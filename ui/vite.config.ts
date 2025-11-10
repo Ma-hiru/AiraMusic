@@ -13,7 +13,7 @@ export default defineConfig(() => {
       })
     ],
     build: {
-      outDir: "../dir/ui",
+      outDir: "../dist-ui",
       sourcemap: false
     }
   };

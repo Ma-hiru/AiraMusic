@@ -1,4 +1,8 @@
 {
   "name": "@mahiru/app",
-  "main": "src/index.ts"
+  "main": "src/index.ts",
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch"
+  }
 }

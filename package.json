@@ -1,6 +1,8 @@
 {
   "name": "simple-cloud-music",
   "description": "",
+  "type": "module",
+  "main": "dist-app/main.mjs",
   "private": true,
   "version": "1.0.0",
   "author": {
@@ -8,12 +10,13 @@
     "email": "tenshimahiru@qq.com"
   },
   "workspaces": [
+    "app",
     "ui",
-    "wasm",
-    "app"
+    "wasm"
   ],
   "scripts": {
     "dev:ui": "pnpm --filter @mahiru/ui run dev",
+    "dev:electron": "pnpm --filter @mahiru/app run build && set NODE_ENV=development && electron .",
     "build:ui": "pnpm --filter @mahiru/ui run build",
     "preview:ui": "pnpm --filter @mahiru/ui run preview",
     "clear:wasm": "pnpm --filter @mahiru/wasm run clear",
@@ -24,29 +27,38 @@
     "lint:oxlint": "oxlint . -D correctness --ignore-path .gitignore --fix",
     "lint:eslint": "eslint . --fix"
   },
+  "dependencies": {
+    "electron": "^39.1.1"
+  },
   "devDependencies": {
     "@types/node": "^24.10.0",
+    "@typescript/native-preview": "latest",
     "eslint": "^9",
     "eslint-plugin-oxlint": "latest",
     "eslint-plugin-prettier": "^5",
     "eslint-plugin-react-hooks": "^7",
     "eslint-plugin-react-refresh": "^0.4",
-    "@typescript/native-preview": "latest",
-    "typescript": "^5",
     "globals": "^15.14.0",
     "jiti": "^2.6.1",
     "oxlint": "latest",
     "prettier": "latest",
+    "rimraf": "^6.1.0",
+    "run-script-os": "^1.1.6",
     "stylelint": "^16",
     "stylelint-config-standard-scss": "^16",
+    "typescript": "^5",
     "typescript-eslint": "^8.46.3",
-    "rimraf": "^6.1.0",
-    "run-script-os": "^1.1.6"
+    "tsup": "^8.5.0"
   },
   "packageManager": "pnpm@10.19.0",
   "pnpm": {
-    "overrides": {
-      "vite": "npm:rolldown-vite@7.2.2"
-    }
+    "onlyBuiltDependencies": [
+      "@parcel/watcher",
+      "electron",
+      "esbuild"
+    ]
+  },
+  "overrides": {
+    "vite": "npm:rolldown-vite@7.2.2"
   }
 }

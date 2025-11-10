@@ -1,0 +1,11 @@
+{
+  "extends": ["../tsconfig.json"],
+  "compilerOptions": {
+    "types": ["@types/node"],
+    "paths": {
+      "@/*": ["./src/*"],
+      "*": ["./*"]
+    }
+  },
+  "include": ["src", "tsup.config.ts"]
+}
