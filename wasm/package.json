@@ -1,0 +1,23 @@
+{
+  "name": "@mahiru/wasm",
+  "type": "module",
+  "version": "1.0.0",
+  "files": [
+    "pkg/*.wasm",
+    "pkg/*.js",
+    "pkg/*.d.ts"
+  ],
+  "main": "pkg/wasm.js",
+  "types": "pkg/wasm.d.ts",
+  "sideEffects": [
+    "./pkg/wasm.js",
+    "./pkg/snippets/*"
+  ],
+  "scripts": {
+    "clean": "rimraf pkg/package.json",
+    "clear": "rimraf pkg target",
+    "build:win32": "wasm-pack build --target bundler --out-dir pkg --release",
+    "build:linux": "wasm-pack build --target bundler --out-dir pkg --dev",
+    "build": "pnpm run-script-os && pnpm clean"
+  }
+}

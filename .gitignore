@@ -1,0 +1,16 @@
+.vscode
+.DS_Store
+*.log
+*.tmp
+*.cache
+*.zip
+*.tar.gz
+*.rar
+*.exe
+
+
+node_modules
+target
+dist
+tests
+

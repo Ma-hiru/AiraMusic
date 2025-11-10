@@ -1,0 +1,4 @@
+{
+  "name": "@mahiru/app",
+  "main": "src/index.ts"
+}

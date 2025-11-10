@@ -1,0 +1,8 @@
+packages:
+  - app
+  - ui
+  - wasm
+
+nodeLinker: hoisted
+
+registry: https://registry.npmmirror.com

@@ -1,0 +1,36 @@
+[package]
+name = "wasm"
+version = "1.0.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+wasm-bindgen = "0.2"
+image = "0.25"
+rand = { version = "0.9" }
+getrandom = { version = "0.3", features = ["wasm_js"] }
+wasm-bindgen-futures = "0.4.54"
+
+[profile.dev]
+lto = true
+opt-level = "z"
+codegen-units = 1
+panic = "abort"
+
+[profile.release]
+lto = true
+opt-level = "z"
+codegen-units = 1
+panic = "abort"
+
+# wasm-pack build configuration with platform-specific settings
+# On some Linux environments, binaryen/wasm-opt may incorrectly set a maximum on the
+# exported externref table, causing `WebAssembly.Table.grow()` to throw during
+# `__wbindgen_init_externref_table`. Disable wasm-opt on Linux to avoid this runtime failure.
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = true
+
+[package.metadata.wasm-pack.profile.dev]
+wasm-opt = false
