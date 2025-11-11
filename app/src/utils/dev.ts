@@ -1,4 +1,3 @@
-export function isDev(){
-  return process.env.NODE_ENV?.trim().toLowerCase() === 'development'
+export function isDev() {
+  return process.env.NODE_ENV?.trim().toLowerCase() === "development";
 }
-
