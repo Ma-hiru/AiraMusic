@@ -13,10 +13,10 @@
   "workspaces": [
     "app",
     "ui",
-    "wasm"
+    "wasm",
+    "err"
   ],
   "scripts": {
-    "dev": "pnpm dev:ui & pnpm dev:electron",
     "dev:ui": "pnpm --filter @mahiru/ui run dev",
     "dev:electron": "pnpm --filter @mahiru/app run build && set NODE_ENV=development && electron .",
     "build:ui": "pnpm --filter @mahiru/ui run build",

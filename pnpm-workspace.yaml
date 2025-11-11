@@ -2,6 +2,7 @@ packages:
   - app
   - ui
   - wasm
+  - err
 
 nodeLinker: hoisted
 

@@ -1,8 +1,11 @@
 {
   "name": "@mahiru/app",
-  "main": "src/index.ts",
+  "main": "src/pure.ts",
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch"
+  },
+  "dependencies": {
+    "@mahiru/err": "workspace:^"
   }
 }
