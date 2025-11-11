@@ -2,7 +2,7 @@
   "name": "simple-cloud-music",
   "description": "",
   "type": "module",
-  "main": "dist-app/main.mjs",
+  "main": "dist/app/main.mjs",
   "private": true,
   "version": "1.0.0",
   "author": {

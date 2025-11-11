@@ -1,6 +1,7 @@
-const { defineConfig } = require("tsup");
+import { defineConfig } from "tsup";
 
-module.exports = defineConfig([
+// noinspection JSUnusedGlobalSymbols 禁用webstorm的未使用默认导出警告
+export default defineConfig([
   {
     entry: ["src/main.ts"],
     outDir: "../dist/app",
