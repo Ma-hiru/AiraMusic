@@ -25,7 +25,9 @@
     "lint": "pnpm lint:oxlint && pnpm lint:eslint",
     "format": "prettier --write .",
     "lint:oxlint": "oxlint . -D correctness --ignore-path .gitignore --fix",
-    "lint:eslint": "eslint . --fix"
+    "lint:eslint": "eslint . --fix",
+    "commit:win32": "pnpm lint && pnpm exec pwsh ./git-commit.ps1"
+
   },
   "dependencies": {
     "electron": "^39.1.1"
