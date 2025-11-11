@@ -18,7 +18,7 @@ export default defineConfig(() => {
       })
     ],
     build: {
-      outDir: "../dist-ui",
+      outDir: join(__dirname, "../dist/ui"),
       sourcemap: false
     },
     resolve: {

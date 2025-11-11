@@ -1,2 +1,0 @@
-import{app as n,BrowserWindow as p}from"electron";function o(){return process.env.NODE_ENV?.trim().toLowerCase()==="development"}import{join as e}from"path";import{app as r}from"electron";function i(...t){return e(r.getAppPath(),...t)}n.on("ready",()=>{let t=new p({title:"test",width:800,height:600});o()?t.loadURL("http://localhost:5173"):t.loadFile(i("dist-ui","index.html"))});
-//# sourceMappingURL=main.mjs.map

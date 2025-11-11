@@ -3,7 +3,7 @@ const { defineConfig } = require("tsup");
 module.exports = defineConfig([
   {
     entry: ["src/main.ts"],
-    outDir: "../dist-app",
+    outDir: "../dist/app",
     format: ["esm"],
     platform: "node",
     target: "node20",
@@ -15,7 +15,7 @@ module.exports = defineConfig([
   },
   {
     entry: ["src/preload/index.ts"],
-    outDir: "../dist-preload",
+    outDir: "../dist/preload",
     format: ["cjs"],
     platform: "node",
     target: "node20",
@@ -23,6 +23,6 @@ module.exports = defineConfig([
     clean: true,
     dts: false,
     minify: true,
-    external: ["electron", "fs", "path"],
+    external: ["electron", "esbuild", "node:*"]
   }
 ]);
