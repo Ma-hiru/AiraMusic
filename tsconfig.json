@@ -20,10 +20,11 @@
     "noEmit": true,
     "jsx": "react-jsx",
     "paths": {
-      "@mahiru/*": ["./*"],
-      "*": ["./*"],
+      "@mahiru/ui/*": ["./ui/src/*"],
+      "@mahiru/*": ["./*/src/index.ts", "./*/src/index.tsx"],
+      "*": ["./*"]
     }
   },
-  "include": [".", "eslint.config.ts"],
+  "include": ["app", "ui", "wasm", "eslint.config.ts"],
   "exclude": ["node_modules", "dist"]
 }

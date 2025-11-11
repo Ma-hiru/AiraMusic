@@ -1,6 +1,6 @@
 import { app, BrowserWindow } from "electron";
-import { isDev } from "@/utils/dev";
-import { appPathJoin } from "@/utils/path";
+import { isDev } from "./utils/dev";
+import { appPathJoin } from "./utils/path";
 
 app.on("ready", () => {
   const mainWindow = new BrowserWindow({

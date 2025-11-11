@@ -5,21 +5,24 @@ module.exports = defineConfig([
     entry: ["src/main.ts"],
     outDir: "../dist-app",
     format: ["esm"],
-    skipNodeModulesBundle: true,
-    sourcemap: false,
+    platform: "node",
+    target: "node20",
+    sourcemap: true,
     clean: true,
-    dts: true,
-    external: ["electron", "esbuild"],
+    dts: false,
+    external: ["electron", "esbuild", "node:*"],
     minify: true
   },
   {
     entry: ["src/preload/index.ts"],
     outDir: "../dist-preload",
     format: ["cjs"],
-    sourcemap: false,
+    platform: "node",
+    target: "node20",
+    sourcemap: true,
     clean: true,
-    dts: true,
-    external: ["electron", "esbuild"],
-    minify: true
+    dts: false,
+    minify: true,
+    external: ["electron", "fs", "path"],
   }
 ]);
