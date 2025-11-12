@@ -4,7 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="c35e40d8-17d4-45c7-8229-ff53afd09bb9" name="更改" comment="" />
+    <list default="true" id="c35e40d8-17d4-45c7-8229-ff53afd09bb9" name="更改" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -27,12 +29,12 @@
     &quot;assignee&quot;: &quot;Ma-hiru&quot;
   }
 }</component>
-  <component name="GithubPullRequestsUISettings"><![CDATA[{
-  "selectedUrlAndAccountId": {
-    "url": "git@github.com:Ma-hiru/simple-cloud-music.git",
-    "accountId": "cb471dd8-177b-41fa-8b95-d50bed1b5561"
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;git@github.com:Ma-hiru/simple-cloud-music.git&quot;,
+    &quot;accountId&quot;: &quot;cb471dd8-177b-41fa-8b95-d50bed1b5561&quot;
   }
-}]]></component>
+}</component>
   <component name="ProjectColorInfo">{
   &quot;customColor&quot;: &quot;&quot;,
   &quot;associatedIndex&quot;: 1
@@ -58,7 +60,7 @@
     "dart.analysis.tool.window.visible": "false",
     "git-widget-placeholder": "main",
     "go.import.settings.migrated": "true",
-    "last_opened_file_path": "/home/linuxbrew/.linuxbrew/bin/pnpm",
+    "last_opened_file_path": "/media/mahiru/E/project/simple-cloud-music/ui/public",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.stylelint": "true",
     "node.js.detected.package.tslint": "true",
@@ -90,6 +92,9 @@
     </option>
   </component>
   <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/ui/public" />
+    </key>
     <key name="MoveFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/app/src/window/manager" />
       <recent name="$PROJECT_DIR$/app/src/window/app" />
@@ -97,7 +102,7 @@
       <recent name="D:\Project\simple-cloud-music\ui\src\page\home" />
     </key>
   </component>
-  <component name="RunManager" selected="Shell Script.dev:electron">
+  <component name="RunManager" selected="npm.dev:ui">
     <configuration name="err &gt; index.ts" type="NodeJSConfigurationType" temporary="true" nameIsGenerated="true" path-to-js-file="$PROJECT_DIR$/err/src/index.ts" typescript-loader="bundled" working-dir="$PROJECT_DIR$/err/src">
       <method v="2" />
     </configuration>
@@ -193,6 +198,7 @@
       <workItem from="1762860980290" duration="12248000" />
       <workItem from="1762929409161" duration="15000" />
       <workItem from="1762937456774" duration="5301000" />
+      <workItem from="1762944647495" duration="7329000" />
     </task>
     <servers />
   </component>
