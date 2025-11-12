@@ -10,6 +10,14 @@
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="TypeScript File" />
+        <option value="TypeScript JSX File" />
+      </list>
+    </option>
+  </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
@@ -38,6 +46,7 @@
   <component name="PropertiesComponent">{
   &quot;keyToString&quot;: {
     &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;Node.js.err &gt; index.ts.executor&quot;: &quot;Run&quot;,
     &quot;PowerShell.git-commit.ps1.executor&quot;: &quot;Run&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
@@ -58,7 +67,9 @@
     &quot;npm.app &gt; build.executor&quot;: &quot;Run&quot;,
     &quot;npm.commit.executor&quot;: &quot;Run&quot;,
     &quot;npm.commit:win32.executor&quot;: &quot;Run&quot;,
+    &quot;npm.dev.executor&quot;: &quot;Run&quot;,
     &quot;npm.dev:electron.executor&quot;: &quot;Run&quot;,
+    &quot;npm.dev:ui.executor&quot;: &quot;Run&quot;,
     &quot;prettierjs.PrettierConfiguration.Package&quot;: &quot;D:\\Project\\simple-cloud-music\\node_modules\\prettier&quot;,
     &quot;show.migrate.to.gradle.popup&quot;: &quot;false&quot;,
     &quot;ts.external.directory.path&quot;: &quot;D:\\Project\\simple-cloud-music\\node_modules\\typescript\\lib&quot;,
@@ -74,19 +85,14 @@
       </map>
     </option>
   </component>
-  <component name="RunManager" selected="npm.commit">
-    <configuration name="git-commit.ps1" type="PowerShellRunType" factoryName="PowerShell" temporary="true" scriptUrl="$PROJECT_DIR$/git-commit.ps1" executablePath="C:/Program Files/PowerShell/7/pwsh.exe">
-      <envs />
-      <method v="2" />
-    </configuration>
-    <configuration name="app &gt; build" type="js.build_tools.npm" temporary="true" nameIsGenerated="true">
-      <package-json value="$PROJECT_DIR$/app/package.json" />
-      <command value="run" />
-      <scripts>
-        <script value="build" />
-      </scripts>
-      <node-interpreter value="project" />
-      <envs />
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="D:\Project\simple-cloud-music\ui\src\componets\public" />
+      <recent name="D:\Project\simple-cloud-music\ui\src\page\home" />
+    </key>
+  </component>
+  <component name="RunManager" selected="npm.dev:ui">
+    <configuration name="err &gt; index.ts" type="NodeJSConfigurationType" temporary="true" nameIsGenerated="true" path-to-js-file="$PROJECT_DIR$/err/src/index.ts" typescript-loader="bundled" working-dir="$PROJECT_DIR$/err/src">
       <method v="2" />
     </configuration>
     <configuration name="commit" type="js.build_tools.npm" temporary="true" nameIsGenerated="true">
@@ -99,11 +105,11 @@
       <envs />
       <method v="2" />
     </configuration>
-    <configuration name="commit:win32" type="js.build_tools.npm" temporary="true" nameIsGenerated="true">
+    <configuration name="dev" type="js.build_tools.npm" temporary="true" nameIsGenerated="true">
       <package-json value="$PROJECT_DIR$/package.json" />
       <command value="run" />
       <scripts>
-        <script value="commit:win32" />
+        <script value="dev" />
       </scripts>
       <node-interpreter value="project" />
       <envs />
@@ -119,13 +125,23 @@
       <envs />
       <method v="2" />
     </configuration>
+    <configuration name="dev:ui" type="js.build_tools.npm" temporary="true" nameIsGenerated="true">
+      <package-json value="$PROJECT_DIR$/package.json" />
+      <command value="run" />
+      <scripts>
+        <script value="dev:ui" />
+      </scripts>
+      <node-interpreter value="project" />
+      <envs />
+      <method v="2" />
+    </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="npm.commit" />
-        <item itemvalue="npm.commit:win32" />
-        <item itemvalue="PowerShell.git-commit.ps1" />
+        <item itemvalue="npm.dev:ui" />
         <item itemvalue="npm.dev:electron" />
-        <item itemvalue="npm.app &gt; build" />
+        <item itemvalue="Node.js.err &gt; index.ts" />
+        <item itemvalue="npm.dev" />
+        <item itemvalue="npm.commit" />
       </list>
     </recent_temporary>
   </component>
@@ -145,6 +161,8 @@
       <updated>1762843382471</updated>
       <workItem from="1762843384747" duration="1185000" />
       <workItem from="1762844612495" duration="5000" />
+      <workItem from="1762860980290" duration="12248000" />
+      <workItem from="1762929409161" duration="15000" />
     </task>
     <servers />
   </component>

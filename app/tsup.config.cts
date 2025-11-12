@@ -26,6 +26,6 @@ export default defineConfig([
     dts: false,
     minify: true,
     external: ["electron", "esbuild", "node:*"],
-    noExternal: ["@mahiru/err"],
+    noExternal: ["@mahiru/err"]
   }
 ]);
