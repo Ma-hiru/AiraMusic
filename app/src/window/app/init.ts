@@ -5,12 +5,21 @@ import { isDev } from "../../utils/dev";
 import { exitAppWithError } from "./exit";
 import { EqError } from "../../utils/err";
 import { appPathJoin } from "../../utils/path";
-import { BrowserWindow } from "electron";
+import { app, BrowserWindow } from "electron";
 
 export function initMainWindow() {
+  startParam();
   const mainWindow = createInitWindow();
   loadPageSource(mainWindow);
+  mainWindow.webContents.openDevTools()
   return mainWindow;
+}
+
+function startParam() {
+  app.commandLine.appendSwitch("use-gl", "egl"); // 或 'desktop'
+  app.commandLine.appendSwitch("ignore-gpu-blacklist");
+  app.commandLine.appendSwitch("enable-webgl");
+  app.commandLine.appendSwitch("enable-gpu-rasterization");
 }
 
 function createInitWindow() {

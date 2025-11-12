@@ -1,5 +1,6 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import wasm from "vite-plugin-wasm";
 import Checker from "vite-plugin-checker";
 import tailwindcss from "@tailwindcss/vite";
 import { fileURLToPath } from "node:url";
@@ -11,6 +12,7 @@ export default defineConfig(() => {
     plugins: [
       Checker({ typescript: true }),
       tailwindcss(),
+      wasm(),
       react({
         babel: {
           plugins: [["babel-plugin-react-compiler"]]
