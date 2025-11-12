@@ -11,7 +11,6 @@ export function initMainWindow() {
   startParam();
   const mainWindow = createInitWindow();
   loadPageSource(mainWindow);
-  mainWindow.webContents.openDevTools()
   return mainWindow;
 }
 
