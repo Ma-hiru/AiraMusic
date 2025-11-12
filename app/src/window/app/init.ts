@@ -5,22 +5,32 @@ import { isDev } from "../../utils/dev";
 import { exitAppWithError } from "./exit";
 import { EqError } from "../../utils/err";
 import { appPathJoin } from "../../utils/path";
+import { BrowserWindow } from "electron";
 
 export function initMainWindow() {
-  const { width, height } = getEffectiveWindowSize();
-  const mainWindow = WindowManager.createBrowserWindow(
+  const mainWindow = createInitWindow();
+  loadPageSource(mainWindow);
+  return mainWindow;
+}
+
+function createInitWindow() {
+  const { effectiveWidth, effectiveHeight } = getEffectiveWindowSize();
+
+  return WindowManager.createBrowserWindow(
     {
-      title: CONSTANTS.APP.INIT_WINDOW_TITLE,
-      width,
-      height,
+      title: CONSTANTS.APP.MAIN_WINDOW_TITLE,
+      width: effectiveWidth,
+      height: effectiveHeight,
       autoHideMenuBar: true,
       frame: false,
       show: false,
       center: true
     },
-    "main"
+    CONSTANTS.APP.MAIN_WINDOW_TITLE
   );
+}
 
+function loadPageSource(mainWindow: BrowserWindow) {
   if (isDev()) {
     mainWindow
       .loadURL("http://localhost:5173")
@@ -52,6 +62,4 @@ export function initMainWindow() {
         )
       );
   }
-
-  return mainWindow;
 }

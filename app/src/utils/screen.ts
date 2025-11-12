@@ -1,11 +1,11 @@
 import { screen } from "electron";
+import { CONSTANTS } from "../constant";
 
-export const DefaultWidthHeightRatio = 16 / 9;
-export const DefaultCoverRatio = 0.8;
+const { DEFAULT_WINDOW_WIDTH_HEIGHT_RATIO, DEFAULT_WINDOW_COVER_RATIO } = CONSTANTS.APP;
 
 export function getEffectiveWindowSize(
-  widthHeightRatio: number = DefaultWidthHeightRatio,
-  coverRatio: number = DefaultCoverRatio
+  widthHeightRatio: number = DEFAULT_WINDOW_WIDTH_HEIGHT_RATIO,
+  coverRatio: number = DEFAULT_WINDOW_COVER_RATIO
 ) {
   const { effectiveScreenWidth, effectiveScreenHeight } = getEffectiveWorkAreaSize();
   const targetHeight = Math.floor(effectiveScreenHeight * coverRatio);
@@ -13,15 +13,15 @@ export function getEffectiveWindowSize(
 
   if (targetWidth < effectiveScreenWidth) {
     return {
-      width: targetWidth,
-      height: targetHeight
+      effectiveWidth: targetWidth,
+      effectiveHeight: targetHeight
     };
   } else {
     const adjustedWidth = Math.floor(effectiveScreenWidth * coverRatio);
     const adjustedHeight = Math.floor(adjustedWidth / widthHeightRatio);
     return {
-      width: adjustedWidth,
-      height: adjustedHeight
+      effectiveWidth: adjustedWidth,
+      effectiveHeight: adjustedHeight
     };
   }
 }
