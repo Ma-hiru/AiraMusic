@@ -1,19 +1,13 @@
-import { app } from "electron";
-import { WindowManager } from "./manager";
-import { CONSTANTS } from "../constant";
-import { EqError } from "../utils/err";
-import { isDev } from "../utils/dev";
-import { appPathJoin } from "../utils/path";
-
-export function exitAppWithError(err: any) {
-  WindowManager.closeAllBrowserWindows();
-  EqError.printDEV("app/main.ts:exitAppWithError", "Critical error occurred, exiting app", err);
-  //TODO: Show error dialog to user
-  app.quit();
-}
+import { getEffectiveWindowSize } from "../../utils/screen";
+import { WindowManager } from "../manager";
+import { CONSTANTS } from "../../constant";
+import { isDev } from "../../utils/dev";
+import { exitAppWithError } from "./exit";
+import { EqError } from "../../utils/err";
+import { appPathJoin } from "../../utils/path";
 
 export function initMainWindow() {
-  const [width, height] = CONSTANTS.APP.INIT_WINDOW_SIZE;
+  const { width, height } = getEffectiveWindowSize();
   const mainWindow = WindowManager.createBrowserWindow(
     {
       title: CONSTANTS.APP.INIT_WINDOW_TITLE,
@@ -21,7 +15,8 @@ export function initMainWindow() {
       height,
       autoHideMenuBar: true,
       frame: false,
-      show: false
+      show: false,
+      center: true
     },
     "main"
   );
