@@ -19,7 +19,9 @@
   "scripts": {
     "dev:ui": "pnpm --filter @mahiru/ui run dev",
     "dev:app": "pnpm --filter @mahiru/app run dev",
-    "dev:electron": "set NODE_ENV=development && electron .",
+    "dev:electron": "pnpm run-script-os",
+    "dev:electron:win32": "pnpm exec pwsh ./scripts/electron.ps1",
+    "dev:electron:linux": "pnpm exec bash ./scripts/electron.sh",
     "build:ui": "pnpm --filter @mahiru/ui run build",
     "build:wasm": "pnpm --filter @mahiru/wasm run build",
     "clear:wasm": "pnpm --filter @mahiru/wasm run clear",
@@ -30,8 +32,8 @@
     "lint:oxlint": "oxlint . -D correctness --ignore-path .gitignore --fix",
     "lint:eslint": "eslint . --fix",
     "auto-commit": "pnpm run-script-os",
-    "auto-commit:win32": "pnpm exec pwsh ./git-commit.ps1",
-    "auto-commit:linux": "pnpm exec ./git-commit.sh"
+    "auto-commit:win32": "pnpm exec pwsh ./scripts/git-commit.ps1",
+    "auto-commit:linux": "pnpm exec bash ./scripts/git-commit.sh"
   },
   "dependencies": {
     "electron": "^39.1.1"

@@ -1,0 +1,152 @@
+Index: .idea/workspace.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<project version=\"4\">\n  <component name=\"AutoImportSettings\">\n    <option name=\"autoReloadType\" value=\"SELECTIVE\" />\n  </component>\n  <component name=\"ChangeListManager\">\n    <list default=\"true\" id=\"c35e40d8-17d4-45c7-8229-ff53afd09bb9\" name=\"更改\" comment=\"\">\n      <change beforePath=\"$PROJECT_DIR$/.idea/workspace.xml\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/.idea/workspace.xml\" afterDir=\"false\" />\n    </list>\n    <option name=\"SHOW_DIALOG\" value=\"false\" />\n    <option name=\"HIGHLIGHT_CONFLICTS\" value=\"true\" />\n    <option name=\"HIGHLIGHT_NON_ACTIVE_CHANGELIST\" value=\"false\" />\n    <option name=\"LAST_RESOLUTION\" value=\"IGNORE\" />\n  </component>\n  <component name=\"FileTemplateManagerImpl\">\n    <option name=\"RECENT_TEMPLATES\">\n      <list>\n        <option value=\"TypeScript JSX File\" />\n        <option value=\"TypeScript File\" />\n      </list>\n    </option>\n  </component>\n  <component name=\"Git.Settings\">\n    <option name=\"RECENT_GIT_ROOT_PATH\" value=\"$PROJECT_DIR$\" />\n  </component>\n  <component name=\"GitHubPullRequestSearchHistory\">{\n  &quot;lastFilter&quot;: {\n    &quot;state&quot;: &quot;OPEN&quot;,\n    &quot;assignee&quot;: &quot;Ma-hiru&quot;\n  }\n}</component>\n  <component name=\"GithubPullRequestsUISettings\">{\n  &quot;selectedUrlAndAccountId&quot;: {\n    &quot;url&quot;: &quot;git@github.com:Ma-hiru/simple-cloud-music.git&quot;,\n    &quot;accountId&quot;: &quot;cb471dd8-177b-41fa-8b95-d50bed1b5561&quot;\n  }\n}</component>\n  <component name=\"ProjectColorInfo\">{\n  &quot;customColor&quot;: &quot;&quot;,\n  &quot;associatedIndex&quot;: 1\n}</component>\n  <component name=\"ProjectId\" id=\"35K0J9idynwlXzJ2wGQr7VJGYI0\" />\n  <component name=\"ProjectViewState\">\n    <option name=\"hideEmptyMiddlePackages\" value=\"true\" />\n    <option name=\"showLibraryContents\" value=\"true\" />\n    <option name=\"showMembers\" value=\"true\" />\n  </component>\n  <component name=\"PropertiesComponent\"><![CDATA[{\n  \"keyToString\": {\n    \"ModuleVcsDetector.initialDetectionPerformed\": \"true\",\n    \"Node.js.err > index.ts.executor\": \"Run\",\n    \"PowerShell.git-commit.ps1.executor\": \"Run\",\n    \"RunOnceActivity.ShowReadmeOnStart\": \"true\",\n    \"RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252\": \"true\",\n    \"RunOnceActivity.git.unshallow\": \"true\",\n    \"RunOnceActivity.go.formatter.settings.were.checked\": \"true\",\n    \"RunOnceActivity.go.migrated.go.modules.settings\": \"true\",\n    \"SHELLCHECK.PATH\": \"/home/mahiru/.local/share/JetBrains/WebStorm2025.2/Shell Script/shellcheck\",\n    \"Shell Script.dev:app.executor\": \"Run\",\n    \"Shell Script.dev:electron.executor\": \"Run\",\n    \"dart.analysis.tool.window.visible\": \"false\",\n    \"git-widget-placeholder\": \"main\",\n    \"go.import.settings.migrated\": \"true\",\n    \"last_opened_file_path\": \"/media/mahiru/E/project/simple-cloud-music/ui/public\",\n    \"node.js.detected.package.eslint\": \"true\",\n    \"node.js.detected.package.stylelint\": \"true\",\n    \"node.js.detected.package.tslint\": \"true\",\n    \"node.js.selected.package.eslint\": \"(autodetect)\",\n    \"node.js.selected.package.stylelint\": \"D:/Project/simple-cloud-music/node_modules/stylelint\",\n    \"node.js.selected.package.tslint\": \"(autodetect)\",\n    \"nodejs_interpreter_path\": \"/home/mahiru/.nvm/versions/node/v24.1.0/bin/node\",\n    \"nodejs_package_manager_path\": \"/home/linuxbrew/.linuxbrew/bin/pnpm\",\n    \"npm.app > build.executor\": \"Run\",\n    \"npm.commit.executor\": \"Run\",\n    \"npm.commit:win32.executor\": \"Run\",\n    \"npm.dev.executor\": \"Run\",\n    \"npm.dev:electron.executor\": \"Run\",\n    \"npm.dev:ui.executor\": \"Run\",\n    \"prettierjs.PrettierConfiguration.Package\": \"/media/mahiru/E/project/simple-cloud-music/node_modules/prettier\",\n    \"settings.editor.selected.configurable\": \"settings.nodejs\",\n    \"show.migrate.to.gradle.popup\": \"false\",\n    \"ts.external.directory.path\": \"/media/mahiru/E/project/simple-cloud-music/node_modules/typescript/lib\",\n    \"vue.rearranger.settings.migration\": \"true\"\n  }\n}]]></component>\n  <component name=\"ReactDesignerToolWindowState\">\n    <option name=\"myId2Visible\">\n      <map>\n        <entry key=\"com.intellij.reactbuddy.reactComponents\" value=\"false\" />\n        <entry key=\"com.intellij.reactbuddy.reactInspector\" value=\"false\" />\n        <entry key=\"com.intellij.reactbuddy.storybook\" value=\"false\" />\n      </map>\n    </option>\n  </component>\n  <component name=\"RecentsManager\">\n    <key name=\"CopyFile.RECENT_KEYS\">\n      <recent name=\"$PROJECT_DIR$/ui/public\" />\n    </key>\n    <key name=\"MoveFile.RECENT_KEYS\">\n      <recent name=\"$PROJECT_DIR$/app/src/window/manager\" />\n      <recent name=\"$PROJECT_DIR$/app/src/window/app\" />\n      <recent name=\"D:\\Project\\simple-cloud-music\\ui\\src\\componets\\public\" />\n      <recent name=\"D:\\Project\\simple-cloud-music\\ui\\src\\page\\home\" />\n    </key>\n  </component>\n  <component name=\"RunManager\" selected=\"Shell Script.dev:app\">\n    <configuration name=\"err &gt; index.ts\" type=\"NodeJSConfigurationType\" temporary=\"true\" nameIsGenerated=\"true\" path-to-js-file=\"$PROJECT_DIR$/err/src/index.ts\" typescript-loader=\"bundled\" working-dir=\"$PROJECT_DIR$/err/src\">\n      <method v=\"2\" />\n    </configuration>\n    <configuration name=\"dev:app\" type=\"ShConfigurationType\">\n      <option name=\"SCRIPT_TEXT\" value=\"cd app &amp;&amp; pnpm dev\" />\n      <option name=\"INDEPENDENT_SCRIPT_PATH\" value=\"true\" />\n      <option name=\"SCRIPT_PATH\" value=\"\" />\n      <option name=\"SCRIPT_OPTIONS\" value=\"\" />\n      <option name=\"INDEPENDENT_SCRIPT_WORKING_DIRECTORY\" value=\"true\" />\n      <option name=\"SCRIPT_WORKING_DIRECTORY\" value=\"$PROJECT_DIR$\" />\n      <option name=\"INDEPENDENT_INTERPRETER_PATH\" value=\"true\" />\n      <option name=\"INTERPRETER_PATH\" value=\"/bin/bash\" />\n      <option name=\"INTERPRETER_OPTIONS\" value=\"\" />\n      <option name=\"EXECUTE_IN_TERMINAL\" value=\"true\" />\n      <option name=\"EXECUTE_SCRIPT_FILE\" value=\"false\" />\n      <envs />\n      <method v=\"2\" />\n    </configuration>\n    <configuration name=\"dev:electron\" type=\"ShConfigurationType\">\n      <option name=\"SCRIPT_TEXT\" value=\"export NODE_ENV=development &amp;&amp; $USER_HOME$/下载/electron/electron $PROJECT_DIR$\" />\n      <option name=\"INDEPENDENT_SCRIPT_PATH\" value=\"true\" />\n      <option name=\"SCRIPT_PATH\" value=\"\" />\n      <option name=\"SCRIPT_OPTIONS\" value=\"\" />\n      <option name=\"INDEPENDENT_SCRIPT_WORKING_DIRECTORY\" value=\"true\" />\n      <option name=\"SCRIPT_WORKING_DIRECTORY\" value=\"$PROJECT_DIR$\" />\n      <option name=\"INDEPENDENT_INTERPRETER_PATH\" value=\"true\" />\n      <option name=\"INTERPRETER_PATH\" value=\"/bin/bash\" />\n      <option name=\"INTERPRETER_OPTIONS\" value=\"\" />\n      <option name=\"EXECUTE_IN_TERMINAL\" value=\"false\" />\n      <option name=\"EXECUTE_SCRIPT_FILE\" value=\"false\" />\n      <envs />\n      <method v=\"2\" />\n    </configuration>\n    <configuration name=\"commit\" type=\"js.build_tools.npm\" temporary=\"true\" nameIsGenerated=\"true\">\n      <package-json value=\"$PROJECT_DIR$/package.json\" />\n      <command value=\"run\" />\n      <scripts>\n        <script value=\"commit\" />\n      </scripts>\n      <node-interpreter value=\"project\" />\n      <envs />\n      <method v=\"2\" />\n    </configuration>\n    <configuration name=\"dev\" type=\"js.build_tools.npm\" temporary=\"true\" nameIsGenerated=\"true\">\n      <package-json value=\"$PROJECT_DIR$/package.json\" />\n      <command value=\"run\" />\n      <scripts>\n        <script value=\"dev\" />\n      </scripts>\n      <node-interpreter value=\"project\" />\n      <envs />\n      <method v=\"2\" />\n    </configuration>\n    <configuration name=\"dev:electron\" type=\"js.build_tools.npm\" temporary=\"true\" nameIsGenerated=\"true\">\n      <package-json value=\"$PROJECT_DIR$/package.json\" />\n      <command value=\"run\" />\n      <scripts>\n        <script value=\"dev:electron\" />\n      </scripts>\n      <node-interpreter value=\"project\" />\n      <envs />\n      <method v=\"2\" />\n    </configuration>\n    <configuration name=\"dev:ui\" type=\"js.build_tools.npm\" temporary=\"true\" nameIsGenerated=\"true\">\n      <package-json value=\"$PROJECT_DIR$/package.json\" />\n      <command value=\"run\" />\n      <scripts>\n        <script value=\"dev:ui\" />\n      </scripts>\n      <node-interpreter value=\"project\" />\n      <envs />\n      <method v=\"2\" />\n    </configuration>\n    <list>\n      <item itemvalue=\"Node.js.err &gt; index.ts\" />\n      <item itemvalue=\"npm.commit\" />\n      <item itemvalue=\"npm.dev\" />\n      <item itemvalue=\"npm.dev:electron\" />\n      <item itemvalue=\"npm.dev:ui\" />\n      <item itemvalue=\"Shell Script.dev:app\" />\n      <item itemvalue=\"Shell Script.dev:electron\" />\n    </list>\n    <recent_temporary>\n      <list>\n        <item itemvalue=\"npm.dev:ui\" />\n        <item itemvalue=\"npm.dev:electron\" />\n        <item itemvalue=\"Node.js.err &gt; index.ts\" />\n        <item itemvalue=\"npm.dev\" />\n        <item itemvalue=\"npm.commit\" />\n      </list>\n    </recent_temporary>\n  </component>\n  <component name=\"SharedIndexes\">\n    <attachedChunks>\n      <set>\n        <option value=\"bundled-js-predefined-d6986cc7102b-b598e85cdad2-JavaScript-WS-252.25557.126\" />\n      </set>\n    </attachedChunks>\n  </component>\n  <component name=\"TaskManager\">\n    <task active=\"true\" id=\"Default\" summary=\"默认任务\">\n      <changelist id=\"c35e40d8-17d4-45c7-8229-ff53afd09bb9\" name=\"更改\" comment=\"\" />\n      <created>1762843382471</created>\n      <option name=\"number\" value=\"Default\" />\n      <option name=\"presentableId\" value=\"Default\" />\n      <updated>1762843382471</updated>\n      <workItem from=\"1762843384747\" duration=\"1185000\" />\n      <workItem from=\"1762844612495\" duration=\"5000\" />\n      <workItem from=\"1762860980290\" duration=\"12248000\" />\n      <workItem from=\"1762929409161\" duration=\"15000\" />\n      <workItem from=\"1762937456774\" duration=\"5301000\" />\n      <workItem from=\"1762944647495\" duration=\"7329000\" />\n      <workItem from=\"1762995946789\" duration=\"119000\" />\n    </task>\n    <servers />\n  </component>\n  <component name=\"TypeScriptGeneratedFilesManager\">\n    <option name=\"version\" value=\"3\" />\n  </component>\n  <component name=\"VgoProject\">\n    <settings-migrated>true</settings-migrated>\n  </component>\n</project>
+===================================================================
+diff --git a/.idea/workspace.xml b/.idea/workspace.xml
+--- a/.idea/workspace.xml	(revision 1cc461df81eedcab26d349048597f54422bd454a)
++++ b/.idea/workspace.xml	(date 1763049196055)
+@@ -45,44 +45,45 @@
+     <option name="showLibraryContents" value="true" />
+     <option name="showMembers" value="true" />
+   </component>
+-  <component name="PropertiesComponent"><![CDATA[{
+-  "keyToString": {
+-    "ModuleVcsDetector.initialDetectionPerformed": "true",
+-    "Node.js.err > index.ts.executor": "Run",
+-    "PowerShell.git-commit.ps1.executor": "Run",
+-    "RunOnceActivity.ShowReadmeOnStart": "true",
+-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+-    "RunOnceActivity.git.unshallow": "true",
+-    "RunOnceActivity.go.formatter.settings.were.checked": "true",
+-    "RunOnceActivity.go.migrated.go.modules.settings": "true",
+-    "SHELLCHECK.PATH": "/home/mahiru/.local/share/JetBrains/WebStorm2025.2/Shell Script/shellcheck",
+-    "Shell Script.dev:app.executor": "Run",
+-    "Shell Script.dev:electron.executor": "Run",
+-    "dart.analysis.tool.window.visible": "false",
+-    "git-widget-placeholder": "main",
+-    "go.import.settings.migrated": "true",
+-    "last_opened_file_path": "/media/mahiru/E/project/simple-cloud-music/ui/public",
+-    "node.js.detected.package.eslint": "true",
+-    "node.js.detected.package.stylelint": "true",
+-    "node.js.detected.package.tslint": "true",
+-    "node.js.selected.package.eslint": "(autodetect)",
+-    "node.js.selected.package.stylelint": "D:/Project/simple-cloud-music/node_modules/stylelint",
+-    "node.js.selected.package.tslint": "(autodetect)",
+-    "nodejs_interpreter_path": "/home/mahiru/.nvm/versions/node/v24.1.0/bin/node",
+-    "nodejs_package_manager_path": "/home/linuxbrew/.linuxbrew/bin/pnpm",
+-    "npm.app > build.executor": "Run",
+-    "npm.commit.executor": "Run",
+-    "npm.commit:win32.executor": "Run",
+-    "npm.dev.executor": "Run",
+-    "npm.dev:electron.executor": "Run",
+-    "npm.dev:ui.executor": "Run",
+-    "prettierjs.PrettierConfiguration.Package": "/media/mahiru/E/project/simple-cloud-music/node_modules/prettier",
+-    "settings.editor.selected.configurable": "settings.nodejs",
+-    "show.migrate.to.gradle.popup": "false",
+-    "ts.external.directory.path": "/media/mahiru/E/project/simple-cloud-music/node_modules/typescript/lib",
+-    "vue.rearranger.settings.migration": "true"
++  <component name="PropertiesComponent">{
++  &quot;keyToString&quot;: {
++    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
++    &quot;Node.js.err &gt; index.ts.executor&quot;: &quot;Run&quot;,
++    &quot;PowerShell.git-commit.ps1.executor&quot;: &quot;Run&quot;,
++    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
++    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
++    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
++    &quot;RunOnceActivity.go.formatter.settings.were.checked&quot;: &quot;true&quot;,
++    &quot;RunOnceActivity.go.migrated.go.modules.settings&quot;: &quot;true&quot;,
++    &quot;SHELLCHECK.PATH&quot;: &quot;/home/mahiru/.local/share/JetBrains/WebStorm2025.2/Shell Script/shellcheck&quot;,
++    &quot;Shell Script.dev:app.executor&quot;: &quot;Run&quot;,
++    &quot;Shell Script.dev:electron.executor&quot;: &quot;Run&quot;,
++    &quot;dart.analysis.tool.window.visible&quot;: &quot;false&quot;,
++    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
++    &quot;go.import.settings.migrated&quot;: &quot;true&quot;,
++    &quot;last_opened_file_path&quot;: &quot;/media/mahiru/E/project/simple-cloud-music/ui/public&quot;,
++    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
++    &quot;node.js.detected.package.stylelint&quot;: &quot;true&quot;,
++    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
++    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
++    &quot;node.js.selected.package.stylelint&quot;: &quot;D:/Project/simple-cloud-music/node_modules/stylelint&quot;,
++    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
++    &quot;nodejs_interpreter_path&quot;: &quot;/home/mahiru/.nvm/versions/node/v24.1.0/bin/node&quot;,
++    &quot;nodejs_package_manager_path&quot;: &quot;/home/linuxbrew/.linuxbrew/bin/pnpm&quot;,
++    &quot;npm.app &gt; build.executor&quot;: &quot;Run&quot;,
++    &quot;npm.build:wasm.executor&quot;: &quot;Run&quot;,
++    &quot;npm.commit.executor&quot;: &quot;Run&quot;,
++    &quot;npm.commit:win32.executor&quot;: &quot;Run&quot;,
++    &quot;npm.dev.executor&quot;: &quot;Run&quot;,
++    &quot;npm.dev:electron.executor&quot;: &quot;Run&quot;,
++    &quot;npm.dev:ui.executor&quot;: &quot;Run&quot;,
++    &quot;prettierjs.PrettierConfiguration.Package&quot;: &quot;/media/mahiru/E/project/simple-cloud-music/node_modules/prettier&quot;,
++    &quot;settings.editor.selected.configurable&quot;: &quot;settings.nodejs&quot;,
++    &quot;show.migrate.to.gradle.popup&quot;: &quot;false&quot;,
++    &quot;ts.external.directory.path&quot;: &quot;/media/mahiru/E/project/simple-cloud-music/node_modules/typescript/lib&quot;,
++    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+   }
+-}]]></component>
++}</component>
+   <component name="ReactDesignerToolWindowState">
+     <option name="myId2Visible">
+       <map>
+@@ -103,7 +104,7 @@
+       <recent name="D:\Project\simple-cloud-music\ui\src\page\home" />
+     </key>
+   </component>
+-  <component name="RunManager" selected="Shell Script.dev:app">
++  <component name="RunManager" selected="Shell Script.dev:electron">
+     <configuration name="err &gt; index.ts" type="NodeJSConfigurationType" temporary="true" nameIsGenerated="true" path-to-js-file="$PROJECT_DIR$/err/src/index.ts" typescript-loader="bundled" working-dir="$PROJECT_DIR$/err/src">
+       <method v="2" />
+     </configuration>
+@@ -137,11 +138,11 @@
+       <envs />
+       <method v="2" />
+     </configuration>
+-    <configuration name="commit" type="js.build_tools.npm" temporary="true" nameIsGenerated="true">
++    <configuration name="build:wasm" type="js.build_tools.npm" temporary="true" nameIsGenerated="true">
+       <package-json value="$PROJECT_DIR$/package.json" />
+       <command value="run" />
+       <scripts>
+-        <script value="commit" />
++        <script value="build:wasm" />
+       </scripts>
+       <node-interpreter value="project" />
+       <envs />
+@@ -179,20 +180,20 @@
+     </configuration>
+     <list>
+       <item itemvalue="Node.js.err &gt; index.ts" />
+-      <item itemvalue="npm.commit" />
++      <item itemvalue="Shell Script.dev:app" />
++      <item itemvalue="Shell Script.dev:electron" />
++      <item itemvalue="npm.build:wasm" />
+       <item itemvalue="npm.dev" />
+       <item itemvalue="npm.dev:electron" />
+       <item itemvalue="npm.dev:ui" />
+-      <item itemvalue="Shell Script.dev:app" />
+-      <item itemvalue="Shell Script.dev:electron" />
+     </list>
+     <recent_temporary>
+       <list>
++        <item itemvalue="npm.build:wasm" />
+         <item itemvalue="npm.dev:ui" />
+         <item itemvalue="npm.dev:electron" />
+         <item itemvalue="Node.js.err &gt; index.ts" />
+         <item itemvalue="npm.dev" />
+-        <item itemvalue="npm.commit" />
+       </list>
+     </recent_temporary>
+   </component>
+@@ -216,7 +217,11 @@
+       <workItem from="1762929409161" duration="15000" />
+       <workItem from="1762937456774" duration="5301000" />
+       <workItem from="1762944647495" duration="7329000" />
+-      <workItem from="1762995946789" duration="119000" />
++      <workItem from="1762995946789" duration="1869000" />
++      <workItem from="1763002224574" duration="263000" />
++      <workItem from="1763002498124" duration="49000" />
++      <workItem from="1763002832674" duration="338000" />
++      <workItem from="1763003181639" duration="588000" />
+     </task>
+     <servers />
+   </component>

@@ -1,0 +1,1 @@
+set NODE_ENV=development && electron .
