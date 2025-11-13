@@ -56,6 +56,7 @@
     "RunOnceActivity.go.formatter.settings.were.checked": "true",
     "RunOnceActivity.go.migrated.go.modules.settings": "true",
     "SHELLCHECK.PATH": "/home/mahiru/.local/share/JetBrains/WebStorm2025.2/Shell Script/shellcheck",
+    "Shell Script.dev:app.executor": "Run",
     "Shell Script.dev:electron.executor": "Run",
     "dart.analysis.tool.window.visible": "false",
     "git-widget-placeholder": "main",
@@ -102,8 +103,23 @@
       <recent name="D:\Project\simple-cloud-music\ui\src\page\home" />
     </key>
   </component>
-  <component name="RunManager" selected="npm.dev:ui">
+  <component name="RunManager" selected="Shell Script.dev:app">
     <configuration name="err &gt; index.ts" type="NodeJSConfigurationType" temporary="true" nameIsGenerated="true" path-to-js-file="$PROJECT_DIR$/err/src/index.ts" typescript-loader="bundled" working-dir="$PROJECT_DIR$/err/src">
+      <method v="2" />
+    </configuration>
+    <configuration name="dev:app" type="ShConfigurationType">
+      <option name="SCRIPT_TEXT" value="cd app &amp;&amp; pnpm dev" />
+      <option name="INDEPENDENT_SCRIPT_PATH" value="true" />
+      <option name="SCRIPT_PATH" value="" />
+      <option name="SCRIPT_OPTIONS" value="" />
+      <option name="INDEPENDENT_SCRIPT_WORKING_DIRECTORY" value="true" />
+      <option name="SCRIPT_WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="INDEPENDENT_INTERPRETER_PATH" value="true" />
+      <option name="INTERPRETER_PATH" value="/bin/bash" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="EXECUTE_IN_TERMINAL" value="true" />
+      <option name="EXECUTE_SCRIPT_FILE" value="false" />
+      <envs />
       <method v="2" />
     </configuration>
     <configuration name="dev:electron" type="ShConfigurationType">
@@ -167,6 +183,7 @@
       <item itemvalue="npm.dev" />
       <item itemvalue="npm.dev:electron" />
       <item itemvalue="npm.dev:ui" />
+      <item itemvalue="Shell Script.dev:app" />
       <item itemvalue="Shell Script.dev:electron" />
     </list>
     <recent_temporary>
@@ -199,6 +216,7 @@
       <workItem from="1762929409161" duration="15000" />
       <workItem from="1762937456774" duration="5301000" />
       <workItem from="1762944647495" duration="7329000" />
+      <workItem from="1762995946789" duration="119000" />
     </task>
     <servers />
   </component>
