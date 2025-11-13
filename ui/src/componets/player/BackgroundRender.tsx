@@ -5,7 +5,6 @@ import {
   MeshGradientRenderer
 } from "@applemusic-like-lyrics/core";
 import { type HTMLProps, forwardRef, useEffect, useImperativeHandle, useRef } from "react";
-export { BaseRenderer, MeshGradientRenderer, PixiRenderer } from "@applemusic-like-lyrics/core";
 
 /**
  * 背景渲染组件的属性
@@ -181,7 +180,7 @@ export const BackgroundRender = forwardRef<
         wrapperEl: wrapperRef.current,
         bgRender: coreBGRenderRef.current!
       }),
-      [coreBGRenderRef.current]
+      []
     );
 
     return (
