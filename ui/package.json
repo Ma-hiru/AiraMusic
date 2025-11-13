@@ -6,8 +6,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@applemusic-like-lyrics/lyric": "workspace:^",
-    "@applemusic-like-lyrics/core": "workspace:^",
+    "@applemusic-like-lyrics/lyric": "0.3.0",
+    "@applemusic-like-lyrics/core": "0.2.0",
     "@mahiru/app": "workspace:^",
     "@mahiru/err": "workspace:^",
     "@mahiru/wasm": "workspace:^",

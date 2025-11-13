@@ -181,7 +181,7 @@ export const BackgroundRender = forwardRef<
         wrapperEl: wrapperRef.current,
         bgRender: coreBGRenderRef.current!
       }),
-      []
+      [coreBGRenderRef.current]
     );
 
     return (

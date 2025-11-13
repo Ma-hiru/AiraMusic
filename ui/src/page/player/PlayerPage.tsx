@@ -95,10 +95,6 @@ export const PlayerPage: FC = () => {
           height: "100%"
         }}
         album={"/小さな恋のうた - 石見舞菜香.jpg"}
-        staticMode={true}
-        flowSpeed={5}
-        renderScale={0.2}
-        albumIsVideo={false}
       />
       <LyricPlayer
         style={{

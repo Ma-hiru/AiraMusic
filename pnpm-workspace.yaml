@@ -3,8 +3,6 @@ packages:
   - ui
   - wasm
   - err
-  - patch/@applemusic-like-lyrics/core
-  - patch/@applemusic-like-lyrics/lyric
 
 nodeLinker: hoisted
 

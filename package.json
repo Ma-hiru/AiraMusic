@@ -18,7 +18,8 @@
   ],
   "scripts": {
     "dev:ui": "pnpm --filter @mahiru/ui run dev",
-    "dev:electron": "pnpm --filter @mahiru/app run build && set NODE_ENV=development && electron .",
+    "dev:app": "pnpm --filter @mahiru/app run dev",
+    "dev:electron": "set NODE_ENV=development && electron .",
     "build:ui": "pnpm --filter @mahiru/ui run build",
     "build:wasm": "pnpm --filter @mahiru/wasm run build",
     "clear:wasm": "pnpm --filter @mahiru/wasm run clear",
@@ -60,7 +61,6 @@
     "onlyBuiltDependencies": [
       "@applemusic-like-lyrics/core",
       "@applemusic-like-lyrics/lyric",
-      "@applemusic-like-lyrics/react",
       "@parcel/watcher",
       "electron",
       "esbuild"
