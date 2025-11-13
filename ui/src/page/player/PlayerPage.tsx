@@ -1,9 +1,11 @@
-import { FC, memo } from "react";
-import type { LyricLine } from "@applemusic-like-lyrics/core";
-import { type LyricLine as RawLyricLine, parseTTML } from "@applemusic-like-lyrics/lyric";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { BackgroundRender, LyricPlayer, type LyricPlayerRef } from "@applemusic-like-lyrics/react";
-import bg from "/public/bg.png";
+import { FC, useEffect } from "react";
+import { LyricLine } from "@applemusic-like-lyrics/core";
+import "@applemusic-like-lyrics/core/style.css";
+import { type LyricLine as RawLyricLine, parseLrc } from "@applemusic-like-lyrics/lyric";
+import { useRef, useState } from "react";
+import { css, cx } from "@emotion/css";
+import { LyricPlayer, LyricPlayerRef } from "@mahiru/ui/page/player/LyricPlayer";
+import { BackgroundRender } from "@mahiru/ui/page/player/BackgroundRender";
 
 const mapTTMLLyric = (line: RawLyricLine): LyricLine => ({
   ...line,
@@ -11,63 +13,16 @@ const mapTTMLLyric = (line: RawLyricLine): LyricLine => ({
 });
 
 export const PlayerPage: FC = () => {
-  const [audioUrl, setAudioUrl] = useState("");
-  const [albumUrl, setAlbumUrl] = useState("");
-  const [albumIsVideo, setAlbumIsVideo] = useState(false);
-  const [lyricLines, setLyricLines] = useState<LyricLine[]>([]);
-
   const audioRef = useRef<HTMLAudioElement>(null);
   const lyricPlayerRef = useRef<LyricPlayerRef>(null);
-
-  const onClickOpenAudio = useCallback(() => {
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = "audio/*";
-    input.onchange = () => {
-      const file = input.files?.[0];
-      if (file) {
-        setAudioUrl((old) => {
-          if (old.trim().length > 0) {
-            URL.revokeObjectURL(old);
-          }
-          return URL.createObjectURL(file);
-        });
-      }
-    };
-    input.click();
+  const [lyricLines, setLyricLines] = useState<LyricLine[]>([]);
+  useEffect(() => {
+    fetch("/小さな恋のうた - 石見舞菜香.lrc")
+      .then((res) => res.text())
+      .then((lrc) => {
+        setLyricLines(parseLrc(lrc).map(mapTTMLLyric));
+      });
   }, []);
-  const onClickOpenAlbumImage = useCallback(() => {
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = "image/*,video/*";
-    input.onchange = () => {
-      const file = input.files?.[0];
-      if (file) {
-        setAlbumIsVideo(file.type.startsWith("video/"));
-        setAlbumUrl((old) => {
-          if (old.trim().length > 0) {
-            URL.revokeObjectURL(old);
-          }
-          return URL.createObjectURL(file);
-        });
-      }
-    };
-    input.click();
-  }, []);
-  const onClickOpenTTMLLyric = useCallback(() => {
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = ".ttml,text/*";
-    input.onchange = async () => {
-      const file = input.files?.[0];
-      if (file) {
-        const text = await file.text();
-        setLyricLines(parseTTML(text).lines.map(mapTTMLLyric));
-      }
-    };
-    input.click();
-  }, []);
-
   useEffect(() => {
     if (audioRef.current) {
       let lastTime = -1;
@@ -87,6 +42,7 @@ export const PlayerPage: FC = () => {
       const onPlay = () => onFrame(0);
       audioRef.current.addEventListener("play", onPlay);
       return () => {
+        // oxlint-disable-next-line exhaustive-deps
         audioRef.current?.removeEventListener("play", onPlay);
       };
     }
@@ -99,7 +55,37 @@ export const PlayerPage: FC = () => {
     }
   }, []);
   return (
-    <>
+    <div className="w-screen h-screen relative">
+      <div
+        className={cx(
+          css`
+            -webkit-app-region: drag;
+          `,
+          "absolute top-0 left-0 right-0 h-10"
+        )}
+      />
+      <div className="absolute w-1/2 h-screen flex items-center justify-center z-10 flex-col gap-8">
+        <img
+          className="sm:w-[200px] lg:w-[300px] object-cover rounded-lg shadow-lg ease-in duration-300 transition-normal pointer-events-none"
+          src="/小さな恋のうた - 石見舞菜香.jpg"
+          alt="小さな恋のうた - 石見舞菜香"
+        />
+        <audio
+          controls
+          className="z-10"
+          ref={audioRef}
+          src={"/小さな恋のうた - 石見舞菜香.mp3"}
+          preload="auto"
+        />
+        <button
+          onClick={() => {
+            if (lyricPlayerRef.current) {
+              console.log(lyricPlayerRef.current.lyricPlayer?.setWordFadeWidth);
+            }
+          }}>
+          1
+        </button>
+      </div>
       <BackgroundRender
         style={{
           position: "absolute",
@@ -108,18 +94,20 @@ export const PlayerPage: FC = () => {
           width: "100%",
           height: "100%"
         }}
-        album={"/public/bg.png"}
+        album={"/小さな恋のうた - 石見舞菜香.jpg"}
         staticMode={true}
-        albumIsVideo={albumIsVideo}
+        flowSpeed={5}
+        renderScale={0.2}
+        albumIsVideo={false}
       />
       <LyricPlayer
         style={{
           position: "absolute",
           top: "0",
-          left: "0",
-          width: "100%",
+          left: "50%",
+          width: "50%",
           height: "100%",
-          maxWidth: "100%",
+          maxWidth: "50%",
           maxHeight: "100%",
           contain: "paint layout",
           overflow: "hidden",
@@ -129,36 +117,7 @@ export const PlayerPage: FC = () => {
         alignAnchor="center"
         lyricLines={lyricLines}
       />
-      <div
-        style={{
-          position: "absolute",
-          right: "0",
-          bottom: "0",
-          backgroundColor: "#0004",
-          margin: "1rem",
-          padding: "1rem",
-          borderRadius: "0.5rem",
-          color: "white",
-          display: "flex",
-          flexDirection: "column",
-          gap: "0.5rem"
-        }}>
-        <div>AMLL React 绑定调试页面</div>
-        <div>为了减少依赖，没有过多的调试设置。</div>
-        <div>更加详尽的调试可以直接使用 Core 模块调试。</div>
-        <button type="button" onClick={onClickOpenAudio}>
-          加载音乐
-        </button>
-        <button type="button" onClick={onClickOpenAlbumImage}>
-          加载专辑背景资源（图片/视频）
-        </button>
-        <button type="button" onClick={onClickOpenTTMLLyric}>
-          加载歌词
-        </button>
-        {/* biome-ignore lint/a11y/useMediaCaption: <explanation> */}
-        <audio controls ref={audioRef} src={audioUrl || (null as any)} preload="auto" />
-      </div>
-    </>
+    </div>
   );
 };
-export default memo(PlayerPage);
+export default PlayerPage;

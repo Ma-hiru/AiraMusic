@@ -5,20 +5,14 @@ import { isDev } from "../../utils/dev";
 import { exitAppWithError } from "./exit";
 import { EqError } from "../../utils/err";
 import { appPathJoin } from "../../utils/path";
-import { app, BrowserWindow } from "electron";
+import { BrowserWindow } from "electron";
+
+process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = "true";
 
 export function initMainWindow() {
-  startParam();
   const mainWindow = createInitWindow();
   loadPageSource(mainWindow);
   return mainWindow;
-}
-
-function startParam() {
-  app.commandLine.appendSwitch("use-gl", "egl"); // 或 'desktop'
-  app.commandLine.appendSwitch("ignore-gpu-blacklist");
-  app.commandLine.appendSwitch("enable-webgl");
-  app.commandLine.appendSwitch("enable-gpu-rasterization");
 }
 
 function createInitWindow() {
@@ -30,6 +24,7 @@ function createInitWindow() {
       width: effectiveWidth,
       height: effectiveHeight,
       autoHideMenuBar: true,
+      titleBarStyle: "hidden",
       frame: false,
       show: false,
       center: true

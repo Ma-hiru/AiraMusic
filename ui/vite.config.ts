@@ -1,7 +1,6 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import wasm from "vite-plugin-wasm";
-import Checker from "vite-plugin-checker";
 import tailwindcss from "@tailwindcss/vite";
 import { fileURLToPath } from "node:url";
 import { join } from "node:path";
@@ -10,7 +9,6 @@ export default defineConfig(() => {
   const __dirname = fileURLToPath(new URL(".", import.meta.url));
   return {
     plugins: [
-      Checker({ typescript: true }),
       tailwindcss(),
       wasm(),
       react({

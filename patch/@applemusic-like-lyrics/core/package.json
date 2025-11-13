@@ -1,0 +1,46 @@
+{
+  "name": "@applemusic-like-lyrics/core",
+  "version": "0.2.0",
+  "description": "AMLL 的纯 JS 核心组件框架，包括歌词显示组件和背景组件等其它可以复用的组件",
+  "repository": {
+    "url": "https://github.com/Steve-xmh/applemusic-like-lyrics.git",
+    "directory": "packages/core",
+    "type": "git"
+  },
+  "license": "GPL-3.0",
+  "nx": {
+    "tags": [
+      "library"
+    ]
+  },
+  "files": [
+    "dist/**/*.js",
+    "dist/**/*.ts",
+    "dist/**/*.cjs",
+    "dist/**/*.css"
+  ],
+  "type": "module",
+  "main": "./amll-core.cjs",
+  "module": "./amll-core.js",
+  "typings": "./index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "import": "./amll-core.js",
+      "require": "./amll-core.cjs"
+    },
+    "./style.css": {
+      "import": "./amll-core.css",
+      "require": "./amll-core.css"
+    }
+  },
+  "peerDependencies": {
+    "@pixi/app": "*",
+    "@pixi/core": "*",
+    "@pixi/display": "*",
+    "@pixi/filter-blur": "*",
+    "@pixi/filter-bulge-pinch": "*",
+    "@pixi/filter-color-matrix": "*",
+    "@pixi/sprite": "*"
+  }
+}

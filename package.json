@@ -39,10 +39,10 @@
     "@types/node": "^24.10.0",
     "@typescript/native-preview": "latest",
     "eslint": "^9.39.1",
-    "eslint-plugin-react-hooks": "^5.2.0",
-    "eslint-plugin-react-refresh": "^0.4.24",
     "eslint-plugin-oxlint": "latest",
     "eslint-plugin-prettier": "^5",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react-refresh": "^0.4.24",
     "globals": "^15.14.0",
     "jiti": "^2.6.1",
     "oxlint": "latest",
@@ -51,13 +51,16 @@
     "run-script-os": "^1.1.6",
     "stylelint": "^16",
     "stylelint-config-standard-scss": "^16",
+    "tsup": "^8.5.0",
     "typescript": "^5",
-    "typescript-eslint": "^8.46.3",
-    "tsup": "^8.5.0"
+    "typescript-eslint": "^8.46.3"
   },
   "packageManager": "pnpm@10.19.0",
   "pnpm": {
     "onlyBuiltDependencies": [
+      "@applemusic-like-lyrics/core",
+      "@applemusic-like-lyrics/lyric",
+      "@applemusic-like-lyrics/react",
       "@parcel/watcher",
       "electron",
       "esbuild"

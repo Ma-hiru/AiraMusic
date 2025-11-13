@@ -6,17 +6,27 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@applemusic-like-lyrics/core": "0.2.0",
-    "@applemusic-like-lyrics/lyric": "0.3.0",
-    "@applemusic-like-lyrics/react": "0.2.0",
+    "@applemusic-like-lyrics/lyric": "workspace:^",
+    "@applemusic-like-lyrics/core": "workspace:^",
     "@mahiru/app": "workspace:^",
     "@mahiru/err": "workspace:^",
     "@mahiru/wasm": "workspace:^",
+    "@emotion/css": "^11.13.5",
+    "@pixi/app": "^7.4.3",
+    "@pixi/core": "^7.4.3",
+    "@pixi/display": "^7.4.3",
+    "@pixi/filter-blur": "^7.4.3",
+    "@pixi/filter-bulge-pinch": "^5.1.1",
+    "@pixi/filter-color-matrix": "^7.4.3",
+    "@pixi/sprite": "^7.4.3",
     "@tailwindcss/vite": "^4.1.17",
+    "jss": "^10.10.0",
+    "jss-preset-default": "^10.10.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-router-dom": "^7.9.5",
-    "tailwindcss": "^4.1.17"
+    "tailwindcss": "^4.1.17",
+    "use-immer": "^0.11.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
@@ -26,7 +36,6 @@
     "babel-plugin-react-compiler": "^1.0.0",
     "sass-embedded": "^1.93.3",
     "vite": "npm:rolldown-vite@7.2.2",
-    "vite-plugin-checker": "^0.11.0",
     "vite-plugin-wasm": "^3.5.0"
   }
 }
