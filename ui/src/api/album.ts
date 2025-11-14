@@ -1,14 +1,19 @@
 import request from "./utils/request";
 import { mapTrackPlayableStatus } from "./utils/common";
-import { cacheAlbum, getAlbumFromCache } from "./utils/db";
+import { cacheAlbum, getAlbumFromCache } from "@mahiru/ui/db";
+import type {
+  NeteaseAlbumDetailResponse,
+  NeteaseAlbumDynamicResponse,
+  NeteaseStatusResponse
+} from "@mahiru/ui/types/netease-api";
 
 /**
  * 获取专辑内容
  * @param id 专辑 id
  */
-export function getAlbum(id: number) {
+export function getAlbum(id: number): Promise<NeteaseAlbumDetailResponse> {
   const fetchLatest = () => {
-    return request({
+    return request<{ id: number }, NeteaseAlbumDetailResponse>({
       url: "/album",
       method: "get",
       params: {
@@ -20,6 +25,7 @@ export function getAlbum(id: number) {
       return data;
     });
   };
+
   fetchLatest();
 
   return getAlbumFromCache(id).then((result) => {
@@ -31,6 +37,7 @@ export function getAlbum(id: number) {
  * 全部新碟
  * @desc 登录后调用此接口 ,可获取全部新碟
  */
+// TODO: 官方返回体包含 albums/albumCount，这里后续可补 `NeteaseAlbumNewResponse` 类型
 export function newAlbums(params: {
   /** 返回数量 , 默认为 30 */
   limit?: number;
@@ -55,7 +62,7 @@ export function newAlbums(params: {
  * @param id 专辑id
  */
 export function albumDynamicDetail(id: number) {
-  return request({
+  return request<{ id: number; timestamp: number }, NeteaseAlbumDynamicResponse>({
     url: "/album/detail/dynamic",
     method: "get",
     params: { id, timestamp: new Date().getTime() }
@@ -66,13 +73,13 @@ export function albumDynamicDetail(id: number) {
  * 收藏/取消收藏专辑
  * @desc 调用此接口,可 收藏/取消收藏 专辑
  */
-export function likeAAlbum(params:{
+export function likeAAlbum(params: {
   /** 返专辑 id */
   id: number;
   /** 1 为收藏,其他为取消收藏 */
   t: number;
 }) {
-  return request({
+  return request<typeof params, NeteaseStatusResponse>({
     url: "/album/sub",
     method: "post",
     params

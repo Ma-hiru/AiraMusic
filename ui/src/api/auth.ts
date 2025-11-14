@@ -1,4 +1,11 @@
 import request from "./utils/request";
+import type {
+  NeteaseLoginQrCheckResponse,
+  NeteaseLoginQrCreateResponse,
+  NeteaseLoginQrKeyResponse,
+  NeteaseLoginResponse,
+  NeteaseStatusResponse
+} from "@mahiru/ui/types/netease-api";
 
 /**
  * 手机登录
@@ -13,7 +20,7 @@ export function loginWithPhone(params: {
   /** md5加密后的密码,传入后 password 将失效 */
   md5_password?: string;
 }) {
-  return request({
+  return request<typeof params, NeteaseLoginResponse>({
     url: "/login/cellphone",
     method: "post",
     params
@@ -23,7 +30,7 @@ export function loginWithPhone(params: {
 /**
  * 邮箱登录
  */
-export function loginWithEmail(params:{
+export function loginWithEmail(params: {
   /** 163 网易邮箱 */
   email: string;
   /** 密码 */
@@ -31,7 +38,7 @@ export function loginWithEmail(params:{
   /** md5加密后的密码,传入后 password 将失效 */
   md5_password?: string;
 }) {
-  return request({
+  return request<typeof params, NeteaseLoginResponse>({
     url: "/login",
     method: "post",
     params
@@ -42,7 +49,7 @@ export function loginWithEmail(params:{
  * 二维码key生成接口
  */
 export function loginQrCodeKey() {
-  return request({
+  return request<{ timestamp: number }, NeteaseLoginQrKeyResponse>({
     url: "/login/qr/key",
     method: "get",
     params: {
@@ -56,13 +63,13 @@ export function loginQrCodeKey() {
  * @desc 调用此接口传入`loginQrCodeKey`生成的key可生成二维码图片的base64和二维码信息,
  * 可使用base64展示图片,或者使用二维码信息内容自行使用第三方二维码生产库渲染二维码
  */
-export function loginQrCodeCreate(params:{
+export function loginQrCodeCreate(params: {
   /** 二维码key */
   key: string;
   /** 传入后会额外返回二维码图片base64编码 */
   qrimg?: string;
 }) {
-  return request({
+  return request<typeof params & { timestamp: number }, NeteaseLoginQrCreateResponse>({
     url: "/login/qr/create",
     method: "get",
     params: {
@@ -78,8 +85,8 @@ export function loginQrCodeCreate(params:{
  * @param key 二维码key
  * @return 800为二维码过期,801为等待扫码,802为待确认,803为授权登录成功(803状态码下会返回cookies)
  */
-export function loginQrCodeCheck(key:string) {
-  return request({
+export function loginQrCodeCheck(key: string): Promise<NeteaseLoginQrCheckResponse> {
+  return request<{ key: string; timestamp: number }, NeteaseLoginQrCheckResponse>({
     url: "/login/qr/check",
     method: "get",
     params: {
@@ -95,7 +102,7 @@ export function loginQrCodeCheck(key:string) {
  * @example /login/refresh
  */
 export function refreshCookie() {
-  return request({
+  return request<never, NeteaseStatusResponse>({
     url: "/login/refresh",
     method: "post"
   });
@@ -106,7 +113,7 @@ export function refreshCookie() {
  * @desc 调用此接口, 可退出登录
  */
 export function logout() {
-  return request({
+  return request<never, NeteaseStatusResponse>({
     url: "/logout",
     method: "post"
   });

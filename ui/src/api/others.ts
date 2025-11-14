@@ -1,5 +1,10 @@
 import request from "./utils/request";
 import { mapTrackPlayableStatus } from "./utils/common";
+import type {
+  NeteasePersonalFMResponse,
+  NeteaseSearchSongResponse,
+  NeteaseStatusResponse
+} from "@mahiru/ui/types/netease-api";
 
 /**
  * 搜索类型枚举
@@ -34,7 +39,7 @@ export function search(params: {
   /** 搜索类型；默认为 1 即单曲 , 取值意义 : 1: 单曲, 10: 专辑, 100: 歌手, 1000: 歌单, 1002: 用户, 1004: MV, 1006: 歌词, 1009: 电台, 1014: 视频, 1018:综合 */
   type?: SearchType;
 }) {
-  return request({
+  return request<typeof params, NeteaseSearchSongResponse>({
     url: "/search",
     method: "get",
     params
@@ -46,7 +51,7 @@ export function search(params: {
 }
 
 export function personalFM() {
-  return request({
+  return request<{ timestamp: number }, NeteasePersonalFMResponse>({
     url: "/personal_fm",
     method: "get",
     params: {
@@ -56,7 +61,7 @@ export function personalFM() {
 }
 
 export function fmTrash(id: unknown) {
-  return request({
+  return request<{ id: unknown; timestamp: number }, NeteaseStatusResponse>({
     url: "/fm_trash",
     method: "post",
     params: {

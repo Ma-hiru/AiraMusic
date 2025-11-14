@@ -20,7 +20,7 @@
     "dev:ui": "pnpm --filter @mahiru/ui run dev",
     "dev:app": "pnpm --filter @mahiru/app run dev",
     "dev:electron": "pnpm run-script-os",
-    "dev:electron:win32": "pnpm exec pwsh ./scripts/electron.ps1",
+    "dev:electron:win32": "set NODE_ENV=development && electron .",
     "dev:electron:linux": "pnpm exec bash ./scripts/electron.sh",
     "build:ui": "pnpm --filter @mahiru/ui run build",
     "build:wasm": "pnpm --filter @mahiru/wasm run build",

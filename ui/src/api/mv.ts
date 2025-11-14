@@ -1,4 +1,10 @@
 import request from "./utils/request";
+import type {
+  NeteaseMVDetailResponse,
+  NeteaseMVUrlResponse,
+  NeteaseSimiMVResponse,
+  NeteaseStatusResponse
+} from "@mahiru/ui/types/netease-api";
 
 /**
  * 获取 mv 数据
@@ -9,7 +15,7 @@ import request from "./utils/request";
  * @example /mv/detail?mvid=5436712
  */
 export function mvDetail(mvid: number) {
-  return request({
+  return request<{ mvid: number; timestamp: number }, NeteaseMVDetailResponse>({
     url: "/mv/detail",
     method: "get",
     params: {
@@ -30,7 +36,7 @@ export function mvUrl(params: {
   /** 分辨率,默认1080,可从 /mv/detail 接口获取分辨率列表 */
   r?: number;
 }) {
-  return request({
+  return request<typeof params, NeteaseMVUrlResponse>({
     url: "/mv/url",
     method: "get",
     params
@@ -43,7 +49,7 @@ export function mvUrl(params: {
  * @param mvid mv id
  */
 export function simiMv(mvid: number) {
-  return request({
+  return request<{ mvid: number }, NeteaseSimiMVResponse>({
     url: "/simi/mv",
     method: "get",
     params: { mvid }
@@ -61,7 +67,7 @@ export function likeAMV(params: {
   /** 1 为收藏,其他为取消收藏 */
   t?: number;
 }) {
-  return request({
+  return request<typeof params & { timestamp: number }, NeteaseStatusResponse>({
     url: "/mv/sub",
     method: "post",
     params: {

@@ -1,12 +1,23 @@
 import request from "./utils/request";
 import { mapTrackPlayableStatus } from "./utils/common";
-import {
-  cacheTrackDetail,
-  getTrackDetailFromCache,
-  cacheLyric,
-  getLyricFromCache
-} from "@/utils/db";
-import { usePersistZustandStore } from "@mahiru/ui/store";
+import { cacheTrackDetail, getTrackDetailFromCache, cacheLyric, getLyricFromCache } from "../db";
+import { usePersistZustandStore } from "../store";
+import type {
+  NeteaseLyricResponse,
+  NeteaseSongDetailResponse,
+  NeteaseSongUrlResponse,
+  NeteaseStatusResponse,
+  NeteaseTopSongResponse,
+  NeteaseTrack,
+  NeteaseTrackPrivilege
+} from "@mahiru/ui/types/netease-api";
+
+type TrackDetailCacheResult = {
+  songs: NeteaseTrack[];
+  privileges: NeteaseTrackPrivilege[];
+};
+
+type TrackDetailResult = NeteaseSongDetailResponse | TrackDetailCacheResult;
 
 /**
  * 获取音乐 url
@@ -23,7 +34,7 @@ export function getMP3(id: string | number) {
     return quality === "flac" ? "350000" : quality;
   };
 
-  return request({
+  return request<any, NeteaseSongUrlResponse>({
     url: "/song/url",
     method: "get",
     params: {
@@ -40,23 +51,21 @@ export function getMP3(id: string | number) {
  * @param ids - 音乐 id, 例如 ids=405998841,33894312
  * @example /song/detail?ids=347230`,`/song/detail?ids=347230,347231
  */
-export function getTrackDetail(ids: string | number) {
+export function getTrackDetail(ids: string | number): Promise<TrackDetailResult> {
   const fetchLatest = () => {
-    return request({
+    return request<{ ids: string | number }, NeteaseSongDetailResponse>({
       url: "/song/detail",
       method: "get",
       params: {
         ids
       }
     }).then((data) => {
-      // TODO: ts-type
-      // @ts-expect-error
-      data.songs.map((song) => {
-        // @ts-expect-error
+      data.songs.forEach((song) => {
         const privileges = data.privileges.find((t) => t.id === song.id);
-        cacheTrackDetail(song, privileges);
+        if (privileges) {
+          cacheTrackDetail(song, privileges);
+        }
       });
-      // @ts-expect-error
       data.songs = mapTrackPlayableStatus(data.songs, data.privileges);
       return data;
     });
@@ -68,8 +77,6 @@ export function getTrackDetail(ids: string | number) {
     idsInArray = ids.split(",");
   }
 
-  // TODO: ts-type
-  // @ts-expect-error
   return getTrackDetailFromCache(idsInArray).then((result) => {
     if (result) {
       result.songs = mapTrackPlayableStatus(result.songs, result.privileges);
@@ -83,9 +90,9 @@ export function getTrackDetail(ids: string | number) {
  * @desc 调用此接口 , 传入音乐 id 可获得对应音乐的歌词 ( 不需要登录 )
  * @param id - 音乐 id
  */
-export function getLyric(id: number) {
+export function getLyric(id: number): Promise<NeteaseLyricResponse> {
   const fetchLatest = () => {
-    return request({
+    return request<{ id: number }, NeteaseLyricResponse>({
       url: "/lyric",
       method: "get",
       params: {
@@ -99,8 +106,6 @@ export function getLyric(id: number) {
 
   fetchLatest();
 
-  // TODO: ts-type
-  // @ts-expect-error
   return getLyricFromCache(id).then((result) => {
     return result ?? fetchLatest();
   });
@@ -112,7 +117,7 @@ export function getLyric(id: number) {
  * @param type - 地区类型 id, 对应以下: 全部:0 华语:7 欧美:96 日本:8 韩国:16
  */
 export function topSong(type: 0 | 7 | 96 | 8 | 16) {
-  return request({
+  return request<{ type: number }, NeteaseTopSongResponse>({
     url: "/top/song",
     method: "get",
     params: {
@@ -131,7 +136,7 @@ export function likeATrack(params: {
   /** 默认为 true 即喜欢 , 若传 false, 则取消喜欢 */
   like?: boolean;
 }) {
-  return request({
+  return request<typeof params & { timestamp: number }, NeteaseStatusResponse>({
     url: "/like",
     method: "get",
     params: {
@@ -153,7 +158,7 @@ export function scrobble(params: {
   /** 歌曲播放时间,单位为秒 */
   time?: number;
 }) {
-  return request({
+  return request<typeof params & { timestamp: number }, NeteaseStatusResponse>({
     url: "/scrobble",
     method: "get",
     params: {

@@ -23,7 +23,8 @@ export default defineConfig(() => {
     },
     resolve: {
       alias: {
-        "@mahiru/ui": join(__dirname, "./src")
+        "@mahiru/ui": join(__dirname, "./src"),
+        "@": join(__dirname, "./src")
       }
     }
   };

@@ -1,8 +1,7 @@
 import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { PlayerCtx, PlayerCtxType } from "./PlayerCtx";
 import { LyricLine } from "@applemusic-like-lyrics/core";
-import { parseLrc } from "@applemusic-like-lyrics/lyric";
-import { handleTranslatedLRC, mapRawLyricLine } from "@mahiru/ui/utils/lyric";
+import { handleTranslatedLRC } from "@mahiru/ui/utils/lyric";
 
 export default function PlayerProvider({ children }: { children: ReactNode }) {
   const audioRef = useRef<HTMLAudioElement>(null);

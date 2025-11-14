@@ -2,6 +2,11 @@ import request from "./utils/request";
 import { mapTrackPlayableStatus } from "./utils/common";
 import { isAccountLoggedIn } from "./utils/auth";
 import { getTrackDetail } from "./track";
+import type {
+  NeteaseArtistAlbumResponse,
+  NeteaseArtistDetailResponse,
+  NeteaseStatusResponse
+} from "@mahiru/ui/types/netease-api";
 
 /**
  * 获取歌手单曲
@@ -9,7 +14,7 @@ import { getTrackDetail } from "./track";
  * @param id - 歌手 id, 可由搜索接口获得
  */
 export function getArtist(id: number) {
-  return request({
+  return request<{ id: number; timestamp: number }, NeteaseArtistDetailResponse>({
     url: "/artists",
     method: "get",
     params: {
@@ -42,7 +47,7 @@ export function getArtistAlbum(params: {
 }) {
   params.limit ||= 50;
   params.offset ||= 0;
-  return request({
+  return request<typeof params, NeteaseArtistAlbumResponse>({
     url: "/artist/album",
     method: "get",
     params
@@ -63,6 +68,7 @@ export const enum ArtistRegion {
  * 歌手榜
  * @desc 调用此接口，可获取排行榜中的歌手榜
  */
+// TODO: 返回体包含 artists、type 等字段，待补 `NeteaseArtistToplistResponse` 类型
 export function toplistOfArtists(type?: ArtistRegion) {
   return request({
     url: "/toplist/artist",
@@ -79,6 +85,7 @@ export function toplistOfArtists(type?: ArtistRegion) {
  * @desc 具体 mv 播放地址可调 用/mv传入此接口获得的 mvid 来拿到 ,
  * @example 如 : /artist/mv?id=6452,/mv?mvid=5461064
  */
+// TODO: `/artist/mv` 返回字段较多，后续补类型
 export function artistMv(params: {
   /** 歌手 id, 可由搜索接口获得 */
   id: number;
@@ -102,7 +109,7 @@ export function followAArtist(params: {
   /** 操作,1 为收藏,其他为取消收藏 */
   t: number;
 }) {
-  return request({
+  return request<typeof params, NeteaseStatusResponse>({
     url: "/artist/sub",
     method: "post",
     params
@@ -114,6 +121,7 @@ export function followAArtist(params: {
  * @desc 调用此接口 , 传入歌手 id, 可获得相似歌手
  * @param id 歌手 id
  */
+// TODO: `/simi/artist` 返回相似歌手列表，待补类型
 export function similarArtists(id: number) {
   return request({
     url: "/simi/artist",

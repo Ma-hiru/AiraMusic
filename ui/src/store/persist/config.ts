@@ -1,6 +1,7 @@
 import { playlistCategories } from "@mahiru/ui/api/utils/staticData";
 import pkg from "../../../package.json";
 import shortcuts from "@mahiru/ui/api/utils/shortcuts";
+import { ZustandConfig } from "@mahiru/ui/types/zustand";
 
 const enabledPlaylistCategories = playlistCategories.filter((c) => c.enable).map((c) => c.name);
 
@@ -12,8 +13,6 @@ export const PersistStoreConfig: ZustandConfig<
   updatePersistStore(PartialState: Partial<PersistStoreInitialState>) {
     set((state) => {
       Object.entries(PartialState ?? {}).forEach(([key, value]) => {
-        // oxlint-disable-next-line ban-ts-comment
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-expect-error
         state[key] = value;
       });
@@ -22,8 +21,6 @@ export const PersistStoreConfig: ZustandConfig<
   updatePersistStoreData(PartialData: Partial<PersistStoreInitialState["data"]>) {
     set((state) => {
       Object.entries(PartialData ?? {}).forEach(([key, value]) => {
-        // oxlint-disable-next-line ban-ts-comment
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-expect-error
         state.data[key] = value;
       });
@@ -32,8 +29,6 @@ export const PersistStoreConfig: ZustandConfig<
   updatePersistStoreSettings(PartialSettings: Partial<PersistStoreInitialState["settings"]>) {
     set((state) => {
       Object.entries(PartialSettings ?? {}).forEach(([key, value]) => {
-        // oxlint-disable-next-line ban-ts-comment
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-expect-error
         state.settings[key] = value;
       });
@@ -98,7 +93,7 @@ export interface PersistStoreInitialState {
     showPlaylistsByAppleMusic: boolean;
     enableUnblockNeteaseMusic: boolean;
     automaticallyCacheSongs: boolean;
-    cacheLimit: number;
+    cacheLimit: number | false;
     enableReversedMode: boolean;
     nyancatStyle: boolean;
     showLyricsTranslation: boolean;

@@ -1,3 +1,5 @@
+import { ZustandConfig } from "@mahiru/ui/types/zustand";
+
 export const DynamicStoreConfig: ZustandConfig<
   DynamicStoreInitialState & DynamicStoreActions,
   DynamicStoreInitialState

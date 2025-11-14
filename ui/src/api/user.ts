@@ -1,4 +1,17 @@
 import request from "./utils/request";
+import type {
+  NeteaseCloudDiskResponse,
+  NeteaseCloudDiskTrackDetailResponse,
+  NeteaseLikedAlbumsResponse,
+  NeteaseLikedArtistsResponse,
+  NeteaseLikedMVsResponse,
+  NeteaseLikedSongIdsResponse,
+  NeteaseStatusResponse,
+  NeteaseUserAccountResponse,
+  NeteaseUserDetailResponse,
+  NeteaseUserPlaylistResponse,
+  NeteaseUserRecordResponse
+} from "@mahiru/ui/types/netease-api";
 
 /**
  * 获取用户详情
@@ -6,7 +19,7 @@ import request from "./utils/request";
  * @param uid 用户 id
  */
 export function userDetail(uid: number) {
-  return request({
+  return request<{ uid: number; timestamp: number }, NeteaseUserDetailResponse>({
     url: "/user/detail",
     method: "get",
     params: {
@@ -21,7 +34,7 @@ export function userDetail(uid: number) {
  * @desc 登录后调用此接口 ,可获取用户账号信息
  */
 export function userAccount() {
-  return request({
+  return request<{ timestamp: number }, NeteaseUserAccountResponse>({
     url: "/user/account",
     method: "get",
     params: {
@@ -42,7 +55,7 @@ export function userPlaylist(params: {
   /** 偏移数量，用于分页 , 如 :( 页数 -1)*30, 其中 30 为 limit 的值 , 默认为 0 */
   offset?: number;
 }) {
-  return request({
+  return request<typeof params, NeteaseUserPlaylistResponse>({
     url: "/user/playlist",
     method: "get",
     params
@@ -59,7 +72,7 @@ export function userPlayHistory(params: {
   /** type=1 时只返回 weekData, type=0 时返回 allData */
   type: 1 | 0;
 }) {
-  return request({
+  return request<typeof params, NeteaseUserRecordResponse>({
     url: "/user/record",
     method: "get",
     params
@@ -71,12 +84,8 @@ export function userPlayHistory(params: {
  * @desc 调用此接口 , 传入用户 id, 可获取已喜欢音乐id列表(id数组)
  * @param uid 用户 id
  */
-export function userLikedSongsIDs(uid: {
-  //TODO 何意味？
-  /** 用户 id */
-  uid: number;
-}) {
-  return request({
+export function userLikedSongsIDs(uid: number) {
+  return request<{ uid: number; timestamp: number }, NeteaseLikedSongIdsResponse>({
     url: "/likelist",
     method: "get",
     params: {
@@ -92,7 +101,7 @@ export function userLikedSongsIDs(uid: {
  * @param type 签到类型 , 默认 0, 其中 0 为安卓端签到 ,1 为 web/PC 签到
  */
 export function dailySignin(type: 0 | 1 = 0) {
-  return request({
+  return request<{ type: number; timestamp: number }, NeteaseStatusResponse>({
     url: "/daily_signin",
     method: "post",
     params: {
@@ -109,15 +118,15 @@ export function dailySignin(type: 0 | 1 = 0) {
 export function likedAlbums(params: {
   /** 返回数量 , 默认为 25 */
   limit: number;
-  //TODO: offset??
   /** 偏移数量，用于分页 , 如 :( 页数 -1)*25, 其中 25 为 limit 的值 , 默认为 0 */
-  // offset?: number;
+  offset?: number;
 }) {
-  return request({
+  return request<typeof params & { timestamp: number }, NeteaseLikedAlbumsResponse>({
     url: "/album/sublist",
     method: "get",
     params: {
       limit: params.limit,
+      offset: params.offset,
       timestamp: new Date().getTime()
     }
   });
@@ -127,12 +136,13 @@ export function likedAlbums(params: {
  * 获取收藏的歌手（需要登录）
  * @desc 调用此接口可获取到用户收藏的歌手
  */
-export function likedArtists(params: { limit: number }) {
-  return request({
+export function likedArtists(params: { limit: number; offset?: number }) {
+  return request<typeof params & { timestamp: number }, NeteaseLikedArtistsResponse>({
     url: "/artist/sublist",
     method: "get",
     params: {
       limit: params.limit,
+      offset: params.offset,
       timestamp: new Date().getTime()
     }
   });
@@ -142,12 +152,13 @@ export function likedArtists(params: { limit: number }) {
  * 获取收藏的MV（需要登录）
  * @desc 调用此接口可获取到用户收藏的MV
  */
-export function likedMVs(params: { limit: number }) {
-  return request({
+export function likedMVs(params: { limit: number; offset?: number }) {
+  return request<typeof params & { timestamp: number }, NeteaseLikedMVsResponse>({
     url: "/mv/sublist",
     method: "get",
     params: {
       limit: params.limit,
+      offset: params.offset,
       timestamp: new Date().getTime()
     }
   });
@@ -159,7 +170,7 @@ export function likedMVs(params: { limit: number }) {
 export function uploadSong(file: Blob) {
   const formData = new FormData();
   formData.append("songFile", file);
-  return request({
+  return request<{ timestamp: number }, NeteaseStatusResponse>({
     url: "/cloud",
     method: "post",
     params: {
@@ -184,20 +195,20 @@ export function uploadSong(file: Blob) {
  * @param {number} params.limit
  * @param {number=} params.offset
  */
-export function cloudDisk(params: {
-  /** 返回数量 , 默认为 200 */
-  limit: number;
-  /** 偏移数量，用于分页 , 如 :( 页数 -1)*200, 其中 200 为 limit 的值 , 默认为 0 */
-  offset?: number;
-}) {
-  params ||= {
-    limit: 200
-  };
-  return request({
+export function cloudDisk(
+  params: {
+    /** 返回数量 , 默认为 200 */
+    limit?: number;
+    /** 偏移数量，用于分页 , 如 :( 页数 -1)*200, 其中 200 为 limit 的值 , 默认为 0 */
+    offset?: number;
+  } = { limit: 200 }
+) {
+  return request<typeof params & { timestamp: number }, NeteaseCloudDiskResponse>({
     url: "/user/cloud",
     method: "get",
     params: {
-      ...params,
+      limit: params.limit ?? 200,
+      offset: params.offset,
       timestamp: new Date().getTime()
     }
   });
@@ -207,7 +218,7 @@ export function cloudDisk(params: {
  * 获取云盘歌曲详情（需要登录）
  */
 export function cloudDiskTrackDetail(id: number) {
-  return request({
+  return request<{ id: number; timestamp: number }, NeteaseCloudDiskTrackDetailResponse>({
     url: "/user/cloud/detail",
     method: "get",
     params: {
@@ -223,7 +234,7 @@ export function cloudDiskTrackDetail(id: number) {
  */
 //TODO : id 类型说明
 export function cloudDiskTrackDelete(id: number | string | number[]) {
-  return request({
+  return request<{ id: unknown; timestamp: number }, NeteaseStatusResponse>({
     url: "/user/cloud/del",
     method: "get",
     params: {

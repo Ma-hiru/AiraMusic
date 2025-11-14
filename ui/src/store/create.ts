@@ -4,6 +4,7 @@ import { create } from "zustand";
 import { useShallow } from "zustand/react/shallow";
 import { isRelease } from "@mahiru/ui/utils/dev";
 import { EqError } from "@mahiru/ui/utils/err";
+import { ZustandConfig } from "@mahiru/ui/types/zustand";
 
 export function createZustandStore<T extends ZustandConfig<any>>(
   config: T,
@@ -21,7 +22,7 @@ export function createZustandStore<T extends ZustandConfig<any>>(
 
   const middleware = immer(
     isPersist
-      ? persist(config, {
+      ? persist(config as any, {
           name,
           storage: createJSONStorage(() => localStorage),
           version: currentVersion,
@@ -36,10 +37,10 @@ export function createZustandStore<T extends ZustandConfig<any>>(
             return persistedState;
           }
         })
-      : config
+      : (config as any)
   );
 
-  return create<ReturnType<T>>()(middleware);
+  return create<ReturnType<T>>()(middleware as any);
 }
 
 export function createZustandShallowStore<StoreType>(

@@ -1,12 +1,15 @@
-interface ZustandSet<T> {
-  (updater: (draft: T) => (void | T)): void;
-}
+import type { Draft } from "immer";
+import type { StoreApi } from "zustand";
 
-interface ZustandGet<T> {
-  (): T;
-}
+export type ZustandSet<T> = (
+  partial: T | Partial<T> | ((draft: Draft<T>) => void | T | Partial<T>),
+  replace?: boolean
+) => void;
 
-interface ZustandConfig<T, U = T> {
-  //with immer,we can use void value in set
-  (set: ZustandSet<U>, get: ZustandGet<T>, api: any): T;
+export type ZustandGet<T> = () => T;
+
+export type ZustandApi<T> = StoreApi<T>;
+
+export interface ZustandConfig<T, U = T> {
+  (set: ZustandSet<U>, get: ZustandGet<T>, api: ZustandApi<T>): T;
 }
