@@ -35,6 +35,7 @@ function createInitWindow() {
 
 function loadPageSource(mainWindow: BrowserWindow) {
   if (isDev()) {
+    mainWindow.webContents.openDevTools();
     mainWindow
       .loadURL("http://localhost:5173")
       .then(() => {
