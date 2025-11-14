@@ -1,0 +1,9 @@
+{
+  "name": "@mahiru/api",
+  "type": "module",
+  "version": "1.0.0",
+  "main": "src/index.ts",
+  "peerDependencies": {
+    "axios": "^1.13.2"
+  }
+}
