@@ -1,6 +1,6 @@
 import Cookies from "js-cookie";
 import { logout } from "../auth";
-import store from "@/store";
+import { usePersistZustandStore } from "@mahiru/ui/store";
 
 export function setCookies(raw: string) {
   const cookies = raw.split(";;");
@@ -29,12 +29,14 @@ export function isLoggedIn() {
 
 // 账号登录
 export function isAccountLoggedIn() {
-  return getCookie("MUSIC_U") !== undefined && store.state.data.loginMode === "account";
+  const loginMode = usePersistZustandStore.getState().data.loginMode;
+  return getCookie("MUSIC_U") !== undefined && loginMode === "account";
 }
 
 /** 用户名搜索（用户数据为只读） */
 export function isUsernameLoggedIn() {
-  return store.state.data.loginMode === "username";
+  const loginMode = usePersistZustandStore.getState().data.loginMode;
+  return loginMode === "username";
 }
 
 /** 账户登录或者用户名搜索都判断为登录，宽松检查 */
@@ -42,14 +44,15 @@ export function isLooseLoggedIn() {
   return isAccountLoggedIn() || isUsernameLoggedIn();
 }
 
+const { updatePersistStoreData } = usePersistZustandStore.getState();
 export function doLogout() {
   logout();
   removeCookie("MUSIC_U");
   removeCookie("__csrf");
   // 更新状态仓库中的用户信息
-  store.commit("updateData", { key: "user", value: {} });
+  updatePersistStoreData({ user: {} });
   // 更新状态仓库中的登录状态
-  store.commit("updateData", { key: "loginMode", value: null });
+  updatePersistStoreData({ loginMode: null });
   // 更新状态仓库中的喜欢列表
-  store.commit("updateData", { key: "likedSongPlaylistID", value: undefined });
+  updatePersistStoreData({ likedSongPlaylistID: undefined });
 }

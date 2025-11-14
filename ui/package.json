@@ -1,5 +1,6 @@
 {
   "name": "@mahiru/ui",
+  "version": "1.0.0",
   "scripts": {
     "dev": "vite",
     "build": "tsgo --noEmit && vite build",

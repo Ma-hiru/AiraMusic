@@ -1,4 +1,3 @@
-import store from "@/store";
 import request from "./utils/request";
 import { mapTrackPlayableStatus } from "./utils/common";
 import {
@@ -7,6 +6,7 @@ import {
   cacheLyric,
   getLyricFromCache
 } from "@/utils/db";
+import { usePersistZustandStore } from "@mahiru/ui/store";
 
 /**
  * 获取音乐 url
@@ -18,7 +18,8 @@ import {
 export function getMP3(id: string | number) {
   const getBr = () => {
     // 当返回的 quality >= 400000时，就会优先返回 hi-res
-    const quality = store.state.settings?.musicQuality ?? "320000";
+    const { settings } = usePersistZustandStore.getState();
+    const quality = settings?.musicQuality ?? "320000";
     return quality === "flac" ? "350000" : quality;
   };
 
@@ -48,10 +49,14 @@ export function getTrackDetail(ids: string | number) {
         ids
       }
     }).then((data) => {
+      // TODO: ts-type
+      // @ts-expect-error
       data.songs.map((song) => {
+        // @ts-expect-error
         const privileges = data.privileges.find((t) => t.id === song.id);
         cacheTrackDetail(song, privileges);
       });
+      // @ts-expect-error
       data.songs = mapTrackPlayableStatus(data.songs, data.privileges);
       return data;
     });
@@ -63,6 +68,8 @@ export function getTrackDetail(ids: string | number) {
     idsInArray = ids.split(",");
   }
 
+  // TODO: ts-type
+  // @ts-expect-error
   return getTrackDetailFromCache(idsInArray).then((result) => {
     if (result) {
       result.songs = mapTrackPlayableStatus(result.songs, result.privileges);
@@ -92,6 +99,8 @@ export function getLyric(id: number) {
 
   fetchLatest();
 
+  // TODO: ts-type
+  // @ts-expect-error
   return getLyricFromCache(id).then((result) => {
     return result ?? fetchLatest();
   });

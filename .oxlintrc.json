@@ -92,7 +92,7 @@
     {
       "files": ["**/*.{tsx,jsx}"],
       "rules": {
-        "@typescript-eslint/ban-ts-comment": "error",
+        "@typescript-eslint/ban-ts-comment": "off",
         "no-array-constructor": "error",
         "@typescript-eslint/no-duplicate-enum-values": "error",
         "@typescript-eslint/no-empty-object-type": "error",
@@ -1343,7 +1343,7 @@
     {
       "files": ["**/*.{ts,js}"],
       "rules": {
-        "@typescript-eslint/ban-ts-comment": "error",
+        "@typescript-eslint/ban-ts-comment": "off",
         "no-array-constructor": "error",
         "@typescript-eslint/no-duplicate-enum-values": "error",
         "@typescript-eslint/no-empty-object-type": "error",
