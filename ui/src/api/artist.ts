@@ -1,7 +1,7 @@
-import request from "@/utils/request";
-import { mapTrackPlayableStatus } from "@/utils/common";
-import { isAccountLoggedIn } from "@/utils/auth";
-import { getTrackDetail } from "@/api/track";
+import request from "./utils/request";
+import { mapTrackPlayableStatus } from "./utils/common";
+import { isAccountLoggedIn } from "./utils/auth";
+import { getTrackDetail } from "./track";
 
 /**
  * 获取歌手单曲

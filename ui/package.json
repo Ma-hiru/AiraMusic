@@ -6,12 +6,12 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@applemusic-like-lyrics/lyric": "0.3.0",
     "@applemusic-like-lyrics/core": "0.2.0",
+    "@applemusic-like-lyrics/lyric": "0.3.0",
+    "@emotion/css": "^11.13.5",
     "@mahiru/app": "workspace:^",
     "@mahiru/err": "workspace:^",
     "@mahiru/wasm": "workspace:^",
-    "@emotion/css": "^11.13.5",
     "@pixi/app": "^7.4.3",
     "@pixi/core": "^7.4.3",
     "@pixi/display": "^7.4.3",
@@ -20,6 +20,8 @@
     "@pixi/filter-color-matrix": "^7.4.3",
     "@pixi/sprite": "^7.4.3",
     "@tailwindcss/vite": "^4.1.17",
+    "dexie": "^4.2.1",
+    "js-cookie": "^3.0.5",
     "jss": "^10.10.0",
     "jss-preset-default": "^10.10.0",
     "react": "^19.2.0",
@@ -30,6 +32,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
+    "@types/js-cookie": "^3.0.6",
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.2",
     "@vitejs/plugin-react": "^5.1.0",

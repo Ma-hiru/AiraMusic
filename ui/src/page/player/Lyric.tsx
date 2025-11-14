@@ -1,7 +1,7 @@
 import { FC, memo, useEffect, useRef } from "react";
 import { LyricPlayer, LyricPlayerRef } from "@mahiru/ui/componets/player/LyricPlayer";
 import { usePlayer } from "@mahiru/ui/ctx/PlayerCtx";
-import { css, cx } from "@emotion/css";
+import { cx } from "@emotion/css";
 
 const Lyric: FC<object> = () => {
   const lyricPlayerRef = useRef<LyricPlayerRef>(null);

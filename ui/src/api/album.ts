@@ -1,6 +1,6 @@
-import request from "@/utils/request";
-import { mapTrackPlayableStatus } from "@/utils/common";
-import { cacheAlbum, getAlbumFromCache } from "@/utils/db";
+import request from "./utils/request";
+import { mapTrackPlayableStatus } from "./utils/common";
+import { cacheAlbum, getAlbumFromCache } from "./utils/db";
 
 /**
  * 获取专辑内容

@@ -1,5 +1,5 @@
-import request from "@/utils/request";
-import { mapTrackPlayableStatus } from "@/utils/common";
+import request from "./utils/request";
+import { mapTrackPlayableStatus } from "./utils/common";
 
 /**
  * 搜索类型枚举
