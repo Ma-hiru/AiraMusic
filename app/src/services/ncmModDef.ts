@@ -1,5 +1,5 @@
 import { createRequire } from "node:module";
-import type { ModuleDefinition } from "@neteasecloudmusicapienhanced/api/server";
+import type { ModuleDefinition } from "@neteasecloudmusicapienhanced/api/server.js";
 
 const require = createRequire(import.meta.url);
 

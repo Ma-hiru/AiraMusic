@@ -1,6 +1,5 @@
 import { app } from "electron";
-import { initMainWindow } from "./window";
-import { exitAppGracefully } from "./window/app";
+import { initMainWindow, exitAppGracefully } from "./window";
 import { registerIpcMainHandlers } from "./ipc/main";
 import { typedIpcMainSend } from "./ipc/typed";
 

@@ -1,4 +1,4 @@
-declare module "@neteasecloudmusicapienhanced/api/server" {
+declare module "@neteasecloudmusicapienhanced/api/server.js" {
   import type { Express } from "express";
 
   export interface ModuleDefinition {

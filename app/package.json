@@ -1,6 +1,6 @@
 {
   "name": "@mahiru/app",
-  "main": "src/pure.ts",
+  "main": "src/main.ts",
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch"
