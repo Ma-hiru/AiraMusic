@@ -1,12 +1,12 @@
 import { doLogout } from "./auth";
 import axios, { AxiosResponse } from "axios";
 import { usePersistZustandStore } from "@mahiru/ui/store";
-import { EqError } from "@mahiru/ui/utils/err";
+import { Log } from "@mahiru/ui/utils/log";
 
 const NETEASE_API_BASE_URL = "http://127.0.0.1:10754";
 
 if (!NETEASE_API_BASE_URL) {
-  EqError.printErrorDEV("[api/request]", "Missing API base URL.");
+  Log.error("ui/request.ts", "NETEASE_API_BASE_URL is not defined.");
 }
 
 const service = axios.create({
@@ -19,7 +19,7 @@ service.interceptors.request.use((config) => {
   config.params ||= {};
 
   if (!config.baseURL?.length) {
-    EqError.printErrorDEV("[api/request]", "Missing baseURL.");
+    Log.error("ui/request.ts", "Missing baseURL in axios request.");
   }
 
   const { settings } = usePersistZustandStore.getState();
@@ -43,7 +43,7 @@ service.interceptors.response.use(
     const data = axiosResponse?.data;
 
     if (!axiosResponse && typeof error?.message === "string" && error.message.includes("baseURL")) {
-      console.error("You must set up the baseURL in the service's config");
+      Log.error("ui/request.ts", "Missing baseURL in axios request.");
     }
 
     if (
@@ -53,7 +53,7 @@ service.interceptors.response.use(
       (data as { code?: number; msg?: string }).code === 301 &&
       (data as { code?: number; msg?: string }).msg === "需要登录"
     ) {
-      EqError.printDEV("[api/request]", "Token has expired. Logout now!");
+      Log.warn("ui/request.ts", "Token has expired.");
       doLogout();
       //TODO: router redirect to login page
     }

@@ -1,4 +1,4 @@
-import { createEqError } from "@mahiru/err";
+import { createEqError } from "@mahiru/log";
 import { isDev } from "./dev";
 
 export const EqError = createEqError(isDev());

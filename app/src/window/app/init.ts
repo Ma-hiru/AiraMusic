@@ -27,7 +27,10 @@ function createInitWindow() {
       titleBarStyle: "hidden",
       frame: false,
       show: false,
-      center: true
+      center: true,
+      webPreferences: {
+        preload: appPathJoin("dist", "preload", "index.js")
+      }
     },
     CONSTANTS.APP.MAIN_WINDOW_TITLE
   );
@@ -38,9 +41,7 @@ function loadPageSource(mainWindow: BrowserWindow) {
     mainWindow.webContents.openDevTools();
     mainWindow
       .loadURL("http://localhost:5173")
-      .then(() => {
-        mainWindow.show();
-      })
+      .then(() => mainWindow.show())
       .catch((err) =>
         exitAppWithError(
           new EqError({
@@ -52,10 +53,8 @@ function loadPageSource(mainWindow: BrowserWindow) {
       );
   } else {
     mainWindow
-      .loadFile(appPathJoin("dist-ui", "index.html"))
-      .then(() => {
-        mainWindow.show();
-      })
+      .loadFile(appPathJoin("dist", "ui", "index.html"))
+      .then(() => mainWindow.show())
       .catch((err) =>
         exitAppWithError(
           new EqError({

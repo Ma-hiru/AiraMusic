@@ -6,6 +6,7 @@
     "allowJs": false,
     "skipLibCheck": true,
     "esModuleInterop": false,
+    "ignoreDeprecations": "6.0",
     "allowSyntheticDefaultImports": true,
     "strict": true,
     "forceConsistentCasingInFileNames": false,
@@ -26,6 +27,6 @@
       "*": ["./*"]
     }
   },
-  "include": ["app", "ui", "wasm", "eslint.config.ts"],
+  "include": ["app", "ui", "wasm", "log", "eslint.config.ts"],
   "exclude": ["node_modules", "dist", "patch"]
 }

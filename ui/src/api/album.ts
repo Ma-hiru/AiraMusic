@@ -46,9 +46,6 @@ export function newAlbums(params: {
   /** ALL:全部,ZH:华语,EA:欧美,KR:韩国,JP:日本 */
   area?: "ALL" | "ZH" | "EA" | "KR" | "JP";
 }) {
-  params.limit ||= 30;
-  params.offset ||= 0;
-  params.area ||= "ALL";
   return request({
     url: "/album/new",
     method: "get",

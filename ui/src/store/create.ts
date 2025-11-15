@@ -5,6 +5,7 @@ import { useShallow } from "zustand/react/shallow";
 import { isRelease } from "@mahiru/ui/utils/dev";
 import { EqError } from "@mahiru/ui/utils/err";
 import { ZustandConfig } from "@mahiru/ui/types/zustand";
+import { Log } from "@mahiru/ui/utils/log";
 
 export function createZustandStore<T extends ZustandConfig<any>>(
   config: T,
@@ -32,7 +33,13 @@ export function createZustandStore<T extends ZustandConfig<any>>(
                 return migrate(persistedState, version, currentVersion);
               }
             } catch (e) {
-              EqError.printErrorDEV("[zustand]", "persist migrate error:", e);
+              Log.error(
+                new EqError({
+                  label: "ui/create.ts:createZustandStore",
+                  message: "persist migrate error",
+                  raw: e
+                })
+              );
             }
             return persistedState;
           }

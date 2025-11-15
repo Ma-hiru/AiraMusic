@@ -2,7 +2,7 @@ packages:
   - app
   - ui
   - wasm
-  - err
+  - log
 
 nodeLinker: hoisted
 

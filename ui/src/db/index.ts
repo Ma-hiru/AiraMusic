@@ -8,6 +8,7 @@ import {
   NeteaseTrack,
   NeteaseTrackPrivilege
 } from "@mahiru/ui/types/netease-api";
+import { Log } from "@mahiru/ui/utils/log";
 
 export interface TrackSourceRow {
   id: number;
@@ -68,14 +69,20 @@ async function deleteExcessCache() {
     if (delCache) {
       await db.trackSources.delete(delCache.id);
       tracksCacheBytes -= delCache.source.byteLength;
-      EqError.printDEV(
+      Log.trace(
         "ui/db:deleteExcessCache",
         `Deleted cached track 👉 ${delCache.name} by ${delCache.artist}`
       );
       await deleteExcessCache();
     }
   } catch (err) {
-    EqError.printErrorDEV("ui/db:deleteExcessCache", "Error deleting excess cache:", err);
+    Log.error(
+      new EqError({
+        message: "Error deleting excess cache:",
+        raw: err,
+        label: "ui/db:deleteExcessCache"
+      })
+    );
   }
 }
 
@@ -91,9 +98,9 @@ export function cacheTrackSource(
     ? trackInfo.al.picUrl
     : "https" + trackInfo.al.picUrl.slice(4);
   // 预加载专辑封面不同尺寸，提升后续使用时的加载速度
-  axios.get(`${cover}?param=512y512`);
-  axios.get(`${cover}?param=224y224`);
-  axios.get(`${cover}?param=1024y1024`);
+  axios.get(`${cover}?param=512y512`).catch();
+  axios.get(`${cover}?param=224y224`).catch();
+  axios.get(`${cover}?param=1024y1024`).catch();
   return axios
     .get(url, {
       responseType: "arraybuffer"
@@ -110,7 +117,7 @@ export function cacheTrackSource(
       });
       console.debug(`cached track 👉 ${name} by ${artist}`);
       tracksCacheBytes += response.data.byteLength;
-      deleteExcessCache();
+      deleteExcessCache().then();
       return { trackID: trackInfo.id, source: response.data as ArrayBuffer, bitRate };
     });
 }
@@ -118,10 +125,7 @@ export function cacheTrackSource(
 export function getTrackSourceFromCache(id: number | string) {
   return db.trackSources.get(Number(id)).then((track) => {
     if (!track) return null;
-    EqError.printDEV(
-      "ui/db:getTrackSource",
-      `Loaded cached track 👉 ${track.name} by ${track.artist}`
-    );
+    Log.trace("ui/db:getTrackSource", `Loaded cached track 👉 ${track.name} by ${track.artist}`);
     return track;
   });
 }
@@ -170,7 +174,7 @@ export function cacheLyric(id: number, lyrics: NeteaseLyricResponse) {
 export function getLyricFromCache(id: number | string) {
   return db.lyric.get(Number(id)).then((result) => {
     if (!result) return null;
-    EqError.printDEV("ui/db:getLyric", `Loaded cached lyric for track ID 👉 ${id}`);
+    Log.trace("ui/db:getLyric", `Loaded cached lyric for track ID 👉 ${id}`);
     return result.lyrics;
   });
 }
@@ -186,7 +190,7 @@ export function cacheAlbum(id: number | string, album: NeteaseAlbumDetailRespons
 export function getAlbumFromCache(id: number | string) {
   return db.album.get(Number(id)).then((result) => {
     if (!result) return null;
-    EqError.printDEV("ui/db:getAlbum", `Loaded cached album for album ID 👉 ${id}`);
+    Log.trace("ui/db:getAlbum", `Loaded cached album for album ID 👉 ${id}`);
     return result.album;
   });
 }
@@ -201,7 +205,7 @@ export function countDBSize() {
         length: trackSizes.length
       };
       tracksCacheBytes = res.bytes;
-      EqError.printDEV("ui/db:countDBSize", `DB Size: ${res.bytes} bytes in ${res.length} tracks`);
+      Log.trace("ui/db:countDBSize", `DB Size: ${res.bytes} bytes in ${res.length} tracks`);
       return res;
     });
 }

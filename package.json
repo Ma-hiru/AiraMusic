@@ -36,8 +36,9 @@
     "auto-commit:linux": "pnpm exec bash ./scripts/git-commit.sh"
   },
   "dependencies": {
+    "axios": "^1.13.2",
     "electron": "^39.1.1",
-    "axios": "^1.13.2"
+    "lodash-es": "^4.17.21"
   },
   "devDependencies": {
     "@types/node": "^24.10.0",

@@ -11,7 +11,7 @@
     "@applemusic-like-lyrics/lyric": "0.3.0",
     "@emotion/css": "^11.13.5",
     "@mahiru/app": "workspace:^",
-    "@mahiru/err": "workspace:^",
+    "@mahiru/log": "workspace:^",
     "@mahiru/wasm": "workspace:^",
     "@pixi/app": "^7.4.3",
     "@pixi/core": "^7.4.3",

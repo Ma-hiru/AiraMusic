@@ -122,7 +122,7 @@ export interface PersistStoreInitialState {
     }[];
   };
   data: {
-    user: Record<string, any>;
+    user: Record<string, any> & { vipType?: number };
     likedSongPlaylistID: number;
     lastRefreshCookieDate: number;
     loginMode: string | null;
