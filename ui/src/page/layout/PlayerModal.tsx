@@ -6,6 +6,7 @@ import PlayerPage from "@mahiru/ui/page/player/PlayerPage";
 const PlayerModal: FC<object> = () => {
   const { PlayerModalVisible } = useLayout();
   const [scope, animate] = useAnimate();
+
   useLayoutEffect(() => {
     if (PlayerModalVisible) {
       animate(scope.current, { top: "0%" });
@@ -16,14 +17,21 @@ const PlayerModal: FC<object> = () => {
   return (
     <motion.div
       ref={scope}
-      className="absolute w-screen h-screen bg-blue-500 z-20"
-      initial={{ top: "100%" }}
-      transition={{
-        ease: "easeInOut",
-        duration: 0.3
-      }}>
+      className="absolute w-screen h-screen overflow-hidden z-20"
+      initial={animation.initial}
+      transition={animation.transition}>
       <PlayerPage />
     </motion.div>
   );
 };
 export default memo(PlayerModal);
+
+const animation = {
+  initial: {
+    top: "100%"
+  },
+  transition: {
+    ease: "easeInOut",
+    duration: 0.3
+  }
+} as const;

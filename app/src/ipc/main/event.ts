@@ -16,8 +16,9 @@ export function registerEventHandlers(mainWindow: BrowserWindow, store: Electron
 
 function registerLoginWindowControl() {
   typedIpcMainOn("createLoginWindow", (_e) => {
-    const height = calcEffectivePixel(400);
-    const width = calcEffectivePixel(400 * CONSTANTS.APP.DEFAULT_WINDOW_WIDTH_HEIGHT_RATIO);
+    const ratio = CONSTANTS.APP.DEFAULT_WINDOW_WIDTH_HEIGHT_RATIO;
+    const height = calcEffectivePixel(650 + 50);
+    const width = calcEffectivePixel(650 * ratio);
     const LoginWindow = WindowManager.createBrowserWindow(
       {
         width,

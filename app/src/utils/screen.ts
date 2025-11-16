@@ -27,10 +27,10 @@ export function getEffectiveWindowSize(
 }
 
 export function getEffectiveWorkAreaSize() {
-  const { width: screenWidth, height: screenHeight } = screen.getPrimaryDisplay().workAreaSize;
+  const { width, height } = screen.getPrimaryDisplay().workAreaSize;
   return {
-    effectiveScreenWidth: calcEffectivePixel(screenWidth),
-    effectiveScreenHeight: calcEffectivePixel(screenHeight)
+    effectiveScreenWidth: width,
+    effectiveScreenHeight: height
   };
 }
 
