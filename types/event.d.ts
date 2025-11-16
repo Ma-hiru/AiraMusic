@@ -3,7 +3,8 @@ type InvokeEventMaps = {
 };
 
 type NormalEventMaps = {
-  log: number;
+  rememberCloseAppOption: "exit" | "minimizeToTray";
+  isMaximized: boolean;
 };
 
 type NormalEvent = keyof NormalEventMaps;

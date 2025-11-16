@@ -5,7 +5,8 @@ export const renderInvokeAPI: Record<InvokeEvent, RenderInvokeEventHandler<Invok
 };
 
 export const renderEventAPI: Record<NormalEvent, RenderNormalEventHandler<NormalEvent>> = {
-  log: (msg: number) => ipcRenderer.send("log", msg)
+  isMaximized: (_e) => {},
+  rememberCloseAppOption: (_opts) => {}
 };
 
 export function setupRenderEventListeners() {

@@ -1,0 +1,24 @@
+{
+  "appId": "com.mahiru.music",
+  "productName": "SimpleCloudMusic",
+  "files": [
+    {
+      "from": "dist/app",
+      "to": "app",
+      "filter": ["**/*"]
+    }
+  ],
+  "extraResources": [
+    {
+      "from": "dist/ui",
+      "to": "ui"
+    },
+    {
+      "from": "dist/preload/index.js",
+      "to": "preload.js"
+    }
+  ],
+  "mac": { "target": "dmg" },
+  "linux": { "target": "AppImage", "category": "Utility" },
+  "win": { "target": "nsis" }
+}

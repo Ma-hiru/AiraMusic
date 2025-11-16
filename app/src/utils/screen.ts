@@ -4,8 +4,8 @@ import { CONSTANTS } from "../constant";
 const { DEFAULT_WINDOW_WIDTH_HEIGHT_RATIO, DEFAULT_WINDOW_COVER_RATIO } = CONSTANTS.APP;
 
 export function getEffectiveWindowSize(
-  widthHeightRatio: number = DEFAULT_WINDOW_WIDTH_HEIGHT_RATIO,
-  coverRatio: number = DEFAULT_WINDOW_COVER_RATIO
+  coverRatio: number = DEFAULT_WINDOW_COVER_RATIO,
+  widthHeightRatio: number = DEFAULT_WINDOW_WIDTH_HEIGHT_RATIO
 ) {
   const { effectiveScreenWidth, effectiveScreenHeight } = getEffectiveWorkAreaSize();
   const targetHeight = Math.floor(effectiveScreenHeight * coverRatio);

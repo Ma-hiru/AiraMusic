@@ -15,18 +15,17 @@ async function loadServer() {
   return serverImpl;
 }
 
-export function startNeteaseMusicApiServer() {
-  loadServer()
-    .then((server) => {
-      return server.serveNcmApi({ port: 10754, moduleDefs });
-    })
-    .catch((err) => {
-      Log.error(
-        new EqError({
-          label: "app/netease.ts",
-          message: "Failed to start Netease Music API server",
-          raw: err
-        })
-      );
-    });
+export async function startNeteaseMusicApiServer() {
+  try {
+    const server = await loadServer();
+    await server.serveNcmApi({ port: 10754, moduleDefs });
+  } catch (err) {
+    Log.error(
+      new EqError({
+        label: "app/netease.ts",
+        message: "Failed to start Netease Music API server",
+        raw: err
+      })
+    );
+  }
 }

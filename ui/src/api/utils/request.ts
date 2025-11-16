@@ -2,8 +2,19 @@ import { doLogout } from "./auth";
 import axios, { AxiosResponse } from "axios";
 import { usePersistZustandStore } from "@mahiru/ui/store";
 import { Log } from "@mahiru/ui/utils/log";
+import { isDev } from "@mahiru/ui/utils/dev";
 
-const NETEASE_API_BASE_URL = "http://127.0.0.1:10754";
+function getNeteaseApiBaseUrl() {
+  if (isDev) {
+    // 开发模式直接访问electron代理的API服务器地址
+    return "http://127.0.0.1:10754";
+  } else {
+    // 生产模式通过express访问API服务器地址
+    return "/api";
+  }
+}
+
+const NETEASE_API_BASE_URL = getNeteaseApiBaseUrl();
 
 if (!NETEASE_API_BASE_URL) {
   Log.error("ui/request.ts", "NETEASE_API_BASE_URL is not defined.");

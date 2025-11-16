@@ -13,6 +13,7 @@
     "express-http-proxy": "^2.1.2"
   },
   "devDependencies": {
-    "@types/express": "^5.0.0"
+    "@types/express": "^5.0.0",
+    "@types/express-http-proxy": "^1.6.7"
   }
 }
