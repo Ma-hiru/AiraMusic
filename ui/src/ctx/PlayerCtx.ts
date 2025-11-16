@@ -5,21 +5,33 @@ import { EqError } from "@mahiru/ui/utils/err";
 export type PlayerCtxType = {
   lyricLines: LyricLine[];
   audioRef: RefObject<HTMLAudioElement | null>;
-  cover: string;
+  info: {
+    title: string;
+    artist: string;
+    album: string;
+    cover: string;
+  };
   play: () => void;
   mute: () => void;
   upVolume: (gap?: number) => void;
   downVolume: (gap?: number) => void;
+  isPlaying: boolean;
 };
 
 export const PlayerCtx = createContext<PlayerCtxType>({
   lyricLines: [],
   audioRef: { current: null },
-  cover: "",
+  info: {
+    title: "",
+    artist: "",
+    album: "",
+    cover: ""
+  },
   play: () => {},
   mute: () => {},
   upVolume: (_?: number) => {},
-  downVolume: (_?: number) => {}
+  downVolume: (_?: number) => {},
+  isPlaying: false
 });
 
 export const usePlayer = () => {

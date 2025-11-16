@@ -5,7 +5,15 @@ import { handleTranslatedLRC } from "@mahiru/ui/utils/lyric";
 
 export default function PlayerProvider({ children }: { children: ReactNode }) {
   const audioRef = useRef<HTMLAudioElement>(null);
-  const [cover, setCover] = useState("/小さな恋のうた - 石見舞菜香.jpg");
+  const [info, setInfo] = useState({
+    title: "小さな恋のうた",
+    artist: "石見舞菜香",
+    album: "小さな恋のうた",
+    cover: "/小さな恋のうた - 石見舞菜香.jpg",
+    audio: "/小さな恋のうた - 石見舞菜香.mp3"
+  });
+
+  const [isPlaying, setIsPlaying] = useState(false);
   const [lyricLines, setLyricLines] = useState<LyricLine[]>([]);
   const play = useCallback(() => {
     const audio = audioRef.current;
@@ -33,13 +41,14 @@ export default function PlayerProvider({ children }: { children: ReactNode }) {
     () => ({
       audioRef,
       lyricLines,
-      cover,
+      info,
       play,
       mute,
       upVolume,
-      downVolume
+      downVolume,
+      isPlaying
     }),
-    [audioRef, lyricLines, cover, play, mute, upVolume, downVolume]
+    [audioRef, lyricLines, info, play, mute, upVolume, downVolume, isPlaying]
   );
 
   useEffect(() => {
@@ -50,14 +59,21 @@ export default function PlayerProvider({ children }: { children: ReactNode }) {
         setLyricLines(handleTranslatedLRC(lrc));
       });
   }, []);
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    const onPlay = () => setIsPlaying(true);
+    const onPause = () => setIsPlaying(false);
+    audio.addEventListener("play", onPlay);
+    audio.addEventListener("pause", onPause);
+    return () => {
+      audio.removeEventListener("play", onPlay);
+      audio.removeEventListener("pause", onPause);
+    };
+  }, []);
   return (
     <>
-      <audio
-        className="w-0 h-0 opacity-0"
-        ref={audioRef}
-        src={"/小さな恋のうた - 石見舞菜香.mp3"}
-        preload="auto"
-      />
+      <audio className="w-0 h-0 opacity-0" ref={audioRef} src={info.audio} preload="auto" />
       <PlayerCtx.Provider value={ctxValue}>{children}</PlayerCtx.Provider>
     </>
   );

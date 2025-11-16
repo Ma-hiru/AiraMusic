@@ -408,6 +408,7 @@ export interface NeteaseLoginQrKeyResponse {
     qrurl?: string;
     [key: string]: any;
   };
+  // 状态码
   code: number;
   [key: string]: any;
 }

@@ -3,7 +3,7 @@ import { BackgroundRender } from "@mahiru/ui/componets/player/BackgroundRender";
 import { usePlayer } from "@mahiru/ui/ctx/PlayerCtx";
 
 const Background: FC<object> = () => {
-  const { cover } = usePlayer();
+  const { info } = usePlayer();
   return (
     <BackgroundRender
       style={{
@@ -13,7 +13,7 @@ const Background: FC<object> = () => {
         width: "100%",
         height: "100%"
       }}
-      album={cover}
+      album={info.cover}
     />
   );
 };

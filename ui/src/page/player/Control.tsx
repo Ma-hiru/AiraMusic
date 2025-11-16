@@ -14,6 +14,41 @@ const Control: FC<object> = () => {
         }}>
         send message
       </button>
+      <button
+        className="px-2 py-1 rounded-lg bg-white/50"
+        onClick={() => {
+          window.node.event.createLoginWindow();
+        }}>
+        login
+      </button>
+      <button
+        className="px-2 py-1 rounded-lg bg-white/50"
+        onClick={() => {
+          window.node.event.close("main");
+        }}>
+        close
+      </button>
+      <button
+        className="px-2 py-1 rounded-lg bg-white/50"
+        onClick={() => {
+          window.node.event.minimize("main");
+        }}>
+        min
+      </button>
+      <button
+        className="px-2 py-1 rounded-lg bg-white/50"
+        onClick={() => {
+          window.node.event.maximize("main");
+        }}>
+        max
+      </button>
+      <button
+        className="px-2 py-1 rounded-lg bg-white/50"
+        onClick={() => {
+          window.node.event.unmaximize("main");
+        }}>
+        unmax
+      </button>
       <button onClick={play} className="px-2 py-1 rounded-lg bg-white/50">
         play
       </button>

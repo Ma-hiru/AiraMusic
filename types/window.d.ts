@@ -1,0 +1,1 @@
+type WindowType = "main" | "login";

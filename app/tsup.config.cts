@@ -11,7 +11,7 @@ export default defineConfig([
     sourcemap: true,
     clean: true,
     dts: false,
-    external: ["electron", "esbuild", "node:*"],
+    external: ["electron", "esbuild", "node:*", "window"],
     noExternal: ["@mahiru/log"],
     minify: true
   },

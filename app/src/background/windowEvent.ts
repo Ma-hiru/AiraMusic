@@ -2,7 +2,7 @@ import { APP } from "./index";
 import { Log } from "../utils/log";
 import { isLinux, isMacOS } from "../utils/platform";
 import { Event, dialog, app } from "electron";
-import { typedIpcMainSend } from "../ipc/typed";
+import { typedIpcMainSend } from "../ipc";
 import { EqError } from "../utils/err";
 
 export function handleWindowEvents(instance: APP) {

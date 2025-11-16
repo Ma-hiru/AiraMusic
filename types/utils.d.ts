@@ -22,3 +22,25 @@ type NormalFunc<P extends any[] = never[], R = void> = (...args: P) => R;
 type PromiseFunc<P extends any[] = never[], R = void> = (...args: P) => Promise<R>;
 
 type ValidationReject<T> = { field: keyof T; reason: string };
+
+type NormalEventPayload<T extends NormalEvent> = NormalEventMaps[T];
+
+type InvokeEventArgs<T extends InvokeEvent> = InvokeEventMaps[T][0];
+
+type InvokeEventPayload<T extends InvokeEvent> = InvokeEventMaps[T][1];
+
+type RenderInvokeEventHandler<T extends InvokeEvent> =
+  InvokeEventArgs<T> extends never
+    ? () => Promise<InvokeEventPayload<T>>
+    : (param: InvokeEventArgs<T>) => Promise<InvokeEventPayload<T>>;
+
+type RenderNormalEventHandler<T extends NormalEvent> =
+  NormalEventPayload<T> extends never ? () => void : (param: NormalEventPayload<T>) => void;
+
+type RenderEventAPI = {
+  [K in NormalEvent]: RenderNormalEventHandler<K>;
+};
+
+type RenderInvokeAPI = {
+  [K in InvokeEvent]: RenderInvokeEventHandler<K>;
+};

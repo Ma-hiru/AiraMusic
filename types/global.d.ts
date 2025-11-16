@@ -1,9 +1,10 @@
 declare global {
   interface Window {
     node: {
-      invoke: Record<InvokeEvent, RenderInvokeEventHandler<InvokeEvent>>;
-      event: Record<NormalEvent, RenderNormalEventHandler<NormalEvent>>;
+      invoke: RenderInvokeAPI;
+      event: RenderEventAPI;
     };
+    login: (cookies: string) => void;
   }
 }
 export {};

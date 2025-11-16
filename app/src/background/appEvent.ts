@@ -4,7 +4,7 @@ import { Log } from "../utils/log";
 import { createInitWindow } from "./createWindow";
 import { handleWindowEvents } from "./windowEvent";
 import { isCreateTray, isMacOS } from "../utils/platform";
-import { registerIpcMainHandlers } from "../ipc/main";
+import { registerIpcMainHandlers } from "../ipc";
 
 export function handleAppEvents(instance: APP) {
   app.on("ready", async () => {
