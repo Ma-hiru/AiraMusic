@@ -1,4 +1,4 @@
-import { screen } from "electron";
+import { BrowserWindow, screen } from "electron";
 import { CONSTANTS } from "../constant";
 
 const { DEFAULT_WINDOW_WIDTH_HEIGHT_RATIO, DEFAULT_WINDOW_COVER_RATIO } = CONSTANTS.APP;
@@ -37,4 +37,20 @@ export function getEffectiveWorkAreaSize() {
 export function calcEffectivePixel(pixel: number) {
   const scaleFactor = screen.getPrimaryDisplay().scaleFactor || 1;
   return Math.floor(pixel / scaleFactor);
+}
+
+export function checkPositionOutScreenBounds(x?: number, y?: number) {
+  return !(
+    typeof x === "number" &&
+    typeof y === "number" &&
+    screen
+      .getAllDisplays()
+      .some(
+        ({ bounds }) =>
+          x > bounds.x &&
+          x < bounds.x + bounds.width &&
+          y > bounds.y &&
+          y < bounds.y + bounds.height
+      )
+  );
 }

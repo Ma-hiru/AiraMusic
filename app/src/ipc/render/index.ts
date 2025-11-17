@@ -1,3 +1,3 @@
 export { renderInvokeAPI } from "./invoke";
 export { renderEventAPI } from "./event";
-export { setupRenderEventListeners } from "./listener";
+export { renderEventRegister } from "./listener";

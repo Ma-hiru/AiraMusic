@@ -1,11 +1,10 @@
 import { contextBridge } from "electron";
-import { renderEventAPI, renderInvokeAPI, setupRenderEventListeners } from "../ipc/render";
+import { renderEventAPI, renderInvokeAPI, renderEventRegister } from "../ipc/render";
 
 contextBridge.exposeInMainWorld("node", {
   invoke: renderInvokeAPI,
-  event: renderEventAPI
+  event: renderEventAPI,
+  register: renderEventRegister
 });
-
-setupRenderEventListeners();
 
 console.log("Preload script loaded");

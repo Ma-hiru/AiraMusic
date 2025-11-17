@@ -1,9 +1,9 @@
 import { createRoot } from "react-dom/client";
-import { exposeToWindow } from "@mahiru/ui/utils/exposeToWindow";
+import { registerMessageHandlers } from "@mahiru/ui/utils/registerMessageHandlers";
 import "./styles/index.scss";
 import App from "./App";
 
-exposeToWindow();
+registerMessageHandlers();
 const element = document.getElementById("root")!;
 const root = createRoot(element);
 root.render(<App />);

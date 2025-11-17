@@ -6,11 +6,15 @@ type NormalEventMaps = {
   rememberCloseAppOption: "exit" | "minimizeToTray";
   isMaximized: boolean;
   createLoginWindow: never;
-  loggedInSuccess: string; // cookies
+  sendMessageTo: { to: WindowType; from: WindowType; data: string; type: "login" };
   close: WindowType;
   minimize: WindowType;
   maximize: WindowType;
   unmaximize: WindowType;
+};
+
+type NormalEventRegister = {
+  sendMessageToHandler: (handler: (message: NormalEventMaps["sendMessageTo"]) => void) => void;
 };
 
 type NormalEvent = keyof NormalEventMaps;

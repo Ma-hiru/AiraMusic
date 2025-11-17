@@ -2,11 +2,10 @@ import { BrowserWindow } from "electron";
 import ElectronStore from "electron-store";
 import { StoreType } from "../../background";
 import { typedIpcMainOn, typedIpcMainSend } from "./typed";
-import { calcEffectivePixel } from "../../utils/screen";
+import { getEffectiveWindowSize } from "../../utils/screen";
 import { WindowExits, WindowManager } from "../../window";
 import { preloadPath } from "../../utils/path";
 import { Log } from "../../utils/log";
-import { CONSTANTS } from "../../constant";
 import { isDev } from "../../utils/dev";
 
 export function registerEventHandlers(mainWindow: BrowserWindow, store: ElectronStore<StoreType>) {
@@ -16,9 +15,7 @@ export function registerEventHandlers(mainWindow: BrowserWindow, store: Electron
 
 function registerLoginWindowControl() {
   typedIpcMainOn("createLoginWindow", (_e) => {
-    const ratio = CONSTANTS.APP.DEFAULT_WINDOW_WIDTH_HEIGHT_RATIO;
-    const height = calcEffectivePixel(650 + 50);
-    const width = calcEffectivePixel(650 * ratio);
+    const { effectiveWidth: width, effectiveHeight: height } = getEffectiveWindowSize(0.25);
     const LoginWindow = WindowManager.createBrowserWindow(
       {
         width,
@@ -51,7 +48,7 @@ function registerLoginWindowControl() {
       }
       LoginWindow.on("ready-to-show", () => {
         LoginWindow.show();
-        LoginWindow.webContents.openDevTools();
+        isDev() && LoginWindow.webContents.openDevTools();
       });
     }
   });
@@ -80,8 +77,11 @@ function registerWindowControl(mainWindow: BrowserWindow) {
       win.unmaximize();
     }
   });
-  typedIpcMainOn("loggedInSuccess", (_e, data) => {
-    Log.trace("app/ipc", "IPC Logged In Success:", data);
-    typedIpcMainSend(mainWindow, "loggedInSuccess", data);
+  typedIpcMainOn("sendMessageTo", (_e, { to, data, type, from }) => {
+    Log.trace("app/ipc", `IPC Send Message from ${from} to ${to}:`, type, data);
+    const win = WindowManager.getBrowserWindowById(to);
+    if (win) {
+      typedIpcMainSend(win, "sendMessageTo", { to, data, type, from });
+    }
   });
 }

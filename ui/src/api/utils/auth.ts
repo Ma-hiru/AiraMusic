@@ -45,14 +45,11 @@ export function isLooseLoggedIn() {
 }
 
 const { updatePersistStoreData } = usePersistZustandStore.getState();
+
 export function doLogout() {
   logout();
   removeCookie("MUSIC_U");
   removeCookie("__csrf");
-  // 更新状态仓库中的用户信息
-  updatePersistStoreData({ user: {} });
-  // 更新状态仓库中的登录状态
-  updatePersistStoreData({ loginMode: null });
-  // 更新状态仓库中的喜欢列表
-  updatePersistStoreData({ likedSongPlaylistID: undefined });
+  // 更新状态仓库
+  updatePersistStoreData({ user: null, loginMode: "" });
 }

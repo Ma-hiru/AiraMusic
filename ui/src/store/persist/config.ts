@@ -2,6 +2,7 @@ import { playlistCategories } from "@mahiru/ui/api/utils/staticData";
 import pkg from "../../../package.json";
 import shortcuts from "@mahiru/ui/api/utils/shortcuts";
 import { ZustandConfig } from "@mahiru/ui/types/zustand";
+import { NeteasePlaylistSummary, NeteaseUserDetailResponse } from "@mahiru/ui/types/netease-api";
 
 const enabledPlaylistCategories = playlistCategories.filter((c) => c.enable).map((c) => c.name);
 
@@ -73,10 +74,10 @@ const InitialState: PersistStoreInitialState = {
     shortcuts
   },
   data: {
-    user: {},
-    likedSongPlaylistID: 0,
+    user: null,
     lastRefreshCookieDate: 0,
-    loginMode: null
+    loginMode: "",
+    userPlayLists: []
   }
 };
 
@@ -122,10 +123,10 @@ export interface PersistStoreInitialState {
     }[];
   };
   data: {
-    user: Record<string, any> & { vipType?: number };
-    likedSongPlaylistID: number;
+    user: NeteaseUserDetailResponse["profile"] | null;
     lastRefreshCookieDate: number;
-    loginMode: string | null;
+    loginMode: "account" | "username" | "";
+    userPlayLists: NeteasePlaylistSummary[];
   };
 }
 

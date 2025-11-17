@@ -3,8 +3,8 @@ declare global {
     node: {
       invoke: RenderInvokeAPI;
       event: RenderEventAPI;
+      register: NormalEventRegister;
     };
-    login: (cookies: string) => void;
   }
 }
 export {};

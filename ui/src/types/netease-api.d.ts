@@ -316,47 +316,200 @@ export interface NeteaseArtistAlbumResponse {
   [key: string]: any;
 }
 
+export interface Creator {
+  accountStatus: number;
+  anchor: boolean;
+  authenticationTypes: number;
+  authority: number;
+  authStatus: number;
+  avatarDetail: null;
+  avatarImgId: number;
+  avatarImgId_str: string;
+  avatarImgIdStr: string;
+  avatarUrl: string;
+  backgroundImgId: number;
+  backgroundImgIdStr: string;
+  backgroundUrl: null | string;
+  birthday: number;
+  city: number;
+  defaultAvatar: boolean;
+  description: string;
+  detailDescription: string;
+  djStatus: number;
+  experts: null | { "1": string; "2"?: string };
+  expertTags: string[] | null;
+  followed: boolean;
+  gender: number;
+  mutual: boolean;
+  nickname: string;
+  province: number;
+  remarkName: null;
+  signature: string;
+  userId: number;
+  userType: number;
+  vipType: number;
+}
+
+export interface RecommendInfo {
+  alg: string;
+  firstSongId: null;
+  logInfo: string;
+  reason: null;
+  relatedId: string;
+  relatedType: string;
+}
+
 /**
  * `/top/playlist`、`/top/playlist/highquality` 返回的歌单摘要。
  */
 export interface NeteasePlaylistSummary {
+  adType: number;
+  anonimous: boolean;
+  artists: null;
+  backgroundCoverId: number;
+  backgroundCoverUrl: null | string;
+  cloudTrackCount: number;
+  commentThreadId: string;
+  containsTracks: boolean;
+  copied: boolean;
+  coverImgId: number;
+  coverImgId_str: null | string;
+  coverImgUrl: string;
+  createTime: number;
+  creator: Creator;
+  description: null | string;
+  englishTitle: null | string;
+  highQuality: boolean;
   id: number;
   name: string;
-  coverImgUrl: string;
-  trackCount: number;
+  newImported: boolean;
+  opRecommend: boolean;
+  ordered: boolean;
   playCount: number;
-  description?: string;
-  tags?: string[];
-  [key: string]: any;
+  privacy: number;
+  recommendInfo: null | RecommendInfo;
+  sharedUsers: null;
+  shareStatus: null;
+  specialType: number;
+  status: number;
+  subscribed: boolean;
+  subscribedCount: number;
+  subscribers: string[];
+  tags: string[];
+  titleImage: number;
+  titleImageUrl: null | string;
+  top: boolean;
+  totalDuration: number;
+  trackCount: number;
+  trackNumberUpdateTime: number;
+  tracks: null;
+  trackUpdateTime: number;
+  updateFrequency: null | string;
+  updateTime: number;
+  userId: number;
 }
 
 /**
  * `/user/detail` 返回的用户详情。
  */
 export interface NeteaseUserDetailResponse {
-  profile: {
-    userId: number;
-    nickname: string;
-    avatarUrl: string;
-    backgroundUrl?: string;
-    signature?: string;
-    vipType?: number;
-    [key: string]: any;
-  };
   level: number;
   listenSongs: number;
+  userPoint: {
+    userId: number;
+    balance: number;
+    updateTime: number;
+    version: number;
+    status: number;
+    blockBalance: number;
+  };
+  mobileSign: boolean;
+  pcSign: boolean;
+  profile: {
+    privacyItemUnlimit: {
+      area: boolean;
+      college: boolean;
+      gender: boolean;
+      age: boolean;
+      villageAge: boolean;
+    };
+    avatarDetail: null;
+    defaultAvatar: boolean;
+    followed: boolean;
+    nickname: string;
+    authStatus: number;
+    expertTags: null;
+    experts: object;
+    avatarUrl: string;
+    backgroundImgId: number;
+    backgroundUrl: string;
+    userType: number;
+    city: number;
+    djStatus: number;
+    detailDescription: string;
+    gender: number;
+    avatarImgId: number;
+    vipType: number;
+    mutual: boolean;
+    remarkName: null;
+    province: number;
+    accountStatus: number;
+    avatarImgIdStr: string;
+    backgroundImgIdStr: string;
+    description: string;
+    createTime: number;
+    userId: number;
+    birthday: number;
+    signature: string;
+    authority: number;
+    followeds: number;
+    follows: number;
+    blacklist: boolean;
+    eventCount: number;
+    allSubscribedCount: number;
+    playlistBeSubscribedCount: number;
+    followTime: null;
+    followMe: boolean;
+    artistIdentity: [];
+    cCount: number;
+    inBlacklist: boolean;
+    sDJPCount: number;
+    playlistCount: number;
+    sCount: number;
+    newFollows: number;
+  };
+  peopleCanSeeMyPlayRecord: boolean;
+  bindings: {
+    expiresIn: number;
+    refreshTime: number;
+    bindingTime: number;
+    tokenJsonStr: null;
+    url: string;
+    expired: boolean;
+    userId: number;
+    id: number;
+    type: number;
+  }[];
+  adValid: boolean;
   code: number;
-  [key: string]: any;
+  newUser: boolean;
+  recallUser: boolean;
+  createTime: number;
+  createDays: number;
+  profileVillageInfo: {
+    title: number;
+    imageUrl: null | string;
+    targetUrl: string;
+  };
 }
 
 /**
  * `/user/playlist` 返回的歌单集合。
  */
 export interface NeteaseUserPlaylistResponse {
-  playlist: NeteasePlaylistDetail[] | NeteasePlaylistSummary[];
+  playlist: NeteasePlaylistSummary[];
   code: number;
-  more?: boolean;
-  [key: string]: any;
+  more: boolean;
 }
 
 /**
@@ -373,18 +526,61 @@ export interface NeteaseUserRecordResponse {
  * `/user/account` 返回的账号信息。
  */
 export interface NeteaseUserAccountResponse {
+  code: number;
   account: {
     id: number;
     userName: string;
     type: number;
     status: number;
+    whitelistAuthority: number;
     createTime: number;
+    tokenVersion: number;
+    ban: number;
+    baoyueVersion: number;
+    donateVersion: number;
     vipType: number;
-    [key: string]: any;
+    anonimousUser: boolean;
+    paidFee: boolean;
   };
-  profile: NeteaseUserDetailResponse["profile"];
-  code: number;
-  [key: string]: any;
+  profile: {
+    userId: number;
+    userType: number;
+    nickname: "仲商贰肆";
+    avatarImgId: number;
+    avatarUrl: string;
+    backgroundImgId: number;
+    backgroundUrl: string;
+    signature: string;
+    createTime: number;
+    userName: string;
+    accountType: number;
+    shortUserName: string;
+    birthday: number;
+    authority: number;
+    gender: number;
+    accountStatus: number;
+    province: number;
+    city: number;
+    authStatus: number;
+    description: null;
+    detailDescription: null;
+    defaultAvatar: boolean;
+    expertTags: null;
+    experts: null;
+    djStatus: number;
+    locationStatus: number;
+    vipType: number;
+    followed: boolean;
+    mutual: boolean;
+    authenticated: boolean;
+    lastLoginTime: number;
+    lastLoginIP: string;
+    remarkName: null;
+    viptypeVersion: number;
+    authenticationTypes: number;
+    avatarDetail: null;
+    anchor: boolean;
+  };
 }
 
 /**
@@ -432,7 +628,7 @@ export interface NeteaseLoginQrCreateResponse {
 export interface NeteaseLoginQrCheckResponse {
   code: number;
   message?: string;
-  cookie?: string;
+  cookie: string;
   nickname?: string;
   avatarUrl?: string;
   [key: string]: any;

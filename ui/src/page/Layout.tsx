@@ -8,7 +8,7 @@ import PlayerModal from "@mahiru/ui/page/layout/PlayerModal";
 const Layout: FC<object> = () => {
   return (
     <div className="relative w-screen h-screen overflow-hidden">
-      <div className="w-screen h-screen overflow-hidden relative">
+      <div className="w-screen h-screen overflow-hidden relative bg-[#f7f9fc]">
         <TopBar />
         <NavSide />
         <PlayerBar />

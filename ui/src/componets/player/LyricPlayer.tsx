@@ -96,13 +96,13 @@ export interface LyricPlayerProps {
    */
   linePosXSpringParams?: Partial<spring.SpringParams>;
   /**
-   * 设置所有歌词行在​纵坐标上的弹簧属性，包括重量、弹力和阻力。
+   * 设置所有歌词行在纵坐标上的弹簧属性，包括重量、弹力和阻力。
    *
    * @param params 需要设置的弹簧属性，提供的属性将会覆盖原来的属性，未提供的属性将会保持原样
    */
   linePosYSpringParams?: Partial<spring.SpringParams>;
   /**
-   * 设置所有歌词行在​缩放大小上的弹簧属性，包括重量、弹力和阻力。
+   * 设置所有歌词行在缩放大小上的弹簧属性，包括重量、弹力和阻力。
    *
    * @param params 需要设置的弹簧属性，提供的属性将会覆盖原来的属性，未提供的属性将会保持原样
    */
