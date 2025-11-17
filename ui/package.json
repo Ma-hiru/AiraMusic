@@ -21,6 +21,8 @@
     "@pixi/filter-color-matrix": "^7.4.3",
     "@pixi/sprite": "^7.4.3",
     "@tailwindcss/vite": "^4.1.17",
+    "color": "^5.0.3",
+    "dayjs": "^1.11.19",
     "dexie": "^4.2.1",
     "js-cookie": "^3.0.5",
     "jss": "^10.10.0",

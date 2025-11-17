@@ -3,7 +3,7 @@ import { PersistStoreActions, PersistStoreInitialState, PersistStoreConfig } fro
 
 export type PersistStoreType = PersistStoreInitialState & PersistStoreActions;
 
-export const usePersistZustandStore = createZustandStore(PersistStoreConfig, "persist");
+export const usePersistZustandStore = createZustandStore(PersistStoreConfig, "persist", true);
 
 export const usePersistZustandShallowStore =
   createZustandShallowStore<PersistStoreType>(usePersistZustandStore);

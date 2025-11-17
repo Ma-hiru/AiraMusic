@@ -1,7 +1,7 @@
 import { FC, memo } from "react";
 import { addMessageHandler, removeMessageHandler } from "@mahiru/ui/utils/registerMessageHandlers";
-import { login } from "@mahiru/ui/utils/login";
 import { doLogout, isAccountLoggedIn } from "@mahiru/ui/api/utils/auth";
+import { refreshLogin } from "@mahiru/ui/utils/task";
 
 const HomePage: FC<object> = () => {
   return (
@@ -14,7 +14,7 @@ const HomePage: FC<object> = () => {
             window.node.event.createLoginWindow();
             addMessageHandler((message) => {
               if (message.from === "login" && message.type === "login") {
-                login(message.data);
+                refreshLogin(message.data);
                 removeMessageHandler("login");
               }
             }, "login");

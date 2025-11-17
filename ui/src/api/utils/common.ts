@@ -1,9 +1,7 @@
 import { isAccountLoggedIn } from "./auth";
-import { refreshCookie } from "../auth";
+
 import { usePersistZustandStore } from "@mahiru/ui/store";
 import type { NeteaseTrack, NeteaseTrackPrivilege } from "@mahiru/ui/types/netease-api";
-import { EqError } from "@mahiru/ui/utils/err";
-import { Log } from "@mahiru/ui/utils/log";
 
 const getStoreSnapshot = () => usePersistZustandStore.getState();
 
@@ -66,28 +64,4 @@ export function mapTrackPlayableStatus(
     track.reason = reason;
     return track;
   });
-}
-
-export async function dailyTask(): Promise<void> {
-  const store = getStoreSnapshot();
-  const lastDate = store.data.lastRefreshCookieDate;
-  if (
-    isAccountLoggedIn() &&
-    (typeof lastDate === "undefined" || lastDate !== new Date().getDate())
-  ) {
-    Log.trace("start daily task");
-    try {
-      await refreshCookie();
-      Log.trace("refresh cookie");
-      store.updatePersistStoreData({ lastRefreshCookieDate: new Date().getDate() });
-    } catch (error) {
-      Log.error(
-        new EqError({
-          label: "ui/common.ts:dailyTask",
-          message: "refresh cookie failed",
-          raw: error
-        })
-      );
-    }
-  }
 }
