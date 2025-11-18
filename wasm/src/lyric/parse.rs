@@ -49,9 +49,8 @@ pub fn parseNeteaseLyric(raw: JsValue, ts: JsValue, rm: JsValue, meta: JsValue) 
 }
 
 #[wasm_bindgen]
-pub fn parseTranslatedLRC(raw: JsValue, reverse: JsValue) -> JsValue {
+pub fn parseTranslatedLRC(raw: JsValue, reverse: bool) -> JsValue {
     let parsedRawLRC = from_value::<Vec<RawLyricLine>>(raw).unwrap_or_default();
-    let reverse = from_value::<bool>(reverse).unwrap_or(false);
     let mut lastMatchedIndex = -1;
     let result = parsedRawLRC
         .iter()
@@ -59,7 +58,7 @@ pub fn parseTranslatedLRC(raw: JsValue, reverse: JsValue) -> JsValue {
         .fold(vec![], |mut result, (index, rawLRC)| {
             if lastMatchedIndex != index as i32 {
                 if rawLRC.startTime == rawLRC.endTime
-                    && parsedRawLRC.len() > index + 1
+                    && parsedRawLRC.len() - 1 > index + 1
                     && parsedRawLRC[index + 1].startTime == rawLRC.endTime
                 {
                     let mut newLine = RawLyricLine {
@@ -87,9 +86,11 @@ pub fn parseTranslatedLRC(raw: JsValue, reverse: JsValue) -> JsValue {
 
                     result.push(LyricLine::from(newLine));
                     lastMatchedIndex = index as i32 + 1;
+                } else {
+                    result.push(LyricLine::from(rawLRC.clone()));
                 }
             } else {
-                result.push(LyricLine::from(rawLRC.clone()))
+                lastMatchedIndex = -1;
             }
             return result;
         });

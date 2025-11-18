@@ -31,36 +31,6 @@ export function mapRawLyricWord(words: RawLyricWord[]): LyricWord[] {
 export function parseTranslatedLRCWasm(content: string): LyricLine[] {
   const raw = parseLrc(content);
   return parseTranslatedLRC(raw, false) as LyricLine[];
-  // const parsedRawLRC = parseLrc(content);
-  // let lastMatchedIndex = -1;
-  // return parsedRawLRC.reduce(
-  //   (final, rawLRC, index) => {
-  //     if (lastMatchedIndex !== index) {
-  //       if (
-  //         rawLRC.startTime === rawLRC.endTime &&
-  //         parsedRawLRC.length - 1 > index + 1 &&
-  //         parsedRawLRC[index + 1]!.startTime === rawLRC.endTime
-  //       ) {
-  //         final.push({
-  //           startTime: rawLRC.startTime,
-  //           endTime: parsedRawLRC[index + 1]!.endTime,
-  //           translatedLyric: parsedRawLRC[index + 1]!.words.map((w) => w.word).join(""),
-  //           romanLyric: "",
-  //           isBG: false,
-  //           isDuet: false,
-  //           words: mapRawLyricWord(rawLRC.words)
-  //         });
-  //         lastMatchedIndex = index + 1;
-  //       } else {
-  //         final.push(mapRawLyricLine(rawLRC));
-  //       }
-  //     } else {
-  //       lastMatchedIndex = -1;
-  //     }
-  //     return final;
-  //   },
-  //   <LyricLine[]>[]
-  // );
 }
 
 export function parseNeteaseLyricWasm(
