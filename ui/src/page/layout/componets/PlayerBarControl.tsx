@@ -7,14 +7,14 @@ const PlayerBarControl: FC<object> = () => {
   return (
     <div className="flex justify-center items-center gap-6">
       <SkipBack className="size-5" fill={"#171b20"} />
-      <div className="bg-red-500 text-white  p-2 rounded-full">
+      <div className="bg-[#fc3d49] text-white  p-2 rounded-full">
         {isPlaying ? (
           <Pause className="size-5" onClick={play} fill={"#ffffff"} />
         ) : (
           <Play className="size-5" onClick={play} fill={"#ffffff"} />
         )}
       </div>
-      <SkipForward className="size-5" fill={"171b20"} />
+      <SkipForward className="size-5" fill={"#171b20"} />
     </div>
   );
 };

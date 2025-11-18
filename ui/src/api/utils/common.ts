@@ -51,7 +51,7 @@ export function isTrackPlayable(track: NeteaseTrack): TrackPlayableStatus {
 export function mapTrackPlayableStatus(
   tracks: Undefinable<NeteaseTrack[]>,
   privileges: NeteaseTrackPrivilege[] = []
-) {
+): (NeteaseTrack & { playable: boolean; reason: string })[] {
   if (!Array.isArray(tracks)) return [];
 
   return tracks.map((track) => {
@@ -62,6 +62,6 @@ export function mapTrackPlayableStatus(
     const { playable, reason } = isTrackPlayable(track);
     track.playable = playable;
     track.reason = reason;
-    return track;
+    return track as NeteaseTrack & { playable: boolean; reason: string };
   });
 }

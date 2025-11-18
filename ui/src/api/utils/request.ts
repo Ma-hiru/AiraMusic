@@ -57,7 +57,7 @@ service.interceptors.response.use(
     ) {
       Log.warn("ui/request.ts", "Token has expired.");
       doLogout();
-      //TODO: router redirect to login page
+      window.node.event.createLoginWindow();
     }
 
     return Promise.reject(error);

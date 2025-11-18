@@ -1,16 +1,36 @@
-import { FC, memo } from "react";
+import { memo, HTMLAttributes } from "react";
 import { css, cx } from "@emotion/css";
 
-const Drag: FC<object> = () => {
+interface DragProps extends HTMLAttributes<HTMLDivElement> {
+  drag?: boolean;
+}
+
+export const Drag = memo(({ drag = true, className, ...props }: DragProps) => {
   return (
     <div
       className={cx(
-        css`
-          -webkit-app-region: drag;
-        `,
-        "absolute top-0 left-0 right-0 h-10"
+        drag &&
+          css`
+            -webkit-app-region: drag;
+          `,
+        className
       )}
+      {...props}
     />
   );
-};
-export default memo(Drag);
+});
+
+export const NoDrag = memo(({ drag = false, className, ...props }: DragProps) => {
+  return (
+    <div
+      className={cx(
+        !drag &&
+          css`
+            -webkit-app-region: no-drag;
+          `,
+        className
+      )}
+      {...props}
+    />
+  );
+});

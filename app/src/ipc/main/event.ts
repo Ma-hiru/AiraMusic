@@ -1,5 +1,5 @@
-import { BrowserWindow } from "electron";
 import ElectronStore from "electron-store";
+import { BrowserWindow } from "electron";
 import { StoreType } from "../../background";
 import { typedIpcMainOn, typedIpcMainSend } from "./typed";
 import { getEffectiveWindowSize } from "../../utils/screen";
@@ -14,7 +14,7 @@ export function registerEventHandlers(mainWindow: BrowserWindow, store: Electron
 }
 
 function registerLoginWindowControl() {
-  typedIpcMainOn("createLoginWindow", (_e) => {
+  typedIpcMainOn("createLoginWindow", () => {
     const { effectiveWidth: width, effectiveHeight: height } = getEffectiveWindowSize(0.3);
     const LoginWindow = WindowManager.createBrowserWindow(
       {

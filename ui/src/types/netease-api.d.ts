@@ -32,6 +32,24 @@ export interface NeteaseAlbumSummary {
   [key: string]: any;
 }
 
+export interface ChargeInfoList {
+  chargeMessage: null;
+  chargeType: number;
+  chargeUrl: null;
+  rate: number;
+  [property: string]: any;
+}
+
+export interface FreeTrialPrivilege {
+  cannotListenReason: null;
+  freeLimitTagType: null;
+  listenType: null;
+  playReason: null;
+  resConsumable: boolean;
+  userConsumable: boolean;
+  [property: string]: any;
+}
+
 /**
  * 歌曲可播/版权信息，搭配 `mapTrackPlayableStatus` 使用。
  * 来源：temp/src/api/track.js#getTrackDetail、temp/src/utils/common.js#isTrackPlayable。
@@ -59,7 +77,31 @@ export interface NeteaseTrackPrivilege {
   /** 位掩码/标志位，可能包含多种权限或特殊标识（需查看具体实现确定各位含义）。 */
   flag?: number;
   /** 其余仍会影响可播状态但暂未明确定义的字段。 */
-  [key: string]: any;
+  bd: null;
+  chargeInfoList: ChargeInfoList[];
+  code: number;
+  cp: number;
+  dlLevel: string;
+  dlLevels: null;
+  downloadMaxbr: number;
+  downloadMaxBrLevel: string;
+  flLevel: string;
+  freeTrialPrivilege: FreeTrialPrivilege;
+  ignoreCache: null;
+  maxBrLevel: string;
+  message: null;
+  paidBigBang: boolean;
+  pc: null;
+  playMaxbr: number;
+  playMaxBrLevel: string;
+  plLevel: string;
+  plLevels: null;
+  preSell: boolean;
+  realPayed: number;
+  rightSource: number;
+  rscl: null;
+  sp: number;
+  subp: number;
 }
 
 /**
@@ -69,30 +111,6 @@ export interface NeteaseTrackPrivilege {
 export interface NeteaseNoCopyrightRcmd {
   type: number;
   typeDesc: string;
-  [key: string]: any;
-}
-
-/**
- * `/song/detail`、`/album` 返回的歌曲结构，稍后会被 `mapTrackPlayableStatus` 写入本地字段。
- */
-export interface NeteaseTrack {
-  id: number;
-  name: string;
-  ar: NeteaseArtistSummary[];
-  /** 一些接口依然返回 `artists` 字段，与 `ar` 含义一致。 */
-  artists?: NeteaseArtistSummary[];
-  al: NeteaseAlbumSummary;
-  /** 歌曲时长（毫秒）。 */
-  dt: number;
-  /** 与 `privilege.fee` 配合的付费标记。 */
-  fee: number;
-  privilege?: NeteaseTrackPrivilege;
-  noCopyrightRcmd?: NeteaseNoCopyrightRcmd | null;
-  /** `mapTrackPlayableStatus` 注入的可播标记。 */
-  playable?: boolean;
-  /** `mapTrackPlayableStatus` 注入的不可播原因。 */
-  reason?: string;
-  /** 其余暂未使用的字段。 */
   [key: string]: any;
 }
 
@@ -125,19 +143,60 @@ export interface NeteaseSongUrlItem {
 export interface NeteaseSongUrlResponse {
   data: NeteaseSongUrlItem[];
   code: number;
-  [key: string]: any;
+}
+
+export interface NeteaseKlyric {
+  lyric: string;
+  version: number;
+}
+
+export interface NeteaseLrc {
+  lyric: string;
+  version: number;
+}
+
+export interface NeteaseRomalrc {
+  lyric: string;
+  version: number;
+  [property: string]: any;
+}
+
+export interface NeteaseTlyric {
+  lyric: string;
+  version: number;
+  [property: string]: any;
+}
+
+export interface NeteaseTransUser {
+  demand: number;
+  id: number;
+  nickname: string;
+  status: number;
+  uptime: number;
+  userid: number;
 }
 
 /**
  * 歌词接口 `/lyric` 返回体，同时也是 IndexedDB 的缓存结构。
  */
 export interface NeteaseLyricResponse {
-  lrc?: { version: number; lyric: string } | null;
-  tlyric?: { version: number; lyric: string } | null;
-  romalrc?: { version: number; lyric: string } | null;
-  yrc?: any; // 原接口会返回逐字歌词，这里暂未解析。
   code: number;
-  [key: string]: any;
+  /** 逐字歌词 QRC （逐字格式）*/
+  klyric: NeteaseKlyric;
+  /** 主歌词 LRC */
+  lrc: NeteaseLrc;
+  /** 罗马音歌词 LRC（罗马拼音）*/
+  romalrc: NeteaseRomalrc;
+  /** 歌词同步、翻译质量相关标志 */
+  qfy: boolean;
+  /** 歌词同步、翻译质量相关标志 */
+  sfy: boolean;
+  /** 歌词同步、翻译质量相关标志 */
+  sgc: boolean;
+  /** 翻译歌词 LRC（翻译版）*/
+  tlyric: NeteaseTlyric;
+  /** 提供歌词/翻译的用户信息 */
+  transUser: NeteaseTransUser;
 }
 
 /**
@@ -151,7 +210,7 @@ export interface NeteaseAlbumDetailResponse {
     artists?: NeteaseArtistSummary[];
     size?: number;
   };
-  songs: NeteaseTrack[];
+  songs: NeteaseTrackDetail[];
   code: number;
   [key: string]: any;
 }
@@ -169,29 +228,242 @@ export interface NeteasePlaylistTrackRef {
 /**
  * 歌单详情主体。
  */
-export interface NeteasePlaylistDetail {
+export interface Creator {
+  accountStatus: number;
+  anchor: boolean;
+  authenticationTypes: number;
+  authority: number;
+  authStatus: number;
+  avatarDetail: null;
+  avatarImgId: number;
+  avatarImgId_str: string;
+  avatarImgIdStr: string;
+  avatarUrl: string;
+  backgroundImgId: number;
+  backgroundImgIdStr: string;
+  backgroundUrl: string;
+  birthday: number;
+  city: number;
+  defaultAvatar: boolean;
+  description: string;
+  detailDescription: string;
+  djStatus: number;
+  experts: null;
+  expertTags: null;
+  followed: boolean;
+  gender: number;
+  mutual: boolean;
+  nickname: string;
+  province: number;
+  remarkName: null;
+  signature: string;
+  userId: number;
+  userType: number;
+  vipType: number;
+}
+
+export interface TrackId {
+  alg: null;
+  at: number;
+  dpr: null;
+  f: null;
+  id: number;
+  rcmdReason: string;
+  rcmdReasonTitle: string;
+  sc: null;
+  sr: null;
+  t: number;
+  tr: number;
+  uid: number;
+  v: number;
+}
+
+export interface NeteaseTrack {
+  a: null;
+  additionalTitle: null;
+  al: Al;
+  alg: null;
+  alia: string[];
+  ar: Ar[];
+  awardTags: null;
+  cd: string;
+  cf: string;
+  copyright: number;
+  cp: number;
+  crbt: null;
+  displayReason: null;
+  displayTags: null;
+  djId: number;
+  dt: number;
+  entertainmentTags: null;
+  fee: number;
+  ftype: number;
+  h: H;
+  hr: null;
+  id: number;
+  l: L;
+  m: null | M;
+  mainTitle: null;
+  mark: number;
+  mst: number;
+  mv: number;
+  name: string;
+  no: number;
+  noCopyrightRcmd: null;
+  originCoverType: number;
+  originSongSimpleData: null;
+  pop: number;
+  pst: number;
+  pubDJProgramData: null;
+  publishTime: number;
+  resourceState: boolean;
+  rt: null | string;
+  rtUrl: null;
+  rtUrls: string[];
+  rtype: number;
+  rurl: null;
+  s_id: number;
+  single: number;
+  songJumpInfo: null;
+  sq: Sq;
+  st: number;
+  t: number;
+  tagPicList: null;
+  tns?: string[];
+  v: number;
+  version: number;
+  /** 注入字段 */
+  privilege: NeteaseTrackPrivilege | null;
+  /** 注入字段 */
+  playable: boolean;
+  /** 注入字段 */
+  reason: string;
+}
+
+export interface Al {
   id: number;
   name: string;
-  description?: string;
+  pic: number;
+  pic_str?: string;
+  picUrl: string;
+  tns: string[];
+}
+
+export interface Ar {
+  alias: string[];
+  id: number;
+  name: string;
+  tns: string[];
+}
+
+export interface H {
+  br: number;
+  fid: number;
+  size: number;
+  sr?: number;
+  vd: number;
+}
+
+export interface L {
+  br: number;
+  fid: number;
+  size: number;
+  sr?: number;
+  vd: number;
+}
+
+export interface M {
+  br: number;
+  fid: number;
+  size: number;
+  sr?: number;
+  vd: number;
+}
+
+export interface Sq {
+  br: number;
+  fid: number;
+  size: number;
+  sr?: number;
+  vd: number;
+}
+
+export interface NeteasePlaylistDetail {
+  adType: number;
+  algTags: null;
+  backgroundCoverId: number;
+  backgroundCoverUrl: null;
+  bannedTrackIds: null;
+  bizExtInfo: { [key: string]: any };
+  cloudTrackCount: number;
+  commentCount: number;
+  commentThreadId: string;
+  copied: boolean;
+  coverImgId: number;
+  coverImgId_str: null;
   coverImgUrl: string;
+  coverStatus: number;
+  createTime: number;
+  creator: Creator;
+  description: null;
+  detailPageTitle: null;
+  displayTags: null;
+  displayUserInfoAsTagOnly: boolean;
+  distributeTags: string[];
+  englishTitle: null;
+  gradeStatus: string;
+  highQuality: boolean;
+  historySharedUsers: null;
+  id: number;
+  mixPodcastPlaylist: boolean;
+  mvResourceInfos: null;
+  name: string;
+  newDetailPageRemixVideo: null;
+  newImported: boolean;
+  officialPlaylistType: null;
+  opRecommend: boolean;
+  ordered: boolean;
+  playCount: number;
+  playlistType: string;
+  podcastTrackCount: number;
+  privacy: number;
+  relateResType: null;
+  remixVideo: null;
+  score: null;
+  shareCount: number;
+  sharedUsers: null;
+  specialType: number;
+  status: number;
+  subscribed: boolean;
+  subscribedCount: number;
+  subscribers: string[];
+  tags: string[];
+  titleImage: number;
+  titleImageUrl: null;
   trackCount: number;
-  trackIds: NeteasePlaylistTrackRef[];
+  trackIds: TrackId[];
+  trackNumberUpdateTime: number;
   tracks: NeteaseTrack[];
-  subscribers?: any[]; // 暂只读取数量，未细化结构。
-  tags?: string[];
-  playCount?: number;
-  updateTime?: number;
-  createTime?: number;
-  creator?: any; // 创建者信息字段较多，暂不展开。
-  privileges?: NeteaseTrackPrivilege[];
-  [key: string]: any;
+  trackUpdateTime: number;
+  trialMode: number;
+  updateFrequency: null;
+  updateTime: number;
+  userId: number;
+  videoIds: null;
+  videos: null;
 }
 
 export interface NeteasePlaylistDetailResponse {
-  playlist: NeteasePlaylistDetail;
-  privileges?: NeteaseTrackPrivilege[];
   code: number;
-  [key: string]: any;
+  fromUserCount: number;
+  fromUsers: null;
+  playlist: NeteasePlaylistDetail;
+  privileges: NeteaseTrackPrivilege[];
+  relatedVideos: null;
+  resEntrance: null;
+  sharedPrivilege: null;
+  songFromUsers: null;
+  urls: null;
 }
 
 /**
@@ -199,7 +471,7 @@ export interface NeteasePlaylistDetailResponse {
  */
 export interface NeteaseDailySongsResponse {
   data: {
-    dailySongs: NeteaseTrack[];
+    dailySongs: NeteaseTrackDetail[];
     privileges: NeteaseTrackPrivilege[];
     [key: string]: any;
   };
@@ -211,7 +483,7 @@ export interface NeteaseDailySongsResponse {
  * `/personal_fm` 返回的私人 FM 列表。
  */
 export interface NeteasePersonalFMResponse {
-  data: NeteaseTrack[];
+  data: NeteaseTrackDetail[];
   code: number;
   [key: string]: any;
 }
@@ -225,7 +497,7 @@ export interface NeteaseArtistDetailResponse {
     albumSize?: number;
     mvSize?: number;
   };
-  hotSongs: NeteaseTrack[];
+  hotSongs: NeteaseTrackDetail[];
   more: boolean;
   code: number;
   [key: string]: any;
@@ -239,7 +511,7 @@ export interface NeteaseCloudDiskTrack {
   fileName: string;
   artist: string;
   album: string;
-  simpleSong?: NeteaseTrack;
+  simpleSong?: NeteaseTrackDetail;
   /** 文件大小（字节）。 */
   fileSize: number;
   /** 其余原始字段。 */
@@ -277,7 +549,7 @@ export interface NeteaseStatusResponse {
 export interface NeteaseSearchSongResponse {
   result: {
     song?: {
-      songs: NeteaseTrack[];
+      songs: NeteaseTrackDetail[];
       [key: string]: any;
     };
     [key: string]: any;
@@ -290,7 +562,7 @@ export interface NeteaseSearchSongResponse {
  * `/top/song` 返回的新歌速递列表。
  */
 export interface NeteaseTopSongResponse {
-  data: NeteaseTrack[];
+  data: NeteaseTrackDetail[];
   code: number;
   [key: string]: any;
 }
@@ -314,40 +586,6 @@ export interface NeteaseArtistAlbumResponse {
   more: boolean;
   code: number;
   [key: string]: any;
-}
-
-export interface Creator {
-  accountStatus: number;
-  anchor: boolean;
-  authenticationTypes: number;
-  authority: number;
-  authStatus: number;
-  avatarDetail: null;
-  avatarImgId: number;
-  avatarImgId_str: string;
-  avatarImgIdStr: string;
-  avatarUrl: string;
-  backgroundImgId: number;
-  backgroundImgIdStr: string;
-  backgroundUrl: null | string;
-  birthday: number;
-  city: number;
-  defaultAvatar: boolean;
-  description: string;
-  detailDescription: string;
-  djStatus: number;
-  experts: null | { "1": string; "2"?: string };
-  expertTags: string[] | null;
-  followed: boolean;
-  gender: number;
-  mutual: boolean;
-  nickname: string;
-  province: number;
-  remarkName: null;
-  signature: string;
-  userId: number;
-  userType: number;
-  vipType: number;
 }
 
 export interface RecommendInfo {
@@ -516,8 +754,18 @@ export interface NeteaseUserPlaylistResponse {
  * `/user/record` 返回的听歌记录。
  */
 export interface NeteaseUserRecordResponse {
-  weekData?: Array<{ song: NeteaseTrack; playCount: number; score?: number; [key: string]: any }>;
-  allData?: Array<{ song: NeteaseTrack; playCount: number; score?: number; [key: string]: any }>;
+  weekData?: Array<{
+    song: NeteaseTrackDetail;
+    playCount: number;
+    score?: number;
+    [key: string]: any;
+  }>;
+  allData?: Array<{
+    song: NeteaseTrackDetail;
+    playCount: number;
+    score?: number;
+    [key: string]: any;
+  }>;
   code: number;
   [key: string]: any;
 }
@@ -734,7 +982,7 @@ export interface NeteaseLikedMVsResponse {
 export interface NeteaseCloudDiskTrackDetailResponse {
   data: {
     songId: number;
-    simpleSong?: NeteaseTrack;
+    simpleSong?: NeteaseTrackDetail;
     fileName?: string;
     [key: string]: any;
   } | null;

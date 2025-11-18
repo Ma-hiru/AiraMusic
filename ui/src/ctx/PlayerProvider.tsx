@@ -1,7 +1,7 @@
 import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { PlayerCtx, PlayerCtxType } from "./PlayerCtx";
 import { LyricLine } from "@applemusic-like-lyrics/core";
-import { handleTranslatedLRC } from "@mahiru/ui/utils/lyric";
+import { parseTranslatedLRCWasm } from "@mahiru/ui/utils/lyric";
 
 export default function PlayerProvider({ children }: { children: ReactNode }) {
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -55,8 +55,8 @@ export default function PlayerProvider({ children }: { children: ReactNode }) {
     fetch("/小さな恋のうた - 石見舞菜香.lrc")
       .then((res) => res.text())
       .then((lrc) => {
-        handleTranslatedLRC(lrc);
-        setLyricLines(handleTranslatedLRC(lrc));
+        parseTranslatedLRCWasm(lrc);
+        setLyricLines(parseTranslatedLRCWasm(lrc));
       });
   }, []);
   useEffect(() => {

@@ -87,13 +87,13 @@ async function deleteExcessCache() {
 }
 
 export function cacheTrackSource(
-  trackInfo: Pick<NeteaseTrack, "id" | "name" | "artists" | "ar" | "al">,
+  trackInfo: Pick<NeteaseTrack, "id" | "name" | "ar" | "al">,
   url: string,
   bitRate: number,
   from = "netease"
 ) {
   const name = trackInfo.name;
-  const artist = trackInfo?.ar?.[0]?.name || trackInfo?.artists?.[0]?.name || "Unknown";
+  const artist = trackInfo?.ar?.[0]?.name || "Unknown";
   const cover = trackInfo.al.picUrl.startsWith("https")
     ? trackInfo.al.picUrl
     : "https" + trackInfo.al.picUrl.slice(4);

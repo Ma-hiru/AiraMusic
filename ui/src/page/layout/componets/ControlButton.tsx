@@ -1,6 +1,6 @@
 import { FC, memo, useCallback, useState } from "react";
 import { Minus, Square, SquareMinus, X } from "lucide-react";
-import { css, cx } from "@emotion/css";
+import { NoDrag } from "@mahiru/ui/componets/public/Drag";
 
 interface ControlButtonProps {
   windowId: WindowType;
@@ -28,13 +28,7 @@ const ControlButton: FC<ControlButtonProps> = ({ windowId, maximizable = true })
   }, [windowId]);
 
   return (
-    <div
-      className={cx(
-        "flex flex-row gap-4 select-none relative z-10",
-        css`
-          -webkit-app-region: no-drag;
-        `
-      )}>
+    <NoDrag className="flex flex-row gap-4 select-none relative z-10">
       <Minus className="size-5 cursor-pointer" onClick={minimize} />
       {isMax
         ? maximizable && (
@@ -42,7 +36,7 @@ const ControlButton: FC<ControlButtonProps> = ({ windowId, maximizable = true })
           )
         : maximizable && <Square className="size-5 cursor-pointer scale-80" onClick={maximize} />}
       <X className="size-5" onClick={close} />
-    </div>
+    </NoDrag>
   );
 };
 export default memo(ControlButton);

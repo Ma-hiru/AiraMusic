@@ -4,7 +4,7 @@ import PlayerBarControl from "@mahiru/ui/page/layout/componets/PlayerBarControl"
 
 const PlayerBar: FC<object> = () => {
   return (
-    <div className="absolute h-18 bottom-0 left-0 right-0 bg-white px-6 shadow-lg grid grid-rows-1 grid-cols-[1fr_auto_1fr] items-center">
+    <div className="absolute h-18 bottom-0 left-0 right-0 bg-white px-6 shadow-lg grid grid-rows-1 grid-cols-[1fr_auto_1fr] items-center z-10">
       <PlayerBarCover />
       <PlayerBarControl />
       <div></div>

@@ -2,6 +2,7 @@ import { FC, memo } from "react";
 import { addMessageHandler, removeMessageHandler } from "@mahiru/ui/utils/registerMessageHandlers";
 import { doLogout, isAccountLoggedIn } from "@mahiru/ui/api/utils/auth";
 import { refreshLogin } from "@mahiru/ui/utils/task";
+import { isDev } from "@mahiru/ui/utils/dev";
 
 const HomePage: FC<object> = () => {
   return (
@@ -18,6 +19,8 @@ const HomePage: FC<object> = () => {
                 removeMessageHandler("login");
               }
             }, "login");
+          } else if (isDev) {
+            window.node.event.createLoginWindow();
           }
         }}>
         Login

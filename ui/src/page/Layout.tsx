@@ -12,7 +12,9 @@ const Layout: FC<object> = () => {
         <TopBar />
         <NavSide />
         <PlayerBar />
-        <KeepAliveOutlet />
+        <div className="w-screen h-screen pb-18 pl-48">
+          <KeepAliveOutlet />
+        </div>
       </div>
       <PlayerModal />
     </div>

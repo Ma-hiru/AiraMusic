@@ -1,6 +1,7 @@
 import Cookies from "js-cookie";
 import { logout } from "../auth";
 import { usePersistZustandStore } from "@mahiru/ui/store";
+import router from "@mahiru/ui/router";
 
 export function setCookies(raw: string) {
   const cookies = raw.split(";;");
@@ -47,9 +48,16 @@ export function isLooseLoggedIn() {
 const { updatePersistStoreData } = usePersistZustandStore.getState();
 
 export function doLogout() {
-  logout();
-  removeCookie("MUSIC_U");
-  removeCookie("__csrf");
-  // 更新状态仓库
-  updatePersistStoreData({ user: null, loginMode: "" });
+  logout().finally(() => {
+    removeCookie("MUSIC_U");
+    removeCookie("__csrf");
+    // 更新状态仓库
+    updatePersistStoreData({
+      user: null,
+      loginMode: "",
+      userPlayLists: [],
+      lastRefreshCookieDate: 0
+    });
+    return router.navigate("/home");
+  });
 }
