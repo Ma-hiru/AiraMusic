@@ -1,28 +1,43 @@
-import { FC, memo, useEffect, useState } from "react";
+import { FC, memo, useDeferredValue, useEffect, useState } from "react";
 import { getPlaylistDetail } from "@mahiru/ui/api/playlist";
 import Top from "@mahiru/ui/page/playlist/Top";
 import List from "@mahiru/ui/page/playlist/List";
 import Divider from "@mahiru/ui/page/playlist/Divider";
 import { NeteasePlaylistDetailResponse } from "@mahiru/ui/types/netease-api";
+import { useParams } from "react-router-dom";
+import { Log } from "@mahiru/ui/utils/log";
+import { EqError } from "@mahiru/ui/utils/err";
 
 const PlayListPage: FC<object> = () => {
-  const [testDetailData, setTestDetailData] =
-    useState<Nullable<NeteasePlaylistDetailResponse>>(null);
+  const { id } = useParams();
+  const [detail, setDetail] = useState<Nullable<NeteasePlaylistDetailResponse>>(null);
   useEffect(() => {
-    fetch("/playListDetail.json")
-      .then((res) => res.json())
-      .then(setTestDetailData);
-  }, []);
+    if (id) {
+      requestPlayListDetail(Number(id)).then((res) => {
+        res && setDetail(res);
+      });
+    }
+  }, [id, detail]);
   return (
     <div className="w-full h-full px-12 pt-20">
-      <Top detail={testDetailData} />
+      <Top detail={detail} />
       <Divider />
-      <List detail={testDetailData} />
+      <List detail={detail} />
     </div>
   );
 };
-export default memo(PlayListPage);
+export default PlayListPage;
 
-async function getPlayListDetail(id: number) {
-  const result = await getPlaylistDetail(id);
+async function requestPlayListDetail(id: number) {
+  try {
+    return await getPlaylistDetail(id, false);
+  } catch (err) {
+    Log.error(
+      new EqError({
+        raw: err,
+        label: "ui/playListPage:requestPlayListDetail",
+        message: "Failed to fetch playlist detail"
+      })
+    );
+  }
 }

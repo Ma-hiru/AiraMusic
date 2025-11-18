@@ -3,6 +3,9 @@ import { NeteasePlaylistDetailResponse, NeteaseTrack } from "@mahiru/ui/types/ne
 import { mapTrackPlayableStatus } from "@mahiru/ui/api/utils/common";
 import { formatDurationToMMSS, formatTimeToMMDD } from "@mahiru/ui/utils/time";
 import { getLyric, getMP3 } from "@mahiru/ui/api/track";
+import ListItem from "@mahiru/ui/page/playlist/ListItem";
+import { css, cx } from "@emotion/css";
+import Search from "@mahiru/ui/page/playlist/Search";
 
 interface ListProps {
   detail: Nullable<NeteasePlaylistDetailResponse>;
@@ -11,56 +14,26 @@ interface ListProps {
 const List: FC<ListProps> = ({ detail }) => {
   const tracks = useMemo(() => {
     if (!detail) return [];
-    return mapTrackPlayableStatus(
-      detail.playlist.tracks,
-      detail.privileges
-    ) as unknown as (NeteaseTrack & {
-      playable: boolean;
-      reason: string;
-    })[];
+    return mapTrackPlayableStatus(detail.playlist.tracks, detail.privileges);
   }, [detail]);
   return (
-    <div className="space-y-2">
-      {tracks.map((track) => {
-        return (
-          <div key={track.id} className="flex gap-4" onClick={() => {}}>
-            <img src={track.al.picUrl} className="size-6" alt={track.al.name} />
-            <span>
-              {track.name}({track.tns?.[0] || track.alia?.[0]})
-            </span>
-            <span>{track.ar.map((ar) => ar.name).join("-")}</span>
-            <span>{track.al.name}</span>
-            <span>
-              {track.playable ? "可播放" : "不可播放"}-{track.reason}
-            </span>
-            <span>{formatTimeToMMDD(track.publishTime)}</span>
-            <span>时长:{formatDurationToMMSS(track.dt)}</span>
-            <button
-              onClick={() => {
-                requestLyric(track.id);
-              }}>
-              get lyric
-            </button>
-            <button
-              onClick={() => {
-                requestTrackURL(track.id);
-              }}>
-              get url
-            </button>
-          </div>
-        );
-      })}
-    </div>
+    <>
+      <Search />
+      <div
+        className={cx(
+          "space-y-2 w-full overflow-y-auto h-[calc(100%-216px)] pb-12",
+          css`
+            scrollbar-width: none;
+          `
+        )}>
+        {tracks.map((track, index) => (
+          <ListItem track={track} index={index + 1} key={track.id} />
+        ))}
+        <div className="text-[#7b8290]/50 text-[12px] font-medium text-center mt-4">
+          一共 {detail?.playlist.tracks.length} 首音乐
+        </div>
+      </div>
+    </>
   );
 };
 export default memo(List);
-
-async function requestLyric(trackId: number) {
-  const result = await getLyric(trackId);
-  console.log("lyric", result);
-}
-
-async function requestTrackURL(trackId: number) {
-  const result = await getMP3(trackId);
-  console.log("track url", result);
-}

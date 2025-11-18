@@ -17,7 +17,7 @@ const Top: FC<TopProps> = ({ detail }) => {
       <div className="flex items-start gap-4">
         {/*Cover*/}
         <img
-          className="size-44 rounded-md shadow-xl"
+          className="size-44 rounded-md shadow-xs"
           src={detail?.playlist.coverImgUrl}
           alt={detail?.playlist.name}
         />

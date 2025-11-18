@@ -19,3 +19,7 @@ export function formatDurationToMMSS(duration: number) {
   const paddedSeconds = seconds.toString().padStart(2, "0");
   return `${minutes}:${paddedSeconds}`;
 }
+
+export function padNumber(num: number, length: number) {
+  return num.toString().padStart(length, "0");
+}

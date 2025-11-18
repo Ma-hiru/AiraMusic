@@ -87,12 +87,3 @@ export function bytesToSize(bytes: number): string {
   }
   return `${(bytes / gigaBytes).toFixed(decimal)} GB`;
 }
-
-export function formatTrackTime(value: number | null | undefined): string {
-  if (!value) return "";
-  const minutes = Math.floor(value / 60);
-  const seconds = Math.floor(value % 60)
-    .toString()
-    .padStart(2, "0");
-  return `${minutes}:${seconds}`;
-}
