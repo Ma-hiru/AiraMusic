@@ -32,6 +32,17 @@ function createWindow(params: { width?: number; height?: number }) {
   const { width, height } = params || {};
   const { effectiveWidth, effectiveHeight } = getEffectiveWindowSize();
   const { effectiveWidth: minWidth, effectiveHeight: minHeight } = getEffectiveWindowSize(0.55);
+
+  Log.trace(
+    "app/createWindow.ts",
+    "store size:",
+    width,
+    height,
+    "effective size:",
+    effectiveWidth,
+    effectiveHeight
+  );
+
   return WindowManager.createBrowserWindow(
     {
       width: width || effectiveWidth,

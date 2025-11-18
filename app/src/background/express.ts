@@ -10,7 +10,12 @@ export function createExpressApp() {
   const port = CONSTANTS.APP.EXPRESS_PORT;
   const ncmPort = CONSTANTS.APP.NCM_PORT;
   expressAPP.use("/", express.static(staticPath));
-  expressAPP.use("/api", expressProxy(`http://127.0.0.1:${ncmPort}`));
+  expressAPP.use(
+    "/api",
+    expressProxy(`http://127.0.0.1:${ncmPort}`, {
+      timeout: 15000
+    })
+  );
   //TODO: player
   return expressAPP.listen(port, "127.0.0.1");
 }

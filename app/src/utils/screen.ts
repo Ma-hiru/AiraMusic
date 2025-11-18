@@ -1,5 +1,6 @@
-import { BrowserWindow, screen } from "electron";
+import { screen } from "electron";
 import { CONSTANTS } from "../constant";
+import { isLinux } from "./platform";
 
 const { DEFAULT_WINDOW_WIDTH_HEIGHT_RATIO, DEFAULT_WINDOW_COVER_RATIO } = CONSTANTS.APP;
 
@@ -28,15 +29,17 @@ export function getEffectiveWindowSize(
 
 export function getEffectiveWorkAreaSize() {
   const { width, height } = screen.getPrimaryDisplay().workAreaSize;
+  if (isLinux) {
+    const sf = screen.getPrimaryDisplay().scaleFactor;
+    return {
+      effectiveScreenWidth: Math.floor(width / sf),
+      effectiveScreenHeight: Math.floor(height / sf)
+    };
+  }
   return {
     effectiveScreenWidth: width,
     effectiveScreenHeight: height
   };
-}
-
-export function calcEffectivePixel(pixel: number) {
-  const scaleFactor = screen.getPrimaryDisplay().scaleFactor || 1;
-  return Math.floor(pixel / scaleFactor);
 }
 
 export function checkPositionOutScreenBounds(x?: number, y?: number) {
@@ -53,4 +56,8 @@ export function checkPositionOutScreenBounds(x?: number, y?: number) {
           y < bounds.y + bounds.height
       )
   );
+}
+
+export function getScreenInfo() {
+  return screen.getAllDisplays();
 }

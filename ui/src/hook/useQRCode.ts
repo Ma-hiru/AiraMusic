@@ -55,7 +55,7 @@ export function useQRCode() {
             timer.current && clearInterval(timer.current);
           }
         });
-    }, 1000);
+    }, 1200);
   }, [key]);
 
   const fetchQRCode = useCallback(async () => {
