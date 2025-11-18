@@ -17,7 +17,7 @@ const PlayListPage: FC<object> = () => {
         res && setDetail(res);
       });
     }
-  }, [id, detail]);
+  }, [id]);
   return (
     <div className="w-full h-full px-12 pt-20">
       <Top detail={detail} />

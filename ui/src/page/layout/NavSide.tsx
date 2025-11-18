@@ -61,7 +61,7 @@ const NavSide: FC<object> = () => {
           );
         })}
       </div>
-      {data?.userPlayLists?.length && <NavSideDivider />}
+      {!!data?.userPlayLists?.length && <NavSideDivider />}
       {/*playList*/}
       <div className="overflow-hidden">
         <div
@@ -85,9 +85,11 @@ const NavSide: FC<object> = () => {
               />
             );
           })}
-          <span className="text-[10px] text-[#7b8290] text-center block mt-2">
-            一共 {data.userPlayLists.length} 个歌单
-          </span>
+          {!!data.userPlayLists.length && (
+            <span className="text-[10px] text-[#7b8290] text-center block mt-2">
+              一共 {data.userPlayLists.length} 个歌单
+            </span>
+          )}
         </div>
         <button
           className={cx(
