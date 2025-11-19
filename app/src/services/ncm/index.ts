@@ -1,8 +1,8 @@
 import moduleDefs from "./ncmModDef";
 import { ensureAnonToken } from "./ensureAnonToken";
-import { Log } from "../utils/log";
-import { EqError } from "../utils/err";
-import { CONSTANTS } from "../constant";
+import { Log } from "../../utils/log";
+import { EqError } from "../../utils/err";
+import { CONSTANTS } from "../../constant";
 
 type ServerModule = typeof import("@neteasecloudmusicapienhanced/api/server.js");
 let serverImpl: ServerModule["default"] | undefined;

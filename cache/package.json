@@ -1,0 +1,14 @@
+{
+  "name": "@mahiru/cache",
+  "main": "index.ts",
+  "files": [
+    "server.exe",
+    "server",
+    "index.ts"
+  ],
+  "scripts": {
+    "build": "pnpm run-script-os",
+    "build:win32": "go build -o ../dist/app/server.exe main.go",
+    "build:linux": "go build -o ../dist/app/server main.go"
+  }
+}

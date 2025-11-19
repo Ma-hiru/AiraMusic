@@ -33,6 +33,11 @@ export default defineConfig(() => {
           target: "http://127.0.0.1:10754",
           changeOrigin: true,
           rewrite: (path) => path.replace(/^\/api/, "")
+        },
+        "/cache": {
+          target: "http://127.0.0.1:8824",
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/cache/, "")
         }
       }
     }

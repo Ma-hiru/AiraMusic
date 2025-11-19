@@ -3,6 +3,7 @@ packages:
   - ui
   - wasm
   - log
+  - cache
 
 nodeLinker: hoisted
 

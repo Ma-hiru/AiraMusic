@@ -1,4 +1,5 @@
 import { defineConfig } from "tsup";
+import { copyFile } from "node:fs/promises";
 
 // noinspection JSUnusedGlobalSymbols 禁用webstorm的未使用默认导出警告
 export default defineConfig([
@@ -12,7 +13,15 @@ export default defineConfig([
     clean: true,
     dts: false,
     external: ["electron", "esbuild", "node:*", "window"],
-    noExternal: ["@mahiru/log"],
+    noExternal: ["@mahiru/log", "@mahiru/cache"],
+    onSuccess: async () => {
+      try {
+        await copyFile("../cache/server.exe", "../dist/app/server.exe");
+        await copyFile("../cache/server", "../dist/app/server");
+      } catch {
+        /** empty */
+      }
+    },
     minify: true
   },
   {

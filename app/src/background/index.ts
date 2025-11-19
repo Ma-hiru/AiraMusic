@@ -2,10 +2,11 @@ import ElectronStore from "electron-store";
 import { isCreateMpris, isMacOS } from "../utils/platform";
 import { Log } from "../utils/log";
 import { app, BrowserWindow, protocol } from "electron";
-import { startNeteaseMusicApiServer } from "../services";
+import { startNeteaseMusicApiServer } from "../services/ncm";
 import { Server } from "node:http";
-import { createExpressApp } from "./express";
+import { createExpressApp } from "../services/express";
 import { handleAppEvents } from "./appEvent";
+import { startCacheServer } from "@mahiru/app/src/services/cache";
 
 export type StoreType = {
   window: {
@@ -25,6 +26,7 @@ export class APP {
   neteaseMusicAPIServer!: Promise<void>;
   expressAPP!: Server;
   window!: BrowserWindow;
+  cacheAPP!: number;
 
   private init() {
     Log.debug("App initialize");
@@ -44,6 +46,7 @@ export class APP {
     });
     this.neteaseMusicAPIServer = startNeteaseMusicApiServer();
     this.expressAPP = createExpressApp();
+    this.cacheAPP = startCacheServer();
     protocol.registerSchemesAsPrivileged([
       {
         scheme: "app",

@@ -26,11 +26,7 @@
     "cloudTrackCount": 0,
     "ordered": true,
     "description": "future bass，又名kawaii bass，是一种特定的电子音乐风格，因其能生动的表现出心动的感觉。\n\nfuture bass最初并非以音乐风格方式出现，而是来源于soundcloud的一个标签，久而久之，人们将这种类型的音乐称之为future bass 。future bass常与trap混搭 。\n\nfuture bass特点非常鲜明，BPM（Beat Per Minute）通常在70到95之间，鼓音色一般是Roland 808、909系列，由于合成器通常会运用一些滤波变化，使得整个音乐有一种忽明忽暗的感觉。\n\n",
-    "tags": [
-      "欧美",
-      "电子",
-      "夜晚"
-    ],
+    "tags": ["欧美", "电子", "夜晚"],
     "updateFrequency": null,
     "backgroundCoverId": 0,
     "backgroundCoverUrl": null,
@@ -334,11 +330,7 @@
       "backgroundUrl": "http://p1.music.126.net/5fgPRx7JLJJI2NhPj7Fv-g==/3294136844598970.jpg",
       "authority": 0,
       "mutual": false,
-      "expertTags": [
-        "轻音乐",
-        "流行",
-        "欧美"
-      ],
+      "expertTags": ["轻音乐", "流行", "欧美"],
       "experts": null,
       "djStatus": 10,
       "vipType": 0,
@@ -1313,9 +1305,7 @@
         "cp": 7001,
         "mv": 5547010,
         "publishTime": 1495728000000,
-        "tns": [
-          "守候"
-        ]
+        "tns": ["守候"]
       },
       {
         "name": "Complicated",
@@ -4133,9 +4123,7 @@
         "cp": 7001,
         "mv": 5449021,
         "publishTime": 1487692800000,
-        "tns": [
-          "仅此而已"
-        ]
+        "tns": ["仅此而已"]
       },
       {
         "name": "Keep Me from You (feat. ODA)",
@@ -8385,9 +8373,7 @@
         "cp": 1416512,
         "mv": 22607401,
         "publishTime": 1486310400007,
-        "tns": [
-          "裂隙"
-        ]
+        "tns": ["裂隙"]
       },
       {
         "name": "Choose",
@@ -9086,9 +9072,7 @@
         "cp": 7003,
         "mv": 5488026,
         "publishTime": 1487779200000,
-        "tns": [
-          "片刻停留"
-        ]
+        "tns": ["片刻停留"]
       },
       {
         "name": "Aftershock (Justin Caruso Remix)",
@@ -9967,9 +9951,7 @@
         "cp": 7001,
         "mv": 0,
         "publishTime": 1450317291588,
-        "tns": [
-          "涅槃重生"
-        ]
+        "tns": ["涅槃重生"]
       },
       {
         "name": "Shape Of You (Jupe x Awoltalk Remix)",
@@ -11851,9 +11833,7 @@
         "cp": 7001,
         "mv": 0,
         "publishTime": 1512057600000,
-        "tns": [
-          "遥不可及"
-        ]
+        "tns": ["遥不可及"]
       },
       {
         "name": "Don't Speak",
@@ -13732,10 +13712,7 @@
     "historySharedUsers": null,
     "gradeStatus": "OPENED",
     "score": null,
-    "algTags": [
-      "欧美",
-      "电子"
-    ],
+    "algTags": ["欧美", "电子"],
     "distributeTags": [],
     "trialMode": 1,
     "displayTags": null,

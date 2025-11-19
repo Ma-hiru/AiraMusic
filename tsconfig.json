@@ -22,7 +22,12 @@
     "jsx": "react-jsx",
     "paths": {
       "@mahiru/ui/*": ["./ui/src/*"],
-      "@mahiru/*": ["./*/src/index.ts", "./*/src/index.tsx"],
+      "@mahiru/*": [
+        "./*/src/index.ts",
+        "./*/src/index.tsx",
+        "./*/index.ts",
+        "./*/index.tsx"
+      ],
       "@applemusic-like-lyrics/core": ["./patch/@applemusic-like-lyrics/core"],
       "*": ["./*"]
     }

@@ -5,6 +5,7 @@ import { createInitWindow } from "./createWindow";
 import { handleWindowEvents } from "./windowEvent";
 import { isCreateTray, isMacOS } from "../utils/platform";
 import { registerIpcMainHandlers } from "../ipc";
+import { stopCacheServer } from "@mahiru/app/src/services/cache";
 
 export function handleAppEvents(instance: APP) {
   app.on("ready", async () => {
@@ -48,6 +49,7 @@ export function handleAppEvents(instance: APP) {
   app.on("quit", () => {
     Log.trace("App quit");
     instance.expressAPP.close();
+    stopCacheServer();
   });
 
   // 退出前注销全局快捷键

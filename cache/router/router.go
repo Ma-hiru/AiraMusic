@@ -21,31 +21,6 @@ func SetRouter(app *gin.Engine) {
 			"index": index,
 		})
 	})
-
-	app.GET("/api/fetch", func(ctx *gin.Context) {
-		var url = ctx.Query("url")
-		var fileType = ctx.Query("type")
-		var store = file.GetStore()
-		var index, ok = store.Check(url)
-		if !ok {
-			ctx.Status(404)
-			return
-		}
-		var storeFile = store.Fetch(index)
-		ctx.Header("Content-Disposition", "attachment; filename=\""+index.Name+"\"")
-		if fileType != "" {
-			ctx.Header("Content-Type", fileType)
-		} else {
-			ctx.Header("Content-Type", "application/octet-stream")
-
-		}
-		ctx.Header("Content-Length", strconv.FormatInt(index.Size, 10))
-		ctx.Stream(func(w io.Writer) bool {
-			_, err := io.Copy(w, storeFile)
-			return err == nil
-		})
-	})
-
 	app.GET("/api/store", func(ctx *gin.Context) {
 		var url = ctx.Query("url")
 		var httpClint = http.DefaultClient
@@ -57,8 +32,9 @@ func SetRouter(app *gin.Engine) {
 		}
 
 		var store = file.GetStore()
-
-		index, err := store.Store(resp.Body, url, getNameFromURL(url))
+		var fileType = resp.Header.Get("Content-Type")
+		var fileName = getNameFromURL(url)
+		index, err := store.Store(resp.Body, url, fileName, fileType)
 		if err != nil {
 			ctx.Status(500)
 			log.Panicln(err)
@@ -68,6 +44,64 @@ func SetRouter(app *gin.Engine) {
 		ctx.JSON(200, gin.H{
 			"ok":    true,
 			"index": index,
+		})
+	})
+	app.GET("/api/fetch", func(ctx *gin.Context) {
+		var url = ctx.Query("url")
+		var store = file.GetStore()
+		var index, ok = store.Check(url)
+		if !ok {
+			ctx.Status(404)
+			return
+		}
+		var storeFile = store.Fetch(index)
+		ctx.Header("Content-Disposition", "attachment; filename=\""+index.Name+"\"")
+		ctx.Header("Content-Type", index.Type)
+
+		ctx.Header("Content-Length", strconv.FormatInt(index.Size, 10))
+		ctx.Stream(func(w io.Writer) bool {
+			_, err := io.Copy(w, storeFile)
+			return err == nil
+		})
+	})
+	app.GET("/api/remove", func(ctx *gin.Context) {
+		var url = ctx.Query("url")
+		var store = file.GetStore()
+		var index, ok = store.Check(url)
+		if !ok {
+			ctx.Status(404)
+			return
+		}
+		success, err := store.Remove(index)
+		if err != nil {
+			ctx.Status(500)
+			log.Panicln(err)
+			return
+		}
+		ctx.JSON(200, gin.H{
+			"ok":    success,
+			"index": index,
+		})
+	})
+	app.GET("/api/clear", func(ctx *gin.Context) {
+		var store = file.GetStore()
+		count, err := store.Clear()
+		if err != nil {
+			ctx.Status(500)
+			log.Panicln(err)
+			return
+		}
+		ctx.JSON(200, gin.H{
+			"ok":    true,
+			"count": count,
+		})
+	})
+	app.GET("/api/count", func(ctx *gin.Context) {
+		var store = file.GetStore()
+		var count = store.Count()
+		ctx.JSON(200, gin.H{
+			"ok":    true,
+			"count": count,
 		})
 	})
 }

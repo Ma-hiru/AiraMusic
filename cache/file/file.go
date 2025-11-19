@@ -16,14 +16,16 @@ type Store struct {
 	indexName   string
 	mappedIndex map[string]Index
 	indexMutex  sync.RWMutex
+	timeLimit   time.Duration
 }
 
 type Index struct {
 	Url        string `json:"url"`
 	Path       string `json:"path"`
-	Name       string
-	CreateTime int64 `json:"createTime"`
-	Size       int64 `json:"size"`
+	Name       string `json:"name"`
+	Type       string `json:"type"`
+	CreateTime int64  `json:"createTime"`
+	Size       int64  `json:"size"`
 }
 
 var store *Store
@@ -32,7 +34,9 @@ func GetStore() *Store {
 	return store
 }
 
-func InitStore(dir string) error {
+func InitStore(dir string, timeLimit time.Duration) error {
+	dir = filepath.Join(dir, "mahiru")
+	fmt.Printf("Store directory: %s\n", dir)
 	if fileInfo, err := os.Stat(dir); os.IsNotExist(err) {
 		err := os.MkdirAll(dir, 0755)
 		if err != nil {
@@ -47,6 +51,7 @@ func InitStore(dir string) error {
 		indexName:   "index",
 		mappedIndex: make(map[string]Index),
 		indexMutex:  sync.RWMutex{},
+		timeLimit:   timeLimit,
 	}
 
 	var err = file.loadIndex()
@@ -58,21 +63,25 @@ func InitStore(dir string) error {
 	return nil
 }
 
-func createIndex(path string, url string, size int64, name string) Index {
-	var createTime = time.Now().Unix()
+func createIndex(path string, url string, size int64, name string, fileType string) Index {
 	var index = Index{
-		url,
-		path,
-		name,
-		createTime,
-		size,
+		Url:        url,
+		Name:       name,
+		Size:       size,
+		Path:       path,
+		Type:       fileType,
+		CreateTime: getTime(),
 	}
 
 	return index
 }
 
-func (Self *Store) randomFilename() string {
+func randomFilename() string {
 	return strconv.FormatInt(time.Now().UnixMilli(), 10)
+}
+
+func getTime() int64 {
+	return time.Now().Unix()
 }
 
 func (Self *Store) Check(url string) (Index, bool) {
@@ -80,14 +89,21 @@ func (Self *Store) Check(url string) (Index, bool) {
 	return index, exist
 }
 
-func (Self *Store) Store(reader io.Reader, url string, name string) (Index, error) {
-	var filename = Self.randomFilename()
+func (Self *Store) Store(reader io.Reader, url string, name string, fileType string) (Index, error) {
+	if index, exist := Self.Check(url); exist {
+		return index, nil
+	}
+
+	var filename = randomFilename()
 	var path = filepath.Join(Self.storeDir, filename)
 	var lens, err = write(path, reader)
 	if err != nil {
 		return Index{}, err
 	}
-	return createIndex(path, url, lens, name), nil
+	var index = createIndex(path, url, lens, name, fileType)
+	Self.mappedIndex[url] = index
+	_ = Self.appendIndex(index)
+	return index, nil
 }
 
 func (Self *Store) Fetch(idx Index) io.Reader {
@@ -98,7 +114,46 @@ func (Self *Store) Fetch(idx Index) io.Reader {
 	return reader
 }
 
+func (Self *Store) Remove(idx Index) (bool, error) {
+	var index, exits = Self.Check(idx.Url)
+	if !exits {
+		return false, nil
+	}
+
+	err := os.Remove(index.Path)
+	if err != nil {
+		return false, err
+	}
+
+	Self.indexMutex.Lock()
+	defer Self.indexMutex.Unlock()
+	delete(Self.mappedIndex, idx.Url)
+	return true, nil
+}
+
+func (Self *Store) Clear() (int, error) {
+	Self.indexMutex.Lock()
+	defer Self.indexMutex.Unlock()
+
+	for _, index := range Self.mappedIndex {
+		_ = os.Remove(index.Path)
+	}
+	var count = len(Self.mappedIndex)
+	Self.mappedIndex = make(map[string]Index)
+	var path = filepath.Join(Self.storeDir, Self.indexName)
+	return count, os.WriteFile(path, []byte("[]"), 0666)
+}
+
+func (Self *Store) Count() int {
+	Self.indexMutex.RLock()
+	defer Self.indexMutex.RUnlock()
+	return len(Self.mappedIndex)
+}
+
 func (Self *Store) loadIndex() error {
+	Self.indexMutex.RLock()
+	defer Self.indexMutex.RUnlock()
+
 	var path = filepath.Join(Self.storeDir, Self.indexName)
 	var idxFile, err = os.OpenFile(path, os.O_CREATE|os.O_RDWR, 0666)
 	defer idxFile.Close()
@@ -132,6 +187,9 @@ func (Self *Store) loadIndex() error {
 }
 
 func (Self *Store) storeIndex() error {
+	Self.indexMutex.Lock()
+	defer Self.indexMutex.Unlock()
+
 	var indexData = make([]Index, 0)
 	for _, index := range Self.mappedIndex {
 		indexData = append(indexData, index)
@@ -146,8 +204,42 @@ func (Self *Store) storeIndex() error {
 	return os.WriteFile(path, storeData, 0666)
 }
 
+func (Self *Store) appendIndex(index Index) error {
+	Self.indexMutex.Lock()
+	defer Self.indexMutex.Unlock()
+
+	var path = filepath.Join(Self.storeDir, Self.indexName)
+	var idxFile, err = os.OpenFile(path, os.O_APPEND|os.O_WRONLY, 0666)
+	defer idxFile.Close()
+	if err != nil {
+		return err
+	}
+
+	var indexData, errMarshal = json.Marshal(index)
+	if errMarshal != nil {
+		return errMarshal
+	}
+
+	_, err = idxFile.Write(indexData)
+	return err
+}
+
 func (Self *Store) Destroy() error {
 	return Self.storeIndex()
+}
+
+func (Self *Store) ClearOutdate() error {
+	Self.indexMutex.Lock()
+	defer Self.indexMutex.Unlock()
+
+	var now = getTime()
+	for url, index := range Self.mappedIndex {
+		if now-index.CreateTime > int64(Self.timeLimit.Seconds()) {
+			_ = os.Remove(index.Path)
+			delete(Self.mappedIndex, url)
+		}
+	}
+	return nil
 }
 
 func write(path string, data io.Reader) (int64, error) {
