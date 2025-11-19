@@ -31,7 +31,7 @@ export function createInitWindow(params: {
 function createWindow(params: { width?: number; height?: number }) {
   const { width, height } = params || {};
   const { effectiveWidth, effectiveHeight } = getEffectiveWindowSize();
-  const { effectiveWidth: minWidth, effectiveHeight: minHeight } = getEffectiveWindowSize(0.55);
+  const { effectiveWidth: minWidth, effectiveHeight: minHeight } = getEffectiveWindowSize(0.65);
 
   Log.trace(
     "app/createWindow.ts",

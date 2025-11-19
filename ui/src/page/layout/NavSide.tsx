@@ -1,47 +1,34 @@
-import { FC, memo, useCallback, useEffect, useRef, useState } from "react";
+import { FC, memo, useCallback, useRef, useState } from "react";
 import Avatar from "@mahiru/ui/page/layout/componets/Avatar";
 import NavSideNavItem from "@mahiru/ui/page/layout/componets/NavSideNavItem";
-import { ArrowBigUp, Clock, House, Star } from "lucide-react";
+import { ArrowBigUp } from "lucide-react";
 import NavSideDivider from "@mahiru/ui/page/layout/componets/NavSideDivider";
 import NavSidePlayListItem from "@mahiru/ui/page/layout/componets/NavSidePlayListItem";
 import { css, cx } from "@emotion/css";
 import { usePersistZustandShallowStore } from "@mahiru/ui/store";
-import { useNavigate, useLocation } from "react-router-dom";
-
-const NAV = [
-  { icon: <House className="w-full" />, label: "推荐", path: "/home" },
-  { icon: <Star className="w-full" />, label: "搜藏", path: "/start" },
-  { icon: <Clock className="w-full" />, label: "历史", path: "/history" }
-];
+import { useNavigate, useLocation, NavigateFunction, Location } from "react-router-dom";
+import { List, RowComponentProps, ListImperativeAPI } from "react-window";
+import { NeteasePlaylistSummary } from "@mahiru/ui/types/netease-api";
+import { NAV_DATA } from "@mahiru/ui/router";
 
 const NavSide: FC<object> = () => {
   const { data } = usePersistZustandShallowStore(["data"]);
   const navigate = useNavigate();
   const location = useLocation();
   /** Scroll */
-  const listElement = useRef<HTMLDivElement>(null);
+  const listElement = useRef<ListImperativeAPI>(null);
   const [showRestScroll, setShowRestScroll] = useState(false);
   const scrollReset = useCallback(() => {
     const list = listElement.current;
     if (list) {
-      list.scrollTo({ top: 0, behavior: "smooth" });
+      list.scrollToRow({
+        align: "start",
+        behavior: "smooth",
+        index: 0
+      });
     }
   }, []);
-  useEffect(() => {
-    const list = listElement.current;
-    if (!list) return;
-    const onScroll = () => {
-      if (list.scrollTop > 100) {
-        setShowRestScroll(true);
-      } else {
-        setShowRestScroll(false);
-      }
-    };
-    list.addEventListener("scroll", onScroll);
-    return () => {
-      list.removeEventListener("scroll", onScroll);
-    };
-  }, []);
+
   return (
     <div className="absolute grid grid-cols-1 grid-rows-[auto_auto_auto_1fr] left-0 top-0 bottom-0 w-48 pb-18 px-6 bg-[#f0f3f6] z-0">
       <div className="py-8">
@@ -49,7 +36,7 @@ const NavSide: FC<object> = () => {
       </div>
       {/*nav*/}
       <div className="space-y-4">
-        {NAV.map(({ icon, label, path }) => {
+        {NAV_DATA.map(({ icon, label, path }) => {
           return (
             <NavSideNavItem
               key={label}
@@ -65,31 +52,28 @@ const NavSide: FC<object> = () => {
       {/*playList*/}
       <div className="overflow-hidden">
         <div
-          ref={listElement}
           className={cx(
-            "overflow-y-auto relative w-full h-full pb-4 space-y-2",
+            "overflow-y-auto relative w-full h-full",
             css`
               scrollbar-width: none;
             `
           )}>
-          {data?.userPlayLists?.map((playList) => {
-            return (
-              <NavSidePlayListItem
-                active={location.pathname === `/playlist/${playList.id}`}
-                key={playList.id}
-                cover={playList.coverImgUrl}
-                id={playList.id}
-                label={playList.name}
-                count={playList.trackCount}
-                onClick={(id) => navigate(`/playlist/${id}`)}
-              />
-            );
-          })}
-          {!!data.userPlayLists.length && (
-            <span className="text-[10px] text-[#7b8290] text-center block mt-2">
-              一共 {data.userPlayLists.length} 个歌单
-            </span>
-          )}
+          <List
+            listRef={listElement}
+            rowComponent={Row}
+            className={cx(css`
+              scrollbar-width: none;
+            `)}
+            rowCount={data.userPlayLists.length}
+            rowHeight={55}
+            onRowsRendered={({ startIndex }) => setShowRestScroll(startIndex > 5)}
+            overscanCount={5}
+            rowProps={{
+              playLists: data.userPlayLists,
+              navigate,
+              location
+            }}
+          />
         </div>
         <button
           className={cx(
@@ -105,3 +89,27 @@ const NavSide: FC<object> = () => {
   );
 };
 export default memo(NavSide);
+
+function Row(
+  props: RowComponentProps<{
+    playLists: NeteasePlaylistSummary[];
+    navigate: NavigateFunction;
+    location: Location;
+  }>
+) {
+  const { index, style, playLists, navigate, location } = props;
+  const playList = playLists[index]!;
+  return (
+    <div style={style}>
+      <NavSidePlayListItem
+        active={location.pathname === `/playlist/${playList.id}`}
+        key={playList.id}
+        cover={playList.coverImgUrl}
+        id={playList.id}
+        label={playList.name}
+        count={playList.trackCount}
+        onClick={(id) => navigate(`/playlist/${id}`)}
+      />
+    </div>
+  );
+}

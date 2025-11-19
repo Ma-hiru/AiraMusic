@@ -12,9 +12,9 @@ const Top: FC<TopProps> = ({ detail }) => {
   const { data } = usePersistZustandShallowStore(["data"]);
 
   return (
-    <div className="flex h-44 items-center gap-4 justify-between">
+    <div className="grid grid-rows-1 grid-cols-[1fr_auto]">
       {/*Left*/}
-      <div className="flex items-start gap-4">
+      <div className="min-w-0 grid grid-rows-1 grid-cols-[auto_1fr] gap-4 items-center">
         {/*Cover*/}
         <img
           className="size-44 rounded-md shadow-xs"
@@ -22,17 +22,22 @@ const Top: FC<TopProps> = ({ detail }) => {
           alt={detail?.playlist.name}
         />
         {/*Info*/}
-        <div className="h-44 grid grid-cols-1 grid-rows-[auto_1fr_auto]">
+        <div className="min-w-0 h-44 grid grid-cols-1 grid-rows-[auto_1fr_auto]">
           <div className="font-bold text-[26px]">{detail?.playlist.name}</div>
-          <div className="flex flex-col text-[12px] font-semibold text-[#7b8290]/80 mt-2 gap-1">
-            <span>歌曲数量 {Number(detail?.playlist.trackCount)}</span>
-            <span>更新时间 {formatTimeToMMDD(detail?.playlist.trackUpdateTime)}</span>
+          <div className="grid grid-rows-[1fr_auto] grid-cols-1 text-[12px] font-semibold text-[#7b8290]/80 overflow-hidden">
+            <p className="text-ellipsis overflow-hidden line-clamp-4">
+              {detail?.playlist.description}
+            </p>
+            <div className="flex flex-col">
+              <span>歌曲数量 {Number(detail?.playlist.trackCount)}</span>
+              <span>更新时间 {formatTimeToMMDD(detail?.playlist.trackUpdateTime)}</span>
+            </div>
           </div>
           <div className="flex items-center">
-            <button className="bg-[#fc3d49] text-white rounded-md px-2 py-1 text-[12px] mr-2 hover:bg-[#fc3d49]/70 active:bg-[#fc3d49]/40 cursor-pointer font-semibold flex items-center gap-1 overflow-hidden active:scale-98 shadow-2xl select-none">
+            <button className="bg-[#fc3d49] text-white rounded-md px-2 py-1 text-[12px] mr-2 hover:bg-[#fc3d49]/70 active:bg-[#fc3d49]/40 cursor-pointer font-semibold flex items-center gap-1 overflow-hidden active:scale-98 shadow-2xl select-none min-w-max">
               <Play size={16} /> 全部播放
             </button>
-            <button className="text-[#fc3d49] text-[12px] font-semibold cursor-pointer hover:text-[#fc3d49]/70 active:text-[#fc3d49]/40 bg-white px-2 py-1 rounded-md border flex items-center gap-1 overflow-hidden active:scale-98 shadow-2xl select-none">
+            <button className="text-[#fc3d49] text-[12px] font-semibold cursor-pointer hover:text-[#fc3d49]/70 active:text-[#fc3d49]/40 bg-white px-2 py-1 rounded-md border flex items-center gap-1 overflow-hidden active:scale-98 shadow-2xl select-none min-w-max">
               <ListMusic size={16} /> 加入列表
             </button>
           </div>

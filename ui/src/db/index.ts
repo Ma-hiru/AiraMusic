@@ -86,8 +86,9 @@ async function deleteExcessCache() {
   }
 }
 
+// 缓存歌曲数据到 IndexedDB
 export function cacheTrackSource(
-  trackInfo: Pick<NeteaseTrack, "id" | "name" | "ar" | "al">,
+  trackInfo: NeteaseTrack,
   url: string,
   bitRate: number,
   from = "netease"
@@ -122,7 +123,7 @@ export function cacheTrackSource(
     });
 }
 
-export function getTrackSourceFromCache(id: number | string) {
+export function getTrackSourceFromCache(id: number) {
   return db.trackSources.get(Number(id)).then((track) => {
     if (!track) return null;
     Log.trace("ui/db:getTrackSource", `Loaded cached track 👉 ${track.name} by ${track.artist}`);
