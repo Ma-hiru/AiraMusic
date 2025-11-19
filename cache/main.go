@@ -24,7 +24,7 @@ func main() {
 	gin.SetMode(gin.ReleaseMode)
 	app.Use(cors.Default())
 	router.SetRouter(app)
-	if err := app.Run(":8824"); err != nil {
+	if err := app.Run("127.0.0.1:8824"); err != nil {
 		panic(err)
 	}
 }
