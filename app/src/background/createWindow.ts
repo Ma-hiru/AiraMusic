@@ -70,8 +70,8 @@ function createWindow(params: { width?: number; height?: number }) {
       },
       frame: false,
       show: false,
-      minHeight: Math.min(minHeight, maxHeight * 0.65),
-      minWidth: Math.min(minWidth, maxWidth * 0.65)
+      minHeight: Math.floor(Math.min(minHeight, maxHeight * 0.65)),
+      minWidth: Math.floor(Math.min(minWidth, maxWidth * 0.65))
     },
     CONSTANTS.APP.MAIN_WINDOW_ID
   );
