@@ -1,4 +1,4 @@
-import { FC, memo, useDeferredValue, useEffect, useState } from "react";
+import { FC, memo, useCallback, useDeferredValue, useEffect, useRef, useState } from "react";
 import { getPlaylistDetail } from "@mahiru/ui/api/playlist";
 import Top from "@mahiru/ui/page/playlist/Top";
 import List from "@mahiru/ui/page/playlist/List";
@@ -8,23 +8,51 @@ import { useParams } from "react-router-dom";
 import { Log } from "@mahiru/ui/utils/log";
 import { EqError } from "@mahiru/ui/utils/err";
 import CachedProvider from "@mahiru/ui/ctx/CachedProvider";
+import { mapTrackPlayableStatus } from "@mahiru/ui/api/utils/common";
 
 const PlayListPage: FC<object> = () => {
   const { id } = useParams();
   const [detail, setDetail] = useState<Nullable<NeteasePlaylistDetailResponse>>(null);
+
+  const [filterTracks, setFilterTracks] = useState<
+    NeteasePlaylistDetailResponse["playlist"]["tracks"]
+  >([]);
+  const tracks = useRef<NeteasePlaylistDetailResponse["playlist"]["tracks"]>([]);
   useEffect(() => {
     if (id) {
       requestPlayListDetail(Number(id)).then((res) => {
-        res && setDetail(res);
+        if (res) {
+          const mappedTrack = mapTrackPlayableStatus(res.playlist.tracks);
+          tracks.current = mappedTrack;
+          setFilterTracks(mappedTrack);
+          setDetail(res);
+        }
       });
     }
   }, [id]);
+
+  const searchTracks = useCallback((k: string) => {
+    if (k.trim() === "") {
+      setFilterTracks(tracks.current);
+    } else {
+      const lowerK = k.toLowerCase();
+      const filtered = tracks.current.filter(
+        (track) =>
+          track.name.toLowerCase().includes(lowerK) ||
+          track.ar.some((artist) => artist.name.toLowerCase().includes(lowerK)) ||
+          track.al.name.toLowerCase().includes(lowerK) ||
+          track.alia.some((alias) => alias.toLowerCase().includes(lowerK)) ||
+          track.tns?.some((tns) => tns.toLowerCase().includes(lowerK))
+      );
+      setFilterTracks(filtered);
+    }
+  }, []);
   return (
     <div className="w-full h-full px-12 pt-20">
-      <Top detail={detail} />
+      <Top detail={detail} searchTracks={searchTracks} />
       <Divider />
       <CachedProvider>
-        <List detail={detail} />
+        <List filterTracks={filterTracks} />
       </CachedProvider>
     </div>
   );

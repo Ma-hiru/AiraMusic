@@ -27,6 +27,7 @@ const ListItem: FC<ListItemProps> = ({ track, index, active = false, total }) =>
             "active:bg-black/20": !active
           }
         )}>
+        {/*序号*/}
         <span
           className={cx(
             "mr-[1px] max-w-max text-left text-[12px] text-[#7b8290]/50 font-semibold",
@@ -39,6 +40,7 @@ const ListItem: FC<ListItemProps> = ({ track, index, active = false, total }) =>
           )}>
           {index.toString().padStart(2, "0")}
         </span>
+        {/*封面*/}
         <img
           src={cachedURL as string}
           onLoad={init}
@@ -47,6 +49,7 @@ const ListItem: FC<ListItemProps> = ({ track, index, active = false, total }) =>
           alt={track.al.name}
         />
         <div className="flex flex-col text-[14px]">
+          {/*名称*/}
           <div className="overflow-hidden flex-row">
             <span className="cursor-pointer font-bold">{track.name}</span>
             {(track.tns?.[0] || track.alia?.[0]) && (
@@ -58,12 +61,18 @@ const ListItem: FC<ListItemProps> = ({ track, index, active = false, total }) =>
               </span>
             )}
           </div>
-          <span
-            className={cx("text-[12px] text-[#7b8290]/80 cursor-pointer", {
-              "text-white/60": active
-            })}>
-            {track.ar.map((ar) => ar.name).join(" / ")} - <span>{track.al.name}</span>
-          </span>
+          {/*歌手、专辑*/}
+          <div
+            className={cx(
+              "text-[12px] text-[#7b8290]/80 cursor-pointer flex flex-row overflow-hidden text-ellipsis line-clamp-1 gap-2",
+              {
+                "text-white/60": active
+              }
+            )}>
+            <span>{track.ar.map((ar) => ar.name).join(" / ")}</span>
+            <span>-</span>
+            <span>{track.al.name}</span>
+          </div>
         </div>
         <div className="flex gap-4 justify-end items-end h-full">
           <div

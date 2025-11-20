@@ -4,12 +4,14 @@ import { ListMusic, Play, SquarePen } from "lucide-react";
 import { usePersistZustandShallowStore } from "@mahiru/ui/store";
 import { NeteasePlaylistDetailResponse } from "@mahiru/ui/types/netease-api";
 import { wrapCacheUrl } from "@mahiru/ui/api/cache";
+import Search from "@mahiru/ui/page/playlist/Search";
 
 interface TopProps {
   detail: Nullable<NeteasePlaylistDetailResponse>;
+  searchTracks: (k: string) => void;
 }
 
-const Top: FC<TopProps> = ({ detail }) => {
+const Top: FC<TopProps> = ({ detail, searchTracks }) => {
   const { data } = usePersistZustandShallowStore(["data"]);
   const [cachedCover, setCachedCover] = useState<Nullable<string>>(null);
   const [cachedAvatar, setCachedAvatar] = useState<Nullable<string>>(null);
@@ -60,6 +62,7 @@ const Top: FC<TopProps> = ({ detail }) => {
         </div>
         {/*Info*/}
         <div className="flex flex-col items-end justify-end">
+          <Search searchTracks={searchTracks} />
           <div className="flex items-center gap-2 mt-2 font-semibold">
             <img
               src={cachedAvatar as string}
