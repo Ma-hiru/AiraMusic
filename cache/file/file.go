@@ -96,10 +96,16 @@ func (Self *Store) Store(reader io.Reader, url string, name string, fileType str
 
 	var filename = randomFilename()
 	var path = filepath.Join(Self.storeDir, filename)
-	var _, err = write(path, reader)
+	var writtenSize, err = write(path, reader)
 	if err != nil {
 		return Index{}, err
 	}
+	if strconv.FormatInt(writtenSize, 10) != size {
+		fmt.Println("written size does not match expected size, removing file:", url)
+		_ = os.Remove(path)
+		return Index{}, fmt.Errorf("written size %d does not match expected size %s", writtenSize, size)
+	}
+
 	var index = createIndex(path, url, size, name, fileType)
 	Self.mappedIndex[url] = index
 	_ = Self.appendIndex(index)

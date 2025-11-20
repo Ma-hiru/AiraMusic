@@ -29,33 +29,6 @@ export function fetchCache(url: string) {
   return `/cache/api/fetch?url=${encodeURIComponent(url)}`;
 }
 
-// export async function wrapCacheUrl(url: string) {
-//   try {
-//     if (!url || !url.startsWith("http")) {
-//       return url;
-//     }
-//     const check = await checkCache(url);
-//     if (check.ok) {
-//       Log.debug("ui/api/cache.ts:wrapCacheUrl", "cache url hit:", url, JSON.stringify(check.index));
-//       return fetchCache(url);
-//     } else {
-//       return await storeCache(url).then(res => {
-//         Log.debug("cache url stored:", url, JSON.stringify(res.index));
-//         return fetchCache(url);
-//       });
-//     }
-//   } catch (err) {
-//     Log.error(
-//       new EqError({
-//         raw: err,
-//         label: "ui/api/cache.ts:wrapCacheUrl",
-//         message: "Failed to store cache for url: " + url
-//       })
-//     );
-//     return url;
-//   }
-// }
-
 export async function wrapCacheUrl(url: string) {
   try {
     if (!url || !url.startsWith("http")) {
