@@ -1,6 +1,7 @@
 package file
 
 import (
+	"bytes"
 	"context"
 	"crypto/sha1"
 	"encoding/json"
@@ -22,13 +23,14 @@ type Store struct {
 }
 
 type Index struct {
-	Url        string `json:"url"`
-	Path       string `json:"path"`
-	Name       string `json:"name"`
-	Type       string `json:"type"`
-	Size       string `json:"size"`
-	CreateTime int64  `json:"createTime"`
-	ETag       string `json:"eTag"`
+	Url          string `json:"url"`
+	Path         string `json:"path"`
+	Name         string `json:"name"`
+	Type         string `json:"type"`
+	Size         string `json:"size"`
+	CreateTime   int64  `json:"createTime"`
+	ETag         string `json:"eTag"`
+	LastModified string `json:"lastModified,omitempty"`
 }
 
 var store *Store
@@ -66,15 +68,16 @@ func InitStore(dir string, timeLimit time.Duration) error {
 	return nil
 }
 
-func createIndex(path string, url string, size string, name string, fileType string, etag string) Index {
+func createIndex(path string, url string, size string, name string, fileType string, etag string, lastModified string) Index {
 	var index = Index{
-		Url:        url,
-		Name:       name,
-		Size:       size,
-		Path:       path,
-		Type:       fileType,
-		CreateTime: getTime(),
-		ETag:       etag,
+		Url:          url,
+		Name:         name,
+		Size:         size,
+		Path:         path,
+		Type:         fileType,
+		CreateTime:   getTime(),
+		ETag:         etag,
+		LastModified: lastModified,
 	}
 
 	return index
@@ -93,7 +96,7 @@ func (Self *Store) Check(url string) (Index, bool) {
 	return index, exist
 }
 
-func (Self *Store) Store(ctx context.Context, reader io.Reader, url string, name string, fileType string, size string) (Index, error) {
+func (Self *Store) Store(ctx context.Context, reader io.Reader, url string, name string, fileType string, size string, hash string, lastModified string) (Index, error) {
 	if index, exist := Self.Check(url); exist {
 		return index, nil
 	}
@@ -110,7 +113,10 @@ func (Self *Store) Store(ctx context.Context, reader io.Reader, url string, name
 		return Index{}, fmt.Errorf("written size %d does not match expected size %s", writtenSize, size)
 	}
 
-	var index = createIndex(path, url, size, name, fileType, etag)
+	if hash != "" && etag != hash {
+		etag = hash
+	}
+	var index = createIndex(path, url, size, name, fileType, etag, lastModified)
 	Self.mappedIndex[url] = index
 	_ = Self.appendIndex(index)
 	return index, nil
@@ -160,6 +166,46 @@ func (Self *Store) Count() int {
 	return len(Self.mappedIndex)
 }
 
+func (Self *Store) Destroy() error {
+	return Self.storeIndex()
+}
+
+func (Self *Store) ClearOutdate() error {
+	Self.indexMutex.Lock()
+	defer Self.indexMutex.Unlock()
+
+	var now = getTime()
+	for url, index := range Self.mappedIndex {
+		if now-index.CreateTime > Self.timeLimit.Nanoseconds() {
+			_ = os.Remove(index.Path)
+			delete(Self.mappedIndex, url)
+		}
+	}
+	return nil
+}
+
+func (Self *Store) Size() int64 {
+	var dirEntries, err = os.ReadDir(Self.storeDir)
+	if err != nil {
+		return 0
+	}
+
+	var varSize int64 = 0
+	for _, entry := range dirEntries {
+		if !entry.IsDir() && entry.Name() != Self.indexName {
+			var fileInfo, err = entry.Info()
+			if err == nil {
+				varSize += fileInfo.Size()
+			}
+		}
+	}
+	return varSize
+}
+
+func (Self *Store) Path() string {
+	return Self.storeDir
+}
+
 func (Self *Store) loadIndex() error {
 	Self.indexMutex.RLock()
 	defer Self.indexMutex.RUnlock()
@@ -196,24 +242,6 @@ func (Self *Store) loadIndex() error {
 	return err
 }
 
-func (Self *Store) storeIndex() error {
-	Self.indexMutex.Lock()
-	defer Self.indexMutex.Unlock()
-
-	var indexData = make([]Index, 0)
-	for _, index := range Self.mappedIndex {
-		indexData = append(indexData, index)
-	}
-
-	var storeData, err = json.Marshal(indexData)
-	if err != nil {
-		return err
-	}
-
-	var path = filepath.Join(Self.storeDir, Self.indexName)
-	return os.WriteFile(path, storeData, 0666)
-}
-
 func (Self *Store) appendIndex(index Index) error {
 	Self.indexMutex.Lock()
 	defer Self.indexMutex.Unlock()
@@ -246,25 +274,49 @@ func (Self *Store) appendIndex(index Index) error {
 	return os.WriteFile(path, storeData, 0666)
 }
 
-func (Self *Store) Destroy() error {
-	return Self.storeIndex()
-}
-
-func (Self *Store) ClearOutdate() error {
+func (Self *Store) storeIndex() error {
 	Self.indexMutex.Lock()
 	defer Self.indexMutex.Unlock()
 
-	var now = getTime()
-	for url, index := range Self.mappedIndex {
-		if now-index.CreateTime > Self.timeLimit.Nanoseconds() {
-			_ = os.Remove(index.Path)
-			delete(Self.mappedIndex, url)
-		}
+	var indexData = make([]Index, 0)
+	for _, index := range Self.mappedIndex {
+		indexData = append(indexData, index)
 	}
-	return nil
+
+	var storeData, err = json.Marshal(indexData)
+	if err != nil {
+		return err
+	}
+
+	var path = filepath.Join(Self.storeDir, Self.indexName)
+	return os.WriteFile(path, storeData, 0666)
 }
 
-const bufferSize = 1024 * 100
+const BufferSize = 1024 * 100
+
+func PeekForHash(reader io.Reader) (string, io.Reader, error) {
+	var peek, newReader, err = Peek(reader, BufferSize)
+	if err != nil {
+		return "", newReader, err
+	}
+
+	return Hash(peek, len(peek)), newReader, nil
+}
+
+func Hash(buffer []byte, len int) string {
+	return fmt.Sprintf("%x", sha1.Sum(buffer[:len]))
+}
+
+func Peek(reader io.Reader, size int) ([]byte, io.Reader, error) {
+	var buffer = make([]byte, size)
+	var n, err = reader.Read(buffer)
+
+	if err == io.EOF {
+		err = nil
+	}
+
+	return buffer[:n], io.MultiReader(bytes.NewReader(buffer[:n]), reader), err
+}
 
 func write(ctx context.Context, path string, reader io.Reader) (int64, string, error) {
 	var file, err = os.Create(path)
@@ -273,11 +325,12 @@ func write(ctx context.Context, path string, reader io.Reader) (int64, string, e
 	}
 	defer file.Close()
 
-	var buffer = make([]byte, bufferSize) // 100KB buffer
+	var buffer = make([]byte, BufferSize) // 100KB buffer
 	var count int64 = 0
 	var etag string
 	for {
 		if err := ctx.Err(); err != nil {
+			fmt.Println("context cancelled, removing file:", path)
 			file.Close()
 			// 后面会根据错误和索引判断是否删除文件，如果源头已经删除，这里就不需要再删除一次，所以返回这里的err
 			return count, etag, os.Remove(path)
@@ -303,25 +356,11 @@ func write(ctx context.Context, path string, reader io.Reader) (int64, string, e
 				return count, etag, io.ErrShortWrite
 			}
 			if count == int64(written) {
-				var h = sha1.Sum(buffer[:n])
-				etag = fmt.Sprintf("%x", h)
+				etag = Hash(buffer, n)
 			}
 		}
 	}
 	return count, etag, nil
-}
-
-func hash(path string) (string, error) {
-	var buffer = make([]byte, bufferSize)
-	var file, err = os.Open(path)
-	if err != nil {
-		return "", err
-	}
-	defer file.Close()
-
-	n, err := file.Read(buffer)
-	var h = sha1.Sum(buffer[:n])
-	return fmt.Sprintf("%x", h), nil
 }
 
 func read(path string) (io.Reader, error) {

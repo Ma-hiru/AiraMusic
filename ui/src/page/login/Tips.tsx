@@ -11,7 +11,7 @@ interface TipsProps {
 const Tips: FC<TipsProps> = ({ status, result }) => {
   const [avatar, setAvatar] = useState<Nullable<string>>(null);
   useEffect(() => {
-    result?.avatarUrl && wrapCacheUrl(result.avatarUrl).then(setAvatar);
+    result?.avatarUrl && setAvatar(wrapCacheUrl(result.avatarUrl));
   }, [result?.avatarUrl]);
   return (
     <div className="flex justify-center items-center flex-col">

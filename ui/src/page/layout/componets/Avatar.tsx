@@ -1,15 +1,12 @@
-import { FC, memo, useEffect, useState } from "react";
+import { FC, memo } from "react";
 import { usePersistZustandShallowStore } from "@mahiru/ui/store";
 import { css, cx } from "@emotion/css";
 import { LogOut, UserRound } from "lucide-react";
-import { wrapCacheUrl } from "@mahiru/ui/api/cache";
+import { useCache } from "@mahiru/ui/ctx/CachedCtx";
 
 const Avatar: FC<object> = () => {
   const { data } = usePersistZustandShallowStore(["data"]);
-  const [avatar, setAvatar] = useState<Nullable<string>>(null);
-  useEffect(() => {
-    data.user?.avatarUrl && wrapCacheUrl(data.user.avatarUrl).then(setAvatar);
-  }, [data.user]);
+  const { cachedURL, init, fail } = useCache(data.user?.avatarUrl);
   return (
     <div
       className={cx(
@@ -22,9 +19,11 @@ const Avatar: FC<object> = () => {
         <div className="rounded-full flex justify-center items-center overflow-hidden bg-black/60">
           {data.user?.avatarUrl ? (
             <img
-              src={avatar as string}
+              src={cachedURL as string}
               alt={data.user?.nickname}
               className="size-7 rounded-full cursor-pointer"
+              onLoad={init}
+              onError={fail}
             />
           ) : (
             <UserRound className="text-white" />

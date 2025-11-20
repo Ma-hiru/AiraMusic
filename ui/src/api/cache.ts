@@ -8,28 +8,28 @@ type Index = {
   type: string;
   createTime: number;
   size: number;
-}
+};
 
 type CheckResult = {
   ok: boolean;
   index: Index;
-}
+};
 
 type StoreResult = CheckResult;
 
 export async function checkCache(url: string): Promise<CheckResult> {
-  return await fetch(`/cache/api/check?url=${encodeURIComponent(url)}`).then(res => res.json());
+  return await fetch(`/cache/api/check?url=${encodeURIComponent(url)}`).then((res) => res.json());
 }
 
 export async function storeCache(url: string): Promise<StoreResult> {
-  return await fetch(`/cache/api/store?url=${encodeURIComponent(url)}`).then(res => res.json());
+  return await fetch(`/cache/api/store?url=${encodeURIComponent(url)}`).then((res) => res.json());
 }
 
 export function fetchCache(url: string) {
   return `/cache/api/fetch?url=${encodeURIComponent(url)}`;
 }
 
-export async function wrapCacheUrl(url: string) {
+export function wrapCacheUrl(url: string) {
   try {
     if (!url || !url.startsWith("http")) {
       return url;

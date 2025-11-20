@@ -6,7 +6,7 @@ const AvatarMini: FC<object> = () => {
   const { data } = usePersistZustandShallowStore(["data"]);
   const [avatar, setAvatar] = useState("");
   useEffect(() => {
-    data.user?.avatarUrl && wrapCacheUrl(data.user.avatarUrl).then(setAvatar);
+    data.user?.avatarUrl && setAvatar(wrapCacheUrl(data.user.avatarUrl));
   }, [data.user?.avatarUrl]);
   return (
     <div>

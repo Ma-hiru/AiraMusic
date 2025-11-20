@@ -1,5 +1,4 @@
 import { defineConfig } from "tsup";
-import { copyFile } from "node:fs/promises";
 
 // noinspection JSUnusedGlobalSymbols 禁用webstorm的未使用默认导出警告
 export default defineConfig([

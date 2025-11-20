@@ -6,7 +6,7 @@ const Cover: FC<object> = () => {
   const { info } = usePlayer();
   const [cacheCover, setCacheCover] = useState<Nullable<string>>(null);
   useEffect(() => {
-    wrapCacheUrl(info.cover).then(setCacheCover);
+    setCacheCover(wrapCacheUrl(info.cover));
   }, [info.cover]);
   return (
     <img

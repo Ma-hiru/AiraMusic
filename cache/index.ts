@@ -9,14 +9,21 @@ const exeName = process.platform === "win32" ? "server.exe" : "server";
 const applicationPath = join(__dirname, exeName);
 
 let serverProc: ChildProcessByStdio<any, any, any> | null = null;
+let enableConsole = true;
+
+export function enableServerConsole(enable: boolean) {
+  enableConsole = enable;
+}
 
 export function startServer(args: string[] = []) {
   if (serverProc) return serverProc.pid!;
   if (!existsSync(applicationPath)) throw new Error(`Executable not found: ${applicationPath}`);
   serverProc = spawn(applicationPath, args, { stdio: ["ignore", "pipe", "pipe"] });
   if (!serverProc) throw new Error("Failed to start server process.");
-  serverProc.stdout.on("data", (b: any) => console.log("[server stdout]", b.toString()));
-  serverProc.stderr.on("data", (b: any) => console.error("[server stderr]", b.toString()));
+  enableConsole &&
+    serverProc.stdout.on("data", (b: any) => console.log("[server stdout]", b.toString()));
+  enableConsole &&
+    serverProc.stderr.on("data", (b: any) => console.error("[server stderr]", b.toString()));
   serverProc.on("exit", (code) => {
     console.log("server exited", code);
     serverProc = null;

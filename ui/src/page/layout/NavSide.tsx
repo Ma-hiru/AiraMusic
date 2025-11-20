@@ -6,33 +6,48 @@ import NavSideDivider from "@mahiru/ui/page/layout/componets/NavSideDivider";
 import NavSidePlayListItem from "@mahiru/ui/page/layout/componets/NavSidePlayListItem";
 import { css, cx } from "@emotion/css";
 import { usePersistZustandShallowStore } from "@mahiru/ui/store";
-import { useNavigate, useLocation, NavigateFunction, Location } from "react-router-dom";
-import { List, RowComponentProps, ListImperativeAPI } from "react-window";
-import { NeteasePlaylistSummary } from "@mahiru/ui/types/netease-api";
+import { useNavigate, useLocation } from "react-router-dom";
 import { NAV_DATA } from "@mahiru/ui/router";
+import CachedProvider from "@mahiru/ui/ctx/CachedProvider";
+import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
+import { NeteasePlaylistSummary } from "@mahiru/ui/types/netease-api";
 
 const NavSide: FC<object> = () => {
   const { data } = usePersistZustandShallowStore(["data"]);
   const navigate = useNavigate();
   const location = useLocation();
   /** Scroll */
-  const listElement = useRef<ListImperativeAPI>(null);
+  const scrollElement = useRef<VirtuosoHandle>(null);
   const [showRestScroll, setShowRestScroll] = useState(false);
-  const scrollReset = useCallback(() => {
-    const list = listElement.current;
-    if (list) {
-      list.scrollToRow({
-        align: "start",
-        behavior: "smooth",
-        index: 0
-      });
-    }
-  }, []);
 
+  const scrollReset = useCallback(
+    () => scrollElement.current?.scrollToIndex({ index: 0, behavior: "smooth" }),
+    []
+  );
+  const handleScroll = useCallback(
+    (range: { startIndex: number }) => setShowRestScroll(range.startIndex > 10),
+    []
+  );
+
+  const RowComponent = useCallback(
+    (_: number, data: NeteasePlaylistSummary) => (
+      <NavSidePlayListItem
+        active={location.pathname === `/playlist/${data.id}`}
+        cover={data.coverImgUrl}
+        id={data.id}
+        label={data.name}
+        count={data.trackCount}
+        onClick={(id) => navigate(`/playlist/${id}`)}
+      />
+    ),
+    [navigate, location.pathname]
+  );
   return (
     <div className="absolute grid grid-cols-1 grid-rows-[auto_auto_auto_1fr] left-0 top-0 bottom-0 w-48 pb-18 px-6 bg-[#f0f3f6] z-0">
       <div className="py-8">
-        <Avatar />
+        <CachedProvider>
+          <Avatar />
+        </CachedProvider>
       </div>
       {/*nav*/}
       <div className="space-y-4">
@@ -58,22 +73,34 @@ const NavSide: FC<object> = () => {
               scrollbar-width: none;
             `
           )}>
-          <List
-            listRef={listElement}
-            rowComponent={Row}
-            className={cx(css`
-              scrollbar-width: none;
-            `)}
-            rowCount={data.userPlayLists.length}
-            rowHeight={55}
-            onRowsRendered={({ startIndex }) => setShowRestScroll(startIndex > 5)}
-            overscanCount={5}
-            rowProps={{
-              playLists: data.userPlayLists,
-              navigate,
-              location
-            }}
-          />
+          <CachedProvider>
+            {data.userPlayLists.length > 200 ? (
+              <Virtuoso<NeteasePlaylistSummary>
+                ref={scrollElement}
+                className={cx(css`
+                  scrollbar-width: none;
+                `)}
+                rangeChanged={handleScroll}
+                data={data.userPlayLists}
+                overscan={5}
+                itemContent={RowComponent}
+              />
+            ) : (
+              data.userPlayLists.map((item) => {
+                return (
+                  <NavSidePlayListItem
+                    key={item.id}
+                    active={location.pathname === `/playlist/${item.id}`}
+                    cover={item.coverImgUrl}
+                    id={item.id}
+                    label={item.name}
+                    count={item.trackCount}
+                    onClick={(id) => navigate(`/playlist/${id}`)}
+                  />
+                );
+              })
+            )}
+          </CachedProvider>
         </div>
         <button
           className={cx(
@@ -89,27 +116,3 @@ const NavSide: FC<object> = () => {
   );
 };
 export default memo(NavSide);
-
-function Row(
-  props: RowComponentProps<{
-    playLists: NeteasePlaylistSummary[];
-    navigate: NavigateFunction;
-    location: Location;
-  }>
-) {
-  const { index, style, playLists, navigate, location } = props;
-  const playList = playLists[index]!;
-  return (
-    <div style={style}>
-      <NavSidePlayListItem
-        active={location.pathname === `/playlist/${playList.id}`}
-        key={playList.id}
-        cover={playList.coverImgUrl}
-        id={playList.id}
-        label={playList.name}
-        count={playList.trackCount}
-        onClick={(id) => navigate(`/playlist/${id}`)}
-      />
-    </div>
-  );
-}

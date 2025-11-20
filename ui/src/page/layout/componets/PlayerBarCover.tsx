@@ -8,7 +8,7 @@ const PlayerBarCover: FC<object> = () => {
   const { TogglePlayerModalVisible } = useLayout();
   const [cachedCover, setCachedCover] = useState<Nullable<string>>(null);
   useEffect(() => {
-    wrapCacheUrl(info.cover).then(setCachedCover);
+    setCachedCover(wrapCacheUrl(info.cover));
   }, [info.cover]);
   return (
     <div className="h-2/3 space-x-2 flex items-center justify-start gap-2">

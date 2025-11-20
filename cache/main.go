@@ -4,6 +4,7 @@ import (
 	"context"
 	"fileServer/file"
 	"fileServer/router"
+	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
@@ -14,14 +15,15 @@ import (
 )
 
 func main() {
+	fmt.Println("Starting file server...")
 	var err = file.InitStore(os.TempDir(), time.Hour*24*3)
 	if err != nil {
 		panic(err)
 	}
 	go handleExit()
 
-	var app = gin.Default()
 	gin.SetMode(gin.ReleaseMode)
+	var app = gin.Default()
 	app.Use(cors.Default())
 	router.SetRouter(app)
 	if err := app.Run("127.0.0.1:8824"); err != nil {

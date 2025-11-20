@@ -7,6 +7,7 @@ import { NeteasePlaylistDetailResponse } from "@mahiru/ui/types/netease-api";
 import { useParams } from "react-router-dom";
 import { Log } from "@mahiru/ui/utils/log";
 import { EqError } from "@mahiru/ui/utils/err";
+import CachedProvider from "@mahiru/ui/ctx/CachedProvider";
 
 const PlayListPage: FC<object> = () => {
   const { id } = useParams();
@@ -22,7 +23,9 @@ const PlayListPage: FC<object> = () => {
     <div className="w-full h-full px-12 pt-20">
       <Top detail={detail} />
       <Divider />
-      <List detail={detail} />
+      <CachedProvider>
+        <List detail={detail} />
+      </CachedProvider>
     </div>
   );
 };

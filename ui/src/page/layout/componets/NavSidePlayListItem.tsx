@@ -1,6 +1,7 @@
-import { FC, memo, useEffect, useState } from "react";
+import { FC, memo } from "react";
 import NavSideNavItem from "@mahiru/ui/page/layout/componets/NavSideNavItem";
-import { wrapCacheUrl } from "@mahiru/ui/api/cache";
+import { useCache } from "@mahiru/ui/ctx/CachedCtx";
+import { cx } from "@emotion/css";
 
 interface Props {
   cover: string;
@@ -9,21 +10,33 @@ interface Props {
   id: number | string;
   onClick?: (id: number | string) => void;
   active?: boolean;
+  className?: string;
 }
 
-const NavSidePlayListItem: FC<Props> = ({ cover, label, count, id, onClick, active }) => {
-  const [cacheCover, setCacheCover] = useState<Nullable<string>>(null);
-  useEffect(() => {
-    wrapCacheUrl(cover).then(setCacheCover);
-  }, [cover]);
+const NavSidePlayListItem: FC<Props> = ({
+  cover,
+  label,
+  className,
+  count,
+  id,
+  onClick,
+  active
+}) => {
+  const { cachedURL, init, fail } = useCache(cover);
   return (
-    <div className="space-x-2 font-bold">
+    <div className={cx("space-x-2 font-bold mt-2", className)}>
       <NavSideNavItem
         active={active}
         onClick={() => onClick?.(id)}
         prefix={
           <div className="size-10 min-w-10 rounded-md overflow-hidden">
-            <img className="w-full" src={cacheCover as string} alt={label} />
+            <img
+              className="w-full"
+              src={cachedURL as string}
+              onLoad={init}
+              onError={fail}
+              alt={label}
+            />
           </div>
         }>
         <div className="flex flex-col overflow-hidden">
