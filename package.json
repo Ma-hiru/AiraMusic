@@ -24,6 +24,7 @@
     "dev:electron:linux": "export NODE_ENV=development && electron .",
     "build:ui": "pnpm --filter @mahiru/ui run build",
     "build:wasm": "pnpm --filter @mahiru/wasm run build",
+    "build:cache": "pnpm --filter @mahiru/cache run build",
     "clear:wasm": "pnpm --filter @mahiru/wasm run clear",
     "commit": "pnpm check && pnpm format && pnpm lint && pnpm auto-commit",
     "check": "tsgo --noEmit",

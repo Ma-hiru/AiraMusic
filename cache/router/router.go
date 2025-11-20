@@ -1,6 +1,7 @@
 package router
 
 import (
+	"context"
 	"fileServer/file"
 	"fmt"
 	"io"
@@ -35,7 +36,7 @@ func SetRouter(app *gin.Engine) {
 		var fileType = resp.Header.Get("Content-Type")
 		var fileSize = resp.Header.Get("Content-Length")
 		var fileName = getNameFromURL(url)
-		index, err := store.Store(resp.Body, url, fileName, fileType, fileSize)
+		index, err := store.Store(context.Background(), resp.Body, url, fileName, fileType, fileSize)
 		if err != nil {
 			ctx.Status(500)
 			log.Panicln(err)
@@ -126,13 +127,13 @@ func SetRouter(app *gin.Engine) {
 			var fileName = getNameFromURL(url)
 			fmt.Println("file not found in store, fetching from source:", url)
 
-			// Use a pipe + MultiWriter to stream to client and store simultaneously
 			pr, pw := io.Pipe()
+			var cancelCtx, cancel = context.WithCancel(ctx)
 			go func() {
 				defer pr.Close()
 				fmt.Println("storing file to store:", url)
-				_, err := store.Store(pr, url, fileName, fileType, fileSize)
-				if err != nil {
+				_, err := store.Store(cancelCtx, pr, url, fileName, fileType, fileSize)
+				if err != nil || cancelCtx.Err() != nil {
 					var index, ok = store.Check(url)
 					if ok {
 						_, _ = store.Remove(index)
@@ -147,20 +148,29 @@ func SetRouter(app *gin.Engine) {
 			}
 			ctx.Header("Content-Type", fileType)
 			ctx.Header("Content-Length", fileSize)
+			ctx.Header("Cache-Control", "public, max-age=31536000, immutable")
 			ctx.Stream(func(w io.Writer) bool {
 				fmt.Println("streaming file to client from source:", url)
 				// copy resp.Body into both the client writer and the pipe writer
 				mw := io.MultiWriter(w, pw)
 				_, err := io.Copy(mw, resp.Body)
-				// close the pipe writer to signal EOF to the storing goroutine
+				if err != nil {
+					fmt.Println("error during streaming:", err)
+					cancel()
+				}
 				_ = pw.Close()
 				return err == nil
 			})
 			return
 		}
+		if match := ctx.Request.Header.Get("If-None-Match"); match == index.ETag {
+			ctx.Status(http.StatusNotModified)
+			return
+		}
 		fmt.Println("file found in store, fetching from store:", url)
 		var storeFile = store.Fetch(index)
 		ctx.Header("Content-Disposition", "inline; filename=\""+index.Name+"\"")
+		ctx.Header("Cache-Control", "public, max-age=31536000, immutable")
 		ctx.Header("Content-Type", index.Type)
 		ctx.Header("Content-Length", index.Size)
 		ctx.Stream(func(w io.Writer) bool {

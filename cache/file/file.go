@@ -1,6 +1,8 @@
 package file
 
 import (
+	"context"
+	"crypto/sha1"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -26,6 +28,7 @@ type Index struct {
 	Type       string `json:"type"`
 	Size       string `json:"size"`
 	CreateTime int64  `json:"createTime"`
+	ETag       string `json:"eTag"`
 }
 
 var store *Store
@@ -63,7 +66,7 @@ func InitStore(dir string, timeLimit time.Duration) error {
 	return nil
 }
 
-func createIndex(path string, url string, size string, name string, fileType string) Index {
+func createIndex(path string, url string, size string, name string, fileType string, etag string) Index {
 	var index = Index{
 		Url:        url,
 		Name:       name,
@@ -71,6 +74,7 @@ func createIndex(path string, url string, size string, name string, fileType str
 		Path:       path,
 		Type:       fileType,
 		CreateTime: getTime(),
+		ETag:       etag,
 	}
 
 	return index
@@ -81,7 +85,7 @@ func randomFilename() string {
 }
 
 func getTime() int64 {
-	return time.Now().Unix()
+	return time.Now().UnixNano()
 }
 
 func (Self *Store) Check(url string) (Index, bool) {
@@ -89,14 +93,14 @@ func (Self *Store) Check(url string) (Index, bool) {
 	return index, exist
 }
 
-func (Self *Store) Store(reader io.Reader, url string, name string, fileType string, size string) (Index, error) {
+func (Self *Store) Store(ctx context.Context, reader io.Reader, url string, name string, fileType string, size string) (Index, error) {
 	if index, exist := Self.Check(url); exist {
 		return index, nil
 	}
 
 	var filename = randomFilename()
 	var path = filepath.Join(Self.storeDir, filename)
-	var writtenSize, err = write(path, reader)
+	var writtenSize, etag, err = write(ctx, path, reader)
 	if err != nil {
 		return Index{}, err
 	}
@@ -106,7 +110,7 @@ func (Self *Store) Store(reader io.Reader, url string, name string, fileType str
 		return Index{}, fmt.Errorf("written size %d does not match expected size %s", writtenSize, size)
 	}
 
-	var index = createIndex(path, url, size, name, fileType)
+	var index = createIndex(path, url, size, name, fileType, etag)
 	Self.mappedIndex[url] = index
 	_ = Self.appendIndex(index)
 	return index, nil
@@ -213,11 +217,7 @@ func (Self *Store) storeIndex() error {
 func (Self *Store) appendIndex(index Index) error {
 	Self.indexMutex.Lock()
 	defer Self.indexMutex.Unlock()
-
-	// Read existing index array, append the new index, then overwrite file.
 	var path = filepath.Join(Self.storeDir, Self.indexName)
-
-	// Ensure the index file exists
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		if err := os.WriteFile(path, []byte("[]"), 0666); err != nil {
 			return err
@@ -256,7 +256,7 @@ func (Self *Store) ClearOutdate() error {
 
 	var now = getTime()
 	for url, index := range Self.mappedIndex {
-		if now-index.CreateTime > int64(Self.timeLimit.Seconds()) {
+		if now-index.CreateTime > Self.timeLimit.Nanoseconds() {
 			_ = os.Remove(index.Path)
 			delete(Self.mappedIndex, url)
 		}
@@ -264,18 +264,64 @@ func (Self *Store) ClearOutdate() error {
 	return nil
 }
 
-func write(path string, data io.Reader) (int64, error) {
+const bufferSize = 1024 * 100
+
+func write(ctx context.Context, path string, reader io.Reader) (int64, string, error) {
 	var file, err = os.Create(path)
 	if err != nil {
-		return -1, err
+		return -1, "", err
 	}
 	defer file.Close()
 
-	n, err := io.Copy(file, data)
-	if err != nil {
-		return -1, err
+	var buffer = make([]byte, bufferSize) // 100KB buffer
+	var count int64 = 0
+	var etag string
+	for {
+		if err := ctx.Err(); err != nil {
+			file.Close()
+			// 后面会根据错误和索引判断是否删除文件，如果源头已经删除，这里就不需要再删除一次，所以返回这里的err
+			return count, etag, os.Remove(path)
+		}
+
+		var n, err = reader.Read(buffer)
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			_ = os.Remove(path)
+			return count, etag, err
+		}
+		if n > 0 {
+			var written, writeErr = file.Write(buffer[:n])
+			count += int64(written)
+			if writeErr != nil {
+				_ = os.Remove(path)
+				return count, etag, writeErr
+			}
+			if written != n {
+				_ = os.Remove(path)
+				return count, etag, io.ErrShortWrite
+			}
+			if count == int64(written) {
+				var h = sha1.Sum(buffer[:n])
+				etag = fmt.Sprintf("%x", h)
+			}
+		}
 	}
-	return n, nil
+	return count, etag, nil
+}
+
+func hash(path string) (string, error) {
+	var buffer = make([]byte, bufferSize)
+	var file, err = os.Open(path)
+	if err != nil {
+		return "", err
+	}
+	defer file.Close()
+
+	n, err := file.Read(buffer)
+	var h = sha1.Sum(buffer[:n])
+	return fmt.Sprintf("%x", h), nil
 }
 
 func read(path string) (io.Reader, error) {
