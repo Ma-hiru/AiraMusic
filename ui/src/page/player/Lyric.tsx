@@ -6,6 +6,7 @@ import { cx } from "@emotion/css";
 const Lyric: FC<object> = () => {
   const lyricPlayerRef = useRef<LyricPlayerRef>(null);
   const { lyricLines, audioRef } = usePlayer();
+  console.log("lyricLines", lyricLines);
   useEffect(() => {
     if (audioRef.current) {
       let lastTime = -1;

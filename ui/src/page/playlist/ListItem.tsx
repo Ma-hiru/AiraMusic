@@ -1,9 +1,12 @@
-import { FC, memo } from "react";
+import { FC, memo, useCallback } from "react";
 import { NeteaseTrack } from "@mahiru/ui/types/netease-api";
 import { formatDurationToMMSS } from "@mahiru/ui/utils/time";
-import { getLyric, getMP3 } from "@mahiru/ui/api/track";
+import { getMP3 } from "@mahiru/ui/api/track";
 import { cx } from "@emotion/css";
 import { useCache } from "@mahiru/ui/ctx/CachedCtx";
+import { usePlayer } from "@mahiru/ui/ctx/PlayerCtx";
+import { Log } from "@mahiru/ui/utils/log";
+import { EqError } from "@mahiru/ui/utils/err";
 
 interface ListItemProps {
   track: NeteaseTrack;
@@ -14,10 +17,26 @@ interface ListItemProps {
 
 const ListItem: FC<ListItemProps> = ({ track, index, active = false, total }) => {
   const { cachedURL, init, fail } = useCache(track.al.picUrl);
+  const { addAndPlayTrack } = usePlayer();
+  const play = useCallback(() => {
+    console.log("play track:", track.name);
+    requestTrackURL(track.id).then((res) => {
+      res &&
+        addAndPlayTrack({
+          id: track.id,
+          title: track.name,
+          artist: track.ar,
+          album: track.al,
+          cover: track.al.picUrl,
+          audio: res.data[0]?.url || ""
+        });
+    });
+  }, [track.id, track.name, track.ar, track.al, addAndPlayTrack]);
   return (
     <>
       <div
         key={track.id}
+        onClick={play}
         className={cx(
           "items-center grid grid-row-1 grid-cols-[auto_auto_1fr_auto_auto] gap-4 rounded-md py-[2px] pl-2 ease-in-out transition-colors mb-2",
           {
@@ -88,12 +107,16 @@ const ListItem: FC<ListItemProps> = ({ track, index, active = false, total }) =>
 };
 export default memo(ListItem);
 
-async function requestLyric(trackId: number) {
-  const result = await getLyric(trackId);
-  console.log("lyric", result);
-}
-
 async function requestTrackURL(trackId: number) {
-  const result = await getMP3(trackId);
-  console.log("track url", result);
+  try {
+    return await getMP3(trackId);
+  } catch (err) {
+    Log.error(
+      new EqError({
+        raw: err,
+        label: "ui/player/ListItem:requestTrackURL",
+        message: "request track url failed"
+      })
+    );
+  }
 }

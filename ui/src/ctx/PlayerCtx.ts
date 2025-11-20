@@ -1,36 +1,68 @@
 import { createContext, RefObject, useContext } from "react";
 import { LyricLine } from "@applemusic-like-lyrics/core";
 import { EqError } from "@mahiru/ui/utils/err";
+import { NeteaseTrack } from "@mahiru/ui/types/netease-api";
 
 export type PlayerCtxType = {
   lyricLines: LyricLine[];
   audioRef: RefObject<HTMLAudioElement | null>;
+  playList: PlayerCtxType["info"][];
   info: {
+    id: number;
     title: string;
-    artist: string;
-    album: string;
+    artist: NeteaseTrack["ar"];
+    album: NeteaseTrack["al"];
     cover: string;
+    audio: string;
   };
+  currentIndex: number;
+  setInfo: (info: PlayerCtxType["info"]) => void;
+  setPlayList: (list: PlayerCtxType["info"][]) => void;
+  setCurrentIndex: (index: number) => void;
   play: () => void;
   mute: () => void;
   upVolume: (gap?: number) => void;
   downVolume: (gap?: number) => void;
   isPlaying: boolean;
+  addTrackToList: (newTrack: PlayerCtxType["info"]) => void;
+  addAndPlayTrack: (newTrack: PlayerCtxType["info"]) => void;
+  removeTrackInList: (trackId: number) => void;
+  nextTrack: () => void;
+  lastTrack: () => void;
 };
 
 export const PlayerCtx = createContext<PlayerCtxType>({
   lyricLines: [],
   audioRef: { current: null },
+  playList: [],
   info: {
+    id: 0,
     title: "",
-    artist: "",
-    album: "",
-    cover: ""
+    artist: [] as NeteaseTrack["ar"],
+    album: {
+      id: 0,
+      name: "",
+      pic: 0,
+      pic_str: "",
+      picUrl: "",
+      tns: []
+    } as NeteaseTrack["al"],
+    cover: "",
+    audio: ""
   },
+  currentIndex: 0,
+  setInfo: () => {},
+  setPlayList: () => {},
+  setCurrentIndex: () => {},
   play: () => {},
   mute: () => {},
-  upVolume: (_?: number) => {},
-  downVolume: (_?: number) => {},
+  upVolume: () => {},
+  downVolume: () => {},
+  addTrackToList: () => {},
+  removeTrackInList: () => {},
+  nextTrack: () => {},
+  lastTrack: () => {},
+  addAndPlayTrack: () => {},
   isPlaying: false
 });
 

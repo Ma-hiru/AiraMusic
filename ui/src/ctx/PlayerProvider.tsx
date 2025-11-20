@@ -1,20 +1,36 @@
 import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { PlayerCtx, PlayerCtxType } from "./PlayerCtx";
 import { LyricLine } from "@applemusic-like-lyrics/core";
-import { parseTranslatedLRCWasm } from "@mahiru/ui/utils/lyric";
+import { handleNeteaseLyricResponse } from "@mahiru/ui/utils/lyric";
+import { NeteaseTrack } from "@mahiru/ui/types/netease-api";
+import { getLyric } from "@mahiru/ui/api/track";
+import { useImmer } from "use-immer";
+import { Log } from "@mahiru/ui/utils/log";
+import { EqError } from "@mahiru/ui/utils/err";
+import { wrapCacheUrl } from "@mahiru/ui/api/cache";
 
 export default function PlayerProvider({ children }: { children: ReactNode }) {
   const audioRef = useRef<HTMLAudioElement>(null);
-  const [info, setInfo] = useState({
-    title: "小さな恋のうた",
-    artist: "石見舞菜香",
-    album: "小さな恋のうた",
-    cover: "/小さな恋のうた - 石見舞菜香.jpg",
-    audio: "/小さな恋のうた - 石見舞菜香.mp3"
+  const [info, setInfo] = useImmer<PlayerCtxType["info"]>({
+    title: "",
+    artist: [] as NeteaseTrack["ar"],
+    album: {
+      id: 0,
+      name: "",
+      pic: 0,
+      pic_str: "",
+      picUrl: "",
+      tns: []
+    } as NeteaseTrack["al"],
+    cover: "",
+    audio: "",
+    id: 0
   });
-
+  const [playList, setPlayList] = useImmer<PlayerCtxType["info"][]>([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [lyricLines, setLyricLines] = useState<LyricLine[]>([]);
+
   const play = useCallback(() => {
     const audio = audioRef.current;
     audio && (audio.paused ? audio.play() : audio.pause());
@@ -25,18 +41,104 @@ export default function PlayerProvider({ children }: { children: ReactNode }) {
   }, []);
   const upVolume = useCallback((gap?: number) => {
     const audio = audioRef.current;
-    gap ||= 0.1;
+    gap ||= 0.2;
     if (audio) {
       audio.volume = Math.min(1, audio.volume + gap);
     }
   }, []);
   const downVolume = useCallback((gap?: number) => {
     const audio = audioRef.current;
-    gap ||= 0.1;
+    gap ||= 0.2;
     if (audio) {
       audio.volume = Math.max(0, audio.volume - gap);
     }
   }, []);
+  const addTrackToList = useCallback(
+    (newTrack: PlayerCtxType["info"]) => {
+      const exists = playList.findIndex((t) => t.id === newTrack.id);
+      if (exists === -1) {
+        setPlayList((draft) => {
+          draft.push(newTrack);
+        });
+      }
+    },
+    [playList, setPlayList]
+  );
+  const removeTrackInList = useCallback(
+    (id: number) => {
+      setPlayList((draft) => {
+        const index = draft.findIndex((t) => t.id === id);
+        if (index !== -1) {
+          draft.splice(index, 1);
+        }
+      });
+    },
+    [setPlayList]
+  );
+  const addAndPlayTrack = useCallback(
+    (newTrack: PlayerCtxType["info"]) => {
+      console.log("addAndPlayTrack:", newTrack);
+      const exists = playList.findIndex((t) => t.id === newTrack.id);
+      if (exists === -1) {
+        // clamp insert position to [0, playList.length]
+        const insertAt = Math.min(currentIndex + 1, playList.length);
+        const newPlayList = [...playList.slice(0, insertAt), newTrack, ...playList.slice(insertAt)];
+        // useImmer's setter accepts a value too; cast to any for compatibility
+        setPlayList(newPlayList as any);
+        setCurrentIndex(insertAt);
+      } else {
+        setCurrentIndex(exists);
+      }
+      // 不直接设置 info，交由 currentIndex 的 useEffect 去设置 info 并加载歌词
+    },
+    [currentIndex, playList, setPlayList]
+  );
+
+  // 当 info.audio 改变时，尝试加载并播放（用户点击通常允许播放，若被浏览器策略阻止会被捕获）
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio || !info.audio) return;
+    try {
+      // React 控制 audio 的 src 属性，但为了确保立即生效，调用 load 并尝试 play
+      audio.load();
+      void audio.play().catch((err) => {
+        Log.error(
+          new EqError({
+            raw: err,
+            message: "play request failed or was blocked",
+            label: "ui/ctx/PlayerProvider:playOnInfoAudioChange"
+          })
+        );
+      });
+    } catch (err) {
+      Log.error(
+        new EqError({
+          raw: err,
+          message: "unexpected error when trying to play",
+          label: "ui/ctx/PlayerProvider:playOnInfoAudioChange"
+        })
+      );
+    }
+  }, [info.audio]);
+  const nextTrack = useCallback(() => {
+    setCurrentIndex((index) => {
+      const nextIndex = index + 1;
+      if (nextIndex >= playList.length) {
+        return 0;
+      }
+      return nextIndex;
+    });
+  }, [playList]);
+  const lastTrack = useCallback(() => {
+    setCurrentIndex((index) => {
+      const lastIndex = index - 1;
+      if (lastIndex < 0) {
+        return playList.length - 1;
+      }
+      return lastIndex;
+    });
+  }, [playList]);
+
   const ctxValue = useMemo<PlayerCtxType>(
     () => ({
       audioRef,
@@ -46,19 +148,62 @@ export default function PlayerProvider({ children }: { children: ReactNode }) {
       mute,
       upVolume,
       downVolume,
-      isPlaying
+      currentIndex,
+      setInfo,
+      setPlayList,
+      setCurrentIndex,
+      isPlaying,
+      playList,
+      addTrackToList,
+      removeTrackInList,
+      nextTrack,
+      lastTrack,
+      addAndPlayTrack
     }),
-    [audioRef, lyricLines, info, play, mute, upVolume, downVolume, isPlaying]
+    [
+      addTrackToList,
+      currentIndex,
+      downVolume,
+      info,
+      isPlaying,
+      lastTrack,
+      lyricLines,
+      mute,
+      nextTrack,
+      play,
+      playList,
+      removeTrackInList,
+      setInfo,
+      setPlayList,
+      upVolume,
+      addAndPlayTrack
+    ]
   );
 
   useEffect(() => {
-    fetch("/小さな恋のうた - 石見舞菜香.lrc")
-      .then((res) => res.text())
-      .then((lrc) => {
-        parseTranslatedLRCWasm(lrc);
-        setLyricLines(parseTranslatedLRCWasm(lrc));
-      });
-  }, []);
+    const candidate = playList[currentIndex];
+    if (candidate && candidate.id !== info.id) {
+      const next = candidate;
+      setInfo(next);
+      getLyric(next.id)
+        .then((result) => {
+          Log.debug("Lyric=>", result);
+          const parsedLyric = handleNeteaseLyricResponse(result);
+          setLyricLines(parsedLyric);
+        })
+        .catch((err) => {
+          Log.error(
+            new EqError({
+              raw: err,
+              message: "Failed to fetch lyric",
+              label: "ui/ctx/PlayerProvider:getLyric"
+            })
+          );
+        });
+    } else {
+      // no change: either no candidate or already current track
+    }
+  }, [info.id, playList, currentIndex, setInfo]);
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
@@ -71,9 +216,23 @@ export default function PlayerProvider({ children }: { children: ReactNode }) {
       audio.removeEventListener("pause", onPause);
     };
   }, []);
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (audio) {
+      audio.addEventListener("ended", nextTrack);
+      return () => {
+        audio.removeEventListener("ended", nextTrack);
+      };
+    }
+  }, [nextTrack]);
   return (
     <>
-      <audio className="w-0 h-0 opacity-0" ref={audioRef} src={info.audio} preload="auto" />
+      <audio
+        className="w-0 h-0 opacity-0"
+        ref={audioRef}
+        src={wrapCacheUrl(info.audio)}
+        preload="auto"
+      />
       <PlayerCtx.Provider value={ctxValue}>{children}</PlayerCtx.Provider>
     </>
   );

@@ -33,7 +33,7 @@ export function parseTranslatedLRCWasm(content: string): LyricLine[] {
   return parseTranslatedLRC(raw, false) as LyricLine[];
 }
 
-export function parseNeteaseLyricWasm(
+function parseNeteaseLyricWasm(
   raw: NeteaseLrc | NeteaseKlyric,
   ts: NeteaseTlyric,
   rm: NeteaseRomalrc,

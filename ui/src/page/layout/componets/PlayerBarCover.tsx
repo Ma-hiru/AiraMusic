@@ -20,7 +20,9 @@ const PlayerBarCover: FC<object> = () => {
       />
       <div className="flex flex-col gap-0">
         <div className="text-sm font-medium text-center">{info.title}</div>
-        <div className="text-xs text-center text-gray-500">{info.artist}</div>
+        <div className="text-xs text-center text-gray-500">
+          {(info.artist || []).map((a) => a.name).join(" / ")}
+        </div>
       </div>
     </div>
   );
