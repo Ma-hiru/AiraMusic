@@ -3,7 +3,7 @@ import { PlayerCtx, PlayerCtxType } from "./PlayerCtx";
 import { LyricLine } from "@applemusic-like-lyrics/core";
 import { handleNeteaseLyricResponse } from "@mahiru/ui/utils/lyric";
 import { NeteaseTrack } from "@mahiru/ui/types/netease-api";
-import { getLyric } from "@mahiru/ui/api/track";
+import { getLyric, getMP3 } from "@mahiru/ui/api/track";
 import { useImmer } from "use-immer";
 import { Log } from "@mahiru/ui/utils/log";
 import { EqError } from "@mahiru/ui/utils/err";
@@ -77,49 +77,29 @@ export default function PlayerProvider({ children }: { children: ReactNode }) {
   );
   const addAndPlayTrack = useCallback(
     (newTrack: PlayerCtxType["info"]) => {
-      console.log("addAndPlayTrack:", newTrack);
       const exists = playList.findIndex((t) => t.id === newTrack.id);
       if (exists === -1) {
-        // clamp insert position to [0, playList.length]
         const insertAt = Math.min(currentIndex + 1, playList.length);
         const newPlayList = [...playList.slice(0, insertAt), newTrack, ...playList.slice(insertAt)];
-        // useImmer's setter accepts a value too; cast to any for compatibility
-        setPlayList(newPlayList as any);
+        setPlayList(newPlayList);
         setCurrentIndex(insertAt);
       } else {
         setCurrentIndex(exists);
       }
-      // 不直接设置 info，交由 currentIndex 的 useEffect 去设置 info 并加载歌词
     },
     [currentIndex, playList, setPlayList]
   );
-
-  // 当 info.audio 改变时，尝试加载并播放（用户点击通常允许播放，若被浏览器策略阻止会被捕获）
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio || !info.audio) return;
-    try {
-      // React 控制 audio 的 src 属性，但为了确保立即生效，调用 load 并尝试 play
-      audio.load();
-      void audio.play().catch((err) => {
-        Log.error(
-          new EqError({
-            raw: err,
-            message: "play request failed or was blocked",
-            label: "ui/ctx/PlayerProvider:playOnInfoAudioChange"
-          })
-        );
-      });
-    } catch (err) {
-      Log.error(
-        new EqError({
-          raw: err,
-          message: "unexpected error when trying to play",
-          label: "ui/ctx/PlayerProvider:playOnInfoAudioChange"
-        })
-      );
-    }
-  }, [info.audio]);
+  const clearPlayList = useCallback(() => {
+    setPlayList([]);
+    setCurrentIndex(0);
+  }, [setPlayList]);
+  const replacePlayList = useCallback(
+    (playList: PlayerCtxType["info"][], currentIndex: number) => {
+      setPlayList(playList);
+      setCurrentIndex(currentIndex);
+    },
+    [setPlayList]
+  );
   const nextTrack = useCallback(() => {
     setCurrentIndex((index) => {
       const nextIndex = index + 1;
@@ -158,7 +138,9 @@ export default function PlayerProvider({ children }: { children: ReactNode }) {
       removeTrackInList,
       nextTrack,
       lastTrack,
-      addAndPlayTrack
+      addAndPlayTrack,
+      clearPlayList,
+      replacePlayList
     }),
     [
       addTrackToList,
@@ -176,7 +158,9 @@ export default function PlayerProvider({ children }: { children: ReactNode }) {
       setInfo,
       setPlayList,
       upVolume,
-      addAndPlayTrack
+      addAndPlayTrack,
+      clearPlayList,
+      replacePlayList
     ]
   );
 
@@ -187,7 +171,6 @@ export default function PlayerProvider({ children }: { children: ReactNode }) {
       setInfo(next);
       getLyric(next.id)
         .then((result) => {
-          Log.debug("Lyric=>", result);
           const parsedLyric = handleNeteaseLyricResponse(result);
           setLyricLines(parsedLyric);
         })
@@ -200,10 +183,43 @@ export default function PlayerProvider({ children }: { children: ReactNode }) {
             })
           );
         });
-    } else {
-      // no change: either no candidate or already current track
     }
   }, [info.id, playList, currentIndex, setInfo]);
+  useEffect(() => {
+    if (info.id !== 0 && info.audio === "") {
+      getMP3(info.id).then((res) => {
+        res &&
+          setInfo((draft) => {
+            draft.audio = res.data[0]?.url || "err";
+          });
+      });
+    }
+  }, [info, setInfo]);
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio || !info.audio) return;
+    try {
+      // React 控制 audio 的 src 属性，但为了确保立即生效，调用 load 并尝试 play
+      audio.load();
+      void audio.play().catch((err) => {
+        Log.error(
+          new EqError({
+            raw: err,
+            message: "play request failed or was blocked",
+            label: "ui/ctx/PlayerProvider:playOnInfoAudioChange"
+          })
+        );
+      });
+    } catch (err) {
+      Log.error(
+        new EqError({
+          raw: err,
+          message: "unexpected error when trying to play",
+          label: "ui/ctx/PlayerProvider:playOnInfoAudioChange"
+        })
+      );
+    }
+  }, [info.audio]);
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
@@ -230,7 +246,7 @@ export default function PlayerProvider({ children }: { children: ReactNode }) {
       <audio
         className="w-0 h-0 opacity-0"
         ref={audioRef}
-        src={wrapCacheUrl(info.audio)}
+        src={(wrapCacheUrl(info.audio) || null) as string}
         preload="auto"
       />
       <PlayerCtx.Provider value={ctxValue}>{children}</PlayerCtx.Provider>

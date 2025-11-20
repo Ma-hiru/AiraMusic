@@ -29,7 +29,7 @@ const Transition = <T extends keyof HTMLElements>({
   );
 };
 
-export default memo(Transition) as typeof Transition;
+export default memo(Transition);
 
 const defaultTransition = {
   ease: "easeInOut",

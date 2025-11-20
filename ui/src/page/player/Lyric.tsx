@@ -5,8 +5,7 @@ import { cx } from "@emotion/css";
 
 const Lyric: FC<object> = () => {
   const lyricPlayerRef = useRef<LyricPlayerRef>(null);
-  const { lyricLines, audioRef } = usePlayer();
-  console.log("lyricLines", lyricLines);
+  const { lyricLines, audioRef, info } = usePlayer();
   useEffect(() => {
     if (audioRef.current) {
       let lastTime = -1;
@@ -27,10 +26,11 @@ const Lyric: FC<object> = () => {
       audioRef.current.addEventListener("play", onPlay);
       return () => {
         // oxlint-disable-next-line exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
         audioRef.current?.removeEventListener("play", onPlay);
       };
     }
-  }, [audioRef]);
+  }, [audioRef, info.audio]);
   return (
     <div
       className={cx(

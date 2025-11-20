@@ -7,6 +7,7 @@ export type PlayerCtxType = {
   lyricLines: LyricLine[];
   audioRef: RefObject<HTMLAudioElement | null>;
   playList: PlayerCtxType["info"][];
+  replacePlayList: (playList: PlayerCtxType["info"][], currentIndex: number) => void;
   info: {
     id: number;
     title: string;
@@ -29,7 +30,10 @@ export type PlayerCtxType = {
   removeTrackInList: (trackId: number) => void;
   nextTrack: () => void;
   lastTrack: () => void;
+  clearPlayList: () => void;
 };
+
+function blankFunc() {}
 
 export const PlayerCtx = createContext<PlayerCtxType>({
   lyricLines: [],
@@ -51,18 +55,20 @@ export const PlayerCtx = createContext<PlayerCtxType>({
     audio: ""
   },
   currentIndex: 0,
-  setInfo: () => {},
-  setPlayList: () => {},
-  setCurrentIndex: () => {},
-  play: () => {},
-  mute: () => {},
-  upVolume: () => {},
-  downVolume: () => {},
-  addTrackToList: () => {},
-  removeTrackInList: () => {},
-  nextTrack: () => {},
-  lastTrack: () => {},
-  addAndPlayTrack: () => {},
+  setInfo: blankFunc,
+  setPlayList: blankFunc,
+  setCurrentIndex: blankFunc,
+  play: blankFunc,
+  mute: blankFunc,
+  upVolume: blankFunc,
+  downVolume: blankFunc,
+  addTrackToList: blankFunc,
+  removeTrackInList: blankFunc,
+  nextTrack: blankFunc,
+  lastTrack: blankFunc,
+  addAndPlayTrack: blankFunc,
+  clearPlayList: blankFunc,
+  replacePlayList: blankFunc,
   isPlaying: false
 });
 

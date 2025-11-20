@@ -10,7 +10,11 @@ const AvatarMini: FC<object> = () => {
   }, [data.user?.avatarUrl]);
   return (
     <div>
-      <img className="size-6 rounded-full" src={avatar} alt={data.user?.nickname} />
+      <img
+        className="size-6 rounded-full"
+        src={(avatar || null) as string}
+        alt={data.user?.nickname}
+      />
     </div>
   );
 };

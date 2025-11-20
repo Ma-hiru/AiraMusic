@@ -1,6 +1,10 @@
 import { FC, memo, useCallback, useState } from "react";
-import { Minus, Square, SquareMinus, X } from "lucide-react";
+import { Minus, PictureInPicture, Square, SquareMinus, X } from "lucide-react";
 import { NoDrag } from "@mahiru/ui/componets/public/Drag";
+import { usePlayer } from "@mahiru/ui/ctx/PlayerCtx";
+import { useLayout } from "@mahiru/ui/ctx/LayoutCtx";
+import Transition from "@mahiru/ui/componets/public/Transition";
+import { TransitionPreset } from "@mahiru/ui/constants/transition";
 
 interface ControlButtonProps {
   windowId: WindowType;
@@ -9,6 +13,7 @@ interface ControlButtonProps {
 
 const ControlButton: FC<ControlButtonProps> = ({ windowId, maximizable = true }) => {
   const [isMax, setIsMax] = useState(false);
+  const { PlayerModalVisible } = useLayout();
 
   const maximize = useCallback(() => {
     if (isMax) {
@@ -28,8 +33,11 @@ const ControlButton: FC<ControlButtonProps> = ({ windowId, maximizable = true })
   }, [windowId]);
 
   return (
-    <NoDrag className="flex flex-row gap-4 select-none relative z-10">
+    <NoDrag className="flex flex-row gap-4 select-none relative z-10 ease-in-out transition-all">
       <Minus className="size-5 cursor-pointer" onClick={minimize} />
+      <Transition show={PlayerModalVisible} {...TransitionPreset.OpacityPreset}>
+        <PictureInPicture className="size-5 cursor-pointer scale-95" />
+      </Transition>
       {isMax
         ? maximizable && (
             <SquareMinus className="size-5 cursor-pointer scale-80" onClick={maximize} />

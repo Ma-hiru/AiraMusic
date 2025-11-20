@@ -2,55 +2,17 @@ import { FC, memo } from "react";
 import { usePlayer } from "@mahiru/ui/ctx/PlayerCtx";
 
 const Control: FC<object> = () => {
-  const { play, mute, upVolume, downVolume } = usePlayer();
+  const { play, mute, upVolume, downVolume, lastTrack, nextTrack } = usePlayer();
   return (
     <div className="space-x-2">
-      <button
-        className="px-2 py-1 rounded-lg bg-white/50"
-        onClick={() => {
-          window.node.invoke.message("hello from renderer").then((response) => {
-            console.log(response);
-          });
-        }}>
-        send message
-      </button>
-      <button
-        className="px-2 py-1 rounded-lg bg-white/50"
-        onClick={() => {
-          window.node.event.createLoginWindow();
-        }}>
-        login
-      </button>
-      <button
-        className="px-2 py-1 rounded-lg bg-white/50"
-        onClick={() => {
-          window.node.event.close("main");
-        }}>
-        close
-      </button>
-      <button
-        className="px-2 py-1 rounded-lg bg-white/50"
-        onClick={() => {
-          window.node.event.minimize("main");
-        }}>
-        min
-      </button>
-      <button
-        className="px-2 py-1 rounded-lg bg-white/50"
-        onClick={() => {
-          window.node.event.maximize("main");
-        }}>
-        max
-      </button>
-      <button
-        className="px-2 py-1 rounded-lg bg-white/50"
-        onClick={() => {
-          window.node.event.unmaximize("main");
-        }}>
-        unmax
+      <button onClick={lastTrack} className="px-2 py-1 rounded-lg bg-white/50">
+        last
       </button>
       <button onClick={play} className="px-2 py-1 rounded-lg bg-white/50">
         play
+      </button>
+      <button onClick={nextTrack} className="px-2 py-1 rounded-lg bg-white/50">
+        next
       </button>
       <button onClick={mute} className="px-2 py-1 rounded-lg bg-white/50">
         mute

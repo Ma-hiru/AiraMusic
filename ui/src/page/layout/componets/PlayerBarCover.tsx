@@ -14,11 +14,11 @@ const PlayerBarCover: FC<object> = () => {
     <div className="h-2/3 space-x-2 flex items-center justify-start gap-2">
       <img
         className="h-full rounded-md cursor-pointer"
-        src={cachedCover as string}
+        src={(cachedCover || null) as string}
         alt={info.title}
         onClick={() => TogglePlayerModalVisible(true)}
       />
-      <div className="flex flex-col gap-0">
+      <div className="flex flex-col gap-0 items-start">
         <div className="text-sm font-medium text-center">{info.title}</div>
         <div className="text-xs text-center text-gray-500">
           {(info.artist || []).map((a) => a.name).join(" / ")}

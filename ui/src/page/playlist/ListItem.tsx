@@ -1,4 +1,4 @@
-import { FC, memo, useCallback } from "react";
+import { FC, memo, MouseEventHandler, useCallback } from "react";
 import { NeteaseTrack } from "@mahiru/ui/types/netease-api";
 import { formatDurationToMMSS } from "@mahiru/ui/utils/time";
 import { getMP3 } from "@mahiru/ui/api/track";
@@ -10,28 +10,38 @@ import { EqError } from "@mahiru/ui/utils/err";
 
 interface ListItemProps {
   track: NeteaseTrack;
+  data: NeteaseTrack[];
   index: number;
   total: number;
   active?: boolean;
 }
 
-const ListItem: FC<ListItemProps> = ({ track, index, active = false, total }) => {
+const ListItem: FC<ListItemProps> = ({ track, index, active = false, total, data }) => {
   const { cachedURL, init, fail } = useCache(track.al.picUrl);
-  const { addAndPlayTrack } = usePlayer();
-  const play = useCallback(() => {
-    console.log("play track:", track.name);
-    requestTrackURL(track.id).then((res) => {
-      res &&
-        addAndPlayTrack({
+  const { replacePlayList } = usePlayer();
+  const disabled = !track.playable;
+  const play = useCallback<MouseEventHandler<HTMLDivElement>>(
+    (e) => {
+      if (disabled) {
+        e.preventDefault();
+        return;
+      }
+      Log.trace("ui/ListItem", "Playing track:", track.name);
+      replacePlayList(
+        data.map((track) => ({
           id: track.id,
           title: track.name,
           artist: track.ar,
           album: track.al,
           cover: track.al.picUrl,
-          audio: res.data[0]?.url || ""
-        });
-    });
-  }, [track.id, track.name, track.ar, track.al, addAndPlayTrack]);
+          audio: ""
+        })),
+        index - 1
+      );
+    },
+    [data, disabled, index, replacePlayList, track.name]
+  );
+
   return (
     <>
       <div
@@ -43,7 +53,9 @@ const ListItem: FC<ListItemProps> = ({ track, index, active = false, total }) =>
             "bg-[#fc3d49]": active,
             "text-white": active,
             "hover:bg-black/10": !active,
-            "active:bg-black/20": !active
+            "active:bg-black/20": !active,
+            "cursor-not-allowed! opacity-50": disabled,
+            "cursor-pointer": !disabled
           }
         )}>
         {/*序号*/}
@@ -70,7 +82,12 @@ const ListItem: FC<ListItemProps> = ({ track, index, active = false, total }) =>
         <div className="flex flex-col text-[14px]">
           {/*名称*/}
           <div className="overflow-hidden flex-row">
-            <span className="cursor-pointer font-bold">{track.name}</span>
+            <span
+              className={cx("cursor-pointer font-bold hover:text-[#fc3d49]/85", {
+                "cursor-not-allowed! opacity-50": disabled
+              })}>
+              {track.name}
+            </span>
             {(track.tns?.[0] || track.alia?.[0]) && (
               <span
                 className={cx("text-[#7b8290]/50 w-2 overflow-hidden text-ellipsis ml-2", {
@@ -83,9 +100,10 @@ const ListItem: FC<ListItemProps> = ({ track, index, active = false, total }) =>
           {/*歌手、专辑*/}
           <div
             className={cx(
-              "text-[12px] text-[#7b8290]/80 cursor-pointer flex flex-row overflow-hidden text-ellipsis line-clamp-1 gap-2",
+              "text-[12px] text-[#7b8290]/80 cursor-pointer flex flex-row overflow-hidden text-ellipsis line-clamp-1 gap-2 hover:text-[#fc3d49]/85",
               {
-                "text-white/60": active
+                "text-white/60": active,
+                "cursor-not-allowed! opacity-50": disabled
               }
             )}>
             <span>{track.ar.map((ar) => ar.name).join(" / ")}</span>
@@ -106,17 +124,3 @@ const ListItem: FC<ListItemProps> = ({ track, index, active = false, total }) =>
   );
 };
 export default memo(ListItem);
-
-async function requestTrackURL(trackId: number) {
-  try {
-    return await getMP3(trackId);
-  } catch (err) {
-    Log.error(
-      new EqError({
-        raw: err,
-        label: "ui/player/ListItem:requestTrackURL",
-        message: "request track url failed"
-      })
-    );
-  }
-}

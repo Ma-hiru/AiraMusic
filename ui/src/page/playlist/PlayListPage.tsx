@@ -8,7 +8,6 @@ import { useParams } from "react-router-dom";
 import { Log } from "@mahiru/ui/utils/log";
 import { EqError } from "@mahiru/ui/utils/err";
 import CachedProvider from "@mahiru/ui/ctx/CachedProvider";
-import { mapTrackPlayableStatus } from "@mahiru/ui/api/utils/common";
 import { SearchTrack } from "@mahiru/wasm";
 
 const PlayListPage: FC<object> = () => {
@@ -24,10 +23,9 @@ const PlayListPage: FC<object> = () => {
     if (id) {
       requestPlayListDetail(Number(id)).then((res) => {
         if (res) {
-          const mappedTrack = mapTrackPlayableStatus(res.playlist.tracks);
-          tracks.current = mappedTrack;
+          tracks.current = res.playlist.tracks;
           setSearchTrackInstance(new SearchTrack(JSON.stringify(tracks.current)));
-          setFilterTracks(mappedTrack);
+          setFilterTracks(tracks.current);
           setDetail(res);
         }
       });

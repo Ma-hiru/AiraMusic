@@ -48,7 +48,7 @@ function registerLoginWindowControl() {
       }
       LoginWindow.on("ready-to-show", () => {
         LoginWindow.show();
-        isDev() && LoginWindow.webContents.openDevTools();
+        // isDev() && LoginWindow.webContents.openDevTools();
       });
     }
   });

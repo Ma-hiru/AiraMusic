@@ -17,7 +17,7 @@ const PlayerModal: FC<object> = () => {
   return (
     <motion.div
       ref={scope}
-      className="absolute w-screen h-screen overflow-hidden z-20"
+      className="absolute w-screen h-screen overflow-hidden z-20 bg-white/90 backdrop-blur-md"
       initial={animation.initial}
       transition={animation.transition}>
       <PlayerPage />

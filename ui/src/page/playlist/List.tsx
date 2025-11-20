@@ -11,7 +11,9 @@ interface ListProps {
 const PlayList: FC<ListProps> = ({ filterTracks }) => {
   const RowComponent = useCallback(
     (index: number, data: NeteaseTrack) => {
-      return <ListItem track={data} index={index + 1} total={filterTracks.length} />;
+      return (
+        <ListItem track={data} index={index + 1} total={filterTracks.length} data={filterTracks} />
+      );
     },
     [filterTracks]
   );
@@ -34,7 +36,13 @@ const PlayList: FC<ListProps> = ({ filterTracks }) => {
         />
       ) : (
         filterTracks.map((track, index) => (
-          <ListItem key={track.id} track={track} index={index + 1} total={filterTracks.length} />
+          <ListItem
+            key={track.id}
+            track={track}
+            index={index + 1}
+            total={filterTracks.length}
+            data={filterTracks}
+          />
         ))
       )}
     </div>
