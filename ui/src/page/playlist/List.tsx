@@ -18,19 +18,16 @@ const PlayList: FC<ListProps> = ({ filterTracks }) => {
   return (
     <div
       className={cx(
-        "w-full overflow-y-auto h-[calc(100%-216px)] pb-8",
+        "w-full overflow-y-auto h-[calc(100%-210px)]",
         css`
           scrollbar-width: none;
         `
       )}>
       {filterTracks.length > 200 ? (
         <Virtuoso<NeteaseTrack>
-          className={cx(
-            "w-full h-full",
-            css`
-              scrollbar-width: none;
-            `
-          )}
+          className={cx(css`
+            scrollbar-width: none;
+          `)}
           data={filterTracks}
           itemContent={RowComponent}
           overscan={5}

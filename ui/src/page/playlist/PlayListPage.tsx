@@ -1,4 +1,4 @@
-import { FC, memo, useCallback, useDeferredValue, useEffect, useRef, useState } from "react";
+import { FC, useCallback, useEffect, useRef, useState } from "react";
 import { getPlaylistDetail } from "@mahiru/ui/api/playlist";
 import Top from "@mahiru/ui/page/playlist/Top";
 import List from "@mahiru/ui/page/playlist/List";
@@ -9,6 +9,7 @@ import { Log } from "@mahiru/ui/utils/log";
 import { EqError } from "@mahiru/ui/utils/err";
 import CachedProvider from "@mahiru/ui/ctx/CachedProvider";
 import { mapTrackPlayableStatus } from "@mahiru/ui/api/utils/common";
+import { SearchTrack } from "@mahiru/wasm";
 
 const PlayListPage: FC<object> = () => {
   const { id } = useParams();
@@ -17,6 +18,7 @@ const PlayListPage: FC<object> = () => {
   const [filterTracks, setFilterTracks] = useState<
     NeteasePlaylistDetailResponse["playlist"]["tracks"]
   >([]);
+  const [searchTrackInstance, setSearchTrackInstance] = useState<Nullable<SearchTrack>>(null);
   const tracks = useRef<NeteasePlaylistDetailResponse["playlist"]["tracks"]>([]);
   useEffect(() => {
     if (id) {
@@ -24,6 +26,7 @@ const PlayListPage: FC<object> = () => {
         if (res) {
           const mappedTrack = mapTrackPlayableStatus(res.playlist.tracks);
           tracks.current = mappedTrack;
+          setSearchTrackInstance(new SearchTrack(JSON.stringify(tracks.current)));
           setFilterTracks(mappedTrack);
           setDetail(res);
         }
@@ -31,22 +34,24 @@ const PlayListPage: FC<object> = () => {
     }
   }, [id]);
 
-  const searchTracks = useCallback((k: string) => {
-    if (k.trim() === "") {
-      setFilterTracks(tracks.current);
-    } else {
-      const lowerK = k.toLowerCase();
-      const filtered = tracks.current.filter(
-        (track) =>
-          track.name.toLowerCase().includes(lowerK) ||
-          track.ar.some((artist) => artist.name.toLowerCase().includes(lowerK)) ||
-          track.al.name.toLowerCase().includes(lowerK) ||
-          track.alia.some((alias) => alias.toLowerCase().includes(lowerK)) ||
-          track.tns?.some((tns) => tns.toLowerCase().includes(lowerK))
-      );
-      setFilterTracks(filtered);
-    }
-  }, []);
+  const searchTracks = useCallback(
+    (k: string) => {
+      if (k.trim() === "") {
+        setFilterTracks(tracks.current);
+      } else {
+        if (searchTrackInstance) {
+          const lowerK = k.toLowerCase();
+          const indexs = searchTrackInstance.search(lowerK);
+          const result: NeteasePlaylistDetailResponse["playlist"]["tracks"] = [];
+          indexs.forEach((i) => {
+            result.push(tracks.current[i]!);
+          });
+          setFilterTracks(result);
+        }
+      }
+    },
+    [searchTrackInstance]
+  );
   return (
     <div className="w-full h-full px-12 pt-20">
       <Top detail={detail} searchTracks={searchTracks} />
