@@ -1,8 +1,9 @@
-import { FC, memo } from "react";
+import { FC, memo, useEffect, useState } from "react";
 import { NeteaseTrack } from "@mahiru/ui/types/netease-api";
 import { formatDurationToMMSS } from "@mahiru/ui/utils/time";
 import { getLyric, getMP3 } from "@mahiru/ui/api/track";
 import { cx } from "@emotion/css";
+import { wrapCacheUrl } from "@mahiru/ui/api/cache";
 
 interface ListItemProps {
   track: NeteaseTrack;
@@ -11,6 +12,10 @@ interface ListItemProps {
 }
 
 const ListItem: FC<ListItemProps> = ({ track, index, active = false }) => {
+  const [picURL, setPicURL] = useState<Nullable<string>>(null);
+  useEffect(() => {
+    wrapCacheUrl(track.al.picUrl).then(setPicURL);
+  }, [track.al.picUrl]);
   return (
     <>
       <div
@@ -33,7 +38,7 @@ const ListItem: FC<ListItemProps> = ({ track, index, active = false }) => {
           )}>
           {index.toString().padStart(2, "0")}
         </span>
-        <img src={track.al.picUrl} className="size-8 rounded-md" alt={track.al.name} />
+        <img src={picURL as string} className="size-8 rounded-md" alt={track.al.name} />
         <div className="flex flex-col text-[14px]">
           <div className="overflow-hidden flex-row">
             <span className="cursor-pointer font-bold">{track.name}</span>
@@ -66,6 +71,7 @@ const ListItem: FC<ListItemProps> = ({ track, index, active = false }) => {
   );
 };
 export default memo(ListItem);
+
 async function requestLyric(trackId: number) {
   const result = await getLyric(trackId);
   console.log("lyric", result);

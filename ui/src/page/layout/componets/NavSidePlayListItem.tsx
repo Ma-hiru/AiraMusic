@@ -1,5 +1,6 @@
-import { FC, memo } from "react";
+import { FC, memo, useEffect, useState } from "react";
 import NavSideNavItem from "@mahiru/ui/page/layout/componets/NavSideNavItem";
+import { wrapCacheUrl } from "@mahiru/ui/api/cache";
 
 interface Props {
   cover: string;
@@ -11,6 +12,10 @@ interface Props {
 }
 
 const NavSidePlayListItem: FC<Props> = ({ cover, label, count, id, onClick, active }) => {
+  const [cacheCover, setCacheCover] = useState<Nullable<string>>(null);
+  useEffect(() => {
+    wrapCacheUrl(cover).then(setCacheCover);
+  }, [cover]);
   return (
     <div className="space-x-2 font-bold">
       <NavSideNavItem
@@ -18,7 +23,7 @@ const NavSidePlayListItem: FC<Props> = ({ cover, label, count, id, onClick, acti
         onClick={() => onClick?.(id)}
         prefix={
           <div className="size-10 min-w-10 rounded-md overflow-hidden">
-            <img className="w-full" src={cover} alt={label} />
+            <img className="w-full" src={cacheCover as string} alt={label} />
           </div>
         }>
         <div className="flex flex-col overflow-hidden">

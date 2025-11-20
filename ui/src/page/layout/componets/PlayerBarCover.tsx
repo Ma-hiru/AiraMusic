@@ -1,15 +1,20 @@
-import { FC, memo } from "react";
+import { FC, memo, useEffect, useState } from "react";
 import { usePlayer } from "@mahiru/ui/ctx/PlayerCtx";
 import { useLayout } from "@mahiru/ui/ctx/LayoutCtx";
+import { wrapCacheUrl } from "@mahiru/ui/api/cache";
 
 const PlayerBarCover: FC<object> = () => {
   const { info } = usePlayer();
   const { TogglePlayerModalVisible } = useLayout();
+  const [cachedCover, setCachedCover] = useState<Nullable<string>>(null);
+  useEffect(() => {
+    wrapCacheUrl(info.cover).then(setCachedCover);
+  }, [info.cover]);
   return (
     <div className="h-2/3 space-x-2 flex items-center justify-start gap-2">
       <img
         className="h-full rounded-md cursor-pointer"
-        src={info.cover}
+        src={cachedCover as string}
         alt={info.title}
         onClick={() => TogglePlayerModalVisible(true)}
       />

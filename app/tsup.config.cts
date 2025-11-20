@@ -10,18 +10,10 @@ export default defineConfig([
     platform: "node",
     target: "node20",
     sourcemap: true,
-    clean: true,
+    clean: false,
     dts: false,
     external: ["electron", "esbuild", "node:*", "window"],
     noExternal: ["@mahiru/log", "@mahiru/cache"],
-    onSuccess: async () => {
-      try {
-        await copyFile("../cache/server.exe", "../dist/app/server.exe");
-        await copyFile("../cache/server", "../dist/app/server");
-      } catch {
-        /** empty */
-      }
-    },
     minify: true
   },
   {

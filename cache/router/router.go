@@ -2,10 +2,10 @@ package router
 
 import (
 	"fileServer/file"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
-	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -33,8 +33,9 @@ func SetRouter(app *gin.Engine) {
 
 		var store = file.GetStore()
 		var fileType = resp.Header.Get("Content-Type")
+		var fileSize = resp.Header.Get("Content-Length")
 		var fileName = getNameFromURL(url)
-		index, err := store.Store(resp.Body, url, fileName, fileType)
+		index, err := store.Store(resp.Body, url, fileName, fileType, fileSize)
 		if err != nil {
 			ctx.Status(500)
 			log.Panicln(err)
@@ -57,8 +58,7 @@ func SetRouter(app *gin.Engine) {
 		var storeFile = store.Fetch(index)
 		ctx.Header("Content-Disposition", "attachment; filename=\""+index.Name+"\"")
 		ctx.Header("Content-Type", index.Type)
-
-		ctx.Header("Content-Length", strconv.FormatInt(index.Size, 10))
+		ctx.Header("Content-Length", index.Size)
 		ctx.Stream(func(w io.Writer) bool {
 			_, err := io.Copy(w, storeFile)
 			return err == nil
@@ -102,6 +102,70 @@ func SetRouter(app *gin.Engine) {
 		ctx.JSON(200, gin.H{
 			"ok":    true,
 			"count": count,
+		})
+	})
+	app.GET("/api/wrap", func(ctx *gin.Context) {
+		var url = ctx.Query("url")
+		if url == "" {
+			ctx.Status(404)
+			return
+		}
+		var store = file.GetStore()
+		var index, ok = store.Check(url)
+		if !ok {
+			var httpClint = http.DefaultClient
+			var resp, err = httpClint.Get(url)
+			if err != nil {
+				ctx.Status(500)
+				log.Panicln(err)
+				return
+			}
+			var fileType = resp.Header.Get("Content-Type")
+			var fileSize = resp.Header.Get("Content-Length")
+			var fileDisposition = resp.Header.Get("Content-Disposition")
+			var fileName = getNameFromURL(url)
+			fmt.Println("file not found in store, fetching from source:", url)
+
+			// Use a pipe + MultiWriter to stream to client and store simultaneously
+			pr, pw := io.Pipe()
+			go func() {
+				defer pr.Close()
+				fmt.Println("storing file to store:", url)
+				_, err := store.Store(pr, url, fileName, fileType, fileSize)
+				if err != nil {
+					var index, ok = store.Check(url)
+					if ok {
+						_, _ = store.Remove(index)
+					}
+				}
+			}()
+
+			if fileDisposition != "" {
+				ctx.Header("Content-Disposition", fileDisposition)
+			} else {
+				ctx.Header("Content-Disposition", "inline; filename=\""+fileName+"\"")
+			}
+			ctx.Header("Content-Type", fileType)
+			ctx.Header("Content-Length", fileSize)
+			ctx.Stream(func(w io.Writer) bool {
+				fmt.Println("streaming file to client from source:", url)
+				// copy resp.Body into both the client writer and the pipe writer
+				mw := io.MultiWriter(w, pw)
+				_, err := io.Copy(mw, resp.Body)
+				// close the pipe writer to signal EOF to the storing goroutine
+				_ = pw.Close()
+				return err == nil
+			})
+			return
+		}
+		fmt.Println("file found in store, fetching from store:", url)
+		var storeFile = store.Fetch(index)
+		ctx.Header("Content-Disposition", "inline; filename=\""+index.Name+"\"")
+		ctx.Header("Content-Type", index.Type)
+		ctx.Header("Content-Length", index.Size)
+		ctx.Stream(func(w io.Writer) bool {
+			_, err := io.Copy(w, storeFile)
+			return err == nil
 		})
 	})
 }

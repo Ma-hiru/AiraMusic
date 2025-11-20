@@ -1,6 +1,7 @@
-import { FC, memo } from "react";
+import { FC, memo, useEffect, useState } from "react";
 import { mapQRCodeStatusToText, QRCodeStatus } from "@mahiru/ui/hook/useQRCode";
 import { NeteaseLoginQrCheckResponse } from "@mahiru/ui/types/netease-api";
+import { wrapCacheUrl } from "@mahiru/ui/api/cache";
 
 interface TipsProps {
   status: QRCodeStatus;
@@ -8,6 +9,10 @@ interface TipsProps {
 }
 
 const Tips: FC<TipsProps> = ({ status, result }) => {
+  const [avatar, setAvatar] = useState<Nullable<string>>(null);
+  useEffect(() => {
+    result?.avatarUrl && wrapCacheUrl(result.avatarUrl).then(setAvatar);
+  }, [result?.avatarUrl]);
   return (
     <div className="flex justify-center items-center flex-col">
       {status !== QRCodeStatus.WAITING_CONFIRM && (
@@ -19,7 +24,7 @@ const Tips: FC<TipsProps> = ({ status, result }) => {
       )}
       {status === QRCodeStatus.WAITING_CONFIRM && (
         <div className="flex justify-center items-center flex-col">
-          <img src={result?.avatarUrl} alt="avatar" className="size-10 rounded-full" />
+          <img src={avatar as string} alt="avatar" className="size-10 rounded-full" />
           <span className="font-bold mt-4">{result?.nickname}</span>
         </div>
       )}

@@ -24,8 +24,8 @@ type Index struct {
 	Path       string `json:"path"`
 	Name       string `json:"name"`
 	Type       string `json:"type"`
+	Size       string `json:"size"`
 	CreateTime int64  `json:"createTime"`
-	Size       int64  `json:"size"`
 }
 
 var store *Store
@@ -63,7 +63,7 @@ func InitStore(dir string, timeLimit time.Duration) error {
 	return nil
 }
 
-func createIndex(path string, url string, size int64, name string, fileType string) Index {
+func createIndex(path string, url string, size string, name string, fileType string) Index {
 	var index = Index{
 		Url:        url,
 		Name:       name,
@@ -89,18 +89,18 @@ func (Self *Store) Check(url string) (Index, bool) {
 	return index, exist
 }
 
-func (Self *Store) Store(reader io.Reader, url string, name string, fileType string) (Index, error) {
+func (Self *Store) Store(reader io.Reader, url string, name string, fileType string, size string) (Index, error) {
 	if index, exist := Self.Check(url); exist {
 		return index, nil
 	}
 
 	var filename = randomFilename()
 	var path = filepath.Join(Self.storeDir, filename)
-	var lens, err = write(path, reader)
+	var _, err = write(path, reader)
 	if err != nil {
 		return Index{}, err
 	}
-	var index = createIndex(path, url, lens, name, fileType)
+	var index = createIndex(path, url, size, name, fileType)
 	Self.mappedIndex[url] = index
 	_ = Self.appendIndex(index)
 	return index, nil
@@ -208,20 +208,36 @@ func (Self *Store) appendIndex(index Index) error {
 	Self.indexMutex.Lock()
 	defer Self.indexMutex.Unlock()
 
+	// Read existing index array, append the new index, then overwrite file.
 	var path = filepath.Join(Self.storeDir, Self.indexName)
-	var idxFile, err = os.OpenFile(path, os.O_APPEND|os.O_WRONLY, 0666)
-	defer idxFile.Close()
+
+	// Ensure the index file exists
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		if err := os.WriteFile(path, []byte("[]"), 0666); err != nil {
+			return err
+		}
+	}
+
+	data, err := os.ReadFile(path)
 	if err != nil {
 		return err
 	}
 
-	var indexData, errMarshal = json.Marshal(index)
-	if errMarshal != nil {
-		return errMarshal
+	var indexData = make([]Index, 0)
+	if len(data) != 0 {
+		if err := json.Unmarshal(data, &indexData); err != nil {
+			return err
+		}
 	}
 
-	_, err = idxFile.Write(indexData)
-	return err
+	indexData = append(indexData, index)
+
+	storeData, err := json.Marshal(indexData)
+	if err != nil {
+		return err
+	}
+
+	return os.WriteFile(path, storeData, 0666)
 }
 
 func (Self *Store) Destroy() error {
