@@ -79,8 +79,9 @@ export function useCache(url?: string, defaultURL: string | null = null) {
 }
 
 // 控制缓存数量，避免内存占用过高
-function limitSize(cachedMap: Map<string, string>, size: number = 250) {
+function limitSize(cachedMap: Map<string, string>, size: number = 50) {
   if (cachedMap.size > size) {
+    console.log("CachedCtx", "limit cache size, current size:", cachedMap.size);
     const keys = Array.from(cachedMap.keys());
     const removeCount = Math.ceil(cachedMap.size / 5);
     for (let i = 0; i < removeCount; i++) {
