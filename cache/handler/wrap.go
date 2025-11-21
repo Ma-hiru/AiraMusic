@@ -31,22 +31,20 @@ func Wrap(ctx *gin.Context) {
 		ctx.Status(http.StatusNotFound)
 		return
 	}
+	// 尝试对可能被百分号编码的 URL 解码
+	if decoded, err := neturl.QueryUnescape(url); err == nil && decoded != "" {
+		url = decoded
+	} else if err != nil {
+		ctx.Status(http.StatusBadRequest)
+		log.Panicln(err)
+		return
+	}
 	// 检查文件是否已缓存
 	var store = file.GetStore()
 	var index, ok = store.Check(url)
 	// 文件不存在、请求更新且文件已缓存或文件已过期
-	log.Println("url:", url, "update:", update, "time_limit:", timeLimit, "if=>", !ok || (ok && update) || (ok && timeLimit > 0 && index.IsExpiredMill(timeLimit)))
-
 	if !ok || (ok && update) || (ok && timeLimit > 0 && index.IsExpiredMill(timeLimit)) {
 		// 如果未缓存，则从源URL获取文件
-		// 尝试对可能被百分号编码的 URL 解码
-		if decoded, err := neturl.QueryUnescape(url); err == nil && decoded != "" {
-			url = decoded
-		} else if err != nil {
-			ctx.Status(http.StatusBadRequest)
-			log.Panicln(err)
-			return
-		}
 		var httpClient = http.DefaultClient
 		// 创建新请求 保留原始请求的方法和头
 		var request, err = http.NewRequest(ctx.Request.Method, url, ctx.Request.Body)
@@ -115,7 +113,7 @@ func Wrap(ctx *gin.Context) {
 			ctx.Header("Content-Disposition", "inline; filename=\""+index.Name+"\"")
 		}
 		// 开始流式传输（io.Copy 会在读到 EOF 时返回 nil，返回 false 停止重复调用）
-		ctx.Status(resp.StatusCode)
+		ctx.Status(http.StatusOK)
 		ctx.Stream(func(w io.Writer) bool {
 			log.Println("streaming from source:", url)
 			// 同时写入响应和管道写入端
