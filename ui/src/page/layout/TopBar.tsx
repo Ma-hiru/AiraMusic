@@ -1,7 +1,7 @@
 import { FC, memo } from "react";
-import ControlButton from "@mahiru/ui/page/layout/componets/ControlButton";
+import ControlButton from "@mahiru/ui/page/layout/top/TopControl";
 import { useLayout } from "@mahiru/ui/ctx/LayoutCtx";
-import AvatarMini from "@mahiru/ui/page/layout/componets/AvatarMini";
+import AvatarMini from "@mahiru/ui/page/layout/top/TopAvatar";
 import { Drag, NoDrag } from "@mahiru/ui/componets/public/Drag";
 import Transition from "@mahiru/ui/componets/public/Transition";
 import { cx } from "@emotion/css";

@@ -2,47 +2,51 @@ import { createContext, RefObject, useContext } from "react";
 import { LyricLine } from "@applemusic-like-lyrics/core";
 import { EqError } from "@mahiru/ui/utils/err";
 import { NeteaseTrack } from "@mahiru/ui/types/netease-api";
+import { Log } from "@mahiru/ui/utils/log";
 
-export type PlayerCtxType = {
-  lyricLines: LyricLine[];
-  audioRef: RefObject<HTMLAudioElement | null>;
-  playList: PlayerCtxType["info"][];
-  replacePlayList: (playList: PlayerCtxType["info"][], currentIndex: number) => void;
-  info: {
-    id: number;
-    title: string;
-    artist: NeteaseTrack["ar"];
-    album: NeteaseTrack["al"];
-    cover: string;
-    audio: string;
-  };
-  currentIndex: number;
-  setInfo: (info: PlayerCtxType["info"]) => void;
-  setPlayList: (list: PlayerCtxType["info"][]) => void;
-  setCurrentIndex: (index: number) => void;
-  play: () => void;
-  mute: () => void;
-  upVolume: (gap?: number) => void;
-  downVolume: (gap?: number) => void;
+export interface PlayerTrackInfo {
+  id: number;
+  title: string;
+  artist: NeteaseTrack["ar"];
+  album: NeteaseTrack["al"];
+  cover: string;
+  audio: string;
+}
+
+export interface PlayerCtxType {
+  // states
   isPlaying: boolean;
-  addTrackToList: (newTrack: PlayerCtxType["info"]) => void;
-  addAndPlayTrack: (newTrack: PlayerCtxType["info"]) => void;
-  removeTrackInList: (trackId: number) => void;
-  nextTrack: () => void;
-  lastTrack: () => void;
-  clearPlayList: () => void;
-};
+  info: PlayerTrackInfo;
+  currentIndex: number;
+  lyricLines: LyricLine[];
+  playList: PlayerTrackInfo[];
+  // refs
+  audioRef: RefObject<HTMLAudioElement | null>;
+  // actions
+  play: NormalFunc;
+  mute: NormalFunc;
+  nextTrack: NormalFunc;
+  lastTrack: NormalFunc;
+  clearPlayList: NormalFunc;
+  replacePlayList: NormalFunc<[playList: PlayerTrackInfo[], currentIndex: number]>;
+  setInfo: NormalFunc<[info: PlayerTrackInfo]>;
+  setPlayList: NormalFunc<[list: PlayerTrackInfo[]]>;
+  setCurrentIndex: NormalFunc<[index: number]>;
+  upVolume: NormalFunc<[gap?: number]>;
+  downVolume: NormalFunc<[gap?: number]>;
+  addTrackToList: NormalFunc<[newTrack: PlayerTrackInfo]>;
+  addAndPlayTrack: NormalFunc<[newTrack: PlayerTrackInfo]>;
+  removeTrackInList: NormalFunc<[trackId: number]>;
+}
 
-function blankFunc() {}
-
-export const PlayerCtx = createContext<PlayerCtxType>({
+export const PlayerCtxDefault = {
+  isPlaying: false,
   lyricLines: [],
   audioRef: { current: null },
   playList: [],
   info: {
-    id: 0,
     title: "",
-    artist: [] as NeteaseTrack["ar"],
+    artist: [],
     album: {
       id: 0,
       name: "",
@@ -50,9 +54,10 @@ export const PlayerCtx = createContext<PlayerCtxType>({
       pic_str: "",
       picUrl: "",
       tns: []
-    } as NeteaseTrack["al"],
+    },
     cover: "",
-    audio: ""
+    audio: "",
+    id: 0
   },
   currentIndex: 0,
   setInfo: blankFunc,
@@ -68,9 +73,11 @@ export const PlayerCtx = createContext<PlayerCtxType>({
   lastTrack: blankFunc,
   addAndPlayTrack: blankFunc,
   clearPlayList: blankFunc,
-  replacePlayList: blankFunc,
-  isPlaying: false
-});
+  replacePlayList: blankFunc
+
+};
+
+export const PlayerCtx = createContext<PlayerCtxType>(PlayerCtxDefault);
 
 export const usePlayer = () => {
   const ctxValue = useContext(PlayerCtx);
@@ -82,3 +89,7 @@ export const usePlayer = () => {
   }
   return ctxValue;
 };
+
+function blankFunc() {
+  Log.info("ui/PlayerCtx.ts", "called blank function");
+}

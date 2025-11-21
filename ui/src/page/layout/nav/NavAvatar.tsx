@@ -5,7 +5,7 @@ import { LogOut, UserRound } from "lucide-react";
 import { useCache } from "@mahiru/ui/ctx/CachedCtx";
 import { useLogin, useLogout } from "@mahiru/ui/hook/useLogout";
 
-const Avatar: FC<object> = () => {
+const NavAvatar: FC<object> = () => {
   const { data } = usePersistZustandShallowStore(["data"]);
   const { cachedURL, init, fail } = useCache(data.user?.avatarUrl);
   const login = useLogin();
@@ -38,4 +38,4 @@ const Avatar: FC<object> = () => {
     </div>
   );
 };
-export default memo(Avatar);
+export default memo(NavAvatar);

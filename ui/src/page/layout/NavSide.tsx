@@ -1,9 +1,9 @@
 import { FC, memo, useCallback, useRef, useState } from "react";
-import Avatar from "@mahiru/ui/page/layout/componets/Avatar";
-import NavSideNavItem from "@mahiru/ui/page/layout/componets/NavSideNavItem";
 import { ArrowBigUp } from "lucide-react";
-import NavSideDivider from "@mahiru/ui/page/layout/componets/NavSideDivider";
-import NavSidePlayListItem from "@mahiru/ui/page/layout/componets/NavSidePlayListItem";
+import Avatar from "@mahiru/ui/page/layout/nav/NavAvatar";
+import NavSideNavItem from "@mahiru/ui/page/layout/nav/NavItem";
+import NavSideDivider from "@mahiru/ui/page/layout/nav/NavDivider";
+import NavSidePlayListItem from "@mahiru/ui/page/layout/nav/NavListItem";
 import { css, cx } from "@emotion/css";
 import { usePersistZustandShallowStore } from "@mahiru/ui/store";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -43,7 +43,8 @@ const NavSide: FC<object> = () => {
     [navigate, location.pathname]
   );
   return (
-    <div className="absolute grid grid-cols-1 grid-rows-[auto_auto_auto_1fr] left-0 top-0 bottom-0 w-48 pb-18 px-6 bg-[#f0f3f6] z-0">
+    <div
+      className="absolute grid grid-cols-1 grid-rows-[auto_auto_auto_1fr] left-0 top-0 bottom-0 w-48 pb-18 px-6 bg-[#f0f3f6] z-0">
       <div className="py-8">
         <CachedProvider>
           <Avatar />

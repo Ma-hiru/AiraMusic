@@ -7,7 +7,7 @@ type Props = Omit<HTMLAttributes<HTMLDivElement>, "prefix"> & {
   prefix?: ReactNode;
 };
 
-const NavSideNavItem: FC<Props> = ({ children, active = false, prefix, className, ...props }) => {
+const NavItem: FC<Props> = ({ children, active = false, prefix, className, ...props }) => {
   return (
     <div
       className={cx(
@@ -26,4 +26,4 @@ const NavSideNavItem: FC<Props> = ({ children, active = false, prefix, className
     </div>
   );
 };
-export default memo(NavSideNavItem);
+export default memo(NavItem);

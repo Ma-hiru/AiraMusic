@@ -1,6 +1,6 @@
 import { FC, memo } from "react";
-import PlayerBarCover from "@mahiru/ui/page/layout/componets/PlayerBarCover";
-import PlayerBarControl from "@mahiru/ui/page/layout/componets/PlayerBarControl";
+import PlayerBarCover from "@mahiru/ui/page/layout/bar/BarCover";
+import PlayerBarControl from "@mahiru/ui/page/layout/bar/BarControl";
 
 const PlayerBar: FC<object> = () => {
   return (

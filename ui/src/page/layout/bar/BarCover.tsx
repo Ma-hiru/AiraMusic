@@ -3,7 +3,7 @@ import { usePlayer } from "@mahiru/ui/ctx/PlayerCtx";
 import { useLayout } from "@mahiru/ui/ctx/LayoutCtx";
 import { wrapCacheUrl } from "@mahiru/ui/api/cache";
 
-const PlayerBarCover: FC<object> = () => {
+const BarCover: FC<object> = () => {
   const { info } = usePlayer();
   const { TogglePlayerModalVisible } = useLayout();
   const [cachedCover, setCachedCover] = useState<Nullable<string>>(null);
@@ -27,4 +27,4 @@ const PlayerBarCover: FC<object> = () => {
     </div>
   );
 };
-export default memo(PlayerBarCover);
+export default memo(BarCover);

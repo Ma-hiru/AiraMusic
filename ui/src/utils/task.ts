@@ -54,15 +54,7 @@ export async function refreshLogin(cookies: string) {
   Log.debug("Logged in successfully, fetching user data...");
   try {
     setCookies(cookies);
-    const account = await userAccount();
-    const detail = await userDetail(account.profile.userId);
-    const playList = await userPlaylist({ uid: account.profile.userId, limit: 30 });
-    const { updatePersistStoreData } = getStoreSnapshot();
-    updatePersistStoreData({
-      loginMode: "account",
-      user: detail.profile,
-      userPlayLists: playList.playlist
-    });
+    await refreshUserProfile();
   } catch (err) {
     Log.error(
       new EqError({
@@ -75,4 +67,5 @@ export async function refreshLogin(cookies: string) {
   }
 }
 
-export async function isBackgroundDark() {}
+export async function isBackgroundDark() {
+}

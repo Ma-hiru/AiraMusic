@@ -2,7 +2,7 @@ import { FC, memo } from "react";
 import { Pause, Play, SkipBack, SkipForward } from "lucide-react";
 import { usePlayer } from "@mahiru/ui/ctx/PlayerCtx";
 
-const PlayerBarControl: FC<object> = () => {
+const BarControl: FC<object> = () => {
   const { isPlaying, play, lastTrack, nextTrack } = usePlayer();
   return (
     <div className="flex justify-center items-center gap-6">
@@ -18,4 +18,4 @@ const PlayerBarControl: FC<object> = () => {
     </div>
   );
 };
-export default memo(PlayerBarControl);
+export default memo(BarControl);

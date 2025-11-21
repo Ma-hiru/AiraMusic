@@ -1,12 +1,10 @@
 import { FC, memo, MouseEventHandler, useCallback } from "react";
 import { NeteaseTrack } from "@mahiru/ui/types/netease-api";
 import { formatDurationToMMSS } from "@mahiru/ui/utils/time";
-import { getMP3 } from "@mahiru/ui/api/track";
 import { cx } from "@emotion/css";
 import { useCache } from "@mahiru/ui/ctx/CachedCtx";
 import { usePlayer } from "@mahiru/ui/ctx/PlayerCtx";
 import { Log } from "@mahiru/ui/utils/log";
-import { EqError } from "@mahiru/ui/utils/err";
 
 interface ListItemProps {
   track: NeteaseTrack;

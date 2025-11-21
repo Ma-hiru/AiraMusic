@@ -1,5 +1,5 @@
 import { FC, memo } from "react";
-import ControlButton from "@mahiru/ui/page/layout/componets/ControlButton";
+import ControlButton from "@mahiru/ui/page/layout/top/TopControl";
 import { Drag } from "@mahiru/ui/componets/public/Drag";
 
 const Control: FC<object> = () => {

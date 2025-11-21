@@ -2,7 +2,7 @@ import { FC, memo, useEffect, useState } from "react";
 import { usePersistZustandShallowStore } from "@mahiru/ui/store";
 import { wrapCacheUrl } from "@mahiru/ui/api/cache";
 
-const AvatarMini: FC<object> = () => {
+const TopAvatar: FC<object> = () => {
   const { data } = usePersistZustandShallowStore(["data"]);
   const [avatar, setAvatar] = useState("");
   useEffect(() => {
@@ -18,4 +18,4 @@ const AvatarMini: FC<object> = () => {
     </div>
   );
 };
-export default memo(AvatarMini);
+export default memo(TopAvatar);

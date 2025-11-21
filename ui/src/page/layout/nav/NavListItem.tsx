@@ -1,5 +1,5 @@
 import { FC, memo } from "react";
-import NavSideNavItem from "@mahiru/ui/page/layout/componets/NavSideNavItem";
+import NavSideNavItem from "@mahiru/ui/page/layout/nav/NavItem";
 import { useCache } from "@mahiru/ui/ctx/CachedCtx";
 import { cx } from "@emotion/css";
 
@@ -13,7 +13,7 @@ interface Props {
   className?: string;
 }
 
-const NavSidePlayListItem: FC<Props> = ({
+const NavListItem: FC<Props> = ({
   cover,
   label,
   className,
@@ -47,4 +47,4 @@ const NavSidePlayListItem: FC<Props> = ({
     </div>
   );
 };
-export default memo(NavSidePlayListItem);
+export default memo(NavListItem);

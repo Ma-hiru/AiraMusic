@@ -1,7 +1,6 @@
 import { FC, memo, useCallback, useState } from "react";
 import { Minus, PictureInPicture, Square, SquareMinus, X } from "lucide-react";
 import { NoDrag } from "@mahiru/ui/componets/public/Drag";
-import { usePlayer } from "@mahiru/ui/ctx/PlayerCtx";
 import { useLayout } from "@mahiru/ui/ctx/LayoutCtx";
 import Transition from "@mahiru/ui/componets/public/Transition";
 import { TransitionPreset } from "@mahiru/ui/constants/transition";
@@ -11,7 +10,7 @@ interface ControlButtonProps {
   maximizable?: boolean;
 }
 
-const ControlButton: FC<ControlButtonProps> = ({ windowId, maximizable = true }) => {
+const TopControl: FC<ControlButtonProps> = ({ windowId, maximizable = true }) => {
   const [isMax, setIsMax] = useState(false);
   const { PlayerModalVisible } = useLayout();
 
@@ -47,4 +46,4 @@ const ControlButton: FC<ControlButtonProps> = ({ windowId, maximizable = true })
     </NoDrag>
   );
 };
-export default memo(ControlButton);
+export default memo(TopControl);
