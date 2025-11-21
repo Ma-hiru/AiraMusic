@@ -5,6 +5,7 @@ import type {
   NeteasePlaylistDetailResponse,
   NeteaseStatusResponse
 } from "@mahiru/ui/types/netease-api";
+import { checkCache, fetchCache, storeCache } from "@mahiru/ui/api/cache";
 
 /**
  * 推荐歌单
@@ -49,22 +50,33 @@ export function dailyRecommendPlaylist(params: { limit?: number }) {
  * @param time_limit
  * @param update
  */
-export function getPlaylistDetail(id: number, update = false, time_limit?: number) {
-  return cacheRequest<{ id: number; timestamp: number }, NeteasePlaylistDetailResponse>({
-    url: "/playlist/detail",
-    method: "get",
-    params: {
-      id,
-      timestamp: update ? new Date().getTime() : undefined,
-      update,
-      time_limit
-    }
-  }).then((data) => {
+export async function getPlaylistDetail(id: number, update = false) {
+  const url = "http://127.0.0.1:10754/playlist/detail?id=" + id;
+  const result = await checkCache(url);
+  if (result.ok) {
+    console.log("playlist detail from cache=>", id);
+    const data = await fetchCache(url).then((res) => res.json());
     if (data.playlist) {
       data.playlist.tracks = mapTrackPlayableStatus(data.playlist.tracks, data.privileges || []);
     }
     return data;
+  } else {
+    console.log("playlist detail store cache=>", id);
+    storeCache(url).catch((err) => console.log(err));
+  }
+  console.log("playlist detail from net=>", id);
+  const data = await request<{ id: number; timestamp: number }, NeteasePlaylistDetailResponse>({
+    url: "/playlist/detail",
+    method: "get",
+    params: {
+      id,
+      timestamp: update ? new Date().getTime() : undefined
+    }
   });
+  if (data.playlist) {
+    data.playlist.tracks = mapTrackPlayableStatus(data.playlist.tracks, data.privileges || []);
+  }
+  return data;
 }
 
 /**

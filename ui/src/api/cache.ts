@@ -15,7 +15,9 @@ type CheckResult = {
   index: Index;
 };
 
-type StoreResult = CheckResult;
+type StoreResult = {
+  ok: boolean;
+};
 
 export async function checkCache(url: string): Promise<CheckResult> {
   return await fetch(`/cache/api/check?url=${encodeURIComponent(url)}`).then((res) => res.json());
@@ -26,15 +28,22 @@ export async function storeCache(url: string): Promise<StoreResult> {
 }
 
 export function fetchCache(url: string) {
-  return `/cache/api/fetch?url=${encodeURIComponent(url)}`;
+  return fetch(`/cache/api/fetch?url=${encodeURIComponent(url)}`);
 }
 
-export function wrapCacheUrl(url: string) {
+export function wrapCacheUrl(url: string, update: boolean = false, timeLimit?: number) {
   try {
     if (!url || !url.startsWith("http")) {
       return url;
     }
-    return `/cache/api/wrap?url=${encodeURIComponent(url)}`;
+    let result = `/cache/api/wrap?url=${encodeURIComponent(url)}`;
+    if (update) {
+      result += "&update=true";
+    }
+    if (timeLimit) {
+      result += `&timeLimit=${timeLimit}`;
+    }
+    return result;
   } catch (err) {
     Log.error(
       new EqError({

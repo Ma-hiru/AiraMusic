@@ -1,12 +1,13 @@
 import { FC, memo, useEffect, useState } from "react";
 import { usePlayer } from "@mahiru/ui/ctx/PlayerCtx";
 import { wrapCacheUrl } from "@mahiru/ui/api/cache";
+import { setImageURLSize } from "@mahiru/ui/utils/setImageSize";
 
 const Cover: FC<object> = () => {
   const { info } = usePlayer();
   const [cacheCover, setCacheCover] = useState<Nullable<string>>(null);
   useEffect(() => {
-    setCacheCover(wrapCacheUrl(info.cover));
+    setCacheCover(wrapCacheUrl(setImageURLSize(info.cover, "raw")));
   }, [info.cover]);
   return (
     <img

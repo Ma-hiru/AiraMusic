@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -390,6 +391,14 @@ func (Self *Store) EndWrite(url string, success bool) {
 	delete(Self.currentWrite, url)
 	Self.muWrite.Unlock()
 
+	var info, err = wFile.file.Stat()
+	if err == nil {
+		if strconv.FormatInt(info.Size(), 10) != wFile.size {
+			success = false
+		}
+	} else {
+		log.Println("error stating written file:", err)
+	}
 	wFile.file.Close()
 
 	if !success {

@@ -13,6 +13,33 @@ export default function CachedProvider(props: { children: ReactNode }) {
       cachedMap?.clear();
     };
   }, [cachedMap]);
+  useEffect(() => {
+    // 控制缓存数量，避免内存占用过高
+    const interval = setInterval(() => {
+      limitSize(cachedMap);
+    }, 5000);
+    return () => {
+      clearInterval(interval);
+    };
+  }, [cachedMap]);
 
   return <CachedCtx.Provider value={ctxValue} {...props} />;
+}
+
+// 控制缓存数量，避免内存占用过高
+function limitSize(cachedMap: Map<string, string>, size: number = 25) {
+  console.log("CachedCtx", "current cache size:", cachedMap.size, cachedMap.size > size);
+  if (cachedMap.size > size) {
+    console.log("CachedCtx", "limit cache size, current size:", cachedMap.size);
+    const keys = Array.from(cachedMap.keys());
+    const removeCount = Math.ceil(cachedMap.size - size);
+    for (let i = 0; i < removeCount; i++) {
+      const key = keys[i]!;
+      const objectURL = cachedMap.get(key);
+      if (objectURL) {
+        URL.revokeObjectURL(objectURL);
+      }
+      cachedMap.delete(key);
+    }
+  }
 }

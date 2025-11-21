@@ -110,6 +110,8 @@ func LoadLocalStore(dir string, timeLimit time.Duration) error {
 		timeLimit:        timeLimit,
 		version:          version,
 		crateTime:        createTime,
+		muWrite:          sync.Mutex{},
+		currentWrite:     make(map[string]*writingFile),
 	}
 	// 重置文件指针到开头，准备加载索引
 	if _, err := iFile.Seek(0, io.SeekStart); err != nil {

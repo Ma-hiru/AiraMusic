@@ -8,10 +8,18 @@ import {
   useState
 } from "react";
 import { wrapCacheUrl } from "@mahiru/ui/api/cache";
+import { setImageURLSize } from "@mahiru/ui/utils/setImageSize";
 
 export const CachedCtx = createContext(new Map<string, string>());
 
-export function useCache(url?: string, defaultURL: string | null = null) {
+export function useCache(
+  url?: string,
+  defaultURL: string | null = null,
+  imgSize: "sm" | "md" | "lg" | "raw" | null = null
+) {
+  if (url && imgSize) {
+    url = setImageURLSize(url, imgSize);
+  }
   const [cachedURL, setCachedURL] = useState<Nullable<string>>(defaultURL);
   const cachedMap = useContext(CachedCtx);
   const cached = useRef(false);
@@ -51,12 +59,22 @@ export function useCache(url?: string, defaultURL: string | null = null) {
   const fail = useCallback(() => {
     // 加载失败则释放缓存，退回到原始 URL
     if (cachedURL && cachedURL.startsWith("blob:") && url) {
+      console.log("level 1 fail=>", cachedURL);
       const objectURL = cachedMap.get(url);
       objectURL && oldObjStack.push(objectURL);
       cachedMap.delete(url);
       setCachedURL(wrapCacheUrl(url));
+    } else if (cachedURL && url && cachedURL === wrapCacheUrl(url)) {
+      console.log("level 2 fail=>", cachedURL);
+      setCachedURL(wrapCacheUrl(url, true));
+    } else if (cachedURL && url && cachedURL === wrapCacheUrl(url, true)) {
+      console.log("level 3 fail=>", cachedURL);
+      setCachedURL(url);
+    } else if (cachedURL === url) {
+      console.log("level 4 fail=>", cachedURL);
+      setCachedURL(defaultURL);
     }
-  }, [cachedMap, url, cachedURL, oldObjStack]);
+  }, [cachedURL, url, cachedMap, oldObjStack, defaultURL]);
   useEffect(() => {
     return () => {
       // 组件卸载时释放不再使用的 object URL
@@ -64,8 +82,6 @@ export function useCache(url?: string, defaultURL: string | null = null) {
         const objectURL = oldObjStack.pop()!;
         URL.revokeObjectURL(objectURL);
       }
-      // 控制缓存数量
-      limitSize(cachedMap);
     };
   }, [cachedMap, oldObjStack]);
 
@@ -76,21 +92,4 @@ export function useCache(url?: string, defaultURL: string | null = null) {
     init,
     fail
   };
-}
-
-// 控制缓存数量，避免内存占用过高
-function limitSize(cachedMap: Map<string, string>, size: number = 50) {
-  if (cachedMap.size > size) {
-    console.log("CachedCtx", "limit cache size, current size:", cachedMap.size);
-    const keys = Array.from(cachedMap.keys());
-    const removeCount = Math.ceil(cachedMap.size / 5);
-    for (let i = 0; i < removeCount; i++) {
-      const key = keys[i]!;
-      const objectURL = cachedMap.get(key);
-      if (objectURL) {
-        URL.revokeObjectURL(objectURL);
-      }
-      cachedMap.delete(key);
-    }
-  }
 }

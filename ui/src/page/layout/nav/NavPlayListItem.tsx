@@ -14,7 +14,7 @@ interface Props {
 }
 
 const NavPlayListItem: FC<Props> = ({ cover, label, className, count, id, onClick, active }) => {
-  const { cachedURL, init, fail } = useCache(cover);
+  const { cachedURL, init, fail } = useCache(cover, null, "sm");
   return (
     <div
       className={cx(

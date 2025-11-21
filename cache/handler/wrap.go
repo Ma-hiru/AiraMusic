@@ -86,7 +86,18 @@ func Wrap(ctx *gin.Context) {
 		}
 
 		// 设置响应头并开始流式传输
-		ctx.Status(http.StatusOK)
+		// 音频/视频 必须转发 206！
+
+		if resp.StatusCode >= 400 {
+			buf, _ := io.ReadAll(resp.Body)
+			ctx.JSON(resp.StatusCode, gin.H{
+				"status": resp.StatusCode,
+				"msg":    http.StatusText(resp.StatusCode),
+				"body":   string(buf),
+			})
+			return
+		}
+		ctx.Status(resp.StatusCode)
 		ctx.Header("Content-Type", fileType)
 		ctx.Header("ETag", etag)
 		ctx.Header("Cache-Control", "no-cache")
@@ -98,6 +109,15 @@ func Wrap(ctx *gin.Context) {
 		}
 		if fileSize != "" {
 			ctx.Header("Content-Length", fileSize)
+		}
+		// 复制其他响应头
+		for key, values := range resp.Header {
+			if strings.ToLower(key) == "content-length" || strings.ToLower(key) == "content-type" || strings.ToLower(key) == "etag" || strings.ToLower(key) == "cache-control" || strings.ToLower(key) == "content-disposition" {
+				continue
+			}
+			for _, value := range values {
+				ctx.Header(key, value)
+			}
 		}
 		// 开始缓存：使用 TeeReader
 		var pr = io.TeeReader(reader, store.BeginWrite(url, fileName, fileType, fileSize, etag, lastModified))
