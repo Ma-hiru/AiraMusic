@@ -123,8 +123,8 @@ func Wrap(ctx *gin.Context) {
 				if err != io.EOF {
 					// 如果传输过程中出错，取消存储操作
 					fmt.Println("error during streaming:", err)
-					cancel()
 				}
+				cancel()
 			}
 			// ctx.request关闭前关闭管道写入端，以通知存储协程传输结束，如果顺序颠倒，会导致协程误以为提前结束，进而删除文件
 			_ = pw.Close()
@@ -146,6 +146,7 @@ func Wrap(ctx *gin.Context) {
 		log.Panicln(err)
 		return
 	}
+	defer storeFile.Close()
 	setHeaders(ctx, index)
 	// 开始流式传输缓存的文件（主协程负责写入）
 	ctx.Status(http.StatusOK)
@@ -158,4 +159,5 @@ func Wrap(ctx *gin.Context) {
 	if err != nil {
 		fmt.Println("error during streaming (cached):", err)
 	}
+
 }

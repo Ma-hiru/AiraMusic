@@ -58,7 +58,7 @@ func (Self *Store) Store(ctx context.Context, reader io.Reader, url string, name
 }
 
 // Fetch 根据索引信息获取对应的文件读取句柄
-func (Self *Store) Fetch(idx Index) (io.Reader, error) {
+func (Self *Store) Fetch(idx Index) (io.ReadCloser, error) {
 	return os.Open(idx.Path)
 }
 
