@@ -16,6 +16,9 @@ import (
 
 // Check 检查指定 URL 的文件是否已存在于存储中，存在则返回对应的索引和 true，否则返回 false
 func (Self *Store) Check(url string) (Index, bool) {
+	Self.indexMappedMutex.RLock()
+	defer Self.indexMappedMutex.RUnlock()
+
 	var index, exist = Self.indexMapped[url]
 	return index, exist
 }
@@ -248,33 +251,27 @@ func (Self *Store) Path() string {
 }
 
 // 从索引文件加载索引到内存，这里使用index参数传入的是只读的 io.Reader 初始化之后 Self.indexFile 还未赋值，只读完毕，再重新追加读写打开赋值，所以本函数只能在初始化时调用
-func (Self *Store) loadIndex(index io.Reader) error {
+func (Self *Store) loadIndex(index io.Reader) {
 	var scanner = bufio.NewScanner(index)
 	for scanner.Scan() {
 		var line = scanner.Text()
-		// 跳过版本和创建时间行
-		if strings.HasPrefix(line, "version: ") || strings.HasPrefix(line, "createTime: ") {
+		// 跳过空行、版本和创建时间行
+		if len(line) == 0 || strings.HasPrefix(line, "version: ") || strings.HasPrefix(line, "createTime: ") {
 			continue
 		}
-		var index Index
-		var err = json.Unmarshal([]byte(line), &index)
-		if err != nil {
-			return err
+
+		var idx Index
+		if err := json.Unmarshal([]byte(line), &idx); err != nil {
+			continue
 		}
-		Self.indexMapped[index.Url] = index
+
+		Self.indexMapped[idx.Url] = idx
 	}
-	return nil
 }
 
 // 以追加写入的方式写入单条 JSON（加换行），本函数在运行时执行
 func (Self *Store) appendIndex(index Index) error {
-	b, err := json.Marshal(index)
-	if err != nil {
-		return err
-	}
-	Self.indexFileMutex.Lock()
-	defer Self.indexFileMutex.Unlock()
-	_, err = Self.indexFile.Write(append(b, '\n'))
+	var indexData, err = json.Marshal(index)
 	if err != nil {
 		return err
 	}
@@ -282,6 +279,13 @@ func (Self *Store) appendIndex(index Index) error {
 	Self.indexMappedMutex.Lock()
 	Self.indexMapped[index.Url] = index
 	Self.indexMappedMutex.Unlock()
+
+	Self.indexFileMutex.Lock()
+	defer Self.indexFileMutex.Unlock()
+	_, err = Self.indexFile.Write(append(indexData, '\n'))
+	if err != nil {
+		return err
+	}
 
 	return Self.indexFile.Sync()
 }
@@ -350,4 +354,57 @@ func (Self *Store) forceUpdateIndex() {
 	}
 	Self.indexFile = iFile
 	Self.indexFileMutex.Unlock()
+}
+
+func (Self *Store) BeginWrite(url, name, fileType, size, etag, lastModified string) io.WriteCloser {
+	var tmpName = randomFilename() + ".tmp"
+	var tmpPath = filepath.Join(Self.storeDir, tmpName)
+
+	var file, err = os.Create(tmpPath)
+	if err != nil {
+		return &nopCloseWriter{}
+	}
+
+	Self.muWrite.Lock()
+	Self.currentWrite[url] = &writingFile{
+		tmpPath:      tmpPath,
+		finalName:    name,
+		fileType:     fileType,
+		size:         size,
+		etag:         etag,
+		lastModified: lastModified,
+		file:         file,
+	}
+	Self.muWrite.Unlock()
+
+	return file
+}
+
+func (Self *Store) EndWrite(url string, success bool) {
+	Self.muWrite.Lock()
+	var wFile, ok = Self.currentWrite[url]
+	if !ok {
+		Self.muWrite.Unlock()
+		return
+	}
+	delete(Self.currentWrite, url)
+	Self.muWrite.Unlock()
+
+	wFile.file.Close()
+
+	if !success {
+		_ = os.Remove(wFile.tmpPath)
+		return
+	}
+
+	var finalName = randomFilename()
+	var finalPath = filepath.Join(Self.storeDir, finalName)
+
+	if err := os.Rename(wFile.tmpPath, finalPath); err != nil {
+		_ = os.Remove(wFile.tmpPath)
+		return
+	}
+
+	var index = createIndex(finalPath, url, wFile.size, wFile.finalName, wFile.fileType, wFile.etag, wFile.lastModified)
+	Self.appendIndex(index)
 }

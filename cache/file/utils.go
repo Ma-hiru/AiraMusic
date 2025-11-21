@@ -123,3 +123,8 @@ func randomFilename() string {
 func getTime() int64 {
 	return time.Now().UnixNano()
 }
+
+type nopCloseWriter struct{}
+
+func (*nopCloseWriter) Write(p []byte) (int, error) { return len(p), nil }
+func (*nopCloseWriter) Close() error                { return nil }

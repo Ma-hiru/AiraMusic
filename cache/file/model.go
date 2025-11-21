@@ -7,20 +7,24 @@ import (
 )
 
 type Store struct {
-	storeDir         string
-	indexName        string
+	storeDir  string
+	indexName string
+	version   int
+	crateTime int64
+	timeLimit time.Duration
+
 	indexFile        *os.File
 	indexMapped      map[string]Index
 	indexMappedMutex sync.RWMutex
 	indexFileMutex   sync.Mutex
-	timeLimit        time.Duration
-	version          int
-	crateTime        int64
+
+	muWrite      sync.Mutex
+	currentWrite map[string]*writingFile
 }
 
 type Index struct {
-	Url          string `json:"url"`  // 真实存储路径
-	Path         string `json:"path"` // 原始文件名
+	Url          string `json:"url"`
+	Path         string `json:"path"`
 	Name         string `json:"name"`
 	Type         string `json:"type"`
 	Size         string `json:"size"`
@@ -29,15 +33,12 @@ type Index struct {
 	LastModified string `json:"lastModified,omitempty"`
 }
 
-func createIndex(path string, url string, size string, name string, fileType string, etag string, lastModified string) Index {
-	return Index{
-		Url:          url,
-		Name:         name,
-		Size:         size,
-		Path:         path,
-		Type:         fileType,
-		CreateTime:   getTime(),
-		ETag:         etag,
-		LastModified: lastModified,
-	}
+type writingFile struct {
+	tmpPath      string
+	finalName    string
+	fileType     string
+	size         string
+	etag         string
+	lastModified string
+	file         *os.File
 }

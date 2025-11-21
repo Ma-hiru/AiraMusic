@@ -116,10 +116,8 @@ func LoadLocalStore(dir string, timeLimit time.Duration) error {
 		_ = iFile.Close()
 		return fmt.Errorf("failed to seek index file: %v", err)
 	}
-	err = store.loadIndex(iFile)
-	if err != nil {
-		return fmt.Errorf("failed to load index: %v", err)
-	}
+
+	store.loadIndex(iFile)
 	// 以追加模式重新打开索引文件
 	iFile, err = os.OpenFile(iPath, os.O_APPEND|os.O_RDWR, 0666)
 	if err != nil {
