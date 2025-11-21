@@ -7,6 +7,7 @@ import { Server } from "node:http";
 import { createExpressApp } from "../services/express";
 import { handleAppEvents } from "./appEvent";
 import { startCacheServer } from "@mahiru/app/src/services/cache";
+import { commands } from "./cmd";
 
 export type StoreType = {
   window: {
@@ -67,6 +68,7 @@ export class APP {
   }
 
   run() {
+    commands();
     // 单实例锁，避免多开
     if (app.requestSingleInstanceLock()) {
       this.init();

@@ -55,7 +55,12 @@ func Fetch(ctx *gin.Context) {
 		ctx.Status(404)
 		return
 	}
-	var storeFile = store.Fetch(index)
+	var storeFile, err = store.Fetch(index)
+	if err != nil {
+		ctx.Status(500)
+		log.Panicln(err)
+		return
+	}
 	setHeaders(ctx, index)
 	ctx.Stream(func(w io.Writer) bool {
 		_, err := io.Copy(w, storeFile)
@@ -115,5 +120,17 @@ func Info(ctx *gin.Context) {
 		"size":  size,
 		"count": count,
 		"path":  path,
+	})
+}
+func RemoveInvalid(ctx *gin.Context) {
+	var store = file.GetStore()
+	var err = store.ClearInvalidFile()
+	if err != nil {
+		ctx.Status(500)
+		log.Panicln(err)
+		return
+	}
+	ctx.JSON(200, gin.H{
+		"ok": true,
 	})
 }

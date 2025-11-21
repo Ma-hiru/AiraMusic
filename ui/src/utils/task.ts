@@ -67,5 +67,4 @@ export async function refreshLogin(cookies: string) {
   }
 }
 
-export async function isBackgroundDark() {
-}
+export async function isBackgroundDark() {}

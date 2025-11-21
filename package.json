@@ -63,7 +63,7 @@
     "typescript": "^5",
     "typescript-eslint": "^8.46.3"
   },
-  "packageManager": "pnpm@10.22.0",
+  "packageManager": "pnpm@10.23.0",
   "pnpm": {
     "onlyBuiltDependencies": [
       "@applemusic-like-lyrics/core",

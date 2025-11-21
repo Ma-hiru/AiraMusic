@@ -1,6 +1,6 @@
 import { BrowserWindow } from "electron";
 import ElectronStore from "electron-store";
-import { StoreType } from "../../background";
+import { StoreType } from "../../app";
 import { typedIpcMainHandle } from "./typed";
 
 export function registerInvokeHandlers(mainWindow: BrowserWindow, store: ElectronStore<StoreType>) {

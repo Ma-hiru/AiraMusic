@@ -1,4 +1,4 @@
-import { APP } from "./background";
+import { APP } from "./app";
 import { printDevInfo } from "./utils/dev";
 
 printDevInfo();

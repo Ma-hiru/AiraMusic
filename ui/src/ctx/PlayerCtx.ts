@@ -84,7 +84,6 @@ export const PlayerCtxDefault = {
   addAndPlayTrack: blankFunc,
   clearPlayList: blankFunc,
   replacePlayList: blankFunc
-
 };
 
 export const PlayerCtx = createContext<PlayerCtxType>(PlayerCtxDefault);

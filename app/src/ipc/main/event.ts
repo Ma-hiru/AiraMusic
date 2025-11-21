@@ -1,6 +1,6 @@
 import ElectronStore from "electron-store";
 import { BrowserWindow } from "electron";
-import { StoreType } from "../../background";
+import { StoreType } from "../../app";
 import { typedIpcMainOn, typedIpcMainSend } from "./typed";
 import { getEffectiveWindowSize } from "../../utils/screen";
 import { WindowExits, WindowManager } from "../../window";

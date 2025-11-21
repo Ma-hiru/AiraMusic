@@ -43,8 +43,7 @@ const NavSide: FC<object> = () => {
     [navigate, location.pathname]
   );
   return (
-    <div
-      className="absolute grid grid-cols-1 grid-rows-[auto_auto_auto_1fr] left-0 top-0 bottom-0 w-48 pb-18 px-6 bg-[#f0f3f6] z-0">
+    <div className="absolute grid grid-cols-1 grid-rows-[auto_auto_auto_1fr] left-0 top-0 bottom-0 w-48 pb-18 px-6 bg-[#f0f3f6] z-0">
       <div className="py-8">
         <CachedProvider>
           <Avatar />

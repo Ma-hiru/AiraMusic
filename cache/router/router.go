@@ -16,6 +16,7 @@ func SetRouter(app *gin.Engine) {
 	app.GET("/api/count", handler.Count)
 	app.GET("/api/info", handler.Info)
 	app.GET("/api/wrap", handler.Wrap)
+	app.GET("/api/clear-invalid", handler.RemoveInvalid)
 	app.GET("/.well-known/appspecific/com.chrome.devtools.json", func(c *gin.Context) {
 		c.Status(http.StatusNoContent)
 	})

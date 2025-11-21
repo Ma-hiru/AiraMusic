@@ -100,14 +100,8 @@ func Wrap(ctx *gin.Context) {
 		var cancelCtx, cancel = context.WithCancel(context.Background())
 		go func() {
 			defer pr.Close()
-			_, err := store.Store(cancelCtx, pr, url, fileName, fileType, fileSize, etag, lastModified)
-			if err != nil {
-				fmt.Println("downloading file failed:", err)
-				var index, ok = store.Check(url)
-				if ok {
-					_, _ = store.Remove(index)
-				}
-			}
+			// 文件存储失败或被取消时，不会创建索引，且会删除临时文件
+			_, _ = store.Store(cancelCtx, pr, url, fileName, fileType, fileSize, etag, lastModified)
 		}()
 
 		// 设置响应头并开始流式传输
@@ -145,7 +139,12 @@ func Wrap(ctx *gin.Context) {
 	}
 
 	// 从缓存中获取文件并设置响应头
-	var storeFile = store.Fetch(index)
+	var storeFile, err = store.Fetch(index)
+	if err != nil {
+		ctx.Status(500)
+		log.Panicln(err)
+		return
+	}
 	setHeaders(ctx, index)
 	// 开始流式传输缓存的文件
 	ctx.Stream(func(w io.Writer) bool {

@@ -66,7 +66,10 @@ function createWindow(params: { width?: number; height?: number }) {
       title: CONSTANTS.APP.MAIN_WINDOW_TITLE,
       titleBarStyle: "hidden",
       webPreferences: {
-        preload: preloadPath
+        preload: preloadPath,
+        scrollBounce: false,
+        experimentalFeatures: true,
+        webgl: true
       },
       frame: false,
       show: false,

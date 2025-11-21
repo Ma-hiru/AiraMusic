@@ -13,15 +13,7 @@ interface Props {
   className?: string;
 }
 
-const NavListItem: FC<Props> = ({
-  cover,
-  label,
-  className,
-  count,
-  id,
-  onClick,
-  active
-}) => {
+const NavListItem: FC<Props> = ({ cover, label, className, count, id, onClick, active }) => {
   const { cachedURL, init, fail } = useCache(cover);
   return (
     <div className={cx("space-x-2 font-bold mt-2", className)}>
