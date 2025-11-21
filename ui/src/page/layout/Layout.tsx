@@ -1,9 +1,9 @@
 import { FC } from "react";
-import TopBar from "@mahiru/ui/page/layout/TopBar";
-import PlayerBar from "@mahiru/ui/page/layout/PlayerBar";
-import NavSide from "@mahiru/ui/page/layout/NavSide";
+import TopBar from "@mahiru/ui/page/layout/top/Top";
+import PlayerBar from "@mahiru/ui/page/layout/bar/Bar";
+import NavSide from "@mahiru/ui/page/layout/nav/Nav";
 import KeepAliveOutlet from "@mahiru/ui/componets/public/KeepAliveOutlet";
-import PlayerModal from "@mahiru/ui/page/layout/PlayerModal";
+import PlayerModal from "@mahiru/ui/page/layout/model/Modal";
 
 const Layout: FC<object> = () => {
   return (

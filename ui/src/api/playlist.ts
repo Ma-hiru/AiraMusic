@@ -1,4 +1,4 @@
-import request from "./utils/request";
+import request, { cacheRequest } from "./utils/request";
 import { mapTrackPlayableStatus } from "./utils/common";
 import type {
   NeteaseDailySongsResponse,
@@ -46,15 +46,18 @@ export function dailyRecommendPlaylist(params: { limit?: number }) {
  * 获取所有歌曲的详情 (https://github.com/Binaryify/NeteaseCloudMusicApi/issues/452)
  * - s : 歌单最近的 s 个收藏者, 默认为8
  * @param  id 歌单 id
- * @param noCache
+ * @param time_limit
+ * @param update
  */
-export function getPlaylistDetail(id: number, noCache = false) {
-  return request<{ id: number; timestamp: number }, NeteasePlaylistDetailResponse>({
+export function getPlaylistDetail(id: number, update = false, time_limit?: number) {
+  return cacheRequest<{ id: number; timestamp: number }, NeteasePlaylistDetailResponse>({
     url: "/playlist/detail",
     method: "get",
     params: {
       id,
-      timestamp: noCache ? new Date().getTime() : undefined
+      timestamp: update ? new Date().getTime() : undefined,
+      update,
+      time_limit
     }
   }).then((data) => {
     if (data.playlist) {

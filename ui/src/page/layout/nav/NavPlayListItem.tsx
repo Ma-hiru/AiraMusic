@@ -13,10 +13,14 @@ interface Props {
   className?: string;
 }
 
-const NavListItem: FC<Props> = ({ cover, label, className, count, id, onClick, active }) => {
+const NavPlayListItem: FC<Props> = ({ cover, label, className, count, id, onClick, active }) => {
   const { cachedURL, init, fail } = useCache(cover);
   return (
-    <div className={cx("space-x-2 font-bold mt-2", className)}>
+    <div
+      className={cx(
+        "space-x-2 font-bold will-change-transform backface-hidden contain-paint",
+        className
+      )}>
       <NavSideNavItem
         active={active}
         onClick={() => onClick?.(id)}
@@ -39,4 +43,4 @@ const NavListItem: FC<Props> = ({ cover, label, className, count, id, onClick, a
     </div>
   );
 };
-export default memo(NavListItem);
+export default memo(NavPlayListItem);

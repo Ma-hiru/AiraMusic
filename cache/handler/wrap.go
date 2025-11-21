@@ -7,6 +7,8 @@ import (
 	"io"
 	"log"
 	"net/http"
+	neturl "net/url"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -15,57 +17,52 @@ func Wrap(ctx *gin.Context) {
 	// 获取URL参数
 	var url = ctx.Query("url")
 	var update = ctx.Query("update") == "true"
+	var tl = ctx.Query("time_limit")
+	log.Println("tl=====>", tl)
+	var timeLimit = int64(0)
+	if tl != "" {
+		var _, err = fmt.Sscanf(tl, "%d", &timeLimit)
+		if err != nil {
+			ctx.Status(http.StatusBadRequest)
+			log.Panicln(err)
+			return
+		}
+	}
 	if url == "" {
-		ctx.Status(404)
+		ctx.Status(http.StatusNotFound)
 		return
 	}
 	// 检查文件是否已缓存
 	var store = file.GetStore()
 	var index, ok = store.Check(url)
-	// 如果请求更新且文件已缓存
-	if ok && update {
-		// 请求URL，如果是304，则继续使用缓存，否则删除缓存并重新下载
-		var httpClint = http.DefaultClient
-		var req, reqErr = http.NewRequest("GET", url, nil)
-		if reqErr != nil {
-			ctx.Status(500)
-			log.Panicln(reqErr)
-			return
-		}
-		req.Header.Set("If-None-Match", index.ETag)
-		req.Header.Set("If-Modified-Since", index.LastModified)
-		var resp, err = httpClint.Do(req)
-		if err != nil {
-			ctx.Status(500)
+	// 文件不存在、请求更新且文件已缓存或文件已过期
+	if !ok || (ok && update) || (ok && timeLimit > 0 && index.IsExpiredMill(timeLimit)) {
+		// 如果未缓存，则从源URL获取文件
+		// 尝试对可能被百分号编码的 URL 解码
+		if decoded, err := neturl.QueryUnescape(url); err == nil && decoded != "" {
+			url = decoded
+		} else if err != nil {
+			ctx.Status(http.StatusBadRequest)
 			log.Panicln(err)
 			return
 		}
-		// 如果服务器返回非304，说明文件已更新
-		if resp.StatusCode != http.StatusNotModified {
-			// 删除过期缓存
-			_, err = store.Remove(index)
-			if err != nil {
-				ctx.Status(500)
-				log.Panicln(err)
-				return
-			}
-			// 从请求 URL 中删除 `update` 参数，防止递归时重复触发更新分支
-			q := ctx.Request.URL.Query()
-			q.Del("update")
-			ctx.Request.URL.RawQuery = q.Encode()
-			Wrap(ctx)
-		} else {
-			// 服务器返回304，继续使用缓存
-			ctx.Status(http.StatusNotModified)
-		}
-		return
-	}
-	if !ok {
-		// 如果未缓存，则从源URL获取文件
-		var httpClint = http.DefaultClient
-		var resp, err = httpClint.Get(url)
+		var httpClient = http.DefaultClient
+		// 创建新请求 保留原始请求的方法和头
+		var request, err = http.NewRequest(ctx.Request.Method, url, ctx.Request.Body)
 		if err != nil {
-			ctx.Status(500)
+			ctx.Status(http.StatusInternalServerError)
+			log.Panicln(err)
+			return
+		}
+		// 复制请求头
+		for key, values := range ctx.Request.Header {
+			for _, value := range values {
+				request.Header.Add(key, value)
+			}
+		}
+		resp, err := httpClient.Do(request)
+		if err != nil {
+			ctx.Status(http.StatusInternalServerError)
 			log.Panicln(err)
 			return
 		}
@@ -86,7 +83,7 @@ func Wrap(ctx *gin.Context) {
 			//预读取以计算ETag
 			etag, respBody, err = file.PeekForHash(resp.Body)
 			if err != nil {
-				ctx.Status(500)
+				ctx.Status(http.StatusInternalServerError)
 				log.Panicln(err)
 				return
 			}
@@ -113,7 +110,7 @@ func Wrap(ctx *gin.Context) {
 		// 设置Content-Disposition头
 		if fileDisposition != "" {
 			ctx.Header("Content-Disposition", fileDisposition)
-		} else {
+		} else if !strings.Contains(fileType, "json") {
 			ctx.Header("Content-Disposition", "inline; filename=\""+index.Name+"\"")
 		}
 		// 开始流式传输（io.Copy 会在读到 EOF 时返回 nil，返回 false 停止重复调用）
@@ -141,7 +138,7 @@ func Wrap(ctx *gin.Context) {
 	// 从缓存中获取文件并设置响应头
 	var storeFile, err = store.Fetch(index)
 	if err != nil {
-		ctx.Status(500)
+		ctx.Status(http.StatusInternalServerError)
 		log.Panicln(err)
 		return
 	}

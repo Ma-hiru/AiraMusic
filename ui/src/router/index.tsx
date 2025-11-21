@@ -1,5 +1,5 @@
 import { createBrowserRouter, Navigate } from "react-router-dom";
-import Layout from "@mahiru/ui/page/Layout";
+import Layout from "@mahiru/ui/page/layout/Layout";
 import SettingsPage from "@mahiru/ui/page/settings/SettingsPage";
 import HomePage from "@mahiru/ui/page/home/HomePage";
 import PlayListPage from "@mahiru/ui/page/playlist/PlayListPage";

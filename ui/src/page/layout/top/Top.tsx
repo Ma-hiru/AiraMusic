@@ -8,7 +8,7 @@ import { cx } from "@emotion/css";
 import { ChevronDown } from "lucide-react";
 import { TransitionPreset } from "@mahiru/ui/constants/transition";
 
-const TopBar: FC<object> = () => {
+const Top: FC<object> = () => {
   const { TogglePlayerModalVisible, PlayerModalVisible } = useLayout();
   return (
     <Drag
@@ -38,4 +38,4 @@ const TopBar: FC<object> = () => {
     </Drag>
   );
 };
-export default memo(TopBar);
+export default memo(Top);

@@ -9,7 +9,7 @@ import (
 
 func setHeaders(ctx *gin.Context, index file.Index) {
 	ctx.Header("Cache-Control", "no-cache")
-	if index.Name != "" {
+	if index.Name != "" && !strings.Contains(index.Type, "json") {
 		ctx.Header("Content-Disposition", "inline; filename=\""+index.Name+"\"")
 	}
 	if index.ETag != "" {

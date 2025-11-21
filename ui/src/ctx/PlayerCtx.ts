@@ -13,6 +13,12 @@ export interface PlayerTrackInfo {
   audio: string;
 }
 
+export interface PlayerCtxProgress {
+  currentTime: number;
+  duration: number;
+  buffered: number;
+}
+
 export interface PlayerCtxType {
   // states
   isPlaying: boolean;
@@ -20,11 +26,7 @@ export interface PlayerCtxType {
   currentIndex: number;
   lyricLines: LyricLine[];
   playList: PlayerTrackInfo[];
-  progress: {
-    currentTime: number;
-    duration: number;
-    buffered: number;
-  };
+  progress: NormalFunc<never[], PlayerCtxProgress>;
   // refs
   audioRef: RefObject<HTMLAudioElement | null>;
   // actions
@@ -64,12 +66,12 @@ export const PlayerCtxDefault = {
     audio: "",
     id: 0
   },
-  progress: {
+  currentIndex: 0,
+  progress: () => ({
     currentTime: 0,
     duration: 0,
     buffered: 0
-  },
-  currentIndex: 0,
+  }),
   setInfo: blankFunc,
   setPlayList: blankFunc,
   setCurrentIndex: blankFunc,

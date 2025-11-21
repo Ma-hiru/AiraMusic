@@ -1,8 +1,8 @@
+import Top from "./Top/Top";
+import List from "./List/List";
+import Divider from "./Divider/Divider";
 import { FC, useCallback, useEffect, useRef, useState } from "react";
 import { getPlaylistDetail } from "@mahiru/ui/api/playlist";
-import Top from "@mahiru/ui/page/playlist/Top";
-import List from "@mahiru/ui/page/playlist/List";
-import Divider from "@mahiru/ui/page/playlist/Divider";
 import { NeteasePlaylistDetailResponse } from "@mahiru/ui/types/netease-api";
 import { useParams } from "react-router-dom";
 import { Log } from "@mahiru/ui/utils/log";
@@ -64,7 +64,10 @@ export default PlayListPage;
 
 async function requestPlayListDetail(id: number) {
   try {
-    return await getPlaylistDetail(id, false);
+    console.log("request detail=>", id);
+    const res = await getPlaylistDetail(id);
+    console.log("get detail=>", res);
+    return res;
   } catch (err) {
     Log.error(
       new EqError({

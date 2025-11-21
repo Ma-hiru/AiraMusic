@@ -16,7 +16,7 @@ export function useSong() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [lyricLines, setLyricLines] = useState<LyricLine[]>([]);
-  const [progress, setProgress] = useImmer(PlayerCtxDefault.progress);
+  const progress = useRef(PlayerCtxDefault.progress());
   /**                        暴露方法                         */
   // 播放控制函数
   const play = useCallback(() => {
@@ -214,29 +214,23 @@ export function useSong() {
     const handlePlay = () => setIsPlaying(true);
     const handlePause = () => setIsPlaying(false);
     const handleTimeUpdate = () => {
-      setProgress((draft) => {
-        draft.currentTime = audio.currentTime;
-      });
+      progress.current.currentTime = audio.currentTime;
     };
     const handleDurationChange = () => {
-      setProgress((draft) => {
-        draft.duration = audio.duration || 0;
-      });
+      progress.current.duration = audio.duration || 0;
     };
     // 缓冲进度
     const handleProgress = () => {
       if (audio.buffered.length > 0) {
-        setProgress((draft) => {
-          draft.buffered = audio.buffered.end(audio.buffered.length - 1);
-        });
+        progress.current.buffered = audio.buffered.end(audio.buffered.length - 1);
       }
     };
-    audio.addEventListener("play", handlePlay);
-    audio.addEventListener("pause", handlePause);
-    audio.addEventListener("ended", nextTrack);
-    audio.addEventListener("timeupdate", handleTimeUpdate);
-    audio.addEventListener("durationchange", handleDurationChange);
-    audio.addEventListener("progress", handleProgress);
+    audio.addEventListener("play", handlePlay, { passive: true });
+    audio.addEventListener("pause", handlePause, { passive: true });
+    audio.addEventListener("ended", nextTrack, { passive: true });
+    audio.addEventListener("timeupdate", handleTimeUpdate, { passive: true });
+    audio.addEventListener("durationchange", handleDurationChange, { passive: true });
+    audio.addEventListener("progress", handleProgress, { passive: true });
     return () => {
       audio.removeEventListener("play", handlePlay);
       audio.removeEventListener("pause", handlePause);
@@ -245,8 +239,9 @@ export function useSong() {
       audio.removeEventListener("durationchange", handleDurationChange);
       audio.removeEventListener("progress", handleProgress);
     };
-  }, [nextTrack, setProgress]);
+  }, [nextTrack]);
 
+  const getProgress = useRef(() => progress.current).current;
   return useMemo<PlayerCtxType>(
     () => ({
       audioRef,
@@ -269,7 +264,7 @@ export function useSong() {
       addAndPlayTrack,
       clearPlayList,
       replacePlayList,
-      progress
+      progress: getProgress
     }),
     [
       addAndPlayTrack,
@@ -277,6 +272,7 @@ export function useSong() {
       clearPlayList,
       currentIndex,
       downVolume,
+      getProgress,
       info,
       isPlaying,
       lastTrack,
@@ -289,8 +285,7 @@ export function useSong() {
       replacePlayList,
       setInfo,
       setPlayList,
-      upVolume,
-      progress
+      upVolume
     ]
   );
 }
