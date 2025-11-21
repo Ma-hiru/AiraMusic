@@ -9,22 +9,38 @@ import { PlayerCtxDefault, PlayerCtxType, PlayerTrackInfo } from "@mahiru/ui/ctx
 import { NeteaseLyricResponse } from "@mahiru/ui/types/netease-api";
 
 export function useSong() {
+  /**                        状态管理                         */
   const audioRef = useRef<HTMLAudioElement>(null);
   const [info, setInfo] = useImmer<PlayerTrackInfo>(PlayerCtxDefault.info);
   const [playList, setPlayList] = useImmer<PlayerTrackInfo[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [lyricLines, setLyricLines] = useState<LyricLine[]>([]);
-  const [progress, setProgress] = useImmer({
-    currentTime: 0,
-    duration: 0,
-    buffered: 0
-  });
-
+  const [progress, setProgress] = useImmer(PlayerCtxDefault.progress);
+  /**                        暴露方法                         */
+  // 播放控制函数
   const play = useCallback(() => {
     const audio = audioRef.current;
     audio && (audio.paused ? audio.play() : audio.pause());
   }, []);
+  const nextTrack = useCallback(() => {
+    setCurrentIndex((index) => {
+      const nextIndex = index + 1;
+      if (nextIndex >= playList.length) {
+        return 0;
+      }
+      return nextIndex;
+    });
+  }, [playList.length]);
+  const lastTrack = useCallback(() => {
+    setCurrentIndex((index) => {
+      const lastIndex = index - 1;
+      if (lastIndex < 0) {
+        return playList.length - 1;
+      }
+      return lastIndex;
+    });
+  }, [playList.length]);
   const mute = useCallback(() => {
     const audio = audioRef.current;
     audio && (audio.muted = !audio.muted);
@@ -43,6 +59,7 @@ export function useSong() {
       audio.volume = Math.max(0, audio.volume - gap);
     }
   }, []);
+  // 播放列表管理函数
   const addTrackToList = useCallback(
     (newTrack: PlayerTrackInfo) => {
       const exists = playList.findIndex((t) => t.id === newTrack.id);
@@ -90,25 +107,8 @@ export function useSong() {
     },
     [setPlayList]
   );
-  const nextTrack = useCallback(() => {
-    setCurrentIndex((index) => {
-      const nextIndex = index + 1;
-      if (nextIndex >= playList.length) {
-        return 0;
-      }
-      return nextIndex;
-    });
-  }, [playList.length]);
-  const lastTrack = useCallback(() => {
-    setCurrentIndex((index) => {
-      const lastIndex = index - 1;
-      if (lastIndex < 0) {
-        return playList.length - 1;
-      }
-      return lastIndex;
-    });
-  }, [playList.length]);
 
+  /**                        状态变化                         */
   // 加载歌词函数
   const loadLyric = useCallback((id: number) => {
     getLyric(id)
@@ -127,38 +127,41 @@ export function useSong() {
       });
   }, []);
   // 加载音频函数
-  const loadMP3 = useCallback((id: number) => {
-    let retryCount = 0;
-    const maxRetries = 3;
-    const fetchAudio = () => {
-      getMP3(id).then((res) => {
-        if (Array.isArray(res?.data) && typeof res.data[0]?.url === "string") {
-          setInfo((draft) => {
-            draft.audio = res.data[0]!.url!;
-          });
-        } else {
-          if (retryCount < maxRetries) {
-            retryCount++;
-            Log.warn(
-              `MP3 URL not found for track ID ${id}. Retrying (${retryCount}/${maxRetries})...`
-            );
-            fetchAudio();
+  const loadMP3 = useCallback(
+    (id: number) => {
+      let retryCount = 0;
+      const maxRetries = 3;
+      const fetchAudio = () => {
+        getMP3(id).then((res) => {
+          if (Array.isArray(res?.data) && typeof res.data[0]?.url === "string") {
+            setInfo((draft) => {
+              draft.audio = res.data[0]!.url!;
+            });
           } else {
-            Log.error(
-              new EqError({
-                message: `MP3 URL not found after ${maxRetries} attempts for track ID ${id}.`,
-                label: "ui/ctx/PlayerProvider:loadMP3"
-              })
-            );
+            if (retryCount < maxRetries) {
+              retryCount++;
+              Log.warn(
+                `MP3 URL not found for track ID ${id}. Retrying (${retryCount}/${maxRetries})...`
+              );
+              fetchAudio();
+            } else {
+              Log.error(
+                new EqError({
+                  message: `MP3 URL not found after ${maxRetries} attempts for track ID ${id}.`,
+                  label: "ui/ctx/PlayerProvider:loadMP3"
+                })
+              );
+            }
           }
-        }
-      });
-    };
-    fetchAudio();
-    return () => {
-      retryCount = maxRetries;
-    };
-  }, [setInfo]);
+        });
+      };
+      fetchAudio();
+      return () => {
+        retryCount = maxRetries;
+      };
+    },
+    [setInfo]
+  );
   // 刷新并播放音频
   const refreshAudio = useCallback((audio: HTMLAudioElement) => {
     try {
@@ -208,81 +211,138 @@ export function useSong() {
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
-    const onPlay = () => setIsPlaying(true);
-    const onPause = () => setIsPlaying(false);
-    audio.addEventListener("play", onPlay);
-    audio.addEventListener("pause", onPause);
-    audio.addEventListener("ended", nextTrack);
-    return () => {
-      audio.removeEventListener("play", onPlay);
-      audio.removeEventListener("pause", onPause);
-      audio.removeEventListener("ended", nextTrack);
+    const handlePlay = () => setIsPlaying(true);
+    const handlePause = () => setIsPlaying(false);
+    const handleTimeUpdate = () => {
+      setProgress((draft) => {
+        draft.currentTime = audio.currentTime;
+      });
     };
-  }, [nextTrack]);
-  
-  return useMemo<PlayerCtxType>(() => ({
-    audioRef,
-    lyricLines,
-    info,
-    play,
-    mute,
-    upVolume,
-    downVolume,
-    currentIndex,
-    setInfo,
-    setPlayList,
-    setCurrentIndex,
-    isPlaying,
-    playList,
-    addTrackToList,
-    removeTrackInList,
-    nextTrack,
-    lastTrack,
-    addAndPlayTrack,
-    clearPlayList,
-    replacePlayList
-  }), [addAndPlayTrack, addTrackToList, clearPlayList, currentIndex, downVolume, info, isPlaying, lastTrack, lyricLines, mute, nextTrack, play, playList, removeTrackInList, replacePlayList, setInfo, setPlayList, upVolume]);
+    const handleDurationChange = () => {
+      setProgress((draft) => {
+        draft.duration = audio.duration || 0;
+      });
+    };
+    // 缓冲进度
+    const handleProgress = () => {
+      if (audio.buffered.length > 0) {
+        setProgress((draft) => {
+          draft.buffered = audio.buffered.end(audio.buffered.length - 1);
+        });
+      }
+    };
+    audio.addEventListener("play", handlePlay);
+    audio.addEventListener("pause", handlePause);
+    audio.addEventListener("ended", nextTrack);
+    audio.addEventListener("timeupdate", handleTimeUpdate);
+    audio.addEventListener("durationchange", handleDurationChange);
+    audio.addEventListener("progress", handleProgress);
+    return () => {
+      audio.removeEventListener("play", handlePlay);
+      audio.removeEventListener("pause", handlePause);
+      audio.removeEventListener("ended", nextTrack);
+      audio.removeEventListener("timeupdate", handleTimeUpdate);
+      audio.removeEventListener("durationchange", handleDurationChange);
+      audio.removeEventListener("progress", handleProgress);
+    };
+  }, [nextTrack, setProgress]);
+
+  return useMemo<PlayerCtxType>(
+    () => ({
+      audioRef,
+      lyricLines,
+      info,
+      play,
+      mute,
+      upVolume,
+      downVolume,
+      currentIndex,
+      setInfo,
+      setPlayList,
+      setCurrentIndex,
+      isPlaying,
+      playList,
+      addTrackToList,
+      removeTrackInList,
+      nextTrack,
+      lastTrack,
+      addAndPlayTrack,
+      clearPlayList,
+      replacePlayList,
+      progress
+    }),
+    [
+      addAndPlayTrack,
+      addTrackToList,
+      clearPlayList,
+      currentIndex,
+      downVolume,
+      info,
+      isPlaying,
+      lastTrack,
+      lyricLines,
+      mute,
+      nextTrack,
+      play,
+      playList,
+      removeTrackInList,
+      replacePlayList,
+      setInfo,
+      setPlayList,
+      upVolume,
+      progress
+    ]
+  );
 }
 
 function handleLyricResponse(result: NeteaseLyricResponse): LyricLine[] {
-  if (result.lrc.lyric === "" && result.klyric.lyric === "" && result.romalrc.lyric === "" && result.tlyric.lyric === "") {
-    return [{
-      words: [
-        {
-          startTime: 0,
-          endTime: 999999999999,
-          obscene: false,
-          word: "暂无歌词",
-          romanWord: ""
-        }
-      ],
-      translatedLyric: "",
-      romanLyric: "",
-      startTime: 0,
-      endTime: 999999999999,
-      isBG: false,
-      isDuet: false
-    }];
+  if (
+    result.lrc.lyric === "" &&
+    result.klyric.lyric === "" &&
+    result.romalrc.lyric === "" &&
+    result.tlyric.lyric === ""
+  ) {
+    return [
+      {
+        words: [
+          {
+            startTime: 0,
+            endTime: 999999999999,
+            obscene: false,
+            word: "暂无歌词",
+            romanWord: ""
+          }
+        ],
+        translatedLyric: "",
+        romanLyric: "",
+        startTime: 0,
+        endTime: 999999999999,
+        isBG: false,
+        isDuet: false
+      }
+    ];
   }
   const parsedLyric = handleNeteaseLyricResponse(result);
   if (parsedLyric.length === 0) {
-    return [{
-      words: [
-        {
-          startTime: 0,
-          endTime: 999999999999,
-          obscene: false,
-          word: "纯音乐，请欣赏",
-          romanWord: ""
-        }
-      ],
-      translatedLyric: "",
-      romanLyric: "",
-      startTime: 0,
-      endTime: 999999999999,
-      isBG: false,
-      isDuet: false
-    }];
+    return [
+      {
+        words: [
+          {
+            startTime: 0,
+            endTime: 999999999999,
+            obscene: false,
+            word: "纯音乐，请欣赏",
+            romanWord: ""
+          }
+        ],
+        translatedLyric: "",
+        romanLyric: "",
+        startTime: 0,
+        endTime: 999999999999,
+        isBG: false,
+        isDuet: false
+      }
+    ];
   } else {
     return parsedLyric;
   }

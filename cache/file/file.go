@@ -332,8 +332,8 @@ func write(ctx context.Context, path string, reader io.Reader) (int64, string, e
 		if err := ctx.Err(); err != nil {
 			fmt.Println("context cancelled, removing file:", path)
 			file.Close()
-			// 后面会根据错误和索引判断是否删除文件，如果源头已经删除，这里就不需要再删除一次，所以返回这里的err
-			return count, etag, os.Remove(path)
+			_ = os.Remove(path)
+			return count, etag, err
 		}
 
 		var n, err = reader.Read(buffer)
@@ -359,6 +359,10 @@ func write(ctx context.Context, path string, reader io.Reader) (int64, string, e
 				etag = Hash(buffer, n)
 			}
 		}
+	}
+	if count == 0 {
+		_ = os.Remove(path)
+		return count, etag, fmt.Errorf("no data written to file")
 	}
 	return count, etag, nil
 }
