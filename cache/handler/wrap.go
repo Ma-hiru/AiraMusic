@@ -18,7 +18,6 @@ func Wrap(ctx *gin.Context) {
 	var url = ctx.Query("url")
 	var update = ctx.Query("update") == "true"
 	var tl = ctx.Query("time_limit")
-	log.Println("tl=====>", tl)
 	var timeLimit = int64(0)
 	if tl != "" {
 		var _, err = fmt.Sscanf(tl, "%d", &timeLimit)
@@ -36,6 +35,8 @@ func Wrap(ctx *gin.Context) {
 	var store = file.GetStore()
 	var index, ok = store.Check(url)
 	// 文件不存在、请求更新且文件已缓存或文件已过期
+	log.Println("url:", url, "update:", update, "time_limit:", timeLimit, "if=>", !ok || (ok && update) || (ok && timeLimit > 0 && index.IsExpiredMill(timeLimit)))
+
 	if !ok || (ok && update) || (ok && timeLimit > 0 && index.IsExpiredMill(timeLimit)) {
 		// 如果未缓存，则从源URL获取文件
 		// 尝试对可能被百分号编码的 URL 解码
@@ -96,8 +97,8 @@ func Wrap(ctx *gin.Context) {
 		// 只在发生传输错误时手动调用 cancel()。
 		var cancelCtx, cancel = context.WithCancel(context.Background())
 		go func() {
-			defer pr.Close()
 			// 文件存储失败或被取消时，不会创建索引，且会删除临时文件
+			// 不要在存储协程中关闭 pr（reader），否则会导致主写入端报 ErrClosedPipe
 			_, _ = store.Store(cancelCtx, pr, url, fileName, fileType, fileSize, etag, lastModified)
 		}()
 
@@ -114,13 +115,18 @@ func Wrap(ctx *gin.Context) {
 			ctx.Header("Content-Disposition", "inline; filename=\""+index.Name+"\"")
 		}
 		// 开始流式传输（io.Copy 会在读到 EOF 时返回 nil，返回 false 停止重复调用）
+		ctx.Status(resp.StatusCode)
 		ctx.Stream(func(w io.Writer) bool {
+			log.Println("streaming from source:", url)
+			// 同时写入响应和管道写入端
 			mw := io.MultiWriter(w, pw)
 			_, err := io.Copy(mw, respBody)
 			if err != nil {
-				// 如果传输过程中出错，取消存储操作
-				fmt.Println("error during streaming:", err)
-				cancel()
+				if err != io.EOF {
+					// 如果传输过程中出错，取消存储操作
+					fmt.Println("error during streaming:", err)
+					cancel()
+				}
 			}
 			// ctx.request关闭前关闭管道写入端，以通知存储协程传输结束，如果顺序颠倒，会导致协程误以为提前结束，进而删除文件
 			_ = pw.Close()
@@ -143,12 +149,15 @@ func Wrap(ctx *gin.Context) {
 		return
 	}
 	setHeaders(ctx, index)
-	// 开始流式传输缓存的文件
-	ctx.Stream(func(w io.Writer) bool {
-		_, err := io.Copy(w, storeFile)
-		if err != nil {
-			fmt.Println("error during streaming (cached):", err)
-		}
-		return false
-	})
+	// 开始流式传输缓存的文件（主协程负责写入）
+	ctx.Status(http.StatusOK)
+	if flusher, ok := ctx.Writer.(http.Flusher); ok {
+		flusher.Flush()
+	}
+	// 将缓存文件直接拷贝到响应
+	buf := make([]byte, 32*1024)
+	_, err = io.CopyBuffer(ctx.Writer, storeFile, buf)
+	if err != nil {
+		fmt.Println("error during streaming (cached):", err)
+	}
 }
