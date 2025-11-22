@@ -8,7 +8,13 @@ type NormalEventMaps = {
   rememberCloseAppOption: "exit" | "minimizeToTray";
   isMaximized: boolean;
   createLoginWindow: never;
-  sendMessageTo: { to: WindowType; from: WindowType; data: string; type: "login" };
+  createLyricWindow: never;
+  sendMessageTo: {
+    to: WindowType;
+    from: WindowType;
+    data: string;
+    type: "login" | "lyricSync" | "lyricInit" | "lyricClose";
+  };
   close: WindowType;
   minimize: WindowType;
   maximize: WindowType;

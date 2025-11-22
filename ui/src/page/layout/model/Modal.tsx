@@ -3,6 +3,7 @@ import { motion, useAnimate } from "motion/react";
 import { useLayout } from "@mahiru/ui/ctx/LayoutCtx";
 import PlayerPage from "@mahiru/ui/page/player/PlayerPage";
 import { useGPU } from "@mahiru/ui/hook/useGPU";
+import { cx } from "@emotion/css";
 
 const Modal: FC<object> = () => {
   const { PlayerModalVisible } = useLayout();
@@ -19,7 +20,7 @@ const Modal: FC<object> = () => {
       if (hasDedicatedGPU) {
         animate(scope.current, { y: "100%" }, animation.transition);
       } else {
-        animate(scope.current, { top: "0%" }, animation.transition);
+        animate(scope.current, { top: "100%" }, animation.transition);
       }
     }
   }, [PlayerModalVisible, animate, hasDedicatedGPU, scope]);
@@ -27,7 +28,10 @@ const Modal: FC<object> = () => {
   return (
     <motion.div
       ref={scope}
-      className="fixed inset-0 w-screen h-screen overflow-hidden z-20 bg-white/90 backdrop-blur-md will-change-transform"
+      className={cx("w-screen h-screen overflow-hidden z-20 bg-white/90 backdrop-blur-md", {
+        "fixed will-change-transform inset-0": hasDedicatedGPU,
+        absolute: !hasDedicatedGPU
+      })}
       initial={hasDedicatedGPU ? animation.initialTransform : animation.initialTop}>
       <PlayerPage />
     </motion.div>

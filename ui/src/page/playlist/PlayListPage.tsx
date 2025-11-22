@@ -1,7 +1,7 @@
 import Top from "./Top/Top";
 import List from "./List/List";
 import Divider from "./Divider/Divider";
-import { FC, useCallback, useEffect, useRef, useState } from "react";
+import { FC, useCallback, useLayoutEffect, useRef, useState } from "react";
 import { getPlaylistDetail } from "@mahiru/ui/api/playlist";
 import { NeteasePlaylistDetailResponse } from "@mahiru/ui/types/netease-api";
 import { useParams } from "react-router-dom";
@@ -10,8 +10,17 @@ import { EqError } from "@mahiru/ui/utils/err";
 import BlobCachedProvider from "@mahiru/ui/ctx/BlobCachedProvider";
 import { SearchTrack } from "@mahiru/wasm";
 
-const PlayListPage: FC<object> = () => {
-  const { id } = useParams();
+interface PlayListPageProps {
+  setId?: number;
+  isLikedList?: boolean;
+}
+
+const PlayListPage: FC<PlayListPageProps> = ({ setId, isLikedList }) => {
+  const { id: defaultID } = useParams();
+  let id: Undefinable<string> = defaultID;
+  if (setId) {
+    id = String(setId);
+  }
   const [detail, setDetail] = useState<Nullable<NeteasePlaylistDetailResponse>>(null);
 
   const [filterTracks, setFilterTracks] = useState<
@@ -19,7 +28,8 @@ const PlayListPage: FC<object> = () => {
   >([]);
   const [searchTrackInstance, setSearchTrackInstance] = useState<Nullable<SearchTrack>>(null);
   const tracks = useRef<NeteasePlaylistDetailResponse["playlist"]["tracks"]>([]);
-  useEffect(() => {
+
+  useLayoutEffect(() => {
     if (id) {
       requestPlayListDetail(Number(id)).then((res) => {
         if (res) {

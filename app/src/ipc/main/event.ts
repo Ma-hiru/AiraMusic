@@ -10,6 +10,7 @@ import { isDev } from "../../utils/dev";
 
 export function registerEventHandlers(mainWindow: BrowserWindow, store: ElectronStore<StoreType>) {
   registerLoginWindowControl();
+  registerLyricWindowControl();
   registerWindowControl(mainWindow);
 }
 
@@ -51,6 +52,44 @@ function registerLoginWindowControl() {
         // isDev() && LoginWindow.webContents.openDevTools();
       });
     }
+  });
+}
+
+function registerLyricWindowControl() {
+  typedIpcMainOn("createLyricWindow", () => {
+    const { effectiveWidth: width, effectiveHeight: height } = getEffectiveWindowSize(0.22, 4);
+    const LyricWindow = WindowManager.createBrowserWindow(
+      {
+        width,
+        height,
+        transparent: true,
+        backgroundColor: "#00000000",
+        webPreferences: {
+          preload: preloadPath
+        },
+        title: "Lyric",
+        resizable: true,
+        minimizable: false,
+        maximizable: false,
+        titleBarStyle: "hidden",
+        frame: false
+      },
+      "lyric",
+      WindowExits.IGNORE
+    );
+    if (isDev()) {
+      LyricWindow.loadURL("http://localhost:5173/lyric").catch((err) => {
+        Log.error("app/ipc", "Failed to load lyric window URL:", err);
+      });
+    } else {
+      LyricWindow.loadURL("http://localhost:27232/lyric").catch((err) => {
+        Log.error("app/ipc", "Failed to load lyric window URL:", err);
+      });
+    }
+    LyricWindow.on("ready-to-show", () => {
+      LyricWindow.show();
+      isDev() && LyricWindow.webContents.openDevTools();
+    });
   });
 }
 

@@ -4,10 +4,13 @@ import { usePlayer } from "@mahiru/ui/ctx/PlayerCtx";
 import { useLayout } from "@mahiru/ui/ctx/LayoutCtx";
 import { setImageURLSize } from "@mahiru/ui/utils/setImageSize";
 import { useFileCache } from "@mahiru/ui/ctx/BlobCachedCtx";
+import { useGPU } from "@mahiru/ui/hook/useGPU";
 
 const Background: FC<object> = () => {
-  const { info } = usePlayer();
+  const { info, lyricLines, isPlaying } = usePlayer();
   const { PlayerModalVisible } = useLayout();
+  const hasLyrics = lyricLines.raw.length > 0;
+  const { hasDedicatedGPU } = useGPU();
   const cachedBackground = useFileCache(setImageURLSize(info.cover, "lg"));
   return (
     <BackgroundRender
@@ -18,6 +21,12 @@ const Background: FC<object> = () => {
         width: "100%",
         height: "100%"
       }}
+      renderScale={hasDedicatedGPU ? 0.5 : 0.35}
+      flowSpeed={hasDedicatedGPU ? 2 : 1}
+      albumIsVideo={false}
+      fps={PlayerModalVisible ? (hasDedicatedGPU ? 30 : 15) : 0}
+      playing={isPlaying && PlayerModalVisible}
+      hasLyric={hasLyrics}
       album={cachedBackground}
       staticMode={!PlayerModalVisible}
     />

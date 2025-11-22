@@ -1,11 +1,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { LyricLine } from "@applemusic-like-lyrics/core";
 import { FullVersionLyricLine, handleNeteaseLyricResponse } from "@mahiru/ui/utils/lyric";
 import { getLyric, getMP3 } from "@mahiru/ui/api/track";
 import { useImmer } from "use-immer";
 import { Log } from "@mahiru/ui/utils/log";
 import { EqError } from "@mahiru/ui/utils/err";
-import { PlayerCtxDefault, PlayerCtxType, PlayerTrackInfo } from "@mahiru/ui/ctx/PlayerCtx";
+import {
+  LyricVersionType,
+  PlayerCtxDefault,
+  PlayerCtxType,
+  PlayerTrackInfo
+} from "@mahiru/ui/ctx/PlayerCtx";
 import { NeteaseLyricResponse } from "@mahiru/ui/types/netease-api";
 
 export function useSong() {
@@ -21,7 +25,8 @@ export function useSong() {
     tl: [],
     rm: []
   });
-  const [lyricVersion, setLyricVersion] = useState<"raw" | "full" | "tl" | "rm">("tl");
+  const [lyricVersion, setLyricVersion] = useState<LyricVersionType>("tl");
+  const [volume, setVolume] = useState(PlayerCtxDefault.volume);
   const switching = useRef(false);
   const progress = useRef(PlayerCtxDefault.getProgress());
   /**                        暴露方法                         */
@@ -128,29 +133,29 @@ export function useSong() {
   }, []);
   /**                        状态变化                         */
   // 加载歌词函数
-  const loadLyric = useCallback((id: number) => {
-    getLyric(id)
-      .then((result) => {
-        const lyric = handleLyricResponse(result);
-        setLyricLines(lyric);
-        if (lyric.tl.length > 0) {
-          setLyricVersion("tl");
-        } else if (lyric.rm.length > 0) {
-          setLyricVersion("rm");
-        } else {
-          setLyricVersion("raw");
-        }
-      })
-      .catch((err) => {
-        Log.error(
-          new EqError({
-            raw: err,
-            message: "Failed to fetch lyric",
-            label: "ui/ctx/PlayerProvider:getLyric"
-          })
-        );
-      });
-  }, []);
+  const loadLyric = useCallback(
+    (id: number) => {
+      getLyric(id)
+        .then((result) => {
+          const lyric = handleLyricResponse(result);
+          setLyricLines(lyric);
+          const hasRm = lyric.rm.length > 0;
+          const hasTl = lyric.tl.length > 0;
+          const selectVersion = chooseLyricVersion(lyricVersion, hasRm, hasTl);
+          setLyricVersion(selectVersion);
+        })
+        .catch((err) => {
+          Log.error(
+            new EqError({
+              raw: err,
+              message: "Failed to fetch lyric",
+              label: "ui/ctx/PlayerProvider:getLyric"
+            })
+          );
+        });
+    },
+    [lyricVersion]
+  );
   // 加载音频函数
   const loadMP3 = useCallback(
     (id: number) => {
@@ -236,24 +241,22 @@ export function useSong() {
     if (!audio) return;
     const handlePlay = () => setIsPlaying(true);
     const handlePause = () => setIsPlaying(false);
-    const handleTimeUpdate = () => {
-      progress.current.currentTime = audio.currentTime;
-    };
-    const handleDurationChange = () => {
-      progress.current.duration = audio.duration || 0;
-    };
+    const handleTimeUpdate = () => (progress.current.currentTime = audio.currentTime);
+    const handleDurationChange = () => (progress.current.duration = audio.duration || 0);
     // 缓冲进度
     const handleProgress = () => {
       if (audio.buffered.length > 0) {
         progress.current.buffered = audio.buffered.end(audio.buffered.length - 1);
       }
     };
+    const handleVolumeChange = () => setVolume(audio.volume);
     audio.addEventListener("play", handlePlay, { passive: true });
     audio.addEventListener("pause", handlePause, { passive: true });
     audio.addEventListener("ended", nextTrack, { passive: true });
     audio.addEventListener("timeupdate", handleTimeUpdate, { passive: true });
     audio.addEventListener("durationchange", handleDurationChange, { passive: true });
     audio.addEventListener("progress", handleProgress, { passive: true });
+    audio.addEventListener("volumechange", handleVolumeChange, { passive: true });
     return () => {
       audio.removeEventListener("play", handlePlay);
       audio.removeEventListener("pause", handlePause);
@@ -261,6 +264,7 @@ export function useSong() {
       audio.removeEventListener("timeupdate", handleTimeUpdate);
       audio.removeEventListener("durationchange", handleDurationChange);
       audio.removeEventListener("progress", handleProgress);
+      audio.removeEventListener("volumechange", handleVolumeChange);
     };
   }, [nextTrack]);
 
@@ -290,7 +294,8 @@ export function useSong() {
       getProgress,
       changeCurrentTime,
       lyricVersion,
-      setLyricVersion
+      setLyricVersion,
+      volume
     }),
     [
       addAndPlayTrack,
@@ -314,7 +319,8 @@ export function useSong() {
       upVolume,
       changeCurrentTime,
       lyricVersion,
-      setLyricVersion
+      setLyricVersion,
+      volume
     ]
   );
 }
@@ -353,6 +359,33 @@ function handleLyricResponse(result: NeteaseLyricResponse): FullVersionLyricLine
   }
 }
 
+function chooseLyricVersion(current: LyricVersionType, hasRm: boolean, hasTl: boolean) {
+  if (current === "raw" && hasTl) {
+    return "tl";
+  }
+  if (current === "full") {
+    if (!hasRm && !hasTl) {
+      return "raw";
+    } else if (!hasRm && hasTl) {
+      return "tl";
+    } else if (hasRm && !hasTl) {
+      return "rm";
+    }
+  } else if (current === "rm" && !hasRm) {
+    if (hasTl) {
+      return "tl";
+    } else {
+      return "raw";
+    }
+  } else if (current === "tl" && !hasTl) {
+    if (hasRm) {
+      return "rm";
+    } else {
+      return "raw";
+    }
+  }
+  return current;
+}
 const noLyricTmp = {
   words: [
     {

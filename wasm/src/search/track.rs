@@ -1,6 +1,8 @@
 #![allow(non_snake_case)]
 
-use crate::search::model::NeteaseTrack;
+use crate::search::model::{
+    NeteasePlaylistDetail, NeteasePlaylistDetailResponsePart, NeteaseTrack,
+};
 use wasm_bindgen::prelude::wasm_bindgen;
 
 #[wasm_bindgen]
@@ -52,5 +54,57 @@ impl SearchTrack {
             // 返回索引
             .map(|track| self.parsed.iter().position(|t| t.id == track.id).unwrap() as i32)
             .collect()
+    }
+}
+
+#[wasm_bindgen]
+pub struct LikedTrackSearcher {
+    content: String,
+    parsed: NeteasePlaylistDetailResponsePart,
+}
+#[wasm_bindgen]
+impl LikedTrackSearcher {
+    #[wasm_bindgen(constructor)]
+    pub fn new(content: String) -> Self {
+        let mut instance = Self {
+            content,
+            parsed: NeteasePlaylistDetailResponsePart {
+                playlist: NeteasePlaylistDetail { trackIds: vec![] },
+            },
+        };
+        instance.parsed =
+            serde_json::from_str::<NeteasePlaylistDetailResponsePart>(&instance.content).unwrap();
+        instance
+    }
+
+    #[wasm_bindgen]
+    pub fn update(&mut self, content: String) {
+        self.content = content;
+        self.parsed =
+            serde_json::from_str::<NeteasePlaylistDetailResponsePart>(&self.content).unwrap();
+    }
+
+    #[wasm_bindgen]
+    pub fn isLiked(&self, track_id: f64) -> bool {
+        self.parsed
+            .playlist
+            .trackIds
+            .iter()
+            .any(|track| track.id == track_id)
+    }
+
+    #[wasm_bindgen]
+    pub fn getLikedTrackIds(&self) -> Vec<f64> {
+        self.parsed
+            .playlist
+            .trackIds
+            .iter()
+            .map(|track| track.id)
+            .collect()
+    }
+
+    #[wasm_bindgen]
+    pub fn getLikedCount(&self) -> usize {
+        self.parsed.playlist.trackIds.len()
     }
 }

@@ -4,3 +4,16 @@ html,
 body {
   font-family: "HarmonyOS Sans SC", system-ui;
 }
+
+img {
+  color: transparent;
+  font-size: 0;
+}
+
+img:not([src]) {
+  visibility: hidden;
+}
+
+img[src=""] {
+  visibility: hidden;
+}

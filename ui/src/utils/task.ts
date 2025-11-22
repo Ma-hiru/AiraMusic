@@ -4,6 +4,7 @@ import { EqError } from "@mahiru/ui/utils/err";
 import { userAccount, userDetail, userPlaylist } from "@mahiru/ui/api/user";
 import { usePersistZustandStore } from "@mahiru/ui/store";
 import { doLogout, setCookies } from "@mahiru/ui/api/utils/auth";
+import { initLikedSongsSearcher } from "@mahiru/ui/utils/song";
 
 const getStoreSnapshot = () => usePersistZustandStore.getState();
 
@@ -34,10 +35,12 @@ export async function refreshUserProfile() {
     const account = await userAccount();
     const detail = await userDetail(account.profile.userId);
     const playList = await userPlaylist({ uid: account.profile.userId, limit: 30 });
+    const userLikedList = playList.playlist.shift();
     updatePersistStoreData({
       loginMode: "account",
       user: detail.profile,
-      userPlayLists: playList.playlist
+      userPlayLists: playList.playlist,
+      userLikedList: userLikedList || null
     });
   } catch (err) {
     Log.error(
@@ -64,6 +67,21 @@ export async function refreshLogin(cookies: string) {
       })
     );
     doLogout();
+  }
+}
+
+export async function refreshLikedListDetailString() {
+  const { data, updatePersistStoreData } = getStoreSnapshot();
+  if (data.userLikedList) {
+    fetch(`http://127.0.0.1:10754/playlist/detail?id=${data.userLikedList.id}`)
+      .then((res) => res.text())
+      .then((detail) => {
+        detail &&
+          updatePersistStoreData({
+            userLikedListDetail: detail
+          });
+        initLikedSongsSearcher(detail);
+      });
   }
 }
 

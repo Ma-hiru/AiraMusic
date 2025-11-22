@@ -20,15 +20,18 @@ export interface PlayerCtxProgress {
   size: number;
 }
 
+export type LyricVersionType = "raw" | "full" | "tl" | "rm";
+
 export interface PlayerCtxType {
   // states
   isPlaying: boolean;
+  volume: number;
   info: PlayerTrackInfo;
   currentIndex: number;
   lyricLines: FullVersionLyricLine;
   playList: PlayerTrackInfo[];
   getProgress: NormalFunc<never[], PlayerCtxProgress>;
-  lyricVersion: "raw" | "full" | "tl" | "rm";
+  lyricVersion: LyricVersionType;
   // refs
   audioRef: RefObject<HTMLAudioElement | null>;
   // actions
@@ -52,6 +55,7 @@ export interface PlayerCtxType {
 
 export const PlayerCtxDefault = {
   isPlaying: false,
+  volume: 0.5,
   lyricLines: {
     full: [],
     raw: [],

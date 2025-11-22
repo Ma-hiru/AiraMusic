@@ -1,1 +1,1 @@
-type WindowType = "main" | "login";
+type WindowType = "main" | "login" | "lyric";

@@ -30,7 +30,6 @@ const BarProgress: FC<object> = () => {
   // 播放同步
   const tick = useCallback(() => {
     if (getDragging.current || !getPlaying.current) return;
-    console.log("tick");
     const { buffered, currentTime, duration } = getProgress();
     const percent = !duration ? 0 : (currentTime / duration) * 100;
     const buffer = !duration ? 0 : (buffered / duration) * 100;
@@ -40,8 +39,10 @@ const BarProgress: FC<object> = () => {
     const audio = audioRef.current;
     if (isDragging || !isPlaying || !audio) return;
     audio.addEventListener("timeupdate", tick);
+    audio.addEventListener("loadstart", tick);
     return () => {
       audio.removeEventListener("timeupdate", tick);
+      audio.removeEventListener("loadstart", tick);
     };
   }, [audioRef, isDragging, isPlaying, tick]);
   // 进度条动画

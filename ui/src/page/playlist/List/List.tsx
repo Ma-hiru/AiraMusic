@@ -6,9 +6,10 @@ import { useVirtualList, RowComponentType } from "@mahiru/ui/hook/useVirtualList
 
 interface ListProps {
   filterTracks: NeteasePlaylistDetailResponse["playlist"]["tracks"];
+  isLikedList?: boolean;
 }
 
-const ListContainer: FC<ListProps> = ({ filterTracks }) => {
+const ListContainer: FC<ListProps> = ({ filterTracks, isLikedList }) => {
   const containerRef = useRef<Nullable<HTMLDivElement>>(null);
   const List = useVirtualList(filterTracks, containerRef, 10, 50);
   return (

@@ -2,7 +2,11 @@ import { playlistCategories } from "@mahiru/ui/api/utils/staticData";
 import pkg from "../../../package.json";
 import shortcuts from "@mahiru/ui/api/utils/shortcuts";
 import { ZustandConfig } from "@mahiru/ui/types/zustand";
-import { NeteasePlaylistSummary, NeteaseUserDetailResponse } from "@mahiru/ui/types/netease-api";
+import {
+  NeteasePlaylistDetailResponse,
+  NeteasePlaylistSummary,
+  NeteaseUserDetailResponse
+} from "@mahiru/ui/types/netease-api";
 
 const enabledPlaylistCategories = playlistCategories.filter((c) => c.enable).map((c) => c.name);
 
@@ -77,7 +81,9 @@ const InitialState: PersistStoreInitialState = {
     user: null,
     lastRefreshCookieDate: 0,
     loginMode: "",
-    userPlayLists: []
+    userPlayLists: [],
+    userLikedList: null,
+    userLikedListDetail: ""
   }
 };
 
@@ -127,6 +133,8 @@ export interface PersistStoreInitialState {
     lastRefreshCookieDate: number;
     loginMode: "account" | "username" | "";
     userPlayLists: NeteasePlaylistSummary[];
+    userLikedList: NeteasePlaylistSummary | null;
+    userLikedListDetail: string;
   };
 }
 

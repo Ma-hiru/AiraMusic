@@ -50,7 +50,10 @@ export function dailyRecommendPlaylist(params: { limit?: number }) {
  * @param time_limit
  * @param update
  */
-export async function getPlaylistDetail(id: number, update = false) {
+export async function getPlaylistDetail(
+  id: number,
+  update = false
+): Promise<NeteasePlaylistDetailResponse> {
   const url = "http://127.0.0.1:10754/playlist/detail?id=" + id;
   const result = await cacheCheck(id);
   if (result.ok) {

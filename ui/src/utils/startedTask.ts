@@ -2,15 +2,19 @@ import { Log } from "@mahiru/ui/utils/log";
 import { EqError } from "@mahiru/ui/utils/err";
 import { usePersistZustandStore } from "@mahiru/ui/store";
 import { isAccountLoggedIn } from "@mahiru/ui/api/utils/auth";
-import { refreshCookieTask, refreshUserProfile } from "@mahiru/ui/utils/task";
+import {
+  refreshCookieTask,
+  refreshLikedListDetailString,
+  refreshUserProfile
+} from "@mahiru/ui/utils/task";
 import { isDev } from "@mahiru/ui/utils/dev";
 
 export function startedTask() {
-  if (isDev) {
-    onlyChangeDay([refreshCookieTask, refreshUserProfile]).then();
+  if (!isDev) {
+    onlyChangeDay([refreshCookieTask, refreshUserProfile, refreshLikedListDetailString]).then();
   } else {
     onlyChangeDay([refreshCookieTask]).then();
-    onStartedTask([refreshUserProfile]).then();
+    onStartedTask([refreshUserProfile, refreshLikedListDetailString]).then();
   }
 }
 
