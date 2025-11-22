@@ -14,15 +14,16 @@ type Store struct {
 	timeLimit time.Duration
 
 	indexFile        *os.File
-	indexMapped      map[string]Index
+	indexMapped      map[string]Index // ID <-> Index
 	indexMappedMutex sync.RWMutex
 	indexFileMutex   sync.Mutex
 
-	muWrite      sync.Mutex
-	currentWrite map[string]*writingFile
+	muWrite      sync.RWMutex
+	currentWrite map[string]*writingFile // URL <-> writingFile
 }
 
 type Index struct {
+	ID           string `json:"id"`
 	Url          string `json:"url"`
 	Path         string `json:"path"`
 	Name         string `json:"name"`

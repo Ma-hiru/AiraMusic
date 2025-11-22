@@ -1,5 +1,7 @@
-import { ipcRenderer } from "electron";
+import { typedIpcRenderInvoke } from "./typed";
 
 export const renderInvokeAPI: RenderInvokeAPI = {
-  message: (msg) => ipcRenderer.invoke("message", msg)
+  message: (msg) => typedIpcRenderInvoke("message", msg),
+  readFile: (local) => typedIpcRenderInvoke("readFile", local),
+  GPUInfo: () => typedIpcRenderInvoke("GPUInfo", undefined)
 };

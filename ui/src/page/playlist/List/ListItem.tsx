@@ -1,6 +1,6 @@
 import { cx } from "@emotion/css";
 import { Log } from "@mahiru/ui/utils/log";
-import { usePlayer } from "@mahiru/ui/ctx/PlayerCtx";
+import { PlayerTrackInfo, usePlayer } from "@mahiru/ui/ctx/PlayerCtx";
 import { NeteaseTrack } from "@mahiru/ui/types/netease-api";
 import { FC, memo, MouseEventHandler, useCallback } from "react";
 import ListItemIndex from "./ListItemIndex";
@@ -27,17 +27,20 @@ const ListItem: FC<ListItemProps> = ({ index, data }) => {
         return;
       }
       Log.trace("ui/ListItem", "Playing track:", track.name);
-      replacePlayList(
-        data.map((track) => ({
-          id: track.id,
-          title: track.name,
-          artist: track.ar,
-          album: track.al,
-          cover: track.al.picUrl,
-          audio: ""
-        })),
-        index
-      );
+      const newPlayList: PlayerTrackInfo[] = [];
+      for (const track of data) {
+        if (track.playable) {
+          newPlayList.push({
+            id: track.id,
+            title: track.name,
+            artist: track.ar,
+            album: track.al,
+            cover: track.al.picUrl,
+            audio: ""
+          });
+        }
+      }
+      replacePlayList(newPlayList, index);
     },
     [data, disabled, index, replacePlayList, track.name]
   );
@@ -55,7 +58,8 @@ const ListItem: FC<ListItemProps> = ({ index, data }) => {
             "hover:bg-black/10": !active,
             "active:bg-black/20": !active,
             "cursor-not-allowed! opacity-50": disabled,
-            "cursor-pointer": !disabled
+            "cursor-pointer": !disabled,
+            "shadow-lg": active
           }
         )}>
         {/*序号*/}

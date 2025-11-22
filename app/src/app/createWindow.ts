@@ -69,7 +69,8 @@ function createWindow(params: { width?: number; height?: number }) {
         preload: preloadPath,
         scrollBounce: false,
         experimentalFeatures: true,
-        webgl: true
+        webgl: true,
+        webSecurity: false
       },
       frame: false,
       show: false,

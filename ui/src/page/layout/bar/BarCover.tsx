@@ -1,15 +1,13 @@
-import { FC, memo, useEffect, useState } from "react";
+import { FC, memo } from "react";
 import { usePlayer } from "@mahiru/ui/ctx/PlayerCtx";
 import { useLayout } from "@mahiru/ui/ctx/LayoutCtx";
-import { wrapCacheUrl } from "@mahiru/ui/api/cache";
+import { setImageURLSize } from "@mahiru/ui/utils/setImageSize";
+import { useFileCache } from "@mahiru/ui/ctx/BlobCachedCtx";
 
 const BarCover: FC<object> = () => {
   const { info } = usePlayer();
   const { TogglePlayerModalVisible } = useLayout();
-  const [cachedCover, setCachedCover] = useState<Nullable<string>>(null);
-  useEffect(() => {
-    setCachedCover(wrapCacheUrl(info.cover));
-  }, [info.cover]);
+  const cachedCover = useFileCache(setImageURLSize(info.cover, "md"));
   return (
     <div className="h-2/3 space-x-2 flex items-center justify-start gap-2">
       <img

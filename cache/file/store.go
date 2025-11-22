@@ -2,9 +2,7 @@ package file
 
 import (
 	"bufio"
-	"context"
 	"encoding/json"
-	"fmt"
 	"io"
 	"log"
 	"os"
@@ -15,50 +13,13 @@ import (
 	"time"
 )
 
-// Check 检查指定 URL 的文件是否已存在于存储中，存在则返回对应的索引和 true，否则返回 false
-func (Self *Store) Check(url string) (Index, bool) {
+// Check 检查指定 id 的文件是否已存在于存储中，存在则返回对应的索引和 true，否则返回 false
+func (Self *Store) Check(id string) (Index, bool) {
 	Self.indexMappedMutex.RLock()
 	defer Self.indexMappedMutex.RUnlock()
 
-	var index, exist = Self.indexMapped[url]
+	var index, exist = Self.indexMapped[id]
 	return index, exist
-}
-
-// Store 存储文件到本地存储中，若文件已存在则直接返回对应索引
-func (Self *Store) Store(ctx context.Context, reader io.Reader, url string, name string, fileType string, size string, hash string, lastModified string) (Index, error) {
-	if index, exist := Self.Check(url); exist {
-		return index, nil
-	}
-
-	var filename = randomFilename()
-	var path = filepath.Join(Self.storeDir, filename)
-	var writtenSize, etag, err = write(ctx, path, reader)
-	if err != nil {
-		return Index{}, err
-	}
-
-	// 检查写入的文件大小是否与预期大小匹配，write 函数不知道预期大小，在这里进行检查
-	if strconv.FormatInt(writtenSize, 10) != size {
-		fmt.Println("written size does not match expected size, removing file:", url)
-		_ = os.Remove(path)
-		return Index{}, fmt.Errorf("written size %d does not match expected size %s", writtenSize, size)
-	}
-	// 如果提供了 hash(md5)，则使用 hash 作为 etag
-	if hash != "" && etag != hash {
-		etag = hash
-	}
-	var index = createIndex(path, url, size, name, fileType, etag, lastModified)
-	err = Self.appendIndex(index)
-	if err != nil {
-		// 写入索引失败，删除已写入的文件
-		_ = os.Remove(path)
-		Self.indexMappedMutex.Lock()
-		delete(Self.indexMapped, url)
-		Self.indexMappedMutex.Unlock()
-		return Index{}, err
-	}
-
-	return index, nil
 }
 
 // Fetch 根据索引信息获取对应的文件读取句柄
@@ -68,7 +29,7 @@ func (Self *Store) Fetch(idx Index) (io.ReadCloser, error) {
 
 // Remove 根据索引信息删除对应的文件，成功删除返回 true，否则返回 false
 func (Self *Store) Remove(idx Index) (bool, error) {
-	var index, exits = Self.Check(idx.Url)
+	var index, exits = Self.Check(idx.ID)
 	if !exits {
 		return false, nil
 	}
@@ -77,7 +38,7 @@ func (Self *Store) Remove(idx Index) (bool, error) {
 		return false, err
 	}
 	Self.indexMappedMutex.Lock()
-	delete(Self.indexMapped, idx.Url)
+	delete(Self.indexMapped, idx.ID)
 	Self.indexMappedMutex.Unlock()
 	// 没有立即更新索引文件，等待下一次 启动时 时更新
 	return true, nil
@@ -183,13 +144,13 @@ func (Self *Store) ClearInvalidFile() error {
 		var fileName = filepath.Base(index.Path)
 		if _, exist := blanks[fileName]; exist {
 			// 先删除索引
-			shouldDeleteIndexes = append(shouldDeleteIndexes, index.Url)
+			shouldDeleteIndexes = append(shouldDeleteIndexes, index.ID)
 			// notExist > blanks ，满足blanks的文件一定在notExist中
 			// 这条分支说明文件本地存在且有索引管理，但是由于是空文件，所以索引和文件都会被删除，移除notExist中的记录
 			delete(notExist, fileName)
 		} else if _, exist := notExist[fileName]; !exist {
 			// 这条分支说明索引存在、本地文件不存在，删除索引
-			shouldDeleteIndexes = append(shouldDeleteIndexes, index.Url)
+			shouldDeleteIndexes = append(shouldDeleteIndexes, index.ID)
 		} else {
 			// 这条分支说明文件本地存在且有索引管理，正常文件，移除notExist中的记录
 			delete(notExist, fileName)
@@ -198,8 +159,8 @@ func (Self *Store) ClearInvalidFile() error {
 	Self.indexMappedMutex.RUnlock()
 	// 先删除所有需要删除的索引
 	Self.indexMappedMutex.Lock()
-	for _, url := range shouldDeleteIndexes {
-		delete(Self.indexMapped, url)
+	for _, id := range shouldDeleteIndexes {
+		delete(Self.indexMapped, id)
 	}
 	Self.indexMappedMutex.Unlock()
 	// 后删除所有的空文件
@@ -215,10 +176,10 @@ func (Self *Store) ClearInvalidFile() error {
 	// 清理过期文件
 	var now = getTime()
 	Self.indexMappedMutex.Lock()
-	for url, index := range Self.indexMapped {
+	for id, index := range Self.indexMapped {
 		if now-index.CreateTime > Self.timeLimit.Nanoseconds() {
 			_ = os.Remove(index.Path)
-			delete(Self.indexMapped, url)
+			delete(Self.indexMapped, id)
 		}
 	}
 	Self.indexMappedMutex.Unlock()
@@ -266,7 +227,7 @@ func (Self *Store) loadIndex(index io.Reader) {
 			continue
 		}
 
-		Self.indexMapped[idx.Url] = idx
+		Self.indexMapped[idx.ID] = idx
 	}
 }
 
@@ -278,7 +239,7 @@ func (Self *Store) appendIndex(index Index) error {
 	}
 
 	Self.indexMappedMutex.Lock()
-	Self.indexMapped[index.Url] = index
+	Self.indexMapped[index.ID] = index
 	Self.indexMappedMutex.Unlock()
 
 	Self.indexFileMutex.Lock()
@@ -358,6 +319,13 @@ func (Self *Store) forceUpdateIndex() {
 }
 
 func (Self *Store) BeginWrite(url, name, fileType, size, etag, lastModified string) io.WriteCloser {
+	Self.muWrite.RLock()
+	if _, ok := Self.currentWrite[url]; ok {
+		Self.muWrite.RUnlock()
+		return &nopCloseWriter{}
+	}
+	Self.muWrite.RUnlock()
+
 	var tmpName = randomFilename() + ".tmp"
 	var tmpPath = filepath.Join(Self.storeDir, tmpName)
 
@@ -381,7 +349,7 @@ func (Self *Store) BeginWrite(url, name, fileType, size, etag, lastModified stri
 	return file
 }
 
-func (Self *Store) EndWrite(url string, success bool) {
+func (Self *Store) EndWrite(id, url string, success bool) {
 	Self.muWrite.Lock()
 	var wFile, ok = Self.currentWrite[url]
 	if !ok {
@@ -413,7 +381,9 @@ func (Self *Store) EndWrite(url string, success bool) {
 		_ = os.Remove(wFile.tmpPath)
 		return
 	}
-
-	var index = createIndex(finalPath, url, wFile.size, wFile.finalName, wFile.fileType, wFile.etag, wFile.lastModified)
+	if id == "" {
+		id = url
+	}
+	var index = createIndex(id, finalPath, url, wFile.size, wFile.finalName, wFile.fileType, wFile.etag, wFile.lastModified)
 	Self.appendIndex(index)
 }

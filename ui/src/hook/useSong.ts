@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { LyricLine } from "@applemusic-like-lyrics/core";
-import { handleNeteaseLyricResponse } from "@mahiru/ui/utils/lyric";
+import { FullVersionLyricLine, handleNeteaseLyricResponse } from "@mahiru/ui/utils/lyric";
 import { getLyric, getMP3 } from "@mahiru/ui/api/track";
 import { useImmer } from "use-immer";
 import { Log } from "@mahiru/ui/utils/log";
@@ -15,8 +15,15 @@ export function useSong() {
   const [playList, setPlayList] = useImmer<PlayerTrackInfo[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [lyricLines, setLyricLines] = useState<LyricLine[]>([]);
-  const progress = useRef(PlayerCtxDefault.progress());
+  const [lyricLines, setLyricLines] = useState<FullVersionLyricLine>({
+    full: [],
+    raw: [],
+    tl: [],
+    rm: []
+  });
+  const [lyricVersion, setLyricVersion] = useState<"raw" | "full" | "tl" | "rm">("tl");
+  const switching = useRef(false);
+  const progress = useRef(PlayerCtxDefault.getProgress());
   /**                        暴露方法                         */
   // 播放控制函数
   const play = useCallback(() => {
@@ -24,6 +31,7 @@ export function useSong() {
     audio && (audio.paused ? audio.play() : audio.pause());
   }, []);
   const nextTrack = useCallback(() => {
+    switching.current = true;
     setCurrentIndex((index) => {
       const nextIndex = index + 1;
       if (nextIndex >= playList.length) {
@@ -33,6 +41,7 @@ export function useSong() {
     });
   }, [playList.length]);
   const lastTrack = useCallback(() => {
+    switching.current = true;
     setCurrentIndex((index) => {
       const lastIndex = index - 1;
       if (lastIndex < 0) {
@@ -84,6 +93,7 @@ export function useSong() {
   );
   const addAndPlayTrack = useCallback(
     (newTrack: PlayerTrackInfo) => {
+      switching.current = true;
       const exists = playList.findIndex((t) => t.id === newTrack.id);
       if (exists === -1) {
         const insertAt = Math.min(currentIndex + 1, playList.length);
@@ -97,17 +107,25 @@ export function useSong() {
     [currentIndex, playList, setPlayList]
   );
   const clearPlayList = useCallback(() => {
+    switching.current = true;
     setPlayList([]);
     setCurrentIndex(0);
   }, [setPlayList]);
   const replacePlayList = useCallback(
     (playList: PlayerTrackInfo[], currentIndex: number) => {
+      switching.current = true;
       setPlayList(playList);
       setCurrentIndex(currentIndex);
     },
     [setPlayList]
   );
-
+  const changeCurrentTime = useCallback((current: number) => {
+    if (current < 0 || current > progress.current.buffered) return;
+    const audio = audioRef.current;
+    if (audio) {
+      audio.currentTime = current;
+    }
+  }, []);
   /**                        状态变化                         */
   // 加载歌词函数
   const loadLyric = useCallback((id: number) => {
@@ -115,6 +133,13 @@ export function useSong() {
       .then((result) => {
         const lyric = handleLyricResponse(result);
         setLyricLines(lyric);
+        if (lyric.tl.length > 0) {
+          setLyricVersion("tl");
+        } else if (lyric.rm.length > 0) {
+          setLyricVersion("rm");
+        } else {
+          setLyricVersion("raw");
+        }
       })
       .catch((err) => {
         Log.error(
@@ -134,9 +159,12 @@ export function useSong() {
       const fetchAudio = () => {
         getMP3(id).then((res) => {
           if (Array.isArray(res?.data) && typeof res.data[0]?.url === "string") {
-            setInfo((draft) => {
-              draft.audio = res.data[0]!.url!;
-            });
+            if (info.audio !== res.data[0]!.url) {
+              setInfo((draft) => {
+                draft.audio = res.data[0]!.url!;
+              });
+            }
+            progress.current.size = res.data[0]!.size;
           } else {
             if (retryCount < maxRetries) {
               retryCount++;
@@ -160,32 +188,8 @@ export function useSong() {
         retryCount = maxRetries;
       };
     },
-    [setInfo]
+    [info.audio, setInfo]
   );
-  // 刷新并播放音频
-  const refreshAudio = useCallback((audio: HTMLAudioElement) => {
-    try {
-      // React 控制 audio 的 src 属性，但为了确保立即生效，调用 load 并尝试 play
-      audio.load();
-      void audio.play().catch((err) => {
-        Log.error(
-          new EqError({
-            raw: err,
-            message: "play request failed or was blocked",
-            label: "ui/ctx/PlayerProvider:playOnInfoAudioChange"
-          })
-        );
-      });
-    } catch (err) {
-      Log.error(
-        new EqError({
-          raw: err,
-          message: "unexpected error when trying to play",
-          label: "ui/ctx/PlayerProvider:playOnInfoAudioChange"
-        })
-      );
-    }
-  }, []);
   // 监听 currentIndex 变化以切换歌曲
   useEffect(() => {
     const candidate = playList[currentIndex];
@@ -193,6 +197,8 @@ export function useSong() {
       const next = candidate;
       setInfo(next);
       loadLyric(next.id);
+    } else {
+      switching.current = false;
     }
   }, [currentIndex, info.id, loadLyric, playList, setInfo]);
   // 监听 info.id 变化以加载音频地址
@@ -205,8 +211,25 @@ export function useSong() {
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio || !info.audio) return;
-    refreshAudio(audio);
-  }, [info.audio, refreshAudio]);
+    audio.src = info.audio;
+    const handleCanPlay = () => {
+      audio.play().catch((err) => {
+        Log.error(
+          new EqError({
+            raw: err,
+            message: "play() failed after canplay",
+            label: "ui/ctx/PlayerProvider:canPlay"
+          })
+        );
+      });
+    };
+
+    audio.addEventListener("canplay", handleCanPlay);
+    audio.load();
+    return () => {
+      audio.removeEventListener("canplay", handleCanPlay);
+    };
+  }, [info.audio]);
   // 监听 audio 播放状态变化
   useEffect(() => {
     const audio = audioRef.current;
@@ -264,7 +287,10 @@ export function useSong() {
       addAndPlayTrack,
       clearPlayList,
       replacePlayList,
-      progress: getProgress
+      getProgress,
+      changeCurrentTime,
+      lyricVersion,
+      setLyricVersion
     }),
     [
       addAndPlayTrack,
@@ -285,60 +311,80 @@ export function useSong() {
       replacePlayList,
       setInfo,
       setPlayList,
-      upVolume
+      upVolume,
+      changeCurrentTime,
+      lyricVersion,
+      setLyricVersion
     ]
   );
 }
 
-function handleLyricResponse(result: NeteaseLyricResponse): LyricLine[] {
+function handleLyricResponse(result: NeteaseLyricResponse): FullVersionLyricLine {
   if (
     result.lrc.lyric === "" &&
     result.klyric.lyric === "" &&
     result.romalrc.lyric === "" &&
     result.tlyric.lyric === ""
   ) {
-    return [
-      {
-        words: [
-          {
-            startTime: 0,
-            endTime: 999999999999,
-            obscene: false,
-            word: "暂无歌词",
-            romanWord: ""
-          }
-        ],
-        translatedLyric: "",
-        romanLyric: "",
-        startTime: 0,
-        endTime: 999999999999,
-        isBG: false,
-        isDuet: false
-      }
-    ];
+    return {
+      full: [noLyricTmp],
+      rm: [noLyricTmp],
+      tl: [noLyricTmp],
+      raw: [noLyricTmp]
+    };
   }
   const parsedLyric = handleNeteaseLyricResponse(result);
-  if (parsedLyric.length === 0) {
-    return [
-      {
-        words: [
-          {
-            startTime: 0,
-            endTime: 999999999999,
-            obscene: false,
-            word: "纯音乐，请欣赏",
-            romanWord: ""
-          }
-        ],
-        translatedLyric: "",
-        romanLyric: "",
-        startTime: 0,
-        endTime: 999999999999,
-        isBG: false,
-        isDuet: false
-      }
-    ];
+  if (!parsedLyric)
+    return {
+      full: [noLyricTmp],
+      rm: [noLyricTmp],
+      tl: [noLyricTmp],
+      raw: [noLyricTmp]
+    };
+  if (parsedLyric.raw.length === 0) {
+    return {
+      full: [pureMusicTmp],
+      rm: [pureMusicTmp],
+      tl: [pureMusicTmp],
+      raw: [pureMusicTmp]
+    };
   } else {
     return parsedLyric;
   }
 }
+
+const noLyricTmp = {
+  words: [
+    {
+      startTime: 0,
+      endTime: 999999999999,
+      obscene: false,
+      word: "暂无歌词",
+      romanWord: ""
+    }
+  ],
+  translatedLyric: "",
+  romanLyric: "",
+  startTime: 0,
+  endTime: 999999999999,
+  isBG: false,
+  isDuet: false
+};
+
+const pureMusicTmp = {
+  words: [
+    {
+      startTime: 0,
+      endTime: 999999999999,
+      obscene: false,
+      word: "纯音乐，请欣赏",
+      romanWord: ""
+    }
+  ],
+  translatedLyric: "",
+  romanLyric: "",
+  startTime: 0,
+  endTime: 999999999999,
+  isBG: false,
+  isDuet: false
+};

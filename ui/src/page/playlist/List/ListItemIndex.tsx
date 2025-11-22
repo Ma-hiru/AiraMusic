@@ -1,5 +1,6 @@
 import { FC, memo } from "react";
 import { cx } from "@emotion/css";
+import { AudioLines } from "lucide-react";
 
 interface ListItemIndexProps {
   index: number;
@@ -16,7 +17,7 @@ const ListItemIndex: FC<ListItemIndexProps> = ({ index, total, active }) => {
         "min-w-[24px]": total >= 100,
         "min-w-[32px]": total >= 1000
       })}>
-      {(index + 1).toString().padStart(2, "0")}
+      {active ? <AudioLines className="w-1/2" /> : (index + 1).toString().padStart(2, "0")}
     </span>
   );
 };

@@ -1,7 +1,8 @@
 import { FC, memo } from "react";
 import NavSideNavItem from "@mahiru/ui/page/layout/nav/NavItem";
-import { useCache } from "@mahiru/ui/ctx/CachedCtx";
+import { useBlobOrFileCache } from "@mahiru/ui/ctx/BlobCachedCtx";
 import { cx } from "@emotion/css";
+import { setImageURLSize } from "@mahiru/ui/utils/setImageSize";
 
 interface Props {
   cover: string;
@@ -14,7 +15,7 @@ interface Props {
 }
 
 const NavPlayListItem: FC<Props> = ({ cover, label, className, count, id, onClick, active }) => {
-  const { cachedURL, init, fail } = useCache(cover, null, "sm");
+  const cachedCover = useBlobOrFileCache(setImageURLSize(cover, "sm"));
   return (
     <div
       className={cx(
@@ -26,13 +27,7 @@ const NavPlayListItem: FC<Props> = ({ cover, label, className, count, id, onClic
         onClick={() => onClick?.(id)}
         prefix={
           <div className="size-10 min-w-10 rounded-md overflow-hidden">
-            <img
-              className="w-full"
-              src={cachedURL as string}
-              onLoad={init}
-              onError={fail}
-              alt={label}
-            />
+            <img className="w-full" src={cachedCover} alt={label} />
           </div>
         }>
         <div className="flex flex-col overflow-hidden">

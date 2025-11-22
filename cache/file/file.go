@@ -110,7 +110,7 @@ func LoadLocalStore(dir string, timeLimit time.Duration) error {
 		timeLimit:        timeLimit,
 		version:          version,
 		crateTime:        createTime,
-		muWrite:          sync.Mutex{},
+		muWrite:          sync.RWMutex{},
 		currentWrite:     make(map[string]*writingFile),
 	}
 	// 重置文件指针到开头，准备加载索引

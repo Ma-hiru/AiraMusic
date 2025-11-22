@@ -1,5 +1,5 @@
 #![allow(non_snake_case)]
-use crate::lyric::model::{LyricLine, LyricTranslatedMeta, RawLyricLine};
+use crate::lyric::model::{FullVersionLyricLine, LyricLine, LyricTranslatedMeta, RawLyricLine};
 use serde_wasm_bindgen::{from_value, to_value};
 use std::collections::HashMap;
 use wasm_bindgen::prelude::wasm_bindgen;
@@ -11,28 +11,39 @@ pub fn parseNeteaseLyric(raw: JsValue, ts: JsValue, rm: JsValue, meta: JsValue) 
     let ts = from_value::<Vec<RawLyricLine>>(ts).unwrap_or_default();
     let rm = from_value::<Vec<RawLyricLine>>(rm).unwrap_or_default();
     let meta = from_value::<LyricTranslatedMeta>(meta).unwrap_or_default();
-    let mut result: Vec<LyricLine> = vec![];
+    let mut full_version: Vec<LyricLine> = vec![];
+    let mut raw_version: Vec<LyricLine> = vec![];
+    let mut tl_version: Vec<LyricLine> = vec![];
+    let mut rm_version: Vec<LyricLine> = vec![];
 
     if !raw.is_empty() {
         let mut timedTranslatedLyricMap = get_rawLyricLine_map(ts);
         let mut timedRomanLyricMap = get_rawLyricLine_map(rm);
-        result = raw
+        full_version = raw
             .into_iter()
             .map(|mut line| {
+                raw_version.push(LyricLine::from(line.clone()));
                 let translatedLine = timedTranslatedLyricMap.remove(&line.startTime);
                 let romanLine = timedRomanLyricMap.remove(&line.startTime);
+                let mut tl_line = line.clone();
+                let mut rm_line = line.clone();
                 if let Some(tl) = translatedLine {
-                    line.translatedLyric = tl;
+                    line.translatedLyric = tl.clone();
+                    tl_line.translatedLyric = tl;
+                    tl_version.push(LyricLine::from(tl_line));
                 }
+
                 if let Some(rl) = romanLine {
-                    line.romanLyric = rl;
+                    line.romanLyric = rl.clone();
+                    rm_line.romanLyric = rl;
+                    rm_version.push(LyricLine::from(rm_line));
                 }
                 LyricLine::from(line)
             })
             .collect();
         if !meta.nickname.is_empty() {
-            if let Some(&LyricLine { endTime, .. }) = result.last() {
-                result.push(LyricLine {
+            if let Some(&LyricLine { endTime, .. }) = full_version.last() {
+                full_version.push(LyricLine {
                     startTime: endTime,
                     endTime: endTime + 10000,
                     words: vec![],
@@ -45,7 +56,13 @@ pub fn parseNeteaseLyric(raw: JsValue, ts: JsValue, rm: JsValue, meta: JsValue) 
         }
     }
 
-    to_value::<Vec<LyricLine>>(&result).unwrap()
+    let result = FullVersionLyricLine {
+        full: full_version,
+        raw: raw_version,
+        tl: tl_version,
+        rm: rm_version,
+    };
+    to_value::<FullVersionLyricLine>(&result).unwrap()
 }
 
 #[wasm_bindgen]

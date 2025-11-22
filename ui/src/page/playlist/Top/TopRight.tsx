@@ -1,10 +1,11 @@
-import { FC, memo, useEffect, useState } from "react";
+import { FC, memo } from "react";
 import { SquarePen } from "lucide-react";
 import Search from "@mahiru/ui/page/playlist/Top/Search";
 import { formatTimeToMMDD } from "@mahiru/ui/utils/time";
 import { NeteasePlaylistDetailResponse } from "@mahiru/ui/types/netease-api";
 import { usePersistZustandShallowStore } from "@mahiru/ui/store";
-import { wrapCacheUrl } from "@mahiru/ui/api/cache";
+import { setImageURLSize } from "@mahiru/ui/utils/setImageSize";
+import { useFileCache } from "@mahiru/ui/ctx/BlobCachedCtx";
 
 interface TopRightProps {
   detail: Nullable<NeteasePlaylistDetailResponse>;
@@ -13,11 +14,7 @@ interface TopRightProps {
 
 const TopRight: FC<TopRightProps> = ({ detail, searchTracks }) => {
   const { data } = usePersistZustandShallowStore(["data"]);
-  const [cachedAvatar, setCachedAvatar] = useState<Nullable<string>>(null);
-  useEffect(() => {
-    detail?.playlist.creator.avatarUrl &&
-      setCachedAvatar(wrapCacheUrl(detail?.playlist.creator.avatarUrl));
-  }, [detail?.playlist.creator.avatarUrl]);
+  const cachedAvatar = useFileCache(setImageURLSize(detail?.playlist.creator.avatarUrl, "md"));
   return (
     <div className="flex h-full flex-col justify-between items-end text-[12px] text-[#7b8290]/80">
       {/*EditBtn*/}

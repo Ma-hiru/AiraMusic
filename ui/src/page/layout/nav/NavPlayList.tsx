@@ -4,7 +4,7 @@ import { NeteasePlaylistSummary } from "@mahiru/ui/types/netease-api";
 import { usePersistZustandShallowStore } from "@mahiru/ui/store";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ArrowBigUp } from "lucide-react";
-import CachedProvider from "@mahiru/ui/ctx/CachedProvider";
+import BlobCachedProvider from "@mahiru/ui/ctx/BlobCachedProvider";
 import NavPlayListItem from "@mahiru/ui/page/layout/nav/NavPlayListItem";
 import { useVirtualList, RowComponentType } from "@mahiru/ui/hook/useVirtualList";
 
@@ -42,9 +42,9 @@ const NavPlayList: FC<object> = () => {
             -webkit-overflow-scrolling: auto;
           `
         )}>
-        <CachedProvider>
+        <BlobCachedProvider>
           <List RowComponent={RowComponent} />
-        </CachedProvider>
+        </BlobCachedProvider>
       </div>
       <button
         className={cx(

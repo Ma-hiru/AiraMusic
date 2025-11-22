@@ -2,12 +2,14 @@ import { FC, memo } from "react";
 import { usePersistZustandShallowStore } from "@mahiru/ui/store";
 import { css, cx } from "@emotion/css";
 import { LogOut, UserRound } from "lucide-react";
-import { useCache } from "@mahiru/ui/ctx/CachedCtx";
+
 import { useLogin, useLogout } from "@mahiru/ui/hook/useLogout";
+import { useFileCache } from "@mahiru/ui/ctx/BlobCachedCtx";
+import { setImageURLSize } from "@mahiru/ui/utils/setImageSize";
 
 const NavAvatar: FC<object> = () => {
   const { data } = usePersistZustandShallowStore(["data"]);
-  const { cachedURL, init, fail } = useCache(data.user?.avatarUrl);
+  const cachedURL = useFileCache(setImageURLSize(data.user?.avatarUrl, "md"));
   const login = useLogin();
   const logout = useLogout();
   return (
@@ -25,8 +27,6 @@ const NavAvatar: FC<object> = () => {
               src={(cachedURL || null) as string}
               alt={data.user?.nickname}
               className="size-7 rounded-full cursor-pointer"
-              onLoad={init}
-              onError={fail}
             />
           ) : (
             <UserRound className="text-white cursor-pointer" onClick={login} />

@@ -5,7 +5,7 @@ import { cx } from "@emotion/css";
 
 const Lyric: FC<object> = () => {
   const lyricPlayerRef = useRef<LyricPlayerRef>(null);
-  const { lyricLines, audioRef, info } = usePlayer();
+  const { lyricLines, audioRef, info, lyricVersion } = usePlayer();
   useEffect(() => {
     if (audioRef.current) {
       let lastTime = -1;
@@ -31,6 +31,21 @@ const Lyric: FC<object> = () => {
       };
     }
   }, [audioRef, info.audio]);
+
+  const chooseVersion = () => {
+    switch (lyricVersion) {
+      case "full":
+        return lyricLines.full;
+      case "tl":
+        return lyricLines.tl;
+      case "rm":
+        return lyricLines.rm;
+      case "raw":
+      default:
+        return lyricLines.raw;
+    }
+  };
+
   return (
     <div
       className={cx(
@@ -40,7 +55,7 @@ const Lyric: FC<object> = () => {
         className="w-full h-full"
         ref={lyricPlayerRef}
         alignAnchor="center"
-        lyricLines={lyricLines}
+        lyricLines={chooseVersion()}
       />
     </div>
   );

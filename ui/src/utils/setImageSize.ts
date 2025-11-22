@@ -1,8 +1,11 @@
-export function setImageURLSize(url: string, size: "sm" | "md" | "lg" | "raw") {
+export function setImageURLSize(url: Undefinable<string>, size: "xs" | "sm" | "md" | "lg" | "raw") {
   if (!url) return url;
   const u = new URL(url);
   let param;
   switch (size) {
+    case "xs":
+      param = "50y50";
+      break;
     case "sm":
       param = "100y100";
       break;

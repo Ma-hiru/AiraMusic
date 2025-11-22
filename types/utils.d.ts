@@ -15,13 +15,9 @@ type Undefinable<T> = T | undefined;
 
 type Optional<T> = T | null | undefined;
 
-type AssertOptional<T extends Optional<any>, U> = T extends null | undefined ? T : U;
-
 type NormalFunc<P extends any[] = never[], R = void> = (...args: P) => R;
 
 type PromiseFunc<P extends any[] = never[], R = void> = (...args: P) => Promise<R>;
-
-type ValidationReject<T> = { field: keyof T; reason: string };
 
 type NormalEventPayload<T extends NormalEvent> = NormalEventMaps[T];
 

@@ -5,38 +5,22 @@ import (
 	"io"
 	"log"
 	"net/http"
-	neturl "net/url"
 
 	"github.com/gin-gonic/gin"
 )
 
 func Check(ctx *gin.Context) {
-	var url = ctx.Query("url")
-	if url == "" {
-		ctx.Status(http.StatusBadRequest)
-		return
-	}
-	//  URL 解码
-	if decoded, err := neturl.QueryUnescape(url); err == nil {
-		url = decoded
-	}
+	var id, _ = getRequireQuery(ctx)
 	var store = file.GetStore()
-	var index, ok = store.Check(url)
+	var index, ok = store.Check(id)
 	ctx.JSON(200, gin.H{
 		"ok":    ok,
 		"index": index,
 	})
 }
+
 func Store(ctx *gin.Context) {
-	var url = ctx.Query("url")
-	if url == "" {
-		ctx.Status(http.StatusBadRequest)
-		return
-	}
-	//  URL 解码
-	if decoded, err := neturl.QueryUnescape(url); err == nil {
-		url = decoded
-	}
+	var id, url = getRequireQuery(ctx)
 	go func() {
 		var httpClient = http.DefaultClient
 		// 创建新请求 保留原始请求的方法和头
@@ -79,27 +63,22 @@ func Store(ctx *gin.Context) {
 		var store = file.GetStore()
 		var buffer = make([]byte, 24*1024)
 		_, err = io.CopyBuffer(store.BeginWrite(url, fileName, fileType, fileSize, etag, lastModified), reader, buffer)
-		store.EndWrite(url, err == nil)
+		store.EndWrite(id, url, err == nil)
 		if err != nil {
 			log.Println("error storing file:", err)
 			return
 		}
 	}()
 
-	ctx.Status(200)
+	ctx.JSON(200, gin.H{
+		"ok": true,
+	})
 }
+
 func Fetch(ctx *gin.Context) {
-	var url = ctx.Query("url")
-	if url == "" {
-		ctx.Status(http.StatusBadRequest)
-		return
-	}
-	//  URL 解码
-	if decoded, err := neturl.QueryUnescape(url); err == nil {
-		url = decoded
-	}
+	var id, _ = getRequireQuery(ctx)
 	var store = file.GetStore()
-	var index, ok = store.Check(url)
+	var index, ok = store.Check(id)
 	if !ok {
 		ctx.Status(404)
 		return
@@ -121,18 +100,11 @@ func Fetch(ctx *gin.Context) {
 	var buffer = make([]byte, 24*1024)
 	_, _ = io.CopyBuffer(ctx.Writer, storeFile, buffer)
 }
+
 func Remove(ctx *gin.Context) {
-	var url = ctx.Query("url")
-	if url == "" {
-		ctx.Status(http.StatusBadRequest)
-		return
-	}
-	//  URL 解码
-	if decoded, err := neturl.QueryUnescape(url); err == nil {
-		url = decoded
-	}
+	var id, _ = getRequireQuery(ctx)
 	var store = file.GetStore()
-	var index, ok = store.Check(url)
+	var index, ok = store.Check(id)
 	if !ok {
 		ctx.Status(404)
 		return
@@ -148,6 +120,7 @@ func Remove(ctx *gin.Context) {
 		"index": index,
 	})
 }
+
 func Clear(ctx *gin.Context) {
 	var store = file.GetStore()
 	count, err := store.Clear()
@@ -161,6 +134,7 @@ func Clear(ctx *gin.Context) {
 		"count": count,
 	})
 }
+
 func Count(ctx *gin.Context) {
 	var store = file.GetStore()
 	var count = store.Count()
@@ -169,6 +143,7 @@ func Count(ctx *gin.Context) {
 		"count": count,
 	})
 }
+
 func Info(ctx *gin.Context) {
 	var store = file.GetStore()
 	var size = store.Size()
@@ -181,6 +156,7 @@ func Info(ctx *gin.Context) {
 		"path":  path,
 	})
 }
+
 func RemoveInvalid(ctx *gin.Context) {
 	var store = file.GetStore()
 	var err = store.ClearInvalidFile()

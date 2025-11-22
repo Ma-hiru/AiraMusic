@@ -1,8 +1,8 @@
 import { createContext, RefObject, useContext } from "react";
-import { LyricLine } from "@applemusic-like-lyrics/core";
 import { EqError } from "@mahiru/ui/utils/err";
 import { NeteaseTrack } from "@mahiru/ui/types/netease-api";
 import { Log } from "@mahiru/ui/utils/log";
+import { FullVersionLyricLine } from "@mahiru/ui/utils/lyric";
 
 export interface PlayerTrackInfo {
   id: number;
@@ -17,6 +17,7 @@ export interface PlayerCtxProgress {
   currentTime: number;
   duration: number;
   buffered: number;
+  size: number;
 }
 
 export interface PlayerCtxType {
@@ -24,9 +25,10 @@ export interface PlayerCtxType {
   isPlaying: boolean;
   info: PlayerTrackInfo;
   currentIndex: number;
-  lyricLines: LyricLine[];
+  lyricLines: FullVersionLyricLine;
   playList: PlayerTrackInfo[];
-  progress: NormalFunc<never[], PlayerCtxProgress>;
+  getProgress: NormalFunc<never[], PlayerCtxProgress>;
+  lyricVersion: "raw" | "full" | "tl" | "rm";
   // refs
   audioRef: RefObject<HTMLAudioElement | null>;
   // actions
@@ -39,16 +41,24 @@ export interface PlayerCtxType {
   setInfo: NormalFunc<[info: PlayerTrackInfo]>;
   setPlayList: NormalFunc<[list: PlayerTrackInfo[]]>;
   setCurrentIndex: NormalFunc<[index: number]>;
+  setLyricVersion: NormalFunc<["raw" | "full" | "tl" | "rm"]>;
   upVolume: NormalFunc<[gap?: number]>;
   downVolume: NormalFunc<[gap?: number]>;
   addTrackToList: NormalFunc<[newTrack: PlayerTrackInfo]>;
   addAndPlayTrack: NormalFunc<[newTrack: PlayerTrackInfo]>;
   removeTrackInList: NormalFunc<[trackId: number]>;
+  changeCurrentTime: NormalFunc<[time: number]>;
 }
 
 export const PlayerCtxDefault = {
   isPlaying: false,
-  lyricLines: [],
+  lyricLines: {
+    full: [],
+    raw: [],
+    tl: [],
+    rm: []
+  },
+  lyricVersion: "raw" as "raw" | "full" | "tl" | "rm",
   audioRef: { current: null },
   playList: [],
   info: {
@@ -67,13 +77,15 @@ export const PlayerCtxDefault = {
     id: 0
   },
   currentIndex: 0,
-  progress: () => ({
+  getProgress: () => ({
     currentTime: 0,
     duration: 0,
-    buffered: 0
+    buffered: 0,
+    size: 0
   }),
   setInfo: blankFunc,
   setPlayList: blankFunc,
+  setLyricVersion: blankFunc,
   setCurrentIndex: blankFunc,
   play: blankFunc,
   mute: blankFunc,
@@ -85,7 +97,8 @@ export const PlayerCtxDefault = {
   lastTrack: blankFunc,
   addAndPlayTrack: blankFunc,
   clearPlayList: blankFunc,
-  replacePlayList: blankFunc
+  replacePlayList: blankFunc,
+  changeCurrentTime: blankFunc
 };
 
 export const PlayerCtx = createContext<PlayerCtxType>(PlayerCtxDefault);

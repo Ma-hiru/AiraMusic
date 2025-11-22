@@ -1,10 +1,5 @@
-import { FC, memo, useEffect, useState } from "react";
-import { formatTimeToMMDD } from "@mahiru/ui/utils/time";
-import { ListMusic, Play, SquarePen } from "lucide-react";
-import { usePersistZustandShallowStore } from "@mahiru/ui/store";
+import { FC, memo } from "react";
 import { NeteasePlaylistDetailResponse } from "@mahiru/ui/types/netease-api";
-import { wrapCacheUrl } from "@mahiru/ui/api/cache";
-import Search from "@mahiru/ui/page/playlist/Top/Search";
 import TopCover from "@mahiru/ui/page/playlist/Top/TopCover";
 import TopRight from "@mahiru/ui/page/playlist/Top/TopRight";
 import TopInfo from "@mahiru/ui/page/playlist/Top/TopInfo";

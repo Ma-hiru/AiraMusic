@@ -33,6 +33,13 @@ export function parseTranslatedLRCWasm(content: string): LyricLine[] {
   return parseTranslatedLRC(raw, false) as LyricLine[];
 }
 
+export type FullVersionLyricLine = {
+  full: LyricLine[];
+  raw: LyricLine[];
+  tl: LyricLine[];
+  rm: LyricLine[];
+};
+
 function parseNeteaseLyricWasm(
   raw: NeteaseLrc | NeteaseKlyric,
   ts: NeteaseTlyric,
@@ -54,7 +61,7 @@ function parseNeteaseLyricWasm(
       translatedLyric || [],
       romanLyric || [],
       meta
-    ) as LyricLine[];
+    ) as FullVersionLyricLine;
   } catch (err) {
     Log.error(
       new EqError({
@@ -63,11 +70,16 @@ function parseNeteaseLyricWasm(
         message: "Failed to parse Netease lyric with wasm parser"
       })
     );
-    return [];
+    return {
+      full: [],
+      raw: [],
+      tl: [],
+      rm: []
+    } as FullVersionLyricLine;
   }
 }
 
-export function handleNeteaseLyricResponse(response: NeteaseLyricResponse): LyricLine[] {
+export function handleNeteaseLyricResponse(response: NeteaseLyricResponse): FullVersionLyricLine {
   const translatedLyric = response.tlyric;
   const romanLyric = response.romalrc;
   const meta = response.transUser;
@@ -78,5 +90,10 @@ export function handleNeteaseLyricResponse(response: NeteaseLyricResponse): Lyri
   } else if (LRC && LRC.lyric) {
     return parseNeteaseLyricWasm(LRC, translatedLyric, romanLyric, "LRC", meta);
   }
-  return [];
+  return {
+    full: [],
+    raw: [],
+    tl: [],
+    rm: []
+  };
 }

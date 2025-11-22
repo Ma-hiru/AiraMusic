@@ -1,20 +1,14 @@
-import { FC, memo, useEffect, useState } from "react";
+import { FC, memo } from "react";
 import { usePersistZustandShallowStore } from "@mahiru/ui/store";
-import { wrapCacheUrl } from "@mahiru/ui/api/cache";
+import { setImageURLSize } from "@mahiru/ui/utils/setImageSize";
+import { useFileCache } from "@mahiru/ui/ctx/BlobCachedCtx";
 
 const TopAvatar: FC<object> = () => {
   const { data } = usePersistZustandShallowStore(["data"]);
-  const [avatar, setAvatar] = useState("");
-  useEffect(() => {
-    data.user?.avatarUrl && setAvatar(wrapCacheUrl(data.user.avatarUrl));
-  }, [data.user?.avatarUrl]);
+  const cachedAvatar = useFileCache(setImageURLSize(data.user?.avatarUrl, "sm"));
   return (
     <div>
-      <img
-        className="size-6 rounded-full"
-        src={(avatar || null) as string}
-        alt={data.user?.nickname}
-      />
+      <img className="size-6 rounded-full" src={cachedAvatar} alt={data.user?.nickname} />
     </div>
   );
 };

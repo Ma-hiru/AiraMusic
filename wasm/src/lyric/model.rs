@@ -86,3 +86,11 @@ impl From<RawLyricLine> for LyricLine {
         }
     }
 }
+
+#[derive(Tsify, Serialize, Deserialize)]
+pub struct FullVersionLyricLine {
+    pub full: Vec<LyricLine>,
+    pub raw: Vec<LyricLine>,
+    pub tl: Vec<LyricLine>,
+    pub rm: Vec<LyricLine>,
+}

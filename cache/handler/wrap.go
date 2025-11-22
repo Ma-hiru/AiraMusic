@@ -6,23 +6,13 @@ import (
 	"io"
 	"log"
 	"net/http"
-	neturl "net/url"
 	"strings"
 
 	"github.com/gin-gonic/gin"
 )
 
 func Wrap(ctx *gin.Context) {
-	// 获取URL参数
-	var url = ctx.Query("url")
-	if url == "" {
-		ctx.Status(http.StatusBadRequest)
-		return
-	}
-	//  URL 解码
-	if decoded, err := neturl.QueryUnescape(url); err == nil {
-		url = decoded
-	}
+	var id, url = getRequireQuery(ctx)
 	var update = ctx.Query("update") == "true"
 	var tl = ctx.Query("time_limit")
 	var timeLimit = int64(0)
@@ -34,11 +24,13 @@ func Wrap(ctx *gin.Context) {
 			return
 		}
 	}
+
 	// 检查文件是否已缓存
 	var store = file.GetStore()
 	var index, ok = store.Check(url)
 	// 文件不存在、请求更新且文件已缓存或文件已过期
 	var needUpdate = !ok || update || timeLimit > 0 && index.IsExpiredMill(timeLimit)
+
 	// 需要更新或未缓存，进行代理
 	if needUpdate {
 		// 如果未缓存，则从源URL获取文件
@@ -84,10 +76,8 @@ func Wrap(ctx *gin.Context) {
 				return
 			}
 		}
-
 		// 设置响应头并开始流式传输
-		// 音频/视频 必须转发 206！
-
+		// 音频/视频 必须转发 206
 		if resp.StatusCode >= 400 {
 			buf, _ := io.ReadAll(resp.Body)
 			ctx.JSON(resp.StatusCode, gin.H{
@@ -124,7 +114,7 @@ func Wrap(ctx *gin.Context) {
 		var buffer = make([]byte, 64*1024)
 
 		_, err = io.CopyBuffer(ctx.Writer, pr, buffer)
-		store.EndWrite(url, err == nil)
+		store.EndWrite(id, url, err == nil)
 
 		return
 	}

@@ -1,7 +1,8 @@
 package file
 
-func createIndex(path string, url string, size string, name string, fileType string, etag string, lastModified string) Index {
+func createIndex(id, path, url, size, name, fileType, etag, lastModified string) Index {
 	return Index{
+		ID:           id,
 		Url:          url,
 		Name:         name,
 		Size:         size,

@@ -7,7 +7,7 @@ import { NeteasePlaylistDetailResponse } from "@mahiru/ui/types/netease-api";
 import { useParams } from "react-router-dom";
 import { Log } from "@mahiru/ui/utils/log";
 import { EqError } from "@mahiru/ui/utils/err";
-import CachedProvider from "@mahiru/ui/ctx/CachedProvider";
+import BlobCachedProvider from "@mahiru/ui/ctx/BlobCachedProvider";
 import { SearchTrack } from "@mahiru/wasm";
 
 const PlayListPage: FC<object> = () => {
@@ -54,9 +54,9 @@ const PlayListPage: FC<object> = () => {
     <div className="w-full h-full px-12 pt-20">
       <Top detail={detail} searchTracks={searchTracks} />
       <Divider />
-      <CachedProvider>
+      <BlobCachedProvider>
         <List filterTracks={filterTracks} />
-      </CachedProvider>
+      </BlobCachedProvider>
     </div>
   );
 };
