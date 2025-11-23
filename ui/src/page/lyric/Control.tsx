@@ -1,6 +1,6 @@
 import React, { FC, memo, useCallback, HTMLAttributes, useRef } from "react";
 import { cx, css } from "@emotion/css";
-import { Drag } from "@mahiru/ui/componets/public/Drag";
+import { Drag, NoDrag } from "@mahiru/ui/componets/public/Drag";
 import { setImageURLSize } from "@mahiru/ui/utils/setImageSize";
 import { formatCurrentTimeToMMSS } from "@mahiru/ui/utils/time";
 import { useLyric } from "@mahiru/ui/hook/useLyric";
@@ -82,7 +82,7 @@ const Control: FC<ControlProps> = ({
             <span>{info?.artist.map((a) => a.name).join("/")}</span>
           </div>
         </div>
-        <div className="w-full flex items-center justify-end gap-4">
+        <NoDrag className="w-full flex items-center justify-end gap-4">
           <div className="text-white">
             {lock ? (
               <LockKeyholeOpen className="size-4 cursor-pointer" onClick={() => setLock(false)} />
@@ -122,7 +122,7 @@ const Control: FC<ControlProps> = ({
             {formatCurrentTimeToMMSS(lyricSync?.currentTime)} /{" "}
             {formatCurrentTimeToMMSS(lyricSync?.duration)}
           </span>
-        </div>
+        </NoDrag>
       </div>
     </Drag>
   );

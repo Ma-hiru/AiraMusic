@@ -173,7 +173,6 @@ function registerWindowControl(mainWindow: BrowserWindow) {
     }
   });
   typedIpcMainOn("sendMessageTo", (_e, { to, data, type, from }) => {
-    Log.trace("app/ipc", `IPC Send Message from ${from} to ${to}:`, type, data);
     const win = WindowManager.getBrowserWindowById(to);
     if (win) {
       typedIpcMainSend(win, "sendMessageTo", { to, data, type, from });

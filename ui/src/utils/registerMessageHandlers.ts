@@ -35,7 +35,6 @@ export function removeMessageHandler(id: string) {
 
 export function registerMessageHandlers() {
   window.node.register.sendMessageToHandler((message) => {
-    Log.trace("ui/registerHandlers", "Received message from", message.from, "type", message.type);
     for (const handler of handlers) {
       try {
         handler.fn(message);
