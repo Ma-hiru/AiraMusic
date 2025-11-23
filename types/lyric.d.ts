@@ -44,6 +44,21 @@ type LyricVersionType = "raw" | "full" | "tl" | "rm";
 
 type LyricInit = {
   lyricLines: FullVersionLyricLine;
+  info: {
+    id: number;
+    title: string;
+    artist: Array<{ alias: string[]; id: number; name: string; tns: string[] }>;
+    album: {
+      id: number;
+      name: string;
+      pic: number;
+      pic_str?: string;
+      picUrl: string;
+      tns: string[];
+    };
+    cover: string;
+    audio: string;
+  };
 };
 
 type LyricSync = {

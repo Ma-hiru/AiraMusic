@@ -10,11 +10,11 @@ import {
 import { isDev } from "@mahiru/ui/utils/dev";
 
 export function startedTask() {
-  if (!isDev) {
-    onlyChangeDay([refreshCookieTask, refreshUserProfile, refreshLikedListDetailString]).then();
+  if (isDev) {
+    void onlyChangeDay([refreshCookieTask, refreshUserProfile, refreshLikedListDetailString]);
   } else {
-    onlyChangeDay([refreshCookieTask]).then();
-    onStartedTask([refreshUserProfile, refreshLikedListDetailString]).then();
+    void onlyChangeDay([refreshCookieTask]);
+    void onStartedTask([refreshUserProfile, refreshLikedListDetailString]);
   }
 }
 

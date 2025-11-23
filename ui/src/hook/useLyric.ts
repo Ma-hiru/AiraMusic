@@ -1,0 +1,53 @@
+import { LyricVersionType } from "@mahiru/ui/ctx/PlayerCtx";
+import { useCallback } from "react";
+
+export function useLyric(
+  lyricVersion: LyricVersionType,
+  setLyricVersion: NormalFunc<[version: LyricVersionType]>,
+  lyricLines: FullVersionLyricLine
+) {
+  const hasRm = lyricLines.rm.length > 0;
+  const hasTl = lyricLines.tl.length > 0;
+  const rmActive = lyricVersion === "rm" || lyricVersion === "full";
+  const tlActive = lyricVersion === "tl" || lyricVersion === "full";
+  const setRm = useCallback(() => {
+    switch (lyricVersion) {
+      case "full":
+        setLyricVersion("tl");
+        break;
+      case "rm":
+        setLyricVersion("raw");
+        break;
+      case "raw":
+        setLyricVersion("rm");
+        break;
+      case "tl":
+        setLyricVersion("full");
+        break;
+    }
+  }, [lyricVersion, setLyricVersion]);
+  const setTl = useCallback(() => {
+    switch (lyricVersion) {
+      case "full":
+        setLyricVersion("rm");
+        break;
+      case "tl":
+        setLyricVersion("raw");
+        break;
+      case "raw":
+        setLyricVersion("tl");
+        break;
+      case "rm":
+        setLyricVersion("full");
+        break;
+    }
+  }, [lyricVersion, setLyricVersion]);
+  return {
+    hasRm,
+    hasTl,
+    rmActive,
+    tlActive,
+    setRm,
+    setTl
+  };
+}

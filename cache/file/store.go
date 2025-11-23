@@ -139,7 +139,7 @@ func (Self *Store) ClearInvalidFile() error {
 	}
 	// 对于空文件，应该全部删除，删除前，查看是否有对应索引存在，有索引删除索引，同时检查notExist的文件是否被管理
 	var shouldDeleteIndexes = make([]string, 0)
-	Self.indexMappedMutex.RUnlock()
+	Self.indexMappedMutex.RLock()
 	for _, index := range Self.indexMapped {
 		var fileName = filepath.Base(index.Path)
 		if _, exist := blanks[fileName]; exist {

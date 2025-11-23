@@ -1,6 +1,7 @@
 import { FC, memo, useCallback, useState } from "react";
 import { Minus, PictureInPicture, Square, SquareMinus, X } from "lucide-react";
 import { NoDrag } from "@mahiru/ui/componets/public/Drag";
+import { useMiniPlayerSync } from "@mahiru/ui/hook/useMiniPlayerSync";
 
 interface ControlButtonProps {
   windowId: WindowType;
@@ -26,11 +27,14 @@ const TopControl: FC<ControlButtonProps> = ({ windowId, maximizable = true }) =>
   const close = useCallback(() => {
     window.node.event.close(windowId);
   }, [windowId]);
-
+  const { openMiniWin } = useMiniPlayerSync();
   return (
     <NoDrag className="flex flex-row gap-4 select-none relative z-10 ease-in-out transition-all">
       <Minus className="size-5 cursor-pointer hover:opacity-50" onClick={minimize} />
-      <PictureInPicture className="size-5 cursor-pointer scale-95 hover:opacity-50" />
+      <PictureInPicture
+        className="size-5 cursor-pointer scale-95 hover:opacity-50"
+        onClick={openMiniWin}
+      />
       {isMax
         ? maximizable && (
             <SquareMinus

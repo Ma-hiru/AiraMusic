@@ -1,7 +1,7 @@
 import ElectronStore from "electron-store";
 import { isCreateMpris, isMacOS } from "../utils/platform";
 import { Log } from "../utils/log";
-import { app, BrowserWindow, protocol } from "electron";
+import { app, BrowserWindow } from "electron";
 import { startNeteaseMusicApiServer } from "../services/ncm";
 import { Server } from "node:http";
 import { createExpressApp } from "../services/express";
@@ -31,7 +31,9 @@ export class APP {
 
   private init() {
     Log.debug("App initialize");
-    this.willQuitAPP = !isMacOS;
+    this.cacheAPP = startCacheServer();
+    this.expressAPP = createExpressApp();
+    this.neteaseMusicAPIServer = startNeteaseMusicApiServer();
     this.store = new ElectronStore<StoreType>({
       defaults: {
         window: {
@@ -45,19 +47,9 @@ export class APP {
         }
       }
     });
-    this.neteaseMusicAPIServer = startNeteaseMusicApiServer();
-    this.expressAPP = createExpressApp();
-    this.cacheAPP = startCacheServer();
-    protocol.registerSchemesAsPrivileged([
-      {
-        scheme: "app",
-        privileges: {
-          secure: true,
-          standard: true
-        }
-      }
-    ]);
+    this.willQuitAPP = !isMacOS;
     handleAppEvents(this);
+
     // disable chromium mpris
     if (isCreateMpris) {
       app.commandLine.appendSwitch(

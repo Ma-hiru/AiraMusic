@@ -1,8 +1,42 @@
 @use "./font";
 
+:root {
+  --amll-lp-color: white;
+}
+
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+  40% {
+    transform: translateX(calc(-100% + 100%)); /* 左移到最左边 */
+  }
+  60% {
+    transform: translateX(calc(-100% + 100%)); /* 停留 */
+  }
+  100% {
+    transform: translateX(0); /* 回到开头 */
+  }
+}
+
+.marquee-animation {
+  display: inline-block;
+  animation: marquee 8s linear infinite;
+  will-change: transform;
+}
+
 html,
 body {
   font-family: "HarmonyOS Sans SC", system-ui;
+  overflow: hidden;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 img {

@@ -14,8 +14,17 @@ export function formatTimeToMMDD(time?: number) {
 }
 
 export function formatDurationToMMSS(duration: number) {
+  if (!duration) return "0:00";
   const minutes = Math.floor(duration / 60000);
   const seconds = Math.floor((duration % 60000) / 1000);
+  const paddedSeconds = seconds.toString().padStart(2, "0");
+  return `${minutes}:${paddedSeconds}`;
+}
+
+export function formatCurrentTimeToMMSS(duration: number) {
+  if (!duration) return "0:00";
+  const minutes = Math.floor(duration / 60);
+  const seconds = Math.floor(duration % 60);
   const paddedSeconds = seconds.toString().padStart(2, "0");
   return `${minutes}:${paddedSeconds}`;
 }

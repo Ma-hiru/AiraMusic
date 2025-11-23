@@ -1,4 +1,5 @@
 import { LikedTrackSearcher } from "@mahiru/wasm";
+import { refreshLikedListDetailString } from "@mahiru/ui/utils/task";
 
 export function splitSoundtrackAlbumTitle(title: string) {
   const keywords = [
@@ -97,5 +98,8 @@ export function initLikedSongsSearcher(raw: string) {
 }
 
 export function getLikedSongsSearcher() {
+  if (likedTrackSearcher === null) {
+    void refreshLikedListDetailString();
+  }
   return likedTrackSearcher;
 }

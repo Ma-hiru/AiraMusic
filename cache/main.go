@@ -18,7 +18,7 @@ import (
 
 func main() {
 	handleExit()
-	initStore(time.Hour * 24 * 7)
+	go initStore(time.Hour * 24 * 7)
 	initHTTP("127.0.0.1:8824")
 }
 
@@ -27,14 +27,24 @@ func initStore(timeLimit time.Duration) {
 	var localStorePath = filepath.Join(os.TempDir(), "mahiru")
 	if err := file.CreateLocalStore(localStorePath, 1); err != nil {
 		if !errors.Is(err, file.ErrStoreExist) {
-			panic(err)
+			fmt.Println("Failed to create local store:", err)
+			os.Exit(114514)
 		}
 		fmt.Println("Local store already exists, loading existing store...")
 	}
 	if err := file.LoadLocalStore(localStorePath, timeLimit); err != nil {
-		panic(err)
+		fmt.Println("Failed to load local store:", err)
+		os.Exit(114514)
 	}
 	fmt.Println("Local store initialized at:", localStorePath)
+	go func() {
+		var store = file.GetStore()
+		fmt.Println("Clearing invalid files from store...")
+		err := store.ClearInvalidFile()
+		if err != nil {
+			fmt.Println("Error clearing invalid files:", err)
+		}
+	}()
 }
 
 func initHTTP(port string) {

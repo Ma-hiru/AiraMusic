@@ -1,45 +1,15 @@
 import { FC, memo, useCallback } from "react";
 import { usePlayer } from "@mahiru/ui/ctx/PlayerCtx";
 import { cx } from "@emotion/css";
+import { useLyric } from "@mahiru/ui/hook/useLyric";
 
 const LyricChange: FC<object> = () => {
   const { lyricVersion, setLyricVersion, lyricLines } = usePlayer();
-  const hasRm = lyricLines.rm.length > 0;
-  const hasTl = lyricLines.tl.length > 0;
-  const rmActive = lyricVersion === "rm" || lyricVersion === "full";
-  const tlActive = lyricVersion === "tl" || lyricVersion === "full";
-  const setRm = useCallback(() => {
-    switch (lyricVersion) {
-      case "full":
-        setLyricVersion("tl");
-        break;
-      case "rm":
-        setLyricVersion("raw");
-        break;
-      case "raw":
-        setLyricVersion("rm");
-        break;
-      case "tl":
-        setLyricVersion("full");
-        break;
-    }
-  }, [lyricVersion, setLyricVersion]);
-  const setTl = useCallback(() => {
-    switch (lyricVersion) {
-      case "full":
-        setLyricVersion("rm");
-        break;
-      case "tl":
-        setLyricVersion("raw");
-        break;
-      case "raw":
-        setLyricVersion("tl");
-        break;
-      case "rm":
-        setLyricVersion("full");
-        break;
-    }
-  }, [lyricVersion, setLyricVersion]);
+  const { hasTl, hasRm, setRm, setTl, rmActive, tlActive } = useLyric(
+    lyricVersion,
+    setLyricVersion,
+    lyricLines
+  );
   return (
     <div className="absolute right-8 bottom-10 text-white flex flex-col gap-2">
       <span

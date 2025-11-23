@@ -8,6 +8,7 @@ import SettingsPage from "@mahiru/ui/page/settings/SettingsPage";
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import PlayListPage from "@mahiru/ui/page/playlist/PlayListPage";
 import LyricPage from "@mahiru/ui/page/lyric/LyricPage";
+import MiniPlayerPage from "@mahiru/ui/page/mini/MiniPlayerPage";
 
 const router = createBrowserRouter([
   {
@@ -43,6 +44,10 @@ const router = createBrowserRouter([
   {
     path: "/lyric",
     element: <LyricPage />
+  },
+  {
+    path: "/mini",
+    element: <MiniPlayerPage />
   },
   {
     path: "/settings",

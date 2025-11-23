@@ -10,12 +10,14 @@ const BarCover: FC<object> = () => {
   const cachedCover = useFileCache(setImageURLSize(info.cover, "md"));
   return (
     <div className="h-2/3 space-x-2 flex items-center justify-start gap-2">
-      <img
-        className="h-full rounded-md cursor-pointer"
-        src={(cachedCover || null) as string}
-        alt={info.title}
-        onClick={() => TogglePlayerModalVisible(true)}
-      />
+      <div className="h-full rounded-md overflow-hidden">
+        <img
+          className="h-full cursor-pointer"
+          src={(cachedCover || null) as string}
+          alt={info.title}
+          onClick={() => TogglePlayerModalVisible(true)}
+        />
+      </div>
       <div className="flex flex-col gap-0 items-start">
         <div className="text-sm font-medium text-center">{info.title}</div>
         <div className="text-xs text-center text-gray-500">

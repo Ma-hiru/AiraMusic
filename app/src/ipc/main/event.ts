@@ -11,6 +11,7 @@ import { isDev } from "../../utils/dev";
 export function registerEventHandlers(mainWindow: BrowserWindow, store: ElectronStore<StoreType>) {
   registerLoginWindowControl();
   registerLyricWindowControl();
+  registerMiniplayerWindowControl();
   registerWindowControl(mainWindow);
 }
 
@@ -57,7 +58,7 @@ function registerLoginWindowControl() {
 
 function registerLyricWindowControl() {
   typedIpcMainOn("createLyricWindow", () => {
-    const { effectiveWidth: width, effectiveHeight: height } = getEffectiveWindowSize(0.22, 4);
+    const { effectiveWidth: width, effectiveHeight: height } = getEffectiveWindowSize(0.15, 6);
     const LyricWindow = WindowManager.createBrowserWindow(
       {
         width,
@@ -67,6 +68,7 @@ function registerLyricWindowControl() {
         webPreferences: {
           preload: preloadPath
         },
+        alwaysOnTop: true,
         title: "Lyric",
         resizable: true,
         minimizable: false,
@@ -93,6 +95,46 @@ function registerLyricWindowControl() {
   });
 }
 
+function registerMiniplayerWindowControl() {
+  typedIpcMainOn("createMiniplayerWindow", () => {
+    const { effectiveWidth: width, effectiveHeight: height } = getEffectiveWindowSize(0.05, 4.5);
+    const MiniplayerWindow = WindowManager.createBrowserWindow(
+      {
+        width,
+        height,
+        transparent: true,
+        backgroundColor: "#00000000",
+        webPreferences: {
+          preload: preloadPath
+        },
+        alwaysOnTop: true,
+        title: "miniplayer",
+        resizable: true,
+        maxHeight: height,
+        minimizable: false,
+        maximizable: false,
+        titleBarStyle: "hidden",
+        frame: false
+      },
+      "miniplayer",
+      WindowExits.IGNORE
+    );
+    if (isDev()) {
+      MiniplayerWindow.loadURL("http://localhost:5173/mini").catch((err) => {
+        Log.error("app/ipc", "Failed to load mini window URL:", err);
+      });
+    } else {
+      MiniplayerWindow.loadURL("http://localhost:27232/mini").catch((err) => {
+        Log.error("app/ipc", "Failed to load mini window URL:", err);
+      });
+    }
+    MiniplayerWindow.on("ready-to-show", () => {
+      MiniplayerWindow.show();
+      isDev() && MiniplayerWindow.webContents.openDevTools();
+    });
+  });
+}
+
 function registerWindowControl(mainWindow: BrowserWindow) {
   typedIpcMainOn("close", (_e, type) => {
     Log.trace("app/ipc", "IPC Close Window:", type);
@@ -114,6 +156,20 @@ function registerWindowControl(mainWindow: BrowserWindow) {
     const win = WindowManager.getBrowserWindowById(type);
     if (win && win.isMaximized()) {
       win.unmaximize();
+    }
+  });
+  typedIpcMainOn("hidden", (_e, type) => {
+    Log.trace("app/ipc", "IPC Hidden Window:", type);
+    const win = WindowManager.getBrowserWindowById(type);
+    if (win && win.isVisible()) {
+      win.hide();
+    }
+  });
+  typedIpcMainOn("visible", (_e, type) => {
+    Log.trace("app/ipc", "IPC Visible Window:", type);
+    const win = WindowManager.getBrowserWindowById(type);
+    if (win && !win.isVisible()) {
+      win.show();
     }
   });
   typedIpcMainOn("sendMessageTo", (_e, { to, data, type, from }) => {

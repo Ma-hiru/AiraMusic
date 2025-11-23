@@ -9,16 +9,28 @@ type NormalEventMaps = {
   isMaximized: boolean;
   createLoginWindow: never;
   createLyricWindow: never;
+  createMiniplayerWindow: never;
   sendMessageTo: {
     to: WindowType;
     from: WindowType;
     data: string;
-    type: "login" | "lyricSync" | "lyricInit" | "lyricClose";
+    type:
+      | "login"
+      | "lyricSync"
+      | "lyricInit"
+      | "lyricClose"
+      | "lyricVersionChange"
+      | "closeMiniplayer"
+      | "nextTrack"
+      | "lastTrack"
+      | "playTrack";
   };
   close: WindowType;
   minimize: WindowType;
   maximize: WindowType;
   unmaximize: WindowType;
+  hidden: WindowType;
+  visible: WindowType;
 };
 
 type NormalEventRegister = {

@@ -1,8 +1,10 @@
-import { FC, memo, useEffect, useRef, useState } from "react";
+import React, { FC, memo, useCallback, useEffect, useRef, useState } from "react";
 import { addMessageHandler, removeMessageHandler } from "@mahiru/ui/utils/registerMessageHandlers";
 import { useImmer } from "use-immer";
-import { Drag } from "@mahiru/ui/componets/public/Drag";
 import { LyricPlayer, LyricPlayerRef } from "@mahiru/ui/componets/player/LyricPlayer";
+import { cx } from "@emotion/css";
+import { changeLyricComponentColorByCSSVar } from "@mahiru/ui/utils/color";
+import Control from "@mahiru/ui/page/lyric/Control";
 
 const LyricPage: FC<object> = () => {
   const lyricPlayerRef = useRef<LyricPlayerRef>(null);
@@ -13,14 +15,21 @@ const LyricPage: FC<object> = () => {
     rm: [],
     tl: []
   });
+  const [info, setInfo] = useState<Nullable<LyricInit["info"]>>(null);
   const [lyricSync, setLyricSync] = useImmer<LyricSync>({
     currentTime: 0,
     duration: 0,
     lyricVersion: "raw",
     isPlaying: false
   });
+  const [showBg, setShowBg] = useState(false);
+  const [color, setColor] = useState("#ffffff");
+  const [lock, setLock] = useState(false);
+
+  const showBgTimer = useRef<Nullable<ReturnType<typeof setTimeout>>>(null);
   const getSync = useRef(lyricSync);
   getSync.current = lyricSync;
+  // 同步信息
   useEffect(() => {
     addMessageHandler((message) => {
       const { data, type, to, from } = message;
@@ -28,6 +37,7 @@ const LyricPage: FC<object> = () => {
         if (type === "lyricInit") {
           const lyricInit = JSON.parse(data) as LyricInit;
           setLyricLines(lyricInit.lyricLines);
+          setInfo(lyricInit.info);
           update((p) => p + 1);
         } else if (type === "lyricSync") {
           const lyricSync = JSON.parse(data) as LyricSync;
@@ -46,6 +56,7 @@ const LyricPage: FC<object> = () => {
       removeMessageHandler("lyric-sync-handler");
     };
   }, [setLyricSync]);
+  // 歌词播放同步
   useEffect(() => {
     let rafId = 0;
     let lastTime = 0;
@@ -69,34 +80,100 @@ const LyricPage: FC<object> = () => {
 
     return () => cancelAnimationFrame(rafId);
   }, [lyricSync.isPlaying]);
-  const chooseVersion = () => {
-    switch (lyricSync.lyricVersion) {
-      case "full":
-        return lyricLines.full;
-      case "tl":
-        return lyricLines.tl;
-      case "rm":
-        return lyricLines.rm;
-      case "raw":
-      default:
-        return lyricLines.raw;
-    }
-  };
+  // 颜色变化
+  useEffect(() => {
+    changeLyricComponentColorByCSSVar(color);
+  }, [color]);
+
+  const handleClick = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (lock) return;
+      if (showBg) {
+        setShowBg(false);
+        return;
+      }
+      setShowBg(true);
+      showBgTimer.current && clearTimeout(showBgTimer.current);
+      showBgTimer.current = setTimeout(() => {
+        setShowBg(false);
+      }, 2500);
+    },
+    [lock, showBg]
+  );
+  const handleMouseOver = useCallback(
+    (e: React.MouseEvent) => {
+      if (lock) return;
+      e.preventDefault();
+      setShowBg(true);
+      showBgTimer.current && clearTimeout(showBgTimer.current);
+      showBgTimer.current = setTimeout(() => {
+        setShowBg(false);
+      }, 2500);
+    },
+    [lock]
+  );
+  // 初始显示背景
+  useEffect(() => {
+    setShowBg(true);
+    showBgTimer.current && clearTimeout(showBgTimer.current);
+    showBgTimer.current = setTimeout(() => {
+      setShowBg(false);
+    }, 2500);
+  }, []);
   return (
-    <Drag className="w-screen h-screen text-white relative overflow-hidden flex justify-center items-center">
-      <div className="w-full h-1/2 overflow-hidden contain-[paint_layout] mix-blend-plus-lighter transition-normal ease-in-out text-center">
-        <LyricPlayer
-          ref={lyricPlayerRef}
-          playing={lyricSync.isPlaying}
-          className="w-full h-full"
-          alignAnchor="center"
-          hidePassedLines
-          lyricLines={chooseVersion()}
-          enableScale={false}
-          enableSpring={false}
-        />
+    <div className="w-screen h-screen overflow-hidden relative flex flex-col">
+      <div
+        className={cx(
+          "w-screen flex-1 relative overflow-hidden flex flex-col justify-center items-center ease-in-out transition-all duration-300",
+          showBg && "bg-black/10 rounded-lg",
+          lock && "bg-transparent"
+        )}
+        onClick={handleClick}
+        onMouseOver={handleMouseOver}>
+        <div
+          className={cx(
+            "w-full h-full overflow-hidden contain-[paint_layout] mix-blend-plus-lighter transition-normal ease-in-out text-center",
+            lock && "pointer-events-none"
+          )}>
+          <LyricPlayer
+            ref={lyricPlayerRef}
+            playing={lyricSync.isPlaying}
+            className="w-full h-full"
+            alignAnchor="center"
+            hidePassedLines
+            lyricLines={chooseVersion(lyricSync, lyricLines)}
+            enableScale={false}
+            enableSpring={false}
+          />
+        </div>
       </div>
-    </Drag>
+      <Control
+        color={color}
+        lyricSync={lyricSync}
+        info={info}
+        showBg={showBg}
+        setShowBg={setShowBg}
+        lyricLines={lyricLines}
+        lock={lock}
+        setLock={setLock}
+      />
+    </div>
   );
 };
 export default memo(LyricPage);
+
+function chooseVersion(lyricSync: LyricSync, lyricLines: FullVersionLyricLine) {
+  switch (lyricSync.lyricVersion) {
+    case "full":
+      return lyricLines.full;
+    case "tl":
+      return lyricLines.tl;
+    case "rm":
+      return lyricLines.rm;
+    case "raw":
+    default:
+      return lyricLines.raw;
+  }
+}
