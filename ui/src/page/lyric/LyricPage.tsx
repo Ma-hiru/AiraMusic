@@ -123,7 +123,7 @@ const LyricPage: FC<object> = () => {
     }, 2500);
   }, []);
   return (
-    <div className="w-screen h-screen overflow-hidden relative flex flex-col">
+    <div className="w-screen h-screen overflow-hidden relative flex rounded-md flex-col-reverse">
       <div
         className={cx(
           "w-screen flex-1 relative overflow-hidden flex flex-col justify-center items-center ease-in-out transition-all duration-300",

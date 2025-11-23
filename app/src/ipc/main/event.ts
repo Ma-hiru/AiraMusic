@@ -58,7 +58,7 @@ function registerLoginWindowControl() {
 
 function registerLyricWindowControl() {
   typedIpcMainOn("createLyricWindow", () => {
-    const { effectiveWidth: width, effectiveHeight: height } = getEffectiveWindowSize(0.15, 6);
+    const { effectiveWidth: width, effectiveHeight: height } = getEffectiveWindowSize(0.15, 5.9);
     const LyricWindow = WindowManager.createBrowserWindow(
       {
         width,
@@ -97,7 +97,7 @@ function registerLyricWindowControl() {
 
 function registerMiniplayerWindowControl() {
   typedIpcMainOn("createMiniplayerWindow", () => {
-    const { effectiveWidth: width, effectiveHeight: height } = getEffectiveWindowSize(0.05, 4.5);
+    const { effectiveWidth: width, effectiveHeight: height } = getEffectiveWindowSize(0.08, 4.45);
     const MiniplayerWindow = WindowManager.createBrowserWindow(
       {
         width,
