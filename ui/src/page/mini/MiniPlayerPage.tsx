@@ -3,6 +3,8 @@ import { Drag, NoDrag } from "@mahiru/ui/componets/public/Drag";
 import { addMessageHandler, removeMessageHandler } from "@mahiru/ui/utils/registerMessageHandlers";
 import { useImmer } from "use-immer";
 import { Pause, Play, SkipBack, SkipForward, X } from "lucide-react";
+import { useFileCache } from "@mahiru/ui/ctx/BlobCachedCtx";
+import { setImageURLSize } from "@mahiru/ui/utils/setImageSize";
 
 const MiniPlayerPage: FC<object> = () => {
   const [_, update] = useState(0);
@@ -37,7 +39,7 @@ const MiniPlayerPage: FC<object> = () => {
       removeMessageHandler("mini-player-sync-handler");
     };
   }, [setLyricSync]);
-
+  const cachedCover = useFileCache(setImageURLSize(info?.cover, "xs"));
   const percent = lyricSync.duration
     ? Math.min(((lyricSync.currentTime || 0) / lyricSync.duration) * 100, 100)
     : 0;
@@ -46,7 +48,7 @@ const MiniPlayerPage: FC<object> = () => {
       <div className="h-12 w-12 rounded-md overflow-hidden">
         <img
           className="w-full h-full object-cover"
-          src={info?.cover || undefined}
+          src={cachedCover || undefined}
           alt={info?.title}
         />
       </div>
