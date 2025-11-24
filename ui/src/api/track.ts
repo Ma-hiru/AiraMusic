@@ -92,10 +92,14 @@ export function getTrackDetail(ids: string | number): Promise<TrackDetailResult>
  * @param id - 音乐 id
  */
 export async function getLyric(id: number): Promise<NeteaseLyricResponse> {
-  const url = "http://127.0.0.1:10754/playlist/lyric?id=" + id;
+  const url = "http://127.0.0.1:10754/lyric?id=" + id;
   const check = await cacheCheck(url);
   if (check.ok) {
-    return (await cacheFetch(url).then((res) => res.json())) as NeteaseLyricResponse;
+    try {
+      return (await cacheFetch(url).then((res) => res.json())) as NeteaseLyricResponse;
+    } catch {
+      void cacheStore(url, url);
+    }
   } else {
     void cacheStore(url, url);
   }

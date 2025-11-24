@@ -4,20 +4,26 @@ import PlayerBar from "@mahiru/ui/page/layout/bar/Bar";
 import NavSide from "@mahiru/ui/page/layout/nav/Nav";
 import KeepAliveOutlet from "@mahiru/ui/componets/public/KeepAliveOutlet";
 import PlayerModal from "@mahiru/ui/page/layout/model/Modal";
+import PlayerProvider from "@mahiru/ui/ctx/PlayerProvider";
+import LayoutProvider from "@mahiru/ui/ctx/LayoutProvider";
 
 const Layout: FC<object> = () => {
   return (
-    <div className="relative w-screen h-screen overflow-hidden">
-      <div className="w-screen h-screen overflow-hidden relative bg-[#f7f9fc]">
-        <TopBar />
-        <NavSide />
-        <PlayerBar />
-        <div className="w-screen h-screen pb-18 pl-48">
-          <KeepAliveOutlet />
+    <PlayerProvider>
+      <LayoutProvider>
+        <div className="relative w-screen h-screen overflow-hidden">
+          <div className="w-screen h-screen overflow-hidden relative bg-[#f7f9fc]">
+            <TopBar />
+            <NavSide />
+            <PlayerBar />
+            <div className="w-screen h-screen pb-18 pl-48">
+              <KeepAliveOutlet />
+            </div>
+          </div>
+          <PlayerModal />
         </div>
-      </div>
-      <PlayerModal />
-    </div>
+      </LayoutProvider>
+    </PlayerProvider>
   );
 };
 export default Layout;

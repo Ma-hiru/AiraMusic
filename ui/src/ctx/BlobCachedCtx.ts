@@ -2,7 +2,6 @@ import { createContext, useContext, useLayoutEffect, useState } from "react";
 import { Log } from "@mahiru/ui/utils/log";
 import { EqError } from "@mahiru/ui/utils/err";
 import { cacheCheck, cacheStore } from "@mahiru/ui/utils/cache";
-import { toFileURL } from "@mahiru/wasm";
 
 export const BlobCachedCtx = createContext(new Map<string | number, string>());
 
@@ -35,10 +34,10 @@ export function useBlobOrFileCache(
         // 二级缓存
         const check = await cacheCheck(id).catch(() => null);
         if (canceled) return;
-        if (check?.ok && check.index.path) {
+        if (check?.ok && check.index.file) {
           // 二级缓存命中
           if (forceBlob) {
-            const readResult = await window.node.invoke.readFile(check.index.path);
+            const readResult = await window.node.invoke.readFile(check.index.file);
             if (!canceled && readResult.ok) {
               const blob = new Blob([readResult.data!], { type: check.index.type });
               const objectURL = URL.createObjectURL(blob);
@@ -47,7 +46,7 @@ export function useBlobOrFileCache(
               return;
             }
           } else {
-            const path = toFileURL(check.index.path);
+            const path = check.index.file;
             if (!canceled && path !== cachedURL) {
               setCachedURL(path);
               return;
@@ -94,8 +93,8 @@ export function useFileCache(url?: string, id: string | number | undefined = url
     const run = async () => {
       const check = await cacheCheck(id).catch(() => null);
       if (canceled) return;
-      if (check?.ok && check.index.path) {
-        const path = toFileURL(check.index.path);
+      if (check?.ok && check.index.file) {
+        const path = check.index.file;
         if (!canceled && path !== finalURL) {
           setFinalURL(path);
         }

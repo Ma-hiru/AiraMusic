@@ -26,6 +26,7 @@ type Index struct {
 	ID           string `json:"id"`
 	Url          string `json:"url"`
 	Path         string `json:"path"`
+	File         string `json:"file"`
 	Name         string `json:"name"`
 	Type         string `json:"type"`
 	Size         string `json:"size"`

@@ -8,6 +8,7 @@ import (
 	"io"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -122,6 +123,30 @@ func randomFilename() string {
 // getTime 获取当前时间的纳秒级时间戳。
 func getTime() int64 {
 	return time.Now().UnixNano()
+}
+
+func pathToFileURL(path string) string {
+	var normalized = strings.TrimSpace(path)
+	if normalized == "" {
+		return ""
+	}
+
+	var isWindowsPath = strings.Contains(normalized, "\\") || (len(normalized) > 1 && normalized[1] == ':')
+	if isWindowsPath {
+		normalized = strings.ReplaceAll(normalized, "\\", "/")
+		if len(normalized) > 2 && normalized[1] == ':' {
+			normalized = "/" + normalized
+		}
+	}
+	if strings.HasPrefix(normalized, "file://") {
+		return normalized
+	}
+
+	if strings.HasSuffix(normalized, "/") {
+		return "file://" + normalized
+	}
+
+	return "file:///" + normalized
 }
 
 type nopCloseWriter struct{}

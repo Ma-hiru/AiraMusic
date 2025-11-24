@@ -86,7 +86,7 @@ const MiniPlayerPage: FC<object> = () => {
             />
           )}
           <SkipForward
-            className="hover:scale-90 active:scale-80 cursor-pointer ease-in-out transition-all duration-300 size-3"
+            className="size-3 hover:scale-90 hover:opacity-50 active:scale-80 cursor-pointer ease-in-out transition-all duration-300"
             onClick={nextTrack}
             fill={"#171b20"}
           />

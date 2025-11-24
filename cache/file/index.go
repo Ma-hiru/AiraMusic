@@ -11,6 +11,7 @@ func createIndex(id, path, url, size, name, fileType, etag, lastModified string)
 		CreateTime:   getTime(),
 		ETag:         etag,
 		LastModified: lastModified,
+		File:         pathToFileURL(path),
 	}
 }
 

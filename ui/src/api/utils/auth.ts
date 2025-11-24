@@ -1,7 +1,7 @@
 import Cookies from "js-cookie";
 import { logout } from "../auth";
 import { usePersistZustandStore } from "@mahiru/ui/store";
-import router from "@mahiru/ui/router";
+import { router } from "@mahiru/ui/router";
 
 export function setCookies(raw: string) {
   const cookies = raw.split(";;");

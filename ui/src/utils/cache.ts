@@ -43,6 +43,7 @@ export type StoreIndex = {
   id: string;
   url: string;
   path: string;
+  file: string;
   name: string;
   type: string;
   size: number;
