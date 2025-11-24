@@ -1,12 +1,12 @@
 import ElectronStore from "electron-store";
 import { BrowserWindow } from "electron";
-import { StoreType } from "../../app";
 import { typedIpcMainOn, typedIpcMainSend } from "./typed";
-import { getEffectiveWindowSize } from "../../utils/screen";
+import { checkPositionOutScreenBounds, getEffectiveWindowSize } from "../../utils/screen";
 import { WindowExits, WindowManager } from "../../window";
 import { preloadPath } from "../../utils/path";
 import { Log } from "../../utils/log";
 import { isDev } from "../../utils/dev";
+import { Store, StoreType } from "../../app/store";
 
 export function registerEventHandlers(mainWindow: BrowserWindow, store: ElectronStore<StoreType>) {
   registerLoginWindowControl();
@@ -30,7 +30,9 @@ function registerLoginWindowControl() {
         minimizable: true,
         maximizable: false,
         titleBarStyle: "hidden",
-        frame: false
+        frame: false,
+        type: "toolbar",
+        skipTaskbar: true
       },
       "login",
       WindowExits.IGNORE
@@ -74,11 +76,25 @@ function registerLyricWindowControl() {
         minimizable: false,
         maximizable: false,
         titleBarStyle: "hidden",
-        frame: false
+        frame: false,
+        type: "toolbar",
+        skipTaskbar: true
       },
       "lyric",
       WindowExits.IGNORE
     );
+    const { x, y } = Store.get("lyric");
+    if (checkPositionOutScreenBounds(x, y)) {
+      LyricWindow.center();
+    } else {
+      LyricWindow.setBounds({ x, y });
+    }
+    LyricWindow.on("resized", () => {
+      Store.set("lyric", LyricWindow.getBounds());
+    });
+    LyricWindow.on("move", () => {
+      Store.set("lyric", LyricWindow.getBounds());
+    });
     if (isDev()) {
       LyricWindow.loadURL("http://localhost:5173/lyric").catch((err) => {
         Log.error("app/ipc", "Failed to load lyric window URL:", err);
@@ -90,7 +106,6 @@ function registerLyricWindowControl() {
     }
     LyricWindow.on("ready-to-show", () => {
       LyricWindow.show();
-      isDev() && LyricWindow.webContents.openDevTools();
     });
   });
 }
@@ -114,11 +129,25 @@ function registerMiniplayerWindowControl() {
         minimizable: false,
         maximizable: false,
         titleBarStyle: "hidden",
-        frame: false
+        frame: false,
+        type: "toolbar",
+        skipTaskbar: true
       },
       "miniplayer",
       WindowExits.IGNORE
     );
+    const { x, y } = Store.get("mini");
+    if (checkPositionOutScreenBounds(x, y)) {
+      MiniplayerWindow.center();
+    } else {
+      MiniplayerWindow.setBounds({ x, y });
+    }
+    MiniplayerWindow.on("resized", () => {
+      Store.set("mini", MiniplayerWindow.getBounds());
+    });
+    MiniplayerWindow.on("move", () => {
+      Store.set("mini", MiniplayerWindow.getBounds());
+    });
     if (isDev()) {
       MiniplayerWindow.loadURL("http://localhost:5173/mini").catch((err) => {
         Log.error("app/ipc", "Failed to load mini window URL:", err);
@@ -130,7 +159,6 @@ function registerMiniplayerWindowControl() {
     }
     MiniplayerWindow.on("ready-to-show", () => {
       MiniplayerWindow.show();
-      isDev() && MiniplayerWindow.webContents.openDevTools();
     });
   });
 }

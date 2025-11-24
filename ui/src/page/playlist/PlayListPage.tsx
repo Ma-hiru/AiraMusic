@@ -17,10 +17,7 @@ interface PlayListPageProps {
 
 const PlayListPage: FC<PlayListPageProps> = ({ setId, isLikedList }) => {
   const { id: defaultID } = useParams();
-  let id: Undefinable<string> = defaultID;
-  if (setId) {
-    id = String(setId);
-  }
+  const id: Undefinable<string> = setId ? String(setId) : defaultID;
   const [detail, setDetail] = useState<Nullable<NeteasePlaylistDetailResponse>>(null);
 
   const [filterTracks, setFilterTracks] = useState<

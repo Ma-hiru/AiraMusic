@@ -11,6 +11,7 @@ type ControlProps = HTMLAttributes<HTMLDivElement> & {
   showBg: boolean;
   setShowBg: (show: boolean) => void;
   color: string;
+  setColor: (color: string) => void;
   info: Nullable<LyricInit["info"]>;
   lyricSync: LyricSync;
   lyricLines: FullVersionLyricLine;
@@ -27,6 +28,7 @@ const Control: FC<ControlProps> = ({
   lock,
   setLock,
   setShowBg,
+  setColor,
   ...rest
 }) => {
   const setLyricVersion = useCallback((version: LyricVersionType) => {
@@ -62,7 +64,23 @@ const Control: FC<ControlProps> = ({
       drag={showBg}
       {...rest}>
       <div className="w-full grid h-5 grid-rows-1 grid-cols-[1fr_auto_1fr] items-center select-none">
-        <div />
+        <div
+          className={cx(
+            "w-full h-full flex justify-start items-center gap-2",
+            showBg ? "opacity-100" : "opacity-0"
+          )}>
+          {persetColors.map((presetColor) => {
+            if (presetColor === color) return null;
+            return (
+              <NoDrag
+                className="size-4 rounded-sm cursor-pointer"
+                key={presetColor}
+                style={{ backgroundColor: presetColor }}
+                onClick={() => setColor(presetColor)}
+              />
+            );
+          })}
+        </div>
         <div className="flex items-center gap-2">
           <img
             src={setImageURLSize(info?.cover, "xs")}
@@ -82,49 +100,65 @@ const Control: FC<ControlProps> = ({
             <span>{info?.artist.map((a) => a.name).join("/")}</span>
           </div>
         </div>
-        <NoDrag className="w-full flex items-center justify-end gap-4">
-          <div className="text-white">
+        <div className="w-full flex items-center justify-end gap-4">
+          <NoDrag>
             {lock ? (
               <LockKeyholeOpen className="size-4 cursor-pointer" onClick={() => setLock(false)} />
             ) : (
               <LucideLock className="size-4 cursor-pointer" onClick={() => setLock(true)} />
             )}
-          </div>
-          <div className="text-white flex gap-2">
-            <span
+          </NoDrag>
+          <div className="flex gap-2">
+            <NoDrag
               onClick={setRm}
               className={cx(
                 "size-4 text-[11px] font-semibold flex justify-center items-center overflow-hidden rounded-[2px] backdrop-blur-lg cursor-pointer",
                 {
-                  "bg-white text-black ": rmActive && hasRm,
+                  "bg-white": rmActive && hasRm,
+                  "text-black": color === "#FFFFFF",
                   "bg-white/20 ": !rmActive || !hasRm,
                   "cursor-not-allowed": !hasRm,
                   "cursor-pointer": hasRm
                 }
               )}>
               音
-            </span>
-            <span
+            </NoDrag>
+            <NoDrag
               onClick={setTl}
               className={cx(
                 "size-4 text-[11px] font-semibold flex justify-center items-center overflow-hidden rounded-[2px] backdrop-blur-lg cursor-pointer",
                 {
-                  "bg-white text-black ": tlActive && hasTl,
+                  "bg-white": tlActive && hasTl,
+                  "text-black": color === "#FFFFFF",
                   "bg-white/20": !tlActive || !hasTl,
                   "cursor-not-allowed": !hasTl,
                   "cursor-pointer": hasTl
                 }
               )}>
               译
-            </span>
+            </NoDrag>
           </div>
           <span className="text-[12px] font-semibold">
             {formatCurrentTimeToMMSS(lyricSync?.currentTime)} /{" "}
             {formatCurrentTimeToMMSS(lyricSync?.duration)}
           </span>
-        </NoDrag>
+        </div>
       </div>
     </Drag>
   );
 };
 export default memo(Control);
+
+const persetColors = [
+  "#FFFFFF",
+  "#FF0000",
+  "#00FF00",
+  "#0000FF",
+  "#FFFF00",
+  "#FF00FF",
+  "#00FFFF",
+  "#FFA500",
+  "#800080",
+  "#008000",
+  "#000000"
+];

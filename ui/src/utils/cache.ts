@@ -14,6 +14,14 @@ export function cacheFetch(id: string | number) {
   return fetch(`/cache/api/fetch?id=${id}`);
 }
 
+export async function cachePreload(bing: PreloadShouldBind): Promise<PreloadResult> {
+  return await fetch("/cache/api/preload", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(bing)
+  }).then((res) => res.json());
+}
+
 export function cacheWrap(
   url: string,
   id: string = url,
@@ -48,4 +56,15 @@ export type StoreCheckResult = {
 
 export type StoreTask = {
   ok: boolean;
+};
+
+export type PreloadShouldBind = {
+  preload: { id: string; url: string }[];
+  header: Record<string, string>;
+  method: string;
+};
+
+export type PreloadResult = {
+  ok: boolean;
+  ids: StoreIndex[];
 };

@@ -11,6 +11,7 @@ import {
   PlayerTrackInfo
 } from "@mahiru/ui/ctx/PlayerCtx";
 import { NeteaseLyricResponse } from "@mahiru/ui/types/netease-api";
+import { cacheCheck } from "@mahiru/ui/utils/cache";
 
 export function useSong() {
   /**                        状态管理                         */

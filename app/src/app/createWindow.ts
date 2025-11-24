@@ -34,31 +34,6 @@ function createWindow(params: { width?: number; height?: number }) {
   const { width: maxWidth, height: maxHeight } = CONSTANTS.APP.DEFAULT_WINDOW_SIZE;
   const { effectiveWidth: minWidth, effectiveHeight: minHeight } = getEffectiveWindowSize(0.65);
 
-  Log.trace(
-    "app/createWindow.ts",
-    "store size:",
-    width,
-    height,
-    "effective size:",
-    effectiveWidth,
-    effectiveHeight,
-    "max size:",
-    maxWidth,
-    maxHeight,
-    "min size:",
-    minWidth,
-    minHeight
-  );
-  console.error(
-    "width",
-    width || Math.min(effectiveWidth, maxWidth),
-    "height",
-    height || Math.min(effectiveHeight, maxHeight),
-    "minHeight",
-    Math.min(minHeight, maxHeight * 0.65),
-    "minWidth",
-    Math.min(minWidth, maxWidth * 0.65)
-  );
   return WindowManager.createBrowserWindow(
     {
       width: width || Math.min(effectiveWidth, maxWidth),

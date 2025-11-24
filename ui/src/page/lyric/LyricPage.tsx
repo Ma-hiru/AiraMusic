@@ -151,6 +151,7 @@ const LyricPage: FC<object> = () => {
       </div>
       <Control
         color={color}
+        setColor={setColor}
         lyricSync={lyricSync}
         info={info}
         showBg={showBg}

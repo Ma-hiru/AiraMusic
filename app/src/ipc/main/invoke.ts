@@ -1,12 +1,12 @@
 import ElectronStore from "electron-store";
 import { app, BrowserWindow } from "electron";
-import { StoreType } from "../../app";
 import { readFile } from "node:fs/promises";
 import { resolve, normalize } from "node:path";
 import { typedIpcMainHandle } from "./typed";
 import { Log } from "../../utils/log";
 import { EqError } from "../../utils/err";
 import { fileURLToPath } from "node:url";
+import { StoreType } from "../../app/store";
 
 export function registerInvokeHandlers(mainWindow: BrowserWindow, store: ElectronStore<StoreType>) {
   typedIpcMainHandle("message", (e, data) => {

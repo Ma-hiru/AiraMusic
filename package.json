@@ -22,6 +22,7 @@
     "dev:electron": "pnpm run-script-os",
     "dev:electron:win32": "set NODE_ENV=development && electron .",
     "dev:electron:linux": "export NODE_ENV=development && electron .",
+    "cache-clear": "rimraf ui/node_modules/.vite dist wasm/pkg",
     "build:ui": "pnpm --filter @mahiru/ui run build",
     "build:wasm": "pnpm --filter @mahiru/wasm run build",
     "build:cache": "pnpm --filter @mahiru/cache run build",

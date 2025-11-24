@@ -1,8 +1,8 @@
 import { registerInvokeHandlers } from "./invoke";
 import { registerEventHandlers } from "./event";
 import ElectronStore from "electron-store";
-import { StoreType } from "../../app";
 import { BrowserWindow } from "electron";
+import { StoreType } from "../../app/store";
 
 export { typedIpcMainOn, typedIpcMainSend, typedIpcMainHandle } from "./typed";
 

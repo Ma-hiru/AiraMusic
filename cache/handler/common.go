@@ -75,6 +75,34 @@ func Store(ctx *gin.Context) {
 	})
 }
 
+type RequireQuery struct {
+	Id  string `json:"id"`
+	Url string `json:"url"`
+}
+
+type PreloadShouldBind struct {
+	Preload []RequireQuery `json:"preload" binding:"required"`
+	Header  http.Header    `json:"header"`
+	Method  string         `json:"method"`
+}
+
+func Preload(ctx *gin.Context) {
+	var request PreloadShouldBind
+	if err := ctx.ShouldBindJSON(&request); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		return
+	}
+	var ids = make([]file.Index, len(request.Preload))
+	for _, preload := range request.Preload {
+		var idx = download(preload.Id, preload.Url, request.Method, nil, request.Header)
+		ids = append(ids, idx)
+	}
+	ctx.JSON(http.StatusOK, gin.H{
+		"ok":  true,
+		"ids": ids,
+	})
+}
+
 func Fetch(ctx *gin.Context) {
 	var id, _ = getRequireQuery(ctx)
 	var store = file.GetStore()

@@ -349,12 +349,12 @@ func (Self *Store) BeginWrite(url, name, fileType, size, etag, lastModified stri
 	return file
 }
 
-func (Self *Store) EndWrite(id, url string, success bool) {
+func (Self *Store) EndWrite(id, url string, success bool) Index {
 	Self.muWrite.Lock()
 	var wFile, ok = Self.currentWrite[url]
 	if !ok {
 		Self.muWrite.Unlock()
-		return
+		return Index{}
 	}
 	delete(Self.currentWrite, url)
 	Self.muWrite.Unlock()
@@ -371,7 +371,7 @@ func (Self *Store) EndWrite(id, url string, success bool) {
 
 	if !success {
 		_ = os.Remove(wFile.tmpPath)
-		return
+		return Index{}
 	}
 
 	var finalName = randomFilename()
@@ -379,11 +379,12 @@ func (Self *Store) EndWrite(id, url string, success bool) {
 
 	if err := os.Rename(wFile.tmpPath, finalPath); err != nil {
 		_ = os.Remove(wFile.tmpPath)
-		return
+		return Index{}
 	}
 	if id == "" {
 		id = url
 	}
 	var index = createIndex(id, finalPath, url, wFile.size, wFile.finalName, wFile.fileType, wFile.etag, wFile.lastModified)
 	Self.appendIndex(index)
+	return index
 }

@@ -8,18 +8,7 @@ import { createExpressApp } from "../services/express";
 import { handleAppEvents } from "./appEvent";
 import { startCacheServer } from "@mahiru/app/src/services/cache";
 import { commands } from "./cmd";
-
-export type StoreType = {
-  window: {
-    width: number;
-    height: number;
-    x: number;
-    y: number;
-  };
-  settings: {
-    closeAppOption: "ask" | "exit";
-  };
-};
+import { StoreType, Store } from "./store";
 
 export class APP {
   store!: ElectronStore<StoreType>;
@@ -34,19 +23,7 @@ export class APP {
     this.cacheAPP = startCacheServer();
     this.expressAPP = createExpressApp();
     this.neteaseMusicAPIServer = startNeteaseMusicApiServer();
-    this.store = new ElectronStore<StoreType>({
-      defaults: {
-        window: {
-          width: 0,
-          height: 0,
-          x: 0,
-          y: 0
-        },
-        settings: {
-          closeAppOption: "ask"
-        }
-      }
-    });
+    this.store = Store;
     this.willQuitAPP = !isMacOS;
     handleAppEvents(this);
 

@@ -11,6 +11,7 @@ import type {
   NeteaseTrack,
   NeteaseTrackPrivilege
 } from "@mahiru/ui/types/netease-api";
+import { cacheCheck, cacheFetch, cacheStore } from "@mahiru/ui/utils/cache";
 
 type TrackDetailCacheResult = {
   songs: NeteaseTrack[];
@@ -90,24 +91,20 @@ export function getTrackDetail(ids: string | number): Promise<TrackDetailResult>
  * @desc 调用此接口 , 传入音乐 id 可获得对应音乐的歌词 ( 不需要登录 )
  * @param id - 音乐 id
  */
-export function getLyric(id: number): Promise<NeteaseLyricResponse> {
-  const fetchLatest = () => {
-    return request<{ id: number }, NeteaseLyricResponse>({
-      url: "/lyric",
-      method: "get",
-      params: {
-        id
-      }
-    }).then((result) => {
-      cacheLyric(id, result);
-      return result;
-    });
-  };
-
-  fetchLatest();
-
-  return getLyricFromCache(id).then((result) => {
-    return result ?? fetchLatest();
+export async function getLyric(id: number): Promise<NeteaseLyricResponse> {
+  const url = "http://127.0.0.1:10754/playlist/lyric?id=" + id;
+  const check = await cacheCheck(url);
+  if (check.ok) {
+    return (await cacheFetch(url).then((res) => res.json())) as NeteaseLyricResponse;
+  } else {
+    void cacheStore(url, url);
+  }
+  return request<{ id: number }, NeteaseLyricResponse>({
+    url: "/lyric",
+    method: "get",
+    params: {
+      id
+    }
   });
 }
 
