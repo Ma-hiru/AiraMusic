@@ -1,4 +1,4 @@
-import { startServer, stopServer, isRunning, getPID, enableServerConsole } from "@mahiru/cache";
+import { startServer, stopServer, isRunning, getPID, enableServerConsole } from "@mahiru/store";
 import { isDev } from "../../utils/dev";
 
 export function startCacheServer(args: string[] = []) {

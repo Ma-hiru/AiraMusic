@@ -6,7 +6,7 @@ import { startNeteaseMusicApiServer } from "../services/ncm";
 import { Server } from "node:http";
 import { createExpressApp } from "../services/express";
 import { handleAppEvents } from "./appEvent";
-import { startCacheServer } from "@mahiru/app/src/services/cache";
+import { startCacheServer } from "../services/store";
 import { commands } from "./cmd";
 import { StoreType, Store } from "./store";
 

@@ -1,5 +1,5 @@
 {
-  "name": "@mahiru/cache",
+  "name": "@mahiru/store",
   "main": "index.ts",
   "files": [
     "server.exe",

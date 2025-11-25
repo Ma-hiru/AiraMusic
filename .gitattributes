@@ -1,2 +1,5 @@
 *.tsx linguist-language=TypeScript
 *.go linguist-detectable=true
+*.scss linguist-disable=true
+*.ps1 linguist-disable=true
+*.sh linguist-disable=true
