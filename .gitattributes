@@ -1,0 +1,2 @@
+*.tsx linguist-language=TypeScript
+*.go linguist-detectable=true
