@@ -33,7 +33,7 @@ export function removeMessageHandler(id: string) {
   }
 }
 
-export function registerMessageHandlers() {
+export function message() {
   window.node.register.sendMessageToHandler((message) => {
     for (const handler of handlers) {
       try {

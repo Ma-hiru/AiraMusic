@@ -55,17 +55,17 @@ export async function getPlaylistDetail(
   update = false
 ): Promise<NeteasePlaylistDetailResponse> {
   const url = "http://127.0.0.1:10754/playlist/detail?id=" + id;
-  const result = await cacheCheck(id);
+  const result = await cacheCheck(url);
   if (result.ok) {
     console.log("playlist detail from cache=>", id);
-    const data = await cacheFetch(id).then((res) => res.json());
+    const data = await cacheFetch(url).then((res) => res.json());
     if (data.playlist) {
       data.playlist.tracks = mapTrackPlayableStatus(data.playlist.tracks, data.privileges || []);
     }
     return data;
   } else {
     console.log("playlist detail store cache=>", id);
-    cacheStore(id, url).catch((err) => console.log(err));
+    cacheStore(url, url).catch((err) => console.log(err));
   }
   console.log("playlist detail from net=>", id);
   const data = await request<{ id: number; timestamp: number }, NeteasePlaylistDetailResponse>({

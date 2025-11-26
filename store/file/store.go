@@ -212,6 +212,80 @@ func (Self *Store) Path() string {
 	return Self.storeDir
 }
 
+// BeginWrite 开始写入文件，返回写入句柄，如果已经有相同 URL 的写入在进行中，返回一个空的写入句柄
+// 不用担心并发写入同一个 URL，因为调用此函数前会先检查索引是否存在，只有不存在时才会调用此函数
+func (Self *Store) BeginWrite(url, name, fileType, size, etag, lastModified string) io.WriteCloser {
+	Self.muWrite.RLock()
+	if _, ok := Self.currentWrite[url]; ok {
+		Self.muWrite.RUnlock()
+		return &nopCloseWriter{}
+	}
+	Self.muWrite.RUnlock()
+
+	var tmpName = randomFilename() + ".tmp"
+	var tmpPath = filepath.Join(Self.storeDir, tmpName)
+
+	var file, err = os.Create(tmpPath)
+	if err != nil {
+		return &nopCloseWriter{}
+	}
+
+	Self.muWrite.Lock()
+	Self.currentWrite[url] = &writingFile{
+		tmpPath:      tmpPath,
+		finalName:    name,
+		fileType:     fileType,
+		size:         size,
+		etag:         etag,
+		lastModified: lastModified,
+		file:         file,
+	}
+	Self.muWrite.Unlock()
+
+	return file
+}
+
+// EndWrite 结束写入文件，success 表示写入过程是否成功，如果成功则将临时文件重命名为最终文件并创建索引，返回索引信息，否则删除临时文件并返回空索引
+func (Self *Store) EndWrite(id, url string, success bool) Index {
+	Self.muWrite.Lock()
+	var wFile, ok = Self.currentWrite[url]
+	if !ok {
+		Self.muWrite.Unlock()
+		return Index{}
+	}
+	delete(Self.currentWrite, url)
+	Self.muWrite.Unlock()
+
+	var info, err = wFile.file.Stat()
+	if err == nil {
+		if strconv.FormatInt(info.Size(), 10) != wFile.size {
+			success = false
+		}
+	} else {
+		log.Println("error stating written file:", err)
+	}
+	wFile.file.Close()
+
+	if !success {
+		_ = os.Remove(wFile.tmpPath)
+		return Index{}
+	}
+
+	var finalName = randomFilename()
+	var finalPath = filepath.Join(Self.storeDir, finalName)
+
+	if err := os.Rename(wFile.tmpPath, finalPath); err != nil {
+		_ = os.Remove(wFile.tmpPath)
+		return Index{}
+	}
+	if id == "" {
+		id = url
+	}
+	var index = createIndex(id, finalPath, url, wFile.size, wFile.finalName, wFile.fileType, wFile.etag, wFile.lastModified)
+	Self.appendIndex(index)
+	return index
+}
+
 // 从索引文件加载索引到内存，这里使用index参数传入的是只读的 io.Reader 初始化之后 Self.indexFile 还未赋值，只读完毕，再重新追加读写打开赋值，所以本函数只能在初始化时调用
 func (Self *Store) loadIndex(index io.Reader) {
 	var scanner = bufio.NewScanner(index)
@@ -316,75 +390,4 @@ func (Self *Store) forceUpdateIndex() {
 	}
 	Self.indexFile = iFile
 	Self.indexFileMutex.Unlock()
-}
-
-func (Self *Store) BeginWrite(url, name, fileType, size, etag, lastModified string) io.WriteCloser {
-	Self.muWrite.RLock()
-	if _, ok := Self.currentWrite[url]; ok {
-		Self.muWrite.RUnlock()
-		return &nopCloseWriter{}
-	}
-	Self.muWrite.RUnlock()
-
-	var tmpName = randomFilename() + ".tmp"
-	var tmpPath = filepath.Join(Self.storeDir, tmpName)
-
-	var file, err = os.Create(tmpPath)
-	if err != nil {
-		return &nopCloseWriter{}
-	}
-
-	Self.muWrite.Lock()
-	Self.currentWrite[url] = &writingFile{
-		tmpPath:      tmpPath,
-		finalName:    name,
-		fileType:     fileType,
-		size:         size,
-		etag:         etag,
-		lastModified: lastModified,
-		file:         file,
-	}
-	Self.muWrite.Unlock()
-
-	return file
-}
-
-func (Self *Store) EndWrite(id, url string, success bool) Index {
-	Self.muWrite.Lock()
-	var wFile, ok = Self.currentWrite[url]
-	if !ok {
-		Self.muWrite.Unlock()
-		return Index{}
-	}
-	delete(Self.currentWrite, url)
-	Self.muWrite.Unlock()
-
-	var info, err = wFile.file.Stat()
-	if err == nil {
-		if strconv.FormatInt(info.Size(), 10) != wFile.size {
-			success = false
-		}
-	} else {
-		log.Println("error stating written file:", err)
-	}
-	wFile.file.Close()
-
-	if !success {
-		_ = os.Remove(wFile.tmpPath)
-		return Index{}
-	}
-
-	var finalName = randomFilename()
-	var finalPath = filepath.Join(Self.storeDir, finalName)
-
-	if err := os.Rename(wFile.tmpPath, finalPath); err != nil {
-		_ = os.Remove(wFile.tmpPath)
-		return Index{}
-	}
-	if id == "" {
-		id = url
-	}
-	var index = createIndex(id, finalPath, url, wFile.size, wFile.finalName, wFile.fileType, wFile.etag, wFile.lastModified)
-	Self.appendIndex(index)
-	return index
 }

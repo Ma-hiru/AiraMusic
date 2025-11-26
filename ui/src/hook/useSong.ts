@@ -39,7 +39,7 @@ export function useSong() {
   const nextTrack = useCallback(() => {
     switching.current = true;
     setCurrentIndex((index) => {
-      const nextIndex = index + 1;
+      const nextIndex = (Math.random() * (playList.length || 0)) >>> 0;
       if (nextIndex >= playList.length) {
         return 0;
       }

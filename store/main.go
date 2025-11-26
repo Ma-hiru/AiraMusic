@@ -52,7 +52,7 @@ func initHTTP(port string) {
 	gin.SetMode(gin.ReleaseMode)
 	var app = gin.Default()
 	app.Use(cors.Default())
-	router.SetRouter(app)
+	router.RegisterRoutes(app)
 	if err := app.Run(port); err != nil {
 		panic(err)
 	}

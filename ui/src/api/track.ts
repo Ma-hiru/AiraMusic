@@ -1,10 +1,10 @@
 import request from "./utils/request";
 import { mapTrackPlayableStatus } from "./utils/common";
-import { cacheTrackDetail, getTrackDetailFromCache, cacheLyric, getLyricFromCache } from "../db";
+import { cacheTrackDetail, getTrackDetailFromCache } from "../db";
 import { usePersistZustandStore } from "../store";
 import type {
   NeteaseLyricResponse,
-  NeteaseSongDetailResponse,
+  NeteaseTrackDetailResponse,
   NeteaseSongUrlResponse,
   NeteaseStatusResponse,
   NeteaseTopSongResponse,
@@ -18,7 +18,7 @@ type TrackDetailCacheResult = {
   privileges: NeteaseTrackPrivilege[];
 };
 
-type TrackDetailResult = NeteaseSongDetailResponse | TrackDetailCacheResult;
+type TrackDetailResult = NeteaseTrackDetailResponse | TrackDetailCacheResult;
 
 /**
  * 获取音乐 url
@@ -54,7 +54,7 @@ export function getMP3(id: string | number) {
  */
 export function getTrackDetail(ids: string | number): Promise<TrackDetailResult> {
   const fetchLatest = () => {
-    return request<{ ids: string | number }, NeteaseSongDetailResponse>({
+    return request<{ ids: string | number }, NeteaseTrackDetailResponse>({
       url: "/song/detail",
       method: "get",
       params: {

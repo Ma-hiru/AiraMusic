@@ -1116,6 +1116,7 @@ version = "1.0.0"
 dependencies = [
  "getrandom 0.3.4",
  "image",
+ "js-sys",
  "rand 0.9.2",
  "serde",
  "serde-wasm-bindgen",

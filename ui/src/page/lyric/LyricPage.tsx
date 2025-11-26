@@ -1,5 +1,5 @@
 import React, { FC, memo, useCallback, useEffect, useRef, useState } from "react";
-import { addMessageHandler, removeMessageHandler } from "@mahiru/ui/utils/registerMessageHandlers";
+import { addMessageHandler, removeMessageHandler } from "@mahiru/ui/utils/message";
 import { useImmer } from "use-immer";
 import { LyricPlayer, LyricPlayerRef } from "@mahiru/ui/componets/player/LyricPlayer";
 import { cx } from "@emotion/css";

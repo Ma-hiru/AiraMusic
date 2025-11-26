@@ -1,6 +1,3 @@
-import { LikedTrackSearcher } from "@mahiru/wasm";
-import { refreshLikedListDetailString } from "@mahiru/ui/utils/task";
-
 export function splitSoundtrackAlbumTitle(title: string) {
   const keywords = [
     "Music from the Original Motion Picture Score",
@@ -89,17 +86,4 @@ export function bytesToSize(bytes: number): string {
     return `${(bytes / megaBytes).toFixed(decimal)} MB`;
   }
   return `${(bytes / gigaBytes).toFixed(decimal)} GB`;
-}
-
-let likedTrackSearcher: Nullable<LikedTrackSearcher> = null;
-
-export function initLikedSongsSearcher(raw: string) {
-  likedTrackSearcher = new LikedTrackSearcher(raw);
-}
-
-export function getLikedSongsSearcher() {
-  if (likedTrackSearcher === null) {
-    void refreshLikedListDetailString();
-  }
-  return likedTrackSearcher;
 }

@@ -1,11 +1,11 @@
 import { createRoot } from "react-dom/client";
-import { startedTask } from "@mahiru/ui/utils/startedTask";
-import { registerMessageHandlers } from "@mahiru/ui/utils/registerMessageHandlers";
+import { started } from "@mahiru/ui/utils/started";
+import { message } from "@mahiru/ui/utils/message";
 import "./styles/index.scss";
 import App from "./App";
 
-registerMessageHandlers();
-startedTask();
+message();
+started();
 
 const element = document.getElementById("root")!;
 const root = createRoot(element);

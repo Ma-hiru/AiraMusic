@@ -12,7 +12,7 @@ export default defineConfig([
     clean: false,
     dts: false,
     external: ["electron", "esbuild", "node:*", "window"],
-    noExternal: ["@mahiru/log", "@mahiru/cache"],
+    noExternal: ["@mahiru/log", "@mahiru/store"],
     minify: true
   },
   {

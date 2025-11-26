@@ -1,6 +1,6 @@
 import { FC, memo, useEffect, useState } from "react";
 import { Drag, NoDrag } from "@mahiru/ui/componets/public/Drag";
-import { addMessageHandler, removeMessageHandler } from "@mahiru/ui/utils/registerMessageHandlers";
+import { addMessageHandler, removeMessageHandler } from "@mahiru/ui/utils/message";
 import { useImmer } from "use-immer";
 import { Pause, Play, SkipBack, SkipForward, X } from "lucide-react";
 import { useFileCache } from "@mahiru/ui/ctx/BlobCachedCtx";

@@ -3,7 +3,7 @@ import List from "./List/List";
 import Divider from "./Divider/Divider";
 import { FC, useCallback, useLayoutEffect, useRef, useState } from "react";
 import { getPlaylistDetail } from "@mahiru/ui/api/playlist";
-import { NeteasePlaylistDetailResponse } from "@mahiru/ui/types/netease-api";
+import { NeteasePlaylistDetailResponse, NeteaseTrack } from "@mahiru/ui/types/netease-api";
 import { useParams } from "react-router-dom";
 import { Log } from "@mahiru/ui/utils/log";
 import { EqError } from "@mahiru/ui/utils/err";
@@ -20,11 +20,9 @@ const PlayListPage: FC<PlayListPageProps> = ({ setId, isLikedList }) => {
   const id: Undefinable<string> = setId ? String(setId) : defaultID;
   const [detail, setDetail] = useState<Nullable<NeteasePlaylistDetailResponse>>(null);
 
-  const [filterTracks, setFilterTracks] = useState<
-    NeteasePlaylistDetailResponse["playlist"]["tracks"]
-  >([]);
+  const [filterTracks, setFilterTracks] = useState<NeteaseTrack[]>([]);
   const [searchTrackInstance, setSearchTrackInstance] = useState<Nullable<SearchTrack>>(null);
-  const tracks = useRef<NeteasePlaylistDetailResponse["playlist"]["tracks"]>([]);
+  const tracks = useRef<NeteaseTrack[]>([]);
 
   useLayoutEffect(() => {
     if (id) {
@@ -47,7 +45,7 @@ const PlayListPage: FC<PlayListPageProps> = ({ setId, isLikedList }) => {
         if (searchTrackInstance) {
           const lowerK = k.toLowerCase();
           const indexs = searchTrackInstance.search(lowerK);
-          const result: NeteasePlaylistDetailResponse["playlist"]["tracks"] = [];
+          const result: NeteaseTrack[] = [];
           indexs.forEach((i) => {
             result.push(tracks.current[i]!);
           });

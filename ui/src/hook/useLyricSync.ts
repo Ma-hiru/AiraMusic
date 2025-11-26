@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { usePlayer } from "@mahiru/ui/ctx/PlayerCtx";
-import { addMessageHandler, removeMessageHandler } from "@mahiru/ui/utils/registerMessageHandlers";
+import { addMessageHandler, removeMessageHandler } from "@mahiru/ui/utils/message";
 
 export function useLyricSync() {
   const [hasOpenLyricWin, setHasOpenLyricWin] = useState(false);

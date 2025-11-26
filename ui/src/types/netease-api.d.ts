@@ -117,11 +117,10 @@ export interface NeteaseNoCopyrightRcmd {
 /**
  * `/song/detail` 返回体。
  */
-export interface NeteaseSongDetailResponse {
+export interface NeteaseTrackDetailResponse {
   songs: NeteaseTrack[];
   privileges: NeteaseTrackPrivilege[];
-  code: number;
-  [key: string]: any;
+  code?: number;
 }
 
 /**
@@ -338,6 +337,8 @@ export interface NeteaseTrack {
   playable: boolean;
   /** 注入字段 */
   reason: string;
+  /** 注入字段 */
+  isLiked: boolean;
 }
 
 export interface Al {
@@ -530,9 +531,9 @@ export interface NeteaseCloudDiskResponse {
  */
 export interface NeteaseLikedSongIdsResponse {
   ids: number[];
+  /** 时间戳 */
   checkPoint: number;
   code: number;
-  [key: string]: any;
 }
 
 /**

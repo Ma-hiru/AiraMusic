@@ -1,43 +1,68 @@
-export async function cacheCheck(id: string | number): Promise<StoreCheckResult> {
-  id = encodeURIComponent(id);
-  return await fetch(`/cache/api/check?id=${id}`).then((res) => res.json());
-}
+import axios from "axios";
 
-export async function cacheStore(id: string | number, url: string): Promise<StoreTask> {
-  id = encodeURIComponent(id);
-  url = encodeURIComponent(url);
-  return await fetch(`/cache/api/store?url=${url}&id=${id}`).then((res) => res.json());
-}
+const request = axios.create({
+  baseURL: "/cache",
+  withCredentials: true,
+  timeout: 15000
+});
 
-export function cacheFetch(id: string | number) {
-  id = encodeURIComponent(id);
-  return fetch(`/cache/api/fetch?id=${id}`);
-}
+export const Store = new (class {
+  encode(str: string | number) {
+    return encodeURIComponent(String(str));
+  }
 
-export async function cachePreload(bing: PreloadShouldBind): Promise<PreloadResult> {
-  return await fetch("/cache/api/preload", {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify(bing)
-  }).then((res) => res.json());
-}
+  check(id: string | number): Promise<CheckResult> {
+    id = this.encode(id);
+    return request("/api/check", { method: "GET", params: { id } });
+  }
 
-export function cacheWrap(
-  url: string,
-  id: string = url,
-  update: boolean = false,
-  timeLimit?: number
-) {
-  if (!url || !url.startsWith("http")) return url;
-  url = encodeURIComponent(url);
-  id = encodeURIComponent(id);
+  checkMutil(items: { id: string }[]): Promise<CheckMutilResult> {
+    return request("/api/check/mutil", {
+      method: "POST",
+      data: { items } satisfies CheckMutilRequest
+    });
+  }
 
-  let result = `/cache/api/wrap?url=${url}&id=${id}`;
-  update && (result += "&update=true");
-  timeLimit && (result += `&timeLimit=${timeLimit}`);
+  storeAsync(url: string, id = url, method: string = "GET") {
+    url = this.encode(url);
+    id = this.encode(id);
+    return request("/api/store/async", { method, params: { id, url } });
+  }
 
-  return result;
-}
+  storeAsyncMutil(items: { id?: string; url: string }[], method: string = "GET") {
+    return request("/api/store/async/mutil", {
+      method: "POST",
+      data: { items, method } satisfies StoreAsyncRequest
+    });
+  }
+
+  checkOrStoreAsync(
+    url: string,
+    id = url,
+    method: string = "GET",
+    update?: boolean,
+    timeLimit?: number
+  ) {
+    url = this.encode(url);
+    id = this.encode(id);
+    return request("/api/check-store", { method, params: { id, url, update, timeLimit } });
+  }
+
+  checkOrStoreAsyncMutil(
+    items: { id?: string; url: string; update?: boolean; timeLimit?: number }[],
+    method: string = "GET"
+  ): Promise<CheckMutilResult> {
+    return request("/api/check-store/mutil", {
+      method: "POST",
+      data: { method, items } satisfies StoreAsyncRequest
+    });
+  }
+
+  fetch<T>(id: string | number): Promise<T> {
+    id = this.encode(id);
+    return request("/api/fetch", { method: "GET", params: { id } });
+  }
+})();
 
 export type StoreIndex = {
   id: string;
@@ -46,26 +71,34 @@ export type StoreIndex = {
   file: string;
   name: string;
   type: string;
-  size: number;
+  size: string;
   createTime: number;
+  eTag: string;
+  lastModified?: string;
 };
 
-export type StoreCheckResult = {
+export type CheckResult = {
   ok: boolean;
   index: StoreIndex;
 };
 
-export type StoreTask = {
-  ok: boolean;
+export type CheckMutilRequest = {
+  items: {
+    id: string;
+  }[];
 };
 
-export type PreloadShouldBind = {
-  preload: { id: string; url: string }[];
-  header: Record<string, string>;
+export type CheckMutilResult = {
+  ok: boolean;
+  results: CheckResult[];
+};
+
+export type StoreAsyncRequest = {
+  items: {
+    id?: string;
+    url: string;
+    update?: boolean;
+    timeLimit?: number;
+  }[];
   method: string;
-};
-
-export type PreloadResult = {
-  ok: boolean;
-  ids: StoreIndex[];
 };

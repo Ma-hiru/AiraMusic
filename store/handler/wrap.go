@@ -2,7 +2,6 @@ package handler
 
 import (
 	"fileServer/file"
-	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -13,18 +12,7 @@ import (
 
 func Wrap(ctx *gin.Context) {
 	var id, url = getRequireQuery(ctx)
-	var update = ctx.Query("update") == "true"
-	var tl = ctx.Query("time_limit")
-	var timeLimit = int64(0)
-	if tl != "" {
-		var _, err = fmt.Sscanf(tl, "%d", &timeLimit)
-		if err != nil {
-			ctx.Status(http.StatusBadRequest)
-			log.Println(err)
-			return
-		}
-	}
-
+	var update, timeLimit = getOptionQuery(ctx)
 	// 检查文件是否已缓存
 	var store = file.GetStore()
 	var index, ok = store.Check(url)

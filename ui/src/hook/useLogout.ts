@@ -1,5 +1,5 @@
 import { doLogout, isAccountLoggedIn } from "@mahiru/ui/api/utils/auth";
-import { addMessageHandler, removeMessageHandler } from "@mahiru/ui/utils/registerMessageHandlers";
+import { addMessageHandler, removeMessageHandler } from "@mahiru/ui/utils/message";
 import { refreshLogin } from "@mahiru/ui/utils/task";
 import { useNavigate } from "react-router-dom";
 import { usePlayer } from "@mahiru/ui/ctx/PlayerCtx";

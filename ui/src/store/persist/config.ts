@@ -80,6 +80,10 @@ const InitialState: PersistStoreInitialState = {
   data: {
     user: null,
     lastRefreshCookieDate: 0,
+    userLikedTracksID: {
+      ids: new Set<number>(),
+      checkPoint: 0
+    },
     loginMode: "",
     userPlayLists: [],
     userLikedList: null,
@@ -134,6 +138,10 @@ export interface PersistStoreInitialState {
     loginMode: "account" | "username" | "";
     userPlayLists: NeteasePlaylistSummary[];
     userLikedList: NeteasePlaylistSummary | null;
+    userLikedTracksID: {
+      ids: Set<number>;
+      checkPoint: number;
+    };
     userLikedListDetail: string;
   };
 }

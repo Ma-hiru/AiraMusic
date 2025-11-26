@@ -1,0 +1,12 @@
+package router
+
+import (
+	"fileServer/handler"
+
+	"github.com/gin-gonic/gin"
+)
+
+func checkStoreRoutes(app *gin.Engine) {
+	app.GET("/api/check-store", handler.CheckOrStoreAsync)
+	app.POST("/api/check-store/mutil", handler.CheckOrStoreAsyncMutil)
+}

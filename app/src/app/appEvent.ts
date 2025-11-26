@@ -5,7 +5,7 @@ import { createInitWindow } from "./createWindow";
 import { handleWindowEvents } from "./windowEvent";
 import { isCreateTray, isMacOS } from "../utils/platform";
 import { registerIpcMainHandlers } from "../ipc";
-import { stopCacheServer } from "@mahiru/app/src/services/cache";
+import { stopCacheServer } from "@mahiru/app/src/services/store";
 
 export function handleAppEvents(instance: APP) {
   app.on("ready", async () => {

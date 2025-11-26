@@ -2,11 +2,9 @@ package file
 
 import (
 	"bytes"
-	"context"
 	"crypto/sha1"
 	"fmt"
 	"io"
-	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -42,77 +40,6 @@ func Peek(reader io.Reader, size int) ([]byte, io.Reader, error) {
 	}
 
 	return buffer[:n], io.MultiReader(bytes.NewReader(buffer[:n]), reader), err
-}
-
-// write 将 reader 中的数据写入指定路径的文件中，并返回写入的字节数和计算得到的 ETag。
-// 如果在写入过程中上下文被取消，函数会停止写入并删除临时文件。
-func write(ctx context.Context, path string, reader io.Reader) (int64, string, error) {
-	var tmpPath = path + ".tmp"
-	var file, err = os.Create(tmpPath)
-	if err != nil {
-		return -1, "", err
-	}
-
-	var buffer = make([]byte, BufferSize) // 100KB buffer
-	var count int64 = 0
-	var etag string
-	for {
-		if err := ctx.Err(); err != nil {
-			fmt.Println("context cancelled, removing file:", tmpPath)
-			_ = file.Close()
-			_ = os.Remove(tmpPath)
-			return count, etag, err
-		}
-
-		var n, err = reader.Read(buffer)
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			_ = file.Close()
-			_ = os.Remove(tmpPath)
-			return count, etag, err
-		}
-		if n > 0 {
-			var written, writeErr = file.Write(buffer[:n])
-			count += int64(written)
-			if writeErr != nil {
-				_ = file.Close()
-				_ = os.Remove(tmpPath)
-				return count, etag, writeErr
-			}
-			if written != n {
-				_ = file.Close()
-				_ = os.Remove(tmpPath)
-				return count, etag, io.ErrShortWrite
-			}
-			if count == int64(written) {
-				etag = Hash(buffer, n)
-			}
-		}
-	}
-	// 空文件不允许存储
-	if count == 0 {
-		_ = file.Close()
-		_ = os.Remove(tmpPath)
-		return count, etag, fmt.Errorf("no data written to file")
-	}
-	// 刷盘并关闭，然后重命名临时文件为目标文件
-	if err := file.Sync(); err != nil {
-		_ = file.Close()
-		_ = os.Remove(tmpPath)
-		return count, etag, err
-	}
-	if err := file.Close(); err != nil {
-		_ = os.Remove(tmpPath)
-		return count, etag, err
-	}
-	if err := os.Rename(tmpPath, path); err != nil {
-		_ = os.Remove(tmpPath)
-		return count, etag, err
-	}
-
-	return count, etag, nil
 }
 
 // randomFilename 生成一个基于当前时间戳的随机文件名字符串。

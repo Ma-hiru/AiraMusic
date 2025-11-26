@@ -1,5 +1,5 @@
 import { FC, memo } from "react";
-import { addMessageHandler, removeMessageHandler } from "@mahiru/ui/utils/registerMessageHandlers";
+import { addMessageHandler, removeMessageHandler } from "@mahiru/ui/utils/message";
 import { doLogout, isAccountLoggedIn } from "@mahiru/ui/api/utils/auth";
 import { refreshLogin } from "@mahiru/ui/utils/task";
 import { isDev } from "@mahiru/ui/utils/dev";

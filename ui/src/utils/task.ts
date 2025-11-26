@@ -1,13 +1,31 @@
 import { Log } from "@mahiru/ui/utils/log";
 import { refreshCookie } from "@mahiru/ui/api/auth";
 import { EqError } from "@mahiru/ui/utils/err";
-import { userAccount, userDetail, userPlaylist } from "@mahiru/ui/api/user";
+import { userAccount, userDetail, userLikedSongsIDs, userPlaylist } from "@mahiru/ui/api/user";
 import { usePersistZustandStore } from "@mahiru/ui/store";
 import { doLogout, setCookies } from "@mahiru/ui/api/utils/auth";
-import { initLikedSongsSearcher } from "@mahiru/ui/utils/song";
 
-const getStoreSnapshot = () => usePersistZustandStore.getState();
+const getStoreSnapshot = usePersistZustandStore.getState;
 
+/** 登录接口 */
+export async function refreshLogin(cookies: string) {
+  Log.debug("Logged in successfully, fetching user data...");
+  try {
+    setCookies(cookies);
+    await refreshUserProfile();
+    await refreshUserPlaylist();
+  } catch (err) {
+    Log.error(
+      new EqError({
+        label: "ui/utils/login.ts",
+        message: "Failed to fetch user data after login.",
+        raw: err
+      })
+    );
+    doLogout();
+  }
+}
+/** 登录状态下，刷新Cookie */
 export async function refreshCookieTask() {
   try {
     Log.trace("refresh cookie");
@@ -27,20 +45,17 @@ export async function refreshCookieTask() {
     );
   }
 }
-
+/** 登录状态下，刷新用户信息 */
 export async function refreshUserProfile() {
   try {
     Log.trace("refresh user profile");
-    const { updatePersistStoreData } = getStoreSnapshot();
     const account = await userAccount();
     const detail = await userDetail(account.profile.userId);
-    const playList = await userPlaylist({ uid: account.profile.userId, limit: 30 });
-    const userLikedList = playList.playlist.shift();
+
+    const { updatePersistStoreData } = getStoreSnapshot();
     updatePersistStoreData({
       loginMode: "account",
-      user: detail.profile,
-      userPlayLists: playList.playlist,
-      userLikedList: userLikedList || null
+      user: detail.profile
     });
   } catch (err) {
     Log.error(
@@ -52,37 +67,61 @@ export async function refreshUserProfile() {
     );
   }
 }
-
-export async function refreshLogin(cookies: string) {
-  Log.debug("Logged in successfully, fetching user data...");
+/** 登录状态下，只包含歌单的id、描述、封面 */
+export async function refreshUserPlaylist() {
   try {
-    setCookies(cookies);
-    await refreshUserProfile();
+    Log.trace("refresh user playlist");
+    const { updatePersistStoreData, data } = getStoreSnapshot();
+    const uid = data.user?.userId;
+    if (uid) {
+      const playList = await userPlaylist({ uid, limit: 30 });
+      const userLikedList = playList.playlist.shift();
+      updatePersistStoreData({
+        userPlayLists: playList.playlist,
+        userLikedList: userLikedList || null
+      });
+    }
   } catch (err) {
     Log.error(
       new EqError({
-        label: "ui/utils/login.ts",
-        message: "Failed to fetch user data after login.",
+        label: "ui/common.ts:refreshUserPlaylist",
+        message: "refresh user playlist failed",
         raw: err
       })
     );
-    doLogout();
   }
 }
-
-export async function refreshLikedListDetailString() {
-  const { data, updatePersistStoreData } = getStoreSnapshot();
-  if (data.userLikedList) {
-    fetch(`http://127.0.0.1:10754/playlist/detail?id=${data.userLikedList.id}`)
-      .then((res) => res.text())
-      .then((detail) => {
-        detail &&
-          updatePersistStoreData({
-            userLikedListDetail: detail
-          });
-        initLikedSongsSearcher(detail);
-      });
+/** 登录状态下，获取喜欢歌曲列表，在使用喜欢或不喜欢后应该刷新 */
+export async function refreshUserLikedTrackIDs() {
+  try {
+    Log.trace("refresh user liked track IDs");
+    const { data, updatePersistStoreData } = getStoreSnapshot();
+    const uid = data.user?.userId;
+    if (uid) {
+      const { ids, checkPoint, code } = await userLikedSongsIDs(uid);
+      if (code === 200) {
+        updatePersistStoreData({
+          userLikedTracksID: {
+            ids: new Set<number>(ids),
+            checkPoint
+          }
+        });
+      } else {
+        Log.error(
+          new EqError({
+            label: "ui/common.ts:refreshUserLikedTrackIDs",
+            message: `refresh user liked track IDs failed with code ${code}`
+          })
+        );
+      }
+    }
+  } catch (err) {
+    Log.error(
+      new EqError({
+        label: "ui/common.ts:refreshUserLikedTrackIDs",
+        message: "refresh user liked track IDs failed",
+        raw: err
+      })
+    );
   }
 }
-
-export async function isBackgroundDark() {}

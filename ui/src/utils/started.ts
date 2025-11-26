@@ -4,21 +4,17 @@ import { usePersistZustandStore } from "@mahiru/ui/store";
 import { isAccountLoggedIn } from "@mahiru/ui/api/utils/auth";
 import {
   refreshCookieTask,
-  refreshLikedListDetailString,
-  refreshUserProfile
+  refreshUserProfile,
+  refreshUserPlaylist,
+  refreshUserLikedTrackIDs
 } from "@mahiru/ui/utils/task";
-import { isDev } from "@mahiru/ui/utils/dev";
 
-export function startedTask() {
-  if (isDev) {
-    void onlyChangeDay([refreshCookieTask, refreshUserProfile, refreshLikedListDetailString]);
-  } else {
-    void onlyChangeDay([refreshCookieTask]);
-    void onStartedTask([refreshUserProfile, refreshLikedListDetailString]);
-  }
+export function started() {
+  void onChangeDay([refreshCookieTask]);
+  void onStarted([refreshUserProfile, refreshUserPlaylist, refreshUserLikedTrackIDs]);
 }
 
-async function onlyChangeDay(task: NormalFunc<never[], Promise<void>>[]) {
+async function onChangeDay(task: NormalFunc<never[], Promise<void>>[]) {
   const store = usePersistZustandStore.getState();
   const lastDate = store.data.lastRefreshCookieDate;
   if (
@@ -43,7 +39,7 @@ async function onlyChangeDay(task: NormalFunc<never[], Promise<void>>[]) {
   }
 }
 
-async function onStartedTask(task: NormalFunc<never[], Promise<void>>[]) {
+async function onStarted(task: NormalFunc<never[], Promise<void>>[]) {
   Log.trace("start started task");
   for (const func of task) {
     try {
