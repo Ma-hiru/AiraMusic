@@ -22,6 +22,40 @@ func (Self *Store) Check(id string) (Index, bool) {
 	return index, exist
 }
 
+// Store 直接将数据存储到存储中，返回对应的索引信息或者错误
+func (Self *Store) Store(id string, fileType string, data []byte) (Index, error) {
+	var fileName = randomFilename()
+	var filePath = filepath.Join(Self.storeDir, fileName)
+	var file, err = os.Create(filePath)
+	if err != nil {
+		return Index{}, err
+	}
+	_, err = file.Write(data)
+	if err != nil {
+		_ = file.Close()
+		_ = os.Remove(filePath)
+		return Index{}, err
+	}
+	err = file.Sync()
+	if err != nil {
+		_ = file.Close()
+		_ = os.Remove(filePath)
+		return Index{}, err
+	}
+	err = file.Close()
+	if err != nil {
+		_ = os.Remove(filePath)
+		return Index{}, err
+	}
+	var index = createIndex(id, filePath, "", strconv.Itoa(len(data)), fileName, fileType, "", "")
+	err = Self.appendIndex(index)
+	if err != nil {
+		_ = os.Remove(filePath)
+		return Index{}, err
+	}
+	return index, nil
+}
+
 // Fetch 根据索引信息获取对应的文件读取句柄
 func (Self *Store) Fetch(idx Index) (io.ReadCloser, error) {
 	return os.Open(idx.Path)

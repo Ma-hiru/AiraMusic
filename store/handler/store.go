@@ -10,6 +10,36 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+type StoreShouldBind struct {
+	Id   string `json:"id" binding:"required"`
+	Data string `json:"data" binding:"required"`
+}
+
+func Store(ctx *gin.Context) {
+	var requestParam = StoreShouldBind{}
+	if err := ctx.ShouldBindJSON(&requestParam); err != nil {
+		ctx.JSON(200, gin.H{
+			"ok":    false,
+			"error": "invalid parameters",
+		})
+		return
+	}
+	var store = file.GetStore()
+	var index, err = store.Store(requestParam.Id, "text/plain", []byte(requestParam.Data))
+	if err != nil {
+		ctx.JSON(200, gin.H{
+			"ok":    false,
+			"error": "store file failed",
+		})
+		log.Println(err)
+		return
+	}
+	ctx.JSON(200, gin.H{
+		"ok":    true,
+		"index": index,
+	})
+}
+
 func StoreAsync(ctx *gin.Context) {
 	var id, url = getRequireQuery(ctx)
 	go download(id, url, ctx.Request.Method, ctx.Request.Body, ctx.Request.Header)
