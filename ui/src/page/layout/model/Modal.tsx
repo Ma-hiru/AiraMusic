@@ -6,21 +6,15 @@ import { cx } from "@emotion/css";
 
 const Modal: FC = () => {
   const { PlayerModalVisible } = useLayout();
-  const { hasDedicatedGPU } = useGPU();
 
   return (
     <div
       className={cx(
         "w-screen h-screen overflow-hidden z-20 bg-white/90 backdrop-blur-md duration-400 ease-in-out",
-        hasDedicatedGPU && {
+        {
           "fixed inset-0 transform transition-transform": true,
           "translate-y-0": PlayerModalVisible,
           "translate-y-full": !PlayerModalVisible
-        },
-        !hasDedicatedGPU && {
-          "absolute left-0 right-0 transition-[top]": true,
-          "top-0": PlayerModalVisible,
-          "top-[100vh]": !PlayerModalVisible
         }
       )}>
       <PlayerPage />
