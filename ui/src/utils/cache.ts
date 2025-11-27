@@ -23,6 +23,10 @@ export const Store = new (class {
     });
   }
 
+  store(id: string, data: object) {
+    return request("/api/store", { method: "POST", params: { id, data: JSON.stringify(data) } });
+  }
+
   storeAsync(url: string, id = url, method: string = "GET") {
     url = this.encode(url);
     id = this.encode(id);

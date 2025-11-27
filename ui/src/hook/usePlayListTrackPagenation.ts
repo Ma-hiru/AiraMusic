@@ -1,8 +1,8 @@
-import { NeteasePlaylistDetail, NeteaseTrack } from "@mahiru/ui/types/netease-api";
+import { NeteasePlaylistDetail, NeteaseTrack, TrackId } from "@mahiru/ui/types/netease-api";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   NeteaseImageSizeFilter,
-  NeteaseTrackFilter,
+  NeteaseTrackStatusFilter,
   NeteaseTrackIDsToTrackFilter
 } from "@mahiru/ui/utils/filter";
 import { useImmer } from "use-immer";
@@ -52,7 +52,7 @@ export function usePlayListTrackPagination(playList: NeteasePlaylistDetail, defa
 
       const trackIds = playList.trackIds.slice(start, end);
       const rawDetails = await NeteaseTrackIDsToTrackFilter(trackIds);
-      const mappedTracks = NeteaseTrackFilter(rawDetails);
+      const mappedTracks = NeteaseTrackStatusFilter(rawDetails);
       // 封面 URL 需要检查缓存
       const coverURLs = mappedTracks.map((track) => ({
         url: NeteaseImageSizeFilter(track.al.picUrl, "xs")!
@@ -105,4 +105,57 @@ export function usePlayListTrackPagination(playList: NeteasePlaylistDetail, defa
   };
 }
 
-function createPlayListTrackPagination(data: NeteasePlaylistDetail, defaultLimit = 20){}
+class PlayListPagination {
+  cached = false;
+  playList: NeteasePlaylistDetail;
+  trackIDs: TrackId[] = [];
+  tracks: NeteaseTrack[] = [];
+  private constructor(playList: NeteasePlaylistDetail, tracks?: NeteaseTrack[]) {
+    if (Array.isArray(tracks)) {
+      this.tracks = tracks;
+      this.playList = playList;
+      this.trackIDs = playList.trackIds;
+      this.cached = true;
+      return;
+    }
+    this.playList = playList;
+    this.trackIDs = playList.trackIds;
+    this.tracks.length = this.trackIDs.length;
+  }
+  static async create(playList: NeteasePlaylistDetail) {
+    const cacheKey = PlayListPagination.cacheKey(playList);
+    const check = await Store.check(cacheKey);
+    if (check.ok) {
+      const raw = await Store.fetch<string>(cacheKey);
+      const tracks = JSON.parse(raw);
+      return new PlayListPagination(playList, tracks);
+    }
+    return new PlayListPagination(playList);
+  }
+  static cacheKey(playList: NeteasePlaylistDetail) {
+    return `playlist_tracks_${playList.id}`;
+  }
+  async requestRange(range: Range) {
+    const [start, end] = range;
+    const ids = this.trackIDs.slice(start, end);
+    const rawDetails = await NeteaseTrackIDsToTrackFilter(ids);
+    const mappedTracks = NeteaseTrackStatusFilter(rawDetails);
+    // 封面 URL 需要检查缓存
+    const coverURLs = mappedTracks.map((track) => ({
+      url: NeteaseImageSizeFilter(track.al.picUrl, "xs")!
+    }));
+    const cachedResult = await Store.checkOrStoreAsyncMutil(coverURLs, "GET");
+    // 有缓存的直接替换
+    if (cachedResult.ok) {
+      cachedResult.results.forEach((cache, index) => {
+        if (cache.ok) {
+          mappedTracks[index]!.al.picUrl = cache.index.file;
+        }
+      });
+    }
+    for (let i = start; i < end; i++) {
+      // @ts-expect-error
+      tracks[i] = mappedTracks[i - start];
+    }
+  }
+}

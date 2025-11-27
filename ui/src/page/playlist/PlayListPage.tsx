@@ -69,10 +69,7 @@ export default PlayListPage;
 
 async function requestPlayListDetail(id: number) {
   try {
-    console.log("request detail=>", id);
-    const res = await getPlaylistDetail(id);
-    console.log("get detail=>", res);
-    return res;
+    return await getPlaylistDetail(id);
   } catch (err) {
     Log.error(
       new EqError({

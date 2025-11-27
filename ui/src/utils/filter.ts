@@ -1,18 +1,29 @@
 import {
+  NeteasePlaylistDetail,
   NeteaseTrack,
   NeteaseTrackDetailResponse,
-  NeteaseTrackPrivilege,
   TrackId
 } from "@mahiru/ui/types/netease-api";
 import { isTrackPlayable } from "@mahiru/ui/api/utils/common";
-import { usePersistZustandStore } from "@mahiru/ui/store";
+import { usePersistZustandStore, useDynamicZustandStore } from "@mahiru/ui/store";
 import { getTrackDetail } from "@mahiru/ui/api/track";
+import { Store } from "@mahiru/ui/utils/cache";
 
-const getSnapshot = usePersistZustandStore.getState;
+const getPersistSnapshot = usePersistZustandStore.getState;
 
-export function NeteaseTrackFilter(trackDetailResponse: NeteaseTrackDetailResponse) {
+const getDynamicSnapshot = useDynamicZustandStore.getState;
+
+export const enum ImageSize {
+  xs,
+  sm,
+  md,
+  lg,
+  raw
+}
+
+export function NeteaseTrackStatusFilter(trackDetailResponse: NeteaseTrackDetailResponse) {
   if (!trackDetailResponse) return [];
-  const { data } = getSnapshot();
+  const { data } = getPersistSnapshot();
   const tracks = trackDetailResponse?.songs ?? [];
   const privileges = trackDetailResponse?.privileges ?? [];
   return tracks.map((track) => {
@@ -28,35 +39,70 @@ export function NeteaseTrackFilter(trackDetailResponse: NeteaseTrackDetailRespon
   });
 }
 
-export function NeteaseImageSizeFilter(
-  url: Undefinable<string>,
-  size: "xs" | "sm" | "md" | "lg" | "raw"
-) {
-  if (!url) return url;
-  if (!url.startsWith("http")) return url;
+export function NeteaseImageSizeFilter(url: Undefinable<string>, size: ImageSize) {
+  if (!url || !url.startsWith("http")) return url;
   const u = new URL(url);
   let param;
   switch (size) {
-    case "xs":
+    case ImageSize.xs:
       param = "50y50";
       break;
-    case "sm":
+    case ImageSize.sm:
       param = "100y100";
       break;
-    case "md":
+    case ImageSize.md:
       param = "250y250";
       break;
-    case "lg":
+    case ImageSize.lg:
       param = "500y500";
       break;
-    default:
-      return u.toString();
   }
-  u.searchParams.append("param", param);
+  param && u.searchParams.append("param", param);
   return u.toString();
 }
 
-export async function NeteaseTrackIDsToTrackFilter(ids: TrackId[]) {
-  if (!Array.isArray(ids)) return { songs: [], privileges: [] };
-  return await getTrackDetail(ids.map((i) => i.id).join(","));
+export async function NeteasePlayListToFullTracksFilter(playList: NeteasePlaylistDetail) {
+  if (playList.trackCount === playList.tracks.length) {
+    return playList.tracks;
+  } else {
+    return await NeteaseTrackIdsToFullTracksFilter(
+      playList.trackIds.slice(playList.tracks.length, playList.trackCount),
+      100
+    );
+  }
+}
+
+export async function NeteaseTrackCoverPreCacheFilter(
+  tracks: NeteaseTrack[],
+  range: [start: number, end: number],
+  size: ImageSize = ImageSize.xs
+) {
+  const [start, end] = range;
+  const coverURLs = tracks.slice(start, end).map((track) => ({
+    url: NeteaseImageSizeFilter(track.al.picUrl, size)!
+  }));
+
+  const cached = await Store.checkOrStoreAsyncMutil(coverURLs, "GET");
+  const store = getDynamicSnapshot();
+  if (cached.ok) {
+    cached.results.forEach((cache, i) => {
+      if (cache.ok) {
+        const track = tracks[i]!;
+        track.al.picUrl = cache.index.file;
+        store.setTrackCoverCache(track.id, size, cache.index.file);
+      }
+    });
+  }
+  return tracks;
+}
+
+export async function NeteaseTrackIdsToFullTracksFilter(ids: TrackId[], maxPerRequest: number = 100) {
+  const result: NeteaseTrack[] = [];
+  for (let i = 0; i < ids.length; i += maxPerRequest) {
+    const chunk = ids.slice(i, i + maxPerRequest).map((t) => t.id);
+    const raw = await getTrackDetail(chunk.join(","));
+    const mapped = NeteaseTrackStatusFilter(raw);
+    result.push(...mapped);
+  }
+  return result;
 }

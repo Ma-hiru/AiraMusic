@@ -1,52 +1,31 @@
 import { ZustandConfig } from "@mahiru/ui/types/zustand";
+import { ImageSize } from "@mahiru/ui/utils/filter";
 
 export const DynamicStoreConfig: ZustandConfig<
   DynamicStoreInitialState & DynamicStoreActions,
   DynamicStoreInitialState
 > = (set, get) => ({
-  ...InitialState
+  ...InitialState,
+  getTrackCoverCache(trackID: number, size: ImageSize) {
+    const cache = get().trackCoverCache.get(trackID) || [];
+    return cache[size] || "";
+  },
+  setTrackCoverCache(trackID: number, size: ImageSize, cache: string) {
+    const old = get().trackCoverCache.get(trackID) || [];
+    old[size] = cache;
+    get().trackCoverCache.set(trackID, old);
+  }
 });
 
 const InitialState: DynamicStoreInitialState = {
-  showLyrics: false,
-  enableScrolling: true,
-  title: "simple-cloud-music",
-  liked: {
-    songs: [],
-    /** 只有前12首 */
-    songsWithDetails: [],
-    playlists: [],
-    albums: [],
-    artists: [],
-    mvs: [],
-    cloudDisk: [],
-    playHistory: {
-      weekData: [],
-      allData: []
-    }
-  },
-  dailyTracks: []
+  trackCoverCache: new Map<number, string[]>()
 };
 
 export interface DynamicStoreInitialState {
-  showLyrics: boolean;
-  enableScrolling: boolean;
-  title: string;
-  liked: {
-    songs: number[];
-    /** 只有前12首 */
-    songsWithDetails: any[];
-    playlists: number[];
-    albums: number[];
-    artists: number[];
-    mvs: number[];
-    cloudDisk: number[];
-    playHistory: {
-      weekData: any[];
-      allData: any[];
-    };
-  };
-  dailyTracks: any[];
+  trackCoverCache: Map<number, string[]>;
 }
 
-export type DynamicStoreActions = object;
+export type DynamicStoreActions = {
+  getTrackCoverCache: (trackID: number, size: ImageSize) => string;
+  setTrackCoverCache: (trackID: number, size: ImageSize, cache: string) => void;
+};
