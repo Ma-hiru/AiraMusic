@@ -25,6 +25,7 @@ const NavAvatar: FC<object> = () => {
             <img
               src={(cachedURL || null) as string}
               alt={data.user?.nickname}
+              loading="lazy"
               className="size-7 rounded-full cursor-pointer"
             />
           ) : (

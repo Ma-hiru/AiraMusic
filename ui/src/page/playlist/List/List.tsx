@@ -48,7 +48,7 @@ const ListContainer: FC<ListProps> = ({
       {filterTracks.length === 0 && (
         <div className="flex flex-col justify-center items-center gap-1 font-medium text-lg absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 text-black/70 select-none">
           <Loading className="size-8" />
-          <span>加载中</span>
+          <span className="font-semibold">加载中</span>
         </div>
       )}
     </div>

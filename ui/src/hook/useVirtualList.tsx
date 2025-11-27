@@ -41,7 +41,6 @@ export function useVirtualList<T extends HasID, U = never>(
 ) {
   // 滚动距离
   const [scrollTop, setScrollTop] = useState(0);
-  const { hasDedicatedGPU } = useGPU();
   // 监听容器滚动，实时更新scrollTop
   useEffect(() => {
     const container = containerRef.current;
@@ -85,9 +84,7 @@ export function useVirtualList<T extends HasID, U = never>(
               className="absolute w-full will-change-transform"
               key={item.id}
               style={{
-                transform: hasDedicatedGPU
-                  ? `translate3d(0, ${realIndex * itemHeight}px, 0)`
-                  : `translateY(${realIndex * itemHeight}px)`
+                transform: `translate3d(0, ${realIndex * itemHeight}px, 0)`
               }}>
               <RowComponent items={items} index={realIndex} extra={extraData} />
             </div>

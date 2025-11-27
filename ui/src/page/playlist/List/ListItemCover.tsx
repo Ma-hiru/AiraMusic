@@ -41,7 +41,13 @@ const ListItemCover: FC<ListItemCoverProps> = ({ track, index, playListID }) => 
     [cachedCover, index, playListID, track.al.picUrl]
   );
   return (
-    <img src={cachedCover} className="size-8 rounded-md" alt={track.al.name} onError={onError} />
+    <img
+      src={cachedCover}
+      loading="lazy"
+      className="size-8 rounded-md"
+      alt={track.al.name}
+      onError={onError}
+    />
   );
 };
 export default memo(ListItemCover);

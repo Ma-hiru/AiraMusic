@@ -10,12 +10,10 @@ const Loading: FC<LoadingProps> = (props) => {
       {...props}
       animate={{
         rotate: 360,
-        transformOrigin: "50% 50%",
+        transformOrigin: "center",
         display: "flex",
         alignItems: "center",
-        justifyContent: "center",
-        minWidth: 32,
-        minHeight: 32
+        justifyContent: "center"
       }}
       transition={{ repeat: Infinity, duration: 1, ease: "linear" }}>
       <Loader />
