@@ -61,7 +61,7 @@ function registerLoginWindowControl() {
 
 function registerLyricWindowControl() {
   typedIpcMainOn("createLyricWindow", () => {
-    const { effectiveWidth: width, effectiveHeight: height } = getEffectiveWindowSize(0.15, 5.9);
+    const { effectiveWidth: width, effectiveHeight: height } = getEffectiveWindowSize(0.11, 6);
     const LyricWindow = WindowManager.createBrowserWindow(
       {
         width,
@@ -93,7 +93,7 @@ function registerLyricWindowControl() {
     LyricWindow.on("resized", () => {
       Store.set("lyric", LyricWindow.getBounds());
     });
-    LyricWindow.on("move", () => {
+    LyricWindow.on("moved", () => {
       Store.set("lyric", LyricWindow.getBounds());
     });
     if (isDev()) {
@@ -113,18 +113,26 @@ function registerLyricWindowControl() {
 
 function registerMiniplayerWindowControl() {
   typedIpcMainOn("createMiniplayerWindow", () => {
-    const { effectiveWidth: width, effectiveHeight: height } = getEffectiveWindowSize(0.08, 4.45);
+    const storedSize = Store.get("mini");
+    const { effectiveWidth: width, effectiveHeight: height } = getEffectiveWindowSize(0.07, 4.4);
+    const { effectiveWidth: minWidth, effectiveHeight: minHeight } = getEffectiveWindowSize(
+      0.05,
+      4.4
+    );
     const MiniplayerWindow = WindowManager.createBrowserWindow(
       {
-        width,
-        height,
+        width: storedSize.width || width,
+        height: storedSize.height || height,
         webPreferences: {
           preload: preloadPath
         },
         alwaysOnTop: true,
         title: "miniplayer",
         resizable: true,
-        maxHeight: height,
+        minHeight,
+        maxHeight: Math.floor(height * 1.2),
+        minWidth,
+        maxWidth: Math.floor(width * 1.2),
         minimizable: false,
         maximizable: false,
         titleBarStyle: "hidden",
@@ -135,16 +143,18 @@ function registerMiniplayerWindowControl() {
       "miniplayer",
       WindowExits.IGNORE
     );
-    const { x, y } = Store.get("mini");
+    const { x, y } = storedSize;
     if (checkPositionOutScreenBounds(x, y)) {
       MiniplayerWindow.center();
     } else {
       MiniplayerWindow.setBounds({ x, y });
     }
     MiniplayerWindow.on("resized", () => {
+      console.log("resized mini");
       Store.set("mini", MiniplayerWindow.getBounds());
     });
-    MiniplayerWindow.on("move", () => {
+    MiniplayerWindow.on("moved", () => {
+      console.log("moved mini");
       Store.set("mini", MiniplayerWindow.getBounds());
     });
     if (isDev()) {

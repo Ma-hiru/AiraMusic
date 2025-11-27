@@ -72,7 +72,7 @@ const MiniPlayerPage: FC<object> = () => {
     ? Math.min(((lyricSync.currentTime || 0) / lyricSync.duration) * 100, 100)
     : 0;
   return (
-    <Drag className="w-full h-full relative bg-white/80 rounded-md text-black overflow-hidden grid grid-rows-1 grid-cols-[auto_1fr] px-2 py-1 items-center select-none backdrop-blur-lg">
+    <Drag className="w-screen h-screen overflow-hidden relative bg-white rounded-md text-black grid grid-rows-1 grid-cols-[auto_1fr] px-2 py-1 items-center select-none backdrop-blur-lg">
       <div className="h-12 w-12 rounded-md overflow-hidden">
         <img
           className="w-full h-full object-cover"
@@ -90,9 +90,9 @@ const MiniPlayerPage: FC<object> = () => {
           </span>
         </div>
         <div className="grid grid-rows-1 grid-cols-[1fr_auto] items-center justify-center gap-1">
-          <div className="h-[5px] bg-black/20 rounded-full overflow-hidden">
+          <div className="h-[5px] bg-gray-500 rounded-full overflow-hidden">
             <span
-              className="h-full block bg-white ease-in-out duration-300 transition-all"
+              className="h-full block bg-white/80 ease-in-out duration-300 transition-all"
               style={{ width: `${percent}%` }}
             />
           </div>

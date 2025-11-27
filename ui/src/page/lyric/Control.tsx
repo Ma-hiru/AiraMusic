@@ -46,10 +46,11 @@ const Control: FC<ControlProps> = ({
   );
   const titleContainer = useRef<HTMLDivElement>(null);
   useManualAutoScroll(titleContainer, {
-    speed: 15,
+    speed: 10,
     auto: true,
     pingPong: true,
-    pauseOnHover: true
+    pauseOnHover: true,
+    gapDuration: 2000
   });
   useEffect(() => {
     if (lock) {
@@ -97,7 +98,7 @@ const Control: FC<ControlProps> = ({
           <div
             ref={titleContainer}
             className={cx(
-              "text-[14px] font-semibold whitespace-nowrap max-w-[50vw] overflow-x-scroll",
+              "text-[14px] font-semibold whitespace-nowrap max-w-[35vw] overflow-x-scroll",
               css`
                 scrollbar-width: none;
               `

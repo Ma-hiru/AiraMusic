@@ -3,7 +3,10 @@ import { addMessageHandler, removeMessageHandler } from "@mahiru/ui/utils/messag
 import { useImmer } from "use-immer";
 import { LyricPlayer, LyricPlayerRef } from "@mahiru/ui/componets/player/LyricPlayer";
 import { cx } from "@emotion/css";
-import { changeLyricComponentColorByCSSVar } from "@mahiru/ui/utils/ui";
+import {
+  changeLyricComponentColorByCSSVar,
+  changeLyricComponentFontSizeByCSSVar
+} from "@mahiru/ui/utils/ui";
 import Control from "@mahiru/ui/page/lyric/Control";
 import { useUpdate } from "@mahiru/ui/hook/useUpdate";
 
@@ -85,6 +88,10 @@ const LyricPage: FC<object> = () => {
   useEffect(() => {
     changeLyricComponentColorByCSSVar(color);
   }, [color]);
+
+  useEffect(() => {
+    changeLyricComponentFontSizeByCSSVar("16px");
+  }, []);
 
   const handleClick = useCallback(
     (e: React.MouseEvent) => {

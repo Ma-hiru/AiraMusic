@@ -9,13 +9,20 @@ type Opts = {
   pingPong?: boolean;
   /** 悬停时是否暂停 */
   pauseOnHover?: boolean;
+  gapDuration?: number;
 };
 
 export function useManualAutoScroll(
   containerRef: RefObject<Nullable<HTMLElement>>,
   opts: Opts = {}
 ) {
-  const { speed = 50, auto = true, pingPong = true, pauseOnHover = true } = opts;
+  const {
+    speed = 50,
+    auto = true,
+    pingPong = true,
+    pauseOnHover = true,
+    gapDuration = 1000
+  } = opts;
   const rafRef = useRef<number | null>(null);
   const stateRef = useRef({
     running: false,
@@ -88,6 +95,8 @@ export function useManualAutoScroll(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [containerRef.current]);
 
+  const gapTimer = useRef<Nullable<number>>(null);
+
   function animate(ts: number) {
     const el = containerRef.current;
     if (!el) return;
@@ -116,18 +125,48 @@ export function useManualAutoScroll(
 
     if (pingPong) {
       if (nextPos >= max) {
-        nextPos = max;
-        stateRef.current.dir = -1;
+        if (!gapTimer.current) {
+          // 到达末尾，停顿
+          nextPos = max;
+          el.scrollLeft = Math.round(nextPos);
+          gapTimer.current = window.setTimeout(() => {
+            stateRef.current.dir = -1;
+            gapTimer.current = null;
+          }, gapDuration);
+          rafRef.current = requestAnimationFrame(animate);
+          return;
+        }
+        nextPos = max; // 等待间隔时保持末尾
       } else if (nextPos <= 0) {
+        if (!gapTimer.current) {
+          nextPos = 0;
+          el.scrollLeft = Math.round(nextPos);
+          gapTimer.current = window.setTimeout(() => {
+            stateRef.current.dir = 1;
+            gapTimer.current = null;
+          }, gapDuration);
+          rafRef.current = requestAnimationFrame(animate);
+          return;
+        }
         nextPos = 0;
-        stateRef.current.dir = 1;
-      }
-    } else {
-      // loop style: 到末尾瞬回左侧继续
-      if (nextPos >= max) {
-        nextPos = 0;
-      } else if (nextPos <= 0) {
-        nextPos = max;
+      } else {
+        // loop 风格
+        if (nextPos >= max) {
+          if (!gapTimer.current) {
+            nextPos = max;
+            el.scrollLeft = Math.round(nextPos);
+            gapTimer.current = window.setTimeout(() => {
+              nextPos = 0;
+              stateRef.current.pos = 0;
+              gapTimer.current = null;
+            }, gapDuration);
+            rafRef.current = requestAnimationFrame(animate);
+            return;
+          }
+          nextPos = max;
+        } else if (nextPos <= 0) {
+          nextPos = 0;
+        }
       }
     }
 

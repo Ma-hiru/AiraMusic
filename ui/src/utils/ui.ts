@@ -6,3 +6,12 @@ export function changeLyricComponentColorByCSSVar(color?: string) {
     document.documentElement.style.removeProperty(varsName);
   }
 }
+
+export function changeLyricComponentFontSizeByCSSVar(size?: string) {
+  const varsName = "--amll-lp-font-size";
+  if (size) {
+    document.documentElement.style.setProperty(varsName, size);
+  } else {
+    document.documentElement.style.removeProperty(varsName);
+  }
+}
