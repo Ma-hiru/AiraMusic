@@ -2,8 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FullVersionLyricLine, handleNeteaseLyricResponse } from "@mahiru/ui/utils/lyric";
 import { getLyric, getMP3 } from "@mahiru/ui/api/track";
 import { useImmer } from "use-immer";
-import { Log } from "@mahiru/ui/utils/log";
-import { EqError } from "@mahiru/ui/utils/err";
+import { Log, EqError } from "@mahiru/ui/utils/dev";
 import {
   LyricVersionType,
   PlayerCtxDefault,
@@ -11,7 +10,6 @@ import {
   PlayerTrackInfo
 } from "@mahiru/ui/ctx/PlayerCtx";
 import { NeteaseLyricResponse } from "@mahiru/ui/types/netease-api";
-import { cacheCheck } from "@mahiru/ui/utils/cache";
 
 export function useSong() {
   /**                        状态管理                         */
@@ -28,6 +26,8 @@ export function useSong() {
   });
   const [lyricVersion, setLyricVersion] = useState<LyricVersionType>("tl");
   const [volume, setVolume] = useState(PlayerCtxDefault.volume);
+  const [isShuffle, setIsShuffle] = useState(false);
+  const [isRepeat, setIsRepeat] = useState(false);
   const switching = useRef(false);
   const progress = useRef(PlayerCtxDefault.getProgress());
   /**                        暴露方法                         */
@@ -39,13 +39,37 @@ export function useSong() {
   const nextTrack = useCallback(() => {
     switching.current = true;
     setCurrentIndex((index) => {
-      const nextIndex = (Math.random() * (playList.length || 0)) >>> 0;
+      let nextIndex = index + 1;
+      if (isShuffle) {
+        nextIndex = (Math.random() * (playList.length || 0)) >>> 0;
+      }
       if (nextIndex >= playList.length) {
         return 0;
       }
       return nextIndex;
     });
-  }, [playList.length]);
+  }, [isShuffle, playList.length]);
+  const autoNextTrack = useCallback(() => {
+    if (isRepeat) {
+      const audio = audioRef.current;
+      if (audio) {
+        audio.currentTime = 0;
+        try {
+          void audio.play();
+        } catch (err) {
+          Log.error(
+            new EqError({
+              message: "play() failed in autoNextTrack with isRepeat",
+              label: "ui/ctx/PlayerProvider:autoNextTrack",
+              raw: err
+            })
+          );
+        }
+      }
+    } else {
+      nextTrack();
+    }
+  }, [isRepeat, nextTrack]);
   const lastTrack = useCallback(() => {
     switching.current = true;
     setCurrentIndex((index) => {
@@ -72,6 +96,20 @@ export function useSong() {
     gap ||= 0.2;
     if (audio) {
       audio.volume = Math.max(0, audio.volume - gap);
+    }
+  }, []);
+  const shuffle = useCallback((enable?: boolean) => {
+    if (enable === undefined) {
+      setIsShuffle((prev) => !prev);
+    } else {
+      setIsShuffle(enable);
+    }
+  }, []);
+  const repeat = useCallback((enable?: boolean) => {
+    if (enable === undefined) {
+      setIsRepeat((prev) => !prev);
+    } else {
+      setIsRepeat(enable);
     }
   }, []);
   // 播放列表管理函数
@@ -253,7 +291,7 @@ export function useSong() {
     const handleVolumeChange = () => setVolume(audio.volume);
     audio.addEventListener("play", handlePlay, { passive: true });
     audio.addEventListener("pause", handlePause, { passive: true });
-    audio.addEventListener("ended", nextTrack, { passive: true });
+    audio.addEventListener("ended", autoNextTrack, { passive: true });
     audio.addEventListener("timeupdate", handleTimeUpdate, { passive: true });
     audio.addEventListener("durationchange", handleDurationChange, { passive: true });
     audio.addEventListener("progress", handleProgress, { passive: true });
@@ -261,13 +299,13 @@ export function useSong() {
     return () => {
       audio.removeEventListener("play", handlePlay);
       audio.removeEventListener("pause", handlePause);
-      audio.removeEventListener("ended", nextTrack);
+      audio.removeEventListener("ended", autoNextTrack);
       audio.removeEventListener("timeupdate", handleTimeUpdate);
       audio.removeEventListener("durationchange", handleDurationChange);
       audio.removeEventListener("progress", handleProgress);
       audio.removeEventListener("volumechange", handleVolumeChange);
     };
-  }, [nextTrack]);
+  }, [autoNextTrack]);
 
   const getProgress = useRef(() => progress.current).current;
   return useMemo<PlayerCtxType>(
@@ -296,7 +334,11 @@ export function useSong() {
       changeCurrentTime,
       lyricVersion,
       setLyricVersion,
-      volume
+      volume,
+      isShuffle,
+      shuffle,
+      isRepeat,
+      repeat
     }),
     [
       addAndPlayTrack,
@@ -321,7 +363,11 @@ export function useSong() {
       changeCurrentTime,
       lyricVersion,
       setLyricVersion,
-      volume
+      volume,
+      isShuffle,
+      shuffle,
+      isRepeat,
+      repeat
     ]
   );
 }

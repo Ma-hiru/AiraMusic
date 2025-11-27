@@ -17,6 +17,13 @@ const LoginPage: FC<object> = () => {
       window.node.event.close("login");
     }
   }, [status, result]);
+  useEffect(() => {
+    window.node.event.loaded({
+      win: "login",
+      broadcast: false,
+      showAfterLoaded: true
+    });
+  }, []);
   return (
     <div className="w-screen h-screen overflow-hidden">
       <Control />

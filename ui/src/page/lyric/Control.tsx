@@ -1,11 +1,11 @@
-import React, { FC, memo, useCallback, HTMLAttributes, useRef } from "react";
+import React, { FC, memo, useCallback, HTMLAttributes, useRef, useEffect } from "react";
 import { cx, css } from "@emotion/css";
 import { Drag, NoDrag } from "@mahiru/ui/componets/public/Drag";
-import { setImageURLSize } from "@mahiru/ui/utils/setImageSize";
 import { formatCurrentTimeToMMSS } from "@mahiru/ui/utils/time";
 import { useLyric } from "@mahiru/ui/hook/useLyric";
 import { useManualAutoScroll } from "@mahiru/ui/hook/useMarquee";
 import { LockKeyholeOpen, LucideLock } from "lucide-react";
+import { ImageSize, NeteaseImageSizeFilter } from "@mahiru/ui/utils/filter";
 
 type ControlProps = HTMLAttributes<HTMLDivElement> & {
   showBg: boolean;
@@ -51,7 +51,14 @@ const Control: FC<ControlProps> = ({
     pingPong: true,
     pauseOnHover: true
   });
-
+  useEffect(() => {
+    if (lock) {
+      window.node.event.mousePenetrate({
+        win: "lyric",
+        penetrate: true
+      });
+    }
+  }, [lock]);
   return (
     <Drag
       className={cx(
@@ -69,7 +76,7 @@ const Control: FC<ControlProps> = ({
             "w-full h-full flex justify-start items-center gap-2",
             showBg ? "opacity-100" : "opacity-0"
           )}>
-          {persetColors.map((presetColor) => {
+          {presetColors.map((presetColor) => {
             if (presetColor === color) return null;
             return (
               <NoDrag
@@ -83,7 +90,7 @@ const Control: FC<ControlProps> = ({
         </div>
         <div className="flex items-center gap-2">
           <img
-            src={setImageURLSize(info?.cover, "xs")}
+            src={NeteaseImageSizeFilter(info?.cover, ImageSize.xs)}
             alt={info?.title}
             className="rounded-full size-5 shrink-0"
           />
@@ -103,7 +110,22 @@ const Control: FC<ControlProps> = ({
         <div className="w-full flex items-center justify-end gap-4">
           <NoDrag>
             {lock ? (
-              <LockKeyholeOpen className="size-4 cursor-pointer" onClick={() => setLock(false)} />
+              <LockKeyholeOpen
+                className="size-4 cursor-pointer"
+                onClick={() => setLock(false)}
+                onMouseOver={() => {
+                  window.node.event.mousePenetrate({
+                    win: "lyric",
+                    penetrate: false
+                  });
+                }}
+                onMouseLeave={() => {
+                  window.node.event.mousePenetrate({
+                    win: "lyric",
+                    penetrate: true
+                  });
+                }}
+              />
             ) : (
               <LucideLock className="size-4 cursor-pointer" onClick={() => setLock(true)} />
             )}
@@ -149,7 +171,7 @@ const Control: FC<ControlProps> = ({
 };
 export default memo(Control);
 
-const persetColors = [
+const presetColors = [
   "#FFFFFF",
   "#FF0000",
   "#00FF00",

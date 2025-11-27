@@ -8,7 +8,8 @@ import { EqError } from "../utils/err";
 export function handleWindowEvents(instance: APP) {
   instance.window.once("ready-to-show", () => {
     Log.trace("Window ready-to-show");
-    instance.window.show();
+    // 等待react的load事件再显示窗口
+    // instance.window.show();
     // 把窗口位置尺寸保存（用于下次启动恢复）
     instance.store.set("window", instance.window.getBounds());
   });
@@ -49,13 +50,9 @@ export function handleWindowEvents(instance: APP) {
     instance.store.set("window", instance.window.getBounds());
   });
 
-  instance.window.on("maximize", () => {
-    typedIpcMainSend(instance.window, "isMaximized", true);
-  });
+  instance.window.on("maximize", () => {});
 
-  instance.window.on("unmaximize", () => {
-    typedIpcMainSend(instance.window, "isMaximized", false);
-  });
+  instance.window.on("unmaximize", () => {});
 
   instance.window.webContents.setWindowOpenHandler((e) => {
     Log.info(`Blocked attempt to open external link: ${e.url}`);

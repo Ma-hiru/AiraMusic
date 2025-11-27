@@ -1,6 +1,5 @@
 import QRCode from "qrcode";
-import { Log } from "@mahiru/ui/utils/log";
-import { EqError } from "@mahiru/ui/utils/err";
+import { Log, EqError } from "@mahiru/ui/utils/dev";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { NeteaseLoginQrCheckResponse } from "@mahiru/ui/types/netease-api";
 import { loginQrCodeCheck, loginQrCodeCreate, loginQrCodeKey } from "@mahiru/ui/api/auth";

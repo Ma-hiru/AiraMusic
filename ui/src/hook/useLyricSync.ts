@@ -15,10 +15,10 @@ export function useLyricSync() {
       from: "main",
       to: "lyric",
       type: "lyricInit",
-      data: JSON.stringify({
+      data: {
         lyricLines,
         info
-      } satisfies LyricInit)
+      } satisfies LyricInit
     });
   }, []);
   const sendSync = useCallback(() => {
@@ -28,26 +28,29 @@ export function useLyricSync() {
       from: "main",
       to: "lyric",
       type: "lyricSync",
-      data: JSON.stringify({
+      data: {
         lyricVersion,
         currentTime,
         duration,
         isPlaying
-      } satisfies LyricSync)
+      } satisfies LyricSync
     });
   }, []);
 
   const openLyricWin = useCallback(() => {
     if (!hasOpenLyricWin) {
       window.node.event.createLyricWindow();
-      setTimeout(sendInit, 2000);
       setHasOpenLyricWin(true);
       addMessageHandler((message) => {
+        if (message.from === "lyric" && message.type === "winLoaded") {
+          sendInit();
+          removeMessageHandler("lyric-win-loaded-handler");
+        }
+      }, "lyric-win-loaded-handler");
+      addMessageHandler<LyricVersionType>((message) => {
         if (message.from === "lyric" && message.to === "main") {
           if (message.type === "lyricVersionChange") {
-            const { data } = message;
-            const newVersion = data as LyricVersionType;
-            setLyricVersion(newVersion);
+            setLyricVersion(message.data);
           }
         }
       }, "lyric-win-lyric-version-change-handler");
@@ -69,7 +72,7 @@ export function useLyricSync() {
     };
   }, [audioRef, hasOpenLyricWin, sendInit, sendSync]);
   // 额外同步歌词变化，歌词受网络影响可能会延迟得到数据
-  useEffect(sendInit, [sendInit]);
+  useEffect(sendInit, [sendInit, lyricLines, info]);
 
   return { hasOpenLyricWin, openLyricWin };
 }

@@ -1,6 +1,6 @@
 import axios, { AxiosResponse } from "axios";
 import { doLogout } from "./auth";
-import { Log } from "@mahiru/ui/utils/log";
+import { Log } from "@mahiru/ui/utils/dev";
 
 // 开发模式通过VITE代理访问API服务器地址
 // 生产模式通过express访问API服务器地址

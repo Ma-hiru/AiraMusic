@@ -6,6 +6,8 @@ const request = axios.create({
   timeout: 15000
 });
 
+request.interceptors.response.use((response) => response.data);
+
 export const Store = new (class {
   encode(str: string | number) {
     return encodeURIComponent(String(str));
@@ -46,7 +48,7 @@ export const Store = new (class {
     method: string = "GET",
     update?: boolean,
     timeLimit?: number
-  ) {
+  ): Promise<CheckResult> {
     url = this.encode(url);
     id = this.encode(id);
     return request("/api/check-store", { method, params: { id, url, update, timeLimit } });
@@ -65,6 +67,11 @@ export const Store = new (class {
   fetch<T>(id: string | number): Promise<T> {
     id = this.encode(id);
     return request("/api/fetch", { method: "GET", params: { id } });
+  }
+
+  remove(id: number | string): Promise<CheckResult> {
+    id = this.encode(id);
+    return request("/api/remove", { method: "GET", params: { id } });
   }
 })();
 

@@ -1,11 +1,14 @@
 import { Clock, House, Star } from "lucide-react";
-import { createBrowserRouter, createHashRouter, Navigate } from "react-router-dom";
+import { createBrowserRouter, Navigate } from "react-router-dom";
 import Layout from "@mahiru/ui/page/layout/Layout";
 import HomePage from "@mahiru/ui/page/home/HomePage";
 import LoginPage from "@mahiru/ui/page/login/LoginPage";
 import LyricPage from "@mahiru/ui/page/lyric/LyricPage";
 import MiniPlayerPage from "@mahiru/ui/page/mini/MiniPlayerPage";
 import SettingsPage from "@mahiru/ui/page/settings/SettingsPage";
+import PlayListPage from "@mahiru/ui/page/playlist/PlayListPage";
+import HistoryPage from "@mahiru/ui/page/history/HistoryPage";
+import StarPage from "@mahiru/ui/page/star/StarPage";
 
 export const router = createBrowserRouter([
   {
@@ -22,21 +25,15 @@ export const router = createBrowserRouter([
       },
       {
         path: "/star",
-        lazy: async () => ({
-          Component: (await import("@mahiru/ui/page/star/StarPage")).default
-        })
+        element: <StarPage />
       },
       {
         path: "/history",
-        lazy: async () => ({
-          Component: (await import("@mahiru/ui/page/history/HistoryPage")).default
-        })
+        element: <HistoryPage />
       },
       {
         path: "/playlist/:id",
-        lazy: async () => ({
-          Component: (await import("@mahiru/ui/page/playlist/PlayListPage")).default
-        })
+        element: <PlayListPage />
       }
     ]
   },

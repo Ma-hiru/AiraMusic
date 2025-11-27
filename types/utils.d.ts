@@ -40,3 +40,5 @@ type RenderEventAPI = {
 type RenderInvokeAPI = {
   [K in InvokeEvent]: RenderInvokeEventHandler<K>;
 };
+
+type IndexRange = [start: number, end: number];

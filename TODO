@@ -1,15 +1,4 @@
-使用worker预加载
-
-暂停后mini 的播放图标不会变化
-暂停后歌词进度有问题
-mini、lyric首次同步时间过长
-歌曲自动切换时，歌词有几率不切换
 给useSong添加自定义的addEventListener和removeEventListener方法，方便同步信息
-preload时，go这边应该考虑check一下
 限制一下mini的大小
-看看能不能把lyric大小控制一下、能不能穿透鼠标
 封装一个worker的hook，方便使用worker，哪怕使用useEffect的异步，当渲染过多时，还是会卡顿
-暂停播放逻辑有点问题
 lyric时间长了内存占用过高，貌似没有释放内存
-
-喜欢歌曲不需要手动计算，有接口

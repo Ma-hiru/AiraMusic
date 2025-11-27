@@ -1,26 +1,47 @@
-import { FC, RefObject, useCallback, useEffect, useState } from "react";
+import {
+  FC,
+  RefObject,
+  useEffect,
+  useImperativeHandle,
+  useState,
+  ForwardRefRenderFunction,
+  forwardRef
+} from "react";
+import { useGPU } from "@mahiru/ui/hook/useGPU";
 
 interface HasID {
   id: string | number;
 }
 
-export type RowComponentType<T> = FC<{
+export type RowComponentType<T, U = never> = FC<{
   items: T[];
   index: number;
+  extra?: U;
 }>;
 
-export type ListComponentType<T> = FC<{
-  RowComponent: RowComponentType<T>;
-}>;
+export type ListRef = {
+  getScrollHeight: () => number;
+  setScrollTop: (top: number) => void;
+};
 
-export function useVirtualList<T extends HasID>(
+export type ListComponentType<T, U = never> = ForwardRefRenderFunction<
+  ListRef,
+  {
+    RowComponent: RowComponentType<T, U>;
+  }
+>;
+
+export function useVirtualList<T extends HasID, U = never>(
   items: T[],
   containerRef: RefObject<Nullable<HTMLDivElement>>,
   overscan: number = 5,
-  itemHeight: number = 64
+  itemHeight: number = 64,
+  extraData?: U,
+  onRangeUpdate?: NormalFunc<[IndexRange]>
 ) {
   // 滚动距离
   const [scrollTop, setScrollTop] = useState(0);
+  const { hasDedicatedGPU } = useGPU();
   // 监听容器滚动，实时更新scrollTop
   useEffect(() => {
     const container = containerRef.current;
@@ -41,28 +62,39 @@ export function useVirtualList<T extends HasID>(
   // 计算渲染范围（包含缓冲区）
   const start = Math.max(0, visibleStart - overscan);
   const end = Math.min(total, visibleStart + visibleCount + overscan);
-
-  return useCallback<ListComponentType<T>>(
-    ({ RowComponent }) => {
-      return (
-        <div style={{ height: total * itemHeight, position: "relative" }}>
-          {/* 渲染可见区 */}
-          {items.slice(start, end).map((item, i) => {
-            const realIndex = start + i;
-            return (
-              <div
-                className="absolute w-full will-change-transform"
-                key={item.id}
-                style={{
-                  transform: `translate3d(0, ${realIndex * itemHeight}px, 0)`
-                }}>
-                <RowComponent items={items} index={realIndex} />
-              </div>
-            );
-          })}
-        </div>
-      );
-    },
-    [start, items, end, total, itemHeight]
-  );
+  // 通知范围更新
+  useEffect(() => {
+    onRangeUpdate?.([start, end]);
+  }, [start, end, onRangeUpdate]);
+  const List: ListComponentType<T, U> = ({ RowComponent }, ref) => {
+    useImperativeHandle(ref, () => ({
+      getScrollHeight: () => containerRef.current?.scrollHeight ?? 0,
+      setScrollTop: (top: number) => {
+        if (containerRef.current) {
+          containerRef.current.scrollTop = top;
+        }
+      }
+    }));
+    return (
+      <div style={{ height: total * itemHeight, position: "relative" }}>
+        {/* 渲染可见区 */}
+        {items.slice(start, end).map((item, i) => {
+          const realIndex = start + i;
+          return (
+            <div
+              className="absolute w-full will-change-transform"
+              key={item.id}
+              style={{
+                transform: hasDedicatedGPU
+                  ? `translate3d(0, ${realIndex * itemHeight}px, 0)`
+                  : `translateY(${realIndex * itemHeight}px)`
+              }}>
+              <RowComponent items={items} index={realIndex} extra={extraData} />
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+  return forwardRef(List);
 }

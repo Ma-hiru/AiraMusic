@@ -2,7 +2,6 @@ package handler
 
 import (
 	"fileServer/file"
-	"fileServer/ws"
 	"io"
 	"log"
 	"net/http"
@@ -127,10 +126,6 @@ func download(id, url, method string, body io.Reader, header http.Header) file.I
 	if err != nil {
 		log.Println("error storing file:", err)
 		return file.Index{}
-	}
-	ws.GetInstance().Broadcast <- ws.Message{
-		Id:   id,
-		File: idx.File,
 	}
 	return idx
 }

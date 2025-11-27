@@ -1,11 +1,11 @@
 import { FC, memo } from "react";
 import { usePlayer } from "@mahiru/ui/ctx/PlayerCtx";
-import { setImageURLSize } from "@mahiru/ui/utils/setImageSize";
 import { useFileCache } from "@mahiru/ui/ctx/BlobCachedCtx";
+import { ImageSize, NeteaseImageSizeFilter } from "@mahiru/ui/utils/filter";
 
 const Cover: FC<object> = () => {
   const { info } = usePlayer();
-  const cacheCover = useFileCache(setImageURLSize(info.cover, "raw"));
+  const cacheCover = useFileCache(NeteaseImageSizeFilter(info.cover, ImageSize.raw));
 
   return (
     <img

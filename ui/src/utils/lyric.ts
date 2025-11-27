@@ -14,8 +14,7 @@ import {
   NeteaseTransUser
 } from "@mahiru/ui/types/netease-api";
 import { parseNeteaseLyric, parseTranslatedLRC } from "@mahiru/wasm";
-import { Log } from "@mahiru/ui/utils/log";
-import { EqError } from "@mahiru/ui/utils/err";
+import { EqError, Log } from "@mahiru/ui/utils/dev";
 
 export function mapRawLyricLine(line: RawLyricLine): LyricLine {
   return {

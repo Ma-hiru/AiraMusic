@@ -347,6 +347,10 @@ export interface Al {
   pic: number;
   pic_str?: string;
   picUrl: string;
+  /** 注入字段 */
+  cachedPicUrl: string;
+  /** 注入字段 */
+  cachedPicUrlID: string;
   tns: string[];
 }
 
@@ -455,16 +459,16 @@ export interface NeteasePlaylistDetail {
 }
 
 export interface NeteasePlaylistDetailResponse {
-  code: number;
-  fromUserCount: number;
-  fromUsers: null;
+  code?: number;
+  fromUserCount?: number;
+  fromUsers?: null;
   playlist: NeteasePlaylistDetail;
   privileges: NeteaseTrackPrivilege[];
-  relatedVideos: null;
-  resEntrance: null;
-  sharedPrivilege: null;
-  songFromUsers: null;
-  urls: null;
+  relatedVideos?: null;
+  resEntrance?: null;
+  sharedPrivilege?: null;
+  songFromUsers?: null;
+  urls?: null;
 }
 
 /**
@@ -614,6 +618,10 @@ export interface NeteasePlaylistSummary {
   coverImgId: number;
   coverImgId_str: null | string;
   coverImgUrl: string;
+  /** 注入字段 */
+  cachedCoverImgUrl: string;
+  /** 注入字段 */
+  cachedCoverImgUrlID: string;
   createTime: number;
   creator: Creator;
   description: null | string;

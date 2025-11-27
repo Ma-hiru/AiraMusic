@@ -48,16 +48,18 @@ type LyricInit = {
     id: number;
     title: string;
     artist: Array<{ alias: string[]; id: number; name: string; tns: string[] }>;
-    album: {
+    album: Partial<{
       id: number;
       name: string;
       pic: number;
       pic_str?: string;
       picUrl: string;
       tns: string[];
-    };
+    }>;
     cover: string;
     audio: string;
+    alias: string;
+    tsTitle: string;
   };
 };
 

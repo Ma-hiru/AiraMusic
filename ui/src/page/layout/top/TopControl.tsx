@@ -1,4 +1,4 @@
-import { FC, memo, useCallback, useState } from "react";
+import { FC, memo, useCallback, useEffect, useState } from "react";
 import { Minus, PictureInPicture, Square, SquareMinus, X } from "lucide-react";
 import { NoDrag } from "@mahiru/ui/componets/public/Drag";
 import { useMiniPlayerSync } from "@mahiru/ui/hook/useMiniPlayerSync";
@@ -28,6 +28,12 @@ const TopControl: FC<ControlButtonProps> = ({ windowId, maximizable = true }) =>
     window.node.event.close(windowId);
   }, [windowId]);
   const { openMiniWin } = useMiniPlayerSync();
+
+  useEffect(() => {
+    window.node.invoke.isMaximized("main").then((isMaximized) => {
+      setIsMax(isMaximized);
+    });
+  }, []);
   return (
     <NoDrag className="flex flex-row gap-4 select-none relative z-10 ease-in-out transition-all">
       <Minus className="size-5 cursor-pointer hover:opacity-50" onClick={minimize} />

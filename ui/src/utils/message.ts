@@ -1,5 +1,4 @@
-import { Log } from "@mahiru/ui/utils/log";
-import { EqError } from "@mahiru/ui/utils/err";
+import { EqError, Log } from "@mahiru/ui/utils/dev";
 
 type MessageHandler = {
   id: string;
@@ -8,8 +7,8 @@ type MessageHandler = {
 
 const handlers: MessageHandler[] = [];
 
-export function addMessageHandler(
-  fn: (message: NormalEventMaps["sendMessageTo"]) => void,
+export function addMessageHandler<T = any>(
+  fn: (message: SendMessageDataType<T>) => void,
   id?: string
 ) {
   if (id) {

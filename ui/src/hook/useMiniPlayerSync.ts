@@ -24,10 +24,10 @@ export function useMiniPlayerSync() {
       from: "main",
       to: "miniplayer",
       type: "lyricInit",
-      data: JSON.stringify({
+      data: {
         lyricLines,
         info
-      } satisfies LyricInit)
+      } satisfies LyricInit
     });
   }, []);
   const sendSync = useCallback(() => {
@@ -37,20 +37,25 @@ export function useMiniPlayerSync() {
       from: "main",
       to: "miniplayer",
       type: "lyricSync",
-      data: JSON.stringify({
+      data: {
         lyricVersion,
         currentTime,
         duration,
         isPlaying
-      } satisfies LyricSync)
+      } satisfies LyricSync
     });
   }, []);
 
   const openMiniWin = useCallback(() => {
     window.node.event.createMiniplayerWindow();
     window.node.event.hidden("main");
-    setTimeout(sendInit, 2000);
     setHasOpenMiniWin(true);
+    addMessageHandler(({ from, type }) => {
+      if (from === "miniplayer" && type === "winLoaded") {
+        sendInit();
+        removeMessageHandler("mini-win-loaded-handler");
+      }
+    }, "mini-win-loaded-handler");
     addMessageHandler(({ from, to, type }) => {
       if (from === "miniplayer" && to === "main") {
         if (type === "closeMiniplayer") {
@@ -72,13 +77,15 @@ export function useMiniPlayerSync() {
     if (!audio) return;
     audio.addEventListener("timeupdate", sendSync);
     audio.addEventListener("loadstart", sendInit);
+    audio.addEventListener("pause", sendSync);
     return () => {
       audio.removeEventListener("timeupdate", sendSync);
       audio.removeEventListener("loadstart", sendInit);
+      audio.removeEventListener("pause", sendSync);
     };
   }, [audioRef, hasOpenMiniWin, sendInit, sendSync]);
   // 额外同步歌词变化，歌词受网络影响可能会延迟得到数据
-  useEffect(sendInit, [sendInit]);
+  useEffect(sendInit, [sendInit, lyricLines, info]);
 
   return { hasOpenMiniWin, openMiniWin };
 }

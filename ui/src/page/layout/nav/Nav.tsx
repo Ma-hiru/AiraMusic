@@ -2,14 +2,18 @@ import { FC, memo } from "react";
 import Avatar from "@mahiru/ui/page/layout/nav/NavAvatar";
 import NavSideNavItem from "@mahiru/ui/page/layout/nav/NavItem";
 import NavSideDivider from "@mahiru/ui/page/layout/nav/NavDivider";
-import { usePersistZustandShallowStore } from "@mahiru/ui/store";
+import { useDynamicZustandShallowStore } from "@mahiru/ui/store";
 import { useNavigate, useLocation } from "react-router-dom";
 import { NAV_DATA } from "@mahiru/ui/router";
 import BlobCachedProvider from "@mahiru/ui/ctx/BlobCachedProvider";
 import NavPlayList from "@mahiru/ui/page/layout/nav/NavPlayList";
 
 const Nav: FC<object> = () => {
-  const { data } = usePersistZustandShallowStore(["data"]);
+  const { getUserPlayListSummaryStatic, _update } = useDynamicZustandShallowStore([
+    "getUserPlayListSummaryStatic",
+    "_update"
+  ]);
+  const userPlayLists = getUserPlayListSummaryStatic();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -34,7 +38,7 @@ const Nav: FC<object> = () => {
           );
         })}
       </div>
-      {!!data?.userPlayLists?.length && <NavSideDivider />}
+      {!!userPlayLists.length && <NavSideDivider key={_update} />}
       {/*playList*/}
       <NavPlayList />
     </div>

@@ -2,14 +2,13 @@ import { FC, memo } from "react";
 import { usePersistZustandShallowStore } from "@mahiru/ui/store";
 import { css, cx } from "@emotion/css";
 import { LogOut, UserRound } from "lucide-react";
-
 import { useLogin, useLogout } from "@mahiru/ui/hook/useLogout";
 import { useFileCache } from "@mahiru/ui/ctx/BlobCachedCtx";
-import { setImageURLSize } from "@mahiru/ui/utils/setImageSize";
+import { ImageSize, NeteaseImageSizeFilter } from "@mahiru/ui/utils/filter";
 
 const NavAvatar: FC<object> = () => {
   const { data } = usePersistZustandShallowStore(["data"]);
-  const cachedURL = useFileCache(setImageURLSize(data.user?.avatarUrl, "md"));
+  const cachedURL = useFileCache(NeteaseImageSizeFilter(data.user?.avatarUrl, ImageSize.md));
   const login = useLogin();
   const logout = useLogout();
   return (

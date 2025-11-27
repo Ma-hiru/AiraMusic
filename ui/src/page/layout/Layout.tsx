@@ -1,4 +1,4 @@
-import { FC } from "react";
+import { FC, useEffect } from "react";
 import TopBar from "@mahiru/ui/page/layout/top/Top";
 import PlayerBar from "@mahiru/ui/page/layout/bar/Bar";
 import NavSide from "@mahiru/ui/page/layout/nav/Nav";
@@ -8,6 +8,13 @@ import PlayerProvider from "@mahiru/ui/ctx/PlayerProvider";
 import LayoutProvider from "@mahiru/ui/ctx/LayoutProvider";
 
 const Layout: FC<object> = () => {
+  useEffect(() => {
+    window.node.event.loaded({
+      win: "main",
+      broadcast: false,
+      showAfterLoaded: true
+    });
+  }, []);
   return (
     <PlayerProvider>
       <LayoutProvider>

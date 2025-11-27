@@ -7,3 +7,5 @@ export const usePersistZustandStore = createZustandStore(PersistStoreConfig, "pe
 
 export const usePersistZustandShallowStore =
   createZustandShallowStore<PersistStoreType>(usePersistZustandStore);
+
+export const getPersistSnapshot = usePersistZustandStore.getState;

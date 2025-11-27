@@ -2,6 +2,7 @@ package file
 
 import (
 	"bytes"
+	"crypto/rand"
 	"crypto/sha1"
 	"fmt"
 	"io"
@@ -42,9 +43,24 @@ func Peek(reader io.Reader, size int) ([]byte, io.Reader, error) {
 	return buffer[:n], io.MultiReader(bytes.NewReader(buffer[:n]), reader), err
 }
 
-// randomFilename 生成一个基于当前时间戳的随机文件名字符串。
+var alphaNumeric = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+
 func randomFilename() string {
-	return strconv.FormatInt(time.Now().UnixMilli(), 10)
+	return strconv.FormatInt(time.Now().UnixMilli(), 10) + "_" + randString(12)
+}
+
+func randString(n int) string {
+	b := make([]byte, n)
+	_, err := rand.Read(b)
+	if err != nil {
+		panic(err)
+	}
+
+	for i := 0; i < n; i++ {
+		b[i] = alphaNumeric[int(b[i])%len(alphaNumeric)]
+	}
+
+	return string(b)
 }
 
 // getTime 获取当前时间的纳秒级时间戳。

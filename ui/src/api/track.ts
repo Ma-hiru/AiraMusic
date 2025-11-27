@@ -11,7 +11,7 @@ import type {
   NeteaseTrack,
   NeteaseTrackPrivilege
 } from "@mahiru/ui/types/netease-api";
-import { cacheCheck, cacheFetch, cacheStore } from "@mahiru/ui/utils/cache";
+import { Store } from "@mahiru/ui/store";
 
 type TrackDetailCacheResult = {
   songs: NeteaseTrack[];
@@ -93,15 +93,9 @@ export function getTrackDetail(ids: string | number): Promise<TrackDetailResult>
  */
 export async function getLyric(id: number): Promise<NeteaseLyricResponse> {
   const url = "http://127.0.0.1:10754/lyric?id=" + id;
-  const check = await cacheCheck(url);
+  const check = await Store.checkOrStoreAsync(url);
   if (check.ok) {
-    try {
-      return (await cacheFetch(url).then((res) => res.json())) as NeteaseLyricResponse;
-    } catch {
-      void cacheStore(url, url);
-    }
-  } else {
-    void cacheStore(url, url);
+    return await Store.fetch<NeteaseLyricResponse>(url);
   }
   return request<{ id: number }, NeteaseLyricResponse>({
     url: "/lyric",

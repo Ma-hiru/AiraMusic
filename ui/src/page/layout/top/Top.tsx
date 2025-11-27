@@ -12,7 +12,7 @@ const Top: FC<object> = () => {
   const { TogglePlayerModalVisible, PlayerModalVisible } = useLayout();
   return (
     <Drag
-      className={cx("absolute min-h-10 w-full flex items-center justify-between px-6 z-30 py-2", {
+      className={cx("absolute min-h-10 w-full flex items-center justify-between px-6 z-30", {
         "text-[#7b8290]": !PlayerModalVisible,
         "text-white": PlayerModalVisible
       })}>

@@ -12,12 +12,18 @@ func Remove(ctx *gin.Context) {
 	var store = file.GetStore()
 	var index, ok = store.Check(id)
 	if !ok {
-		ctx.Status(404)
+		ctx.JSON(200, gin.H{
+			"ok":    false,
+			"index": file.Index{},
+		})
 		return
 	}
 	success, err := store.Remove(index)
 	if err != nil {
-		ctx.Status(500)
+		ctx.JSON(200, gin.H{
+			"ok":    false,
+			"index": file.Index{},
+		})
 		log.Println(err)
 		return
 	}

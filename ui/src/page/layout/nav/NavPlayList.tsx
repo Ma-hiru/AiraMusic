@@ -1,7 +1,7 @@
 import { FC, memo, useCallback, useRef } from "react";
 import { css, cx } from "@emotion/css";
 import { NeteasePlaylistSummary } from "@mahiru/ui/types/netease-api";
-import { usePersistZustandShallowStore } from "@mahiru/ui/store";
+import { useDynamicZustandShallowStore } from "@mahiru/ui/store";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ArrowBigUp } from "lucide-react";
 import BlobCachedProvider from "@mahiru/ui/ctx/BlobCachedProvider";
@@ -9,7 +9,11 @@ import NavPlayListItem from "@mahiru/ui/page/layout/nav/NavPlayListItem";
 import { useVirtualList, RowComponentType } from "@mahiru/ui/hook/useVirtualList";
 
 const NavPlayList: FC<object> = () => {
-  const { data } = usePersistZustandShallowStore(["data"]);
+  const { getUserPlayListSummaryStatic, _update } = useDynamicZustandShallowStore([
+    "getUserPlayListSummaryStatic",
+    "_update"
+  ]);
+  const userPlayLists = getUserPlayListSummaryStatic();
   const navigate = useNavigate();
   const location = useLocation();
   const RowComponent = useCallback<RowComponentType<NeteasePlaylistSummary>>(
@@ -18,8 +22,13 @@ const NavPlayList: FC<object> = () => {
       const data = items[index]!;
       return (
         <NavPlayListItem
+          index={index}
           active={location.pathname === `/playlist/${data.id}`}
-          cover={data.coverImgUrl}
+          cover={{
+            raw: data.coverImgUrl,
+            cached: data.cachedCoverImgUrl,
+            cacheID: data.cachedCoverImgUrlID
+          }}
           id={data.id}
           label={data.name}
           count={data.trackCount}
@@ -30,7 +39,7 @@ const NavPlayList: FC<object> = () => {
     [navigate, location.pathname]
   );
   const containerRef = useRef<Nullable<HTMLDivElement>>(null);
-  const List = useVirtualList(data.userPlayLists, containerRef, 10, 55);
+  const List = useVirtualList(userPlayLists, containerRef, 10, 55);
   return (
     <div className="overflow-hidden">
       <div
@@ -42,7 +51,7 @@ const NavPlayList: FC<object> = () => {
             -webkit-overflow-scrolling: auto;
           `
         )}>
-        <BlobCachedProvider>
+        <BlobCachedProvider key={_update}>
           <List RowComponent={RowComponent} />
         </BlobCachedProvider>
       </div>

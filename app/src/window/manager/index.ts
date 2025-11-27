@@ -1,6 +1,6 @@
 import { BrowserWindow, BrowserWindowConstructorOptions } from "electron";
 
-export type WindowID = string | number;
+export type WindowID = WindowType;
 
 export enum WindowExits {
   IGNORE,

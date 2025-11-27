@@ -1,5 +1,5 @@
 import { createContext, useContext } from "react";
-import { EqError } from "@mahiru/ui/utils/err";
+import { EqError } from "@mahiru/ui/utils/dev";
 
 export type LayoutCtxType = {
   PlayerModalVisible: boolean;

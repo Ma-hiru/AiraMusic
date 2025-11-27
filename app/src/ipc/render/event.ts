@@ -1,7 +1,6 @@
 import { typedIpcRenderSend } from "./typed";
 
 export const renderEventAPI: RenderEventAPI = {
-  isMaximized: () => {},
   rememberCloseAppOption: () => {},
   createLoginWindow: () => typedIpcRenderSend("createLoginWindow", undefined),
   createLyricWindow: () => typedIpcRenderSend("createLyricWindow", undefined),
@@ -13,5 +12,7 @@ export const renderEventAPI: RenderEventAPI = {
   hidden: (winType) => typedIpcRenderSend("hidden", winType),
   visible: (winType) => typedIpcRenderSend("visible", winType),
   sendMessageTo: ({ to, data, type, from }) =>
-    typedIpcRenderSend("sendMessageTo", { to, data, type, from })
+    typedIpcRenderSend("sendMessageTo", { to, data, type, from }),
+  mousePenetrate: (params) => typedIpcRenderSend("mousePenetrate", params),
+  loaded: (params) => typedIpcRenderSend("loaded", params)
 };

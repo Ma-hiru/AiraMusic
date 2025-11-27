@@ -2,35 +2,41 @@ type InvokeEventMaps = {
   message: [message: string, string];
   readFile: [filePath: string, Promise<{ ok: boolean; data?: ArrayBuffer }>];
   GPUInfo: [never, Promise<string>];
+  isMaximized: [win: WindowType, boolean];
+};
+
+type SendMessageDataType<T = any> = {
+  to: WindowType;
+  from: WindowType;
+  data: T;
+  type:
+    | "login"
+    | "lyricSync"
+    | "lyricInit"
+    | "lyricClose"
+    | "lyricVersionChange"
+    | "closeMiniplayer"
+    | "nextTrack"
+    | "lastTrack"
+    | "playTrack"
+    | "windowMaximizedChange"
+    | "winLoaded";
 };
 
 type NormalEventMaps = {
   rememberCloseAppOption: "exit" | "minimizeToTray";
-  isMaximized: boolean;
   createLoginWindow: never;
   createLyricWindow: never;
   createMiniplayerWindow: never;
-  sendMessageTo: {
-    to: WindowType;
-    from: WindowType;
-    data: string;
-    type:
-      | "login"
-      | "lyricSync"
-      | "lyricInit"
-      | "lyricClose"
-      | "lyricVersionChange"
-      | "closeMiniplayer"
-      | "nextTrack"
-      | "lastTrack"
-      | "playTrack";
-  };
+  sendMessageTo: SendMessageDataType;
   close: WindowType;
   minimize: WindowType;
   maximize: WindowType;
   unmaximize: WindowType;
   hidden: WindowType;
   visible: WindowType;
+  mousePenetrate: { win: WindowType; penetrate: boolean };
+  loaded: { win: WindowType; broadcast: boolean; showAfterLoaded: boolean };
 };
 
 type NormalEventRegister = {

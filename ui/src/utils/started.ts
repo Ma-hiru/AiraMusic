@@ -1,5 +1,4 @@
-import { Log } from "@mahiru/ui/utils/log";
-import { EqError } from "@mahiru/ui/utils/err";
+import { EqError, Log } from "@mahiru/ui/utils/dev";
 import { usePersistZustandStore } from "@mahiru/ui/store";
 import { isAccountLoggedIn } from "@mahiru/ui/api/utils/auth";
 import {

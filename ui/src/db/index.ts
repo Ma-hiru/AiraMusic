@@ -1,14 +1,13 @@
 import axios from "axios";
 import Dexie, { Table } from "dexie";
 import { usePersistZustandStore } from "@mahiru/ui/store";
-import { EqError } from "@mahiru/ui/utils/err";
+import { EqError, Log } from "@mahiru/ui/utils/dev";
 import {
   NeteaseAlbumDetailResponse,
   NeteaseLyricResponse,
   NeteaseTrack,
   NeteaseTrackPrivilege
 } from "@mahiru/ui/types/netease-api";
-import { Log } from "@mahiru/ui/utils/log";
 
 export interface TrackSourceRow {
   id: number;

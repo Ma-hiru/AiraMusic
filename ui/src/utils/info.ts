@@ -1,4 +1,4 @@
-import { EqError } from "@mahiru/ui/utils/err";
+import { EqError } from "@mahiru/ui/utils/dev";
 
 export interface GpuDevice {
   active: boolean;

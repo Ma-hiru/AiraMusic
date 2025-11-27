@@ -1,11 +1,8 @@
-import { Log } from "@mahiru/ui/utils/log";
+import { EqError, Log } from "@mahiru/ui/utils/dev";
 import { refreshCookie } from "@mahiru/ui/api/auth";
-import { EqError } from "@mahiru/ui/utils/err";
 import { userAccount, userDetail, userLikedSongsIDs, userPlaylist } from "@mahiru/ui/api/user";
-import { usePersistZustandStore } from "@mahiru/ui/store";
+import { getDynamicSnapshot, getPersistSnapshot } from "@mahiru/ui/store";
 import { doLogout, setCookies } from "@mahiru/ui/api/utils/auth";
-
-const getStoreSnapshot = usePersistZustandStore.getState;
 
 /** 登录接口 */
 export async function refreshLogin(cookies: string) {
@@ -31,7 +28,7 @@ export async function refreshCookieTask() {
     Log.trace("refresh cookie");
     await refreshCookie();
 
-    const store = getStoreSnapshot();
+    const store = getPersistSnapshot();
     store.updatePersistStoreData({
       lastRefreshCookieDate: new Date().getDate()
     });
@@ -52,7 +49,7 @@ export async function refreshUserProfile() {
     const account = await userAccount();
     const detail = await userDetail(account.profile.userId);
 
-    const { updatePersistStoreData } = getStoreSnapshot();
+    const { updatePersistStoreData } = getPersistSnapshot();
     updatePersistStoreData({
       loginMode: "account",
       user: detail.profile
@@ -71,16 +68,19 @@ export async function refreshUserProfile() {
 export async function refreshUserPlaylist() {
   try {
     Log.trace("refresh user playlist");
-    const { updatePersistStoreData, data } = getStoreSnapshot();
+    const { updateUserLikedPlayList, getUserPlayListSummaryStatic, updateTrigger } =
+      getDynamicSnapshot();
+    const { data } = getPersistSnapshot();
     const uid = data.user?.userId;
     if (uid) {
-      const playList = await userPlaylist({ uid, limit: 30 });
-      const userLikedList = playList.playlist.shift();
-      updatePersistStoreData({
-        userPlayLists: playList.playlist,
-        userLikedList: userLikedList || null
-      });
+      const { playlist } = await userPlaylist({ uid, limit: 30 });
+      const userLikedList = playlist.shift();
+      updateUserLikedPlayList(userLikedList || null);
+      const userPlaylistStatic = getUserPlayListSummaryStatic();
+      userPlaylistStatic.length = 0;
+      userPlaylistStatic.push(...playlist);
     }
+    updateTrigger();
   } catch (err) {
     Log.error(
       new EqError({
@@ -95,17 +95,13 @@ export async function refreshUserPlaylist() {
 export async function refreshUserLikedTrackIDs() {
   try {
     Log.trace("refresh user liked track IDs");
-    const { data, updatePersistStoreData } = getStoreSnapshot();
+    const { updateLikedTrackIDs } = getDynamicSnapshot();
+    const { data } = getPersistSnapshot();
     const uid = data.user?.userId;
     if (uid) {
       const { ids, checkPoint, code } = await userLikedSongsIDs(uid);
       if (code === 200) {
-        updatePersistStoreData({
-          userLikedTracksID: {
-            ids: new Set<number>(ids),
-            checkPoint
-          }
-        });
+        updateLikedTrackIDs(new Set<number>(ids), checkPoint);
       } else {
         Log.error(
           new EqError({

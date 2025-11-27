@@ -7,6 +7,7 @@ import { Log } from "../../utils/log";
 import { EqError } from "../../utils/err";
 import { fileURLToPath } from "node:url";
 import { StoreType } from "../../app/store";
+import { WindowManager } from "@mahiru/app/src/window/manager";
 
 export function registerInvokeHandlers(mainWindow: BrowserWindow, store: ElectronStore<StoreType>) {
   typedIpcMainHandle("message", (e, data) => {
@@ -49,5 +50,9 @@ export function registerInvokeHandlers(mainWindow: BrowserWindow, store: Electro
         })
         .catch(reject);
     });
+  });
+  typedIpcMainHandle("isMaximized", (e, type) => {
+    const win = WindowManager.getBrowserWindowById(type);
+    return win ? win.isMaximized() : false;
   });
 }

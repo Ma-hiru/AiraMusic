@@ -3,9 +3,8 @@ import { createJSONStorage, persist } from "zustand/middleware";
 import { create } from "zustand";
 import { useShallow } from "zustand/react/shallow";
 import { isRelease } from "@mahiru/ui/utils/dev";
-import { EqError } from "@mahiru/ui/utils/err";
+import { EqError, Log } from "@mahiru/ui/utils/dev";
 import { ZustandConfig } from "@mahiru/ui/types/zustand";
-import { Log } from "@mahiru/ui/utils/log";
 
 export function createZustandStore<T extends ZustandConfig<any>>(
   config: T,

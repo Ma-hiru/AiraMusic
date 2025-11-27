@@ -1,13 +1,13 @@
 import { FC, memo } from "react";
 import { usePlayer } from "@mahiru/ui/ctx/PlayerCtx";
 import { useLayout } from "@mahiru/ui/ctx/LayoutCtx";
-import { setImageURLSize } from "@mahiru/ui/utils/setImageSize";
 import { useFileCache } from "@mahiru/ui/ctx/BlobCachedCtx";
+import { ImageSize, NeteaseImageSizeFilter } from "@mahiru/ui/utils/filter";
 
 const BarCover: FC<object> = () => {
   const { info } = usePlayer();
   const { TogglePlayerModalVisible } = useLayout();
-  const cachedCover = useFileCache(setImageURLSize(info.cover, "md"));
+  const cachedCover = useFileCache(NeteaseImageSizeFilter(info.cover, ImageSize.md));
   return (
     <div className="h-2/3 space-x-2 flex items-center justify-start gap-2">
       <div className="h-12 w-12 rounded-md overflow-hidden">

@@ -3,12 +3,12 @@ import { addMessageHandler, removeMessageHandler } from "@mahiru/ui/utils/messag
 import { useImmer } from "use-immer";
 import { LyricPlayer, LyricPlayerRef } from "@mahiru/ui/componets/player/LyricPlayer";
 import { cx } from "@emotion/css";
-import { changeLyricComponentColorByCSSVar } from "@mahiru/ui/utils/color";
+import { changeLyricComponentColorByCSSVar } from "@mahiru/ui/utils/ui";
 import Control from "@mahiru/ui/page/lyric/Control";
+import { useUpdate } from "@mahiru/ui/hook/useUpdate";
 
 const LyricPage: FC<object> = () => {
   const lyricPlayerRef = useRef<LyricPlayerRef>(null);
-  const [_, update] = useState(0);
   const [lyricLines, setLyricLines] = useState<FullVersionLyricLine>({
     full: [],
     raw: [],
@@ -23,31 +23,32 @@ const LyricPage: FC<object> = () => {
     isPlaying: false
   });
   const [showBg, setShowBg] = useState(false);
-  const [color, setColor] = useState("#ffffff");
+  const [color, setColor] = useState("#FFFFFF");
   const [lock, setLock] = useState(false);
 
+  const update = useUpdate();
   const showBgTimer = useRef<Nullable<ReturnType<typeof setTimeout>>>(null);
   const getSync = useRef(lyricSync);
   getSync.current = lyricSync;
   // 同步信息
   useEffect(() => {
-    addMessageHandler((message) => {
+    addMessageHandler<LyricInit | LyricSync>((message) => {
       const { data, type, to, from } = message;
       if (from === "main" && to === "lyric") {
         if (type === "lyricInit") {
-          const lyricInit = JSON.parse(data) as LyricInit;
+          const lyricInit = data as LyricInit;
           setLyricLines(lyricInit.lyricLines);
           setInfo(lyricInit.info);
-          update((p) => p + 1);
+          update();
         } else if (type === "lyricSync") {
-          const lyricSync = JSON.parse(data) as LyricSync;
+          const lyricSync = data as LyricSync;
           setLyricSync((draft) => {
             draft.currentTime = lyricSync.currentTime;
             draft.duration = lyricSync.duration;
             draft.lyricVersion = lyricSync.lyricVersion;
             draft.isPlaying = lyricSync.isPlaying;
           });
-          update((p) => p + 1);
+          update();
         }
       }
     }, "lyric-sync-handler");
@@ -55,7 +56,7 @@ const LyricPage: FC<object> = () => {
     return () => {
       removeMessageHandler("lyric-sync-handler");
     };
-  }, [setLyricSync]);
+  }, [setLyricSync, update]);
   // 歌词播放同步
   useEffect(() => {
     let rafId = 0;
@@ -121,6 +122,13 @@ const LyricPage: FC<object> = () => {
     showBgTimer.current = setTimeout(() => {
       setShowBg(false);
     }, 2500);
+  }, []);
+  useEffect(() => {
+    window.node.event.loaded({
+      win: "lyric",
+      broadcast: true,
+      showAfterLoaded: true
+    });
   }, []);
   return (
     <div className="w-screen h-screen overflow-hidden relative flex rounded-md flex-col-reverse">

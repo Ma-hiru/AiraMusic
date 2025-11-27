@@ -1,13 +1,14 @@
-import { FC, memo, useEffect, useState } from "react";
+import { FC, memo, SyntheticEvent, useCallback, useEffect, useRef, useState } from "react";
 import { Drag, NoDrag } from "@mahiru/ui/componets/public/Drag";
 import { addMessageHandler, removeMessageHandler } from "@mahiru/ui/utils/message";
 import { useImmer } from "use-immer";
 import { Pause, Play, SkipBack, SkipForward, X } from "lucide-react";
 import { useFileCache } from "@mahiru/ui/ctx/BlobCachedCtx";
-import { setImageURLSize } from "@mahiru/ui/utils/setImageSize";
+import { ImageSize, NeteaseImageSizeFilter } from "@mahiru/ui/utils/filter";
+import { useUpdate } from "@mahiru/ui/hook/useUpdate";
+import { Store } from "@mahiru/ui/store";
 
 const MiniPlayerPage: FC<object> = () => {
-  const [_, update] = useState(0);
   const [info, setInfo] = useState<Nullable<LyricInit["info"]>>(null);
   const [lyricSync, setLyricSync] = useImmer<LyricSync>({
     currentTime: 0,
@@ -15,31 +16,58 @@ const MiniPlayerPage: FC<object> = () => {
     lyricVersion: "raw",
     isPlaying: false
   });
+
+  const update = useUpdate();
   useEffect(() => {
     addMessageHandler((message) => {
       const { data, type, to, from } = message;
       if (from === "main" && to === "miniplayer") {
         if (type === "lyricInit") {
-          const lyricInit = JSON.parse(data) as LyricInit;
+          const lyricInit = data as LyricInit;
           setInfo(lyricInit.info);
-          update((p) => p + 1);
+          update();
         } else if (type === "lyricSync") {
-          const lyricSync = JSON.parse(data) as LyricSync;
+          const lyricSync = data as LyricSync;
           setLyricSync((draft) => {
             draft.currentTime = lyricSync.currentTime;
             draft.duration = lyricSync.duration;
             draft.lyricVersion = lyricSync.lyricVersion;
             draft.isPlaying = lyricSync.isPlaying;
           });
-          update((p) => p + 1);
+          update();
         }
       }
     }, "mini-player-sync-handler");
     return () => {
       removeMessageHandler("mini-player-sync-handler");
     };
-  }, [setLyricSync]);
-  const cachedCover = useFileCache(setImageURLSize(info?.cover, "xs"));
+  }, [setLyricSync, update]);
+  useEffect(() => {
+    window.node.event.loaded({
+      win: "miniplayer",
+      broadcast: true,
+      showAfterLoaded: true
+    });
+  }, []);
+  const cacheID = useRef("");
+  const cachedCover = useFileCache(NeteaseImageSizeFilter(info?.cover, ImageSize.xs), {
+    onCacheHit: (_, id) => {
+      cacheID.current = id;
+    }
+  });
+  const onImageErr = useCallback(
+    (e: SyntheticEvent<HTMLImageElement, Event>) => {
+      const raw = NeteaseImageSizeFilter(info?.cover, ImageSize.xs) as string;
+      if (e.currentTarget.src === raw) return;
+      e.currentTarget.src = raw;
+      console.log(
+        `MiniPlayer Image load error: ${cachedCover}, fallback to original cover: ${raw}`
+      );
+      if (cacheID.current) void Store.remove(cacheID.current);
+      cacheID.current = "";
+    },
+    [cachedCover, info?.cover]
+  );
   const percent = lyricSync.duration
     ? Math.min(((lyricSync.currentTime || 0) / lyricSync.duration) * 100, 100)
     : 0;
@@ -50,6 +78,7 @@ const MiniPlayerPage: FC<object> = () => {
           className="w-full h-full object-cover"
           src={cachedCover || undefined}
           alt={info?.title}
+          onError={onImageErr}
         />
       </div>
       <div className="h-full w-full flex flex-col justify-center px-2 gap-[6px] overflow-hidden">
@@ -113,7 +142,7 @@ function lastTrack() {
     from: "miniplayer",
     to: "main",
     type: "lastTrack",
-    data: ""
+    data: undefined
   });
 }
 function nextTrack() {
@@ -121,7 +150,7 @@ function nextTrack() {
     from: "miniplayer",
     to: "main",
     type: "nextTrack",
-    data: ""
+    data: undefined
   });
 }
 function playTrack() {
@@ -129,6 +158,6 @@ function playTrack() {
     from: "miniplayer",
     to: "main",
     type: "playTrack",
-    data: ""
+    data: undefined
   });
 }

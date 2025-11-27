@@ -21,7 +21,7 @@ func CheckOrStoreAsync(ctx *gin.Context) {
 		return
 	}
 	ctx.JSON(200, gin.H{
-		"ok":    ok,
+		"ok":    true,
 		"index": index,
 	})
 }

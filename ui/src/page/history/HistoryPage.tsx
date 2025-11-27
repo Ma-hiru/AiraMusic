@@ -2,6 +2,7 @@ import { FC, memo, useState } from "react";
 import { getTrackDetail } from "@mahiru/ui/api/track";
 import { userLikedSongsIDs, userPlaylist } from "@mahiru/ui/api/user";
 import { usePersistZustandShallowStore } from "@mahiru/ui/store";
+import Loading from "@mahiru/ui/componets/public/Loading";
 
 const HistoryPage: FC<object> = () => {
   const [trackId, setTrackId] = useState("");

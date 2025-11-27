@@ -1,14 +1,15 @@
 import { createContext, RefObject, useContext } from "react";
-import { EqError } from "@mahiru/ui/utils/err";
+import { EqError, Log } from "@mahiru/ui/utils/dev";
 import { NeteaseTrack } from "@mahiru/ui/types/netease-api";
-import { Log } from "@mahiru/ui/utils/log";
 import { FullVersionLyricLine } from "@mahiru/ui/utils/lyric";
 
 export interface PlayerTrackInfo {
   id: number;
   title: string;
+  alias: string;
+  tsTitle: string;
   artist: NeteaseTrack["ar"];
-  album: NeteaseTrack["al"];
+  album: Partial<NeteaseTrack["al"]>;
   cover: string;
   audio: string;
 }
@@ -32,6 +33,10 @@ export interface PlayerCtxType {
   playList: PlayerTrackInfo[];
   getProgress: NormalFunc<never[], PlayerCtxProgress>;
   lyricVersion: LyricVersionType;
+  isShuffle: boolean;
+  isRepeat: boolean;
+  shuffle: NormalFunc<[enable?: boolean]>;
+  repeat: NormalFunc<[enable?: boolean]>;
   // refs
   audioRef: RefObject<HTMLAudioElement | null>;
   // actions
@@ -64,6 +69,8 @@ export const PlayerCtxDefault = {
   },
   lyricVersion: "raw" as "raw" | "full" | "tl" | "rm",
   audioRef: { current: null },
+  isShuffle: false,
+  isRepeat: false,
   playList: [],
   info: {
     title: "",
@@ -78,7 +85,9 @@ export const PlayerCtxDefault = {
     },
     cover: "",
     audio: "",
-    id: 0
+    id: 0,
+    alias: "",
+    tsTitle: ""
   },
   currentIndex: 0,
   getProgress: () => ({
@@ -102,7 +111,9 @@ export const PlayerCtxDefault = {
   addAndPlayTrack: blankFunc,
   clearPlayList: blankFunc,
   replacePlayList: blankFunc,
-  changeCurrentTime: blankFunc
+  changeCurrentTime: blankFunc,
+  shuffle: blankFunc,
+  repeat: blankFunc
 };
 
 export const PlayerCtx = createContext<PlayerCtxType>(PlayerCtxDefault);

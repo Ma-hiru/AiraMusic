@@ -12,7 +12,8 @@ export function registerEventHandlers(mainWindow: BrowserWindow, store: Electron
   registerLoginWindowControl();
   registerLyricWindowControl();
   registerMiniplayerWindowControl();
-  registerWindowControl(mainWindow);
+  registerWindowControl();
+  registerWindowEventListeners(mainWindow, "main");
 }
 
 function registerLoginWindowControl() {
@@ -51,7 +52,7 @@ function registerLoginWindowControl() {
         });
       }
       LoginWindow.on("ready-to-show", () => {
-        LoginWindow.show();
+        // LoginWindow.show();
         // isDev() && LoginWindow.webContents.openDevTools();
       });
     }
@@ -105,7 +106,7 @@ function registerLyricWindowControl() {
       });
     }
     LyricWindow.on("ready-to-show", () => {
-      LyricWindow.show();
+      // LyricWindow.show();
     });
   });
 }
@@ -117,8 +118,6 @@ function registerMiniplayerWindowControl() {
       {
         width,
         height,
-        transparent: true,
-        backgroundColor: "#00000000",
         webPreferences: {
           preload: preloadPath
         },
@@ -158,12 +157,12 @@ function registerMiniplayerWindowControl() {
       });
     }
     MiniplayerWindow.on("ready-to-show", () => {
-      MiniplayerWindow.show();
+      // MiniplayerWindow.show();
     });
   });
 }
 
-function registerWindowControl(mainWindow: BrowserWindow) {
+function registerWindowControl() {
   typedIpcMainOn("close", (_e, type) => {
     Log.trace("app/ipc", "IPC Close Window:", type);
     WindowManager.getBrowserWindowById(type)?.close();
@@ -205,5 +204,45 @@ function registerWindowControl(mainWindow: BrowserWindow) {
     if (win) {
       typedIpcMainSend(win, "sendMessageTo", { to, data, type, from });
     }
+  });
+  typedIpcMainOn("mousePenetrate", (_e, { win: type, penetrate }) => {
+    const win = WindowManager.getBrowserWindowById(type);
+    win?.setIgnoreMouseEvents(penetrate, { forward: true });
+  });
+  typedIpcMainOn("loaded", (_e, { win, showAfterLoaded, broadcast }) => {
+    Log.trace("app/ipc", `IPC Window Loaded:`, win);
+    const window = WindowManager.getBrowserWindowById(win);
+    if (window && showAfterLoaded) {
+      window.show();
+    }
+    if (broadcast) {
+      WindowManager.getAllBrowserWindows().forEach(([winItemID, winItem]) => {
+        typedIpcMainSend(winItem, "sendMessageTo", {
+          from: win,
+          to: winItemID,
+          data: undefined,
+          type: "winLoaded"
+        });
+      });
+    }
+  });
+}
+
+function registerWindowEventListeners(needRegisterWin: BrowserWindow, type: WindowType) {
+  needRegisterWin.on("maximize", () => {
+    typedIpcMainSend(needRegisterWin, "sendMessageTo", {
+      from: type,
+      to: type,
+      data: true,
+      type: "windowMaximizedChange"
+    });
+  });
+  needRegisterWin.on("unmaximize", () => {
+    typedIpcMainSend(needRegisterWin, "sendMessageTo", {
+      from: type,
+      to: type,
+      data: false,
+      type: "windowMaximizedChange"
+    });
   });
 }

@@ -5,7 +5,6 @@ import type {
   NeteasePlaylistDetailResponse,
   NeteaseStatusResponse
 } from "@mahiru/ui/types/netease-api";
-import { cacheCheck, cacheFetch, cacheStore } from "@mahiru/ui/utils/cache";
 
 /**
  * 推荐歌单
@@ -54,21 +53,7 @@ export async function getPlaylistDetail(
   id: number,
   update = false
 ): Promise<NeteasePlaylistDetailResponse> {
-  const url = "http://127.0.0.1:10754/playlist/detail?id=" + id;
-  const result = await cacheCheck(url);
-  if (result.ok) {
-    console.log("playlist detail from cache=>", id);
-    const data = await cacheFetch(url).then((res) => res.json());
-    if (data.playlist) {
-      data.playlist.tracks = mapTrackPlayableStatus(data.playlist.tracks, data.privileges || []);
-    }
-    return data;
-  } else {
-    console.log("playlist detail store cache=>", id);
-    cacheStore(url, url).catch((err) => console.log(err));
-  }
-  console.log("playlist detail from net=>", id);
-  const data = await request<{ id: number; timestamp: number }, NeteasePlaylistDetailResponse>({
+  return await request<{ id: number; timestamp: number }, NeteasePlaylistDetailResponse>({
     url: "/playlist/detail",
     method: "get",
     params: {
@@ -76,10 +61,6 @@ export async function getPlaylistDetail(
       timestamp: update ? new Date().getTime() : undefined
     }
   });
-  if (data.playlist) {
-    data.playlist.tracks = mapTrackPlayableStatus(data.playlist.tracks, data.privileges || []);
-  }
-  return data;
 }
 
 /**

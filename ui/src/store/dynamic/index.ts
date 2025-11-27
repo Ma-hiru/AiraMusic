@@ -7,3 +7,5 @@ export const useDynamicZustandStore = createZustandStore(DynamicStoreConfig, "dy
 
 export const useDynamicZustandShallowStore =
   createZustandShallowStore<DynamicStoreType>(useDynamicZustandStore);
+
+export const getDynamicSnapshot = useDynamicZustandStore.getState;
