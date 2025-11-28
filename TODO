@@ -1,4 +1,4 @@
 给useSong添加自定义的addEventListener和removeEventListener方法，方便同步信息
-限制一下mini的大小
 封装一个worker的hook，方便使用worker，哪怕使用useEffect的异步，当渲染过多时，还是会卡顿
 lyric时间长了内存占用过高，貌似没有释放内存
+主题色切换
