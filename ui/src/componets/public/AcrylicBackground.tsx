@@ -24,6 +24,7 @@ const AcrylicBackground: FC<AcrylicBackgroundProps> = ({
       <img
         src={src}
         loading="lazy"
+        decoding="async"
         alt={alt}
         className={css`
           position: absolute;

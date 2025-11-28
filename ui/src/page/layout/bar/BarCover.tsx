@@ -13,6 +13,8 @@ const BarCover: FC<object> = () => {
       <div className="h-12 w-12 rounded-md overflow-hidden">
         <img
           className="h-full w-full object-cover cursor-pointer"
+          loading="lazy"
+          decoding="async"
           src={(cachedCover || null) as string}
           alt={info.title}
           onClick={() => TogglePlayerModalVisible(true)}

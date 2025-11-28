@@ -64,8 +64,8 @@ export function useVirtualList<T extends HasID, U = never>(
   const end = Math.min(total, visibleStart + visibleCount + overscan);
   // 通知范围更新
   useEffect(() => {
-    onRangeUpdate?.([start, end]);
-  }, [start, end, onRangeUpdate]);
+    onRangeUpdate?.([visibleStart, Math.min(total, visibleStart + visibleCount)]);
+  }, [onRangeUpdate, total, visibleCount, visibleStart]);
   const platform = usePlatform();
   const { hasDedicatedGPU } = useGPU();
   const List: ListComponentType<T, U> = ({ RowComponent }, ref) => {

@@ -11,7 +11,7 @@ const Bar: FC<object> = () => {
   return (
     <div
       className={cx(
-        "absolute h-18 bottom-0 left-0 right-0 backdrop-blur-lg px-6 shadow-[0_10px_25px_-5px_rgba(0,0,0,0.25)] grid grid-rows-1 grid-cols-[1fr_auto_1fr] items-center z-10",
+        "absolute h-18 bottom-0 left-0 right-0 backdrop-blur-lg px-6 shadow-[0_10px_25px_-5px_rgba(0,0,0,0.25)] grid grid-rows-1 grid-cols-[1fr_auto_1fr] items-center z-10 select-none",
         background ? "bg-transparent" : "bg-white"
       )}>
       <BarCover />

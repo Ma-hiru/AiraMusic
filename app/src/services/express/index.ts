@@ -2,14 +2,13 @@ import { Log } from "../../utils/log";
 import express from "express";
 import { staticPath } from "../../utils/path";
 import expressProxy from "express-http-proxy";
-import { CONSTANTS } from "../../constant";
 
 export function createExpressApp() {
   Log.debug("Create Express APP");
   const expressAPP = express();
-  const port = CONSTANTS.APP.EXPRESS_PORT;
-  const ncmPort = CONSTANTS.APP.NCM_PORT;
-  const cachePort = CONSTANTS.APP.CACHE_PORT;
+  const port = Number(process.env.EXPRESS_SERVER_PORT);
+  const ncmPort = Number(process.env.NCM_SERVER_PORT);
+  const cachePort = Number(process.env.GO_SERVER_PORT);
   expressAPP.use("/", express.static(staticPath));
   expressAPP.use(
     "/api",

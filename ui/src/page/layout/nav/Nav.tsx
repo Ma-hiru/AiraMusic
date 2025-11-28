@@ -11,10 +11,8 @@ import { useLayout } from "@mahiru/ui/ctx/LayoutCtx";
 import { cx } from "@emotion/css";
 
 const Nav: FC<object> = () => {
-  const { getUserPlayListSummaryStatic, _update } = useDynamicZustandShallowStore([
-    "getUserPlayListSummaryStatic",
-    "_update"
-  ]);
+  const { getUserPlayListSummaryStatic, userLikedPlayList, _update } =
+    useDynamicZustandShallowStore(["getUserPlayListSummaryStatic", "userLikedPlayList", "_update"]);
   const userPlayLists = getUserPlayListSummaryStatic();
   const navigate = useNavigate();
   const location = useLocation();
@@ -37,8 +35,17 @@ const Nav: FC<object> = () => {
             <NavSideNavItem
               key={label}
               prefix={icon}
-              active={location.pathname === path}
-              onClick={() => navigate(path)}>
+              active={
+                location.pathname === path ||
+                (label === "搜藏" && location.pathname === `/playlist/${userLikedPlayList?.id}`)
+              }
+              onClick={() => {
+                if (label === "搜藏" && (userLikedPlayList?.id || userLikedPlayList?.id === 0)) {
+                  navigate(`/playlist/${userLikedPlayList.id}`);
+                } else {
+                  navigate(path);
+                }
+              }}>
               {label}
             </NavSideNavItem>
           );

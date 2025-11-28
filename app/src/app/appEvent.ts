@@ -1,12 +1,13 @@
 import { APP } from "./index";
-import { app } from "electron";
+import { app, protocol } from "electron";
 import { Log } from "../utils/log";
 import { createInitWindow } from "./createWindow";
 import { handleWindowEvents } from "./windowEvent";
 import { isCreateTray, isMacOS } from "../utils/platform";
 import { registerIpcMainHandlers } from "../ipc";
 import { stopCacheServer } from "@mahiru/app/src/services/store";
-
+import { readFile } from "node:fs/promises";
+import mime from "mime";
 export function handleAppEvents(instance: APP) {
   app.on("ready", async () => {
     Log.trace("App ready");
@@ -21,6 +22,32 @@ export function handleAppEvents(instance: APP) {
     // TODO dock
     // TODO touch
     // TODO ......
+  });
+
+  protocol.registerSchemesAsPrivileged([
+    {
+      scheme: "mahiru",
+      privileges: {
+        secure: true,
+        standard: true,
+        supportFetchAPI: true,
+        bypassCSP: true
+      }
+    }
+  ]);
+
+  app.whenReady().then(() => {
+    protocol.handle("mahiru", async (request) => {
+      // url.hostname === "local"
+      // url.pathname === "/C:/Users/xxx.png"
+      const url = new URL(request.url);
+      const filePath = decodeURIComponent(url.pathname.slice(1)); // 去掉开头的 "/"
+      return new Response(await readFile(filePath), {
+        headers: {
+          "Content-Type": mime.getType(filePath) ?? "application/octet-stream"
+        }
+      });
+    });
   });
 
   // macOS 行为，点击 Dock 图标时如果没有窗口则重建

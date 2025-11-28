@@ -18,8 +18,10 @@ const TopCover: FC<TopCoverProps> = ({ detail }) => {
   }, [cachedCover, setBackground]);
   return (
     <img
-      className="size-44 rounded-md shadow-xs"
+      className="size-44 rounded-md shadow-xs select-none"
       src={cachedCover}
+      loading="lazy"
+      decoding="async"
       alt={detail?.playlist.name}
       onLoad={onLoad}
     />

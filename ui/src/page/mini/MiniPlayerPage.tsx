@@ -56,7 +56,7 @@ const MiniPlayerPage: FC<object> = () => {
     }
   });
   const onImageErr = useCallback(
-    (e: SyntheticEvent<HTMLImageElement, Event>) => {
+    (e: SyntheticEvent<HTMLImageElement>) => {
       const raw = NeteaseImageSizeFilter(info?.cover, ImageSize.xs) as string;
       if (e.currentTarget.src === raw) return;
       e.currentTarget.src = raw;
@@ -77,6 +77,8 @@ const MiniPlayerPage: FC<object> = () => {
         <img
           className="w-full h-full object-cover"
           src={cachedCover || undefined}
+          loading="lazy"
+          decoding="async"
           alt={info?.title}
           onError={onImageErr}
         />

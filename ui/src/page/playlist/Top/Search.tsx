@@ -16,7 +16,7 @@ const Search: FC<SearchProps> = ({ searchTracks }) => {
           value={value}
           type="text"
           placeholder="搜索"
-          className="block h-6 px-3 rounded-full border border-gray-300/60 focus:outline-none text-[12px]  placeholder-black/10 pr-8 w-18 focus:w-48 ease-in-out transition-all duration-300"
+          className="block h-6 px-3 rounded-full border border-gray-300/60 focus:outline-none text-[12px]  placeholder-black/10 pr-8 w-18 focus:w-48 ease-in-out transition-all duration-300 placeholder:select-none"
           onChange={(e) => {
             setValue(e.target.value);
             debouncedSearch(e.target.value);

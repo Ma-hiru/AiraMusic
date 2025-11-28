@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"crypto/rand"
 	"crypto/sha1"
+	"fileServer/env"
 	"fmt"
 	"io"
+	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -68,28 +70,22 @@ func getTime() int64 {
 	return time.Now().UnixNano()
 }
 
-func pathToFileURL(path string) string {
-	var normalized = strings.TrimSpace(path)
+var scheme = env.Scheme + "://"
+
+func pathToSchemeURL(path string) string {
+	if strings.HasPrefix(path, scheme) {
+		return path
+	}
+	normalized := strings.TrimSpace(path)
 	if normalized == "" {
 		return ""
 	}
 
-	var isWindowsPath = strings.Contains(normalized, "\\") || (len(normalized) > 1 && normalized[1] == ':')
-	if isWindowsPath {
-		normalized = strings.ReplaceAll(normalized, "\\", "/")
-		if len(normalized) > 2 && normalized[1] == ':' {
-			normalized = "/" + normalized
-		}
-	}
-	if strings.HasPrefix(normalized, "file://") {
-		return normalized
-	}
+	normalized = strings.ReplaceAll(normalized, "\\", "/")
+	encoded := url.PathEscape(normalized)
 
-	if strings.HasSuffix(normalized, "/") {
-		return "file://" + normalized
-	}
+	return env.Scheme + "://local/" + encoded
 
-	return "file:///" + normalized
 }
 
 type nopCloseWriter struct{}

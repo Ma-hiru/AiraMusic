@@ -1,4 +1,4 @@
-import { ComponentProps, FC, memo, useEffect, useRef } from "react";
+import { ComponentProps, FC, memo, RefObject, useEffect, useRef } from "react";
 import { NeteasePlaylistDetailResponse, NeteaseTrack } from "@mahiru/ui/types/netease-api";
 import { css, cx } from "@emotion/css";
 import ListItem from "@mahiru/ui/page/playlist/List/ListItem";
@@ -33,7 +33,7 @@ const ListContainer: FC<ListProps> = ({
     listRef.current?.setScrollTop(0);
   }, [id]);
   return (
-    <div className="w-full  h-[calc(100%-210px)] relative">
+    <div className="w-full h-[calc(100%-210px)] relative">
       <div
         ref={containerRef}
         className={cx(

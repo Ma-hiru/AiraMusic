@@ -3,6 +3,7 @@ package file
 import (
 	"bufio"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -105,6 +106,8 @@ func (Self *Store) Destroy() error {
 
 // ClearInvalidFile 清理无效文件：包括空文件、未被使用的临时文件、没有索引的文件、过期文件
 func (Self *Store) ClearInvalidFile() error {
+	var start = time.Now()
+	fmt.Println("[Store] Clearing invalid files...")
 	var entries, err = os.ReadDir(Self.storeDir)
 	if err != nil {
 		return err
@@ -219,6 +222,8 @@ func (Self *Store) ClearInvalidFile() error {
 	Self.indexMappedMutex.Unlock()
 	// 最后更新存储索引，然后重建索引文件句柄
 	Self.forceUpdateIndex()
+	var duration = time.Since(start)
+	fmt.Printf("[Store] Clearing invalid files completed in %s.\n", duration.String())
 	return nil
 }
 
@@ -291,11 +296,9 @@ func (Self *Store) EndWrite(id, url string, success bool) Index {
 	Self.muWrite.Unlock()
 
 	var info, err = wFile.file.Stat()
-	if err == nil {
-		if strconv.FormatInt(info.Size(), 10) != wFile.size {
-			success = false
-		}
-	} else {
+	if err == nil && strconv.FormatInt(info.Size(), 10) != wFile.size {
+		success = false
+	} else if err != nil {
 		log.Println("error stating written file:", err)
 	}
 	wFile.file.Close()

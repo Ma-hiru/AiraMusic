@@ -8,15 +8,12 @@ import BlobCachedProvider from "@mahiru/ui/ctx/BlobCachedProvider";
 import { SearchTrack } from "@mahiru/wasm";
 import { requestPlayListDetailWithStore } from "@mahiru/ui/utils/playList";
 import { ImageSize, NeteaseTrackCoverPreCacheFilter } from "@mahiru/ui/utils/filter";
+import { useDynamicZustandShallowStore } from "@mahiru/ui/store";
 
-interface PlayListPageProps {
-  setId?: number;
-  isLikedList?: boolean;
-}
-
-const PlayListPage: FC<PlayListPageProps> = ({ setId, isLikedList = false }) => {
-  const { id: defaultID } = useParams();
-  const id = setId ? String(setId) : defaultID;
+const PlayListPage: FC<object> = () => {
+  const { id } = useParams();
+  const { userLikedPlayList } = useDynamicZustandShallowStore(["userLikedPlayList"]);
+  const isLikedList = String(userLikedPlayList?.id) === String(id);
   const [detail, setDetail] = useState<Nullable<NeteasePlaylistDetailResponse>>(null);
   // 所有的track地址最终指向Store中的缓存
   const [filterTracks, setFilterTracks] = useState<NeteaseTrack[]>([]);

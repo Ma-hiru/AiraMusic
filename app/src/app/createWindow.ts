@@ -69,11 +69,11 @@ function loadSource(mainWindow: BrowserWindow) {
       );
     });
   } else {
-    mainWindow.loadURL("http://localhost:27232").catch((err) => {
+    mainWindow.loadURL(`http://localhost:${process.env.EXPRESS_SERVER_PORT}`).catch((err) => {
       Log.error(
         new EqError({
           label: "app/createWindow.ts",
-          message: "Failed to load URL http://localhost:27232",
+          message: `Failed to load URL http://localhost:${process.env.EXPRESS_SERVER_PORT}`,
           raw: err
         })
       );

@@ -32,11 +32,13 @@ const TopRight: FC<TopRightProps> = ({ detail, searchTracks, isLikedList }) => {
         <div className="flex items-center gap-2 mt-2 font-semibold">
           <img
             src={cachedAvatar as string}
+            loading="lazy"
+            decoding="async"
             className="size-5 rounded-full select-none"
             alt={detail?.playlist.creator.nickname}
           />
           <span className="text-[12px]">{detail?.playlist.creator.nickname}</span>
-          <span>{formatTimeToMMDD(detail?.playlist.createTime)} 创建</span>
+          <span className="select-none">{formatTimeToMMDD(detail?.playlist.createTime)} 创建</span>
         </div>
       </div>
     </div>

@@ -18,7 +18,7 @@
   ],
   "scripts": {
     "dev:ui": "pnpm --filter @mahiru/ui run dev",
-    "dev:app": "pnpm --filter @mahiru/app run dev",
+    "dev:app": "shx cp .env ./app/.env && pnpm --filter @mahiru/app run dev",
     "dev:electron": "pnpm run-script-os",
     "dev:electron:win32": "set NODE_ENV=development && electron .",
     "dev:electron:linux": "export NODE_ENV=development && electron .",
@@ -58,6 +58,7 @@
     "prettier": "latest",
     "rimraf": "^6.1.0",
     "run-script-os": "^1.1.6",
+    "shx": "^0.4.0",
     "stylelint": "^16",
     "stylelint-config-standard-scss": "^16",
     "tsup": "^8.5.0",

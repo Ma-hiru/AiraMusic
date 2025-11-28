@@ -92,6 +92,8 @@ const Control: FC<ControlProps> = ({
         <div className="flex items-center gap-2">
           <img
             src={NeteaseImageSizeFilter(info?.cover, ImageSize.xs)}
+            loading="lazy"
+            decoding="async"
             alt={info?.title}
             className="rounded-full size-5 shrink-0"
           />

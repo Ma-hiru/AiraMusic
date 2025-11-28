@@ -20,7 +20,12 @@ export class APP {
 
   private init() {
     Log.debug("App initialize");
-    this.cacheAPP = startCacheServer();
+    this.cacheAPP = startCacheServer([
+      "--port",
+      process.env.GO_SERVER_PORT!,
+      "--scheme",
+      process.env.APP_SCHEME!
+    ]);
     this.expressAPP = createExpressApp();
     this.neteaseMusicAPIServer = startNeteaseMusicApiServer();
     this.store = Store;

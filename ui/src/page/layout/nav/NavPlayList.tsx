@@ -1,4 +1,4 @@
-import { FC, memo, useCallback, useRef } from "react";
+import { FC, memo, useCallback, useRef, useState } from "react";
 import { css, cx } from "@emotion/css";
 import { NeteasePlaylistSummary } from "@mahiru/ui/types/netease-api";
 import { useDynamicZustandShallowStore } from "@mahiru/ui/store";
@@ -39,7 +39,18 @@ const NavPlayList: FC<object> = () => {
     [navigate, location.pathname]
   );
   const containerRef = useRef<Nullable<HTMLDivElement>>(null);
-  const List = useVirtualList(userPlayLists, containerRef, 10, 55);
+  const [showTopBtn, setShowTopBtn] = useState(false);
+  const onRangeChange = useCallback(
+    (range: IndexRange) => {
+      if (range[0] > 5 && !showTopBtn) {
+        setShowTopBtn(true);
+      } else if (range[0] <= 5 && showTopBtn) {
+        setShowTopBtn(false);
+      }
+    },
+    [showTopBtn]
+  );
+  const List = useVirtualList(userPlayLists, containerRef, 10, 55, undefined, onRangeChange);
   return (
     <div className="overflow-hidden">
       <div
@@ -58,7 +69,7 @@ const NavPlayList: FC<object> = () => {
       <button
         className={cx(
           "absolute bottom-22 right-4 text-[#fc3d49] bg-black/5 rounded-full p-1 cursor-pointer backdrop-blur-2xl ease-in-out transition-opacity",
-          "opacity-0"
+          !showTopBtn && "opacity-0"
         )}
         aria-label="回到顶部">
         <ArrowBigUp />

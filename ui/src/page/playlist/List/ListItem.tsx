@@ -2,7 +2,7 @@ import { cx } from "@emotion/css";
 import { Log } from "@mahiru/ui/utils/dev";
 import { PlayerTrackInfo, usePlayer } from "@mahiru/ui/ctx/PlayerCtx";
 import { NeteaseTrack } from "@mahiru/ui/types/netease-api";
-import { FC, memo, MouseEventHandler, useCallback } from "react";
+import { FC, memo, MouseEventHandler, RefObject, useCallback } from "react";
 import ListItemIndex from "./ListItemIndex";
 import ListItemCover from "./ListItemCover";
 import ListItemName from "@mahiru/ui/page/playlist/List/ListItemName";

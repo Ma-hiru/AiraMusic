@@ -11,7 +11,8 @@
     "@neteasecloudmusicapienhanced/api": "^4.29.17",
     "electron-store": "^11.0.2",
     "express": "^5.1.0",
-    "express-http-proxy": "^2.1.2"
+    "express-http-proxy": "^2.1.2",
+    "mime": "^4.1.0"
   },
   "devDependencies": {
     "@types/express": "^5.0.0",

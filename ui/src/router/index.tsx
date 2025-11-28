@@ -58,4 +58,4 @@ export const NAV_DATA = [
   { icon: <House className="w-full" />, label: "推荐", path: "/home" },
   { icon: <Star className="w-full" />, label: "搜藏", path: "/star" },
   { icon: <Clock className="w-full" />, label: "历史", path: "/history" }
-];
+] as const;

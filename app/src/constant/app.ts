@@ -10,6 +10,3 @@ export const DEFAULT_WINDOW_SIZE = {
   width: 1330,
   height: 780
 };
-export const EXPRESS_PORT = 27232;
-export const NCM_PORT = 10754;
-export const CACHE_PORT = 8824;

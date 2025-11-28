@@ -92,7 +92,7 @@ export function getTrackDetail(ids: string | number): Promise<TrackDetailResult>
  * @param id - 音乐 id
  */
 export async function getLyric(id: number): Promise<NeteaseLyricResponse> {
-  const url = "http://127.0.0.1:10754/lyric?id=" + id;
+  const url = `http://127.0.0.1:${import.meta.env.NCM_SERVER_PORT}/lyric?id=` + id;
   const check = await Store.checkOrStoreAsync(url);
   if (check.ok) {
     return await Store.fetch<NeteaseLyricResponse>(url);

@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"fileServer/env"
 	"fileServer/file"
 	"fileServer/router"
 	"fmt"
@@ -18,13 +19,16 @@ import (
 
 func main() {
 	handleExit()
-	go initStore(time.Hour * 24 * 7)
-	initHTTP("127.0.0.1:8824")
+	go initStore(env.Ttl, env.Path)
+	initHTTP("127.0.0.1:" + fmt.Sprint(env.Port))
 }
 
-func initStore(timeLimit time.Duration) {
+func initStore(timeLimit time.Duration, storePath string) {
 	fmt.Println("Initializing local store...")
 	var localStorePath = filepath.Join(os.TempDir(), "mahiru")
+	if storePath != "" {
+		localStorePath = storePath
+	}
 	if err := file.CreateLocalStore(localStorePath, 1); err != nil {
 		if !errors.Is(err, file.ErrStoreExist) {
 			fmt.Println("Failed to create local store:", err)
@@ -48,7 +52,7 @@ func initStore(timeLimit time.Duration) {
 }
 
 func initHTTP(port string) {
-	fmt.Println("Initializing HTTP server...")
+	fmt.Println("Initializing HTTP server at", port)
 	gin.SetMode(gin.ReleaseMode)
 	var app = gin.Default()
 	app.Use(cors.Default())

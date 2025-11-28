@@ -6,7 +6,6 @@ import KeepAliveOutlet from "@mahiru/ui/componets/public/KeepAliveOutlet";
 import PlayerModal from "@mahiru/ui/page/layout/model/Modal";
 import PlayerProvider from "@mahiru/ui/ctx/PlayerProvider";
 import LayoutProvider from "@mahiru/ui/ctx/LayoutProvider";
-import AcrylicBackground from "@mahiru/ui/componets/public/AcrylicBackground";
 import Background from "@mahiru/ui/page/layout/background/Background";
 
 const Layout: FC<object> = () => {

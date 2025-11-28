@@ -1,6 +1,7 @@
 import { createContext, useContext, useLayoutEffect, useState } from "react";
 import { Log, EqError } from "@mahiru/ui/utils/dev";
 import { Store } from "@mahiru/ui/store";
+import { AppScheme } from "@mahiru/ui/constants/scheme";
 
 export const BlobCachedCtx = createContext(new Map<string | number, string>());
 
@@ -26,7 +27,14 @@ export function useBlobOrFileCache(
   const cachedMap = useContext(BlobCachedCtx);
 
   useLayoutEffect(() => {
-    if (!url || !id || !url.startsWith("http") || url.startsWith("file")) return;
+    if (
+      !url ||
+      !id ||
+      !url.startsWith("http") ||
+      url.startsWith("file") ||
+      url.startsWith(AppScheme)
+    )
+      return;
     let canceled = false;
     const run = async () => {
       if (cachedMap.has(id)) {
@@ -82,7 +90,7 @@ export function useBlobOrFileCache(
   }, [cachedMap, cachedURL, forceBlob, id, onCacheHit, url]);
 
   if (!url || !id) return undefined;
-  if (!url.startsWith("http") || url.startsWith("file")) {
+  if (!url.startsWith("http") || url.startsWith("file") || url.startsWith(AppScheme)) {
     return url;
   }
   return cachedURL;
@@ -98,7 +106,14 @@ export function useFileCache(
   const [finalURL, setFinalURL] = useState<string>();
   const { id = url, onCacheHit } = options || {};
   useLayoutEffect(() => {
-    if (!url || !url.startsWith("http") || !id || url.startsWith("file")) return;
+    if (
+      !url ||
+      !url.startsWith("http") ||
+      !id ||
+      url.startsWith("file") ||
+      url.startsWith(AppScheme)
+    )
+      return;
     let canceled = false;
     const run = async () => {
       const check = await Store.checkOrStoreAsync(url, id as string).catch(() => null);
@@ -121,7 +136,7 @@ export function useFileCache(
     };
   }, [finalURL, id, onCacheHit, url]);
   if (!url || !id) return undefined;
-  if (!url.startsWith("http") || url.startsWith("file")) {
+  if (!url.startsWith("http") || url.startsWith("file") || url.startsWith(AppScheme)) {
     return url;
   }
   return finalURL;

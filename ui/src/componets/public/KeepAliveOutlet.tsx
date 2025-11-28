@@ -12,7 +12,14 @@ export type KeepAliveOutletRef = {
   clearCache: (pathname: string) => void;
 };
 
-const KeepAliveOutlet: ForwardRefRenderFunction<KeepAliveOutletRef, object> = (_, ref) => {
+interface KeepAliveOutletProps {
+  cache?: boolean;
+}
+
+const KeepAliveOutlet: ForwardRefRenderFunction<KeepAliveOutletRef, KeepAliveOutletProps> = (
+  { cache = true },
+  ref
+) => {
   const outlet = useOutlet();
   const location = useLocation();
   const cacheRef = useRef<Record<string, ReactNode>>({});
@@ -23,6 +30,10 @@ const KeepAliveOutlet: ForwardRefRenderFunction<KeepAliveOutletRef, object> = (_
   useImperativeHandle(ref, () => ({
     clearCache
   }));
+
+  if (!cache) {
+    return outlet;
+  }
 
   if (location.pathname && !cacheRef.current[location.pathname]) {
     cacheRef.current[location.pathname] = outlet;

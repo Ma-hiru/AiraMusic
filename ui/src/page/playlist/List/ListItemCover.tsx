@@ -1,4 +1,4 @@
-import { FC, memo, SyntheticEvent, useCallback } from "react";
+import { FC, memo, RefObject, SyntheticEvent, useCallback } from "react";
 import { NeteaseTrack } from "@mahiru/ui/types/netease-api";
 import { useBlobOrFileCache } from "@mahiru/ui/ctx/BlobCachedCtx";
 import { ImageSize, NeteaseImageSizeFilter } from "@mahiru/ui/utils/filter";
@@ -45,6 +45,7 @@ const ListItemCover: FC<ListItemCoverProps> = ({ track, index, playListID }) => 
       <img
         src={cachedCover}
         loading="lazy"
+        decoding="async"
         className="h-full w-full rounded-md object-cover"
         alt={track.al.name}
         onError={onError}
