@@ -1,6 +1,6 @@
 import { FC, memo, SyntheticEvent, useCallback } from "react";
 import { NeteaseTrack } from "@mahiru/ui/types/netease-api";
-import { useBlobOrFileCache, useFileCache } from "@mahiru/ui/ctx/BlobCachedCtx";
+import { useBlobOrFileCache } from "@mahiru/ui/ctx/BlobCachedCtx";
 import { ImageSize, NeteaseImageSizeFilter } from "@mahiru/ui/utils/filter";
 import { getDynamicSnapshot, Store } from "@mahiru/ui/store";
 
@@ -13,7 +13,7 @@ interface ListItemCoverProps {
 
 const ListItemCover: FC<ListItemCoverProps> = ({ track, absoluteIndex, playListID, onClick }) => {
   const sizedURL = NeteaseImageSizeFilter(track.al.cachedPicUrl || track.al.picUrl, ImageSize.xs);
-  const cachedCover = useFileCache(sizedURL, {
+  const cachedCover = useBlobOrFileCache(sizedURL, {
     onCacheHit: (file, id) => {
       const { getPlayListStatic } = getDynamicSnapshot();
       const playList = getPlayListStatic();

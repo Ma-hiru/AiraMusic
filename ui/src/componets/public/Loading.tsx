@@ -1,5 +1,5 @@
 import { FC, memo } from "react";
-import { Loader, LoaderCircle } from "lucide-react";
+import { Loader } from "lucide-react";
 import { motion, HTMLMotionProps } from "motion/react";
 
 export type LoadingProps = HTMLMotionProps<"div">;
