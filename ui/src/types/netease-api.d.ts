@@ -181,11 +181,11 @@ export interface NeteaseTransUser {
 export interface NeteaseLyricResponse {
   code: number;
   /** 逐字歌词 QRC （逐字格式）*/
-  klyric: NeteaseKlyric;
+  klyric?: NeteaseKlyric;
   /** 主歌词 LRC */
-  lrc: NeteaseLrc;
+  lrc?: NeteaseLrc;
   /** 罗马音歌词 LRC（罗马拼音）*/
-  romalrc: NeteaseRomalrc;
+  romalrc?: NeteaseRomalrc;
   /** 歌词同步、翻译质量相关标志 */
   qfy: boolean;
   /** 歌词同步、翻译质量相关标志 */
@@ -193,7 +193,7 @@ export interface NeteaseLyricResponse {
   /** 歌词同步、翻译质量相关标志 */
   sgc: boolean;
   /** 翻译歌词 LRC（翻译版）*/
-  tlyric: NeteaseTlyric;
+  tlyric?: NeteaseTlyric;
   /** 提供歌词/翻译的用户信息 */
   transUser: NeteaseTransUser;
 }

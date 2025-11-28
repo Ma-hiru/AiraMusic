@@ -374,10 +374,10 @@ export function useSong() {
 
 function handleLyricResponse(result: NeteaseLyricResponse): FullVersionLyricLine {
   if (
-    result.lrc.lyric === "" &&
-    result.klyric.lyric === "" &&
-    result.romalrc.lyric === "" &&
-    result.tlyric.lyric === ""
+    !result.lrc?.lyric &&
+    !result.klyric?.lyric &&
+    !result.romalrc?.lyric &&
+    !result.tlyric?.lyric
   ) {
     return {
       full: [noLyricTmp],

@@ -8,7 +8,6 @@ import MiniPlayerPage from "@mahiru/ui/page/mini/MiniPlayerPage";
 import SettingsPage from "@mahiru/ui/page/settings/SettingsPage";
 import PlayListPage from "@mahiru/ui/page/playlist/PlayListPage";
 import HistoryPage from "@mahiru/ui/page/history/HistoryPage";
-import StarPage from "@mahiru/ui/page/star/StarPage";
 
 export const router = createBrowserRouter([
   {
@@ -22,10 +21,6 @@ export const router = createBrowserRouter([
       {
         path: "/home",
         element: <HomePage />
-      },
-      {
-        path: "/star",
-        element: <StarPage />
       },
       {
         path: "/history",

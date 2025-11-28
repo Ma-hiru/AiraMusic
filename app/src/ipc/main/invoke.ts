@@ -55,7 +55,7 @@ export function registerInvokeHandlers(mainWindow: BrowserWindow, store: Electro
     const win = WindowManager.getBrowserWindowById(type);
     return win ? win.isMaximized() : false;
   });
-  typedIpcMainHandle("platform",()=>{
+  typedIpcMainHandle("platform", () => {
     return process.platform;
   });
 }

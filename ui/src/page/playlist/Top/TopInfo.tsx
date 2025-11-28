@@ -15,7 +15,9 @@ const TopInfo: FC<TopInfoProps> = ({ detail }) => {
         <p className="text-ellipsis overflow-hidden line-clamp-4">{detail?.playlist.description}</p>
         <div className="flex flex-col">
           <span className="select-none">歌曲数量 {Number(detail?.playlist.trackCount) || "-"}</span>
-          <span className="select-none">更新时间 {formatTimeToMMDD(detail?.playlist.trackUpdateTime) || "-"}</span>
+          <span className="select-none">
+            更新时间 {formatTimeToMMDD(detail?.playlist.trackUpdateTime) || "-"}
+          </span>
         </div>
       </div>
       <div className="flex items-center">

@@ -47,9 +47,11 @@ function registerLoginWindowControl() {
           Log.error("app/ipc", "Failed to load login window URL:", err);
         });
       } else {
-        LoginWindow.loadURL(`http://localhost:${process.env.EXPRESS_SERVER_PORT}/login`).catch((err) => {
-          Log.error("app/ipc", "Failed to load login window URL:", err);
-        });
+        LoginWindow.loadURL(`http://localhost:${process.env.EXPRESS_SERVER_PORT}/login`).catch(
+          (err) => {
+            Log.error("app/ipc", "Failed to load login window URL:", err);
+          }
+        );
       }
       LoginWindow.on("ready-to-show", () => {
         // LoginWindow.show();
@@ -101,9 +103,11 @@ function registerLyricWindowControl() {
         Log.error("app/ipc", "Failed to load lyric window URL:", err);
       });
     } else {
-      LyricWindow.loadURL(`http://localhost:${process.env!.EXPRESS_SERVER_PORT}/lyric`).catch((err) => {
-        Log.error("app/ipc", "Failed to load lyric window URL:", err);
-      });
+      LyricWindow.loadURL(`http://localhost:${process.env!.EXPRESS_SERVER_PORT}/lyric`).catch(
+        (err) => {
+          Log.error("app/ipc", "Failed to load lyric window URL:", err);
+        }
+      );
     }
     LyricWindow.on("ready-to-show", () => {
       // LyricWindow.show();
@@ -162,9 +166,11 @@ function registerMiniplayerWindowControl() {
         Log.error("app/ipc", "Failed to load mini window URL:", err);
       });
     } else {
-      MiniplayerWindow.loadURL(`http://localhost:${process.env.EXPRESS_SERVER_PORT}/mini`).catch((err) => {
-        Log.error("app/ipc", "Failed to load mini window URL:", err);
-      });
+      MiniplayerWindow.loadURL(`http://localhost:${process.env.EXPRESS_SERVER_PORT}/mini`).catch(
+        (err) => {
+          Log.error("app/ipc", "Failed to load mini window URL:", err);
+        }
+      );
     }
     MiniplayerWindow.on("ready-to-show", () => {
       // MiniplayerWindow.show();

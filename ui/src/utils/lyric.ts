@@ -13,7 +13,7 @@ import {
   NeteaseTlyric,
   NeteaseTransUser
 } from "@mahiru/ui/types/netease-api";
-import { parseNeteaseLyric, parseTranslatedLRC } from "@mahiru/wasm";
+import { parseNeteaseLyric, parseTranslatedLRC, parseExternalLrc } from "@mahiru/wasm";
 import { EqError, Log } from "@mahiru/ui/utils/dev";
 
 export function mapRawLyricLine(line: RawLyricLine): LyricLine {
@@ -39,17 +39,23 @@ export type FullVersionLyricLine = {
   rm: LyricLine[];
 };
 
+function externalParseLrc(lyric: string) {
+  // eg: [00:00.00-1] 作曲 : solfa \n
+  lyric = parseExternalLrc(lyric);
+  return parseLrc(lyric);
+}
+
 function parseNeteaseLyricWasm(
   raw: NeteaseLrc | NeteaseKlyric,
-  ts: NeteaseTlyric,
-  rm: NeteaseRomalrc,
+  ts: NeteaseTlyric | undefined,
+  rm: NeteaseRomalrc | undefined,
   type: "LRC" | "QRC",
   mt?: NeteaseTransUser
 ) {
   try {
-    const mainLyric = type === "LRC" ? parseLrc(raw.lyric) : parseQrc(raw.lyric);
-    const translatedLyric = parseLrc(ts.lyric);
-    const romanLyric = parseLrc(rm.lyric);
+    const mainLyric = type === "LRC" ? externalParseLrc(raw.lyric) : parseQrc(raw.lyric);
+    const translatedLyric = externalParseLrc(ts?.lyric || "");
+    const romanLyric = externalParseLrc(rm?.lyric || "");
 
     const meta = <NeteaseTransUser>{
       nickname: mt?.nickname || ""

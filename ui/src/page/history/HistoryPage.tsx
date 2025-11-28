@@ -47,9 +47,9 @@ const HistoryPage: FC<object> = () => {
         <button
           className="cursor-pointer border bg-purple-500 text-white px-2 py-1 font-semibold rounded-md"
           onClick={() => {
-            getGPUDevice().then(console.log)
+            getGPUDevice().then(console.log);
           }}>
-         gpu
+          gpu
         </button>
       </div>
     </div>

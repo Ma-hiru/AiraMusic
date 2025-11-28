@@ -1,5 +1,6 @@
 #![allow(non_snake_case)]
 use crate::lyric::model::{FullVersionLyricLine, LyricLine, LyricTranslatedMeta, RawLyricLine};
+use regex::Regex;
 use serde_wasm_bindgen::{from_value, to_value};
 use std::collections::HashMap;
 use wasm_bindgen::prelude::wasm_bindgen;
@@ -113,6 +114,13 @@ pub fn parseTranslatedLRC(raw: JsValue, reverse: bool) -> JsValue {
         });
 
     to_value::<Vec<LyricLine>>(&result).unwrap()
+}
+
+// eg: [00:00.00-1] 作曲 : solfa \n
+#[wasm_bindgen]
+pub fn parseExternalLrc(lyric: String) -> String {
+    let re = Regex::new(r"\[(\d{2}):(\d{2}\.\d{1,3})-\d+]").unwrap();
+    re.replace_all(&lyric, "[$1:$2]").to_string()
 }
 
 #[inline]
