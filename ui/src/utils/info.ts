@@ -1,9 +1,9 @@
-import { EqError } from "@mahiru/ui/utils/dev";
+import { EqError, Log } from "@mahiru/ui/utils/dev";
 
 export interface GpuDevice {
   active: boolean;
   deviceId: number;
-  deviceString: string;
+  deviceString?: string;
   driverVendor?: string;
   driverVersion: string;
   gpuPreference: number;
@@ -32,5 +32,18 @@ export function getGPUDevice() {
         }
       })
       .catch(reject);
+  });
+}
+
+export function getPlatform(): Promise<NodeJS.Platform | "unknown"> {
+  return window.node.invoke.platform().catch((err) => {
+    Log.error(
+      new EqError({
+        raw: err,
+        message: `Get platform fail.`,
+        label: "ui/info.ts:getPlatform"
+      })
+    );
+    return "unknown";
   });
 }

@@ -7,6 +7,7 @@ import {
   ForwardRefRenderFunction,
   forwardRef
 } from "react";
+import { usePlatform } from "@mahiru/ui/hook/usePlatform";
 import { useGPU } from "@mahiru/ui/hook/useGPU";
 
 interface HasID {
@@ -65,6 +66,8 @@ export function useVirtualList<T extends HasID, U = never>(
   useEffect(() => {
     onRangeUpdate?.([start, end]);
   }, [start, end, onRangeUpdate]);
+  const platform = usePlatform();
+  const { hasDedicatedGPU } = useGPU();
   const List: ListComponentType<T, U> = ({ RowComponent }, ref) => {
     useImperativeHandle(ref, () => ({
       getScrollHeight: () => containerRef.current?.scrollHeight ?? 0,
@@ -84,7 +87,11 @@ export function useVirtualList<T extends HasID, U = never>(
               className="absolute w-full will-change-transform"
               key={item.id}
               style={{
-                transform: `translate3d(0, ${realIndex * itemHeight}px, 0)`
+                transform:
+                // 至少我的独显ubuntu貌似怎么都不行，姑且这样处理吧
+                  platform === "linux" && !hasDedicatedGPU
+                    ? `translateY(${realIndex * itemHeight}px)`
+                    : `translate3d(0, ${realIndex * itemHeight}px, 0)`
               }}>
               <RowComponent items={items} index={realIndex} extra={extraData} />
             </div>

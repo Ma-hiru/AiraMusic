@@ -2,15 +2,18 @@ import { FC, memo } from "react";
 import { motion } from "motion/react";
 import { cx } from "@emotion/css";
 import { usePlayProgress } from "@mahiru/ui/hook/usePlayProgress";
+import { useLayout } from "@mahiru/ui/ctx/LayoutCtx";
 
 const BarProgress: FC<object> = () => {
   const { barRef, handleBarClick, handleBarMouseDown, bufferScope, percentScope, isPlaying } =
     usePlayProgress();
+  const { background } = useLayout();
   return (
     <div
       ref={barRef}
       className={cx(
-        "fixed w-screen bg-white bottom-18 shadow-[0_5px_10px_-5px_rgba(0,0,0,0.15)] h-1 overflow-hidden cursor-pointer ease-in-out transition-all duration-300",
+        "fixed w-screen backdrop-blur-lg bottom-18 shadow-[0_5px_10px_-5px_rgba(0,0,0,0.15)] h-1 overflow-hidden cursor-pointer ease-in-out transition-all duration-300",
+        background ? "bg-transparent" : "bg-white",
         {
           "hover:h-2": isPlaying
         }

@@ -2,6 +2,7 @@ type InvokeEventMaps = {
   message: [message: string, string];
   readFile: [filePath: string, Promise<{ ok: boolean; data?: ArrayBuffer }>];
   GPUInfo: [never, Promise<string>];
+  platform: [never, NodeJS.Platform];
   isMaximized: [win: WindowType, boolean];
 };
 

@@ -4,11 +4,15 @@ import { EqError } from "@mahiru/ui/utils/dev";
 export type LayoutCtxType = {
   PlayerModalVisible: boolean;
   TogglePlayerModalVisible: (show: boolean) => void;
+  background: Undefinable<string>;
+  setBackground: (bg?: string) => void;
 };
 
 export const LayoutCtx = createContext<LayoutCtxType>({
   PlayerModalVisible: false,
-  TogglePlayerModalVisible: () => {}
+  TogglePlayerModalVisible: () => {},
+  background: undefined,
+  setBackground: () => {}
 });
 
 export const useLayout = () => {

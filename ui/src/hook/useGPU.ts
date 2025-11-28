@@ -9,8 +9,8 @@ export function useGPU() {
       const hasDedicatedGPU = devices.some((device) => {
         return (
           device.active &&
-          (device.deviceString.toLowerCase().includes("nvidia") ||
-            device.deviceString.toLowerCase().includes("amd"))
+          (device.deviceString?.toLowerCase().includes("nvidia") ||
+            device.deviceString?.toLowerCase().includes("amd"))
         );
       });
       setHasDedicatedGPU(hasDedicatedGPU);

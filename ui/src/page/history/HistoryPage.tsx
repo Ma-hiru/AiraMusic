@@ -1,8 +1,8 @@
 import { FC, memo, useState } from "react";
 import { getTrackDetail } from "@mahiru/ui/api/track";
-import { userLikedSongsIDs, userPlaylist } from "@mahiru/ui/api/user";
+import { userPlaylist } from "@mahiru/ui/api/user";
 import { usePersistZustandShallowStore } from "@mahiru/ui/store";
-import Loading from "@mahiru/ui/componets/public/Loading";
+import { getGPUDevice } from "@mahiru/ui/utils/info";
 
 const HistoryPage: FC<object> = () => {
   const [trackId, setTrackId] = useState("");
@@ -10,6 +10,7 @@ const HistoryPage: FC<object> = () => {
   // login => userPlayList limit?
   // => likedSongsIDs
   // playListDetail => trackIDs => trackDetail
+
   return (
     <div className="flex w-full h-full flex-col justify-center items-center gap-2">
       <div>
@@ -40,6 +41,15 @@ const HistoryPage: FC<object> = () => {
             }).then(console.log);
           }}>
           userPlaylist
+        </button>
+      </div>
+      <div>
+        <button
+          className="cursor-pointer border bg-purple-500 text-white px-2 py-1 font-semibold rounded-md"
+          onClick={() => {
+            getGPUDevice().then(console.log)
+          }}>
+         gpu
         </button>
       </div>
     </div>

@@ -11,10 +11,10 @@ interface ListItemNameProps {
 const ListItemName: FC<ListItemNameProps> = ({ track, active, disabled }) => {
   return (
     <div className="flex flex-col text-[14px]">
-      <div className="overflow-hidden flex-row">
+      <div className="overflow-hidden flex-row truncate">
         <span
           className={cx(
-            "cursor-pointer font-bold hover:text-[#fc3d49]/85 ease-in-out duration-300 transition-all",
+            "cursor-pointer font-bold hover:text-[#fc3d49]/85 ease-in-out duration-300 transition-all truncate",
             {
               "cursor-not-allowed! opacity-50": disabled,
               "hover:text-black/50": active
@@ -37,7 +37,7 @@ const ListItemName: FC<ListItemNameProps> = ({ track, active, disabled }) => {
       {/*歌手、专辑*/}
       <div
         className={cx(
-          "text-[12px] text-[#7b8290]/80 cursor-pointer flex flex-row overflow-hidden text-ellipsis line-clamp-1 gap-2 hover:text-[#fc3d49]/85 ease-in-out duration-300 transition-all",
+          "text-[12px] text-[#7b8290]/80 cursor-pointer flex flex-row overflow-hidden gap-2 hover:text-[#fc3d49]/85 ease-in-out duration-300 transition-all truncate",
           {
             "text-white/60": active,
             "hover:text-black/50": active,

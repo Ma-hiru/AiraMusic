@@ -1,7 +1,6 @@
 import { FC, memo } from "react";
 import { useLayout } from "@mahiru/ui/ctx/LayoutCtx";
 import PlayerPage from "@mahiru/ui/page/player/PlayerPage";
-import { useGPU } from "@mahiru/ui/hook/useGPU";
 import { cx } from "@emotion/css";
 
 const Modal: FC = () => {

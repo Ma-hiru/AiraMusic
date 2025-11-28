@@ -1,6 +1,7 @@
 import { FC, memo } from "react";
 import { Pause, Play, SkipBack, SkipForward } from "lucide-react";
 import { usePlayer } from "@mahiru/ui/ctx/PlayerCtx";
+import { useLayout } from "@mahiru/ui/ctx/LayoutCtx";
 
 const BarControl: FC<object> = () => {
   const { isPlaying, play, lastTrack, nextTrack } = usePlayer();

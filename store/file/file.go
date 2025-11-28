@@ -24,9 +24,12 @@ func GetStore() *Store {
 func CreateLocalStore(dir string, version int) error {
 	dir = filepath.Clean(dir)
 	iPath := filepath.Join(dir, "index")
-	if err := os.MkdirAll(dir, 0666); err != nil {
+	if err := os.MkdirAll(dir, 0777); err != nil {
 		return fmt.Errorf("failed to create directory: %v", err)
 	}
+    if err := os.Chmod(dir, 0775); err != nil {
+	    return fmt.Errorf("failed to set directory permissions: %v", err)
+    }
 	var fileInfo, err = os.Stat(iPath)
 	if err != nil && !os.IsNotExist(err) {
 		return fmt.Errorf("failed to stat index file: %v", err)
