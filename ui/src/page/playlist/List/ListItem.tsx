@@ -2,7 +2,7 @@ import { cx } from "@emotion/css";
 import { Log } from "@mahiru/ui/utils/dev";
 import { PlayerTrackInfo, usePlayer } from "@mahiru/ui/ctx/PlayerCtx";
 import { NeteaseTrack } from "@mahiru/ui/types/netease-api";
-import { FC, memo, MouseEventHandler, RefObject, useCallback } from "react";
+import { FC, memo, MouseEventHandler, useCallback } from "react";
 import ListItemIndex from "./ListItemIndex";
 import ListItemCover from "./ListItemCover";
 import ListItemName from "@mahiru/ui/page/playlist/List/ListItemName";
@@ -13,12 +13,14 @@ interface ListItemProps {
   index: number;
   playListID: number;
   isLikedList: boolean;
+  absoluteIdx: number[] | null;
 }
 
-const ListItem: FC<ListItemProps> = ({ index, data, playListID, isLikedList }) => {
+const ListItem: FC<ListItemProps> = ({ index, data, playListID, isLikedList, absoluteIdx }) => {
   const { replacePlayList, info } = usePlayer();
   const track = data[index]!;
   const total = data.length;
+  const absoluteIndex = absoluteIdx ? absoluteIdx[index]! : index;
   const active = info.id === track.id;
 
   const disabled = !track.playable;
@@ -44,6 +46,7 @@ const ListItem: FC<ListItemProps> = ({ index, data, playListID, isLikedList }) =
           });
         }
       }
+      // 播放列表使用的是相对索引
       replacePlayList(newPlayList, index);
     },
     [data, disabled, index, replacePlayList, track.name]
@@ -54,9 +57,8 @@ const ListItem: FC<ListItemProps> = ({ index, data, playListID, isLikedList }) =
       {(!isLikedList || track.isLiked) && (
         <div
           key={track.id}
-          onClick={play}
           className={cx(
-            "items-center grid grid-row-1 grid-cols-[auto_auto_1fr_auto_auto] gap-4 rounded-md py-[2px] pl-2 ease-in-out transition-colors mb-2 will-change-transform contain-paint backface-hidden",
+            "items-center grid grid-row-1 grid-cols-[auto_auto_1fr_auto_auto] gap-4 rounded-md py-[2px] pl-2 ease-in-out transition-colors mb-2",
             {
               "bg-[#fc3d49]": active,
               "text-white": active,
@@ -68,11 +70,16 @@ const ListItem: FC<ListItemProps> = ({ index, data, playListID, isLikedList }) =
             }
           )}>
           {/*序号*/}
-          <ListItemIndex total={total} active={active} index={index} />
+          <ListItemIndex total={total} active={active} relativeIndex={index} onClick={play} />
           {/*封面*/}
-          <ListItemCover track={track} index={index} playListID={playListID} />
+          <ListItemCover
+            track={track}
+            absoluteIndex={absoluteIndex}
+            playListID={playListID}
+            onClick={play}
+          />
           {/*名称*/}
-          <ListItemName track={track} disabled={disabled} active={active} />
+          <ListItemName track={track} disabled={disabled} active={active} onClick={play} />
           {/*专辑*/}
           <ListItemInfo active={active} track={track} />
         </div>

@@ -1,0 +1,28 @@
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+  40% {
+    transform: translateX(calc(-100% + 100%)); /* 左移到最左边 */
+  }
+  60% {
+    transform: translateX(calc(-100% + 100%)); /* 停留 */
+  }
+  100% {
+    transform: translateX(0); /* 回到开头 */
+  }
+}
+
+.marquee-animation {
+  display: inline-block;
+  animation: marquee 8s linear infinite;
+  will-change: transform;
+}
+
+.virtual-item {
+  will-change: transform;
+  contain: layout paint size style;
+  backface-visibility: hidden;
+  /* 预 GPU 分配 */
+  transform: translate3d(0, 0, 0);
+}

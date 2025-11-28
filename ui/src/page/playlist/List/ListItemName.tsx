@@ -6,12 +6,13 @@ interface ListItemNameProps {
   track: NeteaseTrack;
   active: boolean;
   disabled: boolean;
+  onClick?: NormalFunc;
 }
 
-const ListItemName: FC<ListItemNameProps> = ({ track, active, disabled }) => {
+const ListItemName: FC<ListItemNameProps> = ({ track, active, disabled, onClick }) => {
   return (
     <div className="flex flex-col text-[14px]">
-      <div className="overflow-hidden flex-row truncate">
+      <div className="overflow-hidden flex-row truncate" onClick={onClick}>
         <span
           className={cx(
             "cursor-pointer font-bold hover:text-[#fc3d49]/85 ease-in-out duration-300 transition-all truncate",

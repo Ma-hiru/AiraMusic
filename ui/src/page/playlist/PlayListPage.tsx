@@ -16,7 +16,13 @@ const PlayListPage: FC<object> = () => {
   const isLikedList = String(userLikedPlayList?.id) === String(id);
   const [detail, setDetail] = useState<Nullable<NeteasePlaylistDetailResponse>>(null);
   // 所有的track地址最终指向Store中的缓存
-  const [filterTracks, setFilterTracks] = useState<NeteaseTrack[]>([]);
+  const [filterTracks, setFilterTracks] = useState<{
+    tracks: NeteaseTrack[];
+    absoluteIdx: number[] | null;
+  }>({
+    tracks: [],
+    absoluteIdx: null
+  });
   const [searchTrackInstance, setSearchTrackInstance] = useState<Nullable<SearchTrack>>(null);
   const tracks = useRef<NeteaseTrack[]>([]);
   const maxRange = useRef<IndexRange>([0, 0]);
@@ -27,6 +33,10 @@ const PlayListPage: FC<object> = () => {
   }, []);
   const onVirtualListRangeUpdate = useCallback(
     async (range: IndexRange) => {
+      if (filterTracks.absoluteIdx !== null) {
+        // 搜索状态不处理预缓存
+        return;
+      }
       // 50 70 75 95
       const [start, end] = range;
       if (start < maxRange.current[0]) {
@@ -50,12 +60,15 @@ const PlayListPage: FC<object> = () => {
         }
       }
     },
-    [checkAndUpdateLastPreloadRange]
+    [checkAndUpdateLastPreloadRange, filterTracks.absoluteIdx]
   );
   const searchTracks = useCallback(
     (k: string) => {
       if (k.trim() === "") {
-        setFilterTracks(tracks.current);
+        setFilterTracks({
+          tracks: tracks.current,
+          absoluteIdx: null
+        });
       } else {
         if (searchTrackInstance) {
           const lowerK = k.toLowerCase();
@@ -64,7 +77,10 @@ const PlayListPage: FC<object> = () => {
           indexs.forEach((i) => {
             result.push(tracks.current[i]!);
           });
-          setFilterTracks(result);
+          setFilterTracks({
+            tracks: result,
+            absoluteIdx: indexs as unknown as number[]
+          });
         }
       }
     },
@@ -84,7 +100,10 @@ const PlayListPage: FC<object> = () => {
             }
           }, 1000);
           setSearchTrackInstance(new SearchTrack(JSON.stringify(tracks.current)));
-          setFilterTracks(tracks.current);
+          setFilterTracks({
+            tracks: tracks.current,
+            absoluteIdx: null
+          });
           setDetail(res);
         }
       });

@@ -1,25 +1,26 @@
-import { FC, memo, RefObject, SyntheticEvent, useCallback } from "react";
+import { FC, memo, SyntheticEvent, useCallback } from "react";
 import { NeteaseTrack } from "@mahiru/ui/types/netease-api";
-import { useBlobOrFileCache } from "@mahiru/ui/ctx/BlobCachedCtx";
+import { useBlobOrFileCache, useFileCache } from "@mahiru/ui/ctx/BlobCachedCtx";
 import { ImageSize, NeteaseImageSizeFilter } from "@mahiru/ui/utils/filter";
 import { getDynamicSnapshot, Store } from "@mahiru/ui/store";
 
 interface ListItemCoverProps {
   track: NeteaseTrack;
-  index: number;
+  absoluteIndex: number;
   playListID: number;
+  onClick?: NormalFunc;
 }
 
-const ListItemCover: FC<ListItemCoverProps> = ({ track, index, playListID }) => {
+const ListItemCover: FC<ListItemCoverProps> = ({ track, absoluteIndex, playListID, onClick }) => {
   const sizedURL = NeteaseImageSizeFilter(track.al.cachedPicUrl || track.al.picUrl, ImageSize.xs);
-  const cachedCover = useBlobOrFileCache(sizedURL, {
+  const cachedCover = useFileCache(sizedURL, {
     onCacheHit: (file, id) => {
       const { getPlayListStatic } = getDynamicSnapshot();
       const playList = getPlayListStatic();
       const list = playList.get(playListID);
       if (list) {
-        list.playlist.tracks[index]!.al.cachedPicUrl = file;
-        list.playlist.tracks[index]!.al.cachedPicUrlID = id;
+        list.playlist.tracks[absoluteIndex]!.al.cachedPicUrl = file;
+        list.playlist.tracks[absoluteIndex]!.al.cachedPicUrlID = id;
       }
     }
   });
@@ -33,15 +34,15 @@ const ListItemCover: FC<ListItemCoverProps> = ({ track, index, playListID }) => 
       const playList = getPlayListStatic();
       const list = playList.get(playListID);
       if (list) {
-        list.playlist.tracks[index]!.al.cachedPicUrl = "";
-        void Store.remove(list.playlist.tracks[index]!.al.cachedPicUrlID);
-        list.playlist.tracks[index]!.al.cachedPicUrlID = "";
+        list.playlist.tracks[absoluteIndex]!.al.cachedPicUrl = "";
+        void Store.remove(list.playlist.tracks[absoluteIndex]!.al.cachedPicUrlID);
+        list.playlist.tracks[absoluteIndex]!.al.cachedPicUrlID = "";
       }
     },
-    [cachedCover, index, playListID, track.al.picUrl]
+    [cachedCover, absoluteIndex, playListID, track.al.picUrl]
   );
   return (
-    <div className="size-8">
+    <div className="size-8" onClick={onClick}>
       <img
         src={cachedCover}
         loading="lazy"

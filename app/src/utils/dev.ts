@@ -19,6 +19,7 @@ export function printDevInfo() {
       `Electron Version: ${process.versions.electron}\n`,
       `Node.js Version: ${process.versions.node}\n`,
       `V8 Version: ${process.versions.v8}\n`,
+      `Chrome Version: ${process.versions.chrome}\n`,
       `Screen Count: ${displays.length}\n`,
       `Displays:`,
       displays.map(formatDisplay).join("\n"),

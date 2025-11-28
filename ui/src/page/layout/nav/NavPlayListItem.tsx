@@ -64,13 +64,7 @@ const NavPlayListItem: FC<Props> = ({
         onClick={() => onClick?.(id)}
         prefix={
           <div className="size-10 min-w-10 rounded-md overflow-hidden">
-            <img
-              className="w-full"
-              src={cachedCover}
-              alt={label}
-              loading="lazy"
-              onError={onError}
-            />
+            <img className="w-full" src={cachedCover} alt={label} onError={onError} />
           </div>
         }>
         <div className="flex flex-col overflow-hidden">
