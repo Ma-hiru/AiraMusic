@@ -3,16 +3,20 @@ import { EqError } from "@mahiru/ui/utils/dev";
 
 export type LayoutCtxType = {
   PlayerModalVisible: boolean;
-  TogglePlayerModalVisible: (show: boolean) => void;
+  TogglePlayerModalVisible: NormalFunc<[show: boolean]>;
   background: Undefinable<string>;
-  setBackground: (bg?: string) => void;
+  setBackground: NormalFunc<[bg?: string]>;
+  backgroundThemeColor: string[];
+  setBackgroundThemeColor: NormalFunc<[colors: string[]]>;
 };
 
 export const LayoutCtx = createContext<LayoutCtxType>({
   PlayerModalVisible: false,
-  TogglePlayerModalVisible: () => {},
+  TogglePlayerModalVisible: blank,
   background: undefined,
-  setBackground: () => {}
+  setBackground: blank,
+  backgroundThemeColor: [],
+  setBackgroundThemeColor: blank
 });
 
 export const useLayout = () => {
@@ -25,3 +29,5 @@ export const useLayout = () => {
   }
   return ctxValue;
 };
+
+function blank() {}

@@ -7,6 +7,8 @@ import ListItemIndex from "./ListItemIndex";
 import ListItemCover from "./ListItemCover";
 import ListItemName from "@mahiru/ui/page/playlist/List/ListItemName";
 import ListItemInfo from "@mahiru/ui/page/playlist/List/ListItemInfo";
+import { getTextColorByBackgroundColor, readThemeColorByCSSVar } from "@mahiru/ui/utils/ui";
+import { useTextColorOnThemeColor } from "@mahiru/ui/hook/useTextColorOnThemeColor";
 
 interface ListItemProps {
   data: NeteaseTrack[];
@@ -22,6 +24,7 @@ const ListItem: FC<ListItemProps> = ({ index, data, playListID, isLikedList, abs
   const total = data.length;
   const absoluteIndex = absoluteIdx ? absoluteIdx[index]! : index;
   const active = info.id === track.id;
+  const textColor = useTextColorOnThemeColor();
 
   const disabled = !track.playable;
   const play = useCallback<MouseEventHandler<HTMLDivElement>>(
@@ -56,17 +59,17 @@ const ListItem: FC<ListItemProps> = ({ index, data, playListID, isLikedList, abs
     <>
       {(!isLikedList || track.isLiked) && (
         <div
+          style={active ? { color: textColor } : undefined}
           key={track.id}
           className={cx(
             "items-center grid grid-row-1 grid-cols-[auto_auto_1fr_auto_auto] gap-4 rounded-md py-[2px] pl-2 ease-in-out transition-colors mb-2",
             {
-              "bg-[#fc3d49]": active,
-              "text-white": active,
+              "bg-[var(--theme-color-main)]": active,
               "hover:bg-black/10": !active,
               "active:bg-black/20": !active,
               "cursor-not-allowed! opacity-50": disabled,
               "cursor-pointer": !disabled,
-              "shadow-lg": active
+              "shadow-xs": active
             }
           )}>
           {/*序号*/}

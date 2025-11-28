@@ -1,6 +1,8 @@
-import { FC, memo } from "react";
-import { cx } from "@emotion/css";
+import { FC, memo, useState } from "react";
+import { css, cx } from "@emotion/css";
 import { NeteaseTrack } from "@mahiru/ui/types/netease-api";
+import { useTextColorOnThemeColor } from "@mahiru/ui/hook/useTextColorOnThemeColor";
+import Color from "color";
 
 interface ListItemNameProps {
   track: NeteaseTrack;
@@ -10,6 +12,10 @@ interface ListItemNameProps {
 }
 
 const ListItemName: FC<ListItemNameProps> = ({ track, active, disabled, onClick }) => {
+  const textColor = useTextColorOnThemeColor();
+  const [hover, setHover] = useState(false);
+  const normalColor = Color(textColor).alpha(0.5).string();
+  const hoverColor = Color(textColor).alpha(0.7).string();
   return (
     <div className="flex flex-col text-[14px]">
       <div className="overflow-hidden flex-row truncate" onClick={onClick}>
@@ -37,11 +43,16 @@ const ListItemName: FC<ListItemNameProps> = ({ track, active, disabled, onClick 
       </div>
       {/*歌手、专辑*/}
       <div
+        onMouseEnter={() => setHover(true)}
+        onMouseLeave={() => setHover(false)}
+        style={
+          active
+            ? { color: hover ? hoverColor : normalColor }
+            : { color: Color(textColor).alpha(0.3).hex() }
+        }
         className={cx(
-          "text-[12px] text-[#7b8290]/80 cursor-pointer flex flex-row overflow-hidden gap-2 hover:text-[#fc3d49]/85 ease-in-out duration-300 transition-all truncate",
+          "text-[12px] cursor-pointer flex flex-row overflow-hidden gap-2 ease-in-out duration-300 transition-all truncate",
           {
-            "text-white/60": active,
-            "hover:text-black/50": active,
             "cursor-not-allowed! opacity-50": disabled
           }
         )}>
