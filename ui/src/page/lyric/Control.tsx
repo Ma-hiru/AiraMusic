@@ -1,4 +1,4 @@
-import React, { FC, memo, useCallback, HTMLAttributes, useRef, useEffect } from "react";
+import React, { FC, memo, useCallback, HTMLAttributes, useRef, useEffect, useState } from "react";
 import { cx, css } from "@emotion/css";
 import { Drag, NoDrag } from "@mahiru/ui/componets/public/Drag";
 import { formatCurrentTimeToMMSS } from "@mahiru/ui/utils/time";
@@ -27,10 +27,11 @@ const Control: FC<ControlProps> = ({
   lyricSync,
   lock,
   setLock,
-  setShowBg,
   setColor,
   ...rest
 }) => {
+  const [openColorSelect, setOpenColorSelect] = useState(false);
+
   const setLyricVersion = useCallback((version: LyricVersionType) => {
     window.node.event.sendMessageTo({
       from: "lyric",
@@ -60,6 +61,9 @@ const Control: FC<ControlProps> = ({
       });
     }
   }, [lock]);
+  useEffect(() => {
+    if (!showBg) setOpenColorSelect(false);
+  }, [showBg]);
   return (
     <Drag
       className={cx(
@@ -77,17 +81,32 @@ const Control: FC<ControlProps> = ({
             "w-full h-full flex justify-start items-center gap-2",
             showBg ? "opacity-100" : "opacity-0"
           )}>
-          {presetColors.map((presetColor) => {
-            if (presetColor === color) return null;
-            return (
-              <NoDrag
-                className="size-4 rounded-sm cursor-pointer"
-                key={presetColor}
-                style={{ backgroundColor: presetColor }}
-                onClick={() => setColor(presetColor)}
-              />
-            );
-          })}
+          <NoDrag
+            onClick={() => setOpenColorSelect(!openColorSelect)}
+            className="relative size-4 rounded-sm cursor-pointer"
+            style={{ backgroundColor: color }}>
+            <NoDrag
+              className="absolute top-full mt-2 flex justify-start items-center gap-1 ease-in-out duration-300 transition-opacity"
+              style={{
+                opacity: openColorSelect ? 1 : 0,
+                pointerEvents: openColorSelect ? "auto" : "none"
+              }}>
+              {presetColors.map((presetColor) => {
+                if (presetColor === color) return null;
+                return (
+                  <NoDrag
+                    className="size-4 rounded-sm cursor-pointer"
+                    key={presetColor}
+                    style={{ backgroundColor: presetColor }}
+                    onClick={() => {
+                      setColor(presetColor);
+                      setOpenColorSelect(false);
+                    }}
+                  />
+                );
+              })}
+            </NoDrag>
+          </NoDrag>
         </div>
         <div className="flex items-center gap-2">
           <img
@@ -110,7 +129,7 @@ const Control: FC<ControlProps> = ({
             <span>{info?.artist.map((a) => a.name).join("/")}</span>
           </div>
         </div>
-        <div className="w-full flex items-center justify-end gap-4">
+        <div className="w-full flex items-center justify-end">
           <NoDrag>
             {lock ? (
               <LockKeyholeOpen
@@ -133,7 +152,7 @@ const Control: FC<ControlProps> = ({
               <LucideLock className="size-4 cursor-pointer" onClick={() => setLock(true)} />
             )}
           </NoDrag>
-          <div className="flex gap-2">
+          <div className="flex gap-2 mx-2 ease-in-out duration-300 transition-all" style={{ width: lock ? 0 : "auto" }}>
             <NoDrag
               onClick={setRm}
               className={cx(

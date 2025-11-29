@@ -9,6 +9,7 @@ import {
 } from "@mahiru/ui/utils/task";
 
 export function started() {
+  if (window.location.pathname !== "/") return;
   void onChangeDay([refreshCookieTask]);
   void onStarted([refreshUserProfile, refreshUserPlaylist, refreshUserLikedTrackIDs]);
 }
