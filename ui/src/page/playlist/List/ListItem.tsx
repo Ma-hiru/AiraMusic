@@ -7,7 +7,6 @@ import ListItemIndex from "./ListItemIndex";
 import ListItemCover from "./ListItemCover";
 import ListItemName from "@mahiru/ui/page/playlist/List/ListItemName";
 import ListItemInfo from "@mahiru/ui/page/playlist/List/ListItemInfo";
-import { getTextColorByBackgroundColor, readThemeColorByCSSVar } from "@mahiru/ui/utils/ui";
 import { useTextColorOnThemeColor } from "@mahiru/ui/hook/useTextColorOnThemeColor";
 
 interface ListItemProps {
@@ -68,7 +67,6 @@ const ListItem: FC<ListItemProps> = ({ index, data, playListID, isLikedList, abs
               "hover:bg-black/10": !active,
               "active:bg-black/20": !active,
               "cursor-not-allowed! opacity-50": disabled,
-              "cursor-pointer": !disabled,
               "shadow-xs": active
             }
           )}>

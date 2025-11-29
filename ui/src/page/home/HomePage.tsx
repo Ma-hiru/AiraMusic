@@ -3,8 +3,10 @@ import { addMessageHandler, removeMessageHandler } from "@mahiru/ui/utils/messag
 import { doLogout, isAccountLoggedIn } from "@mahiru/ui/api/utils/auth";
 import { refreshLogin } from "@mahiru/ui/utils/task";
 import { isDev } from "@mahiru/ui/utils/dev";
+import { usePlayingBackground } from "@mahiru/ui/hook/usePlayingBackground";
 
 const HomePage: FC<object> = () => {
+  usePlayingBackground();
   return (
     <div className="w-screen h-screen flex  flex-col justify-center items-center text-md font-mono text-white">
       Home Page

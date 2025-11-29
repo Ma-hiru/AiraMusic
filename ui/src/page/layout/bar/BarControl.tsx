@@ -1,17 +1,11 @@
 import { FC, memo } from "react";
 import { Pause, Play, SkipBack, SkipForward } from "lucide-react";
 import { usePlayer } from "@mahiru/ui/ctx/PlayerCtx";
-import { darkenOrLightenTextColorWithBackgroundColor } from "@mahiru/ui/utils/ui";
-import { useThemeColor } from "@mahiru/ui/hook/useThemeColor";
+import { useTextColorOnThemeColor } from "@mahiru/ui/hook/useTextColorOnThemeColor";
 
 const BarControl: FC<object> = () => {
   const { isPlaying, play, lastTrack, nextTrack } = usePlayer();
-  const { mainColor, secondaryColor } = useThemeColor();
-  const betterSecondaryColor = darkenOrLightenTextColorWithBackgroundColor(
-    mainColor,
-    secondaryColor,
-    0.3
-  ).hex();
+  const textColor = useTextColorOnThemeColor();
   return (
     <div className="flex justify-center items-center gap-6">
       <SkipBack
@@ -23,9 +17,9 @@ const BarControl: FC<object> = () => {
         className="hover:scale-95 active:scale-85 cursor-pointer ease-in-out transition-all duration-300 bg-[var(--theme-color-main)] hover:bg-[var(--theme-color-main)]/50 active:bg-[var(--theme-color-main)]/80 p-2 rounded-full"
         onClick={play}>
         {isPlaying ? (
-          <Pause className="size-5" color={betterSecondaryColor} fill={betterSecondaryColor} />
+          <Pause className="size-5" color={textColor} fill={textColor} />
         ) : (
-          <Play className="size-5" color={betterSecondaryColor} fill={betterSecondaryColor} />
+          <Play className="size-5" color={textColor} fill={textColor} />
         )}
       </div>
       <SkipForward

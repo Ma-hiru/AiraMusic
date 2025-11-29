@@ -13,8 +13,9 @@ interface ListItemCoverProps {
 
 const ListItemCover: FC<ListItemCoverProps> = ({ track, absoluteIndex, playListID, onClick }) => {
   const sizedURL = NeteaseImageSizeFilter(track.al.cachedPicUrl || track.al.picUrl, ImageSize.xs);
-  const cachedCover = useBlobOrFileCache(sizedURL, {
-    onCacheHit: (file, id) => {
+
+  const onCacheHit = useCallback(
+    (file: string, id: string) => {
       const { getPlayListStatic } = getDynamicSnapshot();
       const playList = getPlayListStatic();
       const list = playList.get(playListID);
@@ -22,14 +23,14 @@ const ListItemCover: FC<ListItemCoverProps> = ({ track, absoluteIndex, playListI
         list.playlist.tracks[absoluteIndex]!.al.cachedPicUrl = file;
         list.playlist.tracks[absoluteIndex]!.al.cachedPicUrlID = id;
       }
-    }
-  });
+    },
+    [absoluteIndex, playListID]
+  );
   const onError = useCallback(
     (e: SyntheticEvent<HTMLImageElement>) => {
       const raw = NeteaseImageSizeFilter(track.al.picUrl, ImageSize.xs) as string;
       if (e.currentTarget.src === raw) return;
       e.currentTarget.src = raw;
-      console.log(`List Image load error: ${cachedCover}, fallback to original picUrl: ${raw}`);
       const { getPlayListStatic } = getDynamicSnapshot();
       const playList = getPlayListStatic();
       const list = playList.get(playListID);
@@ -39,15 +40,17 @@ const ListItemCover: FC<ListItemCoverProps> = ({ track, absoluteIndex, playListI
         list.playlist.tracks[absoluteIndex]!.al.cachedPicUrlID = "";
       }
     },
-    [cachedCover, absoluteIndex, playListID, track.al.picUrl]
+    [absoluteIndex, playListID, track.al.picUrl]
   );
+
+  const cachedCover = useBlobOrFileCache(sizedURL, { onCacheHit });
   return (
     <div className="size-8" onClick={onClick}>
       <img
         src={cachedCover}
         loading="lazy"
         decoding="async"
-        className="h-full w-full rounded-md object-cover"
+        className="h-full w-full rounded-md object-cover cursor-pointer hover:scale-105 ease-in-out duration-300 transition-all select-none active:scale-95"
         alt={track.al.name}
         onError={onError}
       />

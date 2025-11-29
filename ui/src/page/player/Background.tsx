@@ -1,5 +1,5 @@
 import { FC, memo } from "react";
-import { BackgroundRender } from "@mahiru/ui/componets/player/BackgroundRender";
+import BackgroundRender from "@mahiru/ui/componets/player/BackgroundRender";
 import { usePlayer } from "@mahiru/ui/ctx/PlayerCtx";
 import { useLayout } from "@mahiru/ui/ctx/LayoutCtx";
 import { useFileCache } from "@mahiru/ui/ctx/BlobCachedCtx";
@@ -16,10 +16,7 @@ const Background: FC<object> = () => {
   return hasDedicatedGPU ? (
     <BackgroundRender
       className="absolute inset-0"
-      renderScale={hasDedicatedGPU ? 0.5 : 0.35}
-      flowSpeed={hasDedicatedGPU ? 2 : 1}
       albumIsVideo={false}
-      fps={PlayerModalVisible ? (hasDedicatedGPU ? 30 : 15) : 0}
       playing={PlayerModalVisible}
       hasLyric={hasLyrics}
       album={cachedBackground}

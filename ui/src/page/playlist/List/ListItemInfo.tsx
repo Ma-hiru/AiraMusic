@@ -5,6 +5,8 @@ import { NeteaseTrack } from "@mahiru/ui/types/netease-api";
 import { Heart } from "lucide-react";
 import { getDynamicSnapshot, useDynamicZustandShallowStore } from "@mahiru/ui/store";
 import { likeATrack } from "@mahiru/ui/api/track";
+import { useTextColorOnThemeColor } from "@mahiru/ui/hook/useTextColorOnThemeColor";
+import { useThemeColor } from "@mahiru/ui/hook/useThemeColor";
 
 interface ListItemAlbumProps {
   track: NeteaseTrack;
@@ -18,14 +20,14 @@ const ListItemInfo: FC<ListItemAlbumProps> = ({ track, active }) => {
     "userLikedPlayList"
   ]);
   const isLiked = likedTrackIDs.ids.has(track.id);
+  const textColor = useTextColorOnThemeColor();
+  const { mainColor } = useThemeColor();
   return (
     <div className="flex gap-4 justify-between items-center">
       <Heart
-        className={cx("size-4 relative -top-[1px]", {
-          "text-[#fc3d49]": !active,
-          "text-white": active
-        })}
-        fill={isLiked ? (active ? "#ffffff" : "#fc3d49") : "rgba(255,255,255,0.45)"}
+        color={active ? textColor : mainColor}
+        fill={isLiked ? (active ? textColor : mainColor) : "transparent"}
+        className="size-4 relative -top-[1px] cursor-pointer hover:opacity-50 ease-in-out duration-300 transition-all active:scale-90"
         onClick={(e) => {
           e.stopPropagation();
           const newSet = new Set(likedTrackIDs.ids);

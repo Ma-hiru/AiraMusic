@@ -81,7 +81,7 @@ export interface BackgroundRenderRef {
 /**
  * 流体背景渲染组件，通过提供图片链接可以显示出酷似 Apple Music 的流体背景效果
  */
-export const BackgroundRender = forwardRef<
+const BackgroundRender = forwardRef<
   BackgroundRenderRef,
   HTMLProps<HTMLDivElement> & BackgroundRenderProps
 >(
@@ -195,3 +195,5 @@ export const BackgroundRender = forwardRef<
     );
   }
 );
+
+export default BackgroundRender;
