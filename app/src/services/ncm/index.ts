@@ -18,7 +18,7 @@ export async function startNeteaseMusicApiServer() {
   try {
     const port = Number(process.env.NCM_SERVER_PORT);
     const server = await loadServer();
-    await server.serveNcmApi({ port, moduleDefs });
+    return await server.serveNcmApi({ port, moduleDefs });
   } catch (err) {
     throw new EqError({
       label: "app/netease.ts",

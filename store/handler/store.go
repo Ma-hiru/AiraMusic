@@ -2,9 +2,12 @@ package handler
 
 import (
 	"fileServer/file"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
+	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -104,12 +107,16 @@ func download(id, url, method string, body io.Reader, header http.Header) file.I
 	var fileType = resp.Header.Get("Content-Type")
 	var fileSize = resp.Header.Get("Content-Length")
 	var fileMD5 = resp.Header.Get("Content-MD5")
+	var fileEtag = resp.Header.Get("ETag")
 	var lastModified = resp.Header.Get("Last-Modified")
 	var fileName = getNameFromURL(url)
+	// 计算ETag
 	var etag string
 	var reader io.Reader = resp.Body
 	if fileMD5 != "" {
 		etag = fileMD5
+	} else if fileEtag != "" {
+		etag = fileEtag
 	} else {
 		//预读取以计算ETag
 		etag, reader, err = file.PeekForHash(resp.Body)
@@ -120,13 +127,60 @@ func download(id, url, method string, body io.Reader, header http.Header) file.I
 	}
 	// 开始缓存
 	var store = file.GetStore()
-	var buffer = make([]byte, 24*1024)
-	_, err = io.CopyBuffer(store.BeginWrite(url, fileName, fileType, fileSize, etag, lastModified), reader, buffer)
-	var idx = store.EndWrite(id, url, err == nil)
+	var buffer = make([]byte, 32*1024)
+	var writer = store.BeginWrite(url, fileName, fileType, fileSize, etag, lastModified)
+	if writer == file.BlankWriter {
+		log.Println("already exits writing for:", url)
+		return file.Index{}
+	}
+
+	written, err := io.CopyBuffer(writer, reader, buffer)
 	if err != nil {
+		store.EndWrite(id, url, false)
 		log.Println("error storing file:", err)
 		return file.Index{}
 	}
+
+	// 处理断点续传
+	if resp.StatusCode == http.StatusPartialContent {
+		var contentRange = resp.Header.Get("Content-Range")
+		var total int64
+
+		if parts := strings.Split(contentRange, "/"); len(parts) == 2 {
+			total, _ = strconv.ParseInt(parts[1], 10, 64)
+		}
+
+		for written < total {
+			var rangeReq, _ = http.NewRequest(method, url, nil)
+			// 复制请求头
+			for key, values := range header {
+				for _, value := range values {
+					rangeReq.Header.Add(key, value)
+				}
+			}
+			rangeReq.Header.Set("Range", fmt.Sprintf("bytes=%d-", written))
+			var rangeResp, err = httpClient.Do(rangeReq)
+			if err != nil {
+				store.EndWrite(id, url, false)
+				log.Println("range request error:", err)
+				return file.Index{}
+			}
+
+			n, err := io.CopyBuffer(writer, rangeResp.Body, buffer)
+			rangeResp.Body.Close()
+
+			if err != nil {
+				store.EndWrite(id, url, false)
+				log.Println("range write error:", err)
+				return file.Index{}
+			}
+
+			written += n
+		}
+		log.Println("resumed download completed:", url)
+	}
+
+	var idx = store.EndWrite(id, url, true)
 	return idx
 }
 

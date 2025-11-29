@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FullVersionLyricLine, handleNeteaseLyricResponse } from "@mahiru/ui/utils/lyric";
-import { getLyric, getMP3 } from "@mahiru/ui/api/track";
+import { getLyric, getMP3, scrobble as requestScrobble } from "@mahiru/ui/api/track";
 import { useImmer } from "use-immer";
 import { Log, EqError } from "@mahiru/ui/utils/dev";
 import {
@@ -36,8 +36,18 @@ export function useSong() {
     const audio = audioRef.current;
     audio && (audio.paused ? audio.play() : audio.pause());
   }, []);
+  const scrobble = useCallback(() => {
+    const source = info?.sourceID || info?.album?.id;
+    source &&
+      requestScrobble({
+        id: info.id,
+        sourceid: source,
+        time: Math.floor(progress.current.currentTime)
+      });
+  }, [info?.album?.id, info.id, info?.sourceID]);
   const nextTrack = useCallback(() => {
     switching.current = true;
+    scrobble();
     setCurrentIndex((index) => {
       let nextIndex = index + 1;
       if (isShuffle) {
@@ -48,9 +58,10 @@ export function useSong() {
       }
       return nextIndex;
     });
-  }, [isShuffle, playList.length]);
+  }, [isShuffle, playList.length, scrobble]);
   const autoNextTrack = useCallback(() => {
     if (isRepeat) {
+      scrobble();
       const audio = audioRef.current;
       if (audio) {
         audio.currentTime = 0;
@@ -69,9 +80,10 @@ export function useSong() {
     } else {
       nextTrack();
     }
-  }, [isRepeat, nextTrack]);
+  }, [isRepeat, nextTrack, scrobble]);
   const lastTrack = useCallback(() => {
     switching.current = true;
+    scrobble();
     setCurrentIndex((index) => {
       const lastIndex = index - 1;
       if (lastIndex < 0) {
@@ -79,7 +91,7 @@ export function useSong() {
       }
       return lastIndex;
     });
-  }, [playList.length]);
+  }, [playList.length, scrobble]);
   const mute = useCallback(() => {
     const audio = audioRef.current;
     audio && (audio.muted = !audio.muted);
@@ -341,28 +353,27 @@ export function useSong() {
       repeat
     }),
     [
-      addAndPlayTrack,
-      addTrackToList,
-      clearPlayList,
-      currentIndex,
-      downVolume,
-      getProgress,
-      info,
-      isPlaying,
-      lastTrack,
       lyricLines,
-      mute,
-      nextTrack,
+      info,
       play,
-      playList,
-      removeTrackInList,
-      replacePlayList,
+      mute,
+      upVolume,
+      downVolume,
+      currentIndex,
       setInfo,
       setPlayList,
-      upVolume,
+      isPlaying,
+      playList,
+      addTrackToList,
+      removeTrackInList,
+      nextTrack,
+      lastTrack,
+      addAndPlayTrack,
+      clearPlayList,
+      replacePlayList,
+      getProgress,
       changeCurrentTime,
       lyricVersion,
-      setLyricVersion,
       volume,
       isShuffle,
       shuffle,

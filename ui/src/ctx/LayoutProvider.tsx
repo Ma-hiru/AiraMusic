@@ -53,7 +53,8 @@ export default function LayoutProvider({ children }: { children: ReactNode }) {
   const ctxValue = useMemo<LayoutCtxType>(
     () => ({
       PlayerModalVisible: playerModalVisible,
-      TogglePlayerModalVisible: setPlayerModalVisible,
+      TogglePlayerModalVisible: () => setPlayerModalVisible((v) => !v),
+      setPlayerModalVisible,
       background,
       setBackground,
       backgroundThemeColor,

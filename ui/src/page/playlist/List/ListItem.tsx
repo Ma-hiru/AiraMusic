@@ -44,14 +44,15 @@ const ListItem: FC<ListItemProps> = ({ index, data, playListID, isLikedList, abs
             cover: track.al.picUrl,
             audio: "",
             alias: track.alia[0] || "",
-            tsTitle: track.tns?.[0] || ""
+            tsTitle: track.tns?.[0] || "",
+            sourceID: playListID
           });
         }
       }
       // 播放列表使用的是相对索引
       replacePlayList(newPlayList, index);
     },
-    [data, disabled, index, replacePlayList, track.name]
+    [data, disabled, index, playListID, replacePlayList, track.name]
   );
 
   return (

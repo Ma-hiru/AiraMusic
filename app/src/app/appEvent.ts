@@ -1,22 +1,21 @@
 import { APP } from "./index";
-import { app, protocol } from "electron";
+import { app } from "electron";
 import { Log } from "../utils/log";
 import { createInitWindow } from "./createWindow";
 import { handleWindowEvents } from "./windowEvent";
 import { isCreateTray, isMacOS } from "../utils/platform";
 import { registerIpcMainHandlers } from "../ipc";
 import { stopCacheServer } from "@mahiru/app/src/services/store";
-import { readFile } from "node:fs/promises";
-import mime from "mime";
+
 export function handleAppEvents(instance: APP) {
   app.on("ready", async () => {
-    Log.trace("App ready");
+    Log.debug("App ready");
     instance.window = createInitWindow(instance.store.get("window"));
     handleWindowEvents(instance);
+    registerIpcMainHandlers(instance.window, instance.store);
     if (isCreateTray) {
       // TODO
     }
-    registerIpcMainHandlers(instance.window, instance.store);
     // TODO proxy
     // TODO menu
     // TODO dock
@@ -24,35 +23,9 @@ export function handleAppEvents(instance: APP) {
     // TODO ......
   });
 
-  protocol.registerSchemesAsPrivileged([
-    {
-      scheme: "mahiru",
-      privileges: {
-        secure: true,
-        standard: true,
-        supportFetchAPI: true,
-        bypassCSP: true
-      }
-    }
-  ]);
-
-  app.whenReady().then(() => {
-    protocol.handle("mahiru", async (request) => {
-      // url.hostname === "local"
-      // url.pathname === "/C:/Users/xxx.png"
-      const url = new URL(request.url);
-      const filePath = decodeURIComponent(url.pathname.slice(1)); // 去掉开头的 "/"
-      return new Response(await readFile(filePath), {
-        headers: {
-          "Content-Type": mime.getType(filePath) ?? "application/octet-stream"
-        }
-      });
-    });
-  });
-
   // macOS 行为，点击 Dock 图标时如果没有窗口则重建
   app.on("activate", () => {
-    Log.trace("App activated");
+    Log.debug("App activated");
     if (instance.window === null) {
       instance.window = createInitWindow(instance.store.get("window"));
     } else {
@@ -62,32 +35,40 @@ export function handleAppEvents(instance: APP) {
 
   // macOS 里 window-all-closed 不自动退出程序（保持 Dock 图标），在非 macOS 平台通常退出。
   app.on("window-all-closed", () => {
-    Log.trace("App window all-closed");
+    Log.debug("App window all-closed");
     !isMacOS && app.quit();
   });
 
   // 应用即将退出，this.willQuitApp = true; 用于 window.close 事件里的逻辑判断（确定用户是不是要退出）。
   app.on("before-quit", () => {
-    Log.trace("App before-quit");
+    Log.debug("App before-quit");
     instance.willQuitAPP = true;
   });
 
   // 在退出时清理资源，例如 this.expressApp.close() 停掉本地 HTTP 服务。
   app.on("quit", () => {
-    Log.trace("App quit");
+    Log.debug("App quit");
     instance.expressAPP.close();
     stopCacheServer();
+    instance.neteaseMusicAPIServer
+      .then((ncm) => {
+        Log.debug("stop neteaseMusicAPIServer");
+        ncm?.server?.close();
+      })
+      .catch((err) => {
+        Log.debug(`failed to stop neteaseMusicAPIServer: ${err}`);
+      });
   });
 
   // 退出前注销全局快捷键
   app.on("will-quit", () => {
-    Log.trace("App will-quit");
+    Log.debug("App will-quit");
     // TODO
   });
 
   if (!isMacOS) {
     // 当用户再次尝试打开应用（双击可执行文件）时，主实例接收事件；常见做法是把原窗口 show()/focus()。注意在 requestSingleInstanceLock() 返回 true 的情况下，这个事件会被触发
-    app.on("second-instance", (_e, _cl, _wd) => {
+    app.on("second-instance", () => {
       if (instance.window) {
         instance.window.show();
         if (instance.window.isMinimized()) {

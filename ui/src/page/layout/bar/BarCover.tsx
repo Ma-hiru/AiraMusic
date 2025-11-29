@@ -17,7 +17,7 @@ const BarCover: FC<object> = () => {
           decoding="async"
           src={(cachedCover || null) as string}
           alt={info.title}
-          onClick={() => TogglePlayerModalVisible(true)}
+          onClick={TogglePlayerModalVisible}
         />
       </div>
       <div className="flex flex-col gap-0 items-start">

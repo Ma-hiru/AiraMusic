@@ -251,13 +251,15 @@ func (Self *Store) Path() string {
 	return Self.storeDir
 }
 
+var BlankWriter = &nopCloseWriter{}
+
 // BeginWrite 开始写入文件，返回写入句柄，如果已经有相同 URL 的写入在进行中，返回一个空的写入句柄
 // 不用担心并发写入同一个 URL，因为调用此函数前会先检查索引是否存在，只有不存在时才会调用此函数
 func (Self *Store) BeginWrite(url, name, fileType, size, etag, lastModified string) io.WriteCloser {
 	Self.muWrite.RLock()
 	if _, ok := Self.currentWrite[url]; ok {
 		Self.muWrite.RUnlock()
-		return &nopCloseWriter{}
+		return BlankWriter
 	}
 	Self.muWrite.RUnlock()
 
@@ -319,7 +321,7 @@ func (Self *Store) EndWrite(id, url string, success bool) Index {
 		id = url
 	}
 	var index = createIndex(id, finalPath, url, wFile.size, wFile.finalName, wFile.fileType, wFile.etag, wFile.lastModified)
-	Self.appendIndex(index)
+	_ = Self.appendIndex(index)
 	return index
 }
 

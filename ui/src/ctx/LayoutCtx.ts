@@ -3,7 +3,8 @@ import { EqError } from "@mahiru/ui/utils/dev";
 
 export type LayoutCtxType = {
   PlayerModalVisible: boolean;
-  TogglePlayerModalVisible: NormalFunc<[show: boolean]>;
+  setPlayerModalVisible: NormalFunc<[visible: boolean]>;
+  TogglePlayerModalVisible: NormalFunc;
   background: Undefinable<string>;
   setBackground: NormalFunc<[bg?: string]>;
   backgroundThemeColor: string[];
@@ -12,6 +13,7 @@ export type LayoutCtxType = {
 
 export const LayoutCtx = createContext<LayoutCtxType>({
   PlayerModalVisible: false,
+  setPlayerModalVisible: blank,
   TogglePlayerModalVisible: blank,
   background: undefined,
   setBackground: blank,

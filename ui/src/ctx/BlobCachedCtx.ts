@@ -101,10 +101,11 @@ export function useFileCache(
   options?: {
     id?: string | number;
     onCacheHit?: (file: string, id: string) => void;
+    partial?: boolean;
   }
 ) {
   const [finalURL, setFinalURL] = useState<string>();
-  const { id = url, onCacheHit } = options || {};
+  const { id = url, onCacheHit, partial = false } = options || {};
   useLayoutEffect(() => {
     if (
       !url ||

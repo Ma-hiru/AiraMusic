@@ -9,11 +9,12 @@ import { handleAppEvents } from "./appEvent";
 import { startCacheServer } from "../services/store";
 import { commands } from "./cmd";
 import { StoreType, Store } from "./store";
+import { registerAppProtocol } from "./protocol";
 
 export class APP {
   store!: ElectronStore<StoreType>;
   willQuitAPP!: boolean;
-  neteaseMusicAPIServer!: Promise<void>;
+  neteaseMusicAPIServer!: ReturnType<typeof startNeteaseMusicApiServer>;
   expressAPP!: Server;
   window!: BrowserWindow;
   cacheAPP!: number;
@@ -30,8 +31,8 @@ export class APP {
     this.neteaseMusicAPIServer = startNeteaseMusicApiServer();
     this.store = Store;
     this.willQuitAPP = !isMacOS;
+    registerAppProtocol();
     handleAppEvents(this);
-
     // disable chromium mpris
     if (isCreateMpris) {
       app.commandLine.appendSwitch(

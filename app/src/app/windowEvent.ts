@@ -7,7 +7,7 @@ import { EqError } from "../utils/err";
 
 export function handleWindowEvents(instance: APP) {
   instance.window.once("ready-to-show", () => {
-    Log.trace("Window ready-to-show");
+    Log.debug("Window ready-to-show");
     // 等待react的load事件再显示窗口
     // instance.window.show();
     // 把窗口位置尺寸保存（用于下次启动恢复）
@@ -15,7 +15,7 @@ export function handleWindowEvents(instance: APP) {
   });
 
   instance.window.on("close", (e) => {
-    Log.trace("Window closed");
+    Log.debug("Window closed");
     if (isLinux) {
       closeOnLinux(e, instance);
     } else if (isMacOS) {

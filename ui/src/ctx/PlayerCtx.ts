@@ -12,6 +12,7 @@ export interface PlayerTrackInfo {
   album: Partial<NeteaseTrack["al"]>;
   cover: string;
   audio: string;
+  sourceID?: number;
 }
 
 export interface PlayerCtxProgress {
