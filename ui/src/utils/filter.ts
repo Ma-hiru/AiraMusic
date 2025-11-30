@@ -5,7 +5,7 @@ import {
   TrackId
 } from "@mahiru/ui/types/netease-api";
 import { isTrackPlayable } from "@mahiru/ui/api/utils/common";
-import { CheckMutilResult, useDynamicZustandStore } from "@mahiru/ui/store";
+import { useDynamicZustandStore } from "@mahiru/ui/store";
 import { getTrackDetail } from "@mahiru/ui/api/track";
 import { Store } from "@mahiru/ui/store/cache";
 import { EqError, Log } from "@mahiru/ui/utils/dev";
@@ -142,6 +142,7 @@ export async function NeteaseTrackCoverPreCacheFilter(
     cached.results.forEach((cache, i) => {
       const track = tracks[i]!;
       if (cache.ok) {
+        console.log("封面预缓存命中");
         track.al.cachedPicUrl = cache.index.file;
         track.al.cachedPicUrlID = cache.index.id;
       } else if (track.al.cachedPicUrl || track.al.cachedPicUrlID) {

@@ -7,7 +7,7 @@ import ListItem from "./ListItem";
 import Loading from "../public/Loading";
 
 interface ListProps {
-  id: number;
+  id?: number;
   filterTracks: { tracks: NeteaseTrack[]; absoluteIdx: Nullable<number[]> };
   onVirtualListRangeUpdate: (range: IndexRange) => void;
 }
@@ -57,7 +57,7 @@ export default memo(ListContainer);
 
 function RowComponent(
   props: ComponentProps<
-    RowComponentType<NeteaseTrack, { id: number; absoluteIdx: number[] | null }>
+    RowComponentType<NeteaseTrack, { id?: number; absoluteIdx: number[] | null }>
   >
 ) {
   const { index, items, extra } = props;

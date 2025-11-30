@@ -3,12 +3,14 @@ import { ZustandConfig } from "@mahiru/ui/types/zustand";
 import { NeteaseTrack, NeteaseUserDetailResponse } from "@mahiru/ui/types/netease-api";
 
 const enabledPlaylistCategories = playlistCategories.filter((c) => c.enable).map((c) => c.name);
+const historyListStatic: NeteaseTrack[] = [];
 
 export const PersistStoreConfig: ZustandConfig<
   PersistStoreInitialState & PersistStoreActions,
   PersistStoreInitialState
 > = (set, get) => ({
   ...InitialState,
+  getHistoryListStatic: () => historyListStatic,
   updatePersistStore(PartialState: Partial<PersistStoreInitialState>) {
     set((state) => {
       Object.entries(PartialState ?? {}).forEach(([key, value]) => {
@@ -27,18 +29,27 @@ export const PersistStoreConfig: ZustandConfig<
   },
   updatePlayHistory(track: NeteaseTrack) {
     set((draft) => {
-      const historyList = draft.data.historyList;
+      const historyList = draft.data._historyList || [];
       // 移除已有的记录
       const existingIndex = historyList.findIndex((t) => t.id === track.id);
       if (existingIndex !== -1) {
         historyList.splice(existingIndex, 1);
+        historyListStatic.splice(existingIndex, 1);
       }
       // 添加到最前面
       historyList.unshift(track);
+      historyListStatic.unshift(track);
       // 限制最大长度
-      if (historyList.length > draft.settings.maxHistoryListLength) {
+      if (historyList.length > get().settings.maxHistoryListLength) {
         historyList.pop();
+        historyListStatic.pop();
       }
+    });
+  },
+  clearHistoryList() {
+    set((draft) => {
+      draft.data._historyList = [];
+      historyListStatic.length = 0;
     });
   }
 });
@@ -52,7 +63,7 @@ const InitialState: PersistStoreInitialState = {
     user: null,
     lastRefreshCookieDate: 0,
     loginMode: "",
-    historyList: []
+    _historyList: []
   }
 };
 
@@ -65,7 +76,7 @@ export interface PersistStoreInitialState {
     user: NeteaseUserDetailResponse["profile"] | null;
     lastRefreshCookieDate: number;
     loginMode: "account" | "username" | "";
-    historyList: NeteaseTrack[];
+    _historyList: NeteaseTrack[];
   };
 }
 
@@ -73,4 +84,6 @@ export interface PersistStoreActions {
   updatePersistStore: (PartialState: Partial<PersistStoreInitialState>) => void;
   updatePersistStoreData: (PartialData: Partial<PersistStoreInitialState["data"]>) => void;
   updatePlayHistory: (track: NeteaseTrack) => void;
+  clearHistoryList: () => void;
+  getHistoryListStatic: () => NeteaseTrack[];
 }

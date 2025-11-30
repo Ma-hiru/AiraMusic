@@ -50,7 +50,7 @@ export function doLogout() {
     removeCookie("MUSIC_U");
     removeCookie("__csrf");
     // 更新状态仓库
-    const { updatePersistStoreData } = getPersistSnapshot();
+    const { updatePersistStoreData, clearHistoryList } = getPersistSnapshot();
     const { updateLikedTrackIDs, updateUserLikedPlayList, getUserPlayListSummaryStatic } =
       getDynamicSnapshot();
     updatePersistStoreData({
@@ -62,6 +62,7 @@ export function doLogout() {
     updateUserLikedPlayList(null);
     const userPlayList = getUserPlayListSummaryStatic();
     userPlayList.length = 0;
+    clearHistoryList();
     return router.navigate("/home");
   });
 }

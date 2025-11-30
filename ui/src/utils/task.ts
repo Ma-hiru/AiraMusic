@@ -121,3 +121,12 @@ export async function refreshUserLikedTrackIDs() {
     );
   }
 }
+/** 从持久化存储加载播放历史列表到静态列表 */
+export async function loadHistoryListFromPersistentStore() {
+  const { data, getHistoryListStatic } = getPersistSnapshot();
+  const persistedHistoryList = data._historyList || [];
+  const historyListStatic = getHistoryListStatic();
+  historyListStatic.length = 0;
+  historyListStatic.push(...persistedHistoryList);
+  return Promise.resolve();
+}

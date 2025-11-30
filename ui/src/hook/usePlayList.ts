@@ -4,6 +4,12 @@ import { ImageSize, NeteaseTrackCoverPreCacheFilter } from "@mahiru/ui/utils/fil
 import { Log } from "@mahiru/ui/utils/dev";
 import { requestPlayListDetailWithStore } from "@mahiru/ui/utils/playList";
 import { SearchTrack } from "@mahiru/wasm";
+import {
+  getDynamicSnapshot,
+  usePersistZustandShallowStore,
+  usePersistZustandStore
+} from "@mahiru/ui/store";
+import { useShallow } from "zustand/react/shallow";
 
 export function usePlayListNormal(id?: string) {
   // 歌单详情
@@ -135,4 +141,125 @@ export function usePlayListNormal(id?: string) {
   };
 }
 
-export function usePlayListHistory() {}
+export function usePlayListHistory() {
+  // 精确监听历史列表变化
+  const { _historyList, getHistoryListStatic } = usePersistZustandStore(
+    useShallow((state) => ({
+      _historyList: state.data._historyList,
+      getHistoryListStatic: state.getHistoryListStatic
+    }))
+  );
+  const historyTracks = useRef<NeteaseTrack[]>([]);
+  const [filterTracks, setFilterTracks] = useState({
+    tracks: [] as NeteaseTrack[],
+    // 搜索时的绝对索引，如果为null则表示未搜索
+    absoluteIdx: null as Nullable<number[]>
+  });
+  const [searchTrackInstance, setSearchTrackInstance] = useState<Nullable<SearchTrack>>(null);
+
+  // 历史最大滚动范围
+  const maxRange = useRef<IndexRange>([0, 0]);
+  // 检查并更新前一段预缓存范围
+  const checkAndUpdateLastPreloadRange = useCallback(async (range: IndexRange) => {
+    const [start, end] = range;
+    return await NeteaseTrackCoverPreCacheFilter(
+      historyTracks.current,
+      [start, end],
+      ImageSize.xs,
+      true
+    );
+  }, []);
+  // 虚拟列表范围更新回调
+  const onVirtualListRangeUpdate = useCallback(
+    async (range: IndexRange) => {
+      // 搜索状态不处理预缓存
+      if (filterTracks.absoluteIdx !== null) return;
+      // 50 70 75 95
+      const [start, end] = range;
+      // 向上滚动不处理
+      if (start < maxRange.current[0]) return;
+      // 向下滚动，更新最大范围
+      maxRange.current = range;
+      // 如果开始位置是25的倍数再进行预缓存，减少调用次数
+      if (start % 25 === 0 && start !== 0) {
+        Log.debug("ui/PlayListPage.tsx:onVirtualListRangeUpdate", "预缓存封面", end, end + 25);
+        historyTracks.current = await NeteaseTrackCoverPreCacheFilter(
+          historyTracks.current,
+          [end, end + 25], // 70 95 95 120
+          ImageSize.xs
+        );
+        // 检查前一段范围，写入预缓存
+        if (start - 50 > 0) {
+          Log.debug(
+            "ui/PlayListPage.tsx:onVirtualListRangeUpdate",
+            "检查前一段范围预缓存",
+            end - 25,
+            end
+          );
+          await checkAndUpdateLastPreloadRange([end - 25, end]);
+        }
+      }
+    },
+    [checkAndUpdateLastPreloadRange, filterTracks.absoluteIdx]
+  );
+  // 搜索曲目
+  const searchTracks = useCallback(
+    (k: string) => {
+      if (k.trim() === "") {
+        setFilterTracks({
+          tracks: historyTracks.current,
+          absoluteIdx: null
+        });
+      } else {
+        if (searchTrackInstance) {
+          const lowerK = k.toLowerCase();
+          const indexs = searchTrackInstance.search(lowerK);
+          const result: NeteaseTrack[] = [];
+          indexs.forEach((i) => {
+            result.push(historyTracks.current[i]!);
+          });
+          setFilterTracks({
+            tracks: result,
+            absoluteIdx: indexs as unknown as number[]
+          });
+        }
+      }
+    },
+    [historyTracks, searchTrackInstance]
+  );
+  // 加载历史歌曲详情
+  useEffect(() => {
+    let cancelled = false;
+    setTimeout(() => {
+      if (!cancelled) {
+        console.log("初始预缓存封面 0-50 检查并更新");
+        void checkAndUpdateLastPreloadRange([0, 50]);
+      }
+    }, 1000);
+    searchTrackInstance?.update(JSON.stringify(historyTracks.current));
+    setFilterTracks({
+      tracks: historyTracks.current,
+      absoluteIdx: null
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [checkAndUpdateLastPreloadRange, historyTracks, searchTrackInstance]);
+  // 初始化搜索实例
+  useEffect(() => {
+    if (searchTrackInstance === null) {
+      setSearchTrackInstance(new SearchTrack());
+    }
+  }, [searchTrackInstance]);
+  // 获取最新的历史列表
+  useEffect(() => {
+    // 监听持久化列表变化
+    void _historyList;
+    historyTracks.current = getHistoryListStatic();
+  }, [_historyList, getHistoryListStatic]);
+  return {
+    filterTracks,
+    onVirtualListRangeUpdate,
+    searchTracks
+  };
+}

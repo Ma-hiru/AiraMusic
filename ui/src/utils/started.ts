@@ -5,13 +5,19 @@ import {
   refreshCookieTask,
   refreshUserProfile,
   refreshUserPlaylist,
-  refreshUserLikedTrackIDs
+  refreshUserLikedTrackIDs,
+  loadHistoryListFromPersistentStore
 } from "@mahiru/ui/utils/task";
 
 export function started() {
   if (window.location.pathname !== "/") return;
   void onChangeDay([refreshCookieTask]);
-  void onStarted([refreshUserProfile, refreshUserPlaylist, refreshUserLikedTrackIDs]);
+  void onStarted([
+    refreshUserProfile,
+    refreshUserPlaylist,
+    refreshUserLikedTrackIDs,
+    loadHistoryListFromPersistentStore
+  ]);
 }
 
 async function onChangeDay(task: NormalFunc<never[], Promise<void>>[]) {

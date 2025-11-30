@@ -18,7 +18,7 @@ export async function requestPlayListDetailWithStore(
     return playList.get(id)!;
   } else {
     const rawList = await getPlaylistDetail(id);
-    const fullList = await NeteasePlayListToFullTracksFilter(rawList);
+    const fullList = await NeteasePlayListToFullTracksFilter({ ...rawList });
     fullList.playlist.tracks = NeteaseTrackPrivilegesStatusFilter(
       fullList.playlist.tracks,
       fullList.privileges
