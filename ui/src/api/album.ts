@@ -1,6 +1,4 @@
 import request from "./utils/request";
-import { mapTrackPlayableStatus } from "./utils/common";
-import { cacheAlbum, getAlbumFromCache } from "@mahiru/ui/db";
 import type {
   NeteaseAlbumDetailResponse,
   NeteaseAlbumDynamicResponse,
@@ -12,24 +10,12 @@ import type {
  * @param id 专辑 id
  */
 export function getAlbum(id: number): Promise<NeteaseAlbumDetailResponse> {
-  const fetchLatest = () => {
-    return request<{ id: number }, NeteaseAlbumDetailResponse>({
-      url: "/album",
-      method: "get",
-      params: {
-        id
-      }
-    }).then((data) => {
-      cacheAlbum(id, data);
-      data.songs = mapTrackPlayableStatus(data.songs);
-      return data;
-    });
-  };
-
-  fetchLatest();
-
-  return getAlbumFromCache(id).then((result) => {
-    return result ?? fetchLatest();
+  return request<{ id: number }, NeteaseAlbumDetailResponse>({
+    url: "/album",
+    method: "get",
+    params: {
+      id
+    }
   });
 }
 

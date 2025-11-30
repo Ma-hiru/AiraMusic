@@ -6,4 +6,8 @@ interface ENV {
   readonly GO_SERVER_PORT: string;
   readonly EXPRESS_SERVER_PORT: string;
   readonly VITE_SERVER_PORT: string;
+  readonly UI_LOG_LEVEL: EnvLogLevel;
+  readonly APP_LOG_LEVEL: EnvLogLevel;
 }
+
+type EnvLogLevel = "TRACE" | "DEBUG" | "INFO" | "WARN" | "ERROR" | "NONE";

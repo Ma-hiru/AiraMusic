@@ -1,6 +1,4 @@
 import request from "./utils/request";
-import { mapTrackPlayableStatus } from "./utils/common";
-import { cacheTrackDetail, getTrackDetailFromCache } from "../db";
 import { usePersistZustandStore } from "../store";
 import type {
   NeteaseLyricResponse,
@@ -12,6 +10,7 @@ import type {
   NeteaseTrackPrivilege
 } from "@mahiru/ui/types/netease-api";
 import { Store } from "@mahiru/ui/store";
+import { Log } from "@mahiru/ui/utils/dev";
 
 type TrackDetailCacheResult = {
   songs: NeteaseTrack[];
@@ -52,37 +51,19 @@ export function getMP3(id: string | number) {
  * @param ids - 音乐 id, 例如 ids=405998841,33894312
  * @example /song/detail?ids=347230`,`/song/detail?ids=347230,347231
  */
-export function getTrackDetail(ids: string | number): Promise<TrackDetailResult> {
-  const fetchLatest = () => {
-    return request<{ ids: string | number }, NeteaseTrackDetailResponse>({
-      url: "/song/detail",
-      method: "get",
-      params: {
-        ids
-      }
-    }).then((data) => {
-      data.songs.forEach((song) => {
-        const privileges = data.privileges.find((t) => t.id === song.id);
-        if (privileges) {
-          cacheTrackDetail(song, privileges);
-        }
-      });
-      data.songs = mapTrackPlayableStatus(data.songs, data.privileges);
-      return data;
-    });
-  };
-  fetchLatest();
-
-  let idsInArray = [String(ids)];
-  if (typeof ids === "string") {
-    idsInArray = ids.split(",");
+export async function getTrackDetail(ids: string | number): Promise<TrackDetailResult> {
+  const url = `http://127.0.0.1:${import.meta.env.NCM_SERVER_PORT}/song/detail?ids=` + ids;
+  const check = await Store.checkOrStoreAsync(url);
+  if (check.ok) {
+    Log.debug("ui/api/track.ts:getTrackDetail", "从本地缓存获取歌曲详情", ids);
+    return await Store.fetch<TrackDetailResult>(url);
   }
-
-  return getTrackDetailFromCache(idsInArray).then((result) => {
-    if (result) {
-      result.songs = mapTrackPlayableStatus(result.songs, result.privileges);
+  return request<{ ids: string | number }, NeteaseTrackDetailResponse>({
+    url: "/song/detail",
+    method: "get",
+    params: {
+      ids
     }
-    return result ?? fetchLatest();
   });
 }
 

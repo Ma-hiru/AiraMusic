@@ -7,7 +7,7 @@ import { getDynamicSnapshot, Store } from "@mahiru/ui/store";
 interface ListItemCoverProps {
   track: NeteaseTrack;
   absoluteIndex: number;
-  playListID: number;
+  playListID?: number;
   onClick?: NormalFunc;
 }
 
@@ -16,6 +16,8 @@ const ListItemCover: FC<ListItemCoverProps> = ({ track, absoluteIndex, playListI
 
   const onCacheHit = useCallback(
     (file: string, id: string) => {
+      // 写入缓存ID
+      if (!playListID) return; // 没有歌单ID不处理(可能是搜索结果、历史记录等)
       const { getPlayListStatic } = getDynamicSnapshot();
       const playList = getPlayListStatic();
       const list = playList.get(playListID);
@@ -31,6 +33,8 @@ const ListItemCover: FC<ListItemCoverProps> = ({ track, absoluteIndex, playListI
       const raw = NeteaseImageSizeFilter(track.al.picUrl, ImageSize.xs) as string;
       if (e.currentTarget.src === raw) return;
       e.currentTarget.src = raw;
+      // 清除缓存
+      if (!playListID) return; // 没有歌单ID不处理(可能是搜索结果、历史记录等)
       const { getPlayListStatic } = getDynamicSnapshot();
       const playList = getPlayListStatic();
       const list = playList.get(playListID);

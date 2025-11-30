@@ -7,10 +7,9 @@ import TopInfo from "@mahiru/ui/page/playlist/Top/TopInfo";
 interface TopProps {
   detail: Nullable<NeteasePlaylistDetailResponse>;
   searchTracks: (k: string) => void;
-  isLikedList: boolean;
 }
 
-const Top: FC<TopProps> = ({ detail, searchTracks, isLikedList }) => {
+const Top: FC<TopProps> = ({ detail, searchTracks }) => {
   return (
     <div className="grid grid-rows-1 grid-cols-[1fr_auto]">
       {/*Left*/}
@@ -20,7 +19,7 @@ const Top: FC<TopProps> = ({ detail, searchTracks, isLikedList }) => {
         <TopInfo detail={detail} />
       </div>
       {/*Right*/}
-      <TopRight detail={detail} searchTracks={searchTracks} isLikedList={isLikedList} />
+      <TopRight detail={detail} searchTracks={searchTracks} />
     </div>
   );
 };

@@ -41,7 +41,7 @@ const Nav: FC<object> = () => {
               }
               onClick={() => {
                 if (label === "搜藏" && (userLikedPlayList?.id || userLikedPlayList?.id === 0)) {
-                  navigate(`/playlist/${userLikedPlayList.id}`);
+                  navigate(`/playlist/${userLikedPlayList.id}?like=true&history=false`);
                 } else {
                   navigate(path);
                 }

@@ -5,9 +5,10 @@ import {
   TrackId
 } from "@mahiru/ui/types/netease-api";
 import { isTrackPlayable } from "@mahiru/ui/api/utils/common";
-import { useDynamicZustandStore } from "@mahiru/ui/store";
+import { CheckMutilResult, useDynamicZustandStore } from "@mahiru/ui/store";
 import { getTrackDetail } from "@mahiru/ui/api/track";
 import { Store } from "@mahiru/ui/store/cache";
+import { EqError, Log } from "@mahiru/ui/utils/dev";
 
 const getDynamicSnapshot = useDynamicZustandStore.getState;
 
@@ -107,28 +108,36 @@ export async function NeteaseTrackCoverPreCacheFilter(
   size: ImageSize = ImageSize.xs,
   noStore = false
 ) {
+  // range => [start, end)
   let [start, end] = range;
-  if (start >= end || start >= tracks.length || end <= 0) {
-    return tracks;
-  }
-  if (end > tracks.length) {
-    end = tracks.length;
-  }
-  if (start < 0) {
-    start = 0;
-  }
+  // 边界检查
+  if (start >= end || start >= tracks.length || end <= 0) return tracks;
+  if (end > tracks.length) end = tracks.length;
+  if (start < 0) start = 0;
+  // 构建检查列表
+  const coverURLs = tracks.slice(start, end).map((track) => {
+    const url = NeteaseImageSizeFilter(track.al.picUrl, size)!;
+    return {
+      id: url,
+      url
+    };
+  });
+  // 检查或预缓存
   let cached;
-  if (noStore) {
-    const coverURLs = tracks.slice(start, end).map((track) => ({
-      id: NeteaseImageSizeFilter(track.al.picUrl, size)!
-    }));
-    cached = await Store.checkMutil(coverURLs);
-  } else {
-    const coverURLs = tracks.slice(start, end).map((track) => ({
-      url: NeteaseImageSizeFilter(track.al.picUrl, size)!
-    }));
-    cached = await Store.checkOrStoreAsyncMutil(coverURLs, "GET");
+  try {
+    if (noStore) cached = await Store.checkMutil(coverURLs);
+    else cached = await Store.checkOrStoreAsyncMutil(coverURLs, "GET");
+  } catch (err) {
+    Log.error(
+      new EqError({
+        raw: err,
+        message: "预缓存封面失败",
+        label: "ui/utils/filter.ts:NeteaseTrackCoverPreCacheFilter"
+      })
+    );
+    cached = { ok: false, results: [] };
   }
+  // 写入结果
   if (cached.ok) {
     cached.results.forEach((cache, i) => {
       const track = tracks[i]!;
@@ -143,5 +152,6 @@ export async function NeteaseTrackCoverPreCacheFilter(
       }
     });
   }
+
   return tracks;
 }

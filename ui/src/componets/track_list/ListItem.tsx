@@ -3,21 +3,21 @@ import { Log } from "@mahiru/ui/utils/dev";
 import { PlayerTrackInfo, usePlayer } from "@mahiru/ui/ctx/PlayerCtx";
 import { NeteaseTrack } from "@mahiru/ui/types/netease-api";
 import { FC, memo, MouseEventHandler, useCallback } from "react";
+import { useTextColorOnThemeColor } from "@mahiru/ui/hook/useTextColorOnThemeColor";
+
 import ListItemIndex from "./ListItemIndex";
 import ListItemCover from "./ListItemCover";
-import ListItemName from "@mahiru/ui/page/playlist/List/ListItemName";
-import ListItemInfo from "@mahiru/ui/page/playlist/List/ListItemInfo";
-import { useTextColorOnThemeColor } from "@mahiru/ui/hook/useTextColorOnThemeColor";
+import ListItemName from "./ListItemName";
+import ListItemInfo from "./ListItemInfo";
 
 interface ListItemProps {
   data: NeteaseTrack[];
   index: number;
-  playListID: number;
-  isLikedList: boolean;
+  playListID?: number;
   absoluteIdx: number[] | null;
 }
 
-const ListItem: FC<ListItemProps> = ({ index, data, playListID, isLikedList, absoluteIdx }) => {
+const ListItem: FC<ListItemProps> = ({ index, data, playListID, absoluteIdx }) => {
   const { replacePlayList, info } = usePlayer();
   const track = data[index]!;
   const total = data.length;
@@ -56,37 +56,33 @@ const ListItem: FC<ListItemProps> = ({ index, data, playListID, isLikedList, abs
   );
 
   return (
-    <>
-      {(!isLikedList || track.isLiked) && (
-        <div
-          style={active ? { color: textColor } : undefined}
-          key={track.id}
-          className={cx(
-            "items-center grid grid-row-1 grid-cols-[auto_auto_1fr_auto_auto] gap-4 rounded-md py-[2px] pl-2 ease-in-out transition-colors mb-2",
-            {
-              "bg-[var(--theme-color-main)]": active,
-              "hover:bg-black/10": !active,
-              "active:bg-black/20": !active,
-              "cursor-not-allowed! opacity-50": disabled,
-              "shadow-xs": active
-            }
-          )}>
-          {/*序号*/}
-          <ListItemIndex total={total} active={active} relativeIndex={index} onClick={play} />
-          {/*封面*/}
-          <ListItemCover
-            track={track}
-            absoluteIndex={absoluteIndex}
-            playListID={playListID}
-            onClick={play}
-          />
-          {/*名称*/}
-          <ListItemName track={track} disabled={disabled} active={active} onClick={play} />
-          {/*专辑*/}
-          <ListItemInfo active={active} track={track} />
-        </div>
-      )}
-    </>
+    <div
+      style={active ? { color: textColor } : undefined}
+      key={track.id}
+      className={cx(
+        "items-center grid grid-row-1 grid-cols-[auto_auto_1fr_auto_auto] gap-4 rounded-md py-[2px] pl-2 ease-in-out transition-colors mb-2",
+        {
+          "bg-[var(--theme-color-main)]": active,
+          "hover:bg-black/10": !active,
+          "active:bg-black/20": !active,
+          "cursor-not-allowed! opacity-50": disabled,
+          "shadow-xs": active
+        }
+      )}>
+      {/*序号*/}
+      <ListItemIndex total={total} active={active} relativeIndex={index} onClick={play} />
+      {/*封面*/}
+      <ListItemCover
+        track={track}
+        absoluteIndex={absoluteIndex}
+        playListID={playListID}
+        onClick={play}
+      />
+      {/*名称*/}
+      <ListItemName track={track} disabled={disabled} active={active} onClick={play} />
+      {/*专辑*/}
+      <ListItemInfo active={active} track={track} />
+    </div>
   );
 };
 export default memo(ListItem);

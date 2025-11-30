@@ -6,15 +6,18 @@ import { NeteasePlaylistDetailResponse } from "@mahiru/ui/types/netease-api";
 import { usePersistZustandShallowStore } from "@mahiru/ui/store";
 import { useFileCache } from "@mahiru/ui/ctx/BlobCachedCtx";
 import { ImageSize, NeteaseImageSizeFilter } from "@mahiru/ui/utils/filter";
+import { useSearchParams } from "react-router-dom";
 
 interface TopRightProps {
   detail: Nullable<NeteasePlaylistDetailResponse>;
   searchTracks: (k: string) => void;
-  isLikedList: boolean;
 }
 
-const TopRight: FC<TopRightProps> = ({ detail, searchTracks, isLikedList }) => {
+const TopRight: FC<TopRightProps> = ({ detail, searchTracks }) => {
   const { data } = usePersistZustandShallowStore(["data"]);
+  const [searchParams] = useSearchParams();
+  const isLikedList = searchParams.get("like") === "true";
+  const isHistoryList = searchParams.get("history") === "true";
   const cachedAvatar = useFileCache(
     NeteaseImageSizeFilter(detail?.playlist.creator.avatarUrl, ImageSize.sm)
   );

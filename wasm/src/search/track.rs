@@ -13,13 +13,23 @@ pub struct SearchTrack {
 #[wasm_bindgen]
 impl SearchTrack {
     #[wasm_bindgen(constructor)]
-    pub fn new(content: String) -> Self {
-        let mut instance = Self {
-            content,
-            parsed: vec![],
-        };
-        instance.parsed = serde_json::from_str::<Vec<NeteaseTrack>>(&instance.content).unwrap();
-        instance
+    pub fn new(content: Option<String>) -> Self {
+        if let Some(content) = content {
+            let mut instance = Self {
+                content,
+                parsed: vec![],
+            };
+            if !instance.content.is_empty() {
+                instance.parsed =
+                    serde_json::from_str::<Vec<NeteaseTrack>>(&instance.content).unwrap();
+            }
+            instance
+        } else {
+            Self {
+                content: String::new(),
+                parsed: vec![],
+            }
+        }
     }
 
     #[wasm_bindgen]
@@ -54,6 +64,21 @@ impl SearchTrack {
             // 返回索引
             .map(|track| self.parsed.iter().position(|t| t.id == track.id).unwrap() as i32)
             .collect()
+    }
+
+    #[wasm_bindgen]
+    pub fn update(&mut self, content: Option<String>) {
+        if let Some(content) = content {
+            self.content = content;
+            if !self.content.is_empty() {
+                self.parsed = serde_json::from_str::<Vec<NeteaseTrack>>(&self.content).unwrap();
+            } else {
+                self.parsed.clear();
+            }
+        } else {
+            self.content.clear();
+            self.parsed.clear();
+        }
     }
 }
 
