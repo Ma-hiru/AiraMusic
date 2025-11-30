@@ -24,12 +24,29 @@ export const PersistStoreConfig: ZustandConfig<
         state.data[key] = value;
       });
     });
+  },
+  updatePlayHistory(track: NeteaseTrack) {
+    set((draft) => {
+      const historyList = draft.data.historyList;
+      // 移除已有的记录
+      const existingIndex = historyList.findIndex((t) => t.id === track.id);
+      if (existingIndex !== -1) {
+        historyList.splice(existingIndex, 1);
+      }
+      // 添加到最前面
+      historyList.unshift(track);
+      // 限制最大长度
+      if (historyList.length > draft.settings.maxHistoryListLength) {
+        historyList.pop();
+      }
+    });
   }
 });
 
 const InitialState: PersistStoreInitialState = {
   settings: {
-    musicQuality: 320000
+    musicQuality: 320000,
+    maxHistoryListLength: 500
   },
   data: {
     user: null,
@@ -42,6 +59,7 @@ const InitialState: PersistStoreInitialState = {
 export interface PersistStoreInitialState {
   settings: {
     musicQuality: number | string;
+    maxHistoryListLength: number;
   };
   data: {
     user: NeteaseUserDetailResponse["profile"] | null;
@@ -54,4 +72,5 @@ export interface PersistStoreInitialState {
 export interface PersistStoreActions {
   updatePersistStore: (PartialState: Partial<PersistStoreInitialState>) => void;
   updatePersistStoreData: (PartialData: Partial<PersistStoreInitialState["data"]>) => void;
+  updatePlayHistory: (track: NeteaseTrack) => void;
 }

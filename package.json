@@ -19,9 +19,7 @@
   "scripts": {
     "dev:ui": "pnpm --filter @mahiru/ui run dev",
     "dev:app": "shx cp .env ./app/.env && pnpm --filter @mahiru/app run dev",
-    "dev:electron": "pnpm run-script-os",
-    "dev:electron:win32": "set NODE_ENV=development && electron .",
-    "dev:electron:linux": "export NODE_ENV=development && electron .",
+    "dev:electron": "electron .",
     "cache-clear": "rimraf ui/node_modules/.vite dist wasm/pkg",
     "build:ui": "pnpm --filter @mahiru/ui run build",
     "build:wasm": "pnpm --filter @mahiru/wasm run build",

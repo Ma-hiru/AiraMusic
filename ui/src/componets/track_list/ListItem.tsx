@@ -45,7 +45,8 @@ const ListItem: FC<ListItemProps> = ({ index, data, playListID, absoluteIdx }) =
             audio: "",
             alias: track.alia[0] || "",
             tsTitle: track.tns?.[0] || "",
-            sourceID: playListID
+            sourceID: playListID,
+            raw: track
           });
         }
       }

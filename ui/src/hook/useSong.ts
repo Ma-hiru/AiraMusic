@@ -10,6 +10,9 @@ import {
   PlayerTrackInfo
 } from "@mahiru/ui/ctx/PlayerCtx";
 import { NeteaseLyricResponse } from "@mahiru/ui/types/netease-api";
+import { getPersistSnapshot } from "@mahiru/ui/store";
+
+const { updatePlayHistory } = getPersistSnapshot();
 
 export function useSong() {
   /**                        状态管理                         */
@@ -44,7 +47,8 @@ export function useSong() {
         sourceid: source,
         time: Math.floor(progress.current.currentTime)
       });
-  }, [info?.album?.id, info.id, info?.sourceID]);
+    updatePlayHistory(info.raw);
+  }, [info?.album?.id, info.id, info.raw, info?.sourceID]);
   const nextTrack = useCallback(() => {
     switching.current = true;
     scrobble();
@@ -444,6 +448,7 @@ function chooseLyricVersion(current: LyricVersionType, hasRm: boolean, hasTl: bo
   }
   return current;
 }
+
 const noLyricTmp = {
   words: [
     {

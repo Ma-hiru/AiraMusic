@@ -152,7 +152,9 @@ const Control: FC<ControlProps> = ({
               <LucideLock className="size-4 cursor-pointer" onClick={() => setLock(true)} />
             )}
           </NoDrag>
-          <div className="flex gap-2 mx-2 ease-in-out duration-300 transition-all" style={{ width: lock ? 0 : "auto" }}>
+          <div
+            className="flex gap-2 mx-2 ease-in-out duration-300 transition-all"
+            style={{ width: lock ? 0 : "auto" }}>
             <NoDrag
               onClick={setRm}
               className={cx(

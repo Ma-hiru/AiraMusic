@@ -13,6 +13,7 @@ export interface PlayerTrackInfo {
   cover: string;
   audio: string;
   sourceID?: number;
+  raw: NeteaseTrack;
 }
 
 export interface PlayerCtxProgress {
@@ -88,7 +89,8 @@ export const PlayerCtxDefault = {
     audio: "",
     id: 0,
     alias: "",
-    tsTitle: ""
+    tsTitle: "",
+    raw: {} as NeteaseTrack
   },
   currentIndex: 0,
   getProgress: () => ({
