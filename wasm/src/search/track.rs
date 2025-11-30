@@ -33,7 +33,7 @@ impl SearchTrack {
     }
 
     #[wasm_bindgen]
-    pub fn search(&self, k: String) -> Vec<i32> {
+    pub fn search(&self, k: String) -> Vec<f64> {
         self.parsed
             .iter()
             .filter(|track| {
@@ -62,7 +62,7 @@ impl SearchTrack {
                         .unwrap_or(false)
             })
             // 返回索引
-            .map(|track| self.parsed.iter().position(|t| t.id == track.id).unwrap() as i32)
+            .map(|track| self.parsed.iter().position(|t| t.id == track.id).unwrap() as f64)
             .collect()
     }
 
