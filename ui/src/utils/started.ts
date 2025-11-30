@@ -1,5 +1,5 @@
 import { EqError, Log } from "@mahiru/ui/utils/dev";
-import { usePersistZustandStore } from "@mahiru/ui/store";
+import { getPersistSnapshot, usePersistZustandStore } from "@mahiru/ui/store";
 import { isAccountLoggedIn } from "@mahiru/ui/api/utils/auth";
 import {
   refreshCookieTask,
@@ -11,6 +11,7 @@ import {
 
 export function started() {
   if (window.location.pathname !== "/") return;
+  console.log(getPersistSnapshot());
   void onChangeDay([refreshCookieTask]);
   void onStarted([
     refreshUserProfile,

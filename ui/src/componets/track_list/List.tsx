@@ -8,11 +8,12 @@ import Loading from "../public/Loading";
 
 interface ListProps {
   id?: number;
+  loading: boolean;
   filterTracks: { tracks: NeteaseTrack[]; absoluteIdx: Nullable<number[]> };
   onVirtualListRangeUpdate: (range: IndexRange) => void;
 }
 
-const ListContainer: FC<ListProps> = ({ id, filterTracks, onVirtualListRangeUpdate }) => {
+const ListContainer: FC<ListProps> = ({ id, filterTracks, onVirtualListRangeUpdate, loading }) => {
   const containerRef = useRef<Nullable<HTMLDivElement>>(null);
   const { mainColor } = useThemeColor();
   const List = useVirtualList(
@@ -41,7 +42,7 @@ const ListContainer: FC<ListProps> = ({ id, filterTracks, onVirtualListRangeUpda
         )}>
         <List ref={listRef} RowComponent={RowComponent} />
       </div>
-      {filterTracks.tracks.length === 0 && (
+      {loading && (
         <div
           style={{ color: mainColor }}
           className="absolute flex flex-col justify-center items-center gap-1 font-medium text-lg left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 select-none">

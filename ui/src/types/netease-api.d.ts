@@ -1,9 +1,4 @@
 /**
- * React UI 侧复用的网易云接口类型定义。
- * 数据结构来自 `temp/src` 的原始 Vue 代码以及 NeteaseCloudMusicApi 的返回体。
- */
-
-/**
  * 歌手的基础信息，常见于 `/song/detail`、`/artist` 等接口。
  * 来源：temp/src/api/track.js#getTrackDetail、temp/src/api/artist.js#getArtist。
  */

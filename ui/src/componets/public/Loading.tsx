@@ -8,9 +8,9 @@ const Loading: FC<LoadingProps> = (props) => {
   return (
     <motion.div
       {...props}
+      initial={{ transformOrigin: "center" }}
       animate={{
         rotate: 360,
-        transformOrigin: "center",
         display: "flex",
         alignItems: "center",
         justifyContent: "center"

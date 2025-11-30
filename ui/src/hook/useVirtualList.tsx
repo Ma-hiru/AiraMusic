@@ -82,7 +82,8 @@ export function useVirtualList<T extends HasID, U = never>(
       getScrollHeight: () => total * itemHeight,
       setScrollTop: (top: number) => containerRef.current && (containerRef.current.scrollTop = top)
     }));
-    const totalHeight = useMemo(() => ({ height: total * itemHeight }), []);
+    // 嵌套使用useMemo会导致无法正确响应items变化，因为这个组件的外部不是模块环境，而是另一个组件环境，状态会发生变化，而不是静态不变
+    const totalHeight = { height: total * itemHeight };
     return (
       <div className="relative w-full will-change-auto contain-paint" style={totalHeight}>
         {items.slice(start, end).map((item, i) => {

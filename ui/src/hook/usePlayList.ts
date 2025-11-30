@@ -4,11 +4,7 @@ import { ImageSize, NeteaseTrackCoverPreCacheFilter } from "@mahiru/ui/utils/fil
 import { Log } from "@mahiru/ui/utils/dev";
 import { requestPlayListDetailWithStore } from "@mahiru/ui/utils/playList";
 import { SearchTrack } from "@mahiru/wasm";
-import {
-  getDynamicSnapshot,
-  usePersistZustandShallowStore,
-  usePersistZustandStore
-} from "@mahiru/ui/store";
+import { usePersistZustandStore } from "@mahiru/ui/store";
 import { useShallow } from "zustand/react/shallow";
 
 export function usePlayListNormal(id?: string) {
@@ -21,6 +17,7 @@ export function usePlayListNormal(id?: string) {
     absoluteIdx: null as Nullable<number[]>
   });
   const [searchTrackInstance, setSearchTrackInstance] = useState<Nullable<SearchTrack>>(null);
+  const [loading, setLoading] = useState(true);
   // 所有曲目
   const tracks = useRef<NeteaseTrack[]>([]);
   // 历史最大滚动范围
@@ -74,11 +71,13 @@ export function usePlayListNormal(id?: string) {
       } else {
         if (searchTrackInstance) {
           const lowerK = k.toLowerCase();
-          const indexs = searchTrackInstance.search(lowerK);
+          const indexs = Array.from(searchTrackInstance.search(lowerK));
+          console.log("searchTracks indexs", indexs);
           const result: NeteaseTrack[] = [];
           indexs.forEach((i) => {
             result.push(tracks.current[i]!);
           });
+          console.log("searchTracks result", result);
           setFilterTracks({
             tracks: result,
             absoluteIdx: indexs as unknown as number[]
@@ -98,6 +97,7 @@ export function usePlayListNormal(id?: string) {
     });
     setDetail(null);
     searchTrackInstance?.update();
+    setLoading(true);
   }, [searchTrackInstance]);
   // 初始化搜索实例
   useEffect(() => {
@@ -110,23 +110,28 @@ export function usePlayListNormal(id?: string) {
     let cancelled = false;
     clearState();
     if (id) {
-      requestPlayListDetailWithStore(Number(id), [0, 50], ImageSize.xs).then((res) => {
-        if (res && !cancelled) {
-          tracks.current = res.playlist.tracks;
-          setTimeout(() => {
-            if (!cancelled) {
-              console.log("初始预缓存封面 0-50 检查并更新");
-              void checkAndUpdateLastPreloadRange([0, 50]);
-            }
-          }, 1000);
-          searchTrackInstance?.update(JSON.stringify(tracks.current));
-          setFilterTracks({
-            tracks: tracks.current,
-            absoluteIdx: null
-          });
-          setDetail(res);
-        }
-      });
+      requestPlayListDetailWithStore(Number(id), [0, 50], ImageSize.xs)
+        .then((res) => {
+          if (res && !cancelled) {
+            tracks.current = res.playlist.tracks;
+            setTimeout(() => {
+              if (!cancelled) {
+                void checkAndUpdateLastPreloadRange([0, 50]);
+              }
+            }, 1000);
+            searchTrackInstance?.update(JSON.stringify(tracks.current));
+            setFilterTracks({
+              tracks: tracks.current,
+              absoluteIdx: null
+            });
+            setDetail(res);
+          }
+        })
+        .finally(() => {
+          if (!cancelled) {
+            setLoading(false);
+          }
+        });
     }
     return () => {
       cancelled = true;
@@ -137,7 +142,8 @@ export function usePlayListNormal(id?: string) {
     detail,
     filterTracks,
     onVirtualListRangeUpdate,
-    searchTracks
+    searchTracks,
+    loading
   };
 }
 
@@ -150,6 +156,7 @@ export function usePlayListHistory() {
     }))
   );
   const historyTracks = useRef<NeteaseTrack[]>([]);
+  const [loading, setLoading] = useState(true);
   const [filterTracks, setFilterTracks] = useState({
     tracks: [] as NeteaseTrack[],
     // 搜索时的绝对索引，如果为null则表示未搜索
@@ -225,14 +232,20 @@ export function usePlayListHistory() {
         }
       }
     },
-    [historyTracks, searchTrackInstance]
+    [searchTrackInstance]
   );
+  // 获取最新的历史列表
+  useEffect(() => {
+    // 监听持久化列表变化
+    void _historyList;
+    setLoading(true);
+    historyTracks.current = getHistoryListStatic();
+  }, [_historyList, getHistoryListStatic]);
   // 加载历史歌曲详情
   useEffect(() => {
     let cancelled = false;
     setTimeout(() => {
       if (!cancelled) {
-        console.log("初始预缓存封面 0-50 检查并更新");
         void checkAndUpdateLastPreloadRange([0, 50]);
       }
     }, 1000);
@@ -241,25 +254,21 @@ export function usePlayListHistory() {
       tracks: historyTracks.current,
       absoluteIdx: null
     });
+    if (loading) setLoading(false);
     return () => {
       cancelled = true;
     };
-  }, [checkAndUpdateLastPreloadRange, historyTracks, searchTrackInstance]);
+  }, [checkAndUpdateLastPreloadRange, historyTracks, loading, searchTrackInstance]);
   // 初始化搜索实例
   useEffect(() => {
     if (searchTrackInstance === null) {
       setSearchTrackInstance(new SearchTrack());
     }
   }, [searchTrackInstance]);
-  // 获取最新的历史列表
-  useEffect(() => {
-    // 监听持久化列表变化
-    void _historyList;
-    historyTracks.current = getHistoryListStatic();
-  }, [_historyList, getHistoryListStatic]);
   return {
     filterTracks,
     onVirtualListRangeUpdate,
-    searchTracks
+    searchTracks,
+    loading
   };
 }

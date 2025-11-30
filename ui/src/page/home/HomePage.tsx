@@ -1,41 +1,66 @@
 import { FC, memo } from "react";
-import { addMessageHandler, removeMessageHandler } from "@mahiru/ui/utils/message";
-import { doLogout, isAccountLoggedIn } from "@mahiru/ui/api/utils/auth";
-import { refreshLogin } from "@mahiru/ui/utils/task";
-import { isDev } from "@mahiru/ui/utils/dev";
 import { usePlayingBackground } from "@mahiru/ui/hook/usePlayingBackground";
+import Title from "@mahiru/ui/componets/public/Title";
+import {
+  dailyRecommendPlaylist,
+  highQualityPlaylist,
+  playlistCatlist,
+  recommendPlaylist,
+  topPlaylist
+} from "@mahiru/ui/api/playlist";
+import { topSong } from "@mahiru/ui/api/track";
 
 const HomePage: FC<object> = () => {
   usePlayingBackground();
   return (
-    <div className="w-screen h-screen flex  flex-col justify-center items-center text-md font-mono text-white">
-      Home Page
-      <button
-        className="border bg-purple-500 text-white px-2 py-1 rounded-md font-mono"
-        onClick={() => {
-          if (!isAccountLoggedIn()) {
-            window.node.event.createLoginWindow();
-            addMessageHandler((message) => {
-              if (message.from === "login" && message.type === "login") {
-                refreshLogin(message.data);
-                removeMessageHandler("login");
-              }
-            }, "login");
-          } else if (isDev) {
-            window.node.event.createLoginWindow();
-          }
-        }}>
-        Login
-      </button>
-      <button
-        className="border bg-purple-500 text-white px-2 py-1 rounded-md font-mono"
-        onClick={() => {
-          if (isAccountLoggedIn()) {
-            doLogout();
-          }
-        }}>
-        Logout
-      </button>
+    <div className="w-full h-full px-12 pt-10 contain-style contain-size contain-layout">
+      <Title title="推荐" />
+      <div className="flex flex-col gap-2">
+        <button
+          onClick={() => {
+            recommendPlaylist({ limit: 10 }).then(console.log);
+          }}>
+          get personalized
+        </button>
+        <button
+          onClick={() => {
+            highQualityPlaylist({
+              cat: "全部",
+              limit: 10,
+              before: Date.now()
+            }).then(console.log);
+          }}>
+          get highquality
+        </button>
+        <button
+          onClick={() => {
+            dailyRecommendPlaylist({ limit: 10 }).then(console.log);
+          }}>
+          get dailyRecommend
+        </button>
+        <button
+          onClick={() => {
+            topPlaylist({
+              limit: 10,
+              order: "hot",
+              cat: "全部"
+            }).then(console.log);
+          }}>
+          get topList
+        </button>
+        <button
+          onClick={() => {
+            playlistCatlist().then(console.log);
+          }}>
+          get playlistCatlist
+        </button>
+        <button
+          onClick={() => {
+            topSong(0).then(console.log);
+          }}>
+          get topSong
+        </button>
+      </div>
     </div>
   );
 };
