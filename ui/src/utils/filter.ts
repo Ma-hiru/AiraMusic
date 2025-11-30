@@ -140,16 +140,21 @@ export async function NeteaseTrackCoverPreCacheFilter(
   // 写入结果
   if (cached.ok) {
     cached.results.forEach((cache, i) => {
-      const track = tracks[i]!;
+      const idx = start + i;
+      const track = tracks[idx];
+      if (!track) return;
       if (cache.ok) {
-        console.log("封面预缓存命中");
-        track.al.cachedPicUrl = cache.index.file;
-        track.al.cachedPicUrlID = cache.index.id;
-      } else if (track.al.cachedPicUrl || track.al.cachedPicUrlID) {
-        // 如果缓存失败但之前有缓存过，则删除缓存路径
-        track.al.cachedPicUrl = "";
-        track.al.cachedPicUrlID && void Store.remove(track.al.cachedPicUrlID);
-        track.al.cachedPicUrlID = "";
+        const newAl = {
+          ...(track.al ?? {}),
+          cachedPicUrl: cache.index.file,
+          cachedPicUrlID: cache.index.id
+        };
+        tracks[idx] = { ...track, al: newAl } as NeteaseTrack;
+      } else {
+        const oldId = track.al?.cachedPicUrlID;
+        if (oldId) void Store.remove(oldId);
+        const newAl = { ...(track.al ?? {}), cachedPicUrl: "", cachedPicUrlID: "" };
+        tracks[idx] = { ...track, al: newAl } as NeteaseTrack;
       }
     });
   }
