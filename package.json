@@ -20,6 +20,7 @@
     "dev:ui": "pnpm --filter @mahiru/ui run dev",
     "dev:app": "shx cp .env ./app/.env && pnpm --filter @mahiru/app run dev",
     "dev:electron": "electron .",
+    "preview:ui": "pnpm --filter @mahiru/ui run preview",
     "cache-clear": "rimraf ui/node_modules/.vite dist wasm/pkg",
     "build:ui": "pnpm --filter @mahiru/ui run build",
     "build:wasm": "pnpm --filter @mahiru/wasm run build",

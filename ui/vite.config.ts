@@ -7,7 +7,14 @@ import { join } from "node:path";
 
 export default defineConfig(({ mode }) => {
   const __dirname = fileURLToPath(new URL(".", import.meta.url));
-  const env = loadEnv(mode, join(__dirname, "../"), "") as ImportMetaEnv;
+  const env = loadEnv(mode, join(__dirname, "../"), [
+    "APP_",
+    "NCM_",
+    "GO_",
+    "EXPRESS_",
+    "VITE_",
+    "UI_"
+  ]) as ImportMetaEnv;
   const defineEnv: Record<string, string> = {};
   for (const k in env) {
     defineEnv[`import.meta.env.${k}`] = JSON.stringify(env[k]);
