@@ -4,8 +4,10 @@ import { Drag, NoDrag } from "@mahiru/ui/componets/public/Drag";
 import { formatCurrentTimeToMMSS } from "@mahiru/ui/utils/time";
 import { useLyric } from "@mahiru/ui/hook/useLyric";
 import { useManualAutoScroll } from "@mahiru/ui/hook/useMarquee";
-import { LockKeyholeOpen, LucideLock } from "lucide-react";
+import { AArrowDown, AArrowUp, LockKeyholeOpen, LucideLock } from "lucide-react";
 import { ImageSize, NeteaseImageSizeFilter } from "@mahiru/ui/utils/filter";
+
+type FontSize = `${number}px` | `${number}rem` | `${number}em`;
 
 type ControlProps = HTMLAttributes<HTMLDivElement> & {
   showBg: boolean;
@@ -17,6 +19,8 @@ type ControlProps = HTMLAttributes<HTMLDivElement> & {
   lyricLines: FullVersionLyricLine;
   lock: boolean;
   setLock: (lock: boolean) => void;
+  fontSize: FontSize;
+  setFontSize: (size: FontSize) => void;
 };
 
 const Control: FC<ControlProps> = ({
@@ -28,6 +32,8 @@ const Control: FC<ControlProps> = ({
   lock,
   setLock,
   setColor,
+  fontSize,
+  setFontSize,
   ...rest
 }) => {
   const [openColorSelect, setOpenColorSelect] = useState(false);
@@ -64,6 +70,18 @@ const Control: FC<ControlProps> = ({
   useEffect(() => {
     if (!showBg) setOpenColorSelect(false);
   }, [showBg]);
+
+  const upFontSize = useCallback(() => {
+    const currentSize = parseInt(fontSize.replace("px", ""), 10);
+    const newSize = Math.min(currentSize + 2, 72);
+    setFontSize(`${newSize}px`);
+  }, [fontSize, setFontSize]);
+
+  const downFontSize = useCallback(() => {
+    const currentSize = parseInt(fontSize.replace("px", ""), 10);
+    const newSize = Math.max(currentSize - 2, 16);
+    setFontSize(`${newSize}px`);
+  }, [fontSize, setFontSize]);
   return (
     <Drag
       className={cx(
@@ -83,7 +101,7 @@ const Control: FC<ControlProps> = ({
           )}>
           <NoDrag
             onClick={() => setOpenColorSelect(!openColorSelect)}
-            className="relative size-4 rounded-sm cursor-pointer"
+            className="relative size-4 rounded-sm cursor-pointer mr-1"
             style={{ backgroundColor: color }}>
             <NoDrag
               className="absolute top-full mt-2 flex justify-start items-center gap-1 ease-in-out duration-300 transition-opacity"
@@ -106,6 +124,18 @@ const Control: FC<ControlProps> = ({
                 );
               })}
             </NoDrag>
+          </NoDrag>
+          <NoDrag>
+            <AArrowUp
+              onClick={upFontSize}
+              className="size-5 cursor-pointer hover:opacity-50 duration-300 ease-in-out transition-all active:scale-90"
+            />
+          </NoDrag>
+          <NoDrag>
+            <AArrowDown
+              onClick={downFontSize}
+              className="size-5 cursor-pointer hover:opacity-50 duration-300 ease-in-out transition-all active:scale-90"
+            />
           </NoDrag>
         </div>
         <div className="flex items-center gap-2">
@@ -132,8 +162,8 @@ const Control: FC<ControlProps> = ({
         <div className="w-full flex items-center justify-end">
           <NoDrag>
             {lock ? (
-              <LockKeyholeOpen
-                className="size-4 cursor-pointer"
+              <LucideLock
+                className="size-4 cursor-pointer hover:opacity-50 duration-300 ease-in-out transition-all active:scale-90"
                 onClick={() => setLock(false)}
                 onMouseOver={() => {
                   window.node.event.mousePenetrate({
@@ -149,7 +179,10 @@ const Control: FC<ControlProps> = ({
                 }}
               />
             ) : (
-              <LucideLock className="size-4 cursor-pointer" onClick={() => setLock(true)} />
+              <LockKeyholeOpen
+                className="size-4 cursor-pointer hover:opacity-50 duration-300 ease-in-out transition-all active:scale-90"
+                onClick={() => setLock(true)}
+              />
             )}
           </NoDrag>
           <div

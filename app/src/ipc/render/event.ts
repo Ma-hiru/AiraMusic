@@ -11,6 +11,7 @@ export const renderEventAPI: RenderEventAPI = {
   unmaximize: (winType) => typedIpcRenderSend("unmaximize", winType),
   hidden: (winType) => typedIpcRenderSend("hidden", winType),
   visible: (winType) => typedIpcRenderSend("visible", winType),
+  resizeWindow: (params) => typedIpcRenderSend("resizeWindow", params),
   sendMessageTo: ({ to, data, type, from }) =>
     typedIpcRenderSend("sendMessageTo", { to, data, type, from }),
   mousePenetrate: (params) => typedIpcRenderSend("mousePenetrate", params),

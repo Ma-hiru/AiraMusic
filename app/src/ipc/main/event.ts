@@ -225,6 +225,18 @@ function registerWindowControl() {
     const win = WindowManager.getBrowserWindowById(type);
     win?.setIgnoreMouseEvents(penetrate, { forward: true });
   });
+  typedIpcMainOn("resizeWindow", (_e, { win: type, bounds }) => {
+    const win = WindowManager.getBrowserWindowById(type);
+    if (!win) return;
+    const current = win.getBounds();
+    const next = {
+      x: Math.floor(bounds.x ?? current.x),
+      y: Math.floor(bounds.y ?? current.y),
+      width: Math.floor(bounds.width ?? current.width),
+      height: Math.floor(bounds.height ?? current.height)
+    };
+    win.setBounds(next);
+  });
   typedIpcMainOn("loaded", (_e, { win, showAfterLoaded, broadcast }) => {
     Log.trace("app/ipc", `IPC Window Loaded:`, win);
     const window = WindowManager.getBrowserWindowById(win);

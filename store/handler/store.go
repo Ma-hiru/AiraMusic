@@ -110,6 +110,13 @@ func download(id, url, method string, body io.Reader, header http.Header) file.I
 	var fileEtag = resp.Header.Get("ETag")
 	var lastModified = resp.Header.Get("Last-Modified")
 	var fileName = getNameFromURL(url)
+	if contentRange := resp.Header.Get("Content-Range"); contentRange != "" {
+		if parts := strings.Split(contentRange, "/"); len(parts) == 2 {
+			if total, err := strconv.ParseInt(parts[1], 10, 64); err == nil {
+				fileSize = strconv.FormatInt(total, 10)
+			}
+		}
+	}
 	// 计算ETag
 	var etag string
 	var reader io.Reader = resp.Body
@@ -180,6 +187,7 @@ func download(id, url, method string, body io.Reader, header http.Header) file.I
 		log.Println("resumed download completed:", url)
 	}
 
+	store.UpdateWriteSize(url, strconv.FormatInt(written, 10))
 	var idx = store.EndWrite(id, url, true)
 	return idx
 }

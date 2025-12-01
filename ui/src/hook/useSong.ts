@@ -95,15 +95,27 @@ export function useSong() {
       return lastIndex;
     });
   }, [playList.length, scrobble]);
+  const volumeBeforeMute = useRef(volume);
   const mute = useCallback(() => {
     const audio = audioRef.current;
-    audio && (audio.muted = !audio.muted);
+    if (audio) {
+      audio.muted = !audio.muted;
+      if (audio.muted) {
+        volumeBeforeMute.current = audio.volume;
+        audio.volume = 0;
+      } else {
+        audio.volume = volumeBeforeMute.current;
+      }
+    }
   }, []);
   const upVolume = useCallback((gap?: number) => {
     const audio = audioRef.current;
     gap ||= 0.2;
     if (audio) {
       audio.volume = Math.min(1, audio.volume + gap);
+      if (audio.volume > 0 && audio.muted) {
+        audio.muted = false;
+      }
     }
   }, []);
   const downVolume = useCallback((gap?: number) => {
@@ -111,6 +123,9 @@ export function useSong() {
     gap ||= 0.2;
     if (audio) {
       audio.volume = Math.max(0, audio.volume - gap);
+      if (audio.volume > 0 && audio.muted) {
+        audio.muted = false;
+      }
     }
   }, []);
   const shuffle = useCallback((enable?: boolean) => {
@@ -289,6 +304,18 @@ export function useSong() {
       audio.removeEventListener("canplay", handleCanPlay);
     };
   }, [info.audio]);
+  // 初始化 progress 和 volume 状态
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    setIsPlaying(!audio.paused);
+    progress.current.duration = audio.duration || 0;
+    progress.current.currentTime = audio.currentTime;
+    setVolume(audio.volume);
+    if (audio.buffered.length > 0) {
+      progress.current.buffered = audio.buffered.end(audio.buffered.length - 1);
+    }
+  }, []);
   // 监听 audio 播放状态变化
   useEffect(() => {
     const audio = audioRef.current;
@@ -320,7 +347,7 @@ export function useSong() {
       audio.removeEventListener("progress", handleProgress);
       audio.removeEventListener("volumechange", handleVolumeChange);
     };
-  }, [autoNextTrack]);
+  }, [autoNextTrack, mute]);
 
   const getProgress = useRef(() => progress.current).current;
   return useMemo<PlayerCtxType>(

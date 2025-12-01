@@ -37,6 +37,10 @@ type NormalEventMaps = {
   hidden: WindowType;
   visible: WindowType;
   mousePenetrate: { win: WindowType; penetrate: boolean };
+  resizeWindow: {
+    win: WindowType;
+    bounds: Partial<{ x: number; y: number; width: number; height: number }>;
+  };
   loaded: { win: WindowType; broadcast: boolean; showAfterLoaded: boolean };
 };
 

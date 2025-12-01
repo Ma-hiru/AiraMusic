@@ -9,29 +9,6 @@ import {
   useRef
 } from "react";
 
-interface HasID {
-  id: string | number;
-}
-
-export type RowComponentType<T, U = never> = FC<{
-  items: T[];
-  index: number;
-  extra?: U;
-}>;
-
-export type ListRef = {
-  getScrollHeight: () => number;
-  setScrollTop: (top: number) => void;
-};
-
-export type ListComponentType<T, U = never> = ForwardRefRenderFunction<
-  ListRef,
-  {
-    RowComponent: RowComponentType<T, U>;
-    paddingBottom?: number | string;
-  }
->;
-
 export function useVirtualList<T extends HasID, U = never>(
   items: T[],
   containerRef: RefObject<HTMLDivElement | null>,
@@ -113,3 +90,26 @@ export function useVirtualList<T extends HasID, U = never>(
 
   return forwardRef(List);
 }
+
+interface HasID {
+  id: string | number;
+}
+
+export type RowComponentType<T, U = never> = FC<{
+  items: T[];
+  index: number;
+  extra?: U;
+}>;
+
+export type ListRef = {
+  getScrollHeight: () => number;
+  setScrollTop: (top: number) => void;
+};
+
+export type ListComponentType<T, U = never> = ForwardRefRenderFunction<
+  ListRef,
+  {
+    RowComponent: RowComponentType<T, U>;
+    paddingBottom?: number | string;
+  }
+>;

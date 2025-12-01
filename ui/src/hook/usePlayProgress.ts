@@ -24,10 +24,10 @@ export function usePlayProgress() {
   const tick = useCallback(
     (force: boolean = false) => {
       if (!force && (getDragging.current || !getPlaying.current)) return;
-    const { buffered, currentTime, duration } = getProgress();
-    const percent = !duration ? 0 : (currentTime / duration) * 100;
-    const buffer = !duration ? 0 : (buffered / duration) * 100;
-    setProgress({ percent, buffer, currentTime, duration });
+      const { buffered, currentTime, duration } = getProgress();
+      const percent = !duration ? 0 : (currentTime / duration) * 100;
+      const buffer = !duration ? 0 : (buffered / duration) * 100;
+      setProgress({ percent, buffer, currentTime, duration });
     },
     [getProgress, setProgress]
   );
@@ -56,18 +56,10 @@ export function usePlayProgress() {
     const nextState = { percent: 0, buffer: 0, currentTime: 0, duration };
     setProgress(nextState);
     if (percentScope.current) {
-      percentAnimate(
-        percentScope.current,
-        { width: "0%" },
-        { duration: 0, ease: "linear" }
-      );
+      percentAnimate(percentScope.current, { width: "0%" }, { duration: 0, ease: "linear" });
     }
     if (bufferScope.current) {
-      bufferAnimate(
-        bufferScope.current,
-        { width: "0%" },
-        { duration: 0, ease: "linear" }
-      );
+      bufferAnimate(bufferScope.current, { width: "0%" }, { duration: 0, ease: "linear" });
     }
   }, [bufferAnimate, bufferScope, getProgress, info.id, percentAnimate, percentScope, setProgress]);
   // 进度条动画

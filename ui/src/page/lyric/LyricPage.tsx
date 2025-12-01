@@ -9,6 +9,7 @@ import {
 } from "@mahiru/ui/utils/ui";
 import Control from "@mahiru/ui/page/lyric/Control";
 import { useUpdate } from "@mahiru/ui/hook/useUpdate";
+import { WindowResize } from "@mahiru/ui/hook/useWindowResize";
 
 const LyricPage: FC<object> = () => {
   const lyricPlayerRef = useRef<LyricPlayerRef>(null);
@@ -26,7 +27,12 @@ const LyricPage: FC<object> = () => {
     isPlaying: false
   });
   const [showBg, setShowBg] = useState(false);
-  const [color, setColor] = useState("#FFFFFF");
+  const [color, setColor] = useState(() => {
+    return window.localStorage.getItem("lyricWindowColor") || "#FFFFFF";
+  });
+  const [fontSize, setFontSize] = useState<FontSize>(() => {
+    return (window.localStorage.getItem("lyricWindowFontSize") as FontSize) || "16px";
+  });
   const [lock, setLock] = useState(false);
 
   const update = useUpdate();
@@ -87,11 +93,13 @@ const LyricPage: FC<object> = () => {
   // 颜色变化
   useEffect(() => {
     changeLyricComponentColorByCSSVar(color);
+    window.localStorage.setItem("lyricWindowColor", color);
   }, [color]);
-
+  // 字体大小变化
   useEffect(() => {
-    changeLyricComponentFontSizeByCSSVar("16px");
-  }, []);
+    changeLyricComponentFontSizeByCSSVar(fontSize);
+    window.localStorage.setItem("lyricWindowFontSize", fontSize);
+  }, [fontSize]);
 
   const handleClick = useCallback(
     (e: React.MouseEvent) => {
@@ -174,11 +182,16 @@ const LyricPage: FC<object> = () => {
         lyricLines={lyricLines}
         lock={lock}
         setLock={setLock}
+        fontSize={fontSize}
+        setFontSize={setFontSize}
       />
+      <WindowResize disable={lock || !showBg} showArea={false} />
     </div>
   );
 };
 export default memo(LyricPage);
+
+type FontSize = `${number}px` | `${number}rem` | `${number}em`;
 
 function chooseVersion(lyricSync: LyricSync, lyricLines: FullVersionLyricLine) {
   switch (lyricSync.lyricVersion) {

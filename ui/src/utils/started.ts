@@ -11,7 +11,6 @@ import {
 
 export function started() {
   if (window.location.pathname !== "/") return;
-  console.log(getPersistSnapshot());
   void onChangeDay([refreshCookieTask]);
   void onStarted([
     refreshUserProfile,

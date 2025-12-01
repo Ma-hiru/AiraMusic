@@ -286,6 +286,15 @@ func (Self *Store) BeginWrite(url, name, fileType, size, etag, lastModified stri
 	return file
 }
 
+// UpdateWriteSize 更新正在写入文件的大小信息，用于在写入过程中检查文件大小是否一致，适应于 Content-Length 不准确的情况（206）
+func (Self *Store) UpdateWriteSize(url, size string) {
+	Self.muWrite.Lock()
+	if wFile, ok := Self.currentWrite[url]; ok {
+		wFile.size = size
+	}
+	Self.muWrite.Unlock()
+}
+
 // EndWrite 结束写入文件，success 表示写入过程是否成功，如果成功则将临时文件重命名为最终文件并创建索引，返回索引信息，否则删除临时文件并返回空索引
 func (Self *Store) EndWrite(id, url string, success bool) Index {
 	Self.muWrite.Lock()
@@ -298,9 +307,14 @@ func (Self *Store) EndWrite(id, url string, success bool) Index {
 	Self.muWrite.Unlock()
 
 	var info, err = wFile.file.Stat()
-	if err == nil && strconv.FormatInt(info.Size(), 10) != wFile.size {
-		success = false
-	} else if err != nil {
+	if err == nil {
+		var actualSize = strconv.FormatInt(info.Size(), 10)
+		if wFile.size == "" {
+			wFile.size = actualSize
+		} else if actualSize != wFile.size {
+			success = false
+		}
+	} else {
 		log.Println("error stating written file:", err)
 	}
 	wFile.file.Close()
