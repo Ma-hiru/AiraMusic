@@ -4,7 +4,7 @@ import { useAnimate } from "motion/react";
 import { MouseEvent as ReactMouseEvent, useCallback, useEffect, useRef, useState } from "react";
 
 export function usePlayProgress() {
-  const { getProgress, isPlaying, changeCurrentTime, audioRef } = usePlayer();
+  const { getProgress, isPlaying, changeCurrentTime, audioRef, info } = usePlayer();
   const [progress, setProgress] = useImmer({
     percent: 0,
     buffer: 0,
@@ -21,23 +21,55 @@ export function usePlayProgress() {
   getDragging.current = isDragging;
   getPlaying.current = isPlaying;
   // 播放同步
-  const tick = useCallback(() => {
-    if (getDragging.current || !getPlaying.current) return;
+  const tick = useCallback(
+    (force: boolean = false) => {
+      if (!force && (getDragging.current || !getPlaying.current)) return;
     const { buffered, currentTime, duration } = getProgress();
     const percent = !duration ? 0 : (currentTime / duration) * 100;
     const buffer = !duration ? 0 : (buffered / duration) * 100;
     setProgress({ percent, buffer, currentTime, duration });
-  }, [getProgress, setProgress]);
+    },
+    [getProgress, setProgress]
+  );
   useEffect(() => {
     const audio = audioRef.current;
-    if (isDragging || !isPlaying || !audio) return;
-    audio.addEventListener("timeupdate", tick);
-    audio.addEventListener("loadstart", tick);
+    if (!audio) return;
+    const handleTimeUpdate = () => tick();
+    const handleLoad = () => tick(true);
+    audio.addEventListener("timeupdate", handleTimeUpdate);
+    audio.addEventListener("loadstart", handleLoad);
+    audio.addEventListener("progress", handleLoad);
+    audio.addEventListener("waiting", handleLoad);
     return () => {
-      audio.removeEventListener("timeupdate", tick);
-      audio.removeEventListener("loadstart", tick);
+      audio.removeEventListener("timeupdate", handleTimeUpdate);
+      audio.removeEventListener("loadstart", handleLoad);
+      audio.removeEventListener("progress", handleLoad);
+      audio.removeEventListener("waiting", handleLoad);
     };
-  }, [audioRef, isDragging, isPlaying, tick]);
+  }, [audioRef, tick]);
+  // track change resets progress immediately to avoid sluggish animation after auto-advance
+  const lastTrackId = useRef(info.id);
+  useEffect(() => {
+    if (info.id === lastTrackId.current) return;
+    lastTrackId.current = info.id;
+    const { duration } = getProgress();
+    const nextState = { percent: 0, buffer: 0, currentTime: 0, duration };
+    setProgress(nextState);
+    if (percentScope.current) {
+      percentAnimate(
+        percentScope.current,
+        { width: "0%" },
+        { duration: 0, ease: "linear" }
+      );
+    }
+    if (bufferScope.current) {
+      bufferAnimate(
+        bufferScope.current,
+        { width: "0%" },
+        { duration: 0, ease: "linear" }
+      );
+    }
+  }, [bufferAnimate, bufferScope, getProgress, info.id, percentAnimate, percentScope, setProgress]);
   // 进度条动画
   useEffect(() => {
     if (!percentScope.current || isDragging) return;

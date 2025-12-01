@@ -78,14 +78,21 @@ export function useVirtualList<T extends HasID, U = never>(
   }, [visibleStart, visibleCount, total, onRangeUpdate]);
 
   const List: ListComponentType<T, U> = ({ RowComponent, paddingBottom }, ref) => {
+    const baseHeight = total * itemHeight;
+    const heightWithNumberPadding =
+      typeof paddingBottom === "number" ? baseHeight + paddingBottom : baseHeight;
     useImperativeHandle(ref, () => ({
-      getScrollHeight: () => total * itemHeight,
+      getScrollHeight: () => heightWithNumberPadding,
       setScrollTop: (top: number) => containerRef.current && (containerRef.current.scrollTop = top)
     }));
-    // 嵌套使用useMemo会导致无法正确响应items变化，因为这个组件的外部不是模块环境，而是另一个组件环境，状态会发生变化，而不是静态不变
-    const totalHeight = { height: total * itemHeight };
+    const heightStyle = (() => {
+      if (typeof paddingBottom !== "string") return heightWithNumberPadding;
+      return `calc(${baseHeight}px + ${paddingBottom})`;
+    })();
     return (
-      <div className="relative w-full will-change-auto contain-paint" style={totalHeight}>
+      <div
+        className="relative w-full will-change-auto contain-paint contain-layout"
+        style={{ height: heightStyle }}>
         {items.slice(start, end).map((item, i) => {
           const realIndex = start + i;
           return (
@@ -100,7 +107,6 @@ export function useVirtualList<T extends HasID, U = never>(
             </div>
           );
         })}
-        {end === total && total !== 0 && <div style={{ height: paddingBottom }} />}
       </div>
     );
   };
