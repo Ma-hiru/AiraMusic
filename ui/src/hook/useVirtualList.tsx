@@ -6,7 +6,6 @@ import {
   useState,
   ForwardRefRenderFunction,
   forwardRef,
-  useMemo,
   useRef
 } from "react";
 
@@ -29,6 +28,7 @@ export type ListComponentType<T, U = never> = ForwardRefRenderFunction<
   ListRef,
   {
     RowComponent: RowComponentType<T, U>;
+    paddingBottom?: number | string;
   }
 >;
 
@@ -77,7 +77,7 @@ export function useVirtualList<T extends HasID, U = never>(
     onRangeUpdate?.([visibleStart, Math.min(total, visibleStart + visibleCount)]);
   }, [visibleStart, visibleCount, total, onRangeUpdate]);
 
-  const List: ListComponentType<T, U> = ({ RowComponent }, ref) => {
+  const List: ListComponentType<T, U> = ({ RowComponent, paddingBottom }, ref) => {
     useImperativeHandle(ref, () => ({
       getScrollHeight: () => total * itemHeight,
       setScrollTop: (top: number) => containerRef.current && (containerRef.current.scrollTop = top)
@@ -100,6 +100,7 @@ export function useVirtualList<T extends HasID, U = never>(
             </div>
           );
         })}
+        {end === total && total !== 0 && <div style={{ height: paddingBottom }} />}
       </div>
     );
   };

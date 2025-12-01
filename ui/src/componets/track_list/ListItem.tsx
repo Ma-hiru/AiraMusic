@@ -1,7 +1,6 @@
 import { cx } from "@emotion/css";
 import { Log } from "@mahiru/ui/utils/dev";
 import { PlayerTrackInfo, usePlayer } from "@mahiru/ui/ctx/PlayerCtx";
-import { NeteaseTrack } from "@mahiru/ui/types/netease-api";
 import { FC, memo, MouseEventHandler, useCallback } from "react";
 import { useTextColorOnThemeColor } from "@mahiru/ui/hook/useTextColorOnThemeColor";
 

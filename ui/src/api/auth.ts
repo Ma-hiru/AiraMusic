@@ -1,11 +1,4 @@
 import request from "./utils/request";
-import type {
-  NeteaseLoginQrCheckResponse,
-  NeteaseLoginQrCreateResponse,
-  NeteaseLoginQrKeyResponse,
-  NeteaseLoginResponse,
-  NeteaseStatusResponse
-} from "@mahiru/ui/types/netease-api";
 
 /**
  * 手机登录
@@ -102,7 +95,7 @@ export function loginQrCodeCheck(key: string): Promise<NeteaseLoginQrCheckRespon
  * @example /login/refresh
  */
 export function refreshCookie() {
-  return request<never, NeteaseStatusResponse>({
+  return request<never, NeteaseAPIResponse>({
     url: "/login/refresh",
     method: "post"
   });
@@ -113,7 +106,7 @@ export function refreshCookie() {
  * @desc 调用此接口, 可退出登录
  */
 export function logout() {
-  return request<never, NeteaseStatusResponse>({
+  return request<never, NeteaseAPIResponse>({
     url: "/logout",
     method: "post"
   });

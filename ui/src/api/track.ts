@@ -1,14 +1,5 @@
 import request from "./utils/request";
 import { usePersistZustandStore } from "../store";
-import type {
-  NeteaseLyricResponse,
-  NeteaseTrackDetailResponse,
-  NeteaseSongUrlResponse,
-  NeteaseStatusResponse,
-  NeteaseTopSongResponse,
-  NeteaseTrack,
-  NeteaseTrackPrivilege
-} from "@mahiru/ui/types/netease-api";
 import { Store } from "@mahiru/ui/store";
 import { Log } from "@mahiru/ui/utils/dev";
 
@@ -112,7 +103,7 @@ export function likeATrack(params: {
   /** 默认为 true 即喜欢 , 若传 false, 则取消喜欢 */
   like?: boolean;
 }) {
-  return request<typeof params & { timestamp: number }, NeteaseStatusResponse>({
+  return request<typeof params & { timestamp: number }, NeteaseAPIResponse>({
     url: "/like",
     method: "get",
     params: {
@@ -134,7 +125,7 @@ export function scrobble(params: {
   /** 歌曲播放时间,单位为秒 */
   time?: number;
 }) {
-  return request<typeof params & { timestamp: number }, NeteaseStatusResponse>({
+  return request<typeof params & { timestamp: number }, NeteaseAPIResponse>({
     url: "/scrobble",
     method: "get",
     params: {

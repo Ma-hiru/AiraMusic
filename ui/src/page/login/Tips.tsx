@@ -1,6 +1,5 @@
 import { FC, memo } from "react";
 import { mapQRCodeStatusToText, QRCodeStatus } from "@mahiru/ui/hook/useQRCode";
-import { NeteaseLoginQrCheckResponse } from "@mahiru/ui/types/netease-api";
 import { useFileCache } from "@mahiru/ui/ctx/BlobCachedCtx";
 import { ImageSize, NeteaseImageSizeFilter } from "@mahiru/ui/utils/filter";
 

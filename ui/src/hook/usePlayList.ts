@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { NeteasePlaylistDetailResponse, NeteaseTrack } from "@mahiru/ui/types/netease-api";
 import { ImageSize, NeteaseTrackCoverPreCacheFilter } from "@mahiru/ui/utils/filter";
 import { Log } from "@mahiru/ui/utils/dev";
 import { requestPlayListDetailWithStore } from "@mahiru/ui/utils/playList";

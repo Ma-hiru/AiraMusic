@@ -1,16 +1,11 @@
 import request from "./utils/request";
-import type {
-  NeteaseAlbumDetailResponse,
-  NeteaseAlbumDynamicResponse,
-  NeteaseStatusResponse
-} from "@mahiru/ui/types/netease-api";
 
 /**
  * 获取专辑内容
  * @param id 专辑 id
  */
-export function getAlbum(id: number): Promise<NeteaseAlbumDetailResponse> {
-  return request<{ id: number }, NeteaseAlbumDetailResponse>({
+export function getAlbum(id: number) {
+  return request<{ id: number }, NeteaseAPIResponse>({
     url: "/album",
     method: "get",
     params: {
@@ -45,7 +40,7 @@ export function newAlbums(params: {
  * @param id 专辑id
  */
 export function albumDynamicDetail(id: number) {
-  return request<{ id: number; timestamp: number }, NeteaseAlbumDynamicResponse>({
+  return request<{ id: number; timestamp: number }, NeteaseAPIResponse>({
     url: "/album/detail/dynamic",
     method: "get",
     params: { id, timestamp: new Date().getTime() }
@@ -62,7 +57,7 @@ export function likeAAlbum(params: {
   /** 1 为收藏,其他为取消收藏 */
   t: number;
 }) {
-  return request<typeof params, NeteaseStatusResponse>({
+  return request<typeof params, NeteaseAPIResponse>({
     url: "/album/sub",
     method: "post",
     params

@@ -1,7 +1,6 @@
 import Color from "color";
 import { FC, memo } from "react";
 import { css, cx } from "@emotion/css";
-import { NeteaseTrack } from "@mahiru/ui/types/netease-api";
 import { useTextColorOnThemeColor } from "@mahiru/ui/hook/useTextColorOnThemeColor";
 
 interface ListItemNameProps {

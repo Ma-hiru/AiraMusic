@@ -5,14 +5,6 @@ import {
   parseQrc
 } from "@applemusic-like-lyrics/lyric";
 import { LyricLine, LyricWord } from "@applemusic-like-lyrics/core";
-import {
-  NeteaseKlyric,
-  NeteaseLrc,
-  NeteaseLyricResponse,
-  NeteaseRomalrc,
-  NeteaseTlyric,
-  NeteaseTransUser
-} from "@mahiru/ui/types/netease-api";
 import { parseNeteaseLyric, parseTranslatedLRC, parseExternalLrc } from "@mahiru/wasm";
 import { EqError, Log } from "@mahiru/ui/utils/dev";
 

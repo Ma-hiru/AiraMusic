@@ -1,8 +1,4 @@
 import { ZustandConfig } from "@mahiru/ui/types/zustand";
-import {
-  NeteasePlaylistDetailResponse,
-  NeteasePlaylistSummary
-} from "@mahiru/ui/types/netease-api";
 
 const playList = new Map<number, NeteasePlaylistDetailResponse>();
 const userPlayLists: NeteasePlaylistSummary[] = [];

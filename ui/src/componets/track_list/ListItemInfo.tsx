@@ -1,7 +1,6 @@
 import { FC, memo } from "react";
 import { cx } from "@emotion/css";
 import { formatDurationToMMSS } from "@mahiru/ui/utils/time";
-import { NeteaseTrack } from "@mahiru/ui/types/netease-api";
 import { Heart } from "lucide-react";
 import { getDynamicSnapshot, useDynamicZustandShallowStore } from "@mahiru/ui/store";
 import { likeATrack } from "@mahiru/ui/api/track";

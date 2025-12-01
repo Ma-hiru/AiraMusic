@@ -2,11 +2,6 @@ import request from "./utils/request";
 import { mapTrackPlayableStatus } from "./utils/common";
 import { isAccountLoggedIn } from "./utils/auth";
 import { getTrackDetail } from "./track";
-import type {
-  NeteaseArtistAlbumResponse,
-  NeteaseArtistDetailResponse,
-  NeteaseStatusResponse
-} from "@mahiru/ui/types/netease-api";
 
 /**
  * 获取歌手单曲
@@ -14,7 +9,7 @@ import type {
  * @param id - 歌手 id, 可由搜索接口获得
  */
 export function getArtist(id: number) {
-  return request<{ id: number; timestamp: number }, NeteaseArtistDetailResponse>({
+  return request<{ id: number; timestamp: number }, NeteaseAPIResponse>({
     url: "/artists",
     method: "get",
     params: {
@@ -23,7 +18,7 @@ export function getArtist(id: number) {
     }
   }).then(async (data) => {
     if (!isAccountLoggedIn()) {
-      const trackIDs = data.hotSongs.map((t) => t.id);
+      const trackIDs = data.hotSongs.map((t: any) => t.id);
       const tracks = await getTrackDetail(trackIDs.join(","));
       data.hotSongs = tracks.songs;
       return data;
@@ -47,7 +42,7 @@ export function getArtistAlbum(params: {
 }) {
   params.limit ||= 50;
   params.offset ||= 0;
-  return request<typeof params, NeteaseArtistAlbumResponse>({
+  return request<typeof params, NeteaseAPIResponse>({
     url: "/artist/album",
     method: "get",
     params
@@ -109,7 +104,7 @@ export function followAArtist(params: {
   /** 操作,1 为收藏,其他为取消收藏 */
   t: number;
 }) {
-  return request<typeof params, NeteaseStatusResponse>({
+  return request<typeof params, NeteaseAPIResponse>({
     url: "/artist/sub",
     method: "post",
     params

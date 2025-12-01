@@ -1,5 +1,4 @@
 import { FC, memo, useCallback } from "react";
-import { NeteasePlaylistDetailResponse } from "@mahiru/ui/types/netease-api";
 import { useFileCache } from "@mahiru/ui/ctx/BlobCachedCtx";
 import { ImageSize, NeteaseImageSizeFilter } from "@mahiru/ui/utils/filter";
 import { useLayout } from "@mahiru/ui/ctx/LayoutCtx";

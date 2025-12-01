@@ -1,5 +1,4 @@
 import { FC, memo, SyntheticEvent, useCallback } from "react";
-import { NeteaseTrack } from "@mahiru/ui/types/netease-api";
 import { useBlobOrFileCache } from "@mahiru/ui/ctx/BlobCachedCtx";
 import { ImageSize, NeteaseImageSizeFilter } from "@mahiru/ui/utils/filter";
 import { getDynamicSnapshot, Store } from "@mahiru/ui/store";

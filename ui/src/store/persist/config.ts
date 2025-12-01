@@ -1,6 +1,5 @@
 import { playlistCategories } from "@mahiru/ui/api/utils/staticData";
 import { ZustandConfig } from "@mahiru/ui/types/zustand";
-import { NeteaseTrack, NeteaseUserDetailResponse } from "@mahiru/ui/types/netease-api";
 
 const enabledPlaylistCategories = playlistCategories.filter((c) => c.enable).map((c) => c.name);
 const historyListStatic: NeteaseTrack[] = [];

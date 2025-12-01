@@ -1,7 +1,5 @@
 import { isAccountLoggedIn } from "./auth";
-
 import { usePersistZustandStore } from "@mahiru/ui/store";
-import type { NeteaseTrack, NeteaseTrackPrivilege } from "@mahiru/ui/types/netease-api";
 
 const getStoreSnapshot = () => usePersistZustandStore.getState();
 

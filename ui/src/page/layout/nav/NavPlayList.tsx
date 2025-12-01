@@ -1,6 +1,5 @@
 import { FC, memo, useCallback, useRef, useState } from "react";
 import { css, cx } from "@emotion/css";
-import { NeteasePlaylistSummary } from "@mahiru/ui/types/netease-api";
 import { useDynamicZustandShallowStore } from "@mahiru/ui/store";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ArrowBigUp } from "lucide-react";

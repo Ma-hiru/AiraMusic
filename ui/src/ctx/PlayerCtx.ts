@@ -1,6 +1,5 @@
 import { createContext, RefObject, useContext } from "react";
 import { EqError, Log } from "@mahiru/ui/utils/dev";
-import { NeteaseTrack } from "@mahiru/ui/types/netease-api";
 import { FullVersionLyricLine } from "@mahiru/ui/utils/lyric";
 
 export interface PlayerTrackInfo {

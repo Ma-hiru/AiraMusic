@@ -9,7 +9,6 @@ import {
   PlayerCtxType,
   PlayerTrackInfo
 } from "@mahiru/ui/ctx/PlayerCtx";
-import { NeteaseLyricResponse } from "@mahiru/ui/types/netease-api";
 import { getPersistSnapshot } from "@mahiru/ui/store";
 
 const { updatePlayHistory } = getPersistSnapshot();

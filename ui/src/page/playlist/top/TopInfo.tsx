@@ -1,7 +1,6 @@
 import { FC, memo } from "react";
 import { formatTimeToMMDD } from "@mahiru/ui/utils/time";
 import { ListMusic, Play } from "lucide-react";
-import { NeteasePlaylistDetailResponse } from "@mahiru/ui/types/netease-api";
 import { useTextColorOnThemeColor } from "@mahiru/ui/hook/useTextColorOnThemeColor";
 import { useThemeColor } from "@mahiru/ui/hook/useThemeColor";
 import Color from "color";

@@ -1,7 +1,6 @@
 import QRCode from "qrcode";
 import { Log, EqError } from "@mahiru/ui/utils/dev";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { NeteaseLoginQrCheckResponse } from "@mahiru/ui/types/netease-api";
 import { loginQrCodeCheck, loginQrCodeCreate, loginQrCodeKey } from "@mahiru/ui/api/auth";
 
 export enum QRCodeStatus {

@@ -1,7 +1,5 @@
 import { FC, memo } from "react";
 import Title from "@mahiru/ui/componets/public/Title";
-import { NeteaseTrack } from "@mahiru/ui/types/netease-api";
-import Dayjs from "dayjs";
 import Search from "@mahiru/ui/page/history/Search";
 
 interface TopProps {

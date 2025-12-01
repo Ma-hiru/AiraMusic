@@ -1,5 +1,4 @@
 import { ComponentProps, FC, memo, useEffect, useRef } from "react";
-import { NeteaseTrack } from "@mahiru/ui/types/netease-api";
 import { css, cx } from "@emotion/css";
 import { useVirtualList, RowComponentType, ListRef } from "@mahiru/ui/hook/useVirtualList";
 import { useThemeColor } from "@mahiru/ui/hook/useThemeColor";
@@ -11,9 +10,16 @@ interface ListProps {
   loading: boolean;
   filterTracks: { tracks: NeteaseTrack[]; absoluteIdx: Nullable<number[]> };
   onVirtualListRangeUpdate: (range: IndexRange) => void;
+  paddingBottom?: number | string;
 }
 
-const ListContainer: FC<ListProps> = ({ id, filterTracks, onVirtualListRangeUpdate, loading }) => {
+const ListContainer: FC<ListProps> = ({
+  id,
+  filterTracks,
+  onVirtualListRangeUpdate,
+  loading,
+  paddingBottom
+}) => {
   const containerRef = useRef<Nullable<HTMLDivElement>>(null);
   const { mainColor } = useThemeColor();
   const List = useVirtualList(
@@ -40,7 +46,7 @@ const ListContainer: FC<ListProps> = ({ id, filterTracks, onVirtualListRangeUpda
             -webkit-overflow-scrolling: auto;
           `
         )}>
-        <List ref={listRef} RowComponent={RowComponent} />
+        <List ref={listRef} RowComponent={RowComponent} paddingBottom={paddingBottom} />
       </div>
       {loading && (
         <div

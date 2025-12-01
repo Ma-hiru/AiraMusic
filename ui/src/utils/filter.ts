@@ -1,9 +1,3 @@
-import {
-  NeteasePlaylistDetailResponse,
-  NeteaseTrack,
-  NeteaseTrackPrivilege,
-  TrackId
-} from "@mahiru/ui/types/netease-api";
 import { isTrackPlayable } from "@mahiru/ui/api/utils/common";
 import { useDynamicZustandStore } from "@mahiru/ui/store";
 import { getTrackDetail } from "@mahiru/ui/api/track";

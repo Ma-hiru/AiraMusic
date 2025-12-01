@@ -16,6 +16,7 @@ const HistoryPage: FC<object> = () => {
         onVirtualListRangeUpdate={onVirtualListRangeUpdate}
         filterTracks={filterTracks}
         loading={loading}
+        paddingBottom={80}
       />
     </div>
   );
