@@ -34,6 +34,7 @@ const ListItemName: FC<ListItemNameProps> = ({ track, disabled, onClick }) => {
   );
   return (
     <div className="flex flex-col text-[14px] overflow-hidden">
+      {/*歌曲标题*/}
       <div className="overflow-hidden flex-row truncate">
         <span className={titleStyle} onClick={onClick}>
           {track.name}

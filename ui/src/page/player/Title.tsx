@@ -5,7 +5,7 @@ const Title: FC<object> = () => {
   const { info } = usePlayer();
   const title = handleTitle(info.title);
   return (
-    <div className="flex flex-col select-none w-[150px] sm:w-[200px] md:w-[250px] lg:w-[300px]">
+    <div className="flex flex-col select-none w-full justify-end">
       <div className="text-white text-center">
         <span className="block w-full font-bold text-[24px] truncate">{title.main}</span>
         {!!title.sub && (

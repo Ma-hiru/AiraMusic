@@ -16,7 +16,7 @@ const Control: FC<object> = () => {
   const { isPlaying, isShuffle, isRepeat, repeat, shuffle, nextTrack, lastTrack, play } =
     usePlayer();
   return (
-    <div className="space-x-2">
+    <div className="space-x-2 w-full">
       <Progress />
       <div className="flex flex-row justify-center items-center gap-16 text-[rgba(255,255,255,0.89)] font-bold mt-2">
         <div className="flex justify-center items-center gap-8">

@@ -1,7 +1,6 @@
 import { FC } from "react";
 import { useParams } from "react-router-dom";
 import { usePlayListNormal } from "@mahiru/ui/hook/usePlayList";
-import BlobCachedProvider from "@mahiru/ui/ctx/BlobCachedProvider";
 
 import Top from "./top";
 import List from "@mahiru/ui/componets/track_list";
@@ -16,16 +15,14 @@ const PlayListPage: FC<object> = () => {
     <div className="w-full h-full px-12 pt-20 contain-style contain-size contain-layout">
       <Top detail={detail} searchTracks={searchTracks} />
       <Divider />
-      <BlobCachedProvider>
-        <div className="w-full h-[calc(100%-210px)] relative">
-          <List
-            id={Number(id)}
-            loading={loading}
-            filterTracks={filterTracks}
-            onVirtualListRangeUpdate={onVirtualListRangeUpdate}
-          />
-        </div>
-      </BlobCachedProvider>
+      <div className="w-full h-[calc(100%-210px)] relative">
+        <List
+          id={Number(id)}
+          loading={loading}
+          filterTracks={filterTracks}
+          onVirtualListRangeUpdate={onVirtualListRangeUpdate}
+        />
+      </div>
     </div>
   );
 };

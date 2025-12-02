@@ -84,6 +84,9 @@ func StoreAsyncMutil(ctx *gin.Context) {
 }
 
 func download(id, url, method string, body io.Reader, header http.Header) file.Index {
+	if url == "" {
+		return file.Index{}
+	}
 	var httpClient = http.DefaultClient
 	// 创建新请求 保留原始请求的方法和头
 	var request, err = http.NewRequest(method, url, body)

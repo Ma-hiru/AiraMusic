@@ -4,6 +4,7 @@ import { useVirtualList, RowComponentType, ListRef } from "@mahiru/ui/hook/useVi
 import { useThemeColor } from "@mahiru/ui/hook/useThemeColor";
 import ListItem from "./ListItem";
 import Loading from "../public/Loading";
+import { useDynamicZustandShallowStore } from "@mahiru/ui/store";
 
 interface ListProps {
   id?: number;
@@ -20,16 +21,20 @@ const ListContainer: FC<ListProps> = ({
   loading,
   paddingBottom
 }) => {
-  const containerRef = useRef<Nullable<HTMLDivElement>>(null);
+  const { userLikedPlayList } = useDynamicZustandShallowStore(["userLikedPlayList"]);
   const { mainColor } = useThemeColor();
-  const List = useVirtualList(
-    filterTracks.tracks,
+  const { tracks, absoluteIdx } = filterTracks;
+  const containerRef = useRef<Nullable<HTMLDivElement>>(null);
+  const isLikedPlayList = id === userLikedPlayList?.id;
+
+  const List = useVirtualList({
+    items: tracks,
     containerRef,
-    10,
-    50,
-    { id, absoluteIdx: filterTracks.absoluteIdx },
-    onVirtualListRangeUpdate
-  );
+    overscan: 10,
+    itemHeight: 50,
+    extraData: { id, isLikedPlayList, absoluteIdx },
+    onRangeUpdate: onVirtualListRangeUpdate
+  });
   const listRef = useRef<ListRef>(null);
   // id变化时，重置滚动位置
   useEffect(() => {

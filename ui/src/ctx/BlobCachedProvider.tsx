@@ -1,6 +1,7 @@
 import { ReactNode, useEffect, useMemo, useRef } from "react";
 import { BlobCachedCtx } from "./BlobCachedCtx";
 
+/** @deprecated */
 export default function BlobCachedProvider(props: { children: ReactNode }) {
   const cachedMap = useRef(new Map<string, string>()).current;
   const ctxValue = useMemo(() => cachedMap, [cachedMap]);

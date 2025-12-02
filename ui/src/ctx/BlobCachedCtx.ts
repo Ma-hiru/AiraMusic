@@ -5,15 +5,9 @@ import { AppScheme } from "@mahiru/ui/constants/scheme";
 
 export const BlobCachedCtx = createContext(new Map<string | number, string>());
 
-// useBlobOrFileCache
-//  ├── 1. 一级缓存 Map 命中？ → 立即返回
-//  ├── 2. 检查本地缓存（Go）是否存在
-//  │     ├── 存在 → readFile
-//  │     │     ├── 成功 → 转 blob URL → 写入一级缓存
-//  │     │     └── 失败 → fallback
-//  │     └── 不存在 → fallback
-//  └── 3. fallback = fetch 源 URL → blob → URL.createObjectURL → 写入一级缓存
-/** 如果url为假值或者本地路径则原地返回 */
+/** 如果url为假值或者本地路径则原地返回
+ * @deprecated
+ * */
 export function useBlobOrFileCache(
   url: Undefinable<string>,
   options?: {
@@ -101,11 +95,10 @@ export function useFileCache(
   options?: {
     id?: string | number;
     onCacheHit?: (file: string, id: string) => void;
-    partial?: boolean;
   }
 ) {
   const [finalURL, setFinalURL] = useState<string>();
-  const { id = url, onCacheHit, partial = false } = options || {};
+  const { id = url, onCacheHit } = options || {};
   useLayoutEffect(() => {
     if (
       !url ||

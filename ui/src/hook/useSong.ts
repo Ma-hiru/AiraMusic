@@ -1,15 +1,16 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { FullVersionLyricLine, handleNeteaseLyricResponse } from "@mahiru/ui/utils/lyric";
 import { getLyric, getMP3, scrobble as requestScrobble } from "@mahiru/ui/api/track";
 import { useImmer } from "use-immer";
-import { Log, EqError } from "@mahiru/ui/utils/dev";
+import { EqError, Log } from "@mahiru/ui/utils/dev";
 import {
   LyricVersionType,
   PlayerCtxDefault,
   PlayerCtxType,
   PlayerTrackInfo
 } from "@mahiru/ui/ctx/PlayerCtx";
-import { getPersistSnapshot } from "@mahiru/ui/store";
+import { getPersistSnapshot, Store } from "@mahiru/ui/store";
+import { ImageSize, NeteaseImageSizeFilter } from "@mahiru/ui/utils/filter";
 
 const { updatePlayHistory } = getPersistSnapshot();
 
@@ -17,6 +18,7 @@ export function useSong() {
   /**                        状态管理                         */
   const audioRef = useRef<HTMLAudioElement>(null);
   const [info, setInfo] = useImmer<PlayerTrackInfo>(PlayerCtxDefault.info);
+  const [nextInfo, setNextInfo] = useState<Nullable<PlayerTrackInfo>>(PlayerCtxDefault.info);
   const [playList, setPlayList] = useImmer<PlayerTrackInfo[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -30,10 +32,12 @@ export function useSong() {
   const [volume, setVolume] = useState(PlayerCtxDefault.volume);
   const [isShuffle, setIsShuffle] = useState(false);
   const [isRepeat, setIsRepeat] = useState(false);
+  const volumeBeforeMute = useRef(volume);
   const switching = useRef(false);
   const progress = useRef(PlayerCtxDefault.getProgress());
   /**                        暴露方法                         */
   // 播放控制函数
+  const getProgress = useRef(() => progress.current).current;
   const play = useCallback(() => {
     const audio = audioRef.current;
     audio && (audio.paused ? audio.play() : audio.pause());
@@ -46,11 +50,10 @@ export function useSong() {
         sourceid: source,
         time: Math.floor(progress.current.currentTime)
       });
-    updatePlayHistory(info.raw);
-  }, [info?.album?.id, info.id, info.raw, info?.sourceID]);
+  }, [info?.album?.id, info.id, info?.sourceID]);
   const nextTrack = useCallback(() => {
+    if (switching.current) return;
     switching.current = true;
-    scrobble();
     setCurrentIndex((index) => {
       let nextIndex = index + 1;
       if (isShuffle) {
@@ -61,9 +64,10 @@ export function useSong() {
       }
       return nextIndex;
     });
-  }, [isShuffle, playList.length, scrobble]);
+  }, [isShuffle, playList.length]);
   const autoNextTrack = useCallback(() => {
     if (isRepeat) {
+      // 重复播放当前歌曲不会触发更新 currentIndex，所以需要手动scrobble
       scrobble();
       const audio = audioRef.current;
       if (audio) {
@@ -85,8 +89,8 @@ export function useSong() {
     }
   }, [isRepeat, nextTrack, scrobble]);
   const lastTrack = useCallback(() => {
+    if (switching.current) return;
     switching.current = true;
-    scrobble();
     setCurrentIndex((index) => {
       const lastIndex = index - 1;
       if (lastIndex < 0) {
@@ -94,8 +98,7 @@ export function useSong() {
       }
       return lastIndex;
     });
-  }, [playList.length, scrobble]);
-  const volumeBeforeMute = useRef(volume);
+  }, [playList.length]);
   const mute = useCallback(() => {
     const audio = audioRef.current;
     if (audio) {
@@ -110,95 +113,115 @@ export function useSong() {
   }, []);
   const upVolume = useCallback((gap?: number) => {
     const audio = audioRef.current;
-    gap ||= 0.2;
     if (audio) {
+      gap ||= 0.2;
       audio.volume = Math.min(1, audio.volume + gap);
-      if (audio.volume > 0 && audio.muted) {
-        audio.muted = false;
-      }
+      audio.volume > 0 && audio.muted && (audio.muted = false);
     }
   }, []);
   const downVolume = useCallback((gap?: number) => {
     const audio = audioRef.current;
-    gap ||= 0.2;
     if (audio) {
+      gap ||= 0.2;
       audio.volume = Math.max(0, audio.volume - gap);
-      if (audio.volume > 0 && audio.muted) {
-        audio.muted = false;
-      }
+      audio.volume > 0 && audio.muted && (audio.muted = false);
     }
   }, []);
   const shuffle = useCallback((enable?: boolean) => {
-    if (enable === undefined) {
-      setIsShuffle((prev) => !prev);
-    } else {
-      setIsShuffle(enable);
-    }
+    setIsShuffle((prev) => (enable === undefined ? !prev : enable));
   }, []);
   const repeat = useCallback((enable?: boolean) => {
-    if (enable === undefined) {
-      setIsRepeat((prev) => !prev);
-    } else {
-      setIsRepeat(enable);
-    }
+    setIsRepeat((prev) => (enable === undefined ? !prev : enable));
   }, []);
   // 播放列表管理函数
   const addTrackToList = useCallback(
     (newTrack: PlayerTrackInfo) => {
       const exists = playList.findIndex((t) => t.id === newTrack.id);
       if (exists === -1) {
+        // 不存在则添加到列表尾
         setPlayList((draft) => {
           draft.push(newTrack);
         });
+      } else {
+        // 已存在则提前到列表头
+        setPlayList((draft) => {
+          const [track] = draft.splice(exists, 1);
+          draft.unshift(track!);
+        });
+        // 由于歌曲被提前到列表头，currentIndex 需要更新
+        if (exists < currentIndex) {
+          // 如果原先的索引在播放索引的前面，那么无需修改 currentIndex，因为播放位置不变
+          return;
+        } else if (exists === currentIndex) {
+          // 如果原先的索引就是播放索引，那么 currentIndex 同步提前为 0
+          setCurrentIndex(0);
+        } else if (exists > currentIndex) {
+          // 如果原先的索引在播放索引的后面，那么 currentIndex 需要加一
+          setCurrentIndex((index) => index + 1);
+        }
       }
     },
-    [playList, setPlayList]
+    [currentIndex, playList, setPlayList]
   );
   const removeTrackInList = useCallback(
     (id: number) => {
       setPlayList((draft) => {
         const index = draft.findIndex((t) => t.id === id);
+        // 如果删除的歌曲合法（在列表中）
         if (index !== -1) {
+          // 如果删除的歌曲在播放中，切换到下一首
+          if (index === currentIndex) {
+            // 如果是最后一首，切换到第一首
+            if (index === draft.length - 1) {
+              setCurrentIndex(0);
+            } else {
+              // 否则切换到下一首，由于 splice 之后，
+              // 下一首的 index 会和当前相同，所以不需要修改 currentIndex，
+              // 这里显示操作是为了触发更新，因为index没有变化但是内容变了
+              setCurrentIndex(() => index);
+            }
+          }
           draft.splice(index, 1);
         }
       });
     },
-    [setPlayList]
+    [currentIndex, setPlayList]
   );
   const addAndPlayTrack = useCallback(
     (newTrack: PlayerTrackInfo) => {
+      if (switching.current) return;
       switching.current = true;
       const exists = playList.findIndex((t) => t.id === newTrack.id);
       if (exists === -1) {
         const insertAt = Math.min(currentIndex + 1, playList.length);
         const newPlayList = [...playList.slice(0, insertAt), newTrack, ...playList.slice(insertAt)];
         setPlayList(newPlayList);
-        setCurrentIndex(insertAt);
+        setCurrentIndex(() => insertAt);
       } else {
-        setCurrentIndex(exists);
+        setCurrentIndex(() => exists);
       }
     },
     [currentIndex, playList, setPlayList]
   );
   const clearPlayList = useCallback(() => {
+    if (switching.current) return;
     switching.current = true;
     setPlayList([]);
-    setCurrentIndex(0);
+    setCurrentIndex(() => 0);
   }, [setPlayList]);
   const replacePlayList = useCallback(
-    (playList: PlayerTrackInfo[], currentIndex: number) => {
+    (playList: PlayerTrackInfo[], relativeIndex: number) => {
+      if (switching.current) return;
       switching.current = true;
       setPlayList(playList);
-      setCurrentIndex(currentIndex);
+      setCurrentIndex(() => relativeIndex);
     },
     [setPlayList]
   );
   const changeCurrentTime = useCallback((current: number) => {
     if (current < 0 || current > progress.current.buffered) return;
     const audio = audioRef.current;
-    if (audio) {
-      audio.currentTime = current;
-    }
+    audio && (audio.currentTime = current);
   }, []);
   /**                        状态变化                         */
   // 加载歌词函数
@@ -264,25 +287,42 @@ export function useSong() {
     },
     [info.audio, setInfo]
   );
+  const preloadNextTrack = useCallback(
+    async (currentTrack: PlayerTrackInfo, nextTrack: Nullable<PlayerTrackInfo>) => {
+      if (!nextTrack || currentTrack.id === nextTrack.id) return;
+      const cover = NeteaseImageSizeFilter(nextTrack.album.picUrl, ImageSize.raw) || "";
+      const mp3 = (await getMP3(nextTrack.id)).data[0]?.url || "";
+      void Store.checkOrStoreAsyncMutil([
+        { url: cover },
+        { id: "audio_" + nextTrack.id, url: mp3 }
+      ]);
+    },
+    []
+  );
   // 监听 currentIndex 变化以切换歌曲
-  useEffect(() => {
+  useLayoutEffect(() => {
     const candidate = playList[currentIndex];
+    const next = playList[currentIndex + 1] || null;
     if (candidate && candidate.id !== info.id) {
-      const next = candidate;
-      setInfo(next);
-      loadLyric(next.id);
+      setInfo(candidate);
+      setNextInfo(next);
+      // 预加载下一首歌曲信息
+      void preloadNextTrack(candidate, next);
+      loadLyric(candidate.id);
+      updatePlayHistory(candidate.raw);
+      scrobble();
     } else {
       switching.current = false;
     }
-  }, [currentIndex, info.id, loadLyric, playList, setInfo]);
+  }, [currentIndex, info.id, loadLyric, playList, preloadNextTrack, scrobble, setInfo]);
   // 监听 info.id 变化以加载音频地址
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (info.id !== 0 && info.audio === "") {
       return loadMP3(info.id);
     }
   }, [info.audio, info.id, loadMP3]);
   // 监听 info.audio 地址变化以播放音频
-  useEffect(() => {
+  useLayoutEffect(() => {
     const audio = audioRef.current;
     if (!audio || !info.audio) return;
     audio.src = info.audio;
@@ -349,12 +389,39 @@ export function useSong() {
     };
   }, [autoNextTrack, mute]);
 
-  const getProgress = useRef(() => progress.current).current;
+  useEffect(() => {
+    if (navigator.mediaSession) {
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: info.title,
+        artist: info.artist.map((artist) => artist.name).join(", "),
+        album: info.album.name,
+        artwork: [
+          {
+            src: NeteaseImageSizeFilter(info.album.picUrl, ImageSize.lg) || "",
+            sizes: "500x500",
+            type: "image/png"
+          }
+        ]
+      });
+      navigator.mediaSession.setActionHandler("play", play);
+      navigator.mediaSession.setActionHandler("pause", play);
+      navigator.mediaSession.setActionHandler("previoustrack", lastTrack);
+      navigator.mediaSession.setActionHandler("nexttrack", nextTrack);
+      return () => {
+        navigator.mediaSession.metadata = new MediaMetadata();
+        navigator.mediaSession.setActionHandler("play", null);
+        navigator.mediaSession.setActionHandler("pause", null);
+        navigator.mediaSession.setActionHandler("previoustrack", null);
+        navigator.mediaSession.setActionHandler("nexttrack", null);
+      };
+    }
+  }, [info.album.name, info.album.picUrl, info.artist, info.title, lastTrack, nextTrack, play]);
   return useMemo<PlayerCtxType>(
     () => ({
       audioRef,
       lyricLines,
       info,
+      nextInfo,
       play,
       mute,
       upVolume,
@@ -385,6 +452,7 @@ export function useSong() {
     [
       lyricLines,
       info,
+      nextInfo,
       play,
       mute,
       upVolume,

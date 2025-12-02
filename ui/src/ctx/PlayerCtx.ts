@@ -29,6 +29,7 @@ export interface PlayerCtxType {
   isPlaying: boolean;
   volume: number;
   info: PlayerTrackInfo;
+  nextInfo: Nullable<PlayerTrackInfo>;
   currentIndex: number;
   lyricLines: FullVersionLyricLine;
   playList: PlayerTrackInfo[];
@@ -91,6 +92,7 @@ export const PlayerCtxDefault = {
     tsTitle: "",
     raw: {} as NeteaseTrack
   },
+  nextInfo: null,
   currentIndex: 0,
   getProgress: () => ({
     currentTime: 0,

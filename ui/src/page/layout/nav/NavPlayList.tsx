@@ -3,18 +3,42 @@ import { css, cx } from "@emotion/css";
 import { useDynamicZustandShallowStore } from "@mahiru/ui/store";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ArrowBigUp } from "lucide-react";
-import BlobCachedProvider from "@mahiru/ui/ctx/BlobCachedProvider";
 import NavPlayListItem from "@mahiru/ui/page/layout/nav/NavPlayListItem";
 import { useVirtualList, RowComponentType } from "@mahiru/ui/hook/useVirtualList";
 
 const NavPlayList: FC<object> = () => {
-  const { getUserPlayListSummaryStatic, _update } = useDynamicZustandShallowStore([
+  const { getUserPlayListSummaryStatic } = useDynamicZustandShallowStore([
     "getUserPlayListSummaryStatic",
-    "_update"
+    "_static_update"
   ]);
   const userPlayLists = getUserPlayListSummaryStatic();
   const navigate = useNavigate();
   const location = useLocation();
+  const containerRef = useRef<Nullable<HTMLDivElement>>(null);
+  const [showTopBtn, setShowTopBtn] = useState(false);
+
+  const onRangeChange = useCallback(
+    (range: IndexRange) => {
+      if (range[0] > 5 && !showTopBtn) {
+        setShowTopBtn(true);
+      } else if (range[0] <= 5 && showTopBtn) {
+        setShowTopBtn(false);
+      }
+    },
+    [showTopBtn]
+  );
+  const gotoTop = useCallback(() => {
+    if (containerRef.current) {
+      containerRef.current.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, []);
+  const List = useVirtualList({
+    items: userPlayLists,
+    containerRef,
+    overscan: 10,
+    itemHeight: 55,
+    onRangeUpdate: onRangeChange
+  });
   const RowComponent = useCallback<RowComponentType<NeteasePlaylistSummary>>(
     (props) => {
       const { index, items } = props;
@@ -37,19 +61,6 @@ const NavPlayList: FC<object> = () => {
     },
     [navigate, location.pathname]
   );
-  const containerRef = useRef<Nullable<HTMLDivElement>>(null);
-  const [showTopBtn, setShowTopBtn] = useState(false);
-  const onRangeChange = useCallback(
-    (range: IndexRange) => {
-      if (range[0] > 5 && !showTopBtn) {
-        setShowTopBtn(true);
-      } else if (range[0] <= 5 && showTopBtn) {
-        setShowTopBtn(false);
-      }
-    },
-    [showTopBtn]
-  );
-  const List = useVirtualList(userPlayLists, containerRef, 10, 55, undefined, onRangeChange);
   return (
     <div className="overflow-hidden">
       <div
@@ -61,15 +72,14 @@ const NavPlayList: FC<object> = () => {
             -webkit-overflow-scrolling: auto;
           `
         )}>
-        <BlobCachedProvider key={_update}>
-          <List RowComponent={RowComponent} />
-        </BlobCachedProvider>
+        <List RowComponent={RowComponent} />
       </div>
       <button
         className={cx(
-          "absolute bottom-22 right-4 text-[#fc3d49] bg-black/5 rounded-full p-1 cursor-pointer backdrop-blur-2xl ease-in-out transition-opacity",
+          "absolute bottom-22 right-4 text-[#fc3d49] bg-black/5 rounded-full p-1 cursor-pointer backdrop-blur-2xl hover:opacity-50 active:scale-90 ease-in-out duration-300 transition-all",
           !showTopBtn && "opacity-0"
         )}
+        onClick={gotoTop}
         aria-label="回到顶部">
         <ArrowBigUp />
       </button>

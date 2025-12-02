@@ -5,14 +5,17 @@ import NavSideDivider from "@mahiru/ui/page/layout/nav/NavDivider";
 import { useDynamicZustandShallowStore } from "@mahiru/ui/store";
 import { useNavigate, useLocation } from "react-router-dom";
 import { NAV_DATA } from "@mahiru/ui/router";
-import BlobCachedProvider from "@mahiru/ui/ctx/BlobCachedProvider";
 import NavPlayList from "@mahiru/ui/page/layout/nav/NavPlayList";
 import { useLayout } from "@mahiru/ui/ctx/LayoutCtx";
 import { cx } from "@emotion/css";
 
 const Nav: FC<object> = () => {
-  const { getUserPlayListSummaryStatic, userLikedPlayList, _update } =
-    useDynamicZustandShallowStore(["getUserPlayListSummaryStatic", "userLikedPlayList", "_update"]);
+  const { getUserPlayListSummaryStatic, userLikedPlayList, _static_update } =
+    useDynamicZustandShallowStore([
+      "getUserPlayListSummaryStatic",
+      "userLikedPlayList",
+      "_static_update"
+    ]);
   const userPlayLists = getUserPlayListSummaryStatic();
   const navigate = useNavigate();
   const location = useLocation();
@@ -24,9 +27,7 @@ const Nav: FC<object> = () => {
         background ? "bg-[#f0f3f6]/20" : "bg-[#f0f3f6]"
       )}>
       <div className="py-8">
-        <BlobCachedProvider>
-          <Avatar />
-        </BlobCachedProvider>
+        <Avatar />
       </div>
       {/*nav*/}
       <div className="space-y-4">
@@ -51,7 +52,7 @@ const Nav: FC<object> = () => {
           );
         })}
       </div>
-      {!!userPlayLists.length && <NavSideDivider key={_update} />}
+      {!!userPlayLists.length && <NavSideDivider key={_static_update} />}
       {/*playList*/}
       <NavPlayList />
     </div>

@@ -1,6 +1,6 @@
 import { FC, memo, SyntheticEvent, useCallback } from "react";
 import NavSideNavItem from "@mahiru/ui/page/layout/nav/NavItem";
-import { useBlobOrFileCache } from "@mahiru/ui/ctx/BlobCachedCtx";
+import { useFileCache } from "@mahiru/ui/ctx/BlobCachedCtx";
 import { cx } from "@emotion/css";
 import { getDynamicSnapshot, Store } from "@mahiru/ui/store";
 import { ImageSize, NeteaseImageSizeFilter } from "@mahiru/ui/utils/filter";
@@ -26,7 +26,7 @@ const NavPlayListItem: FC<Props> = ({
   active,
   index
 }) => {
-  const cachedCover = useBlobOrFileCache(
+  const cachedCover = useFileCache(
     NeteaseImageSizeFilter(cover.cached || cover.raw, ImageSize.sm),
     {
       onCacheHit: (file, id) => {

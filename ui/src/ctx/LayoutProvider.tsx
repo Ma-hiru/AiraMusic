@@ -14,6 +14,10 @@ export default function LayoutProvider({ children }: { children: ReactNode }) {
     if (kmeansWorker.current === null) {
       kmeansWorker.current = new KMeansWorker();
     }
+    return () => {
+      kmeansWorker.current?.terminate();
+      kmeansWorker.current = null;
+    };
   }, []);
 
   useEffect(() => {

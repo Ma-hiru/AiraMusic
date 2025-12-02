@@ -21,15 +21,15 @@ export const DynamicStoreConfig: ZustandConfig<
       draft.userLikedPlayList = liked;
     });
   },
-  updateTrigger: () => {
+  staticUpdateTrigger: () => {
     set((draft) => {
-      draft._update += 1;
+      draft._static_update += 1;
     });
   }
 });
 
 const InitialState: DynamicStoreInitialState = {
-  _update: 0,
+  _static_update: 0,
   userLikedPlayList: null,
   likedTrackIDs: {
     ids: new Set<number>(),
@@ -38,7 +38,7 @@ const InitialState: DynamicStoreInitialState = {
 };
 
 export interface DynamicStoreInitialState {
-  _update: number;
+  _static_update: number;
   userLikedPlayList: Nullable<NeteasePlaylistSummary>;
   likedTrackIDs: {
     ids: Set<number>;
@@ -51,5 +51,5 @@ export type DynamicStoreActions = {
   updateUserLikedPlayList: (liked: Nullable<NeteasePlaylistSummary>) => void;
   getUserPlayListSummaryStatic: () => NeteasePlaylistSummary[];
   getPlayListStatic: () => Map<number, NeteasePlaylistDetailResponse>;
-  updateTrigger: () => void;
+  staticUpdateTrigger: () => void;
 };

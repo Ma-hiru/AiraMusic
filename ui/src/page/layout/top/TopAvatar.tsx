@@ -8,7 +8,11 @@ const TopAvatar: FC<object> = () => {
   const cachedAvatar = useFileCache(NeteaseImageSizeFilter(data.user?.avatarUrl, ImageSize.sm));
   return (
     <div>
-      <img className="size-5 rounded-full" src={cachedAvatar} alt={data.user?.nickname} />
+      <img
+        className="size-5 rounded-full select-none"
+        src={cachedAvatar}
+        alt={data.user?.nickname}
+      />
     </div>
   );
 };

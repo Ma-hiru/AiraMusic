@@ -3,10 +3,11 @@ import { ImageSize, NeteaseTrackCoverPreCacheFilter } from "@mahiru/ui/utils/fil
 import { Log } from "@mahiru/ui/utils/dev";
 import { requestPlayListDetailWithStore } from "@mahiru/ui/utils/playList";
 import { SearchTrack } from "@mahiru/wasm";
-import { usePersistZustandStore } from "@mahiru/ui/store";
+import { useDynamicZustandShallowStore, usePersistZustandStore } from "@mahiru/ui/store";
 import { useShallow } from "zustand/react/shallow";
 
 export function usePlayListNormal(id?: string) {
+  const { _static_update } = useDynamicZustandShallowStore(["_static_update"]);
   // 歌单详情
   const [detail, setDetail] = useState<Nullable<NeteasePlaylistDetailResponse>>(null);
   // 所有的track地址最终指向Store中的缓存
@@ -71,12 +72,10 @@ export function usePlayListNormal(id?: string) {
         if (searchTrackInstance) {
           const lowerK = k.toLowerCase();
           const indexs = Array.from(searchTrackInstance.search(lowerK));
-          console.log("searchTracks indexs", indexs);
           const result: NeteaseTrack[] = [];
           indexs.forEach((i) => {
             result.push(tracks.current[i]!);
           });
-          console.log("searchTracks result", result);
           setFilterTracks({
             tracks: result,
             absoluteIdx: indexs as unknown as number[]
@@ -107,6 +106,7 @@ export function usePlayListNormal(id?: string) {
   // 监听id变化，加载歌单详情
   useEffect(() => {
     let cancelled = false;
+    void _static_update;
     clearState();
     if (id) {
       requestPlayListDetailWithStore(Number(id), [0, 50], ImageSize.xs)
@@ -135,7 +135,7 @@ export function usePlayListNormal(id?: string) {
     return () => {
       cancelled = true;
     };
-  }, [checkAndUpdateLastPreloadRange, clearState, id, searchTrackInstance]);
+  }, [_static_update, checkAndUpdateLastPreloadRange, clearState, id, searchTrackInstance]);
 
   return {
     detail,

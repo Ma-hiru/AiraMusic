@@ -68,7 +68,7 @@ export async function refreshUserProfile() {
 export async function refreshUserPlaylist() {
   try {
     Log.trace("refresh user playlist");
-    const { updateUserLikedPlayList, getUserPlayListSummaryStatic, updateTrigger } =
+    const { updateUserLikedPlayList, getUserPlayListSummaryStatic, staticUpdateTrigger } =
       getDynamicSnapshot();
     const { data } = getPersistSnapshot();
     const uid = data.user?.userId;
@@ -80,7 +80,7 @@ export async function refreshUserPlaylist() {
       userPlaylistStatic.length = 0;
       userPlaylistStatic.push(...playlist);
     }
-    updateTrigger();
+    staticUpdateTrigger();
   } catch (err) {
     Log.error(
       new EqError({

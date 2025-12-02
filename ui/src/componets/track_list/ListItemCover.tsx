@@ -1,5 +1,5 @@
 import { FC, memo, SyntheticEvent, useCallback } from "react";
-import { useBlobOrFileCache } from "@mahiru/ui/ctx/BlobCachedCtx";
+import { useFileCache } from "@mahiru/ui/ctx/BlobCachedCtx";
 import { ImageSize, NeteaseImageSizeFilter } from "@mahiru/ui/utils/filter";
 import { getDynamicSnapshot, Store } from "@mahiru/ui/store";
 
@@ -46,7 +46,7 @@ const ListItemCover: FC<ListItemCoverProps> = ({ track, absoluteIndex, playListI
     [absoluteIndex, playListID, track.al.picUrl]
   );
 
-  const cachedCover = useBlobOrFileCache(sizedURL, { onCacheHit });
+  const cachedCover = useFileCache(sizedURL, { onCacheHit });
   return (
     <div className="size-8" onClick={onClick}>
       <img

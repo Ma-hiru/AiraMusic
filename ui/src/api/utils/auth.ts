@@ -12,6 +12,7 @@ export function setCookies(raw: string) {
       localStorage.setItem(`cookie-${cookieKeyValue[0]}`, cookieKeyValue[1]);
     }
   });
+  document.cookie = "os=pc; path=/";
 }
 
 export function getCookie(key: string) {

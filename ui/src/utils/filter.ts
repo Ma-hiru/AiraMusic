@@ -54,15 +54,6 @@ export function NeteaseTrackPrivilegesStatusFilter(
   });
 }
 
-/** 拓展track状态，是否like */
-export function NeteaseTrackLikedStatusFilter(tracks: NeteaseTrack[]) {
-  const { likedTrackIDs } = getDynamicSnapshot();
-  return tracks.map((track) => {
-    track.isLiked = likedTrackIDs.ids.has(track.id);
-    return track;
-  });
-}
-
 /** 检查歌单tracks是否完整，不完整再额外请求 */
 export async function NeteasePlayListToFullTracksFilter(response: NeteasePlaylistDetailResponse) {
   const { playlist } = response;

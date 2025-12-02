@@ -9,17 +9,23 @@ import {
   useRef
 } from "react";
 
-export function useVirtualList<T extends HasID, U = never>(
-  items: T[],
-  containerRef: RefObject<HTMLDivElement | null>,
-  overscan: number = 5,
-  itemHeight: number = 64,
-  extraData?: U,
-  onRangeUpdate?: (range: [number, number]) => void,
-  onScrollCallback?: (top: number) => void
-) {
+export function useVirtualList<T extends HasID, U = never>({
+  items,
+  containerRef,
+  overscan = 5,
+  itemHeight = 64,
+  extraData,
+  onRangeUpdate,
+  onScrollCallback
+}: VirtualListProps<T, U>) {
   const [scrollTop, setScrollTop] = useState(0);
   const ticking = useRef(false);
+  const total = items.length;
+  const containerHeight = containerRef.current?.clientHeight ?? 0;
+  const visibleStart = Math.floor(scrollTop / itemHeight);
+  const visibleCount = Math.ceil(containerHeight / itemHeight);
+  const start = Math.max(0, visibleStart - overscan);
+  const end = Math.min(total, visibleStart + visibleCount + overscan);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -40,16 +46,6 @@ export function useVirtualList<T extends HasID, U = never>(
     container.addEventListener("scroll", onScroll, { passive: true });
     return () => container.removeEventListener("scroll", onScroll);
   }, [containerRef, onScrollCallback]);
-
-  const total = items.length;
-  const containerHeight = containerRef.current?.clientHeight ?? 0;
-
-  const visibleStart = Math.floor(scrollTop / itemHeight);
-  const visibleCount = Math.ceil(containerHeight / itemHeight);
-
-  const start = Math.max(0, visibleStart - overscan);
-  const end = Math.min(total, visibleStart + visibleCount + overscan);
-
   useEffect(() => {
     onRangeUpdate?.([visibleStart, Math.min(total, visibleStart + visibleCount)]);
   }, [visibleStart, visibleCount, total, onRangeUpdate]);
@@ -93,6 +89,16 @@ export function useVirtualList<T extends HasID, U = never>(
 
 interface HasID {
   id: string | number;
+}
+
+export interface VirtualListProps<T extends HasID, U = never> {
+  items: T[];
+  containerRef: RefObject<HTMLDivElement | null>;
+  overscan?: number;
+  itemHeight?: number;
+  extraData?: U;
+  onRangeUpdate?: (range: [number, number]) => void;
+  onScrollCallback?: (top: number) => void;
 }
 
 export type RowComponentType<T, U = never> = FC<{

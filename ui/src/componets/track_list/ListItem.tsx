@@ -14,9 +14,10 @@ interface ListItemProps {
   index: number;
   playListID?: number;
   absoluteIdx: number[] | null;
+  isLikedList?: boolean;
 }
 
-const ListItem: FC<ListItemProps> = ({ index, data, playListID, absoluteIdx }) => {
+const ListItem: FC<ListItemProps> = ({ index, data, playListID, absoluteIdx, isLikedList }) => {
   const { replacePlayList, info } = usePlayer();
   const track = data[index]!;
   const total = data.length;

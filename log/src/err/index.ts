@@ -1,33 +1,37 @@
 class EqErrorRaw {
   raw?: Error;
   label?: string;
+  id?: number | string | symbol;
   message: string;
   private readonly isEqError: boolean;
   private readonly dev;
-
-  constructor(props: { raw?: any; label?: string; message: string }, dev: boolean = false) {
+  constructor(
+    props: { raw?: any; label?: string; message: string; id?: number | string | symbol },
+    dev: boolean = false
+  ) {
     this.dev = dev;
-    const { raw, label, message } = props;
+    const { raw, label, message, id } = props;
     const [err, isEqError] = EqErrorRaw.anyToError(raw);
     this.raw = err;
     this.isEqError = isEqError;
     this.label = label;
     this.message = message;
+    this.id = id;
   }
 
   eq(other: EqErrorRaw, strict: boolean = false) {
     if (strict) {
       return (
         this.raw?.message === other.raw?.message &&
-        this.label === other.label &&
-        this.message === other.message
+        this.message === other.message &&
+        (this.id === other.id ||
+          (typeof this.id === "undefined" && typeof other.id === "undefined"))
       );
     }
-    if (this.label && other.label) {
-      return this.label === other.label && this.message === other.message;
-    } else {
-      return this.message === other.message;
+    if (typeof this.id !== "undefined" && typeof other.id !== "undefined") {
+      return this.id === other.id;
     }
+    return this.message === other.message;
   }
 
   toString() {
@@ -84,12 +88,22 @@ class EqErrorRaw {
 }
 
 type EqError = typeof EqErrorRaw & {
-  new (props: { raw?: any; label?: string; message: string }): EqErrorRaw;
+  new (props: {
+    raw?: any;
+    label?: string;
+    message: string;
+    id?: number | string | symbol;
+  }): EqErrorRaw;
 };
 
 export function createEqError(dev: boolean): EqError {
   return class extends EqErrorRaw {
-    constructor(props: { raw?: any; label?: string; message: string }) {
+    constructor(props: {
+      raw?: any;
+      label?: string;
+      message: string;
+      id?: number | string | symbol;
+    }) {
       super(props, dev);
     }
   };

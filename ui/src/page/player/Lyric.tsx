@@ -1,13 +1,14 @@
-import { FC, memo, useEffect, useRef } from "react";
+import { FC, memo, useCallback, useEffect, useRef } from "react";
 import { LyricPlayer, LyricPlayerRef } from "@mahiru/ui/componets/player/LyricPlayer";
 import { usePlayer } from "@mahiru/ui/ctx/PlayerCtx";
 import { cx } from "@emotion/css";
 import { useLayout } from "@mahiru/ui/ctx/LayoutCtx";
 import { useGPU } from "@mahiru/ui/hook/useGPU";
+import { LyricLineMouseEvent } from "@applemusic-like-lyrics/core";
 
 const Lyric: FC<object> = () => {
   const lyricPlayerRef = useRef<LyricPlayerRef>(null);
-  const { lyricLines, audioRef, info, lyricVersion, isPlaying } = usePlayer();
+  const { lyricLines, audioRef, info, lyricVersion, isPlaying, getProgress } = usePlayer();
   const { PlayerModalVisible } = useLayout();
   const { hasDedicatedGPU } = useGPU();
   useEffect(() => {
@@ -50,7 +51,19 @@ const Lyric: FC<object> = () => {
         return lyricLines.raw;
     }
   };
-
+  const onLyricLineClick = useCallback(
+    (e: LyricLineMouseEvent) => {
+      const ms = e.line.getLine().startTime || 0;
+      const nextTime = ms / 1000;
+      const { duration } = getProgress();
+      const audio = audioRef.current;
+      if (audio) {
+        audio.currentTime = Math.min(nextTime, duration);
+        audio.paused && audio.play();
+      }
+    },
+    [audioRef, getProgress]
+  );
   return (
     <div
       className={cx(
@@ -65,6 +78,7 @@ const Lyric: FC<object> = () => {
         lyricLines={chooseVersion()}
         enableScale={hasDedicatedGPU}
         enableSpring={hasDedicatedGPU}
+        onLyricLineClick={onLyricLineClick}
       />
     </div>
   );
