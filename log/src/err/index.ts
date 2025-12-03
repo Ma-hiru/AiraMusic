@@ -1,8 +1,8 @@
 class EqErrorRaw {
   raw?: Error;
   label?: string;
-  id?: number | string | symbol;
-  message: string;
+  readonly id?: number | string | symbol;
+  readonly message: string;
   private readonly isEqError: boolean;
   private readonly dev;
   constructor(
@@ -32,6 +32,17 @@ class EqErrorRaw {
       return this.id === other.id;
     }
     return this.message === other.message;
+  }
+
+  create(label: string, err: any) {
+    return new EqErrorRaw(
+      {
+        label,
+        raw: err,
+        message: this.message
+      },
+      this.dev
+    );
   }
 
   toString() {

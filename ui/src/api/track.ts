@@ -112,39 +112,6 @@ export async function getTrackDetail(ids: string | number): Promise<NeteaseTrack
 }
 
 /**
- * 获取歌词
- * @desc 调用此接口 , 传入音乐 id 可获得对应音乐的歌词 ( 不需要登录 )
- * @param id - 音乐 id
- */
-export async function getLyric(id: number): Promise<NeteaseLyricResponse> {
-  const url = `http://127.0.0.1:${import.meta.env.NCM_SERVER_PORT}/lyric?id=` + id;
-  const check = await Store.checkOrStoreAsync(url);
-  if (check.ok) {
-    try {
-      const result = await Store.fetch<NeteaseLyricResponse>(url);
-      if (Number(result.code) === 200) {
-        return result;
-      } else {
-        void Store.remove(url);
-      }
-    } catch (err) {
-      throw CacheStoreErr.create("ui/api/lyric.ts:getLyricResponse", err);
-    }
-  }
-  try {
-    return await request<{ id: number }, NeteaseLyricResponse>({
-      url: "/lyric",
-      method: "get",
-      params: {
-        id
-      }
-    });
-  } catch (err) {
-    throw NCMServerErr.create("ui/api/lyric.ts:getLyricResponse", err);
-  }
-}
-
-/**
  * 新歌速递
  * @desc 调用此接口 , 可获取新歌速递
  * @param type - 地区类型 id, 对应以下: 全部:0 华语:7 欧美:96 日本:8 韩国:16

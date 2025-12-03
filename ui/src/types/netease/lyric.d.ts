@@ -30,13 +30,16 @@ interface NeteaseLrc {
 interface NeteaseRomalrc {
   lyric: string;
   version: number;
-  [property: string]: any;
 }
 
 interface NeteaseTlyric {
   lyric: string;
   version: number;
-  [property: string]: any;
+}
+
+interface NeteaseYRC {
+  lyric: string;
+  version: number;
 }
 
 interface NeteaseTransUser {
@@ -46,4 +49,8 @@ interface NeteaseTransUser {
   status: number;
   uptime: number;
   userid: number;
+}
+
+interface NeteaseLyricResponseNew extends NeteaseLyricResponse {
+  yrc?: NeteaseYRC;
 }

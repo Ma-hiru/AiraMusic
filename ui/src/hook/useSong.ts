@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { FullVersionLyricLine, handleNeteaseLyricResponse } from "@mahiru/ui/utils/lyric";
-import { getLyric, getMP3, scrobble as requestScrobble } from "@mahiru/ui/api/track";
+import { getMP3, scrobble as requestScrobble } from "@mahiru/ui/api/track";
 import { useImmer } from "use-immer";
 import { EqError, Log } from "@mahiru/ui/utils/dev";
 import {
@@ -11,6 +11,7 @@ import {
 } from "@mahiru/ui/ctx/PlayerCtx";
 import { getPersistSnapshot, Store } from "@mahiru/ui/store";
 import { ImageSize, NeteaseImageSizeFilter } from "@mahiru/ui/utils/filter";
+import { getYRCLyric } from "@mahiru/ui/api/lyric";
 
 const { updatePlayHistory } = getPersistSnapshot();
 
@@ -227,7 +228,7 @@ export function useSong() {
   // 加载歌词函数
   const loadLyric = useCallback(
     (id: number) => {
-      getLyric(id)
+      getYRCLyric(id)
         .then((result) => {
           const lyric = handleLyricResponse(result);
           setLyricLines(lyric);
@@ -481,12 +482,13 @@ export function useSong() {
   );
 }
 
-function handleLyricResponse(result: NeteaseLyricResponse): FullVersionLyricLine {
+function handleLyricResponse(result: NeteaseLyricResponseNew): FullVersionLyricLine {
   if (
     !result.lrc?.lyric &&
     !result.klyric?.lyric &&
     !result.romalrc?.lyric &&
-    !result.tlyric?.lyric
+    !result.tlyric?.lyric &&
+    !result.yrc
   ) {
     return {
       full: [noLyricTmp],

@@ -2,11 +2,13 @@ import {
   LyricLine as RawLyricLine,
   LyricWord as RawLyricWord,
   parseLrc,
-  parseQrc
+  parseQrc,
+  parseYrc
 } from "@applemusic-like-lyrics/lyric";
 import { LyricLine, LyricWord } from "@applemusic-like-lyrics/core";
 import { parseNeteaseLyric, parseTranslatedLRC, parseExternalLrc } from "@mahiru/wasm";
-import { EqError, Log } from "@mahiru/ui/utils/dev";
+import { Log } from "@mahiru/ui/utils/dev";
+import { LyricParseErr } from "@mahiru/ui/utils/errs";
 
 export function mapRawLyricLine(line: RawLyricLine): LyricLine {
   return {
@@ -38,14 +40,23 @@ function externalParseLrc(lyric: string) {
 }
 
 function parseNeteaseLyricWasm(
-  raw: NeteaseLrc | NeteaseKlyric,
+  raw: NeteaseLrc | NeteaseKlyric | NeteaseYRC,
   ts: NeteaseTlyric | undefined,
   rm: NeteaseRomalrc | undefined,
-  type: "LRC" | "QRC",
+  type: "LRC" | "QRC" | "YRC",
   mt?: NeteaseTransUser
 ) {
   try {
-    const mainLyric = type === "LRC" ? externalParseLrc(raw.lyric) : parseQrc(raw.lyric);
+    const mainLyric = (() => {
+      switch (type) {
+        case "YRC":
+          return parseYrc(raw.lyric);
+        case "QRC":
+          return parseQrc(raw.lyric);
+        case "LRC":
+          return externalParseLrc(raw.lyric);
+      }
+    })();
     const translatedLyric = externalParseLrc(ts?.lyric || "");
     const romanLyric = externalParseLrc(rm?.lyric || "");
 
@@ -60,13 +71,7 @@ function parseNeteaseLyricWasm(
       meta
     ) as FullVersionLyricLine;
   } catch (err) {
-    Log.error(
-      new EqError({
-        raw: err,
-        label: "ui/lyric.ts:parseNeteaseLyricWasm",
-        message: "Failed to parse Netease lyric with wasm parser"
-      })
-    );
+    Log.error(LyricParseErr.create("ui/utils/lyric.ts:parseNeteaseLyricWasm", err));
     return {
       full: [],
       raw: [],
@@ -76,16 +81,21 @@ function parseNeteaseLyricWasm(
   }
 }
 
-export function handleNeteaseLyricResponse(response: NeteaseLyricResponse): FullVersionLyricLine {
+export function handleNeteaseLyricResponse(
+  response: NeteaseLyricResponseNew
+): FullVersionLyricLine {
   const translatedLyric = response.tlyric;
   const romanLyric = response.romalrc;
   const meta = response.transUser;
   const LRC = response.lrc;
   const QRC = response.klyric;
+  const YRC = response.yrc;
   if (QRC && QRC.lyric) {
     return parseNeteaseLyricWasm(QRC, translatedLyric, romanLyric, "QRC", meta);
   } else if (LRC && LRC.lyric) {
     return parseNeteaseLyricWasm(LRC, translatedLyric, romanLyric, "LRC", meta);
+  } else if (YRC && YRC.lyric) {
+    return parseNeteaseLyricWasm(YRC, translatedLyric, romanLyric, "YRC", meta);
   }
   return {
     full: [],
