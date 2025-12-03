@@ -6,27 +6,46 @@ const request = axios.create({
   timeout: 15000
 });
 
-request.interceptors.response.use((response) => response.data);
+request.interceptors.response.use((response) => {
+  if (response.status === 204) {
+    return null;
+  }
+  return response.data;
+});
 
 export const Store = new (class {
   encode(str: string | number) {
     return encodeURIComponent(String(str));
   }
 
-  check(id: string | number): Promise<CheckResult> {
+  check(id: string | number, timeLimit?: number): Promise<CheckResult> {
     id = this.encode(id);
-    return request("/api/check", { method: "GET", params: { id } });
+    return request("/api/check", { method: "GET", params: { id, timeLimit } });
   }
 
-  checkMutil(items: { id: string }[]): Promise<CheckMutilResult> {
+  checkMutil(
+    items: { id: string; timeLimit?: number }[],
+    timeLimit?: number
+  ): Promise<CheckMutilResult> {
     return request("/api/check/mutil", {
       method: "POST",
-      data: { items } satisfies CheckMutilRequest
+      data: { items, timeLimit } satisfies CheckMutilRequest
     });
   }
 
-  store(id: string, data: object) {
-    return request("/api/store", { method: "POST", params: { id, data: JSON.stringify(data) } });
+  storeObject(id: string, data: object) {
+    return request("/api/store/object", {
+      method: "POST",
+      params: { id, data: JSON.stringify(data) }
+    });
+  }
+
+  fetchObject<T extends object>(id: string, timeLimit?: number): Promise<T | null> {
+    id = this.encode(id);
+    return request<any, T | null>("/api/fetch/object", {
+      method: "GET",
+      params: { id, timeLimit }
+    });
   }
 
   storeAsync(url: string, id = url, method: string = "GET") {
@@ -96,7 +115,9 @@ export type CheckResult = {
 export type CheckMutilRequest = {
   items: {
     id: string;
+    timeLimit?: number;
   }[];
+  timeLimit?: number;
 };
 
 export type CheckMutilResult = {

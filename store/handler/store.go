@@ -17,7 +17,7 @@ type StoreShouldBind struct {
 	Data string `json:"data" binding:"required"`
 }
 
-func Store(ctx *gin.Context) {
+func StoreObject(ctx *gin.Context) {
 	var requestParam = StoreShouldBind{}
 	if err := ctx.ShouldBindJSON(&requestParam); err != nil {
 		ctx.JSON(200, gin.H{
@@ -27,7 +27,7 @@ func Store(ctx *gin.Context) {
 		return
 	}
 	var store = file.GetStore()
-	var index, err = store.Store(requestParam.Id, "text/plain", []byte(requestParam.Data))
+	var index, err = store.Store(requestParam.Id, "application/json", []byte(requestParam.Data))
 	if err != nil {
 		ctx.JSON(200, gin.H{
 			"ok":    false,

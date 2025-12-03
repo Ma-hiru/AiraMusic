@@ -1,6 +1,5 @@
 import { ZustandConfig } from "@mahiru/ui/types/zustand";
 
-const playList = new Map<number, NeteasePlaylistDetailResponse>();
 const userPlayLists: NeteasePlaylistSummary[] = [];
 
 export const DynamicStoreConfig: ZustandConfig<
@@ -8,7 +7,6 @@ export const DynamicStoreConfig: ZustandConfig<
   DynamicStoreInitialState
 > = (set, get) => ({
   ...InitialState,
-  getPlayListStatic: () => playList,
   getUserPlayListSummaryStatic: () => userPlayLists,
   updateLikedTrackIDs: (ids: Set<number>, checkPoint: number) => {
     set((draft) => {
@@ -50,6 +48,5 @@ export type DynamicStoreActions = {
   updateLikedTrackIDs: (ids: Set<number>, checkPoint: number) => void;
   updateUserLikedPlayList: (liked: Nullable<NeteasePlaylistSummary>) => void;
   getUserPlayListSummaryStatic: () => NeteasePlaylistSummary[];
-  getPlayListStatic: () => Map<number, NeteasePlaylistDetailResponse>;
   staticUpdateTrigger: () => void;
 };
