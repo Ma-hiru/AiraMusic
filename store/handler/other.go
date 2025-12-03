@@ -102,3 +102,24 @@ func RemoveInvalid(ctx *gin.Context) {
 		"ok": true,
 	})
 }
+
+func Size(ctx *gin.Context) {
+	var store = file.GetStore()
+	var size = store.Size()
+	ctx.JSON(200, gin.H{
+		"ok":   true,
+		"size": size,
+	})
+}
+
+func SizeCategories(ctx *gin.Context) {
+	var store = file.GetStore()
+	var image, audio, video, other = store.SizeCategory()
+	ctx.JSON(200, gin.H{
+		"ok":    true,
+		"image": image,
+		"audio": audio,
+		"video": video,
+		"other": other,
+	})
+}

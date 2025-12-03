@@ -2,23 +2,24 @@ import { FC, memo } from "react";
 import TopCover from "@mahiru/ui/page/playlist/Top/TopCover";
 import TopRight from "@mahiru/ui/page/playlist/Top/TopRight";
 import TopInfo from "@mahiru/ui/page/playlist/Top/TopInfo";
+import { PlaylistCacheEntry } from "@mahiru/ui/utils/playList";
 
 interface TopProps {
-  detail: Nullable<NeteasePlaylistDetailResponse>;
+  entry: Nullable<PlaylistCacheEntry>;
   searchTracks: (k: string) => void;
 }
 
-const Top: FC<TopProps> = ({ detail, searchTracks }) => {
+const Top: FC<TopProps> = ({ entry, searchTracks }) => {
   return (
     <div className="grid grid-rows-1 grid-cols-[1fr_auto]">
       {/*Left*/}
       <div className="min-w-0 grid grid-rows-1 grid-cols-[auto_1fr] gap-4 items-center">
-        <TopCover detail={detail} />
+        <TopCover entry={entry} />
         {/*Info*/}
-        <TopInfo detail={detail} />
+        <TopInfo entry={entry} />
       </div>
       {/*Right*/}
-      <TopRight detail={detail} searchTracks={searchTracks} />
+      <TopRight entry={entry} searchTracks={searchTracks} />
     </div>
   );
 };

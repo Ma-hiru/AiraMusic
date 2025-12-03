@@ -8,16 +8,25 @@ import ListItemIndex from "./ListItemIndex";
 import ListItemCover from "./ListItemCover";
 import ListItemName from "./ListItemName";
 import ListItemInfo from "./ListItemInfo";
+import { PlaylistCacheEntry } from "@mahiru/ui/utils/playList";
 
 interface ListItemProps {
   data: NeteaseTrack[];
+  entry: Nullable<PlaylistCacheEntry>;
   index: number;
   playListID?: number;
   absoluteIdx: number[] | null;
   isLikedList?: boolean;
 }
 
-const ListItem: FC<ListItemProps> = ({ index, data, playListID, absoluteIdx, isLikedList }) => {
+const ListItem: FC<ListItemProps> = ({
+  index,
+  data,
+  playListID,
+  absoluteIdx,
+  isLikedList,
+  entry
+}) => {
   const { replacePlayList, info } = usePlayer();
   const track = data[index]!;
   const total = data.length;
@@ -78,6 +87,7 @@ const ListItem: FC<ListItemProps> = ({ index, data, playListID, absoluteIdx, isL
         absoluteIndex={absoluteIndex}
         playListID={playListID}
         onClick={play}
+        entry={entry}
       />
       {/*名称*/}
       <ListItemName track={track} disabled={disabled} active={active} onClick={play} />

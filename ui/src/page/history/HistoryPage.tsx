@@ -17,6 +17,7 @@ const HistoryPage: FC<object> = () => {
         filterTracks={filterTracks}
         loading={loading}
         paddingBottom={80}
+        entry={null}
       />
     </div>
   );

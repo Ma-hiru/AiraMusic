@@ -246,6 +246,29 @@ func (Self *Store) Size() int64 {
 	return varSize
 }
 
+func (Self *Store) SizeCategory() (image int64, audio int64, video int64, other int64) {
+	Self.indexMappedMutex.RLock()
+	defer Self.indexMappedMutex.RUnlock()
+
+	for _, index := range Self.indexMapped {
+		size, err := strconv.ParseInt(index.Size, 10, 64)
+		if err != nil {
+			continue
+		}
+		if strings.HasPrefix(index.Type, "image/") {
+			image += size
+		} else if strings.HasPrefix(index.Type, "audio/") {
+			audio += size
+		} else if strings.HasPrefix(index.Type, "video/") {
+			video += size
+		} else {
+			other += size
+		}
+	}
+	
+	return
+}
+
 // Path 返回存储目录路径
 func (Self *Store) Path() string {
 	return Self.storeDir

@@ -2,30 +2,37 @@ import { FC, memo, SyntheticEvent, useCallback } from "react";
 import { useFileCache } from "@mahiru/ui/ctx/BlobCachedCtx";
 import { ImageSize, NeteaseImageSizeFilter } from "@mahiru/ui/utils/filter";
 import { getDynamicSnapshot, Store } from "@mahiru/ui/store";
+import { PlaylistCacheEntry, updatePlaylistEntryTrackCoverCache } from "@mahiru/ui/utils/playList";
 
 interface ListItemCoverProps {
   track: NeteaseTrack;
   absoluteIndex: number;
   playListID?: number;
   onClick?: NormalFunc;
+  entry: Nullable<PlaylistCacheEntry>;
 }
 
-const ListItemCover: FC<ListItemCoverProps> = ({ track, absoluteIndex, playListID, onClick }) => {
+const ListItemCover: FC<ListItemCoverProps> = ({
+  track,
+  absoluteIndex,
+  playListID,
+  onClick,
+  entry
+}) => {
   const sizedURL = NeteaseImageSizeFilter(track.al.cachedPicUrl || track.al.picUrl, ImageSize.xs);
 
   const onCacheHit = useCallback(
     (file: string, id: string) => {
       // 写入缓存ID
-      if (!playListID) return; // 没有歌单ID不处理(可能是搜索结果、历史记录等)
-      const { getPlayListStatic } = getDynamicSnapshot();
-      const playList = getPlayListStatic();
-      const list = playList.get(playListID);
-      if (list) {
-        list.playlist.tracks[absoluteIndex]!.al.cachedPicUrl = file;
-        list.playlist.tracks[absoluteIndex]!.al.cachedPicUrlID = id;
-      }
+      if (!playListID || !entry) return; // 没有歌单ID不处理(可能是搜索结果、历史记录等)
+      updatePlaylistEntryTrackCoverCache({
+        entry,
+        absoluteIndex,
+        cachedPicUrl: file,
+        cachedPicUrlID: id
+      });
     },
-    [absoluteIndex, playListID]
+    [absoluteIndex, entry, playListID]
   );
   const onError = useCallback(
     (e: SyntheticEvent<HTMLImageElement>) => {
@@ -33,17 +40,15 @@ const ListItemCover: FC<ListItemCoverProps> = ({ track, absoluteIndex, playListI
       if (e.currentTarget.src === raw) return;
       e.currentTarget.src = raw;
       // 清除缓存
-      if (!playListID) return; // 没有歌单ID不处理(可能是搜索结果、历史记录等)
-      const { getPlayListStatic } = getDynamicSnapshot();
-      const playList = getPlayListStatic();
-      const list = playList.get(playListID);
-      if (list) {
-        list.playlist.tracks[absoluteIndex]!.al.cachedPicUrl = "";
-        void Store.remove(list.playlist.tracks[absoluteIndex]!.al.cachedPicUrlID);
-        list.playlist.tracks[absoluteIndex]!.al.cachedPicUrlID = "";
-      }
+      if (!playListID || !entry) return; // 没有歌单ID不处理(可能是搜索结果、历史记录等)
+      updatePlaylistEntryTrackCoverCache({
+        entry,
+        absoluteIndex,
+        cachedPicUrl: "",
+        cachedPicUrlID: ""
+      });
     },
-    [absoluteIndex, playListID, track.al.picUrl]
+    [absoluteIndex, entry, playListID, track.al.picUrl]
   );
 
   const cachedCover = useFileCache(sizedURL, { onCacheHit });

@@ -9,16 +9,17 @@ import Divider from "./Divider";
 const PlayListPage: FC<object> = () => {
   // 获取路由参数id
   const { id } = useParams();
-  const { detail, searchTracks, onVirtualListRangeUpdate, filterTracks, loading } =
+  const { entry, searchTracks, onVirtualListRangeUpdate, filterTracks, loading } =
     usePlayListNormal(id);
   return (
     <div className="w-full h-full px-12 pt-20 contain-style contain-size contain-layout">
-      <Top detail={detail} searchTracks={searchTracks} />
+      <Top entry={entry} searchTracks={searchTracks} />
       <Divider />
       <div className="w-full h-[calc(100%-210px)] relative">
         <List
-          id={Number(id)}
+          entry={entry}
           loading={loading}
+          id={Number(id)}
           filterTracks={filterTracks}
           onVirtualListRangeUpdate={onVirtualListRangeUpdate}
         />

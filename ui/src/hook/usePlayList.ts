@@ -1,7 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ImageSize, NeteaseTrackCoverPreCacheFilter } from "@mahiru/ui/utils/filter";
 import { Log } from "@mahiru/ui/utils/dev";
-import { requestPlayListDetailWithStore } from "@mahiru/ui/utils/playList";
+import {
+  PlaylistCacheEntry,
+  requestPlayListDetailWithStore,
+  saveDirtyPlaylistEntry
+} from "@mahiru/ui/utils/playList";
 import { SearchTrack } from "@mahiru/wasm";
 import { useDynamicZustandShallowStore, usePersistZustandStore } from "@mahiru/ui/store";
 import { useShallow } from "zustand/react/shallow";
@@ -9,7 +13,7 @@ import { useShallow } from "zustand/react/shallow";
 export function usePlayListNormal(id?: string) {
   const { _static_update } = useDynamicZustandShallowStore(["_static_update"]);
   // 歌单详情
-  const [detail, setDetail] = useState<Nullable<NeteasePlaylistDetailResponse>>(null);
+  const [entry, setEntry] = useState<Nullable<PlaylistCacheEntry>>(null);
   // 所有的track地址最终指向Store中的缓存
   const [filterTracks, setFilterTracks] = useState({
     tracks: [] as NeteaseTrack[],
@@ -93,7 +97,7 @@ export function usePlayListNormal(id?: string) {
       tracks: [],
       absoluteIdx: null
     });
-    setDetail(null);
+    setEntry(null);
     searchTrackInstance?.update();
     setLoading(true);
   }, [searchTrackInstance]);
@@ -110,9 +114,9 @@ export function usePlayListNormal(id?: string) {
     clearState();
     if (id) {
       requestPlayListDetailWithStore(Number(id), [0, 50], ImageSize.xs)
-        .then((res) => {
-          if (res && !cancelled) {
-            tracks.current = res.playlist.tracks;
+        .then((entry) => {
+          if (entry && !cancelled) {
+            tracks.current = entry.playlist.tracks;
             setTimeout(() => {
               if (!cancelled) {
                 void checkAndUpdateLastPreloadRange([0, 50]);
@@ -123,7 +127,7 @@ export function usePlayListNormal(id?: string) {
               tracks: tracks.current,
               absoluteIdx: null
             });
-            setDetail(res);
+            setEntry(entry);
           }
         })
         .finally(() => {
@@ -136,13 +140,19 @@ export function usePlayListNormal(id?: string) {
       cancelled = true;
     };
   }, [_static_update, checkAndUpdateLastPreloadRange, clearState, id, searchTrackInstance]);
-
+  useEffect(() => {
+    return () => {
+      // 保存脏数据
+      Log.info("usePlayListNormal", "组件卸载，保存脏数据");
+      entry && saveDirtyPlaylistEntry(entry);
+    };
+  }, [entry]);
   return {
-    detail,
+    entry,
+    loading,
     filterTracks,
-    onVirtualListRangeUpdate,
     searchTracks,
-    loading
+    onVirtualListRangeUpdate
   };
 }
 

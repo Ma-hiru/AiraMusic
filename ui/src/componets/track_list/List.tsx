@@ -5,8 +5,10 @@ import { useThemeColor } from "@mahiru/ui/hook/useThemeColor";
 import ListItem from "./ListItem";
 import Loading from "../public/Loading";
 import { useDynamicZustandShallowStore } from "@mahiru/ui/store";
+import { PlaylistCacheEntry } from "@mahiru/ui/utils/playList";
 
 interface ListProps {
+  entry: Nullable<PlaylistCacheEntry>;
   id?: number;
   loading: boolean;
   filterTracks: { tracks: NeteaseTrack[]; absoluteIdx: Nullable<number[]> };
@@ -19,7 +21,8 @@ const ListContainer: FC<ListProps> = ({
   filterTracks,
   onVirtualListRangeUpdate,
   loading,
-  paddingBottom
+  paddingBottom,
+  entry
 }) => {
   const { userLikedPlayList } = useDynamicZustandShallowStore(["userLikedPlayList"]);
   const { mainColor } = useThemeColor();
@@ -32,7 +35,7 @@ const ListContainer: FC<ListProps> = ({
     containerRef,
     overscan: 10,
     itemHeight: 50,
-    extraData: { id, isLikedPlayList, absoluteIdx },
+    extraData: { id, isLikedPlayList, absoluteIdx, entry },
     onRangeUpdate: onVirtualListRangeUpdate
   });
   const listRef = useRef<ListRef>(null);
@@ -69,11 +72,20 @@ export default memo(ListContainer);
 
 function RowComponent(
   props: ComponentProps<
-    RowComponentType<NeteaseTrack, { id?: number; absoluteIdx: number[] | null }>
+    RowComponentType<
+      NeteaseTrack,
+      { id?: number; absoluteIdx: number[] | null; entry: Nullable<PlaylistCacheEntry> }
+    >
   >
 ) {
   const { index, items, extra } = props;
   return (
-    <ListItem index={index} data={items} playListID={extra!.id} absoluteIdx={extra!.absoluteIdx} />
+    <ListItem
+      entry={extra!.entry}
+      index={index}
+      data={items}
+      playListID={extra!.id}
+      absoluteIdx={extra!.absoluteIdx}
+    />
   );
 }

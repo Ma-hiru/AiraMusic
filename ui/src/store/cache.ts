@@ -36,7 +36,7 @@ export const Store = new (class {
   storeObject(id: string, data: object) {
     return request("/api/store/object", {
       method: "POST",
-      params: { id, data: JSON.stringify(data) }
+      data: { id, data: JSON.stringify(data) }
     });
   }
 
