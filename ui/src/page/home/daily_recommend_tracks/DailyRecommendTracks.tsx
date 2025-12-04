@@ -1,24 +1,40 @@
-import { FC, memo, useEffect, useState } from "react";
+import { FC, memo, useCallback, useEffect, useRef, useState } from "react";
 import { dailyRecommendTracks } from "@mahiru/ui/api/recommend";
-import { useThemeColor } from "@mahiru/ui/hook/useThemeColor";
-import Color from "color";
+import { usePlayingBackground } from "@mahiru/ui/hook/usePlayingBackground";
+import RecommendTrackTitle from "./RecommendTrackTitle";
+import RecommendTrackList from "./list";
 
 const DailyRecommendTracks: FC<object> = () => {
   const [recommend, setRecommend] = useState<DailyRecommendTracksDailySong[]>([]);
-  const [recommendReason, setRecommendReason] = useState<DailyRecommendTracksRecommendReason[]>([]);
-  const { mainColor } = useThemeColor();
-  const titleColor = Color("#000000").mix(Color(mainColor), 0.5).string();
+  const containerRef = useRef<HTMLDivElement>(null);
+  usePlayingBackground(recommend[0]?.al.picUrl);
+
+  const lastPage = useCallback(() => {
+    if (containerRef.current) {
+      containerRef.current.scrollBy({
+        left: -containerRef.current.clientWidth,
+        behavior: "smooth"
+      });
+    }
+  }, []);
+  const nextPage = useCallback(() => {
+    if (containerRef.current) {
+      containerRef.current.scrollBy({
+        left: containerRef.current.clientWidth,
+        behavior: "smooth"
+      });
+    }
+  }, []);
+
   useEffect(() => {
     dailyRecommendTracks().then((result) => {
       setRecommend(result.data.dailySongs);
-      setRecommendReason(result.data.recommendReasons);
     });
   }, []);
   return (
-    <div className="w-full">
-      <h1 className="font-bold text-lg" style={{ color: titleColor }}>
-        每日精选歌曲
-      </h1>
+    <div className="w-full overflow-hidden contain-layout">
+      <RecommendTrackTitle lastPage={lastPage} nextPage={nextPage} />
+      <RecommendTrackList recommend={recommend} containerRef={containerRef} />
     </div>
   );
 };

@@ -42,6 +42,7 @@ export const WindowManager = new (class {
             oldWindow.close();
             break;
           case WindowExits.IGNORE:
+            oldWindow.focus();
             return oldWindow;
         }
       }

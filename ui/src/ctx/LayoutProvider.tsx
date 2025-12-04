@@ -4,6 +4,8 @@ import { LayoutCtx, LayoutCtxType } from "@mahiru/ui/ctx/LayoutCtx";
 import { EqError, Log } from "@mahiru/ui/utils/dev";
 import { changeThemeColorByCSSVar } from "@mahiru/ui/utils/ui";
 
+const themeColorCache = new Map<string, string[]>();
+
 export default function LayoutProvider({ children }: { children: ReactNode }) {
   const [playerModalVisible, setPlayerModalVisible] = useState(false);
   const [background, setBackground] = useState<Undefinable<string>>();
@@ -23,10 +25,15 @@ export default function LayoutProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const worker = kmeansWorker.current;
     if (!background || !worker) return;
+    if (themeColorCache.has(background)) {
+      setBackgroundThemeColor(themeColorCache.get(background)!);
+      return;
+    }
     const id = Math.random() * 10000;
     const handleMessage = (message: MessageEvent<KMeansWorkerResult>) => {
       if (message.data.ok && message.data.id === id) {
         setBackgroundThemeColor(message.data.result);
+        themeColorCache.set(background, message.data.result);
       } else {
         Log.error(
           new EqError({

@@ -12,7 +12,7 @@ const Title: FC<TitleProps> = ({ title, slot }) => {
   return (
     <div
       className="w-full truncate font-bold text-[28px] py-2 flex justify-between items-center"
-      style={{ color: Color("#000000").mix(Color(mainColor), 0.5).string() }}>
+      style={{ color: Color("#000000").mix(Color(mainColor), 0.2).string() }}>
       <span>{title}</span>
       <span>{slot}</span>
     </div>

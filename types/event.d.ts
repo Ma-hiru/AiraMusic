@@ -30,6 +30,7 @@ type NormalEventMaps = {
   createLyricWindow: never;
   createMiniplayerWindow: never;
   sendMessageTo: SendMessageDataType;
+  openExternalLink: { url: string; title: string };
   close: WindowType;
   minimize: WindowType;
   maximize: WindowType;

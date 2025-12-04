@@ -2,22 +2,19 @@ import request from "./utils/request";
 import { Store } from "@mahiru/ui/store";
 import { IsChangeDay } from "@mahiru/ui/utils/time";
 import { Log } from "@mahiru/ui/utils/dev";
+import { NeteaseBannerResponse } from "@mahiru/ui/types/netease/banner";
 
 /**
  * 推荐歌单
  * @desc 调用此接口 , 可获取推荐歌单
  */
-export async function recommendPlaylist(params: {
+export async function recommendPlaylist(
   /** 取出数量 , 默认为 30 (不支持 offset) */
-  limit?: number;
-}): Promise<NeteaseRecommendPlaylistResponse> {
-  const cacheKey = `personalized_${params.limit ?? 30}`;
-  let cache;
-  if (IsChangeDay()) {
-    cache = await Store.fetchObject<NeteaseRecommendPlaylistResponse>(cacheKey, 0); // 强制更新缓存
-  } else {
-    cache = await Store.fetchObject<NeteaseRecommendPlaylistResponse>(cacheKey, 1000 * 60 * 5); // 5分钟缓存
-  }
+  limit?: number
+): Promise<NeteaseRecommendPlaylistResponse> {
+  const cacheKey = `personalized_${limit ?? 30}`;
+  // 5分钟缓存
+  const cache = await Store.fetchObject<NeteaseRecommendPlaylistResponse>(cacheKey, 1000 * 60 * 5);
   if (cache) {
     Log.trace("api/recommend.ts:recommendPlaylist", "使用推荐歌单缓存");
     return cache;
@@ -25,7 +22,7 @@ export async function recommendPlaylist(params: {
   return await request<any, NeteaseRecommendPlaylistResponse>({
     url: "/personalized",
     method: "get",
-    params
+    params: { limit, timestamp: Date.now() }
   }).then((result) => {
     Log.trace("api/recommend.ts:recommendPlaylist", "更新推荐歌单缓存");
     Store.storeObject(cacheKey, result);
@@ -37,19 +34,13 @@ export async function recommendPlaylist(params: {
  * 获取每日推荐歌单
  * @desc 调用此接口 , 可获得每日推荐歌单 ( 需要登录 )
  */
-export async function dailyRecommendPlaylist(params: {
-  limit?: number;
-}): Promise<NeteaseDailyRecommendPlaylistResponse> {
-  const cacheKey = `recommend_resource_${params.limit ?? 30}`;
-  let cache;
-  if (IsChangeDay()) {
-    cache = await Store.fetchObject<NeteaseDailyRecommendPlaylistResponse>(cacheKey, 0); // 强制更新缓存
-  } else {
-    cache = await Store.fetchObject<NeteaseDailyRecommendPlaylistResponse>(
-      cacheKey,
-      1000 * 60 * 60 * 24
-    ); // 24小时缓存
-  }
+export async function dailyRecommendPlaylist(): Promise<NeteaseDailyRecommendPlaylistResponse> {
+  const cacheKey = `recommend_resource`;
+  const cache = await Store.fetchObject<NeteaseDailyRecommendPlaylistResponse>(
+    cacheKey,
+    // 如果是新的一天则强制更新缓存,否则缓存24小时
+    IsChangeDay() ? 0 : 1000 * 60 * 60 * 24
+  );
   if (cache) {
     Log.trace("api/recommend.ts:dailyRecommendPlaylist", "使用推荐歌单缓存");
     return cache;
@@ -57,12 +48,35 @@ export async function dailyRecommendPlaylist(params: {
   return await request<any, NeteaseDailyRecommendPlaylistResponse>({
     url: "/recommend/resource",
     method: "get",
-    params: {
-      params,
-      timestamp: Date.now()
-    }
+    params: { timestamp: Date.now() }
   }).then((result) => {
     Log.trace("api/recommend.ts:dailyRecommendPlaylist", "更新推荐歌单缓存");
+    Store.storeObject(cacheKey, result);
+    return result;
+  });
+}
+
+/**
+ * 每日推荐歌曲
+ * @desc 调用此接口 , 可获得每日推荐歌曲 ( 需要登录 )
+ */
+export async function dailyRecommendTracks(): Promise<NeteaseDailyRecommendTracksResponse> {
+  const cacheKey = `recommend_songs`;
+  const cache = await Store.fetchObject<NeteaseDailyRecommendTracksResponse>(
+    cacheKey,
+    // 如果是新的一天则强制更新缓存,否则缓存24小时
+    IsChangeDay() ? 0 : 1000 * 60 * 60 * 24
+  );
+  if (cache) {
+    Log.trace("api/recommend.ts:dailyRecommendTracks", "使用推荐歌曲缓存");
+    return cache;
+  }
+  return await request<any, NeteaseDailyRecommendTracksResponse>({
+    url: "/recommend/songs",
+    method: "get",
+    params: { timestamp: Date.now() }
+  }).then((result) => {
+    Log.trace("api/recommend.ts:dailyRecommendTracks", "更新推荐歌曲缓存");
     Store.storeObject(cacheKey, result);
     return result;
   });
@@ -118,30 +132,26 @@ export function toplists() {
 }
 
 /**
- * 每日推荐歌曲
- * @desc 调用此接口 , 可获得每日推荐歌曲 ( 需要登录 )
- */
-export async function dailyRecommendTracks(): Promise<NeteaseDailyRecommendTracksResponse> {
-  let cache;
-  if (IsChangeDay()) {
-    cache = await Store.fetchObject<NeteaseDailyRecommendTracksResponse>("recommend_songs", 0); // 强制更新缓存
-  } else {
-    cache = await Store.fetchObject<NeteaseDailyRecommendTracksResponse>(
-      "recommend_songs",
-      1000 * 60 * 60 * 24
-    ); // 24小时缓存
-  }
+ * @desc 调用此接口 , 可获取 banner( 轮播图 ) 数据
+ * @param type 资源类型,对应以下类型,默认为0 即 PC。
+ *
+ * 0: pc,1: android,2: iphone,3: ipad
+ * */
+export async function homeBanner(type: 0 | 1 | 2 | 3 = 0): Promise<NeteaseBannerResponse> {
+  const cacheKey = `banner_${type}`;
+  // 5分钟缓存
+  const cache = await Store.fetchObject<NeteaseBannerResponse>(cacheKey, 1000 * 60 * 5);
   if (cache) {
-    Log.trace("api/recommend.ts:dailyRecommendTracks", "使用推荐歌曲缓存");
+    Log.trace("api/recommend.ts:homeBanner", "使用 Banner 缓存");
     return cache;
   }
-  return await request<any, NeteaseDailyRecommendTracksResponse>({
-    url: "/recommend/songs",
+  return await request<any, NeteaseBannerResponse>({
+    url: "/banner",
     method: "get",
-    params: { timestamp: new Date().getTime() }
+    params: { type, timestamp: Date.now() }
   }).then((result) => {
-    Log.trace("api/recommend.ts:dailyRecommendTracks", "更新推荐歌曲缓存");
-    Store.storeObject("recommend_songs", result);
+    Log.trace("api/recommend.ts:homeBanner", "更新 Banner 缓存");
+    Store.storeObject(cacheKey, result);
     return result;
   });
 }

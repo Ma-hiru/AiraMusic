@@ -254,6 +254,28 @@ function registerWindowControl() {
       });
     }
   });
+  typedIpcMainOn("openExternalLink", (_e, { url, title }) => {
+    Log.trace("app/ipc", "IPC Open External Link:", url);
+    const { effectiveWidth: width, effectiveHeight: height } = getEffectiveWindowSize(0.5);
+    WindowManager.createBrowserWindow(
+      {
+        width,
+        height,
+        title: title || "External Link",
+        resizable: true,
+        minimizable: true,
+        maximizable: true,
+        frame: true,
+        type: "normal"
+      },
+      "external",
+      WindowExits.IGNORE
+    )
+      .loadURL(url)
+      .catch((err) => {
+        Log.error("app/ipc", "Failed to load external link URL:", err);
+      });
+  });
 }
 
 function registerWindowEventListeners(needRegisterWin: BrowserWindow, type: WindowType) {
