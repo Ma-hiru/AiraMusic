@@ -17,6 +17,7 @@ import { ImageSize, NeteaseImageSizeFilter } from "@mahiru/ui/utils/filter";
 import { getYRCLyric } from "@mahiru/ui/api/lyric";
 import { useMediaSession } from "@mahiru/ui/hook/useMediaSession";
 import { useLock } from "@mahiru/ui/hook/useLock";
+import { useKeyboardShortcut } from "@mahiru/ui/hook/useKeyboardShortcut";
 
 const { updatePlayHistory } = getPersistSnapshot();
 const AUDIO_CACHE_PREFIX = "audio_";
@@ -394,6 +395,36 @@ export function useSong() {
     lastTrack,
     play
   });
+  /**                        快捷键                         */
+  useKeyboardShortcut([
+    {
+      key: " ",
+      description: "播放/暂停",
+      callback: play
+    },
+    {
+      key: "ArrowRight",
+      modifiers: ["alt"],
+      description: "下一首",
+      callback: nextTrack
+    },
+    {
+      key: "ArrowLeft",
+      modifiers: ["alt"],
+      description: "上一首",
+      callback: lastTrack
+    },
+    {
+      key: "ArrowUp",
+      description: "增加音量",
+      callback: () => upVolume(0.05)
+    },
+    {
+      key: "ArrowDown",
+      description: "减少音量",
+      callback: () => downVolume(0.05)
+    }
+  ]);
   /**                        返回值                         */
   // 将方法和状态进行 useMemo 包装以避免不必要的重渲染
   // 返回方法
