@@ -15,7 +15,7 @@ const PlaylistItem: FC<RecommendTrackItemProps> = ({ playlist, mainColor, textCo
   const cachedCover = useFileCache(sizedCover);
   const navigate = useNavigate();
   const play = useCallback(() => {
-    navigate(`/playlist/${playlist.id}?like=false&history=false`);
+    navigate(`/playlist/${playlist.id}?like=false&history=false&source=recommend`);
   }, [navigate, playlist.id]);
   return (
     <div className="w-full h-full flex flex-col justify-center items-center p-2">

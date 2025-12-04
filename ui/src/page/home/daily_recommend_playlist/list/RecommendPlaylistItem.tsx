@@ -1,13 +1,7 @@
 import { FC, memo, useCallback } from "react";
 import { useFileCache } from "@mahiru/ui/ctx/BlobCachedCtx";
-import {
-  ImageSize,
-  NeteaseImageSizeFilter,
-  NeteaseTrackPrivilegesStatusFilter
-} from "@mahiru/ui/utils/filter";
-import { AudioLines, CirclePlay, Headphones } from "lucide-react";
-import { usePlayer } from "@mahiru/ui/ctx/PlayerCtx";
-import { getTrackDetail } from "@mahiru/ui/api/track";
+import { ImageSize, NeteaseImageSizeFilter } from "@mahiru/ui/utils/filter";
+import { CirclePlay, Headphones } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface RecommendTrackItemProps {
@@ -23,7 +17,8 @@ const RecommendPlaylistItem: FC<RecommendTrackItemProps> = ({ playlist, mainColo
   const cachedAvatar = useFileCache(sizedAvatar);
   const navigate = useNavigate();
   const play = useCallback(() => {
-    navigate(`/playlist/${playlist.id}?like=false&history=false`);
+    console.log(`/playlist/${playlist.id}?like=false&history=false&source=recommend`);
+    navigate(`/playlist/${playlist.id}?like=false&history=false&source=recommend`);
   }, [navigate, playlist.id]);
   return (
     <div className="w-full h-full flex flex-col justify-center items-center p-2">
