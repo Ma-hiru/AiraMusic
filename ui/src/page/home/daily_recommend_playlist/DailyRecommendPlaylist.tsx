@@ -7,13 +7,13 @@ const DailyRecommendPlaylist: FC<object> = () => {
   const [recommend, setRecommend] = useState<DailyRecommendPlaylistResult[]>([]);
   const { mainColor } = useThemeColor();
   const titleColor = Color("#000000").mix(Color(mainColor), 0.5).string();
-  // useEffect(() => {
-  //   dailyRecommendPlaylist({
-  //     limit: 30
-  //   }).then((result) => {
-  //     setRecommend(result.recommend);
-  //   });
-  // }, []);
+  useEffect(() => {
+    dailyRecommendPlaylist({
+      limit: 30
+    }).then((result) => {
+      setRecommend(result.recommend);
+    });
+  }, []);
   return (
     <div className="w-full">
       <h1 className="font-bold text-lg" style={{ color: titleColor }}>

@@ -7,14 +7,29 @@ import { Log } from "@mahiru/ui/utils/dev";
  * 推荐歌单
  * @desc 调用此接口 , 可获取推荐歌单
  */
-export function recommendPlaylist(params: {
+export async function recommendPlaylist(params: {
   /** 取出数量 , 默认为 30 (不支持 offset) */
   limit?: number;
 }): Promise<NeteaseRecommendPlaylistResponse> {
-  return request({
+  const cacheKey = `personalized_${params.limit ?? 30}`;
+  let cache;
+  if (IsChangeDay()) {
+    cache = await Store.fetchObject<NeteaseRecommendPlaylistResponse>(cacheKey, 0); // 强制更新缓存
+  } else {
+    cache = await Store.fetchObject<NeteaseRecommendPlaylistResponse>(cacheKey, 1000 * 60 * 5); // 5分钟缓存
+  }
+  if (cache) {
+    Log.trace("api/recommend.ts:recommendPlaylist", "使用推荐歌单缓存");
+    return cache;
+  }
+  return await request<any, NeteaseRecommendPlaylistResponse>({
     url: "/personalized",
     method: "get",
     params
+  }).then((result) => {
+    Log.trace("api/recommend.ts:recommendPlaylist", "更新推荐歌单缓存");
+    Store.storeObject(cacheKey, result);
+    return result;
   });
 }
 
@@ -22,16 +37,34 @@ export function recommendPlaylist(params: {
  * 获取每日推荐歌单
  * @desc 调用此接口 , 可获得每日推荐歌单 ( 需要登录 )
  */
-export function dailyRecommendPlaylist(params: {
+export async function dailyRecommendPlaylist(params: {
   limit?: number;
 }): Promise<NeteaseDailyRecommendPlaylistResponse> {
-  return request({
+  const cacheKey = `recommend_resource_${params.limit ?? 30}`;
+  let cache;
+  if (IsChangeDay()) {
+    cache = await Store.fetchObject<NeteaseDailyRecommendPlaylistResponse>(cacheKey, 0); // 强制更新缓存
+  } else {
+    cache = await Store.fetchObject<NeteaseDailyRecommendPlaylistResponse>(
+      cacheKey,
+      1000 * 60 * 60 * 24
+    ); // 24小时缓存
+  }
+  if (cache) {
+    Log.trace("api/recommend.ts:dailyRecommendPlaylist", "使用推荐歌单缓存");
+    return cache;
+  }
+  return await request<any, NeteaseDailyRecommendPlaylistResponse>({
     url: "/recommend/resource",
     method: "get",
     params: {
       params,
       timestamp: Date.now()
     }
+  }).then((result) => {
+    Log.trace("api/recommend.ts:dailyRecommendPlaylist", "更新推荐歌单缓存");
+    Store.storeObject(cacheKey, result);
+    return result;
   });
 }
 
