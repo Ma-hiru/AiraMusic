@@ -3,7 +3,7 @@ import Avatar from "@mahiru/ui/page/layout/nav/NavAvatar";
 import NavSideNavItem from "@mahiru/ui/page/layout/nav/NavItem";
 import NavSideDivider from "@mahiru/ui/page/layout/nav/NavDivider";
 import { useDynamicZustandShallowStore } from "@mahiru/ui/store";
-import { useNavigate, useLocation, useParams } from "react-router-dom";
+import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { NAV_DATA } from "@mahiru/ui/router";
 import NavPlayList from "@mahiru/ui/page/layout/nav/NavPlayList";
 import { useLayout } from "@mahiru/ui/ctx/LayoutCtx";
@@ -19,7 +19,7 @@ const Nav: FC<object> = () => {
   const userPlayLists = getUserPlayListSummaryStatic();
   const navigate = useNavigate();
   const location = useLocation();
-  const { source } = useParams();
+  const [searchParams] = useSearchParams();
   const { background } = useLayout();
   return (
     <div
@@ -40,7 +40,7 @@ const Nav: FC<object> = () => {
               active={
                 location.pathname === path ||
                 (label === "搜藏" && location.pathname === `/playlist/${userLikedPlayList?.id}`) ||
-                (label === "推荐" && source === "recommend")
+                (label === "推荐" && searchParams.get("source") === "recommend")
               }
               onClick={() => {
                 if (label === "搜藏" && (userLikedPlayList?.id || userLikedPlayList?.id === 0)) {

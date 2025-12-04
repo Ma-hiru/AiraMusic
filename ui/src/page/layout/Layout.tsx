@@ -7,6 +7,7 @@ import Background from "./Background";
 import KeepAliveOutlet from "@mahiru/ui/componets/public/KeepAliveOutlet";
 import PlayerProvider from "@mahiru/ui/ctx/PlayerProvider";
 import LayoutProvider from "@mahiru/ui/ctx/LayoutProvider";
+import RouterBack from "@mahiru/ui/page/layout/RouterBack";
 
 const Layout: FC<object> = () => {
   useEffect(() => {
@@ -30,6 +31,7 @@ const Layout: FC<object> = () => {
           </div>
           <Background /> {/* z-0 */}
           <PlayerModal /> {/* z-20 */}
+          <RouterBack />
         </div>
       </LayoutProvider>
     </PlayerProvider>

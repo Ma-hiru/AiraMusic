@@ -17,7 +17,10 @@ const Top: FC<object> = () => {
         "text-[#7b8290]": !PlayerModalVisible,
         "text-white": PlayerModalVisible
       })}>
-      <Back />
+      <div className="absolute z-10 left-6">
+        <Back />
+      </div>
+      <div />
       <div className="flex gap-4 justify-center items-center">
         <Transition show={PlayerModalVisible} {...TransitionPreset.OpacityPreset}>
           <div className="flex items-center gap-4">
