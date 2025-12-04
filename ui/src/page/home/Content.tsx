@@ -7,13 +7,9 @@ import { useScrollAutoHide } from "@mahiru/ui/hook/useScrollAutoHide";
 
 const Content: FC<object> = () => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const { onScroll, onScrollEnd } = useScrollAutoHide(containerRef);
+  const { onScroll } = useScrollAutoHide(containerRef);
   return (
-    <div
-      ref={containerRef}
-      className="w-full h-full overflow-y-auto scrollbar"
-      onScroll={onScroll}
-      onScrollEnd={onScrollEnd}>
+    <div ref={containerRef} className="w-full h-full overflow-y-auto scrollbar" onScroll={onScroll}>
       <Banner />
       <DailyRecommendTracks />
       <DailyRecommendPlaylist />

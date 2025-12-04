@@ -44,12 +44,11 @@ const ListContainer: FC<ListProps> = ({
   useEffect(() => {
     listRef.current?.setScrollTop(0);
   }, [id]);
-  const { onScrollEnd, onScroll } = useScrollAutoHide(containerRef);
+  const { onScroll } = useScrollAutoHide(containerRef);
   return (
     <>
       <div
         ref={containerRef}
-        onScrollEnd={onScrollEnd}
         onScroll={onScroll}
         className={cx(
           "w-full h-full overflow-y-auto contain-content will-change-scroll scrollbar",

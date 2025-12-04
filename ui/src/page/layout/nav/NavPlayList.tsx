@@ -18,7 +18,7 @@ const NavPlayList: FC<object> = () => {
   const containerRef = useRef<Nullable<HTMLDivElement>>(null);
   const [showTopBtn, setShowTopBtn] = useState(false);
 
-  const { onScroll, onScrollEnd } = useScrollAutoHide(containerRef);
+  const { onScroll } = useScrollAutoHide(containerRef);
   const onRangeChange = useCallback(
     (range: IndexRange) => {
       if (range[0] > 5 && !showTopBtn) {
@@ -67,7 +67,6 @@ const NavPlayList: FC<object> = () => {
     <div className="overflow-hidden">
       <div
         onScroll={onScroll}
-        onScrollEnd={onScrollEnd}
         ref={containerRef}
         className={cx(
           "overflow-y-auto relative w-full h-full contain-content will-change-scroll scrollbar",

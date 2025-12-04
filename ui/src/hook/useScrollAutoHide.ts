@@ -1,37 +1,35 @@
-import { useCallback, useRef, RefObject } from "react";
-import { debounce } from "lodash-es";
+import { useCallback, useEffect, useRef, RefObject } from "react";
+
+const SCROLLBAR_HIDE_DELAY = 800;
 
 export function useScrollAutoHide(containerRef: RefObject<Nullable<HTMLElement>>) {
-  const scrollTimer = useRef<Nullable<number>>(null);
-  const onScroll = debounce(
-    () => {
-      const container = containerRef.current;
-      if (container) {
-        scrollTimer.current && window.clearTimeout(scrollTimer.current);
-        container.classList.add("scrollbar-show");
-      }
-    },
-    100,
-    {
-      leading: true
+  const hideTimerRef = useRef<number | null>(null);
+
+  const onScroll = useCallback(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    // 立即显示滚动条
+    container.classList.add("scrollbar-show");
+    // 清除之前的定时器
+    if (hideTimerRef.current) {
+      window.clearTimeout(hideTimerRef.current);
     }
-  );
-  const onScrollEnd = useCallback(() => {
-    scrollTimer.current = window.setTimeout(() => {
-      const container = containerRef.current;
-      if (container) {
-        container.classList.remove("scrollbar-show");
-      }
-    }, 300);
+    // 设置新的隐藏定时器
+    hideTimerRef.current = window.setTimeout(() => {
+      container.classList.remove("scrollbar-show");
+      hideTimerRef.current = null;
+    }, SCROLLBAR_HIDE_DELAY);
   }, [containerRef]);
-  useCallback(() => {
+
+  useEffect(() => {
     return () => {
-      if (scrollTimer.current) window.clearTimeout(scrollTimer.current);
+      if (hideTimerRef.current) {
+        window.clearTimeout(hideTimerRef.current);
+      }
     };
   }, []);
 
   return {
-    onScroll,
-    onScrollEnd
+    onScroll
   };
 }
