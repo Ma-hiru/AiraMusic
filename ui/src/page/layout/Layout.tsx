@@ -1,4 +1,4 @@
-import { FC, useEffect } from "react";
+import { FC } from "react";
 import TopBar from "./Top";
 import PlayerBar from "./Bar";
 import NavSide from "./Nav";
@@ -10,13 +10,6 @@ import LayoutProvider from "@mahiru/ui/ctx/LayoutProvider";
 import RouterBack from "@mahiru/ui/page/layout/RouterBack";
 
 const Layout: FC<object> = () => {
-  useEffect(() => {
-    window.node.event.loaded({
-      win: "main",
-      broadcast: false,
-      showAfterLoaded: true
-    });
-  }, []);
   return (
     <PlayerProvider>
       <LayoutProvider>

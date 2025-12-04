@@ -20,9 +20,9 @@ const BarCover: FC<object> = () => {
           onClick={TogglePlayerModalVisible}
         />
       </div>
-      <div className="flex flex-col gap-0 items-start">
-        <div className="text-sm font-medium text-center">{info.title}</div>
-        <div className="text-xs text-center text-gray-500">
+      <div className="flex flex-col gap-0 items-start truncate">
+        <div className="text-sm font-medium text-center truncate max-w-max">{info.title}</div>
+        <div className="text-xs text-center text-gray-500 truncate max-w-max">
           {(info.artist || []).map((a) => a.name).join(" / ")}
         </div>
       </div>

@@ -7,6 +7,7 @@ import { usePlayer } from "@mahiru/ui/ctx/PlayerCtx";
 import { getTrackDetail } from "@mahiru/ui/api/track";
 import { NeteaseTrackPrivilegesStatusFilter } from "@mahiru/ui/utils/filter";
 import { useTextColorOnThemeColor } from "@mahiru/ui/hook/useTextColorOnThemeColor";
+import { useAppLoaded } from "@mahiru/ui/hook/useAppLoaded";
 
 const Banner: FC<object> = () => {
   const [banner, setBanner] = useState<NeteaseBanner[]>([]);
@@ -16,6 +17,7 @@ const Banner: FC<object> = () => {
       setBanner(result.banners);
     });
   }, []);
+  useAppLoaded(!!banner.length);
   const titleColor = useTextColorOnThemeColor();
   const handleClick = useCallback(
     async (i: number) => {

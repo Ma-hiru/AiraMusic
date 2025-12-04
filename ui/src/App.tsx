@@ -5,10 +5,10 @@ import SettingsProvider from "@mahiru/ui/ctx/SettingsProvider";
 
 export default function App() {
   return (
-    <StrictMode>
-      <SettingsProvider>
-        <RouterProvider router={router} />
-      </SettingsProvider>
-    </StrictMode>
+    // <StrictMode>
+    <SettingsProvider>
+      <RouterProvider router={router} />
+    </SettingsProvider>
+    // </StrictMode>
   );
 }
