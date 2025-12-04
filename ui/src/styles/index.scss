@@ -41,3 +41,35 @@ img[src=""] {
     display: none;
   }
 }
+
+/* 默认隐藏 */
+.scrollbar::-webkit-scrollbar {
+  width: 6px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+/* 轨道 */
+.scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* 滑块 */
+.scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.25);
+  border-radius: 9999px;
+  transition: background-color 0.2s ease;
+}
+
+.scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(255, 255, 255, 0.5);
+}
+
+.scrollbar::-webkit-scrollbar-thumb:active {
+  background-color: rgba(255, 255, 255, 0.7);
+}
+
+/* 显示状态 */
+.scrollbar.scrollbar-show::-webkit-scrollbar {
+  opacity: 1;
+}

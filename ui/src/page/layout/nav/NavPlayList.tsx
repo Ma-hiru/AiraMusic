@@ -5,6 +5,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { ArrowBigUp } from "lucide-react";
 import NavPlayListItem from "@mahiru/ui/page/layout/nav/NavPlayListItem";
 import { useVirtualList, RowComponentType } from "@mahiru/ui/hook/useVirtualList";
+import { useScrollAutoHide } from "@mahiru/ui/hook/useScrollAutoHide";
 
 const NavPlayList: FC<object> = () => {
   const { getUserPlayListSummaryStatic } = useDynamicZustandShallowStore([
@@ -17,6 +18,7 @@ const NavPlayList: FC<object> = () => {
   const containerRef = useRef<Nullable<HTMLDivElement>>(null);
   const [showTopBtn, setShowTopBtn] = useState(false);
 
+  const { onScroll, onScrollEnd } = useScrollAutoHide(containerRef);
   const onRangeChange = useCallback(
     (range: IndexRange) => {
       if (range[0] > 5 && !showTopBtn) {
@@ -64,11 +66,12 @@ const NavPlayList: FC<object> = () => {
   return (
     <div className="overflow-hidden">
       <div
+        onScroll={onScroll}
+        onScrollEnd={onScrollEnd}
         ref={containerRef}
         className={cx(
-          "overflow-y-auto relative w-full h-full contain-content will-change-scroll",
+          "overflow-y-auto relative w-full h-full contain-content will-change-scroll scrollbar",
           css`
-            scrollbar-width: none;
             -webkit-overflow-scrolling: auto;
           `
         )}>

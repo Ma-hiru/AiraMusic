@@ -33,9 +33,7 @@ const BarBtns: FC<object> = () => {
     [downVolume, upVolume]
   );
   return (
-    <div
-      className="flex gap-4 justify-end items-center h-full"
-      style={{ color: hasOpenLyricWin ? mainColor : undefined }}>
+    <div className="flex gap-4 justify-end items-center h-full">
       <VolumeTag
         className="size-5 select-none cursor-pointer hover:opacity-50 ease-in-out duration-300 transition-all active:scale-90"
         onWheel={onWheel}
@@ -43,6 +41,7 @@ const BarBtns: FC<object> = () => {
       />
       <span
         onClick={openLyricWin}
+        style={{ color: hasOpenLyricWin ? mainColor : undefined }}
         className="size-5 flex justify-center items-center font-semibold hover:opacity-50 select-none cursor-pointer ease-in-out duration-300 transition-all active:scale-90">
         词
       </span>

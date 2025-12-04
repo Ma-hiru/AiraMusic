@@ -6,6 +6,7 @@ import ListItem from "./ListItem";
 import Loading from "../public/Loading";
 import { useDynamicZustandShallowStore } from "@mahiru/ui/store";
 import { PlaylistCacheEntry } from "@mahiru/ui/utils/playList";
+import { useScrollAutoHide } from "@mahiru/ui/hook/useScrollAutoHide";
 
 interface ListProps {
   entry: Nullable<PlaylistCacheEntry>;
@@ -43,14 +44,16 @@ const ListContainer: FC<ListProps> = ({
   useEffect(() => {
     listRef.current?.setScrollTop(0);
   }, [id]);
+  const { onScrollEnd, onScroll } = useScrollAutoHide(containerRef);
   return (
     <>
       <div
         ref={containerRef}
+        onScrollEnd={onScrollEnd}
+        onScroll={onScroll}
         className={cx(
-          "w-full h-full overflow-y-auto contain-content will-change-scroll",
+          "w-full h-full overflow-y-auto contain-content will-change-scroll scrollbar",
           css`
-            scrollbar-width: none;
             -webkit-overflow-scrolling: auto;
           `
         )}>
