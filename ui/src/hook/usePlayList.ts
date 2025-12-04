@@ -1,11 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ImageSize, NeteaseTrackCoverPreCacheFilter } from "@mahiru/ui/utils/filter";
 import { Log } from "@mahiru/ui/utils/dev";
-import {
-  PlaylistCacheEntry,
-  requestPlayListDetailWithStore,
-  saveDirtyPlaylistEntry
-} from "@mahiru/ui/utils/playList";
+import { PlaylistCacheEntry, PlaylistManager } from "@mahiru/ui/utils/playList";
 import { SearchTrack } from "@mahiru/wasm";
 import { useDynamicZustandShallowStore, usePersistZustandStore } from "@mahiru/ui/store";
 import { useShallow } from "zustand/react/shallow";
@@ -113,7 +109,7 @@ export function usePlayListNormal(id?: string) {
     void _static_update;
     clearState();
     if (id) {
-      requestPlayListDetailWithStore(Number(id), [0, 50], ImageSize.xs)
+      PlaylistManager.requestPlayListDetailWithStore(Number(id), [0, 50], ImageSize.xs)
         .then((entry) => {
           if (entry && !cancelled) {
             tracks.current = entry.playlist.tracks;
@@ -144,7 +140,7 @@ export function usePlayListNormal(id?: string) {
     return () => {
       // 保存脏数据
       Log.info("usePlayListNormal", "组件卸载，保存脏数据");
-      entry && saveDirtyPlaylistEntry(entry);
+      entry && PlaylistManager.saveDirtyPlaylistEntry(entry);
     };
   }, [entry]);
   return {

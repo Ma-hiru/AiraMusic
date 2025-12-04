@@ -19,7 +19,7 @@ export type PlaylistCacheEntry = {
   _dirty: boolean;
 };
 
-const PlaylistManager = new (class {
+export const PlaylistManager = new (class {
   /** 内存中最多存储的歌单数目 */
   private maxMemorySize = 5;
   /** 超过限制强制存在Store里面，而不是内存 */
@@ -29,7 +29,7 @@ const PlaylistManager = new (class {
   private memory = new Map<PlaylistCacheID, PlaylistCacheEntry>();
   constructor() {}
 
-  createEntry(data: NeteasePlaylistDetailResponse): PlaylistCacheEntry {
+  private createEntry(data: NeteasePlaylistDetailResponse): PlaylistCacheEntry {
     const cacheID = this.cacheID(data.playlist.id);
     return {
       playlistId: data.playlist.id,
@@ -42,21 +42,21 @@ const PlaylistManager = new (class {
   }
 
   /** 将内存中的更新保存到Store */
-  updateInStore(entry: PlaylistCacheEntry) {
+  private updateInStore(entry: PlaylistCacheEntry) {
     if (entry._dirty) {
       entry._dirty = false;
       this.setInStore(entry);
     }
   }
 
-  async set(entry: PlaylistCacheEntry) {
+  private async set(entry: PlaylistCacheEntry) {
     if (entry.playlist.trackCount <= this.maxPlayListSize) {
       this.setInMemory(entry);
     }
     this.setInStore(entry);
   }
 
-  async get(id: number) {
+  private async get(id: number) {
     const cacheID = this.cacheID(id);
     const memory = this.getInMemory(cacheID);
     if (memory) {
@@ -115,76 +115,73 @@ const PlaylistManager = new (class {
   private async getInStore(id: PlaylistCacheID) {
     return await Store.fetchObject<PlaylistCacheEntry>(id, this.timeLimit);
   }
-})();
 
-export async function requestPlayListDetailWithStore(
-  id: number,
-  preloadRange: [start: number, end: number],
-  size: ImageSize = ImageSize.xs
-) {
-  const cache = await PlaylistManager.get(id);
-  if (cache) {
-    return cache;
-  } else {
-    const rawList = await getPlaylistDetail(id);
-    const fullList = await NeteasePlayListToFullTracksFilter({ ...rawList });
-    fullList.playlist.tracks = NeteaseTrackPrivilegesStatusFilter(
-      fullList.playlist.tracks,
-      fullList.privileges
-    );
-    fullList.playlist.tracks = await NeteaseTrackCoverPreCacheFilter(
-      fullList.playlist.tracks,
-      preloadRange,
-      size
-    );
-    const entry = PlaylistManager.createEntry(fullList);
-    await PlaylistManager.set(entry);
-    return entry;
-  }
-}
-
-export async function saveDirtyPlaylistEntry(entry: PlaylistCacheEntry) {
-  return PlaylistManager.updateInStore(entry);
-}
-
-export function updatePlaylistEntryTrackCoverCache(props: {
-  entry: PlaylistCacheEntry;
-  absoluteIndex: number;
-  cachedPicUrl: string;
-  cachedPicUrlID: string;
-}) {
-  const { entry, absoluteIndex, cachedPicUrlID, cachedPicUrl } = props;
-  const track = entry.playlist.tracks[absoluteIndex];
-  if (track) {
-    track.al.cachedPicUrl = cachedPicUrl;
-    if (cachedPicUrlID === "" && track.al.cachedPicUrlID) {
-      void Store.remove(track.al.cachedPicUrlID);
+  async requestPlayListDetailWithStore(
+    id: number,
+    preloadRange: [start: number, end: number],
+    size: ImageSize = ImageSize.xs
+  ) {
+    const cache = await this.get(id);
+    if (cache) {
+      return cache;
+    } else {
+      const rawList = await getPlaylistDetail(id);
+      const fullList = await NeteasePlayListToFullTracksFilter({ ...rawList });
+      fullList.playlist.tracks = NeteaseTrackPrivilegesStatusFilter(
+        fullList.playlist.tracks,
+        fullList.privileges
+      );
+      fullList.playlist.tracks = await NeteaseTrackCoverPreCacheFilter(
+        fullList.playlist.tracks,
+        preloadRange,
+        size
+      );
+      const entry = this.createEntry(fullList);
+      await this.set(entry);
+      return entry;
     }
-    track.al.cachedPicUrlID = cachedPicUrlID;
-    entry._dirty = true;
   }
-}
 
-export async function updatePlaylistEntryTrackLikedStatus(props: {
-  track: NeteaseTrack;
-  nextStatus: boolean;
-}) {
-  const { track, nextStatus } = props;
-  const { userLikedPlayList } = getDynamicSnapshot();
-  const likedPlaylistID = userLikedPlayList?.id;
-  if (likedPlaylistID) {
-    const entry = await PlaylistManager.get(likedPlaylistID);
-    if (entry) {
-      const findTrackIndex = entry.playlist.tracks.findIndex((t) => t.id === track.id);
-      if (!nextStatus && findTrackIndex !== -1) {
-        // 取消喜欢时，在喜欢的音乐列表中找到了该歌曲，需要移除
-        entry.playlist.tracks.splice(findTrackIndex, 1);
-      } else if (nextStatus && findTrackIndex === -1) {
-        // 新喜欢时，如果在喜欢的音乐列表中找不到该歌曲，需要添加进去
-        entry.playlist.tracks.unshift(track);
+  async saveDirtyPlaylistEntry(entry: PlaylistCacheEntry) {
+    return this.updateInStore(entry);
+  }
+
+  updatePlaylistEntryTrackCoverCache(props: {
+    entry: PlaylistCacheEntry;
+    absoluteIndex: number;
+    cachedPicUrl: string;
+    cachedPicUrlID: string;
+  }) {
+    const { entry, absoluteIndex, cachedPicUrlID, cachedPicUrl } = props;
+    const track = entry.playlist.tracks[absoluteIndex];
+    if (track) {
+      track.al.cachedPicUrl = cachedPicUrl;
+      if (cachedPicUrlID === "" && track.al.cachedPicUrlID) {
+        void Store.remove(track.al.cachedPicUrlID);
       }
+      track.al.cachedPicUrlID = cachedPicUrlID;
       entry._dirty = true;
-      await saveDirtyPlaylistEntry(entry);
     }
   }
-}
+
+  async updatePlaylistEntryTrackLikedStatus(props: { track: NeteaseTrack; nextStatus: boolean }) {
+    const { track, nextStatus } = props;
+    const { userLikedPlayList } = getDynamicSnapshot();
+    const likedPlaylistID = userLikedPlayList?.id;
+    if (likedPlaylistID) {
+      const entry = await this.get(likedPlaylistID);
+      if (entry) {
+        const findTrackIndex = entry.playlist.tracks.findIndex((t) => t.id === track.id);
+        if (!nextStatus && findTrackIndex !== -1) {
+          // 取消喜欢时，在喜欢的音乐列表中找到了该歌曲，需要移除
+          entry.playlist.tracks.splice(findTrackIndex, 1);
+        } else if (nextStatus && findTrackIndex === -1) {
+          // 新喜欢时，如果在喜欢的音乐列表中找不到该歌曲，需要添加进去
+          entry.playlist.tracks.unshift(track);
+        }
+        entry._dirty = true;
+        await this.saveDirtyPlaylistEntry(entry);
+      }
+    }
+  }
+})();

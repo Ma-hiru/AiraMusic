@@ -244,15 +244,15 @@ interface NeteaseDailyRecommendTracksResponse extends NeteaseAPIResponse {
 interface DailyRecommendTracksData {
   algReturnDemote: boolean;
   dailyRecommendInfo: null;
-  dailySongs: DailySong[];
+  dailySongs: DailyRecommendTracksDailySong[];
   demote: boolean;
   fromCache: boolean;
   mvResourceInfos: null;
   orderSongs: string[];
-  recommendReasons: RecommendReason[];
+  recommendReasons: DailyRecommendTracksRecommendReason[];
 }
 
-interface DailySong {
+interface DailyRecommendTracksDailySong {
   a: null;
   additionalTitle: null | string;
   al: Al;
@@ -316,7 +316,7 @@ interface ChargeInfoList {
   rate: number;
 }
 
-interface RecommendReason {
+interface DailyRecommendTracksRecommendReason {
   reason: string;
   reasonId: string;
   songId: number;

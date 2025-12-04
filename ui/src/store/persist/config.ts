@@ -60,7 +60,7 @@ const InitialState: PersistStoreInitialState = {
   },
   data: {
     user: null,
-    lastRefreshCookieDate: 0,
+    lastRefreshCookieDate: null,
     loginMode: "",
     _historyList: []
   }
@@ -73,7 +73,7 @@ export interface PersistStoreInitialState {
   };
   data: {
     user: NeteaseUserDetailResponse["profile"] | null;
-    lastRefreshCookieDate: number;
+    lastRefreshCookieDate: number | null;
     loginMode: "account" | "username" | "";
     _historyList: NeteaseTrack[];
   };

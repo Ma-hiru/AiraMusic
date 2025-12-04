@@ -83,20 +83,15 @@ export async function getMP3New(id: string | number, level: NeteaseMusicLevel, u
  * @example /song/detail?ids=347230`,`/song/detail?ids=347230,347231
  */
 export async function getTrackDetail(ids: string | number): Promise<NeteaseTrackDetailResponse> {
-  const url = `http://127.0.0.1:${import.meta.env.NCM_SERVER_PORT}/song/detail?ids=` + ids;
-  const check = await Store.checkOrStoreAsync(url);
-  if (check.ok) {
-    try {
-      const result = await Store.fetch<NeteaseTrackDetailResponse>(url);
-      if (Number(result.code) === 200) {
-        return result;
-      } else {
-        Log.info("ui/api/track.ts:getTrackDetail", "track-detail cache is invalid, removing...");
-        void Store.remove(url);
-      }
-    } catch (err) {
-      throw CacheStoreErr.create("ui/api/track.ts:getTrackDetail", err);
+  const cacheID = `song_detail?ids=` + ids;
+  try {
+    const cache = await Store.fetchObject<NeteaseTrackDetailResponse>(cacheID, 1000 * 60 * 60 * 24); // 缓存24小时
+    if (cache) {
+      Log.trace("api/track.ts:getTrackDetail", "使用歌曲详情缓存", ids);
+      return cache;
     }
+  } catch (err) {
+    throw CacheStoreErr.create("ui/api/track.ts:getTrackDetail", err);
   }
   try {
     return await request<{ ids: string | number }, NeteaseTrackDetailResponse>({
@@ -105,6 +100,14 @@ export async function getTrackDetail(ids: string | number): Promise<NeteaseTrack
       params: {
         ids
       }
+    }).then((result) => {
+      Log.trace("api/track.ts:getTrackDetail", "获取歌曲详情并缓存");
+      try {
+        void Store.storeObject(cacheID, result);
+      } catch (err) {
+        Log.error(CacheStoreErr.create("ui/api/track.ts:getTrackDetail", err));
+      }
+      return result;
     });
   } catch (err) {
     throw NCMServerErr.create("ui/api/track.ts:getTrackDetail", err);

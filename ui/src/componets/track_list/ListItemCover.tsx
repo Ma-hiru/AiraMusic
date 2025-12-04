@@ -1,8 +1,7 @@
 import { FC, memo, SyntheticEvent, useCallback } from "react";
 import { useFileCache } from "@mahiru/ui/ctx/BlobCachedCtx";
 import { ImageSize, NeteaseImageSizeFilter } from "@mahiru/ui/utils/filter";
-import { getDynamicSnapshot, Store } from "@mahiru/ui/store";
-import { PlaylistCacheEntry, updatePlaylistEntryTrackCoverCache } from "@mahiru/ui/utils/playList";
+import { PlaylistCacheEntry, PlaylistManager } from "@mahiru/ui/utils/playList";
 
 interface ListItemCoverProps {
   track: NeteaseTrack;
@@ -25,7 +24,7 @@ const ListItemCover: FC<ListItemCoverProps> = ({
     (file: string, id: string) => {
       // 写入缓存ID
       if (!playListID || !entry) return; // 没有歌单ID不处理(可能是搜索结果、历史记录等)
-      updatePlaylistEntryTrackCoverCache({
+      PlaylistManager.updatePlaylistEntryTrackCoverCache({
         entry,
         absoluteIndex,
         cachedPicUrl: file,
@@ -41,7 +40,7 @@ const ListItemCover: FC<ListItemCoverProps> = ({
       e.currentTarget.src = raw;
       // 清除缓存
       if (!playListID || !entry) return; // 没有歌单ID不处理(可能是搜索结果、历史记录等)
-      updatePlaylistEntryTrackCoverCache({
+      PlaylistManager.updatePlaylistEntryTrackCoverCache({
         entry,
         absoluteIndex,
         cachedPicUrl: "",

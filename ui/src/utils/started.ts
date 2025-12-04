@@ -1,5 +1,4 @@
 import { EqError, Log } from "@mahiru/ui/utils/dev";
-import { getPersistSnapshot, usePersistZustandStore } from "@mahiru/ui/store";
 import { isAccountLoggedIn } from "@mahiru/ui/api/utils/auth";
 import {
   refreshCookieTask,
@@ -8,6 +7,7 @@ import {
   refreshUserLikedTrackIDs,
   loadHistoryListFromPersistentStore
 } from "@mahiru/ui/utils/task";
+import { IsChangeDay } from "@mahiru/ui/utils/time";
 
 export function started() {
   if (window.location.pathname !== "/") return;
@@ -21,12 +21,7 @@ export function started() {
 }
 
 async function onChangeDay(task: NormalFunc<never[], Promise<void>>[]) {
-  const store = usePersistZustandStore.getState();
-  const lastDate = store.data.lastRefreshCookieDate;
-  if (
-    isAccountLoggedIn() &&
-    (typeof lastDate === "undefined" || lastDate !== new Date().getDate())
-  ) {
+  if (isAccountLoggedIn() && IsChangeDay()) {
     Log.trace("start daily task");
     for (const func of task) {
       try {

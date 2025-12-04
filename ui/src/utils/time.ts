@@ -1,4 +1,5 @@
 import Dayjs from "dayjs";
+import { getPersistSnapshot } from "@mahiru/ui/store";
 
 export function formatTimeToMMDD(time?: number) {
   if (time) {
@@ -31,4 +32,10 @@ export function formatCurrentTimeToMMSS(duration: number) {
 
 export function padNumber(num: number, length: number) {
   return num.toString().padStart(length, "0");
+}
+
+export function IsChangeDay() {
+  const { data } = getPersistSnapshot();
+  const lastDate = data.lastRefreshCookieDate;
+  return typeof lastDate !== "number" || lastDate !== new Date().getDate();
 }

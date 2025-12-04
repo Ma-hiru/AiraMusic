@@ -1,39 +1,6 @@
 import request from "./utils/request";
 
 /**
- * 推荐歌单
- * @desc 调用此接口 , 可获取推荐歌单
- * @example /personalized?limit=1
- */
-export function recommendPlaylist(params: {
-  /** 取出数量 , 默认为 30 (不支持 offset) */
-  limit?: number;
-}): Promise<NeteaseRecommendPlaylistResponse> {
-  return request({
-    url: "/personalized",
-    method: "get",
-    params
-  });
-}
-
-/**
- * 获取每日推荐歌单
- * @desc 调用此接口 , 可获得每日推荐歌单 ( 需要登录 )
- */
-export function dailyRecommendPlaylist(params: {
-  limit?: number;
-}): Promise<NeteaseDailyRecommendPlaylistResponse> {
-  return request({
-    url: "/recommend/resource",
-    method: "get",
-    params: {
-      params,
-      timestamp: Date.now()
-    }
-  });
-}
-
-/**
  * 获取歌单详情
  * @desc 歌单能看到歌单名字, 但看不到具体歌单内容 , 调用此接口 , 传入歌单 id, 可以获取对应歌单内的所有的音乐(未登录状态只能获取不完整的歌单,登录后是完整的)，
  * @return 返回的trackIds是完整的，tracks 则是不完整的，可拿全部 trackIds 请求一次 song/detail 接口
@@ -58,65 +25,12 @@ export async function getPlaylistDetail(
 }
 
 /**
- * 获取精品歌单
- * @desc 调用此接口 , 可获取精品歌单
- */
-// TODO: `/top/playlist/highquality` 返回内容较大，待补类型
-export function highQualityPlaylist(params: {
-  /** tag, 比如 " 华语 "、" 古风 " 、" 欧美 "、" 流行 ", 默认为 "全部", 可从精品歌单标签列表接口获取(/playlist/highquality/tags) */
-  cat: string;
-  /** 取出歌单数量 , 默认为 20 */
-  limit?: number;
-  /** 分页参数,取上一页最后一个歌单的 updateTime 获取下一页数据 */
-  before: number;
-}): Promise<NeteaseHighQualityPlaylistsResponse> {
-  return request({
-    url: "/top/playlist/highquality",
-    method: "get",
-    params
-  });
-}
-
-/**
- * 歌单 ( 网友精选碟 )
- * @desc 调用此接口 , 可获取网友精选碟歌单
- */
-// TODO: `/top/playlist` 返回结构与精选歌单类似，待补类型
-export function topPlaylist(params: {
-  /** 可选值为 'new' 和 'hot', 分别对应最新和最热 , 默认为 'hot' */
-  order: "new" | "hot";
-  /** tag, 比如 " 华语 "、" 古风 " 、" 欧美 "、" 流行 ", 默认为 "全部",可从歌单分类接口获取(/playlist/catlist) */
-  cat: string;
-  /** 取出歌单数量 , 默认为 50 */
-  limit?: number;
-}): Promise<NeteaseTopPlaylistResponse> {
-  return request({
-    url: "/top/playlist",
-    method: "get",
-    params
-  });
-}
-
-/**
  * 歌单分类
  * @desc 调用此接口,可获取歌单分类,包含 category 信息
  */
-// TODO: `/playlist/catlist` 返回 categories/ sub 类别，待补类型
 export function playlistCatlist() {
   return request<never, NeteasePlaylistCatlistResponse>({
     url: "/playlist/catlist",
-    method: "get"
-  });
-}
-
-/**
- * 所有榜单
- * @desc 调用此接口,可获取所有榜单 接口地址 : /toplist
- */
-// TODO: `/toplist` 返回多个榜单详情，待补类型
-export function toplists() {
-  return request({
-    url: "/toplist",
     method: "get"
   });
 }
@@ -195,18 +109,6 @@ export function addOrRemoveTrackFromPlaylist(params: {
       ...params,
       timestamp: new Date().getTime()
     }
-  });
-}
-
-/**
- * 每日推荐歌曲
- * @desc 调用此接口 , 可获得每日推荐歌曲 ( 需要登录 )
- */
-export function dailyRecommendTracks() {
-  return request<{ timestamp: number }, NeteaseDailyRecommendTracksResponse>({
-    url: "/recommend/songs",
-    method: "get",
-    params: { timestamp: new Date().getTime() }
   });
 }
 

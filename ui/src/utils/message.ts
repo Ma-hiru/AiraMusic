@@ -1,47 +1,30 @@
 import { EqError, Log } from "@mahiru/ui/utils/dev";
 
-type MessageHandler = {
-  id: string;
-  fn: (message: NormalEventMaps["sendMessageTo"]) => void;
-};
-
-const handlers: MessageHandler[] = [];
+const handlers = new Map<string, NormalFunc<[message: NormalEventMaps["sendMessageTo"]]>>();
 
 export function addMessageHandler<T = any>(
   fn: (message: SendMessageDataType<T>) => void,
   id?: string
 ) {
-  if (id) {
-    const handler = handlers.find((h) => h.id === id);
-    if (handler) {
-      handler.fn = fn;
-    } else {
-      handlers.push({ id, fn });
-    }
-  } else {
-    id = crypto.randomUUID();
-    handlers.push({ id, fn });
-  }
+  id ||= crypto.randomUUID();
+  handlers.set(id, fn);
   return id;
 }
 
 export function removeMessageHandler(id: string) {
-  const index = handlers.findIndex((h) => h.id === id);
-  if (index !== -1) {
-    handlers.splice(index, 1);
-  }
+  handlers.delete(id);
 }
 
 export function message() {
   window.node.register.sendMessageToHandler((message) => {
-    for (const handler of handlers) {
+    for (const [id, handler] of handlers.entries()) {
       try {
-        handler.fn(message);
+        handler(message);
       } catch (err) {
         Log.error(
           new EqError({
             raw: err,
-            message: `Error in message handler ${handler.id} for message from ${message.from} type ${message.type}`,
+            message: `error in message handler ${id} for message from ${message.from} type ${message.type}`,
             label: "ui/registerMessageHandlers.ts"
           })
         );

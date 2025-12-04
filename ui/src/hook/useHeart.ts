@@ -1,7 +1,7 @@
 import { useCallback } from "react";
 import { getDynamicSnapshot, useDynamicZustandShallowStore } from "@mahiru/ui/store";
 import { likeATrack } from "@mahiru/ui/api/track";
-import { updatePlaylistEntryTrackLikedStatus } from "@mahiru/ui/utils/playList";
+import { PlaylistManager } from "@mahiru/ui/utils/playList";
 
 export const useHeart = (track: NeteaseTrack) => {
   const { likedTrackIDs, updateLikedTrackIDs } = useDynamicZustandShallowStore([
@@ -26,7 +26,7 @@ export const useHeart = (track: NeteaseTrack) => {
     });
 
     const { staticUpdateTrigger } = getDynamicSnapshot();
-    updatePlaylistEntryTrackLikedStatus({
+    PlaylistManager.updatePlaylistEntryTrackLikedStatus({
       track,
       nextStatus: !isLiked
     }).finally(staticUpdateTrigger);
