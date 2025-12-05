@@ -7,6 +7,7 @@ type SpectrumCanvasProps = HTMLAttributes<HTMLCanvasElement> & {
   color?: string;
   secondaryColor?: string;
   gap?: number;
+  barWidth?: number;
   spectrumOptions?: SpectrumOptions;
 };
 
@@ -17,12 +18,13 @@ const SpectrumCanvas: FC<SpectrumCanvasProps> = ({
   isPlaying,
   spectrumOptions,
   secondaryColor = "#00ffaa",
+  barWidth,
   ...rest
 }) => {
   const canvasRef = useRef<Nullable<HTMLCanvasElement>>(null);
   const { spectrumData, isReady } = useSpectrum(audioRef, isPlaying, {
     fftSize: 2048,
-    numBands: 32, // 减少到32个频段，避免拥挤
+    numBands: 32,
     withPeaks: false,
     ...spectrumOptions
   });
@@ -57,32 +59,33 @@ const SpectrumCanvas: FC<SpectrumCanvasProps> = ({
         return;
       }
       const totalGap = gap * Math.max(0, count - 1);
-      const availableWidth = Math.max(1, width - totalGap);
-      // 设置最小柱宽，避免出现<1px的细线
-      const barWidth = Math.max(2, Math.floor(availableWidth / count));
+      let computedBarWidth: number;
+      if (typeof barWidth === "number" && barWidth > 0) {
+        // 使用用户指定的柱宽（CSS 像素）
+        computedBarWidth = Math.max(1, Math.floor(barWidth));
+      } else {
+        const availableWidth = Math.max(1, width - totalGap);
+        computedBarWidth = Math.max(2, Math.floor(availableWidth / count));
+      }
       for (let i = 0; i < count; i++) {
         const value = bands[i] ?? 0;
-        // 值已在 WASM 端做过 prettier，这里轻量增强对比度
-        const enhanced = Math.pow(value, 0.9);
-        const normalized = Math.min(1, Math.max(0, enhanced));
-        const barHeight = Math.max(2, normalized * height);
-        const x = i * (barWidth + gap);
+        const barHeight = Math.max(2, value * height);
+        const x = i * (computedBarWidth + gap);
         const y = height - barHeight;
-        // 渐变色：从底部绿色到顶部黄色
+
         const gradient = ctx.createLinearGradient(x, height, x, y);
         gradient.addColorStop(0, color);
         gradient.addColorStop(0.6, color);
-        gradient.addColorStop(1, secondaryColor); // 顶部黄色高光
-
+        gradient.addColorStop(1, secondaryColor);
         ctx.fillStyle = gradient;
-        const radius = Math.min(3, Math.floor(barWidth / 2), Math.floor(barHeight / 2));
+        const radius = Math.min(3, Math.floor(computedBarWidth / 2), Math.floor(barHeight / 2));
 
         if (radius > 0 && typeof ctx.roundRect === "function") {
           ctx.beginPath();
-          ctx.roundRect(x, y, barWidth, barHeight, [radius, radius, 0, 0]);
+          ctx.roundRect(x, y, computedBarWidth, barHeight, [radius, radius, 0, 0]);
           ctx.fill();
         } else {
-          ctx.fillRect(x, y, barWidth, barHeight);
+          ctx.fillRect(x, y, computedBarWidth, barHeight);
         }
       }
 
@@ -92,7 +95,7 @@ const SpectrumCanvas: FC<SpectrumCanvasProps> = ({
     return () => {
       cancelAnimationFrame(animationFrameId);
     };
-  }, [color, gap, isPlaying, isReady, secondaryColor, spectrumData]);
+  }, [barWidth, color, gap, isPlaying, isReady, secondaryColor, spectrumData]);
   return <canvas ref={canvasRef} {...rest} />;
 };
 export default memo(SpectrumCanvas);

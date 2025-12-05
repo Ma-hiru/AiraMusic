@@ -3,6 +3,7 @@ import { useLyricSync } from "@mahiru/ui/hook/useLyricSync";
 import { useThemeColor } from "@mahiru/ui/hook/useThemeColor";
 import { Volume, Volume1, Volume2, VolumeX } from "lucide-react";
 import { usePlayer } from "@mahiru/ui/ctx/PlayerCtx";
+import { useTextColorOnThemeColor } from "@mahiru/ui/hook/useTextColorOnThemeColor";
 
 const BarBtns: FC<object> = () => {
   const { openLyricWin, hasOpenLyricWin } = useLyricSync();
@@ -32,16 +33,19 @@ const BarBtns: FC<object> = () => {
     },
     [downVolume, upVolume]
   );
+  const textColor = useTextColorOnThemeColor();
   return (
     <div className="flex gap-4 justify-end items-center h-full">
       <VolumeTag
+        color={textColor}
+        fill={textColor}
         className="size-5 select-none cursor-pointer hover:opacity-50 ease-in-out duration-300 transition-all active:scale-90"
         onWheel={onWheel}
         onClick={mute}
       />
       <span
         onClick={openLyricWin}
-        style={{ color: hasOpenLyricWin ? mainColor : undefined }}
+        style={{ color: hasOpenLyricWin ? mainColor : textColor }}
         className="size-5 flex justify-center items-center font-semibold hover:opacity-50 select-none cursor-pointer ease-in-out duration-300 transition-all active:scale-90">
         词
       </span>

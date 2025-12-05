@@ -2,15 +2,19 @@ import { FC, memo } from "react";
 import { Pause, Play, SkipBack, SkipForward } from "lucide-react";
 import { usePlayer } from "@mahiru/ui/ctx/PlayerCtx";
 import { useTextColorOnThemeColor } from "@mahiru/ui/hook/useTextColorOnThemeColor";
+import { useThemeColor } from "@mahiru/ui/hook/useThemeColor";
 
 const BarControl: FC<object> = () => {
   const { isPlaying, play, lastTrack, nextTrack } = usePlayer();
   const textColor = useTextColorOnThemeColor();
+  const { mainColor } = useThemeColor();
   return (
     <div className="flex justify-center items-center gap-6">
       <SkipBack
         className="hover:scale-90 active:scale-80 cursor-pointer ease-in-out transition-all duration-300 size-5"
-        fill={"#171b20"}
+        // fill={"#171b20"}
+        fill={mainColor}
+        color={mainColor}
         onClick={lastTrack}
       />
       <div
@@ -24,7 +28,9 @@ const BarControl: FC<object> = () => {
       </div>
       <SkipForward
         className="hover:scale-90 active:scale-80 cursor-pointer ease-in-out transition-all duration-300 size-5"
-        fill={"#171b20"}
+        // fill={"#171b20"}
+        color={mainColor}
+        fill={mainColor}
         onClick={nextTrack}
       />
     </div>

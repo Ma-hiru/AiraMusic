@@ -3,26 +3,35 @@ import { usePlayer } from "@mahiru/ui/ctx/PlayerCtx";
 import { useLayout } from "@mahiru/ui/ctx/LayoutCtx";
 import { useFileCache } from "@mahiru/ui/ctx/BlobCachedCtx";
 import { ImageSize, NeteaseImageSizeFilter } from "@mahiru/ui/utils/filter";
+import { useTextColorOnThemeColor } from "@mahiru/ui/hook/useTextColorOnThemeColor";
+import { cx } from "@emotion/css";
 
 const BarCover: FC<object> = () => {
   const { info } = usePlayer();
   const { TogglePlayerModalVisible } = useLayout();
   const cachedCover = useFileCache(NeteaseImageSizeFilter(info.cover, ImageSize.md));
+  const textColor = useTextColorOnThemeColor();
   return (
     <div className="h-2/3 space-x-2 flex items-center justify-start gap-2">
-      <div className="h-12 w-12 rounded-md overflow-hidden">
+      <div className={cx("h-12 w-12 rounded-md overflow-hidden", cachedCover && "shadow-lg")}>
         <img
           className="h-full w-full object-cover cursor-pointer"
           loading="lazy"
           decoding="async"
-          src={(cachedCover || null) as string}
+          src={cachedCover}
           alt={info.title}
           onClick={TogglePlayerModalVisible}
         />
       </div>
       <div className="flex flex-col gap-0 items-start truncate">
-        <div className="text-sm font-medium text-center truncate max-w-max">{info.title}</div>
-        <div className="text-xs text-center text-gray-500 truncate max-w-max">
+        <div
+          className="text-sm font-medium text-center truncate max-w-max"
+          style={{ color: textColor }}>
+          {info.title}
+        </div>
+        <div
+          className="text-xs text-center text-gray-500 truncate max-w-max opacity-70"
+          style={{ color: textColor }}>
           {(info.artist || []).map((a) => a.name).join(" / ")}
         </div>
       </div>

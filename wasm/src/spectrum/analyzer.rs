@@ -89,17 +89,36 @@ impl SpectrumAnalyzer {
     #[allow(dead_code)]
     fn group_logarithmic(&self, spectrum: &[f32]) -> Vec<f32> {
         let mut bands = vec![0.0; self.num_bands];
+        let len = spectrum.len();
+        if len == 0 || self.num_bands == 0 {
+            return bands;
+        }
+        // 确保每个频带至少包含一个 bin，并且覆盖连续区间
+        let mut prev_end: usize = 0;
         for i in 0..self.num_bands {
             let normalized_start = (i as f32 / self.num_bands as f32).powf(2.0);
             let normalized_end = ((i + 1) as f32 / self.num_bands as f32).powf(2.0);
 
-            let bin_start = (normalized_start * spectrum.len() as f32) as usize;
-            let bin_end =
-                (normalized_end * spectrum.len() as f32).min(spectrum.len() as f32) as usize;
+            // 使用 floor/ceil 获取更稳健的边界
+            let mut bin_start = (normalized_start * len as f32).floor() as usize;
+            let mut bin_end = (normalized_end * len as f32).ceil() as usize;
 
-            if bin_start < bin_end && bin_end <= spectrum.len() {
+            // 保证单调且连续覆盖
+            bin_start = bin_start.max(prev_end).min(len);
+            bin_end = bin_end.max(bin_start + 1).min(len);
+
+            if bin_start < bin_end {
                 let band_sum: f32 = spectrum[bin_start..bin_end].iter().sum();
                 bands[i] = band_sum / (bin_end - bin_start) as f32;
+                prev_end = bin_end;
+            } else {
+                // 兜底：若仍出现空区间，尽量从 prev_end 分配一个 bin
+                if prev_end < len {
+                    bands[i] = spectrum[prev_end];
+                    prev_end += 1;
+                } else {
+                    bands[i] = 0.0;
+                }
             }
         }
         bands
