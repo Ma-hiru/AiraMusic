@@ -43,20 +43,33 @@ impl SpectrumProcessor {
     /// 优化的混合处理 (推荐)
     /// 结合了对数压缩和增益，使频谱看起来更饱满
     pub fn process_auto(data: &[f32]) -> Vec<f32> {
-        // 提高倍率以增强低音量下的细节
-        const LOG_MULTIPLIER: f32 = 100.0;
-        // 归一化基准：假设最大有效幅度为 2.5
-        // log10(1 + 2.5 * 100) = log10(251) ≈ 2.4
-        const NORM_BASE: f32 = 2.4; 
-        const MIN_VAL: f32 = 0.005; // 最小显示高度
+        // 自适应归一化，避免固定基准导致整体过低
+        // 1) 提高低值可见度
+        let log_multiplier: f32 = 300.0;
+        // 2) 依据当前帧的最大值动态归一化（稳健：用分位数防止极端值影响）
+        let mut sorted = data.to_vec();
+        sorted.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+        let max_est = if !sorted.is_empty() {
+            // 95% 分位作为估计最大值
+            let idx = ((sorted.len() as f32 * 0.95).floor() as usize).min(sorted.len() - 1);
+            sorted[idx].max(1e-6)
+        } else {
+            1e-6
+        };
+        // 对应归一化基准
+        let norm_base = (1.0 + max_est * log_multiplier).log10().max(1e-6);
+        // 最小可见高度稍提高，避免过多接近零的条
+        const MIN_VAL: f32 = 0.02;
 
-        data.iter()
+        data
+            .iter()
             .map(|&value| {
-                // 1. 对数压缩
-                let log_val = (1.0 + value * LOG_MULTIPLIER).log10();
-                // 2. 归一化
-                let norm = log_val / NORM_BASE;
-                // 3. 限制范围并保留最小值
+                let v = value.max(0.0);
+                // 对数压缩 + 自适应归一化
+                let log_val = (1.0 + v * log_multiplier).log10();
+                let mut norm = log_val / norm_base;
+                // 轻微的指数映射提升小值细节
+                norm = norm.powf(0.9);
                 norm.clamp(MIN_VAL, 1.0)
             })
             .collect()

@@ -23,15 +23,15 @@ const Bar: FC<object> = () => {
       <BarControl />
       <BarBtns />
       <BarProgress />
-      <div className="absolute left-0 top-0 inset-0 pointer-events-none">
+      <div className="absolute left-0 top-0 inset-0 pointer-events-none z-0">
         <SpectrumCanvas
           isPlaying={isPlaying}
           audioRef={audioRef}
-          gap={50}
+          gap={1}
           color={mainColor}
           className="w-full h-full"
           spectrumOptions={{
-            numBands: 1000,
+            numBands: 500,
             withPeaks: true
           }}
         />
