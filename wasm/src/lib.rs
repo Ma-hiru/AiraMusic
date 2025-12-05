@@ -4,6 +4,7 @@ pub mod kmeans;
 pub mod lyric;
 pub mod path;
 pub mod range;
+pub mod renderer;
 pub mod search;
 pub mod spectrum;
 
