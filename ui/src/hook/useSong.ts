@@ -46,6 +46,7 @@ export function useSong() {
   const [volume, setVolume] = useState(PlayerCtxDefault.volume);
   const [isShuffle, setIsShuffle] = useState(false);
   const [isRepeat, setIsRepeat] = useState(false);
+  const [infoFromCache, setInfoFromCache] = useState(false);
   const volumeBeforeMute = useRef(volume);
   const TransitionLock = useLock();
   const progress = useRef(PlayerCtxDefault.getProgress());
@@ -322,7 +323,10 @@ export function useSong() {
   // 监听 info.audio 地址变化以播放音频
   useLayoutEffect(() => {
     const audio = audioRef.current;
-    if (!audio || !info.audio) return;
+    if (!audio || !info.audio || infoFromCache) {
+      setInfoFromCache(false);
+      return;
+    }
     audio.src = info.audio;
     const handleCanPlay = () => {
       audio.play().catch((err) => {
@@ -341,7 +345,7 @@ export function useSong() {
     return () => {
       audio.removeEventListener("canplay", handleCanPlay);
     };
-  }, [info.audio]);
+  }, [info.audio, infoFromCache]);
   // 初始化 progress 和 volume 状态
   useEffect(() => {
     const audio = audioRef.current;
@@ -388,6 +392,32 @@ export function useSong() {
   }, [autoNextTrack, mute]);
   // 清理预加载定时器
   useEffect(() => cancelScheduledPreload, [cancelScheduledPreload]);
+  // 从缓存中恢复播放状态
+  useEffect(() => {
+    if (infoFromCache) {
+      const audio = audioRef.current;
+      audio && audio.pause();
+    }
+  }, [infoFromCache]);
+  useEffect(() => {
+    if (info.id === PlayerCtxDefault.info.id) {
+      Store.fetchObject<{ info: typeof info; progress: ReturnType<typeof getProgress> }>(
+        "playerInfo"
+      )
+        .then((cache) => {
+          TransitionLock.run(() => {
+            if (cache && cache.info.id !== info.id) {
+              const { info, progress } = cache;
+              setInfo(info);
+              progress.currentTime && changeCurrentTime(progress.currentTime);
+              setInfoFromCache(true);
+            }
+          }, true);
+        })
+        .catch();
+    }
+    // eslint-disable-next-line
+  }, []);
   // Media Session API 支持
   useMediaSession({
     info,

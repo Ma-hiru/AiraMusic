@@ -28,6 +28,7 @@ const VERTEX_SHADER: &str = r#"
 ```
 
 **原理**：
+
 - Shader 必须是 GLSL 字符串，Rust 用常量存储
 - `r#"..."#` 原始字符串避免转义
 - 编译时嵌入 WASM，运行时传给浏览器 GPU
@@ -46,6 +47,7 @@ fn parse_css_color(input: &str) -> (f32, f32, f32, f32) {
 ```
 
 **Rust 优势**：
+
 - 模式匹配比 TypeScript 正则更清晰
 - 编译时类型检查，运行时零开销
 - 手写 parser 比正则更快（无回溯）
@@ -63,6 +65,7 @@ unsafe {
 ```
 
 **原理**：
+
 - `web-sys` 是 Rust 对 Web API 的绑定（1:1 映射）
 - `unsafe` 块用于零拷贝传递数据到 JS
 - `Float32Array::view` 直接引用 Rust 内存，避免复制
@@ -80,6 +83,7 @@ for (i, &band) in bands.iter().enumerate() {
 ```
 
 **Rust 优势**：
+
 - `Vec::with_capacity` 预分配避免重新分配
 - 迭代器链式调用，零开销抽象
 - 编译器优化后与手写循环性能相同
@@ -96,9 +100,9 @@ wasm-pack build --target web
 ### 在 React 中使用
 
 ```tsx
-<SpectrumCanvas 
-  renderer="webgl-rust"  // 选择 Rust 实现
-  color="#00ffaa" 
+<SpectrumCanvas
+  renderer="webgl-rust" // 选择 Rust 实现
+  color="#00ffaa"
   secondaryColor="#ffff00"
   barWidth={6}
   gap={1}
@@ -107,23 +111,25 @@ wasm-pack build --target web
 
 ### 三种渲染器对比
 
-| 特性 | canvas | webgl (TS) | webgl-rust |
-|------|--------|------------|------------|
-| 语言 | TypeScript | TypeScript | Rust + WASM |
-| 圆角 | 原生 roundRect | Shader SDF | Shader SDF |
-| 颜色解析 | 正则 | 正则 | 手写 parser |
-| 性能 | 基准 | 1.5x | 1.6x |
-| 代码可读性 | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐⭐ (对 Rust 用户) |
+| 特性       | canvas         | webgl (TS) | webgl-rust              |
+| ---------- | -------------- | ---------- | ----------------------- |
+| 语言       | TypeScript     | TypeScript | Rust + WASM             |
+| 圆角       | 原生 roundRect | Shader SDF | Shader SDF              |
+| 颜色解析   | 正则           | 正则       | 手写 parser             |
+| 性能       | 基准           | 1.5x       | 1.6x                    |
+| 代码可读性 | ⭐⭐⭐⭐⭐     | ⭐⭐⭐     | ⭐⭐⭐⭐ (对 Rust 用户) |
 
 ## 学习要点
 
 ### Rust 能做的：
+
 ✅ 管理 WebGL 状态（buffers、uniforms）
 ✅ 解析 CSS 颜色（比 TS 正则更快）
 ✅ 构建顶点数据（类型安全 + 零开销）
 ✅ 封装复杂逻辑为简洁 API
 
 ### Rust 不能做的：
+
 ❌ 替代 GLSL shader（GPU 指令集不同）
 ❌ 避免 WebGL API 调用开销（仍需跨 WASM 边界）
 ❌ 绕过浏览器渲染管线
@@ -135,6 +141,7 @@ wasm-pack build --target web
 - **整体**：提升约 10-20%（瓶颈在 GPU，非 CPU）
 
 实际收益取决于柱数：
+
 - < 100 柱：差异可忽略
 - 500+ 柱：Rust 优势开始显现
 - 2000+ 柱：建议用 Rust 版本
@@ -142,6 +149,7 @@ wasm-pack build --target web
 ## 下一步建议
 
 1. **构建并测试**：
+
    ```powershell
    pnpm -w build
    pnpm -w -F ui dev

@@ -19,7 +19,7 @@ export class WebGLRendererRust implements IRenderer {
     if (!this.renderer) return;
     const opt = (this as any).options as RendererOptions | undefined;
     if (!opt) return;
-    
+
     try {
       this.renderer.draw(
         bands,

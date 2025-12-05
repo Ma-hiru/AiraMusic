@@ -128,17 +128,33 @@ export class WebGLRenderer implements IRenderer {
     const program = this.program;
     const opt = this.options;
     if (!gl || !program || !opt) return;
-    const { width, height, gap, barWidth, color, secondaryColor, dpr, roundedCorners = "top" } = opt;
+    const {
+      width,
+      height,
+      gap,
+      barWidth,
+      color,
+      secondaryColor,
+      dpr,
+      roundedCorners = "top"
+    } = opt;
     gl.useProgram(program);
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
     gl.clearColor(0, 0, 0, 0);
     gl.uniform2f(this.resolutionLoc!, width, height);
     gl.uniform1f(this.pixelRatioLoc!, dpr);
-    
-    const cornerMode = roundedCorners === "none" ? 0 : roundedCorners === "top" ? 1 : roundedCorners === "bottom" ? 2 : 3;
+
+    const cornerMode =
+      roundedCorners === "none"
+        ? 0
+        : roundedCorners === "top"
+          ? 1
+          : roundedCorners === "bottom"
+            ? 2
+            : 3;
     gl.uniform1i(this.roundedCornersLoc!, cornerMode);
-    
+
     const rgbaBottom = this.parseCssColor(color) || { r: 0, g: 1, b: 0.666, a: 1 };
     const rgbaTop = this.parseCssColor(secondaryColor || color) || rgbaBottom;
     gl.uniform4f(this.colorBottomLoc!, rgbaBottom.r, rgbaBottom.g, rgbaBottom.b, rgbaBottom.a);

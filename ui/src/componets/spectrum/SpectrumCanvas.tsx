@@ -91,7 +91,17 @@ const SpectrumCanvas: FC<SpectrumCanvasProps> = ({
       }
       rendererRef.current = null;
     };
-  }, [barWidth, color, gap, isPlaying, isReady, renderer, roundedCorners, secondaryColor, spectrumData]);
+  }, [
+    barWidth,
+    color,
+    gap,
+    isPlaying,
+    isReady,
+    renderer,
+    roundedCorners,
+    secondaryColor,
+    spectrumData
+  ]);
   return <canvas ref={canvasRef} {...rest} />;
 };
 export default memo(SpectrumCanvas);

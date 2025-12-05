@@ -41,7 +41,7 @@ export class Canvas2DRenderer implements IRenderer {
       gradient.addColorStop(1, secondaryColor || color);
       ctx.fillStyle = gradient;
       const radius = Math.min(3, Math.floor(computedBarWidth / 2), Math.floor(barHeight / 2));
-      
+
       let radii: number[];
       if (roundedCorners === "both") {
         radii = [radius, radius, radius, radius];
@@ -49,11 +49,12 @@ export class Canvas2DRenderer implements IRenderer {
         radii = [0, 0, radius, radius];
       } else if (roundedCorners === "none") {
         radii = [0, 0, 0, 0];
-      } else { // "top"
+      } else {
+        // "top"
         radii = [radius, radius, 0, 0];
       }
-      
-      if (radii.some(r => r > 0) && typeof (ctx as any).roundRect === "function") {
+
+      if (radii.some((r) => r > 0) && typeof (ctx as any).roundRect === "function") {
         ctx.beginPath();
         ctx.roundRect(x, y, computedBarWidth, barHeight, [radius, radius, 0, 0]);
         ctx.fill();

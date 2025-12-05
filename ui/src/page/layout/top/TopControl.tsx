@@ -2,6 +2,8 @@ import { FC, memo, useCallback, useEffect, useState } from "react";
 import { Minus, PictureInPicture, Square, SquareMinus, X } from "lucide-react";
 import { NoDrag } from "@mahiru/ui/componets/public/Drag";
 import { useMiniPlayerSync } from "@mahiru/ui/hook/useMiniPlayerSync";
+import { usePlayer } from "@mahiru/ui/ctx/PlayerCtx";
+import { Store } from "@mahiru/ui/store";
 
 interface ControlButtonProps {
   windowId: WindowType;
@@ -10,6 +12,7 @@ interface ControlButtonProps {
 
 const TopControl: FC<ControlButtonProps> = ({ windowId, maximizable = true }) => {
   const [isMax, setIsMax] = useState(false);
+  const { info, getProgress } = usePlayer();
 
   const maximize = useCallback(() => {
     if (isMax) {
@@ -26,7 +29,8 @@ const TopControl: FC<ControlButtonProps> = ({ windowId, maximizable = true }) =>
   }, [windowId]);
   const close = useCallback(() => {
     window.node.event.close(windowId);
-  }, [windowId]);
+    void Store.storeObject("playerInfo", { info, progress: getProgress() });
+  }, [getProgress, info, windowId]);
   const { openMiniWin } = useMiniPlayerSync();
 
   useEffect(() => {
