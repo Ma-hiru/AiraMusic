@@ -13,4 +13,5 @@ export function useAppLoaded(condition: boolean) {
       loaded = true;
     }
   }, [condition]);
+  return loaded;
 }

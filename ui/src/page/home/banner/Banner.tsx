@@ -17,7 +17,17 @@ const Banner: FC<object> = () => {
       setBanner(result.banners);
     });
   }, []);
-  useAppLoaded(!!banner.length);
+  const loaded = useAppLoaded(!!banner.length);
+  useEffect(() => {
+    if (loaded) return;
+    setTimeout(() => {
+      window.node.event.loaded({
+        win: "main",
+        broadcast: false,
+        showAfterLoaded: true
+      });
+    }, 5000);
+  }, [loaded]);
   const titleColor = useTextColorOnThemeColor();
   const handleClick = useCallback(
     async (i: number) => {

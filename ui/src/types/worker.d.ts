@@ -9,3 +9,22 @@ type KMeansWorkerResult = {
   result: string[];
   error?: string;
 };
+
+type SpectrumWorkerArgs =
+  | {
+      type: "init";
+      fftSize: number;
+      numBands: number;
+      withPeaks: boolean;
+      sampleRate: number;
+    }
+  | { type: "analyze"; data: Float32Array }
+  | { type: "analyzeWithPeaks"; data: Float32Array }
+  | { type: "setSmoothing"; factor: number }
+  | { type: "reset" };
+
+type SpectrumWorkerResult =
+  | { type: "ready" }
+  | { type: "spectrum"; bands: number[] }
+  | { type: "spectrumWithPeaks"; data: number[] }
+  | { type: "error"; error: string };
