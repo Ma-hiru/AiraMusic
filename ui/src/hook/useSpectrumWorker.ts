@@ -13,7 +13,7 @@ export type SpectrumOptions = {
   withPeaks?: boolean;
 };
 
-export function useSpectrum(
+export function useSpectrumWorker(
   audioRef: RefObject<Nullable<HTMLAudioElement>>,
   isPlaying: boolean,
   options: SpectrumOptions = {}
@@ -58,17 +58,35 @@ export function useSpectrum(
     );
     animationFrameRef.current = requestAnimationFrame(updateSpectrum);
   }, [isReady, isPlaying, withPeaks]);
+  // 初始化 AudioContext 和 AnalyserNode，connect只在一个audioRef上执行一次
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
-
     const ctx = new AudioContext();
     const source = ctx.createMediaElementSource(audio);
     const analyser = ctx.createAnalyser();
     analyser.smoothingTimeConstant = 0;
-    analyser.fftSize = fftSize;
     source.connect(analyser);
     analyser.connect(ctx.destination);
+    analyserRef.current = analyser;
+    audioCtxRef.current = ctx;
+    return () => {
+      source.disconnect();
+      analyser.disconnect();
+      void ctx.close().catch();
+      analyserRef.current = null;
+      audioCtxRef.current = null;
+    };
+  }, [audioRef]);
+  // 初始化 SpectrumWorker，随着 fftSize、numBands、withPeaks 变化而重新初始化
+  useEffect(() => {
+    const audio = audioRef.current;
+    const analyser = analyserRef.current;
+    const audioCtx = audioCtxRef.current;
+    if (!audio || !analyser || !audioCtx) return;
+
+    analyser.smoothingTimeConstant = 0;
+    analyser.fftSize = fftSize;
 
     const samples = new Float32Array(analyser.fftSize);
     const worker = new SpectrumWorker();
@@ -128,50 +146,37 @@ export function useSpectrum(
 
     worker.postMessage({
       type: "init",
-      sampleRate: ctx.sampleRate,
+      sampleRate: audioCtx.sampleRate,
       fftSize: analyser.fftSize,
       numBands,
       withPeaks
     } satisfies SpectrumWorkerArgs);
 
-    analyserRef.current = analyser;
-    audioCtxRef.current = ctx;
     workerRef.current = worker;
     samplesRef.current = samples;
 
     return () => {
-      try {
-        analyser.disconnect();
-      } catch {
-        /** empty */
-      }
-      try {
-        source.disconnect();
-      } catch {
-        /** empty */
-      }
       worker.terminate();
-      void ctx.close().catch();
-      analyserRef.current = null;
-      audioCtxRef.current = null;
+      setIsReady(false);
       workerRef.current = null;
       samplesRef.current = null;
-      setIsReady(false);
     };
   }, [audioRef, fftSize, numBands, withPeaks]);
+  // 当 numBands 或 withPeaks 变化时，更新 spectrumData 的结构
   useEffect(() => {
     spectrumData.current = {
       bands: new Float32Array(numBands),
       peaks: withPeaks ? new Float32Array(numBands) : undefined
     };
   }, [numBands, withPeaks]);
+  // 根据 isPlaying 和 isReady 状态，启动或停止频谱数据的更新循环
   useEffect(() => {
     if (!isReady || !isPlaying) return;
     animationFrameRef.current = requestAnimationFrame(updateSpectrum);
     return () => {
       cancelAnimationFrame(animationFrameRef.current);
     };
-  }, [isReady, isPlaying, updateSpectrum]);
+  }, [isPlaying, isReady, updateSpectrum]);
   return {
     spectrumData,
     isReady,
