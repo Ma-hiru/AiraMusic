@@ -3,9 +3,10 @@ export type RendererOptions = {
   height: number;
   dpr: number;
   color: string;
-  secondaryColor: string;
+  secondaryColor?: string;
   gap: number;
   barWidth?: number;
+  roundedCorners?: "top" | "bottom" | "both" | "none";
 };
 
 export interface IRenderer {

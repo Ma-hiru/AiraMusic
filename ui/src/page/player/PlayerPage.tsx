@@ -6,7 +6,8 @@ import Background from "./Background";
 import Lyric from "./Lyric";
 import LyricChange from "./LyricChange";
 import Title from "./Title";
-import Artist from "@mahiru/ui/page/player/Artist";
+import Artist from "./Artist";
+import Spectrum from "./Spectrum";
 
 export const PlayerPage: FC = () => {
   return (
@@ -19,9 +20,10 @@ export const PlayerPage: FC = () => {
           <div className="w-full h-[150px] sm:h-[200px] md:h-[250px] lg:h-[300px]">
             <Cover />
           </div>
-          <div className="h-30 w-full flex flex-col justify-center gap-2">
+          <div className="h-40 w-full flex flex-col justify-center gap-2">
             <Artist />
             <Control />
+            <Spectrum />
           </div>
         </div>
       </div>

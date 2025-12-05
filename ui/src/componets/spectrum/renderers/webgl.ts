@@ -13,6 +13,7 @@ export class WebGLRenderer implements IRenderer {
   private colorBottomLoc: WebGLUniformLocation | null = null;
   private colorTopLoc: WebGLUniformLocation | null = null;
   private pixelRatioLoc: WebGLUniformLocation | null = null;
+  private roundedCornersLoc: WebGLUniformLocation | null = null;
   private options: RendererOptions | null = null;
 
   init(canvas: HTMLCanvasElement, options: RendererOptions) {
@@ -49,6 +50,7 @@ export class WebGLRenderer implements IRenderer {
       uniform vec4 u_colorBottom;
       uniform vec4 u_colorTop;
       uniform float u_pixelRatio;
+      uniform int u_roundedCorners; // 0=none, 1=top, 2=bottom, 3=both
       void main() {
         float canvasHeight = u_resolution.y;
         float pixelHeight = canvasHeight * u_pixelRatio;
@@ -62,14 +64,32 @@ export class WebGLRenderer implements IRenderer {
         float h = v_rect.w;
         float r = min(v_radius, min(w * 0.5, h * 0.5));
 
-        vec2 cL = vec2(x + r, y + r);
-        vec2 cR = vec2(x + w - r, y + r);
+        // Top corners
+        vec2 cLT = vec2(x + r, y + r);
+        vec2 cRT = vec2(x + w - r, y + r);
+        // Bottom corners
+        vec2 cLB = vec2(x + r, y + h - r);
+        vec2 cRB = vec2(x + w - r, y + h - r);
+        
         bool inTopBand = p.y <= (y + r);
-        if (r > 0.0 && inTopBand) {
-          if (p.x < (x + r)) {
-            if (distance(p, cL) > r) discard;
-          } else if (p.x > (x + w - r)) {
-            if (distance(p, cR) > r) discard;
+        bool inBottomBand = p.y >= (y + h - r);
+        
+        if (r > 0.0) {
+          // Top corners (mode 1=top, 3=both)
+          if ((u_roundedCorners == 1 || u_roundedCorners == 3) && inTopBand) {
+            if (p.x < (x + r)) {
+              if (distance(p, cLT) > r) discard;
+            } else if (p.x > (x + w - r)) {
+              if (distance(p, cRT) > r) discard;
+            }
+          }
+          // Bottom corners (mode 2=bottom, 3=both)
+          if ((u_roundedCorners == 2 || u_roundedCorners == 3) && inBottomBand) {
+            if (p.x < (x + r)) {
+              if (distance(p, cLB) > r) discard;
+            } else if (p.x > (x + w - r)) {
+              if (distance(p, cRB) > r) discard;
+            }
           }
         }
 
@@ -93,10 +113,11 @@ export class WebGLRenderer implements IRenderer {
     this.positionLoc = gl.getAttribLocation(program, "a_position");
     this.rectLoc = gl.getAttribLocation(program, "a_rect");
     this.radiusLoc = gl.getAttribLocation(program, "a_radius");
-    this.resolutionLoc = gl.getUniformLocation(program, "u_resolution");
     this.colorBottomLoc = gl.getUniformLocation(program, "u_colorBottom");
     this.colorTopLoc = gl.getUniformLocation(program, "u_colorTop");
     this.pixelRatioLoc = gl.getUniformLocation(program, "u_pixelRatio");
+    this.roundedCornersLoc = gl.getUniformLocation(program, "u_roundedCorners");
+    this.resolutionLoc = gl.getUniformLocation(program, "u_resolution");
     this.positionBuffer = gl.createBuffer();
     this.rectBuffer = gl.createBuffer();
     this.radiusBuffer = gl.createBuffer();
@@ -107,14 +128,17 @@ export class WebGLRenderer implements IRenderer {
     const program = this.program;
     const opt = this.options;
     if (!gl || !program || !opt) return;
-    const { width, height, gap, barWidth, color, secondaryColor, dpr } = opt;
+    const { width, height, gap, barWidth, color, secondaryColor, dpr, roundedCorners = "top" } = opt;
     gl.useProgram(program);
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
     gl.clearColor(0, 0, 0, 0);
-    gl.clear(gl.COLOR_BUFFER_BIT);
     gl.uniform2f(this.resolutionLoc!, width, height);
     gl.uniform1f(this.pixelRatioLoc!, dpr);
+    
+    const cornerMode = roundedCorners === "none" ? 0 : roundedCorners === "top" ? 1 : roundedCorners === "bottom" ? 2 : 3;
+    gl.uniform1i(this.roundedCornersLoc!, cornerMode);
+    
     const rgbaBottom = this.parseCssColor(color) || { r: 0, g: 1, b: 0.666, a: 1 };
     const rgbaTop = this.parseCssColor(secondaryColor || color) || rgbaBottom;
     gl.uniform4f(this.colorBottomLoc!, rgbaBottom.r, rgbaBottom.g, rgbaBottom.b, rgbaBottom.a);

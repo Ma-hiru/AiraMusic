@@ -1,8 +1,9 @@
 import { FC, memo, useRef, HTMLAttributes, useEffect } from "react";
 import { SpectrumOptions } from "@mahiru/ui/hook/useSpectrumWorker";
-import { IRenderer } from "./renderers/IRenderer";
+import { IRenderer, RendererOptions } from "./renderers/IRenderer";
 import { Canvas2DRenderer } from "./renderers/canvas2d";
 import { WebGLRenderer } from "./renderers/webgl";
+import { WebGLRendererRust } from "./renderers/webgl-rust";
 import { useSpectrum } from "@mahiru/ui/ctx/SpectrumCtx";
 
 type SpectrumCanvasProps = HTMLAttributes<HTMLCanvasElement> & {
@@ -11,7 +12,8 @@ type SpectrumCanvasProps = HTMLAttributes<HTMLCanvasElement> & {
   secondaryColor?: string;
   gap?: number;
   barWidth?: number;
-  renderer?: "canvas" | "webgl";
+  roundedCorners?: "top" | "bottom" | "both" | "none";
+  renderer?: "canvas" | "webgl" | "webgl-rust";
   spectrumOptions?: SpectrumOptions;
 };
 
@@ -22,6 +24,7 @@ const SpectrumCanvas: FC<SpectrumCanvasProps> = ({
   spectrumOptions,
   secondaryColor = "#ffffff",
   barWidth,
+  roundedCorners = "top",
   renderer = "canvas",
   ...rest
 }) => {
@@ -47,16 +50,25 @@ const SpectrumCanvas: FC<SpectrumCanvasProps> = ({
       canvas.width = targetW;
       canvas.height = targetH;
     }
-    const render = renderer === "webgl" ? new WebGLRenderer() : new Canvas2DRenderer();
-    render.init(canvas, {
+    const render =
+      renderer === "webgl"
+        ? new WebGLRenderer()
+        : renderer === "webgl-rust"
+          ? new WebGLRendererRust()
+          : new Canvas2DRenderer();
+    const opts: RendererOptions = {
       width: cssW,
       height: cssH,
       dpr,
       color,
       gap,
       barWidth,
-      secondaryColor
-    });
+      secondaryColor,
+      roundedCorners
+    };
+    render.init(canvas, opts);
+    // 保存 options 供 webgl-rust 使用
+    (render as any).options = opts;
     rendererRef.current = render;
     let animationFrameId: number;
     const draw = () => {
@@ -79,7 +91,7 @@ const SpectrumCanvas: FC<SpectrumCanvasProps> = ({
       }
       rendererRef.current = null;
     };
-  }, [barWidth, color, gap, isPlaying, isReady, renderer, secondaryColor, spectrumData]);
+  }, [barWidth, color, gap, isPlaying, isReady, renderer, roundedCorners, secondaryColor, spectrumData]);
   return <canvas ref={canvasRef} {...rest} />;
 };
 export default memo(SpectrumCanvas);

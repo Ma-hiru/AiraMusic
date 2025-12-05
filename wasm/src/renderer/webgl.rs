@@ -31,6 +31,7 @@ uniform vec2 u_resolution;
 uniform vec4 u_colorBottom;
 uniform vec4 u_colorTop;
 uniform float u_pixelRatio;
+uniform int u_roundedCorners;
 void main() {
     float canvasHeight = u_resolution.y;
     float pixelHeight = canvasHeight * u_pixelRatio;
@@ -44,14 +45,28 @@ void main() {
     float h = v_rect.w;
     float r = min(v_radius, min(w * 0.5, h * 0.5));
 
-    vec2 cL = vec2(x + r, y + r);
-    vec2 cR = vec2(x + w - r, y + r);
+    vec2 cLT = vec2(x + r, y + r);
+    vec2 cRT = vec2(x + w - r, y + r);
+    vec2 cLB = vec2(x + r, y + h - r);
+    vec2 cRB = vec2(x + w - r, y + h - r);
+    
     bool inTopBand = p.y <= (y + r);
-    if (r > 0.0 && inTopBand) {
-        if (p.x < (x + r)) {
-            if (distance(p, cL) > r) discard;
-        } else if (p.x > (x + w - r)) {
-            if (distance(p, cR) > r) discard;
+    bool inBottomBand = p.y >= (y + h - r);
+    
+    if (r > 0.0) {
+        if ((u_roundedCorners == 1 || u_roundedCorners == 3) && inTopBand) {
+            if (p.x < (x + r)) {
+                if (distance(p, cLT) > r) discard;
+            } else if (p.x > (x + w - r)) {
+                if (distance(p, cRT) > r) discard;
+            }
+        }
+        if ((u_roundedCorners == 2 || u_roundedCorners == 3) && inBottomBand) {
+            if (p.x < (x + r)) {
+                if (distance(p, cLB) > r) discard;
+            } else if (p.x > (x + w - r)) {
+                if (distance(p, cRB) > r) discard;
+            }
         }
     }
 
@@ -82,6 +97,7 @@ pub struct WebGLRenderer {
     color_bottom_loc: Option<WebGlUniformLocation>,
     color_top_loc: Option<WebGlUniformLocation>,
     pixel_ratio_loc: Option<WebGlUniformLocation>,
+    rounded_corners_loc: Option<WebGlUniformLocation>,
     width: f32,
     height: f32,
     dpr: f32,
@@ -107,9 +123,8 @@ impl WebGLRenderer {
 
         let canvas_width = (width * dpr).floor() as i32;
         let canvas_height = (height * dpr).floor() as i32;
-        canvas.set_width(canvas_width.max(1) as u32);
-        canvas.set_height(canvas_height.max(1) as u32);
-        gl.viewport(0, 0, canvas_width, canvas_height);
+        canvas.set_width(canvas_width as u32);
+        canvas.set_height(canvas_height as u32);
 
         // 编译 shader
         let vs = compile_shader(&gl, GL::VERTEX_SHADER, VERTEX_SHADER)?;
@@ -124,6 +139,7 @@ impl WebGLRenderer {
         let color_bottom_loc = gl.get_uniform_location(&program, "u_colorBottom");
         let color_top_loc = gl.get_uniform_location(&program, "u_colorTop");
         let pixel_ratio_loc = gl.get_uniform_location(&program, "u_pixelRatio");
+        let rounded_corners_loc = gl.get_uniform_location(&program, "u_roundedCorners");
 
         // 创建 buffers
         let position_buffer = gl
@@ -145,6 +161,7 @@ impl WebGLRenderer {
             color_bottom_loc,
             color_top_loc,
             pixel_ratio_loc,
+            rounded_corners_loc,
             width,
             height,
             dpr,
@@ -153,7 +170,7 @@ impl WebGLRenderer {
         })
     }
 
-    pub fn draw(&self, bands: &[f32], color: &str, secondary_color: &str) -> Result<(), JsValue> {
+    pub fn draw(&self, bands: &[f32], color: &str, secondary_color: &str, rounded_corners: &str) -> Result<(), JsValue> {
         let gl = &self.gl;
 
         gl.use_program(Some(&self.program));
@@ -165,6 +182,15 @@ impl WebGLRenderer {
         // 设置 uniforms
         gl.uniform2f(self.resolution_loc.as_ref(), self.width, self.height);
         gl.uniform1f(self.pixel_ratio_loc.as_ref(), self.dpr);
+        
+        let corner_mode = match rounded_corners {
+            "none" => 0,
+            "top" => 1,
+            "bottom" => 2,
+            "both" => 3,
+            _ => 1,
+        };
+        gl.uniform1i(self.rounded_corners_loc.as_ref(), corner_mode);
 
         let rgba_bottom = parse_css_color(color);
         let rgba_top = parse_css_color(secondary_color);

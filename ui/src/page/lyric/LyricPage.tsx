@@ -20,16 +20,18 @@ const LyricPage: FC<object> = () => {
     tl: []
   });
   const [info, setInfo] = useState<Nullable<LyricInit["info"]>>(null);
+  const [color, setColor] = useState(() => {
+    return window.localStorage.getItem("lyricWindowColor") || undefined;
+  });
   const [lyricSync, setLyricSync] = useImmer<LyricSync>({
     currentTime: 0,
     duration: 0,
     lyricVersion: "raw",
-    isPlaying: false
+    isPlaying: false,
+    themeColor: color
   });
   const [showBg, setShowBg] = useState(false);
-  const [color, setColor] = useState(() => {
-    return window.localStorage.getItem("lyricWindowColor") || "#FFFFFF";
-  });
+
   const [fontSize, setFontSize] = useState<FontSize>(() => {
     return (window.localStorage.getItem("lyricWindowFontSize") as FontSize) || "16px";
   });
@@ -48,6 +50,9 @@ const LyricPage: FC<object> = () => {
           const lyricInit = data as LyricInit;
           setLyricLines(lyricInit.lyricLines);
           setInfo(lyricInit.info);
+          setLyricSync((draft) => {
+            draft.themeColor = lyricInit.themeColor;
+          });
           update();
         } else if (type === "lyricSync") {
           const lyricSync = data as LyricSync;
@@ -56,6 +61,7 @@ const LyricPage: FC<object> = () => {
             draft.duration = lyricSync.duration;
             draft.lyricVersion = lyricSync.lyricVersion;
             draft.isPlaying = lyricSync.isPlaying;
+            draft.themeColor = lyricSync.themeColor;
           });
           update();
         }
@@ -92,9 +98,14 @@ const LyricPage: FC<object> = () => {
   }, [lyricSync.isPlaying]);
   // 颜色变化
   useEffect(() => {
-    changeLyricComponentColorByCSSVar(color);
-    window.localStorage.setItem("lyricWindowColor", color);
-  }, [color]);
+    if (color !== undefined) {
+      changeLyricComponentColorByCSSVar(color);
+      window.localStorage.setItem("lyricWindowColor", color);
+    } else {
+      changeLyricComponentColorByCSSVar(lyricSync.themeColor || "#ffffff");
+      window.localStorage.removeItem("lyricWindowColor");
+    }
+  }, [color, lyricSync.themeColor]);
   // 字体大小变化
   useEffect(() => {
     changeLyricComponentFontSizeByCSSVar(fontSize);

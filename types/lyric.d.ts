@@ -61,6 +61,7 @@ type LyricInit = {
     alias: string;
     tsTitle: string;
   };
+  themeColor?: string;
 };
 
 type LyricSync = {
@@ -68,4 +69,5 @@ type LyricSync = {
   duration: number;
   lyricVersion: LyricVersionType;
   isPlaying: boolean;
+  themeColor?: string;
 };

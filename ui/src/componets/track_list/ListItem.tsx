@@ -88,6 +88,7 @@ const ListItem: FC<ListItemProps> = ({
         playListID={playListID}
         onClick={play}
         entry={entry}
+        active={active}
       />
       {/*名称*/}
       <ListItemName track={track} disabled={disabled} active={active} onClick={play} />

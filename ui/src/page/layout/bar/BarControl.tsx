@@ -13,24 +13,25 @@ const BarControl: FC<object> = () => {
       <SkipBack
         className="hover:scale-90 active:scale-80 cursor-pointer ease-in-out transition-all duration-300 size-5"
         // fill={"#171b20"}
-        fill={mainColor}
-        color={mainColor}
+        fill={textColor}
+        color={textColor}
         onClick={lastTrack}
       />
       <div
         className="hover:scale-95 active:scale-85 cursor-pointer ease-in-out transition-all duration-300 bg-[var(--theme-color-main)] hover:bg-[var(--theme-color-main)]/50 active:bg-[var(--theme-color-main)]/80 p-2 rounded-full"
+        style={{ background: textColor }}
         onClick={play}>
         {isPlaying ? (
-          <Pause className="size-5" color={textColor} fill={textColor} />
+          <Pause className="size-5" color={mainColor} fill={mainColor} />
         ) : (
-          <Play className="size-5" color={textColor} fill={textColor} />
+          <Play className="size-5" color={mainColor} fill={mainColor} />
         )}
       </div>
       <SkipForward
         className="hover:scale-90 active:scale-80 cursor-pointer ease-in-out transition-all duration-300 size-5"
         // fill={"#171b20"}
-        color={mainColor}
-        fill={mainColor}
+        color={textColor}
+        fill={textColor}
         onClick={nextTrack}
       />
     </div>

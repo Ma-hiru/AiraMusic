@@ -7,14 +7,20 @@ import { useLayout } from "@mahiru/ui/ctx/LayoutCtx";
 const BarSpectrum: FC<object> = () => {
   const { PlayerModalVisible } = useLayout();
   const { mainColor, secondaryColor } = useThemeColor();
+  const color = Color(mainColor);
+  const secondary_color = Color(secondaryColor);
   return (
     <SpectrumCanvas
       isPlaying={!PlayerModalVisible}
       gap={1}
-      renderer="webgl"
+      renderer="webgl-rust"
       barWidth={3.8}
-      color={Color(secondaryColor).alpha(0.25).string()}
-      secondaryColor={Color(mainColor).alpha(0.35).string()}
+      color={color.isLight() ? color.alpha(0.1).string() : color.alpha(0.6).string()}
+      secondaryColor={
+        secondary_color.isLight()
+          ? secondary_color.alpha(0.5).string()
+          : secondary_color.alpha(0.8).string()
+      }
       className="w-full h-full"
       spectrumOptions={{
         numBands: 340,

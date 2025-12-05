@@ -53,7 +53,7 @@ const Carousel: FC<CarouselProps> = ({
       onMouseLeave={startAutoPlay}>
       <div className="w-[89%] h-[89%] flex justify-center overflow-hidden">
         <div
-          className="w-full flex transition-transform duration-300 ease-in-out"
+          className="w-full flex transition-transform duration-300 ease-in-out rounded-md"
           style={{ transform: `translateX(-${index * 100}%)` }}>
           {items.map((item, index) => (
             <div key={index} className="w-full shrink-0 flex-col relative">

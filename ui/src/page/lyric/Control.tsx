@@ -9,11 +9,11 @@ import { ImageSize, NeteaseImageSizeFilter } from "@mahiru/ui/utils/filter";
 
 type FontSize = `${number}px` | `${number}rem` | `${number}em`;
 
-type ControlProps = HTMLAttributes<HTMLDivElement> & {
+type ControlProps = Omit<HTMLAttributes<HTMLDivElement>, "color"> & {
   showBg: boolean;
   setShowBg: (show: boolean) => void;
-  color: string;
-  setColor: (color: string) => void;
+  color?: string;
+  setColor: (color?: string) => void;
   info: Nullable<LyricInit["info"]>;
   lyricSync: LyricSync;
   lyricLines: FullVersionLyricLine;
@@ -37,7 +37,6 @@ const Control: FC<ControlProps> = ({
   ...rest
 }) => {
   const [openColorSelect, setOpenColorSelect] = useState(false);
-
   const setLyricVersion = useCallback((version: LyricVersionType) => {
     window.node.event.sendMessageTo({
       from: "lyric",
@@ -88,7 +87,7 @@ const Control: FC<ControlProps> = ({
         "w-screen px-2 py-1",
         showBg && "bg-black/40",
         css`
-          color: ${color};
+          color: ${color || lyricSync.themeColor || "#ffffff"};
         `
       )}
       drag={showBg}
@@ -102,13 +101,26 @@ const Control: FC<ControlProps> = ({
           <NoDrag
             onClick={() => setOpenColorSelect(!openColorSelect)}
             className="relative size-4 rounded-sm cursor-pointer mr-1"
-            style={{ backgroundColor: color }}>
+            style={{ backgroundColor: color || lyricSync.themeColor || "#ffffff" }}>
             <NoDrag
               className="absolute top-full mt-2 flex justify-start items-center gap-1 ease-in-out duration-300 transition-opacity"
               style={{
                 opacity: openColorSelect ? 1 : 0,
                 pointerEvents: openColorSelect ? "auto" : "none"
               }}>
+              {lyricSync.themeColor && (
+                <NoDrag
+                  className="size-4 rounded-sm cursor-pointer text-[8px] font-semibold"
+                  style={{ backgroundColor: lyricSync.themeColor }}
+                  onClick={() => {
+                    if (lyricSync.themeColor) {
+                      setColor(undefined);
+                      setOpenColorSelect(false);
+                    }
+                  }}>
+                  主
+                </NoDrag>
+              )}
               {presetColors.map((presetColor) => {
                 if (presetColor === color) return null;
                 return (

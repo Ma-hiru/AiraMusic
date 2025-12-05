@@ -9,6 +9,7 @@ interface ListItemCoverProps {
   playListID?: number;
   onClick?: NormalFunc;
   entry: Nullable<PlaylistCacheEntry>;
+  active: boolean;
 }
 
 const ListItemCover: FC<ListItemCoverProps> = ({
@@ -16,7 +17,8 @@ const ListItemCover: FC<ListItemCoverProps> = ({
   absoluteIndex,
   playListID,
   onClick,
-  entry
+  entry,
+  active
 }) => {
   const sizedURL = NeteaseImageSizeFilter(track.al.cachedPicUrl || track.al.picUrl, ImageSize.xs);
 
@@ -57,6 +59,7 @@ const ListItemCover: FC<ListItemCoverProps> = ({
         src={cachedCover}
         loading="lazy"
         decoding="async"
+        style={{ boxShadow: active ? "0 0 8px var(--theme-color-main)" : undefined }}
         className="h-full w-full rounded-md object-cover cursor-pointer hover:scale-105 ease-in-out duration-300 transition-all select-none active:scale-95"
         alt={track.al.name}
         onError={onError}

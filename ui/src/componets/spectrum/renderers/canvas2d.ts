@@ -18,7 +18,7 @@ export class Canvas2DRenderer implements IRenderer {
     const ctx = this.ctx;
     const opt = this.options;
     if (!ctx || !opt) return;
-    const { width, height, color, gap, barWidth, secondaryColor } = opt;
+    const { width, height, color, gap, barWidth, secondaryColor, roundedCorners = "top" } = opt;
     ctx.clearRect(0, 0, width, height);
     const count = bands.length;
     const totalGap = gap * Math.max(0, count - 1);
@@ -38,10 +38,22 @@ export class Canvas2DRenderer implements IRenderer {
       const gradient = ctx.createLinearGradient(x, height, x, y);
       gradient.addColorStop(0, color);
       gradient.addColorStop(0.6, color);
-      gradient.addColorStop(1, secondaryColor);
+      gradient.addColorStop(1, secondaryColor || color);
       ctx.fillStyle = gradient;
       const radius = Math.min(3, Math.floor(computedBarWidth / 2), Math.floor(barHeight / 2));
-      if (radius > 0 && typeof (ctx as any).roundRect === "function") {
+      
+      let radii: number[];
+      if (roundedCorners === "both") {
+        radii = [radius, radius, radius, radius];
+      } else if (roundedCorners === "bottom") {
+        radii = [0, 0, radius, radius];
+      } else if (roundedCorners === "none") {
+        radii = [0, 0, 0, 0];
+      } else { // "top"
+        radii = [radius, radius, 0, 0];
+      }
+      
+      if (radii.some(r => r > 0) && typeof (ctx as any).roundRect === "function") {
         ctx.beginPath();
         ctx.roundRect(x, y, computedBarWidth, barHeight, [radius, radius, 0, 0]);
         ctx.fill();

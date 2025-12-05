@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { usePlayer } from "@mahiru/ui/ctx/PlayerCtx";
 import { addMessageHandler, removeMessageHandler } from "@mahiru/ui/utils/message";
+import { useThemeColor } from "@mahiru/ui/hook/useThemeColor";
 
 export function useLyricSync() {
   const [hasOpenLyricWin, setHasOpenLyricWin] = useState(false);
   const { lyricVersion, lyricLines, getProgress, isPlaying, info, audioRef, setLyricVersion } =
     usePlayer();
+  const { mainColor } = useThemeColor();
   const getNewestInfo = useRef({ lyricLines, info, isPlaying, lyricVersion, getProgress });
   getNewestInfo.current = { lyricLines, info, isPlaying, lyricVersion, getProgress };
 
@@ -17,10 +19,11 @@ export function useLyricSync() {
       type: "lyricInit",
       data: {
         lyricLines,
-        info
+        info,
+        themeColor: mainColor
       } satisfies LyricInit
     });
-  }, []);
+  }, [mainColor]);
   const sendSync = useCallback(() => {
     const { lyricVersion, isPlaying, getProgress } = getNewestInfo.current;
     const { currentTime, duration } = getProgress();
@@ -32,10 +35,11 @@ export function useLyricSync() {
         lyricVersion,
         currentTime,
         duration,
-        isPlaying
+        isPlaying,
+        themeColor: mainColor
       } satisfies LyricSync
     });
-  }, []);
+  }, [mainColor]);
 
   const openLyricWin = useCallback(() => {
     if (!hasOpenLyricWin) {
