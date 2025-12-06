@@ -5,6 +5,7 @@ export const renderEventAPI: RenderEventAPI = {
   createLoginWindow: () => typedIpcRenderSend("createLoginWindow", undefined),
   createLyricWindow: () => typedIpcRenderSend("createLyricWindow", undefined),
   createMiniplayerWindow: () => typedIpcRenderSend("createMiniplayerWindow", undefined),
+  createInfoWindow: () => typedIpcRenderSend("createInfoWindow", undefined),
   openExternalLink: (link) => typedIpcRenderSend("openExternalLink", link),
   close: (winType) => typedIpcRenderSend("close", winType),
   minimize: (winType) => typedIpcRenderSend("minimize", winType),

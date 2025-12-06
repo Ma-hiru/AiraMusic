@@ -22,7 +22,5 @@ env可以分系统
 todo:
 22.自定义协议是否消耗资源过多，ｇｏ？
 21.绑定快捷键
-express +         "Cross-Origin-Opener-Policy": "same-origin",
-                  "Cross-Origin-Embedder-Policy": "require-corp"
 
-平普ｌｉｎｕｘ
+平普ｌｉｎｕｘ宽度

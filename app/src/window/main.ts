@@ -1,19 +1,16 @@
 import { BrowserWindow } from "electron";
 import { Log } from "../utils/log";
+import { Store } from "../app/store";
 import { checkPositionOutScreenBounds, getEffectiveWindowSize } from "../utils/screen";
-import { preloadPath } from "../utils/path";
 import { CONSTANTS } from "../constant";
-import { WindowManager } from "../window";
+import { WindowManager } from "./manager";
+import { preloadPath } from "../utils/path";
 import { isDev } from "../utils/dev";
 import { EqError } from "../utils/err";
 
-export function createInitWindow(params: {
-  width?: number;
-  height?: number;
-  x?: number;
-  y?: number;
-}) {
+export function CreateMainWindow() {
   Log.trace("Create APP Window");
+  const params = Store.get("window");
   const { x, y } = params || {};
   const mainWindow = createWindow(params);
   // 检查窗口位置是否超出屏幕范围，超出则居中显示
@@ -59,11 +56,11 @@ function createWindow(params: { width?: number; height?: number }) {
 function loadSource(mainWindow: BrowserWindow) {
   if (isDev()) {
     mainWindow.webContents.openDevTools();
-    mainWindow.loadURL("http://localhost:5173").catch((err) => {
+    mainWindow.loadURL(`http://localhost:${process.env.VITE_SERVER_PORT}`).catch((err) => {
       Log.error(
         new EqError({
           label: "app/createWindow.ts",
-          message: "Failed to load URL http://localhost:5173",
+          message: `Failed to load URL http://localhost:${process.env.VITE_SERVER_PORT}`,
           raw: err
         })
       );

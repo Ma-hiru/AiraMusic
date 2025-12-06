@@ -1,15 +1,13 @@
-import ElectronStore from "electron-store";
-import { app, BrowserWindow } from "electron";
+import { app } from "electron";
 import { readFile } from "node:fs/promises";
-import { resolve, normalize } from "node:path";
+import { normalize, resolve } from "node:path";
 import { typedIpcMainHandle } from "./typed";
 import { Log } from "../../utils/log";
 import { EqError } from "../../utils/err";
 import { fileURLToPath } from "node:url";
-import { StoreType } from "../../app/store";
-import { WindowManager } from "@mahiru/app/src/window/manager";
+import { WindowManager } from "../../window";
 
-export function registerInvokeHandlers(mainWindow: BrowserWindow, store: ElectronStore<StoreType>) {
+export function registerInvokeHandlers() {
   typedIpcMainHandle("message", (e, data) => {
     console.log("Message invoke received in main:", data);
     return `Received: ${data}`;

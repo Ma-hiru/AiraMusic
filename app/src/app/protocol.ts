@@ -9,7 +9,7 @@ import { app, protocol } from "electron";
 export function registerAppProtocol() {
   protocol.registerSchemesAsPrivileged([
     {
-      scheme: "mahiru",
+      scheme: process.env.APP_SCHEME || "mahiru",
       privileges: {
         secure: true,
         standard: true,
@@ -20,7 +20,7 @@ export function registerAppProtocol() {
   ]);
 
   app.whenReady().then(() => {
-    protocol.handle("mahiru", async (request) => {
+    protocol.handle(process.env.APP_SCHEME || "mahiru", async (request) => {
       try {
         // url.hostname === "local"
         // url.pathname === "/C:/Users/xxx.png"

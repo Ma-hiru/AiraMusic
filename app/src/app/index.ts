@@ -1,18 +1,15 @@
-import ElectronStore from "electron-store";
-import { isCreateMpris, isMacOS } from "../utils/platform";
+import { isMacOS } from "../utils/platform";
 import { Log } from "../utils/log";
 import { app, BrowserWindow } from "electron";
 import { startNeteaseMusicApiServer } from "../services/ncm";
 import { Server } from "node:http";
 import { createExpressApp } from "../services/express";
-import { handleAppEvents } from "./appEvent";
+import { handleAppEvents } from "./events";
 import { startCacheServer } from "../services/store";
 import { commands } from "./cmd";
-import { StoreType, Store } from "./store";
 import { registerAppProtocol } from "./protocol";
 
 export class APP {
-  store!: ElectronStore<StoreType>;
   willQuitAPP!: boolean;
   neteaseMusicAPIServer!: ReturnType<typeof startNeteaseMusicApiServer>;
   expressAPP!: Server;
@@ -29,17 +26,9 @@ export class APP {
     ]);
     this.expressAPP = createExpressApp();
     this.neteaseMusicAPIServer = startNeteaseMusicApiServer();
-    this.store = Store;
     this.willQuitAPP = !isMacOS;
     registerAppProtocol();
     handleAppEvents(this);
-    // disable chromium mpris
-    if (isCreateMpris) {
-      app.commandLine.appendSwitch(
-        "enable-features",
-        "HardwareMediaKeyHandling,MediaSessionService"
-      );
-    }
   }
 
   run() {

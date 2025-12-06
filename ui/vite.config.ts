@@ -32,7 +32,13 @@ export default defineConfig(({ mode }) => {
     ],
     build: {
       outDir: join(__dirname, "../dist/ui"),
-      sourcemap: false
+      sourcemap: false,
+      rollupOptions: {
+        input: {
+          index: join(__dirname, "index.html"),
+          info: join(__dirname, "info.html")
+        }
+      }
     },
     resolve: {
       alias: {

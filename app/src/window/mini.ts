@@ -1,0 +1,66 @@
+import { Store } from "../app/store";
+import { checkPositionOutScreenBounds, getEffectiveWindowSize } from "../utils/screen";
+import { WindowExits, WindowManager } from "./manager";
+import { preloadPath } from "../utils/path";
+import { isDev } from "../utils/dev";
+import { Log } from "../utils/log";
+
+export function CreateMiniWindow() {
+  const storedSize = Store.get("mini");
+  const { effectiveWidth: width, effectiveHeight: height } = getEffectiveWindowSize(0.07, 4.4);
+  const { effectiveWidth: minWidth, effectiveHeight: minHeight } = getEffectiveWindowSize(
+    0.05,
+    4.4
+  );
+  const MiniplayerWindow = WindowManager.createBrowserWindow(
+    {
+      width: storedSize.width || width,
+      height: storedSize.height || height,
+      webPreferences: {
+        preload: preloadPath
+      },
+      alwaysOnTop: true,
+      title: "miniplayer",
+      resizable: true,
+      minHeight,
+      maxHeight: Math.floor(height * 1.2),
+      minWidth,
+      maxWidth: Math.floor(width * 1.2),
+      minimizable: false,
+      maximizable: false,
+      titleBarStyle: "hidden",
+      frame: false,
+      type: "toolbar",
+      skipTaskbar: true
+    },
+    "miniplayer",
+    WindowExits.IGNORE
+  );
+  const { x, y } = storedSize;
+  if (checkPositionOutScreenBounds(x, y)) {
+    MiniplayerWindow.center();
+  } else {
+    MiniplayerWindow.setBounds({ x, y });
+  }
+  MiniplayerWindow.on("resized", () => {
+    console.log("resized mini");
+    Store.set("mini", MiniplayerWindow.getBounds());
+  });
+  MiniplayerWindow.on("moved", () => {
+    console.log("moved mini");
+    Store.set("mini", MiniplayerWindow.getBounds());
+  });
+  if (isDev()) {
+    MiniplayerWindow.loadURL(`http://localhost:${process.env.VITE_SERVER_PORT}/mini`).catch(
+      (err) => {
+        Log.error("app/ipc", "Failed to load mini window URL:", err);
+      }
+    );
+  } else {
+    MiniplayerWindow.loadURL(`http://localhost:${process.env.EXPRESS_SERVER_PORT}/mini`).catch(
+      (err) => {
+        Log.error("app/ipc", "Failed to load mini window URL:", err);
+      }
+    );
+  }
+}

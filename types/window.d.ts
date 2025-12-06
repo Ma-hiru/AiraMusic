@@ -1,1 +1,1 @@
-type WindowType = "main" | "login" | "lyric" | "miniplayer" | "external";
+type WindowType = "main" | "login" | "lyric" | "miniplayer" | "external" | "info";

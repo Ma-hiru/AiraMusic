@@ -4,6 +4,7 @@ import { useSong } from "@mahiru/ui/hook/useSong";
 import { useFileCache } from "@mahiru/ui/ctx/BlobCachedCtx";
 import { Store } from "@mahiru/ui/store";
 import { Log } from "@mahiru/ui/utils/dev";
+import { useWindowTitle } from "@mahiru/ui/hook/useWindowTitle";
 
 export default function PlayerProvider({ children }: { children: ReactNode }) {
   const ctxValue = useSong();
@@ -13,6 +14,14 @@ export default function PlayerProvider({ children }: { children: ReactNode }) {
   const cachedAudio = useFileCache(ctxValue.info.audio, {
     id: "audio_" + ctxValue.info.id
   });
+  const { updateWindowTitle, defaultTitle } = useWindowTitle();
+  useEffect(() => {
+    if (ctxValue.info.title && ctxValue.info.artist) {
+      updateWindowTitle(`${ctxValue.info.title} - ${ctxValue.info.artist.join("&")}`);
+    } else {
+      updateWindowTitle(defaultTitle);
+    }
+  }, [ctxValue.info.artist, ctxValue.info.title, defaultTitle, updateWindowTitle]);
   return (
     <>
       <audio

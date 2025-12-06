@@ -1,181 +1,23 @@
-import ElectronStore from "electron-store";
 import { BrowserWindow } from "electron";
 import { typedIpcMainOn, typedIpcMainSend } from "./typed";
-import { checkPositionOutScreenBounds, getEffectiveWindowSize } from "../../utils/screen";
-import { WindowExits, WindowManager } from "../../window";
-import { preloadPath } from "../../utils/path";
+import { getEffectiveWindowSize } from "../../utils/screen";
 import { Log } from "../../utils/log";
-import { isDev } from "../../utils/dev";
-import { Store, StoreType } from "../../app/store";
+import {
+  CrateLyricWindow,
+  CreateLoginWindow,
+  CreateMiniWindow,
+  WindowExits,
+  WindowManager
+} from "../../window";
+import { CreateInfoWindow } from "../../window/info";
 
-export function registerEventHandlers(mainWindow: BrowserWindow, store: ElectronStore<StoreType>) {
-  registerLoginWindowControl();
-  registerLyricWindowControl();
-  registerMiniplayerWindowControl();
+export function registerEventHandlers(mainWindow: BrowserWindow) {
+  typedIpcMainOn("createLoginWindow", CreateLoginWindow);
+  typedIpcMainOn("createLyricWindow", CrateLyricWindow);
+  typedIpcMainOn("createMiniplayerWindow", CreateMiniWindow);
+  typedIpcMainOn("createInfoWindow", CreateInfoWindow);
   registerWindowControl();
   registerWindowEventListeners(mainWindow, "main");
-}
-
-function registerLoginWindowControl() {
-  typedIpcMainOn("createLoginWindow", () => {
-    const { effectiveWidth: width, effectiveHeight: height } = getEffectiveWindowSize(0.3);
-    const LoginWindow = WindowManager.createBrowserWindow(
-      {
-        width,
-        height,
-        webPreferences: {
-          preload: preloadPath
-        },
-        title: "Login",
-        resizable: false,
-        minimizable: true,
-        maximizable: false,
-        titleBarStyle: "hidden",
-        frame: false,
-        type: "toolbar",
-        skipTaskbar: true
-      },
-      "login",
-      WindowExits.IGNORE
-    );
-    if (LoginWindow.isMinimized()) {
-      LoginWindow.restore();
-      LoginWindow.focus();
-    } else {
-      if (isDev()) {
-        LoginWindow.loadURL("http://localhost:5173/login").catch((err) => {
-          Log.error("app/ipc", "Failed to load login window URL:", err);
-        });
-      } else {
-        LoginWindow.loadURL(`http://localhost:${process.env.EXPRESS_SERVER_PORT}/login`).catch(
-          (err) => {
-            Log.error("app/ipc", "Failed to load login window URL:", err);
-          }
-        );
-      }
-      LoginWindow.on("ready-to-show", () => {
-        // LoginWindow.show();
-        // isDev() && LoginWindow.webContents.openDevTools();
-      });
-    }
-  });
-}
-
-function registerLyricWindowControl() {
-  typedIpcMainOn("createLyricWindow", () => {
-    const { effectiveWidth: width, effectiveHeight: height } = getEffectiveWindowSize(0.11, 6);
-    const LyricWindow = WindowManager.createBrowserWindow(
-      {
-        width,
-        height,
-        transparent: true,
-        backgroundColor: "#00000000",
-        webPreferences: {
-          preload: preloadPath
-        },
-        alwaysOnTop: true,
-        title: "Lyric",
-        resizable: true,
-        minimizable: false,
-        maximizable: false,
-        titleBarStyle: "hidden",
-        frame: false,
-        type: "toolbar",
-        skipTaskbar: true
-      },
-      "lyric",
-      WindowExits.IGNORE
-    );
-    const { x, y } = Store.get("lyric");
-    if (checkPositionOutScreenBounds(x, y)) {
-      LyricWindow.center();
-    } else {
-      LyricWindow.setBounds({ x, y });
-    }
-    LyricWindow.on("resized", () => {
-      Store.set("lyric", LyricWindow.getBounds());
-    });
-    LyricWindow.on("moved", () => {
-      Store.set("lyric", LyricWindow.getBounds());
-    });
-    if (isDev()) {
-      LyricWindow.loadURL("http://localhost:5173/lyric").catch((err) => {
-        Log.error("app/ipc", "Failed to load lyric window URL:", err);
-      });
-    } else {
-      LyricWindow.loadURL(`http://localhost:${process.env!.EXPRESS_SERVER_PORT}/lyric`).catch(
-        (err) => {
-          Log.error("app/ipc", "Failed to load lyric window URL:", err);
-        }
-      );
-    }
-    LyricWindow.on("ready-to-show", () => {
-      // LyricWindow.show();
-    });
-  });
-}
-
-function registerMiniplayerWindowControl() {
-  typedIpcMainOn("createMiniplayerWindow", () => {
-    const storedSize = Store.get("mini");
-    const { effectiveWidth: width, effectiveHeight: height } = getEffectiveWindowSize(0.07, 4.4);
-    const { effectiveWidth: minWidth, effectiveHeight: minHeight } = getEffectiveWindowSize(
-      0.05,
-      4.4
-    );
-    const MiniplayerWindow = WindowManager.createBrowserWindow(
-      {
-        width: storedSize.width || width,
-        height: storedSize.height || height,
-        webPreferences: {
-          preload: preloadPath
-        },
-        alwaysOnTop: true,
-        title: "miniplayer",
-        resizable: true,
-        minHeight,
-        maxHeight: Math.floor(height * 1.2),
-        minWidth,
-        maxWidth: Math.floor(width * 1.2),
-        minimizable: false,
-        maximizable: false,
-        titleBarStyle: "hidden",
-        frame: false,
-        type: "toolbar",
-        skipTaskbar: true
-      },
-      "miniplayer",
-      WindowExits.IGNORE
-    );
-    const { x, y } = storedSize;
-    if (checkPositionOutScreenBounds(x, y)) {
-      MiniplayerWindow.center();
-    } else {
-      MiniplayerWindow.setBounds({ x, y });
-    }
-    MiniplayerWindow.on("resized", () => {
-      console.log("resized mini");
-      Store.set("mini", MiniplayerWindow.getBounds());
-    });
-    MiniplayerWindow.on("moved", () => {
-      console.log("moved mini");
-      Store.set("mini", MiniplayerWindow.getBounds());
-    });
-    if (isDev()) {
-      MiniplayerWindow.loadURL("http://localhost:5173/mini").catch((err) => {
-        Log.error("app/ipc", "Failed to load mini window URL:", err);
-      });
-    } else {
-      MiniplayerWindow.loadURL(`http://localhost:${process.env.EXPRESS_SERVER_PORT}/mini`).catch(
-        (err) => {
-          Log.error("app/ipc", "Failed to load mini window URL:", err);
-        }
-      );
-    }
-    MiniplayerWindow.on("ready-to-show", () => {
-      // MiniplayerWindow.show();
-    });
-  });
 }
 
 function registerWindowControl() {

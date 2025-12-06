@@ -21,7 +21,8 @@ type SendMessageDataType<T = any> = {
     | "lastTrack"
     | "playTrack"
     | "windowMaximizedChange"
-    | "winLoaded";
+    | "winLoaded"
+    | "infoSync";
 };
 
 type NormalEventMaps = {
@@ -29,6 +30,7 @@ type NormalEventMaps = {
   createLoginWindow: never;
   createLyricWindow: never;
   createMiniplayerWindow: never;
+  createInfoWindow: never;
   sendMessageTo: SendMessageDataType;
   openExternalLink: { url: string; title: string };
   close: WindowType;

@@ -8,9 +8,10 @@ import { Store } from "@mahiru/ui/store";
 interface ControlButtonProps {
   windowId: WindowType;
   maximizable?: boolean;
+  mini?: boolean;
 }
 
-const TopControl: FC<ControlButtonProps> = ({ windowId, maximizable = true }) => {
+const TopControl: FC<ControlButtonProps> = ({ windowId, maximizable = true, mini = true }) => {
   const [isMax, setIsMax] = useState(false);
   const { info, getProgress } = usePlayer();
 
@@ -41,10 +42,12 @@ const TopControl: FC<ControlButtonProps> = ({ windowId, maximizable = true }) =>
   return (
     <NoDrag className="flex flex-row gap-4 select-none relative z-10 ease-in-out transition-all">
       <Minus className="size-5 cursor-pointer hover:opacity-50" onClick={minimize} />
-      <PictureInPicture
-        className="size-5 cursor-pointer scale-95 hover:opacity-50"
-        onClick={openMiniWin}
-      />
+      {mini && (
+        <PictureInPicture
+          className="size-5 cursor-pointer scale-95 hover:opacity-50"
+          onClick={openMiniWin}
+        />
+      )}
       {isMax
         ? maximizable && (
             <SquareMinus
