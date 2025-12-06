@@ -3,6 +3,7 @@ import { WebGLRenderer as WasmWebGLRenderer } from "@mahiru/wasm";
 
 export class WebGLRendererRust implements IRenderer {
   private renderer: WasmWebGLRenderer | null = null;
+  options?: RendererOptions;
 
   init(canvas: HTMLCanvasElement, options: RendererOptions) {
     this.renderer = new WasmWebGLRenderer(
@@ -13,11 +14,12 @@ export class WebGLRendererRust implements IRenderer {
       options.gap,
       options.barWidth ?? undefined
     );
+    this.options = options;
   }
 
   draw(bands: Float32Array) {
     if (!this.renderer) return;
-    const opt = (this as any).options as RendererOptions | undefined;
+    const opt = this.options as RendererOptions;
     if (!opt) return;
 
     try {

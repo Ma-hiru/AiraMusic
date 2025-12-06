@@ -1,5 +1,5 @@
 import QRCode from "qrcode";
-import { Log, EqError } from "@mahiru/ui/utils/dev";
+import { EqError, Log } from "@mahiru/ui/utils/dev";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { loginQrCodeCheck, loginQrCodeCreate, loginQrCodeKey } from "@mahiru/ui/api/auth";
 

@@ -2,7 +2,7 @@ import { IRenderer, RendererOptions } from "./IRenderer";
 
 export class Canvas2DRenderer implements IRenderer {
   private ctx: CanvasRenderingContext2D | null = null;
-  private options: RendererOptions | null = null;
+  options?: RendererOptions;
 
   init(canvas: HTMLCanvasElement, options: RendererOptions) {
     const ctx = canvas.getContext("2d");
@@ -66,6 +66,6 @@ export class Canvas2DRenderer implements IRenderer {
 
   destroy() {
     this.ctx = null;
-    this.options = null;
+    this.options = undefined;
   }
 }

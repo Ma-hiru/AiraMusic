@@ -1,8 +1,7 @@
-import { FC, memo, useRef, HTMLAttributes, useEffect } from "react";
+import { FC, HTMLAttributes, memo, useEffect, useRef } from "react";
 import { SpectrumOptions } from "@mahiru/ui/hook/useSpectrumWorker";
 import { IRenderer, RendererOptions } from "./renderers/IRenderer";
 import { Canvas2DRenderer } from "./renderers/canvas2d";
-import { WebGLRenderer } from "./renderers/webgl";
 import { WebGLRendererRust } from "./renderers/webgl-rust";
 import { useSpectrum } from "@mahiru/ui/ctx/SpectrumCtx";
 
@@ -13,11 +12,12 @@ type SpectrumCanvasProps = HTMLAttributes<HTMLCanvasElement> & {
   gap?: number;
   barWidth?: number;
   roundedCorners?: "top" | "bottom" | "both" | "none";
-  renderer?: "canvas" | "webgl" | "webgl-rust";
+  renderer?: "canvas" | "webgl-rust";
   spectrumOptions?: SpectrumOptions;
+  heightScale?: number;
 };
 
-const SpectrumCanvas: FC<SpectrumCanvasProps> = ({
+const AudioSpectrum: FC<SpectrumCanvasProps> = ({
   color = "#ffffff",
   gap = 2,
   isPlaying,
@@ -26,6 +26,7 @@ const SpectrumCanvas: FC<SpectrumCanvasProps> = ({
   barWidth,
   roundedCorners = "top",
   renderer = "canvas",
+  heightScale = 1,
   ...rest
 }) => {
   const canvasRef = useRef<Nullable<HTMLCanvasElement>>(null);
@@ -50,12 +51,7 @@ const SpectrumCanvas: FC<SpectrumCanvasProps> = ({
       canvas.width = targetW;
       canvas.height = targetH;
     }
-    const render =
-      renderer === "webgl"
-        ? new WebGLRenderer()
-        : renderer === "webgl-rust"
-          ? new WebGLRendererRust()
-          : new Canvas2DRenderer();
+    const render = renderer === "webgl-rust" ? new WebGLRendererRust() : new Canvas2DRenderer();
     const opts: RendererOptions = {
       width: cssW,
       height: cssH,
@@ -64,11 +60,12 @@ const SpectrumCanvas: FC<SpectrumCanvasProps> = ({
       gap,
       barWidth,
       secondaryColor,
-      roundedCorners
+      roundedCorners,
+      heightScale
     };
     render.init(canvas, opts);
-    // 保存 options 供 webgl-rust 使用
-    (render as any).options = opts;
+    // 每次参数变更都更新渲染器配置
+    render.options = opts;
     rendererRef.current = render;
     let animationFrameId: number;
     const draw = () => {
@@ -104,4 +101,4 @@ const SpectrumCanvas: FC<SpectrumCanvasProps> = ({
   ]);
   return <canvas ref={canvasRef} {...rest} />;
 };
-export default memo(SpectrumCanvas);
+export default memo(AudioSpectrum);

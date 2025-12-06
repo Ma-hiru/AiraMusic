@@ -1,11 +1,11 @@
 import { FC, memo } from "react";
-import SpectrumCanvas from "@mahiru/ui/componets/spectrum/SpectrumCanvas";
+import AudioSpectrum from "@mahiru/ui/componets/spectrum/AudioSpectrum";
 import { useLayout } from "@mahiru/ui/ctx/LayoutCtx";
 
 const Spectrum: FC<object> = () => {
   const { PlayerModalVisible } = useLayout();
   return (
-    <SpectrumCanvas
+    <AudioSpectrum
       isPlaying={PlayerModalVisible}
       className="w-full h-5 mt-2"
       gap={2}

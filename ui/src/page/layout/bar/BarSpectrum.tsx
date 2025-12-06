@@ -1,5 +1,5 @@
 import { FC, memo } from "react";
-import SpectrumCanvas from "@mahiru/ui/componets/spectrum/SpectrumCanvas";
+import AudioSpectrum from "@mahiru/ui/componets/spectrum/AudioSpectrum";
 import { useThemeColor } from "@mahiru/ui/hook/useThemeColor";
 import Color from "color";
 import { useLayout } from "@mahiru/ui/ctx/LayoutCtx";
@@ -10,7 +10,7 @@ const BarSpectrum: FC<object> = () => {
   const color = Color(mainColor);
   const secondary_color = Color(secondaryColor);
   return (
-    <SpectrumCanvas
+    <AudioSpectrum
       isPlaying={!PlayerModalVisible}
       gap={1}
       renderer="webgl-rust"

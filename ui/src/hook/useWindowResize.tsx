@@ -1,4 +1,4 @@
-import { FC, useCallback, useRef, MouseEvent as ReactMouseEvent } from "react";
+import { FC, MouseEvent as ReactMouseEvent, useCallback, useRef } from "react";
 import { cx } from "@emotion/css";
 
 interface WindowResizeProps {

@@ -1,5 +1,11 @@
 import { useMemo, useRef } from "react";
 
+export type Lock = {
+  lock: () => boolean;
+  unlock: () => void;
+  run: (task: () => void, releaseAfterTask?: boolean) => boolean;
+};
+
 export function useLock() {
   const lock = useRef(false);
 
@@ -13,7 +19,7 @@ export function useLock() {
     lock.current = false;
   }).current;
 
-  const runWithLock = useRef((task: () => void, releaseAfterTask = false) => {
+  const runWithLock = useRef((task: () => void, releaseAfterTask = true) => {
     if (!acquireLock()) return false;
     let didThrow = true;
     try {
@@ -27,7 +33,7 @@ export function useLock() {
     return true;
   }).current;
 
-  return useMemo(
+  return useMemo<Lock>(
     () => ({
       lock: acquireLock,
       unlock: releaseLock,

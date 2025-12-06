@@ -1,12 +1,12 @@
 import {
   FC,
+  forwardRef,
+  ForwardRefRenderFunction,
   RefObject,
   useEffect,
   useImperativeHandle,
-  useState,
-  ForwardRefRenderFunction,
-  forwardRef,
-  useRef
+  useRef,
+  useState
 } from "react";
 
 export function useVirtualList<T extends HasID, U = never>({

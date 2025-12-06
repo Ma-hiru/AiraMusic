@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, RefObject } from "react";
+import { RefObject, useCallback, useEffect, useRef } from "react";
 
 const SCROLLBAR_HIDE_DELAY = 800;
 
