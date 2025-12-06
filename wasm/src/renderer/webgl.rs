@@ -103,6 +103,7 @@ pub struct WebGLRenderer {
     dpr: f32,
     gap: f32,
     bar_width: Option<f32>,
+    height_scale: f32,
 }
 
 #[wasm_bindgen]
@@ -115,6 +116,7 @@ impl WebGLRenderer {
         dpr: f32,
         gap: f32,
         bar_width: Option<f32>,
+        height_scale: Option<f32>,
     ) -> Result<WebGLRenderer, JsValue> {
         let gl = canvas
             .get_context("webgl")?
@@ -167,6 +169,7 @@ impl WebGLRenderer {
             dpr,
             gap,
             bar_width,
+            height_scale: height_scale.unwrap_or(1.0),
         })
     }
 
@@ -226,7 +229,7 @@ impl WebGLRenderer {
 
         for (i, &band) in bands.iter().enumerate() {
             let v = band.clamp(0.0, 1.0).powf(0.9);
-            let h = (v * self.height).max(2.0);
+            let h = (v * self.height * self.height_scale).max(2.0);
             let x = i as f32 * (computed_bar_width + self.gap);
             let y = self.height - h;
 

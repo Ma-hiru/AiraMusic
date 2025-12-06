@@ -12,7 +12,8 @@ export class WebGLRendererRust implements IRenderer {
       options.height,
       options.dpr,
       options.gap,
-      options.barWidth ?? undefined
+      options.barWidth ?? undefined,
+      options.heightScale ?? undefined
     );
     this.options = options;
   }

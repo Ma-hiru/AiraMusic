@@ -10,12 +10,12 @@ const Spectrum: FC<object> = () => {
       className="w-full h-5 mt-2"
       gap={2}
       renderer="canvas"
-      barWidth={4}
+      barWidth={2}
       color="#ffffff"
       secondaryColor="#ffffff"
       roundedCorners="both"
       spectrumOptions={{
-        numBands: 85,
+        numBands: 100,
         withPeaks: true
       }}
     />

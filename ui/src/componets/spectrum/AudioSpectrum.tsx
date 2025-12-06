@@ -5,7 +5,7 @@ import { Canvas2DRenderer } from "./renderers/canvas2d";
 import { WebGLRendererRust } from "./renderers/webgl-rust";
 import { useSpectrum } from "@mahiru/ui/ctx/SpectrumCtx";
 
-type SpectrumCanvasProps = HTMLAttributes<HTMLCanvasElement> & {
+type AudioSpectrumProps = HTMLAttributes<HTMLCanvasElement> & {
   isPlaying: boolean;
   color?: string;
   secondaryColor?: string;
@@ -17,7 +17,7 @@ type SpectrumCanvasProps = HTMLAttributes<HTMLCanvasElement> & {
   heightScale?: number;
 };
 
-const AudioSpectrum: FC<SpectrumCanvasProps> = ({
+const AudioSpectrum: FC<AudioSpectrumProps> = ({
   color = "#ffffff",
   gap = 2,
   isPlaying,
@@ -92,6 +92,7 @@ const AudioSpectrum: FC<SpectrumCanvasProps> = ({
     barWidth,
     color,
     gap,
+    heightScale,
     isPlaying,
     isReady,
     renderer,

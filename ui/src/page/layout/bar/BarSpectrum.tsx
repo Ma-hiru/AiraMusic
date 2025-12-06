@@ -15,6 +15,7 @@ const BarSpectrum: FC<object> = () => {
       gap={1}
       renderer="webgl-rust"
       barWidth={3.8}
+      heightScale={0.8}
       color={color.isLight() ? color.alpha(0.1).string() : color.alpha(0.6).string()}
       secondaryColor={
         secondary_color.isLight()

@@ -18,7 +18,16 @@ export class Canvas2DRenderer implements IRenderer {
     const ctx = this.ctx;
     const opt = this.options;
     if (!ctx || !opt) return;
-    const { width, height, color, gap, barWidth, secondaryColor, roundedCorners = "top" } = opt;
+    const {
+      width,
+      height,
+      color,
+      gap,
+      barWidth,
+      secondaryColor,
+      roundedCorners = "top",
+      heightScale = 1
+    } = opt;
     ctx.clearRect(0, 0, width, height);
     const count = bands.length;
     const totalGap = gap * Math.max(0, count - 1);
@@ -32,7 +41,7 @@ export class Canvas2DRenderer implements IRenderer {
     for (let i = 0; i < count; i++) {
       const value = bands[i] ?? 0;
       const enhanced = Math.pow(Math.min(1, Math.max(0, value)), 0.9);
-      const barHeight = Math.max(2, enhanced * height);
+      const barHeight = Math.max(2, enhanced * height * heightScale);
       const x = i * (computedBarWidth + gap);
       const y = height - barHeight;
       const gradient = ctx.createLinearGradient(x, height, x, y);
@@ -56,7 +65,7 @@ export class Canvas2DRenderer implements IRenderer {
 
       if (radii.some((r) => r > 0) && typeof (ctx as any).roundRect === "function") {
         ctx.beginPath();
-        ctx.roundRect(x, y, computedBarWidth, barHeight, [radius, radius, 0, 0]);
+        ctx.roundRect(x, y, computedBarWidth, barHeight, radii);
         ctx.fill();
       } else {
         ctx.fillRect(x, y, computedBarWidth, barHeight);
