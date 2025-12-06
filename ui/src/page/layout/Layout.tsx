@@ -1,7 +1,7 @@
 import { FC } from "react";
-import TopBar from "./Top";
-import PlayerBar from "./Bar";
-import NavSide from "./Nav";
+import TopBar from "./top";
+import PlayerBar from "./bar";
+import NavSide from "./nav";
 import PlayerModal from "./Modal";
 import Background from "./Background";
 import KeepAliveOutlet from "@mahiru/ui/componets/public/KeepAliveOutlet";

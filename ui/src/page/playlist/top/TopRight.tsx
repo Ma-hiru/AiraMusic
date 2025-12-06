@@ -1,6 +1,6 @@
 import { FC, memo } from "react";
 import { SquarePen } from "lucide-react";
-import Search from "@mahiru/ui/page/playlist/Top/Search";
+import Search from "./Search";
 import { formatTimeToMMDD } from "@mahiru/ui/utils/time";
 import { usePersistZustandShallowStore } from "@mahiru/ui/store";
 import { useFileCache } from "@mahiru/ui/ctx/BlobCachedCtx";

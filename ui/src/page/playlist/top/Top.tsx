@@ -1,7 +1,7 @@
 import { FC, memo } from "react";
-import TopCover from "@mahiru/ui/page/playlist/Top/TopCover";
-import TopRight from "@mahiru/ui/page/playlist/Top/TopRight";
-import TopInfo from "@mahiru/ui/page/playlist/Top/TopInfo";
+import TopCover from "./TopCover";
+import TopRight from "./TopRight";
+import TopInfo from "./TopInfo";
 import { PlaylistCacheEntry } from "@mahiru/ui/utils/playList";
 
 interface TopProps {
