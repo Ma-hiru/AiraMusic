@@ -3,7 +3,7 @@ use js_sys::Array;
 use wasm_bindgen::prelude::wasm_bindgen;
 use wasm_bindgen::JsValue;
 
-mod range;
+pub mod range;
 
 #[wasm_bindgen]
 pub struct RangeTree {

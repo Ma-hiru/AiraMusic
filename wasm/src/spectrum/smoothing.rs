@@ -1,5 +1,3 @@
-use wasm_bindgen::prelude::wasm_bindgen;
-
 /// ## 对每帧的频谱幅度做平滑与峰值保持，减少频谱值跳动／闪烁并保留短时峰值。
 /// - 平滑（减抖动）：用指数移动平均等方式把当前帧的值和上一帧的平滑值混合，得到更稳定的输出。通常公式为：smoothed = previous * smoothing_factor + current * (1 - smoothing_factor)，其中 smoothing_factor 越大，平滑越明显（变化越慢）。
 /// - 峰值保持（peak hold）：记录每个频带的短时峰值，避免峰值瞬间下降看起来突兀。peaks 保存当前峰值，当新值超过峰值时更新，否则按 peak_decay 逐步衰减（例如乘以小于 1 的衰减因子或按速率减少）。
@@ -25,11 +23,6 @@ impl Smoother {
             peak_decay,
             peak_threshold: 0.01,
         }
-    }
-
-    pub fn resize(&mut self, new_size: usize) {
-        self.previous.resize(new_size, 0.0);
-        self.peaks.resize(new_size, 0.0);
     }
 
     pub fn reset(&mut self) {

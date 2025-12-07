@@ -6,7 +6,7 @@ import {
   parseYrc
 } from "@applemusic-like-lyrics/lyric";
 import { LyricLine, LyricWord } from "@applemusic-like-lyrics/core";
-import { parseNeteaseLyric, parseTranslatedLRC, parseExternalLrc } from "@mahiru/wasm";
+import { parseExternalLrc, parseNeteaseLyric, parseTranslatedLRC } from "@mahiru/wasm";
 import { Log } from "@mahiru/ui/utils/dev";
 import { LyricParseErr } from "@mahiru/ui/utils/errs";
 

@@ -23,28 +23,49 @@ pub fn parseNeteaseLyric(raw: JsValue, ts: JsValue, rm: JsValue, meta: JsValue) 
         full_version = raw
             .into_iter()
             .map(|mut line| {
-                raw_version.push(LyricLine::from(line.clone()));
+                // 查找对应的翻译和罗马音
                 let translatedLine = timedTranslatedLyricMap.remove(&line.startTime);
                 let romanLine = timedRomanLyricMap.remove(&line.startTime);
+                // 解析行内翻译
+                let raw_word = line
+                    .words
+                    .iter()
+                    .map(|l| l.word.clone())
+                    .collect::<String>();
+                let (raw_without_inline_tl, inline_tl) = parse_tl_lyric_inline(&raw_word);
+                // 复制当前行用于不同版本
+                if line.words.len() == 1 {
+                    // 非逐字歌词
+                    line.words[0].word = raw_without_inline_tl;
+                } else if raw_without_inline_tl.len() < line.words.len() {
+                    // 逐字歌词，截断
+                    line.words = line.words[0..raw_without_inline_tl.len()].to_owned();
+                }
                 let mut tl_line = line.clone();
                 let mut rm_line = line.clone();
+                raw_version.push(LyricLine::from(line.clone()));
+                // 如果有翻译或罗马音，则分别添加到对应的版本中
                 if let Some(tl) = translatedLine {
                     line.translatedLyric = tl.clone();
                     tl_line.translatedLyric = tl;
                     tl_version.push(LyricLine::from(tl_line));
+                } else if let Some(inline_tl) = inline_tl {
+                    line.translatedLyric = inline_tl.clone();
+                    tl_line.translatedLyric = inline_tl;
+                    tl_version.push(LyricLine::from(tl_line));
                 }
-
                 if let Some(rl) = romanLine {
                     line.romanLyric = rl.clone();
                     rm_line.romanLyric = rl;
                     rm_version.push(LyricLine::from(rm_line));
                 }
+
                 LyricLine::from(line)
             })
             .collect();
         if !meta.nickname.is_empty() {
             if let Some(&LyricLine { endTime, .. }) = full_version.last() {
-                full_version.push(LyricLine {
+                let meta_line = LyricLine {
                     startTime: endTime,
                     endTime: endTime + 10000,
                     words: vec![],
@@ -52,7 +73,11 @@ pub fn parseNeteaseLyric(raw: JsValue, ts: JsValue, rm: JsValue, meta: JsValue) 
                     isDuet: false,
                     romanLyric: String::new(),
                     translatedLyric: format!("歌词贡献者：{}", meta.nickname),
-                })
+                };
+                full_version.push(meta_line.clone());
+                raw_version.push(meta_line.clone());
+                tl_version.push(meta_line.clone());
+                rm_version.push(meta_line);
             }
         }
     }
@@ -142,4 +167,60 @@ fn get_rawLyricLine_map(lines: Vec<RawLyricLine>) -> HashMap<i32, String> {
                 .collect()
         })
         .unwrap_or(HashMap::new())
+}
+
+const LYRIC_INLINE_SPLIT: [(&str, &str); 4] = [("〖", "〗"), ("【", "】"), ("[", "]"), ("(", ")")];
+
+fn parse_tl_lyric_inline(line: &str) -> (String, Option<String>) {
+    let mut pattern = String::from(r"^(.*?)\s*(?:");
+    for (i, (l, r)) in LYRIC_INLINE_SPLIT.iter().enumerate() {
+        if i > 0 {
+            pattern.push('|');
+        }
+        pattern.push_str(&format!("{}(.*?){}", regex::escape(l), regex::escape(r)));
+    }
+    pattern.push_str(r")\s*$");
+
+    let re = Regex::new(&pattern).unwrap();
+
+    if let Some(caps) = re.captures(line) {
+        let before = caps.get(1).unwrap().as_str().trim();
+        for i in 2..=caps.len() {
+            if let Some(matched) = caps.get(i) {
+                let after = matched.as_str().trim();
+                if !after.is_empty() {
+                    return (before.to_string(), Some(after.to_string()));
+                }
+            }
+        }
+        (before.to_string(), None)
+    } else {
+        (line.to_string(), None)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_parse_tl_lyric_inline() {
+        let cases = vec![
+            "Hello World 〖你好，世界〗",
+            "Good Morning 【早上好】",
+            "Welcome [欢迎]",
+            "Thank you (谢谢)",
+            "No Translation Here",
+            "Mixed (混合) Text 【文本】",
+            "Empty () Brackets",
+            "Just Text",
+            "   Leading and Trailing   【前后空格】   ",
+            "[03:17.230]flight 旅立つ朝 あの日背伸びしてた肩に〖flight 启程之晨 在你那天逞强的肩膀上〗"
+        ];
+
+        for input in cases {
+            let result = parse_tl_lyric_inline(input);
+            println!("Input: '{}', Result: {:?}", input, result);
+        }
+    }
 }

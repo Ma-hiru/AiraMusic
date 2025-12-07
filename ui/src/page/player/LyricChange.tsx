@@ -11,7 +11,7 @@ const LyricChange: FC<object> = () => {
     lyricLines
   );
   return (
-    <div className="absolute right-8 bottom-10 text-white flex flex-col gap-2">
+    <div className="absolute right-8 bottom-10 text-white flex flex-col gap-2 select-none">
       <span
         onClick={setRm}
         className={cx(

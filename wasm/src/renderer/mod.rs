@@ -1,3 +1,1 @@
-mod webgl;
-
-pub use webgl::WebGLRenderer;
+pub mod webgl;

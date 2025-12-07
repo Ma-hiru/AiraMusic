@@ -55,7 +55,7 @@ fn blackman_window(n: usize, size: usize) -> f32 {
 pub fn apply_window(samples: &[f32], window: WindowFunction) -> Vec<f32> {
     let size = samples.len();
     let weight = match window {
-        WindowFunction::None => |n, size| 1.0,
+        WindowFunction::None => |_n, _size| 1.0,
         WindowFunction::Hanning => hanning_window,
         WindowFunction::Hamming => hamming_window,
         WindowFunction::Blackman => blackman_window,

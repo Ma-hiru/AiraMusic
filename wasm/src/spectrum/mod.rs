@@ -1,5 +1,5 @@
-mod analyzer;
-mod fft;
+pub mod analyzer;
+pub mod fft;
 pub mod processor;
-mod smoothing;
-mod window;
+pub mod smoothing;
+pub mod window;

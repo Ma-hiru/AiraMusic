@@ -28,7 +28,7 @@ pub struct RawLyricLine {
     pub endTime: i32,
 }
 
-#[derive(Tsify, Serialize, Deserialize)]
+#[derive(Tsify, Serialize, Deserialize, Clone)]
 pub struct LyricWord {
     pub startTime: i32,
     pub endTime: i32,
@@ -37,7 +37,7 @@ pub struct LyricWord {
     pub obscene: bool,
 }
 
-#[derive(Tsify, Serialize, Deserialize)]
+#[derive(Tsify, Serialize, Deserialize, Clone)]
 pub struct LyricLine {
     pub words: Vec<LyricWord>,
     pub translatedLyric: String,

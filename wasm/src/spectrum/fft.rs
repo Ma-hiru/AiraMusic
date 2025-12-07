@@ -27,13 +27,3 @@ pub fn compute_fft(samples: &[f32], window: WindowFunction) -> Vec<f32> {
         })
         .collect()
 }
-
-const MIN_DB: f32 = -100.0;
-/// 将幅度转换为分贝（dB）
-pub fn to_decibels(magnitude: f32) -> f32 {
-    if magnitude <= 0.0 {
-        MIN_DB
-    } else {
-        20.0 * magnitude.log10().max(MIN_DB)
-    }
-}

@@ -11,6 +11,7 @@ export function useLyric(
   const rmActive = lyricVersion === "rm" || lyricVersion === "full";
   const tlActive = lyricVersion === "tl" || lyricVersion === "full";
   const setRm = useCallback(() => {
+    if (!hasRm) return;
     switch (lyricVersion) {
       case "full":
         setLyricVersion("tl");
@@ -25,8 +26,9 @@ export function useLyric(
         setLyricVersion("full");
         break;
     }
-  }, [lyricVersion, setLyricVersion]);
+  }, [hasRm, lyricVersion, setLyricVersion]);
   const setTl = useCallback(() => {
+    if (!hasTl) return;
     switch (lyricVersion) {
       case "full":
         setLyricVersion("rm");
@@ -41,7 +43,7 @@ export function useLyric(
         setLyricVersion("full");
         break;
     }
-  }, [lyricVersion, setLyricVersion]);
+  }, [hasTl, lyricVersion, setLyricVersion]);
   return {
     hasRm,
     hasTl,
