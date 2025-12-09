@@ -9,6 +9,8 @@ import { isDev } from "../utils/dev";
 import { EqError } from "../utils/err";
 
 export function CreateMainWindow() {
+  if (WindowManager.checkAndShow("main")) return;
+
   Log.trace("Create APP Window");
   const params = Store.get("window");
   const { x, y } = params || {};
@@ -19,10 +21,17 @@ export function CreateMainWindow() {
   } else {
     mainWindow.setBounds({ x, y });
   }
+
   // 禁用菜单栏
   mainWindow.setMenuBarVisibility(false);
+  isDev() && mainWindow.webContents.openDevTools();
 
-  return loadSource(mainWindow);
+  loadSource(
+    mainWindow,
+    isDev() ? process.env.VITE_SERVER_PORT! : process.env.EXPRESS_SERVER_PORT!
+  );
+
+  return registerWindowEvents(mainWindow);
 }
 
 function createWindow(params: { width?: number; height?: number }) {
@@ -53,29 +62,33 @@ function createWindow(params: { width?: number; height?: number }) {
   );
 }
 
-function loadSource(mainWindow: BrowserWindow) {
-  if (isDev()) {
-    mainWindow.webContents.openDevTools();
-    mainWindow.loadURL(`http://localhost:${process.env.VITE_SERVER_PORT}`).catch((err) => {
-      Log.error(
-        new EqError({
-          label: "app/createWindow.ts",
-          message: `Failed to load URL http://localhost:${process.env.VITE_SERVER_PORT}`,
-          raw: err
-        })
-      );
-    });
-  } else {
-    mainWindow.loadURL(`http://localhost:${process.env.EXPRESS_SERVER_PORT}`).catch((err) => {
-      Log.error(
-        new EqError({
-          label: "app/createWindow.ts",
-          message: `Failed to load URL http://localhost:${process.env.EXPRESS_SERVER_PORT}`,
-          raw: err
-        })
-      );
-    });
-  }
+function loadSource(mainWindow: BrowserWindow, port: number | string) {
+  mainWindow.loadURL(`http://localhost:${port}`).catch((err) => {
+    Log.error(
+      new EqError({
+        label: "app/window/main.ts",
+        message: `failed to load main window URL http://localhost:${process.env.VITE_SERVER_PORT}`,
+        raw: err
+      })
+    );
+  });
+  return mainWindow;
+}
+
+function registerWindowEvents(mainWindow: BrowserWindow) {
+  mainWindow.on("resized", () => {
+    Store.set("window", mainWindow.getBounds());
+  });
+
+  mainWindow.on("moved", () => {
+    Store.set("window", mainWindow.getBounds());
+  });
+
+  mainWindow.webContents.setWindowOpenHandler((e) => {
+    Log.info(`Blocked attempt to open external link: ${e.url}`);
+    // TODO: 可以考虑用 shell.openExternal 打开外部浏览器
+    return { action: "deny" };
+  });
 
   return mainWindow;
 }

@@ -1,8 +1,8 @@
 import { ipcRenderer, IpcRendererEvent } from "electron";
 
-export const typedIpcRenderOn = <T extends NormalEvent>(
+export const typedIpcRenderOn = <T extends keyof RendererEventListenerAPI>(
   event: T,
-  handler: NormalFunc<[IpcRendererEvent, NormalEventPayload<T>]>
+  handler: NormalFunc<[IpcRendererEvent, Parameters<Parameters<RendererEventListenerAPI[T]>[0]>[0]]>
 ) => {
   ipcRenderer.on(event, handler);
 };

@@ -1,21 +1,21 @@
 import { typedIpcRenderSend } from "./typed";
 
-export const renderEventAPI: RenderEventAPI = {
-  rememberCloseAppOption: () => {},
-  createLoginWindow: () => typedIpcRenderSend("createLoginWindow", undefined),
-  createLyricWindow: () => typedIpcRenderSend("createLyricWindow", undefined),
-  createMiniplayerWindow: () => typedIpcRenderSend("createMiniplayerWindow", undefined),
-  createInfoWindow: () => typedIpcRenderSend("createInfoWindow", undefined),
-  openExternalLink: (link) => typedIpcRenderSend("openExternalLink", link),
-  close: (winType) => typedIpcRenderSend("close", winType),
-  minimize: (winType) => typedIpcRenderSend("minimize", winType),
-  maximize: (winType) => typedIpcRenderSend("maximize", winType),
-  unmaximize: (winType) => typedIpcRenderSend("unmaximize", winType),
-  hidden: (winType) => typedIpcRenderSend("hidden", winType),
-  visible: (winType) => typedIpcRenderSend("visible", winType),
-  resizeWindow: (params) => typedIpcRenderSend("resizeWindow", params),
-  sendMessageTo: ({ to, data, type, from }) =>
-    typedIpcRenderSend("sendMessageTo", { to, data, type, from }),
-  mousePenetrate: (params) => typedIpcRenderSend("mousePenetrate", params),
-  loaded: (params) => typedIpcRenderSend("loaded", params)
-};
+export const rendererEventAPI = {
+  rememberCloseAppOption: (payload) => typedIpcRenderSend("rememberCloseAppOption", payload),
+  message: (payload) => typedIpcRenderSend("message", payload),
+  /** window control */
+  openExternalLink: (payload) => typedIpcRenderSend("openExternalLink", payload),
+  openInternalWindow: (payload) => typedIpcRenderSend("openInternalWindow", payload),
+  closeInternalWindow: (payload) => typedIpcRenderSend("closeInternalWindow", payload),
+  openDevTools: () => typedIpcRenderSend("openDevTools", undefined),
+  close: (props) => typedIpcRenderSend("close", props),
+  minimize: () => typedIpcRenderSend("minimize", undefined),
+  unminimize: () => typedIpcRenderSend("unminimize", undefined),
+  maximize: () => typedIpcRenderSend("maximize", undefined),
+  unmaximize: () => typedIpcRenderSend("unmaximize", undefined),
+  hidden: () => typedIpcRenderSend("hidden", undefined),
+  visible: () => typedIpcRenderSend("visible", undefined),
+  resizeWindow: (payload) => typedIpcRenderSend("resizeWindow", payload),
+  mousePenetrate: (payload) => typedIpcRenderSend("mousePenetrate", payload),
+  loaded: (payload) => typedIpcRenderSend("loaded", payload)
+} satisfies RendererEventAPI;

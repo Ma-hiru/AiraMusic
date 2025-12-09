@@ -3,7 +3,7 @@ import express from "express";
 import { staticPath } from "../../utils/path";
 import expressProxy from "express-http-proxy";
 
-export function createExpressApp() {
+export function createProxyServer() {
   Log.debug("Create Express APP");
   const expressAPP = express();
   const port = Number(process.env.EXPRESS_SERVER_PORT);

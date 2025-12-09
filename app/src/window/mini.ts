@@ -4,8 +4,11 @@ import { WindowExits, WindowManager } from "./manager";
 import { preloadPath } from "../utils/path";
 import { isDev } from "../utils/dev";
 import { Log } from "../utils/log";
+import { EqError } from "../utils/err";
 
 export function CreateMiniWindow() {
+  if (WindowManager.checkAndShow("miniplayer")) return;
+
   const storedSize = Store.get("mini");
   const { effectiveWidth: width, effectiveHeight: height } = getEffectiveWindowSize(0.07, 4.4);
   const { effectiveWidth: minWidth, effectiveHeight: minHeight } = getEffectiveWindowSize(
@@ -36,31 +39,38 @@ export function CreateMiniWindow() {
     "miniplayer",
     WindowExits.IGNORE
   );
+
   const { x, y } = storedSize;
   if (checkPositionOutScreenBounds(x, y)) {
     MiniplayerWindow.center();
   } else {
     MiniplayerWindow.setBounds({ x, y });
   }
+
   MiniplayerWindow.on("resized", () => {
-    console.log("resized mini");
     Store.set("mini", MiniplayerWindow.getBounds());
   });
   MiniplayerWindow.on("moved", () => {
-    console.log("moved mini");
     Store.set("mini", MiniplayerWindow.getBounds());
   });
-  if (isDev()) {
-    MiniplayerWindow.loadURL(`http://localhost:${process.env.VITE_SERVER_PORT}/mini`).catch(
-      (err) => {
-        Log.error("app/ipc", "Failed to load mini window URL:", err);
-      }
+  MiniplayerWindow.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
+
+  MiniplayerWindow.hide();
+
+  loadMiniWindowURL(
+    MiniplayerWindow,
+    isDev() ? process.env.VITE_SERVER_PORT! : process.env.EXPRESS_SERVER_PORT!
+  );
+}
+
+function loadMiniWindowURL(MiniplayerWindow: Electron.BrowserWindow, port: string | number) {
+  MiniplayerWindow.loadURL(`http://localhost:${port}/mini`).catch((err) => {
+    Log.error(
+      new EqError({
+        raw: err,
+        message: `failed to load mini window URL: http://localhost:${port}/mini`,
+        label: "app/window/mini.ts"
+      })
     );
-  } else {
-    MiniplayerWindow.loadURL(`http://localhost:${process.env.EXPRESS_SERVER_PORT}/mini`).catch(
-      (err) => {
-        Log.error("app/ipc", "Failed to load mini window URL:", err);
-      }
-    );
-  }
+  });
 }

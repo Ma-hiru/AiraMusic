@@ -6,7 +6,7 @@ import { EqError } from "../utils/err";
 import { Log } from "../utils/log";
 import { app, protocol } from "electron";
 
-export function registerAppProtocol() {
+export function registerProtocol() {
   protocol.registerSchemesAsPrivileged([
     {
       scheme: process.env.APP_SCHEME || "mahiru",

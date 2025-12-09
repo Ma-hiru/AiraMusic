@@ -1,10 +1,10 @@
 import { registerInvokeHandlers } from "./invoke";
 import { registerEventHandlers } from "./event";
-import { BrowserWindow } from "electron";
+import { app } from "electron";
 
-export { typedIpcMainOn, typedIpcMainSend, typedIpcMainHandle } from "./typed";
-
-export function registerIpcMainHandlers(mainWindow: BrowserWindow) {
-  registerInvokeHandlers();
-  registerEventHandlers(mainWindow);
+export function registerIpcMain() {
+  app.on("ready", () => {
+    registerInvokeHandlers();
+    registerEventHandlers();
+  });
 }

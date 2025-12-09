@@ -1,9 +1,9 @@
 declare global {
   interface Window {
-    node: {
-      invoke: RenderInvokeAPI;
-      event: RenderEventAPI;
-      register: NormalEventRegister;
+    electron: {
+      invoke: RendererInvokeAPI;
+      event: RendererEventAPI;
+      listener: RendererEventListenerAPI;
     };
   }
 }

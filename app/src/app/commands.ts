@@ -2,6 +2,7 @@ import { app } from "electron";
 import { isCreateMpris } from "../utils/platform";
 
 export function commands() {
+  process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = "true";
   // disable chromium mpris
   if (isCreateMpris) {
     app.commandLine.appendSwitch("enable-features", "HardwareMediaKeyHandling,MediaSessionService");

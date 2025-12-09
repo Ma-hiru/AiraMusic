@@ -29,6 +29,7 @@ export const WindowManager = new (class {
     id?: WindowID,
     handleExits: WindowExits = WindowExits.IGNORE
   ) {
+    let window;
     if (id) {
       // 检查是否已存在具有相同 ID 的窗口
       const oldWindow = this.BrowserWindowList.get(id);
@@ -42,45 +43,59 @@ export const WindowManager = new (class {
             oldWindow.close();
             break;
           case WindowExits.IGNORE:
+            if (oldWindow.isMinimized()) {
+              oldWindow.restore();
+            }
             oldWindow.focus();
             return oldWindow;
         }
       }
       // 创建并存储新的窗口实例
-      const window = new BrowserWindow(options);
+      window = new BrowserWindow(options);
       this.BrowserWindowList.set(id, window);
-      window.on("closed", () => {
-        this.BrowserWindowList.delete(id);
-      });
-      return window;
     } else {
       // 创建没有 ID 的窗口实例
-      const window = new BrowserWindow(options);
+      window = new BrowserWindow(options);
       this.BrowserWindowListHasNoID.add(window);
-      window.on("closed", () => {
-        this.BrowserWindowListHasNoID.delete(window);
-      });
-      return window;
     }
+    this.bindWindowCloseEvent(window, id);
+    return window;
   }
 
-  getBrowserWindowById(id: WindowID) {
+  has(id: WindowID) {
+    return this.BrowserWindowList.has(id);
+  }
+
+  remove(id: WindowID) {
+    return this.BrowserWindowList.delete(id);
+  }
+
+  get(id: WindowID) {
     return this.BrowserWindowList.get(id);
   }
 
-  closeBrowserWindowById(id: WindowID) {
+  getId(window: BrowserWindow) {
+    for (const [id, win] of this.BrowserWindowList) {
+      if (win === window) {
+        return id;
+      }
+    }
+    return null;
+  }
+
+  close(id: WindowID) {
     const window = this.BrowserWindowList.get(id);
     window && window.close();
     return !!window;
   }
 
-  destroyBrowserWindowById(id: WindowID) {
+  destroy(id: WindowID) {
     const window = this.BrowserWindowList.get(id);
     window && window.destroy();
     return !!window;
   }
 
-  closeAllBrowserWindows(ids?: WindowID[]) {
+  closeAll(ids?: WindowID[]) {
     if (ids) {
       ids.forEach((id) => {
         const window = this.BrowserWindowList.get(id);
@@ -93,7 +108,7 @@ export const WindowManager = new (class {
     }
   }
 
-  destroyAllBrowserWindows(ids?: WindowID[]) {
+  destroyAll(ids?: WindowID[]) {
     if (ids) {
       ids.forEach((id) => {
         const window = this.BrowserWindowList.get(id);
@@ -106,11 +121,34 @@ export const WindowManager = new (class {
     }
   }
 
-  getAllBrowserWindows() {
+  getAll() {
     return Array.from(this.BrowserWindowList);
   }
 
-  getAllBrowserWindowHasNoId() {
+  getAllHasNoId() {
     return Array.from(this.BrowserWindowListHasNoID);
+  }
+
+  checkAndShow(id: WindowID) {
+    const existingWindow = this.get(id);
+    if (existingWindow) {
+      if (existingWindow.isMinimized()) {
+        existingWindow.restore();
+      } else if (!existingWindow.isVisible()) {
+        existingWindow.show();
+      }
+      existingWindow.focus();
+    }
+    return existingWindow;
+  }
+
+  private bindWindowCloseEvent(window: BrowserWindow, id?: WindowID) {
+    window.on("closed", () => {
+      if (id) {
+        this.BrowserWindowList.delete(id);
+      } else {
+        this.BrowserWindowListHasNoID.delete(window);
+      }
+    });
   }
 })();

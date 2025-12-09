@@ -2,5 +2,5 @@ export {
   typedIpcMainSend,
   typedIpcMainHandle,
   typedIpcMainOn,
-  registerIpcMainHandlers
+  registerIpcMain
 } from "./main";

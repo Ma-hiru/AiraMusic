@@ -47,7 +47,7 @@ export function isLooseLoggedIn() {
 }
 
 export function doLogout() {
-  logout().finally(() => {
+  return logout().finally(() => {
     removeCookie("MUSIC_U");
     removeCookie("__csrf");
     // 更新状态仓库

@@ -1,18 +1,13 @@
-import { app } from "electron";
+import { app, BrowserWindow, ipcMain } from "electron";
 import { readFile } from "node:fs/promises";
 import { normalize, resolve } from "node:path";
-import { typedIpcMainHandle } from "./typed";
+import { MainInvokeAPI } from "./typed";
 import { Log } from "../../utils/log";
 import { EqError } from "../../utils/err";
 import { fileURLToPath } from "node:url";
-import { WindowManager } from "../../window";
 
-export function registerInvokeHandlers() {
-  typedIpcMainHandle("message", (e, data) => {
-    console.log("Message invoke received in main:", data);
-    return `Received: ${data}`;
-  });
-  typedIpcMainHandle("readFile", async (e, localPath) => {
+const mainInvokeAPI = {
+  readFile: async (_, localPath) => {
     try {
       localPath.startsWith("file://") && (localPath = fileURLToPath(localPath));
       localPath = resolve(normalize(localPath));
@@ -25,16 +20,16 @@ export function registerInvokeHandlers() {
       Log.error(
         new EqError({
           raw: err,
-          message: `Failed to read file at path: ${localPath}`,
-          label: "app/invoke.ts:readFile"
+          message: `failed to read file at path: ${localPath}`,
+          label: "app/ipc/main/invoke.ts:readFile"
         })
       );
       return {
         ok: false
       };
     }
-  });
-  typedIpcMainHandle("GPUInfo", async () => {
+  },
+  GPUInfo: async () => {
     return new Promise<string>((resolve, reject) => {
       app
         .whenReady()
@@ -48,12 +43,16 @@ export function registerInvokeHandlers() {
         })
         .catch(reject);
     });
-  });
-  typedIpcMainHandle("isMaximized", (e, type) => {
-    const win = WindowManager.getBrowserWindowById(type);
+  },
+  isMaximized: (e) => {
+    const win = BrowserWindow.fromWebContents(e.sender);
     return win ? win.isMaximized() : false;
-  });
-  typedIpcMainHandle("platform", () => {
-    return process.platform;
+  },
+  platform: () => process.platform
+} satisfies MainInvokeAPI;
+
+export function registerInvokeHandlers() {
+  Object.entries(mainInvokeAPI).forEach(([event, handler]) => {
+    ipcMain.handle(event, handler);
   });
 }

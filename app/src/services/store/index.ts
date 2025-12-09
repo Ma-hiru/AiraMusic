@@ -1,4 +1,4 @@
-import { startServer, stopServer, isRunning, getPID, enableServerConsole } from "@mahiru/store";
+import { enableServerConsole, getPID, isRunning, startServer, stopServer } from "@mahiru/store";
 import { isDev } from "../../utils/dev";
 
 export function startCacheServer(args: string[] = []) {
@@ -6,7 +6,13 @@ export function startCacheServer(args: string[] = []) {
     return getPID()!;
   }
   enableServerConsole(isDev());
-  return startServer(args);
+  return startServer([
+    "--port",
+    process.env.GO_SERVER_PORT!,
+    "--scheme",
+    process.env.APP_SCHEME!,
+    ...args
+  ]);
 }
 
 export function stopCacheServer(): boolean {

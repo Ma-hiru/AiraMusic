@@ -1,9 +1,8 @@
 import { typedIpcRenderInvoke } from "./typed";
 
-export const renderInvokeAPI: RenderInvokeAPI = {
-  message: (msg) => typedIpcRenderInvoke("message", msg),
-  readFile: (local) => typedIpcRenderInvoke("readFile", local),
+export const rendererInvokeAPI = {
+  readFile: (path) => typedIpcRenderInvoke("readFile", path),
   GPUInfo: () => typedIpcRenderInvoke("GPUInfo", undefined),
-  isMaximized: (winType) => typedIpcRenderInvoke("isMaximized", winType),
+  isMaximized: () => typedIpcRenderInvoke("isMaximized", undefined),
   platform: () => typedIpcRenderInvoke("platform", undefined)
-};
+} satisfies RendererInvokeAPI;

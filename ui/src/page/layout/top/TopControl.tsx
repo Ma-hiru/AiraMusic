@@ -1,9 +1,10 @@
 import { FC, memo, useCallback, useEffect, useState } from "react";
-import { Minus, PictureInPicture, Square, SquareMinus, X } from "lucide-react";
+import { Chromium, Minus, PictureInPicture, Square, SquareMinus, X } from "lucide-react";
 import { NoDrag } from "@mahiru/ui/componets/public/Drag";
 import { useMiniPlayerSync } from "@mahiru/ui/hook/useMiniPlayerSync";
 import { usePlayer } from "@mahiru/ui/ctx/PlayerCtx";
 import { Store } from "@mahiru/ui/store";
+import { isDev } from "@mahiru/ui/utils/dev";
 
 interface ControlButtonProps {
   windowId: WindowType;
@@ -41,6 +42,12 @@ const TopControl: FC<ControlButtonProps> = ({ windowId, maximizable = true, mini
   }, []);
   return (
     <NoDrag className="flex flex-row gap-4 select-none relative z-10 ease-in-out transition-all">
+      {isDev && (
+        <Chromium
+          className="size-5 cursor-pointer hover:opacity-50"
+          onClick={() => window.node.event.openDevTools()}
+        />
+      )}
       <Minus className="size-5 cursor-pointer hover:opacity-50" onClick={minimize} />
       {mini && (
         <PictureInPicture

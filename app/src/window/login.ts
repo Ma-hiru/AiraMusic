@@ -3,8 +3,12 @@ import { getEffectiveWindowSize } from "../utils/screen";
 import { preloadPath } from "../utils/path";
 import { isDev } from "../utils/dev";
 import { Log } from "../utils/log";
+import { EqError } from "../utils/err";
+import { BrowserWindow } from "electron";
 
 export function CreateLoginWindow() {
+  if (WindowManager.checkAndShow("login")) return;
+
   const { effectiveWidth: width, effectiveHeight: height } = getEffectiveWindowSize(0.3);
   const LoginWindow = WindowManager.createBrowserWindow(
     {
@@ -23,22 +27,28 @@ export function CreateLoginWindow() {
       skipTaskbar: true
     },
     "login",
-    WindowExits.IGNORE
+    WindowExits.DESTROY
   );
-  if (LoginWindow.isMinimized()) {
-    LoginWindow.restore();
-    LoginWindow.focus();
-  } else {
-    if (isDev()) {
-      LoginWindow.loadURL(`http://localhost:${process.env.VITE_SERVER_PORT}/login`).catch((err) => {
-        Log.error("app/ipc", "Failed to load login window URL:", err);
-      });
-    } else {
-      LoginWindow.loadURL(`http://localhost:${process.env.EXPRESS_SERVER_PORT}/login`).catch(
-        (err) => {
-          Log.error("app/ipc", "Failed to load login window URL:", err);
-        }
-      );
-    }
-  }
+
+  LoginWindow.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
+
+  LoginWindow.hide();
+  LoginWindow.center();
+
+  loadLoginWindowURL(
+    LoginWindow,
+    isDev() ? process.env.VITE_SERVER_PORT! : process.env.EXPRESS_SERVER_PORT!
+  );
+}
+
+function loadLoginWindowURL(LoginWindow: BrowserWindow, port: string | number) {
+  LoginWindow.loadURL(`http://localhost:${port}/login`).catch((err) => {
+    Log.error(
+      new EqError({
+        raw: err,
+        message: `failed to load login window URL: http://localhost:${port}/login`,
+        label: "app/window/login.ts"
+      })
+    );
+  });
 }

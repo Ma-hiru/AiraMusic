@@ -4,8 +4,11 @@ import { preloadPath } from "../utils/path";
 import { Store } from "../app/store";
 import { isDev } from "../utils/dev";
 import { Log } from "../utils/log";
+import { EqError } from "../utils/err";
 
-export function CrateLyricWindow() {
+export function CreateLyricWindow() {
+  if (WindowManager.checkAndShow("lyric")) return;
+
   const { effectiveWidth: width, effectiveHeight: height } = getEffectiveWindowSize(0.11, 6);
   const LyricWindow = WindowManager.createBrowserWindow(
     {
@@ -27,29 +30,40 @@ export function CrateLyricWindow() {
       skipTaskbar: true
     },
     "lyric",
-    WindowExits.IGNORE
+    WindowExits.DESTROY
   );
+
   const { x, y } = Store.get("lyric");
   if (checkPositionOutScreenBounds(x, y)) {
     LyricWindow.center();
   } else {
     LyricWindow.setBounds({ x, y });
   }
+
   LyricWindow.on("resized", () => {
     Store.set("lyric", LyricWindow.getBounds());
   });
   LyricWindow.on("moved", () => {
     Store.set("lyric", LyricWindow.getBounds());
   });
-  if (isDev()) {
-    LyricWindow.loadURL(`http://localhost:${process.env.VITE_SERVER_PORT}/lyric`).catch((err) => {
-      Log.error("app/ipc", "Failed to load lyric window URL:", err);
-    });
-  } else {
-    LyricWindow.loadURL(`http://localhost:${process.env!.EXPRESS_SERVER_PORT}/lyric`).catch(
-      (err) => {
-        Log.error("app/ipc", "Failed to load lyric window URL:", err);
-      }
+  LyricWindow.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
+
+  LyricWindow.hide();
+
+  loadLyricWindowURL(
+    LyricWindow,
+    isDev() ? process.env.VITE_SERVER_PORT! : process.env.EXPRESS_SERVER_PORT!
+  );
+}
+
+function loadLyricWindowURL(LyricWindow: Electron.BrowserWindow, port: string | number) {
+  LyricWindow.loadURL(`http://localhost:${port}/lyric`).catch((err) => {
+    Log.error(
+      new EqError({
+        raw: err,
+        message: `failed to load lyric window URL: http://localhost:${port}/lyric`,
+        label: "app/window/lyric.ts"
+      })
     );
-  }
+  });
 }

@@ -28,7 +28,7 @@ function genDevDefine() {
   return result;
 }
 
-// noinspection JSUnusedGlobalSymbols 禁用webstorm的未使用默认导出警告
+// noinspection JSUnusedGlobalSymbols
 export default defineConfig([
   {
     entry: ["src/main.ts"],

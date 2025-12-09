@@ -1,9 +1,9 @@
 import { typedIpcRenderOn } from "./typed";
 
-export const renderEventRegister: NormalEventRegister = {
-  sendMessageToHandler: (handler) => {
-    typedIpcRenderOn("sendMessageTo", (_e, data) => {
+export const rendererEventListenerAPI = {
+  message: (handler) => {
+    typedIpcRenderOn("message", (_e, data) => {
       handler(data);
     });
   }
-};
+} satisfies RendererEventListenerAPI;
