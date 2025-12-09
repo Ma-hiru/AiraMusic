@@ -1,6 +1,1 @@
-export {
-  typedIpcMainSend,
-  typedIpcMainHandle,
-  typedIpcMainOn,
-  registerIpcMain
-} from "./main";
+export { registerIpcMain } from "./main";
