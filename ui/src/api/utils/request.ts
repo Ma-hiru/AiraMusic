@@ -1,6 +1,7 @@
 import axios, { AxiosResponse } from "axios";
 import { doLogout } from "./auth";
 import { Log } from "@mahiru/ui/utils/dev";
+import { waitLogin } from "@mahiru/ui/hook/useLogout";
 
 // 开发模式通过VITE代理访问API服务器地址
 // 生产模式通过express访问API服务器地址
@@ -39,8 +40,7 @@ const responseInterceptor = async (error: any) => {
     (data as { code?: number; msg?: string }).msg === "需要登录"
   ) {
     Log.warn("ui/request.ts", "Token has expired.");
-    doLogout();
-    window.node.event.createLoginWindow();
+    doLogout().finally(waitLogin);
   }
 
   return Promise.reject(error);

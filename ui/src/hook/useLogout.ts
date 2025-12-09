@@ -25,7 +25,7 @@ export function useLogin() {
   }, []);
 }
 
-function waitLogin() {
+export function waitLogin() {
   window.electron.event.openInternalWindow("login");
   const unsubscribe = addMessageHandler("login", "login", refreshLogin, {
     once: true,
