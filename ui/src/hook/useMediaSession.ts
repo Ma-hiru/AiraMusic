@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { ImageSize, NeteaseImageSizeFilter } from "@mahiru/ui/utils/filter";
+import { Filter, ImageSize } from "@mahiru/ui/utils/filter";
 import { TrackStatus } from "@mahiru/ui/hook/useSongNew";
 
 export function useMediaSession(props: {
@@ -11,14 +11,14 @@ export function useMediaSession(props: {
   const { play, lastTrack, nextTrack, trackStatus } = props;
   const mediaMetadataSignatureRef = useRef("");
   useEffect(() => {
-    if (!navigator.mediaSession) return;
+    if (!navigator.mediaSession || !trackStatus) return;
     const { mediaSession } = navigator;
-    const artist = trackStatus?.track.ar.map((artist) => artist.name).join(", ");
-    const artworkSrc = NeteaseImageSizeFilter(trackStatus?.track.al.picUrl, ImageSize.md) || "";
+    const artist = trackStatus.track.ar.map((artist) => artist.name).join(", ");
+    const artworkSrc = Filter.NeteaseImageSize(trackStatus?.track.al.picUrl, ImageSize.md) || "";
     const signature = `${trackStatus?.track.id}|${artist}|${artworkSrc}`;
     if (mediaMetadataSignatureRef.current !== signature) {
       mediaSession.metadata = new MediaMetadata({
-        title: trackStatus?.track.title,
+        title: trackStatus?.track.name,
         artist,
         album: trackStatus?.track.al.name,
         artwork: [
@@ -43,14 +43,5 @@ export function useMediaSession(props: {
       mediaSession.metadata = null;
       mediaMetadataSignatureRef.current = "";
     };
-  }, [
-    info.album.name,
-    info.album.picUrl,
-    info.artist,
-    info.id,
-    info.title,
-    lastTrack,
-    nextTrack,
-    play
-  ]);
+  }, [lastTrack, nextTrack, play, trackStatus]);
 }

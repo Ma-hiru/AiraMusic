@@ -2,9 +2,9 @@ import { FC, memo, useCallback, useEffect, useState } from "react";
 import { Chromium, Minus, PictureInPicture, Square, SquareMinus, X } from "lucide-react";
 import { NoDrag } from "@mahiru/ui/componets/public/Drag";
 import { useMiniPlayerSync } from "@mahiru/ui/hook/useMiniPlayerSync";
-import { usePlayer } from "@mahiru/ui/ctx/PlayerCtx";
-import { Store } from "@mahiru/ui/store";
 import { isDev } from "@mahiru/ui/utils/dev";
+import { Renderer } from "@mahiru/ui/utils/renderer";
+import { usePlayer } from "@mahiru/ui/ctx/PlayerCtx";
 
 interface ControlButtonProps {
   windowId: WindowType;
@@ -12,40 +12,36 @@ interface ControlButtonProps {
   mini?: boolean;
 }
 
-const TopControl: FC<ControlButtonProps> = ({ windowId, maximizable = true, mini = true }) => {
+const TopControl: FC<ControlButtonProps> = ({ maximizable = true, mini = true }) => {
   const [isMax, setIsMax] = useState(false);
-  const { info, getProgress } = usePlayer();
+  const { playlistControl } = usePlayer();
+
+  useEffect(() => {
+    Renderer.invoke.isMaximized(undefined).then(setIsMax);
+  }, []);
 
   const maximize = useCallback(() => {
     if (isMax) {
       setIsMax(false);
-      window.node.event.unmaximize(windowId);
+      Renderer.event.unmaximize();
     } else {
       setIsMax(true);
-      window.node.event.maximize(windowId);
+      Renderer.event.maximize();
     }
-  }, [isMax, windowId]);
-  const minimize = useCallback(() => {
-    console.log("minimize");
-    window.node.event.minimize(windowId);
-  }, [windowId]);
+  }, [isMax]);
+  const minimize = Renderer.event.minimize;
   const close = useCallback(() => {
-    window.node.event.close(windowId);
-    void Store.storeObject("playerInfo", { info, progress: getProgress() });
-  }, [getProgress, info, windowId]);
+    playlistControl.saveInZustand();
+    setTimeout(() => Renderer.event.close(undefined), 200);
+  }, [playlistControl]);
   const { openMiniWin } = useMiniPlayerSync();
 
-  useEffect(() => {
-    window.node.invoke.isMaximized("main").then((isMaximized) => {
-      setIsMax(isMaximized);
-    });
-  }, []);
   return (
     <NoDrag className="flex flex-row gap-4 select-none relative z-10 ease-in-out transition-all">
       {isDev && (
         <Chromium
           className="size-5 cursor-pointer hover:opacity-50"
-          onClick={() => window.node.event.openDevTools()}
+          onClick={Renderer.event.openDevTools}
         />
       )}
       <Minus className="size-5 cursor-pointer hover:opacity-50" onClick={minimize} />

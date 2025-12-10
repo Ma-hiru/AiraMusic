@@ -52,6 +52,13 @@ export const Track = new (class {
     void CacheStore.storeAsync(url, cacheKey);
   }
 
+  removeCache(id: number) {
+    const metaKey = this.metaCacheKey(id);
+    const sourceKey = this.sourceCacheKey(id);
+    void CacheStore.remove(metaKey);
+    void CacheStore.remove(sourceKey);
+  }
+
   async loadAudio(id: number, signal: AbortSignal) {
     const meta = await this.getMeta(id);
     const cacheSource = await this.getCacheSource(id);

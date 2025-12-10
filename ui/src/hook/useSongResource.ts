@@ -1,21 +1,21 @@
-import { PlayerCtxDefault } from "@mahiru/ui/ctx/PlayerCtx";
 import { Lyric, LyricVersionType } from "@mahiru/ui/utils/lyric";
 import { Updater } from "use-immer";
-import { RefObject, useCallback, useMemo, useRef } from "react";
+import { RefObject, useCallback, useLayoutEffect, useRef } from "react";
 import { EqError, Log } from "@mahiru/ui/utils/dev";
 import { Track } from "@mahiru/ui/utils/track";
 import { useUnMounted } from "@mahiru/ui/hook/useUnMounted";
-import { TrackStatus } from "@mahiru/ui/hook/useSongNew";
-
-type PlayerProgress = ReturnType<typeof PlayerCtxDefault.getProgress>;
+import { PlaylistManager } from "@mahiru/ui/hook/useSongPlaylistControl";
 
 export function useSongResource(params: {
   playerProgress: RefObject<PlayerProgress>;
-  setTrackStatus: Updater<Nullable<TrackStatus>>;
+  trackStatus: Nullable<PlayerTrackStatus>;
+  setTrackStatus: Updater<Nullable<PlayerTrackStatus>>;
   lyricVersionPreference?: LyricVersionType;
+  playlistManager: PlaylistManager;
 }) {
   Log.trace("useSongResource executed");
-  const { playerProgress, setTrackStatus, lyricVersionPreference } = params;
+  const { playerProgress, setTrackStatus, lyricVersionPreference, trackStatus, playlistManager } =
+    params;
   const lyricCancelRef = useRef<Nullable<NormalFunc>>(null);
   const audioCancelRef = useRef<Nullable<NormalFunc>>(null);
   const preloadCancelRef = useRef<Nullable<NormalFunc>>(null);
@@ -29,7 +29,7 @@ export function useSongResource(params: {
         const { lyric, version } = await Lyric.requestLyric(id, lyricVersionPreference);
         if (controller.signal.aborted) return;
         setTrackStatus((draft) => {
-          if (draft) {
+          if (draft && !controller.signal.aborted) {
             draft.lyric = {
               data: lyric,
               version
@@ -57,7 +57,7 @@ export function useSongResource(params: {
       Track.loadAudio(id, controller.signal).then(({ cacheSource, meta }) => {
         if (!meta || controller.signal.aborted) return;
         setTrackStatus((draft) => {
-          if (!draft) return;
+          if (!draft || controller.signal.aborted) return;
           if (draft.audio !== cacheSource && cacheSource) {
             draft.audio = cacheSource;
           } else if (meta?.[0]?.url && draft.audio !== meta?.[0].url) {
@@ -77,7 +77,7 @@ export function useSongResource(params: {
   }, []);
 
   const schedulePreloadNextTrack = useCallback(
-    (currentTrack: TrackStatus, nextTrack: Nullable<TrackStatus>) => {
+    (currentTrack: PlayerTrackStatus, nextTrack: Nullable<PlayerTrackStatus>) => {
       if (!nextTrack || currentTrack.track.id === nextTrack.track.id) return;
       preloadCancelRef.current?.();
       preloadCancelRef.current = Track.preloadTrack(nextTrack.track);
@@ -92,8 +92,21 @@ export function useSongResource(params: {
   }, [cancelScheduledPreload]);
   useUnMounted(clear);
 
-  return useMemo(
-    () => ({ loadLyric, loadAudioSource, schedulePreloadNextTrack, cancelScheduledPreload }),
-    [cancelScheduledPreload, loadAudioSource, loadLyric, schedulePreloadNextTrack]
-  );
+  useLayoutEffect(() => {
+    const current = trackStatus;
+    const peak = playlistManager.peek();
+    if (current) {
+      void loadLyric(current.track.id);
+      void loadAudioSource(current.track.id);
+      schedulePreloadNextTrack(current, peak);
+    }
+    return cancelScheduledPreload;
+  }, [
+    cancelScheduledPreload,
+    loadAudioSource,
+    loadLyric,
+    playlistManager,
+    schedulePreloadNextTrack,
+    trackStatus
+  ]);
 }

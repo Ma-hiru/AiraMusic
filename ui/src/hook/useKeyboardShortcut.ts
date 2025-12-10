@@ -3,7 +3,7 @@ import { useEffect, useRef } from "react";
 type ModifierKey = "ctrl" | "shift" | "alt" | "meta";
 type Key = string;
 
-interface ShortcutConfig {
+export interface ShortcutConfig {
   key: Key;
   modifiers?: ModifierKey[];
   callback: (event: KeyboardEvent) => void;
@@ -12,7 +12,7 @@ interface ShortcutConfig {
   description?: string;
 }
 
-interface UseKeyboardShortcutOptions {
+export interface UseKeyboardShortcutOptions {
   enabled?: boolean;
   target?: HTMLElement | Window | null;
 }

@@ -48,6 +48,11 @@ export const PersistStoreConfig: ZustandConfig<
       draft.data._historyList = [];
       historyListStatic.length = 0;
     });
+  },
+  updatePlayerStatus(status: PersistStoreInitialState["player"]) {
+    set((draft) => {
+      draft.player = status;
+    });
   }
 });
 
@@ -61,7 +66,8 @@ const InitialState: PersistStoreInitialState = {
     lastRefreshCookieDate: null,
     loginMode: "",
     _historyList: []
-  }
+  },
+  player: null
 };
 
 export interface PersistStoreInitialState {
@@ -75,6 +81,12 @@ export interface PersistStoreInitialState {
     loginMode: "account" | "username" | "";
     _historyList: NeteaseTrack[];
   };
+  player: Nullable<{
+    position: number;
+    playlist: PlayerTrackStatus[];
+    shuffle: boolean;
+    repeat: "off" | "one" | "all";
+  }>;
 }
 
 export interface PersistStoreActions {
@@ -83,4 +95,5 @@ export interface PersistStoreActions {
   updatePlayHistory: (track: NeteaseTrack) => void;
   clearHistoryList: () => void;
   getHistoryListStatic: () => NeteaseTrack[];
+  updatePlayerStatus: (status: PersistStoreInitialState["player"]) => void;
 }
