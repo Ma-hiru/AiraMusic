@@ -1,4 +1,4 @@
-import request from "./utils/request";
+import { apiRequest } from "@mahiru/ui/utils/request";
 
 /**
  * 手机登录
@@ -13,7 +13,7 @@ export function loginWithPhone(params: {
   /** md5加密后的密码,传入后 password 将失效 */
   md5_password?: string;
 }) {
-  return request<typeof params, NeteaseLoginResponse>({
+  return apiRequest<typeof params, NeteaseLoginResponse>({
     url: "/login/cellphone",
     method: "post",
     params
@@ -31,7 +31,7 @@ export function loginWithEmail(params: {
   /** md5加密后的密码,传入后 password 将失效 */
   md5_password?: string;
 }) {
-  return request<typeof params, NeteaseLoginResponse>({
+  return apiRequest<typeof params, NeteaseLoginResponse>({
     url: "/login",
     method: "post",
     params
@@ -42,7 +42,7 @@ export function loginWithEmail(params: {
  * 二维码key生成接口
  */
 export function loginQrCodeKey() {
-  return request<{ timestamp: number }, NeteaseLoginQrKeyResponse>({
+  return apiRequest<{ timestamp: number }, NeteaseLoginQrKeyResponse>({
     url: "/login/qr/key",
     method: "get",
     params: {
@@ -62,7 +62,7 @@ export function loginQrCodeCreate(params: {
   /** 传入后会额外返回二维码图片base64编码 */
   qrimg?: string;
 }) {
-  return request<typeof params & { timestamp: number }, NeteaseLoginQrCreateResponse>({
+  return apiRequest<typeof params & { timestamp: number }, NeteaseLoginQrCreateResponse>({
     url: "/login/qr/create",
     method: "get",
     params: {
@@ -79,7 +79,7 @@ export function loginQrCodeCreate(params: {
  * @return 800为二维码过期,801为等待扫码,802为待确认,803为授权登录成功(803状态码下会返回cookies)
  */
 export function loginQrCodeCheck(key: string): Promise<NeteaseLoginQrCheckResponse> {
-  return request<{ key: string; timestamp: number }, NeteaseLoginQrCheckResponse>({
+  return apiRequest<{ key: string; timestamp: number }, NeteaseLoginQrCheckResponse>({
     url: "/login/qr/check",
     method: "get",
     params: {
@@ -95,7 +95,7 @@ export function loginQrCodeCheck(key: string): Promise<NeteaseLoginQrCheckRespon
  * @example /login/refresh
  */
 export function refreshCookie() {
-  return request<never, NeteaseAPIResponse>({
+  return apiRequest<never, NeteaseAPIResponse>({
     url: "/login/refresh",
     method: "post"
   });
@@ -106,7 +106,7 @@ export function refreshCookie() {
  * @desc 调用此接口, 可退出登录
  */
 export function logout() {
-  return request<never, NeteaseAPIResponse>({
+  return apiRequest<never, NeteaseAPIResponse>({
     url: "/logout",
     method: "post"
   });

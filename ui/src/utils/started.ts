@@ -1,5 +1,5 @@
 import { EqError, Log } from "@mahiru/ui/utils/dev";
-import { isAccountLoggedIn } from "@mahiru/ui/api/utils/auth";
+import { isAccountLoggedIn } from "@mahiru/ui/utils/auth";
 import {
   refreshCookieTask,
   refreshUserProfile,
@@ -10,6 +10,7 @@ import {
 import { IsChangeDay } from "@mahiru/ui/utils/time";
 
 export function started() {
+  // 仅在主窗口执行这些任务
   if (window.location.pathname !== "/") return;
   void onChangeDay([refreshCookieTask]);
   void onStarted([

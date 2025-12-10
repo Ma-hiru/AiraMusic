@@ -8,7 +8,7 @@ import {
   PlayerCtxType,
   PlayerTrackInfo
 } from "@mahiru/ui/ctx/PlayerCtx";
-import { getPersistSnapshot, Store } from "@mahiru/ui/store";
+import { CacheStore, getPersistSnapshot } from "@mahiru/ui/store";
 import { useMediaSession } from "@mahiru/ui/hook/useMediaSession";
 import { useLock } from "@mahiru/ui/hook/useLock";
 import { useKeyboardShortcut } from "@mahiru/ui/hook/useKeyboardShortcut";
@@ -195,7 +195,7 @@ export function useSong() {
   // 从缓存中恢复播放状态
   useEffect(() => {
     if (info.id === PlayerCtxDefault.info.id) {
-      Store.fetchObject<{ info: typeof info; progress: ReturnType<typeof getProgress> }>(
+      CacheStore.fetchObject<{ info: typeof info; progress: ReturnType<typeof getProgress> }>(
         "playerInfo"
       )
         .then((cache) => {

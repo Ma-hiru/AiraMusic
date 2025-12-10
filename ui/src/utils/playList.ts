@@ -1,12 +1,12 @@
 import {
   ImageSize,
-  NeteasePlayListToFullTracksFilter,
+  NeteasePlaylistToFullTracksFilter,
   NeteaseTrackCoverPreCacheFilter,
-  NeteaseTrackPrivilegesStatusFilter
+  NeteaseTracksPrivilegeExtendsFilter
 } from "@mahiru/ui/utils/filter";
 import { Log } from "@mahiru/ui/utils/dev";
 import { getPlaylistDetail } from "@mahiru/ui/api/playlist";
-import { getDynamicSnapshot, Store } from "@mahiru/ui/store";
+import { CacheStore, getDynamicSnapshot } from "@mahiru/ui/store";
 
 export type PlaylistCacheID = `play_list_cache_${string | number}`;
 
@@ -19,17 +19,16 @@ export type PlaylistCacheEntry = {
   _dirty: boolean;
 };
 
-export const PlaylistManager = new (class {
+class _PlaylistStore {
   /** 内存中最多存储的歌单数目 */
-  private maxMemorySize = 5;
+  maxMemorySize = 5;
   /** 超过限制强制存在Store里面，而不是内存 */
-  private maxPlayListSize = 500;
+  maxPlayListSize = 500;
   /** 缓存过期时间 */
-  private timeLimit = 1000 * 60 * 60; // 1 hour
-  private memory = new Map<PlaylistCacheID, PlaylistCacheEntry>();
-  constructor() {}
+  timeLimit = 1000 * 60 * 60; // 1 hour
+  memory = new Map<PlaylistCacheID, PlaylistCacheEntry>();
 
-  private createEntry(data: NeteasePlaylistDetailResponse): PlaylistCacheEntry {
+  createEntry(data: NeteasePlaylistDetailResponse): PlaylistCacheEntry {
     const cacheID = this.cacheID(data.playlist.id);
     return {
       playlistId: data.playlist.id,
@@ -42,21 +41,21 @@ export const PlaylistManager = new (class {
   }
 
   /** 将内存中的更新保存到Store */
-  private updateInStore(entry: PlaylistCacheEntry) {
+  updateInStore(entry: PlaylistCacheEntry) {
     if (entry._dirty) {
       entry._dirty = false;
       this.setInStore(entry);
     }
   }
 
-  private async set(entry: PlaylistCacheEntry) {
+  async set(entry: PlaylistCacheEntry) {
     if (entry.playlist.trackCount <= this.maxPlayListSize) {
       this.setInMemory(entry);
     }
     this.setInStore(entry);
   }
 
-  private async get(id: number) {
+  async get(id: number) {
     const cacheID = this.cacheID(id);
     const memory = this.getInMemory(cacheID);
     if (memory) {
@@ -72,15 +71,15 @@ export const PlaylistManager = new (class {
     return null;
   }
 
-  private outdate(entry: PlaylistCacheEntry) {
+  outdate(entry: PlaylistCacheEntry) {
     return Date.now() - entry.createTime > this.timeLimit;
   }
 
-  private cacheID(playListID: number): PlaylistCacheID {
+  cacheID(playListID: number): PlaylistCacheID {
     return `play_list_cache_${playListID}`;
   }
 
-  private limitMemorySize() {
+  limitMemorySize() {
     if (this.memory.size >= this.maxMemorySize) {
       // 删除最久未使用的
       let LRUKey: PlaylistCacheID | undefined;
@@ -93,16 +92,16 @@ export const PlaylistManager = new (class {
     }
   }
 
-  private setInMemory(data: PlaylistCacheEntry) {
+  setInMemory(data: PlaylistCacheEntry) {
     this.limitMemorySize();
     this.memory.set(data.playlistCacheId, data);
   }
 
-  private setInStore(data: PlaylistCacheEntry) {
-    void Store.storeObject(data.playlistCacheId, data);
+  setInStore(data: PlaylistCacheEntry) {
+    void CacheStore.storeObject(data.playlistCacheId, data);
   }
 
-  private getInMemory(id: PlaylistCacheID) {
+  getInMemory(id: PlaylistCacheID) {
     const entry = this.memory.get(id);
     if (!entry) return null;
     if (this.outdate(entry)) {
@@ -112,22 +111,26 @@ export const PlaylistManager = new (class {
     return entry;
   }
 
-  private async getInStore(id: PlaylistCacheID) {
-    return await Store.fetchObject<PlaylistCacheEntry>(id, this.timeLimit);
+  async getInStore(id: PlaylistCacheID) {
+    return await CacheStore.fetchObject<PlaylistCacheEntry>(id, this.timeLimit);
   }
+}
+
+class _PlaylistManager {
+  store = new _PlaylistStore();
 
   async requestPlayListDetailWithStore(
     id: number,
     preloadRange: [start: number, end: number],
     size: ImageSize = ImageSize.xs
   ) {
-    const cache = await this.get(id);
+    const cache = await this.store.get(id);
     if (cache) {
       return cache;
     } else {
       const rawList = await getPlaylistDetail(id);
-      const fullList = await NeteasePlayListToFullTracksFilter({ ...rawList });
-      fullList.playlist.tracks = NeteaseTrackPrivilegesStatusFilter(
+      const fullList = await NeteasePlaylistToFullTracksFilter({ ...rawList });
+      fullList.playlist.tracks = NeteaseTracksPrivilegeExtendsFilter(
         fullList.playlist.tracks,
         fullList.privileges
       );
@@ -136,14 +139,14 @@ export const PlaylistManager = new (class {
         preloadRange,
         size
       );
-      const entry = this.createEntry(fullList);
-      await this.set(entry);
+      const entry = this.store.createEntry(fullList);
+      await this.store.set(entry);
       return entry;
     }
   }
 
   async saveDirtyPlaylistEntry(entry: PlaylistCacheEntry) {
-    return this.updateInStore(entry);
+    return this.store.updateInStore(entry);
   }
 
   updatePlaylistEntryTrackCoverCache(props: {
@@ -157,7 +160,7 @@ export const PlaylistManager = new (class {
     if (track) {
       track.al.cachedPicUrl = cachedPicUrl;
       if (cachedPicUrlID === "" && track.al.cachedPicUrlID) {
-        void Store.remove(track.al.cachedPicUrlID);
+        void CacheStore.remove(track.al.cachedPicUrlID);
       }
       track.al.cachedPicUrlID = cachedPicUrlID;
       entry._dirty = true;
@@ -169,7 +172,7 @@ export const PlaylistManager = new (class {
     const { userLikedPlayList } = getDynamicSnapshot();
     const likedPlaylistID = userLikedPlayList?.id;
     if (likedPlaylistID) {
-      const entry = await this.get(likedPlaylistID);
+      const entry = await this.store.get(likedPlaylistID);
       if (entry) {
         const findTrackIndex = entry.playlist.tracks.findIndex((t) => t.id === track.id);
         if (!nextStatus && findTrackIndex !== -1) {
@@ -184,4 +187,6 @@ export const PlaylistManager = new (class {
       }
     }
   }
-})();
+}
+
+export const PlaylistManager = new _PlaylistManager();

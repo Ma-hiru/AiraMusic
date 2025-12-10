@@ -1,9 +1,9 @@
 import Cookies from "js-cookie";
-import { logout } from "../auth";
-import { getDynamicSnapshot, getPersistSnapshot, usePersistZustandStore } from "@mahiru/ui/store";
+import { logout } from "@mahiru/ui/api/auth";
 import { router } from "@mahiru/ui/router";
+import { getDynamicSnapshot, getPersistSnapshot, usePersistZustandStore } from "@mahiru/ui/store";
 
-export function setCookies(raw: string) {
+function setCookies(raw: string) {
   const cookies = raw.split(";;");
   cookies.map((cookie) => {
     document.cookie = cookie;
@@ -15,38 +15,38 @@ export function setCookies(raw: string) {
   document.cookie = "os=pc; path=/";
 }
 
-export function getCookie(key: string) {
-  return Cookies.get(key) ?? localStorage.getItem(`cookie-${key}`);
+function getCookie(key: string) {
+  return Cookies.get(key) || localStorage.getItem(`cookie-${key}`);
 }
 
-export function removeCookie(key: string) {
+function removeCookie(key: string) {
   Cookies.remove(key);
   localStorage.removeItem(`cookie-${key}`);
 }
 
 /** MUSIC_U 只有在账户登录的情况下才有 */
-export function isLoggedIn() {
+function isLoggedIn() {
   return getCookie("MUSIC_U") !== undefined;
 }
 
 // 账号登录
-export function isAccountLoggedIn() {
+function isAccountLoggedIn() {
   const loginMode = usePersistZustandStore.getState().data.loginMode;
   return getCookie("MUSIC_U") !== undefined && loginMode === "account";
 }
 
 /** 用户名搜索（用户数据为只读） */
-export function isUsernameLoggedIn() {
+function isUsernameLoggedIn() {
   const loginMode = usePersistZustandStore.getState().data.loginMode;
   return loginMode === "username";
 }
 
 /** 账户登录或者用户名搜索都判断为登录，宽松检查 */
-export function isLooseLoggedIn() {
+function isLooseLoggedIn() {
   return isAccountLoggedIn() || isUsernameLoggedIn();
 }
 
-export function doLogout() {
+function doLogout() {
   return logout().finally(() => {
     removeCookie("MUSIC_U");
     removeCookie("__csrf");
@@ -67,3 +67,13 @@ export function doLogout() {
     return router.navigate("/home");
   });
 }
+
+export const Auth = {
+  setCookies,
+  getCookie,
+  isLoggedIn,
+  isAccountLoggedIn,
+  isUsernameLoggedIn,
+  isLooseLoggedIn,
+  doLogout
+};

@@ -3,7 +3,7 @@ import { useFileCache } from "@mahiru/ui/ctx/BlobCachedCtx";
 import {
   ImageSize,
   NeteaseImageSizeFilter,
-  NeteaseTrackPrivilegesStatusFilter
+  NeteaseTracksPrivilegeExtendsFilter
 } from "@mahiru/ui/utils/filter";
 import { AudioLines, CirclePlay } from "lucide-react";
 import { usePlayer } from "@mahiru/ui/ctx/PlayerCtx";
@@ -23,7 +23,7 @@ const RecommendTrackItem: FC<RecommendTrackItemProps> = ({ song, mainColor, text
   const play = useCallback(async () => {
     if (isPlaying) return;
     const detail = await getTrackDetail(song.id);
-    const tracks = NeteaseTrackPrivilegesStatusFilter(detail.songs, detail.privileges);
+    const tracks = NeteaseTracksPrivilegeExtendsFilter(detail.songs, detail.privileges);
     const track = tracks[0];
     if (track && track.playable) {
       addAndPlayTrack({

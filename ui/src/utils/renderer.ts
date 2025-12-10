@@ -1,0 +1,86 @@
+import { EqError, Log } from "@mahiru/ui/utils/dev";
+
+type MessageEvent = keyof MessageTypeMap;
+
+type HandlerID = string;
+
+type Handler = {
+  once: boolean;
+  from: WindowType | null;
+  callback:
+    | NormalFunc<[message: MessageDataReceive<any>]>
+    | NormalFunc<[data: MessageDataReceive<any>["data"]]>;
+};
+
+type HandlerMapType = Map<MessageEvent, Map<HandlerID, Handler>>;
+
+class _Renderer {
+  readonly event = window.electron.event;
+  readonly invoke = window.electron.invoke;
+  readonly listener = window.electron.listener;
+  private readonly handlers: HandlerMapType = new Map();
+
+  constructor() {
+    window.electron.listener.message((message) => {
+      const eventHandlers = this.handlers.get(message.type);
+      if (eventHandlers) {
+        for (const [id, { once, from, callback }] of eventHandlers.entries()) {
+          try {
+            if (from === message.from) {
+              callback(message.data);
+              once && eventHandlers.delete(id);
+            } else if (from === null) {
+              callback(message);
+              once && eventHandlers.delete(id);
+            }
+          } catch (err) {
+            Log.error(
+              new EqError({
+                raw: err,
+                label: "utils/message.ts",
+                message: `error in message handler [id=${id}] for event [type=${message.type}]`
+              })
+            );
+            eventHandlers.delete(id);
+          }
+        }
+      }
+    });
+  }
+
+  addMessageHandler<T extends keyof MessageTypeMap, U extends WindowType | null>(
+    event: T,
+    from: U,
+    callback: U extends null
+      ? NormalFunc<[message: Omit<MessageDataReceive<T>, "type">]>
+      : NormalFunc<[data: MessageDataReceive<T>["data"]]>,
+    options?: {
+      id?: string;
+      once?: boolean;
+    }
+  ) {
+    const { id = crypto.randomUUID(), once = false } = options || {};
+    if (!this.handlers.has(event)) {
+      this.handlers.set(event, new Map());
+    }
+    this.handlers.get(event)!.set(id, { once, from, callback });
+
+    // 返回移除该处理器的函数
+    return () => !!this.handlers.get(event)?.delete(id);
+  }
+
+  removeMessageHandler(id: string) {
+    for (const [event, eventHandlers] of this.handlers.entries()) {
+      if (eventHandlers.has(id)) {
+        eventHandlers.delete(id);
+        if (eventHandlers.size === 0) {
+          this.handlers.delete(event);
+        }
+        return true;
+      }
+    }
+    return false;
+  }
+}
+
+export const Renderer = new _Renderer();

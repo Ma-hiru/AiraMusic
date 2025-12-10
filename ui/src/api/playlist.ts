@@ -1,4 +1,4 @@
-import request from "./utils/request";
+import { apiRequest } from "@mahiru/ui/utils/request";
 
 /**
  * 获取歌单详情
@@ -14,7 +14,7 @@ export async function getPlaylistDetail(
   id: number,
   update = false
 ): Promise<NeteasePlaylistDetailResponse> {
-  return await request<{ id: number; timestamp: number }, NeteasePlaylistDetailResponse>({
+  return await apiRequest<{ id: number; timestamp: number }, NeteasePlaylistDetailResponse>({
     url: "/playlist/detail",
     method: "get",
     params: {
@@ -29,7 +29,7 @@ export async function getPlaylistDetail(
  * @desc 调用此接口,可获取歌单分类,包含 category 信息
  */
 export function playlistCatlist() {
-  return request<never, NeteasePlaylistCatlistResponse>({
+  return apiRequest<never, NeteasePlaylistCatlistResponse>({
     url: "/playlist/catlist",
     method: "get"
   });
@@ -45,7 +45,7 @@ export function subscribePlaylist(params: {
   /** 类型,`1:收藏`,`2:取消收藏` */
   t: 1 | 2;
 }) {
-  return request<typeof params & { timestamp: number }, NeteaseAPIResponse>({
+  return apiRequest<typeof params & { timestamp: number }, NeteaseAPIResponse>({
     url: "/playlist/subscribe",
     method: "post",
     params: {
@@ -61,7 +61,7 @@ export function subscribePlaylist(params: {
  * @param id 歌单id,可多个,用逗号隔开
  */
 export function deletePlaylist(id: number) {
-  return request<{ id: number }, NeteaseAPIResponse>({
+  return apiRequest<{ id: number }, NeteaseAPIResponse>({
     url: "/playlist/delete",
     method: "post",
     params: { id }
@@ -80,7 +80,7 @@ export function createPlaylist(params: {
   /** 歌单类型,默认`NORMAL`,传 `VIDEO`则为视频歌单 */
   type?: "NORMAL" | "VIDEO";
 }) {
-  return request<typeof params & { timestamp: number }, NeteaseAPIResponse>({
+  return apiRequest<typeof params & { timestamp: number }, NeteaseAPIResponse>({
     url: "/playlist/create",
     method: "post",
     params: {
@@ -102,7 +102,7 @@ export function addOrRemoveTrackFromPlaylist(params: {
   /** 歌曲 id,可多个,用逗号隔开 */
   tracks: number | string;
 }) {
-  return request<typeof params & { timestamp: number }, NeteaseAPIResponse>({
+  return apiRequest<typeof params & { timestamp: number }, NeteaseAPIResponse>({
     url: "/playlist/tracks",
     method: "post",
     params: {
@@ -125,7 +125,7 @@ export function intelligencePlaylist(params: {
   /** 要开始播放的歌曲的 id (可选参数) */
   sid?: number;
 }) {
-  return request({
+  return apiRequest({
     url: "/playmode/intelligence/list",
     method: "get",
     params

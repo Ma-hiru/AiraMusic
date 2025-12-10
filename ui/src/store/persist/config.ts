@@ -1,7 +1,5 @@
-import { playlistCategories } from "@mahiru/ui/api/utils/staticData";
 import { ZustandConfig } from "@mahiru/ui/types/zustand";
 
-const enabledPlaylistCategories = playlistCategories.filter((c) => c.enable).map((c) => c.name);
 const historyListStatic: NeteaseTrack[] = [];
 
 export const PersistStoreConfig: ZustandConfig<

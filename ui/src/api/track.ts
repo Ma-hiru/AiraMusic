@@ -1,7 +1,7 @@
-import request from "./utils/request";
+import { apiRequest } from "@mahiru/ui/utils/request";
 import { usePersistZustandStore } from "../store";
 import { CacheStoreErr, NCMServerErr } from "@mahiru/ui/utils/errs";
-import { Store } from "@mahiru/ui/store";
+import { CacheStore } from "@mahiru/ui/store";
 import { Log } from "@mahiru/ui/utils/dev";
 
 /**
@@ -19,7 +19,7 @@ export async function getMP3(id: string | number) {
     return quality === "flac" ? "350000" : quality;
   };
   try {
-    return await request<any, NeteaseSongUrlResponse>({
+    return await apiRequest<any, NeteaseSongUrlResponse>({
       url: "/song/url",
       method: "get",
       params: {
@@ -63,7 +63,7 @@ export const enum NeteaseMusicLevel {
  * */
 export async function getMP3New(id: string | number, level: NeteaseMusicLevel, unblock = false) {
   try {
-    return await request<any, NeteaseMusicLevel>("/song/url/v1", {
+    return await apiRequest<any, NeteaseMusicLevel>("/song/url/v1", {
       method: "get",
       params: {
         id,
@@ -85,7 +85,10 @@ export async function getMP3New(id: string | number, level: NeteaseMusicLevel, u
 export async function getTrackDetail(ids: string | number): Promise<NeteaseTrackDetailResponse> {
   const cacheID = `song_detail?ids=` + ids;
   try {
-    const cache = await Store.fetchObject<NeteaseTrackDetailResponse>(cacheID, 1000 * 60 * 60 * 24); // 缓存24小时
+    const cache = await CacheStore.fetchObject<NeteaseTrackDetailResponse>(
+      cacheID,
+      1000 * 60 * 60 * 24
+    ); // 缓存24小时
     if (cache) {
       Log.trace("api/track.ts:getTrackDetail", "使用歌曲详情缓存", ids);
       return cache;
@@ -94,7 +97,7 @@ export async function getTrackDetail(ids: string | number): Promise<NeteaseTrack
     throw CacheStoreErr.create("ui/api/track.ts:getTrackDetail", err);
   }
   try {
-    return await request<{ ids: string | number }, NeteaseTrackDetailResponse>({
+    return await apiRequest<{ ids: string | number }, NeteaseTrackDetailResponse>({
       url: "/song/detail",
       method: "get",
       params: {
@@ -103,7 +106,7 @@ export async function getTrackDetail(ids: string | number): Promise<NeteaseTrack
     }).then((result) => {
       Log.trace("api/track.ts:getTrackDetail", "获取歌曲详情并缓存");
       try {
-        void Store.storeObject(cacheID, result);
+        void CacheStore.storeObject(cacheID, result);
       } catch (err) {
         Log.error(CacheStoreErr.create("ui/api/track.ts:getTrackDetail", err));
       }
@@ -121,7 +124,7 @@ export async function getTrackDetail(ids: string | number): Promise<NeteaseTrack
  */
 export async function topSong(type: 0 | 7 | 96 | 8 | 16) {
   try {
-    return await request<{ type: number }, NeteaseTopSongResponse>({
+    return await apiRequest<{ type: number }, NeteaseTopSongResponse>({
       url: "/top/song",
       method: "get",
       params: {
@@ -144,7 +147,7 @@ export async function likeATrack(params: {
   like?: boolean;
 }) {
   try {
-    return await request<typeof params & { timestamp: number }, NeteaseAPIResponse>({
+    return await apiRequest<typeof params & { timestamp: number }, NeteaseAPIResponse>({
       url: "/like",
       method: "get",
       params: {
@@ -170,7 +173,7 @@ export async function scrobble(params: {
   time?: number;
 }) {
   try {
-    return await request<typeof params & { timestamp: number }, NeteaseAPIResponse>({
+    return await apiRequest<typeof params & { timestamp: number }, NeteaseAPIResponse>({
       url: "/scrobble",
       method: "get",
       params: {

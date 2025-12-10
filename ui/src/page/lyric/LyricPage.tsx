@@ -4,8 +4,8 @@ import { useImmer } from "use-immer";
 import { LyricPlayer, LyricPlayerRef } from "@mahiru/ui/componets/player/LyricPlayer";
 import { cx } from "@emotion/css";
 import {
-  changeLyricComponentColorByCSSVar,
-  changeLyricComponentFontSizeByCSSVar
+  changeAMLyricColor,
+  changeAMLyricFontSize
 } from "@mahiru/ui/utils/ui";
 import Control from "@mahiru/ui/page/lyric/Control";
 import { useUpdate } from "@mahiru/ui/hook/useUpdate";
@@ -99,16 +99,16 @@ const LyricPage: FC<object> = () => {
   // 颜色变化
   useEffect(() => {
     if (color !== undefined) {
-      changeLyricComponentColorByCSSVar(color);
+      changeAMLyricColor(color);
       window.localStorage.setItem("lyricWindowColor", color);
     } else {
-      changeLyricComponentColorByCSSVar(lyricSync.themeColor || "#ffffff");
+      changeAMLyricColor(lyricSync.themeColor || "#ffffff");
       window.localStorage.removeItem("lyricWindowColor");
     }
   }, [color, lyricSync.themeColor]);
   // 字体大小变化
   useEffect(() => {
-    changeLyricComponentFontSizeByCSSVar(fontSize);
+    changeAMLyricFontSize(fontSize);
     window.localStorage.setItem("lyricWindowFontSize", fontSize);
   }, [fontSize]);
 

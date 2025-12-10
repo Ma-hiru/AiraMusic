@@ -2,7 +2,7 @@ import { EqError, Log } from "@mahiru/ui/utils/dev";
 import { refreshCookie } from "@mahiru/ui/api/auth";
 import { userAccount, userDetail, userLikedSongsIDs, userPlaylist } from "@mahiru/ui/api/user";
 import { getDynamicSnapshot, getPersistSnapshot } from "@mahiru/ui/store";
-import { doLogout, setCookies } from "@mahiru/ui/api/utils/auth";
+import { doLogout, setCookies } from "@mahiru/ui/utils/auth";
 
 /** 登录接口 */
 export async function refreshLogin(cookies: string) {

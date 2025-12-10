@@ -1,11 +1,11 @@
-import request from "./utils/request";
+import { apiRequest } from "@mahiru/ui/utils/request";
 
 /**
  * 获取专辑内容
  * @param id 专辑 id
  */
 export function getAlbum(id: number) {
-  return request<{ id: number }, NeteaseAPIResponse>({
+  return apiRequest<{ id: number }, NeteaseAPIResponse>({
     url: "/album",
     method: "get",
     params: {
@@ -27,7 +27,7 @@ export function newAlbums(params: {
   /** ALL:全部,ZH:华语,EA:欧美,KR:韩国,JP:日本 */
   area?: "ALL" | "ZH" | "EA" | "KR" | "JP";
 }) {
-  return request({
+  return apiRequest({
     url: "/album/new",
     method: "get",
     params
@@ -40,7 +40,7 @@ export function newAlbums(params: {
  * @param id 专辑id
  */
 export function albumDynamicDetail(id: number) {
-  return request<{ id: number; timestamp: number }, NeteaseAPIResponse>({
+  return apiRequest<{ id: number; timestamp: number }, NeteaseAPIResponse>({
     url: "/album/detail/dynamic",
     method: "get",
     params: { id, timestamp: new Date().getTime() }
@@ -57,7 +57,7 @@ export function likeAAlbum(params: {
   /** 1 为收藏,其他为取消收藏 */
   t: number;
 }) {
-  return request<typeof params, NeteaseAPIResponse>({
+  return apiRequest<typeof params, NeteaseAPIResponse>({
     url: "/album/sub",
     method: "post",
     params

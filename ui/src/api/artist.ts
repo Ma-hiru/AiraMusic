@@ -1,7 +1,7 @@
-import request from "./utils/request";
-import { mapTrackPlayableStatus } from "./utils/common";
-import { isAccountLoggedIn } from "./utils/auth";
-import { getTrackDetail } from "./track";
+import { apiRequest } from "@mahiru/ui/utils/request";
+import { isAccountLoggedIn } from "@mahiru/ui/utils/auth";
+import { getTrackDetail } from "@mahiru/ui/api/track";
+import { NeteaseTrackPlayableFilter } from "@mahiru/ui/utils/filter";
 
 /**
  * 获取歌手单曲
@@ -9,7 +9,7 @@ import { getTrackDetail } from "./track";
  * @param id - 歌手 id, 可由搜索接口获得
  */
 export function getArtist(id: number) {
-  return request<{ id: number; timestamp: number }, NeteaseAPIResponse>({
+  return apiRequest<{ id: number; timestamp: number }, NeteaseAPIResponse>({
     url: "/artists",
     method: "get",
     params: {
@@ -23,7 +23,7 @@ export function getArtist(id: number) {
       data.hotSongs = tracks.songs;
       return data;
     }
-    data.hotSongs = mapTrackPlayableStatus(data.hotSongs);
+    data.hotSongs = NeteaseTrackPlayableFilter(data.hotSongs);
     return data;
   });
 }
@@ -42,7 +42,7 @@ export function getArtistAlbum(params: {
 }) {
   params.limit ||= 50;
   params.offset ||= 0;
-  return request<typeof params, NeteaseAPIResponse>({
+  return apiRequest<typeof params, NeteaseAPIResponse>({
     url: "/artist/album",
     method: "get",
     params
@@ -65,7 +65,7 @@ export const enum ArtistRegion {
  */
 // TODO: 返回体包含 artists、type 等字段，待补 `NeteaseArtistToplistResponse` 类型
 export function toplistOfArtists(type?: ArtistRegion) {
-  return request({
+  return apiRequest({
     url: "/toplist/artist",
     method: "get",
     params: {
@@ -87,7 +87,7 @@ export function artistMv(params: {
   offset: number;
   limit: number;
 }) {
-  return request({
+  return apiRequest({
     url: "/artist/mv",
     method: "get",
     params
@@ -104,7 +104,7 @@ export function followAArtist(params: {
   /** 操作,1 为收藏,其他为取消收藏 */
   t: number;
 }) {
-  return request<typeof params, NeteaseAPIResponse>({
+  return apiRequest<typeof params, NeteaseAPIResponse>({
     url: "/artist/sub",
     method: "post",
     params
@@ -118,7 +118,7 @@ export function followAArtist(params: {
  */
 // TODO: `/simi/artist` 返回相似歌手列表，待补类型
 export function similarArtists(id: number) {
-  return request({
+  return apiRequest({
     url: "/simi/artist",
     method: "post",
     params: { id }

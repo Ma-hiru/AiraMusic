@@ -1,17 +1,17 @@
-import { getTextColorByBackgroundColor, readThemeColorByCSSVar } from "@mahiru/ui/utils/ui";
+import { calcTextColorOn, getAPPThemeColor } from "@mahiru/ui/utils/ui";
 import { useEffect, useState } from "react";
 
 export function useTextColorOnThemeColor() {
-  const [mainColor, setMainColor] = useState(() => readThemeColorByCSSVar().main);
-  const [textColor, setTextColor] = useState(() => getTextColorByBackgroundColor(mainColor).hex());
+  const [mainColor, setMainColor] = useState(() => getAPPThemeColor().main);
+  const [textColor, setTextColor] = useState(() => calcTextColorOn(mainColor).hex());
 
   useEffect(() => {
     const observer = new MutationObserver(() => {
-      const { main: newMain } = readThemeColorByCSSVar();
+      const { main: newMain } = getAPPThemeColor();
       if (mainColor !== newMain) {
         setMainColor(newMain);
       }
-      const newTextColor = getTextColorByBackgroundColor(newMain).hex();
+      const newTextColor = calcTextColorOn(newMain).hex();
       if (textColor !== newTextColor) {
         setTextColor(newTextColor);
       }
@@ -25,7 +25,7 @@ export function useTextColorOnThemeColor() {
     };
   }, [mainColor, textColor]);
   useEffect(() => {
-    getTextColorByBackgroundColor(mainColor).hex();
+    calcTextColorOn(mainColor).hex();
   }, [mainColor]);
 
   return textColor;

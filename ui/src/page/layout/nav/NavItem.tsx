@@ -1,6 +1,6 @@
 import { FC, memo, ReactNode, HTMLAttributes } from "react";
 import { cx } from "@emotion/css";
-import { getTextColorByBackgroundColor, readThemeColorByCSSVar } from "@mahiru/ui/utils/ui";
+import { calcTextColorOn, getAPPThemeColor } from "@mahiru/ui/utils/ui";
 import { useTextColorOnThemeColor } from "@mahiru/ui/hook/useTextColorOnThemeColor";
 
 type Props = Omit<HTMLAttributes<HTMLDivElement>, "prefix"> & {

@@ -1,5 +1,5 @@
-import request from "./utils/request";
-import { Store } from "@mahiru/ui/store";
+import { apiRequest } from "@mahiru/ui/utils/request";
+import { CacheStore } from "@mahiru/ui/store";
 import { IsChangeDay } from "@mahiru/ui/utils/time";
 import { Log } from "@mahiru/ui/utils/dev";
 import { NeteaseBannerResponse } from "@mahiru/ui/types/netease/banner";
@@ -14,18 +14,21 @@ export async function recommendPlaylist(
 ): Promise<NeteaseRecommendPlaylistResponse> {
   const cacheKey = `personalized_${limit ?? 30}`;
   // 5分钟缓存
-  const cache = await Store.fetchObject<NeteaseRecommendPlaylistResponse>(cacheKey, 1000 * 60 * 5);
+  const cache = await CacheStore.fetchObject<NeteaseRecommendPlaylistResponse>(
+    cacheKey,
+    1000 * 60 * 5
+  );
   if (cache) {
     Log.trace("api/recommend.ts:recommendPlaylist", "使用推荐歌单缓存");
     return cache;
   }
-  return await request<any, NeteaseRecommendPlaylistResponse>({
+  return await apiRequest<any, NeteaseRecommendPlaylistResponse>({
     url: "/personalized",
     method: "get",
     params: { limit, timestamp: Date.now() }
   }).then((result) => {
     Log.trace("api/recommend.ts:recommendPlaylist", "更新推荐歌单缓存");
-    Store.storeObject(cacheKey, result);
+    CacheStore.storeObject(cacheKey, result);
     return result;
   });
 }
@@ -36,7 +39,7 @@ export async function recommendPlaylist(
  */
 export async function dailyRecommendPlaylist(): Promise<NeteaseDailyRecommendPlaylistResponse> {
   const cacheKey = `recommend_resource`;
-  const cache = await Store.fetchObject<NeteaseDailyRecommendPlaylistResponse>(
+  const cache = await CacheStore.fetchObject<NeteaseDailyRecommendPlaylistResponse>(
     cacheKey,
     // 如果是新的一天则强制更新缓存,否则缓存24小时
     IsChangeDay() ? 0 : 1000 * 60 * 60 * 24
@@ -45,13 +48,13 @@ export async function dailyRecommendPlaylist(): Promise<NeteaseDailyRecommendPla
     Log.trace("api/recommend.ts:dailyRecommendPlaylist", "使用推荐歌单缓存");
     return cache;
   }
-  return await request<any, NeteaseDailyRecommendPlaylistResponse>({
+  return await apiRequest<any, NeteaseDailyRecommendPlaylistResponse>({
     url: "/recommend/resource",
     method: "get",
     params: { timestamp: Date.now() }
   }).then((result) => {
     Log.trace("api/recommend.ts:dailyRecommendPlaylist", "更新推荐歌单缓存");
-    Store.storeObject(cacheKey, result);
+    CacheStore.storeObject(cacheKey, result);
     return result;
   });
 }
@@ -62,7 +65,7 @@ export async function dailyRecommendPlaylist(): Promise<NeteaseDailyRecommendPla
  */
 export async function dailyRecommendTracks(): Promise<NeteaseDailyRecommendTracksResponse> {
   const cacheKey = `recommend_songs`;
-  const cache = await Store.fetchObject<NeteaseDailyRecommendTracksResponse>(
+  const cache = await CacheStore.fetchObject<NeteaseDailyRecommendTracksResponse>(
     cacheKey,
     // 如果是新的一天则强制更新缓存,否则缓存24小时
     IsChangeDay() ? 0 : 1000 * 60 * 60 * 24
@@ -71,13 +74,13 @@ export async function dailyRecommendTracks(): Promise<NeteaseDailyRecommendTrack
     Log.trace("api/recommend.ts:dailyRecommendTracks", "使用推荐歌曲缓存");
     return cache;
   }
-  return await request<any, NeteaseDailyRecommendTracksResponse>({
+  return await apiRequest<any, NeteaseDailyRecommendTracksResponse>({
     url: "/recommend/songs",
     method: "get",
     params: { timestamp: Date.now() }
   }).then((result) => {
     Log.trace("api/recommend.ts:dailyRecommendTracks", "更新推荐歌曲缓存");
-    Store.storeObject(cacheKey, result);
+    CacheStore.storeObject(cacheKey, result);
     return result;
   });
 }
@@ -94,7 +97,7 @@ export function highQualityPlaylist(params: {
   /** 分页参数,取上一页最后一个歌单的 updateTime 获取下一页数据 */
   before: number;
 }): Promise<NeteaseHighQualityPlaylistsResponse> {
-  return request({
+  return apiRequest({
     url: "/top/playlist/highquality",
     method: "get",
     params
@@ -113,7 +116,7 @@ export function topPlaylist(params: {
   /** 取出歌单数量 , 默认为 50 */
   limit?: number;
 }): Promise<NeteaseTopPlaylistResponse> {
-  return request({
+  return apiRequest({
     url: "/top/playlist",
     method: "get",
     params
@@ -125,7 +128,7 @@ export function topPlaylist(params: {
  * @desc 调用此接口,可获取所有榜单 接口地址 : /toplist
  */
 export function toplists() {
-  return request({
+  return apiRequest({
     url: "/toplist",
     method: "get"
   });
@@ -140,18 +143,18 @@ export function toplists() {
 export async function homeBanner(type: 0 | 1 | 2 | 3 = 0): Promise<NeteaseBannerResponse> {
   const cacheKey = `banner_${type}`;
   // 5分钟缓存
-  const cache = await Store.fetchObject<NeteaseBannerResponse>(cacheKey, 1000 * 60 * 5);
+  const cache = await CacheStore.fetchObject<NeteaseBannerResponse>(cacheKey, 1000 * 60 * 5);
   if (cache) {
     Log.trace("api/recommend.ts:homeBanner", "使用 Banner 缓存");
     return cache;
   }
-  return await request<any, NeteaseBannerResponse>({
+  return await apiRequest<any, NeteaseBannerResponse>({
     url: "/banner",
     method: "get",
     params: { type, timestamp: Date.now() }
   }).then((result) => {
     Log.trace("api/recommend.ts:homeBanner", "更新 Banner 缓存");
-    Store.storeObject(cacheKey, result);
+    CacheStore.storeObject(cacheKey, result);
     return result;
   });
 }

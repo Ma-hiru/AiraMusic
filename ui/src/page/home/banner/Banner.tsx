@@ -5,7 +5,7 @@ import { NeteaseBanner } from "@mahiru/ui/types/netease/banner";
 import { EqError, Log } from "@mahiru/ui/utils/dev";
 import { usePlayer } from "@mahiru/ui/ctx/PlayerCtx";
 import { getTrackDetail } from "@mahiru/ui/api/track";
-import { NeteaseTrackPrivilegesStatusFilter } from "@mahiru/ui/utils/filter";
+import { NeteaseTracksPrivilegeExtendsFilter } from "@mahiru/ui/utils/filter";
 import { useTextColorOnThemeColor } from "@mahiru/ui/hook/useTextColorOnThemeColor";
 import { useAppLoaded } from "@mahiru/ui/hook/useAppLoaded";
 
@@ -37,7 +37,7 @@ const Banner: FC<object> = () => {
       switch (type) {
         case "song": {
           const detail = await getTrackDetail(id);
-          const tracks = NeteaseTrackPrivilegesStatusFilter(detail.songs, detail.privileges);
+          const tracks = NeteaseTracksPrivilegeExtendsFilter(detail.songs, detail.privileges);
           const track = tracks[0];
           if (track && track.playable) {
             addAndPlayTrack({

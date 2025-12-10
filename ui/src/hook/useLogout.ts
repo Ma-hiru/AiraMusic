@@ -1,4 +1,4 @@
-import { doLogout, isAccountLoggedIn } from "@mahiru/ui/api/utils/auth";
+import { doLogout, isAccountLoggedIn } from "@mahiru/ui/utils/auth";
 import { addMessageHandler } from "@mahiru/ui/utils/message";
 import { refreshLogin } from "@mahiru/ui/utils/task";
 import { useNavigate } from "react-router-dom";

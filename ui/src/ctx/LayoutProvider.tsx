@@ -2,7 +2,7 @@ import KMeansWorker from "@mahiru/ui/worker/kmeans.ts?worker";
 import { ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { LayoutCtx, LayoutCtxType } from "@mahiru/ui/ctx/LayoutCtx";
 import { EqError, Log } from "@mahiru/ui/utils/dev";
-import { changeThemeColorByCSSVar } from "@mahiru/ui/utils/ui";
+import { changeAPPThemeColor } from "@mahiru/ui/utils/ui";
 
 const themeColorCache = new Map<string, string[]>();
 
@@ -57,7 +57,7 @@ export default function LayoutProvider({ children }: { children: ReactNode }) {
     const mainColor = backgroundThemeColor[0] || "#fc3d49";
     const secondaryColor = backgroundThemeColor[1] || "#ffffff";
     if (mainColor && secondaryColor) {
-      changeThemeColorByCSSVar(mainColor, secondaryColor);
+      changeAPPThemeColor(mainColor, secondaryColor);
     }
   }, [backgroundThemeColor]);
 

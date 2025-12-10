@@ -1,5 +1,5 @@
-import request from "./utils/request";
-import { mapTrackPlayableStatus } from "./utils/common";
+import { apiRequest } from "@mahiru/ui/utils/request";
+import { NeteaseTrackPlayableFilter } from "@mahiru/ui/utils/filter";
 
 /**
  * 搜索类型枚举
@@ -34,19 +34,19 @@ export function search(params: {
   /** 搜索类型；默认为 1 即单曲 , 取值意义 : 1: 单曲, 10: 专辑, 100: 歌手, 1000: 歌单, 1002: 用户, 1004: MV, 1006: 歌词, 1009: 电台, 1014: 视频, 1018:综合 */
   type?: SearchType;
 }) {
-  return request<typeof params, NeteaseAPIResponse>({
+  return apiRequest<typeof params, NeteaseAPIResponse>({
     url: "/search",
     method: "get",
     params
   }).then((data) => {
     if (data.result?.song !== undefined)
-      data.result.song.songs = mapTrackPlayableStatus(data.result.song.songs);
+      data.result.song.songs = NeteaseTrackPlayableFilter(data.result.song.songs);
     return data;
   });
 }
 
 export function personalFM() {
-  return request<{ timestamp: number }, NeteaseAPIResponse>({
+  return apiRequest<{ timestamp: number }, NeteaseAPIResponse>({
     url: "/personal_fm",
     method: "get",
     params: {
@@ -56,7 +56,7 @@ export function personalFM() {
 }
 
 export function fmTrash(id: unknown) {
-  return request<{ id: unknown; timestamp: number }, NeteaseAPIResponse>({
+  return apiRequest<{ id: unknown; timestamp: number }, NeteaseAPIResponse>({
     url: "/fm_trash",
     method: "post",
     params: {

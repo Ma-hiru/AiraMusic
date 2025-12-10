@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
-import { readThemeColorByCSSVar } from "@mahiru/ui/utils/ui";
+import { getAPPThemeColor } from "@mahiru/ui/utils/ui";
 
 export function useThemeColor() {
-  const [mainColor, setMainColor] = useState(() => readThemeColorByCSSVar().main);
-  const [secondaryColor, setSecondaryColor] = useState(() => readThemeColorByCSSVar().secondary);
+  const [mainColor, setMainColor] = useState(() => getAPPThemeColor().main);
+  const [secondaryColor, setSecondaryColor] = useState(() => getAPPThemeColor().secondary);
 
   useEffect(() => {
     const observer = new MutationObserver(() => {
-      const { main: newMain, secondary: newSecondary } = readThemeColorByCSSVar();
+      const { main: newMain, secondary: newSecondary } = getAPPThemeColor();
       if (mainColor !== newMain) {
         setMainColor(newMain);
       }

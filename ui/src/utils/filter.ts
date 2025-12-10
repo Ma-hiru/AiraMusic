@@ -1,11 +1,9 @@
-import { isTrackPlayable } from "@mahiru/ui/api/utils/common";
-import { useDynamicZustandStore } from "@mahiru/ui/store";
 import { getTrackDetail } from "@mahiru/ui/api/track";
-import { Store } from "@mahiru/ui/store/cache";
 import { EqError, Log } from "@mahiru/ui/utils/dev";
+import { CacheStore, getPersistSnapshot } from "@mahiru/ui/store";
+import { Auth } from "@mahiru/ui/utils/auth";
 
-const getDynamicSnapshot = useDynamicZustandStore.getState;
-
+/** Netease Image Size Enum */
 export const enum ImageSize {
   xs,
   sm,
@@ -14,8 +12,8 @@ export const enum ImageSize {
   raw
 }
 
-/** 如果url为假值或者为本地路径，原地返回 */
-export function NeteaseImageSizeFilter(url: Undefinable<string>, size: ImageSize) {
+/** 设置图片的size，如果url为假值或者为本地路径，原地返回 */
+function NeteaseImageSize(url: Undefinable<string>, size: ImageSize) {
   if (!url || !url.startsWith("http")) return url;
   const u = new URL(url);
   let param;
@@ -37,8 +35,50 @@ export function NeteaseImageSizeFilter(url: Undefinable<string>, size: ImageSize
   return u.toString();
 }
 
-/** 拓展track状态，版权信息 */
-export function NeteaseTrackPrivilegesStatusFilter(
+/** 判断NeteaseTrack是否可以播放 */
+function NeteaseTrackPlayable(track: NeteaseTrack) {
+  const result = {
+    playable: true,
+    reason: ""
+  };
+
+  if (
+    // 播放权限 > 0
+    (typeof track?.privilege?.pl === "number" && track.privilege.pl > 0) ||
+    // 云盘歌曲且已登录
+    (Auth.isAccountLoggedIn() && track?.privilege?.cs)
+  )
+    return result;
+
+  const { data } = getPersistSnapshot();
+  const vipType = data?.user?.vipType;
+  // 0: 免费或无版权 1: VIP 歌曲 4: 购买专辑 8: 非会员可免费播放低音质，会员可播放高音质及下载
+  if (track.fee === 1 || track.privilege?.fee === 1) {
+    // VIP 歌曲
+    if (Auth.isAccountLoggedIn() && vipType === 11) {
+      result.playable = true;
+    } else {
+      result.playable = false;
+      result.reason = "VIP专属";
+    }
+  } else if (track.fee === 4 || track.privilege?.fee === 4) {
+    // 付费专辑
+    result.playable = false;
+    result.reason = "付费专辑";
+  } else if (track.noCopyrightRcmd !== null && track.noCopyrightRcmd !== undefined) {
+    result.playable = false;
+    result.reason = "无版权";
+    // st小于0时为灰色歌曲, 使用上传云盘的方法解灰后 st == 0。
+  } else if (track.privilege?.st && track.privilege.st < 0 && Auth.isAccountLoggedIn()) {
+    result.playable = false;
+    result.reason = "已下架";
+  }
+
+  return result;
+}
+
+/** 拓展track状态，包含版权信息 */
+function NeteaseTracksPrivilegeExtends(
   tracks: NeteaseTrack[],
   privileges: NeteaseTrackPrivilege[]
 ) {
@@ -47,20 +87,20 @@ export function NeteaseTrackPrivilegesStatusFilter(
     const privilege = privileges.find((item) => item.id === track.id);
     if (privilege) track.privilege = { ...(track.privilege ?? {}), ...privilege };
     // 注入 playable 状态
-    const { playable, reason } = isTrackPlayable(track);
+    const { playable, reason } = NeteaseTrackPlayable(track);
     track.playable = playable;
     track.reason = reason;
     return track as NeteaseTrack & { playable: boolean; reason: string };
   });
 }
 
-/** 检查歌单tracks是否完整，不完整再额外请求 */
-export async function NeteasePlayListToFullTracksFilter(response: NeteasePlaylistDetailResponse) {
+/** 检查歌单tracks字段是否完整，不完整再额外请求 */
+async function NeteasePlaylistToFullTracks(response: NeteasePlaylistDetailResponse) {
   const { playlist } = response;
   if (playlist.trackCount === playlist.tracks.length) {
     return response;
   } else {
-    const { tracks, privilege } = await NeteaseTrackIdsToFullTracksFilter(
+    const { tracks, privilege } = await NeteaseTrackIdsToDetail(
       playlist.trackIds.slice(playlist.tracks.length, playlist.trackCount),
       100
     );
@@ -70,11 +110,8 @@ export async function NeteasePlayListToFullTracksFilter(response: NeteasePlaylis
   }
 }
 
-/** 根据id获取歌曲详情 */
-export async function NeteaseTrackIdsToFullTracksFilter(
-  ids: TrackId[],
-  maxPerRequest: number = 100
-) {
+/** 根据歌曲id获取歌曲详情，会考虑请求次数和URL大小限制 */
+async function NeteaseTrackIdsToDetail(ids: TrackId[], maxPerRequest: number = 100) {
   const tracks: NeteaseTrack[] = [];
   const privilege: NeteaseTrackPrivilege[] = [];
   for (let i = 0; i < ids.length; i += maxPerRequest) {
@@ -86,8 +123,8 @@ export async function NeteaseTrackIdsToFullTracksFilter(
   return { tracks, privilege };
 }
 
-/** 检查缓存，命中则替换成本地路径，没有就预下载 */
-export async function NeteaseTrackCoverPreCacheFilter(
+/** 歌曲封面缓存，命中则替换成本地路径，没有就预下载 */
+async function NeteaseTrackCoverPreCache(
   tracks: NeteaseTrack[],
   range: [start: number, end: number],
   size: ImageSize = ImageSize.xs,
@@ -101,7 +138,7 @@ export async function NeteaseTrackCoverPreCacheFilter(
   if (start < 0) start = 0;
   // 构建检查列表
   const coverURLs = tracks.slice(start, end).map((track) => {
-    const url = NeteaseImageSizeFilter(track.al.picUrl, size)!;
+    const url = NeteaseImageSize(track.al.picUrl, size)!;
     return {
       id: url,
       url
@@ -110,8 +147,8 @@ export async function NeteaseTrackCoverPreCacheFilter(
   // 检查或预缓存
   let cached;
   try {
-    if (noStore) cached = await Store.checkMutil(coverURLs);
-    else cached = await Store.checkOrStoreAsyncMutil(coverURLs, "GET");
+    if (noStore) cached = await CacheStore.checkMutil(coverURLs);
+    else cached = await CacheStore.checkOrStoreAsyncMutil(coverURLs, "GET");
   } catch (err) {
     Log.error(
       new EqError({
@@ -137,7 +174,7 @@ export async function NeteaseTrackCoverPreCacheFilter(
         tracks[idx] = { ...track, al: newAl } as NeteaseTrack;
       } else {
         const oldId = track.al?.cachedPicUrlID;
-        if (oldId) void Store.remove(oldId);
+        if (oldId) void CacheStore.remove(oldId);
         const newAl = { ...(track.al ?? {}), cachedPicUrl: "", cachedPicUrlID: "" };
         tracks[idx] = { ...track, al: newAl } as NeteaseTrack;
       }
@@ -146,3 +183,12 @@ export async function NeteaseTrackCoverPreCacheFilter(
 
   return tracks;
 }
+
+export const Filter = {
+  NeteaseImageSize,
+  NeteaseTrackPlayable,
+  NeteaseTracksPrivilegeExtends,
+  NeteasePlaylistToFullTracks,
+  NeteaseTrackIdsToDetail,
+  NeteaseTrackCoverPreCache
+};
