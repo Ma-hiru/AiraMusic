@@ -10,6 +10,7 @@ type InvokeEventMaps = {
   GPUInfo: [undefined, Promise<string>];
   platform: [undefined, NodeJS.Platform];
   isMaximized: [undefined, boolean];
+  hasOpenInternalWindow: [WindowType, boolean];
 };
 
 /** Normal 事件类型以及参数 */
@@ -38,6 +39,7 @@ type MessageTypeMap = {
   /** token */
   login: string;
   lyricSync: LyricSync;
+  lyricSyncReverse: LyricSyncReverse;
   lyricInit: LyricInit;
   lyricVersion: LyricVersionType;
   nextTrack: undefined;

@@ -1,76 +1,50 @@
 import { FC, memo, SyntheticEvent, useCallback, useEffect, useRef, useState } from "react";
 import { Drag, NoDrag } from "@mahiru/ui/componets/public/Drag";
-import { addMessageHandler, removeMessageHandler } from "@mahiru/ui/utils/message";
-import { useImmer } from "use-immer";
 import { Pause, Play, SkipBack, SkipForward, X } from "lucide-react";
-import { useFileCache } from "@mahiru/ui/ctx/BlobCachedCtx";
-import { ImageSize, NeteaseImageSizeFilter } from "@mahiru/ui/utils/filter";
-import { useUpdate } from "@mahiru/ui/hook/useUpdate";
-import { Store } from "@mahiru/ui/store";
+import { useFileCache } from "@mahiru/ui/hook/useFileCache";
+import { Filter, ImageSize } from "@mahiru/ui/utils/filter";
+import { Renderer } from "@mahiru/ui/utils/renderer";
+import { CacheStore } from "@mahiru/ui/store";
 
 const MiniPlayerPage: FC<object> = () => {
-  const [info, setInfo] = useState<Nullable<LyricInit["info"]>>(null);
-  const [lyricSync, setLyricSync] = useImmer<LyricSync>({
-    currentTime: 0,
-    duration: 0,
-    lyricVersion: "raw",
-    isPlaying: false
-  });
-
-  const update = useUpdate();
-  useEffect(() => {
-    addMessageHandler((message) => {
-      const { data, type, to, from } = message;
-      if (from === "main" && to === "miniplayer") {
-        if (type === "lyricInit") {
-          const lyricInit = data as LyricInit;
-          setInfo(lyricInit.info);
-          update();
-        } else if (type === "lyricSync") {
-          const lyricSync = data as LyricSync;
-          setLyricSync((draft) => {
-            draft.currentTime = lyricSync.currentTime;
-            draft.duration = lyricSync.duration;
-            draft.lyricVersion = lyricSync.lyricVersion;
-            draft.isPlaying = lyricSync.isPlaying;
-          });
-          update();
-        }
-      }
-    }, "mini-player-sync-handler");
-    return () => {
-      removeMessageHandler("mini-player-sync-handler");
-    };
-  }, [setLyricSync, update]);
-  useEffect(() => {
-    window.node.event.loaded({
-      win: "miniplayer",
-      broadcast: true,
-      showAfterLoaded: true
-    });
-  }, []);
+  const [lyricInit, setLyricInit] = useState<LyricInit>();
+  const [lyricSync, setLyricSync] = useState<LyricSync>();
   const cacheID = useRef("");
-  const cachedCover = useFileCache(NeteaseImageSizeFilter(info?.cover, ImageSize.xs), {
-    onCacheHit: (_, id) => {
-      cacheID.current = id;
+  const track = lyricInit?.trackStatus.track;
+  const percent = lyricSync?.progress.duration
+    ? Math.min(((lyricSync.progress.currentTime || 0) / lyricSync.progress.duration) * 100, 100)
+    : 0;
+
+  const cachedCover = useFileCache(
+    Filter.NeteaseImageSize(track?.al.cachedPicUrl || track?.al.picUrl, ImageSize.xs),
+    {
+      onCacheHit: (_, id) => {
+        cacheID.current = id;
+      }
     }
-  });
+  );
   const onImageErr = useCallback(
     (e: SyntheticEvent<HTMLImageElement>) => {
-      const raw = NeteaseImageSizeFilter(info?.cover, ImageSize.xs) as string;
+      const raw = Filter.NeteaseImageSize(track?.al.picUrl, ImageSize.xs) as string;
       if (e.currentTarget.src === raw) return;
       e.currentTarget.src = raw;
-      console.log(
-        `MiniPlayer Image load error: ${cachedCover}, fallback to original cover: ${raw}`
-      );
-      if (cacheID.current) void Store.remove(cacheID.current);
+      if (cacheID.current) void CacheStore.remove(cacheID.current);
       cacheID.current = "";
     },
-    [cachedCover, info?.cover]
+    [track?.al.picUrl]
   );
-  const percent = lyricSync.duration
-    ? Math.min(((lyricSync.currentTime || 0) / lyricSync.duration) * 100, 100)
-    : 0;
+
+  useEffect(() => {
+    const removeInitListener = Renderer.addMessageHandler("lyricSync", "main", setLyricSync);
+    const removeSyncListener = Renderer.addMessageHandler("lyricInit", "main", setLyricInit);
+    return () => {
+      removeInitListener();
+      removeSyncListener();
+    };
+  }, []);
+  useEffect(() => {
+    Renderer.event.loaded({ broadcast: true });
+  }, []);
   return (
     <Drag className="w-screen h-screen overflow-hidden relative bg-white rounded-md text-black grid grid-rows-1 grid-cols-[auto_1fr] px-2 py-1 items-center select-none backdrop-blur-lg">
       <div className="h-12 w-12 rounded-md overflow-hidden">
@@ -79,16 +53,16 @@ const MiniPlayerPage: FC<object> = () => {
           src={cachedCover || undefined}
           loading="lazy"
           decoding="async"
-          alt={info?.title}
+          alt={track?.name}
           onError={onImageErr}
         />
       </div>
       <div className="h-full w-full flex flex-col justify-center px-2 gap-[6px] overflow-hidden">
         <div className="flex items-center justify-center gap-1">
-          <span className="text-[12px] font-bold truncate">{info?.title}</span>
+          <span className="text-[12px] font-bold truncate">{track?.name}</span>
           <span className="text-[12px]"> - </span>
           <span className="text-[10px] font-medium truncate opacity-50">
-            {info?.artist.map((a) => a.name).join("/")}
+            {track?.ar.map((a) => a.name).join("/")}
           </span>
         </div>
         <div className="grid grid-rows-1 grid-cols-[1fr_auto] items-center justify-center gap-1">
@@ -105,7 +79,7 @@ const MiniPlayerPage: FC<object> = () => {
             onClick={lastTrack}
             fill={"#171b20"}
           />
-          {lyricSync?.isPlaying ? (
+          {lyricSync?.playerStatus.playing ? (
             <Pause
               className="size-3 hover:scale-90 hover:opacity-50 active:scale-80 cursor-pointer ease-in-out transition-all duration-300"
               onClick={playTrack}
@@ -128,10 +102,7 @@ const MiniPlayerPage: FC<object> = () => {
       <NoDrag className="absolute right-1 top-1">
         <X
           className="size-4 hover:opacity-50 cursor-pointer active:text-white/80"
-          onClick={() => {
-            window.node.event.close("miniplayer");
-            window.node.event.visible("main");
-          }}
+          onClick={() => Renderer.event.close({ broadcast: true })}
         />
       </NoDrag>
     </Drag>
@@ -140,26 +111,19 @@ const MiniPlayerPage: FC<object> = () => {
 export default memo(MiniPlayerPage);
 
 function lastTrack() {
-  window.node.event.sendMessageTo({
-    from: "miniplayer",
-    to: "main",
-    type: "lastTrack",
-    data: undefined
+  Renderer.sendMessage("lyricSyncReverse", "main", {
+    playerControl: "last"
   });
 }
+
 function nextTrack() {
-  window.node.event.sendMessageTo({
-    from: "miniplayer",
-    to: "main",
-    type: "nextTrack",
-    data: undefined
+  Renderer.sendMessage("lyricSyncReverse", "main", {
+    playerControl: "next"
   });
 }
+
 function playTrack() {
-  window.node.event.sendMessageTo({
-    from: "miniplayer",
-    to: "main",
-    type: "playTrack",
-    data: undefined
+  Renderer.sendMessage("lyricSyncReverse", "main", {
+    playerControl: "play"
   });
 }

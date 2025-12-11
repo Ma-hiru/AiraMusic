@@ -4,7 +4,7 @@ import { useDynamicZustandShallowStore } from "@mahiru/ui/store";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ArrowBigUp } from "lucide-react";
 import NavPlayListItem from "@mahiru/ui/page/layout/nav/NavPlayListItem";
-import { useVirtualList, RowComponentType } from "@mahiru/ui/hook/useVirtualList";
+import { RowComponentType, useVirtualList } from "@mahiru/ui/hook/useVirtualList";
 import { useScrollAutoHide } from "@mahiru/ui/hook/useScrollAutoHide";
 
 const NavPlayList: FC<object> = () => {
@@ -39,7 +39,8 @@ const NavPlayList: FC<object> = () => {
     containerRef,
     overscan: 10,
     itemHeight: 55,
-    onRangeUpdate: onRangeChange
+    onRangeUpdate: onRangeChange,
+    extraData: undefined
   });
   const RowComponent = useCallback<RowComponentType<NeteasePlaylistSummary>>(
     (props) => {

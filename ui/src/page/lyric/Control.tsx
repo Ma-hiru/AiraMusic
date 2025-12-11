@@ -1,11 +1,12 @@
-import React, { FC, memo, useCallback, HTMLAttributes, useRef, useEffect, useState } from "react";
-import { cx, css } from "@emotion/css";
+import React, { FC, HTMLAttributes, memo, useCallback, useEffect, useRef, useState } from "react";
+import { css, cx } from "@emotion/css";
 import { Drag, NoDrag } from "@mahiru/ui/componets/public/Drag";
-import { formatCurrentTimeToMMSS } from "@mahiru/ui/utils/time";
 import { useLyric } from "@mahiru/ui/hook/useLyric";
 import { useManualAutoScroll } from "@mahiru/ui/hook/useMarquee";
 import { AArrowDown, AArrowUp, LockKeyholeOpen, LucideLock } from "lucide-react";
-import { ImageSize, NeteaseImageSizeFilter } from "@mahiru/ui/utils/filter";
+import { Filter, ImageSize } from "@mahiru/ui/utils/filter";
+import { Renderer } from "@mahiru/ui/utils/renderer";
+import { Time } from "@mahiru/ui/utils/time";
 
 type FontSize = `${number}px` | `${number}rem` | `${number}em`;
 
@@ -14,9 +15,8 @@ type ControlProps = Omit<HTMLAttributes<HTMLDivElement>, "color"> & {
   setShowBg: (show: boolean) => void;
   color?: string;
   setColor: (color?: string) => void;
-  info: Nullable<LyricInit["info"]>;
-  lyricSync: LyricSync;
-  lyricLines: FullVersionLyricLine;
+  lyricSync?: LyricSync;
+  lyricInit?: LyricInit;
   lock: boolean;
   setLock: (lock: boolean) => void;
   fontSize: FontSize;
@@ -26,9 +26,8 @@ type ControlProps = Omit<HTMLAttributes<HTMLDivElement>, "color"> & {
 const Control: FC<ControlProps> = ({
   showBg,
   color,
-  info,
-  lyricLines,
   lyricSync,
+  lyricInit,
   lock,
   setLock,
   setColor,
@@ -36,39 +35,9 @@ const Control: FC<ControlProps> = ({
   setFontSize,
   ...rest
 }) => {
+  const track = lyricInit?.trackStatus?.track;
   const [openColorSelect, setOpenColorSelect] = useState(false);
-  const setLyricVersion = useCallback((version: LyricVersionType) => {
-    window.node.event.sendMessageTo({
-      from: "lyric",
-      to: "main",
-      type: "lyricVersionChange",
-      data: version
-    });
-  }, []);
-  const { hasRm, hasTl, rmActive, tlActive, setRm, setTl } = useLyric(
-    lyricSync.lyricVersion,
-    setLyricVersion,
-    lyricLines
-  );
   const titleContainer = useRef<HTMLDivElement>(null);
-  useManualAutoScroll(titleContainer, {
-    speed: 10,
-    auto: true,
-    pingPong: true,
-    pauseOnHover: true,
-    gapDuration: 2000
-  });
-  useEffect(() => {
-    if (lock) {
-      window.node.event.mousePenetrate({
-        win: "lyric",
-        penetrate: true
-      });
-    }
-  }, [lock]);
-  useEffect(() => {
-    if (!showBg) setOpenColorSelect(false);
-  }, [showBg]);
 
   const upFontSize = useCallback(() => {
     const currentSize = parseInt(fontSize.replace("px", ""), 10);
@@ -81,13 +50,43 @@ const Control: FC<ControlProps> = ({
     const newSize = Math.max(currentSize - 2, 16);
     setFontSize(`${newSize}px`);
   }, [fontSize, setFontSize]);
+
+  const setLyricVersion = useCallback((version: LyricVersionType) => {
+    Renderer.sendMessage("lyricSyncReverse", "main", {
+      playerStatus: {
+        lyricVersion: version
+      }
+    });
+  }, []);
+
+  const { hasRm, hasTl, rmActive, tlActive, setRm, setTl } = useLyric(
+    lyricSync?.playerStatus.lyricVersion,
+    setLyricVersion,
+    lyricInit?.trackStatus.lyric
+  );
+  useManualAutoScroll(titleContainer, {
+    speed: 10,
+    auto: true,
+    pingPong: true,
+    pauseOnHover: true,
+    gapDuration: 2000
+  });
+
+  useEffect(() => {
+    lock && Renderer.event.mousePenetrate(true);
+  }, [lock]);
+
+  useEffect(() => {
+    if (!showBg) setOpenColorSelect(false);
+  }, [showBg]);
+
   return (
     <Drag
       className={cx(
         "w-screen px-2 py-1",
         showBg && "bg-black/40",
         css`
-          color: ${color || lyricSync.themeColor || "#ffffff"};
+          color: ${color || lyricSync?.themeColor || "#ffffff"};
         `
       )}
       drag={showBg}
@@ -101,14 +100,14 @@ const Control: FC<ControlProps> = ({
           <NoDrag
             onClick={() => setOpenColorSelect(!openColorSelect)}
             className="relative size-4 rounded-sm cursor-pointer mr-1"
-            style={{ backgroundColor: color || lyricSync.themeColor || "#ffffff" }}>
+            style={{ backgroundColor: color || lyricSync?.themeColor || "#ffffff" }}>
             <NoDrag
               className="absolute top-full mt-2 flex justify-start items-center gap-1 ease-in-out duration-300 transition-opacity"
               style={{
                 opacity: openColorSelect ? 1 : 0,
                 pointerEvents: openColorSelect ? "auto" : "none"
               }}>
-              {lyricSync.themeColor && (
+              {lyricSync?.themeColor && (
                 <NoDrag
                   className="size-4 rounded-sm cursor-pointer text-[8px] font-semibold"
                   style={{ backgroundColor: lyricSync.themeColor }}
@@ -152,10 +151,10 @@ const Control: FC<ControlProps> = ({
         </div>
         <div className="flex items-center gap-2">
           <img
-            src={NeteaseImageSizeFilter(info?.cover, ImageSize.xs)}
+            src={Filter.NeteaseImageSize(track?.al.cachedPicUrl || track?.al.picUrl, ImageSize.xs)}
             loading="lazy"
             decoding="async"
-            alt={info?.title}
+            alt={track?.name}
             className="rounded-full size-5 shrink-0"
           />
           <div
@@ -166,9 +165,9 @@ const Control: FC<ControlProps> = ({
                 scrollbar-width: none;
               `
             )}>
-            <span>{info?.title}</span>
-            {info?.title && <span> - </span>}
-            <span>{info?.artist.map((a) => a.name).join("/")}</span>
+            <span>{track?.name}</span>
+            {track?.name && <span> - </span>}
+            <span>{track?.ar.map((a) => a.name).join("/")}</span>
           </div>
         </div>
         <div className="w-full flex items-center justify-end">
@@ -177,18 +176,8 @@ const Control: FC<ControlProps> = ({
               <LucideLock
                 className="size-4 cursor-pointer hover:opacity-50 duration-300 ease-in-out transition-all active:scale-90"
                 onClick={() => setLock(false)}
-                onMouseOver={() => {
-                  window.node.event.mousePenetrate({
-                    win: "lyric",
-                    penetrate: false
-                  });
-                }}
-                onMouseLeave={() => {
-                  window.node.event.mousePenetrate({
-                    win: "lyric",
-                    penetrate: true
-                  });
-                }}
+                onMouseOver={() => Renderer.event.mousePenetrate(false)}
+                onMouseLeave={() => Renderer.event.mousePenetrate(true)}
               />
             ) : (
               <LockKeyholeOpen
@@ -230,8 +219,9 @@ const Control: FC<ControlProps> = ({
             </NoDrag>
           </div>
           <span className="text-[12px] font-semibold">
-            {formatCurrentTimeToMMSS(lyricSync?.currentTime)} /{" "}
-            {formatCurrentTimeToMMSS(lyricSync?.duration)}
+            {Time.formatTrackTime(lyricSync?.progress?.currentTime, "s")}
+            {" / "}
+            {Time.formatTrackTime(lyricSync?.progress?.duration, "s")}
           </span>
         </div>
       </div>

@@ -1,119 +1,84 @@
-import React, { FC, memo, useCallback, useEffect, useRef, useState } from "react";
-import { addMessageHandler, removeMessageHandler } from "@mahiru/ui/utils/message";
-import { useImmer } from "use-immer";
+import Control from "@mahiru/ui/page/lyric/Control";
+import {
+  FC,
+  memo,
+  MouseEvent as ReactMouseEvent,
+  useCallback,
+  useEffect,
+  useRef,
+  useState
+} from "react";
 import { LyricPlayer, LyricPlayerRef } from "@mahiru/ui/componets/player/LyricPlayer";
 import { cx } from "@emotion/css";
-import {
-  changeAMLyricColor,
-  changeAMLyricFontSize
-} from "@mahiru/ui/utils/ui";
-import Control from "@mahiru/ui/page/lyric/Control";
-import { useUpdate } from "@mahiru/ui/hook/useUpdate";
 import { WindowResize } from "@mahiru/ui/hook/useWindowResize";
+import { Renderer } from "@mahiru/ui/utils/renderer";
+import { UI } from "@mahiru/ui/utils/ui";
+import { Lyric } from "@mahiru/ui/utils/lyric";
 
 const LyricPage: FC<object> = () => {
   const lyricPlayerRef = useRef<LyricPlayerRef>(null);
-  const [lyricLines, setLyricLines] = useState<FullVersionLyricLine>({
-    full: [],
-    raw: [],
-    rm: [],
-    tl: []
-  });
-  const [info, setInfo] = useState<Nullable<LyricInit["info"]>>(null);
+  const [showBg, setShowBg] = useState(false);
+  const [lock, setLock] = useState(false);
+  const [lyricSync, setLyricSync] = useState<LyricSync>();
+  const [lyricInit, setLyricInit] = useState<LyricInit>();
   const [color, setColor] = useState(() => {
     return window.localStorage.getItem("lyricWindowColor") || undefined;
   });
-  const [lyricSync, setLyricSync] = useImmer<LyricSync>({
-    currentTime: 0,
-    duration: 0,
-    lyricVersion: "raw",
-    isPlaying: false,
-    themeColor: color
-  });
-  const [showBg, setShowBg] = useState(false);
-
   const [fontSize, setFontSize] = useState<FontSize>(() => {
     return (window.localStorage.getItem("lyricWindowFontSize") as FontSize) || "16px";
   });
-  const [lock, setLock] = useState(false);
-
-  const update = useUpdate();
   const showBgTimer = useRef<Nullable<ReturnType<typeof setTimeout>>>(null);
-  const getSync = useRef(lyricSync);
-  getSync.current = lyricSync;
+
   // 同步信息
   useEffect(() => {
-    addMessageHandler<LyricInit | LyricSync>((message) => {
-      const { data, type, to, from } = message;
-      if (from === "main" && to === "lyric") {
-        if (type === "lyricInit") {
-          const lyricInit = data as LyricInit;
-          setLyricLines(lyricInit.lyricLines);
-          setInfo(lyricInit.info);
-          setLyricSync((draft) => {
-            draft.themeColor = lyricInit.themeColor;
-          });
-          update();
-        } else if (type === "lyricSync") {
-          const lyricSync = data as LyricSync;
-          setLyricSync((draft) => {
-            draft.currentTime = lyricSync.currentTime;
-            draft.duration = lyricSync.duration;
-            draft.lyricVersion = lyricSync.lyricVersion;
-            draft.isPlaying = lyricSync.isPlaying;
-            draft.themeColor = lyricSync.themeColor;
-          });
-          update();
-        }
-      }
-    }, "lyric-sync-handler");
+    const removeInitListener = Renderer.addMessageHandler("lyricInit", "main", setLyricInit);
+    const removeSyncListener = Renderer.addMessageHandler("lyricSync", "main", setLyricSync);
 
     return () => {
-      removeMessageHandler("lyric-sync-handler");
+      removeInitListener();
+      removeSyncListener();
     };
-  }, [setLyricSync, update]);
+  }, []);
   // 歌词播放同步
   useEffect(() => {
     let rafId = 0;
     let lastTime = 0;
-
     const onFrame = (time: number) => {
-      if (!getSync.current.isPlaying) return;
-
+      if (!lyricSync || !lyricSync.playerStatus.playing) return;
       if (!lastTime) lastTime = time;
       const delta = time - lastTime;
       lastTime = time;
 
       lyricPlayerRef.current?.lyricPlayer?.update(delta);
-      lyricPlayerRef.current?.lyricPlayer?.setCurrentTime((getSync.current.currentTime * 1000) | 0);
+      lyricPlayerRef.current?.lyricPlayer?.setCurrentTime(
+        (lyricSync.progress.currentTime * 1000) | 0
+      );
 
       rafId = requestAnimationFrame(onFrame);
     };
-
-    if (lyricSync.isPlaying) {
+    if (lyricSync?.playerStatus.playing) {
       rafId = requestAnimationFrame(onFrame);
     }
-
     return () => cancelAnimationFrame(rafId);
-  }, [lyricSync.isPlaying]);
+  }, [lyricSync]);
   // 颜色变化
   useEffect(() => {
     if (color !== undefined) {
-      changeAMLyricColor(color);
+      UI.AMLyricColor = color;
       window.localStorage.setItem("lyricWindowColor", color);
     } else {
-      changeAMLyricColor(lyricSync.themeColor || "#ffffff");
+      UI.AMLyricColor = lyricSync?.themeColor || "#ffffff";
       window.localStorage.removeItem("lyricWindowColor");
     }
-  }, [color, lyricSync.themeColor]);
+  }, [color, lyricSync?.themeColor]);
   // 字体大小变化
   useEffect(() => {
-    changeAMLyricFontSize(fontSize);
+    UI.AMLyricFontSize = fontSize;
     window.localStorage.setItem("lyricWindowFontSize", fontSize);
   }, [fontSize]);
 
   const handleClick = useCallback(
-    (e: React.MouseEvent) => {
+    (e: ReactMouseEvent) => {
       e.preventDefault();
       e.stopPropagation();
       if (lock) return;
@@ -129,8 +94,9 @@ const LyricPage: FC<object> = () => {
     },
     [lock, showBg]
   );
+
   const handleMouseOver = useCallback(
-    (e: React.MouseEvent) => {
+    (e: ReactMouseEvent) => {
       if (lock) return;
       e.preventDefault();
       setShowBg(true);
@@ -141,6 +107,7 @@ const LyricPage: FC<object> = () => {
     },
     [lock]
   );
+
   // 初始显示背景
   useEffect(() => {
     setShowBg(true);
@@ -149,12 +116,9 @@ const LyricPage: FC<object> = () => {
       setShowBg(false);
     }, 2500);
   }, []);
+
   useEffect(() => {
-    window.node.event.loaded({
-      win: "lyric",
-      broadcast: true,
-      showAfterLoaded: true
-    });
+    Renderer.event.loaded({ broadcast: true });
   }, []);
   return (
     <div className="w-screen h-screen overflow-hidden relative flex rounded-md flex-col-reverse">
@@ -173,11 +137,14 @@ const LyricPage: FC<object> = () => {
           )}>
           <LyricPlayer
             ref={lyricPlayerRef}
-            playing={lyricSync.isPlaying}
+            playing={lyricSync?.playerStatus.playing}
             className="w-full h-full"
             alignAnchor="center"
             hidePassedLines
-            lyricLines={chooseVersion(lyricSync, lyricLines)}
+            lyricLines={Lyric.chooseLyric(
+              lyricInit?.trackStatus.lyric,
+              lyricSync?.playerStatus.lyricVersion
+            )}
             enableScale={false}
             enableSpring={false}
           />
@@ -187,10 +154,9 @@ const LyricPage: FC<object> = () => {
         color={color}
         setColor={setColor}
         lyricSync={lyricSync}
-        info={info}
+        lyricInit={lyricInit}
         showBg={showBg}
         setShowBg={setShowBg}
-        lyricLines={lyricLines}
         lock={lock}
         setLock={setLock}
         fontSize={fontSize}
@@ -203,17 +169,3 @@ const LyricPage: FC<object> = () => {
 export default memo(LyricPage);
 
 type FontSize = `${number}px` | `${number}rem` | `${number}em`;
-
-function chooseVersion(lyricSync: LyricSync, lyricLines: FullVersionLyricLine) {
-  switch (lyricSync.lyricVersion) {
-    case "full":
-      return lyricLines.full;
-    case "tl":
-      return lyricLines.tl;
-    case "rm":
-      return lyricLines.rm;
-    case "raw":
-    default:
-      return lyricLines.raw;
-  }
-}

@@ -4,10 +4,7 @@ type PlayerTrackInfo = {
 };
 
 type PlayerTrackSource = {
-  lyric: {
-    version: LyricVersionType;
-    data: FullVersionLyricLine;
-  };
+  lyric: FullVersionLyricLine;
   audio: string;
   meta?: NeteaseSongUrlItem[];
 };
@@ -22,6 +19,7 @@ type PlayerStatus = {
   shuffle: boolean;
   position: number;
   lyricPreference: LyricVersionType | null;
+  lyricVersion: LyricVersionType;
 };
 
 type PlayerProgress = {

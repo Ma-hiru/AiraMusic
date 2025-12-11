@@ -1,10 +1,10 @@
 import { FC, memo, useCallback, useEffect, useState } from "react";
 import { Chromium, Minus, PictureInPicture, Square, SquareMinus, X } from "lucide-react";
 import { NoDrag } from "@mahiru/ui/componets/public/Drag";
-import { useMiniPlayerSync } from "@mahiru/ui/hook/useMiniPlayerSync";
 import { isDev } from "@mahiru/ui/utils/dev";
 import { Renderer } from "@mahiru/ui/utils/renderer";
 import { usePlayer } from "@mahiru/ui/ctx/PlayerCtx";
+import { usePlayerInfoSync } from "@mahiru/ui/hook/usePlayerInfoSync";
 
 interface ControlButtonProps {
   windowId: WindowType;
@@ -34,7 +34,8 @@ const TopControl: FC<ControlButtonProps> = ({ maximizable = true, mini = true })
     playlistControl.saveInZustand();
     setTimeout(() => Renderer.event.close(undefined), 200);
   }, [playlistControl]);
-  const { openMiniWin } = useMiniPlayerSync();
+
+  const { toggleTargetWindow } = usePlayerInfoSync("miniplayer");
 
   return (
     <NoDrag className="flex flex-row gap-4 select-none relative z-10 ease-in-out transition-all">
@@ -48,7 +49,7 @@ const TopControl: FC<ControlButtonProps> = ({ maximizable = true, mini = true })
       {mini && (
         <PictureInPicture
           className="size-5 cursor-pointer scale-95 hover:opacity-50"
-          onClick={openMiniWin}
+          onClick={toggleTargetWindow}
         />
       )}
       {isMax

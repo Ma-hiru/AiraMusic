@@ -1,14 +1,14 @@
-import { FC, memo, useCallback } from "react";
+import { FC, memo } from "react";
 import { usePlayer } from "@mahiru/ui/ctx/PlayerCtx";
 import { cx } from "@emotion/css";
 import { useLyric } from "@mahiru/ui/hook/useLyric";
 
 const LyricChange: FC<object> = () => {
-  const { lyricVersion, setLyricVersion, lyricLines } = usePlayer();
+  const { setLyricVersion, playerStatus, trackStatus } = usePlayer();
   const { hasTl, hasRm, setRm, setTl, rmActive, tlActive } = useLyric(
-    lyricVersion,
+    playerStatus.lyricVersion,
     setLyricVersion,
-    lyricLines
+    trackStatus?.lyric
   );
   return (
     <div className="absolute right-8 bottom-10 text-white flex flex-col gap-2 select-none">

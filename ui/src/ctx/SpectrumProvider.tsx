@@ -4,9 +4,9 @@ import { usePlayer } from "@mahiru/ui/ctx/PlayerCtx";
 import { SpectrumCtx, SpectrumCtxType } from "@mahiru/ui/ctx/SpectrumCtx";
 
 export default function SpectrumProvider({ children }: { children: ReactNode }) {
-  const { audioRef, isPlaying } = usePlayer();
+  const { audioRef, playerStatus } = usePlayer();
   const [spectrumOptions, setSpectrumOptions] = useState<SpectrumOptions>();
-  const { spectrumData, isReady } = useSpectrumWorker(audioRef, isPlaying, {
+  const { spectrumData, isReady } = useSpectrumWorker(audioRef, playerStatus.playing, {
     fftSize: 2048,
     numBands: 32,
     withPeaks: false,

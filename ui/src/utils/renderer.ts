@@ -81,6 +81,18 @@ class _Renderer {
     }
     return false;
   }
+
+  sendMessage<T extends keyof MessageTypeMap, U extends WindowType>(
+    type: T,
+    to: U,
+    data: MessageDataSend<T>["data"]
+  ) {
+    window.electron.event.message({
+      type,
+      to,
+      data
+    });
+  }
 }
 
 export const Renderer = new _Renderer();

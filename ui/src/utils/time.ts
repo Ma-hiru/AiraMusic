@@ -1,7 +1,7 @@
 import Dayjs from "dayjs";
 import { getPersistSnapshot } from "@mahiru/ui/store";
 
-function formatDate(time?: number, split?: string) {
+function formatTrackDate(time?: number, split?: string) {
   if (time) {
     const date = Dayjs(time);
     const now = Dayjs();
@@ -15,21 +15,19 @@ function formatDate(time?: number, split?: string) {
   return "";
 }
 
-function formatTrackDurationMS(ms: number, split?: string) {
-  if (!ms) return "0:00";
+function formatTrackTime(time: Optional<number>, type: "ms" | "s" = "ms", split?: string) {
+  if (!time) return "0:00";
   split ||= ":";
-  const minutes = Math.floor(ms / 60000);
-  const seconds = Math.floor((ms % 60000) / 1000);
+  let base;
+  if (type === "ms") {
+    base = 1000;
+  } else {
+    base = 1;
+  }
+  const minutes = Math.floor(time / (60 * base));
+  const seconds = Math.floor((time % (60 * base)) / base);
   const paddedSeconds = seconds.toString().padStart(2, "0");
   return `${minutes}${split}${paddedSeconds}`;
-}
-
-function formatTrackCurrentTimeSecond(s: number) {
-  if (!s) return "0:00";
-  const minutes = Math.floor(s / 60);
-  const seconds = Math.floor(s % 60);
-  const paddedSeconds = seconds.toString().padStart(2, "0");
-  return `${minutes}:${paddedSeconds}`;
 }
 
 function padNumber(num: number, length: number) {
@@ -43,9 +41,8 @@ function isChangeDay() {
 }
 
 export const Time = {
-  formatDate,
-  formatTrackDurationMS,
-  formatTrackCurrentTimeSecond,
+  formatTrackDate,
+  formatTrackTime,
   padNumber,
   isChangeDay
 };

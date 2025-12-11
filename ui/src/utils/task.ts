@@ -2,13 +2,13 @@ import { EqError, Log } from "@mahiru/ui/utils/dev";
 import { refreshCookie } from "@mahiru/ui/api/auth";
 import { userAccount, userDetail, userLikedSongsIDs, userPlaylist } from "@mahiru/ui/api/user";
 import { getDynamicSnapshot, getPersistSnapshot } from "@mahiru/ui/store";
-import { doLogout, setCookies } from "@mahiru/ui/utils/auth";
+import { Auth } from "@mahiru/ui/utils/auth";
 
 /** 登录接口 */
 export async function refreshLogin(cookies: string) {
   Log.debug("Logged in successfully, fetching user data...");
   try {
-    setCookies(cookies);
+    Auth.setCookies(cookies);
     await refreshUserProfile();
     await refreshUserPlaylist();
   } catch (err) {
@@ -19,7 +19,7 @@ export async function refreshLogin(cookies: string) {
         raw: err
       })
     );
-    doLogout();
+    void Auth.doLogout();
   }
 }
 /** 登录状态下，刷新Cookie */

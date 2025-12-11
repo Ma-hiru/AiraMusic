@@ -1,9 +1,4 @@
-import {
-  ImageSize,
-  NeteasePlaylistToFullTracksFilter,
-  NeteaseTrackCoverPreCacheFilter,
-  NeteaseTracksPrivilegeExtendsFilter
-} from "@mahiru/ui/utils/filter";
+import { Filter, ImageSize } from "@mahiru/ui/utils/filter";
 import { Log } from "@mahiru/ui/utils/dev";
 import { getPlaylistDetail } from "@mahiru/ui/api/playlist";
 import { CacheStore, getDynamicSnapshot } from "@mahiru/ui/store";
@@ -129,12 +124,12 @@ class _PlaylistManager {
       return cache;
     } else {
       const rawList = await getPlaylistDetail(id);
-      const fullList = await NeteasePlaylistToFullTracksFilter({ ...rawList });
-      fullList.playlist.tracks = NeteaseTracksPrivilegeExtendsFilter(
+      const fullList = await Filter.NeteasePlaylistToFullTracks({ ...rawList });
+      fullList.playlist.tracks = Filter.NeteaseTracksPrivilegeExtends(
         fullList.playlist.tracks,
         fullList.privileges
       );
-      fullList.playlist.tracks = await NeteaseTrackCoverPreCacheFilter(
+      fullList.playlist.tracks = await Filter.NeteaseTrackCoverPreCache(
         fullList.playlist.tracks,
         preloadRange,
         size

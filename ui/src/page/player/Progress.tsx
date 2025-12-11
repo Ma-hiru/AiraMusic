@@ -1,7 +1,7 @@
 import { FC, memo } from "react";
 import { usePlayProgress } from "@mahiru/ui/hook/usePlayProgress";
 import { motion } from "motion/react";
-import { formatCurrentTimeToMMSS } from "@mahiru/ui/utils/time";
+import { Time } from "@mahiru/ui/utils/time";
 
 const Progress: FC<object> = () => {
   const { barRef, bufferScope, percentScope, handleBarClick, handleBarMouseDown, progress } =
@@ -28,8 +28,8 @@ const Progress: FC<object> = () => {
         </div>
       </div>
       <div className="w-full flex justify-between items-center text-white/50 backdrop-blur-lg text-[12px] mt-1 select-none">
-        <span>{formatCurrentTimeToMMSS(progress.currentTime)}</span>
-        <span>{formatCurrentTimeToMMSS(progress.duration)}</span>
+        <span>{Time.formatTrackTime(progress.currentTime, "s")}</span>
+        <span>{Time.formatTrackTime(progress.duration, "s")}</span>
       </div>
     </div>
   );

@@ -43,31 +43,19 @@ type FullVersionLyricLine = {
 type LyricVersionType = "raw" | "full" | "tl" | "rm";
 
 type LyricInit = {
-  lyricLines: FullVersionLyricLine;
-  info: {
-    id: number;
-    title: string;
-    artist: Array<{ alias: string[]; id: number; name: string; tns: string[] }>;
-    album: Partial<{
-      id: number;
-      name: string;
-      pic: number;
-      pic_str?: string;
-      picUrl: string;
-      tns: string[];
-    }>;
-    cover: string;
-    audio: string;
-    alias: string;
-    tsTitle: string;
-  };
+  trackStatus: PlayerTrackStatus;
   themeColor?: string;
 };
 
 type LyricSync = {
-  currentTime: number;
-  duration: number;
-  lyricVersion: LyricVersionType;
-  isPlaying: boolean;
+  progress: PlayerProgress;
+  playerStatus: PlayerStatus;
   themeColor?: string;
+};
+
+type LyricSyncReverse = {
+  progress?: Partial<PlayerProgress>;
+  playerStatus?: Partial<PlayerStatus>;
+  themeColor?: string;
+  playerControl?: "next" | "last" | "play";
 };

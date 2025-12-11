@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ImageSize, NeteaseTrackCoverPreCacheFilter } from "@mahiru/ui/utils/filter";
+import { Filter, ImageSize } from "@mahiru/ui/utils/filter";
 import { Log } from "@mahiru/ui/utils/dev";
 import { PlaylistCacheEntry, PlaylistManager } from "@mahiru/ui/utils/playList";
 import { SearchTrack } from "@mahiru/wasm";
@@ -25,7 +25,7 @@ export function usePlayListNormal(id?: string) {
   // 检查并更新前一段预缓存范围
   const checkAndUpdateLastPreloadRange = useCallback(async (range: IndexRange) => {
     const [start, end] = range;
-    return await NeteaseTrackCoverPreCacheFilter(tracks.current, [start, end], ImageSize.xs, true);
+    return await Filter.NeteaseTrackCoverPreCache(tracks.current, [start, end], ImageSize.xs, true);
   }, []);
   // 虚拟列表范围更新回调
   const onVirtualListRangeUpdate = useCallback(
@@ -41,7 +41,7 @@ export function usePlayListNormal(id?: string) {
       // 如果开始位置是25的倍数再进行预缓存，减少调用次数
       if (start % 25 === 0 && start !== 0) {
         Log.debug("ui/PlayListPage.tsx:onVirtualListRangeUpdate", "预缓存封面", end, end + 25);
-        tracks.current = await NeteaseTrackCoverPreCacheFilter(
+        tracks.current = await Filter.NeteaseTrackCoverPreCache(
           tracks.current,
           [end, end + 25], // 70 95 95 120
           ImageSize.xs
@@ -174,7 +174,7 @@ export function usePlayListHistory() {
   // 检查并更新前一段预缓存范围
   const checkAndUpdateLastPreloadRange = useCallback(async (range: IndexRange) => {
     const [start, end] = range;
-    return await NeteaseTrackCoverPreCacheFilter(
+    return await Filter.NeteaseTrackCoverPreCache(
       historyTracks.current,
       [start, end],
       ImageSize.xs,
@@ -195,7 +195,7 @@ export function usePlayListHistory() {
       // 如果开始位置是25的倍数再进行预缓存，减少调用次数
       if (start % 25 === 0 && start !== 0) {
         Log.debug("ui/PlayListPage.tsx:onVirtualListRangeUpdate", "预缓存封面", end, end + 25);
-        historyTracks.current = await NeteaseTrackCoverPreCacheFilter(
+        historyTracks.current = await Filter.NeteaseTrackCoverPreCache(
           historyTracks.current,
           [end, end + 25], // 70 95 95 120
           ImageSize.xs

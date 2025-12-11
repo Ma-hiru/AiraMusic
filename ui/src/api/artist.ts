@@ -1,7 +1,7 @@
 import { apiRequest } from "@mahiru/ui/utils/request";
-import { isAccountLoggedIn } from "@mahiru/ui/utils/auth";
 import { getTrackDetail } from "@mahiru/ui/api/track";
-import { NeteaseTrackPlayableFilter } from "@mahiru/ui/utils/filter";
+import { Filter } from "@mahiru/ui/utils/filter";
+import { Auth } from "@mahiru/ui/utils/auth";
 
 /**
  * 获取歌手单曲
@@ -17,13 +17,13 @@ export function getArtist(id: number) {
       timestamp: new Date().getTime()
     }
   }).then(async (data) => {
-    if (!isAccountLoggedIn()) {
+    if (!Auth.isAccountLoggedIn()) {
       const trackIDs = data.hotSongs.map((t: any) => t.id);
       const tracks = await getTrackDetail(trackIDs.join(","));
       data.hotSongs = tracks.songs;
       return data;
     }
-    data.hotSongs = NeteaseTrackPlayableFilter(data.hotSongs);
+    data.hotSongs = data.hotSongs.map(Filter.NeteaseTrackPlayable);
     return data;
   });
 }

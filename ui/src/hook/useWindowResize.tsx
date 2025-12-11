@@ -1,5 +1,6 @@
 import { FC, MouseEvent as ReactMouseEvent, useCallback, useRef } from "react";
 import { cx } from "@emotion/css";
+import { Renderer } from "@mahiru/ui/utils/renderer";
 
 interface WindowResizeProps {
   disable: boolean;
@@ -32,7 +33,7 @@ export const WindowResize: FC<WindowResizeProps> = ({
     resizeRaf.current = requestAnimationFrame(() => {
       resizeRaf.current = null;
       if (!pendingBounds.current || Object.keys(pendingBounds.current).length === 0) return;
-      window.node.event.resizeWindow({ win: "lyric", bounds: pendingBounds.current });
+      Renderer.event.resizeWindow(pendingBounds.current);
       pendingBounds.current = {};
     });
   }, []);

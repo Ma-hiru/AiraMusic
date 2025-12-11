@@ -5,10 +5,11 @@ import { cx } from "@emotion/css";
 import { useLayout } from "@mahiru/ui/ctx/LayoutCtx";
 import { useGPU } from "@mahiru/ui/hook/useGPU";
 import { LyricLineMouseEvent } from "@applemusic-like-lyrics/core";
+import { Lyric as LyricUtils } from "@mahiru/ui/utils/lyric";
 
 const Lyric: FC<object> = () => {
   const lyricPlayerRef = useRef<LyricPlayerRef>(null);
-  const { lyricLines, audioRef, info, lyricVersion, isPlaying, getProgress } = usePlayer();
+  const { getPlayerProgress, trackStatus, audioRef, playerStatus } = usePlayer();
   const { PlayerModalVisible } = useLayout();
   const { hasDedicatedGPU } = useGPU();
   useEffect(() => {
@@ -37,32 +38,20 @@ const Lyric: FC<object> = () => {
         audio?.removeEventListener("loadstart", loadstart);
       };
     }
-  }, [audioRef, info.audio]);
-  const chooseVersion = () => {
-    switch (lyricVersion) {
-      case "full":
-        return lyricLines.full;
-      case "tl":
-        return lyricLines.tl;
-      case "rm":
-        return lyricLines.rm;
-      case "raw":
-      default:
-        return lyricLines.raw;
-    }
-  };
+  }, [audioRef]);
+
   const onLyricLineClick = useCallback(
     (e: LyricLineMouseEvent) => {
       const ms = e.line.getLine().startTime || 0;
       const nextTime = ms / 1000;
-      const { duration } = getProgress();
+      const { duration } = getPlayerProgress();
       const audio = audioRef.current;
       if (audio) {
         audio.currentTime = Math.min(nextTime, duration);
         audio.paused && audio.play();
       }
     },
-    [audioRef, getProgress]
+    [audioRef, getPlayerProgress]
   );
   return (
     <div
@@ -71,11 +60,11 @@ const Lyric: FC<object> = () => {
       )}>
       <LyricPlayer
         disabled
-        playing={isPlaying && PlayerModalVisible}
+        playing={playerStatus.playing && PlayerModalVisible}
         className="w-full h-full"
         ref={lyricPlayerRef}
         alignAnchor="center"
-        lyricLines={chooseVersion()}
+        lyricLines={LyricUtils.chooseLyric(trackStatus?.lyric, playerStatus.lyricVersion)}
         enableScale={hasDedicatedGPU}
         enableSpring={hasDedicatedGPU}
         onLyricLineClick={onLyricLineClick}

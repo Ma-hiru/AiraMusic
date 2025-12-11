@@ -1,9 +1,9 @@
 import { FC, memo, SyntheticEvent, useCallback } from "react";
 import NavSideNavItem from "@mahiru/ui/page/layout/nav/NavItem";
-import { useFileCache } from "@mahiru/ui/ctx/BlobCachedCtx";
+import { useFileCache } from "@mahiru/ui/hook/useFileCache";
 import { cx } from "@emotion/css";
-import { getDynamicSnapshot, Store } from "@mahiru/ui/store";
-import { ImageSize, NeteaseImageSizeFilter } from "@mahiru/ui/utils/filter";
+import { CacheStore, getDynamicSnapshot } from "@mahiru/ui/store";
+import { Filter, ImageSize } from "@mahiru/ui/utils/filter";
 
 interface Props {
   cover: { raw: string; cached: string; cacheID: string };
@@ -27,7 +27,7 @@ const NavPlayListItem: FC<Props> = ({
   index
 }) => {
   const cachedCover = useFileCache(
-    NeteaseImageSizeFilter(cover.cached || cover.raw, ImageSize.sm),
+    Filter.NeteaseImageSize(cover.cached || cover.raw, ImageSize.sm),
     {
       onCacheHit: (file, id) => {
         const { getUserPlayListSummaryStatic } = getDynamicSnapshot();
@@ -39,7 +39,7 @@ const NavPlayListItem: FC<Props> = ({
   );
   const onError = useCallback(
     (e: SyntheticEvent<HTMLImageElement>) => {
-      const raw = NeteaseImageSizeFilter(cover.raw, ImageSize.sm) as string;
+      const raw = Filter.NeteaseImageSize(cover.raw, ImageSize.sm) as string;
       if (e.currentTarget.src === raw) return;
       e.currentTarget.src = raw;
       console.log("nav Image load error:", cachedCover, "fallback to raw:", raw);
@@ -47,7 +47,7 @@ const NavPlayListItem: FC<Props> = ({
       const userPlayLists = getUserPlayListSummaryStatic();
       if (userPlayLists[index]) {
         userPlayLists[index].cachedCoverImgUrl = "";
-        void Store.remove(userPlayLists[index].cachedCoverImgUrlID);
+        void CacheStore.remove(userPlayLists[index].cachedCoverImgUrlID);
         userPlayLists[index].cachedCoverImgUrlID = "";
       }
     },

@@ -1,8 +1,9 @@
-import { FC, memo, useCallback } from "react";
-import { useFileCache } from "@mahiru/ui/ctx/BlobCachedCtx";
-import { ImageSize, NeteaseImageSizeFilter } from "@mahiru/ui/utils/filter";
+import { FC, memo, SyntheticEvent, useCallback, useRef } from "react";
+import { useFileCache } from "@mahiru/ui/hook/useFileCache";
+import { Filter, ImageSize } from "@mahiru/ui/utils/filter";
 import { useLayout } from "@mahiru/ui/ctx/LayoutCtx";
 import { PlaylistCacheEntry } from "@mahiru/ui/utils/playList";
+import { CacheStore } from "@mahiru/ui/store";
 
 interface TopCoverProps {
   entry: Nullable<PlaylistCacheEntry>;
@@ -10,12 +11,27 @@ interface TopCoverProps {
 
 const TopCover: FC<TopCoverProps> = ({ entry }) => {
   const url = entry?.playlist.coverImgUrl;
-  const sizedURL = NeteaseImageSizeFilter(url, ImageSize.lg);
-  const cachedCover = useFileCache(sizedURL);
+  const sizedURL = Filter.NeteaseImageSize(url, ImageSize.lg);
+  const cacheID = useRef("");
+  const cachedCover = useFileCache(sizedURL, {
+    onCacheHit: (_, id) => {
+      cacheID.current = id;
+    }
+  });
   const { setBackground } = useLayout();
   const onLoad = useCallback(() => {
     setBackground(cachedCover);
   }, [cachedCover, setBackground]);
+  const onImageError = useCallback(
+    (e: SyntheticEvent<HTMLImageElement>) => {
+      const raw = Filter.NeteaseImageSize(url, ImageSize.lg)!;
+      if (e.currentTarget.src === raw) return;
+      e.currentTarget.src = raw;
+      if (cacheID.current) void CacheStore.remove(cacheID.current);
+      cacheID.current = "";
+    },
+    [url]
+  );
   return (
     <img
       className="size-44 rounded-md shadow-xs select-none"
@@ -24,6 +40,7 @@ const TopCover: FC<TopCoverProps> = ({ entry }) => {
       decoding="async"
       alt={entry?.playlist.name}
       onLoad={onLoad}
+      onError={onImageError}
     />
   );
 };

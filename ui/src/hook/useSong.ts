@@ -7,6 +7,7 @@ import { useMediaSession } from "@mahiru/ui/hook/useMediaSession";
 import { useKeyboardShortcut } from "@mahiru/ui/hook/useKeyboardShortcut";
 import { useSongAudioControl } from "@mahiru/ui/hook/useSongAudioControl";
 import { useSongPlaylistControl } from "@mahiru/ui/hook/useSongPlaylistControl";
+import { Lyric } from "@mahiru/ui/utils/lyric";
 
 export function useSong(audioRef: RefObject<Nullable<HTMLAudioElement>>) {
   /**                        状态管理                         */
@@ -24,7 +25,8 @@ export function useSong(audioRef: RefObject<Nullable<HTMLAudioElement>>) {
     shuffle: false,
     volume: 0.5,
     volumeBeforeMute: 0.5,
-    lyricPreference: null
+    lyricPreference: null,
+    lyricVersion: "raw"
   });
   /**                        播放控制                         */
   const scrobble = useCallback((lastStatus: PlayerTrackStatus) => {
@@ -44,6 +46,20 @@ export function useSong(audioRef: RefObject<Nullable<HTMLAudioElement>>) {
     },
     [scrobble, trackStatus]
   );
+  const setLyricVersion = useCallback(
+    (next: LyricVersionType) => {
+      const chosenVersion = Lyric.checkLyricVersion(
+        trackStatus?.lyric,
+        next,
+        playerStatus.lyricVersion
+      );
+      setPlayerStatus((draft) => {
+        draft.lyricVersion = chosenVersion;
+        draft.lyricPreference = next;
+      });
+    },
+    [playerStatus.lyricVersion, setPlayerStatus, trackStatus?.lyric]
+  );
   const audioControl = useSongAudioControl({
     audioRef,
     playerStatus,
@@ -59,6 +75,7 @@ export function useSong(audioRef: RefObject<Nullable<HTMLAudioElement>>) {
   useSongResource({
     playerProgress,
     setTrackStatus,
+    setPlayerStatus,
     trackStatus,
     playlistManager: playlistControl.playlistManager
   });
@@ -177,15 +194,25 @@ export function useSong(audioRef: RefObject<Nullable<HTMLAudioElement>>) {
       callback: () => audioControl.downVolume(0.1)
     }
   ]);
-
+  const getPlayerProgress = useRef(() => playerProgress.current).current;
   return useMemo(
     () => ({
       trackStatus,
       playerStatus,
-      playerProgress,
+      getPlayerProgress,
       audioControl,
-      playlistControl
+      playlistControl,
+      setLyricVersion,
+      audioRef
     }),
-    [audioControl, playerStatus, playlistControl, trackStatus]
+    [
+      audioControl,
+      audioRef,
+      getPlayerProgress,
+      playerStatus,
+      playlistControl,
+      setLyricVersion,
+      trackStatus
+    ]
   );
 }

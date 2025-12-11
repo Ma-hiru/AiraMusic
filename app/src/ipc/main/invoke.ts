@@ -5,6 +5,7 @@ import { MainInvokeAPI } from "./typed";
 import { Log } from "../../utils/log";
 import { EqError } from "../../utils/err";
 import { fileURLToPath } from "node:url";
+import { WindowManager } from "../../window";
 
 const mainInvokeAPI = {
   readFile: async (_, localPath) => {
@@ -48,7 +49,15 @@ const mainInvokeAPI = {
     const win = BrowserWindow.fromWebContents(e.sender);
     return win ? win.isMaximized() : false;
   },
-  platform: () => process.platform
+  platform: () => process.platform,
+  hasOpenInternalWindow: (e, win) => {
+    const sender = BrowserWindow.fromWebContents(e.sender);
+    if (!sender) return false;
+    if (WindowManager.getId(sender) === "main") {
+      return WindowManager.has(win);
+    }
+    return false;
+  }
 } satisfies MainInvokeAPI;
 
 export function registerInvokeHandlers() {

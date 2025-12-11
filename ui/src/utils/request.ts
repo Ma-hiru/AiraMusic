@@ -1,5 +1,5 @@
 import axios, { AxiosResponse } from "axios";
-import { doLogout } from "./auth";
+import { Auth } from "./auth";
 import { Log } from "@mahiru/ui/utils/dev";
 import { waitLogin } from "@mahiru/ui/hook/useLogout";
 
@@ -45,7 +45,7 @@ apiRequest.interceptors.response.use(
       (data as { code?: number; msg?: string }).msg === "需要登录"
     ) {
       Log.warn("ui/request.ts", "Token has expired.");
-      doLogout().finally(waitLogin);
+      Auth.doLogout().finally(waitLogin);
     }
 
     return Promise.reject(error);

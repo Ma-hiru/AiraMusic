@@ -6,16 +6,24 @@ import { Track } from "@mahiru/ui/utils/track";
 import { useUnMounted } from "@mahiru/ui/hook/useUnMounted";
 import { PlaylistManager } from "@mahiru/ui/hook/useSongPlaylistControl";
 
-export function useSongResource(params: {
+interface SongResourceProps {
   playerProgress: RefObject<PlayerProgress>;
   trackStatus: Nullable<PlayerTrackStatus>;
   setTrackStatus: Updater<Nullable<PlayerTrackStatus>>;
+  setPlayerStatus: Updater<PlayerStatus>;
   lyricVersionPreference?: LyricVersionType;
   playlistManager: PlaylistManager;
-}) {
+}
+
+export function useSongResource({
+  playerProgress,
+  setTrackStatus,
+  lyricVersionPreference,
+  trackStatus,
+  playlistManager,
+  setPlayerStatus
+}: SongResourceProps) {
   Log.trace("useSongResource executed");
-  const { playerProgress, setTrackStatus, lyricVersionPreference, trackStatus, playlistManager } =
-    params;
   const lyricCancelRef = useRef<Nullable<NormalFunc>>(null);
   const audioCancelRef = useRef<Nullable<NormalFunc>>(null);
   const preloadCancelRef = useRef<Nullable<NormalFunc>>(null);
@@ -30,10 +38,12 @@ export function useSongResource(params: {
         if (controller.signal.aborted) return;
         setTrackStatus((draft) => {
           if (draft && !controller.signal.aborted) {
-            draft.lyric = {
-              data: lyric,
-              version
-            };
+            draft.lyric = lyric;
+          }
+        });
+        setPlayerStatus((draft) => {
+          if (!controller.signal.aborted) {
+            draft.lyricVersion = version;
           }
         });
       } catch (err) {
@@ -47,7 +57,7 @@ export function useSongResource(params: {
         );
       }
     },
-    [lyricVersionPreference, setTrackStatus]
+    [lyricVersionPreference, setPlayerStatus, setTrackStatus]
   );
 
   const loadAudioSource = useCallback(

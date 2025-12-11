@@ -1,21 +1,21 @@
 import { cx } from "@emotion/css";
 import { Log } from "@mahiru/ui/utils/dev";
-import { PlayerTrackInfo, usePlayer } from "@mahiru/ui/ctx/PlayerCtx";
+import { usePlayer } from "@mahiru/ui/ctx/PlayerCtx";
 import { FC, memo, MouseEventHandler, useCallback } from "react";
-import { useTextColorOnThemeColor } from "@mahiru/ui/hook/useTextColorOnThemeColor";
 
 import ListItemIndex from "./ListItemIndex";
 import ListItemCover from "./ListItemCover";
 import ListItemName from "./ListItemName";
 import ListItemInfo from "./ListItemInfo";
 import { PlaylistCacheEntry } from "@mahiru/ui/utils/playList";
+import { useThemeColor } from "@mahiru/ui/hook/useThemeColor";
 
 interface ListItemProps {
   data: NeteaseTrack[];
   entry: Nullable<PlaylistCacheEntry>;
   index: number;
   playListID?: number;
-  absoluteIdx: number[] | null;
+  absoluteIndex: number;
   isLikedList?: boolean;
 }
 
@@ -23,51 +23,33 @@ const ListItem: FC<ListItemProps> = ({
   index,
   data,
   playListID,
-  absoluteIdx,
+  absoluteIndex,
   isLikedList,
   entry
 }) => {
-  const { replacePlayList, info } = usePlayer();
+  const { trackStatus, playlistControl } = usePlayer();
+  const { textColorOnMain } = useThemeColor();
   const track = data[index]!;
   const total = data.length;
-  const absoluteIndex = absoluteIdx ? absoluteIdx[index]! : index;
-  const active = info.id === track.id;
-  const textColor = useTextColorOnThemeColor();
-
+  const active = trackStatus?.track.id === track.id;
   const disabled = !track.playable;
+
   const play = useCallback<MouseEventHandler<HTMLDivElement>>(
     (e) => {
       if (disabled) {
         e.preventDefault();
         return;
       }
-      Log.trace("ui/ListItem", "Playing track:", track.name);
-      const newPlayList: PlayerTrackInfo[] = [];
-      for (const track of data) {
-        if (track.playable) {
-          newPlayList.push({
-            id: track.id,
-            title: track.name,
-            artist: track.ar,
-            album: track.al,
-            cover: track.al.picUrl,
-            audio: "",
-            alias: track.alia[0] || "",
-            tsTitle: track.tns?.[0] || "",
-            sourceID: playListID,
-            raw: track
-          });
-        }
-      }
+      Log.trace("components/track_list/ListItem.tsx", "Playing track:", track.name);
       // 播放列表使用的是相对索引
-      replacePlayList(newPlayList, index);
+      playlistControl.replacePlaylist(data, playListID, index);
     },
-    [data, disabled, index, playListID, replacePlayList, track.name]
+    [data, disabled, index, playListID, playlistControl, track.name]
   );
 
   return (
     <div
-      style={active ? { color: textColor } : undefined}
+      style={active ? { color: textColorOnMain.hex() } : undefined}
       key={track.id}
       className={cx(
         "items-center grid grid-row-1 grid-cols-[auto_auto_1fr_auto_auto] gap-4 rounded-md py-[2px] pl-2 ease-in-out transition-colors mb-2",

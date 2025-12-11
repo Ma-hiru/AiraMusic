@@ -3,15 +3,15 @@ import { getDynamicSnapshot, useDynamicZustandShallowStore } from "@mahiru/ui/st
 import { likeATrack } from "@mahiru/ui/api/track";
 import { PlaylistManager } from "@mahiru/ui/utils/playList";
 
-export const useHeart = (track: NeteaseTrack) => {
+export const useHeart = (track?: NeteaseTrack) => {
   const { likedTrackIDs, updateLikedTrackIDs } = useDynamicZustandShallowStore([
     "likedTrackIDs",
     "updateLikedTrackIDs",
     "userLikedPlayList"
   ]);
-  const isLiked = likedTrackIDs.ids.has(track.id);
+  const isLiked = !!track && likedTrackIDs.ids.has(track.id);
   const likeChange = useCallback(() => {
-    if (!track.id) return;
+    if (!track || !track.id) return;
     const newSet = new Set(likedTrackIDs.ids);
     if (isLiked) {
       newSet.delete(track.id);

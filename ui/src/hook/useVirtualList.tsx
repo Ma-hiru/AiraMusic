@@ -91,20 +91,20 @@ interface HasID {
   id: string | number;
 }
 
-export interface VirtualListProps<T extends HasID, U = never> {
+export interface VirtualListProps<T extends HasID, U = undefined> {
   items: T[];
   containerRef: RefObject<HTMLDivElement | null>;
   overscan?: number;
   itemHeight?: number;
-  extraData?: U;
+  extraData: U;
   onRangeUpdate?: (range: [number, number]) => void;
   onScrollCallback?: (top: number) => void;
 }
 
-export type RowComponentType<T, U = never> = FC<{
+export type RowComponentType<T, U = undefined> = FC<{
   items: T[];
   index: number;
-  extra?: U;
+  extra: U;
 }>;
 
 export type ListRef = {

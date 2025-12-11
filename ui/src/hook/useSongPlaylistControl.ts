@@ -55,13 +55,10 @@ export class PlaylistManager {
           source: source as number | null,
           track,
           lyric: {
-            version: "raw",
-            data: {
-              full: [],
-              rm: [],
-              tl: [],
-              raw: []
-            }
+            full: [],
+            rm: [],
+            tl: [],
+            raw: []
           },
           audio: ""
         };
@@ -103,13 +100,10 @@ export class PlaylistManager {
             source: source as number | null,
             track,
             lyric: {
-              version: "raw",
-              data: {
-                full: [],
-                rm: [],
-                tl: [],
-                raw: []
-              }
+              full: [],
+              rm: [],
+              tl: [],
+              raw: []
             },
             audio: ""
           } satisfies PlayerTrackStatus;
@@ -171,13 +165,10 @@ export class PlaylistManager {
         source,
         track: track as NeteaseTrack,
         lyric: {
-          version: "raw",
-          data: {
-            full: [],
-            rm: [],
-            tl: [],
-            raw: []
-          }
+          full: [],
+          rm: [],
+          tl: [],
+          raw: []
         },
         audio: ""
       };

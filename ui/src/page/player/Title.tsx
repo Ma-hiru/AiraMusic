@@ -2,8 +2,11 @@ import { FC, memo } from "react";
 import { usePlayer } from "@mahiru/ui/ctx/PlayerCtx";
 
 const Title: FC<object> = () => {
-  const { info } = usePlayer();
-  const title = handleTitle(info.title);
+  const { trackStatus } = usePlayer();
+  const track = trackStatus?.track;
+  const alias = track?.alia?.length ? track.alia[0] : "";
+  const ts = track?.tns?.length ? track.tns[0] : "";
+  const title = handleTitle(trackStatus?.track.name);
   return (
     <div className="flex flex-col select-none w-full justify-end">
       <div className="text-white text-center">
@@ -11,10 +14,10 @@ const Title: FC<object> = () => {
         {!!title.sub && (
           <span className="block w-full opacity-50 text-[14px] truncate">{title.sub}</span>
         )}
-        {info.tsTitle ? (
-          <span className="block w-full opacity-50 text-[12px] truncate">{info.tsTitle}</span>
-        ) : info.alias ? (
-          <span className="block w-full opacity-50 text-[12px] truncate">{info.alias}</span>
+        {ts ? (
+          <span className="block w-full opacity-50 text-[12px] truncate">{ts}</span>
+        ) : alias ? (
+          <span className="block w-full opacity-50 text-[12px] truncate">{alias}</span>
         ) : null}
       </div>
     </div>
@@ -22,7 +25,8 @@ const Title: FC<object> = () => {
 };
 export default memo(Title);
 
-function handleTitle(title: string) {
+function handleTitle(title: Optional<string>) {
+  if (!title) return { main: "", sub: "" };
   if (
     (title.includes("(") && title.includes(")")) ||
     (title.includes("（") && title.includes("）"))

@@ -1,6 +1,6 @@
 import { FC, memo, useCallback } from "react";
-import { useFileCache } from "@mahiru/ui/ctx/BlobCachedCtx";
-import { ImageSize, NeteaseImageSizeFilter } from "@mahiru/ui/utils/filter";
+import { useFileCache } from "@mahiru/ui/hook/useFileCache";
+import { Filter, ImageSize } from "@mahiru/ui/utils/filter";
 import { CirclePlay } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -11,7 +11,7 @@ interface RecommendTrackItemProps {
 }
 
 const PlaylistItem: FC<RecommendTrackItemProps> = ({ playlist, mainColor, textColor }) => {
-  const sizedCover = NeteaseImageSizeFilter(playlist.picUrl, ImageSize.md);
+  const sizedCover = Filter.NeteaseImageSize(playlist.picUrl, ImageSize.md);
   const cachedCover = useFileCache(sizedCover);
   const navigate = useNavigate();
   const play = useCallback(() => {

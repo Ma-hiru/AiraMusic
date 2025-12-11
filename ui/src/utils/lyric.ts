@@ -102,10 +102,10 @@ class Parser {
 export const Lyric = new (class {
   Parser = new Parser();
 
-  async requestLyric(id: number, versionPreference?: LyricVersionType) {
+  async requestLyric(id: number, preference?: LyricVersionType) {
     const response = await getYRCLyric(id);
     const lyric = this.handleLyricResponse(response);
-    const version = this.chooseLyricResponseVersion(lyric, versionPreference);
+    const version = this.chooseLyricVersionWithPreference(lyric, preference);
     return {
       lyric,
       version,
@@ -113,20 +113,33 @@ export const Lyric = new (class {
     };
   }
 
-  getLyricVersionInfo(lyric: FullVersionLyricLine) {
-    const hasRm = lyric.rm.length > 0;
-    const hasTl = lyric.tl.length > 0;
-    const hasFull = lyric.full.length > 0;
-    const hasRaw = lyric.raw.length > 0;
-    return {
-      hasRm,
-      hasTl,
-      hasFull,
-      hasRaw
+  getLyricVersionInfo(
+    lyric: Optional<FullVersionLyricLine>,
+    currentVersion?: Optional<LyricVersionType>
+  ) {
+    const result = {
+      hasRm: false,
+      hasTl: false,
+      hasFull: false,
+      hasRaw: false,
+      rmActive: false,
+      tlActive: false
     };
+
+    if (lyric) {
+      result.hasRm = lyric.rm.length > 0;
+      result.hasTl = lyric.tl.length > 0;
+      result.hasFull = lyric.full.length > 0;
+      result.hasRaw = lyric.raw.length > 0;
+      if (currentVersion) {
+        result.rmActive = currentVersion === "rm" || currentVersion === "full";
+        result.tlActive = currentVersion === "tl" || currentVersion === "full";
+      }
+    }
+    return result;
   }
 
-  private handleLyricResponse(response: NeteaseLyricResponseNew): FullVersionLyricLine {
+  handleLyricResponse(response: NeteaseLyricResponseNew): FullVersionLyricLine {
     if (
       !response.lrc?.lyric &&
       !response.klyric?.lyric &&
@@ -161,12 +174,12 @@ export const Lyric = new (class {
     }
   }
 
-  private chooseLyricResponseVersion(
+  chooseLyricVersionWithPreference(
     lyric: FullVersionLyricLine,
-    versionPreference?: LyricVersionType
-  ) {
+    preference: Optional<LyricVersionType>
+  ): LyricVersionType {
     const { hasRm, hasTl } = this.getLyricVersionInfo(lyric);
-    if (!versionPreference) {
+    if (!preference) {
       if (hasTl) {
         return "tl";
       }
@@ -175,10 +188,10 @@ export const Lyric = new (class {
       }
       return "raw";
     }
-    if (versionPreference === "raw" && hasTl) {
+    if (preference === "raw" && hasTl) {
       return "tl";
     }
-    if (versionPreference === "full") {
+    if (preference === "full") {
       if (!hasRm && !hasTl) {
         return "raw";
       } else if (!hasRm && hasTl) {
@@ -186,20 +199,42 @@ export const Lyric = new (class {
       } else if (hasRm && !hasTl) {
         return "rm";
       }
-    } else if (versionPreference === "rm" && !hasRm) {
+    } else if (preference === "rm" && !hasRm) {
       if (hasTl) {
         return "tl";
       } else {
         return "raw";
       }
-    } else if (versionPreference === "tl" && !hasTl) {
+    } else if (preference === "tl" && !hasTl) {
       if (hasRm) {
         return "rm";
       } else {
         return "raw";
       }
     }
-    return versionPreference;
+    return preference;
+  }
+
+  chooseLyric(lyric: Optional<FullVersionLyricLine>, version: Optional<LyricVersionType>) {
+    if (lyric) {
+      const chosenVersion = this.checkLyricVersion(lyric, version, null);
+      return lyric[chosenVersion];
+    } else {
+      return [];
+    }
+  }
+
+  checkLyricVersion(
+    lyric: Optional<FullVersionLyricLine>,
+    next: Optional<LyricVersionType>,
+    last: Optional<LyricVersionType>
+  ): LyricVersionType {
+    if (!lyric || !next || next === "raw") return "raw";
+    const { hasRm, hasFull, hasTl } = this.getLyricVersionInfo(lyric);
+    if ((next === "rm" && hasRm) || (next === "tl" && hasTl) || (next === "full" && hasFull)) {
+      return next;
+    }
+    return last || "raw";
   }
 })();
 

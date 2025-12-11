@@ -1,6 +1,6 @@
 import { FC, memo, SyntheticEvent, useCallback } from "react";
-import { useFileCache } from "@mahiru/ui/ctx/BlobCachedCtx";
-import { ImageSize, NeteaseImageSizeFilter } from "@mahiru/ui/utils/filter";
+import { useFileCache } from "@mahiru/ui/hook/useFileCache";
+import { Filter, ImageSize } from "@mahiru/ui/utils/filter";
 import { PlaylistCacheEntry, PlaylistManager } from "@mahiru/ui/utils/playList";
 
 interface ListItemCoverProps {
@@ -20,7 +20,7 @@ const ListItemCover: FC<ListItemCoverProps> = ({
   entry,
   active
 }) => {
-  const sizedURL = NeteaseImageSizeFilter(track.al.cachedPicUrl || track.al.picUrl, ImageSize.xs);
+  const sizedURL = Filter.NeteaseImageSize(track.al.cachedPicUrl || track.al.picUrl, ImageSize.xs);
 
   const onCacheHit = useCallback(
     (file: string, id: string) => {
@@ -37,7 +37,7 @@ const ListItemCover: FC<ListItemCoverProps> = ({
   );
   const onError = useCallback(
     (e: SyntheticEvent<HTMLImageElement>) => {
-      const raw = NeteaseImageSizeFilter(track.al.picUrl, ImageSize.xs) as string;
+      const raw = Filter.NeteaseImageSize(track.al.picUrl, ImageSize.xs) as string;
       if (e.currentTarget.src === raw) return;
       e.currentTarget.src = raw;
       // 清除缓存

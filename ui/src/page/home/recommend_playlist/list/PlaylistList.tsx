@@ -3,7 +3,6 @@ import RecommendTrackItem from "./PlaylistItem";
 import { FC, memo } from "react";
 import { css, cx } from "@emotion/css";
 import { useInnerWidth } from "@mahiru/ui/hook/useInnerWidth";
-import { useTextColorOnThemeColor } from "@mahiru/ui/hook/useTextColorOnThemeColor";
 import { useThemeColor } from "@mahiru/ui/hook/useThemeColor";
 
 interface RecommendTrackListProps {
@@ -11,9 +10,8 @@ interface RecommendTrackListProps {
 }
 
 const PlaylistList: FC<RecommendTrackListProps> = ({ recommend }) => {
-  const { mainColor } = useThemeColor();
+  const { mainColor, textColorOnMain } = useThemeColor();
   const innerWidth = useInnerWidth();
-  const textColor = useTextColorOnThemeColor();
   return (
     <div
       className={cx(
@@ -27,7 +25,7 @@ const PlaylistList: FC<RecommendTrackListProps> = ({ recommend }) => {
           key={playlist.id}
           playlist={playlist}
           mainColor={Color(mainColor).alpha(0.5).string()}
-          textColor={textColor}
+          textColor={textColorOnMain.string()}
         />
       ))}
     </div>

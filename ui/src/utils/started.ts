@@ -1,13 +1,13 @@
 import { EqError, Log } from "@mahiru/ui/utils/dev";
-import { isAccountLoggedIn } from "@mahiru/ui/utils/auth";
+import { Auth } from "@mahiru/ui/utils/auth";
 import {
+  loadHistoryListFromPersistentStore,
   refreshCookieTask,
-  refreshUserProfile,
-  refreshUserPlaylist,
   refreshUserLikedTrackIDs,
-  loadHistoryListFromPersistentStore
+  refreshUserPlaylist,
+  refreshUserProfile
 } from "@mahiru/ui/utils/task";
-import { IsChangeDay } from "@mahiru/ui/utils/time";
+import { Time } from "@mahiru/ui/utils/time";
 
 export function started() {
   // 仅在主窗口执行这些任务
@@ -22,7 +22,7 @@ export function started() {
 }
 
 async function onChangeDay(task: NormalFunc<never[], Promise<void>>[]) {
-  if (isAccountLoggedIn() && IsChangeDay()) {
+  if (Auth.isAccountLoggedIn() && Time.isChangeDay()) {
     Log.trace("start daily task");
     for (const func of task) {
       try {

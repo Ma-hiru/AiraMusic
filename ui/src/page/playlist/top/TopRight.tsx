@@ -1,12 +1,12 @@
 import { FC, memo } from "react";
 import { SquarePen } from "lucide-react";
 import Search from "./Search";
-import { formatTimeToMMDD } from "@mahiru/ui/utils/time";
 import { usePersistZustandShallowStore } from "@mahiru/ui/store";
-import { useFileCache } from "@mahiru/ui/ctx/BlobCachedCtx";
-import { ImageSize, NeteaseImageSizeFilter } from "@mahiru/ui/utils/filter";
+import { useFileCache } from "@mahiru/ui/hook/useFileCache";
+import { Filter, ImageSize } from "@mahiru/ui/utils/filter";
 import { useSearchParams } from "react-router-dom";
 import { PlaylistCacheEntry } from "@mahiru/ui/utils/playList";
+import { Time } from "@mahiru/ui/utils/time";
 
 interface TopRightProps {
   entry: Nullable<PlaylistCacheEntry>;
@@ -19,7 +19,7 @@ const TopRight: FC<TopRightProps> = ({ entry, searchTracks }) => {
   const isLikedList = searchParams.get("like") === "true";
   const isHistoryList = searchParams.get("history") === "true";
   const cachedAvatar = useFileCache(
-    NeteaseImageSizeFilter(entry?.playlist.creator.avatarUrl, ImageSize.sm)
+    Filter.NeteaseImageSize(entry?.playlist.creator.avatarUrl, ImageSize.sm)
   );
   return (
     <div className="flex h-full flex-col justify-between items-end text-[12px] text-[#7b8290]/80">
@@ -41,7 +41,9 @@ const TopRight: FC<TopRightProps> = ({ entry, searchTracks }) => {
             alt={entry?.playlist.creator.nickname}
           />
           <span className="text-[12px]">{entry?.playlist.creator.nickname}</span>
-          <span className="select-none">{formatTimeToMMDD(entry?.playlist.createTime)} 创建</span>
+          <span className="select-none">
+            {Time.formatTrackDate(entry?.playlist.createTime)} 创建
+          </span>
         </div>
       </div>
     </div>

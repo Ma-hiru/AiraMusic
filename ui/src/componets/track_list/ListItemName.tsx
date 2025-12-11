@@ -1,7 +1,6 @@
-import Color from "color";
 import { FC, memo } from "react";
 import { css, cx } from "@emotion/css";
-import { useTextColorOnThemeColor } from "@mahiru/ui/hook/useTextColorOnThemeColor";
+import { useThemeColor } from "@mahiru/ui/hook/useThemeColor";
 
 interface ListItemNameProps {
   track: NeteaseTrack;
@@ -11,25 +10,25 @@ interface ListItemNameProps {
 }
 
 const ListItemName: FC<ListItemNameProps> = ({ track, disabled, onClick }) => {
-  const textColor = useTextColorOnThemeColor();
+  const { textColorOnMain } = useThemeColor();
   const titleStyle = cx(
     "cursor-pointer font-bold hover:opacity-50 ease-in-out duration-300 transition-all truncate select-none active:scale-95",
     disabled && "cursor-not-allowed! opacity-50",
     css`
-      color: ${textColor};
+      color: ${textColorOnMain.string()};
     `
   );
   const subTitleStyle = cx(
     "w-2 overflow-hidden ml-2 ease-in-out duration-300 transition-all truncate select-none",
     css`
-      color: ${Color(textColor).alpha(0.3).string()};
+      color: ${textColorOnMain.alpha(0.3).string()};
     `
   );
   const artistStyle = cx(
     "text-[12px] flex overflow-hidden gap-2 truncate select-none",
     disabled && "cursor-not-allowed! opacity-50",
     css`
-      color: ${Color(textColor).alpha(0.6).string()};
+      color: ${textColorOnMain.alpha(0.6).string()};
     `
   );
   return (

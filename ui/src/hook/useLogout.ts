@@ -1,38 +1,38 @@
-import { doLogout, isAccountLoggedIn } from "@mahiru/ui/utils/auth";
-import { addMessageHandler } from "@mahiru/ui/utils/message";
 import { refreshLogin } from "@mahiru/ui/utils/task";
 import { useNavigate } from "react-router-dom";
 import { usePlayer } from "@mahiru/ui/ctx/PlayerCtx";
 import { useCallback } from "react";
+import { Auth } from "@mahiru/ui/utils/auth";
+import { Renderer } from "@mahiru/ui/utils/renderer";
 
 export function useLogout() {
   const navigate = useNavigate();
-  const { clearPlayList } = usePlayer();
+  const { playlistControl } = usePlayer();
   return useCallback(() => {
-    if (isAccountLoggedIn()) {
-      clearPlayList();
-      doLogout().finally(() => {
+    if (Auth.isAccountLoggedIn()) {
+      playlistControl.clearPlaylist();
+      Auth.doLogout().finally(() => {
         waitLogin();
         navigate("/home");
       });
     }
-  }, [navigate, clearPlayList]);
+  }, [navigate, playlistControl]);
 }
 
 export function useLogin() {
   return useCallback(() => {
-    !isAccountLoggedIn() && waitLogin();
+    !Auth.isAccountLoggedIn() && waitLogin();
   }, []);
 }
 
 export function waitLogin() {
-  window.electron.event.openInternalWindow("login");
-  const unsubscribe = addMessageHandler("login", "login", refreshLogin, {
-    once: true,
-    id: "wait_login"
-  });
-  addMessageHandler("otherWindowClosed", "login", unsubscribe, {
-    once: true,
-    id: "wait_login_close"
+  Renderer.invoke.hasOpenInternalWindow("login").then((ok) => {
+    if (!ok) {
+      Renderer.event.openInternalWindow("login");
+      const unsubscribe = Renderer.addMessageHandler("login", "login", refreshLogin, {
+        once: true
+      });
+      Renderer.addMessageHandler("otherWindowClosed", "login", unsubscribe, { once: true });
+    }
   });
 }

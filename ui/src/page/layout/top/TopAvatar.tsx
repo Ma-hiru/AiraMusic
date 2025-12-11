@@ -1,11 +1,11 @@
 import { FC, memo } from "react";
 import { usePersistZustandShallowStore } from "@mahiru/ui/store";
-import { useFileCache } from "@mahiru/ui/ctx/BlobCachedCtx";
-import { ImageSize, NeteaseImageSizeFilter } from "@mahiru/ui/utils/filter";
+import { useFileCache } from "@mahiru/ui/hook/useFileCache";
+import { Filter, ImageSize } from "@mahiru/ui/utils/filter";
 
 const TopAvatar: FC<object> = () => {
   const { data } = usePersistZustandShallowStore(["data"]);
-  const cachedAvatar = useFileCache(NeteaseImageSizeFilter(data.user?.avatarUrl, ImageSize.sm));
+  const cachedAvatar = useFileCache(Filter.NeteaseImageSize(data.user?.avatarUrl, ImageSize.sm));
   return (
     <div>
       <img

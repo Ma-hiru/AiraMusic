@@ -4,19 +4,18 @@ import BarControl from "@mahiru/ui/page/layout/bar/BarControl";
 import BarProgress from "@mahiru/ui/page/layout/bar/BarProgress";
 import BarBtns from "@mahiru/ui/page/layout/bar/BarBtns";
 import { useLayout } from "@mahiru/ui/ctx/LayoutCtx";
-import { cx } from "@emotion/css";
 import BarSpectrum from "@mahiru/ui/page/layout/bar/BarSpectrum";
-import { useTextColorOnThemeColor } from "@mahiru/ui/hook/useTextColorOnThemeColor";
 import Color from "color";
+import { useThemeColor } from "@mahiru/ui/hook/useThemeColor";
 
 const Bar: FC<object> = () => {
   const { background } = useLayout();
-  const textColor = useTextColorOnThemeColor();
+  const { textColorOnMain } = useThemeColor();
   return (
     <div
       style={{
         background: background
-          ? Color("#ffffff").mix(Color(textColor), 0.5).alpha(0.1).string()
+          ? Color("#ffffff").mix(textColorOnMain, 0.5).alpha(0.1).string()
           : Color("#ffffff").alpha(0.5).string()
       }}
       className="absolute h-18 bottom-0 left-0 right-0 backdrop-blur-md shadow-[0_10px_25px_-5px_rgba(0,0,0,0.25)] z-10">

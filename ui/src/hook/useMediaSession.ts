@@ -1,12 +1,11 @@
 import { useEffect, useRef } from "react";
 import { Filter, ImageSize } from "@mahiru/ui/utils/filter";
-import { TrackStatus } from "@mahiru/ui/hook/useSongNew";
 
 export function useMediaSession(props: {
   play: NormalFunc<any>;
   lastTrack: NormalFunc<any>;
   nextTrack: NormalFunc<any>;
-  trackStatus: Nullable<TrackStatus>;
+  trackStatus: Nullable<PlayerTrackStatus>;
 }) {
   const { play, lastTrack, nextTrack, trackStatus } = props;
   const mediaMetadataSignatureRef = useRef("");

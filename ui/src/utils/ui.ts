@@ -46,8 +46,8 @@ class _UI {
     }
   }
 
-  set APPThemeColor(props: { main: string; secondary: string }) {
-    const { main, secondary } = props;
+  set APPThemeColor(colors) {
+    const { main, secondary } = colors;
     document.documentElement.style.setProperty(this.APPMainColorVarsName, main);
     document.documentElement.style.setProperty(this.APPSecondaryColorVarsName, secondary);
   }
@@ -61,6 +61,14 @@ class _UI {
     return {
       main,
       secondary
+    };
+  }
+
+  get APPThemeColorInstance() {
+    const { main, secondary } = this.APPThemeColor;
+    return {
+      main: Color(main),
+      secondary: Color(secondary)
     };
   }
 

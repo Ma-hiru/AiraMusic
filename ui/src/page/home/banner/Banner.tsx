@@ -5,30 +5,22 @@ import { NeteaseBanner } from "@mahiru/ui/types/netease/banner";
 import { EqError, Log } from "@mahiru/ui/utils/dev";
 import { usePlayer } from "@mahiru/ui/ctx/PlayerCtx";
 import { getTrackDetail } from "@mahiru/ui/api/track";
-import { NeteaseTracksPrivilegeExtendsFilter } from "@mahiru/ui/utils/filter";
-import { useTextColorOnThemeColor } from "@mahiru/ui/hook/useTextColorOnThemeColor";
 import { useAppLoaded } from "@mahiru/ui/hook/useAppLoaded";
+import { useThemeColor } from "@mahiru/ui/hook/useThemeColor";
+import { Filter } from "@mahiru/ui/utils/filter";
+import { Renderer } from "@mahiru/ui/utils/renderer";
 
 const Banner: FC<object> = () => {
   const [banner, setBanner] = useState<NeteaseBanner[]>([]);
-  const { addAndPlayTrack } = usePlayer();
+  const { playlistControl } = usePlayer();
   useEffect(() => {
     homeBanner().then((result) => {
       setBanner(result.banners);
     });
   }, []);
-  const loaded = useAppLoaded(!!banner.length);
-  useEffect(() => {
-    if (loaded) return;
-    setTimeout(() => {
-      window.node.event.loaded({
-        win: "main",
-        broadcast: false,
-        showAfterLoaded: true
-      });
-    }, 5000);
-  }, [loaded]);
-  const titleColor = useTextColorOnThemeColor();
+  useAppLoaded(!!banner.length);
+
+  const { textColorOnMain } = useThemeColor();
   const handleClick = useCallback(
     async (i: number) => {
       const item = banner[i];
@@ -37,25 +29,16 @@ const Banner: FC<object> = () => {
       switch (type) {
         case "song": {
           const detail = await getTrackDetail(id);
-          const tracks = NeteaseTracksPrivilegeExtendsFilter(detail.songs, detail.privileges);
+          const tracks = Filter.NeteaseTracksPrivilegeExtends(detail.songs, detail.privileges);
           const track = tracks[0];
           if (track && track.playable) {
-            addAndPlayTrack({
-              id: track.id,
-              title: track.name,
-              artist: track.ar,
-              album: track.al,
-              cover: track.al.picUrl,
-              audio: "",
-              alias: track.alia[0] || "",
-              tsTitle: track.tns?.[0] || "",
-              raw: track
-            });
+            playlistControl.addTrack(track, track.al.id, "next");
+            playlistControl.nextTrack(true);
           }
           return;
         }
         case "web": {
-          window.node.event.openExternalLink({
+          Renderer.event.openExternalLink({
             url: item.url,
             title: item.typeTitle
           });
@@ -63,7 +46,7 @@ const Banner: FC<object> = () => {
         }
       }
     },
-    [addAndPlayTrack, banner]
+    [banner, playlistControl]
   );
   return (
     <div className="w-full px-2">
@@ -73,7 +56,7 @@ const Banner: FC<object> = () => {
           url: b.bigImageUrl,
           title: b.typeTitle
         }))}
-        titleColor={titleColor}
+        titleColor={textColorOnMain.string()}
         onClick={handleClick}
       />
     </div>

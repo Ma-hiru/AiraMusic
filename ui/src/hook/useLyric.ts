@@ -1,17 +1,14 @@
-import { LyricVersionType } from "@mahiru/ui/ctx/PlayerCtx";
 import { useCallback } from "react";
+import { Lyric } from "@mahiru/ui/utils/lyric";
 
 export function useLyric(
-  lyricVersion: LyricVersionType,
+  lyricVersion: Optional<LyricVersionType>,
   setLyricVersion: NormalFunc<[version: LyricVersionType]>,
-  lyricLines: FullVersionLyricLine
+  lyricLines: Optional<FullVersionLyricLine>
 ) {
-  const hasRm = lyricLines.rm.length > 0;
-  const hasTl = lyricLines.tl.length > 0;
-  const rmActive = lyricVersion === "rm" || lyricVersion === "full";
-  const tlActive = lyricVersion === "tl" || lyricVersion === "full";
+  const lyricInfos = Lyric.getLyricVersionInfo(lyricLines, lyricVersion);
   const setRm = useCallback(() => {
-    if (!hasRm) return;
+    if (!lyricInfos.hasRm) return;
     switch (lyricVersion) {
       case "full":
         setLyricVersion("tl");
@@ -26,9 +23,9 @@ export function useLyric(
         setLyricVersion("full");
         break;
     }
-  }, [hasRm, lyricVersion, setLyricVersion]);
+  }, [lyricInfos.hasRm, lyricVersion, setLyricVersion]);
   const setTl = useCallback(() => {
-    if (!hasTl) return;
+    if (!lyricInfos.hasTl) return;
     switch (lyricVersion) {
       case "full":
         setLyricVersion("rm");
@@ -43,12 +40,9 @@ export function useLyric(
         setLyricVersion("full");
         break;
     }
-  }, [hasTl, lyricVersion, setLyricVersion]);
+  }, [lyricInfos.hasTl, lyricVersion, setLyricVersion]);
   return {
-    hasRm,
-    hasTl,
-    rmActive,
-    tlActive,
+    ...lyricInfos,
     setRm,
     setTl
   };

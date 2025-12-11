@@ -1,4 +1,4 @@
-import { useMemo, useCallback, RefObject } from "react";
+import { RefObject, useCallback, useMemo } from "react";
 import { Updater } from "use-immer";
 
 export function useSongAudioControl(props: {

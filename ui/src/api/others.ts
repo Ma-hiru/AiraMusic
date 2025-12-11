@@ -1,5 +1,5 @@
 import { apiRequest } from "@mahiru/ui/utils/request";
-import { NeteaseTrackPlayableFilter } from "@mahiru/ui/utils/filter";
+import { Filter } from "@mahiru/ui/utils/filter";
 
 /**
  * 搜索类型枚举
@@ -40,7 +40,7 @@ export function search(params: {
     params
   }).then((data) => {
     if (data.result?.song !== undefined)
-      data.result.song.songs = NeteaseTrackPlayableFilter(data.result.song.songs);
+      data.result.song.songs = Filter.NeteaseTrackPlayable(data.result.song.songs);
     return data;
   });
 }

@@ -1,8 +1,7 @@
 import { FC, memo } from "react";
 import { cx } from "@emotion/css";
 import { AudioLines } from "lucide-react";
-import { useTextColorOnThemeColor } from "@mahiru/ui/hook/useTextColorOnThemeColor";
-import Color from "color";
+import { useThemeColor } from "@mahiru/ui/hook/useThemeColor";
 
 interface ListItemIndexProps {
   relativeIndex: number;
@@ -12,8 +11,8 @@ interface ListItemIndexProps {
 }
 
 const ListItemIndex: FC<ListItemIndexProps> = ({ relativeIndex, total, active, onClick }) => {
-  const textColor = Color(useTextColorOnThemeColor());
-  const color = textColor.alpha(0.8).string();
+  const { textColorOnMain } = useThemeColor();
+  const color = textColorOnMain.alpha(0.8).string();
   return (
     <span
       style={{ color }}

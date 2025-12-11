@@ -26,7 +26,7 @@ const BarProgress: FC<object> = () => {
       <motion.span
         ref={percentScope}
         initial={{ width: 0 }}
-        style={{ background: mainColor }}
+        style={{ background: mainColor.hex() }}
         className="absolute left-0 top-0 block h-full ease-in-out duration-300 transition-all"
       />
       {/*缓冲区*/}

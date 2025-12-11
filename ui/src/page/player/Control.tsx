@@ -13,8 +13,7 @@ import {
 } from "lucide-react";
 
 const Control: FC<object> = () => {
-  const { isPlaying, isShuffle, isRepeat, repeat, shuffle, nextTrack, lastTrack, play } =
-    usePlayer();
+  const { audioControl, playerStatus, playlistControl } = usePlayer();
   return (
     <div className="space-x-2 w-full">
       <Progress />
@@ -23,48 +22,48 @@ const Control: FC<object> = () => {
           <SkipBack
             className="size-5 cursor-pointer hover:opacity-50 ease-in-out duration-300 transition-all active:scale-90"
             fill={"rgba(255,255,255,0.89)"}
-            onClick={lastTrack}
+            onClick={() => playlistControl.lastTrack(true)}
           />
-          {isPlaying ? (
+          {playerStatus.playing ? (
             <Pause
               className="size-5 cursor-pointer hover:opacity-50 ease-in-out duration-300 transition-all active:scale-90"
               fill={"rgba(255,255,255,0.89)"}
-              onClick={play}
+              onClick={audioControl.play}
             />
           ) : (
             <Play
               className="size-5 cursor-pointer hover:opacity-50 ease-in-out duration-300 transition-all active:scale-90"
               fill={"rgba(255,255,255,0.89)"}
-              onClick={play}
+              onClick={audioControl.play}
             />
           )}
           <SkipForward
             className="size-5 cursor-pointer hover:opacity-50 ease-in-out duration-300 transition-all active:scale-90"
             fill={"rgba(255,255,255,0.89)"}
-            onClick={nextTrack}
+            onClick={() => playlistControl.nextTrack(true)}
           />
-          {isShuffle ? (
+          {playerStatus.shuffle ? (
             <Shuffle
               className="size-6 scale-85 cursor-pointer hover:opacity-50 ease-in-out duration-300 transition-all active:scale-90"
               fill={"rgba(255,255,255,0.89)"}
-              onClick={() => shuffle(false)}
+              onClick={() => playlistControl.setShuffle(false)}
             />
           ) : (
             <ArrowRightLeft
               className="size-6 cursor-pointer hover:opacity-50 ease-in-out duration-300 transition-all active:scale-90"
               fill={"rgba(255,255,255,0.89)"}
-              onClick={() => shuffle(true)}
+              onClick={() => playlistControl.setShuffle(true)}
             />
           )}
-          {isRepeat ? (
+          {playerStatus.repeat !== "off" ? (
             <Repeat1
               className="size-6 cursor-pointer hover:opacity-50 ease-in-out duration-300 transition-all active:scale-90"
-              onClick={() => repeat(false)}
+              onClick={() => playlistControl.setRepeat("off")}
             />
           ) : (
             <Repeat2
               className="size-6 cursor-pointer hover:opacity-50 ease-in-out duration-300 transition-all active:scale-90"
-              onClick={() => repeat(true)}
+              onClick={() => playlistControl.setRepeat("one")}
             />
           )}
         </div>

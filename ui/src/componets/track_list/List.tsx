@@ -1,6 +1,6 @@
 import { ComponentProps, FC, memo, useEffect, useRef } from "react";
 import { css, cx } from "@emotion/css";
-import { useVirtualList, RowComponentType, ListRef } from "@mahiru/ui/hook/useVirtualList";
+import { ListRef, RowComponentType, useVirtualList } from "@mahiru/ui/hook/useVirtualList";
 import { useThemeColor } from "@mahiru/ui/hook/useThemeColor";
 import ListItem from "./ListItem";
 import Loading from "../public/Loading";
@@ -60,7 +60,7 @@ const ListContainer: FC<ListProps> = ({
       </div>
       {loading && (
         <div
-          style={{ color: mainColor }}
+          style={{ color: mainColor.hex() }}
           className="absolute flex flex-col justify-center items-center gap-1 font-medium text-lg left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 select-none">
           <Loading className="size-8" />
           <span className="font-semibold">加载中</span>
@@ -83,11 +83,11 @@ function RowComponent(
   const { index, items, extra } = props;
   return (
     <ListItem
-      entry={extra!.entry}
+      entry={extra.entry}
       index={index}
       data={items}
-      playListID={extra!.id}
-      absoluteIdx={extra!.absoluteIdx}
+      playListID={extra.id}
+      absoluteIndex={extra.absoluteIdx ? extra.absoluteIdx[index]! : index}
     />
   );
 }

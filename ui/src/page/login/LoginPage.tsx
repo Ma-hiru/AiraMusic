@@ -3,26 +3,18 @@ import { QRCodeStatus, useQRCode } from "@mahiru/ui/hook/useQRCode";
 import Control from "@mahiru/ui/page/login/Control";
 import QRCode from "@mahiru/ui/page/login/QRCode";
 import Tips from "@mahiru/ui/page/login/Tips";
+import { Renderer } from "@mahiru/ui/utils/renderer";
 
 const LoginPage: FC<object> = () => {
   const { status, result, dataURL, update } = useQRCode();
   useEffect(() => {
     if (status === QRCodeStatus.AUTHORIZED && result) {
-      window.node.event.sendMessageTo({
-        from: "login",
-        to: "main",
-        data: result.cookie,
-        type: "login"
-      });
-      window.node.event.close("login");
+      Renderer.sendMessage("login", "main", result.cookie);
+      Renderer.event.close({ broadcast: true });
     }
   }, [status, result]);
   useEffect(() => {
-    window.node.event.loaded({
-      win: "login",
-      broadcast: false,
-      showAfterLoaded: true
-    });
+    Renderer.event.loaded({ broadcast: true });
   }, []);
   return (
     <div className="w-screen h-screen overflow-hidden">
