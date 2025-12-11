@@ -42,9 +42,14 @@ export function useSong(audioRef: RefObject<Nullable<HTMLAudioElement>>) {
     (next: Nullable<PlayerTrackStatus>) => {
       if (trackStatus && trackStatus.track.id !== next?.track.id) {
         scrobble(trackStatus);
+        setPlayerStatus((draft) => {
+          if (draft.playing) {
+            draft.playing = false;
+          }
+        });
       }
     },
-    [scrobble, trackStatus]
+    [scrobble, setPlayerStatus, trackStatus]
   );
   const setLyricVersion = useCallback(
     (next: LyricVersionType) => {
@@ -79,6 +84,25 @@ export function useSong(audioRef: RefObject<Nullable<HTMLAudioElement>>) {
     trackStatus,
     playlistManager: playlistControl.playlistManager
   });
+  const clearResourceCache = useCallback(
+    (type: "audio" | "lyric") => {
+      setTrackStatus((draft) => {
+        if (!draft) return;
+        if (type === "audio") {
+          draft.audio = "";
+          draft.meta = [];
+        } else if (type === "lyric") {
+          draft.lyric = {
+            tl: [],
+            rm: [],
+            raw: [],
+            full: []
+          };
+        }
+      });
+    },
+    [setTrackStatus]
+  );
   /**                        状态变化                         */
   // 初始化 progress 和 volume 状态
   useLayoutEffect(() => {
@@ -127,7 +151,14 @@ export function useSong(audioRef: RefObject<Nullable<HTMLAudioElement>>) {
       setPlayerStatus((draft) => {
         draft.playing = false;
       });
-    const handleTimeUpdate = () => (playerProgress.current.currentTime = audio.currentTime);
+    const handleTimeUpdate = () => {
+      playerProgress.current.currentTime = audio.currentTime;
+      setPlayerStatus((draft) => {
+        if (!draft.playing) {
+          draft.playing = true;
+        }
+      });
+    };
     const handleDurationChange = () => (playerProgress.current.duration = audio.duration || 0);
     const handleProgress = () => {
       if (audio.buffered.length > 0) {
@@ -203,11 +234,13 @@ export function useSong(audioRef: RefObject<Nullable<HTMLAudioElement>>) {
       audioControl,
       playlistControl,
       setLyricVersion,
+      clearResourceCache,
       audioRef
     }),
     [
       audioControl,
       audioRef,
+      clearResourceCache,
       getPlayerProgress,
       playerStatus,
       playlistControl,

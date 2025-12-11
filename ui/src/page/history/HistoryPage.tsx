@@ -18,6 +18,7 @@ const HistoryPage: FC<object> = () => {
         loading={loading}
         paddingBottom={80}
         entry={null}
+        requestMissedTracks={0}
       />
     </div>
   );

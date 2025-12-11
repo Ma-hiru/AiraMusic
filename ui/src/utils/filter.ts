@@ -2,6 +2,7 @@ import { getTrackDetail } from "@mahiru/ui/api/track";
 import { EqError, Log } from "@mahiru/ui/utils/dev";
 import { CacheStore, getPersistSnapshot } from "@mahiru/ui/store";
 import { Auth } from "@mahiru/ui/utils/auth";
+import pLimit from "p-limit";
 
 /** Netease Image Size Enum */
 export const enum ImageSize {
@@ -95,11 +96,15 @@ function NeteaseTracksPrivilegeExtends(
 }
 
 /** 检查歌单tracks字段是否完整，不完整再额外请求 */
-async function NeteasePlaylistToFullTracks(response: NeteasePlaylistDetailResponse) {
+async function NeteasePlaylistToFullTracks(
+  response: NeteasePlaylistDetailResponse,
+  whenRequestMissedTracks?: NormalFunc<[missTrack: number]>
+) {
   const { playlist } = response;
   if (playlist.trackCount === playlist.tracks.length) {
     return response;
   } else {
+    whenRequestMissedTracks?.(playlist.trackCount - playlist.tracks.length);
     const { tracks, privilege } = await NeteaseTrackIdsToDetail(
       playlist.trackIds.slice(playlist.tracks.length, playlist.trackCount),
       100
@@ -111,12 +116,22 @@ async function NeteasePlaylistToFullTracks(response: NeteasePlaylistDetailRespon
 }
 
 /** 根据歌曲id获取歌曲详情，会考虑请求次数和URL大小限制 */
-async function NeteaseTrackIdsToDetail(ids: TrackId[], maxPerRequest: number = 100) {
+async function NeteaseTrackIdsToDetail(
+  ids: TrackId[],
+  maxPerRequest: number = 100,
+  concurrency: number = 5
+) {
+  const limit = pLimit(concurrency);
+  const chunks: number[][] = [];
+  for (let i = 0; i < ids.length; i += maxPerRequest) {
+    chunks.push(ids.slice(i, i + maxPerRequest).map((t) => t.id));
+  }
+  const results = await Promise.all(
+    chunks.map((chunk) => limit(() => getTrackDetail(chunk.join(","))))
+  );
   const tracks: NeteaseTrack[] = [];
   const privilege: NeteaseTrackPrivilege[] = [];
-  for (let i = 0; i < ids.length; i += maxPerRequest) {
-    const chunk = ids.slice(i, i + maxPerRequest).map((t) => t.id);
-    const raw = await getTrackDetail(chunk.join(","));
+  for (const raw of results) {
     tracks.push(...raw.songs);
     privilege.push(...raw.privileges);
   }

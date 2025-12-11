@@ -64,19 +64,30 @@ export function useSongResource({
     async (id: number) => {
       audioCancelRef.current?.();
       const controller = new AbortController();
-      Track.loadAudio(id, controller.signal).then(({ cacheSource, meta }) => {
+      audioCancelRef.current = () => controller.abort();
+      try {
+        const { cacheSource, meta } = await Track.loadAudio(id, controller.signal);
         if (!meta || controller.signal.aborted) return;
+        const remoteUrl = meta?.[0]?.url || "";
+        const nextAudio = cacheSource || remoteUrl || "";
         setTrackStatus((draft) => {
           if (!draft || controller.signal.aborted) return;
-          if (draft.audio !== cacheSource && cacheSource) {
-            draft.audio = cacheSource;
-          } else if (meta?.[0]?.url && draft.audio !== meta?.[0].url) {
-            draft.audio = meta?.[0].url;
+          draft.meta = meta || [];
+          if (nextAudio && draft.audio !== nextAudio) {
+            draft.audio = nextAudio;
           }
         });
         playerProgress.current.size = meta?.[0]?.size ?? 0;
-      });
-      audioCancelRef.current = () => controller.abort();
+      } catch (err) {
+        if (controller.signal.aborted) return;
+        Log.error(
+          new EqError({
+            raw: err,
+            message: "failed to load audio source",
+            label: "ui/hook/useSongResource:loadAudioSource"
+          })
+        );
+      }
     },
     [playerProgress, setTrackStatus]
   );
@@ -106,11 +117,12 @@ export function useSongResource({
     const current = trackStatus;
     const peak = playlistManager.peek();
     if (current) {
-      console.log("useSongResource: load resources for track", current);
+      const invalid = Track.markedInvalidCache(current.track.id);
       const hasLyric = !!current.lyric && current.lyric.raw.length > 0;
       const hasAudio = !!current.audio;
-      if (!hasLyric) void loadLyric(current.track.id);
-      if (!hasAudio) void loadAudioSource(current.track.id);
+      if (!hasLyric || invalid) void loadLyric(current.track.id);
+      if (!hasAudio || invalid) void loadAudioSource(current.track.id);
+      if (invalid) Track.removeMarkedInvalidCache(current.track.id);
       // 仅在资源加载完成后才预加载下一首，避免无意义的重复触发
       hasLyric && hasAudio && schedulePreloadNextTrack(current, peak);
     }

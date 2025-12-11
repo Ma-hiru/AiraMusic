@@ -322,7 +322,7 @@ export class PlaylistManager {
       this._repeat = player.repeat;
       this._shuffle = player.shuffle;
       this._position = player.position;
-      this._playlist = player.playlist;
+      this._playlist = structuredClone(player.playlist);
     }
   }
 

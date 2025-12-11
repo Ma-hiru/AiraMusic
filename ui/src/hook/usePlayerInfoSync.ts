@@ -36,26 +36,32 @@ export function usePlayerInfoSync(targetWindow: WindowType) {
     });
   }, [mainColor, targetWindow]);
   // 更新歌词窗口打开状态
-  const updateOpenedStatus = useCallback(() => {
-    setTimeout(() => {
+  const getOpenedStatus = useCallback(
+    (callback?: NormalFunc<[ok: boolean]>) => {
       Renderer.invoke.hasOpenInternalWindow(targetWindow).then((opened) => {
         setHasOpened(opened);
+        if (callback) {
+          callback(opened);
+          getOpenedStatus();
+        }
       });
-    }, 200);
-  }, [targetWindow]);
+    },
+    [targetWindow]
+  );
   // 打开/关闭歌词窗口
   const toggleTargetWindow = useCallback(() => {
-    if (!hasOpened) {
-      Renderer.event.openInternalWindow(targetWindow);
-      Renderer.addMessageHandler("otherWindowLoaded", targetWindow, sendInit, { once: true });
-      updateOpenedStatus();
-    } else {
-      Renderer.event.closeInternalWindow(targetWindow);
-      updateOpenedStatus();
-    }
-  }, [hasOpened, sendInit, targetWindow, updateOpenedStatus]);
+    getOpenedStatus((ok) => {
+      if (!ok) {
+        Renderer.event.openInternalWindow(targetWindow);
+        Renderer.addMessageHandler("otherWindowLoaded", targetWindow, sendInit, { once: true });
+      } else {
+        Renderer.event.closeInternalWindow(targetWindow);
+      }
+    });
+  }, [getOpenedStatus, sendInit, targetWindow]);
   // 同步状态反向变更
   useEffect(() => {
+    if (!hasOpened) return;
     const removeListener = Renderer.addMessageHandler("lyricSyncReverse", targetWindow, (sync) => {
       const changedLyricVersion = sync.playerStatus?.lyricVersion;
       if (changedLyricVersion) setLyricVersion(changedLyricVersion);
@@ -73,7 +79,7 @@ export function usePlayerInfoSync(targetWindow: WindowType) {
     return () => {
       removeListener();
     };
-  }, [audioControl, playlistControl, setLyricVersion, targetWindow]);
+  }, [audioControl, hasOpened, playlistControl, setLyricVersion, targetWindow]);
   // 同步音频进度变化
   useEffect(() => {
     if (!hasOpened) return;
@@ -89,7 +95,15 @@ export function usePlayerInfoSync(targetWindow: WindowType) {
     };
   }, [audioRef, hasOpened, sendInit, sendSync]);
   // 同步歌曲信息
-  useEffect(sendInit, [sendInit, trackStatus]);
+  useEffect(() => {
+    hasOpened && sendInit();
+  }, [hasOpened, sendInit, trackStatus]);
+  // 保底机制，定时检查窗口是否打开，避免遗漏消息导致一直占用资源同步
+  useEffect(() => {
+    if (!hasOpened) return;
+    const timer = setInterval(getOpenedStatus, 10000);
+    return () => clearInterval(timer);
+  }, [getOpenedStatus, hasOpened]);
 
   return { hasOpened, toggleTargetWindow };
 }

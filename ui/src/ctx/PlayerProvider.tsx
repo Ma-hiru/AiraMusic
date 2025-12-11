@@ -30,17 +30,23 @@ export default function PlayerProvider({ children }: { children: ReactNode }) {
 
   const onError = useCallback(
     (err: SyntheticEvent<HTMLAudioElement>) => {
-      const raw = ctxValue.trackStatus?.audio;
-      if (raw && err.currentTarget.src !== raw) {
-        Log.info("ui/player/PlayerProvider.tsx", "Audio load error, fallback to raw src");
-        err.currentTarget.src = raw;
-        const id = ctxValue.trackStatus?.track.id;
-        if (id) {
-          Track.removeCache(id);
+      const raw = ctxValue.trackStatus?.meta?.[0]?.url;
+      if (raw) {
+        if (err.currentTarget.src !== raw) {
+          Log.info("ctx/PlayerProvider.tsx", "cache audio load error, fallback to raw src");
+          err.currentTarget.src = raw;
+          const id = ctxValue.trackStatus?.track.id;
+          if (id) {
+            Track.removeCache(id);
+          }
+        } else {
+          Log.error("ctx/PlayerProvider.tsx", "audio playback error", err);
+          // TODO: 播放错误，可能是403或网络错误，403应该重新登录或刷新缓存，网络错误则跳过当前歌曲
+          ctxValue.playlistControl.nextTrack(true);
         }
       }
     },
-    [ctxValue.trackStatus?.audio, ctxValue.trackStatus?.track.id]
+    [ctxValue]
   );
   return (
     <>

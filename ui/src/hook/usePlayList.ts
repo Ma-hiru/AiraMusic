@@ -18,6 +18,7 @@ export function usePlayListNormal(id?: string) {
   });
   const [searchTrackInstance, setSearchTrackInstance] = useState<Nullable<SearchTrack>>(null);
   const [loading, setLoading] = useState(true);
+  const [requestMissedTracks, setRequestMissedTracks] = useState(0);
   // 所有曲目
   const tracks = useRef<NeteaseTrack[]>([]);
   // 历史最大滚动范围
@@ -109,7 +110,17 @@ export function usePlayListNormal(id?: string) {
     void _static_update;
     clearState();
     if (id) {
-      PlaylistManager.requestPlayListDetailWithStore(Number(id), [0, 50], ImageSize.xs)
+      PlaylistManager.requestPlayListDetailWithStore(
+        Number(id),
+        [0, 50],
+        ImageSize.xs,
+        (missedTrack) => {
+          if (!cancelled) {
+            Log.info("usePlayListNormal", `请求缺失的曲目，数量 ${missedTrack}`);
+            setRequestMissedTracks(missedTrack);
+          }
+        }
+      )
         .then((entry) => {
           if (entry && !cancelled) {
             tracks.current = entry.playlist.tracks;
@@ -117,7 +128,7 @@ export function usePlayListNormal(id?: string) {
               if (!cancelled) {
                 void checkAndUpdateLastPreloadRange([0, 50]);
               }
-            }, 1000);
+            }, 2000);
             searchTrackInstance?.update(JSON.stringify(tracks.current));
             setFilterTracks({
               tracks: tracks.current,
@@ -129,6 +140,7 @@ export function usePlayListNormal(id?: string) {
         .finally(() => {
           if (!cancelled) {
             setLoading(false);
+            setRequestMissedTracks(0);
           }
         });
     }
@@ -148,7 +160,8 @@ export function usePlayListNormal(id?: string) {
     loading,
     filterTracks,
     searchTracks,
-    onVirtualListRangeUpdate
+    onVirtualListRangeUpdate,
+    requestMissedTracks
   };
 }
 

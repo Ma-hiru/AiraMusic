@@ -56,9 +56,8 @@ const mainEventAPI = {
           data: undefined
         });
       });
-    } else {
-      sender.close();
     }
+    sender.close();
   },
   hidden: (e) => {
     const win = BrowserWindow.fromWebContents(e.sender);
@@ -124,10 +123,9 @@ const mainEventAPI = {
           data: undefined
         });
       });
-    } else {
-      if (hide) return;
-      sender.show();
     }
+    if (hide) return;
+    sender.show();
   },
   message: (e, message) => {
     typedIpcMainSendMessage({

@@ -15,11 +15,11 @@ function formatTrackDate(time?: number, split?: string) {
   return "";
 }
 
-function formatTrackTime(time: Optional<number>, type: "ms" | "s" = "ms", split?: string) {
+function formatTrackTime(time: Optional<number>, unit: "ms" | "s" = "ms", split?: string) {
   if (!time) return "0:00";
   split ||= ":";
   let base;
-  if (type === "ms") {
+  if (unit === "ms") {
     base = 1000;
   } else {
     base = 1;
@@ -40,9 +40,29 @@ function isChangeDay() {
   return typeof lastDate !== "number" || lastDate !== new Date().getDate();
 }
 
+function getCacheTimeLimit(time: number, unit: "seconds" | "hour" | "day" | "minute") {
+  let limit = 0;
+  switch (unit) {
+    case "seconds":
+      limit = time * 1000;
+      break;
+    case "minute":
+      limit = time * 60 * 1000;
+      break;
+    case "hour":
+      limit = time * 60 * 60 * 1000;
+      break;
+    case "day":
+      limit = time * 24 * 60 * 60 * 1000;
+      break;
+  }
+  return limit;
+}
+
 export const Time = {
   formatTrackDate,
   formatTrackTime,
   padNumber,
-  isChangeDay
+  isChangeDay,
+  getCacheTimeLimit
 };

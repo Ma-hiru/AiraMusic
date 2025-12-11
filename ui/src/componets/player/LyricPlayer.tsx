@@ -1,6 +1,19 @@
-import type { LyricLine, LyricLineMouseEvent, LyricPlayerBase, spring } from "@applemusic-like-lyrics/core";
+import type {
+  LyricLine,
+  LyricLineMouseEvent,
+  LyricPlayerBase,
+  spring
+} from "@applemusic-like-lyrics/core";
 import { LyricPlayer as DefaultLyricPlayer } from "@applemusic-like-lyrics/core";
-import { forwardRef, type HTMLProps, useEffect, useImperativeHandle, useLayoutEffect, useRef, useState } from "react";
+import {
+  forwardRef,
+  type HTMLProps,
+  useEffect,
+  useImperativeHandle,
+  useLayoutEffect,
+  useRef,
+  useState
+} from "react";
 import { createPortal } from "react-dom";
 
 /**

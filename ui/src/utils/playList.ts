@@ -117,14 +117,18 @@ class _PlaylistManager {
   async requestPlayListDetailWithStore(
     id: number,
     preloadRange: [start: number, end: number],
-    size: ImageSize = ImageSize.xs
+    size: ImageSize = ImageSize.xs,
+    whenRequestMissedTracks?: NormalFunc<[missTrack: number]>
   ) {
     const cache = await this.store.get(id);
     if (cache) {
       return cache;
     } else {
       const rawList = await getPlaylistDetail(id);
-      const fullList = await Filter.NeteasePlaylistToFullTracks({ ...rawList });
+      const fullList = await Filter.NeteasePlaylistToFullTracks(
+        { ...rawList },
+        whenRequestMissedTracks
+      );
       fullList.playlist.tracks = Filter.NeteaseTracksPrivilegeExtends(
         fullList.playlist.tracks,
         fullList.privileges

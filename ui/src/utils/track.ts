@@ -2,9 +2,11 @@ import { getMP3 } from "@mahiru/ui/api/track";
 import { EqError, Log } from "@mahiru/ui/utils/dev";
 import { CacheStore } from "@mahiru/ui/store";
 import { Filter, ImageSize } from "@mahiru/ui/utils/filter";
+import { Time } from "@mahiru/ui/utils/time";
 
 export const Track = new (class {
-  timeLimit = 1000 * 60 * 60 * 24; // 1天
+  private _metaCacheTimeLimit = Time.getCacheTimeLimit(1, "hour");
+  private _shouldClearCacheList = new Set<number>();
 
   metaCacheKey(id: number) {
     return `audio_meta_${id}`;
@@ -18,7 +20,7 @@ export const Track = new (class {
     const cacheKey = this.metaCacheKey(id);
     const cacheResponse = await CacheStore.fetchObject<NeteaseSongUrlResponse>(
       cacheKey,
-      this.timeLimit
+      this._metaCacheTimeLimit
     );
     if (cacheResponse) {
       return cacheResponse?.data || null;
@@ -53,10 +55,19 @@ export const Track = new (class {
   }
 
   removeCache(id: number) {
+    this._shouldClearCacheList.add(id);
     const metaKey = this.metaCacheKey(id);
     const sourceKey = this.sourceCacheKey(id);
     void CacheStore.remove(metaKey);
     void CacheStore.remove(sourceKey);
+  }
+
+  markedInvalidCache(id: number) {
+    return this._shouldClearCacheList.has(id);
+  }
+
+  removeMarkedInvalidCache(id: number) {
+    this._shouldClearCacheList.delete(id);
   }
 
   async loadAudio(id: number, signal: AbortSignal) {

@@ -14,6 +14,7 @@ interface ListProps {
   loading: boolean;
   filterTracks: { tracks: NeteaseTrack[]; absoluteIdx: Nullable<number[]> };
   onVirtualListRangeUpdate: (range: IndexRange) => void;
+  requestMissedTracks: number;
   paddingBottom?: number | string;
 }
 
@@ -23,7 +24,8 @@ const ListContainer: FC<ListProps> = ({
   onVirtualListRangeUpdate,
   loading,
   paddingBottom,
-  entry
+  entry,
+  requestMissedTracks
 }) => {
   const { userLikedPlayList } = useDynamicZustandShallowStore(["userLikedPlayList"]);
   const { mainColor } = useThemeColor();
@@ -63,7 +65,13 @@ const ListContainer: FC<ListProps> = ({
           style={{ color: mainColor.hex() }}
           className="absolute flex flex-col justify-center items-center gap-1 font-medium text-lg left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 select-none">
           <Loading className="size-8" />
-          <span className="font-semibold">加载中</span>
+          {requestMissedTracks !== 0 ? (
+            <span className="font-semibold">
+              歌曲较多，正在获取 {requestMissedTracks} 首歌曲详情
+            </span>
+          ) : (
+            <span className="font-semibold">加载中</span>
+          )}
         </div>
       )}
     </>
