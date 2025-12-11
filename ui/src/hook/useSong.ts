@@ -120,7 +120,7 @@ export function useSong(audioRef: RefObject<Nullable<HTMLAudioElement>>) {
   }, [audioRef, setPlayerStatus]);
   useLayoutEffect(() => {
     const audio = audioRef.current;
-    if (!audio || !trackStatus || !trackStatus.audio) return;
+    if (!audio || !trackStatus || !trackStatus.audio || !playerStatus.playing) return;
     audio.src = trackStatus.audio;
     const handleCanPlay = () => {
       audio.play().catch((err) => {
@@ -138,7 +138,7 @@ export function useSong(audioRef: RefObject<Nullable<HTMLAudioElement>>) {
     return () => {
       audio.removeEventListener("canplay", handleCanPlay);
     };
-  }, [audioRef, trackStatus]);
+  }, [audioRef, playerStatus.playing, trackStatus]);
   // 监听 audio 播放状态变化
   useEffect(() => {
     const audio = audioRef.current;

@@ -317,13 +317,14 @@ export class PlaylistManager {
   }
 
   loadFromZustand() {
-    const { player } = getPersistSnapshot();
+    const { player, updatePlayerStatus } = getPersistSnapshot();
     if (player) {
       this._repeat = player.repeat || "off";
       this._shuffle = player.shuffle || false;
-      this._position = typeof player.position === "number" ? player.position : -1;
+      this._position = player.position === 0 ? 0 : player.position || -1;
       this._playlist = structuredClone(player.playlist || []);
     }
+    updatePlayerStatus(null);
   }
 
   get repeat() {
