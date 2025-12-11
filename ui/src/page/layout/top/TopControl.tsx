@@ -35,8 +35,14 @@ const TopControl: FC<ControlButtonProps> = ({ maximizable = true, mini = true })
     setTimeout(() => Renderer.event.close({ broadcast: true }), 200);
   }, [playlistControl]);
 
-  const { toggleTargetWindow } = usePlayerInfoSync("miniplayer");
-
+  const { toggleTargetWindow, hasOpened } = usePlayerInfoSync("miniplayer");
+  useEffect(() => {
+    if (hasOpened) {
+      Renderer.event.hidden();
+    } else {
+      Renderer.event.visible();
+    }
+  }, [hasOpened]);
   return (
     <NoDrag className="flex flex-row gap-4 select-none relative z-10 ease-in-out transition-all">
       {isDev && (

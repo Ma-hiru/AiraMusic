@@ -127,6 +127,7 @@ impl WebGLRenderer {
         let canvas_height = (height * dpr).floor() as i32;
         canvas.set_width(canvas_width as u32);
         canvas.set_height(canvas_height as u32);
+        gl.viewport(0, 0, canvas_width, canvas_height);
 
         // 编译 shader
         let vs = compile_shader(&gl, GL::VERTEX_SHADER, VERTEX_SHADER)?;

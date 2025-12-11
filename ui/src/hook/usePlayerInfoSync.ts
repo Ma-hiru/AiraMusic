@@ -54,6 +54,9 @@ export function usePlayerInfoSync(targetWindow: WindowType) {
       if (!ok) {
         Renderer.event.openInternalWindow(targetWindow);
         Renderer.addMessageHandler("otherWindowLoaded", targetWindow, sendInit, { once: true });
+        Renderer.addMessageHandler("otherWindowClosed", targetWindow, getOpenedStatus, {
+          once: true
+        });
       } else {
         Renderer.event.closeInternalWindow(targetWindow);
       }
@@ -101,7 +104,7 @@ export function usePlayerInfoSync(targetWindow: WindowType) {
   // 保底机制，定时检查窗口是否打开，避免遗漏消息导致一直占用资源同步
   useEffect(() => {
     if (!hasOpened) return;
-    const timer = setInterval(getOpenedStatus, 10000);
+    const timer = setInterval(getOpenedStatus, 2000);
     return () => clearInterval(timer);
   }, [getOpenedStatus, hasOpened]);
 
