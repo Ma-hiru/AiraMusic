@@ -186,6 +186,27 @@ export class PlaylistManager {
     return this._position;
   }
 
+  setPosition(pos: number) {
+    if (pos < 0 || pos >= this._playlist.length) return this.current();
+    this._position = pos;
+    this.updateOuter();
+    return this.current();
+  }
+
+  isSamePlaylist(list: NeteaseTrack[] | PlayerTrackStatus[], source?: Optional<number>) {
+    if (!list || list.length !== this._playlist.length) return false;
+    for (let i = 0; i < list.length; i++) {
+      const incoming = list[i]!;
+      const existing = this._playlist[i];
+      const incomingId = "track" in incoming ? incoming.track.id : incoming.id;
+      const incomingSource = "source" in incoming ? incoming.source : (source ?? null);
+      if (!existing || existing.track.id !== incomingId || existing.source !== incomingSource) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   updateOuter() {
     const current = this.current();
     this._outerTrackUpdater?.((draft) => {
@@ -361,6 +382,8 @@ export function useSongPlaylistControl(props: {
       setShuffle: (staus: boolean) => (playlistManager.shuffle = staus),
       count: playlistManager.count.bind(playlistManager),
       position: playlistManager.position.bind(playlistManager),
+      setPosition: playlistManager.setPosition.bind(playlistManager),
+      isSamePlaylist: playlistManager.isSamePlaylist.bind(playlistManager),
       current: playlistManager.current.bind(playlistManager),
       canPlay: playlistManager.canPlay.bind(playlistManager),
       saveInZustand: playlistManager.saveInZustand.bind(playlistManager),

@@ -1,19 +1,6 @@
-import type {
-  LyricLine,
-  LyricLineMouseEvent,
-  LyricPlayerBase,
-  spring
-} from "@applemusic-like-lyrics/core";
+import type { LyricLine, LyricLineMouseEvent, LyricPlayerBase, spring } from "@applemusic-like-lyrics/core";
 import { LyricPlayer as DefaultLyricPlayer } from "@applemusic-like-lyrics/core";
-import {
-  type HTMLProps,
-  forwardRef,
-  useEffect,
-  useImperativeHandle,
-  useLayoutEffect,
-  useRef,
-  useState
-} from "react";
+import { forwardRef, type HTMLProps, useEffect, useImperativeHandle, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 /**
@@ -191,9 +178,18 @@ export const LyricPlayer = forwardRef<LyricPlayerRef, HTMLProps<HTMLDivElement> 
       };
     }, [lyricPlayer]);
 
+    // 歌词数据来自全局状态（immer 可能冻结对象），corePlayer 内部会改写行/词对象，
+    // 需要在传入前做一次可变副本，避免 “Cannot assign to read only property”
     useLayoutEffect(() => {
       if (lyricLines !== undefined) {
-        corePlayer?.setLyricLines(lyricLines, currentTimeRef.current);
+        const clonedLyricLines =
+          typeof structuredClone === "function"
+            ? structuredClone(lyricLines)
+            : lyricLines.map((line) => ({
+                ...line,
+                words: line.words?.map((w) => ({ ...w }))
+              }));
+        corePlayer?.setLyricLines(clonedLyricLines, currentTimeRef.current);
         corePlayer?.update();
       } else {
         corePlayer?.setLyricLines([]);

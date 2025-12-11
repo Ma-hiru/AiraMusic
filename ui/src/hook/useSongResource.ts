@@ -106,9 +106,13 @@ export function useSongResource({
     const current = trackStatus;
     const peak = playlistManager.peek();
     if (current) {
-      void loadLyric(current.track.id);
-      void loadAudioSource(current.track.id);
-      schedulePreloadNextTrack(current, peak);
+      console.log("useSongResource: load resources for track", current);
+      const hasLyric = !!current.lyric && current.lyric.raw.length > 0;
+      const hasAudio = !!current.audio;
+      if (!hasLyric) void loadLyric(current.track.id);
+      if (!hasAudio) void loadAudioSource(current.track.id);
+      // 仅在资源加载完成后才预加载下一首，避免无意义的重复触发
+      hasLyric && hasAudio && schedulePreloadNextTrack(current, peak);
     }
     return cancelScheduledPreload;
   }, [

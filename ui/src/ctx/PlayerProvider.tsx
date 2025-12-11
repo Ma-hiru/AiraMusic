@@ -49,7 +49,7 @@ export default function PlayerProvider({ children }: { children: ReactNode }) {
         controls={false}
         autoPlay={false}
         ref={audioRef}
-        src={ctxValue.trackStatus?.audio}
+        src={ctxValue.trackStatus?.audio || undefined}
         preload="auto"
         onError={onError}
       />

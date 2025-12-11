@@ -38,13 +38,24 @@ const ListItem: FC<ListItemProps> = ({
     (e) => {
       if (disabled) {
         e.preventDefault();
+        Log.trace(
+          "components/track_list/ListItem.tsx",
+          "Track is not playable:",
+          track.name,
+          track.reason
+        );
         return;
       }
       Log.trace("components/track_list/ListItem.tsx", "Playing track:", track.name);
-      // 播放列表使用的是相对索引
-      playlistControl.replacePlaylist(data, playListID, index);
+      // 如果与当前播放列表相同，仅切换位置，避免重建列表导致状态抖动
+      if (playlistControl.isSamePlaylist(data, playListID)) {
+        playlistControl.setPosition(index);
+      } else {
+        // 播放列表使用的是相对索引
+        playlistControl.replacePlaylist(data, playListID, index);
+      }
     },
-    [data, disabled, index, playListID, playlistControl, track.name]
+    [data, disabled, index, playListID, playlistControl, track.name, track.reason]
   );
 
   return (
