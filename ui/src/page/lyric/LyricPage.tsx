@@ -119,6 +119,9 @@ const LyricPage: FC<object> = () => {
 
   useEffect(() => {
     Renderer.event.loaded({ broadcast: true });
+    Renderer.addMessageHandler("otherWindowClosed", "main", () => {
+      Renderer.event.close({ broadcast: false });
+    });
   }, []);
   return (
     <div className="w-screen h-screen overflow-hidden relative flex rounded-md flex-col-reverse">

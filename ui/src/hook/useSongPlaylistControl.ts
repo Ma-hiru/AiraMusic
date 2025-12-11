@@ -319,10 +319,10 @@ export class PlaylistManager {
   loadFromZustand() {
     const { player } = getPersistSnapshot();
     if (player) {
-      this._repeat = player.repeat;
-      this._shuffle = player.shuffle;
-      this._position = player.position;
-      this._playlist = structuredClone(player.playlist);
+      this._repeat = player.repeat || "off";
+      this._shuffle = player.shuffle || false;
+      this._position = typeof player.position === "number" ? player.position : -1;
+      this._playlist = structuredClone(player.playlist || []);
     }
   }
 

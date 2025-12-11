@@ -44,6 +44,9 @@ const MiniPlayerPage: FC<object> = () => {
   }, []);
   useEffect(() => {
     Renderer.event.loaded({ broadcast: true });
+    Renderer.addMessageHandler("otherWindowClosed", "main", () => {
+      Renderer.event.close({ broadcast: false });
+    });
   }, []);
   return (
     <Drag className="w-screen h-screen overflow-hidden relative bg-white rounded-md text-black grid grid-rows-1 grid-cols-[auto_1fr] px-2 py-1 items-center select-none backdrop-blur-lg">
