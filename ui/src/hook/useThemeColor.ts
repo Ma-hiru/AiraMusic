@@ -1,20 +1,32 @@
-import { useSyncExternalStore } from "react";
+import { useEffect, useState } from "react";
 import { UI } from "@mahiru/ui/utils/ui";
 
 export function useThemeColor() {
-  return useSyncExternalStore(
-    (updater) => {
-      const observer = new MutationObserver(updater);
-      observer.observe(document.documentElement, {
-        attributes: true,
-        attributeFilter: ["style"]
+  const [themeColor, setThemeColor] = useState({
+    mainColor: UI.APPThemeColorInstance.main,
+    secondaryColor: UI.APPThemeColorInstance.secondary,
+    textColorOnMain: UI.Utils.calcTextColorOn(UI.APPThemeColor.main)
+  });
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      const newThemeColor = {
+        mainColor: UI.APPThemeColorInstance.main,
+        secondaryColor: UI.APPThemeColorInstance.secondary,
+        textColorOnMain: UI.Utils.calcTextColorOn(UI.APPThemeColor.main)
+      };
+      const hasChanged = !!Object.entries(themeColor).find(([key, color]) => {
+        return color.string() !== newThemeColor[key as keyof typeof newThemeColor].string();
       });
-      return () => observer.disconnect();
-    },
-    () => ({
-      mainColor: UI.APPThemeColorInstance.main,
-      secondaryColor: UI.APPThemeColorInstance.secondary,
-      textColorOnMain: UI.Utils.calcTextColorOn(UI.APPThemeColor.main)
-    })
-  );
+      if (hasChanged) {
+        setThemeColor(newThemeColor);
+      }
+    });
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["style"]
+    });
+    return () => observer.disconnect();
+  }, [themeColor]);
+
+  return themeColor;
 }
