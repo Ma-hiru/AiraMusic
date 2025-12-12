@@ -15,7 +15,6 @@ export const PlaylistHistoryCache = new (class {
   }
 
   get outerUpdater() {
-    console.log("PlaylistHistoryCache get outerUpdater", this._outerUpdater);
     return this._outerUpdater;
   }
 
@@ -25,7 +24,6 @@ export const PlaylistHistoryCache = new (class {
 
   async load() {
     const result = (await CacheStore.fetchObject<NeteaseTrack[]>(this.cacheKey)) || [];
-    console.log("PlaylistHistoryCache load", result);
     return result;
   }
 
@@ -43,11 +41,9 @@ export const PlaylistHistoryCache = new (class {
   }
 
   async addTrack(track: NeteaseTrack) {
-    console.log("PlaylistHistoryCache addTrack", track);
     const findResult = await this.findTrack(track.id);
     if (findResult.ok && findResult.data) {
       // 已存在，提前到开始
-      console.log("PlaylistHistoryCache track exists, move to front", findResult.data);
       await CacheStore.editObject<NeteaseTrack[]>({
         id: this.cacheKey,
         objType: "array",
@@ -58,7 +54,6 @@ export const PlaylistHistoryCache = new (class {
         save: true
       });
     } else {
-      console.log("PlaylistHistoryCache track not exists, add to front", track);
       // 不存在，直接添加到开始
       await CacheStore.editObject<NeteaseTrack[]>({
         id: this.cacheKey,

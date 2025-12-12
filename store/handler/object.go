@@ -62,7 +62,6 @@ func FetchObject(ctx *gin.Context) {
 	}
 	defer storeFile.Close()
 	ctx.Status(200)
-	setHeaders(ctx, index)
 
 	if objType != "" && objField != "" {
 		decoder := json.NewDecoder(storeFile)
@@ -108,7 +107,7 @@ func FetchObject(ctx *gin.Context) {
 			return
 		}
 	}
-
+	setHeaders(ctx, index)
 	var buffer = make([]byte, 24*1024)
 	_, _ = io.CopyBuffer(ctx.Writer, storeFile, buffer)
 }

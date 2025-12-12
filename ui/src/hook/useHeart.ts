@@ -13,7 +13,7 @@ export const useHeart = (track?: NeteaseTrack) => {
     if (!track || !track.id) return;
     const newSet = structuredClone(userLikedTrackIDs.ids);
     if (isLiked) {
-       delete newSet[track.id];
+      delete newSet[track.id];
     } else {
       newSet[track.id] = true;
     }

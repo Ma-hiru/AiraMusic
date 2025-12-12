@@ -21,7 +21,7 @@ const Layout: FC<object> = () => {
               <NavSide /> {/* absolute z-10 */}
               <PlayerBar /> {/* absolute z-10 */}
               <div className="w-screen h-screen pb-18 pl-48 z-[9] relative">
-                <KeepAliveOutlet /> {/* relative z-10 */}
+                <KeepAliveOutlet maxCache={3} /> {/* relative z-10 */}
               </div>
             </div>
             <Background /> {/* z-0 */}

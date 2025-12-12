@@ -15,36 +15,35 @@ export type KeepAliveOutletRef = {
 
 interface KeepAliveOutletProps {
   cache?: boolean;
+  maxCache?: number;
 }
 
 const KeepAliveOutlet: ForwardRefRenderFunction<KeepAliveOutletRef, KeepAliveOutletProps> = (
-  { cache = true },
+  { cache = true, maxCache = 10 },
   ref
 ) => {
   const outlet = useOutlet();
   const location = useLocation();
-  const cacheRef = useRef<Record<string, ReactNode>>({});
+  const cacheRef = useRef<Map<string, ReactNode>>(new Map());
   const forceUpdate = useUpdate();
 
-  const buildKey = useCallback(
-    (pathname: string, search?: string) => `${pathname}${search ?? ""}`,
-    []
-  );
+  const buildKey = useCallback((pathname: string, search?: string) => {
+    // playlist/:id 不分配独立缓存，统一使用 /playlist 作为 key
+    if (pathname.startsWith("/playlist/")) return "/playlist";
+    return `${pathname}${search ?? ""}`;
+  }, []);
   const currentKey = cache ? buildKey(location.pathname, location.search) : undefined;
 
   const clearCache = useCallback(
     (pathname: string) => {
-      const keys = Object.keys(cacheRef.current);
       let removed = false;
-      keys.forEach((key) => {
+      cacheRef.current.forEach((_, key) => {
         if (key === pathname || key.startsWith(`${pathname}?`)) {
-          delete cacheRef.current[key];
+          cacheRef.current.delete(key);
           removed = true;
         }
       });
-      if (removed) {
-        forceUpdate();
-      }
+      removed && forceUpdate();
     },
     [forceUpdate]
   );
@@ -57,9 +56,22 @@ const KeepAliveOutlet: ForwardRefRenderFunction<KeepAliveOutletRef, KeepAliveOut
   }
 
   if (currentKey) {
-    cacheRef.current[currentKey] = outlet;
+    cacheRef.current.set(currentKey, outlet);
+    // 超出上限时移除最旧的一个缓存
+    if (cacheRef.current.size > maxCache) {
+      const oldestKey = cacheRef.current.keys().next().value as string | undefined;
+      if (oldestKey && oldestKey !== currentKey) {
+        cacheRef.current.delete(oldestKey);
+      } else if (oldestKey) {
+        // 如果最旧的是当前 key，删除下一个
+        const iterator = cacheRef.current.keys();
+        iterator.next();
+        const nextKey = iterator.next().value as string | undefined;
+        if (nextKey) cacheRef.current.delete(nextKey);
+      }
+    }
   }
-  const entries = Object.entries(cacheRef.current).filter(([, node]) => Boolean(node));
+  const entries = Array.from(cacheRef.current.entries()).filter(([, node]) => Boolean(node));
   if (entries.length === 0) {
     return null;
   }

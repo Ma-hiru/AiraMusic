@@ -10,20 +10,9 @@ export default function LayoutProvider({ children }: { children: ReactNode }) {
   const [playerModalVisible, setPlayerModalVisible] = useState(false);
   const [background, setBackground] = useState<Undefinable<string>>();
   const [backgroundThemeColor, setBackgroundThemeColor] = useState<string[]>([]);
-  const kmeansWorker = useRef<Nullable<Worker>>(null);
 
   useEffect(() => {
-    if (kmeansWorker.current === null) {
-      kmeansWorker.current = new KMeansWorker();
-    }
-    return () => {
-      kmeansWorker.current?.terminate();
-      kmeansWorker.current = null;
-    };
-  }, []);
-
-  useEffect(() => {
-    const worker = kmeansWorker.current;
+    const worker = new KMeansWorker();
     if (!background || !worker) return;
     if (themeColorCache.has(background)) {
       setBackgroundThemeColor(themeColorCache.get(background)!);
@@ -42,6 +31,7 @@ export default function LayoutProvider({ children }: { children: ReactNode }) {
           })
         );
       }
+      worker.terminate();
     };
     worker.addEventListener("message", handleMessage);
     worker.postMessage({
@@ -50,6 +40,7 @@ export default function LayoutProvider({ children }: { children: ReactNode }) {
     } satisfies KMeansWorkerArgs);
     return () => {
       worker.removeEventListener("message", handleMessage);
+      worker.terminate();
     };
   }, [background]);
 
