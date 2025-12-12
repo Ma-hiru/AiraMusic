@@ -1,10 +1,10 @@
 package handler
 
 import (
-	"fileServer/file"
 	"io"
 	"log"
 	"net/http"
+	"store/file"
 
 	"github.com/gin-gonic/gin"
 )

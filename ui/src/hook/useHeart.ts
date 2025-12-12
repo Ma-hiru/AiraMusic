@@ -1,35 +1,37 @@
 import { useCallback } from "react";
-import { getDynamicSnapshot, useDynamicZustandShallowStore } from "@mahiru/ui/store";
+import { usePersistZustandShallowStore } from "@mahiru/ui/store";
 import { likeATrack } from "@mahiru/ui/api/track";
-import { PlaylistManager } from "@mahiru/ui/utils/playList";
+import { PlaylistManager } from "@mahiru/ui/utils/playlist";
 
 export const useHeart = (track?: NeteaseTrack) => {
-  const { likedTrackIDs, updateLikedTrackIDs } = useDynamicZustandShallowStore([
-    "likedTrackIDs",
-    "updateLikedTrackIDs",
-    "userLikedPlayList"
+  const { updateUserLikedTrackIDs, userLikedTrackIDs } = usePersistZustandShallowStore([
+    "userLikedTrackIDs",
+    "updateUserLikedTrackIDs"
   ]);
-  const isLiked = !!track && likedTrackIDs.ids.has(track.id);
+  const isLiked = !!track && userLikedTrackIDs.ids.has(track.id);
   const likeChange = useCallback(() => {
     if (!track || !track.id) return;
-    const newSet = new Set(likedTrackIDs.ids);
+    const newSet = new Set(userLikedTrackIDs.ids);
     if (isLiked) {
       newSet.delete(track.id);
     } else {
       newSet.add(track.id);
     }
-    updateLikedTrackIDs(newSet, likedTrackIDs.checkPoint);
-
+    updateUserLikedTrackIDs({ ids: newSet, checkPoint: userLikedTrackIDs.checkPoint });
     void likeATrack({
       id: track.id,
       like: !isLiked
     });
-
-    const { staticUpdateTrigger } = getDynamicSnapshot();
-    PlaylistManager.updateTrackLikedStatus({
+    void PlaylistManager.updateTrackLikedStatus({
       track,
       nextStatus: !isLiked
-    }).finally(staticUpdateTrigger);
-  }, [isLiked, likedTrackIDs.checkPoint, likedTrackIDs.ids, track, updateLikedTrackIDs]);
+    });
+  }, [
+    isLiked,
+    track,
+    updateUserLikedTrackIDs,
+    userLikedTrackIDs.checkPoint,
+    userLikedTrackIDs.ids
+  ]);
   return { isLiked, likeChange };
 };

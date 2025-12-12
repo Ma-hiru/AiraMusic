@@ -5,7 +5,7 @@ import { usePersistZustandShallowStore } from "@mahiru/ui/store";
 import { useFileCache } from "@mahiru/ui/hook/useFileCache";
 import { Filter, ImageSize } from "@mahiru/ui/utils/filter";
 import { useSearchParams } from "react-router-dom";
-import { PlaylistCacheEntry } from "@mahiru/ui/utils/playList";
+import { PlaylistCacheEntry } from "@mahiru/ui/utils/playlist";
 import { Time } from "@mahiru/ui/utils/time";
 
 interface TopRightProps {

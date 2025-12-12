@@ -1,7 +1,7 @@
 import { FC, memo, SyntheticEvent, useCallback } from "react";
 import { useFileCache } from "@mahiru/ui/hook/useFileCache";
 import { Filter, ImageSize } from "@mahiru/ui/utils/filter";
-import { PlaylistCacheEntry, PlaylistManager } from "@mahiru/ui/utils/playList";
+import { PlaylistCacheEntry, PlaylistManager } from "@mahiru/ui/utils/playlist";
 
 interface ListItemCoverProps {
   track: NeteaseTrack;

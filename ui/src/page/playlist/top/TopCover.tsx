@@ -2,7 +2,7 @@ import { FC, memo, SyntheticEvent, useCallback, useRef } from "react";
 import { useFileCache } from "@mahiru/ui/hook/useFileCache";
 import { Filter, ImageSize } from "@mahiru/ui/utils/filter";
 import { useLayout } from "@mahiru/ui/ctx/LayoutCtx";
-import { PlaylistCacheEntry } from "@mahiru/ui/utils/playList";
+import { PlaylistCacheEntry } from "@mahiru/ui/utils/playlist";
 import { CacheStore } from "@mahiru/ui/store";
 
 interface TopCoverProps {

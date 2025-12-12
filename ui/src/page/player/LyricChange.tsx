@@ -2,9 +2,11 @@ import { FC, memo } from "react";
 import { usePlayer } from "@mahiru/ui/ctx/PlayerCtx";
 import { cx } from "@emotion/css";
 import { useLyric } from "@mahiru/ui/hook/useLyric";
+import { useDynamicZustandShallowStore } from "@mahiru/ui/store";
 
 const LyricChange: FC<object> = () => {
-  const { setLyricVersion, playerStatus, trackStatus } = usePlayer();
+  const { setLyricVersion, trackStatus } = usePlayer();
+  const { playerStatus } = useDynamicZustandShallowStore(["playerStatus"]);
   const { hasTl, hasRm, setRm, setTl, rmActive, tlActive } = useLyric(
     playerStatus.lyricVersion,
     setLyricVersion,

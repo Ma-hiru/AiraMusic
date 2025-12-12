@@ -3,13 +3,13 @@ package main
 import (
 	"context"
 	"errors"
-	"fileServer/env"
-	"fileServer/file"
-	"fileServer/router"
 	"fmt"
 	"os"
 	"os/signal"
 	"path/filepath"
+	"store/env"
+	"store/file"
+	"store/router"
 	"syscall"
 	"time"
 

@@ -1,6 +1,6 @@
 import { FC } from "react";
 import { useParams } from "react-router-dom";
-import { usePlayListNormal } from "@mahiru/ui/hook/usePlayList";
+import { usePlaylistNormalRender } from "@mahiru/ui/hook/usePlaylistRender";
 
 import Top from "./top";
 import List from "@mahiru/ui/componets/track_list";
@@ -16,7 +16,7 @@ const PlayListPage: FC<object> = () => {
     filterTracks,
     loading,
     requestMissedTracks
-  } = usePlayListNormal(id);
+  } = usePlaylistNormalRender(id);
   return (
     <div className="w-full h-full px-12 pt-20 contain-style contain-size contain-layout">
       <Top entry={entry} searchTracks={searchTracks} />

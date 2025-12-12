@@ -11,9 +11,11 @@ import {
   SkipBack,
   SkipForward
 } from "lucide-react";
+import { useDynamicZustandShallowStore } from "@mahiru/ui/store";
 
 const Control: FC<object> = () => {
-  const { audioControl, playerStatus, playlistControl } = usePlayer();
+  const { audioControl, playlistControl } = usePlayer();
+  const { playerStatus } = useDynamicZustandShallowStore(["playerStatus"]);
   return (
     <div className="space-x-2 w-full">
       <Progress />

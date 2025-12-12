@@ -8,6 +8,7 @@ import { useKeyboardShortcut } from "@mahiru/ui/hook/useKeyboardShortcut";
 import { useSongAudioControl } from "@mahiru/ui/hook/useSongAudioControl";
 import { useSongPlaylistControl } from "@mahiru/ui/hook/useSongPlaylistControl";
 import { Lyric } from "@mahiru/ui/utils/lyric";
+import { useDynamicZustandShallowStore } from "@mahiru/ui/store";
 
 export function useSong(audioRef: RefObject<Nullable<HTMLAudioElement>>) {
   /**                        状态管理                         */
@@ -18,16 +19,10 @@ export function useSong(audioRef: RefObject<Nullable<HTMLAudioElement>>) {
     size: 0
   });
   const [trackStatus, setTrackStatus] = useImmer<Nullable<PlayerTrackStatus>>(null);
-  const [playerStatus, setPlayerStatus] = useImmer<PlayerStatus>({
-    playing: false,
-    position: 0,
-    repeat: "off",
-    shuffle: false,
-    volume: 0.5,
-    volumeBeforeMute: 0.5,
-    lyricPreference: null,
-    lyricVersion: "raw"
-  });
+  const { playerStatus, setPlayerStatus } = useDynamicZustandShallowStore([
+    "playerStatus",
+    "setPlayerStatus"
+  ]);
   /**                        播放控制                         */
   const scrobble = useCallback((lastStatus: PlayerTrackStatus) => {
     const source = lastStatus?.source || lastStatus?.track?.al?.id;
@@ -65,12 +60,7 @@ export function useSong(audioRef: RefObject<Nullable<HTMLAudioElement>>) {
     },
     [playerStatus.lyricVersion, setPlayerStatus, trackStatus?.lyric]
   );
-  const audioControl = useSongAudioControl({
-    audioRef,
-    playerStatus,
-    setPlayerStatus,
-    playerProgress
-  });
+  const audioControl = useSongAudioControl({ audioRef, playerProgress });
   const playlistControl = useSongPlaylistControl({
     outerTrackUpdater: setTrackStatus,
     outerStatusUpdater: setPlayerStatus,
@@ -80,7 +70,6 @@ export function useSong(audioRef: RefObject<Nullable<HTMLAudioElement>>) {
   useSongResource({
     playerProgress,
     setTrackStatus,
-    setPlayerStatus,
     trackStatus,
     playlistManager: playlistControl.playlistManager
   });
@@ -229,7 +218,6 @@ export function useSong(audioRef: RefObject<Nullable<HTMLAudioElement>>) {
   return useMemo(
     () => ({
       trackStatus,
-      playerStatus,
       getPlayerProgress,
       audioControl,
       playlistControl,
@@ -242,7 +230,6 @@ export function useSong(audioRef: RefObject<Nullable<HTMLAudioElement>>) {
       audioRef,
       clearResourceCache,
       getPlayerProgress,
-      playerStatus,
       playlistControl,
       setLyricVersion,
       trackStatus

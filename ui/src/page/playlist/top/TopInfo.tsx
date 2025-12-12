@@ -3,7 +3,7 @@ import { FC, memo } from "react";
 import { ListMusic, Play } from "lucide-react";
 
 import { useThemeColor } from "@mahiru/ui/hook/useThemeColor";
-import { PlaylistCacheEntry } from "@mahiru/ui/utils/playList";
+import { PlaylistCacheEntry } from "@mahiru/ui/utils/playlist";
 import { Time } from "@mahiru/ui/utils/time";
 
 interface TopInfoProps {

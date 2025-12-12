@@ -1,7 +1,7 @@
 import { EqError, Log } from "@mahiru/ui/utils/dev";
 import { refreshCookie } from "@mahiru/ui/api/auth";
 import { userAccount, userDetail, userLikedSongsIDs, userPlaylist } from "@mahiru/ui/api/user";
-import { getDynamicSnapshot, getPersistSnapshot } from "@mahiru/ui/store";
+import { getPersistSnapshot } from "@mahiru/ui/store";
 import { Auth } from "@mahiru/ui/utils/auth";
 
 /** 登录接口 */
@@ -68,19 +68,15 @@ export async function refreshUserProfile() {
 export async function refreshUserPlaylist() {
   try {
     Log.trace("refresh user playlist");
-    const { updateUserLikedPlayList, getUserPlayListSummaryStatic, staticUpdateTrigger } =
-      getDynamicSnapshot();
+    const { updateUserLikedListSummary, updateUserPlaylistSummary } = getPersistSnapshot();
     const { data } = getPersistSnapshot();
     const uid = data.user?.userId;
     if (uid) {
       const { playlist } = await userPlaylist({ uid, limit: 30 });
       const userLikedList = playlist.shift();
-      updateUserLikedPlayList(userLikedList || null);
-      const userPlaylistStatic = getUserPlayListSummaryStatic();
-      userPlaylistStatic.length = 0;
-      userPlaylistStatic.push(...playlist);
+      updateUserLikedListSummary(userLikedList || null);
+      updateUserPlaylistSummary(playlist);
     }
-    staticUpdateTrigger();
   } catch (err) {
     Log.error(
       new EqError({
@@ -95,13 +91,13 @@ export async function refreshUserPlaylist() {
 export async function refreshUserLikedTrackIDs() {
   try {
     Log.trace("refresh user liked track IDs");
-    const { updateLikedTrackIDs } = getDynamicSnapshot();
+    const { updateUserLikedTrackIDs } = getPersistSnapshot();
     const { data } = getPersistSnapshot();
     const uid = data.user?.userId;
     if (uid) {
       const { ids, checkPoint, code } = await userLikedSongsIDs(uid);
       if (code === 200) {
-        updateLikedTrackIDs(new Set<number>(ids), checkPoint);
+        updateUserLikedTrackIDs({ ids: new Set<number>(ids), checkPoint });
       } else {
         Log.error(
           new EqError({
@@ -120,13 +116,4 @@ export async function refreshUserLikedTrackIDs() {
       })
     );
   }
-}
-/** 从持久化存储加载播放历史列表到静态列表 */
-export async function loadHistoryListFromPersistentStore() {
-  const { data, getHistoryListStatic } = getPersistSnapshot();
-  const persistedHistoryList = data._historyList || [];
-  const historyListStatic = getHistoryListStatic();
-  historyListStatic.length = 0;
-  historyListStatic.push(...persistedHistoryList);
-  return Promise.resolve();
 }

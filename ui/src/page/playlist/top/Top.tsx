@@ -2,7 +2,7 @@ import { FC, memo } from "react";
 import TopCover from "./TopCover";
 import TopRight from "./TopRight";
 import TopInfo from "./TopInfo";
-import { PlaylistCacheEntry } from "@mahiru/ui/utils/playList";
+import { PlaylistCacheEntry } from "@mahiru/ui/utils/playlist";
 
 interface TopProps {
   entry: Nullable<PlaylistCacheEntry>;

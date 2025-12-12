@@ -1,13 +1,15 @@
 import { RefObject, useCallback, useMemo } from "react";
-import { Updater } from "use-immer";
+import { useDynamicZustandShallowStore } from "@mahiru/ui/store";
 
 export function useSongAudioControl(props: {
   audioRef: RefObject<Nullable<HTMLAudioElement>>;
-  playerStatus: PlayerStatus;
-  setPlayerStatus: Updater<PlayerStatus>;
   playerProgress: RefObject<PlayerProgress>;
 }) {
-  const { audioRef, playerStatus, setPlayerStatus, playerProgress } = props;
+  const { audioRef, playerProgress } = props;
+  const { playerStatus, setPlayerStatus } = useDynamicZustandShallowStore([
+    "playerStatus",
+    "setPlayerStatus"
+  ]);
   const play = useCallback(() => {
     const audio = audioRef.current;
     audio && (audio.paused ? audio.play() : audio.pause());

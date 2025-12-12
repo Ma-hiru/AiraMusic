@@ -2,21 +2,18 @@ import { FC, memo } from "react";
 import Avatar from "@mahiru/ui/page/layout/nav/NavAvatar";
 import NavSideNavItem from "@mahiru/ui/page/layout/nav/NavItem";
 import NavSideDivider from "@mahiru/ui/page/layout/nav/NavDivider";
-import { useDynamicZustandShallowStore } from "@mahiru/ui/store";
-import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
+import { usePersistZustandShallowStore } from "@mahiru/ui/store";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { NAV_DATA } from "@mahiru/ui/router";
 import NavPlayList from "@mahiru/ui/page/layout/nav/NavPlayList";
 import { useLayout } from "@mahiru/ui/ctx/LayoutCtx";
 import { cx } from "@emotion/css";
 
 const Nav: FC<object> = () => {
-  const { getUserPlayListSummaryStatic, userLikedPlayList, _static_update } =
-    useDynamicZustandShallowStore([
-      "getUserPlayListSummaryStatic",
-      "userLikedPlayList",
-      "_static_update"
-    ]);
-  const userPlayLists = getUserPlayListSummaryStatic();
+  const { userPlaylistSummary, userLikedListSummary } = usePersistZustandShallowStore([
+    "userPlaylistSummary",
+    "userLikedListSummary"
+  ]);
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
@@ -39,12 +36,16 @@ const Nav: FC<object> = () => {
               prefix={icon}
               active={
                 location.pathname === path ||
-                (label === "搜藏" && location.pathname === `/playlist/${userLikedPlayList?.id}`) ||
+                (label === "搜藏" &&
+                  location.pathname === `/playlist/${userLikedListSummary?.id}`) ||
                 (label === "推荐" && searchParams.get("source") === "recommend")
               }
               onClick={() => {
-                if (label === "搜藏" && (userLikedPlayList?.id || userLikedPlayList?.id === 0)) {
-                  navigate(`/playlist/${userLikedPlayList.id}?like=true&history=false`);
+                if (
+                  label === "搜藏" &&
+                  (userLikedListSummary?.id || userLikedListSummary?.id === 0)
+                ) {
+                  navigate(`/playlist/${userLikedListSummary.id}?like=true&history=false`);
                 } else {
                   navigate(path);
                 }
@@ -54,7 +55,7 @@ const Nav: FC<object> = () => {
           );
         })}
       </div>
-      {!!userPlayLists.length && <NavSideDivider key={_static_update} />}
+      {!!userPlaylistSummary?.length && <NavSideDivider />}
       {/*playList*/}
       <NavPlayList />
     </div>

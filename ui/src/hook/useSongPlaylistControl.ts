@@ -1,17 +1,47 @@
 import { useEffect, useMemo } from "react";
 import { Updater } from "use-immer";
+import { CacheStore } from "@mahiru/ui/store";
+
+type CacheType = {
+  _position: number;
+  _playlist: PlayerTrackStatus[];
+  _shuffle: boolean;
+  _repeat: "off" | "one" | "all";
+};
 
 export class PlaylistPlayerManager {
+  private _cacheKey = "playlist_player_manager";
   private _position: number = -1;
   private _playlist: PlayerTrackStatus[] = [];
   private _shuffle: boolean = false;
   private _repeat: "off" | "one" | "all" = "off";
   private _outerTrackUpdater: Nullable<Updater<Nullable<PlayerTrackStatus>>> = null;
-  private _outerStatusUpdater: Nullable<Updater<PlayerStatus>> = null;
+  private _outerStatusUpdater: Nullable<
+    NormalFunc<[updater: NormalFunc<[draft: PlayerStatus], void | PlayerStatus>]>
+  > = null;
   private _beforeTrackUpdate: Nullable<NormalFunc<[next: Nullable<PlayerTrackStatus>]>> = null;
 
   constructor() {
-    this.loadFromZustand();
+    void this.loadFromCache();
+  }
+
+  async loadFromCache() {
+    const cache = await CacheStore.fetchObject<CacheType>(this._cacheKey);
+    if (cache) {
+      this._position = cache._position;
+      this._playlist = cache._playlist;
+      this._shuffle = cache._shuffle;
+      this._repeat = cache._repeat;
+    }
+  }
+
+  async saveToCache() {
+    await CacheStore.storeObject(this._cacheKey, {
+      _position: this._position,
+      _playlist: this._playlist,
+      _shuffle: this._shuffle,
+      _repeat: this._repeat
+    } satisfies CacheType);
   }
 
   set beforeTrackUpdate(callback: NormalFunc<[next: Nullable<PlayerTrackStatus>]>) {
@@ -22,7 +52,7 @@ export class PlaylistPlayerManager {
     this._outerTrackUpdater = updater;
   }
 
-  set outerStatusUpdater(updater: Updater<PlayerStatus>) {
+  set outerStatusUpdater(updater: NormalFunc<[updater: NormalFunc<[draft: PlayerStatus]>]>) {
     this._outerStatusUpdater = updater;
   }
 
@@ -336,7 +366,7 @@ const playlistManager = new PlaylistPlayerManager();
 
 export function useSongPlaylistControl(props: {
   outerTrackUpdater: Updater<Nullable<PlayerTrackStatus>>;
-  outerStatusUpdater: Updater<PlayerStatus>;
+  outerStatusUpdater: NormalFunc<[updater: NormalFunc<[draft: PlayerStatus], void | PlayerStatus>]>;
   beforeTrackUpdate: NormalFunc<[next: Nullable<PlayerTrackStatus>]>;
 }) {
   const { outerStatusUpdater, outerTrackUpdater, beforeTrackUpdate } = props;
@@ -365,6 +395,8 @@ export function useSongPlaylistControl(props: {
       isSamePlaylist: playlistManager.isSamePlaylist.bind(playlistManager),
       current: playlistManager.current.bind(playlistManager),
       canPlay: playlistManager.canPlay.bind(playlistManager),
+      saveToCache: playlistManager.saveToCache.bind(playlistManager),
+      loadFromCache: playlistManager.loadFromCache.bind(playlistManager),
       playlistManager
     }),
     []

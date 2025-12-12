@@ -1,7 +1,7 @@
 import { Filter, ImageSize } from "@mahiru/ui/utils/filter";
-import { Log } from "@mahiru/ui/utils/dev";
+import { EqError, Log } from "@mahiru/ui/utils/dev";
 import { getPlaylistDetail } from "@mahiru/ui/api/playlist";
-import { CacheStore, getDynamicSnapshot } from "@mahiru/ui/store";
+import { CacheStore, getPersistSnapshot } from "@mahiru/ui/store";
 import { Time } from "@mahiru/ui/utils/time";
 
 export type PlaylistCacheID = `play_list_cache_${string | number}`;
@@ -22,7 +22,12 @@ class PlaylistStore {
   maxPlayListSize = 100;
   /** 缓存过期时间 */
   timeLimit = Time.getCacheTimeLimit(1, "hour"); // 1 hour
+
   memory = new Map<PlaylistCacheID, PlaylistCacheEntry>();
+
+  cacheID(playListID: number): PlaylistCacheID {
+    return `play_list_cache_${playListID}`;
+  }
 
   createEntry(data: NeteasePlaylistDetailResponse): PlaylistCacheEntry {
     const cacheID = this.cacheID(data.playlist.id);
@@ -36,8 +41,7 @@ class PlaylistStore {
     };
   }
 
-  /** 将内存中的更新保存到Store */
-  updateInStore(entry: PlaylistCacheEntry) {
+  saveDirtyEntry(entry: PlaylistCacheEntry) {
     if (entry._dirty) {
       entry._dirty = false;
       this.setInStore(entry);
@@ -69,10 +73,6 @@ class PlaylistStore {
 
   outdate(entry: PlaylistCacheEntry) {
     return Date.now() - entry.createTime > this.timeLimit;
-  }
-
-  cacheID(playListID: number): PlaylistCacheID {
-    return `play_list_cache_${playListID}`;
   }
 
   limitMemorySize() {
@@ -113,7 +113,33 @@ class PlaylistStore {
 }
 
 export const PlaylistManager = new (class {
-  store = new PlaylistStore();
+  private store = new PlaylistStore();
+  private outerUpdater: Set<NormalFunc> = new Set();
+
+  addOuterUpdater(func: NormalFunc) {
+    this.outerUpdater.add(func);
+  }
+
+  removeOuterUpdater(func: NormalFunc) {
+    this.outerUpdater.delete(func);
+  }
+
+  private execUpdater() {
+    this.outerUpdater.forEach((func) => {
+      try {
+        func();
+      } catch (err) {
+        Log.error(
+          new EqError({
+            raw: err,
+            message: "PlaylistManager execUpdater failed",
+            label: "ui/store/playlist.ts:PlaylistManager:execUpdater"
+          })
+        );
+        this.removeOuterUpdater(func);
+      }
+    });
+  }
 
   async requestPlaylistDetail(
     id: number,
@@ -146,7 +172,7 @@ export const PlaylistManager = new (class {
   }
 
   async saveDirtyEntry(entry: PlaylistCacheEntry) {
-    return this.store.updateInStore(entry);
+    return this.store.saveDirtyEntry(entry);
   }
 
   updateTrackCoverCache(props: {
@@ -169,8 +195,8 @@ export const PlaylistManager = new (class {
 
   async updateTrackLikedStatus(props: { track: NeteaseTrack; nextStatus: boolean }) {
     const { track, nextStatus } = props;
-    const { userLikedPlayList } = getDynamicSnapshot();
-    const likedPlaylistID = userLikedPlayList?.id;
+    const { userLikedListSummary } = getPersistSnapshot();
+    const likedPlaylistID = userLikedListSummary?.id;
     if (likedPlaylistID) {
       const entry = await this.store.get(likedPlaylistID);
       if (entry) {
@@ -185,6 +211,7 @@ export const PlaylistManager = new (class {
         entry._dirty = true;
         await this.saveDirtyEntry(entry);
       }
+      this.execUpdater();
     }
   }
 })();

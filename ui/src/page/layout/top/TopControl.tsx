@@ -31,8 +31,9 @@ const TopControl: FC<ControlButtonProps> = ({ maximizable = true, mini = true })
   }, [isMax]);
   const minimize = Renderer.event.minimize;
   const close = useCallback(() => {
-    playlistControl.saveInZustand();
-    setTimeout(() => Renderer.event.close({ broadcast: true }), 200);
+    playlistControl.saveToCache().finally(() => {
+      Renderer.event.close({ broadcast: true });
+    });
   }, [playlistControl]);
 
   const { toggleTargetWindow, hasOpened } = usePlayerInfoSync("miniplayer");

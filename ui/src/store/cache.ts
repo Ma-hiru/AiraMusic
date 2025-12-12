@@ -30,7 +30,7 @@ export class CacheStore {
     });
   }
 
-  static fetchObject<T extends object>(
+  static fetchObject<T>(
     id: string,
     timeLimit?: number,
     parts?: {
@@ -48,7 +48,7 @@ export class CacheStore {
   static editObject<T = any, TObjType extends ObjType = ObjType>(
     payload: EditObjectRequest<TObjType, T>
   ) {
-    return cacheRequest<any, EditObjectResponse<T>>("/api/object/edit", {
+    return cacheRequest<any, EditObjectResponse<any>>("/api/object/edit", {
       method: "POST",
       data: payload
     });
@@ -164,6 +164,7 @@ type ArrayOperations =
       value: { start?: number; startIndex?: number; deleteCount: number; items?: any[] };
       field?: undefined;
     }
+  | { name: "find"; value: { field?: string; value: any }; field?: undefined }
   | { name: "read"; value: number; field?: undefined }
   | { name: "map"; itemOperations: EditObjectItemOperations; field?: undefined; value?: undefined };
 
@@ -192,7 +193,7 @@ export type EditObjectSummary = {
 
 export type EditObjectResponse<T = any> = {
   ok: boolean;
-  data?: T;
+  data: T | null;
   summary?: EditObjectSummary;
   error?: string;
 };

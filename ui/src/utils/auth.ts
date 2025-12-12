@@ -1,7 +1,7 @@
 import Cookies from "js-cookie";
 import { logout } from "@mahiru/ui/api/auth";
 import { router } from "@mahiru/ui/router";
-import { getDynamicSnapshot, getPersistSnapshot, usePersistZustandStore } from "@mahiru/ui/store";
+import { getPersistSnapshot, usePersistZustandStore } from "@mahiru/ui/store";
 
 function setCookies(raw: string) {
   const cookies = raw.split(";;");
@@ -51,19 +51,21 @@ function doLogout() {
     removeCookie("MUSIC_U");
     removeCookie("__csrf");
     // 更新状态仓库
-    const { updatePersistStoreData, clearHistoryList } = getPersistSnapshot();
-    const { updateLikedTrackIDs, updateUserLikedPlayList, getUserPlayListSummaryStatic } =
-      getDynamicSnapshot();
+    const {
+      updatePersistStoreData,
+      updateUserLikedTrackIDs,
+      updateUserPlaylistSummary,
+      updateUserLikedListSummary
+    } = getPersistSnapshot();
+
     updatePersistStoreData({
       user: null,
       loginMode: "",
       lastRefreshCookieDate: 0
     });
-    updateLikedTrackIDs(new Set(), new Date().getTime());
-    updateUserLikedPlayList(null);
-    const userPlayList = getUserPlayListSummaryStatic();
-    userPlayList.length = 0;
-    clearHistoryList();
+    updateUserLikedTrackIDs({ ids: new Set(), checkPoint: new Date().getTime() });
+    updateUserLikedListSummary(null);
+    updateUserPlaylistSummary([]);
     return router.navigate("/home");
   });
 }

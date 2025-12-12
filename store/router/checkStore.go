@@ -1,7 +1,7 @@
 package router
 
 import (
-	"fileServer/handler"
+	"store/handler"
 
 	"github.com/gin-gonic/gin"
 )

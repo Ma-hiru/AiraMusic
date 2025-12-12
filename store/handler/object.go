@@ -2,11 +2,11 @@ package handler
 
 import (
 	"encoding/json"
-	"fileServer/file"
-	"fileServer/jsonEditer"
 	"io"
 	"log"
 	"net/http"
+	"store/file"
+	"store/jsonEditer"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -170,76 +170,77 @@ func EditObject(ctx *gin.Context) {
 		})
 		return
 	}
+	// 编辑 JSON 对象
+	var resp = editJsonStr(objectData, requestParam.ObjType, requestParam.ObjOperations, requestParam.Save, requestParam.Id)
+	ctx.JSON(200, resp)
+
+}
+
+func editJsonStr(objectData []byte, ObjType string, ObjOperations []jsonEditer.ObjOperations, Save bool, Id string) gin.H {
 	// 解析 JSON 数据
 	var payload any
+	var store = file.GetStore()
 	if err := json.Unmarshal(objectData, &payload); err != nil {
-		ctx.JSON(200, gin.H{
+		return gin.H{
 			"ok":    false,
 			"error": "invalid json data",
-		})
-		return
+		}
 	}
 
 	var editor = &jsonEditer.JSONEditor{Data: payload}
-	resolvedType, err := jsonEditer.ResolveObjType(requestParam.ObjType, editor.Data)
+	resolvedType, err := jsonEditer.ResolveObjType(ObjType, editor.Data)
 	if err != nil || (resolvedType != "object" && resolvedType != "array") {
-		ctx.JSON(200, gin.H{
+		return gin.H{
 			"ok":    false,
 			"error": "invalid objType",
-		})
-		return
+		}
 	}
 	if resolvedType == "object" {
 		if _, ok := editor.Data.(map[string]any); !ok {
-			ctx.JSON(200, gin.H{
+			return gin.H{
 				"ok":    false,
 				"error": "target is not object",
-			})
-			return
+			}
 		}
 	} else if resolvedType == "array" {
 		if _, ok := editor.Data.([]any); !ok {
-			ctx.JSON(200, gin.H{
+			return gin.H{
 				"ok":    false,
 				"error": "target is not array",
-			})
-			return
+			}
 		}
 	}
 
 	summary := jsonEditer.NewEditSummary()
-	result, err := jsonEditer.ApplyOperations(editor, resolvedType, requestParam.ObjOperations, summary)
+	result, err := jsonEditer.ApplyOperations(editor, resolvedType, ObjOperations, summary)
 	if err != nil {
-		ctx.JSON(200, gin.H{
+		return gin.H{
 			"ok":    false,
 			"error": err.Error(),
-		})
-		return
+		}
 	}
 
-	if requestParam.Save {
+	if Save {
 		var buffer, marshalErr = json.Marshal(editor.Data)
 		if marshalErr != nil {
-			ctx.JSON(200, gin.H{
+			return gin.H{
 				"ok":    false,
 				"error": "marshal json failed",
-			})
-			return
+			}
 		}
-		_, storeErr := store.Store(requestParam.Id, "application/json", buffer)
+		_, storeErr := store.Store(Id, "application/json", buffer)
 		if storeErr != nil {
-			ctx.JSON(200, gin.H{
+			return gin.H{
 				"ok":    false,
 				"error": "store file failed",
-			})
-			return
+			}
 		}
 	}
 
 	respSummary := summary.Export()
-	ctx.JSON(200, gin.H{
+	return gin.H{
 		"ok":      true,
 		"data":    result,
 		"summary": respSummary,
-	})
+	}
 }

@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Filter, ImageSize } from "@mahiru/ui/utils/filter";
 import { Log } from "@mahiru/ui/utils/dev";
-import { PlaylistCacheEntry, PlaylistManager } from "@mahiru/ui/utils/playList";
+import { PlaylistCacheEntry, PlaylistManager } from "@mahiru/ui/utils/playlist";
 import { SearchTrack } from "@mahiru/wasm";
-import { useDynamicZustandShallowStore, usePersistZustandStore } from "@mahiru/ui/store";
-import { useShallow } from "zustand/react/shallow";
 
-export function usePlayListNormal(id?: string) {
-  const { _static_update } = useDynamicZustandShallowStore(["_static_update"]);
+import { PlaylistHistoryCache } from "@mahiru/ui/utils/history";
+import { useUpdate } from "@mahiru/ui/hook/useUpdate";
+
+export function usePlaylistNormalRender(id?: string) {
   // 歌单详情
   const [entry, setEntry] = useState<Nullable<PlaylistCacheEntry>>(null);
   // 所有的track地址最终指向Store中的缓存
@@ -105,22 +105,23 @@ export function usePlayListNormal(id?: string) {
     }
   }, [searchTrackInstance]);
   // 监听id变化，加载歌单详情
+  const outerUpdate = useUpdate();
+  useEffect(() => {
+    PlaylistManager.addOuterUpdater(outerUpdate);
+    return () => {
+      PlaylistManager.removeOuterUpdater(outerUpdate);
+    };
+  }, [outerUpdate]);
   useEffect(() => {
     let cancelled = false;
-    void _static_update;
     clearState();
     if (id) {
-      PlaylistManager.requestPlaylistDetail(
-        Number(id),
-        [0, 50],
-        ImageSize.xs,
-        (missedTrack) => {
-          if (!cancelled) {
-            Log.info("usePlayListNormal", `请求缺失的曲目，数量 ${missedTrack}`);
-            setRequestMissedTracks(missedTrack);
-          }
+      PlaylistManager.requestPlaylistDetail(Number(id), [0, 50], ImageSize.xs, (missedTrack) => {
+        if (!cancelled) {
+          Log.info("usePlayListNormal", `请求缺失的曲目，数量 ${missedTrack}`);
+          setRequestMissedTracks(missedTrack);
         }
-      )
+      })
         .then((entry) => {
           if (entry && !cancelled) {
             tracks.current = entry.playlist.tracks;
@@ -147,7 +148,8 @@ export function usePlayListNormal(id?: string) {
     return () => {
       cancelled = true;
     };
-  }, [_static_update, checkAndUpdateLastPreloadRange, clearState, id, searchTrackInstance]);
+    // outerUpdate.count 用于监听外部更新请求
+  }, [checkAndUpdateLastPreloadRange, clearState, id, searchTrackInstance, outerUpdate.count]);
   useEffect(() => {
     return () => {
       // 保存脏数据
@@ -165,14 +167,7 @@ export function usePlayListNormal(id?: string) {
   };
 }
 
-export function usePlayListHistory() {
-  // 精确监听历史列表变化
-  const { _historyList, getHistoryListStatic } = usePersistZustandStore(
-    useShallow((state) => ({
-      _historyList: state.data._historyList,
-      getHistoryListStatic: state.getHistoryListStatic
-    }))
-  );
+export function usePlaylistHistoryRender() {
   const historyTracks = useRef<NeteaseTrack[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterTracks, setFilterTracks] = useState({
@@ -252,13 +247,20 @@ export function usePlayListHistory() {
     },
     [searchTrackInstance]
   );
-  // 获取最新的历史列表
-  useEffect(() => {
-    // 监听持久化列表变化
-    void _historyList;
+
+  const updater = useCallback(() => {
     setLoading(true);
-    historyTracks.current = getHistoryListStatic();
-  }, [_historyList, getHistoryListStatic]);
+    PlaylistHistoryCache.load()
+      .then((data) => {
+        historyTracks.current = data;
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, []);
+  const saver = useCallback(() => {
+    void PlaylistHistoryCache.save(historyTracks.current);
+  }, []);
   // 加载历史歌曲详情
   useEffect(() => {
     let cancelled = false;
@@ -283,6 +285,16 @@ export function usePlayListHistory() {
       setSearchTrackInstance(new SearchTrack());
     }
   }, [searchTrackInstance]);
+  useEffect(() => {
+    PlaylistHistoryCache.outerUpdater = updater;
+    void updater();
+    return () => {
+      PlaylistHistoryCache.outerUpdater = null;
+      // 保存脏数据
+      Log.info("usePlayListHistoryRender", "组件卸载，保存历史缓存");
+      void saver();
+    };
+  }, [saver, updater]);
   return {
     filterTracks,
     onVirtualListRangeUpdate,

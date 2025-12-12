@@ -4,8 +4,8 @@ import { ListRef, RowComponentType, useVirtualList } from "@mahiru/ui/hook/useVi
 import { useThemeColor } from "@mahiru/ui/hook/useThemeColor";
 import ListItem from "./ListItem";
 import Loading from "../public/Loading";
-import { useDynamicZustandShallowStore } from "@mahiru/ui/store";
-import { PlaylistCacheEntry } from "@mahiru/ui/utils/playList";
+import { usePersistZustandShallowStore } from "@mahiru/ui/store";
+import { PlaylistCacheEntry } from "@mahiru/ui/utils/playlist";
 import { useScrollAutoHide } from "@mahiru/ui/hook/useScrollAutoHide";
 
 interface ListProps {
@@ -27,11 +27,11 @@ const ListContainer: FC<ListProps> = ({
   entry,
   requestMissedTracks
 }) => {
-  const { userLikedPlayList } = useDynamicZustandShallowStore(["userLikedPlayList"]);
+  const { userLikedListSummary } = usePersistZustandShallowStore(["userLikedListSummary"]);
   const { mainColor } = useThemeColor();
   const { tracks, absoluteIdx } = filterTracks;
   const containerRef = useRef<Nullable<HTMLDivElement>>(null);
-  const isLikedPlayList = id === userLikedPlayList?.id;
+  const isLikedPlayList = id === userLikedListSummary?.id;
 
   const List = useVirtualList({
     items: tracks,

@@ -7,7 +7,7 @@ import ListItemIndex from "./ListItemIndex";
 import ListItemCover from "./ListItemCover";
 import ListItemName from "./ListItemName";
 import ListItemInfo from "./ListItemInfo";
-import { PlaylistCacheEntry } from "@mahiru/ui/utils/playList";
+import { PlaylistCacheEntry } from "@mahiru/ui/utils/playlist";
 import { useThemeColor } from "@mahiru/ui/hook/useThemeColor";
 
 interface ListItemProps {

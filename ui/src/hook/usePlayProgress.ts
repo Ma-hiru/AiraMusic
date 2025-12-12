@@ -2,9 +2,11 @@ import { usePlayer } from "@mahiru/ui/ctx/PlayerCtx";
 import { useImmer } from "use-immer";
 import { useAnimate } from "motion/react";
 import { MouseEvent as ReactMouseEvent, useCallback, useEffect, useRef, useState } from "react";
+import { useDynamicZustandShallowStore } from "@mahiru/ui/store";
 
 export function usePlayProgress() {
-  const { getPlayerProgress, playerStatus, trackStatus, audioRef, audioControl } = usePlayer();
+  const { getPlayerProgress, trackStatus, audioRef, audioControl } = usePlayer();
+  const { playerStatus } = useDynamicZustandShallowStore(["playerStatus"]);
   const [progress, setProgress] = useImmer({
     percent: 0,
     buffer: 0,

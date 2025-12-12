@@ -3,10 +3,12 @@ import { usePlayerInfoSync } from "@mahiru/ui/hook/usePlayerInfoSync";
 import { useThemeColor } from "@mahiru/ui/hook/useThemeColor";
 import { Volume, Volume1, Volume2, VolumeX } from "lucide-react";
 import { usePlayer } from "@mahiru/ui/ctx/PlayerCtx";
+import { useDynamicZustandShallowStore } from "@mahiru/ui/store";
 
 const BarBtns: FC<object> = () => {
   const { hasOpened, toggleTargetWindow } = usePlayerInfoSync("lyric");
-  const { playerStatus, audioControl } = usePlayer();
+  const { audioControl } = usePlayer();
+  const { playerStatus } = useDynamicZustandShallowStore(["playerStatus"]);
   const { mainColor } = useThemeColor();
   const volumeIcons = () => {
     if (playerStatus.volume <= 0) {

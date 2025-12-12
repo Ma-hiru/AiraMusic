@@ -5,12 +5,12 @@ import { EqError, Log } from "@mahiru/ui/utils/dev";
 import { Track } from "@mahiru/ui/utils/track";
 import { useUnMounted } from "@mahiru/ui/hook/useUnMounted";
 import { PlaylistPlayerManager } from "@mahiru/ui/hook/useSongPlaylistControl";
+import { useDynamicZustandShallowStore } from "@mahiru/ui/store";
 
 interface SongResourceProps {
   playerProgress: RefObject<PlayerProgress>;
   trackStatus: Nullable<PlayerTrackStatus>;
   setTrackStatus: Updater<Nullable<PlayerTrackStatus>>;
-  setPlayerStatus: Updater<PlayerStatus>;
   lyricVersionPreference?: LyricVersionType;
   playlistManager: PlaylistPlayerManager;
 }
@@ -20,13 +20,13 @@ export function useSongResource({
   setTrackStatus,
   lyricVersionPreference,
   trackStatus,
-  playlistManager,
-  setPlayerStatus
+  playlistManager
 }: SongResourceProps) {
   Log.trace("useSongResource executed");
   const lyricCancelRef = useRef<Nullable<NormalFunc>>(null);
   const audioCancelRef = useRef<Nullable<NormalFunc>>(null);
   const preloadCancelRef = useRef<Nullable<NormalFunc>>(null);
+  const { setPlayerStatus } = useDynamicZustandShallowStore(["setPlayerStatus"]);
 
   const loadLyric = useCallback(
     async (id: number) => {

@@ -1,11 +1,11 @@
 package handler
 
 import (
-	"fileServer/file"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
+	"store/file"
 	"strconv"
 	"strings"
 

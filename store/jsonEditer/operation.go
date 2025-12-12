@@ -1,6 +1,9 @@
 package jsonEditer
 
-import "fmt"
+import (
+	"fmt"
+	"reflect"
+)
 
 type ObjOperations struct {
 	Name           string `json:"name" binding:"required"` // 操作名称、预设（push/pop/set/delete/map/merge/...）
@@ -23,7 +26,6 @@ func ApplyOperations(editor *JSONEditor, objType string, ops []ObjOperations, su
 			result = res
 		}
 	}
-
 	return result, nil
 }
 
@@ -58,7 +60,7 @@ func applyArrayOperation(editor *JSONEditor, op ObjOperations, summary *EditSumm
 			return nil, err
 		}
 		summary.AddIndex(0)
-		return editor.Data, nil
+		return nil, nil
 	case "pop":
 		var val, err = editor.Pop()
 		if err != nil {
@@ -90,7 +92,7 @@ func applyArrayOperation(editor *JSONEditor, op ObjOperations, summary *EditSumm
 			return nil, err
 		}
 		summary.AddIndex(idx)
-		return editor.Data, nil
+		return nil, nil
 	case "insert":
 		var payload, ok = op.Value.(map[string]any)
 		if !ok {
@@ -108,7 +110,7 @@ func applyArrayOperation(editor *JSONEditor, op ObjOperations, summary *EditSumm
 			return nil, err
 		}
 		summary.AddIndex(idx)
-		return editor.Data, nil
+		return nil, nil
 	case "splice":
 		var payload, ok = op.Value.(map[string]any)
 		if !ok {
@@ -137,7 +139,7 @@ func applyArrayOperation(editor *JSONEditor, op ObjOperations, summary *EditSumm
 			return nil, err
 		}
 		summary.AddIndex(start)
-		return editor.Data, nil
+		return nil, nil
 	case "read":
 		var idx, err = toInt(op.Value)
 		if err != nil {
@@ -148,6 +150,35 @@ func applyArrayOperation(editor *JSONEditor, op ObjOperations, summary *EditSumm
 		}
 		summary.AddIndex(idx)
 		return arr[idx], nil
+	case "find":
+		// value: { field?: string, value: any }
+		criteria, ok := op.Value.(map[string]any)
+		if !ok {
+			return nil, fmt.Errorf("find expects object value")
+		}
+		target, hasValue := criteria["value"]
+		if !hasValue {
+			return nil, fmt.Errorf("find requires value")
+		}
+		field, _ := criteria["field"].(string)
+		for i, v := range arr {
+			if field == "" {
+				if reflect.DeepEqual(v, target) {
+					summary.AddIndex(i)
+					return map[string]any{"index": i, "value": v}, nil
+				}
+				continue
+			}
+			obj, ok := v.(map[string]any)
+			if !ok {
+				continue
+			}
+			if reflect.DeepEqual(obj[field], target) {
+				summary.AddIndex(i)
+				return map[string]any{"index": i, "value": v}, nil
+			}
+		}
+		return nil, nil
 	case "map":
 		if op.ItemOperations == nil || len(op.ItemOperations.ObjOperations) == 0 {
 			return nil, fmt.Errorf("map requires itemOperations")
@@ -166,6 +197,9 @@ func applyArrayOperation(editor *JSONEditor, op ObjOperations, summary *EditSumm
 			summary.AddIndex(i)
 		}
 		editor.Data = arr
+		return nil, nil
+	case "clear":
+		editor.Data = []any{}
 		return editor.Data, nil
 	default:
 		return nil, fmt.Errorf("unsupported array op: %s", op.Name)
@@ -198,7 +232,7 @@ func applyObjectOperation(editor *JSONEditor, op ObjOperations, summary *EditSum
 		return nil, nil
 	case "clear":
 		editor.Data = map[string]any{}
-		return nil, nil
+		return editor.Data, nil
 	case "read":
 		if op.Field == "" {
 			return obj, nil
@@ -230,7 +264,7 @@ func applyObjectOperation(editor *JSONEditor, op ObjOperations, summary *EditSum
 			obj[key] = child.Data
 			summary.AddField(key)
 		}
-		return editor.Data, nil
+		return nil, nil
 	default:
 		return nil, fmt.Errorf("unsupported object op: %s", op.Name)
 	}

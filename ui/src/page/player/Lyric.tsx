@@ -6,10 +6,12 @@ import { useLayout } from "@mahiru/ui/ctx/LayoutCtx";
 import { useGPU } from "@mahiru/ui/hook/useGPU";
 import { LyricLineMouseEvent } from "@applemusic-like-lyrics/core";
 import { Lyric as LyricUtils } from "@mahiru/ui/utils/lyric";
+import { useDynamicZustandShallowStore } from "@mahiru/ui/store";
 
 const Lyric: FC<object> = () => {
   const lyricPlayerRef = useRef<LyricPlayerRef>(null);
-  const { getPlayerProgress, trackStatus, audioRef, playerStatus } = usePlayer();
+  const { getPlayerProgress, trackStatus, audioRef } = usePlayer();
+  const { playerStatus } = useDynamicZustandShallowStore(["playerStatus"]);
   const { PlayerModalVisible } = useLayout();
   const { hasDedicatedGPU } = useGPU();
   useEffect(() => {

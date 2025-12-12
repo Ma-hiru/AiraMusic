@@ -2,7 +2,7 @@ import { FC, memo, SyntheticEvent, useCallback } from "react";
 import NavSideNavItem from "@mahiru/ui/page/layout/nav/NavItem";
 import { useFileCache } from "@mahiru/ui/hook/useFileCache";
 import { cx } from "@emotion/css";
-import { CacheStore, getDynamicSnapshot } from "@mahiru/ui/store";
+import { CacheStore } from "@mahiru/ui/store";
 import { Filter, ImageSize } from "@mahiru/ui/utils/filter";
 
 interface Props {
@@ -14,6 +14,7 @@ interface Props {
   active?: boolean;
   className?: string;
   index: number;
+  rawList: NeteasePlaylistSummary[];
 }
 
 const NavPlayListItem: FC<Props> = ({
@@ -24,16 +25,15 @@ const NavPlayListItem: FC<Props> = ({
   id,
   onClick,
   active,
-  index
+  index,
+  rawList
 }) => {
   const cachedCover = useFileCache(
     Filter.NeteaseImageSize(cover.cached || cover.raw, ImageSize.sm),
     {
       onCacheHit: (file, id) => {
-        const { getUserPlayListSummaryStatic } = getDynamicSnapshot();
-        const userPlayLists = getUserPlayListSummaryStatic();
-        userPlayLists[index]!.cachedCoverImgUrl = file;
-        userPlayLists[index]!.cachedCoverImgUrlID = id;
+        rawList[index]!.cachedCoverImgUrl = file;
+        rawList[index]!.cachedCoverImgUrlID = id;
       }
     }
   );
@@ -42,16 +42,13 @@ const NavPlayListItem: FC<Props> = ({
       const raw = Filter.NeteaseImageSize(cover.raw, ImageSize.sm) as string;
       if (e.currentTarget.src === raw) return;
       e.currentTarget.src = raw;
-      console.log("nav Image load error:", cachedCover, "fallback to raw:", raw);
-      const { getUserPlayListSummaryStatic } = getDynamicSnapshot();
-      const userPlayLists = getUserPlayListSummaryStatic();
-      if (userPlayLists[index]) {
-        userPlayLists[index].cachedCoverImgUrl = "";
-        void CacheStore.remove(userPlayLists[index].cachedCoverImgUrlID);
-        userPlayLists[index].cachedCoverImgUrlID = "";
+      if (rawList[index]) {
+        rawList[index].cachedCoverImgUrl = "";
+        void CacheStore.remove(rawList[index].cachedCoverImgUrlID);
+        rawList[index].cachedCoverImgUrlID = "";
       }
     },
-    [cachedCover, cover.raw, index]
+    [cover.raw, index, rawList]
   );
   return (
     <div

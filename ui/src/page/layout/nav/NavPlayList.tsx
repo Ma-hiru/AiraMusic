@@ -1,18 +1,24 @@
-import { FC, memo, useCallback, useRef, useState } from "react";
+import { FC, memo, useCallback, useEffect, useRef, useState } from "react";
 import { css, cx } from "@emotion/css";
-import { useDynamicZustandShallowStore } from "@mahiru/ui/store";
+import { usePersistZustandShallowStore } from "@mahiru/ui/store";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ArrowBigUp } from "lucide-react";
 import NavPlayListItem from "@mahiru/ui/page/layout/nav/NavPlayListItem";
 import { RowComponentType, useVirtualList } from "@mahiru/ui/hook/useVirtualList";
 import { useScrollAutoHide } from "@mahiru/ui/hook/useScrollAutoHide";
+import { useUpdate } from "@mahiru/ui/hook/useUpdate";
 
 const NavPlayList: FC<object> = () => {
-  const { getUserPlayListSummaryStatic } = useDynamicZustandShallowStore([
-    "getUserPlayListSummaryStatic",
-    "_static_update"
-  ]);
-  const userPlayLists = getUserPlayListSummaryStatic();
+  const { userPlaylistSummary } = usePersistZustandShallowStore(["userPlaylistSummary"]);
+  const userPlayListRef = useRef<NeteasePlaylistSummary[]>([]);
+  const userPlayLists = userPlayListRef.current;
+  const updater = useUpdate();
+  useEffect(() => {
+    if (userPlaylistSummary) {
+      userPlayListRef.current = structuredClone(userPlaylistSummary);
+      updater();
+    }
+  }, [updater, userPlaylistSummary]);
   const navigate = useNavigate();
   const location = useLocation();
   const containerRef = useRef<Nullable<HTMLDivElement>>(null);
@@ -49,6 +55,7 @@ const NavPlayList: FC<object> = () => {
       return (
         <NavPlayListItem
           index={index}
+          rawList={userPlayLists}
           active={location.pathname === `/playlist/${data.id}`}
           cover={{
             raw: data.coverImgUrl,
