@@ -1,8 +1,7 @@
 import { useEffect, useMemo } from "react";
 import { Updater } from "use-immer";
-import { getPersistSnapshot } from "@mahiru/ui/store";
 
-export class PlaylistManager {
+export class PlaylistPlayerManager {
   private _position: number = -1;
   private _playlist: PlayerTrackStatus[] = [];
   private _shuffle: boolean = false;
@@ -306,27 +305,6 @@ export class PlaylistManager {
     );
   }
 
-  saveInZustand() {
-    const { updatePlayerStatus } = getPersistSnapshot();
-    updatePlayerStatus({
-      repeat: this._repeat,
-      shuffle: this._shuffle,
-      position: this._position,
-      playlist: this._playlist
-    });
-  }
-
-  loadFromZustand() {
-    const { player, updatePlayerStatus } = getPersistSnapshot();
-    if (player) {
-      this._repeat = player.repeat || "off";
-      this._shuffle = player.shuffle || false;
-      this._position = player.position === 0 ? 0 : player.position || -1;
-      this._playlist = structuredClone(player.playlist || []);
-    }
-    updatePlayerStatus(null);
-  }
-
   get repeat() {
     return this._repeat;
   }
@@ -354,7 +332,7 @@ export class PlaylistManager {
   }
 }
 
-const playlistManager = new PlaylistManager();
+const playlistManager = new PlaylistPlayerManager();
 
 export function useSongPlaylistControl(props: {
   outerTrackUpdater: Updater<Nullable<PlayerTrackStatus>>;
@@ -387,7 +365,6 @@ export function useSongPlaylistControl(props: {
       isSamePlaylist: playlistManager.isSamePlaylist.bind(playlistManager),
       current: playlistManager.current.bind(playlistManager),
       canPlay: playlistManager.canPlay.bind(playlistManager),
-      saveInZustand: playlistManager.saveInZustand.bind(playlistManager),
       playlistManager
     }),
     []

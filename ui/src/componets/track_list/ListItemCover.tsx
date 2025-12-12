@@ -26,7 +26,7 @@ const ListItemCover: FC<ListItemCoverProps> = ({
     (file: string, id: string) => {
       // 写入缓存ID
       if (!playListID || !entry) return; // 没有歌单ID不处理(可能是搜索结果、历史记录等)
-      PlaylistManager.updatePlaylistEntryTrackCoverCache({
+      PlaylistManager.updateTrackCoverCache({
         entry,
         absoluteIndex,
         cachedPicUrl: file,
@@ -42,7 +42,7 @@ const ListItemCover: FC<ListItemCoverProps> = ({
       e.currentTarget.src = raw;
       // 清除缓存
       if (!playListID || !entry) return; // 没有歌单ID不处理(可能是搜索结果、历史记录等)
-      PlaylistManager.updatePlaylistEntryTrackCoverCache({
+      PlaylistManager.updateTrackCoverCache({
         entry,
         absoluteIndex,
         cachedPicUrl: "",

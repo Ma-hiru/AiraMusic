@@ -2,6 +2,7 @@ import { Filter, ImageSize } from "@mahiru/ui/utils/filter";
 import { Log } from "@mahiru/ui/utils/dev";
 import { getPlaylistDetail } from "@mahiru/ui/api/playlist";
 import { CacheStore, getDynamicSnapshot } from "@mahiru/ui/store";
+import { Time } from "@mahiru/ui/utils/time";
 
 export type PlaylistCacheID = `play_list_cache_${string | number}`;
 
@@ -14,13 +15,13 @@ export type PlaylistCacheEntry = {
   _dirty: boolean;
 };
 
-class _PlaylistStore {
+class PlaylistStore {
   /** 内存中最多存储的歌单数目 */
-  maxMemorySize = 5;
+  maxMemorySize = 3;
   /** 超过限制强制存在Store里面，而不是内存 */
-  maxPlayListSize = 500;
+  maxPlayListSize = 100;
   /** 缓存过期时间 */
-  timeLimit = 1000 * 60 * 60; // 1 hour
+  timeLimit = Time.getCacheTimeLimit(1, "hour"); // 1 hour
   memory = new Map<PlaylistCacheID, PlaylistCacheEntry>();
 
   createEntry(data: NeteasePlaylistDetailResponse): PlaylistCacheEntry {
@@ -111,10 +112,10 @@ class _PlaylistStore {
   }
 }
 
-class _PlaylistManager {
-  store = new _PlaylistStore();
+export const PlaylistManager = new (class {
+  store = new PlaylistStore();
 
-  async requestPlayListDetailWithStore(
+  async requestPlaylistDetail(
     id: number,
     preloadRange: [start: number, end: number],
     size: ImageSize = ImageSize.xs,
@@ -144,11 +145,11 @@ class _PlaylistManager {
     }
   }
 
-  async saveDirtyPlaylistEntry(entry: PlaylistCacheEntry) {
+  async saveDirtyEntry(entry: PlaylistCacheEntry) {
     return this.store.updateInStore(entry);
   }
 
-  updatePlaylistEntryTrackCoverCache(props: {
+  updateTrackCoverCache(props: {
     entry: PlaylistCacheEntry;
     absoluteIndex: number;
     cachedPicUrl: string;
@@ -166,7 +167,7 @@ class _PlaylistManager {
     }
   }
 
-  async updatePlaylistEntryTrackLikedStatus(props: { track: NeteaseTrack; nextStatus: boolean }) {
+  async updateTrackLikedStatus(props: { track: NeteaseTrack; nextStatus: boolean }) {
     const { track, nextStatus } = props;
     const { userLikedPlayList } = getDynamicSnapshot();
     const likedPlaylistID = userLikedPlayList?.id;
@@ -182,10 +183,8 @@ class _PlaylistManager {
           entry.playlist.tracks.unshift(track);
         }
         entry._dirty = true;
-        await this.saveDirtyPlaylistEntry(entry);
+        await this.saveDirtyEntry(entry);
       }
     }
   }
-}
-
-export const PlaylistManager = new _PlaylistManager();
+})();

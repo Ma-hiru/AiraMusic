@@ -4,7 +4,7 @@ import { RefObject, useCallback, useLayoutEffect, useRef } from "react";
 import { EqError, Log } from "@mahiru/ui/utils/dev";
 import { Track } from "@mahiru/ui/utils/track";
 import { useUnMounted } from "@mahiru/ui/hook/useUnMounted";
-import { PlaylistManager } from "@mahiru/ui/hook/useSongPlaylistControl";
+import { PlaylistPlayerManager } from "@mahiru/ui/hook/useSongPlaylistControl";
 
 interface SongResourceProps {
   playerProgress: RefObject<PlayerProgress>;
@@ -12,7 +12,7 @@ interface SongResourceProps {
   setTrackStatus: Updater<Nullable<PlayerTrackStatus>>;
   setPlayerStatus: Updater<PlayerStatus>;
   lyricVersionPreference?: LyricVersionType;
-  playlistManager: PlaylistManager;
+  playlistManager: PlaylistPlayerManager;
 }
 
 export function useSongResource({

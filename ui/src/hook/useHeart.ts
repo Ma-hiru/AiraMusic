@@ -26,7 +26,7 @@ export const useHeart = (track?: NeteaseTrack) => {
     });
 
     const { staticUpdateTrigger } = getDynamicSnapshot();
-    PlaylistManager.updatePlaylistEntryTrackLikedStatus({
+    PlaylistManager.updateTrackLikedStatus({
       track,
       nextStatus: !isLiked
     }).finally(staticUpdateTrigger);

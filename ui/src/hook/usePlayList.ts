@@ -110,7 +110,7 @@ export function usePlayListNormal(id?: string) {
     void _static_update;
     clearState();
     if (id) {
-      PlaylistManager.requestPlayListDetailWithStore(
+      PlaylistManager.requestPlaylistDetail(
         Number(id),
         [0, 50],
         ImageSize.xs,
@@ -152,7 +152,7 @@ export function usePlayListNormal(id?: string) {
     return () => {
       // 保存脏数据
       Log.info("usePlayListNormal", "组件卸载，保存脏数据");
-      entry && PlaylistManager.saveDirtyPlaylistEntry(entry);
+      entry && PlaylistManager.saveDirtyEntry(entry);
     };
   }, [entry]);
   return {
