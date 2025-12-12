@@ -22,38 +22,6 @@ func (Self *JSONEditor) SetArrayIndex(index int, value any) error {
 	return nil
 }
 
-func (Self *JSONEditor) ReadArrayIndex(index int) (any, error) {
-	arr, err := Self.GetArray()
-	if err != nil {
-		return nil, err
-	}
-	if index < 0 || index >= len(arr) {
-		return nil, fmt.Errorf("index out of range")
-	}
-	return arr[index], nil
-}
-
-func (Self *JSONEditor) DeleteArrayIndex(index int) error {
-	arr, err := Self.GetArray()
-	if err != nil {
-		return err
-	}
-	if index < 0 || index >= len(arr) {
-		return fmt.Errorf("index out of range")
-	}
-	Self.Data = append(arr[:index], arr[index+1:]...)
-	return nil
-}
-
-func (Self *JSONEditor) Push(value any) error {
-	arr, err := Self.GetArray()
-	if err != nil {
-		return err
-	}
-	Self.Data = append(arr, value)
-	return nil
-}
-
 func (Self *JSONEditor) Pop() (any, error) {
 	arr, err := Self.GetArray()
 	if err != nil {

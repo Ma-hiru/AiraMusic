@@ -265,7 +265,7 @@ func (Self *Store) SizeCategory() (image int64, audio int64, video int64, other 
 			other += size
 		}
 	}
-	
+
 	return
 }
 
@@ -387,7 +387,7 @@ func (Self *Store) appendIndex(index Index) error {
 	if err != nil {
 		return err
 	}
-
+	// 内存可以覆盖，但是文件只是追加，那么被覆盖的索引仍然存在于文件中，导致索引文件膨胀，必须在关闭存储时重新覆盖写入索引文件，不能仅仅依靠过期清理
 	Self.indexMappedMutex.Lock()
 	Self.indexMapped[index.ID] = index
 	Self.indexMappedMutex.Unlock()

@@ -8,5 +8,4 @@ import (
 
 func fetchRoutes(app *gin.Engine) {
 	app.GET("/api/fetch", handler.Fetch)
-	app.GET("/api/fetch/object", handler.FetchObject)
 }

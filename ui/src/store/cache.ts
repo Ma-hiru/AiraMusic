@@ -24,17 +24,33 @@ export class CacheStore {
   }
 
   static storeObject(id: string, data: object) {
-    return cacheRequest("/api/store/object", {
+    return cacheRequest("/api/object/store", {
       method: "POST",
       data: { id, data: JSON.stringify(data) }
     });
   }
 
-  static fetchObject<T extends object>(id: string, timeLimit?: number): Promise<T | null> {
+  static fetchObject<T extends object>(
+    id: string,
+    timeLimit?: number,
+    parts?: {
+      objType: ObjType;
+      objField: string | number | "length";
+    }
+  ): Promise<T | null> {
     id = this.encode(id);
-    return cacheRequest<any, T | null>("/api/fetch/object", {
+    return cacheRequest<any, T | null>("/api/object/fetch", {
       method: "GET",
-      params: { id, timeLimit }
+      params: { id, timeLimit, ...(parts || {}) }
+    });
+  }
+
+  static editObject<T = any, TObjType extends ObjType = ObjType>(
+    payload: EditObjectRequest<TObjType, T>
+  ) {
+    return cacheRequest<any, EditObjectResponse<T>>("/api/object/edit", {
+      method: "POST",
+      data: payload
     });
   }
 
@@ -123,4 +139,60 @@ export type StoreAsyncRequest = {
     timeLimit?: number;
   }[];
   method: string;
+};
+
+export type ObjType = "object" | "array";
+
+export type EditObjectOperation<T extends ObjType = ObjType> = T extends "array"
+  ? ArrayOperations
+  : T extends "object"
+    ? ObjectOperations
+    : ArrayOperations | ObjectOperations;
+
+export type EditObjectItemOperations<T extends ObjType = ObjType> = {
+  objType: T;
+  objOperations: EditObjectOperation<T>[];
+};
+
+type ArrayOperations =
+  | { name: "unshift"; value: any; field?: undefined }
+  | { name: "pop" | "shift"; value?: undefined; field?: undefined }
+  | { name: "set"; value: { index: number; value: any }; field?: undefined }
+  | { name: "insert"; value: { index: number; value: any }; field?: undefined }
+  | {
+      name: "splice";
+      value: { start?: number; startIndex?: number; deleteCount: number; items?: any[] };
+      field?: undefined;
+    }
+  | { name: "read"; value: number; field?: undefined }
+  | { name: "map"; itemOperations: EditObjectItemOperations; field?: undefined; value?: undefined };
+
+type ObjectOperations =
+  | { name: "set"; field: string; value: any }
+  | { name: "delete"; field: string; value?: undefined }
+  | { name: "clear"; value?: undefined; field?: undefined }
+  | { name: "read"; field?: string; value?: undefined; itemOperations?: undefined }
+  | { name: "has"; field: string; value?: undefined }
+  | { name: "map"; itemOperations: EditObjectItemOperations; field?: undefined; value?: undefined };
+
+export type EditObjectRequest<TObjType extends ObjType = ObjType, TData = any> = {
+  id: string;
+  timeLimit?: number;
+  objType: TObjType;
+  objOperations: EditObjectOperation<TObjType>[];
+  save?: boolean;
+  // 预留额外字段
+  data?: TData;
+};
+
+export type EditObjectSummary = {
+  touchedFields?: string[];
+  touchedIndex?: number[];
+};
+
+export type EditObjectResponse<T = any> = {
+  ok: boolean;
+  data?: T;
+  summary?: EditObjectSummary;
+  error?: string;
 };

@@ -9,5 +9,6 @@ func RegisterRoutes(app *gin.Engine) {
 	storeRoutes(app)
 	fetchRoutes(app)
 	otherRoutes(app)
+	objectRoutes(app)
 	checkStoreRoutes(app)
 }
