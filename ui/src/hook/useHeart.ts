@@ -8,14 +8,14 @@ export const useHeart = (track?: NeteaseTrack) => {
     "userLikedTrackIDs",
     "updateUserLikedTrackIDs"
   ]);
-  const isLiked = !!track && userLikedTrackIDs.ids.has(track.id);
+  const isLiked = !!track && userLikedTrackIDs.ids[track.id];
   const likeChange = useCallback(() => {
     if (!track || !track.id) return;
-    const newSet = new Set(userLikedTrackIDs.ids);
+    const newSet = structuredClone(userLikedTrackIDs.ids);
     if (isLiked) {
-      newSet.delete(track.id);
+       delete newSet[track.id];
     } else {
-      newSet.add(track.id);
+      newSet[track.id] = true;
     }
     updateUserLikedTrackIDs({ ids: newSet, checkPoint: userLikedTrackIDs.checkPoint });
     void likeATrack({

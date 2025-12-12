@@ -9,6 +9,7 @@ import { useSongAudioControl } from "@mahiru/ui/hook/useSongAudioControl";
 import { useSongPlaylistControl } from "@mahiru/ui/hook/useSongPlaylistControl";
 import { Lyric } from "@mahiru/ui/utils/lyric";
 import { useDynamicZustandShallowStore } from "@mahiru/ui/store";
+import { PlaylistHistoryCache } from "@mahiru/ui/utils/history";
 
 export function useSong(audioRef: RefObject<Nullable<HTMLAudioElement>>) {
   /**                        状态管理                         */
@@ -37,6 +38,7 @@ export function useSong(audioRef: RefObject<Nullable<HTMLAudioElement>>) {
     (next: Nullable<PlayerTrackStatus>) => {
       if (trackStatus && trackStatus.track.id !== next?.track.id) {
         scrobble(trackStatus);
+        void PlaylistHistoryCache.addTrack(trackStatus.track);
         setPlayerStatus((draft) => {
           if (draft.playing) {
             draft.playing = false;

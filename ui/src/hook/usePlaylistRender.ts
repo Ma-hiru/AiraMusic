@@ -249,6 +249,7 @@ export function usePlaylistHistoryRender() {
   );
 
   const updater = useCallback(() => {
+    console.log("usePlayListHistoryRender updater called");
     setLoading(true);
     PlaylistHistoryCache.load()
       .then((data) => {
@@ -259,7 +260,9 @@ export function usePlaylistHistoryRender() {
       });
   }, []);
   const saver = useCallback(() => {
-    void PlaylistHistoryCache.save(historyTracks.current);
+    if (historyTracks.current.length) {
+      void PlaylistHistoryCache.save(historyTracks.current);
+    }
   }, []);
   // 加载历史歌曲详情
   useEffect(() => {

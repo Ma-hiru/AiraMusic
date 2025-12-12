@@ -97,7 +97,9 @@ export async function refreshUserLikedTrackIDs() {
     if (uid) {
       const { ids, checkPoint, code } = await userLikedSongsIDs(uid);
       if (code === 200) {
-        updateUserLikedTrackIDs({ ids: new Set<number>(ids), checkPoint });
+        const idsSet: Record<number, boolean> = {};
+        ids.forEach((id) => (idsSet[id] = true));
+        updateUserLikedTrackIDs({ ids: idsSet, checkPoint });
       } else {
         Log.error(
           new EqError({

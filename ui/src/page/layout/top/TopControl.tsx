@@ -32,7 +32,7 @@ const TopControl: FC<ControlButtonProps> = ({ maximizable = true, mini = true })
   const minimize = Renderer.event.minimize;
   const close = useCallback(() => {
     playlistControl.saveToCache().finally(() => {
-      Renderer.event.close({ broadcast: true });
+      setTimeout(() => Renderer.event.close({ broadcast: true }), 200);
     });
   }, [playlistControl]);
 

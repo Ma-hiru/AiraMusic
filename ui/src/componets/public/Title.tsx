@@ -11,7 +11,7 @@ const Title: FC<TitleProps> = ({ title, slot }) => {
   const { mainColor } = useThemeColor();
   return (
     <div
-      className="w-full truncate font-bold text-[28px] py-2 flex justify-between items-center"
+      className="w-full truncate font-bold text-[28px] py-2 flex justify-between items-center select-none"
       style={{ color: Color("#000000").mix(Color(mainColor), 0.2).string() }}>
       <span>{title}</span>
       <span>{slot}</span>

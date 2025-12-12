@@ -32,8 +32,10 @@ const NavPlayListItem: FC<Props> = ({
     Filter.NeteaseImageSize(cover.cached || cover.raw, ImageSize.sm),
     {
       onCacheHit: (file, id) => {
-        rawList[index]!.cachedCoverImgUrl = file;
-        rawList[index]!.cachedCoverImgUrlID = id;
+        if (rawList[index]) {
+          rawList[index].cachedCoverImgUrl = file;
+          rawList[index].cachedCoverImgUrlID = id;
+        }
       }
     }
   );

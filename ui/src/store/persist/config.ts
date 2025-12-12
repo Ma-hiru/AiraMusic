@@ -51,7 +51,7 @@ const InitialState: PersistStoreInitialState = {
   userPlaylistSummary: null,
   userLikedListSummary: null,
   userLikedTrackIDs: {
-    ids: new Set<number>(),
+    ids: {},
     checkPoint: 0
   }
 };
@@ -68,7 +68,7 @@ export interface PersistStoreInitialState {
   };
   userLikedListSummary: Nullable<NeteasePlaylistSummary>;
   userPlaylistSummary: Nullable<NeteasePlaylistSummary[]>;
-  userLikedTrackIDs: { ids: Set<number>; checkPoint: number };
+  userLikedTrackIDs: { ids: Record<number, boolean>; checkPoint: number };
 }
 
 export interface PersistStoreActions {

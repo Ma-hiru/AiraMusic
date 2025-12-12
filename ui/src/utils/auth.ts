@@ -63,7 +63,7 @@ function doLogout() {
       loginMode: "",
       lastRefreshCookieDate: 0
     });
-    updateUserLikedTrackIDs({ ids: new Set(), checkPoint: new Date().getTime() });
+    updateUserLikedTrackIDs({ ids: {}, checkPoint: new Date().getTime() });
     updateUserLikedListSummary(null);
     updateUserPlaylistSummary([]);
     return router.navigate("/home");
