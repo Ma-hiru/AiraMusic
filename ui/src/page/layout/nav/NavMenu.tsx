@@ -7,17 +7,16 @@ import { useLayout } from "@mahiru/ui/ctx/LayoutCtx";
 
 const NavMenu: FC<object> = () => {
   const { userLikedListSummary } = usePersistZustandShallowStore(["userLikedListSummary"]);
-  const { sideBarOpen } = useLayout();
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 px-2">
       {NAV_DATA.map(({ icon, label, path }) => {
         return (
           <NavItem
             key={label}
-            prefix={icon}
+            prefix={<span className="size-10 items-center justify-start flex">{icon}</span>}
             active={
               location.pathname === path ||
               (label === "搜藏" && location.pathname === `/playlist/${userLikedListSummary?.id}`) ||
@@ -33,7 +32,7 @@ const NavMenu: FC<object> = () => {
                 navigate(path);
               }
             }}>
-            {sideBarOpen && <span className="truncate pl-2">{label}</span>}
+            <span className="truncate pl-1">{label}</span>
           </NavItem>
         );
       })}

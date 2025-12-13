@@ -1,12 +1,11 @@
 import { FC, memo } from "react";
 import { usePersistZustandShallowStore } from "@mahiru/ui/store";
-import { css, cx } from "@emotion/css";
 import { UserRound } from "lucide-react";
 import { useLogin } from "@mahiru/ui/hook/useLogout";
 import { useFileCache } from "@mahiru/ui/hook/useFileCache";
 import { Filter, ImageSize } from "@mahiru/ui/utils/filter";
 import { useLayout } from "@mahiru/ui/ctx/LayoutCtx";
-import { AnimatePresence, motion } from "motion/react";
+import { NoDrag } from "@mahiru/ui/componets/public/Drag";
 
 const NavAvatar: FC<object> = () => {
   const { data } = usePersistZustandShallowStore(["data"]);
@@ -14,43 +13,24 @@ const NavAvatar: FC<object> = () => {
   const login = useLogin();
   const { sideBarOpen } = useLayout();
   return (
-    <div
-      className={cx(
-        "flex justify-center items-center relative",
-        css`
-          -webkit-app-region: no-drag;
-        `
-      )}>
-      <div className="flex justify-center items-center gap-2">
-        <div className="rounded-full flex justify-center items-center overflow-hidden bg-black/60 size-7">
-          {data.user?.avatarUrl ? (
-            <img
-              src={(cachedURL || null) as string}
-              alt={data.user?.nickname}
-              loading="lazy"
-              decoding="async"
-              className="size-7 rounded-full cursor-pointer"
-            />
-          ) : (
-            <UserRound className="text-white cursor-pointer" onClick={login} />
-          )}
-        </div>
-
-        <AnimatePresence>
-          {sideBarOpen && (
-            <motion.span
-              key="nickname"
-              className="text-xs font-bold truncate"
-              initial={{ opacity: 0, width: 0 }}
-              animate={{ opacity: 1, width: "auto" }}
-              exit={{ opacity: 0, width: 0 }}
-              transition={{ ease: "easeInOut", duration: 0.3 }}>
-              {data.user?.nickname || "未登录"}
-            </motion.span>
-          )}
-        </AnimatePresence>
+    <NoDrag className="flex justify-center items-center relative py-7 px-3 overflow-hidden">
+      <div className="rounded-full flex justify-center items-center bg-black/60 size-7 min-w-7">
+        {data.user?.avatarUrl ? (
+          <img
+            src={(cachedURL || null) as string}
+            alt={data.user?.nickname}
+            loading="lazy"
+            decoding="async"
+            className="size-7 min-w-7 rounded-full cursor-pointer"
+          />
+        ) : (
+          <UserRound className="text-white cursor-pointer" onClick={login} />
+        )}
       </div>
-    </div>
+      {sideBarOpen && (
+        <span className="text-xs font-bold truncate pl-2">{data.user?.nickname || "未登录"}</span>
+      )}
+    </NoDrag>
   );
 };
 export default memo(NavAvatar);

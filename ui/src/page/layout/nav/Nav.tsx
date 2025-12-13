@@ -17,9 +17,7 @@ const Nav: FC<object> = () => {
         background ? "bg-[#f0f3f6]/20" : "bg-[#f0f3f6]",
         sideBarOpen ? "w-44" : "w-22"
       )}>
-      <div className="py-8">
-        <Avatar />
-      </div>
+      <Avatar />
       {/*nav*/}
       <NavMenu />
       {!!userPlaylistSummary?.length && <NavSideDivider />}
