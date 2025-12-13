@@ -7,7 +7,7 @@ import { useDynamicZustandShallowStore } from "@mahiru/ui/store";
 
 const BarBtns: FC<object> = () => {
   const { hasOpened, toggleTargetWindow } = usePlayerInfoSync("lyric");
-  const { audioControl } = usePlayer();
+  const { Audio } = usePlayer();
   const { playerStatus } = useDynamicZustandShallowStore(["playerStatus"]);
   const { mainColor } = useThemeColor();
   const volumeIcons = () => {
@@ -27,12 +27,12 @@ const BarBtns: FC<object> = () => {
       // 向上滚增加音量，向下滚减少音量
       const delta = e.deltaY < 0 ? 0.1 : -0.1;
       if (delta > 0) {
-        audioControl.upVolume(delta);
+        Audio.upVolume(delta);
       } else {
-        audioControl.downVolume(-delta);
+        Audio.downVolume(-delta);
       }
     },
-    [audioControl]
+    [Audio]
   );
   const { textColorOnMain } = useThemeColor();
   return (
@@ -42,7 +42,7 @@ const BarBtns: FC<object> = () => {
         fill={textColorOnMain.hex()}
         className="size-5 select-none cursor-pointer hover:opacity-50 ease-in-out duration-300 transition-all active:scale-90"
         onWheel={onWheel}
-        onClick={audioControl.mute}
+        onClick={Audio.mute}
       />
       <span
         onClick={toggleTargetWindow}

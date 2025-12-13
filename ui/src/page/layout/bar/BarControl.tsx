@@ -3,11 +3,11 @@ import { Pause, Play, SkipBack, SkipForward } from "lucide-react";
 import { usePlayer } from "@mahiru/ui/ctx/PlayerCtx";
 
 import { useThemeColor } from "@mahiru/ui/hook/useThemeColor";
-import { useDynamicZustandShallowStore } from "@mahiru/ui/store";
+import { usePlayerStatus } from "@mahiru/ui/store";
 
 const BarControl: FC<object> = () => {
-  const { audioControl, playlistControl } = usePlayer();
-  const { playerStatus } = useDynamicZustandShallowStore(["playerStatus"]);
+  const { Audio, Player } = usePlayer();
+  const { playerStatus } = usePlayerStatus(["playerStatus"]);
   const { mainColor, textColorOnMain } = useThemeColor();
   return (
     <div className="flex justify-center items-center gap-6">
@@ -16,12 +16,12 @@ const BarControl: FC<object> = () => {
         // fill={"#171b20"}
         fill={textColorOnMain.string()}
         color={textColorOnMain.string()}
-        onClick={() => playlistControl.lastTrack(true)}
+        onClick={() => Player.last(true)}
       />
       <div
         className="hover:scale-95 active:scale-85 cursor-pointer ease-in-out transition-all duration-300 bg-(--theme-color-main) hover:bg-(--theme-color-main)/50 active:bg-(--theme-color-main)/80 p-2 rounded-full"
         style={{ background: textColorOnMain.string() }}
-        onClick={audioControl.play}>
+        onClick={Audio.play}>
         {playerStatus.playing ? (
           <Pause className="size-5" color={mainColor.string()} fill={mainColor.string()} />
         ) : (
@@ -33,7 +33,7 @@ const BarControl: FC<object> = () => {
         // fill={"#171b20"}
         color={textColorOnMain.string()}
         fill={textColorOnMain.string()}
-        onClick={() => playlistControl.nextTrack(true)}
+        onClick={() => Player.next(true)}
       />
     </div>
   );

@@ -1,11 +1,10 @@
 import { FC, memo } from "react";
-import { usePlayer } from "@mahiru/ui/ctx/PlayerCtx";
 import { cx } from "@emotion/css";
 import { useLyric } from "@mahiru/ui/hook/useLyric";
-import { useDynamicZustandShallowStore } from "@mahiru/ui/store";
+import { useDynamicZustandShallowStore, usePlayerStatus } from "@mahiru/ui/store";
 
 const LyricChange: FC<object> = () => {
-  const { setLyricVersion, trackStatus } = usePlayer();
+  const { trackStatus, setLyricVersion } = usePlayerStatus(["trackStatus", "setLyricVersion"]);
   const { playerStatus } = useDynamicZustandShallowStore(["playerStatus"]);
   const { hasTl, hasRm, setRm, setTl, rmActive, tlActive } = useLyric(
     playerStatus.lyricVersion,
@@ -17,7 +16,7 @@ const LyricChange: FC<object> = () => {
       <span
         onClick={setRm}
         className={cx(
-          "size-5 text-[12px] font-semibold flex justify-center items-center overflow-hidden rounded-[2px] backdrop-blur-lg",
+          "size-5 text-[12px] font-semibold flex justify-center items-center overflow-hidden rounded-xs backdrop-blur-lg",
           {
             "bg-white text-black ": rmActive && hasRm,
             "bg-white/20 ": !rmActive || !hasRm,
@@ -30,7 +29,7 @@ const LyricChange: FC<object> = () => {
       <span
         onClick={setTl}
         className={cx(
-          "size-5 text-[12px] font-semibold flex justify-center items-center overflow-hidden rounded-[2px] backdrop-blur-lg",
+          "size-5 text-[12px] font-semibold flex justify-center items-center overflow-hidden rounded-xs backdrop-blur-lg",
           {
             "bg-white text-black ": tlActive && hasTl,
             "bg-white/20": !tlActive || !hasTl,

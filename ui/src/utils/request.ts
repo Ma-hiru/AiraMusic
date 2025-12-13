@@ -6,16 +6,9 @@ import { waitLogin } from "@mahiru/ui/hook/useLogout";
 // 开发模式通过vite代理访问API服务器地址
 // 生产模式通过express代理访问API服务器地址
 const NETEASE_API_BASE_URL = "/api";
-const CACHE_SERVER_BASE_URL = "/cache";
 
 export const apiRequest = axios.create({
   baseURL: NETEASE_API_BASE_URL,
-  withCredentials: true,
-  timeout: 15000
-});
-
-export const cacheRequest = axios.create({
-  baseURL: CACHE_SERVER_BASE_URL,
   withCredentials: true,
   timeout: 15000
 });
@@ -51,10 +44,3 @@ apiRequest.interceptors.response.use(
     return Promise.reject(error);
   }
 );
-
-cacheRequest.interceptors.response.use((response) => {
-  if (response.status === 204) {
-    return null;
-  }
-  return response.data;
-});

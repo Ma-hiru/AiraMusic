@@ -12,7 +12,7 @@ import { Renderer } from "@mahiru/ui/utils/renderer";
 
 const Banner: FC<object> = () => {
   const [banner, setBanner] = useState<NeteaseBanner[]>([]);
-  const { playlistControl } = usePlayer();
+  const { Player } = usePlayer();
   useEffect(() => {
     homeBanner().then((result) => {
       setBanner(result.banners);
@@ -32,8 +32,8 @@ const Banner: FC<object> = () => {
           const tracks = Filter.NeteaseTracksPrivilegeExtends(detail.songs, detail.privileges);
           const track = tracks[0];
           if (track && track.playable) {
-            playlistControl.addTrack(track, track.al.id, "next");
-            playlistControl.nextTrack(true);
+            Player.addTrack(track, track.al.id, "next");
+            Player.next(true);
           }
           return;
         }
@@ -46,7 +46,7 @@ const Banner: FC<object> = () => {
         }
       }
     },
-    [banner, playlistControl]
+    [banner, Player]
   );
   return (
     <div className="w-full px-2">

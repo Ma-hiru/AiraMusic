@@ -1,19 +1,17 @@
-import { cacheRequest } from "@mahiru/ui/utils/request";
+import { cacheRequest } from "@mahiru/ui/utils/cacheRequest";
 
 /** CacheStore api  */
-export class CacheStore {
-  private constructor() {}
-
-  static encode(str: string | number) {
+export const CacheStore = new (class CacheStore {
+  encode(str: string | number) {
     return encodeURIComponent(String(str));
   }
 
-  static check(id: string | number, timeLimit?: number): Promise<CheckResult> {
+  check(id: string | number, timeLimit?: number): Promise<CheckResult> {
     id = this.encode(id);
     return cacheRequest("/api/check", { method: "GET", params: { id, timeLimit } });
   }
 
-  static checkMutil(
+  checkMutil(
     items: { id: string; timeLimit?: number }[],
     timeLimit?: number
   ): Promise<CheckMutilResult> {
@@ -23,14 +21,14 @@ export class CacheStore {
     });
   }
 
-  static storeObject(id: string, data: object) {
+  storeObject(id: string, data: object) {
     return cacheRequest("/api/object/store", {
       method: "POST",
       data: { id, data: JSON.stringify(data) }
     });
   }
 
-  static fetchObject<T>(
+  fetchObject<T>(
     id: string,
     timeLimit?: number,
     parts?: {
@@ -45,29 +43,27 @@ export class CacheStore {
     });
   }
 
-  static editObject<T = any, TObjType extends ObjType = ObjType>(
-    payload: EditObjectRequest<TObjType, T>
-  ) {
-    return cacheRequest<any, EditObjectResponse<any>>("/api/object/edit", {
+  editObject<T = any, TObjType extends ObjType = ObjType>(payload: EditObjectRequest<TObjType, T>) {
+    return cacheRequest<any, EditObjectResponse>("/api/object/edit", {
       method: "POST",
       data: payload
     });
   }
 
-  static storeAsync(url: string, id = url, method: string = "GET") {
+  storeAsync(url: string, id = url, method: string = "GET") {
     url = this.encode(url);
     id = this.encode(id);
     return cacheRequest("/api/store/async", { method, params: { id, url } });
   }
 
-  static storeAsyncMutil(items: { id?: string; url: string }[], method: string = "GET") {
+  storeAsyncMutil(items: { id?: string; url: string }[], method: string = "GET") {
     return cacheRequest("/api/store/async/mutil", {
       method: "POST",
       data: { items, method } satisfies StoreAsyncRequest
     });
   }
 
-  static checkOrStoreAsync(
+  checkOrStoreAsync(
     url: string,
     id = url,
     method: string = "GET",
@@ -79,7 +75,7 @@ export class CacheStore {
     return cacheRequest("/api/check-store", { method, params: { id, url, update, timeLimit } });
   }
 
-  static checkOrStoreAsyncMutil(
+  checkOrStoreAsyncMutil(
     items: { id?: string; url: string; update?: boolean; timeLimit?: number }[],
     method: string = "GET"
   ): Promise<CheckMutilResult> {
@@ -89,16 +85,16 @@ export class CacheStore {
     });
   }
 
-  static fetch<T>(id: string | number): Promise<T> {
+  fetch<T>(id: string | number): Promise<T> {
     id = this.encode(id);
     return cacheRequest("/api/fetch", { method: "GET", params: { id } });
   }
 
-  static remove(id: number | string): Promise<CheckResult> {
+  remove(id: number | string): Promise<CheckResult> {
     id = this.encode(id);
     return cacheRequest("/api/remove", { method: "GET", params: { id } });
   }
-}
+})();
 
 export type StoreIndex = {
   id: string;

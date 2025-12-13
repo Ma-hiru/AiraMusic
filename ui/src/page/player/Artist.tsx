@@ -1,10 +1,10 @@
 import { FC, Fragment, memo } from "react";
-import { usePlayer } from "@mahiru/ui/ctx/PlayerCtx";
 import { Heart } from "lucide-react";
 import { useHeart } from "@mahiru/ui/hook/useHeart";
+import { usePlayerStatus } from "@mahiru/ui/store";
 
 const Artist: FC<object> = () => {
-  const { trackStatus } = usePlayer();
+  const { trackStatus } = usePlayerStatus(["trackStatus"]);
   const track = trackStatus?.track;
   const { likeChange, isLiked } = useHeart(track);
   return (

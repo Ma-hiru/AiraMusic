@@ -1,7 +1,8 @@
 import { Filter, ImageSize } from "@mahiru/ui/utils/filter";
 import { EqError, Log } from "@mahiru/ui/utils/dev";
 import { getPlaylistDetail } from "@mahiru/ui/api/playlist";
-import { CacheStore, getPersistSnapshot } from "@mahiru/ui/store";
+import { getPersistSnapshot } from "@mahiru/ui/store";
+import { CacheStore } from "@mahiru/ui/store/cache";
 import { Time } from "@mahiru/ui/utils/time";
 
 export type PlaylistCacheID = `play_list_cache_${string | number}`;

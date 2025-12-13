@@ -9,6 +9,7 @@ import ListItemName from "./ListItemName";
 import ListItemInfo from "./ListItemInfo";
 import { PlaylistCacheEntry } from "@mahiru/ui/utils/playlist";
 import { useThemeColor } from "@mahiru/ui/hook/useThemeColor";
+import { usePlayerStatus } from "@mahiru/ui/store";
 
 interface ListItemProps {
   data: NeteaseTrack[];
@@ -27,8 +28,9 @@ const ListItem: FC<ListItemProps> = ({
   isLikedList,
   entry
 }) => {
-  const { trackStatus, playlistControl } = usePlayer();
+  const { Player } = usePlayer();
   const { textColorOnMain } = useThemeColor();
+  const { trackStatus } = usePlayerStatus(["trackStatus"]);
   const track = data[index]!;
   const total = data.length;
   const active = trackStatus?.track.id === track.id;
@@ -48,14 +50,14 @@ const ListItem: FC<ListItemProps> = ({
       }
       Log.trace("components/track_list/ListItem.tsx", "Playing track:", track.name);
       // 如果与当前播放列表相同，仅切换位置，避免重建列表导致状态抖动
-      if (playlistControl.isSamePlaylist(data, playListID)) {
-        playlistControl.setPosition(index);
+      if (Player.isSamePlaylist(data, playListID)) {
+        Player.setPosition(index);
       } else {
         // 播放列表使用的是相对索引
-        playlistControl.replacePlaylist(data, playListID, index);
+        Player.replacePlaylist(data, playListID, index);
       }
     },
-    [data, disabled, index, playListID, playlistControl, track.name, track.reason]
+    [Player, data, disabled, index, playListID, track.name, track.reason]
   );
 
   return (
@@ -65,7 +67,7 @@ const ListItem: FC<ListItemProps> = ({
       className={cx(
         "items-center grid grid-row-1 grid-cols-[auto_auto_1fr_auto_auto] gap-4 rounded-md py-[2px] pl-2 ease-in-out transition-colors mb-2",
         {
-          "bg-[var(--theme-color-main)]": active,
+          "bg-(--theme-color-main)": active,
           "hover:bg-black/10": !active,
           "active:bg-black/20": !active,
           "cursor-not-allowed! opacity-50": disabled,

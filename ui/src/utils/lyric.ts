@@ -102,7 +102,7 @@ class Parser {
 export const Lyric = new (class {
   Parser = new Parser();
 
-  async requestLyric(id: number, preference?: LyricVersionType) {
+  async requestLyric(id: number, preference?: Optional<LyricVersionType>) {
     const response = await getYRCLyric(id);
     const lyric = this.handleLyricResponse(response);
     const version = this.chooseLyricVersionWithPreference(lyric, preference);

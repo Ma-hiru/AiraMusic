@@ -7,7 +7,7 @@
 /** Invoke 事件类型以及参数 */
 type InvokeEventMaps = {
   readFile: [filePath: string, Promise<{ ok: boolean; data?: ArrayBuffer }>];
-  GPUInfo: [undefined, Promise<string>];
+  GPUInfo: [undefined, Promise<unknown>];
   platform: [undefined, NodeJS.Platform];
   isMaximized: [undefined, boolean];
   hasOpenInternalWindow: [WindowType, boolean];

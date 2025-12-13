@@ -5,10 +5,10 @@ import { SpectrumCtx, SpectrumCtxType } from "@mahiru/ui/ctx/SpectrumCtx";
 import { useDynamicZustandShallowStore } from "@mahiru/ui/store";
 
 export default function SpectrumProvider({ children }: { children: ReactNode }) {
-  const { audioRef } = usePlayer();
+  const { Audio } = usePlayer();
   const { playerStatus } = useDynamicZustandShallowStore(["playerStatus"]);
   const [spectrumOptions, setSpectrumOptions] = useState<SpectrumOptions>();
-  const { spectrumData, isReady } = useSpectrumWorker(audioRef, playerStatus.playing, {
+  const { spectrumData, isReady } = useSpectrumWorker(Audio.ref, playerStatus.playing, {
     fftSize: 2048,
     numBands: 32,
     withPeaks: false,

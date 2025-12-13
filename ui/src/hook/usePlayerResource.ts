@@ -1,32 +1,25 @@
-import { Lyric, LyricVersionType } from "@mahiru/ui/utils/lyric";
-import { Updater } from "use-immer";
-import { RefObject, useCallback, useLayoutEffect, useRef } from "react";
+import { Lyric } from "@mahiru/ui/utils/lyric";
+import { useCallback, useLayoutEffect, useRef } from "react";
 import { EqError, Log } from "@mahiru/ui/utils/dev";
 import { Track } from "@mahiru/ui/utils/track";
 import { useUnMounted } from "@mahiru/ui/hook/useUnMounted";
-import { PlaylistPlayerManager } from "@mahiru/ui/hook/useSongPlaylistControl";
-import { useDynamicZustandShallowStore } from "@mahiru/ui/store";
+import { usePlayerStatus } from "@mahiru/ui/store";
+import { Player } from "@mahiru/ui/utils/player";
 
-interface SongResourceProps {
-  playerProgress: RefObject<PlayerProgress>;
-  trackStatus: Nullable<PlayerTrackStatus>;
-  setTrackStatus: Updater<Nullable<PlayerTrackStatus>>;
-  lyricVersionPreference?: LyricVersionType;
-  playlistManager: PlaylistPlayerManager;
-}
-
-export function useSongResource({
-  playerProgress,
-  setTrackStatus,
-  lyricVersionPreference,
-  trackStatus,
-  playlistManager
-}: SongResourceProps) {
+export function usePlayerResource() {
   Log.trace("useSongResource executed");
+  const { setPlayerStatus, setTrackStatus, playerStatus, playerProgress, trackStatus } =
+    usePlayerStatus([
+      "setPlayerStatus",
+      "setTrackStatus",
+      "playerStatus",
+      "playerProgress",
+      "trackStatus"
+    ]);
   const lyricCancelRef = useRef<Nullable<NormalFunc>>(null);
   const audioCancelRef = useRef<Nullable<NormalFunc>>(null);
   const preloadCancelRef = useRef<Nullable<NormalFunc>>(null);
-  const { setPlayerStatus } = useDynamicZustandShallowStore(["setPlayerStatus"]);
+  const lyricVersionPreference = playerStatus.lyricPreference;
 
   const loadLyric = useCallback(
     async (id: number) => {
@@ -77,7 +70,7 @@ export function useSongResource({
             draft.audio = nextAudio;
           }
         });
-        playerProgress.current.size = meta?.[0]?.size ?? 0;
+        playerProgress.current().size = meta?.[0]?.size ?? 0;
       } catch (err) {
         if (controller.signal.aborted) return;
         Log.error(
@@ -115,7 +108,7 @@ export function useSongResource({
 
   useLayoutEffect(() => {
     const current = trackStatus;
-    const peak = playlistManager.peek();
+    const peak = Player.peek();
     if (current) {
       const invalid = Track.markedInvalidCache(current.track.id);
       const hasLyric = !!current.lyric && current.lyric.raw.length > 0;
@@ -127,12 +120,5 @@ export function useSongResource({
       hasLyric && hasAudio && schedulePreloadNextTrack(current, peak);
     }
     return cancelScheduledPreload;
-  }, [
-    cancelScheduledPreload,
-    loadAudioSource,
-    loadLyric,
-    playlistManager,
-    schedulePreloadNextTrack,
-    trackStatus
-  ]);
+  }, [cancelScheduledPreload, loadAudioSource, loadLyric, schedulePreloadNextTrack, trackStatus]);
 }

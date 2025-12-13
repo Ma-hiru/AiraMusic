@@ -1,25 +1,28 @@
-import { useEffect, useMemo } from "react";
-import { Updater } from "use-immer";
-import { CacheStore } from "@mahiru/ui/store";
+import { getPlayerStatusSnapshot } from "@mahiru/ui/store";
+import { CacheStore } from "@mahiru/ui/store/cache";
 
 type CacheType = {
   _position: number;
   _playlist: PlayerTrackStatus[];
   _shuffle: boolean;
   _repeat: "off" | "one" | "all";
+  playerStatus: PlayerStatus;
+  playerProgress: PlayerProgress;
+  trackStatus: Nullable<PlayerTrackStatus>;
 };
 
-export class PlaylistPlayerManager {
+const { setTrackStatus, setPlayerStatus, beforeTrackUpdate, playerProgress } =
+  getPlayerStatusSnapshot();
+
+export const Player = new (class {
   private _cacheKey = "playlist_player_manager";
   private _position: number = -1;
   private _playlist: PlayerTrackStatus[] = [];
   private _shuffle: boolean = false;
   private _repeat: "off" | "one" | "all" = "off";
-  private _outerTrackUpdater: Nullable<Updater<Nullable<PlayerTrackStatus>>> = null;
-  private _outerStatusUpdater: Nullable<
-    NormalFunc<[updater: NormalFunc<[draft: PlayerStatus], void | PlayerStatus>]>
-  > = null;
-  private _beforeTrackUpdate: Nullable<NormalFunc<[next: Nullable<PlayerTrackStatus>]>> = null;
+  private _outerTrackUpdater = setTrackStatus;
+  private _outerStatusUpdater = setPlayerStatus;
+  private _beforeTrackUpdate = beforeTrackUpdate;
 
   constructor() {
     void this.loadFromCache();
@@ -32,28 +35,31 @@ export class PlaylistPlayerManager {
       this._playlist = cache._playlist;
       this._shuffle = cache._shuffle;
       this._repeat = cache._repeat;
+      const { currentTime, duration, buffered, size } = cache.playerProgress;
+      playerProgress.current().currentTime = currentTime;
+      playerProgress.current().duration = duration;
+      playerProgress.current().buffered = buffered;
+      playerProgress.current().size = size;
+      setPlayerStatus(() => {
+        cache.playerStatus.playing = false;
+        return cache.playerStatus;
+      });
+      setTrackStatus(() => cache.trackStatus);
     }
+    this.updateOuter();
   }
 
   async saveToCache() {
+    const { playerStatus, playerProgress, trackStatus } = getPlayerStatusSnapshot();
     await CacheStore.storeObject(this._cacheKey, {
       _position: this._position,
       _playlist: this._playlist,
       _shuffle: this._shuffle,
-      _repeat: this._repeat
+      _repeat: this._repeat,
+      playerStatus,
+      trackStatus,
+      playerProgress: playerProgress.current()
     } satisfies CacheType);
-  }
-
-  set beforeTrackUpdate(callback: NormalFunc<[next: Nullable<PlayerTrackStatus>]>) {
-    this._beforeTrackUpdate = callback;
-  }
-
-  set outerTrackUpdater(updater: Updater<Nullable<PlayerTrackStatus>>) {
-    this._outerTrackUpdater = updater;
-  }
-
-  set outerStatusUpdater(updater: NormalFunc<[updater: NormalFunc<[draft: PlayerStatus]>]>) {
-    this._outerStatusUpdater = updater;
   }
 
   replacePlaylist(
@@ -95,6 +101,7 @@ export class PlaylistPlayerManager {
     }
     if (initPosition >= 0 && initPosition < list.length) {
       this._position = initPosition;
+      this.setPlayingStatus(true);
     } else {
       this._position = -1;
     }
@@ -290,6 +297,7 @@ export class PlaylistPlayerManager {
       }
     }
     this._position = nextPos;
+    this.setPlayingStatus(true);
     this.updateOuter();
     return this.current(false);
   }
@@ -320,6 +328,7 @@ export class PlaylistPlayerManager {
       }
     }
     this._position = lastPos;
+    this.setPlayingStatus(true);
     this.updateOuter();
     return this.current(false);
   }
@@ -333,6 +342,12 @@ export class PlaylistPlayerManager {
       (this._position === -1 && this._playlist.length > 0) ||
       (this._position >= 0 && this._position < this._playlist.length)
     );
+  }
+
+  setPlayingStatus(playing: boolean) {
+    this._outerStatusUpdater?.((draft) => {
+      draft.playing = playing;
+    });
   }
 
   get repeat() {
@@ -360,45 +375,4 @@ export class PlaylistPlayerManager {
   get playlist() {
     return this._playlist;
   }
-}
-
-const playlistManager = new PlaylistPlayerManager();
-
-export function useSongPlaylistControl(props: {
-  outerTrackUpdater: Updater<Nullable<PlayerTrackStatus>>;
-  outerStatusUpdater: NormalFunc<[updater: NormalFunc<[draft: PlayerStatus], void | PlayerStatus>]>;
-  beforeTrackUpdate: NormalFunc<[next: Nullable<PlayerTrackStatus>]>;
-}) {
-  const { outerStatusUpdater, outerTrackUpdater, beforeTrackUpdate } = props;
-  useEffect(() => {
-    playlistManager.beforeTrackUpdate = beforeTrackUpdate;
-    playlistManager.outerTrackUpdater = outerTrackUpdater;
-    playlistManager.outerStatusUpdater = outerStatusUpdater;
-  }, [beforeTrackUpdate, outerStatusUpdater, outerTrackUpdater]);
-  useEffect(() => {
-    playlistManager.updateOuter();
-  }, []);
-  return useMemo(
-    () => ({
-      nextTrack: playlistManager.next.bind(playlistManager),
-      lastTrack: playlistManager.last.bind(playlistManager),
-      addTrack: playlistManager.addTrack.bind(playlistManager),
-      addPlaylist: playlistManager.addPlaylist.bind(playlistManager),
-      replacePlaylist: playlistManager.replacePlaylist.bind(playlistManager),
-      removeTrack: playlistManager.removeTrack.bind(playlistManager),
-      clearPlaylist: playlistManager.clearPlaylist.bind(playlistManager),
-      setRepeat: (status: "all" | "off" | "one") => (playlistManager.repeat = status),
-      setShuffle: (staus: boolean) => (playlistManager.shuffle = staus),
-      count: playlistManager.count.bind(playlistManager),
-      position: playlistManager.position.bind(playlistManager),
-      setPosition: playlistManager.setPosition.bind(playlistManager),
-      isSamePlaylist: playlistManager.isSamePlaylist.bind(playlistManager),
-      current: playlistManager.current.bind(playlistManager),
-      canPlay: playlistManager.canPlay.bind(playlistManager),
-      saveToCache: playlistManager.saveToCache.bind(playlistManager),
-      loadFromCache: playlistManager.loadFromCache.bind(playlistManager),
-      playlistManager
-    }),
-    []
-  );
-}
+})();

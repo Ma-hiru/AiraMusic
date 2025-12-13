@@ -14,7 +14,7 @@ interface ControlButtonProps {
 
 const TopControl: FC<ControlButtonProps> = ({ maximizable = true, mini = true }) => {
   const [isMax, setIsMax] = useState(false);
-  const { playlistControl } = usePlayer();
+  const { Player } = usePlayer();
 
   useEffect(() => {
     Renderer.invoke.isMaximized(undefined).then(setIsMax);
@@ -31,10 +31,10 @@ const TopControl: FC<ControlButtonProps> = ({ maximizable = true, mini = true })
   }, [isMax]);
   const minimize = Renderer.event.minimize;
   const close = useCallback(() => {
-    playlistControl.saveToCache().finally(() => {
+    Player.saveToCache().finally(() => {
       setTimeout(() => Renderer.event.close({ broadcast: true }), 200);
     });
-  }, [playlistControl]);
+  }, [Player]);
 
   const { toggleTargetWindow, hasOpened } = usePlayerInfoSync("miniplayer");
   useEffect(() => {

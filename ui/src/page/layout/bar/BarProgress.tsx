@@ -14,7 +14,7 @@ const BarProgress: FC<object> = () => {
     <div
       ref={barRef}
       className={cx(
-        "fixed w-screen backdrop-blur-lg bottom-18 shadow-[0_5px_10px_-5px_rgba(0,0,0,0.15)] h-1 overflow-hidden cursor-pointer ease-in-out transition-all duration-300 contain-layout contain-size contain-style",
+        "fixed w-screen backdrop-blur-lg bottom-18 shadow-[0_5px_10px_-5px_rgba(0,0,0,0.15)] h-1 overflow-hidden cursor-pointer ease-in-out transition-all duration-300",
         background ? "bg-transparent" : "bg-white",
         {
           "hover:h-2": isPlaying
@@ -27,7 +27,7 @@ const BarProgress: FC<object> = () => {
         ref={percentScope}
         initial={{ width: 0 }}
         style={{ background: mainColor.hex() }}
-        className="absolute left-0 top-0 block h-full ease-in-out duration-300 transition-all"
+        className="absolute left-0 top-0 block h-full"
       />
       {/*缓冲区*/}
       <motion.span

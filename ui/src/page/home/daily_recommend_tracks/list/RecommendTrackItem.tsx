@@ -4,6 +4,7 @@ import { Filter, ImageSize } from "@mahiru/ui/utils/filter";
 import { AudioLines, CirclePlay } from "lucide-react";
 import { usePlayer } from "@mahiru/ui/ctx/PlayerCtx";
 import { getTrackDetail } from "@mahiru/ui/api/track";
+import { usePlayerStatus } from "@mahiru/ui/store";
 
 interface RecommendTrackItemProps {
   song: DailyRecommendTracksDailySong;
@@ -12,9 +13,10 @@ interface RecommendTrackItemProps {
 }
 
 const RecommendTrackItem: FC<RecommendTrackItemProps> = ({ song, mainColor, textColor }) => {
+  const { Player } = usePlayer();
+  const { trackStatus } = usePlayerStatus(["trackStatus"]);
   const sizedCover = Filter.NeteaseImageSize(song.al.picUrl, ImageSize.md);
   const cachedCover = useFileCache(sizedCover);
-  const { trackStatus, playlistControl } = usePlayer();
   const track = trackStatus?.track;
   const isPlaying = track?.id === song?.id;
   const play = useCallback(async () => {
@@ -23,10 +25,10 @@ const RecommendTrackItem: FC<RecommendTrackItemProps> = ({ song, mainColor, text
     const tracks = Filter.NeteaseTracksPrivilegeExtends(detail.songs, detail.privileges);
     const track = tracks[0];
     if (track && track.playable) {
-      playlistControl.addTrack(track, song.al.id, "next");
-      playlistControl.nextTrack(true);
+      Player.addTrack(track, song.al.id, "next");
+      Player.next(true);
     }
-  }, [isPlaying, playlistControl, song.al.id, song.id]);
+  }, [isPlaying, Player, song.al.id, song.id]);
   return (
     <div className="w-full flex flex-col justify-center items-center p-2">
       <div

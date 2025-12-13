@@ -1,10 +1,10 @@
 import { FC, memo } from "react";
-import { usePlayer } from "@mahiru/ui/ctx/PlayerCtx";
 import { useFileCache } from "@mahiru/ui/hook/useFileCache";
 import { Filter, ImageSize } from "@mahiru/ui/utils/filter";
+import { usePlayerStatus } from "@mahiru/ui/store";
 
 const Cover: FC<object> = () => {
-  const { trackStatus } = usePlayer();
+  const { trackStatus } = usePlayerStatus(["trackStatus"]);
   const track = trackStatus?.track;
   const cacheCover = useFileCache(Filter.NeteaseImageSize(track?.al.picUrl, ImageSize.raw));
 

@@ -8,12 +8,12 @@ const Progress: FC<object> = () => {
     usePlayProgress();
   return (
     <div className="w-[150px] sm:w-[200px] md:w-[250px] lg:w-[300px]">
-      <div className="h-[12px] flex flex-col justify-center">
+      <div className="h-3 flex flex-col justify-center">
         <div
           ref={barRef}
           onClick={handleBarClick}
           onMouseDown={handleBarMouseDown}
-          className="relative h-[8px] overflow-hidden cursor-pointer ease-in-out transition-all duration-300 rounded-full bg-white/10 backdrop-blur-lg hover:h-[12px] ">
+          className="relative h-2 overflow-hidden cursor-pointer ease-in-out transition-all duration-300 rounded-full bg-white/10 backdrop-blur-lg hover:h-3 ">
           <motion.span
             ref={percentScope}
             initial={{ width: 0 }}

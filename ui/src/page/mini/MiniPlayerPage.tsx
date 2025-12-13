@@ -4,7 +4,7 @@ import { Pause, Play, SkipBack, SkipForward, X } from "lucide-react";
 import { useFileCache } from "@mahiru/ui/hook/useFileCache";
 import { Filter, ImageSize } from "@mahiru/ui/utils/filter";
 import { Renderer } from "@mahiru/ui/utils/renderer";
-import { CacheStore } from "@mahiru/ui/store";
+import { CacheStore } from "@mahiru/ui/store/cache";
 
 const MiniPlayerPage: FC<object> = () => {
   const [lyricInit, setLyricInit] = useState<LyricInit>();

@@ -2,22 +2,20 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { usePlayer } from "@mahiru/ui/ctx/PlayerCtx";
 import { useThemeColor } from "@mahiru/ui/hook/useThemeColor";
 import { Renderer } from "@mahiru/ui/utils/renderer";
-import { useDynamicZustandShallowStore } from "@mahiru/ui/store";
+import { useDynamicZustandShallowStore, usePlayerStatus } from "@mahiru/ui/store";
 
 export function usePlayerInfoSync(targetWindow: WindowType) {
   const [hasOpened, setHasOpened] = useState(false);
-  const {
-    trackStatus,
-    getPlayerProgress,
-    setLyricVersion,
-    audioRef,
-    audioControl,
-    playlistControl
-  } = usePlayer();
+  const { Audio, Player } = usePlayer();
+  const { trackStatus, playerProgress, setLyricVersion } = usePlayerStatus([
+    "trackStatus",
+    "playerProgress",
+    "setLyricVersion"
+  ]);
   const { playerStatus } = useDynamicZustandShallowStore(["playerStatus"]);
   const { mainColor } = useThemeColor();
-  const getNewestInfo = useRef({ trackStatus, playerStatus, getPlayerProgress });
-  getNewestInfo.current = { trackStatus, playerStatus, getPlayerProgress };
+  const getNewestInfo = useRef({ trackStatus, playerStatus, playerProgress });
+  getNewestInfo.current = { trackStatus, playerStatus, playerProgress };
 
   // 发送歌曲信息
   const sendInit = useCallback(() => {
@@ -29,9 +27,9 @@ export function usePlayerInfoSync(targetWindow: WindowType) {
   }, [targetWindow]);
   // 发送同步信息
   const sendSync = useCallback(() => {
-    const { getPlayerProgress, playerStatus } = getNewestInfo.current;
+    const { playerProgress, playerStatus } = getNewestInfo.current;
     Renderer.sendMessage("lyricSync", targetWindow, {
-      progress: getPlayerProgress(),
+      progress: playerProgress.current(),
       playerStatus,
       themeColor: mainColor.hex()
     });
@@ -72,22 +70,22 @@ export function usePlayerInfoSync(targetWindow: WindowType) {
       const controlMsg = sync.playerControl;
       if (controlMsg) {
         if (controlMsg === "play") {
-          audioControl.play();
+          Audio.play();
         } else if (controlMsg === "last") {
-          playlistControl.lastTrack(true);
+          Player.last(true);
         } else if (controlMsg === "next") {
-          playlistControl.nextTrack(true);
+          Player.next(true);
         }
       }
     });
     return () => {
       removeListener();
     };
-  }, [audioControl, hasOpened, playlistControl, setLyricVersion, targetWindow]);
+  }, [Audio, Player, hasOpened, setLyricVersion, targetWindow]);
   // 同步音频进度变化
   useEffect(() => {
     if (!hasOpened) return;
-    const audio = audioRef.current;
+    const audio = Audio.ref.current;
     if (!audio) return;
     audio.addEventListener("timeupdate", sendSync);
     audio.addEventListener("loadstart", sendInit);
@@ -97,7 +95,7 @@ export function usePlayerInfoSync(targetWindow: WindowType) {
       audio.removeEventListener("loadstart", sendInit);
       audio.removeEventListener("pause", sendSync);
     };
-  }, [audioRef, hasOpened, sendInit, sendSync]);
+  }, [Audio.ref, hasOpened, sendInit, sendSync]);
   // 同步歌曲信息
   useEffect(() => {
     hasOpened && sendInit();

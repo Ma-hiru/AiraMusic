@@ -2,7 +2,7 @@ import { FC, memo, SyntheticEvent, useCallback } from "react";
 import NavSideNavItem from "@mahiru/ui/page/layout/nav/NavItem";
 import { useFileCache } from "@mahiru/ui/hook/useFileCache";
 import { cx } from "@emotion/css";
-import { CacheStore } from "@mahiru/ui/store";
+import { CacheStore } from "@mahiru/ui/store/cache";
 import { Filter, ImageSize } from "@mahiru/ui/utils/filter";
 
 interface Props {

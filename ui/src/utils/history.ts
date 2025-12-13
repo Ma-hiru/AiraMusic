@@ -1,4 +1,4 @@
-import { CacheStore, EditObjectResponse } from "@mahiru/ui/store";
+import { CacheStore, EditObjectResponse } from "@mahiru/ui/store/cache";
 
 export const PlaylistHistoryCache = new (class {
   private cacheKey = "playlist_history_cache";
@@ -23,8 +23,7 @@ export const PlaylistHistoryCache = new (class {
   }
 
   async load() {
-    const result = (await CacheStore.fetchObject<NeteaseTrack[]>(this.cacheKey)) || [];
-    return result;
+    return (await CacheStore.fetchObject<NeteaseTrack[]>(this.cacheKey)) || [];
   }
 
   async save(data: NeteaseTrack[], outerUpdate: boolean = false) {

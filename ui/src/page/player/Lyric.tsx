@@ -6,16 +6,20 @@ import { useLayout } from "@mahiru/ui/ctx/LayoutCtx";
 import { useGPU } from "@mahiru/ui/hook/useGPU";
 import { LyricLineMouseEvent } from "@applemusic-like-lyrics/core";
 import { Lyric as LyricUtils } from "@mahiru/ui/utils/lyric";
-import { useDynamicZustandShallowStore } from "@mahiru/ui/store";
+import { usePlayerStatus } from "@mahiru/ui/store";
 
 const Lyric: FC<object> = () => {
   const lyricPlayerRef = useRef<LyricPlayerRef>(null);
-  const { getPlayerProgress, trackStatus, audioRef } = usePlayer();
-  const { playerStatus } = useDynamicZustandShallowStore(["playerStatus"]);
+  const { Audio } = usePlayer();
+  const { trackStatus, playerStatus, playerProgress } = usePlayerStatus([
+    "trackStatus",
+    "playerStatus",
+    "playerProgress"
+  ]);
   const { PlayerModalVisible } = useLayout();
   const { hasDedicatedGPU } = useGPU();
   useEffect(() => {
-    const audio = audioRef.current;
+    const audio = Audio.ref.current;
     if (audio) {
       let lastTime = -1;
       const onFrame = (time: number) => {
@@ -40,20 +44,20 @@ const Lyric: FC<object> = () => {
         audio?.removeEventListener("loadstart", loadstart);
       };
     }
-  }, [audioRef]);
+  }, [Audio.ref]);
 
   const onLyricLineClick = useCallback(
     (e: LyricLineMouseEvent) => {
       const ms = e.line.getLine().startTime || 0;
       const nextTime = ms / 1000;
-      const { duration } = getPlayerProgress();
-      const audio = audioRef.current;
+      const { duration } = playerProgress.current();
+      const audio = Audio.ref.current;
       if (audio) {
         audio.currentTime = Math.min(nextTime, duration);
         audio.paused && audio.play();
       }
     },
-    [audioRef, getPlayerProgress]
+    [Audio.ref, playerProgress]
   );
   return (
     <div

@@ -1,8 +1,8 @@
 import { FC, memo } from "react";
-import { usePlayer } from "@mahiru/ui/ctx/PlayerCtx";
+import { usePlayerStatus } from "@mahiru/ui/store";
 
 const Title: FC<object> = () => {
-  const { trackStatus } = usePlayer();
+  const { trackStatus } = usePlayerStatus(["trackStatus"]);
   const track = trackStatus?.track;
   const alias = track?.alia?.length ? track.alia[0] : "";
   const ts = track?.tns?.length ? track.tns[0] : "";

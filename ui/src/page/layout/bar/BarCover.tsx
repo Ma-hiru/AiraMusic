@@ -1,18 +1,18 @@
 import { FC, memo } from "react";
-import { usePlayer } from "@mahiru/ui/ctx/PlayerCtx";
 import { useLayout } from "@mahiru/ui/ctx/LayoutCtx";
 import { useFileCache } from "@mahiru/ui/hook/useFileCache";
 import { Filter, ImageSize } from "@mahiru/ui/utils/filter";
 
 import { cx } from "@emotion/css";
 import { useThemeColor } from "@mahiru/ui/hook/useThemeColor";
+import { usePlayerStatus } from "@mahiru/ui/store";
 
 const BarCover: FC<object> = () => {
-  const { trackStatus } = usePlayer();
-  const track = trackStatus?.track;
+  const { trackStatus } = usePlayerStatus(["trackStatus"]);
   const { TogglePlayerModalVisible } = useLayout();
-  const cachedCover = useFileCache(Filter.NeteaseImageSize(track?.al.picUrl, ImageSize.md));
   const { textColorOnMain } = useThemeColor();
+  const track = trackStatus?.track;
+  const cachedCover = useFileCache(Filter.NeteaseImageSize(track?.al.picUrl, ImageSize.md));
   return (
     <div className="h-2/3 space-x-2 flex items-center justify-start gap-2 overflow-hidden pr-6 truncate">
       <div className={cx("h-12 w-12 rounded-md overflow-hidden", cachedCover && "shadow-lg")}>

@@ -1,7 +1,7 @@
 import { apiRequest } from "@mahiru/ui/utils/request";
 import { usePersistZustandStore } from "../store";
 import { CacheStoreErr, NCMServerErr } from "@mahiru/ui/utils/errs";
-import { CacheStore } from "@mahiru/ui/store";
+import { CacheStore } from "@mahiru/ui/store/cache";
 import { Log } from "@mahiru/ui/utils/dev";
 
 /**
@@ -164,7 +164,7 @@ export async function likeATrack(params: {
  * 听歌打卡
  * @desc 调用此接口 , 传入音乐 id, 来源 id，歌曲时间 time，更新听歌排行数据
  */
-export async function scrobble(params: {
+async function requestScrobble(params: {
   /** 歌曲 id */
   id: number;
   /** 歌单或专辑 id */
@@ -184,4 +184,14 @@ export async function scrobble(params: {
   } catch (err) {
     throw NCMServerErr.create("ui/api/track.ts:scrobble", err);
   }
+}
+
+export function scrobble(lastStatus: PlayerTrackStatus, time: number) {
+  const source = lastStatus?.source || lastStatus?.track?.al?.id;
+  source &&
+    requestScrobble({
+      id: lastStatus.track.id,
+      sourceid: source,
+      time: Math.floor(time)
+    });
 }

@@ -1,5 +1,5 @@
 import { apiRequest } from "@mahiru/ui/utils/request";
-import { CacheStore } from "@mahiru/ui/store";
+import { CacheStore } from "@mahiru/ui/store/cache";
 import { NCMServerErr } from "@mahiru/ui/utils/errs";
 import { Log } from "@mahiru/ui/utils/dev";
 import { Time } from "@mahiru/ui/utils/time";

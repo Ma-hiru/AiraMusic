@@ -1,3 +1,4 @@
 export * from "./persist";
 export * from "./dynamic";
-export * from "./cache";
+// 不能导出会引起循环依赖（暂时性死区）
+// export * from "./cache";

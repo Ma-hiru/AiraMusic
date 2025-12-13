@@ -3,7 +3,7 @@ import { useFileCache } from "@mahiru/ui/hook/useFileCache";
 import { Filter, ImageSize } from "@mahiru/ui/utils/filter";
 import { useLayout } from "@mahiru/ui/ctx/LayoutCtx";
 import { PlaylistCacheEntry } from "@mahiru/ui/utils/playlist";
-import { CacheStore } from "@mahiru/ui/store";
+import { CacheStore } from "@mahiru/ui/store/cache";
 
 interface TopCoverProps {
   entry: Nullable<PlaylistCacheEntry>;

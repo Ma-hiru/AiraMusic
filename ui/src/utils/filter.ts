@@ -1,8 +1,9 @@
 import { getTrackDetail } from "@mahiru/ui/api/track";
 import { EqError, Log } from "@mahiru/ui/utils/dev";
-import { CacheStore, getPersistSnapshot } from "@mahiru/ui/store";
+import { getPersistSnapshot } from "@mahiru/ui/store";
 import { Auth } from "@mahiru/ui/utils/auth";
 import pLimit from "p-limit";
+import { CacheStore } from "@mahiru/ui/store/cache";
 
 /** Netease Image Size Enum */
 export const enum ImageSize {

@@ -1,5 +1,5 @@
-import { createZustandStore, createZustandShallowStore } from "../create";
-import { DynamicStoreConfig, DynamicStoreInitialState, DynamicStoreActions } from "./config";
+import { createZustandShallowStore, createZustandStore } from "../create";
+import { DynamicStoreActions, DynamicStoreConfig, DynamicStoreInitialState } from "./config";
 
 export type DynamicStoreType = DynamicStoreInitialState & DynamicStoreActions;
 
@@ -9,3 +9,7 @@ export const useDynamicZustandShallowStore =
   createZustandShallowStore<DynamicStoreType>(useDynamicZustandStore);
 
 export const getDynamicSnapshot = useDynamicZustandStore.getState;
+
+export const usePlayerStatus = useDynamicZustandShallowStore;
+
+export const getPlayerStatusSnapshot = getDynamicSnapshot;

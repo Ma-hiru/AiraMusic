@@ -1,6 +1,6 @@
 import { useLayoutEffect, useState } from "react";
 import { AppScheme } from "@mahiru/ui/constants/scheme";
-import { CacheStore } from "@mahiru/ui/store";
+import { CacheStore } from "@mahiru/ui/store/cache";
 
 export function useFileCache(
   url: Undefinable<string>,

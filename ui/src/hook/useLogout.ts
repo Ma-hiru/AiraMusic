@@ -7,16 +7,16 @@ import { Renderer } from "@mahiru/ui/utils/renderer";
 
 export function useLogout() {
   const navigate = useNavigate();
-  const { playlistControl } = usePlayer();
+  const { Player } = usePlayer();
   return useCallback(() => {
     if (Auth.isAccountLoggedIn()) {
-      playlistControl.clearPlaylist();
+      Player.clearPlaylist();
       Auth.doLogout().finally(() => {
         waitLogin();
         navigate("/home");
       });
     }
-  }, [navigate, playlistControl]);
+  }, [Player, navigate]);
 }
 
 export function useLogin() {

@@ -1,5 +1,5 @@
 import { apiRequest } from "@mahiru/ui/utils/request";
-import { CacheStore } from "@mahiru/ui/store";
+import { CacheStore } from "@mahiru/ui/store/cache";
 import { Log } from "@mahiru/ui/utils/dev";
 import { NeteaseBannerResponse } from "@mahiru/ui/types/netease/banner";
 import { Time } from "@mahiru/ui/utils/time";

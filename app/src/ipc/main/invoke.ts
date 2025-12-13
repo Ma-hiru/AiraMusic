@@ -30,21 +30,7 @@ const mainInvokeAPI = {
       };
     }
   },
-  GPUInfo: async () => {
-    return new Promise<string>((resolve, reject) => {
-      app
-        .whenReady()
-        .then(() => {
-          app
-            .getGPUInfo("complete")
-            .then((gpuInfo) => {
-              resolve(JSON.stringify(gpuInfo));
-            })
-            .catch(reject);
-        })
-        .catch(reject);
-    });
-  },
+  GPUInfo: async () => app.whenReady().then(() => app.getGPUInfo("complete")),
   isMaximized: (e) => {
     const win = BrowserWindow.fromWebContents(e.sender);
     return win ? win.isMaximized() : false;
