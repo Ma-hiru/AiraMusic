@@ -2,3 +2,4 @@
 **/*.ttf
 **/*.woff
 **/target
+pnpm-lock.yaml
