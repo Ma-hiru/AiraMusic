@@ -1,26 +1,28 @@
 import { FC, memo } from "react";
 import { usePersistZustandShallowStore } from "@mahiru/ui/store";
 import { css, cx } from "@emotion/css";
-import { LogOut, UserRound } from "lucide-react";
-import { useLogin, useLogout } from "@mahiru/ui/hook/useLogout";
+import { UserRound } from "lucide-react";
+import { useLogin } from "@mahiru/ui/hook/useLogout";
 import { useFileCache } from "@mahiru/ui/hook/useFileCache";
 import { Filter, ImageSize } from "@mahiru/ui/utils/filter";
+import { useLayout } from "@mahiru/ui/ctx/LayoutCtx";
+import { AnimatePresence, motion } from "motion/react";
 
 const NavAvatar: FC<object> = () => {
   const { data } = usePersistZustandShallowStore(["data"]);
   const cachedURL = useFileCache(Filter.NeteaseImageSize(data.user?.avatarUrl, ImageSize.md));
   const login = useLogin();
-  const logout = useLogout();
+  const { sideBarOpen } = useLayout();
   return (
     <div
       className={cx(
-        "flex justify-between items-center",
+        "flex justify-center items-center relative",
         css`
           -webkit-app-region: no-drag;
         `
       )}>
       <div className="flex justify-center items-center gap-2">
-        <div className="rounded-full flex justify-center items-center overflow-hidden bg-black/60">
+        <div className="rounded-full flex justify-center items-center overflow-hidden bg-black/60 size-7">
           {data.user?.avatarUrl ? (
             <img
               src={(cachedURL || null) as string}
@@ -33,9 +35,21 @@ const NavAvatar: FC<object> = () => {
             <UserRound className="text-white cursor-pointer" onClick={login} />
           )}
         </div>
-        <span className="text-xs font-bold">{data.user?.nickname || "未登录"}</span>
+
+        <AnimatePresence>
+          {sideBarOpen && (
+            <motion.span
+              key="nickname"
+              className="text-xs font-bold truncate"
+              initial={{ opacity: 0, width: 0 }}
+              animate={{ opacity: 1, width: "auto" }}
+              exit={{ opacity: 0, width: 0 }}
+              transition={{ ease: "easeInOut", duration: 0.3 }}>
+              {data.user?.nickname || "未登录"}
+            </motion.span>
+          )}
+        </AnimatePresence>
       </div>
-      <LogOut className="size-3 cursor-pointer" onClick={logout} />
     </div>
   );
 };

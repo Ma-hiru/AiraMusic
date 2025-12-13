@@ -42,6 +42,7 @@ type MessageTypeMap = {
   lyricSyncReverse: LyricSyncReverse;
   lyricInit: LyricInit;
   lyricVersion: LyricVersionType;
+  infoSync: InfoSync;
   nextTrack: undefined;
   lastTrack: undefined;
   playTrack: undefined;

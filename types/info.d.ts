@@ -1,6 +1,6 @@
 type InfoSync = {
   type: "musicInfo" | "search" | "artist" | "album" | "none";
-  id: string | number;
+  value: string | number;
   background?: string;
   mainColor: string;
   secondaryColor: string;

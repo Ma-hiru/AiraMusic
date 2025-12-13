@@ -2,23 +2,29 @@ import { createContext, useContext } from "react";
 import { EqError } from "@mahiru/ui/utils/dev";
 
 export type LayoutCtxType = {
-  PlayerModalVisible: boolean;
+  playerModalVisible: boolean;
   setPlayerModalVisible: NormalFunc<[visible: boolean]>;
-  TogglePlayerModalVisible: NormalFunc;
+  togglePlayerModalVisible: NormalFunc;
   background: Undefinable<string>;
   setBackground: NormalFunc<[bg?: string]>;
   backgroundThemeColor: string[];
   setBackgroundThemeColor: NormalFunc<[colors: string[]]>;
+  sideBarOpen: boolean;
+  setSideBarOpen: NormalFunc<[open: boolean]>;
+  toggleSideBarOpen: NormalFunc;
 };
 
 export const LayoutCtx = createContext<LayoutCtxType>({
-  PlayerModalVisible: false,
+  playerModalVisible: false,
   setPlayerModalVisible: blank,
-  TogglePlayerModalVisible: blank,
+  togglePlayerModalVisible: blank,
   background: undefined,
   setBackground: blank,
   backgroundThemeColor: [],
-  setBackgroundThemeColor: blank
+  setBackgroundThemeColor: blank,
+  sideBarOpen: false,
+  setSideBarOpen: blank,
+  toggleSideBarOpen: blank
 });
 
 export const useLayout = () => {

@@ -3,10 +3,10 @@ import AudioSpectrum from "@mahiru/ui/componets/spectrum/AudioSpectrum";
 import { useLayout } from "@mahiru/ui/ctx/LayoutCtx";
 
 const Spectrum: FC<object> = () => {
-  const { PlayerModalVisible } = useLayout();
+  const { playerModalVisible } = useLayout();
   return (
     <AudioSpectrum
-      isPlaying={PlayerModalVisible}
+      isPlaying={playerModalVisible}
       className="w-full h-5 mt-2"
       gap={2}
       renderer="canvas"

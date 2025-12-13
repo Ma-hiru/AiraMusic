@@ -9,7 +9,7 @@ import { usePlayerStatus } from "@mahiru/ui/store";
 
 const BarCover: FC<object> = () => {
   const { trackStatus } = usePlayerStatus(["trackStatus"]);
-  const { TogglePlayerModalVisible } = useLayout();
+  const { togglePlayerModalVisible } = useLayout();
   const { textColorOnMain } = useThemeColor();
   const track = trackStatus?.track;
   const cachedCover = useFileCache(Filter.NeteaseImageSize(track?.al.picUrl, ImageSize.md));
@@ -22,7 +22,7 @@ const BarCover: FC<object> = () => {
           decoding="async"
           src={cachedCover}
           alt={track?.name}
-          onClick={TogglePlayerModalVisible}
+          onClick={togglePlayerModalVisible}
         />
       </div>
       <div className="flex flex-col gap-0 items-start truncate">

@@ -2,10 +2,10 @@ import { FC, memo } from "react";
 import { ChevronDown } from "lucide-react";
 import { NoDrag } from "@mahiru/ui/componets/public/Drag";
 import { useLayout } from "@mahiru/ui/ctx/LayoutCtx";
-import { Variants, motion } from "motion/react";
+import { motion, Variants } from "motion/react";
 
 const Back: FC<object> = () => {
-  const { TogglePlayerModalVisible, PlayerModalVisible } = useLayout();
+  const { togglePlayerModalVisible, playerModalVisible } = useLayout();
   const variants: Variants = {
     show: {
       opacity: 1,
@@ -27,9 +27,9 @@ const Back: FC<object> = () => {
     <NoDrag>
       <motion.button
         variants={variants}
-        animate={PlayerModalVisible ? "show" : "hide"}
+        animate={playerModalVisible ? "show" : "hide"}
         className="relative top-2"
-        onClick={TogglePlayerModalVisible}>
+        onClick={togglePlayerModalVisible}>
         <ChevronDown className="size-5 cursor-pointer hover:opacity-50" />
       </motion.button>
     </NoDrag>

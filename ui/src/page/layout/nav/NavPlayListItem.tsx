@@ -60,13 +60,14 @@ const NavPlayListItem: FC<Props> = ({
       )}>
       <NavSideNavItem
         active={active}
+        className="justify-start"
         onClick={() => onClick?.(id)}
         prefix={
           <div className="size-10 min-w-10 rounded-md overflow-hidden">
             <img className="w-full" src={cachedCover} alt={label} onError={onError} />
           </div>
         }>
-        <div className="flex flex-col overflow-hidden">
+        <div className="flex flex-col overflow-hidden pl-2">
           <span className="text-[12px] font-normal truncate">{label}</span>
           <span className="text-[10px] font-light">{count}首</span>
         </div>

@@ -16,7 +16,7 @@ export function useAppLoaded(condition: boolean) {
       if (loaded) return;
       loaded = true;
       Renderer.event.loaded({ broadcast: false });
-    }, 5000);
+    }, 10000);
     return () => {
       clearTimeout(timer);
     };

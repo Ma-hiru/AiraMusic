@@ -3,7 +3,7 @@ import { EqError } from "@mahiru/ui/utils/dev";
 
 export const InfoCtx = createContext<InfoSync>({
   type: "none",
-  id: 0,
+  value: 0,
   mainColor: "",
   secondaryColor: "",
   textColor: ""

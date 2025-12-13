@@ -16,7 +16,7 @@ const Lyric: FC<object> = () => {
     "playerStatus",
     "playerProgress"
   ]);
-  const { PlayerModalVisible } = useLayout();
+  const { playerModalVisible } = useLayout();
   const { hasDedicatedGPU } = useGPU();
   useEffect(() => {
     const audio = Audio.ref.current;
@@ -66,7 +66,7 @@ const Lyric: FC<object> = () => {
       )}>
       <LyricPlayer
         disabled
-        playing={playerStatus.playing && PlayerModalVisible}
+        playing={playerStatus.playing && playerModalVisible}
         className="w-full h-full"
         ref={lyricPlayerRef}
         alignAnchor="center"

@@ -10,7 +10,7 @@ import { usePlayerStatus } from "@mahiru/ui/store";
 
 const Background: FC<object> = () => {
   const { trackStatus } = usePlayerStatus(["trackStatus"]);
-  const { PlayerModalVisible } = useLayout();
+  const { playerModalVisible } = useLayout();
   const { hasRaw } = Lyric.getLyricVersionInfo(trackStatus?.lyric);
   const { hasDedicatedGPU } = useGPU();
   const track = trackStatus?.track;
@@ -19,10 +19,10 @@ const Background: FC<object> = () => {
     <BackgroundRender
       className="absolute inset-0"
       albumIsVideo={false}
-      playing={PlayerModalVisible}
+      playing={playerModalVisible}
       hasLyric={hasRaw}
       album={cachedBackground}
-      staticMode={!PlayerModalVisible}
+      staticMode={!playerModalVisible}
     />
   ) : (
     <AcrylicBackground

@@ -8,7 +8,7 @@ const Artist: FC<object> = () => {
   const track = trackStatus?.track;
   const { likeChange, isLiked } = useHeart(track);
   return (
-    <div className="relative w-full flex justify-between gap-1 overflow-hidden items-center text-white/50 h-[14px] text-[12px] select-none">
+    <div className="relative w-full flex justify-between gap-1 overflow-hidden items-center text-white/50 h-3.5 text-[12px] select-none">
       <div className="flex gap-1 justify-start items-center truncate">
         {track?.ar?.map((a, index) => {
           return (

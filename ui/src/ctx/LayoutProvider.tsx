@@ -1,5 +1,5 @@
 import KMeansWorker from "@mahiru/ui/worker/kmeans.ts?worker";
-import { ReactNode, useEffect, useMemo, useRef, useState } from "react";
+import { ReactNode, useEffect, useMemo, useState } from "react";
 import { LayoutCtx, LayoutCtxType } from "@mahiru/ui/ctx/LayoutCtx";
 import { EqError, Log } from "@mahiru/ui/utils/dev";
 import { UI } from "@mahiru/ui/utils/ui";
@@ -8,6 +8,7 @@ const themeColorCache = new Map<string, string[]>();
 
 export default function LayoutProvider({ children }: { children: ReactNode }) {
   const [playerModalVisible, setPlayerModalVisible] = useState(false);
+  const [sideBarOpen, setSideBarOpen] = useState(false);
   const [background, setBackground] = useState<Undefinable<string>>();
   const [backgroundThemeColor, setBackgroundThemeColor] = useState<string[]>([]);
 
@@ -57,15 +58,18 @@ export default function LayoutProvider({ children }: { children: ReactNode }) {
 
   const ctxValue = useMemo<LayoutCtxType>(
     () => ({
-      PlayerModalVisible: playerModalVisible,
-      TogglePlayerModalVisible: () => setPlayerModalVisible((v) => !v),
+      playerModalVisible,
+      togglePlayerModalVisible: () => setPlayerModalVisible((v) => !v),
       setPlayerModalVisible,
       background,
       setBackground,
       backgroundThemeColor,
-      setBackgroundThemeColor
+      setBackgroundThemeColor,
+      sideBarOpen,
+      setSideBarOpen,
+      toggleSideBarOpen: () => setSideBarOpen((o) => !o)
     }),
-    [playerModalVisible, background, backgroundThemeColor]
+    [playerModalVisible, background, backgroundThemeColor, sideBarOpen]
   );
 
   return <LayoutCtx.Provider value={ctxValue}>{children}</LayoutCtx.Provider>;

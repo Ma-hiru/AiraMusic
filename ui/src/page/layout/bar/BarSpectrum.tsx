@@ -5,13 +5,13 @@ import Color from "color";
 import { useLayout } from "@mahiru/ui/ctx/LayoutCtx";
 
 const BarSpectrum: FC<object> = () => {
-  const { PlayerModalVisible } = useLayout();
+  const { playerModalVisible } = useLayout();
   const { mainColor, secondaryColor } = useThemeColor();
   const color = Color(mainColor);
   const secondary_color = Color(secondaryColor);
   return (
     <AudioSpectrum
-      isPlaying={!PlayerModalVisible}
+      isPlaying={!playerModalVisible}
       gap={1}
       renderer="webgl-rust"
       barWidth={3.8}
