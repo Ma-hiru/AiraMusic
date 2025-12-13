@@ -31,5 +31,5 @@ components/*/*.jsx
 .eslintignore
 .history
 **/*.yml
-*.html
+*.ttf
 CHANGELOG.*.md
