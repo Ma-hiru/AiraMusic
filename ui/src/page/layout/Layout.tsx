@@ -1,14 +1,15 @@
 import { FC } from "react";
+import PlayerProvider from "@mahiru/ui/ctx/PlayerProvider";
+import SpectrumProvider from "@mahiru/ui/ctx/SpectrumProvider";
+
 import TopBar from "./top";
 import PlayerBar from "./bar";
 import NavSide from "./nav";
 import PlayerModal from "./Modal";
 import Background from "./Background";
-import PlayerProvider from "@mahiru/ui/ctx/PlayerProvider";
-import RouterBack from "@mahiru/ui/page/layout/RouterBack";
-import SpectrumProvider from "@mahiru/ui/ctx/SpectrumProvider";
-import Content from "@mahiru/ui/page/layout/Content";
-import ThemeColor from "@mahiru/ui/page/layout/ThemeColor";
+import Content from "./Content";
+import ThemeColor from "./ThemeColor";
+import FloatButtons from "./float";
 
 const Layout: FC<object> = () => {
   return (
@@ -23,7 +24,7 @@ const Layout: FC<object> = () => {
           </div>
           <Background /> {/* z-0 */}
           <PlayerModal /> {/* z-20 */}
-          <RouterBack />
+          <FloatButtons />
           <ThemeColor />
         </SpectrumProvider>
       </PlayerProvider>

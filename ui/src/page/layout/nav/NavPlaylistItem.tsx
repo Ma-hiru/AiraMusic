@@ -58,9 +58,9 @@ const NavPlaylistItem: FC<Props> = ({
           <img className="w-full" src={cachedCover} alt={label} onError={onImageError} />
         </div>
       }>
-      <div className="flex flex-col overflow-hidden pl-2">
+      <div className="flex flex-col overflow-hidden pl-2 truncate">
         <span className="text-[12px] font-normal truncate">{label}</span>
-        <span className="text-[10px] font-light">{count}首</span>
+        <span className="text-[10px] font-light truncate">{count}首</span>
       </div>
     </NavSideNavItem>
   );
