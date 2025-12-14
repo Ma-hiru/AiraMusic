@@ -1,4 +1,4 @@
-import init, { SpectrumAnalyzer, WindowFunction, SpectrumProcessor } from "@mahiru/wasm";
+import init, { SpectrumAnalyzer, WindowFunction } from "@mahiru/wasm";
 
 let analyser: Nullable<SpectrumAnalyzer> = null;
 let fftSize = 0;
@@ -45,12 +45,13 @@ self.addEventListener("message", (ev: MessageEvent<SpectrumWorkerArgs>) => {
       if (!ready || !analyser) break;
       try {
         const input = ensureInput(data.data);
-        const rawBands = analyser.analyze(input);
-        // 使用 WASM 中的 prettier 函数处理数据
-        const bands = SpectrumProcessor.process_auto(rawBands);
+        const raw = analyser.analyze_frame(input);
+        const lowFreqVolume = raw[raw.length - 1] ?? 0;
+        const bands = raw.subarray(0, raw.length - 1);
         self.postMessage({
           type: "spectrum",
-          bands: Array.from(bands)
+          bands: Array.from(bands),
+          lowFreqVolume
         } satisfies SpectrumWorkerResult);
       } catch (err) {
         postErr("analyze error: " + String(err));
@@ -61,12 +62,13 @@ self.addEventListener("message", (ev: MessageEvent<SpectrumWorkerArgs>) => {
       if (!ready || !analyser) break;
       try {
         const input = ensureInput(data.data);
-        const rawResult = analyser.analyze_with_peaks(input);
-        // 使用 WASM 中的 prettier 函数处理数据
-        const result = SpectrumProcessor.process_auto(rawResult);
+        const rawResult = analyser.analyze_frame_with_peaks(input);
+        const lowFreqVolume = rawResult[rawResult.length - 1] ?? 0;
+        const result = rawResult.subarray(0, rawResult.length - 1);
         self.postMessage({
           type: "spectrumWithPeaks",
-          data: Array.from(result)
+          data: Array.from(result),
+          lowFreqVolume
         } satisfies SpectrumWorkerResult);
       } catch (err) {
         postErr("analyzeWithPeaks error: " + String(err));

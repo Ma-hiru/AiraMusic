@@ -31,4 +31,11 @@ type PlayerProgress = {
 
 type LyricVersionType = "raw" | "full" | "tl" | "rm";
 
-type LayoutCanScrollTop = "none" | "home" | "playlist" | "album" | "artist" | "search";
+type LayoutCanScrollTop =
+  | "none"
+  | "home"
+  | "playlist"
+  | "userPlaylist"
+  | "album"
+  | "artist"
+  | "search";

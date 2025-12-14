@@ -10,12 +10,16 @@ const NavMenu: FC<object> = () => {
   const location = useLocation();
   const [searchParams] = useSearchParams();
   return (
-    <div className="space-y-4 px-2">
+    <div className="space-y-4 w-full overflow-hidden">
       {NAV_DATA.map(({ icon, label, path }) => {
         return (
           <NavItem
             key={label}
-            prefix={<span className="size-10 items-center justify-start flex">{icon}</span>}
+            prefix={
+              <div className="size-10 min-w-10 rounded-md overflow-hidden items-center justify-center flex">
+                {icon}
+              </div>
+            }
             active={
               location.pathname === path ||
               (label === "搜藏" && location.pathname === `/playlist/${userLikedListSummary?.id}`) ||

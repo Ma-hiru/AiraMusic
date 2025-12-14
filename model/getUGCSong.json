@@ -1,0 +1,99 @@
+{
+  "message": "提交成功",
+  "data": {
+    "songId": 32432782,
+    "songName": "before light",
+    "artistRepVos": [
+      {
+        "artistId": 14624,
+        "artistName": "keeno",
+        "alias": null,
+        "headPicUrl": null,
+        "area": null,
+        "type": null,
+        "desc": null,
+        "production": null,
+        "avatarPicUrl": null,
+        "transName": null
+      },
+      {
+        "artistId": 159692,
+        "artistName": "初音ミク",
+        "alias": null,
+        "headPicUrl": null,
+        "area": null,
+        "type": null,
+        "desc": null,
+        "production": null,
+        "avatarPicUrl": null,
+        "transName": null
+      }
+    ],
+    "songSubTitle": "",
+    "company": null,
+    "publishTime": 1438099200007,
+    "language": "日语",
+    "originalCover": 0,
+    "originalSong": null,
+    "no": null,
+    "disc": "1",
+    "lyricArtists": [
+      {
+        "artistId": 14624,
+        "artistName": "keeno",
+        "alias": null,
+        "headPicUrl": null,
+        "area": null,
+        "type": null,
+        "desc": null,
+        "production": null,
+        "avatarPicUrl": null,
+        "transName": null
+      }
+    ],
+    "composeArtists": [
+      {
+        "artistId": 14624,
+        "artistName": "keeno",
+        "alias": null,
+        "headPicUrl": null,
+        "area": null,
+        "type": null,
+        "desc": null,
+        "production": null,
+        "avatarPicUrl": null,
+        "transName": null
+      }
+    ],
+    "arrangeArtists": [],
+    "roleArtists": null,
+    "songTags": null,
+    "albumRepVo": {
+      "albumId": 3159911,
+      "albumName": "before light",
+      "artistRepVos": null,
+      "albumPicUrl": null,
+      "albumSubTitle": null,
+      "company": null,
+      "publishTime": null,
+      "songRepVos": null,
+      "songTags": null,
+      "production": null,
+      "language": null,
+      "type": null,
+      "transName": null
+    },
+    "transName": null,
+    "mvIds": [419715],
+    "lyricContent": "[by:annelas52]\n[00:23.400]溢れた言葉は キミの胸に刺さって\n[00:28.400]開いた傷から 赤黒く広がった\n[00:34.400]キミの目から 今まで見たことない\n[00:40.400]涙が溢れて 私は立ち尽くしていたんだ\n[00:58.400]知らないうちに 傷だらけになってた\n[01:03.800]キミのココロが 割れる音が聞こえた\n[01:09.400]気付かないまま 私は笑っていたの\n[01:15.100]キミのすべてを 解ったつもりだったの\n[01:21.100]今一人で また思い出すよ\n[01:33.100]ただ震えた キミのあの声を\n[01:43.800]零れ落ちたキミの涙が 私をここで 縛り付けているの\n[01:56.400]どうして見上げた空は 錆付いたまま 星も見えないよ\n[02:41.900]逃げ出したくて 遠い世界へ\n[02:48.100]キレイな二人 閉じ込めたまま\n[02:54.500]失くした世界で 狂いそうになった\n[02:59.600]夜を隠した 雲が千切れていくわ\n[03:12.200]あの日のように\n[03:25.000]ほら疼いて また泣いていたの\n[03:41.200]ただ痛いほど 綺麗な空があった\n[03:51.700]頬の痕を撫でて\n[03:57.500]降り注いだ星の数だけ\n[04:03.500]私は今も恋を重ねるの\n[04:11.100]どれだけもがいてみても\n[04:16.500]何も無いこと分かっていたのに\n[04:17.600]また瞼の奥に映った\n[04:23.900]キミの涙は胸を抉るけど\n[04:34.400]どうして  キミの笑顔も\n[04:40.600]あれからずっと思い出せないの\n[04:45.900]きらりきらり ゆらゆらと\n[04:50.300]溶けていくわ\n[04:55.500]燃えそうな空に 流れ落ちて\n[05:00.400]さらさらさらと\n[05:03.500]私はずっと泣いてた",
+    "transLyricContent": "[by:annelas52]\n[00:23.400]滿溢而出的話語 刺穿了你的胸口\n[00:28.400]自裂開的傷口 黑紅色開始蔓延\n[00:34.400]從你的雙眼 未曾看過的\n[00:40.400]眼淚奪眶而出 我卻始終呆站原地\n[00:58.400]回過神時 你已遍體鱗傷\n[01:03.800]聽見你的心 碎裂的聲音\n[01:09.400]卻仍未發覺 自己正笑著呢\n[01:15.100]明明認為自己 對你的一切再熟悉不過\n[01:21.100]如今 一個人 仍會 想起呢\n[01:33.100]卻只能 不住顫抖 每當憶起你的聲音時\n[01:43.800]滑落雙頰的你的淚水 將我束縛此地\n[01:56.400]為什麼呢 仰望天空 鏽灰依舊 連星星也不見蹤影呢\n[02:41.900]想逃得遠遠 直至遙遠世界\n[02:48.100]美好的我們 卻只能困在這裡\n[02:54.500]在死氣沉沉的世界中 我們變得失常\n[02:59.600]遮蔽夜晚的 雲朵逐漸化為千片\n[03:12.200]就像那天一樣\n[03:25.000]你看 隱隱作痛著 仍然 淚流不止呢\n[03:41.200]天空卻仍美得 如此叫人心痛\n[03:51.700]輕撫雙頰上的淚痕\n[03:57.500]星星殞落幾顆\n[04:03.500]如今的我就將戀情交織幾遍\n[04:11.100]無論如何嘗試掙扎\n[04:16.500]卻早已相當清楚什麼也不會發生\n[04:17.600]仍深深映於眼底的\n[04:23.900]你的眼淚在心裡狠狠開了洞\n[04:34.400]卻為什麼…連你的笑容\n[04:40.600]從那天起就再也想不起來了呢\n[04:45.900]一閃一亮 忽明忽滅地\n[04:50.300]溶化消失了\n[04:55.500]燃燒的天空中 傾瀉而下\n[05:00.400]嘩啦嘩啦地\n[05:03.500]是不住哭泣的我",
+    "playUrl": "http://m801.music.126.net/20251214202949/5200bfadea8269dab06e8947f4d5714b/jdymusic/obj/wo3DlMOGwrbDjj7DisKw/17195144967/a4d7/c2f9/625b/f938da934a487d884973980a17691d78.mp3?vuutv=8vSIkKt3klcBxHsq33ewvD3ia7S8ESJPYmp4dJO3EyW6+rDCyOp6o3hLaZDDH2qCI1AgUTN437mbQtOCSYGgqdgt8w2xI1lgeQ0+j8S2tLw=",
+    "forTransLyric": 1,
+    "noNeedLyric": 0,
+    "lyricLock": 1,
+    "transLyricLock": 1,
+    "lyricIsEdited": 0,
+    "duration": 358680
+  },
+  "code": 200
+}

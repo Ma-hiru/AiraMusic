@@ -192,8 +192,12 @@ interface FreeTrialPrivilege {
   userConsumable: boolean;
 }
 
+interface NeteaseQualityLevels {
+  br: number;
+}
+
 /** 高质量文件信息 */
-interface H {
+interface H extends NeteaseQualityLevels {
   br: number;
   fid: number;
   size: number;
@@ -202,7 +206,7 @@ interface H {
 }
 
 /** 低质量文件信息 */
-interface L {
+interface L extends NeteaseQualityLevels {
   br: number;
   fid: number;
   size: number;
@@ -211,7 +215,7 @@ interface L {
 }
 
 /** 中质量文件信息 */
-interface M {
+interface M extends NeteaseQualityLevels {
   br: number;
   fid: number;
   size: number;
@@ -220,7 +224,7 @@ interface M {
 }
 
 /** 无损质量文件信息 */
-interface Sq {
+interface Sq extends NeteaseQualityLevels {
   br: number;
   fid: number;
   size: number;
@@ -229,7 +233,7 @@ interface Sq {
 }
 
 /** Hi-Res质量文件信息 */
-interface Hr {
+interface Hr extends NeteaseQualityLevels {
   br: number;
   fid: number;
   size: number;

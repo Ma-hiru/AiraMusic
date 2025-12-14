@@ -5,6 +5,7 @@ import { EqError, Log } from "@mahiru/ui/utils/dev";
 export interface SpectrumData {
   bands: Float32Array;
   peaks?: Float32Array;
+  lowFreqVolume?: number;
 }
 
 export type SpectrumOptions = {
@@ -26,7 +27,8 @@ export function useSpectrumWorker(
   const samplesRef = useRef<Nullable<Float32Array<ArrayBuffer>>>(null);
   const spectrumData = useRef<SpectrumData>({
     bands: new Float32Array(numBands),
-    peaks: withPeaks ? new Float32Array(numBands) : undefined
+    peaks: withPeaks ? new Float32Array(numBands) : undefined,
+    lowFreqVolume: 0
   });
   const [isReady, setIsReady] = useState(false);
 
@@ -107,6 +109,7 @@ export function useSpectrumWorker(
               arr[i] = data.bands[i]!;
             }
           }
+          spectrumData.current.lowFreqVolume = data.lowFreqVolume;
           break;
         }
         case "spectrumWithPeaks": {
@@ -127,6 +130,7 @@ export function useSpectrumWorker(
               }
             }
           }
+          spectrumData.current.lowFreqVolume = data.lowFreqVolume;
           break;
         }
         case "error": {
@@ -166,7 +170,8 @@ export function useSpectrumWorker(
   useEffect(() => {
     spectrumData.current = {
       bands: new Float32Array(numBands),
-      peaks: withPeaks ? new Float32Array(numBands) : undefined
+      peaks: withPeaks ? new Float32Array(numBands) : undefined,
+      lowFreqVolume: 0
     };
   }, [numBands, withPeaks]);
   // 根据 isPlaying 和 isReady 状态，启动或停止频谱数据的更新循环

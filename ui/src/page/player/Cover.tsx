@@ -2,7 +2,7 @@ import { FC, memo } from "react";
 import { useFileCache } from "@mahiru/ui/hook/useFileCache";
 import { Filter, ImageSize } from "@mahiru/ui/utils/filter";
 import { usePlayerStatus } from "@mahiru/ui/store";
-import { CommentSort, CommentType, getCommentNew } from "@mahiru/ui/api/comment";
+import { getUGCSong } from "@mahiru/ui/api/wiki";
 
 const Cover: FC<object> = () => {
   const { trackStatus } = usePlayerStatus(["trackStatus"]);
@@ -16,14 +16,7 @@ const Cover: FC<object> = () => {
         src={cacheCover}
         alt={track?.al?.name || track?.name}
         onClick={() => {
-          track?.id &&
-            getCommentNew({
-              id: track.id,
-              pageNo: 0,
-              pageSize: 20,
-              sortType: CommentSort.Recommend,
-              type: CommentType.Song
-            }).then(console.log);
+          track?.id && getUGCSong(track.id).then(console.log);
         }}
       />
     </div>

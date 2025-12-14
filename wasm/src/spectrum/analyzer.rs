@@ -1,4 +1,5 @@
 use super::fft::compute_fft;
+use super::processor::SpectrumProcessor;
 use super::smoothing::Smoother;
 use super::window::WindowFunction;
 use wasm_bindgen::prelude::wasm_bindgen;
@@ -82,9 +83,105 @@ impl SpectrumAnalyzer {
 
         result
     }
+
+    /// 返回经过平滑与自适应压缩的频带，并在末尾追加低频能量（80-120Hz）
+    /// 返回长度 = num_bands + 1，最后一个元素为低频归一化值
+    #[wasm_bindgen]
+    pub fn analyze_frame(&mut self, samples: &[f32]) -> Vec<f32> {
+        let spectrum = compute_fft(samples, self.window_function);
+        let low_raw = self.low_freq_energy(&spectrum, 80.0, 120.0);
+
+        let bands = self.group_logarithmic(&spectrum);
+        let smoothed = self.smoother.smooth(&bands);
+
+        let (processed, low_processed) = self.process_auto_with_low(&smoothed, low_raw);
+
+        let mut out = processed;
+        out.push(low_processed);
+        out
+    }
+
+    /// 带峰值版本：同样在末尾追加低频归一化值；数据排列为 [band, peak, band, peak, ..., low]
+    #[wasm_bindgen]
+    pub fn analyze_frame_with_peaks(&mut self, samples: &[f32]) -> Vec<f32> {
+        let spectrum = compute_fft(samples, self.window_function);
+        let low_raw = self.low_freq_energy(&spectrum, 80.0, 120.0);
+
+        let bands = self.group_logarithmic(&spectrum);
+        let (smoothed, peaks) = self.smoother.smooth_with_peaks(&bands);
+
+        // 先将 band/peak 交错，再整体自适应压缩
+        let mut combined = Vec::with_capacity(self.num_bands * 2);
+        for i in 0..self.num_bands {
+            combined.push(smoothed[i]);
+            combined.push(peaks[i]);
+        }
+
+        let (processed, low_processed) = self.process_auto_with_low(&combined, low_raw);
+
+        let mut out = processed;
+        out.push(low_processed);
+        out
+    }
 }
 // 实现不同的频谱分组方法
 impl SpectrumAnalyzer {
+    fn low_freq_energy(&self, spectrum: &[f32], start_hz: f32, end_hz: f32) -> f32 {
+        let max_freq = self.sample_rate / 2.0;
+        if max_freq <= 0.0 || spectrum.is_empty() {
+            return 0.0;
+        }
+
+        let len = spectrum.len();
+        let start_ratio = (start_hz / max_freq).clamp(0.0, 1.0);
+        let end_ratio = (end_hz / max_freq).clamp(0.0, 1.0);
+
+        let mut start_bin = (start_ratio * len as f32).floor() as usize;
+        let mut end_bin = (end_ratio * len as f32).ceil() as usize;
+
+        start_bin = start_bin.min(len.saturating_sub(1));
+        end_bin = end_bin.max(start_bin + 1).min(len);
+
+        let slice = &spectrum[start_bin..end_bin];
+        let sum: f32 = slice.iter().sum();
+        sum / slice.len() as f32
+    }
+
+    fn process_auto_with_low(&self, data: &[f32], low_raw: f32) -> (Vec<f32>, f32) {
+        // 与 SpectrumProcessor::process_auto 一致的参数
+        const LOG_MULTIPLIER: f32 = 300.0;
+        const MIN_VAL: f32 = 0.02;
+
+        // 估计归一化基准
+        let mut sorted = data.to_vec();
+        sorted.sort_by(|a, b| a
+            .partial_cmp(b)
+            .unwrap_or(std::cmp::Ordering::Equal));
+        let max_est = if !sorted.is_empty() {
+            let idx = ((sorted.len() as f32 * 0.95).floor() as usize).min(sorted.len() - 1);
+            sorted[idx].max(1e-6)
+        } else {
+            1e-6
+        };
+
+        let norm_base = (1.0 + max_est * LOG_MULTIPLIER)
+            .log10()
+            .max(1e-6);
+
+        let process_val = |v: f32| {
+            let v = v.max(0.0);
+            let log_val = (1.0 + v * LOG_MULTIPLIER).log10();
+            let mut norm = log_val / norm_base;
+            norm = norm.powf(0.9);
+            norm.clamp(MIN_VAL, 1.0)
+        };
+
+        let processed = data.iter().map(|&v| process_val(v)).collect::<Vec<f32>>();
+        let low_processed = process_val(low_raw);
+
+        (processed, low_processed)
+    }
+
     /// 对数分组（低频密集，高频稀疏）
     #[allow(dead_code)]
     fn group_logarithmic(&self, spectrum: &[f32]) -> Vec<f32> {

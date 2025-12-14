@@ -17,7 +17,6 @@ const TopRight: FC<TopRightProps> = ({ entry, searchTracks }) => {
   const { data } = usePersistZustandShallowStore(["data"]);
   const [searchParams] = useSearchParams();
   const isLikedList = searchParams.get("like") === "true";
-  const isHistoryList = searchParams.get("history") === "true";
   const cachedAvatar = useFileCache(
     Filter.NeteaseImageSize(entry?.playlist.creator.avatarUrl, ImageSize.sm)
   );

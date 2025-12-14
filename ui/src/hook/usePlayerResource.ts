@@ -2,7 +2,7 @@ import { Lyric } from "@mahiru/ui/utils/lyric";
 import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
 import { EqError, Log } from "@mahiru/ui/utils/dev";
 import { Track } from "@mahiru/ui/utils/track";
-import { usePlayerStatus } from "@mahiru/ui/store";
+import { usePlayerStatus, useSettings } from "@mahiru/ui/store";
 import { Player } from "@mahiru/ui/utils/player";
 
 export function usePlayerResource() {
@@ -15,6 +15,7 @@ export function usePlayerResource() {
       "playerProgress",
       "trackStatus"
     ]);
+  const { settings } = useSettings();
   const lyricCancelRef = useRef<Nullable<NormalFunc>>(null);
   const audioCancelRef = useRef<Nullable<NormalFunc>>(null);
   const preloadCancelRef = useRef<Nullable<NormalFunc>>(null);
@@ -53,12 +54,12 @@ export function usePlayerResource() {
   );
 
   const loadAudioSource = useCallback(
-    async (id: number) => {
+    async (track: NeteaseTrack) => {
       audioCancelRef.current?.();
       const controller = new AbortController();
       audioCancelRef.current = () => controller.abort();
       try {
-        const { cacheSource, meta } = await Track.loadAudio(id, controller.signal);
+        const { cacheSource, meta } = await Track.loadAudio(track, controller.signal);
         if (!meta || controller.signal.aborted) return;
         const remoteUrl = meta?.[0]?.url || "";
         const nextAudio = cacheSource || remoteUrl || "";
@@ -97,23 +98,24 @@ export function usePlayerResource() {
     },
     []
   );
-
+  // 加载当前播放音乐的歌词和音频资源
   useLayoutEffect(() => {
     const current = trackStatus;
     const peak = Player.peek();
     if (current) {
+      // 检查缓存是否无效(当音频加载失败时，callback会标记缓存无效)，无效则重新加载
       const invalid = Track.markedInvalidCache(current.track.id);
       const hasLyric = !!current.lyric && current.lyric.raw.length > 0;
       const hasAudio = !!current.audio;
       if (!hasLyric || invalid) void loadLyric(current.track.id);
-      if (!hasAudio || invalid) void loadAudioSource(current.track.id);
+      if (!hasAudio || invalid) void loadAudioSource(current.track);
       if (invalid) Track.removeMarkedInvalidCache(current.track.id);
       // 仅在资源加载完成后才预加载下一首，避免无意义的重复触发
       hasLyric && hasAudio && schedulePreloadNextTrack(current, peak);
     }
     return cancelScheduledPreload;
   }, [cancelScheduledPreload, loadAudioSource, loadLyric, schedulePreloadNextTrack, trackStatus]);
-
+  // 清理所有未完成的请求
   useEffect(() => {
     return () => {
       cancelScheduledPreload();
@@ -121,4 +123,10 @@ export function usePlayerResource() {
       audioCancelRef.current?.();
     };
   }, [cancelScheduledPreload]);
+  // 同步音乐质量设置
+  useEffect(() => {
+    if (settings.musicQuality) {
+      Track.setRequestQuality(settings.musicQuality);
+    }
+  }, [settings.musicQuality]);
 }

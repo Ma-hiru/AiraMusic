@@ -1,12 +1,13 @@
 import { FC, memo } from "react";
 import { usePlayerStatus } from "@mahiru/ui/store";
+import { splitTrackTitle } from "@mahiru/ui/utils/str";
 
 const Title: FC<object> = () => {
   const { trackStatus } = usePlayerStatus(["trackStatus"]);
   const track = trackStatus?.track;
   const alias = track?.alia?.length ? track.alia[0] : "";
   const ts = track?.tns?.length ? track.tns[0] : "";
-  const title = handleTitle(trackStatus?.track.name);
+  const title = splitTrackTitle(trackStatus?.track.name);
   return (
     <div className="flex flex-col select-none w-full justify-end">
       <div className="text-white text-center">
@@ -24,25 +25,3 @@ const Title: FC<object> = () => {
   );
 };
 export default memo(Title);
-
-function handleTitle(title: Optional<string>) {
-  if (!title) return { main: "", sub: "" };
-  if (
-    (title.includes("(") && title.includes(")")) ||
-    (title.includes("（") && title.includes("）"))
-  ) {
-    const start = title.indexOf("(");
-    const end = title.indexOf(")");
-    const main = title.substring(0, start) + title.substring(end + 1, title.length);
-    const sub = title.substring(start, end + 1);
-    return {
-      main: main.trim(),
-      sub: sub.trim()
-    };
-  } else {
-    return {
-      main: title,
-      sub: ""
-    };
-  }
-}

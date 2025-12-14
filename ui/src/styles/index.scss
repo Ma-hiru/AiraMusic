@@ -74,3 +74,51 @@ img[src=""] {
 .scrollbar.scrollbar-show::-webkit-scrollbar-thumb:active {
   background-color: rgba(255, 255, 255, 0.7);
 }
+
+/* 自定义悬浮滚动条（配合 VirtualScrollbar 组件） */
+.virtual-scrollbar {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 2px;
+  width: 12px;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.virtual-scrollbar__track {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  right: 0;
+  width: 8px;
+  border-radius: 9999px;
+  background: transparent;
+  transition: background-color 0.2s ease;
+}
+
+.virtual-scrollbar__thumb {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 8px;
+  border-radius: 9999px;
+  background-color: rgba(255, 255, 255, 0.25);
+  opacity: 0;
+  transition:
+    opacity 0.2s ease,
+    background-color 0.2s ease;
+  pointer-events: auto;
+}
+
+.virtual-scrollbar--show .virtual-scrollbar__thumb {
+  opacity: 1;
+}
+
+.virtual-scrollbar__thumb:hover {
+  background-color: rgba(255, 255, 255, 0.5);
+}
+
+.virtual-scrollbar__thumb:active {
+  background-color: rgba(255, 255, 255, 0.7);
+}

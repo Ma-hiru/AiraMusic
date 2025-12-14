@@ -1,11 +1,12 @@
 import { ZustandConfig } from "@mahiru/ui/types/zustand";
+import { TrackQuality } from "@mahiru/ui/utils/track";
 
 export const PersistStoreConfig: ZustandConfig<
   PersistStoreInitialState & PersistStoreActions,
   PersistStoreInitialState
 > = (set, get) => ({
   ...InitialState,
-  updatePersistStore(PartialState: Partial<PersistStoreInitialState>) {
+  updatePersistStore(PartialState) {
     set((state) => {
       Object.entries(PartialState ?? {}).forEach(([key, value]) => {
         // @ts-expect-error
@@ -13,7 +14,7 @@ export const PersistStoreConfig: ZustandConfig<
       });
     });
   },
-  updatePersistStoreData(PartialData: Partial<PersistStoreInitialState["data"]>) {
+  updatePersistStoreData(PartialData) {
     set((state) => {
       Object.entries(PartialData ?? {}).forEach(([key, value]) => {
         // @ts-expect-error
@@ -21,26 +22,33 @@ export const PersistStoreConfig: ZustandConfig<
       });
     });
   },
-  updateUserPlaylistSummary(summary: Nullable<PersistStoreInitialState["userPlaylistSummary"]>) {
+  updateUserPlaylistSummary(summary) {
     set((state) => {
       state.userPlaylistSummary = summary;
     });
   },
-  updateUserLikedListSummary(summary: Nullable<PersistStoreInitialState["userLikedListSummary"]>) {
+  updateUserLikedListSummary(summary) {
     set((state) => {
       state.userLikedListSummary = summary;
     });
   },
-  updateUserLikedTrackIDs(trackIDs: PersistStoreInitialState["userLikedTrackIDs"]) {
+  updateUserLikedTrackIDs(trackIDs) {
     set((state) => {
       state.userLikedTrackIDs = trackIDs;
+    });
+  },
+  updateSettings(PartialSettings) {
+    set((state) => {
+      Object.entries(PartialSettings ?? {}).forEach(([key, value]) => {
+        state.settings[key as keyof PersistStoreInitialState["settings"]] = value;
+      });
     });
   }
 });
 
 const InitialState: PersistStoreInitialState = {
   settings: {
-    musicQuality: 320000,
+    musicQuality: TrackQuality.h,
     maxHistoryListLength: 500
   },
   data: {
@@ -58,7 +66,7 @@ const InitialState: PersistStoreInitialState = {
 
 export interface PersistStoreInitialState {
   settings: {
-    musicQuality: number | string;
+    musicQuality: TrackQuality;
     maxHistoryListLength: number;
   };
   data: {
@@ -74,6 +82,7 @@ export interface PersistStoreInitialState {
 export interface PersistStoreActions {
   updatePersistStore: (PartialState: Partial<PersistStoreInitialState>) => void;
   updatePersistStoreData: (PartialData: Partial<PersistStoreInitialState["data"]>) => void;
+  updateSettings: (PartialSettings: Partial<PersistStoreInitialState["settings"]>) => void;
   updateUserPlaylistSummary: (
     summary: Nullable<PersistStoreInitialState["userPlaylistSummary"]>
   ) => void;

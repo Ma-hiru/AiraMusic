@@ -1,9 +1,8 @@
 import { FC, memo, SyntheticEvent, useCallback } from "react";
-import NavSideNavItem from "@mahiru/ui/page/layout/nav/NavItem";
 import { useFileCache } from "@mahiru/ui/hook/useFileCache";
-import { cx } from "@emotion/css";
 import { CacheStore } from "@mahiru/ui/store/cache";
 import { Filter, ImageSize } from "@mahiru/ui/utils/filter";
+import NavSideNavItem from "@mahiru/ui/page/layout/nav/NavItem";
 
 interface Props {
   cover: { raw: string; cached: string; cacheID: string };
@@ -12,15 +11,13 @@ interface Props {
   id: number | string;
   onClick?: (id: number | string) => void;
   active?: boolean;
-  className?: string;
   index: number;
   rawList: NeteasePlaylistSummary[];
 }
 
-const NavPlayListItem: FC<Props> = ({
+const NavPlaylistItem: FC<Props> = ({
   cover,
   label,
-  className,
   count,
   id,
   onClick,
@@ -39,7 +36,7 @@ const NavPlayListItem: FC<Props> = ({
       }
     }
   );
-  const onError = useCallback(
+  const onImageError = useCallback(
     (e: SyntheticEvent<HTMLImageElement>) => {
       const raw = Filter.NeteaseImageSize(cover.raw, ImageSize.sm) as string;
       if (e.currentTarget.src === raw) return;
@@ -53,26 +50,19 @@ const NavPlayListItem: FC<Props> = ({
     [cover.raw, index, rawList]
   );
   return (
-    <div
-      className={cx(
-        "space-x-2 font-bold will-change-transform backface-hidden contain-paint",
-        className
-      )}>
-      <NavSideNavItem
-        active={active}
-        className="justify-start"
-        onClick={() => onClick?.(id)}
-        prefix={
-          <div className="size-10 min-w-10 rounded-md overflow-hidden">
-            <img className="w-full" src={cachedCover} alt={label} onError={onError} />
-          </div>
-        }>
-        <div className="flex flex-col overflow-hidden pl-2">
-          <span className="text-[12px] font-normal truncate">{label}</span>
-          <span className="text-[10px] font-light">{count}首</span>
+    <NavSideNavItem
+      active={active}
+      onClick={() => onClick?.(id)}
+      prefix={
+        <div className="size-10 min-w-10 rounded-md overflow-hidden">
+          <img className="w-full" src={cachedCover} alt={label} onError={onImageError} />
         </div>
-      </NavSideNavItem>
-    </div>
+      }>
+      <div className="flex flex-col overflow-hidden pl-2">
+        <span className="text-[12px] font-normal truncate">{label}</span>
+        <span className="text-[10px] font-light">{count}首</span>
+      </div>
+    </NavSideNavItem>
   );
 };
-export default memo(NavPlayListItem);
+export default memo(NavPlaylistItem);

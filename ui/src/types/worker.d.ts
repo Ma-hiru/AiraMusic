@@ -25,6 +25,6 @@ type SpectrumWorkerArgs =
 
 type SpectrumWorkerResult =
   | { type: "ready" }
-  | { type: "spectrum"; bands: number[] }
-  | { type: "spectrumWithPeaks"; data: number[] }
+  | { type: "spectrum"; bands: number[]; lowFreqVolume: number }
+  | { type: "spectrumWithPeaks"; data: number[]; lowFreqVolume: number }
   | { type: "error"; error: string };
