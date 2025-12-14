@@ -1,7 +1,7 @@
 import { createContext, useContext } from "react";
 import { EqError } from "@mahiru/ui/utils/dev";
 
-export const InfoCtx = createContext<InfoSync>({
+export const InfoCtx = createContext<InfoSync<any>>({
   type: "none",
   value: 0,
   mainColor: "",

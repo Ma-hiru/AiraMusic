@@ -6,7 +6,7 @@ import { useScrollAutoHide } from "@mahiru/ui/hook/useScrollAutoHide";
 
 const CommentsPage: FC<object> = () => {
   const { value } = useInfoCtx<"comments">();
-  const [sortType, setSortType] = useState(CommentSort.Recommend);
+  const [sortType, setSortType] = useState(CommentSort.Hot);
   const containerRef = useRef<HTMLDivElement>(null);
   const { onScroll } = useScrollAutoHide(containerRef);
   const { comments, currentPageNo, totalComment, requestComment, totalPageNo } = useComment({
@@ -17,6 +17,9 @@ const CommentsPage: FC<object> = () => {
   });
   return (
     <div className="w-full h-full overflow-hidden">
+      <div>total: {totalComment}</div>
+      <div>totalPage: {totalPageNo}</div>
+      <div>currentPage: {currentPageNo}</div>
       <div className="flex justify-center items-center gap-2 p-2">
         <button
           className="bg-purple-300 px-2 py-1 font-semibold text-sm cursor-pointer hover:opacity-50 active:scale-90 rounded-md"
@@ -47,7 +50,7 @@ const CommentsPage: FC<object> = () => {
         {comments.map((comment) => {
           return (
             <div className="px-2 py-1 text-[16px] font-semibold" key={comment.commentId}>
-              {comment.content}
+              {comment.content} - {comment.likedCount}
             </div>
           );
         })}

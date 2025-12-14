@@ -1,24 +1,19 @@
 import { FC, memo, useCallback, useEffect, useState } from "react";
-import { Chromium, Minus, PictureInPicture, Square, SquareMinus, X } from "lucide-react";
+import { Renderer } from "@mahiru/ui/utils/renderer";
 import { NoDrag } from "@mahiru/ui/componets/public/Drag";
 import { isDev } from "@mahiru/ui/utils/dev";
-import { Renderer } from "@mahiru/ui/utils/renderer";
-import { usePlayerInfoSync } from "@mahiru/ui/hook/usePlayerInfoSync";
-import { Player } from "@mahiru/ui/utils/player";
+import { Chromium, Minus, Square, SquareMinus, X } from "lucide-react";
 
-interface TopControlProps {
-  windowId: WindowType;
+interface TopControlPurProps {
   maximizable?: boolean;
   mini?: boolean;
 }
 
-const TopControl: FC<TopControlProps> = ({ maximizable = true, mini = true }) => {
+const TopControlPure: FC<TopControlPurProps> = ({ maximizable, mini }) => {
   const [isMax, setIsMax] = useState(false);
-
   useEffect(() => {
     Renderer.invoke.isMaximized(undefined).then(setIsMax);
   }, []);
-
   const maximize = useCallback(() => {
     if (isMax) {
       setIsMax(false);
@@ -30,19 +25,9 @@ const TopControl: FC<TopControlProps> = ({ maximizable = true, mini = true }) =>
   }, [isMax]);
   const minimize = Renderer.event.minimize;
   const close = useCallback(() => {
-    Player.saveToCache().finally(() => {
-      setTimeout(() => Renderer.event.close({ broadcast: true }), 200);
-    });
+    Renderer.event.close({ broadcast: true });
   }, []);
 
-  const { toggleTargetWindow, hasOpened } = usePlayerInfoSync("miniplayer");
-  useEffect(() => {
-    if (hasOpened) {
-      Renderer.event.hidden();
-    } else {
-      Renderer.event.visible();
-    }
-  }, [hasOpened]);
   return (
     <NoDrag className="flex flex-row gap-4 select-none relative z-10 ease-in-out transition-all">
       {isDev && (
@@ -52,12 +37,6 @@ const TopControl: FC<TopControlProps> = ({ maximizable = true, mini = true }) =>
         />
       )}
       <Minus className="size-5 cursor-pointer hover:opacity-50" onClick={minimize} />
-      {mini && (
-        <PictureInPicture
-          className="size-5 cursor-pointer scale-95 hover:opacity-50"
-          onClick={toggleTargetWindow}
-        />
-      )}
       {isMax
         ? maximizable && (
             <SquareMinus
@@ -75,4 +54,4 @@ const TopControl: FC<TopControlProps> = ({ maximizable = true, mini = true }) =>
     </NoDrag>
   );
 };
-export default memo(TopControl);
+export default memo(TopControlPure);

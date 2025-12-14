@@ -2,26 +2,22 @@ import { FC, memo } from "react";
 import { usePlayProgress } from "@mahiru/ui/hook/usePlayProgress";
 import { motion } from "motion/react";
 import { Time } from "@mahiru/ui/utils/time";
-import { Heart, MessageSquareText } from "lucide-react";
-import { useHeart } from "@mahiru/ui/hook/useHeart";
 import { usePlayerStatus } from "@mahiru/ui/store";
-import { Track, TrackQuality } from "@mahiru/ui/utils/track";
-import { useInfoWindow } from "@mahiru/ui/hook/useInfoWindow";
-import { CommentType } from "@mahiru/ui/api/comment";
+import { TrackQuality } from "@mahiru/ui/utils/track";
+import ListItemQuality from "@mahiru/ui/componets/track_list/ListItemQuality";
 
 const Progress: FC<object> = () => {
   const { barRef, bufferScope, percentScope, handleBarClick, handleBarMouseDown, progress } =
     usePlayProgress();
-  const { openInfoWindow } = useInfoWindow();
+
   const { trackStatus } = usePlayerStatus(["trackStatus"]);
-  const track = trackStatus?.track;
-  const { likeChange, isLiked } = useHeart(track);
   const quality = () => {
     if (
       trackStatus?.quality?.level === TrackQuality.sq ||
-      trackStatus?.quality?.level === TrackQuality.hr
+      trackStatus?.quality?.level === TrackQuality.hr ||
+      trackStatus?.quality?.level === TrackQuality.h
     ) {
-      return Track.mapTrackQualityToText(trackStatus.quality.level);
+      return trackStatus.quality.level as TrackQuality;
     }
     return null;
   };
@@ -47,34 +43,19 @@ const Progress: FC<object> = () => {
         </div>
       </div>
       <div className="w-full flex justify-between items-center text-white/50 backdrop-blur-lg text-[12px] mt-1 select-none">
-        <div className="flex justify-start items-center gap-2">
-          <Heart
-            color={isLiked ? "white" : undefined}
-            fill={isLiked ? "white" : "transparent"}
-            className="size-4 text-white/50  hover:opacity-50 active:scale-90 cursor-pointer select-none shadow-lg ease-in-out duration-300 transition-all opacity-80"
-            onClick={likeChange}
-          />
-          <MessageSquareText
-            onClick={() => {
-              track?.id &&
-                openInfoWindow("comments", {
-                  id: track.id,
-                  type: CommentType.Song
-                });
-            }}
-            className="size-4 text-white/50  hover:opacity-50 active:scale-90 active:text-white cursor-pointer select-none shadow-lg ease-in-out duration-300 transition-all opacity-80"
-          />
-          {quality() && (
-            <span className="px-1.5 py-0.5 text-[10px] border border-white/30 rounded-md select-none">
-              {quality()}
-            </span>
-          )}
-        </div>
-        <div className="flex justify-end items-center gap-2">
-          <span>{Time.formatTrackTime(progress.currentTime, "s")}</span>
-          <span className="opacity-50">/</span>
-          <span>{Time.formatTrackTime(progress.duration, "s")}</span>
-        </div>
+        <ListItemQuality forceShow={quality()} bgColor="white" themeColor="#99a1af" />
+        {quality() ? (
+          <div className="flex justify-end items-center gap-2">
+            <span>{Time.formatTrackTime(progress.currentTime, "s")}</span>
+            <span className="opacity-50">/</span>
+            <span>{Time.formatTrackTime(progress.duration, "s")}</span>
+          </div>
+        ) : (
+          <>
+            <span>{Time.formatTrackTime(progress.currentTime, "s")}</span>
+            <span>{Time.formatTrackTime(progress.duration, "s")}</span>
+          </>
+        )}
       </div>
     </div>
   );

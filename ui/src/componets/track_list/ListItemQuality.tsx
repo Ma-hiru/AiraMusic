@@ -2,12 +2,26 @@ import { FC, memo } from "react";
 import { Track, TrackQuality } from "@mahiru/ui/utils/track";
 
 interface ListItemQualityProps {
-  track: NeteaseTrack;
+  track?: NeteaseTrack;
   themeColor: string;
   bgColor: string;
+  forceShow?: Optional<TrackQuality>;
 }
 
-const ListItemQuality: FC<ListItemQualityProps> = ({ track, themeColor, bgColor }) => {
+const ListItemQuality: FC<ListItemQualityProps> = ({ track, themeColor, bgColor, forceShow }) => {
+  if (forceShow) {
+    return (
+      <div
+        className="text-[8px] h-3 text-center align-middle rounded-sm px-1 font-semibold opacity-80"
+        style={{
+          background: bgColor,
+          color: themeColor
+        }}>
+        {Track.mapTrackQualityToText(forceShow)}
+      </div>
+    );
+  }
+  if (!track) return null;
   const qualities = Track.getTrackSourceQuality(track, undefined);
   return qualities.map((quality) => {
     // 小于SQ不显示

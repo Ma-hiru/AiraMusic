@@ -2,7 +2,7 @@ import { ZustandConfig } from "@mahiru/ui/types/zustand";
 import { Lyric } from "@mahiru/ui/utils/lyric";
 import { PlaylistHistoryCache } from "@mahiru/ui/utils/history";
 import { scrobble } from "@mahiru/ui/api/track";
-import { AudioControl } from "@mahiru/ui/hook/usePlayerAudio";
+import type { AudioControl } from "@mahiru/ui/hook/usePlayerAudio";
 
 export const DynamicStoreConfig: ZustandConfig<
   DynamicStoreInitialState & DynamicStoreActions,

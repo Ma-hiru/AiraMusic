@@ -16,15 +16,19 @@ const InfoLayout: FC<object> = () => {
   });
 
   useEffect(() => {
+    if (infoSync.type === "none") return;
     navigate(`/info/${infoSync.type}`);
   }, [infoSync.type, navigate]);
 
   useEffect(() => {
     const remove = Renderer.addMessageHandler("infoSync", "main", setInfoSync);
-    Renderer.event.loaded({ broadcast: true });
     return () => {
       remove();
     };
+  }, []);
+
+  useEffect(() => {
+    Renderer.event.loaded({ broadcast: true });
   }, []);
   return (
     <div className="w-screen h-screen bg-white overflow-hidden">

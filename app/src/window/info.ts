@@ -21,7 +21,8 @@ export function CreateInfoWindow() {
       resizable: true,
       titleBarStyle: "hidden",
       frame: false,
-      skipTaskbar: true
+      skipTaskbar: false,
+      show: false
     },
     "info",
     WindowExits.IGNORE

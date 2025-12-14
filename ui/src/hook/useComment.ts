@@ -20,6 +20,7 @@ export function useComment({
   const [totalComment, setTotalComment] = useState(0);
   const [currentPageNo, setCurrentPageNo] = useState(0);
   const [comments, setComments] = useState<NeteaseComment[]>([]);
+  const commentsCache = useRef<Map<number, NeteaseComment[]>>(null);
   const pageCursor = useRef({
     hasMore: false,
     cursor: undefined as Undefinable<number>
@@ -28,6 +29,13 @@ export function useComment({
 
   const requestComment = useCallback(
     async (pageNo: number) => {
+      console.log("requestComment", pageNo);
+      if (pageNo < 1) return;
+      if (commentsCache.current?.has(pageNo)) {
+        setCurrentPageNo(pageNo);
+        setComments(commentsCache.current.get(pageNo) || []);
+        return;
+      }
       setLoading(true);
       setFailed(false);
       getCommentNew({
@@ -42,6 +50,7 @@ export function useComment({
           setComments(response.data.comments);
           setCurrentPageNo(pageNo);
           setTotalComment(response.data.totalCount);
+          commentsCache.current?.set(pageNo, response.data.comments);
           pageCursor.current.hasMore = response.data.hasMore;
           pageCursor.current.cursor = Number(response.data.cursor);
         })
@@ -66,6 +75,7 @@ export function useComment({
     setComments([]);
     setCurrentPageNo(0);
     setTotalComment(0);
+    commentsCache.current = new Map<number, NeteaseComment[]>();
     pageCursor.current.hasMore = false;
     pageCursor.current.cursor = undefined;
     void requestComment(1);

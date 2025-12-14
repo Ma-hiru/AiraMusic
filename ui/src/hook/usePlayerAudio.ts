@@ -6,6 +6,7 @@ import { EqError, Log } from "@mahiru/ui/utils/dev";
 let initialized = false;
 let initialSeekTime: number | null = null;
 let isApplyingInitialSeek = false;
+let cachedTrackID: number | null = null;
 
 export function usePlayerAudio() {
   const { playerProgress, trackStatus, setPlayerStatus, playerStatus, audioRef } = usePlayerStatus([
@@ -87,6 +88,7 @@ export function usePlayerAudio() {
       if (cached.currentTime && cached.currentTime !== audio.currentTime) {
         initialSeekTime = cached.currentTime;
         isApplyingInitialSeek = true;
+        cachedTrackID = trackStatus.track.id;
       }
       initialized = true;
     }
@@ -125,6 +127,20 @@ export function usePlayerAudio() {
       audio.removeEventListener("loadedmetadata", handleCanPlay);
     };
   }, [audioRef, playerProgress, playerStatus.playing, trackStatus]);
+  useEffect(() => {
+    const audio = audioRef.current();
+    if (isApplyingInitialSeek && audio && trackStatus && trackStatus.track.id !== cachedTrackID) {
+      console.log("apply initial seek for new track", trackStatus.track.id);
+      isApplyingInitialSeek = false;
+      audio.src = trackStatus.audio;
+      audio.load();
+      setTimeout(() => {
+        audio.fastSeek?.(0);
+        audio.currentTime = 0;
+        audio.play();
+      }, 1000);
+    }
+  }, [audioRef, trackStatus]);
   // 监听 audio 播放状态变化
   useEffect(() => {
     const audio = audioRef.current();
