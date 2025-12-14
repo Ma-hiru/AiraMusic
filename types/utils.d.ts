@@ -20,3 +20,7 @@ type NormalFunc<P extends any[] = never[], R = void> = (...args: P) => R;
 type PromiseFunc<P extends any[] = never[], R = void> = (...args: P) => Promise<R>;
 
 type IndexRange = [start: number, end: number];
+
+interface HasID {
+  id: string | number;
+}

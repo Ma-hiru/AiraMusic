@@ -13,3 +13,5 @@ export const getDynamicSnapshot = useDynamicZustandStore.getState;
 export const usePlayerStatus = useDynamicZustandShallowStore;
 
 export const getPlayerStatusSnapshot = getDynamicSnapshot;
+
+export const useLayoutStatus = useDynamicZustandShallowStore;

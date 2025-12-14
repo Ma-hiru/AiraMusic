@@ -3,7 +3,6 @@ import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { NAV_DATA } from "@mahiru/ui/router";
 import { usePersistZustandShallowStore } from "@mahiru/ui/store";
 import NavItem from "./NavItem";
-import { useLayout } from "@mahiru/ui/ctx/LayoutCtx";
 
 const NavMenu: FC<object> = () => {
   const { userLikedListSummary } = usePersistZustandShallowStore(["userLikedListSummary"]);

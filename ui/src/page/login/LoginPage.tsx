@@ -1,12 +1,12 @@
 import { FC, memo, useEffect } from "react";
-import { QRCodeStatus, useQRCode } from "@mahiru/ui/hook/useQRCode";
+import { QRCodeStatus, useLoginQRCode } from "@mahiru/ui/hook/useLoginQRCode";
 import Control from "@mahiru/ui/page/login/Control";
 import QRCode from "@mahiru/ui/page/login/QRCode";
 import Tips from "@mahiru/ui/page/login/Tips";
 import { Renderer } from "@mahiru/ui/utils/renderer";
 
 const LoginPage: FC<object> = () => {
-  const { status, result, dataURL, update } = useQRCode();
+  const { status, result, dataURL, update } = useLoginQRCode();
   useEffect(() => {
     if (status === QRCodeStatus.AUTHORIZED && result) {
       Renderer.sendMessage("login", "main", result.cookie);

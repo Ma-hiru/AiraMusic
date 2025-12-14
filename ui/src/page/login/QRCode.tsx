@@ -1,10 +1,10 @@
 import { cx } from "@emotion/css";
 import { RotateCcw } from "lucide-react";
 import { FC, memo, useEffect, useState } from "react";
-import { QRCodeStatus } from "@mahiru/ui/hook/useQRCode";
+import { QRCodeStatus } from "@mahiru/ui/hook/useLoginQRCode";
 
 interface QRCodeProps {
-  url: string | null;
+  url: Nullable<string>;
   status: QRCodeStatus;
   update: () => void;
 }
@@ -31,10 +31,7 @@ const QRCode: FC<QRCodeProps> = ({ url, status, update }) => {
           className={cx(
             "absolute inset-0 bg-black/60 flex justify-center items-center",
             "ease-in-out transition-opacity duration-300",
-            {
-              "opacity-0": !showUpdateMask,
-              "opacity-100": showUpdateMask
-            }
+            showUpdateMask ? "opacity-100" : "opacity-0"
           )}>
           <button
             className="flex gap-1 text-sm justify-center items-center text-white cursor-pointer hover:text-white/80 active:scale-95 p-1"

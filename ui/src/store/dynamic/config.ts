@@ -20,7 +20,7 @@ export const DynamicStoreConfig: ZustandConfig<
       newStatus !== undefined && (draft.trackStatus = newStatus);
     });
   },
-  setLyricVersion: (next: LyricVersionType) => {
+  setLyricVersion: (next) => {
     const { trackStatus, playerStatus } = get();
     const chosenVersion = Lyric.checkLyricVersion(
       trackStatus?.lyric,
@@ -32,7 +32,7 @@ export const DynamicStoreConfig: ZustandConfig<
       draft.playerStatus.lyricPreference = next;
     });
   },
-  beforeTrackUpdate: (next: Nullable<PlayerTrackStatus>) => {
+  beforeTrackUpdate: (next) => {
     const { trackStatus, playerProgress } = get();
     if (trackStatus && trackStatus.track.id !== next?.track.id) {
       scrobble(trackStatus, playerProgress.current().currentTime);
@@ -43,6 +43,34 @@ export const DynamicStoreConfig: ZustandConfig<
         }
       });
     }
+  },
+  requestCanScrollTop: (type, callback?) => {
+    set((draft) => {
+      if (draft.canScrollTop.type !== type) {
+        draft.canScrollTop.type = type;
+        draft.canScrollTop.callback = callback;
+      }
+    });
+  },
+  togglePlayerModalVisible: () => {
+    set((draft) => {
+      draft.playerModalVisible = !draft.playerModalVisible;
+    });
+  },
+  toggleSideBarOpen: () => {
+    set((draft) => {
+      draft.sideBarOpen = !draft.sideBarOpen;
+    });
+  },
+  setBackground: (bg) => {
+    set((draft) => {
+      draft.background = bg || "";
+    });
+  },
+  setKmeansColor: (colors) => {
+    set((draft) => {
+      draft.kmeansColor = colors;
+    });
   }
 });
 
@@ -67,15 +95,28 @@ const InitialState: DynamicStoreInitialState = {
   trackStatus: null,
   playerProgress: {
     current: () => playerProgress
-  }
+  },
+  canScrollTop: {
+    type: "none"
+  },
+  playerModalVisible: false,
+  sideBarOpen: false,
+  background: "",
+  kmeansColor: []
 };
 
 export interface DynamicStoreInitialState {
   playerStatus: PlayerStatus;
-  playerProgress: {
-    current: () => PlayerProgress;
-  };
+  playerProgress: { current: () => PlayerProgress };
   trackStatus: Nullable<PlayerTrackStatus>;
+  canScrollTop: {
+    type: LayoutCanScrollTop;
+    callback?: () => void;
+  };
+  playerModalVisible: boolean;
+  sideBarOpen: boolean;
+  background: string;
+  kmeansColor: string[];
 }
 
 export type DynamicStoreActions = {
@@ -85,4 +126,9 @@ export type DynamicStoreActions = {
   ) => void;
   setLyricVersion: (next: LyricVersionType) => void;
   beforeTrackUpdate: (next: Nullable<PlayerTrackStatus>) => void;
+  requestCanScrollTop: (type: LayoutCanScrollTop, callback?: NormalFunc) => void;
+  togglePlayerModalVisible: NormalFunc;
+  toggleSideBarOpen: NormalFunc;
+  setBackground: NormalFunc<[bg: Optional<string>]>;
+  setKmeansColor: NormalFunc<[colors: string[]]>;
 };

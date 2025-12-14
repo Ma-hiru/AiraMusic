@@ -1,5 +1,4 @@
 import { FC, memo } from "react";
-import { useLayout } from "@mahiru/ui/ctx/LayoutCtx";
 import { Drag } from "@mahiru/ui/componets/public/Drag";
 import { cx } from "@emotion/css";
 import { TransitionPreset } from "@mahiru/ui/constants/transition";
@@ -8,9 +7,10 @@ import ControlButton from "@mahiru/ui/page/layout/top/TopControl";
 import AvatarMini from "@mahiru/ui/page/layout/top/TopAvatar";
 import Transition from "@mahiru/ui/componets/public/Transition";
 import Back from "@mahiru/ui/page/layout/top/Back";
+import { useLayoutStatus } from "@mahiru/ui/store";
 
 const Top: FC<object> = () => {
-  const { playerModalVisible } = useLayout();
+  const { playerModalVisible } = useLayoutStatus(["playerModalVisible"]);
   return (
     <Drag
       className={cx(

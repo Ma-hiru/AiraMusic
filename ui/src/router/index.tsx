@@ -6,7 +6,7 @@ import LoginPage from "@mahiru/ui/page/login/LoginPage";
 import LyricPage from "@mahiru/ui/page/lyric/LyricPage";
 import MiniPlayerPage from "@mahiru/ui/page/mini/MiniPlayerPage";
 import SettingsPage from "@mahiru/ui/page/settings/SettingsPage";
-import PlayListPage from "@mahiru/ui/page/playlist/PlayListPage";
+import PlaylistPage from "@mahiru/ui/page/playlist/PlaylistPage";
 import HistoryPage from "@mahiru/ui/page/history/HistoryPage";
 
 export const router = createBrowserRouter([
@@ -28,7 +28,7 @@ export const router = createBrowserRouter([
       },
       {
         path: "/playlist/:id",
-        element: <PlayListPage />
+        element: <PlaylistPage />
       }
     ]
   },

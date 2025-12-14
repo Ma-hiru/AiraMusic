@@ -8,9 +8,7 @@ import { PlaylistHistoryCache } from "@mahiru/ui/utils/history";
 import { useUpdate } from "@mahiru/ui/hook/useUpdate";
 
 export function usePlaylistNormalRender(id?: string) {
-  // 歌单详情
   const [entry, setEntry] = useState<Nullable<PlaylistCacheEntry>>(null);
-  // 所有的track地址最终指向Store中的缓存
   const [filterTracks, setFilterTracks] = useState({
     tracks: [] as NeteaseTrack[],
     // 搜索时的绝对索引，如果为null则表示未搜索

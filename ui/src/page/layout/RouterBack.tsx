@@ -1,10 +1,17 @@
 import { FC, memo } from "react";
-import { ChevronLeft, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { ChevronLeft, ChevronUp, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useLayout } from "@mahiru/ui/ctx/LayoutCtx";
+import { cx } from "@emotion/css";
+import { useLayoutStatus } from "@mahiru/ui/store";
 
 const RouterBack: FC<object> = () => {
-  const { playerModalVisible, sideBarOpen, toggleSideBarOpen } = useLayout();
+  const { canScrollTop, playerModalVisible, sideBarOpen, toggleSideBarOpen } = useLayoutStatus([
+    "canScrollTop",
+    "playerModalVisible",
+    "sideBarOpen",
+    "toggleSideBarOpen"
+  ]);
+
   const navigate = useNavigate();
   const location = useLocation();
   const handleBack = () => {
@@ -12,11 +19,22 @@ const RouterBack: FC<object> = () => {
   };
 
   // 在首页或根路径时不显示返回按钮
-  const showBack = location.pathname === "/" || location.pathname === "/home" || playerModalVisible;
+  const hiddenBack = !(location.pathname === "/" || location.pathname === "/home");
 
   return (
-    <div className="absolute right-10 bottom-24 z-30 flex justify-center items-center flex-col w-10 gap-2">
-      {!showBack && (
+    <div
+      className={cx(
+        "absolute right-10 bottom-24 z-30 flex justify-center items-center flex-col w-10 gap-2",
+        playerModalVisible && "hidden"
+      )}>
+      {canScrollTop.type !== "none" && (
+        <div
+          onClick={canScrollTop.callback}
+          className="cursor-pointer bg-white/50 backdrop-blur-sm rounded-full p-1 hover:bg-white/70 transition-colors">
+          <ChevronUp className="size-5" />
+        </div>
+      )}
+      {hiddenBack && (
         <div
           onClick={handleBack}
           className="cursor-pointer bg-white/50 backdrop-blur-sm rounded-full p-1 hover:bg-white/70 transition-colors">

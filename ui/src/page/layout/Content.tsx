@@ -1,10 +1,10 @@
 import { FC, memo } from "react";
 import KeepAliveOutlet from "@mahiru/ui/componets/public/KeepAliveOutlet";
-import { useLayout } from "@mahiru/ui/ctx/LayoutCtx";
 import { cx } from "@emotion/css";
+import { useLayoutStatus } from "@mahiru/ui/store";
 
 const Content: FC<object> = () => {
-  const { sideBarOpen } = useLayout();
+  const { sideBarOpen } = useLayoutStatus(["sideBarOpen"]);
   return (
     <div
       className={cx(

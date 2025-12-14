@@ -1,17 +1,16 @@
 import { FC, memo } from "react";
-import { usePersistZustandShallowStore } from "@mahiru/ui/store";
+import { useLayoutStatus, usePersistZustandShallowStore } from "@mahiru/ui/store";
 import { UserRound } from "lucide-react";
 import { useLogin } from "@mahiru/ui/hook/useLogout";
 import { useFileCache } from "@mahiru/ui/hook/useFileCache";
 import { Filter, ImageSize } from "@mahiru/ui/utils/filter";
-import { useLayout } from "@mahiru/ui/ctx/LayoutCtx";
 import { NoDrag } from "@mahiru/ui/componets/public/Drag";
 
 const NavAvatar: FC<object> = () => {
   const { data } = usePersistZustandShallowStore(["data"]);
   const cachedURL = useFileCache(Filter.NeteaseImageSize(data.user?.avatarUrl, ImageSize.md));
   const login = useLogin();
-  const { sideBarOpen } = useLayout();
+  const { sideBarOpen } = useLayoutStatus(["sideBarOpen"]);
   return (
     <NoDrag className="flex justify-center items-center relative py-7 px-3 overflow-hidden">
       <div className="rounded-full flex justify-center items-center bg-black/60 size-7 min-w-7">

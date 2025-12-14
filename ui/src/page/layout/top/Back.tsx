@@ -1,11 +1,14 @@
 import { FC, memo } from "react";
 import { ChevronDown } from "lucide-react";
 import { NoDrag } from "@mahiru/ui/componets/public/Drag";
-import { useLayout } from "@mahiru/ui/ctx/LayoutCtx";
 import { motion, Variants } from "motion/react";
+import { useLayoutStatus } from "@mahiru/ui/store";
 
 const Back: FC<object> = () => {
-  const { togglePlayerModalVisible, playerModalVisible } = useLayout();
+  const { togglePlayerModalVisible, playerModalVisible } = useLayoutStatus([
+    "togglePlayerModalVisible",
+    "playerModalVisible"
+  ]);
   const variants: Variants = {
     show: {
       opacity: 1,

@@ -1,8 +1,7 @@
 import { Lyric } from "@mahiru/ui/utils/lyric";
-import { useCallback, useLayoutEffect, useRef } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
 import { EqError, Log } from "@mahiru/ui/utils/dev";
 import { Track } from "@mahiru/ui/utils/track";
-import { useUnMounted } from "@mahiru/ui/hook/useUnMounted";
 import { usePlayerStatus } from "@mahiru/ui/store";
 import { Player } from "@mahiru/ui/utils/player";
 
@@ -99,13 +98,6 @@ export function usePlayerResource() {
     []
   );
 
-  const clear = useCallback(() => {
-    cancelScheduledPreload();
-    lyricCancelRef.current?.();
-    audioCancelRef.current?.();
-  }, [cancelScheduledPreload]);
-  useUnMounted(clear);
-
   useLayoutEffect(() => {
     const current = trackStatus;
     const peak = Player.peek();
@@ -121,4 +113,12 @@ export function usePlayerResource() {
     }
     return cancelScheduledPreload;
   }, [cancelScheduledPreload, loadAudioSource, loadLyric, schedulePreloadNextTrack, trackStatus]);
+
+  useEffect(() => {
+    return () => {
+      cancelScheduledPreload();
+      lyricCancelRef.current?.();
+      audioCancelRef.current?.();
+    };
+  }, [cancelScheduledPreload]);
 }

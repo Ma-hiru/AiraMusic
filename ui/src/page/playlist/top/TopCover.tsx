@@ -1,24 +1,26 @@
 import { FC, memo, SyntheticEvent, useCallback, useRef } from "react";
 import { useFileCache } from "@mahiru/ui/hook/useFileCache";
 import { Filter, ImageSize } from "@mahiru/ui/utils/filter";
-import { useLayout } from "@mahiru/ui/ctx/LayoutCtx";
 import { PlaylistCacheEntry } from "@mahiru/ui/utils/playlist";
 import { CacheStore } from "@mahiru/ui/store/cache";
+import { useLayoutStatus } from "@mahiru/ui/store";
 
 interface TopCoverProps {
   entry: Nullable<PlaylistCacheEntry>;
 }
 
 const TopCover: FC<TopCoverProps> = ({ entry }) => {
+  const { setBackground } = useLayoutStatus(["setBackground"]);
   const url = entry?.playlist.coverImgUrl;
   const sizedURL = Filter.NeteaseImageSize(url, ImageSize.lg);
   const cacheID = useRef("");
+
   const cachedCover = useFileCache(sizedURL, {
     onCacheHit: (_, id) => {
       cacheID.current = id;
     }
   });
-  const { setBackground } = useLayout();
+
   const onLoad = useCallback(() => {
     setBackground(cachedCover);
   }, [cachedCover, setBackground]);
@@ -32,6 +34,7 @@ const TopCover: FC<TopCoverProps> = ({ entry }) => {
     },
     [url]
   );
+
   return (
     <img
       className="size-44 rounded-md shadow-xs select-none"

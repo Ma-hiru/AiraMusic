@@ -2,13 +2,13 @@ import { FC, memo } from "react";
 import { motion } from "motion/react";
 import { cx } from "@emotion/css";
 import { usePlayProgress } from "@mahiru/ui/hook/usePlayProgress";
-import { useLayout } from "@mahiru/ui/ctx/LayoutCtx";
 import { useThemeColor } from "@mahiru/ui/hook/useThemeColor";
+import { useLayoutStatus } from "@mahiru/ui/store";
 
 const BarProgress: FC<object> = () => {
   const { barRef, handleBarClick, handleBarMouseDown, bufferScope, percentScope, isPlaying } =
     usePlayProgress();
-  const { background } = useLayout();
+  const { background } = useLayoutStatus(["background"]);
   const { mainColor } = useThemeColor();
   return (
     <div

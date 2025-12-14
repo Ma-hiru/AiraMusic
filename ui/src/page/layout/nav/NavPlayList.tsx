@@ -4,9 +4,10 @@ import { usePersistZustandShallowStore } from "@mahiru/ui/store";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ArrowBigUp } from "lucide-react";
 import NavPlayListItem from "@mahiru/ui/page/layout/nav/NavPlayListItem";
-import { RowComponentType, useVirtualList } from "@mahiru/ui/hook/useVirtualList";
+import { useVirtualList } from "@mahiru/ui/hook/useVirtualList";
 import { useScrollAutoHide } from "@mahiru/ui/hook/useScrollAutoHide";
 import { useUpdate } from "@mahiru/ui/hook/useUpdate";
+import VirtualList, { VirtualListRow } from "@mahiru/ui/componets/virtual_list/VirtualList";
 
 const NavPlayList: FC<object> = () => {
   const { userPlaylistSummary } = usePersistZustandShallowStore(["userPlaylistSummary"]);
@@ -40,15 +41,14 @@ const NavPlayList: FC<object> = () => {
       containerRef.current.scrollTo({ top: 0, behavior: "smooth" });
     }
   }, []);
-  const List = useVirtualList({
-    items: userPlayLists,
+  const { start, end } = useVirtualList({
+    total: userPlayLists.length,
     containerRef,
     overscan: 10,
     itemHeight: 55,
-    onRangeUpdate: onRangeChange,
-    extraData: undefined
+    onRangeUpdate: onRangeChange
   });
-  const RowComponent = useCallback<RowComponentType<NeteasePlaylistSummary>>(
+  const RowComponent = useCallback<VirtualListRow<NeteasePlaylistSummary, undefined>>(
     (props) => {
       const { index, items } = props;
       const data = items[index]!;
@@ -69,7 +69,7 @@ const NavPlayList: FC<object> = () => {
         />
       );
     },
-    [navigate, location.pathname]
+    [location.pathname, navigate, userPlayLists]
   );
   return (
     <div className="overflow-hidden">
@@ -82,7 +82,14 @@ const NavPlayList: FC<object> = () => {
             -webkit-overflow-scrolling: auto;
           `
         )}>
-        <List RowComponent={RowComponent} />
+        <VirtualList
+          RowComponent={RowComponent}
+          start={start}
+          end={end}
+          items={userPlayLists}
+          itemHeight={55}
+          extraData={undefined}
+        />
       </div>
       <button
         className={cx(

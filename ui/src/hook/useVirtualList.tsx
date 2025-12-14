@@ -1,32 +1,33 @@
-import {
-  FC,
-  forwardRef,
-  ForwardRefRenderFunction,
-  RefObject,
-  useEffect,
-  useImperativeHandle,
-  useRef,
-  useState
-} from "react";
+import { RefObject, useEffect, useMemo, useRef, useState } from "react";
 
-export function useVirtualList<T extends HasID, U = never>({
-  items,
+interface Props {
+  total: number;
+  containerRef: RefObject<Nullable<HTMLDivElement>>;
+  overscan?: number;
+  itemHeight?: number;
+  onRangeUpdate?: NormalFunc<[range: IndexRange]>;
+}
+
+export function useVirtualList({
+  total,
   containerRef,
   overscan = 5,
   itemHeight = 64,
-  extraData,
-  onRangeUpdate,
-  onScrollCallback
-}: VirtualListProps<T, U>) {
-  const [scrollTop, setScrollTop] = useState(0);
+  onRangeUpdate
+}: Props) {
   const ticking = useRef(false);
-  const total = items.length;
-  const containerHeight = containerRef.current?.clientHeight ?? 0;
-  const visibleStart = Math.floor(scrollTop / itemHeight);
-  const visibleCount = Math.ceil(containerHeight / itemHeight);
-  const start = Math.max(0, visibleStart - overscan);
-  const end = Math.min(total, visibleStart + visibleCount + overscan);
-
+  const scrollTopRef = useRef(0);
+  const visibleStartRef = useRef(0);
+  const [visibleStart, setVisibleStart] = useState(0);
+  const { visibleCount } = useMemo(() => {
+    const containerHeight = containerRef.current?.clientHeight ?? 0;
+    const visibleCount = Math.ceil(containerHeight / itemHeight);
+    return {
+      containerHeight,
+      visibleCount
+    };
+  }, [containerRef, itemHeight]);
+  // 滚动事件处理
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
@@ -36,86 +37,39 @@ export function useVirtualList<T extends HasID, U = never>({
         ticking.current = true;
         requestAnimationFrame(() => {
           const top = container.scrollTop;
-          setScrollTop(top);
-          onScrollCallback?.(top);
+          scrollTopRef.current = top;
+          const nextVisibleStart = Math.floor(top / itemHeight);
+          if (visibleStartRef.current !== nextVisibleStart) {
+            visibleStartRef.current = nextVisibleStart;
+            setVisibleStart(nextVisibleStart);
+          }
           ticking.current = false;
         });
       }
     };
-
     container.addEventListener("scroll", onScroll, { passive: true });
     return () => container.removeEventListener("scroll", onScroll);
-  }, [containerRef, onScrollCallback]);
+  }, [containerRef, itemHeight]);
+  // 范围更新回调
+  const prevRange = useRef<Nullable<IndexRange>>(null);
   useEffect(() => {
-    onRangeUpdate?.([visibleStart, Math.min(total, visibleStart + visibleCount)]);
+    const range: IndexRange = [visibleStart, Math.min(total, visibleStart + visibleCount)];
+    if (
+      !prevRange.current ||
+      prevRange.current[0] !== range[0] ||
+      prevRange.current[1] !== range[1]
+    ) {
+      onRangeUpdate?.(range);
+      prevRange.current = range;
+    }
   }, [visibleStart, visibleCount, total, onRangeUpdate]);
-
-  const List: ListComponentType<T, U> = ({ RowComponent, paddingBottom }, ref) => {
-    const baseHeight = total * itemHeight;
-    const heightWithNumberPadding =
-      typeof paddingBottom === "number" ? baseHeight + paddingBottom : baseHeight;
-    useImperativeHandle(ref, () => ({
-      getScrollHeight: () => heightWithNumberPadding,
-      setScrollTop: (top: number) => containerRef.current && (containerRef.current.scrollTop = top)
-    }));
-    const heightStyle = (() => {
-      if (typeof paddingBottom !== "string") return heightWithNumberPadding;
-      return `calc(${baseHeight}px + ${paddingBottom})`;
-    })();
-    return (
-      <div
-        className="relative w-full will-change-auto contain-paint contain-layout"
-        style={{ height: heightStyle }}>
-        {items.slice(start, end).map((item, i) => {
-          const realIndex = start + i;
-          return (
-            <div
-              key={item.id}
-              className="virtual-item absolute w-full"
-              style={{
-                height: itemHeight,
-                transform: `translate3d(0, ${realIndex * itemHeight}px, 0)`
-              }}>
-              <RowComponent items={items} index={realIndex} extra={extraData} />
-            </div>
-          );
-        })}
-      </div>
-    );
-  };
-
-  return forwardRef(List);
+  // 返回虚拟列表组件
+  return useMemo(() => {
+    const start = Math.max(0, visibleStart - overscan);
+    const end = Math.min(total, visibleStart + visibleCount + overscan);
+    return {
+      start,
+      end
+    };
+  }, [overscan, total, visibleCount, visibleStart]);
 }
-
-interface HasID {
-  id: string | number;
-}
-
-export interface VirtualListProps<T extends HasID, U = undefined> {
-  items: T[];
-  containerRef: RefObject<HTMLDivElement | null>;
-  overscan?: number;
-  itemHeight?: number;
-  extraData: U;
-  onRangeUpdate?: (range: [number, number]) => void;
-  onScrollCallback?: (top: number) => void;
-}
-
-export type RowComponentType<T, U = undefined> = FC<{
-  items: T[];
-  index: number;
-  extra: U;
-}>;
-
-export type ListRef = {
-  getScrollHeight: () => number;
-  setScrollTop: (top: number) => void;
-};
-
-export type ListComponentType<T, U = never> = ForwardRefRenderFunction<
-  ListRef,
-  {
-    RowComponent: RowComponentType<T, U>;
-    paddingBottom?: number | string;
-  }
->;

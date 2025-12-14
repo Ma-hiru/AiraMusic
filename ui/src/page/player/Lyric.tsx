@@ -2,11 +2,10 @@ import { FC, memo, useCallback, useEffect, useRef } from "react";
 import { LyricPlayer, LyricPlayerRef } from "@mahiru/ui/componets/player/LyricPlayer";
 import { usePlayer } from "@mahiru/ui/ctx/PlayerCtx";
 import { cx } from "@emotion/css";
-import { useLayout } from "@mahiru/ui/ctx/LayoutCtx";
 import { useGPU } from "@mahiru/ui/hook/useGPU";
 import { LyricLineMouseEvent } from "@applemusic-like-lyrics/core";
 import { Lyric as LyricUtils } from "@mahiru/ui/utils/lyric";
-import { usePlayerStatus } from "@mahiru/ui/store";
+import { useLayoutStatus, usePlayerStatus } from "@mahiru/ui/store";
 
 const Lyric: FC<object> = () => {
   const lyricPlayerRef = useRef<LyricPlayerRef>(null);
@@ -16,7 +15,7 @@ const Lyric: FC<object> = () => {
     "playerStatus",
     "playerProgress"
   ]);
-  const { playerModalVisible } = useLayout();
+  const { playerModalVisible } = useLayoutStatus(["playerModalVisible"]);
   const { hasDedicatedGPU } = useGPU();
   useEffect(() => {
     const audio = Audio.ref.current;

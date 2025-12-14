@@ -1,8 +1,8 @@
 import { FC, HTMLAttributes, memo, ReactNode } from "react";
 import { cx } from "@emotion/css";
 import { useThemeColor } from "@mahiru/ui/hook/useThemeColor";
-import { useLayout } from "@mahiru/ui/ctx/LayoutCtx";
 import { AnimatePresence, motion } from "motion/react";
+import { useLayoutStatus } from "@mahiru/ui/store";
 
 type Props = Omit<HTMLAttributes<HTMLDivElement>, "prefix"> & {
   children?: ReactNode;
@@ -12,7 +12,7 @@ type Props = Omit<HTMLAttributes<HTMLDivElement>, "prefix"> & {
 
 const NavItem: FC<Props> = ({ children, active = false, prefix, className, ...props }) => {
   const { textColorOnMain } = useThemeColor();
-  const { sideBarOpen } = useLayout();
+  const { sideBarOpen } = useLayoutStatus(["sideBarOpen"]);
   return (
     <div
       style={active ? { color: textColorOnMain.hex() } : undefined}

@@ -1,16 +1,15 @@
 import { FC, memo } from "react";
 import BackgroundRender from "@mahiru/ui/componets/player/BackgroundRender";
-import { useLayout } from "@mahiru/ui/ctx/LayoutCtx";
 import { useFileCache } from "@mahiru/ui/hook/useFileCache";
 import { useGPU } from "@mahiru/ui/hook/useGPU";
 import { Filter, ImageSize } from "@mahiru/ui/utils/filter";
 import AcrylicBackground from "@mahiru/ui/componets/public/AcrylicBackground";
 import { Lyric } from "@mahiru/ui/utils/lyric";
-import { usePlayerStatus } from "@mahiru/ui/store";
+import { useLayoutStatus, usePlayerStatus } from "@mahiru/ui/store";
 
 const Background: FC<object> = () => {
   const { trackStatus } = usePlayerStatus(["trackStatus"]);
-  const { playerModalVisible } = useLayout();
+  const { playerModalVisible } = useLayoutStatus(["playerModalVisible"]);
   const { hasRaw } = Lyric.getLyricVersionInfo(trackStatus?.lyric);
   const { hasDedicatedGPU } = useGPU();
   const track = trackStatus?.track;

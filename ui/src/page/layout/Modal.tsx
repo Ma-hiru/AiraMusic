@@ -1,10 +1,10 @@
 import { FC, memo } from "react";
-import { useLayout } from "@mahiru/ui/ctx/LayoutCtx";
 import { cx } from "@emotion/css";
 import PlayerPage from "@mahiru/ui/page/player/PlayerPage";
+import { useLayoutStatus } from "@mahiru/ui/store";
 
 const Modal: FC = () => {
-  const { playerModalVisible } = useLayout();
+  const { playerModalVisible } = useLayoutStatus(["playerModalVisible"]);
 
   return (
     <div

@@ -1,15 +1,15 @@
+import Color from "color";
 import { FC, memo } from "react";
+import { useThemeColor } from "@mahiru/ui/hook/useThemeColor";
+import { useLayoutStatus } from "@mahiru/ui/store";
 import BarCover from "@mahiru/ui/page/layout/bar/BarCover";
 import BarControl from "@mahiru/ui/page/layout/bar/BarControl";
 import BarProgress from "@mahiru/ui/page/layout/bar/BarProgress";
 import BarBtns from "@mahiru/ui/page/layout/bar/BarBtns";
-import { useLayout } from "@mahiru/ui/ctx/LayoutCtx";
 import BarSpectrum from "@mahiru/ui/page/layout/bar/BarSpectrum";
-import Color from "color";
-import { useThemeColor } from "@mahiru/ui/hook/useThemeColor";
 
 const Bar: FC<object> = () => {
-  const { background } = useLayout();
+  const { background } = useLayoutStatus(["background"]);
   const { textColorOnMain } = useThemeColor();
   return (
     <div

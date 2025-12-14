@@ -1,15 +1,14 @@
 import { FC, memo } from "react";
-import { useLayout } from "@mahiru/ui/ctx/LayoutCtx";
 import { useFileCache } from "@mahiru/ui/hook/useFileCache";
 import { Filter, ImageSize } from "@mahiru/ui/utils/filter";
 
 import { cx } from "@emotion/css";
 import { useThemeColor } from "@mahiru/ui/hook/useThemeColor";
-import { usePlayerStatus } from "@mahiru/ui/store";
+import { useLayoutStatus, usePlayerStatus } from "@mahiru/ui/store";
 
 const BarCover: FC<object> = () => {
   const { trackStatus } = usePlayerStatus(["trackStatus"]);
-  const { togglePlayerModalVisible } = useLayout();
+  const { togglePlayerModalVisible } = useLayoutStatus(["togglePlayerModalVisible"]);
   const { textColorOnMain } = useThemeColor();
   const track = trackStatus?.track;
   const cachedCover = useFileCache(Filter.NeteaseImageSize(track?.al.picUrl, ImageSize.md));

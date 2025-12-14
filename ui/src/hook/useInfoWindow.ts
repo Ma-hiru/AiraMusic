@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
 import { Renderer } from "@mahiru/ui/utils/renderer";
 import { useThemeColor } from "@mahiru/ui/hook/useThemeColor";
-import { useLayout } from "@mahiru/ui/ctx/LayoutCtx";
+import { useLayoutStatus } from "@mahiru/ui/store";
 
 export function useInfoWindow() {
   const [opened, setOpened] = useState(false);
   const { mainColor, textColorOnMain, secondaryColor } = useThemeColor();
-  const { background } = useLayout();
+  const { background } = useLayoutStatus(["background"]);
 
   const sendSync = useCallback(
     (type: InfoSync["type"], value: number | string) => {

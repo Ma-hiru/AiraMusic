@@ -1,15 +1,14 @@
 import { FC, memo } from "react";
 import Avatar from "@mahiru/ui/page/layout/nav/NavAvatar";
 import NavSideDivider from "@mahiru/ui/page/layout/nav/NavDivider";
-import { usePersistZustandShallowStore } from "@mahiru/ui/store";
+import { useLayoutStatus, usePersistZustandShallowStore } from "@mahiru/ui/store";
 import NavPlayList from "@mahiru/ui/page/layout/nav/NavPlayList";
-import { useLayout } from "@mahiru/ui/ctx/LayoutCtx";
 import { cx } from "@emotion/css";
 import NavMenu from "@mahiru/ui/page/layout/nav/NavMenu";
 
 const Nav: FC<object> = () => {
   const { userPlaylistSummary } = usePersistZustandShallowStore(["userPlaylistSummary"]);
-  const { background, sideBarOpen } = useLayout();
+  const { background, sideBarOpen } = useLayoutStatus(["background", "sideBarOpen"]);
   return (
     <div
       className={cx(

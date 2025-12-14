@@ -1,52 +1,83 @@
-import { ComponentProps, FC, memo, useEffect, useRef } from "react";
+import {
+  forwardRef,
+  ForwardRefRenderFunction,
+  memo,
+  RefObject,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef
+} from "react";
 import { css, cx } from "@emotion/css";
-import { ListRef, RowComponentType, useVirtualList } from "@mahiru/ui/hook/useVirtualList";
+import { useVirtualList } from "@mahiru/ui/hook/useVirtualList";
 import { useThemeColor } from "@mahiru/ui/hook/useThemeColor";
-import ListItem from "./ListItem";
-import Loading from "../public/Loading";
 import { usePersistZustandShallowStore } from "@mahiru/ui/store";
 import { PlaylistCacheEntry } from "@mahiru/ui/utils/playlist";
 import { useScrollAutoHide } from "@mahiru/ui/hook/useScrollAutoHide";
 
-interface ListProps {
-  entry: Nullable<PlaylistCacheEntry>;
-  id?: number;
-  loading: boolean;
-  filterTracks: { tracks: NeteaseTrack[]; absoluteIdx: Nullable<number[]> };
-  onVirtualListRangeUpdate: (range: IndexRange) => void;
-  requestMissedTracks: number;
-  paddingBottom?: number | string;
+import Loading from "../public/Loading";
+import ListItem from "./ListItem";
+import VirtualList, { VirtualListRow } from "@mahiru/ui/componets/virtual_list/VirtualList";
+
+export interface ListContainerRef {
+  containerRef: RefObject<Nullable<HTMLDivElement>>;
 }
 
-const ListContainer: FC<ListProps> = ({
-  id,
-  filterTracks,
-  onVirtualListRangeUpdate,
-  loading,
-  paddingBottom,
-  entry,
-  requestMissedTracks
-}) => {
+interface ListContainerProps {
+  id?: number;
+  loading: boolean;
+  requestMissedTracks: number;
+  paddingBottom?: number | string;
+  entry: Nullable<PlaylistCacheEntry>;
+  onVirtualListRangeUpdate: NormalFunc<[range: IndexRange]>;
+  filterTracks: { tracks: NeteaseTrack[]; absoluteIdx: Nullable<number[]> };
+}
+
+const ListContainer: ForwardRefRenderFunction<ListContainerRef, ListContainerProps> = (
+  {
+    id,
+    filterTracks,
+    onVirtualListRangeUpdate,
+    loading,
+    paddingBottom,
+    entry,
+    requestMissedTracks
+  },
+  ref
+) => {
+  console.log("ListContainer render");
   const { userLikedListSummary } = usePersistZustandShallowStore(["userLikedListSummary"]);
   const { mainColor } = useThemeColor();
   const { tracks, absoluteIdx } = filterTracks;
-  const containerRef = useRef<Nullable<HTMLDivElement>>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const isLikedPlayList = id === userLikedListSummary?.id;
+  const extraData = useMemo(
+    () => ({ id, isLikedPlayList, absoluteIdx, entry }),
+    [absoluteIdx, entry, id, isLikedPlayList]
+  );
 
-  const List = useVirtualList({
-    items: tracks,
+  const { start, end } = useVirtualList({
+    total: tracks.length,
     containerRef,
     overscan: 10,
     itemHeight: 50,
-    extraData: { id, isLikedPlayList, absoluteIdx, entry },
     onRangeUpdate: onVirtualListRangeUpdate
   });
-  const listRef = useRef<ListRef>(null);
+  const { onScroll } = useScrollAutoHide(containerRef);
   // id变化时，重置滚动位置
   useEffect(() => {
-    listRef.current?.setScrollTop(0);
+    containerRef.current?.scrollTo({
+      top: 0,
+      behavior: "smooth"
+    });
   }, [id]);
-  const { onScroll } = useScrollAutoHide(containerRef);
+  useImperativeHandle(
+    ref,
+    () => ({
+      containerRef
+    }),
+    []
+  );
   return (
     <>
       <div
@@ -58,7 +89,15 @@ const ListContainer: FC<ListProps> = ({
             -webkit-overflow-scrolling: auto;
           `
         )}>
-        <List ref={listRef} RowComponent={RowComponent} paddingBottom={paddingBottom} />
+        <VirtualList
+          items={tracks}
+          extraData={extraData}
+          itemHeight={50}
+          RowComponent={RowComponent}
+          paddingBottom={paddingBottom}
+          start={start}
+          end={end}
+        />
       </div>
       {loading && (
         <div
@@ -78,17 +117,10 @@ const ListContainer: FC<ListProps> = ({
   );
 };
 
-export default memo(ListContainer);
-
-function RowComponent(
-  props: ComponentProps<
-    RowComponentType<
-      NeteaseTrack,
-      { id?: number; absoluteIdx: number[] | null; entry: Nullable<PlaylistCacheEntry> }
-    >
-  >
-) {
-  const { index, items, extra } = props;
+const RowComponent: VirtualListRow<
+  NeteaseTrack,
+  { id?: number; absoluteIdx: number[] | null; entry: Nullable<PlaylistCacheEntry> }
+> = ({ index, items, extra }) => {
   return (
     <ListItem
       entry={extra.entry}
@@ -98,4 +130,7 @@ function RowComponent(
       absoluteIndex={extra.absoluteIdx ? extra.absoluteIdx[index]! : index}
     />
   );
-}
+};
+
+ListContainer.displayName = "ListContainer";
+export default memo(forwardRef(ListContainer));

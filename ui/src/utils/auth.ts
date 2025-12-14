@@ -12,7 +12,6 @@ function setCookies(raw: string) {
       localStorage.setItem(`cookie-${cookieKeyValue[0]}`, cookieKeyValue[1]);
     }
   });
-  document.cookie = "os=pc; path=/";
 }
 
 function getCookie(key: string) {
