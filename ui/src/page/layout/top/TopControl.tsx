@@ -3,8 +3,8 @@ import { Chromium, Minus, PictureInPicture, Square, SquareMinus, X } from "lucid
 import { NoDrag } from "@mahiru/ui/componets/public/Drag";
 import { isDev } from "@mahiru/ui/utils/dev";
 import { Renderer } from "@mahiru/ui/utils/renderer";
-import { usePlayer } from "@mahiru/ui/ctx/PlayerCtx";
 import { usePlayerInfoSync } from "@mahiru/ui/hook/usePlayerInfoSync";
+import { Player } from "@mahiru/ui/utils/player";
 
 interface ControlButtonProps {
   windowId: WindowType;
@@ -14,7 +14,6 @@ interface ControlButtonProps {
 
 const TopControl: FC<ControlButtonProps> = ({ maximizable = true, mini = true }) => {
   const [isMax, setIsMax] = useState(false);
-  const { Player } = usePlayer();
 
   useEffect(() => {
     Renderer.invoke.isMaximized(undefined).then(setIsMax);
@@ -34,7 +33,7 @@ const TopControl: FC<ControlButtonProps> = ({ maximizable = true, mini = true })
     Player.saveToCache().finally(() => {
       setTimeout(() => Renderer.event.close({ broadcast: true }), 200);
     });
-  }, [Player]);
+  }, []);
 
   const { toggleTargetWindow, hasOpened } = usePlayerInfoSync("miniplayer");
   useEffect(() => {

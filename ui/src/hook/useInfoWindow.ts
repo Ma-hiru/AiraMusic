@@ -9,7 +9,8 @@ export function useInfoWindow() {
   const { background } = useLayoutStatus(["background"]);
 
   const sendSync = useCallback(
-    (type: InfoSync["type"], value: number | string) => {
+    <T extends InfoSyncType>(type: T, value: InfoSync<T>["value"]) => {
+      console.log("sending info sync:", type, value);
       Renderer.sendMessage("infoSync", "info", {
         type,
         mainColor: mainColor.string(),
@@ -25,6 +26,7 @@ export function useInfoWindow() {
   const getOpenedStatus = useCallback(
     (cb?: NormalFunc<[ok: boolean]>) => {
       Renderer.invoke.hasOpenInternalWindow("info").then((ok) => {
+        console.log("info window opened:", ok);
         if (ok !== opened) {
           setOpened(ok);
         }
@@ -35,10 +37,11 @@ export function useInfoWindow() {
   );
 
   const openInfoWindow = useCallback(
-    (type: InfoSync["type"], value: number | string) => {
+    <T extends InfoSyncType>(type: T, value: InfoSync<T>["value"]) => {
       getOpenedStatus((open) => {
-        if (open) sendSync(type, value);
+        if (open) sendSync<T>(type, value);
         else {
+          console.log("opening info window");
           Renderer.event.openInternalWindow("info");
           Renderer.addMessageHandler(
             "otherWindowLoaded",

@@ -2,6 +2,7 @@ import { ZustandConfig } from "@mahiru/ui/types/zustand";
 import { Lyric } from "@mahiru/ui/utils/lyric";
 import { PlaylistHistoryCache } from "@mahiru/ui/utils/history";
 import { scrobble } from "@mahiru/ui/api/track";
+import { AudioControl } from "@mahiru/ui/hook/usePlayerAudio";
 
 export const DynamicStoreConfig: ZustandConfig<
   DynamicStoreInitialState & DynamicStoreActions,
@@ -71,6 +72,16 @@ export const DynamicStoreConfig: ZustandConfig<
     set((draft) => {
       draft.kmeansColor = colors;
     });
+  },
+  setAudioRef: (audio) => {
+    set((draft) => {
+      draft.audioRef.current = audio;
+    });
+  },
+  setAudioControl: (control) => {
+    set((draft) => {
+      draft.audioControl.current = control;
+    });
   }
 });
 
@@ -82,6 +93,8 @@ const playerProgress: PlayerProgress = {
 };
 
 const InitialState: DynamicStoreInitialState = {
+  audioRef: { current: () => null },
+  audioControl: { current: () => null },
   playerStatus: {
     playing: false,
     position: 0,
@@ -106,6 +119,12 @@ const InitialState: DynamicStoreInitialState = {
 };
 
 export interface DynamicStoreInitialState {
+  audioRef: {
+    current: NormalFunc<[], Nullable<HTMLAudioElement>>;
+  };
+  audioControl: {
+    current: NormalFunc<[], Nullable<AudioControl>>;
+  };
   playerStatus: PlayerStatus;
   playerProgress: { current: () => PlayerProgress };
   trackStatus: Nullable<PlayerTrackStatus>;
@@ -131,4 +150,6 @@ export type DynamicStoreActions = {
   toggleSideBarOpen: NormalFunc;
   setBackground: NormalFunc<[bg: Optional<string>]>;
   setKmeansColor: NormalFunc<[colors: string[]]>;
+  setAudioRef: NormalFunc<[ref: NormalFunc<[], Nullable<HTMLAudioElement>>]>;
+  setAudioControl: NormalFunc<[control: NormalFunc<[], Nullable<AudioControl>>]>;
 };

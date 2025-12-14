@@ -2,9 +2,9 @@ import { FC, memo, useCallback } from "react";
 import { useFileCache } from "@mahiru/ui/hook/useFileCache";
 import { Filter, ImageSize } from "@mahiru/ui/utils/filter";
 import { AudioLines, CirclePlay } from "lucide-react";
-import { usePlayer } from "@mahiru/ui/ctx/PlayerCtx";
 import { getTrackDetail } from "@mahiru/ui/api/track";
 import { usePlayerStatus } from "@mahiru/ui/store";
+import { Player } from "@mahiru/ui/utils/player";
 
 interface RecommendTrackItemProps {
   song: DailyRecommendTracksDailySong;
@@ -13,7 +13,6 @@ interface RecommendTrackItemProps {
 }
 
 const RecommendTrackItem: FC<RecommendTrackItemProps> = ({ song, mainColor, textColor }) => {
-  const { Player } = usePlayer();
   const { trackStatus } = usePlayerStatus(["trackStatus"]);
   const sizedCover = Filter.NeteaseImageSize(song.al.picUrl, ImageSize.md);
   const cachedCover = useFileCache(sizedCover);
@@ -28,7 +27,7 @@ const RecommendTrackItem: FC<RecommendTrackItemProps> = ({ song, mainColor, text
       Player.addTrack(track, song.al.id, "next");
       Player.next(true);
     }
-  }, [isPlaying, Player, song.al.id, song.id]);
+  }, [isPlaying, song.al.id, song.id]);
   return (
     <div className="w-full flex flex-col justify-center items-center p-2">
       <div

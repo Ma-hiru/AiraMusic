@@ -1,9 +1,9 @@
 import { createBrowserRouter } from "react-router-dom";
 import SearchPage from "@mahiru/ui/page/search/SearchPage";
-import MusicInfoPage from "@mahiru/ui/page/music_info/MusicInfoPage";
 import ArtistPage from "@mahiru/ui/page/artist/ArtistPage";
 import AlbumPage from "@mahiru/ui/page/album/AlbumPage";
 import InfoLayout from "@mahiru/ui/page/info_layout/InfoLayout";
+import CommentsPage from "@mahiru/ui/page/comments/CommentsPage";
 
 export const infoRouter = createBrowserRouter([
   {
@@ -15,8 +15,8 @@ export const infoRouter = createBrowserRouter([
         element: <SearchPage />
       },
       {
-        path: "/info/musicInfo",
-        element: <MusicInfoPage />
+        path: "/info/comments",
+        element: <CommentsPage />
       },
       {
         path: "/info/artist",

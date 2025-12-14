@@ -1,4 +1,4 @@
-import { RefObject, useCallback, useEffect, useLayoutEffect, useMemo } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo } from "react";
 import { usePlayerStatus } from "@mahiru/ui/store";
 import { Player } from "@mahiru/ui/utils/player";
 import { EqError, Log } from "@mahiru/ui/utils/dev";
@@ -7,20 +7,21 @@ let initialized = false;
 let initialSeekTime: number | null = null;
 let isApplyingInitialSeek = false;
 
-export function usePlayerAudio(audioRef: RefObject<Nullable<HTMLAudioElement>>) {
-  const { playerProgress, trackStatus, setPlayerStatus, playerStatus } = usePlayerStatus([
+export function usePlayerAudio() {
+  const { playerProgress, trackStatus, setPlayerStatus, playerStatus, audioRef } = usePlayerStatus([
     "playerProgress",
     "trackStatus",
     "setPlayerStatus",
-    "playerStatus"
+    "playerStatus",
+    "audioRef"
   ]);
 
   const play = useCallback(() => {
-    const audio = audioRef.current;
+    const audio = audioRef.current();
     audio && (audio.paused ? audio.play() : audio.pause());
   }, [audioRef]);
   const mute = useCallback(() => {
-    const audio = audioRef.current;
+    const audio = audioRef.current();
     if (audio) {
       audio.muted = !audio.muted;
       if (audio.muted) {
@@ -35,7 +36,7 @@ export function usePlayerAudio(audioRef: RefObject<Nullable<HTMLAudioElement>>) 
   }, [audioRef, playerStatus.volumeBeforeMute, setPlayerStatus]);
   const upVolume = useCallback(
     (gap?: number) => {
-      const audio = audioRef.current;
+      const audio = audioRef.current();
       if (audio) {
         gap ||= 0.2;
         audio.volume = Math.min(1, audio.volume + gap);
@@ -46,7 +47,7 @@ export function usePlayerAudio(audioRef: RefObject<Nullable<HTMLAudioElement>>) 
   );
   const downVolume = useCallback(
     (gap?: number) => {
-      const audio = audioRef.current;
+      const audio = audioRef.current();
       if (audio) {
         gap ||= 0.2;
         audio.volume = Math.max(0, audio.volume - gap);
@@ -57,7 +58,7 @@ export function usePlayerAudio(audioRef: RefObject<Nullable<HTMLAudioElement>>) 
   );
   const changeCurrentTime = useCallback(
     (targetTime: number) => {
-      const audio = audioRef.current;
+      const audio = audioRef.current();
       if (!audio || !Number.isFinite(targetTime)) return;
       const duration = Number.isFinite(audio.duration)
         ? audio.duration
@@ -79,7 +80,7 @@ export function usePlayerAudio(audioRef: RefObject<Nullable<HTMLAudioElement>>) 
 
   // 初始化 progress 和 volume 状态
   useLayoutEffect(() => {
-    const audio = audioRef.current;
+    const audio = audioRef.current();
     if (!audio || !trackStatus || !trackStatus.audio) return;
     if (!initialized) {
       const cached = playerProgress.current();
@@ -126,7 +127,7 @@ export function usePlayerAudio(audioRef: RefObject<Nullable<HTMLAudioElement>>) 
   }, [audioRef, playerProgress, playerStatus.playing, trackStatus]);
   // 监听 audio 播放状态变化
   useEffect(() => {
-    const audio = audioRef.current;
+    const audio = audioRef.current();
     if (!audio) return;
     const handlePlay = () =>
       setPlayerStatus((draft) => {
@@ -187,3 +188,5 @@ export function usePlayerAudio(audioRef: RefObject<Nullable<HTMLAudioElement>>) 
     [audioRef, changeCurrentTime, downVolume, mute, play, upVolume]
   );
 }
+
+export type AudioControl = ReturnType<typeof usePlayerAudio>;

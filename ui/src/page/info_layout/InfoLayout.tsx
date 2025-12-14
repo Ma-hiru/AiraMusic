@@ -7,28 +7,16 @@ import { Renderer } from "@mahiru/ui/utils/renderer";
 
 const InfoLayout: FC<object> = () => {
   const navigate = useNavigate();
-  const [infoSync, setInfoSync] = useState<InfoSync>({
+  const [infoSync, setInfoSync] = useState<InfoSync<"none">>({
     type: "none",
-    value: 0,
+    value: undefined,
     mainColor: "",
     secondaryColor: "",
     textColor: ""
   });
 
   useEffect(() => {
-    switch (infoSync.type) {
-      case "musicInfo":
-        navigate("/info/musicInfo");
-        break;
-      case "album":
-        navigate("/info/album");
-        break;
-      case "artist":
-        navigate("/info/artist");
-        break;
-      case "search":
-        navigate("/info/search");
-    }
+    navigate(`/info/${infoSync.type}`);
   }, [infoSync.type, navigate]);
 
   useEffect(() => {

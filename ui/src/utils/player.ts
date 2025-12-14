@@ -14,7 +14,7 @@ type CacheType = {
 const { setTrackStatus, setPlayerStatus, beforeTrackUpdate, playerProgress } =
   getPlayerStatusSnapshot();
 
-export const Player = new (class {
+export class _Player {
   private _cacheKey = "playlist_player_manager";
   private _position: number = -1;
   private _playlist: PlayerTrackStatus[] = [];
@@ -95,7 +95,8 @@ export const Player = new (class {
             tl: [],
             raw: []
           },
-          audio: ""
+          audio: "",
+          quality: undefined
         };
       });
     }
@@ -141,7 +142,8 @@ export const Player = new (class {
               tl: [],
               raw: []
             },
-            audio: ""
+            audio: "",
+            quality: undefined
           } satisfies PlayerTrackStatus;
         })
       );
@@ -206,7 +208,8 @@ export const Player = new (class {
           tl: [],
           raw: []
         },
-        audio: ""
+        audio: "",
+        quality: undefined
       };
     }
     if (position === "end") {
@@ -375,4 +378,6 @@ export const Player = new (class {
   get playlist() {
     return this._playlist;
   }
-})();
+}
+
+export const Player = new _Player();

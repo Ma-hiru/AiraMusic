@@ -2,13 +2,14 @@ import { FC, memo, useCallback, WheelEvent } from "react";
 import { usePlayerInfoSync } from "@mahiru/ui/hook/usePlayerInfoSync";
 import { useThemeColor } from "@mahiru/ui/hook/useThemeColor";
 import { Volume, Volume1, Volume2, VolumeX } from "lucide-react";
-import { usePlayer } from "@mahiru/ui/ctx/PlayerCtx";
 import { useDynamicZustandShallowStore } from "@mahiru/ui/store";
 
 const BarBtns: FC<object> = () => {
   const { hasOpened, toggleTargetWindow } = usePlayerInfoSync("lyric");
-  const { Audio } = usePlayer();
-  const { playerStatus } = useDynamicZustandShallowStore(["playerStatus"]);
+  const { playerStatus, audioControl } = useDynamicZustandShallowStore([
+    "playerStatus",
+    "audioControl"
+  ]);
   const { mainColor } = useThemeColor();
   const volumeIcons = () => {
     if (playerStatus.volume <= 0) {
@@ -27,12 +28,12 @@ const BarBtns: FC<object> = () => {
       // 向上滚增加音量，向下滚减少音量
       const delta = e.deltaY < 0 ? 0.1 : -0.1;
       if (delta > 0) {
-        Audio.upVolume(delta);
+        audioControl.current()?.upVolume(delta);
       } else {
-        Audio.downVolume(-delta);
+        audioControl.current()?.downVolume(-delta);
       }
     },
-    [Audio]
+    [audioControl]
   );
   const { textColorOnMain } = useThemeColor();
   return (
@@ -42,7 +43,7 @@ const BarBtns: FC<object> = () => {
         fill={textColorOnMain.hex()}
         className="size-5 select-none cursor-pointer hover:opacity-50 ease-in-out duration-300 transition-all active:scale-90"
         onWheel={onWheel}
-        onClick={Audio.mute}
+        onClick={audioControl.current()?.mute}
       />
       <span
         onClick={toggleTargetWindow}

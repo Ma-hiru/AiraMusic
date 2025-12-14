@@ -3,16 +3,15 @@ import { FC, memo, useCallback, useEffect, useState } from "react";
 import { homeBanner } from "@mahiru/ui/api/recommend";
 import { NeteaseBanner } from "@mahiru/ui/types/netease/banner";
 import { EqError, Log } from "@mahiru/ui/utils/dev";
-import { usePlayer } from "@mahiru/ui/ctx/PlayerCtx";
 import { getTrackDetail } from "@mahiru/ui/api/track";
 import { useAppLoaded } from "@mahiru/ui/hook/useAppLoaded";
 import { useThemeColor } from "@mahiru/ui/hook/useThemeColor";
 import { Filter } from "@mahiru/ui/utils/filter";
 import { Renderer } from "@mahiru/ui/utils/renderer";
+import { Player } from "@mahiru/ui/utils/player";
 
 const Banner: FC<object> = () => {
   const [banner, setBanner] = useState<NeteaseBanner[]>([]);
-  const { Player } = usePlayer();
   useEffect(() => {
     homeBanner().then((result) => {
       setBanner(result.banners);
@@ -46,7 +45,7 @@ const Banner: FC<object> = () => {
         }
       }
     },
-    [banner, Player]
+    [banner]
   );
   return (
     <div className="w-full px-2">

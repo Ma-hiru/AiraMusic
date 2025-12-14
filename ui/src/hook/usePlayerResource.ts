@@ -59,7 +59,7 @@ export function usePlayerResource() {
       const controller = new AbortController();
       audioCancelRef.current = () => controller.abort();
       try {
-        const { cacheSource, meta } = await Track.loadAudio(track, controller.signal);
+        const { cacheSource, meta, quality } = await Track.loadAudio(track, controller.signal);
         if (!meta || controller.signal.aborted) return;
         const remoteUrl = meta?.[0]?.url || "";
         const nextAudio = cacheSource || remoteUrl || "";
@@ -68,6 +68,7 @@ export function usePlayerResource() {
           draft.meta = meta || [];
           if (nextAudio && draft.audio !== nextAudio) {
             draft.audio = nextAudio;
+            draft.quality = quality;
           }
         });
         playerProgress.current().size = meta?.[0]?.size ?? 0;

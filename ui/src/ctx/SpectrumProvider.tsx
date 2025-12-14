@@ -1,14 +1,12 @@
 import { ReactNode, useMemo, useState } from "react";
 import { SpectrumOptions, useSpectrumWorker } from "@mahiru/ui/hook/useSpectrumWorker";
-import { usePlayer } from "@mahiru/ui/ctx/PlayerCtx";
 import { SpectrumCtx, SpectrumCtxType } from "@mahiru/ui/ctx/SpectrumCtx";
 import { useDynamicZustandShallowStore } from "@mahiru/ui/store";
 
 export default function SpectrumProvider({ children }: { children: ReactNode }) {
-  const { Audio } = usePlayer();
-  const { playerStatus } = useDynamicZustandShallowStore(["playerStatus"]);
+  const { playerStatus, audioRef } = useDynamicZustandShallowStore(["playerStatus", "audioRef"]);
   const [spectrumOptions, setSpectrumOptions] = useState<SpectrumOptions>();
-  const { spectrumData, isReady } = useSpectrumWorker(Audio.ref, playerStatus.playing, {
+  const { spectrumData, isReady } = useSpectrumWorker(audioRef, playerStatus.playing, {
     fftSize: 2048,
     numBands: 32,
     withPeaks: false,

@@ -1,6 +1,5 @@
 import { FC, memo, useCallback, useEffect, useRef } from "react";
 import { LyricPlayer, LyricPlayerRef } from "@mahiru/ui/componets/player/LyricPlayer";
-import { usePlayer } from "@mahiru/ui/ctx/PlayerCtx";
 import { cx } from "@emotion/css";
 import { useGPU } from "@mahiru/ui/hook/useGPU";
 import { LyricLineMouseEvent } from "@applemusic-like-lyrics/core";
@@ -9,16 +8,17 @@ import { useLayoutStatus, usePlayerStatus } from "@mahiru/ui/store";
 
 const Lyric: FC<object> = () => {
   const lyricPlayerRef = useRef<LyricPlayerRef>(null);
-  const { Audio } = usePlayer();
-  const { trackStatus, playerStatus, playerProgress } = usePlayerStatus([
+  const { trackStatus, playerStatus, playerProgress, audioRef } = usePlayerStatus([
     "trackStatus",
     "playerStatus",
-    "playerProgress"
+    "playerProgress",
+    "audioControl",
+    "audioRef"
   ]);
   const { playerModalVisible } = useLayoutStatus(["playerModalVisible"]);
   const { hasDedicatedGPU } = useGPU();
   useEffect(() => {
-    const audio = Audio.ref.current;
+    const audio = audioRef.current();
     if (audio) {
       let lastTime = -1;
       const onFrame = (time: number) => {
@@ -43,20 +43,20 @@ const Lyric: FC<object> = () => {
         audio?.removeEventListener("loadstart", loadstart);
       };
     }
-  }, [Audio.ref]);
+  }, [audioRef]);
 
   const onLyricLineClick = useCallback(
     (e: LyricLineMouseEvent) => {
       const ms = e.line.getLine().startTime || 0;
       const nextTime = ms / 1000;
       const { duration } = playerProgress.current();
-      const audio = Audio.ref.current;
+      const audio = audioRef.current();
       if (audio) {
         audio.currentTime = Math.min(nextTime, duration);
         audio.paused && audio.play();
       }
     },
-    [Audio.ref, playerProgress]
+    [audioRef, playerProgress]
   );
   return (
     <div

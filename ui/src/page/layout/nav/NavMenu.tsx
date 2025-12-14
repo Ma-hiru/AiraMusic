@@ -3,11 +3,14 @@ import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { NAV_DATA } from "@mahiru/ui/router";
 import { usePersistZustandShallowStore } from "@mahiru/ui/store";
 import NavItem from "./NavItem";
+import { Auth } from "@mahiru/ui/utils/auth";
+import { useLogin } from "@mahiru/ui/hook/useLogout";
 
 const NavMenu: FC<object> = () => {
   const { userLikedListSummary } = usePersistZustandShallowStore(["userLikedListSummary"]);
   const navigate = useNavigate();
   const location = useLocation();
+  const login = useLogin();
   const [searchParams] = useSearchParams();
   return (
     <div className="space-y-4 w-full overflow-hidden">
@@ -22,15 +25,18 @@ const NavMenu: FC<object> = () => {
             }
             active={
               location.pathname === path ||
-              (label === "搜藏" && location.pathname === `/playlist/${userLikedListSummary?.id}`) ||
+              (label === "喜欢" && location.pathname === `/playlist/${userLikedListSummary?.id}`) ||
               (label === "推荐" && searchParams.get("source") === "recommend")
             }
             onClick={() => {
-              if (
-                label === "搜藏" &&
-                (userLikedListSummary?.id || userLikedListSummary?.id === 0)
-              ) {
-                navigate(`/playlist/${userLikedListSummary.id}?like=true&history=false`);
+              if (label === "喜欢") {
+                if (userLikedListSummary?.id) {
+                  if (Auth.isAccountLoggedIn()) {
+                    navigate(`/playlist/${userLikedListSummary.id}?like=true&history=false`);
+                  } else {
+                    login();
+                  }
+                }
               } else {
                 navigate(path);
               }

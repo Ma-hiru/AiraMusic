@@ -79,7 +79,8 @@ export const Track = new (class {
     }
     return {
       meta,
-      cacheSource
+      cacheSource,
+      quality
     };
   }
 

@@ -51,13 +51,17 @@ export function CreateInfoWindow() {
 }
 
 function loadInfoWindowURL(InfoWindow: Electron.BrowserWindow, port: string | number) {
-  InfoWindow.loadURL(`http://localhost:${port}/info`).catch((err) => {
-    Log.error(
-      new EqError({
-        raw: err,
-        message: `failed to load info window URL: http://localhost:${port}/info`,
-        label: "app/window/info.ts"
-      })
-    );
-  });
+  InfoWindow.loadURL(`http://localhost:${port}/info`)
+    .then(() => {
+      InfoWindow.webContents.openDevTools();
+    })
+    .catch((err) => {
+      Log.error(
+        new EqError({
+          raw: err,
+          message: `failed to load info window URL: http://localhost:${port}/info`,
+          label: "app/window/info.ts"
+        })
+      );
+    });
 }

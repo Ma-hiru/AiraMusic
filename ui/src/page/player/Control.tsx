@@ -1,5 +1,4 @@
 import { FC, memo } from "react";
-import { usePlayer } from "@mahiru/ui/ctx/PlayerCtx";
 import Progress from "./Progress";
 import {
   ArrowRightLeft,
@@ -12,10 +11,11 @@ import {
   SkipForward
 } from "lucide-react";
 import { usePlayerStatus } from "@mahiru/ui/store";
+import { Player } from "@mahiru/ui/utils/player";
 
 const Control: FC<object> = () => {
-  const { Audio, Player } = usePlayer();
-  const { playerStatus } = usePlayerStatus(["playerStatus"]);
+  const { playerStatus, audioControl } = usePlayerStatus(["playerStatus", "audioControl"]);
+
   return (
     <div className="space-x-2 w-full">
       <Progress />
@@ -30,13 +30,13 @@ const Control: FC<object> = () => {
             <Pause
               className="size-5 cursor-pointer hover:opacity-50 ease-in-out duration-300 transition-all active:scale-90"
               fill={"rgba(255,255,255,0.89)"}
-              onClick={Audio.play}
+              onClick={audioControl.current()?.play}
             />
           ) : (
             <Play
               className="size-5 cursor-pointer hover:opacity-50 ease-in-out duration-300 transition-all active:scale-90"
               fill={"rgba(255,255,255,0.89)"}
-              onClick={Audio.play}
+              onClick={audioControl.current()?.play}
             />
           )}
           <SkipForward

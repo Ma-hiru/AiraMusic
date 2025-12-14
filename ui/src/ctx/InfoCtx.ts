@@ -9,7 +9,7 @@ export const InfoCtx = createContext<InfoSync>({
   textColor: ""
 });
 
-export function useInfoCtx() {
+export function useInfoCtx<T extends InfoSyncType>() {
   const infoCtxValue = useContext(InfoCtx);
   if (!infoCtxValue) {
     throw new EqError({
@@ -17,5 +17,5 @@ export function useInfoCtx() {
       label: "ui/InfoCtx:useInfoCtx"
     });
   }
-  return infoCtxValue;
+  return infoCtxValue as InfoSync<T>;
 }

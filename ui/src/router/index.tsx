@@ -1,4 +1,4 @@
-import { Clock, House, Star } from "lucide-react";
+import { Clock, House, Heart } from "lucide-react";
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import Layout from "@mahiru/ui/page/layout/Layout";
 import HomePage from "@mahiru/ui/page/home/HomePage";
@@ -51,6 +51,6 @@ export const router = createBrowserRouter([
 ]);
 export const NAV_DATA = [
   { icon: <House className="size-7" />, label: "推荐", path: "/home" },
-  { icon: <Star className="size-7" />, label: "搜藏", path: "/star" },
+  { icon: <Heart className="size-7" />, label: "喜欢", path: "/star" },
   { icon: <Clock className="size-7" />, label: "历史", path: "/history" }
 ] as const;

@@ -1,15 +1,15 @@
-import { usePlayer } from "@mahiru/ui/ctx/PlayerCtx";
 import { useImmer } from "use-immer";
 import { useAnimate } from "motion/react";
 import { MouseEvent as ReactMouseEvent, useCallback, useEffect, useRef, useState } from "react";
 import { usePlayerStatus } from "@mahiru/ui/store";
 
 export function usePlayProgress() {
-  const { Audio } = usePlayer();
-  const { trackStatus, playerStatus, playerProgress } = usePlayerStatus([
+  const { trackStatus, playerStatus, playerProgress, audioRef, audioControl } = usePlayerStatus([
     "trackStatus",
     "playerStatus",
-    "playerProgress"
+    "playerProgress",
+    "audioRef",
+    "audioControl"
   ]);
   const [progress, setProgress] = useImmer({
     percent: 0,
@@ -39,7 +39,7 @@ export function usePlayProgress() {
     [playerProgress, setProgress]
   );
   useEffect(() => {
-    const audio = Audio.ref.current;
+    const audio = audioRef.current();
     if (!audio) return;
     const handleTimeUpdate = () => tick();
     const handleLoad = () => tick(true);
@@ -53,7 +53,7 @@ export function usePlayProgress() {
       audio.removeEventListener("progress", handleLoad);
       audio.removeEventListener("waiting", handleLoad);
     };
-  }, [Audio.ref, tick]);
+  }, [audioRef, tick]);
   // track change resets progress immediately to avoid sluggish animation after auto-advance
   const lastTrackId = useRef(track?.id);
   useEffect(() => {
@@ -118,7 +118,7 @@ export function usePlayProgress() {
       const percent = calcPercent(e.clientX);
       dragPercentRef.current = percent;
       const { duration } = playerProgress.current();
-      Audio.changeCurrentTime((percent / 100) * duration);
+      audioControl.current()?.changeCurrentTime((percent / 100) * duration);
       setProgress((draft) => {
         draft.percent = percent;
       });
@@ -130,7 +130,15 @@ export function usePlayProgress() {
         );
       }
     },
-    [Audio, calcPercent, isDragging, playerProgress, setProgress]
+    [
+      audioControl,
+      calcPercent,
+      isDragging,
+      percentAnimate,
+      percentScope,
+      playerProgress,
+      setProgress
+    ]
   );
   const handleBarMouseDown = useCallback(
     (e: ReactMouseEvent) => {
@@ -156,7 +164,7 @@ export function usePlayProgress() {
         setIsDragging(false);
         const finalPercent = dragPercentRef.current;
         const { duration } = playerProgress.current();
-        Audio.changeCurrentTime((finalPercent / 100) * duration);
+        audioControl.current()?.changeCurrentTime((finalPercent / 100) * duration);
         if (isListenerAttachedRef.current) {
           window.removeEventListener("mousemove", mouseMoveHandlerRef.current);
           window.removeEventListener("mouseup", mouseUpHandlerRef.current);
@@ -167,7 +175,7 @@ export function usePlayProgress() {
       window.addEventListener("mouseup", mouseUpHandlerRef.current);
       isListenerAttachedRef.current = true;
     },
-    [Audio, calcPercent, percentAnimate, percentScope, playerProgress, setProgress]
+    [audioControl, calcPercent, percentAnimate, percentScope, playerProgress, setProgress]
   );
   useEffect(() => {
     return () => {

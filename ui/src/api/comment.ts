@@ -39,8 +39,7 @@ export function getCommentNew(params: {
   /** 当sortType为 3 时且页数不是第一页时需传入,值为上一条数据的 time */
   cursor?: number;
 }) {
-  return apiRequest({
-    url: "/comment/new",
-    params: { ...params }
+  return apiRequest<any, NeteaseCommentsNewResponse>("/comment/new", {
+    params
   });
 }

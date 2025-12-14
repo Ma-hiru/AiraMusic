@@ -1,5 +1,5 @@
 import SpectrumWorker from "@mahiru/ui/worker/spectrum.ts?worker";
-import { RefObject, useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { EqError, Log } from "@mahiru/ui/utils/dev";
 
 export interface SpectrumData {
@@ -15,7 +15,7 @@ export type SpectrumOptions = {
 };
 
 export function useSpectrumWorker(
-  audioRef: RefObject<Nullable<HTMLAudioElement>>,
+  audioRef: { current: NormalFunc<[], Nullable<HTMLAudioElement>> },
   isPlaying: boolean,
   options: SpectrumOptions = {}
 ) {
@@ -62,7 +62,7 @@ export function useSpectrumWorker(
   }, [isReady, isPlaying, withPeaks]);
   // 初始化 AudioContext 和 AnalyserNode，connect只在一个audioRef上执行一次
   useEffect(() => {
-    const audio = audioRef.current;
+    const audio = audioRef.current();
     if (!audio) return;
     const ctx = new AudioContext();
     const source = ctx.createMediaElementSource(audio);

@@ -25,6 +25,7 @@ export async function refreshLogin(cookies: string) {
 /** 登录状态下，刷新Cookie */
 export async function refreshCookieTask() {
   try {
+    if (!Auth.isAccountLoggedIn()) return;
     Log.trace("refresh cookie");
     await refreshCookie();
 
@@ -45,6 +46,7 @@ export async function refreshCookieTask() {
 /** 登录状态下，刷新用户信息 */
 export async function refreshUserProfile() {
   try {
+    if (!Auth.isAccountLoggedIn()) return;
     Log.trace("refresh user profile");
     const account = await userAccount();
     const detail = await userDetail(account.profile.userId);
@@ -67,6 +69,7 @@ export async function refreshUserProfile() {
 /** 登录状态下，只包含歌单的id、描述、封面 */
 export async function refreshUserPlaylist() {
   try {
+    if (!Auth.isAccountLoggedIn()) return;
     Log.trace("refresh user playlist");
     const { updateUserLikedListSummary, updateUserPlaylistSummary } = getPersistSnapshot();
     const { data } = getPersistSnapshot();
@@ -90,6 +93,7 @@ export async function refreshUserPlaylist() {
 /** 登录状态下，获取喜欢歌曲列表，在使用喜欢或不喜欢后应该刷新 */
 export async function refreshUserLikedTrackIDs() {
   try {
+    if (!Auth.isAccountLoggedIn()) return;
     Log.trace("refresh user liked track IDs");
     const { updateUserLikedTrackIDs } = getPersistSnapshot();
     const { data } = getPersistSnapshot();

@@ -6,6 +6,7 @@ type PlayerTrackInfo = {
 type PlayerTrackSource = {
   lyric: FullVersionLyricLine;
   audio: string;
+  quality: Undefinable<NeteaseQualityLevels & { level: number }>;
   meta?: NeteaseSongUrlItem[];
 };
 

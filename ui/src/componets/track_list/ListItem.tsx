@@ -1,6 +1,5 @@
 import { cx } from "@emotion/css";
 import { Log } from "@mahiru/ui/utils/dev";
-import { usePlayer } from "@mahiru/ui/ctx/PlayerCtx";
 import { FC, memo, MouseEventHandler, useCallback } from "react";
 
 import ListItemIndex from "./ListItemIndex";
@@ -10,6 +9,7 @@ import ListItemInfo from "./ListItemInfo";
 import { PlaylistCacheEntry } from "@mahiru/ui/utils/playlist";
 import { useThemeColor } from "@mahiru/ui/hook/useThemeColor";
 import { usePlayerStatus } from "@mahiru/ui/store";
+import { Player } from "@mahiru/ui/utils/player";
 
 interface ListItemProps {
   data: NeteaseTrack[];
@@ -28,7 +28,6 @@ const ListItem: FC<ListItemProps> = ({
   isLikedList,
   entry
 }) => {
-  const { Player } = usePlayer();
   const { textColorOnMain } = useThemeColor();
   const { trackStatus } = usePlayerStatus(["trackStatus"]);
   const track = data[index]!;
@@ -57,7 +56,7 @@ const ListItem: FC<ListItemProps> = ({
         Player.replacePlaylist(data, playListID, index);
       }
     },
-    [Player, data, disabled, index, playListID, track.name, track.reason]
+    [data, disabled, index, playListID, track.name, track.reason]
   );
 
   return (

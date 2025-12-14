@@ -1,18 +1,21 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { usePlayer } from "@mahiru/ui/ctx/PlayerCtx";
 import { useThemeColor } from "@mahiru/ui/hook/useThemeColor";
 import { Renderer } from "@mahiru/ui/utils/renderer";
 import { useDynamicZustandShallowStore, usePlayerStatus } from "@mahiru/ui/store";
+import { Player } from "@mahiru/ui/utils/player";
 
 export function usePlayerInfoSync(targetWindow: WindowType) {
   const [hasOpened, setHasOpened] = useState(false);
-  const { Audio, Player } = usePlayer();
   const { trackStatus, playerProgress, setLyricVersion } = usePlayerStatus([
     "trackStatus",
     "playerProgress",
     "setLyricVersion"
   ]);
-  const { playerStatus } = useDynamicZustandShallowStore(["playerStatus"]);
+  const { playerStatus, audioControl, audioRef } = useDynamicZustandShallowStore([
+    "playerStatus",
+    "audioControl",
+    "audioRef"
+  ]);
   const { mainColor } = useThemeColor();
   const getNewestInfo = useRef({ trackStatus, playerStatus, playerProgress });
   getNewestInfo.current = { trackStatus, playerStatus, playerProgress };
@@ -70,7 +73,7 @@ export function usePlayerInfoSync(targetWindow: WindowType) {
       const controlMsg = sync.playerControl;
       if (controlMsg) {
         if (controlMsg === "play") {
-          Audio.play();
+          audioControl.current()?.play();
         } else if (controlMsg === "last") {
           Player.last(true);
         } else if (controlMsg === "next") {
@@ -81,11 +84,11 @@ export function usePlayerInfoSync(targetWindow: WindowType) {
     return () => {
       removeListener();
     };
-  }, [Audio, Player, hasOpened, setLyricVersion, targetWindow]);
+  }, [audioControl, hasOpened, setLyricVersion, targetWindow]);
   // 同步音频进度变化
   useEffect(() => {
     if (!hasOpened) return;
-    const audio = Audio.ref.current;
+    const audio = audioRef.current();
     if (!audio) return;
     audio.addEventListener("timeupdate", sendSync);
     audio.addEventListener("loadstart", sendInit);
@@ -95,7 +98,7 @@ export function usePlayerInfoSync(targetWindow: WindowType) {
       audio.removeEventListener("loadstart", sendInit);
       audio.removeEventListener("pause", sendSync);
     };
-  }, [Audio.ref, hasOpened, sendInit, sendSync]);
+  }, [audioRef, hasOpened, sendInit, sendSync]);
   // 同步歌曲信息
   useEffect(() => {
     hasOpened && sendInit();
