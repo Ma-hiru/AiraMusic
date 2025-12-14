@@ -19,18 +19,21 @@ export function useVirtualList({
   const scrollTopRef = useRef(0);
   const visibleStartRef = useRef(0);
   const [visibleStart, setVisibleStart] = useState(0);
-  const { visibleCount } = useMemo(() => {
-    const containerHeight = containerRef.current?.clientHeight ?? 0;
-    const visibleCount = Math.ceil(containerHeight / itemHeight);
-    return {
-      containerHeight,
-      visibleCount
-    };
-  }, [containerRef, itemHeight]);
+  const [visibleCount, setVisibleCount] = useState(1);
   // 滚动事件处理
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
+
+    const calcVisibleCount = () => {
+      const containerHeight = container.clientHeight;
+      const nextCount = Math.max(1, Math.ceil(containerHeight / itemHeight));
+      setVisibleCount((prev) => (prev === nextCount ? prev : nextCount));
+    };
+
+    calcVisibleCount();
+    const resizeObserver = new ResizeObserver(calcVisibleCount);
+    resizeObserver.observe(container);
 
     const onScroll = () => {
       if (!ticking.current) {
@@ -48,7 +51,10 @@ export function useVirtualList({
       }
     };
     container.addEventListener("scroll", onScroll, { passive: true });
-    return () => container.removeEventListener("scroll", onScroll);
+    return () => {
+      resizeObserver.disconnect();
+      container.removeEventListener("scroll", onScroll);
+    };
   }, [containerRef, itemHeight]);
   // 范围更新回调
   const prevRange = useRef<Nullable<IndexRange>>(null);

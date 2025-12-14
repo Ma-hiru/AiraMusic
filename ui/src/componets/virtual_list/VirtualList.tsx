@@ -29,13 +29,13 @@ const VirtualList = <T extends HasID, U>({
   const finalHeight = useMemo(() => {
     const total = items.length;
     const baseHeight = total * itemHeight;
-    const height =
-      typeof paddingBottom === "number"
-        ? baseHeight + paddingBottom
-        : `calc(${baseHeight}px + ${paddingBottom})`;
-    return {
-      height
-    };
+    let height: number | string = baseHeight;
+    if (typeof paddingBottom === "number") {
+      height = baseHeight + paddingBottom;
+    } else if (typeof paddingBottom === "string") {
+      height = `calc(${baseHeight}px + ${paddingBottom})`;
+    }
+    return { height };
   }, [itemHeight, items.length, paddingBottom]);
   return (
     <div className="relative w-full will-change-auto contain-layout" style={finalHeight}>

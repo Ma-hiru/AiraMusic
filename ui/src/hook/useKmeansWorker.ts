@@ -5,7 +5,7 @@ import { UI } from "@mahiru/ui/utils/ui";
 
 const themeColorCache = new Map<string, string[]>();
 
-export function useKmeansWorker(backgroundURL: string) {
+export function useKmeansWorker(backgroundURL: Optional<string>) {
   const [result, setResult] = useState<string[]>([]);
 
   useEffect(() => {

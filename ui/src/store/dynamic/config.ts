@@ -64,7 +64,7 @@ export const DynamicStoreConfig: ZustandConfig<
   },
   setBackground: (bg) => {
     set((draft) => {
-      draft.background = bg || "";
+      draft.background = bg || undefined;
     });
   },
   setKmeansColor: (colors) => {
@@ -101,7 +101,7 @@ const InitialState: DynamicStoreInitialState = {
   },
   playerModalVisible: false,
   sideBarOpen: false,
-  background: "",
+  background: undefined,
   kmeansColor: []
 };
 
@@ -115,7 +115,7 @@ export interface DynamicStoreInitialState {
   };
   playerModalVisible: boolean;
   sideBarOpen: boolean;
-  background: string;
+  background: Undefinable<string>;
   kmeansColor: string[];
 }
 
