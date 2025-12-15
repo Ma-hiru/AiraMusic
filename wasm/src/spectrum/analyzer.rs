@@ -1,5 +1,4 @@
 use super::fft::compute_fft;
-use super::processor::SpectrumProcessor;
 use super::smoothing::Smoother;
 use super::window::WindowFunction;
 use wasm_bindgen::prelude::wasm_bindgen;

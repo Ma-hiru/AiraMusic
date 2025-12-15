@@ -8,7 +8,7 @@
 
 use image::Rgb;
 use rand;
-use rand::prelude::{IndexedRandom, SliceRandom};
+use rand::prelude::IndexedRandom;
 
 pub struct KMeans {
     // 聚类数
@@ -22,6 +22,7 @@ impl KMeans {
     pub fn new(pixels: &[Rgb<u8>], max_samples: usize, k: usize) -> Self {
         let dataset = prepare_dataset(pixels, max_samples);
         let centroids = init_centroids(&dataset, k);
+        let k = centroids.len();
         KMeans {
             k,
             dataset,
@@ -68,6 +69,7 @@ impl KMeans {
         }
 
         let mut max_shift = 0.0f32;
+        let mut rng = rand::rng();
         for i in 0..self.k {
             if counts[i] > 0 {
                 let inv = 1.0 / counts[i] as f32;
@@ -76,8 +78,13 @@ impl KMeans {
                 max_shift = max_shift.max(shift);
                 self.centroids[i] = new_centroid;
             } else {
-                // 如果某个质心没有任何点分配给它，可以选择重新初始化它
-                // 这里简单地保持不变
+                // 如果某个质心没有任何点分配给它，则随机重置，避免停滞
+                if let Some(&sample) = self.dataset.choose(&mut rng) {
+                    let old = self.centroids[i];
+                    let shift = distance2(&old, &sample);
+                    max_shift = max_shift.max(shift);
+                    self.centroids[i] = sample;
+                }
             }
         }
         max_shift
@@ -111,7 +118,6 @@ impl KMeans {
         for _ in 0..max_iters {
             // 更新质心
             let shift = self.update_centroids(&labels);
-            println!("Centroid shift: {}", shift);
             // 检查收敛
             if shift <= tol {
                 break;
@@ -152,26 +158,25 @@ impl KMeans {
 
 /// 像素归一化并随机（下）采样
 fn prepare_dataset(pixels: &[Rgb<u8>], max_samples: usize) -> Vec<[f32; 3]> {
-    // 归一化
-    let mut data: Vec<[f32; 3]> = pixels
-        .iter()
-        .map(|p| {
-            [
-                p[0] as f32 / 255.0,
-                p[1] as f32 / 255.0,
-                p[2] as f32 / 255.0,
-            ]
-        })
-        .collect();
-    // 随机采样
-    let mut rng = rand::rng();
-    data.shuffle(&mut rng);
-    if data.len() > max_samples {
-        // 下取样
-        data.truncate(max_samples);
+    if pixels.len() <= max_samples {
+        return pixels
+            .iter()
+            .map(|p| {
+                [
+                    p[0] as f32 / 255.0,
+                    p[1] as f32 / 255.0,
+                    p[2] as f32 / 255.0,
+                ]
+            })
+            .collect();
     }
 
-    data
+    // 仅抽取所需样本，避免全量 shuffle
+    let mut rng = rand::rng();
+    pixels
+        .choose_multiple(&mut rng, max_samples)
+        .map(|p| [p[0] as f32 / 255.0, p[1] as f32 / 255.0, p[2] as f32 / 255.0])
+        .collect()
 }
 
 /// 初始化k个质心
