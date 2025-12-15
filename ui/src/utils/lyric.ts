@@ -9,7 +9,7 @@ import { LyricLine, LyricWord } from "@applemusic-like-lyrics/core";
 import { parseExternalLrc, parseNeteaseLyric, parseTranslatedLRC } from "@mahiru/wasm";
 import { Log } from "@mahiru/ui/utils/dev";
 import { LyricParseErr } from "@mahiru/ui/utils/errs";
-import { getYRCLyric } from "@mahiru/ui/api/lyric";
+import { API } from "@mahiru/ui/api";
 
 class Parser {
   mapRawLyricLine(line: RawLyricLine): LyricLine {
@@ -103,7 +103,7 @@ export const Lyric = new (class {
   Parser = new Parser();
 
   async requestLyric(id: number, preference?: Optional<LyricVersionType>) {
-    const response = await getYRCLyric(id);
+    const response = await API.Lyric.getYRCLyric(id);
     const lyric = this.handleLyricResponse(response);
     const version = this.chooseLyricVersionWithPreference(lyric, preference);
     return {

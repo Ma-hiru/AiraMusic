@@ -1,7 +1,7 @@
 import { useCallback } from "react";
 import { usePersistZustandShallowStore } from "@mahiru/ui/store";
-import { likeATrack } from "@mahiru/ui/api/track";
 import { PlaylistManager } from "@mahiru/ui/utils/playlist";
+import { API } from "@mahiru/ui/api";
 
 export const useHeart = (track?: NeteaseTrack) => {
   const { updateUserLikedTrackIDs, userLikedTrackIDs } = usePersistZustandShallowStore([
@@ -18,7 +18,7 @@ export const useHeart = (track?: NeteaseTrack) => {
       newSet[track.id] = true;
     }
     updateUserLikedTrackIDs({ ids: newSet, checkPoint: userLikedTrackIDs.checkPoint });
-    void likeATrack({
+    void API.Track.likeATrack({
       id: track.id,
       like: !isLiked
     });

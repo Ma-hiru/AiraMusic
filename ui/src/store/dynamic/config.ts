@@ -1,8 +1,8 @@
 import { ZustandConfig } from "@mahiru/ui/types/zustand";
 import { Lyric } from "@mahiru/ui/utils/lyric";
 import { PlaylistHistoryCache } from "@mahiru/ui/utils/history";
-import { scrobble } from "@mahiru/ui/api/track";
 import type { AudioControl } from "@mahiru/ui/hook/usePlayerAudio";
+import { API } from "@mahiru/ui/api";
 
 export const DynamicStoreConfig: ZustandConfig<
   DynamicStoreInitialState & DynamicStoreActions,
@@ -36,7 +36,7 @@ export const DynamicStoreConfig: ZustandConfig<
   beforeTrackUpdate: (next) => {
     const { trackStatus, playerProgress } = get();
     if (trackStatus && trackStatus.track.id !== next?.track.id) {
-      scrobble(trackStatus, playerProgress.current().currentTime);
+      API.Track.scrobble(trackStatus, playerProgress.current().currentTime);
       void PlaylistHistoryCache.addTrack(trackStatus.track);
       set((draft) => {
         if (draft.playerStatus.playing) {
@@ -139,13 +139,13 @@ export interface DynamicStoreInitialState {
 }
 
 export type DynamicStoreActions = {
-  setPlayerStatus: (updater: NormalFunc<[draft: PlayerStatus], void | PlayerStatus>) => void;
-  setTrackStatus: (
-    updater: NormalFunc<[draft: Nullable<PlayerTrackStatus>], void | Nullable<PlayerTrackStatus>>
-  ) => void;
-  setLyricVersion: (next: LyricVersionType) => void;
-  beforeTrackUpdate: (next: Nullable<PlayerTrackStatus>) => void;
-  requestCanScrollTop: (type: LayoutCanScrollTop, callback?: NormalFunc) => void;
+  setPlayerStatus: NormalFunc<[updater: NormalFunc<[draft: PlayerStatus], void | PlayerStatus>]>;
+  setTrackStatus: NormalFunc<
+    [updater: NormalFunc<[draft: Nullable<PlayerTrackStatus>], void | Nullable<PlayerTrackStatus>>]
+  >;
+  setLyricVersion: NormalFunc<[next: LyricVersionType]>;
+  beforeTrackUpdate: NormalFunc<[next: Nullable<PlayerTrackStatus>]>;
+  requestCanScrollTop: NormalFunc<[type: LayoutCanScrollTop, callback?: NormalFunc]>;
   togglePlayerModalVisible: NormalFunc;
   toggleSideBarOpen: NormalFunc;
   setBackground: NormalFunc<[bg: Optional<string>]>;

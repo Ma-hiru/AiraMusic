@@ -2,18 +2,13 @@ import InfoTop from "./InfoTop";
 import KeepAliveOutlet from "@mahiru/ui/componets/public/KeepAliveOutlet";
 import { FC, memo, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { InfoCtx } from "@mahiru/ui/ctx/InfoCtx";
+import { defaultInfoCtxValue, InfoCtx } from "@mahiru/ui/ctx/InfoCtx";
 import { Renderer } from "@mahiru/ui/utils/renderer";
+import Color from "color";
 
 const InfoLayout: FC<object> = () => {
   const navigate = useNavigate();
-  const [infoSync, setInfoSync] = useState<InfoSync<"none">>({
-    type: "none",
-    value: undefined,
-    mainColor: "",
-    secondaryColor: "",
-    textColor: ""
-  });
+  const [infoSync, setInfoSync] = useState<InfoSync<"none">>(defaultInfoCtxValue);
 
   useEffect(() => {
     if (infoSync.type === "none") return;
@@ -32,7 +27,7 @@ const InfoLayout: FC<object> = () => {
   }, []);
   return (
     <div className="w-screen h-screen bg-white overflow-hidden">
-      <InfoTop />
+      <InfoTop color={Color(infoSync.mainColor).darken(0.5).string()} />
       <InfoCtx.Provider value={infoSync}>
         <KeepAliveOutlet />;
       </InfoCtx.Provider>

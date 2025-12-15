@@ -1,7 +1,16 @@
 import { useImmer } from "use-immer";
 import { useAnimate } from "motion/react";
-import { MouseEvent as ReactMouseEvent, useCallback, useEffect, useRef, useState } from "react";
+import {
+  MouseEvent as ReactMouseEvent,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState
+} from "react";
 import { usePlayerStatus } from "@mahiru/ui/store";
+import { API } from "@mahiru/ui/api";
+import { NCMServerErr } from "@mahiru/ui/utils/errs";
 
 export function usePlayProgress() {
   const { trackStatus, playerStatus, playerProgress, audioRef, audioControl } = usePlayerStatus([
@@ -20,6 +29,7 @@ export function usePlayProgress() {
   const [percentScope, percentAnimate] = useAnimate();
   const [bufferScope, bufferAnimate] = useAnimate();
   const [isDragging, setIsDragging] = useState(false);
+  const [chorus, setChorus] = useState<NeteaseChorusData[]>([]);
   const track = trackStatus?.track;
   const barRef = useRef<HTMLDivElement>(null);
   const dragPercentRef = useRef(0);
@@ -27,7 +37,7 @@ export function usePlayProgress() {
   const getDragging = useRef(isDragging);
   getDragging.current = isDragging;
   getPlaying.current = playerStatus.playing;
-  // 播放同步
+  // 一次播放同步函数
   const tick = useCallback(
     (force: boolean = false) => {
       if (!force && getDragging.current) return;
@@ -38,6 +48,7 @@ export function usePlayProgress() {
     },
     [playerProgress, setProgress]
   );
+  // 监听音频事件，自然更新
   useEffect(() => {
     const audio = audioRef.current();
     if (!audio) return;
@@ -54,7 +65,7 @@ export function usePlayProgress() {
       audio.removeEventListener("waiting", handleLoad);
     };
   }, [audioRef, tick]);
-  // track change resets progress immediately to avoid sluggish animation after auto-advance
+  // 切歌快速重置进度条
   const lastTrackId = useRef(track?.id);
   useEffect(() => {
     if (!track || track.id === lastTrackId.current) return;
@@ -104,7 +115,6 @@ export function usePlayProgress() {
   const mouseMoveHandlerRef = useRef<NormalFunc<[MouseEvent]>>(() => {});
   const mouseUpHandlerRef = useRef<NormalFunc<[MouseEvent]>>(() => {});
   const isListenerAttachedRef = useRef(false);
-
   const calcPercent = useCallback((clientX: number) => {
     const element = barRef.current;
     if (!element) return 0;
@@ -190,13 +200,36 @@ export function usePlayProgress() {
       }
     };
   }, []);
-
+  // 页面可见性变化时强制更新一次
   useEffect(() => {
     const handleVisibility = () => tick(true);
     document.addEventListener("visibilitychange", handleVisibility);
     return () => document.removeEventListener("visibilitychange", handleVisibility);
   }, [tick]);
-
+  // 获取歌曲副歌时间
+  useEffect(() => {
+    trackStatus &&
+      API.Track.getTrackChorus(trackStatus.track.id)
+        .then((response) => {
+          if (Array.isArray(response.chorus)) {
+            console.log("Chorus data:", response.chorus);
+            setChorus(response.chorus);
+          } else {
+            setChorus([]);
+          }
+        })
+        .catch((err) => {
+          setChorus([]);
+          if (NCMServerErr.eq(err)) {
+            // TODO
+          }
+        });
+  }, [trackStatus]);
+  const chorusPercent = useMemo(() => {
+    const duration = playerProgress.current().duration;
+    if (!duration || duration <= 0) return [];
+    return chorus.map((c) => (c.startTime / (1000 * duration)) * 100);
+  }, [chorus, playerProgress]);
   return {
     barRef,
     handleBarClick,
@@ -205,6 +238,8 @@ export function usePlayProgress() {
     bufferScope,
     isPlaying: playerStatus.playing,
     isDragging,
-    progress
+    progress,
+    chorus,
+    chorusPercent
   };
 }

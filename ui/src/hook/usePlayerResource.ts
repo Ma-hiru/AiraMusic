@@ -5,8 +5,12 @@ import { Track } from "@mahiru/ui/utils/track";
 import { usePlayerStatus, useSettings } from "@mahiru/ui/store";
 import { Player } from "@mahiru/ui/utils/player";
 
+/**
+ * 音乐资源加载
+ * - 监听zustand的播放器状态变化，加载当前播放音乐的歌词和音频资源，然后写回zustand相应位置
+ * - 可以预加载下一首音乐资源
+ * */
 export function usePlayerResource() {
-  Log.trace("useSongResource executed");
   const { setPlayerStatus, setTrackStatus, playerStatus, playerProgress, trackStatus } =
     usePlayerStatus([
       "setPlayerStatus",
@@ -103,6 +107,7 @@ export function usePlayerResource() {
   useLayoutEffect(() => {
     const current = trackStatus;
     const peak = Player.peek();
+    const isShuffle = playerStatus.shuffle === true;
     if (current) {
       // 检查缓存是否无效(当音频加载失败时，callback会标记缓存无效)，无效则重新加载
       const invalid = Track.markedInvalidCache(current.track.id);
@@ -112,10 +117,17 @@ export function usePlayerResource() {
       if (!hasAudio || invalid) void loadAudioSource(current.track);
       if (invalid) Track.removeMarkedInvalidCache(current.track.id);
       // 仅在资源加载完成后才预加载下一首，避免无意义的重复触发
-      hasLyric && hasAudio && schedulePreloadNextTrack(current, peak);
+      hasLyric && hasAudio && !isShuffle && schedulePreloadNextTrack(current, peak);
     }
     return cancelScheduledPreload;
-  }, [cancelScheduledPreload, loadAudioSource, loadLyric, schedulePreloadNextTrack, trackStatus]);
+  }, [
+    cancelScheduledPreload,
+    loadAudioSource,
+    loadLyric,
+    playerStatus.shuffle,
+    schedulePreloadNextTrack,
+    trackStatus
+  ]);
   // 清理所有未完成的请求
   useEffect(() => {
     return () => {

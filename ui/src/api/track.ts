@@ -2,6 +2,7 @@ import { apiRequest } from "@mahiru/ui/utils/request";
 import { CacheStoreErr, NCMServerErr } from "@mahiru/ui/utils/errs";
 import { CacheStore } from "@mahiru/ui/store/cache";
 import { Log } from "@mahiru/ui/utils/dev";
+import { Time } from "@mahiru/ui/utils/time";
 
 /**
  * 获取音乐 url
@@ -81,8 +82,8 @@ export async function getTrackDetail(ids: string | number): Promise<NeteaseTrack
   try {
     const cache = await CacheStore.fetchObject<NeteaseTrackDetailResponse>(
       cacheID,
-      1000 * 60 * 60 * 24
-    ); // 缓存24小时
+      Time.getCacheTimeLimit(24, "day")
+    );
     if (cache) {
       Log.trace("api/track.ts:getTrackDetail", "使用歌曲详情缓存", ids);
       return cache;
@@ -108,25 +109,6 @@ export async function getTrackDetail(ids: string | number): Promise<NeteaseTrack
     });
   } catch (err) {
     throw NCMServerErr.create("ui/api/track.ts:getTrackDetail", err);
-  }
-}
-
-/**
- * 新歌速递
- * @desc 调用此接口 , 可获取新歌速递
- * @param type - 地区类型 id, 对应以下: 全部:0 华语:7 欧美:96 日本:8 韩国:16
- */
-export async function topSong(type: 0 | 7 | 96 | 8 | 16) {
-  try {
-    return await apiRequest<{ type: number }, NeteaseTopSongResponse>({
-      url: "/top/song",
-      method: "get",
-      params: {
-        type
-      }
-    });
-  } catch (err) {
-    throw NCMServerErr.create("ui/api/track.ts:topSong", err);
   }
 }
 
@@ -188,4 +170,35 @@ export function scrobble(lastStatus: PlayerTrackStatus, time: number) {
       sourceid: source,
       time: Math.floor(time)
     });
+}
+
+/**
+ * 副歌时间
+ * @desc 调用此接口, 传入歌曲 id, 获取副歌时间
+ * */
+export async function getTrackChorus(id: number) {
+  const cacheID = `song_chorus?id=` + id;
+  try {
+    const cache = await CacheStore.fetchObject<NeteaseTrackChorusResponse>(
+      cacheID,
+      Time.getCacheTimeLimit(7, "day")
+    );
+    if (cache) return cache;
+  } catch (err) {
+    throw CacheStoreErr.create("ui/api/track.ts:getTrackChorus", err);
+  }
+  try {
+    return await apiRequest<any, NeteaseTrackChorusResponse>("/song/chorus", {
+      params: { id }
+    }).then((response) => {
+      try {
+        void CacheStore.storeObject(cacheID, response);
+      } catch (err) {
+        Log.error(CacheStoreErr.create("ui/api/track.ts:getTrackChorus", err));
+      }
+      return response;
+    });
+  } catch (err) {
+    throw NCMServerErr.create("ui/api/track.ts:getTrackChorus", err);
+  }
 }

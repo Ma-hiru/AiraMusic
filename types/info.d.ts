@@ -1,5 +1,9 @@
 type InfoSyncValueMap = {
-  comments: { type: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7; id: number };
+  comments: {
+    type: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
+    id: number;
+    track: NeteaseTrack;
+  };
   search: string;
   artist: number;
   album: number;
@@ -14,4 +18,5 @@ type InfoSync<T extends InfoSyncType> = {
   mainColor: string;
   secondaryColor: string;
   textColor: string;
+  backgroundImage: Undefinable<string>;
 };

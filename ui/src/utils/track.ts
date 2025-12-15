@@ -1,8 +1,8 @@
-import { getMP3 } from "@mahiru/ui/api/track";
 import { EqError, Log } from "@mahiru/ui/utils/dev";
 import { CacheStore } from "@mahiru/ui/store/cache";
 import { Filter, ImageSize } from "@mahiru/ui/utils/filter";
 import { Time } from "@mahiru/ui/utils/time";
+import { API } from "@mahiru/ui/api";
 
 /**
  * 音质等级对应的码率
@@ -41,7 +41,7 @@ export const Track = new (class {
     if (cacheResponse) {
       return cacheResponse?.data || null;
     }
-    return getMP3(id, quality)
+    return API.Track.getMP3(id, quality)
       .then((res) => {
         if (res) void CacheStore.storeObject(cacheKey, res);
         return res?.data || null;

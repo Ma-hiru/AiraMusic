@@ -45,9 +45,7 @@ export function subscribePlaylist(params: {
   /** 类型,`1:收藏`,`2:取消收藏` */
   t: 1 | 2;
 }) {
-  return apiRequest<typeof params & { timestamp: number }, NeteaseAPIResponse>({
-    url: "/playlist/subscribe",
-    method: "post",
+  return apiRequest<any, NeteaseAPIResponse>("/playlist/subscribe", {
     params: {
       ...params,
       timestamp: new Date().getTime()
@@ -116,7 +114,6 @@ export function addOrRemoveTrackFromPlaylist(params: {
  * 心动模式/智能播放
  * @desc 登录后调用此接口 , 可获取心动模式/智能播放列表 必选参数 : id :
  */
-// TODO: `/playmode/intelligence/list` 返回推荐队列，待补类型
 export function intelligencePlaylist(params: {
   /** 歌曲 id */
   id: number;
@@ -130,4 +127,19 @@ export function intelligencePlaylist(params: {
     method: "get",
     params
   });
+}
+
+/**
+ * 歌单收藏者
+ * @desc 调用此接口 , 传入歌单 id 可获取歌单的所有收藏者
+ * */
+export function getPlaylistSubscribers(params: {
+  /** 歌单id */
+  id: number;
+  /** 取出评论数量 , 默认为 20 */
+  limit?: number;
+  /** 偏移数量 , 用于分页 , 如 :( 评论页数 -1)*20, 其中 20 为 limit 的值 */
+  offset?: number;
+}) {
+  return apiRequest<never, NeteaseAPIResponse>({ params });
 }

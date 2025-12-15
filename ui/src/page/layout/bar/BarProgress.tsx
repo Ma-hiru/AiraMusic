@@ -1,24 +1,26 @@
 import { FC, memo } from "react";
 import { motion } from "motion/react";
-import { cx } from "@emotion/css";
+import { css, cx } from "@emotion/css";
 import { usePlayProgress } from "@mahiru/ui/hook/usePlayProgress";
 import { useThemeColor } from "@mahiru/ui/hook/useThemeColor";
 import { useLayoutStatus } from "@mahiru/ui/store";
 
 const BarProgress: FC<object> = () => {
-  const { barRef, handleBarClick, handleBarMouseDown, bufferScope, percentScope, isPlaying } =
-    usePlayProgress();
   const { background } = useLayoutStatus(["background"]);
-  const { mainColor } = useThemeColor();
+  const { mainColor, textColorOnMain } = useThemeColor();
+  const { barRef, handleBarClick, handleBarMouseDown, bufferScope, percentScope, chorusPercent } =
+    usePlayProgress();
+
   return (
     <div
       ref={barRef}
       className={cx(
-        "fixed w-screen backdrop-blur-lg bottom-18 shadow-[0_5px_10px_-5px_rgba(0,0,0,0.15)] h-1 overflow-hidden cursor-pointer ease-in-out transition-all duration-300",
-        background ? "bg-transparent" : "bg-white",
-        {
-          "hover:h-2": isPlaying
-        }
+        `
+          fixed w-screen h-1 bottom-18 overflow-hidden
+          shadow-[0_5px_10px_-5px_rgba(0,0,0,0.15)] backdrop-blur-lg
+          cursor-pointer ease-in-out transition-all duration-300 hover:h-2
+        `,
+        background ? "bg-transparent" : "bg-white"
       )}
       onClick={handleBarClick}
       onMouseDown={handleBarMouseDown}>
@@ -35,6 +37,22 @@ const BarProgress: FC<object> = () => {
         initial={{ width: 0 }}
         className="block h-full bg-gray-500/20"
       />
+      {chorusPercent.map((percent, index) => {
+        return (
+          <span
+            key={index}
+            className={css`
+              position: absolute;
+              top: 0;
+              left: ${percent}%;
+              height: 100%;
+              max-width: 5px;
+              aspect-ratio: 1 / 1;
+            `}
+            style={{ background: textColorOnMain.string() }}
+          />
+        );
+      })}
     </div>
   );
 };

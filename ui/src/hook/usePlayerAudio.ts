@@ -8,14 +8,21 @@ let initialSeekTime: number | null = null;
 let isApplyingInitialSeek = false;
 let cachedTrackID: number | null = null;
 
+/**
+ * 音频控制
+ * - 监听zustand的audioRef变化，绑定audio元素的各种事件，更新播放进度、播放状态、音量等信息到zustand
+ * - 提供播放/暂停、静音/取消静音、音量调节、跳转播放时间等方法
+ * */
 export function usePlayerAudio() {
-  const { playerProgress, trackStatus, setPlayerStatus, playerStatus, audioRef } = usePlayerStatus([
-    "playerProgress",
-    "trackStatus",
-    "setPlayerStatus",
-    "playerStatus",
-    "audioRef"
-  ]);
+  const { playerProgress, trackStatus, setPlayerStatus, playerStatus, audioRef, setAudioControl } =
+    usePlayerStatus([
+      "playerProgress",
+      "trackStatus",
+      "setPlayerStatus",
+      "playerStatus",
+      "audioRef",
+      "setAudioControl"
+    ]);
 
   const play = useCallback(() => {
     const audio = audioRef.current();
@@ -130,15 +137,14 @@ export function usePlayerAudio() {
   useEffect(() => {
     const audio = audioRef.current();
     if (isApplyingInitialSeek && audio && trackStatus && trackStatus.track.id !== cachedTrackID) {
-      console.log("apply initial seek for new track", trackStatus.track.id);
       isApplyingInitialSeek = false;
       audio.src = trackStatus.audio;
       audio.load();
+      audio.fastSeek?.(0);
       setTimeout(() => {
-        audio.fastSeek?.(0);
         audio.currentTime = 0;
         audio.play();
-      }, 1000);
+      }, 500);
     }
   }, [audioRef, trackStatus]);
   // 监听 audio 播放状态变化
@@ -192,7 +198,7 @@ export function usePlayerAudio() {
     };
   }, [audioRef, playerProgress, setPlayerStatus]);
 
-  return useMemo(
+  const Audio = useMemo(
     () => ({
       play,
       mute,
@@ -203,6 +209,14 @@ export function usePlayerAudio() {
     }),
     [audioRef, changeCurrentTime, downVolume, mute, play, upVolume]
   );
+  // 注册 Audio 控制器到全局状态
+  useEffect(() => {
+    setAudioControl(() => Audio);
+    return () => {
+      setAudioControl(() => null);
+    };
+  }, [Audio, setAudioControl]);
+  return Audio;
 }
 
 export type AudioControl = ReturnType<typeof usePlayerAudio>;

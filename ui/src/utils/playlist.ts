@@ -1,9 +1,9 @@
 import { Filter, ImageSize } from "@mahiru/ui/utils/filter";
 import { EqError, Log } from "@mahiru/ui/utils/dev";
-import { getPlaylistDetail } from "@mahiru/ui/api/playlist";
 import { getPersistSnapshot } from "@mahiru/ui/store";
 import { CacheStore } from "@mahiru/ui/store/cache";
 import { Time } from "@mahiru/ui/utils/time";
+import { API } from "@mahiru/ui/api";
 
 export type PlaylistCacheID = `play_list_cache_${string | number}`;
 
@@ -152,7 +152,7 @@ export const PlaylistManager = new (class {
     if (cache) {
       return cache;
     } else {
-      const rawList = await getPlaylistDetail(id);
+      const rawList = await API.Playlist.getPlaylistDetail(id);
       const fullList = await Filter.NeteasePlaylistToFullTracks(
         { ...rawList },
         whenRequestMissedTracks

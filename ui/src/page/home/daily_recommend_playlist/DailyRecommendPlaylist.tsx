@@ -1,15 +1,15 @@
 import { FC, memo, useEffect, useState } from "react";
-import { dailyRecommendPlaylist } from "@mahiru/ui/api/recommend";
 import { useThemeColor } from "@mahiru/ui/hook/useThemeColor";
 import RecommendPlaylistList from "./list";
 import Color from "color";
+import { API } from "@mahiru/ui/api";
 
 const DailyRecommendPlaylist: FC<object> = () => {
   const [recommend, setRecommend] = useState<DailyRecommendPlaylistResult[]>([]);
   const { mainColor } = useThemeColor();
   const titleColor = Color("#000000").mix(Color(mainColor), 0.2).string();
   useEffect(() => {
-    dailyRecommendPlaylist().then((result) => {
+    API.Recommend.dailyRecommendPlaylist().then((result) => {
       setRecommend(result.recommend);
     });
   }, []);

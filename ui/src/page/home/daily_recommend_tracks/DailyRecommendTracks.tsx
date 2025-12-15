@@ -1,8 +1,8 @@
 import { FC, memo, useCallback, useEffect, useRef, useState } from "react";
-import { dailyRecommendTracks } from "@mahiru/ui/api/recommend";
 import { usePlayingBackground } from "@mahiru/ui/hook/usePlayingBackground";
 import RecommendTrackTitle from "./RecommendTrackTitle";
 import RecommendTrackList from "./list";
+import { API } from "@mahiru/ui/api";
 
 const DailyRecommendTracks: FC<object> = () => {
   const [recommend, setRecommend] = useState<DailyRecommendTracksDailySong[]>([]);
@@ -27,7 +27,7 @@ const DailyRecommendTracks: FC<object> = () => {
   }, []);
 
   useEffect(() => {
-    dailyRecommendTracks().then((result) => {
+    API.Recommend.dailyRecommendTracks().then((result) => {
       setRecommend(result.data.dailySongs);
     });
   }, []);

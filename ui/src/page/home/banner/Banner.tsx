@@ -1,19 +1,18 @@
 import Carousel from "@mahiru/ui/componets/public/Carousel";
 import { FC, memo, useCallback, useEffect, useState } from "react";
-import { homeBanner } from "@mahiru/ui/api/recommend";
 import { NeteaseBanner } from "@mahiru/ui/types/netease/banner";
 import { EqError, Log } from "@mahiru/ui/utils/dev";
-import { getTrackDetail } from "@mahiru/ui/api/track";
 import { useAppLoaded } from "@mahiru/ui/hook/useAppLoaded";
 import { useThemeColor } from "@mahiru/ui/hook/useThemeColor";
 import { Filter } from "@mahiru/ui/utils/filter";
 import { Renderer } from "@mahiru/ui/utils/renderer";
 import { Player } from "@mahiru/ui/utils/player";
+import { API } from "@mahiru/ui/api";
 
 const Banner: FC<object> = () => {
   const [banner, setBanner] = useState<NeteaseBanner[]>([]);
   useEffect(() => {
-    homeBanner().then((result) => {
+    API.Recommend.homeBanner().then((result) => {
       setBanner(result.banners);
     });
   }, []);
@@ -27,7 +26,7 @@ const Banner: FC<object> = () => {
       const { type, id } = parseBannerURL(item.url);
       switch (type) {
         case "song": {
-          const detail = await getTrackDetail(id);
+          const detail = await API.Track.getTrackDetail(id);
           const tracks = Filter.NeteaseTracksPrivilegeExtends(detail.songs, detail.privileges);
           const track = tracks[0];
           if (track && track.playable) {

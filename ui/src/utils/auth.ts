@@ -1,7 +1,7 @@
 import Cookies from "js-cookie";
-import { logout } from "@mahiru/ui/api/auth";
 import { router } from "@mahiru/ui/router";
 import { getPersistSnapshot, usePersistZustandStore } from "@mahiru/ui/store";
+import { API } from "@mahiru/ui/api";
 
 function setCookies(raw: string) {
   const cookies = raw.split(";;");
@@ -46,7 +46,7 @@ function isLooseLoggedIn() {
 }
 
 function doLogout() {
-  return logout().finally(() => {
+  return API.Auth.logout().finally(() => {
     removeCookie("MUSIC_U");
     removeCookie("__csrf");
     // 更新状态仓库

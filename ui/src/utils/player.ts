@@ -11,24 +11,32 @@ type CacheType = {
   trackStatus: Nullable<PlayerTrackStatus>;
 };
 
-const { setTrackStatus, setPlayerStatus, beforeTrackUpdate, playerProgress } =
-  getPlayerStatusSnapshot();
-
-export class _Player {
+export const Player = new (class {
   private _cacheKey = "playlist_player_manager";
   private _position: number = -1;
   private _playlist: PlayerTrackStatus[] = [];
   private _shuffle: boolean = false;
   private _repeat: "off" | "one" | "all" = "off";
-  private _outerTrackUpdater = setTrackStatus;
-  private _outerStatusUpdater = setPlayerStatus;
-  private _beforeTrackUpdate = beforeTrackUpdate;
+  private _outerTrackUpdater: NormalFunc<
+    [updater: NormalFunc<[draft: Nullable<PlayerTrackStatus>], void | Nullable<PlayerTrackStatus>>]
+  > | null = null;
+  private _outerStatusUpdater: NormalFunc<
+    [updater: NormalFunc<[draft: PlayerStatus], void | PlayerStatus>]
+  > | null = null;
+  private _beforeTrackUpdate: NormalFunc<[next: Nullable<PlayerTrackStatus>]> | null = null;
 
-  constructor() {
+  constructor() {}
+
+  init() {
+    const { setTrackStatus, setPlayerStatus, beforeTrackUpdate } = getPlayerStatusSnapshot();
+    this._outerTrackUpdater = setTrackStatus;
+    this._outerStatusUpdater = setPlayerStatus;
+    this._beforeTrackUpdate = beforeTrackUpdate;
     void this.loadFromCache();
   }
 
   async loadFromCache() {
+    const { playerProgress, setPlayerStatus, setTrackStatus } = getPlayerStatusSnapshot();
     const cache = await CacheStore.fetchObject<CacheType>(this._cacheKey);
     if (cache) {
       this._position = cache._position;
@@ -378,6 +386,4 @@ export class _Player {
   get playlist() {
     return this._playlist;
   }
-}
-
-export const Player = new _Player();
+})();

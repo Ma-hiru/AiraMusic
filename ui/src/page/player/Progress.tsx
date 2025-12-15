@@ -5,10 +5,18 @@ import { Time } from "@mahiru/ui/utils/time";
 import { usePlayerStatus } from "@mahiru/ui/store";
 import { TrackQuality } from "@mahiru/ui/utils/track";
 import ListItemQuality from "@mahiru/ui/componets/track_list/ListItemQuality";
+import { css } from "@emotion/css";
 
 const Progress: FC<object> = () => {
-  const { barRef, bufferScope, percentScope, handleBarClick, handleBarMouseDown, progress } =
-    usePlayProgress();
+  const {
+    barRef,
+    bufferScope,
+    percentScope,
+    handleBarClick,
+    handleBarMouseDown,
+    progress,
+    chorusPercent
+  } = usePlayProgress();
 
   const { trackStatus } = usePlayerStatus(["trackStatus"]);
   const quality = () => {
@@ -40,6 +48,21 @@ const Progress: FC<object> = () => {
             initial={{ width: 0 }}
             className="block h-full bg-white/30 backdrop-blur-lg"
           />
+          {chorusPercent.map((percent, index) => {
+            return (
+              <span
+                key={index}
+                className={css`
+                  position: absolute;
+                  top: 0;
+                  left: ${percent}%;
+                  height: 100%;
+                  width: 3px;
+                `}
+                style={{ background: "white" }}
+              />
+            );
+          })}
         </div>
       </div>
       <div className="w-full flex justify-between items-center text-white/50 backdrop-blur-lg text-[12px] mt-1 select-none">

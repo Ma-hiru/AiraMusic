@@ -1,8 +1,7 @@
 import { EqError, Log } from "@mahiru/ui/utils/dev";
-import { refreshCookie } from "@mahiru/ui/api/auth";
-import { userAccount, userDetail, userLikedSongsIDs, userPlaylist } from "@mahiru/ui/api/user";
 import { getPersistSnapshot } from "@mahiru/ui/store";
 import { Auth } from "@mahiru/ui/utils/auth";
+import { API } from "@mahiru/ui/api";
 
 /** 登录接口 */
 export async function refreshLogin(cookies: string) {
@@ -27,7 +26,7 @@ export async function refreshCookieTask() {
   try {
     if (!Auth.isAccountLoggedIn()) return;
     Log.trace("refresh cookie");
-    await refreshCookie();
+    await API.Auth.refreshCookie();
 
     const store = getPersistSnapshot();
     store.updatePersistStoreData({
@@ -48,8 +47,8 @@ export async function refreshUserProfile(login: boolean = false) {
   try {
     if (!Auth.isAccountLoggedIn() && !login) return;
     Log.trace("refresh user profile");
-    const account = await userAccount();
-    const detail = await userDetail(account.profile.userId);
+    const account = await API.User.userAccount();
+    const detail = await API.User.userDetail(account.profile.userId);
 
     const { updatePersistStoreData } = getPersistSnapshot();
     updatePersistStoreData({
@@ -75,7 +74,7 @@ export async function refreshUserPlaylist(login: boolean = false) {
     const { data } = getPersistSnapshot();
     const uid = data.user?.userId;
     if (uid) {
-      const { playlist } = await userPlaylist({ uid, limit: 30 });
+      const { playlist } = await API.User.userPlaylist({ uid, limit: 30 });
       const userLikedList = playlist.shift();
       updateUserLikedListSummary(userLikedList || null);
       updateUserPlaylistSummary(playlist);
@@ -99,7 +98,7 @@ export async function refreshUserLikedTrackIDs() {
     const { data } = getPersistSnapshot();
     const uid = data.user?.userId;
     if (uid) {
-      const { ids, checkPoint, code } = await userLikedSongsIDs(uid);
+      const { ids, checkPoint, code } = await API.User.userLikedSongsIDs(uid);
       if (code === 200) {
         const idsSet: Record<number, boolean> = {};
         ids.forEach((id) => (idsSet[id] = true));

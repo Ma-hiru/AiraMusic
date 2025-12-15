@@ -326,3 +326,15 @@ interface DailyRecommendTracksRecommendReason {
   songId: number;
   targetUrl: null;
 }
+
+interface NeteaseTrackChorusResponse extends NeteaseAPIResponse {
+  chorus: NeteaseChorusData[];
+  data: NeteaseChorusData[];
+}
+
+interface NeteaseChorusData {
+  endTime: number;
+  id: number;
+  startTime: number;
+  ugcLocked: number;
+}

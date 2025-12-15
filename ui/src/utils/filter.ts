@@ -1,9 +1,9 @@
-import { getTrackDetail } from "@mahiru/ui/api/track";
 import { EqError, Log } from "@mahiru/ui/utils/dev";
 import { getPersistSnapshot } from "@mahiru/ui/store";
 import { Auth } from "@mahiru/ui/utils/auth";
 import pLimit from "p-limit";
 import { CacheStore } from "@mahiru/ui/store/cache";
+import { API } from "@mahiru/ui/api";
 
 /** Netease Image Size Enum */
 export const enum ImageSize {
@@ -128,7 +128,7 @@ async function NeteaseTrackIdsToDetail(
     chunks.push(ids.slice(i, i + maxPerRequest).map((t) => t.id));
   }
   const results = await Promise.all(
-    chunks.map((chunk) => limit(() => getTrackDetail(chunk.join(","))))
+    chunks.map((chunk) => limit(() => API.Track.getTrackDetail(chunk.join(","))))
   );
   const tracks: NeteaseTrack[] = [];
   const privilege: NeteaseTrackPrivilege[] = [];

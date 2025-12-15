@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { CommentSort, CommentType, getCommentNew } from "@mahiru/ui/api/comment";
+import { CommentSort, CommentType } from "@mahiru/ui/api/comment";
 import { EqError, Log } from "@mahiru/ui/utils/dev";
+import { API } from "@mahiru/ui/api";
 
 interface UseCommentProps {
   type: CommentType;
@@ -29,7 +30,6 @@ export function useComment({
 
   const requestComment = useCallback(
     async (pageNo: number) => {
-      console.log("requestComment", pageNo);
       if (pageNo < 1) return;
       if (commentsCache.current?.has(pageNo)) {
         setCurrentPageNo(pageNo);
@@ -38,7 +38,7 @@ export function useComment({
       }
       setLoading(true);
       setFailed(false);
-      getCommentNew({
+      API.Comment.getCommentNew({
         id,
         pageSize,
         pageNo,

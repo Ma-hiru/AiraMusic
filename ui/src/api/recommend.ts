@@ -3,6 +3,7 @@ import { CacheStore } from "@mahiru/ui/store/cache";
 import { Log } from "@mahiru/ui/utils/dev";
 import { NeteaseBannerResponse } from "@mahiru/ui/types/netease/banner";
 import { Time } from "@mahiru/ui/utils/time";
+import { NCMServerErr } from "@mahiru/ui/utils/errs";
 
 /**
  * 推荐歌单
@@ -157,4 +158,23 @@ export async function homeBanner(type: 0 | 1 | 2 | 3 = 0): Promise<NeteaseBanner
     CacheStore.storeObject(cacheKey, result);
     return result;
   });
+}
+
+/**
+ * 新歌速递
+ * @desc 调用此接口 , 可获取新歌速递
+ * @param type - 地区类型 id, 对应以下: 全部:0 华语:7 欧美:96 日本:8 韩国:16
+ */
+export async function topSong(type: 0 | 7 | 96 | 8 | 16) {
+  try {
+    return await apiRequest<{ type: number }, NeteaseTopSongResponse>({
+      url: "/top/song",
+      method: "get",
+      params: {
+        type
+      }
+    });
+  } catch (err) {
+    throw NCMServerErr.create("ui/api/track.ts:topSong", err);
+  }
 }

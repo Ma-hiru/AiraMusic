@@ -1,7 +1,8 @@
 import QRCode from "qrcode";
 import { EqError, Log } from "@mahiru/ui/utils/dev";
 import { useCallback, useEffect, useState } from "react";
-import { loginQrCodeCheck, loginQrCodeCreate, loginQrCodeKey } from "@mahiru/ui/api/auth";
+import { loginQrCodeCheck } from "@mahiru/ui/api/auth";
+import { API } from "@mahiru/ui/api";
 
 interface LoginQRCodeProps {
   qrOptions?: QRCode.QRCodeToDataURLOptions;
@@ -91,8 +92,8 @@ export enum QRCodeStatus {
 }
 
 async function requestQRCode() {
-  const keyResult = await loginQrCodeKey();
-  const codeResult = await loginQrCodeCreate({ key: keyResult.data.unikey });
+  const keyResult = await API.Auth.loginQrCodeKey();
+  const codeResult = await API.Auth.loginQrCodeCreate({ key: keyResult.data.unikey });
   return {
     QRCodeKey: keyResult.data.unikey,
     QRCodeURL: codeResult.data.qrurl
@@ -101,7 +102,7 @@ async function requestQRCode() {
 
 async function checkQRCode(codeKey: string) {
   try {
-    const checkResult = await loginQrCodeCheck(codeKey);
+    const checkResult = await API.Auth.loginQrCodeCheck(codeKey);
     return { code: checkResult.code as QRCodeStatus, result: checkResult };
   } catch (err) {
     Log.error(

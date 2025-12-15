@@ -2,9 +2,9 @@ import { FC, memo, useCallback } from "react";
 import { useFileCache } from "@mahiru/ui/hook/useFileCache";
 import { Filter, ImageSize } from "@mahiru/ui/utils/filter";
 import { AudioLines, CirclePlay } from "lucide-react";
-import { getTrackDetail } from "@mahiru/ui/api/track";
 import { usePlayerStatus } from "@mahiru/ui/store";
 import { Player } from "@mahiru/ui/utils/player";
+import { API } from "@mahiru/ui/api";
 
 interface RecommendTrackItemProps {
   song: DailyRecommendTracksDailySong;
@@ -20,7 +20,7 @@ const RecommendTrackItem: FC<RecommendTrackItemProps> = ({ song, mainColor, text
   const isPlaying = track?.id === song?.id;
   const play = useCallback(async () => {
     if (isPlaying) return;
-    const detail = await getTrackDetail(song.id);
+    const detail = await API.Track.getTrackDetail(song.id);
     const tracks = Filter.NeteaseTracksPrivilegeExtends(detail.songs, detail.privileges);
     const track = tracks[0];
     if (track && track.playable) {

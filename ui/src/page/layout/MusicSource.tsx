@@ -13,30 +13,40 @@ import { usePlayerAudio } from "@mahiru/ui/hook/usePlayerAudio";
 
 const MusicSource: FC<object> = () => {
   console.log("Render Music Source");
-  const { trackStatus, setAudioRef, setAudioControl } = usePlayerStatus([
+  const { trackStatus, setAudioRef, audioControl } = usePlayerStatus([
     "trackStatus",
     "setAudioRef",
-    "setAudioControl"
+    "audioControl"
   ]);
-  const { updateWindowTitle, defaultTitle } = useWindowTitle();
-  const Audio = usePlayerAudio();
-  const login = useLogin();
+  // 初始化播放器
+  useEffect(() => {
+    Player.init();
+  }, []);
+  // 注册 Audio 元素引用
   const audioRealRef = useRef<HTMLAudioElement>(null);
-
+  useEffect(() => {
+    setAudioRef(() => audioRealRef.current);
+    return () => {
+      setAudioRef(() => null);
+    };
+  }, [setAudioRef]);
+  // 注册音频控制器
+  usePlayerAudio();
+  // 注册音频资源加载器
   usePlayerResource();
-
+  // 注册 Media Session API
   useMediaSession({
     trackStatus,
-    play: Audio.play,
+    play: () => audioControl.current()?.play(),
     lastTrack: Player.last,
     nextTrack: Player.next
   });
-
+  // 注册局部键盘快捷键
   useKeyboardShortcut([
     {
       key: " ",
       description: "播放/暂停",
-      callback: () => Audio.play()
+      callback: () => audioControl.current()?.play()
     },
     {
       key: "ArrowRight",
@@ -53,15 +63,16 @@ const MusicSource: FC<object> = () => {
     {
       key: "ArrowUp",
       description: "增加音量",
-      callback: () => Audio.upVolume(0.1)
+      callback: () => audioControl.current()?.upVolume(0.1)
     },
     {
       key: "ArrowDown",
       description: "减少音量",
-      callback: () => Audio.downVolume(0.1)
+      callback: () => audioControl.current()?.downVolume(0.1)
     }
   ]);
-
+  // 注册窗口标题
+  const { updateWindowTitle, defaultTitle } = useWindowTitle();
   useEffect(() => {
     const title = trackStatus?.track.name;
     const artist = trackStatus?.track.ar;
@@ -71,21 +82,8 @@ const MusicSource: FC<object> = () => {
       updateWindowTitle(defaultTitle);
     }
   }, [defaultTitle, trackStatus?.track.ar, trackStatus?.track.name, updateWindowTitle]);
-
-  useEffect(() => {
-    setAudioRef(() => audioRealRef.current);
-    return () => {
-      setAudioRef(() => null);
-    };
-  }, [setAudioRef]);
-
-  useEffect(() => {
-    setAudioControl(() => Audio);
-    return () => {
-      setAudioControl(() => null);
-    };
-  }, [Audio, setAudioControl]);
-
+  // 处理音频加载错误
+  const login = useLogin();
   const onError = useCallback(
     (err: SyntheticEvent<HTMLAudioElement>) => {
       const raw = trackStatus?.meta?.[0]?.url;
@@ -100,7 +98,7 @@ const MusicSource: FC<object> = () => {
         } else {
           Log.error("ctx/PlayerProvider.tsx", "audio playback error", err);
           if (!Auth.isAccountLoggedIn()) {
-            Audio.play();
+            audioControl.current()?.play();
             login();
           } else {
             // TODO: 播放错误，可能是403或网络错误，403应该重新登录或刷新缓存，网络错误则跳过当前歌曲
@@ -109,7 +107,7 @@ const MusicSource: FC<object> = () => {
         }
       }
     },
-    [Audio, login, trackStatus?.meta, trackStatus?.track.id]
+    [audioControl, login, trackStatus?.meta, trackStatus?.track.id]
   );
   return (
     <audio
