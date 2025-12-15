@@ -10,7 +10,6 @@ const LoginPage: FC<object> = () => {
   useEffect(() => {
     if (status === QRCodeStatus.AUTHORIZED && result) {
       Renderer.sendMessage("login", "main", result.cookie);
-      Renderer.event.close({ broadcast: true });
     }
   }, [status, result]);
   useEffect(() => {

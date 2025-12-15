@@ -34,7 +34,8 @@ export function CreateMiniWindow() {
       titleBarStyle: "hidden",
       frame: false,
       type: "toolbar",
-      skipTaskbar: true
+      skipTaskbar: true,
+      show: false
     },
     "miniplayer",
     WindowExits.IGNORE
@@ -54,8 +55,6 @@ export function CreateMiniWindow() {
     Store.set("mini", MiniplayerWindow.getBounds());
   });
   MiniplayerWindow.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
-
-  MiniplayerWindow.hide();
 
   loadMiniWindowURL(
     MiniplayerWindow,

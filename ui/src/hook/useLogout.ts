@@ -28,10 +28,20 @@ export function waitLogin() {
   Renderer.invoke.hasOpenInternalWindow("login").then((ok) => {
     if (!ok) {
       Renderer.event.openInternalWindow("login");
-      const unsubscribe = Renderer.addMessageHandler("login", "login", refreshLogin, {
-        once: true
-      });
-      Renderer.addMessageHandler("otherWindowClosed", "login", unsubscribe, { once: true });
     }
+    Renderer.removeMessageHandler("loginHandler");
+    Renderer.addMessageHandler(
+      "login",
+      "login",
+      (cookie) => {
+        refreshLogin(cookie).then(() => {
+          Renderer.event.closeInternalWindow("login");
+        });
+      },
+      {
+        id: "loginHandler",
+        once: true
+      }
+    );
   });
 }

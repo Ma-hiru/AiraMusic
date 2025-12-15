@@ -43,8 +43,6 @@ export function CreateInfoWindow() {
   });
   InfoWindow.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
 
-  InfoWindow.hide();
-
   loadInfoWindowURL(
     InfoWindow,
     isDev() ? process.env.VITE_SERVER_PORT! : process.env.EXPRESS_SERVER_PORT!

@@ -1,6 +1,6 @@
 {
-  "appId": "com.mahiru.music",
-  "productName": "SimpleCloudMusic",
+  "appId": "com.mahiru.airamusic",
+  "productName": "AiraMusic",
   "files": [
     {
       "from": "dist/app",

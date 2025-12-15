@@ -24,15 +24,14 @@ export function CreateLoginWindow() {
       titleBarStyle: "hidden",
       frame: false,
       type: "toolbar",
-      skipTaskbar: true
+      skipTaskbar: true,
+      show: false
     },
     "login",
     WindowExits.DESTROY
   );
 
   LoginWindow.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
-
-  LoginWindow.hide();
   LoginWindow.center();
 
   loadLoginWindowURL(

@@ -27,7 +27,8 @@ export function CreateLyricWindow() {
       titleBarStyle: "hidden",
       frame: false,
       type: "toolbar",
-      skipTaskbar: true
+      skipTaskbar: true,
+      show: false
     },
     "lyric",
     WindowExits.DESTROY
@@ -47,8 +48,6 @@ export function CreateLyricWindow() {
     Store.set("lyric", LyricWindow.getBounds());
   });
   LyricWindow.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
-
-  LyricWindow.hide();
 
   loadLyricWindowURL(
     LyricWindow,
