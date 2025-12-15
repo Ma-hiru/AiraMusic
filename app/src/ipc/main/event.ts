@@ -34,6 +34,13 @@ const mainEventAPI = {
       WindowManager.get(win)?.close();
     }
   },
+  focusInternalWindow: (e, win) => {
+    const sender = BrowserWindow.fromWebContents(e.sender);
+    if (!sender) return;
+    if (WindowManager.getId(sender) === "main") {
+      WindowManager.get(win)?.focus();
+    }
+  },
   openExternalLink: (e, { title, url }) => {
     const sender = BrowserWindow.fromWebContents(e.sender);
     if (!sender) return;

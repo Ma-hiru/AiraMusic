@@ -5,11 +5,13 @@ import { useLayoutStatus } from "@mahiru/ui/store";
 
 export function useInfoWindow() {
   const [opened, setOpened] = useState(false);
+  const [commentsDisplayType, setCommentsDisplayType] = useState<"static" | "subscribe">("static");
   const { mainColor, textColorOnMain, secondaryColor } = useThemeColor();
   const { background } = useLayoutStatus(["background"]);
 
   const sendSync = useCallback(
     <T extends InfoSyncType>(type: T, value: InfoSync<T>["value"]) => {
+      Renderer.event.focusInternalWindow("info");
       Renderer.sendMessage("infoSync", "info", {
         type,
         value,
@@ -62,5 +64,12 @@ export function useInfoWindow() {
     };
   }, [getOpenedStatus, opened]);
 
-  return { openInfoWindow, opened };
+  useEffect(() => {
+    Renderer.addMessageHandler("infoSyncReverse", "info", ({ displayType }) => {
+      if (displayType && displayType !== commentsDisplayType) {
+        setCommentsDisplayType(displayType);
+      }
+    });
+  });
+  return { openInfoWindow, opened, commentsDisplayType };
 }

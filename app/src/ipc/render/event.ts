@@ -7,6 +7,7 @@ export const rendererEventAPI = {
   openExternalLink: (payload) => typedIpcRenderSend("openExternalLink", payload),
   openInternalWindow: (payload) => typedIpcRenderSend("openInternalWindow", payload),
   closeInternalWindow: (payload) => typedIpcRenderSend("closeInternalWindow", payload),
+  focusInternalWindow: (payload) => typedIpcRenderSend("focusInternalWindow", payload),
   openDevTools: () => typedIpcRenderSend("openDevTools", undefined),
   close: (props) => typedIpcRenderSend("close", props),
   minimize: () => typedIpcRenderSend("minimize", undefined),

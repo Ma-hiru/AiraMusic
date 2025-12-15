@@ -38,8 +38,8 @@ const MusicSource: FC<object> = () => {
   useMediaSession({
     trackStatus,
     play: () => audioControl.current()?.play(),
-    lastTrack: Player.last,
-    nextTrack: Player.next
+    lastTrack: () => Player.last(true),
+    nextTrack: () => Player.next(true)
   });
   // 注册局部键盘快捷键
   useKeyboardShortcut([

@@ -27,7 +27,7 @@ const InfoLayout: FC<object> = () => {
   }, []);
   return (
     <div className="w-screen h-screen bg-white overflow-hidden">
-      <InfoTop color={Color(infoSync.mainColor).darken(0.5).string()} />
+      <InfoTop color={Color(infoSync.secondaryColor).darken(0.5).string()} />
       <InfoCtx.Provider value={infoSync}>
         <KeepAliveOutlet />;
       </InfoCtx.Provider>

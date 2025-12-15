@@ -94,9 +94,7 @@ export function usePlayProgress() {
     const duration = getPlaying.current && !document.hidden ? 0.3 : 0;
     percentAnimate(
       percentScope.current,
-      {
-        width: `${progress.percent}%`
-      },
+      { width: `${progress.percent}%` },
       { duration, ease: "linear" }
     );
   }, [progress.percent, percentAnimate, percentScope, isDragging]);
@@ -105,9 +103,7 @@ export function usePlayProgress() {
     const duration = progress.buffer <= 1 || document.hidden ? 0 : 0.3;
     bufferAnimate(
       bufferScope.current,
-      {
-        width: `${progress.buffer}%`
-      },
+      { width: `${progress.buffer}%` },
       { duration, ease: "linear" }
     );
   }, [progress.buffer, bufferAnimate, bufferScope, isDragging]);
@@ -212,7 +208,6 @@ export function usePlayProgress() {
       API.Track.getTrackChorus(trackStatus.track.id)
         .then((response) => {
           if (Array.isArray(response.chorus)) {
-            console.log("Chorus data:", response.chorus);
             setChorus(response.chorus);
           } else {
             setChorus([]);

@@ -9,12 +9,13 @@ import Meta from "@mahiru/ui/page/comments/Meta";
 const CommentsPage: FC<object> = () => {
   const infoSync = useInfoCtx<"comments">();
   const [sortType, setSortType] = useState(CommentSort.Hot);
-  const { comments, currentPageNo, totalComment, requestComment, totalPageNo } = useComment({
-    id: infoSync.value.id,
-    type: infoSync.value.type,
-    pageSize: 30,
-    sortType
-  });
+  const { comments, currentPageNo, totalComment, requestComment, totalPageNo, pageCursor } =
+    useComment({
+      id: infoSync.value.id,
+      type: infoSync.value.type,
+      pageSize: 30,
+      sortType
+    });
 
   return (
     <div className="w-full h-full overflow-hidden">
@@ -23,6 +24,7 @@ const CommentsPage: FC<object> = () => {
       </div>
       <div className="w-full h-full relative overflow-hidden grid grid-cols-1 grid-rows-[auto_1fr] gap-1">
         <Meta
+          pageCursor={pageCursor}
           currentPageNo={currentPageNo}
           requestComment={requestComment}
           totalComment={totalComment}

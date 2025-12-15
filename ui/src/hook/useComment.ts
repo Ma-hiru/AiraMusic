@@ -91,6 +91,7 @@ export function useComment({
     comments,
     totalPageNo,
     requestComment,
-    clear
+    clear,
+    pageCursor
   };
 }

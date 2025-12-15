@@ -32,6 +32,7 @@ type NormalEventMaps = {
   openExternalLink: { url: string; title: string };
   openInternalWindow: WindowType;
   closeInternalWindow: WindowType;
+  focusInternalWindow: WindowType;
 };
 
 /** Normal 事件的 Message 类型以及其参数 */
@@ -43,6 +44,7 @@ type MessageTypeMap = {
   lyricInit: LyricInit;
   lyricVersion: LyricVersionType;
   infoSync: InfoSync;
+  infoSyncReverse: InfoSyncReverse;
   nextTrack: undefined;
   lastTrack: undefined;
   playTrack: undefined;

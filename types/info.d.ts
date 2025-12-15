@@ -20,3 +20,7 @@ type InfoSync<T extends InfoSyncType> = {
   textColor: string;
   backgroundImage: Undefinable<string>;
 };
+
+type InfoSyncReverse = {
+  displayType?: "static" | "subscribe";
+};
