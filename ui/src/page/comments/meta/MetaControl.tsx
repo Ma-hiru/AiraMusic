@@ -34,7 +34,7 @@ const MetaControl: FC<MetaControlProps> = ({
     });
   }, [displayType]);
   return (
-    <div className="w-full flex justify-between items-center gap-2">
+    <div className="w-full flex justify-between items-center gap-2 mt-2">
       <div>
         <h1
           className="space-x-2 font-bold text-[12px] sm:text-[14px] select-none"
@@ -66,7 +66,7 @@ const MetaControl: FC<MetaControlProps> = ({
           }}
         />
         <select
-          className="text-[10px] sm:text-[12px]"
+          className="text-[10px] sm:text-[12px] select-none"
           style={{ color: Color(themeSync.value.secondaryColor).darken(0.5).string() }}
           value={sortType}
           onChange={(e) => setSortType(Number(e.target.value) as CommentSort)}>
@@ -75,7 +75,7 @@ const MetaControl: FC<MetaControlProps> = ({
           <option value={CommentSort.Hot}>热门排序</option>
         </select>
         <select
-          className="text-[10px] sm:text-[12px]"
+          className="text-[10px] sm:text-[12px] select-none"
           style={{ color: Color(themeSync.value.secondaryColor).darken(0.5).string() }}
           value={displayType}
           onChange={(e) => setDisplayType(e.target.value as "static" | "subscribe")}>

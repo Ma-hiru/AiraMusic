@@ -42,7 +42,7 @@ const MetaWiki: FC<MetaWikiProps> = ({ infoSync, themeSync }) => {
   }, [RenderAlbumWiki, RenderSongWiki, infoSync.value]);
   return (
     <div
-      className="flex justify-center items-center gap-1"
+      className="flex justify-center items-center gap-1 select-none"
       style={{ color: Color(themeSync.value.secondaryColor).darken(0.5).string() }}>
       {RenderData.map((data) => {
         if (!data) return null;

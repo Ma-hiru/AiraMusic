@@ -6,9 +6,27 @@ interface ListItemQualityProps {
   themeColor: string;
   bgColor: string;
   forceShow?: Optional<TrackQuality>;
+  customText?: string;
 }
 
-const ListItemQuality: FC<ListItemQualityProps> = ({ track, themeColor, bgColor, forceShow }) => {
+const ListItemQuality: FC<ListItemQualityProps> = ({
+  track,
+  themeColor,
+  bgColor,
+  forceShow,
+  customText
+}) => {
+  if (customText)
+    return (
+      <div
+        className="text-[8px] h-3 text-center align-middle rounded-sm px-1 font-semibold opacity-80"
+        style={{
+          background: bgColor,
+          color: themeColor
+        }}>
+        {customText}
+      </div>
+    );
   if (forceShow) {
     return (
       <div

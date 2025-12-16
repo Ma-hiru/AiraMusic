@@ -5,6 +5,7 @@ import { useHeart } from "@mahiru/ui/hook/useHeart";
 import { useThemeColor } from "@mahiru/ui/hook/useThemeColor";
 import { Time } from "@mahiru/ui/utils/time";
 import ListItemQuality from "@mahiru/ui/componets/track_list/ListItemQuality";
+import { Track, TrackBitmark } from "@mahiru/ui/utils/track";
 
 interface ListItemAlbumProps {
   track: NeteaseTrack;
@@ -14,9 +15,16 @@ interface ListItemAlbumProps {
 const ListItemInfo: FC<ListItemAlbumProps> = ({ track, active }) => {
   const { isLiked, likeChange } = useHeart(track);
   const { mainColor, textColorOnMain } = useThemeColor();
-
+  const hasExplicit = Track.parseTrackBitmark(track, TrackBitmark.Explicit);
   return (
     <div className="flex gap-4 justify-end items-center">
+      {hasExplicit && (
+        <ListItemQuality
+          bgColor={textColorOnMain.string()}
+          themeColor={mainColor.string()}
+          customText="E"
+        />
+      )}
       <ListItemQuality
         bgColor={textColorOnMain.string()}
         themeColor={mainColor.string()}

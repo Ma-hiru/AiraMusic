@@ -1,4 +1,4 @@
-import { FC, Fragment, memo, useCallback, useEffect } from "react";
+import { FC, Fragment, memo, useCallback, useEffect, useRef } from "react";
 import { usePlayerStatus } from "@mahiru/ui/store";
 import { useHeart } from "@mahiru/ui/hook/useHeart";
 import { useInfoWindow } from "@mahiru/ui/hook/useInfoWindow";
@@ -8,21 +8,27 @@ import { CommentType } from "@mahiru/ui/api/comment";
 const Artist: FC<object> = () => {
   const { trackStatus } = usePlayerStatus(["trackStatus"]);
   const track = trackStatus?.track;
-  const { openInfoWindow, commentsDisplayType, opened } = useInfoWindow();
   const { likeChange, isLiked } = useHeart(track);
+  const lastTrackID = useRef(track?.id);
 
-  const handleOpenComments = useCallback(() => {
-    track?.id &&
+  const { openInfoWindow, commentsDisplayType, opened } = useInfoWindow();
+
+  const handleOpenComments = useCallback(
+    (track?: NeteaseTrack) => {
+      if (!track) return;
       openInfoWindow("comments", {
         id: track.id,
         type: CommentType.Song,
         track
       });
-  }, [openInfoWindow, track]);
+    },
+    [openInfoWindow]
+  );
 
   useEffect(() => {
-    if (opened && commentsDisplayType === "subscribe") {
-      handleOpenComments();
+    if (opened && commentsDisplayType === "subscribe" && track?.id !== lastTrackID.current) {
+      handleOpenComments(track);
+      lastTrackID.current = track?.id;
     }
     // 监听track变化
   }, [commentsDisplayType, handleOpenComments, opened, track]);
@@ -53,7 +59,7 @@ const Artist: FC<object> = () => {
         <MessageSquare
           color="white"
           fill="white"
-          onClick={handleOpenComments}
+          onClick={() => handleOpenComments(track)}
           className="size-4 scale-90 text-white/50  hover:opacity-50 active:scale-90 active:text-white cursor-pointer select-none shadow-lg ease-in-out duration-300 transition-all opacity-80"
         />
       </div>

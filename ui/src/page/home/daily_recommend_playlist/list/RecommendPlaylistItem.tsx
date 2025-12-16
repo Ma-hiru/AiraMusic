@@ -3,6 +3,7 @@ import { useFileCache } from "@mahiru/ui/hook/useFileCache";
 import { Filter, ImageSize } from "@mahiru/ui/utils/filter";
 import { CirclePlay, Headphones } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { PlaylistManager } from "@mahiru/ui/utils/playlist";
 
 interface RecommendTrackItemProps {
   playlist: DailyRecommendPlaylistResult;
@@ -33,7 +34,9 @@ const RecommendPlaylistItem: FC<RecommendTrackItemProps> = ({ playlist, mainColo
           />
           <div className="absolute right-1 top-1 flex gap-1 justify-center items-center text-white z-10">
             <Headphones className="size-3" />
-            <p className="text-[10px] align-middle">{formatPlayCount(playlist.playcount)}</p>
+            <p className="text-[10px] align-middle">
+              {PlaylistManager.formatPlayCount(playlist.playcount)}
+            </p>
           </div>
           <div
             className="absolute inset-0 flex justify-center items-center opacity-0 hover:opacity-100 bg-black/30 transition-opacity duration-300"
@@ -47,7 +50,7 @@ const RecommendPlaylistItem: FC<RecommendTrackItemProps> = ({ playlist, mainColo
                 loading="lazy"
                 alt={playlist.creator.nickname}
               />
-              <p className="text-[6px] max-w-8 truncate mt-[2px] text-white font-medium">
+              <p className="text-[6px] max-w-8 truncate mt-0.5 text-white font-medium">
                 {playlist.creator.nickname}
               </p>
             </div>
@@ -68,13 +71,3 @@ const RecommendPlaylistItem: FC<RecommendTrackItemProps> = ({ playlist, mainColo
   );
 };
 export default memo(RecommendPlaylistItem);
-
-function formatPlayCount(playcount: number): string {
-  if (playcount >= 100000000) {
-    return (playcount / 100000000).toFixed(1) + "亿";
-  } else if (playcount >= 10000) {
-    return (playcount / 10000).toFixed(1) + "万";
-  } else {
-    return playcount.toString();
-  }
-}

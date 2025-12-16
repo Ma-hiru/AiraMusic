@@ -1,5 +1,5 @@
 import Color from "color";
-import RecommendTrackItem from "./PlaylistItem";
+import PlaylistItem from "./PlaylistItem";
 import { FC, memo } from "react";
 import { css, cx } from "@emotion/css";
 import { useInnerWidth } from "@mahiru/ui/hook/useInnerWidth";
@@ -21,7 +21,7 @@ const PlaylistList: FC<RecommendTrackListProps> = ({ recommend }) => {
         `
       )}>
       {recommend.map((playlist) => (
-        <RecommendTrackItem
+        <PlaylistItem
           key={playlist.id}
           playlist={playlist}
           mainColor={Color(mainColor).alpha(0.5).string()}

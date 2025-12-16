@@ -196,8 +196,22 @@ export const Track = new (class {
         return "Hi-Res";
     }
   }
+
+  parseTrackBitmark(track: NeteaseTrack, flag: TrackBitmark) {
+    const mark = track?.mark;
+    if (typeof mark !== "number") return false;
+    return (mark & flag) === flag;
+  }
 })();
 
 type TrackSourceQualityReturn<T extends TrackQuality | undefined> = T extends undefined
   ? (NeteaseQualityLevels & { level: TrackQuality })[]
   : Undefinable<NeteaseQualityLevels & { level: TrackQuality }>;
+
+export enum TrackBitmark {
+  Stereo = 8192,
+  PureMusic = 131072,
+  DolbyAtmos = 262144,
+  Explicit = 1048576,
+  HiRes = 17179869184
+}

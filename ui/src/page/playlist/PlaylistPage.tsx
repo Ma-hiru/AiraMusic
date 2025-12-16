@@ -11,7 +11,6 @@ import { useLayoutStatus } from "@mahiru/ui/store";
 const PlaylistPage: FC<object> = () => {
   // 获取路由参数id
   const { id } = useParams();
-  console.log("Render PlayListPage", id);
   const { requestCanScrollTop } = useLayoutStatus(["requestCanScrollTop"]);
   const listRef = useRef<ListContainerRef>(null);
 
@@ -48,12 +47,7 @@ const PlaylistPage: FC<object> = () => {
 
   return (
     <div className="w-full h-full px-12 pt-20 contain-style contain-size contain-layout">
-      <Top
-        entry={entry}
-        id={id ? Number(id) : undefined}
-        filterTracks={filterTracks}
-        searchTracks={searchTracks}
-      />
+      <Top entry={entry} filterTracks={filterTracks} searchTracks={searchTracks} />
       <Divider />
       <div className="w-full h-[calc(100%-210px)] relative">
         <List

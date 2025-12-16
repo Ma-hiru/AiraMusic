@@ -50,7 +50,7 @@ const CommentAction: FC<CommentActionProps> = ({
       });
   }, [comment, liked, sourceId, type]);
   return (
-    <div className="absolute right-0 bottom-1.5 flex justify-end items-center select-none">
+    <div className="absolute right-0 bottom-1 flex justify-end items-center select-none">
       <div className="flex justify-center items-center gap-1">
         <p className="text-[8px] sm:text-[10px] relative top-0.5">{likedCount}</p>
         <ThumbsUp

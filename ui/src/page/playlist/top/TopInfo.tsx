@@ -1,4 +1,4 @@
-import { FC, memo, useCallback, useEffect } from "react";
+import { FC, memo, useCallback, useEffect, useRef } from "react";
 
 import { ListMusic, MessageSquare, Play } from "lucide-react";
 
@@ -10,29 +10,38 @@ import { useInfoWindow } from "@mahiru/ui/hook/useInfoWindow";
 import { CommentType } from "@mahiru/ui/api/comment";
 
 interface TopInfoProps {
-  id?: number;
   entry: Nullable<PlaylistCacheEntry>;
   filterTracks: { tracks: NeteaseTrack[]; absoluteIdx: Nullable<number[]> };
 }
 
-const TopInfo: FC<TopInfoProps> = ({ entry, filterTracks, id }) => {
+const TopInfo: FC<TopInfoProps> = ({ entry, filterTracks }) => {
   const { textColorOnMain, mainColor } = useThemeColor();
   const { openInfoWindow, opened, commentsDisplayType } = useInfoWindow();
+  const lastPlaylistID = useRef(entry?.playlist.id);
 
-  const openComments = useCallback(() => {
-    entry?.playlist &&
+  const openComments = useCallback(
+    (playlist?: NeteasePlaylistDetail) => {
+      if (!playlist) return;
       openInfoWindow("comments", {
         type: CommentType.Playlist,
-        id: id || 0,
-        playlist: entry?.playlist
+        id: playlist.id,
+        playlist
       });
-  }, [entry?.playlist, id, openInfoWindow]);
+    },
+    [openInfoWindow]
+  );
 
   useEffect(() => {
-    if (opened && commentsDisplayType === "subscribe" && entry?.playlist) {
-      openComments();
+    if (
+      opened &&
+      commentsDisplayType === "subscribe" &&
+      entry?.playlist.id !== lastPlaylistID.current
+    ) {
+      openComments(entry?.playlist);
+      lastPlaylistID.current = entry?.playlist.id;
     }
   }, [commentsDisplayType, entry?.playlist, openComments, opened]);
+
   return (
     <div className="h-44 grid grid-cols-1 grid-rows-[auto_1fr_auto] overflow-hidden max-w-max">
       <div
@@ -58,7 +67,7 @@ const TopInfo: FC<TopInfoProps> = ({ entry, filterTracks, id }) => {
           style={{ backgroundColor: mainColor.hex(), color: textColorOnMain.hex() }}
           className="rounded-md px-2 py-1 text-[12px] mr-2 cursor-pointer font-semibold flex items-center gap-1 overflow-hidden active:scale-95 shadow-2xl select-none min-w-max ease-in-out duration-300 transition-all hover:opacity-60"
           onClick={() => {
-            Player.replacePlaylist(filterTracks.tracks, id, 0);
+            Player.replacePlaylist(filterTracks.tracks, entry?.playlist.id, 0);
           }}>
           <Play size={16} /> 全部播放
         </button>
@@ -66,18 +75,31 @@ const TopInfo: FC<TopInfoProps> = ({ entry, filterTracks, id }) => {
           style={{ color: mainColor.hex(), backgroundColor: textColorOnMain.hex() }}
           className="rounded-md px-2 py-1 text-[12px] mr-2 cursor-pointer font-semibold flex items-center gap-1 overflow-hidden active:scale-95 shadow-2xl select-none min-w-max ease-in-out duration-300 transition-all hover:opacity-60"
           onClick={() => {
-            Player.addPlaylist(filterTracks.tracks, id);
+            Player.addPlaylist(filterTracks.tracks, entry?.playlist.id);
           }}>
           <ListMusic size={16} /> 加入列表
         </button>
         <button
           style={{ color: mainColor.hex() }}
-          className="px-2 py-1 text-[12px] mr-2 cursor-pointer font-semibold flex items-center gap-1 overflow-hidden active:scale-95 shadow-2xl select-none min-w-max ease-in-out duration-300 transition-all hover:opacity-60"
-          onClick={openComments}>
-          <MessageSquare size={16} /> 评论
+          onClick={() => openComments(entry?.playlist)}
+          className="overflow-hidden px-2 py-1 text-[12px] mr-2 cursor-pointer font-semibold flex items-center gap-1 active:scale-95 shadow-2xl select-none min-w-max ease-in-out duration-300 transition-all hover:opacity-60 space-x-0.5">
+          <MessageSquare size={16} />
+          <span>评论</span>
+          <span>{commentPosition(entry?.playlist.commentCount)}</span>
         </button>
       </div>
     </div>
   );
 };
 export default memo(TopInfo);
+
+function commentPosition(count?: number) {
+  if (!count) {
+    return "";
+  }
+  if (count > 999) {
+    return "999+";
+  } else {
+    return count.toString();
+  }
+}

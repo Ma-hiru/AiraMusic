@@ -1,9 +1,10 @@
 import { FC, memo, SyntheticEvent, useCallback, useRef } from "react";
 import { useFileCache } from "@mahiru/ui/hook/useFileCache";
 import { Filter, ImageSize } from "@mahiru/ui/utils/filter";
-import { PlaylistCacheEntry } from "@mahiru/ui/utils/playlist";
+import { PlaylistCacheEntry, PlaylistManager } from "@mahiru/ui/utils/playlist";
 import { CacheStore } from "@mahiru/ui/store/cache";
 import { useLayoutStatus } from "@mahiru/ui/store";
+import { Headphones } from "lucide-react";
 
 interface TopCoverProps {
   entry: Nullable<PlaylistCacheEntry>;
@@ -36,15 +37,23 @@ const TopCover: FC<TopCoverProps> = ({ entry }) => {
   );
 
   return (
-    <img
-      className="size-44 rounded-md shadow-xs select-none"
-      src={cachedCover}
-      loading="lazy"
-      decoding="async"
-      alt={entry?.playlist.name}
-      onLoad={onLoad}
-      onError={onImageError}
-    />
+    <div className="size-44 relative">
+      <img
+        className="w-full h-full rounded-md shadow-xs select-none"
+        src={cachedCover}
+        loading="lazy"
+        decoding="async"
+        alt={entry?.playlist.name}
+        onLoad={onLoad}
+        onError={onImageError}
+      />
+      <div className="absolute right-1 top-1 flex gap-1 justify-center items-center text-white z-10 select-none">
+        <Headphones className="size-3" />
+        <p className="text-[10px] align-middle">
+          {PlaylistManager.formatPlayCount(entry?.playlist.playCount)}
+        </p>
+      </div>
+    </div>
   );
 };
 export default memo(TopCover);
