@@ -7,8 +7,6 @@ import ListItemCover from "./ListItemCover";
 import ListItemName from "./ListItemName";
 import ListItemInfo from "./ListItemInfo";
 import { PlaylistCacheEntry } from "@mahiru/ui/utils/playlist";
-import { useThemeColor } from "@mahiru/ui/hook/useThemeColor";
-import { usePlayerStatus } from "@mahiru/ui/store";
 import { Player } from "@mahiru/ui/utils/player";
 
 interface ListItemProps {
@@ -18,6 +16,8 @@ interface ListItemProps {
   playListID?: number;
   absoluteIndex: number;
   isLikedList?: boolean;
+  textColorOnMain: string;
+  active?: boolean;
 }
 
 const ListItem: FC<ListItemProps> = ({
@@ -26,13 +26,12 @@ const ListItem: FC<ListItemProps> = ({
   playListID,
   absoluteIndex,
   isLikedList,
-  entry
+  entry,
+  textColorOnMain,
+  active = false
 }) => {
-  const { textColorOnMain } = useThemeColor();
-  const { trackStatus } = usePlayerStatus(["trackStatus"]);
   const track = data[index]!;
   const total = data.length;
-  const active = trackStatus?.track.id === track.id;
   const disabled = !track.playable;
 
   const play = useCallback<MouseEventHandler<HTMLDivElement>>(
@@ -61,7 +60,7 @@ const ListItem: FC<ListItemProps> = ({
 
   return (
     <div
-      style={active ? { color: textColorOnMain.hex() } : undefined}
+      style={active ? { color: textColorOnMain } : undefined}
       key={track.id}
       className={cx(
         "items-center grid grid-row-1 grid-cols-[auto_auto_1fr_auto_auto] gap-4 rounded-md py-[2px] pl-2 ease-in-out transition-colors mb-2",

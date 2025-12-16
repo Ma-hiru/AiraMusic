@@ -24,7 +24,8 @@ const Artist: FC<object> = () => {
     if (opened && commentsDisplayType === "subscribe") {
       handleOpenComments();
     }
-  }, [opened, commentsDisplayType, handleOpenComments]);
+    // 监听track变化
+  }, [commentsDisplayType, handleOpenComments, opened, track]);
 
   return (
     <div className="relative w-full flex justify-between gap-1 overflow-hidden items-center text-white/50 h-3.5 text-[12px] select-none">

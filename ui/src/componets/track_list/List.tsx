@@ -11,7 +11,7 @@ import {
 import { css, cx } from "@emotion/css";
 import { useVirtualList } from "@mahiru/ui/hook/useVirtualList";
 import { useThemeColor } from "@mahiru/ui/hook/useThemeColor";
-import { usePersistZustandShallowStore } from "@mahiru/ui/store";
+import { usePersistZustandShallowStore, usePlayerStatus } from "@mahiru/ui/store";
 import { PlaylistCacheEntry } from "@mahiru/ui/utils/playlist";
 import { useScrollAutoHide } from "@mahiru/ui/hook/useScrollAutoHide";
 
@@ -46,14 +46,23 @@ const ListContainer: ForwardRefRenderFunction<ListContainerRef, ListContainerPro
   ref
 ) => {
   console.log("ListContainer render");
+  const { textColorOnMain } = useThemeColor();
+  const { trackStatus } = usePlayerStatus(["trackStatus"]);
   const { userLikedListSummary } = usePersistZustandShallowStore(["userLikedListSummary"]);
   const { mainColor } = useThemeColor();
   const { tracks, absoluteIdx } = filterTracks;
   const containerRef = useRef<HTMLDivElement>(null);
   const isLikedPlayList = id === userLikedListSummary?.id;
   const extraData = useMemo(
-    () => ({ id, isLikedPlayList, absoluteIdx, entry }),
-    [absoluteIdx, entry, id, isLikedPlayList]
+    () => ({
+      id,
+      isLikedPlayList,
+      absoluteIdx,
+      entry,
+      currentTrackID: trackStatus?.track?.id,
+      textColorOnMain: textColorOnMain.string()
+    }),
+    [absoluteIdx, entry, id, isLikedPlayList, textColorOnMain, trackStatus?.track?.id]
   );
 
   const { start, end } = useVirtualList({
@@ -119,10 +128,19 @@ const ListContainer: ForwardRefRenderFunction<ListContainerRef, ListContainerPro
 
 const RowComponent: VirtualListRow<
   NeteaseTrack,
-  { id?: number; absoluteIdx: number[] | null; entry: Nullable<PlaylistCacheEntry> }
+  {
+    id?: number;
+    absoluteIdx: number[] | null;
+    entry: Nullable<PlaylistCacheEntry>;
+    currentTrackID?: number;
+    textColorOnMain: string;
+  }
 > = ({ index, items, extra }) => {
+  const track = items[index];
   return (
     <ListItem
+      active={track?.id === extra.currentTrackID}
+      textColorOnMain={extra.textColorOnMain}
       entry={extra.entry}
       index={index}
       data={items}

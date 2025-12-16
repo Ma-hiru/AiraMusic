@@ -48,14 +48,19 @@ const PlaylistPage: FC<object> = () => {
 
   return (
     <div className="w-full h-full px-12 pt-20 contain-style contain-size contain-layout">
-      <Top entry={entry} searchTracks={searchTracks} />
+      <Top
+        entry={entry}
+        id={id ? Number(id) : undefined}
+        filterTracks={filterTracks}
+        searchTracks={searchTracks}
+      />
       <Divider />
       <div className="w-full h-[calc(100%-210px)] relative">
         <List
           ref={listRef}
           entry={entry}
           loading={loading}
-          id={Number(id)}
+          id={id ? Number(id) : undefined}
           filterTracks={filterTracks}
           requestMissedTracks={requestMissedTracks}
           onVirtualListRangeUpdate={wrapRangeUpdate}

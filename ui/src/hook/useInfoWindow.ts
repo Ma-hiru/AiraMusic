@@ -9,21 +9,13 @@ export function useInfoWindow() {
   const { mainColor, textColorOnMain, secondaryColor } = useThemeColor();
   const { background } = useLayoutStatus(["background"]);
 
-  const sendSync = useCallback(
-    <T extends InfoSyncType>(type: T, value: InfoSync<T>["value"]) => {
-      Renderer.event.focusInternalWindow("info");
-      Renderer.sendMessage("infoSync", "info", {
-        type,
-        value,
-        mainColor: mainColor.string(),
-        secondaryColor: secondaryColor.string(),
-        textColor: textColorOnMain.string(),
-        backgroundImage: background
-      });
-    },
-    [background, mainColor, secondaryColor, textColorOnMain]
-  );
-
+  const sendSync = useCallback(<T extends InfoSyncType>(type: T, value: InfoSync<T>["value"]) => {
+    Renderer.event.focusInternalWindow("info");
+    Renderer.sendMessage("infoSync", "info", {
+      type,
+      value
+    });
+  }, []);
   const getOpenedStatus = useCallback(
     (cb?: NormalFunc<[ok: boolean]>) => {
       Renderer.invoke.hasOpenInternalWindow("info").then((ok) => {
@@ -35,7 +27,6 @@ export function useInfoWindow() {
     },
     [opened]
   );
-
   const openInfoWindow = useCallback(
     <T extends InfoSyncType>(type: T, value: InfoSync<T>["value"]) => {
       getOpenedStatus((open) => {
@@ -47,13 +38,20 @@ export function useInfoWindow() {
             "info",
             () => {
               sendSync(type, value);
+              sendSync("theme", {
+                mainColor: mainColor.string(),
+                secondaryColor: secondaryColor.string(),
+                textColor: textColorOnMain.string(),
+                backgroundImage: background
+              });
+              getOpenedStatus();
             },
             { once: true }
           );
         }
       });
     },
-    [getOpenedStatus, sendSync]
+    [background, getOpenedStatus, mainColor, secondaryColor, sendSync, textColorOnMain]
   );
 
   useEffect(() => {
@@ -63,13 +61,16 @@ export function useInfoWindow() {
       clearInterval(timer);
     };
   }, [getOpenedStatus, opened]);
-
   useEffect(() => {
-    Renderer.addMessageHandler("infoSyncReverse", "info", ({ displayType }) => {
+    const unsubscribe = Renderer.addMessageHandler("infoSyncReverse", "info", ({ displayType }) => {
       if (displayType && displayType !== commentsDisplayType) {
         setCommentsDisplayType(displayType);
       }
     });
+    return () => {
+      unsubscribe();
+    };
   });
+
   return { openInfoWindow, opened, commentsDisplayType };
 }

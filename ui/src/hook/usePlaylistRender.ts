@@ -247,7 +247,6 @@ export function usePlaylistHistoryRender() {
   );
 
   const updater = useCallback(() => {
-    console.log("usePlayListHistoryRender updater called");
     setLoading(true);
     PlaylistHistoryCache.load()
       .then((data) => {

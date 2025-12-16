@@ -1,30 +1,31 @@
-import { FC, memo, useRef } from "react";
-import CommentItem from "@mahiru/ui/page/comments/item/CommentItem";
 import Color from "color";
+import { FC, memo, useRef } from "react";
+import CommentItem from "./CommentItem";
 import { useScrollAutoHide } from "@mahiru/ui/hook/useScrollAutoHide";
 
 interface CommentsProps {
   comments: NeteaseComment[];
   infoSync: InfoSync<"comments">;
+  themeSync: InfoSync<"theme">;
 }
 
-const Comments: FC<CommentsProps> = ({ comments, infoSync }) => {
+const Comments: FC<CommentsProps> = ({ comments, infoSync, themeSync }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const { onScroll } = useScrollAutoHide(containerRef);
   return (
     <div
       ref={containerRef}
       onScroll={onScroll}
-      className="overflow-y-scroll scrollbar w-[90%] mx-auto pb-10">
+      className="overflow-y-scroll scrollbar w-[90%] mx-auto pb-10 px-1.5">
       {comments.map((comment) => (
         <CommentItem
           key={comment.commentId}
           comment={comment}
           type={infoSync.value.type}
           sourceId={infoSync.value.id}
-          mainColor={Color(infoSync.mainColor).darken(0.5).string()}
-          secondaryColor={infoSync.secondaryColor}
-          textColorOnMain={infoSync.textColor}
+          mainColor={Color(themeSync.value.mainColor).darken(0.5).string()}
+          secondaryColor={themeSync.value.secondaryColor}
+          textColorOnMain={themeSync.value.textColor}
         />
       ))}
     </div>

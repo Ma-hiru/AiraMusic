@@ -15,7 +15,7 @@ export function getSongWikiSummary(id: number) {
  * @desc 登录后调用此接口,使用此接口,传入歌曲 id,可获取对应的歌曲简要百科信息
  * */
 export function getUGCSong(id: number) {
-  return apiRequest<any, NeteaseAPIResponse>("/ugc/song/get", {
+  return apiRequest<any, NeteaseUGCSongResponse>("/ugc/song/get", {
     params: { id }
   });
 }
@@ -25,7 +25,7 @@ export function getUGCSong(id: number) {
  * @desc 登录后调用此接口,使用此接口,传入专辑 id,可获取对应的专辑简要百科信息
  * */
 export function getUGCAlbum(id: number) {
-  return apiRequest<any, NeteaseAPIResponse>("/ugc/album/get", {
+  return apiRequest<any, NeteaseUGCAlbumResponse>("/ugc/album/get", {
     params: { id }
   });
 }
