@@ -1,6 +1,6 @@
 import { FC, memo } from "react";
 import Title from "@mahiru/ui/componets/public/Title";
-import Search from "@mahiru/ui/page/history/Search";
+import Search from "@mahiru/ui/componets/public/Search";
 
 interface TopProps {
   searchTracks: NormalFunc<[k: string]>;

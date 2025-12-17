@@ -1,6 +1,6 @@
-import { FC, memo, SyntheticEvent, useCallback, useEffect, useRef } from "react";
+import { FC, memo, SyntheticEvent, useCallback, useEffect, useRef, useState } from "react";
 import { Player } from "@mahiru/ui/utils/player";
-import { useKeyboardShortcut } from "@mahiru/ui/hook/useKeyboardShortcut";
+import { ShortcutConfig, useKeyboardShortcut } from "@mahiru/ui/hook/useKeyboardShortcut";
 import { usePlayerResource } from "@mahiru/ui/hook/usePlayerResource";
 import { useMediaSession } from "@mahiru/ui/hook/useMediaSession";
 import { usePlayerStatus } from "@mahiru/ui/store";
@@ -21,7 +21,8 @@ const MusicSource: FC<object> = () => {
     playerStatus,
     spectrumOptions,
     setSpectrumData,
-    setSpectrumIsReady
+    setSpectrumIsReady,
+    isTyping
   } = usePlayerStatus([
     "trackStatus",
     "setAudioRef",
@@ -29,7 +30,8 @@ const MusicSource: FC<object> = () => {
     "playerStatus",
     "spectrumOptions",
     "setSpectrumIsReady",
-    "setSpectrumData"
+    "setSpectrumData",
+    "isTyping"
   ]);
   // 初始化播放器
   useEffect(() => {
@@ -55,35 +57,66 @@ const MusicSource: FC<object> = () => {
     nextTrack: () => Player.next(true)
   });
   // 注册局部键盘快捷键
-  useKeyboardShortcut([
-    {
-      key: " ",
-      description: "播放/暂停",
-      callback: () => audioControl.current()?.play()
-    },
-    {
-      key: "ArrowRight",
-      modifiers: ["alt"],
-      description: "下一首",
-      callback: () => Player.next(true)
-    },
-    {
-      key: "ArrowLeft",
-      modifiers: ["alt"],
-      description: "上一首",
-      callback: () => Player.last()
-    },
-    {
-      key: "ArrowUp",
-      description: "增加音量",
-      callback: () => audioControl.current()?.upVolume(0.1)
-    },
-    {
-      key: "ArrowDown",
-      description: "减少音量",
-      callback: () => audioControl.current()?.downVolume(0.1)
+  const [Shortcuts, setShortcuts] = useState<ShortcutConfig[]>([]);
+  useKeyboardShortcut(Shortcuts);
+  useEffect(() => {
+    if (isTyping) {
+      setShortcuts([
+        {
+          key: "ArrowRight",
+          modifiers: ["alt"],
+          description: "下一首",
+          callback: () => Player.next(true)
+        },
+        {
+          key: "ArrowLeft",
+          modifiers: ["alt"],
+          description: "上一首",
+          callback: () => Player.last()
+        },
+        {
+          key: "ArrowUp",
+          description: "增加音量",
+          callback: () => audioControl.current()?.upVolume(0.1)
+        },
+        {
+          key: "ArrowDown",
+          description: "减少音量",
+          callback: () => audioControl.current()?.downVolume(0.1)
+        }
+      ]);
+    } else {
+      setShortcuts([
+        {
+          key: " ",
+          description: "播放/暂停",
+          callback: () => audioControl.current()?.play()
+        },
+        {
+          key: "ArrowRight",
+          modifiers: ["alt"],
+          description: "下一首",
+          callback: () => Player.next(true)
+        },
+        {
+          key: "ArrowLeft",
+          modifiers: ["alt"],
+          description: "上一首",
+          callback: () => Player.last()
+        },
+        {
+          key: "ArrowUp",
+          description: "增加音量",
+          callback: () => audioControl.current()?.upVolume(0.1)
+        },
+        {
+          key: "ArrowDown",
+          description: "减少音量",
+          callback: () => audioControl.current()?.downVolume(0.1)
+        }
+      ]);
     }
-  ]);
+  }, [audioControl, isTyping]);
   // 注册窗口标题
   const { updateWindowTitle, defaultTitle } = useWindowTitle();
   useEffect(() => {

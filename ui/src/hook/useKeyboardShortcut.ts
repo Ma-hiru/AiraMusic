@@ -33,15 +33,10 @@ export function useKeyboardShortcut(
 ) {
   const { enabled = true, target = window } = options;
   const shortcutsRef = useRef<ShortcutConfig[]>(shortcuts);
-
-  // 更新 shortcuts ref
-  useEffect(() => {
-    shortcutsRef.current = shortcuts;
-  }, [shortcuts]);
+  shortcutsRef.current = shortcuts;
 
   useEffect(() => {
     if (!enabled || !target) return;
-
     const handleKeyDown = (event: KeyboardEvent) => {
       for (const shortcut of shortcutsRef.current) {
         if (matchShortcut(event, shortcut)) {
@@ -56,9 +51,7 @@ export function useKeyboardShortcut(
         }
       }
     };
-
     target.addEventListener("keydown", handleKeyDown as EventListener);
-
     return () => {
       target.removeEventListener("keydown", handleKeyDown as EventListener);
     };

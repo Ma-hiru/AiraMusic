@@ -1,12 +1,13 @@
 import { FC, memo } from "react";
 import { SquarePen } from "lucide-react";
-import Search from "./Search";
 import { usePersistZustandShallowStore } from "@mahiru/ui/store";
 import { useFileCache } from "@mahiru/ui/hook/useFileCache";
 import { Filter, ImageSize } from "@mahiru/ui/utils/filter";
 import { useSearchParams } from "react-router-dom";
 import { PlaylistCacheEntry } from "@mahiru/ui/utils/playlist";
 import { Time } from "@mahiru/ui/utils/time";
+
+import Search from "@mahiru/ui/componets/public/Search";
 
 interface TopRightProps {
   entry: Nullable<PlaylistCacheEntry>;

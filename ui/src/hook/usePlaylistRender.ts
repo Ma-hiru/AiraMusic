@@ -245,17 +245,18 @@ export function usePlaylistHistoryRender() {
     },
     [searchTrackInstance]
   );
-
+  const forceUpdate = useUpdate();
   const updater = useCallback(() => {
     setLoading(true);
     PlaylistHistoryCache.load()
       .then((data) => {
         historyTracks.current = data;
+        forceUpdate();
       })
       .finally(() => {
         setLoading(false);
       });
-  }, []);
+  }, [forceUpdate]);
   const saver = useCallback(() => {
     if (historyTracks.current.length) {
       void PlaylistHistoryCache.save(historyTracks.current);
@@ -278,13 +279,21 @@ export function usePlaylistHistoryRender() {
     return () => {
       cancelled = true;
     };
-  }, [checkAndUpdateLastPreloadRange, historyTracks, loading, searchTrackInstance]);
+  }, [
+    checkAndUpdateLastPreloadRange,
+    historyTracks,
+    loading,
+    searchTrackInstance,
+    // 监听ref变化
+    forceUpdate.count
+  ]);
   // 初始化搜索实例
   useEffect(() => {
     if (searchTrackInstance === null) {
       setSearchTrackInstance(new SearchTrack());
     }
   }, [searchTrackInstance]);
+  // 挂载updater
   useEffect(() => {
     PlaylistHistoryCache.outerUpdater = updater;
     void updater();

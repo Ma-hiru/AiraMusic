@@ -103,6 +103,11 @@ export const DynamicStoreConfig: ZustandConfig<
     set((draft) => {
       draft.spectrumIsReady = ready;
     });
+  },
+  setIsTyping: (typing) => {
+    set((draft) => {
+      draft.isTyping = typing;
+    });
   }
 });
 
@@ -140,7 +145,8 @@ const InitialState: DynamicStoreInitialState = {
   playerModalVisible: false,
   sideBarOpen: false,
   background: undefined,
-  kmeansColor: []
+  kmeansColor: [],
+  isTyping: false
 };
 
 export interface DynamicStoreInitialState {
@@ -165,6 +171,7 @@ export interface DynamicStoreInitialState {
   sideBarOpen: boolean;
   background: Undefinable<string>;
   kmeansColor: string[];
+  isTyping: boolean;
 }
 
 export type DynamicStoreActions = {
@@ -185,4 +192,5 @@ export type DynamicStoreActions = {
   setSpectrumOptions: NormalFunc<[options: Nullable<SpectrumOptions>]>;
   setSpectrumData: NormalFunc<[get: Nullable<NormalFunc<[], SpectrumData>>]>;
   setSpectrumIsReady: NormalFunc<[isReady: boolean]>;
+  setIsTyping: NormalFunc<[typing: boolean]>;
 };
