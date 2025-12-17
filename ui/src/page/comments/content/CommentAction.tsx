@@ -13,14 +13,7 @@ interface CommentActionProps {
   secondaryColor: string;
 }
 
-const CommentAction: FC<CommentActionProps> = ({
-  comment,
-  type,
-  sourceId,
-  mainColor,
-  secondaryColor,
-  textColorOnMain
-}) => {
+const CommentAction: FC<CommentActionProps> = ({ comment, type, sourceId, mainColor }) => {
   const [liked, setLiked] = useState(comment.liked);
   const [likedCount, setLikedCount] = useState(comment.likedCount);
   const likeComment = useCallback(() => {

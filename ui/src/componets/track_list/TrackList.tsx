@@ -14,16 +14,15 @@ import { useThemeColor } from "@mahiru/ui/hook/useThemeColor";
 import { usePersistZustandShallowStore, usePlayerStatus } from "@mahiru/ui/store";
 import { PlaylistCacheEntry } from "@mahiru/ui/utils/playlist";
 import { useScrollAutoHide } from "@mahiru/ui/hook/useScrollAutoHide";
-
-import Loading from "../public/Loading";
-import ListItem from "./ListItem";
+import Loading from "@mahiru/ui/componets/public/Loading";
+import ListItem from "@mahiru/ui/componets/track_list/ListItem";
 import VirtualList, { VirtualListRow } from "@mahiru/ui/componets/virtual_list/VirtualList";
 
-export interface ListContainerRef {
+export interface TrackListRef {
   containerRef: RefObject<Nullable<HTMLDivElement>>;
 }
 
-interface ListContainerProps {
+interface TrackListProps {
   id?: number;
   loading: boolean;
   requestMissedTracks: number;
@@ -33,7 +32,7 @@ interface ListContainerProps {
   filterTracks: { tracks: NeteaseTrack[]; absoluteIdx: Nullable<number[]> };
 }
 
-const ListContainer: ForwardRefRenderFunction<ListContainerRef, ListContainerProps> = (
+const TrackList: ForwardRefRenderFunction<TrackListRef, TrackListProps> = (
   {
     id,
     filterTracks,
@@ -45,14 +44,22 @@ const ListContainer: ForwardRefRenderFunction<ListContainerRef, ListContainerPro
   },
   ref
 ) => {
-  console.log("ListContainer render");
-  const { textColorOnMain } = useThemeColor();
-  const { trackStatus } = usePlayerStatus(["trackStatus"]);
+  const { textColorOnMain, mainColor } = useThemeColor();
+  const { trackStatus, audioControl, playerStatus } = usePlayerStatus([
+    "trackStatus",
+    "audioControl",
+    "playerStatus"
+  ]);
   const { userLikedListSummary } = usePersistZustandShallowStore(["userLikedListSummary"]);
-  const { mainColor } = useThemeColor();
   const { tracks, absoluteIdx } = filterTracks;
   const containerRef = useRef<HTMLDivElement>(null);
   const isLikedPlayList = id === userLikedListSummary?.id;
+
+  const isPlaying = useRef(false);
+  isPlaying.current = playerStatus.playing;
+  const play = useRef<Undefinable<NormalFunc>>(undefined);
+  play.current = audioControl.current()?.play;
+
   const extraData = useMemo(
     () => ({
       id,
@@ -60,7 +67,12 @@ const ListContainer: ForwardRefRenderFunction<ListContainerRef, ListContainerPro
       absoluteIdx,
       entry,
       currentTrackID: trackStatus?.track?.id,
-      textColorOnMain: textColorOnMain.string()
+      textColorOnMain: textColorOnMain.string(),
+      play: () => {
+        if (!isPlaying.current) {
+          play.current?.();
+        }
+      }
     }),
     [absoluteIdx, entry, id, isLikedPlayList, textColorOnMain, trackStatus?.track?.id]
   );
@@ -134,6 +146,7 @@ const RowComponent: VirtualListRow<
     entry: Nullable<PlaylistCacheEntry>;
     currentTrackID?: number;
     textColorOnMain: string;
+    play?: NormalFunc;
   }
 > = ({ index, items, extra }) => {
   const track = items[index];
@@ -145,10 +158,11 @@ const RowComponent: VirtualListRow<
       index={index}
       data={items}
       playListID={extra.id}
+      play={extra.play}
       absoluteIndex={extra.absoluteIdx ? extra.absoluteIdx[index]! : index}
     />
   );
 };
 
-ListContainer.displayName = "ListContainer";
-export default memo(forwardRef(ListContainer));
+TrackList.displayName = "ListContainer";
+export default memo(forwardRef(TrackList));

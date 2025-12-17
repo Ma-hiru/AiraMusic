@@ -7,7 +7,6 @@ import { apiRequest } from "@mahiru/ui/utils/request";
  * 获取所有歌曲的详情 (https://github.com/Binaryify/NeteaseCloudMusicApi/issues/452)
  * - s : 歌单最近的 s 个收藏者, 默认为8
  * @param  id 歌单 id
- * @param time_limit
  * @param update
  */
 export async function getPlaylistDetail(

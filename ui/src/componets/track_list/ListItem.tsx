@@ -1,13 +1,12 @@
 import { cx } from "@emotion/css";
-import { Log } from "@mahiru/ui/utils/dev";
 import { FC, memo, MouseEventHandler, useCallback } from "react";
+import { PlaylistCacheEntry } from "@mahiru/ui/utils/playlist";
+import { Player } from "@mahiru/ui/utils/player";
 
 import ListItemIndex from "./ListItemIndex";
 import ListItemCover from "./ListItemCover";
 import ListItemName from "./ListItemName";
 import ListItemInfo from "./ListItemInfo";
-import { PlaylistCacheEntry } from "@mahiru/ui/utils/playlist";
-import { Player } from "@mahiru/ui/utils/player";
 
 interface ListItemProps {
   data: NeteaseTrack[];
@@ -18,6 +17,7 @@ interface ListItemProps {
   isLikedList?: boolean;
   textColorOnMain: string;
   active?: boolean;
+  play?: NormalFunc;
 }
 
 const ListItem: FC<ListItemProps> = ({
@@ -25,28 +25,21 @@ const ListItem: FC<ListItemProps> = ({
   data,
   playListID,
   absoluteIndex,
-  isLikedList,
   entry,
   textColorOnMain,
-  active = false
+  active = false,
+  play
 }) => {
   const track = data[index]!;
   const total = data.length;
   const disabled = !track.playable;
 
-  const play = useCallback<MouseEventHandler<HTMLDivElement>>(
+  const handleClick = useCallback<MouseEventHandler<HTMLDivElement>>(
     (e) => {
       if (disabled) {
         e.preventDefault();
-        Log.trace(
-          "components/track_list/ListItem.tsx",
-          "Track is not playable:",
-          track.name,
-          track.reason
-        );
         return;
       }
-      Log.trace("components/track_list/ListItem.tsx", "Playing track:", track.name);
       // 如果与当前播放列表相同，仅切换位置，避免重建列表导致状态抖动
       if (Player.isSamePlaylist(data, playListID)) {
         Player.setPosition(index);
@@ -54,8 +47,11 @@ const ListItem: FC<ListItemProps> = ({
         // 播放列表使用的是相对索引
         Player.replacePlaylist(data, playListID, index);
       }
+      setTimeout(() => {
+        play?.();
+      }, 1000);
     },
-    [data, disabled, index, playListID, track.name, track.reason]
+    [data, disabled, index, play, playListID]
   );
 
   return (
@@ -63,7 +59,7 @@ const ListItem: FC<ListItemProps> = ({
       style={active ? { color: textColorOnMain } : undefined}
       key={track.id}
       className={cx(
-        "items-center grid grid-row-1 grid-cols-[auto_auto_1fr_auto_auto] gap-4 rounded-md py-[2px] pl-2 ease-in-out transition-colors mb-2",
+        "items-center grid grid-row-1 grid-cols-[auto_auto_1fr_auto_auto] gap-4 rounded-md py-0.5 pl-2 ease-in-out transition-colors mb-2",
         {
           "bg-(--theme-color-main)": active,
           "hover:bg-black/10": !active,
@@ -73,18 +69,18 @@ const ListItem: FC<ListItemProps> = ({
         }
       )}>
       {/*序号*/}
-      <ListItemIndex total={total} active={active} relativeIndex={index} onClick={play} />
+      <ListItemIndex total={total} active={active} relativeIndex={index} onClick={handleClick} />
       {/*封面*/}
       <ListItemCover
         track={track}
         absoluteIndex={absoluteIndex}
         playListID={playListID}
-        onClick={play}
+        onClick={handleClick}
         entry={entry}
         active={active}
       />
       {/*名称*/}
-      <ListItemName track={track} disabled={disabled} active={active} onClick={play} />
+      <ListItemName track={track} disabled={disabled} active={active} onClick={handleClick} />
       {/*专辑*/}
       <ListItemInfo active={active} track={track} />
     </div>

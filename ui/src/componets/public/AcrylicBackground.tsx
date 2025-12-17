@@ -1,4 +1,4 @@
-import { FC, memo, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { FC, memo, useCallback, useEffect, useState } from "react";
 import { css, cx } from "@emotion/css";
 
 interface AcrylicBackgroundProps {

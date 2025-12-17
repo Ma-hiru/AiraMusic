@@ -1,21 +1,20 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useThemeColor } from "@mahiru/ui/hook/useThemeColor";
 import { Renderer } from "@mahiru/ui/utils/renderer";
-import { useDynamicZustandShallowStore, usePlayerStatus } from "@mahiru/ui/store";
+import { usePlayerStatus } from "@mahiru/ui/store";
 import { Player } from "@mahiru/ui/utils/player";
 
 export function usePlayerInfoSync(targetWindow: WindowType) {
   const [hasOpened, setHasOpened] = useState(false);
-  const { trackStatus, playerProgress, setLyricVersion } = usePlayerStatus([
-    "trackStatus",
-    "playerProgress",
-    "setLyricVersion"
-  ]);
-  const { playerStatus, audioControl, audioRef } = useDynamicZustandShallowStore([
-    "playerStatus",
-    "audioControl",
-    "audioRef"
-  ]);
+  const { trackStatus, playerProgress, setLyricVersion, playerStatus, audioControl, audioRef } =
+    usePlayerStatus([
+      "trackStatus",
+      "playerProgress",
+      "setLyricVersion",
+      "playerStatus",
+      "audioControl",
+      "audioRef"
+    ]);
   const { mainColor } = useThemeColor();
   const getNewestInfo = useRef({ trackStatus, playerStatus, playerProgress });
   getNewestInfo.current = { trackStatus, playerStatus, playerProgress };

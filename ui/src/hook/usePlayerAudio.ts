@@ -1,9 +1,7 @@
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import { usePlayerStatus } from "@mahiru/ui/store";
 import { Player } from "@mahiru/ui/utils/player";
 import { EqError, Log } from "@mahiru/ui/utils/dev";
-
-let initialized = false;
 
 /**
  * 音频控制
@@ -11,15 +9,23 @@ let initialized = false;
  * - 提供播放/暂停、静音/取消静音、音量调节、跳转播放时间等方法
  * */
 export function usePlayerAudio() {
-  const { playerProgress, trackStatus, setPlayerStatus, playerStatus, audioRef, setAudioControl } =
-    usePlayerStatus([
-      "playerProgress",
-      "trackStatus",
-      "setPlayerStatus",
-      "playerStatus",
-      "audioRef",
-      "setAudioControl"
-    ]);
+  const {
+    playerProgress,
+    trackStatus,
+    setPlayerStatus,
+    playerStatus,
+    audioRef,
+    setAudioControl,
+    playerInitialized
+  } = usePlayerStatus([
+    "playerProgress",
+    "trackStatus",
+    "setPlayerStatus",
+    "playerStatus",
+    "audioRef",
+    "setAudioControl",
+    "playerInitialized"
+  ]);
   const lastTrackIdRef = useRef<Nullable<number>>(null);
   const lastAudioSrcRef = useRef<Nullable<string>>(null);
 
@@ -85,6 +91,17 @@ export function usePlayerAudio() {
     },
     [audioRef]
   );
+  // 从缓存恢复音量
+  useLayoutEffect(() => {
+    if (playerInitialized) {
+      const audio = audioRef.current();
+      if (!audio) return;
+      audio.volume = playerStatus.volume;
+      const cached = playerProgress.current();
+      audio.currentTime = cached.currentTime;
+    }
+    // eslint-disable-next-line
+  }, [playerInitialized]);
   // 自动加载
   useEffect(() => {
     const audio = audioRef.current();
@@ -121,23 +138,7 @@ export function usePlayerAudio() {
       audio.removeEventListener("canplay", handleCanPlay);
       audio.removeEventListener("loadedmetadata", handleCanPlay);
     };
-  }, [audioRef, playerProgress, playerStatus.playing, playerStatus.volume, trackStatus]);
-  // 从缓存恢复进度
-  useEffect(() => {
-    if (initialized) return;
-    const audio = audioRef.current();
-    if (!audio) return;
-    const cachedProgress = playerProgress.current();
-    const cachedVolume = playerStatus.volume;
-    if (cachedProgress.currentTime && cachedProgress.currentTime !== audio.currentTime) {
-      audio.volume = cachedVolume;
-      audio.fastSeek?.(cachedProgress.currentTime);
-      audio.currentTime = cachedProgress.currentTime;
-    }
-    initialized = true;
-    // 排除 playerStatus.volume
-    // eslint-disable-next-line
-  }, [audioRef, playerProgress]);
+  }, [audioRef, playerStatus.playing, trackStatus]);
   // 监听 audio 播放状态变化
   useEffect(() => {
     const audio = audioRef.current();
@@ -152,11 +153,8 @@ export function usePlayerAudio() {
         if (draft.playing) draft.playing = false;
       });
     const handleTimeUpdate = () => {
-      if (!initialized) return;
+      if (!playerInitialized) return;
       playerProgress.current().currentTime = audio.currentTime;
-      setPlayerStatus((draft) => {
-        if (!draft.playing) draft.playing = true;
-      });
     };
     const handleDurationChange = () => (playerProgress.current().duration = audio.duration || 0);
     const handleProgress = () => {
@@ -186,7 +184,7 @@ export function usePlayerAudio() {
       audio.removeEventListener("progress", handleProgress);
       audio.removeEventListener("volumechange", handleVolumeChange);
     };
-  }, [audioRef, playerProgress, setPlayerStatus]);
+  }, [audioRef, playerInitialized, playerProgress, setPlayerStatus]);
 
   const Audio = useMemo(
     () => ({

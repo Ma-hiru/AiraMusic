@@ -3,16 +3,15 @@ import { useParams } from "react-router-dom";
 import { usePlaylistNormalRender } from "@mahiru/ui/hook/usePlaylistRender";
 
 import Top from "./top";
-import List from "@mahiru/ui/componets/track_list";
 import Divider from "./Divider";
-import { ListContainerRef } from "@mahiru/ui/componets/track_list/List";
+import TrackList, { TrackListRef } from "@mahiru/ui/componets/track_list";
 import { useLayoutStatus } from "@mahiru/ui/store";
 
 const PlaylistPage: FC<object> = () => {
   // 获取路由参数id
   const { id } = useParams();
   const { requestCanScrollTop } = useLayoutStatus(["requestCanScrollTop"]);
-  const listRef = useRef<ListContainerRef>(null);
+  const listRef = useRef<TrackListRef>(null);
 
   const {
     entry,
@@ -50,7 +49,7 @@ const PlaylistPage: FC<object> = () => {
       <Top entry={entry} filterTracks={filterTracks} searchTracks={searchTracks} />
       <Divider />
       <div className="w-full h-[calc(100%-210px)] relative">
-        <List
+        <TrackList
           ref={listRef}
           entry={entry}
           loading={loading}

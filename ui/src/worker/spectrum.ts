@@ -10,7 +10,7 @@ function postErr(msg: string) {
   self.postMessage({ type: "error", error: msg } satisfies SpectrumWorkerResult);
 }
 
-function ensureInput(payload: Float32Array): Float32Array {
+function ensureInput(payload: any): Float32Array {
   if (payload instanceof Float32Array) {
     return payload;
   }

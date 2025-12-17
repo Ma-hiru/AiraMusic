@@ -1,5 +1,4 @@
 import { FC } from "react";
-import SpectrumProvider from "@mahiru/ui/ctx/SpectrumProvider";
 
 import TopBar from "./top";
 import PlayerBar from "./bar";
@@ -14,19 +13,17 @@ import MusicSource from "@mahiru/ui/page/layout/MusicSource";
 const Layout: FC<object> = () => {
   return (
     <div className="relative w-screen h-screen overflow-hidden">
-      <SpectrumProvider>
-        <div className="w-screen h-screen overflow-hidden relative">
-          <TopBar /> {/* absolute z-30 */}
-          <NavSide /> {/* absolute z-10 */}
-          <PlayerBar /> {/* absolute z-10 */}
-          <Content /> {/*relative z-10*/}
-        </div>
-        <Background /> {/* z-0 */}
-        <PlayerModal /> {/* z-20 */}
-        <FloatButtons />
-        <ThemeColor />
-        <MusicSource />
-      </SpectrumProvider>
+      <div className="w-screen h-screen overflow-hidden relative">
+        <TopBar /> {/* absolute z-30 */}
+        <NavSide /> {/* absolute z-10 */}
+        <PlayerBar /> {/* absolute z-10 */}
+        <Content /> {/*relative z-10*/}
+      </div>
+      <Background /> {/* z-0 */}
+      <PlayerModal /> {/* z-20 */}
+      <FloatButtons />
+      <ThemeColor />
+      <MusicSource />
     </div>
   );
 };

@@ -10,13 +10,26 @@ import { Track } from "@mahiru/ui/utils/track";
 import { Auth } from "@mahiru/ui/utils/auth";
 import { useLogin } from "@mahiru/ui/hook/useLogout";
 import { usePlayerAudio } from "@mahiru/ui/hook/usePlayerAudio";
+import { useSpectrumWorker } from "@mahiru/ui/hook/useSpectrumWorker";
 
 const MusicSource: FC<object> = () => {
   console.log("Render Music Source");
-  const { trackStatus, setAudioRef, audioControl } = usePlayerStatus([
+  const {
+    trackStatus,
+    setAudioRef,
+    audioControl,
+    playerStatus,
+    spectrumOptions,
+    setSpectrumData,
+    setSpectrumIsReady
+  } = usePlayerStatus([
     "trackStatus",
     "setAudioRef",
-    "audioControl"
+    "audioControl",
+    "playerStatus",
+    "spectrumOptions",
+    "setSpectrumIsReady",
+    "setSpectrumData"
   ]);
   // 初始化播放器
   useEffect(() => {
@@ -109,6 +122,18 @@ const MusicSource: FC<object> = () => {
     },
     [audioControl, login, trackStatus?.meta, trackStatus?.track.id]
   );
+  // 注册频谱
+  const { spectrumData, isReady } = useSpectrumWorker(audioRealRef, playerStatus.playing, {
+    fftSize: 2048,
+    numBands: 32,
+    withPeaks: false,
+    ...spectrumOptions
+  });
+  useEffect(() => {
+    setSpectrumData(() => spectrumData.current);
+    setSpectrumIsReady(isReady);
+  }, [isReady, setSpectrumData, setSpectrumIsReady, spectrumData]);
+
   return (
     <audio
       className="w-0 h-0 opacity-0"

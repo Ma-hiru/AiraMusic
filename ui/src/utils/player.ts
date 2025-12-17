@@ -36,7 +36,8 @@ export const Player = new (class {
   }
 
   async loadFromCache() {
-    const { playerProgress, setPlayerStatus, setTrackStatus } = getPlayerStatusSnapshot();
+    const { playerProgress, setPlayerStatus, setTrackStatus, setPlayerInitialized } =
+      getPlayerStatusSnapshot();
     const cache = await CacheStore.fetchObject<CacheType>(this._cacheKey);
     if (cache) {
       this._position = cache._position;
@@ -54,6 +55,7 @@ export const Player = new (class {
       });
       setTrackStatus(() => cache.trackStatus);
     }
+    setPlayerInitialized(true);
     this.updateOuter();
   }
 

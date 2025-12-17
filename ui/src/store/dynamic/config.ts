@@ -3,6 +3,7 @@ import { Lyric } from "@mahiru/ui/utils/lyric";
 import { PlaylistHistoryCache } from "@mahiru/ui/utils/history";
 import type { AudioControl } from "@mahiru/ui/hook/usePlayerAudio";
 import { API } from "@mahiru/ui/api";
+import { SpectrumData, SpectrumOptions } from "@mahiru/ui/hook/useSpectrumWorker";
 
 export const DynamicStoreConfig: ZustandConfig<
   DynamicStoreInitialState & DynamicStoreActions,
@@ -82,6 +83,26 @@ export const DynamicStoreConfig: ZustandConfig<
     set((draft) => {
       draft.audioControl.current = control;
     });
+  },
+  setPlayerInitialized: (initialized) => {
+    set((draft) => {
+      draft.playerInitialized = initialized;
+    });
+  },
+  setSpectrumOptions: (options) => {
+    set((draft) => {
+      draft.spectrumOptions = options;
+    });
+  },
+  setSpectrumData: (cb) => {
+    set((draft) => {
+      draft.spectrumData = cb;
+    });
+  },
+  setSpectrumIsReady: (ready) => {
+    set((draft) => {
+      draft.spectrumIsReady = ready;
+    });
   }
 });
 
@@ -105,7 +126,11 @@ const InitialState: DynamicStoreInitialState = {
     lyricPreference: null,
     lyricVersion: "raw"
   },
+  playerInitialized: false,
   trackStatus: null,
+  spectrumOptions: null,
+  spectrumData: null,
+  spectrumIsReady: false,
   playerProgress: {
     current: () => playerProgress
   },
@@ -127,6 +152,10 @@ export interface DynamicStoreInitialState {
   };
   playerStatus: PlayerStatus;
   playerProgress: { current: () => PlayerProgress };
+  spectrumOptions: Nullable<SpectrumOptions>;
+  spectrumData: Nullable<NormalFunc<[], SpectrumData>>;
+  spectrumIsReady: boolean;
+  playerInitialized: boolean;
   trackStatus: Nullable<PlayerTrackStatus>;
   canScrollTop: {
     type: LayoutCanScrollTop;
@@ -152,4 +181,8 @@ export type DynamicStoreActions = {
   setKmeansColor: NormalFunc<[colors: string[]]>;
   setAudioRef: NormalFunc<[ref: NormalFunc<[], Nullable<HTMLAudioElement>>]>;
   setAudioControl: NormalFunc<[control: NormalFunc<[], Nullable<AudioControl>>]>;
+  setPlayerInitialized: NormalFunc<[initialized: boolean]>;
+  setSpectrumOptions: NormalFunc<[options: Nullable<SpectrumOptions>]>;
+  setSpectrumData: NormalFunc<[get: Nullable<NormalFunc<[], SpectrumData>>]>;
+  setSpectrumIsReady: NormalFunc<[isReady: boolean]>;
 };
