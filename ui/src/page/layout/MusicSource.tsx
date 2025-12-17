@@ -13,7 +13,6 @@ import { usePlayerAudio } from "@mahiru/ui/hook/usePlayerAudio";
 import { useSpectrumWorker } from "@mahiru/ui/hook/useSpectrumWorker";
 
 const MusicSource: FC<object> = () => {
-  console.log("Render Music Source");
   const {
     trackStatus,
     setAudioRef,

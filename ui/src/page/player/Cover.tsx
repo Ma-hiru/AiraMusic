@@ -2,10 +2,9 @@ import { FC, memo } from "react";
 import { useFileCache } from "@mahiru/ui/hook/useFileCache";
 import { Filter, ImageSize } from "@mahiru/ui/utils/filter";
 import { usePlayerStatus } from "@mahiru/ui/store";
-import { getUGCSong } from "@mahiru/ui/api/wiki";
 
 const Cover: FC<object> = () => {
-  const { trackStatus } = usePlayerStatus(["trackStatus"]);
+  const { trackStatus, showToast } = usePlayerStatus(["trackStatus", "showToast"]);
   const track = trackStatus?.track;
   const cacheCover = useFileCache(Filter.NeteaseImageSize(track?.al.picUrl, ImageSize.raw));
 
@@ -16,7 +15,7 @@ const Cover: FC<object> = () => {
         src={cacheCover}
         alt={track?.al?.name || track?.name}
         onClick={() => {
-          track?.id && getUGCSong(track.id).then(console.log);
+          showToast(track?.al?.name || track?.name || "");
         }}
       />
     </div>

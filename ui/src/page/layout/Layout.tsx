@@ -9,10 +9,12 @@ import Content from "./Content";
 import ThemeColor from "./ThemeColor";
 import FloatButtons from "./float";
 import MusicSource from "@mahiru/ui/page/layout/MusicSource";
+import ToastProvider from "@mahiru/ui/componets/toast/ToastProvider";
 
 const Layout: FC<object> = () => {
   return (
     <div className="relative w-screen h-screen overflow-hidden">
+      <ToastProvider />
       <div className="w-screen h-screen overflow-hidden relative">
         <TopBar /> {/* absolute z-30 */}
         <NavSide /> {/* absolute z-10 */}
