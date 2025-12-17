@@ -1,12 +1,9 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { usePlayerStatus } from "@mahiru/ui/store";
 import { Player } from "@mahiru/ui/utils/player";
 import { EqError, Log } from "@mahiru/ui/utils/dev";
 
 let initialized = false;
-let initialSeekTime: number | null = null;
-let isApplyingInitialSeek = false;
-let cachedTrackID: number | null = null;
 
 /**
  * 音频控制
@@ -23,56 +20,59 @@ export function usePlayerAudio() {
       "audioRef",
       "setAudioControl"
     ]);
+  const lastTrackIdRef = useRef<Nullable<number>>(null);
+  const lastAudioSrcRef = useRef<Nullable<string>>(null);
 
   const play = useCallback(() => {
     const audio = audioRef.current();
     audio && (audio.paused ? audio.play() : audio.pause());
   }, [audioRef]);
+
   const mute = useCallback(() => {
     const audio = audioRef.current();
-    if (audio) {
-      audio.muted = !audio.muted;
-      if (audio.muted) {
-        setPlayerStatus((draft) => {
-          draft.volumeBeforeMute = audio.volume;
-        });
-        audio.volume = 0;
-      } else {
-        audio.volume = playerStatus.volumeBeforeMute;
-      }
+    if (!audio) return;
+    audio.muted = !audio.muted;
+    if (audio.muted) {
+      setPlayerStatus((draft) => {
+        draft.volumeBeforeMute = audio.volume;
+      });
+      audio.volume = 0;
+    } else {
+      audio.volume = playerStatus.volumeBeforeMute;
     }
   }, [audioRef, playerStatus.volumeBeforeMute, setPlayerStatus]);
+
   const upVolume = useCallback(
     (gap?: number) => {
       const audio = audioRef.current();
-      if (audio) {
-        gap ||= 0.2;
-        audio.volume = Math.min(1, audio.volume + gap);
-        audio.volume > 0 && audio.muted && (audio.muted = false);
-      }
+      if (!audio) return;
+      gap ||= 0.2;
+      audio.volume = Math.min(1, audio.volume + gap);
+      audio.volume > 0 && audio.muted && (audio.muted = false);
     },
     [audioRef]
   );
+
   const downVolume = useCallback(
     (gap?: number) => {
       const audio = audioRef.current();
-      if (audio) {
-        gap ||= 0.2;
-        audio.volume = Math.max(0, audio.volume - gap);
-        audio.volume > 0 && audio.muted && (audio.muted = false);
-      }
+      if (!audio) return;
+      gap ||= 0.2;
+      audio.volume = Math.max(0, audio.volume - gap);
+      audio.volume > 0 && audio.muted && (audio.muted = false);
     },
     [audioRef]
   );
+
   const changeCurrentTime = useCallback(
     (targetTime: number) => {
       const audio = audioRef.current();
       if (!audio || !Number.isFinite(targetTime)) return;
-      const duration = Number.isFinite(audio.duration)
-        ? audio.duration
-        : playerProgress.current().duration || 0;
       // 确保跳转时间在合法范围内 0 ~ duration 之间
-      const clamped = Math.max(0, Math.min(duration > 0 ? duration : targetTime, targetTime));
+      const clamped = Math.max(
+        0,
+        Math.min(audio.duration > 0 ? audio.duration : targetTime, targetTime)
+      );
       try {
         if (typeof audio.fastSeek === "function") {
           audio.fastSeek(clamped);
@@ -83,89 +83,79 @@ export function usePlayerAudio() {
         audio.currentTime = clamped;
       }
     },
-    [audioRef, playerProgress]
+    [audioRef]
   );
-
-  // 初始化 progress 和 volume 状态
-  useLayoutEffect(() => {
+  // 自动加载
+  useEffect(() => {
     const audio = audioRef.current();
     if (!audio || !trackStatus || !trackStatus.audio) return;
-    if (!initialized) {
-      const cached = playerProgress.current();
-      if (cached.currentTime && cached.currentTime !== audio.currentTime) {
-        initialSeekTime = cached.currentTime;
-        isApplyingInitialSeek = true;
-        cachedTrackID = trackStatus.track.id;
-      }
-      initialized = true;
+    const trackId = trackStatus.track.id;
+    const nextAudioSrc = trackStatus.audio;
+    const shouldReloadTrack =
+      trackId !== lastTrackIdRef.current || nextAudioSrc !== lastAudioSrcRef.current;
+
+    if (shouldReloadTrack) {
+      audio.src = nextAudioSrc;
+      audio.load();
+      lastTrackIdRef.current = trackId;
+      lastAudioSrcRef.current = nextAudioSrc;
     }
-    if (!playerStatus.playing) return;
-    audio.src = trackStatus.audio;
+
     const handleCanPlay = () => {
-      if (initialSeekTime && Number.isFinite(initialSeekTime)) {
-        try {
-          if (typeof audio.fastSeek === "function") {
-            audio.fastSeek(initialSeekTime);
-          } else {
-            audio.currentTime = initialSeekTime;
-          }
-        } catch {
-          audio.currentTime = initialSeekTime;
-        } finally {
-          initialSeekTime = null;
-          isApplyingInitialSeek = false;
-        }
+      if (playerStatus.playing) {
+        audio.play().catch((err) => {
+          Log.error(
+            new EqError({
+              raw: err,
+              message: "play() failed after canplay",
+              label: "ui/ctx/PlayerProvider:canPlay"
+            })
+          );
+        });
       }
-      audio.play().catch((err) => {
-        Log.error(
-          new EqError({
-            raw: err,
-            message: "play() failed after canplay",
-            label: "ui/ctx/PlayerProvider:canPlay"
-          })
-        );
-      });
     };
+
     audio.addEventListener("canplay", handleCanPlay);
     audio.addEventListener("loadedmetadata", handleCanPlay);
-    audio.load();
     return () => {
       audio.removeEventListener("canplay", handleCanPlay);
       audio.removeEventListener("loadedmetadata", handleCanPlay);
     };
-  }, [audioRef, playerProgress, playerStatus.playing, trackStatus]);
+  }, [audioRef, playerProgress, playerStatus.playing, playerStatus.volume, trackStatus]);
+  // 从缓存恢复进度
   useEffect(() => {
+    if (initialized) return;
     const audio = audioRef.current();
-    if (isApplyingInitialSeek && audio && trackStatus && trackStatus.track.id !== cachedTrackID) {
-      isApplyingInitialSeek = false;
-      audio.src = trackStatus.audio;
-      audio.load();
-      audio.fastSeek?.(0);
-      setTimeout(() => {
-        audio.currentTime = 0;
-        audio.play();
-      }, 500);
+    if (!audio) return;
+    const cachedProgress = playerProgress.current();
+    const cachedVolume = playerStatus.volume;
+    if (cachedProgress.currentTime && cachedProgress.currentTime !== audio.currentTime) {
+      audio.volume = cachedVolume;
+      audio.fastSeek?.(cachedProgress.currentTime);
+      audio.currentTime = cachedProgress.currentTime;
     }
-  }, [audioRef, trackStatus]);
+    initialized = true;
+    // 排除 playerStatus.volume
+    // eslint-disable-next-line
+  }, [audioRef, playerProgress]);
   // 监听 audio 播放状态变化
   useEffect(() => {
     const audio = audioRef.current();
     if (!audio) return;
+
     const handlePlay = () =>
       setPlayerStatus((draft) => {
-        draft.playing = true;
+        if (!draft.playing) draft.playing = true;
       });
     const handlePause = () =>
       setPlayerStatus((draft) => {
-        draft.playing = false;
+        if (draft.playing) draft.playing = false;
       });
     const handleTimeUpdate = () => {
-      if (isApplyingInitialSeek) return;
+      if (!initialized) return;
       playerProgress.current().currentTime = audio.currentTime;
       setPlayerStatus((draft) => {
-        if (!draft.playing) {
-          draft.playing = true;
-        }
+        if (!draft.playing) draft.playing = true;
       });
     };
     const handleDurationChange = () => (playerProgress.current().duration = audio.duration || 0);
@@ -209,6 +199,7 @@ export function usePlayerAudio() {
     }),
     [audioRef, changeCurrentTime, downVolume, mute, play, upVolume]
   );
+
   // 注册 Audio 控制器到全局状态
   useEffect(() => {
     setAudioControl(() => Audio);
@@ -216,6 +207,7 @@ export function usePlayerAudio() {
       setAudioControl(() => null);
     };
   }, [Audio, setAudioControl]);
+
   return Audio;
 }
 

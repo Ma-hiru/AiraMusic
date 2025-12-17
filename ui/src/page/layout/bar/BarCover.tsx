@@ -14,7 +14,11 @@ const BarCover: FC<object> = () => {
   const cachedCover = useFileCache(Filter.NeteaseImageSize(track?.al.picUrl, ImageSize.md));
   return (
     <div className="h-2/3 space-x-2 flex items-center justify-start gap-2 overflow-hidden pr-6 truncate">
-      <div className={cx("h-12 w-12 rounded-md overflow-hidden", cachedCover && "shadow-lg")}>
+      <div
+        className={cx(
+          "h-12 w-12 min-w-12 min-h-12 rounded-md overflow-hidden",
+          cachedCover && "shadow-lg"
+        )}>
         <img
           className="h-full w-full aspect-square object-cover cursor-pointer"
           loading="lazy"
