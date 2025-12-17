@@ -36,7 +36,7 @@ const ToastProvider: FC<object> = () => {
     };
   }, [checkToast, showToast.length]);
   return (
-    <div className="fixed left-1/2 top-5 -translate-x-1/2 flex justify-center items-center flex-col-reverse">
+    <div className="fixed left-1/2 top-5 -translate-x-1/2 flex justify-center items-center flex-col-reverse z-50">
       <AnimatePresence>
         {showToast.map((toast) => {
           return (
