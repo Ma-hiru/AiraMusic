@@ -28,10 +28,9 @@
         "./*/index.ts",
         "./*/index.tsx"
       ],
-      "@applemusic-like-lyrics/core": ["./patch/@applemusic-like-lyrics/core"],
       "*": ["./*"]
     }
   },
-  "include": ["app", "ui", "wasm", "log", "types", "eslint.config.ts"],
-  "exclude": ["node_modules", "dist", "patch"]
+  "include": ["app", "ui", "log", "types", "eslint.config.ts"],
+  "exclude": ["node_modules", "dist", "temp"]
 }

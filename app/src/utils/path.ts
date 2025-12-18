@@ -10,6 +10,8 @@ export const preloadPath = isDev()
   ? join(appPathJoin("dist", "preload", "index.js"))
   : join(process.resourcesPath, "preload.js");
 
-export const staticPath = isDev()
+export const staticUIDir = isDev()
   ? join(appPathJoin("dist", "ui"))
   : join(process.resourcesPath, "ui");
+
+export const staticIconDir = isDev() ? appPathJoin("icon") : join(process.resourcesPath, "icon");

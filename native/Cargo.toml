@@ -1,0 +1,35 @@
+[package]
+name = "native"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+napi = { version = "3.7.0", features = ["napi10"] }
+napi-derive = "3.4"
+once_cell = "1.21"
+windows = { version = "0.62", features = [
+    # HWND / HRESULT / BOOL
+    "Win32_Foundation",
+    # 窗口消息 / WM_COMMAND / SetWindowSubclass
+    "Win32_UI_WindowsAndMessaging",
+    "Win32_UI_Shell",
+    # ITaskbarList3 / THUMBBUTTON
+    "Win32_UI_Shell_Common",
+    # HBITMAP / CreateBitmap / DeleteObject
+    "Win32_Graphics_Gdi",
+    # DwmSetIconicThumbnail / DwmInvalidateIconicBitmaps
+    "Win32_Graphics_Dwm",
+    # CoInitializeEx / CoCreateInstance
+    "Win32_System_Com",
+] }
+
+[profile.release]
+lto = true
+opt-level = 3
+codegen-units = 1
+panic = "abort"
+strip = false
+debug = false

@@ -11,6 +11,7 @@ import { Auth } from "@mahiru/ui/utils/auth";
 import { useLogin } from "@mahiru/ui/hook/useLogout";
 import { usePlayerAudio } from "@mahiru/ui/hook/usePlayerAudio";
 import { useSpectrumWorker } from "@mahiru/ui/hook/useSpectrumWorker";
+import { Renderer } from "@mahiru/ui/utils/renderer";
 
 const MusicSource: FC<object> = () => {
   const {
@@ -165,7 +166,26 @@ const MusicSource: FC<object> = () => {
     setSpectrumData(() => spectrumData.current);
     setSpectrumIsReady(isReady);
   }, [isReady, setSpectrumData, setSpectrumIsReady, spectrumData]);
-
+  // 注册任务栏回调
+  useEffect(() => {
+    const unsubscribeLast = Renderer.addMainProcessMessageHandler("lastTrack", () => {
+      Player.last(true);
+    });
+    const unsubscribePlay = Renderer.addMainProcessMessageHandler("playTrack", () => {
+      audioControl.current()?.play();
+    });
+    const unsubscribeNext = Renderer.addMainProcessMessageHandler("nextTrack", () => {
+      Player.next(true);
+    });
+    return () => {
+      unsubscribeLast();
+      unsubscribePlay();
+      unsubscribeNext();
+    };
+  }, [audioControl]);
+  useEffect(() => {
+    Renderer.sendMessageToMainProcess("playStatus", playerStatus.playing);
+  }, [playerStatus.playing]);
   return (
     <audio
       className="w-0 h-0 opacity-0"

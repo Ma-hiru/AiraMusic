@@ -1,6 +1,6 @@
 import { Log } from "../../utils/log";
 import express from "express";
-import { staticPath } from "../../utils/path";
+import { staticUIDir } from "../../utils/path";
 import expressProxy from "express-http-proxy";
 
 export function createProxyServer() {
@@ -9,7 +9,7 @@ export function createProxyServer() {
   const port = Number(process.env.EXPRESS_SERVER_PORT);
   const ncmPort = Number(process.env.NCM_SERVER_PORT);
   const cachePort = Number(process.env.GO_SERVER_PORT);
-  expressAPP.use("/", express.static(staticPath));
+  expressAPP.use("/", express.static(staticUIDir));
   expressAPP.use(
     "/api",
     expressProxy(`http://127.0.0.1:${ncmPort}`, {
@@ -22,6 +22,6 @@ export function createProxyServer() {
       timeout: 15000
     })
   );
-  //TODO: player
+
   return expressAPP.listen(port, "127.0.0.1");
 }

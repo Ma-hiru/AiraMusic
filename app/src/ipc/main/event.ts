@@ -1,5 +1,5 @@
 import { BrowserWindow, ipcMain } from "electron";
-import { MainEventAPI, typedIpcMainSendMessage } from "./typed";
+import { MainEventAPI, typedIpcMainReceiveMessage, typedIpcMainSendMessage } from "./typed";
 import {
   CreateLoginWindow,
   CreateLyricWindow,
@@ -135,12 +135,16 @@ const mainEventAPI = {
     sender.show();
   },
   message: (e, message) => {
-    typedIpcMainSendMessage({
-      sender: BrowserWindow.fromWebContents(e.sender),
-      receiver: message.to,
-      type: message.type,
-      data: message.data
-    });
+    if (message.to === "main") {
+      typedIpcMainReceiveMessage(message.type, message.data);
+    } else {
+      typedIpcMainSendMessage({
+        sender: BrowserWindow.fromWebContents(e.sender),
+        receiver: message.to,
+        type: message.type,
+        data: message.data
+      });
+    }
   },
   rememberCloseAppOption: (e, option) => {
     const sender = BrowserWindow.fromWebContents(e.sender);

@@ -93,4 +93,31 @@ export const Renderer = new (class {
       data
     });
   }
+
+  sendMessageToMainProcess<T extends keyof MessageTypeMap>(
+    type: T,
+    data: MessageDataSend<T>["data"]
+  ) {
+    window.electron.event.message({
+      type,
+      to: "main",
+      data
+    });
+  }
+
+  addMainProcessMessageHandler<T extends keyof MessageTypeMap>(
+    event: T,
+    callback: NormalFunc<[data: MessageDataReceive<T>["data"]]>,
+    options?: {
+      id?: string;
+      once?: boolean;
+    }
+  ) {
+    const { id = crypto.randomUUID(), once = false } = options || {};
+    if (!this.handlers.has(event)) {
+      this.handlers.set(event, new Map());
+    }
+    this.handlers.get(event)!.set(id, { once, from: "main", callback });
+    return () => !!this.handlers.get(event)?.delete(id);
+  }
 })();

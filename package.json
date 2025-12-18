@@ -36,11 +36,12 @@
     "preview:ui": "pnpm --filter @mahiru/ui run preview",
     "cache-clear": "rimraf ui/node_modules/.vite dist wasm/pkg",
     "build:ui": "pnpm --filter @mahiru/ui run build",
+    "build:app": "pnpm --filter @mahiru/app run build",
     "build:wasm": "pnpm --filter @mahiru/wasm run build",
     "build:store": "pnpm --filter @mahiru/store run build",
     "clear:wasm": "pnpm --filter @mahiru/wasm run clear",
-    "commit": "pnpm check && pnpm format && pnpm lint && pnpm auto-commit",
-    "check": "tsgo --noEmit",
+    "commit": "pnpm format && pnpm lint && pnpm auto-commit",
+    "check": "pnpm exec tsgo --noEmit",
     "format": "prettier --write .",
     "lint": "pnpm lint:oxlint && pnpm lint:eslint",
     "lint:oxlint": "oxlint . -D correctness --ignore-path .gitignore --fix",
@@ -75,7 +76,7 @@
     "typescript": "^5",
     "typescript-eslint": "^8.46.3"
   },
-  "packageManager": "pnpm@10.25.0",
+  "packageManager": "pnpm@10.26.0",
   "engines": {
     "node": ">=20"
   },

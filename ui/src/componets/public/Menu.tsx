@@ -96,7 +96,7 @@ const Menu: FC<MenuProps> = ({
       <div
         ref={menuRef}
         className={cx(
-          "fixed z-[1000] min-w-40 rounded-md border border-black/10 bg-white/95 p-1 shadow-2xl backdrop-blur-md text-sm select-none",
+          "fixed z-1000 min-w-40 rounded-md border border-black/10 bg-white/95 p-1 shadow-2xl backdrop-blur-md text-sm select-none",
           menuClassName
         )}
         style={{ top: menuState.y, left: menuState.x }}

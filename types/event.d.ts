@@ -48,8 +48,11 @@ type MessageTypeMap = {
   nextTrack: undefined;
   lastTrack: undefined;
   playTrack: undefined;
+  playStatus: boolean;
   otherWindowLoaded: undefined;
   otherWindowClosed: undefined;
+  setThumbnailImage: { buffer: ArrayBuffer; width: number; height: number };
+  clearThumbnailImage: undefined;
 };
 
 /** Normal 事件的 Message 类型的发送参数 */

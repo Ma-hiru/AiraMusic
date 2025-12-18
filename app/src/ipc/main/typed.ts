@@ -1,5 +1,6 @@
 import { BrowserWindow, IpcMainEvent, IpcMainInvokeEvent } from "electron";
 import { WindowManager } from "../../window";
+import { Log } from "../../utils/log";
 
 export type MainEventAPI = {
   [K in NormalEvent]: NormalFunc<[IpcMainEvent, NormalEventPayload<K>]>;
@@ -7,6 +8,54 @@ export type MainEventAPI = {
 
 export type MainInvokeAPI = {
   [K in InvokeEvent]: NormalFunc<[IpcMainInvokeEvent, InvokeEventArgs<K>], InvokeEventPayload<K>>;
+};
+
+const handlers = new Map<
+  keyof MessageTypeMap,
+  NormalFunc<[data: MessageDataReceive<any>["data"]]>[]
+>();
+
+export const typedIpcMainReceiveMessage = <T extends keyof MessageTypeMap>(
+  type: T,
+  data: MessageDataReceive<T>["data"]
+) => {
+  const handler = handlers.get(type);
+  if (handler) {
+    handler.forEach((cb) => {
+      try {
+        cb(data);
+      } catch (err) {
+        Log.error({
+          raw: err,
+          message: `typedIpcMainReceiveMessage handler error for type ${String(type)}`,
+          label: "ipc/main/typed/typedIpcMainReceiveMessage"
+        });
+      }
+    });
+  }
+};
+
+export const addIpcMainReceiveMessageHandler = <T extends keyof MessageTypeMap>(
+  type: T,
+  callback: NormalFunc<[data: MessageDataReceive<T>["data"]]>
+) => {
+  const handler = handlers.get(type) || [];
+  handler.push(callback);
+  handlers.set(type, handler);
+};
+
+export const removeIpcMainReceiveMessageHandler = <T extends keyof MessageTypeMap>(
+  type: T,
+  callback: NormalFunc<[data: MessageDataReceive<T>["data"]]>
+) => {
+  const handler = handlers.get(type);
+  if (handler) {
+    const index = handler.indexOf(callback);
+    if (index !== -1) {
+      handler.splice(index, 1);
+      handlers.set(type, handler);
+    }
+  }
 };
 
 export const typedIpcMainSendMessage = <T extends keyof MessageTypeMap>(props: {
