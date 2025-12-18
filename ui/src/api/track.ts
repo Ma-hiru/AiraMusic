@@ -202,3 +202,11 @@ export async function getTrackChorus(id: number) {
     throw NCMServerErr.create("ui/api/track.ts:getTrackChorus", err);
   }
 }
+
+/**
+ * 歌曲动态封面
+ * @desc 登录后调用此接口, 传入歌曲 id, 获取歌曲动态封面
+ * */
+export function dynamicCover(id: number) {
+  return apiRequest<any, NeteaseAPIResponse>("/song/dynamic/cover", { params: { id } });
+}

@@ -211,3 +211,13 @@ export function fmTrash(id: number) {
     }
   });
 }
+
+/**
+ *  相关歌单推荐
+ * @desc 调用此接口, 传入歌单 id, 获取相关歌单推荐
+ * */
+export function relativePlaylist(id: number) {
+  return apiRequest<any, NeteaseAPIResponse>("/playlist/detail/rcmd/get", {
+    params: { id }
+  });
+}
