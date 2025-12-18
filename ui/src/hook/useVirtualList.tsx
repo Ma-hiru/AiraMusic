@@ -69,13 +69,11 @@ export function useVirtualList({
       prevRange.current = range;
     }
   }, [visibleStart, visibleCount, total, onRangeUpdate]);
-  // 返回虚拟列表组件
-  return useMemo(() => {
-    const start = Math.max(0, visibleStart - overscan);
-    const end = Math.min(total, visibleStart + visibleCount + overscan);
-    return {
-      start,
-      end
-    };
-  }, [overscan, total, visibleCount, visibleStart]);
+  // 计算渲染范围
+  const start = Math.max(0, visibleStart - overscan);
+  const end = Math.min(total, visibleStart + visibleCount + overscan);
+  return {
+    start,
+    end
+  };
 }

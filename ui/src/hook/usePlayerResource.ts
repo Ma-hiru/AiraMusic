@@ -115,9 +115,14 @@ export function usePlayerResource() {
       const hasAudio = !!current.audio;
       if (!hasLyric || invalid) void loadLyric(current.track.id);
       if (!hasAudio || invalid) void loadAudioSource(current.track);
-      if (invalid) Track.removeMarkedInvalidCache(current.track.id);
-      // 仅在资源加载完成后才预加载下一首，避免无意义的重复触发
-      hasLyric && hasAudio && !isShuffle && schedulePreloadNextTrack(current, peak);
+      requestIdleCallback(
+        () => {
+          if (invalid) Track.removeMarkedInvalidCache(current.track.id);
+          // 仅在资源加载完成后才预加载下一首，避免无意义的重复触发
+          hasLyric && hasAudio && !isShuffle && schedulePreloadNextTrack(current, peak);
+        },
+        { timeout: 2000 }
+      );
     }
     return cancelScheduledPreload;
   }, [

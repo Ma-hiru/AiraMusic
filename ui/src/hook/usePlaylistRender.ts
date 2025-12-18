@@ -14,9 +14,9 @@ export function usePlaylistNormalRender(id?: string) {
     // 搜索时的绝对索引，如果为null则表示未搜索
     absoluteIdx: null as Nullable<number[]>
   });
-  const [searchTrackInstance, setSearchTrackInstance] = useState<Nullable<SearchTrack>>(null);
   const [loading, setLoading] = useState(true);
   const [requestMissedTracks, setRequestMissedTracks] = useState(0);
+  const searchTrackInstance = useRef<Nullable<SearchTrack>>(null);
   // 所有曲目
   const tracks = useRef<NeteaseTrack[]>([]);
   // 历史最大滚动范围
@@ -60,30 +60,28 @@ export function usePlaylistNormalRender(id?: string) {
     [checkAndUpdateLastPreloadRange, filterTracks.absoluteIdx]
   );
   // 搜索曲目
-  const searchTracks = useCallback(
-    (k: string) => {
-      if (k.trim() === "") {
-        setFilterTracks({
-          tracks: tracks.current,
-          absoluteIdx: null
+  const searchTracks = useCallback((k: string) => {
+    if (k.trim() === "") {
+      setFilterTracks({
+        tracks: tracks.current,
+        absoluteIdx: null
+      });
+    } else {
+      const searcher = searchTrackInstance.current;
+      if (searcher) {
+        const lowerK = k.toLowerCase();
+        const indexs = Array.from(searcher.search(lowerK));
+        const result: NeteaseTrack[] = [];
+        indexs.forEach((i) => {
+          result.push(tracks.current[i]!);
         });
-      } else {
-        if (searchTrackInstance) {
-          const lowerK = k.toLowerCase();
-          const indexs = Array.from(searchTrackInstance.search(lowerK));
-          const result: NeteaseTrack[] = [];
-          indexs.forEach((i) => {
-            result.push(tracks.current[i]!);
-          });
-          setFilterTracks({
-            tracks: result,
-            absoluteIdx: indexs as unknown as number[]
-          });
-        }
+        setFilterTracks({
+          tracks: result,
+          absoluteIdx: indexs as unknown as number[]
+        });
       }
-    },
-    [searchTrackInstance]
-  );
+    }
+  }, []);
   // 清除状态
   const clearState = useCallback(() => {
     tracks.current = [];
@@ -93,15 +91,15 @@ export function usePlaylistNormalRender(id?: string) {
       absoluteIdx: null
     });
     setEntry(null);
-    searchTrackInstance?.update();
+    searchTrackInstance.current?.update();
     setLoading(true);
-  }, [searchTrackInstance]);
+  }, []);
   // 初始化搜索实例
   useEffect(() => {
-    if (searchTrackInstance === null) {
-      setSearchTrackInstance(new SearchTrack());
+    if (searchTrackInstance.current === null) {
+      searchTrackInstance.current = new SearchTrack();
     }
-  }, [searchTrackInstance]);
+  }, []);
   // 挂载updater
   const outerUpdaterForID = useUpdate();
   const outerUpdaterForAll = useUpdate();
@@ -132,7 +130,7 @@ export function usePlaylistNormalRender(id?: string) {
                 void checkAndUpdateLastPreloadRange([0, 50]);
               }
             }, 2000);
-            searchTrackInstance?.update(JSON.stringify(tracks.current));
+            searchTrackInstance.current?.update(JSON.stringify(tracks.current));
             setFilterTracks({
               tracks: tracks.current,
               absoluteIdx: null
@@ -155,7 +153,6 @@ export function usePlaylistNormalRender(id?: string) {
     checkAndUpdateLastPreloadRange,
     clearState,
     id,
-    searchTrackInstance,
     // 通过id精确监听歌单数据更新
     outerUpdaterForID.count
   ]);
@@ -197,13 +194,13 @@ export function usePlaylistNormalRender(id?: string) {
 
 export function usePlaylistHistoryRender() {
   const historyTracks = useRef<NeteaseTrack[]>([]);
+  const searchTrackInstance = useRef<Nullable<SearchTrack>>(null);
   const [loading, setLoading] = useState(true);
   const [filterTracks, setFilterTracks] = useState({
     tracks: [] as NeteaseTrack[],
     // 搜索时的绝对索引，如果为null则表示未搜索
     absoluteIdx: null as Nullable<number[]>
   });
-  const [searchTrackInstance, setSearchTrackInstance] = useState<Nullable<SearchTrack>>(null);
 
   // 历史最大滚动范围
   const maxRange = useRef<IndexRange>([0, 0]);
@@ -251,30 +248,28 @@ export function usePlaylistHistoryRender() {
     [checkAndUpdateLastPreloadRange, filterTracks.absoluteIdx]
   );
   // 搜索曲目
-  const searchTracks = useCallback(
-    (k: string) => {
-      if (k.trim() === "") {
-        setFilterTracks({
-          tracks: historyTracks.current,
-          absoluteIdx: null
+  const searchTracks = useCallback((k: string) => {
+    if (k.trim() === "") {
+      setFilterTracks({
+        tracks: historyTracks.current,
+        absoluteIdx: null
+      });
+    } else {
+      const searcher = searchTrackInstance.current;
+      if (searcher) {
+        const lowerK = k.toLowerCase();
+        const indexs = searcher.search(lowerK);
+        const result: NeteaseTrack[] = [];
+        indexs.forEach((i) => {
+          result.push(historyTracks.current[i]!);
         });
-      } else {
-        if (searchTrackInstance) {
-          const lowerK = k.toLowerCase();
-          const indexs = searchTrackInstance.search(lowerK);
-          const result: NeteaseTrack[] = [];
-          indexs.forEach((i) => {
-            result.push(historyTracks.current[i]!);
-          });
-          setFilterTracks({
-            tracks: result,
-            absoluteIdx: indexs as unknown as number[]
-          });
-        }
+        setFilterTracks({
+          tracks: result,
+          absoluteIdx: indexs as unknown as number[]
+        });
       }
-    },
-    [searchTrackInstance]
-  );
+    }
+  }, []);
   const forceUpdate = useUpdate();
   const updater = useCallback(() => {
     setLoading(true);
@@ -300,7 +295,7 @@ export function usePlaylistHistoryRender() {
         void checkAndUpdateLastPreloadRange([0, 50]);
       }
     }, 1000);
-    searchTrackInstance?.update(JSON.stringify(historyTracks.current));
+    searchTrackInstance.current?.update(JSON.stringify(historyTracks.current));
     setFilterTracks({
       tracks: historyTracks.current,
       absoluteIdx: null
@@ -313,16 +308,15 @@ export function usePlaylistHistoryRender() {
     checkAndUpdateLastPreloadRange,
     historyTracks,
     loading,
-    searchTrackInstance,
     // 监听ref变化
     forceUpdate.count
   ]);
   // 初始化搜索实例
   useEffect(() => {
-    if (searchTrackInstance === null) {
-      setSearchTrackInstance(new SearchTrack());
+    if (searchTrackInstance.current === null) {
+      searchTrackInstance.current = new SearchTrack();
     }
-  }, [searchTrackInstance]);
+  }, []);
   // 挂载updater
   useEffect(() => {
     PlaylistHistoryCache.outerUpdater = updater;

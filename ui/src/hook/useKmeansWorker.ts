@@ -1,5 +1,5 @@
 import KMeansWorker from "@mahiru/ui/worker/kmeans.ts?worker";
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 import { EqError, Log } from "@mahiru/ui/utils/dev";
 import { UI } from "@mahiru/ui/utils/ui";
 
@@ -8,18 +8,31 @@ const themeColorCache = new Map<string, string[]>();
 export function useKmeansWorker(backgroundURL: Optional<string>) {
   const [result, setResult] = useState<string[]>([]);
 
-  useEffect(() => {
-    const worker = new KMeansWorker();
-    if (!backgroundURL || !worker) return;
-    if (themeColorCache.has(backgroundURL)) {
-      setResult(themeColorCache.get(backgroundURL)!);
-      return;
+  useLayoutEffect(() => {
+    const mainColor = result[0] || "#fc3d49";
+    const secondaryColor = result[1] || "#ffffff";
+    if (mainColor && secondaryColor) {
+      UI.APPThemeColor = {
+        main: mainColor,
+        secondary: secondaryColor
+      };
     }
-    const id = Math.random() * 10000;
+  }, [result]);
+
+  useEffect(() => {
+    if (!backgroundURL) return;
+    const cached = themeColorCache.get(backgroundURL);
+    if (cached) {
+      return setResult(cached);
+    }
+    const worker = new KMeansWorker();
+    const id = Date.now();
     const handleMessage = (message: MessageEvent<KMeansWorkerResult>) => {
-      if (message.data.ok && message.data.id === id) {
-        setResult(message.data.result);
-        themeColorCache.set(backgroundURL, message.data.result);
+      if (message.data.ok) {
+        if (message.data.id === id) {
+          setResult(message.data.result);
+          themeColorCache.set(backgroundURL, message.data.result);
+        }
       } else {
         Log.error(
           new EqError({
@@ -30,7 +43,7 @@ export function useKmeansWorker(backgroundURL: Optional<string>) {
       }
       worker.terminate();
     };
-    worker.addEventListener("message", handleMessage);
+    worker.addEventListener("message", handleMessage, { passive: true });
     worker.postMessage({
       id,
       url: backgroundURL
@@ -40,15 +53,6 @@ export function useKmeansWorker(backgroundURL: Optional<string>) {
       worker.terminate();
     };
   }, [backgroundURL]);
-  useEffect(() => {
-    const mainColor = result[0] || "#fc3d49";
-    const secondaryColor = result[1] || "#ffffff";
-    if (mainColor && secondaryColor) {
-      UI.APPThemeColor = {
-        main: mainColor,
-        secondary: secondaryColor
-      };
-    }
-  }, [result]);
+
   return result;
 }

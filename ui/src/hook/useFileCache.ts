@@ -1,4 +1,4 @@
-import { useLayoutEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { AppScheme } from "@mahiru/ui/constants/scheme";
 import { CacheStore } from "@mahiru/ui/store/cache";
 
@@ -11,7 +11,7 @@ export function useFileCache(
 ) {
   const [finalURL, setFinalURL] = useState<string>();
   const { id = url, onCacheHit } = options || {};
-  useLayoutEffect(() => {
+  useEffect(() => {
     if (
       !url ||
       !url.startsWith("http") ||
@@ -23,20 +23,24 @@ export function useFileCache(
     let canceled = false;
     const run = async () => {
       const check = await CacheStore.checkOrStoreAsync(url, id as string).catch(() => null);
-      if (canceled) return;
       if (check?.ok && check.index.file) {
         const path = check.index.file;
-        onCacheHit?.(path, check.index.id);
+        requestIdleCallback(
+          () => {
+            if (canceled) return;
+            onCacheHit?.(path, check.index.id);
+          },
+          { timeout: 5000 }
+        );
         if (!canceled && path !== finalURL) {
           setFinalURL(path);
         }
-        return;
-      }
-      if (finalURL !== url) {
+      } else if (finalURL !== url) {
+        if (canceled) return;
         setFinalURL(url);
       }
     };
-    void run();
+    requestIdleCallback(run, { timeout: 500 });
     return () => {
       canceled = true;
     };

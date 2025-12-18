@@ -56,7 +56,9 @@ export function useInfoWindow() {
 
   useEffect(() => {
     if (!opened) return;
-    const timer = setInterval(getOpenedStatus, 5000);
+    const timer = setInterval(() => {
+      requestIdleCallback(() => getOpenedStatus());
+    }, 5000);
     return () => {
       clearInterval(timer);
     };

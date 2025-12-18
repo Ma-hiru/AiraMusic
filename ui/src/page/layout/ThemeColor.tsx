@@ -10,18 +10,24 @@ const ThemeColor: FC<object> = () => {
 
   useKmeansWorker(background);
   useEffect(() => {
-    Renderer.invoke.hasOpenInternalWindow("info").then((ok) => {
-      if (!ok) return;
-      Renderer.sendMessage("infoSync", "info", {
-        type: "theme",
-        value: {
-          mainColor: mainColor.string(),
-          secondaryColor: secondaryColor.string(),
-          textColor: textColorOnMain.string(),
-          backgroundImage: background
-        }
+    let canceled = false;
+    requestIdleCallback(() => {
+      Renderer.invoke.hasOpenInternalWindow("info").then((ok) => {
+        if (!ok || canceled) return;
+        Renderer.sendMessage("infoSync", "info", {
+          type: "theme",
+          value: {
+            mainColor: mainColor.string(),
+            secondaryColor: secondaryColor.string(),
+            textColor: textColorOnMain.string(),
+            backgroundImage: background
+          }
+        });
       });
     });
+    return () => {
+      canceled = true;
+    };
   }, [background, mainColor, secondaryColor, textColorOnMain]);
 
   return null;
