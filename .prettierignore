@@ -2,4 +2,9 @@
 **/*.ttf
 **/*.woff
 **/target
+**/temp
+**/node_modules
+**/.idea
+**/dist
+**/pkg
 pnpm-lock.yaml

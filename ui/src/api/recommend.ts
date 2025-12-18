@@ -87,6 +87,14 @@ export async function dailyRecommendTracks(): Promise<NeteaseDailyRecommendTrack
 }
 
 /**
+ * 每日推荐歌曲-不感兴趣
+ * @desc 日推歌曲标记为不感兴趣( 同时会返回一个新推荐歌曲, 需要登录 )
+ * */
+export async function dailyRecommendTracksTrash(id: number) {
+  return apiRequest("/recommend/songs/dislike", { params: { id, timestamp: Date.now() } });
+}
+
+/**
  * 获取精品歌单
  * @desc 调用此接口 , 可获取精品歌单
  */
@@ -167,7 +175,7 @@ export async function homeBanner(type: 0 | 1 | 2 | 3 = 0): Promise<NeteaseBanner
  */
 export async function topSong(type: 0 | 7 | 96 | 8 | 16) {
   try {
-    return await apiRequest<{ type: number }, NeteaseTopSongResponse>({
+    return await apiRequest<any, NeteaseTopSongResponse>({
       url: "/top/song",
       method: "get",
       params: {
@@ -177,4 +185,29 @@ export async function topSong(type: 0 | 7 | 96 | 8 | 16) {
   } catch (err) {
     throw NCMServerErr.create("ui/api/track.ts:topSong", err);
   }
+}
+
+/**
+ * 私人 FM
+ * @note 需要登录
+ * */
+export function personalFM() {
+  return apiRequest<any, NeteaseAPIResponse>("/personal_fm", {
+    params: {
+      timestamp: Date.now()
+    }
+  });
+}
+
+/**
+ * 私人FM垃圾桶
+ * @desc 调用此接口 , 传入音乐 id, 可把该音乐从私人 FM 中移除至垃圾桶
+ * */
+export function fmTrash(id: number) {
+  return apiRequest<any, NeteaseAPIResponse>("/fm_trash", {
+    params: {
+      timestamp: Date.now(),
+      id
+    }
+  });
 }

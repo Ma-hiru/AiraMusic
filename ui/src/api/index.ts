@@ -5,11 +5,12 @@ import * as Comment from "./comment";
 import * as Lyric from "./lyric";
 import * as Artist from "./artist";
 import * as Auth from "./auth";
-import * as Others from "./others";
 import * as Playlist from "./playlist";
 import * as Recommend from "./recommend";
 import * as User from "./user";
 import * as Wiki from "./wiki";
+import * as Search from "./search";
+import * as Similar from "./similar";
 
 export const API = {
   Track,
@@ -19,9 +20,10 @@ export const API = {
   Lyric,
   Artist,
   Auth,
-  Others,
   Playlist,
   Recommend,
   User,
-  Wiki
+  Wiki,
+  Search,
+  Similar
 };

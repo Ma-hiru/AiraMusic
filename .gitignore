@@ -14,6 +14,5 @@ target
 dist
 tests
 
-.idea/workspace.xml
 temp
 .idea
