@@ -1,10 +1,13 @@
 import { defineConfig } from "tsup";
 import { readFileSync } from "node:fs";
+import { join } from "node:path";
+
+const envFile = ".env";
+const envPath = join(__dirname, "..", envFile);
 
 function loadEnv() {
-  const envFile = ".env";
   const env: Record<string, string> = {};
-  const data = readFileSync(envFile, "utf-8");
+  const data = readFileSync(envPath, "utf-8");
   const lines = data.split("\n");
   for (const line of lines) {
     const trimmedLine = line.trim();
@@ -39,7 +42,7 @@ export default defineConfig([
     sourcemap: true,
     clean: false,
     dts: false,
-    external: ["electron", "esbuild", "node:*", "window"],
+    external: ["electron", "esbuild", "esbuild/*", "node:*", "window"],
     noExternal: ["@mahiru/log", "@mahiru/store"],
     minify: true,
     esbuildOptions: (options) => {
@@ -64,7 +67,7 @@ export default defineConfig([
     clean: true,
     dts: false,
     minify: true,
-    external: ["electron", "esbuild", "node:*"],
+    external: ["electron", "esbuild", "esbuild/*", "node:*", "window"],
     noExternal: ["@mahiru/log"]
   }
 ]);

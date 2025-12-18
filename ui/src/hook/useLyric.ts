@@ -1,12 +1,12 @@
 import { useCallback } from "react";
-import { Lyric } from "@mahiru/ui/utils/lyric";
+import { LyricManager } from "@mahiru/ui/utils/lyricManager";
 
 export function useLyric(
   lyricVersion: Optional<LyricVersionType>,
   setLyricVersion: NormalFunc<[version: LyricVersionType]>,
   lyricLines: Optional<FullVersionLyricLine>
 ) {
-  const lyricInfos = Lyric.getLyricVersionInfo(lyricLines, lyricVersion);
+  const lyricInfos = LyricManager.getLyricVersionInfo(lyricLines, lyricVersion);
   const setRm = useCallback(() => {
     if (!lyricInfos.hasRm) return;
     switch (lyricVersion) {

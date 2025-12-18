@@ -102,21 +102,25 @@ export function usePlaylistNormalRender(id?: string) {
       setSearchTrackInstance(new SearchTrack());
     }
   }, [searchTrackInstance]);
-  // 监听id变化，加载歌单详情
-  const outerUpdate = useUpdate();
+  // 挂载updater
+  const outerUpdaterForID = useUpdate();
+  const outerUpdaterForAll = useUpdate();
   useEffect(() => {
-    PlaylistManager.addOuterUpdater(outerUpdate);
+    id && PlaylistManager.addOuterUpdater(outerUpdaterForID, Number(id));
+    PlaylistManager.addOuterUpdater(outerUpdaterForAll, null);
     return () => {
-      PlaylistManager.removeOuterUpdater(outerUpdate);
+      id && PlaylistManager.removeOuterUpdater(null, Number(id));
+      PlaylistManager.removeOuterUpdater(outerUpdaterForAll, null);
     };
-  }, [outerUpdate]);
+  }, [id, outerUpdaterForAll, outerUpdaterForID]);
+  // 监听id变化，加载歌单详情
   useEffect(() => {
     let cancelled = false;
     clearState();
     if (id) {
+      Log.trace("usePlayListNormal", `加载歌单详情 ${id}`);
       PlaylistManager.requestPlaylistDetail(Number(id), [0, 50], ImageSize.xs, (missedTrack) => {
         if (!cancelled) {
-          Log.info("usePlayListNormal", `请求缺失的曲目，数量 ${missedTrack}`);
           setRequestMissedTracks(missedTrack);
         }
       })
@@ -147,14 +151,40 @@ export function usePlaylistNormalRender(id?: string) {
       cancelled = true;
     };
     // outerUpdate.count 用于监听外部更新请求
-  }, [checkAndUpdateLastPreloadRange, clearState, id, searchTrackInstance, outerUpdate.count]);
+  }, [
+    checkAndUpdateLastPreloadRange,
+    clearState,
+    id,
+    searchTrackInstance,
+    // 通过id精确监听歌单数据更新
+    outerUpdaterForID.count
+  ]);
+  // 监听外部歌单更新请求(一般是喜欢歌曲的变更)，重载列表
+  const lastUpdateAllCount = useRef(outerUpdaterForID.count);
+  useEffect(() => {
+    if (lastUpdateAllCount.current === outerUpdaterForID.count) {
+      // 说明 outerUpdaterForID 没有触发更新，是外部歌单更新
+      // 此时仅仅重载一下列表，触发列表项的useEffect，更新状态，不要重载数据
+      Log.trace("usePlayListNormalRender", "检测到外部歌单更新，重载列表");
+      setFilterTracks(() => filterTracks);
+    } else {
+      Log.trace("usePlayListNormalRender", "检测到当前歌单更新，重载数据");
+      // 更新的是当前歌单，那么已经重载数据了，不需要再处理
+      lastUpdateAllCount.current = outerUpdaterForID.count;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [outerUpdaterForAll.count, outerUpdaterForID.count]);
+  // 组件卸载时保存脏数据
+  const entryRef = useRef(entry);
+  entryRef.current = entry;
   useEffect(() => {
     return () => {
-      // 保存脏数据
-      Log.info("usePlayListNormal", "组件卸载，保存脏数据");
+      Log.info("usePlayListRender", "组件卸载，保存脏数据");
+      const entry = entryRef.current;
       entry && PlaylistManager.saveDirtyEntry(entry);
     };
-  }, [entry]);
+  }, []);
+
   return {
     entry,
     loading,

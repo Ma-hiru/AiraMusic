@@ -11,7 +11,7 @@ import { Log } from "@mahiru/ui/utils/dev";
 import { LyricParseErr } from "@mahiru/ui/utils/errs";
 import { API } from "@mahiru/ui/api";
 
-class Parser {
+class LyricParser {
   mapRawLyricLine(line: RawLyricLine): LyricLine {
     return {
       ...line,
@@ -23,7 +23,7 @@ class Parser {
     return words.map((word) => ({ obscene: false, ...word }));
   }
 
-  parseTranslatedLRCWasm(content: string): LyricLine[] {
+  parseTranslatedLRC(content: string): LyricLine[] {
     const raw = parseLrc(content);
     return parseTranslatedLRC(raw, false) as LyricLine[];
   }
@@ -34,7 +34,7 @@ class Parser {
     return parseLrc(lyric);
   }
 
-  parseNeteaseLyricWasm(
+  parseNeteaseLyric(
     raw: NeteaseLrc | NeteaseKlyric | NeteaseYRC,
     ts: NeteaseTlyric | undefined,
     rm: NeteaseRomalrc | undefined,
@@ -76,7 +76,19 @@ class Parser {
     }
   }
 
-  parseNeteaseLyricResponse(response: NeteaseLyricResponseNew) {
+  /** 处理和解析歌词响应 */
+  parseNeteaseLyricResponse(response: NeteaseLyricResponseNew): FullVersionLyricLine {
+    if (
+      !response?.lrc?.lyric &&
+      !response?.klyric?.lyric &&
+      !response?.romalrc?.lyric &&
+      !response?.tlyric?.lyric &&
+      !response?.yrc
+    )
+      // 没有任何歌词
+      return noLyricPreset;
+
+    let parsedLyric;
     const translatedLyric = response.tlyric;
     const romanLyric = response.romalrc;
     const meta = response.transUser;
@@ -84,27 +96,80 @@ class Parser {
     const QRC = response.klyric;
     const YRC = response.yrc;
     if (QRC && QRC.lyric) {
-      return this.parseNeteaseLyricWasm(QRC, translatedLyric, romanLyric, "QRC", meta);
+      parsedLyric = this.parseNeteaseLyric(QRC, translatedLyric, romanLyric, "QRC", meta);
     } else if (LRC && LRC.lyric) {
-      return this.parseNeteaseLyricWasm(LRC, translatedLyric, romanLyric, "LRC", meta);
+      parsedLyric = this.parseNeteaseLyric(LRC, translatedLyric, romanLyric, "LRC", meta);
     } else if (YRC && YRC.lyric) {
-      return this.parseNeteaseLyricWasm(YRC, translatedLyric, romanLyric, "YRC", meta);
+      parsedLyric = this.parseNeteaseLyric(YRC, translatedLyric, romanLyric, "YRC", meta);
     }
-    return {
-      full: [],
-      raw: [],
-      tl: [],
-      rm: []
-    };
+
+    if (!parsedLyric) {
+      return noLyricPreset;
+    } else if (parsedLyric.raw.length === 0) {
+      return pureMusicLyricPreset;
+    } else {
+      return parsedLyric;
+    }
   }
 }
 
-export const Lyric = new (class {
-  Parser = new Parser();
+const noLyricPreset = {
+  full: [],
+  rm: [],
+  tl: [],
+  raw: [
+    {
+      words: [
+        {
+          startTime: 0,
+          endTime: 999999999999,
+          obscene: false,
+          word: "暂无歌词",
+          romanWord: ""
+        }
+      ],
+      translatedLyric: "",
+      romanLyric: "",
+      startTime: 0,
+      endTime: 999999999999,
+      isBG: false,
+      isDuet: false
+    }
+  ]
+};
 
+const pureMusicLyricPreset = {
+  full: [],
+  rm: [],
+  tl: [],
+  raw: [
+    {
+      words: [
+        {
+          startTime: 0,
+          endTime: 999999999999,
+          obscene: false,
+          word: "纯音乐，请欣赏",
+          romanWord: ""
+        }
+      ],
+      translatedLyric: "",
+      romanLyric: "",
+      startTime: 0,
+      endTime: 999999999999,
+      isBG: false,
+      isDuet: false
+    }
+  ]
+};
+
+export const LyricManager = new (class {
+  Parser = new LyricParser();
+
+  /** 请求和解析歌词 */
   async requestLyric(id: number, preference?: Optional<LyricVersionType>) {
     const response = await API.Lyric.getYRCLyric(id);
-    const lyric = this.handleLyricResponse(response);
+    const lyric = this.Parser.parseNeteaseLyricResponse(response);
     const version = this.chooseLyricVersionWithPreference(lyric, preference);
     return {
       lyric,
@@ -113,6 +178,7 @@ export const Lyric = new (class {
     };
   }
 
+  /** 根据歌词数据，将相应版本映射成布尔值 */
   getLyricVersionInfo(
     lyric: Optional<FullVersionLyricLine>,
     currentVersion?: Optional<LyricVersionType>
@@ -139,41 +205,7 @@ export const Lyric = new (class {
     return result;
   }
 
-  handleLyricResponse(response: NeteaseLyricResponseNew): FullVersionLyricLine {
-    if (
-      !response.lrc?.lyric &&
-      !response.klyric?.lyric &&
-      !response.romalrc?.lyric &&
-      !response.tlyric?.lyric &&
-      !response.yrc
-    ) {
-      return {
-        full: [noLyricPreset],
-        rm: [noLyricPreset],
-        tl: [noLyricPreset],
-        raw: [noLyricPreset]
-      };
-    }
-    const parsedLyric = this.Parser.parseNeteaseLyricResponse(response);
-    if (!parsedLyric)
-      return {
-        full: [noLyricPreset],
-        rm: [noLyricPreset],
-        tl: [noLyricPreset],
-        raw: [noLyricPreset]
-      };
-    if (parsedLyric.raw.length === 0) {
-      return {
-        full: [pureMusicLyricPreset],
-        rm: [pureMusicLyricPreset],
-        tl: [pureMusicLyricPreset],
-        raw: [pureMusicLyricPreset]
-      };
-    } else {
-      return parsedLyric;
-    }
-  }
-
+  /** 歌词版本选择，结合偏好和现有歌词，选出最合适的歌词版本，没有偏好默认显示翻译 */
   chooseLyricVersionWithPreference(
     lyric: FullVersionLyricLine,
     preference: Optional<LyricVersionType>
@@ -215,6 +247,7 @@ export const Lyric = new (class {
     return preference;
   }
 
+  /** 歌词显示版本选择，可用于歌词组件，含容错处理 */
   chooseLyric(lyric: Optional<FullVersionLyricLine>, version: Optional<LyricVersionType>) {
     if (lyric) {
       const chosenVersion = this.checkLyricVersion(lyric, version, null);
@@ -224,6 +257,7 @@ export const Lyric = new (class {
     }
   }
 
+  /** 歌词版本切换检查 */
   checkLyricVersion(
     lyric: Optional<FullVersionLyricLine>,
     next: Optional<LyricVersionType>,
@@ -237,48 +271,3 @@ export const Lyric = new (class {
     return last || "raw";
   }
 })();
-
-export type LyricVersionType = "raw" | "full" | "tl" | "rm";
-
-export type FullVersionLyricLine = {
-  full: LyricLine[];
-  raw: LyricLine[];
-  tl: LyricLine[];
-  rm: LyricLine[];
-};
-
-const noLyricPreset = {
-  words: [
-    {
-      startTime: 0,
-      endTime: 999999999999,
-      obscene: false,
-      word: "暂无歌词",
-      romanWord: ""
-    }
-  ],
-  translatedLyric: "",
-  romanLyric: "",
-  startTime: 0,
-  endTime: 999999999999,
-  isBG: false,
-  isDuet: false
-};
-
-const pureMusicLyricPreset = {
-  words: [
-    {
-      startTime: 0,
-      endTime: 999999999999,
-      obscene: false,
-      word: "纯音乐，请欣赏",
-      romanWord: ""
-    }
-  ],
-  translatedLyric: "",
-  romanLyric: "",
-  startTime: 0,
-  endTime: 999999999999,
-  isBG: false,
-  isDuet: false
-};

@@ -3,7 +3,7 @@ import { LyricPlayer, LyricPlayerRef } from "@mahiru/ui/componets/player/LyricPl
 import { cx } from "@emotion/css";
 import { useGPU } from "@mahiru/ui/hook/useGPU";
 import { LyricLineMouseEvent } from "@applemusic-like-lyrics/core";
-import { Lyric as LyricUtils } from "@mahiru/ui/utils/lyric";
+import { LyricManager as LyricUtils } from "@mahiru/ui/utils/lyricManager";
 import { useLayoutStatus, usePlayerStatus } from "@mahiru/ui/store";
 
 const Lyric: FC<object> = () => {

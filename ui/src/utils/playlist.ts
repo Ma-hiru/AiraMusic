@@ -18,20 +18,16 @@ export type PlaylistCacheEntry = {
 
 class PlaylistStore {
   /** 内存中最多存储的歌单数目 */
-  maxMemorySize = 3;
+  _maxMemorySize = 3;
   /** 超过限制强制存在Store里面，而不是内存 */
-  maxPlayListSize = 100;
+  _maxPlayListSize = 100;
   /** 缓存过期时间 */
-  timeLimit = Time.getCacheTimeLimit(1, "hour"); // 1 hour
+  _timeLimit = Time.getCacheTimeLimit(1, "day");
 
-  memory = new Map<PlaylistCacheID, PlaylistCacheEntry>();
-
-  cacheID(playListID: number): PlaylistCacheID {
-    return `play_list_cache_${playListID}`;
-  }
+  _memory = new Map<PlaylistCacheID, PlaylistCacheEntry>();
 
   createEntry(data: NeteasePlaylistDetailResponse): PlaylistCacheEntry {
-    const cacheID = this.cacheID(data.playlist.id);
+    const cacheID = this.getEntryCacheID(data.playlist.id);
     return {
       playlistId: data.playlist.id,
       playlistCacheId: cacheID,
@@ -42,22 +38,25 @@ class PlaylistStore {
     };
   }
 
-  saveDirtyEntry(entry: PlaylistCacheEntry) {
+  saveDirtyEntry(entry: PlaylistCacheEntry, memoryFresh = false) {
     if (entry._dirty) {
       entry._dirty = false;
       this.setInStore(entry);
+      if (memoryFresh) {
+        this.setInMemory(entry);
+      }
     }
   }
 
-  async set(entry: PlaylistCacheEntry) {
-    if (entry.playlist.trackCount <= this.maxPlayListSize) {
+  setEntry(entry: PlaylistCacheEntry) {
+    if (entry.playlist.trackCount <= this._maxPlayListSize) {
       this.setInMemory(entry);
     }
     this.setInStore(entry);
   }
 
-  async get(id: number) {
-    const cacheID = this.cacheID(id);
+  async getEntry(id: number) {
+    const cacheID = this.getEntryCacheID(id);
     const memory = this.getInMemory(cacheID);
     if (memory) {
       Log.info("PlaylistManager", "从内存获取歌单缓存", id);
@@ -65,68 +64,109 @@ class PlaylistStore {
     }
     const store = await this.getInStore(cacheID);
     if (store) {
-      Log.info("PlaylistManager", "从存储获取歌单缓存", id);
+      Log.trace("PlaylistManager", "从存储获取歌单缓存", id);
       return store;
     }
-    Log.info("PlaylistManager", "未命中歌单缓存", id);
+    Log.trace("PlaylistManager", "未命中歌单缓存", id);
     return null;
   }
 
-  outdate(entry: PlaylistCacheEntry) {
-    return Date.now() - entry.createTime > this.timeLimit;
-  }
-
-  limitMemorySize() {
-    if (this.memory.size >= this.maxMemorySize) {
-      // 删除最久未使用的
-      let LRUKey: PlaylistCacheID | undefined;
-      for (const entry of this.memory.values()) {
-        if (!LRUKey || entry.createTime < this.memory.get(LRUKey)!.createTime) {
-          LRUKey = entry.playlistCacheId;
-        }
-      }
-      this.memory.delete(LRUKey!);
+  removeEntry(entry: PlaylistCacheEntry | number) {
+    if (typeof entry === "number") {
+      const cacheID = this.getEntryCacheID(entry);
+      this._memory.delete(cacheID);
+      void CacheStore.remove(cacheID);
+    } else {
+      this._memory.delete(entry.playlistCacheId);
+      void CacheStore.remove(entry.playlistCacheId);
     }
   }
 
-  setInMemory(data: PlaylistCacheEntry) {
-    this.limitMemorySize();
-    this.memory.set(data.playlistCacheId, data);
+  private getEntryCacheID(playlist: number | PlaylistCacheEntry): PlaylistCacheID {
+    if (typeof playlist === "object" && "playlistId" in playlist) {
+      return `play_list_cache_${playlist.playlistId}`;
+    }
+    return `play_list_cache_${playlist}`;
   }
 
-  setInStore(data: PlaylistCacheEntry) {
+  private isEntryOutdate(entry: PlaylistCacheEntry) {
+    return Date.now() - entry.createTime > this._timeLimit;
+  }
+
+  private limitMemorySize() {
+    if (this._memory.size >= this._maxMemorySize) {
+      // 删除最久未使用的
+      let LRUKey: PlaylistCacheID | undefined;
+      for (const entry of this._memory.values()) {
+        if (!LRUKey || entry.createTime < this._memory.get(LRUKey)!.createTime) {
+          LRUKey = entry.playlistCacheId;
+        }
+      }
+      this._memory.delete(LRUKey!);
+    }
+  }
+
+  private setInMemory(data: PlaylistCacheEntry) {
+    this.limitMemorySize();
+    this._memory.set(data.playlistCacheId, data);
+  }
+
+  private setInStore(data: PlaylistCacheEntry) {
     void CacheStore.storeObject(data.playlistCacheId, data);
   }
 
-  getInMemory(id: PlaylistCacheID) {
-    const entry = this.memory.get(id);
+  private getInMemory(id: PlaylistCacheID) {
+    const entry = this._memory.get(id);
     if (!entry) return null;
-    if (this.outdate(entry)) {
-      this.memory.delete(id);
+    if (this.isEntryOutdate(entry)) {
+      this._memory.delete(id);
       return null;
     }
     return entry;
   }
 
-  async getInStore(id: PlaylistCacheID) {
-    return await CacheStore.fetchObject<PlaylistCacheEntry>(id, this.timeLimit);
+  private getInStore(id: PlaylistCacheID) {
+    return CacheStore.fetchObject<PlaylistCacheEntry>(id, this._timeLimit);
   }
 }
 
 export const PlaylistManager = new (class {
   private store = new PlaylistStore();
-  private outerUpdater: Set<NormalFunc> = new Set();
+  private outerUpdaterWithID: Map<number, NormalFunc> = new Map();
+  private outerUpdaterWithAll: Set<NormalFunc> = new Set();
 
-  addOuterUpdater(func: NormalFunc) {
-    this.outerUpdater.add(func);
+  addOuterUpdater(func: NormalFunc, id: Optional<number>) {
+    if (id) {
+      this.outerUpdaterWithID.set(id, func);
+    } else {
+      this.outerUpdaterWithAll.add(func);
+    }
   }
 
-  removeOuterUpdater(func: NormalFunc) {
-    this.outerUpdater.delete(func);
+  removeOuterUpdater(func: Optional<NormalFunc>, id: Optional<number>) {
+    if (id) {
+      this.outerUpdaterWithID.delete(id);
+    } else if (func) {
+      this.outerUpdaterWithAll.delete(func);
+    }
   }
 
-  private execUpdater() {
-    this.outerUpdater.forEach((func) => {
+  private execUpdater(id: Optional<number>) {
+    if (id) {
+      try {
+        this.outerUpdaterWithID.get(id)?.();
+      } catch (err) {
+        Log.error(
+          new EqError({
+            raw: err,
+            message: "PlaylistManager execUpdater failed",
+            label: "ui/store/playlist.ts:PlaylistManager.execUpdater"
+          })
+        );
+        this.removeOuterUpdater(null, id);
+      }
+    }
+    this.outerUpdaterWithAll.forEach((func) => {
       try {
         func();
       } catch (err) {
@@ -134,10 +174,10 @@ export const PlaylistManager = new (class {
           new EqError({
             raw: err,
             message: "PlaylistManager execUpdater failed",
-            label: "ui/store/playlist.ts:PlaylistManager:execUpdater"
+            label: "ui/store/playlist.ts:PlaylistManager.execUpdater"
           })
         );
-        this.removeOuterUpdater(func);
+        this.removeOuterUpdater(func, null);
       }
     });
   }
@@ -146,10 +186,11 @@ export const PlaylistManager = new (class {
     id: number,
     preloadRange: [start: number, end: number],
     size: ImageSize = ImageSize.xs,
-    whenRequestMissedTracks?: NormalFunc<[missTrack: number]>
+    whenRequestMissedTracks?: NormalFunc<[missTrack: number]>,
+    noCache = false
   ) {
-    const cache = await this.store.get(id);
-    if (cache) {
+    const cache = await this.store.getEntry(id);
+    if (cache && !noCache) {
       return cache;
     } else {
       const rawList = await API.Playlist.getPlaylistDetail(id);
@@ -167,13 +208,13 @@ export const PlaylistManager = new (class {
         size
       );
       const entry = this.store.createEntry(fullList);
-      await this.store.set(entry);
+      this.store.setEntry(entry);
       return entry;
     }
   }
 
-  async saveDirtyEntry(entry: PlaylistCacheEntry) {
-    return this.store.saveDirtyEntry(entry);
+  saveDirtyEntry(entry: PlaylistCacheEntry, memoryFresh = false) {
+    return this.store.saveDirtyEntry(entry, memoryFresh);
   }
 
   updateTrackCoverCache(props: {
@@ -199,20 +240,30 @@ export const PlaylistManager = new (class {
     const { userLikedListSummary } = getPersistSnapshot();
     const likedPlaylistID = userLikedListSummary?.id;
     if (likedPlaylistID) {
-      const entry = await this.store.get(likedPlaylistID);
+      const entry = await this.store.getEntry(likedPlaylistID);
       if (entry) {
         const findTrackIndex = entry.playlist.tracks.findIndex((t) => t.id === track.id);
         if (!nextStatus && findTrackIndex !== -1) {
           // 取消喜欢时，在喜欢的音乐列表中找到了该歌曲，需要移除
+          Log.trace("取消喜欢歌曲", "找到喜欢列表歌曲，移除", track.id);
           entry.playlist.tracks.splice(findTrackIndex, 1);
-        } else if (nextStatus && findTrackIndex === -1) {
+        } else if (nextStatus) {
           // 新喜欢时，如果在喜欢的音乐列表中找不到该歌曲，需要添加进去
-          entry.playlist.tracks.unshift(track);
+          if (findTrackIndex === -1) {
+            Log.trace("喜欢歌曲", "找不到喜欢的音乐列表中的歌曲，添加进去", track.id);
+            entry.playlist.tracks.unshift(track);
+          } else {
+            // 已经存在喜欢的列表中，需要提前到歌单顶部
+            Log.trace("喜欢歌曲", "喜欢的音乐列表中已经存在该歌曲，提前到歌单顶部", track.id);
+            const [likedTrack] = entry.playlist.tracks.splice(findTrackIndex, 1);
+            likedTrack && entry.playlist.tracks.unshift(likedTrack);
+          }
         }
         entry._dirty = true;
-        await this.saveDirtyEntry(entry);
+        this.saveDirtyEntry(entry, true);
+        this.execUpdater(likedPlaylistID);
+        this.execUpdater(null);
       }
-      this.execUpdater();
     }
   }
 
@@ -225,5 +276,24 @@ export const PlaylistManager = new (class {
     } else {
       return playcount.toString();
     }
+  }
+
+  async forceFetchLatestData(
+    id: number,
+    preloadRange: [start: number, end: number],
+    size: ImageSize = ImageSize.xs,
+    whenRequestMissedTracks?: NormalFunc<[missTrack: number]>
+  ) {
+    this.store.removeEntry(id);
+    const entry = await this.requestPlaylistDetail(
+      id,
+      preloadRange,
+      size,
+      whenRequestMissedTracks,
+      true
+    );
+    this.execUpdater(id);
+    this.execUpdater(null);
+    return entry;
   }
 })();

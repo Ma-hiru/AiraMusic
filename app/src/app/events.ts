@@ -2,7 +2,7 @@ import { APP } from "./index";
 import { app } from "electron";
 import { Log } from "../utils/log";
 import { isCreateTray, isLinux, isMacOS } from "../utils/platform";
-import { stopCacheServer } from "../services/store";
+import { stopStoreServer } from "../services/store";
 import { CreateMainWindow, WindowManager } from "../window";
 import { Store } from "./store";
 
@@ -43,7 +43,7 @@ export function registerAppEvents(instance: APP) {
   app.on("quit", () => {
     Log.debug("App quit");
     instance.proxyServer.close();
-    stopCacheServer();
+    stopStoreServer();
     instance.neteaseMusicAPIServer
       .then((ncm) => {
         Log.debug("stop neteaseMusicAPIServer");

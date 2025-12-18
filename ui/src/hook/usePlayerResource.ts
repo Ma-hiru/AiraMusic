@@ -1,4 +1,4 @@
-import { Lyric } from "@mahiru/ui/utils/lyric";
+import { LyricManager } from "@mahiru/ui/utils/lyricManager";
 import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
 import { EqError, Log } from "@mahiru/ui/utils/dev";
 import { Track } from "@mahiru/ui/utils/track";
@@ -31,7 +31,7 @@ export function usePlayerResource() {
       const controller = new AbortController();
       lyricCancelRef.current = () => controller.abort();
       try {
-        const { lyric, version } = await Lyric.requestLyric(id, lyricVersionPreference);
+        const { lyric, version } = await LyricManager.requestLyric(id, lyricVersionPreference);
         if (controller.signal.aborted) return;
         setTrackStatus((draft) => {
           if (draft && !controller.signal.aborted) {

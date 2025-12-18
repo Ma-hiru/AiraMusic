@@ -1,27 +1,56 @@
-import { enableServerConsole, getPID, isRunning, startServer, stopServer } from "@mahiru/store";
+import {
+  enableServerConsole,
+  getPID,
+  isRunning,
+  setServerPath,
+  startServer,
+  stopServer
+} from "@mahiru/store";
 import { isDev } from "../../utils/dev";
 
-export function startCacheServer(args: string[] = []) {
-  if (isRunning()) {
-    return getPID()!;
-  }
-  enableServerConsole(isDev());
-  return startServer([
-    "--port",
-    process.env.GO_SERVER_PORT!,
-    "--scheme",
-    process.env.APP_SCHEME!,
-    ...args
-  ]);
+type Props = {
+  args?: Record<string, string | number>;
+  log?: boolean;
+  logger?: NormalFunc<[msg: Buffer]>;
+  exitHandler?: Nullable<NormalFunc<[code: Nullable<number>]>>;
+  path?: string;
+};
+
+let _cachedProps: Nullable<Props> = null;
+
+export function startStoreServer(props?: Optional<Props>) {
+  const { args = {}, log = isDev(), logger, exitHandler, path } = props || {};
+  if (isRunning()) return getPID()!;
+  if (path) setServerPath(path);
+  enableServerConsole(log);
+
+  _cachedProps = { ...props, args, log };
+  return startServer(
+    [
+      ...Object.entries(args)
+        .map(([flag, value]) => [flag.startsWith("--") ? flag : "--" + flag, String(value)])
+        .flat()
+    ],
+    logger,
+    exitHandler
+  );
 }
 
-export function stopCacheServer(): boolean {
+export function stopStoreServer(): boolean {
   if (isRunning()) {
     return stopServer();
   }
   return true;
 }
 
-export function isCacheServerRunning(): boolean {
+export function isStoreServerRunning(): boolean {
   return isRunning();
+}
+
+export function restartStoreServer() {
+  if (stopStoreServer()) {
+    startStoreServer(_cachedProps);
+  } else {
+    throw new Error("failed to close store server");
+  }
 }

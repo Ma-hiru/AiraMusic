@@ -1,5 +1,5 @@
 import { ZustandConfig } from "@mahiru/ui/types/zustand";
-import { Lyric } from "@mahiru/ui/utils/lyric";
+import { LyricManager } from "@mahiru/ui/utils/lyricManager";
 import { PlaylistHistoryCache } from "@mahiru/ui/utils/history";
 import type { AudioControl } from "@mahiru/ui/hook/usePlayerAudio";
 import { API } from "@mahiru/ui/api";
@@ -24,7 +24,7 @@ export const DynamicStoreConfig: ZustandConfig<
   },
   setLyricVersion: (next) => {
     const { trackStatus, playerStatus } = get();
-    const chosenVersion = Lyric.checkLyricVersion(
+    const chosenVersion = LyricManager.checkLyricVersion(
       trackStatus?.lyric,
       next,
       playerStatus.lyricVersion

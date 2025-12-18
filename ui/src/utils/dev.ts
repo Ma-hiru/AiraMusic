@@ -1,5 +1,4 @@
-import { createEqError } from "@mahiru/log";
-import { createLog, LogLevel } from "@mahiru/log";
+import { createEqError, createLog, LogLevel } from "@mahiru/log";
 
 const convertToLogLevel = (env?: EnvLogLevel): LogLevel => {
   if (!env) return LogLevel.TRACE;
@@ -25,3 +24,5 @@ export const isDev = import.meta.env.DEV;
 export const isRelease = import.meta.env.PROD;
 export const EqError = createEqError(isDev);
 export const Log = createLog(convertToLogLevel(import.meta.env.UI_LOG_LEVEL));
+
+isDev && Log.info("environment", import.meta.env);

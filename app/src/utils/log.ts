@@ -1,6 +1,6 @@
 import { createLog, LogLevel } from "@mahiru/log";
 
-const convertToLogLevel = (env?: EnvLogLevel): LogLevel => {
+export const convertToLogLevel = (env?: EnvLogLevel): LogLevel => {
   if (!env) return LogLevel.TRACE;
   switch (env.toUpperCase()) {
     case "TRACE":
