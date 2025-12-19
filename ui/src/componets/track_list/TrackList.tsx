@@ -60,7 +60,7 @@ const TrackList: ForwardRefRenderFunction<TrackListRef, TrackListProps> = (
   const play = useRef<Undefinable<NormalFunc>>(undefined);
   play.current = audioControl.current()?.play;
 
-  const extraData = useMemo(
+  const extraData = useMemo<ExtraData>(
     () => ({
       id,
       isLikedPlayList,
@@ -68,13 +68,14 @@ const TrackList: ForwardRefRenderFunction<TrackListRef, TrackListProps> = (
       entry,
       currentTrackID: trackStatus?.track?.id,
       textColorOnMain: textColorOnMain.string(),
+      isMainColorDark: mainColor.isDark(),
       play: () => {
         if (!isPlaying.current) {
           play.current?.();
         }
       }
     }),
-    [absoluteIdx, entry, id, isLikedPlayList, textColorOnMain, trackStatus?.track?.id]
+    [absoluteIdx, entry, id, isLikedPlayList, mainColor, textColorOnMain, trackStatus?.track?.id]
   );
 
   const { start, end } = useVirtualList({
@@ -138,17 +139,17 @@ const TrackList: ForwardRefRenderFunction<TrackListRef, TrackListProps> = (
   );
 };
 
-const RowComponent: VirtualListRow<
-  NeteaseTrack,
-  {
-    id?: number;
-    absoluteIdx: number[] | null;
-    entry: Nullable<PlaylistCacheEntry>;
-    currentTrackID?: number;
-    textColorOnMain: string;
-    play?: NormalFunc;
-  }
-> = ({ index, items, extra }) => {
+type ExtraData = {
+  id?: number;
+  absoluteIdx: number[] | null;
+  entry: Nullable<PlaylistCacheEntry>;
+  currentTrackID?: number;
+  textColorOnMain: string;
+  play?: NormalFunc;
+  isMainColorDark: boolean;
+};
+
+const RowComponent: VirtualListRow<NeteaseTrack, ExtraData> = ({ index, items, extra }) => {
   const track = items[index];
   return (
     <ListItem
@@ -159,6 +160,7 @@ const RowComponent: VirtualListRow<
       data={items}
       playListID={extra.id}
       play={extra.play}
+      isMainColorDark={extra.isMainColorDark}
       absoluteIndex={extra.absoluteIdx ? extra.absoluteIdx[index]! : index}
     />
   );

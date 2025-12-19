@@ -1,12 +1,15 @@
 import { FC, memo } from "react";
 import AudioSpectrum from "@mahiru/ui/componets/spectrum/AudioSpectrum";
-import { useLayoutStatus } from "@mahiru/ui/store";
+import { usePlayerStatus } from "@mahiru/ui/store";
 
 const Spectrum: FC<object> = () => {
-  const { playerModalVisible } = useLayoutStatus(["playerModalVisible"]);
+  const { playerModalVisible, playerStatus } = usePlayerStatus([
+    "playerModalVisible",
+    "playerStatus"
+  ]);
   return (
     <AudioSpectrum
-      isPlaying={playerModalVisible}
+      isPlaying={playerModalVisible && playerStatus.playing}
       className="w-full h-5 mt-2"
       gap={2}
       renderer="canvas"

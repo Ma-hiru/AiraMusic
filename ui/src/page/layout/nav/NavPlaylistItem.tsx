@@ -1,8 +1,8 @@
-import { FC, memo, SyntheticEvent, useCallback } from "react";
-import { useFileCache } from "@mahiru/ui/hook/useFileCache";
+import { FC, memo } from "react";
 import { CacheStore } from "@mahiru/ui/store/cache";
-import { Filter, ImageSize } from "@mahiru/ui/utils/filter";
+import { ImageSize } from "@mahiru/ui/utils/filter";
 import NavSideNavItem from "@mahiru/ui/page/layout/nav/NavItem";
+import NeteaseImage from "@mahiru/ui/componets/public/NeteaseImage";
 
 interface Props {
   cover: { raw: string; cached: string; cacheID: string };
@@ -12,6 +12,7 @@ interface Props {
   onClick?: (id: number | string) => void;
   active?: boolean;
   index: number;
+  isMainColorDark: boolean;
   rawList: NeteasePlaylistSummary[];
 }
 
@@ -23,39 +24,35 @@ const NavPlaylistItem: FC<Props> = ({
   onClick,
   active,
   index,
-  rawList
+  rawList,
+  isMainColorDark
 }) => {
-  const cachedCover = useFileCache(
-    Filter.NeteaseImageSize(cover.cached || cover.raw, ImageSize.sm),
-    {
-      onCacheHit: (file, id) => {
-        if (rawList[index]) {
-          rawList[index].cachedCoverImgUrl = file;
-          rawList[index].cachedCoverImgUrlID = id;
-        }
-      }
-    }
-  );
-  const onImageError = useCallback(
-    (e: SyntheticEvent<HTMLImageElement>) => {
-      const raw = Filter.NeteaseImageSize(cover.raw, ImageSize.sm) as string;
-      if (e.currentTarget.src === raw) return;
-      e.currentTarget.src = raw;
-      if (rawList[index]) {
-        rawList[index].cachedCoverImgUrl = "";
-        void CacheStore.remove(rawList[index].cachedCoverImgUrlID);
-        rawList[index].cachedCoverImgUrlID = "";
-      }
-    },
-    [cover.raw, index, rawList]
-  );
   return (
     <NavSideNavItem
       active={active}
       onClick={() => onClick?.(id)}
       prefix={
         <div className="size-10 min-w-10 rounded-md overflow-hidden">
-          <img className="w-full" src={cachedCover} alt={label} onError={onImageError} />
+          <NeteaseImage
+            onCacheHit={(file, id) => {
+              if (rawList[index]) {
+                rawList[index].cachedCoverImgUrl = file;
+                rawList[index].cachedCoverImgUrlID = id;
+              }
+            }}
+            className="w-full"
+            src={cover.cached || cover.raw}
+            alt={label}
+            onCacheError={() => {
+              if (rawList[index]) {
+                rawList[index].cachedCoverImgUrl = "";
+                void CacheStore.remove(rawList[index].cachedCoverImgUrlID);
+                rawList[index].cachedCoverImgUrlID = "";
+              }
+            }}
+            size={ImageSize.sm}
+            shadowColor={isMainColorDark ? "dark" : "light"}
+          />
         </div>
       }>
       <div className="flex flex-col overflow-hidden pl-2 truncate">

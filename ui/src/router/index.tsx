@@ -1,4 +1,4 @@
-import { Clock, House, Heart } from "lucide-react";
+import { Clock, Heart, House } from "lucide-react";
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import Layout from "@mahiru/ui/page/layout/Layout";
 import HomePage from "@mahiru/ui/page/home/HomePage";

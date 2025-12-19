@@ -12,6 +12,7 @@ interface CommentsProps {
 const Comments: FC<CommentsProps> = ({ comments, infoSync, themeSync }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const { onScroll } = useScrollAutoHide(containerRef);
+  const isMainColorDark = Color(themeSync.value.mainColor).isDark();
   return (
     <div
       ref={containerRef}
@@ -26,6 +27,7 @@ const Comments: FC<CommentsProps> = ({ comments, infoSync, themeSync }) => {
           mainColor={Color(themeSync.value.mainColor).darken(0.5).string()}
           secondaryColor={themeSync.value.secondaryColor}
           textColorOnMain={themeSync.value.textColor}
+          isMainColorDark={isMainColorDark}
         />
       ))}
     </div>

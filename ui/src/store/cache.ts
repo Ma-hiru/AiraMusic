@@ -65,7 +65,7 @@ export const CacheStore = new (class CacheStore {
 
   checkOrStoreAsync(
     url: string,
-    id = url,
+    id: string | number = url,
     method: string = "GET",
     update?: boolean,
     timeLimit?: number

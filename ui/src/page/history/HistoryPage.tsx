@@ -1,15 +1,21 @@
-import { FC, memo } from "react";
-import { usePlayingBackground } from "@mahiru/ui/hook/usePlayingBackground";
+import { FC, memo, useEffect } from "react";
 import { usePlaylistHistoryRender } from "@mahiru/ui/hook/usePlaylistRender";
 import TrackList from "@mahiru/ui/componets/track_list";
 import Top from "@mahiru/ui/page/history/Top";
+import { usePlayerStatus } from "@mahiru/ui/store";
 
 const HistoryPage: FC<object> = () => {
   const { filterTracks, onVirtualListRangeUpdate, searchTracks, loading } =
     usePlaylistHistoryRender();
+  const { background, setBackground } = usePlayerStatus(["background", "setBackground"]);
   const defaultBackground =
     filterTracks?.tracks[0]?.al.cachedPicUrl || filterTracks?.tracks[0]?.al.picUrl;
-  usePlayingBackground(defaultBackground);
+
+  useEffect(() => {
+    if (!background) {
+      setBackground(defaultBackground);
+    }
+  }, [background, defaultBackground, setBackground]);
   return (
     <div className="w-full h-full px-12 pt-10 contain-style contain-size contain-layout">
       <Top filterTracks={filterTracks} searchTracks={searchTracks} loading={loading} />

@@ -1,23 +1,28 @@
 import { FC, memo, useCallback } from "react";
-import { useFileCache } from "@mahiru/ui/hook/useFileCache";
 import { Filter, ImageSize } from "@mahiru/ui/utils/filter";
 import { AudioLines, CirclePlay } from "lucide-react";
 import { usePlayerStatus } from "@mahiru/ui/store";
 import { Player } from "@mahiru/ui/utils/player";
 import { API } from "@mahiru/ui/api";
+import NeteaseImage from "@mahiru/ui/componets/public/NeteaseImage";
 
 interface RecommendTrackItemProps {
   song: DailyRecommendTracksDailySong;
   mainColor: string;
   textColor: string;
+  isMainColorDark: boolean;
 }
 
-const RecommendTrackItem: FC<RecommendTrackItemProps> = ({ song, mainColor, textColor }) => {
+const RecommendTrackItem: FC<RecommendTrackItemProps> = ({
+  song,
+  mainColor,
+  textColor,
+  isMainColorDark
+}) => {
   const { trackStatus } = usePlayerStatus(["trackStatus"]);
-  const sizedCover = Filter.NeteaseImageSize(song.al.picUrl, ImageSize.md);
-  const cachedCover = useFileCache(sizedCover);
   const track = trackStatus?.track;
   const isPlaying = track?.id === song?.id;
+
   const play = useCallback(async () => {
     if (isPlaying) return;
     const detail = await API.Track.getTrackDetail(song.id);
@@ -40,12 +45,12 @@ const RecommendTrackItem: FC<RecommendTrackItemProps> = ({ song, mainColor, text
         style={{ background: mainColor, color: textColor }}
         onClick={play}>
         <div className="w-full aspect-square overflow-hidden relative rounded-md">
-          <img
-            className="w-full h-full object-cover"
-            src={cachedCover}
-            decoding="async"
-            loading="lazy"
+          <NeteaseImage
+            className="w-full h-full"
+            src={song.al.picUrl}
+            size={ImageSize.md}
             alt={song.al.name}
+            shadowColor={isMainColorDark ? "dark" : "light"}
           />
           {!isPlaying && (
             <div className="absolute inset-0 flex justify-center items-center opacity-0 hover:opacity-100 bg-black/30 transition-opacity duration-300">

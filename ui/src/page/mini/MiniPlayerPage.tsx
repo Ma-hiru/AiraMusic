@@ -1,10 +1,10 @@
-import { FC, memo, SyntheticEvent, useCallback, useEffect, useRef, useState } from "react";
+import { FC, memo, useEffect, useRef, useState } from "react";
 import { Drag, NoDrag } from "@mahiru/ui/componets/public/Drag";
 import { Pause, Play, SkipBack, SkipForward, X } from "lucide-react";
-import { useFileCache } from "@mahiru/ui/hook/useFileCache";
-import { Filter, ImageSize } from "@mahiru/ui/utils/filter";
+import { ImageSize } from "@mahiru/ui/utils/filter";
 import { Renderer } from "@mahiru/ui/utils/renderer";
 import { CacheStore } from "@mahiru/ui/store/cache";
+import NeteaseImage from "@mahiru/ui/componets/public/NeteaseImage";
 
 const MiniPlayerPage: FC<object> = () => {
   const [lyricInit, setLyricInit] = useState<LyricInit>();
@@ -14,25 +14,6 @@ const MiniPlayerPage: FC<object> = () => {
   const percent = lyricSync?.progress.duration
     ? Math.min(((lyricSync.progress.currentTime || 0) / lyricSync.progress.duration) * 100, 100)
     : 0;
-
-  const cachedCover = useFileCache(
-    Filter.NeteaseImageSize(track?.al.cachedPicUrl || track?.al.picUrl, ImageSize.xs),
-    {
-      onCacheHit: (_, id) => {
-        cacheID.current = id;
-      }
-    }
-  );
-  const onImageErr = useCallback(
-    (e: SyntheticEvent<HTMLImageElement>) => {
-      const raw = Filter.NeteaseImageSize(track?.al.picUrl, ImageSize.xs) as string;
-      if (e.currentTarget.src === raw) return;
-      e.currentTarget.src = raw;
-      if (cacheID.current) void CacheStore.remove(cacheID.current);
-      cacheID.current = "";
-    },
-    [track?.al.picUrl]
-  );
 
   useEffect(() => {
     const removeInitListener = Renderer.addMessageHandler("lyricSync", "main", setLyricSync);
@@ -51,16 +32,22 @@ const MiniPlayerPage: FC<object> = () => {
   return (
     <Drag className="w-screen h-screen overflow-hidden relative bg-white rounded-md text-black grid grid-rows-1 grid-cols-[auto_1fr] px-2 py-1 items-center select-none backdrop-blur-lg">
       <div className="h-12 w-12 rounded-md overflow-hidden">
-        <img
-          className="w-full h-full object-cover"
-          src={cachedCover || undefined}
-          loading="lazy"
-          decoding="async"
+        <NeteaseImage
+          className="w-full h-full"
+          src={track?.al.cachedPicUrl || track?.al.picUrl}
+          onCacheHit={(_, id) => {
+            cacheID.current = id;
+          }}
+          size={ImageSize.xs}
           alt={track?.name}
-          onError={onImageErr}
+          onCacheError={() => {
+            if (cacheID.current) void CacheStore.remove(cacheID.current);
+            cacheID.current = "";
+          }}
+          shadowColor={"light"}
         />
       </div>
-      <div className="h-full w-full flex flex-col justify-center px-2 gap-[6px] overflow-hidden">
+      <div className="h-full w-full flex flex-col justify-center px-2 gap-1.5 overflow-hidden">
         <div className="flex items-center justify-center gap-1">
           <span className="text-[12px] font-bold truncate">{track?.name}</span>
           <span className="text-[12px]"> - </span>

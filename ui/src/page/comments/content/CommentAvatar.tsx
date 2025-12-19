@@ -1,22 +1,22 @@
 import { FC, memo } from "react";
-import { Filter, ImageSize } from "@mahiru/ui/utils/filter";
+import { ImageSize } from "@mahiru/ui/utils/filter";
+import NeteaseImage from "@mahiru/ui/componets/public/NeteaseImage";
 
 interface CommentAvatarProps {
   avatar: Undefinable<string>;
   nickname: string;
+  isMainColorDark: boolean;
 }
 
-const CommentAvatar: FC<CommentAvatarProps> = ({ avatar, nickname }) => {
+const CommentAvatar: FC<CommentAvatarProps> = ({ avatar, nickname, isMainColorDark }) => {
   return (
-    <div className="size-8">
-      <img
-        className="select-none w-full h-full rounded-full object-cover shadow-2xs border"
-        src={Filter.NeteaseImageSize(avatar, ImageSize.xs)}
-        alt={nickname}
-        loading="lazy"
-        decoding="auto"
-      />
-    </div>
+    <NeteaseImage
+      className="size-8 select-none rounded-full border"
+      src={avatar}
+      size={ImageSize.xs}
+      alt={nickname}
+      shadowColor={isMainColorDark ? "dark" : "light"}
+    />
   );
 };
 export default memo(CommentAvatar);

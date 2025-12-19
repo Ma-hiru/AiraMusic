@@ -1,4 +1,3 @@
-import Color from "color";
 import RecommendTrackItem from "./RecommendTrackItem";
 import { FC, memo, RefObject } from "react";
 import { css, cx } from "@emotion/css";
@@ -29,7 +28,8 @@ const RecommendTrackList: FC<RecommendTrackListProps> = ({ recommend, containerR
         <div key={song.id} className="snap-start">
           <RecommendTrackItem
             song={song}
-            mainColor={Color(mainColor).alpha(0.5).string()}
+            mainColor={mainColor.alpha(0.5).string()}
+            isMainColorDark={mainColor.isDark()}
             textColor={textColorOnMain.string()}
           />
         </div>

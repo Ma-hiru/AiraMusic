@@ -16,6 +16,7 @@ interface ListItemProps {
   absoluteIndex: number;
   isLikedList?: boolean;
   textColorOnMain: string;
+  isMainColorDark: boolean;
   active?: boolean;
   play?: NormalFunc;
 }
@@ -28,7 +29,8 @@ const ListItem: FC<ListItemProps> = ({
   entry,
   textColorOnMain,
   active = false,
-  play
+  play,
+  isMainColorDark
 }) => {
   const track = data[index]!;
   const total = data.length;
@@ -78,6 +80,7 @@ const ListItem: FC<ListItemProps> = ({
         onClick={handleClick}
         entry={entry}
         active={active}
+        isMainColorDark={isMainColorDark}
       />
       {/*名称*/}
       <ListItemName track={track} disabled={disabled} active={active} onClick={handleClick} />

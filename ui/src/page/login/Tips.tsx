@@ -1,7 +1,7 @@
 import { FC, memo } from "react";
-import { useFileCache } from "@mahiru/ui/hook/useFileCache";
-import { Filter, ImageSize } from "@mahiru/ui/utils/filter";
+import { ImageSize } from "@mahiru/ui/utils/filter";
 import { QRCodeStatus } from "@mahiru/ui/hook/useLoginQRCode";
+import NeteaseImage from "@mahiru/ui/componets/public/NeteaseImage";
 
 interface TipsProps {
   status: QRCodeStatus;
@@ -9,7 +9,6 @@ interface TipsProps {
 }
 
 const Tips: FC<TipsProps> = ({ status, result }) => {
-  const cachedAvatar = useFileCache(Filter.NeteaseImageSize(result?.avatarUrl, ImageSize.sm));
   return (
     <div className="flex justify-center items-center flex-col">
       {status !== QRCodeStatus.WAITING_CONFIRM && (
@@ -21,7 +20,13 @@ const Tips: FC<TipsProps> = ({ status, result }) => {
       )}
       {status === QRCodeStatus.WAITING_CONFIRM && (
         <div className="flex justify-center items-center flex-col">
-          <img src={cachedAvatar} alt="avatar" className="size-10 rounded-full" />
+          <NeteaseImage
+            src={result?.avatarUrl}
+            size={ImageSize.sm}
+            alt={result?.nickname}
+            className="size-10 rounded-full"
+            shadowColor={"light"}
+          />
           <span className="font-bold mt-4">{result?.nickname}</span>
         </div>
       )}

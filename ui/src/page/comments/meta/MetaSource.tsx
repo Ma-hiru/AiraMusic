@@ -1,8 +1,8 @@
 import { FC, memo, useEffect, useState } from "react";
 import Color from "color";
-import { useFileCache } from "@mahiru/ui/hook/useFileCache";
-import { Filter, ImageSize } from "@mahiru/ui/utils/filter";
+import { ImageSize } from "@mahiru/ui/utils/filter";
 import { CommentType } from "@mahiru/ui/api/comment";
+import NeteaseImage from "@mahiru/ui/componets/public/NeteaseImage";
 
 interface MetaSourceProps {
   themeSync: InfoSync<"theme">;
@@ -30,14 +30,15 @@ const MetaSource: FC<MetaSourceProps> = ({ infoSync, themeSync }) => {
       });
     }
   }, [infoSync.value]);
-  const cachedCover = useFileCache(Filter.NeteaseImageSize(RenderData.sourceCover, ImageSize.sm));
+
   return (
     <div
       className="flex justify-center items-center select-none mb-2 gap-2"
       style={{ color: Color(themeSync.value.secondaryColor).darken(0.5).string() }}>
-      <img
+      <NeteaseImage
         className="size-7 rounded-full sm:size-8"
-        src={cachedCover}
+        src={RenderData.sourceCover}
+        size={ImageSize.sm}
         alt={RenderData.sourceName}
       />
       <span className="flex flex-col justify-center items-start">

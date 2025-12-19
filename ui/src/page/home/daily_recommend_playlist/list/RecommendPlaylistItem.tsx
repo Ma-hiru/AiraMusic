@@ -1,36 +1,36 @@
 import { FC, memo, useCallback } from "react";
-import { useFileCache } from "@mahiru/ui/hook/useFileCache";
-import { Filter, ImageSize } from "@mahiru/ui/utils/filter";
+import { ImageSize } from "@mahiru/ui/utils/filter";
 import { CirclePlay, Headphones } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { PlaylistManager } from "@mahiru/ui/utils/playlist";
+import NeteaseImage from "@mahiru/ui/componets/public/NeteaseImage";
+import { getPlaylistRouterPath } from "@mahiru/ui/hook/usePlaylistRouter";
 
 interface RecommendTrackItemProps {
   playlist: DailyRecommendPlaylistResult;
-  mainColor: string;
+  isMainColorDark: boolean;
   textColor: string;
 }
 
-const RecommendPlaylistItem: FC<RecommendTrackItemProps> = ({ playlist, mainColor, textColor }) => {
-  const sizedCover = Filter.NeteaseImageSize(playlist.picUrl, ImageSize.md);
-  const cachedCover = useFileCache(sizedCover);
-  const sizedAvatar = Filter.NeteaseImageSize(playlist.creator.avatarUrl, ImageSize.sm);
-  const cachedAvatar = useFileCache(sizedAvatar);
+const RecommendPlaylistItem: FC<RecommendTrackItemProps> = ({
+  playlist,
+  isMainColorDark,
+  textColor
+}) => {
   const navigate = useNavigate();
   const play = useCallback(() => {
-    console.log(`/playlist/${playlist.id}?like=false&history=false&source=recommend`);
-    navigate(`/playlist/${playlist.id}?like=false&history=false&source=recommend`);
+    navigate(getPlaylistRouterPath(playlist.id, "recommend"));
   }, [navigate, playlist.id]);
   return (
     <div className="w-full h-full flex flex-col justify-center items-center p-2">
       <div className="w-full h-full rounded-md">
         <div className="w-full overflow-hidden relative rounded-md shadow-lg">
-          <img
-            className="w-full aspect-square rounded-md"
-            src={cachedCover}
-            loading="lazy"
-            decoding="async"
+          <NeteaseImage
+            className="w-full rounded-md"
+            src={playlist.picUrl}
+            size={ImageSize.md}
             alt={playlist.name}
+            shadowColor={isMainColorDark ? "dark" : "light"}
           />
           <div className="absolute right-1 top-1 flex gap-1 justify-center items-center text-white z-10">
             <Headphones className="size-3" />
@@ -43,12 +43,12 @@ const RecommendPlaylistItem: FC<RecommendTrackItemProps> = ({ playlist, mainColo
             onClick={play}>
             <CirclePlay className="size-5" color="#ffffff" />
             <div className="absolute right-1 bottom-1 flex items-center flex-col">
-              <img
+              <NeteaseImage
                 className="size-5 rounded-full"
-                src={cachedAvatar}
-                decoding="async"
-                loading="lazy"
+                src={playlist.creator.avatarUrl}
+                size={ImageSize.sm}
                 alt={playlist.creator.nickname}
+                shadowColor={isMainColorDark ? "dark" : "light"}
               />
               <p className="text-[6px] max-w-8 truncate mt-0.5 text-white font-medium">
                 {playlist.creator.nickname}

@@ -6,6 +6,8 @@ import { useVirtualList } from "@mahiru/ui/hook/useVirtualList";
 import { useScrollAutoHide } from "@mahiru/ui/hook/useScrollAutoHide";
 import { useUpdate } from "@mahiru/ui/hook/useUpdate";
 import VirtualList, { VirtualListRow } from "@mahiru/ui/componets/virtual_list/VirtualList";
+import { useThemeColor } from "@mahiru/ui/hook/useThemeColor";
+import { getPlaylistRouterPath } from "@mahiru/ui/hook/usePlaylistRouter";
 
 const NavPlaylist: FC<object> = () => {
   const { userPlaylistSummary } = usePersistZustandShallowStore(["userPlaylistSummary"]);
@@ -13,6 +15,7 @@ const NavPlaylist: FC<object> = () => {
     "requestCanScrollTop",
     "sideBarOpen"
   ]);
+  const { mainColor } = useThemeColor();
   const userPlayListRef = useRef<NeteasePlaylistSummary[]>([]);
   const containerRef = useRef<Nullable<HTMLDivElement>>(null);
   const userPlayLists = userPlayListRef.current;
@@ -25,6 +28,7 @@ const NavPlaylist: FC<object> = () => {
       containerRef.current.scrollTo({ top: 0, behavior: "smooth" });
     }
   }, []);
+  const isMainColorDark = mainColor.isDark();
   const RowComponent = useCallback<VirtualListRow<NeteasePlaylistSummary, undefined>>(
     (props) => {
       const { index, items } = props;
@@ -32,6 +36,7 @@ const NavPlaylist: FC<object> = () => {
       return (
         <NavPlayListItem
           index={index}
+          isMainColorDark={isMainColorDark}
           rawList={userPlayLists}
           active={location.pathname === `/playlist/${data.id}`}
           cover={{
@@ -42,11 +47,11 @@ const NavPlaylist: FC<object> = () => {
           id={data.id}
           label={data.name}
           count={data.trackCount}
-          onClick={(id) => navigate(`/playlist/${id}`)}
+          onClick={(id) => navigate(getPlaylistRouterPath(id, "playlist"))}
         />
       );
     },
-    [location.pathname, navigate, userPlayLists]
+    [isMainColorDark, location.pathname, navigate, userPlayLists]
   );
   const onRangeChange = useCallback(
     (range: IndexRange) => {

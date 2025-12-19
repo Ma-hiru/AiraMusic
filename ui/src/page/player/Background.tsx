@@ -1,51 +1,37 @@
-import { FC, memo } from "react";
+import { FC, memo, useEffect, useRef } from "react";
 import BackgroundRender from "@mahiru/ui/componets/player/BackgroundRender";
 import { useFileCache } from "@mahiru/ui/hook/useFileCache";
 import { useGPU } from "@mahiru/ui/hook/useGPU";
 import { Filter, ImageSize } from "@mahiru/ui/utils/filter";
 import AcrylicBackground from "@mahiru/ui/componets/public/AcrylicBackground";
 import { LyricManager } from "@mahiru/ui/utils/lyricManager";
-import { useLayoutStatus, usePlayerStatus } from "@mahiru/ui/store";
+import { usePlayerStatus } from "@mahiru/ui/store";
 
 const Background: FC<object> = () => {
-  const { trackStatus } = usePlayerStatus(["trackStatus"]);
-  // const { playerStatus } = usePlayerStatus(["playerStatus"]);
-  const { playerModalVisible } = useLayoutStatus(["playerModalVisible"]);
+  const { trackStatus, playerStatus, playerModalVisible } = usePlayerStatus([
+    "trackStatus",
+    "playerModalVisible",
+    "playerStatus"
+  ]);
   const { hasRaw } = LyricManager.getLyricVersionInfo(trackStatus?.lyric);
   const { hasDedicatedGPU } = useGPU();
-  // const { spectrumData, isReady } = useSpectrum();
-  // const [lowFreqVolume, setLowFreqVolume] = useState(1);
+  const firstRender = useRef(true);
 
   const track = trackStatus?.track;
   const cachedBackground = useFileCache(Filter.NeteaseImageSize(track?.al.picUrl, ImageSize.lg));
-  // const computedLowFreqVolume = useMemo(
-  //   () => (Number.isFinite(lowFreqVolume) ? lowFreqVolume : 1),
-  //   [lowFreqVolume]
-  // );
 
-  // useEffect(() => {
-  //   if (!hasDedicatedGPU) return;
-  //   let raf = 0;
-  //   const tick = () => {
-  //     const target = spectrumData.current?.lowFreqVolume;
-  //     if (typeof target === "number" && Number.isFinite(target)) {
-  //       setLowFreqVolume((prev) => prev + (target - prev) * 0.2);
-  //     }
-  //     raf = requestAnimationFrame(tick);
-  //   };
-  //
-  //   if (isReady && playerStatus.playing) {
-  //     raf = requestAnimationFrame(tick);
-  //   }
-  //
-  //   return () => cancelAnimationFrame(raf);
-  // }, [hasDedicatedGPU, isReady, playerStatus.playing, spectrumData]);
+  useEffect(() => {
+    if (playerModalVisible && firstRender.current) {
+      firstRender.current = false;
+    }
+  }, [playerModalVisible]);
 
   return hasDedicatedGPU ? (
     <BackgroundRender
       className="absolute inset-0"
       albumIsVideo={false}
-      playing={playerModalVisible}
+      // 初次渲染未打开播放器模态框时强制开启动画，避免背景懒加载时的空白
+      playing={firstRender.current ? true : playerModalVisible && playerStatus.playing}
       hasLyric={hasRaw}
       album={cachedBackground}
       staticMode={!playerModalVisible}

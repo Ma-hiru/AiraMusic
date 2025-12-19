@@ -192,7 +192,7 @@ const Control: FC<ControlProps> = ({
             <NoDrag
               onClick={setRm}
               className={cx(
-                "size-4 text-[11px] font-semibold flex justify-center items-center overflow-hidden rounded-[2px] backdrop-blur-lg cursor-pointer",
+                "size-4 text-[11px] font-semibold flex justify-center items-center overflow-hidden rounded-xs backdrop-blur-lg cursor-pointer",
                 {
                   "bg-white": rmActive && hasRm,
                   "text-black": color === "#FFFFFF",
@@ -206,7 +206,7 @@ const Control: FC<ControlProps> = ({
             <NoDrag
               onClick={setTl}
               className={cx(
-                "size-4 text-[11px] font-semibold flex justify-center items-center overflow-hidden rounded-[2px] backdrop-blur-lg cursor-pointer",
+                "size-4 text-[11px] font-semibold flex justify-center items-center overflow-hidden rounded-xs backdrop-blur-lg cursor-pointer",
                 {
                   "bg-white": tlActive && hasTl,
                   "text-black": color === "#FFFFFF",

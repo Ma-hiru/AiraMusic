@@ -1,6 +1,9 @@
 import { FC, memo, useCallback, useEffect, useRef, useState } from "react";
 import { cx } from "@emotion/css";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import NeteaseImage from "@mahiru/ui/componets/public/NeteaseImage";
+import { ImageSize } from "@mahiru/ui/utils/filter";
+import { useThemeColor } from "@mahiru/ui/hook/useThemeColor";
 
 interface CarouselProps {
   items: { url: string; title?: string }[];
@@ -18,6 +21,7 @@ const Carousel: FC<CarouselProps> = ({
   titleColor
 }) => {
   const [index, setIndex] = useState(0);
+  const { mainColor } = useThemeColor();
   const timerRef = useRef<Nullable<number>>(null);
 
   const next = useCallback(() => {
@@ -57,13 +61,13 @@ const Carousel: FC<CarouselProps> = ({
           style={{ transform: `translateX(-${index * 100}%)` }}>
           {items.map((item, index) => (
             <div key={index} className="w-full shrink-0 flex-col relative">
-              <img
-                className="w-full h-full object-cover select-none rounded-md"
+              <NeteaseImage
+                className="w-full h-full select-none rounded-md"
                 src={item.url}
+                size={ImageSize.raw}
                 alt={item.title || `carousel-item-${index}`}
-                loading="lazy"
-                decoding="async"
                 onClick={() => onClick?.(index)}
+                shadowColor={mainColor.isDark() ? "dark" : "light"}
               />
             </div>
           ))}

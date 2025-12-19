@@ -1,17 +1,18 @@
 import { FC, memo } from "react";
-import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { NAV_DATA } from "@mahiru/ui/router";
 import { usePersistZustandShallowStore } from "@mahiru/ui/store";
 import NavItem from "./NavItem";
 import { Auth } from "@mahiru/ui/utils/auth";
 import { useLogin } from "@mahiru/ui/hook/useLogout";
+import { usePlaylistRouter } from "@mahiru/ui/hook/usePlaylistRouter";
 
 const NavMenu: FC<object> = () => {
-  const { userLikedListSummary } = usePersistZustandShallowStore(["userLikedListSummary"]);
-  const navigate = useNavigate();
-  const location = useLocation();
   const login = useLogin();
-  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const { userLikedListSummary } = usePersistZustandShallowStore(["userLikedListSummary"]);
+  const { shouldPlaylistIDIs, getPlaylistRouterPath, location, getPlaylistSource } =
+    usePlaylistRouter();
   return (
     <div className="space-y-4 w-full overflow-hidden">
       {NAV_DATA.map(({ icon, label, path }) => {
@@ -25,14 +26,14 @@ const NavMenu: FC<object> = () => {
             }
             active={
               location.pathname === path ||
-              (label === "喜欢" && location.pathname === `/playlist/${userLikedListSummary?.id}`) ||
-              (label === "推荐" && searchParams.get("source") === "recommend")
+              (label === "喜欢" && shouldPlaylistIDIs(userLikedListSummary?.id)) ||
+              (label === "推荐" && getPlaylistSource() === "recommend")
             }
             onClick={() => {
               if (label === "喜欢") {
                 if (userLikedListSummary?.id) {
                   if (Auth.isAccountLoggedIn()) {
-                    navigate(`/playlist/${userLikedListSummary.id}?like=true&history=false`);
+                    navigate(getPlaylistRouterPath(userLikedListSummary.id, "like"));
                   } else {
                     login();
                   }

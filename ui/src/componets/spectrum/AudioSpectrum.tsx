@@ -105,6 +105,7 @@ const AudioSpectrum: FC<AudioSpectrumProps> = ({
     spectrumData,
     spectrumIsReady
   ]);
+
   return <canvas ref={canvasRef} {...rest} />;
 };
 export default memo(AudioSpectrum);

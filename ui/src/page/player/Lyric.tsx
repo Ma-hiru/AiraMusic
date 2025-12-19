@@ -4,19 +4,39 @@ import { cx } from "@emotion/css";
 import { useGPU } from "@mahiru/ui/hook/useGPU";
 import { LyricLineMouseEvent } from "@applemusic-like-lyrics/core";
 import { LyricManager as LyricUtils } from "@mahiru/ui/utils/lyricManager";
-import { useLayoutStatus, usePlayerStatus } from "@mahiru/ui/store";
+import { usePlayerStatus } from "@mahiru/ui/store";
 
 const Lyric: FC<object> = () => {
   const lyricPlayerRef = useRef<LyricPlayerRef>(null);
-  const { trackStatus, playerStatus, playerProgress, audioRef } = usePlayerStatus([
-    "trackStatus",
-    "playerStatus",
-    "playerProgress",
-    "audioControl",
-    "audioRef"
-  ]);
-  const { playerModalVisible } = useLayoutStatus(["playerModalVisible"]);
+  const { trackStatus, playerStatus, playerProgress, audioRef, playerModalVisible } =
+    usePlayerStatus([
+      "trackStatus",
+      "playerStatus",
+      "playerProgress",
+      "audioControl",
+      "audioRef",
+      "playerModalVisible"
+    ]);
+
   const { hasDedicatedGPU } = useGPU();
+  const firstRender = useRef(true);
+
+  const onLyricLineClick = useCallback(
+    (e: LyricLineMouseEvent) => {
+      const ms = e.line.getLine().startTime || 0;
+      const nextTime = ms / 1000;
+      const { duration } = playerProgress.current();
+      const audio = audioRef.current();
+      if (audio) {
+        audio.currentTime = Math.min(nextTime, duration);
+        audio.paused && audio.play();
+        lyricPlayerRef.current?.lyricPlayer?.resetScroll();
+        lyricPlayerRef.current?.lyricPlayer?.calcLayout();
+      }
+    },
+    [audioRef, playerProgress]
+  );
+
   useEffect(() => {
     const audio = audioRef.current();
     if (audio) {
@@ -30,6 +50,7 @@ const Lyric: FC<object> = () => {
           lastTime = time;
           lyricPlayerRef.current?.lyricPlayer?.setCurrentTime((audio.currentTime * 1000) | 0);
           requestAnimationFrame(onFrame);
+          firstRender.current = false;
         }
       };
       const onPlay = () => onFrame(0);
@@ -45,19 +66,15 @@ const Lyric: FC<object> = () => {
     }
   }, [audioRef]);
 
-  const onLyricLineClick = useCallback(
-    (e: LyricLineMouseEvent) => {
-      const ms = e.line.getLine().startTime || 0;
-      const nextTime = ms / 1000;
-      const { duration } = playerProgress.current();
-      const audio = audioRef.current();
-      if (audio) {
-        audio.currentTime = Math.min(nextTime, duration);
-        audio.paused && audio.play();
-      }
-    },
-    [audioRef, playerProgress]
-  );
+  useEffect(() => {
+    if (!firstRender.current) return;
+    const audio = audioRef.current();
+    if (audio && trackStatus?.lyric.raw.length && lyricPlayerRef.current?.lyricPlayer) {
+      lyricPlayerRef.current?.lyricPlayer?.resetScroll();
+      lyricPlayerRef.current?.lyricPlayer?.calcLayout();
+      firstRender.current = false;
+    }
+  }, [audioRef, trackStatus?.lyric.raw.length]);
   return (
     <div
       className={cx(

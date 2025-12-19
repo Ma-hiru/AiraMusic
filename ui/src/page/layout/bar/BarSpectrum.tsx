@@ -2,16 +2,20 @@ import { FC, memo } from "react";
 import AudioSpectrum from "@mahiru/ui/componets/spectrum/AudioSpectrum";
 import { useThemeColor } from "@mahiru/ui/hook/useThemeColor";
 import Color from "color";
-import { useLayoutStatus } from "@mahiru/ui/store";
+import { usePlayerStatus } from "@mahiru/ui/store";
 
 const BarSpectrum: FC<object> = () => {
-  const { playerModalVisible } = useLayoutStatus(["playerModalVisible"]);
+  const { playerModalVisible, playerStatus } = usePlayerStatus([
+    "playerModalVisible",
+    "playerStatus"
+  ]);
   const { mainColor, secondaryColor } = useThemeColor();
   const color = Color(mainColor);
   const secondary_color = Color(secondaryColor);
+
   return (
     <AudioSpectrum
-      isPlaying={!playerModalVisible}
+      isPlaying={!playerModalVisible && playerStatus.playing}
       gap={1}
       renderer="webgl-rust"
       barWidth={3.8}

@@ -3,11 +3,11 @@ import { SquarePen } from "lucide-react";
 import { usePersistZustandShallowStore } from "@mahiru/ui/store";
 import { useFileCache } from "@mahiru/ui/hook/useFileCache";
 import { Filter, ImageSize } from "@mahiru/ui/utils/filter";
-import { useSearchParams } from "react-router-dom";
 import { PlaylistCacheEntry } from "@mahiru/ui/utils/playlist";
 import { Time } from "@mahiru/ui/utils/time";
 
 import Search from "@mahiru/ui/componets/public/Search";
+import { usePlaylistRouter } from "@mahiru/ui/hook/usePlaylistRouter";
 
 interface TopRightProps {
   entry: Nullable<PlaylistCacheEntry>;
@@ -16,8 +16,8 @@ interface TopRightProps {
 
 const TopRight: FC<TopRightProps> = ({ entry, searchTracks }) => {
   const { data } = usePersistZustandShallowStore(["data"]);
-  const [searchParams] = useSearchParams();
-  const isLikedList = searchParams.get("like") === "true";
+  const { getPlaylistSource } = usePlaylistRouter();
+  const isLikedList = getPlaylistSource() === "like";
   const cachedAvatar = useFileCache(
     Filter.NeteaseImageSize(entry?.playlist.creator.avatarUrl, ImageSize.sm)
   );

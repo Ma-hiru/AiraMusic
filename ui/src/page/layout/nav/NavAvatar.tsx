@@ -2,29 +2,28 @@ import { FC, memo } from "react";
 import { useLayoutStatus, usePersistZustandShallowStore } from "@mahiru/ui/store";
 import { UserRound } from "lucide-react";
 import { useLogin, useLogout } from "@mahiru/ui/hook/useLogout";
-import { useFileCache } from "@mahiru/ui/hook/useFileCache";
-import { Filter, ImageSize } from "@mahiru/ui/utils/filter";
+import { ImageSize } from "@mahiru/ui/utils/filter";
 import { NoDrag } from "@mahiru/ui/componets/public/Drag";
+import NeteaseImage from "@mahiru/ui/componets/public/NeteaseImage";
+import { useThemeColor } from "@mahiru/ui/hook/useThemeColor";
 
 const NavAvatar: FC<object> = () => {
+  const { sideBarOpen } = useLayoutStatus(["sideBarOpen"]);
   const { data } = usePersistZustandShallowStore(["data"]);
-  const cachedURL = useFileCache(Filter.NeteaseImageSize(data.user?.avatarUrl, ImageSize.md));
+  const { mainColor } = useThemeColor();
   const login = useLogin();
   const logout = useLogout();
-  const { sideBarOpen } = useLayoutStatus(["sideBarOpen"]);
   return (
     <NoDrag className="w-full flex justify-center items-center relative py-7 overflow-hidden space-x-2">
       {data.user?.avatarUrl ? (
-        <div className="size-7 min-w-7 cursor-pointer select-none">
-          <img
-            onClick={logout}
-            src={(cachedURL || null) as string}
-            alt={data.user?.nickname}
-            loading="lazy"
-            decoding="async"
-            className="w-full h-full rounded-full"
-          />
-        </div>
+        <NeteaseImage
+          className="size-7 min-w-7 cursor-pointer select-none rounded-full"
+          size={ImageSize.md}
+          onClick={logout}
+          src={data.user?.avatarUrl}
+          alt={data.user?.nickname}
+          shadowColor={mainColor.isDark() ? "dark" : "light"}
+        />
       ) : (
         <div className="bg-black/60 size-7 min-w-7 cursor-pointer rounded-full hover:opacity-50 select-none">
           <UserRound className="text-white" onClick={login} />
