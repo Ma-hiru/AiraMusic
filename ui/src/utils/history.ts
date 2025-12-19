@@ -1,4 +1,5 @@
 import { CacheStore, EditObjectResponse } from "@mahiru/ui/store/cache";
+import { startTransition } from "react";
 
 export const PlaylistHistoryCache = new (class {
   private cacheKey = "playlist_history_cache";
@@ -63,7 +64,9 @@ export const PlaylistHistoryCache = new (class {
     }
     // 检查大小
     await this.limitSize();
-    this.outerUpdater?.();
+    startTransition(() => {
+      this.outerUpdater?.();
+    });
   }
 
   async removeTrack(id: number) {
@@ -78,7 +81,9 @@ export const PlaylistHistoryCache = new (class {
         save: true
       });
     }
-    this.outerUpdater?.();
+    startTransition(() => {
+      this.outerUpdater?.();
+    });
   }
 
   async clear() {
@@ -88,7 +93,9 @@ export const PlaylistHistoryCache = new (class {
       objOperations: [{ name: "clear" }],
       save: true
     });
-    this.outerUpdater?.();
+    startTransition(() => {
+      this.outerUpdater?.();
+    });
   }
 
   async limitSize() {

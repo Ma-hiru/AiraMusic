@@ -36,6 +36,7 @@ const Image: FC<ImageProps> = ({
   retryOnError = true,
   shadow = "base",
   shadowColor = "dark",
+  onClick,
   ...rest
 }) => {
   const [error, setError] = useState(false);
@@ -95,6 +96,7 @@ const Image: FC<ImageProps> = ({
   }, [src]);
   return (
     <div
+      onClick={onClick}
       className={cx(
         `
           bg-white/10 backdrop-blur-sm

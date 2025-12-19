@@ -53,6 +53,7 @@ const NeteaseImage: FC<ImageProps> = ({
   retryOnError = true,
   shadow = "base",
   shadowColor = "light",
+  onClick,
   ...rest
 }) => {
   const [error, setError] = useState(false);
@@ -118,6 +119,7 @@ const NeteaseImage: FC<ImageProps> = ({
   }, [src]);
   return (
     <div
+      onClick={onClick}
       className={cx(
         `
           bg-white/10 backdrop-blur-sm

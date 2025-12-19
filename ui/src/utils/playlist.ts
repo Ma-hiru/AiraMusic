@@ -4,6 +4,7 @@ import { getPersistSnapshot } from "@mahiru/ui/store";
 import { CacheStore } from "@mahiru/ui/store/cache";
 import { Time } from "@mahiru/ui/utils/time";
 import { API } from "@mahiru/ui/api";
+import { startTransition } from "react";
 
 export type PlaylistCacheID = `play_list_cache_${string | number}`;
 
@@ -261,8 +262,10 @@ export const PlaylistManager = new (class {
         }
         entry._dirty = true;
         this.saveDirtyEntry(entry, true);
-        this.execUpdater(likedPlaylistID);
-        this.execUpdater(null);
+        startTransition(() => {
+          this.execUpdater(likedPlaylistID);
+          this.execUpdater(null);
+        });
       }
     }
   }
@@ -292,8 +295,10 @@ export const PlaylistManager = new (class {
       whenRequestMissedTracks,
       true
     );
-    this.execUpdater(id);
-    this.execUpdater(null);
+    startTransition(() => {
+      this.execUpdater(id);
+      this.execUpdater(null);
+    });
     return entry;
   }
 })();

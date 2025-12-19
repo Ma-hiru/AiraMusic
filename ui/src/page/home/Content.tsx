@@ -5,8 +5,10 @@ import DailyRecommendPlaylist from "@mahiru/ui/page/home/daily_recommend_playlis
 import RecommendPlaylist from "@mahiru/ui/page/home/recommend_playlist/RecommendPlaylist";
 import { useScrollAutoHide } from "@mahiru/ui/hook/useScrollAutoHide";
 import { useLayoutStatus } from "@mahiru/ui/store";
+import { Stage, useStage } from "@mahiru/ui/hook/useStage";
 
 const Content: FC<object> = () => {
+  const { stage } = useStage();
   const containerRef = useRef<HTMLDivElement>(null);
   const { onScroll } = useScrollAutoHide(containerRef);
   const { requestCanScrollTop } = useLayoutStatus(["requestCanScrollTop"]);
@@ -39,10 +41,10 @@ const Content: FC<object> = () => {
       ref={containerRef}
       className="w-full h-full overflow-y-auto scrollbar"
       onScroll={wrapOnScroll}>
-      <Banner />
-      <DailyRecommendTracks />
-      <DailyRecommendPlaylist />
-      <RecommendPlaylist />
+      {stage >= Stage.First && <Banner />}
+      {stage >= Stage.Second && <DailyRecommendTracks />}
+      {stage >= Stage.Finally && <DailyRecommendPlaylist />}
+      {stage >= Stage.Finally && <RecommendPlaylist />}
     </div>
   );
 };

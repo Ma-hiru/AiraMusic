@@ -1,5 +1,6 @@
 import { getPlayerStatusSnapshot } from "@mahiru/ui/store";
 import { CacheStore } from "@mahiru/ui/store/cache";
+import { startTransition } from "react";
 
 type CacheType = {
   _position: number;
@@ -257,22 +258,24 @@ export const Player = new (class {
   }
 
   updateOuter() {
-    const current = this.current();
-    this._outerTrackUpdater?.((draft) => {
-      if (draft && draft.track.id === current?.track.id) return;
-      this._beforeTrackUpdate?.(current);
-      return current;
-    });
-    this._outerStatusUpdater?.((draft) => {
-      if (draft.repeat !== this._repeat) {
-        draft.repeat = this._repeat;
-      }
-      if (draft.shuffle !== this._shuffle) {
-        draft.shuffle = this._shuffle;
-      }
-      if (draft.position !== this._position) {
-        draft.position = this._position;
-      }
+    startTransition(() => {
+      const current = this.current();
+      this._outerTrackUpdater?.((draft) => {
+        if (draft && draft.track.id === current?.track.id) return;
+        this._beforeTrackUpdate?.(current);
+        return current;
+      });
+      this._outerStatusUpdater?.((draft) => {
+        if (draft.repeat !== this._repeat) {
+          draft.repeat = this._repeat;
+        }
+        if (draft.shuffle !== this._shuffle) {
+          draft.shuffle = this._shuffle;
+        }
+        if (draft.position !== this._position) {
+          draft.position = this._position;
+        }
+      });
     });
   }
 
@@ -358,8 +361,10 @@ export const Player = new (class {
   }
 
   setPlayingStatus(playing: boolean) {
-    this._outerStatusUpdater?.((draft) => {
-      draft.playing = playing;
+    startTransition(() => {
+      this._outerStatusUpdater?.((draft) => {
+        draft.playing = playing;
+      });
     });
   }
 
@@ -369,8 +374,10 @@ export const Player = new (class {
 
   set repeat(status: "off" | "one" | "all") {
     this._repeat = status;
-    this._outerStatusUpdater?.((draft) => {
-      draft.repeat = status;
+    startTransition(() => {
+      this._outerStatusUpdater?.((draft) => {
+        draft.repeat = status;
+      });
     });
   }
 
@@ -380,8 +387,10 @@ export const Player = new (class {
 
   set shuffle(status: boolean) {
     this._shuffle = status;
-    this._outerStatusUpdater?.((draft) => {
-      draft.shuffle = status;
+    startTransition(() => {
+      this._outerStatusUpdater?.((draft) => {
+        draft.shuffle = status;
+      });
     });
   }
 

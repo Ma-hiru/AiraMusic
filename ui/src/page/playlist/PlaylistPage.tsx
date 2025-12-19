@@ -6,8 +6,10 @@ import Top from "./top";
 import Divider from "./Divider";
 import TrackList, { TrackListRef } from "@mahiru/ui/componets/track_list";
 import { useLayoutStatus } from "@mahiru/ui/store";
+import { Stage, useStage } from "@mahiru/ui/hook/useStage";
 
 const PlaylistPage: FC<object> = () => {
+  const { stage } = useStage();
   // 获取路由参数id
   const { id } = useParams();
   const { requestCanScrollTop } = useLayoutStatus(["requestCanScrollTop"]);
@@ -46,18 +48,22 @@ const PlaylistPage: FC<object> = () => {
 
   return (
     <div className="w-full h-full px-12 pt-20 contain-style contain-size contain-layout">
-      <Top entry={entry} filterTracks={filterTracks} searchTracks={searchTracks} />
-      <Divider />
+      {stage >= Stage.First && (
+        <Top entry={entry} filterTracks={filterTracks} searchTracks={searchTracks} />
+      )}
+      {stage >= Stage.Second && <Divider />}
       <div className="w-full h-[calc(100%-210px)] relative">
-        <TrackList
-          ref={listRef}
-          entry={entry}
-          loading={loading}
-          id={id ? Number(id) : undefined}
-          filterTracks={filterTracks}
-          requestMissedTracks={requestMissedTracks}
-          onVirtualListRangeUpdate={wrapRangeUpdate}
-        />
+        {stage >= Stage.Finally && (
+          <TrackList
+            ref={listRef}
+            entry={entry}
+            loading={loading}
+            id={id ? Number(id) : undefined}
+            filterTracks={filterTracks}
+            requestMissedTracks={requestMissedTracks}
+            onVirtualListRangeUpdate={wrapRangeUpdate}
+          />
+        )}
       </div>
     </div>
   );

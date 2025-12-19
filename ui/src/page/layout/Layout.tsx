@@ -9,23 +9,24 @@ import Content from "./Content";
 import ThemeColor from "./ThemeColor";
 import FloatButtons from "./float";
 import MusicSource from "@mahiru/ui/page/layout/MusicSource";
-import ToastProvider from "@mahiru/ui/componets/toast/ToastProvider";
+import { Stage, useStage } from "@mahiru/ui/hook/useStage";
 
 const Layout: FC<object> = () => {
+  const { stage } = useStage();
   return (
     <div className="relative w-screen h-screen overflow-hidden">
-      <ToastProvider />
       <div className="w-screen h-screen overflow-hidden relative">
-        <TopBar /> {/* absolute z-30 */}
-        <NavSide /> {/* absolute z-10 */}
-        <PlayerBar /> {/* absolute z-10 */}
-        <Content /> {/*relative z-10*/}
+        {stage >= Stage.Immediately && <TopBar />} {/* absolute z-30 */}
+        {stage >= Stage.Second && <NavSide />} {/* absolute z-10 */}
+        {stage >= Stage.Finally && <PlayerBar />} {/* absolute z-10 */}
+        {stage >= Stage.Second && <Content />} {/*relative z-10*/}
       </div>
-      <Background /> {/* z-0 */}
-      <PlayerModal /> {/* z-20 */}
-      <FloatButtons />
-      <ThemeColor />
-      <MusicSource />
+      {stage >= Stage.Finally && <Background />}
+      {/* z-0 */}
+      {stage >= Stage.Finally && <PlayerModal />} {/* z-20 */}
+      {stage >= Stage.Second && <FloatButtons />}
+      {stage >= Stage.Second && <ThemeColor />}
+      {stage >= Stage.Finally && <MusicSource />}
     </div>
   );
 };

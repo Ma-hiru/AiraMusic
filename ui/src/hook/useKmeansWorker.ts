@@ -1,5 +1,5 @@
 import KMeansWorker from "@mahiru/ui/worker/kmeans.ts?worker";
-import { useEffect, useLayoutEffect, useState } from "react";
+import { startTransition, useEffect, useState } from "react";
 import { EqError, Log } from "@mahiru/ui/utils/dev";
 import { UI } from "@mahiru/ui/utils/ui";
 
@@ -8,15 +8,17 @@ const themeColorCache = new Map<string, string[]>();
 export function useKmeansWorker(backgroundURL: Optional<string>) {
   const [result, setResult] = useState<string[]>([]);
 
-  useLayoutEffect(() => {
-    const mainColor = result[0] || "#fc3d49";
-    const secondaryColor = result[1] || "#ffffff";
-    if (mainColor && secondaryColor) {
-      UI.APPThemeColor = {
-        main: mainColor,
-        secondary: secondaryColor
-      };
-    }
+  useEffect(() => {
+    startTransition(() => {
+      const mainColor = result[0] || "#fc3d49";
+      const secondaryColor = result[1] || "#ffffff";
+      if (mainColor && secondaryColor) {
+        UI.APPThemeColor = {
+          main: mainColor,
+          secondary: secondaryColor
+        };
+      }
+    });
   }, [result]);
 
   useEffect(() => {

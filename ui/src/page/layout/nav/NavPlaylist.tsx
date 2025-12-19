@@ -8,8 +8,10 @@ import { useUpdate } from "@mahiru/ui/hook/useUpdate";
 import VirtualList, { VirtualListRow } from "@mahiru/ui/componets/virtual_list/VirtualList";
 import { useThemeColor } from "@mahiru/ui/hook/useThemeColor";
 import { getPlaylistRouterPath } from "@mahiru/ui/hook/usePlaylistRouter";
+import { Stage, useStage } from "@mahiru/ui/hook/useStage";
 
 const NavPlaylist: FC<object> = () => {
+  const { stage } = useStage();
   const { userPlaylistSummary } = usePersistZustandShallowStore(["userPlaylistSummary"]);
   const { requestCanScrollTop, sideBarOpen } = useLayoutStatus([
     "requestCanScrollTop",
@@ -84,6 +86,7 @@ const NavPlaylist: FC<object> = () => {
       requestCanScrollTop("none");
     };
   }, [requestCanScrollTop]);
+
   return (
     <div
       className="
@@ -92,14 +95,16 @@ const NavPlaylist: FC<object> = () => {
       "
       onScroll={onScroll}
       ref={containerRef}>
-      <VirtualList
-        RowComponent={RowComponent}
-        start={start}
-        end={end}
-        items={userPlayLists}
-        itemHeight={57}
-        extraData={undefined}
-      />
+      {stage >= Stage.Finally && (
+        <VirtualList
+          RowComponent={RowComponent}
+          start={start}
+          end={end}
+          items={userPlayLists}
+          itemHeight={57}
+          extraData={undefined}
+        />
+      )}
     </div>
   );
 };

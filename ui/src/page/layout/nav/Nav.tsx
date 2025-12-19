@@ -5,10 +5,12 @@ import { useLayoutStatus, usePersistZustandShallowStore } from "@mahiru/ui/store
 import NavPlayList from "@mahiru/ui/page/layout/nav/NavPlaylist";
 import { cx } from "@emotion/css";
 import NavMenu from "@mahiru/ui/page/layout/nav/NavMenu";
+import { Stage, useStage } from "@mahiru/ui/hook/useStage";
 
 const Nav: FC<object> = () => {
   const { userPlaylistSummary } = usePersistZustandShallowStore(["userPlaylistSummary"]);
   const { background, sideBarOpen } = useLayoutStatus(["background", "sideBarOpen"]);
+  const { stage } = useStage();
   return (
     <div
       className={cx(
@@ -16,10 +18,10 @@ const Nav: FC<object> = () => {
         background ? "bg-[#f0f3f6]/20" : "bg-[#f0f3f6]",
         sideBarOpen ? "w-44" : "w-22"
       )}>
-      <Avatar />
-      <NavMenu />
-      {!!userPlaylistSummary?.length && <NavSideDivider />}
-      <NavPlayList />
+      {stage >= Stage.First && <Avatar />}
+      {stage >= Stage.Second && <NavMenu />}
+      {!!userPlaylistSummary?.length && stage > Stage.Second && <NavSideDivider />}
+      {stage >= Stage.Finally && <NavPlayList />}
     </div>
   );
 };
