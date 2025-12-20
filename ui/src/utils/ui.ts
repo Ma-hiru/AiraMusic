@@ -28,6 +28,7 @@ class _UI {
   readonly AMLyricColorVarsName = "--amll-lp-color";
   readonly AMLyricFontSizeVarsName = "--amll-lp-font-size";
   readonly APPMainColorVarsName = "--theme-color-main";
+  readonly APPTextColorOnMainColorVarsName = "--text-color-on-main";
   readonly APPSecondaryColorVarsName = "--theme-color-secondary";
 
   set AMLyricColor(color: string) {
@@ -47,28 +48,34 @@ class _UI {
   }
 
   set APPThemeColor(colors) {
-    const { main, secondary } = colors;
+    const { main, secondary, textOnMainColor } = colors;
     document.documentElement.style.setProperty(this.APPMainColorVarsName, main);
     document.documentElement.style.setProperty(this.APPSecondaryColorVarsName, secondary);
+    document.documentElement.style.setProperty(
+      this.APPTextColorOnMainColorVarsName,
+      textOnMainColor
+    );
   }
 
   get APPThemeColor() {
-    const mainVarsName = "--theme-color-main";
-    const secondaryVarsName = "--theme-color-secondary";
     const styles = getComputedStyle(document.documentElement);
-    const main = styles.getPropertyValue(mainVarsName).trim() || "#fc3d49";
-    const secondary = styles.getPropertyValue(secondaryVarsName).trim() || "#ffffff";
+    const main = styles.getPropertyValue(this.APPMainColorVarsName).trim() || "#fc3d49";
+    const textOnMainColor =
+      styles.getPropertyValue(this.APPTextColorOnMainColorVarsName).trim() || "#000000";
+    const secondary = styles.getPropertyValue(this.APPSecondaryColorVarsName).trim() || "#ffffff";
     return {
       main,
-      secondary
+      secondary,
+      textOnMainColor
     };
   }
 
   get APPThemeColorInstance() {
-    const { main, secondary } = this.APPThemeColor;
+    const { main, secondary, textOnMainColor } = this.APPThemeColor;
     return {
       main: Color(main),
-      secondary: Color(secondary)
+      secondary: Color(secondary),
+      textOnMainColor: Color(textOnMainColor)
     };
   }
 

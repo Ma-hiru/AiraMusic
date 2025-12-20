@@ -7,8 +7,10 @@ import { useWindowTitle } from "@mahiru/ui/hook/useWindowTitle";
 import Meta from "@mahiru/ui/page/comments/meta";
 import Content from "@mahiru/ui/page/comments/content";
 import AcrylicBackground from "@mahiru/ui/componets/public/AcrylicBackground";
+import { Stage, useStage } from "@mahiru/ui/hook/useStage";
 
 const CommentsPage: FC<object> = () => {
+  const { stage } = useStage();
   const infoSync = useInfoCtx<"comments">();
   const themeSync = useInfoThemeCtx();
   const [sortType, setSortType] = useState(CommentSort.Hot);
@@ -39,25 +41,31 @@ const CommentsPage: FC<object> = () => {
           w-screen h-screen z-0 bg-[#f7f9fc]
           fixed left-0 top-0 inset-0
       ">
-        <AcrylicBackground src={themeSync.value.backgroundImage} brightness={0.5} blur={20} />
+        {stage >= Stage.Finally && (
+          <AcrylicBackground src={themeSync.value.backgroundImage} brightness={0.5} blur={20} />
+        )}
       </div>
       <div
         className="
           w-full h-full relative overflow-hidden
           grid grid-cols-1 grid-rows-[auto_1fr] gap-2
       ">
-        <Meta
-          pageCursor={pageCursor}
-          currentPageNo={currentPageNo}
-          requestComment={requestComment}
-          totalComment={totalComment}
-          totalPageNo={totalPageNo}
-          setSortType={setSortType}
-          sortType={sortType}
-          infoSync={infoSync}
-          themeSync={themeSync}
-        />
-        <Content comments={comments} infoSync={infoSync} themeSync={themeSync} />
+        {stage >= Stage.First && (
+          <Meta
+            pageCursor={pageCursor}
+            currentPageNo={currentPageNo}
+            requestComment={requestComment}
+            totalComment={totalComment}
+            totalPageNo={totalPageNo}
+            setSortType={setSortType}
+            sortType={sortType}
+            infoSync={infoSync}
+            themeSync={themeSync}
+          />
+        )}
+        {stage >= Stage.Second && (
+          <Content comments={comments} infoSync={infoSync} themeSync={themeSync} />
+        )}
       </div>
     </div>
   );

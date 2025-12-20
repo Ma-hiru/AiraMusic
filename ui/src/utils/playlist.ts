@@ -153,33 +153,35 @@ export const PlaylistManager = new (class {
   }
 
   private execUpdater(id: Optional<number>) {
-    if (id) {
-      try {
-        this.outerUpdaterWithID.get(id)?.();
-      } catch (err) {
-        Log.error(
-          new EqError({
-            raw: err,
-            message: "PlaylistManager execUpdater failed",
-            label: "ui/store/playlist.ts:PlaylistManager.execUpdater"
-          })
-        );
-        this.removeOuterUpdater(null, id);
+    startTransition(() => {
+      if (id) {
+        try {
+          this.outerUpdaterWithID.get(id)?.();
+        } catch (err) {
+          Log.error(
+            new EqError({
+              raw: err,
+              message: "PlaylistManager execUpdater failed",
+              label: "ui/store/playlist.ts:PlaylistManager.execUpdater"
+            })
+          );
+          this.removeOuterUpdater(null, id);
+        }
       }
-    }
-    this.outerUpdaterWithAll.forEach((func) => {
-      try {
-        func();
-      } catch (err) {
-        Log.error(
-          new EqError({
-            raw: err,
-            message: "PlaylistManager execUpdater failed",
-            label: "ui/store/playlist.ts:PlaylistManager.execUpdater"
-          })
-        );
-        this.removeOuterUpdater(func, null);
-      }
+      this.outerUpdaterWithAll.forEach((func) => {
+        try {
+          func();
+        } catch (err) {
+          Log.error(
+            new EqError({
+              raw: err,
+              message: "PlaylistManager execUpdater failed",
+              label: "ui/store/playlist.ts:PlaylistManager.execUpdater"
+            })
+          );
+          this.removeOuterUpdater(func, null);
+        }
+      });
     });
   }
 

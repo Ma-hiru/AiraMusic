@@ -4,6 +4,7 @@ import { PlaylistHistoryCache } from "@mahiru/ui/utils/history";
 import type { AudioControl } from "@mahiru/ui/hook/usePlayerAudio";
 import { API } from "@mahiru/ui/api";
 import { SpectrumData, SpectrumOptions } from "@mahiru/ui/hook/useSpectrumWorker";
+import { ContextMenuRender } from "@mahiru/ui/componets/menu/MenuProvider";
 
 export const DynamicStoreConfig: ZustandConfig<
   DynamicStoreInitialState & DynamicStoreActions,
@@ -118,6 +119,21 @@ export const DynamicStoreConfig: ZustandConfig<
     set((draft) => {
       draft.toast = [];
     });
+  },
+  setContextMenuRenderer: (renderer) => {
+    set((draft) => {
+      draft.getContextMenuRenderer = renderer;
+    });
+  },
+  setContextMenuVisibleSetter: (setter) => {
+    set((draft) => {
+      draft.getContextMenuVisibleSetter = setter;
+    });
+  },
+  setContextMenuVisible: (visible) => {
+    set((draft) => {
+      draft.contextMenuVisible = visible;
+    });
   }
 });
 
@@ -157,7 +173,10 @@ const InitialState: DynamicStoreInitialState = {
   background: undefined,
   kmeansColor: [],
   isTyping: false,
-  toast: []
+  toast: [],
+  getContextMenuRenderer: null,
+  getContextMenuVisibleSetter: null,
+  contextMenuVisible: false
 };
 
 export interface DynamicStoreInitialState {
@@ -184,6 +203,9 @@ export interface DynamicStoreInitialState {
   kmeansColor: string[];
   isTyping: boolean;
   toast: string[];
+  getContextMenuRenderer: Nullable<() => NormalFunc<[data: Nullable<ContextMenuRender>]>>;
+  getContextMenuVisibleSetter: Nullable<() => NormalFunc<[visible?: boolean]>>;
+  contextMenuVisible: boolean;
 }
 
 export type DynamicStoreActions = {
@@ -207,4 +229,11 @@ export type DynamicStoreActions = {
   setIsTyping: NormalFunc<[typing: boolean]>;
   showToast: NormalFunc<[toast: string]>;
   clearToast: NormalFunc;
+  setContextMenuRenderer: NormalFunc<
+    [renderer: Nullable<() => NormalFunc<[data: Nullable<ContextMenuRender>]>>]
+  >;
+  setContextMenuVisibleSetter: NormalFunc<
+    [setter: Nullable<() => NormalFunc<[visible?: boolean]>>]
+  >;
+  setContextMenuVisible: NormalFunc<[visible: boolean]>;
 };

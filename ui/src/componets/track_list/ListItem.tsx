@@ -1,5 +1,5 @@
 import { cx } from "@emotion/css";
-import { FC, memo, MouseEventHandler, useCallback } from "react";
+import { FC, memo, MouseEvent as ReactMouseEvent, MouseEventHandler, useCallback } from "react";
 import { PlaylistCacheEntry } from "@mahiru/ui/utils/playlist";
 import { Player } from "@mahiru/ui/utils/player";
 
@@ -19,6 +19,12 @@ interface ListItemProps {
   isMainColorDark: boolean;
   active?: boolean;
   play?: NormalFunc;
+  onContextMenu?: NormalFunc<
+    [
+      e: ReactMouseEvent<HTMLDivElement>,
+      props: { track: NeteaseTrack; index: number; absoluteIndex: number }
+    ]
+  >;
 }
 
 const ListItem: FC<ListItemProps> = ({
@@ -30,7 +36,8 @@ const ListItem: FC<ListItemProps> = ({
   textColorOnMain,
   active = false,
   play,
-  isMainColorDark
+  isMainColorDark,
+  onContextMenu
 }) => {
   const track = data[index]!;
   const total = data.length;
@@ -58,6 +65,13 @@ const ListItem: FC<ListItemProps> = ({
 
   return (
     <div
+      onContextMenu={(e) => {
+        onContextMenu?.(e, {
+          track,
+          index,
+          absoluteIndex
+        });
+      }}
       style={active ? { color: textColorOnMain } : undefined}
       key={track.id}
       className={cx(

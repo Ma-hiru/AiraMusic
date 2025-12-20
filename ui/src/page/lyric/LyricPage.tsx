@@ -14,8 +14,10 @@ import { WindowResize } from "@mahiru/ui/hook/useWindowResize";
 import { Renderer } from "@mahiru/ui/utils/renderer";
 import { UI } from "@mahiru/ui/utils/ui";
 import { LyricManager } from "@mahiru/ui/utils/lyricManager";
+import { Stage, useStage } from "@mahiru/ui/hook/useStage";
 
 const LyricPage: FC<object> = () => {
+  const { stage } = useStage();
   const lyricPlayerRef = useRef<LyricPlayerRef>(null);
   const [showBg, setShowBg] = useState(false);
   const [lock, setLock] = useState(false);
@@ -138,34 +140,38 @@ const LyricPage: FC<object> = () => {
             "w-full h-full overflow-hidden contain-[paint_layout] mix-blend-plus-lighter transition-normal ease-in-out text-center",
             lock && "pointer-events-none"
           )}>
-          <LyricPlayer
-            ref={lyricPlayerRef}
-            playing={lyricSync?.playerStatus.playing}
-            className="w-full h-full"
-            alignAnchor="center"
-            hidePassedLines
-            lyricLines={LyricManager.chooseLyric(
-              lyricInit?.trackStatus.lyric,
-              lyricSync?.playerStatus.lyricVersion
-            )}
-            enableScale={false}
-            enableSpring={false}
-          />
+          {stage >= Stage.Finally && (
+            <LyricPlayer
+              ref={lyricPlayerRef}
+              playing={lyricSync?.playerStatus.playing}
+              className="w-full h-full"
+              alignAnchor="center"
+              hidePassedLines
+              lyricLines={LyricManager.chooseLyric(
+                lyricInit?.trackStatus.lyric,
+                lyricSync?.playerStatus.lyricVersion
+              )}
+              enableScale={false}
+              enableSpring={false}
+            />
+          )}
         </div>
       </div>
-      <Control
-        color={color}
-        setColor={setColor}
-        lyricSync={lyricSync}
-        lyricInit={lyricInit}
-        showBg={showBg}
-        setShowBg={setShowBg}
-        lock={lock}
-        setLock={setLock}
-        fontSize={fontSize}
-        setFontSize={setFontSize}
-      />
-      <WindowResize disable={lock || !showBg} showArea={false} />
+      {stage >= Stage.First && (
+        <Control
+          color={color}
+          setColor={setColor}
+          lyricSync={lyricSync}
+          lyricInit={lyricInit}
+          showBg={showBg}
+          setShowBg={setShowBg}
+          lock={lock}
+          setLock={setLock}
+          fontSize={fontSize}
+          setFontSize={setFontSize}
+        />
+      )}
+      {stage >= Stage.Finally && <WindowResize disable={lock || !showBg} showArea={false} />}
     </div>
   );
 };

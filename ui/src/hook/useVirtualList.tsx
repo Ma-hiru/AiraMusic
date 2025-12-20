@@ -1,4 +1,4 @@
-import { RefObject, useEffect, useMemo, useRef, useState } from "react";
+import { RefObject, useEffect, useRef, useState } from "react";
 
 interface Props {
   total: number;

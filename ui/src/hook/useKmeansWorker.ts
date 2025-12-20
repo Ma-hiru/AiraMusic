@@ -15,7 +15,8 @@ export function useKmeansWorker(backgroundURL: Optional<string>) {
       if (mainColor && secondaryColor) {
         UI.APPThemeColor = {
           main: mainColor,
-          secondary: secondaryColor
+          secondary: secondaryColor,
+          textOnMainColor: UI.Utils.calcTextColorOn(mainColor).string()
         };
       }
     });

@@ -2,13 +2,14 @@ import {
   forwardRef,
   ForwardRefRenderFunction,
   memo,
+  MouseEvent as ReactMouseEvent,
   RefObject,
+  useCallback,
   useEffect,
   useImperativeHandle,
   useMemo,
   useRef
 } from "react";
-import { css, cx } from "@emotion/css";
 import { useVirtualList } from "@mahiru/ui/hook/useVirtualList";
 import { useThemeColor } from "@mahiru/ui/hook/useThemeColor";
 import { usePersistZustandShallowStore, usePlayerStatus } from "@mahiru/ui/store";
@@ -17,6 +18,8 @@ import { useScrollAutoHide } from "@mahiru/ui/hook/useScrollAutoHide";
 import Loading from "@mahiru/ui/componets/public/Loading";
 import ListItem from "@mahiru/ui/componets/track_list/ListItem";
 import VirtualList, { VirtualListRow } from "@mahiru/ui/componets/virtual_list/VirtualList";
+import { useContextMenu } from "@mahiru/ui/hook/useContextMenu";
+import { createContextMenu } from "@mahiru/ui/componets/track_list/createContextMenu";
 
 export interface TrackListRef {
   containerRef: RefObject<Nullable<HTMLDivElement>>;
@@ -60,6 +63,24 @@ const TrackList: ForwardRefRenderFunction<TrackListRef, TrackListProps> = (
   const play = useRef<Undefinable<NormalFunc>>(undefined);
   play.current = audioControl.current()?.play;
 
+  const { setContextMenuRenderer, setContextMenuVisible, contextMenuVisible } = useContextMenu();
+  const onContextMenu = useCallback<OnContextMenuFunc>(
+    (e, { track, index, absoluteIndex }) => {
+      setContextMenuRenderer?.(
+        createContextMenu({
+          track,
+          index,
+          absoluteIndex,
+          clientX: e.clientX,
+          clientY: e.clientY,
+          source: id
+        })
+      );
+      setContextMenuVisible?.(true);
+    },
+    [id, setContextMenuRenderer, setContextMenuVisible]
+  );
+
   const extraData = useMemo<ExtraData>(
     () => ({
       id,
@@ -73,11 +94,20 @@ const TrackList: ForwardRefRenderFunction<TrackListRef, TrackListProps> = (
         if (!isPlaying.current) {
           play.current?.();
         }
-      }
+      },
+      onContextMenu
     }),
-    [absoluteIdx, entry, id, isLikedPlayList, mainColor, textColorOnMain, trackStatus?.track?.id]
+    [
+      absoluteIdx,
+      entry,
+      id,
+      isLikedPlayList,
+      mainColor,
+      onContextMenu,
+      textColorOnMain,
+      trackStatus?.track?.id
+    ]
   );
-
   const { start, end } = useVirtualList({
     total: tracks.length,
     containerRef,
@@ -86,6 +116,14 @@ const TrackList: ForwardRefRenderFunction<TrackListRef, TrackListProps> = (
     onRangeUpdate: onVirtualListRangeUpdate
   });
   const { onScroll } = useScrollAutoHide(containerRef);
+
+  const wrapScroll = useCallback(() => {
+    if (contextMenuVisible) {
+      setContextMenuVisible?.(false);
+    }
+    return onScroll();
+  }, [contextMenuVisible, onScroll, setContextMenuVisible]);
+
   // id变化时，重置滚动位置
   useEffect(() => {
     containerRef.current?.scrollTo({
@@ -93,6 +131,7 @@ const TrackList: ForwardRefRenderFunction<TrackListRef, TrackListProps> = (
       behavior: "smooth"
     });
   }, [id]);
+
   useImperativeHandle(
     ref,
     () => ({
@@ -104,13 +143,8 @@ const TrackList: ForwardRefRenderFunction<TrackListRef, TrackListProps> = (
     <>
       <div
         ref={containerRef}
-        onScroll={onScroll}
-        className={cx(
-          "w-full h-full overflow-y-auto contain-content will-change-scroll scrollbar",
-          css`
-            -webkit-overflow-scrolling: auto;
-          `
-        )}>
+        onScroll={wrapScroll}
+        className="w-full h-full overflow-y-auto contain-content will-change-scroll scrollbar">
         <VirtualList
           items={tracks}
           extraData={extraData}
@@ -139,6 +173,13 @@ const TrackList: ForwardRefRenderFunction<TrackListRef, TrackListProps> = (
   );
 };
 
+type OnContextMenuFunc = NormalFunc<
+  [
+    e: ReactMouseEvent<HTMLDivElement>,
+    props: { track: NeteaseTrack; index: number; absoluteIndex: number }
+  ]
+>;
+
 type ExtraData = {
   id?: number;
   absoluteIdx: number[] | null;
@@ -147,12 +188,14 @@ type ExtraData = {
   textColorOnMain: string;
   play?: NormalFunc;
   isMainColorDark: boolean;
+  onContextMenu?: OnContextMenuFunc;
 };
 
 const RowComponent: VirtualListRow<NeteaseTrack, ExtraData> = ({ index, items, extra }) => {
   const track = items[index];
   return (
     <ListItem
+      onContextMenu={extra.onContextMenu}
       active={track?.id === extra.currentTrackID}
       textColorOnMain={extra.textColorOnMain}
       entry={extra.entry}

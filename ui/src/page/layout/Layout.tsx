@@ -10,6 +10,7 @@ import ThemeColor from "./ThemeColor";
 import FloatButtons from "./float";
 import MusicSource from "@mahiru/ui/page/layout/MusicSource";
 import { Stage, useStage } from "@mahiru/ui/hook/useStage";
+import MenuProvider from "@mahiru/ui/componets/menu/MenuProvider";
 
 const Layout: FC<object> = () => {
   const { stage } = useStage();
@@ -27,6 +28,7 @@ const Layout: FC<object> = () => {
       {stage >= Stage.Second && <FloatButtons />}
       {stage >= Stage.Second && <ThemeColor />}
       {stage >= Stage.Finally && <MusicSource />}
+      {stage >= Stage.Finally && <MenuProvider />}
     </div>
   );
 };

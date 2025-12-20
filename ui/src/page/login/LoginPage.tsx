@@ -4,8 +4,10 @@ import Control from "@mahiru/ui/page/login/Control";
 import QRCode from "@mahiru/ui/page/login/QRCode";
 import Tips from "@mahiru/ui/page/login/Tips";
 import { Renderer } from "@mahiru/ui/utils/renderer";
+import { Stage, useStage } from "@mahiru/ui/hook/useStage";
 
 const LoginPage: FC<object> = () => {
+  const { stage } = useStage();
   const { status, result, dataURL, update } = useLoginQRCode();
   useEffect(() => {
     if (status === QRCodeStatus.AUTHORIZED && result) {
@@ -20,10 +22,10 @@ const LoginPage: FC<object> = () => {
   }, []);
   return (
     <div className="w-screen h-screen overflow-hidden">
-      <Control />
+      {stage >= Stage.First && <Control />}
       <div className="w-full h-full grid grid-rows-1 grid-cols-[1fr_1fr]">
-        <Tips status={status} result={result} />
-        <QRCode url={dataURL} update={update} status={status} />
+        {stage >= Stage.Second && <Tips status={status} result={result} />}
+        {stage >= Stage.Finally && <QRCode url={dataURL} update={update} status={status} />}
       </div>
     </div>
   );
