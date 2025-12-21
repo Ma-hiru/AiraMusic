@@ -291,7 +291,7 @@ export const Player = new (class {
     return this._playlist[this._position] || null;
   }
 
-  next(force: boolean = true) {
+  next(force: boolean = true): Nullable<PlayerTrackStatus> {
     if (!this.canPlay()) return null;
     if (!force && this._repeat === "one") return this.current(false);
     let nextPos;
@@ -312,6 +312,9 @@ export const Player = new (class {
         nextPos = this._position + 1;
       }
     }
+    if (this._playlist[nextPos]?.track?.playable === false) {
+      return this.next(force);
+    }
     this._position = nextPos;
     this.setPlayingStatus(true);
     this.updateOuter();
@@ -322,7 +325,7 @@ export const Player = new (class {
     return this._playlist[this._position + 1] || null;
   }
 
-  last(force: boolean = true) {
+  last(force: boolean = true): Nullable<PlayerTrackStatus> {
     if (!this.canPlay()) return null;
     if (!force && this._repeat === "one") return this.current(false);
     let lastPos;
@@ -342,6 +345,9 @@ export const Player = new (class {
         // 顺序播放
         lastPos = this._position - 1;
       }
+    }
+    if (this._playlist[lastPos]?.track?.playable === false) {
+      return this.last(force);
     }
     this._position = lastPos;
     this.setPlayingStatus(true);

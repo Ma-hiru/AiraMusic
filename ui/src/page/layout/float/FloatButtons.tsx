@@ -1,17 +1,19 @@
 import { FC, memo } from "react";
 import { useLayoutStatus } from "@mahiru/ui/store";
 import { useLocation, useNavigate } from "react-router-dom";
-import { ChevronLeft, ChevronUp, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { ChevronLeft, ChevronUp, LocateFixed, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import FloatItem from "@mahiru/ui/page/layout/float/FloatItem";
 
 const FloatButtons: FC<object> = () => {
-  const { canScrollTop, playerModalVisible, sideBarOpen, toggleSideBarOpen } = useLayoutStatus([
-    "canScrollTop",
-    "playerModalVisible",
-    "sideBarOpen",
-    "toggleSideBarOpen"
-  ]);
+  const { canScrollTop, playerModalVisible, sideBarOpen, toggleSideBarOpen, locateCurrentTrack } =
+    useLayoutStatus([
+      "canScrollTop",
+      "playerModalVisible",
+      "sideBarOpen",
+      "toggleSideBarOpen",
+      "locateCurrentTrack"
+    ]);
   const navigate = useNavigate();
   const location = useLocation();
   const handleBack = () => {
@@ -35,6 +37,9 @@ const FloatButtons: FC<object> = () => {
             onClick={canScrollTop.callback}
             show={canScrollTop.type !== "none" && !playerModalVisible}>
             <ChevronUp className="size-5" />
+          </FloatItem>
+          <FloatItem show={!!locateCurrentTrack} onClick={locateCurrentTrack?.()}>
+            <LocateFixed className="size-5" />
           </FloatItem>
           <FloatItem show={hiddenBack && !playerModalVisible} onClick={handleBack}>
             <ChevronLeft className="size-5" />

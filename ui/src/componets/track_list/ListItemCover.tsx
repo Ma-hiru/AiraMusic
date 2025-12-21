@@ -61,7 +61,6 @@ const ListItemCover: FC<ListItemCoverProps> = ({
       size={ImageSize.xs}
       onCacheError={onCacheError}
       onCacheHit={onCacheHit}
-      shadow={active ? "float" : "base"}
       shadowColor={isMainColorDark ? "dark" : "light"}
     />
   );

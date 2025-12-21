@@ -1,4 +1,4 @@
-import { RefObject, useEffect, useRef, useState } from "react";
+import { RefObject, useCallback, useEffect, useRef, useState } from "react";
 
 interface Props {
   total: number;
@@ -69,11 +69,26 @@ export function useVirtualList({
       prevRange.current = range;
     }
   }, [visibleStart, visibleCount, total, onRangeUpdate]);
+  // 滚动到指定项
+  const scrollToItem = useCallback(
+    (index: number) => {
+      const container = containerRef.current;
+      if (!container) return;
+      if (index < 0 || index >= total) return;
+      container.scrollTo({
+        top: index * itemHeight,
+        behavior: "smooth"
+      });
+    },
+    [containerRef, itemHeight, total]
+  );
   // 计算渲染范围
   const start = Math.max(0, visibleStart - overscan);
   const end = Math.min(total, visibleStart + visibleCount + overscan);
+
   return {
     start,
-    end
+    end,
+    scrollToItem
   };
 }

@@ -134,6 +134,11 @@ export const DynamicStoreConfig: ZustandConfig<
     set((draft) => {
       draft.contextMenuVisible = visible;
     });
+  },
+  setLocateCurrentTrack: (locator) => {
+    set((draft) => {
+      draft.locateCurrentTrack = locator;
+    });
   }
 });
 
@@ -176,7 +181,8 @@ const InitialState: DynamicStoreInitialState = {
   toast: [],
   getContextMenuRenderer: null,
   getContextMenuVisibleSetter: null,
-  contextMenuVisible: false
+  contextMenuVisible: false,
+  locateCurrentTrack: null
 };
 
 export interface DynamicStoreInitialState {
@@ -206,6 +212,7 @@ export interface DynamicStoreInitialState {
   getContextMenuRenderer: Nullable<() => NormalFunc<[data: Nullable<ContextMenuRender>]>>;
   getContextMenuVisibleSetter: Nullable<() => NormalFunc<[visible?: boolean]>>;
   contextMenuVisible: boolean;
+  locateCurrentTrack: Nullable<() => NormalFunc>;
 }
 
 export type DynamicStoreActions = {
@@ -236,4 +243,5 @@ export type DynamicStoreActions = {
     [setter: Nullable<() => NormalFunc<[visible?: boolean]>>]
   >;
   setContextMenuVisible: NormalFunc<[visible: boolean]>;
+  setLocateCurrentTrack: NormalFunc<[locator: Nullable<() => NormalFunc>]>;
 };

@@ -75,6 +75,11 @@ const Lyric: FC<object> = () => {
       firstRender.current = false;
     }
   }, [audioRef, trackStatus?.lyric.raw.length]);
+
+  useEffect(() => {
+    lyricPlayerRef.current?.lyricPlayer?.resetScroll();
+    lyricPlayerRef.current?.lyricPlayer?.calcLayout();
+  }, [trackStatus?.lyric]);
   return (
     <div
       className={cx(

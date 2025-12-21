@@ -51,10 +51,11 @@ const TrackList: ForwardRefRenderFunction<TrackListRef, TrackListProps> = (
   ref
 ) => {
   const { textColorOnMain, mainColor } = useThemeColor();
-  const { trackStatus, audioControl, playerStatus } = usePlayerStatus([
+  const { trackStatus, audioControl, playerStatus, setLocateCurrentTrack } = usePlayerStatus([
     "trackStatus",
     "audioControl",
-    "playerStatus"
+    "playerStatus",
+    "setLocateCurrentTrack"
   ]);
   const { userLikedListSummary } = usePersistZustandShallowStore(["userLikedListSummary"]);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -114,7 +115,7 @@ const TrackList: ForwardRefRenderFunction<TrackListRef, TrackListProps> = (
       trackStatus?.track?.id
     ]
   );
-  const { start, end } = useVirtualList({
+  const { start, end, scrollToItem } = useVirtualList({
     total: filterTracks.tracks.length,
     containerRef,
     overscan: 10,
@@ -137,6 +138,20 @@ const TrackList: ForwardRefRenderFunction<TrackListRef, TrackListProps> = (
       behavior: "smooth"
     });
   }, [id]);
+
+  // 定位当前播放歌曲
+  useEffect(() => {
+    const currentTrackIndex = filterTracks.tracks.findIndex(
+      (track) => track.id === trackStatus?.track?.id
+    );
+    const scrollTo = () => scrollToItem(currentTrackIndex);
+    if (currentTrackIndex !== -1) {
+      setLocateCurrentTrack(() => scrollTo);
+    }
+    return () => {
+      setLocateCurrentTrack(null);
+    };
+  }, [filterTracks.tracks, scrollToItem, setLocateCurrentTrack, trackStatus?.track?.id]);
 
   useImperativeHandle(
     ref,
