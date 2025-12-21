@@ -21,7 +21,8 @@ const PlaylistPage: FC<object> = () => {
     onVirtualListRangeUpdate,
     filterTracks,
     loading,
-    requestMissedTracks
+    requestMissedTracks,
+    tracks
   } = usePlaylistNormalRender(id);
 
   const scrollTop = useCallback(() => {
@@ -60,6 +61,7 @@ const PlaylistPage: FC<object> = () => {
             loading={loading}
             id={id ? Number(id) : undefined}
             filterTracks={filterTracks}
+            rawTracks={tracks}
             requestMissedTracks={requestMissedTracks}
             onVirtualListRangeUpdate={wrapRangeUpdate}
           />

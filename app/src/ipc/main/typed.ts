@@ -80,8 +80,13 @@ export const typedIpcMainSendMessage = <T extends keyof MessageTypeMap>(props: {
   }
 
   // 自己给自己发消息，没必要
-  if (typeof receiver === "string" && senderID === receiver) return;
-  if (typeof receiver === "object" && WindowManager.get(senderID) === receiver) return;
+  if (senderID !== "main" && typeof receiver === "string" && senderID === receiver) return;
+  if (
+    senderID !== "main" &&
+    typeof receiver === "object" &&
+    WindowManager.get(senderID) === receiver
+  )
+    return;
 
   if (typeof receiver === "string") {
     const r = WindowManager.get(receiver);

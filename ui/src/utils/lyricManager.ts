@@ -42,19 +42,19 @@ class LyricParser {
     mt?: NeteaseTransUser
   ) {
     try {
-      const mainLyric = (() => {
-        switch (type) {
-          case "YRC":
-            return parseYrc(raw.lyric);
-          case "QRC":
-            return parseQrc(raw.lyric);
-          case "LRC":
-            return this.parseExternalLrc(raw.lyric);
-        }
-      })();
+      let mainLyric;
+      switch (type) {
+        case "YRC":
+          mainLyric = parseYrc(raw.lyric);
+          break;
+        case "QRC":
+          mainLyric = parseQrc(raw.lyric);
+          break;
+        case "LRC":
+          mainLyric = this.parseExternalLrc(raw.lyric);
+      }
       const translatedLyric = this.parseExternalLrc(ts?.lyric || "");
       const romanLyric = this.parseExternalLrc(rm?.lyric || "");
-
       const meta = <NeteaseTransUser>{
         nickname: mt?.nickname || ""
       };
@@ -78,29 +78,24 @@ class LyricParser {
 
   /** 处理和解析歌词响应 */
   parseNeteaseLyricResponse(response: NeteaseLyricResponseNew): FullVersionLyricLine {
-    if (
-      !response?.lrc?.lyric &&
-      !response?.klyric?.lyric &&
-      !response?.romalrc?.lyric &&
-      !response?.tlyric?.lyric &&
-      !response?.yrc
-    )
+    if (!response?.lrc?.lyric && !response?.yrc)
       // 没有任何歌词
       return noLyricPreset;
 
     let parsedLyric;
-    const translatedLyric = response.tlyric;
-    const romanLyric = response.romalrc;
-    const meta = response.transUser;
     const LRC = response.lrc;
-    const QRC = response.klyric;
+    const LRCTranslated = response.tlyric;
+    const LRCRoman = response.romalrc;
+
     const YRC = response.yrc;
-    if (QRC && QRC.lyric) {
-      parsedLyric = this.parseNeteaseLyric(QRC, translatedLyric, romanLyric, "QRC", meta);
+    const YRCTranslated = response.ytlrc;
+    const YRCRoman = response.yromalrc;
+
+    const meta = response.transUser;
+    if (YRC && YRC.lyric) {
+      parsedLyric = this.parseNeteaseLyric(YRC, YRCTranslated, YRCRoman, "YRC", meta);
     } else if (LRC && LRC.lyric) {
-      parsedLyric = this.parseNeteaseLyric(LRC, translatedLyric, romanLyric, "LRC", meta);
-    } else if (YRC && YRC.lyric) {
-      parsedLyric = this.parseNeteaseLyric(YRC, translatedLyric, romanLyric, "YRC", meta);
+      parsedLyric = this.parseNeteaseLyric(LRC, LRCTranslated, LRCRoman, "LRC", meta);
     }
 
     if (!parsedLyric) {

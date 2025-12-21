@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { Renderer } from "@mahiru/ui/utils/renderer";
-import { useThemeColor } from "@mahiru/ui/hook/useThemeColor";
 import { useLayoutStatus } from "@mahiru/ui/store";
+import { useThemeColor } from "@mahiru/ui/hook/useThemeColor";
 
-export function useInfoWindow() {
+export function useInfoWindow(sendOnly = false) {
   const [opened, setOpened] = useState(false);
   const [commentsDisplayType, setCommentsDisplayType] = useState<"static" | "subscribe">("static");
   const { mainColor, textColorOnMain, secondaryColor } = useThemeColor();
@@ -19,13 +19,13 @@ export function useInfoWindow() {
   const getOpenedStatus = useCallback(
     (cb?: NormalFunc<[ok: boolean]>) => {
       Renderer.invoke.hasOpenInternalWindow("info").then((ok) => {
-        if (ok !== opened) {
+        if (ok !== opened && !sendOnly) {
           setOpened(ok);
         }
         cb?.(ok);
       });
     },
-    [opened]
+    [opened, sendOnly]
   );
   const openInfoWindow = useCallback(
     <T extends InfoSyncType>(type: T, value: InfoSync<T>["value"]) => {
@@ -55,15 +55,16 @@ export function useInfoWindow() {
   );
 
   useEffect(() => {
-    if (!opened) return;
+    if (!opened || sendOnly) return;
     const timer = setInterval(() => {
       requestIdleCallback(() => getOpenedStatus());
     }, 5000);
     return () => {
       clearInterval(timer);
     };
-  }, [getOpenedStatus, opened]);
+  }, [getOpenedStatus, opened, sendOnly]);
   useEffect(() => {
+    if (sendOnly) return;
     const unsubscribe = Renderer.addMessageHandler("infoSyncReverse", "info", ({ displayType }) => {
       if (displayType && displayType !== commentsDisplayType) {
         setCommentsDisplayType(displayType);

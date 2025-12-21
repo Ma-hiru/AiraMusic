@@ -20,6 +20,7 @@ import ListItem from "@mahiru/ui/componets/track_list/ListItem";
 import VirtualList, { VirtualListRow } from "@mahiru/ui/componets/virtual_list/VirtualList";
 import { useContextMenu } from "@mahiru/ui/hook/useContextMenu";
 import { createContextMenu } from "@mahiru/ui/componets/track_list/createContextMenu";
+import { useInfoWindow } from "@mahiru/ui/hook/useInfoWindow";
 
 export interface TrackListRef {
   containerRef: RefObject<Nullable<HTMLDivElement>>;
@@ -33,6 +34,7 @@ interface TrackListProps {
   entry: Nullable<PlaylistCacheEntry>;
   onVirtualListRangeUpdate: NormalFunc<[range: IndexRange]>;
   filterTracks: { tracks: NeteaseTrack[]; absoluteIdx: Nullable<number[]> };
+  rawTracks: RefObject<NeteaseTrack[]>;
 }
 
 const TrackList: ForwardRefRenderFunction<TrackListRef, TrackListProps> = (
@@ -43,7 +45,8 @@ const TrackList: ForwardRefRenderFunction<TrackListRef, TrackListProps> = (
     loading,
     paddingBottom,
     entry,
-    requestMissedTracks
+    requestMissedTracks,
+    rawTracks
   },
   ref
 ) => {
@@ -54,7 +57,6 @@ const TrackList: ForwardRefRenderFunction<TrackListRef, TrackListProps> = (
     "playerStatus"
   ]);
   const { userLikedListSummary } = usePersistZustandShallowStore(["userLikedListSummary"]);
-  const { tracks, absoluteIdx } = filterTracks;
   const containerRef = useRef<HTMLDivElement>(null);
   const isLikedPlayList = id === userLikedListSummary?.id;
 
@@ -64,6 +66,7 @@ const TrackList: ForwardRefRenderFunction<TrackListRef, TrackListProps> = (
   play.current = audioControl.current()?.play;
 
   const { setContextMenuRenderer, setContextMenuVisible, contextMenuVisible } = useContextMenu();
+  const { openInfoWindow } = useInfoWindow();
   const onContextMenu = useCallback<OnContextMenuFunc>(
     (e, { track, index, absoluteIndex }) => {
       setContextMenuRenderer?.(
@@ -73,19 +76,20 @@ const TrackList: ForwardRefRenderFunction<TrackListRef, TrackListProps> = (
           absoluteIndex,
           clientX: e.clientX,
           clientY: e.clientY,
-          source: id
+          source: id,
+          openInfoWindow
         })
       );
       setContextMenuVisible?.(true);
     },
-    [id, setContextMenuRenderer, setContextMenuVisible]
+    [id, openInfoWindow, setContextMenuRenderer, setContextMenuVisible]
   );
 
   const extraData = useMemo<ExtraData>(
     () => ({
       id,
       isLikedPlayList,
-      absoluteIdx,
+      absoluteIdx: filterTracks.absoluteIdx,
       entry,
       currentTrackID: trackStatus?.track?.id,
       textColorOnMain: textColorOnMain.string(),
@@ -95,21 +99,23 @@ const TrackList: ForwardRefRenderFunction<TrackListRef, TrackListProps> = (
           play.current?.();
         }
       },
-      onContextMenu
+      onContextMenu,
+      rawTracks
     }),
     [
-      absoluteIdx,
       entry,
+      filterTracks.absoluteIdx,
       id,
       isLikedPlayList,
       mainColor,
       onContextMenu,
+      rawTracks,
       textColorOnMain,
       trackStatus?.track?.id
     ]
   );
   const { start, end } = useVirtualList({
-    total: tracks.length,
+    total: filterTracks.tracks.length,
     containerRef,
     overscan: 10,
     itemHeight: 50,
@@ -146,7 +152,7 @@ const TrackList: ForwardRefRenderFunction<TrackListRef, TrackListProps> = (
         onScroll={wrapScroll}
         className="w-full h-full overflow-y-auto contain-content will-change-scroll scrollbar">
         <VirtualList
-          items={tracks}
+          items={filterTracks.tracks}
           extraData={extraData}
           itemHeight={50}
           RowComponent={RowComponent}
@@ -189,6 +195,7 @@ type ExtraData = {
   play?: NormalFunc;
   isMainColorDark: boolean;
   onContextMenu?: OnContextMenuFunc;
+  rawTracks: RefObject<NeteaseTrack[]>;
 };
 
 const RowComponent: VirtualListRow<NeteaseTrack, ExtraData> = ({ index, items, extra }) => {
@@ -198,13 +205,14 @@ const RowComponent: VirtualListRow<NeteaseTrack, ExtraData> = ({ index, items, e
       onContextMenu={extra.onContextMenu}
       active={track?.id === extra.currentTrackID}
       textColorOnMain={extra.textColorOnMain}
-      entry={extra.entry}
-      index={index}
-      data={items}
+      playlistEntry={extra.entry}
+      filterIndex={index}
+      filterTracks={items}
+      rawTracks={extra.rawTracks}
       playListID={extra.id}
       play={extra.play}
       isMainColorDark={extra.isMainColorDark}
-      absoluteIndex={extra.absoluteIdx ? extra.absoluteIdx[index]! : index}
+      rawIndex={extra.absoluteIdx ? extra.absoluteIdx[index]! : index}
     />
   );
 };

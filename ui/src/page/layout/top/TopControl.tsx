@@ -28,7 +28,10 @@ const TopControl: FC<TopControlProps> = ({ maximizable = true, mini = true }) =>
       Renderer.event.maximize();
     }
   }, [isMax]);
-  const minimize = Renderer.event.minimize;
+  const minimize = () => {
+    setIsMax(false);
+    Renderer.event.minimize();
+  };
   const close = useCallback(() => {
     Player.saveToCache().finally(() => {
       setTimeout(() => Renderer.event.close({ broadcast: true }), 200);
@@ -43,6 +46,12 @@ const TopControl: FC<TopControlProps> = ({ maximizable = true, mini = true }) =>
       Renderer.event.visible();
     }
   }, [hasOpened]);
+  useEffect(() => {
+    const unsubscribe = Renderer.addMainProcessMessageHandler("windowMaximizedChanged", setIsMax);
+    return () => {
+      unsubscribe();
+    };
+  }, []);
   return (
     <NoDrag className="flex flex-row gap-4 select-none relative z-10 ease-in-out transition-all">
       {isDev && (

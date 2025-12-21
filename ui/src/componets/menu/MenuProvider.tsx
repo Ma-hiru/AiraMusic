@@ -24,16 +24,17 @@ const MenuProvider: FC<object> = () => {
   const [scope, animate] = useAnimate();
   const [visible, setVisible] = useState(false);
   const [render, setRender] = useState<Nullable<ContextMenuRender>>(null);
-
   const { setContextMenuVisibleSetter, setContextMenuRenderer, setContextMenuVisible } =
     usePlayerStatus([
       "setContextMenuVisibleSetter",
       "setContextMenuRenderer",
       "setContextMenuVisible"
     ]);
+
   const SetContextMenuRenderData = useCallback((data: Nullable<ContextMenuRender>) => {
     setRender(data);
   }, []);
+
   const SetContextMenuVisible = useCallback((show?: boolean) => {
     if (typeof show === "boolean") {
       setVisible(show);
@@ -49,6 +50,41 @@ const MenuProvider: FC<object> = () => {
       { duration: OPEN_DURATION, ease: "easeOut" }
     );
   }, [animate, scope]);
+
+  const MoveContextMenu = useCallback(
+    async (x: number, y: number) => {
+      const menu = scope.current;
+      if (!menu) return;
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      const mh = menu.offsetHeight;
+      const mw = menu.offsetWidth;
+
+      let left = x;
+      let top = y;
+
+      if (x + mw > vw) {
+        left = x - mw;
+      }
+      if (y + mh > vh) {
+        top = y - mh;
+      }
+
+      const padding = 8;
+      // left + mw <= vw - padding
+      // padding <= left
+      left = Math.max(padding, Math.min(left, vw - mw - padding));
+      top = Math.max(padding, Math.min(top, vh - mh - padding));
+
+      const originX = x + mw > vw ? "right" : "left";
+      const originY = y + mh > vh ? "bottom" : "top";
+
+      menu.style.transformOrigin = `${originX} ${originY}`;
+      await animate(menu, { left, top }, { duration: 0 });
+    },
+    [animate, scope]
+  );
+
   const CloseContextMenuAnimate = useCallback(async () => {
     await animate(
       scope.current,
@@ -60,13 +96,22 @@ const MenuProvider: FC<object> = () => {
   useEffect(() => {
     if (!render) return;
     if (visible) {
-      CloseContextMenuAnimate().then(OpenContextMenuAnimate);
+      CloseContextMenuAnimate()
+        .then(() => MoveContextMenu(render.clientX, render.clientY))
+        .then(OpenContextMenuAnimate);
       setContextMenuVisible(true);
     } else {
       void CloseContextMenuAnimate();
       setContextMenuVisible(false);
     }
-  }, [CloseContextMenuAnimate, OpenContextMenuAnimate, render, setContextMenuVisible, visible]);
+  }, [
+    CloseContextMenuAnimate,
+    MoveContextMenu,
+    OpenContextMenuAnimate,
+    render,
+    setContextMenuVisible,
+    visible
+  ]);
 
   useEffect(() => {
     setContextMenuRenderer(() => SetContextMenuRenderData);
@@ -81,13 +126,15 @@ const MenuProvider: FC<object> = () => {
   return (
     <motion.div
       ref={scope}
-      className="fixed z-15 overflow-hidden rounded-md bg-white/10 backdrop-blur-md border border-neutral-700/10 shadow-lg p-1"
-      animate={{ left: render?.clientX, top: render?.clientY }}
-      initial={{ opacity: 0, scale: 0.95, pointerEvents: "none" }}
-      transition={{ duration: 0 }}>
+      className={`
+          fixed z-15 w-40 overflow-hidden rounded-md
+          bg-white/20 backdrop-blur-md p-1
+          border border-neutral-700/10 shadow-lg
+          pointer-events-none opacity-0
+      `}>
       {!!render?.header && (
         <>
-          <div className="px-1">{render.header}</div>
+          <div className="px-1 h-10">{render.header}</div>
           <div className="mx-2 my-1 h-px bg-neutral-700/10" />
         </>
       )}
@@ -96,7 +143,13 @@ const MenuProvider: FC<object> = () => {
           return (
             <div
               key={id || index}
-              className="flex items-center gap-1.5 px-1 py-2 hover:bg-(--theme-color-main)/60 hover:text-(--text-color-on-main) cursor-default"
+              className={`
+                  flex items-center gap-1.5
+                  px-2 py-1 rounded-md
+                  hover:bg-(--theme-color-main)/60
+                  hover:text-(--text-color-on-main)
+                  cursor-default
+              `}
               onMouseDown={(e) => {
                 e.stopPropagation();
                 onClick?.();

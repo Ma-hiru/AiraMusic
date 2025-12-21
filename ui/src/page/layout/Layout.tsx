@@ -1,4 +1,4 @@
-import { FC } from "react";
+import { FC, useEffect } from "react";
 
 import TopBar from "./top";
 import PlayerBar from "./bar";
@@ -14,6 +14,16 @@ import MenuProvider from "@mahiru/ui/componets/menu/MenuProvider";
 
 const Layout: FC<object> = () => {
   const { stage } = useStage();
+  useEffect(() => {
+    // 禁 Tab
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Tab") {
+        e.preventDefault();
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, []);
   return (
     <div className="relative w-screen h-screen overflow-hidden">
       <div className="w-screen h-screen overflow-hidden relative">
@@ -22,13 +32,12 @@ const Layout: FC<object> = () => {
         {stage >= Stage.Finally && <PlayerBar />} {/* absolute z-10 */}
         {stage >= Stage.Second && <Content />} {/*relative z-10*/}
       </div>
-      {stage >= Stage.Finally && <Background />}
-      {/* z-0 */}
+      {stage >= Stage.Finally && <Background />} {/* z-0 */}
       {stage >= Stage.Finally && <PlayerModal />} {/* z-20 */}
       {stage >= Stage.Second && <FloatButtons />}
       {stage >= Stage.Second && <ThemeColor />}
       {stage >= Stage.Finally && <MusicSource />}
-      {stage >= Stage.Finally && <MenuProvider />}
+      {stage >= Stage.Finally && <MenuProvider />} {/*z-15*/}
     </div>
   );
 };

@@ -53,6 +53,7 @@ type MessageTypeMap = {
   otherWindowClosed: undefined;
   setThumbnailImage: { buffer: ArrayBuffer; width: number; height: number };
   clearThumbnailImage: undefined;
+  windowMaximizedChanged: boolean;
 };
 
 /** Normal 事件的 Message 类型的发送参数 */

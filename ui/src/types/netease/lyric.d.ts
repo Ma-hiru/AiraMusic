@@ -53,4 +53,6 @@ interface NeteaseTransUser {
 
 interface NeteaseLyricResponseNew extends NeteaseLyricResponse {
   yrc?: NeteaseYRC;
+  ytlrc?: NeteaseTlyric;
+  yromalrc?: NeteaseRomalrc;
 }

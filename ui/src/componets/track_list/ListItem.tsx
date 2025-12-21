@@ -1,5 +1,12 @@
 import { cx } from "@emotion/css";
-import { FC, memo, MouseEvent as ReactMouseEvent, MouseEventHandler, useCallback } from "react";
+import {
+  FC,
+  memo,
+  MouseEvent as ReactMouseEvent,
+  MouseEventHandler,
+  RefObject,
+  useCallback
+} from "react";
 import { PlaylistCacheEntry } from "@mahiru/ui/utils/playlist";
 import { Player } from "@mahiru/ui/utils/player";
 
@@ -9,11 +16,12 @@ import ListItemName from "./ListItemName";
 import ListItemInfo from "./ListItemInfo";
 
 interface ListItemProps {
-  data: NeteaseTrack[];
-  entry: Nullable<PlaylistCacheEntry>;
-  index: number;
+  filterTracks: NeteaseTrack[];
+  filterIndex: number;
+  rawTracks: RefObject<NeteaseTrack[]>;
+  rawIndex: number;
+  playlistEntry: Nullable<PlaylistCacheEntry>;
   playListID?: number;
-  absoluteIndex: number;
   isLikedList?: boolean;
   textColorOnMain: string;
   isMainColorDark: boolean;
@@ -28,19 +36,20 @@ interface ListItemProps {
 }
 
 const ListItem: FC<ListItemProps> = ({
-  index,
-  data,
+  filterIndex,
+  filterTracks,
   playListID,
-  absoluteIndex,
-  entry,
+  rawIndex,
+  playlistEntry,
   textColorOnMain,
   active = false,
   play,
   isMainColorDark,
-  onContextMenu
+  onContextMenu,
+  rawTracks
 }) => {
-  const track = data[index]!;
-  const total = data.length;
+  const track = filterTracks[filterIndex]!;
+  const total = filterTracks.length;
   const disabled = !track.playable;
 
   const handleClick = useCallback<MouseEventHandler<HTMLDivElement>>(
@@ -50,17 +59,16 @@ const ListItem: FC<ListItemProps> = ({
         return;
       }
       // 如果与当前播放列表相同，仅切换位置，避免重建列表导致状态抖动
-      if (Player.isSamePlaylist(data, playListID)) {
-        Player.setPosition(index);
+      if (Player.isSamePlaylist(rawTracks.current, playListID)) {
+        Player.setPosition(rawIndex);
       } else {
-        // 播放列表使用的是相对索引
-        Player.replacePlaylist(data, playListID, index);
+        Player.replacePlaylist(rawTracks.current, playListID, rawIndex);
       }
       setTimeout(() => {
         play?.();
       }, 1000);
     },
-    [data, disabled, index, play, playListID]
+    [disabled, play, playListID, rawIndex, rawTracks]
   );
 
   return (
@@ -68,8 +76,8 @@ const ListItem: FC<ListItemProps> = ({
       onContextMenu={(e) => {
         onContextMenu?.(e, {
           track,
-          index,
-          absoluteIndex
+          index: filterIndex,
+          absoluteIndex: rawIndex
         });
       }}
       style={active ? { color: textColorOnMain } : undefined}
@@ -85,14 +93,19 @@ const ListItem: FC<ListItemProps> = ({
         }
       )}>
       {/*序号*/}
-      <ListItemIndex total={total} active={active} relativeIndex={index} onClick={handleClick} />
+      <ListItemIndex
+        total={total}
+        active={active}
+        relativeIndex={filterIndex}
+        onClick={handleClick}
+      />
       {/*封面*/}
       <ListItemCover
         track={track}
-        absoluteIndex={absoluteIndex}
+        absoluteIndex={rawIndex}
         playListID={playListID}
         onClick={handleClick}
-        entry={entry}
+        entry={playlistEntry}
         active={active}
         isMainColorDark={isMainColorDark}
       />

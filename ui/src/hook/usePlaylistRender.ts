@@ -188,7 +188,8 @@ export function usePlaylistNormalRender(id?: string) {
     filterTracks,
     searchTracks,
     onVirtualListRangeUpdate,
-    requestMissedTracks
+    requestMissedTracks,
+    tracks
   };
 }
 
@@ -332,6 +333,7 @@ export function usePlaylistHistoryRender() {
     filterTracks,
     onVirtualListRangeUpdate,
     searchTracks,
-    loading
+    loading,
+    historyTracks
   };
 }

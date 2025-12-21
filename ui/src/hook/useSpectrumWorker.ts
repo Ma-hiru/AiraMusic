@@ -23,6 +23,7 @@ export function useSpectrumWorker(
   const workerRef = useRef<Nullable<Worker>>(null);
   const analyserRef = useRef<Nullable<AnalyserNode>>(null);
   const audioCtxRef = useRef<Nullable<AudioContext>>(null);
+  const sourceRef = useRef<Nullable<MediaElementAudioSourceNode>>(null);
   const animationFrameRef = useRef<number>(0);
   const samplesRef = useRef<Nullable<Float32Array<ArrayBuffer>>>(null);
   const spectrumData = useRef<SpectrumData>({
@@ -62,14 +63,18 @@ export function useSpectrumWorker(
   }, [isReady, isPlaying, withPeaks]);
   // 初始化 AudioContext 和 AnalyserNode，connect只在一个audioRef上执行一次
   useEffect(() => {
+    if (sourceRef.current) return;
     const audio = audioRef.current;
     if (!audio) return;
     const ctx = new AudioContext();
     const source = ctx.createMediaElementSource(audio);
+    sourceRef.current = source;
     const analyser = ctx.createAnalyser();
+
     analyser.smoothingTimeConstant = 0;
     source.connect(analyser);
     analyser.connect(ctx.destination);
+
     analyserRef.current = analyser;
     audioCtxRef.current = ctx;
     return () => {

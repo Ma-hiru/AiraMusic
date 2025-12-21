@@ -1,4 +1,4 @@
-import { startTransition, useEffect, useState } from "react";
+import { startTransition, useCallback, useEffect, useState } from "react";
 
 export const enum Stage {
   Immediately,
@@ -10,21 +10,31 @@ export const enum Stage {
 export function useStage() {
   const [stage, setStage] = useState(Stage.Immediately);
 
-  useEffect(() => {
+  const startStagePipeline = useCallback(() => {
+    setStage(Stage.Immediately);
+
     requestAnimationFrame(() => {
       startTransition(() => {
         setStage(Stage.First);
       });
+
       requestAnimationFrame(() => {
         startTransition(() => {
           setStage(Stage.Second);
         });
+
         requestIdleCallback(() => {
-          setStage(Stage.Finally);
+          startTransition(() => {
+            setStage(Stage.Finally);
+          });
         });
       });
     });
   }, []);
+
+  useEffect(() => {
+    startStagePipeline();
+  }, [startStagePipeline]);
 
   return { stage };
 }

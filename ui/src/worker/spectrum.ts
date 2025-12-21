@@ -32,7 +32,7 @@ self.addEventListener("message", (ev: MessageEvent<SpectrumWorkerArgs>) => {
           analyser = new SpectrumAnalyzer(fftSize, numBands, sampleRate);
           analyser.set_smoothing(0.8);
           analyser.set_peak_decay(0.02);
-          analyser.set_window_function(WindowFunction.Hamming);
+          analyser.set_window_function(WindowFunction.Blackman);
           ready = true;
           self.postMessage({ type: "ready" } satisfies SpectrumWorkerResult);
         } catch (err) {

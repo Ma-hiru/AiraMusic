@@ -9,7 +9,7 @@ const Modal: FC = () => {
   return (
     <div
       className={cx(
-        "w-screen h-screen overflow-hidden z-20 bg-white/90 backdrop-blur-md duration-400 ease-in-out fixed inset-0 transform transition-transform contain-style contain-size contain-layout",
+        "w-screen h-screen overflow-hidden z-20 bg-white/60 backdrop-blur-md duration-400 ease-in-out fixed inset-0 transform transition-transform contain-style contain-size contain-layout",
         playerModalVisible ? "translate-y-0" : "translate-y-full"
       )}>
       <PlayerPage />

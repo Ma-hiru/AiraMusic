@@ -14,7 +14,7 @@ const Spectrum: FC<object> = () => {
         isPlaying={playerModalVisible && playerStatus.playing}
         className="w-full h-5 mt-2"
         gap={2}
-        renderer="canvas"
+        renderer="webgl-rust"
         barWidth={2}
         color="#ffffff"
         secondaryColor="#ffffff"

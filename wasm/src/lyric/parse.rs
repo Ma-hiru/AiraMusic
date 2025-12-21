@@ -6,7 +6,6 @@ use std::collections::HashMap;
 use wasm_bindgen::JsValue;
 use wasm_bindgen::prelude::wasm_bindgen;
 
-#[wasm_bindgen]
 pub fn parseNeteaseLyric(raw: JsValue, ts: JsValue, rm: JsValue, meta: JsValue) -> JsValue {
     let raw = from_value::<Vec<RawLyricLine>>(raw).unwrap_or_default();
     let ts = from_value::<Vec<RawLyricLine>>(ts).unwrap_or_default();
@@ -97,10 +96,18 @@ pub fn parseNeteaseLyric(raw: JsValue, ts: JsValue, rm: JsValue, meta: JsValue) 
                 romanLyric: String::new(),
                 translatedLyric: format!("歌词贡献者：{}", meta.nickname),
             };
-            full_version.push(meta_line.clone());
-            raw_version.push(meta_line.clone());
-            tl_version.push(meta_line.clone());
-            rm_version.push(meta_line);
+            if !raw_version.is_empty() {
+                raw_version.push(meta_line.clone());
+            }
+            if !full_version.is_empty() {
+                full_version.push(meta_line.clone())
+            }
+            if !tl_version.is_empty() {
+                tl_version.push(meta_line.clone());
+            }
+            if !rm_version.is_empty() {
+                rm_version.push(meta_line);
+            }
         }
     }
 

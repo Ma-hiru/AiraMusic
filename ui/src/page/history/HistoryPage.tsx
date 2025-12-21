@@ -5,7 +5,7 @@ import Top from "@mahiru/ui/page/history/Top";
 import { usePlayerStatus } from "@mahiru/ui/store";
 
 const HistoryPage: FC<object> = () => {
-  const { filterTracks, onVirtualListRangeUpdate, searchTracks, loading } =
+  const { filterTracks, historyTracks, onVirtualListRangeUpdate, searchTracks, loading } =
     usePlaylistHistoryRender();
   const { background, setBackground } = usePlayerStatus(["background", "setBackground"]);
   const defaultBackground =
@@ -22,6 +22,7 @@ const HistoryPage: FC<object> = () => {
       <TrackList
         onVirtualListRangeUpdate={onVirtualListRangeUpdate}
         filterTracks={filterTracks}
+        rawTracks={historyTracks}
         loading={loading}
         paddingBottom={80}
         entry={null}
