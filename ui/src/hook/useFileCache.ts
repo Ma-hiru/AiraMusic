@@ -10,45 +10,54 @@ export function useFileCache(
     update?: boolean;
     timeLimit?: number;
     method?: string;
+    fastLocation?: boolean;
   }
 ) {
   const [finalURL, setFinalURL] = useState<string>();
-  const { id = url, onCacheHit, update, timeLimit, method = "GET" } = options || {};
+  const {
+    id = url,
+    onCacheHit,
+    update,
+    timeLimit,
+    method = "GET",
+    fastLocation = false
+  } = options || {};
 
   useEffect(() => {
-    if (!url || !url.startsWith("http")) return;
+    if (!url || !url.startsWith("http") || fastLocation) return;
     if (!id || url.startsWith("file") || url.startsWith(AppScheme)) return;
 
-    let canceled = false;
+    const controller = new AbortController();
     const run = () => {
-      CacheStore.checkOrStoreAsync(url, id, method, update, timeLimit)
+      if (controller.signal.aborted) return;
+      CacheStore.checkOrStoreAsync(url, id, method, update, timeLimit, controller.signal)
         .then((check) => {
           if (check?.ok && check.index.file) {
             const path = check.index.file;
-            if (!canceled && path !== finalURL) setFinalURL(path);
+            if (!controller.signal.aborted && path !== finalURL) setFinalURL(path);
             requestIdleCallback(
               () => {
-                if (canceled) return;
+                if (controller.signal.aborted) return;
                 onCacheHit?.(path, check.index.id);
               },
               { timeout: 5000 }
             );
           } else if (finalURL !== url) {
-            if (canceled) return;
+            if (controller.signal.aborted) return;
             setFinalURL(url);
           }
         })
         .catch(() => {
-          if (canceled) return;
+          if (controller.signal.aborted) return;
           setFinalURL(url);
         });
     };
-    run();
+    requestAnimationFrame(run);
 
     return () => {
-      canceled = true;
+      controller.abort();
     };
-  }, [finalURL, id, method, onCacheHit, timeLimit, update, url]);
+  }, [fastLocation, finalURL, id, method, onCacheHit, timeLimit, update, url]);
 
   if (!url || !id) {
     return undefined;

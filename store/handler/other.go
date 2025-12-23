@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"encoding/json"
 	"log"
 	"store/file"
 
@@ -122,4 +123,26 @@ func SizeCategories(ctx *gin.Context) {
 		"video": video,
 		"other": other,
 	})
+}
+
+func Move(ctx *gin.Context) {
+	var newPath = ctx.Query("path")
+	if newPath == "" {
+		ctx.SSEvent("done", "missing path parameter")
+		return
+	}
+	var store = file.GetStore()
+	var progress = make(chan file.MoveProgressChan, 100)
+	go func() {
+		var err = store.Move(newPath, progress)
+		if err != nil {
+			log.Println(err)
+		}
+		close(progress)
+	}()
+	for p := range progress {
+		var data, _ = json.Marshal(p)
+		ctx.SSEvent("message", string(data))
+	}
+	ctx.SSEvent("done", "")
 }

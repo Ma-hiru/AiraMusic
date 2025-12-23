@@ -20,6 +20,7 @@ interface ListItemProps {
   filterIndex: number;
   rawTracks: RefObject<NeteaseTrack[]>;
   rawIndex: number;
+  fastLocation?: boolean;
   playlistEntry: Nullable<PlaylistCacheEntry>;
   playListID?: number;
   isLikedList?: boolean;
@@ -46,7 +47,8 @@ const ListItem: FC<ListItemProps> = ({
   play,
   isMainColorDark,
   onContextMenu,
-  rawTracks
+  rawTracks,
+  fastLocation
 }) => {
   const track = filterTracks[filterIndex]!;
   const total = filterTracks.length;
@@ -108,6 +110,7 @@ const ListItem: FC<ListItemProps> = ({
         entry={playlistEntry}
         active={active}
         isMainColorDark={isMainColorDark}
+        fastLocation={fastLocation}
       />
       {/*名称*/}
       <ListItemName track={track} disabled={disabled} active={active} onClick={handleClick} />

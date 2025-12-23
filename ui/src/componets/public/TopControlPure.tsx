@@ -30,31 +30,39 @@ const TopControlPure: FC<TopControlPurProps> = ({ maximizable, mini, color }) =>
   }, []);
 
   return (
-    <NoDrag className="flex flex-row gap-4 select-none relative z-10 ease-in-out transition-all">
+    <NoDrag className="flex flex-row gap-4 select-none relative z-10">
       {isDev && (
         <Chromium
           color={color}
-          className="size-5 cursor-pointer hover:opacity-50"
+          className="size-5 cursor-pointer hover:opacity-50 ease-in-out transition-all duration-300"
           onClick={Renderer.event.openDevTools}
         />
       )}
-      <Minus color={color} className="size-5 cursor-pointer hover:opacity-50" onClick={minimize} />
+      <Minus
+        color={color}
+        className="size-5 cursor-pointer hover:opacity-50 ease-in-out transition-all duration-300"
+        onClick={minimize}
+      />
       {isMax
         ? maximizable && (
             <SquareMinus
               color={color}
-              className="size-5 cursor-pointer scale-80 hover:opacity-50"
+              className="size-5 cursor-pointer scale-80 hover:opacity-50 ease-in-out transition-all duration-300"
               onClick={maximize}
             />
           )
         : maximizable && (
             <Square
               color={color}
-              className="size-5 cursor-pointer scale-80 hover:opacity-50"
+              className="size-5 cursor-pointer scale-80 hover:opacity-50 ease-in-out transition-all duration-300"
               onClick={maximize}
             />
           )}
-      <X color={color} className="size-5 hover:opacity-50" onClick={close} />
+      <X
+        color={color}
+        className="size-5 cursor-pointer hover:opacity-50 ease-in-out transition-all duration-300"
+        onClick={close}
+      />
     </NoDrag>
   );
 };

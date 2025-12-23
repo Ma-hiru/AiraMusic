@@ -4,11 +4,13 @@ import {
   memo,
   MouseEvent as ReactMouseEvent,
   RefObject,
+  startTransition,
   useCallback,
   useEffect,
   useImperativeHandle,
   useMemo,
-  useRef
+  useRef,
+  useState
 } from "react";
 import { useVirtualList } from "@mahiru/ui/hook/useVirtualList";
 import { useThemeColor } from "@mahiru/ui/hook/useThemeColor";
@@ -58,6 +60,7 @@ const TrackList: ForwardRefRenderFunction<TrackListRef, TrackListProps> = (
     "setLocateCurrentTrack"
   ]);
   const { userLikedListSummary } = usePersistZustandShallowStore(["userLikedListSummary"]);
+  const [fastLocation, setFastLocation] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const isLikedPlayList = id === userLikedListSummary?.id;
 
@@ -101,10 +104,12 @@ const TrackList: ForwardRefRenderFunction<TrackListRef, TrackListProps> = (
         }
       },
       onContextMenu,
-      rawTracks
+      rawTracks,
+      fastLocation
     }),
     [
       entry,
+      fastLocation,
       filterTracks.absoluteIdx,
       id,
       isLikedPlayList,
@@ -133,9 +138,11 @@ const TrackList: ForwardRefRenderFunction<TrackListRef, TrackListProps> = (
 
   // id变化时，重置滚动位置
   useEffect(() => {
-    containerRef.current?.scrollTo({
-      top: 0,
-      behavior: "smooth"
+    startTransition(() => {
+      containerRef.current?.scrollTo({
+        top: 0,
+        behavior: "smooth"
+      });
     });
   }, [id]);
 
@@ -144,7 +151,18 @@ const TrackList: ForwardRefRenderFunction<TrackListRef, TrackListProps> = (
     const currentTrackIndex = filterTracks.tracks.findIndex(
       (track) => track.id === trackStatus?.track?.id
     );
-    const scrollTo = () => scrollToItem(currentTrackIndex);
+    const scrollTo = () => {
+      startTransition(() => {
+        setFastLocation(true);
+        scrollToItem(currentTrackIndex);
+
+        requestIdleCallback(() => {
+          startTransition(() => {
+            setFastLocation(false);
+          });
+        });
+      });
+    };
     if (currentTrackIndex !== -1) {
       setLocateCurrentTrack(() => scrollTo);
     }
@@ -211,6 +229,7 @@ type ExtraData = {
   isMainColorDark: boolean;
   onContextMenu?: OnContextMenuFunc;
   rawTracks: RefObject<NeteaseTrack[]>;
+  fastLocation?: boolean;
 };
 
 const RowComponent: VirtualListRow<NeteaseTrack, ExtraData> = ({ index, items, extra }) => {
@@ -222,6 +241,7 @@ const RowComponent: VirtualListRow<NeteaseTrack, ExtraData> = ({ index, items, e
       textColorOnMain={extra.textColorOnMain}
       playlistEntry={extra.entry}
       filterIndex={index}
+      fastLocation={extra.fastLocation}
       filterTracks={items}
       rawTracks={extra.rawTracks}
       playListID={extra.id}

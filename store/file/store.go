@@ -1,7 +1,6 @@
 package file
 
 import (
-	"bufio"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -16,8 +15,8 @@ import (
 
 // Check 检查指定 id 的文件是否已存在于存储中，存在则返回对应的索引和 true，否则返回 false
 func (Self *Store) Check(id string) (Index, bool) {
-	Self.indexMappedMutex.RLock()
-	defer Self.indexMappedMutex.RUnlock()
+	Self.indexMappedLock.RLock()
+	defer Self.indexMappedLock.RUnlock()
 
 	var index, exist = Self.indexMapped[id]
 	return index, exist
@@ -26,7 +25,7 @@ func (Self *Store) Check(id string) (Index, bool) {
 // Store 直接将数据存储到存储中，返回对应的索引信息或者错误
 func (Self *Store) Store(id string, fileType string, data []byte) (Index, error) {
 	var fileName = randomFilename()
-	var filePath = filepath.Join(Self.storeDir, fileName)
+	var filePath = filepath.Join(Self.meta.storeDir, fileName)
 	var file, err = os.Create(filePath)
 	if err != nil {
 		return Index{}, err
@@ -48,7 +47,11 @@ func (Self *Store) Store(id string, fileType string, data []byte) (Index, error)
 		_ = os.Remove(filePath)
 		return Index{}, err
 	}
-	var index = createIndex(id, filePath, "", strconv.Itoa(len(data)), fileName, fileType, "", "")
+	var index = NewIndex(
+		id,
+		filePath,
+		WithFileInfo("", fileName, fileType, strconv.Itoa(len(data))),
+	)
 	err = Self.appendIndex(index)
 	if err != nil {
 		_ = os.Remove(filePath)
@@ -72,43 +75,43 @@ func (Self *Store) Remove(idx Index) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	Self.indexMappedMutex.Lock()
+	Self.indexMappedLock.Lock()
 	delete(Self.indexMapped, idx.ID)
-	Self.indexMappedMutex.Unlock()
+	Self.indexMappedLock.Unlock()
 	// 没有立即更新索引文件，等待下一次 启动时 时更新
 	return true, nil
 }
 
 // Clear 清空存储中的所有文件，返回被删除的文件数量
 func (Self *Store) Clear() (int, error) {
-	Self.indexMappedMutex.Lock()
+	Self.indexMappedLock.Lock()
 	var count = len(Self.indexMapped)
 	for _, index := range Self.indexMapped {
 		_ = os.Remove(index.Path)
 	}
 	Self.indexMapped = make(map[string]Index)
-	Self.indexMappedMutex.Unlock()
+	Self.indexMappedLock.Unlock()
 	Self.forceUpdateIndex()
 	return count, nil
 }
 
 // Count 返回当前存储的文件数量
 func (Self *Store) Count() int {
-	Self.indexMappedMutex.RLock()
-	defer Self.indexMappedMutex.RUnlock()
+	Self.indexMappedLock.RLock()
+	defer Self.indexMappedLock.RUnlock()
 	return len(Self.indexMapped)
 }
 
 // Destroy 销毁文件句柄，保存索引到文件
 func (Self *Store) Destroy() error {
+	fmt.Println("Storing index to file...")
 	return Self.storeIndex()
 }
 
 // ClearInvalidFile 清理无效文件：包括空文件、未被使用的临时文件、没有索引的文件、过期文件
 func (Self *Store) ClearInvalidFile() error {
 	var start = time.Now()
-	fmt.Println("[Store] Clearing invalid files...")
-	var entries, err = os.ReadDir(Self.storeDir)
+	var entries, err = os.ReadDir(Self.meta.storeDir)
 	if err != nil {
 		return err
 	}
@@ -121,7 +124,7 @@ func (Self *Store) ClearInvalidFile() error {
 	// 收集所有临时文件、空文件、存储所有文件名到 notExist 初始化
 	for _, entry := range entries {
 		// 跳过目录和索引文件
-		if entry.IsDir() || entry.Name() == Self.indexName {
+		if entry.IsDir() || entry.Name() == Self.meta.indexName {
 			continue
 		}
 		// 获取文件信息
@@ -129,7 +132,7 @@ func (Self *Store) ClearInvalidFile() error {
 		if err != nil || info.IsDir() {
 			continue
 		}
-		if info.Name() != Self.indexName {
+		if info.Name() != Self.meta.indexName {
 			// 筛选无效文件：临时文件或大小为0的文件
 			if info.Size() == 0 {
 				blanks[info.Name()] = struct{}{}
@@ -143,7 +146,7 @@ func (Self *Store) ClearInvalidFile() error {
 	}
 	// 对于临时文件，检查是否正在写入，否则删除，临时文件一定不会有索引管理，直接删除
 	for _, temp := range temps {
-		var fpath = filepath.Join(Self.storeDir, temp)
+		var fpath = filepath.Join(Self.meta.storeDir, temp)
 		var getSize = func() (int64, error) {
 			file, err := os.Open(fpath)
 			if err != nil {
@@ -176,7 +179,7 @@ func (Self *Store) ClearInvalidFile() error {
 	}
 	// 对于空文件，应该全部删除，删除前，查看是否有对应索引存在，有索引删除索引，同时检查notExist的文件是否被管理
 	var shouldDeleteIndexes = make([]string, 0)
-	Self.indexMappedMutex.RLock()
+	Self.indexMappedLock.RLock()
 	for _, index := range Self.indexMapped {
 		var fileName = filepath.Base(index.Path)
 		if _, exist := blanks[fileName]; exist {
@@ -193,50 +196,50 @@ func (Self *Store) ClearInvalidFile() error {
 			delete(notExist, fileName)
 		}
 	}
-	Self.indexMappedMutex.RUnlock()
+	Self.indexMappedLock.RUnlock()
 	// 先删除所有需要删除的索引
-	Self.indexMappedMutex.Lock()
+	Self.indexMappedLock.Lock()
 	for _, id := range shouldDeleteIndexes {
 		delete(Self.indexMapped, id)
 	}
-	Self.indexMappedMutex.Unlock()
+	Self.indexMappedLock.Unlock()
 	// 后删除所有的空文件
 	for blank := range blanks {
-		var fpath = filepath.Join(Self.storeDir, blank)
+		var fpath = filepath.Join(Self.meta.storeDir, blank)
 		_ = os.Remove(fpath)
 	}
 	// 最后删除所有没有索引管理的文件
 	for fileName := range notExist {
-		var fpath = filepath.Join(Self.storeDir, fileName)
+		var fpath = filepath.Join(Self.meta.storeDir, fileName)
 		_ = os.Remove(fpath)
 	}
 	// 清理过期文件
-	var now = getTime()
-	Self.indexMappedMutex.Lock()
+	var now = getTimeNano()
+	Self.indexMappedLock.Lock()
 	for id, index := range Self.indexMapped {
-		if now-index.CreateTime > Self.timeLimit.Nanoseconds() {
+		if now-index.CreateTime > Self.option.TimeLimit.Nanoseconds() {
 			_ = os.Remove(index.Path)
 			delete(Self.indexMapped, id)
 		}
 	}
-	Self.indexMappedMutex.Unlock()
+	Self.indexMappedLock.Unlock()
 	// 最后更新存储索引，然后重建索引文件句柄
 	Self.forceUpdateIndex()
 	var duration = time.Since(start)
-	fmt.Printf("[Store] Clearing invalid files completed in %s.\n", duration.String())
+	fmt.Printf("Clearing invalid files completed in %s.\n", duration.String())
 	return nil
 }
 
 // Size 计算存储目录下所有文件的总大小，排除索引文件
 func (Self *Store) Size() int64 {
-	var dirEntries, err = os.ReadDir(Self.storeDir)
+	var dirEntries, err = os.ReadDir(Self.meta.storeDir)
 	if err != nil {
 		return 0
 	}
 
 	var varSize int64 = 0
 	for _, entry := range dirEntries {
-		if !entry.IsDir() && entry.Name() != Self.indexName {
+		if !entry.IsDir() && entry.Name() != Self.meta.indexName {
 			var fileInfo, err = entry.Info()
 			if err == nil {
 				varSize += fileInfo.Size()
@@ -247,8 +250,8 @@ func (Self *Store) Size() int64 {
 }
 
 func (Self *Store) SizeCategory() (image int64, audio int64, video int64, other int64) {
-	Self.indexMappedMutex.RLock()
-	defer Self.indexMappedMutex.RUnlock()
+	Self.indexMappedLock.RLock()
+	defer Self.indexMappedLock.RUnlock()
 
 	for _, index := range Self.indexMapped {
 		size, err := strconv.ParseInt(index.Size, 10, 64)
@@ -271,31 +274,29 @@ func (Self *Store) SizeCategory() (image int64, audio int64, video int64, other 
 
 // Path 返回存储目录路径
 func (Self *Store) Path() string {
-	return Self.storeDir
+	return Self.meta.storeDir
 }
-
-var BlankWriter = &nopCloseWriter{}
 
 // BeginWrite 开始写入文件，返回写入句柄，如果已经有相同 URL 的写入在进行中，返回一个空的写入句柄
 // 不用担心并发写入同一个 URL，因为调用此函数前会先检查索引是否存在，只有不存在时才会调用此函数
 func (Self *Store) BeginWrite(url, name, fileType, size, etag, lastModified string) io.WriteCloser {
-	Self.muWrite.RLock()
-	if _, ok := Self.currentWrite[url]; ok {
-		Self.muWrite.RUnlock()
+	Self.currentWriteMappedLock.RLock()
+	if _, ok := Self.currentWriteMapped[url]; ok {
+		Self.currentWriteMappedLock.RUnlock()
 		return BlankWriter
 	}
-	Self.muWrite.RUnlock()
+	Self.currentWriteMappedLock.RUnlock()
 
 	var tmpName = randomFilename() + ".tmp"
-	var tmpPath = filepath.Join(Self.storeDir, tmpName)
+	var tmpPath = filepath.Join(Self.meta.storeDir, tmpName)
 
 	var file, err = os.Create(tmpPath)
 	if err != nil {
-		return &nopCloseWriter{}
+		return &blankWriter{}
 	}
 
-	Self.muWrite.Lock()
-	Self.currentWrite[url] = &writingFile{
+	Self.currentWriteMappedLock.Lock()
+	Self.currentWriteMapped[url] = &WritingFile{
 		tmpPath:      tmpPath,
 		finalName:    name,
 		fileType:     fileType,
@@ -304,30 +305,30 @@ func (Self *Store) BeginWrite(url, name, fileType, size, etag, lastModified stri
 		lastModified: lastModified,
 		file:         file,
 	}
-	Self.muWrite.Unlock()
+	Self.currentWriteMappedLock.Unlock()
 
 	return file
 }
 
 // UpdateWriteSize 更新正在写入文件的大小信息，用于在写入过程中检查文件大小是否一致，适应于 Content-Length 不准确的情况（206）
 func (Self *Store) UpdateWriteSize(url, size string) {
-	Self.muWrite.Lock()
-	if wFile, ok := Self.currentWrite[url]; ok {
+	Self.currentWriteMappedLock.Lock()
+	if wFile, ok := Self.currentWriteMapped[url]; ok {
 		wFile.size = size
 	}
-	Self.muWrite.Unlock()
+	Self.currentWriteMappedLock.Unlock()
 }
 
 // EndWrite 结束写入文件，success 表示写入过程是否成功，如果成功则将临时文件重命名为最终文件并创建索引，返回索引信息，否则删除临时文件并返回空索引
 func (Self *Store) EndWrite(id, url string, success bool) Index {
-	Self.muWrite.Lock()
-	var wFile, ok = Self.currentWrite[url]
+	Self.currentWriteMappedLock.Lock()
+	var wFile, ok = Self.currentWriteMapped[url]
 	if !ok {
-		Self.muWrite.Unlock()
+		Self.currentWriteMappedLock.Unlock()
 		return Index{}
 	}
-	delete(Self.currentWrite, url)
-	Self.muWrite.Unlock()
+	delete(Self.currentWriteMapped, url)
+	Self.currentWriteMappedLock.Unlock()
 
 	var info, err = wFile.file.Stat()
 	if err == nil {
@@ -338,7 +339,7 @@ func (Self *Store) EndWrite(id, url string, success bool) Index {
 			success = false
 		}
 	} else {
-		log.Println("error stating written file:", err)
+		log.Println("Failed stating written file:", err)
 	}
 	wFile.file.Close()
 
@@ -348,7 +349,7 @@ func (Self *Store) EndWrite(id, url string, success bool) Index {
 	}
 
 	var finalName = randomFilename()
-	var finalPath = filepath.Join(Self.storeDir, finalName)
+	var finalPath = filepath.Join(Self.meta.storeDir, finalName)
 
 	if err := os.Rename(wFile.tmpPath, finalPath); err != nil {
 		_ = os.Remove(wFile.tmpPath)
@@ -357,26 +358,114 @@ func (Self *Store) EndWrite(id, url string, success bool) Index {
 	if id == "" {
 		id = url
 	}
-	var index = createIndex(id, finalPath, url, wFile.size, wFile.finalName, wFile.fileType, wFile.etag, wFile.lastModified)
+	var index = NewIndex(
+		id,
+		finalPath,
+		WithFileInfo(url, wFile.finalName, wFile.fileType, wFile.size),
+		WithETag(wFile.etag),
+		WithLastModified(wFile.lastModified),
+	)
 	_ = Self.appendIndex(index)
 	return index
 }
 
+type MoveProgressChan struct {
+	Total   int64 `json:"total"`
+	Current int64 `json:"current"`
+	Percent int64 `json:"percent"`
+	Failed  int64 `json:"failed"`
+}
+
+// Move 将存储目录下的所有文件移动到新的目录中，并更新索引中的路径信息，过程中通过 progress 通道报告进度
+func (Self *Store) Move(path string, progress chan<- MoveProgressChan) error {
+	if path == "" {
+		return fmt.Errorf("target path is empty")
+	}
+	if path == Self.meta.storeDir {
+		return fmt.Errorf("target path is the same as Current store path")
+	}
+	var info, err = os.Stat(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return fmt.Errorf("target path does not exist")
+		}
+		return err
+	}
+	if !info.IsDir() {
+		return fmt.Errorf("target path is not a directory")
+	}
+
+	Self.indexMappedLock.Lock()
+	Self.currentWriteMappedLock.Lock()
+	Self.indexFileLock.Lock()
+
+	dirEntries, err := os.ReadDir(Self.meta.storeDir)
+	if err != nil {
+		Self.indexMappedLock.Unlock()
+		Self.currentWriteMappedLock.Unlock()
+		Self.indexFileLock.Unlock()
+		return err
+	}
+
+	var totalCount int64 = 0
+	var errorCount int64 = 0
+	var currentCount int64 = 0
+	var percent int64 = 0
+	for _, entry := range dirEntries {
+		if entry.IsDir() {
+			continue
+		}
+		totalCount += 1
+	}
+	Self.indexFile.Close()
+	for _, entry := range dirEntries {
+		if entry.IsDir() {
+			continue
+		}
+		var srcPath = filepath.Join(Self.meta.storeDir, entry.Name())
+		var destPath = filepath.Join(path, entry.Name())
+		err = os.Rename(srcPath, destPath)
+		currentCount += 1
+		percent = (currentCount * 100) / totalCount
+		if err != nil {
+			errorCount += 1
+		}
+		if progress != nil {
+			percent = (currentCount * 100) / totalCount
+			progress <- MoveProgressChan{
+				Total:   totalCount,
+				Current: currentCount,
+				Percent: percent,
+				Failed:  errorCount,
+			}
+		}
+	}
+	// 更新存储目录
+	Self.meta.storeDir = filepath.Clean(path)
+	// 更新索引中的路径信息
+	for id, index := range Self.indexMapped {
+		var fileName = filepath.Base(index.Path)
+		index.Path = filepath.Join(Self.meta.storeDir, fileName)
+		index.File = pathToSchemeURL(
+			index.Path,
+			store.option.FileScheme,
+			store.option.FileSchemeHost,
+		)
+		Self.indexMapped[id] = index
+	}
+
+	Self.indexMappedLock.Unlock()
+	Self.currentWriteMappedLock.Unlock()
+	Self.indexFileLock.Unlock()
+
+	_ = Self.storeIndex()
+	Self.forceUpdateIndex()
+	return nil
+}
+
 // 从索引文件加载索引到内存，这里使用index参数传入的是只读的 io.Reader 初始化之后 Self.indexFile 还未赋值，只读完毕，再重新追加读写打开赋值，所以本函数只能在初始化时调用
 func (Self *Store) loadIndex(index io.Reader) {
-	var scanner = bufio.NewScanner(index)
-	for scanner.Scan() {
-		var line = scanner.Text()
-		// 跳过空行、版本和创建时间行
-		if len(line) == 0 || strings.HasPrefix(line, "version: ") || strings.HasPrefix(line, "createTime: ") {
-			continue
-		}
-
-		var idx Index
-		if err := json.Unmarshal([]byte(line), &idx); err != nil {
-			continue
-		}
-
+	for _, idx := range readIndexFileData(index) {
 		Self.indexMapped[idx.ID] = idx
 	}
 }
@@ -387,17 +476,17 @@ func (Self *Store) appendIndex(index Index) error {
 	if err != nil {
 		return err
 	}
-	Self.indexMappedMutex.RLock()
+	Self.indexMappedLock.RLock()
 	var oldIndex, exist = Self.indexMapped[index.ID]
-	Self.indexMappedMutex.RUnlock()
+	Self.indexMappedLock.RUnlock()
 	if exist {
 		_, _ = Self.Remove(oldIndex)
 	}
-	Self.indexMappedMutex.Lock()
+	Self.indexMappedLock.Lock()
 	Self.indexMapped[index.ID] = index
-	Self.indexMappedMutex.Unlock()
-	Self.indexFileMutex.Lock()
-	defer Self.indexFileMutex.Unlock()
+	Self.indexMappedLock.Unlock()
+	Self.indexFileLock.Lock()
+	defer Self.indexFileLock.Unlock()
 	_, err = Self.indexFile.Write(append(indexData, '\n'))
 	if err != nil {
 		return err
@@ -409,65 +498,47 @@ func (Self *Store) appendIndex(index Index) error {
 // 将内存中的索引全部写入索引文件，覆盖写入，由于会销毁 os.File 本函数在销毁存储时执行
 func (Self *Store) storeIndex() error {
 	var indexData = make([]Index, 0)
-	Self.indexMappedMutex.RLock()
+	Self.indexMappedLock.RLock()
 	for _, index := range Self.indexMapped {
 		indexData = append(indexData, index)
 	}
-	Self.indexMappedMutex.RUnlock()
+	Self.indexMappedLock.RUnlock()
 
 	_ = Self.indexFile.Close()
-	var path = filepath.Join(Self.storeDir, Self.indexName)
+	var path = filepath.Join(Self.meta.storeDir, Self.meta.indexName)
 	var file, err = os.OpenFile(path, os.O_TRUNC|os.O_WRONLY, 0666)
 	if err != nil {
 		return err
 	}
+	defer file.Close()
 	// 写入版本和创建时间
-	_, err = file.Write([]byte("version: " + strconv.Itoa(Self.version) + "\n"))
+	err = writeIndexFileMeta(file, &Self.meta)
 	if err != nil {
-		_ = file.Close()
-		return err
-	}
-	_, err = file.Write([]byte("createTime: " + strconv.FormatInt(Self.crateTime, 10) + "\n"))
-	if err != nil {
-		_ = file.Close()
 		return err
 	}
 	// 写入所有索引
-	for _, index := range indexData {
-		var line, err = json.Marshal(index)
-		if err != nil {
-			_ = file.Close()
-			return err
-		}
-		_, err = file.Write(append(line, '\n'))
-		if err != nil {
-			_ = file.Close()
-			return err
-		}
-	}
-	if err := file.Sync(); err != nil {
-		_ = file.Close()
+	err = writeIndexFileData(file, indexData)
+	if err != nil {
 		return err
 	}
-
-	return file.Close()
+	return nil
 }
 
 // 强制更新存储索引并重建索引文件句柄，如果失败，由于无法继续使用存储，直接 panic
 func (Self *Store) forceUpdateIndex() {
-	Self.indexFileMutex.Lock()
+	Self.indexFileLock.Lock()
 	var err = Self.storeIndex()
 	if err != nil {
 		// 索引损坏
 		panic(err)
 	}
 	// 重新以追加读写方式打开索引文件
-	var iPath = filepath.Join(Self.storeDir, Self.indexName)
-	iFile, err := os.OpenFile(iPath, os.O_APPEND|os.O_RDWR, 0666)
+	var indexPath = filepath.Join(Self.meta.storeDir, Self.meta.indexName)
+	indexFile, err := os.OpenFile(indexPath, os.O_APPEND|os.O_RDWR, 0666)
 	if err != nil {
 		// 无法打开索引文件
 		panic(err)
 	}
-	Self.indexFile = iFile
-	Self.indexFileMutex.Unlock()
+	Self.indexFile = indexFile
+	Self.indexFileLock.Unlock()
 }

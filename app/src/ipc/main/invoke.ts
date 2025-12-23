@@ -6,6 +6,7 @@ import { Log } from "../../utils/log";
 import { EqError } from "../../utils/err";
 import { fileURLToPath } from "node:url";
 import { WindowManager } from "../../window";
+import { storeKeyAccessToken } from "../../utils/dev";
 
 const mainInvokeAPI = {
   readFile: async (_, localPath) => {
@@ -43,7 +44,8 @@ const mainInvokeAPI = {
       return WindowManager.has(win);
     }
     return false;
-  }
+  },
+  storeKey: () => storeKeyAccessToken
 } satisfies MainInvokeAPI;
 
 export function registerInvokeHandlers() {

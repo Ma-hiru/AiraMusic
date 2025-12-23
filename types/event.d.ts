@@ -11,6 +11,7 @@ type InvokeEventMaps = {
   platform: [undefined, NodeJS.Platform];
   isMaximized: [undefined, boolean];
   hasOpenInternalWindow: [WindowType, boolean];
+  storeKey: [undefined, string];
 };
 
 /** Normal 事件类型以及参数 */

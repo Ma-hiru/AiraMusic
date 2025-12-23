@@ -11,6 +11,7 @@ interface ListItemCoverProps {
   entry: Nullable<PlaylistCacheEntry>;
   active: boolean;
   isMainColorDark: boolean;
+  fastLocation?: boolean;
 }
 
 const ListItemCover: FC<ListItemCoverProps> = ({
@@ -20,7 +21,8 @@ const ListItemCover: FC<ListItemCoverProps> = ({
   onClick,
   entry,
   active,
-  isMainColorDark
+  isMainColorDark,
+  fastLocation
 }) => {
   const onCacheHit = useCallback(
     (file: string, id: string) => {

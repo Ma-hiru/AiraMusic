@@ -1,4 +1,4 @@
-import { FC, useCallback, useEffect, useRef } from "react";
+import { FC, startTransition, useCallback, useEffect, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { usePlaylistNormalRender } from "@mahiru/ui/hook/usePlaylistRender";
 
@@ -26,9 +26,11 @@ const PlaylistPage: FC<object> = () => {
   } = usePlaylistNormalRender(id);
 
   const scrollTop = useCallback(() => {
-    listRef.current?.containerRef.current?.scrollTo({
-      top: 0,
-      behavior: "smooth"
+    startTransition(() => {
+      listRef.current?.containerRef.current?.scrollTo({
+        top: 0,
+        behavior: "smooth"
+      });
     });
   }, []);
 

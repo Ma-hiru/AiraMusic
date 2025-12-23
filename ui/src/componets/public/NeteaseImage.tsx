@@ -31,6 +31,7 @@ type ImageProps = ImgHTMLAttributes<HTMLImageElement> & {
   onCacheError?: NormalFunc;
   shadow?: ShadowLevel;
   shadowColor?: ShadowColor;
+  fastLocation?: boolean;
 };
 
 const NeteaseImage: FC<ImageProps> = ({
@@ -54,11 +55,19 @@ const NeteaseImage: FC<ImageProps> = ({
   shadow = "base",
   shadowColor = "light",
   onClick,
+  fastLocation,
   ...rest
 }) => {
   const [error, setError] = useState(false);
   const sizedURL = useMemo(() => Filter.NeteaseImageSize(src, size), [size, src]);
-  const cachedCover = useFileCache(sizedURL, { onCacheHit, id, update: update, timeLimit, method });
+  const cachedCover = useFileCache(sizedURL, {
+    onCacheHit,
+    id,
+    update: update,
+    timeLimit,
+    method,
+    fastLocation
+  });
   const retryStatus = useRef({
     token: 0,
     count: 0,

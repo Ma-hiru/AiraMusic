@@ -7,19 +7,29 @@ import (
 )
 
 type Store struct {
-	storeDir  string
-	indexName string
-	version   int
-	crateTime int64
-	timeLimit time.Duration
+	meta   StoreMeta
+	option StoreOption
 
-	indexFile        *os.File
-	indexMapped      map[string]Index // ID <-> Index
-	indexMappedMutex sync.RWMutex
-	indexFileMutex   sync.Mutex
+	indexFile       *os.File
+	indexFileLock   sync.Mutex
+	indexMapped     map[string]Index // ID <-> Index
+	indexMappedLock sync.RWMutex
 
-	muWrite      sync.RWMutex
-	currentWrite map[string]*writingFile // URL <-> writingFile
+	currentWriteMapped     map[string]*WritingFile // URL <-> WritingFile
+	currentWriteMappedLock sync.RWMutex
+}
+
+type StoreMeta struct {
+	storeDir   string
+	indexName  string
+	version    int
+	createTime int64
+}
+
+type StoreOption struct {
+	FileScheme     string
+	FileSchemeHost string
+	TimeLimit      time.Duration
 }
 
 type Index struct {
@@ -35,7 +45,7 @@ type Index struct {
 	LastModified string `json:"lastModified,omitempty"`
 }
 
-type writingFile struct {
+type WritingFile struct {
 	tmpPath      string
 	finalName    string
 	fileType     string

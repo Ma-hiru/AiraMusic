@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"net/url"
-	"store/env"
 	"strconv"
 	"strings"
 	"time"
@@ -45,12 +44,14 @@ func Peek(reader io.Reader, size int) ([]byte, io.Reader, error) {
 	return buffer[:n], io.MultiReader(bytes.NewReader(buffer[:n]), reader), err
 }
 
-var alphaNumeric = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-
 func randomFilename() string {
-	return strconv.FormatInt(time.Now().UnixMilli(), 10) + "_" + randString(12)
+	return strconv.FormatInt(getTimeMilli(), 10) + "_" + randString(12)
 }
 
+// alphaNumeric 包含用于生成随机字符串的字母和数字字符集。
+const alphaNumeric = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+
+// randString 生成一个长度为 n 的随机字母数字字符串。
 func randString(n int) string {
 	b := make([]byte, n)
 	_, err := rand.Read(b)
@@ -58,37 +59,43 @@ func randString(n int) string {
 		panic(err)
 	}
 
-	for i := 0; i < n; i++ {
+	for i := range n {
 		b[i] = alphaNumeric[int(b[i])%len(alphaNumeric)]
 	}
 
 	return string(b)
 }
 
-// getTime 获取当前时间的纳秒级时间戳。
-func getTime() int64 {
+// getTimeNano 获取当前时间的纳秒级时间戳。
+func getTimeNano() int64 {
 	return time.Now().UnixNano()
 }
 
-var scheme = env.Scheme + "://"
-
-func pathToSchemeURL(path string) string {
-	if strings.HasPrefix(path, scheme) {
-		return path
-	}
-	normalized := strings.TrimSpace(path)
-	if normalized == "" {
-		return ""
-	}
-
-	normalized = strings.ReplaceAll(normalized, "\\", "/")
-	encoded := url.PathEscape(normalized)
-
-	return env.Scheme + "://local/" + encoded
-
+// getTimeMilli 获取当前时间的毫秒级时间戳。
+func getTimeMilli() int64 {
+	return time.Now().UnixMilli()
 }
 
-type nopCloseWriter struct{}
+// pathToSchemeURL 将给定的文件路径转换为带有自定义方案的 URL。
+func pathToSchemeURL(path, scheme, schemeHostname string) string {
+	if strings.HasPrefix(path, scheme+"://") {
+		return path
+	}
 
-func (*nopCloseWriter) Write(p []byte) (int, error) { return len(p), nil }
-func (*nopCloseWriter) Close() error                { return nil }
+	var normalized = strings.ReplaceAll(strings.TrimSpace(path), "\\", "/")
+	var encoded = url.PathEscape(normalized)
+
+	if encoded != "" {
+		return fmt.Sprintf("%s://%s/%s", scheme, schemeHostname, encoded)
+	}
+	return encoded
+}
+
+// BlankWriter 是一个实现了 io.WriteCloser 接口但不执行任何写入操作的空写入器实例。
+var BlankWriter = &blankWriter{}
+
+// blankWriter 是一个实现了 io.WriteCloser 接口但不执行任何写入操作的空写入器。
+type blankWriter struct{}
+
+func (*blankWriter) Write(p []byte) (int, error) { return len(p), nil }
+func (*blankWriter) Close() error                { return nil }

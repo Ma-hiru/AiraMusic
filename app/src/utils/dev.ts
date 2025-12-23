@@ -1,6 +1,9 @@
 import { Log } from "./log";
 import { getScreenInfo } from "./screen";
 import { app, Display, screen } from "electron";
+import { randomUUID } from "node:crypto";
+
+export const storeKeyAccessToken = `mahiru-access-token-${randomUUID()}`;
 
 export function isDev() {
   return process.env.APP_MODE!.toLowerCase().includes("dev");

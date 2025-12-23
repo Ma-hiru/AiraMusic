@@ -53,34 +53,40 @@ const TopControl: FC<TopControlProps> = ({ maximizable = true, mini = true }) =>
     };
   }, []);
   return (
-    <NoDrag className="flex flex-row gap-4 select-none relative z-10 ease-in-out transition-all">
+    <NoDrag className="flex flex-row gap-4 select-none relative z-10">
       {isDev && (
         <Chromium
-          className="size-5 cursor-pointer hover:opacity-50"
+          className="size-5 cursor-pointer hover:opacity-50 ease-in-out transition-all duration-300"
           onClick={Renderer.event.openDevTools}
         />
       )}
-      <Minus className="size-5 cursor-pointer hover:opacity-50" onClick={minimize} />
+      <Minus
+        className="size-5 cursor-pointer hover:opacity-50 ease-in-out transition-all duration-300"
+        onClick={minimize}
+      />
       {mini && (
         <PictureInPicture
-          className="size-5 cursor-pointer scale-95 hover:opacity-50"
+          className="size-5 cursor-pointer scale-95 hover:opacity-50 ease-in-out transition-all duration-300"
           onClick={toggleTargetWindow}
         />
       )}
       {isMax
         ? maximizable && (
             <SquareMinus
-              className="size-5 cursor-pointer scale-80 hover:opacity-50"
+              className="size-5 cursor-pointer scale-80 hover:opacity-50 ease-in-out transition-all duration-300"
               onClick={maximize}
             />
           )
         : maximizable && (
             <Square
-              className="size-5 cursor-pointer scale-80 hover:opacity-50"
+              className="size-5 cursor-pointer scale-80 hover:opacity-50 ease-in-out transition-all duration-300"
               onClick={maximize}
             />
           )}
-      <X className="size-5 hover:opacity-50" onClick={close} />
+      <X
+        className="size-5 hover:opacity-50 ease-in-out transition-all duration-300"
+        onClick={close}
+      />
     </NoDrag>
   );
 };

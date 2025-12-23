@@ -1,4 +1,4 @@
-import { cacheRequest } from "@mahiru/ui/utils/cacheRequest";
+import { accessToken, cacheRequest } from "@mahiru/ui/utils/cacheRequest";
 
 /** CacheStore api  */
 export const CacheStore = new (class CacheStore {
@@ -68,11 +68,16 @@ export const CacheStore = new (class CacheStore {
     id: string | number = url,
     method: string = "GET",
     update?: boolean,
-    timeLimit?: number
+    timeLimit?: number,
+    signal?: AbortSignal
   ): Promise<CheckResult> {
     url = this.encode(url);
     id = this.encode(id);
-    return cacheRequest("/api/check-store", { method, params: { id, url, update, timeLimit } });
+    return cacheRequest("/api/check-store", {
+      method,
+      params: { id, url, update, timeLimit },
+      signal
+    });
   }
 
   checkOrStoreAsyncMutil(
@@ -93,6 +98,28 @@ export const CacheStore = new (class CacheStore {
   remove(id: number | string): Promise<CheckResult> {
     id = this.encode(id);
     return cacheRequest("/api/remove", { method: "GET", params: { id } });
+  }
+
+  move(
+    path: string,
+    onMessage: Nullable<
+      NormalFunc<[data: { total: number; current: number; percent: number; failed: number }]>
+    >,
+    onDone: Nullable<NormalFunc<[data: string]>>
+  ) {
+    const es = new EventSource(`/api/move?path=${this.encode(path)}&key=${accessToken}`);
+    es.addEventListener("done", (e) => {
+      es.close();
+      onDone?.(e.data);
+    });
+    es.addEventListener("message", (e) => {
+      onMessage?.(JSON.parse(e.data));
+    });
+    es.addEventListener("error", () => {
+      es.close();
+      onDone?.("error");
+    });
+    return es;
   }
 })();
 
