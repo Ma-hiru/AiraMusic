@@ -148,7 +148,7 @@ const MenuProvider: FC<object> = () => {
                   px-2 py-1 rounded-md
                   hover:bg-(--theme-color-main)/60
                   hover:text-(--text-color-on-main)
-                  cursor-default
+                  cursor-pointer
               `}
               onMouseDown={(e) => {
                 e.stopPropagation();

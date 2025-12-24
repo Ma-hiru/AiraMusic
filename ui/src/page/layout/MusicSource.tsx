@@ -35,7 +35,7 @@ const MusicSource: FC<object> = () => {
   ]);
   // 初始化播放器
   useEffect(() => {
-    Player.init();
+    void Player.init();
   }, []);
   // 注册 Audio 元素引用
   const audioRealRef = useRef<HTMLAudioElement>(null);
@@ -142,7 +142,7 @@ const MusicSource: FC<object> = () => {
             Track.removeCache(id);
           }
         } else {
-          Log.error("ctx/PlayerProvider.tsx", "audio playback error", err);
+          Log.error("ctx/PlayerProvider.tsx", "audio playback error");
           if (!Auth.isAccountLoggedIn()) {
             audioControl.current()?.play();
             login();

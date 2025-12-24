@@ -24,3 +24,11 @@ type IndexRange = [start: number, end: number];
 interface HasID {
   id: string | number;
 }
+
+type NetworkStatus =
+  | "offline" // 系统无网络
+  | "dns_error" // DNS 无法解析
+  | "tcp_error" // 无法建立连接
+  | "tls_error" // TLS / 证书异常（常见于劫持）
+  | "http_blocked" // HTTP 被阻断 / 重定向
+  | "ok"; // 网络正常

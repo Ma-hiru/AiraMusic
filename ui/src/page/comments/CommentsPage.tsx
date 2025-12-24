@@ -6,7 +6,6 @@ import { useWindowTitle } from "@mahiru/ui/hook/useWindowTitle";
 
 import Meta from "@mahiru/ui/page/comments/meta";
 import Content from "@mahiru/ui/page/comments/content";
-import AcrylicBackground from "@mahiru/ui/componets/public/AcrylicBackground";
 import { Stage, useStage } from "@mahiru/ui/hook/useStage";
 
 const CommentsPage: FC<object> = () => {
@@ -36,15 +35,6 @@ const CommentsPage: FC<object> = () => {
 
   return (
     <div className="w-full h-full overflow-hidden">
-      <div
-        className="
-          w-screen h-screen z-0 bg-[#f7f9fc]
-          fixed left-0 top-0 inset-0
-      ">
-        {stage >= Stage.Finally && (
-          <AcrylicBackground src={themeSync.value.backgroundImage} brightness={0.5} blur={20} />
-        )}
-      </div>
       <div
         className="
           w-full h-full relative overflow-hidden

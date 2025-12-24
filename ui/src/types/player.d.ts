@@ -15,7 +15,6 @@ type PlayerTrackStatus = PlayerTrackInfo & PlayerTrackSource;
 type PlayerStatus = {
   playing: boolean;
   volume: number;
-  volumeBeforeMute: number;
   repeat: "off" | "one" | "all";
   shuffle: boolean;
   position: number;

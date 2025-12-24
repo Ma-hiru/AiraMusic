@@ -6,6 +6,7 @@ import { useThemeColor } from "@mahiru/ui/hook/useThemeColor";
 import { Time } from "@mahiru/ui/utils/time";
 import ListItemQuality from "@mahiru/ui/componets/track_list/ListItemQuality";
 import { Track, TrackBitmark } from "@mahiru/ui/utils/track";
+import Tag from "@mahiru/ui/componets/public/Tag";
 
 interface ListItemAlbumProps {
   track: NeteaseTrack;
@@ -19,11 +20,7 @@ const ListItemInfo: FC<ListItemAlbumProps> = ({ track, active }) => {
   return (
     <div className="flex gap-4 justify-end items-center">
       {hasExplicit && (
-        <ListItemQuality
-          bgColor={textColorOnMain.string()}
-          themeColor={mainColor.string()}
-          customText="E"
-        />
+        <Tag backgroundColor={textColorOnMain.string()} textColor={mainColor.string()} text="E" />
       )}
       <ListItemQuality
         bgColor={textColorOnMain.string()}

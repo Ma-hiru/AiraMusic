@@ -2,9 +2,10 @@ import { typedIpcRenderInvoke } from "./typed";
 
 export const rendererInvokeAPI = {
   readFile: (path) => typedIpcRenderInvoke("readFile", path),
-  GPUInfo: () => typedIpcRenderInvoke("GPUInfo", undefined),
-  isMaximized: () => typedIpcRenderInvoke("isMaximized", undefined),
-  platform: () => typedIpcRenderInvoke("platform", undefined),
+  GPUInfo: () => typedIpcRenderInvoke("GPUInfo"),
+  isMaximized: () => typedIpcRenderInvoke("isMaximized"),
+  platform: () => typedIpcRenderInvoke("platform"),
   hasOpenInternalWindow: (win) => typedIpcRenderInvoke("hasOpenInternalWindow", win),
-  storeKey: () => typedIpcRenderInvoke("storeKey", undefined)
+  storeKey: () => typedIpcRenderInvoke("storeKey"),
+  checkOnlineStatus: () => typedIpcRenderInvoke("checkOnlineStatus")
 } satisfies RendererInvokeAPI;

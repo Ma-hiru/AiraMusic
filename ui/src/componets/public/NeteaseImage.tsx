@@ -12,6 +12,7 @@ import {
 import { Filter, ImageSize } from "@mahiru/ui/utils/filter";
 import { useFileCache } from "@mahiru/ui/hook/useFileCache";
 import { cx } from "@emotion/css";
+import { AppScheme } from "@mahiru/ui/constants/scheme";
 
 type ShadowLevel = "none" | "base" | "float";
 
@@ -28,6 +29,7 @@ type ImageProps = ImgHTMLAttributes<HTMLImageElement> & {
   retryOnError?: boolean;
   retryDelay?: number;
   retryCount?: number;
+  retryURL?: string;
   onCacheError?: NormalFunc;
   shadow?: ShadowLevel;
   shadowColor?: ShadowColor;
@@ -52,6 +54,7 @@ const NeteaseImage: FC<ImageProps> = ({
   retryCount = 2,
   retryDelay = 500,
   retryOnError = true,
+  retryURL,
   shadow = "base",
   shadowColor = "light",
   onClick,
@@ -78,46 +81,59 @@ const NeteaseImage: FC<ImageProps> = ({
   retryStatus.current.retryCount = retryCount;
   retryStatus.current.retryDelay = retryDelay;
 
-  const retry = useCallback((image: HTMLImageElement) => {
-    if (!image.isConnected) return;
-    if (image.complete && image.naturalWidth > 0) return;
-    const { retryCount, retryDelay, count } = retryStatus.current;
-    if (count >= retryCount) {
-      setError(true);
-      return;
-    }
-    const token = Date.now();
-    retryStatus.current.token = token;
-    setTimeout(
-      () => {
-        if (!image.isConnected) return;
-        if (token !== retryStatus.current.token) return;
-        if (image.complete && image.naturalWidth > 0) return;
-        requestIdleCallback(() => {
-          if (!image.isConnected) return;
-          if (token !== retryStatus.current.token) return;
-          if (image.complete && image.naturalWidth > 0) return;
-          retryStatus.current.count += 1;
-          const newURL = new URL(image.src);
-          newURL.searchParams.set("timestamp", Date.now().toString());
-          image.src = newURL.toString();
-        });
-      },
-      retryDelay * (count + 1)
-    );
-  }, []);
+  const retry = useCallback(
+    (image: HTMLImageElement) => {
+      if (!image.isConnected) return;
+      if (image.complete && image.naturalWidth > 0) return;
+
+      const { retryCount, retryDelay, count } = retryStatus.current;
+      if (count >= retryCount) return;
+
+      const token = Date.now();
+      retryStatus.current.token = token;
+      const check = () => {
+        let ok = true;
+        if (!image.isConnected) ok = false;
+        else if (token !== retryStatus.current.token) ok = false;
+        else if (image.complete && image.naturalWidth > 0) ok = false;
+        return ok;
+      };
+
+      setTimeout(
+        () => {
+          if (!check()) return;
+          requestIdleCallback(() => {
+            if (!check()) return;
+            retryStatus.current.count += 1;
+            const newURL = new URL(retryURL ? retryURL : image.src);
+            newURL.searchParams.set("timestamp", Date.now().toString());
+            image.src = newURL.toString();
+            setError(false);
+          });
+        },
+        retryDelay * (count + 1)
+      );
+    },
+    [retryURL]
+  );
   const handleLoadError = useCallback(
     (e: SyntheticEvent<HTMLImageElement>) => {
       const canFallback = e.currentTarget.src !== sizedURL && !!sizedURL;
       if (canFallback) {
         e.currentTarget.src = sizedURL;
         requestIdleCallback(() => onCacheError?.(), { timeout: 500 });
-      } else if (retryOnError && retryCount > 0) {
-        retry(e.currentTarget);
-      } else {
-        setError(true);
+        return;
       }
-      onError?.(e);
+
+      setError(true);
+      if (!canFallback && e.currentTarget.src.startsWith(AppScheme)) {
+        requestIdleCallback(() => onCacheError?.(), { timeout: 500 });
+      }
+      if (retryOnError && retryCount > 0) {
+        retry(e.currentTarget);
+      }
+
+      return onError?.(e);
     },
     [onCacheError, onError, retry, retryCount, retryOnError, sizedURL]
   );

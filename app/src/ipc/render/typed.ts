@@ -16,7 +16,7 @@ export const typedIpcRenderSend = <T extends NormalEvent>(
 
 export const typedIpcRenderInvoke = async <T extends InvokeEvent>(
   event: T,
-  value: InvokeEventArgs<T> extends never ? undefined : InvokeEventArgs<T>
+  value?: InvokeEventArgs<T>
 ): Promise<InvokeEventPayload<T>> => {
   return await ipcRenderer.invoke(event, value);
 };

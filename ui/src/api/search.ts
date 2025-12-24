@@ -33,7 +33,7 @@ export const enum SearchType {
  * @desc 调用此接口 , 传入搜索关键词可以搜索该音乐 / 专辑 / 歌手 / 歌单 / 用户
  * @note 关键词可以多个 , 以空格隔开 , 如 " 周杰伦 搁浅 "( 不需要登录 ), 可通过 /song/url 接口传入歌曲 id 获取具体的播放链接
  * */
-export function search(props: {
+export function search<T extends keyof NeteaseSearchResultMap = any>(props: {
   /** 关键词,关键词可以多个,以空格隔开,如 " 周杰伦 搁浅 "*/
   keywords: string;
   /** 搜索类型 */
@@ -46,7 +46,17 @@ export function search(props: {
 }) {
   const { keywords, type = SearchType.SOUND, searchType = "MORE", limit, offset } = props;
   const searchURL = searchType === "NORMAL" ? "/search" : "/cloudsearch";
-  return apiRequest(searchURL, { params: { keywords, type, limit, offset } });
+  return apiRequest<any, NeteaseSearchResultResponse<T>>(searchURL, {
+    params: { keywords, type, limit, offset }
+  });
+}
+
+/**
+ * 默认搜索关键词
+ * @desc 默认搜索关键词
+ * */
+export function searchDefaultKeywords() {
+  return apiRequest<any, NeteaseSearchDefaultKeywordsResponse>("/search/default");
 }
 
 /** 热搜列表(简略) */
@@ -56,14 +66,16 @@ export function searchHotListSummary() {
 
 /** 热搜列表(详细) */
 export function searchHotListDetail() {
-  return apiRequest("/search/hot/detail");
+  return apiRequest<any, NeteaseSearchHotListDetailResponse>("/search/hot/detail");
 }
 
 /** 搜索建议
  * @desc 调用此接口 , 传入搜索关键词可获得搜索建议 , 搜索结果同时包含单曲 , 歌手 , 歌单信息
  * */
 export function searchSuggest(keywords: string) {
-  return apiRequest("/search/suggest", { params: { keywords } });
+  return apiRequest<any, NeteaseSearchSuggestionResponse>("/search/suggest", {
+    params: { keywords }
+  });
 }
 
 /** 搜索多重匹配

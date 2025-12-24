@@ -13,7 +13,7 @@ interface TopControlPurProps {
 const TopControlPure: FC<TopControlPurProps> = ({ maximizable, mini, color }) => {
   const [isMax, setIsMax] = useState(false);
   useEffect(() => {
-    Renderer.invoke.isMaximized(undefined).then(setIsMax);
+    Renderer.invoke.isMaximized().then(setIsMax);
   }, []);
   const maximize = useCallback(() => {
     if (isMax) {

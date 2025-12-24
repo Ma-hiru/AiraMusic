@@ -158,7 +158,6 @@ const InitialState: DynamicStoreInitialState = {
     repeat: "off",
     shuffle: false,
     volume: 0.5,
-    volumeBeforeMute: 0.5,
     lyricPreference: null,
     lyricVersion: "raw"
   },

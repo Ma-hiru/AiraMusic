@@ -4,7 +4,7 @@ import { NoDrag } from "@mahiru/ui/componets/public/Drag";
 import { motion, Variants } from "motion/react";
 import { useLayoutStatus } from "@mahiru/ui/store";
 
-const Back: FC<object> = () => {
+const TopBack: FC<object> = () => {
   const { togglePlayerModalVisible, playerModalVisible } = useLayoutStatus([
     "togglePlayerModalVisible",
     "playerModalVisible"
@@ -38,4 +38,4 @@ const Back: FC<object> = () => {
     </NoDrag>
   );
 };
-export default memo(Back);
+export default memo(TopBack);

@@ -70,7 +70,7 @@ const TrackList: ForwardRefRenderFunction<TrackListRef, TrackListProps> = (
   play.current = audioControl.current()?.play;
 
   const { setContextMenuRenderer, setContextMenuVisible, contextMenuVisible } = useContextMenu();
-  const { openInfoWindow } = useInfoWindow();
+  const { openInfoWindow } = useInfoWindow(true);
   const onContextMenu = useCallback<OnContextMenuFunc>(
     (e, { track, index, absoluteIndex }) => {
       setContextMenuRenderer?.(

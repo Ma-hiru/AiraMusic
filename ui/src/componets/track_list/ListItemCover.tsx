@@ -59,6 +59,7 @@ const ListItemCover: FC<ListItemCoverProps> = ({
         ease-in-out duration-300 transition-all
       `}
       src={track.al.cachedPicUrl || track.al.picUrl}
+      retryURL={track.al.picUrl}
       alt={track.al.name}
       size={ImageSize.xs}
       onCacheError={onCacheError}

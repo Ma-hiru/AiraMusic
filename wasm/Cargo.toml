@@ -31,7 +31,6 @@ web-sys = { version = "0.3", features = [
     "WebGlUniformLocation"
 ] }
 
-
 [profile.dev]
 lto = true
 opt-level = "z"

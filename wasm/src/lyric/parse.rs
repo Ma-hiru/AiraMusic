@@ -1,11 +1,11 @@
 #![allow(non_snake_case)]
-use crate::lyric::model::{FullVersionLyricLine, LyricLine, LyricTranslatedMeta, RawLyricLine};
+use super::model::{FullVersionLyricLine, LyricLine, LyricTranslatedMeta, RawLyricLine};
 use regex::Regex;
 use serde_wasm_bindgen::{from_value, to_value};
 use std::collections::HashMap;
-use wasm_bindgen::JsValue;
-use wasm_bindgen::prelude::wasm_bindgen;
+use wasm_bindgen::{JsValue, prelude::wasm_bindgen};
 
+#[wasm_bindgen]
 pub fn parseNeteaseLyric(raw: JsValue, ts: JsValue, rm: JsValue, meta: JsValue) -> JsValue {
     let raw = from_value::<Vec<RawLyricLine>>(raw).unwrap_or_default();
     let ts = from_value::<Vec<RawLyricLine>>(ts).unwrap_or_default();
@@ -16,24 +16,28 @@ pub fn parseNeteaseLyric(raw: JsValue, ts: JsValue, rm: JsValue, meta: JsValue) 
     let mut tl_version: Vec<LyricLine> = vec![];
     let mut rm_version: Vec<LyricLine> = vec![];
 
-    let shouldIgnoreInlineTranslated = raw
-        .iter()
-        .map(|line| {
-            let raw_word = line
-                .words
-                .iter()
-                .map(|l| l.word.clone())
-                .collect::<String>();
-            let (_, inline_tl) = parse_tl_lyric_inline(&raw_word);
-            inline_tl
-        })
-        .filter(|tl| tl.is_some())
-        .count()
-        < raw.len() / 2;
-
     if !raw.is_empty() {
         let mut timedTranslatedLyricMap = get_rawLyricLine_map(ts);
         let mut timedRomanLyricMap = get_rawLyricLine_map(rm);
+        let shouldIgnoreInlineTranslated = raw
+            .iter()
+            .filter(|line| {
+                parse_tl_lyric_inline(
+                    line.words
+                        .iter()
+                        .map(|l| l.word.clone())
+                        .collect::<String>()
+                        .as_str(),
+                )
+                .1
+                .is_some()
+            })
+            .count()
+            < raw.len() / 2;
+        let hasTranslatedLyric =
+            !timedTranslatedLyricMap.is_empty() && timedTranslatedLyricMap.len() >= raw.len() / 2;
+        let hasRomanLyric =
+            !timedRomanLyricMap.is_empty() && timedRomanLyricMap.len() >= raw.len() / 2;
 
         full_version = raw
             .into_iter()
@@ -49,22 +53,19 @@ pub fn parseNeteaseLyric(raw: JsValue, ts: JsValue, rm: JsValue, meta: JsValue) 
                         .collect::<String>();
                     let (raw_without_inline_tl, _inline_tl) = parse_tl_lyric_inline(&raw_word);
                     // 移除行内翻译
-                    if line.words.len() == 1 {
-                        // 非逐字歌词
-                        line.words[0].word = raw_without_inline_tl;
-                    } else if raw_without_inline_tl.len() < line.words.len() {
-                        // 逐字歌词，截断
-                        line.words = line.words[0..raw_without_inline_tl.len()].to_owned();
-                    }
+                    split_tl_lyric(&mut line, &raw_without_inline_tl);
                     _inline_tl
                 };
+
                 // 复制当前行用于不同版本
                 let mut tl_line = line.clone();
                 let mut rm_line = line.clone();
                 raw_version.push(LyricLine::from(line.clone()));
+
                 // 查找对应的翻译和罗马音
                 let translatedLine = timedTranslatedLyricMap.remove(&line.startTime);
                 let romanLine = timedRomanLyricMap.remove(&line.startTime);
+
                 // 如果有翻译或罗马音，则分别添加到对应的版本中
                 if let Some(tl) = translatedLine {
                     line.translatedLyric = tl.clone();
@@ -74,16 +75,26 @@ pub fn parseNeteaseLyric(raw: JsValue, ts: JsValue, rm: JsValue, meta: JsValue) 
                     line.translatedLyric = inline_tl.clone();
                     tl_line.translatedLyric = inline_tl;
                     tl_version.push(LyricLine::from(tl_line));
+                } else if hasTranslatedLyric {
+                    // 有翻译，但是没有找到这行的翻译，则添加空行
+                    tl_line.translatedLyric = String::new();
+                    tl_version.push(LyricLine::from(tl_line));
                 }
+
                 if let Some(rl) = romanLine {
                     line.romanLyric = rl.clone();
                     rm_line.romanLyric = rl;
+                    rm_version.push(LyricLine::from(rm_line));
+                } else if hasRomanLyric {
+                    // 有罗马音，但是没有找到这行的罗马音，则添加空行
+                    rm_line.romanLyric = String::new();
                     rm_version.push(LyricLine::from(rm_line));
                 }
 
                 LyricLine::from(line)
             })
             .collect();
+
         if !meta.nickname.is_empty()
             && let Some(&LyricLine { endTime, .. }) = full_version.last()
         {
@@ -111,13 +122,13 @@ pub fn parseNeteaseLyric(raw: JsValue, ts: JsValue, rm: JsValue, meta: JsValue) 
         }
     }
 
-    let result = FullVersionLyricLine {
+    to_value::<FullVersionLyricLine>(&FullVersionLyricLine {
         full: full_version,
         raw: raw_version,
         tl: tl_version,
         rm: rm_version,
-    };
-    to_value::<FullVersionLyricLine>(&result).unwrap()
+    })
+    .unwrap()
 }
 
 #[wasm_bindgen]
@@ -177,7 +188,6 @@ pub fn parseExternalLrc(lyric: String) -> String {
     re.replace_all(&lyric, "[$1:$2]").to_string()
 }
 
-#[inline]
 fn get_rawLyricLine_map(lines: Vec<RawLyricLine>) -> HashMap<i32, String> {
     if !lines.is_empty() {
         lines
@@ -198,9 +208,10 @@ fn get_rawLyricLine_map(lines: Vec<RawLyricLine>) -> HashMap<i32, String> {
     }
 }
 
-const LYRIC_INLINE_SPLIT: [(&str, &str); 4] = [("〖", "〗"), ("【", "】"), ("[", "]"), ("(", ")")];
-
 fn parse_tl_lyric_inline(line: &str) -> (String, Option<String>) {
+    const LYRIC_INLINE_SPLIT: [(&str, &str); 4] =
+        [("〖", "〗"), ("【", "】"), ("[", "]"), ("(", ")")];
+
     let mut pattern = String::from(r"^(.*?)\s*(?:");
     for (i, (l, r)) in LYRIC_INLINE_SPLIT.iter().enumerate() {
         if i > 0 {
@@ -225,6 +236,42 @@ fn parse_tl_lyric_inline(line: &str) -> (String, Option<String>) {
         (before.to_string(), None)
     } else {
         (line.to_string(), None)
+    }
+}
+
+fn split_tl_lyric(raw: &mut RawLyricLine, line: &str) {
+    if raw.words.len() == 1 {
+        // 非逐字歌词
+        raw.words[0].word = line.to_string();
+    } else {
+        // 逐字歌词，截断
+        let mut count = line.chars().count() as i32;
+        let mut words = vec![];
+        for l in raw.words.iter() {
+            count -= l.word.chars().count() as i32;
+            if count >= 0 {
+                words.push(l.clone());
+            }
+            // 截断最后一个词
+            if count == 0 {
+                // 刚好截断
+                break;
+            } else if count < 0 {
+                // 需要截断
+                let mut last_word = l.clone();
+                let new_word_len = l.word.chars().count() as i32 + count;
+                if new_word_len > 0 {
+                    last_word.word = l
+                        .word
+                        .chars()
+                        .take(new_word_len as usize)
+                        .collect::<String>();
+                    words.push(last_word);
+                }
+                break;
+            }
+        }
+        raw.words = words;
     }
 }
 

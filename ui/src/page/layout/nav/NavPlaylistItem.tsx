@@ -42,6 +42,7 @@ const NavPlaylistItem: FC<Props> = ({
             }}
             className="w-full"
             src={cover.cached || cover.raw}
+            retryURL={cover.raw}
             alt={label}
             onCacheError={() => {
               if (rawList[index]) {

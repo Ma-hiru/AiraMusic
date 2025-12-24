@@ -26,17 +26,37 @@ export const Player = new (class {
   > | null = null;
   private _beforeTrackUpdate: NormalFunc<[next: Nullable<PlayerTrackStatus>]> | null = null;
 
-  constructor() {}
-
-  init() {
-    const { setTrackStatus, setPlayerStatus, beforeTrackUpdate } = getPlayerStatusSnapshot();
-    this._outerTrackUpdater = setTrackStatus;
-    this._outerStatusUpdater = setPlayerStatus;
-    this._beforeTrackUpdate = beforeTrackUpdate;
-    void this.loadFromCache();
+  private updateOuter() {
+    startTransition(() => {
+      const current = this.current();
+      this._outerTrackUpdater?.((draft) => {
+        if (draft && draft.track.id === current?.track.id) return;
+        this._beforeTrackUpdate?.(current);
+        return current;
+      });
+      this._outerStatusUpdater?.((draft) => {
+        if (draft.repeat !== this._repeat) {
+          draft.repeat = this._repeat;
+        }
+        if (draft.shuffle !== this._shuffle) {
+          draft.shuffle = this._shuffle;
+        }
+        if (draft.position !== this._position) {
+          draft.position = this._position;
+        }
+      });
+    });
   }
 
-  async loadFromCache() {
+  private setPlayingStatus(playing: boolean) {
+    startTransition(() => {
+      this._outerStatusUpdater?.((draft) => {
+        draft.playing = playing;
+      });
+    });
+  }
+
+  private async loadFromCache() {
     const { playerProgress, setPlayerStatus, setTrackStatus, setPlayerInitialized } =
       getPlayerStatusSnapshot();
     const cache = await CacheStore.fetchObject<CacheType>(this._cacheKey);
@@ -58,6 +78,14 @@ export const Player = new (class {
     }
     setPlayerInitialized(true);
     this.updateOuter();
+  }
+
+  async init() {
+    const { setTrackStatus, setPlayerStatus, beforeTrackUpdate } = getPlayerStatusSnapshot();
+    this._outerTrackUpdater = setTrackStatus;
+    this._outerStatusUpdater = setPlayerStatus;
+    this._beforeTrackUpdate = beforeTrackUpdate;
+    await this.loadFromCache();
   }
 
   async saveToCache() {
@@ -257,28 +285,6 @@ export const Player = new (class {
     return true;
   }
 
-  updateOuter() {
-    startTransition(() => {
-      const current = this.current();
-      this._outerTrackUpdater?.((draft) => {
-        if (draft && draft.track.id === current?.track.id) return;
-        this._beforeTrackUpdate?.(current);
-        return current;
-      });
-      this._outerStatusUpdater?.((draft) => {
-        if (draft.repeat !== this._repeat) {
-          draft.repeat = this._repeat;
-        }
-        if (draft.shuffle !== this._shuffle) {
-          draft.shuffle = this._shuffle;
-        }
-        if (draft.position !== this._position) {
-          draft.position = this._position;
-        }
-      });
-    });
-  }
-
   current(autoplay: boolean = false) {
     if (!this.canPlay()) return null;
     if (this._position === -1) {
@@ -355,23 +361,11 @@ export const Player = new (class {
     return this.current(false);
   }
 
-  count() {
-    return this._playlist.length;
-  }
-
   canPlay() {
     return (
       (this._position === -1 && this._playlist.length > 0) ||
       (this._position >= 0 && this._position < this._playlist.length)
     );
-  }
-
-  setPlayingStatus(playing: boolean) {
-    startTransition(() => {
-      this._outerStatusUpdater?.((draft) => {
-        draft.playing = playing;
-      });
-    });
   }
 
   get repeat() {
@@ -398,6 +392,10 @@ export const Player = new (class {
         draft.shuffle = status;
       });
     });
+  }
+
+  get count() {
+    return this._playlist.length;
   }
 
   get playlist() {

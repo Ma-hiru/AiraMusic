@@ -16,7 +16,7 @@ export interface GPUDevice {
 export const Device = new (class {
   get gpu(): Promise<GPUDevice[]> {
     return Renderer.invoke
-      .GPUInfo(undefined)
+      .GPUInfo()
       .then((res) => res)
       .then((res) => {
         if (res && typeof res === "object" && "gpuDevice" in res && Array.isArray(res?.gpuDevice)) {
@@ -37,7 +37,7 @@ export const Device = new (class {
       });
   }
   get platform(): Promise<NodeJS.Platform | "unknown"> {
-    return Renderer.invoke.platform(undefined).catch((err) => {
+    return Renderer.invoke.platform().catch((err) => {
       Log.error(
         new EqError({
           raw: err,

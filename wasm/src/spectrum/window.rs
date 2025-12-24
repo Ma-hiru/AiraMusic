@@ -31,13 +31,13 @@ fn cosine(n: usize, size: usize, alpha: f32) -> f32 {
     (alpha * 2.0 * PI * n as f32 / (size - 1) as f32).cos()
 }
 
-/// `Hann:    w\[n\] = 0.5  - 0.5  * cos(θ)`
+/// `Hann:    w[n] = 0.5  - 0.5  * cos(θ)`
 #[inline]
 fn hanning_window(n: usize, size: usize) -> f32 {
     0.5 - 0.5 * cosine(n, size, 1.0)
 }
 
-/// `Hamming: w\[n\] = 0.54 - 0.46 * cos(θ)`
+/// `Hamming: w[n] = 0.54 - 0.46 * cos(θ)`
 #[inline]
 fn hamming_window(n: usize, size: usize) -> f32 {
     0.54 - 0.46 * cosine(n, size, 1.0)
@@ -46,7 +46,7 @@ fn hamming_window(n: usize, size: usize) -> f32 {
 const A0: f32 = 7938.0 / 18608.0; // 约 0.42659
 const A1: f32 = 9230.0 / 18608.0; // 约 0.49656
 const A2: f32 = 2330.0 / 18608.0; // 约 0.12505
-/// `Blackman: w\[n\] = A0 - A1 * cos(θ) + A2 * cos(2θ)`
+/// `Blackman: w[n] = A0 - A1 * cos(θ) + A2 * cos(2θ)`
 #[inline]
 fn blackman_window(n: usize, size: usize) -> f32 {
     A0 - A1 * cosine(n, size, 1.0) + A2 * cosine(n, size, 2.0)

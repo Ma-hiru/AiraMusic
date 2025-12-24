@@ -4,8 +4,8 @@ import { motion } from "motion/react";
 import { Time } from "@mahiru/ui/utils/time";
 import { usePlayerStatus } from "@mahiru/ui/store";
 import { TrackQuality } from "@mahiru/ui/utils/track";
-import ListItemQuality from "@mahiru/ui/componets/track_list/ListItemQuality";
 import { css } from "@emotion/css";
+import QualityTag from "@mahiru/ui/componets/track_list/ListItemQuality";
 
 const Progress: FC<object> = () => {
   const {
@@ -66,7 +66,7 @@ const Progress: FC<object> = () => {
         </div>
       </div>
       <div className="w-full flex justify-between items-center text-white/50 backdrop-blur-lg text-[12px] mt-1 select-none">
-        <ListItemQuality forceShow={quality()} bgColor="white" themeColor="#99a1af" />
+        <QualityTag forceShow={quality()} bgColor="white" themeColor="#99a1af" />
         {quality() ? (
           <div className="flex justify-end items-center gap-2">
             <span>{Time.formatTrackTime(progress.currentTime, "s")}</span>

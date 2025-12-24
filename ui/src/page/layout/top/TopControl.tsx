@@ -14,10 +14,7 @@ interface TopControlProps {
 
 const TopControl: FC<TopControlProps> = ({ maximizable = true, mini = true }) => {
   const [isMax, setIsMax] = useState(false);
-
-  useEffect(() => {
-    Renderer.invoke.isMaximized(undefined).then(setIsMax);
-  }, []);
+  const { toggleTargetWindow, hasOpened } = usePlayerInfoSync("miniplayer");
 
   const maximize = useCallback(() => {
     if (isMax) {
@@ -33,12 +30,14 @@ const TopControl: FC<TopControlProps> = ({ maximizable = true, mini = true }) =>
     Renderer.event.minimize();
   };
   const close = useCallback(() => {
+    Renderer.event.hidden();
     Player.saveToCache().finally(() => {
-      setTimeout(() => Renderer.event.close({ broadcast: true }), 200);
+      setTimeout(() => {
+        Renderer.event.close({ broadcast: true });
+      }, 200);
     });
   }, []);
 
-  const { toggleTargetWindow, hasOpened } = usePlayerInfoSync("miniplayer");
   useEffect(() => {
     if (hasOpened) {
       Renderer.event.hidden();
@@ -52,39 +51,42 @@ const TopControl: FC<TopControlProps> = ({ maximizable = true, mini = true }) =>
       unsubscribe();
     };
   }, []);
+  useEffect(() => {
+    Renderer.invoke.isMaximized().then(setIsMax);
+  }, []);
   return (
     <NoDrag className="flex flex-row gap-4 select-none relative z-10">
       {isDev && (
         <Chromium
-          className="size-5 cursor-pointer hover:opacity-50 ease-in-out transition-all duration-300"
+          className="size-5 cursor-pointer hover:opacity-50 ease-in-out transition-all duration-300 active:scale-90"
           onClick={Renderer.event.openDevTools}
         />
       )}
       <Minus
-        className="size-5 cursor-pointer hover:opacity-50 ease-in-out transition-all duration-300"
+        className="size-5 cursor-pointer hover:opacity-50 ease-in-out transition-all duration-300 active:scale-90"
         onClick={minimize}
       />
       {mini && (
         <PictureInPicture
-          className="size-5 cursor-pointer scale-95 hover:opacity-50 ease-in-out transition-all duration-300"
+          className="size-5 cursor-pointer scale-95 hover:opacity-50 ease-in-out transition-all duration-300 active:scale-90"
           onClick={toggleTargetWindow}
         />
       )}
       {isMax
         ? maximizable && (
             <SquareMinus
-              className="size-5 cursor-pointer scale-80 hover:opacity-50 ease-in-out transition-all duration-300"
+              className="size-5 cursor-pointer scale-80 hover:opacity-50 ease-in-out transition-all duration-300 active:scale-90"
               onClick={maximize}
             />
           )
         : maximizable && (
             <Square
-              className="size-5 cursor-pointer scale-80 hover:opacity-50 ease-in-out transition-all duration-300"
+              className="size-5 cursor-pointer scale-80 hover:opacity-50 ease-in-out transition-all duration-300 active:scale-90"
               onClick={maximize}
             />
           )}
       <X
-        className="size-5 hover:opacity-50 ease-in-out transition-all duration-300"
+        className="size-5 hover:opacity-50 ease-in-out transition-all duration-300 active:scale-90"
         onClick={close}
       />
     </NoDrag>

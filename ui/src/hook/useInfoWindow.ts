@@ -1,14 +1,35 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Renderer } from "@mahiru/ui/utils/renderer";
 import { useLayoutStatus } from "@mahiru/ui/store";
 import { useThemeColor } from "@mahiru/ui/hook/useThemeColor";
 
+const handlers = new Set<NormalFunc<[status: boolean]>>();
+setInterval(() => {
+  requestIdleCallback(() => {
+    Renderer.invoke.hasOpenInternalWindow("info").then((ok) => {
+      handlers.forEach((handler) => handler(ok));
+    });
+  });
+}, 5000);
+
+let commentsDisplay: "static" | "subscribe" = "static";
+const commentsDisplayUpdater = new Set<NormalFunc<[type: "static" | "subscribe"]>>();
+Renderer.addMessageHandler("infoSyncReverse", "info", ({ displayType }) => {
+  if (displayType && displayType !== commentsDisplay) {
+    commentsDisplay = displayType;
+    commentsDisplayUpdater.forEach((cb) => cb(displayType));
+  }
+});
+
 export function useInfoWindow(sendOnly = false) {
   const [opened, setOpened] = useState(false);
-  const [commentsDisplayType, setCommentsDisplayType] = useState<"static" | "subscribe">("static");
+  const [commentsDisplayType, setCommentsDisplayType] = useState<"static" | "subscribe">(
+    commentsDisplay
+  );
   const { mainColor, textColorOnMain, secondaryColor } = useThemeColor();
   const { background } = useLayoutStatus(["background"]);
 
+  const sendTheme = useRef<Nullable<NormalFunc>>(null);
   const sendSync = useCallback(<T extends InfoSyncType>(type: T, value: InfoSync<T>["value"]) => {
     Renderer.event.focusInternalWindow("info");
     Renderer.sendMessage("infoSync", "info", {
@@ -16,17 +37,27 @@ export function useInfoWindow(sendOnly = false) {
       value
     });
   }, []);
+  sendTheme.current = () => {
+    sendSync("theme", {
+      mainColor: mainColor.string(),
+      secondaryColor: secondaryColor.string(),
+      textColor: textColorOnMain.string(),
+      backgroundImage: background
+    });
+  };
+
   const getOpenedStatus = useCallback(
     (cb?: NormalFunc<[ok: boolean]>) => {
       Renderer.invoke.hasOpenInternalWindow("info").then((ok) => {
-        if (ok !== opened && !sendOnly) {
+        if (!sendOnly) {
           setOpened(ok);
         }
         cb?.(ok);
       });
     },
-    [opened, sendOnly]
+    [sendOnly]
   );
+
   const openInfoWindow = useCallback(
     <T extends InfoSyncType>(type: T, value: InfoSync<T>["value"]) => {
       getOpenedStatus((open) => {
@@ -38,12 +69,7 @@ export function useInfoWindow(sendOnly = false) {
             "info",
             () => {
               sendSync(type, value);
-              sendSync("theme", {
-                mainColor: mainColor.string(),
-                secondaryColor: secondaryColor.string(),
-                textColor: textColorOnMain.string(),
-                backgroundImage: background
-              });
+              sendTheme.current?.();
               getOpenedStatus();
             },
             { once: true }
@@ -51,29 +77,29 @@ export function useInfoWindow(sendOnly = false) {
         }
       });
     },
-    [background, getOpenedStatus, mainColor, secondaryColor, sendSync, textColorOnMain]
+    [getOpenedStatus, sendSync]
   );
 
   useEffect(() => {
     if (!opened || sendOnly) return;
-    const timer = setInterval(() => {
-      requestIdleCallback(() => getOpenedStatus());
-    }, 5000);
-    return () => {
-      clearInterval(timer);
+    const handler = (status: boolean) => {
+      if (status !== opened) {
+        setOpened(status);
+      }
     };
-  }, [getOpenedStatus, opened, sendOnly]);
+    handlers.add(handler);
+    return () => {
+      handlers.delete(handler);
+    };
+  }, [opened, sendOnly]);
+
   useEffect(() => {
     if (sendOnly) return;
-    const unsubscribe = Renderer.addMessageHandler("infoSyncReverse", "info", ({ displayType }) => {
-      if (displayType && displayType !== commentsDisplayType) {
-        setCommentsDisplayType(displayType);
-      }
-    });
+    commentsDisplayUpdater.add(setCommentsDisplayType);
     return () => {
-      unsubscribe();
+      commentsDisplayUpdater.delete(setCommentsDisplayType);
     };
-  });
+  }, [sendOnly]);
 
   return { openInfoWindow, opened, commentsDisplayType };
 }

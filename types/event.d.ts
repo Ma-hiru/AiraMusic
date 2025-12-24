@@ -7,11 +7,12 @@
 /** Invoke 事件类型以及参数 */
 type InvokeEventMaps = {
   readFile: [filePath: string, Promise<{ ok: boolean; data?: ArrayBuffer }>];
-  GPUInfo: [undefined, Promise<unknown>];
-  platform: [undefined, NodeJS.Platform];
-  isMaximized: [undefined, boolean];
+  GPUInfo: [never, Promise<unknown>];
+  platform: [never, NodeJS.Platform];
+  isMaximized: [never, boolean];
   hasOpenInternalWindow: [WindowType, boolean];
-  storeKey: [undefined, string];
+  storeKey: [never, string];
+  checkOnlineStatus: [never, Promise<NetworkStatus>];
 };
 
 /** Normal 事件类型以及参数 */

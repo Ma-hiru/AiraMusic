@@ -28,10 +28,16 @@ export function usePlayerAudio() {
   ]);
   const lastTrackIdRef = useRef<Nullable<number>>(null);
   const lastAudioSrcRef = useRef<Nullable<string>>(null);
+  const volumeBeforeMute = useRef(playerStatus.volume);
 
   const play = useCallback(() => {
     const audio = audioRef.current();
     audio && (audio.paused ? audio.play() : audio.pause());
+  }, [audioRef]);
+
+  const pause = useCallback(() => {
+    const audio = audioRef.current();
+    audio && !audio.paused && audio.pause();
   }, [audioRef]);
 
   const mute = useCallback(() => {
@@ -39,14 +45,12 @@ export function usePlayerAudio() {
     if (!audio) return;
     audio.muted = !audio.muted;
     if (audio.muted) {
-      setPlayerStatus((draft) => {
-        draft.volumeBeforeMute = audio.volume;
-      });
+      volumeBeforeMute.current = audio.volume;
       audio.volume = 0;
     } else {
-      audio.volume = playerStatus.volumeBeforeMute;
+      audio.volume = volumeBeforeMute.current;
     }
-  }, [audioRef, playerStatus.volumeBeforeMute, setPlayerStatus]);
+  }, [audioRef]);
 
   const upVolume = useCallback(
     (gap?: number) => {
@@ -189,13 +193,14 @@ export function usePlayerAudio() {
   const Audio = useMemo(
     () => ({
       play,
+      pause,
       mute,
       upVolume,
       downVolume,
       changeCurrentTime,
       ref: audioRef
     }),
-    [audioRef, changeCurrentTime, downVolume, mute, play, upVolume]
+    [audioRef, changeCurrentTime, downVolume, mute, pause, play, upVolume]
   );
 
   // 注册 Audio 控制器到全局状态
