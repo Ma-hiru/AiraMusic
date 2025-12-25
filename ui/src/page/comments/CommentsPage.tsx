@@ -34,7 +34,7 @@ const CommentsPage: FC<object> = () => {
   }, [infoSync.value, updateWindowTitle]);
 
   return (
-    <div className="w-full h-full overflow-hidden">
+    <div className="w-screen h-screen pt-10 overflow-hidden">
       <div
         className="
           w-full h-full relative overflow-hidden

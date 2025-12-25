@@ -44,7 +44,7 @@ export function search<T extends keyof NeteaseSearchResultMap = any>(props: {
   /** 偏移数量，用于分页 , 如 : 如 :( 页数 -1)*30, 其中 30 为 limit 的值 , 默认为 0 */
   offset?: number;
 }) {
-  const { keywords, type = SearchType.SOUND, searchType = "MORE", limit, offset } = props;
+  const { keywords, type = SearchType.SOUND, searchType = "NORMAL", limit, offset } = props;
   const searchURL = searchType === "NORMAL" ? "/search" : "/cloudsearch";
   return apiRequest<any, NeteaseSearchResultResponse<T>>(searchURL, {
     params: { keywords, type, limit, offset }
@@ -56,7 +56,9 @@ export function search<T extends keyof NeteaseSearchResultMap = any>(props: {
  * @desc 默认搜索关键词
  * */
 export function searchDefaultKeywords() {
-  return apiRequest<any, NeteaseSearchDefaultKeywordsResponse>("/search/default");
+  return apiRequest<any, NeteaseSearchDefaultKeywordsResponse>("/search/default", {
+    params: { timestamp: Date.now() }
+  });
 }
 
 /** 热搜列表(简略) */

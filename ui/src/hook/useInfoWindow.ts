@@ -81,7 +81,7 @@ export function useInfoWindow(sendOnly = false) {
   );
 
   useEffect(() => {
-    if (!opened || sendOnly) return;
+    if (sendOnly) return;
     const handler = (status: boolean) => {
       if (status !== opened) {
         setOpened(status);

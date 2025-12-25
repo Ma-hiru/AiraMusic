@@ -17,7 +17,7 @@ const Comments: FC<CommentsProps> = ({ comments, infoSync, themeSync }) => {
     <div
       ref={containerRef}
       onScroll={onScroll}
-      className="overflow-y-scroll scrollbar w-[90%] mx-auto pb-10 px-1.5">
+      className="overflow-y-scroll scrollbar w-[90%] mx-auto pb-5 px-1.5">
       {comments.map((comment) => (
         <CommentItem
           key={comment.commentId}

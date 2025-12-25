@@ -1,15 +1,17 @@
 export function splitTrackTitle(title?: string) {
-  if (!title) return { main: "", sub: "" };
+  const result = { main: title?.trim() || "", sub: "" };
+  if (!title) return result;
+
   const regex = /^(.*?)\s*(\([^()]*\)|（[^（）]*）|\[[^[\]]*]|【[^【】]*】|-[^-\s][^-]*-)\s*$/;
   const match = title.match(regex);
-  if (!match) {
-    return {
-      main: title.trim(),
-      sub: ""
-    };
+  if (!match) return result;
+
+  result.main = match[1]?.trim() || "";
+  result.sub = match[2]?.trim() || "";
+  if (result.sub === title.trim()) {
+    result.main = title.trim();
+    result.sub = "";
   }
-  return {
-    main: match[1]?.trim() || "",
-    sub: match[2]?.trim() || ""
-  };
+
+  return result;
 }

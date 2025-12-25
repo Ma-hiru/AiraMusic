@@ -4,7 +4,7 @@ import { isMacOS } from "../utils/platform";
 import { Server } from "node:http";
 import { commands } from "./commands";
 import { registerAppEvents } from "./events";
-import { registerProtocol } from "./protocol";
+import { registerSchemes } from "./protocol";
 import { restartStoreServer, startStoreServer } from "../services/store";
 import { createProxyServer } from "../services/express";
 import { registerIpcMain } from "@mahiru/app/src/ipc/main";
@@ -48,7 +48,7 @@ export class APP {
     this.proxyServer = createProxyServer();
     this.neteaseMusicAPIServer = startNeteaseMusicApiServer();
     this.willQuitAPP = !isMacOS;
-    registerProtocol();
+    registerSchemes();
     registerIpcMain();
     registerAppEvents(this);
   }

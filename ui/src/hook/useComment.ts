@@ -30,7 +30,7 @@ export function useComment({
 
   const requestComment = useCallback(
     async (pageNo: number) => {
-      if (pageNo < 1) return;
+      if (pageNo < 1 || !id) return;
       if (commentsCache.current?.has(pageNo)) {
         setCurrentPageNo(pageNo);
         setComments(commentsCache.current.get(pageNo) || []);

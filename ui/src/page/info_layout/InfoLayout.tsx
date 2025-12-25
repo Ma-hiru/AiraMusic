@@ -52,7 +52,7 @@ const InfoLayout: FC<object> = () => {
           <AcrylicBackground src={themeSync.value.backgroundImage} brightness={0.5} blur={20} />
         )}
       </div>
-      <div className="w-full h-full relative z-10">
+      <div className="w-screen h-screen relative z-10">
         <InfoCtx.Provider value={infoSync}>
           <InfoThemeCtx value={themeSync}>
             <KeepAliveOutlet />;

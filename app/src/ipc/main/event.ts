@@ -135,11 +135,12 @@ const mainEventAPI = {
     sender.show();
   },
   message: (e, message) => {
-    if (message.to === "main") {
+    const sender = BrowserWindow.fromWebContents(e.sender);
+    if (message.to === "main" && WindowManager.getId(sender) === "main") {
       typedIpcMainReceiveMessage(message.type, message.data);
     } else {
       typedIpcMainSendMessage({
-        sender: BrowserWindow.fromWebContents(e.sender),
+        sender,
         receiver: message.to,
         type: message.type,
         data: message.data

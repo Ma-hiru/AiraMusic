@@ -1,12 +1,13 @@
 import mime from "mime";
 import { createReadStream } from "node:fs";
+import { normalize } from "node:path";
 import { stat } from "node:fs/promises";
 import { Readable } from "node:stream";
 import { EqError } from "../utils/err";
 import { Log } from "../utils/log";
 import { app, protocol } from "electron";
 
-export function registerProtocol() {
+export function registerSchemes() {
   protocol.registerSchemesAsPrivileged([
     {
       scheme: process.env.APP_SCHEME || "mahiru",
@@ -24,11 +25,9 @@ export function registerProtocol() {
       try {
         // url.hostname === "local"
         // url.pathname === "/C:/Users/xxx.png"
-        const url = new URL(request.url);
-        if (url.hostname === "local") {
+        if (new URL(request.url).hostname === "local") {
           return handleProtocolLocal(request);
         }
-        return new Response("Not Found", { status: 404 });
       } catch (err) {
         Log.trace(
           new EqError({
@@ -37,8 +36,8 @@ export function registerProtocol() {
             label: "app/appEvent.ts:mahiru protocol"
           })
         );
-        return new Response("Not Found", { status: 404 });
       }
+      return new Response("Not Found", { status: 404 });
     });
   });
 }
@@ -48,7 +47,7 @@ async function handleProtocolLocal(request: Request) {
     // url.hostname === "local"
     const url = new URL(request.url);
     // url.pathname === "/C:/Users/xxx.png"
-    const filePath = decodeURIComponent(url.pathname.slice(1));
+    const filePath = normalize(decodeURIComponent(url.pathname.slice(1)));
     const fileStat = await stat(filePath);
     const total = fileStat.size;
     const rangeHeader = request.headers.get("range") ?? request.headers.get("Range");

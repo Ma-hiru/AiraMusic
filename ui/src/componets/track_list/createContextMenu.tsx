@@ -1,7 +1,7 @@
 import { ContextMenuItem, ContextMenuRender } from "@mahiru/ui/componets/menu/MenuProvider";
 import { ImageSize } from "@mahiru/ui/utils/filter";
 import { Player } from "@mahiru/ui/utils/player";
-import { DiscAlbum, ListMusic, ListPlus, MessageSquare, Play } from "lucide-react";
+import { Copy, DiscAlbum, ListMusic, ListPlus, MessageSquare, Play } from "lucide-react";
 import NeteaseImage from "@mahiru/ui/componets/public/NeteaseImage";
 import { CommentType } from "@mahiru/ui/api/comment";
 
@@ -70,6 +70,35 @@ function createMenuItems(props: {
   source?: number;
 }): ContextMenuItem[] {
   return [
+    {
+      prefix: <Copy size={14} />,
+      label: <p className="text-[12px]">复制歌曲名</p>,
+      onClick: () => {
+        window.navigator.clipboard.writeText(props.track.name).then(() => {
+          //todo
+        });
+      }
+    },
+    {
+      prefix: <div className="size-3.5" />,
+      label: <p className="text-[12px]">复制专辑名</p>,
+      onClick: () => {
+        window.navigator.clipboard.writeText(props.track.al.name).then(() => {
+          //todo
+        });
+      }
+    },
+    {
+      prefix: <div className="size-3.5" />,
+      label: <p className="text-[12px]">复制歌手名</p>,
+      onClick: () => {
+        window.navigator.clipboard
+          .writeText(props.track.ar.map((a) => a.name).join(" "))
+          .then(() => {
+            //todo
+          });
+      }
+    },
     {
       prefix: <Play size={14} />,
       label: <p className="text-[12px]">播放</p>,

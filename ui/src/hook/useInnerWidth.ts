@@ -19,3 +19,15 @@ export function useInnerWidth() {
     () => window.innerWidth
   );
 }
+
+export function useInnerHeight() {
+  return useSyncExternalStore(
+    (update) => {
+      handlerSet.add(update);
+      return () => {
+        handlerSet.delete(update);
+      };
+    },
+    () => window.innerHeight
+  );
+}

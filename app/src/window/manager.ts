@@ -74,10 +74,10 @@ export const WindowManager = new (class {
     return this.BrowserWindowList.get(id);
   }
 
-  getId(window: BrowserWindow) {
-    for (const [id, win] of this.BrowserWindowList) {
-      if (win === window) {
-        return id;
+  getId(window: Optional<BrowserWindow>) {
+    if (window) {
+      for (const [id, win] of this.BrowserWindowList) {
+        if (win === window) return id;
       }
     }
     return null;

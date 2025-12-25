@@ -8,7 +8,7 @@ interface InfoProps {
 
 const InfoTop: FC<InfoProps> = ({ color }) => {
   return (
-    <Drag className="h-10 flex items-center justify-between px-6 select-none">
+    <Drag className="absolute w-screen h-10 flex items-center justify-between px-6 select-none z-100">
       <div />
       <TopControlPure maximizable={false} mini={false} color={color} />
     </Drag>
