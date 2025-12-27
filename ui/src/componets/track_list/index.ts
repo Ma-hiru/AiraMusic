@@ -1,1 +1,1 @@
-export { default, type TrackListRef } from "./TrackList";
+export { default, type TrackListRef, type TrackListProps } from "./TrackList";
