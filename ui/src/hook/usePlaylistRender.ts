@@ -11,11 +11,14 @@ import { useContextMenu } from "@mahiru/ui/hook/useContextMenu";
 import { usePersistZustandShallowStore, usePlayerStatus } from "@mahiru/ui/store";
 import { TrackListRef } from "@mahiru/ui/componets/track_list";
 import { createContextMenu } from "@mahiru/ui/componets/track_list/createContextMenu";
-import { OnContextMenuFunc, TrackListProps } from "@mahiru/ui/componets/track_list/TrackList";
+import { TrackListProps } from "@mahiru/ui/componets/track_list/TrackList";
 import { Player } from "@mahiru/ui/utils/player";
 import { useThemeColor } from "@mahiru/ui/hook/useThemeColor";
+import { OnContextMenuFunc } from "@mahiru/ui/componets/track_item/TrackItem";
+import { useHeart } from "@mahiru/ui/hook/useHeart";
 
-export function usePlaylistNormalRender(listRef: RefObject<Nullable<TrackListRef>>, id?: string) {
+export function usePlaylistNormalRender(id?: string) {
+  const listRef = useRef<TrackListRef>(null);
   const [entry, setEntry] = useState<Nullable<PlaylistCacheEntry>>(null);
   const [filterTracks, setFilterTracks] = useState({
     tracks: [] as NeteaseTrack[],
@@ -24,18 +27,8 @@ export function usePlaylistNormalRender(listRef: RefObject<Nullable<TrackListRef
   });
   const [loading, setLoading] = useState(true);
   const [requestMissedTracks, setRequestMissedTracks] = useState(0);
-  const [fastLocation, setFastLocation] = useState(false);
   const { mainColor, textColorOnMain } = useThemeColor();
-  const { openInfoWindow } = useInfoWindow(true);
-  const { setContextMenuRenderer, setContextMenuVisible, contextMenuVisible } = useContextMenu();
-  const { setLocateCurrentTrack, trackStatus, requestCanScrollTop, playerStatus, audioControl } =
-    usePlayerStatus([
-      "setLocateCurrentTrack",
-      "trackStatus",
-      "requestCanScrollTop",
-      "playerStatus",
-      "audioControl"
-    ]);
+  const { trackStatus } = usePlayerStatus(["trackStatus"]);
   const { userLikedListSummary } = usePersistZustandShallowStore(["userLikedListSummary"]);
   const source = id ? Number(id) : undefined;
   const isLikedPlayList = userLikedListSummary?.id === source;
@@ -205,125 +198,39 @@ export function usePlaylistNormalRender(listRef: RefObject<Nullable<TrackListRef
       entry && PlaylistManager.saveDirtyEntry(entry);
     };
   }, []);
-  // 定位当前播放歌曲
-  useEffect(() => {
-    const currentTrackIndex = filterTracks.tracks.findIndex(
-      (track) => track.id === trackStatus?.track?.id
-    );
-    const scrollTo = () => {
-      startTransition(() => {
-        setFastLocation(true);
-        listRef.current?.scrollToItem(currentTrackIndex);
-        requestIdleCallback(() => {
-          startTransition(() => {
-            setFastLocation(false);
-          });
-        });
-      });
-    };
-    if (currentTrackIndex !== -1) {
-      setLocateCurrentTrack(() => scrollTo);
-    }
-    return () => {
-      setLocateCurrentTrack(null);
-    };
-  }, [filterTracks.tracks, listRef, setLocateCurrentTrack, trackStatus?.track?.id]);
-  const onListScroll = useCallback(() => {
-    if (contextMenuVisible) {
-      setContextMenuVisible?.(false);
-    }
-  }, [contextMenuVisible, setContextMenuVisible]);
-  // 右键菜单
-  const onContextMenu = useCallback<OnContextMenuFunc>(
-    (e, { track }) => {
-      setContextMenuRenderer?.(
-        createContextMenu({
-          track,
-          clientX: e.clientX,
-          clientY: e.clientY,
-          source: source,
-          openInfoWindow
-        })
-      );
-      setContextMenuVisible?.(true);
-    },
-    [openInfoWindow, setContextMenuRenderer, setContextMenuVisible, source]
-  );
-  // 回到顶部
-  const scrollTop = useCallback(() => {
-    startTransition(() => {
-      listRef.current?.containerRef.current?.scrollTo({
-        top: 0,
-        behavior: "smooth"
-      });
-    });
-  }, [listRef]);
-  // 包装范围更新，处理回到顶部请求
-  const wrapRangeUpdate = useCallback(
-    (range: IndexRange) => {
-      if (range[0] > 5) requestCanScrollTop("playlist", scrollTop);
-      else requestCanScrollTop("none");
-      return onVirtualListRangeUpdate(range);
-    },
-    [onVirtualListRangeUpdate, requestCanScrollTop, scrollTop]
-  );
 
-  useEffect(() => {
-    return () => {
-      requestCanScrollTop("none");
-    };
-  }, [requestCanScrollTop]);
-
-  const onPlay = useCallback(
-    (index: number) => {
-      if (!filterTracks.tracks[index]!.playable) return;
-      const rawTracks = tracks.current;
-      const rawIdx = filterTracks.absoluteIdx?.[index];
-      // 如果与当前播放列表相同，仅切换位置，避免重建列表导致状态抖动
-      if (Array.isArray(rawTracks) && typeof rawIdx === "number") {
-        if (Player.isSamePlaylist(rawTracks, source)) {
-          Player.setPosition(rawIdx);
-        } else {
-          Player.replacePlaylist(rawTracks, source, rawIdx);
-        }
-      } else {
-        if (Player.isSamePlaylist(filterTracks.tracks, source)) {
-          Player.setPosition(index);
-        } else {
-          Player.replacePlaylist(filterTracks.tracks, source, index);
-        }
-      }
-      setTimeout(() => {
-        requestIdleCallback(() => {
-          if (!playerStatus.playing) {
-            audioControl.current()?.play();
-          }
-        });
-      }, 1000);
-    },
-    [audioControl, filterTracks.absoluteIdx, filterTracks.tracks, playerStatus.playing, source]
-  );
-  return {
-    mainColor,
-    fastLocation,
-    textColorOnMain,
+  const controller = usePlaylistController({
+    filterTracks,
+    tracks: tracks.current,
+    listRef,
+    onVirtualListRangeUpdate,
     entry,
+    source
+  });
+
+  return {
+    ...controller,
+    entry,
+    mainColor,
+    textColorOnMain,
     loading,
     source,
     tracks: filterTracks.tracks,
-    absoluteIdx: filterTracks.absoluteIdx,
     requestMissedTracks,
-    onVirtualListRangeUpdate: wrapRangeUpdate,
-    onPlay,
     currentTrackID,
     isLikedPlayList,
-    onContextMenu,
-    onListScroll,
-    searchTracks
-  } satisfies TrackListProps & { searchTracks: NormalFunc<[k: string]> };
+    searchTracks,
+    showHeart: true,
+    ref: listRef
+  } satisfies TrackListProps & {
+    searchTracks: NormalFunc<[k: string]>;
+    ref: RefObject<Nullable<TrackListRef>>;
+    entry: Nullable<PlaylistCacheEntry>;
+  };
 }
 
 export function usePlaylistHistoryRender() {
+  const listRef = useRef<TrackListRef>(null);
   const historyTracks = useRef<NeteaseTrack[]>([]);
   const searchTrackInstance = useRef<Nullable<SearchTrack>>(null);
   const [loading, setLoading] = useState(true);
@@ -332,6 +239,9 @@ export function usePlaylistHistoryRender() {
     // 搜索时的绝对索引，如果为null则表示未搜索
     absoluteIdx: null as Nullable<number[]>
   });
+  const { mainColor, textColorOnMain } = useThemeColor();
+  const { trackStatus } = usePlayerStatus(["trackStatus"]);
+  const currentTrackID = trackStatus?.track?.id;
 
   // 历史最大滚动范围
   const maxRange = useRef<IndexRange>([0, 0]);
@@ -459,11 +369,191 @@ export function usePlaylistHistoryRender() {
       void saver();
     };
   }, [saver, updater]);
-  return {
+
+  const controller = usePlaylistController({
     filterTracks,
+    tracks: historyTracks.current,
+    listRef,
     onVirtualListRangeUpdate,
-    searchTracks,
+    entry: null
+  });
+
+  return {
+    ...controller,
+    mainColor,
+    textColorOnMain,
     loading,
-    historyTracks
+    tracks: filterTracks.tracks,
+    requestMissedTracks: 0,
+    currentTrackID,
+    isLikedPlayList: false,
+    searchTracks,
+    showHeart: true,
+    ref: listRef
+  } satisfies TrackListProps & {
+    searchTracks: NormalFunc<[k: string]>;
+    ref: RefObject<Nullable<TrackListRef>>;
+  };
+}
+
+function usePlaylistController(props: {
+  filterTracks: {
+    tracks: NeteaseTrack[];
+    absoluteIdx: Nullable<number[]>;
+  };
+  tracks: NeteaseTrack[];
+  listRef: RefObject<TrackListRef | null>;
+  onVirtualListRangeUpdate: (range: IndexRange) => Promise<void>;
+  entry: Nullable<PlaylistCacheEntry>;
+  source?: number;
+}) {
+  const { filterTracks, tracks, listRef, onVirtualListRangeUpdate, entry, source } = props;
+  const [fastLocation, setFastLocation] = useState(false);
+  const { mainColor, textColorOnMain } = useThemeColor();
+  const { openInfoWindow } = useInfoWindow(true);
+  const { setContextMenuRenderer, setContextMenuVisible, contextMenuVisible } = useContextMenu();
+  const { setLocateCurrentTrack, trackStatus, requestCanScrollTop, playerStatus, audioControl } =
+    usePlayerStatus([
+      "setLocateCurrentTrack",
+      "trackStatus",
+      "requestCanScrollTop",
+      "playerStatus",
+      "audioControl"
+    ]);
+  // 定位当前播放歌曲
+  useEffect(() => {
+    const currentTrackIndex = filterTracks.tracks.findIndex(
+      (track) => track.id === trackStatus?.track?.id
+    );
+    const scrollTo = () => {
+      startTransition(() => {
+        setFastLocation(true);
+        listRef.current?.scrollToItem(currentTrackIndex);
+        requestIdleCallback(() => {
+          startTransition(() => {
+            setFastLocation(false);
+          });
+        });
+      });
+    };
+    if (currentTrackIndex !== -1) {
+      setLocateCurrentTrack(() => scrollTo);
+    }
+    return () => {
+      setLocateCurrentTrack(null);
+    };
+  }, [filterTracks.tracks, listRef, setLocateCurrentTrack, trackStatus?.track?.id]);
+  const onListScroll = useCallback(() => {
+    if (contextMenuVisible) {
+      setContextMenuVisible?.(false);
+    }
+  }, [contextMenuVisible, setContextMenuVisible]);
+  // 右键菜单
+  const onContextMenu = useCallback<OnContextMenuFunc>(
+    (e, track) => {
+      setContextMenuRenderer?.(
+        createContextMenu({
+          track,
+          clientX: e.clientX,
+          clientY: e.clientY,
+          source: source,
+          openInfoWindow
+        })
+      );
+      setContextMenuVisible?.(true);
+    },
+    [openInfoWindow, setContextMenuRenderer, setContextMenuVisible, source]
+  );
+  // 回到顶部
+  const scrollTop = useCallback(() => {
+    startTransition(() => {
+      listRef.current?.containerRef.current?.scrollTo({
+        top: 0,
+        behavior: "smooth"
+      });
+    });
+  }, [listRef]);
+  useEffect(() => {
+    return () => {
+      requestCanScrollTop("none");
+    };
+  }, [requestCanScrollTop]);
+  // 包装范围更新，处理回到顶部请求
+  const wrapRangeUpdate = useCallback(
+    (range: IndexRange) => {
+      if (range[0] > 5) requestCanScrollTop("playlist", scrollTop);
+      else requestCanScrollTop("none");
+      return onVirtualListRangeUpdate(range);
+    },
+    [onVirtualListRangeUpdate, requestCanScrollTop, scrollTop]
+  );
+  // 播放歌曲
+  const onPlay = useCallback(
+    (trackIdx: number) => {
+      const rawTracks = tracks;
+      const rawIdx = filterTracks.absoluteIdx ? filterTracks.absoluteIdx[trackIdx]! : trackIdx;
+      if (!rawTracks[rawIdx]!.playable) return;
+      // 如果与当前播放列表相同，仅切换位置，避免重建列表导致状态抖动
+      if (Player.isSamePlaylist(rawTracks, source)) {
+        Player.setPosition(rawIdx);
+      } else {
+        Player.replacePlaylist(rawTracks, source, rawIdx);
+      }
+      setTimeout(() => {
+        requestIdleCallback(() => {
+          if (!playerStatus.playing) {
+            audioControl.current()?.play();
+          }
+        });
+      }, 1000);
+    },
+    [audioControl, filterTracks.absoluteIdx, playerStatus.playing, source, tracks]
+  );
+  // 封面缓存命中/错误回调
+  const onCoverCacheHit = useCallback<NormalFunc<[file: string, id: string, trackIdx: number]>>(
+    (file, id, trackIdx) => {
+      const entryTrackIdx = filterTracks.absoluteIdx
+        ? filterTracks.absoluteIdx[trackIdx]
+        : trackIdx;
+      if (!entry || typeof entryTrackIdx === "undefined") return;
+      PlaylistManager.updateTrackCoverCache({
+        entry,
+        trackIdx: entryTrackIdx,
+        cachedPicUrl: file,
+        cachedPicUrlID: id
+      });
+    },
+    [entry, filterTracks.absoluteIdx]
+  );
+  const onCoverCacheError = useCallback(
+    (trackIdx: number) => {
+      const entryTrackIdx = filterTracks.absoluteIdx
+        ? filterTracks.absoluteIdx[trackIdx]
+        : trackIdx;
+      if (!entry || typeof entryTrackIdx === "undefined") return;
+      PlaylistManager.updateTrackCoverCache({
+        entry,
+        trackIdx: entryTrackIdx,
+        cachedPicUrl: "",
+        cachedPicUrlID: ""
+      });
+    },
+    [entry, filterTracks.absoluteIdx]
+  );
+  // 喜欢状态
+  const { isTrackLiked, likeChange } = useHeart();
+
+  return {
+    mainColor,
+    fastLocation,
+    textColorOnMain,
+    onListScroll,
+    onContextMenu,
+    onVirtualListRangeUpdate: wrapRangeUpdate,
+    onPlay,
+    onCoverCacheHit,
+    onCoverCacheError,
+    isTrackLiked,
+    likeChange
   };
 }

@@ -5,28 +5,18 @@ import Top from "@mahiru/ui/page/history/Top";
 import { usePlayerStatus } from "@mahiru/ui/store";
 
 const HistoryPage: FC<object> = () => {
-  const { filterTracks, historyTracks, onVirtualListRangeUpdate, searchTracks, loading } =
-    usePlaylistHistoryRender();
+  const props = usePlaylistHistoryRender();
   const { background, setBackground } = usePlayerStatus(["background", "setBackground"]);
-  const defaultBackground =
-    filterTracks?.tracks[0]?.al.cachedPicUrl || filterTracks?.tracks[0]?.al.picUrl;
+  const defaultBackground = props.tracks[0]?.al.cachedPicUrl || props.tracks[0]?.al.picUrl;
 
   useEffect(() => {
-    if (!background) {
-      setBackground(defaultBackground);
-    }
+    if (!background) setBackground(defaultBackground);
   }, [background, defaultBackground, setBackground]);
+
   return (
     <div className="w-full h-full px-12 pt-10 contain-style contain-size contain-layout">
-      <Top filterTracks={filterTracks} searchTracks={searchTracks} loading={loading} />
-      <TrackList
-        onVirtualListRangeUpdate={onVirtualListRangeUpdate}
-        tracks={filterTracks.tracks}
-        absoluteIdx={filterTracks.absoluteIdx}
-        rawTracks={historyTracks.current}
-        loading={loading}
-        paddingBottom={80}
-      />
+      <Top recordCount={props.tracks.length} searchTracks={props.searchTracks} />
+      <TrackList {...props} paddingBottom={80} />
     </div>
   );
 };

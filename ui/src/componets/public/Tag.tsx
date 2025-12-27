@@ -22,6 +22,7 @@ const Tag: FC<TagProps> = ({ backgroundColor, textColor, text, className }) => {
           background: ${backgroundColor};
           color: ${textColor};
         `),
+        !text && "invisible",
         className
       )}>
       {text}

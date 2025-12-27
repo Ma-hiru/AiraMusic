@@ -1,34 +1,33 @@
 import { FC, memo } from "react";
 import { css, cx } from "@emotion/css";
-import { useThemeColor } from "@mahiru/ui/hook/useThemeColor";
+import { ColorInstance } from "color";
 
 interface ListItemNameProps {
   track: NeteaseTrack;
-  active: boolean;
   disabled: boolean;
   onClick?: NormalFunc;
+  textColor: ColorInstance;
 }
 
-const ListItemName: FC<ListItemNameProps> = ({ track, disabled, onClick }) => {
-  const { textColorOnMain } = useThemeColor();
+const TrackItemName: FC<ListItemNameProps> = ({ track, disabled, onClick, textColor }) => {
   const titleStyle = cx(
     "cursor-pointer font-bold hover:opacity-50 ease-in-out duration-300 transition-all truncate select-none active:scale-95",
     disabled && "cursor-not-allowed! opacity-50",
     css`
-      color: ${textColorOnMain.string()};
+      color: ${textColor.string()};
     `
   );
   const subTitleStyle = cx(
     "w-2 overflow-hidden ml-2 ease-in-out duration-300 transition-all truncate select-none",
     css`
-      color: ${textColorOnMain.alpha(0.3).string()};
+      color: ${textColor.alpha(0.3).string()};
     `
   );
   const artistStyle = cx(
     "text-[12px] flex overflow-hidden gap-2 truncate select-none",
     disabled && "cursor-not-allowed! opacity-50",
     css`
-      color: ${textColorOnMain.alpha(0.6).string()};
+      color: ${textColor.alpha(0.6).string()};
     `
   );
   return (
@@ -55,4 +54,4 @@ const ListItemName: FC<ListItemNameProps> = ({ track, disabled, onClick }) => {
     </div>
   );
 };
-export default memo(ListItemName);
+export default memo(TrackItemName);

@@ -1,17 +1,16 @@
-import { FC, useRef } from "react";
+import { FC } from "react";
 import { useParams } from "react-router-dom";
 import { usePlaylistNormalRender } from "@mahiru/ui/hook/usePlaylistRender";
 
 import Top from "./top";
 import Divider from "./Divider";
-import TrackList, { TrackListRef } from "@mahiru/ui/componets/track_list";
+import TrackList from "@mahiru/ui/componets/track_list";
 import { Stage, useStage } from "@mahiru/ui/hook/useStage";
 
 const PlaylistPage: FC<object> = () => {
   const { stage } = useStage();
   const { id } = useParams();
-  const listRef = useRef<TrackListRef>(null);
-  const props = usePlaylistNormalRender(listRef, id);
+  const props = usePlaylistNormalRender(id);
 
   return (
     <div className="w-full h-full px-12 pt-20 contain-style contain-size contain-layout">
@@ -25,7 +24,7 @@ const PlaylistPage: FC<object> = () => {
       )}
       {stage >= Stage.Second && <Divider />}
       <div className="w-full h-[calc(100%-210px)] relative">
-        {stage >= Stage.Finally && <TrackList ref={listRef} {...props} />}
+        {stage >= Stage.Finally && <TrackList {...props} />}
       </div>
     </div>
   );

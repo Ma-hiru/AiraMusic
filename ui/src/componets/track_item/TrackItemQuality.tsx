@@ -9,7 +9,7 @@ interface ListItemQualityProps {
   forceShow?: Optional<TrackQuality>;
 }
 
-const ListItemQuality: FC<ListItemQualityProps> = ({ track, themeColor, bgColor, forceShow }) => {
+const TrackItemQuality: FC<ListItemQualityProps> = ({ track, themeColor, bgColor, forceShow }) => {
   if (forceShow) {
     return (
       <Tag
@@ -38,4 +38,4 @@ const ListItemQuality: FC<ListItemQualityProps> = ({ track, themeColor, bgColor,
     );
   });
 };
-export default memo(ListItemQuality);
+export default memo(TrackItemQuality);
