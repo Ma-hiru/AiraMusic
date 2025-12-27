@@ -2,6 +2,7 @@ import { FC, memo, useCallback, useRef } from "react";
 import { SearchType } from "@mahiru/ui/api/search";
 import { cx } from "@emotion/css";
 import { useScrollAutoHide } from "@mahiru/ui/hook/useScrollAutoHide";
+import SongResult from "@mahiru/ui/page/search/result/SongResult";
 
 interface SearchResultProps {
   data: Nullable<NeteaseSearchResult<any>>;
@@ -54,6 +55,10 @@ const SearchResult: FC<SearchResultProps> = ({
                 </div>
               );
             })}
+            <SongResult
+              ids={comprehensive.song.songs.map((song) => song.id)}
+              themeSync={themeSync}
+            />
             {comprehensive.song.moreText}
             <h2>album</h2>
             {comprehensive.album.albums.map((al) => {
@@ -88,13 +93,7 @@ const SearchResult: FC<SearchResultProps> = ({
             <h2 onClick={nextPage}>
               songs({totalResult}):{currentPage} / {totalPage}
             </h2>
-            {songResult.songs.map((song) => {
-              return (
-                <div key={song.id}>
-                  {song.name} - {song.artists.map((ar) => ar.name).join(" / ")} - {song.album.name}
-                </div>
-              );
-            })}
+            <SongResult ids={songResult.songs.map((song) => song.id)} themeSync={themeSync} />
           </div>
         );
       }

@@ -49,9 +49,15 @@ export const Player = new (class {
   }
 
   private setPlayingStatus(playing: boolean) {
+    const { audioControl } = getPlayerStatusSnapshot();
     startTransition(() => {
       this._outerStatusUpdater?.((draft) => {
         draft.playing = playing;
+        if (playing) {
+          audioControl.current()?.play();
+        } else {
+          audioControl.current()?.pause();
+        }
       });
     });
   }

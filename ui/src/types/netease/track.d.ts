@@ -3,7 +3,7 @@ interface NeteaseTrackDetailResponse extends NeteaseAPIResponse {
   privileges: NeteaseTrackPrivilege[];
 }
 
-interface NeteaseTrack {
+interface NeteaseTrack extends NeteaseTrackBase {
   id: number;
   a: null;
   /** 云盘歌曲信息，如果不存在该字段，则为非云盘歌曲 */
@@ -120,6 +120,36 @@ interface NeteaseTrack {
   playable: boolean;
   /** 注入字段 */
   reason: string;
+}
+
+interface NeteaseTrackBase {
+  id: number;
+  name: string;
+  dt: number;
+  alia?: string[];
+  tns?: string[];
+  ar: {
+    id: number;
+    name: string;
+  }[];
+  al: {
+    picUrl: string;
+    name: string;
+    /** 注入字段 */
+    cachedPicUrl: string;
+    /** 注入字段 */
+    cachedPicUrlID: string;
+  };
+  /** 注入字段 */
+  playable: boolean;
+  /** 注入字段 */
+  reason: string;
+  mark: number;
+  sq: null | Sq;
+  h: null | H;
+  hr: null | Hr;
+  l: null | L;
+  m: null | M;
 }
 
 interface NeteaseTrackPrivilege extends NeteaseSongPrivilege {

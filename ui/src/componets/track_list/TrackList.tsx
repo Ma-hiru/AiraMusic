@@ -23,7 +23,7 @@ export interface TrackListRef {
 }
 
 export interface TrackListProps {
-  tracks: NeteaseTrack[];
+  tracks: NeteaseTrackBase[];
   textColorOnMain: ColorInstance;
   mainColor: ColorInstance;
   source?: number;
@@ -40,8 +40,8 @@ export interface TrackListProps {
   onCoverCacheHit?: NormalFunc<[file: string, id: string, idx: number]>;
   onCoverCacheError?: NormalFunc<[idx: number]>;
   showHeart?: boolean;
-  isTrackLiked?: NormalFunc<[track: NeteaseTrack], boolean>;
-  likeChange?: NormalFunc<[track: NeteaseTrack]>;
+  isTrackLiked?: NormalFunc<[track: NeteaseTrackBase], boolean>;
+  likeChange?: NormalFunc<[track: NeteaseTrackBase]>;
 }
 
 const TrackList: ForwardRefRenderFunction<TrackListRef, TrackListProps> = (
@@ -142,7 +142,7 @@ const TrackList: ForwardRefRenderFunction<TrackListRef, TrackListProps> = (
   );
 };
 
-const RowComponent: VirtualListRow<NeteaseTrack, ExtraData> = ({ index, items, extra }) => {
+const RowComponent: VirtualListRow<NeteaseTrackBase, ExtraData> = ({ index, items, extra }) => {
   return (
     <TrackItem
       tracks={items}
@@ -174,8 +174,8 @@ type ExtraData = {
   onCoverCacheHit?: NormalFunc<[file: string, id: string, idx: number]>;
   onCoverCacheError?: NormalFunc<[idx: number]>;
   showHeart?: boolean;
-  isLiked?: NormalFunc<[track: NeteaseTrack], boolean>;
-  likeChange?: NormalFunc<[track: NeteaseTrack]>;
+  isLiked?: NormalFunc<[track: NeteaseTrackBase], boolean>;
+  likeChange?: NormalFunc<[track: NeteaseTrackBase]>;
 };
 
 TrackList.displayName = "TrackList";

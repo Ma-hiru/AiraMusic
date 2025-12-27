@@ -9,13 +9,13 @@ import ListItemName from "./TrackItemName";
 import ListItemInfo from "./TrackItemInfo";
 
 export type OnContextMenuFunc = NormalFunc<
-  [e: ReactMouseEvent<HTMLDivElement>, track: NeteaseTrack]
+  [e: ReactMouseEvent<HTMLDivElement>, track: NeteaseTrackBase]
 >;
 
 interface ListItemProps {
   textColorOnMain: ColorInstance;
   mainColor: ColorInstance;
-  tracks: NeteaseTrack[];
+  tracks: NeteaseTrackBase[];
   trackIdx: number;
   fastLocation?: boolean;
   isLikedList?: boolean;
@@ -25,8 +25,8 @@ interface ListItemProps {
   onCoverCacheHit?: NormalFunc<[file: string, id: string, idx: number]>;
   onCoverCacheError?: NormalFunc<[idx: number]>;
   showHeart?: boolean;
-  isLiked?: NormalFunc<[track: NeteaseTrack], boolean>;
-  likeChange?: NormalFunc<[track: NeteaseTrack]>;
+  isLiked?: NormalFunc<[track: NeteaseTrackBase], boolean>;
+  likeChange?: NormalFunc<[track: NeteaseTrackBase]>;
 }
 
 const TrackItem: FC<ListItemProps> = ({

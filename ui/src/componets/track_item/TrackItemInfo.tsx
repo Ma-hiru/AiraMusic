@@ -8,14 +8,14 @@ import ListItemQuality from "./TrackItemQuality";
 import Tag from "@mahiru/ui/componets/public/Tag";
 
 interface ListItemAlbumProps {
-  track: NeteaseTrack;
+  track: NeteaseTrackBase;
   active: boolean;
   disabled: boolean;
   textColorOnMain: ColorInstance;
   mainColor: ColorInstance;
   showHeart?: boolean;
-  isLiked?: NormalFunc<[track: NeteaseTrack], boolean>;
-  likeChange?: NormalFunc<[track: NeteaseTrack]>;
+  isLiked?: NormalFunc<[track: NeteaseTrackBase], boolean>;
+  likeChange?: NormalFunc<[track: NeteaseTrackBase]>;
 }
 
 const TrackItemInfo: FC<ListItemAlbumProps> = ({

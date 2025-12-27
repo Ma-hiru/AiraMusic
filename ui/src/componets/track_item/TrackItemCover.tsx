@@ -3,7 +3,7 @@ import { ImageSize } from "@mahiru/ui/utils/filter";
 import NeteaseImage from "@mahiru/ui/componets/public/NeteaseImage";
 
 interface ListItemCoverProps {
-  track: NeteaseTrack;
+  track: NeteaseTrackBase;
   trackIdx: number;
   isMainColorDark: boolean;
   disabled: boolean;

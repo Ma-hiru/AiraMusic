@@ -124,7 +124,7 @@ export const Track = new (class {
   }
 
   getTrackSourceQuality<T extends TrackQuality | undefined>(
-    track: NeteaseTrack,
+    track: NeteaseTrackBase,
     preference: T
   ): TrackSourceQualityReturn<T> {
     const availableQualities: (NeteaseQualityLevels & { level: TrackQuality })[] = [];
@@ -197,7 +197,7 @@ export const Track = new (class {
     }
   }
 
-  parseTrackBitmark(track: NeteaseTrack, flag: TrackBitmark) {
+  parseTrackBitmark(track: NeteaseTrackBase, flag: TrackBitmark) {
     const mark = track?.mark;
     if (typeof mark !== "number") return false;
     return (mark & flag) === flag;

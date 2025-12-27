@@ -10,7 +10,7 @@ export const useHeart = () => {
   ]);
 
   const isTrackLiked = useCallback(
-    (track?: NeteaseTrack) => {
+    (track?: NeteaseTrackBase) => {
       return Boolean(track && userLikedTrackIDs.ids[track.id]);
     },
     [userLikedTrackIDs.ids]

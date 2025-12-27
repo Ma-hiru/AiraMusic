@@ -455,19 +455,21 @@ function usePlaylistController(props: {
   }, [contextMenuVisible, setContextMenuVisible]);
   // 右键菜单
   const onContextMenu = useCallback<OnContextMenuFunc>(
-    (e, track) => {
-      setContextMenuRenderer?.(
-        createContextMenu({
-          track,
-          clientX: e.clientX,
-          clientY: e.clientY,
-          source: source,
-          openInfoWindow
-        })
-      );
+    (e, trackBase) => {
+      const track = tracks.find((t) => t.id === trackBase.id);
+      track &&
+        setContextMenuRenderer?.(
+          createContextMenu({
+            track,
+            clientX: e.clientX,
+            clientY: e.clientY,
+            source: source,
+            openInfoWindow
+          })
+        );
       setContextMenuVisible?.(true);
     },
-    [openInfoWindow, setContextMenuRenderer, setContextMenuVisible, source]
+    [openInfoWindow, setContextMenuRenderer, setContextMenuVisible, source, tracks]
   );
   // 回到顶部
   const scrollTop = useCallback(() => {
@@ -547,7 +549,13 @@ function usePlaylistController(props: {
   );
   // 喜欢状态
   const { isTrackLiked, likeChange } = useHeart();
-
+  const likeChangeWrap = useCallback(
+    (trackBase: NeteaseTrackBase) => {
+      const track = tracks.find((t) => t.id === trackBase.id);
+      return likeChange(track);
+    },
+    [likeChange, tracks]
+  );
   return {
     mainColor,
     fastLocation,
@@ -559,7 +567,7 @@ function usePlaylistController(props: {
     onCoverCacheHit,
     onCoverCacheError,
     isTrackLiked,
-    likeChange
+    likeChange: likeChangeWrap
   };
 }
 

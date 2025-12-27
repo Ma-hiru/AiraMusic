@@ -3,7 +3,7 @@ import { css, cx } from "@emotion/css";
 import { ColorInstance } from "color";
 
 interface ListItemNameProps {
-  track: NeteaseTrack;
+  track: NeteaseTrackBase;
   disabled: boolean;
   onClick?: NormalFunc;
   textColor: ColorInstance;

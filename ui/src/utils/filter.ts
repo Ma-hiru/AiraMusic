@@ -118,14 +118,19 @@ async function NeteasePlaylistToFullTracks(
 
 /** 根据歌曲id获取歌曲详情，会考虑请求次数和URL大小限制 */
 async function NeteaseTrackIdsToDetail(
-  ids: TrackId[],
+  ids: TrackId[] | number[],
   maxPerRequest: number = 100,
   concurrency: number = 5
 ) {
   const limit = pLimit(concurrency);
   const chunks: number[][] = [];
+
+  if (typeof ids[0] === "object") {
+    ids = (ids as TrackId[]).map((track) => track.id);
+  }
+
   for (let i = 0; i < ids.length; i += maxPerRequest) {
-    chunks.push(ids.slice(i, i + maxPerRequest).map((t) => t.id));
+    chunks.push((ids as number[]).slice(i, i + maxPerRequest));
   }
   const results = await Promise.all(
     chunks.map((chunk) => limit(() => API.Track.getTrackDetail(chunk.join(","))))

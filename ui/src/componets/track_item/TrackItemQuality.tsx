@@ -3,7 +3,7 @@ import { Track, TrackQuality } from "@mahiru/ui/utils/track";
 import Tag from "@mahiru/ui/componets/public/Tag";
 
 interface ListItemQualityProps {
-  track?: NeteaseTrack;
+  track?: NeteaseTrackBase;
   themeColor: string;
   bgColor: string;
   forceShow?: Optional<TrackQuality>;
