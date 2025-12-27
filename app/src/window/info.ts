@@ -10,11 +10,12 @@ import { CONSTANTS } from "@mahiru/app/src/constant";
 export function CreateInfoWindow() {
   if (WindowManager.checkAndShow("info")) return;
 
-  const { effectiveWidth: width, effectiveHeight: height } = getEffectiveWindowSize(0.5);
+  const { x, y, width, height } = Store.get("info");
+  const { effectiveWidth, effectiveHeight } = getEffectiveWindowSize(0.5);
   const InfoWindow = WindowManager.createBrowserWindow(
     {
-      width,
-      height,
+      width: width || effectiveWidth,
+      height: height || effectiveHeight,
       webPreferences: {
         preload: preloadPath
       },
@@ -29,7 +30,6 @@ export function CreateInfoWindow() {
     WindowExits.IGNORE
   );
 
-  const { x, y } = Store.get("info");
   if (checkPositionOutScreenBounds(x, y)) {
     InfoWindow.center();
   } else {

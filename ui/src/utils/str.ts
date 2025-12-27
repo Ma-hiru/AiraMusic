@@ -7,7 +7,12 @@ export function splitTrackTitle(title?: string) {
   if (!match) return result;
 
   result.main = match[1]?.trim() || "";
-  result.sub = match[2]?.trim() || "";
+  result.sub =
+    match[2]
+      ?.trim()
+      .replace(/^[（([【-]\s*/, "")
+      .replace(/[）)\]】-]\s*$/, "") || "";
+
   if (result.sub === title.trim()) {
     result.main = title.trim();
     result.sub = "";

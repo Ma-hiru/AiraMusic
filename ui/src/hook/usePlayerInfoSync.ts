@@ -30,12 +30,10 @@ export function usePlayerInfoSync(targetWindow: WindowType) {
   // 发送同步信息
   const sendSync = useCallback(() => {
     const { playerProgress, playerStatus } = getNewestInfo.current;
-    requestIdleCallback(() => {
-      Renderer.sendMessage("lyricSync", targetWindow, {
-        progress: playerProgress.current(),
-        playerStatus,
-        themeColor: mainColor.hex()
-      });
+    Renderer.sendMessage("lyricSync", targetWindow, {
+      progress: playerProgress.current(),
+      playerStatus,
+      themeColor: mainColor.hex()
     });
   }, [mainColor, targetWindow]);
   // 更新歌词窗口打开状态

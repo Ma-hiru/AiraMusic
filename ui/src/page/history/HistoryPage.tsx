@@ -21,12 +21,11 @@ const HistoryPage: FC<object> = () => {
       <Top filterTracks={filterTracks} searchTracks={searchTracks} loading={loading} />
       <TrackList
         onVirtualListRangeUpdate={onVirtualListRangeUpdate}
-        filterTracks={filterTracks}
-        rawTracks={historyTracks}
+        tracks={filterTracks.tracks}
+        absoluteIdx={filterTracks.absoluteIdx}
+        rawTracks={historyTracks.current}
         loading={loading}
         paddingBottom={80}
-        entry={null}
-        requestMissedTracks={0}
       />
     </div>
   );

@@ -1,14 +1,6 @@
 import { cx } from "@emotion/css";
-import {
-  FC,
-  memo,
-  MouseEvent as ReactMouseEvent,
-  MouseEventHandler,
-  RefObject,
-  useCallback
-} from "react";
+import { FC, memo, MouseEvent as ReactMouseEvent } from "react";
 import { PlaylistCacheEntry } from "@mahiru/ui/utils/playlist";
-import { Player } from "@mahiru/ui/utils/player";
 
 import ListItemIndex from "./ListItemIndex";
 import ListItemCover from "./ListItemCover";
@@ -16,104 +8,74 @@ import ListItemName from "./ListItemName";
 import ListItemInfo from "./ListItemInfo";
 
 interface ListItemProps {
-  filterTracks: NeteaseTrack[];
-  filterIndex: number;
-  rawTracks: RefObject<NeteaseTrack[]>;
-  rawIndex: number;
-  fastLocation?: boolean;
-  playlistEntry: Nullable<PlaylistCacheEntry>;
-  playListID?: number;
-  isLikedList?: boolean;
   textColorOnMain: string;
   isMainColorDark: boolean;
+  tracks: NeteaseTrack[];
+  tracksIdx: number;
+  fastLocation?: boolean;
+  playlistEntry?: Nullable<PlaylistCacheEntry>;
+  entryTrackIdx?: number;
+  isLikedList?: boolean;
   active?: boolean;
-  play?: NormalFunc;
+  onPlay?: NormalFunc;
   onContextMenu?: NormalFunc<
     [
       e: ReactMouseEvent<HTMLDivElement>,
-      props: { track: NeteaseTrack; index: number; absoluteIndex: number }
+      props: { track: NeteaseTrack; tracksIdx: number; rawIdx?: number }
     ]
   >;
 }
 
 const ListItem: FC<ListItemProps> = ({
-  filterIndex,
-  filterTracks,
-  playListID,
-  rawIndex,
-  playlistEntry,
+  tracksIdx,
+  tracks,
+  entryTrackIdx,
+  playlistEntry = null,
   textColorOnMain,
   active = false,
-  play,
+  onPlay,
   isMainColorDark,
   onContextMenu,
-  rawTracks,
   fastLocation
 }) => {
-  const track = filterTracks[filterIndex]!;
-  const total = filterTracks.length;
+  const track = tracks[tracksIdx]!;
+  const total = tracks.length;
   const disabled = !track.playable;
-
-  const handleClick = useCallback<MouseEventHandler<HTMLDivElement>>(
-    (e) => {
-      if (disabled) {
-        e.preventDefault();
-        return;
-      }
-      // 如果与当前播放列表相同，仅切换位置，避免重建列表导致状态抖动
-      if (Player.isSamePlaylist(rawTracks.current, playListID)) {
-        Player.setPosition(rawIndex);
-      } else {
-        Player.replacePlaylist(rawTracks.current, playListID, rawIndex);
-      }
-      setTimeout(() => {
-        play?.();
-      }, 1000);
-    },
-    [disabled, play, playListID, rawIndex, rawTracks]
-  );
 
   return (
     <div
-      onContextMenu={(e) => {
+      onContextMenu={(e) =>
         onContextMenu?.(e, {
           track,
-          index: filterIndex,
-          absoluteIndex: rawIndex
-        });
-      }}
+          tracksIdx,
+          rawIdx: entryTrackIdx
+        })
+      }
       style={active ? { color: textColorOnMain } : undefined}
       key={track.id}
       className={cx(
-        "items-center grid grid-row-1 grid-cols-[auto_auto_1fr_auto_auto] gap-4 rounded-md py-0.5 pl-2 ease-in-out transition-colors mb-2",
-        {
-          "bg-(--theme-color-main)": active,
-          "hover:bg-black/10": !active,
-          "active:bg-black/20": !active,
-          "cursor-not-allowed! opacity-50": disabled,
-          "shadow-xs": active
-        }
+        `
+            items-center grid grid-row-1 grid-cols-[auto_auto_1fr_auto_auto] gap-4
+            rounded-md py-0.5 pl-2 mb-2
+            ease-in-out transition-colors
+        `,
+        active ? "bg-(--theme-color-main) shadow-xs" : "hover:bg-black/10 active:bg-black/20",
+        disabled && "cursor-not-allowed! opacity-50"
       )}>
       {/*序号*/}
-      <ListItemIndex
-        total={total}
-        active={active}
-        relativeIndex={filterIndex}
-        onClick={handleClick}
-      />
+      <ListItemIndex total={total} active={active} index={tracksIdx} onClick={onPlay} />
       {/*封面*/}
       <ListItemCover
         track={track}
-        absoluteIndex={rawIndex}
-        playListID={playListID}
-        onClick={handleClick}
+        entryTrackIdx={entryTrackIdx}
+        onClick={onPlay}
         entry={playlistEntry}
         active={active}
         isMainColorDark={isMainColorDark}
         fastLocation={fastLocation}
       />
       {/*名称*/}
-      <ListItemName track={track} disabled={disabled} active={active} onClick={handleClick} />
+      <ListItemName track={track} disabled={disabled} active={active} onClick={onPlay} />
       {/*专辑*/}
       <ListItemInfo active={active} track={track} />
     </div>

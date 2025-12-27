@@ -9,8 +9,6 @@ interface CreateContextMenuProps {
   clientX: number;
   clientY: number;
   track: NeteaseTrack;
-  index: number;
-  absoluteIndex: number;
   source?: number;
   openInfoWindow: <T extends keyof InfoSyncValueMap>(type: T, value: InfoSyncValueMap[T]) => void;
 }
@@ -19,8 +17,6 @@ export function createContextMenu({
   clientX,
   clientY,
   track,
-  index,
-  absoluteIndex,
   source,
   openInfoWindow
 }: CreateContextMenuProps) {
@@ -28,8 +24,6 @@ export function createContextMenu({
     header: createHeader(track),
     items: createMenuItems({
       track,
-      index,
-      absoluteIndex,
       openInfoWindow,
       source
     }),
@@ -64,8 +58,6 @@ function createHeader(track: NeteaseTrack) {
 
 function createMenuItems(props: {
   track: NeteaseTrack;
-  index: number;
-  absoluteIndex: number;
   openInfoWindow: <T extends keyof InfoSyncValueMap>(type: T, value: InfoSyncValueMap[T]) => void;
   source?: number;
 }): ContextMenuItem[] {

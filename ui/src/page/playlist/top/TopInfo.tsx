@@ -5,16 +5,16 @@ import { ListMusic, MessageSquare, Play } from "lucide-react";
 import { useThemeColor } from "@mahiru/ui/hook/useThemeColor";
 import { PlaylistCacheEntry } from "@mahiru/ui/utils/playlist";
 import { Time } from "@mahiru/ui/utils/time";
-import { Player } from "@mahiru/ui/utils/player";
 import { useInfoWindow } from "@mahiru/ui/hook/useInfoWindow";
 import { CommentType } from "@mahiru/ui/api/comment";
 
 interface TopInfoProps {
   entry: Nullable<PlaylistCacheEntry>;
-  filterTracks: { tracks: NeteaseTrack[]; absoluteIdx: Nullable<number[]> };
+  onPlayAll: NormalFunc;
+  onAddList: NormalFunc;
 }
 
-const TopInfo: FC<TopInfoProps> = ({ entry, filterTracks }) => {
+const TopInfo: FC<TopInfoProps> = ({ entry, onPlayAll, onAddList }) => {
   const { textColorOnMain, mainColor } = useThemeColor();
   const { openInfoWindow, opened, commentsDisplayType } = useInfoWindow();
   const lastPlaylistID = useRef(entry?.playlist.id);
@@ -66,17 +66,13 @@ const TopInfo: FC<TopInfoProps> = ({ entry, filterTracks }) => {
         <button
           style={{ backgroundColor: mainColor.hex(), color: textColorOnMain.hex() }}
           className="rounded-md px-2 py-1 text-[12px] mr-2 cursor-pointer font-semibold flex items-center gap-1 overflow-hidden active:scale-95 shadow-2xl select-none min-w-max ease-in-out duration-300 transition-all hover:opacity-60"
-          onClick={() => {
-            Player.replacePlaylist(filterTracks.tracks, entry?.playlist.id, 0);
-          }}>
+          onClick={onPlayAll}>
           <Play size={16} /> 全部播放
         </button>
         <button
           style={{ color: mainColor.hex(), backgroundColor: textColorOnMain.hex() }}
           className="rounded-md px-2 py-1 text-[12px] mr-2 cursor-pointer font-semibold flex items-center gap-1 overflow-hidden active:scale-95 shadow-2xl select-none min-w-max ease-in-out duration-300 transition-all hover:opacity-60"
-          onClick={() => {
-            Player.addPlaylist(filterTracks.tracks, entry?.playlist.id);
-          }}>
+          onClick={onAddList}>
           <ListMusic size={16} /> 加入列表
         </button>
         <button

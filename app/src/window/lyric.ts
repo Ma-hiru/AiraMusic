@@ -10,11 +10,12 @@ import { CONSTANTS } from "@mahiru/app/src/constant";
 export function CreateLyricWindow() {
   if (WindowManager.checkAndShow("lyric")) return;
 
-  const { effectiveWidth: width, effectiveHeight: height } = getEffectiveWindowSize(0.11, 6);
+  const { x, y, width, height } = Store.get("lyric");
+  const { effectiveWidth, effectiveHeight } = getEffectiveWindowSize(0.11, 6);
   const LyricWindow = WindowManager.createBrowserWindow(
     {
-      width,
-      height,
+      width: width || effectiveWidth,
+      height: height || effectiveHeight,
       transparent: true,
       backgroundColor: "#00000000",
       webPreferences: {
@@ -35,7 +36,6 @@ export function CreateLyricWindow() {
     WindowExits.DESTROY
   );
 
-  const { x, y } = Store.get("lyric");
   if (checkPositionOutScreenBounds(x, y)) {
     LyricWindow.center();
   } else {

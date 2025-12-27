@@ -1,73 +1,31 @@
-import { FC, startTransition, useCallback, useEffect, useRef } from "react";
+import { FC, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { usePlaylistNormalRender } from "@mahiru/ui/hook/usePlaylistRender";
 
 import Top from "./top";
 import Divider from "./Divider";
 import TrackList, { TrackListRef } from "@mahiru/ui/componets/track_list";
-import { useLayoutStatus } from "@mahiru/ui/store";
 import { Stage, useStage } from "@mahiru/ui/hook/useStage";
 
 const PlaylistPage: FC<object> = () => {
   const { stage } = useStage();
-  // 获取路由参数id
   const { id } = useParams();
-  const { requestCanScrollTop } = useLayoutStatus(["requestCanScrollTop"]);
   const listRef = useRef<TrackListRef>(null);
-
-  const {
-    entry,
-    searchTracks,
-    onVirtualListRangeUpdate,
-    filterTracks,
-    loading,
-    requestMissedTracks,
-    tracks
-  } = usePlaylistNormalRender(id);
-
-  const scrollTop = useCallback(() => {
-    startTransition(() => {
-      listRef.current?.containerRef.current?.scrollTo({
-        top: 0,
-        behavior: "smooth"
-      });
-    });
-  }, []);
-
-  const wrapRangeUpdate = useCallback(
-    (range: IndexRange) => {
-      if (range[0] > 5) requestCanScrollTop("playlist", scrollTop);
-      else requestCanScrollTop("none");
-      return onVirtualListRangeUpdate(range);
-    },
-    [onVirtualListRangeUpdate, requestCanScrollTop, scrollTop]
-  );
-
-  useEffect(() => {
-    return () => {
-      requestCanScrollTop("none");
-    };
-  }, [requestCanScrollTop]);
+  const props = usePlaylistNormalRender(listRef, id);
 
   return (
     <div className="w-full h-full px-12 pt-20 contain-style contain-size contain-layout">
       {stage >= Stage.First && (
-        <Top entry={entry} filterTracks={filterTracks} searchTracks={searchTracks} />
+        <Top
+          entry={props.entry}
+          onPlayAll={() => {}}
+          onAddList={() => {}}
+          searchTracks={props.searchTracks}
+        />
       )}
       {stage >= Stage.Second && <Divider />}
       <div className="w-full h-[calc(100%-210px)] relative">
-        {stage >= Stage.Finally && (
-          <TrackList
-            ref={listRef}
-            entry={entry}
-            loading={loading}
-            id={id ? Number(id) : undefined}
-            filterTracks={filterTracks}
-            rawTracks={tracks}
-            requestMissedTracks={requestMissedTracks}
-            onVirtualListRangeUpdate={wrapRangeUpdate}
-          />
-        )}
+        {stage >= Stage.Finally && <TrackList ref={listRef} {...props} />}
       </div>
     </div>
   );

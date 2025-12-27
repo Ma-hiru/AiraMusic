@@ -10,16 +10,16 @@ import { CONSTANTS } from "@mahiru/app/src/constant";
 export function CreateMiniWindow() {
   if (WindowManager.checkAndShow("miniplayer")) return;
 
-  const storedSize = Store.get("mini");
-  const { effectiveWidth: width, effectiveHeight: height } = getEffectiveWindowSize(0.07, 4.4);
+  const { x, y, width, height } = Store.get("mini");
+  const { effectiveWidth, effectiveHeight } = getEffectiveWindowSize(0.07, 4.4);
   const { effectiveWidth: minWidth, effectiveHeight: minHeight } = getEffectiveWindowSize(
     0.05,
     4.4
   );
   const MiniplayerWindow = WindowManager.createBrowserWindow(
     {
-      width: storedSize.width || width,
-      height: storedSize.height || height,
+      width: width || effectiveWidth,
+      height: height || effectiveHeight,
       webPreferences: {
         preload: preloadPath
       },
@@ -42,7 +42,6 @@ export function CreateMiniWindow() {
     WindowExits.IGNORE
   );
 
-  const { x, y } = storedSize;
   if (checkPositionOutScreenBounds(x, y)) {
     MiniplayerWindow.center();
   } else {

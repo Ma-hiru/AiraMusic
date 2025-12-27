@@ -222,12 +222,12 @@ export const PlaylistManager = new (class {
 
   updateTrackCoverCache(props: {
     entry: PlaylistCacheEntry;
-    absoluteIndex: number;
+    trackIdx: number;
     cachedPicUrl: string;
     cachedPicUrlID: string;
   }) {
-    const { entry, absoluteIndex, cachedPicUrlID, cachedPicUrl } = props;
-    const track = entry.playlist.tracks[absoluteIndex];
+    const { entry, trackIdx, cachedPicUrlID, cachedPicUrl } = props;
+    const track = entry.playlist.tracks[trackIdx];
     if (track) {
       track.al.cachedPicUrl = cachedPicUrl;
       if (cachedPicUrlID === "" && track.al.cachedPicUrlID) {

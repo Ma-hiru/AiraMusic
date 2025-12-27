@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { RefObject, startTransition, useCallback, useEffect, useRef, useState } from "react";
 import { Filter, ImageSize } from "@mahiru/ui/utils/filter";
 import { Log } from "@mahiru/ui/utils/dev";
 import { PlaylistCacheEntry, PlaylistManager } from "@mahiru/ui/utils/playlist";
@@ -6,8 +6,16 @@ import { SearchTrack } from "@mahiru/wasm";
 
 import { PlaylistHistoryCache } from "@mahiru/ui/utils/history";
 import { useUpdate } from "@mahiru/ui/hook/useUpdate";
+import { useInfoWindow } from "@mahiru/ui/hook/useInfoWindow";
+import { useContextMenu } from "@mahiru/ui/hook/useContextMenu";
+import { usePersistZustandShallowStore, usePlayerStatus } from "@mahiru/ui/store";
+import { TrackListRef } from "@mahiru/ui/componets/track_list";
+import { createContextMenu } from "@mahiru/ui/componets/track_list/createContextMenu";
+import { OnContextMenuFunc, TrackListProps } from "@mahiru/ui/componets/track_list/TrackList";
+import { Player } from "@mahiru/ui/utils/player";
+import { useThemeColor } from "@mahiru/ui/hook/useThemeColor";
 
-export function usePlaylistNormalRender(id?: string) {
+export function usePlaylistNormalRender(listRef: RefObject<Nullable<TrackListRef>>, id?: string) {
   const [entry, setEntry] = useState<Nullable<PlaylistCacheEntry>>(null);
   const [filterTracks, setFilterTracks] = useState({
     tracks: [] as NeteaseTrack[],
@@ -16,6 +24,22 @@ export function usePlaylistNormalRender(id?: string) {
   });
   const [loading, setLoading] = useState(true);
   const [requestMissedTracks, setRequestMissedTracks] = useState(0);
+  const [fastLocation, setFastLocation] = useState(false);
+  const { mainColor, textColorOnMain } = useThemeColor();
+  const { openInfoWindow } = useInfoWindow(true);
+  const { setContextMenuRenderer, setContextMenuVisible, contextMenuVisible } = useContextMenu();
+  const { setLocateCurrentTrack, trackStatus, requestCanScrollTop, playerStatus, audioControl } =
+    usePlayerStatus([
+      "setLocateCurrentTrack",
+      "trackStatus",
+      "requestCanScrollTop",
+      "playerStatus",
+      "audioControl"
+    ]);
+  const { userLikedListSummary } = usePersistZustandShallowStore(["userLikedListSummary"]);
+  const source = id ? Number(id) : undefined;
+  const isLikedPlayList = userLikedListSummary?.id === source;
+  const currentTrackID = trackStatus?.track?.id;
   const searchTrackInstance = useRef<Nullable<SearchTrack>>(null);
   // 所有曲目
   const tracks = useRef<NeteaseTrack[]>([]);
@@ -181,16 +205,122 @@ export function usePlaylistNormalRender(id?: string) {
       entry && PlaylistManager.saveDirtyEntry(entry);
     };
   }, []);
+  // 定位当前播放歌曲
+  useEffect(() => {
+    const currentTrackIndex = filterTracks.tracks.findIndex(
+      (track) => track.id === trackStatus?.track?.id
+    );
+    const scrollTo = () => {
+      startTransition(() => {
+        setFastLocation(true);
+        listRef.current?.scrollToItem(currentTrackIndex);
+        requestIdleCallback(() => {
+          startTransition(() => {
+            setFastLocation(false);
+          });
+        });
+      });
+    };
+    if (currentTrackIndex !== -1) {
+      setLocateCurrentTrack(() => scrollTo);
+    }
+    return () => {
+      setLocateCurrentTrack(null);
+    };
+  }, [filterTracks.tracks, listRef, setLocateCurrentTrack, trackStatus?.track?.id]);
+  const onListScroll = useCallback(() => {
+    if (contextMenuVisible) {
+      setContextMenuVisible?.(false);
+    }
+  }, [contextMenuVisible, setContextMenuVisible]);
+  // 右键菜单
+  const onContextMenu = useCallback<OnContextMenuFunc>(
+    (e, { track }) => {
+      setContextMenuRenderer?.(
+        createContextMenu({
+          track,
+          clientX: e.clientX,
+          clientY: e.clientY,
+          source: source,
+          openInfoWindow
+        })
+      );
+      setContextMenuVisible?.(true);
+    },
+    [openInfoWindow, setContextMenuRenderer, setContextMenuVisible, source]
+  );
+  // 回到顶部
+  const scrollTop = useCallback(() => {
+    startTransition(() => {
+      listRef.current?.containerRef.current?.scrollTo({
+        top: 0,
+        behavior: "smooth"
+      });
+    });
+  }, [listRef]);
+  // 包装范围更新，处理回到顶部请求
+  const wrapRangeUpdate = useCallback(
+    (range: IndexRange) => {
+      if (range[0] > 5) requestCanScrollTop("playlist", scrollTop);
+      else requestCanScrollTop("none");
+      return onVirtualListRangeUpdate(range);
+    },
+    [onVirtualListRangeUpdate, requestCanScrollTop, scrollTop]
+  );
 
+  useEffect(() => {
+    return () => {
+      requestCanScrollTop("none");
+    };
+  }, [requestCanScrollTop]);
+
+  const onPlay = useCallback(
+    (index: number) => {
+      if (!filterTracks.tracks[index]!.playable) return;
+      const rawTracks = tracks.current;
+      const rawIdx = filterTracks.absoluteIdx?.[index];
+      // 如果与当前播放列表相同，仅切换位置，避免重建列表导致状态抖动
+      if (Array.isArray(rawTracks) && typeof rawIdx === "number") {
+        if (Player.isSamePlaylist(rawTracks, source)) {
+          Player.setPosition(rawIdx);
+        } else {
+          Player.replacePlaylist(rawTracks, source, rawIdx);
+        }
+      } else {
+        if (Player.isSamePlaylist(filterTracks.tracks, source)) {
+          Player.setPosition(index);
+        } else {
+          Player.replacePlaylist(filterTracks.tracks, source, index);
+        }
+      }
+      setTimeout(() => {
+        requestIdleCallback(() => {
+          if (!playerStatus.playing) {
+            audioControl.current()?.play();
+          }
+        });
+      }, 1000);
+    },
+    [audioControl, filterTracks.absoluteIdx, filterTracks.tracks, playerStatus.playing, source]
+  );
   return {
+    mainColor,
+    fastLocation,
+    textColorOnMain,
     entry,
     loading,
-    filterTracks,
-    searchTracks,
-    onVirtualListRangeUpdate,
+    source,
+    tracks: filterTracks.tracks,
+    absoluteIdx: filterTracks.absoluteIdx,
     requestMissedTracks,
-    tracks
-  };
+    onVirtualListRangeUpdate: wrapRangeUpdate,
+    onPlay,
+    currentTrackID,
+    isLikedPlayList,
+    onContextMenu,
+    onListScroll,
+    searchTracks
+  } satisfies TrackListProps & { searchTracks: NormalFunc<[k: string]> };
 }
 
 export function usePlaylistHistoryRender() {

@@ -10,6 +10,7 @@ export function useFileCache(
     update?: boolean;
     timeLimit?: number;
     method?: string;
+    /** 是否为快速定位 */
     fastLocation?: boolean;
   }
 ) {
@@ -59,7 +60,7 @@ export function useFileCache(
     };
   }, [fastLocation, finalURL, id, method, onCacheHit, timeLimit, update, url]);
 
-  if (!url || !id) {
+  if (!url || !id || fastLocation) {
     return undefined;
   } else if (!url.startsWith("http") || url.startsWith("file") || url.startsWith(AppScheme)) {
     return url;

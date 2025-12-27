@@ -5,50 +5,46 @@ import NeteaseImage from "@mahiru/ui/componets/public/NeteaseImage";
 
 interface ListItemCoverProps {
   track: NeteaseTrack;
-  absoluteIndex: number;
-  playListID?: number;
-  onClick?: NormalFunc;
-  entry: Nullable<PlaylistCacheEntry>;
-  active: boolean;
   isMainColorDark: boolean;
+  onClick?: NormalFunc;
+  entry?: Nullable<PlaylistCacheEntry>;
+  entryTrackIdx?: number;
+  active?: boolean;
   fastLocation?: boolean;
 }
 
 const ListItemCover: FC<ListItemCoverProps> = ({
   track,
-  absoluteIndex,
-  playListID,
+  entryTrackIdx,
   onClick,
   entry,
-  active,
+  active = false,
   isMainColorDark,
-  fastLocation
+  fastLocation = false
 }) => {
   const onCacheHit = useCallback(
     (file: string, id: string) => {
       // 写入缓存ID
-      if (!playListID || !entry) return; // 没有歌单ID不处理(可能是搜索结果、历史记录等)
+      if (!entry || typeof entryTrackIdx !== "number") return;
       PlaylistManager.updateTrackCoverCache({
         entry,
-        absoluteIndex,
+        trackIdx: entryTrackIdx,
         cachedPicUrl: file,
         cachedPicUrlID: id
       });
     },
-    [absoluteIndex, entry, playListID]
+    [entry, entryTrackIdx]
   );
 
-  // 清除缓存
   const onCacheError = useCallback(() => {
-    // 没有歌单ID不处理(可能是搜索结果、历史记录等)
-    if (!playListID || !entry) return;
+    if (!entry || typeof entryTrackIdx !== "number") return;
     PlaylistManager.updateTrackCoverCache({
       entry,
-      absoluteIndex,
+      trackIdx: entryTrackIdx,
       cachedPicUrl: "",
       cachedPicUrlID: ""
     });
-  }, [absoluteIndex, entry, playListID]);
+  }, [entry, entryTrackIdx]);
 
   return (
     <NeteaseImage
@@ -64,6 +60,7 @@ const ListItemCover: FC<ListItemCoverProps> = ({
       size={ImageSize.xs}
       onCacheError={onCacheError}
       onCacheHit={onCacheHit}
+      fastLocation={fastLocation}
       shadowColor={isMainColorDark ? "dark" : "light"}
     />
   );

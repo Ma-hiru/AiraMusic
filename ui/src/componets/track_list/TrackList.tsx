@@ -9,174 +9,120 @@ import {
   useEffect,
   useImperativeHandle,
   useMemo,
-  useRef,
-  useState
+  useRef
 } from "react";
 import { useVirtualList } from "@mahiru/ui/hook/useVirtualList";
-import { useThemeColor } from "@mahiru/ui/hook/useThemeColor";
-import { usePersistZustandShallowStore, usePlayerStatus } from "@mahiru/ui/store";
 import { PlaylistCacheEntry } from "@mahiru/ui/utils/playlist";
 import { useScrollAutoHide } from "@mahiru/ui/hook/useScrollAutoHide";
+import { ColorInstance } from "color";
+
 import Loading from "@mahiru/ui/componets/public/Loading";
 import ListItem from "@mahiru/ui/componets/track_list/ListItem";
 import VirtualList, { VirtualListRow } from "@mahiru/ui/componets/virtual_list/VirtualList";
-import { useContextMenu } from "@mahiru/ui/hook/useContextMenu";
-import { createContextMenu } from "@mahiru/ui/componets/track_list/createContextMenu";
-import { useInfoWindow } from "@mahiru/ui/hook/useInfoWindow";
 
 export interface TrackListRef {
   containerRef: RefObject<Nullable<HTMLDivElement>>;
+  scrollToItem: NormalFunc<[item: number]>;
 }
 
-interface TrackListProps {
-  id?: number;
-  loading: boolean;
-  requestMissedTracks: number;
+export interface TrackListProps {
+  tracks: NeteaseTrack[];
+  textColorOnMain: ColorInstance;
+  mainColor: ColorInstance;
+  source?: number;
+  loading?: boolean;
+  requestMissedTracks?: number;
   paddingBottom?: number | string;
-  entry: Nullable<PlaylistCacheEntry>;
-  onVirtualListRangeUpdate: NormalFunc<[range: IndexRange]>;
-  filterTracks: { tracks: NeteaseTrack[]; absoluteIdx: Nullable<number[]> };
-  rawTracks: RefObject<NeteaseTrack[]>;
+  entry?: Nullable<PlaylistCacheEntry>;
+  onVirtualListRangeUpdate?: NormalFunc<[range: IndexRange]>;
+  absoluteIdx?: Nullable<number[]>;
+  isLikedPlayList?: boolean;
+  currentTrackID?: number;
+  onPlay?: NormalFunc<[index: number]>;
+  onContextMenu?: OnContextMenuFunc;
+  onListScroll?: NormalFunc;
+  fastLocation?: boolean;
 }
 
 const TrackList: ForwardRefRenderFunction<TrackListRef, TrackListProps> = (
   {
-    id,
-    filterTracks,
+    source,
+    tracks,
+    absoluteIdx,
     onVirtualListRangeUpdate,
     loading,
     paddingBottom,
     entry,
     requestMissedTracks,
-    rawTracks
+    mainColor,
+    textColorOnMain,
+    isLikedPlayList,
+    currentTrackID,
+    onPlay,
+    onContextMenu,
+    onListScroll,
+    fastLocation
   },
   ref
 ) => {
-  const { textColorOnMain, mainColor } = useThemeColor();
-  const { trackStatus, audioControl, playerStatus, setLocateCurrentTrack } = usePlayerStatus([
-    "trackStatus",
-    "audioControl",
-    "playerStatus",
-    "setLocateCurrentTrack"
-  ]);
-  const { userLikedListSummary } = usePersistZustandShallowStore(["userLikedListSummary"]);
-  const [fastLocation, setFastLocation] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
-  const isLikedPlayList = id === userLikedListSummary?.id;
-
-  const isPlaying = useRef(false);
-  isPlaying.current = playerStatus.playing;
-  const play = useRef<Undefinable<NormalFunc>>(undefined);
-  play.current = audioControl.current()?.play;
-
-  const { setContextMenuRenderer, setContextMenuVisible, contextMenuVisible } = useContextMenu();
-  const { openInfoWindow } = useInfoWindow(true);
-  const onContextMenu = useCallback<OnContextMenuFunc>(
-    (e, { track, index, absoluteIndex }) => {
-      setContextMenuRenderer?.(
-        createContextMenu({
-          track,
-          index,
-          absoluteIndex,
-          clientX: e.clientX,
-          clientY: e.clientY,
-          source: id,
-          openInfoWindow
-        })
-      );
-      setContextMenuVisible?.(true);
-    },
-    [id, openInfoWindow, setContextMenuRenderer, setContextMenuVisible]
-  );
-
   const extraData = useMemo<ExtraData>(
     () => ({
-      id,
-      isLikedPlayList,
-      absoluteIdx: filterTracks.absoluteIdx,
-      entry,
-      currentTrackID: trackStatus?.track?.id,
+      isLikedList: isLikedPlayList,
+      playlistEntry: entry,
+      absoluteIdx,
+      currentTrackID,
       textColorOnMain: textColorOnMain.string(),
       isMainColorDark: mainColor.isDark(),
-      play: () => {
-        if (!isPlaying.current) {
-          play.current?.();
-        }
+      createPlayHandler: (index: number) => {
+        return () => onPlay?.(index);
       },
       onContextMenu,
-      rawTracks,
       fastLocation
     }),
     [
+      absoluteIdx,
+      currentTrackID,
       entry,
       fastLocation,
-      filterTracks.absoluteIdx,
-      id,
       isLikedPlayList,
       mainColor,
       onContextMenu,
-      rawTracks,
-      textColorOnMain,
-      trackStatus?.track?.id
+      onPlay,
+      textColorOnMain
     ]
   );
   const { start, end, scrollToItem } = useVirtualList({
-    total: filterTracks.tracks.length,
+    total: tracks.length,
     containerRef,
     overscan: 10,
     itemHeight: 50,
     onRangeUpdate: onVirtualListRangeUpdate
   });
-  const { onScroll } = useScrollAutoHide(containerRef);
 
+  const { onScroll } = useScrollAutoHide(containerRef);
   const wrapScroll = useCallback(() => {
-    if (contextMenuVisible) {
-      setContextMenuVisible?.(false);
-    }
+    onListScroll?.();
     return onScroll();
-  }, [contextMenuVisible, onScroll, setContextMenuVisible]);
+  }, [onListScroll, onScroll]);
 
   // id变化时，重置滚动位置
   useEffect(() => {
     startTransition(() => {
       containerRef.current?.scrollTo({
         top: 0,
-        behavior: "smooth"
+        behavior: "instant"
       });
     });
-  }, [id]);
-
-  // 定位当前播放歌曲
-  useEffect(() => {
-    const currentTrackIndex = filterTracks.tracks.findIndex(
-      (track) => track.id === trackStatus?.track?.id
-    );
-    const scrollTo = () => {
-      startTransition(() => {
-        setFastLocation(true);
-        scrollToItem(currentTrackIndex);
-
-        requestIdleCallback(() => {
-          startTransition(() => {
-            setFastLocation(false);
-          });
-        });
-      });
-    };
-    if (currentTrackIndex !== -1) {
-      setLocateCurrentTrack(() => scrollTo);
-    }
-    return () => {
-      setLocateCurrentTrack(null);
-    };
-  }, [filterTracks.tracks, scrollToItem, setLocateCurrentTrack, trackStatus?.track?.id]);
+  }, [source]);
 
   useImperativeHandle(
     ref,
     () => ({
-      containerRef
+      containerRef,
+      scrollToItem
     }),
-    []
+    [scrollToItem]
   );
   return (
     <>
@@ -185,7 +131,7 @@ const TrackList: ForwardRefRenderFunction<TrackListRef, TrackListProps> = (
         onScroll={wrapScroll}
         className="w-full h-full overflow-y-auto contain-content will-change-scroll scrollbar">
         <VirtualList
-          items={filterTracks.tracks}
+          items={tracks}
           extraData={extraData}
           itemHeight={50}
           RowComponent={RowComponent}
@@ -212,42 +158,39 @@ const TrackList: ForwardRefRenderFunction<TrackListRef, TrackListProps> = (
   );
 };
 
-type OnContextMenuFunc = NormalFunc<
+export type OnContextMenuFunc = NormalFunc<
   [
     e: ReactMouseEvent<HTMLDivElement>,
-    props: { track: NeteaseTrack; index: number; absoluteIndex: number }
+    props: { track: NeteaseTrack; tracksIdx: number; rawIdx?: number }
   ]
 >;
 
 type ExtraData = {
-  id?: number;
-  absoluteIdx: number[] | null;
-  entry: Nullable<PlaylistCacheEntry>;
-  currentTrackID?: number;
   textColorOnMain: string;
-  play?: NormalFunc;
   isMainColorDark: boolean;
+  createPlayHandler?: NormalFunc<[number], NormalFunc>;
+  playlistEntry?: Nullable<PlaylistCacheEntry>;
+  absoluteIdx?: Nullable<number[]>;
+  currentTrackID?: Optional<number>;
   onContextMenu?: OnContextMenuFunc;
-  rawTracks: RefObject<NeteaseTrack[]>;
   fastLocation?: boolean;
+  isLikedList?: boolean;
 };
 
 const RowComponent: VirtualListRow<NeteaseTrack, ExtraData> = ({ index, items, extra }) => {
-  const track = items[index];
   return (
     <ListItem
-      onContextMenu={extra.onContextMenu}
-      active={track?.id === extra.currentTrackID}
       textColorOnMain={extra.textColorOnMain}
-      playlistEntry={extra.entry}
-      filterIndex={index}
-      fastLocation={extra.fastLocation}
-      filterTracks={items}
-      rawTracks={extra.rawTracks}
-      playListID={extra.id}
-      play={extra.play}
       isMainColorDark={extra.isMainColorDark}
-      rawIndex={extra.absoluteIdx ? extra.absoluteIdx[index]! : index}
+      tracks={items}
+      tracksIdx={index}
+      fastLocation={extra.fastLocation}
+      playlistEntry={extra.playlistEntry}
+      entryTrackIdx={extra.absoluteIdx?.[index]}
+      isLikedList={extra.isLikedList}
+      active={items[index]?.id === extra.currentTrackID}
+      onPlay={extra.createPlayHandler?.(index)}
+      onContextMenu={extra.onContextMenu}
     />
   );
 };
