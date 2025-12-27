@@ -3,6 +3,7 @@ import { SearchType } from "@mahiru/ui/api/search";
 import { cx } from "@emotion/css";
 import { useScrollAutoHide } from "@mahiru/ui/hook/useScrollAutoHide";
 import SongResult from "@mahiru/ui/page/search/result/SongResult";
+import SongResultSummary from "@mahiru/ui/page/search/result/SongResultSummary";
 
 interface SearchResultProps {
   data: Nullable<NeteaseSearchResult<any>>;
@@ -48,14 +49,7 @@ const SearchResult: FC<SearchResultProps> = ({
         return (
           <div>
             <h2>songs:</h2>
-            {comprehensive.song.songs.map((song) => {
-              return (
-                <div key={song.id}>
-                  {song.name} - {song.ar.map((ar) => ar.name).join(" / ")} - {song.al.name}
-                </div>
-              );
-            })}
-            <SongResult
+            <SongResultSummary
               ids={comprehensive.song.songs.map((song) => song.id)}
               themeSync={themeSync}
             />

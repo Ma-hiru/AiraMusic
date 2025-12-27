@@ -19,10 +19,10 @@ export const Player = new (class {
   private _shuffle: boolean = false;
   private _repeat: "off" | "one" | "all" = "off";
   private _outerTrackUpdater: NormalFunc<
-    [updater: NormalFunc<[draft: Nullable<PlayerTrackStatus>], void | Nullable<PlayerTrackStatus>>]
+    [updater: (draft: Nullable<PlayerTrackStatus>) => void | Nullable<PlayerTrackStatus>]
   > | null = null;
   private _outerStatusUpdater: NormalFunc<
-    [updater: NormalFunc<[draft: PlayerStatus], void | PlayerStatus>]
+    [updater: (draft: PlayerStatus) => void | PlayerStatus]
   > | null = null;
   private _beforeTrackUpdate: NormalFunc<[next: Nullable<PlayerTrackStatus>]> | null = null;
 
@@ -52,11 +52,12 @@ export const Player = new (class {
     const { audioControl } = getPlayerStatusSnapshot();
     startTransition(() => {
       this._outerStatusUpdater?.((draft) => {
-        draft.playing = playing;
-        if (playing) {
-          audioControl.current()?.play();
-        } else {
-          audioControl.current()?.pause();
+        if (draft.playing !== playing) {
+          draft.playing = playing;
+        }
+        const audio = audioControl.current()?.ref.current();
+        if (audio && !audio.paused !== playing) {
+          playing ? audio.play() : audio.pause();
         }
       });
     });
@@ -132,7 +133,7 @@ export const Player = new (class {
       source ||= null;
       this._playlist = (list as NeteaseTrack[]).map((track) => {
         return {
-          source: source as number | null,
+          source: source as Nullable<number>,
           track,
           lyric: {
             full: [],
@@ -257,10 +258,34 @@ export const Player = new (class {
         quality: undefined
       };
     }
-    if (position === "end") {
-      this._playlist.push(newTrack);
+
+    let exist: Undefinable<PlayerTrackStatus>;
+    let existPos = -1;
+    for (const trackStatus of this._playlist) {
+      existPos++;
+      if (trackStatus.track.id === newTrack.track.id) {
+        exist = trackStatus;
+        break;
+      }
+    }
+
+    if (!exist) {
+      // 如果原有播放列表没有该歌曲
+      if (position === "end") {
+        this._playlist.push(newTrack);
+      } else {
+        this._playlist.splice(this._position + 1, 0, newTrack);
+      }
     } else {
-      this._playlist.splice(this._position + 1, 0, newTrack);
+      // 如果有，则改变位置
+      if (existPos !== this._position) {
+        // 如果现有位置不是播放位置
+        this._playlist.splice(existPos, 1);
+        this._playlist.splice(this._position + 1, 0, exist);
+      } else {
+        // 如果现有位置是播放位置
+        // TODO: 应不应该忽略？
+      }
     }
     this.updateOuter();
     return this.current();
@@ -272,8 +297,11 @@ export const Player = new (class {
 
   setPosition(pos: number) {
     if (pos < 0 || pos >= this._playlist.length) return this.current();
-    this._position = pos;
-    this.updateOuter();
+    if (this._position !== pos) {
+      this._position = pos;
+      this.setPlayingStatus(true);
+      this.updateOuter();
+    }
     return this.current();
   }
 
@@ -294,18 +322,18 @@ export const Player = new (class {
   current(autoplay: boolean = false) {
     if (!this.canPlay()) return null;
     if (this._position === -1) {
-      if (autoplay) {
-        this._position = 0;
-      } else {
-        return null;
-      }
+      if (autoplay) this._position = 0;
+      else return null;
     }
     return this._playlist[this._position] || null;
   }
 
   next(force: boolean = true): Nullable<PlayerTrackStatus> {
     if (!this.canPlay()) return null;
-    if (!force && this._repeat === "one") return this.current(false);
+    if (!force && this._repeat === "one") {
+      this.setPlayingStatus(true);
+      return this.current(false);
+    }
     let nextPos;
     if (this._shuffle) {
       // 随机播放
@@ -324,22 +352,26 @@ export const Player = new (class {
         nextPos = this._position + 1;
       }
     }
-    if (this._playlist[nextPos]?.track?.playable === false) {
+    this._position = nextPos;
+    if (this.current(false)?.track?.playable === false) {
       return this.next(force);
     }
-    this._position = nextPos;
     this.setPlayingStatus(true);
     this.updateOuter();
     return this.current(false);
   }
 
   peek() {
-    return this._playlist[this._position + 1] || null;
+    const nextPos = (this._position + 1) % this._playlist.length;
+    return this._playlist[nextPos] || null;
   }
 
   last(force: boolean = true): Nullable<PlayerTrackStatus> {
     if (!this.canPlay()) return null;
-    if (!force && this._repeat === "one") return this.current(false);
+    if (!force && this._repeat === "one") {
+      this.setPlayingStatus(true);
+      return this.current(false);
+    }
     let lastPos;
     if (this._shuffle) {
       // 随机播放
@@ -358,10 +390,10 @@ export const Player = new (class {
         lastPos = this._position - 1;
       }
     }
+    this._position = lastPos;
     if (this._playlist[lastPos]?.track?.playable === false) {
       return this.last(force);
     }
-    this._position = lastPos;
     this.setPlayingStatus(true);
     this.updateOuter();
     return this.current(false);

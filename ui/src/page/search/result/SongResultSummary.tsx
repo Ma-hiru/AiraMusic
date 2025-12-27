@@ -1,14 +1,14 @@
 import { FC, memo, useEffect, useState } from "react";
 import { Filter } from "@mahiru/ui/utils/filter";
 import Color from "color";
-import TrackList from "@mahiru/ui/componets/track_list";
+import TrackItem from "@mahiru/ui/componets/track_item/TrackItem";
 
 interface SongResultProps {
   ids: number[];
   themeSync: InfoSync<"theme">;
 }
 
-const SongResult: FC<SongResultProps> = ({ ids, themeSync }) => {
+const SongResultSummary: FC<SongResultProps> = ({ ids, themeSync }) => {
   const [tracks, setTracks] = useState<NeteaseTrack[]>([]);
   useEffect(() => {
     if (ids.length) {
@@ -19,14 +19,16 @@ const SongResult: FC<SongResultProps> = ({ ids, themeSync }) => {
         .then(setTracks);
     }
   }, [ids]);
-  return (
-    <TrackList
-      tracks={tracks}
-      textColorOnMain={Color(themeSync.value.textColor)}
-      mainColor={Color(themeSync.value.mainColor)}
-      showHeart={false}
-      overscan={5}
-    />
-  );
+  return tracks.map((_, index) => {
+    return (
+      <TrackItem
+        tracks={tracks}
+        trackIdx={index}
+        textColorOnMain={Color(themeSync.value.textColor)}
+        mainColor={Color(themeSync.value.mainColor)}
+        showHeart={false}
+      />
+    );
+  });
 };
-export default memo(SongResult);
+export default memo(SongResultSummary);

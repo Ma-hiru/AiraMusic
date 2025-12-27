@@ -1,8 +1,10 @@
 import NeteaseImage from "@mahiru/ui/componets/public/NeteaseImage";
 
+import type { RefObject } from "react";
 import { startTransition, useCallback, useEffect, useRef, useState } from "react";
 import { Filter, ImageSize } from "@mahiru/ui/utils/filter";
 import { Log } from "@mahiru/ui/utils/dev";
+import type { PlaylistCacheEntry } from "@mahiru/ui/utils/playlist";
 import { PlaylistManager } from "@mahiru/ui/utils/playlist";
 import { Copy, DiscAlbum, ListMusic, ListPlus, MessageSquare, Play } from "lucide-react";
 import { PlaylistHistoryCache } from "@mahiru/ui/utils/history";
@@ -15,12 +17,10 @@ import { useThemeColor } from "@mahiru/ui/hook/useThemeColor";
 import { useHeart } from "@mahiru/ui/hook/useHeart";
 import { SearchTrack } from "@mahiru/wasm";
 import { CommentType } from "@mahiru/ui/api/comment";
-
-import type { RefObject } from "react";
-import type { PlaylistCacheEntry } from "@mahiru/ui/utils/playlist";
-import type { TrackListRef, TrackListProps } from "@mahiru/ui/componets/track_list";
+import type { TrackListProps, TrackListRef } from "@mahiru/ui/componets/track_list";
 import type { OnContextMenuFunc } from "@mahiru/ui/componets/track_item/TrackItem";
 import type { ContextMenuItem, ContextMenuRender } from "@mahiru/ui/componets/menu/MenuProvider";
+import { useKeepAliveCtx } from "@mahiru/ui/ctx/KeepAliveCtx";
 
 export function usePlaylistNormalRender(id?: string) {
   const listRef = useRef<TrackListRef>(null);
@@ -204,13 +204,15 @@ export function usePlaylistNormalRender(id?: string) {
     };
   }, []);
 
+  const { activeKey } = useKeepAliveCtx();
   const controller = usePlaylistController({
     filterTracks,
     tracks: tracks.current,
     listRef,
     onVirtualListRangeUpdate,
     entry,
-    source
+    source,
+    routerActive: !!activeKey?.startsWith("/playlist")
   });
 
   return {
@@ -375,12 +377,14 @@ export function usePlaylistHistoryRender() {
     };
   }, [saver, updater]);
 
+  const { activeKey } = useKeepAliveCtx();
   const controller = usePlaylistController({
     filterTracks,
     tracks: historyTracks.current,
     listRef,
     onVirtualListRangeUpdate,
-    entry: null
+    entry: null,
+    routerActive: !!activeKey?.startsWith("/history")
   });
 
   return {
@@ -410,35 +414,35 @@ function usePlaylistController(props: {
   listRef: RefObject<TrackListRef | null>;
   onVirtualListRangeUpdate: (range: IndexRange) => Promise<void>;
   entry: Nullable<PlaylistCacheEntry>;
+  routerActive: boolean;
   source?: number;
 }) {
-  const { filterTracks, tracks, listRef, onVirtualListRangeUpdate, entry, source } = props;
+  const { filterTracks, tracks, listRef, onVirtualListRangeUpdate, entry, source, routerActive } =
+    props;
   const [fastLocation, setFastLocation] = useState(false);
   const { mainColor, textColorOnMain } = useThemeColor();
   const { openInfoWindow } = useInfoWindow(true);
   const { setContextMenuRenderer, setContextMenuVisible, contextMenuVisible } = useContextMenu();
-  const { setLocateCurrentTrack, trackStatus, requestCanScrollTop, playerStatus, audioControl } =
-    usePlayerStatus([
-      "setLocateCurrentTrack",
-      "trackStatus",
-      "requestCanScrollTop",
-      "playerStatus",
-      "audioControl"
-    ]);
+  const { setLocateCurrentTrack, trackStatus, requestCanScrollTop } = usePlayerStatus([
+    "setLocateCurrentTrack",
+    "trackStatus",
+    "requestCanScrollTop"
+  ]);
   // 定位当前播放歌曲
   useEffect(() => {
+    if (!routerActive) return;
     const currentTrackIndex = filterTracks.tracks.findIndex(
       (track) => track.id === trackStatus?.track?.id
     );
     const scrollTo = () => {
+      setFastLocation(true);
       startTransition(() => {
-        setFastLocation(true);
         listRef.current?.scrollToItem(currentTrackIndex);
-        requestIdleCallback(() => {
+        setTimeout(() => {
           startTransition(() => {
             setFastLocation(false);
           });
-        });
+        }, 1500);
       });
     };
     if (currentTrackIndex !== -1) {
@@ -447,7 +451,7 @@ function usePlaylistController(props: {
     return () => {
       setLocateCurrentTrack(null);
     };
-  }, [filterTracks.tracks, listRef, setLocateCurrentTrack, trackStatus?.track?.id]);
+  }, [filterTracks.tracks, listRef, routerActive, setLocateCurrentTrack, trackStatus?.track?.id]);
   const onListScroll = useCallback(() => {
     if (contextMenuVisible) {
       setContextMenuVisible?.(false);
@@ -473,11 +477,17 @@ function usePlaylistController(props: {
   );
   // 回到顶部
   const scrollTop = useCallback(() => {
+    setFastLocation(true);
     startTransition(() => {
       listRef.current?.containerRef.current?.scrollTo({
         top: 0,
         behavior: "smooth"
       });
+      setTimeout(() => {
+        startTransition(() => {
+          setFastLocation(false);
+        });
+      }, 1500);
     });
   }, [listRef]);
   useEffect(() => {
@@ -506,15 +516,8 @@ function usePlaylistController(props: {
       } else {
         Player.replacePlaylist(rawTracks, source, rawIdx);
       }
-      setTimeout(() => {
-        requestIdleCallback(() => {
-          if (!playerStatus.playing) {
-            audioControl.current()?.play();
-          }
-        });
-      }, 1000);
     },
-    [audioControl, filterTracks.absoluteIdx, playerStatus.playing, source, tracks]
+    [filterTracks.absoluteIdx, source, tracks]
   );
   // 封面缓存命中/错误回调
   const onCoverCacheHit = useCallback<NormalFunc<[file: string, id: string, trackIdx: number]>>(
@@ -620,7 +623,9 @@ function createMenuItems(props: {
   openInfoWindow: <T extends keyof InfoSyncValueMap>(type: T, value: InfoSyncValueMap[T]) => void;
   source?: number;
 }): ContextMenuItem[] {
-  return [
+  const disabled = !props.track.playable;
+  const items: ContextMenuItem[] = [];
+  items.push(
     {
       prefix: <Copy size={14} />,
       label: <p className="text-[12px]">复制歌曲名</p>,
@@ -651,28 +656,6 @@ function createMenuItems(props: {
       }
     },
     {
-      prefix: <Play size={14} />,
-      label: <p className="text-[12px]">播放</p>,
-      onClick: () => {
-        Player.addTrack(props.track, props.source, "next");
-        Player.next(true);
-      }
-    },
-    {
-      prefix: <ListPlus size={14} />,
-      label: <p className="text-[12px]">下一首播放</p>,
-      onClick: () => {
-        Player.addTrack(props.track, props.source, "next");
-      }
-    },
-    {
-      prefix: <ListMusic size={14} />,
-      label: <p className="text-[12px]">添加到播放列表</p>,
-      onClick: () => {
-        Player.addTrack(props.track, props.source, "end");
-      }
-    },
-    {
       prefix: <DiscAlbum size={14} />,
       label: <p className="text-[12px]">专辑</p>
     },
@@ -687,5 +670,32 @@ function createMenuItems(props: {
         });
       }
     }
-  ];
+  );
+  if (!disabled) {
+    items.push(
+      {
+        prefix: <Play size={14} />,
+        label: <p className="text-[12px]">播放</p>,
+        onClick: () => {
+          Player.addTrack(props.track, props.source, "next");
+          Player.next(true);
+        }
+      },
+      {
+        prefix: <ListPlus size={14} />,
+        label: <p className="text-[12px]">下一首播放</p>,
+        onClick: () => {
+          Player.addTrack(props.track, props.source, "next");
+        }
+      },
+      {
+        prefix: <ListMusic size={14} />,
+        label: <p className="text-[12px]">添加到播放列表</p>,
+        onClick: () => {
+          Player.addTrack(props.track, props.source, "end");
+        }
+      }
+    );
+  }
+  return items;
 }

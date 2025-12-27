@@ -40,11 +40,6 @@ export const DynamicStoreConfig: ZustandConfig<
     if (trackStatus && trackStatus.track.id !== next?.track.id) {
       API.Track.scrobble(trackStatus, playerProgress.current().currentTime);
       void PlaylistHistoryCache.addTrack(trackStatus.track);
-      set((draft) => {
-        if (draft.playerStatus.playing) {
-          draft.playerStatus.playing = false;
-        }
-      });
     }
   },
   requestCanScrollTop: (type, callback?) => {

@@ -3,11 +3,14 @@ import {
   ForwardRefRenderFunction,
   ReactNode,
   useCallback,
+  useEffect,
   useImperativeHandle,
-  useRef
+  useRef,
+  useState
 } from "react";
 import { useUpdate } from "@mahiru/ui/hook/useUpdate";
 import { useLocation, useOutlet } from "react-router-dom";
+import { KeepAliveBuildKey, KeepAliveCtx } from "@mahiru/ui/ctx/KeepAliveCtx";
 
 export type KeepAliveOutletRef = {
   clearCache: (pathname: string) => void;
@@ -24,15 +27,11 @@ const KeepAliveOutlet: ForwardRefRenderFunction<KeepAliveOutletRef, KeepAliveOut
 ) => {
   const outlet = useOutlet();
   const location = useLocation();
-  const cacheRef = useRef<Map<string, ReactNode>>(new Map());
   const forceUpdate = useUpdate();
+  const cacheRef = useRef<Map<string, ReactNode>>(new Map());
+  const [activeKey, setActiveKey] = useState<string>();
 
-  const buildKey = useCallback((pathname: string, search?: string) => {
-    // playlist/:id 不分配独立缓存，统一使用 /playlist 作为 key
-    if (pathname.startsWith("/playlist/")) return "/playlist";
-    return `${pathname}${search ?? ""}`;
-  }, []);
-  const currentKey = cache ? buildKey(location.pathname, location.search) : undefined;
+  const currentKey = cache ? KeepAliveBuildKey(location.pathname, location.search) : undefined;
 
   const clearCache = useCallback(
     (pathname: string) => {
@@ -51,10 +50,11 @@ const KeepAliveOutlet: ForwardRefRenderFunction<KeepAliveOutletRef, KeepAliveOut
     clearCache
   }));
 
-  if (!cache) {
-    return outlet;
-  }
+  useEffect(() => {
+    setActiveKey(currentKey);
+  }, [currentKey]);
 
+  if (!cache) return outlet;
   if (currentKey) {
     cacheRef.current.set(currentKey, outlet);
     // 超出上限时移除最旧的一个缓存
@@ -71,13 +71,12 @@ const KeepAliveOutlet: ForwardRefRenderFunction<KeepAliveOutletRef, KeepAliveOut
       }
     }
   }
+
   const entries = Array.from(cacheRef.current.entries()).filter(([, node]) => Boolean(node));
-  if (entries.length === 0) {
-    return null;
-  }
+  if (entries.length === 0) return null;
 
   return (
-    <>
+    <KeepAliveCtx.Provider value={{ activeKey }}>
       {entries.map(([key, element]) => (
         <div
           key={key}
@@ -86,7 +85,7 @@ const KeepAliveOutlet: ForwardRefRenderFunction<KeepAliveOutletRef, KeepAliveOut
           {element}
         </div>
       ))}
-    </>
+    </KeepAliveCtx.Provider>
   );
 };
 export default forwardRef(KeepAliveOutlet);

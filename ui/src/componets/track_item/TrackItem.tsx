@@ -1,7 +1,6 @@
 import { cx } from "@emotion/css";
 import { FC, memo, MouseEvent as ReactMouseEvent } from "react";
 import { ColorInstance } from "color";
-import { PlaylistCacheEntry } from "@mahiru/ui/utils/playlist";
 
 import ListItemIndex from "./TrackItemIndex";
 import ListItemCover from "./TrackItemCover";

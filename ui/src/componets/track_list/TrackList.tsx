@@ -16,6 +16,7 @@ import { ColorInstance } from "color";
 import TrackItem, { OnContextMenuFunc } from "@mahiru/ui/componets/track_item/TrackItem";
 import VirtualList, { VirtualListRow } from "@mahiru/ui/componets/virtual_list/VirtualList";
 import ListLoading from "@mahiru/ui/componets/track_list/ListLoading";
+import { cx } from "@emotion/css";
 
 export interface TrackListRef {
   containerRef: RefObject<Nullable<HTMLDivElement>>;
@@ -42,6 +43,8 @@ export interface TrackListProps {
   showHeart?: boolean;
   isTrackLiked?: NormalFunc<[track: NeteaseTrackBase], boolean>;
   likeChange?: NormalFunc<[track: NeteaseTrackBase]>;
+  className?: string;
+  overscan?: number;
 }
 
 const TrackList: ForwardRefRenderFunction<TrackListRef, TrackListProps> = (
@@ -64,7 +67,9 @@ const TrackList: ForwardRefRenderFunction<TrackListRef, TrackListProps> = (
     likeChange,
     isTrackLiked,
     onCoverCacheHit,
-    onCoverCacheError
+    onCoverCacheError,
+    className,
+    overscan = 10
   },
   ref
 ) => {
@@ -73,7 +78,7 @@ const TrackList: ForwardRefRenderFunction<TrackListRef, TrackListProps> = (
   const { start, end, scrollToItem } = useVirtualList({
     total: tracks.length,
     containerRef,
-    overscan: 10,
+    overscan,
     itemHeight: 50,
     onRangeUpdate: onVirtualListRangeUpdate
   });
@@ -106,10 +111,13 @@ const TrackList: ForwardRefRenderFunction<TrackListRef, TrackListProps> = (
       <div
         ref={containerRef}
         onScroll={wrapScroll}
-        className={`
+        className={cx(
+          `
           w-full h-full overflow-y-auto scrollbar
           contain-content will-change-scroll
-        `}>
+        `,
+          className
+        )}>
         <VirtualList
           items={tracks}
           extraData={{
