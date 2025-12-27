@@ -5,10 +5,9 @@ import DailyRecommendPlaylist from "@mahiru/ui/page/home/daily_recommend_playlis
 import RecommendPlaylist from "@mahiru/ui/page/home/recommend_playlist/RecommendPlaylist";
 import { useScrollAutoHide } from "@mahiru/ui/hook/useScrollAutoHide";
 import { useLayoutStatus } from "@mahiru/ui/store";
-import { Stage, useStage } from "@mahiru/ui/hook/useStage";
+import { useDelay } from "@mahiru/ui/hook/useDelay";
 
 const Content: FC<object> = () => {
-  const { stage } = useStage();
   const containerRef = useRef<HTMLDivElement>(null);
   const { onScroll } = useScrollAutoHide(containerRef);
   const { requestCanScrollTop } = useLayoutStatus(["requestCanScrollTop"]);
@@ -36,15 +35,17 @@ const Content: FC<object> = () => {
     };
   }, [requestCanScrollTop]);
 
+  const reachedSet = useDelay([200, 1000, 5000, 10000]);
+
   return (
     <div
       ref={containerRef}
       className="w-full h-full overflow-y-auto scrollbar"
       onScroll={wrapOnScroll}>
-      {stage >= Stage.First && <Banner />}
-      {stage >= Stage.Second && <DailyRecommendTracks />}
-      {stage >= Stage.Finally && <DailyRecommendPlaylist />}
-      {stage >= Stage.Finally && <RecommendPlaylist />}
+      {reachedSet.has(200) && <Banner />}
+      {reachedSet.has(1000) && <DailyRecommendTracks />}
+      {reachedSet.has(5000) && <DailyRecommendPlaylist />}
+      {reachedSet.has(10000) && <RecommendPlaylist />}
     </div>
   );
 };

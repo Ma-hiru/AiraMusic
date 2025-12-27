@@ -1,46 +1,34 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { startTransition, useEffect, useRef, useState } from "react";
 
-export function useDelay() {
-  const [, forceUpdate] = useState(0);
-  // 页面级时间起点
-  const timeOrigin = performance.timeOrigin;
-  // 目标执行时间（绝对时间）
-  const targetTimeRef = useRef<number | null>(null);
-  // 是否已触发
-  const firedRef = useRef(false);
-  const ready = targetTimeRef.current == null ? true : performance.now() >= targetTimeRef.current;
-  const requestDelay = useCallback((delayMs: number) => {
-    const target = performance.now() + delayMs;
-    // 取最早的那个时间
-    if (targetTimeRef.current == null || target < targetTimeRef.current) {
-      targetTimeRef.current = target;
-      firedRef.current = false;
-    }
-    // 强制一次检查
-    forceUpdate((n) => n + 1);
-  }, []);
+export function useDelay<const T extends readonly number[]>(timeNode: T) {
+  const mountTime = useRef(performance.now());
+  const [delayStage, setDelayStage] = useState<Set<T[number]>>(new Set());
+  const delayRef = useRef(delayStage);
+  delayRef.current = delayStage;
+
   useEffect(() => {
-    if (targetTimeRef.current == null) return;
-    if (firedRef.current) return;
+    const now = performance.now();
+    const elapsed = now - mountTime.current;
+    const sorted = [...timeNode].sort((a, b) => a - b);
+    const timers: number[] = [];
 
-    let rafId: number;
+    for (const time of sorted) {
+      timers.push(
+        window.setTimeout(() => {
+          startTransition(() => {
+            const newSet = new Set(delayRef.current);
+            newSet.add(time);
+            setDelayStage(newSet);
+          });
+        }, time - elapsed)
+      );
+    }
 
-    const check = () => {
-      if (performance.now() >= targetTimeRef.current!) {
-        firedRef.current = true;
-        forceUpdate((n) => n + 1);
-      } else {
-        rafId = requestAnimationFrame(check);
-      }
+    return () => {
+      timers.forEach(clearTimeout);
     };
+    // eslint-disable-next-line
+  }, []);
 
-    rafId = requestAnimationFrame(check);
-
-    return () => cancelAnimationFrame(rafId);
-  }, [ready]);
-
-  return {
-    ready,
-    requestDelay
-  };
+  return delayStage;
 }

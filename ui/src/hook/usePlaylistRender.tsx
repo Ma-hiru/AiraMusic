@@ -500,9 +500,10 @@ function usePlaylistController(props: {
     (range: IndexRange) => {
       if (range[0] > 5) requestCanScrollTop("playlist", scrollTop);
       else requestCanScrollTop("none");
+      if (fastLocation) return;
       return onVirtualListRangeUpdate(range);
     },
-    [onVirtualListRangeUpdate, requestCanScrollTop, scrollTop]
+    [fastLocation, onVirtualListRangeUpdate, requestCanScrollTop, scrollTop]
   );
   // 播放歌曲
   const onPlay = useCallback(
