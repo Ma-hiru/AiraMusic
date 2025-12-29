@@ -1,11 +1,9 @@
 import NeteaseImage from "@mahiru/ui/componets/public/NeteaseImage";
 
-import type { RefObject } from "react";
-import { startTransition, useCallback, useEffect, useRef, useState } from "react";
+import { RefObject, startTransition, useCallback, useEffect, useRef, useState } from "react";
 import { Filter, ImageSize } from "@mahiru/ui/utils/filter";
 import { Log } from "@mahiru/ui/utils/dev";
-import type { PlaylistCacheEntry } from "@mahiru/ui/utils/playlist";
-import { PlaylistManager } from "@mahiru/ui/utils/playlist";
+import { PlaylistCacheEntry, PlaylistManager } from "@mahiru/ui/utils/playlist";
 import { Copy, DiscAlbum, ListMusic, ListPlus, MessageSquare, Play } from "lucide-react";
 import { PlaylistHistoryCache } from "@mahiru/ui/utils/history";
 import { useUpdate } from "@mahiru/ui/hook/useUpdate";
@@ -17,9 +15,9 @@ import { useThemeColor } from "@mahiru/ui/hook/useThemeColor";
 import { useHeart } from "@mahiru/ui/hook/useHeart";
 import { SearchTrack } from "@mahiru/wasm";
 import { CommentType } from "@mahiru/ui/api/comment";
-import type { TrackListProps, TrackListRef } from "@mahiru/ui/componets/track_list";
-import type { OnContextMenuFunc } from "@mahiru/ui/componets/track_item/TrackItem";
-import type { ContextMenuItem, ContextMenuRender } from "@mahiru/ui/componets/menu/MenuProvider";
+import { TrackListProps, TrackListRef } from "@mahiru/ui/componets/track_list";
+import { OnContextMenuFunc } from "@mahiru/ui/componets/track_item/TrackItem";
+import { ContextMenuItem, ContextMenuRender } from "@mahiru/ui/componets/menu/MenuProvider";
 import { useKeepAliveCtx } from "@mahiru/ui/ctx/KeepAliveCtx";
 
 export function usePlaylistNormalRender(id?: string) {

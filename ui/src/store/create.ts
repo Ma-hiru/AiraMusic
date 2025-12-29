@@ -2,8 +2,7 @@ import { immer } from "zustand/middleware/immer";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { create } from "zustand";
 import { useShallow } from "zustand/react/shallow";
-import { isRelease } from "@mahiru/ui/utils/dev";
-import { EqError, Log } from "@mahiru/ui/utils/dev";
+import { EqError, isRelease, Log } from "@mahiru/ui/utils/dev";
 import { ZustandConfig } from "@mahiru/ui/types/zustand";
 
 export function createZustandStore<T extends ZustandConfig<any>>(
@@ -11,10 +10,7 @@ export function createZustandStore<T extends ZustandConfig<any>>(
   name: string,
   isPersist: boolean | NormalFunc<never[], boolean> = isRelease,
   currentVersion: number = 1,
-  migrate?: NormalFunc<
-    [persistedState: unknown, version: number, currentVersion: number],
-    Promise<unknown>
-  >
+  migrate?: PromiseFunc<[persistedState: unknown, version: number, currentVersion: number], unknown>
 ) {
   if (typeof isPersist === "function") {
     isPersist = isPersist();
@@ -49,20 +45,28 @@ export function createZustandStore<T extends ZustandConfig<any>>(
   return create<ReturnType<T>>()(middleware as any);
 }
 
+interface useZustandShallowStoreFunc<StoreType> {
+  <T extends (keyof StoreType)[]>(select: T): Pick<StoreType, T[number]>;
+  (): StoreType;
+}
+
 export function createZustandShallowStore<StoreType>(
   useStore: ReturnType<typeof createZustandStore>
 ) {
-  return function useZustandShallowStore<T extends (keyof StoreType)[]>(select: T) {
+  return (<T extends (keyof StoreType)[]>(select?: T) => {
     return useStore(
-      useShallow((state) =>
+      useShallow((state: StoreType) => {
+        if (!select || select.length === 0) {
+          return state;
+        }
         select.reduce(
           (result, key: T[number]) => {
             result[key] = state[key];
             return result;
           },
           {} as Pick<StoreType, T[number]>
-        )
-      )
+        );
+      })
     );
-  };
+  }) as useZustandShallowStoreFunc<StoreType>;
 }

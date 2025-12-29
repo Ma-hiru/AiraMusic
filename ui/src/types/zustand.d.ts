@@ -1,5 +1,5 @@
-import type { Draft } from "immer";
-import type { StoreApi } from "zustand";
+import { Draft } from "immer";
+import { StoreApi } from "zustand";
 
 export type ZustandSet<T> = (
   partial: T | Partial<T> | ((draft: Draft<T>) => void | T | Partial<T>),
