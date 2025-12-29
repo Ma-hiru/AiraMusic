@@ -1,7 +1,7 @@
 import { createZustandShallowStore, createZustandStore } from "../create";
 import { PlayerStoreActions, PlayerStoreConfig, PlayerStoreInitialState } from "./config";
 
-export type { PlayerFSMEvent, PlayerFSMStatus } from "./fsm";
+export { PlayerFSMEvent, PlayerFSMStatus } from "./fsm";
 
 export type PlayerStoreType = PlayerStoreInitialState & PlayerStoreActions;
 
