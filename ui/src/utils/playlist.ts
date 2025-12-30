@@ -1,10 +1,10 @@
 import { Filter, ImageSize } from "@mahiru/ui/utils/filter";
 import { EqError, Log } from "@mahiru/ui/utils/dev";
-import { getPersistSnapshot } from "@mahiru/ui/store";
 import { CacheStore } from "@mahiru/ui/store/cache";
 import { Time } from "@mahiru/ui/utils/time";
 import { API } from "@mahiru/ui/api";
 import { startTransition } from "react";
+import { getUserStoreSnapshot } from "@mahiru/ui/store/user";
 
 export type PlaylistCacheID = `play_list_cache_${string | number}`;
 
@@ -240,8 +240,8 @@ export const PlaylistManager = new (class {
 
   async updateTrackLikedStatus(props: { track: NeteaseTrack; nextStatus: boolean }) {
     const { track, nextStatus } = props;
-    const { userLikedListSummary } = getPersistSnapshot();
-    const likedPlaylistID = userLikedListSummary?.id;
+    const { UserLikedListSummary } = getUserStoreSnapshot();
+    const likedPlaylistID = UserLikedListSummary?.id;
     if (likedPlaylistID) {
       const entry = await this.store.getEntry(likedPlaylistID);
       if (entry) {

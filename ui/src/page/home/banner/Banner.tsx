@@ -6,11 +6,13 @@ import { useAppLoaded } from "@mahiru/ui/hook/useAppLoaded";
 import { useThemeColor } from "@mahiru/ui/hook/useThemeColor";
 import { Filter } from "@mahiru/ui/utils/filter";
 import { Renderer } from "@mahiru/ui/utils/renderer";
-import { Player } from "@mahiru/ui/utils/player";
 import { API } from "@mahiru/ui/api";
+import { usePlayerStore } from "@mahiru/ui/store/player";
 
 const Banner: FC<object> = () => {
   const [banner, setBanner] = useState<NeteaseBanner[]>([]);
+  const { PlayerCoreGetter } = usePlayerStore(["PlayerCoreGetter"]);
+  const player = PlayerCoreGetter();
   useEffect(() => {
     API.Recommend.homeBanner().then((result) => {
       setBanner(result.banners);
@@ -30,8 +32,8 @@ const Banner: FC<object> = () => {
           const tracks = Filter.NeteaseTracksPrivilegeExtends(detail.songs, detail.privileges);
           const track = tracks[0];
           if (track && track.playable) {
-            Player.addTrack(track, track.al.id, "next");
-            Player.next(true);
+            player?.addTrack(track, track.al.id, "next");
+            player?.next(true);
           }
           return;
         }
@@ -44,7 +46,7 @@ const Banner: FC<object> = () => {
         }
       }
     },
-    [banner]
+    [banner, player]
   );
   return (
     <div className="w-full px-2">

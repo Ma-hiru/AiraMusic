@@ -1,4 +1,4 @@
-export const enum PlayerFSMStatus {
+export const enum PlayerFSMStatusEnum {
   idle = 1,
   loading,
   ready,
@@ -16,14 +16,13 @@ export type PlayerFSMEvent =
   | "playingError"
   | "requestPause"
   | "requestSeeking"
-  | "loadStart"
   | "loadSuccess"
   | "loadError"
-  | "requestNewBegin";
+  | "requestRestart";
 
 export class PlayerFSM {
-  private _current: PlayerFSMStatus;
-  constructor(current = PlayerFSMStatus.idle) {
+  private _current: PlayerFSMStatusEnum;
+  constructor(current = PlayerFSMStatusEnum.idle) {
     this._current = current;
   }
 
@@ -38,69 +37,69 @@ export class PlayerFSM {
 }
 
 const caseMap: Record<
-  PlayerFSMStatus,
-  NormalFunc<[event: PlayerFSMEvent], Undefinable<PlayerFSMStatus>>
+  PlayerFSMStatusEnum,
+  NormalFunc<[event: PlayerFSMEvent], Undefinable<PlayerFSMStatusEnum>>
 > = {
-  [PlayerFSMStatus.idle]: (event: PlayerFSMEvent) => {
+  [PlayerFSMStatusEnum.idle]: (event: PlayerFSMEvent) => {
     if (event === "requestPlaying") {
-      return PlayerFSMStatus.loading;
+      return PlayerFSMStatusEnum.loading;
     }
   },
-  [PlayerFSMStatus.loading]: (event: PlayerFSMEvent) => {
+  [PlayerFSMStatusEnum.loading]: (event: PlayerFSMEvent) => {
     if (event === "loadSuccess") {
-      return PlayerFSMStatus.ready;
+      return PlayerFSMStatusEnum.ready;
     } else if (event === "loadError") {
-      return PlayerFSMStatus.error;
-    } else if (event === "requestNewBegin") {
-      return PlayerFSMStatus.idle;
+      return PlayerFSMStatusEnum.error;
+    } else if (event === "requestRestart") {
+      return PlayerFSMStatusEnum.idle;
     }
   },
-  [PlayerFSMStatus.ready]: (event: PlayerFSMEvent) => {
+  [PlayerFSMStatusEnum.ready]: (event: PlayerFSMEvent) => {
     if (event === "requestPlaying") {
-      return PlayerFSMStatus.playing;
-    } else if (event === "requestNewBegin") {
-      return PlayerFSMStatus.idle;
+      return PlayerFSMStatusEnum.playing;
+    } else if (event === "requestRestart") {
+      return PlayerFSMStatusEnum.idle;
     }
   },
-  [PlayerFSMStatus.playing]: (event: PlayerFSMEvent) => {
+  [PlayerFSMStatusEnum.playing]: (event: PlayerFSMEvent) => {
     if (event === "requestPause") {
-      return PlayerFSMStatus.paused;
+      return PlayerFSMStatusEnum.paused;
     } else if (event === "playingEnd") {
-      return PlayerFSMStatus.ended;
+      return PlayerFSMStatusEnum.ended;
     } else if (event === "playingError") {
-      return PlayerFSMStatus.error;
+      return PlayerFSMStatusEnum.error;
     } else if (event === "requestSeeking") {
-      return PlayerFSMStatus.seeking;
-    } else if (event === "requestNewBegin") {
-      return PlayerFSMStatus.idle;
+      return PlayerFSMStatusEnum.seeking;
+    } else if (event === "requestRestart") {
+      return PlayerFSMStatusEnum.idle;
     }
   },
-  [PlayerFSMStatus.paused]: (event: PlayerFSMEvent) => {
+  [PlayerFSMStatusEnum.paused]: (event: PlayerFSMEvent) => {
     if (event === "requestPlaying") {
-      return PlayerFSMStatus.playing;
+      return PlayerFSMStatusEnum.playing;
     } else if (event === "requestSeeking") {
-      return PlayerFSMStatus.seeking;
-    } else if (event === "requestNewBegin") {
-      return PlayerFSMStatus.idle;
+      return PlayerFSMStatusEnum.seeking;
+    } else if (event === "requestRestart") {
+      return PlayerFSMStatusEnum.idle;
     }
   },
-  [PlayerFSMStatus.seeking]: (event: PlayerFSMEvent) => {
+  [PlayerFSMStatusEnum.seeking]: (event: PlayerFSMEvent) => {
     if (event === "playingStart") {
-      return PlayerFSMStatus.playing;
+      return PlayerFSMStatusEnum.playing;
     } else if (event === "playingError") {
-      return PlayerFSMStatus.error;
-    } else if (event === "requestNewBegin") {
-      return PlayerFSMStatus.idle;
+      return PlayerFSMStatusEnum.error;
+    } else if (event === "requestRestart") {
+      return PlayerFSMStatusEnum.idle;
     }
   },
-  [PlayerFSMStatus.ended]: (event: PlayerFSMEvent) => {
-    if (event === "requestPlaying" || event === "requestNewBegin") {
-      return PlayerFSMStatus.idle;
+  [PlayerFSMStatusEnum.ended]: (event: PlayerFSMEvent) => {
+    if (event === "requestPlaying" || event === "requestRestart") {
+      return PlayerFSMStatusEnum.idle;
     }
   },
-  [PlayerFSMStatus.error]: (event: PlayerFSMEvent) => {
-    if (event === "requestPlaying" || event === "requestNewBegin") {
-      return PlayerFSMStatus.idle;
+  [PlayerFSMStatusEnum.error]: (event: PlayerFSMEvent) => {
+    if (event === "requestPlaying" || event === "requestRestart") {
+      return PlayerFSMStatusEnum.idle;
     }
   }
 };

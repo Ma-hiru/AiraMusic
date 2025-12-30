@@ -5,36 +5,41 @@ import { useGPU } from "@mahiru/ui/hook/useGPU";
 import { Filter, ImageSize } from "@mahiru/ui/utils/filter";
 import AcrylicBackground from "@mahiru/ui/componets/public/AcrylicBackground";
 import { LyricManager } from "@mahiru/ui/utils/lyricManager";
-import { usePlayerStatus } from "@mahiru/ui/store";
+import { PlayerFSMStatusEnum, usePlayerStore } from "@mahiru/ui/store/player";
+import { useLayoutStore } from "@mahiru/ui/store/layout";
 
 const Background: FC<object> = () => {
-  const { trackStatus, playerStatus, playerModalVisible } = usePlayerStatus([
-    "trackStatus",
-    "playerModalVisible",
-    "playerStatus"
+  const { PlayerFSMStatus, PlayerTrackStatus } = usePlayerStore([
+    "PlayerTrackStatus",
+    "PlayerFSMStatus"
   ]);
-  const { hasRaw } = LyricManager.getLyricVersionInfo(trackStatus?.lyric);
+  const { PlayerVisible } = useLayoutStore(["PlayerVisible"]);
+  const { hasRaw } = LyricManager.getLyricVersionInfo(PlayerTrackStatus?.lyric);
   const { hasDedicatedGPU } = useGPU();
   const firstRender = useRef(true);
 
-  const track = trackStatus?.track;
+  const track = PlayerTrackStatus?.track;
   const cachedBackground = useFileCache(Filter.NeteaseImageSize(track?.al.picUrl, ImageSize.lg));
 
   useEffect(() => {
-    if (playerModalVisible && firstRender.current) {
+    if (PlayerVisible && firstRender.current) {
       firstRender.current = false;
     }
-  }, [playerModalVisible]);
+  }, [PlayerVisible]);
 
   return hasDedicatedGPU ? (
     <BackgroundRender
       className="absolute inset-0"
       albumIsVideo={false}
       // 初次渲染未打开播放器模态框时强制开启动画，避免背景懒加载时的空白
-      playing={firstRender.current ? true : playerModalVisible && playerStatus.playing}
+      playing={
+        firstRender.current
+          ? true
+          : PlayerVisible && PlayerFSMStatus === PlayerFSMStatusEnum.playing
+      }
       hasLyric={hasRaw}
       album={cachedBackground}
-      staticMode={!playerModalVisible}
+      staticMode={!PlayerVisible}
     />
   ) : (
     <AcrylicBackground

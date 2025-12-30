@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Renderer } from "@mahiru/ui/utils/renderer";
-import { useLayoutStatus } from "@mahiru/ui/store";
 import { useThemeColor } from "@mahiru/ui/hook/useThemeColor";
+import { useLayoutStore } from "@mahiru/ui/store/layout";
 
 const handlers = new Set<NormalFunc<[status: boolean]>>();
 setInterval(() => {
@@ -27,7 +27,7 @@ export function useInfoWindow(sendOnly = false) {
     commentsDisplay
   );
   const { mainColor, textColorOnMain, secondaryColor } = useThemeColor();
-  const { background } = useLayoutStatus(["background"]);
+  const { PlayerTheme } = useLayoutStore(["PlayerTheme"]);
 
   const sendTheme = useRef<Nullable<NormalFunc>>(null);
   const sendSync = useCallback(<T extends InfoSyncType>(type: T, value: InfoSync<T>["value"]) => {
@@ -42,7 +42,7 @@ export function useInfoWindow(sendOnly = false) {
       mainColor: mainColor.string(),
       secondaryColor: secondaryColor.string(),
       textColor: textColorOnMain.string(),
-      backgroundImage: background
+      backgroundImage: PlayerTheme.BackgroundCover
     });
   };
 

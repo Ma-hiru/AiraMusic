@@ -1,8 +1,8 @@
 import { createZustandShallowStore, createZustandStore } from "../create";
-import { PlayerStoreActions, PlayerStoreConfig, PlayerStoreInitialState } from "./config";
+import { LayoutStoreActions, LayoutStoreConfig, LayoutStoreInitialState } from "./config";
 
-export type PlayerStoreType = PlayerStoreInitialState & PlayerStoreActions;
+export type LayoutStoreType = LayoutStoreInitialState & LayoutStoreActions;
 
-export const usePlayerStore = createZustandShallowStore<PlayerStoreType>(
-  createZustandStore(PlayerStoreConfig, "player", false)
+export const useLayoutStore = createZustandShallowStore<LayoutStoreType>(
+  createZustandStore(LayoutStoreConfig, "layout", false)
 );

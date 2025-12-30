@@ -3,10 +3,10 @@ import { motion } from "motion/react";
 import { css, cx } from "@emotion/css";
 import { usePlayProgress } from "@mahiru/ui/hook/usePlayProgress";
 import { useThemeColor } from "@mahiru/ui/hook/useThemeColor";
-import { useLayoutStatus } from "@mahiru/ui/store";
+import { useLayoutStore } from "@mahiru/ui/store/layout";
 
 const BarProgress: FC<object> = () => {
-  const { background } = useLayoutStatus(["background"]);
+  const { PlayerTheme } = useLayoutStore(["PlayerTheme"]);
   const { mainColor, textColorOnMain } = useThemeColor();
   const { barRef, handleBarClick, handleBarMouseDown, bufferScope, percentScope, chorusPercent } =
     usePlayProgress();
@@ -20,7 +20,7 @@ const BarProgress: FC<object> = () => {
           shadow-[0_5px_10px_-5px_rgba(0,0,0,0.15)] backdrop-blur-lg
           cursor-pointer ease-in-out transition-all duration-300 hover:h-2
         `,
-        background ? "bg-transparent" : "bg-white"
+        PlayerTheme.BackgroundCover ? "bg-transparent" : "bg-white"
       )}
       onClick={handleBarClick}
       onMouseDown={handleBarMouseDown}>

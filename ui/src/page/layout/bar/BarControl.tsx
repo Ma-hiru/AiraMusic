@@ -1,12 +1,15 @@
 import { FC, memo } from "react";
 import { Pause, Play, SkipBack, SkipForward } from "lucide-react";
 import { useThemeColor } from "@mahiru/ui/hook/useThemeColor";
-import { usePlayerStatus } from "@mahiru/ui/store";
-import { Player } from "@mahiru/ui/utils/player";
+import { PlayerFSMStatusEnum, usePlayerStore } from "@mahiru/ui/store/player";
 
 const BarControl: FC<object> = () => {
-  const { playerStatus, audioControl } = usePlayerStatus(["playerStatus", "audioControl"]);
+  const { PlayerFSMStatus, PlayerCoreGetter } = usePlayerStore([
+    "PlayerCoreGetter",
+    "PlayerFSMStatus"
+  ]);
   const { mainColor, textColorOnMain } = useThemeColor();
+  const player = PlayerCoreGetter();
   return (
     <div className="flex justify-center items-center gap-6">
       <SkipBack
@@ -14,13 +17,13 @@ const BarControl: FC<object> = () => {
         // fill={"#171b20"}
         fill={textColorOnMain.string()}
         color={textColorOnMain.string()}
-        onClick={() => Player.last(true)}
+        onClick={() => player?.last(true)}
       />
       <div
         className="hover:scale-95 active:scale-85 cursor-pointer ease-in-out transition-all duration-300 bg-(--theme-color-main) hover:bg-(--theme-color-main)/50 active:bg-(--theme-color-main)/80 p-2 rounded-full"
         style={{ background: textColorOnMain.string() }}
-        onClick={audioControl.current()?.play}>
-        {playerStatus.playing ? (
+        onClick={player?.play}>
+        {PlayerFSMStatus === PlayerFSMStatusEnum.playing ? (
           <Pause className="size-5" color={mainColor.string()} fill={mainColor.string()} />
         ) : (
           <Play className="size-5" color={mainColor.string()} fill={mainColor.string()} />
@@ -31,7 +34,7 @@ const BarControl: FC<object> = () => {
         // fill={"#171b20"}
         color={textColorOnMain.string()}
         fill={textColorOnMain.string()}
-        onClick={() => Player.next(true)}
+        onClick={() => player?.next(true)}
       />
     </div>
   );

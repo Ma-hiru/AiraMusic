@@ -13,11 +13,11 @@ type PlayerTrackSource = {
 type PlayerTrackStatus = PlayerTrackInfo & PlayerTrackSource;
 
 type PlayerStatus = {
-  playing: boolean;
   volume: number;
   repeat: "off" | "one" | "all";
   shuffle: boolean;
   position: number;
+  playerList: PlayerTrackStatus[];
   lyricPreference: LyricVersionType | null;
   lyricVersion: LyricVersionType;
 };

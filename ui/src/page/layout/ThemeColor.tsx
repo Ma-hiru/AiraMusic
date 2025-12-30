@@ -1,14 +1,14 @@
 import { FC, memo, useEffect } from "react";
-import { useLayoutStatus } from "@mahiru/ui/store";
 import { useKmeansWorker } from "@mahiru/ui/hook/useKmeansWorker";
 import { Renderer } from "@mahiru/ui/utils/renderer";
 import { useThemeColor } from "@mahiru/ui/hook/useThemeColor";
+import { useLayoutStore } from "@mahiru/ui/store/layout";
 
 const ThemeColor: FC<object> = () => {
-  const { background } = useLayoutStatus(["background"]);
+  const { PlayerTheme } = useLayoutStore(["PlayerTheme"]);
   const { mainColor, secondaryColor, textColorOnMain } = useThemeColor();
 
-  useKmeansWorker(background);
+  useKmeansWorker(PlayerTheme.BackgroundCover);
   useEffect(() => {
     let canceled = false;
     requestIdleCallback(() => {
@@ -20,7 +20,7 @@ const ThemeColor: FC<object> = () => {
             mainColor: mainColor.string(),
             secondaryColor: secondaryColor.string(),
             textColor: textColorOnMain.string(),
-            backgroundImage: background
+            backgroundImage: PlayerTheme.BackgroundCover
           }
         });
       });
@@ -28,7 +28,7 @@ const ThemeColor: FC<object> = () => {
     return () => {
       canceled = true;
     };
-  }, [background, mainColor, secondaryColor, textColorOnMain]);
+  }, [PlayerTheme.BackgroundCover, mainColor, secondaryColor, textColorOnMain]);
 
   return null;
 };

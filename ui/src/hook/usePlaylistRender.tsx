@@ -9,8 +9,6 @@ import { PlaylistHistoryCache } from "@mahiru/ui/utils/history";
 import { useUpdate } from "@mahiru/ui/hook/useUpdate";
 import { useInfoWindow } from "@mahiru/ui/hook/useInfoWindow";
 import { useContextMenu } from "@mahiru/ui/hook/useContextMenu";
-import { usePersistZustandShallowStore, usePlayerStatus } from "@mahiru/ui/store";
-import { Player } from "@mahiru/ui/utils/player";
 import { useThemeColor } from "@mahiru/ui/hook/useThemeColor";
 import { useHeart } from "@mahiru/ui/hook/useHeart";
 import { SearchTrack } from "@mahiru/wasm";
@@ -19,6 +17,9 @@ import { TrackListProps, TrackListRef } from "@mahiru/ui/componets/track_list";
 import { OnContextMenuFunc } from "@mahiru/ui/componets/track_item/TrackItem";
 import { ContextMenuItem, ContextMenuRender } from "@mahiru/ui/componets/menu/MenuProvider";
 import { useKeepAliveCtx } from "@mahiru/ui/ctx/KeepAliveCtx";
+import { getPlayerStoreSnapshot, usePlayerStore } from "@mahiru/ui/store/player";
+import { useUserStore } from "@mahiru/ui/store/user";
+import { useLayoutStore } from "@mahiru/ui/store/layout";
 
 export function usePlaylistNormalRender(id?: string) {
   const listRef = useRef<TrackListRef>(null);
@@ -31,11 +32,11 @@ export function usePlaylistNormalRender(id?: string) {
   const [loading, setLoading] = useState(true);
   const [requestMissedTracks, setRequestMissedTracks] = useState(0);
   const { mainColor, textColorOnMain } = useThemeColor();
-  const { trackStatus } = usePlayerStatus(["trackStatus"]);
-  const { userLikedListSummary } = usePersistZustandShallowStore(["userLikedListSummary"]);
+  const { PlayerTrackStatus } = usePlayerStore(["PlayerTrackStatus"]);
+  const { UserLikedListSummary } = useUserStore(["UserLikedListSummary"]);
   const source = id ? Number(id) : undefined;
-  const isLikedPlayList = userLikedListSummary?.id === source;
-  const currentTrackID = trackStatus?.track?.id;
+  const isLikedPlayList = UserLikedListSummary?.id === source;
+  const currentTrackID = PlayerTrackStatus?.track?.id;
   const searchTrackInstance = useRef<Nullable<SearchTrack>>(null);
   // 所有曲目
   const tracks = useRef<NeteaseTrack[]>([]);
@@ -245,8 +246,8 @@ export function usePlaylistHistoryRender() {
     absoluteIdx: null as Nullable<number[]>
   });
   const { mainColor, textColorOnMain } = useThemeColor();
-  const { trackStatus } = usePlayerStatus(["trackStatus"]);
-  const currentTrackID = trackStatus?.track?.id;
+  const { PlayerTrackStatus } = usePlayerStore(["PlayerTrackStatus"]);
+  const currentTrackID = PlayerTrackStatus?.track?.id;
 
   // 历史最大滚动范围
   const maxRange = useRef<IndexRange>([0, 0]);
@@ -421,16 +422,20 @@ function usePlaylistController(props: {
   const { mainColor, textColorOnMain } = useThemeColor();
   const { openInfoWindow } = useInfoWindow(true);
   const { setContextMenuRenderer, setContextMenuVisible, contextMenuVisible } = useContextMenu();
-  const { setLocateCurrentTrack, trackStatus, requestCanScrollTop } = usePlayerStatus([
-    "setLocateCurrentTrack",
-    "trackStatus",
-    "requestCanScrollTop"
+  const { PlayerTrackStatus, PlayerCoreGetter } = usePlayerStore([
+    "PlayerTrackStatus",
+    "PlayerCoreGetter"
   ]);
+  const { UpdateScrollTop, SetTrackListFastLocater } = useLayoutStore([
+    "UpdateScrollTop",
+    "SetTrackListFastLocater"
+  ]);
+  const player = PlayerCoreGetter();
   // 定位当前播放歌曲
   useEffect(() => {
     if (!routerActive) return;
     const currentTrackIndex = filterTracks.tracks.findIndex(
-      (track) => track.id === trackStatus?.track?.id
+      (track) => track.id === PlayerTrackStatus?.track?.id
     );
     const scrollTo = () => {
       setFastLocation(true);
@@ -444,12 +449,18 @@ function usePlaylistController(props: {
       });
     };
     if (currentTrackIndex !== -1) {
-      setLocateCurrentTrack(() => scrollTo);
+      SetTrackListFastLocater(() => scrollTo);
     }
     return () => {
-      setLocateCurrentTrack(null);
+      SetTrackListFastLocater(() => null);
     };
-  }, [filterTracks.tracks, listRef, routerActive, setLocateCurrentTrack, trackStatus?.track?.id]);
+  }, [
+    PlayerTrackStatus?.track?.id,
+    SetTrackListFastLocater,
+    filterTracks.tracks,
+    listRef,
+    routerActive
+  ]);
   const onListScroll = useCallback(() => {
     if (contextMenuVisible) {
       setContextMenuVisible?.(false);
@@ -490,18 +501,21 @@ function usePlaylistController(props: {
   }, [listRef]);
   useEffect(() => {
     return () => {
-      requestCanScrollTop("none");
+      UpdateScrollTop({
+        type: "none",
+        callback: null
+      });
     };
-  }, [requestCanScrollTop]);
+  }, [UpdateScrollTop]);
   // 包装范围更新，处理回到顶部请求
   const wrapRangeUpdate = useCallback(
     (range: IndexRange) => {
-      if (range[0] > 5) requestCanScrollTop("playlist", scrollTop);
-      else requestCanScrollTop("none");
+      if (range[0] > 5) UpdateScrollTop({ type: "playlist", callback: scrollTop });
+      else UpdateScrollTop({ type: "none", callback: null });
       if (fastLocation) return;
       return onVirtualListRangeUpdate(range);
     },
-    [fastLocation, onVirtualListRangeUpdate, requestCanScrollTop, scrollTop]
+    [UpdateScrollTop, fastLocation, onVirtualListRangeUpdate, scrollTop]
   );
   // 播放歌曲
   const onPlay = useCallback(
@@ -510,13 +524,13 @@ function usePlaylistController(props: {
       const rawIdx = filterTracks.absoluteIdx ? filterTracks.absoluteIdx[trackIdx]! : trackIdx;
       if (!rawTracks[rawIdx]!.playable) return;
       // 如果与当前播放列表相同，仅切换位置，避免重建列表导致状态抖动
-      if (Player.isSamePlaylist(rawTracks, source)) {
-        Player.setPosition(rawIdx);
+      if (player?.isSamePlaylist(rawTracks, source)) {
+        player?.setPlayerPosition(rawIdx);
       } else {
-        Player.replacePlaylist(rawTracks, source, rawIdx);
+        player?.replacePlaylist(rawTracks, source, rawIdx);
       }
     },
-    [filterTracks.absoluteIdx, source, tracks]
+    [filterTracks.absoluteIdx, player, source, tracks]
   );
   // 封面缓存命中/错误回调
   const onCoverCacheHit = useCallback<NormalFunc<[file: string, id: string, trackIdx: number]>>(
@@ -624,6 +638,7 @@ function createMenuItems(props: {
 }): ContextMenuItem[] {
   const disabled = !props.track.playable;
   const items: ContextMenuItem[] = [];
+  const player = getPlayerStoreSnapshot().PlayerCoreGetter();
   items.push(
     {
       prefix: <Copy size={14} />,
@@ -676,22 +691,22 @@ function createMenuItems(props: {
         prefix: <Play size={14} />,
         label: <p className="text-[12px]">播放</p>,
         onClick: () => {
-          Player.addTrack(props.track, props.source, "next");
-          Player.next(true);
+          player?.addTrack(props.track, props.source, "next");
+          player?.next(true);
         }
       },
       {
         prefix: <ListPlus size={14} />,
         label: <p className="text-[12px]">下一首播放</p>,
         onClick: () => {
-          Player.addTrack(props.track, props.source, "next");
+          player?.addTrack(props.track, props.source, "next");
         }
       },
       {
         prefix: <ListMusic size={14} />,
         label: <p className="text-[12px]">添加到播放列表</p>,
         onClick: () => {
-          Player.addTrack(props.track, props.source, "end");
+          player?.addTrack(props.track, props.source, "end");
         }
       }
     );

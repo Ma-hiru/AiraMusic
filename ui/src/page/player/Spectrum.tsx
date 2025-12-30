@@ -1,17 +1,16 @@
 import { FC, memo } from "react";
 import AudioSpectrum from "@mahiru/ui/componets/spectrum/AudioSpectrum";
-import { usePlayerStatus } from "@mahiru/ui/store";
+import { PlayerFSMStatusEnum, usePlayerStore } from "@mahiru/ui/store/player";
+import { useLayoutStore } from "@mahiru/ui/store/layout";
 
 const Spectrum: FC<object> = () => {
-  const { playerModalVisible, playerStatus, spectrumIsReady } = usePlayerStatus([
-    "playerModalVisible",
-    "playerStatus",
-    "spectrumIsReady"
-  ]);
+  const { SpectrumGetter, PlayerFSMStatus } = usePlayerStore(["SpectrumGetter", "PlayerFSMStatus"]);
+  const { PlayerVisible } = useLayoutStore(["PlayerVisible"]);
+  const spectrum = SpectrumGetter();
   return (
-    spectrumIsReady && (
+    spectrum.ready && (
       <AudioSpectrum
-        isPlaying={playerModalVisible && playerStatus.playing}
+        isPlaying={PlayerVisible && PlayerFSMStatus === PlayerFSMStatusEnum.playing}
         className="w-full h-5 mt-2"
         gap={2}
         renderer="webgl-rust"

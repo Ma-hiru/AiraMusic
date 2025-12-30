@@ -1,16 +1,17 @@
 import { FC, memo, UIEvent as ReactUIEvent, useCallback, useEffect, useRef } from "react";
+import { useScrollAutoHide } from "@mahiru/ui/hook/useScrollAutoHide";
+import { useDelay } from "@mahiru/ui/hook/useDelay";
+
 import Banner from "@mahiru/ui/page/home/banner/Banner";
 import DailyRecommendTracks from "@mahiru/ui/page/home/daily_recommend_tracks/DailyRecommendTracks";
 import DailyRecommendPlaylist from "@mahiru/ui/page/home/daily_recommend_playlist/DailyRecommendPlaylist";
 import RecommendPlaylist from "@mahiru/ui/page/home/recommend_playlist/RecommendPlaylist";
-import { useScrollAutoHide } from "@mahiru/ui/hook/useScrollAutoHide";
-import { useLayoutStatus } from "@mahiru/ui/store";
-import { useDelay } from "@mahiru/ui/hook/useDelay";
+import { useLayoutStore } from "@mahiru/ui/store/layout";
 
 const Content: FC<object> = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const { onScroll } = useScrollAutoHide(containerRef);
-  const { requestCanScrollTop } = useLayoutStatus(["requestCanScrollTop"]);
+  const { UpdateScrollTop } = useLayoutStore(["UpdateScrollTop"]);
 
   const scrollTop = useCallback(() => {
     containerRef.current?.scrollTo({ top: 0, behavior: "smooth" });
@@ -20,20 +21,23 @@ const Content: FC<object> = () => {
     (e: ReactUIEvent) => {
       const scrollDistance = e.currentTarget.scrollTop;
       if (scrollDistance > 500) {
-        requestCanScrollTop("home", scrollTop);
+        UpdateScrollTop({ type: "home", callback: scrollTop });
       } else {
-        requestCanScrollTop("none");
+        UpdateScrollTop({ type: "none", callback: null });
       }
       return onScroll();
     },
-    [onScroll, requestCanScrollTop, scrollTop]
+    [UpdateScrollTop, onScroll, scrollTop]
   );
 
   useEffect(() => {
     return () => {
-      requestCanScrollTop("none");
+      UpdateScrollTop({
+        type: "none",
+        callback: null
+      });
     };
-  }, [requestCanScrollTop]);
+  }, [UpdateScrollTop]);
 
   const reachedSet = useDelay([200, 1000, 5000, 10000]);
 

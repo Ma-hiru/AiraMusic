@@ -1,32 +1,31 @@
 import { useCallback } from "react";
-import { usePersistZustandShallowStore } from "@mahiru/ui/store";
 import { PlaylistManager } from "@mahiru/ui/utils/playlist";
 import { API } from "@mahiru/ui/api";
+import { useUserStore } from "@mahiru/ui/store/user";
 
 export const useHeart = () => {
-  const { updateUserLikedTrackIDs, userLikedTrackIDs } = usePersistZustandShallowStore([
-    "userLikedTrackIDs",
-    "updateUserLikedTrackIDs"
+  const { UserLikedTrackIDs, UpdateUserLikedTrackIDs } = useUserStore([
+    "UserLikedTrackIDs",
+    "UpdateUserLikedTrackIDs"
   ]);
-
   const isTrackLiked = useCallback(
     (track?: NeteaseTrackBase) => {
-      return Boolean(track && userLikedTrackIDs.ids[track.id]);
+      return Boolean(track && UserLikedTrackIDs.ids[track.id]);
     },
-    [userLikedTrackIDs.ids]
+    [UserLikedTrackIDs.ids]
   );
 
   const likeChange = useCallback(
     (track?: NeteaseTrack) => {
       if (!track || !track.id) return;
-      const newSet = structuredClone(userLikedTrackIDs.ids);
+      const newSet = structuredClone(UserLikedTrackIDs.ids);
       const isLiked = isTrackLiked(track);
       if (isLiked) {
         delete newSet[track.id];
       } else {
         newSet[track.id] = true;
       }
-      updateUserLikedTrackIDs({ ids: newSet, checkPoint: userLikedTrackIDs.checkPoint });
+      UpdateUserLikedTrackIDs({ ids: newSet, checkPoint: UserLikedTrackIDs.checkPoint });
       void API.Track.likeATrack({
         id: track.id,
         like: !isLiked
@@ -36,7 +35,7 @@ export const useHeart = () => {
         nextStatus: !isLiked
       });
     },
-    [isTrackLiked, updateUserLikedTrackIDs, userLikedTrackIDs.checkPoint, userLikedTrackIDs.ids]
+    [UpdateUserLikedTrackIDs, UserLikedTrackIDs.checkPoint, UserLikedTrackIDs.ids, isTrackLiked]
   );
 
   return { isTrackLiked, likeChange };

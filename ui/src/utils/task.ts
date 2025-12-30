@@ -1,7 +1,7 @@
 import { EqError, Log } from "@mahiru/ui/utils/dev";
-import { getPersistSnapshot } from "@mahiru/ui/store";
 import { Auth } from "@mahiru/ui/utils/auth";
 import { API } from "@mahiru/ui/api";
+import { getUserStoreSnapshot } from "@mahiru/ui/store/user";
 
 /** 登录接口 */
 export async function refreshLogin(cookies: string) {
@@ -27,11 +27,8 @@ export async function refreshCookieTask() {
     if (!Auth.isAccountLoggedIn()) return;
     Log.trace("refresh cookie");
     await API.Auth.refreshCookie();
-
-    const store = getPersistSnapshot();
-    store.updatePersistStoreData({
-      lastRefreshCookieDate: new Date().getDate()
-    });
+    const { UpdateUserLastRefreshCookieDate } = getUserStoreSnapshot();
+    UpdateUserLastRefreshCookieDate(new Date().getDate());
   } catch (err) {
     Log.error(
       new EqError({
@@ -50,11 +47,8 @@ export async function refreshUserProfile(login: boolean = false) {
     const account = await API.User.userAccount();
     const detail = await API.User.userDetail(account.profile.userId);
 
-    const { updatePersistStoreData } = getPersistSnapshot();
-    updatePersistStoreData({
-      loginMode: "account",
-      user: detail.profile
-    });
+    const { UpdateUserProfile } = getUserStoreSnapshot();
+    UpdateUserProfile(detail.profile, "account");
   } catch (err) {
     Log.error(
       new EqError({
@@ -70,14 +64,15 @@ export async function refreshUserPlaylist(login: boolean = false) {
   try {
     if (!Auth.isAccountLoggedIn() && !login) return;
     Log.trace("refresh user playlist");
-    const { updateUserLikedListSummary, updateUserPlaylistSummary } = getPersistSnapshot();
-    const { data } = getPersistSnapshot();
-    const uid = data.user?.userId;
+
+    const { UserProfile, UpdateUserLikedListSummary, UpdateUserPlaylistSummary } =
+      getUserStoreSnapshot();
+    const uid = UserProfile?.userId;
     if (uid) {
       const { playlist } = await API.User.userPlaylist({ uid, limit: 30 });
       const userLikedList = playlist.shift();
-      updateUserLikedListSummary(userLikedList || null);
-      updateUserPlaylistSummary(playlist);
+      UpdateUserLikedListSummary(userLikedList || null);
+      UpdateUserPlaylistSummary(playlist);
     }
   } catch (err) {
     Log.error(
@@ -94,15 +89,14 @@ export async function refreshUserLikedTrackIDs() {
   try {
     if (!Auth.isAccountLoggedIn()) return;
     Log.trace("refresh user liked track IDs");
-    const { updateUserLikedTrackIDs } = getPersistSnapshot();
-    const { data } = getPersistSnapshot();
-    const uid = data.user?.userId;
+    const { UserProfile, UpdateUserLikedTrackIDs } = getUserStoreSnapshot();
+    const uid = UserProfile?.userId;
     if (uid) {
       const { ids, checkPoint, code } = await API.User.userLikedSongsIDs(uid);
       if (code === 200) {
         const idsSet: Record<number, boolean> = {};
         ids.forEach((id) => (idsSet[id] = true));
-        updateUserLikedTrackIDs({ ids: idsSet, checkPoint });
+        UpdateUserLikedTrackIDs({ ids: idsSet, checkPoint });
       } else {
         Log.error(
           new EqError({

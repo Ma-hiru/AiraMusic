@@ -1,7 +1,7 @@
 import { FC, memo, useState } from "react";
 import { Search as SearchIcon } from "lucide-react";
 import { debounce } from "lodash-es";
-import { usePlayerStatus } from "@mahiru/ui/store";
+import { useLayoutStore } from "@mahiru/ui/store/layout";
 
 interface SearchProps {
   searchTracks: (k: string) => void;
@@ -9,7 +9,7 @@ interface SearchProps {
 
 const Search: FC<SearchProps> = ({ searchTracks }) => {
   const [value, setValue] = useState("");
-  const { setIsTyping } = usePlayerStatus(["setIsTyping"]);
+  const { SetIsTyping } = useLayoutStore(["SetIsTyping"]);
   const debouncedSearch = debounce(searchTracks, 300);
   return (
     <div className="my-2 relative flex justify-end items-center font-semibold">
@@ -18,8 +18,8 @@ const Search: FC<SearchProps> = ({ searchTracks }) => {
           value={value}
           type="text"
           placeholder="搜索"
-          onFocus={() => setIsTyping(true)}
-          onBlur={() => setIsTyping(false)}
+          onFocus={() => SetIsTyping(true)}
+          onBlur={() => SetIsTyping(false)}
           className="block h-6 px-3 rounded-full border border-gray-300/60 focus:outline-none text-[12px]  placeholder-black/10 pr-8 w-18 focus:w-48 ease-in-out transition-all duration-300 placeholder:select-none"
           onChange={(e) => {
             setValue(e.target.value);

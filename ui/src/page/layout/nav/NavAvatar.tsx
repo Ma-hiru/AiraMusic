@@ -1,27 +1,28 @@
 import { FC, memo } from "react";
-import { useLayoutStatus, usePersistZustandShallowStore } from "@mahiru/ui/store";
 import { UserRound } from "lucide-react";
 import { useLogin, useLogout } from "@mahiru/ui/hook/useLogout";
 import { ImageSize } from "@mahiru/ui/utils/filter";
 import { NoDrag } from "@mahiru/ui/componets/public/Drag";
 import NeteaseImage from "@mahiru/ui/componets/public/NeteaseImage";
 import { useThemeColor } from "@mahiru/ui/hook/useThemeColor";
+import { useLayoutStore } from "@mahiru/ui/store/layout";
+import { useUserStore } from "@mahiru/ui/store/user";
 
 const NavAvatar: FC<object> = () => {
-  const { sideBarOpen } = useLayoutStatus(["sideBarOpen"]);
-  const { data } = usePersistZustandShallowStore(["data"]);
+  const { SideBarOpen } = useLayoutStore(["SideBarOpen"]);
+  const { UserProfile } = useUserStore(["UserProfile"]);
   const { mainColor } = useThemeColor();
   const login = useLogin();
   const logout = useLogout();
   return (
     <NoDrag className="w-full flex justify-center items-center relative py-7 overflow-hidden space-x-2">
-      {data.user?.avatarUrl ? (
+      {UserProfile?.avatarUrl ? (
         <NeteaseImage
           className="size-7 min-w-7 cursor-pointer select-none rounded-full"
           size={ImageSize.md}
           onClick={logout}
-          src={data.user?.avatarUrl}
-          alt={data.user?.nickname}
+          src={UserProfile?.avatarUrl}
+          alt={UserProfile?.nickname}
           shadowColor={mainColor.isDark() ? "dark" : "light"}
         />
       ) : (
@@ -29,8 +30,8 @@ const NavAvatar: FC<object> = () => {
           <UserRound className="text-white" onClick={login} />
         </div>
       )}
-      {sideBarOpen && (
-        <span className="text-xs font-bold truncate">{data.user?.nickname || "未登录"}</span>
+      {SideBarOpen && (
+        <span className="text-xs font-bold truncate">{UserProfile?.nickname || "未登录"}</span>
       )}
     </NoDrag>
   );

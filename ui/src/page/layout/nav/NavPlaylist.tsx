@@ -1,5 +1,4 @@
 import { FC, memo, useCallback, useEffect, useRef } from "react";
-import { useLayoutStatus, usePersistZustandShallowStore } from "@mahiru/ui/store";
 import { useLocation, useNavigate } from "react-router-dom";
 import NavPlayListItem from "@mahiru/ui/page/layout/nav/NavPlaylistItem";
 import { useVirtualList } from "@mahiru/ui/hook/useVirtualList";
@@ -9,14 +8,13 @@ import VirtualList, { VirtualListRow } from "@mahiru/ui/componets/virtual_list/V
 import { useThemeColor } from "@mahiru/ui/hook/useThemeColor";
 import { getPlaylistRouterPath } from "@mahiru/ui/hook/usePlaylistRouter";
 import { Stage, useStage } from "@mahiru/ui/hook/useStage";
+import { useLayoutStore } from "@mahiru/ui/store/layout";
+import { useUserStore } from "@mahiru/ui/store/user";
 
 const NavPlaylist: FC<object> = () => {
   const { stage } = useStage();
-  const { userPlaylistSummary } = usePersistZustandShallowStore(["userPlaylistSummary"]);
-  const { requestCanScrollTop, sideBarOpen } = useLayoutStatus([
-    "requestCanScrollTop",
-    "sideBarOpen"
-  ]);
+  const { UserPlaylistSummary } = useUserStore(["UserPlaylistSummary"]);
+  const { SideBarOpen, UpdateScrollTop } = useLayoutStore(["SideBarOpen", "UpdateScrollTop"]);
   const { mainColor } = useThemeColor();
   const userPlayListRef = useRef<NeteasePlaylistSummary[]>([]);
   const containerRef = useRef<Nullable<HTMLDivElement>>(null);
@@ -58,12 +56,18 @@ const NavPlaylist: FC<object> = () => {
   const onRangeChange = useCallback(
     (range: IndexRange) => {
       if (range[0] > 5) {
-        requestCanScrollTop("userPlaylist", gotoTop);
+        UpdateScrollTop({
+          type: "userPlaylist",
+          callback: gotoTop
+        });
       } else if (range[0] <= 5) {
-        requestCanScrollTop("none");
+        UpdateScrollTop({
+          type: "none",
+          callback: null
+        });
       }
     },
-    [gotoTop, requestCanScrollTop]
+    [UpdateScrollTop, gotoTop]
   );
 
   const { start, end } = useVirtualList({
@@ -73,19 +77,22 @@ const NavPlaylist: FC<object> = () => {
     itemHeight: 55,
     onRangeUpdate: onRangeChange
   });
-  const { onScroll } = useScrollAutoHide(containerRef, !sideBarOpen);
+  const { onScroll } = useScrollAutoHide(containerRef, !SideBarOpen);
 
   useEffect(() => {
-    if (userPlaylistSummary) {
-      userPlayListRef.current = structuredClone(userPlaylistSummary);
+    if (UserPlaylistSummary) {
+      userPlayListRef.current = structuredClone(UserPlaylistSummary);
       updater();
     }
-  }, [updater, userPlaylistSummary]);
+  }, [updater, UserPlaylistSummary]);
   useEffect(() => {
     return () => {
-      requestCanScrollTop("none");
+      UpdateScrollTop({
+        type: "none",
+        callback: null
+      });
     };
-  }, [requestCanScrollTop]);
+  }, [UpdateScrollTop]);
 
   return (
     <div

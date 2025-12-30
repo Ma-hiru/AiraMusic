@@ -1,15 +1,19 @@
 import { FC, memo } from "react";
 import { cx } from "@emotion/css";
 import { useLyric } from "@mahiru/ui/hook/useLyric";
-import { useDynamicZustandShallowStore, usePlayerStatus } from "@mahiru/ui/store";
+import { usePlayerStore } from "@mahiru/ui/store/player";
 
 const LyricChange: FC<object> = () => {
-  const { trackStatus, setLyricVersion } = usePlayerStatus(["trackStatus", "setLyricVersion"]);
-  const { playerStatus } = useDynamicZustandShallowStore(["playerStatus"]);
+  const { PlayerTrackStatus, SetLyricVersion, PlayerStatus } = usePlayerStore([
+    "PlayerTrackStatus",
+    "SetLyricVersion",
+    "PlayerStatus"
+  ]);
+
   const { hasTl, hasRm, setRm, setTl, rmActive, tlActive } = useLyric(
-    playerStatus.lyricVersion,
-    setLyricVersion,
-    trackStatus?.lyric
+    PlayerStatus.lyricVersion,
+    SetLyricVersion,
+    PlayerTrackStatus?.lyric
   );
   return (
     <div className="absolute right-8 bottom-10 text-white flex flex-col gap-2 select-none">

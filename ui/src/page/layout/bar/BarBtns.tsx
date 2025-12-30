@@ -2,21 +2,19 @@ import { FC, memo, useCallback, WheelEvent } from "react";
 import { usePlayerInfoSync } from "@mahiru/ui/hook/usePlayerInfoSync";
 import { useThemeColor } from "@mahiru/ui/hook/useThemeColor";
 import { Volume, Volume1, Volume2, VolumeX } from "lucide-react";
-import { useDynamicZustandShallowStore } from "@mahiru/ui/store";
+import { usePlayerStore } from "@mahiru/ui/store/player";
 
 const BarBtns: FC<object> = () => {
   const { hasOpened, toggleTargetWindow } = usePlayerInfoSync("lyric");
-  const { playerStatus, audioControl } = useDynamicZustandShallowStore([
-    "playerStatus",
-    "audioControl"
-  ]);
+  const { PlayerStatus, PlayerCoreGetter } = usePlayerStore(["PlayerStatus", "PlayerCoreGetter"]);
+  const player = PlayerCoreGetter();
   const { mainColor } = useThemeColor();
   const volumeIcons = () => {
-    if (playerStatus.volume <= 0) {
+    if (PlayerStatus.volume <= 0) {
       return VolumeX;
-    } else if (playerStatus.volume <= 0.15) {
+    } else if (PlayerStatus.volume <= 0.15) {
       return Volume;
-    } else if (playerStatus.volume <= 0.5) {
+    } else if (PlayerStatus.volume <= 0.5) {
       return Volume1;
     } else {
       return Volume2;
@@ -28,12 +26,12 @@ const BarBtns: FC<object> = () => {
       // 向上滚增加音量，向下滚减少音量
       const delta = e.deltaY < 0 ? 0.1 : -0.1;
       if (delta > 0) {
-        audioControl.current()?.upVolume(delta);
+        player?.upVolume?.(delta);
       } else {
-        audioControl.current()?.downVolume(-delta);
+        player?.downVolume?.(-delta);
       }
     },
-    [audioControl]
+    [player]
   );
   const { textColorOnMain } = useThemeColor();
   return (
@@ -43,7 +41,7 @@ const BarBtns: FC<object> = () => {
         fill={textColorOnMain.hex()}
         className="size-5 select-none cursor-pointer hover:opacity-50 ease-in-out duration-300 transition-all active:scale-90"
         onWheel={onWheel}
-        onClick={audioControl.current()?.mute}
+        onClick={player?.mute}
       />
       <span
         onClick={toggleTargetWindow}

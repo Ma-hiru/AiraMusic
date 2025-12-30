@@ -1,13 +1,13 @@
 import { FC, memo } from "react";
-import { usePlayerStatus } from "@mahiru/ui/store";
 import { splitTrackTitle } from "@mahiru/ui/utils/str";
+import { usePlayerStore } from "@mahiru/ui/store/player";
 
 const Title: FC<object> = () => {
-  const { trackStatus } = usePlayerStatus(["trackStatus"]);
-  const track = trackStatus?.track;
+  const { PlayerTrackStatus } = usePlayerStore(["PlayerTrackStatus"]);
+  const track = PlayerTrackStatus?.track;
   const alias = track?.alia?.length ? track.alia[0] : "";
   const ts = track?.tns?.length ? track.tns[0] : "";
-  const title = splitTrackTitle(trackStatus?.track.name);
+  const title = splitTrackTitle(PlayerTrackStatus?.track.name);
   return (
     <div className="flex flex-col select-none w-full justify-end">
       <div className="text-white text-center">

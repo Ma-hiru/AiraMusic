@@ -1,5 +1,5 @@
 import Dayjs from "dayjs";
-import { getPersistSnapshot } from "@mahiru/ui/store";
+import { getUserStoreSnapshot } from "@mahiru/ui/store/user";
 
 function formatTrackDate(time?: number, split?: string) {
   if (time) {
@@ -35,8 +35,7 @@ function padNumber(num: number, length: number) {
 }
 
 function isChangeDay() {
-  const { data } = getPersistSnapshot();
-  const lastDate = data.lastRefreshCookieDate;
+  const lastDate = getUserStoreSnapshot().UserLastRefreshCookieDate;
   return typeof lastDate !== "number" || lastDate !== new Date().getDate();
 }
 

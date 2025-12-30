@@ -1,23 +1,22 @@
-import { FC, memo } from "react";
-import AudioSpectrum from "@mahiru/ui/componets/spectrum/AudioSpectrum";
-import { useThemeColor } from "@mahiru/ui/hook/useThemeColor";
 import Color from "color";
-import { usePlayerStatus } from "@mahiru/ui/store";
+import { FC, memo } from "react";
+import { useThemeColor } from "@mahiru/ui/hook/useThemeColor";
+
+import AudioSpectrum from "@mahiru/ui/componets/spectrum/AudioSpectrum";
+import { PlayerFSMStatusEnum, usePlayerStore } from "@mahiru/ui/store/player";
+import { useLayoutStore } from "@mahiru/ui/store/layout";
 
 const BarSpectrum: FC<object> = () => {
-  const { playerModalVisible, playerStatus, spectrumIsReady } = usePlayerStatus([
-    "playerModalVisible",
-    "playerStatus",
-    "spectrumIsReady"
-  ]);
+  const { SpectrumGetter, PlayerFSMStatus } = usePlayerStore(["SpectrumGetter", "PlayerFSMStatus"]);
+  const { PlayerVisible } = useLayoutStore(["PlayerVisible"]);
   const { mainColor, secondaryColor } = useThemeColor();
   const color = Color(mainColor);
   const secondary_color = Color(secondaryColor);
-
+  const spectrumIsReady = SpectrumGetter().ready;
   return (
     spectrumIsReady && (
       <AudioSpectrum
-        isPlaying={!playerModalVisible && playerStatus.playing}
+        isPlaying={!PlayerVisible && PlayerFSMStatus === PlayerFSMStatusEnum.playing}
         gap={1}
         renderer="webgl-rust"
         barWidth={3.8}

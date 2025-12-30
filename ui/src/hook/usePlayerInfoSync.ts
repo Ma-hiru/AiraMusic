@@ -1,38 +1,44 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useThemeColor } from "@mahiru/ui/hook/useThemeColor";
 import { Renderer } from "@mahiru/ui/utils/renderer";
-import { usePlayerStatus } from "@mahiru/ui/store";
-import { Player } from "@mahiru/ui/utils/player";
+import { usePlayerStore } from "@mahiru/ui/store/player";
 
 export function usePlayerInfoSync(targetWindow: WindowType) {
   const [hasOpened, setHasOpened] = useState(false);
-  const { trackStatus, playerProgress, setLyricVersion, playerStatus, audioControl, audioRef } =
-    usePlayerStatus([
-      "trackStatus",
-      "playerProgress",
-      "setLyricVersion",
-      "playerStatus",
-      "audioControl",
-      "audioRef"
-    ]);
+  const {
+    PlayerStatus,
+    PlayerTrackStatus,
+    PlayerProgressGetter,
+    AudioRefGetter,
+    SetLyricVersion,
+    PlayerCoreGetter
+  } = usePlayerStore([
+    "PlayerTrackStatus",
+    "PlayerProgressGetter",
+    "SetLyricVersion",
+    "PlayerStatus",
+    "AudioRefGetter",
+    "PlayerCoreGetter"
+  ]);
   const { mainColor } = useThemeColor();
-  const getNewestInfo = useRef({ trackStatus, playerStatus, playerProgress });
-  getNewestInfo.current = { trackStatus, playerStatus, playerProgress };
-
+  const getNewestInfo = useRef({ PlayerTrackStatus, PlayerStatus, PlayerProgressGetter });
+  getNewestInfo.current = { PlayerTrackStatus, PlayerStatus, PlayerProgressGetter };
+  const player = PlayerCoreGetter();
+  const audio = AudioRefGetter();
   // 发送歌曲信息
   const sendInit = useCallback(() => {
-    const { trackStatus } = getNewestInfo.current;
-    trackStatus &&
+    const { PlayerTrackStatus } = getNewestInfo.current;
+    PlayerTrackStatus &&
       Renderer.sendMessage("lyricInit", targetWindow, {
-        trackStatus
+        trackStatus: PlayerTrackStatus
       });
   }, [targetWindow]);
   // 发送同步信息
   const sendSync = useCallback(() => {
-    const { playerProgress, playerStatus } = getNewestInfo.current;
+    const { PlayerProgressGetter, PlayerStatus } = getNewestInfo.current;
     Renderer.sendMessage("lyricSync", targetWindow, {
-      progress: playerProgress.current(),
-      playerStatus,
+      progress: PlayerProgressGetter(),
+      playerStatus: PlayerStatus,
       themeColor: mainColor.hex()
     });
   }, [mainColor, targetWindow]);
@@ -68,26 +74,25 @@ export function usePlayerInfoSync(targetWindow: WindowType) {
     if (!hasOpened) return;
     const removeListener = Renderer.addMessageHandler("lyricSyncReverse", targetWindow, (sync) => {
       const changedLyricVersion = sync.playerStatus?.lyricVersion;
-      if (changedLyricVersion) setLyricVersion(changedLyricVersion);
+      if (changedLyricVersion) SetLyricVersion(changedLyricVersion);
       const controlMsg = sync.playerControl;
       if (controlMsg) {
         if (controlMsg === "play") {
-          audioControl.current()?.play();
+          player?.play?.();
         } else if (controlMsg === "last") {
-          Player.last(true);
+          player?.last(true);
         } else if (controlMsg === "next") {
-          Player.next(true);
+          player?.next(true);
         }
       }
     });
     return () => {
       removeListener();
     };
-  }, [audioControl, hasOpened, setLyricVersion, targetWindow]);
+  }, [SetLyricVersion, hasOpened, player, targetWindow]);
   // 同步音频进度变化
   useEffect(() => {
     if (!hasOpened) return;
-    const audio = audioRef.current();
     if (!audio) return;
     audio.addEventListener("timeupdate", sendSync);
     audio.addEventListener("loadstart", sendInit);
@@ -97,11 +102,11 @@ export function usePlayerInfoSync(targetWindow: WindowType) {
       audio.removeEventListener("loadstart", sendInit);
       audio.removeEventListener("pause", sendSync);
     };
-  }, [audioRef, hasOpened, sendInit, sendSync]);
+  }, [audio, hasOpened, sendInit, sendSync]);
   // 同步歌曲信息
   useEffect(() => {
     hasOpened && sendInit();
-  }, [hasOpened, sendInit, trackStatus]);
+  }, [hasOpened, sendInit]);
   // 保底机制，定时检查窗口是否打开，避免遗漏消息导致一直占用资源同步
   useEffect(() => {
     if (!hasOpened) return;

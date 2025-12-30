@@ -1,16 +1,20 @@
 import { FC, memo, ReactEventHandler, useCallback } from "react";
 import { ImageSize } from "@mahiru/ui/utils/filter";
-import { usePlayerStatus } from "@mahiru/ui/store";
 import NeteaseImage from "@mahiru/ui/componets/public/NeteaseImage";
+import { usePlayerStore } from "@mahiru/ui/store/player";
+import { useLayoutStore } from "@mahiru/ui/store/layout";
 
 const Cover: FC<object> = () => {
-  const { trackStatus, setBackground } = usePlayerStatus(["trackStatus", "setBackground"]);
-  const track = trackStatus?.track;
+  const { PlayerTrackStatus } = usePlayerStore(["PlayerTrackStatus"]);
+  const { UpdatePlayerTheme } = useLayoutStore(["UpdatePlayerTheme"]);
+  const track = PlayerTrackStatus?.track;
   const onLoad = useCallback<ReactEventHandler<HTMLImageElement>>(
     (e) => {
-      setBackground(e.currentTarget.src);
+      UpdatePlayerTheme({
+        BackgroundCover: e.currentTarget.src
+      });
     },
-    [setBackground]
+    [UpdatePlayerTheme]
   );
   return (
     <NeteaseImage

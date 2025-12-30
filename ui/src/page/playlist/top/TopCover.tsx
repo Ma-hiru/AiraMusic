@@ -1,8 +1,8 @@
 import { FC, memo, ReactEventHandler, useCallback, useRef } from "react";
 import { PlaylistCacheEntry, PlaylistManager } from "@mahiru/ui/utils/playlist";
 import { CacheStore } from "@mahiru/ui/store/cache";
-import { useLayoutStatus } from "@mahiru/ui/store";
 import { Headphones } from "lucide-react";
+import { useLayoutStore } from "@mahiru/ui/store/layout";
 import NeteaseImage from "@mahiru/ui/componets/public/NeteaseImage";
 
 interface TopCoverProps {
@@ -10,7 +10,7 @@ interface TopCoverProps {
 }
 
 const TopCover: FC<TopCoverProps> = ({ entry }) => {
-  const { setBackground } = useLayoutStatus(["setBackground"]);
+  const { UpdatePlayerTheme } = useLayoutStore(["PlayerTheme", "UpdatePlayerTheme"]);
   const cacheID = useRef("");
 
   const onCacheHit = useCallback((_: string, id: string) => {
@@ -21,8 +21,11 @@ const TopCover: FC<TopCoverProps> = ({ entry }) => {
     cacheID.current = "";
   }, []);
   const onLoad = useCallback<ReactEventHandler<HTMLImageElement>>(
-    (e) => setBackground(e.currentTarget.src),
-    [setBackground]
+    (e) =>
+      UpdatePlayerTheme({
+        BackgroundCover: e.currentTarget.src
+      }),
+    [UpdatePlayerTheme]
   );
   return (
     <div className="size-44 relative select-none">

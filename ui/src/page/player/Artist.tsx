@@ -1,14 +1,14 @@
 import { FC, Fragment, memo, useCallback, useEffect, useRef } from "react";
-import { usePlayerStatus } from "@mahiru/ui/store";
 import { useHeart } from "@mahiru/ui/hook/useHeart";
 import { useInfoWindow } from "@mahiru/ui/hook/useInfoWindow";
 import { Heart, MessageSquare } from "lucide-react";
 import { CommentType } from "@mahiru/ui/api/comment";
+import { usePlayerStore } from "@mahiru/ui/store/player";
 
 const Artist: FC<object> = () => {
-  const { trackStatus } = usePlayerStatus(["trackStatus"]);
+  const { PlayerTrackStatus } = usePlayerStore(["PlayerTrackStatus"]);
   const { likeChange, isTrackLiked } = useHeart();
-  const track = trackStatus?.track;
+  const track = PlayerTrackStatus?.track;
   const lastTrackID = useRef(track?.id);
 
   const { openInfoWindow, commentsDisplayType, opened } = useInfoWindow();

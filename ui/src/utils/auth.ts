@@ -1,7 +1,7 @@
 import Cookies from "js-cookie";
 import { router } from "@mahiru/ui/router";
-import { getPersistSnapshot, usePersistZustandStore } from "@mahiru/ui/store";
 import { API } from "@mahiru/ui/api";
+import { getUserStoreSnapshot } from "@mahiru/ui/store/user";
 
 function setCookies(raw: string) {
   const cookies = raw.split(";;");
@@ -30,13 +30,13 @@ function isLoggedIn() {
 
 // 账号登录
 function isAccountLoggedIn() {
-  const loginMode = usePersistZustandStore.getState().data.loginMode;
+  const loginMode = getUserStoreSnapshot().UserLoginMode;
   return getCookie("MUSIC_U") !== undefined && loginMode === "account";
 }
 
 /** 用户名搜索（用户数据为只读） */
 function isUsernameLoggedIn() {
-  const loginMode = usePersistZustandStore.getState().data.loginMode;
+  const loginMode = getUserStoreSnapshot().UserLoginMode;
   return loginMode === "username";
 }
 
@@ -50,21 +50,20 @@ function doLogout() {
     removeCookie("MUSIC_U");
     removeCookie("__csrf");
     // 更新状态仓库
-    const {
-      updatePersistStoreData,
-      updateUserLikedTrackIDs,
-      updateUserPlaylistSummary,
-      updateUserLikedListSummary
-    } = getPersistSnapshot();
 
-    updatePersistStoreData({
-      user: null,
-      loginMode: "",
-      lastRefreshCookieDate: 0
-    });
-    updateUserLikedTrackIDs({ ids: {}, checkPoint: new Date().getTime() });
-    updateUserLikedListSummary(null);
-    updateUserPlaylistSummary([]);
+    const {
+      UpdateUserLastRefreshCookieDate,
+      UpdateUserProfile,
+      UpdateUserLikedTrackIDs,
+      UpdateUserLikedListSummary,
+      UpdateUserPlaylistSummary
+    } = getUserStoreSnapshot();
+
+    UpdateUserLastRefreshCookieDate(null);
+    UpdateUserProfile(null, "");
+    UpdateUserLikedTrackIDs({ ids: {}, checkPoint: Date.now() });
+    UpdateUserLikedListSummary(null);
+    UpdateUserPlaylistSummary([]);
     return router.navigate("/home");
   });
 }

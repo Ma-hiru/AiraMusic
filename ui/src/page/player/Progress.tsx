@@ -2,10 +2,10 @@ import { FC, memo } from "react";
 import { usePlayProgress } from "@mahiru/ui/hook/usePlayProgress";
 import { motion } from "motion/react";
 import { Time } from "@mahiru/ui/utils/time";
-import { usePlayerStatus } from "@mahiru/ui/store";
 import { Track, TrackQuality } from "@mahiru/ui/utils/track";
 import { css } from "@emotion/css";
 import Tag from "@mahiru/ui/componets/public/Tag";
+import { usePlayerStore } from "@mahiru/ui/store/player";
 
 const Progress: FC<object> = () => {
   const {
@@ -18,14 +18,14 @@ const Progress: FC<object> = () => {
     chorusPercent
   } = usePlayProgress();
 
-  const { trackStatus } = usePlayerStatus(["trackStatus"]);
+  const { PlayerTrackStatus } = usePlayerStore(["PlayerTrackStatus"]);
   const quality = () => {
     if (
-      trackStatus?.quality?.level === TrackQuality.sq ||
-      trackStatus?.quality?.level === TrackQuality.hr ||
-      trackStatus?.quality?.level === TrackQuality.h
+      PlayerTrackStatus?.quality?.level === TrackQuality.sq ||
+      PlayerTrackStatus?.quality?.level === TrackQuality.hr ||
+      PlayerTrackStatus?.quality?.level === TrackQuality.h
     ) {
-      return Track.mapTrackQualityToText(trackStatus.quality.level);
+      return Track.mapTrackQualityToText(PlayerTrackStatus.quality.level);
     }
     return null;
   };

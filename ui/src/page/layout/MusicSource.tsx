@@ -1,9 +1,7 @@
 import { FC, memo, SyntheticEvent, useCallback, useEffect, useRef, useState } from "react";
-import { Player } from "@mahiru/ui/utils/player";
 import { ShortcutConfig, useKeyboardShortcut } from "@mahiru/ui/hook/useKeyboardShortcut";
 import { usePlayerResource } from "@mahiru/ui/hook/usePlayerResource";
 import { useMediaSession } from "@mahiru/ui/hook/useMediaSession";
-import { usePlayerStatus } from "@mahiru/ui/store";
 import { useWindowTitle } from "@mahiru/ui/hook/useWindowTitle";
 import { Log } from "@mahiru/ui/utils/dev";
 import { Track } from "@mahiru/ui/utils/track";
@@ -12,77 +10,80 @@ import { useLogin } from "@mahiru/ui/hook/useLogout";
 import { usePlayerAudio } from "@mahiru/ui/hook/usePlayerAudio";
 import { useSpectrumWorker } from "@mahiru/ui/hook/useSpectrumWorker";
 import { Renderer } from "@mahiru/ui/utils/renderer";
+import { PlayerFSMStatusEnum, usePlayerStore } from "@mahiru/ui/store/player";
+import { useLayoutStore } from "@mahiru/ui/store/layout";
 
 const MusicSource: FC<object> = () => {
   const {
-    trackStatus,
-    setAudioRef,
-    audioControl,
-    playerStatus,
-    spectrumOptions,
-    setSpectrumData,
-    setSpectrumIsReady,
-    isTyping
-  } = usePlayerStatus([
-    "trackStatus",
-    "setAudioRef",
-    "audioControl",
-    "playerStatus",
-    "spectrumOptions",
-    "setSpectrumIsReady",
-    "setSpectrumData",
-    "isTyping"
+    PlayerCoreGetter,
+    PlayerTrackStatus,
+    InitPlayerCore,
+    SetAudioRefGetter,
+    PlayerFSMStatus,
+
+    SetSpectrumGetter,
+    SpectrumOptions
+  } = usePlayerStore([
+    "PlayerCoreGetter",
+    "InitPlayerCore",
+    "SetAudioRefGetter",
+    "PlayerTrackStatus",
+    "PlayerFSMStatus",
+    "SetSpectrumGetter",
+    "SpectrumOptions"
   ]);
+  const { IsTyping } = useLayoutStore(["IsTyping"]);
   // 初始化播放器
   useEffect(() => {
-    void Player.init();
-  }, []);
+    InitPlayerCore();
+  }, [InitPlayerCore]);
   // 注册 Audio 元素引用
   const audioRealRef = useRef<HTMLAudioElement>(null);
   useEffect(() => {
-    setAudioRef(() => audioRealRef.current);
+    SetAudioRefGetter(() => audioRealRef.current);
     return () => {
-      setAudioRef(() => null);
+      SetAudioRefGetter(() => null);
     };
-  }, [setAudioRef]);
+  }, [SetAudioRefGetter]);
   // 注册音频控制器
   usePlayerAudio();
   // 注册音频资源加载器
   usePlayerResource();
   // 注册 Media Session API
+  const player = PlayerCoreGetter();
   useMediaSession({
-    trackStatus,
-    play: () => audioControl.current()?.play(),
-    lastTrack: () => Player.last(true),
-    nextTrack: () => Player.next(true)
+    trackStatus: PlayerTrackStatus,
+    play: () => player?.play?.(),
+    lastTrack: () => player?.last(true),
+    nextTrack: () => player?.next(true)
   });
   // 注册局部键盘快捷键
   const [Shortcuts, setShortcuts] = useState<ShortcutConfig[]>([]);
   useKeyboardShortcut(Shortcuts);
   useEffect(() => {
-    if (isTyping) {
+    if (IsTyping) {
       setShortcuts([
         {
           key: "ArrowRight",
           modifiers: ["alt"],
           description: "下一首",
-          callback: () => Player.next(true)
+          callback: () => player?.next(true)
         },
         {
           key: "ArrowLeft",
           modifiers: ["alt"],
           description: "上一首",
-          callback: () => Player.last()
+          callback: () => player?.last()
         },
         {
           key: "ArrowUp",
           description: "增加音量",
-          callback: () => audioControl.current()?.upVolume(0.1)
+          callback: () => player?.upVolume?.(0.1)
         },
         {
           key: "ArrowDown",
           description: "减少音量",
-          callback: () => audioControl.current()?.downVolume(0.1)
+          callback: () => player?.downVolume?.(0.1)
         }
       ]);
     } else {
@@ -90,109 +91,119 @@ const MusicSource: FC<object> = () => {
         {
           key: " ",
           description: "播放/暂停",
-          callback: () => audioControl.current()?.play()
+          callback: () => player?.play?.()
         },
         {
           key: "ArrowRight",
           modifiers: ["alt"],
           description: "下一首",
-          callback: () => Player.next(true)
+          callback: () => player?.next(true)
         },
         {
           key: "ArrowLeft",
           modifiers: ["alt"],
           description: "上一首",
-          callback: () => Player.last()
+          callback: () => player?.last()
         },
         {
           key: "ArrowUp",
           description: "增加音量",
-          callback: () => audioControl.current()?.upVolume(0.1)
+          callback: () => player?.upVolume?.(0.1)
         },
         {
           key: "ArrowDown",
           description: "减少音量",
-          callback: () => audioControl.current()?.downVolume(0.1)
+          callback: () => player?.downVolume?.(0.1)
         }
       ]);
     }
-  }, [audioControl, isTyping]);
+  }, [IsTyping, player]);
   // 注册窗口标题
   const { updateWindowTitle, defaultTitle } = useWindowTitle();
   useEffect(() => {
-    const title = trackStatus?.track.name;
-    const artist = trackStatus?.track.ar;
+    const title = PlayerTrackStatus?.track.name;
+    const artist = PlayerTrackStatus?.track.ar;
     if (title && artist) {
       updateWindowTitle(`${title} - ${artist.map((ar) => ar.name).join("&")}`);
     } else {
       updateWindowTitle(defaultTitle);
     }
-  }, [defaultTitle, trackStatus?.track.ar, trackStatus?.track.name, updateWindowTitle]);
+  }, [PlayerTrackStatus?.track.ar, PlayerTrackStatus?.track.name, defaultTitle, updateWindowTitle]);
   // 处理音频加载错误
   const login = useLogin();
   const onError = useCallback(
     (err: SyntheticEvent<HTMLAudioElement>) => {
-      const raw = trackStatus?.meta?.[0]?.url;
+      const raw = PlayerTrackStatus?.meta?.[0]?.url;
       if (raw) {
         if (err.currentTarget.src !== raw) {
           Log.info("ctx/PlayerProvider.tsx", "cache audio load error, fallback to raw src");
           err.currentTarget.src = raw;
-          const id = trackStatus?.track.id;
+          const id = PlayerTrackStatus?.track.id;
           if (id) {
             Track.removeCache(id);
           }
         } else {
           Log.error("ctx/PlayerProvider.tsx", "audio playback error");
           if (!Auth.isAccountLoggedIn()) {
-            audioControl.current()?.play();
+            player?.play?.();
             login();
           } else {
             // TODO: 播放错误，可能是403或网络错误，403应该重新登录或刷新缓存，网络错误则跳过当前歌曲
-            Player.next(true);
+            player?.next(true);
           }
         }
       }
     },
-    [audioControl, login, trackStatus?.meta, trackStatus?.track.id]
+    [PlayerTrackStatus?.meta, PlayerTrackStatus?.track.id, login, player]
   );
   // 注册频谱
-  const { spectrumData, isReady } = useSpectrumWorker(audioRealRef, playerStatus.playing, {
-    fftSize: 2048,
-    numBands: 32,
-    withPeaks: false,
-    ...spectrumOptions
-  });
+
+  const { spectrumData, isReady } = useSpectrumWorker(
+    audioRealRef,
+    PlayerFSMStatus === PlayerFSMStatusEnum.playing,
+    {
+      fftSize: 2048,
+      numBands: 32,
+      withPeaks: false,
+      ...SpectrumOptions
+    }
+  );
   useEffect(() => {
-    setSpectrumData(() => spectrumData.current);
-    setSpectrumIsReady(isReady);
-  }, [isReady, setSpectrumData, setSpectrumIsReady, spectrumData]);
+    SetSpectrumGetter(() => ({
+      data: () => spectrumData.current,
+      ready: isReady
+    }));
+  }, [SetSpectrumGetter, isReady, spectrumData]);
   // 注册任务栏回调
   useEffect(() => {
     const unsubscribeLast = Renderer.addMainProcessMessageHandler("lastTrack", () => {
-      Player.last(true);
+      player?.last(true);
     });
     const unsubscribePlay = Renderer.addMainProcessMessageHandler("playTrack", () => {
-      audioControl.current()?.play();
+      player?.play?.();
     });
     const unsubscribeNext = Renderer.addMainProcessMessageHandler("nextTrack", () => {
-      Player.next(true);
+      player?.next(true);
     });
     return () => {
       unsubscribeLast();
       unsubscribePlay();
       unsubscribeNext();
     };
-  }, [audioControl]);
+  }, [player]);
   useEffect(() => {
-    Renderer.sendMessageToMainProcess("playStatus", playerStatus.playing);
-  }, [playerStatus.playing]);
+    Renderer.sendMessageToMainProcess(
+      "playStatus",
+      PlayerFSMStatus === PlayerFSMStatusEnum.playing
+    );
+  }, [PlayerFSMStatus]);
   return (
     <audio
       className="w-0 h-0 opacity-0"
       controls={false}
       autoPlay={false}
       ref={audioRealRef}
-      src={trackStatus?.audio || undefined}
+      src={PlayerTrackStatus?.audio || undefined}
       preload="auto"
       onError={onError}
     />

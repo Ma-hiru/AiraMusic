@@ -1,6 +1,6 @@
 import { FC, Key, memo, ReactNode, useCallback, useEffect, useState } from "react";
 import { motion, useAnimate } from "motion/react";
-import { usePlayerStatus } from "@mahiru/ui/store";
+import { useLayoutStore } from "@mahiru/ui/store/layout";
 
 const OPEN_DURATION = 0.15;
 const CLOSE_DURATION = 0.08;
@@ -24,12 +24,7 @@ const MenuProvider: FC<object> = () => {
   const [scope, animate] = useAnimate();
   const [visible, setVisible] = useState(false);
   const [render, setRender] = useState<Nullable<ContextMenuRender>>(null);
-  const { setContextMenuVisibleSetter, setContextMenuRenderer, setContextMenuVisible } =
-    usePlayerStatus([
-      "setContextMenuVisibleSetter",
-      "setContextMenuRenderer",
-      "setContextMenuVisible"
-    ]);
+  const { UpdateContextMenu } = useLayoutStore(["UpdateContextMenu"]);
 
   const SetContextMenuRenderData = useCallback((data: Nullable<ContextMenuRender>) => {
     setRender(data);
@@ -99,29 +94,26 @@ const MenuProvider: FC<object> = () => {
       CloseContextMenuAnimate()
         .then(() => MoveContextMenu(render.clientX, render.clientY))
         .then(OpenContextMenuAnimate);
-      setContextMenuVisible(true);
+      UpdateContextMenu({ visible: true });
     } else {
       void CloseContextMenuAnimate();
-      setContextMenuVisible(false);
+      UpdateContextMenu({ visible: false });
     }
   }, [
     CloseContextMenuAnimate,
     MoveContextMenu,
     OpenContextMenuAnimate,
+    UpdateContextMenu,
     render,
-    setContextMenuVisible,
     visible
   ]);
 
   useEffect(() => {
-    setContextMenuRenderer(() => SetContextMenuRenderData);
-    setContextMenuVisibleSetter(() => SetContextMenuVisible);
-  }, [
-    SetContextMenuRenderData,
-    SetContextMenuVisible,
-    setContextMenuRenderer,
-    setContextMenuVisibleSetter
-  ]);
+    UpdateContextMenu({
+      rendererGetter: () => SetContextMenuRenderData,
+      visibleSetter: () => SetContextMenuVisible
+    });
+  }, [SetContextMenuRenderData, SetContextMenuVisible, UpdateContextMenu]);
 
   return (
     <motion.div

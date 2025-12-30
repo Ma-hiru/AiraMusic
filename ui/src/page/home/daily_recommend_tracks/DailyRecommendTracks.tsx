@@ -2,11 +2,11 @@ import { FC, memo, useCallback, useEffect, useRef, useState } from "react";
 import RecommendTrackTitle from "./RecommendTrackTitle";
 import RecommendTrackList from "./list";
 import { API } from "@mahiru/ui/api";
-import { usePlayerStatus } from "@mahiru/ui/store";
+import { useLayoutStore } from "@mahiru/ui/store/layout";
 
 const DailyRecommendTracks: FC<object> = () => {
   const [recommend, setRecommend] = useState<DailyRecommendTracksDailySong[]>([]);
-  const { background, setBackground } = usePlayerStatus(["background", "setBackground"]);
+  const { PlayerTheme, UpdatePlayerTheme } = useLayoutStore(["PlayerTheme", "UpdatePlayerTheme"]);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const lastPage = useCallback(() => {
@@ -33,10 +33,12 @@ const DailyRecommendTracks: FC<object> = () => {
   }, []);
 
   useEffect(() => {
-    if (!background) {
-      setBackground(recommend[0]?.al.picUrl);
+    if (!PlayerTheme.BackgroundCover) {
+      UpdatePlayerTheme({
+        BackgroundCover: recommend[0]?.al.picUrl
+      });
     }
-  }, [background, recommend, setBackground]);
+  }, [PlayerTheme.BackgroundCover, UpdatePlayerTheme, recommend]);
   return (
     <div className="w-full overflow-hidden contain-layout">
       <RecommendTrackTitle lastPage={lastPage} nextPage={nextPage} />

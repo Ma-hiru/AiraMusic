@@ -69,7 +69,7 @@ const MiniPlayerPage: FC<object> = () => {
             onClick={lastTrack}
             fill={"#171b20"}
           />
-          {lyricSync?.playerStatus.playing ? (
+          {lyricSync?.playing ? (
             <Pause
               className="size-3 hover:scale-90 hover:opacity-50 active:scale-80 cursor-pointer ease-in-out transition-all duration-300"
               onClick={playTrack}

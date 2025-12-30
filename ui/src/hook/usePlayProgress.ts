@@ -8,17 +8,23 @@ import {
   useRef,
   useState
 } from "react";
-import { usePlayerStatus } from "@mahiru/ui/store";
 import { API } from "@mahiru/ui/api";
 import { NCMServerErr } from "@mahiru/ui/utils/errs";
+import { PlayerFSMStatusEnum, usePlayerStore } from "@mahiru/ui/store/player";
 
 export function usePlayProgress() {
-  const { trackStatus, playerStatus, playerProgress, audioRef, audioControl } = usePlayerStatus([
-    "trackStatus",
-    "playerStatus",
-    "playerProgress",
-    "audioRef",
-    "audioControl"
+  const {
+    PlayerTrackStatus,
+    PlayerCoreGetter,
+    PlayerProgressGetter,
+    AudioRefGetter,
+    PlayerFSMStatus
+  } = usePlayerStore([
+    "PlayerTrackStatus",
+    "PlayerProgressGetter",
+    "AudioRefGetter",
+    "PlayerCoreGetter",
+    "PlayerFSMStatus"
   ]);
   const [progress, setProgress] = useImmer({
     percent: 0,
@@ -30,27 +36,28 @@ export function usePlayProgress() {
   const [bufferScope, bufferAnimate] = useAnimate();
   const [isDragging, setIsDragging] = useState(false);
   const [chorus, setChorus] = useState<NeteaseChorusData[]>([]);
-  const track = trackStatus?.track;
+  const track = PlayerTrackStatus?.track;
+  const player = PlayerCoreGetter();
+  const audio = AudioRefGetter();
   const barRef = useRef<HTMLDivElement>(null);
   const dragPercentRef = useRef(0);
-  const getPlaying = useRef(playerStatus.playing);
+  const getPlaying = useRef(PlayerFSMStatus === PlayerFSMStatusEnum.playing);
   const getDragging = useRef(isDragging);
   getDragging.current = isDragging;
-  getPlaying.current = playerStatus.playing;
+  getPlaying.current = PlayerFSMStatus === PlayerFSMStatusEnum.playing;
   // 一次播放同步函数
   const tick = useCallback(
     (force: boolean = false) => {
       if (!force && getDragging.current) return;
-      const { buffered, currentTime, duration } = playerProgress.current();
+      const { buffered, currentTime, duration } = PlayerProgressGetter();
       const percent = !duration ? 0 : (currentTime / duration) * 100;
       const buffer = !duration ? 0 : (buffered / duration) * 100;
       setProgress({ percent, buffer, currentTime, duration });
     },
-    [playerProgress, setProgress]
+    [PlayerProgressGetter, setProgress]
   );
   // 监听音频事件，自然更新
   useEffect(() => {
-    const audio = audioRef.current();
     if (!audio) return;
     const handleTimeUpdate = () => tick();
     const handleLoad = () => tick(true);
@@ -64,13 +71,13 @@ export function usePlayProgress() {
       audio.removeEventListener("progress", handleLoad);
       audio.removeEventListener("waiting", handleLoad);
     };
-  }, [audioRef, tick]);
+  }, [audio, tick]);
   // 切歌快速重置进度条
   const lastTrackId = useRef(track?.id);
   useEffect(() => {
     if (!track || track.id === lastTrackId.current) return;
     lastTrackId.current = track.id;
-    const { duration } = playerProgress.current();
+    const { duration } = PlayerProgressGetter();
     const nextState = { percent: 0, buffer: 0, currentTime: 0, duration };
     setProgress(nextState);
     if (percentScope.current) {
@@ -80,11 +87,11 @@ export function usePlayProgress() {
       bufferAnimate(bufferScope.current, { width: "0%" }, { duration: 0, ease: "linear" });
     }
   }, [
+    PlayerProgressGetter,
     bufferAnimate,
     bufferScope,
     percentAnimate,
     percentScope,
-    playerProgress,
     setProgress,
     track
   ]);
@@ -123,8 +130,8 @@ export function usePlayProgress() {
       if (isDragging) return;
       const percent = calcPercent(e.clientX);
       dragPercentRef.current = percent;
-      const { duration } = playerProgress.current();
-      audioControl.current()?.changeCurrentTime((percent / 100) * duration);
+      const { duration } = PlayerProgressGetter();
+      player?.changeCurrentTime?.((percent / 100) * duration);
       setProgress((draft) => {
         draft.percent = percent;
       });
@@ -137,12 +144,12 @@ export function usePlayProgress() {
       }
     },
     [
-      audioControl,
+      PlayerProgressGetter,
       calcPercent,
       isDragging,
       percentAnimate,
       percentScope,
-      playerProgress,
+      player,
       setProgress
     ]
   );
@@ -169,8 +176,8 @@ export function usePlayProgress() {
       mouseUpHandlerRef.current = () => {
         setIsDragging(false);
         const finalPercent = dragPercentRef.current;
-        const { duration } = playerProgress.current();
-        audioControl.current()?.changeCurrentTime((finalPercent / 100) * duration);
+        const { duration } = PlayerProgressGetter();
+        player?.changeCurrentTime?.((finalPercent / 100) * duration);
         if (isListenerAttachedRef.current) {
           window.removeEventListener("mousemove", mouseMoveHandlerRef.current);
           window.removeEventListener("mouseup", mouseUpHandlerRef.current);
@@ -181,7 +188,7 @@ export function usePlayProgress() {
       window.addEventListener("mouseup", mouseUpHandlerRef.current);
       isListenerAttachedRef.current = true;
     },
-    [audioControl, calcPercent, percentAnimate, percentScope, playerProgress, setProgress]
+    [PlayerProgressGetter, calcPercent, percentAnimate, percentScope, player, setProgress]
   );
   useEffect(() => {
     return () => {
@@ -204,8 +211,8 @@ export function usePlayProgress() {
   }, [tick]);
   // 获取歌曲副歌时间
   useEffect(() => {
-    trackStatus &&
-      API.Track.getTrackChorus(trackStatus.track.id)
+    PlayerTrackStatus &&
+      API.Track.getTrackChorus(PlayerTrackStatus.track.id)
         .then((response) => {
           if (Array.isArray(response.chorus)) {
             setChorus(response.chorus);
@@ -219,19 +226,20 @@ export function usePlayProgress() {
             // TODO
           }
         });
-  }, [trackStatus]);
+  }, [PlayerTrackStatus]);
   const chorusPercent = useMemo(() => {
-    const duration = playerProgress.current().duration;
+    const duration = PlayerProgressGetter().duration;
     if (!duration || duration <= 0) return [];
     return chorus.map((c) => (c.startTime / (1000 * duration)) * 100);
-  }, [chorus, playerProgress]);
+  }, [PlayerProgressGetter, chorus]);
+
   return {
     barRef,
     handleBarClick,
     handleBarMouseDown,
     percentScope,
     bufferScope,
-    isPlaying: playerStatus.playing,
+    isPlaying: PlayerFSMStatus === PlayerFSMStatusEnum.playing,
     isDragging,
     progress,
     chorus,

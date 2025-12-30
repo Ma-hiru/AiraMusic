@@ -1,7 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef } from "react";
-import { usePlayerStatus } from "@mahiru/ui/store";
-import { Player } from "@mahiru/ui/utils/player";
-import { EqError, Log } from "@mahiru/ui/utils/dev";
+import { PlayerFSMStatusEnum, usePlayerStore } from "@mahiru/ui/store/player";
 
 /**
  * 音频控制
@@ -10,38 +8,37 @@ import { EqError, Log } from "@mahiru/ui/utils/dev";
  * */
 export function usePlayerAudio() {
   const {
-    playerProgress,
-    trackStatus,
-    setPlayerStatus,
-    playerStatus,
-    audioRef,
-    setAudioControl,
-    playerInitialized
-  } = usePlayerStatus([
-    "playerProgress",
-    "trackStatus",
-    "setPlayerStatus",
-    "playerStatus",
-    "audioRef",
-    "setAudioControl",
-    "playerInitialized"
+    PlayerStatus,
+    AudioRefGetter,
+    PlayerInitialized,
+    PlayerProgressGetter,
+    SetAudioControlGetter,
+    PlayerFSMStatus,
+    PlayerCoreGetter,
+    SetPlayerStatus
+  } = usePlayerStore([
+    "PlayerStatus",
+    "AudioRefGetter",
+    "PlayerInitialized",
+    "PlayerProgressGetter",
+    "SetAudioControlGetter",
+    "PlayerFSMStatus",
+    "PlayerCoreGetter",
+    "SetPlayerStatus"
   ]);
-  const lastTrackIdRef = useRef<Nullable<number>>(null);
-  const lastAudioSrcRef = useRef<Nullable<string>>(null);
-  const volumeBeforeMute = useRef(playerStatus.volume);
+  const volumeBeforeMute = useRef(PlayerStatus.volume);
+  const audio = AudioRefGetter();
+  const player = PlayerCoreGetter();
 
   const play = useCallback(() => {
-    const audio = audioRef.current();
     audio && (audio.paused ? audio.play() : audio.pause());
-  }, [audioRef]);
+  }, [audio]);
 
   const pause = useCallback(() => {
-    const audio = audioRef.current();
     audio && !audio.paused && audio.pause();
-  }, [audioRef]);
+  }, [audio]);
 
   const mute = useCallback(() => {
-    const audio = audioRef.current();
     if (!audio) return;
     audio.muted = !audio.muted;
     if (audio.muted) {
@@ -50,33 +47,30 @@ export function usePlayerAudio() {
     } else {
       audio.volume = volumeBeforeMute.current;
     }
-  }, [audioRef]);
+  }, [audio]);
 
   const upVolume = useCallback(
     (gap?: number) => {
-      const audio = audioRef.current();
       if (!audio) return;
       gap ||= 0.2;
       audio.volume = Math.min(1, audio.volume + gap);
       audio.volume > 0 && audio.muted && (audio.muted = false);
     },
-    [audioRef]
+    [audio]
   );
 
   const downVolume = useCallback(
     (gap?: number) => {
-      const audio = audioRef.current();
       if (!audio) return;
       gap ||= 0.2;
       audio.volume = Math.max(0, audio.volume - gap);
       audio.volume > 0 && audio.muted && (audio.muted = false);
     },
-    [audioRef]
+    [audio]
   );
 
   const changeCurrentTime = useCallback(
     (targetTime: number) => {
-      const audio = audioRef.current();
       if (!audio || !Number.isFinite(targetTime)) return;
       // 确保跳转时间在合法范围内 0 ~ duration 之间
       const clamped = Math.max(
@@ -93,102 +87,60 @@ export function usePlayerAudio() {
         audio.currentTime = clamped;
       }
     },
-    [audioRef]
+    [audio]
   );
+
   // 从缓存恢复音量
   useLayoutEffect(() => {
-    if (playerInitialized) {
-      const audio = audioRef.current();
+    if (PlayerInitialized) {
       if (!audio) return;
-      audio.volume = playerStatus.volume;
-      const cached = playerProgress.current();
+      audio.volume = PlayerStatus.volume;
+      const cached = PlayerProgressGetter();
       audio.currentTime = cached.currentTime;
     }
     // eslint-disable-next-line
-  }, [playerInitialized]);
-  // 自动加载
-  useEffect(() => {
-    const audio = audioRef.current();
-    if (!audio || !trackStatus || !trackStatus.audio) return;
-    const trackId = trackStatus.track.id;
-    const nextAudioSrc = trackStatus.audio;
-    const shouldReloadTrack =
-      trackId !== lastTrackIdRef.current || nextAudioSrc !== lastAudioSrcRef.current;
-
-    if (shouldReloadTrack) {
-      audio.src = nextAudioSrc;
-      audio.load();
-      lastTrackIdRef.current = trackId;
-      lastAudioSrcRef.current = nextAudioSrc;
-    }
-
-    const handleCanPlay = () => {
-      if (playerStatus.playing) {
-        audio.play().catch((err) => {
-          Log.error(
-            new EqError({
-              raw: err,
-              message: "play() failed after canplay",
-              label: "ui/ctx/PlayerProvider:canPlay"
-            })
-          );
-        });
-      }
-    };
-
-    audio.addEventListener("canplay", handleCanPlay);
-    audio.addEventListener("loadedmetadata", handleCanPlay);
-    return () => {
-      audio.removeEventListener("canplay", handleCanPlay);
-      audio.removeEventListener("loadedmetadata", handleCanPlay);
-    };
-  }, [audioRef, playerStatus.playing, trackStatus]);
+  }, [PlayerInitialized]);
   // 监听 audio 播放状态变化
   useEffect(() => {
-    const audio = audioRef.current();
     if (!audio) return;
 
-    const handlePlay = () =>
-      setPlayerStatus((draft) => {
-        if (!draft.playing) draft.playing = true;
-      });
-    const handlePause = () =>
-      setPlayerStatus((draft) => {
-        if (draft.playing) draft.playing = false;
-      });
     const handleTimeUpdate = () => {
-      if (!playerInitialized) return;
-      playerProgress.current().currentTime = audio.currentTime;
+      if (!PlayerInitialized) return;
+      PlayerProgressGetter().currentTime = audio.currentTime;
     };
-    const handleDurationChange = () => (playerProgress.current().duration = audio.duration || 0);
+    const handleDurationChange = () => (PlayerProgressGetter().duration = audio.duration || 0);
     const handleProgress = () => {
       if (audio.buffered.length > 0) {
-        playerProgress.current().buffered = audio.buffered.end(audio.buffered.length - 1);
+        PlayerProgressGetter().buffered = audio.buffered.end(audio.buffered.length - 1);
       }
     };
     const handleVolumeChange = () =>
-      setPlayerStatus((draft) => {
+      SetPlayerStatus((draft) => {
         draft.volume = audio.volume;
       });
-    const handleEnded = () => Player.next(false);
+    const handleEnded = () => player?.next(false);
 
-    audio.addEventListener("play", handlePlay, { passive: true });
-    audio.addEventListener("pause", handlePause, { passive: true });
     audio.addEventListener("ended", handleEnded, { passive: true });
     audio.addEventListener("timeupdate", handleTimeUpdate, { passive: true });
     audio.addEventListener("durationchange", handleDurationChange, { passive: true });
     audio.addEventListener("progress", handleProgress, { passive: true });
     audio.addEventListener("volumechange", handleVolumeChange, { passive: true });
     return () => {
-      audio.removeEventListener("play", handlePlay);
-      audio.removeEventListener("pause", handlePause);
       audio.removeEventListener("ended", handleEnded);
       audio.removeEventListener("timeupdate", handleTimeUpdate);
       audio.removeEventListener("durationchange", handleDurationChange);
       audio.removeEventListener("progress", handleProgress);
       audio.removeEventListener("volumechange", handleVolumeChange);
     };
-  }, [audioRef, playerInitialized, playerProgress, setPlayerStatus]);
+  }, [PlayerInitialized, PlayerProgressGetter, SetPlayerStatus, audio, player]);
+  // 根据 FSM 状态自动播放或暂停
+  useEffect(() => {
+    if (PlayerFSMStatus === PlayerFSMStatusEnum.playing) {
+      audio && audio.play();
+    } else {
+      audio && audio.pause();
+    }
+  }, [PlayerFSMStatus, audio]);
 
   const Audio = useMemo(
     () => ({
@@ -197,19 +149,18 @@ export function usePlayerAudio() {
       mute,
       upVolume,
       downVolume,
-      changeCurrentTime,
-      ref: audioRef
+      changeCurrentTime
     }),
-    [audioRef, changeCurrentTime, downVolume, mute, pause, play, upVolume]
+    [changeCurrentTime, downVolume, mute, pause, play, upVolume]
   );
 
   // 注册 Audio 控制器到全局状态
   useEffect(() => {
-    setAudioControl(() => Audio);
+    SetAudioControlGetter(() => Audio);
     return () => {
-      setAudioControl(() => null);
+      SetAudioControlGetter(() => null);
     };
-  }, [Audio, setAudioControl]);
+  }, [Audio, SetAudioControlGetter]);
 
   return Audio;
 }

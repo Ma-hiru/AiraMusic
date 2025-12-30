@@ -1,14 +1,16 @@
 import { FC, memo } from "react";
 import { ImageSize } from "@mahiru/ui/utils/filter";
 import { useThemeColor } from "@mahiru/ui/hook/useThemeColor";
-import { useLayoutStatus, usePlayerStatus } from "@mahiru/ui/store";
+import { usePlayerStore } from "@mahiru/ui/store/player";
+import { useLayoutStore } from "@mahiru/ui/store/layout";
+
 import NeteaseImage from "@mahiru/ui/componets/public/NeteaseImage";
 
 const BarCover: FC<object> = () => {
-  const { trackStatus } = usePlayerStatus(["trackStatus"]);
-  const { togglePlayerModalVisible } = useLayoutStatus(["togglePlayerModalVisible"]);
+  const { PlayerTrackStatus } = usePlayerStore(["PlayerTrackStatus"]);
+  const { TogglePlayerVisible } = useLayoutStore(["TogglePlayerVisible"]);
   const { textColorOnMain } = useThemeColor();
-  const track = trackStatus?.track;
+  const track = PlayerTrackStatus?.track;
 
   return (
     <div className="w-full h-2/3 grid grid-cols-[auto_1fr] grid-rows-1 items-center overflow-hidden">
@@ -17,7 +19,7 @@ const BarCover: FC<object> = () => {
         size={ImageSize.md}
         src={track?.al.picUrl}
         alt={track?.name}
-        onClick={togglePlayerModalVisible}
+        onClick={TogglePlayerVisible}
         shadow={track?.al.picUrl ? "base" : "none"}
       />
       <div className="w-full pl-2 pr-6 flex flex-col items-start overflow-hidden">

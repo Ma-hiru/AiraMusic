@@ -1,18 +1,18 @@
 import { FC, memo } from "react";
-import { useLayoutStatus } from "@mahiru/ui/store";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ChevronLeft, ChevronUp, LocateFixed, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import FloatItem from "@mahiru/ui/page/layout/float/FloatItem";
+import { useLayoutStore } from "@mahiru/ui/store/layout";
 
 const FloatButtons: FC<object> = () => {
-  const { canScrollTop, playerModalVisible, sideBarOpen, toggleSideBarOpen, locateCurrentTrack } =
-    useLayoutStatus([
-      "canScrollTop",
-      "playerModalVisible",
-      "sideBarOpen",
-      "toggleSideBarOpen",
-      "locateCurrentTrack"
+  const { ScrollTop, ToggleSideBarOpen, PlayerVisible, TrackListFastLocater, SideBarOpen } =
+    useLayoutStore([
+      "ScrollTop",
+      "ToggleSideBarOpen",
+      "PlayerVisible",
+      "TrackListFastLocater",
+      "SideBarOpen"
     ]);
   const navigate = useNavigate();
   const location = useLocation();
@@ -25,7 +25,7 @@ const FloatButtons: FC<object> = () => {
 
   return (
     <AnimatePresence>
-      {!playerModalVisible && (
+      {!PlayerVisible && (
         <motion.div
           key="floatButtons"
           className="absolute right-10 bottom-24 z-30 flex justify-center items-center flex-col w-10 gap-2"
@@ -34,18 +34,18 @@ const FloatButtons: FC<object> = () => {
           animate={{ opacity: 1 }}
           transition={{ ease: "easeInOut", duration: 0.3 }}>
           <FloatItem
-            onClick={canScrollTop.callback}
-            show={canScrollTop.type !== "none" && !playerModalVisible}>
+            onClick={ScrollTop.callback || undefined}
+            show={ScrollTop.type !== "none" && !PlayerVisible}>
             <ChevronUp className="size-5" />
           </FloatItem>
-          <FloatItem show={!!locateCurrentTrack} onClick={locateCurrentTrack?.()}>
+          <FloatItem show={!!TrackListFastLocater} onClick={TrackListFastLocater?.() || undefined}>
             <LocateFixed className="size-5" />
           </FloatItem>
-          <FloatItem show={hiddenBack && !playerModalVisible} onClick={handleBack}>
+          <FloatItem show={hiddenBack && !PlayerVisible} onClick={handleBack}>
             <ChevronLeft className="size-5" />
           </FloatItem>
-          <FloatItem onClick={toggleSideBarOpen} show={!playerModalVisible}>
-            {sideBarOpen ? (
+          <FloatItem onClick={ToggleSideBarOpen} show={!PlayerVisible}>
+            {SideBarOpen ? (
               <PanelLeftClose className="size-5" />
             ) : (
               <PanelLeftOpen className="size-5" />

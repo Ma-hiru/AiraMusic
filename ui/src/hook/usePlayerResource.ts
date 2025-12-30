@@ -1,9 +1,9 @@
 import { LyricManager } from "@mahiru/ui/utils/lyricManager";
-import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { EqError, Log } from "@mahiru/ui/utils/dev";
 import { Track } from "@mahiru/ui/utils/track";
-import { usePlayerStatus, useSettings } from "@mahiru/ui/store";
-import { Player } from "@mahiru/ui/utils/player";
+import { PlayerFSMStatusEnum, usePlayerStore } from "@mahiru/ui/store/player";
+import { useSettingsStore } from "@mahiru/ui/store/settings";
 
 /**
  * 音乐资源加载
@@ -11,19 +11,36 @@ import { Player } from "@mahiru/ui/utils/player";
  * - 可以预加载下一首音乐资源
  * */
 export function usePlayerResource() {
-  const { setPlayerStatus, setTrackStatus, playerStatus, playerProgress, trackStatus } =
-    usePlayerStatus([
-      "setPlayerStatus",
-      "setTrackStatus",
-      "playerStatus",
-      "playerProgress",
-      "trackStatus"
-    ]);
-  const { settings } = useSettings();
+  const {
+    PlayerFSMStatus,
+    PlayerStatus,
+    PlayerTrackStatus,
+    SetPlayerTrackStatus,
+    SetPlayerStatus,
+    PlayerProgressGetter,
+    PlayerCoreGetter,
+    TriggerPlayerFSMEvent,
+    AudioRefGetter
+  } = usePlayerStore([
+    "PlayerFSMStatus",
+    "PlayerStatus",
+    "SetPlayerTrackStatus",
+    "SetPlayerStatus",
+    "PlayerProgressGetter",
+    "PlayerTrackStatus",
+    "PlayerCoreGetter",
+    "TriggerPlayerFSMEvent",
+    "AudioRefGetter"
+  ]);
+  const { PlayerSettings } = useSettingsStore(["PlayerSettings"]);
   const lyricCancelRef = useRef<Nullable<NormalFunc>>(null);
   const audioCancelRef = useRef<Nullable<NormalFunc>>(null);
   const preloadCancelRef = useRef<Nullable<NormalFunc>>(null);
-  const lyricVersionPreference = playerStatus.lyricPreference;
+  const lastTrackIdRef = useRef<Nullable<number>>(null);
+  const lastAudioSrcRef = useRef<Nullable<string>>(null);
+  const lyricVersionPreference = PlayerStatus.lyricPreference;
+  const player = PlayerCoreGetter();
+  const audio = AudioRefGetter();
 
   const loadLyric = useCallback(
     async (id: number) => {
@@ -33,12 +50,12 @@ export function usePlayerResource() {
       try {
         const { lyric, version } = await LyricManager.requestLyric(id, lyricVersionPreference);
         if (controller.signal.aborted) return;
-        setTrackStatus((draft) => {
+        SetPlayerTrackStatus((draft) => {
           if (draft && !controller.signal.aborted) {
             draft.lyric = lyric;
           }
         });
-        setPlayerStatus((draft) => {
+        SetPlayerStatus((draft) => {
           if (!controller.signal.aborted) {
             draft.lyricVersion = version;
           }
@@ -54,7 +71,7 @@ export function usePlayerResource() {
         );
       }
     },
-    [lyricVersionPreference, setPlayerStatus, setTrackStatus]
+    [SetPlayerStatus, SetPlayerTrackStatus, lyricVersionPreference]
   );
 
   const loadAudioSource = useCallback(
@@ -67,7 +84,7 @@ export function usePlayerResource() {
         if (!meta || controller.signal.aborted) return;
         const remoteUrl = meta?.[0]?.url || "";
         const nextAudio = cacheSource || remoteUrl || "";
-        setTrackStatus((draft) => {
+        SetPlayerTrackStatus((draft) => {
           if (!draft || controller.signal.aborted) return;
           draft.meta = meta || [];
           if (nextAudio && draft.audio !== nextAudio) {
@@ -75,7 +92,7 @@ export function usePlayerResource() {
             draft.quality = quality;
           }
         });
-        playerProgress.current().size = meta?.[0]?.size ?? 0;
+        PlayerProgressGetter().size = meta?.[0]?.size ?? 0;
       } catch (err) {
         if (controller.signal.aborted) return;
         Log.error(
@@ -87,7 +104,7 @@ export function usePlayerResource() {
         );
       }
     },
-    [playerProgress, setTrackStatus]
+    [PlayerProgressGetter, SetPlayerTrackStatus]
   );
 
   const cancelScheduledPreload = useCallback(() => {
@@ -96,42 +113,65 @@ export function usePlayerResource() {
   }, []);
 
   const schedulePreloadNextTrack = useCallback(
-    (currentTrack: PlayerTrackStatus, nextTrack: Nullable<PlayerTrackStatus>) => {
+    (currentTrack: PlayerTrackStatus, nextTrack: Optional<PlayerTrackStatus>) => {
       if (!nextTrack || currentTrack.track.id === nextTrack.track.id) return;
       preloadCancelRef.current?.();
       preloadCancelRef.current = Track.preloadTrack(nextTrack.track);
     },
     []
   );
+
   // 加载当前播放音乐的歌词和音频资源
-  useLayoutEffect(() => {
-    const current = trackStatus;
-    const peak = Player.peek();
-    const isShuffle = playerStatus.shuffle === true;
-    if (current) {
-      // 检查缓存是否无效(当音频加载失败时，callback会标记缓存无效)，无效则重新加载
-      const invalid = Track.markedInvalidCache(current.track.id);
-      const hasLyric = !!current.lyric && current.lyric.raw.length > 0;
-      const hasAudio = !!current.audio;
-      if (!hasLyric || invalid) void loadLyric(current.track.id);
-      if (!hasAudio || invalid) void loadAudioSource(current.track);
-      requestIdleCallback(
-        () => {
-          if (invalid) Track.removeMarkedInvalidCache(current.track.id);
+  useEffect(() => {
+    if (PlayerFSMStatus === PlayerFSMStatusEnum.loading) {
+      async function loadResources() {
+        try {
+          const current = PlayerTrackStatus;
+          if (!current || !audio) return TriggerPlayerFSMEvent("loadError");
+          const peak = player?.peek();
+          const isShuffle = PlayerStatus.shuffle;
+          // 检查缓存是否无效(当音频加载失败时，callback会标记缓存无效)，无效则重新加载
+          const invalid = Track.markedInvalidCache(current.track.id);
+          const hasLyric = !!current.lyric && current.lyric.raw.length > 0;
+          const hasAudio = !!current.audio;
+          if (!hasLyric || invalid) await loadLyric(current!.track.id);
+          if (!hasAudio || invalid) await loadAudioSource(current!.track);
+          if (invalid) Track.removeMarkedInvalidCache(current!.track.id);
           // 仅在资源加载完成后才预加载下一首，避免无意义的重复触发
-          hasLyric && hasAudio && !isShuffle && schedulePreloadNextTrack(current, peak);
-        },
-        { timeout: 2000 }
-      );
+          hasLyric && hasAudio && !isShuffle && schedulePreloadNextTrack(current!, peak);
+
+          const trackId = PlayerTrackStatus.track.id;
+          const nextAudioSrc = PlayerTrackStatus.audio;
+          const shouldReloadTrack =
+            trackId !== lastTrackIdRef.current || nextAudioSrc !== lastAudioSrcRef.current;
+          if (shouldReloadTrack) {
+            audio.src = nextAudioSrc;
+            audio.load();
+            lastTrackIdRef.current = trackId;
+            lastAudioSrcRef.current = nextAudioSrc;
+          } else {
+            audio.currentTime = 0;
+          }
+
+          TriggerPlayerFSMEvent("loadSuccess");
+        } catch {
+          TriggerPlayerFSMEvent("loadError");
+        }
+      }
+      void loadResources();
+      return cancelScheduledPreload;
     }
-    return cancelScheduledPreload;
   }, [
+    PlayerFSMStatus,
+    PlayerStatus.shuffle,
+    PlayerTrackStatus,
+    TriggerPlayerFSMEvent,
+    audio,
     cancelScheduledPreload,
     loadAudioSource,
     loadLyric,
-    playerStatus.shuffle,
-    schedulePreloadNextTrack,
-    trackStatus
+    player,
+    schedulePreloadNextTrack
   ]);
   // 清理所有未完成的请求
   useEffect(() => {
@@ -143,8 +183,8 @@ export function usePlayerResource() {
   }, [cancelScheduledPreload]);
   // 同步音乐质量设置
   useEffect(() => {
-    if (settings.musicQuality) {
-      Track.setRequestQuality(settings.musicQuality);
+    if (PlayerSettings.musicQuality) {
+      Track.setRequestQuality(PlayerSettings.musicQuality);
     }
-  }, [settings.musicQuality]);
+  }, [PlayerSettings.musicQuality]);
 }

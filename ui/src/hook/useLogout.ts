@@ -3,13 +3,14 @@ import { useNavigate } from "react-router-dom";
 import { useCallback } from "react";
 import { Auth } from "@mahiru/ui/utils/auth";
 import { Renderer } from "@mahiru/ui/utils/renderer";
-import { Player } from "@mahiru/ui/utils/player";
+import { getPlayerStoreSnapshot } from "@mahiru/ui/store/player";
 
 export function useLogout() {
   const navigate = useNavigate();
   return useCallback(() => {
     if (Auth.isAccountLoggedIn()) {
-      Player.clearPlaylist();
+      const { PlayerCoreGetter } = getPlayerStoreSnapshot();
+      PlayerCoreGetter()?.clearPlaylist();
       Auth.doLogout().finally(() => {
         waitLogin();
         navigate("/home");

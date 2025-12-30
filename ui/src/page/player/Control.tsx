@@ -10,12 +10,14 @@ import {
   SkipBack,
   SkipForward
 } from "lucide-react";
-import { usePlayerStatus } from "@mahiru/ui/store";
-import { Player } from "@mahiru/ui/utils/player";
+import { PlayerFSMStatusEnum, usePlayerStore } from "@mahiru/ui/store/player";
 
 const Control: FC<object> = () => {
-  const { playerStatus, audioControl } = usePlayerStatus(["playerStatus", "audioControl"]);
-
+  const { PlayerCoreGetter, PlayerFSMStatus } = usePlayerStore([
+    "PlayerCoreGetter",
+    "PlayerFSMStatus"
+  ]);
+  const player = PlayerCoreGetter();
   return (
     <div className="space-x-2 w-full">
       <Progress />
@@ -24,48 +26,48 @@ const Control: FC<object> = () => {
           <SkipBack
             className="size-5 cursor-pointer hover:opacity-50 ease-in-out duration-300 transition-all active:scale-90"
             fill={"rgba(255,255,255,0.89)"}
-            onClick={() => Player.last(true)}
+            onClick={() => player?.last(true)}
           />
-          {playerStatus.playing ? (
+          {PlayerFSMStatus === PlayerFSMStatusEnum.playing ? (
             <Pause
               className="size-5 cursor-pointer hover:opacity-50 ease-in-out duration-300 transition-all active:scale-90"
               fill={"rgba(255,255,255,0.89)"}
-              onClick={audioControl.current()?.play}
+              onClick={player?.play}
             />
           ) : (
             <Play
               className="size-5 cursor-pointer hover:opacity-50 ease-in-out duration-300 transition-all active:scale-90"
               fill={"rgba(255,255,255,0.89)"}
-              onClick={audioControl.current()?.play}
+              onClick={player?.play}
             />
           )}
           <SkipForward
             className="size-5 cursor-pointer hover:opacity-50 ease-in-out duration-300 transition-all active:scale-90"
             fill={"rgba(255,255,255,0.89)"}
-            onClick={() => Player.next(true)}
+            onClick={() => player?.next(true)}
           />
-          {playerStatus.shuffle ? (
+          {player?.shuffle ? (
             <Shuffle
               className="size-6 scale-85 cursor-pointer hover:opacity-50 ease-in-out duration-300 transition-all active:scale-90"
               fill={"rgba(255,255,255,0.89)"}
-              onClick={() => (Player.shuffle = false)}
+              onClick={() => player && (player.shuffle = false)}
             />
           ) : (
             <ArrowRightLeft
               className="size-6 cursor-pointer hover:opacity-50 ease-in-out duration-300 transition-all active:scale-90"
               fill={"rgba(255,255,255,0.89)"}
-              onClick={() => (Player.shuffle = true)}
+              onClick={() => player && (player.shuffle = true)}
             />
           )}
-          {playerStatus.repeat !== "off" ? (
+          {player?.repeat !== "off" ? (
             <Repeat1
               className="size-6 cursor-pointer hover:opacity-50 ease-in-out duration-300 transition-all active:scale-90"
-              onClick={() => (Player.repeat = "off")}
+              onClick={() => player && (player.repeat = "off")}
             />
           ) : (
             <Repeat2
               className="size-6 cursor-pointer hover:opacity-50 ease-in-out duration-300 transition-all active:scale-90"
-              onClick={() => (Player.repeat = "one")}
+              onClick={() => player && (player.repeat = "one")}
             />
           )}
         </div>

@@ -3,7 +3,7 @@ import { SpectrumOptions } from "@mahiru/ui/hook/useSpectrumWorker";
 import { IRenderer, RendererOptions } from "./renderers/IRenderer";
 import { Canvas2DRenderer } from "./renderers/canvas2d";
 import { WebGLRendererRust } from "./renderers/webgl-rust";
-import { usePlayerStatus } from "@mahiru/ui/store";
+import { usePlayerStore } from "@mahiru/ui/store/player";
 
 type AudioSpectrumProps = HTMLAttributes<HTMLCanvasElement> & {
   isPlaying: boolean;
@@ -31,18 +31,19 @@ const AudioSpectrum: FC<AudioSpectrumProps> = ({
 }) => {
   const canvasRef = useRef<Nullable<HTMLCanvasElement>>(null);
   const rendererRef = useRef<Nullable<IRenderer>>(null);
-  const { spectrumData, setSpectrumOptions, spectrumIsReady } = usePlayerStatus([
-    "spectrumData",
-    "spectrumIsReady",
-    "setSpectrumOptions"
+  const { SpectrumGetter, SetSpectrumOptions } = usePlayerStore([
+    "SpectrumGetter",
+    "SetSpectrumOptions"
   ]);
+  const spectrum = SpectrumGetter();
 
   useEffect(() => {
-    isPlaying && setSpectrumOptions(spectrumOptions || null);
-  }, [isPlaying, setSpectrumOptions, spectrumOptions]);
+    isPlaying && SetSpectrumOptions(spectrumOptions || null);
+  }, [SetSpectrumOptions, isPlaying, spectrumOptions]);
 
   useEffect(() => {
-    if (!spectrumIsReady || !isPlaying || !spectrumData) return;
+    const spectrumData = spectrum.data;
+    if (!spectrum.ready || !isPlaying || !spectrumData) return;
     const canvas = canvasRef.current;
     if (!canvas) return;
     // 确保画布像素尺寸与显示尺寸一致（考虑设备像素比）
@@ -102,8 +103,8 @@ const AudioSpectrum: FC<AudioSpectrumProps> = ({
     renderer,
     roundedCorners,
     secondaryColor,
-    spectrumData,
-    spectrumIsReady
+    spectrum.data,
+    spectrum.ready
   ]);
 
   return <canvas ref={canvasRef} {...rest} />;

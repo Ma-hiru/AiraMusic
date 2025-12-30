@@ -1,17 +1,17 @@
 import { FC, memo } from "react";
-import { usePersistZustandShallowStore } from "@mahiru/ui/store";
 import { useFileCache } from "@mahiru/ui/hook/useFileCache";
 import { Filter, ImageSize } from "@mahiru/ui/utils/filter";
+import { useUserStore } from "@mahiru/ui/store/user";
 
 const TopAvatar: FC<object> = () => {
-  const { data } = usePersistZustandShallowStore(["data"]);
-  const cachedAvatar = useFileCache(Filter.NeteaseImageSize(data.user?.avatarUrl, ImageSize.sm));
+  const { UserProfile } = useUserStore(["UserProfile"]);
+  const cachedAvatar = useFileCache(Filter.NeteaseImageSize(UserProfile?.avatarUrl, ImageSize.sm));
   return (
     <div>
       <img
         className="size-5 rounded-full select-none"
         src={cachedAvatar}
-        alt={data.user?.nickname}
+        alt={UserProfile?.nickname}
       />
     </div>
   );

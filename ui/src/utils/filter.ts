@@ -1,9 +1,9 @@
-import { EqError, Log } from "@mahiru/ui/utils/dev";
-import { getPersistSnapshot } from "@mahiru/ui/store";
-import { Auth } from "@mahiru/ui/utils/auth";
 import pLimit from "p-limit";
+import { EqError, Log } from "@mahiru/ui/utils/dev";
+import { Auth } from "@mahiru/ui/utils/auth";
 import { CacheStore } from "@mahiru/ui/store/cache";
 import { API } from "@mahiru/ui/api";
+import { getUserStoreSnapshot } from "@mahiru/ui/store/user";
 
 /** Netease Image Size Enum */
 export const enum ImageSize {
@@ -52,8 +52,8 @@ function NeteaseTrackPlayable(track: NeteaseTrack) {
   )
     return result;
 
-  const { data } = getPersistSnapshot();
-  const vipType = data?.user?.vipType;
+  const { UserProfile } = getUserStoreSnapshot();
+  const vipType = UserProfile?.vipType;
   // 0: 免费或无版权 1: VIP 歌曲 4: 购买专辑 8: 非会员可免费播放低音质，会员可播放高音质及下载
   if (track.fee === 1 || track.privilege?.fee === 1) {
     // VIP 歌曲

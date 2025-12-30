@@ -51,6 +51,7 @@ type LyricSync = {
   progress: PlayerProgress;
   playerStatus: PlayerStatus;
   themeColor?: string;
+  playing?: boolean;
 };
 
 type LyricSyncReverse = {

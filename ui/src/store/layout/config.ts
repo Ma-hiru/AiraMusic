@@ -1,160 +1,102 @@
 import { ZustandConfig } from "@mahiru/ui/types/zustand";
-import { PlayerFSM, PlayerFSMEvent, PlayerFSMStatus } from "@mahiru/ui/store/player/fsm";
-import type { AudioControl } from "@mahiru/ui/hook/usePlayerAudio";
-import { SpectrumData, SpectrumOptions } from "@mahiru/ui/hook/useSpectrumWorker";
-import { API } from "@mahiru/ui/api";
-import { PlaylistHistoryCache } from "@mahiru/ui/utils/history";
-import { LyricManager } from "@mahiru/ui/utils/lyricManager";
+import { ContextMenuRender } from "@mahiru/ui/componets/menu/MenuProvider";
 
-const playerFSM = new PlayerFSM(PlayerFSMStatus.idle);
-const playerFSMEventStack: { stack: PlayerFSMEvent[]; timer: Nullable<number> } = {
-  stack: [],
-  timer: null
-};
-const playerProgress: PlayerProgress = {
-  size: 0,
-  buffered: 0,
-  duration: 0,
-  currentTime: 0
-};
-
-export const PlayerStoreConfig: ZustandConfig<
-  PlayerStoreInitialState & PlayerStoreActions,
-  PlayerStoreInitialState
+export const LayoutStoreConfig: ZustandConfig<
+  LayoutStoreInitialState & LayoutStoreActions,
+  LayoutStoreInitialState
 > = (set, get) => ({
   ...InitialState,
-  TriggerPlayerFSMEvent: (event) => {
-    playerFSMEventStack.stack.push(event);
-    playerFSMEventStack.timer && clearTimeout(playerFSMEventStack.timer);
-    playerFSMEventStack.timer = window.setTimeout(() => {
-      set((draft) => {
-        const nextStatus = playerFSMEventStack.stack.reduce(
-          (fsm, event) => fsm.next(event),
-          playerFSM
-        ).current;
-        playerFSMEventStack.stack = [];
-        playerFSMEventStack.timer = null;
-        if (draft.PlayerFSMStatus !== nextStatus) {
-          draft.PlayerFSMStatus = nextStatus;
-        }
-      });
-    }, 300);
-  },
-  SetAudioRefGetter: (getter) => {
+  UpdatePlayerTheme: (theme) => {
     set((draft) => {
-      draft.AudioRefGetter = getter;
+      draft.PlayerTheme = {
+        ...draft.PlayerTheme,
+        ...theme
+      };
     });
   },
-  SetAudioControlGetter: (getter) => {
+  UpdateScrollTop: (data) => {
     set((draft) => {
-      draft.AudioControlGetter = getter;
-    });
-  },
-  SetPlayerStatus: (updater) => {
-    set((draft) => {
-      const newStatus = updater(draft.PlayerStatus);
-      newStatus !== undefined && (draft.PlayerStatus = newStatus);
-    });
-  },
-  SetLyricVersion: (next) => {
-    const { PlayerTrackStatus, PlayerStatus } = get();
-    const chosenVersion = LyricManager.checkLyricVersion(
-      PlayerTrackStatus?.lyric,
-      next,
-      PlayerStatus.lyricVersion
-    );
-    set((draft) => {
-      draft.PlayerStatus.lyricVersion = chosenVersion;
-      draft.PlayerStatus.lyricPreference = next;
-    });
-  },
-  SetPlayerTrackStatus: (updater) => {
-    set((draft) => {
-      const { PlayerTrackStatus, PlayerProgressGetter } = get();
-
-      const newStatus = updater(draft.PlayerTrackStatus);
-      newStatus !== undefined && (draft.PlayerTrackStatus = newStatus);
-
-      if (
-        PlayerTrackStatus &&
-        (newStatus !== undefined ||
-          draft.PlayerTrackStatus?.track.id !== PlayerTrackStatus.track.id)
-      ) {
-        API.Track.scrobble(PlayerTrackStatus, PlayerProgressGetter().currentTime);
-        void PlaylistHistoryCache.addTrack(PlayerTrackStatus.track);
+      if (draft.ScrollTop.type !== data.type) {
+        draft.ScrollTop = data;
       }
     });
   },
-  SetPlayerInitialized: (initialized) => {
+  UpdateContextMenu: (data) => {
     set((draft) => {
-      draft.PlayerInitialized = initialized;
+      draft.ContextMenu = {
+        ...draft.ContextMenu,
+        ...data
+      };
     });
   },
-  SetSpectrumGetter: (getter) => {
+  TogglePlayerVisible: () => {
     set((draft) => {
-      draft.SpectrumGetter = getter;
+      draft.PlayerVisible = !draft.PlayerVisible;
+    });
+  },
+  ToggleSideBarOpen: () => {
+    set((draft) => {
+      draft.SideBarOpen = !draft.SideBarOpen;
+    });
+  },
+  SetIsTyping: (isTyping) => {
+    set((draft) => {
+      draft.IsTyping = isTyping;
+    });
+  },
+  SetTrackListFastLocater: (locator) => {
+    set((draft) => {
+      draft.TrackListFastLocater = locator;
     });
   }
 });
 
-const InitialState: PlayerStoreInitialState = {
-  AudioRefGetter: () => null,
-  AudioControlGetter: () => null,
-  PlayerProgressGetter: () => playerProgress,
-  SpectrumGetter: () => ({
-    options: null,
-    data: null,
-    ready: false
-  }),
-  PlayerStatus: {
-    playing: false,
-    position: 0,
-    repeat: "off",
-    shuffle: false,
-    volume: 0.5,
-    lyricPreference: null,
-    lyricVersion: "raw"
+const InitialState: LayoutStoreInitialState = {
+  ScrollTop: {
+    type: "none",
+    callback: null
   },
-  PlayerTrackStatus: null,
-  PlayerInitialized: false,
-  PlayerFSMStatus: playerFSM.current
+  PlayerVisible: false,
+  SideBarOpen: false,
+  PlayerTheme: {
+    BackgroundCover: undefined,
+    KmeansColor: []
+  },
+  IsTyping: false,
+  ContextMenu: {
+    visible: false,
+    visibleSetter: () => null,
+    rendererGetter: () => null
+  },
+  TrackListFastLocater: () => null
 };
 
-export type PlayerStoreInitialState = {
-  PlayerFSMStatus: PlayerFSMStatus;
-  AudioRefGetter: NormalFunc<[], Nullable<HTMLAudioElement>>;
-  AudioControlGetter: NormalFunc<[], Nullable<AudioControl>>;
-  PlayerProgressGetter: NormalFunc<[], PlayerProgress>;
-  PlayerStatus: PlayerStatus;
-  PlayerTrackStatus: Nullable<PlayerTrackStatus>;
-  PlayerInitialized: boolean;
-  SpectrumGetter: NormalFunc<
-    [],
-    {
-      options: Nullable<SpectrumOptions>;
-      data: Nullable<NormalFunc<[], SpectrumData>>;
-      ready: boolean;
-    }
-  >;
+export type LayoutStoreInitialState = {
+  ScrollTop: {
+    type: LayoutCanScrollTop;
+    callback: Nullable<NormalFunc>;
+  };
+  PlayerVisible: boolean;
+  SideBarOpen: boolean;
+  PlayerTheme: {
+    BackgroundCover: Undefinable<string>;
+    KmeansColor: string[];
+  };
+  IsTyping: boolean;
+  ContextMenu: {
+    visible: boolean;
+    visibleSetter: NormalFunc<[], Nullable<(visible?: boolean) => void>>;
+    rendererGetter: NormalFunc<[], Nullable<(data: Nullable<ContextMenuRender>) => void>>;
+  };
+  TrackListFastLocater: NormalFunc<[], Nullable<() => void>>;
 };
 
-export type PlayerStoreActions = {
-  TriggerPlayerFSMEvent: NormalFunc<[event: PlayerFSMEvent]>;
-  SetAudioRefGetter: NormalFunc<[getter: () => Nullable<HTMLAudioElement>]>;
-  SetAudioControlGetter: NormalFunc<[getter: () => Nullable<AudioControl>]>;
-  SetSpectrumGetter: NormalFunc<
-    [
-      getter: () => {
-        options: Nullable<SpectrumOptions>;
-        data: Nullable<NormalFunc<[], SpectrumData>>;
-        ready: boolean;
-      }
-    ]
-  >;
-  SetPlayerStatus: NormalFunc<[updater: (draft: PlayerStatus) => void | PlayerStatus]>;
-  SetLyricVersion: NormalFunc<[next: LyricVersionType]>;
-  SetPlayerTrackStatus: NormalFunc<
-    [updater: (draft: Nullable<PlayerTrackStatus>) => void | Nullable<PlayerTrackStatus>]
-  >;
-  SetPlayerInitialized: NormalFunc<[initialized: boolean]>;
+export type LayoutStoreActions = {
+  UpdatePlayerTheme: NormalFunc<[theme: Partial<LayoutStoreInitialState["PlayerTheme"]>]>;
+  UpdateScrollTop: NormalFunc<[data: LayoutStoreInitialState["ScrollTop"]]>;
+  UpdateContextMenu: NormalFunc<[data: Partial<LayoutStoreInitialState["ContextMenu"]>]>;
+  TogglePlayerVisible: NormalFunc<[]>;
+  ToggleSideBarOpen: NormalFunc<[]>;
+  SetIsTyping: NormalFunc<[isTyping: boolean]>;
+  SetTrackListFastLocater: NormalFunc<[locater: LayoutStoreInitialState["TrackListFastLocater"]]>;
 };

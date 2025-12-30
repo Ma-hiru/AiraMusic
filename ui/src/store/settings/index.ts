@@ -1,10 +1,10 @@
 import { createZustandShallowStore, createZustandStore } from "../create";
-import { PlayerStoreActions, PlayerStoreConfig, PlayerStoreInitialState } from "./config";
+import { SettingsStoreActions, SettingsStoreConfig, SettingsStoreInitialState } from "./config";
 
-export { PlayerFSMEvent, PlayerFSMStatus } from "./fsm";
+export type SettingsStoreType = SettingsStoreInitialState & SettingsStoreActions;
 
-export type PlayerStoreType = PlayerStoreInitialState & PlayerStoreActions;
+const settingsStore = createZustandStore(SettingsStoreConfig, "settings", true);
 
-export const usePlayerStore = createZustandShallowStore<PlayerStoreType>(
-  createZustandStore(PlayerStoreConfig, "player", false)
-);
+export const useSettingsStore = createZustandShallowStore<SettingsStoreType>(settingsStore);
+
+export const getSettingsStoreSnapshot = settingsStore.getState;

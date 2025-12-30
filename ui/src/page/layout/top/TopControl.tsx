@@ -4,7 +4,7 @@ import { NoDrag } from "@mahiru/ui/componets/public/Drag";
 import { isDev } from "@mahiru/ui/utils/dev";
 import { Renderer } from "@mahiru/ui/utils/renderer";
 import { usePlayerInfoSync } from "@mahiru/ui/hook/usePlayerInfoSync";
-import { Player } from "@mahiru/ui/utils/player";
+import { usePlayerStore } from "@mahiru/ui/store/player";
 
 interface TopControlProps {
   windowId: WindowType;
@@ -13,8 +13,13 @@ interface TopControlProps {
 }
 
 const TopControl: FC<TopControlProps> = ({ maximizable = true, mini = true }) => {
+  const { PlayerCoreGetter, SavePlayerCore } = usePlayerStore([
+    "PlayerCoreGetter",
+    "SavePlayerCore"
+  ]);
   const [isMax, setIsMax] = useState(false);
   const { toggleTargetWindow, hasOpened } = usePlayerInfoSync("miniplayer");
+  const player = PlayerCoreGetter();
 
   const maximize = useCallback(() => {
     if (isMax) {
@@ -31,12 +36,12 @@ const TopControl: FC<TopControlProps> = ({ maximizable = true, mini = true }) =>
   };
   const close = useCallback(() => {
     Renderer.event.hidden();
-    Player.saveToCache().finally(() => {
-      setTimeout(() => {
-        Renderer.event.close({ broadcast: true });
-      }, 200);
-    });
-  }, []);
+    player?.pause?.();
+    SavePlayerCore();
+    setTimeout(() => {
+      Renderer.event.close({ broadcast: true });
+    }, 200);
+  }, [SavePlayerCore, player]);
 
   useEffect(() => {
     if (hasOpened) {

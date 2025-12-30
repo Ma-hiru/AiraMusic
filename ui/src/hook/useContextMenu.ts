@@ -1,19 +1,14 @@
-import { usePlayerStatus } from "@mahiru/ui/store";
 import { useEffect } from "react";
+import { useLayoutStore } from "@mahiru/ui/store/layout";
 
 export function useContextMenu() {
-  const { getContextMenuRenderer, getContextMenuVisibleSetter, contextMenuVisible } =
-    usePlayerStatus([
-      "getContextMenuRenderer",
-      "getContextMenuVisibleSetter",
-      "contextMenuVisible"
-    ]);
-  const setContextMenuRenderer = getContextMenuRenderer?.();
-  const setContextMenuVisible = getContextMenuVisibleSetter?.();
+  const { ContextMenu } = useLayoutStore(["ContextMenu"]);
+  const setContextMenuRenderer = ContextMenu.rendererGetter?.();
+  const setContextMenuVisible = ContextMenu.visibleSetter?.();
 
   useEffect(() => {
-    const close = (e: MouseEvent | UIEvent | Event) => {
-      if (!contextMenuVisible) return;
+    const close = () => {
+      if (!ContextMenu.visible) return;
       setContextMenuVisible?.(false);
     };
     window.addEventListener("resize", close, {
@@ -30,7 +25,7 @@ export function useContextMenu() {
       window.removeEventListener("click", close);
       window.removeEventListener("scroll", close);
     };
-  }, [contextMenuVisible, setContextMenuVisible]);
+  }, [ContextMenu.visible, setContextMenuVisible]);
 
   useEffect(() => {
     return () => {
@@ -42,6 +37,6 @@ export function useContextMenu() {
   return {
     setContextMenuRenderer,
     setContextMenuVisible,
-    contextMenuVisible
+    contextMenuVisible: ContextMenu.visible
   };
 }

@@ -46,7 +46,7 @@ const LyricPage: FC<object> = () => {
     let rafId = 0;
     let lastTime = 0;
     const onFrame = (time: number) => {
-      if (!lyricSync || !lyricSync.playerStatus.playing) return;
+      if (!lyricSync || !lyricSync.playing) return;
       if (!lastTime) lastTime = time;
       const delta = time - lastTime;
       lastTime = time;
@@ -58,7 +58,7 @@ const LyricPage: FC<object> = () => {
 
       rafId = requestAnimationFrame(onFrame);
     };
-    if (lyricSync?.playerStatus.playing) {
+    if (lyricSync?.playing) {
       rafId = requestAnimationFrame(onFrame);
     }
     return () => cancelAnimationFrame(rafId);
@@ -143,7 +143,7 @@ const LyricPage: FC<object> = () => {
           {stage >= Stage.Finally && (
             <LyricPlayer
               ref={lyricPlayerRef}
-              playing={lyricSync?.playerStatus.playing}
+              playing={lyricSync?.playing}
               className="w-full h-full"
               alignAnchor="center"
               hidePassedLines

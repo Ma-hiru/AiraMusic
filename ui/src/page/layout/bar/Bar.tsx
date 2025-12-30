@@ -1,22 +1,23 @@
 import Color from "color";
 import { FC, memo } from "react";
 import { useThemeColor } from "@mahiru/ui/hook/useThemeColor";
-import { useLayoutStatus } from "@mahiru/ui/store";
+import { Stage, useStage } from "@mahiru/ui/hook/useStage";
+
 import BarCover from "@mahiru/ui/page/layout/bar/BarCover";
 import BarControl from "@mahiru/ui/page/layout/bar/BarControl";
 import BarProgress from "@mahiru/ui/page/layout/bar/BarProgress";
 import BarBtns from "@mahiru/ui/page/layout/bar/BarBtns";
 import BarSpectrum from "@mahiru/ui/page/layout/bar/BarSpectrum";
-import { Stage, useStage } from "@mahiru/ui/hook/useStage";
+import { useLayoutStore } from "@mahiru/ui/store/layout";
 
 const Bar: FC<object> = () => {
-  const { background } = useLayoutStatus(["background"]);
+  const { PlayerTheme } = useLayoutStore(["PlayerTheme"]);
   const { textColorOnMain } = useThemeColor();
   const { stage } = useStage();
   return (
     <div
       style={{
-        background: background
+        background: PlayerTheme.BackgroundCover
           ? Color("#ffffff").mix(textColorOnMain, 0.5).alpha(0.1).string()
           : Color("#ffffff").alpha(0.5).string()
       }}
