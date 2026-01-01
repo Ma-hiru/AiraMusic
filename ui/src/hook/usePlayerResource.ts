@@ -75,13 +75,13 @@ export function usePlayerResource() {
   );
 
   const loadAudioSource = useCallback(
-    async (track: NeteaseTrack) => {
+    async (track: NeteaseTrack): Promise<string> => {
       audioCancelRef.current?.();
       const controller = new AbortController();
       audioCancelRef.current = () => controller.abort();
       try {
         const { cacheSource, meta, quality } = await Track.loadAudio(track, controller.signal);
-        if (!meta || controller.signal.aborted) return;
+        if (!meta || controller.signal.aborted) return "";
         const remoteUrl = meta?.[0]?.url || "";
         const nextAudio = cacheSource || remoteUrl || "";
         SetPlayerTrackStatus((draft) => {
@@ -93,8 +93,9 @@ export function usePlayerResource() {
           }
         });
         PlayerProgressGetter().size = meta?.[0]?.size ?? 0;
+        return nextAudio;
       } catch (err) {
-        if (controller.signal.aborted) return;
+        if (controller.signal.aborted) return "";
         Log.error(
           new EqError({
             raw: err,
@@ -102,6 +103,7 @@ export function usePlayerResource() {
             label: "ui/hook/useSongResource:loadAudioSource"
           })
         );
+        return "";
       }
     },
     [PlayerProgressGetter, SetPlayerTrackStatus]
@@ -122,8 +124,13 @@ export function usePlayerResource() {
   );
 
   // 加载当前播放音乐的歌词和音频资源
+  const loadingTrackIdRef = useRef<Nullable<number>>(null);
   useEffect(() => {
     if (PlayerFSMStatus === PlayerFSMStatusEnum.loading) {
+      // 防止重复加载同一首歌
+      const requestID = PlayerTrackStatus?.track.id;
+      if (loadingTrackIdRef.current === requestID || !requestID) return;
+      loadingTrackIdRef.current = requestID;
       async function loadResources() {
         try {
           const current = PlayerTrackStatus;
@@ -134,17 +141,28 @@ export function usePlayerResource() {
           const invalid = Track.markedInvalidCache(current.track.id);
           const hasLyric = !!current.lyric && current.lyric.raw.length > 0;
           const hasAudio = !!current.audio;
+          if (loadingTrackIdRef.current !== requestID) return;
           if (!hasLyric || invalid) await loadLyric(current!.track.id);
-          if (!hasAudio || invalid) await loadAudioSource(current!.track);
+          // 关键：不要依赖异步 set 后的 PlayerTrackStatus.audio（切歌会导致读到别的歌/空值）
+          let nextAudioSrc = current.audio || "";
+          if (!hasAudio || invalid) {
+            if (loadingTrackIdRef.current !== requestID) return;
+            nextAudioSrc = await loadAudioSource(current.track);
+          }
+          if (loadingTrackIdRef.current !== requestID) return;
+          if (!nextAudioSrc) {
+            return TriggerPlayerFSMEvent("loadError");
+          }
           if (invalid) Track.removeMarkedInvalidCache(current!.track.id);
           // 仅在资源加载完成后才预加载下一首，避免无意义的重复触发
           hasLyric && hasAudio && !isShuffle && schedulePreloadNextTrack(current!, peak);
 
-          const trackId = PlayerTrackStatus.track.id;
-          const nextAudioSrc = PlayerTrackStatus.audio;
+          const trackId = current.track.id;
           const shouldReloadTrack =
             trackId !== lastTrackIdRef.current || nextAudioSrc !== lastAudioSrcRef.current;
-          if (shouldReloadTrack) {
+
+          if (shouldReloadTrack && nextAudioSrc && loadingTrackIdRef.current === requestID) {
+            // 只在拿到真实音频 URL 时才写入 src，避免空 src 被解析成页面 URL
             audio.src = nextAudioSrc;
             audio.load();
             lastTrackIdRef.current = trackId;

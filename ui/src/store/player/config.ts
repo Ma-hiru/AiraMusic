@@ -48,7 +48,7 @@ export const PlayerStoreConfig: ZustandConfig<
           draft.PlayerFSMStatus = nextStatus;
         }
       });
-    }, 300);
+    }, 25);
   },
   SetAudioRefGetter: (getter) => {
     set((draft) => {
@@ -120,15 +120,26 @@ export const PlayerStoreConfig: ZustandConfig<
     runtime.playerCore.Sync();
     set((draft) => {
       draft.PlayerInitialized = true;
+      draft.PlayingRequest = false;
       draft.PlayerCoreGetter = () => runtime.playerCore;
     });
   },
   SavePlayerCore: () => {
+    const { TriggerPlayerFSMEvent } = get();
+    TriggerPlayerFSMEvent("requestPause");
+    set((draft) => {
+      draft.PlayingRequest = false;
+    });
     localStorage.setItem("playerProgressCache", JSON.stringify(runtime.playerProgress));
   },
   SetSpectrumOptions: (options) => {
     set((draft) => {
       draft.SpectrumOptions = options;
+    });
+  },
+  SetPlayingRequest: (playing) => {
+    set((draft) => {
+      draft.PlayingRequest = playing;
     });
   }
 });
@@ -143,6 +154,7 @@ const InitialState: PlayerStoreInitialState = {
     ready: false
   }),
   PlayerCoreGetter: () => null,
+  PlayingRequest: false,
   PlayerStatus: {
     position: 0,
     repeat: "off",
@@ -161,6 +173,7 @@ export type PlayerStoreInitialState = {
   PlayerFSMStatus: PlayerFSMStatusEnum;
   AudioRefGetter: NormalFunc<[], Nullable<HTMLAudioElement>>;
   AudioControlGetter: NormalFunc<[], Nullable<AudioControl>>;
+  PlayingRequest: boolean;
   PlayerCoreGetter: NormalFunc<[], Nullable<PlayerCore>>;
   PlayerProgressGetter: NormalFunc<[], PlayerProgress>;
   PlayerStatus: PlayerStatus;
@@ -190,4 +203,5 @@ export type PlayerStoreActions = {
   SetPlayerInitialized: NormalFunc<[initialized: boolean]>;
   InitPlayerCore: NormalFunc;
   SavePlayerCore: NormalFunc;
+  SetPlayingRequest: NormalFunc<[playing: boolean]>;
 };

@@ -15,7 +15,8 @@ export function usePlayerAudio() {
     SetAudioControlGetter,
     PlayerFSMStatus,
     PlayerCoreGetter,
-    SetPlayerStatus
+    SetPlayerStatus,
+    SetPlayingRequest
   } = usePlayerStore([
     "PlayerStatus",
     "AudioRefGetter",
@@ -24,19 +25,23 @@ export function usePlayerAudio() {
     "SetAudioControlGetter",
     "PlayerFSMStatus",
     "PlayerCoreGetter",
-    "SetPlayerStatus"
+    "SetPlayerStatus",
+    "SetPlayingRequest"
   ]);
   const volumeBeforeMute = useRef(PlayerStatus.volume);
   const audio = AudioRefGetter();
   const player = PlayerCoreGetter();
 
   const play = useCallback(() => {
-    audio && (audio.paused ? audio.play() : audio.pause());
-  }, [audio]);
+    if (audio) {
+      const shouldPlay = audio.paused;
+      SetPlayingRequest(shouldPlay);
+    }
+  }, [SetPlayingRequest, audio]);
 
   const pause = useCallback(() => {
-    audio && !audio.paused && audio.pause();
-  }, [audio]);
+    SetPlayingRequest(false);
+  }, [SetPlayingRequest]);
 
   const mute = useCallback(() => {
     if (!audio) return;
@@ -136,7 +141,13 @@ export function usePlayerAudio() {
   // 根据 FSM 状态自动播放或暂停
   useEffect(() => {
     if (PlayerFSMStatus === PlayerFSMStatusEnum.playing) {
-      audio && audio.play();
+      // 检查 src 是否是有效的音频 URL（排除页面 URL）
+      const src = audio?.src || "";
+      const isValidAudioSrc =
+        src && !src.startsWith("http://localhost") && !src.startsWith("https://localhost");
+      if (audio && isValidAudioSrc) {
+        audio.play().catch();
+      }
     } else {
       audio && audio.pause();
     }

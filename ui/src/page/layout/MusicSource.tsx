@@ -20,9 +20,12 @@ const MusicSource: FC<object> = () => {
     InitPlayerCore,
     SetAudioRefGetter,
     PlayerFSMStatus,
-
     SetSpectrumGetter,
-    SpectrumOptions
+    SpectrumOptions,
+    PlayingRequest,
+    TriggerPlayerFSMEvent,
+    SetPlayingRequest,
+    PlayerInitialized
   } = usePlayerStore([
     "PlayerCoreGetter",
     "InitPlayerCore",
@@ -30,7 +33,11 @@ const MusicSource: FC<object> = () => {
     "PlayerTrackStatus",
     "PlayerFSMStatus",
     "SetSpectrumGetter",
-    "SpectrumOptions"
+    "SpectrumOptions",
+    "PlayingRequest",
+    "TriggerPlayerFSMEvent",
+    "SetPlayingRequest",
+    "PlayerInitialized"
   ]);
   const { IsTyping } = useLayoutStore(["IsTyping"]);
   // 初始化播放器
@@ -133,17 +140,23 @@ const MusicSource: FC<object> = () => {
   const login = useLogin();
   const onError = useCallback(
     (err: SyntheticEvent<HTMLAudioElement>) => {
+      const audioEl = err.currentTarget;
+      const currentSrc = audioEl.src;
+      // 如果 src 为空或者是空 src 错误，忽略（切换歌曲时的正常情况）
+      if (!currentSrc || audioEl.error?.message?.includes("Empty src")) {
+        return;
+      }
       const raw = PlayerTrackStatus?.meta?.[0]?.url;
       if (raw) {
-        if (err.currentTarget.src !== raw) {
-          Log.info("ctx/PlayerProvider.tsx", "cache audio load error, fallback to raw src");
-          err.currentTarget.src = raw;
+        if (currentSrc !== raw) {
+          Log.info("MusicSource.tsx", "cache audio load error, fallback to raw src");
+          audioEl.src = raw;
           const id = PlayerTrackStatus?.track.id;
           if (id) {
             Track.removeCache(id);
           }
         } else {
-          Log.error("ctx/PlayerProvider.tsx", "audio playback error");
+          Log.error("MusicSource.tsx", "audio playback error");
           if (!Auth.isAccountLoggedIn()) {
             player?.play?.();
             login();
@@ -157,7 +170,6 @@ const MusicSource: FC<object> = () => {
     [PlayerTrackStatus?.meta, PlayerTrackStatus?.track.id, login, player]
   );
   // 注册频谱
-
   const { spectrumData, isReady } = useSpectrumWorker(
     audioRealRef,
     PlayerFSMStatus === PlayerFSMStatusEnum.playing,
@@ -197,13 +209,59 @@ const MusicSource: FC<object> = () => {
       PlayerFSMStatus === PlayerFSMStatusEnum.playing
     );
   }, [PlayerFSMStatus]);
+  const requestPlayingRetryCount = useRef(0);
+  // 处理播放请求
+  useEffect(() => {
+    // 当没有播放请求时，仅在 playing 状态下暂停
+    if (!PlayingRequest) {
+      if (PlayerFSMStatus === PlayerFSMStatusEnum.playing) {
+        TriggerPlayerFSMEvent("requestPause");
+      }
+      return;
+    }
+    if (
+      PlayerFSMStatus === PlayerFSMStatusEnum.idle ||
+      PlayerFSMStatus === PlayerFSMStatusEnum.ready ||
+      PlayerFSMStatus === PlayerFSMStatusEnum.paused
+    ) {
+      if (requestPlayingRetryCount.current < 5) {
+        requestPlayingRetryCount.current += 1;
+        TriggerPlayerFSMEvent("requestPlaying");
+      } else {
+        SetPlayingRequest(false);
+      }
+    }
+    if (PlayerFSMStatus === PlayerFSMStatusEnum.error) {
+      SetPlayingRequest(false);
+    }
+    if (PlayerFSMStatus === PlayerFSMStatusEnum.playing) {
+      requestPlayingRetryCount.current = 0;
+    }
+  }, [
+    PlayerFSMStatus,
+    PlayerTrackStatus?.audio,
+    PlayingRequest,
+    SetPlayingRequest,
+    TriggerPlayerFSMEvent
+  ]);
+  console.log("src", audioRealRef.current?.src, "status", PlayerFSMStatus);
+  // 处理初始音频源设置
+  useEffect(() => {
+    if (PlayerInitialized) {
+      const audio = audioRealRef.current;
+      const initSrc = PlayerTrackStatus?.audio;
+      if (audio && initSrc) {
+        audio.src = initSrc;
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [PlayerInitialized]);
   return (
     <audio
       className="w-0 h-0 opacity-0"
       controls={false}
       autoPlay={false}
       ref={audioRealRef}
-      src={PlayerTrackStatus?.audio || undefined}
       preload="auto"
       onError={onError}
     />

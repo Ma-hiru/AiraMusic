@@ -228,11 +228,11 @@ export const PlaylistManager = new (class {
   }) {
     const { entry, trackIdx, cachedPicUrlID, cachedPicUrl } = props;
     const track = entry.playlist.tracks[trackIdx];
-    if (track) {
-      track.al.cachedPicUrl = cachedPicUrl;
+    if (track && track.al) {
       if (cachedPicUrlID === "" && track.al.cachedPicUrlID) {
         void CacheStore.remove(track.al.cachedPicUrlID);
       }
+      track.al.cachedPicUrl = cachedPicUrl;
       track.al.cachedPicUrlID = cachedPicUrlID;
       entry._dirty = true;
     }

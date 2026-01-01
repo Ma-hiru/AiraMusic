@@ -59,7 +59,7 @@ export function createZustandShallowStore<StoreType>(
         if (!select || select.length === 0) {
           return state;
         }
-        select.reduce(
+        return select.reduce(
           (result, key: T[number]) => {
             result[key] = state[key];
             return result;

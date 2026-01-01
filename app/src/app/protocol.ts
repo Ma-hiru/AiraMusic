@@ -51,7 +51,9 @@ async function handleProtocolLocal(request: Request) {
     const fileStat = await stat(filePath);
     const total = fileStat.size;
     const rangeHeader = request.headers.get("range") ?? request.headers.get("Range");
-    const contentType = mime.getType(filePath) ?? "application/octet-stream";
+    // 优先使用 URL 查询参数中的 MIME 类型，否则根据文件扩展名猜测
+    const mimeFromQuery = url.searchParams.get("mime");
+    const contentType = mimeFromQuery || mime.getType(filePath) || "application/octet-stream";
     const commonHeaders = {
       "Accept-Ranges": "bytes",
       "Content-Type": contentType

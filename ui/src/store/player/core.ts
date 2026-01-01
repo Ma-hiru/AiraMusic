@@ -65,7 +65,11 @@ export class PlayerCore {
   }
 
   private triggerFSMEvent(event: PlayerFSMEvent) {
-    const { TriggerPlayerFSMEvent } = getPlayerStoreSnapshot();
+    const { TriggerPlayerFSMEvent, SetPlayingRequest } = getPlayerStoreSnapshot();
+    // 当触发 requestRestart 时，表示要切换歌曲并播放，需要同时设置播放请求
+    if (event === "requestRestart") {
+      SetPlayingRequest(true);
+    }
     TriggerPlayerFSMEvent(event);
   }
 
