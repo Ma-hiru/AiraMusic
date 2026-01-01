@@ -430,6 +430,7 @@ function usePlaylistController(props: {
     "UpdateScrollTop",
     "SetTrackListFastLocater"
   ]);
+  const currentVisibleItemIndex = useRef(0);
   const player = PlayerCoreGetter();
   // 定位当前播放歌曲
   useEffect(() => {
@@ -438,14 +439,22 @@ function usePlaylistController(props: {
       (track) => track.id === PlayerTrackStatus?.track?.id
     );
     const scrollTo = () => {
-      setFastLocation(true);
+      const currentItemIndex = currentVisibleItemIndex.current;
+      if (Math.abs(currentItemIndex - currentTrackIndex) > 50) {
+        setFastLocation(true);
+      }
       startTransition(() => {
         listRef.current?.scrollToItem(currentTrackIndex);
-        setTimeout(() => {
-          startTransition(() => {
-            setFastLocation(false);
-          });
-        }, 1500);
+        if (Math.abs(currentItemIndex - currentTrackIndex) > 50) {
+          setTimeout(
+            () => {
+              startTransition(() => {
+                setFastLocation(false);
+              });
+            },
+            Math.floor((Math.abs(currentItemIndex - currentTrackIndex) / 10) * 100)
+          );
+        }
       });
     };
     if (currentTrackIndex !== -1) {
@@ -486,17 +495,25 @@ function usePlaylistController(props: {
   );
   // 回到顶部
   const scrollTop = useCallback(() => {
-    setFastLocation(true);
+    const currentItemIndex = currentVisibleItemIndex.current;
+    if (currentItemIndex > 200) {
+      setFastLocation(true);
+    }
     startTransition(() => {
       listRef.current?.containerRef.current?.scrollTo({
         top: 0,
         behavior: "smooth"
       });
-      setTimeout(() => {
-        startTransition(() => {
-          setFastLocation(false);
-        });
-      }, 1500);
+      if (currentItemIndex > 200) {
+        setTimeout(
+          () => {
+            startTransition(() => {
+              setFastLocation(false);
+            });
+          },
+          Math.floor((currentItemIndex / 10) * 100)
+        );
+      }
     });
   }, [listRef]);
   useEffect(() => {
@@ -513,6 +530,7 @@ function usePlaylistController(props: {
       if (range[0] > 5) UpdateScrollTop({ type: "playlist", callback: scrollTop });
       else UpdateScrollTop({ type: "none", callback: null });
       if (fastLocation) return;
+      currentVisibleItemIndex.current = range[0];
       return onVirtualListRangeUpdate(range);
     },
     [UpdateScrollTop, fastLocation, onVirtualListRangeUpdate, scrollTop]

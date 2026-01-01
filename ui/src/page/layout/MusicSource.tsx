@@ -12,6 +12,7 @@ import { useSpectrumWorker } from "@mahiru/ui/hook/useSpectrumWorker";
 import { Renderer } from "@mahiru/ui/utils/renderer";
 import { PlayerFSMStatusEnum, usePlayerStore } from "@mahiru/ui/store/player";
 import { useLayoutStore } from "@mahiru/ui/store/layout";
+import { useNetwork } from "@mahiru/ui/hook/useNetwork";
 
 const MusicSource: FC<object> = () => {
   const {
@@ -138,12 +139,13 @@ const MusicSource: FC<object> = () => {
   }, [PlayerTrackStatus?.track.ar, PlayerTrackStatus?.track.name, defaultTitle, updateWindowTitle]);
   // 处理音频加载错误
   const login = useLogin();
+  const network = useNetwork();
   const onError = useCallback(
     (err: SyntheticEvent<HTMLAudioElement>) => {
       const audioEl = err.currentTarget;
       const currentSrc = audioEl.src;
       // 如果 src 为空或者是空 src 错误，忽略（切换歌曲时的正常情况）
-      if (!currentSrc || audioEl.error?.message?.includes("Empty src")) {
+      if (!currentSrc || audioEl.error?.message?.includes("Empty src") || network === "offline") {
         return;
       }
       const raw = PlayerTrackStatus?.meta?.[0]?.url;
@@ -167,7 +169,7 @@ const MusicSource: FC<object> = () => {
         }
       }
     },
-    [PlayerTrackStatus?.meta, PlayerTrackStatus?.track.id, login, player]
+    [PlayerTrackStatus?.meta, PlayerTrackStatus?.track.id, login, network, player]
   );
   // 注册频谱
   const { spectrumData, isReady } = useSpectrumWorker(
@@ -244,7 +246,7 @@ const MusicSource: FC<object> = () => {
     SetPlayingRequest,
     TriggerPlayerFSMEvent
   ]);
-  console.log("src", audioRealRef.current?.src, "status", PlayerFSMStatus);
+
   // 处理初始音频源设置
   useEffect(() => {
     if (PlayerInitialized) {

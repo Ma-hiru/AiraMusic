@@ -4,6 +4,7 @@ import { EqError, Log } from "@mahiru/ui/utils/dev";
 import { Track } from "@mahiru/ui/utils/track";
 import { PlayerFSMStatusEnum, usePlayerStore } from "@mahiru/ui/store/player";
 import { useSettingsStore } from "@mahiru/ui/store/settings";
+import { useNetwork } from "@mahiru/ui/hook/useNetwork";
 
 /**
  * 音乐资源加载
@@ -125,8 +126,12 @@ export function usePlayerResource() {
 
   // 加载当前播放音乐的歌词和音频资源
   const loadingTrackIdRef = useRef<Nullable<number>>(null);
+  const network = useNetwork();
   useEffect(() => {
     if (PlayerFSMStatus === PlayerFSMStatusEnum.loading) {
+      if (network === "offline") {
+        return TriggerPlayerFSMEvent("loadError");
+      }
       // 防止重复加载同一首歌
       const requestID = PlayerTrackStatus?.track.id;
       if (loadingTrackIdRef.current === requestID || !requestID) return;
@@ -188,6 +193,7 @@ export function usePlayerResource() {
     cancelScheduledPreload,
     loadAudioSource,
     loadLyric,
+    network,
     player,
     schedulePreloadNextTrack
   ]);
