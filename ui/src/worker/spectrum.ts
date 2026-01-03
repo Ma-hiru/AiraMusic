@@ -29,6 +29,12 @@ self.addEventListener("message", (ev: MessageEvent<SpectrumWorkerArgs>) => {
       (async () => {
         try {
           await init();
+          // 重新初始化时显式释放旧实例，避免依赖 GC 触发 wasm free
+          try {
+            analyser?.free();
+          } catch {
+            /** empty */
+          }
           analyser = new SpectrumAnalyzer(fftSize, numBands, sampleRate);
           analyser.set_smoothing(0.8);
           analyser.set_peak_decay(0.02);
@@ -47,12 +53,16 @@ self.addEventListener("message", (ev: MessageEvent<SpectrumWorkerArgs>) => {
         const input = ensureInput(data.data);
         const raw = analyser.analyze_frame(input);
         const lowFreqVolume = raw[raw.length - 1] ?? 0;
-        const bands = raw.subarray(0, raw.length - 1);
-        self.postMessage({
-          type: "spectrum",
-          bands: Array.from(bands),
-          lowFreqVolume
-        } satisfies SpectrumWorkerResult);
+        const bands = raw.subarray(0, Math.max(0, raw.length - 1));
+        // 直接传递 Float32Array，避免 Array.from 的大额分配
+        self.postMessage(
+          {
+            type: "spectrum",
+            bands,
+            lowFreqVolume
+          } satisfies SpectrumWorkerResult,
+          [bands.buffer]
+        );
       } catch (err) {
         postErr("analyze error: " + String(err));
       }
@@ -64,12 +74,15 @@ self.addEventListener("message", (ev: MessageEvent<SpectrumWorkerArgs>) => {
         const input = ensureInput(data.data);
         const rawResult = analyser.analyze_frame_with_peaks(input);
         const lowFreqVolume = rawResult[rawResult.length - 1] ?? 0;
-        const result = rawResult.subarray(0, rawResult.length - 1);
-        self.postMessage({
-          type: "spectrumWithPeaks",
-          data: Array.from(result),
-          lowFreqVolume
-        } satisfies SpectrumWorkerResult);
+        const result = rawResult.subarray(0, Math.max(0, rawResult.length - 1));
+        self.postMessage(
+          {
+            type: "spectrumWithPeaks",
+            data: result,
+            lowFreqVolume
+          } satisfies SpectrumWorkerResult,
+          [result.buffer]
+        );
       } catch (err) {
         postErr("analyzeWithPeaks error: " + String(err));
       }

@@ -134,6 +134,12 @@ impl WebGLRenderer {
         let fs = compile_shader(&gl, GL::FRAGMENT_SHADER, FRAGMENT_SHADER)?;
         let program = link_program(&gl, &vs, &fs)?;
 
+        // program link 完成后即可释放 shader 对象
+        gl.detach_shader(&program, &vs);
+        gl.detach_shader(&program, &fs);
+        gl.delete_shader(Some(&vs));
+        gl.delete_shader(Some(&fs));
+
         // 获取 attribute 和 uniform 位置
         let position_loc = gl.get_attrib_location(&program, "a_position");
         let rect_loc = gl.get_attrib_location(&program, "a_rect");
@@ -172,6 +178,19 @@ impl WebGLRenderer {
             bar_width,
             height_scale: height_scale.unwrap_or(1.0),
         })
+    }
+
+    /// 显式释放 WebGL 资源（buffer/program）。
+    /// 注意：单纯 drop Rust struct 不一定会及时释放 GPU 资源。
+    #[wasm_bindgen]
+    pub fn destroy(&mut self) {
+        let gl = &self.gl;
+        gl.bind_buffer(GL::ARRAY_BUFFER, None);
+        gl.use_program(None);
+        gl.delete_buffer(Some(&self.position_buffer));
+        gl.delete_buffer(Some(&self.rect_buffer));
+        gl.delete_buffer(Some(&self.radius_buffer));
+        gl.delete_program(Some(&self.program));
     }
 
     pub fn draw(&self, bands: &[f32], color: &str, secondary_color: &str, rounded_corners: &str) -> Result<(), JsValue> {

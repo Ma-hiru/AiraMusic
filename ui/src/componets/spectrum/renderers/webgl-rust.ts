@@ -36,6 +36,18 @@ export class WebGLRendererRust implements IRenderer {
   }
 
   destroy() {
+    const r = this.renderer;
+    try {
+      r?.destroy?.();
+    } catch {
+      /** empty */
+    }
+    try {
+      r?.free?.();
+    } catch {
+      /** empty */
+    }
     this.renderer = null;
+    this.options = undefined;
   }
 }

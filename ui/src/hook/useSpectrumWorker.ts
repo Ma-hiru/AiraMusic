@@ -25,6 +25,7 @@ export function useSpectrumWorker(
   const audioCtxRef = useRef<Nullable<AudioContext>>(null);
   const sourceRef = useRef<Nullable<MediaElementAudioSourceNode>>(null);
   const animationFrameRef = useRef<number>(0);
+  const lastPostTsRef = useRef<number>(0);
   const samplesRef = useRef<Nullable<Float32Array<ArrayBuffer>>>(null);
   const spectrumData = useRef<SpectrumData>({
     bands: new Float32Array(numBands),
@@ -50,15 +51,20 @@ export function useSpectrumWorker(
       animationFrameRef.current = requestAnimationFrame(updateSpectrum);
       return;
     }
-    analyser.getFloatTimeDomainData(samples);
-    const payload = samples.slice();
-    worker.postMessage(
-      {
-        type: withPeaks ? "analyzeWithPeaks" : "analyze",
-        data: payload
-      } satisfies SpectrumWorkerArgs,
-      [payload.buffer]
-    );
+    const now = performance.now();
+    // 频谱更新采用 60fps 限频，减少分配/消息量但保持流畅
+    if (now - lastPostTsRef.current >= 1000 / 60) {
+      lastPostTsRef.current = now;
+      analyser.getFloatTimeDomainData(samples);
+      const payload = samples.slice();
+      worker.postMessage(
+        {
+          type: withPeaks ? "analyzeWithPeaks" : "analyze",
+          data: payload
+        } satisfies SpectrumWorkerArgs,
+        [payload.buffer]
+      );
+    }
     animationFrameRef.current = requestAnimationFrame(updateSpectrum);
   }, [isReady, isPlaying, withPeaks]);
   // 初始化 AudioContext 和 AnalyserNode，connect只在一个audioRef上执行一次
@@ -71,7 +77,6 @@ export function useSpectrumWorker(
     sourceRef.current = source;
     const analyser = ctx.createAnalyser();
 
-    analyser.smoothingTimeConstant = 0;
     source.connect(analyser);
     analyser.connect(ctx.destination);
 
@@ -107,32 +112,23 @@ export function useSpectrumWorker(
           break;
         }
         case "spectrum": {
-          if (Array.isArray(data.bands)) {
+          if (data.bands instanceof Float32Array) {
             const arr = spectrumData.current.bands;
-            const len = Math.min(arr.length, data.bands.length);
-            for (let i = 0; i < len; i++) {
-              arr[i] = data.bands[i]!;
-            }
+            arr.set(data.bands.subarray(0, arr.length));
           }
           spectrumData.current.lowFreqVolume = data.lowFreqVolume;
           break;
         }
         case "spectrumWithPeaks": {
-          if (Array.isArray(data.data)) {
+          if (data.data instanceof Float32Array) {
             const d = data.data;
             const bandsArr = spectrumData.current.bands;
             const peaksArr = (spectrumData.current.peaks ||= new Float32Array(numBands));
             const pairLen = Math.min(numBands, Math.floor(d.length / 2));
             for (let i = 0; i < pairLen; i++) {
               const bandIndex = i * 2;
-              const bandValue = d[bandIndex];
-              const peakValue = d[bandIndex + 1];
-              if (bandValue !== undefined) {
-                bandsArr[i] = bandValue;
-              }
-              if (peakValue !== undefined) {
-                peaksArr[i] = peakValue;
-              }
+              bandsArr[i] = d[bandIndex] ?? 0;
+              peaksArr[i] = d[bandIndex + 1] ?? 0;
             }
           }
           spectrumData.current.lowFreqVolume = data.lowFreqVolume;
