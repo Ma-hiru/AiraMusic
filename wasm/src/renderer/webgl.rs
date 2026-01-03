@@ -104,6 +104,10 @@ pub struct WebGLRenderer {
     gap: f32,
     bar_width: Option<f32>,
     height_scale: f32,
+    // 复用临时缓冲区，避免每帧 Vec 分配导致 wasm 内存持续上升
+    positions: Vec<f32>,
+    rect_attribs: Vec<f32>,
+    radii: Vec<f32>,
 }
 
 #[wasm_bindgen]
@@ -177,6 +181,9 @@ impl WebGLRenderer {
             gap,
             bar_width,
             height_scale: height_scale.unwrap_or(1.0),
+            positions: Vec::new(),
+            rect_attribs: Vec::new(),
+            radii: Vec::new(),
         })
     }
 
@@ -193,7 +200,7 @@ impl WebGLRenderer {
         gl.delete_program(Some(&self.program));
     }
 
-    pub fn draw(&self, bands: &[f32], color: &str, secondary_color: &str, rounded_corners: &str) -> Result<(), JsValue> {
+    pub fn draw(&mut self, bands: &[f32], color: &str, secondary_color: &str, rounded_corners: &str) -> Result<(), JsValue> {
         let gl = &self.gl;
 
         gl.use_program(Some(&self.program));
@@ -205,7 +212,7 @@ impl WebGLRenderer {
         // 设置 uniforms
         gl.uniform2f(self.resolution_loc.as_ref(), self.width, self.height);
         gl.uniform1f(self.pixel_ratio_loc.as_ref(), self.dpr);
-        
+
         let corner_mode = match rounded_corners {
             "none" => 0,
             "top" => 1,
@@ -234,6 +241,9 @@ impl WebGLRenderer {
 
         // 计算柱宽
         let count = bands.len();
+        if count == 0 {
+            return Ok(());
+        }
         let total_gap = self.gap * (count.saturating_sub(1) as f32);
         let computed_bar_width = if let Some(bw) = self.bar_width {
             bw.floor().max(1.0)
@@ -242,10 +252,13 @@ impl WebGLRenderer {
             (available_width / count as f32).floor().max(2.0)
         };
 
-        // 构建顶点数据
-        let mut positions = Vec::with_capacity(count * 12);
-        let mut rect_attribs = Vec::with_capacity(count * 24);
-        let mut radii = Vec::with_capacity(count * 6);
+        // 构建顶点数据（复用 Vec 容量）
+        self.positions.clear();
+        self.rect_attribs.clear();
+        self.radii.clear();
+        self.positions.reserve(count * 12);
+        self.rect_attribs.reserve(count * 24);
+        self.radii.reserve(count * 6);
 
         for (i, &band) in bands.iter().enumerate() {
             let v = band.clamp(0.0, 1.0).powf(0.9);
@@ -254,7 +267,7 @@ impl WebGLRenderer {
             let y = self.height - h;
 
             // 两个三角形组成矩形
-            positions.extend_from_slice(&[
+            self.positions.extend_from_slice(&[
                 x,
                 y,
                 x + computed_bar_width,
@@ -272,40 +285,40 @@ impl WebGLRenderer {
             // rect info (x, y, w, h) 重复 6 次
             let rect_info = [x, y, computed_bar_width, h];
             for _ in 0..6 {
-                rect_attribs.extend_from_slice(&rect_info);
+                self.rect_attribs.extend_from_slice(&rect_info);
             }
 
             // radius
             let radius = 3.0_f32.min(computed_bar_width / 2.0).min(h / 2.0).floor();
-            radii.extend_from_slice(&[radius; 6]);
+            self.radii.extend_from_slice(&[radius; 6]);
         }
 
-        // 上传数据到 GPU
+        // 上传数据到 GPU：每帧更新，使用 DYNAMIC_DRAW
         gl.bind_buffer(GL::ARRAY_BUFFER, Some(&self.position_buffer));
         unsafe {
-            let view = js_sys::Float32Array::view(&positions);
-            gl.buffer_data_with_array_buffer_view(GL::ARRAY_BUFFER, &view, GL::STATIC_DRAW);
+            let view = js_sys::Float32Array::view(&self.positions);
+            gl.buffer_data_with_array_buffer_view(GL::ARRAY_BUFFER, &view, GL::DYNAMIC_DRAW);
         }
         gl.enable_vertex_attrib_array(self.position_loc as u32);
         gl.vertex_attrib_pointer_with_i32(self.position_loc as u32, 2, GL::FLOAT, false, 0, 0);
 
         gl.bind_buffer(GL::ARRAY_BUFFER, Some(&self.rect_buffer));
         unsafe {
-            let view = js_sys::Float32Array::view(&rect_attribs);
-            gl.buffer_data_with_array_buffer_view(GL::ARRAY_BUFFER, &view, GL::STATIC_DRAW);
+            let view = js_sys::Float32Array::view(&self.rect_attribs);
+            gl.buffer_data_with_array_buffer_view(GL::ARRAY_BUFFER, &view, GL::DYNAMIC_DRAW);
         }
         gl.enable_vertex_attrib_array(self.rect_loc as u32);
         gl.vertex_attrib_pointer_with_i32(self.rect_loc as u32, 4, GL::FLOAT, false, 0, 0);
 
         gl.bind_buffer(GL::ARRAY_BUFFER, Some(&self.radius_buffer));
         unsafe {
-            let view = js_sys::Float32Array::view(&radii);
-            gl.buffer_data_with_array_buffer_view(GL::ARRAY_BUFFER, &view, GL::STATIC_DRAW);
+            let view = js_sys::Float32Array::view(&self.radii);
+            gl.buffer_data_with_array_buffer_view(GL::ARRAY_BUFFER, &view, GL::DYNAMIC_DRAW);
         }
         gl.enable_vertex_attrib_array(self.radius_loc as u32);
         gl.vertex_attrib_pointer_with_i32(self.radius_loc as u32, 1, GL::FLOAT, false, 0, 0);
 
-        gl.draw_arrays(GL::TRIANGLES, 0, (positions.len() / 2) as i32);
+        gl.draw_arrays(GL::TRIANGLES, 0, (self.positions.len() / 2) as i32);
 
         Ok(())
     }

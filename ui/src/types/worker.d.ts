@@ -17,6 +17,7 @@ type SpectrumWorkerArgs =
       numBands: number;
       withPeaks: boolean;
       sampleRate: number;
+      fpsLimit?: number;
     }
   | { type: "analyze"; data: Float32Array }
   | { type: "analyzeWithPeaks"; data: Float32Array }
@@ -25,6 +26,6 @@ type SpectrumWorkerArgs =
 
 type SpectrumWorkerResult =
   | { type: "ready" }
-  | { type: "spectrum"; bands: Float32Array; lowFreqVolume: number }
-  | { type: "spectrumWithPeaks"; data: Float32Array; lowFreqVolume: number }
+  | { type: "spectrum"; bands: Float32Array }
+  | { type: "spectrumWithPeaks"; data: Float32Array }
   | { type: "error"; error: string };

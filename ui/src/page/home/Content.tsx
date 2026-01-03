@@ -44,7 +44,7 @@ const Content: FC<object> = () => {
   return (
     <div
       ref={containerRef}
-      className="w-full h-full overflow-y-auto scrollbar"
+      className="w-full h-full overflow-y-auto scrollbar will-change-scroll contain-strict"
       onScroll={wrapOnScroll}>
       {reachedSet.has(200) && <Banner />}
       {reachedSet.has(1000) && <DailyRecommendTracks />}

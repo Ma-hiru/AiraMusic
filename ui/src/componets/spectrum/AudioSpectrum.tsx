@@ -4,6 +4,7 @@ import { IRenderer, RendererOptions } from "./renderers/IRenderer";
 import { Canvas2DRenderer } from "./renderers/canvas2d";
 import { WebGLRendererRust } from "./renderers/webgl-rust";
 import { usePlayerStore } from "@mahiru/ui/store/player";
+import { useListenResize } from "@mahiru/ui/hook/useListenResize";
 
 type AudioSpectrumProps = HTMLAttributes<HTMLCanvasElement> & {
   isPlaying: boolean;
@@ -48,7 +49,10 @@ const AudioSpectrum: FC<AudioSpectrumProps> = ({
   const rendererFactory = useMemo(() => {
     return () => (renderer === "webgl-rust" ? new WebGLRendererRust() : new Canvas2DRenderer());
   }, [renderer]);
+  // 监听 canvas 尺寸变化
+  const sizeListener = useListenResize(canvasRef);
   const rendererOptions = useMemo(() => {
+    void sizeListener;
     const canvas = canvasRef.current;
     if (!canvas) return;
     // 确保画布像素尺寸与显示尺寸一致（考虑设备像素比）
@@ -76,7 +80,7 @@ const AudioSpectrum: FC<AudioSpectrumProps> = ({
       } as RendererOptions,
       canvas
     };
-  }, [barWidth, color, gap, heightScale, roundedCorners, secondaryColor]);
+  }, [barWidth, color, gap, heightScale, roundedCorners, secondaryColor, sizeListener]);
   // 初始化和销毁渲染器
   useEffect(() => {
     if (!rendererOptions) return;

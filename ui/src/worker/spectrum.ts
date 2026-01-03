@@ -39,6 +39,7 @@ self.addEventListener("message", (ev: MessageEvent<SpectrumWorkerArgs>) => {
           analyser.set_smoothing(0.8);
           analyser.set_peak_decay(0.02);
           analyser.set_window_function(WindowFunction.Blackman);
+          analyser.set_fps_limit(data.fpsLimit);
           ready = true;
           self.postMessage({ type: "ready" } satisfies SpectrumWorkerResult);
         } catch (err) {
@@ -51,15 +52,12 @@ self.addEventListener("message", (ev: MessageEvent<SpectrumWorkerArgs>) => {
       if (!ready || !analyser) break;
       try {
         const input = ensureInput(data.data);
-        const raw = analyser.analyze_frame(input);
-        const lowFreqVolume = raw[raw.length - 1] ?? 0;
-        const bands = raw.subarray(0, Math.max(0, raw.length - 1));
+        const bands = analyser.analyze_frame(input);
         // 直接传递 Float32Array，避免 Array.from 的大额分配
         self.postMessage(
           {
             type: "spectrum",
-            bands,
-            lowFreqVolume
+            bands
           } satisfies SpectrumWorkerResult,
           [bands.buffer]
         );
@@ -72,14 +70,11 @@ self.addEventListener("message", (ev: MessageEvent<SpectrumWorkerArgs>) => {
       if (!ready || !analyser) break;
       try {
         const input = ensureInput(data.data);
-        const rawResult = analyser.analyze_frame_with_peaks(input);
-        const lowFreqVolume = rawResult[rawResult.length - 1] ?? 0;
-        const result = rawResult.subarray(0, Math.max(0, rawResult.length - 1));
+        const result = analyser.analyze_frame_with_peaks(input);
         self.postMessage(
           {
             type: "spectrumWithPeaks",
-            data: result,
-            lowFreqVolume
+            data: result
           } satisfies SpectrumWorkerResult,
           [result.buffer]
         );

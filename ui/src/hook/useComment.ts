@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { CommentSort, CommentType } from "@mahiru/ui/api/comment";
 import { EqError, Log } from "@mahiru/ui/utils/dev";
 import { API } from "@mahiru/ui/api";
+import { parseCommentEmoji } from "@mahiru/ui/utils/str";
 
 interface UseCommentProps {
   type: CommentType;
@@ -47,6 +48,10 @@ export function useComment({
         cursor: pageCursor.current.hasMore ? pageCursor.current.cursor : undefined
       })
         .then((response) => {
+          response.data.comments = response.data.comments.map((comment) => {
+            comment.content = parseCommentEmoji(comment.content);
+            return comment;
+          });
           setComments(response.data.comments);
           setCurrentPageNo(pageNo);
           setTotalComment(response.data.totalCount);

@@ -1,3 +1,5 @@
+import { commonEmojiMap } from "@mahiru/ui/constants/emoji";
+
 export function splitTrackTitle(title?: string) {
   const result = { main: title?.trim() || "", sub: "" };
   if (!title) return result;
@@ -19,4 +21,12 @@ export function splitTrackTitle(title?: string) {
   }
 
   return result;
+}
+
+export function parseCommentEmoji(text: string): string {
+  if (!text || !text.includes("[")) return text;
+
+  return text.replace(/\[([^[\]]+)]/g, (raw, name) => {
+    return commonEmojiMap[name] ?? raw;
+  });
 }

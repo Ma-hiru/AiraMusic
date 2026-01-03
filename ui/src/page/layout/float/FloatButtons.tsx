@@ -23,8 +23,9 @@ const FloatButtons: FC<object> = () => {
   // 在首页或根路径时不显示返回按钮
   const hiddenBack = !(location.pathname === "/" || location.pathname === "/home");
 
+  const locator = TrackListFastLocater?.() || undefined;
   return (
-    <AnimatePresence>
+    <AnimatePresence initial={false}>
       {!PlayerVisible && (
         <motion.div
           key="floatButtons"
@@ -33,24 +34,30 @@ const FloatButtons: FC<object> = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ ease: "easeInOut", duration: 0.3 }}>
-          <FloatItem
-            onClick={ScrollTop.callback || undefined}
-            show={ScrollTop.type !== "none" && !PlayerVisible}>
-            <ChevronUp className="size-5" />
-          </FloatItem>
-          <FloatItem show={!!TrackListFastLocater} onClick={TrackListFastLocater?.() || undefined}>
-            <LocateFixed className="size-5" />
-          </FloatItem>
-          <FloatItem show={hiddenBack && !PlayerVisible} onClick={handleBack}>
-            <ChevronLeft className="size-5" />
-          </FloatItem>
-          <FloatItem onClick={ToggleSideBarOpen} show={!PlayerVisible}>
-            {SideBarOpen ? (
-              <PanelLeftClose className="size-5" />
-            ) : (
-              <PanelLeftOpen className="size-5" />
+          <AnimatePresence initial={false}>
+            {ScrollTop.type !== "none" && (
+              <FloatItem key="scrollTop" onClick={ScrollTop.callback || undefined}>
+                <ChevronUp className="size-5" />
+              </FloatItem>
             )}
-          </FloatItem>
+            {locator && (
+              <FloatItem key="locate" onClick={locator}>
+                <LocateFixed className="size-5" />
+              </FloatItem>
+            )}
+            {hiddenBack && (
+              <FloatItem key="back" onClick={handleBack}>
+                <ChevronLeft className="size-5" />
+              </FloatItem>
+            )}
+            <FloatItem key="sidebar" onClick={ToggleSideBarOpen}>
+              {SideBarOpen ? (
+                <PanelLeftClose className="size-5" />
+              ) : (
+                <PanelLeftOpen className="size-5" />
+              )}
+            </FloatItem>
+          </AnimatePresence>
         </motion.div>
       )}
     </AnimatePresence>
