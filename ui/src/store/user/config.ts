@@ -30,6 +30,11 @@ export const UserStoreConfig: ZustandConfig<
     set((draft) => {
       draft.UserLastRefreshCookieDate = date;
     });
+  },
+  UpdateUserFavoriteListsSummary: (summary) => {
+    set((draft) => {
+      draft.UserFavoriteListsSummary = summary;
+    });
   }
 });
 
@@ -37,6 +42,7 @@ const InitialState: UserStoreInitialState = {
   UserProfile: null,
   UserLoginMode: "",
   UserLikedListSummary: null,
+  UserFavoriteListsSummary: null,
   UserPlaylistSummary: null,
   UserLikedTrackIDs: { ids: {}, checkPoint: 0 },
   UserLastRefreshCookieDate: null
@@ -46,6 +52,7 @@ export type UserStoreInitialState = {
   UserProfile: Nullable<NeteaseUserDetailResponse["profile"]>;
   UserLoginMode: "account" | "username" | "";
   UserLikedListSummary: Nullable<NeteasePlaylistSummary>;
+  UserFavoriteListsSummary: Nullable<NeteasePlaylistSummary[]>;
   UserPlaylistSummary: Nullable<NeteasePlaylistSummary[]>;
   UserLikedTrackIDs: { ids: Record<number, boolean>; checkPoint: number };
   UserLastRefreshCookieDate: Nullable<number>;
@@ -63,5 +70,8 @@ export type UserStoreActions = {
   UpdateUserLikedTrackIDs: NormalFunc<[trackIDs: UserStoreInitialState["UserLikedTrackIDs"]]>;
   UpdateUserLastRefreshCookieDate: NormalFunc<
     [date: UserStoreInitialState["UserLastRefreshCookieDate"]]
+  >;
+  UpdateUserFavoriteListsSummary: NormalFunc<
+    [summary: UserStoreInitialState["UserFavoriteListsSummary"]]
   >;
 };

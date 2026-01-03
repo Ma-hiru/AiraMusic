@@ -1,5 +1,4 @@
 import { FC, memo } from "react";
-import { useNavigate } from "react-router-dom";
 import { NAV_DATA } from "@mahiru/ui/router";
 import { Auth } from "@mahiru/ui/utils/auth";
 import { useLogin } from "@mahiru/ui/hook/useLogout";
@@ -8,11 +7,11 @@ import NavItem from "./NavItem";
 import { useUserStore } from "@mahiru/ui/store/user";
 
 const NavMenu: FC<object> = () => {
-  const { UserLikedListSummary } = useUserStore(["UserLikedListSummary"]);
-  const { shouldPlaylistIDIs, getPlaylistRouterPath, location, getPlaylistSource } =
-    usePlaylistRouter();
   const login = useLogin();
-  const navigate = useNavigate();
+  const { UserLikedListSummary } = useUserStore(["UserLikedListSummary"]);
+  const { shouldPlaylistIDIs, location, getPlaylistSource, goToPlaylistPage, navigate } =
+    usePlaylistRouter();
+
   return (
     <div className="space-y-4 w-full overflow-hidden">
       {NAV_DATA.map(({ icon, label, path }) => {
@@ -33,7 +32,7 @@ const NavMenu: FC<object> = () => {
               if (label === "喜欢") {
                 if (UserLikedListSummary?.id) {
                   if (Auth.isAccountLoggedIn()) {
-                    navigate(getPlaylistRouterPath(UserLikedListSummary.id, "like"));
+                    goToPlaylistPage(UserLikedListSummary.id, "like");
                   } else {
                     login();
                   }

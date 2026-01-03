@@ -1,4 +1,4 @@
-import { accessToken, cacheRequest } from "@mahiru/ui/utils/cacheRequest";
+import { accessToken, cacheRequest } from "@mahiru/ui/utils/cache";
 
 /** CacheStore api  */
 export const CacheStore = new (class CacheStore {
@@ -35,7 +35,7 @@ export const CacheStore = new (class CacheStore {
       objType: ObjType;
       objField: string | number | "length";
     }
-  ): Promise<T | null> {
+  ): Promise<Nullable<T>> {
     id = this.encode(id);
     return cacheRequest<any, T | null>("/api/object/fetch", {
       method: "GET",

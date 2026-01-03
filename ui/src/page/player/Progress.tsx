@@ -2,7 +2,7 @@ import { FC, memo } from "react";
 import { usePlayProgress } from "@mahiru/ui/hook/usePlayProgress";
 import { motion } from "motion/react";
 import { Time } from "@mahiru/ui/utils/time";
-import { Track, TrackQuality } from "@mahiru/ui/utils/track";
+import { NeteaseTrack, TrackQuality } from "@mahiru/ui/utils/track";
 import { css } from "@emotion/css";
 import Tag from "@mahiru/ui/componets/public/Tag";
 import { usePlayerStore } from "@mahiru/ui/store/player";
@@ -25,7 +25,7 @@ const Progress: FC<object> = () => {
       PlayerTrackStatus?.quality?.level === TrackQuality.hr ||
       PlayerTrackStatus?.quality?.level === TrackQuality.h
     ) {
-      return Track.mapTrackQualityToText(PlayerTrackStatus.quality.level);
+      return NeteaseTrack.mapTrackQualityToText(PlayerTrackStatus.quality.level);
     }
     return null;
   };

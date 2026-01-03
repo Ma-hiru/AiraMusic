@@ -4,10 +4,10 @@ import { NeteaseBanner } from "@mahiru/ui/types/netease/banner";
 import { EqError, Log } from "@mahiru/ui/utils/dev";
 import { useAppLoaded } from "@mahiru/ui/hook/useAppLoaded";
 import { useThemeColor } from "@mahiru/ui/hook/useThemeColor";
-import { Filter } from "@mahiru/ui/utils/filter";
 import { Renderer } from "@mahiru/ui/utils/renderer";
 import { API } from "@mahiru/ui/api";
 import { usePlayerStore } from "@mahiru/ui/store/player";
+import { NeteaseTrack } from "@mahiru/ui/utils/track";
 
 const Banner: FC<object> = () => {
   const [banner, setBanner] = useState<NeteaseBanner[]>([]);
@@ -29,7 +29,7 @@ const Banner: FC<object> = () => {
       switch (type) {
         case "song": {
           const detail = await API.Track.getTrackDetail(id);
-          const tracks = Filter.NeteaseTracksPrivilegeExtends(detail.songs, detail.privileges);
+          const tracks = NeteaseTrack.tracksPrivilegeExtends(detail.songs, detail.privileges);
           const track = tracks[0];
           if (track && track.playable) {
             player?.addTrack(track, track.al.id, "next");

@@ -2,7 +2,7 @@ import { FC, memo } from "react";
 import { cx } from "@emotion/css";
 import { Heart } from "lucide-react";
 import { Time } from "@mahiru/ui/utils/time";
-import { Track, TrackBitmark } from "@mahiru/ui/utils/track";
+import { NeteaseTrack, TrackBitmark } from "@mahiru/ui/utils/track";
 import { ColorInstance } from "color";
 import ListItemQuality from "./TrackItemQuality";
 import Tag from "@mahiru/ui/componets/public/Tag";
@@ -28,7 +28,7 @@ const TrackItemInfo: FC<ListItemAlbumProps> = ({
   showHeart,
   disabled
 }) => {
-  const hasExplicit = Track.parseTrackBitmark(track, TrackBitmark.Explicit);
+  const hasExplicit = NeteaseTrack.parseTrackBitmark(track, TrackBitmark.Explicit);
   return (
     <div className="flex gap-4 justify-end items-center">
       {hasExplicit && (

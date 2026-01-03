@@ -1,5 +1,5 @@
 import { FC, memo, useCallback } from "react";
-import { ImageSize } from "@mahiru/ui/utils/filter";
+import { NeteaseImageSize } from "@mahiru/ui/utils/image";
 import { CirclePlay } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import NeteaseImage from "@mahiru/ui/componets/public/NeteaseImage";
@@ -23,7 +23,7 @@ const PlaylistItem: FC<RecommendTrackItemProps> = ({ playlist, isMainColorDark, 
           <NeteaseImage
             className="w-full rounded-md"
             src={playlist.picUrl}
-            size={ImageSize.md}
+            size={NeteaseImageSize.md}
             alt={playlist.name}
             shadowColor={isMainColorDark ? "dark" : "light"}
           />

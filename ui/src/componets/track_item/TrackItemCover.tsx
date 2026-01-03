@@ -1,27 +1,23 @@
 import { FC, memo } from "react";
-import { ImageSize } from "@mahiru/ui/utils/filter";
+import { NeteaseImageSize } from "@mahiru/ui/utils/image";
+import { cx } from "@emotion/css";
+
 import NeteaseImage from "@mahiru/ui/componets/public/NeteaseImage";
 
 interface ListItemCoverProps {
   track: NeteaseTrackBase;
-  trackIdx: number;
   isMainColorDark: boolean;
   disabled: boolean;
   onClick?: NormalFunc;
   fastLocation?: boolean;
-  onCoverCacheHit?: NormalFunc<[file: string, id: string, idx: number]>;
-  onCoverCacheError?: NormalFunc<[idx: number]>;
 }
 
 const TrackItemCover: FC<ListItemCoverProps> = ({
   track,
-  trackIdx,
   onClick,
   disabled,
   isMainColorDark,
-  fastLocation = false,
-  onCoverCacheError,
-  onCoverCacheHit
+  fastLocation = false
 }) => {
   return (
     <NeteaseImage
@@ -29,17 +25,17 @@ const TrackItemCover: FC<ListItemCoverProps> = ({
         if (disabled) return;
         onClick?.();
       }}
-      className={`
+      className={cx(
+        `
         size-8 rounded-md cursor-pointer select-none
         hover:scale-105 active:scale-95
         ease-in-out duration-300 transition-all
-      `}
-      src={track.al.cachedPicUrl || track.al.picUrl}
-      retryURL={track.al.picUrl}
+      `,
+        disabled && "cursor-not-allowed"
+      )}
+      src={track.al.picUrl}
       alt={track.al.name}
-      size={ImageSize.xs}
-      onCacheError={() => onCoverCacheError?.(trackIdx)}
-      onCacheHit={(file, id) => onCoverCacheHit?.(file, id, trackIdx)}
+      size={NeteaseImageSize.xs}
       fastLocation={fastLocation}
       shadowColor={isMainColorDark ? "dark" : "light"}
     />

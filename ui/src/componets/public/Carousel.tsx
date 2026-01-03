@@ -2,7 +2,7 @@ import { FC, memo, useCallback, useEffect, useRef, useState } from "react";
 import { cx } from "@emotion/css";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import NeteaseImage from "@mahiru/ui/componets/public/NeteaseImage";
-import { ImageSize } from "@mahiru/ui/utils/filter";
+import { NeteaseImageSize } from "@mahiru/ui/utils/image";
 import { useThemeColor } from "@mahiru/ui/hook/useThemeColor";
 
 interface CarouselProps {
@@ -64,7 +64,7 @@ const Carousel: FC<CarouselProps> = ({
               <NeteaseImage
                 className="w-full h-full select-none rounded-md"
                 src={item.url}
-                size={ImageSize.raw}
+                size={NeteaseImageSize.raw}
                 alt={item.title || `carousel-item-${index}`}
                 onClick={() => onClick?.(index)}
                 shadowColor={mainColor.isDark() ? "dark" : "light"}

@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { PlaylistManager } from "@mahiru/ui/utils/playlist";
+import { Playlist } from "@mahiru/ui/utils/playlist";
 import { API } from "@mahiru/ui/api";
 import { useUserStore } from "@mahiru/ui/store/user";
 
@@ -30,7 +30,7 @@ export const useHeart = () => {
         id: track.id,
         like: !isLiked
       });
-      void PlaylistManager.updateTrackLikedStatus({
+      void Playlist.updateTrackLikedStatus({
         track,
         nextStatus: !isLiked
       });

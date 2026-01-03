@@ -100,8 +100,7 @@ export function usePlayerAudio() {
     if (PlayerInitialized) {
       if (!audio) return;
       audio.volume = PlayerStatus.volume;
-      const cached = PlayerProgressGetter();
-      audio.currentTime = cached.currentTime;
+      changeCurrentTime(PlayerProgressGetter().currentTime);
     }
     // eslint-disable-next-line
   }, [PlayerInitialized]);

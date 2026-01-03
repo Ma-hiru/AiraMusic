@@ -126,10 +126,6 @@ interface NeteasePlaylistSummary {
   coverImgId: number;
   coverImgId_str: null | string;
   coverImgUrl: string;
-  /** 注入字段 */
-  cachedCoverImgUrl: string;
-  /** 注入字段 */
-  cachedCoverImgUrlID: string;
   createTime: number;
   creator: Creator;
   description: null | string;

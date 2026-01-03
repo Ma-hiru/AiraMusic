@@ -48,6 +48,7 @@ async function handleProtocolLocal(request: Request) {
     const url = new URL(request.url);
     // url.pathname === "/C:/Users/xxx.png"
     const filePath = normalize(decodeURIComponent(url.pathname.slice(1)));
+    // TODO 限制访问权限
     const fileStat = await stat(filePath);
     const total = fileStat.size;
     const rangeHeader = request.headers.get("range") ?? request.headers.get("Range");

@@ -1,7 +1,7 @@
-import { LyricManager } from "@mahiru/ui/utils/lyricManager";
+import { NeteaseLyric } from "@mahiru/ui/utils/lyric";
 import { useCallback, useEffect, useRef } from "react";
 import { EqError, Log } from "@mahiru/ui/utils/dev";
-import { Track } from "@mahiru/ui/utils/track";
+import { NeteaseTrack } from "@mahiru/ui/utils/track";
 import { PlayerFSMStatusEnum, usePlayerStore } from "@mahiru/ui/store/player";
 import { useSettingsStore } from "@mahiru/ui/store/settings";
 import { useNetwork } from "@mahiru/ui/hook/useNetwork";
@@ -49,7 +49,7 @@ export function usePlayerResource() {
       const controller = new AbortController();
       lyricCancelRef.current = () => controller.abort();
       try {
-        const { lyric, version } = await LyricManager.requestLyric(id, lyricVersionPreference);
+        const { lyric, version } = await NeteaseLyric.requestLyric(id, lyricVersionPreference);
         if (controller.signal.aborted) return;
         SetPlayerTrackStatus((draft) => {
           if (draft && !controller.signal.aborted) {
@@ -81,7 +81,10 @@ export function usePlayerResource() {
       const controller = new AbortController();
       audioCancelRef.current = () => controller.abort();
       try {
-        const { cacheSource, meta, quality } = await Track.loadAudio(track, controller.signal);
+        const { cacheSource, meta, quality } = await NeteaseTrack.loadAudio(
+          track,
+          controller.signal
+        );
         if (!meta || controller.signal.aborted) return "";
         const remoteUrl = meta?.[0]?.url || "";
         const nextAudio = cacheSource || remoteUrl || "";
@@ -119,7 +122,7 @@ export function usePlayerResource() {
     (currentTrack: PlayerTrackStatus, nextTrack: Optional<PlayerTrackStatus>) => {
       if (!nextTrack || currentTrack.track.id === nextTrack.track.id) return;
       preloadCancelRef.current?.();
-      preloadCancelRef.current = Track.preloadTrack(nextTrack.track);
+      preloadCancelRef.current = NeteaseTrack.preloadTrack(nextTrack.track);
     },
     []
   );
@@ -143,7 +146,7 @@ export function usePlayerResource() {
           const peak = player?.peek();
           const isShuffle = PlayerStatus.shuffle;
           // 检查缓存是否无效(当音频加载失败时，callback会标记缓存无效)，无效则重新加载
-          const invalid = Track.markedInvalidCache(current.track.id);
+          const invalid = NeteaseTrack.isMarkedInvalidCache(current.track.id);
           const hasLyric = !!current.lyric && current.lyric.raw.length > 0;
           const hasAudio = !!current.audio;
           if (loadingTrackIdRef.current !== requestID) return;
@@ -158,7 +161,7 @@ export function usePlayerResource() {
           if (!nextAudioSrc) {
             return TriggerPlayerFSMEvent("loadError");
           }
-          if (invalid) Track.removeMarkedInvalidCache(current!.track.id);
+          if (invalid) NeteaseTrack.removeMarkedInvalidCache(current!.track.id);
           // 仅在资源加载完成后才预加载下一首，避免无意义的重复触发
           hasLyric && hasAudio && !isShuffle && schedulePreloadNextTrack(current!, peak);
 
@@ -208,7 +211,7 @@ export function usePlayerResource() {
   // 同步音乐质量设置
   useEffect(() => {
     if (PlayerSettings.musicQuality) {
-      Track.setRequestQuality(PlayerSettings.musicQuality);
+      NeteaseTrack.setRequestQuality(PlayerSettings.musicQuality);
     }
   }, [PlayerSettings.musicQuality]);
 }

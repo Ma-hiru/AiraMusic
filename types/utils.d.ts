@@ -15,6 +15,10 @@ type Undefinable<T> = T | undefined;
 
 type Optional<T> = T | null | undefined;
 
+type Falsy = false | 0 | "" | null | undefined;
+
+type NullishValue = null | undefined;
+
 type NormalFunc<P extends any[] = never[], R = void> = (...args: P) => R;
 
 type PromiseFunc<P extends any[] = never[], R = void> = (...args: P) => Promise<R>;

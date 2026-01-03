@@ -4,7 +4,7 @@ import { usePlayerResource } from "@mahiru/ui/hook/usePlayerResource";
 import { useMediaSession } from "@mahiru/ui/hook/useMediaSession";
 import { useWindowTitle } from "@mahiru/ui/hook/useWindowTitle";
 import { Log } from "@mahiru/ui/utils/dev";
-import { Track } from "@mahiru/ui/utils/track";
+import { NeteaseTrack } from "@mahiru/ui/utils/track";
 import { Auth } from "@mahiru/ui/utils/auth";
 import { useLogin } from "@mahiru/ui/hook/useLogout";
 import { usePlayerAudio } from "@mahiru/ui/hook/usePlayerAudio";
@@ -13,6 +13,7 @@ import { Renderer } from "@mahiru/ui/utils/renderer";
 import { PlayerFSMStatusEnum, usePlayerStore } from "@mahiru/ui/store/player";
 import { useLayoutStore } from "@mahiru/ui/store/layout";
 import { useNetwork } from "@mahiru/ui/hook/useNetwork";
+import { addCloseTask } from "@mahiru/ui/utils/close";
 
 const MusicSource: FC<object> = () => {
   const {
@@ -26,7 +27,8 @@ const MusicSource: FC<object> = () => {
     PlayingRequest,
     TriggerPlayerFSMEvent,
     SetPlayingRequest,
-    PlayerInitialized
+    PlayerInitialized,
+    SavePlayerCore
   } = usePlayerStore([
     "PlayerCoreGetter",
     "InitPlayerCore",
@@ -38,7 +40,8 @@ const MusicSource: FC<object> = () => {
     "PlayingRequest",
     "TriggerPlayerFSMEvent",
     "SetPlayingRequest",
-    "PlayerInitialized"
+    "PlayerInitialized",
+    "SavePlayerCore"
   ]);
   const { IsTyping } = useLayoutStore(["IsTyping"]);
   // 初始化播放器
@@ -155,7 +158,7 @@ const MusicSource: FC<object> = () => {
           audioEl.src = raw;
           const id = PlayerTrackStatus?.track.id;
           if (id) {
-            Track.removeCache(id);
+            NeteaseTrack.removeCache(id);
           }
         } else {
           Log.error("MusicSource.tsx", "audio playback error");
@@ -258,6 +261,13 @@ const MusicSource: FC<object> = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [PlayerInitialized]);
+  // 添加close任务
+  useEffect(() => {
+    addCloseTask("save_player_core", async () => {
+      return SavePlayerCore();
+    });
+  }, [SavePlayerCore]);
+
   return (
     <audio
       className="w-0 h-0 opacity-0"

@@ -4,9 +4,10 @@ import { Drag, NoDrag } from "@mahiru/ui/componets/public/Drag";
 import { useLyric } from "@mahiru/ui/hook/useLyric";
 import { useManualAutoScroll } from "@mahiru/ui/hook/useMarquee";
 import { AArrowDown, AArrowUp, LockKeyholeOpen, LucideLock } from "lucide-react";
-import { Filter, ImageSize } from "@mahiru/ui/utils/filter";
 import { Renderer } from "@mahiru/ui/utils/renderer";
 import { Time } from "@mahiru/ui/utils/time";
+import { NeteaseImageSize } from "@mahiru/ui/utils/image";
+import NeteaseImage from "@mahiru/ui/componets/public/NeteaseImage";
 
 type FontSize = `${number}px` | `${number}rem` | `${number}em`;
 
@@ -150,10 +151,9 @@ const Control: FC<ControlProps> = ({
           </NoDrag>
         </div>
         <div className="flex items-center gap-2">
-          <img
-            src={Filter.NeteaseImageSize(track?.al.cachedPicUrl || track?.al.picUrl, ImageSize.xs)}
-            loading="lazy"
-            decoding="async"
+          <NeteaseImage
+            src={track?.al.picUrl}
+            size={NeteaseImageSize.xs}
             alt={track?.name}
             className="rounded-full size-5 shrink-0"
           />

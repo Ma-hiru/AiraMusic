@@ -1,6 +1,6 @@
 import { FC, memo, useEffect, useState } from "react";
 import Color from "color";
-import { ImageSize } from "@mahiru/ui/utils/filter";
+import { NeteaseImageSize } from "@mahiru/ui/utils/image";
 import { CommentType } from "@mahiru/ui/api/comment";
 import NeteaseImage from "@mahiru/ui/componets/public/NeteaseImage";
 
@@ -38,7 +38,7 @@ const MetaSource: FC<MetaSourceProps> = ({ infoSync, themeSync }) => {
       <NeteaseImage
         className="size-7 rounded-full sm:size-8"
         src={RenderData.sourceCover}
-        size={ImageSize.sm}
+        size={NeteaseImageSize.sm}
         alt={RenderData.sourceName}
       />
       <span className="flex flex-col justify-center items-start">

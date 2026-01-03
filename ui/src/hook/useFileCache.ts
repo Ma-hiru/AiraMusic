@@ -11,21 +11,14 @@ export function useFileCache(
     timeLimit?: number;
     method?: string;
     /** 是否为快速定位 */
-    fastLocation?: boolean;
+    pause?: boolean;
   }
 ) {
   const [finalURL, setFinalURL] = useState<string>();
-  const {
-    id = url,
-    onCacheHit,
-    update,
-    timeLimit,
-    method = "GET",
-    fastLocation = false
-  } = options || {};
+  const { id = url, onCacheHit, update, timeLimit, method = "GET", pause = false } = options || {};
 
   useEffect(() => {
-    if (!url || !url.startsWith("http") || fastLocation) return;
+    if (!url || !url.startsWith("http") || pause) return;
     if (!id || url.startsWith("file") || url.startsWith(AppScheme)) return;
 
     const controller = new AbortController();
@@ -33,24 +26,23 @@ export function useFileCache(
       if (controller.signal.aborted) return;
       CacheStore.checkOrStoreAsync(url, id, method, update, timeLimit, controller.signal)
         .then((check) => {
+          if (controller.signal.aborted) return;
           if (check?.ok && check.index.file) {
-            const path = check.index.file;
-            if (!controller.signal.aborted && path !== finalURL) setFinalURL(path);
-            requestIdleCallback(
-              () => {
-                if (controller.signal.aborted) return;
-                onCacheHit?.(path, check.index.id);
-              },
-              { timeout: 5000 }
-            );
+            const raw = new URL(check.index.file);
+            raw.searchParams.set("mime", check.index.type);
+            const path = raw.toString();
+            if (path !== finalURL) setFinalURL(path);
+            requestIdleCallback(() => {
+              onCacheHit?.(path, check.index.id);
+            });
           } else if (finalURL !== url) {
-            if (controller.signal.aborted) return;
             setFinalURL(url);
           }
         })
         .catch(() => {
-          if (controller.signal.aborted) return;
-          setFinalURL(url);
+          if (!controller.signal.aborted) {
+            setFinalURL(url);
+          }
         });
     };
     requestAnimationFrame(run);
@@ -58,9 +50,9 @@ export function useFileCache(
     return () => {
       controller.abort();
     };
-  }, [fastLocation, finalURL, id, method, onCacheHit, timeLimit, update, url]);
+  }, [pause, finalURL, id, method, onCacheHit, timeLimit, update, url]);
 
-  if (!url || !id || fastLocation) {
+  if (!url || !id || pause) {
     return undefined;
   } else if (!url.startsWith("http") || url.startsWith("file") || url.startsWith(AppScheme)) {
     return url;

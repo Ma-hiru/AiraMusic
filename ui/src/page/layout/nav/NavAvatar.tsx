@@ -1,7 +1,7 @@
 import { FC, memo } from "react";
 import { UserRound } from "lucide-react";
 import { useLogin, useLogout } from "@mahiru/ui/hook/useLogout";
-import { ImageSize } from "@mahiru/ui/utils/filter";
+import { NeteaseImageSize } from "@mahiru/ui/utils/image";
 import { NoDrag } from "@mahiru/ui/componets/public/Drag";
 import NeteaseImage from "@mahiru/ui/componets/public/NeteaseImage";
 import { useThemeColor } from "@mahiru/ui/hook/useThemeColor";
@@ -19,7 +19,7 @@ const NavAvatar: FC<object> = () => {
       {UserProfile?.avatarUrl ? (
         <NeteaseImage
           className="size-7 min-w-7 cursor-pointer select-none rounded-full"
-          size={ImageSize.md}
+          size={NeteaseImageSize.md}
           onClick={logout}
           src={UserProfile?.avatarUrl}
           alt={UserProfile?.nickname}

@@ -1,19 +1,17 @@
 import { FC, memo } from "react";
-import { CacheStore } from "@mahiru/ui/store/cache";
-import { ImageSize } from "@mahiru/ui/utils/filter";
+import { NeteaseImageSize } from "@mahiru/ui/utils/image";
 import NavSideNavItem from "@mahiru/ui/page/layout/nav/NavItem";
 import NeteaseImage from "@mahiru/ui/componets/public/NeteaseImage";
 
 interface Props {
-  cover: { raw: string; cached: string; cacheID: string };
+  cover: string;
   label: string;
   count: number | string;
   id: number | string;
   onClick?: (id: number | string) => void;
   active?: boolean;
-  index: number;
+  fastLocation?: boolean;
   isMainColorDark: boolean;
-  rawList: NeteasePlaylistSummary[];
 }
 
 const NavPlaylistItem: FC<Props> = ({
@@ -23,9 +21,8 @@ const NavPlaylistItem: FC<Props> = ({
   id,
   onClick,
   active,
-  index,
-  rawList,
-  isMainColorDark
+  isMainColorDark,
+  fastLocation
 }) => {
   return (
     <NavSideNavItem
@@ -34,24 +31,11 @@ const NavPlaylistItem: FC<Props> = ({
       prefix={
         <div className="size-10 min-w-10 rounded-md overflow-hidden">
           <NeteaseImage
-            onCacheHit={(file, id) => {
-              if (rawList[index]) {
-                rawList[index].cachedCoverImgUrl = file;
-                rawList[index].cachedCoverImgUrlID = id;
-              }
-            }}
+            fastLocation={fastLocation}
             className="w-full"
-            src={cover.cached || cover.raw}
-            retryURL={cover.raw}
+            src={cover}
             alt={label}
-            onCacheError={() => {
-              if (rawList[index]) {
-                rawList[index].cachedCoverImgUrl = "";
-                void CacheStore.remove(rawList[index].cachedCoverImgUrlID);
-                rawList[index].cachedCoverImgUrlID = "";
-              }
-            }}
-            size={ImageSize.sm}
+            size={NeteaseImageSize.sm}
             shadowColor={isMainColorDark ? "dark" : "light"}
           />
         </div>

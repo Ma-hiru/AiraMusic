@@ -3,11 +3,13 @@ import { usePlaylistHistoryRender } from "@mahiru/ui/hook/usePlaylistRender";
 import TrackList from "@mahiru/ui/componets/track_list";
 import Top from "@mahiru/ui/page/history/Top";
 import { useLayoutStore } from "@mahiru/ui/store/layout";
+import { NeteaseImage } from "@mahiru/ui/utils/image";
 
 const HistoryPage: FC<object> = () => {
   const props = usePlaylistHistoryRender();
   const { PlayerTheme, UpdatePlayerTheme } = useLayoutStore(["PlayerTheme", "UpdatePlayerTheme"]);
-  const defaultBackground = props.tracks[0]?.al.cachedPicUrl || props.tracks[0]?.al.picUrl;
+  const defaultBackground =
+    NeteaseImage.fetchCacheURL(props.tracks[0]?.al.picUrl) || props.tracks[0]?.al.picUrl;
 
   useEffect(() => {
     if (!PlayerTheme.BackgroundCover) {

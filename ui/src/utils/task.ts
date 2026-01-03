@@ -5,16 +5,19 @@ import { getUserStoreSnapshot } from "@mahiru/ui/store/user";
 
 /** 登录接口 */
 export async function refreshLogin(cookies: string) {
-  Log.debug("Logged in successfully, fetching user data...");
+  Log.trace("Logged in successfully, fetching user data...");
   try {
     Auth.setCookies(cookies);
-    await refreshUserProfile(true);
-    await refreshUserPlaylist(true);
+    await Promise.all([
+      refreshUserProfile(true),
+      refreshUserPlaylist(true),
+      refreshUserLikedTrackIDs(true)
+    ]);
   } catch (err) {
     Log.error(
       new EqError({
-        label: "ui/utils/login.ts",
-        message: "Failed to fetch user data after login.",
+        label: "task.ts:refreshLogin",
+        message: "failed to fetch user data after login.",
         raw: err
       })
     );
@@ -32,7 +35,7 @@ export async function refreshCookieTask() {
   } catch (err) {
     Log.error(
       new EqError({
-        label: "ui/common.ts:refreshCookieTask",
+        label: "task.ts:refreshCookieTask",
         message: "refresh cookie failed",
         raw: err
       })
@@ -52,7 +55,7 @@ export async function refreshUserProfile(login: boolean = false) {
   } catch (err) {
     Log.error(
       new EqError({
-        label: "ui/common.ts:refreshUserProfile",
+        label: "task.ts:refreshUserProfile",
         message: "refresh user profile failed",
         raw: err
       })
@@ -65,19 +68,35 @@ export async function refreshUserPlaylist(login: boolean = false) {
     if (!Auth.isAccountLoggedIn() && !login) return;
     Log.trace("refresh user playlist");
 
-    const { UserProfile, UpdateUserLikedListSummary, UpdateUserPlaylistSummary } =
-      getUserStoreSnapshot();
+    const {
+      UserProfile,
+      UpdateUserLikedListSummary,
+      UpdateUserPlaylistSummary,
+      UpdateUserFavoriteListsSummary
+    } = getUserStoreSnapshot();
     const uid = UserProfile?.userId;
     if (uid) {
       const { playlist } = await API.User.userPlaylist({ uid, limit: 30 });
+      const userPlaylist: NeteasePlaylistSummary[] = [];
+      const userFavoriteLists: NeteasePlaylistSummary[] = [];
       const userLikedList = playlist.shift();
+
+      playlist.forEach((item) => {
+        if (item.creator.userId === uid) {
+          userPlaylist.push(item);
+        } else {
+          userFavoriteLists.push(item);
+        }
+      });
+
       UpdateUserLikedListSummary(userLikedList || null);
-      UpdateUserPlaylistSummary(playlist);
+      UpdateUserFavoriteListsSummary(userFavoriteLists);
+      UpdateUserPlaylistSummary(userPlaylist);
     }
   } catch (err) {
     Log.error(
       new EqError({
-        label: "ui/common.ts:refreshUserPlaylist",
+        label: "task.ts:refreshUserPlaylist",
         message: "refresh user playlist failed",
         raw: err
       })
@@ -85,31 +104,22 @@ export async function refreshUserPlaylist(login: boolean = false) {
   }
 }
 /** 登录状态下，获取喜欢歌曲列表，在使用喜欢或不喜欢后应该刷新 */
-export async function refreshUserLikedTrackIDs() {
+export async function refreshUserLikedTrackIDs(login: boolean = false) {
   try {
-    if (!Auth.isAccountLoggedIn()) return;
+    if (!Auth.isAccountLoggedIn() && !login) return;
     Log.trace("refresh user liked track IDs");
     const { UserProfile, UpdateUserLikedTrackIDs } = getUserStoreSnapshot();
     const uid = UserProfile?.userId;
     if (uid) {
-      const { ids, checkPoint, code } = await API.User.userLikedSongsIDs(uid);
-      if (code === 200) {
-        const idsSet: Record<number, boolean> = {};
-        ids.forEach((id) => (idsSet[id] = true));
-        UpdateUserLikedTrackIDs({ ids: idsSet, checkPoint });
-      } else {
-        Log.error(
-          new EqError({
-            label: "ui/common.ts:refreshUserLikedTrackIDs",
-            message: `refresh user liked track IDs failed with code ${code}`
-          })
-        );
-      }
+      const { ids, checkPoint } = await API.User.userLikedSongsIDs(uid);
+      const idsSet: Record<number, boolean> = {};
+      ids.forEach((id) => (idsSet[id] = true));
+      UpdateUserLikedTrackIDs({ ids: idsSet, checkPoint });
     }
   } catch (err) {
     Log.error(
       new EqError({
-        label: "ui/common.ts:refreshUserLikedTrackIDs",
+        label: "task.ts:refreshUserLikedTrackIDs",
         message: "refresh user liked track IDs failed",
         raw: err
       })

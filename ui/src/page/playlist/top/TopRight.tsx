@@ -1,13 +1,13 @@
 import { FC, memo } from "react";
 import { SquarePen } from "lucide-react";
 import { useFileCache } from "@mahiru/ui/hook/useFileCache";
-import { Filter, ImageSize } from "@mahiru/ui/utils/filter";
 import { PlaylistCacheEntry } from "@mahiru/ui/utils/playlist";
 import { Time } from "@mahiru/ui/utils/time";
 
 import Search from "@mahiru/ui/componets/public/Search";
 import { usePlaylistRouter } from "@mahiru/ui/hook/usePlaylistRouter";
 import { useUserStore } from "@mahiru/ui/store/user";
+import { NeteaseImage, NeteaseImageSize } from "@mahiru/ui/utils/image";
 
 interface TopRightProps {
   entry: Nullable<PlaylistCacheEntry>;
@@ -19,7 +19,7 @@ const TopRight: FC<TopRightProps> = ({ entry, searchTracks }) => {
   const { getPlaylistSource } = usePlaylistRouter();
   const isLikedList = getPlaylistSource() === "like";
   const cachedAvatar = useFileCache(
-    Filter.NeteaseImageSize(entry?.playlist.creator.avatarUrl, ImageSize.sm)
+    NeteaseImage.setSize(entry?.playlist.creator.avatarUrl, NeteaseImageSize.sm)
   );
   return (
     <div className="flex h-full flex-col justify-between items-end text-[12px] text-[#7b8290]/80">

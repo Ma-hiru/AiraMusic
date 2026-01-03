@@ -21,8 +21,6 @@ interface ListItemProps {
   active?: boolean;
   onSelectTrack?: NormalFunc;
   onContextMenu?: OnContextMenuFunc;
-  onCoverCacheHit?: NormalFunc<[file: string, id: string, idx: number]>;
-  onCoverCacheError?: NormalFunc<[idx: number]>;
   showHeart?: boolean;
   isLiked?: NormalFunc<[track: NeteaseTrackBase], boolean>;
   likeChange?: NormalFunc<[track: NeteaseTrackBase]>;
@@ -37,8 +35,6 @@ const TrackItem: FC<ListItemProps> = ({
   onSelectTrack,
   fastLocation,
   onContextMenu,
-  onCoverCacheError,
-  onCoverCacheHit,
   showHeart,
   isLiked,
   likeChange
@@ -73,13 +69,10 @@ const TrackItem: FC<ListItemProps> = ({
       {/*封面*/}
       <ListItemCover
         track={track}
-        trackIdx={trackIdx}
         onClick={onSelectTrack}
         disabled={disabled}
         isMainColorDark={mainColor.isDark()}
         fastLocation={fastLocation}
-        onCoverCacheError={onCoverCacheError}
-        onCoverCacheHit={onCoverCacheHit}
       />
       {/*名称*/}
       <ListItemName

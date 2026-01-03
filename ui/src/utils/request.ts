@@ -12,19 +12,24 @@ export const apiRequest = axios.create({
 });
 
 apiRequest.interceptors.response.use(
-  (response) => response.data,
+  (response) => {
+    if (response?.data?.code !== 200) {
+      Log.error(
+        "apiRequest.ts",
+        response.data.msg ||
+          response.data.message ||
+          `API responded with error code: ${response.data.code}`
+      );
+      return Promise.reject(response);
+    }
+    return response.data;
+  },
   async (error: any) => {
     const axiosResponse = error?.response;
     const data = axiosResponse?.data as NeteaseAPIResponse;
 
-    if (
-      axiosResponse &&
-      typeof data === "object" &&
-      data !== null &&
-      data.code === 301 &&
-      data.msg === "需要登录"
-    ) {
-      Log.warn("ui/request.ts", "Token has expired.");
+    if (data?.code === 301 && data?.msg === "需要登录") {
+      Log.warn("apiRequest.ts", "token has expired");
       Auth.doLogout().finally(waitLogin);
     }
 

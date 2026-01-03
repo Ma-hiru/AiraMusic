@@ -3,7 +3,7 @@ import { LyricPlayer, LyricPlayerRef } from "@mahiru/ui/componets/player/LyricPl
 import { cx } from "@emotion/css";
 import { useGPU } from "@mahiru/ui/hook/useGPU";
 import { LyricLineMouseEvent } from "@applemusic-like-lyrics/core";
-import { LyricManager as LyricUtils } from "@mahiru/ui/utils/lyricManager";
+import { NeteaseLyric as LyricUtils } from "@mahiru/ui/utils/lyric";
 import { PlayerFSMStatusEnum, usePlayerStore } from "@mahiru/ui/store/player";
 import { useLayoutStore } from "@mahiru/ui/store/layout";
 

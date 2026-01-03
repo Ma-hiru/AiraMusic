@@ -1,8 +1,11 @@
 import { EqError, Log } from "@mahiru/ui/utils/dev";
 import { CacheStore } from "@mahiru/ui/store/cache";
-import { Filter, ImageSize } from "@mahiru/ui/utils/filter";
 import { Time } from "@mahiru/ui/utils/time";
 import { API } from "@mahiru/ui/api";
+import { NeteaseImage, NeteaseImageSize } from "@mahiru/ui/utils/image";
+import { Auth } from "@mahiru/ui/utils/auth";
+import { getUserStoreSnapshot } from "@mahiru/ui/store/user";
+import pLimit from "p-limit";
 
 /**
  * 音质等级对应的码率
@@ -15,24 +18,30 @@ export const enum TrackQuality {
   hr = 9990000
 }
 
-export const Track = new (class {
+export const NeteaseTrack = new (class {
   private _metaCacheTimeLimit = Time.getCacheTimeLimit(1, "hour");
   private _shouldClearCacheList = new Set<number>();
   private _requestQuality: TrackQuality = TrackQuality.h;
 
+  /// 音频加载器，负责获取音频Meta和音频源（包含缓存处理）
+
+  /** 计算Meta缓存key */
   metaCacheKey(id: number) {
     return `audio_meta_${id}_${this._requestQuality}`;
   }
 
+  /** 计算音频Source缓存Key */
   sourceCacheKey(id: number) {
     return `audio_source_${id}_${this._requestQuality}`;
   }
 
+  /** Set请求首选音质 */
   setRequestQuality(level: TrackQuality) {
     this._requestQuality = level;
   }
 
-  async getMeta(id: number, quality?: NeteaseQualityLevels) {
+  /** 获取Meta，包含缓存源 */
+  private async getMeta(id: number, quality?: NeteaseQualityLevels) {
     const cacheKey = this.metaCacheKey(id);
     const cacheResponse = await CacheStore.fetchObject<NeteaseSongUrlResponse>(
       cacheKey,
@@ -58,19 +67,31 @@ export const Track = new (class {
       });
   }
 
-  async getCacheSource(id: number) {
+  /** 获取缓存音频源地址 */
+  private async getCacheSource(id: number) {
     const cacheKey = this.sourceCacheKey(id);
     const check = await CacheStore.check(cacheKey);
     return check.ok ? check.index.file : null;
   }
 
-  async setCacheSource(id: number, url: string, signal?: AbortSignal) {
+  /** 设置缓存音频源 */
+  private async setCacheSource(id: number, url: string, signal?: AbortSignal) {
     const cacheKey = this.sourceCacheKey(id);
     if (signal && signal.aborted) return;
     void CacheStore.storeAsync(url, cacheKey);
   }
 
-  async loadAudio(track: NeteaseTrack, signal: AbortSignal) {
+  /** 删除缓存 */
+  public removeCache(id: number) {
+    this._shouldClearCacheList.add(id);
+    const metaKey = this.metaCacheKey(id);
+    const sourceKey = this.sourceCacheKey(id);
+    void CacheStore.remove(metaKey);
+    void CacheStore.remove(sourceKey);
+  }
+
+  /** 加载Track，包含Meta和Source */
+  public async loadAudio(track: NeteaseTrack, signal: AbortSignal) {
     const quality = this.getTrackSourceQuality(track, this._requestQuality);
     const meta = await this.getMeta(track.id, quality);
     const cacheSource = await this.getCacheSource(track.id);
@@ -84,28 +105,23 @@ export const Track = new (class {
     };
   }
 
-  removeCache(id: number) {
-    this._shouldClearCacheList.add(id);
-    const metaKey = this.metaCacheKey(id);
-    const sourceKey = this.sourceCacheKey(id);
-    void CacheStore.remove(metaKey);
-    void CacheStore.remove(sourceKey);
-  }
-
-  markedInvalidCache(id: number) {
+  /** 标记缓存无效 */
+  isMarkedInvalidCache(id: number) {
     return this._shouldClearCacheList.has(id);
   }
 
+  /** 移除缓存无效标记 */
   removeMarkedInvalidCache(id: number) {
     this._shouldClearCacheList.delete(id);
   }
 
+  /** 预加载音频源 */
   preloadTrack(nextTrack: NeteaseTrack) {
     const controller = new AbortController();
     const timer = setTimeout(async () => {
       if (controller.signal.aborted) return;
-      const cover = Filter.NeteaseImageSize(nextTrack.al.picUrl, ImageSize.raw) || "";
-      const audioMeta = await Track.getMeta(nextTrack.id);
+      const cover = NeteaseImage.setSize(nextTrack.al.picUrl, NeteaseImageSize.raw) || "";
+      const audioMeta = await NeteaseTrack.getMeta(nextTrack.id);
       const tasks: { id?: string; url: string }[] = [];
       if (cover) {
         tasks.push({ url: cover });
@@ -123,6 +139,9 @@ export const Track = new (class {
     };
   }
 
+  /// 相关工具方法
+
+  /** 获取歌曲音质信息 */
   getTrackSourceQuality<T extends TrackQuality | undefined>(
     track: NeteaseTrackBase,
     preference: T
@@ -182,6 +201,7 @@ export const Track = new (class {
     }
   }
 
+  /** 音质文本映射 */
   mapTrackQualityToText(level: TrackQuality) {
     switch (level) {
       case TrackQuality.l:
@@ -197,10 +217,95 @@ export const Track = new (class {
     }
   }
 
+  /** 解析歌曲Bitmark */
   parseTrackBitmark(track: NeteaseTrackBase, flag: TrackBitmark) {
     const mark = track?.mark;
     if (typeof mark !== "number") return false;
     return (mark & flag) === flag;
+  }
+
+  /** 判断NeteaseTrack是否可以播放 */
+  isTrackPlayable(track: NeteaseTrack) {
+    const result = {
+      playable: true,
+      reason: ""
+    };
+
+    if (
+      // 播放权限 > 0
+      (typeof track?.privilege?.pl === "number" && track.privilege.pl > 0) ||
+      // 云盘歌曲且已登录
+      (Auth.isAccountLoggedIn() && track?.privilege?.cs)
+    )
+      return result;
+
+    const { UserProfile } = getUserStoreSnapshot();
+    const vipType = UserProfile?.vipType;
+    // 0: 免费或无版权 1: VIP 歌曲 4: 购买专辑 8: 非会员可免费播放低音质，会员可播放高音质及下载
+    if (track.fee === 1 || track.privilege?.fee === 1) {
+      // VIP 歌曲
+      if (Auth.isAccountLoggedIn() && vipType === 11) {
+        result.playable = true;
+      } else {
+        result.playable = false;
+        result.reason = "VIP专属";
+      }
+    } else if (track.fee === 4 || track.privilege?.fee === 4) {
+      // 付费专辑
+      result.playable = false;
+      result.reason = "付费专辑";
+    } else if (track.noCopyrightRcmd !== null && track.noCopyrightRcmd !== undefined) {
+      result.playable = false;
+      result.reason = "无版权";
+      // st小于0时为灰色歌曲, 使用上传云盘的方法解灰后 st == 0。
+    } else if (track.privilege?.st && track.privilege.st < 0 && Auth.isAccountLoggedIn()) {
+      result.playable = false;
+      result.reason = "已下架";
+    }
+
+    return result;
+  }
+
+  /** 拓展track状态，包含版权信息 */
+  tracksPrivilegeExtends(tracks: NeteaseTrack[], privileges: NeteaseTrackPrivilege[]) {
+    return tracks.map((track) => {
+      // 合并 privilege 信息
+      const privilege = privileges.find((item) => item.id === track.id);
+      if (privilege) track.privilege = { ...(track.privilege ?? {}), ...privilege };
+      // 注入 playable 状态
+      const { playable, reason } = this.isTrackPlayable(track);
+      track.playable = playable;
+      track.reason = reason;
+      return track as NeteaseTrack & { playable: boolean; reason: string };
+    });
+  }
+
+  /** 根据歌曲id获取歌曲详情，会考虑请求次数和URL大小限制 */
+  async requestTrackDetail(
+    ids: TrackId[] | number[],
+    maxPerRequest: number = 100,
+    concurrency: number = 5
+  ) {
+    const limit = pLimit(concurrency);
+    const chunks: number[][] = [];
+
+    if (typeof ids[0] === "object") {
+      ids = (ids as TrackId[]).map((track) => track.id);
+    }
+
+    for (let i = 0; i < ids.length; i += maxPerRequest) {
+      chunks.push((ids as number[]).slice(i, i + maxPerRequest));
+    }
+    const results = await Promise.all(
+      chunks.map((chunk) => limit(() => API.Track.getTrackDetail(chunk.join(","))))
+    );
+    const tracks: NeteaseTrack[] = [];
+    const privilege: NeteaseTrackPrivilege[] = [];
+    for (const raw of results) {
+      tracks.push(...raw.songs);
+      privilege.push(...raw.privileges);
+    }
+    return { tracks, privilege };
   }
 })();
 

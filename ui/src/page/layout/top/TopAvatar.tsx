@@ -1,11 +1,13 @@
 import { FC, memo } from "react";
 import { useFileCache } from "@mahiru/ui/hook/useFileCache";
-import { Filter, ImageSize } from "@mahiru/ui/utils/filter";
 import { useUserStore } from "@mahiru/ui/store/user";
+import { NeteaseImage, NeteaseImageSize } from "@mahiru/ui/utils/image";
 
 const TopAvatar: FC<object> = () => {
   const { UserProfile } = useUserStore(["UserProfile"]);
-  const cachedAvatar = useFileCache(Filter.NeteaseImageSize(UserProfile?.avatarUrl, ImageSize.sm));
+  const cachedAvatar = useFileCache(
+    NeteaseImage.setSize(UserProfile?.avatarUrl, NeteaseImageSize.sm)
+  );
   return (
     <div>
       <img

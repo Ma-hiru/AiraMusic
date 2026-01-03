@@ -1,6 +1,7 @@
-import { FC, memo, useEffect, useState } from "react";
-import { Filter } from "@mahiru/ui/utils/filter";
 import Color from "color";
+import { FC, memo, useEffect, useState } from "react";
+import { NeteaseTrack } from "@mahiru/ui/utils/track";
+
 import TrackItem from "@mahiru/ui/componets/track_item/TrackItem";
 
 interface SongResultProps {
@@ -12,9 +13,9 @@ const SongResultSummary: FC<SongResultProps> = ({ ids, themeSync }) => {
   const [tracks, setTracks] = useState<NeteaseTrack[]>([]);
   useEffect(() => {
     if (ids.length) {
-      Filter.NeteaseTrackIdsToDetail(ids)
+      NeteaseTrack.requestTrackDetail(ids)
         .then((response) =>
-          Filter.NeteaseTracksPrivilegeExtends(response.tracks, response.privilege)
+          NeteaseTrack.tracksPrivilegeExtends(response.tracks, response.privilege)
         )
         .then(setTracks);
     }

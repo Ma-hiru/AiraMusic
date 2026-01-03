@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { Filter, ImageSize } from "@mahiru/ui/utils/filter";
+import { NeteaseImage, NeteaseImageSize } from "@mahiru/ui/utils/image";
 
 export function useMediaSession(props: {
   play: NormalFunc<any>;
@@ -13,7 +13,8 @@ export function useMediaSession(props: {
     if (!navigator.mediaSession || !trackStatus) return;
     const { mediaSession } = navigator;
     const artist = trackStatus.track.ar.map((artist) => artist.name).join(", ");
-    const artworkSrc = Filter.NeteaseImageSize(trackStatus?.track.al.picUrl, ImageSize.md) || "";
+    const artworkSrc =
+      NeteaseImage.setSize(trackStatus?.track.al.picUrl, NeteaseImageSize.md) || "";
     const signature = `${trackStatus?.track.id}|${artist}|${artworkSrc}`;
     if (mediaMetadataSignatureRef.current !== signature) {
       mediaSession.metadata = new MediaMetadata({

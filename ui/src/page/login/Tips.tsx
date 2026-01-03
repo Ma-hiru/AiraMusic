@@ -1,5 +1,5 @@
 import { FC, memo } from "react";
-import { ImageSize } from "@mahiru/ui/utils/filter";
+import { NeteaseImageSize } from "@mahiru/ui/utils/image";
 import { QRCodeStatus } from "@mahiru/ui/hook/useLoginQRCode";
 import NeteaseImage from "@mahiru/ui/componets/public/NeteaseImage";
 
@@ -22,7 +22,7 @@ const Tips: FC<TipsProps> = ({ status, result }) => {
         <div className="flex justify-center items-center flex-col">
           <NeteaseImage
             src={result?.avatarUrl}
-            size={ImageSize.sm}
+            size={NeteaseImageSize.sm}
             alt={result?.nickname}
             className="size-10 rounded-full"
             shadowColor={"light"}

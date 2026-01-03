@@ -5,6 +5,7 @@ import { isDev } from "@mahiru/ui/utils/dev";
 import { Renderer } from "@mahiru/ui/utils/renderer";
 import { usePlayerInfoSync } from "@mahiru/ui/hook/usePlayerInfoSync";
 import { usePlayerStore } from "@mahiru/ui/store/player";
+import { runCloseTask } from "@mahiru/ui/utils/close";
 
 interface TopControlProps {
   windowId: WindowType;
@@ -13,10 +14,7 @@ interface TopControlProps {
 }
 
 const TopControl: FC<TopControlProps> = ({ maximizable = true, mini = true }) => {
-  const { PlayerCoreGetter, SavePlayerCore } = usePlayerStore([
-    "PlayerCoreGetter",
-    "SavePlayerCore"
-  ]);
+  const { PlayerCoreGetter } = usePlayerStore(["PlayerCoreGetter"]);
   const [isMax, setIsMax] = useState(false);
   const { toggleTargetWindow, hasOpened } = usePlayerInfoSync("miniplayer");
   const player = PlayerCoreGetter();
@@ -37,11 +35,10 @@ const TopControl: FC<TopControlProps> = ({ maximizable = true, mini = true }) =>
   const close = useCallback(() => {
     Renderer.event.hidden();
     player?.pause?.();
-    SavePlayerCore();
-    setTimeout(() => {
+    runCloseTask().finally(() => {
       Renderer.event.close({ broadcast: true });
-    }, 200);
-  }, [SavePlayerCore, player]);
+    });
+  }, [player]);
 
   useEffect(() => {
     if (hasOpened) {

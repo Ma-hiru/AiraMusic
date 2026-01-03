@@ -38,8 +38,6 @@ export interface TrackListProps {
   onContextMenu?: OnContextMenuFunc;
   onListScroll?: NormalFunc;
   fastLocation?: boolean;
-  onCoverCacheHit?: NormalFunc<[file: string, id: string, idx: number]>;
-  onCoverCacheError?: NormalFunc<[idx: number]>;
   showHeart?: boolean;
   isTrackLiked?: NormalFunc<[track: NeteaseTrackBase], boolean>;
   likeChange?: NormalFunc<[track: NeteaseTrackBase]>;
@@ -66,8 +64,6 @@ const TrackList: ForwardRefRenderFunction<TrackListRef, TrackListProps> = (
     showHeart,
     likeChange,
     isTrackLiked,
-    onCoverCacheHit,
-    onCoverCacheError,
     className,
     overscan = 10
   },
@@ -130,9 +126,7 @@ const TrackList: ForwardRefRenderFunction<TrackListRef, TrackListProps> = (
             fastLocation,
             showHeart,
             likeChange,
-            isLiked: isTrackLiked,
-            onCoverCacheHit,
-            onCoverCacheError
+            isLiked: isTrackLiked
           }}
           itemHeight={50}
           RowComponent={RowComponent}
@@ -165,8 +159,6 @@ const RowComponent: VirtualListRow<NeteaseTrackBase, ExtraData> = ({ index, item
       likeChange={extra.likeChange}
       isLiked={extra.isLiked}
       showHeart={extra.showHeart}
-      onCoverCacheHit={extra.onCoverCacheHit}
-      onCoverCacheError={extra.onCoverCacheError}
     />
   );
 };
@@ -179,8 +171,6 @@ type ExtraData = {
   onContextMenu?: OnContextMenuFunc;
   fastLocation?: boolean;
   isLikedList?: boolean;
-  onCoverCacheHit?: NormalFunc<[file: string, id: string, idx: number]>;
-  onCoverCacheError?: NormalFunc<[idx: number]>;
   showHeart?: boolean;
   isLiked?: NormalFunc<[track: NeteaseTrackBase], boolean>;
   likeChange?: NormalFunc<[track: NeteaseTrackBase]>;

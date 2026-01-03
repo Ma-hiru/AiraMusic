@@ -1,15 +1,14 @@
-import { FC, memo, useEffect, useRef, useState } from "react";
+import { FC, memo, useEffect, useState } from "react";
 import { Drag, NoDrag } from "@mahiru/ui/componets/public/Drag";
 import { Pause, Play, SkipBack, SkipForward, X } from "lucide-react";
-import { ImageSize } from "@mahiru/ui/utils/filter";
+import { NeteaseImageSize } from "@mahiru/ui/utils/image";
 import { Renderer } from "@mahiru/ui/utils/renderer";
-import { CacheStore } from "@mahiru/ui/store/cache";
+
 import NeteaseImage from "@mahiru/ui/componets/public/NeteaseImage";
 
 const MiniPlayerPage: FC<object> = () => {
   const [lyricInit, setLyricInit] = useState<LyricInit>();
   const [lyricSync, setLyricSync] = useState<LyricSync>();
-  const cacheID = useRef("");
   const track = lyricInit?.trackStatus.track;
   const percent = lyricSync?.progress.duration
     ? Math.min(((lyricSync.progress.currentTime || 0) / lyricSync.progress.duration) * 100, 100)
@@ -34,16 +33,9 @@ const MiniPlayerPage: FC<object> = () => {
       <div className="h-12 w-12 rounded-md overflow-hidden">
         <NeteaseImage
           className="w-full h-full"
-          src={track?.al.cachedPicUrl || track?.al.picUrl}
-          onCacheHit={(_, id) => {
-            cacheID.current = id;
-          }}
-          size={ImageSize.xs}
+          src={track?.al.picUrl}
+          size={NeteaseImageSize.xs}
           alt={track?.name}
-          onCacheError={() => {
-            if (cacheID.current) void CacheStore.remove(cacheID.current);
-            cacheID.current = "";
-          }}
           shadowColor={"light"}
         />
       </div>

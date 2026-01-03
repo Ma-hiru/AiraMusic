@@ -52,14 +52,10 @@ export class PlayerCore {
   private updateOuter() {
     startTransition(() => {
       const current = this.current();
-      const { SetPlayerTrackStatus, SetPlayerStatus } = getPlayerStoreSnapshot();
+      const { SetPlayerTrackStatus } = getPlayerStoreSnapshot();
       SetPlayerTrackStatus((draft) => {
         if (draft && draft.track.id === current?.track.id) return;
         return current;
-      });
-      SetPlayerStatus((draft) => {
-        draft.playerList = this.playlist;
-        draft.position = this.position;
       });
     });
   }
@@ -75,9 +71,16 @@ export class PlayerCore {
 
   Sync() {
     const { PlayerStatus } = getPlayerStoreSnapshot();
-    this.playlist = PlayerStatus.playerList;
+    this.playlist = structuredClone(PlayerStatus.playerList);
     this.position = PlayerStatus.position;
     this.updateOuter();
+  }
+
+  Save() {
+    return {
+      playlist: this.playlist,
+      position: this.position
+    };
   }
 
   replacePlaylist(

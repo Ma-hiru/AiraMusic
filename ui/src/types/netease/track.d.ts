@@ -135,10 +135,6 @@ interface NeteaseTrackBase {
   al: {
     picUrl: string;
     name: string;
-    /** 注入字段 */
-    cachedPicUrl: string;
-    /** 注入字段 */
-    cachedPicUrlID: string;
   };
   /** 注入字段 */
   playable: boolean;

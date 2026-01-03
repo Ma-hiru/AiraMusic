@@ -1,10 +1,11 @@
-import { Filter, ImageSize } from "@mahiru/ui/utils/filter";
 import { EqError, Log } from "@mahiru/ui/utils/dev";
 import { CacheStore } from "@mahiru/ui/store/cache";
 import { Time } from "@mahiru/ui/utils/time";
 import { API } from "@mahiru/ui/api";
 import { startTransition } from "react";
 import { getUserStoreSnapshot } from "@mahiru/ui/store/user";
+import { NeteaseImage, NeteaseImageSize } from "@mahiru/ui/utils/image";
+import { NeteaseTrack } from "@mahiru/ui/utils/track";
 
 export type PlaylistCacheID = `play_list_cache_${string | number}`;
 
@@ -131,11 +132,12 @@ class PlaylistStore {
   }
 }
 
-export const PlaylistManager = new (class {
+export const Playlist = new (class {
   private store = new PlaylistStore();
   private outerUpdaterWithID: Map<number, NormalFunc> = new Map();
   private outerUpdaterWithAll: Set<NormalFunc> = new Set();
 
+  /// 外部更新器管理
   addOuterUpdater(func: NormalFunc, id: Optional<number>) {
     if (id) {
       this.outerUpdaterWithID.set(id, func);
@@ -185,10 +187,12 @@ export const PlaylistManager = new (class {
     });
   }
 
-  async requestPlaylistDetail(
+  /// 歌单请求部分
+  /** 请求歌单数据 */
+  public async requestPlaylistDetail(
     id: number,
     preloadRange: [start: number, end: number],
-    size: ImageSize = ImageSize.xs,
+    size: NeteaseImageSize = NeteaseImageSize.xs,
     whenRequestMissedTracks?: NormalFunc<[missTrack: number]>,
     noCache = false
   ) {
@@ -197,15 +201,12 @@ export const PlaylistManager = new (class {
       return cache;
     } else {
       const rawList = await API.Playlist.getPlaylistDetail(id);
-      const fullList = await Filter.NeteasePlaylistToFullTracks(
-        { ...rawList },
-        whenRequestMissedTracks
-      );
-      fullList.playlist.tracks = Filter.NeteaseTracksPrivilegeExtends(
+      const fullList = await this.requestFullTracks({ ...rawList }, whenRequestMissedTracks);
+      fullList.playlist.tracks = NeteaseTrack.tracksPrivilegeExtends(
         fullList.playlist.tracks,
         fullList.privileges
       );
-      fullList.playlist.tracks = await Filter.NeteaseTrackCoverPreCache(
+      fullList.playlist.tracks = await this.requestTracksCoverPreCache(
         fullList.playlist.tracks,
         preloadRange,
         size
@@ -216,29 +217,29 @@ export const PlaylistManager = new (class {
     }
   }
 
-  saveDirtyEntry(entry: PlaylistCacheEntry, memoryFresh = false) {
-    return this.store.saveDirtyEntry(entry, memoryFresh);
+  public async forceFetchLatestData(
+    id: number,
+    preloadRange: [start: number, end: number],
+    size: NeteaseImageSize = NeteaseImageSize.xs,
+    whenRequestMissedTracks?: NormalFunc<[missTrack: number]>
+  ) {
+    this.store.removeEntry(id);
+    const entry = await this.requestPlaylistDetail(
+      id,
+      preloadRange,
+      size,
+      whenRequestMissedTracks,
+      true
+    );
+    startTransition(() => {
+      this.execUpdater(id);
+      this.execUpdater(null);
+    });
+    return entry;
   }
 
-  updateTrackCoverCache(props: {
-    entry: PlaylistCacheEntry;
-    trackIdx: number;
-    cachedPicUrl: string;
-    cachedPicUrlID: string;
-  }) {
-    const { entry, trackIdx, cachedPicUrlID, cachedPicUrl } = props;
-    const track = entry.playlist.tracks[trackIdx];
-    if (track && track.al) {
-      if (cachedPicUrlID === "" && track.al.cachedPicUrlID) {
-        void CacheStore.remove(track.al.cachedPicUrlID);
-      }
-      track.al.cachedPicUrl = cachedPicUrl;
-      track.al.cachedPicUrlID = cachedPicUrlID;
-      entry._dirty = true;
-    }
-  }
-
-  async updateTrackLikedStatus(props: { track: NeteaseTrack; nextStatus: boolean }) {
+  /** 更新喜欢歌曲 */
+  public async updateTrackLikedStatus(props: { track: NeteaseTrack; nextStatus: boolean }) {
     const { track, nextStatus } = props;
     const { UserLikedListSummary } = getUserStoreSnapshot();
     const likedPlaylistID = UserLikedListSummary?.id;
@@ -272,6 +273,79 @@ export const PlaylistManager = new (class {
     }
   }
 
+  /** 检查歌单tracks字段是否完整，不完整再额外请求 */
+  private async requestFullTracks(
+    response: NeteasePlaylistDetailResponse,
+    whenRequestMissedTracks?: NormalFunc<[missTrack: number]>
+  ) {
+    const { playlist } = response;
+    if (playlist.trackCount === playlist.tracks.length) {
+      return response;
+    } else {
+      whenRequestMissedTracks?.(playlist.trackCount - playlist.tracks.length);
+      const { tracks, privilege } = await NeteaseTrack.requestTrackDetail(
+        playlist.trackIds.slice(playlist.tracks.length, playlist.trackCount),
+        100
+      );
+      response.playlist.tracks.push(...tracks);
+      response.privileges.push(...privilege);
+      return response;
+    }
+  }
+
+  /** 歌曲封面缓存，命中则替换成本地路径，没有就预下载 */
+  public async requestTracksCoverPreCache(
+    tracks: NeteaseTrack[],
+    range: [start: number, end: number],
+    size: NeteaseImageSize = NeteaseImageSize.xs,
+    noStore = false
+  ) {
+    // range => [start, end)
+    let [start, end] = range;
+    // 边界检查
+    if (start >= end || start >= tracks.length || end <= 0) return tracks;
+    if (end > tracks.length) end = tracks.length;
+    if (start < 0) start = 0;
+    // 构建检查列表
+    const coverURLs = tracks.slice(start, end).map((track) => {
+      const url = NeteaseImage.setSize(track.al.picUrl, size);
+      return {
+        id: url,
+        url
+      };
+    });
+    // 检查或预缓存
+    let check;
+    try {
+      if (noStore) check = await CacheStore.checkMutil(coverURLs);
+      else check = await CacheStore.checkOrStoreAsyncMutil(coverURLs, "GET");
+    } catch (err) {
+      Log.error(
+        new EqError({
+          raw: err,
+          message: "failed to pre-cache track cover images",
+          label: "filter.ts:NeteaseTrackCoverPreCacheFilter"
+        })
+      );
+      check = { ok: false, results: [] };
+    }
+    // 写入结果
+    if (check.ok) {
+      check.results.forEach((cache, i) => {
+        if (cache.ok) {
+          NeteaseImage.storeCacheURL(coverURLs[i]?.url, cache.index.file);
+        }
+      });
+    }
+
+    return tracks;
+  }
+
+  /// Utils
+  saveDirtyEntry(entry: PlaylistCacheEntry, memoryFresh = false) {
+    return this.store.saveDirtyEntry(entry, memoryFresh);
+  }
+
   formatPlayCount(playcount?: number): string {
     if (!playcount) return "0";
     if (playcount >= 100000000) {
@@ -281,26 +355,5 @@ export const PlaylistManager = new (class {
     } else {
       return playcount.toString();
     }
-  }
-
-  async forceFetchLatestData(
-    id: number,
-    preloadRange: [start: number, end: number],
-    size: ImageSize = ImageSize.xs,
-    whenRequestMissedTracks?: NormalFunc<[missTrack: number]>
-  ) {
-    this.store.removeEntry(id);
-    const entry = await this.requestPlaylistDetail(
-      id,
-      preloadRange,
-      size,
-      whenRequestMissedTracks,
-      true
-    );
-    startTransition(() => {
-      this.execUpdater(id);
-      this.execUpdater(null);
-    });
-    return entry;
   }
 })();

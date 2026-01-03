@@ -1,12 +1,12 @@
 import { useCallback } from "react";
-import { LyricManager } from "@mahiru/ui/utils/lyricManager";
+import { NeteaseLyric } from "@mahiru/ui/utils/lyric";
 
 export function useLyric(
   lyricVersion: Optional<LyricVersionType>,
   setLyricVersion: NormalFunc<[version: LyricVersionType]>,
   lyricLines: Optional<FullVersionLyricLine>
 ) {
-  const lyricInfos = LyricManager.getLyricVersionInfo(lyricLines, lyricVersion);
+  const lyricInfos = NeteaseLyric.getLyricVersionInfo(lyricLines, lyricVersion);
   const setRm = useCallback(() => {
     if (!lyricInfos.hasRm) return;
     switch (lyricVersion) {

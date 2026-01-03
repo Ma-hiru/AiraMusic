@@ -1,5 +1,5 @@
 import { FC, memo } from "react";
-import { ImageSize } from "@mahiru/ui/utils/filter";
+import { NeteaseImageSize } from "@mahiru/ui/utils/image";
 import NeteaseImage from "@mahiru/ui/componets/public/NeteaseImage";
 
 interface CommentAvatarProps {
@@ -13,7 +13,7 @@ const CommentAvatar: FC<CommentAvatarProps> = ({ avatar, nickname, isMainColorDa
     <NeteaseImage
       className="size-8 select-none rounded-full border"
       src={avatar}
-      size={ImageSize.xs}
+      size={NeteaseImageSize.xs}
       alt={nickname}
       shadowColor={isMainColorDark ? "dark" : "light"}
     />

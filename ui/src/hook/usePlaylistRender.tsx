@@ -1,9 +1,8 @@
 import NeteaseImage from "@mahiru/ui/componets/public/NeteaseImage";
 
 import { RefObject, startTransition, useCallback, useEffect, useRef, useState } from "react";
-import { Filter, ImageSize } from "@mahiru/ui/utils/filter";
 import { Log } from "@mahiru/ui/utils/dev";
-import { PlaylistCacheEntry, PlaylistManager } from "@mahiru/ui/utils/playlist";
+import { PlaylistCacheEntry, Playlist } from "@mahiru/ui/utils/playlist";
 import { Copy, DiscAlbum, ListMusic, ListPlus, MessageSquare, Play } from "lucide-react";
 import { PlaylistHistoryCache } from "@mahiru/ui/utils/history";
 import { useUpdate } from "@mahiru/ui/hook/useUpdate";
@@ -20,6 +19,7 @@ import { useKeepAliveCtx } from "@mahiru/ui/ctx/KeepAliveCtx";
 import { getPlayerStoreSnapshot, usePlayerStore } from "@mahiru/ui/store/player";
 import { useUserStore } from "@mahiru/ui/store/user";
 import { useLayoutStore } from "@mahiru/ui/store/layout";
+import { NeteaseImageSize } from "@mahiru/ui/utils/image";
 
 export function usePlaylistNormalRender(id?: string) {
   const listRef = useRef<TrackListRef>(null);
@@ -45,7 +45,12 @@ export function usePlaylistNormalRender(id?: string) {
   // 检查并更新前一段预缓存范围
   const checkAndUpdateLastPreloadRange = useCallback(async (range: IndexRange) => {
     const [start, end] = range;
-    return await Filter.NeteaseTrackCoverPreCache(tracks.current, [start, end], ImageSize.xs, true);
+    return await Playlist.requestTracksCoverPreCache(
+      tracks.current,
+      [start, end],
+      NeteaseImageSize.xs,
+      true
+    );
   }, []);
   // 虚拟列表范围更新回调
   const onVirtualListRangeUpdate = useCallback(
@@ -61,10 +66,10 @@ export function usePlaylistNormalRender(id?: string) {
       // 如果开始位置是25的倍数再进行预缓存，减少调用次数
       if (start % 25 === 0 && start !== 0) {
         Log.debug("ui/PlayListPage.tsx:onVirtualListRangeUpdate", "预缓存封面", end, end + 25);
-        tracks.current = await Filter.NeteaseTrackCoverPreCache(
+        tracks.current = await Playlist.requestTracksCoverPreCache(
           tracks.current,
           [end, end + 25], // 70 95 95 120
-          ImageSize.xs
+          NeteaseImageSize.xs
         );
         // 检查前一段范围，写入预缓存
         if (start - 50 > 0) {
@@ -125,11 +130,11 @@ export function usePlaylistNormalRender(id?: string) {
   const outerUpdaterForID = useUpdate();
   const outerUpdaterForAll = useUpdate();
   useEffect(() => {
-    id && PlaylistManager.addOuterUpdater(outerUpdaterForID, Number(id));
-    PlaylistManager.addOuterUpdater(outerUpdaterForAll, null);
+    id && Playlist.addOuterUpdater(outerUpdaterForID, Number(id));
+    Playlist.addOuterUpdater(outerUpdaterForAll, null);
     return () => {
-      id && PlaylistManager.removeOuterUpdater(null, Number(id));
-      PlaylistManager.removeOuterUpdater(outerUpdaterForAll, null);
+      id && Playlist.removeOuterUpdater(null, Number(id));
+      Playlist.removeOuterUpdater(outerUpdaterForAll, null);
     };
   }, [id, outerUpdaterForAll, outerUpdaterForID]);
   // 监听id变化，加载歌单详情
@@ -138,7 +143,7 @@ export function usePlaylistNormalRender(id?: string) {
     clearState();
     if (id) {
       Log.trace("usePlayListNormal", `加载歌单详情 ${id}`);
-      PlaylistManager.requestPlaylistDetail(Number(id), [0, 50], ImageSize.xs, (missedTrack) => {
+      Playlist.requestPlaylistDetail(Number(id), [0, 50], NeteaseImageSize.xs, (missedTrack) => {
         if (!cancelled) {
           setRequestMissedTracks(missedTrack);
         }
@@ -199,7 +204,7 @@ export function usePlaylistNormalRender(id?: string) {
     return () => {
       Log.info("usePlayListRender", "组件卸载，保存脏数据");
       const entry = entryRef.current;
-      entry && PlaylistManager.saveDirtyEntry(entry);
+      entry && Playlist.saveDirtyEntry(entry);
     };
   }, []);
 
@@ -209,7 +214,7 @@ export function usePlaylistNormalRender(id?: string) {
     tracks: tracks.current,
     listRef,
     onVirtualListRangeUpdate,
-    entry,
+
     source,
     routerActive: !!activeKey?.startsWith("/playlist")
   });
@@ -254,10 +259,10 @@ export function usePlaylistHistoryRender() {
   // 检查并更新前一段预缓存范围
   const checkAndUpdateLastPreloadRange = useCallback(async (range: IndexRange) => {
     const [start, end] = range;
-    return await Filter.NeteaseTrackCoverPreCache(
+    return await Playlist.requestTracksCoverPreCache(
       historyTracks.current,
       [start, end],
-      ImageSize.xs,
+      NeteaseImageSize.xs,
       true
     );
   }, []);
@@ -275,10 +280,10 @@ export function usePlaylistHistoryRender() {
       // 如果开始位置是25的倍数再进行预缓存，减少调用次数
       if (start % 25 === 0 && start !== 0) {
         Log.debug("ui/PlayListPage.tsx:onVirtualListRangeUpdate", "预缓存封面", end, end + 25);
-        historyTracks.current = await Filter.NeteaseTrackCoverPreCache(
+        historyTracks.current = await Playlist.requestTracksCoverPreCache(
           historyTracks.current,
           [end, end + 25], // 70 95 95 120
-          ImageSize.xs
+          NeteaseImageSize.xs
         );
         // 检查前一段范围，写入预缓存
         if (start - 50 > 0) {
@@ -382,7 +387,6 @@ export function usePlaylistHistoryRender() {
     tracks: historyTracks.current,
     listRef,
     onVirtualListRangeUpdate,
-    entry: null,
     routerActive: !!activeKey?.startsWith("/history")
   });
 
@@ -412,12 +416,10 @@ function usePlaylistController(props: {
   tracks: NeteaseTrack[];
   listRef: RefObject<TrackListRef | null>;
   onVirtualListRangeUpdate: (range: IndexRange) => Promise<void>;
-  entry: Nullable<PlaylistCacheEntry>;
   routerActive: boolean;
   source?: number;
 }) {
-  const { filterTracks, tracks, listRef, onVirtualListRangeUpdate, entry, source, routerActive } =
-    props;
+  const { filterTracks, tracks, listRef, onVirtualListRangeUpdate, source, routerActive } = props;
   const [fastLocation, setFastLocation] = useState(false);
   const { mainColor, textColorOnMain } = useThemeColor();
   const { openInfoWindow } = useInfoWindow(true);
@@ -550,37 +552,6 @@ function usePlaylistController(props: {
     },
     [filterTracks.absoluteIdx, player, source, tracks]
   );
-  // 封面缓存命中/错误回调
-  const onCoverCacheHit = useCallback<NormalFunc<[file: string, id: string, trackIdx: number]>>(
-    (file, id, trackIdx) => {
-      const entryTrackIdx = filterTracks.absoluteIdx
-        ? filterTracks.absoluteIdx[trackIdx]
-        : trackIdx;
-      if (!entry || typeof entryTrackIdx === "undefined") return;
-      PlaylistManager.updateTrackCoverCache({
-        entry,
-        trackIdx: entryTrackIdx,
-        cachedPicUrl: file,
-        cachedPicUrlID: id
-      });
-    },
-    [entry, filterTracks.absoluteIdx]
-  );
-  const onCoverCacheError = useCallback(
-    (trackIdx: number) => {
-      const entryTrackIdx = filterTracks.absoluteIdx
-        ? filterTracks.absoluteIdx[trackIdx]
-        : trackIdx;
-      if (!entry || typeof entryTrackIdx === "undefined") return;
-      PlaylistManager.updateTrackCoverCache({
-        entry,
-        trackIdx: entryTrackIdx,
-        cachedPicUrl: "",
-        cachedPicUrlID: ""
-      });
-    },
-    [entry, filterTracks.absoluteIdx]
-  );
   // 喜欢状态
   const { isTrackLiked, likeChange } = useHeart();
   const likeChangeWrap = useCallback(
@@ -598,8 +569,6 @@ function usePlaylistController(props: {
     onContextMenu,
     onVirtualListRangeUpdate: wrapRangeUpdate,
     onPlay,
-    onCoverCacheHit,
-    onCoverCacheError,
     isTrackLiked,
     likeChange: likeChangeWrap
   };
@@ -633,10 +602,9 @@ function createHeader(track: NeteaseTrack) {
             size-8 rounded-md select-none
             ease-in-out duration-300 transition-all
           `}
-        src={track.al.cachedPicUrl || track.al.picUrl}
-        retryURL={track.al.picUrl}
+        src={track.al.picUrl}
         alt={track.al.name}
-        size={ImageSize.xs}
+        size={NeteaseImageSize.xs}
         shadowColor="light"
       />
       <div className="w-full overflow-hidden flex flex-col items-start justify-center px-2 select-none truncate">

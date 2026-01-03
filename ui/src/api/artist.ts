@@ -1,7 +1,7 @@
 import { apiRequest } from "@mahiru/ui/utils/request";
 import { getTrackDetail } from "@mahiru/ui/api/track";
-import { Filter } from "@mahiru/ui/utils/filter";
 import { Auth } from "@mahiru/ui/utils/auth";
+import { NeteaseTrack } from "@mahiru/ui/utils/track";
 
 /**
  * 获取歌手单曲
@@ -23,7 +23,7 @@ export function getArtist(id: number) {
       data.hotSongs = tracks.songs;
       return data;
     }
-    data.hotSongs = data.hotSongs.map(Filter.NeteaseTrackPlayable);
+    data.hotSongs = data.hotSongs.map(NeteaseTrack.isTrackPlayable);
     return data;
   });
 }

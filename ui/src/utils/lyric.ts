@@ -158,7 +158,7 @@ const pureMusicLyricPreset = {
   ]
 };
 
-export const LyricManager = new (class {
+export const NeteaseLyric = new (class {
   Parser = new LyricParser();
 
   /** 请求和解析歌词 */

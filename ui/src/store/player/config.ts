@@ -2,7 +2,7 @@ import { ZustandConfig } from "@mahiru/ui/types/zustand";
 import { PlayerFSM, PlayerFSMEvent, PlayerFSMStatusEnum } from "@mahiru/ui/store/player/fsm";
 import { AudioControl } from "@mahiru/ui/hook/usePlayerAudio";
 import { SpectrumData, SpectrumOptions } from "@mahiru/ui/hook/useSpectrumWorker";
-import { LyricManager } from "@mahiru/ui/utils/lyricManager";
+import { NeteaseLyric } from "@mahiru/ui/utils/lyric";
 import { PlayerCore } from "@mahiru/ui/store/player/core";
 
 function createPlayerRuntime() {
@@ -68,7 +68,7 @@ export const PlayerStoreConfig: ZustandConfig<
   },
   SetLyricVersion: (next) => {
     const { PlayerTrackStatus, PlayerStatus } = get();
-    const chosenVersion = LyricManager.checkLyricVersion(
+    const chosenVersion = NeteaseLyric.checkLyricVersion(
       PlayerTrackStatus?.lyric,
       next,
       PlayerStatus.lyricVersion
@@ -126,9 +126,13 @@ export const PlayerStoreConfig: ZustandConfig<
   },
   SavePlayerCore: () => {
     const { TriggerPlayerFSMEvent } = get();
+    const { playlist, position } = runtime.playerCore.Save();
     TriggerPlayerFSMEvent("requestPause");
+
     set((draft) => {
       draft.PlayingRequest = false;
+      draft.PlayerStatus.playerList = playlist;
+      draft.PlayerStatus.position = position;
     });
     localStorage.setItem("playerProgressCache", JSON.stringify(runtime.playerProgress));
   },

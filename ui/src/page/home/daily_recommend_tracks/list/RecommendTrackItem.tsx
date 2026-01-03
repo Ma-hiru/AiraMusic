@@ -1,10 +1,11 @@
 import { FC, memo, useCallback } from "react";
-import { Filter, ImageSize } from "@mahiru/ui/utils/filter";
 import { AudioLines, CirclePlay } from "lucide-react";
 import { API } from "@mahiru/ui/api";
 import { usePlayerStore } from "@mahiru/ui/store/player";
 
 import NeteaseImage from "@mahiru/ui/componets/public/NeteaseImage";
+import { NeteaseImageSize } from "@mahiru/ui/utils/image";
+import { NeteaseTrack } from "@mahiru/ui/utils/track";
 
 interface RecommendTrackItemProps {
   song: DailyRecommendTracksDailySong;
@@ -30,7 +31,7 @@ const RecommendTrackItem: FC<RecommendTrackItemProps> = ({
   const play = useCallback(async () => {
     if (isPlaying) return;
     const detail = await API.Track.getTrackDetail(song.id);
-    const tracks = Filter.NeteaseTracksPrivilegeExtends(detail.songs, detail.privileges);
+    const tracks = NeteaseTrack.tracksPrivilegeExtends(detail.songs, detail.privileges);
     const track = tracks[0];
     if (track && track.playable) {
       player?.addTrack(track, song.al.id, "next");
@@ -52,7 +53,7 @@ const RecommendTrackItem: FC<RecommendTrackItemProps> = ({
           <NeteaseImage
             className="w-full h-full"
             src={song.al.picUrl}
-            size={ImageSize.md}
+            size={NeteaseImageSize.md}
             alt={song.al.name}
             shadowColor={isMainColorDark ? "dark" : "light"}
           />

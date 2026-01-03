@@ -1,5 +1,5 @@
 import { FC, memo } from "react";
-import { Track, TrackQuality } from "@mahiru/ui/utils/track";
+import { NeteaseTrack, TrackQuality } from "@mahiru/ui/utils/track";
 import Tag from "@mahiru/ui/componets/public/Tag";
 
 interface ListItemQualityProps {
@@ -15,12 +15,12 @@ const TrackItemQuality: FC<ListItemQualityProps> = ({ track, themeColor, bgColor
       <Tag
         backgroundColor={bgColor}
         textColor={themeColor}
-        text={Track.mapTrackQualityToText(forceShow)}
+        text={NeteaseTrack.mapTrackQualityToText(forceShow)}
       />
     );
   }
   if (!track) return null;
-  const qualities = Track.getTrackSourceQuality(track, undefined);
+  const qualities = NeteaseTrack.getTrackSourceQuality(track, undefined);
   return qualities.map((quality) => {
     // 小于SQ不显示
     if (quality.level < TrackQuality.sq) return null;
@@ -33,7 +33,7 @@ const TrackItemQuality: FC<ListItemQualityProps> = ({ track, themeColor, bgColor
         key={quality.level}
         backgroundColor={bgColor}
         textColor={themeColor}
-        text={Track.mapTrackQualityToText(quality.level)}
+        text={NeteaseTrack.mapTrackQualityToText(quality.level)}
       />
     );
   });

@@ -9,44 +9,37 @@ import {
   useRef,
   useState
 } from "react";
-import { Filter, ImageSize } from "@mahiru/ui/utils/filter";
 import { useFileCache } from "@mahiru/ui/hook/useFileCache";
 import { cx } from "@emotion/css";
 import { AppScheme } from "@mahiru/ui/constants/scheme";
+import { NeteaseImage as NeteaseImageUtils, NeteaseImageSize } from "@mahiru/ui/utils/image";
 
 type ShadowLevel = "none" | "base" | "float";
 
 type ShadowColor = "light" | "dark";
 
 type ImageProps = ImgHTMLAttributes<HTMLImageElement> & {
-  id?: string | number;
   update?: boolean;
   timeLimit?: number;
   method?: string;
-  size?: ImageSize;
+  size?: NeteaseImageSize;
   imageClassName?: string;
-  onCacheHit?: NormalFunc<[file: string, id: string]>;
   retryOnError?: boolean;
   retryDelay?: number;
   retryCount?: number;
-  retryURL?: string;
-  onCacheError?: NormalFunc;
   shadow?: ShadowLevel;
   shadowColor?: ShadowColor;
   fastLocation?: boolean;
 };
 
 const NeteaseImage: FC<ImageProps> = ({
-  id,
   update = false,
   timeLimit,
   method = "GET",
   src,
-  onCacheHit,
   alt,
-  size = ImageSize.raw,
+  size = NeteaseImageSize.raw,
   onError,
-  onCacheError,
   className,
   loading = "lazy",
   decoding = "async",
@@ -54,7 +47,6 @@ const NeteaseImage: FC<ImageProps> = ({
   retryCount = 2,
   retryDelay = 500,
   retryOnError = true,
-  retryURL,
   shadow = "base",
   shadowColor = "light",
   onClick,
@@ -62,72 +54,87 @@ const NeteaseImage: FC<ImageProps> = ({
   ...rest
 }) => {
   const [error, setError] = useState(false);
-  const sizedURL = useMemo(() => Filter.NeteaseImageSize(src, size), [size, src]);
-  const cachedCover = useFileCache(sizedURL, {
-    onCacheHit,
-    id,
-    update: update,
-    timeLimit,
-    method,
-    fastLocation
-  });
+  const sizedURL = useMemo(() => NeteaseImageUtils.setSize(src, size), [size, src]);
+  const cacheURL = NeteaseImageUtils.fetchCacheURL(sizedURL);
   const retryStatus = useRef({
     token: 0,
     count: 0,
     retryCount,
     retryDelay
   });
-
   retryStatus.current.retryCount = retryCount;
   retryStatus.current.retryDelay = retryDelay;
 
+  const onCacheHit = useCallback(
+    (file: string) => {
+      NeteaseImageUtils.storeCacheURL(sizedURL, file);
+    },
+    [sizedURL]
+  );
+  const onCacheError = useCallback(() => {
+    NeteaseImageUtils.storeCacheURL(sizedURL, null);
+  }, [sizedURL]);
+  const cachedCover = useFileCache(sizedURL, {
+    onCacheHit,
+    update,
+    timeLimit,
+    method,
+    pause: fastLocation || !!cacheURL
+  });
+
   const retry = useCallback(
     (image: HTMLImageElement) => {
-      if (!image.isConnected) return;
-      if (image.complete && image.naturalWidth > 0) return;
-
+      if (!image.isConnected) return; // 图片已不在文档中，停止重试
+      if (image.complete && image.naturalWidth > 0) return; // 图片已加载成功，停止重试
       const { retryCount, retryDelay, count } = retryStatus.current;
-      if (count >= retryCount) return;
+      if (count >= retryCount) return; // 达到最大重试次数，停止重试
 
       const token = Date.now();
-      retryStatus.current.token = token;
-      const check = () => {
-        let ok = true;
-        if (!image.isConnected) ok = false;
-        else if (token !== retryStatus.current.token) ok = false;
-        else if (image.complete && image.naturalWidth > 0) ok = false;
-        return ok;
+      // Full Jitter
+      const delay = Math.random() * retryDelay * (count + 1);
+      const canRun = (cb: NormalFunc) => {
+        if (!image.isConnected) return;
+        else if (token !== retryStatus.current.token) return;
+        else if (image.complete && image.naturalWidth > 0) return;
+        cb();
+      };
+      const retry = () => {
+        retryStatus.current.count += 1;
+        const newURL = new URL(sizedURL || image.src);
+        newURL.searchParams.set("timestamp", Date.now().toString());
+        image.src = newURL.toString();
+        setError(false);
       };
 
-      setTimeout(
-        () => {
-          if (!check()) return;
-          requestIdleCallback(() => {
-            if (!check()) return;
-            retryStatus.current.count += 1;
-            const newURL = new URL(retryURL ? retryURL : image.src);
-            newURL.searchParams.set("timestamp", Date.now().toString());
-            image.src = newURL.toString();
-            setError(false);
+      retryStatus.current.token = token;
+      setTimeout(() => {
+        canRun(() => {
+          requestIdleCallback(() => canRun(retry), {
+            timeout: 200
           });
-        },
-        retryDelay * (count + 1)
-      );
+        });
+      }, delay);
     },
-    [retryURL]
+    [sizedURL]
   );
+
+  // 图片加载错误处理
   const handleLoadError = useCallback(
     (e: SyntheticEvent<HTMLImageElement>) => {
-      const canFallback = e.currentTarget.src !== sizedURL && !!sizedURL;
+      // 首次错误且为缓存URL时，尝试使用原始URL加载
+      const canFallback =
+        sizedURL && e.currentTarget.src !== sizedURL && retryStatus.current.count === 0;
       if (canFallback) {
+        // 尝试使用原始尺寸图片
         e.currentTarget.src = sizedURL;
-        requestIdleCallback(() => onCacheError?.(), { timeout: 500 });
+        requestIdleCallback(onCacheError, { timeout: 500 });
         return;
       }
 
+      // 已经是原始URL或重试后仍然失败
       setError(true);
-      if (!canFallback && e.currentTarget.src.startsWith(AppScheme)) {
-        requestIdleCallback(() => onCacheError?.(), { timeout: 500 });
+      if (e.currentTarget.src.startsWith(AppScheme)) {
+        requestIdleCallback(onCacheError, { timeout: 500 });
       }
       if (retryOnError && retryCount > 0) {
         retry(e.currentTarget);
@@ -137,11 +144,14 @@ const NeteaseImage: FC<ImageProps> = ({
     },
     [onCacheError, onError, retry, retryCount, retryOnError, sizedURL]
   );
+
+  // src变化时重置错误状态和重试状态
   useEffect(() => {
     setError(false);
     retryStatus.current.count = 0;
     retryStatus.current.token = Date.now();
   }, [src]);
+
   return (
     <div
       onClick={onClick}
@@ -160,7 +170,7 @@ const NeteaseImage: FC<ImageProps> = ({
           error && "invisible",
           imageClassName
         )}
-        src={cachedCover}
+        src={cacheURL || cachedCover}
         alt={alt}
         loading={loading}
         decoding={decoding}

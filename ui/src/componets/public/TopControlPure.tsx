@@ -3,6 +3,7 @@ import { Renderer } from "@mahiru/ui/utils/renderer";
 import { NoDrag } from "@mahiru/ui/componets/public/Drag";
 import { isDev } from "@mahiru/ui/utils/dev";
 import { Chromium, Minus, Square, SquareMinus, X } from "lucide-react";
+import { runCloseTask } from "@mahiru/ui/utils/close";
 
 interface TopControlPurProps {
   maximizable?: boolean;
@@ -26,7 +27,10 @@ const TopControlPure: FC<TopControlPurProps> = ({ maximizable, mini, color }) =>
   }, [isMax]);
   const minimize = Renderer.event.minimize;
   const close = useCallback(() => {
-    Renderer.event.close({ broadcast: true });
+    Renderer.event.hidden();
+    runCloseTask().finally(() => {
+      Renderer.event.close({ broadcast: true });
+    });
   }, []);
 
   return (

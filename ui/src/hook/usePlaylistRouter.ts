@@ -1,4 +1,4 @@
-import { useLocation, useSearchParams } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { useCallback } from "react";
 
 type Source = "like" | "history" | "recommend" | "playlist";
@@ -6,6 +6,8 @@ type Source = "like" | "history" | "recommend" | "playlist";
 export function usePlaylistRouter() {
   const [searchParams] = useSearchParams();
   const location = useLocation();
+  const navigate = useNavigate();
+
   const getPlaylistSource = useCallback(() => {
     return searchParams.get("source") as Source;
   }, [searchParams]);
@@ -15,10 +17,18 @@ export function usePlaylistRouter() {
     },
     [location.pathname]
   );
+  const goToPlaylistPage = useCallback(
+    (id: Optional<number | string>, source?: Source) => {
+      navigate(getPlaylistRouterPath(id, source));
+    },
+    [navigate]
+  );
   return {
     getPlaylistSource,
     getPlaylistRouterPath,
     shouldPlaylistIDIs,
+    goToPlaylistPage,
+    navigate,
     searchParams,
     location
   };

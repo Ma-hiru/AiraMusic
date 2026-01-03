@@ -13,7 +13,7 @@ import { cx } from "@emotion/css";
 import { WindowResize } from "@mahiru/ui/hook/useWindowResize";
 import { Renderer } from "@mahiru/ui/utils/renderer";
 import { UI } from "@mahiru/ui/utils/ui";
-import { LyricManager } from "@mahiru/ui/utils/lyricManager";
+import { NeteaseLyric } from "@mahiru/ui/utils/lyric";
 import { Stage, useStage } from "@mahiru/ui/hook/useStage";
 
 const LyricPage: FC<object> = () => {
@@ -147,7 +147,7 @@ const LyricPage: FC<object> = () => {
               className="w-full h-full"
               alignAnchor="center"
               hidePassedLines
-              lyricLines={LyricManager.chooseLyric(
+              lyricLines={NeteaseLyric.chooseLyric(
                 lyricInit?.trackStatus.lyric,
                 lyricSync?.playerStatus.lyricVersion
               )}

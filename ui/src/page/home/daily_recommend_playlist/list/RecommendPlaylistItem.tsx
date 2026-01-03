@@ -1,8 +1,8 @@
 import { FC, memo, useCallback } from "react";
-import { ImageSize } from "@mahiru/ui/utils/filter";
+import { NeteaseImageSize } from "@mahiru/ui/utils/image";
 import { CirclePlay, Headphones } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { PlaylistManager } from "@mahiru/ui/utils/playlist";
+import { Playlist } from "@mahiru/ui/utils/playlist";
 import NeteaseImage from "@mahiru/ui/componets/public/NeteaseImage";
 import { getPlaylistRouterPath } from "@mahiru/ui/hook/usePlaylistRouter";
 
@@ -28,14 +28,14 @@ const RecommendPlaylistItem: FC<RecommendTrackItemProps> = ({
           <NeteaseImage
             className="w-full rounded-md"
             src={playlist.picUrl}
-            size={ImageSize.md}
+            size={NeteaseImageSize.md}
             alt={playlist.name}
             shadowColor={isMainColorDark ? "dark" : "light"}
           />
           <div className="absolute right-1 top-1 flex gap-1 justify-center items-center text-white z-10">
             <Headphones className="size-3" />
             <p className="text-[10px] align-middle">
-              {PlaylistManager.formatPlayCount(playlist.playcount)}
+              {Playlist.formatPlayCount(playlist.playcount)}
             </p>
           </div>
           <div
@@ -46,7 +46,7 @@ const RecommendPlaylistItem: FC<RecommendTrackItemProps> = ({
               <NeteaseImage
                 className="size-5 rounded-full"
                 src={playlist.creator.avatarUrl}
-                size={ImageSize.sm}
+                size={NeteaseImageSize.sm}
                 alt={playlist.creator.nickname}
                 shadowColor={isMainColorDark ? "dark" : "light"}
               />
