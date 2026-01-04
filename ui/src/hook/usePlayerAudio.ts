@@ -96,11 +96,15 @@ export function usePlayerAudio() {
   );
 
   // 从缓存恢复音量
+  const cache = useRef({
+    volume: PlayerStatus.volume,
+    currentTime: PlayerProgressGetter().currentTime
+  });
   useLayoutEffect(() => {
     if (PlayerInitialized) {
       if (!audio) return;
-      audio.volume = PlayerStatus.volume;
-      changeCurrentTime(PlayerProgressGetter().currentTime);
+      audio.volume = cache.current.volume;
+      changeCurrentTime(cache.current.currentTime);
     }
     // eslint-disable-next-line
   }, [PlayerInitialized]);
