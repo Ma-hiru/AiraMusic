@@ -136,6 +136,8 @@ export const Playlist = new (class {
   private store = new PlaylistStore();
   private outerUpdaterWithID: Map<number, NormalFunc> = new Map();
   private outerUpdaterWithAll: Set<NormalFunc> = new Set();
+  private controller: AbortController = new AbortController();
+  private lastCheck: Nullable<{ id: number; time: number }> = null;
 
   /// 外部更新器管理
   addOuterUpdater(func: NormalFunc, id: Optional<number>) {
@@ -198,6 +200,26 @@ export const Playlist = new (class {
   ) {
     const cache = await this.store.getEntry(id);
     if (cache && !noCache) {
+      this.checkShouldUpdate(cache, async (response, signal) => {
+        const fullList = await this.requestFullTracks(response, undefined, 100, 2);
+        fullList.playlist.tracks = NeteaseTrack.tracksPrivilegeExtends(
+          fullList.playlist.tracks,
+          fullList.privileges
+        );
+        if (signal.aborted) return;
+        fullList.playlist.tracks = await this.requestTracksCoverPreCache(
+          fullList.playlist.tracks,
+          preloadRange,
+          size
+        );
+        if (signal.aborted) return;
+        const entry = this.store.createEntry(fullList);
+        this.store.setEntry(entry);
+        startTransition(() => {
+          if (signal.aborted) return;
+          this.execUpdater(id);
+        });
+      });
       return cache;
     } else {
       const rawList = await API.Playlist.getPlaylistDetail(id);
@@ -215,6 +237,43 @@ export const Playlist = new (class {
       this.store.setEntry(entry);
       return entry;
     }
+  }
+
+  private checkShouldUpdate(
+    cache: PlaylistCacheEntry,
+    cb: PromiseFunc<[newDetail: NeteasePlaylistDetailResponse, signal: AbortSignal]>
+  ) {
+    if (
+      this.lastCheck?.id === cache.playlistId &&
+      Date.now() - this.lastCheck.time < Time.getCacheTimeLimit(5, "seconds")
+    )
+      return;
+
+    this.lastCheck = { id: cache.playlistId, time: Date.now() };
+    this.controller.abort();
+    this.controller = new AbortController();
+    const signal = this.controller.signal;
+    API.Playlist.getPlaylistDetail(cache.playlistId, signal)
+      .then((response) => {
+        if (signal.aborted) return;
+        if (response.playlist.trackCount !== cache.playlist.trackCount)
+          void cb(response, this.controller.signal);
+        const result = response.playlist.tracks.find((track, i) => {
+          const cacheTrack = cache.playlist.tracks[i];
+          return !cacheTrack || track.id !== cacheTrack.id;
+        });
+        if (result) void cb(response, this.controller.signal);
+      })
+      .catch((err) => {
+        if (signal.aborted) return;
+        Log.error(
+          new EqError({
+            raw: err,
+            message: "failed to check playlist update",
+            label: "playlist.ts:PlaylistManager.checkShouldUpdate"
+          })
+        );
+      });
   }
 
   public async forceFetchLatestData(
@@ -276,7 +335,9 @@ export const Playlist = new (class {
   /** 检查歌单tracks字段是否完整，不完整再额外请求 */
   private async requestFullTracks(
     response: NeteasePlaylistDetailResponse,
-    whenRequestMissedTracks?: NormalFunc<[missTrack: number]>
+    whenRequestMissedTracks?: NormalFunc<[missTrack: number]>,
+    maxPerRequest: number = 100,
+    concurrency: number = 5
   ) {
     const { playlist } = response;
     if (playlist.trackCount === playlist.tracks.length) {
@@ -285,7 +346,8 @@ export const Playlist = new (class {
       whenRequestMissedTracks?.(playlist.trackCount - playlist.tracks.length);
       const { tracks, privilege } = await NeteaseTrack.requestTrackDetail(
         playlist.trackIds.slice(playlist.tracks.length, playlist.trackCount),
-        100
+        maxPerRequest,
+        concurrency
       );
       response.playlist.tracks.push(...tracks);
       response.privileges.push(...privilege);

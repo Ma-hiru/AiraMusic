@@ -177,7 +177,7 @@ export function scrobble(lastStatus: PlayerTrackStatus, time: number) {
  * @desc 调用此接口, 传入歌曲 id, 获取副歌时间
  * */
 export async function getTrackChorus(id: number) {
-  const cacheID = `song_chorus?id=` + id;
+  const cacheID = `song_chorus_` + id;
   try {
     const cache = await CacheStore.fetchObject<NeteaseTrackChorusResponse>(
       cacheID,
@@ -185,7 +185,7 @@ export async function getTrackChorus(id: number) {
     );
     if (cache) return cache;
   } catch (err) {
-    throw CacheStoreErr.create("ui/api/track.ts:getTrackChorus", err);
+    throw CacheStoreErr.create("track.ts:getTrackChorus", err);
   }
   try {
     return await apiRequest<any, NeteaseTrackChorusResponse>("/song/chorus", {
@@ -194,7 +194,7 @@ export async function getTrackChorus(id: number) {
       try {
         void CacheStore.storeObject(cacheID, response);
       } catch (err) {
-        Log.error(CacheStoreErr.create("ui/api/track.ts:getTrackChorus", err));
+        Log.error(CacheStoreErr.create("track.ts:getTrackChorus", err));
       }
       return response;
     });

@@ -35,7 +35,7 @@ const NavPlaylistItem: FC<Props> = ({
             className="w-full"
             src={cover}
             alt={label}
-            size={NeteaseImageSize.sm}
+            size={NeteaseImageSize.xs}
             shadowColor={isMainColorDark ? "dark" : "light"}
           />
         </div>

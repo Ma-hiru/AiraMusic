@@ -28,19 +28,27 @@ export const NeteaseImage = new (class {
     let param;
     switch (size) {
       case NeteaseImageSize.xs:
-        param = "50y50";
+        param = "37y37";
         break;
       case NeteaseImageSize.sm:
         param = "100y100";
         break;
       case NeteaseImageSize.md:
-        param = "250y250";
+        param = "388y388";
         break;
       case NeteaseImageSize.lg:
         param = "500y500";
         break;
+      case NeteaseImageSize.raw:
+        param = "";
+        break;
     }
-    param && u.searchParams.set("param", param);
+    if (param) {
+      u.searchParams.set("param", param);
+    } else {
+      u.searchParams.delete("param");
+    }
+    param && u.searchParams.set("type", "webp");
     return <T extends Falsy ? undefined : string>u.toString();
   }
 

@@ -1,8 +1,9 @@
 import { FC, memo, ReactEventHandler, useCallback } from "react";
-import { PlaylistCacheEntry, Playlist } from "@mahiru/ui/utils/playlist";
+import { Playlist, PlaylistCacheEntry } from "@mahiru/ui/utils/playlist";
 import { Headphones } from "lucide-react";
 import { useLayoutStore } from "@mahiru/ui/store/layout";
 import NeteaseImage from "@mahiru/ui/componets/public/NeteaseImage";
+import { NeteaseImageSize } from "@mahiru/ui/utils/image";
 
 interface TopCoverProps {
   entry: Nullable<PlaylistCacheEntry>;
@@ -21,6 +22,7 @@ const TopCover: FC<TopCoverProps> = ({ entry }) => {
     <div className="size-44 relative select-none">
       <NeteaseImage
         className="size-44 rounded-md"
+        size={NeteaseImageSize.md}
         src={entry?.playlist.coverImgUrl}
         alt={entry?.playlist.name}
         onLoad={onLoad}

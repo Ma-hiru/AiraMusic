@@ -19,7 +19,7 @@ const NavAvatar: FC<object> = () => {
       {UserProfile?.avatarUrl ? (
         <NeteaseImage
           className="size-7 min-w-7 cursor-pointer select-none rounded-full"
-          size={NeteaseImageSize.md}
+          size={NeteaseImageSize.sm}
           onClick={logout}
           src={UserProfile?.avatarUrl}
           alt={UserProfile?.nickname}

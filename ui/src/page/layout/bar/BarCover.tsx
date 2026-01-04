@@ -16,7 +16,7 @@ const BarCover: FC<object> = () => {
     <div className="w-full h-2/3 grid grid-cols-[auto_1fr] grid-rows-1 items-center overflow-hidden">
       <NeteaseImage
         className="h-12 w-12 min-w-12 min-h-12 rounded-md cursor-pointer"
-        size={NeteaseImageSize.md}
+        size={NeteaseImageSize.sm}
         src={track?.al.picUrl}
         alt={track?.name}
         onClick={TogglePlayerVisible}

@@ -4,6 +4,7 @@ import { AudioControl } from "@mahiru/ui/hook/usePlayerAudio";
 import { SpectrumData, SpectrumOptions } from "@mahiru/ui/hook/useSpectrumWorker";
 import { NeteaseLyric } from "@mahiru/ui/utils/lyric";
 import { PlayerCore } from "@mahiru/ui/store/player/core";
+import { API } from "@mahiru/ui/api";
 
 function createPlayerRuntime() {
   const playerFSM = new PlayerFSM(PlayerFSMStatusEnum.idle);
@@ -34,6 +35,13 @@ export const PlayerStoreConfig: ZustandConfig<
 > = (set, get) => ({
   ...InitialState,
   TriggerPlayerFSMEvent: (event) => {
+    const { PlayerFSMStatus, PlayerTrackStatus, PlayerProgressGetter } = get();
+    const shouldRecord =
+      PlayerFSMStatus === PlayerFSMStatusEnum.playing &&
+      (event === "requestRestart" || event === "playingEnd");
+    if (shouldRecord && PlayerTrackStatus) {
+      API.Track.scrobble(PlayerTrackStatus, PlayerProgressGetter().currentTime);
+    }
     runtime.playerFSMEventStack.stack.push(event);
     runtime.playerFSMEventStack.timer && clearTimeout(runtime.playerFSMEventStack.timer);
     runtime.playerFSMEventStack.timer = window.setTimeout(() => {

@@ -8,18 +8,20 @@ import { apiRequest } from "@mahiru/ui/utils/request";
  * - s : 歌单最近的 s 个收藏者, 默认为8
  * @param  id 歌单 id
  * @param update
+ * @param signal
  */
 export async function getPlaylistDetail(
   id: number,
-  update = false
+  signal?: AbortSignal
 ): Promise<NeteasePlaylistDetailResponse> {
   return await apiRequest<{ id: number; timestamp: number }, NeteasePlaylistDetailResponse>({
     url: "/playlist/detail",
     method: "get",
     params: {
       id,
-      timestamp: update ? new Date().getTime() : undefined
-    }
+      timestamp: Date.now()
+    },
+    signal
   });
 }
 

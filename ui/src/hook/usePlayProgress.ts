@@ -9,7 +9,6 @@ import {
   useState
 } from "react";
 import { API } from "@mahiru/ui/api";
-import { NCMServerErr } from "@mahiru/ui/utils/errs";
 import { PlayerFSMStatusEnum, usePlayerStore } from "@mahiru/ui/store/player";
 
 export function usePlayProgress() {
@@ -211,7 +210,7 @@ export function usePlayProgress() {
   }, [tick]);
   // 获取歌曲副歌时间
   useEffect(() => {
-    PlayerTrackStatus &&
+    if (PlayerFSMStatus === PlayerFSMStatusEnum.loading && PlayerTrackStatus?.track.id) {
       API.Track.getTrackChorus(PlayerTrackStatus.track.id)
         .then((response) => {
           if (Array.isArray(response.chorus)) {
@@ -220,18 +219,16 @@ export function usePlayProgress() {
             setChorus([]);
           }
         })
-        .catch((err) => {
+        .catch(() => {
           setChorus([]);
-          if (NCMServerErr.eq(err)) {
-            // TODO
-          }
         });
-  }, [PlayerTrackStatus]);
+    }
+  }, [PlayerFSMStatus, PlayerTrackStatus?.track.id]);
   const chorusPercent = useMemo(() => {
-    const duration = PlayerProgressGetter().duration;
+    const duration = audio?.duration;
     if (!duration || duration <= 0) return [];
     return chorus.map((c) => (c.startTime / (1000 * duration)) * 100);
-  }, [PlayerProgressGetter, chorus]);
+  }, [audio?.duration, chorus]);
 
   return {
     barRef,
