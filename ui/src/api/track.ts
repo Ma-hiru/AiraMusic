@@ -1,8 +1,8 @@
 import { apiRequest } from "@mahiru/ui/utils/request";
 import { CacheStoreErr, NCMServerErr } from "@mahiru/ui/utils/errs";
-import { CacheStore } from "@mahiru/ui/store/cache";
 import { Log } from "@mahiru/ui/utils/dev";
 import { Time } from "@mahiru/ui/utils/time";
+import { StoreSnapshot } from "@mahiru/ui/store/snapshot";
 
 /**
  * 获取音乐 url
@@ -80,7 +80,7 @@ export async function getMP3New(id: string | number, level: NeteaseMusicLevel, u
 export async function getTrackDetail(ids: string | number): Promise<NeteaseTrackDetailResponse> {
   const cacheID = `song_detail?ids=` + ids;
   try {
-    const cache = await CacheStore.fetchObject<NeteaseTrackDetailResponse>(
+    const cache = await StoreSnapshot.cacheStore.fetchObject<NeteaseTrackDetailResponse>(
       cacheID,
       Time.getCacheTimeLimit(24, "day")
     );
@@ -101,7 +101,7 @@ export async function getTrackDetail(ids: string | number): Promise<NeteaseTrack
     }).then((result) => {
       Log.trace("api/track.ts:getTrackDetail", "获取歌曲详情并缓存");
       try {
-        void CacheStore.storeObject(cacheID, result);
+        void StoreSnapshot.cacheStore.storeObject(cacheID, result);
       } catch (err) {
         Log.error(CacheStoreErr.create("ui/api/track.ts:getTrackDetail", err));
       }
@@ -179,7 +179,7 @@ export function scrobble(lastStatus: PlayerTrackStatus, time: number) {
 export async function getTrackChorus(id: number) {
   const cacheID = `song_chorus_` + id;
   try {
-    const cache = await CacheStore.fetchObject<NeteaseTrackChorusResponse>(
+    const cache = await StoreSnapshot.cacheStore.fetchObject<NeteaseTrackChorusResponse>(
       cacheID,
       Time.getCacheTimeLimit(7, "day")
     );
@@ -192,7 +192,7 @@ export async function getTrackChorus(id: number) {
       params: { id }
     }).then((response) => {
       try {
-        void CacheStore.storeObject(cacheID, response);
+        void StoreSnapshot.cacheStore.storeObject(cacheID, response);
       } catch (err) {
         Log.error(CacheStoreErr.create("track.ts:getTrackChorus", err));
       }

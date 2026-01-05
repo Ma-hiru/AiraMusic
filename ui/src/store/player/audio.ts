@@ -1,15 +1,17 @@
 import { PlayerStoreSnapshot, WithPlayerSnapshot } from "@mahiru/ui/store/player";
 
+export interface PlayerAudio extends WithPlayerSnapshot {}
+
 @PlayerStoreSnapshot
-export class PlayerAudio extends WithPlayerSnapshot {
+export class PlayerAudio {
   private volumeBeforeMute = 0;
 
   play = () => {
-    this.snapshot.SetPlayingRequest(this.audio?.paused || false);
+    this.playerSnapshot.SetPlayingRequest(this.audio?.paused || false);
   };
 
   pause = () => {
-    this.snapshot.SetPlayingRequest(false);
+    this.playerSnapshot.SetPlayingRequest(false);
   };
 
   mute = () => {

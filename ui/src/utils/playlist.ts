@@ -1,11 +1,10 @@
 import { EqError, Log } from "@mahiru/ui/utils/dev";
-import { CacheStore } from "@mahiru/ui/store/cache";
 import { Time } from "@mahiru/ui/utils/time";
 import { API } from "@mahiru/ui/api";
 import { startTransition } from "react";
-import { getUserStoreSnapshot } from "@mahiru/ui/store/user";
 import { NeteaseImage, NeteaseImageSize } from "@mahiru/ui/utils/image";
 import { NeteaseTrack } from "@mahiru/ui/utils/track";
+import { AddStoreSnapshot, WithStoreSnapshot } from "@mahiru/ui/store/decorator";
 
 export type PlaylistCacheID = `play_list_cache_${string | number}`;
 
@@ -18,6 +17,7 @@ export type PlaylistCacheEntry = {
   _dirty: boolean;
 };
 
+@AddStoreSnapshot
 class PlaylistStore {
   /** 内存中最多存储的歌单数目 */
   _maxMemorySize = 3;
@@ -77,10 +77,10 @@ class PlaylistStore {
     if (typeof entry === "number") {
       const cacheID = this.getEntryCacheID(entry);
       this._memory.delete(cacheID);
-      void CacheStore.remove(cacheID);
+      void this.cacheStore.remove(cacheID);
     } else {
       this._memory.delete(entry.playlistCacheId);
-      void CacheStore.remove(entry.playlistCacheId);
+      void this.cacheStore.remove(entry.playlistCacheId);
     }
   }
 
@@ -114,7 +114,7 @@ class PlaylistStore {
   }
 
   private setInStore(data: PlaylistCacheEntry) {
-    void CacheStore.storeObject(data.playlistCacheId, data);
+    void this.cacheStore.storeObject(data.playlistCacheId, data);
   }
 
   private getInMemory(id: PlaylistCacheID) {
@@ -128,11 +128,13 @@ class PlaylistStore {
   }
 
   private getInStore(id: PlaylistCacheID) {
-    return CacheStore.fetchObject<PlaylistCacheEntry>(id, this._timeLimit);
+    return this.cacheStore.fetchObject<PlaylistCacheEntry>(id, this._timeLimit);
   }
 }
+interface PlaylistStore extends WithStoreSnapshot {}
 
-export const Playlist = new (class {
+@AddStoreSnapshot
+class PlaylistManager {
   private store = new PlaylistStore();
   private outerUpdaterWithID: Map<number, NormalFunc> = new Map();
   private outerUpdaterWithAll: Set<NormalFunc> = new Set();
@@ -300,7 +302,7 @@ export const Playlist = new (class {
   /** 更新喜欢歌曲 */
   public async updateTrackLikedStatus(props: { track: NeteaseTrack; nextStatus: boolean }) {
     const { track, nextStatus } = props;
-    const { UserLikedListSummary } = getUserStoreSnapshot();
+    const { UserLikedListSummary } = this.userSnapshot;
     const likedPlaylistID = UserLikedListSummary?.id;
     if (likedPlaylistID) {
       const entry = await this.store.getEntry(likedPlaylistID);
@@ -379,8 +381,8 @@ export const Playlist = new (class {
     // 检查或预缓存
     let check;
     try {
-      if (noStore) check = await CacheStore.checkMutil(coverURLs);
-      else check = await CacheStore.checkOrStoreAsyncMutil(coverURLs, "GET");
+      if (noStore) check = await this.cacheStore.checkMutil(coverURLs);
+      else check = await this.cacheStore.checkOrStoreAsyncMutil(coverURLs, "GET");
     } catch (err) {
       Log.error(
         new EqError({
@@ -418,4 +420,7 @@ export const Playlist = new (class {
       return playcount.toString();
     }
   }
-})();
+}
+interface PlaylistManager extends WithStoreSnapshot {}
+
+export const Playlist = new PlaylistManager();

@@ -1,16 +1,17 @@
-import { CacheStore, EditObjectResponse } from "@mahiru/ui/store/cache";
 import { startTransition } from "react";
+import { AddStoreSnapshot, WithStoreSnapshot } from "@mahiru/ui/store/decorator";
 
-export const PlaylistHistoryCache = new (class {
+@AddStoreSnapshot
+class PlaylistHistoryClass {
   private cacheKey = "playlist_history_cache";
   private maxSize = 500;
   private _outerUpdater: Nullable<NormalFunc> = null;
 
   constructor() {
-    CacheStore.check(this.cacheKey).then((checkResult) => {
+    this.cacheStore.check(this.cacheKey).then((checkResult) => {
       if (!checkResult.ok) {
         // 初始化空数组
-        void CacheStore.storeObject(this.cacheKey, []);
+        void this.cacheStore.storeObject(this.cacheKey, []);
       }
     });
   }
@@ -24,16 +25,18 @@ export const PlaylistHistoryCache = new (class {
   }
 
   async load() {
-    return (await CacheStore.fetchObject<NeteaseTrack[]>(this.cacheKey)) || [];
+    return (await this.cacheStore.fetchObject<NeteaseTrack[]>(this.cacheKey)) || [];
   }
 
   async save(data: NeteaseTrack[], outerUpdate: boolean = false) {
-    await CacheStore.storeObject(this.cacheKey, data);
+    await this.cacheStore.storeObject(this.cacheKey, data);
     outerUpdate && this.outerUpdater?.();
   }
 
-  async findTrack(id: number): Promise<EditObjectResponse<{ index: number; value: NeteaseTrack }>> {
-    return await CacheStore.editObject<NeteaseTrack[]>({
+  async findTrack(
+    id: number
+  ): Promise<CacheEditObjectResponse<{ index: number; value: NeteaseTrack }>> {
+    return await this.cacheStore.editObject<NeteaseTrack[]>({
       id: this.cacheKey,
       objType: "array",
       objOperations: [{ name: "find", value: { field: "id", value: id } }]
@@ -44,7 +47,7 @@ export const PlaylistHistoryCache = new (class {
     const findResult = await this.findTrack(track.id);
     if (findResult.ok && findResult.data) {
       // 已存在，提前到开始
-      await CacheStore.editObject<NeteaseTrack[]>({
+      await this.cacheStore.editObject<NeteaseTrack[]>({
         id: this.cacheKey,
         objType: "array",
         objOperations: [
@@ -55,7 +58,7 @@ export const PlaylistHistoryCache = new (class {
       });
     } else {
       // 不存在，直接添加到开始
-      await CacheStore.editObject<NeteaseTrack[]>({
+      await this.cacheStore.editObject<NeteaseTrack[]>({
         id: this.cacheKey,
         objType: "array",
         objOperations: [{ name: "unshift", value: track }],
@@ -72,7 +75,7 @@ export const PlaylistHistoryCache = new (class {
   async removeTrack(id: number) {
     const findResult = await this.findTrack(id);
     if (findResult.ok && findResult.data) {
-      await CacheStore.editObject<NeteaseTrack[]>({
+      await this.cacheStore.editObject<NeteaseTrack[]>({
         id: this.cacheKey,
         objType: "array",
         objOperations: [
@@ -87,7 +90,7 @@ export const PlaylistHistoryCache = new (class {
   }
 
   async clear() {
-    await CacheStore.editObject<NeteaseTrack[]>({
+    await this.cacheStore.editObject<NeteaseTrack[]>({
       id: this.cacheKey,
       objType: "array",
       objOperations: [{ name: "clear" }],
@@ -99,14 +102,14 @@ export const PlaylistHistoryCache = new (class {
   }
 
   async limitSize() {
-    const size = await CacheStore.fetchObject<number>(this.cacheKey, undefined, {
+    const size = await this.cacheStore.fetchObject<number>(this.cacheKey, undefined, {
       objType: "array",
       objField: "length"
     });
     if (typeof size === "number" && size > this.maxSize) {
       // 超出限制
       const count = this.maxSize - size;
-      await CacheStore.editObject({
+      await this.cacheStore.editObject({
         id: this.cacheKey,
         objType: "array",
         save: true,
@@ -114,4 +117,7 @@ export const PlaylistHistoryCache = new (class {
       });
     }
   }
-})();
+}
+interface PlaylistHistoryClass extends WithStoreSnapshot {}
+
+export const PlaylistHistoryCache = new PlaylistHistoryClass();

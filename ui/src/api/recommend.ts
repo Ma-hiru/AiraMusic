@@ -1,9 +1,9 @@
 import { apiRequest } from "@mahiru/ui/utils/request";
-import { CacheStore } from "@mahiru/ui/store/cache";
 import { Log } from "@mahiru/ui/utils/dev";
 import { NeteaseBannerResponse } from "@mahiru/ui/types/netease/banner";
 import { Time } from "@mahiru/ui/utils/time";
 import { NCMServerErr } from "@mahiru/ui/utils/errs";
+import { StoreSnapshot } from "@mahiru/ui/store/snapshot";
 
 /**
  * 推荐歌单
@@ -15,7 +15,7 @@ export async function recommendPlaylist(
 ): Promise<NeteaseRecommendPlaylistResponse> {
   const cacheKey = `personalized_${limit ?? 30}`;
   // 5分钟缓存
-  const cache = await CacheStore.fetchObject<NeteaseRecommendPlaylistResponse>(
+  const cache = await StoreSnapshot.cacheStore.fetchObject<NeteaseRecommendPlaylistResponse>(
     cacheKey,
     1000 * 60 * 5
   );
@@ -29,7 +29,7 @@ export async function recommendPlaylist(
     params: { limit, timestamp: Date.now() }
   }).then((result) => {
     Log.trace("api/recommend.ts:recommendPlaylist", "更新推荐歌单缓存");
-    CacheStore.storeObject(cacheKey, result);
+    StoreSnapshot.cacheStore.storeObject(cacheKey, result);
     return result;
   });
 }
@@ -40,7 +40,7 @@ export async function recommendPlaylist(
  */
 export async function dailyRecommendPlaylist(): Promise<NeteaseDailyRecommendPlaylistResponse> {
   const cacheKey = `recommend_resource`;
-  const cache = await CacheStore.fetchObject<NeteaseDailyRecommendPlaylistResponse>(
+  const cache = await StoreSnapshot.cacheStore.fetchObject<NeteaseDailyRecommendPlaylistResponse>(
     cacheKey,
     // 如果是新的一天则强制更新缓存,否则缓存24小时
     Time.isChangeDay() ? 0 : 1000 * 60 * 60 * 24
@@ -55,7 +55,7 @@ export async function dailyRecommendPlaylist(): Promise<NeteaseDailyRecommendPla
     params: { timestamp: Date.now() }
   }).then((result) => {
     Log.trace("api/recommend.ts:dailyRecommendPlaylist", "更新推荐歌单缓存");
-    CacheStore.storeObject(cacheKey, result);
+    StoreSnapshot.cacheStore.storeObject(cacheKey, result);
     return result;
   });
 }
@@ -66,7 +66,7 @@ export async function dailyRecommendPlaylist(): Promise<NeteaseDailyRecommendPla
  */
 export async function dailyRecommendTracks(): Promise<NeteaseDailyRecommendTracksResponse> {
   const cacheKey = `recommend_songs`;
-  const cache = await CacheStore.fetchObject<NeteaseDailyRecommendTracksResponse>(
+  const cache = await StoreSnapshot.cacheStore.fetchObject<NeteaseDailyRecommendTracksResponse>(
     cacheKey,
     // 如果是新的一天则强制更新缓存,否则缓存24小时
     Time.isChangeDay() ? 0 : 1000 * 60 * 60 * 24
@@ -81,7 +81,7 @@ export async function dailyRecommendTracks(): Promise<NeteaseDailyRecommendTrack
     params: { timestamp: Date.now() }
   }).then((result) => {
     Log.trace("api/recommend.ts:dailyRecommendTracks", "更新推荐歌曲缓存");
-    CacheStore.storeObject(cacheKey, result);
+    StoreSnapshot.cacheStore.storeObject(cacheKey, result);
     return result;
   });
 }
@@ -152,7 +152,10 @@ export function toplists() {
 export async function homeBanner(type: 0 | 1 | 2 | 3 = 0): Promise<NeteaseBannerResponse> {
   const cacheKey = `banner_${type}`;
   // 5分钟缓存
-  const cache = await CacheStore.fetchObject<NeteaseBannerResponse>(cacheKey, 1000 * 60 * 5);
+  const cache = await StoreSnapshot.cacheStore.fetchObject<NeteaseBannerResponse>(
+    cacheKey,
+    1000 * 60 * 5
+  );
   if (cache) {
     Log.trace("api/recommend.ts:homeBanner", "使用 Banner 缓存");
     return cache;
@@ -163,7 +166,7 @@ export async function homeBanner(type: 0 | 1 | 2 | 3 = 0): Promise<NeteaseBanner
     params: { type, timestamp: Date.now() }
   }).then((result) => {
     Log.trace("api/recommend.ts:homeBanner", "更新 Banner 缓存");
-    CacheStore.storeObject(cacheKey, result);
+    StoreSnapshot.cacheStore.storeObject(cacheKey, result);
     return result;
   });
 }

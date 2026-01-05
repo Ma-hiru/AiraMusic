@@ -1,12 +1,12 @@
 import { apiRequest } from "@mahiru/ui/utils/request";
-import { CacheStore } from "@mahiru/ui/store/cache";
 import { NCMServerErr } from "@mahiru/ui/utils/errs";
 import { Log } from "@mahiru/ui/utils/dev";
 import { Time } from "@mahiru/ui/utils/time";
+import { StoreSnapshot } from "@mahiru/ui/store/snapshot";
 
 export async function getLyric(id: number) {
   const cacheKey = `lyric_${id}`;
-  const cache = await CacheStore.fetchObject<NeteaseLyricResponse>(
+  const cache = await StoreSnapshot.cacheStore.fetchObject<NeteaseLyricResponse>(
     cacheKey,
     // 如果是新的一天则强制更新缓存
     Time.isChangeDay() ? 0 : 1000 * 60 * 60 * 24 * 7
@@ -24,7 +24,7 @@ export async function getLyric(id: number) {
   })
     .then((result) => {
       Log.trace("api/lyric.ts:getLyric", "更新歌词缓存");
-      CacheStore.storeObject(cacheKey, result);
+      StoreSnapshot.cacheStore.storeObject(cacheKey, result);
       return result;
     })
     .catch((err) => {
@@ -34,7 +34,7 @@ export async function getLyric(id: number) {
 
 export async function getYRCLyric(id: number) {
   const cacheKey = `lyric_yrc_${id}`;
-  const cache = await CacheStore.fetchObject<NeteaseLyricResponseNew>(
+  const cache = await StoreSnapshot.cacheStore.fetchObject<NeteaseLyricResponseNew>(
     cacheKey,
     // 如果是新的一天则强制更新缓存
     Time.isChangeDay() ? 0 : 1000 * 60 * 60 * 24 * 7
@@ -53,7 +53,7 @@ export async function getYRCLyric(id: number) {
     .then((res) => res.json())
     .then((result: NeteaseLyricResponseNew) => {
       Log.trace("api/lyric.ts:getYRCLyric", "更新歌词缓存");
-      CacheStore.storeObject(cacheKey, result);
+      StoreSnapshot.cacheStore.storeObject(cacheKey, result);
       return result;
     })
     .catch((err) => {

@@ -1,25 +1,15 @@
-import { CacheStore } from "@mahiru/ui/store/cache";
-import { addCloseTask } from "@mahiru/ui/utils/close";
+import { AddStoreSnapshot, WithStoreSnapshot } from "@mahiru/ui/store/decorator";
 
-export const enum NeteaseImageSize {
-  xs,
-  sm,
-  md,
-  lg,
-  raw
-}
-
-export const NeteaseImage = new (class {
+@AddStoreSnapshot
+class NeteaseImageClass {
   cache: Record<string, { time: number; url?: string }> = {};
 
-  constructor() {
-    void this.loadCacheFromLocal();
-  }
+  constructor() {}
 
   /** 设置图片的size，如果url为假值或者为本地路径，原地返回 */
   setSize<T extends Optional<string>>(
     url: T,
-    size: NeteaseImageSize
+    size: NeteaseImageSize | number
   ): T extends Falsy ? undefined : string {
     if (!url || !url.startsWith("http")) {
       return <T extends Falsy ? undefined : string>(url || undefined);
@@ -43,6 +33,9 @@ export const NeteaseImage = new (class {
         param = "";
         break;
     }
+    if (param === undefined && Number.isFinite(size)) {
+      param = `${size}y${size}`;
+    }
     if (param) {
       u.searchParams.set("param", param);
     } else {
@@ -59,13 +52,13 @@ export const NeteaseImage = new (class {
     const result = this.cache[key];
     if (!cache && result) {
       // 删除旧缓存
-      result.url && CacheStore.remove(result.url);
+      result.url && this.cacheStore.remove(result.url);
       // 删除缓存
       delete this.cache[key];
     } else if (cache) {
       if (result?.url && result.url !== cache) {
         // 删除旧缓存
-        void CacheStore.remove(result.url);
+        void this.cacheStore.remove(result.url);
       }
       // 更新缓存
       this.cache[key] = {
@@ -89,17 +82,27 @@ export const NeteaseImage = new (class {
   }
 
   async loadCacheFromLocal() {
-    const cache = await CacheStore.fetchObject<typeof this.cache>("netease_image_cache");
+    const cache = await this.cacheStore.fetchObject<typeof this.cache>("netease_image_cache");
     if (cache) {
       this.cache = cache;
     }
   }
 
   async saveCacheToLocal() {
-    await CacheStore.storeObject("netease_image_cache", this.cache);
+    await this.cacheStore.storeObject("netease_image_cache", this.cache);
   }
-})();
+}
 
-addCloseTask("netease_image_cache", () => {
-  return NeteaseImage.saveCacheToLocal();
-});
+interface NeteaseImageClass extends WithStoreSnapshot {}
+
+export const enum NeteaseImageSize {
+  xs,
+  sm,
+  md,
+  lg,
+  raw
+}
+
+export const NeteaseImage = new NeteaseImageClass();
+
+void NeteaseImage.loadCacheFromLocal();

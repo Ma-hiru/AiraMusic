@@ -17,10 +17,12 @@ function createPlayerRuntime() {
     duration: 0,
     currentTime: 0
   };
+  const playerCore = new PlayerCore();
   return {
     playerFSM,
     playerFSMEventStack,
-    playerProgress
+    playerProgress,
+    playerCore
   };
 }
 
@@ -155,7 +157,7 @@ const InitialState: PlayerStoreInitialState = {
     data: null,
     ready: false
   }),
-  PlayerCoreGetter: () => new PlayerCore(),
+  PlayerCoreGetter: () => runtime.playerCore,
   PlayingRequest: false,
   PlayerStatus: {
     position: 0,

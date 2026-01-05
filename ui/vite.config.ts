@@ -26,7 +26,10 @@ export default defineConfig(({ mode }) => {
       wasm(),
       react({
         babel: {
-          plugins: [["babel-plugin-react-compiler"]]
+          plugins: [
+            ["babel-plugin-react-compiler"],
+            ["@babel/plugin-proposal-decorators", { version: "2023-05" }]
+          ]
         }
       })
     ],

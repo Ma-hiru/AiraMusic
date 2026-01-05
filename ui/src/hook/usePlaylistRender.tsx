@@ -2,7 +2,7 @@ import NeteaseImage from "@mahiru/ui/componets/public/NeteaseImage";
 
 import { RefObject, startTransition, useCallback, useEffect, useRef, useState } from "react";
 import { Log } from "@mahiru/ui/utils/dev";
-import { PlaylistCacheEntry, Playlist } from "@mahiru/ui/utils/playlist";
+import { Playlist, PlaylistCacheEntry } from "@mahiru/ui/utils/playlist";
 import { Copy, DiscAlbum, ListMusic, ListPlus, MessageSquare, Play } from "lucide-react";
 import { PlaylistHistoryCache } from "@mahiru/ui/utils/history";
 import { useUpdate } from "@mahiru/ui/hook/useUpdate";
@@ -16,10 +16,11 @@ import { TrackListProps, TrackListRef } from "@mahiru/ui/componets/track_list";
 import { OnContextMenuFunc } from "@mahiru/ui/componets/track_item/TrackItem";
 import { ContextMenuItem, ContextMenuRender } from "@mahiru/ui/componets/menu/MenuProvider";
 import { useKeepAliveCtx } from "@mahiru/ui/ctx/KeepAliveCtx";
-import { getPlayerStoreSnapshot, usePlayerStore } from "@mahiru/ui/store/player";
+import { usePlayerStore } from "@mahiru/ui/store/player";
 import { useUserStore } from "@mahiru/ui/store/user";
 import { useLayoutStore } from "@mahiru/ui/store/layout";
 import { NeteaseImageSize } from "@mahiru/ui/utils/image";
+import { StoreSnapshot } from "@mahiru/ui/store/snapshot";
 
 export function usePlaylistNormalRender(id?: string) {
   const listRef = useRef<TrackListRef>(null);
@@ -624,7 +625,7 @@ function createMenuItems(props: {
 }): ContextMenuItem[] {
   const disabled = !props.track.playable;
   const items: ContextMenuItem[] = [];
-  const player = getPlayerStoreSnapshot().PlayerCoreGetter();
+  const player = StoreSnapshot.playerSnapshot.PlayerCoreGetter();
   items.push(
     {
       prefix: <Copy size={14} />,

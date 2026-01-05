@@ -22,7 +22,7 @@ type ImageProps = ImgHTMLAttributes<HTMLImageElement> & {
   update?: boolean;
   timeLimit?: number;
   method?: string;
-  size?: NeteaseImageSize;
+  size?: NeteaseImageSize | number;
   imageClassName?: string;
   retryOnError?: boolean;
   retryDelay?: number;

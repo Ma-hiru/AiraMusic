@@ -1,15 +1,15 @@
-import { refreshLogin } from "@mahiru/ui/utils/task";
 import { useNavigate } from "react-router-dom";
 import { useCallback } from "react";
 import { Auth } from "@mahiru/ui/utils/auth";
 import { Renderer } from "@mahiru/ui/utils/renderer";
-import { getPlayerStoreSnapshot } from "@mahiru/ui/store/player";
+import { Task } from "@mahiru/ui/utils/task";
+import { StoreSnapshot } from "@mahiru/ui/store/snapshot";
 
 export function useLogout() {
   const navigate = useNavigate();
   return useCallback(() => {
     if (Auth.isAccountLoggedIn()) {
-      const { PlayerCoreGetter } = getPlayerStoreSnapshot();
+      const { PlayerCoreGetter } = StoreSnapshot.playerSnapshot;
       PlayerCoreGetter()?.clearPlaylist();
       Auth.doLogout().finally(() => {
         waitLogin();
@@ -35,7 +35,7 @@ export function waitLogin() {
       "login",
       "login",
       (cookie) => {
-        refreshLogin(cookie).then(() => {
+        Task.refreshLogin(cookie).then(() => {
           Renderer.event.closeInternalWindow("login");
         });
       },

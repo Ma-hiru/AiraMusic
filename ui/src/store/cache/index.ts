@@ -1,6 +1,6 @@
 import { accessToken, cacheRequest } from "@mahiru/ui/utils/cache";
 
-export class CacheStoreClass {
+class CacheStoreClass {
   encode(str: string | number) {
     return encodeURIComponent(String(str));
   }
@@ -122,4 +122,27 @@ export class CacheStoreClass {
     });
     return es;
   }
+}
+
+let cacheStoreSingleton: CacheStoreClass | undefined;
+
+function getCache() {
+  if (!cacheStoreSingleton) {
+    cacheStoreSingleton = new CacheStoreClass();
+  }
+  return cacheStoreSingleton;
+}
+
+export function CacheStoreSnapshot(_: Function, ctx: ClassDecoratorContext) {
+  ctx.addInitializer(function (this) {
+    Object.defineProperty(this.prototype, "cacheStore", {
+      get() {
+        return getCache();
+      }
+    });
+  });
+}
+
+export interface WithCacheSnapshot {
+  readonly cacheStore: CacheStoreClass;
 }

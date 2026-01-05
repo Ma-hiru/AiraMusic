@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { AppScheme } from "@mahiru/ui/constants/scheme";
-import { CacheStore } from "@mahiru/ui/store/cache";
+import { StoreSnapshot } from "@mahiru/ui/store/snapshot";
 
 export function useFileCache(
   url: Undefinable<string>,
@@ -24,7 +24,8 @@ export function useFileCache(
     const controller = new AbortController();
     const run = () => {
       if (controller.signal.aborted) return;
-      CacheStore.checkOrStoreAsync(url, id, method, update, timeLimit, controller.signal)
+      StoreSnapshot.cacheStore
+        .checkOrStoreAsync(url, id, method, update, timeLimit, controller.signal)
         .then((check) => {
           if (controller.signal.aborted) return;
           if (check?.ok && check.index.file) {

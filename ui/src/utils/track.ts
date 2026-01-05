@@ -1,24 +1,13 @@
+import pLimit from "p-limit";
 import { EqError, Log } from "@mahiru/ui/utils/dev";
-import { CacheStore } from "@mahiru/ui/store/cache";
 import { Time } from "@mahiru/ui/utils/time";
 import { API } from "@mahiru/ui/api";
 import { NeteaseImage, NeteaseImageSize } from "@mahiru/ui/utils/image";
 import { Auth } from "@mahiru/ui/utils/auth";
-import { getUserStoreSnapshot } from "@mahiru/ui/store/user";
-import pLimit from "p-limit";
+import { AddStoreSnapshot, WithStoreSnapshot } from "@mahiru/ui/store/decorator";
 
-/**
- * 音质等级对应的码率
- */
-export const enum TrackQuality {
-  l = 128000,
-  m = 192000,
-  h = 320000,
-  sq = 990000,
-  hr = 9990000
-}
-
-export const NeteaseTrack = new (class {
+@AddStoreSnapshot
+class NeteaseTrackClass {
   private _metaCacheTimeLimit = Time.getCacheTimeLimit(1, "hour");
   private _shouldClearCacheList = new Set<number>();
   private _requestQuality: TrackQuality = TrackQuality.h;
@@ -43,7 +32,7 @@ export const NeteaseTrack = new (class {
   /** 获取Meta，包含缓存源 */
   private async getMeta(id: number, quality?: NeteaseQualityLevels) {
     const cacheKey = this.metaCacheKey(id);
-    const cacheResponse = await CacheStore.fetchObject<NeteaseSongUrlResponse>(
+    const cacheResponse = await this.cacheStore.fetchObject<NeteaseSongUrlResponse>(
       cacheKey,
       this._metaCacheTimeLimit
     );
@@ -52,7 +41,7 @@ export const NeteaseTrack = new (class {
     }
     return API.Track.getMP3(id, quality)
       .then((res) => {
-        if (res) void CacheStore.storeObject(cacheKey, res);
+        if (res) void this.cacheStore.storeObject(cacheKey, res);
         return res?.data || null;
       })
       .catch((err) => {
@@ -70,7 +59,7 @@ export const NeteaseTrack = new (class {
   /** 获取缓存音频源地址 */
   private async getCacheSource(id: number) {
     const cacheKey = this.sourceCacheKey(id);
-    const check = await CacheStore.check(cacheKey);
+    const check = await this.cacheStore.check(cacheKey);
     return check.ok ? check.index.file : null;
   }
 
@@ -78,7 +67,7 @@ export const NeteaseTrack = new (class {
   private async setCacheSource(id: number, url: string, signal?: AbortSignal) {
     const cacheKey = this.sourceCacheKey(id);
     if (signal && signal.aborted) return;
-    void CacheStore.storeAsync(url, cacheKey);
+    void this.cacheStore.storeAsync(url, cacheKey);
   }
 
   /** 删除缓存 */
@@ -86,8 +75,8 @@ export const NeteaseTrack = new (class {
     this._shouldClearCacheList.add(id);
     const metaKey = this.metaCacheKey(id);
     const sourceKey = this.sourceCacheKey(id);
-    void CacheStore.remove(metaKey);
-    void CacheStore.remove(sourceKey);
+    void this.cacheStore.remove(metaKey);
+    void this.cacheStore.remove(sourceKey);
   }
 
   /** 加载Track，包含Meta和Source */
@@ -130,7 +119,7 @@ export const NeteaseTrack = new (class {
         tasks.push({ id: this.sourceCacheKey(nextTrack.id), url: audioMeta?.[0]?.url });
       }
       if (tasks.length > 0 && !controller.signal.aborted) {
-        void CacheStore.checkOrStoreAsyncMutil(tasks);
+        void this.cacheStore.checkOrStoreAsyncMutil(tasks);
       }
     }, 10000);
     return () => {
@@ -239,7 +228,7 @@ export const NeteaseTrack = new (class {
     )
       return result;
 
-    const { UserProfile } = getUserStoreSnapshot();
+    const { UserProfile } = this.userSnapshot;
     const vipType = UserProfile?.vipType;
     // 0: 免费或无版权 1: VIP 歌曲 4: 购买专辑 8: 非会员可免费播放低音质，会员可播放高音质及下载
     if (track.fee === 1 || track.privilege?.fee === 1) {
@@ -307,12 +296,29 @@ export const NeteaseTrack = new (class {
     }
     return { tracks, privilege };
   }
-})();
+}
+interface NeteaseTrackClass extends WithStoreSnapshot {}
 
 type TrackSourceQualityReturn<T extends TrackQuality | undefined> = T extends undefined
   ? (NeteaseQualityLevels & { level: TrackQuality })[]
   : Undefinable<NeteaseQualityLevels & { level: TrackQuality }>;
 
+export const NeteaseTrack = new NeteaseTrackClass();
+
+/**
+ * 音质等级对应的码率
+ */
+export const enum TrackQuality {
+  l = 128000,
+  m = 192000,
+  h = 320000,
+  sq = 990000,
+  hr = 9990000
+}
+
+/**
+ * 歌曲Bitmark枚举
+ */
 export enum TrackBitmark {
   Stereo = 8192,
   PureMusic = 131072,

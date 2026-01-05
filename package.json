@@ -44,7 +44,7 @@
     "commit": "pnpm check && pnpm format && pnpm lint && pnpm auto-commit",
     "check": "tsgo --noEmit",
     "format": "prettier --write .",
-    "lint": "pnpm lint:oxlint && pnpm lint:eslint",
+    "lint": "pnpm lint:eslint",
     "lint:oxlint": "oxlint . -D correctness --ignore-path .gitignore --fix",
     "lint:eslint": "eslint . --fix",
     "auto-commit": "pnpm run-script-os",

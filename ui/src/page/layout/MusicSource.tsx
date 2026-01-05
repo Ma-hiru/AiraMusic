@@ -11,7 +11,7 @@ import { useSpectrumWorker } from "@mahiru/ui/hook/useSpectrumWorker";
 import { PlayerFSMStatusEnum, usePlayerStore } from "@mahiru/ui/store/player";
 import { useLayoutStore } from "@mahiru/ui/store/layout";
 import { useNetwork } from "@mahiru/ui/hook/useNetwork";
-import { usePlayerControlSync } from "@mahiru/ui/hook/usePlayerControlSync";
+import { addCloseTask } from "@mahiru/ui/utils/close";
 
 const MusicSource: FC<object> = () => {
   const {
@@ -27,7 +27,9 @@ const MusicSource: FC<object> = () => {
     PlayerInitialized,
     PlayerProgressGetter,
     SetPlayerStatus,
-    PlayerStatus
+    PlayerStatus,
+    InitPlayerCore,
+    SavePlayerCore
   } = usePlayerStore();
   const { IsTyping } = useLayoutStore(["IsTyping"]);
   // 注入 Audio 元素引用
@@ -41,6 +43,10 @@ const MusicSource: FC<object> = () => {
     };
   }, [SetAudioRefGetter]);
   // 处理初始化
+  useEffect(() => {
+    InitPlayerCore();
+    addCloseTask("save_player_core", async () => SavePlayerCore());
+  }, [InitPlayerCore, SavePlayerCore]);
   useEffect(() => {
     if (PlayerInitialized) {
       const audio = audioRealRef.current;
@@ -81,13 +87,7 @@ const MusicSource: FC<object> = () => {
     if (PlayerFSMStatus === PlayerFSMStatusEnum.playing) {
       requestPlayingRetryCount.current = 0;
     }
-  }, [
-    PlayerFSMStatus,
-    PlayerTrackStatus?.audio,
-    PlayingRequest,
-    SetPlayingRequest,
-    TriggerPlayerFSMEvent
-  ]);
+  }, [PlayerFSMStatus, PlayingRequest, SetPlayingRequest, TriggerPlayerFSMEvent]);
   // 监听 audio 播放状态变化
   useEffect(() => {
     if (!audio) return;
@@ -266,7 +266,6 @@ const MusicSource: FC<object> = () => {
       ready: isReady
     }));
   }, [SetSpectrumGetter, isReady, spectrumData]);
-  // 信息同步
 
   return (
     <audio

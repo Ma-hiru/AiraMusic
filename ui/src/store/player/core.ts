@@ -1,14 +1,11 @@
-import {
-  getPlayerStoreSnapshot,
-  PlayerFSMEvent,
-  PlayerStoreSnapshot,
-  WithPlayerSnapshot
-} from "@mahiru/ui/store/player";
+import { PlayerFSMEvent, PlayerStoreSnapshot, WithPlayerSnapshot } from "@mahiru/ui/store/player";
 import { startTransition } from "react";
 import { PlayerAudio } from "@mahiru/ui/store/player/audio";
 
+export interface PlayerCore extends WithPlayerSnapshot {}
+
 @PlayerStoreSnapshot
-export class PlayerCore extends WithPlayerSnapshot {
+export class PlayerCore {
   position = -1;
   playlist: PlayerTrackStatus[] = [];
 
@@ -326,7 +323,7 @@ export class PlayerCore extends WithPlayerSnapshot {
 
   private updateOuter() {
     const current = this.current();
-    this.snapshot.SetPlayerTrackStatus((draft) => {
+    this.playerSnapshot.SetPlayerTrackStatus((draft) => {
       if (draft && draft.track.id === current?.track.id) return;
       return current;
     });
@@ -334,14 +331,14 @@ export class PlayerCore extends WithPlayerSnapshot {
 
   private triggerFSMEvent(event: PlayerFSMEvent) {
     // 当触发 requestRestart 时，表示要切换歌曲并播放，需要同时设置播放请求
-    event === "requestRestart" && this.snapshot.SetPlayingRequest(true);
-    this.snapshot.TriggerPlayerFSMEvent(event);
+    event === "requestRestart" && this.playerSnapshot.SetPlayingRequest(true);
+    this.playerSnapshot.TriggerPlayerFSMEvent(event);
   }
 
   /// 初始化与缓存
 
   Sync = () => {
-    const { PlayerStatus } = getPlayerStoreSnapshot();
+    const { PlayerStatus } = this.playerSnapshot;
     this.playlist = structuredClone(PlayerStatus.playerList);
     this.position = PlayerStatus.position;
     this.updateOuter();
@@ -356,11 +353,11 @@ export class PlayerCore extends WithPlayerSnapshot {
 
   /// 其他
   get repeat() {
-    return this.snapshot.PlayerStatus.repeat;
+    return this.playerSnapshot.PlayerStatus.repeat;
   }
   set repeat(status: "off" | "one" | "all") {
     startTransition(() => {
-      this.snapshot.SetPlayerStatus((draft) => {
+      this.playerSnapshot.SetPlayerStatus((draft) => {
         if (draft.repeat !== status) {
           draft.repeat = status;
         }
@@ -368,11 +365,11 @@ export class PlayerCore extends WithPlayerSnapshot {
     });
   }
   get shuffle() {
-    return this.snapshot.PlayerStatus.shuffle;
+    return this.playerSnapshot.PlayerStatus.shuffle;
   }
   set shuffle(status: boolean) {
     startTransition(() => {
-      this.snapshot.SetPlayerStatus((draft) => {
+      this.playerSnapshot.SetPlayerStatus((draft) => {
         if (draft.shuffle !== status) {
           draft.shuffle = status;
         }
