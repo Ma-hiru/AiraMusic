@@ -1,6 +1,6 @@
 import { accessToken, cacheRequest } from "@mahiru/ui/utils/cache";
 
-class CacheStoreClass {
+export class CacheStoreClass {
   encode(str: string | number) {
     return encodeURIComponent(String(str));
   }
@@ -10,13 +10,13 @@ class CacheStoreClass {
     return cacheRequest("/api/check", { method: "GET", params: { id, timeLimit } });
   }
 
-  checkMutil(
+  checkMulti(
     items: { id: string; timeLimit?: number }[],
     timeLimit?: number
-  ): Promise<CacheCheckMutilResult> {
-    return cacheRequest("/api/check/mutil", {
+  ): Promise<CacheCheckMultiResult> {
+    return cacheRequest("/api/check/multi", {
       method: "POST",
-      data: { items, timeLimit } satisfies CacheCheckMutilRequest
+      data: { items, timeLimit } satisfies CacheCheckMultiRequest
     });
   }
 
@@ -57,8 +57,8 @@ class CacheStoreClass {
     return cacheRequest("/api/store/async", { method, params: { id, url } });
   }
 
-  storeAsyncMutil(items: { id?: string; url: string }[], method: string = "GET") {
-    return cacheRequest("/api/store/async/mutil", {
+  storeAsyncMulti(items: { id?: string; url: string }[], method: string = "GET") {
+    return cacheRequest("/api/store/async/multi", {
       method: "POST",
       data: { items, method } satisfies CacheStoreAsyncRequest
     });
@@ -81,11 +81,11 @@ class CacheStoreClass {
     });
   }
 
-  checkOrStoreAsyncMutil(
+  checkOrStoreAsyncMulti(
     items: { id?: string; url: string; update?: boolean; timeLimit?: number }[],
     method: string = "GET"
-  ): Promise<CacheCheckMutilResult> {
-    return cacheRequest("/api/check-store/mutil", {
+  ): Promise<CacheCheckMultiResult> {
+    return cacheRequest("/api/check-store/multi", {
       method: "POST",
       data: { method, items } satisfies CacheStoreAsyncRequest
     });
@@ -98,7 +98,19 @@ class CacheStoreClass {
 
   remove(id: number | string): Promise<CacheCheckResult> {
     id = this.encode(id);
+    return cacheRequest("/api/remove/async", { method: "GET", params: { id } });
+  }
+
+  removeSync(id: number | string): Promise<CacheCheckResult> {
+    id = this.encode(id);
     return cacheRequest("/api/remove", { method: "GET", params: { id } });
+  }
+
+  removeMulti(ids: string[]) {
+    return cacheRequest("/api/remove/multi", {
+      method: "POST",
+      data: { ids }
+    });
   }
 
   move(
@@ -122,27 +134,4 @@ class CacheStoreClass {
     });
     return es;
   }
-}
-
-let cacheStoreSingleton: CacheStoreClass | undefined;
-
-function getCache() {
-  if (!cacheStoreSingleton) {
-    cacheStoreSingleton = new CacheStoreClass();
-  }
-  return cacheStoreSingleton;
-}
-
-export function CacheStoreSnapshot(_: Function, ctx: ClassDecoratorContext) {
-  ctx.addInitializer(function (this) {
-    Object.defineProperty(this.prototype, "cacheStore", {
-      get() {
-        return getCache();
-      }
-    });
-  });
-}
-
-export interface WithCacheSnapshot {
-  readonly cacheStore: CacheStoreClass;
 }

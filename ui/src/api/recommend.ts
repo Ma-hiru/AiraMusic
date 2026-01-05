@@ -1,7 +1,6 @@
 import { apiRequest } from "@mahiru/ui/utils/request";
 import { Log } from "@mahiru/ui/utils/dev";
 import { NeteaseBannerResponse } from "@mahiru/ui/types/netease/banner";
-import { Time } from "@mahiru/ui/utils/time";
 import { NCMServerErr } from "@mahiru/ui/utils/errs";
 import { StoreSnapshot } from "@mahiru/ui/store/snapshot";
 
@@ -43,7 +42,7 @@ export async function dailyRecommendPlaylist(): Promise<NeteaseDailyRecommendPla
   const cache = await StoreSnapshot.cacheStore.fetchObject<NeteaseDailyRecommendPlaylistResponse>(
     cacheKey,
     // 如果是新的一天则强制更新缓存,否则缓存24小时
-    Time.isChangeDay() ? 0 : 1000 * 60 * 60 * 24
+    StoreSnapshot.isChangeDay ? 0 : 1000 * 60 * 60 * 24
   );
   if (cache) {
     Log.trace("api/recommend.ts:dailyRecommendPlaylist", "使用推荐歌单缓存");
@@ -69,7 +68,7 @@ export async function dailyRecommendTracks(): Promise<NeteaseDailyRecommendTrack
   const cache = await StoreSnapshot.cacheStore.fetchObject<NeteaseDailyRecommendTracksResponse>(
     cacheKey,
     // 如果是新的一天则强制更新缓存,否则缓存24小时
-    Time.isChangeDay() ? 0 : 1000 * 60 * 60 * 24
+    StoreSnapshot.isChangeDay ? 0 : 1000 * 60 * 60 * 24
   );
   if (cache) {
     Log.trace("api/recommend.ts:dailyRecommendTracks", "使用推荐歌曲缓存");

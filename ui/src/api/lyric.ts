@@ -1,7 +1,6 @@
 import { apiRequest } from "@mahiru/ui/utils/request";
 import { NCMServerErr } from "@mahiru/ui/utils/errs";
 import { Log } from "@mahiru/ui/utils/dev";
-import { Time } from "@mahiru/ui/utils/time";
 import { StoreSnapshot } from "@mahiru/ui/store/snapshot";
 
 export async function getLyric(id: number) {
@@ -9,7 +8,7 @@ export async function getLyric(id: number) {
   const cache = await StoreSnapshot.cacheStore.fetchObject<NeteaseLyricResponse>(
     cacheKey,
     // 如果是新的一天则强制更新缓存
-    Time.isChangeDay() ? 0 : 1000 * 60 * 60 * 24 * 7
+    StoreSnapshot.isChangeDay ? 0 : 1000 * 60 * 60 * 24 * 7
   );
   if (cache) {
     Log.trace("api/lyric.ts:getLyric", "使用歌词缓存");
@@ -37,7 +36,7 @@ export async function getYRCLyric(id: number) {
   const cache = await StoreSnapshot.cacheStore.fetchObject<NeteaseLyricResponseNew>(
     cacheKey,
     // 如果是新的一天则强制更新缓存
-    Time.isChangeDay() ? 0 : 1000 * 60 * 60 * 24 * 7
+    StoreSnapshot.isChangeDay ? 0 : 1000 * 60 * 60 * 24 * 7
   );
   if (cache) {
     Log.trace("api/lyric.ts:getYRCLyric", "使用歌词缓存");

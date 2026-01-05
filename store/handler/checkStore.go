@@ -26,9 +26,9 @@ func CheckOrStoreAsync(ctx *gin.Context) {
 	})
 }
 
-// CheckOrStoreAsyncMutil
+// CheckOrStoreAsyncMulti
 // note: 注意解码URL
-func CheckOrStoreAsyncMutil(ctx *gin.Context) {
+func CheckOrStoreAsyncMulti(ctx *gin.Context) {
 	var requestParam = StoreMutilShouldBind{}
 	if err := ctx.ShouldBindJSON(&requestParam); err != nil {
 		ctx.JSON(200, gin.H{

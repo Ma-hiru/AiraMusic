@@ -14,7 +14,7 @@ export function useThemeSyncSend(syncWins: WindowType[]) {
 
   const sendThemeSync = useCallback(() => {
     const id = requestIdleCallback(() => {
-      const data: MessageTypeMap["themeSync"] = {
+      const data: ThemeSync = {
         mainColor: mainColor.string(),
         secondaryColor: secondaryColor.string(),
         textColorOnMain: textColorOnMain.string(),

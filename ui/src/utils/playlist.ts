@@ -381,8 +381,8 @@ class PlaylistManager {
     // 检查或预缓存
     let check;
     try {
-      if (noStore) check = await this.cacheStore.checkMutil(coverURLs);
-      else check = await this.cacheStore.checkOrStoreAsyncMutil(coverURLs, "GET");
+      if (noStore) check = await this.cacheStore.checkMulti(coverURLs);
+      else check = await this.cacheStore.checkOrStoreAsyncMulti(coverURLs, "GET");
     } catch (err) {
       Log.error(
         new EqError({

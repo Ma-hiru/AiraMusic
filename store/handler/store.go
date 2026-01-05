@@ -37,7 +37,7 @@ type StoreMutilShouldBind struct {
 	Method string      `json:"method" binding:"required"`
 }
 
-func StoreAsyncMutil(ctx *gin.Context) {
+func StoreAsyncMulti(ctx *gin.Context) {
 	var requestParam = StoreMutilShouldBind{}
 	if err := ctx.ShouldBindJSON(&requestParam); err != nil {
 		ctx.JSON(200, gin.H{

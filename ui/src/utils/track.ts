@@ -119,7 +119,7 @@ class NeteaseTrackClass {
         tasks.push({ id: this.sourceCacheKey(nextTrack.id), url: audioMeta?.[0]?.url });
       }
       if (tasks.length > 0 && !controller.signal.aborted) {
-        void this.cacheStore.checkOrStoreAsyncMutil(tasks);
+        void this.cacheStore.checkOrStoreAsyncMulti(tasks);
       }
     }, 10000);
     return () => {

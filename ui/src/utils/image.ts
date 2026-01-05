@@ -1,8 +1,11 @@
 import { AddStoreSnapshot, WithStoreSnapshot } from "@mahiru/ui/store/decorator";
+import { Time } from "@mahiru/ui/utils/time";
 
 @AddStoreSnapshot
 class NeteaseImageClass {
   cache: Record<string, { time: number; url?: string }> = {};
+  timeLimit: number = Time.getCacheTimeLimit(7, "day");
+  countLimit: number = 10000;
 
   constructor() {}
 
@@ -81,11 +84,46 @@ class NeteaseImageClass {
     return result?.url || undefined;
   }
 
+  private async clearCache() {
+    const now = Date.now();
+    const keys = Object.keys(this.cache);
+    const removeItems: Set<string> = new Set();
+
+    for (const key of keys) {
+      const item = this.cache[key]!;
+      if (now - item.time > this.timeLimit) {
+        // 删除旧缓存
+        item.url && removeItems.add(item.url);
+        // 删除缓存
+        delete this.cache[key];
+      }
+    }
+
+    const cacheKeys = Object.keys(this.cache);
+    if (cacheKeys.length > this.countLimit) {
+      const sortedKeys = cacheKeys.sort((a, b) => {
+        return this.cache[a]!.time - this.cache[b]!.time;
+      });
+      const removeCount = cacheKeys.length - this.countLimit;
+      for (let i = 0; i < removeCount; i++) {
+        const key = sortedKeys[i]!;
+        const item = this.cache[key];
+        // 删除旧缓存
+        item?.url && removeItems.add(item.url);
+        // 删除缓存
+        delete this.cache[key];
+      }
+    }
+
+    await this.cacheStore.removeMulti(Array.from(keys));
+  }
+
   async loadCacheFromLocal() {
     const cache = await this.cacheStore.fetchObject<typeof this.cache>("netease_image_cache");
     if (cache) {
       this.cache = cache;
     }
+    await this.clearCache();
   }
 
   async saveCacheToLocal() {
@@ -105,4 +143,9 @@ export const enum NeteaseImageSize {
 
 export const NeteaseImage = new NeteaseImageClass();
 
-void NeteaseImage.loadCacheFromLocal();
+requestIdleCallback(
+  () => {
+    void NeteaseImage.loadCacheFromLocal();
+  },
+  { timeout: 5000 }
+);

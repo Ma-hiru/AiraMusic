@@ -55,6 +55,51 @@ func RemoveAsync(ctx *gin.Context) {
 	})
 }
 
+type RemoveMultiShouldBind struct {
+	Ids []string `json:"ids" binding:"required"`
+}
+
+func RemoveMulti(ctx *gin.Context) {
+	var requestParam = RemoveMultiShouldBind{}
+	if err := ctx.ShouldBindJSON(&requestParam); err != nil {
+		ctx.JSON(200, gin.H{
+			"ok":    false,
+			"error": "invalid parameters",
+		})
+		return
+	}
+	var store = file.GetStore()
+	var results = make([]gin.H, 0, len(requestParam.Ids))
+	for _, id := range requestParam.Ids {
+		var index, ok = store.Check(id)
+		if !ok {
+			results = append(results, gin.H{
+				"ok":    false,
+				"index": file.Index{},
+			})
+			continue
+		}
+		success, err := store.Remove(index)
+		if err != nil {
+			results = append(results, gin.H{
+				"ok":    false,
+				"index": file.Index{},
+			})
+			log.Println(err)
+			continue
+		}
+		results = append(results, gin.H{
+			"ok":    success,
+			"index": index,
+		})
+	}
+	ctx.JSON(200, gin.H{
+		"ok":      true,
+		"results": results,
+	})
+
+}
+
 func Clear(ctx *gin.Context) {
 	var store = file.GetStore()
 	count, err := store.Clear()

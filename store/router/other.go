@@ -10,6 +10,7 @@ import (
 func otherRoutes(app *gin.Engine) {
 	app.GET("/api/remove", handler.Remove)
 	app.GET("/api/remove/async", handler.RemoveAsync)
+	app.POST("/api/remove/multi", handler.RemoveMulti)
 	app.GET("/api/clear", handler.Clear)
 	app.GET("/api/count", handler.Count)
 	app.GET("/api/size", handler.Size)

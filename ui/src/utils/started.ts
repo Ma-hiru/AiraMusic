@@ -1,7 +1,7 @@
 import { EqError, Log } from "@mahiru/ui/utils/dev";
 import { Auth } from "@mahiru/ui/utils/auth";
 import { Task } from "@mahiru/ui/utils/task";
-import { Time } from "@mahiru/ui/utils/time";
+import { StoreSnapshot } from "@mahiru/ui/store/snapshot";
 
 export function started() {
   // 仅在主窗口执行这些任务
@@ -15,7 +15,7 @@ export function started() {
 }
 
 function onChangeDay(task: NormalFunc<never[], Promise<void>>[]) {
-  if (Auth.isAccountLoggedIn() && Time.isChangeDay()) {
+  if (Auth.isAccountLoggedIn() && StoreSnapshot.isChangeDay) {
     Log.trace("start daily task");
     for (const func of task) {
       func()

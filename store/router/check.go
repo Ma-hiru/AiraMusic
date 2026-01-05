@@ -8,5 +8,5 @@ import (
 
 func checkRoutes(app *gin.Engine) {
 	app.GET("/api/check", handler.Check)
-	app.POST("/api/check/mutil", handler.CheckMutil)
+	app.POST("/api/check/multi", handler.CheckMulti)
 }

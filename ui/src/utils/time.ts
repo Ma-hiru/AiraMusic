@@ -1,5 +1,4 @@
 import Dayjs from "dayjs";
-import { StoreSnapshot } from "@mahiru/ui/store/snapshot";
 
 function formatTrackDate(time?: number, split?: string) {
   if (time) {
@@ -34,11 +33,6 @@ function padNumber(num: number, length: number) {
   return num.toString().padStart(length, "0");
 }
 
-function isChangeDay() {
-  const lastDate = StoreSnapshot.userSnapshot.UserLastRefreshCookieDate;
-  return typeof lastDate !== "number" || lastDate !== new Date().getDate();
-}
-
 function getCacheTimeLimit(time: number, unit: "seconds" | "hour" | "day" | "minute") {
   let limit = 0;
   switch (unit) {
@@ -62,6 +56,5 @@ export const Time = {
   formatTrackDate,
   formatTrackTime,
   padNumber,
-  isChangeDay,
   getCacheTimeLimit
 };

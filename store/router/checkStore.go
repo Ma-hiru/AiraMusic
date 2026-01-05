@@ -8,5 +8,5 @@ import (
 
 func checkStoreRoutes(app *gin.Engine) {
 	app.GET("/api/check-store", handler.CheckOrStoreAsync)
-	app.POST("/api/check-store/mutil", handler.CheckOrStoreAsyncMutil)
+	app.POST("/api/check-store/multi", handler.CheckOrStoreAsyncMulti)
 }

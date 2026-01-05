@@ -16,7 +16,7 @@ type CacheCheckResult = {
   index: CacheStoreIndex;
 };
 
-type CacheCheckMutilRequest = {
+type CacheCheckMultiRequest = {
   items: {
     id: string;
     timeLimit?: number;
@@ -24,7 +24,7 @@ type CacheCheckMutilRequest = {
   timeLimit?: number;
 };
 
-type CacheCheckMutilResult = {
+type CacheCheckMultiResult = {
   ok: boolean;
   results: CacheCheckResult[];
 };

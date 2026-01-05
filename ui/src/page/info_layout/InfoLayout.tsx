@@ -12,7 +12,7 @@ import { useThemeSyncReceive } from "@mahiru/ui/hook/useThemeSyncReceive";
 const InfoLayout: FC<object> = () => {
   const navigate = useNavigate();
   const [infoSync, setInfoSync] = useState<InfoSync<"none">>(defaultInfoCtxValue);
-  const { themeSync } = useThemeSyncReceive();
+  const { themeSync, requestThemeSync } = useThemeSyncReceive();
 
   useEffect(() => {
     if (infoSync.type === "none") return;
@@ -24,8 +24,9 @@ const InfoLayout: FC<object> = () => {
   }, []);
 
   useEffect(() => {
+    requestThemeSync();
     Renderer.event.loaded({ broadcast: true });
-  }, []);
+  }, [requestThemeSync]);
   const { stage } = useStage();
   return (
     <div className="w-screen h-screen bg-white overflow-hidden relative">

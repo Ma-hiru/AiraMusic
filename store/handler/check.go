@@ -29,13 +29,13 @@ type CheckItem struct {
 	TimeLimit int64  `json:"timeLimit"`
 }
 
-type CheckMutilShouldBind struct {
+type CheckMultiShouldBind struct {
 	Items     []CheckItem `json:"items" binding:"required"`
 	TimeLimit int64       `json:"timeLimit"`
 }
 
-func CheckMutil(ctx *gin.Context) {
-	var requestParam = CheckMutilShouldBind{}
+func CheckMulti(ctx *gin.Context) {
+	var requestParam = CheckMultiShouldBind{}
 	if err := ctx.ShouldBindJSON(&requestParam); err != nil {
 		ctx.JSON(200, gin.H{
 			"ok":      false,
