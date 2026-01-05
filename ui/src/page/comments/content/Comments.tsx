@@ -6,13 +6,13 @@ import { useScrollAutoHide } from "@mahiru/ui/hook/useScrollAutoHide";
 interface CommentsProps {
   comments: NeteaseComment[];
   infoSync: InfoSync<"comments">;
-  themeSync: InfoSync<"theme">;
+  themeSync: ThemeSync;
 }
 
 const Comments: FC<CommentsProps> = ({ comments, infoSync, themeSync }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const { onScroll } = useScrollAutoHide(containerRef);
-  const isMainColorDark = Color(themeSync.value.mainColor).isDark();
+  const isMainColorDark = Color(themeSync?.mainColor).isDark();
   return (
     <div
       ref={containerRef}
@@ -24,9 +24,9 @@ const Comments: FC<CommentsProps> = ({ comments, infoSync, themeSync }) => {
           comment={comment}
           type={infoSync.value.type}
           sourceId={infoSync.value.id}
-          mainColor={Color(themeSync.value.mainColor).darken(0.5).string()}
-          secondaryColor={themeSync.value.secondaryColor}
-          textColorOnMain={themeSync.value.textColor}
+          mainColor={Color(themeSync.mainColor).darken(0.5).string()}
+          secondaryColor={themeSync.secondaryColor}
+          textColorOnMain={themeSync.textColorOnMain}
           isMainColorDark={isMainColorDark}
         />
       ))}

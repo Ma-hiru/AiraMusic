@@ -1,6 +1,5 @@
 import { ZustandConfig } from "@mahiru/ui/types/zustand";
 import { PlayerFSM, PlayerFSMEvent, PlayerFSMStatusEnum } from "@mahiru/ui/store/player/fsm";
-import { AudioControl } from "@mahiru/ui/hook/usePlayerAudio";
 import { SpectrumData, SpectrumOptions } from "@mahiru/ui/hook/useSpectrumWorker";
 import { NeteaseLyric } from "@mahiru/ui/utils/lyric";
 import { PlayerCore } from "@mahiru/ui/store/player/core";
@@ -18,12 +17,10 @@ function createPlayerRuntime() {
     duration: 0,
     currentTime: 0
   };
-  const playerCore = new PlayerCore();
   return {
     playerFSM,
     playerFSMEventStack,
-    playerProgress,
-    playerCore
+    playerProgress
   };
 }
 
@@ -61,11 +58,6 @@ export const PlayerStoreConfig: ZustandConfig<
   SetAudioRefGetter: (getter) => {
     set((draft) => {
       draft.AudioRefGetter = getter;
-    });
-  },
-  SetAudioControlGetter: (getter) => {
-    set((draft) => {
-      draft.AudioControlGetter = getter;
     });
   },
   SetPlayerStatus: (updater) => {
@@ -125,16 +117,15 @@ export const PlayerStoreConfig: ZustandConfig<
       }
     }
 
-    runtime.playerCore.Sync();
+    get().PlayerCoreGetter().Sync();
     set((draft) => {
       draft.PlayerInitialized = true;
       draft.PlayingRequest = false;
-      draft.PlayerCoreGetter = () => runtime.playerCore;
     });
   },
   SavePlayerCore: () => {
-    const { TriggerPlayerFSMEvent } = get();
-    const { playlist, position } = runtime.playerCore.Save();
+    const { TriggerPlayerFSMEvent, PlayerCoreGetter } = get();
+    const { playlist, position } = PlayerCoreGetter().Save();
     TriggerPlayerFSMEvent("requestPause");
 
     set((draft) => {
@@ -158,14 +149,13 @@ export const PlayerStoreConfig: ZustandConfig<
 
 const InitialState: PlayerStoreInitialState = {
   AudioRefGetter: () => null,
-  AudioControlGetter: () => null,
   PlayerProgressGetter: () => runtime.playerProgress,
   SpectrumOptions: null,
   SpectrumGetter: () => ({
     data: null,
     ready: false
   }),
-  PlayerCoreGetter: () => null,
+  PlayerCoreGetter: () => new PlayerCore(),
   PlayingRequest: false,
   PlayerStatus: {
     position: 0,
@@ -184,9 +174,8 @@ const InitialState: PlayerStoreInitialState = {
 export type PlayerStoreInitialState = {
   PlayerFSMStatus: PlayerFSMStatusEnum;
   AudioRefGetter: NormalFunc<[], Nullable<HTMLAudioElement>>;
-  AudioControlGetter: NormalFunc<[], Nullable<AudioControl>>;
   PlayingRequest: boolean;
-  PlayerCoreGetter: NormalFunc<[], Nullable<PlayerCore>>;
+  PlayerCoreGetter: NormalFunc<[], PlayerCore>;
   PlayerProgressGetter: NormalFunc<[], PlayerProgress>;
   PlayerStatus: PlayerStatus;
   PlayerTrackStatus: Nullable<PlayerTrackStatus>;
@@ -204,7 +193,6 @@ export type PlayerStoreInitialState = {
 export type PlayerStoreActions = {
   TriggerPlayerFSMEvent: NormalFunc<[event: PlayerFSMEvent]>;
   SetAudioRefGetter: NormalFunc<[getter: () => Nullable<HTMLAudioElement>]>;
-  SetAudioControlGetter: NormalFunc<[getter: () => Nullable<AudioControl>]>;
   SetSpectrumGetter: NormalFunc<[getter: PlayerStoreInitialState["SpectrumGetter"]]>;
   SetSpectrumOptions: NormalFunc<[options: Nullable<SpectrumOptions>]>;
   SetPlayerStatus: NormalFunc<[updater: (draft: PlayerStatus) => void | PlayerStatus]>;

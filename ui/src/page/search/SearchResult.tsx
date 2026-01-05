@@ -10,7 +10,7 @@ interface SearchResultProps {
   type: SearchType;
   setSearchType: NormalFunc<[type: SearchType]>;
   className?: string;
-  themeSync: InfoSync<"theme">;
+  themeSync: ThemeSync;
   requestResult: NormalFunc<[pageNo: number]>;
   currentPage: number;
   totalResult: number;
@@ -146,7 +146,7 @@ const SearchResult: FC<SearchResultProps> = ({
       <div className="flex gap-4 justify-center items-center">
         <span
           style={{
-            color: type === SearchType.COMPREHENSIVE ? themeSync.value.mainColor : undefined
+            color: type === SearchType.COMPREHENSIVE ? themeSync.mainColor : undefined
           }}
           className={cx("cursor-pointer")}
           onClick={() => {
@@ -156,7 +156,7 @@ const SearchResult: FC<SearchResultProps> = ({
         </span>
         <span
           style={{
-            color: type === SearchType.SONG ? themeSync.value.mainColor : undefined
+            color: type === SearchType.SONG ? themeSync.mainColor : undefined
           }}
           className={cx("cursor-pointer")}
           onClick={() => {
@@ -166,7 +166,7 @@ const SearchResult: FC<SearchResultProps> = ({
         </span>
         <span
           style={{
-            color: type === SearchType.ALBUM ? themeSync.value.mainColor : undefined
+            color: type === SearchType.ALBUM ? themeSync.mainColor : undefined
           }}
           className={cx("cursor-pointer")}
           onClick={() => {
@@ -176,7 +176,7 @@ const SearchResult: FC<SearchResultProps> = ({
         </span>
         <span
           style={{
-            color: type === SearchType.ARTIST ? themeSync.value.mainColor : undefined
+            color: type === SearchType.ARTIST ? themeSync.mainColor : undefined
           }}
           className={cx("cursor-pointer")}
           onClick={() => {
@@ -186,7 +186,7 @@ const SearchResult: FC<SearchResultProps> = ({
         </span>
         <span
           style={{
-            color: type === SearchType.PLAYLIST ? themeSync.value.mainColor : undefined
+            color: type === SearchType.PLAYLIST ? themeSync.mainColor : undefined
           }}
           className={cx("cursor-pointer")}
           onClick={() => {

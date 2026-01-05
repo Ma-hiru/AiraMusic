@@ -1,15 +1,16 @@
 import { FC, memo, useEffect, useRef } from "react";
-import { useInfoCtx, useInfoThemeCtx } from "@mahiru/ui/ctx/InfoCtx";
+import { useInfoCtx } from "@mahiru/ui/ctx/InfoCtx";
 import { SearchType } from "@mahiru/ui/api/search";
 import { motion } from "motion/react";
 import { useSearch } from "@mahiru/ui/hook/useSearch";
 import SearchResult from "@mahiru/ui/page/search/SearchResult";
 import SearchHostList from "@mahiru/ui/page/search/SearchHostList";
 import SearchInput, { SearchInputRef } from "@mahiru/ui/page/search/SearchInput";
+import { useThemeSyncReceive } from "@mahiru/ui/hook/useThemeSyncReceive";
 
 const SearchPage: FC<object> = () => {
   const infoSync = useInfoCtx<"search">();
-  const themeSync = useInfoThemeCtx();
+  const { themeSync } = useThemeSyncReceive();
   const searchInputRef = useRef<Nullable<SearchInputRef>>(null);
 
   const {

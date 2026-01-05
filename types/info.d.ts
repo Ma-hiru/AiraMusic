@@ -23,12 +23,7 @@ type InfoSyncValueMap = {
   artist: number;
   album: number;
   none: undefined;
-  theme: {
-    mainColor: string;
-    secondaryColor: string;
-    textColor: string;
-    backgroundImage: Undefinable<string>;
-  };
+  displayType: "static" | "subscribe";
 };
 
 type InfoSyncType = keyof InfoSyncValueMap;
@@ -36,8 +31,4 @@ type InfoSyncType = keyof InfoSyncValueMap;
 type InfoSync<T extends InfoSyncType> = {
   type: T;
   value: InfoSyncValueMap[T];
-};
-
-type InfoSyncReverse = {
-  displayType?: "static" | "subscribe";
 };

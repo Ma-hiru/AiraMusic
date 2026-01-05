@@ -6,7 +6,7 @@ import TrackItem from "@mahiru/ui/componets/track_item/TrackItem";
 
 interface SongResultProps {
   ids: number[];
-  themeSync: InfoSync<"theme">;
+  themeSync: ThemeSync;
 }
 
 const SongResultSummary: FC<SongResultProps> = ({ ids, themeSync }) => {
@@ -25,8 +25,8 @@ const SongResultSummary: FC<SongResultProps> = ({ ids, themeSync }) => {
       <TrackItem
         tracks={tracks}
         trackIdx={index}
-        textColorOnMain={Color(themeSync.value.textColor)}
-        mainColor={Color(themeSync.value.mainColor)}
+        textColorOnMain={Color(themeSync.textColorOnMain)}
+        mainColor={Color(themeSync.mainColor)}
         showHeart={false}
       />
     );

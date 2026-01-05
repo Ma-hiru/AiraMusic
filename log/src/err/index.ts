@@ -1,4 +1,4 @@
-class EqErrorRaw {
+export class EqErrorRaw {
   raw?: Error;
   label?: string;
   readonly id?: number | string | symbol;
@@ -34,7 +34,7 @@ class EqErrorRaw {
     return this.message === other.message;
   }
 
-  create(label: string, err: any) {
+  create(label?: string, err?: any) {
     return new EqErrorRaw(
       {
         label,

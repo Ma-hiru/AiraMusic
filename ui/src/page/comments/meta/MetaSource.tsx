@@ -5,7 +5,7 @@ import { CommentType } from "@mahiru/ui/api/comment";
 import NeteaseImage from "@mahiru/ui/componets/public/NeteaseImage";
 
 interface MetaSourceProps {
-  themeSync: InfoSync<"theme">;
+  themeSync: ThemeSync;
   infoSync: InfoSync<"comments">;
 }
 
@@ -34,7 +34,7 @@ const MetaSource: FC<MetaSourceProps> = ({ infoSync, themeSync }) => {
   return (
     <div
       className="flex justify-center items-center select-none mb-2 gap-2"
-      style={{ color: Color(themeSync.value.secondaryColor).darken(0.5).string() }}>
+      style={{ color: Color(themeSync?.secondaryColor).darken(0.5).string() }}>
       <NeteaseImage
         className="size-7 rounded-full sm:size-8"
         src={RenderData.sourceCover}

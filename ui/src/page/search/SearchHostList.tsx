@@ -7,7 +7,7 @@ interface SearchHostListProps {
   show: boolean;
   hotSearchList: NeteaseSearchHotListDetail[];
   onClick?: (keyword: string) => void;
-  themeSync: InfoSync<"theme">;
+  themeSync: ThemeSync;
 }
 
 const SearchHostList: FC<SearchHostListProps> = ({ show, hotSearchList, onClick, themeSync }) => {
@@ -33,8 +33,8 @@ const SearchHostList: FC<SearchHostListProps> = ({ show, hotSearchList, onClick,
           }}>
           <div
             style={{
-              background: Color(themeSync.value.mainColor).alpha(0.8).string(),
-              color: themeSync.value.textColor
+              background: Color(themeSync.mainColor).alpha(0.8).string(),
+              color: themeSync.textColorOnMain
             }}
             className="flex flex-col gap-2 mt-4 overflow-hidden bg-white/20 rounded-md px-4 py-2">
             <div className="text-left font-semibold text-sm">热搜列表</div>

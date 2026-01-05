@@ -13,30 +13,36 @@ type FontSize = `${number}px` | `${number}rem` | `${number}em`;
 
 type ControlProps = Omit<HTMLAttributes<HTMLDivElement>, "color"> & {
   showBg: boolean;
-  setShowBg: (show: boolean) => void;
+  setShowBg: NormalFunc<[show: boolean]>;
+  playerStatusSync: Nullable<PlayerStatusSync>;
+  trackSync: Nullable<PlayerTrackStatus>;
+  themeSync: ThemeSync;
+  currentTime: number;
+  duration: number;
   color?: string;
-  setColor: (color?: string) => void;
-  lyricSync?: LyricSync;
-  lyricInit?: LyricInit;
+  setColor: NormalFunc<[color?: string]>;
   lock: boolean;
-  setLock: (lock: boolean) => void;
+  setLock: NormalFunc<[lock: boolean]>;
   fontSize: FontSize;
-  setFontSize: (size: FontSize) => void;
+  setFontSize: NormalFunc<[size: FontSize]>;
 };
 
 const Control: FC<ControlProps> = ({
   showBg,
   color,
-  lyricSync,
-  lyricInit,
   lock,
+  playerStatusSync,
+  trackSync,
+  themeSync,
   setLock,
   setColor,
   fontSize,
   setFontSize,
+  currentTime,
+  duration,
   ...rest
 }) => {
-  const track = lyricInit?.trackStatus?.track;
+  const track = trackSync?.track;
   const [openColorSelect, setOpenColorSelect] = useState(false);
   const titleContainer = useRef<HTMLDivElement>(null);
 
@@ -53,17 +59,15 @@ const Control: FC<ControlProps> = ({
   }, [fontSize, setFontSize]);
 
   const setLyricVersion = useCallback((version: LyricVersionType) => {
-    Renderer.sendMessage("lyricSyncReverse", "main", {
-      playerStatus: {
-        lyricVersion: version
-      }
+    Renderer.sendMessage("reverseSync", "main", {
+      chooseLyricVersion: version
     });
   }, []);
 
   const { hasRm, hasTl, rmActive, tlActive, setRm, setTl } = useLyric(
-    lyricSync?.playerStatus.lyricVersion,
+    playerStatusSync?.lyricVersion,
     setLyricVersion,
-    lyricInit?.trackStatus.lyric
+    trackSync?.lyric
   );
   useManualAutoScroll(titleContainer, {
     speed: 10,
@@ -87,7 +91,7 @@ const Control: FC<ControlProps> = ({
         "w-screen px-2 py-1",
         showBg && "bg-black/40",
         css`
-          color: ${color || lyricSync?.themeColor || "#ffffff"};
+          color: ${color || themeSync.mainColor || "#ffffff"};
         `
       )}
       drag={showBg}
@@ -101,19 +105,19 @@ const Control: FC<ControlProps> = ({
           <NoDrag
             onClick={() => setOpenColorSelect(!openColorSelect)}
             className="relative size-4 rounded-sm cursor-pointer mr-1"
-            style={{ backgroundColor: color || lyricSync?.themeColor || "#ffffff" }}>
+            style={{ backgroundColor: color || themeSync.mainColor || "#ffffff" }}>
             <NoDrag
               className="absolute top-full mt-2 flex justify-start items-center gap-1 ease-in-out duration-300 transition-opacity"
               style={{
                 opacity: openColorSelect ? 1 : 0,
                 pointerEvents: openColorSelect ? "auto" : "none"
               }}>
-              {lyricSync?.themeColor && (
+              {themeSync.mainColor && (
                 <NoDrag
                   className="size-4 rounded-sm cursor-pointer text-[8px] font-semibold"
-                  style={{ backgroundColor: lyricSync.themeColor }}
+                  style={{ backgroundColor: themeSync.mainColor }}
                   onClick={() => {
-                    if (lyricSync.themeColor) {
+                    if (themeSync.mainColor) {
                       setColor(undefined);
                       setOpenColorSelect(false);
                     }
@@ -219,9 +223,9 @@ const Control: FC<ControlProps> = ({
             </NoDrag>
           </div>
           <span className="text-[12px] font-semibold">
-            {Time.formatTrackTime(lyricSync?.progress?.currentTime, "s")}
+            {Time.formatTrackTime(currentTime, "s")}
             {" / "}
-            {Time.formatTrackTime(lyricSync?.progress?.duration, "s")}
+            {Time.formatTrackTime(duration, "s")}
           </span>
         </div>
       </div>

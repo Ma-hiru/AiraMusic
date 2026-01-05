@@ -15,14 +15,17 @@ import { Renderer } from "@mahiru/ui/utils/renderer";
 import { UI } from "@mahiru/ui/utils/ui";
 import { NeteaseLyric } from "@mahiru/ui/utils/lyric";
 import { Stage, useStage } from "@mahiru/ui/hook/useStage";
+import { useThemeSyncReceive } from "@mahiru/ui/hook/useThemeSyncReceive";
+import { usePlayerProgressSyncReceive } from "@mahiru/ui/hook/usePlayerProgressSyncReceive";
+import { usePlayerStatusSyncReceive } from "@mahiru/ui/hook/usePlayerStatusSyncReceive";
+import { PlayerFSMStatusEnum } from "@mahiru/ui/store/player";
+import { usePlayerTrackSyncReceive } from "@mahiru/ui/hook/usePlayerTrackSyncReceive";
 
 const LyricPage: FC<object> = () => {
   const { stage } = useStage();
   const lyricPlayerRef = useRef<LyricPlayerRef>(null);
   const [showBg, setShowBg] = useState(false);
   const [lock, setLock] = useState(false);
-  const [lyricSync, setLyricSync] = useState<LyricSync>();
-  const [lyricInit, setLyricInit] = useState<LyricInit>();
   const [color, setColor] = useState(() => {
     return window.localStorage.getItem("lyricWindowColor") || undefined;
   });
@@ -31,48 +34,49 @@ const LyricPage: FC<object> = () => {
   });
   const showBgTimer = useRef<Nullable<ReturnType<typeof setTimeout>>>(null);
 
-  // 同步信息
-  useEffect(() => {
-    const removeInitListener = Renderer.addMessageHandler("lyricInit", "main", setLyricInit);
-    const removeSyncListener = Renderer.addMessageHandler("lyricSync", "main", setLyricSync);
+  const { themeSync } = useThemeSyncReceive();
+  const { progressSync } = usePlayerProgressSyncReceive();
+  const { playerStatusSync } = usePlayerStatusSyncReceive();
+  const { trackSync } = usePlayerTrackSyncReceive();
 
-    return () => {
-      removeInitListener();
-      removeSyncListener();
-    };
-  }, []);
+  const getInfo = useRef({
+    progressSync,
+    playerStatusSync
+  });
+  getInfo.current.progressSync = progressSync;
+  getInfo.current.playerStatusSync = playerStatusSync;
+
   // 歌词播放同步
   useEffect(() => {
     let rafId = 0;
     let lastTime = 0;
     const onFrame = (time: number) => {
-      if (!lyricSync || !lyricSync.playing) return;
+      const { playerStatusSync, progressSync } = getInfo.current;
+      if (playerStatusSync?.fsmState !== PlayerFSMStatusEnum.playing) return;
       if (!lastTime) lastTime = time;
       const delta = time - lastTime;
       lastTime = time;
 
       lyricPlayerRef.current?.lyricPlayer?.update(delta);
-      lyricPlayerRef.current?.lyricPlayer?.setCurrentTime(
-        (lyricSync.progress.currentTime * 1000) | 0
-      );
+      lyricPlayerRef.current?.lyricPlayer?.setCurrentTime((progressSync.currentTime * 1000) | 0);
 
       rafId = requestAnimationFrame(onFrame);
     };
-    if (lyricSync?.playing) {
+    if (playerStatusSync?.fsmState === PlayerFSMStatusEnum.playing) {
       rafId = requestAnimationFrame(onFrame);
     }
     return () => cancelAnimationFrame(rafId);
-  }, [lyricSync]);
+  }, [playerStatusSync?.fsmState]);
   // 颜色变化
   useEffect(() => {
     if (color !== undefined) {
       UI.AMLyricColor = color;
       window.localStorage.setItem("lyricWindowColor", color);
     } else {
-      UI.AMLyricColor = lyricSync?.themeColor || "#ffffff";
+      UI.AMLyricColor = themeSync.mainColor || "#ffffff";
       window.localStorage.removeItem("lyricWindowColor");
     }
-  }, [color, lyricSync?.themeColor]);
+  }, [color, themeSync.mainColor]);
   // 字体大小变化
   useEffect(() => {
     UI.AMLyricFontSize = fontSize;
@@ -143,13 +147,13 @@ const LyricPage: FC<object> = () => {
           {stage >= Stage.Finally && (
             <LyricPlayer
               ref={lyricPlayerRef}
-              playing={lyricSync?.playing}
+              playing={playerStatusSync?.fsmState === PlayerFSMStatusEnum.playing}
               className="w-full h-full"
               alignAnchor="center"
               hidePassedLines
               lyricLines={NeteaseLyric.chooseLyric(
-                lyricInit?.trackStatus.lyric,
-                lyricSync?.playerStatus.lyricVersion
+                trackSync?.lyric,
+                playerStatusSync?.lyricVersion
               )}
               enableScale={false}
               enableSpring={false}
@@ -159,10 +163,13 @@ const LyricPage: FC<object> = () => {
       </div>
       {stage >= Stage.First && (
         <Control
+          playerStatusSync={playerStatusSync}
+          trackSync={trackSync}
+          themeSync={themeSync}
+          currentTime={progressSync.currentTime}
+          duration={progressSync.duration}
           color={color}
           setColor={setColor}
-          lyricSync={lyricSync}
-          lyricInit={lyricInit}
           showBg={showBg}
           setShowBg={setShowBg}
           lock={lock}

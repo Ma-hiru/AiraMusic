@@ -6,7 +6,7 @@ import Color from "color";
 
 interface MetaWikiProps {
   infoSync: InfoSync<"comments">;
-  themeSync: InfoSync<"theme">;
+  themeSync: ThemeSync;
 }
 
 const MetaWiki: FC<MetaWikiProps> = ({ infoSync, themeSync }) => {
@@ -43,7 +43,7 @@ const MetaWiki: FC<MetaWikiProps> = ({ infoSync, themeSync }) => {
   return (
     <div
       className="flex justify-center items-center gap-1 select-none"
-      style={{ color: Color(themeSync.value.secondaryColor).darken(0.5).string() }}>
+      style={{ color: Color(themeSync?.secondaryColor).darken(0.5).string() }}>
       {RenderData.map((data) => {
         if (!data) return null;
         return (

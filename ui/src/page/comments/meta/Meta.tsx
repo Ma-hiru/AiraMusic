@@ -14,7 +14,7 @@ interface MetaProps {
   setSortType: (type: CommentSort) => void;
   requestComment: (pageNo: number) => Promise<void>;
   infoSync: InfoSync<"comments">;
-  themeSync: InfoSync<"theme">;
+  themeSync: ThemeSync;
 }
 
 const Meta: FC<MetaProps> = ({

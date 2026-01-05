@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useRef, useState } from "react";
 
 interface Update {
   (): void;
@@ -8,7 +8,7 @@ interface Update {
 export function useUpdate(): Update {
   const [count, setCount] = useState(0);
 
-  const update = <Update>useCallback(() => setCount((c) => c + 1), []);
+  const update = <Update>useRef(() => setCount((c) => c + 1)).current;
   update.count = count;
 
   return update;

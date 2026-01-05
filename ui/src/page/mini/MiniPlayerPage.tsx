@@ -1,27 +1,24 @@
-import { FC, memo, useEffect, useState } from "react";
+import { FC, memo, useEffect } from "react";
 import { Drag, NoDrag } from "@mahiru/ui/componets/public/Drag";
 import { Pause, Play, SkipBack, SkipForward, X } from "lucide-react";
 import { NeteaseImageSize } from "@mahiru/ui/utils/image";
 import { Renderer } from "@mahiru/ui/utils/renderer";
 
 import NeteaseImage from "@mahiru/ui/componets/public/NeteaseImage";
+import { usePlayerTrackSyncReceive } from "@mahiru/ui/hook/usePlayerTrackSyncReceive";
+import { usePlayerProgressSyncReceive } from "@mahiru/ui/hook/usePlayerProgressSyncReceive";
+import { usePlayerStatusSyncReceive } from "@mahiru/ui/hook/usePlayerStatusSyncReceive";
+import { PlayerFSMStatusEnum } from "@mahiru/ui/store/player";
 
 const MiniPlayerPage: FC<object> = () => {
-  const [lyricInit, setLyricInit] = useState<LyricInit>();
-  const [lyricSync, setLyricSync] = useState<LyricSync>();
-  const track = lyricInit?.trackStatus.track;
-  const percent = lyricSync?.progress.duration
-    ? Math.min(((lyricSync.progress.currentTime || 0) / lyricSync.progress.duration) * 100, 100)
+  const { trackSync } = usePlayerTrackSyncReceive();
+  const { progressSync } = usePlayerProgressSyncReceive();
+  const { playerStatusSync } = usePlayerStatusSyncReceive();
+  const track = trackSync?.track;
+  const percent = progressSync.duration
+    ? Math.min(((progressSync.currentTime || 0) / progressSync.duration) * 100, 100)
     : 0;
 
-  useEffect(() => {
-    const removeInitListener = Renderer.addMessageHandler("lyricSync", "main", setLyricSync);
-    const removeSyncListener = Renderer.addMessageHandler("lyricInit", "main", setLyricInit);
-    return () => {
-      removeInitListener();
-      removeSyncListener();
-    };
-  }, []);
   useEffect(() => {
     Renderer.event.loaded({ broadcast: true });
     Renderer.addMessageHandler("otherWindowClosed", "main", () => {
@@ -61,7 +58,7 @@ const MiniPlayerPage: FC<object> = () => {
             onClick={lastTrack}
             fill={"#171b20"}
           />
-          {lyricSync?.playing ? (
+          {playerStatusSync?.fsmState === PlayerFSMStatusEnum.playing ? (
             <Pause
               className="size-3 hover:scale-90 hover:opacity-50 active:scale-80 cursor-pointer ease-in-out transition-all duration-300"
               onClick={playTrack}
@@ -93,19 +90,13 @@ const MiniPlayerPage: FC<object> = () => {
 export default memo(MiniPlayerPage);
 
 function lastTrack() {
-  Renderer.sendMessage("lyricSyncReverse", "main", {
-    playerControl: "last"
-  });
+  Renderer.sendMessage("playerControl", "main", "last");
 }
 
 function nextTrack() {
-  Renderer.sendMessage("lyricSyncReverse", "main", {
-    playerControl: "next"
-  });
+  Renderer.sendMessage("playerControl", "main", "next");
 }
 
 function playTrack() {
-  Renderer.sendMessage("lyricSyncReverse", "main", {
-    playerControl: "play"
-  });
+  Renderer.sendMessage("playerControl", "main", "play");
 }

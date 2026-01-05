@@ -21,6 +21,10 @@ export const Renderer = new (class {
   private readonly handlers: HandlerMapType = new Map();
 
   constructor() {
+    if (!window.electron) {
+      Log.error("electron API is not available");
+      return;
+    }
     window.electron.listener.message((message) => {
       const eventHandlers = this.handlers.get(message.type);
       if (eventHandlers) {
@@ -37,7 +41,7 @@ export const Renderer = new (class {
             Log.error(
               new EqError({
                 raw: err,
-                label: "utils/message.ts",
+                label: "renderer.ts",
                 message: `error in message handler [id=${id}] for event [type=${message.type}]`
               })
             );
@@ -66,7 +70,9 @@ export const Renderer = new (class {
     this.handlers.get(event)!.set(id, { once, from, callback });
 
     // 返回移除该处理器的函数
-    return () => !!this.handlers.get(event)?.delete(id);
+    return () => {
+      this.handlers.get(event)?.delete(id);
+    };
   }
 
   removeMessageHandler(id: string) {
@@ -118,6 +124,8 @@ export const Renderer = new (class {
       this.handlers.set(event, new Map());
     }
     this.handlers.get(event)!.set(id, { once, from: "main", callback });
-    return () => !!this.handlers.get(event)?.delete(id);
+    return () => {
+      this.handlers.get(event)?.delete(id);
+    };
   }
 })();

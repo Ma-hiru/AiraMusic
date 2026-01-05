@@ -1,93 +1,24 @@
-import { getPlayerStoreSnapshot, PlayerFSMEvent } from "@mahiru/ui/store/player";
+import {
+  getPlayerStoreSnapshot,
+  PlayerFSMEvent,
+  PlayerStoreSnapshot,
+  WithPlayerSnapshot
+} from "@mahiru/ui/store/player";
 import { startTransition } from "react";
+import { PlayerAudio } from "@mahiru/ui/store/player/audio";
 
-export class PlayerCore {
+@PlayerStoreSnapshot
+export class PlayerCore extends WithPlayerSnapshot {
   position = -1;
   playlist: PlayerTrackStatus[] = [];
-  get repeat() {
-    return getPlayerStoreSnapshot().PlayerStatus.repeat;
-  }
-  set repeat(status: "off" | "one" | "all") {
-    startTransition(() => {
-      const { SetPlayerStatus } = getPlayerStoreSnapshot();
-      SetPlayerStatus((draft) => {
-        if (draft.repeat !== status) {
-          draft.repeat = status;
-        }
-      });
-    });
-  }
-  get shuffle() {
-    return getPlayerStoreSnapshot().PlayerStatus.shuffle;
-  }
-  set shuffle(status: boolean) {
-    startTransition(() => {
-      const { SetPlayerStatus } = getPlayerStoreSnapshot();
-      SetPlayerStatus((draft) => {
-        if (draft.shuffle !== status) {
-          draft.shuffle = status;
-        }
-      });
-    });
-  }
-  get play() {
-    return getPlayerStoreSnapshot().AudioControlGetter()?.play;
-  }
-  get pause() {
-    return getPlayerStoreSnapshot().AudioControlGetter()?.pause;
-  }
-  get mute() {
-    return getPlayerStoreSnapshot().AudioControlGetter()?.mute;
-  }
-  get upVolume() {
-    return getPlayerStoreSnapshot().AudioControlGetter()?.upVolume;
-  }
-  get downVolume() {
-    return getPlayerStoreSnapshot().AudioControlGetter()?.downVolume;
-  }
-  get changeCurrentTime() {
-    return getPlayerStoreSnapshot().AudioControlGetter()?.changeCurrentTime;
-  }
 
-  private updateOuter() {
-    startTransition(() => {
-      const current = this.current();
-      const { SetPlayerTrackStatus } = getPlayerStoreSnapshot();
-      SetPlayerTrackStatus((draft) => {
-        if (draft && draft.track.id === current?.track.id) return;
-        return current;
-      });
-    });
-  }
+  /// 播放列表管理
 
-  private triggerFSMEvent(event: PlayerFSMEvent) {
-    const { TriggerPlayerFSMEvent, SetPlayingRequest } = getPlayerStoreSnapshot();
-    // 当触发 requestRestart 时，表示要切换歌曲并播放，需要同时设置播放请求
-    if (event === "requestRestart") {
-      SetPlayingRequest(true);
-    }
-    TriggerPlayerFSMEvent(event);
-  }
-
-  Sync() {
-    const { PlayerStatus } = getPlayerStoreSnapshot();
-    this.playlist = structuredClone(PlayerStatus.playerList);
-    this.position = PlayerStatus.position;
-    this.updateOuter();
-  }
-
-  Save() {
-    return {
-      playlist: this.playlist,
-      position: this.position
-    };
-  }
-
-  replacePlaylist(
+  replacePlaylist = (
     list: NeteaseTrack[] | PlayerTrackStatus[],
     source: Optional<number> = undefined,
     initPosition: number = -1
-  ) {
+  ) => {
     const firstElement = list?.[0];
     if (!firstElement) return this.current();
     if ("source" in firstElement && firstElement.track) {
@@ -132,9 +63,12 @@ export class PlayerCore {
 
     this.updateOuter();
     return this.current();
-  }
+  };
 
-  addPlaylist(list: NeteaseTrack[] | PlayerTrackStatus[], source: Optional<number> = undefined) {
+  addPlaylist = (
+    list: NeteaseTrack[] | PlayerTrackStatus[],
+    source: Optional<number> = undefined
+  ) => {
     const firstElement = list?.[0];
     if (!firstElement) return this.current();
     if ("source" in firstElement && firstElement.track) {
@@ -174,17 +108,17 @@ export class PlayerCore {
     }
     this.updateOuter();
     return this.current();
-  }
+  };
 
-  clearPlaylist() {
+  clearPlaylist = () => {
     this.playlist = [];
     this.position = -1;
     this.updateOuter();
     this.triggerFSMEvent("playingEnd");
     return this.current();
-  }
+  };
 
-  removeTrack(position: number) {
+  removeTrack = (position: number) => {
     // 检查位置合法性
     if (position >= 0 && position < this.playlist.length) {
       this.playlist.splice(position, 1);
@@ -203,13 +137,13 @@ export class PlayerCore {
     }
     this.updateOuter();
     return this.current();
-  }
+  };
 
-  addTrack(
+  addTrack = (
     track: NeteaseTrack | PlayerTrackStatus,
     source: Optional<number> = undefined,
     position: "next" | "end" = "end"
-  ) {
+  ) => {
     let newTrack: PlayerTrackStatus;
     if ("source" in track && track.track) {
       // PlayerTrackStatus类型
@@ -268,9 +202,9 @@ export class PlayerCore {
     }
     this.updateOuter();
     return this.current(false);
-  }
+  };
 
-  setPlayerPosition(pos: number) {
+  setPlayerPosition = (pos: number) => {
     if (pos < 0 || pos >= this.playlist.length) return this.current();
     if (this.position !== pos) {
       this.position = pos;
@@ -278,9 +212,9 @@ export class PlayerCore {
       this.triggerFSMEvent("requestRestart");
     }
     return this.current();
-  }
+  };
 
-  isSamePlaylist(list: NeteaseTrack[] | PlayerTrackStatus[], source?: Optional<number>) {
+  isSamePlaylist = (list: NeteaseTrack[] | PlayerTrackStatus[], source?: Optional<number>) => {
     if (!list || list.length !== this.playlist.length) return false;
     for (let i = 0; i < list.length; i++) {
       const incoming = list[i]!;
@@ -292,18 +226,18 @@ export class PlayerCore {
       }
     }
     return true;
-  }
+  };
 
-  current(autoplay: boolean = false) {
+  current = (autoplay: boolean = false) => {
     if (!this.canPlay()) return null;
     if (this.position === -1) {
       if (autoplay) this.position = 0;
       else return null;
     }
     return this.playlist[this.position] || null;
-  }
+  };
 
-  next(force: boolean = true): Nullable<PlayerTrackStatus> {
+  next = (force: boolean = true): Nullable<PlayerTrackStatus> => {
     if (!this.canPlay()) {
       this.triggerFSMEvent("playingEnd");
       return null;
@@ -337,14 +271,14 @@ export class PlayerCore {
     this.updateOuter();
     this.triggerFSMEvent("requestRestart");
     return this.current(false);
-  }
+  };
 
-  peek() {
+  peek = () => {
     const nextPos = (this.position + 1) % this.playlist.length;
     return this.playlist[nextPos] || null;
-  }
+  };
 
-  last(force: boolean = true): Nullable<PlayerTrackStatus> {
+  last = (force: boolean = true): Nullable<PlayerTrackStatus> => {
     if (!this.canPlay()) {
       this.triggerFSMEvent("playingEnd");
       return null;
@@ -378,13 +312,101 @@ export class PlayerCore {
     this.updateOuter();
     this.triggerFSMEvent("requestRestart");
     return this.current(false);
-  }
+  };
 
-  canPlay() {
+  canPlay = () => {
     const position = this.position;
     const playlist = this.playlist;
     return (
       (position === -1 && playlist.length > 0) || (position >= 0 && position < playlist.length)
     );
+  };
+
+  /// 外部同步
+
+  private updateOuter() {
+    const current = this.current();
+    this.snapshot.SetPlayerTrackStatus((draft) => {
+      if (draft && draft.track.id === current?.track.id) return;
+      return current;
+    });
+  }
+
+  private triggerFSMEvent(event: PlayerFSMEvent) {
+    // 当触发 requestRestart 时，表示要切换歌曲并播放，需要同时设置播放请求
+    event === "requestRestart" && this.snapshot.SetPlayingRequest(true);
+    this.snapshot.TriggerPlayerFSMEvent(event);
+  }
+
+  /// 初始化与缓存
+
+  Sync = () => {
+    const { PlayerStatus } = getPlayerStoreSnapshot();
+    this.playlist = structuredClone(PlayerStatus.playerList);
+    this.position = PlayerStatus.position;
+    this.updateOuter();
+  };
+
+  Save = () => {
+    return {
+      playlist: this.playlist,
+      position: this.position
+    };
+  };
+
+  /// 其他
+  get repeat() {
+    return this.snapshot.PlayerStatus.repeat;
+  }
+  set repeat(status: "off" | "one" | "all") {
+    startTransition(() => {
+      this.snapshot.SetPlayerStatus((draft) => {
+        if (draft.repeat !== status) {
+          draft.repeat = status;
+        }
+      });
+    });
+  }
+  get shuffle() {
+    return this.snapshot.PlayerStatus.shuffle;
+  }
+  set shuffle(status: boolean) {
+    startTransition(() => {
+      this.snapshot.SetPlayerStatus((draft) => {
+        if (draft.shuffle !== status) {
+          draft.shuffle = status;
+        }
+      });
+    });
+  }
+
+  private playerAudio = new PlayerAudio();
+
+  get play() {
+    return this.playerAudio.play;
+  }
+
+  get pause() {
+    return this.playerAudio.pause;
+  }
+
+  get mute() {
+    return this.playerAudio.mute;
+  }
+
+  get upVolume() {
+    return this.playerAudio.upVolume;
+  }
+
+  get downVolume() {
+    return this.playerAudio.downVolume;
+  }
+
+  get changeVolume() {
+    return this.playerAudio.changeVolume;
+  }
+
+  get changeCurrentTime() {
+    return this.playerAudio.changeCurrentTime;
   }
 }

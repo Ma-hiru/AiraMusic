@@ -14,7 +14,7 @@ import Color from "color";
 interface SearchInputProps {
   setKeywords: Dispatch<SetStateAction<string>>;
   placeholder?: string;
-  themeSync: InfoSync<"theme">;
+  themeSync: ThemeSync;
 }
 
 export interface SearchInputRef {
@@ -36,8 +36,8 @@ const SearchInput: ForwardRefRenderFunction<SearchInputRef, SearchInputProps> = 
     <div className="w-1/2 relative">
       <input
         style={{
-          background: Color(themeSync.value.mainColor).alpha(0.8).string(),
-          color: themeSync.value.textColor
+          background: Color(themeSync.mainColor).alpha(0.8).string(),
+          color: themeSync.textColorOnMain
         }}
         value={inputWords}
         onFocus={() => setFocus(true)}
@@ -55,7 +55,7 @@ const SearchInput: ForwardRefRenderFunction<SearchInputRef, SearchInputProps> = 
         placeholder={placeholder}
       />
       <Search
-        color={themeSync.value.textColor}
+        color={themeSync.textColorOnMain}
         className="absolute right-4 top-1/2 -translate-y-1/2 hover:opacity-50 active:scale-90 ease-in-out duration-300 transition-all"
         onClick={() => {
           setKeywords(inputWords);

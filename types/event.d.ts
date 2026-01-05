@@ -39,22 +39,23 @@ type NormalEventMaps = {
 
 /** Normal 事件的 Message 类型以及其参数 */
 type MessageTypeMap = {
-  /** token */
   login: string;
-  lyricSync: LyricSync;
-  lyricSyncReverse: LyricSyncReverse;
-  lyricInit: LyricInit;
-  lyricVersion: LyricVersionType;
+  playerControl: PlayerControlSync;
+  playerStatusSync: PlayerStatusSync;
+  requestPlayerStatusSync: undefined;
+  playerProgressSync: PlayerProgress;
+  requestPlayerProgressSync: undefined;
+  playerTrackSync: PlayerTrackStatus;
+  requestPlayerTrackSync: undefined;
+  themeSync: ThemeSync;
+  requestThemeSync: undefined;
   infoSync: InfoSync;
-  infoSyncReverse: InfoSyncReverse;
-  nextTrack: undefined;
-  lastTrack: undefined;
-  playTrack: undefined;
-  playStatus: boolean;
+  reverseSync: {
+    commentsDisplayType?: "static" | "subscribe";
+    chooseLyricVersion?: LyricVersionType;
+  };
   otherWindowLoaded: undefined;
   otherWindowClosed: undefined;
-  setThumbnailImage: { buffer: ArrayBuffer; width: number; height: number };
-  clearThumbnailImage: undefined;
   windowMaximizedChanged: boolean;
 };
 

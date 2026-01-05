@@ -1,5 +1,5 @@
 import { FC, memo, useEffect, useState } from "react";
-import { useInfoCtx, useInfoThemeCtx } from "@mahiru/ui/ctx/InfoCtx";
+import { useInfoCtx } from "@mahiru/ui/ctx/InfoCtx";
 import { useComment } from "@mahiru/ui/hook/useComment";
 import { CommentSort, CommentType } from "@mahiru/ui/api/comment";
 import { useWindowTitle } from "@mahiru/ui/hook/useWindowTitle";
@@ -7,11 +7,12 @@ import { useWindowTitle } from "@mahiru/ui/hook/useWindowTitle";
 import Meta from "@mahiru/ui/page/comments/meta";
 import Content from "@mahiru/ui/page/comments/content";
 import { Stage, useStage } from "@mahiru/ui/hook/useStage";
+import { useThemeSyncReceive } from "@mahiru/ui/hook/useThemeSyncReceive";
 
 const CommentsPage: FC<object> = () => {
-  const { stage } = useStage();
   const infoSync = useInfoCtx<"comments">();
-  const themeSync = useInfoThemeCtx();
+  const { stage } = useStage();
+  const { themeSync } = useThemeSyncReceive();
   const [sortType, setSortType] = useState(CommentSort.Hot);
 
   const { updateWindowTitle } = useWindowTitle();

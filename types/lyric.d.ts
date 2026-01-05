@@ -41,22 +41,3 @@ type FullVersionLyricLine = {
 };
 
 type LyricVersionType = "raw" | "full" | "tl" | "rm";
-
-type LyricInit = {
-  trackStatus: PlayerTrackStatus;
-  themeColor?: string;
-};
-
-type LyricSync = {
-  progress: PlayerProgress;
-  playerStatus: PlayerStatus;
-  themeColor?: string;
-  playing?: boolean;
-};
-
-type LyricSyncReverse = {
-  progress?: Partial<PlayerProgress>;
-  playerStatus?: Partial<PlayerStatus>;
-  themeColor?: string;
-  playerControl?: "next" | "last" | "play";
-};

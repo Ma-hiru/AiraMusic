@@ -7,19 +7,16 @@ import { Log } from "@mahiru/ui/utils/dev";
 import { NeteaseTrack } from "@mahiru/ui/utils/track";
 import { Auth } from "@mahiru/ui/utils/auth";
 import { useLogin } from "@mahiru/ui/hook/useLogout";
-import { usePlayerAudio } from "@mahiru/ui/hook/usePlayerAudio";
 import { useSpectrumWorker } from "@mahiru/ui/hook/useSpectrumWorker";
-import { Renderer } from "@mahiru/ui/utils/renderer";
 import { PlayerFSMStatusEnum, usePlayerStore } from "@mahiru/ui/store/player";
 import { useLayoutStore } from "@mahiru/ui/store/layout";
 import { useNetwork } from "@mahiru/ui/hook/useNetwork";
-import { addCloseTask } from "@mahiru/ui/utils/close";
+import { usePlayerControlSync } from "@mahiru/ui/hook/usePlayerControlSync";
 
 const MusicSource: FC<object> = () => {
   const {
     PlayerCoreGetter,
     PlayerTrackStatus,
-    InitPlayerCore,
     SetAudioRefGetter,
     PlayerFSMStatus,
     SetSpectrumGetter,
@@ -28,193 +25,34 @@ const MusicSource: FC<object> = () => {
     TriggerPlayerFSMEvent,
     SetPlayingRequest,
     PlayerInitialized,
-    SavePlayerCore
-  } = usePlayerStore([
-    "PlayerCoreGetter",
-    "InitPlayerCore",
-    "SetAudioRefGetter",
-    "PlayerTrackStatus",
-    "PlayerFSMStatus",
-    "SetSpectrumGetter",
-    "SpectrumOptions",
-    "PlayingRequest",
-    "TriggerPlayerFSMEvent",
-    "SetPlayingRequest",
-    "PlayerInitialized",
-    "SavePlayerCore"
-  ]);
+    PlayerProgressGetter,
+    SetPlayerStatus,
+    PlayerStatus
+  } = usePlayerStore();
   const { IsTyping } = useLayoutStore(["IsTyping"]);
-  // 初始化播放器
-  useEffect(() => {
-    InitPlayerCore();
-  }, [InitPlayerCore]);
-  // 注册 Audio 元素引用
+  // 注入 Audio 元素引用
   const audioRealRef = useRef<HTMLAudioElement>(null);
+  const audio = audioRealRef.current;
+  const player = PlayerCoreGetter();
   useEffect(() => {
     SetAudioRefGetter(() => audioRealRef.current);
     return () => {
       SetAudioRefGetter(() => null);
     };
   }, [SetAudioRefGetter]);
-  // 注册音频控制器
-  usePlayerAudio();
-  // 注册音频资源加载器
-  usePlayerResource();
-  // 注册 Media Session API
-  const player = PlayerCoreGetter();
-  useMediaSession({
-    trackStatus: PlayerTrackStatus,
-    play: () => player?.play?.(),
-    lastTrack: () => player?.last(true),
-    nextTrack: () => player?.next(true)
-  });
-  // 注册局部键盘快捷键
-  const [Shortcuts, setShortcuts] = useState<ShortcutConfig[]>([]);
-  useKeyboardShortcut(Shortcuts);
+  // 处理初始化
   useEffect(() => {
-    if (IsTyping) {
-      setShortcuts([
-        {
-          key: "ArrowRight",
-          modifiers: ["alt"],
-          description: "下一首",
-          callback: () => player?.next(true)
-        },
-        {
-          key: "ArrowLeft",
-          modifiers: ["alt"],
-          description: "上一首",
-          callback: () => player?.last()
-        },
-        {
-          key: "ArrowUp",
-          description: "增加音量",
-          callback: () => player?.upVolume?.(0.1)
-        },
-        {
-          key: "ArrowDown",
-          description: "减少音量",
-          callback: () => player?.downVolume?.(0.1)
-        }
-      ]);
-    } else {
-      setShortcuts([
-        {
-          key: " ",
-          description: "播放/暂停",
-          callback: () => player?.play?.()
-        },
-        {
-          key: "ArrowRight",
-          modifiers: ["alt"],
-          description: "下一首",
-          callback: () => player?.next(true)
-        },
-        {
-          key: "ArrowLeft",
-          modifiers: ["alt"],
-          description: "上一首",
-          callback: () => player?.last()
-        },
-        {
-          key: "ArrowUp",
-          description: "增加音量",
-          callback: () => player?.upVolume?.(0.1)
-        },
-        {
-          key: "ArrowDown",
-          description: "减少音量",
-          callback: () => player?.downVolume?.(0.1)
-        }
-      ]);
-    }
-  }, [IsTyping, player]);
-  // 注册窗口标题
-  const { updateWindowTitle, defaultTitle } = useWindowTitle();
-  useEffect(() => {
-    const title = PlayerTrackStatus?.track.name;
-    const artist = PlayerTrackStatus?.track.ar;
-    if (title && artist) {
-      updateWindowTitle(`${title} - ${artist.map((ar) => ar.name).join("&")}`);
-    } else {
-      updateWindowTitle(defaultTitle);
-    }
-  }, [PlayerTrackStatus?.track.ar, PlayerTrackStatus?.track.name, defaultTitle, updateWindowTitle]);
-  // 处理音频加载错误
-  const login = useLogin();
-  const network = useNetwork();
-  const onError = useCallback(
-    (err: SyntheticEvent<HTMLAudioElement>) => {
-      const audioEl = err.currentTarget;
-      const currentSrc = audioEl.src;
-      // 如果 src 为空或者是空 src 错误，忽略（切换歌曲时的正常情况）
-      if (!currentSrc || audioEl.error?.message?.includes("Empty src") || network === "offline") {
-        return;
+    if (PlayerInitialized) {
+      const audio = audioRealRef.current;
+      const initSrc = PlayerTrackStatus?.audio;
+      if (audio && initSrc) {
+        audio.src = initSrc;
+        player.changeCurrentTime(PlayerProgressGetter().currentTime);
+        player.changeVolume(PlayerStatus.volume ?? 0.5);
       }
-      const raw = PlayerTrackStatus?.meta?.[0]?.url;
-      if (raw) {
-        if (currentSrc !== raw) {
-          Log.info("MusicSource.tsx", "cache audio load error, fallback to raw src");
-          audioEl.src = raw;
-          const id = PlayerTrackStatus?.track.id;
-          if (id) {
-            NeteaseTrack.removeCache(id);
-          }
-        } else {
-          Log.error("MusicSource.tsx", "audio playback error");
-          if (!Auth.isAccountLoggedIn()) {
-            player?.play?.();
-            login();
-          } else {
-            // TODO: 播放错误，可能是403或网络错误，403应该重新登录或刷新缓存，网络错误则跳过当前歌曲
-            player?.next(true);
-          }
-        }
-      }
-    },
-    [PlayerTrackStatus?.meta, PlayerTrackStatus?.track.id, login, network, player]
-  );
-  // 注册频谱
-  const { spectrumData, isReady } = useSpectrumWorker(
-    audioRealRef,
-    PlayerFSMStatus === PlayerFSMStatusEnum.playing,
-    {
-      fftSize: 2048,
-      numBands: 32,
-      withPeaks: false,
-      fpsLimit: 60,
-      ...SpectrumOptions
     }
-  );
-  useEffect(() => {
-    SetSpectrumGetter(() => ({
-      data: () => spectrumData.current,
-      ready: isReady
-    }));
-  }, [SetSpectrumGetter, isReady, spectrumData]);
-  // 注册任务栏回调
-  useEffect(() => {
-    const unsubscribeLast = Renderer.addMainProcessMessageHandler("lastTrack", () => {
-      player?.last(true);
-    });
-    const unsubscribePlay = Renderer.addMainProcessMessageHandler("playTrack", () => {
-      player?.play?.();
-    });
-    const unsubscribeNext = Renderer.addMainProcessMessageHandler("nextTrack", () => {
-      player?.next(true);
-    });
-    return () => {
-      unsubscribeLast();
-      unsubscribePlay();
-      unsubscribeNext();
-    };
-  }, [player]);
-  useEffect(() => {
-    Renderer.sendMessageToMainProcess(
-      "playStatus",
-      PlayerFSMStatus === PlayerFSMStatusEnum.playing
-    );
-  }, [PlayerFSMStatus]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [PlayerInitialized]);
   const requestPlayingRetryCount = useRef(0);
   // 处理播放请求
   useEffect(() => {
@@ -250,24 +88,185 @@ const MusicSource: FC<object> = () => {
     SetPlayingRequest,
     TriggerPlayerFSMEvent
   ]);
-
-  // 处理初始音频源设置
+  // 监听 audio 播放状态变化
   useEffect(() => {
-    if (PlayerInitialized) {
-      const audio = audioRealRef.current;
-      const initSrc = PlayerTrackStatus?.audio;
-      if (audio && initSrc) {
-        audio.src = initSrc;
+    if (!audio) return;
+    const handleTimeUpdate = () => {
+      PlayerProgressGetter().currentTime = audio.currentTime;
+    };
+    const handleDurationChange = () => (PlayerProgressGetter().duration = audio.duration || 0);
+    const handleProgress = () => {
+      if (audio.buffered.length > 0) {
+        PlayerProgressGetter().buffered = audio.buffered.end(audio.buffered.length - 1);
       }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [PlayerInitialized]);
-  // 添加close任务
+    };
+    const handleVolumeChange = () =>
+      SetPlayerStatus((draft) => {
+        draft.volume = audio.volume;
+      });
+    const handleEnded = () => player?.next(false);
+
+    audio.addEventListener("ended", handleEnded, { passive: true });
+    audio.addEventListener("timeupdate", handleTimeUpdate, { passive: true });
+    audio.addEventListener("durationchange", handleDurationChange, { passive: true });
+    audio.addEventListener("progress", handleProgress, { passive: true });
+    audio.addEventListener("volumechange", handleVolumeChange, { passive: true });
+    return () => {
+      audio.removeEventListener("ended", handleEnded);
+      audio.removeEventListener("timeupdate", handleTimeUpdate);
+      audio.removeEventListener("durationchange", handleDurationChange);
+      audio.removeEventListener("progress", handleProgress);
+      audio.removeEventListener("volumechange", handleVolumeChange);
+    };
+  }, [PlayerProgressGetter, SetPlayerStatus, audio, player]);
+  // 根据 FSM 状态自动播放或暂停
   useEffect(() => {
-    addCloseTask("save_player_core", async () => {
-      return SavePlayerCore();
-    });
-  }, [SavePlayerCore]);
+    if (PlayerFSMStatus === PlayerFSMStatusEnum.playing) {
+      // 检查 src 是否是有效的音频 URL（排除页面 URL）
+      const src = audio?.src || "";
+      const isValidAudioSrc =
+        src && !src.startsWith("http://localhost") && !src.startsWith("https://localhost");
+      if (audio && isValidAudioSrc) {
+        audio.play().catch();
+      }
+    } else {
+      audio && audio.pause();
+    }
+  }, [PlayerFSMStatus, audio]);
+  // 处理音频加载错误
+  const login = useLogin();
+  const network = useNetwork();
+  const onError = useCallback(
+    (err: SyntheticEvent<HTMLAudioElement>) => {
+      const audioEl = err.currentTarget;
+      const currentSrc = audioEl.src;
+      // 如果 src 为空或者是空 src 错误，忽略（切换歌曲时的正常情况）
+      if (!currentSrc || audioEl.error?.message?.includes("Empty src") || network === "offline") {
+        return;
+      }
+      const raw = PlayerTrackStatus?.meta?.[0]?.url;
+      if (raw) {
+        if (currentSrc !== raw) {
+          Log.info("MusicSource.tsx", "cache audio load error, fallback to raw src");
+          audioEl.src = raw;
+          const id = PlayerTrackStatus?.track.id;
+          if (id) {
+            NeteaseTrack.removeCache(id);
+          }
+        } else {
+          Log.error("MusicSource.tsx", "audio playback error");
+          if (!Auth.isAccountLoggedIn()) {
+            player?.play?.();
+            login();
+          } else {
+            // TODO: 播放错误，可能是403或网络错误，403应该重新登录或刷新缓存，网络错误则跳过当前歌曲
+            player?.next(true);
+          }
+        }
+      }
+    },
+    [PlayerTrackStatus?.meta, PlayerTrackStatus?.track.id, login, network, player]
+  );
+  // 注册音频资源加载器
+  usePlayerResource();
+  // 注册 Media Session API
+  useMediaSession({
+    trackStatus: PlayerTrackStatus,
+    play: () => player?.play?.(),
+    lastTrack: () => player?.last(true),
+    nextTrack: () => player?.next(true)
+  });
+  // 注册局部键盘快捷键
+  const [Shortcuts, setShortcuts] = useState<ShortcutConfig[]>([]);
+  useKeyboardShortcut(Shortcuts);
+  useEffect(() => {
+    if (IsTyping) {
+      setShortcuts([
+        {
+          key: "ArrowRight",
+          modifiers: ["alt"],
+          description: "下一首",
+          callback: () => player.next(true)
+        },
+        {
+          key: "ArrowLeft",
+          modifiers: ["alt"],
+          description: "上一首",
+          callback: () => player.last()
+        },
+        {
+          key: "ArrowUp",
+          description: "增加音量",
+          callback: () => player.upVolume(0.1)
+        },
+        {
+          key: "ArrowDown",
+          description: "减少音量",
+          callback: () => player.downVolume(0.1)
+        }
+      ]);
+    } else {
+      setShortcuts([
+        {
+          key: " ",
+          description: "播放/暂停",
+          callback: () => player.play()
+        },
+        {
+          key: "ArrowRight",
+          modifiers: ["alt"],
+          description: "下一首",
+          callback: () => player.next(true)
+        },
+        {
+          key: "ArrowLeft",
+          modifiers: ["alt"],
+          description: "上一首",
+          callback: () => player.last()
+        },
+        {
+          key: "ArrowUp",
+          description: "增加音量",
+          callback: () => player.upVolume(0.1)
+        },
+        {
+          key: "ArrowDown",
+          description: "减少音量",
+          callback: () => player.downVolume(0.1)
+        }
+      ]);
+    }
+  }, [IsTyping, player]);
+  // 注册窗口标题
+  const { updateWindowTitle, defaultTitle } = useWindowTitle();
+  useEffect(() => {
+    const title = PlayerTrackStatus?.track.name;
+    const artist = PlayerTrackStatus?.track.ar;
+    if (title && artist) {
+      updateWindowTitle(`${title} - ${artist.map((ar) => ar.name).join("&")}`);
+    } else {
+      updateWindowTitle(defaultTitle);
+    }
+  }, [PlayerTrackStatus?.track.ar, PlayerTrackStatus?.track.name, defaultTitle, updateWindowTitle]);
+  // 注册频谱
+  const { spectrumData, isReady } = useSpectrumWorker(
+    audioRealRef,
+    PlayerFSMStatus === PlayerFSMStatusEnum.playing,
+    {
+      fftSize: 2048,
+      numBands: 32,
+      withPeaks: false,
+      fpsLimit: 60,
+      ...SpectrumOptions
+    }
+  );
+  useEffect(() => {
+    SetSpectrumGetter(() => ({
+      data: () => spectrumData.current,
+      ready: isReady
+    }));
+  }, [SetSpectrumGetter, isReady, spectrumData]);
+  // 信息同步
 
   return (
     <audio
