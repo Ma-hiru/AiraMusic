@@ -36,7 +36,7 @@ const TrackItemCover: FC<ListItemCoverProps> = ({
       src={track.al.picUrl}
       alt={track.al.name}
       size={NeteaseImageSize.xs}
-      fastLocation={fastLocation}
+      pause={fastLocation}
       shadowColor={isMainColorDark ? "dark" : "light"}
     />
   );

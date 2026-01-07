@@ -29,7 +29,7 @@ type ImageProps = ImgHTMLAttributes<HTMLImageElement> & {
   retryCount?: number;
   shadow?: ShadowLevel;
   shadowColor?: ShadowColor;
-  fastLocation?: boolean;
+  pause?: boolean;
 };
 
 const NeteaseImage: FC<ImageProps> = ({
@@ -50,12 +50,13 @@ const NeteaseImage: FC<ImageProps> = ({
   shadow = "base",
   shadowColor = "light",
   onClick,
-  fastLocation,
+  pause,
   ...rest
 }) => {
   const [error, setError] = useState(false);
   const sizedURL = useMemo(() => NeteaseImageUtils.setSize(src, size), [size, src]);
-  const cacheURL = NeteaseImageUtils.fetchCacheURL(sizedURL);
+  const cacheURL = pause ? undefined : NeteaseImageUtils.fetchCacheURL(sizedURL);
+  const requestCache = useRef<Nullable<(controller?: AbortController) => void>>(null);
   const retryStatus = useRef({
     token: 0,
     count: 0,
@@ -79,7 +80,10 @@ const NeteaseImage: FC<ImageProps> = ({
     update,
     timeLimit,
     method,
-    pause: fastLocation || !!cacheURL
+    pause: !!cacheURL || pause,
+    injectCacheRequest: (requestFunc) => {
+      requestCache.current = requestFunc;
+    }
   });
 
   const retry = useCallback(
@@ -125,6 +129,7 @@ const NeteaseImage: FC<ImageProps> = ({
       const canFallback =
         sizedURL && e.currentTarget.src !== sizedURL && retryStatus.current.count === 0;
       if (canFallback) {
+        if (!cachedCover) requestCache.current?.();
         // 尝试使用原始尺寸图片
         e.currentTarget.src = sizedURL;
         requestIdleCallback(onCacheError, { timeout: 500 });
@@ -142,7 +147,7 @@ const NeteaseImage: FC<ImageProps> = ({
 
       return onError?.(e);
     },
-    [onCacheError, onError, retry, retryCount, retryOnError, sizedURL]
+    [cachedCover, onCacheError, onError, retry, retryCount, retryOnError, sizedURL]
   );
 
   // src变化时重置错误状态和重试状态
@@ -170,7 +175,7 @@ const NeteaseImage: FC<ImageProps> = ({
           error && "invisible",
           imageClassName
         )}
-        src={cacheURL || cachedCover}
+        src={pause ? undefined : cachedCover || cacheURL}
         alt={alt}
         loading={loading}
         decoding={decoding}

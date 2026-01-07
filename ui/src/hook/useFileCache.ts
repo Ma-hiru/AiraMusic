@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { AppScheme } from "@mahiru/ui/constants/scheme";
 import { StoreSnapshot } from "@mahiru/ui/store/snapshot";
 
@@ -10,24 +10,20 @@ export function useFileCache(
     update?: boolean;
     timeLimit?: number;
     method?: string;
-    /** 是否为快速定位 */
     pause?: boolean;
+    injectCacheRequest?: NormalFunc<[requestCache: (controller?: AbortController) => void]>;
   }
 ) {
   const [finalURL, setFinalURL] = useState<string>();
   const { id = url, onCacheHit, update, timeLimit, method = "GET", pause = false } = options || {};
 
-  useEffect(() => {
-    if (!url || !url.startsWith("http") || pause) return;
-    if (!id || url.startsWith("file") || url.startsWith(AppScheme)) return;
-
-    const controller = new AbortController();
-    const run = () => {
-      if (controller.signal.aborted) return;
+  const request = useCallback(
+    (controller?: AbortController) => {
+      if (controller?.signal.aborted || !url) return;
       StoreSnapshot.cacheStore
-        .checkOrStoreAsync(url, id, method, update, timeLimit, controller.signal)
+        .checkOrStoreAsync(url, id, method, update, timeLimit, controller?.signal)
         .then((check) => {
-          if (controller.signal.aborted) return;
+          if (controller?.signal.aborted) return;
           if (check?.ok && check.index.file) {
             const raw = new URL(check.index.file);
             raw.searchParams.set("mime", check.index.type);
@@ -41,17 +37,27 @@ export function useFileCache(
           }
         })
         .catch(() => {
-          if (!controller.signal.aborted) {
-            setFinalURL(url);
-          }
+          if (controller?.signal.aborted) return;
+          setFinalURL(url);
         });
+    },
+    [finalURL, id, method, onCacheHit, timeLimit, update, url]
+  );
+
+  useEffect(() => {
+    if (!url || !url.startsWith("http") || pause) return;
+    if (!id || url.startsWith("file") || url.startsWith(AppScheme)) return;
+
+    const controller = new AbortController();
+    const run = () => {
+      request(controller);
     };
     requestAnimationFrame(run);
 
     return () => {
       controller.abort();
     };
-  }, [pause, finalURL, id, method, onCacheHit, timeLimit, update, url]);
+  }, [id, pause, request, url]);
 
   if (!url || !id || pause) {
     return undefined;

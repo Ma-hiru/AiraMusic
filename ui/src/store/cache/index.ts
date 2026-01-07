@@ -31,7 +31,7 @@ export class CacheStoreClass {
     id: string,
     timeLimit?: number,
     parts?: {
-      objType: CacheObjType;
+      objType: "object" | "array";
       objField: string | number | "length";
     }
   ): Promise<Nullable<T>> {
@@ -39,15 +39,6 @@ export class CacheStoreClass {
     return cacheRequest<any, T | null>("/api/object/fetch", {
       method: "GET",
       params: { id, timeLimit, ...(parts || {}) }
-    });
-  }
-
-  editObject<T = any, TObjType extends CacheObjType = CacheObjType>(
-    payload: CacheEditObjectRequest<TObjType, T>
-  ) {
-    return cacheRequest<any, CacheEditObjectResponse>("/api/object/edit", {
-      method: "POST",
-      data: payload
     });
   }
 

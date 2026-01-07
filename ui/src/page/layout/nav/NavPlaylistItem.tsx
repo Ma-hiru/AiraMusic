@@ -31,7 +31,7 @@ const NavPlaylistItem: FC<Props> = ({
       prefix={
         <div className="size-10 min-w-10 rounded-md overflow-hidden">
           <NeteaseImage
-            fastLocation={fastLocation}
+            pause={fastLocation}
             className="w-full"
             src={cover}
             alt={label}

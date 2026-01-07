@@ -1,6 +1,7 @@
 import { PlayerFSMEvent, PlayerStoreSnapshot, WithPlayerSnapshot } from "@mahiru/ui/store/player";
 import { startTransition } from "react";
 import { PlayerAudio } from "@mahiru/ui/store/player/audio";
+import { NeteaseTrack } from "@mahiru/ui/utils/track";
 
 export interface PlayerCore extends WithPlayerSnapshot {}
 
@@ -231,7 +232,11 @@ export class PlayerCore {
       if (autoplay) this.position = 0;
       else return null;
     }
-    return this.playlist[this.position] || null;
+    const current = this.playlist[this.position] || null;
+    if (current && !NeteaseTrack.isTrackPlayable(current.track)) {
+      return this.next(true);
+    }
+    return current;
   };
 
   next = (force: boolean = true): Nullable<PlayerTrackStatus> => {
