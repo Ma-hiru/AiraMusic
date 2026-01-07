@@ -2,7 +2,7 @@ import * as Track from "./track";
 import * as MV from "./mv";
 import * as Album from "./album";
 import * as Comment from "./comment";
-import * as Lyric from "./lyric";
+import Lyric from "./lyric";
 import * as Artist from "./artist";
 import * as Auth from "./auth";
 import * as Playlist from "./playlist";

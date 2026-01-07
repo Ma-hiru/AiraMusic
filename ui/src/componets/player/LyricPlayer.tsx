@@ -1,3 +1,9 @@
+/**
+ * Source: https://github.com/Steve-xmh/applemusic-like-lyrics/packages/react/src/lyric-player.tsx
+ *
+ * License: GNU Affero General Public License v3.0 (AGPL-3.0)
+ */
+
 import type {
   LyricLine,
   LyricLineMouseEvent,
@@ -7,7 +13,9 @@ import type {
 import { LyricPlayer as DefaultLyricPlayer } from "@applemusic-like-lyrics/core";
 import {
   forwardRef,
+  ForwardRefRenderFunction,
   type HTMLProps,
+  memo,
   useEffect,
   useImperativeHandle,
   useLayoutEffect,
@@ -150,185 +158,182 @@ export interface LyricPlayerRef {
  *
  * 尽可能贴切 Apple Music for iPad 的歌词效果设计，且做了力所能及的优化措施
  */
-export const LyricPlayer = forwardRef<LyricPlayerRef, HTMLProps<HTMLDivElement> & LyricPlayerProps>(
-  (
-    {
-      disabled,
-      playing,
-      alignAnchor,
-      alignPosition,
-      enableSpring,
-      enableBlur,
-      enableScale,
-      hidePassedLines,
-      lyricLines,
-      currentTime,
-      isSeeking,
-      wordFadeWidth,
-      linePosXSpringParams,
-      linePosYSpringParams,
-      lineScaleSpringParams,
-      bottomLine,
-      lyricPlayer,
-      onLyricLineClick,
-      onLyricLineContextMenu,
-      ...props
-    },
-    ref
-  ) => {
-    // const corePlayerRef = useRef<LyricPlayerBase>();
-    const [corePlayer, setCorePlayer] = useState<LyricPlayerBase>();
-    const wrapperRef = useRef<HTMLDivElement>(null);
-    const currentTimeRef = useRef(currentTime);
+const LyricPlayer: ForwardRefRenderFunction<
+  LyricPlayerRef,
+  HTMLProps<HTMLDivElement> & LyricPlayerProps
+> = (
+  {
+    disabled,
+    playing,
+    alignAnchor,
+    alignPosition,
+    enableSpring,
+    enableBlur,
+    enableScale,
+    hidePassedLines,
+    lyricLines,
+    currentTime,
+    isSeeking,
+    wordFadeWidth,
+    linePosXSpringParams,
+    linePosYSpringParams,
+    lineScaleSpringParams,
+    bottomLine,
+    lyricPlayer,
+    onLyricLineClick,
+    onLyricLineContextMenu,
+    ...props
+  },
+  ref
+) => {
+  // const corePlayerRef = useRef<LyricPlayerBase>();
+  const [corePlayer, setCorePlayer] = useState<LyricPlayerBase>();
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const currentTimeRef = useRef(currentTime);
 
-    useLayoutEffect(() => {
-      const newPlayer = new (lyricPlayer ?? DefaultLyricPlayer)();
-      setCorePlayer(newPlayer);
-      wrapperRef.current?.appendChild(newPlayer.getElement());
-      return () => {
-        newPlayer?.dispose();
-        setCorePlayer(undefined);
-      };
-    }, [lyricPlayer]);
+  useLayoutEffect(() => {
+    const newPlayer = new (lyricPlayer ?? DefaultLyricPlayer)();
+    const wrapper = wrapperRef.current;
+    setCorePlayer(newPlayer);
+    wrapper?.appendChild(newPlayer.getElement());
+    return () => {
+      wrapper?.removeChild(newPlayer.getElement());
+      newPlayer?.dispose();
+      setCorePlayer(undefined);
+    };
+  }, [lyricPlayer]);
 
-    // 歌词数据来自全局状态（immer 可能冻结对象），corePlayer 内部会改写行/词对象，
-    // 需要在传入前做一次可变副本，避免 “Cannot assign to read only property”
-    useLayoutEffect(() => {
-      if (lyricLines !== undefined) {
-        const clonedLyricLines =
-          typeof structuredClone === "function"
-            ? structuredClone(lyricLines)
-            : lyricLines.map((line) => ({
-                ...line,
-                words: line.words?.map((w) => ({ ...w }))
-              }));
-        corePlayer?.setLyricLines(clonedLyricLines, currentTimeRef.current);
-        corePlayer?.update();
-      } else {
-        corePlayer?.setLyricLines([]);
-        corePlayer?.update();
-      }
-    }, [corePlayer, lyricLines]);
+  useLayoutEffect(() => {
+    if (lyricLines !== undefined) {
+      corePlayer?.setLyricLines(lyricLines, currentTimeRef.current);
+      corePlayer?.update();
+    } else {
+      corePlayer?.setLyricLines([]);
+      corePlayer?.update();
+    }
+  }, [corePlayer, lyricLines]);
 
-    useEffect(() => {
-      if (!disabled) {
-        let canceled = false;
-        let lastTime = -1;
-        const onFrame = (time: number) => {
-          if (canceled) return;
-          if (lastTime === -1) {
-            lastTime = time;
-          }
-          corePlayer?.update(time - lastTime);
+  useEffect(() => {
+    if (!disabled) {
+      let canceled = false;
+      let lastTime = -1;
+      const onFrame = (time: number) => {
+        if (canceled) return;
+        if (lastTime === -1) {
           lastTime = time;
-          requestAnimationFrame(onFrame);
-        };
-        corePlayer?.calcLayout();
-        requestAnimationFrame(onFrame);
-        return () => {
-          canceled = true;
-        };
-      }
-    }, [corePlayer, disabled]);
-
-    useEffect(() => {
-      if (playing !== undefined) {
-        if (playing) {
-          corePlayer?.resume();
-        } else {
-          corePlayer?.pause();
         }
-      } else corePlayer?.resume();
-    }, [corePlayer, playing]);
+        corePlayer?.update(time - lastTime);
+        lastTime = time;
+        requestAnimationFrame(onFrame);
+      };
+      corePlayer?.calcLayout();
+      requestAnimationFrame(onFrame);
+      return () => {
+        canceled = true;
+      };
+    }
+  }, [corePlayer, disabled]);
 
-    useEffect(() => {
-      if (alignAnchor !== undefined) corePlayer?.setAlignAnchor(alignAnchor);
-    }, [corePlayer, alignAnchor]);
-
-    useEffect(() => {
-      if (hidePassedLines !== undefined) corePlayer?.setHidePassedLines(hidePassedLines);
-    }, [corePlayer, hidePassedLines]);
-
-    useEffect(() => {
-      if (alignPosition !== undefined) corePlayer?.setAlignPosition(alignPosition);
-    }, [corePlayer, alignPosition]);
-
-    useEffect(() => {
-      if (enableSpring !== undefined) corePlayer?.setEnableSpring(enableSpring);
-      else corePlayer?.setEnableSpring(true);
-    }, [corePlayer, enableSpring]);
-
-    useEffect(() => {
-      if (enableScale !== undefined) corePlayer?.setEnableScale(enableScale);
-      else corePlayer?.setEnableScale(true);
-    }, [corePlayer, enableScale]);
-
-    useEffect(() => {
-      corePlayer?.setEnableBlur(enableBlur ?? true);
-    }, [corePlayer, enableBlur]);
-
-    useEffect(() => {
-      if (currentTime !== undefined) {
-        corePlayer?.setCurrentTime(currentTime);
-        currentTimeRef.current = currentTime;
-      } else corePlayer?.setCurrentTime(0);
-    }, [corePlayer, currentTime]);
-
-    useEffect(() => {
-      corePlayer?.setIsSeeking(!!isSeeking);
-    }, [corePlayer, isSeeking]);
-
-    useEffect(() => {
-      corePlayer?.setWordFadeWidth(wordFadeWidth);
-    }, [corePlayer, wordFadeWidth]);
-
-    useEffect(() => {
-      if (linePosXSpringParams !== undefined)
-        corePlayer?.setLinePosXSpringParams(linePosXSpringParams);
-    }, [corePlayer, linePosXSpringParams]);
-
-    useEffect(() => {
-      if (linePosYSpringParams !== undefined)
-        corePlayer?.setLinePosYSpringParams(linePosYSpringParams);
-    }, [corePlayer, linePosYSpringParams]);
-
-    useEffect(() => {
-      if (lineScaleSpringParams !== undefined)
-        corePlayer?.setLineScaleSpringParams(lineScaleSpringParams);
-    }, [corePlayer, lineScaleSpringParams]);
-
-    useEffect(() => {
-      if (onLyricLineClick) {
-        const handler = (e: Event) => onLyricLineClick(e as LyricLineMouseEvent);
-        corePlayer?.addEventListener("line-click", handler);
-        return () => corePlayer?.removeEventListener("line-click", handler);
+  useEffect(() => {
+    if (playing !== undefined) {
+      if (playing) {
+        corePlayer?.resume();
+      } else {
+        corePlayer?.pause();
       }
-    }, [corePlayer, onLyricLineClick]);
+    } else corePlayer?.resume();
+  }, [corePlayer, playing]);
 
-    useEffect(() => {
-      if (onLyricLineContextMenu) {
-        const handler = (e: Event) => onLyricLineContextMenu(e as LyricLineMouseEvent);
-        corePlayer?.addEventListener("line-contextmenu", handler);
-        return () => corePlayer?.removeEventListener("line-contextmenu", handler);
-      }
-    }, [corePlayer, onLyricLineContextMenu]);
+  useEffect(() => {
+    if (alignAnchor !== undefined) corePlayer?.setAlignAnchor(alignAnchor);
+  }, [corePlayer, alignAnchor]);
 
-    useImperativeHandle(
-      ref,
-      () => ({
-        wrapperEl: wrapperRef.current,
-        lyricPlayer: corePlayer
-      }),
-      [corePlayer]
-    );
+  useEffect(() => {
+    if (hidePassedLines !== undefined) corePlayer?.setHidePassedLines(hidePassedLines);
+  }, [corePlayer, hidePassedLines]);
 
-    return (
-      <>
-        <div {...props} ref={wrapperRef} />
-        {corePlayer?.getBottomLineElement() && bottomLine
-          ? createPortal(bottomLine, corePlayer?.getBottomLineElement())
-          : null}
-      </>
-    );
-  }
-);
+  useEffect(() => {
+    if (alignPosition !== undefined) corePlayer?.setAlignPosition(alignPosition);
+  }, [corePlayer, alignPosition]);
+
+  useEffect(() => {
+    if (enableSpring !== undefined) corePlayer?.setEnableSpring(enableSpring);
+    else corePlayer?.setEnableSpring(true);
+  }, [corePlayer, enableSpring]);
+
+  useEffect(() => {
+    if (enableScale !== undefined) corePlayer?.setEnableScale(enableScale);
+    else corePlayer?.setEnableScale(true);
+  }, [corePlayer, enableScale]);
+
+  useEffect(() => {
+    corePlayer?.setEnableBlur(enableBlur ?? true);
+  }, [corePlayer, enableBlur]);
+
+  useEffect(() => {
+    if (currentTime !== undefined) {
+      corePlayer?.setCurrentTime(currentTime);
+      currentTimeRef.current = currentTime;
+    } else corePlayer?.setCurrentTime(0);
+  }, [corePlayer, currentTime]);
+
+  useEffect(() => {
+    corePlayer?.setIsSeeking(!!isSeeking);
+  }, [corePlayer, isSeeking]);
+
+  useEffect(() => {
+    corePlayer?.setWordFadeWidth(wordFadeWidth);
+  }, [corePlayer, wordFadeWidth]);
+
+  useEffect(() => {
+    if (linePosXSpringParams !== undefined)
+      corePlayer?.setLinePosXSpringParams(linePosXSpringParams);
+  }, [corePlayer, linePosXSpringParams]);
+
+  useEffect(() => {
+    if (linePosYSpringParams !== undefined)
+      corePlayer?.setLinePosYSpringParams(linePosYSpringParams);
+  }, [corePlayer, linePosYSpringParams]);
+
+  useEffect(() => {
+    if (lineScaleSpringParams !== undefined)
+      corePlayer?.setLineScaleSpringParams(lineScaleSpringParams);
+  }, [corePlayer, lineScaleSpringParams]);
+
+  useEffect(() => {
+    if (onLyricLineClick) {
+      const handler = (e: Event) => onLyricLineClick(e as LyricLineMouseEvent);
+      corePlayer?.addEventListener("line-click", handler);
+      return () => corePlayer?.removeEventListener("line-click", handler);
+    }
+  }, [corePlayer, onLyricLineClick]);
+
+  useEffect(() => {
+    if (onLyricLineContextMenu) {
+      const handler = (e: Event) => onLyricLineContextMenu(e as LyricLineMouseEvent);
+      corePlayer?.addEventListener("line-contextmenu", handler);
+      return () => corePlayer?.removeEventListener("line-contextmenu", handler);
+    }
+  }, [corePlayer, onLyricLineContextMenu]);
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      wrapperEl: wrapperRef.current,
+      lyricPlayer: corePlayer
+    }),
+    [corePlayer]
+  );
+
+  return (
+    <>
+      <div {...props} ref={wrapperRef} />
+      {corePlayer?.getBottomLineElement() && bottomLine
+        ? createPortal(bottomLine, corePlayer?.getBottomLineElement())
+        : null}
+    </>
+  );
+};
+
+LyricPlayer.displayName = "LyricPlayer";
+export default memo(forwardRef(LyricPlayer));

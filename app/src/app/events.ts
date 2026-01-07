@@ -4,7 +4,7 @@ import { Log } from "../utils/log";
 import { isCreateTray, isLinux, isMacOS } from "../utils/platform";
 import { stopStoreServer } from "../services/store";
 import { CreateMainWindow, WindowManager } from "../window";
-import { Store } from "./store";
+import { typedIpcMainSendMessage } from "../ipc/main/typed";
 
 export function registerAppEvents(instance: APP) {
   app.on("ready", async () => {
@@ -44,7 +44,18 @@ export function registerAppEvents(instance: APP) {
     Log.debug("App quit");
     instance.proxyServer.close();
     stopStoreServer();
-    instance.neteaseMusicAPIServer
+  });
+
+  // 退出前注销全局快捷键
+  app.on("will-quit", async () => {
+    Log.debug("App will-quit");
+    typedIpcMainSendMessage({
+      sender: "main",
+      receiver: "main",
+      type: "mainProcessExit",
+      data: undefined
+    });
+    await instance.neteaseMusicAPIServer
       .then((ncm) => {
         Log.debug("stop neteaseMusicAPIServer");
         ncm?.server?.close();
@@ -52,12 +63,6 @@ export function registerAppEvents(instance: APP) {
       .catch((err) => {
         Log.debug(`failed to stop neteaseMusicAPIServer: ${err}`);
       });
-  });
-
-  // 退出前注销全局快捷键
-  app.on("will-quit", () => {
-    Log.debug("App will-quit");
-    // TODO
   });
 
   if (!isMacOS) {
@@ -79,18 +84,14 @@ function handleExternalWindowEvents(instance: APP) {
       // 一般惯例是点击左上红点不退出应用，而是隐藏窗口（除非用户真正退出）
       // this.willQuitApp 标志用来区别用户是否在真正退出（例如 app.quit()）
       if (instance.willQuitAPP) {
-        // @ts-expect-error
-        instance.window = null;
         app.quit();
       } else {
         e.preventDefault();
         mainWindow.hide();
       }
     } else {
-      const closeOpts = Store.get("settings.closeAppOption");
-      if (instance.willQuitAPP && (closeOpts === "exit" || closeOpts === "ask")) {
-        //@ts-expect-error
-        instance.window = null;
+      // TODO
+      if (instance.willQuitAPP) {
         app.quit();
       } else {
         e.preventDefault();

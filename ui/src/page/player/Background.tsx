@@ -1,7 +1,7 @@
 import { FC, memo, useEffect, useRef } from "react";
 import BackgroundRender from "@mahiru/ui/componets/player/BackgroundRender";
 import { useFileCache } from "@mahiru/ui/hook/useFileCache";
-import { useGPU } from "@mahiru/ui/hook/useGPU";
+import { useDevice } from "@mahiru/ui/hook/useDevice";
 import AcrylicBackground from "@mahiru/ui/componets/public/AcrylicBackground";
 import { NeteaseLyric } from "@mahiru/ui/utils/lyric";
 import { PlayerFSMStatusEnum, usePlayerStore } from "@mahiru/ui/store/player";
@@ -15,7 +15,7 @@ const Background: FC<object> = () => {
   ]);
   const { PlayerVisible } = useLayoutStore(["PlayerVisible"]);
   const { hasRaw } = NeteaseLyric.getLyricVersionInfo(PlayerTrackStatus?.lyric);
-  const { hasDedicatedGPU } = useGPU();
+  const { gpu } = useDevice();
   const firstRender = useRef(true);
 
   const track = PlayerTrackStatus?.track;
@@ -29,7 +29,7 @@ const Background: FC<object> = () => {
     }
   }, [PlayerVisible]);
 
-  return hasDedicatedGPU ? (
+  return gpu.dedicated ? (
     <BackgroundRender
       className="absolute inset-0"
       albumIsVideo={false}

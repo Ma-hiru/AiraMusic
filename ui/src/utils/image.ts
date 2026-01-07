@@ -1,5 +1,6 @@
 import { AddStoreSnapshot, WithStoreSnapshot } from "@mahiru/ui/store/decorator";
 import { Time } from "@mahiru/ui/utils/time";
+import { setCloseTask } from "@mahiru/ui/utils/close";
 
 @AddStoreSnapshot
 class NeteaseImageClass {
@@ -119,6 +120,7 @@ class NeteaseImageClass {
   }
 
   async loadCacheFromLocal() {
+    setCloseTask("save_netease_image_cache", this.saveCacheToLocal.bind(this));
     const cache = await this.cacheStore.fetchObject<typeof this.cache>("netease_image_cache");
     if (cache) {
       this.cache = cache;

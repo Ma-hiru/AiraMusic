@@ -14,7 +14,7 @@ type Handler = {
 
 type HandlerMapType = Map<MessageEvent, Map<HandlerID, Handler>>;
 
-export const Renderer = new (class {
+export const Renderer = new (class Renderer {
   readonly event = window.electron.event;
   readonly invoke = window.electron.invoke;
   private readonly listener = window.electron.listener;

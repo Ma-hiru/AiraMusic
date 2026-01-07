@@ -11,7 +11,6 @@ import { useSpectrumWorker } from "@mahiru/ui/hook/useSpectrumWorker";
 import { PlayerFSMStatusEnum, usePlayerStore } from "@mahiru/ui/store/player";
 import { useLayoutStore } from "@mahiru/ui/store/layout";
 import { useNetwork } from "@mahiru/ui/hook/useNetwork";
-import { addCloseTask } from "@mahiru/ui/utils/close";
 
 const MusicSource: FC<object> = () => {
   const {
@@ -28,8 +27,7 @@ const MusicSource: FC<object> = () => {
     PlayerProgressGetter,
     SetPlayerStatus,
     PlayerStatus,
-    InitPlayerCore,
-    SavePlayerCore
+    InitPlayerCore
   } = usePlayerStore();
   const { IsTyping } = useLayoutStore(["IsTyping"]);
   // 注入 Audio 元素引用
@@ -45,8 +43,7 @@ const MusicSource: FC<object> = () => {
   // 处理初始化
   useEffect(() => {
     InitPlayerCore();
-    addCloseTask("save_player_core", async () => SavePlayerCore());
-  }, [InitPlayerCore, SavePlayerCore]);
+  }, [InitPlayerCore]);
   useEffect(() => {
     if (PlayerInitialized) {
       const audio = audioRealRef.current;

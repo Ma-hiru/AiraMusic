@@ -140,6 +140,10 @@ interface NeteaseTrackBase {
   playable: boolean;
   /** 注入字段 */
   reason: string;
+  /** 注入字段 */
+  playDuration?: number;
+  /** 注入字段 */
+  recordTime?: number;
   mark: number;
   sq: null | Sq;
   h: null | H;

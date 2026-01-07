@@ -4,7 +4,7 @@ import { RefObject, startTransition, useCallback, useEffect, useRef, useState } 
 import { Log } from "@mahiru/ui/utils/dev";
 import { Playlist, PlaylistCacheEntry } from "@mahiru/ui/utils/playlist";
 import { Copy, DiscAlbum, ListMusic, ListPlus, MessageSquare, Play } from "lucide-react";
-import { PlaylistHistoryCache } from "@mahiru/ui/utils/history";
+import { PlayerHistory } from "@mahiru/ui/utils/history";
 import { useUpdate } from "@mahiru/ui/hook/useUpdate";
 import { useInfoWindow } from "@mahiru/ui/hook/useInfoWindow";
 import { useContextMenu } from "@mahiru/ui/hook/useContextMenu";
@@ -44,18 +44,26 @@ export function usePlaylistNormalRender(id?: string) {
   // 历史最大滚动范围
   const maxRange = useRef<IndexRange>([0, 0]);
   // 检查并更新前一段预缓存范围
-  const checkAndUpdateLastPreloadRange = useCallback(async (range: IndexRange) => {
-    const [start, end] = range;
-    return await Playlist.requestTracksCoverPreCache(
-      tracks.current,
-      [start, end],
-      NeteaseImageSize.xs,
-      true
-    );
-  }, []);
+  const checkAndUpdateLastPreloadRange = useCallback(
+    async (range: IndexRange, signal?: AbortSignal) => {
+      const [start, end] = range;
+      return await Playlist.requestTracksCoverPreCache(
+        tracks.current,
+        [start, end],
+        NeteaseImageSize.xs,
+        true,
+        signal
+      );
+    },
+    []
+  );
   // 虚拟列表范围更新回调
+  const coverCacheController = useRef<Nullable<AbortController>>(null);
   const onVirtualListRangeUpdate = useCallback(
     async (range: IndexRange) => {
+      const controller = new AbortController();
+      coverCacheController.current?.abort();
+      coverCacheController.current = controller;
       // 搜索状态不处理预缓存
       if (filterTracks.absoluteIdx !== null) return;
       // 50 70 75 95
@@ -66,21 +74,25 @@ export function usePlaylistNormalRender(id?: string) {
       maxRange.current = range;
       // 如果开始位置是25的倍数再进行预缓存，减少调用次数
       if (start % 25 === 0 && start !== 0) {
+        if (controller.signal.aborted) return;
         Log.debug("ui/PlayListPage.tsx:onVirtualListRangeUpdate", "预缓存封面", end, end + 25);
         tracks.current = await Playlist.requestTracksCoverPreCache(
           tracks.current,
           [end, end + 25], // 70 95 95 120
-          NeteaseImageSize.xs
+          NeteaseImageSize.xs,
+          false,
+          controller.signal
         );
         // 检查前一段范围，写入预缓存
         if (start - 50 > 0) {
+          if (controller.signal.aborted) return;
           Log.debug(
             "ui/PlayListPage.tsx:onVirtualListRangeUpdate",
             "检查前一段范围预缓存",
             end - 25,
             end
           );
-          await checkAndUpdateLastPreloadRange([end - 25, end]);
+          await checkAndUpdateLastPreloadRange([end - 25, end], controller.signal);
         }
       }
     },
@@ -128,19 +140,17 @@ export function usePlaylistNormalRender(id?: string) {
     }
   }, []);
   // 挂载updater
-  const outerUpdaterForID = useUpdate();
-  const outerUpdaterForAll = useUpdate();
+  const forceUpdater = useUpdate();
   useEffect(() => {
-    id && Playlist.addOuterUpdater(outerUpdaterForID, Number(id));
-    Playlist.addOuterUpdater(outerUpdaterForAll, null);
+    id && Playlist.addOuterUpdater(forceUpdater, Number(id));
     return () => {
-      id && Playlist.removeOuterUpdater(null, Number(id));
-      Playlist.removeOuterUpdater(outerUpdaterForAll, null);
+      id && Playlist.removeOuterUpdater(forceUpdater, Number(id));
     };
-  }, [id, outerUpdaterForAll, outerUpdaterForID]);
+  }, [id, forceUpdater]);
   // 监听id变化，加载歌单详情
   useEffect(() => {
     let cancelled = false;
+    let timer: Nullable<number> = null;
     clearState();
     if (id) {
       Log.trace("usePlayListNormal", `加载歌单详情 ${id}`);
@@ -152,10 +162,12 @@ export function usePlaylistNormalRender(id?: string) {
         .then((entry) => {
           if (entry && !cancelled) {
             tracks.current = entry.playlist.tracks;
-            setTimeout(() => {
-              if (!cancelled) {
-                void checkAndUpdateLastPreloadRange([0, 50]);
-              }
+            timer = window.setTimeout(() => {
+              requestIdleCallback(() => {
+                if (!cancelled) {
+                  void checkAndUpdateLastPreloadRange([0, 50]);
+                }
+              });
             }, 2000);
             searchTrackInstance.current?.update(JSON.stringify(tracks.current));
             setFilterTracks({
@@ -174,6 +186,7 @@ export function usePlaylistNormalRender(id?: string) {
     }
     return () => {
       cancelled = true;
+      timer && clearTimeout(timer);
     };
     // outerUpdate.count 用于监听外部更新请求
   }, [
@@ -181,33 +194,8 @@ export function usePlaylistNormalRender(id?: string) {
     clearState,
     id,
     // 通过id精确监听歌单数据更新
-    outerUpdaterForID.count
+    forceUpdater.count
   ]);
-  // 监听外部歌单更新请求(一般是喜欢歌曲的变更)，重载列表
-  const lastUpdateAllCount = useRef(outerUpdaterForID.count);
-  useEffect(() => {
-    if (lastUpdateAllCount.current === outerUpdaterForID.count) {
-      // 说明 outerUpdaterForID 没有触发更新，是外部歌单更新
-      // 此时仅仅重载一下列表，触发列表项的useEffect，更新状态，不要重载数据
-      Log.trace("usePlayListNormalRender", "检测到外部歌单更新，重载列表");
-      setFilterTracks(() => filterTracks);
-    } else {
-      Log.trace("usePlayListNormalRender", "检测到当前歌单更新，重载数据");
-      // 更新的是当前歌单，那么已经重载数据了，不需要再处理
-      lastUpdateAllCount.current = outerUpdaterForID.count;
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [outerUpdaterForAll.count, outerUpdaterForID.count]);
-  // 组件卸载时保存脏数据
-  const entryRef = useRef(entry);
-  entryRef.current = entry;
-  useEffect(() => {
-    return () => {
-      Log.info("usePlayListRender", "组件卸载，保存脏数据");
-      const entry = entryRef.current;
-      entry && Playlist.saveDirtyEntry(entry);
-    };
-  }, []);
 
   const { activeKey } = useKeepAliveCtx();
   const controller = usePlaylistController({
@@ -245,7 +233,6 @@ export function usePlaylistHistoryRender() {
   const listRef = useRef<TrackListRef>(null);
   const historyTracks = useRef<NeteaseTrack[]>([]);
   const searchTrackInstance = useRef<Nullable<SearchTrack>>(null);
-  const [loading, setLoading] = useState(true);
   const [filterTracks, setFilterTracks] = useState({
     tracks: [] as NeteaseTrack[],
     // 搜索时的绝对索引，如果为null则表示未搜索
@@ -258,18 +245,26 @@ export function usePlaylistHistoryRender() {
   // 历史最大滚动范围
   const maxRange = useRef<IndexRange>([0, 0]);
   // 检查并更新前一段预缓存范围
-  const checkAndUpdateLastPreloadRange = useCallback(async (range: IndexRange) => {
-    const [start, end] = range;
-    return await Playlist.requestTracksCoverPreCache(
-      historyTracks.current,
-      [start, end],
-      NeteaseImageSize.xs,
-      true
-    );
-  }, []);
+  const checkAndUpdateLastPreloadRange = useCallback(
+    async (range: IndexRange, signal?: AbortSignal) => {
+      const [start, end] = range;
+      return await Playlist.requestTracksCoverPreCache(
+        historyTracks.current,
+        [start, end],
+        NeteaseImageSize.xs,
+        true,
+        signal
+      );
+    },
+    []
+  );
   // 虚拟列表范围更新回调
+  const coverCacheController = useRef<Nullable<AbortController>>(null);
   const onVirtualListRangeUpdate = useCallback(
     async (range: IndexRange) => {
+      const controller = new AbortController();
+      coverCacheController.current?.abort();
+      coverCacheController.current = controller;
       // 搜索状态不处理预缓存
       if (filterTracks.absoluteIdx !== null) return;
       // 50 70 75 95
@@ -281,10 +276,13 @@ export function usePlaylistHistoryRender() {
       // 如果开始位置是25的倍数再进行预缓存，减少调用次数
       if (start % 25 === 0 && start !== 0) {
         Log.debug("ui/PlayListPage.tsx:onVirtualListRangeUpdate", "预缓存封面", end, end + 25);
+        if (controller.signal.aborted) return;
         historyTracks.current = await Playlist.requestTracksCoverPreCache(
           historyTracks.current,
           [end, end + 25], // 70 95 95 120
-          NeteaseImageSize.xs
+          NeteaseImageSize.xs,
+          false,
+          controller.signal
         );
         // 检查前一段范围，写入预缓存
         if (start - 50 > 0) {
@@ -294,7 +292,8 @@ export function usePlaylistHistoryRender() {
             end - 25,
             end
           );
-          await checkAndUpdateLastPreloadRange([end - 25, end]);
+          if (controller.signal.aborted) return;
+          await checkAndUpdateLastPreloadRange([end - 25, end], controller.signal);
         }
       }
     },
@@ -318,69 +317,51 @@ export function usePlaylistHistoryRender() {
         });
         setFilterTracks({
           tracks: result,
-          absoluteIdx: indexs as unknown as number[]
+          absoluteIdx: Array.from(indexs)
         });
       }
     }
   }, []);
-  const forceUpdate = useUpdate();
-  const updater = useCallback(() => {
-    setLoading(true);
-    PlaylistHistoryCache.load()
-      .then((data) => {
-        historyTracks.current = data;
-        forceUpdate();
-      })
-      .finally(() => {
-        setLoading(false);
-      });
-  }, [forceUpdate]);
-  const saver = useCallback(() => {
-    if (historyTracks.current.length) {
-      void PlaylistHistoryCache.save(historyTracks.current);
-    }
-  }, []);
-  // 加载历史歌曲详情
-  useEffect(() => {
-    let cancelled = false;
-    setTimeout(() => {
-      if (!cancelled) {
-        void checkAndUpdateLastPreloadRange([0, 50]);
-      }
-    }, 1000);
-    searchTrackInstance.current?.update(JSON.stringify(historyTracks.current));
-    setFilterTracks({
-      tracks: historyTracks.current,
-      absoluteIdx: null
-    });
-    if (loading) setLoading(false);
-    return () => {
-      cancelled = true;
-    };
-  }, [
-    checkAndUpdateLastPreloadRange,
-    historyTracks,
-    loading,
-    // 监听ref变化
-    forceUpdate.count
-  ]);
   // 初始化搜索实例
   useEffect(() => {
     if (searchTrackInstance.current === null) {
       searchTrackInstance.current = new SearchTrack();
     }
   }, []);
+  // 加载历史歌曲详情
+  const forceUpdate = useUpdate();
+  useEffect(() => {
+    let cancelled = false;
+    let timer: Nullable<number> = null;
+    historyTracks.current = PlayerHistory.tracks;
+    timer = window.setTimeout(() => {
+      requestIdleCallback(() => {
+        if (!cancelled) {
+          void checkAndUpdateLastPreloadRange([0, 50]);
+        }
+      });
+    }, 1000);
+    searchTrackInstance.current?.update(JSON.stringify(historyTracks.current));
+    setFilterTracks({
+      tracks: historyTracks.current,
+      absoluteIdx: null
+    });
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [
+    checkAndUpdateLastPreloadRange,
+    // 监听ref变化
+    forceUpdate.count
+  ]);
   // 挂载updater
   useEffect(() => {
-    PlaylistHistoryCache.outerUpdater = updater;
-    void updater();
+    PlayerHistory.addOuterUpdater(forceUpdate);
     return () => {
-      PlaylistHistoryCache.outerUpdater = null;
-      // 保存脏数据
-      Log.info("usePlayListHistoryRender", "组件卸载，保存历史缓存");
-      void saver();
+      PlayerHistory.removeOuterUpdater(forceUpdate);
     };
-  }, [saver, updater]);
+  }, [forceUpdate]);
 
   const { activeKey } = useKeepAliveCtx();
   const controller = usePlaylistController({
@@ -395,7 +376,6 @@ export function usePlaylistHistoryRender() {
     ...controller,
     mainColor,
     textColorOnMain,
-    loading,
     tracks: filterTracks.tracks,
     requestMissedTracks: 0,
     currentTrackID,

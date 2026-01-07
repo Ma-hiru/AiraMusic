@@ -325,6 +325,7 @@ export class PlayerCore {
     const current = this.current();
     this.playerSnapshot.SetPlayerTrackStatus((draft) => {
       if (draft && draft.track.id === current?.track.id) return;
+      this.playerSnapshot.ScrobbleTrack();
       return current;
     });
   }

@@ -4,6 +4,8 @@ import { SpectrumData, SpectrumOptions } from "@mahiru/ui/hook/useSpectrumWorker
 import { NeteaseLyric } from "@mahiru/ui/utils/lyric";
 import { PlayerCore } from "@mahiru/ui/store/player/core";
 import { API } from "@mahiru/ui/api";
+import { PlayerHistory } from "@mahiru/ui/utils/history";
+import { setCloseTask } from "@mahiru/ui/utils/close";
 
 function createPlayerRuntime() {
   const playerFSM = new PlayerFSM(PlayerFSMStatusEnum.idle);
@@ -34,13 +36,6 @@ export const PlayerStoreConfig: ZustandConfig<
 > = (set, get) => ({
   ...InitialState,
   TriggerPlayerFSMEvent: (event) => {
-    const { PlayerFSMStatus, PlayerTrackStatus, PlayerProgressGetter } = get();
-    const shouldRecord =
-      PlayerFSMStatus === PlayerFSMStatusEnum.playing &&
-      (event === "requestRestart" || event === "playingEnd");
-    if (shouldRecord && PlayerTrackStatus) {
-      API.Track.scrobble(PlayerTrackStatus, PlayerProgressGetter().currentTime);
-    }
     runtime.playerFSMEventStack.stack.push(event);
     runtime.playerFSMEventStack.timer && clearTimeout(runtime.playerFSMEventStack.timer);
     runtime.playerFSMEventStack.timer = window.setTimeout(() => {
@@ -97,8 +92,10 @@ export const PlayerStoreConfig: ZustandConfig<
     });
   },
   InitPlayerCore: () => {
-    if (runtime.playerFSM.current !== get().PlayerFSMStatus) {
-      runtime.playerFSM = new PlayerFSM(get().PlayerFSMStatus);
+    const { SavePlayerCore, PlayerCoreGetter, PlayerFSMStatus } = get();
+    setCloseTask("save_player_core", async () => SavePlayerCore());
+    if (runtime.playerFSM.current !== PlayerFSMStatus) {
+      runtime.playerFSM = new PlayerFSM(PlayerFSMStatus);
     }
 
     const progressCache = localStorage.getItem("playerProgressCache");
@@ -119,7 +116,7 @@ export const PlayerStoreConfig: ZustandConfig<
       }
     }
 
-    get().PlayerCoreGetter().Sync();
+    PlayerCoreGetter().Sync();
     set((draft) => {
       draft.PlayerInitialized = true;
       draft.PlayingRequest = false;
@@ -146,6 +143,17 @@ export const PlayerStoreConfig: ZustandConfig<
     set((draft) => {
       draft.PlayingRequest = playing;
     });
+  },
+  SetPlayerHistory: (history) => {
+    set((draft) => {
+      draft.PlayerHistory = history;
+    });
+  },
+  ScrobbleTrack: () => {
+    const { PlayerTrackStatus, PlayerProgressGetter } = get();
+    if (!PlayerTrackStatus) return;
+    API.Track.scrobble(PlayerTrackStatus, PlayerProgressGetter().currentTime);
+    void PlayerHistory.addTrack(PlayerTrackStatus.track, PlayerProgressGetter().currentTime);
   }
 });
 
@@ -170,6 +178,7 @@ const InitialState: PlayerStoreInitialState = {
   },
   PlayerTrackStatus: null,
   PlayerInitialized: false,
+  PlayerHistory: [],
   PlayerFSMStatus: PlayerFSMStatusEnum.idle
 };
 
@@ -182,6 +191,7 @@ export type PlayerStoreInitialState = {
   PlayerStatus: PlayerStatus;
   PlayerTrackStatus: Nullable<PlayerTrackStatus>;
   PlayerInitialized: boolean;
+  PlayerHistory: { track: NeteaseTrack; recordTime: number; playDuration: number }[];
   SpectrumOptions: Nullable<SpectrumOptions>;
   SpectrumGetter: NormalFunc<
     [],
@@ -206,4 +216,6 @@ export type PlayerStoreActions = {
   InitPlayerCore: NormalFunc;
   SavePlayerCore: NormalFunc;
   SetPlayingRequest: NormalFunc<[playing: boolean]>;
+  SetPlayerHistory: NormalFunc<[history: PlayerStoreInitialState["PlayerHistory"]]>;
+  ScrobbleTrack: NormalFunc;
 };

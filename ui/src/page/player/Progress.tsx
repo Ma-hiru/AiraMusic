@@ -1,4 +1,4 @@
-import { FC, memo } from "react";
+import { FC, memo, useMemo } from "react";
 import { usePlayProgress } from "@mahiru/ui/hook/usePlayProgress";
 import { motion } from "motion/react";
 import { Time } from "@mahiru/ui/utils/time";
@@ -19,7 +19,7 @@ const Progress: FC<object> = () => {
   } = usePlayProgress();
 
   const { PlayerTrackStatus } = usePlayerStore(["PlayerTrackStatus"]);
-  const quality = () => {
+  const quality = useMemo(() => {
     if (
       PlayerTrackStatus?.quality?.level === TrackQuality.sq ||
       PlayerTrackStatus?.quality?.level === TrackQuality.hr ||
@@ -28,7 +28,7 @@ const Progress: FC<object> = () => {
       return NeteaseTrack.mapTrackQualityToText(PlayerTrackStatus.quality.level);
     }
     return null;
-  };
+  }, [PlayerTrackStatus?.quality?.level]);
   return (
     <div className="w-[150px] sm:w-[200px] md:w-[250px] lg:w-[300px]">
       <div className="h-3 flex flex-col justify-center">
@@ -66,8 +66,8 @@ const Progress: FC<object> = () => {
         </div>
       </div>
       <div className="w-full flex justify-between items-center text-white/50 backdrop-blur-lg text-[12px] mt-1 select-none">
-        <Tag text={quality()} textColor="#99a1af" backgroundColor="white" />
-        {quality() ? (
+        {quality && <Tag text={quality} textColor="#99a1af" backgroundColor="white" />}
+        {quality ? (
           <div className="flex justify-end items-center gap-2">
             <span>{Time.formatTrackTime(progress.currentTime, "s")}</span>
             <span className="opacity-50">/</span>

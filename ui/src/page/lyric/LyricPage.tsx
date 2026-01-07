@@ -3,12 +3,14 @@ import {
   FC,
   memo,
   MouseEvent as ReactMouseEvent,
+  startTransition,
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState
 } from "react";
-import { LyricPlayer, LyricPlayerRef } from "@mahiru/ui/componets/player/LyricPlayer";
+import LyricPlayer, { LyricPlayerRef } from "@mahiru/ui/componets/player/LyricPlayer";
 import { cx } from "@emotion/css";
 import { WindowResize } from "@mahiru/ui/hook/useWindowResize";
 import { Renderer } from "@mahiru/ui/utils/renderer";
@@ -129,6 +131,26 @@ const LyricPage: FC<object> = () => {
       Renderer.event.close({ broadcast: false });
     });
   }, []);
+
+  const [lyricLines, setLyricLines] = useState<LyricLine[]>([]);
+  const lastTrackID = useRef<number | null>(null);
+  const lines = useMemo(
+    () => NeteaseLyric.chooseLyric(trackSync?.lyric, playerStatusSync?.lyricVersion, false),
+    [playerStatusSync?.lyricVersion, trackSync?.lyric]
+  );
+
+  useEffect(() => {
+    const currentID = trackSync?.track.id;
+    if (!currentID) return;
+    if (currentID !== lastTrackID.current) {
+      lastTrackID.current = currentID;
+      setLyricLines([]);
+    }
+    startTransition(() => {
+      setLyricLines(lines);
+    });
+  }, [lines, trackSync?.track.id]);
+
   return (
     <div className="w-screen h-screen overflow-hidden relative flex rounded-md flex-col-reverse">
       <div
@@ -151,10 +173,7 @@ const LyricPage: FC<object> = () => {
               className="w-full h-full"
               alignAnchor="center"
               hidePassedLines
-              lyricLines={NeteaseLyric.chooseLyric(
-                trackSync?.lyric,
-                playerStatusSync?.lyricVersion
-              )}
+              lyricLines={lyricLines}
               enableScale={false}
               enableSpring={false}
             />

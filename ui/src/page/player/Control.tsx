@@ -13,9 +13,11 @@ import {
 import { PlayerFSMStatusEnum, usePlayerStore } from "@mahiru/ui/store/player";
 
 const Control: FC<object> = () => {
-  const { PlayerCoreGetter, PlayerFSMStatus } = usePlayerStore([
+  const { PlayerCoreGetter, PlayerFSMStatus, PlayerStatus, PlayingRequest } = usePlayerStore([
     "PlayerCoreGetter",
-    "PlayerFSMStatus"
+    "PlayerFSMStatus",
+    "PlayerStatus",
+    "PlayingRequest"
   ]);
   const player = PlayerCoreGetter();
   return (
@@ -28,7 +30,7 @@ const Control: FC<object> = () => {
             fill={"rgba(255,255,255,0.89)"}
             onClick={() => player?.last(true)}
           />
-          {PlayerFSMStatus === PlayerFSMStatusEnum.playing ? (
+          {PlayingRequest || PlayerFSMStatus === PlayerFSMStatusEnum.playing ? (
             <Pause
               className="size-5 cursor-pointer hover:opacity-50 ease-in-out duration-300 transition-all active:scale-90"
               fill={"rgba(255,255,255,0.89)"}
@@ -46,7 +48,7 @@ const Control: FC<object> = () => {
             fill={"rgba(255,255,255,0.89)"}
             onClick={() => player?.next(true)}
           />
-          {player?.shuffle ? (
+          {PlayerStatus.shuffle ? (
             <Shuffle
               className="size-6 scale-85 cursor-pointer hover:opacity-50 ease-in-out duration-300 transition-all active:scale-90"
               fill={"rgba(255,255,255,0.89)"}
@@ -59,7 +61,7 @@ const Control: FC<object> = () => {
               onClick={() => player && (player.shuffle = true)}
             />
           )}
-          {player?.repeat !== "off" ? (
+          {PlayerStatus.repeat !== "off" ? (
             <Repeat1
               className="size-6 cursor-pointer hover:opacity-50 ease-in-out duration-300 transition-all active:scale-90"
               onClick={() => player && (player.repeat = "off")}

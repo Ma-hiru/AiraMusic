@@ -6,7 +6,7 @@ import { CacheStoreClass } from "@mahiru/ui/store/cache";
 
 const cacheStoreInstance = new CacheStoreClass();
 
-export function CacheStoreSnapshot(_: Function, ctx: ClassDecoratorContext) {
+function CacheStoreSnapshot(_: Function, ctx: ClassDecoratorContext) {
   ctx.addInitializer(function (this) {
     Object.defineProperty(this.prototype, "cacheStore", {
       get() {
@@ -16,7 +16,7 @@ export function CacheStoreSnapshot(_: Function, ctx: ClassDecoratorContext) {
   });
 }
 
-export interface WithCacheSnapshot {
+interface WithCacheSnapshot {
   readonly cacheStore: CacheStoreClass;
 }
 

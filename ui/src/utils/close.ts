@@ -1,6 +1,8 @@
+import { Renderer } from "@mahiru/ui/utils/renderer";
+
 const task = new Map<string, PromiseFunc>();
 
-export function addCloseTask(key: string, func: PromiseFunc) {
+export function setCloseTask(key: string, func: PromiseFunc<[], any>) {
   task.set(key, func);
 }
 
@@ -9,5 +11,9 @@ export function runCloseTask() {
   for (const func of task.values()) {
     tasks.push(func().catch());
   }
-  return Promise.all(tasks);
+  Promise.allSettled(tasks).finally(() => {
+    Renderer.event.close({ broadcast: true });
+  });
 }
+
+Renderer.addMainProcessMessageHandler("mainProcessExit", runCloseTask);

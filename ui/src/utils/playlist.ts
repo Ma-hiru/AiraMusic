@@ -136,58 +136,52 @@ interface PlaylistStore extends WithStoreSnapshot {}
 @AddStoreSnapshot
 class PlaylistManager {
   private store = new PlaylistStore();
-  private outerUpdaterWithID: Map<number, NormalFunc> = new Map();
-  private outerUpdaterWithAll: Set<NormalFunc> = new Set();
+  private outerUpdaterWithID: Map<number, NormalFunc[]> = new Map();
   private controller: AbortController = new AbortController();
   private lastCheck: Nullable<{ id: number; time: number }> = null;
 
   /// 外部更新器管理
-  addOuterUpdater(func: NormalFunc, id: Optional<number>) {
-    if (id) {
-      this.outerUpdaterWithID.set(id, func);
+  addOuterUpdater(func: NormalFunc, id: number) {
+    const updaters = this.outerUpdaterWithID.get(id);
+    if (updaters) {
+      updaters.push(func);
     } else {
-      this.outerUpdaterWithAll.add(func);
+      this.outerUpdaterWithID.set(id, [func]);
     }
   }
 
-  removeOuterUpdater(func: Optional<NormalFunc>, id: Optional<number>) {
-    if (id) {
+  removeOuterUpdater(func: NormalFunc, id: number) {
+    const updaters = this.outerUpdaterWithID.get(id);
+    if (updaters) {
+      updaters.splice(updaters.indexOf(func), 1);
+    } else {
       this.outerUpdaterWithID.delete(id);
-    } else if (func) {
-      this.outerUpdaterWithAll.delete(func);
     }
   }
 
-  private execUpdater(id: Optional<number>) {
-    startTransition(() => {
-      if (id) {
-        try {
-          this.outerUpdaterWithID.get(id)?.();
-        } catch (err) {
-          Log.error(
-            new EqError({
-              raw: err,
-              message: "PlaylistManager execUpdater failed",
-              label: "ui/store/playlist.ts:PlaylistManager.execUpdater"
-            })
-          );
-          this.removeOuterUpdater(null, id);
-        }
-      }
-      this.outerUpdaterWithAll.forEach((func) => {
-        try {
-          func();
-        } catch (err) {
-          Log.error(
-            new EqError({
-              raw: err,
-              message: "PlaylistManager execUpdater failed",
-              label: "ui/store/playlist.ts:PlaylistManager.execUpdater"
-            })
-          );
-          this.removeOuterUpdater(func, null);
+  private execUpdater(id: Nullable<number>) {
+    if (!id) {
+      startTransition(() => {
+        for (const [id, updaters] of this.outerUpdaterWithID.entries()) {
+          for (const fn of updaters) {
+            try {
+              fn();
+            } catch {
+              this.removeOuterUpdater(fn, id);
+            }
+          }
         }
       });
+      return;
+    }
+    startTransition(() => {
+      for (const fn of this.outerUpdaterWithID.get(id) || []) {
+        try {
+          fn();
+        } catch {
+          this.removeOuterUpdater(fn, id);
+        }
+      }
     });
   }
 
@@ -293,7 +287,6 @@ class PlaylistManager {
       true
     );
     startTransition(() => {
-      this.execUpdater(id);
       this.execUpdater(null);
     });
     return entry;
@@ -328,7 +321,6 @@ class PlaylistManager {
         this.saveDirtyEntry(entry, true);
         startTransition(() => {
           this.execUpdater(likedPlaylistID);
-          this.execUpdater(null);
         });
       }
     }
@@ -362,7 +354,8 @@ class PlaylistManager {
     tracks: NeteaseTrack[],
     range: [start: number, end: number],
     size: NeteaseImageSize = NeteaseImageSize.xs,
-    noStore = false
+    noStore = false,
+    signal?: AbortSignal
   ) {
     // range => [start, end)
     let [start, end] = range;
@@ -381,6 +374,7 @@ class PlaylistManager {
     // 检查或预缓存
     let check;
     try {
+      if (signal?.aborted) return tracks;
       if (noStore) check = await this.cacheStore.checkMulti(coverURLs);
       else check = await this.cacheStore.checkOrStoreAsyncMulti(coverURLs, "GET");
     } catch (err) {
@@ -395,6 +389,7 @@ class PlaylistManager {
     }
     // 写入结果
     if (check.ok) {
+      if (signal?.aborted) return tracks;
       check.results.forEach((cache, i) => {
         if (cache.ok) {
           NeteaseImage.storeCacheURL(coverURLs[i]?.url, cache.index.file);
@@ -406,7 +401,7 @@ class PlaylistManager {
   }
 
   /// Utils
-  saveDirtyEntry(entry: PlaylistCacheEntry, memoryFresh = false) {
+  private saveDirtyEntry(entry: PlaylistCacheEntry, memoryFresh = false) {
     return this.store.saveDirtyEntry(entry, memoryFresh);
   }
 

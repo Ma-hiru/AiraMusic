@@ -1,5 +1,5 @@
 import { FC, memo } from "react";
-import { cx } from "@emotion/css";
+import { css, cx } from "@emotion/css";
 import { Heart } from "lucide-react";
 import { Time } from "@mahiru/ui/utils/time";
 import { NeteaseTrack, TrackBitmark } from "@mahiru/ui/utils/track";
@@ -50,12 +50,38 @@ const TrackItemInfo: FC<ListItemAlbumProps> = ({
           }}
         />
       )}
-      <div
-        className={cx("text-[#7b8290]/80 text-[12px] font-medium select-none", {
-          "text-white/90": active
-        })}>
-        {Time.formatTrackTime(track.dt, "ms")}
-      </div>
+      {Number.isFinite(track.playDuration) && Number.isFinite(track.recordTime) ? (
+        <>
+          <div
+            className={cx(
+              "text-[12px] font-medium select-none",
+              css`
+                color: ${active ? textColorOnMain.string() : "#7b8290cc"};
+              `
+            )}>
+            {Time.formatTrackDate(track.recordTime)}
+          </div>
+          <div
+            className={cx(
+              "text-[12px] font-medium select-none",
+              css`
+                color: ${active ? textColorOnMain.string() : "#7b8290cc"};
+              `
+            )}>
+            {Time.formatTrackTime(track.playDuration, "s")} / {Time.formatTrackTime(track.dt, "ms")}
+          </div>
+        </>
+      ) : (
+        <div
+          className={cx(
+            "text-[12px] font-medium select-none",
+            css`
+              color: ${active ? textColorOnMain.string() : "#7b8290cc"};
+            `
+          )}>
+          {Time.formatTrackTime(track.dt, "ms")}
+        </div>
+      )}
     </div>
   );
 };

@@ -28,9 +28,7 @@ const TopControlPure: FC<TopControlPurProps> = ({ maximizable, mini, color }) =>
   const minimize = Renderer.event.minimize;
   const close = useCallback(() => {
     Renderer.event.hidden();
-    runCloseTask().finally(() => {
-      Renderer.event.close({ broadcast: true });
-    });
+    runCloseTask();
   }, []);
 
   return (

@@ -3,6 +3,7 @@ import {
   LyricWord as RawLyricWord,
   parseLrc,
   parseQrc,
+  parseTTML,
   parseYrc
 } from "@applemusic-like-lyrics/lyric";
 import { LyricLine, LyricWord } from "@applemusic-like-lyrics/core";
@@ -106,6 +107,19 @@ class LyricParser {
       return parsedLyric;
     }
   }
+
+  parseTTMLyric(context: string) {
+    const ttml = parseTTML(context);
+    return {
+      lyric: {
+        raw: ttml.lines.map(this.mapRawLyricLine.bind(this)),
+        tl: [],
+        rm: [],
+        full: []
+      } satisfies FullVersionLyricLine,
+      metadata: ttml.metadata
+    };
+  }
 }
 
 const noLyricPreset = {
@@ -163,8 +177,22 @@ export const NeteaseLyric = new (class {
 
   /** 请求和解析歌词 */
   async requestLyric(id: number, preference?: Optional<LyricVersionType>) {
-    const response = await API.Lyric.getYRCLyric(id);
-    const lyric = this.Parser.parseNeteaseLyricResponse(response);
+    let lyric: FullVersionLyricLine = { raw: [], rm: [], tl: [], full: [] };
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 1500);
+    const [ttml, response] = await Promise.allSettled([
+      API.Lyric.getTTMLyric(id, controller.signal),
+      API.Lyric.getYRCLyric(id)
+    ]).finally(() => clearTimeout(timer));
+
+    if (ttml.status === "fulfilled" && ttml.value) {
+      console.log(ttml.value);
+      Log.trace("use ttml lyric id:" + id);
+      lyric = this.Parser.parseTTMLyric(ttml.value).lyric;
+    } else if (response.status === "fulfilled") {
+      lyric = this.Parser.parseNeteaseLyricResponse(response.value);
+    }
+
     const version = this.chooseLyricVersionWithPreference(lyric, preference);
     return {
       lyric,
@@ -243,9 +271,14 @@ export const NeteaseLyric = new (class {
   }
 
   /** 歌词显示版本选择，可用于歌词组件，含容错处理 */
-  chooseLyric(lyric: Optional<FullVersionLyricLine>, version: Optional<LyricVersionType>) {
+  chooseLyric(
+    lyric: Optional<FullVersionLyricLine>,
+    version: Optional<LyricVersionType>,
+    clone: Optional<boolean>
+  ) {
     if (lyric) {
       const chosenVersion = this.checkLyricVersion(lyric, version, null);
+      if (clone) return structuredClone(lyric[chosenVersion]);
       return lyric[chosenVersion];
     } else {
       return [];

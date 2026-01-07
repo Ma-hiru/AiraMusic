@@ -5,7 +5,9 @@ function formatTrackDate(time?: number, split?: string) {
     const date = Dayjs(time);
     const now = Dayjs();
     split ||= "-";
-    if (date.year() === now.year()) {
+    if (now.diff(date, "seconds") < 10) {
+      return "刚刚";
+    } else if (date.year() === now.year()) {
       return date.format(`MM${split}DD`);
     } else {
       return date.format(`YYYY${split}MM${split}DD`);

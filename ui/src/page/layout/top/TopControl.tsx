@@ -35,9 +35,7 @@ const TopControl: FC<TopControlProps> = ({ maximizable = true, mini = true }) =>
   const close = useCallback(() => {
     Renderer.event.hidden();
     player?.pause?.();
-    runCloseTask().finally(() => {
-      Renderer.event.close({ broadcast: true });
-    });
+    runCloseTask();
   }, [player]);
 
   useEffect(() => {
