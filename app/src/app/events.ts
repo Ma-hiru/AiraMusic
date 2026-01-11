@@ -5,14 +5,15 @@ import { isCreateTray, isLinux, isMacOS } from "../utils/platform";
 import { stopStoreServer } from "../services/store";
 import { CreateMainWindow, WindowManager } from "../window";
 import { typedIpcMainSendMessage } from "../ipc/main/typed";
+import { registerTray } from "../window/tray";
 
 export function registerAppEvents(instance: APP) {
-  app.on("ready", async () => {
+  app.on("ready", () => {
     Log.debug("App ready");
     CreateMainWindow();
     handleExternalWindowEvents(instance);
     if (isCreateTray) {
-      // TODO
+      registerTray();
     }
     // TODO proxy
     // TODO menu

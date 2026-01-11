@@ -1,5 +1,6 @@
 import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
+import vue from "@vitejs/plugin-vue";
 import wasm from "vite-plugin-wasm";
 import tailwindcss from "@tailwindcss/vite";
 import { fileURLToPath } from "node:url";
@@ -31,7 +32,8 @@ export default defineConfig(({ mode }) => {
             ["@babel/plugin-proposal-decorators", { version: "2023-05" }]
           ]
         }
-      })
+      }),
+      vue()
     ],
     build: {
       outDir: join(__dirname, "../dist/ui"),
@@ -39,7 +41,10 @@ export default defineConfig(({ mode }) => {
       rollupOptions: {
         input: {
           index: join(__dirname, "index.html"),
-          info: join(__dirname, "info.html")
+          info: join(__dirname, "info.html"),
+          login: join(__dirname, "login.html"),
+          mini: join(__dirname, "mini.html"),
+          lyric: join(__dirname, "lyric.html")
         }
       }
     },

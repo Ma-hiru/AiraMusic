@@ -1,0 +1,103 @@
+import { FC, memo, useCallback, useEffect, useState } from "react";
+import { usePlayerStore } from "@mahiru/ui/main/store/player";
+import { API } from "@mahiru/ui/public/api";
+import { useAppLoaded } from "@mahiru/ui/public/hooks/useAppLoaded";
+import { useThemeColor } from "@mahiru/ui/public/hooks/useThemeColor";
+import { NeteaseTrack } from "@mahiru/ui/public/entry/track";
+import { Renderer } from "@mahiru/ui/public/entry/renderer";
+import { EqError, Log } from "@mahiru/ui/public/utils/dev";
+
+import Carousel from "@mahiru/ui/public/components/public/Carousel";
+
+const Banner: FC<object> = () => {
+  const [banner, setBanner] = useState<NeteaseBanner[]>([]);
+  const { PlayerCoreGetter } = usePlayerStore(["PlayerCoreGetter"]);
+  const player = PlayerCoreGetter();
+  useEffect(() => {
+    API.Recommend.homeBanner().then((result) => {
+      setBanner(result.banners);
+    });
+  }, []);
+  useAppLoaded(!!banner.length);
+
+  const { textColorOnMain } = useThemeColor();
+  const handleClick = useCallback(
+    async (i: number) => {
+      const item = banner[i];
+      if (!item) return;
+      const { type, id } = parseBannerURL(item.url);
+      switch (type) {
+        case "song": {
+          const detail = await API.Track.getTrackDetail(id);
+          const tracks = NeteaseTrack.tracksPrivilegeExtends(detail.songs, detail.privileges);
+          const track = tracks[0];
+          if (track && track.playable) {
+            player?.addTrack(track, track.al.id, "next");
+            player?.next(true);
+          }
+          return;
+        }
+        case "web": {
+          Renderer.event.openExternalLink({
+            url: item.url,
+            title: item.typeTitle
+          });
+          return;
+        }
+      }
+    },
+    [banner, player]
+  );
+  return (
+    <div className="w-full px-2">
+      <Carousel
+        className="h-56"
+        items={banner.map((b) => ({
+          url: b.bigImageUrl,
+          title: b.typeTitle
+        }))}
+        titleColor={textColorOnMain.string()}
+        onClick={handleClick}
+      />
+    </div>
+  );
+};
+export default memo(Banner);
+
+type BannerType = "song" | "album" | "web" | "unknown";
+
+function parseBannerURL(url: string): { type: BannerType; id: number } {
+  // 独家策划 https://y.music.163.com/g/yida/act/qianxi?page=50ccea950b38445f98458d3fc61ad72b
+  // 新歌首发 orpheus://song/3322319846
+  // 数字专辑 https://music.163.com/store/newalbum/detail?id=349048250
+  // 新碟首发 orpheus://album/351342148 \ https://music.163.com/#/album?id=352637538
+  // 新歌首发 orpheus://song/3321723289
+  // 热歌推荐 orpheus://song/3322410882
+  const isOrpheus = url.startsWith("orpheus");
+  const isHttp = url.startsWith("http");
+  try {
+    if (isOrpheus) {
+      const [type = "unknown", id = 0] = url.split("://")[1]!.split("/")!;
+      return { type: type as BannerType, id: Number(id) };
+    } else if (isHttp) {
+      const u = new URL(url);
+      const id = u.searchParams.get("id") || "0";
+      if (u.pathname.includes("album") || u.pathname.includes("newalbum")) {
+        return { type: "album", id: Number(id) };
+      } else if (u.pathname.includes("song")) {
+        return { type: "song", id: Number(id) };
+      } else {
+        return { type: "web", id: Number(id) };
+      }
+    }
+  } catch (err) {
+    Log.info(
+      new EqError({
+        message: "parseBannerURL error",
+        raw: err,
+        label: "parseBannerURL"
+      })
+    );
+  }
+  return { type: "unknown", id: 0 };
+}

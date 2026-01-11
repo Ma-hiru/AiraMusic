@@ -19,6 +19,7 @@ export const typedIpcMainReceiveMessage = <T extends keyof MessageTypeMap>(
   type: T,
   data: MessageDataReceive<T>["data"]
 ) => {
+  Log.info("typedIpcMainReceiveMessage", { type, data });
   const handler = handlers.get(type);
   if (handler) {
     handler.forEach((cb) => {

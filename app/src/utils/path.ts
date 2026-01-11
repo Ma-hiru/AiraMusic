@@ -14,4 +14,6 @@ export const staticUIDir = isDev()
   ? join(appPathJoin("dist", "ui"))
   : join(process.resourcesPath, "ui");
 
-export const staticIconDir = isDev() ? appPathJoin("icon") : join(process.resourcesPath, "icon");
+export const staticAssetsDir = isDev()
+  ? appPathJoin("assets")
+  : join(process.resourcesPath, "icon");

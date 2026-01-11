@@ -1,9 +1,9 @@
-export interface NeteaseBannerResponse extends NeteaseAPIResponse {
+interface NeteaseBannerResponse extends NeteaseAPIResponse {
   banners: NeteaseBanner[];
   trp: NeteaseTrp;
 }
 
-export interface NeteaseBanner {
+interface NeteaseBanner {
   bigImageUrl: string;
   imageUrl: string;
   s_ctrp: string;
@@ -13,6 +13,6 @@ export interface NeteaseBanner {
   url: string;
 }
 
-export interface NeteaseTrp {
+interface NeteaseTrp {
   rules: string[];
 }

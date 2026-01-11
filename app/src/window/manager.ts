@@ -1,4 +1,5 @@
-import { BrowserWindow, BrowserWindowConstructorOptions } from "electron";
+import { BrowserWindow, BrowserWindowConstructorOptions, Tray } from "electron";
+import NativeImage = Electron.NativeImage;
 
 export type WindowID = WindowType;
 
@@ -11,6 +12,7 @@ export enum WindowExits {
 export const WindowManager = new (class {
   private readonly BrowserWindowList = new Map<WindowID, BrowserWindow>();
   private readonly BrowserWindowListHasNoID = new Set<BrowserWindow>();
+  private tray: Nullable<Tray> = null;
   constructor() {}
 
   /**
@@ -140,6 +142,15 @@ export const WindowManager = new (class {
       existingWindow.focus();
     }
     return existingWindow;
+  }
+
+  getTray() {
+    return this.tray;
+  }
+
+  initTray(image: NativeImage | string) {
+    this.tray ||= new Tray(image);
+    return this.tray;
   }
 
   private bindWindowCloseEvent(window: BrowserWindow, id?: WindowID) {
