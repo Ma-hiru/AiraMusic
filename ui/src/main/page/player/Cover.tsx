@@ -20,7 +20,7 @@ const Cover: FC<object> = () => {
   return (
     <NeteaseImage
       src={track?.al.picUrl}
-      size={NeteaseImageSize.raw}
+      size={NeteaseImageSize.lg}
       className="w-full h-full rounded-lg ease-in-out duration-300 transition-all select-none"
       alt={track?.al?.name || track?.name}
       onLoad={onLoad}

@@ -10,7 +10,7 @@ const Modal: FC = () => {
   return (
     <div
       className={cx(
-        "w-screen h-screen overflow-hidden z-20 bg-white/60 backdrop-blur-md duration-400 ease-in-out fixed inset-0 transform transition-transform contain-style contain-size contain-layout",
+        "fixed inset-0 overflow-hidden z-20 bg-gray-600 duration-400 ease-in-out transform transition-transform contain-content",
         PlayerVisible ? "translate-y-0" : "translate-y-full"
       )}>
       <PlayerPage />

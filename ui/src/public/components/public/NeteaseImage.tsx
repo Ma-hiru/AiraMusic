@@ -103,7 +103,7 @@ const NeteaseImage: FC<ImageProps> = ({
         else if (image.complete && image.naturalWidth > 0) return;
         cb();
       };
-      const retry = () => {
+      const exec = () => {
         retryStatus.current.count += 1;
         const newURL = new URL(sizedURL || image.src);
         newURL.searchParams.set("timestamp", Date.now().toString());
@@ -114,7 +114,7 @@ const NeteaseImage: FC<ImageProps> = ({
       retryStatus.current.token = token;
       setTimeout(() => {
         canRun(() => {
-          requestIdleCallback(() => canRun(retry), {
+          requestIdleCallback(() => canRun(exec), {
             timeout: 200
           });
         });
@@ -130,6 +130,7 @@ const NeteaseImage: FC<ImageProps> = ({
       const canFallback =
         sizedURL && e.currentTarget.src !== sizedURL && retryStatus.current.count === 0;
       if (canFallback) {
+        // 如果还没有检查缓存
         if (!cachedCover) requestCache.current?.();
         // 尝试使用原始尺寸图片
         e.currentTarget.src = sizedURL;
@@ -154,8 +155,12 @@ const NeteaseImage: FC<ImageProps> = ({
   // src变化时重置错误状态和重试状态
   useEffect(() => {
     setError(false);
-    retryStatus.current.count = 0;
-    retryStatus.current.token = Date.now();
+    const status = retryStatus.current;
+    status.count = 0;
+    status.token = Date.now();
+    return () => {
+      status.token = Date.now();
+    };
   }, [src]);
 
   return (

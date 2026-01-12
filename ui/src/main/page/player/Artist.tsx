@@ -1,4 +1,4 @@
-import { FC, Fragment, memo, useCallback, useEffect, useRef } from "react";
+import { FC, memo, useCallback, useEffect, useRef } from "react";
 import { Heart, MessageSquare } from "lucide-react";
 import { usePlayerStore } from "@mahiru/ui/main/store/player";
 import { useHeart } from "@mahiru/ui/main/hooks/useHeart";
@@ -38,14 +38,12 @@ const Artist: FC<object> = () => {
       <div className="flex gap-1 justify-start items-center truncate">
         {track?.ar?.map((a, index) => {
           return (
-            <Fragment key={a.id}>
-              <span
-                className="hover:opacity-50 cursor-pointer active:scale-90 ease-in-out duration-300 transition-all truncate"
-                key={a.id}>
+            <div key={a.id}>
+              <span className="hover:opacity-50 cursor-pointer active:scale-90 ease-in-out duration-300 transition-all truncate">
                 {a.name}
               </span>
               {index < track?.ar.length - 1 ? <span className="text-white/20">/</span> : null}
-            </Fragment>
+            </div>
           );
         })}
       </div>

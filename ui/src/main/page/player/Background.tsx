@@ -31,7 +31,7 @@ const Background: FC<object> = () => {
     }
   }, [PlayerVisible]);
 
-  return gpu.dedicated ? (
+  return !gpu.dedicated ? (
     <BackgroundRender
       className="absolute inset-0"
       albumIsVideo={false}
@@ -49,8 +49,9 @@ const Background: FC<object> = () => {
     <AcrylicBackground
       className="absolute inset-0"
       src={cachedBackground}
-      brightness={0.5}
+      brightness={0.6}
       opacity={0.5}
+      blur={60}
     />
   );
 };

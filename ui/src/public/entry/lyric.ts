@@ -136,7 +136,6 @@ class NeteaseLyricClass {
     ]).finally(() => clearTimeout(timer));
 
     if (ttml.status === "fulfilled" && ttml.value) {
-      console.log(ttml.value);
       Log.trace("use ttml lyric id:" + id);
       lyric = this.Parser.parseTTMLyric(ttml.value).lyric;
     } else if (response.status === "fulfilled") {

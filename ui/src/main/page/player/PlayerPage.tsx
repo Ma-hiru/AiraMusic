@@ -33,7 +33,7 @@ export const PlayerPage: FC = () => {
         </div>
       </div>
       {stage >= Stage.Finally && <Background />}
-      {stage >= Stage.Finally && <Lyric />}
+      {/*{stage >= Stage.Finally && <Lyric />}*/}
       {stage >= Stage.Immediately && <LyricChange />}
     </div>
   );

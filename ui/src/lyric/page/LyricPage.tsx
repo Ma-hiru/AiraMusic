@@ -165,7 +165,7 @@ export default function LyricPage() {
         onMouseOver={handleMouseOver}>
         <div
           className={cx(
-            "w-full h-full overflow-hidden contain-[paint_layout] mix-blend-plus-lighter transition-normal ease-in-out text-center",
+            "w-full h-full overflow-hidden contain-content mix-blend-plus-lighter transition-normal ease-in-out text-center",
             lock && "pointer-events-none"
           )}>
           <LyricPlayer
@@ -173,10 +173,10 @@ export default function LyricPage() {
             playing={playerStatusSync?.fsmState === PlayerFSMStatusEnum.playing}
             className="w-full h-full"
             alignAnchor="center"
-            hidePassedLines
+            hidePassedLines={true}
+            alignPosition={0.35}
             lyricLines={lyricLines}
             enableScale={false}
-            enableSpring={false}
           />
         </div>
       </div>

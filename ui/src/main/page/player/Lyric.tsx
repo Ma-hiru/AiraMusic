@@ -39,7 +39,7 @@ const Lyric: FC<object> = () => {
   const { gpu } = useDevice();
   const audio = AudioRefGetter();
   const lyricPlayerRef = useRef<LyricPlayerRef>(null);
-  const lastTrackID = useRef(0);
+  const lastTrackID = useRef(PlayerTrackStatus?.track.id);
 
   const lines = useMemo(
     () => NeteaseLyric.chooseLyric(PlayerTrackStatus?.lyric, PlayerStatus.lyricVersion, true),
@@ -52,11 +52,16 @@ const Lyric: FC<object> = () => {
     if (!currentID) return;
     if (currentID !== lastTrackID.current) {
       lastTrackID.current = currentID;
-      setLyricLines([]);
-    } else {
       startTransition(() => {
-        setLyricLines(lines);
+        setLyricLines([]);
       });
+    } else {
+      requestIdleCallback(
+        () => {
+          setLyricLines(lines);
+        },
+        { timeout: 2000 }
+      );
     }
   }, [PlayerTrackStatus?.track.id, lines]);
 
@@ -138,8 +143,9 @@ const Lyric: FC<object> = () => {
         playing={PlayerFSMStatus === PlayerFSMStatusEnum.playing && PlayerVisible}
         className="w-full h-full"
         ref={lyricPlayerRef}
+        alignPosition={0.5}
         alignAnchor="center"
-        lyricLines={lyricLines}
+        lyricLines={lines}
         enableScale={gpu.dedicated}
         enableSpring={gpu.dedicated}
         onLyricLineClick={onLyricLineClick}

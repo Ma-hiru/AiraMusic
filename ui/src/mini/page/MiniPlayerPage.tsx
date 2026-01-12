@@ -26,7 +26,7 @@ export default function MiniPlayerPage() {
     });
   }, []);
   return (
-    <Drag className="w-screen h-screen overflow-hidden relative bg-white rounded-md text-black grid grid-rows-1 grid-cols-[auto_1fr] px-2 py-1 items-center select-none backdrop-blur-lg">
+    <Drag className="w-screen h-screen overflow-hidden relative bg-white rounded-md text-black grid grid-rows-1 grid-cols-[auto_1fr] px-2 py-1 items-center select-none">
       <div className="h-12 w-12 rounded-md overflow-hidden">
         <NeteaseImage
           className="w-full h-full"

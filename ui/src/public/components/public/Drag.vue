@@ -9,7 +9,7 @@
 
   const props = withDefaults(
     defineProps<{
-      draggable: boolean;
+      draggable?: boolean;
     }>(),
     {
       draggable: true

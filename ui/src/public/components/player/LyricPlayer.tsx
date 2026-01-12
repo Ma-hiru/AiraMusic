@@ -198,6 +198,7 @@ const LyricPlayer: ForwardRefRenderFunction<
     wrapper?.appendChild(newPlayer.getElement());
     return () => {
       wrapper?.removeChild(newPlayer.getElement());
+      newPlayer.getElement().remove();
       newPlayer?.dispose();
       setCorePlayer(undefined);
     };
