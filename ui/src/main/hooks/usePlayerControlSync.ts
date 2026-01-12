@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { usePlayerStore } from "@mahiru/ui/main/store/player";
 import { Renderer } from "@mahiru/ui/public/entry/renderer";
+import { runCloseTask } from "@mahiru/ui/public/utils/close";
 
 export function usePlayerControlSync(syncWins: WindowType[]) {
   const { PlayerCoreGetter } = usePlayerStore(["PlayerCoreGetter"]);
@@ -20,6 +21,12 @@ export function usePlayerControlSync(syncWins: WindowType[]) {
           return player.next(true);
         case "mute":
           return player.mute();
+        case "exit":
+          Renderer.event.hidden();
+          runCloseTask();
+          return;
+        case "openInfoWindow":
+          Renderer.event.openInternalWindow("info");
       }
     });
   }, [player, syncWins]);

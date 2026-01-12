@@ -26,6 +26,10 @@ const Layout: FC<object> = () => {
   }, []);
 
   useEffect(() => {
+    return Renderer.addMessageHandler("infoSync", "tray", setInfoSync);
+  }, []);
+
+  useEffect(() => {
     requestThemeSync();
     Renderer.event.loaded({ broadcast: true });
   }, [requestThemeSync]);

@@ -43,10 +43,7 @@ const mainInvokeAPI = {
   hasOpenInternalWindow: (e, win) => {
     const sender = BrowserWindow.fromWebContents(e.sender);
     if (!sender) return false;
-    if (WindowManager.getId(sender) === "main") {
-      return WindowManager.has(win);
-    }
-    return false;
+    return WindowManager.has(win);
   },
   storeKey: () => storeKeyAccessToken,
   checkOnlineStatus: async (): Promise<NetworkStatus> => {

@@ -60,7 +60,7 @@
   "devDependencies": {
     "@types/lodash-es": "^4.17.12",
     "@types/node": "^24.10.0",
-    "@typescript/native-preview": "7.0.0-dev.20260112.1",
+    "@typescript/native-preview": "7.0.0-dev.20251215.1",
     "@vue/devtools": "^8.0.5",
     "add": "^2.0.6",
     "eslint": "^9.39.1",

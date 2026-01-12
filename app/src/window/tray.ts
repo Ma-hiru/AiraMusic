@@ -56,12 +56,12 @@ function createTray() {
     }
 
     trayWin.setPosition(x, y, false);
-    trayWin.show();
+    !trayWin.isVisible() && trayWin.show();
     trayWin.focus();
   });
   trayWin.on("blur", () => {
     if (!trayWin.webContents.isDevToolsOpened()) {
-      trayWin.hide();
+      trayWin.isVisible() && trayWin.hide();
     }
   });
   trayWin.webContents.on("before-input-event", (_, input) => {

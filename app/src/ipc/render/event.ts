@@ -17,6 +17,7 @@ export const rendererEventAPI = {
   hidden: () => typedIpcRenderSend("hidden", undefined),
   visible: () => typedIpcRenderSend("visible", undefined),
   resizeWindow: (payload) => typedIpcRenderSend("resizeWindow", payload),
+  moveWindow: (payload) => typedIpcRenderSend("moveWindow", payload),
   mousePenetrate: (payload) => typedIpcRenderSend("mousePenetrate", payload),
   loaded: (payload) => typedIpcRenderSend("loaded", payload)
 } satisfies RendererEventAPI;

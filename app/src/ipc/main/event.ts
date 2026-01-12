@@ -114,6 +114,27 @@ const mainEventAPI = {
     };
     win.setBounds(next);
   },
+  moveWindow: (e, props) => {
+    const win = BrowserWindow.fromWebContents(e.sender);
+    if (!win) return;
+    const { x, y, deltaX, deltaY } = props;
+    if (x && y) {
+      win.setBounds({
+        x: Math.floor(x),
+        y: Math.floor(y),
+        width: win.getBounds().width,
+        height: win.getBounds().height
+      });
+    } else if (deltaX && deltaY) {
+      const current = win.getBounds();
+      win.setBounds({
+        x: Math.floor(current.x + deltaX),
+        y: Math.floor(current.y + deltaY),
+        width: current.width,
+        height: current.height
+      });
+    }
+  },
   mousePenetrate: (e, penetrate) => {
     const win = BrowserWindow.fromWebContents(e.sender);
     win?.setIgnoreMouseEvents(penetrate, { forward: true });

@@ -15,6 +15,8 @@ import { usePlayerResource } from "@mahiru/ui/main/hooks/usePlayerResource";
 import { useMediaSession } from "@mahiru/ui/main/hooks/useMediaSession";
 import { useSpectrumWorker } from "@mahiru/ui/main/hooks/useSpectrumWorker";
 import { usePlayerStatusSyncSend } from "@mahiru/ui/main/hooks/usePlayerStatusSyncSend";
+import { usePlayerControlSync } from "@mahiru/ui/main/hooks/usePlayerControlSync";
+import { usePlayerTrackSyncSend } from "@mahiru/ui/main/hooks/usePlayerTrackSyncSend";
 
 const MusicSource: FC<object> = () => {
   const {
@@ -267,7 +269,9 @@ const MusicSource: FC<object> = () => {
       ready: isReady
     }));
   }, [SetSpectrumGetter, isReady, spectrumData]);
-  usePlayerStatusSyncSend(["main"]);
+  usePlayerStatusSyncSend(["tray", "main"]);
+  usePlayerControlSync(["tray", "main"]);
+  usePlayerTrackSyncSend(["tray", "main"]);
   return (
     <audio
       className="w-0 h-0 opacity-0"

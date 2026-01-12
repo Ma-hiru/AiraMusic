@@ -614,35 +614,6 @@ function createMenuItems(props: {
   const player = getPlayerStoreSnapshot().PlayerCoreGetter();
   items.push(
     {
-      prefix: <Copy size={14} />,
-      label: <p className="text-[12px]">复制歌曲名</p>,
-      onClick: () => {
-        window.navigator.clipboard.writeText(props.track.name).then(() => {
-          //todo
-        });
-      }
-    },
-    {
-      prefix: <div className="size-3.5" />,
-      label: <p className="text-[12px]">复制专辑名</p>,
-      onClick: () => {
-        window.navigator.clipboard.writeText(props.track.al.name).then(() => {
-          //todo
-        });
-      }
-    },
-    {
-      prefix: <div className="size-3.5" />,
-      label: <p className="text-[12px]">复制歌手名</p>,
-      onClick: () => {
-        window.navigator.clipboard
-          .writeText(props.track.ar.map((a) => a.name).join(" "))
-          .then(() => {
-            //todo
-          });
-      }
-    },
-    {
       prefix: <DiscAlbum size={14} />,
       label: <p className="text-[12px]">专辑</p>
     },
@@ -684,5 +655,36 @@ function createMenuItems(props: {
       }
     );
   }
+  items.push(
+    {
+      prefix: <Copy size={14} />,
+      label: <p className="text-[12px]">复制歌曲名</p>,
+      onClick: () => {
+        window.navigator.clipboard.writeText(props.track.name).then(() => {
+          //todo
+        });
+      }
+    },
+    {
+      prefix: <div className="size-3.5" />,
+      label: <p className="text-[12px]">复制专辑名</p>,
+      onClick: () => {
+        window.navigator.clipboard.writeText(props.track.al.name).then(() => {
+          //todo
+        });
+      }
+    },
+    {
+      prefix: <div className="size-3.5" />,
+      label: <p className="text-[12px]">复制歌手名</p>,
+      onClick: () => {
+        window.navigator.clipboard
+          .writeText(props.track.ar.map((a) => a.name).join(" "))
+          .then(() => {
+            //todo
+          });
+      }
+    }
+  );
   return items;
 }

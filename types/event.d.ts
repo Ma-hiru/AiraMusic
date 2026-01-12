@@ -30,6 +30,7 @@ type NormalEventMaps = {
   loaded: { broadcast: boolean; hide?: boolean };
   mousePenetrate: boolean;
   resizeWindow: Partial<{ x: number; y: number; width: number; height: number }>;
+  moveWindow: Partial<{ x: number; y: number; deltaX: number; deltaY: number }>;
   openDevTools: never;
   openExternalLink: { url: string; title: string };
   openInternalWindow: WindowType;
