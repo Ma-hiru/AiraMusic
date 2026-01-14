@@ -12,13 +12,10 @@ interface CommentsProps {
 
 const Comments: FC<CommentsProps> = ({ comments, infoSync, themeSync }) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const { onScroll } = useScrollAutoHide(containerRef);
+  useScrollAutoHide(containerRef);
   const isMainColorDark = Color(themeSync?.mainColor).isDark();
   return (
-    <div
-      ref={containerRef}
-      onScroll={onScroll}
-      className="overflow-y-scroll scrollbar w-[90%] mx-auto pb-5 px-1.5">
+    <div ref={containerRef} className="overflow-y-scroll scrollbar w-[90%] mx-auto pb-5 px-1.5">
       {comments.map((comment) => (
         <CommentItem
           key={comment.commentId}

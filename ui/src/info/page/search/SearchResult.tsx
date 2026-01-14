@@ -30,7 +30,7 @@ const SearchResult: FC<SearchResultProps> = ({
   currentPage
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const { onScroll } = useScrollAutoHide(containerRef);
+  useScrollAutoHide(containerRef);
 
   const nextPage = useCallback(() => {
     if (currentPage >= totalPage) return;
@@ -198,7 +198,6 @@ const SearchResult: FC<SearchResultProps> = ({
       </div>
       <div
         ref={containerRef}
-        onScroll={onScroll}
         className={cx("w-full h-full overflow-y-scroll scrollbar pb-26", className)}>
         {render()}
       </div>

@@ -137,7 +137,6 @@
 
   let observer: ResizeObserver;
   onMounted(() => {
-    Renderer.event.openDevTools();
     requestThemeSync();
     requestPlayerTrackSync();
     requestPlayerStatusSync();

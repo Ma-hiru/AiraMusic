@@ -3,8 +3,6 @@ import {
   ForwardRefRenderFunction,
   memo,
   RefObject,
-  startTransition,
-  useCallback,
   useEffect,
   useImperativeHandle,
   useRef
@@ -70,7 +68,6 @@ const TrackList: ForwardRefRenderFunction<TrackListRef, TrackListProps> = (
   ref
 ) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const { onScroll } = useScrollAutoHide(containerRef);
   const { start, end, scrollToItem } = useVirtualList({
     total: tracks.length,
     containerRef,
@@ -79,18 +76,13 @@ const TrackList: ForwardRefRenderFunction<TrackListRef, TrackListProps> = (
     onRangeUpdate: onVirtualListRangeUpdate
   });
 
-  const wrapScroll = useCallback(() => {
-    onListScroll?.();
-    return onScroll();
-  }, [onListScroll, onScroll]);
+  useScrollAutoHide(containerRef);
 
   // id变化时，重置滚动位置
   useEffect(() => {
-    startTransition(() => {
-      containerRef.current?.scrollTo({
-        top: 0,
-        behavior: "instant"
-      });
+    containerRef.current?.scrollTo({
+      top: 0,
+      behavior: "instant"
     });
   }, [source]);
 
@@ -106,7 +98,7 @@ const TrackList: ForwardRefRenderFunction<TrackListRef, TrackListProps> = (
     <>
       <div
         ref={containerRef}
-        onScroll={wrapScroll}
+        onScroll={onListScroll}
         className={cx(
           `
           w-full h-full overflow-y-auto scrollbar

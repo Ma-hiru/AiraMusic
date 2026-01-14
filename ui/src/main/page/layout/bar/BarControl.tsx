@@ -1,16 +1,27 @@
-import { FC, memo } from "react";
-import { Pause, Play, SkipBack, SkipForward } from "lucide-react";
+import { FC, memo, useMemo } from "react";
+import { LoaderCircle, Pause, Play, SkipBack, SkipForward } from "lucide-react";
 import { usePlayerStore } from "@mahiru/ui/main/store/player";
 import { useThemeColor } from "@mahiru/ui/public/hooks/useThemeColor";
+import { PlayerFSMStatusEnum } from "@mahiru/ui/public/enum";
 
 const BarControl: FC<object> = () => {
-  const { PlayingRequest, PlayerCoreGetter } = usePlayerStore([
+  const { PlayerCoreGetter, PlayerFSMStatus, PlayingRequest } = usePlayerStore([
     "PlayerCoreGetter",
     "PlayerFSMStatus",
     "PlayingRequest"
   ]);
   const { mainColor, textColorOnMain } = useThemeColor();
   const player = PlayerCoreGetter();
+  const centerIcon = useMemo(() => {
+    if (PlayerFSMStatus === PlayerFSMStatusEnum.playing) {
+      return <Pause className="size-5" color={mainColor.string()} fill={mainColor.string()} />;
+    } else if (PlayerFSMStatus === PlayerFSMStatusEnum.loading) {
+      return <LoaderCircle className="size-5 animate-spin" color={mainColor.string()} />;
+    } else if (PlayingRequest) {
+      return <Pause className="size-5" color={mainColor.string()} fill={mainColor.string()} />;
+    }
+    return <Play className="size-5" color={mainColor.string()} fill={mainColor.string()} />;
+  }, [PlayerFSMStatus, PlayingRequest, mainColor]);
   return (
     <div className="flex justify-center items-center gap-6">
       <SkipBack
@@ -24,11 +35,7 @@ const BarControl: FC<object> = () => {
         className="hover:scale-95 active:scale-85 cursor-pointer ease-in-out transition-all duration-300 bg-(--theme-color-main) hover:bg-(--theme-color-main)/50 active:bg-(--theme-color-main)/80 p-2 rounded-full"
         style={{ background: textColorOnMain.string() }}
         onClick={player?.play}>
-        {PlayingRequest ? (
-          <Pause className="size-5" color={mainColor.string()} fill={mainColor.string()} />
-        ) : (
-          <Play className="size-5" color={mainColor.string()} fill={mainColor.string()} />
-        )}
+        {centerIcon}
       </div>
       <SkipForward
         className="hover:scale-90 active:scale-80 cursor-pointer ease-in-out transition-all duration-300 size-5"

@@ -94,7 +94,7 @@ const NavPlaylist: FC<object> = () => {
     itemHeight: 55,
     onRangeUpdate: onRangeChange
   });
-  const { onScroll } = useScrollAutoHide(containerRef, !SideBarOpen);
+  useScrollAutoHide(containerRef, 800, !SideBarOpen);
 
   return (
     <div
@@ -102,7 +102,6 @@ const NavPlaylist: FC<object> = () => {
         w-full h-full relative overflow-y-auto overflow-x-hidden
         contain-content will-change-scroll scrollbar
       "
-      onScroll={onScroll}
       ref={containerRef}>
       {stage >= Stage.Finally && (
         <VirtualList

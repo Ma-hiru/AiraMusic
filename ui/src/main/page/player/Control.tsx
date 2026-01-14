@@ -1,6 +1,7 @@
-import { FC, memo } from "react";
+import { FC, memo, useMemo } from "react";
 import {
   ArrowRightLeft,
+  LoaderCircle,
   Pause,
   Play,
   Repeat1,
@@ -22,6 +23,40 @@ const Control: FC<object> = () => {
     "PlayingRequest"
   ]);
   const player = PlayerCoreGetter();
+  const centerIcon = useMemo(() => {
+    if (PlayerFSMStatus === PlayerFSMStatusEnum.playing) {
+      return (
+        <Pause
+          className="size-5 cursor-pointer hover:opacity-50 ease-in-out duration-300 transition-all active:scale-90"
+          fill={"rgba(255,255,255,0.89)"}
+          onClick={player?.play}
+        />
+      );
+    } else if (PlayerFSMStatus === PlayerFSMStatusEnum.loading) {
+      return (
+        <LoaderCircle
+          className="animate-spin size-5 cursor-pointer hover:opacity-50 ease-in-out duration-300 transition-all active:scale-90"
+          color={"rgba(255,255,255,0.89)"}
+        />
+      );
+    } else if (PlayingRequest) {
+      return (
+        <Pause
+          className="size-5 cursor-pointer hover:opacity-50 ease-in-out duration-300 transition-all active:scale-90"
+          fill={"rgba(255,255,255,0.89)"}
+          onClick={player?.play}
+        />
+      );
+    }
+    return (
+      <Play
+        className="size-5 cursor-pointer hover:opacity-50 ease-in-out duration-300 transition-all active:scale-90"
+        fill={"rgba(255,255,255,0.89)"}
+        onClick={player?.play}
+      />
+    );
+  }, [PlayerFSMStatus, PlayingRequest, player?.play]);
+
   return (
     <div className="space-x-2 w-full">
       <Progress />
@@ -32,19 +67,7 @@ const Control: FC<object> = () => {
             fill={"rgba(255,255,255,0.89)"}
             onClick={() => player?.last(true)}
           />
-          {PlayingRequest || PlayerFSMStatus === PlayerFSMStatusEnum.playing ? (
-            <Pause
-              className="size-5 cursor-pointer hover:opacity-50 ease-in-out duration-300 transition-all active:scale-90"
-              fill={"rgba(255,255,255,0.89)"}
-              onClick={player?.play}
-            />
-          ) : (
-            <Play
-              className="size-5 cursor-pointer hover:opacity-50 ease-in-out duration-300 transition-all active:scale-90"
-              fill={"rgba(255,255,255,0.89)"}
-              onClick={player?.play}
-            />
-          )}
+          {centerIcon}
           <SkipForward
             className="size-5 cursor-pointer hover:opacity-50 ease-in-out duration-300 transition-all active:scale-90"
             fill={"rgba(255,255,255,0.89)"}

@@ -9,15 +9,16 @@ import DailyRecommendPlaylist from "./daily_recommend_playlist";
 import RecommendPlaylist from "./recommend_playlist";
 
 const Content: FC<object> = () => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const { onScroll } = useScrollAutoHide(containerRef);
   const { UpdateScrollTop } = useLayoutStore(["UpdateScrollTop"]);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const delay = useDelay([200, 1000, 5000, 10000]);
+  useScrollAutoHide(containerRef);
 
   const scrollTop = useCallback(() => {
     containerRef.current?.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
 
-  const wrapOnScroll = useCallback(
+  const onScroll = useCallback(
     (e: ReactUIEvent) => {
       const scrollDistance = e.currentTarget.scrollTop;
       if (scrollDistance > 500) {
@@ -25,9 +26,8 @@ const Content: FC<object> = () => {
       } else {
         UpdateScrollTop({ type: "none", callback: null });
       }
-      return onScroll();
     },
-    [UpdateScrollTop, onScroll, scrollTop]
+    [UpdateScrollTop, scrollTop]
   );
 
   useEffect(() => {
@@ -39,17 +39,15 @@ const Content: FC<object> = () => {
     };
   }, [UpdateScrollTop]);
 
-  const reachedSet = useDelay([200, 1000, 5000, 10000]);
-
   return (
     <div
       ref={containerRef}
       className="w-full h-full overflow-y-auto scrollbar will-change-scroll contain-strict"
-      onScroll={wrapOnScroll}>
-      {reachedSet.has(200) && <Banner />}
-      {reachedSet.has(1000) && <DailyRecommendTracks />}
-      {reachedSet.has(5000) && <DailyRecommendPlaylist />}
-      {reachedSet.has(10000) && <RecommendPlaylist />}
+      onScroll={onScroll}>
+      {delay(200) && <Banner />}
+      {delay(1000) && <DailyRecommendTracks />}
+      {delay(5000) && <DailyRecommendPlaylist />}
+      {delay(10000) && <RecommendPlaylist />}
     </div>
   );
 };

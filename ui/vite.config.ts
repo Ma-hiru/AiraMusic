@@ -1,8 +1,8 @@
-import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
 import vue from "@vitejs/plugin-vue";
 import wasm from "vite-plugin-wasm";
 import tailwindcss from "@tailwindcss/vite";
+import { defineConfig, loadEnv } from "vite";
 import { fileURLToPath } from "node:url";
 import { join } from "node:path";
 

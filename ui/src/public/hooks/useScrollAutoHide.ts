@@ -1,51 +1,36 @@
-import { RefObject, useCallback, useEffect, useRef } from "react";
-
-const SCROLLBAR_HIDE_DELAY = 800;
+import { RefObject, useLayoutEffect } from "react";
 
 export function useScrollAutoHide(
   containerRef: RefObject<Nullable<HTMLElement>>,
+  delay = 800,
   disabled = false
 ) {
-  const hideTimerRef = useRef<number | null>(null);
-
-  const onScroll = useCallback(() => {
+  useLayoutEffect(() => {
     const container = containerRef.current;
-    if (!container || disabled) return;
-    // 立即显示滚动条
-    container.classList.add("scrollbar-show");
-    // 清除之前的定时器
-    if (hideTimerRef.current) {
-      window.clearTimeout(hideTimerRef.current);
-    }
-    // 设置新的隐藏定时器
-    hideTimerRef.current = window.setTimeout(() => {
-      container.classList.remove("scrollbar-show");
-      hideTimerRef.current = null;
-    }, SCROLLBAR_HIDE_DELAY);
-  }, [containerRef, disabled]);
+    if (!container) return;
 
-  useEffect(() => {
-    const container = containerRef.current;
-    if (container) {
-      if (disabled) {
-        // 如果禁用滚定条，立马隐藏
+    if (disabled) {
+      container.classList.add("scrollbar-hide");
+      return () => container.classList.remove("scrollbar-hide");
+    } else {
+      container.classList.add("scrollbar");
+
+      let timer: number;
+      const onScroll = () => container.classList.add("scrollbar-show");
+      const onScrollEnd = () => {
+        timer && window.clearTimeout(timer);
+        timer = window.setTimeout(() => container.classList.remove("scrollbar-show"), delay);
+      };
+      container.addEventListener("scroll", onScroll, { passive: true });
+      container.addEventListener("scrollend", onScrollEnd, { passive: true });
+
+      return () => {
+        timer && window.clearTimeout(timer);
+        container.removeEventListener("scroll", onScroll);
+        container.removeEventListener("scrollend", onScrollEnd);
+        container.classList.remove("scrollbar");
         container.classList.remove("scrollbar-show");
-        container.classList.add("scrollbar-hide");
-      } else {
-        container.classList.remove("scrollbar-hide");
-      }
+      };
     }
-  }, [containerRef, disabled]);
-
-  useEffect(() => {
-    return () => {
-      if (hideTimerRef.current) {
-        window.clearTimeout(hideTimerRef.current);
-      }
-    };
-  }, []);
-
-  return {
-    onScroll
-  };
+  }, [containerRef, delay, disabled]);
 }

@@ -1,34 +1,32 @@
-import { startTransition, useCallback, useEffect, useState } from "react";
+import { startTransition, useLayoutEffect, useState } from "react";
 import { Stage } from "@mahiru/ui/public/enum/stage";
+import { nextFrame, nextIdle } from "@mahiru/ui/public/utils/frame";
 
 export function useStage() {
   const [stage, setStage] = useState(Stage.Immediately);
+  useLayoutEffect(() => {
+    let cancelled = false;
+    const run = async () => {
+      setStage(Stage.Immediately);
 
-  const startStagePipeline = useCallback(() => {
-    setStage(Stage.Immediately);
+      await nextFrame();
+      if (cancelled) return;
+      startTransition(() => setStage(Stage.First));
 
-    requestAnimationFrame(() => {
-      startTransition(() => {
-        setStage(Stage.First);
-      });
+      await nextIdle(1500);
+      if (cancelled) return;
+      startTransition(() => setStage(Stage.Second));
 
-      requestAnimationFrame(() => {
-        startTransition(() => {
-          setStage(Stage.Second);
-        });
+      await nextIdle(5000);
+      if (cancelled) return;
+      startTransition(() => setStage(Stage.Finally));
+    };
 
-        requestIdleCallback(() => {
-          startTransition(() => {
-            setStage(Stage.Finally);
-          });
-        });
-      });
-    });
+    void run();
+    return () => {
+      cancelled = true;
+    };
   }, []);
-
-  useEffect(() => {
-    startStagePipeline();
-  }, [startStagePipeline]);
 
   return { stage };
 }
