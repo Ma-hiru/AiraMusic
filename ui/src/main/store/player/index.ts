@@ -1,4 +1,4 @@
-import { createZustandShallowStore, createZustandStore } from "../create";
+import { createZustandShallowStore, createZustandStore } from "../../../public/utils/store";
 import { PlayerStoreActions, PlayerStoreConfig, PlayerStoreInitialState } from "./config";
 
 const playerStore = createZustandStore(PlayerStoreConfig, "player", true);

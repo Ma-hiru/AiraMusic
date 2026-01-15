@@ -1,4 +1,5 @@
 import { useCallback, useLayoutEffect, useRef, useState } from "react";
+import { useStableArray } from "@mahiru/ui/public/hooks/useStableArray";
 
 export function useDelay<const T extends readonly number[]>(timeNodes: T) {
   const [delayStage, setDelayStage] = useState<Set<T[number]>>(new Set());
@@ -33,14 +34,4 @@ export function useDelay<const T extends readonly number[]>(timeNodes: T) {
   }, [stableTimeNodes]);
 
   return delay;
-}
-
-function useStableArray<T extends readonly number[]>(arr: T): T {
-  const ref = useRef<T>(arr);
-
-  if (arr.length !== ref.current.length || arr.some((v, i) => v !== ref.current[i])) {
-    ref.current = arr;
-  }
-
-  return ref.current;
 }

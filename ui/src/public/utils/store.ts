@@ -4,6 +4,7 @@ import { create } from "zustand";
 import { useShallow } from "zustand/react/shallow";
 import { ZustandConfig } from "@mahiru/ui/types/zustand";
 import { EqError, isRelease, Log } from "@mahiru/ui/public/utils/dev";
+import { useStableArray } from "@mahiru/ui/public/hooks/useStableArray";
 
 export function createZustandStore<T extends ZustandConfig<any>>(
   config: T,
@@ -50,16 +51,18 @@ interface useZustandShallowStoreFunc<StoreType> {
   (): StoreType;
 }
 
+/** @note 为了避免条件渲染hook，selects应该为不改变的数字字面量 */
 export function createZustandShallowStore<StoreType>(
   useStore: ReturnType<typeof createZustandStore>
 ) {
-  return (<T extends (keyof StoreType)[]>(select?: T) => {
+  function useShallowStore<T extends (keyof StoreType)[]>(selects?: T) {
+    const stableSelects = useStableArray(selects || []);
     return useStore(
       useShallow((state: StoreType) => {
-        if (!select || select.length === 0) {
+        if (stableSelects.length === 0) {
           return state;
         }
-        return select.reduce(
+        return stableSelects.reduce(
           (result, key: T[number]) => {
             result[key] = state[key];
             return result;
@@ -68,5 +71,6 @@ export function createZustandShallowStore<StoreType>(
         );
       })
     );
-  }) as useZustandShallowStoreFunc<StoreType>;
+  }
+  return useShallowStore as useZustandShallowStoreFunc<StoreType>;
 }

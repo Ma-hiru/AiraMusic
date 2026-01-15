@@ -4,6 +4,7 @@ import { Log } from "@mahiru/ui/public/utils/dev";
 import { Errs } from "@mahiru/ui/public/entry/errs";
 import { useUpdate } from "@mahiru/ui/public/hooks/useUpdate";
 import { useEffect, useMemo, useRef } from "react";
+import { useStableArray } from "@mahiru/ui/public/hooks/useStableArray";
 
 export interface LocalStoreState {
   User: {
@@ -216,15 +217,16 @@ export function AddLocalStore(_: Function, ctx: ClassDecoratorContext) {
   });
 }
 
-export function useLocalStore<T extends (keyof LocalStoreState)[]>(select: T) {
+export function useLocalStore<T extends (keyof LocalStoreState)[]>(selects: T) {
   const updater = useUpdate();
+  const stableSelect = useStableArray(selects);
   const lastState = useRef(LocalStore.snapshot());
 
   useEffect(() => {
     const listener = () => {
       const newState = LocalStore.snapshot();
       let changed = false;
-      for (const key of select) {
+      for (const key of stableSelect) {
         if (lastState.current[key] !== newState[key]) {
           changed = true;
           break;
@@ -236,12 +238,11 @@ export function useLocalStore<T extends (keyof LocalStoreState)[]>(select: T) {
       }
     };
     return LocalStore.subscribe(listener);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [updater]);
+  }, [stableSelect, updater]);
 
   return useMemo(() => {
     const state = LocalStore.snapshot();
-    return select.reduce(
+    return stableSelect.reduce(
       (result, key: T[number]) => {
         result[key] = state[key];
         return result;
@@ -249,7 +250,7 @@ export function useLocalStore<T extends (keyof LocalStoreState)[]>(select: T) {
       {} as Pick<LocalStoreState, T[number]>
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [updater.count]);
+  }, [updater.count, stableSelect]);
 }
 
 export function useLocalStoreProxy() {

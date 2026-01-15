@@ -1,4 +1,4 @@
-import { createZustandShallowStore, createZustandStore } from "../create";
+import { createZustandShallowStore, createZustandStore } from "../../../public/utils/store";
 import { LayoutStoreActions, LayoutStoreConfig, LayoutStoreInitialState } from "./config";
 
 const layoutStore = createZustandStore(LayoutStoreConfig, "layout", false);
