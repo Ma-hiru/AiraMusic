@@ -171,8 +171,8 @@ func download(id, url, method string, body io.Reader, header http.Header) file.I
 }
 
 func setHeaders(ctx *gin.Context, index file.Index) {
-	ctx.Header("Cache-Control", "no-cache")
 	if index.ETag != "" {
+		ctx.Header("Cache-Control", "no-cache")
 		ctx.Header("ETag", index.ETag)
 	}
 	if index.Type != "" {

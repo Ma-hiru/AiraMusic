@@ -269,6 +269,7 @@ const MusicSource: FC<object> = () => {
       ready: isReady
     }));
   }, [SetSpectrumGetter, isReady, spectrumData]);
+  // 同步歌曲信息和状态到托盘及主进程
   usePlayerStatusSyncSend(["tray", "main"]);
   usePlayerControlSync(["tray", "main"]);
   usePlayerTrackSyncSend(["tray", "main"]);

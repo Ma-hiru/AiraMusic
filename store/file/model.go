@@ -17,6 +17,8 @@ type Store struct {
 
 	currentWriteMapped     map[string]*WritingFile // URL <-> WritingFile
 	currentWriteMappedLock sync.RWMutex
+
+	cancelList map[string]bool
 }
 
 type StoreMeta struct {

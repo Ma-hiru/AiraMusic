@@ -78,7 +78,7 @@ func (Self *Store) Remove(idx Index) (bool, error) {
 	Self.indexMappedLock.Lock()
 	delete(Self.indexMapped, idx.ID)
 	Self.indexMappedLock.Unlock()
-	// 没有立即更新索引文件，等待下一次 启动时 时更新
+	// 没有立即更新索引文件，等待下一次启动时更新
 	return true, nil
 }
 
