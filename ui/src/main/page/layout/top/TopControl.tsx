@@ -7,6 +7,7 @@ import { runCloseTask } from "@mahiru/ui/public/utils/close";
 import { isDev } from "@mahiru/ui/public/utils/dev";
 
 import NoDrag from "@mahiru/ui/public/components/public/NoDrag";
+import { useLayoutStore } from "@mahiru/ui/main/store/layout";
 
 interface TopControlProps {
   windowId: WindowType;
@@ -15,8 +16,9 @@ interface TopControlProps {
 }
 
 const TopControl: FC<TopControlProps> = ({ maximizable = true, mini = true }) => {
-  const { PlayerCoreGetter } = usePlayerStore(["PlayerCoreGetter"]);
   const [isMax, setIsMax] = useState(false);
+  const { RequestToast } = useLayoutStore(["RequestToast"]);
+  const { PlayerCoreGetter } = usePlayerStore(["PlayerCoreGetter"]);
   const { toggleTargetWindow, hasOpened } = usePlayerInfoSync("miniplayer");
   const player = PlayerCoreGetter();
 
@@ -57,6 +59,16 @@ const TopControl: FC<TopControlProps> = ({ maximizable = true, mini = true }) =>
   }, []);
   return (
     <NoDrag className="flex flex-row gap-4 select-none relative z-10">
+      <button
+        className="bg-purple-500 rounded-md font-semibold px-2 py-1"
+        onClick={() => {
+          RequestToast?.({
+            text: "test",
+            type: "info"
+          });
+        }}>
+        toast
+      </button>
       {isDev && (
         <Chromium
           className="size-5 cursor-pointer hover:opacity-50 ease-in-out transition-all duration-300 active:scale-90"

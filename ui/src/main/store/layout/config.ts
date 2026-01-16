@@ -1,5 +1,6 @@
 import { ZustandConfig } from "@mahiru/ui/types/zustand";
 import { ContextMenuRender } from "@mahiru/ui/public/components/menu/MenuProvider";
+import { ToastItemData } from "@mahiru/ui/public/components/toast/ToastItem";
 
 export const LayoutStoreConfig: ZustandConfig<
   LayoutStoreInitialState & LayoutStoreActions,
@@ -48,6 +49,11 @@ export const LayoutStoreConfig: ZustandConfig<
     set((draft) => {
       draft.TrackListFastLocater = locator;
     });
+  },
+  UpdateRequestToast: (requestToast) => {
+    set((draft) => {
+      draft.RequestToast = requestToast;
+    });
   }
 });
 
@@ -68,6 +74,7 @@ const InitialState: LayoutStoreInitialState = {
     visibleSetter: () => null,
     rendererGetter: () => null
   },
+  RequestToast: null,
   TrackListFastLocater: () => null
 };
 
@@ -88,6 +95,7 @@ export type LayoutStoreInitialState = {
     visibleSetter: NormalFunc<[], Nullable<(visible?: boolean) => void>>;
     rendererGetter: NormalFunc<[], Nullable<(data: Nullable<ContextMenuRender>) => void>>;
   };
+  RequestToast: Nullable<(data: ToastItemData) => void>;
   TrackListFastLocater: NormalFunc<[], Nullable<() => void>>;
 };
 
@@ -95,6 +103,7 @@ export type LayoutStoreActions = {
   UpdatePlayerTheme: NormalFunc<[theme: Partial<LayoutStoreInitialState["PlayerTheme"]>]>;
   UpdateScrollTop: NormalFunc<[data: LayoutStoreInitialState["ScrollTop"]]>;
   UpdateContextMenu: NormalFunc<[data: Partial<LayoutStoreInitialState["ContextMenu"]>]>;
+  UpdateRequestToast: NormalFunc<[requestToast: (data: ToastItemData) => void]>;
   TogglePlayerVisible: NormalFunc<[]>;
   ToggleSideBarOpen: NormalFunc<[]>;
   SetIsTyping: NormalFunc<[isTyping: boolean]>;

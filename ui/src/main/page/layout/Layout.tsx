@@ -13,10 +13,14 @@ import ThemeColor from "./ThemeColor";
 import FloatButtons from "./float";
 import MusicSource from "./MusicSource";
 import MenuProvider from "@mahiru/ui/public/components/menu/MenuProvider";
+import ToastProvider from "@mahiru/ui/public/components/toast/ToastProvider";
 
 const Layout: FC<object> = () => {
   const { stage } = useStage();
-  const { UpdateContextMenu } = useLayoutStore(["UpdateContextMenu"]);
+  const { UpdateContextMenu, UpdateRequestToast } = useLayoutStore([
+    "UpdateContextMenu",
+    "UpdateRequestToast"
+  ]);
   useEffect(() => {
     // 禁 Tab
     const handler = (e: KeyboardEvent) => {
@@ -41,6 +45,7 @@ const Layout: FC<object> = () => {
       {stage >= Stage.Second && <ThemeColor />}
       {stage >= Stage.Finally && <MusicSource />}
       {stage >= Stage.Finally && <MenuProvider injectContext={UpdateContextMenu} />} {/*z-15*/}
+      {stage >= Stage.Finally && <ToastProvider injectContext={UpdateRequestToast} />}
     </div>
   );
 };
