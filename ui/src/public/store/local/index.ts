@@ -1,25 +1,13 @@
 import { debounce } from "lodash-es";
-import { TrackQuality } from "@mahiru/ui/public/enum";
 import { Log } from "@mahiru/ui/public/utils/dev";
 import { Errs } from "@mahiru/ui/public/entry/errs";
 import { useUpdate } from "@mahiru/ui/public/hooks/useUpdate";
 import { useEffect, useMemo, useRef } from "react";
 import { useStableArray } from "@mahiru/ui/public/hooks/useStableArray";
+import { LocalStoreState, defaultState } from "@mahiru/ui/public/store/local/state";
+import { mergeState } from "@mahiru/ui/public/store/local/merge";
 
-export interface LocalStoreState {
-  User: {
-    LastRefreshCookiesDay: Nullable<number>;
-    UserProfile: Nullable<NeteaseUserDetailResponse["profile"]>;
-    UserLoginMode: Nullable<"account" | "username">;
-    UserLikedTrackIDs: { ids: Record<number, boolean>; checkPoint: number };
-    UserLikedPlaylistID: Nullable<number>;
-  };
-  Settings: {
-    MusicQuality: TrackQuality;
-    MaxHistoryListLength: number;
-  };
-  version: number;
-}
+export type { LocalStoreState } from "./state";
 
 export interface WithLocalStore {
   readonly localSnapshot: LocalStoreState;
@@ -27,7 +15,6 @@ export interface WithLocalStore {
 }
 
 export class LocalStoreClass {
-  private version = 1;
   private state!: LocalStoreState;
   private shell = {} as LocalStoreState;
   private stateKey = "LOCAL_STORE";
@@ -38,7 +25,7 @@ export class LocalStoreClass {
 
   constructor() {
     this.read();
-    this.update();
+    this.merge();
     this.syncDebounce = debounce(this.sync.bind(this));
   }
 
@@ -52,14 +39,17 @@ export class LocalStoreClass {
     return time ? this.updateTime !== time : true;
   }
 
-  private update() {
-    if (this.state.version < this.version) {
-      // todo
-      this.state.version = this.version;
+  private merge() {
+    const mergedState = mergeState(this.state);
+    if (this.state !== mergedState) {
+      this.sync(mergedState as LocalStoreState);
     }
   }
 
-  private parse(state: string) {
+  /** 如果没有存储的状态，则返回默认状态 */
+  private parse() {
+    const state = localStorage.getItem(this.stateKey);
+    if (!state) return this.default();
     try {
       return <LocalStoreState>JSON.parse(state);
     } catch (err) {
@@ -71,22 +61,16 @@ export class LocalStoreClass {
 
   private read(): LocalStoreState {
     if (!this.outdate) return this.state;
-    const state = localStorage.getItem(this.stateKey);
-    if (state === null) {
-      // 如果没有存储的状态，则返回默认状态，同时初始化
-      return this.sync(this.default());
-    } else {
-      // 尝试解析存储的状态
-      return this.sync(this.parse(state));
-    }
+    return this.sync(this.parse());
   }
 
   private sync(state = this.state, time = Date.now()) {
     this.state = state;
     this.updateTime = time.toString();
-    localStorage.setItem(this.stateKey, JSON.stringify(this.state));
+    const oldState = this.parse();
+    localStorage.setItem(this.stateKey, JSON.stringify({ ...oldState, ...this.state }));
     localStorage.setItem(this.updateTimeKey, this.updateTime);
-    requestIdleCallback(() => this.execSubscriber(), { timeout: 1000 });
+    requestIdleCallback(() => this.execSubscriber(), { timeout: 500 });
     return this.state;
   }
 
@@ -135,7 +119,7 @@ export class LocalStoreClass {
     return proxy;
   }
 
-  public set<T extends keyof LocalStoreState>(store: T, data: Partial<LocalStoreState[T]>) {
+  public setState<T extends keyof LocalStoreState>(store: T, data: Partial<LocalStoreState[T]>) {
     const old = this.read()[store];
     if (typeof old === "object") {
       Object.assign(old, data);
@@ -143,6 +127,10 @@ export class LocalStoreClass {
       throw Errs.LocalSetErr.create();
     }
     this.syncDebounce();
+  }
+
+  public reload() {
+    return this.read();
   }
 
   public subscribe(cb: NormalFunc<[state: LocalStoreState]>) {
@@ -182,21 +170,8 @@ export class LocalStoreClass {
     return this.read();
   }
 
-  public default(): LocalStoreState {
-    return {
-      User: {
-        LastRefreshCookiesDay: null,
-        UserProfile: null,
-        UserLoginMode: null,
-        UserLikedTrackIDs: { ids: {}, checkPoint: 0 },
-        UserLikedPlaylistID: null
-      },
-      Settings: {
-        MusicQuality: TrackQuality.h,
-        MaxHistoryListLength: 500
-      },
-      version: this.version
-    };
+  public default() {
+    return defaultState();
   }
 }
 
