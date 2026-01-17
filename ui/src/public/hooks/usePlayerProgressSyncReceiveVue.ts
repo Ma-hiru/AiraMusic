@@ -12,6 +12,7 @@ export function usePlayerProgressSyncReceiveVue() {
 
   let unsubscribable: Undefinable<NormalFunc>;
   onMounted(() => {
+    requestPlayerProgressSync();
     unsubscribable = Renderer.addMessageHandler("playerProgressSync", "main", (data) => {
       progressSync.value = data;
     });

@@ -1,4 +1,4 @@
-export enum CommentType {
+export const enum CommentType {
   /** 歌曲 */
   Song = 0,
   /** MV */

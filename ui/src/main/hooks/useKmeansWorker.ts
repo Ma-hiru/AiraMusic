@@ -10,13 +10,13 @@ export function useKmeansWorker(backgroundURL: Optional<string>) {
 
   useEffect(() => {
     startTransition(() => {
-      const mainColor = result[0] || "#fc3d49";
-      const secondaryColor = result[1] || "#ffffff";
+      const mainColor = result[0] || UI.APPThemeColorDefault.main;
+      const secondaryColor = result[1] || UI.APPThemeColorDefault.secondary;
       if (mainColor && secondaryColor) {
         UI.APPThemeColor = {
           main: mainColor,
           secondary: secondaryColor,
-          textOnMainColor: UI.Utils.calcTextColorOn(mainColor).string()
+          textOnMainColor: UI.APPThemeColorDefault.textOnMain
         };
       }
     });

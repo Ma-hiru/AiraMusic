@@ -1,4 +1,5 @@
 export { CommentSort, CommentType } from "./comments";
+export { BannerType } from "./home";
 export { NeteaseImageSize } from "./image";
 export { PlayerFSMStatusEnum, type PlayerFSMEvent } from "./player";
 export { SearchType } from "./search";

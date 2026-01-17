@@ -5,9 +5,11 @@ import { useAppLoaded } from "@mahiru/ui/public/hooks/useAppLoaded";
 import { useThemeColor } from "@mahiru/ui/public/hooks/useThemeColor";
 import { NeteaseTrack } from "@mahiru/ui/public/entry/track";
 import { Renderer } from "@mahiru/ui/public/entry/renderer";
-import { EqError, Log } from "@mahiru/ui/public/utils/dev";
+import { Str } from "@mahiru/ui/public/entry/str";
+import { BannerType } from "@mahiru/ui/public/enum";
 
 import Carousel from "@mahiru/ui/public/components/public/Carousel";
+import { Log } from "@mahiru/ui/public/utils/dev";
 
 const Banner: FC<object> = () => {
   const [banner, setBanner] = useState<NeteaseBanner[]>([]);
@@ -18,16 +20,17 @@ const Banner: FC<object> = () => {
       setBanner(result.banners);
     });
   }, []);
-  useAppLoaded(!!banner.length);
+  useAppLoaded(Boolean(banner.length));
 
   const { textColorOnMain } = useThemeColor();
   const handleClick = useCallback(
     async (i: number) => {
       const item = banner[i];
       if (!item) return;
-      const { type, id } = parseBannerURL(item.url);
+      const { type, id } = Str.parseBannerURL(item.url);
+      Log.trace("Banner clicked", item, type, id);
       switch (type) {
-        case "song": {
+        case BannerType.song: {
           const detail = await API.Track.getTrackDetail(id);
           const tracks = NeteaseTrack.tracksPrivilegeExtends(detail.songs, detail.privileges);
           const track = tracks[0];
@@ -37,7 +40,7 @@ const Banner: FC<object> = () => {
           }
           return;
         }
-        case "web": {
+        case BannerType.web: {
           Renderer.event.openExternalLink({
             url: item.url,
             title: item.typeTitle
@@ -63,41 +66,3 @@ const Banner: FC<object> = () => {
   );
 };
 export default memo(Banner);
-
-type BannerType = "song" | "album" | "web" | "unknown";
-
-function parseBannerURL(url: string): { type: BannerType; id: number } {
-  // 独家策划 https://y.music.163.com/g/yida/act/qianxi?page=50ccea950b38445f98458d3fc61ad72b
-  // 新歌首发 orpheus://song/3322319846
-  // 数字专辑 https://music.163.com/store/newalbum/detail?id=349048250
-  // 新碟首发 orpheus://album/351342148 \ https://music.163.com/#/album?id=352637538
-  // 新歌首发 orpheus://song/3321723289
-  // 热歌推荐 orpheus://song/3322410882
-  const isOrpheus = url.startsWith("orpheus");
-  const isHttp = url.startsWith("http");
-  try {
-    if (isOrpheus) {
-      const [type = "unknown", id = 0] = url.split("://")[1]!.split("/")!;
-      return { type: type as BannerType, id: Number(id) };
-    } else if (isHttp) {
-      const u = new URL(url);
-      const id = u.searchParams.get("id") || "0";
-      if (u.pathname.includes("album") || u.pathname.includes("newalbum")) {
-        return { type: "album", id: Number(id) };
-      } else if (u.pathname.includes("song")) {
-        return { type: "song", id: Number(id) };
-      } else {
-        return { type: "web", id: Number(id) };
-      }
-    }
-  } catch (err) {
-    Log.info(
-      new EqError({
-        message: "parseBannerURL error",
-        raw: err,
-        label: "parseBannerURL"
-      })
-    );
-  }
-  return { type: "unknown", id: 0 };
-}

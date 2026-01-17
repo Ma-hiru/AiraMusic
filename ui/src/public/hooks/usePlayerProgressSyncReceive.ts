@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useLayoutEffect, useState } from "react";
 import { debounce } from "lodash-es";
 import { Renderer } from "@mahiru/ui/public/entry/renderer";
 
@@ -9,7 +9,9 @@ export function usePlayerProgressSyncReceive() {
     buffered: 0,
     size: 0
   });
-  useEffect(() => {
+
+  useLayoutEffect(() => {
+    requestPlayerProgressSync();
     return Renderer.addMessageHandler("playerProgressSync", "main", setProgressSync);
   }, []);
 

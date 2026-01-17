@@ -33,6 +33,7 @@ const TrackItemCover: FC<ListItemCoverProps> = ({
       `,
         disabled && "cursor-not-allowed"
       )}
+      imageClassName={(disabled && "cursor-not-allowed") || undefined}
       src={track.al.picUrl}
       alt={track.al.name}
       size={NeteaseImageSize.xs}

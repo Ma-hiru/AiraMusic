@@ -1,6 +1,7 @@
 import { SearchTrack } from "@mahiru/wasm";
-import { RefObject, startTransition, useCallback, useEffect, useRef, useState } from "react";
+import { RefObject, useCallback, useEffect, useRef, useState } from "react";
 import { Copy, DiscAlbum, ListMusic, ListPlus, MessageSquare, Play } from "lucide-react";
+import { clamp } from "lodash-es";
 
 import { Log } from "@mahiru/ui/public/utils/dev";
 import { useUpdate } from "@mahiru/ui/public/hooks/useUpdate";
@@ -20,6 +21,7 @@ import { useContextMenu } from "@mahiru/ui/main/hooks/useContextMenu";
 import { PlayerHistory } from "@mahiru/ui/main/entry/history";
 import { useLayoutStore } from "@mahiru/ui/main/store/layout";
 import { getPlayerStoreSnapshot, usePlayerStore } from "@mahiru/ui/main/store/player";
+import { nextIdle } from "@mahiru/ui/public/utils/frame";
 
 export function usePlaylistNormalRender(id?: string) {
   const listRef = useRef<TrackListRef>(null);
@@ -430,20 +432,19 @@ function usePlaylistController(props: {
     const scrollTo = () => {
       const currentItemIndex = currentVisibleItemIndex.current;
       if (Math.abs(currentItemIndex - currentTrackIndex) > 50) {
+        const timeout = clamp(
+          Math.floor((Math.abs(currentItemIndex - currentTrackIndex) / 10) * 100),
+          0,
+          3000
+        );
         setFastLocation(true);
+        setTimeout(async () => {
+          await nextIdle(500);
+          setFastLocation(false);
+        }, timeout);
       }
-      startTransition(() => {
+      requestAnimationFrame(() => {
         listRef.current?.scrollToItem(currentTrackIndex);
-        if (Math.abs(currentItemIndex - currentTrackIndex) > 50) {
-          setTimeout(
-            () => {
-              startTransition(() => {
-                setFastLocation(false);
-              });
-            },
-            Math.floor((Math.abs(currentItemIndex - currentTrackIndex) / 10) * 100)
-          );
-        }
       });
     };
     if (currentTrackIndex !== -1) {
@@ -486,23 +487,18 @@ function usePlaylistController(props: {
   const scrollTop = useCallback(() => {
     const currentItemIndex = currentVisibleItemIndex.current;
     if (currentItemIndex > 200) {
+      const timeout = clamp(Math.floor((currentItemIndex / 10) * 100), 0, 3000);
       setFastLocation(true);
+      setTimeout(async () => {
+        await nextIdle(500);
+        setFastLocation(false);
+      }, timeout);
     }
-    startTransition(() => {
+    requestAnimationFrame(() => {
       listRef.current?.containerRef.current?.scrollTo({
         top: 0,
         behavior: "smooth"
       });
-      if (currentItemIndex > 200) {
-        setTimeout(
-          () => {
-            startTransition(() => {
-              setFastLocation(false);
-            });
-          },
-          Math.floor((currentItemIndex / 10) * 100)
-        );
-      }
     });
   }, [listRef]);
   useEffect(() => {

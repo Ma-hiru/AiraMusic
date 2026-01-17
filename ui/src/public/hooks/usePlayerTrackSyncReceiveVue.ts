@@ -7,6 +7,7 @@ export function usePlayerTrackSyncReceiveVue() {
 
   let unsubscribable: Undefinable<NormalFunc>;
   onMounted(() => {
+    requestPlayerTrackSync();
     unsubscribable = Renderer.addMessageHandler("playerTrackSync", "main", (data) => {
       trackSync.value = data;
     });

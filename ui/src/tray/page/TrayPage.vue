@@ -29,11 +29,12 @@
   import { usePlayerTrackSyncReceiveVue } from "@mahiru/ui/public/hooks/usePlayerTrackSyncReceiveVue";
   import { usePlayerStatusSyncReceiveVue } from "@mahiru/ui/public/hooks/usePlayerStatusSyncReceiveVue";
   import { PlayerFSMStatusEnum } from "@mahiru/ui/public/enum";
+  import { useAppLoadedVue } from "@mahiru/ui/public/hooks/useAppLoadedVue";
 
-  const { themeSync, requestThemeSync } = useThemeSyncReceiveVue();
-  const { trackSync, requestPlayerTrackSync } = usePlayerTrackSyncReceiveVue();
-  const { playerStatusSync, requestPlayerStatusSync } = usePlayerStatusSyncReceiveVue();
-
+  const { themeSync } = useThemeSyncReceiveVue(true);
+  const { trackSync } = usePlayerTrackSyncReceiveVue();
+  const { playerStatusSync } = usePlayerStatusSyncReceiveVue();
+  const { requestLoaded } = useAppLoadedVue(undefined, { timeout: 0, broadcast: true, hide: true });
   const containerRef = useTemplateRef<HTMLDivElement>("containerRef");
   const track = computed(() => trackSync.value?.track);
   const items = computed(() => {
@@ -137,9 +138,7 @@
 
   let observer: ResizeObserver;
   onMounted(() => {
-    requestThemeSync();
-    requestPlayerTrackSync();
-    requestPlayerStatusSync();
+    requestLoaded(true, true);
     observer = new ResizeObserver(resizeTrayWindow);
     containerRef.value && observer.observe(containerRef.value);
   });
@@ -147,17 +146,6 @@
     observer.disconnect();
   });
 
-  watch(
-    themeSync,
-    () => {
-      document.documentElement.style.setProperty("--theme-color-main", themeSync.value.mainColor);
-      document.documentElement.style.setProperty(
-        "--text-color-on-main",
-        themeSync.value.textColorOnMain
-      );
-    },
-    { immediate: true }
-  );
   watch(
     () => track.value?.id,
     () => {

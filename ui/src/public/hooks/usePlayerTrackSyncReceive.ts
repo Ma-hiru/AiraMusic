@@ -1,11 +1,12 @@
-import { useEffect, useState } from "react";
+import { useLayoutEffect, useState } from "react";
 import { debounce } from "lodash-es";
 import { Renderer } from "@mahiru/ui/public/entry/renderer";
 
 export function usePlayerTrackSyncReceive() {
   const [trackSync, setTrackSync] = useState<Nullable<PlayerTrackStatus>>(null);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
+    requestPlayerTrackSync();
     return Renderer.addMessageHandler("playerTrackSync", "main", setTrackSync);
   }, []);
 

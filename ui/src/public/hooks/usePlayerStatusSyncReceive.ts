@@ -1,10 +1,12 @@
-import { useEffect, useState } from "react";
+import { useLayoutEffect, useState } from "react";
 import { debounce } from "lodash-es";
 import { Renderer } from "@mahiru/ui/public/entry/renderer";
 
 export function usePlayerStatusSyncReceive() {
   const [playerStatusSync, setPlayerStatusSync] = useState<Nullable<PlayerStatusSync>>(null);
-  useEffect(() => {
+
+  useLayoutEffect(() => {
+    requestPlayerStatusSync();
     return Renderer.addMessageHandler("playerStatusSync", "main", setPlayerStatusSync);
   }, []);
 

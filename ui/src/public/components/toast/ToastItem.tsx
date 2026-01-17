@@ -1,101 +1,52 @@
-import {
-  memo,
-  forwardRef,
-  ForwardRefRenderFunction,
-  useImperativeHandle,
-  useCallback,
-  useEffect,
-  useState
-} from "react";
-import { motion, useAnimate } from "motion/react";
+import { FC, memo, useEffect, useRef } from "react";
+import { motion } from "motion/react";
 
 export type ToastItemData = {
+  id?: string;
   type: "info" | "error" | "warn" | "success";
   text: string;
 };
 
-export interface ToastItemRef {
-  dispose: PromiseFunc;
-}
-
 interface ToastItemProps {
   data: ToastItemData;
-  baseDistance: number;
-  offset: number;
+  id: string;
   duration?: number;
-  onDispose?: NormalFunc<[offset: number]>;
+  onDispose?: NormalFunc<[id: string]>;
 }
 
-const ToastItem: ForwardRefRenderFunction<ToastItemRef, ToastItemProps> = (
-  { data, baseDistance, offset, duration = 5000, onDispose },
-  ref
-) => {
-  const [render, setRender] = useState(true);
-  const [scope, animate] = useAnimate();
-
-  const dispose = useCallback(async () => {
-    await animate(
-      scope.current,
-      {
-        opacity: 0,
-        scale: 0,
-        top: 0
-      },
-      {
-        duration: 0.5,
-        ease: "easeInOut"
-      }
-    );
-    setRender(false);
-    onDispose?.(offset);
-  }, [animate, scope]);
+const ToastItem: FC<ToastItemProps> = ({ data, duration = 5000, onDispose, id }) => {
+  const timerRef = useRef(0);
 
   useEffect(() => {
-    animate(
-      scope.current,
-      {
-        opacity: 1,
-        scale: 1,
-        top: baseDistance + offset * 50
-      },
-      {
-        duration: 0.5,
-        ease: "easeInOut"
-      }
-    );
-
-    let timer: Undefinable<number>;
-    if (duration) {
-      timer = window.setTimeout(() => {
-        void dispose();
-      }, duration);
+    if (duration && onDispose) {
+      timerRef.current = window.setTimeout(() => onDispose?.(data.id || id), duration);
     }
-
     return () => {
-      timer && window.clearTimeout(timer);
-      void dispose();
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
     };
-  }, [animate, baseDistance, dispose, duration, offset, scope]);
-
-  useImperativeHandle(
-    ref,
-    () => ({
-      dispose
-    }),
-    [dispose]
-  );
-
+  }, [data.id, duration, id, onDispose]);
   return (
-    render && (
-      <motion.div
-        ref={scope}
-        className="fixed left-1/2 -translate-x-1/2 z-50"
-        initial={{ opacity: 0, scale: 0, top: 0 }}>
-        {data.type} - {data.text}
-      </motion.div>
-    )
+    <motion.div
+      layout
+      drag="x"
+      initial={{ opacity: 0, scale: 0.9, y: -20 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.9, y: -20 }}
+      transition={{ duration: 0.25, ease: "easeOut" }}
+      className="bg-neutral-900 text-white px-4 py-2 rounded-md shadow-lg"
+      whileHover={{ scale: 1.05 }}
+      onDragEnd={(_, info) => {
+        if (info.offset.x > 100) onDispose?.(data.id || id);
+      }}
+      onMouseEnter={() => clearTimeout(timerRef.current)}
+      onMouseLeave={() =>
+        (timerRef.current = window.setTimeout(() => onDispose?.(data.id || id), duration))
+      }>
+      {data.type} - {data.text}
+    </motion.div>
   );
 };
 
-ToastItem.displayName = "ToastItem";
-export default memo(forwardRef(ToastItem));
+export default memo(ToastItem);

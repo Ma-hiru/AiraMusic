@@ -7,6 +7,7 @@ export function usePlayerStatusSyncReceiveVue() {
 
   let unsubscribable: Undefinable<NormalFunc>;
   onMounted(() => {
+    requestPlayerStatusSync();
     unsubscribable = Renderer.addMessageHandler("playerStatusSync", "main", (data) => {
       playerStatusSync.value = data;
     });
