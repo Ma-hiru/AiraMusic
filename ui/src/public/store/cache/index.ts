@@ -20,7 +20,7 @@ export class CacheStoreClass {
     });
   }
 
-  storeObject(id: string, data: object) {
+  storeObject<T extends object>(id: string, data: T) {
     return cacheRequest("/api/object/store", {
       method: "POST",
       data: { id, data: JSON.stringify(data) }
