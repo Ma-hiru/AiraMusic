@@ -16,4 +16,12 @@ type PlayerStatusSync = {
   lyricVersion: LyricVersionType;
 };
 
-type PlayerControlSync = "play" | "pause" | "next" | "last" | "mute" | "exit" | "openInfoWindow";
+type PlayerControlSync =
+  | "play"
+  | "pause"
+  | "next"
+  | "last"
+  | "mute"
+  | "exit"
+  | "openInfoWindow"
+  | "openImageWindow";

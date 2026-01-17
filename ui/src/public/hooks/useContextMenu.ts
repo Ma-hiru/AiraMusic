@@ -1,10 +1,18 @@
 import { ContextMenuRender } from "@mahiru/ui/public/components/menu/MenuProvider";
-import { EqError, Log } from "@mahiru/ui/public/utils/dev";
 import { useLayoutEffect } from "react";
+import { Log } from "@mahiru/ui/public/utils/dev";
+import { Errs } from "@mahiru/ui/public/entry/errs";
 
-let setContextMenuData: NormalFunc<[data: Nullable<ContextMenuRender>]>;
-let setContextMenuVisible: NormalFunc<[show?: boolean]>;
-let contextMenuVisibleGetter: NormalFunc<[], boolean>;
+let setContextMenuData: NormalFunc<[data: Nullable<ContextMenuRender>]> = () => {
+  Log.error(Errs.ContextMenuBeforeInject.create("setContextMenuData"));
+};
+let setContextMenuVisible: NormalFunc<[show?: boolean]> = () => {
+  Log.error(Errs.ContextMenuBeforeInject.create("setContextMenuVisible"));
+};
+let contextMenuVisibleGetter: NormalFunc<[], boolean> = () => {
+  Log.error(Errs.ContextMenuBeforeInject.create("contextMenuVisibleGetter"));
+  return false;
+};
 
 const close = () => {
   if (!contextMenuVisibleGetter?.()) return;
@@ -21,16 +29,6 @@ window.addEventListener("scroll", close, {
 });
 
 export function useContextMenu() {
-  if (!setContextMenuData || !setContextMenuVisible) {
-    Log.error(
-      new EqError({
-        label: "useContextMenu",
-        message:
-          "before using useContextMenu, make sure that MenuProvider is mounted and injectContextMenu has been called."
-      })
-    );
-  }
-
   useLayoutEffect(() => {
     return () => {
       setContextMenuData?.(null);

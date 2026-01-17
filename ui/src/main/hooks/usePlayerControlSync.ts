@@ -27,6 +27,11 @@ export function usePlayerControlSync(syncWins: WindowType[]) {
           return;
         case "openInfoWindow":
           Renderer.event.openInternalWindow("info");
+          return;
+        case "openImageWindow":
+          Renderer.event.openInternalWindow("image");
+          Renderer.event.focusInternalWindow("image");
+          return;
       }
     });
   }, [player, syncWins]);

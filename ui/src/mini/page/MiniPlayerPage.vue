@@ -63,7 +63,9 @@
   import { computed, onMounted } from "vue";
   import { Renderer } from "@mahiru/ui/public/entry/renderer";
   import { NeteaseImageSize, PlayerFSMStatusEnum } from "@mahiru/ui/public/enum";
+  import { useAppLoadedVue } from "@mahiru/ui/public/hooks/useAppLoadedVue";
 
+  const { requestLoaded } = useAppLoadedVue(undefined, { broadcast: true });
   const { trackSync } = usePlayerTrackSyncReceiveVue();
   const { progressSync } = usePlayerProgressSyncReceiveVue();
   const { playerStatusSync } = usePlayerStatusSyncReceiveVue();
@@ -79,10 +81,7 @@
 
   onMounted(() => {
     Renderer.event.openDevTools();
-    Renderer.event.loaded({ broadcast: true });
-    Renderer.addMessageHandler("otherWindowClosed", "main", () => {
-      Renderer.event.close({ broadcast: false });
-    });
+    requestLoaded();
   });
 </script>
 <style scoped lang="scss"></style>

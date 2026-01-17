@@ -11,7 +11,7 @@ const Top: FC<InfoProps> = ({ color }) => {
   return (
     <Drag className="absolute w-screen h-10 flex items-center justify-between px-6 select-none z-100">
       <div />
-      <TopControlPure maximizable={false} mini={false} color={color} />
+      <TopControlPure maximizable={false} color={color} />
     </Drag>
   );
 };

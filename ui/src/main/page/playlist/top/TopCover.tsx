@@ -22,6 +22,7 @@ const TopCover: FC<TopCoverProps> = ({ entry }) => {
   return (
     <div className="size-44 relative select-none">
       <NeteaseImage
+        preview
         className="size-44 rounded-md"
         size={NeteaseImageSize.md}
         src={entry?.playlist.coverImgUrl}

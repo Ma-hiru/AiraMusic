@@ -19,6 +19,7 @@ const Cover: FC<object> = () => {
   );
   return (
     <NeteaseImage
+      preview
       src={track?.al.picUrl}
       size={NeteaseImageSize.lg}
       className="w-full h-full rounded-lg ease-in-out duration-300 transition-all select-none"

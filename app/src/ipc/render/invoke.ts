@@ -7,5 +7,6 @@ export const rendererInvokeAPI = {
   platform: () => typedIpcRenderInvoke("platform"),
   hasOpenInternalWindow: (win) => typedIpcRenderInvoke("hasOpenInternalWindow", win),
   storeKey: () => typedIpcRenderInvoke("storeKey"),
-  checkOnlineStatus: () => typedIpcRenderInvoke("checkOnlineStatus")
+  checkOnlineStatus: () => typedIpcRenderInvoke("checkOnlineStatus"),
+  isMainWindow: () => typedIpcRenderInvoke("isMainWindow")
 } satisfies RendererInvokeAPI;

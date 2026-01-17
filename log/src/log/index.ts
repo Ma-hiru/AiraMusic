@@ -23,7 +23,7 @@ export function createLog(level: LogLevel, showTimestamp: boolean = false): Log 
     private static readonly level = level;
     static trace(...args: Messageable[]) {
       if (this.level <= LogLevel.TRACE) {
-        console.log(handleLogInput(LogLevel.TRACE, showTimestamp, ...args));
+        console.trace(handleLogInput(LogLevel.TRACE, showTimestamp, ...args));
       }
     }
     static debug(...args: Messageable[]) {

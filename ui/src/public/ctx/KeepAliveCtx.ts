@@ -1,5 +1,6 @@
 import { createContext, useContext } from "react";
-import { EqError } from "@mahiru/ui/public/utils/dev";
+import { Errs } from "@mahiru/ui/public/entry/errs";
+import { Log } from "@mahiru/ui/public/utils/dev";
 
 export interface KeepAliveCtxType {
   activeKey?: string;
@@ -18,10 +19,7 @@ export function KeepAliveBuildKey(pathname: string, search?: string) {
 export function useKeepAliveCtx() {
   const ctxValue = useContext(KeepAliveCtx);
   if (!ctxValue) {
-    throw new EqError({
-      message: "useKeepAliveCtx must be used within a KeepAlive",
-      label: "ui/KeepAliveCtx:useKeepAliveCtx"
-    });
+    Log.error(Errs.KeepAliveNoProvider.create("useKeepAliveCtx"));
   }
   return ctxValue;
 }

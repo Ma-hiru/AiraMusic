@@ -6,6 +6,7 @@ import { useThemeSyncReceive } from "@mahiru/ui/public/hooks/useThemeSyncReceive
 import { Renderer } from "@mahiru/ui/public/entry/renderer";
 import { useStage } from "@mahiru/ui/public/hooks/useStage";
 import { Stage } from "@mahiru/ui/public/enum";
+import { useAppLoaded } from "@mahiru/ui/public/hooks/useAppLoaded";
 
 import InfoTop from "./Top";
 import AcrylicBackground from "@mahiru/ui/public/components/public/AcrylicBackground";
@@ -15,6 +16,7 @@ const Layout: FC<object> = () => {
   const navigate = useNavigate();
   const [infoSync, setInfoSync] = useState<InfoSync<"none">>(defaultInfoCtxValue);
   const { themeSync, requestThemeSync } = useThemeSyncReceive();
+  const { requestLoaded } = useAppLoaded(false, { broadcast: true });
 
   useEffect(() => {
     if (infoSync.type === "none") return;
@@ -22,17 +24,13 @@ const Layout: FC<object> = () => {
   }, [infoSync.type, navigate]);
 
   useEffect(() => {
-    return Renderer.addMessageHandler("infoSync", "main", setInfoSync);
-  }, []);
-
-  useEffect(() => {
-    return Renderer.addMessageHandler("infoSync", "tray", setInfoSync);
+    return Renderer.addMessageHandler("infoSync", ["main", "tray"], setInfoSync);
   }, []);
 
   useEffect(() => {
     requestThemeSync();
-    Renderer.event.loaded({ broadcast: true });
-  }, [requestThemeSync]);
+    requestLoaded();
+  }, [requestLoaded, requestThemeSync]);
   const { stage } = useStage();
   return (
     <div className="w-screen h-screen bg-white overflow-hidden relative">

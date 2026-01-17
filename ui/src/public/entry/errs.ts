@@ -17,5 +17,16 @@ export const Errs = {
     message: "error occurred in LocalStore subscriber"
   }),
   AcquireLockError: new EqError({ message: "lock is already acquired" }),
-  TaskRuntimeError: new EqError({ message: "task execution failed" })
+  TaskRuntimeError: new EqError({ message: "task execution failed" }),
+  ToastBeforeInject: new EqError({
+    message:
+      "before using useToast, make sure that ToastProvider is mounted and injectToast has been called."
+  }),
+  ContextMenuBeforeInject: new EqError({
+    message:
+      "before using useContextMenu, make sure that MenuProvider is mounted and injectContextMenu has been called."
+  }),
+  KeepAliveNoProvider: new EqError({
+    message: "KeepAliveCtx must be used within a KeepAliveProvider"
+  })
 };

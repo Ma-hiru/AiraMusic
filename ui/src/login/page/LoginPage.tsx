@@ -3,6 +3,7 @@ import { useStage } from "@mahiru/ui/public/hooks/useStage";
 import { QRCodeStatus, useLoginQRCode } from "@mahiru/ui/login/hooks/useLoginQRCode";
 import { Renderer } from "@mahiru/ui/public/entry/renderer";
 import { Stage } from "@mahiru/ui/public/enum";
+import { useAppLoaded } from "@mahiru/ui/public/hooks/useAppLoaded";
 
 import Control from "./Control";
 import QRCode from "./QRCode";
@@ -11,17 +12,17 @@ import Tips from "./Tips";
 export default function LoginPage() {
   const { stage } = useStage();
   const { status, result, dataURL, update } = useLoginQRCode();
+  const { requestLoaded } = useAppLoaded(false, { broadcast: true });
   useEffect(() => {
     if (status === QRCodeStatus.AUTHORIZED && result) {
       Renderer.sendMessage("login", "main", result.cookie);
     }
   }, [status, result]);
+
   useEffect(() => {
-    Renderer.event.loaded({ broadcast: true });
-    Renderer.addMessageHandler("otherWindowClosed", "main", () => {
-      Renderer.event.close({ broadcast: false });
-    });
-  }, []);
+    requestLoaded();
+  }, [requestLoaded]);
+
   return (
     <div className="w-screen h-screen overflow-hidden">
       {stage >= Stage.First && <Control />}

@@ -9,6 +9,7 @@ import {
 import { CreateInfoWindow } from "../../window/info";
 import { CreateExternalWindow } from "../../window/external";
 import { Store } from "../../app/store";
+import { createImageWindow } from "../../window/image";
 
 const mainEventAPI = {
   openInternalWindow: (e, win) => {
@@ -24,6 +25,8 @@ const mainEventAPI = {
           return CreateMiniWindow();
         case "info":
           return CreateInfoWindow();
+        case "image":
+          return createImageWindow();
       }
     }
   },

@@ -2,7 +2,7 @@
   <div
     class="bg-white/10 backdrop-blur-sm border-none overflow-hidden"
     :class="[shadow && shadowMap[shadow][shadowColor], props.containerClass]"
-    @click="emit('click', $event)">
+    @click="wrapClick">
     <img
       v-bind="imageAttrs"
       class="w-full h-full object-cover aspect-square"
@@ -16,7 +16,8 @@
   import { NeteaseImageSize } from "@mahiru/ui/public/enum";
   import { NeteaseImage as NeteaseImageUtils } from "@mahiru/ui/public/entry/image";
   import { Options, useFileCacheVue } from "@mahiru/ui/public/hooks/useFileCacheVue";
-  import { AppScheme } from "@mahiru/ui/public/utils/dev";
+  import { AppScheme, isMainWindow } from "@mahiru/ui/public/utils/dev";
+  import { Renderer } from "@mahiru/ui/public/entry/renderer";
 
   type ShadowLevel = "none" | "base" | "float";
   type ShadowColor = "light" | "dark";
@@ -55,6 +56,7 @@
       shadowColor?: ShadowColor;
       pause?: boolean;
       containerClass?: string;
+      preview?: boolean;
     }>(),
     {
       update: false,
@@ -68,7 +70,7 @@
     }
   );
   const emit = defineEmits<{
-    click: [e: MouseEvent];
+    (e: "click", event: MouseEvent): void;
   }>();
 
   const error = ref(false);
@@ -99,6 +101,40 @@
     token: 0,
     count: 0
   };
+
+  function wrapClick(e: MouseEvent) {
+    if (props.preview) {
+      const imageRawURL = NeteaseImageUtils.setSize(props.src, NeteaseImageSize.raw);
+      if (imageRawURL) {
+        Renderer.invoke.hasOpenInternalWindow("image").then((opened) => {
+          if (!opened) {
+            if (isMainWindow()) {
+              Renderer.event.openInternalWindow("image");
+              Renderer.event.focusInternalWindow("image");
+            } else {
+              Renderer.sendMessage("playerControl", "main", "openImageWindow");
+            }
+            Renderer.addMessageHandler(
+              "otherWindowLoaded",
+              "image",
+              () => {
+                Renderer.sendMessage("checkImage", "image", imageRawURL);
+              },
+              { id: "imageCheckHandler", once: true }
+            );
+          } else {
+            if (isMainWindow()) {
+              Renderer.event.focusInternalWindow("image");
+            } else {
+              Renderer.sendMessage("playerControl", "main", "openImageWindow");
+            }
+            Renderer.sendMessage("checkImage", "image", imageRawURL);
+          }
+        });
+      }
+    }
+    return emit("click", e);
+  }
 
   function onCacheError() {
     NeteaseImageUtils.storeCacheURL(sizedURL.value, null);

@@ -13,6 +13,7 @@ type InvokeEventMaps = {
   hasOpenInternalWindow: [WindowType, boolean];
   storeKey: [never, string];
   checkOnlineStatus: [never, Promise<NetworkStatus>];
+  isMainWindow: [never, boolean];
 };
 
 /** Normal 事件类型以及参数 */
@@ -59,6 +60,7 @@ type MessageTypeMap = {
   otherWindowClosed: undefined;
   windowMaximizedChanged: boolean;
   mainProcessExit: undefined;
+  checkImage: string;
 };
 
 /** Normal 事件的 Message 类型的发送参数 */

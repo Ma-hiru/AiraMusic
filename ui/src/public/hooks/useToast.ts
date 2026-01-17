@@ -1,19 +1,17 @@
 import { ToastItemData } from "@mahiru/ui/public/components/toast/ToastItem";
-import { EqError, Log } from "@mahiru/ui/public/utils/dev";
+import { Log } from "@mahiru/ui/public/utils/dev";
+import { Errs } from "@mahiru/ui/public/entry/errs";
 
-let requestToast: NormalFunc<[data: Omit<ToastItemData, "id">], string>;
-let disposeToast: NormalFunc<[id: string]>;
+let requestToast: NormalFunc<[data: Omit<ToastItemData, "id">], string> = () => {
+  Log.error(Errs.ToastBeforeInject.create("requestToast"));
+  return "";
+};
+
+let disposeToast: NormalFunc<[id: string]> = () => {
+  Log.error(Errs.ToastBeforeInject.create("disposeToast"));
+};
 
 export function useToast() {
-  if (!requestToast) {
-    Log.error(
-      new EqError({
-        label: "useToast",
-        message:
-          "before using useToast, make sure that ToastProvider is mounted and injectToast has been called."
-      })
-    );
-  }
   return { requestToast, disposeToast };
 }
 

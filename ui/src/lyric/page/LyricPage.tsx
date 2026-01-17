@@ -16,12 +16,12 @@ import { usePlayerStatusSyncReceive } from "@mahiru/ui/public/hooks/usePlayerSta
 import { usePlayerTrackSyncReceive } from "@mahiru/ui/public/hooks/usePlayerTrackSyncReceive";
 import { PlayerFSMStatusEnum, Stage } from "@mahiru/ui/public/enum";
 import { UI } from "@mahiru/ui/public/entry/ui";
-import { Renderer } from "@mahiru/ui/public/entry/renderer";
 import { NeteaseLyric } from "@mahiru/ui/public/entry/lyric";
 import { WindowResize } from "@mahiru/ui/public/hooks/useWindowResize";
 
 import LyricPlayer, { LyricPlayerRef } from "@mahiru/ui/public/components/player/LyricPlayer";
 import Control from "./Control";
+import { useAppLoaded } from "@mahiru/ui/public/hooks/useAppLoaded";
 
 type FontSize = `${number}px` | `${number}rem` | `${number}em`;
 
@@ -127,12 +127,10 @@ export default function LyricPage() {
     }, 2500);
   }, []);
 
+  const { requestLoaded } = useAppLoaded(false, { broadcast: true });
   useEffect(() => {
-    Renderer.event.loaded({ broadcast: true });
-    Renderer.addMessageHandler("otherWindowClosed", "main", () => {
-      Renderer.event.close({ broadcast: false });
-    });
-  }, []);
+    requestLoaded();
+  }, [requestLoaded]);
 
   const [lyricLines, setLyricLines] = useState<LyricLine[]>([]);
   const lastTrackID = useRef<number | null>(null);

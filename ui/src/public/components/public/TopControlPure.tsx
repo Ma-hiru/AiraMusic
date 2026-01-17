@@ -12,11 +12,13 @@ interface TopControlPurProps {
   color?: string;
 }
 
-const TopControlPure: FC<TopControlPurProps> = ({ maximizable, mini, color }) => {
+const TopControlPure: FC<TopControlPurProps> = ({ maximizable, mini = true, color }) => {
   const [isMax, setIsMax] = useState(false);
+
   useEffect(() => {
     Renderer.invoke.isMaximized().then(setIsMax);
   }, []);
+
   const maximize = useCallback(() => {
     if (isMax) {
       setIsMax(false);
@@ -26,7 +28,7 @@ const TopControlPure: FC<TopControlPurProps> = ({ maximizable, mini, color }) =>
       Renderer.event.maximize();
     }
   }, [isMax]);
-  const minimize = Renderer.event.minimize;
+
   const close = useCallback(() => {
     Renderer.event.hidden();
     runCloseTask();
@@ -41,26 +43,27 @@ const TopControlPure: FC<TopControlPurProps> = ({ maximizable, mini, color }) =>
           onClick={Renderer.event.openDevTools}
         />
       )}
-      <Minus
-        color={color}
-        className="size-5 cursor-pointer hover:opacity-50 ease-in-out transition-all duration-300"
-        onClick={minimize}
-      />
-      {isMax
-        ? maximizable && (
-            <SquareMinus
-              color={color}
-              className="size-5 cursor-pointer scale-80 hover:opacity-50 ease-in-out transition-all duration-300"
-              onClick={maximize}
-            />
-          )
-        : maximizable && (
-            <Square
-              color={color}
-              className="size-5 cursor-pointer scale-80 hover:opacity-50 ease-in-out transition-all duration-300"
-              onClick={maximize}
-            />
-          )}
+      {mini && (
+        <Minus
+          color={color}
+          className="size-5 cursor-pointer hover:opacity-50 ease-in-out transition-all duration-300"
+          onClick={Renderer.event.minimize}
+        />
+      )}
+      {maximizable &&
+        (isMax ? (
+          <SquareMinus
+            color={color}
+            className="size-5 cursor-pointer scale-80 hover:opacity-50 ease-in-out transition-all duration-300"
+            onClick={maximize}
+          />
+        ) : (
+          <Square
+            color={color}
+            className="size-5 cursor-pointer scale-80 hover:opacity-50 ease-in-out transition-all duration-300"
+            onClick={maximize}
+          />
+        ))}
       <X
         color={color}
         className="size-5 cursor-pointer hover:opacity-50 ease-in-out transition-all duration-300"
@@ -69,4 +72,5 @@ const TopControlPure: FC<TopControlPurProps> = ({ maximizable, mini, color }) =>
     </NoDrag>
   );
 };
+
 export default memo(TopControlPure);

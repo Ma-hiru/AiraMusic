@@ -2,6 +2,7 @@ import {
   FC,
   ImgHTMLAttributes,
   memo,
+  MouseEvent as ReactMouseEvent,
   SyntheticEvent,
   useCallback,
   useEffect,
@@ -13,7 +14,8 @@ import { cx } from "@emotion/css";
 import { NeteaseImageSize } from "@mahiru/ui/public/enum/image";
 import { NeteaseImage as NeteaseImageUtils } from "@mahiru/ui/public/entry/image";
 import { useFileCache } from "@mahiru/ui/public/hooks/useFileCache";
-import { AppScheme } from "@mahiru/ui/public/utils/dev";
+import { AppScheme, isMainWindow } from "@mahiru/ui/public/utils/dev";
+import { Renderer } from "@mahiru/ui/public/entry/renderer";
 
 type ShadowLevel = "none" | "base" | "float";
 
@@ -31,6 +33,7 @@ type ImageProps = ImgHTMLAttributes<HTMLImageElement> & {
   shadow?: ShadowLevel;
   shadowColor?: ShadowColor;
   pause?: boolean;
+  preview?: boolean;
 };
 
 const NeteaseImage: FC<ImageProps> = ({
@@ -52,6 +55,7 @@ const NeteaseImage: FC<ImageProps> = ({
   shadowColor = "light",
   onClick,
   pause,
+  preview,
   ...rest
 }) => {
   const [error, setError] = useState(false);
@@ -163,9 +167,46 @@ const NeteaseImage: FC<ImageProps> = ({
     };
   }, [src]);
 
+  const wrapClick = useCallback(
+    (e: ReactMouseEvent<HTMLImageElement>) => {
+      if (preview) {
+        const imageRawURL = NeteaseImageUtils.setSize(src, NeteaseImageSize.raw);
+        if (imageRawURL) {
+          Renderer.invoke.hasOpenInternalWindow("image").then((opened) => {
+            if (!opened) {
+              if (isMainWindow()) {
+                Renderer.event.openInternalWindow("image");
+                Renderer.event.focusInternalWindow("image");
+              } else {
+                Renderer.sendMessage("playerControl", "main", "openImageWindow");
+              }
+              Renderer.addMessageHandler(
+                "otherWindowLoaded",
+                "image",
+                () => {
+                  Renderer.sendMessage("checkImage", "image", imageRawURL);
+                },
+                { id: "imageCheckHandler", once: true }
+              );
+            } else {
+              if (isMainWindow()) {
+                Renderer.event.focusInternalWindow("image");
+              } else {
+                Renderer.sendMessage("playerControl", "main", "openImageWindow");
+              }
+              Renderer.sendMessage("checkImage", "image", imageRawURL);
+            }
+          });
+        }
+      }
+      return onClick?.(e);
+    },
+    [onClick, preview, src]
+  );
+
   return (
     <div
-      onClick={onClick}
+      onClick={wrapClick}
       className={cx(
         `
           bg-white/10 backdrop-blur-sm

@@ -52,7 +52,7 @@ export class RendererClass {
     });
   }
 
-  addMessageHandler<T extends keyof MessageTypeMap, U extends WindowType | null>(
+  addMessageHandler<T extends keyof MessageTypeMap, U extends WindowType | WindowType[] | null>(
     event: T,
     from: U,
     callback: U extends null
@@ -62,7 +62,16 @@ export class RendererClass {
       id?: string;
       once?: boolean;
     }
-  ) {
+  ): NormalFunc {
+    if (Array.isArray(from)) {
+      const unsubscribes: NormalFunc[] = [];
+      from.forEach((f) => {
+        unsubscribes.push(this.addMessageHandler(event, f, callback, options));
+      });
+      return () => {
+        unsubscribes.forEach((unsubscribe) => unsubscribe());
+      };
+    }
     const { id = crypto.randomUUID(), once = false } = options || {};
     if (!this.handlers.has(event)) {
       this.handlers.set(event, new Map());
