@@ -1,8 +1,8 @@
 import { FC, memo, useCallback, useEffect, useRef } from "react";
 import { Heart, MessageSquare } from "lucide-react";
 import { usePlayerStore } from "@mahiru/ui/main/store/player";
-import { useHeart } from "@mahiru/ui/main/hooks/useHeart";
 import { useInfoWindow } from "@mahiru/ui/main/hooks/useInfoWindow";
+import { useHeart } from "@mahiru/ui/public/hooks/useHeart";
 import { CommentType } from "@mahiru/ui/public/enum";
 
 const Artist: FC<object> = () => {

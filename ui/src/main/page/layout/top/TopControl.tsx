@@ -7,7 +7,7 @@ import { runCloseTask } from "@mahiru/ui/public/utils/close";
 import { isDev } from "@mahiru/ui/public/utils/dev";
 
 import NoDrag from "@mahiru/ui/public/components/public/NoDrag";
-import { useLayoutStore } from "@mahiru/ui/main/store/layout";
+import { useToast } from "@mahiru/ui/public/hooks/useToast";
 
 interface TopControlProps {
   windowId: WindowType;
@@ -17,9 +17,9 @@ interface TopControlProps {
 
 const TopControl: FC<TopControlProps> = ({ maximizable = true, mini = true }) => {
   const [isMax, setIsMax] = useState(false);
-  const { RequestToast } = useLayoutStore(["RequestToast"]);
   const { PlayerCoreGetter } = usePlayerStore(["PlayerCoreGetter"]);
   const { toggleTargetWindow, hasOpened } = usePlayerInfoSync("miniplayer");
+  const { requestToast } = useToast();
   const player = PlayerCoreGetter();
 
   const maximize = useCallback(() => {
@@ -62,9 +62,9 @@ const TopControl: FC<TopControlProps> = ({ maximizable = true, mini = true }) =>
       <button
         className="bg-purple-500 rounded-md font-semibold px-2 py-1"
         onClick={() => {
-          RequestToast?.({
-            text: "test",
-            type: "info"
+          requestToast({
+            text: Math.random() < 0.5 ? "test" : "测试一下toast能不能用",
+            type: ["success", "info", "error", "warn"][Math.floor(Math.random() * 4)] as any
           });
         }}>
         toast

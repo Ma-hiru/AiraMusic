@@ -1,5 +1,6 @@
 import { FC, memo, useEffect, useRef } from "react";
 import { motion } from "motion/react";
+import { Ban, CircleAlert, CircleCheck, Info } from "lucide-react";
 
 export type ToastItemData = {
   id?: string;
@@ -29,24 +30,38 @@ const ToastItem: FC<ToastItemProps> = ({ data, duration = 5000, onDispose, id })
   }, [data.id, duration, id, onDispose]);
   return (
     <motion.div
-      layout
-      drag="x"
-      initial={{ opacity: 0, scale: 0.9, y: -20 }}
-      animate={{ opacity: 1, scale: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.9, y: -20 }}
-      transition={{ duration: 0.25, ease: "easeOut" }}
-      className="bg-neutral-900 text-white px-4 py-2 rounded-md shadow-lg"
-      whileHover={{ scale: 1.05 }}
-      onDragEnd={(_, info) => {
-        if (info.offset.x > 100) onDispose?.(data.id || id);
+      className="w-full gap-1 flex justify-start items-center"
+      style={{
+        color:
+          data.type === "error"
+            ? "#ff4d4f"
+            : data.type === "warn"
+              ? "#faad14"
+              : data.type === "success"
+                ? "#52c41a"
+                : undefined
       }}
       onMouseEnter={() => clearTimeout(timerRef.current)}
       onMouseLeave={() =>
         (timerRef.current = window.setTimeout(() => onDispose?.(data.id || id), duration))
       }>
-      {data.type} - {data.text}
+      <span className="inline">{getTypeIcon(data.type)}</span>
+      <span className="inline">{data.text}</span>
     </motion.div>
   );
 };
 
 export default memo(ToastItem);
+
+function getTypeIcon(type: ToastItemData["type"]) {
+  switch (type) {
+    case "info":
+      return <Info size={14} />;
+    case "error":
+      return <Ban size={14} />;
+    case "success":
+      return <CircleCheck size={14} />;
+    case "warn":
+      return <CircleAlert size={14} />;
+  }
+}

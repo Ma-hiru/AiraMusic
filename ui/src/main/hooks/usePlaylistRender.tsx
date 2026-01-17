@@ -14,14 +14,14 @@ import { Playlist, PlaylistCacheEntry } from "@mahiru/ui/public/entry/playlist";
 import { CommentType, NeteaseImageSize } from "@mahiru/ui/public/enum";
 import { ContextMenuItem, ContextMenuRender } from "@mahiru/ui/public/components/menu/MenuProvider";
 import NeteaseImage from "@mahiru/ui/public/components/public/NeteaseImage";
+import { nextIdle } from "@mahiru/ui/public/utils/frame";
+import { useContextMenu } from "@mahiru/ui/public/hooks/useContextMenu";
+import { useHeart } from "@mahiru/ui/public/hooks/useHeart";
 
-import { useHeart } from "@mahiru/ui/main/hooks/useHeart";
 import { useInfoWindow } from "@mahiru/ui/main/hooks/useInfoWindow";
-import { useContextMenu } from "@mahiru/ui/main/hooks/useContextMenu";
 import { PlayerHistory } from "@mahiru/ui/main/entry/history";
 import { useLayoutStore } from "@mahiru/ui/main/store/layout";
 import { getPlayerStoreSnapshot, usePlayerStore } from "@mahiru/ui/main/store/player";
-import { nextIdle } from "@mahiru/ui/public/utils/frame";
 
 export function usePlaylistNormalRender(id?: string) {
   const listRef = useRef<TrackListRef>(null);
@@ -412,7 +412,7 @@ function usePlaylistController(props: {
   const [fastLocation, setFastLocation] = useState(false);
   const { mainColor, textColorOnMain } = useThemeColor();
   const { openInfoWindow } = useInfoWindow(true);
-  const { setContextMenuRenderer, setContextMenuVisible, contextMenuVisible } = useContextMenu();
+  const { setContextMenuData, setContextMenuVisible, contextMenuVisible } = useContextMenu();
   const { PlayerTrackStatus, PlayerCoreGetter } = usePlayerStore([
     "PlayerTrackStatus",
     "PlayerCoreGetter"
@@ -470,7 +470,7 @@ function usePlaylistController(props: {
     (e, trackBase) => {
       const track = tracks.find((t) => t.id === trackBase.id);
       track &&
-        setContextMenuRenderer?.(
+        setContextMenuData?.(
           createContextMenu({
             track,
             clientX: e.clientX,
@@ -481,7 +481,7 @@ function usePlaylistController(props: {
         );
       setContextMenuVisible?.(true);
     },
-    [openInfoWindow, setContextMenuRenderer, setContextMenuVisible, source, tracks]
+    [openInfoWindow, setContextMenuData, setContextMenuVisible, source, tracks]
   );
   // 回到顶部
   const scrollTop = useCallback(() => {

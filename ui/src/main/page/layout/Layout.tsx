@@ -1,7 +1,6 @@
 import { FC, useEffect } from "react";
 import { useStage } from "@mahiru/ui/public/hooks/useStage";
 import { Stage } from "@mahiru/ui/public/enum";
-import { useLayoutStore } from "@mahiru/ui/main/store/layout";
 
 import TopBar from "./top";
 import PlayerBar from "./bar";
@@ -17,10 +16,6 @@ import ToastProvider from "@mahiru/ui/public/components/toast/ToastProvider";
 
 const Layout: FC<object> = () => {
   const { stage } = useStage();
-  const { UpdateContextMenu, UpdateRequestToast } = useLayoutStore([
-    "UpdateContextMenu",
-    "UpdateRequestToast"
-  ]);
   useEffect(() => {
     // 禁 Tab
     const handler = (e: KeyboardEvent) => {
@@ -44,8 +39,8 @@ const Layout: FC<object> = () => {
       {stage >= Stage.Second && <FloatButtons />}
       {stage >= Stage.Second && <ThemeColor />}
       {stage >= Stage.Finally && <MusicSource />}
-      {stage >= Stage.Finally && <MenuProvider injectContext={UpdateContextMenu} />} {/*z-15*/}
-      {stage >= Stage.Finally && <ToastProvider injectContext={UpdateRequestToast} />}
+      {stage >= Stage.Finally && <MenuProvider />} {/*z-15*/}
+      {stage >= Stage.Finally && <ToastProvider />}
     </div>
   );
 };

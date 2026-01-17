@@ -1,5 +1,6 @@
 import { FC, Key, memo, ReactNode, useCallback, useEffect, useState } from "react";
 import { motion, useAnimate } from "motion/react";
+import { injectContextMenu } from "@mahiru/ui/public/hooks/useContextMenu";
 
 const OPEN_DURATION = 0.15;
 const CLOSE_DURATION = 0.08;
@@ -19,24 +20,16 @@ export type ContextMenuRender = {
   clientY: number;
 };
 
-interface MenuProviderProps {
-  injectContext: (props: {
-    visible?: boolean;
-    rendererGetter?: () => NormalFunc<[data: Nullable<ContextMenuRender>]>;
-    visibleSetter?: () => NormalFunc<[show?: boolean]>;
-  }) => void;
-}
-
-const MenuProvider: FC<MenuProviderProps> = ({ injectContext }) => {
+const MenuProvider: FC<object> = () => {
   const [scope, animate] = useAnimate();
   const [visible, setVisible] = useState(false);
   const [render, setRender] = useState<Nullable<ContextMenuRender>>(null);
 
-  const SetContextMenuRenderData = useCallback((data: Nullable<ContextMenuRender>) => {
+  const setContextMenuRenderData = useCallback((data: Nullable<ContextMenuRender>) => {
     setRender(data);
   }, []);
 
-  const SetContextMenuVisible = useCallback((show?: boolean) => {
+  const setContextMenuVisible = useCallback((show?: boolean) => {
     if (typeof show === "boolean") {
       setVisible(show);
     } else {
@@ -44,7 +37,7 @@ const MenuProvider: FC<MenuProviderProps> = ({ injectContext }) => {
     }
   }, []);
 
-  const OpenContextMenuAnimate = useCallback(async () => {
+  const openContextMenuAnimate = useCallback(async () => {
     await animate(
       scope.current,
       { opacity: [0, 1], scale: [0.96, 1], pointerEvents: "auto" },
@@ -52,7 +45,7 @@ const MenuProvider: FC<MenuProviderProps> = ({ injectContext }) => {
     );
   }, [animate, scope]);
 
-  const MoveContextMenu = useCallback(
+  const moveContextMenu = useCallback(
     async (x: number, y: number) => {
       const menu = scope.current;
       if (!menu) return;
@@ -86,7 +79,7 @@ const MenuProvider: FC<MenuProviderProps> = ({ injectContext }) => {
     [animate, scope]
   );
 
-  const CloseContextMenuAnimate = useCallback(async () => {
+  const closeContextMenuAnimate = useCallback(async () => {
     await animate(
       scope.current,
       { opacity: [1, 0], scale: [1, 0.96], pointerEvents: "none" },
@@ -97,30 +90,17 @@ const MenuProvider: FC<MenuProviderProps> = ({ injectContext }) => {
   useEffect(() => {
     if (!render) return;
     if (visible) {
-      CloseContextMenuAnimate()
-        .then(() => MoveContextMenu(render.clientX, render.clientY))
-        .then(OpenContextMenuAnimate);
-
-      injectContext({ visible: true });
+      closeContextMenuAnimate()
+        .then(() => moveContextMenu(render.clientX, render.clientY))
+        .then(openContextMenuAnimate);
     } else {
-      void CloseContextMenuAnimate();
-      injectContext({ visible: false });
+      void closeContextMenuAnimate();
     }
-  }, [
-    CloseContextMenuAnimate,
-    MoveContextMenu,
-    OpenContextMenuAnimate,
-    injectContext,
-    render,
-    visible
-  ]);
+  }, [closeContextMenuAnimate, moveContextMenu, openContextMenuAnimate, render, visible]);
 
   useEffect(() => {
-    injectContext({
-      rendererGetter: () => SetContextMenuRenderData,
-      visibleSetter: () => SetContextMenuVisible
-    });
-  }, [SetContextMenuRenderData, SetContextMenuVisible, injectContext]);
+    injectContextMenu(setContextMenuRenderData, setContextMenuVisible, () => visible);
+  }, [setContextMenuRenderData, setContextMenuVisible, visible]);
 
   return (
     <motion.div
@@ -152,7 +132,7 @@ const MenuProvider: FC<MenuProviderProps> = ({ injectContext }) => {
               onMouseDown={(e) => {
                 e.stopPropagation();
                 onClick?.();
-                SetContextMenuVisible(false);
+                setContextMenuVisible(false);
               }}>
               {!!prefix && prefix}
               {label}
