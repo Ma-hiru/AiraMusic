@@ -1,7 +1,7 @@
 import { FC, memo } from "react";
 
 import NavItem from "./NavItem";
-import NeteaseImage from "@mahiru/ui/public/components/public/NeteaseImage";
+import NeteaseImage from "@mahiru/ui/public/components/image/NeteaseImage";
 
 interface Props {
   cover: string;

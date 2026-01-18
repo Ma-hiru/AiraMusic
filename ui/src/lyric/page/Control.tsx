@@ -7,9 +7,9 @@ import { AArrowDown, AArrowUp, LockKeyholeOpen, LucideLock } from "lucide-react"
 import { NeteaseImageSize } from "@mahiru/ui/public/enum";
 import { Time } from "@mahiru/ui/public/entry/time";
 
-import Drag from "@mahiru/ui/public/components/public/Drag";
-import NeteaseImage from "@mahiru/ui/public/components/public/NeteaseImage";
-import NoDrag from "@mahiru/ui/public/components/public/NoDrag";
+import Drag from "@mahiru/ui/public/components/drag/Drag";
+import NeteaseImage from "@mahiru/ui/public/components/image/NeteaseImage";
+import NoDrag from "@mahiru/ui/public/components/drag/NoDrag";
 
 type FontSize = `${number}px` | `${number}rem` | `${number}em`;
 

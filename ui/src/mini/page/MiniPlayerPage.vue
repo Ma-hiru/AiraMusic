@@ -53,9 +53,9 @@
   </Drag>
 </template>
 <script setup lang="ts">
-  import Drag from "@mahiru/ui/public/components/public/Drag.vue";
-  import NoDrag from "@mahiru/ui/public/components/public/NoDrag.vue";
-  import NeteaseImage from "@mahiru/ui/public/components/public/NeteaseImage.vue";
+  import Drag from "@mahiru/ui/public/components/drag/Drag.vue";
+  import NoDrag from "@mahiru/ui/public/components/drag/NoDrag.vue";
+  import NeteaseImage from "@mahiru/ui/public/components/image/NeteaseImage.vue";
   import { Pause, Play, SkipBack, SkipForward, X } from "lucide-vue-next";
   import { usePlayerTrackSyncReceiveVue } from "@mahiru/ui/public/hooks/usePlayerTrackSyncReceiveVue";
   import { usePlayerProgressSyncReceiveVue } from "@mahiru/ui/public/hooks/usePlayerProgressSyncReceiveVue";

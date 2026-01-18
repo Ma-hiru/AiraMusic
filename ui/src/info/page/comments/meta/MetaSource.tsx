@@ -2,7 +2,7 @@ import Color from "color";
 import { FC, memo, useEffect, useState } from "react";
 import { CommentType, NeteaseImageSize } from "@mahiru/ui/public/enum";
 
-import NeteaseImage from "@mahiru/ui/public/components/public/NeteaseImage";
+import NeteaseImage from "@mahiru/ui/public/components/image/NeteaseImage";
 
 interface MetaSourceProps {
   themeSync: ThemeSync;

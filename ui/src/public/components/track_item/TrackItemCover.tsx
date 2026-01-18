@@ -2,7 +2,7 @@ import { FC, memo } from "react";
 import { cx } from "@emotion/css";
 import { NeteaseImageSize } from "@mahiru/ui/public/enum/image";
 
-import NeteaseImage from "@mahiru/ui/public/components/public/NeteaseImage";
+import NeteaseImage from "@mahiru/ui/public/components/image/NeteaseImage";
 
 interface ListItemCoverProps {
   track: NeteaseTrackBase;

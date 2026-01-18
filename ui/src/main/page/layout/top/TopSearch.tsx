@@ -3,7 +3,7 @@ import { useInfoWindow } from "@mahiru/ui/main/hooks/useInfoWindow";
 import { API } from "@mahiru/ui/public/api";
 import { Search } from "lucide-react";
 
-import NoDrag from "@mahiru/ui/public/components/public/NoDrag";
+import NoDrag from "@mahiru/ui/public/components/drag/NoDrag";
 
 const TopSearch: FC<object> = () => {
   const [defaultKeywords, setDefaultKeywords] =

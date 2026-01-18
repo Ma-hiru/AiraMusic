@@ -3,7 +3,7 @@ import { ChevronDown } from "lucide-react";
 import { motion, Variants } from "motion/react";
 import { useLayoutStore } from "@mahiru/ui/main/store/layout";
 
-import NoDrag from "@mahiru/ui/public/components/public/NoDrag";
+import NoDrag from "@mahiru/ui/public/components/drag/NoDrag";
 
 const TopBack: FC<object> = () => {
   const { TogglePlayerVisible, PlayerVisible } = useLayoutStore([

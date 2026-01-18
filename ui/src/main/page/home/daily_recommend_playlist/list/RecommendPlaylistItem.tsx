@@ -5,7 +5,7 @@ import { getPlaylistRouterPath } from "@mahiru/ui/main/hooks/usePlaylistRouter";
 import { NeteaseImageSize } from "@mahiru/ui/public/enum";
 import { Playlist } from "@mahiru/ui/public/entry/playlist";
 
-import NeteaseImage from "@mahiru/ui/public/components/public/NeteaseImage";
+import NeteaseImage from "@mahiru/ui/public/components/image/NeteaseImage";
 
 interface RecommendTrackItemProps {
   playlist: DailyRecommendPlaylistResult;

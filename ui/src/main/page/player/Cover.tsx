@@ -3,7 +3,7 @@ import { usePlayerStore } from "@mahiru/ui/main/store/player";
 import { useLayoutStore } from "@mahiru/ui/main/store/layout";
 import { NeteaseImageSize } from "@mahiru/ui/public/enum";
 
-import NeteaseImage from "@mahiru/ui/public/components/public/NeteaseImage";
+import NeteaseImage from "@mahiru/ui/public/components/image/NeteaseImage";
 
 const Cover: FC<object> = () => {
   const { PlayerTrackStatus } = usePlayerStore(["PlayerTrackStatus"]);

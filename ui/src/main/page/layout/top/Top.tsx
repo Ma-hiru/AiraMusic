@@ -8,7 +8,7 @@ import TopAvatar from "./TopAvatar";
 import TopBack from "./TopBack";
 import TopDivider from "./TopDivider";
 import TopSearch from "./TopSearch";
-import Drag from "@mahiru/ui/public/components/public/Drag";
+import Drag from "@mahiru/ui/public/components/drag/Drag";
 import Transition from "@mahiru/ui/public/components/public/Transition";
 
 const Top: FC<object> = () => {

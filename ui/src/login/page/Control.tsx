@@ -1,6 +1,6 @@
 import { FC, memo } from "react";
 
-import Drag from "@mahiru/ui/public/components/public/Drag";
+import Drag from "@mahiru/ui/public/components/drag/Drag";
 import TopControlPure from "@mahiru/ui/public/components/public/TopControlPure";
 
 const Control: FC<object> = () => {

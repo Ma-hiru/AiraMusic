@@ -20,7 +20,7 @@
 
 <script setup lang="ts" name="ImagePage">
   import TopControlPure from "@mahiru/ui/public/components/public/TopControlPure.vue";
-  import Drag from "@mahiru/ui/public/components/public/Drag.vue";
+  import Drag from "@mahiru/ui/public/components/drag/Drag.vue";
   import { useAppLoadedVue } from "@mahiru/ui/public/hooks/useAppLoadedVue";
   import { onMounted, ref, watch } from "vue";
   import { Renderer } from "@mahiru/ui/public/entry/renderer";

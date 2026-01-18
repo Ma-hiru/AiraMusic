@@ -4,7 +4,7 @@ import { useLayoutStore } from "@mahiru/ui/main/store/layout";
 import { useThemeColor } from "@mahiru/ui/public/hooks/useThemeColor";
 import { NeteaseImageSize } from "@mahiru/ui/public/enum";
 
-import NeteaseImage from "@mahiru/ui/public/components/public/NeteaseImage";
+import NeteaseImage from "@mahiru/ui/public/components/image/NeteaseImage";
 
 const BarCover: FC<object> = () => {
   const { PlayerTrackStatus } = usePlayerStore(["PlayerTrackStatus"]);

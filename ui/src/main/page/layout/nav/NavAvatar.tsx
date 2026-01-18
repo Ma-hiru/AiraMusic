@@ -6,8 +6,8 @@ import { useLogin, useLogout } from "@mahiru/ui/main/hooks/useLogout";
 import { useLocalStore } from "@mahiru/ui/public/store/local";
 import { NeteaseImageSize } from "@mahiru/ui/public/enum";
 
-import NoDrag from "@mahiru/ui/public/components/public/NoDrag";
-import NeteaseImage from "@mahiru/ui/public/components/public/NeteaseImage";
+import NoDrag from "@mahiru/ui/public/components/drag/NoDrag";
+import NeteaseImage from "@mahiru/ui/public/components/image/NeteaseImage";
 
 const NavAvatar: FC<object> = () => {
   const { SideBarOpen } = useLayoutStore(["SideBarOpen"]);

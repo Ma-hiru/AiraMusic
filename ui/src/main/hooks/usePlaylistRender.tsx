@@ -13,7 +13,7 @@ import { TrackListProps, TrackListRef } from "@mahiru/ui/public/components/track
 import { Playlist, PlaylistCacheEntry } from "@mahiru/ui/public/entry/playlist";
 import { CommentType, NeteaseImageSize } from "@mahiru/ui/public/enum";
 import { ContextMenuItem, ContextMenuRender } from "@mahiru/ui/public/components/menu/MenuProvider";
-import NeteaseImage from "@mahiru/ui/public/components/public/NeteaseImage";
+import NeteaseImage from "@mahiru/ui/public/components/image/NeteaseImage";
 import { nextIdle } from "@mahiru/ui/public/utils/frame";
 import { useContextMenu } from "@mahiru/ui/public/hooks/useContextMenu";
 import { useHeart } from "@mahiru/ui/public/hooks/useHeart";

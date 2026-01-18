@@ -4,7 +4,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { NeteaseImageSize } from "@mahiru/ui/public/enum/image";
 import { useThemeColor } from "@mahiru/ui/public/hooks/useThemeColor";
 
-import NeteaseImage from "@mahiru/ui/public/components/public/NeteaseImage";
+import NeteaseImage from "@mahiru/ui/public/components/image/NeteaseImage";
 
 interface CarouselProps {
   items: { url: string; title?: string }[];

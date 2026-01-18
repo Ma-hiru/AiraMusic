@@ -2,7 +2,7 @@ import { FC, memo } from "react";
 import { QRCodeStatus } from "@mahiru/ui/login/hooks/useLoginQRCode";
 import { NeteaseImageSize } from "@mahiru/ui/public/enum";
 
-import NeteaseImage from "@mahiru/ui/public/components/public/NeteaseImage";
+import NeteaseImage from "@mahiru/ui/public/components/image/NeteaseImage";
 
 interface TipsProps {
   status: QRCodeStatus;

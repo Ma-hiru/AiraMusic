@@ -4,7 +4,7 @@ import { useLayoutStore } from "@mahiru/ui/main/store/layout";
 import { Playlist, PlaylistCacheEntry } from "@mahiru/ui/public/entry/playlist";
 import { NeteaseImageSize } from "@mahiru/ui/public/enum";
 
-import NeteaseImage from "@mahiru/ui/public/components/public/NeteaseImage";
+import NeteaseImage from "@mahiru/ui/public/components/image/NeteaseImage";
 
 interface TopCoverProps {
   entry: Nullable<PlaylistCacheEntry>;

@@ -4,7 +4,7 @@ import { runCloseTask } from "@mahiru/ui/public/utils/close";
 import { Renderer } from "@mahiru/ui/public/entry/renderer";
 import { isDev } from "@mahiru/ui/public/utils/dev";
 
-import NoDrag from "@mahiru/ui/public/components/public/NoDrag";
+import NoDrag from "@mahiru/ui/public/components/drag/NoDrag";
 
 interface TopControlPurProps {
   maximizable?: boolean;

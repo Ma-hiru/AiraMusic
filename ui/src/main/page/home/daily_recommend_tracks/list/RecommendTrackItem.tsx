@@ -5,7 +5,7 @@ import { API } from "@mahiru/ui/public/api";
 import { NeteaseTrack } from "@mahiru/ui/public/entry/track";
 import { NeteaseImageSize } from "@mahiru/ui/public/enum";
 
-import NeteaseImage from "@mahiru/ui/public/components/public/NeteaseImage";
+import NeteaseImage from "@mahiru/ui/public/components/image/NeteaseImage";
 
 interface RecommendTrackItemProps {
   song: DailyRecommendTracksDailySong;

@@ -17,7 +17,7 @@
 </template>
 
 <script setup lang="ts" name="TrayPlayer">
-  import NeteaseImage from "@mahiru/ui/public/components/public/NeteaseImage.vue";
+  import NeteaseImage from "@mahiru/ui/public/components/image/NeteaseImage.vue";
   import { NeteaseImageSize } from "@mahiru/ui/public/enum";
 
   const props = defineProps<{

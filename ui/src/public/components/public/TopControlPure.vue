@@ -27,7 +27,7 @@
 </template>
 
 <script setup lang="ts" name="TopControlPure">
-  import NoDrag from "@mahiru/ui/public/components/public/NoDrag.vue";
+  import NoDrag from "@mahiru/ui/public/components/drag/NoDrag.vue";
   import { Chromium, Minus, Square, SquareMinus, X } from "lucide-vue-next";
   import { isDev } from "@mahiru/ui/public/utils/dev";
   import { Renderer } from "@mahiru/ui/public/entry/renderer";
