@@ -1,4 +1,4 @@
-import { FC, Key, memo, ReactNode, useCallback, useEffect, useState } from "react";
+import { FC, Key, memo, ReactNode, useCallback, useEffect, useLayoutEffect, useState } from "react";
 import { motion, useAnimate } from "motion/react";
 import { injectContextMenu } from "@mahiru/ui/public/hooks/useContextMenu";
 
@@ -40,7 +40,7 @@ const MenuProvider: FC<object> = () => {
   const openContextMenuAnimate = useCallback(async () => {
     await animate(
       scope.current,
-      { opacity: [0, 1], scale: [0.96, 1], pointerEvents: "auto" },
+      { opacity: 1, scale: 1, pointerEvents: "auto" },
       { duration: OPEN_DURATION, ease: "easeOut" }
     );
   }, [animate, scope]);
@@ -82,13 +82,15 @@ const MenuProvider: FC<object> = () => {
   const closeContextMenuAnimate = useCallback(async () => {
     await animate(
       scope.current,
-      { opacity: [1, 0], scale: [1, 0.96], pointerEvents: "none" },
+      { opacity: 0, scale: 0.96, pointerEvents: "none" },
       { duration: CLOSE_DURATION, ease: "easeIn" }
     );
   }, [animate, scope]);
 
-  useEffect(() => {
-    if (!render) return;
+  useLayoutEffect(() => {
+    if (!render) {
+      return;
+    }
     if (visible) {
       closeContextMenuAnimate()
         .then(() => moveContextMenu(render.clientX, render.clientY))
@@ -98,7 +100,7 @@ const MenuProvider: FC<object> = () => {
     }
   }, [closeContextMenuAnimate, moveContextMenu, openContextMenuAnimate, render, visible]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     injectContextMenu(setContextMenuRenderData, setContextMenuVisible, () => visible);
   }, [setContextMenuRenderData, setContextMenuVisible, visible]);
 

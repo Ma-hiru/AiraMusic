@@ -54,6 +54,40 @@ const mainInvokeAPI = {
 
     return { ok: true };
   },
+  selectPath: async (_, type) => {
+    const { canceled, filePath } = await dialog.showSaveDialog({
+      title: type === "dir" ? "选择目录" : "选择文件"
+    });
+    if (canceled) return { ok: false, path: "" };
+    if (filePath) return { ok: false, path: "", error: "无效路径" };
+    try {
+      const status = await Fs.stat(filePath);
+      if (type === "dir" && status.isFile()) {
+        return {
+          ok: false,
+          path: "",
+          error: "非目录路径"
+        };
+      }
+      if (type === "file" && status.isDirectory()) {
+        return {
+          ok: false,
+          path: "",
+          error: "非文件路径"
+        };
+      }
+      return {
+        ok: true,
+        path: filePath
+      };
+    } catch {
+      return {
+        ok: false,
+        path: "",
+        error: "路径不存在"
+      };
+    }
+  },
   GPUInfo: async () => app.whenReady().then(() => app.getGPUInfo("complete")),
   isMaximized: (e) => {
     const win = BrowserWindow.fromWebContents(e.sender);

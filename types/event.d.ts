@@ -15,6 +15,7 @@ type InvokeEventMaps = {
   storeKey: [never, string];
   checkOnlineStatus: [never, Promise<NetworkStatus>];
   isMainWindow: [never, boolean];
+  selectPath: [type: "dir" | "file", Promise<{ ok: boolean; path: string; error?: string }>];
 };
 
 /** Normal 事件类型以及参数 */

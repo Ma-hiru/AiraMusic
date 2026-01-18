@@ -104,6 +104,10 @@ export class CacheStoreClass {
     });
   }
 
+  removeInvalid() {
+    return cacheRequest("/api/remove/invalid");
+  }
+
   move(
     path: string,
     onMessage: Nullable<
@@ -124,6 +128,32 @@ export class CacheStoreClass {
       onDone?.("error");
     });
     return es;
+  }
+
+  size(): Promise<{ ok: boolean; size: number }> {
+    return cacheRequest("/api/size");
+  }
+
+  clear(): Promise<{ ok: boolean; count: number }> {
+    return cacheRequest("/api/clear");
+  }
+
+  count(): Promise<{ ok: boolean; count: number }> {
+    return cacheRequest("/api/count");
+  }
+
+  sizeCategories(): Promise<{
+    ok: boolean;
+    image: number;
+    audio: number;
+    video: number;
+    other: number;
+  }> {
+    return cacheRequest("/api/size/categories");
+  }
+
+  info(): Promise<{ ok: boolean; size: number; count: number; path: string }> {
+    return cacheRequest("/api/size/categories");
   }
 }
 
