@@ -12,11 +12,13 @@ export function useKmeansWorker(backgroundURL: Optional<string>) {
     startTransition(() => {
       const mainColor = result[0] || UI.APPThemeColorDefault.main;
       const secondaryColor = result[1] || UI.APPThemeColorDefault.secondary;
+      const textColor =
+        UI.Utils.calcTextColorOn(mainColor).string() || UI.APPThemeColorDefault.textOnMain;
       if (mainColor && secondaryColor) {
         UI.APPThemeColor = {
           main: mainColor,
           secondary: secondaryColor,
-          textOnMainColor: UI.APPThemeColorDefault.textOnMain
+          textOnMainColor: textColor
         };
       }
     });

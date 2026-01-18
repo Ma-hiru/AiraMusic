@@ -1,6 +1,8 @@
 import { cx } from "@emotion/css";
-import { FC, memo, MouseEvent as ReactMouseEvent } from "react";
+import { FC, memo, MouseEvent as ReactMouseEvent, useCallback, useMemo } from "react";
 import { ColorInstance } from "color";
+import { useToast } from "@mahiru/ui/public/hooks/useToast";
+import { debounce } from "lodash-es";
 
 import ListItemIndex from "./TrackItemIndex";
 import ListItemCover from "./TrackItemCover";
@@ -42,12 +44,22 @@ const TrackItem: FC<ListItemProps> = ({
   const track = tracks[trackIdx]!;
   const total = tracks.length;
   const disabled = !track.playable;
+  const { requestToast } = useToast();
+
+  const showDisableReason = useCallback(() => {
+    if (!disabled) return;
+    requestToast({
+      type: "warn",
+      text: track.reason
+    });
+  }, [disabled, requestToast, track.reason]);
 
   return (
     <div
       onContextMenu={(e) => onContextMenu?.(e, track)}
       style={active ? { color: textColorOnMain.string() } : undefined}
       key={track.id}
+      onMouseEnter={debounce(showDisableReason)}
       className={cx(
         `
             items-center grid grid-row-1 grid-cols-[auto_auto_1fr_auto_auto] gap-4

@@ -7,6 +7,7 @@ import { Auth } from "@mahiru/ui/public/entry/auth";
 import { useWindowTitle } from "@mahiru/ui/public/hooks/useWindowTitle";
 import { PlayerFSMStatusEnum } from "@mahiru/ui/public/enum";
 import { ShortcutConfig, useKeyboardShortcut } from "@mahiru/ui/public/hooks/useKeyboardShortcut";
+import { useToast } from "@mahiru/ui/public/hooks/useToast";
 
 import { usePlayerStore } from "@mahiru/ui/main/store/player";
 import { useLayoutStore } from "@mahiru/ui/main/store/layout";
@@ -139,6 +140,7 @@ const MusicSource: FC<object> = () => {
   // 处理音频加载错误
   const login = useLogin();
   const network = useNetwork();
+  const { requestToast } = useToast();
   const onError = useCallback(
     (err: SyntheticEvent<HTMLAudioElement>) => {
       const audioEl = err.currentTarget;
@@ -157,18 +159,22 @@ const MusicSource: FC<object> = () => {
             NeteaseTrack.removeCache(id);
           }
         } else {
-          Log.error("MusicSource.tsx", "audio playback error");
           if (!Auth.isAccountLoggedIn()) {
-            player?.play?.();
+            player.pause();
             login();
           } else {
             // TODO: 播放错误，可能是403或网络错误，403应该重新登录或刷新缓存，网络错误则跳过当前歌曲
-            player?.next(true);
+            Log.warn("MusicSource.tsx", "audio playback error");
+            requestToast({
+              type: "error",
+              text: "歌曲加载失败，请检查网络或登录状态"
+            });
+            player.next(true);
           }
         }
       }
     },
-    [PlayerTrackStatus?.meta, PlayerTrackStatus?.track.id, login, network, player]
+    [PlayerTrackStatus?.meta, PlayerTrackStatus?.track.id, login, network, player, requestToast]
   );
   // 注册音频资源加载器
   usePlayerResource();
