@@ -1,5 +1,5 @@
 <template>
-  <NoDrag class="flex flex-row gap-4 select-none relative z-10">
+  <NoDrag class="flex flex-row gap-4 select-none relative z-50">
     <Chromium
       v-if="isDev"
       :color="props.color"

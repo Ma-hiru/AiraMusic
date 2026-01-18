@@ -7,6 +7,7 @@
 /** Invoke 事件类型以及参数 */
 type InvokeEventMaps = {
   readFile: [filePath: string, Promise<{ ok: boolean; data?: ArrayBuffer }>];
+  writeFile: [{ buffer: ArrayBuffer; name: string }, Promise<{ error?: string; ok: boolean }>];
   GPUInfo: [never, Promise<unknown>];
   platform: [never, NodeJS.Platform];
   isMaximized: [never, boolean];
@@ -60,7 +61,7 @@ type MessageTypeMap = {
   otherWindowClosed: undefined;
   windowMaximizedChanged: boolean;
   mainProcessExit: undefined;
-  checkImage: string;
+  checkImage: { url: string; alt?: string };
 };
 
 /** Normal 事件的 Message 类型的发送参数 */

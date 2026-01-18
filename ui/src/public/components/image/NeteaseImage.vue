@@ -118,7 +118,10 @@
               "otherWindowLoaded",
               "image",
               () => {
-                Renderer.sendMessage("checkImage", "image", imageRawURL);
+                Renderer.sendMessage("checkImage", "image", {
+                  url: imageRawURL,
+                  alt: imageAttrs.value.alt
+                });
               },
               { id: "imageCheckHandler", once: true }
             );
@@ -128,7 +131,10 @@
             } else {
               Renderer.sendMessage("playerControl", "main", "openImageWindow");
             }
-            Renderer.sendMessage("checkImage", "image", imageRawURL);
+            Renderer.sendMessage("checkImage", "image", {
+              url: imageRawURL,
+              alt: imageAttrs.value.alt
+            });
           }
         });
       }

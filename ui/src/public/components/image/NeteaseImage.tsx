@@ -184,7 +184,7 @@ const NeteaseImage: FC<ImageProps> = ({
                 "otherWindowLoaded",
                 "image",
                 () => {
-                  Renderer.sendMessage("checkImage", "image", imageRawURL);
+                  Renderer.sendMessage("checkImage", "image", { url: imageRawURL, alt });
                 },
                 { id: "imageCheckHandler", once: true }
               );
@@ -194,14 +194,14 @@ const NeteaseImage: FC<ImageProps> = ({
               } else {
                 Renderer.sendMessage("playerControl", "main", "openImageWindow");
               }
-              Renderer.sendMessage("checkImage", "image", imageRawURL);
+              Renderer.sendMessage("checkImage", "image", { url: imageRawURL, alt });
             }
           });
         }
       }
       return onClick?.(e);
     },
-    [onClick, preview, src]
+    [alt, onClick, preview, src]
   );
 
   return (

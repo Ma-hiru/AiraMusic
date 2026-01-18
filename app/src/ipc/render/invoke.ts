@@ -2,6 +2,7 @@ import { typedIpcRenderInvoke } from "./typed";
 
 export const rendererInvokeAPI = {
   readFile: (path) => typedIpcRenderInvoke("readFile", path),
+  writeFile: (data) => typedIpcRenderInvoke("writeFile", data),
   GPUInfo: () => typedIpcRenderInvoke("GPUInfo"),
   isMaximized: () => typedIpcRenderInvoke("isMaximized"),
   platform: () => typedIpcRenderInvoke("platform"),

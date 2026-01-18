@@ -1,59 +1,174 @@
 <template>
-  <div
-    ref="viewerRef"
-    class="viewer"
-    @wheel.prevent="onWheel"
-    @pointerdown="onPointerDown"
-    @pointermove="onPointerMove"
-    @pointerup="onPointerUp"
-    @pointerleave="onPointerUp">
-    <img
-      :src="props.src"
-      :alt="props.alt"
-      :style="imgStyle"
-      :class="[
-        status === 'loaded' ? '' : 'hidden',
-        status === 'loading' ? 'animate-pulse' : '',
-        status === 'error' ? 'hidden' : ''
-      ]"
-      ref="imageRef"
-      draggable="false"
-      @loadstart="status = 'loading'"
-      @load="status = 'loaded'"
-      @error="status = 'error'" />
+  <div class="w-full h-full relative">
+    <div class="viewer-title" :class="toolBarVisible && 'active'" @mousemove="showToolBar">
+      <span class="max-w-2/3 truncate text-center">
+        {{ current.alt || current.url }}
+      </span>
+      <span v-if="props.images.length">
+        {{ ` (${index + 1}/${props.images.length}) ` }}
+      </span>
+    </div>
+    <div class="viewer-button" :class="toolBarVisible && 'active'" @mousemove="showToolBar">
+      <CircleArrowLeft
+        class="cursor-pointer hover:opacity-50 active:scale-90 duration-300 transition-all ease-in-out"
+        color="#ffffff"
+        @click="lastImage" />
+      <CircleArrowDown
+        class="cursor-pointer hover:opacity-50 active:scale-90 duration-300 transition-all ease-in-out"
+        color="#ffffff"
+        @click="saveImage" />
+      <CircleArrowRight
+        class="cursor-pointer hover:opacity-50 active:scale-90 duration-300 transition-all ease-in-out"
+        color="#ffffff"
+        @click="nextImage" />
+    </div>
+    <div
+      ref="viewerRef"
+      class="viewer"
+      @wheel.prevent="onWheel"
+      @pointerdown="onPointerDown"
+      @pointermove="onPointerMove"
+      @pointerup="onPointerUp"
+      @pointerleave="onPointerUp"
+      @mousemove="showToolBar">
+      <img
+        :src="current?.url"
+        :alt="current?.alt"
+        :style="imgStyle"
+        :class="[
+          status === 'loaded' ? '' : 'hidden',
+          status === 'loading' ? 'animate-pulse' : '',
+          status === 'error' ? 'hidden' : ''
+        ]"
+        ref="imageRef"
+        draggable="false"
+        @loadstart="status = 'loading'"
+        @load="status = 'loaded'"
+        @error="status = 'error'" />
+    </div>
   </div>
 </template>
 
 <script setup lang="ts" name="ImageViewer">
-  import { computed, ref, CSSProperties, watch, useTemplateRef } from "vue";
+  import { computed, ref, CSSProperties, watch, useTemplateRef, onMounted } from "vue";
   import { clamp } from "lodash-es";
+  import { CircleArrowDown, CircleArrowLeft, CircleArrowRight } from "lucide-vue-next";
+  import { EqError, Log } from "@mahiru/ui/public/utils/dev";
+  import { Renderer } from "@mahiru/ui/public/entry/renderer";
+
+  type ImageEntry = { url?: string; alt?: string };
 
   const viewerRef = useTemplateRef<HTMLDivElement>("viewerRef");
   const imageRef = useTemplateRef<HTMLImageElement>("imageRef");
   const status = ref<"idle" | "loading" | "error" | "loaded">("idle");
-  const props = defineProps<{ src?: string; alt?: string }>();
+  const props = defineProps<{ images: ImageEntry[] }>();
+  const index = ref(0);
+  const current = computed<ImageEntry>(() => {
+    return props.images[index.value] || {};
+  });
   const scale = ref(1);
   const translate = ref({ x: 0, y: 0 });
   const dragging = ref(false);
+  const toolBarVisible = ref(false);
   const imgStyle = computed<CSSProperties>(() => {
     return {
       transform: `translate(${translate.value.x}px, ${translate.value.y}px) scale(${scale.value})`,
       transition: dragging.value ? `none` : `transform 0.2s ease`
     };
   });
+  const emit = defineEmits<{
+    (e: "toolBarChange", visible: boolean): void;
+  }>();
 
   watch(
-    () => props.src,
-    (newURL, oldURL) => {
-      if (newURL !== oldURL) {
+    () => [props.images, props.images.length],
+    () => {
+      console.log("images props", props.images);
+      if (index.value !== props.images.length - 1) {
         status.value = "idle";
+        index.value = Math.max(0, props.images.length - 1);
       }
     }
   );
 
+  onMounted(() => {
+    emit("toolBarChange", toolBarVisible.value);
+  });
+
+  async function saveImage() {
+    if (status.value === "loaded" && current.value.url) {
+      try {
+        let type = "";
+        const buffer = await fetch(current.value.url).then((res) => {
+          if (!res.ok) throw new EqError({ message: "网络错误" });
+          const contentType = res.headers.get("content-type");
+          if (contentType) type = contentType.split("/")[1] || "jpg";
+          return res.arrayBuffer();
+        });
+        const splitSrc = current.value.url.split("/");
+        const name =
+          (current.value.alt ? `${current.value.alt}.${type}` : "") ||
+          splitSrc[splitSrc.length - 1] ||
+          current.value.url ||
+          `unknown.${type}`;
+        const result = (await Renderer.invoke.writeFile(<{ buffer: ArrayBuffer; name: string }>{
+          buffer,
+          name
+        })) as { error?: string; ok: boolean };
+        if (result.error) {
+          Log.error(result.error);
+        }
+      } catch (err) {
+        Log.error(err);
+      }
+    }
+  }
+
+  function lastImage() {
+    index.value = index.value - 1 >= 0 ? index.value - 1 : props.images.length - 1;
+  }
+
+  function nextImage() {
+    index.value = (index.value + 1) % props.images.length;
+  }
+
+  let timer = 0;
+  function showToolBar() {
+    timer && window.clearTimeout(timer);
+    timer = window.setTimeout(() => {
+      toolBarVisible.value = false;
+      emit("toolBarChange", false);
+    }, 3000);
+    toolBarVisible.value = true;
+    emit("toolBarChange", true);
+  }
+
   function reset() {
     scale.value = 1;
     translate.value = { x: 0, y: 0 };
+  }
+
+  function center() {
+    const image = imageRef.value;
+    const viewer = viewerRef.value;
+    if (!image || !viewer) return;
+
+    const { width: containW, height: containH } = calcAbsoluteContainedImageSize(image);
+    if (!containW || !containH) return;
+
+    const viewerW = viewer.clientWidth;
+    const viewerH = viewer.clientHeight;
+
+    // 计算从 contain 到 cover 需要的缩放比例
+    const scaleX = viewerW / containW;
+    const scaleY = viewerH / containH;
+    // 居中放大，translate 保持为 0
+    scale.value = Math.max(scaleX, scaleY);
+    translate.value = { x: 0, y: 0 };
+  }
+
+  function isReset() {
+    return scale.value === 1 && translate.value.x === 0 && translate.value.y === 0;
   }
 
   function calcAbsoluteContainedImageSize(img: HTMLImageElement) {
@@ -116,13 +231,23 @@
     rubberBandTranslate();
   }
 
+  function dClick() {
+    if (isReset()) {
+      center();
+    } else {
+      reset();
+    }
+  }
+
   let last = { x: 0, y: 0 };
+  let startPos = { x: 0, y: 0 };
   let moved = false;
-  let lastTap = 0;
   function onPointerDown(e: PointerEvent) {
     rubberBandTranslate();
     dragging.value = true;
     last = { x: e.clientX, y: e.clientY };
+    startPos = { x: e.clientX, y: e.clientY };
+    moved = false;
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
   }
 
@@ -131,7 +256,10 @@
     const dx = e.clientX - last.x;
     const dy = e.clientY - last.y;
 
-    if (Math.abs(dx) + Math.abs(dy) > 4) {
+    // 使用起始位置计算总移动距离，阈值设为 10 像素
+    const totalDx = e.clientX - startPos.x;
+    const totalDy = e.clientY - startPos.y;
+    if (Math.abs(totalDx) + Math.abs(totalDy) > 10) {
       moved = true;
     }
 
@@ -143,6 +271,8 @@
     last = { x: e.clientX, y: e.clientY };
   }
 
+  let lastTapTime = 0;
+  let lastTapPos = { x: 0, y: 0 };
   function onPointerUp(e: PointerEvent) {
     dragging.value = false;
     (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
@@ -150,11 +280,15 @@
     rubberBandTranslate();
 
     const now = performance.now();
-    if (!moved && now - lastTap < 300) {
-      reset();
+    const tapDist = Math.hypot(e.clientX - lastTapPos.x, e.clientY - lastTapPos.y);
+    // 双击条件：未移动、时间间隔小于 300ms、两次点击位置距离小于 30px
+    if (!moved && now - lastTapTime < 300 && tapDist < 30) {
+      dClick();
+      lastTapTime = 0; // 重置，防止连续触发
+    } else {
+      lastTapTime = now;
+      lastTapPos = { x: e.clientX, y: e.clientY };
     }
-    lastTap = now;
-    moved = false;
   }
 </script>
 
@@ -178,5 +312,44 @@
     cursor: grab;
     will-change: transform;
     object-fit: contain;
+  }
+
+  @mixin tool-bar {
+    position: absolute;
+    left: 0;
+    right: 0;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(2px);
+    z-index: 5;
+    height: 36px;
+    transition: all 0.5s ease-in-out;
+  }
+
+  .viewer-title {
+    @include tool-bar;
+    top: -36px;
+    color: white;
+    font-weight: 500;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+
+    &.active {
+      top: 0;
+    }
+  }
+
+  .viewer-button {
+    @include tool-bar;
+    bottom: -36px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 16px;
+
+    &.active {
+      bottom: 0;
+    }
   }
 </style>
