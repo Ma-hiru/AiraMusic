@@ -102,7 +102,7 @@
         const buffer = await fetch(current.value.url).then((res) => {
           if (!res.ok) throw new EqError({ message: "网络错误" });
           const contentType = res.headers.get("content-type");
-          if (contentType) type = contentType.split("/")[1] || "jpg";
+          if (contentType) type = contentType.split("/")[1]?.split(";")[0] || "jpg";
           return res.arrayBuffer();
         });
         const splitSrc = current.value.url.split("/");

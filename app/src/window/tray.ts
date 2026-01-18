@@ -11,12 +11,13 @@ import {
 import { WindowExits, WindowManager } from "./manager";
 import { preloadPath, staticAssetsDir } from "../utils/path";
 import { join } from "node:path";
-import { isLinux, isMacOS, isWindows, linuxDesktop } from "../utils/platform";
+import { isLinux, isWindows } from "../utils/platform";
 import { Log } from "../utils/log";
 import { getEffectiveWindowSize } from "../utils/screen";
 import { isDev } from "../utils/dev";
 import { EqError } from "../utils/err";
 import { addIpcMainReceiveMessageHandler, typedIpcMainSendMessage } from "../ipc/main/typed";
+import { CreateInfoWindow } from "./info";
 
 export function registerTray() {
   Log.debug("registerTray");
@@ -175,49 +176,81 @@ function setRawMenu(tray: Tray) {
           data: "next"
         });
       }
-    },
-    {
-      label: "显示",
-      click: () => {
-        WindowManager.checkAndShow("main");
-      }
-    },
-    {
-      label: "退出",
-      click: () => {
-        typedIpcMainSendMessage({
-          sender: "main",
-          receiver: "main",
-          type: "playerControl",
-          data: "exit"
-        });
-      }
     }
   ];
   if (trackSync) {
     items.push(
       ...[
         {
-          label: "复制歌名",
+          label: "评论",
           click: () => {
-            trackSync && clipboard.writeText(trackSync.track.name);
+            if (!trackSync) return;
+            CreateInfoWindow();
+            setTimeout(() => {
+              if (!trackSync) return;
+              typedIpcMainSendMessage({
+                sender: "main",
+                receiver: "info",
+                type: "infoSync",
+                data: {
+                  type: "comments",
+                  value: {
+                    type: 0,
+                    id: trackSync.track.id,
+                    track: trackSync.track
+                  }
+                }
+              });
+            }, 3000);
           }
         },
         {
-          label: "复制歌手名",
-          click: () => {
-            trackSync && clipboard.writeText(trackSync.track.ar.map((a) => a.name).join("&"));
-          }
-        },
-        {
-          label: "复制专辑名",
-          click: () => {
-            trackSync && clipboard.writeText(trackSync.track.al.name);
-          }
+          label: "复制",
+          submenu: [
+            {
+              label: "复制歌名",
+              click: () => {
+                trackSync && clipboard.writeText(trackSync.track.name);
+              }
+            },
+            {
+              label: "复制歌手名",
+              click: () => {
+                trackSync && clipboard.writeText(trackSync.track.ar.map((a) => a.name).join("&"));
+              }
+            },
+            {
+              label: "复制专辑名",
+              click: () => {
+                trackSync && clipboard.writeText(trackSync.track.al.name);
+              }
+            }
+          ]
         }
       ]
     );
   }
+  items.push(
+    ...[
+      {
+        label: "显示",
+        click: () => {
+          WindowManager.checkAndShow("main");
+        }
+      },
+      {
+        label: "退出",
+        click: () => {
+          typedIpcMainSendMessage({
+            sender: "main",
+            receiver: "main",
+            type: "playerControl",
+            data: "exit"
+          });
+        }
+      }
+    ]
+  );
   const menu = Menu.buildFromTemplate(items);
 
   tray.setContextMenu(menu);
