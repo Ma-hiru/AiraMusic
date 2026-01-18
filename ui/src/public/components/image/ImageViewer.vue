@@ -51,39 +51,81 @@
     }
   );
 
-  function onWheel(e: WheelEvent) {
-    const delta = e.deltaY > 0 ? -0.1 : 0.1;
-    scale.value = clamp(scale.value + delta, 0.2, 5);
-
-    clampTranslate();
+  function reset() {
+    scale.value = 1;
+    translate.value = { x: 0, y: 0 };
   }
 
-  function clampTranslate() {
+  function calcAbsoluteContainedImageSize(img: HTMLImageElement) {
+    const naturalW = img.naturalWidth;
+    const naturalH = img.naturalHeight;
+    if (!naturalW || !naturalH) return { width: 0, height: 0 };
+
+    const boxW = img.offsetWidth;
+    const boxH = img.offsetHeight;
+    const imgRatio = naturalW / naturalH;
+    const boxRatio = boxW / boxH;
+
+    if (imgRatio > boxRatio) {
+      // 图片更"宽"，宽度撑满，高度按比例
+      return { width: boxW, height: boxW / imgRatio };
+    } else {
+      // 图片更"高"，高度撑满，宽度按比例
+      return { width: boxH * imgRatio, height: boxH };
+    }
+  }
+
+  function calcImageTranslateBounds() {
     const viewer = viewerRef.value;
     const image = imageRef.value;
-    if (!viewer || !image) return;
+    if (!viewer || !image) return { maxX: 0, maxY: 0 };
 
     const viewerWidth = viewer.clientWidth;
     const viewerHeight = viewer.clientHeight;
 
-    const imageWidth = image.offsetWidth * scale.value;
-    const imageHeight = image.offsetHeight * scale.value;
+    const { width: baseW, height: baseH } = calcAbsoluteContainedImageSize(image);
+    const scaledW = baseW * scale.value;
+    const scaledH = baseH * scale.value;
 
-    const maxX = Math.max(0, (imageWidth - viewerWidth) / 2);
-    const maxY = Math.max(0, (imageHeight - viewerHeight) / 2);
+    const maxX = Math.max(0, (scaledW - viewerWidth) / 2);
+    const maxY = Math.max(0, (scaledH - viewerHeight) / 2);
+    return { maxX, maxY };
+  }
 
-    translate.value.x = clamp(translate.value.x, -maxX, maxX);
-    translate.value.y = clamp(translate.value.y, -maxY, maxY);
+  function applyRubberBand(value: number, max: number, damping = 0.4): number {
+    if (value > max) {
+      // 正向越界
+      return max + (value - max) * damping;
+    } else if (value < -max) {
+      // 负向越界
+      return -max + (value + max) * damping;
+    }
+    return value;
+  }
+
+  function rubberBandTranslate() {
+    const { maxX, maxY } = calcImageTranslateBounds();
+    translate.value.x = applyRubberBand(translate.value.x, maxX);
+    translate.value.y = applyRubberBand(translate.value.y, maxY);
+  }
+
+  function onWheel(e: WheelEvent) {
+    const delta = e.deltaY > 0 ? -0.1 : 0.1;
+    scale.value = clamp(scale.value + delta, 0.2, 5);
+
+    rubberBandTranslate();
   }
 
   let last = { x: 0, y: 0 };
+  let moved = false;
+  let lastTap = 0;
   function onPointerDown(e: PointerEvent) {
+    rubberBandTranslate();
     dragging.value = true;
     last = { x: e.clientX, y: e.clientY };
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
   }
 
-  let moved = false;
   function onPointerMove(e: PointerEvent) {
     if (!dragging.value) return;
     const dx = e.clientX - last.x;
@@ -96,17 +138,16 @@
     translate.value.x += dx;
     translate.value.y += dy;
 
-    clampTranslate();
+    rubberBandTranslate();
 
     last = { x: e.clientX, y: e.clientY };
   }
 
-  let lastTap = 0;
   function onPointerUp(e: PointerEvent) {
     dragging.value = false;
     (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
 
-    clampTranslate();
+    rubberBandTranslate();
 
     const now = performance.now();
     if (!moved && now - lastTap < 300) {
@@ -114,11 +155,6 @@
     }
     lastTap = now;
     moved = false;
-  }
-
-  function reset() {
-    scale.value = 1;
-    translate.value = { x: 0, y: 0 };
   }
 </script>
 
