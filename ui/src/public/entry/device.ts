@@ -76,6 +76,37 @@ export class DeviceClass {
       return "unknown";
     });
   }
+
+  get audioDevices() {
+    return new Promise<MediaDeviceInfo[]>((resolve) => {
+      navigator.mediaDevices
+        .enumerateDevices()
+        .then((devices) => {
+          return devices.filter((d) => d.kind === "audiooutput");
+        })
+        .then(resolve)
+        .catch(() => resolve([]));
+    });
+  }
+
+  async setAudioDevice(audio: HTMLAudioElement, device: MediaDeviceInfo) {
+    if (typeof audio.setSinkId !== "function") {
+      Log.warn("not support setSinkId");
+      return false;
+    }
+    try {
+      await audio.setSinkId(device.deviceId);
+      Log.trace("Device.ts", "输出设备切换成功:", device.deviceId);
+    } catch (err) {
+      Log.error(
+        new EqError({
+          raw: err,
+          message: "setSinkId error",
+          label: "Device.ts"
+        })
+      );
+    }
+  }
 }
 
 export const Device = new DeviceClass();
