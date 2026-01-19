@@ -1,5 +1,5 @@
 import SpectrumWorker from "@mahiru/ui/worker/spectrum.ts?worker";
-import { RefObject, useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { EqError, Log } from "@mahiru/ui/public/utils/dev";
 
 export interface SpectrumData {
@@ -16,7 +16,7 @@ export type SpectrumOptions = {
 };
 
 export function useSpectrumWorker(
-  audioRef: RefObject<Nullable<HTMLAudioElement>>,
+  audioRef: HTMLAudioElement,
   isPlaying: boolean,
   options: SpectrumOptions = {}
 ) {
@@ -50,7 +50,6 @@ export function useSpectrumWorker(
       animationFrameRef.current = requestAnimationFrame(updateSpectrum);
       return;
     }
-    // TS 端不做帧率限制：由 wasm/rust 端按 fpsLimit 控制计算频率
     analyser.getFloatTimeDomainData(samples);
     const payload = samples.slice();
     worker.postMessage(
@@ -65,10 +64,8 @@ export function useSpectrumWorker(
   // 初始化 AudioContext 和 AnalyserNode，connect只在一个audioRef上执行一次
   useEffect(() => {
     if (sourceRef.current) return;
-    const audio = audioRef.current;
-    if (!audio) return;
     const ctx = new AudioContext();
-    const source = ctx.createMediaElementSource(audio);
+    const source = ctx.createMediaElementSource(audioRef);
     sourceRef.current = source;
     const analyser = ctx.createAnalyser();
 
@@ -87,10 +84,9 @@ export function useSpectrumWorker(
   }, [audioRef]);
   // 初始化 SpectrumWorker，随着 fftSize、numBands、withPeaks 变化而重新初始化
   useEffect(() => {
-    const audio = audioRef.current;
     const analyser = analyserRef.current;
     const audioCtx = audioCtxRef.current;
-    if (!audio || !analyser || !audioCtx) return;
+    if (!analyser || !audioCtx) return;
 
     analyser.smoothingTimeConstant = 0;
     analyser.fftSize = fftSize;
@@ -160,7 +156,7 @@ export function useSpectrumWorker(
       workerRef.current = null;
       samplesRef.current = null;
     };
-  }, [audioRef, fftSize, numBands, withPeaks, fpsLimit]);
+  }, [fftSize, fpsLimit, numBands, withPeaks]);
   // 当 numBands 或 withPeaks 变化时，更新 spectrumData 的结构
   useEffect(() => {
     spectrumData.current = {

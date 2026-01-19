@@ -7,31 +7,28 @@ const useSyncHookLock = createSyncHookLock("playerProgressSync");
 
 export function usePlayerProgressSyncSend(syncWins: WindowType[]) {
   const { getFinalSendWins, isOwner } = useSyncHookLock(syncWins);
-  const { AudioRefGetter, PlayerProgressGetter } = usePlayerStore([
-    "AudioRefGetter",
-    "PlayerProgressGetter"
-  ]);
-  const audio = AudioRefGetter();
+  const { PlayerCoreGetter } = usePlayerStore(["PlayerCoreGetter"]);
+  const player = PlayerCoreGetter();
 
   const sendProgressSync = useCallback(() => {
     getFinalSendWins().forEach((win) => {
-      Renderer.sendMessage("playerProgressSync", win, PlayerProgressGetter());
+      Renderer.sendMessage("playerProgressSync", win, player.progress);
     });
-  }, [PlayerProgressGetter, getFinalSendWins]);
+  }, [getFinalSendWins, player.progress]);
 
   useEffect(() => {
-    if (!audio || !isOwner()) return;
-    audio.addEventListener("timeupdate", sendProgressSync, { passive: true });
+    if (!isOwner()) return;
+    player.addEventListener("timeupdate", sendProgressSync, { passive: true });
     const subscribe = Renderer.addMessageHandler("requestPlayerProgressSync", null, ({ from }) => {
       if (getFinalSendWins().includes(from)) {
         sendProgressSync();
       }
     });
     return () => {
+      player.removeEventListener("timeupdate", sendProgressSync);
       subscribe();
-      audio.removeEventListener("timeupdate", sendProgressSync);
     };
-  }, [audio, getFinalSendWins, isOwner, sendProgressSync]);
+  }, [getFinalSendWins, isOwner, player, sendProgressSync]);
 
   return { sendProgressSync };
 }

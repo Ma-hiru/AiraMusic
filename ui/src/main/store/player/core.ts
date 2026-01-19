@@ -7,7 +7,7 @@ import { PlayerAudio } from "@mahiru/ui/main/store/player/audio";
 export interface PlayerCore extends WithPlayerStore {}
 
 @AddPlayerStore
-export class PlayerCore {
+export class PlayerCore extends PlayerAudio {
   position = -1;
   playlist: PlayerTrackStatus[] = [];
 
@@ -384,53 +384,28 @@ export class PlayerCore {
     });
   }
 
-  private playerAudio = new PlayerAudio();
+  play = () => {
+    this.playerSnapshot.SetPlayingRequest(this.audio.paused || false);
+  };
 
-  get play() {
-    return this.playerAudio.play;
+  pause = () => {
+    this.playerSnapshot.SetPlayingRequest(false);
+  };
+
+  constructor() {
+    super();
+    this.bindProgressEvents();
   }
 
-  get pause() {
-    return this.playerAudio.pause;
-  }
-
-  get mute() {
-    return this.playerAudio.mute;
-  }
-
-  get unmute() {
-    return this.playerAudio.unmute;
-  }
-
-  get upVolume() {
-    return this.playerAudio.upVolume;
-  }
-
-  get downVolume() {
-    return this.playerAudio.downVolume;
-  }
-
-  get changeVolume() {
-    return this.playerAudio.changeVolume;
-  }
-
-  get changeCurrentTime() {
-    return this.playerAudio.changeCurrentTime;
-  }
-
-  get changeCurrentTimeByPercent() {
-    return this.playerAudio.changeCurrentTimeByPercent;
-  }
-
-  get seekForward() {
-    return this.playerAudio.seekForward;
-  }
-
-  get seekBackward() {
-    return this.playerAudio.seekBackward;
-  }
-
-  get seekTo() {
-    return this.playerAudio.seekTo;
+  protected bindProgressEvents() {
+    super.bindProgressEvents();
+    this.audio.addEventListener("volumechange", () => {
+      this.playerSnapshot.SetPlayerStatus((draft) => {
+        draft.volume = this.audio.volume;
+      });
+    });
+    this.audio.addEventListener("ended", () => {
+      this.next(false);
+    });
   }
 }

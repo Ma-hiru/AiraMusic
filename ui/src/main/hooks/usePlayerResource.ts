@@ -19,20 +19,16 @@ export function usePlayerResource() {
     PlayerTrackStatus,
     SetPlayerTrackStatus,
     SetPlayerStatus,
-    PlayerProgressGetter,
     PlayerCoreGetter,
-    TriggerPlayerFSMEvent,
-    AudioRefGetter
+    TriggerPlayerFSMEvent
   } = usePlayerStore([
     "PlayerFSMStatus",
     "PlayerStatus",
     "SetPlayerTrackStatus",
     "SetPlayerStatus",
-    "PlayerProgressGetter",
     "PlayerTrackStatus",
     "PlayerCoreGetter",
-    "TriggerPlayerFSMEvent",
-    "AudioRefGetter"
+    "TriggerPlayerFSMEvent"
   ]);
   const { Settings } = useLocalStore(["Settings"]);
   const lyricCancelRef = useRef<Nullable<NormalFunc>>(null);
@@ -42,7 +38,6 @@ export function usePlayerResource() {
   const lastAudioSrcRef = useRef<Nullable<string>>(null);
   const lyricVersionPreference = PlayerStatus.lyricPreference;
   const player = PlayerCoreGetter();
-  const audio = AudioRefGetter();
 
   const loadLyric = useCallback(
     async (id: number) => {
@@ -97,7 +92,6 @@ export function usePlayerResource() {
             draft.quality = quality;
           }
         });
-        PlayerProgressGetter().size = meta?.[0]?.size ?? 0;
         return nextAudio;
       } catch (err) {
         if (controller.signal.aborted) return "";
@@ -111,7 +105,7 @@ export function usePlayerResource() {
         return "";
       }
     },
-    [PlayerProgressGetter, SetPlayerTrackStatus]
+    [SetPlayerTrackStatus]
   );
 
   const cancelScheduledPreload = useCallback(() => {
@@ -143,7 +137,7 @@ export function usePlayerResource() {
       async function loadResources() {
         try {
           const current = PlayerTrackStatus;
-          if (!current || !audio) return TriggerPlayerFSMEvent("loadError");
+          if (!current) return TriggerPlayerFSMEvent("loadError");
           const peak = player?.peek();
           const isShuffle = PlayerStatus.shuffle;
           // 检查缓存是否无效(当音频加载失败时，callback会标记缓存无效)，无效则重新加载
@@ -172,12 +166,12 @@ export function usePlayerResource() {
 
           if (shouldReloadTrack && nextAudioSrc && loadingTrackIdRef.current === requestID) {
             // 只在拿到真实音频 URL 时才写入 src，避免空 src 被解析成页面 URL
-            audio.src = nextAudioSrc;
-            audio.load();
+            player.audio.src = nextAudioSrc;
+            player.audio.load();
             lastTrackIdRef.current = trackId;
             lastAudioSrcRef.current = nextAudioSrc;
           } else {
-            audio.currentTime = 0;
+            player.audio.currentTime = 0;
           }
 
           TriggerPlayerFSMEvent("loadSuccess");
@@ -193,7 +187,6 @@ export function usePlayerResource() {
     PlayerStatus.shuffle,
     PlayerTrackStatus,
     TriggerPlayerFSMEvent,
-    audio,
     cancelScheduledPreload,
     loadAudioSource,
     loadLyric,

@@ -6,8 +6,7 @@ export function usePlayerProgressSyncReceive() {
   const [progressSync, setProgressSync] = useState<PlayerProgress>({
     currentTime: 0,
     duration: 0,
-    buffered: 0,
-    size: 0
+    buffered: 0
   });
 
   useLayoutEffect(() => {

@@ -24,20 +24,20 @@ const Lyric: FC<object> = () => {
     PlayerFSMStatus,
     PlayerTrackStatus,
     PlayerProgressGetter,
-    AudioRefGetter,
-    PlayerInitialized
+    PlayerInitialized,
+    PlayerCoreGetter
   } = usePlayerStore([
     "PlayerTrackStatus",
     "PlayerStatus",
     "PlayerProgressGetter",
-    "AudioRefGetter",
     "PlayerFSMStatus",
-    "PlayerInitialized"
+    "PlayerInitialized",
+    "PlayerCoreGetter"
   ]);
   const [lyricLines, setLyricLines] = useState<LyricLine[]>([]);
   const { PlayerVisible } = useLayoutStore(["PlayerVisible"]);
   const { gpu } = useDevice();
-  const audio = AudioRefGetter();
+  const audio = PlayerCoreGetter().audio;
   const lyricPlayerRef = useRef<LyricPlayerRef>(null);
   const lastTrackID = useRef(PlayerTrackStatus?.track.id);
 
@@ -67,7 +67,6 @@ const Lyric: FC<object> = () => {
 
   const onLyricLineClick = useCallback(
     (e: LyricLineMouseEvent) => {
-      if (!audio) return;
       const clickTimeMs = e.line.getLine().startTime;
       const duration = PlayerProgressGetter().duration;
       if (Number.isFinite(clickTimeMs) && Number.isFinite(duration)) {
@@ -80,7 +79,6 @@ const Lyric: FC<object> = () => {
   );
 
   useEffect(() => {
-    if (!audio) return;
     let lastTime = -1;
     let rafId: Nullable<number> = null;
     let isRunning = false;

@@ -6,8 +6,7 @@ export function usePlayerProgressSyncReceiveVue() {
   const progressSync = ref<PlayerProgress>({
     currentTime: 0,
     duration: 0,
-    buffered: 0,
-    size: 0
+    buffered: 0
   });
 
   let unsubscribable: Undefinable<NormalFunc>;

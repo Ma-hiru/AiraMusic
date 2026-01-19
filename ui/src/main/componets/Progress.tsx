@@ -7,22 +7,20 @@ interface ProgressProps {
 }
 
 const Progress: FC<ProgressProps> = ({ render }) => {
-  const { PlayerProgressGetter, AudioRefGetter } = usePlayerStore([
+  const { PlayerProgressGetter, PlayerCoreGetter } = usePlayerStore([
     "PlayerProgressGetter",
-    "AudioRefGetter"
+    "PlayerCoreGetter"
   ]);
   const progress = PlayerProgressGetter();
-  const audio = AudioRefGetter();
+  const player = PlayerCoreGetter();
   const update = useUpdate();
 
   useEffect(() => {
-    if (audio) {
-      audio.addEventListener("timeupdate", update);
-      return () => {
-        audio.removeEventListener("timeupdate", update);
-      };
-    }
-  }, [audio, update]);
+    player.addEventListener("timeupdate", update);
+    return () => {
+      player.removeEventListener("timeupdate", update);
+    };
+  }, [player, update]);
 
   return <>{render(progress)}</>;
 };

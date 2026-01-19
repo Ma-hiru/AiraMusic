@@ -13,27 +13,18 @@ import { PlayerFSMStatusEnum } from "@mahiru/ui/public/enum";
 import { API } from "@mahiru/ui/public/api";
 
 export function usePlayProgress() {
-  const {
-    PlayerTrackStatus,
-    PlayerCoreGetter,
-    PlayerProgressGetter,
-    AudioRefGetter,
-    PlayerFSMStatus,
-    PlayerInitialized
-  } = usePlayerStore([
-    "PlayerTrackStatus",
-    "PlayerProgressGetter",
-    "AudioRefGetter",
-    "PlayerCoreGetter",
-    "PlayerFSMStatus",
-    "PlayerInitialized"
-  ]);
+  const { PlayerTrackStatus, PlayerCoreGetter, PlayerFSMStatus, PlayerInitialized } =
+    usePlayerStore([
+      "PlayerTrackStatus",
+      "PlayerCoreGetter",
+      "PlayerFSMStatus",
+      "PlayerInitialized"
+    ]);
   const [percentScope, percentAnimate] = useAnimate();
   const [bufferScope, bufferAnimate] = useAnimate();
   const [chorus, setChorus] = useState<NeteaseChorusData[]>([]);
   const track = PlayerTrackStatus?.track;
   const player = PlayerCoreGetter();
-  const audio = AudioRefGetter();
   const barRef = useRef<HTMLDivElement>(null);
   const dragPercentRef = useRef(0);
   const isDragging = useRef(false);
@@ -61,13 +52,13 @@ export function usePlayProgress() {
   const tick = useCallback(
     (force: boolean = false) => {
       if (!force && isDragging.current) return;
-      const { buffered, currentTime, duration } = PlayerProgressGetter();
+      const { buffered, currentTime, duration } = player.progress;
       const percent = !duration ? 0 : (currentTime / duration) * 100;
       const buffer = !duration ? 0 : (buffered / duration) * 100;
       updatePercent(percent);
       updateBuffer(buffer);
     },
-    [PlayerProgressGetter, updateBuffer, updatePercent]
+    [player.progress, updateBuffer, updatePercent]
   );
   const tickRef = useRef(tick);
   tickRef.current = tick;
@@ -77,20 +68,19 @@ export function usePlayProgress() {
   ).current;
   // 监听音频事件，自然更新
   useEffect(() => {
-    if (!audio) return;
     const handleTimeUpdate = () => throttleTick();
     const handleLoad = () => throttleTick(true);
-    audio.addEventListener("timeupdate", handleTimeUpdate);
-    audio.addEventListener("loadstart", handleLoad);
-    audio.addEventListener("progress", handleLoad);
-    audio.addEventListener("waiting", handleLoad);
+    player.addEventListener("timeupdate", handleTimeUpdate);
+    player.addEventListener("loadstart", handleLoad);
+    player.addEventListener("progress", handleLoad);
+    player.addEventListener("waiting", handleLoad);
     return () => {
-      audio.removeEventListener("timeupdate", handleTimeUpdate);
-      audio.removeEventListener("loadstart", handleLoad);
-      audio.removeEventListener("progress", handleLoad);
-      audio.removeEventListener("waiting", handleLoad);
+      player.removeEventListener("timeupdate", handleTimeUpdate);
+      player.removeEventListener("loadstart", handleLoad);
+      player.removeEventListener("progress", handleLoad);
+      player.removeEventListener("waiting", handleLoad);
     };
-  }, [audio, throttleTick]);
+  }, [player, throttleTick]);
   // 点击和拖拽
   const calcPercent = useCallback((clientX: number) => {
     const element = barRef.current;
@@ -142,10 +132,10 @@ export function usePlayProgress() {
       .catch(() => setChorus([]));
   }, [PlayerFSMStatus, track]);
   const chorusPercent = useMemo(() => {
-    const duration = audio?.duration;
+    const duration = player.audio.duration;
     if (!duration || duration <= 0) return [];
     return chorus.map((c) => (c.startTime / (1000 * duration)) * 100);
-  }, [audio?.duration, chorus]);
+  }, [chorus, player.audio]);
   // 适当时候强制同步一次
   useEffect(() => {
     const cb = () => throttleTick(true);

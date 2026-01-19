@@ -1,4 +1,4 @@
-import { FC, memo, SyntheticEvent, useCallback, useEffect, useRef, useState } from "react";
+import { FC, memo, useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import { useNetwork } from "@mahiru/ui/public/hooks/useNetwork";
 import { Log } from "@mahiru/ui/public/utils/dev";
@@ -23,7 +23,6 @@ const MusicSource: FC<object> = () => {
   const {
     PlayerCoreGetter,
     PlayerTrackStatus,
-    SetAudioRefGetter,
     PlayerFSMStatus,
     SetSpectrumGetter,
     SpectrumOptions,
@@ -32,28 +31,19 @@ const MusicSource: FC<object> = () => {
     SetPlayingRequest,
     PlayerInitialized,
     PlayerProgressGetter,
-    SetPlayerStatus,
     PlayerStatus,
     InitPlayerCore
   } = usePlayerStore();
   const { IsTyping } = useLayoutStore(["IsTyping"]);
-  // 注入 Audio 元素引用
-  const audioRealRef = useRef<HTMLAudioElement>(null);
-  const audio = audioRealRef.current;
   const player = PlayerCoreGetter();
-  useEffect(() => {
-    SetAudioRefGetter(() => audioRealRef.current);
-    return () => {
-      SetAudioRefGetter(() => null);
-    };
-  }, [SetAudioRefGetter]);
-  // 处理初始化
+
+  // 初始化播放器核心和播放地址，加载上次播放进度和音量
   useEffect(() => {
     InitPlayerCore();
   }, [InitPlayerCore]);
   useEffect(() => {
     if (PlayerInitialized) {
-      const audio = audioRealRef.current;
+      const audio = player.audio;
       const initSrc = PlayerTrackStatus?.audio;
       if (audio && initSrc) {
         audio.src = initSrc;
@@ -64,7 +54,7 @@ const MusicSource: FC<object> = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [PlayerInitialized]);
   const requestPlayingRetryCount = useRef(0);
-  // 处理播放请求
+  // 处理状态机
   useEffect(() => {
     // 当没有播放请求时，仅在 playing 状态下暂停
     if (!PlayingRequest) {
@@ -92,72 +82,41 @@ const MusicSource: FC<object> = () => {
       requestPlayingRetryCount.current = 0;
     }
   }, [PlayerFSMStatus, PlayingRequest, SetPlayingRequest, TriggerPlayerFSMEvent]);
-  // 监听 audio 播放状态变化
-  useEffect(() => {
-    if (!audio) return;
-    const handleTimeUpdate = () => {
-      PlayerProgressGetter().currentTime = audio.currentTime;
-    };
-    const handleDurationChange = () => (PlayerProgressGetter().duration = audio.duration || 0);
-    const handleProgress = () => {
-      if (audio.buffered.length > 0) {
-        PlayerProgressGetter().buffered = audio.buffered.end(audio.buffered.length - 1);
-      }
-    };
-    const handleVolumeChange = () =>
-      SetPlayerStatus((draft) => {
-        draft.volume = audio.volume;
-      });
-    const handleEnded = () => player?.next(false);
-
-    audio.addEventListener("ended", handleEnded, { passive: true });
-    audio.addEventListener("timeupdate", handleTimeUpdate, { passive: true });
-    audio.addEventListener("durationchange", handleDurationChange, { passive: true });
-    audio.addEventListener("progress", handleProgress, { passive: true });
-    audio.addEventListener("volumechange", handleVolumeChange, { passive: true });
-    return () => {
-      audio.removeEventListener("ended", handleEnded);
-      audio.removeEventListener("timeupdate", handleTimeUpdate);
-      audio.removeEventListener("durationchange", handleDurationChange);
-      audio.removeEventListener("progress", handleProgress);
-      audio.removeEventListener("volumechange", handleVolumeChange);
-    };
-  }, [PlayerProgressGetter, SetPlayerStatus, audio, player]);
   // 根据 FSM 状态自动播放或暂停
   useEffect(() => {
     if (PlayerFSMStatus === PlayerFSMStatusEnum.playing) {
       // 检查 src 是否是有效的音频 URL（排除页面 URL）
-      const src = audio?.src || "";
-      const isValidAudioSrc =
-        src && !src.startsWith("http://localhost") && !src.startsWith("https://localhost");
-      if (audio && isValidAudioSrc) {
-        audio.play().catch();
+      const src = player.audio.src;
+      const isValidAudioSrc = !src?.includes("localhost") && !src?.includes("127.0.0.1");
+      if (isValidAudioSrc) {
+        player.playAudio();
       }
     } else {
-      audio && audio.pause();
+      player.pauseAudio();
     }
-  }, [PlayerFSMStatus, audio]);
+  }, [PlayerFSMStatus, player]);
   // 处理音频加载错误
   const login = useLogin();
   const network = useNetwork();
   const { requestToast } = useToast();
-  const onError = useCallback(
-    (err: SyntheticEvent<HTMLAudioElement>) => {
-      const audioEl = err.currentTarget;
-      const currentSrc = audioEl.src;
+  useLayoutEffect(() => {
+    player.audio.addEventListener("error", () => {
+      const currentSrc = player.audio.src;
       // 如果 src 为空或者是空 src 错误，忽略（切换歌曲时的正常情况）
-      if (!currentSrc || audioEl.error?.message?.includes("Empty src") || network === "offline") {
+      if (
+        !currentSrc ||
+        player.audio.error?.message?.includes("Empty src") ||
+        network === "offline"
+      ) {
         return;
       }
       const raw = PlayerTrackStatus?.meta?.[0]?.url;
       if (raw) {
         if (currentSrc !== raw) {
           Log.info("MusicSource.tsx", "cache audio load error, fallback to raw src");
-          audioEl.src = raw;
+          player.audio.src = raw;
           const id = PlayerTrackStatus?.track.id;
-          if (id) {
-            NeteaseTrack.removeCache(id);
-          }
+          if (id) NeteaseTrack.removeCache(id);
         } else {
           if (!Auth.isAccountLoggedIn()) {
             player.pause();
@@ -173,9 +132,8 @@ const MusicSource: FC<object> = () => {
           }
         }
       }
-    },
-    [PlayerTrackStatus?.meta, PlayerTrackStatus?.track.id, login, network, player, requestToast]
-  );
+    });
+  }, [PlayerTrackStatus?.meta, PlayerTrackStatus?.track.id, login, network, player, requestToast]);
   // 注册音频资源加载器
   usePlayerResource();
   // 注册 Media Session API
@@ -266,7 +224,7 @@ const MusicSource: FC<object> = () => {
   }, [PlayerTrackStatus?.track.ar, PlayerTrackStatus?.track.name, defaultTitle, updateWindowTitle]);
   // 注册频谱
   const { spectrumData, isReady } = useSpectrumWorker(
-    audioRealRef,
+    player.audio,
     PlayerFSMStatus === PlayerFSMStatusEnum.playing,
     {
       fftSize: 2048,
@@ -286,15 +244,6 @@ const MusicSource: FC<object> = () => {
   usePlayerStatusSyncSend(["tray", "main"]);
   usePlayerControlSync(["tray", "main"]);
   usePlayerTrackSyncSend(["tray", "main"]);
-  return (
-    <audio
-      className="w-0 h-0 opacity-0"
-      controls={false}
-      autoPlay={false}
-      ref={audioRealRef}
-      preload="auto"
-      onError={onError}
-    />
-  );
+  return null;
 };
 export default memo(MusicSource);

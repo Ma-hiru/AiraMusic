@@ -26,7 +26,6 @@ type PlayerProgress = {
   currentTime: number;
   duration: number;
   buffered: number;
-  size: number;
 };
 
 type LyricVersionType = "raw" | "full" | "tl" | "rm";

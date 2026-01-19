@@ -16,15 +16,9 @@ export function AddPlayerStore(_: Function, ctx: ClassDecoratorContext) {
         return playerStore.getState();
       }
     });
-    Object.defineProperty(this.prototype, "audio", {
-      get() {
-        return playerStore.getState().AudioRefGetter();
-      }
-    });
   });
 }
 
 export interface WithPlayerStore {
   readonly playerSnapshot: PlayerStoreType;
-  readonly audio: Nullable<HTMLAudioElement>;
 }

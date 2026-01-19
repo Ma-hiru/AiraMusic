@@ -14,13 +14,8 @@ function createPlayerRuntime() {
     stack: [],
     timer: null
   };
-  const playerProgress: PlayerProgress = {
-    size: 0,
-    buffered: 0,
-    duration: 0,
-    currentTime: 0
-  };
   const playerCore = new PlayerCore();
+  const playerProgress = playerCore.progress;
   return {
     playerFSM,
     playerFSMEventStack,
@@ -52,11 +47,6 @@ export const PlayerStoreConfig: ZustandConfig<
         }
       });
     }, 25);
-  },
-  SetAudioRefGetter: (getter) => {
-    set((draft) => {
-      draft.AudioRefGetter = getter;
-    });
   },
   SetPlayerStatus: (updater) => {
     set((draft) => {
@@ -106,10 +96,8 @@ export const PlayerStoreConfig: ZustandConfig<
         runtime.playerProgress.currentTime = progress.currentTime;
         runtime.playerProgress.duration = progress.duration;
         runtime.playerProgress.buffered = progress.buffered;
-        runtime.playerProgress.size = progress.size;
       } catch {
         runtime.playerProgress = {
-          size: 0,
           buffered: 0,
           duration: 0,
           currentTime: 0
@@ -174,7 +162,6 @@ export const PlayerStoreConfig: ZustandConfig<
 });
 
 const InitialState: PlayerStoreInitialState = {
-  AudioRefGetter: () => null,
   PlayerProgressGetter: () => runtime.playerProgress,
   SpectrumOptions: null,
   SpectrumGetter: () => ({
@@ -203,7 +190,6 @@ const InitialState: PlayerStoreInitialState = {
 
 export type PlayerStoreInitialState = {
   PlayerFSMStatus: PlayerFSMStatusEnum;
-  AudioRefGetter: NormalFunc<[], Nullable<HTMLAudioElement>>;
   PlayingRequest: boolean;
   PlayerCoreGetter: NormalFunc<[], PlayerCore>;
   PlayerProgressGetter: NormalFunc<[], PlayerProgress>;
@@ -226,7 +212,6 @@ export type PlayerStoreInitialState = {
 
 export type PlayerStoreActions = {
   TriggerPlayerFSMEvent: NormalFunc<[event: PlayerFSMEvent]>;
-  SetAudioRefGetter: NormalFunc<[getter: () => Nullable<HTMLAudioElement>]>;
   SetSpectrumGetter: NormalFunc<[getter: PlayerStoreInitialState["SpectrumGetter"]]>;
   SetSpectrumOptions: NormalFunc<[options: Nullable<SpectrumOptions>]>;
   SetPlayerStatus: NormalFunc<[updater: (draft: PlayerStatus) => void | PlayerStatus]>;

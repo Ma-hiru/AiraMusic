@@ -22,6 +22,10 @@ export const Errs = {
     message:
       "before using useToast, make sure that ToastProvider is mounted and injectToast has been called."
   }),
+  ModalBeforeInject: new EqError({
+    message:
+      "before using useModal, make sure that ModalProvider is mounted and injectModal has been called."
+  }),
   ContextMenuBeforeInject: new EqError({
     message:
       "before using useContextMenu, make sure that MenuProvider is mounted and injectContextMenu has been called."

@@ -13,6 +13,7 @@ import FloatButtons from "./float";
 import MusicSource from "./MusicSource";
 import MenuProvider from "@mahiru/ui/public/components/menu/MenuProvider";
 import ToastProvider from "@mahiru/ui/public/components/toast/ToastProvider";
+import ModalProvider from "@mahiru/ui/public/components/modal/ModalProvider";
 
 const Layout: FC<object> = () => {
   const { stage } = useStage();
@@ -27,20 +28,21 @@ const Layout: FC<object> = () => {
     return () => window.removeEventListener("keydown", handler);
   }, []);
   return (
-    <div className="relative w-screen h-screen overflow-hidden">
-      <div className="w-screen h-screen overflow-hidden relative">
+    <div className="relative w-screen h-screen overflow-hidden scrollbar-hide">
+      <div className="relative w-screen h-screen overflow-hidden scrollbar-hide">
         {stage >= Stage.Immediately && <TopBar />} {/* absolute z-30 */}
         {stage >= Stage.Second && <NavSide />} {/* absolute z-10 */}
         {stage >= Stage.Finally && <PlayerBar />} {/* absolute z-10 */}
         {stage >= Stage.Second && <Content />} {/*relative z-10*/}
       </div>
+      {stage >= Stage.Immediately && <MenuProvider />} {/*z-15*/}
+      {stage >= Stage.Immediately && <ToastProvider />}
+      {stage >= Stage.Immediately && <ModalProvider />}
+      {stage >= Stage.Second && <ThemeColor />}
+      {stage >= Stage.Second && <MusicSource />}
       {stage >= Stage.Finally && <Background />} {/* z-0 */}
       {stage >= Stage.Finally && <PlayerModal />} {/* z-20 */}
-      {stage >= Stage.Second && <FloatButtons />}
-      {stage >= Stage.Second && <ThemeColor />}
-      {stage >= Stage.Finally && <MusicSource />}
-      {stage >= Stage.Finally && <MenuProvider />} {/*z-15*/}
-      {stage >= Stage.Finally && <ToastProvider />}
+      {stage >= Stage.Finally && <FloatButtons />}
     </div>
   );
 };

@@ -25,9 +25,7 @@ const MenuProvider: FC<object> = () => {
   const [visible, setVisible] = useState(false);
   const [render, setRender] = useState<Nullable<ContextMenuRender>>(null);
 
-  const setContextMenuRenderData = useCallback((data: Nullable<ContextMenuRender>) => {
-    setRender(data);
-  }, []);
+  const setContextMenuRenderData = setRender;
 
   const setContextMenuVisible = useCallback((show?: boolean) => {
     if (typeof show === "boolean") {
