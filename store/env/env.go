@@ -9,7 +9,7 @@ import (
 
 var portFlag = flag.Int("port", 8824, "HTTP listen address")
 var ttlFlag = flag.Duration("ttl", 7*24*time.Hour, "store TTL (e.g. 24h)")
-var pathFlag = flag.String("path", filepath.Join(os.TempDir(), "mahiru"), "store path (if empty, use temp dir)")
+var pathFlag = flag.String("path", filepath.Join(os.UserCacheDir(), "mahiru", "music"), "store path (if empty, use temp dir)")
 var schemeFlag = flag.String("scheme", "file", "URL scheme to use for file paths")
 var schemeHostnameFlag = flag.String("scheme-hostname", "local", "Hostname to use in the URL scheme")
 var keyFlag = flag.String("key", "mahiru", "key for store access")
