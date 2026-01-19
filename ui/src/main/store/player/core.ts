@@ -398,6 +398,10 @@ export class PlayerCore {
     return this.playerAudio.mute;
   }
 
+  get unmute() {
+    return this.playerAudio.unmute;
+  }
+
   get upVolume() {
     return this.playerAudio.upVolume;
   }
@@ -416,5 +420,17 @@ export class PlayerCore {
 
   get changeCurrentTimeByPercent() {
     return this.playerAudio.changeCurrentTimeByPercent;
+  }
+
+  get seekForward() {
+    return this.playerAudio.seekForward;
+  }
+
+  get seekBackward() {
+    return this.playerAudio.seekBackward;
+  }
+
+  get seekTo() {
+    return this.playerAudio.seekTo;
   }
 }

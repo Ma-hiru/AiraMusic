@@ -1,48 +1,130 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 import { NeteaseImage } from "@mahiru/ui/public/entry/image";
 import { NeteaseImageSize } from "@mahiru/ui/public/enum";
 
 export function useMediaSession(props: {
   play: NormalFunc<any>;
+  pause: NormalFunc<any>;
   lastTrack: NormalFunc<any>;
   nextTrack: NormalFunc<any>;
+  mute: NormalFunc<any>;
+  unmute: NormalFunc<any>;
+  seekForward: NormalFunc<[gap: number]>;
+  seekBackward: NormalFunc<[gap: number]>;
+  seekTo: NormalFunc<[position: number]>;
+  changeTime: NormalFunc<[position: number]>;
   trackStatus: Nullable<PlayerTrackStatus>;
+  audio?: HTMLAudioElement;
 }) {
-  const { play, lastTrack, nextTrack, trackStatus } = props;
+  const { trackStatus, audio } = props;
+  const getProps = useRef(props);
   const mediaMetadataSignatureRef = useRef("");
-  useEffect(() => {
-    if (!navigator.mediaSession || !trackStatus) return;
+  getProps.current = props;
+
+  useLayoutEffect(() => {
+    if (!window?.navigator?.mediaSession) return;
     const { mediaSession } = navigator;
-    const artist = trackStatus.track.ar.map((artist) => artist.name).join(", ");
+    const { play, pause, lastTrack, nextTrack, seekTo, seekBackward, seekForward, changeTime } =
+      getProps.current;
+
+    const handlers: Record<MediaSessionAction, MediaSessionActionHandler | null> = {
+      play,
+      pause,
+      previoustrack: lastTrack,
+      nexttrack: nextTrack,
+      stop: () => {
+        pause();
+        seekTo(0);
+      },
+      seekforward: () => {
+        seekForward(10);
+      },
+      seekbackward: () => {
+        seekBackward(10);
+      },
+      seekto: (details) => {
+        if (details.seekTime) {
+          if (details.fastSeek) {
+            seekTo(details.seekTime);
+          } else {
+            changeTime(details.seekTime);
+          }
+        }
+      },
+      skipad: null
+    };
+
+    for (const [action, handler] of Object.entries(handlers)) {
+      mediaSession.setActionHandler(action as MediaSessionAction, handler);
+    }
+    return () => {
+      for (const action of Object.keys(handlers)) {
+        mediaSession.setActionHandler(action as MediaSessionAction, null);
+      }
+    };
+  }, []);
+
+  useLayoutEffect(() => {
+    if (!window?.navigator?.mediaSession) return;
+    if (!trackStatus) return;
+    const { mediaSession } = navigator;
+    const artist = trackStatus.track.ar.map((artist) => artist.name).join("&");
     const artworkSrc =
-      NeteaseImage.setSize(trackStatus?.track.al.picUrl, NeteaseImageSize.md) || "";
+      NeteaseImage.setSize(trackStatus?.track.al.picUrl, NeteaseImageSize.lg) || "";
     const signature = `${trackStatus?.track.id}|${artist}|${artworkSrc}`;
     if (mediaMetadataSignatureRef.current !== signature) {
       mediaSession.metadata = new MediaMetadata({
-        title: trackStatus?.track.name,
+        title: trackStatus.track.name,
         artist,
-        album: trackStatus?.track.al.name,
+        album: trackStatus.track.al.name,
         artwork: [
           {
             src: artworkSrc,
             sizes: "500x500",
-            type: "image/png"
+            type: "image/jpg"
           }
         ]
       });
+      mediaSession.setPositionState(undefined);
       mediaMetadataSignatureRef.current = signature;
     }
-    mediaSession.setActionHandler("play", play);
-    mediaSession.setActionHandler("pause", play);
-    mediaSession.setActionHandler("previoustrack", lastTrack);
-    mediaSession.setActionHandler("nexttrack", nextTrack);
-    return () => {
-      mediaSession.setActionHandler("play", null);
-      mediaSession.setActionHandler("pause", null);
-      mediaSession.setActionHandler("previoustrack", null);
-      mediaSession.setActionHandler("nexttrack", null);
-      mediaSession.metadata = null;
-      mediaMetadataSignatureRef.current = "";
+  }, [trackStatus]);
+
+  useEffect(() => {
+    if (!window?.navigator?.mediaSession) return;
+    if (!audio) return;
+    const { mediaSession } = navigator;
+
+    const updatePosition = () => {
+      mediaSession.setPositionState({
+        duration: audio.duration || 0,
+        playbackRate: audio.playbackRate || 1,
+        position: audio.currentTime || 0
+      });
     };
-  }, [lastTrack, nextTrack, play, trackStatus]);
+
+    const updatePlaybackState = () => {
+      mediaSession.playbackState = audio.paused ? "paused" : "playing";
+    };
+
+    audio.addEventListener("play", updatePlaybackState, { passive: true });
+    audio.addEventListener("pause", updatePlaybackState, { passive: true });
+    audio.addEventListener("ended", updatePlaybackState, { passive: true });
+    audio.addEventListener("timeupdate", updatePosition, { passive: true });
+    return () => {
+      audio.removeEventListener("play", updatePlaybackState);
+      audio.removeEventListener("pause", updatePlaybackState);
+      audio.removeEventListener("ended", updatePlaybackState);
+      audio.removeEventListener("timeupdate", updatePosition);
+    };
+  }, [audio]);
+
+  useEffect(() => {
+    if (!window?.navigator?.mediaSession) return;
+    const { mediaSession } = navigator;
+    return () => {
+      mediaSession.metadata = null;
+      mediaSession.setPositionState(undefined);
+    };
+  }, []);
 }

@@ -181,9 +181,16 @@ const MusicSource: FC<object> = () => {
   // 注册 Media Session API
   useMediaSession({
     trackStatus: PlayerTrackStatus,
-    play: () => player?.play?.(),
-    lastTrack: () => player?.last(true),
-    nextTrack: () => player?.next(true)
+    play: player.play,
+    pause: player.pause,
+    lastTrack: player.last,
+    nextTrack: player.next,
+    seekForward: player.seekForward,
+    seekBackward: player.seekBackward,
+    seekTo: player.seekTo,
+    changeTime: player.changeCurrentTime,
+    mute: player.mute,
+    unmute: player.unmute
   });
   // 注册局部键盘快捷键
   const [Shortcuts, setShortcuts] = useState<ShortcutConfig[]>([]);

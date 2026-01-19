@@ -27,6 +27,15 @@ export class PlayerAudio {
     }
   };
 
+  unmute = () => {
+    const audio = this.audio;
+    if (!audio) return;
+    if (audio.muted) {
+      audio.muted = false;
+      audio.volume = this.volumeBeforeMute;
+    }
+  };
+
   upVolume = (gap?: number) => {
     const audio = this.audio;
     if (!audio) return;
@@ -73,5 +82,21 @@ export class PlayerAudio {
       const { duration } = this.playerSnapshot.PlayerProgressGetter();
       this.changeCurrentTime(percent * duration);
     }
+  };
+
+  seekForward = (gap: number) => {
+    const audio = this.audio;
+    if (!audio || !Number.isFinite(gap)) return;
+    this.changeCurrentTime(audio.currentTime + gap);
+  };
+
+  seekBackward = (gap: number) => {
+    const audio = this.audio;
+    if (!audio || !Number.isFinite(gap)) return;
+    this.changeCurrentTime(audio.currentTime - gap);
+  };
+
+  seekTo = (position: number) => {
+    this.changeCurrentTime(position);
   };
 }
