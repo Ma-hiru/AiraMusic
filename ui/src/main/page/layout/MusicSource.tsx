@@ -34,7 +34,7 @@ const MusicSource: FC<object> = () => {
     PlayerStatus,
     InitPlayerCore
   } = usePlayerStore();
-  const { IsTyping } = useLayoutStore(["IsTyping"]);
+  const { IsTyping, TogglePlayerVisible } = useLayoutStore(["IsTyping", "TogglePlayerVisible"]);
   const player = PlayerCoreGetter();
 
   // 初始化播放器核心和播放地址，加载上次播放进度和音量
@@ -152,7 +152,6 @@ const MusicSource: FC<object> = () => {
   });
   // 注册局部键盘快捷键
   const [Shortcuts, setShortcuts] = useState<ShortcutConfig[]>([]);
-  useKeyboardShortcut(Shortcuts);
   useEffect(() => {
     if (IsTyping) {
       setShortcuts([
@@ -177,40 +176,32 @@ const MusicSource: FC<object> = () => {
           key: "ArrowDown",
           description: "减少音量",
           callback: () => player.downVolume(0.1)
+        },
+        {
+          key: "M",
+          description: "静音/取消静音",
+          callback: player.mute
+        },
+        {
+          key: "M",
+          modifiers: ["alt"],
+          callback: TogglePlayerVisible
         }
       ]);
     } else {
-      setShortcuts([
-        {
-          key: " ",
-          description: "播放/暂停",
-          callback: () => player.play()
-        },
-        {
-          key: "ArrowRight",
-          modifiers: ["alt"],
-          description: "下一首",
-          callback: () => player.next(true)
-        },
-        {
-          key: "ArrowLeft",
-          modifiers: ["alt"],
-          description: "上一首",
-          callback: () => player.last()
-        },
-        {
-          key: "ArrowUp",
-          description: "增加音量",
-          callback: () => player.upVolume(0.1)
-        },
-        {
-          key: "ArrowDown",
-          description: "减少音量",
-          callback: () => player.downVolume(0.1)
-        }
-      ]);
+      setShortcuts((shortcuts) => {
+        return [
+          ...shortcuts,
+          {
+            key: " ",
+            description: "播放/暂停",
+            callback: () => player.play()
+          }
+        ];
+      });
     }
-  }, [IsTyping, player]);
+  }, [IsTyping, TogglePlayerVisible, player]);
+  useKeyboardShortcut(Shortcuts);
   // 注册窗口标题
   const { updateWindowTitle, defaultTitle } = useWindowTitle();
   useEffect(() => {

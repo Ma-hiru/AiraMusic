@@ -10,6 +10,35 @@ import * as User from "./user";
 import * as Wiki from "./wiki";
 import * as Search from "./search";
 import * as Similar from "./similar";
+import { EqErrorRaw } from "@mahiru/log/src/err";
+import { Errs } from "@mahiru/ui/public/entry/errs";
+
+function addEqError<T extends Record<string, any>>(module: T): T {
+  if (module && typeof module === "object") {
+    return new Proxy(module, {
+      get(target, key, receiver) {
+        const value = Reflect.get(target, key, receiver);
+        if (typeof value === "function") {
+          return function (...args: any[]) {
+            try {
+              // @ts-expect-error
+              return value.apply(this, args);
+            } catch (err) {
+              if (EqErrorRaw.isEqError(err)) {
+                throw err;
+              } else {
+                throw Errs.NCMServerErr.create(String(key), err);
+              }
+            }
+          };
+        }
+        return value;
+      }
+    });
+  } else {
+    return module;
+  }
+}
 
 export const API = {
   Track,
@@ -25,3 +54,8 @@ export const API = {
   Search,
   Similar
 };
+
+for (const key in API) {
+  // @ts-expect-error
+  API[key] = addEqError(API[key]);
+}

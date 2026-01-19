@@ -15,6 +15,8 @@ export function useToast() {
   return { requestToast, disposeToast };
 }
 
+export const sendToast = requestToast;
+
 export function injectToast(
   request: NormalFunc<[data: Omit<ToastItemData, "id">], string>,
   dispose: NormalFunc<[id: string]>

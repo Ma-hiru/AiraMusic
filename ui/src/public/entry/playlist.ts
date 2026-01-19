@@ -7,6 +7,8 @@ import { NeteaseTrack } from "@mahiru/ui/public/entry/track";
 import { API } from "@mahiru/ui/public/api";
 import { NeteaseImage } from "@mahiru/ui/public/entry/image";
 import { AddLocalStore, WithLocalStore } from "@mahiru/ui/public/store/local";
+import { sendToast, useToast } from "@mahiru/ui/public/hooks/useToast";
+import { Errs } from "@mahiru/ui/public/entry/errs";
 
 export type PlaylistCacheID = `play_list_cache_${string | number}`;
 
@@ -198,44 +200,64 @@ class PlaylistManager {
     whenRequestMissedTracks?: NormalFunc<[missTrack: number]>,
     noCache = false
   ) {
-    const cache = await this.store.getEntry(id);
-    if (cache && !noCache) {
-      this.checkShouldUpdate(cache, async (response, signal) => {
-        const fullList = await this.requestFullTracks(response, undefined, 100, 2);
+    try {
+      const cache = await this.store.getEntry(id);
+      if (cache && !noCache) {
+        this.checkShouldUpdate(cache, async (response, signal) => {
+          const fullList = await this.requestFullTracks(response, undefined, 100, 2);
+          fullList.playlist.tracks = NeteaseTrack.tracksPrivilegeExtends(
+            fullList.playlist.tracks,
+            fullList.privileges
+          );
+          if (signal.aborted) return;
+          fullList.playlist.tracks = await this.requestTracksCoverPreCache(
+            fullList.playlist.tracks,
+            preloadRange,
+            size
+          );
+          if (signal.aborted) return;
+          const entry = this.store.createEntry(fullList);
+          this.store.setEntry(entry);
+          startTransition(() => {
+            if (signal.aborted) return;
+            this.execUpdater(id);
+          });
+        });
+        return cache;
+      } else {
+        const rawList = await API.Playlist.getPlaylistDetail(id);
+        const fullList = await this.requestFullTracks({ ...rawList }, whenRequestMissedTracks);
         fullList.playlist.tracks = NeteaseTrack.tracksPrivilegeExtends(
           fullList.playlist.tracks,
           fullList.privileges
         );
-        if (signal.aborted) return;
         fullList.playlist.tracks = await this.requestTracksCoverPreCache(
           fullList.playlist.tracks,
           preloadRange,
           size
         );
-        if (signal.aborted) return;
         const entry = this.store.createEntry(fullList);
         this.store.setEntry(entry);
-        startTransition(() => {
-          if (signal.aborted) return;
-          this.execUpdater(id);
-        });
+        return entry;
+      }
+    } catch (err) {
+      const error = new EqError({
+        raw: err,
+        message: `failed to request playlist detail for id ${id}`,
+        label: "playlist.ts"
       });
-      return cache;
-    } else {
-      const rawList = await API.Playlist.getPlaylistDetail(id);
-      const fullList = await this.requestFullTracks({ ...rawList }, whenRequestMissedTracks);
-      fullList.playlist.tracks = NeteaseTrack.tracksPrivilegeExtends(
-        fullList.playlist.tracks,
-        fullList.privileges
-      );
-      fullList.playlist.tracks = await this.requestTracksCoverPreCache(
-        fullList.playlist.tracks,
-        preloadRange,
-        size
-      );
-      const entry = this.store.createEntry(fullList);
-      this.store.setEntry(entry);
-      return entry;
+      Log.trace(error);
+      if (Errs.NCMServerErr.eq(err)) {
+        sendToast({
+          type: "info",
+          text: "网络错误"
+        });
+      } else if (Errs.CacheStoreErr.eq(err)) {
+        sendToast({
+          type: "info",
+          text: "内部错误"
+        });
+      }
     }
   }
 

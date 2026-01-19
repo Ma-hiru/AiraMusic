@@ -1,37 +1,30 @@
 export class EqErrorRaw {
-  raw?: Error;
-  label?: string;
+  readonly raw?: Error;
+  readonly label?: string;
   readonly id?: number | string | symbol;
   readonly message: string;
-  private readonly isEqError: boolean;
-  private readonly dev;
+  readonly dev;
+
   constructor(
     props: { raw?: any; label?: string; message: string; id?: number | string | symbol },
     dev: boolean = false
   ) {
-    this.dev = dev;
     const { raw, label, message, id } = props;
-    const [err, isEqError] = EqErrorRaw.anyToError(raw);
-    this.raw = err;
-    this.isEqError = isEqError;
+    this.dev = dev;
+    this.raw = EqErrorRaw.anyToError(raw);
     this.label = label;
     this.message = message;
     this.id = id;
   }
 
-  eq(other: EqErrorRaw, strict: boolean = false) {
-    if (strict) {
-      return (
-        this.raw?.message === other.raw?.message &&
-        this.message === other.message &&
-        (this.id === other.id ||
-          (typeof this.id === "undefined" && typeof other.id === "undefined"))
-      );
-    }
-    if (typeof this.id !== "undefined" && typeof other.id !== "undefined") {
-      return this.id === other.id;
-    }
-    return this.message === other.message;
+  eq(other: unknown, loose = true): other is this {
+    if (!EqErrorRaw.isEqError(other)) return false;
+    if (loose) return this.message === other.message;
+    return (
+      this.getRawMessage() === other.getRawMessage() &&
+      this.message === other.message &&
+      this.id === other.id
+    );
   }
 
   create(label?: string, err?: any) {
@@ -73,28 +66,42 @@ export class EqErrorRaw {
     !this.dev && console.error(this.toString());
   }
 
-  private getRawMessage() {
-    if (this.isEqError) {
-      return "\n  " + this.raw?.message || "";
+  getRawMessage() {
+    if (EqErrorRaw.isEqError(this.raw)) {
+      return "\n  " + this.raw.message || "";
     } else {
       return this.raw?.message || "";
     }
   }
 
-  private static anyToError(source: any): [Error, boolean] {
+  static anyToError(source: any) {
     if (source instanceof Error) {
-      return [source, false];
+      return source;
     } else if (
       typeof source === "string" ||
       typeof source === "number" ||
-      typeof source === "symbol"
+      typeof source === "symbol" ||
+      typeof source === "bigint" ||
+      typeof source === "boolean" ||
+      source instanceof EqErrorRaw
     ) {
-      return [new Error(String(source)), false];
-    } else if (source instanceof EqErrorRaw) {
-      return [new Error(source.toString()), true];
-    } else {
-      return [new Error("Unknown error"), false];
+      return new Error(source.toString());
+    } else if (source === null || source === undefined) {
+      return undefined;
+    } else if (typeof source === "function") {
+      return undefined;
+    } else if (typeof source === "object") {
+      try {
+        return new Error(JSON.stringify(source));
+      } catch {
+        return new Error("Unknown Raw Err Object");
+      }
     }
+  }
+
+  static isEqError(err: unknown): err is EqErrorRaw {
+    if (!err) return false;
+    return err instanceof EqErrorRaw;
   }
 }
 
