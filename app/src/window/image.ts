@@ -37,18 +37,13 @@ export function createImageWindow() {
 }
 
 function loadImageWindowURL(imageWindow: Electron.BrowserWindow, port: string | number) {
-  imageWindow
-    .loadURL(`http://localhost:${port}/image`)
-    .then(() => {
-      isDev() && imageWindow.webContents.openDevTools();
-    })
-    .catch((err) => {
-      Log.error(
-        new EqError({
-          raw: err,
-          message: `failed to load info window URL: http://localhost:${port}/info`,
-          label: "app/window/info.ts"
-        })
-      );
-    });
+  imageWindow.loadURL(`http://localhost:${port}/image`).catch((err) => {
+    Log.error(
+      new EqError({
+        raw: err,
+        message: `failed to load info window URL: http://localhost:${port}/info`,
+        label: "app/window/info.ts"
+      })
+    );
+  });
 }

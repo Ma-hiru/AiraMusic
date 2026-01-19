@@ -36,7 +36,7 @@ const ToastProvider: FC<object> = () => {
 
   return (
     <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 flex flex-col gap-2 duration-300 ease-in-out transition-all">
-      <AnimatePresence mode="popLayout">
+      <AnimatePresence mode="sync">
         {items.map((item) => (
           <motion.div
             layout

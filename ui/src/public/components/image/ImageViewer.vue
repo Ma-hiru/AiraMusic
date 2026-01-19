@@ -4,7 +4,7 @@
       <span class="max-w-2/3 truncate text-center">
         {{ current.alt || current.url }}
       </span>
-      <span v-if="props.images.length">
+      <span v-if="props.images.length && props.images.length > 1">
         {{ ` (${index + 1}/${props.images.length}) ` }}
       </span>
     </div>
@@ -132,15 +132,23 @@
     index.value = (index.value + 1) % props.images.length;
   }
 
+  function toggleToolBar(visible?: boolean) {
+    if (typeof visible === "boolean") {
+      toolBarVisible.value = visible;
+      emit("toolBarChange", visible);
+      return;
+    }
+    toolBarVisible.value = !toolBarVisible.value;
+    emit("toolBarChange", toolBarVisible.value);
+  }
+
   let timer = 0;
   function showToolBar() {
     timer && window.clearTimeout(timer);
     timer = window.setTimeout(() => {
-      toolBarVisible.value = false;
-      emit("toolBarChange", false);
+      toggleToolBar(false);
     }, 3000);
-    toolBarVisible.value = true;
-    emit("toolBarChange", true);
+    toggleToolBar(true);
   }
 
   function reset() {
@@ -165,6 +173,24 @@
     // 居中放大，translate 保持为 0
     scale.value = Math.max(scaleX, scaleY);
     translate.value = { x: 0, y: 0 };
+  }
+
+  function zoomAtPoint(clientX: number, clientY: number) {
+    const viewer = viewerRef.value;
+    if (!viewer) return;
+
+    const viewerRect = viewer.getBoundingClientRect();
+    const relativeX = clientX - viewerRect.x;
+    const relativeY = clientY - viewerRect.y;
+
+    const prevScale = scale.value;
+    const nextScale = isReset() ? 2 : 1;
+
+    translate.value.x = relativeX - ((relativeX - translate.value.x) * nextScale) / prevScale;
+    translate.value.y = relativeY - ((relativeY - translate.value.y) * nextScale) / prevScale;
+    scale.value = nextScale;
+
+    rubberBandTranslate();
   }
 
   function isReset() {
@@ -225,18 +251,35 @@
   }
 
   function onWheel(e: WheelEvent) {
-    const delta = e.deltaY > 0 ? -0.1 : 0.1;
-    scale.value = clamp(scale.value + delta, 0.2, 5);
+    const viewer = viewerRef.value;
+    if (!viewer) return;
 
+    const rect = viewer.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    const prevScale = scale.value;
+    const delta = e.deltaY > 0 ? -0.1 : 0.1;
+    const nextScale = clamp(scale.value + delta, 0.2, 5);
+
+    translate.value.x = x - ((x - translate.value.x) * nextScale) / prevScale;
+    translate.value.y = y - ((y - translate.value.y) * nextScale) / prevScale;
+
+    scale.value = nextScale;
     rubberBandTranslate();
   }
 
-  function dClick() {
+  function dClick(clientX: number, clientY: number) {
     if (isReset()) {
-      center();
+      zoomAtPoint(clientX, clientY);
     } else {
       reset();
     }
+  }
+
+  function click() {
+    toolBarVisible.value = !toolBarVisible.value;
+    emit("toolBarChange", toolBarVisible.value);
   }
 
   let last = { x: 0, y: 0 };
@@ -271,23 +314,34 @@
     last = { x: e.clientX, y: e.clientY };
   }
 
+  let singleTapTimer = 0;
   let lastTapTime = 0;
   let lastTapPos = { x: 0, y: 0 };
   function onPointerUp(e: PointerEvent) {
     dragging.value = false;
     (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
-
     rubberBandTranslate();
+    // 如果是移动过的，则不触发点击事件
+    if (moved) return;
+    // 处理点击事件
+    handleClickEvent(e);
+  }
 
+  function handleClickEvent(e: PointerEvent) {
     const now = performance.now();
     const tapDist = Math.hypot(e.clientX - lastTapPos.x, e.clientY - lastTapPos.y);
-    // 双击条件：未移动、时间间隔小于 300ms、两次点击位置距离小于 30px
-    if (!moved && now - lastTapTime < 300 && tapDist < 30) {
-      dClick();
-      lastTapTime = 0; // 重置，防止连续触发
+    // 双击条件：时间间隔小于 300ms、两次点击位置距离小于 30px
+    if (now - lastTapTime < 300 && tapDist < 30) {
+      singleTapTimer && window.clearTimeout(singleTapTimer);
+      lastTapTime = 0;
+      lastTapPos = { x: 0, y: 0 };
+      dClick(e.clientX, e.clientY);
     } else {
+      // 否则，记录本次点击时间和位置，等待单击定时器
       lastTapTime = now;
       lastTapPos = { x: e.clientX, y: e.clientY };
+      singleTapTimer && window.clearTimeout(singleTapTimer);
+      singleTapTimer = window.setTimeout(click, 300);
     }
   }
 </script>

@@ -32,7 +32,7 @@
   "scripts": {
     "dev:ui": "pnpm --filter @mahiru/ui run dev",
     "dev:app": "pnpm --filter @mahiru/app run dev",
-    "dev:electron": "electron .",
+    "dev:electron": "pnpm electron .",
     "devtools:react": "pnpm exec react-devtools",
     "devtools:vue": "pnpm exec vue-devtools",
     "preview:ui": "pnpm --filter @mahiru/ui run preview",
