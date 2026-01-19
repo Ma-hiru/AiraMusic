@@ -1,6 +1,6 @@
 <template>
   <div class="w-full h-full relative">
-    <div class="viewer-title" :class="toolBarVisible && 'active'" @mousemove="showToolBar">
+    <div class="viewer-title" :class="toolBarVisible && 'active'" @mousemove="toggleToolBar(true)">
       <span class="max-w-2/3 truncate text-center">
         {{ current.alt || current.url }}
       </span>
@@ -8,17 +8,19 @@
         {{ ` (${index + 1}/${props.images.length}) ` }}
       </span>
     </div>
-    <div class="viewer-button" :class="toolBarVisible && 'active'" @mousemove="showToolBar">
-      <CircleArrowLeft
-        class="cursor-pointer hover:opacity-50 active:scale-90 duration-300 transition-all ease-in-out"
+    <div class="viewer-button" :class="toolBarVisible && 'active'" @mousemove="toggleToolBar(true)">
+      <ArrowLeftToLine
+        v-if="props.images.length > 1"
+        class="cursor-pointer hover:opacity-50 active:scale-90 duration-300 transition-all ease-in-out size-5"
         color="#ffffff"
         @click="lastImage" />
-      <CircleArrowDown
-        class="cursor-pointer hover:opacity-50 active:scale-90 duration-300 transition-all ease-in-out"
+      <Download
+        class="cursor-pointer hover:opacity-50 active:scale-90 duration-300 transition-all ease-in-out size-5"
         color="#ffffff"
         @click="saveImage" />
-      <CircleArrowRight
-        class="cursor-pointer hover:opacity-50 active:scale-90 duration-300 transition-all ease-in-out"
+      <ArrowRightToLine
+        v-if="props.images.length > 1"
+        class="cursor-pointer hover:opacity-50 active:scale-90 duration-300 transition-all ease-in-out size-5"
         color="#ffffff"
         @click="nextImage" />
     </div>
@@ -30,7 +32,7 @@
       @pointermove="onPointerMove"
       @pointerup="onPointerUp"
       @pointerleave="onPointerUp"
-      @mousemove="showToolBar">
+      @mousemove="toggleToolBar(true)">
       <img
         :src="current?.url"
         :alt="current?.alt"
@@ -52,7 +54,7 @@
 <script setup lang="ts" name="ImageViewer">
   import { computed, ref, CSSProperties, watch, useTemplateRef, onMounted } from "vue";
   import { clamp } from "lodash-es";
-  import { CircleArrowDown, CircleArrowLeft, CircleArrowRight } from "lucide-vue-next";
+  import { Download, ArrowLeftToLine, ArrowRightToLine } from "lucide-vue-next";
   import { EqError, Log } from "@mahiru/ui/public/utils/dev";
   import { Renderer } from "@mahiru/ui/public/entry/renderer";
 
@@ -132,23 +134,23 @@
     index.value = (index.value + 1) % props.images.length;
   }
 
+  let toolBarTimer = 0;
   function toggleToolBar(visible?: boolean) {
     if (typeof visible === "boolean") {
       toolBarVisible.value = visible;
-      emit("toolBarChange", visible);
-      return;
+    } else {
+      toolBarVisible.value = !toolBarVisible.value;
     }
-    toolBarVisible.value = !toolBarVisible.value;
     emit("toolBarChange", toolBarVisible.value);
-  }
-
-  let timer = 0;
-  function showToolBar() {
-    timer && window.clearTimeout(timer);
-    timer = window.setTimeout(() => {
-      toggleToolBar(false);
-    }, 3000);
-    toggleToolBar(true);
+    if (toolBarVisible.value) {
+      toolBarTimer && window.clearTimeout(toolBarTimer);
+      toolBarTimer = window.setTimeout(() => {
+        toolBarVisible.value = false;
+        emit("toolBarChange", false);
+      }, 3000);
+    } else {
+      toolBarTimer && window.clearTimeout(toolBarTimer);
+    }
   }
 
   function reset() {
@@ -278,8 +280,7 @@
   }
 
   function click() {
-    toolBarVisible.value = !toolBarVisible.value;
-    emit("toolBarChange", toolBarVisible.value);
+    toggleToolBar();
   }
 
   let last = { x: 0, y: 0 };
@@ -361,8 +362,6 @@
   img {
     width: 100%;
     height: 100%;
-    max-width: 100%;
-    max-height: 100%;
     cursor: grab;
     will-change: transform;
     object-fit: contain;
@@ -400,7 +399,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 16px;
+    gap: 32px;
 
     &.active {
       bottom: 0;
