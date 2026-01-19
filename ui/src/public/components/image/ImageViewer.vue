@@ -1,6 +1,7 @@
 <template>
-  <div class="w-full h-full relative">
-    <div class="viewer-title" :class="toolBarVisible && 'active'" @mousemove="toggleToolBar(true)">
+  <div class="w-full h-full relative" @mousemove.passive="toggleToolBar(true)">
+    <slot class="absolute" name="default" />
+    <div class="viewer-title" :class="toolBarVisible && 'active'">
       <span class="max-w-2/3 truncate text-center">
         {{ current.alt || current.url }}
       </span>
@@ -8,31 +9,30 @@
         {{ ` (${index + 1}/${props.images.length}) ` }}
       </span>
     </div>
-    <div class="viewer-button" :class="toolBarVisible && 'active'" @mousemove="toggleToolBar(true)">
+    <div class="viewer-button" :class="toolBarVisible && 'active'">
       <ArrowLeftToLine
         v-if="props.images.length > 1"
         class="cursor-pointer hover:opacity-50 active:scale-90 duration-300 transition-all ease-in-out size-5"
         color="#ffffff"
-        @click="lastImage" />
+        @click.passive="lastImage" />
       <Download
         class="cursor-pointer hover:opacity-50 active:scale-90 duration-300 transition-all ease-in-out size-5"
         color="#ffffff"
-        @click="saveImage" />
+        @click.passive="saveImage" />
       <ArrowRightToLine
         v-if="props.images.length > 1"
         class="cursor-pointer hover:opacity-50 active:scale-90 duration-300 transition-all ease-in-out size-5"
         color="#ffffff"
-        @click="nextImage" />
+        @click.passive="nextImage" />
     </div>
     <div
       ref="viewerRef"
       class="viewer"
       @wheel.prevent="onWheel"
-      @pointerdown="onPointerDown"
-      @pointermove="onPointerMove"
-      @pointerup="onPointerUp"
-      @pointerleave="onPointerUp"
-      @mousemove="toggleToolBar(true)">
+      @pointerdown.passive="onPointerDown"
+      @pointermove.passive="onPointerMove"
+      @pointerup.passive="onPointerUp"
+      @pointerleave.passive="onPointerUp">
       <img
         :src="current?.url"
         :alt="current?.alt"
@@ -136,63 +136,28 @@
 
   let toolBarTimer = 0;
   function toggleToolBar(visible?: boolean) {
-    if (typeof visible === "boolean") {
-      toolBarVisible.value = visible;
-    } else {
-      toolBarVisible.value = !toolBarVisible.value;
-    }
-    emit("toolBarChange", toolBarVisible.value);
-    if (toolBarVisible.value) {
-      toolBarTimer && window.clearTimeout(toolBarTimer);
-      toolBarTimer = window.setTimeout(() => {
-        toolBarVisible.value = false;
-        emit("toolBarChange", false);
-      }, 3000);
-    } else {
-      toolBarTimer && window.clearTimeout(toolBarTimer);
-    }
+    requestAnimationFrame(() => {
+      if (typeof visible === "boolean") {
+        toolBarVisible.value = visible;
+      } else {
+        toolBarVisible.value = !toolBarVisible.value;
+      }
+      emit("toolBarChange", toolBarVisible.value);
+      if (toolBarVisible.value) {
+        toolBarTimer && window.clearTimeout(toolBarTimer);
+        toolBarTimer = window.setTimeout(() => {
+          toolBarVisible.value = false;
+          emit("toolBarChange", false);
+        }, 3000);
+      } else {
+        toolBarTimer && window.clearTimeout(toolBarTimer);
+      }
+    });
   }
 
   function reset() {
     scale.value = 1;
     translate.value = { x: 0, y: 0 };
-  }
-
-  function center() {
-    const image = imageRef.value;
-    const viewer = viewerRef.value;
-    if (!image || !viewer) return;
-
-    const { width: containW, height: containH } = calcAbsoluteContainedImageSize(image);
-    if (!containW || !containH) return;
-
-    const viewerW = viewer.clientWidth;
-    const viewerH = viewer.clientHeight;
-
-    // 计算从 contain 到 cover 需要的缩放比例
-    const scaleX = viewerW / containW;
-    const scaleY = viewerH / containH;
-    // 居中放大，translate 保持为 0
-    scale.value = Math.max(scaleX, scaleY);
-    translate.value = { x: 0, y: 0 };
-  }
-
-  function zoomAtPoint(clientX: number, clientY: number) {
-    const viewer = viewerRef.value;
-    if (!viewer) return;
-
-    const viewerRect = viewer.getBoundingClientRect();
-    const relativeX = clientX - viewerRect.x;
-    const relativeY = clientY - viewerRect.y;
-
-    const prevScale = scale.value;
-    const nextScale = isReset() ? 2 : 1;
-
-    translate.value.x = relativeX - ((relativeX - translate.value.x) * nextScale) / prevScale;
-    translate.value.y = relativeY - ((relativeY - translate.value.y) * nextScale) / prevScale;
-    scale.value = nextScale;
-
-    rubberBandTranslate();
   }
 
   function isReset() {
@@ -235,21 +200,51 @@
     return { maxX, maxY };
   }
 
-  function applyRubberBand(value: number, max: number, damping = 0.4): number {
-    if (value > max) {
-      // 正向越界
-      return max + (value - max) * damping;
-    } else if (value < -max) {
-      // 负向越界
-      return -max + (value + max) * damping;
-    }
-    return value;
+  function limitImageTranslate() {
+    const { maxX, maxY } = calcImageTranslateBounds();
+    translate.value.x = clamp(translate.value.x, -maxX, maxX);
+    translate.value.y = clamp(translate.value.y, -maxY, maxY);
   }
 
-  function rubberBandTranslate() {
-    const { maxX, maxY } = calcImageTranslateBounds();
-    translate.value.x = applyRubberBand(translate.value.x, maxX);
-    translate.value.y = applyRubberBand(translate.value.y, maxY);
+  function center() {
+    const image = imageRef.value;
+    const viewer = viewerRef.value;
+    if (!image || !viewer) return;
+
+    const { width: containW, height: containH } = calcAbsoluteContainedImageSize(image);
+    if (!containW || !containH) return;
+
+    const viewerW = viewer.clientWidth;
+    const viewerH = viewer.clientHeight;
+
+    // 计算从 contain 到 cover 需要的缩放比例
+    const scaleX = viewerW / containW;
+    const scaleY = viewerH / containH;
+    // 居中放大，translate 保持为 0
+    scale.value = Math.max(scaleX, scaleY);
+    translate.value = { x: 0, y: 0 };
+  }
+
+  function zoomAtPoint(clientX: number, clientY: number) {
+    const viewer = viewerRef.value;
+    if (!viewer) return;
+
+    const viewerRect = viewer.getBoundingClientRect();
+    // 鼠标相对于 viewer 中心的位置（因为图片是居中显示的）
+    const centerX = viewerRect.width / 2;
+    const centerY = viewerRect.height / 2;
+    const mouseX = clientX - viewerRect.left - centerX;
+    const mouseY = clientY - viewerRect.top - centerY;
+
+    const prevScale = scale.value;
+    const nextScale = isReset() ? 2 : 1;
+
+    // 保持鼠标指向的图片上的点不变
+    translate.value.x = mouseX - ((mouseX - translate.value.x) * nextScale) / prevScale;
+    translate.value.y = mouseY - ((mouseY - translate.value.y) * nextScale) / prevScale;
+    scale.value = nextScale;
+
+    limitImageTranslate();
   }
 
   function onWheel(e: WheelEvent) {
@@ -257,18 +252,22 @@
     if (!viewer) return;
 
     const rect = viewer.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    // 鼠标相对于 viewer 中心的位置（因为图片是居中显示的）
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+    const mouseX = e.clientX - rect.left - centerX;
+    const mouseY = e.clientY - rect.top - centerY;
 
     const prevScale = scale.value;
     const delta = e.deltaY > 0 ? -0.1 : 0.1;
     const nextScale = clamp(scale.value + delta, 0.2, 5);
 
-    translate.value.x = x - ((x - translate.value.x) * nextScale) / prevScale;
-    translate.value.y = y - ((y - translate.value.y) * nextScale) / prevScale;
+    // 保持鼠标指向的图片上的点不变
+    translate.value.x = mouseX - ((mouseX - translate.value.x) * nextScale) / prevScale;
+    translate.value.y = mouseY - ((mouseY - translate.value.y) * nextScale) / prevScale;
 
     scale.value = nextScale;
-    rubberBandTranslate();
+    limitImageTranslate();
   }
 
   function dClick(clientX: number, clientY: number) {
@@ -287,7 +286,6 @@
   let startPos = { x: 0, y: 0 };
   let moved = false;
   function onPointerDown(e: PointerEvent) {
-    rubberBandTranslate();
     dragging.value = true;
     last = { x: e.clientX, y: e.clientY };
     startPos = { x: e.clientX, y: e.clientY };
@@ -310,7 +308,7 @@
     translate.value.x += dx;
     translate.value.y += dy;
 
-    rubberBandTranslate();
+    limitImageTranslate();
 
     last = { x: e.clientX, y: e.clientY };
   }
@@ -321,7 +319,6 @@
   function onPointerUp(e: PointerEvent) {
     dragging.value = false;
     (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
-    rubberBandTranslate();
     // 如果是移动过的，则不触发点击事件
     if (moved) return;
     // 处理点击事件
@@ -342,7 +339,7 @@
       lastTapTime = now;
       lastTapPos = { x: e.clientX, y: e.clientY };
       singleTapTimer && window.clearTimeout(singleTapTimer);
-      singleTapTimer = window.setTimeout(click, 300);
+      singleTapTimer = window.setTimeout(click, 500);
     }
   }
 </script>

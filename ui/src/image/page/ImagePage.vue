@@ -1,11 +1,12 @@
 <template>
   <div class="w-screen h-screen bg-black relative">
-    <Drag
-      class="absolute left-0 right-0 w-screen flex justify-end items-center px-4 py-2 z-50 duration-500 transition-all ease-in-out h-9"
-      :class="showToolBar ? 'show-control' : 'hide-control'">
-      <TopControlPure color="#ffffff" />
-    </Drag>
-    <ImageViewer :images="images" @tool-bar-change="(visible) => (showToolBar = visible)" />
+    <ImageViewer :images="images" @tool-bar-change="(visible) => (showToolBar = visible)">
+      <Drag
+        class="absolute left-0 right-0 top-0 w-screen flex justify-end items-center px-4 py-2 z-50 duration-500 transition-all ease-in-out h-9"
+        :class="showToolBar ? 'show-control' : 'hide-control'">
+        <TopControlPure color="#ffffff" />
+      </Drag>
+    </ImageViewer>
   </div>
 </template>
 
