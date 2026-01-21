@@ -21,6 +21,11 @@ impl Display for Pixel {
     }
 }
 
+/// HSV:
+/// - Hue: 色相，取值范围为0-360度，表示颜色的类型，如红色、绿色、蓝色等
+/// - Saturation: 饱和度，取值范围为0-1，表示颜色的纯度，0表示灰色，1表示纯色
+/// - Value: 明度，取值范围为0-1，表示颜色的亮度，0表示黑色，1表示最亮色
+#[derive(Clone, Copy, Debug)]
 #[allow(clippy::upper_case_acronyms, unused)]
 pub struct HSV {
     pub h: f32,
@@ -68,10 +73,10 @@ impl From<&Pixel> for HSV {
 }
 
 /// 颜色盒子结构体
-/// r_min, r_max 当前盒子覆盖的红色范围
-/// g_min, g_max 当前盒子覆盖的绿色范围
-/// b_min, b_max 当前盒子覆盖的蓝色范围
-/// pixels 所有落在这个盒子里的像素
+/// - r_min, r_max 当前盒子覆盖的红色范围
+/// - g_min, g_max 当前盒子覆盖的绿色范围
+/// - b_min, b_max 当前盒子覆盖的蓝色范围
+/// - pixels 所有落在这个盒子里的像素
 #[derive(Debug)]
 pub struct ColorBox {
     r_min: u8,
@@ -95,6 +100,17 @@ impl ColorBox {
         let g_range = u8::clamp(self.g_max - self.g_min, 1, 255) as usize;
         let b_range = u8::clamp(self.b_max - self.b_min, 1, 255) as usize;
         r_range * g_range * b_range
+    }
+
+    /// 优先级计算
+    pub fn priority(&self) -> usize {
+        let volume = self.volume();
+        let count = self.pixels_count();
+        if volume > 0 {
+            volume.saturating_mul(count)
+        } else {
+            count
+        }
     }
 
     /// 输出一个“代表色”
@@ -227,17 +243,8 @@ pub struct PriorityBox {
 
 impl PriorityBox {
     pub fn new(color_box: ColorBox) -> Self {
-        // 使用 volume * pixel_count 作为优先级，这是标准 MMCQ 的做法
-        // 如果 volume 为 0，使用 pixel_count 作为备选
-        let volume = color_box.volume();
-        let count = color_box.pixels_count();
-        let priority = if volume > 0 {
-            volume.saturating_mul(count)
-        } else {
-            count
-        };
         Self {
-            priority,
+            priority: color_box.priority(),
             color_box,
         }
     }

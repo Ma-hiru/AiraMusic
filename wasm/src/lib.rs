@@ -1,13 +1,12 @@
 use wasm_bindgen::prelude::wasm_bindgen;
 
-pub mod kmeans;
 pub mod lyric;
 pub mod path;
 pub mod range;
 pub mod renderer;
 pub mod search;
 pub mod spectrum;
-mod theme;
+pub mod theme;
 
 #[wasm_bindgen(start)]
 pub fn init() {

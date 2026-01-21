@@ -79,21 +79,41 @@ pub fn resize_bilinear(
 }
 
 pub fn filter_pixels(pixels: Vec<Pixel>, options: Option<FilterOptions>) -> Vec<Pixel> {
-    let mut result = Vec::new();
     let options = options.unwrap_or_default();
+    let total_count = pixels.len();
 
-    for p in pixels {
+    let mut result = Vec::new();
+    // 灰度像素缓存
+    let mut grayscale_pixels = Vec::new();
+
+    for p in &pixels {
         if p.a < options.alpha_limit {
             continue;
         }
         let hsv = HSV::from(p);
-        if hsv.s < options.saturation_limit {
-            continue;
-        }
         if hsv.v < options.value_min || hsv.v > options.value_max {
             continue;
         }
-        result.push(p);
+        if hsv.s < options.saturation_limit {
+            // 保存灰度像素以备后用
+            grayscale_pixels.push(*p);
+            continue;
+        }
+        result.push(*p);
+    }
+
+    // 如果过滤后的彩色像素太少，说明可能是黑白/灰度图
+    // 此时返回灰度像素，避免噪点主导主题色
+    let min_color_ratio = 0.01;
+    if total_count > 0 && (result.len() as f32 / total_count as f32) < min_color_ratio {
+        // 如果灰度像素也很少，返回所有通过透明度过滤的像素
+        if grayscale_pixels.is_empty() {
+            return pixels
+                .into_iter()
+                .filter(|p| p.a >= options.alpha_limit)
+                .collect();
+        }
+        return grayscale_pixels;
     }
 
     result
