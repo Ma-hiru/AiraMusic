@@ -32,5 +32,6 @@ export const Errs = {
   }),
   KeepAliveNoProvider: new EqError({
     message: "KeepAliveCtx must be used within a KeepAliveProvider"
-  })
+  }),
+  FetchedNotImage: new EqError({ message: "fetched resource is not an image" })
 };

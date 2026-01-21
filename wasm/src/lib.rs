@@ -7,6 +7,7 @@ pub mod range;
 pub mod renderer;
 pub mod search;
 pub mod spectrum;
+mod theme;
 
 #[wasm_bindgen(start)]
 pub fn init() {

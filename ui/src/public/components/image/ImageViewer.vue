@@ -72,10 +72,12 @@
   const translate = ref({ x: 0, y: 0 });
   const dragging = ref(false);
   const toolBarVisible = ref(false);
+  const moved = ref(false);
   const imgStyle = computed<CSSProperties>(() => {
     return {
       transform: `translate(${translate.value.x}px, ${translate.value.y}px) scale(${scale.value})`,
-      transition: dragging.value ? `none` : `transform 0.2s ease`
+      transition: dragging.value ? `none` : `transform 0.2s ease`,
+      cursor: moved.value ? `move` : `default`
     };
   });
   const emit = defineEmits<{
@@ -85,7 +87,6 @@
   watch(
     () => [props.images, props.images.length],
     () => {
-      console.log("images props", props.images);
       if (index.value !== props.images.length - 1) {
         status.value = "idle";
         index.value = Math.max(0, props.images.length - 1);
@@ -284,12 +285,11 @@
 
   let last = { x: 0, y: 0 };
   let startPos = { x: 0, y: 0 };
-  let moved = false;
   function onPointerDown(e: PointerEvent) {
     dragging.value = true;
+    moved.value = false;
     last = { x: e.clientX, y: e.clientY };
     startPos = { x: e.clientX, y: e.clientY };
-    moved = false;
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
   }
 
@@ -302,7 +302,7 @@
     const totalDx = e.clientX - startPos.x;
     const totalDy = e.clientY - startPos.y;
     if (Math.abs(totalDx) + Math.abs(totalDy) > 10) {
-      moved = true;
+      moved.value = true;
     }
 
     translate.value.x += dx;
@@ -320,7 +320,7 @@
     dragging.value = false;
     (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
     // 如果是移动过的，则不触发点击事件
-    if (moved) return;
+    if (moved.value) return (moved.value = false);
     // 处理点击事件
     handleClickEvent(e);
   }
@@ -339,7 +339,7 @@
       lastTapTime = now;
       lastTapPos = { x: e.clientX, y: e.clientY };
       singleTapTimer && window.clearTimeout(singleTapTimer);
-      singleTapTimer = window.setTimeout(click, 500);
+      singleTapTimer = window.setTimeout(click, 300);
     }
   }
 </script>
@@ -359,7 +359,6 @@
   img {
     width: 100%;
     height: 100%;
-    cursor: grab;
     will-change: transform;
     object-fit: contain;
   }
