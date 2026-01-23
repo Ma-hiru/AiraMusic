@@ -2,20 +2,16 @@ import react from "@vitejs/plugin-react";
 import vue from "@vitejs/plugin-vue";
 import wasm from "vite-plugin-wasm";
 import tailwindcss from "@tailwindcss/vite";
-import { defineConfig, loadEnv } from "vite";
+import { defineConfig } from "vite";
 import { fileURLToPath } from "node:url";
 import { join } from "node:path";
+import { loadEnv, generateEnvType } from "../scripts/env";
+
+const __dirname = fileURLToPath(new URL(".", import.meta.url));
 
 export default defineConfig(({ mode }) => {
-  const __dirname = fileURLToPath(new URL(".", import.meta.url));
-  const env = loadEnv(mode, join(__dirname, "../"), [
-    "APP_",
-    "NCM_",
-    "GO_",
-    "EXPRESS_",
-    "VITE_",
-    "UI_"
-  ]) as ImportMetaEnv;
+  const env = loadEnv(mode);
+  generateEnvType(env);
   const defineEnv: Record<string, string> = {};
   for (const k in env) {
     defineEnv[`import.meta.env.${k}`] = JSON.stringify(env[k]);

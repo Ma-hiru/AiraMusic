@@ -30,7 +30,7 @@ export const AppProtocol = import.meta.env.APP_PROTOCOL;
 export const isDev = import.meta.env.DEV;
 export const isRelease = import.meta.env.PROD;
 export const EqError = createEqError(isDev);
-export const Log = createLog(convertToLogLevel(import.meta.env.UI_LOG_LEVEL));
+export const Log = createLog(convertToLogLevel(import.meta.env.UI_LOG_LEVEL as EnvLogLevel));
 
 void nextFrame(() => {
   Renderer.invoke.isMainWindow().then((is) => {

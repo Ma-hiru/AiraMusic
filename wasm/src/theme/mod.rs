@@ -8,6 +8,7 @@ use mmcq::mmcq;
 pub use model::FilterOptions;
 use wasm_bindgen::prelude::wasm_bindgen;
 
+/// 使用 MMCQ 算法提取图片主色调
 #[wasm_bindgen]
 pub fn extractPalette(
     imageBytes: &[u8],
