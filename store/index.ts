@@ -34,14 +34,7 @@ export function startServer(
   }
   if (enableConsole) {
     serverProc = spawn(applicationPath, args, {
-      stdio: [
-        /** 不往子进程输入任何东西 stdin */
-        "ignore",
-        /** 把stdout变成 Node Stream */
-        "pipe",
-        /** 把stderr变成 Node Stream */
-        "pipe"
-      ]
+      stdio: ["ignore", "pipe", "pipe"]
     });
   } else {
     serverProc = spawn(applicationPath, args, {
@@ -60,6 +53,7 @@ export function startServer(
     !logger && console.log("server exited", code);
     logger?.(Buffer.from("server exited: " + code));
     exitHandler?.(code);
+    serverProc?.kill("SIGTERM");
     serverProc = null;
   });
 
@@ -68,7 +62,7 @@ export function startServer(
 
 export function stopServer() {
   if (!serverProc) return true;
-  return serverProc.kill();
+  return serverProc.kill("SIGTERM");
 }
 
 export function isRunning() {

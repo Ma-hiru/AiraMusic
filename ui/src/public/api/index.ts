@@ -10,7 +10,7 @@ import * as User from "./user";
 import * as Wiki from "./wiki";
 import * as Search from "./search";
 import * as Similar from "./similar";
-import { EqErrorRaw } from "@mahiru/log/src/err";
+import { EqErrorRaw } from "@mahiru/log";
 import { Errs } from "@mahiru/ui/public/entry/errs";
 
 function addEqError<T extends Record<string, any>>(module: T): T {

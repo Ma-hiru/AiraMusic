@@ -27,6 +27,7 @@ export type StoreType = {
   };
   settings: {
     closeAppOption: "ask" | "exit";
+    storePath?: string;
   };
   closeAppOption: "ask" | "exit" | "tray";
 };
@@ -37,7 +38,7 @@ export const Store = new ElectronStore<StoreType>({
     mini: { width: 0, height: 0, x: 0, y: 0 },
     lyric: { width: 0, height: 0, x: 0, y: 0 },
     info: { width: 0, height: 0, x: 0, y: 0 },
-    settings: { closeAppOption: "ask" },
+    settings: { closeAppOption: "ask", storePath: undefined },
     closeAppOption: "ask"
   }
 });

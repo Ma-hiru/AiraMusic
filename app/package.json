@@ -1,13 +1,18 @@
 {
   "name": "@mahiru/app",
-  "main": "src/main.ts",
+  "version": "1.0.0",
+  "description": "A third party music player for Netease Music",
+  "author": {
+    "name": "Ma-hiru",
+    "email": "tenshimahiru@qq.com",
+    "github": "https://github.com/Ma-hiru"
+  },
+  "main": "dist/app/main.mjs",
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch"
   },
   "dependencies": {
-    "@mahiru/log": "workspace:^",
-    "@mahiru/store": "workspace:^",
     "@neteasecloudmusicapienhanced/api": "^4.29.17",
     "electron-store": "^11.0.2",
     "express": "^5.1.0",
@@ -16,6 +21,8 @@
   },
   "devDependencies": {
     "@types/express": "^5.0.0",
-    "@types/express-http-proxy": "^1.6.7"
+    "@types/express-http-proxy": "^1.6.7",
+    "@mahiru/log": "workspace:^",
+    "@mahiru/store": "workspace:^"
   }
 }

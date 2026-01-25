@@ -1,3 +1,5 @@
+import { AnyToString } from "../string";
+
 export class EqErrorRaw {
   readonly raw?: Error;
   readonly label?: string;
@@ -77,25 +79,10 @@ export class EqErrorRaw {
   static anyToError(source: any) {
     if (source instanceof Error) {
       return source;
-    } else if (
-      typeof source === "string" ||
-      typeof source === "number" ||
-      typeof source === "symbol" ||
-      typeof source === "bigint" ||
-      typeof source === "boolean" ||
-      source instanceof EqErrorRaw
-    ) {
-      return new Error(source.toString());
     } else if (source === null || source === undefined) {
       return undefined;
-    } else if (typeof source === "function") {
-      return undefined;
-    } else if (typeof source === "object") {
-      try {
-        return new Error(JSON.stringify(source));
-      } catch {
-        return new Error("Unknown Raw Err Object");
-      }
+    } else {
+      return new Error(AnyToString(source));
     }
   }
 

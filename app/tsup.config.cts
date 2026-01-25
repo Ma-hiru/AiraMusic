@@ -17,12 +17,12 @@ export default defineConfig((options) => {
   return [
     {
       entry: ["src/main.ts"],
-      outDir: "../dist/app",
+      outDir: "dist/app",
       format: ["esm"],
       platform: "node",
       target: "node20",
-      sourcemap: true,
-      clean: false,
+      sourcemap: mode === "development",
+      clean: mode === "production",
       dts: false,
       external: ["electron", "esbuild", "esbuild/*", "node:*", "window"],
       noExternal: ["@mahiru/log", "@mahiru/store"],
@@ -37,7 +37,7 @@ export default defineConfig((options) => {
     },
     {
       entry: ["src/preload/index.ts"],
-      outDir: "../dist/preload",
+      outDir: "dist/preload",
       format: ["cjs"],
       platform: "node",
       target: "node20",

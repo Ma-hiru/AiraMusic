@@ -3,22 +3,42 @@
   "productName": "AiraMusic",
   "files": [
     {
-      "from": "dist/app",
-      "to": "app",
-      "filter": ["**/*"]
-    }
+      "from": "app/dist/app/main.mjs",
+      "to": "dist/app/main.mjs"
+    },
+    "app/package.json"
   ],
   "extraResources": [
     {
-      "from": "dist/ui",
+      "from": "ui/dist",
       "to": "ui"
     },
     {
-      "from": "dist/preload/index.js",
+      "from": "app/dist/preload/index.js",
       "to": "preload.js"
+    },
+    {
+      "from": "app/assets",
+      "to": "assets"
     }
   ],
-  "mac": { "target": "dmg" },
-  "linux": { "target": "AppImage", "category": "Utility" },
-  "win": { "target": "nsis" }
+  "linux": {
+    "target": "AppImage",
+    "category": "Utility",
+    "extraResources": [
+      {
+        "from": "store/server",
+        "to": "bin/server"
+      }
+    ]
+  },
+  "win": {
+    "target": "nsis",
+    "extraResources": [
+      {
+        "from": "store/server.exe",
+        "to": "bin/server.exe"
+      }
+    ]
+  }
 }

@@ -23,3 +23,24 @@ export function LogLevelToString(level: LogLevel) {
       return "UNKNOWN";
   }
 }
+
+export function LogLevelFromString(
+  env?: "DEBUG" | "ERROR" | "INFO" | "NONE" | "TRACE" | "WARN" | string
+): LogLevel {
+  switch (env?.toUpperCase()) {
+    case "TRACE":
+      return LogLevel.TRACE;
+    case "DEBUG":
+      return LogLevel.DEBUG;
+    case "INFO":
+      return LogLevel.INFO;
+    case "WARN":
+      return LogLevel.WARN;
+    case "ERROR":
+      return LogLevel.ERROR;
+    case "NONE":
+      return LogLevel.NONE;
+    default:
+      return LogLevel.TRACE;
+  }
+}

@@ -1,7 +1,7 @@
-import { Log } from "../../utils/log";
 import express from "express";
-import { staticUIDir } from "../../utils/path";
 import expressProxy from "express-http-proxy";
+import { Log } from "../../utils/log";
+import { staticUIDir } from "../../utils/path";
 
 export function createProxyServer() {
   Log.debug("Create Express APP");

@@ -32,7 +32,7 @@ export default defineConfig(({ mode }) => {
       vue()
     ],
     build: {
-      outDir: join(__dirname, "../dist/ui"),
+      outDir: join(__dirname, "dist"),
       sourcemap: false,
       rollupOptions: {
         input: {

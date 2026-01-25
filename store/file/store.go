@@ -497,6 +497,7 @@ func (Self *Store) appendIndex(index Index) error {
 
 // 将内存中的索引全部写入索引文件，覆盖写入，由于会销毁 os.File 本函数在销毁存储时执行
 func (Self *Store) storeIndex() error {
+	defer fmt.Println("Store index end")
 	var indexData = make([]Index, 0)
 	Self.indexMappedLock.RLock()
 	for _, index := range Self.indexMapped {

@@ -14,7 +14,7 @@ async function loadServer() {
   return serverImpl;
 }
 
-export async function startNeteaseMusicApiServer() {
+export async function createNeteaseMusicApiServer() {
   try {
     const port = Number(process.env.NCM_SERVER_PORT);
     const server = await loadServer();
