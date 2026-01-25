@@ -63,7 +63,7 @@ export function CreateMiniWindow() {
 }
 
 function loadMiniWindowURL(MiniplayerWindow: Electron.BrowserWindow, port: string | number) {
-  MiniplayerWindow.loadURL(`http://localhost:${port}/mini`).catch((err) => {
+  MiniplayerWindow.loadURL(`http://localhost:${port}/mini.html`).catch((err) => {
     Log.error(
       new EqError({
         raw: err,

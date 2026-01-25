@@ -15,14 +15,14 @@ import { Errs } from "@mahiru/ui/public/entry/errs";
 
 function addEqError<T extends Record<string, any>>(module: T): T {
   if (module && typeof module === "object") {
-    return new Proxy(module, {
-      get(target, key, receiver) {
-        const value = Reflect.get(target, key, receiver);
+    // 使用空对象作为代理目标，因为 ES 模块是只读的
+    return new Proxy({} as T, {
+      get(_, key) {
+        const value = (module as any)[key];
         if (typeof value === "function") {
           return function (...args: any[]) {
             try {
-              // @ts-expect-error
-              return value.apply(this, args);
+              return value.apply(module, args);
             } catch (err) {
               if (EqErrorRaw.isEqError(err)) {
                 throw err;
@@ -33,6 +33,15 @@ function addEqError<T extends Record<string, any>>(module: T): T {
           };
         }
         return value;
+      },
+      has(_, key) {
+        return key in module;
+      },
+      ownKeys() {
+        return Reflect.ownKeys(module);
+      },
+      getOwnPropertyDescriptor(_, key) {
+        return Object.getOwnPropertyDescriptor(module, key);
       }
     });
   } else {

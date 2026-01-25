@@ -5,6 +5,4 @@ packages:
   - log
   - store
 
-nodeLinker: hoisted
-
 registry: https://registry.npmmirror.com

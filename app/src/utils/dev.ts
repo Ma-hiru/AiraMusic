@@ -13,7 +13,7 @@ export function printDevInfo() {
   app.on("ready", () => {
     const dev = isDev();
     const displays = getScreenInfo();
-    Log.info(
+    Log.debug(
       "app/dev.ts:printDevInfo",
       "\n",
       "===================== App Dev Info =====================\n",

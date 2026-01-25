@@ -118,7 +118,7 @@ function createMenu(tray: Tray, trayWin: Optional<BrowserWindow>) {
 }
 
 function loadTrayWindowURL(trayWindow: Electron.BrowserWindow, port: string | number) {
-  trayWindow.loadURL(`http://localhost:${port}/tray`).catch((err) => {
+  trayWindow.loadURL(`http://localhost:${port}/tray.html`).catch((err) => {
     Log.error(
       new EqError({
         raw: err,

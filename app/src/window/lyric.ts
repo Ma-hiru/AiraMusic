@@ -57,7 +57,7 @@ export function CreateLyricWindow() {
 }
 
 function loadLyricWindowURL(LyricWindow: Electron.BrowserWindow, port: string | number) {
-  LyricWindow.loadURL(`http://localhost:${port}/lyric`).catch((err) => {
+  LyricWindow.loadURL(`http://localhost:${port}/lyric.html`).catch((err) => {
     Log.error(
       new EqError({
         raw: err,

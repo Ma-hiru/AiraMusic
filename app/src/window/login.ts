@@ -42,7 +42,7 @@ export function CreateLoginWindow() {
 }
 
 function loadLoginWindowURL(LoginWindow: BrowserWindow, port: string | number) {
-  LoginWindow.loadURL(`http://localhost:${port}/login`).catch((err) => {
+  LoginWindow.loadURL(`http://localhost:${port}/login.html`).catch((err) => {
     Log.error(
       new EqError({
         raw: err,

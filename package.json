@@ -58,6 +58,7 @@
     "lodash-es": "4.17.23"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.1",
     "@types/lodash-es": "^4.17.12",
     "@types/node": "^24.10.0",
     "@typescript/native-preview": "7.0.0-dev.20251215.1",

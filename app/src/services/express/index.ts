@@ -1,15 +1,29 @@
 import express from "express";
 import expressProxy from "express-http-proxy";
+import { join } from "node:path";
 import { Log } from "../../utils/log";
 import { staticUIDir } from "../../utils/path";
+import { isDev } from "../../utils/dev";
 
 export function createProxyServer() {
+  if (isDev()) return;
   Log.debug("Create Express APP");
   const expressAPP = express();
   const port = Number(process.env.EXPRESS_SERVER_PORT);
   const ncmPort = Number(process.env.NCM_SERVER_PORT);
   const cachePort = Number(process.env.GO_SERVER_PORT);
+
+  const serveHtml = (file: string) => (_req: express.Request, res: express.Response) => {
+    res.sendFile(join(staticUIDir, file));
+  };
+
   expressAPP.use("/", express.static(staticUIDir));
+  expressAPP.get("/login", serveHtml("login.html"));
+  expressAPP.get("/info", serveHtml("info.html"));
+  expressAPP.get("/lyric", serveHtml("lyric.html"));
+  expressAPP.get("/image", serveHtml("image.html"));
+  expressAPP.get("/tray", serveHtml("tray.html"));
+  expressAPP.get("/mini", serveHtml("mini.html"));
   expressAPP.use(
     "/api",
     expressProxy(`http://127.0.0.1:${ncmPort}`, {

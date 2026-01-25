@@ -37,7 +37,7 @@ export function createImageWindow() {
 }
 
 function loadImageWindowURL(imageWindow: Electron.BrowserWindow, port: string | number) {
-  imageWindow.loadURL(`http://localhost:${port}/image`).catch((err) => {
+  imageWindow.loadURL(`http://localhost:${port}/image.html`).catch((err) => {
     Log.error(
       new EqError({
         raw: err,

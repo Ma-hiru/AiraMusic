@@ -19,7 +19,7 @@ import { storeServerBinaryPath } from "../utils/path";
 export class APP {
   willQuitAPP!: boolean;
   neteaseMusicAPIServer!: ReturnType<typeof createNeteaseMusicApiServer>;
-  proxyServer!: Server;
+  proxyServer?: Server;
   cacheServer!: number;
 
   private init() {
@@ -83,7 +83,7 @@ export class APP {
     Log.debug("stop all servers");
     return new Promise((resolve) => {
       stopStoreServer();
-      this.proxyServer.close();
+      this.proxyServer?.close();
       this.neteaseMusicAPIServer
         .then((ncm) => {
           Log.debug("stop neteaseMusicAPIServer");
