@@ -1,13 +1,11 @@
 {
   "appId": "com.mahiru.airamusic",
   "productName": "AiraMusic",
-  "files": [
-    {
-      "from": "app/dist/app/main.mjs",
-      "to": "dist/app/main.mjs"
-    },
-    "app/package.json"
-  ],
+  "directories": {
+    "app": "app",
+    "output": "dist"
+  },
+  "files": ["dist/**/*", "package.json"],
   "extraResources": [
     {
       "from": "ui/dist",
