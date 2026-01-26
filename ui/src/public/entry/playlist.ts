@@ -7,7 +7,7 @@ import { NeteaseTrack } from "@mahiru/ui/public/entry/track";
 import { API } from "@mahiru/ui/public/api";
 import { NeteaseImage } from "@mahiru/ui/public/entry/image";
 import { AddLocalStore, WithLocalStore } from "@mahiru/ui/public/store/local";
-import { sendToast, useToast } from "@mahiru/ui/public/hooks/useToast";
+import { sendToast } from "@mahiru/ui/public/hooks/useToast";
 import { Errs } from "@mahiru/ui/public/entry/errs";
 
 export type PlaylistCacheID = `play_list_cache_${string | number}`;
