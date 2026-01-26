@@ -8,7 +8,13 @@ export class CacheStoreBase {
   protected requestCollections = new Map<string, any[]>();
   protected requestCollectionsProps = new Map<
     string,
-    { timer: number; size: number; delay: number; flush: NormalFunc<[collections: any[]]> }
+    {
+      timer: number;
+      size: number;
+      delay: number;
+      flushing: boolean;
+      flush: NormalFunc<[collections: any[]]>;
+    }
   >();
 
   protected registerRequestCollection<T>(
@@ -18,21 +24,33 @@ export class CacheStoreBase {
     flush: NormalFunc<[collections: T[]]>
   ) {
     this.requestCollections.set(key, []);
-    this.requestCollectionsProps.set(key, { timer: 0, size, delay, flush });
+    this.requestCollectionsProps.set(key, {
+      timer: 0,
+      flushing: false,
+      size,
+      delay,
+      flush
+    });
   }
 
   private flushRequestCollection(key: string) {
     const collection = this.requestCollections.get(key);
     const props = this.requestCollectionsProps.get(key);
     if (!collection || !props) return;
+    if (props.flushing) return;
+    props.flushing = true;
 
     props.timer && window.clearTimeout(props.timer);
-    props.timer = 0;
-
     nextFrame().then(() => {
-      if (collection.length === 0) return;
-      const newCollection = [...collection];
+      if (collection.length === 0) {
+        props.timer = 0;
+        props.flushing = false;
+        return;
+      }
+      const newCollection = collection.splice(0, collection.length);
       collection.length = 0;
+      props.timer = 0;
+      props.flushing = false;
       props.flush(newCollection);
     });
   }
@@ -40,7 +58,7 @@ export class CacheStoreBase {
   protected addRequestToCollection<T>(key: string, requestProps: T) {
     const collection = this.requestCollections.get(key);
     const props = this.requestCollectionsProps.get(key);
-    if (!collection || !props) return false;
+    if (!collection || !props) return;
 
     collection.push(requestProps);
 

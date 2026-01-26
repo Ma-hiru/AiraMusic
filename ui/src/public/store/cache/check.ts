@@ -25,14 +25,14 @@ export class CacheStoreForCheck extends CacheStoreBase {
     super();
     this.registerRequestCollection<CheckRequestItem>(
       this.checkCollectionsKey,
-      50,
       100,
+      150,
       this.flushCheckCollections.bind(this)
     );
     this.registerRequestCollection<CheckOrStoreRequestItem>(
       this.checkOrStoreCollectionsKey,
-      50,
       100,
+      150,
       this.flushCheckOrStoreCollections.bind(this)
     );
   }
