@@ -18,7 +18,7 @@ class TaskClass {
       for (const func of task) {
         func()
           .then(() => {
-            Log.trace("task", func.name + " finished");
+            Log.debug("task", func.name + " finished");
           })
           .catch((error) => {
             Log.error(
@@ -39,14 +39,14 @@ class TaskClass {
 
   private onChangeDay(task: NormalFunc<never[], Promise<void>>[]) {
     if (Time.isChangeDay()) {
-      Log.trace("start daily task");
+      Log.debug("start daily task");
       return this.execTask(task);
     }
     return Promise.resolve();
   }
 
   private onStarted(task: NormalFunc<never[], Promise<void>>[]) {
-    Log.trace("start started task");
+    Log.debug("start started task");
     return this.execTask(task);
   }
 
@@ -75,7 +75,7 @@ class TaskClass {
   refreshUserPlaylist = async () => {
     try {
       if (!Auth.isAccountLoggedIn()) return;
-      Log.trace("refresh user playlist");
+      Log.debug("refresh user playlist");
       const { UserProfile } = this.localSnapshot.User;
       const {
         UpdateUserLikedListSummary,

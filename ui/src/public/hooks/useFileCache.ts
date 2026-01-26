@@ -20,7 +20,8 @@ export function useFileCache(
   const request = useCallback(
     (controller?: AbortController) => {
       if (controller?.signal.aborted || !url) return;
-      CacheStore.checkOrStoreAsync(url, id, method, update, timeLimit, controller?.signal)
+      CacheStore.check
+        .orStoreOne(url, id, method, update, timeLimit, controller?.signal)
         .then((check) => {
           if (controller?.signal.aborted) return;
           if (check?.ok && check.index.file) {
@@ -48,14 +49,8 @@ export function useFileCache(
     if (!id || url.startsWith("file") || url.startsWith(AppScheme)) return;
 
     const controller = new AbortController();
-    const run = () => {
-      request(controller);
-    };
-    requestAnimationFrame(run);
-
-    return () => {
-      controller.abort();
-    };
+    requestAnimationFrame(() => request(controller));
+    return () => controller.abort();
   }, [id, pause, request, url]);
 
   if (!url || !id || pause) {

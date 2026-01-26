@@ -28,7 +28,7 @@ const Banner: FC<object> = () => {
       const item = banner[i];
       if (!item) return;
       const { type, id } = Str.parseBannerURL(item.url);
-      Log.trace("Banner clicked", item, type, id);
+      Log.debug("Banner clicked", item, type, id);
       switch (type) {
         case BannerType.song: {
           const detail = await API.Track.getTrackDetail(id);

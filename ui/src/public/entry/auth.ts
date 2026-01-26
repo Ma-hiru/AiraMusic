@@ -71,7 +71,7 @@ export class AuthClass {
 
   refreshProfile = async () => {
     if (!this.isAccountLoggedIn()) return;
-    Log.trace("refresh user profile");
+    Log.debug("refresh user profile");
     const account = await API.User.userAccount();
     const detail = await API.User.userDetail(account.profile.userId);
     const { ids, checkPoint } = await API.User.userLikedSongsIDs(account.profile.userId);
@@ -83,13 +83,13 @@ export class AuthClass {
 
   refreshCookies = async () => {
     if (!this.isAccountLoggedIn()) return;
-    Log.trace("refresh user profile");
+    Log.debug("refresh user profile");
     await API.Auth.refreshCookie();
     this.localProxy.User.LastRefreshCookiesDay = new Date().getDate();
   };
 
   doLogin = (cookies: string) => {
-    Log.trace("doLogin");
+    Log.debug("doLogin");
     this.localProxy.User.UserLoginMode = "account";
     this.localProxy.User.LastRefreshCookiesDay = new Date().getDate();
     this.setCookies(cookies);

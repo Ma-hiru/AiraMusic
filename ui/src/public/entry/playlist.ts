@@ -70,10 +70,10 @@ class PlaylistStore {
     }
     const store = await this.getInStore(cacheID);
     if (store) {
-      Log.trace("PlaylistManager", "从存储获取歌单缓存", id);
+      Log.debug("PlaylistManager", "从存储获取歌单缓存", id);
       return store;
     }
-    Log.trace("PlaylistManager", "未命中歌单缓存", id);
+    Log.debug("PlaylistManager", "未命中歌单缓存", id);
     return null;
   }
 
@@ -81,10 +81,10 @@ class PlaylistStore {
     if (typeof entry === "number") {
       const cacheID = this.getEntryCacheID(entry);
       this._memory.delete(cacheID);
-      void this.cacheStore.remove(cacheID);
+      void this.cacheStore.remove.one(cacheID);
     } else {
       this._memory.delete(entry.playlistCacheId);
-      void this.cacheStore.remove(entry.playlistCacheId);
+      void this.cacheStore.remove.one(entry.playlistCacheId);
     }
   }
 
@@ -118,7 +118,7 @@ class PlaylistStore {
   }
 
   private setInStore(data: PlaylistCacheEntry) {
-    void this.cacheStore.storeObject(data.playlistCacheId, data);
+    void this.cacheStore.object.store(data.playlistCacheId, data);
   }
 
   private getInMemory(id: PlaylistCacheID) {
@@ -132,7 +132,7 @@ class PlaylistStore {
   }
 
   private getInStore(id: PlaylistCacheID) {
-    return this.cacheStore.fetchObject<PlaylistCacheEntry>(id, this._timeLimit);
+    return this.cacheStore.object.fetch<PlaylistCacheEntry>(id, this._timeLimit);
   }
 }
 
@@ -246,7 +246,7 @@ class PlaylistManager {
         message: `failed to request playlist detail for id ${id}`,
         label: "playlist.ts"
       });
-      Log.trace(error);
+      Log.debug(error);
       if (Errs.NCMServerErr.eq(err)) {
         sendToast({
           type: "info",
@@ -328,16 +328,16 @@ class PlaylistManager {
         const findTrackIndex = entry.playlist.tracks.findIndex((t) => t.id === track.id);
         if (!nextStatus && findTrackIndex !== -1) {
           // 取消喜欢时，在喜欢的音乐列表中找到了该歌曲，需要移除
-          Log.trace("取消喜欢歌曲", "找到喜欢列表歌曲，移除", track.id);
+          Log.debug("取消喜欢歌曲", "找到喜欢列表歌曲，移除", track.id);
           entry.playlist.tracks.splice(findTrackIndex, 1);
         } else if (nextStatus) {
           // 新喜欢时，如果在喜欢的音乐列表中找不到该歌曲，需要添加进去
           if (findTrackIndex === -1) {
-            Log.trace("喜欢歌曲", "找不到喜欢的音乐列表中的歌曲，添加进去", track.id);
+            Log.debug("喜欢歌曲", "找不到喜欢的音乐列表中的歌曲，添加进去", track.id);
             entry.playlist.tracks.unshift(track);
           } else {
             // 已经存在喜欢的列表中，需要提前到歌单顶部
-            Log.trace("喜欢歌曲", "喜欢的音乐列表中已经存在该歌曲，提前到歌单顶部", track.id);
+            Log.debug("喜欢歌曲", "喜欢的音乐列表中已经存在该歌曲，提前到歌单顶部", track.id);
             const [likedTrack] = entry.playlist.tracks.splice(findTrackIndex, 1);
             likedTrack && entry.playlist.tracks.unshift(likedTrack);
           }
@@ -400,8 +400,8 @@ class PlaylistManager {
     let check;
     try {
       if (signal?.aborted) return tracks;
-      if (noStore) check = await this.cacheStore.checkMulti(coverURLs);
-      else check = await this.cacheStore.checkOrStoreAsyncMulti(coverURLs, "GET");
+      if (noStore) check = await this.cacheStore.check.multi(coverURLs);
+      else check = await this.cacheStore.check.orStoreMulti(coverURLs, "GET");
     } catch (err) {
       Log.error(
         new EqError({

@@ -35,14 +35,15 @@ export function useFileCacheVue(
     if (controller?.signal.aborted) return;
     const assertURL = unref(url);
     if (!assertURL) return;
-    CacheStore.checkOrStoreAsync(
-      assertURL,
-      resolvedOptions.value.id,
-      resolvedOptions.value.method,
-      resolvedOptions.value.update,
-      resolvedOptions.value.timeLimit,
-      controller?.signal
-    )
+    CacheStore.check
+      .orStoreOne(
+        assertURL,
+        resolvedOptions.value.id,
+        resolvedOptions.value.method,
+        resolvedOptions.value.update,
+        resolvedOptions.value.timeLimit,
+        controller?.signal
+      )
       .then((check) => {
         if (controller?.signal.aborted) return;
         if (check?.ok && check.index.file) {

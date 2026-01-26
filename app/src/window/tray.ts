@@ -94,13 +94,13 @@ function createMenu(tray: Tray, trayWin: Optional<BrowserWindow>) {
   } else {
     if (!trayWin) return;
     tray.on("click", () => {
-      Log.trace("tray", "click");
+      Log.debug("tray", "click");
       const mainWin = WindowManager.get("main");
       if (!mainWin) return;
       mainWin.isVisible() ? mainWin.focus() : mainWin.show();
     });
     tray.on("right-click", () => {
-      Log.trace("tray", "right-click");
+      Log.debug("tray", "right-click");
       setTrayWin(tray, trayWin);
     });
     trayWin.on("blur", () => {
@@ -132,7 +132,7 @@ function loadTrayWindowURL(trayWindow: Electron.BrowserWindow, port: string | nu
 let trackSync: Nullable<PlayerTrackStatus> = null;
 let statusSync: Nullable<PlayerStatusSync> = null;
 function setRawMenu(tray: Tray) {
-  Log.trace("tray", "create menu");
+  Log.debug("tray", "create menu");
   const items: (MenuItem | MenuItemConstructorOptions)[] = [
     {
       label: statusSync?.fsmState === 4 ? "暂停" : "播放",

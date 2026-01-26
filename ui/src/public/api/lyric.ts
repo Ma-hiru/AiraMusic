@@ -23,7 +23,7 @@ class LyricAPIClass {
 
   async getLyric(id: number) {
     const cacheKey = `lyric_${id}`;
-    const cache = await this.cacheStore.fetchObject<NeteaseLyricResponse>(
+    const cache = await this.cacheStore.object.fetch<NeteaseLyricResponse>(
       cacheKey,
       Time.getCacheTimeLimit(30, "day")
     );
@@ -36,8 +36,8 @@ class LyricAPIClass {
       }
     })
       .then((result) => {
-        Log.trace("api/lyric.ts:getLyric", "更新歌词缓存");
-        this.cacheStore.storeObject(cacheKey, result);
+        Log.debug("api/lyric.ts:getLyric", "更新歌词缓存");
+        this.cacheStore.object.store(cacheKey, result);
         return result;
       })
       .catch((err) => {
@@ -47,7 +47,7 @@ class LyricAPIClass {
 
   async getYRCLyric(id: number) {
     const cacheKey = `lyric_yrc_${id}`;
-    const cache = await this.cacheStore.fetchObject<NeteaseLyricResponseNew>(
+    const cache = await this.cacheStore.object.fetch<NeteaseLyricResponseNew>(
       cacheKey,
       Time.getCacheTimeLimit(30, "day")
     );
@@ -61,8 +61,8 @@ class LyricAPIClass {
     )
       .then((res) => res.json())
       .then((result: NeteaseLyricResponseNew) => {
-        Log.trace("api/lyric.ts:getYRCLyric", "更新歌词缓存");
-        this.cacheStore.storeObject(cacheKey, result);
+        Log.debug("api/lyric.ts:getYRCLyric", "更新歌词缓存");
+        this.cacheStore.object.store(cacheKey, result);
         return result;
       })
       .catch((err) => {
@@ -92,7 +92,7 @@ class LyricAPIClass {
   private async getTTMLyricMetadata() {
     if (this.loadedMeta) return;
     const cacheKey = "lyric_ttml_metadata";
-    const meta = await this.cacheStore.fetchObject<{ jsonl: string }>(
+    const meta = await this.cacheStore.object.fetch<{ jsonl: string }>(
       cacheKey,
       Time.getCacheTimeLimit(30, "day")
     );
@@ -112,7 +112,7 @@ class LyricAPIClass {
       .then((jsonl) => {
         if (jsonl) {
           if (this.parseTTMLyricMetadata(jsonl) > 0) {
-            this.cacheStore.storeObject(cacheKey, { jsonl });
+            this.cacheStore.object.store(cacheKey, { jsonl });
             this.loadedMeta = true;
             return;
           }
@@ -128,7 +128,7 @@ class LyricAPIClass {
     await this.getTTMLyricMetadata();
     if (!this.loadedMeta || !this.ttmLyricMeta.has(String(id))) return;
     const cacheKey = `lyric_ttmlyric_${id}`;
-    const cache = await this.cacheStore.fetchObject<{ lyric: string }>(
+    const cache = await this.cacheStore.object.fetch<{ lyric: string }>(
       cacheKey,
       Time.getCacheTimeLimit(30, "day")
     );
@@ -147,11 +147,11 @@ class LyricAPIClass {
         return res.text();
       })
       .then((res) => {
-        res && this.cacheStore.storeObject(cacheKey, { lyric: res });
+        res && this.cacheStore.object.store(cacheKey, { lyric: res });
         return res;
       })
       .catch((err) => {
-        Log.trace("api/lyric.ts:getYRCLyric", "get ttml failed", err);
+        Log.debug("api/lyric.ts:getYRCLyric", "get ttml failed", err);
         return null;
       });
   }

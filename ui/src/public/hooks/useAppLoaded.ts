@@ -8,7 +8,7 @@ function _requestLoaded(broadcast = false, hide = false) {
   if (loaded) return;
   loaded = true;
   Renderer.event.loaded({ broadcast, hide });
-  Log.trace("App loaded");
+  Log.debug("App loaded");
 }
 
 export function useAppLoaded(

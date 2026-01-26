@@ -29,7 +29,7 @@ export function registerSchemes() {
           return handleProtocolLocal(request);
         }
       } catch (err) {
-        Log.trace(
+        Log.debug(
           new EqError({
             raw: err,
             message: "protocol error",
@@ -94,7 +94,7 @@ async function handleProtocolLocal(request: Request) {
       }
     });
   } catch (err) {
-    Log.trace(
+    Log.debug(
       new EqError({
         raw: err,
         message: "protocol error",

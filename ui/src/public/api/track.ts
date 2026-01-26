@@ -60,12 +60,12 @@ export async function getMP3New(id: string | number, level: NeteaseMusicLevel, u
 export async function getTrackDetail(ids: string | number): Promise<NeteaseTrackDetailResponse> {
   const cacheID = `song_detail?ids=` + ids;
   try {
-    const cache = await CacheStore.fetchObject<NeteaseTrackDetailResponse>(
+    const cache = await CacheStore.object.fetch<NeteaseTrackDetailResponse>(
       cacheID,
       Time.getCacheTimeLimit(24, "day")
     );
     if (cache) {
-      Log.trace("api/track.ts:getTrackDetail", "使用歌曲详情缓存", ids);
+      Log.debug("api/track.ts:getTrackDetail", "使用歌曲详情缓存", ids);
       return cache;
     }
   } catch (err) {
@@ -79,9 +79,9 @@ export async function getTrackDetail(ids: string | number): Promise<NeteaseTrack
         ids
       }
     }).then((result) => {
-      Log.trace("api/track.ts:getTrackDetail", "获取歌曲详情并缓存");
+      Log.debug("api/track.ts:getTrackDetail", "获取歌曲详情并缓存");
       try {
-        void CacheStore.storeObject(cacheID, result);
+        void CacheStore.object.store(cacheID, result);
       } catch (err) {
         Log.error(Errs.CacheStoreErr.create("ui/api/track.ts:getTrackDetail", err));
       }
@@ -159,7 +159,7 @@ export function scrobble(lastStatus: PlayerTrackStatus, time: number) {
 export async function getTrackChorus(id: number) {
   const cacheID = `song_chorus_` + id;
   try {
-    const cache = await CacheStore.fetchObject<NeteaseTrackChorusResponse>(
+    const cache = await CacheStore.object.fetch<NeteaseTrackChorusResponse>(
       cacheID,
       Time.getCacheTimeLimit(7, "day")
     );
@@ -172,7 +172,7 @@ export async function getTrackChorus(id: number) {
       params: { id }
     }).then((response) => {
       try {
-        void CacheStore.storeObject(cacheID, response);
+        void CacheStore.object.store(cacheID, response);
       } catch (err) {
         Log.error(Errs.CacheStoreErr.create("track.ts:getTrackChorus", err));
       }

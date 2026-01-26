@@ -33,7 +33,7 @@ export function createSyncHookLock(label?: string) {
 
     useEffect(() => {
       const token = lock.acquire();
-      Log.trace(label, "id", id, "acquired lock:", token?.toString() || "null");
+      Log.debug(label, "id", id, "acquired lock:", token?.toString() || "null");
       symbol.current = token;
       lock.subscribeOwnership(updater);
       return () => {

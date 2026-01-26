@@ -8,6 +8,7 @@ import { EqError, Log } from "@mahiru/ui/public/utils/dev";
 import { NeteaseImage } from "@mahiru/ui/public/entry/image";
 import { NeteaseImageSize } from "@mahiru/ui/public/enum/image";
 import { Auth } from "@mahiru/ui/public/entry/auth";
+import { Net } from "@mahiru/ui/public/entry/net";
 
 @AddCacheStore
 @AddLocalStore
@@ -36,7 +37,7 @@ class NeteaseTrackClass {
   /** 获取Meta，包含缓存源 */
   private async getMeta(id: number, quality?: NeteaseQualityLevels) {
     const cacheKey = this.metaCacheKey(id);
-    const cacheResponse = await this.cacheStore.fetchObject<NeteaseSongUrlResponse>(
+    const cacheResponse = await this.cacheStore.object.fetch<NeteaseSongUrlResponse>(
       cacheKey,
       this._metaCacheTimeLimit
     );
@@ -45,7 +46,7 @@ class NeteaseTrackClass {
     }
     return API.Track.getMP3(id, quality)
       .then((res) => {
-        if (res) void this.cacheStore.storeObject(cacheKey, res);
+        if (res) void this.cacheStore.object.store(cacheKey, res);
         return res?.data || null;
       })
       .catch((err) => {
@@ -63,7 +64,7 @@ class NeteaseTrackClass {
   /** 获取缓存音频源地址 */
   private async getCacheSource(id: number) {
     const cacheKey = this.sourceCacheKey(id);
-    const check = await this.cacheStore.check(cacheKey);
+    const check = await this.cacheStore.check.one(cacheKey);
     return check.ok ? check.index.file : null;
   }
 
@@ -71,7 +72,17 @@ class NeteaseTrackClass {
   private async setCacheSource(id: number, url: string, signal?: AbortSignal) {
     const cacheKey = this.sourceCacheKey(id);
     if (signal && signal.aborted) return;
-    void this.cacheStore.storeAsync(url, cacheKey);
+    let count = 0;
+    const store = () => {
+      if (Net.getStatus().score < 0.7 || count >= 3) {
+        Log.debug("Storing audio source to cache", url, cacheKey);
+        void this.cacheStore.store.one(url, cacheKey);
+      } else {
+        count++;
+        requestIdleCallback(store, { timeout: 5000 });
+      }
+    };
+    window.setTimeout(store, 10000);
   }
 
   /** 删除缓存 */
@@ -79,8 +90,8 @@ class NeteaseTrackClass {
     this._shouldClearCacheList.add(id);
     const metaKey = this.metaCacheKey(id);
     const sourceKey = this.sourceCacheKey(id);
-    void this.cacheStore.remove(metaKey);
-    void this.cacheStore.remove(sourceKey);
+    void this.cacheStore.remove.one(metaKey);
+    void this.cacheStore.remove.one(sourceKey);
   }
 
   /** 加载Track，包含Meta和Source */
@@ -123,7 +134,7 @@ class NeteaseTrackClass {
         tasks.push({ id: this.sourceCacheKey(nextTrack.id), url: audioMeta?.[0]?.url });
       }
       if (tasks.length > 0 && !controller.signal.aborted) {
-        void this.cacheStore.checkOrStoreAsyncMulti(tasks);
+        void this.cacheStore.check.orStoreMulti(tasks);
       }
     }, 10000);
     return () => {

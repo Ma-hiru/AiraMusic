@@ -7,7 +7,7 @@ let loaded = false;
 function _requestLoaded(broadcast = false, hide = false) {
   if (loaded) return;
   loaded = true;
-  Log.trace("App loaded");
+  Log.debug("App loaded");
   Renderer.event.loaded({ broadcast, hide });
 }
 

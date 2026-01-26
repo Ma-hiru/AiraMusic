@@ -96,7 +96,7 @@ export class DeviceClass {
     }
     try {
       await audio.setSinkId(device.deviceId);
-      Log.trace("Device.ts", "输出设备切换成功:", device.deviceId);
+      Log.debug("Device.ts", "输出设备切换成功:", device.deviceId);
     } catch (err) {
       Log.error(
         new EqError({

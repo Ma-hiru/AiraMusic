@@ -154,7 +154,7 @@ export function usePlaylistNormalRender(id?: string) {
     let timer: Nullable<number> = null;
     clearState();
     if (id) {
-      Log.trace("usePlayListNormal", `加载歌单详情 ${id}`);
+      Log.debug("usePlayListNormal", `加载歌单详情 ${id}`);
       Playlist.requestPlaylistDetail(Number(id), [0, 50], NeteaseImageSize.xs, (missedTrack) => {
         if (!cancelled) {
           setRequestMissedTracks(missedTrack);

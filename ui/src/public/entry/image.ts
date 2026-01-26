@@ -5,7 +5,7 @@ import { Log } from "@mahiru/ui/public/utils/dev";
 import { nextIdle } from "@mahiru/ui/public/utils/frame";
 import { setCloseTask } from "@mahiru/ui/public/utils/close";
 
-export type NeteaseImageCacheEntry = { time: number; url?: string };
+export type NeteaseImageCacheEntry = { time: number; file?: string };
 
 @AddCacheStore
 export class NeteaseImageClass {
@@ -26,7 +26,7 @@ export class NeteaseImageClass {
       for (let i = 0; i < removeCount; i++) {
         this.cache.delete(items[i]![0]);
       }
-      Log.trace("NeteaseImageEntry", `Removed ${removeCount} cached images to limit size`);
+      Log.debug("NeteaseImageEntry", `Removed ${removeCount} cached images to limit size`);
     }
   }
 
@@ -35,17 +35,17 @@ export class NeteaseImageClass {
     const now = Date.now();
     const removeIDs: string[] = [];
 
-    for (const [key, { time, url }] of items) {
+    for (const [key, { time, file }] of items) {
       if (now - time > this.timeLimit) {
         // 删除旧缓存
-        url && removeIDs.push(url);
+        file && removeIDs.push(file);
         // 删除缓存
         this.cache.delete(key);
       }
     }
 
-    void this.cacheStore.removeMulti(removeIDs);
-    Log.trace("NeteaseImageEntry", `Removed ${removeIDs.length} expired cached images`);
+    void this.cacheStore.remove.multi(removeIDs);
+    Log.debug("NeteaseImageEntry", `Removed ${removeIDs.length} expired cached images`);
   }
 
   constructor() {
@@ -92,19 +92,19 @@ export class NeteaseImageClass {
     if (!cache && result) {
       requestIdleCallback(() => {
         // 删除文件缓存
-        result.url && this.cacheStore.remove(result.url);
+        result.file && this.cacheStore.remove.one(result.file);
         // 删除内存缓存
         this.cache.delete(key);
       });
     } else if (cache) {
-      if (result?.url && result.url !== cache) {
+      if (result?.file && result.file !== cache) {
         // 删除旧缓存
-        void this.cacheStore.remove(result.url);
+        void this.cacheStore.remove.one(result.file);
       }
       // 更新缓存
       this.cache.set(key, {
         time: Date.now(),
-        url: cache
+        file: cache
       });
     }
 
@@ -125,11 +125,11 @@ export class NeteaseImageClass {
   fetchCacheURL(raw: Optional<string>, size?: NeteaseImageSize) {
     if (!raw) return undefined;
     const key = size ? this.setSize(raw, size) : raw;
-    return this.cache.get(key)?.url || undefined;
+    return this.cache.get(key)?.file || undefined;
   }
 
   async loadCacheFromLocal() {
-    const cache = await this.cacheStore.fetchObject<Record<string, NeteaseImageCacheEntry>>(
+    const cache = await this.cacheStore.object.fetch<Record<string, NeteaseImageCacheEntry>>(
       this.localCacheKey
     );
     if (cache) {
@@ -138,12 +138,13 @@ export class NeteaseImageClass {
         const sortItems = this.sortCacheItems();
         this.limitDate(sortItems);
         this.limitSize(sortItems);
+        Log.debug("NeteaseImageEntry", `Loaded ${this.cache.size} cached images index from local`);
       });
     }
   }
 
   saveCacheToLocal() {
-    return this.cacheStore.storeObject<Record<string, NeteaseImageCacheEntry>>(
+    return this.cacheStore.object.store<Record<string, NeteaseImageCacheEntry>>(
       this.localCacheKey,
       Object.fromEntries(this.cache)
     );

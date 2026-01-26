@@ -46,7 +46,7 @@ export function useMMCQ(
         })
         .catch((err) => {
           if (controller.signal.aborted) return;
-          Log.trace(
+          Log.debug(
             new EqError({
               raw: err,
               message: "failed to extract palette using MMCQ",

@@ -12,7 +12,7 @@ import { typedIpcMainSendMessage } from "../ipc/main/typed";
 export function CreateMainWindow() {
   if (WindowManager.checkAndShow("main")) return;
 
-  Log.trace("Create APP Window");
+  Log.debug("Create APP Window");
   const params = Store.get("window");
   const { x, y } = params || {};
   const mainWindow = createWindow(params);

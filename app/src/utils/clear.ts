@@ -22,6 +22,6 @@ export function clearAllCache() {
     await ses.clearCache();
     // 3. 刷新写入
     ses.flushStorageData();
-    Log.trace("Cache cleared");
+    Log.debug("Cache cleared");
   });
 }

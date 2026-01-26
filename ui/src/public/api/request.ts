@@ -46,7 +46,7 @@ apiRequest.interceptors.response.use(
         const exp = Math.min(cap, base * 2 ** (config.__retryCount - 1));
         const delayTime = Math.random() * exp;
 
-        Log.trace(
+        Log.debug(
           "apiRequest.ts",
           `retry ${config.__retryCount}/${config.__maxRetries} after ${delayTime}ms`
         );

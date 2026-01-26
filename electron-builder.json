@@ -1,5 +1,6 @@
 {
   "appId": "com.mahiru.airamusic",
+  "executableName": "airamusic",
   "productName": "AiraMusic",
   "directories": {
     "app": "app",
