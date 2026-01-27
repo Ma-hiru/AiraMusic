@@ -2,13 +2,8 @@ import { clamp } from "lodash-es";
 import { EqError, Log } from "@mahiru/ui/public/utils/dev";
 
 export class PlayerAudio {
-  private volumeBeforeMute = 0;
   readonly audio = new Audio();
-  readonly progress: PlayerProgress = {
-    duration: 0,
-    currentTime: 0,
-    buffered: 0
-  };
+  private volumeBeforeMute = 0;
 
   mute = () => {
     this.audio.muted = !this.audio.muted;
@@ -109,6 +104,28 @@ export class PlayerAudio {
   pauseAudio = () => {
     if (!this.audio.paused) this.audio.pause();
   };
+
+  public progress = this.defaultProgress;
+
+  get defaultProgress() {
+    return {
+      duration: 0,
+      currentTime: 0,
+      buffered: 0
+    } satisfies PlayerProgress;
+  }
+
+  get currentTime() {
+    return this.audio.currentTime;
+  }
+
+  set currentTime(time: number) {
+    this.changeCurrentTime(time);
+  }
+
+  get paused() {
+    return this.audio.paused;
+  }
 
   readonly addEventListener = this.audio.addEventListener.bind(this.audio);
 

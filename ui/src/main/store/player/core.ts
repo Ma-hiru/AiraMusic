@@ -362,6 +362,7 @@ export class PlayerCore extends PlayerAudio {
   get repeat() {
     return this.playerSnapshot.PlayerStatus.repeat;
   }
+
   set repeat(status: "off" | "one" | "all") {
     startTransition(() => {
       this.playerSnapshot.SetPlayerStatus((draft) => {
@@ -371,9 +372,11 @@ export class PlayerCore extends PlayerAudio {
       });
     });
   }
+
   get shuffle() {
     return this.playerSnapshot.PlayerStatus.shuffle;
   }
+
   set shuffle(status: boolean) {
     startTransition(() => {
       this.playerSnapshot.SetPlayerStatus((draft) => {

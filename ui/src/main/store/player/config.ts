@@ -15,11 +15,9 @@ function createPlayerRuntime() {
     timer: null
   };
   const playerCore = new PlayerCore();
-  const playerProgress = playerCore.progress;
   return {
     playerFSM,
     playerFSMEventStack,
-    playerProgress,
     playerCore
   };
 }
@@ -92,16 +90,9 @@ export const PlayerStoreConfig: ZustandConfig<
     const progressCache = localStorage.getItem("playerProgressCache");
     if (progressCache) {
       try {
-        const progress = JSON.parse(progressCache) as PlayerProgress;
-        runtime.playerProgress.currentTime = progress.currentTime;
-        runtime.playerProgress.duration = progress.duration;
-        runtime.playerProgress.buffered = progress.buffered;
+        runtime.playerCore.progress = JSON.parse(progressCache) as PlayerProgress;
       } catch {
-        runtime.playerProgress = {
-          buffered: 0,
-          duration: 0,
-          currentTime: 0
-        };
+        runtime.playerCore.progress = runtime.playerCore.defaultProgress;
       }
     }
 
@@ -121,7 +112,7 @@ export const PlayerStoreConfig: ZustandConfig<
       draft.PlayerStatus.playerList = playlist;
       draft.PlayerStatus.position = position;
     });
-    localStorage.setItem("playerProgressCache", JSON.stringify(runtime.playerProgress));
+    localStorage.setItem("playerProgressCache", JSON.stringify(runtime.playerCore.progress));
   },
   SetSpectrumOptions: (options) => {
     set((draft) => {
@@ -162,7 +153,7 @@ export const PlayerStoreConfig: ZustandConfig<
 });
 
 const InitialState: PlayerStoreInitialState = {
-  PlayerProgressGetter: () => runtime.playerProgress,
+  PlayerProgressGetter: () => runtime.playerCore.progress,
   SpectrumOptions: null,
   SpectrumGetter: () => ({
     data: null,

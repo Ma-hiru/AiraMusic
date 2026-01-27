@@ -1,27 +1,15 @@
-import {
-  FC,
-  memo,
-  startTransition,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState
-} from "react";
+import { FC, memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import { usePlayerStore } from "@mahiru/ui/main/store/player";
-import { useLayoutStore } from "@mahiru/ui/main/store/layout";
 import { useDevice } from "@mahiru/ui/public/hooks/useDevice";
 import { NeteaseLyric } from "@mahiru/ui/public/entry/lyric";
 import { LyricLineMouseEvent } from "@applemusic-like-lyrics/core";
 import { clamp } from "lodash-es";
-import { PlayerFSMStatusEnum } from "@mahiru/ui/public/enum";
 
 import LyricPlayer, { LyricPlayerRef } from "@mahiru/ui/public/components/player/LyricPlayer";
 
 const Lyric: FC<object> = () => {
   const {
     PlayerStatus,
-    PlayerFSMStatus,
     PlayerTrackStatus,
     PlayerProgressGetter,
     PlayerInitialized,
@@ -30,52 +18,29 @@ const Lyric: FC<object> = () => {
     "PlayerTrackStatus",
     "PlayerStatus",
     "PlayerProgressGetter",
-    "PlayerFSMStatus",
     "PlayerInitialized",
     "PlayerCoreGetter"
   ]);
-  const [lyricLines, setLyricLines] = useState<LyricLine[]>([]);
-  const { PlayerVisible } = useLayoutStore(["PlayerVisible"]);
   const { gpu } = useDevice();
-  const audio = PlayerCoreGetter().audio;
+  const player = PlayerCoreGetter();
   const lyricPlayerRef = useRef<LyricPlayerRef>(null);
-  const lastTrackID = useRef(PlayerTrackStatus?.track.id);
 
   const lines = useMemo(
     () => NeteaseLyric.chooseLyric(PlayerTrackStatus?.lyric, PlayerStatus.lyricVersion, true),
     [PlayerStatus.lyricVersion, PlayerTrackStatus?.lyric]
   );
 
-  // 切换时，先清空一次，释放内存
-  useEffect(() => {
-    const currentID = PlayerTrackStatus?.track.id;
-    if (!currentID) return;
-    if (currentID !== lastTrackID.current) {
-      lastTrackID.current = currentID;
-      startTransition(() => {
-        setLyricLines([]);
-      });
-    } else {
-      requestIdleCallback(
-        () => {
-          setLyricLines(lines);
-        },
-        { timeout: 2000 }
-      );
-    }
-  }, [PlayerTrackStatus?.track.id, lines]);
-
   const onLyricLineClick = useCallback(
     (e: LyricLineMouseEvent) => {
       const clickTimeMs = e.line.getLine().startTime;
       const duration = PlayerProgressGetter().duration;
       if (Number.isFinite(clickTimeMs) && Number.isFinite(duration)) {
-        audio.currentTime = clamp(clickTimeMs / 1000, 0, duration);
+        player.currentTime = clamp(clickTimeMs / 1000, 0, duration);
         lyricPlayerRef.current?.lyricPlayer?.resetScroll();
         lyricPlayerRef.current?.lyricPlayer?.calcLayout();
       }
     },
-    [PlayerProgressGetter, audio]
+    [PlayerProgressGetter, player]
   );
 
   useEffect(() => {
@@ -84,14 +49,14 @@ const Lyric: FC<object> = () => {
     let isRunning = false;
 
     const onFrame = (time: number) => {
-      if (!isRunning || !audio || audio.paused) {
+      if (!isRunning || player.paused) {
         rafId = null;
         return;
       }
       // 如果lastTime === -1 说明是第一次记录时间
       if (lastTime === -1) lastTime = time;
       lyricPlayerRef.current?.lyricPlayer?.update(time - lastTime);
-      lyricPlayerRef.current?.lyricPlayer?.setCurrentTime(audio.currentTime * 1000);
+      lyricPlayerRef.current?.lyricPlayer?.setCurrentTime(player.currentTime * 1000);
 
       lastTime = time;
       rafId = requestAnimationFrame(onFrame);
@@ -110,35 +75,34 @@ const Lyric: FC<object> = () => {
       }
     };
     const loadstart = () => {
-      lyricPlayerRef.current?.lyricPlayer?.setCurrentTime(audio.currentTime * 1000);
+      lyricPlayerRef.current?.lyricPlayer?.setCurrentTime(player.currentTime * 1000);
       lyricPlayerRef.current?.lyricPlayer?.resetScroll();
       lyricPlayerRef.current?.lyricPlayer?.calcLayout();
     };
 
-    audio.addEventListener("play", startLoop, { passive: true });
-    audio.addEventListener("pause", stopLoop, { passive: true });
-    audio.addEventListener("loadstart", loadstart, { passive: true });
+    player.addEventListener("play", startLoop, { passive: true });
+    player.addEventListener("pause", stopLoop, { passive: true });
+    player.addEventListener("loadstart", loadstart, { passive: true });
     return () => {
       stopLoop();
-      audio.removeEventListener("play", startLoop);
-      audio.removeEventListener("pause", stopLoop);
-      audio.removeEventListener("loadstart", loadstart);
+      player.removeEventListener("play", startLoop);
+      player.removeEventListener("pause", stopLoop);
+      player.removeEventListener("loadstart", loadstart);
     };
-  }, [audio]);
+  }, [player]);
 
-  useEffect(() => {
-    if (PlayerInitialized && audio) {
-      lyricPlayerRef.current?.lyricPlayer?.setCurrentTime(audio.currentTime * 1000);
+  useLayoutEffect(() => {
+    if (PlayerInitialized) {
+      lyricPlayerRef.current?.lyricPlayer?.setCurrentTime(player.currentTime * 1000);
       lyricPlayerRef.current?.lyricPlayer?.resetScroll();
       lyricPlayerRef.current?.lyricPlayer?.calcLayout();
     }
-  }, [PlayerInitialized, audio]);
+  }, [PlayerInitialized, player]);
 
   return (
-    <div className="absolute top-0 left-[48%] w-1/2 h-full overflow-hidden contain-[paint_layout] mix-blend-plus-lighter text-lg transition-normal ease-in-out">
+    <div className="absolute top-0 left-[48%] w-1/2 h-full overflow-hidden mix-blend-plus-lighter text-lg transition-normal ease-in-out">
       <LyricPlayer
-        disabled={true}
-        playing={PlayerFSMStatus === PlayerFSMStatusEnum.playing && PlayerVisible}
+        disabled
         className="w-full h-full"
         ref={lyricPlayerRef}
         alignPosition={0.5}
