@@ -8,7 +8,7 @@
   ],
   "scripts": {
     "build": "pnpm run-script-os",
-    "build:win32": "go build -o ./server.exe main.go",
-    "build:linux": "go build -o ./server main.go"
+    "build:win32": "go build -o ./server.exe -v main.go",
+    "build:linux": "go build -o ./server -v main.go"
   }
 }
