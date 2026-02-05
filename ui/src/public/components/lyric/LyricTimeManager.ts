@@ -1,5 +1,5 @@
 export class LyricTimeManager {
-  readonly lyric: LyricLine[];
+  private lyric: LyricLine[];
   private currentTime = 0; // ms
   private currentLineIndex = -1;
   private currentWordIndex = -1;
@@ -84,7 +84,18 @@ export class LyricTimeManager {
     this.linesListeners.set(lineIndex, callback);
   }
 
+  removeLineListener(lineIndex: number) {
+    this.linesListeners.delete(lineIndex);
+  }
+
   constructor(lyric: LyricLine[]) {
     this.lyric = lyric.filter((l) => l.words.length > 0);
+  }
+
+  dispose() {
+    this.linesListeners.clear();
+    this.onLineChange = null;
+    this.onWordChange = null;
+    this.lyric = [];
   }
 }

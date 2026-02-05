@@ -32,27 +32,24 @@ const LyricContainer: ForwardRefRenderFunction<LyricRef, LyricContainerProps> = 
   ref
 ) => {
   const containerRef = useRef<Nullable<HTMLDivElement>>(null);
+  const currentLineRef = useRef(-1);
+  const timeManagerRef = useRef<Nullable<LyricTimeManager>>(null);
   const [currentLine, setCurrentLine] = useState(-1);
   const [timeManager, setTimeManager] = useState<Nullable<LyricTimeManager>>(null);
 
-  const update = useCallback(
-    (deltaMS: number) => {
-      timeManager?.update(deltaMS);
-    },
-    [timeManager]
-  );
+  const update = useCallback((deltaMS: number) => {
+    timeManagerRef.current?.update(deltaMS);
+  }, []);
 
-  const setCurrentTime = useCallback(
-    (ms: number) => {
-      timeManager?.setCurrentTime(ms);
-    },
-    [timeManager]
-  );
+  const setCurrentTime = useCallback((ms: number) => {
+    timeManagerRef.current?.setCurrentTime(ms);
+  }, []);
 
   const calcLayout = useCallback(() => {
     const container = containerRef.current;
-    if (!container || currentLine === -1) return;
-    const activeLine = container.children[currentLine] as Nullable<HTMLElement>;
+    const lineIndex = currentLineRef.current;
+    if (!container || lineIndex === -1) return;
+    const activeLine = container.children[lineIndex] as Nullable<HTMLElement>;
     if (activeLine) {
       const containerHeight = container.clientHeight;
       const lineOffsetTop = activeLine.offsetTop;
@@ -63,7 +60,7 @@ const LyricContainer: ForwardRefRenderFunction<LyricRef, LyricContainerProps> = 
         behavior: "smooth"
       });
     }
-  }, [currentLine]);
+  }, []);
 
   useLayoutEffect(() => {
     containerRef.current?.scrollTo({
@@ -71,19 +68,23 @@ const LyricContainer: ForwardRefRenderFunction<LyricRef, LyricContainerProps> = 
       behavior: "smooth"
     });
     setCurrentLine(-1);
+    currentLineRef.current = -1;
   }, [lyric]);
 
   useLayoutEffect(() => {
     const timeManager = new LyricTimeManager(lyric?.[version] || []);
+    timeManagerRef.current = timeManager;
+    setTimeManager(timeManager);
     timeManager.onLineChange = ({ lineIndex }) => {
       if (lineIndex === -1) return;
+      currentLineRef.current = lineIndex;
       setCurrentLine(lineIndex);
       calcLayout();
     };
-    setTimeManager(timeManager);
 
     return () => {
-      timeManager.onLineChange = null;
+      timeManager.dispose();
+      timeManagerRef.current = null;
       setTimeManager(null);
     };
   }, [calcLayout, lyric, version]);

@@ -20,9 +20,15 @@ const LyricLine: FC<LyricLineProps> = ({ line, timeManager, index, active, onCli
   }, [line.startTime, line.words, onClick]);
 
   useLayoutEffect(() => {
-    if (!timeManager) return setWordIndex(-1);
+    if (!timeManager) {
+      setWordIndex(-1);
+      return;
+    }
     timeManager.addLineListener(index, setWordIndex);
-  }, [index, timeManager]);
+    return () => {
+      timeManager.removeLineListener(index);
+    };
+  }, [timeManager, index]);
 
   return (
     <div

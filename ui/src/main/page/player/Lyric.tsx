@@ -1,4 +1,4 @@
-import { FC, memo, useCallback, useEffect, useLayoutEffect, useRef } from "react";
+import { FC, memo, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { usePlayerStore } from "@mahiru/ui/main/store/player";
 
 import LyricComponent, { LyricRef } from "@mahiru/ui/public/components/lyric/LyricContainer";
@@ -72,6 +72,10 @@ const Lyric: FC<object> = () => {
     }
   }, [PlayerInitialized, player]);
 
+  const [key, setKey] = useState(0);
+  useEffect(() => {
+    setKey(Date.now());
+  }, [PlayerTrackStatus?.lyric]);
   return (
     <div className="absolute top-0 left-[48%] w-1/2 h-full overflow-hidden mix-blend-plus-lighter">
       <LyricComponent
