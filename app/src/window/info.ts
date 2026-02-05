@@ -51,7 +51,7 @@ export function CreateInfoWindow() {
 }
 
 function loadInfoWindowURL(InfoWindow: Electron.BrowserWindow, port: string | number) {
-  InfoWindow.loadURL(`http://localhost:${port}/info.html`)
+  InfoWindow.loadURL(`http://localhost:${port}/info`)
     .then(() => {
       isDev() && InfoWindow.webContents.openDevTools();
     })

@@ -20,27 +20,18 @@ const ToastItem: FC<ToastItemProps> = ({ data, duration = 5000, onDispose, id })
 
   useEffect(() => {
     if (duration && onDispose) {
-      timerRef.current = window.setTimeout(() => onDispose?.(data.id || id), duration);
+      timerRef.current = window.setTimeout(() => {
+        onDispose?.(data.id || id);
+      }, duration);
     }
     return () => {
-      if (timerRef.current) {
-        clearTimeout(timerRef.current);
-      }
+      timerRef.current && clearTimeout(timerRef.current);
     };
   }, [data.id, duration, id, onDispose]);
+
   return (
     <motion.div
       className="w-full gap-1 flex justify-start items-center"
-      style={{
-        color:
-          data.type === "error"
-            ? "#ff4d4f"
-            : data.type === "warn"
-              ? "#faad14"
-              : data.type === "success"
-                ? "#52c41a"
-                : undefined
-      }}
       onMouseEnter={() => clearTimeout(timerRef.current)}
       onMouseLeave={() =>
         (timerRef.current = window.setTimeout(() => onDispose?.(data.id || id), duration))
@@ -58,10 +49,12 @@ function getTypeIcon(type: ToastItemData["type"]) {
     case "info":
       return <Info size={14} />;
     case "error":
-      return <Ban size={14} />;
+      return <Ban size={14} color={"#ff4d4f"} />;
     case "success":
-      return <CircleCheck size={14} />;
+      return <CircleCheck size={14} color={"#52c41a"} />;
     case "warn":
-      return <CircleAlert size={14} />;
+      return <CircleAlert size={14} color={"#faad14"} />;
+    default:
+      return null;
   }
 }

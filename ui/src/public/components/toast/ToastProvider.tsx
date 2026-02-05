@@ -1,8 +1,7 @@
-import { FC, memo, useCallback, useLayoutEffect, useState } from "react";
-import { AnimatePresence, motion } from "motion/react";
-import { useThemeColor } from "@mahiru/ui/public/hooks/useThemeColor";
+import { FC, memo, startTransition, useCallback, useLayoutEffect, useMemo, useState } from "react";
+import { AnimatePresence, motion, HTMLMotionProps, MotionStyle } from "motion/react";
 import { UI } from "@mahiru/ui/public/entry/ui";
-import { nextIdle } from "@mahiru/ui/public/utils/frame";
+import { useThemeColor } from "@mahiru/ui/public/hooks/useThemeColor";
 import { injectToast } from "@mahiru/ui/public/hooks/useToast";
 
 import ToastItem, { ToastItemData } from "@mahiru/ui/public/components/toast/ToastItem";
@@ -10,16 +9,13 @@ import ToastItem, { ToastItemData } from "@mahiru/ui/public/components/toast/Toa
 const ToastProvider: FC<object> = () => {
   const [items, setItems] = useState<ToastItemData[]>([]);
   const { mainColor, textColorOnMain } = useThemeColor();
-  const textColor = textColorOnMain.string();
-  const backgroundColor = mainColor.mix(UI.Utils.WHITE, 0.6).alpha(0.92).string();
-  const borderColor = mainColor.alpha(0.25).string();
 
   const requestToast = useCallback((data: Omit<ToastItemData, "id">) => {
     const id = window.crypto.randomUUID();
-    void nextIdle(1000, () => {
+    startTransition(() => {
       setItems((prev) => {
         const newItems = [...prev, { ...data, id }];
-        if (newItems.length > 5) newItems.shift();
+        newItems.length > 5 && newItems.shift();
         return newItems;
       });
     });
@@ -30,47 +26,82 @@ const ToastProvider: FC<object> = () => {
     setItems((prev) => prev.filter((item) => item.id !== id));
   }, []);
 
+  const computedStyle = useMemo(() => {
+    const textColor = textColorOnMain.string();
+    const backgroundColor = mainColor.mix(UI.Utils.WHITE, 0.6).alpha(0.92).string();
+    const borderColor = mainColor.alpha(0.25).string();
+    return { color: textColor, backgroundColor, borderColor };
+  }, [mainColor, textColorOnMain]);
+
+  /*prettier-ignore*/
+  const Render = useCallback((
+     items: ToastItemData[],
+     style: MotionStyle,
+     dispose: NormalFunc<[id: string]>
+    ) => {
+      return items.map((item) => (
+        <motion.div
+          layout
+          drag="x"
+          className={`
+              px-2 py-1
+              border border-solid rounded-sm shadow-lg
+              select-none font-semibold text-[12px]
+          `}
+          key={item.id}
+          style={style}
+          onDragEnd={(_, info) =>
+            Math.abs(info.offset.x) > 100 && dispose(item.id!)
+          }
+          {...ContainerProps}
+        >
+          <ToastItem data={item} id={item.id!} onDispose={dispose} />
+        </motion.div>
+      ));
+    },
+    []
+  );
+
   useLayoutEffect(() => {
     injectToast(requestToast, dispose);
   }, [dispose, requestToast]);
 
   return (
-    <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 flex flex-col gap-2 duration-300 ease-in-out transition-all">
+    <div
+      className={`
+        fixed top-4 left-1/2 -translate-x-1/2 z-50
+        flex flex-col gap-2
+    `}>
+      {/*prettier-ignore*/}
       <AnimatePresence mode="sync">
-        {items.map((item) => (
-          <motion.div
-            layout
-            drag="x"
-            className="px-2 py-1 rounded-sm shadow-lg border border-solid select-none font-semibold text-[12px]"
-            key={item.id}
-            initial={{ opacity: 0, scale: 0.8, y: -25, x: 0 }}
-            animate={{
-              opacity: 1,
-              scale: 1,
-              y: 0,
-              x: 0,
-              transition: { duration: 0.25, ease: "easeOut" }
-            }}
-            exit={{
-              opacity: 0,
-              scale: 0.5,
-              y: -50,
-              x: 0,
-              transition: { duration: 0.4, ease: "easeIn" }
-            }}
-            style={{ color: textColor, backgroundColor, borderColor }}
-            whileHover={{ scale: 1.05 }}
-            whileDrag={{ cursor: "grabbing" }}
-            onDragEnd={(_, info) => {
-              if (Math.abs(info.offset.x) > 100) dispose(item.id!);
-            }}
-            dragConstraints={{ left: 0, right: 0 }}
-            dragElastic={{ left: 0.5, right: 0.5 }}>
-            <ToastItem data={item} id={item.id!} onDispose={dispose} />
-          </motion.div>
-        ))}
+        {useMemo(() =>
+          Render(items, computedStyle, dispose),
+          [Render, computedStyle, items, dispose]
+        )}
       </AnimatePresence>
     </div>
   );
 };
 export default memo(ToastProvider);
+
+const ContainerProps: HTMLMotionProps<"div"> = {
+  initial: { opacity: 0, scale: 0.8, y: -25, x: 0 },
+  animate: {
+    opacity: 1,
+    scale: 1,
+    y: 0,
+    x: 0,
+    transition: { duration: 0.25, ease: "easeOut" }
+  },
+  exit: {
+    opacity: 0,
+    scale: 0.5,
+    y: -50,
+    x: 0,
+    transition: { duration: 0.4, ease: "easeIn" }
+  },
+  whileHover: { scale: 1.05 },
+  whileDrag: { cursor: "grabbing" },
+  dragConstraints: { left: 0, right: 0 },
+  dragElastic: { left: 0.5, right: 0.5 }
+};

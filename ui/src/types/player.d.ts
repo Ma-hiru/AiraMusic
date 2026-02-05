@@ -28,8 +28,6 @@ type PlayerProgress = {
   buffered: number;
 };
 
-type LyricVersionType = "raw" | "full" | "tl" | "rm";
-
 type LayoutCanScrollTop =
   | "none"
   | "home"

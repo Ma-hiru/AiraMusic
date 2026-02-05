@@ -1,9 +1,8 @@
-import { FC, Key, memo, ReactNode, useCallback, useEffect, useLayoutEffect, useState } from "react";
+import { FC, Key, memo, ReactNode, useCallback, useLayoutEffect, useState } from "react";
 import { motion, useAnimate } from "motion/react";
 import { injectContextMenu } from "@mahiru/ui/public/hooks/useContextMenu";
 
-const OPEN_DURATION = 0.15;
-const CLOSE_DURATION = 0.08;
+const DURATION = 0.15;
 
 export type ContextMenuItem = {
   id?: Key;
@@ -39,7 +38,7 @@ const MenuProvider: FC<object> = () => {
     await animate(
       scope.current,
       { opacity: 1, scale: 1, pointerEvents: "auto" },
-      { duration: OPEN_DURATION, ease: "easeOut" }
+      { duration: DURATION, ease: "easeOut" }
     );
   }, [animate, scope]);
 
@@ -81,7 +80,7 @@ const MenuProvider: FC<object> = () => {
     await animate(
       scope.current,
       { opacity: 0, scale: 0.96, pointerEvents: "none" },
-      { duration: CLOSE_DURATION, ease: "easeIn" }
+      { duration: DURATION, ease: "easeIn" }
     );
   }, [animate, scope]);
 

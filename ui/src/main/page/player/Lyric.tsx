@@ -1,46 +1,23 @@
-import { FC, memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef } from "react";
+import { FC, memo, useCallback, useEffect, useLayoutEffect, useRef } from "react";
 import { usePlayerStore } from "@mahiru/ui/main/store/player";
-import { useDevice } from "@mahiru/ui/public/hooks/useDevice";
-import { NeteaseLyric } from "@mahiru/ui/public/entry/lyric";
-import { LyricLineMouseEvent } from "@applemusic-like-lyrics/core";
-import { clamp } from "lodash-es";
 
-import LyricPlayer, { LyricPlayerRef } from "@mahiru/ui/public/components/player/LyricPlayer";
+import LyricComponent, { LyricRef } from "@mahiru/ui/public/components/lyric/LyricContainer";
 
 const Lyric: FC<object> = () => {
-  const {
-    PlayerStatus,
-    PlayerTrackStatus,
-    PlayerProgressGetter,
-    PlayerInitialized,
-    PlayerCoreGetter
-  } = usePlayerStore([
+  const { PlayerStatus, PlayerTrackStatus, PlayerInitialized, PlayerCoreGetter } = usePlayerStore([
     "PlayerTrackStatus",
     "PlayerStatus",
-    "PlayerProgressGetter",
     "PlayerInitialized",
     "PlayerCoreGetter"
   ]);
-  const { gpu } = useDevice();
   const player = PlayerCoreGetter();
-  const lyricPlayerRef = useRef<LyricPlayerRef>(null);
+  const lyricRef = useRef<Nullable<LyricRef>>(null);
 
-  const lines = useMemo(
-    () => NeteaseLyric.chooseLyric(PlayerTrackStatus?.lyric, PlayerStatus.lyricVersion, true),
-    [PlayerStatus.lyricVersion, PlayerTrackStatus?.lyric]
-  );
-
-  const onLyricLineClick = useCallback(
-    (e: LyricLineMouseEvent) => {
-      const clickTimeMs = e.line.getLine().startTime;
-      const duration = PlayerProgressGetter().duration;
-      if (Number.isFinite(clickTimeMs) && Number.isFinite(duration)) {
-        player.currentTime = clamp(clickTimeMs / 1000, 0, duration);
-        lyricPlayerRef.current?.lyricPlayer?.resetScroll();
-        lyricPlayerRef.current?.lyricPlayer?.calcLayout();
-      }
+  const handleWordClick = useCallback(
+    (timeMS: number) => {
+      player.changeCurrentTime(timeMS / 1000);
     },
-    [PlayerProgressGetter, player]
+    [player]
   );
 
   useEffect(() => {
@@ -55,9 +32,8 @@ const Lyric: FC<object> = () => {
       }
       // 如果lastTime === -1 说明是第一次记录时间
       if (lastTime === -1) lastTime = time;
-      lyricPlayerRef.current?.lyricPlayer?.update(time - lastTime);
-      lyricPlayerRef.current?.lyricPlayer?.setCurrentTime(player.currentTime * 1000);
-
+      lyricRef.current?.update(time - lastTime);
+      lyricRef.current?.setCurrentTime(player.currentTime * 1000);
       lastTime = time;
       rafId = requestAnimationFrame(onFrame);
     };
@@ -75,9 +51,7 @@ const Lyric: FC<object> = () => {
       }
     };
     const loadstart = () => {
-      lyricPlayerRef.current?.lyricPlayer?.setCurrentTime(player.currentTime * 1000);
-      lyricPlayerRef.current?.lyricPlayer?.resetScroll();
-      lyricPlayerRef.current?.lyricPlayer?.calcLayout();
+      lyricRef.current?.calcLayout();
     };
 
     player.addEventListener("play", startLoop, { passive: true });
@@ -93,24 +67,18 @@ const Lyric: FC<object> = () => {
 
   useLayoutEffect(() => {
     if (PlayerInitialized) {
-      lyricPlayerRef.current?.lyricPlayer?.setCurrentTime(player.currentTime * 1000);
-      lyricPlayerRef.current?.lyricPlayer?.resetScroll();
-      lyricPlayerRef.current?.lyricPlayer?.calcLayout();
+      lyricRef.current?.setCurrentTime(player.currentTime * 1000);
+      lyricRef.current?.calcLayout();
     }
   }, [PlayerInitialized, player]);
 
   return (
-    <div className="absolute top-0 left-[48%] w-1/2 h-full overflow-hidden mix-blend-plus-lighter text-lg transition-normal ease-in-out">
-      <LyricPlayer
-        disabled
-        className="w-full h-full"
-        ref={lyricPlayerRef}
-        alignPosition={0.5}
-        alignAnchor="center"
-        lyricLines={lines}
-        enableScale={gpu.dedicated}
-        enableSpring={gpu.dedicated}
-        onLyricLineClick={onLyricLineClick}
+    <div className="absolute top-0 left-[48%] w-1/2 h-full overflow-hidden mix-blend-plus-lighter">
+      <LyricComponent
+        ref={lyricRef}
+        lyric={PlayerTrackStatus?.lyric}
+        version={PlayerStatus.lyricVersion || []}
+        onWordClick={handleWordClick}
       />
     </div>
   );
