@@ -4,29 +4,52 @@ export class LyricTimeManager {
   private currentLineIndex = -1;
   private currentWordIndex = -1;
   private linesListeners = new Map<number, NormalFunc<[currentWordIndex: number]>>();
-
   onLineChange: Nullable<NormalFunc<[{ lineIndex: number; wordIndex: number }]>> = null;
-
   onWordChange: Nullable<NormalFunc<[{ lineIndex: number; wordIndex: number }]>> = null;
 
-  // delta 单位为 ms
-  update(deltaMS: number) {
-    this.currentTime += deltaMS;
-    this.execUpdate();
+  constructor(lyric: LyricLine[]) {
+    this.lyric = lyric;
+    if (
+      this.lyric.length === 1 &&
+      this.lyric[0]!.words.map((w) => w.word)
+        .join("")
+        .includes("纯音乐")
+    ) {
+      this.lyric[0]!.startTime = 0;
+    }
   }
 
-  setCurrentTime(ms: number) {
-    this.currentTime = ms;
-    this.execUpdate();
+  private searchIndex(array: { startTime: number; endTime: number }[], start: number = 0) {
+    for (let i = start; i < array.length; i++) {
+      const item = array[i];
+      if (item && this.currentTime >= item.startTime && this.currentTime <= item.endTime) {
+        return i;
+      }
+    }
+    for (let i = start - 1; i >= 0; i--) {
+      const item = array[i];
+      if (item && this.currentTime >= item.startTime && this.currentTime <= item.endTime) {
+        return i;
+      }
+    }
+    return -1;
   }
 
   private getLatestIndex() {
-    let lineIndex = this.lyric.findIndex(
-      (line) => this.currentTime >= line.startTime && this.currentTime < line.endTime
-    );
+    if (this.lyric.length === 0) {
+      return {
+        lineIndex: -1,
+        wordIndex: -1
+      };
+    }
+
+    let lineIndex = this.searchIndex(this.lyric, this.currentLineIndex);
     if (lineIndex === -1) {
+      const firstLine = this.lyric[0];
       const lastLine = this.lyric[this.lyric.length - 1];
-      if (lastLine && this.currentTime > lastLine.startTime) {
+      if (firstLine && this.currentTime < firstLine.startTime) {
+        lineIndex = -1;
+      } else if (lastLine && this.currentTime > lastLine.startTime) {
         lineIndex = this.lyric.length - 1;
       } else {
         lineIndex = this.currentLineIndex;
@@ -34,18 +57,22 @@ export class LyricTimeManager {
     }
 
     const currentLine = this.lyric[lineIndex];
-    let wordIndex = currentLine?.words.findIndex(
-      (word) => this.currentTime >= word.startTime && this.currentTime < word.endTime
-    );
-    if (wordIndex === undefined) {
-      wordIndex = this.currentWordIndex;
-    }
-    if (wordIndex === -1 && currentLine) {
-      if (this.currentTime <= currentLine.endTime) {
-        wordIndex = this.currentWordIndex;
-      } else {
-        wordIndex = currentLine.words.length - 1;
+    let wordIndex;
+    if (currentLine) {
+      wordIndex = this.searchIndex(currentLine.words, this.currentWordIndex);
+      if (wordIndex === -1) {
+        const firstWord = currentLine.words[0];
+        const lastWord = currentLine.words[currentLine.words.length - 1];
+        if (firstWord && this.currentTime < firstWord.startTime) {
+          wordIndex = -1;
+        } else if (lastWord && this.currentTime > lastWord.startTime) {
+          wordIndex = currentLine.words.length - 1;
+        } else {
+          wordIndex = this.currentWordIndex;
+        }
       }
+    } else {
+      wordIndex = this.currentWordIndex;
     }
 
     return {
@@ -54,7 +81,8 @@ export class LyricTimeManager {
     };
   }
 
-  execUpdate() {
+  private execUpdate() {
+    if (this.lyric.length === 0) return;
     // 更新当前词
     const { lineIndex, wordIndex } = this.getLatestIndex();
     const lineChanged = lineIndex !== this.currentLineIndex;
@@ -80,6 +108,25 @@ export class LyricTimeManager {
     }
   }
 
+  /** ms */
+  update = (deltaMS: number) => {
+    this.currentTime += deltaMS;
+    this.execUpdate();
+    return this;
+  };
+
+  setCurrentTime = (ms: number) => {
+    this.currentTime = ms;
+    return this;
+  };
+
+  getCurrentIndex() {
+    return {
+      lineIndex: this.currentLineIndex,
+      wordIndex: this.currentWordIndex
+    };
+  }
+
   addLineListener(lineIndex: number, callback: NormalFunc<[currentWordIndex: number]>) {
     this.linesListeners.set(lineIndex, callback);
   }
@@ -88,14 +135,19 @@ export class LyricTimeManager {
     this.linesListeners.delete(lineIndex);
   }
 
-  constructor(lyric: LyricLine[]) {
-    this.lyric = lyric.filter((l) => l.words.length > 0);
-  }
-
   dispose() {
     this.linesListeners.clear();
     this.onLineChange = null;
     this.onWordChange = null;
     this.lyric = [];
+    return this;
+  }
+
+  reset(lyric: LyricLine[]) {
+    this.currentTime = 0;
+    this.currentLineIndex = -1;
+    this.currentWordIndex = -1;
+    this.lyric = lyric;
+    return this;
   }
 }

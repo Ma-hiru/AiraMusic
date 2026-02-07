@@ -5,7 +5,6 @@ import {
   useCallback,
   useImperativeHandle,
   useLayoutEffect,
-  useMemo,
   useRef,
   useState
 } from "react";
@@ -31,96 +30,96 @@ const LyricContainer: ForwardRefRenderFunction<LyricRef, LyricContainerProps> = 
   { lyric, version = "raw", className, onWordClick },
   ref
 ) => {
-  const containerRef = useRef<Nullable<HTMLDivElement>>(null);
-  const currentLineRef = useRef(-1);
-  const timeManagerRef = useRef<Nullable<LyricTimeManager>>(null);
   const [currentLine, setCurrentLine] = useState(-1);
-  const [timeManager, setTimeManager] = useState<Nullable<LyricTimeManager>>(null);
-
-  const update = useCallback((deltaMS: number) => {
-    timeManagerRef.current?.update(deltaMS);
-  }, []);
-
-  const setCurrentTime = useCallback((ms: number) => {
-    timeManagerRef.current?.setCurrentTime(ms);
-  }, []);
+  const containerRef = useRef<Nullable<HTMLDivElement>>(null);
+  const currentLineRef = useRef(currentLine);
+  const timeManagerRef = useRef<Nullable<LyricTimeManager>>(null);
+  if (timeManagerRef.current === null) {
+    timeManagerRef.current = new LyricTimeManager([]);
+  }
 
   const calcLayout = useCallback(() => {
     const container = containerRef.current;
     const lineIndex = currentLineRef.current;
-    if (!container || lineIndex === -1) return;
-    const activeLine = container.children[lineIndex] as Nullable<HTMLElement>;
-    if (activeLine) {
-      const containerHeight = container.clientHeight;
-      const lineOffsetTop = activeLine.offsetTop;
-      const lineHeight = activeLine.clientHeight;
-      const scrollTop = lineOffsetTop - containerHeight / 2 + lineHeight / 2;
+    if (!container) return;
+    if (lineIndex === -1) {
       container.scrollTo({
-        top: scrollTop,
+        top: 0,
         behavior: "smooth"
       });
+      return;
     }
+    const activeLine = container.children[lineIndex + 1] as Nullable<HTMLElement>;
+    if (!activeLine) return;
+    const containerHeight = container.clientHeight;
+    const lineOffsetTop = activeLine.offsetTop;
+    const lineHeight = activeLine.clientHeight;
+
+    const scrollTop = lineOffsetTop - containerHeight / 2 + lineHeight / 2;
+    container.scrollTo({
+      top: scrollTop,
+      behavior: "smooth"
+    });
   }, []);
 
   useLayoutEffect(() => {
-    containerRef.current?.scrollTo({
-      top: 0,
-      behavior: "smooth"
-    });
+    timeManagerRef.current?.reset(lyric?.[version] || []);
     setCurrentLine(-1);
     currentLineRef.current = -1;
-  }, [lyric]);
+    calcLayout();
+  }, [calcLayout, lyric, version]);
 
   useLayoutEffect(() => {
-    const timeManager = new LyricTimeManager(lyric?.[version] || []);
-    timeManagerRef.current = timeManager;
-    setTimeManager(timeManager);
+    const timeManager = timeManagerRef.current;
+    if (!timeManager) return;
     timeManager.onLineChange = ({ lineIndex }) => {
       if (lineIndex === -1) return;
-      currentLineRef.current = lineIndex;
       setCurrentLine(lineIndex);
+      currentLineRef.current = lineIndex;
       calcLayout();
     };
-
     return () => {
       timeManager.dispose();
-      timeManagerRef.current = null;
-      setTimeManager(null);
     };
-  }, [calcLayout, lyric, version]);
+  }, [calcLayout]);
 
   useImperativeHandle(
     ref,
     () => ({
-      update,
-      setCurrentTime,
+      update: timeManagerRef.current!.update,
+      setCurrentTime: timeManagerRef.current!.setCurrentTime,
       calcLayout
     }),
-    [calcLayout, setCurrentTime, update]
+    [calcLayout]
   );
-
-  const render = useMemo(() => {
-    return lyric?.[version].map((line, index) => (
-      <LyricLine
-        key={index}
-        line={line}
-        index={index}
-        onClick={onWordClick}
-        timeManager={timeManager}
-        active={currentLine === index}
-      />
-    ));
-  }, [currentLine, lyric, onWordClick, timeManager, version]);
 
   return (
     <div
       ref={containerRef}
       className={cx(
-        "w-full h-full scrollbar-hide overflow-y-scroll space-y-4 transition-all duration-300 ease-in-out pt-[50%] pb-[50%]",
+        `
+          w-full h-full space-y-4
+          scrollbar-hide overflow-y-scroll
+          transition-all duration-500 ease-in-out
+          contain-content
+      `,
         className
       )}>
-      {render}
+      <div className="h-[55%]" />
+      {lyric?.[version].map((line, index) => (
+        <LyricLine
+          key={index}
+          line={line}
+          index={index}
+          onClick={onWordClick}
+          timeManager={timeManagerRef.current!}
+          active={currentLine === index}
+        />
+      ))}
+      <div className="h-[55%]" />
     </div>
   );
 };
+
+LyricContainer.displayName = "LyricContainer";
 export default memo(forwardRef(LyricContainer));

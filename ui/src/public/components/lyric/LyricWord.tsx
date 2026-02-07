@@ -3,13 +3,21 @@ import { cx } from "@emotion/css";
 
 interface LyricWordProps {
   word: LyricWord;
-  active: boolean;
-  highlight: boolean;
-  single?: boolean;
+  wordIndex: number;
+  currentWordIndex: number;
+  lineActive?: boolean;
+  singleWord?: boolean;
   onClick?: NormalFunc<[startTime: number]>;
 }
 
-const LyricWord: FC<LyricWordProps> = ({ word, active, highlight, onClick, single }) => {
+const LyricWord: FC<LyricWordProps> = ({
+  word,
+  wordIndex,
+  currentWordIndex,
+  lineActive = false,
+  singleWord = false,
+  onClick
+}) => {
   const handleClick = useCallback(() => {
     onClick?.(word.startTime);
   }, [onClick, word.startTime]);
@@ -18,9 +26,13 @@ const LyricWord: FC<LyricWordProps> = ({ word, active, highlight, onClick, singl
     <span
       onClick={handleClick}
       className={cx(
-        "font-semibold inline duration-300 ease-in-out transition-all text-3xl relative",
-        active && highlight ? "text-white" : "text-white/30",
-        !single && active && highlight && "text-[32px]"
+        `
+          relative inline
+          text-3xl font-semibold
+          duration-1000 ease-in-out transition-all
+        `,
+        wordIndex <= currentWordIndex && lineActive ? "text-white" : "text-white/30",
+        !singleWord && wordIndex === currentWordIndex && lineActive && "-top-px"
       )}>
       {word.word}
     </span>
