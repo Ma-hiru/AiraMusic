@@ -30,7 +30,9 @@
   "private": true,
   "scripts": {
     "dev": "pnpm run-p dev:ui dev:app dev:electron",
-    "build": "pnpm build:wasm && pnpm build:store && pnpm build:ui && pnpm build:app && pnpm build:electron",
+    "build": "pnpm clear:dist && pnpm clear:cache && pnpm i --frozen-lockfile && pnpm build:wasm && pnpm build:store && pnpm build:ui && pnpm build:app && pnpm build:electron && pnpm clear:cache",
+    "clear:cache": "rimraf ./wasm/target ./ui/node_modules/.vite",
+    "clear:dist": "rimraf ./wasm/pkg ./app/dist ./ui/dist ./store/server",
     "dev:ui": "pnpm --filter @mahiru/ui run dev",
     "dev:app": "pnpm --filter @mahiru/app run dev",
     "dev:electron": "pnpm electron ./app",

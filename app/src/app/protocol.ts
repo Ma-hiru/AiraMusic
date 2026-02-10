@@ -10,7 +10,7 @@ import { app, protocol } from "electron";
 export function registerSchemes() {
   protocol.registerSchemesAsPrivileged([
     {
-      scheme: process.env.APP_SCHEME || "mahiru",
+      scheme: process.env.APP_SCHEME,
       privileges: {
         secure: true,
         standard: true,

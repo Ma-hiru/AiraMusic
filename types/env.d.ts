@@ -2,16 +2,19 @@
 
 interface ENV {
   readonly APP_MODE: string;
-  readonly NCM_SERVER_PORT: number;
   readonly GO_SERVER_PORT: number;
+  readonly NCM_SERVER_PORT: number;
   readonly EXPRESS_SERVER_PORT: number;
-  readonly VITE_SERVER_PORT: number;
   readonly UI_LOG_LEVEL: string;
   readonly APP_LOG_LEVEL: string;
   readonly APP_NAME: string;
   readonly APP_SCHEME: string;
   readonly APP_PROTOCOL: string;
   readonly APP_SCHEME_FILE_HOSTNAME: string;
+}
+
+declare namespace NodeJS {
+  interface ProcessEnv extends ENV {}
 }
 
 type EnvLogLevel = "TRACE" | "DEBUG" | "INFO" | "WARN" | "ERROR" | "NONE";

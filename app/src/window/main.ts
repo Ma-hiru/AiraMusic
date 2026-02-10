@@ -73,18 +73,6 @@ function loadSource(mainWindow: BrowserWindow, port: number | string) {
       })
     );
   });
-  // setTimeout(() => {
-  //   if (!WindowManager.get("main")?.isVisible()) {
-  //     // 超时仍未显示窗口，说明加载失败
-  //     Log.error(
-  //       new EqError({
-  //         label: "app/window/main.ts",
-  //         message: `main window failed to load within expected time`
-  //       })
-  //     );
-  //     WindowManager.get("main")?.close();
-  //   }
-  // }, CONSTANTS.APP.WINDOW_LOAD_TIMEOUT);
   return mainWindow;
 }
 

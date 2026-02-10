@@ -6,6 +6,7 @@ import { isDev } from "../utils/dev";
 import { Log } from "../utils/log";
 import { EqError } from "../utils/err";
 import { CONSTANTS } from "@mahiru/app/src/constant";
+import { isLinux } from "../utils/platform";
 
 export function CreateLyricWindow() {
   if (WindowManager.checkAndShow("lyric")) return;
@@ -35,6 +36,10 @@ export function CreateLyricWindow() {
     "lyric",
     WindowExits.DESTROY
   );
+
+  if (isLinux) {
+    LyricWindow.setAlwaysOnTop(true, "screen-saver");
+  }
 
   if (checkPositionOutScreenBounds(x, y)) {
     LyricWindow.center();

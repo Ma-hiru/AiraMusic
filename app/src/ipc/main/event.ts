@@ -4,12 +4,12 @@ import {
   CreateLoginWindow,
   CreateLyricWindow,
   CreateMiniWindow,
+  CreateImageWindow,
+  CreateInfoWindow,
   WindowManager
 } from "../../window";
-import { CreateInfoWindow } from "../../window/info";
 import { CreateExternalWindow } from "../../window/external";
 import { Store } from "../../app/store";
-import { createImageWindow } from "../../window/image";
 
 const mainEventAPI = {
   openInternalWindow: (e, win) => {
@@ -26,7 +26,7 @@ const mainEventAPI = {
         case "info":
           return CreateInfoWindow();
         case "image":
-          return createImageWindow();
+          return CreateImageWindow();
       }
     }
   },

@@ -9,9 +9,9 @@ export function createProxyServer() {
   if (isDev()) return;
   Log.debug("Create Express APP");
   const expressAPP = express();
-  const port = Number(process.env.EXPRESS_SERVER_PORT);
-  const ncmPort = Number(process.env.NCM_SERVER_PORT);
-  const cachePort = Number(process.env.GO_SERVER_PORT);
+  const port = process.env.EXPRESS_SERVER_PORT;
+  const ncmPort = process.env.NCM_SERVER_PORT;
+  const cachePort = process.env.GO_SERVER_PORT;
 
   const serveHtml = (file: string) => (_req: express.Request, res: express.Response) => {
     res.sendFile(join(staticUIDir, file));

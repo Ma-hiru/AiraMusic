@@ -23,10 +23,10 @@ export default defineConfig((options) => {
       target: "node20",
       sourcemap: mode === "development",
       clean: mode === "production",
+      minify: mode === "production",
       dts: false,
       external: ["electron", "esbuild", "esbuild/*", "node:*", "window"],
       noExternal: ["@mahiru/log", "@mahiru/store"],
-      minify: true,
       esbuildOptions: (esbuildOptions) => {
         esbuildOptions.define = {
           ...(esbuildOptions.define || {}),
@@ -41,10 +41,10 @@ export default defineConfig((options) => {
       format: ["cjs"],
       platform: "node",
       target: "node20",
-      sourcemap: true,
-      clean: true,
       dts: false,
-      minify: true,
+      sourcemap: mode === "development",
+      clean: mode === "production",
+      minify: mode === "production",
       external: ["electron", "esbuild", "esbuild/*", "node:*", "window"],
       noExternal: ["@mahiru/log"]
     }

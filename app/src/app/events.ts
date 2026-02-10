@@ -1,9 +1,8 @@
-import { APP } from "./index";
 import { app } from "electron";
+import { APP } from ".";
 import { Log } from "../utils/log";
 import { isCreateTray } from "../utils/platform";
-import { CreateMainWindow, WindowManager } from "../window";
-import { registerTray } from "../window/tray";
+import { CreateMainWindow, WindowManager, registerTray } from "../window";
 
 export function registerAppEvents(instance: APP) {
   app.on("ready", () => {

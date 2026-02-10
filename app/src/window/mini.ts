@@ -6,6 +6,7 @@ import { isDev } from "../utils/dev";
 import { Log } from "../utils/log";
 import { EqError } from "../utils/err";
 import { CONSTANTS } from "@mahiru/app/src/constant";
+import { isLinux } from "../utils/platform";
 
 export function CreateMiniWindow() {
   if (WindowManager.checkAndShow("miniplayer")) return;
@@ -41,6 +42,10 @@ export function CreateMiniWindow() {
     "miniplayer",
     WindowExits.IGNORE
   );
+
+  if (isLinux) {
+    MiniplayerWindow.setAlwaysOnTop(true, "screen-saver");
+  }
 
   if (checkPositionOutScreenBounds(x, y)) {
     MiniplayerWindow.center();

@@ -7,7 +7,7 @@ import { commands } from "./commands";
 import { registerAppEvents } from "./events";
 import { registerSchemes } from "./protocol";
 import { restartStoreServer, startStoreServer, stopStoreServer } from "../services/store";
-import { createProxyServer } from "../services/express";
+import { createProxyServer } from "../services/proxy";
 import { registerIpcMain } from "../ipc/main";
 import { createNeteaseMusicApiServer } from "../services/ncm";
 import { printDevInfo, storeKeyAccessToken } from "../utils/dev";

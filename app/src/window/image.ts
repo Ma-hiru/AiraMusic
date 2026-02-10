@@ -5,7 +5,7 @@ import { isDev } from "../utils/dev";
 import { Log } from "../utils/log";
 import { EqError } from "../utils/err";
 
-export function createImageWindow() {
+export function CreateImageWindow() {
   if (WindowManager.checkAndShow("image")) return;
 
   const { effectiveWidth, effectiveHeight } = getEffectiveWindowSize(0.5);
