@@ -12,6 +12,7 @@ import { cx } from "@emotion/css";
 import { LyricTimeManager } from "./LyricTimeManager";
 
 import LyricLine from "./LyricLine";
+import { NeteaseLyric } from "@mahiru/ui/public/entry/lyric";
 
 interface LyricContainerProps {
   lyric?: FullVersionLyricLine;
@@ -63,11 +64,11 @@ const LyricContainer: ForwardRefRenderFunction<LyricRef, LyricContainerProps> = 
   }, []);
 
   useLayoutEffect(() => {
-    timeManagerRef.current?.reset(lyric?.[version] || []);
+    timeManagerRef.current?.reset(lyric?.raw ?? NeteaseLyric.blankLyricPreset.raw);
     setCurrentLine(-1);
     currentLineRef.current = -1;
     calcLayout();
-  }, [calcLayout, lyric, version]);
+  }, [calcLayout, lyric]);
 
   useLayoutEffect(() => {
     const timeManager = timeManagerRef.current;
@@ -106,7 +107,7 @@ const LyricContainer: ForwardRefRenderFunction<LyricRef, LyricContainerProps> = 
         className
       )}>
       <div className="h-[55%]" />
-      {lyric?.[version].map((line, index) => (
+      {(lyric?.[version] ?? NeteaseLyric.blankLyricPreset.raw).map((line, index) => (
         <LyricLine
           key={index}
           line={line}

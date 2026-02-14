@@ -135,7 +135,7 @@ export default function LyricPage() {
   const [lyricLines, setLyricLines] = useState<LyricLine[]>([]);
   const lastTrackID = useRef<number | null>(null);
   const lines = useMemo(
-    () => NeteaseLyric.chooseLyric(trackSync?.lyric, playerStatusSync?.lyricVersion, false),
+    () => NeteaseLyric.chooseLyricSafe(trackSync?.lyric, playerStatusSync?.lyricVersion, false),
     [playerStatusSync?.lyricVersion, trackSync?.lyric]
   );
 
