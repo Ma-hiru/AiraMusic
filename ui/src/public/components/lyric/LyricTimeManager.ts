@@ -16,6 +16,7 @@ export class LyricTimeManager {
         .includes("纯音乐")
     ) {
       this.lyric[0]!.startTime = 0;
+      this.lyric[0]!.words[0]!.startTime = 0;
     }
   }
 
