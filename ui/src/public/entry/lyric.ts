@@ -1,6 +1,6 @@
 import { Log } from "@mahiru/ui/public/utils/dev";
 import { API } from "@mahiru/ui/public/api";
-import { LyricParser } from "@mahiru/ui/public/entry/lyric_parser";
+import { LyricParser } from "@mahiru/ui/public/utils/lyric_parser";
 import {
   loadErrorLyricPreset,
   noLyricPreset,

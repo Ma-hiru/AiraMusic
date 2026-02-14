@@ -12,7 +12,7 @@ import { Errs } from "@mahiru/ui/public/entry/errs";
 import { Log } from "@mahiru/ui/public/utils/dev";
 import { noLyricPreset, pureMusicLyricPreset } from "@mahiru/ui/public/constants/lyric";
 
-export const LyricParser = new (class {
+export class LyricParserClass {
   mapRawLyricLine(line: RawLyricLine): LyricLine {
     return {
       ...line,
@@ -120,4 +120,6 @@ export const LyricParser = new (class {
       metadata: ttml.metadata
     };
   }
-})();
+}
+
+export const LyricParser = new LyricParserClass();

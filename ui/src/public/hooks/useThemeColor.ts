@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { UI } from "@mahiru/ui/public/entry/ui";
+import { UIUtils } from "@mahiru/ui/public/utils/ui_utils";
 
 const handlers = new Set<NormalFunc>();
 const observer = new MutationObserver(() => {
@@ -16,7 +17,7 @@ export function useThemeColor() {
   const [themeColor, setThemeColor] = useState({
     mainColor: UI.APPThemeColorInstance.main,
     secondaryColor: UI.APPThemeColorInstance.secondary,
-    textColorOnMain: UI.Utils.calcTextColorOn(UI.APPThemeColor.main)
+    textColorOnMain: UIUtils.calcTextColorOn(UI.APPThemeColor.main)
   });
 
   useEffect(() => {

@@ -3,6 +3,7 @@ import { useLayoutStore } from "@mahiru/ui/main/store/layout";
 import { useThemeSyncSend } from "@mahiru/ui/main/hooks/useThemeSyncSend";
 import { useMMCQ } from "@mahiru/ui/main/hooks/useMMCQ";
 import { UI } from "@mahiru/ui/public/entry/ui";
+import { UIUtils } from "@mahiru/ui/public/utils/ui_utils";
 
 const ThemeColor: FC<object> = () => {
   const { PlayerTheme } = useLayoutStore(["PlayerTheme", "UpdatePlayerTheme"]);
@@ -13,7 +14,7 @@ const ThemeColor: FC<object> = () => {
     const mainColor = themeColors[0] || UI.APPThemeColorDefault.main;
     const secondaryColor = themeColors[themeColors.length - 1] || UI.APPThemeColorDefault.secondary;
     const textColor =
-      UI.Utils.calcTextColorOn(mainColor).string() || UI.APPThemeColorDefault.textOnMain;
+      UIUtils.calcTextColorOn(mainColor).string() || UI.APPThemeColorDefault.textOnMain;
     if (mainColor && secondaryColor) {
       UI.APPThemeColor = {
         main: mainColor,

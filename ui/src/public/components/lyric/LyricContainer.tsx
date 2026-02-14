@@ -13,6 +13,7 @@ import { LyricTimeManager } from "./LyricTimeManager";
 
 import LyricLine from "./LyricLine";
 import { NeteaseLyric } from "@mahiru/ui/public/entry/lyric";
+import { UIUtils } from "@mahiru/ui/public/utils/ui_utils";
 
 interface LyricContainerProps {
   lyric?: FullVersionLyricLine;
@@ -55,12 +56,9 @@ const LyricContainer: ForwardRefRenderFunction<LyricRef, LyricContainerProps> = 
     const containerHeight = container.clientHeight;
     const lineOffsetTop = activeLine.offsetTop;
     const lineHeight = activeLine.clientHeight;
-
     const scrollTop = lineOffsetTop - containerHeight / 2 + lineHeight / 2;
-    container.scrollTo({
-      top: scrollTop,
-      behavior: "smooth"
-    });
+
+    UIUtils.smoothScrollTo(container, scrollTop);
   }, []);
 
   useLayoutEffect(() => {
@@ -100,7 +98,7 @@ const LyricContainer: ForwardRefRenderFunction<LyricRef, LyricContainerProps> = 
       className={cx(
         `
           w-full h-full space-y-4
-          scrollbar-hide overflow-y-scroll
+          scrollbar-hide overflow-y-scroll scroll-auto
           transition-all duration-500 ease-in-out
           contain-content
       `,

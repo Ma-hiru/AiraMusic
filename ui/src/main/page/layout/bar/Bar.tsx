@@ -1,4 +1,3 @@
-import Color from "color";
 import { FC, memo } from "react";
 import { useLayoutStore } from "@mahiru/ui/main/store/layout";
 import { useThemeColor } from "@mahiru/ui/public/hooks/useThemeColor";
@@ -10,6 +9,7 @@ import BarControl from "./BarControl";
 import BarProgress from "./BarProgress";
 import BarBtns from "./BarBtns";
 import BarSpectrum from "./BarSpectrum";
+import { UIUtils } from "@mahiru/ui/public/utils/ui_utils";
 
 const Bar: FC<object> = () => {
   const { PlayerTheme } = useLayoutStore(["PlayerTheme"]);
@@ -19,8 +19,8 @@ const Bar: FC<object> = () => {
     <div
       style={{
         background: PlayerTheme.BackgroundCover
-          ? Color("#ffffff").mix(textColorOnMain, 0.5).alpha(0.1).string()
-          : Color("#ffffff").alpha(0.5).string()
+          ? UIUtils.WHITE.mix(textColorOnMain, 0.5).alpha(0.1).string()
+          : UIUtils.WHITE.alpha(0.5).string()
       }}
       className="absolute h-18 bottom-0 left-0 right-0 backdrop-blur-md shadow-[0_10px_25px_-5px_rgba(0,0,0,0.25)] z-10">
       <div className="w-full h-full grid grid-rows-1 backdrop-blur-md grid-cols-[1fr_auto_1fr] items-center select-none px-6 relative z-10">

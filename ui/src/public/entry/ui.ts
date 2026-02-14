@@ -1,29 +1,5 @@
 import Color from "color";
 
-export class UIUtilsClass {
-  readonly BLACK = Color("#000000");
-  readonly WHITE = Color("#FFFFFF");
-
-  calcTextColorOn(bgColor: string) {
-    const bg = Color(bgColor);
-    if (bg.isDark()) {
-      return this.WHITE;
-    } else {
-      return this.BLACK;
-    }
-  }
-
-  darkenOrLightenTextColorOn(bgColor: string, textColor: string, ratio: number = 0.3) {
-    const bg = Color(bgColor);
-    const text = Color(textColor);
-    if (bg.isDark()) {
-      return text.lighten(ratio);
-    } else {
-      return text.darken(ratio);
-    }
-  }
-}
-
 export class UIClass {
   readonly AMLyricColorVarsName = "--amll-lp-color";
   readonly AMLyricFontSizeVarsName = "--amll-lp-font-size";
@@ -92,8 +68,6 @@ export class UIClass {
       textOnMainColor: Color(textOnMainColor)
     };
   }
-
-  readonly Utils = new UIUtilsClass();
 }
 
 export const UI = new UIClass();

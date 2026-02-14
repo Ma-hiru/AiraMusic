@@ -52,9 +52,9 @@
 </template>
 
 <script setup lang="ts" name="ImageViewer">
-  import { computed, ref, CSSProperties, watch, useTemplateRef, onMounted } from "vue";
+  import { computed, CSSProperties, onMounted, ref, useTemplateRef, watch } from "vue";
   import { clamp } from "lodash-es";
-  import { Download, ArrowLeftToLine, ArrowRightToLine } from "lucide-vue-next";
+  import { ArrowLeftToLine, ArrowRightToLine, Download } from "lucide-vue-next";
   import { EqError, Log } from "@mahiru/ui/public/utils/dev";
   import { Renderer } from "@mahiru/ui/public/entry/renderer";
 
@@ -83,6 +83,10 @@
   const emit = defineEmits<{
     (e: "toolBarChange", visible: boolean): void;
   }>();
+
+  watch(current, () => {
+    document.title = current.value.alt || current.value.url || "Image Viewer";
+  });
 
   watch(
     () => [props.images, props.images.length],

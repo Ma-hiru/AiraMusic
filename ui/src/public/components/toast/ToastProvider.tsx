@@ -1,10 +1,10 @@
 import { FC, memo, startTransition, useCallback, useLayoutEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion, HTMLMotionProps, MotionStyle } from "motion/react";
-import { UI } from "@mahiru/ui/public/entry/ui";
 import { useThemeColor } from "@mahiru/ui/public/hooks/useThemeColor";
 import { injectToast } from "@mahiru/ui/public/hooks/useToast";
 
 import ToastItem, { ToastItemData } from "@mahiru/ui/public/components/toast/ToastItem";
+import { UIUtils } from "@mahiru/ui/public/utils/ui_utils";
 
 const ToastProvider: FC<object> = () => {
   const [items, setItems] = useState<ToastItemData[]>([]);
@@ -28,7 +28,7 @@ const ToastProvider: FC<object> = () => {
 
   const computedStyle = useMemo(() => {
     const textColor = textColorOnMain.string();
-    const backgroundColor = mainColor.mix(UI.Utils.WHITE, 0.6).alpha(0.92).string();
+    const backgroundColor = mainColor.mix(UIUtils.WHITE, 0.6).alpha(0.92).string();
     const borderColor = mainColor.alpha(0.25).string();
     return { color: textColor, backgroundColor, borderColor };
   }, [mainColor, textColorOnMain]);
