@@ -28,6 +28,8 @@ export function CreateImageWindow() {
     WindowExits.IGNORE
   );
 
+  ImageWindow.center();
+
   ImageWindow.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
 
   loadImageWindowURL(

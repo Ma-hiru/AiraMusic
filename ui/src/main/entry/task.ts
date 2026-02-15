@@ -72,7 +72,7 @@ class TaskClass {
   }
 
   /** 登录状态下，只包含歌单的id、描述、封面 */
-  refreshUserPlaylist = async () => {
+  private refreshUserPlaylist = async () => {
     try {
       if (!Auth.isAccountLoggedIn()) return;
       Log.debug("refresh user playlist");
@@ -113,11 +113,11 @@ class TaskClass {
     }
   };
 
-  refreshProfile = async () => {
+  private refreshProfile = async () => {
     return await Auth.refreshProfile();
   };
 
-  refreshCookies = async () => {
+  private refreshCookies = async () => {
     return await Auth.refreshCookies();
   };
 }
