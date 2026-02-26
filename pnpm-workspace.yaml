@@ -5,4 +5,7 @@ packages:
   - log
   - store
 
+onlyBuiltDependencies:
+  - electron
+
 registry: https://registry.npmmirror.com

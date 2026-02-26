@@ -1,5 +1,3 @@
-import "@applemusic-like-lyrics/core/style.css";
-
 import { FC } from "react";
 import { useStage } from "@mahiru/ui/public/hooks/useStage";
 import { Stage } from "@mahiru/ui/public/enum";

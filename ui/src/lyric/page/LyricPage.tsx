@@ -1,4 +1,3 @@
-import "@applemusic-like-lyrics/core/style.css";
 import { MouseEvent as ReactMouseEvent, useCallback, useEffect, useRef, useState } from "react";
 import { cx } from "@emotion/css";
 import { useStage } from "@mahiru/ui/public/hooks/useStage";
