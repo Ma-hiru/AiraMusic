@@ -9,7 +9,7 @@ import {
 
 class NeteaseLyricClass {
   /** 歌词版本选择，结合偏好和现有歌词，选出最合适的歌词版本，没有偏好默认显示翻译 */
-  private chooseLyricVersionWithPreference(
+  chooseLyricVersionWithPreference(
     lyric: FullVersionLyricLine,
     preference: Optional<LyricVersionType>
   ): LyricVersionType {
@@ -100,21 +100,6 @@ class NeteaseLyricClass {
       }
     }
     return result;
-  }
-
-  /** 歌词显示版本选择，可用于歌词组件，含容错处理 */
-  chooseLyricSafe(
-    lyric: Optional<FullVersionLyricLine>,
-    version: Optional<LyricVersionType>,
-    clone: Optional<boolean>
-  ) {
-    if (lyric) {
-      const chosenVersion = this.checkLyricVersion(lyric, version, null);
-      if (clone) return structuredClone(lyric[chosenVersion]);
-      return lyric[chosenVersion];
-    } else {
-      return [];
-    }
   }
 
   /** 歌词版本切换检查 */
