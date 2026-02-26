@@ -23,6 +23,7 @@
   ],
   "linux": {
     "target": "AppImage",
+    "icon": "app/assets/icon/netease.png",
     "category": "Utility",
     "extraResources": [
       {
@@ -33,6 +34,7 @@
   },
   "win": {
     "target": "nsis",
+    "icon": "app/assets/icon/netease.png",
     "extraResources": [
       {
         "from": "store/server.exe",
