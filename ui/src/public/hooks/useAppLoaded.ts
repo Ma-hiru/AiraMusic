@@ -1,4 +1,4 @@
-import { useCallback, useLayoutEffect } from "react";
+import { useCallback, useEffect } from "react";
 import { Renderer } from "@mahiru/ui/public/entry/renderer";
 import { Log } from "@mahiru/ui/public/utils/dev";
 
@@ -15,20 +15,21 @@ export function useAppLoaded(
   condition?: boolean,
   props?: { broadcast?: boolean; timeout?: number; hide?: boolean }
 ) {
-  useLayoutEffect(() => {
-    condition && _requestLoaded(props?.broadcast, props?.hide);
-  }, [condition, props?.broadcast, props?.hide]);
+  const requestLoaded = useCallback(() => {
+    _requestLoaded(props?.broadcast, props?.hide);
+  }, [props?.broadcast, props?.hide]);
 
-  useLayoutEffect(() => {
+  useEffect(() => {
+    condition && requestLoaded();
+  }, [condition, requestLoaded]);
+
+  useEffect(() => {
     if (loaded || props?.timeout === 0) return;
-    const timer = setTimeout(
-      () => _requestLoaded(props?.broadcast, props?.hide),
-      props?.timeout || 10000
-    );
+    const timer = setTimeout(requestLoaded, props?.timeout || 10000);
     return () => clearTimeout(timer);
-  }, [props?.broadcast, props?.hide, props?.timeout]);
+  }, [requestLoaded, props?.timeout]);
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     Renderer.addMessageHandler(
       "otherWindowClosed",
       "main",
@@ -38,10 +39,6 @@ export function useAppLoaded(
       { id: "onMainExit" }
     );
   }, []);
-
-  const requestLoaded = useCallback(() => {
-    _requestLoaded(props?.broadcast, props?.hide);
-  }, [props?.broadcast, props?.hide]);
 
   return {
     loaded,

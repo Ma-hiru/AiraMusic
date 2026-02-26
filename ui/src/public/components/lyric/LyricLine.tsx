@@ -9,10 +9,24 @@ interface LyricLineProps {
   line: LyricLine;
   timeManager: LyricTimeManager;
   active: boolean;
+  crossAlign?: "left" | "center" | "right";
+  activeColor?: string;
+  inactiveColor?: string;
+  fontSize?: FontSize | number;
   onClick?: NormalFunc<[startTime: number]>;
 }
 
-const LyricLine: FC<LyricLineProps> = ({ line, timeManager, index, active, onClick }) => {
+const LyricLine: FC<LyricLineProps> = ({
+  line,
+  timeManager,
+  index,
+  active,
+  onClick,
+  activeColor,
+  inactiveColor,
+  fontSize,
+  crossAlign
+}) => {
   const [wordIndex, setWordIndex] = useState(-1);
 
   const onClickLine = useCallback(() => {
@@ -31,37 +45,50 @@ const LyricLine: FC<LyricLineProps> = ({ line, timeManager, index, active, onCli
         startTime: line.startTime,
         endTime: line.endTime,
         word: "",
-        romanWord: "",
-        obscene: false
+        romanWord: ""
       };
     } else if (line.words.length >= 2) {
       result = {
         startTime: line.words[0]!.startTime,
         endTime: line.words[line.words.length - 1]!.endTime,
         word: line.words.map((w) => w.word).join(""),
-        romanWord: line.words.map((w) => w.romanWord).join(""),
-        obscene: line.words.some((w) => w.obscene)
+        romanWord: line.words.map((w) => w.romanWord).join("")
       };
     }
     return result;
   }, [line.endTime, line.startTime, line.words]);
+  const style = useMemo(
+    () => ({
+      color: active ? activeColor : inactiveColor,
+      fontSize: typeof fontSize === "number" ? `${fontSize}px` : fontSize
+    }),
+    [active, activeColor, fontSize, inactiveColor]
+  );
 
   return (
     <div
+      style={style}
       className={cx(
         `
           w-full px-4 py-1 rounded-md
           text-wrap select-none
           hover:blur-none hover:bg-white/20
+          duration-500 ease-in-out transition-all
           contain-content
         `,
-        active ? "text-white" : "text-white/30 blur-[2px]"
+        active ? "text-white" : "text-white/30 blur-[2px]",
+        crossAlign === "left" && "text-left",
+        crossAlign === "center" && "text-center",
+        crossAlign === "right" && "text-right"
       )}>
       {active ? (
         line.words.map((word, index) => (
           <LyricWord
             key={index}
             word={word}
+            activeColor={activeColor}
+            inactiveColor={inactiveColor}
+            fontSize={fontSize}
             wordIndex={index}
             currentWordIndex={wordIndex}
             onClick={onClick}
@@ -70,7 +97,16 @@ const LyricLine: FC<LyricLineProps> = ({ line, timeManager, index, active, onCli
           />
         ))
       ) : (
-        <LyricWord singleWord wordIndex={0} currentWordIndex={0} word={allWord} onClick={onClick} />
+        <LyricWord
+          singleWord
+          wordIndex={0}
+          currentWordIndex={0}
+          word={allWord}
+          onClick={onClick}
+          activeColor={activeColor}
+          inactiveColor={inactiveColor}
+          fontSize={fontSize}
+        />
       )}
       <div className="text-wrap" onClick={onClickLine}>
         {line.translatedLyric}

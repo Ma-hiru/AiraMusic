@@ -1,29 +1,10 @@
-import {
-  LyricLine as RawLyricLine,
-  LyricWord as RawLyricWord,
-  parseLrc,
-  parseQrc,
-  parseTTML,
-  parseYrc
-} from "@applemusic-like-lyrics/lyric";
-import { LyricLine, LyricWord } from "@applemusic-like-lyrics/core";
+import { parseLrc, parseQrc, parseTTML, parseYrc } from "@applemusic-like-lyrics/lyric";
 import { parseExternalLrc, parseNeteaseLyric, parseTranslatedLRC } from "@mahiru/wasm";
 import { Errs } from "@mahiru/ui/public/entry/errs";
 import { Log } from "@mahiru/ui/public/utils/dev";
 import { noLyricPreset, pureMusicLyricPreset } from "@mahiru/ui/public/constants/lyric";
 
 export class LyricParserClass {
-  mapRawLyricLine(line: RawLyricLine): LyricLine {
-    return {
-      ...line,
-      words: line.words.map((word) => ({ obscene: false, ...word }))
-    };
-  }
-
-  mapRawLyricWord(words: RawLyricWord[]): LyricWord[] {
-    return words.map((word) => ({ obscene: false, ...word }));
-  }
-
   parseTranslatedLRC(content: string): LyricLine[] {
     const raw = parseLrc(content);
     return parseTranslatedLRC(raw, false) as LyricLine[];
@@ -112,7 +93,7 @@ export class LyricParserClass {
     const ttml = parseTTML(context);
     return {
       lyric: {
-        raw: ttml.lines.map(this.mapRawLyricLine.bind(this)),
+        raw: ttml.lines,
         tl: [],
         rm: [],
         full: []

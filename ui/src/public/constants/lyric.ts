@@ -9,7 +9,6 @@ function getPreset(tips: string): FullVersionLyricLine {
           {
             startTime: 0,
             endTime: 999999999999,
-            obscene: false,
             word: tips,
             romanWord: ""
           }

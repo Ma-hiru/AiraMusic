@@ -7,6 +7,7 @@ export type CanString =
   | boolean
   | symbol
   | bigint
+  | unknown
   | Function;
 
 export function AnyToString(input: CanString): string {

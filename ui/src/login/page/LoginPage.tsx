@@ -10,18 +10,15 @@ import QRCode from "./QRCode";
 import Tips from "./Tips";
 
 export default function LoginPage() {
+  useAppLoaded(true, { broadcast: true });
+
   const { stage } = useStage();
   const { status, result, dataURL, update } = useLoginQRCode();
-  const { requestLoaded } = useAppLoaded(false, { broadcast: true });
   useEffect(() => {
     if (status === QRCodeStatus.AUTHORIZED && result) {
       Renderer.sendMessage("login", "main", result.cookie);
     }
   }, [status, result]);
-
-  useEffect(() => {
-    requestLoaded();
-  }, [requestLoaded]);
 
   return (
     <div className="w-screen h-screen overflow-hidden">

@@ -20,8 +20,8 @@ const Banner: FC<object> = () => {
       setBanner(result.banners);
     });
   }, []);
-  useAppLoaded(Boolean(banner.length));
 
+  useAppLoaded(!!banner.length);
   const { textColorOnMain } = useThemeColor();
   const handleClick = useCallback(
     async (i: number) => {

@@ -7,7 +7,6 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@applemusic-like-lyrics/core": "0.2.0",
     "@applemusic-like-lyrics/lyric": "0.3.0",
     "@emotion/css": "^11.13.5",
     "@mahiru/log": "workspace:^",

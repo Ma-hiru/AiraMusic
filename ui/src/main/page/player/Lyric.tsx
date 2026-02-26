@@ -74,7 +74,7 @@ const Lyric: FC<object> = () => {
   }, [PlayerInitialized, player]);
 
   return (
-    <div className="absolute top-0 left-[48%] w-1/2 h-full overflow-hidden mix-blend-plus-lighter">
+    <div className="absolute top-0 left-[48%] w-1/2 h-full overflow-hidden">
       <LyricComponent
         ref={lyricRef}
         lyric={PlayerTrackStatus?.lyric}

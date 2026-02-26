@@ -1,13 +1,5 @@
 import "@applemusic-like-lyrics/core/style.css";
-import {
-  MouseEvent as ReactMouseEvent,
-  startTransition,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState
-} from "react";
+import { MouseEvent as ReactMouseEvent, useCallback, useEffect, useRef, useState } from "react";
 import { cx } from "@emotion/css";
 import { useStage } from "@mahiru/ui/public/hooks/useStage";
 import { useThemeSyncReceive } from "@mahiru/ui/public/hooks/useThemeSyncReceive";
@@ -15,19 +7,17 @@ import { usePlayerProgressSyncReceive } from "@mahiru/ui/public/hooks/usePlayerP
 import { usePlayerStatusSyncReceive } from "@mahiru/ui/public/hooks/usePlayerStatusSyncReceive";
 import { usePlayerTrackSyncReceive } from "@mahiru/ui/public/hooks/usePlayerTrackSyncReceive";
 import { PlayerFSMStatusEnum, Stage } from "@mahiru/ui/public/enum";
-import { UI } from "@mahiru/ui/public/entry/ui";
-import { NeteaseLyric } from "@mahiru/ui/public/entry/lyric";
 import { WindowResize } from "@mahiru/ui/public/hooks/useWindowResize";
-
-import LyricPlayer, { LyricPlayerRef } from "@mahiru/ui/public/components/player/LyricPlayer";
-import Control from "./Control";
 import { useAppLoaded } from "@mahiru/ui/public/hooks/useAppLoaded";
 
-type FontSize = `${number}px` | `${number}rem` | `${number}em`;
+import LyricComponent, { LyricRef } from "@mahiru/ui/public/components/lyric/LyricContainer";
+import Control from "./Control";
 
 export default function LyricPage() {
+  useAppLoaded(true, { broadcast: true });
+
   const { stage } = useStage();
-  const lyricPlayerRef = useRef<LyricPlayerRef>(null);
+  const lyricRef = useRef<LyricRef>(null);
   const [showBg, setShowBg] = useState(false);
   const [lock, setLock] = useState(false);
   const [color, setColor] = useState(() => {
@@ -52,38 +42,40 @@ export default function LyricPage() {
 
   // 歌词播放同步
   useEffect(() => {
-    let rafId = 0;
     let lastTime = 0;
+    let isRunning = playerStatusSync?.fsmState === PlayerFSMStatusEnum.playing;
+
     const onFrame = (time: number) => {
+      if (!isRunning) return;
+
       const { playerStatusSync, progressSync } = getInfo.current;
-      if (playerStatusSync?.fsmState !== PlayerFSMStatusEnum.playing) return;
+      if (playerStatusSync?.fsmState !== PlayerFSMStatusEnum.playing) {
+        isRunning = false;
+        return;
+      }
+
       if (!lastTime) lastTime = time;
       const delta = time - lastTime;
       lastTime = time;
 
-      lyricPlayerRef.current?.lyricPlayer?.update(delta);
-      lyricPlayerRef.current?.lyricPlayer?.setCurrentTime(progressSync.currentTime * 1000 || 0);
+      lyricRef.current?.update(delta);
+      lyricRef.current?.setCurrentTime(progressSync.currentTime * 1000 || 0);
 
-      rafId = requestAnimationFrame(onFrame);
+      requestAnimationFrame(onFrame);
     };
-    if (playerStatusSync?.fsmState === PlayerFSMStatusEnum.playing) {
-      rafId = requestAnimationFrame(onFrame);
-    }
-    return () => cancelAnimationFrame(rafId);
+
+    requestAnimationFrame(onFrame);
+    return () => {
+      isRunning = false;
+    };
   }, [playerStatusSync?.fsmState]);
   // 颜色变化
   useEffect(() => {
-    if (color !== undefined) {
-      UI.AMLyricColor = color;
-      window.localStorage.setItem("lyricWindowColor", color);
-    } else {
-      UI.AMLyricColor = themeSync.mainColor || "#ffffff";
-      window.localStorage.removeItem("lyricWindowColor");
-    }
-  }, [color, themeSync.mainColor]);
+    if (color !== undefined) window.localStorage.setItem("lyricWindowColor", color);
+    else window.localStorage.removeItem("lyricWindowColor");
+  }, [color]);
   // 字体大小变化
   useEffect(() => {
-    UI.AMLyricFontSize = fontSize;
     window.localStorage.setItem("lyricWindowFontSize", fontSize);
   }, [fontSize]);
 
@@ -127,30 +119,6 @@ export default function LyricPage() {
     }, 2500);
   }, []);
 
-  const { requestLoaded } = useAppLoaded(false, { broadcast: true });
-  useEffect(() => {
-    requestLoaded();
-  }, [requestLoaded]);
-
-  const [lyricLines, setLyricLines] = useState<LyricLine[]>([]);
-  const lastTrackID = useRef<number | null>(null);
-  const lines = useMemo(
-    () => NeteaseLyric.chooseLyricSafe(trackSync?.lyric, playerStatusSync?.lyricVersion, false),
-    [playerStatusSync?.lyricVersion, trackSync?.lyric]
-  );
-
-  useEffect(() => {
-    const currentID = trackSync?.track.id;
-    if (!currentID) return;
-    if (currentID !== lastTrackID.current) {
-      lastTrackID.current = currentID;
-      setLyricLines([]);
-    }
-    startTransition(() => {
-      setLyricLines(lines);
-    });
-  }, [lines, trackSync?.track.id]);
-
   return (
     <div className="w-screen h-screen overflow-hidden relative flex rounded-md flex-col-reverse">
       <div
@@ -161,20 +129,15 @@ export default function LyricPage() {
         )}
         onClick={handleClick}
         onMouseOver={handleMouseOver}>
-        <div
-          className={cx(
-            "w-full h-full overflow-hidden contain-content mix-blend-plus-lighter transition-normal ease-in-out text-center",
-            lock && "pointer-events-none"
-          )}>
-          <LyricPlayer
-            ref={lyricPlayerRef}
-            playing={playerStatusSync?.fsmState === PlayerFSMStatusEnum.playing}
-            className="w-full h-full"
-            alignAnchor="center"
-            hidePassedLines={true}
-            alignPosition={0.35}
-            lyricLines={lyricLines}
-            enableScale={false}
+        <div className={cx("w-full h-full overflow-hidden", lock && "pointer-events-none")}>
+          <LyricComponent
+            ref={lyricRef}
+            fontSize={fontSize}
+            activeColor={(color ?? themeSync.mainColor) || "#ffffff"}
+            lyric={trackSync?.lyric}
+            version={playerStatusSync?.lyricVersion}
+            crossAlign="center"
+            mainAlign="top"
           />
         </div>
       </div>
