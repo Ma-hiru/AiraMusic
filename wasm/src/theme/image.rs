@@ -9,7 +9,7 @@ pub fn decode_image(image_bytes: &[u8]) -> Result<DecodedResult> {
         .decode()?
         .to_rgba8();
 
-    let (wight, height) = image.dimensions();
+    let (width, height) = image.dimensions();
 
     let pixels = image
         .pixels()
@@ -23,7 +23,7 @@ pub fn decode_image(image_bytes: &[u8]) -> Result<DecodedResult> {
 
     Ok(DecodedResult {
         pixels,
-        wight,
+        width,
         height,
     })
 }
@@ -37,7 +37,7 @@ pub fn resize_bilinear(
         return Vec::new();
     }
 
-    let src_width = decoded_result.wight;
+    let src_width = decoded_result.width;
     let src_height = decoded_result.height;
     let pixels = &decoded_result.pixels;
     let capacity = match (dst_width as u64).checked_mul(dst_height as u64) {

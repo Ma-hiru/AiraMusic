@@ -122,9 +122,8 @@ const Control: FC<ControlProps> = ({
                       setColor(undefined);
                       setOpenColorSelect(false);
                     }
-                  }}>
-                  主
-                </NoDrag>
+                  }}
+                />
               )}
               {presetColors.map((presetColor) => {
                 if (presetColor === color) return null;

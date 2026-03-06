@@ -211,7 +211,7 @@ impl From<Vec<Pixel>> for ColorBox {
 #[derive(Debug, Default)]
 pub struct DecodedResult {
     pub pixels: Vec<Pixel>,
-    pub wight: u32,
+    pub width: u32,
     pub height: u32,
 }
 
