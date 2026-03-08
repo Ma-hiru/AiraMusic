@@ -1,58 +1,59 @@
-import axios from "axios";
-import { EqError, Log } from "@mahiru/ui/public/utils/dev";
+import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
+import HTTPConstants from "@mahiru/ui/public/constants/http";
+import { Log } from "@mahiru/ui/public/utils/dev";
 import { Auth } from "@mahiru/ui/public/entry/auth";
+import { nextIdle } from "@mahiru/ui/public/utils/frame";
 
-// 开发模式通过vite代理访问API服务器地址
-// 生产模式通过express代理访问API服务器地址
 export const apiRequest = axios.create({
-  baseURL: "/api",
-  withCredentials: true,
-  timeout: 15000
+  baseURL: HTTPConstants.NCMBaseURL,
+  timeout: HTTPConstants.Timeout,
+  withCredentials: true
 });
+
+type ExtendedAxiosRequestConfig = AxiosRequestConfig & {
+  __retryCount?: number;
+};
 
 apiRequest.interceptors.response.use(
   (response) => response.data,
-  async (error: any) => {
+  (error) => {
     if (axios.isCancel(error)) {
       return Promise.reject(error);
     }
 
-    const config = error.config;
-    const axiosResponse = error?.response;
-    const data = axiosResponse?.data as NeteaseAPIResponse;
+    const config: Undefinable<ExtendedAxiosRequestConfig> = error?.config;
+    const axiosResponse: Undefinable<AxiosResponse> = error?.response;
+    const data: Undefinable<NeteaseAPI.NeteaseAPIResponse> = axiosResponse?.data;
+    const message = String(data?.message || data?.msg || "");
+    const method = config?.method?.toLowerCase() ?? "get";
 
-    if (data?.code === 301 && data?.msg === "需要登录") {
-      Log.warn("apiRequest.ts", "token has expired");
-      void Auth.doLogout();
+    if (!config || !data) {
+      !config && Log.warn("apiRequest.ts", "no config in error");
+      !data && Log.warn("apiRequest.ts", "no response data in error");
       return Promise.reject(error);
+    } else if (data.code === 301 && message.includes("需要登录")) {
+      Log.warn("apiRequest.ts", "token has expired");
+      Auth.doLogout().catch();
     } else if (
-      data?.code === 405 &&
-      (data?.message === "操作频繁，请稍候再试" || data?.msg === "操作频繁，请稍候再试")
+      data.code === HTTPConstants.RetryCode &&
+      // 只有在请求过于频繁且请求幂等的情况下才自动重试，否则直接报错
+      message.includes(HTTPConstants.RetryMessageKeyword) &&
+      HTTPConstants.IdempotentMethods.includes(method)
     ) {
-      const method = config.method?.toLowerCase();
-      const isIdempotent = ["get", "head", "options"].includes(method);
-      if (!isIdempotent) {
-        return Promise.reject(error);
-      }
-
       config.__retryCount ??= 0;
-      config.__maxRetries ??= 3;
-      config.__retryDelay ??= 1000;
-      // 请求过于频繁，自动延迟重试
-      if (config.__retryCount < config.__maxRetries) {
-        config.__retryCount++;
-        const base = config.__retryDelay;
-        const cap = 30_000;
-        const exp = Math.min(cap, base * 2 ** (config.__retryCount - 1));
-        const delayTime = Math.random() * exp;
+      if (config.__retryCount < HTTPConstants.MaxRetries) {
+        const delayTime = HTTPConstants.backoff(++config.__retryCount);
 
-        Log.debug(
-          "apiRequest.ts",
-          `retry ${config.__retryCount}/${config.__maxRetries} after ${delayTime}ms`
-        );
+        nextIdle(1000).then(() => {
+          Log.trace(
+            `apiRequest.ts<${config.url}>`,
+            `retry ${config.__retryCount}/${HTTPConstants.MaxRetries} after ${delayTime}ms`
+          );
+        });
 
-        await delay(delayTime, config.signal);
-        return apiRequest(config);
+        return delay(delayTime, <AbortSignal>config.signal)
+          .then(() => apiRequest(config))
+          .catch(() => error);
       }
     }
 
@@ -63,15 +64,14 @@ apiRequest.interceptors.response.use(
 function delay(ms: number, signal?: AbortSignal) {
   return new Promise<void>((resolve, reject) => {
     const timer = setTimeout(resolve, ms);
-
     if (signal) {
       signal.addEventListener(
         "abort",
         () => {
           clearTimeout(timer);
-          reject(new EqError({ message: "Delay aborted", label: "apiRequest.ts" }));
+          reject();
         },
-        { once: true }
+        { once: true, passive: true }
       );
     }
   });

@@ -1,4 +1,8 @@
-interface NeteaseAPIResponse {
-  code: number;
-  [property: string]: any;
+namespace NeteaseAPI {
+  interface NeteaseAPIResponse {
+    code: number;
+    message?: string;
+    msg?: string;
+    [property: string]: any;
+  }
 }

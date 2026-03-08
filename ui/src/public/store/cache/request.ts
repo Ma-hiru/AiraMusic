@@ -1,19 +1,12 @@
 import axios from "axios";
-import { Renderer } from "@mahiru/ui/public/entry/renderer";
-
-export const accessToken = await new Promise<string>((resolve) => {
-  Renderer.invoke
-    .storeKey()
-    .then((token) => resolve(token))
-    .catch(() => resolve("mahiru"));
-});
+import HTTPConstants from "@mahiru/ui/public/constants/http";
 
 export const cacheRequest = axios.create({
-  baseURL: "/cache",
+  baseURL: HTTPConstants.CacheBaseURL,
+  timeout: HTTPConstants.Timeout,
   withCredentials: true,
-  timeout: 15000,
   headers: {
-    Authorization: accessToken
+    Authorization: HTTPConstants.CacheAccessToken
   }
 });
 

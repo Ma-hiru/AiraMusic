@@ -97,7 +97,7 @@ export class AuthClass {
     requestIdleCallback(() => this.execSubscriber(true), { timeout: 1000 });
   };
 
-  doLogout = () => {
+  doLogout = ():Promise => {
     return API.Auth.logout().finally(() => {
       this.removeCookie("MUSIC_U");
       this.removeCookie("__csrf");
