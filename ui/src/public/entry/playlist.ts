@@ -351,28 +351,7 @@ class PlaylistManager {
     }
   }
 
-  /** 检查歌单tracks字段是否完整，不完整再额外请求 */
-  private async requestFullTracks(
-    response: NeteasePlaylistDetailResponse,
-    whenRequestMissedTracks?: NormalFunc<[missTrack: number]>,
-    maxPerRequest: number = 100,
-    concurrency: number = 5
-  ) {
-    const { playlist } = response;
-    if (playlist.trackCount === playlist.tracks.length) {
-      return response;
-    } else {
-      whenRequestMissedTracks?.(playlist.trackCount - playlist.tracks.length);
-      const { tracks, privilege } = await NeteaseTrack.requestTrackDetail(
-        playlist.trackIds.slice(playlist.tracks.length, playlist.trackCount),
-        maxPerRequest,
-        concurrency
-      );
-      response.playlist.tracks.push(...tracks);
-      response.privileges.push(...privilege);
-      return response;
-    }
-  }
+
 
   /** 歌曲封面缓存，命中则替换成本地路径，没有就预下载 */
   public async requestTracksCoverPreCache(
@@ -430,16 +409,7 @@ class PlaylistManager {
     return this.store.saveDirtyEntry(entry, memoryFresh);
   }
 
-  formatPlayCount(playcount?: number): string {
-    if (!playcount) return "0";
-    if (playcount >= 100000000) {
-      return (playcount / 100000000).toFixed(1) + "亿";
-    } else if (playcount >= 10000) {
-      return (playcount / 10000).toFixed(1) + "万";
-    } else {
-      return playcount.toString();
-    }
-  }
+
 }
 
 interface PlaylistManager extends WithCacheStore, WithLocalStore {}

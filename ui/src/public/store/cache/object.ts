@@ -9,6 +9,8 @@ export class CacheStoreForObject extends CacheStoreBase {
     });
   }
 
+  storeMulti<T extends object>(list: { id: string; value: T }[]) {}
+
   fetch<T>(
     id: string,
     timeLimit?: number,
@@ -22,5 +24,9 @@ export class CacheStoreForObject extends CacheStoreBase {
       method: "GET",
       params: { id, timeLimit, ...(parts || {}) }
     });
+  }
+
+  fetchMulti<T>(ids: string[]): Promise<Nullable<T>[]> {
+    return Promise.resolve([]);
   }
 }

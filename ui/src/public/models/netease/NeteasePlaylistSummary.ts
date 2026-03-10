@@ -1,31 +1,27 @@
-
-
-export default class NeteasePlaylistSummray implements NeteasePlaylistModel {
+export default class NeteasePlaylistSummary implements NeteasePlaylistSummaryModel {
   //region fields
-  commentCount: number;
-  coverImgUrl: string;
-  createTime: number;
-  creator: { avatarUrl: string; nickname: string; signature: string };
-  highQuality: boolean;
-  id: number;
-  name: string;
-  playCount: number;
-  playlistType: string;
-  privacy: number;
-  shareCount: number;
-  subscribed: boolean;
-  subscribedCount: number;
-  tags: string[];
-  trackCount: number;
-  trackIds: number[];
-  trackNumberUpdateTime: number;
-  trackUpdateTime: number;
-  tracks: NeteaseTrack[];
-  updateTime: number;
-  userId: number;
+  readonly coverImgUrl: string;
+  readonly createTime: number;
+  readonly creator: {
+    readonly avatarUrl: string;
+    readonly nickname: string;
+    readonly signature: string;
+  };
+  readonly highQuality: boolean;
+  readonly id: number;
+  readonly name: string;
+  readonly playCount: number;
+  readonly privacy: number;
+  readonly subscribed: boolean;
+  readonly subscribedCount: number;
+  readonly tags: string[];
+  readonly trackCount: number;
+  readonly trackNumberUpdateTime: number;
+  readonly trackUpdateTime: number;
+  readonly updateTime: number;
+  readonly userId: number;
 
-  constructor(props: NeteasePlaylistModel) {
-    this.commentCount = props.commentCount;
+  constructor(props: NeteasePlaylistSummaryModel) {
     this.coverImgUrl = props.coverImgUrl;
     this.createTime = props.createTime;
     this.creator = props.creator;
@@ -33,17 +29,13 @@ export default class NeteasePlaylistSummray implements NeteasePlaylistModel {
     this.id = props.id;
     this.name = props.name;
     this.playCount = props.playCount;
-    this.playlistType = props.playlistType;
     this.privacy = props.privacy;
-    this.shareCount = props.shareCount;
     this.subscribed = props.subscribed;
     this.subscribedCount = props.subscribedCount;
     this.tags = props.tags;
     this.trackCount = props.trackCount;
-    this.trackIds = props.trackIds;
     this.trackNumberUpdateTime = props.trackNumberUpdateTime;
     this.trackUpdateTime = props.trackUpdateTime;
-    this.tracks = props.tracks;
     this.updateTime = props.updateTime;
     this.userId = props.userId;
   }
@@ -61,22 +53,14 @@ export default class NeteasePlaylistSummray implements NeteasePlaylistModel {
   }
 
   //region static methods
-  static fromNeteaseAPI(
-    playlist: NeteaseAPI.NeteasePlaylistDetail,
-    privilege: NeteaseAPI.NeteaseTrackPrivilege
-  ) {
-    return new NeteasePlaylist({
-      ...playlist,
-      trackIds: playlist.trackIds.map((i) => i.id),
-      tracks: playlist.tracks.map((t) => NeteaseTrack.fromNeteaseAPI(t, privilege))
-    });
+  static fromNeteaseAPI(playlist: NeteaseAPI.NeteasePlaylistSummary) {
+    return new NeteasePlaylistSummary(playlist);
   }
   //endregion
 }
 
 //region Type Definitions
-interface NeteasePlaylistModel {
-  commentCount: number;
+export interface NeteasePlaylistSummaryModel {
   coverImgUrl: string;
   createTime: number;
   creator: {
@@ -88,15 +72,11 @@ interface NeteasePlaylistModel {
   id: number;
   name: string;
   playCount: number;
-  playlistType: string;
   privacy: number;
-  shareCount: number;
   subscribed: boolean;
   subscribedCount: number;
   tags: string[];
   trackCount: number;
-  trackIds: number[];
-  tracks: NeteaseTrack[];
   trackNumberUpdateTime: number;
   trackUpdateTime: number;
   updateTime: number;

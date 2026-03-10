@@ -11,7 +11,7 @@ import _NeteaseUserAPI from "@mahiru/ui/public/api/user";
 import _NeteaseRecordAPI from "@mahiru/ui/public/api/record";
 import _NeteaseWikiAPI from "@mahiru/ui/public/api/wiki";
 
-export default class NeteaseAPI {
+export default class NCM_API {
   static readonly Album = new _NeteaseAlbumAPI();
   static readonly Auth = new _NeteaseAuthAPI();
   static readonly Comment = new _NeteaseCommentAPI();

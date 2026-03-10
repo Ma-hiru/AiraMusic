@@ -6,7 +6,6 @@ namespace NeteaseAPI {
     id: number;
     name: string;
     pic: number;
-    pic_str?: string;
     picUrl: string;
     tns: string[];
   }

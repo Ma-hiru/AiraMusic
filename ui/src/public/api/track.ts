@@ -45,7 +45,8 @@ export default class _NeteaseTrackAPI {
    * @param ids - 音乐 id, 例如 ids=405998841,33894312
    * @example /song/detail?ids=347230`,`/song/detail?ids=347230,347231
    */
-  detail(ids: string | number) {
+  detail(ids: string | number | number[]) {
+    if (Array.isArray(ids)) ids = ids.join(",");
     return apiRequest<any, NeteaseAPI.NeteaseTrackDetailResponse>({
       url: "/song/detail",
       params: { ids }

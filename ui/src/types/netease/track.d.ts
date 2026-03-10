@@ -88,7 +88,6 @@ namespace NeteaseAPI {
      */
     t: 0 | 1 | 2;
     tagPicList: null;
-    tns?: string[];
     /** 常为[1, ?]任意数字, 代表歌曲当前信息版本 */
     v: number;
     version: number;
@@ -110,14 +109,6 @@ namespace NeteaseAPI {
       picUrl: string;
       name: string;
     };
-    /** 注入字段 */
-    playable: boolean;
-    /** 注入字段 */
-    reason: string;
-    /** 注入字段 */
-    playDuration?: number;
-    /** 注入字段 */
-    recordTime?: number;
     /**
      * 一些歌曲属性，用按位与操作获取对应位置的值
      *   8192 立体声?(不是很确定)

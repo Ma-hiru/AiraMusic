@@ -1,13 +1,12 @@
 import pLimit from "p-limit";
 import { AddCacheStore, WithCacheStore } from "@mahiru/ui/public/store/cache";
 import { AddLocalStore, WithLocalStore } from "@mahiru/ui/public/store/local";
-import { TrackBitmark, TrackQuality } from "@mahiru/ui/public/enum";
+import { TrackQuality } from "@mahiru/ui/public/enum";
 import { Time } from "@mahiru/ui/public/entry/time";
 import { API } from "@mahiru/ui/public/api";
 import { EqError, Log } from "@mahiru/ui/public/utils/dev";
 import { NeteaseImage } from "@mahiru/ui/public/entry/image";
 import { NeteaseImageSize } from "@mahiru/ui/public/enum/image";
-import { Auth } from "@mahiru/ui/public/entry/auth";
 import { Net } from "@mahiru/ui/public/entry/net";
 
 @AddCacheStore
@@ -145,177 +144,8 @@ class NeteaseTrackClass {
 
   /// 相关工具方法
 
-  /** 获取歌曲音质信息 */
-  getTrackSourceQuality<T extends TrackQuality | undefined>(
-    track: NeteaseTrackBase,
-    preference: T
-  ): TrackSourceQualityReturn<T> {
-    const availableQualities: (NeteaseQualityLevels & { level: TrackQuality })[] = [];
-    // 收集可用的音质等级,从低到高
-    if (track.l)
-      availableQualities.push({
-        ...track.l,
-        level: TrackQuality.l
-      });
-    if (track.m)
-      availableQualities.push({
-        ...track.m,
-        level: TrackQuality.m
-      });
-    if (track.h)
-      availableQualities.push({
-        ...track.h,
-        level: TrackQuality.h
-      });
-    if (track.sq)
-      availableQualities.push({
-        ...track.sq,
-        level: TrackQuality.sq
-      });
-    if (track.hr)
-      availableQualities.push({
-        ...track.hr,
-        level: TrackQuality.hr
-      });
-    // 如果没有指定偏好质量，则返回所有可用质量，并按码率从高到低排序
-    availableQualities.sort((b, a) => (a.br || 0) - (b.br || 0));
-    if (preference === undefined) {
-      return availableQualities as TrackSourceQualityReturn<T>;
-    } else {
-      // 如果指定了偏好质量，先尝试返回该质量等级
-      const alreadyExits = availableQualities.find((available) => available.level === preference);
-      if (alreadyExits) return alreadyExits as TrackSourceQualityReturn<T>;
-      // 如果偏好质量是Hi-Res，则直接返回最高质量
-      if (preference === TrackQuality.hr) {
-        return availableQualities[0] as TrackSourceQualityReturn<T>;
-      }
-      // 否则返回最接近偏好质量的音质等级
-      let selectedQuality: Undefinable<NeteaseQualityLevels> = availableQualities[0];
-      if (selectedQuality) {
-        let minDiff = Math.abs((selectedQuality.br || 0) - preference);
-        for (const quality of availableQualities) {
-          const diff = Math.abs((quality.br || 0) - preference);
-          if (diff < minDiff) {
-            minDiff = diff;
-            selectedQuality = quality;
-          }
-        }
-      }
-      return selectedQuality as TrackSourceQualityReturn<T>;
-    }
-  }
 
-  /** 音质文本映射 */
-  mapTrackQualityToText(level: TrackQuality) {
-    switch (level) {
-      case TrackQuality.l:
-        return "L";
-      case TrackQuality.m:
-        return "M";
-      case TrackQuality.h:
-        return "HD";
-      case TrackQuality.sq:
-        return "SQ";
-      case TrackQuality.hr:
-        return "Hi-Res";
-    }
-  }
-
-  /** 解析歌曲Bitmark */
-  parseTrackBitmark(track: NeteaseTrackBase, flag: TrackBitmark) {
-    const mark = track?.mark;
-    if (typeof mark !== "number") return false;
-    return (mark & flag) === flag;
-  }
-
-  /** 判断NeteaseTrack是否可以播放 */
-  isTrackPlayable(track: NeteaseTrack) {
-    const result = {
-      playable: true,
-      reason: ""
-    };
-
-    if (
-      // 播放权限 > 0
-      (typeof track?.privilege?.pl === "number" && track.privilege.pl > 0) ||
-      // 云盘歌曲且已登录
-      (Auth.isAccountLoggedIn() && track?.privilege?.cs)
-    )
-      return result;
-
-    const { UserProfile } = this.localSnapshot.User;
-    const vipType = UserProfile?.vipType;
-    // 0: 免费或无版权 1: VIP 歌曲 4: 购买专辑 8: 非会员可免费播放低音质，会员可播放高音质及下载
-    if (track.fee === 1 || track.privilege?.fee === 1) {
-      // VIP 歌曲
-      if (Auth.isAccountLoggedIn() && vipType === 11) {
-        result.playable = true;
-      } else {
-        result.playable = false;
-        result.reason = "VIP专属";
-      }
-    } else if (track.fee === 4 || track.privilege?.fee === 4) {
-      // 付费专辑
-      result.playable = false;
-      result.reason = "付费专辑";
-    } else if (track.noCopyrightRcmd !== null && track.noCopyrightRcmd !== undefined) {
-      result.playable = false;
-      result.reason = "无版权";
-      // st小于0时为灰色歌曲, 使用上传云盘的方法解灰后 st == 0。
-    } else if (track.privilege?.st && track.privilege.st < 0 && Auth.isAccountLoggedIn()) {
-      result.playable = false;
-      result.reason = "已下架";
-    }
-
-    return result;
-  }
-
-  /** 拓展track状态，包含版权信息 */
-  tracksPrivilegeExtends(tracks: NeteaseTrack[], privileges: NeteaseTrackPrivilege[]) {
-    return tracks.map((track) => {
-      // 合并 privilege 信息
-      const privilege = privileges.find((item) => item.id === track.id);
-      if (privilege) track.privilege = { ...(track.privilege ?? {}), ...privilege };
-      // 注入 playable 状态
-      const { playable, reason } = this.isTrackPlayable(track);
-      track.playable = playable;
-      track.reason = reason;
-      return track as NeteaseTrack & { playable: boolean; reason: string };
-    });
-  }
-
-  /** 根据歌曲id获取歌曲详情，会考虑请求次数和URL大小限制 */
-  async requestTrackDetail(
-    ids: TrackId[] | number[],
-    maxPerRequest: number = 100,
-    concurrency: number = 5
-  ) {
-    const limit = pLimit(concurrency);
-    const chunks: number[][] = [];
-
-    if (typeof ids[0] === "object") {
-      ids = (ids as TrackId[]).map((track) => track.id);
-    }
-
-    for (let i = 0; i < ids.length; i += maxPerRequest) {
-      chunks.push((ids as number[]).slice(i, i + maxPerRequest));
-    }
-    const results = await Promise.all(
-      chunks.map((chunk) => limit(() => API.Track.getTrackDetail(chunk.join(","))))
-    );
-    const tracks: NeteaseTrack[] = [];
-    const privilege: NeteaseTrackPrivilege[] = [];
-    for (const raw of results) {
-      tracks.push(...raw.songs);
-      privilege.push(...raw.privileges);
-    }
-    return { tracks, privilege };
-  }
 }
 interface NeteaseTrackClass extends WithCacheStore, WithLocalStore {}
-
-type TrackSourceQualityReturn<T extends TrackQuality | undefined> = T extends undefined
-  ? (NeteaseQualityLevels & { level: TrackQuality })[]
-  : Undefinable<NeteaseQualityLevels & { level: TrackQuality }>;
 
 export const NeteaseTrack = new NeteaseTrackClass();
