@@ -60,29 +60,7 @@ export class NeteaseImageClass {
     this.initialized = true;
   }
 
-  /** 设置图片的size，如果url为假值或者为本地路径，原地返回 */
-  setSize<T extends Optional<string>>(
-    url: T,
-    size: NeteaseImageSize | number
-  ): T extends Falsy ? undefined : string {
-    if (!url || !url.startsWith("http")) {
-      return <T extends Falsy ? undefined : string>(url || undefined);
-    }
-    if (!Number.isFinite(size) || size < 0) {
-      return <T extends Falsy ? undefined : string>(url || undefined);
-    }
 
-    const u = new URL(url);
-    if (size !== NeteaseImageSize.raw) {
-      u.searchParams.set("param", `${size}y${size}`);
-      u.searchParams.set("type", "webp");
-    } else {
-      u.searchParams.delete("param");
-      u.searchParams.delete("type");
-    }
-
-    return <T extends Falsy ? undefined : string>u.toString();
-  }
 
   storeCacheURL(raw: Optional<string>, cache: Optional<string>, size?: NeteaseImageSize) {
     if (!raw) return;

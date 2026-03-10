@@ -6,7 +6,7 @@ import { CacheStore } from "@mahiru/ui/public/store/cache";
 
 export default class NeteasePlaylistSource {
   //region cache
-  private static readonly cacheKey = "playlist_detail";
+  private static readonly cacheKey = "netease_playlist_detail";
 
   private static storeCache(response: NeteaseAPI.NeteasePlaylistDetailResponse) {
     return CacheStore.object.store(
@@ -37,13 +37,15 @@ export default class NeteasePlaylistSource {
       return cache;
     }
 
-    const { tracks, privileges } = await NeteaseTrackSource.fromIDsRaw(
+    const entries = await NeteaseTrackSource.fromIDsRaw(
       playlist.trackIds.slice(playlist.tracks.length, playlist.trackCount),
       maxPerRequest,
       concurrency
     );
-    response.playlist.tracks.push(...tracks);
-    response.privileges.push(...privileges);
+    for (const { track, privilege } of entries) {
+      response.playlist.tracks.push(track);
+      response.privileges.push(privilege);
+    }
 
     void NeteasePlaylistSource.storeCache(response);
 
