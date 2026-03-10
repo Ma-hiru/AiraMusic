@@ -1,11 +1,11 @@
 namespace NeteaseAPI {
   interface NeteaseLyricResponse extends NeteaseAPIResponse {
     /** 逐字歌词 QRC （逐字格式）*/
-    klyric?: NeteaseKlyric;
+    klyric?: NeteaseLyric;
     /** 主歌词 LRC */
-    lrc?: NeteaseLrc;
+    lrc?: NeteaseLyric;
     /** 罗马音歌词 LRC（罗马拼音）*/
-    romalrc?: NeteaseRomalrc;
+    romalrc?: NeteaseLyric;
     /** 歌词同步、翻译质量相关标志 */
     qfy: boolean;
     /** 歌词同步、翻译质量相关标志 */
@@ -13,32 +13,12 @@ namespace NeteaseAPI {
     /** 歌词同步、翻译质量相关标志 */
     sgc: boolean;
     /** 翻译歌词 LRC（翻译版）*/
-    tlyric?: NeteaseTlyric;
+    tlyric?: NeteaseLyric;
     /** 提供歌词/翻译的用户信息 */
     transUser: NeteaseTransUser;
   }
 
-  interface NeteaseKlyric {
-    lyric: string;
-    version: number;
-  }
-
-  interface NeteaseLrc {
-    lyric: string;
-    version: number;
-  }
-
-  interface NeteaseRomalrc {
-    lyric: string;
-    version: number;
-  }
-
-  interface NeteaseTlyric {
-    lyric: string;
-    version: number;
-  }
-
-  interface NeteaseYRC {
+  interface NeteaseLyric {
     lyric: string;
     version: number;
   }

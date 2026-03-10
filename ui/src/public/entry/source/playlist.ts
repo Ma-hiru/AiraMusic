@@ -5,23 +5,24 @@ import NeteaseTrackSource from "@mahiru/ui/public/entry/source/track";
 import { CacheStore } from "@mahiru/ui/public/store/cache";
 
 export default class NeteasePlaylistSource {
-  static readonly cacheKey = "playlist_detail";
+  //region cache
+  private static readonly cacheKey = "playlist_detail";
 
-  static storeCache(response: NeteaseAPI.NeteasePlaylistDetailResponse) {
+  private static storeCache(response: NeteaseAPI.NeteasePlaylistDetailResponse) {
     return CacheStore.object.store(
       NeteasePlaylistSource.cacheKey + "_" + response.playlist.id,
       response
     );
   }
 
-  static getCache(id: number) {
+  private static getCache(id: number) {
     return CacheStore.object.fetch<NeteaseAPI.NeteasePlaylistDetailResponse>(
       NeteasePlaylistSource.cacheKey + "_" + id
     );
   }
-
+  //endregion
   /** 检查歌单tracks字段是否完整，不完整再额外请求 */
-  static async requestFullTracks(
+  private static async requestFullTracks(
     response: NeteaseAPI.NeteasePlaylistDetailResponse,
     maxPerRequest: number = 100,
     concurrency: number = 5
@@ -49,17 +50,17 @@ export default class NeteasePlaylistSource {
     return response;
   }
 
-  formID(id: number, signal?: AbortSignal) {
-    return NCM_API.Playlist.detail(id, signal).then(this.fromResponse.bind(this));
+  static formID(id: number, signal?: AbortSignal) {
+    return NCM_API.Playlist.detail(id, signal).then(NeteasePlaylistSource.fromResponse);
   }
 
-  fromResponse(response: NeteaseAPI.NeteasePlaylistDetailResponse) {
+  static fromResponse(response: NeteaseAPI.NeteasePlaylistDetailResponse) {
     return NeteasePlaylistSource.requestFullTracks(response).then(
       NeteasePlaylist.fromNeteaseAPIResponse
     );
   }
 
-  fromSummary(summary: NeteasePlaylistSummary | NeteaseAPI.NeteasePlaylistSummary) {
-    return this.formID(summary.id);
+  static fromSummary(summary: NeteasePlaylistSummary | NeteaseAPI.NeteasePlaylistSummary) {
+    return NeteasePlaylistSource.formID(summary.id);
   }
 }

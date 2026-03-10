@@ -2,17 +2,18 @@ import pLimit from "p-limit";
 import NCM_API from "@mahiru/ui/public/api";
 import NeteaseTrack from "@mahiru/ui/public/models/netease/NeteaseTrack";
 import { CacheStore } from "@mahiru/ui/public/store/cache";
+import NeteasePlaylistSource from "@mahiru/ui/public/entry/source/playlist";
 
 export default class NeteaseTrackSource {
-  static readonly cacheKey = "netease_tracks";
+  private static readonly cacheKey = "netease_tracks";
 
-  static getCache(ids: number[]) {
+  private static getCache(ids: number[]) {
     return CacheStore.object.fetchMulti<NeteaseAPI.NeteaseTrack>(
       ids.map((id) => NeteaseTrackSource.cacheKey + "_" + id)
     );
   }
 
-  static storeCache(tracks: NeteaseAPI.NeteaseTrack[]) {
+  private static storeCache(tracks: NeteaseAPI.NeteaseTrack[]) {
     return CacheStore.object.storeMulti<NeteaseAPI.NeteaseTrack>(
       tracks.map((track) => ({
         id: NeteaseTrackSource.cacheKey + "_" + track.id,
@@ -55,7 +56,7 @@ export default class NeteaseTrackSource {
   }
 
   /** 根据歌曲id获取歌曲详情，会考虑请求次数和URL大小限制 */
-  async fromIDs(
+  static async fromIDs(
     ids: NeteaseAPI.TrackId[] | number[],
     maxPerRequest: number = 100,
     concurrency: number = 5
@@ -74,5 +75,7 @@ export default class NeteaseTrackSource {
     return neteaseTracks;
   }
 
-  fromPlaylist(playlist: NeteaseAPI.NeteasePlaylistDetail) {}
+  static fromPlaylist(playlist: NeteaseAPI.NeteasePlaylistDetail) {
+    return NeteasePlaylistSource.formID(playlist.id).then((p) => p.tracks);
+  }
 }
