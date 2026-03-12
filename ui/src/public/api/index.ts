@@ -12,16 +12,16 @@ import _NeteaseRecordAPI from "@mahiru/ui/public/api/record";
 import _NeteaseWikiAPI from "@mahiru/ui/public/api/wiki";
 
 export default class NCM_API {
-  static readonly Album = new _NeteaseAlbumAPI();
-  static readonly Auth = new _NeteaseAuthAPI();
-  static readonly Comment = new _NeteaseCommentAPI();
-  static readonly Home = new _NeteaseHomeAPI();
-  static readonly Lyric = new _NeteaseLyricAPI();
-  static readonly MV = new _NeteaseMVAPI();
-  static readonly Playlist = new _NeteasePlaylistAPI();
-  static readonly Record = new _NeteaseRecordAPI();
-  static readonly Search = new _NeteaseSearchAPI();
-  static readonly Track = new _NeteaseTrackAPI();
-  static readonly User = new _NeteaseUserAPI();
-  static readonly Wiki = new _NeteaseWikiAPI();
+  static readonly Album = _NeteaseAlbumAPI;
+  static readonly Auth = _NeteaseAuthAPI;
+  static readonly Comment = _NeteaseCommentAPI;
+  static readonly Home = _NeteaseHomeAPI;
+  static readonly Lyric = _NeteaseLyricAPI;
+  static readonly MV = _NeteaseMVAPI;
+  static readonly Playlist = _NeteasePlaylistAPI;
+  static readonly Record = _NeteaseRecordAPI;
+  static readonly Search = _NeteaseSearchAPI;
+  static readonly Track = _NeteaseTrackAPI;
+  static readonly User = _NeteaseUserAPI;
+  static readonly Wiki = _NeteaseWikiAPI;
 }

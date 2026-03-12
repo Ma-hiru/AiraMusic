@@ -1,40 +1,8 @@
-import { commonEmojiMap } from "@mahiru/ui/public/constants/emoji";
+import { BannerType, NeteaseImageSize } from "@mahiru/ui/public/enum";
 import { EqError, Log } from "@mahiru/ui/public/utils/dev";
-import { BannerType } from "@mahiru/ui/public/enum";
 
-export class StrClass {
-  splitTrackTitle(title?: string) {
-    const result = { main: title?.trim() || "", sub: "" };
-    if (!title) return result;
-
-    const regex = /^(.*?)\s*(\([^()]*\)|（[^（）]*）|\[[^[\]]*]|【[^【】]*】|-[^-\s][^-]*-)\s*$/;
-    const match = title.match(regex);
-    if (!match) return result;
-
-    result.main = match[1]?.trim() || "";
-    result.sub =
-      match[2]
-        ?.trim()
-        .replace(/^[（([【-]\s*/, "")
-        .replace(/[）)\]】-]\s*$/, "") || "";
-
-    if (result.sub === title.trim()) {
-      result.main = title.trim();
-      result.sub = "";
-    }
-
-    return result;
-  }
-
-  parseCommentEmoji(text: string): string {
-    if (!text || !text.includes("[")) return text;
-
-    return text.replace(/\[([^[\]]+)]/g, (raw, name) => {
-      return commonEmojiMap[name] ?? raw;
-    });
-  }
-
-  parseBannerURL(url: string): { type: BannerType; id: number } {
+export default class NeteaseURL {
+  static parseBannerURL(url: string): { type: BannerType; id: number } {
     // examples:
     // 独家策划 https://y.music.163.com/g/yida/act/qianxi?page=50ccea950b38445f98458d3fc61ad72b
     // 新歌首发 orpheus://song/3322319846
@@ -64,7 +32,7 @@ export class StrClass {
         }
       }
     } catch (err) {
-      Log.info(
+      Log.error(
         new EqError({
           message: "parseBannerURL error",
           raw: err,
@@ -74,6 +42,28 @@ export class StrClass {
     }
     return { type: BannerType.unknown, id: 0 };
   }
-}
 
-export const Str = new StrClass();
+  /** 设置图片的size，如果url为假值或者为本地路径，原地返回 */
+  static setImageSize<T extends Optional<string>>(
+    url: T,
+    size: NeteaseImageSize | number
+  ): T extends Falsy ? undefined : string {
+    if (!url || !url.startsWith("http")) {
+      return <T extends Falsy ? undefined : string>(url || undefined);
+    }
+    if (!Number.isFinite(size) || size < 0) {
+      return <T extends Falsy ? undefined : string>(url || undefined);
+    }
+
+    const u = new URL(url);
+    if (size !== NeteaseImageSize.raw) {
+      u.searchParams.set("param", `${size}y${size}`);
+      u.searchParams.set("type", "webp");
+    } else {
+      u.searchParams.delete("param");
+      u.searchParams.delete("type");
+    }
+
+    return <T extends Falsy ? undefined : string>u.toString();
+  }
+}

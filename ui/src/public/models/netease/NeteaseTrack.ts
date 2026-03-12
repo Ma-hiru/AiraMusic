@@ -1,10 +1,9 @@
-import { Auth } from "@mahiru/ui/public/entry/auth";
-import { AddLocalStore, WithLocalStore } from "@mahiru/ui/public/store/local";
 import { TrackBitmark, TrackQuality } from "@mahiru/ui/public/enum";
 import NeteaseQualityLevels = NeteaseAPI.NeteaseQualityLevels;
+import Dayjs from "dayjs";
+import NeteaseUser from "@mahiru/ui/public/models/netease/NeteaseUser";
 
-@AddLocalStore
-class NeteaseTrack implements NeteaseTrackModel {
+export default class NeteaseTrack implements NeteaseTrackModel {
   //region NeteaseTrackModel fields
   readonly id: number;
   /** 专辑，如果是DJ节目(dj_type != 0)或者无专辑信息(single == 1)，则专辑id为0 */
@@ -51,7 +50,7 @@ class NeteaseTrack implements NeteaseTrackModel {
   /** 注入字段 */
   reason?: string;
 
-  constructor(props: NeteaseTrackModel) {
+  constructor(props: NeteaseTrackModel, user: Optional<NeteaseUser>) {
     this.id = props.id;
     this.al = props.al;
     this.alia = props.alia;
@@ -72,29 +71,28 @@ class NeteaseTrack implements NeteaseTrackModel {
     this.sq = props.sq;
     this.tns = props.tns;
     this.privilege = props.privilege;
-    this.playableExtends();
+    this.playableExtends(user);
   }
   //endregion
 
   /** 判断NeteaseTrack是否可以播放 */
-  playableExtends() {
+  playableExtends(user: Optional<NeteaseUser>) {
     // 如果没有 privilege 信息，无法判断是否可播放，暂时不设置 reason
     if (!this.privilege) return;
     if (
       // 播放权限 > 0
       (typeof this.privilege?.pl === "number" && this.privilege.pl > 0) ||
       // 云盘歌曲且已登录
-      (Auth.isAccountLoggedIn() && this?.privilege?.cs)
+      (user?.isLoggedIn && this?.privilege?.cs)
     ) {
       this.playable = true;
       return;
     }
 
-    const { UserProfile } = this.localSnapshot.User;
     // 0: 免费或无版权 1: VIP 歌曲 4: 购买专辑 8: 非会员可免费播放低音质，会员可播放高音质及下载
     if (this.fee === 1 || this.privilege?.fee === 1) {
       // VIP 歌曲
-      if (Auth.isAccountLoggedIn() && UserProfile?.vipType === 11) {
+      if (user?.isLoggedIn && user?.profile?.vipType === 11) {
         this.playable = true;
       } else {
         this.playable = false;
@@ -186,6 +184,61 @@ class NeteaseTrack implements NeteaseTrackModel {
     return this.tns?.[0];
   }
 
+  splitTitle() {
+    const title = this.name;
+    const result = { main: title?.trim() || "", sub: "" };
+    if (!title) return result;
+
+    const regex = /^(.*?)\s*(\([^()]*\)|（[^（）]*）|\[[^[\]]*]|【[^【】]*】|-[^-\s][^-]*-)\s*$/;
+    const match = title.match(regex);
+    if (!match) return result;
+
+    result.main = match[1]?.trim() || "";
+    result.sub =
+      match[2]
+        ?.trim()
+        .replace(/^[（([【-]\s*/, "")
+        .replace(/[）)\]】-]\s*$/, "") || "";
+
+    if (result.sub === title.trim()) {
+      result.main = title.trim();
+      result.sub = "";
+    }
+
+    return result;
+  }
+
+  formatDate(time?: number, split?: string) {
+    if (time) {
+      const date = Dayjs(time);
+      const now = Dayjs();
+      split ||= "-";
+      if (now.diff(date, "seconds") < 10) {
+        return "刚刚";
+      } else if (date.year() === now.year()) {
+        return date.format(`MM${split}DD`);
+      } else {
+        return date.format(`YYYY${split}MM${split}DD`);
+      }
+    }
+    return "";
+  }
+
+  formatTime(time: Optional<number>, unit: "ms" | "s" = "ms", split?: string) {
+    if (!time) return "0:00";
+    split ||= ":";
+    let base;
+    if (unit === "ms") {
+      base = 1000;
+    } else {
+      base = 1;
+    }
+    const minutes = Math.floor(time / (60 * base));
+    const seconds = Math.floor((time % (60 * base)) / base);
+    const paddedSeconds = seconds.toString().padStart(2, "0");
+    return `${minutes}${split}${paddedSeconds}`;
+  }
+
   //region static methods
   /** 音质文本映射 */
   static qualityText(level: TrackQuality) {
@@ -205,9 +258,24 @@ class NeteaseTrack implements NeteaseTrackModel {
 
   static fromNeteaseAPI(
     apiTrack: NeteaseAPI.NeteaseTrack,
-    privilege: NeteaseAPI.NeteaseTrackPrivilege
+    privilege: NeteaseAPI.NeteaseTrackPrivilege,
+    user: Optional<NeteaseUser>
   ) {
-    return new NeteaseTrack({ ...apiTrack, privilege });
+    return new NeteaseTrack({ ...apiTrack, privilege }, user);
+  }
+
+  static qualityParse(meta: NeteaseAPI.NeteaseSongUrlItem) {
+    if (meta.br >= TrackQuality.hr) {
+      return TrackQuality.hr;
+    } else if (meta.br >= TrackQuality.sq) {
+      return TrackQuality.sq;
+    } else if (meta.br >= TrackQuality.h) {
+      return TrackQuality.h;
+    } else if (meta.br >= TrackQuality.m) {
+      return TrackQuality.m;
+    } else {
+      return TrackQuality.l;
+    }
   }
   //endregion
 }
@@ -226,11 +294,7 @@ interface NeteaseTrackModel extends NeteaseAPI.NeteaseTrackBase {
   privilege: NeteaseAPI.NeteaseTrackPrivilege;
 }
 
-interface NeteaseTrack extends WithLocalStore {}
-
 type TrackSourceQualityReturn<T extends TrackQuality | undefined> = T extends undefined
   ? (NeteaseQualityLevels & { level: TrackQuality })[]
   : Undefinable<NeteaseQualityLevels & { level: TrackQuality }>;
 //endregion
-
-export default NeteaseTrack;

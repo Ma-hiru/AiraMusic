@@ -71,55 +71,9 @@ class TaskClass {
       .finally(() => (this.done = true));
   }
 
-  /** 登录状态下，只包含歌单的id、描述、封面 */
-  private refreshUserPlaylist = async () => {
-    try {
-      if (!Auth.isAccountLoggedIn()) return;
-      Log.debug("refresh user playlist");
-      const { UserProfile } = this.localSnapshot.User;
-      const {
-        UpdateUserLikedListSummary,
-        UpdateUserPlaylistSummary,
-        UpdateUserFavoriteListsSummary
-      } = this.playerSnapshot;
-      const uid = UserProfile?.userId;
-      if (uid) {
-        const { playlist } = await API.User.userPlaylist({ uid, limit: 30 });
-        const userPlaylist: NeteasePlaylistSummary[] = [];
-        const userFavoriteLists: NeteasePlaylistSummary[] = [];
-        const userLikedList = playlist.shift();
 
-        playlist.forEach((item) => {
-          if (item.creator.userId === uid) {
-            userPlaylist.push(item);
-          } else {
-            userFavoriteLists.push(item);
-          }
-        });
 
-        UpdateUserLikedListSummary(userLikedList || null);
-        UpdateUserFavoriteListsSummary(userFavoriteLists);
-        UpdateUserPlaylistSummary(userPlaylist);
-        this.localProxy.User.UserLikedPlaylistID = userLikedList?.id || null;
-      }
-    } catch (err) {
-      Log.error(
-        new EqError({
-          label: "task.ts",
-          message: "refresh user playlist failed",
-          raw: err
-        })
-      );
-    }
-  };
 
-  private refreshProfile = async () => {
-    return await Auth.refreshProfile();
-  };
-
-  private refreshCookies = async () => {
-    return await Auth.refreshCookies();
-  };
 }
 
 interface TaskClass extends WithLocalStore, WithPlayerStore {}

@@ -3,52 +3,40 @@ import {
   NeteaseNetworkImage
 } from "@mahiru/ui/public/models/netease/NeteaseImage";
 import { CacheStore } from "@mahiru/ui/public/store/cache";
+import NeteaseTrack from "@mahiru/ui/public/models/netease/NeteaseTrack";
 
 export default class NeteaseImageSource {
   //region cache
   private static readonly cacheKey = "netease_image";
 
-  private static getCacheKey(props: {
-    sourceID: number | string;
-    sourceName: string;
-    size: number;
-  }) {
+  private static getCacheKey(image: NeteaseNetworkImage) {
     return (
-      NeteaseImageSource.cacheKey + "_" + props.sourceID + "_" + props.sourceName + "_" + props.size
+      NeteaseImageSource.cacheKey + "_" + image.sourceID + "_" + image.sourceName + "_" + image.size
     );
   }
 
-  private static storeCache(props: {
-    sourceID: number | string;
-    sourceName: string;
-    size: number;
-    url: string;
-  }) {
-    return CacheStore.store.one(props.url, NeteaseImageSource.getCacheKey(props));
+  private static storeCache(image: NeteaseNetworkImage) {
+    return CacheStore.store.one(image.url, NeteaseImageSource.getCacheKey(image));
   }
 
-  private static getCache(
-    props: {
-      sourceID: number | string;
-      sourceName: string;
-      size: number;
-    },
-    download?: boolean
-  ) {
+  private static getCache(image: NeteaseNetworkImage, download?: boolean) {
     if (download) {
-      return CacheStore.check.orStoreOne(NeteaseImageSource.getCacheKey(props));
-    } else {
-      return CacheStore.check.one(NeteaseImageSource.getCacheKey(props));
+      return CacheStore.check.orStoreOne(image.url, NeteaseImageSource.getCacheKey(image));
     }
+    return CacheStore.check.one(NeteaseImageSource.getCacheKey(image));
   }
   //endregion
 
-  static async tryFromImage(image: NeteaseNetworkImage, download: boolean) {
+  static async try(image: NeteaseNetworkImage, download: boolean) {
     const check = await NeteaseImageSource.getCache(image, download);
     if (check.ok) {
       return NeteaseLocalImage.fromNetworkImage(image, check.index.file);
     }
     return null;
+  }
+
+  static async tryFromTrack(track: NeteaseTrack, download: boolean) {
+    return NeteaseImageSource.try(NeteaseNetworkImage.fromTrackCover(track), download);
   }
 
   static async downloadImage(image: NeteaseNetworkImage) {

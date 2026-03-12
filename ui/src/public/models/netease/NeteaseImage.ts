@@ -1,6 +1,7 @@
 import { NeteaseImageSize } from "@mahiru/ui/public/enum";
 import NeteaseTrack from "@mahiru/ui/public/models/netease/NeteaseTrack";
 import NeteasePlaylist from "@mahiru/ui/public/models/netease/NeteasePlaylist";
+import NeteaseURL from "@mahiru/ui/public/models/netease/NeteaseURL";
 
 export class NeteaseNetworkImage {
   url: string;
@@ -20,32 +21,8 @@ export class NeteaseNetworkImage {
   }
 
   setSize(size: NeteaseImageSize | number) {
-    this.url = NeteaseNetworkImage.setNeteaseImageURLSize(this.url, size);
+    this.url = NeteaseURL.setImageSize(this.url, size);
     this.size = size;
-  }
-
-  /** 设置图片的size，如果url为假值或者为本地路径，原地返回 */
-  static setNeteaseImageURLSize<T extends Optional<string>>(
-    url: T,
-    size: NeteaseImageSize | number
-  ): T extends Falsy ? undefined : string {
-    if (!url || !url.startsWith("http")) {
-      return <T extends Falsy ? undefined : string>(url || undefined);
-    }
-    if (!Number.isFinite(size) || size < 0) {
-      return <T extends Falsy ? undefined : string>(url || undefined);
-    }
-
-    const u = new URL(url);
-    if (size !== NeteaseImageSize.raw) {
-      u.searchParams.set("param", `${size}y${size}`);
-      u.searchParams.set("type", "webp");
-    } else {
-      u.searchParams.delete("param");
-      u.searchParams.delete("type");
-    }
-
-    return <T extends Falsy ? undefined : string>u.toString();
   }
 
   static fromTrackCover(track: NeteaseTrack | NeteaseAPI.NeteaseTrack) {

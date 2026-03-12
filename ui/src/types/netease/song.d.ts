@@ -10,7 +10,7 @@ namespace NeteaseAPI {
 
   interface NeteaseSongUrlItem {
     id: number;
-    url: string | null;
+    url: string ;
     br: number;
     size: number;
     type: string;

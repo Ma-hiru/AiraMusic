@@ -10,7 +10,7 @@ export default class _NeteaseTrackAPI {
    * @param quality - 码率质量等级
    * @note 默认当返回的 `quality >= 400000` 时，就会优先返回 hi-res
    */
-  url(id: string | number, quality?: NeteaseAPI.NeteaseQualityLevels) {
+  static url(id: string | number, quality?: NeteaseAPI.NeteaseQualityLevels) {
     return apiRequest<any, NeteaseAPI.NeteaseSongUrlResponse>({
       url: "/song/url",
       params: {
@@ -28,7 +28,7 @@ export default class _NeteaseTrackAPI {
    * @param level 播放音质等级
    * @param unblock 是否使用UnblockNeteaseMusic
    * */
-  urlNew(id: string | number, level: NeteaseMusicLevel, unblock = false) {
+  static urlNew(id: string | number, level: NeteaseMusicLevel, unblock = false) {
     return apiRequest<any, NeteaseMusicLevel>({
       url: "/song/url/v1",
       params: {
@@ -45,7 +45,7 @@ export default class _NeteaseTrackAPI {
    * @param ids - 音乐 id, 例如 ids=405998841,33894312
    * @example /song/detail?ids=347230`,`/song/detail?ids=347230,347231
    */
-  detail(ids: string | number | number[]) {
+  static detail(ids: string | number | number[]) {
     if (Array.isArray(ids)) ids = ids.join(",");
     return apiRequest<any, NeteaseAPI.NeteaseTrackDetailResponse>({
       url: "/song/detail",
@@ -57,7 +57,7 @@ export default class _NeteaseTrackAPI {
    * 喜欢音乐
    * @desc 调用此接口 , 传入音乐 id, 可喜欢该音乐
    */
-  star(params: {
+  static star(params: {
     /** 歌曲 id */
     id: number;
     /** 默认为 true 即喜欢 , 若传 false, 则取消喜欢 */
@@ -76,7 +76,7 @@ export default class _NeteaseTrackAPI {
    * 听歌打卡
    * @desc 调用此接口 , 传入音乐 id, 来源 id，歌曲时间 time，更新听歌排行数据
    */
-  scrobble(params: {
+  static scrobble(params: {
     /** 歌曲 id */
     id: number;
     /** 歌单或专辑 id */
@@ -97,7 +97,7 @@ export default class _NeteaseTrackAPI {
    * 副歌时间
    * @desc 调用此接口, 传入歌曲 id, 获取副歌时间
    * */
-  chorus(id: number) {
+  static chorus(id: number) {
     return apiRequest<any, NeteaseAPI.NeteaseTrackChorusResponse>({
       url: "/song/chorus",
       params: { id }
@@ -108,7 +108,7 @@ export default class _NeteaseTrackAPI {
    * 歌曲动态封面
    * @desc 登录后调用此接口, 传入歌曲 id, 获取歌曲动态封面
    * */
-  dynamicCover(id: number) {
+  static dynamicCover(id: number) {
     return apiRequest<any, NeteaseAPI.NeteaseAPIResponse>({
       url: "/song/dynamic/cover",
       params: { id }
@@ -116,7 +116,7 @@ export default class _NeteaseTrackAPI {
   }
 
   /** 获取相似音乐 */
-  similar(id: number) {
+  static similar(id: number) {
     return apiRequest<any, NeteaseAPI.NeteaseAPIResponse>({
       url: "/simi/song",
       params: { id }
@@ -127,7 +127,7 @@ export default class _NeteaseTrackAPI {
    * 每日推荐歌曲
    * @desc 调用此接口 , 可获得每日推荐歌曲 ( 需要登录 )
    */
-  recommendDaily() {
+  static recommendDaily() {
     return apiRequest<any, NeteaseAPI.NeteaseDailyRecommendTracksResponse>({
       url: "/recommend/songs",
       params: { timestamp: Date.now() }
@@ -138,7 +138,7 @@ export default class _NeteaseTrackAPI {
    * 每日推荐歌曲-不感兴趣
    * @desc 日推歌曲标记为不感兴趣( 同时会返回一个新推荐歌曲, 需要登录 )
    * */
-  recommendDailyTrash(id: number) {
+  static recommendDailyTrash(id: number) {
     return apiRequest<any, NeteaseAPI.NeteaseAPIResponse>({
       url: "/recommend/songs/dislike",
       params: { id, timestamp: Date.now() }
@@ -150,7 +150,7 @@ export default class _NeteaseTrackAPI {
    * @desc 调用此接口 , 可获取新歌速递
    * @param type - 地区类型 id, 对应以下: 全部:0 华语:7 欧美:96 日本:8 韩国:16
    */
-  recommendNew(type: 0 | 7 | 96 | 8 | 16) {
+  static recommendNew(type: 0 | 7 | 96 | 8 | 16) {
     return apiRequest<any, NeteaseAPI.NeteaseTopSongResponse>({
       url: "/top/song",
       params: {
@@ -163,7 +163,7 @@ export default class _NeteaseTrackAPI {
    * 私人 FM
    * @note 需要登录
    * */
-  personalFM() {
+  static personalFM() {
     return apiRequest<any, NeteaseAPI.NeteaseAPIResponse>({
       url: "/personal_fm",
       params: {
@@ -176,7 +176,7 @@ export default class _NeteaseTrackAPI {
    * 私人FM垃圾桶
    * @desc 调用此接口 , 传入音乐 id, 可把该音乐从私人 FM 中移除至垃圾桶
    * */
-  personalFMTrash(id: number) {
+  static personalFMTrash(id: number) {
     return apiRequest<any, NeteaseAPI.NeteaseAPIResponse>({
       url: "/fm_trash",
       params: {

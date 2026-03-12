@@ -6,7 +6,7 @@ export default class _NeteaseUserAPI {
    * @desc 登录后调用此接口 , 传入用户 id, 可以获取用户详情
    * @param uid 用户 id
    */
-  detail(uid: number) {
+  static detail(uid: number) {
     return apiRequest<any, NeteaseAPI.NeteaseUserDetailResponse>({
       url: "/user/detail",
       params: {
@@ -20,7 +20,7 @@ export default class _NeteaseUserAPI {
    * 获取账号详情
    * @desc 登录后调用此接口 ,可获取用户账号信息
    */
-  account() {
+  static account() {
     return apiRequest<any, NeteaseAPI.NeteaseUserAccountResponse>({
       url: "/user/account",
       params: {
@@ -33,7 +33,7 @@ export default class _NeteaseUserAPI {
    * 获取用户歌单
    * @desc 登录后调用此接口 , 传入用户 id, 可以获取用户歌单
    */
-  playlist(params: {
+  static playlist(params: {
     /** 用户 id */
     uid: number;
     /** 返回数量 , 默认为 30 */
@@ -51,7 +51,7 @@ export default class _NeteaseUserAPI {
    * 获取用户播放记录
    * @desc 登录后调用此接口 , 传入用户 id, 可获取用户播放记录
    */
-  playHistory(params: {
+  static playHistory(params: {
     /** 用户 id */
     uid: number;
     /** type=1 时只返回 weekData, type=0 时返回 allData */
@@ -68,7 +68,7 @@ export default class _NeteaseUserAPI {
    * @desc 调用此接口 , 传入用户 id, 可获取已喜欢音乐id列表(id数组)
    * @param uid 用户 id
    */
-  likedTracks(uid: number) {
+  static likedTracks(uid: number) {
     return apiRequest<any, NeteaseAPI.NeteaseLikedSongIdsResponse>({
       url: "/likelist",
       params: {
@@ -83,7 +83,7 @@ export default class _NeteaseUserAPI {
    * @desc 调用此接口可签到获取积分
    * @param type 签到类型 , 默认 0, 其中 0 为安卓端签到 ,1 为 web/PC 签到
    */
-  dailySignin(type: 0 | 1 = 0) {
+  static dailySignin(type: 0 | 1 = 0) {
     return apiRequest<any, NeteaseAPI.NeteaseAPIResponse>({
       url: "/daily_signin",
       method: "post",
@@ -98,7 +98,7 @@ export default class _NeteaseUserAPI {
    * 获取收藏的专辑（需要登录）
    * @desc 调用此接口可获取到用户收藏的专辑
    */
-  likedAlbums(params: {
+  static likedAlbums(params: {
     /** 返回数量 , 默认为 25 */
     limit: number;
     /** 偏移数量，用于分页 , 如 :( 页数 -1)*25, 其中 25 为 limit 的值 , 默认为 0 */
@@ -117,7 +117,7 @@ export default class _NeteaseUserAPI {
    * 获取收藏的歌手（需要登录）
    * @desc 调用此接口可获取到用户收藏的歌手
    */
-  likedArtists(params: { limit: number; offset?: number }) {
+  static likedArtists(params: { limit: number; offset?: number }) {
     return apiRequest<any, NeteaseAPI.NeteaseAPIResponse>({
       url: "/artist/sublist",
       params: {
@@ -131,7 +131,7 @@ export default class _NeteaseUserAPI {
    * 获取收藏的MV（需要登录）
    * @desc 调用此接口可获取到用户收藏的MV
    */
-  likedMVs(params: { limit: number; offset?: number }) {
+  static likedMVs(params: { limit: number; offset?: number }) {
     return apiRequest<any, NeteaseAPI.NeteaseAPIResponse>({
       url: "/mv/sublist",
       params: {
