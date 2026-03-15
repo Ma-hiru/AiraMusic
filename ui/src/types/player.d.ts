@@ -1,13 +1,13 @@
 type PlayerTrackInfo = {
   source: Nullable<number>;
-  track: NeteaseTrack;
+  track: NeteaseAPI.NeteaseTrack;
 };
 
 type PlayerTrackSource = {
   lyric: FullVersionLyricLine;
   audio: string;
-  quality: Undefinable<NeteaseQualityLevels & { level: number }>;
-  meta?: NeteaseSongUrlItem[];
+  quality: Undefinable<NeteaseAPI.NeteaseQualityLevels & { level: number }>;
+  meta?: NeteaseAPI.NeteaseSongUrlItem[];
 };
 
 type PlayerTrackStatus = PlayerTrackInfo & PlayerTrackSource;

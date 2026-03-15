@@ -1,8 +1,7 @@
-import NeteasePlaylistSummary from "@mahiru/ui/public/models/netease/NeteasePlaylistSummary";
-import { Persistable } from "@mahiru/ui/public/models/persistable";
-import NeteaseCookie from "@mahiru/ui/public/models/netease/NeteaseCookie";
+import { NeteasePlaylistSummary } from "./NeteasePlaylistSummary";
+import { NeteaseCookie } from "./NeteaseCookie";
 
-export default class NeteaseUser implements Persistable<NeteaseUser>, NeteaseUserModel {
+export class NeteaseUser implements NeteaseUserModel {
   //region fields
   readonly refreshCookiesDate;
   readonly profile;
@@ -36,23 +35,9 @@ export default class NeteaseUser implements Persistable<NeteaseUser>, NeteaseUse
     return NeteaseCookie.isLoggedIn();
   }
 
-  //region persistable
-  fromJSON(json: string) {
-    const obj = JSON.parse(json);
-    return new NeteaseUser({
-      profile: obj.profile,
-      refreshCookiesDate: obj.refreshCookiesDay,
-      likedTrackIDs: obj.likedTrackIDs,
-      likedPlaylist: obj.likedPlaylist,
-      starPlaylists: obj.starPlaylists,
-      userPlaylists: obj.userPlaylist
-    });
+  get isVIP() {
+    return this.profile.vipType === 11;
   }
-
-  toJSON() {
-    return JSON.stringify(this);
-  }
-  //endregion
 
   static fromNeteaseAPI(props: {
     refreshCookiesDate?: number;
@@ -76,12 +61,17 @@ export default class NeteaseUser implements Persistable<NeteaseUser>, NeteaseUse
     });
   }
 
+  static fromObject(user: Optional<NeteaseUserModel>) {
+    if (!user) return null;
+    return new NeteaseUser(user);
+  }
+
   static get isLoggedIn() {
     return NeteaseCookie.isLoggedIn();
   }
 }
 
-interface NeteaseUserModel {
+export interface NeteaseUserModel {
   profile: NeteaseAPI.NeteaseUserDetailResponse["profile"];
   likedTrackIDs: {
     ids: Record<number, boolean>;

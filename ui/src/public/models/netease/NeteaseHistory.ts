@@ -1,0 +1,27 @@
+import { NeteaseTrack } from "./NeteaseTrack";
+import { NeteaseTrackRecord } from "./NeteaseTrackRecord";
+
+export class NeteaseHistory extends NeteaseTrackRecord {
+  playDuration: number;
+  time: number;
+
+  constructor(props: {
+    sourceID: number;
+    track: NeteaseTrack;
+    sourceName: "playlist" | "album" | "other";
+    playDuration: number;
+    time: number;
+  }) {
+    super(props);
+    this.playDuration = props.playDuration;
+    this.time = props.time;
+  }
+
+  static fromObject(
+    record: Optional<NeteaseTrackRecord | NeteaseHistory>
+  ): Nullable<NeteaseTrackRecord | NeteaseHistory> {
+    if (!record) return null;
+    if ("playDuration" in record) return new NeteaseHistory(record);
+    return new NeteaseTrackRecord(record);
+  }
+}

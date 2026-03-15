@@ -44,6 +44,7 @@ func CheckMulti(ctx *gin.Context) {
 		})
 		return
 	}
+
 	var store = file.GetStore()
 	var result = make([]gin.H, 0, len(requestParam.Items))
 	var timeLimit = requestParam.TimeLimit

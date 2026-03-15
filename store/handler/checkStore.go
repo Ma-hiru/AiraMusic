@@ -26,10 +26,8 @@ func CheckOrStoreAsync(ctx *gin.Context) {
 	})
 }
 
-// CheckOrStoreAsyncMulti
-// note: 注意解码URL
 func CheckOrStoreAsyncMulti(ctx *gin.Context) {
-	var requestParam = StoreMutilShouldBind{}
+	var requestParam = StoreMultiShouldBind{}
 	if err := ctx.ShouldBindJSON(&requestParam); err != nil {
 		ctx.JSON(200, gin.H{
 			"ok":      false,
@@ -38,6 +36,7 @@ func CheckOrStoreAsyncMulti(ctx *gin.Context) {
 		})
 		return
 	}
+
 	var store = file.GetStore()
 	var result = make([]gin.H, 0, len(requestParam.Items))
 	for _, item := range requestParam.Items {
@@ -59,6 +58,7 @@ func CheckOrStoreAsyncMulti(ctx *gin.Context) {
 			"index": index,
 		})
 	}
+
 	ctx.JSON(200, gin.H{
 		"ok":      true,
 		"results": result,

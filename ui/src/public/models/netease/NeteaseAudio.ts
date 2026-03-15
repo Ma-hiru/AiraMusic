@@ -1,6 +1,6 @@
+import { NeteaseTrack } from "./NeteaseTrack";
 import { TrackQuality } from "@mahiru/ui/public/enum";
 import NCM_API from "@mahiru/ui/public/api";
-import NeteaseTrack from "@mahiru/ui/public/models/netease/NeteaseTrack";
 
 export class NeteaseNetworkAudio {
   readonly url: string;
@@ -11,6 +11,18 @@ export class NeteaseNetworkAudio {
     this.quality = props.quality;
     this.url = props.url;
     this.id = props.id;
+  }
+
+  toNetworkAudio() {
+    return new NeteaseNetworkAudio(this);
+  }
+
+  isNetwork() {
+    return NeteaseCommonAudio.isNetwork(this);
+  }
+
+  isLocal() {
+    return NeteaseCommonAudio.isLocal(this);
   }
 
   static async fromTrack(track: NeteaseTrack, preference: TrackQuality) {
@@ -40,5 +52,29 @@ export class NeteaseLocalAudio extends NeteaseNetworkAudio {
       quality: image.quality,
       localURL
     });
+  }
+
+  static fromObject(
+    audio: Optional<NeteaseNetworkAudio | NeteaseLocalAudio>
+  ): Nullable<NeteaseNetworkAudio | NeteaseLocalAudio> {
+    if (!audio) return null;
+    if ("localURL" in audio) return new NeteaseLocalAudio(audio);
+    return new NeteaseNetworkAudio(audio);
+  }
+}
+
+export class NeteaseCommonAudio {
+  static isLocal(
+    audio: Optional<NeteaseNetworkAudio | NeteaseLocalAudio>
+  ): audio is NeteaseLocalAudio {
+    if (!audio) return false;
+    return audio instanceof NeteaseLocalAudio && "localURL" in audio;
+  }
+
+  static isNetwork(
+    audio: Optional<NeteaseNetworkAudio | NeteaseLocalAudio>
+  ): audio is NeteaseNetworkAudio {
+    if (!audio) return false;
+    return !this.isLocal(audio);
   }
 }

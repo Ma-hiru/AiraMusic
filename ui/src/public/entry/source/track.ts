@@ -1,20 +1,20 @@
 import pLimit from "p-limit";
 import NCM_API from "@mahiru/ui/public/api";
 import { CacheStore } from "@mahiru/ui/public/store/cache";
-import NeteasePlaylistSource from "@mahiru/ui/public/entry/source/playlist";
-import NeteaseTrack from "@mahiru/ui/public/models/netease/NeteaseTrack";
+import { NeteaseTrack } from "@mahiru/ui/public/models/netease";
+import _NeteasePlaylistSource from "./playlist";
 
 type CacheEntry = {
   track: NeteaseAPI.NeteaseTrack;
   privilege: NeteaseAPI.NeteaseTrackPrivilege;
 };
 
-export default class NeteaseTrackSource {
+export default class _NeteaseTrackSource {
   private static readonly cacheKey = "netease_tracks";
 
   private static getCache(ids: number[]) {
     return CacheStore.object.fetchMulti<CacheEntry>(
-      ids.map((id) => NeteaseTrackSource.cacheKey + "_" + id)
+      ids.map((id) => _NeteaseTrackSource.cacheKey + "_" + id)
     );
   }
 
@@ -26,7 +26,7 @@ export default class NeteaseTrackSource {
       tracks.map((track, index) => {
         return {
           id: String(track.id),
-          value: {
+          data: {
             track,
             privilege: privileges[index]!
           }
@@ -46,7 +46,7 @@ export default class NeteaseTrackSource {
       ids = (ids as NeteaseAPI.TrackId[]).map((track) => track.id);
     }
     // 从缓存中获取数据，找出需要请求的id
-    const cache = await NeteaseTrackSource.getCache(ids as number[]);
+    const cache = await _NeteaseTrackSource.getCache(ids as number[]);
     const requestIDs: number[] = [];
     const requestIdx: number[] = [];
     for (let i = 0; i < cache.length; i++) {
@@ -79,7 +79,7 @@ export default class NeteaseTrackSource {
       requestPrivileges.push(...privileges);
     }
     // 将请求结果存入缓存
-    NeteaseTrackSource.storeCache(requestTracks, requestPrivileges);
+    _NeteaseTrackSource.storeCache(requestTracks, requestPrivileges);
     // 将请求结果合并到结果中
     requestIdx.forEach((idx, index) => {
       cache[idx] = {
@@ -96,7 +96,7 @@ export default class NeteaseTrackSource {
     maxPerRequest: number = 100,
     concurrency: number = 5
   ) {
-    const entries = await NeteaseTrackSource.fromIDsRaw(ids, maxPerRequest, concurrency);
+    const entries = await _NeteaseTrackSource.fromIDsRaw(ids, maxPerRequest, concurrency);
 
     const results: NeteaseTrack[] = [];
     for (const { track, privilege } of entries) {
@@ -106,7 +106,11 @@ export default class NeteaseTrackSource {
     return results;
   }
 
+  static fromID(id: number) {
+    return _NeteaseTrackSource.fromIDs([id]);
+  }
+
   static fromPlaylist(playlist: NeteaseAPI.NeteasePlaylistDetail) {
-    return NeteasePlaylistSource.formID(playlist.id).then((p) => p.tracks);
+    return _NeteasePlaylistSource.formID(playlist.id).then((p) => p.tracks);
   }
 }

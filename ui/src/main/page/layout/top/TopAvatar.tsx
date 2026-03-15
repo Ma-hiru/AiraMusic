@@ -1,24 +1,24 @@
-import { FC, memo } from "react";
-import { useFileCache } from "@mahiru/ui/public/hooks/useFileCache";
-import { NeteaseImage } from "@mahiru/ui/public/entry/image";
-import { NeteaseImageSize } from "@mahiru/ui/public/enum";
-import { useLocalStore } from "@mahiru/ui/public/store/local";
+import { FC, memo, useMemo } from "react";
+import { useUserStore } from "@mahiru/ui/public/store/user";
+import { NeteaseNetworkImage } from "@mahiru/ui/public/models/netease/NeteaseImage";
+import NeteaseImage from "@mahiru/ui/public/components/image/NeteaseImage";
+import { NeteaseUser } from "@mahiru/ui/public/models/netease";
 
 const TopAvatar: FC<object> = () => {
-  const {
-    User: { UserProfile }
-  } = useLocalStore(["User"]);
-  const cachedAvatar = useFileCache(
-    NeteaseImage.setSize(UserProfile?.avatarUrl, NeteaseImageSize.sm)
-  );
+  const { _user } = useUserStore();
+  const avatar = useMemo(() => {
+    return NeteaseNetworkImage.fromUserAvatar(NeteaseUser.fromObject(_user));
+  }, [_user]);
+
   return (
-    <div>
-      <img
+    avatar && (
+      <NeteaseImage
+        preview={false}
+        cache={true}
+        image={avatar}
         className="size-5 rounded-full select-none"
-        src={cachedAvatar}
-        alt={UserProfile?.nickname}
       />
-    </div>
+    )
   );
 };
 export default memo(TopAvatar);

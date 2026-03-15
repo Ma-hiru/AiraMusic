@@ -1,8 +1,8 @@
 import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
 import HTTPConstants from "@mahiru/ui/public/constants/http";
 import { Log } from "@mahiru/ui/public/utils/dev";
-import { Auth } from "@mahiru/ui/public/entry/auth";
 import { nextIdle } from "@mahiru/ui/public/utils/frame";
+import NeteaseSource from "@mahiru/ui/public/entry/source";
 
 export const apiRequest = axios.create({
   baseURL: HTTPConstants.NCMBaseURL,
@@ -33,7 +33,7 @@ apiRequest.interceptors.response.use(
       return Promise.reject(error);
     } else if (data.code === 301 && message.includes("需要登录")) {
       Log.warn("apiRequest.ts", "token has expired");
-      Auth.doLogout().catch();
+      NeteaseSource.User.logout();
     } else if (
       data.code === HTTPConstants.RetryCode &&
       // 只有在请求过于频繁且请求幂等的情况下才自动重试，否则直接报错

@@ -4,7 +4,7 @@ import { usePlayerControlSync } from "@mahiru/ui/main/hooks/usePlayerControlSync
 import { usePlayerTrackSyncSend } from "@mahiru/ui/main/hooks/usePlayerTrackSyncSend";
 import { usePlayerStatusSyncSend } from "@mahiru/ui/main/hooks/usePlayerStatusSyncSend";
 import { useThemeSyncSend } from "@mahiru/ui/main/hooks/useThemeSyncSend";
-import { Renderer } from "@mahiru/ui/public/entry/renderer";
+import AppRenderer from "@mahiru/ui/public/entry/renderer";
 
 export function usePlayerInfoSync(targetWindow: WindowType) {
   const [hasOpened, setHasOpened] = useState(false);
@@ -24,7 +24,7 @@ export function usePlayerInfoSync(targetWindow: WindowType) {
   // 更新歌词窗口打开状态
   const getOpenedStatus = useCallback(
     (callback?: NormalFunc<[ok: boolean]>) => {
-      Renderer.invoke.hasOpenInternalWindow(targetWindow).then((opened) => {
+      AppRenderer.invoke.hasOpenInternalWindow(targetWindow).then((opened) => {
         setHasOpened(opened);
         if (callback) {
           callback(opened);
@@ -38,13 +38,15 @@ export function usePlayerInfoSync(targetWindow: WindowType) {
   const toggleTargetWindow = useCallback(() => {
     getOpenedStatus((ok) => {
       if (!ok) {
-        Renderer.event.openInternalWindow(targetWindow);
-        Renderer.addMessageHandler("otherWindowLoaded", targetWindow, updateSync, { once: true });
-        Renderer.addMessageHandler("otherWindowClosed", targetWindow, getOpenedStatus, {
+        AppRenderer.event.openInternalWindow(targetWindow);
+        AppRenderer.addMessageHandler("otherWindowLoaded", targetWindow, updateSync, {
+          once: true
+        });
+        AppRenderer.addMessageHandler("otherWindowClosed", targetWindow, getOpenedStatus, {
           once: true
         });
       } else {
-        Renderer.event.closeInternalWindow(targetWindow);
+        AppRenderer.event.closeInternalWindow(targetWindow);
       }
     });
   }, [getOpenedStatus, targetWindow, updateSync]);

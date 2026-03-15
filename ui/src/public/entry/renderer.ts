@@ -1,58 +1,15 @@
 import { EqError, Log } from "@mahiru/ui/public/utils/dev";
 
-type MessageEvent = keyof MessageTypeMap;
+export default class AppRenderer {
+  static readonly event = window.electron.event;
+  static readonly invoke = window.electron.invoke;
+  private static readonly listener = window.electron.listener;
+  private static readonly handlers: HandlerMapType = new Map();
 
-type HandlerID = string;
-
-type Handler = {
-  once: boolean;
-  from: WindowType | null;
-  callback:
-    | NormalFunc<[message: MessageDataReceive<any>]>
-    | NormalFunc<[data: MessageDataReceive<any>["data"]]>;
-};
-
-type HandlerMapType = Map<MessageEvent, Map<HandlerID, Handler>>;
-
-export class RendererClass {
-  readonly event = window.electron.event;
-  readonly invoke = window.electron.invoke;
-  private readonly listener = window.electron.listener;
-  private readonly handlers: HandlerMapType = new Map();
-
-  constructor() {
-    if (!window.electron) {
-      Log.error("electron API is not available");
-      return;
-    }
-    window.electron.listener.message((message) => {
-      const eventHandlers = this.handlers.get(message.type);
-      if (eventHandlers) {
-        for (const [id, { once, from, callback }] of eventHandlers.entries()) {
-          try {
-            if (from === message.from) {
-              callback(message.data);
-              once && eventHandlers.delete(id);
-            } else if (from === null) {
-              callback(message);
-              once && eventHandlers.delete(id);
-            }
-          } catch (err) {
-            Log.error(
-              new EqError({
-                raw: err,
-                label: "renderer.ts",
-                message: `error in message handler [id=${id}] for event [type=${message.type}]`
-              })
-            );
-            eventHandlers.delete(id);
-          }
-        }
-      }
-    });
-  }
-
-  addMessageHandler<T extends keyof MessageTypeMap, U extends WindowType | WindowType[] | null>(
+  static addMessageHandler<
+    T extends keyof MessageTypeMap,
+    U extends WindowType | WindowType[] | null
+  >(
     event: T,
     from: U,
     callback: U extends null
@@ -84,7 +41,7 @@ export class RendererClass {
     };
   }
 
-  removeMessageHandler(id: string) {
+  static removeMessageHandler(id: string) {
     for (const [event, eventHandlers] of this.handlers.entries()) {
       if (eventHandlers.has(id)) {
         eventHandlers.delete(id);
@@ -97,7 +54,7 @@ export class RendererClass {
     return false;
   }
 
-  sendMessage<T extends keyof MessageTypeMap, U extends WindowType>(
+  static sendMessage<T extends keyof MessageTypeMap, U extends WindowType>(
     type: T,
     to: U,
     data: MessageDataSend<T>["data"]
@@ -109,7 +66,7 @@ export class RendererClass {
     });
   }
 
-  sendMessageToMainProcess<T extends keyof MessageTypeMap>(
+  static sendMessageToMainProcess<T extends keyof MessageTypeMap>(
     type: T,
     data: MessageDataSend<T>["data"]
   ) {
@@ -120,7 +77,7 @@ export class RendererClass {
     });
   }
 
-  addMainProcessMessageHandler<T extends keyof MessageTypeMap>(
+  static addMainProcessMessageHandler<T extends keyof MessageTypeMap>(
     event: T,
     callback: NormalFunc<[data: MessageDataReceive<T>["data"]]>,
     options?: {
@@ -137,6 +94,54 @@ export class RendererClass {
       this.handlers.get(event)?.delete(id);
     };
   }
+
+  static init() {
+    if (!window.electron) {
+      Log.error("electron API is not available");
+    } else {
+      window.electron.listener.message((message) => {
+        const eventHandlers = AppRenderer.handlers.get(message.type);
+        if (eventHandlers) {
+          for (const [id, { once, from, callback }] of eventHandlers.entries()) {
+            try {
+              if (from === message.from) {
+                callback(message.data);
+                once && eventHandlers.delete(id);
+              } else if (from === null) {
+                callback(message);
+                once && eventHandlers.delete(id);
+              }
+            } catch (err) {
+              Log.error(
+                new EqError({
+                  raw: err,
+                  label: "renderer.ts",
+                  message: `error in message handler [id=${id}] for event [type=${message.type}]`
+                })
+              );
+              eventHandlers.delete(id);
+            }
+          }
+        }
+      });
+    }
+  }
 }
 
-export const Renderer = new RendererClass();
+AppRenderer.init();
+
+// region type
+type MessageEvent = keyof MessageTypeMap;
+
+type HandlerID = string;
+
+type Handler = {
+  once: boolean;
+  from: WindowType | null;
+  callback:
+    | NormalFunc<[message: MessageDataReceive<any>]>
+    | NormalFunc<[data: MessageDataReceive<any>["data"]]>;
+};
+
+type HandlerMapType = Map<MessageEvent, Map<HandlerID, Handler>>;
+//endregion

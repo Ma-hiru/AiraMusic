@@ -74,3 +74,11 @@ export function createZustandShallowStore<StoreType>(
   }
   return useShallowStore as useZustandShallowStoreFunc<StoreType>;
 }
+
+export function createZustandConfig<T extends object>(config: ZustandConfig<T> | T) {
+  if (typeof config === "function") {
+    return config;
+  } else {
+    return () => config;
+  }
+}

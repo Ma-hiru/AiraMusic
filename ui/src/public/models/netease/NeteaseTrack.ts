@@ -1,9 +1,8 @@
-import { TrackBitmark, TrackQuality } from "@mahiru/ui/public/enum";
-import NeteaseQualityLevels = NeteaseAPI.NeteaseQualityLevels;
 import Dayjs from "dayjs";
-import NeteaseUser from "@mahiru/ui/public/models/netease/NeteaseUser";
+import { NeteaseUser } from "./NeteaseUser";
+import { TrackBitmark, TrackQuality } from "@mahiru/ui/public/enum";
 
-export default class NeteaseTrack implements NeteaseTrackModel {
+export class NeteaseTrack implements NeteaseTrackModel {
   //region NeteaseTrackModel fields
   readonly id: number;
   /** 专辑，如果是DJ节目(dj_type != 0)或者无专辑信息(single == 1)，则专辑id为0 */
@@ -45,12 +44,8 @@ export default class NeteaseTrack implements NeteaseTrackModel {
   readonly sq: Nullable<NeteaseAPI.Sq>;
   readonly privilege: NeteaseAPI.NeteaseTrackPrivilege;
   readonly tns?: string[];
-  /** 注入字段 */
-  playable?: boolean;
-  /** 注入字段 */
-  reason?: string;
 
-  constructor(props: NeteaseTrackModel, user: Optional<NeteaseUser>) {
+  constructor(props: NeteaseTrackModel) {
     this.id = props.id;
     this.al = props.al;
     this.alia = props.alia;
@@ -71,45 +66,49 @@ export default class NeteaseTrack implements NeteaseTrackModel {
     this.sq = props.sq;
     this.tns = props.tns;
     this.privilege = props.privilege;
-    this.playableExtends(user);
   }
   //endregion
 
   /** 判断NeteaseTrack是否可以播放 */
-  playableExtends(user: Optional<NeteaseUser>) {
+  playable(user: Optional<NeteaseUser>) {
+    const result = { playable: false, reason: "未知原因" };
     // 如果没有 privilege 信息，无法判断是否可播放，暂时不设置 reason
-    if (!this.privilege) return;
-    if (
-      // 播放权限 > 0
-      (typeof this.privilege?.pl === "number" && this.privilege.pl > 0) ||
-      // 云盘歌曲且已登录
-      (user?.isLoggedIn && this?.privilege?.cs)
-    ) {
-      this.playable = true;
-      return;
+    if (!this.privilege) {
+      result.reason = "无法获取权限信息";
+      return result;
+    }
+    // 播放权限 > 0 或者用户已登录且为云盘歌曲
+    if (this.privilege.pl > 0 || (NeteaseUser.isLoggedIn && this.privilege?.cs)) {
+      result.playable = true;
+      return result;
     }
 
     // 0: 免费或无版权 1: VIP 歌曲 4: 购买专辑 8: 非会员可免费播放低音质，会员可播放高音质及下载
-    if (this.fee === 1 || this.privilege?.fee === 1) {
+    if (this.fee === 1 || this.privilege.fee === 1) {
       // VIP 歌曲
-      if (user?.isLoggedIn && user?.profile?.vipType === 11) {
-        this.playable = true;
+      if (NeteaseUser.isLoggedIn && user?.isVIP) {
+        result.playable = true;
       } else {
-        this.playable = false;
-        this.reason = "VIP专属";
+        result.playable = false;
+        result.reason = "VIP专属";
       }
-    } else if (this.fee === 4 || this.privilege?.fee === 4) {
+    } else if (this.fee === 4 || this.privilege.fee === 4) {
       // 付费专辑
-      this.playable = false;
-      this.reason = "付费专辑";
-    } else if (this.noCopyrightRcmd !== null) {
-      this.playable = false;
-      this.reason = "无版权";
+      result.playable = false;
+      result.reason = "付费专辑";
+    } else if (this.noCopyrightRcmd) {
+      // 无版权
+      result.playable = false;
+      result.reason = "无版权";
+    } else if (this.privilege.st && this.privilege.st < 0) {
       // st小于0时为灰色歌曲, 使用上传云盘的方法解灰后 st == 0。
-    } else if (this.privilege?.st && this.privilege.st < 0) {
-      this.playable = false;
-      this.reason = "已下架";
+      result.playable = false;
+      result.reason = "已下架";
+    } else {
+      result.playable = true;
     }
+
+    return result;
   }
 
   /** 解析歌曲Bitmark */
@@ -121,7 +120,9 @@ export default class NeteaseTrack implements NeteaseTrackModel {
 
   /** 获取歌曲音质信息 */
   quality<T extends TrackQuality | undefined>(preference: T): TrackSourceQualityReturn<T> {
-    const availableQualities: (NeteaseQualityLevels & { level: TrackQuality })[] = [];
+    const availableQualities: (NeteaseAPI.NeteaseQualityLevels & {
+      level: TrackQuality;
+    })[] = [];
     // 收集可用的音质等级,从低到高
     if (this.l)
       availableQualities.push({
@@ -161,7 +162,7 @@ export default class NeteaseTrack implements NeteaseTrackModel {
         return availableQualities[0] as TrackSourceQualityReturn<T>;
       }
       // 否则返回最接近偏好质量的音质等级
-      let selectedQuality: Undefinable<NeteaseQualityLevels> = availableQualities[0];
+      let selectedQuality: Undefinable<NeteaseAPI.NeteaseQualityLevels> = availableQualities[0];
       if (selectedQuality) {
         let minDiff = Math.abs((selectedQuality.br || 0) - preference);
         for (const quality of availableQualities) {
@@ -258,10 +259,9 @@ export default class NeteaseTrack implements NeteaseTrackModel {
 
   static fromNeteaseAPI(
     apiTrack: NeteaseAPI.NeteaseTrack,
-    privilege: NeteaseAPI.NeteaseTrackPrivilege,
-    user: Optional<NeteaseUser>
+    privilege: NeteaseAPI.NeteaseTrackPrivilege
   ) {
-    return new NeteaseTrack({ ...apiTrack, privilege }, user);
+    return new NeteaseTrack({ ...apiTrack, privilege });
   }
 
   static qualityParse(meta: NeteaseAPI.NeteaseSongUrlItem) {
@@ -295,6 +295,6 @@ interface NeteaseTrackModel extends NeteaseAPI.NeteaseTrackBase {
 }
 
 type TrackSourceQualityReturn<T extends TrackQuality | undefined> = T extends undefined
-  ? (NeteaseQualityLevels & { level: TrackQuality })[]
-  : Undefinable<NeteaseQualityLevels & { level: TrackQuality }>;
+  ? (NeteaseAPI.NeteaseQualityLevels & { level: TrackQuality })[]
+  : Undefinable<NeteaseAPI.NeteaseQualityLevels & { level: TrackQuality }>;
 //endregion

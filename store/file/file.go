@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"store/utils"
 	"sync"
 )
 
@@ -19,49 +20,42 @@ func GetStore() *Store {
 
 func CreateLocalStore(dir string) (*StoreMeta, error) {
 	dir = filepath.Clean(dir)
+	if err := utils.EnsureDir(dir, 0775); err != nil {
+		return nil, err
+	}
+
 	var indexPath = filepath.Join(dir, StoreIndexName)
-	// 创建目录
-	if err := os.MkdirAll(dir, 0777); err != nil {
-		return nil, fmt.Errorf("failed to create directory: %v", err)
-	}
-	if err := os.Chmod(dir, 0775); err != nil {
-		return nil, fmt.Errorf("failed to set directory permissions: %v", err)
-	}
+	var fileInfo, err = os.Stat(indexPath)
 	var meta = StoreMeta{
 		storeDir:   dir,
 		indexName:  StoreIndexName,
 		version:    CurrentStoreVersion,
-		createTime: getTimeNano(),
+		createTime: utils.GetTime(),
 	}
 
-	// 检查索引文件是否存在
-	var fileInfo, err = os.Stat(indexPath)
-	// 文件存在
-	if err == nil {
-		if fileInfo.IsDir() {
-			return nil, fmt.Errorf("index path is a directory")
-		}
-		return &meta, ErrStoreExist
-	}
 	// 发生错误
-	if err != nil && !os.IsNotExist(err) {
+	if err != nil {
+		if os.IsNotExist(err) {
+			// 创建索引文件
+			if err = createIndexFile(&meta); err != nil {
+				return nil, fmt.Errorf("failed to initialize index file: %v", err)
+			}
+			return &meta, nil
+		}
 		return nil, fmt.Errorf("failed to stat index file: %v", err)
 	}
-	// 创建索引文件
-	if err != nil && os.IsNotExist(err) {
-		if err = initIndexFile(&meta); err != nil {
-			return nil, fmt.Errorf("failed to initialize index file: %v", err)
-		}
-		return &meta, nil
-	}
 
+	if fileInfo.IsDir() {
+		StoreIndexName = StoreIndexName + "_" + utils.RandString(8)
+
+	}
 	return &meta, ErrStoreExist
 }
 
 func LoadLocalStore(meta *StoreMeta) error {
-	var err = checkIndexFileMeta(meta)
+	var err = checkIndexFile(meta)
 	if err != nil {
-		return fmt.Errorf("failed to read index file: %v", err)
+		return fmt.Errorf("failed to check index file: %v", err)
 	}
 
 	var indexPath = filepath.Join(meta.storeDir, meta.indexName)

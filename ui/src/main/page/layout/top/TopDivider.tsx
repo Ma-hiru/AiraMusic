@@ -1,12 +1,8 @@
-import { FC, memo } from "react";
+import { FC, HTMLAttributes, memo } from "react";
 import { cx } from "@emotion/css";
-import { useLayoutStore } from "@mahiru/ui/main/store/layout";
 
-const TopDivider: FC<object> = () => {
-  const { PlayerVisible } = useLayoutStore(["PlayerVisible"]);
-
-  return (
-    <span className={cx("w-0.5 h-5 scale-80", PlayerVisible ? "bg-white/50" : "bg-[#7b8290]/50")} />
-  );
+const TopDivider: FC<HTMLAttributes<HTMLSpanElement>> = ({ className, ...props }) => {
+  return <span className={cx("w-0.5 h-5 scale-80 bg-[#7b8290]/50", className)} {...props} />;
 };
+
 export default memo(TopDivider);

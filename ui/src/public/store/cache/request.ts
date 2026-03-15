@@ -10,6 +10,8 @@ export const cacheRequest = axios.create({
   }
 });
 
+export const accessToken = HTTPConstants.CacheAccessToken;
+
 cacheRequest.interceptors.response.use((response) => {
   return response.status === 204 ? null : response.data;
 });

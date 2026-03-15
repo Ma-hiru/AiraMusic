@@ -88,9 +88,9 @@ func handleExit() {
 		}()
 		select {
 		case <-done:
-            fmt.Println("Store shutdown complete.")
+			fmt.Println("Store shutdown complete.")
 		case <-time.After(5 * time.Second):
-            fmt.Println("Store shutdown timed out.")
+			fmt.Println("Store shutdown timed out.")
 		}
 	}
 	os.Exit(0)

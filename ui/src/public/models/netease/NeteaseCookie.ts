@@ -1,8 +1,7 @@
 import Cookies from "js-cookie";
-import { Log } from "@mahiru/ui/public/utils/dev";
 import NCM_API from "@mahiru/ui/public/api";
 
-export default class NeteaseCookie {
+export class NeteaseCookie {
   static set(raw: string) {
     const cookies = raw.split(";;");
     cookies.map((cookie) => {

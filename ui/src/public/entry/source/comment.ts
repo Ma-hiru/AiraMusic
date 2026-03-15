@@ -1,3 +1,3 @@
-export default class NeteaseCommentSource {
+export default class _NeteaseCommentSource {
 
 }

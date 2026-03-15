@@ -6,26 +6,24 @@ import {
   SyntheticEvent,
   useCallback,
   useEffect,
-  useMemo,
   useRef,
   useState
 } from "react";
 import { cx } from "@emotion/css";
-import { NeteaseImageSize } from "@mahiru/ui/public/enum/image";
-import { NeteaseImage as NeteaseImageUtils } from "@mahiru/ui/public/entry/image";
-import { useFileCache } from "@mahiru/ui/public/hooks/useFileCache";
-import { AppScheme, isMainWindow } from "@mahiru/ui/public/utils/dev";
-import { Renderer } from "@mahiru/ui/public/entry/renderer";
+import {
+  NeteaseLocalImage,
+  NeteaseNetworkImage
+} from "@mahiru/ui/public/models/netease/NeteaseImage";
+import NeteaseSource from "@mahiru/ui/public/entry/source";
+import AppRenderer from "@mahiru/ui/public/entry/renderer";
+import { isMainWindow } from "@mahiru/ui/public/utils/dev";
+import { NeteaseImageSize } from "@mahiru/ui/public/enum";
 
 type ShadowLevel = "none" | "base" | "float";
 
 type ShadowColor = "light" | "dark";
 
-type ImageProps = ImgHTMLAttributes<HTMLImageElement> & {
-  update?: boolean;
-  timeLimit?: number;
-  method?: string;
-  size?: NeteaseImageSize | number;
+type ImageProps = Omit<ImgHTMLAttributes<HTMLImageElement>, "src"> & {
   imageClassName?: string;
   retryOnError?: boolean;
   retryDelay?: number;
@@ -34,15 +32,14 @@ type ImageProps = ImgHTMLAttributes<HTMLImageElement> & {
   shadowColor?: ShadowColor;
   pause?: boolean;
   preview?: boolean;
+  image: Optional<NeteaseNetworkImage | NeteaseLocalImage>;
+  cache: boolean;
 };
 
 const NeteaseImage: FC<ImageProps> = ({
-  update = false,
-  timeLimit,
-  method = "GET",
-  src,
+  image,
+  cache,
   alt,
-  size = NeteaseImageSize.raw,
   onError,
   className,
   loading = "lazy",
@@ -59,9 +56,7 @@ const NeteaseImage: FC<ImageProps> = ({
   ...rest
 }) => {
   const [error, setError] = useState(false);
-  const sizedURL = useMemo(() => NeteaseImageUtils.setSize(src, size), [size, src]);
-  const cacheURL = pause ? undefined : NeteaseImageUtils.fetchCacheURL(sizedURL);
-  const requestCache = useRef<Nullable<(controller?: AbortController) => void>>(null);
+  const [source, setSource] = useState<Nullable<NeteaseNetworkImage | NeteaseLocalImage>>(null);
   const retryStatus = useRef({
     token: 0,
     count: 0,
@@ -71,138 +66,110 @@ const NeteaseImage: FC<ImageProps> = ({
   retryStatus.current.retryCount = retryCount;
   retryStatus.current.retryDelay = retryDelay;
 
-  const onCacheHit = useCallback(
-    (file: string) => {
-      NeteaseImageUtils.storeCacheURL(sizedURL, file);
-    },
-    [sizedURL]
-  );
-  const onCacheError = useCallback(() => {
-    NeteaseImageUtils.storeCacheURL(sizedURL, null);
-  }, [sizedURL]);
-  const cachedCover = useFileCache(sizedURL, {
-    onCacheHit,
-    update,
-    timeLimit,
-    method,
-    pause: !!cacheURL || pause,
-    injectCacheRequest: (requestFunc) => {
-      requestCache.current = requestFunc;
-    }
-  });
+  const retry = useCallback((imageElement: HTMLImageElement) => {
+    if (!imageElement.isConnected) return; // 图片已不在文档中，停止重试
+    if (imageElement.complete && imageElement.naturalWidth > 0) return; // 图片已加载成功，停止重试
+    const { retryCount, retryDelay, count } = retryStatus.current;
+    if (count >= retryCount) return; // 达到最大重试次数，停止重试
 
-  const retry = useCallback(
-    (image: HTMLImageElement) => {
-      if (!image.isConnected) return; // 图片已不在文档中，停止重试
-      if (image.complete && image.naturalWidth > 0) return; // 图片已加载成功，停止重试
-      const { retryCount, retryDelay, count } = retryStatus.current;
-      if (count >= retryCount) return; // 达到最大重试次数，停止重试
+    const token = Date.now();
+    // Full Jitter
+    const delay = Math.random() * retryDelay * (count + 1);
+    const canRun = (cb: NormalFunc) => {
+      if (!imageElement.isConnected) return;
+      else if (token !== retryStatus.current.token) return;
+      else if (imageElement.complete && imageElement.naturalWidth > 0) return;
+      cb();
+    };
+    const exec = () => {
+      retryStatus.current.count += 1;
+      const newURL = new URL(imageElement.src);
+      newURL.searchParams.set("timestamp", Date.now().toString());
+      imageElement.src = newURL.toString();
+      setError(false);
+    };
 
-      const token = Date.now();
-      // Full Jitter
-      const delay = Math.random() * retryDelay * (count + 1);
-      const canRun = (cb: NormalFunc) => {
-        if (!image.isConnected) return;
-        else if (token !== retryStatus.current.token) return;
-        else if (image.complete && image.naturalWidth > 0) return;
-        cb();
-      };
-      const exec = () => {
-        retryStatus.current.count += 1;
-        const newURL = new URL(sizedURL || image.src);
-        newURL.searchParams.set("timestamp", Date.now().toString());
-        image.src = newURL.toString();
-        setError(false);
-      };
-
-      retryStatus.current.token = token;
-      setTimeout(() => {
-        canRun(() => {
-          requestIdleCallback(() => canRun(exec), {
-            timeout: 200
-          });
-        });
-      }, delay);
-    },
-    [sizedURL]
-  );
+    retryStatus.current.token = token;
+    setTimeout(() => {
+      requestIdleCallback(() => canRun(exec), {
+        timeout: 200
+      });
+    }, delay);
+  }, []);
 
   // 图片加载错误处理
   const handleLoadError = useCallback(
     (e: SyntheticEvent<HTMLImageElement>) => {
-      // 首次错误且为缓存URL时，尝试使用原始URL加载
-      const canFallback =
-        sizedURL && e.currentTarget.src !== sizedURL && retryStatus.current.count === 0;
-      if (canFallback) {
-        // 如果还没有检查缓存
-        if (!cachedCover) requestCache.current?.();
-        // 尝试使用原始尺寸图片
-        e.currentTarget.src = sizedURL;
-        requestIdleCallback(onCacheError, { timeout: 500 });
-        return;
+      if (source?.isLocal && image) {
+        return setSource(image.toNetworkImage());
+      } else if (source?.isNetwork && retryOnError) {
+        return retry(e.currentTarget);
       }
-
-      // 已经是原始URL或重试后仍然失败
-      setError(true);
-      if (e.currentTarget.src.startsWith(AppScheme)) {
-        requestIdleCallback(onCacheError, { timeout: 500 });
-      }
-      if (retryOnError && retryCount > 0) {
-        retry(e.currentTarget);
-      }
-
       return onError?.(e);
     },
-    [cachedCover, onCacheError, onError, retry, retryCount, retryOnError, sizedURL]
+    [image, onError, retry, retryOnError, source]
   );
+
+  const wrapClick = useCallback(
+    (e: ReactMouseEvent<HTMLImageElement>) => {
+      if (preview && image) {
+        AppRenderer.invoke.hasOpenInternalWindow("image").then((opened) => {
+          const sendImage = image.toNetworkImage().setSize(NeteaseImageSize.raw);
+          if (!opened) {
+            if (isMainWindow()) {
+              AppRenderer.event.openInternalWindow("image");
+              AppRenderer.event.focusInternalWindow("image");
+            } else {
+              AppRenderer.sendMessage("playerControl", "main", "openImageWindow");
+            }
+            AppRenderer.addMessageHandler(
+              "otherWindowLoaded",
+              "image",
+              () => {
+                AppRenderer.sendMessage("checkImage", "image", {
+                  url: sendImage.src,
+                  alt: alt ?? sendImage.alt
+                });
+              },
+              { id: "imageCheckHandler", once: true }
+            );
+          } else {
+            if (isMainWindow()) {
+              AppRenderer.event.focusInternalWindow("image");
+            } else {
+              AppRenderer.sendMessage("playerControl", "main", "openImageWindow");
+            }
+            AppRenderer.sendMessage("checkImage", "image", {
+              url: sendImage.src,
+              alt: alt ?? sendImage.alt
+            });
+          }
+        });
+      }
+      return onClick?.(e);
+    },
+    [alt, image, onClick, preview]
+  );
+
+  useEffect(() => {
+    if (pause || !image?.src) return;
+    NeteaseSource.Image.try(image, cache).then((local) => {
+      if (local) setSource(local);
+      else setSource(image);
+    });
+  }, [cache, image, pause]);
 
   // src变化时重置错误状态和重试状态
   useEffect(() => {
     setError(false);
+    setSource(null);
     const status = retryStatus.current;
     status.count = 0;
     status.token = Date.now();
     return () => {
       status.token = Date.now();
     };
-  }, [src]);
-
-  const wrapClick = useCallback(
-    (e: ReactMouseEvent<HTMLImageElement>) => {
-      if (preview) {
-        const imageRawURL = NeteaseImageUtils.setSize(src, NeteaseImageSize.raw);
-        if (imageRawURL) {
-          Renderer.invoke.hasOpenInternalWindow("image").then((opened) => {
-            if (!opened) {
-              if (isMainWindow()) {
-                Renderer.event.openInternalWindow("image");
-                Renderer.event.focusInternalWindow("image");
-              } else {
-                Renderer.sendMessage("playerControl", "main", "openImageWindow");
-              }
-              Renderer.addMessageHandler(
-                "otherWindowLoaded",
-                "image",
-                () => {
-                  Renderer.sendMessage("checkImage", "image", { url: imageRawURL, alt });
-                },
-                { id: "imageCheckHandler", once: true }
-              );
-            } else {
-              if (isMainWindow()) {
-                Renderer.event.focusInternalWindow("image");
-              } else {
-                Renderer.sendMessage("playerControl", "main", "openImageWindow");
-              }
-              Renderer.sendMessage("checkImage", "image", { url: imageRawURL, alt });
-            }
-          });
-        }
-      }
-      return onClick?.(e);
-    },
-    [alt, onClick, preview, src]
-  );
+  }, [image]);
 
   return (
     <div
@@ -222,8 +189,8 @@ const NeteaseImage: FC<ImageProps> = ({
           error && "invisible",
           imageClassName
         )}
-        src={pause ? undefined : cachedCover || cacheURL}
-        alt={alt}
+        src={source?.src}
+        alt={alt ?? source?.alt}
         loading={loading}
         decoding={decoding}
         onError={handleLoadError}

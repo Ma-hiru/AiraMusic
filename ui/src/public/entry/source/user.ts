@@ -1,9 +1,8 @@
 import { Log } from "@mahiru/ui/public/utils/dev";
-import NeteaseCookie from "@mahiru/ui/public/models/netease/NeteaseCookie";
+import { NeteaseCookie, NeteaseUser } from "@mahiru/ui/public/models/netease";
 import NCM_API from "@mahiru/ui/public/api";
-import NeteaseUser from "@mahiru/ui/public/models/netease/NeteaseUser";
 
-export default class NeteaseUserSource {
+export default class _NeteaseUserSource {
   private static async getUserPlaylist(uid: number) {
     if (uid) {
       const { playlist } = await NCM_API.User.playlist({ uid, limit: 30 });
@@ -63,9 +62,9 @@ export default class NeteaseUserSource {
         refreshCookiesDate = new Date().getDate();
       }
 
-      const userProfile = await NeteaseUserSource.getUserProfile(uid);
+      const userProfile = await _NeteaseUserSource.getUserProfile(uid);
       if (!userProfile) return null;
-      const userPlaylist = await NeteaseUserSource.getUserPlaylist(uid);
+      const userPlaylist = await _NeteaseUserSource.getUserPlaylist(uid);
       if (!userPlaylist) return null;
 
       Log.debug("refresh user info");
@@ -80,13 +79,13 @@ export default class NeteaseUserSource {
     }
   }
 
-  static async fromCookies(cookies: string) {
-    NeteaseCookie.set(cookies);
+  static async fromCookies(cookies?: string) {
+    cookies && NeteaseCookie.set(cookies);
     if (NeteaseCookie.isLoggedIn()) {
       const { profile } = await NCM_API.User.account();
-      return await NeteaseUserSource.refresh(profile);
+      return await _NeteaseUserSource.refresh(profile);
     } else {
-      Log.error("set cookies failed");
+      Log.error("no cookies");
       return null;
     }
   }

@@ -1,48 +1,29 @@
-import { useEffect, useState } from "react";
-import { UI } from "@mahiru/ui/public/entry/ui";
-import { UIUtils } from "@mahiru/ui/public/utils/ui_utils";
+import { useLayoutEffect, useRef, useState } from "react";
+import AppUI from "@mahiru/ui/public/entry/ui";
 
-const handlers = new Set<NormalFunc>();
-const observer = new MutationObserver(() => {
-  requestIdleCallback(() => {
-    handlers.forEach((handler) => handler());
-  });
-});
-observer.observe(document.documentElement, {
-  attributes: true,
-  attributeFilter: ["style"]
-});
+function getColor() {
+  const { main, secondary, textOnMainColor } = AppUI.themeInstance;
+  return {
+    mainColor: main,
+    secondaryColor: secondary,
+    textColorOnMain: textOnMainColor
+  };
+}
 
 export function useThemeColor() {
-  const [themeColor, setThemeColor] = useState({
-    mainColor: UI.APPThemeColorInstance.main,
-    secondaryColor: UI.APPThemeColorInstance.secondary,
-    textColorOnMain: UIUtils.calcTextColorOn(UI.APPThemeColor.main)
-  });
+  const [themeColor, setThemeColor] = useState(getColor);
 
-  useEffect(() => {
-    let canceled = false;
-    const updater = () => {
-      if (canceled) return;
-      setThemeColor((prev) => {
-        const { main, secondary, textOnMainColor } = UI.APPThemeColorInstance;
-        const next = {
-          mainColor: main,
-          secondaryColor: secondary,
-          textColorOnMain: textOnMainColor
-        };
-        const changed = Object.keys(prev).some(
-          (k) => prev[k as keyof typeof prev].string() !== next[k as keyof typeof next].string()
-        );
-        return changed ? next : prev;
-      });
-    };
-    handlers.add(updater);
-    return () => {
-      handlers.delete(updater);
-      canceled = true;
-    };
-  }, []);
+  const updateColor = useRef(() => {
+    setThemeColor((prev) => {
+      const next = getColor();
+      const changed = Object.keys(prev).some(
+        (k) => prev[k as keyof typeof prev].string() !== next[k as keyof typeof next].string()
+      );
+      return changed ? next : prev;
+    });
+  }).current;
+
+  useLayoutEffect(() => AppUI.addListener(updateColor), [updateColor]);
 
   return themeColor;
 }

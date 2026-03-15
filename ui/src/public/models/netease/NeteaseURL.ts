@@ -1,7 +1,7 @@
 import { BannerType, NeteaseImageSize } from "@mahiru/ui/public/enum";
 import { EqError, Log } from "@mahiru/ui/public/utils/dev";
 
-export default class NeteaseURL {
+export class NeteaseURL {
   static parseBannerURL(url: string): { type: BannerType; id: number } {
     // examples:
     // 独家策划 https://y.music.163.com/g/yida/act/qianxi?page=50ccea950b38445f98458d3fc61ad72b

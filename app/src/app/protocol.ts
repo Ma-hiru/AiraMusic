@@ -21,7 +21,7 @@ export function registerSchemes() {
   ]);
 
   app.whenReady().then(() => {
-    protocol.handle(process.env.APP_SCHEME || "mahiru", async (request) => {
+    protocol.handle(process.env.APP_SCHEME, async (request) => {
       try {
         // url.hostname === "local"
         // url.pathname === "/C:/Users/xxx.png"

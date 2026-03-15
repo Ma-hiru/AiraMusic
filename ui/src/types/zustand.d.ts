@@ -9,10 +9,6 @@ export type ZustandGet<T> = () => T;
 
 export type ZustandApi<T> = StoreApi<T>;
 
-export interface ZustandConfig<InitState, Actions> {
-  (
-    set: ZustandSet<InitState>, // i
-    get: ZustandGet<InitState & Actions>,
-    api: ZustandApi<InitState & Actions>
-  ): InitState & Actions;
+export interface ZustandConfig<InitState> {
+  (set: ZustandSet<InitState>, get: ZustandGet<InitState>, api: ZustandApi<InitState>): InitState;
 }

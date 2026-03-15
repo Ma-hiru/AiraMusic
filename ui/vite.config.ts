@@ -29,7 +29,7 @@ export default defineConfig(({ mode }) => {
           ]
         }
       }),
-      vue()
+      // vue()
     ],
     build: {
       outDir: join(__dirname, "dist"),
@@ -37,12 +37,12 @@ export default defineConfig(({ mode }) => {
       rollupOptions: {
         input: {
           index: join(__dirname, "index.html"),
-          info: join(__dirname, "info.html"),
-          login: join(__dirname, "login.html"),
-          mini: join(__dirname, "mini.html"),
-          lyric: join(__dirname, "lyric.html"),
-          tray: join(__dirname, "tray.html"),
-          image: join(__dirname, "image.html")
+          // info: join(__dirname, "info.html"),
+          // login: join(__dirname, "login.html"),
+          // mini: join(__dirname, "mini.html"),
+          // lyric: join(__dirname, "lyric.html"),
+          // tray: join(__dirname, "tray.html"),
+          // image: join(__dirname, "image.html")
         }
       }
     },

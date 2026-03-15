@@ -3,13 +3,25 @@ import { CacheStoreBase } from "./base";
 
 export class CacheStoreForObject extends CacheStoreBase {
   store<T extends object>(id: string, data: T) {
-    return cacheRequest("/api/object/store", {
+    return cacheRequest({
+      url: "/api/object/store",
       method: "POST",
       data: { id, data: JSON.stringify(data) }
     });
   }
 
-  storeMulti<T extends object>(list: { id: string; value: T }[]) {}
+  storeMulti<T extends object>(list: { id: string; data: T }[]) {
+    return cacheRequest({
+      url: "/api/object/store/multi",
+      method: "POST",
+      data: {
+        items: list.map((item) => ({
+          id: item.id,
+          data: JSON.stringify(item)
+        }))
+      }
+    });
+  }
 
   fetch<T>(
     id: string,
@@ -27,6 +39,12 @@ export class CacheStoreForObject extends CacheStoreBase {
   }
 
   fetchMulti<T>(ids: string[]): Promise<Nullable<T>[]> {
-    return Promise.resolve([]);
+    return cacheRequest({
+      url: "/api/object/fetch/multi",
+      method: "POST",
+      data: {
+        ids
+      }
+    });
   }
 }

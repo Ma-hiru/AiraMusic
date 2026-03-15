@@ -1,5 +1,5 @@
-import { Renderer } from "@mahiru/ui/public/entry/renderer";
 import { Log } from "@mahiru/ui/public/utils/dev";
+import AppRenderer from "@mahiru/ui/public/entry/renderer";
 
 export class NetClass {
   completed: number[] = [];
@@ -41,7 +41,7 @@ export class NetClass {
       return "offline";
     }
 
-    return await Renderer.invoke.checkOnlineStatus();
+    return await AppRenderer.invoke.checkOnlineStatus();
   }
 
   addNetworkChangeListener(callback: (online: boolean) => void) {

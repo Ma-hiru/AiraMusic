@@ -1,12 +1,7 @@
-import NeteaseTrack from "@mahiru/ui/public/models/netease/NeteaseTrack";
-import NeteasePlaylistSummary, {
-  NeteasePlaylistSummaryModel
-} from "@mahiru/ui/public/models/netease/NeteasePlaylistSummary";
+import { NeteaseTrack } from "./NeteaseTrack";
+import { NeteasePlaylistSummary, NeteasePlaylistSummaryModel } from "./NeteasePlaylistSummary";
 
-export default class NeteasePlaylist
-  extends NeteasePlaylistSummary
-  implements NeteasePlaylistModel
-{
+export class NeteasePlaylist extends NeteasePlaylistSummary implements NeteasePlaylistModel {
   //region fields
   readonly commentCount: number;
   readonly playlistType: string;

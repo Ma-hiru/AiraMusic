@@ -1,4 +1,4 @@
-import { FC } from "react";
+import { FC, memo } from "react";
 import { useParams } from "react-router-dom";
 import { usePlaylistNormalRender } from "@mahiru/ui/main/hooks/usePlaylistRender";
 import { useStage } from "@mahiru/ui/public/hooks/useStage";
@@ -30,4 +30,4 @@ const PlaylistPage: FC<object> = () => {
     </div>
   );
 };
-export default PlaylistPage;
+export default memo(PlaylistPage);

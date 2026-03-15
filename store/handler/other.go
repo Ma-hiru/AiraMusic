@@ -160,7 +160,7 @@ func Size(ctx *gin.Context) {
 
 func SizeCategories(ctx *gin.Context) {
 	var store = file.GetStore()
-	var image, audio, video, other = store.SizeCategory()
+	var image, audio, video, other = store.SizeByCategory()
 	ctx.JSON(200, gin.H{
 		"ok":    true,
 		"image": image,

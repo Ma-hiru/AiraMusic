@@ -199,13 +199,13 @@ importers:
         version: 4.1.17
       use-immer:
         specifier: ^0.11.0
-        version: 0.11.0(immer@10.2.0)(react@19.2.0)
+        version: 0.11.0(immer@11.1.4)(react@19.2.0)
       vue:
         specifier: ^3.5.26
         version: 3.5.26(typescript@5.9.3)
       zustand:
         specifier: ^5.0.8
-        version: 5.0.8(@types/react@19.2.2)(immer@10.2.0)(react@19.2.0)
+        version: 5.0.8(@types/react@19.2.2)(immer@11.1.4)(react@19.2.0)
     devDependencies:
       '@babel/plugin-proposal-decorators':
         specifier: ^7.28.0
@@ -237,6 +237,9 @@ importers:
       baseline-browser-mapping:
         specifier: ^2.9.18
         version: 2.9.18
+      immer:
+        specifier: ^11.1.4
+        version: 11.1.4
       sass-embedded:
         specifier: ^1.93.3
         version: 1.93.3
@@ -2743,8 +2746,8 @@ packages:
     resolution: {integrity: sha512-Hs59xBNfUIunMFgWAbGX5cq6893IbWg4KnrjbYwX3tx0ztorVgTDA6B2sxf8ejHJ4wz8BqGUMYlnzNBer5NvGg==}
     engines: {node: '>= 4'}
 
-  immer@10.2.0:
-    resolution: {integrity: sha512-d/+XTN3zfODyjr89gM3mPq1WNX2B8pYsu7eORitdwyA2sBubnTl3laYlBk4sXY5FUa5qTZGBDPJICVbvqzjlbw==}
+  immer@11.1.4:
+    resolution: {integrity: sha512-XREFCPo6ksxVzP4E0ekD5aMdf8WMwmdNaz6vuvxgI40UaEiu6q3p8X52aU6GdyvLY3XXX/8R7JOTXStz/nBbRw==}
 
   immutable@5.1.4:
     resolution: {integrity: sha512-p6u1bG3YSnINT5RQmx/yRZBpenIl30kVxkTLDyHLIMk0gict704Q9n+thfDI7lTRm9vXdDYutVzXhzcThxTnXA==}
@@ -7922,7 +7925,7 @@ snapshots:
 
   ignore@7.0.5: {}
 
-  immer@10.2.0: {}
+  immer@11.1.4: {}
 
   immutable@5.1.4: {}
 
@@ -9981,9 +9984,9 @@ snapshots:
       punycode: 1.4.1
       qs: 6.14.0
 
-  use-immer@0.11.0(immer@10.2.0)(react@19.2.0):
+  use-immer@0.11.0(immer@11.1.4)(react@19.2.0):
     dependencies:
-      immer: 10.2.0
+      immer: 11.1.4
       react: 19.2.0
 
   utf8-byte-length@1.0.5: {}
@@ -10247,8 +10250,8 @@ snapshots:
 
   yocto-queue@1.2.2: {}
 
-  zustand@5.0.8(@types/react@19.2.2)(immer@10.2.0)(react@19.2.0):
+  zustand@5.0.8(@types/react@19.2.2)(immer@11.1.4)(react@19.2.0):
     optionalDependencies:
       '@types/react': 19.2.2
-      immer: 10.2.0
+      immer: 11.1.4
       react: 19.2.0

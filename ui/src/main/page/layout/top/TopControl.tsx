@@ -1,108 +1,74 @@
-import { FC, memo, useCallback, useEffect, useState } from "react";
-import { Chromium, Minus, PictureInPicture, Square, SquareMinus, X } from "lucide-react";
-import { usePlayerStore } from "@mahiru/ui/main/store/player";
-import { usePlayerInfoSync } from "@mahiru/ui/main/hooks/usePlayerInfoSync";
-import { Renderer } from "@mahiru/ui/public/entry/renderer";
-import { runCloseTask } from "@mahiru/ui/public/utils/close";
+import { FC, memo, useEffect, useState } from "react";
+import { AppWindow, Minus, PictureInPicture, Square, SquareMinus, X } from "lucide-react";
 import { isDev } from "@mahiru/ui/public/utils/dev";
 
 import NoDrag from "@mahiru/ui/public/components/drag/NoDrag";
-import { useToast } from "@mahiru/ui/public/hooks/useToast";
+import AppRenderer from "@mahiru/ui/public/entry/renderer";
+import AppInstance from "@mahiru/ui/main/entry/instance";
 
-interface TopControlProps {
-  windowId: WindowType;
-  maximizable?: boolean;
-  mini?: boolean;
-}
-
-const TopControl: FC<TopControlProps> = ({ maximizable = true, mini = true }) => {
+const TopControl: FC = () => {
   const [isMax, setIsMax] = useState(false);
-  const { PlayerCoreGetter } = usePlayerStore(["PlayerCoreGetter"]);
-  const { toggleTargetWindow, hasOpened } = usePlayerInfoSync("miniplayer");
-  const { requestToast } = useToast();
-  const player = PlayerCoreGetter();
 
-  const maximize = useCallback(() => {
+  const maximize = () => {
     if (isMax) {
       setIsMax(false);
-      Renderer.event.unmaximize();
+      AppRenderer.event.unmaximize();
     } else {
       setIsMax(true);
-      Renderer.event.maximize();
+      AppRenderer.event.maximize();
     }
-  }, [isMax]);
+  };
   const minimize = () => {
     setIsMax(false);
-    Renderer.event.minimize();
+    AppRenderer.event.minimize();
   };
-  const close = useCallback(() => {
-    Renderer.event.hidden();
-    player?.pause?.();
-    runCloseTask();
-  }, [player]);
+  const close = () => {
+    AppRenderer.event.hidden();
+    AppInstance.player.audio.pause();
+    AppInstance.dispose();
+  };
+  const mini = () => {};
 
   useEffect(() => {
-    if (hasOpened) {
-      Renderer.event.hidden();
-    } else {
-      Renderer.event.visible();
-    }
-  }, [hasOpened]);
-  useEffect(() => {
-    const unsubscribe = Renderer.addMainProcessMessageHandler("windowMaximizedChanged", setIsMax);
-    return () => {
-      unsubscribe();
-    };
+    return AppRenderer.addMainProcessMessageHandler("windowMaximizedChanged", setIsMax);
   }, []);
+
   useEffect(() => {
-    Renderer.invoke.isMaximized().then(setIsMax);
+    AppRenderer.invoke.isMaximized().then(setIsMax);
   }, []);
+
   return (
-    <NoDrag className="flex flex-row gap-4 select-none relative z-10">
-      <button
-        className="bg-purple-500 rounded-md font-semibold px-2 py-1"
-        onClick={() => {
-          requestToast({
-            text: Math.random() < 0.5 ? "test" : "测试一下toast能不能用",
-            type: ["success", "info", "error", "warn"][Math.floor(Math.random() * 4)] as any
-          });
-        }}>
-        toast
-      </button>
-      {isDev && (
-        <Chromium
-          className="size-5 cursor-pointer hover:opacity-50 ease-in-out transition-all duration-300 active:scale-90"
-          onClick={Renderer.event.openDevTools}
-        />
-      )}
-      <Minus
-        className="size-5 cursor-pointer hover:opacity-50 ease-in-out transition-all duration-300 active:scale-90"
-        onClick={minimize}
-      />
-      {mini && (
-        <PictureInPicture
-          className="size-5 cursor-pointer scale-95 hover:opacity-50 ease-in-out transition-all duration-300 active:scale-90"
-          onClick={toggleTargetWindow}
-        />
-      )}
-      {isMax
-        ? maximizable && (
-            <SquareMinus
-              className="size-5 cursor-pointer scale-80 hover:opacity-50 ease-in-out transition-all duration-300 active:scale-90"
-              onClick={maximize}
-            />
-          )
-        : maximizable && (
-            <Square
-              className="size-5 cursor-pointer scale-80 hover:opacity-50 ease-in-out transition-all duration-300 active:scale-90"
-              onClick={maximize}
-            />
-          )}
-      <X
-        className="size-5 hover:opacity-50 ease-in-out transition-all duration-300 active:scale-90"
-        onClick={close}
-      />
+    <NoDrag className="flex flex-row gap-4 select-none">
+      <ControlButton show={isDev} Icon={AppWindow} onClick={AppRenderer.event.openDevTools} />
+      <ControlButton Icon={Minus} onClick={minimize} />
+      <ControlButton Icon={PictureInPicture} onClick={mini} />
+      <ControlButton show={isMax} Icon={SquareMinus} onClick={maximize} />
+      <ControlButton show={!isMax} Icon={Square} onClick={maximize} />
+      <ControlButton Icon={X} onClick={close} />
     </NoDrag>
   );
 };
+
+type ControlButtonProps = {
+  Icon: ButtonItem;
+  show?: boolean;
+  onClick?: NormalFunc;
+};
+
+type ButtonItem = FC<{
+  className: string;
+  onClick?: NormalFunc;
+}>;
+
+const ControlButton: FC<ControlButtonProps> = ({ Icon, onClick, show = true }) => {
+  return (
+    show && (
+      <Icon
+        className="size-5 cursor-pointer hover:opacity-50 ease-in-out transition-all duration-300 active:scale-85"
+        onClick={onClick}
+      />
+    )
+  );
+};
+
 export default memo(TopControl);

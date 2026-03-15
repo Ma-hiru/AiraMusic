@@ -1,33 +1,34 @@
 import { Clock, Heart, House } from "lucide-react";
-import { createBrowserRouter, Navigate } from "react-router-dom";
+import { createBrowserRouter } from "react-router-dom";
+import MainRoutePath from "@mahiru/ui/main/router/path";
 
-import Layout from "@mahiru/ui/main/page/layout/Layout";
-import HomePage from "@mahiru/ui/main/page/home/HomePage";
-import HistoryPage from "@mahiru/ui/main/page/history/HistoryPage";
-import PlaylistPage from "@mahiru/ui/main/page/playlist/PlaylistPage";
+import Layout from "@mahiru/ui/main/page/layout/Layout"; // import HomePage from "@mahiru/ui/main/page/home/HomePage";
+// import HomePage from "@mahiru/ui/main/page/home/HomePage";
+// import HistoryPage from "@mahiru/ui/main/page/history/HistoryPage";
+// import PlaylistPage from "@mahiru/ui/main/page/playlist/PlaylistPage";
 
 export const router = createBrowserRouter([
   {
-    path: "/",
-    element: <Layout />,
-    children: [
-      {
-        index: true,
-        element: <Navigate to="/home" replace />
-      },
-      {
-        path: "/home",
-        element: <HomePage />
-      },
-      {
-        path: "/history",
-        element: <HistoryPage />
-      },
-      {
-        path: "/playlist/:id",
-        element: <PlaylistPage />
-      }
-    ]
+    path: MainRoutePath.base,
+    element: <Layout />
+    // children: [
+    //   {
+    //     index: true,
+    //     element: <Navigate to={MainRoutePath.home} replace />
+    //   },
+    //   {
+    //     path: MainRoutePath.home,
+    //     element: <HomePage />
+    //   },
+    //   {
+    //     path: MainRoutePath.history,
+    //     element: <HistoryPage />
+    //   },
+    //   {
+    //     path: MainRoutePath.playlistBase,
+    //     element: <PlaylistPage />
+    //   }
+    // ]
   }
 ]);
 

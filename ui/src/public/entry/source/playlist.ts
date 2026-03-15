@@ -1,23 +1,22 @@
-import NeteasePlaylistSummary from "@mahiru/ui/public/models/netease/NeteasePlaylistSummary";
 import NCM_API from "@mahiru/ui/public/api";
-import NeteasePlaylist from "@mahiru/ui/public/models/netease/NeteasePlaylist";
 import NeteaseTrackSource from "@mahiru/ui/public/entry/source/track";
+import { NeteasePlaylist, NeteasePlaylistSummary } from "@mahiru/ui/public/models/netease";
 import { CacheStore } from "@mahiru/ui/public/store/cache";
 
-export default class NeteasePlaylistSource {
+export default class _NeteasePlaylistSource {
   //region cache
   private static readonly cacheKey = "netease_playlist_detail";
 
   private static storeCache(response: NeteaseAPI.NeteasePlaylistDetailResponse) {
     return CacheStore.object.store(
-      NeteasePlaylistSource.cacheKey + "_" + response.playlist.id,
+      _NeteasePlaylistSource.cacheKey + "_" + response.playlist.id,
       response
     );
   }
 
   private static getCache(id: number) {
     return CacheStore.object.fetch<NeteaseAPI.NeteasePlaylistDetailResponse>(
-      NeteasePlaylistSource.cacheKey + "_" + id
+      _NeteasePlaylistSource.cacheKey + "_" + id
     );
   }
   //endregion
@@ -32,7 +31,7 @@ export default class NeteasePlaylistSource {
       return response;
     }
 
-    const cache = await NeteasePlaylistSource.getCache(playlist.id);
+    const cache = await _NeteasePlaylistSource.getCache(playlist.id);
     if (cache?.playlist.updateTime === playlist.updateTime) {
       return cache;
     }
@@ -47,22 +46,24 @@ export default class NeteasePlaylistSource {
       response.privileges.push(privilege);
     }
 
-    void NeteasePlaylistSource.storeCache(response);
+    void _NeteasePlaylistSource.storeCache(response);
 
     return response;
   }
 
   static formID(id: number, signal?: AbortSignal) {
-    return NCM_API.Playlist.detail(id, signal).then(NeteasePlaylistSource.fromResponse);
-  }
-
-  static fromResponse(response: NeteaseAPI.NeteasePlaylistDetailResponse) {
-    return NeteasePlaylistSource.requestFullTracks(response).then(
-      NeteasePlaylist.fromNeteaseAPIResponse
+    return NCM_API.Playlist.detail(id, signal).then((response) =>
+      _NeteasePlaylistSource.fromResponse(response)
     );
   }
 
+  static fromResponse(response: NeteaseAPI.NeteasePlaylistDetailResponse) {
+    return _NeteasePlaylistSource
+      .requestFullTracks(response)
+      .then(NeteasePlaylist.fromNeteaseAPIResponse);
+  }
+
   static fromSummary(summary: NeteasePlaylistSummary | NeteaseAPI.NeteasePlaylistSummary) {
-    return NeteasePlaylistSource.formID(summary.id);
+    return _NeteasePlaylistSource.formID(summary.id);
   }
 }

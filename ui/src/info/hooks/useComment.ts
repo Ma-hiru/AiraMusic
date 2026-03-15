@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { CommentSort, CommentType } from "@mahiru/ui/public/enum";
-import { API } from "@mahiru/ui/public/api";
-import { Str } from "@mahiru/ui/public/entry/str";
+import NCM_API from "@mahiru/ui/public/api";
+
 import { EqError, Log } from "@mahiru/ui/public/utils/dev";
 
 interface UseCommentProps {
@@ -21,8 +21,8 @@ export function useComment({
   const [failed, setFailed] = useState(false);
   const [totalComment, setTotalComment] = useState(0);
   const [currentPageNo, setCurrentPageNo] = useState(0);
-  const [comments, setComments] = useState<NeteaseComment[]>([]);
-  const commentsCache = useRef<Map<number, NeteaseComment[]>>(null);
+  const [comments, setComments] = useState<NeteaseAPI.NeteaseComment[]>([]);
+  const commentsCache = useRef<Map<number, NeteaseAPI.NeteaseComment[]>>(null);
   const pageCursor = useRef({
     hasMore: false,
     cursor: undefined as Undefinable<number>
@@ -39,7 +39,7 @@ export function useComment({
       }
       setLoading(true);
       setFailed(false);
-      API.Comment.getCommentNew({
+      NCM_API.Comment.get({
         id,
         pageSize,
         pageNo,
@@ -48,10 +48,6 @@ export function useComment({
         cursor: pageCursor.current.hasMore ? pageCursor.current.cursor : undefined
       })
         .then((response) => {
-          response.data.comments = response.data.comments.map((comment) => {
-            comment.content = Str.parseCommentEmoji(comment.content);
-            return comment;
-          });
           setComments(response.data.comments);
           setCurrentPageNo(pageNo);
           setTotalComment(response.data.totalCount);
@@ -80,7 +76,7 @@ export function useComment({
     setComments([]);
     setCurrentPageNo(0);
     setTotalComment(0);
-    commentsCache.current = new Map<number, NeteaseComment[]>();
+    commentsCache.current = new Map<number, NeteaseAPI.NeteaseComment[]>();
     pageCursor.current.hasMore = false;
     pageCursor.current.cursor = undefined;
     void requestComment(1);

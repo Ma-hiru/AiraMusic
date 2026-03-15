@@ -16,7 +16,7 @@ export default class NCM_API {
   static readonly Auth = _NeteaseAuthAPI;
   static readonly Comment = _NeteaseCommentAPI;
   static readonly Home = _NeteaseHomeAPI;
-  static readonly Lyric = _NeteaseLyricAPI;
+  static readonly Lyric = new _NeteaseLyricAPI();
   static readonly MV = _NeteaseMVAPI;
   static readonly Playlist = _NeteasePlaylistAPI;
   static readonly Record = _NeteaseRecordAPI;

@@ -1,5 +1,5 @@
 import { createEqError, createLog, LogLevel } from "@mahiru/log";
-import { Renderer } from "@mahiru/ui/public/entry/renderer";
+import AppRenderer from "@mahiru/ui/public/entry/renderer";
 import { nextFrame } from "@mahiru/ui/public/utils/frame";
 
 function convertToLogLevel(env?: EnvLogLevel): LogLevel {
@@ -33,7 +33,7 @@ export const EqError = createEqError(isDev);
 export const Log = createLog(convertToLogLevel(import.meta.env.UI_LOG_LEVEL as EnvLogLevel));
 
 void nextFrame(() => {
-  Renderer.invoke.isMainWindow().then((is) => {
+  AppRenderer.invoke.isMainWindow().then((is) => {
     isMain = is;
   });
 });

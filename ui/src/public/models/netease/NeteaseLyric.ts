@@ -8,7 +8,7 @@ import {
 } from "@mahiru/ui/public/constants/lyric";
 import { Log } from "@mahiru/ui/public/utils/dev";
 
-export default class NeteaseLyric implements FullVersionLyricLine {
+export class NeteaseLyric implements FullVersionLyricLine {
   //region fields
   readonly full: LyricLine[];
   readonly raw: LyricLine[];
@@ -77,6 +77,11 @@ export default class NeteaseLyric implements FullVersionLyricLine {
 
   static fromTTMLyric(lyric: string) {
     return new NeteaseLyric(Parser.parseTTMLyric(lyric).lyric);
+  }
+
+  static fromObject(lyric: Optional<NeteaseLyric>) {
+    if (!lyric) return null;
+    return new NeteaseLyric(lyric);
   }
 
   static get blankLyric() {

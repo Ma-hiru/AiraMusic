@@ -1,4 +1,4 @@
-export default class NeteasePlaylistSummary implements NeteasePlaylistSummaryModel {
+export class NeteasePlaylistSummary implements NeteasePlaylistSummaryModel {
   //region fields
   readonly coverImgUrl: string;
   readonly createTime: number;
