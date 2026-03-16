@@ -20,6 +20,7 @@ func otherRoutes(app *gin.Engine) {
 	app.GET("/api/move", handler.Move)
 	app.GET("/api/cancel", handler.Cancel)
 	app.POST("/api/cancel/multi", handler.CancelMulti)
+	app.GET("/api/exit", handler.Exit)
 	app.GET("/.well-known/appspecific/com.chrome.devtools.json", func(c *gin.Context) {
 		c.Status(http.StatusNoContent)
 	})

@@ -2,8 +2,11 @@ package handler
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
+	"os"
 	"store/file"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -190,4 +193,25 @@ func Move(ctx *gin.Context) {
 		ctx.SSEvent("message", string(data))
 	}
 	ctx.SSEvent("done", "")
+}
+
+func Exit(ctx *gin.Context) {
+	var store = file.GetStore()
+	var err = store.Destroy()
+	if err != nil {
+		ctx.JSON(200, gin.H{
+			"ok":      false,
+			"message": err.Error(),
+		})
+	} else {
+		ctx.JSON(200, gin.H{
+			"ok":      true,
+			"message": "exited successfully",
+		})
+	}
+	go func() {
+		fmt.Println("Exiting in 5 seconds...")
+		time.Sleep(5 * time.Second)
+		os.Exit(0)
+	}()
 }
