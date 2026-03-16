@@ -13,14 +13,22 @@ const Top: FC<object> = () => {
     <Drag
       className={cx(
         `
-          absolute h-10 left-0 right-0 top-0 px-4
-          bg-pink-200 opacity-50 z-10
-          flex items-center
+          absolute h-10 left-0 right-0 top-0 pr-4
+          flex items-center opacity-50 z-10
         `,
         layout.playModal ? "text-white" : "text-[#7b8290]"
       )}>
-      <div className="flex-1" />
-      <div className="flex flex-row gap-4 items-center">
+      <div
+        className={cx(
+          `
+            flex justify-center items-center h-full
+            duration-300 ease-in-out transition-all
+          `,
+          layout.sideBar ? "w-40" : "w-20"
+        )}>
+        <TopAvatar />
+      </div>
+      <div className="flex-1 flex flex-row gap-4 items-center justify-end">
         <TopSearch />
         <TopAvatar />
         <TopDivider />

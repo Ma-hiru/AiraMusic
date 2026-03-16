@@ -39,6 +39,10 @@ export class NeteaseUser implements NeteaseUserModel {
     return this.profile.vipType === 11;
   }
 
+  get playlistCount() {
+    return this.userPlaylists.length + this.starPlaylists.length;
+  }
+
   static fromNeteaseAPI(props: {
     refreshCookiesDate?: number;
     profile: NeteaseAPI.NeteaseUserDetailResponse["profile"];

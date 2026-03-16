@@ -1,6 +1,6 @@
 import { NeteaseImageSize } from "@mahiru/ui/public/enum";
 import {
-  NeteasePlaylist,
+  NeteasePlaylistSummary,
   NeteaseTrack,
   NeteaseURL,
   NeteaseUser
@@ -38,6 +38,11 @@ export class NeteaseNetworkImage {
     return this;
   }
 
+  setAlt(alt: string) {
+    this.alt = alt;
+    return this;
+  }
+
   get isNetwork() {
     return NeteaseCommonImage.isNetwork(this);
   }
@@ -59,7 +64,10 @@ export class NeteaseNetworkImage {
   }
 
   static fromPlaylistCover(
-    playlist: NeteasePlaylist | NeteaseAPI.NeteasePlaylistDetail | NeteaseAPI.NeteasePlaylistSummary
+    playlist:
+      | NeteaseAPI.NeteasePlaylistDetail
+      | NeteaseAPI.NeteasePlaylistSummary
+      | NeteasePlaylistSummary
   ) {
     return new NeteaseNetworkImage({
       url: playlist.coverImgUrl,
@@ -131,14 +139,12 @@ export class NeteaseCommonImage {
   static isLocal(
     image: Optional<NeteaseNetworkImage | NeteaseLocalImage>
   ): image is NeteaseLocalImage {
-    if (!image) return false;
-    return image instanceof NeteaseLocalImage && "localURL" in image;
+    return image?.constructor === NeteaseLocalImage;
   }
 
   static isNetwork(
     image: Optional<NeteaseNetworkImage | NeteaseLocalImage>
   ): image is NeteaseNetworkImage {
-    if (!image) return false;
-    return !this.isLocal(image);
+    return image?.constructor === NeteaseNetworkImage;
   }
 }

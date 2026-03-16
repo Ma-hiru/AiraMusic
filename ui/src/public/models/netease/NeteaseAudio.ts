@@ -67,14 +67,12 @@ export class NeteaseCommonAudio {
   static isLocal(
     audio: Optional<NeteaseNetworkAudio | NeteaseLocalAudio>
   ): audio is NeteaseLocalAudio {
-    if (!audio) return false;
-    return audio instanceof NeteaseLocalAudio && "localURL" in audio;
+    return audio?.constructor === NeteaseLocalAudio;
   }
 
   static isNetwork(
     audio: Optional<NeteaseNetworkAudio | NeteaseLocalAudio>
   ): audio is NeteaseNetworkAudio {
-    if (!audio) return false;
-    return !this.isLocal(audio);
+    return audio?.constructor === NeteaseNetworkAudio;
   }
 }

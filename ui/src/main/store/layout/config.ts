@@ -1,5 +1,5 @@
 import { createZustandConfig } from "@mahiru/ui/public/utils/store";
-import UI from "@mahiru/ui/public/entry/ui";
+import AppUI from "@mahiru/ui/public/entry/ui";
 
 export const LayoutStoreConfig = createZustandConfig((set): LayoutStoreType => {
   return {
@@ -33,7 +33,7 @@ export type LayoutStoreType = {
   updateOther: (other: OtherConfig) => void;
 };
 
-class LayoutConfig {
+export class LayoutConfig {
   sideBar;
   playModal;
   scrollTop;
@@ -51,7 +51,7 @@ class LayoutConfig {
     this.fastLocate = props?.fastLocate;
   }
 
-  setScrollTop(cb: NormalFunc) {
+  setScrollTop(cb?: NormalFunc) {
     this.scrollTop = cb;
     return this;
   }
@@ -76,7 +76,7 @@ class LayoutConfig {
   }
 }
 
-class ThemeConfig {
+export class ThemeConfig {
   backgroundCover;
   themeColors;
 
@@ -96,11 +96,11 @@ class ThemeConfig {
   }
 
   get mainColor() {
-    return this.themeColors[0] || UI.APPThemeColorDefault.main;
+    return this.themeColors[0] || AppUI.themeDefault.main;
   }
 
   get secondaryColor() {
-    return this.themeColors[1] || UI.APPThemeColorDefault.secondary;
+    return this.themeColors[1] || AppUI.themeDefault.secondary;
   }
 
   copy() {
@@ -108,7 +108,7 @@ class ThemeConfig {
   }
 }
 
-class OtherConfig {
+export class OtherConfig {
   typing;
   constructor(props?: { typing?: boolean }) {
     this.typing = props?.typing ?? false;

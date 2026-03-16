@@ -1,49 +1,59 @@
 import { FC, memo } from "react";
-import { useLogin } from "@mahiru/ui/main/hooks/useLogout";
-import { usePlaylistRouter } from "@mahiru/ui/main/hooks/usePlaylistRouter";
-import { NAV_DATA } from "@mahiru/ui/main/router";
-import { Auth } from "@mahiru/ui/public/entry/auth";
-import { usePlayerStore } from "@mahiru/ui/main/store/player";
+import { NavConstants, RoutePathConstants } from "@mahiru/ui/main/constants";
+import { useLocation, useNavigate } from "react-router-dom";
+import { cx } from "@emotion/css";
+import { useUserStore } from "@mahiru/ui/public/store/user";
+import { useToast } from "@mahiru/ui/public/hooks/useToast";
 
-import NavItem from "./NavItem";
+interface NavMenuProps {
+  barOpened: boolean;
+}
 
-const NavMenu: FC<object> = () => {
-  const login = useLogin();
-  const { UserLikedListSummary } = usePlayerStore(["UserLikedListSummary"]);
-  const { shouldPlaylistIDIs, location, getPlaylistSource, goToPlaylistPage, navigate } =
-    usePlaylistRouter();
-
+const NavMenu: FC<NavMenuProps> = ({ barOpened }) => {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { requestToast } = useToast();
+  const { isLoggedIn } = useUserStore();
   return (
-    <div className="space-y-4 w-full overflow-hidden">
-      {NAV_DATA.map(({ icon, label, path }) => {
+    <div className="flex flex-col gap-4 w-40 overflow-hidden">
+      {NavConstants.navs.map(({ icon, label, path }) => {
+        const active = RoutePathConstants.match(location, path);
         return (
-          <NavItem
-            key={label}
-            prefix={
-              <div className="size-10 min-w-10 rounded-md overflow-hidden items-center justify-center flex">
-                {icon}
-              </div>
-            }
-            active={
-              location.pathname === path ||
-              (label === "喜欢" && shouldPlaylistIDIs(UserLikedListSummary?.id)) ||
-              (label === "推荐" && getPlaylistSource() === "recommend")
-            }
+          <div
+            className={cx(
+              `
+              flex flex-row h-12 items-center mx-3 rounded-md
+          `,
+              active ? "bg-(--theme-color-main)" : barOpened && "hover:bg-black/5"
+            )}
             onClick={() => {
-              if (label === "喜欢") {
-                if (UserLikedListSummary?.id) {
-                  if (Auth.isAccountLoggedIn()) {
-                    goToPlaylistPage(UserLikedListSummary.id, "like");
-                  } else {
-                    login();
-                  }
-                }
-              } else {
-                navigate(path);
+              if (path === RoutePathConstants.like && !isLoggedIn()) {
+                return requestToast({
+                  type: "info",
+                  text: "请先登录账号"
+                });
               }
+              !active && navigate(path);
             }}>
-            <span className="truncate pl-1">{label}</span>
-          </NavItem>
+            <span
+              className={cx(
+                "flex-1 h-full mr-3 flex items-center justify-center font-bold rounded-md",
+                !barOpened && "hover:bg-black/5"
+              )}>
+              {icon}
+            </span>
+            <span
+              className={cx(
+                `
+                  flex-1 h-full mr-3 relative -left-3
+                  flex items-center justify-start font-bold rounded-md
+                  ease-in-out duration-300 transition-opacity
+                `,
+                !barOpened && "opacity-0"
+              )}>
+              {label}
+            </span>
+          </div>
         );
       })}
     </div>
