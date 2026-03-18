@@ -1315,11 +1315,6 @@ const moduleDefs: ModuleDefinition[] = [
     module: require("@neteasecloudmusicapienhanced/api/module/song_url_ncmget")
   },
   {
-    identifier: "song_url_unblock",
-    route: "/song/url/unblock",
-    module: require("@neteasecloudmusicapienhanced/api/module/song_url_unblock")
-  },
-  {
     identifier: "song_url_v1",
     route: "/song/url/v1",
     module: require("@neteasecloudmusicapienhanced/api/module/song_url_v1")

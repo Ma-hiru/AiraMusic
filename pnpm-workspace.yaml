@@ -13,3 +13,5 @@ onlyBuiltDependencies:
   - esbuild
 
 registry: https://registry.npmmirror.com
+
+injectWorkspacePackages: true
