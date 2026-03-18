@@ -19,6 +19,7 @@ import { Log } from "@mahiru/ui/public/utils/dev";
 import { userStoreSnapshot } from "@mahiru/ui/public/store/user";
 import { useUpdate } from "@mahiru/ui/public/hooks/useUpdate";
 import { useEffect } from "react";
+import { NeteaseImageSize } from "@mahiru/ui/public/enum";
 
 export default class AppPlayer extends Listenable {
   readonly current;
@@ -67,6 +68,11 @@ export default class AppPlayer extends Listenable {
     };
     this._status = props?.status || AppPlayerStatus.idle;
     this.disconnect = this.connect();
+  }
+
+  setLyricVersion(next: Optional<LyricVersionType>) {
+    this.current.lyric?.versionChange(next);
+    this.executeListeners();
   }
 
   private connect() {
@@ -154,8 +160,7 @@ export default class AppPlayer extends Listenable {
   private async loadAudio(
     track: NeteaseTrack
   ): Promise<Nullable<NeteaseLocalAudio | NeteaseNetworkAudio>> {
-    const preference =
-      this.userStore._settings?.preference ?? NeteaseSettings.default.preference;
+    const preference = this.userStore._settings?.preference ?? NeteaseSettings.default.preference;
     const local = await NeteaseSource.Audio.local(track, preference, false);
     if (local) return local;
     const network = await NeteaseSource.Audio.network(track, preference);
@@ -167,9 +172,9 @@ export default class AppPlayer extends Listenable {
   }
 
   private async loadCover(track: NeteaseTrack): Promise<NeteaseNetworkImage | NeteaseLocalImage> {
-    const local = await NeteaseSource.Image.local(track, false);
+    const local = await NeteaseSource.Image.local(track, false, NeteaseImageSize.lg);
     if (local) return local;
-    const network = NeteaseSource.Image.notwork(track);
+    const network = NeteaseSource.Image.notwork(track, NeteaseImageSize.lg);
     window.setTimeout(() => NeteaseSource.Image.download(network), 10000);
     return network;
   }

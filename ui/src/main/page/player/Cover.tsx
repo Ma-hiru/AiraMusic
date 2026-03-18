@@ -1,23 +1,12 @@
-import { FC, memo, ReactEventHandler, useCallback, useMemo } from "react";
-
+import { FC, memo, ReactEventHandler, useCallback } from "react";
 import { useLayoutStore } from "@mahiru/ui/main/store/layout";
-
 import NeteaseImage from "@mahiru/ui/public/components/image/NeteaseImage";
 import AppInstance from "@mahiru/ui/main/entry/instance";
-import { NeteaseNetworkImage } from "@mahiru/ui/public/models/netease";
-import { NeteaseImageSize } from "@mahiru/ui/public/enum";
 
 const Cover: FC<object> = () => {
   const { theme, updateTheme } = useLayoutStore();
   const player = AppInstance.usePlayer();
-  const track = player.current.track?.track;
-
-  const image = useMemo(() => {
-    if (!track) return null;
-    return NeteaseNetworkImage.fromTrackCover(track)
-      .setAlt(track.al.name || track.name)
-      .setSize(NeteaseImageSize.lg);
-  }, [track]);
+  const image = player.current.cover;
 
   const onLoad = useCallback<ReactEventHandler<HTMLImageElement>>(
     (e) => {
