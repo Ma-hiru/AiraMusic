@@ -25,7 +25,10 @@ const TopControl: FC = () => {
   const close = () => {
     AppRenderer.event.hidden();
     AppInstance.player.audio.pause();
-    AppInstance.dispose();
+    void AppInstance.dispose();
+    setTimeout(() => {
+      AppRenderer.event.close({ broadcast: true });
+    }, 5000);
   };
   const mini = () => {};
 

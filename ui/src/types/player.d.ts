@@ -26,6 +26,7 @@ type PlayerProgress = {
   currentTime: number;
   duration: number;
   buffered: number;
+  volume: number;
 };
 
 type LayoutCanScrollTop =

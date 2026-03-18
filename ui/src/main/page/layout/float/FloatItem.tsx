@@ -1,6 +1,7 @@
 import { FC, memo, ReactNode, useMemo } from "react";
 import { motion } from "motion/react";
 import { useThemeColor } from "@mahiru/ui/public/hooks/useThemeColor";
+import AppUI from "@mahiru/ui/public/entry/ui";
 
 interface FloatItemProps {
   children?: ReactNode;
@@ -8,21 +9,23 @@ interface FloatItemProps {
 }
 
 const FloatItem: FC<FloatItemProps> = ({ children, onClick }) => {
-  const { mainColor, textColorOnMain } = useThemeColor();
+  const { mainColor, secondaryColor } = useThemeColor();
 
   const style = useMemo(
-    () => ({ background: textColorOnMain.alpha(0.6).string(), color: mainColor.string() }),
-    [mainColor, textColorOnMain]
+    () => ({
+      background: AppUI.generatePalette(mainColor.string())["200"].string(),
+      color: secondaryColor.string()
+    }),
+    [mainColor, secondaryColor]
   );
 
   return (
     <motion.div
       onClick={onClick}
       style={style}
-      exit={{ opacity: 0, scale: 0 }}
+      exit={{ opacity: 0, scale: 0, transition: { ease: "easeInOut", duration: 0.3 } }}
       initial={{ opacity: 0, scale: 0 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ ease: "easeInOut", duration: 0.3 }}
+      animate={{ opacity: 1, scale: 1, transition: { ease: "easeInOut", duration: 0.6 } }}
       whileHover={{ opacity: 0.5 }}
       whileTap={{ scale: 0.9 }}
       className="

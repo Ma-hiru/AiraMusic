@@ -6,7 +6,7 @@ import { useThemeColor } from "@mahiru/ui/public/hooks/useThemeColor";
 import { usePlayProgress } from "@mahiru/ui/main/hooks/usePlayProgress";
 
 const BarProgress: FC<object> = () => {
-  const { PlayerTheme } = useLayoutStore(["PlayerTheme"]);
+  const { theme } = useLayoutStore();
   const { mainColor, textColorOnMain } = useThemeColor();
   const { barRef, handleBarClick, handleBarMouseDown, bufferScope, percentScope, chorusPercent } =
     usePlayProgress();
@@ -20,7 +20,7 @@ const BarProgress: FC<object> = () => {
           shadow-[0_5px_10px_-5px_rgba(0,0,0,0.15)] backdrop-blur-lg
           cursor-pointer ease-in-out transition-all duration-300 hover:h-2
         `,
-        PlayerTheme.BackgroundCover ? "bg-transparent" : "bg-white"
+        theme.backgroundCover ? "bg-transparent" : "bg-white"
       )}
       onClick={handleBarClick}
       onMouseDown={handleBarMouseDown}>

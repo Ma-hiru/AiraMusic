@@ -1,21 +1,15 @@
-import { FC, memo, useCallback, useEffect, useLayoutEffect, useRef } from "react";
-import { usePlayerStore } from "@mahiru/ui/main/store/player";
+import { FC, memo, useCallback, useEffect, useRef } from "react";
 
 import LyricComponent, { LyricRef } from "@mahiru/ui/public/components/lyric/LyricContainer";
+import AppInstance from "@mahiru/ui/main/entry/instance";
 
 const Lyric: FC<object> = () => {
-  const { PlayerStatus, PlayerTrackStatus, PlayerInitialized, PlayerCoreGetter } = usePlayerStore([
-    "PlayerTrackStatus",
-    "PlayerStatus",
-    "PlayerInitialized",
-    "PlayerCoreGetter"
-  ]);
-  const player = PlayerCoreGetter();
+  const player = AppInstance.usePlayer();
   const lyricRef = useRef<Nullable<LyricRef>>(null);
 
   const handleWordClick = useCallback(
     (timeMS: number) => {
-      player.changeCurrentTime(timeMS / 1000);
+      player.audio.currentTime = timeMS / 1000;
     },
     [player]
   );
@@ -26,14 +20,14 @@ const Lyric: FC<object> = () => {
     let isRunning = false;
 
     const onFrame = (time: number) => {
-      if (!isRunning || player.paused) {
+      if (!isRunning || player.audio.paused) {
         rafId = null;
         return;
       }
       // 如果lastTime === -1 说明是第一次记录时间
       if (lastTime === -1) lastTime = time;
       lyricRef.current?.update(time - lastTime);
-      lyricRef.current?.setCurrentTime(player.currentTime * 1000);
+      lyricRef.current?.setCurrentTime(player.audio.instance.currentTime * 1000);
       lastTime = time;
       rafId = requestAnimationFrame(onFrame);
     };
@@ -54,31 +48,23 @@ const Lyric: FC<object> = () => {
       lyricRef.current?.calcLayout();
     };
 
-    player.addEventListener("play", startLoop, { passive: true });
-    player.addEventListener("pause", stopLoop, { passive: true });
-    player.addEventListener("loadstart", loadstart, { passive: true });
+    player.audio.addEventListener("play", startLoop, { passive: true });
+    player.audio.addEventListener("pause", stopLoop, { passive: true });
+    player.audio.addEventListener("loadstart", loadstart, { passive: true });
     return () => {
       stopLoop();
-      player.removeEventListener("play", startLoop);
-      player.removeEventListener("pause", stopLoop);
-      player.removeEventListener("loadstart", loadstart);
+      player.audio.removeEventListener("play", startLoop);
+      player.audio.removeEventListener("pause", stopLoop);
+      player.audio.removeEventListener("loadstart", loadstart);
     };
   }, [player]);
-
-  useLayoutEffect(() => {
-    if (PlayerInitialized) {
-      lyricRef.current?.setCurrentTime(player.currentTime * 1000);
-      lyricRef.current?.update(0);
-      lyricRef.current?.calcLayout();
-    }
-  }, [PlayerInitialized, player]);
 
   return (
     <div className="absolute top-0 left-[48%] w-1/2 h-full overflow-hidden">
       <LyricComponent
         ref={lyricRef}
-        lyric={PlayerTrackStatus?.lyric}
-        version={PlayerStatus.lyricVersion || []}
+        lyric={player.current.lyric}
+        version={player.current.lyric?.currentVersion}
         onWordClick={handleWordClick}
       />
     </div>

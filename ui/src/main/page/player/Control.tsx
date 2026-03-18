@@ -10,41 +10,27 @@ import {
   SkipBack,
   SkipForward
 } from "lucide-react";
-import { usePlayerStore } from "@mahiru/ui/main/store/player";
-import { PlayerFSMStatusEnum } from "@mahiru/ui/public/enum";
 
 import Progress from "./Progress";
+import AppInstance from "@mahiru/ui/main/entry/instance";
+import { AppPlayerStatus } from "@mahiru/ui/public/models/player";
 
 const Control: FC<object> = () => {
-  const { PlayerCoreGetter, PlayerFSMStatus, PlayerStatus, PlayingRequest } = usePlayerStore([
-    "PlayerCoreGetter",
-    "PlayerFSMStatus",
-    "PlayerStatus",
-    "PlayingRequest"
-  ]);
-  const player = PlayerCoreGetter();
+  const player = AppInstance.usePlayer();
   const centerIcon = useMemo(() => {
-    if (PlayerFSMStatus === PlayerFSMStatusEnum.playing) {
+    if (player.status === AppPlayerStatus.playing) {
       return (
         <Pause
           className="size-5 cursor-pointer hover:opacity-50 ease-in-out duration-300 transition-all active:scale-90"
           fill={"rgba(255,255,255,0.89)"}
-          onClick={player?.play}
+          onClick={() => player.audio.pause()}
         />
       );
-    } else if (PlayerFSMStatus === PlayerFSMStatusEnum.loading) {
+    } else if (player.status === AppPlayerStatus.loading) {
       return (
         <LoaderCircle
           className="animate-spin size-5 cursor-pointer hover:opacity-50 ease-in-out duration-300 transition-all active:scale-90"
           color={"rgba(255,255,255,0.89)"}
-        />
-      );
-    } else if (PlayingRequest) {
-      return (
-        <Pause
-          className="size-5 cursor-pointer hover:opacity-50 ease-in-out duration-300 transition-all active:scale-90"
-          fill={"rgba(255,255,255,0.89)"}
-          onClick={player?.play}
         />
       );
     }
@@ -52,10 +38,10 @@ const Control: FC<object> = () => {
       <Play
         className="size-5 cursor-pointer hover:opacity-50 ease-in-out duration-300 transition-all active:scale-90"
         fill={"rgba(255,255,255,0.89)"}
-        onClick={player?.play}
+        onClick={() => player.audio.play()}
       />
     );
-  }, [PlayerFSMStatus, PlayingRequest, player?.play]);
+  }, [player.audio, player.status]);
 
   return (
     <div className="space-x-2 w-full">
@@ -65,36 +51,36 @@ const Control: FC<object> = () => {
           <SkipBack
             className="size-5 cursor-pointer hover:opacity-50 ease-in-out duration-300 transition-all active:scale-90"
             fill={"rgba(255,255,255,0.89)"}
-            onClick={() => player?.last(true)}
+            onClick={() => player.playlist.last(true)}
           />
           {centerIcon}
           <SkipForward
             className="size-5 cursor-pointer hover:opacity-50 ease-in-out duration-300 transition-all active:scale-90"
             fill={"rgba(255,255,255,0.89)"}
-            onClick={() => player?.next(true)}
+            onClick={() => player.playlist.next(true)}
           />
-          {PlayerStatus.shuffle ? (
+          {player.playlist.shuffle ? (
             <Shuffle
               className="size-6 scale-85 cursor-pointer hover:opacity-50 ease-in-out duration-300 transition-all active:scale-90"
               fill={"rgba(255,255,255,0.89)"}
-              onClick={() => player && (player.shuffle = false)}
+              onClick={() => (player.playlist.shuffle = false)}
             />
           ) : (
             <ArrowRightLeft
               className="size-6 cursor-pointer hover:opacity-50 ease-in-out duration-300 transition-all active:scale-90"
               fill={"rgba(255,255,255,0.89)"}
-              onClick={() => player && (player.shuffle = true)}
+              onClick={() => (player.playlist.shuffle = true)}
             />
           )}
-          {PlayerStatus.repeat !== "off" ? (
+          {player.playlist.repeat !== "off" ? (
             <Repeat1
               className="size-6 cursor-pointer hover:opacity-50 ease-in-out duration-300 transition-all active:scale-90"
-              onClick={() => player && (player.repeat = "off")}
+              onClick={() => (player.playlist.repeat = "off")}
             />
           ) : (
             <Repeat2
               className="size-6 cursor-pointer hover:opacity-50 ease-in-out duration-300 transition-all active:scale-90"
-              onClick={() => player && (player.repeat = "one")}
+              onClick={() => (player.playlist.repeat = "one")}
             />
           )}
         </div>

@@ -20,6 +20,7 @@
     "@pixi/sprite": "^7.4.3",
     "@tailwindcss/vite": "^4.1.17",
     "color": "^5.0.3",
+    "culori": "^4.0.2",
     "dayjs": "^1.11.19",
     "js-cookie": "^3.0.5",
     "jss": "^10.10.0",
@@ -41,6 +42,7 @@
   "devDependencies": {
     "@babel/plugin-proposal-decorators": "^7.28.0",
     "@eslint/js": "^9.39.1",
+    "@types/culori": "^4.0.1",
     "@types/js-cookie": "^3.0.6",
     "@types/qrcode": "^1.5.6",
     "@types/react": "^19.2.2",
@@ -51,7 +53,7 @@
     "baseline-browser-mapping": "^2.9.18",
     "immer": "^11.1.4",
     "sass-embedded": "^1.93.3",
-    "vite": "^7.2.6",
+    "vite": "^8.0.0",
     "vite-plugin-wasm": "^3.5.0"
   }
 }

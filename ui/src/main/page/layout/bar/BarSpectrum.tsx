@@ -1,30 +1,29 @@
-import Color from "color";
 import { FC, memo } from "react";
-import { usePlayerStore } from "@mahiru/ui/main/store/player";
+
 import { useLayoutStore } from "@mahiru/ui/main/store/layout";
 import { useThemeColor } from "@mahiru/ui/public/hooks/useThemeColor";
-import { PlayerFSMStatusEnum } from "@mahiru/ui/public/enum";
 
 import AudioSpectrum from "@mahiru/ui/main/componets/spectrum/AudioSpectrum";
+import AppInstance from "@mahiru/ui/main/entry/instance";
+import { AppPlayerStatus } from "@mahiru/ui/public/models/player";
 
 const BarSpectrum: FC<object> = () => {
-  const { PlayerFSMStatus } = usePlayerStore(["PlayerFSMStatus"]);
-  const { PlayerVisible } = useLayoutStore(["PlayerVisible"]);
+  const { layout } = useLayoutStore();
   const { mainColor, secondaryColor } = useThemeColor();
-  const color = Color(mainColor);
-  const secondary_color = Color(secondaryColor);
+  const player = AppInstance.usePlayer();
+
   return (
     <AudioSpectrum
-      isPlaying={!PlayerVisible && PlayerFSMStatus === PlayerFSMStatusEnum.playing}
+      isPlaying={!layout.playModal && player.status === AppPlayerStatus.playing}
       gap={1}
       renderer="webgl-rust"
       barWidth={3.8}
       heightScale={0.9}
-      color={color.isLight() ? color.alpha(0.1).string() : color.alpha(0.6).string()}
+      color={mainColor.isLight() ? mainColor.alpha(0.1).string() : mainColor.alpha(0.6).string()}
       secondaryColor={
-        secondary_color.isLight()
-          ? secondary_color.alpha(0.5).string()
-          : secondary_color.alpha(0.8).string()
+        secondaryColor.isLight()
+          ? secondaryColor.alpha(0.5).string()
+          : secondaryColor.alpha(0.8).string()
       }
       className="w-full h-full"
       spectrumOptions={{

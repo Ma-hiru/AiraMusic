@@ -1,6 +1,5 @@
 import { FC, memo } from "react";
 import { cx } from "@emotion/css";
-import { usePlayerStore } from "@mahiru/ui/main/store/player";
 import { useLyric } from "@mahiru/ui/public/hooks/useLyric";
 
 const LyricChange: FC<object> = () => {

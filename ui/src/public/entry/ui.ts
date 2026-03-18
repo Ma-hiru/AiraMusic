@@ -1,4 +1,5 @@
 import Color, { ColorInstance } from "color";
+import { converter, formatHex } from "culori";
 import { clamp } from "lodash-es";
 import { Listener } from "@mahiru/ui/public/models/Listenable";
 
@@ -126,4 +127,38 @@ export default class AppUI {
 
     elementExtended.raf = requestAnimationFrame(animate);
   }
+
+  static generatePalette(color: string) {
+    const base = converter("oklch")(color);
+    return <Record<LIGHTNESS_SCALE, ColorInstance>>Object.fromEntries(
+      Object.entries(Palette_SCALE).map(([key, l]) => {
+        return [
+          key,
+          Color(
+            formatHex({
+              mode: "oklch",
+              l,
+              c: base!.c * (l > base!.l ? 0.6 : 0.9),
+              h: base!.h
+            })
+          )
+        ];
+      })
+    );
+  }
 }
+
+export type LIGHTNESS_SCALE = 50 | 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900;
+
+const Palette_SCALE: Record<LIGHTNESS_SCALE, number> = {
+  50: 0.98,
+  100: 0.95,
+  200: 0.9,
+  300: 0.82,
+  400: 0.72,
+  500: 0.62,
+  600: 0.52,
+  700: 0.42,
+  800: 0.32,
+  900: 0.22
+};

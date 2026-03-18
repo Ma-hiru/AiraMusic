@@ -1,1 +1,1 @@
-export { default } from "./FloatButtons";
+export { default } from "./Float";

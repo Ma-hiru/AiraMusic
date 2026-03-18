@@ -69,7 +69,7 @@ export default class AppPlayer extends Listenable {
     this.disconnect = this.connect();
   }
 
-  connect() {
+  private connect() {
     const onPlaying = () => (this.status = AppPlayerStatus.playing);
     const onLoadStart = () => (this.status = AppPlayerStatus.loading);
     const onPause = () => (this.status = AppPlayerStatus.paused);
@@ -155,7 +155,7 @@ export default class AppPlayer extends Listenable {
     track: NeteaseTrack
   ): Promise<Nullable<NeteaseLocalAudio | NeteaseNetworkAudio>> {
     const preference =
-      this.userStore.getSettings()?.preference ?? NeteaseSettings.default.preference;
+      this.userStore._settings?.preference ?? NeteaseSettings.default.preference;
     const local = await NeteaseSource.Audio.local(track, preference, false);
     if (local) return local;
     const network = await NeteaseSource.Audio.network(track, preference);

@@ -9,9 +9,14 @@ export default class AppAudio {
   readonly progress: PlayerProgress = {
     duration: 0,
     currentTime: 0,
-    buffered: 0
+    buffered: 0,
+    volume: 0
   };
   private readonly removeEvents: NormalFunc;
+
+  get instance() {
+    return this.audio;
+  }
 
   constructor() {
     this.removeEvents = this.bindProgressEvents();
@@ -82,6 +87,7 @@ export default class AppAudio {
   private bindProgressEvents() {
     const handleTimeUpdate = () => (this.progress.currentTime = this.audio.currentTime);
     const handleDurationChange = () => (this.progress.duration = this.audio.duration);
+    const handleVolumeChange = () => (this.progress.volume = this.audio.volume);
     const handleProgress = () => {
       if (this.audio.buffered.length > 0) {
         this.progress.buffered = this.audio.buffered.end(this.audio.buffered.length - 1);
@@ -89,10 +95,12 @@ export default class AppAudio {
     };
     this.audio.addEventListener("timeupdate", handleTimeUpdate, { passive: true });
     this.audio.addEventListener("durationchange", handleDurationChange, { passive: true });
+    this.audio.addEventListener("volumechange", handleVolumeChange, { passive: true });
     this.audio.addEventListener("progress", handleProgress, { passive: true });
     return () => {
       this.audio.removeEventListener("timeupdate", handleTimeUpdate);
       this.audio.removeEventListener("durationchange", handleDurationChange);
+      this.audio.removeEventListener("volumechange", handleVolumeChange);
       this.audio.removeEventListener("progress", handleProgress);
     };
   }

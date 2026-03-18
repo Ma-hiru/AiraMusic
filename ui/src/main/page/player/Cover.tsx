@@ -1,29 +1,37 @@
-import { FC, memo, ReactEventHandler, useCallback } from "react";
-import { usePlayerStore } from "@mahiru/ui/main/store/player";
+import { FC, memo, ReactEventHandler, useCallback, useMemo } from "react";
+
 import { useLayoutStore } from "@mahiru/ui/main/store/layout";
-import { NeteaseImageSize } from "@mahiru/ui/public/enum";
 
 import NeteaseImage from "@mahiru/ui/public/components/image/NeteaseImage";
+import AppInstance from "@mahiru/ui/main/entry/instance";
+import { NeteaseNetworkImage } from "@mahiru/ui/public/models/netease";
+import { NeteaseImageSize } from "@mahiru/ui/public/enum";
 
 const Cover: FC<object> = () => {
-  const { PlayerTrackStatus } = usePlayerStore(["PlayerTrackStatus"]);
-  const { UpdatePlayerTheme } = useLayoutStore(["UpdatePlayerTheme"]);
-  const track = PlayerTrackStatus?.track;
+  const { theme, updateTheme } = useLayoutStore();
+  const player = AppInstance.usePlayer();
+  const track = player.current.track?.track;
+
+  const image = useMemo(() => {
+    if (!track) return null;
+    return NeteaseNetworkImage.fromTrackCover(track)
+      .setAlt(track.al.name || track.name)
+      .setSize(NeteaseImageSize.lg);
+  }, [track]);
+
   const onLoad = useCallback<ReactEventHandler<HTMLImageElement>>(
     (e) => {
-      UpdatePlayerTheme({
-        BackgroundCover: e.currentTarget.src
-      });
+      updateTheme(theme.copy().setBackgroundCover(e.currentTarget.src));
     },
-    [UpdatePlayerTheme]
+    [theme, updateTheme]
   );
+
   return (
     <NeteaseImage
+      cache
       preview
-      src={track?.al.picUrl}
-      size={NeteaseImageSize.lg}
+      image={image}
       className="w-full h-full rounded-lg ease-in-out duration-300 transition-all select-none"
-      alt={track?.al?.name || track?.name}
       onLoad={onLoad}
       shadowColor="light"
     />

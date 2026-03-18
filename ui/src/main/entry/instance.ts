@@ -4,6 +4,7 @@ import { NeteaseUser } from "@mahiru/ui/public/models/netease";
 import AppPlayer, { createAppPlayerHook } from "@mahiru/ui/public/models/player/AppPlayer";
 import NeteaseSource from "@mahiru/ui/public/entry/source";
 import AppRenderer from "@mahiru/ui/public/entry/renderer";
+import { CacheStore } from "@mahiru/ui/public/store/cache";
 
 export default class AppInstance {
   private static _player: Nullable<AppPlayer>;
@@ -82,5 +83,6 @@ export default class AppInstance {
 
   static dispose() {
     this.savePlayer();
+    return CacheStore.dispose();
   }
 }

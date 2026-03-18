@@ -1,22 +1,21 @@
 import { FC, memo, useMemo } from "react";
-import { useUserStore } from "@mahiru/ui/public/store/user";
 import { NeteaseNetworkImage } from "@mahiru/ui/public/models/netease/NeteaseImage";
 import NeteaseImage from "@mahiru/ui/public/components/image/NeteaseImage";
 import { NeteaseUser } from "@mahiru/ui/public/models/netease";
 
-const TopAvatar: FC<object> = () => {
-  const { _user } = useUserStore();
-  const avatar = useMemo(() => {
-    return NeteaseNetworkImage.fromUserAvatar(NeteaseUser.fromObject(_user));
-  }, [_user]);
+interface TopAvatarProps {
+  user: Nullable<NeteaseUser>;
+}
 
+const TopAvatar: FC<TopAvatarProps> = ({ user }) => {
+  const avatar = useMemo(() => NeteaseNetworkImage.fromUserAvatar(user), [user]);
   return (
     avatar && (
       <NeteaseImage
         preview={false}
         cache={true}
         image={avatar}
-        className="size-5 rounded-full select-none"
+        className="size-5 rounded-full select-none shadow-[0_10px_25px_-5px_rgba(0,0,0,0.25)]"
       />
     )
   );

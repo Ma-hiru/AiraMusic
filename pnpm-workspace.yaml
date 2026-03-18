@@ -6,6 +6,7 @@ packages:
   - store
 
 onlyBuiltDependencies:
+  - '@parcel/watcher'
   - electron
 
 registry: https://registry.npmmirror.com

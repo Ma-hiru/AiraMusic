@@ -12,11 +12,11 @@ import { cx } from "@emotion/css";
 import { LyricTimeManager } from "./LyricTimeManager";
 
 import LyricLine from "./LyricLine";
-import { NeteaseLyric } from "@mahiru/ui/public/entry/lyric";
-import { UIUtils } from "@mahiru/ui/public/utils/ui_utils";
+import AppUI from "@mahiru/ui/public/entry/ui";
+import { NeteaseLyric } from "@mahiru/ui/public/models/netease";
 
 interface LyricContainerProps {
-  lyric?: FullVersionLyricLine;
+  lyric?: Optional<FullVersionLyricLine>;
   version?: LyricVersionType;
   className?: string;
   onWordClick?: NormalFunc<[startTime: number]>;
@@ -61,7 +61,7 @@ const LyricContainer: ForwardRefRenderFunction<LyricRef, LyricContainerProps> = 
     const lineIndex = currentLineRef.current;
     if (!container) return;
     if (lineIndex === -1) {
-      return UIUtils.smoothScrollTo(container, 0);
+      return AppUI.smoothScrollTo(container, 0);
     }
 
     const activeLine = container.children[lineIndex + 1] as Nullable<HTMLElement>;
@@ -80,11 +80,11 @@ const LyricContainer: ForwardRefRenderFunction<LyricRef, LyricContainerProps> = 
       scrollTop = lineOffsetTop - containerHeight / 2 + lineHeight / 2;
     }
 
-    UIUtils.smoothScrollTo(container, scrollTop);
+    AppUI.smoothScrollTo(container, scrollTop);
   }, [mainAlign]);
 
   useLayoutEffect(() => {
-    timeManagerRef.current?.reset(lyric?.raw ?? NeteaseLyric.blankLyricPreset.raw);
+    timeManagerRef.current?.reset(lyric?.raw ?? NeteaseLyric.blankLyric.raw);
     setCurrentLine(-1);
     currentLineRef.current = -1;
     calcLayout();
@@ -126,7 +126,7 @@ const LyricContainer: ForwardRefRenderFunction<LyricRef, LyricContainerProps> = 
         className
       )}>
       <div className="h-[55%]" />
-      {(lyric?.[version] ?? NeteaseLyric.blankLyricPreset.raw).map((line, index) => (
+      {(lyric?.[version] ?? NeteaseLyric.blankLyric.raw).map((line, index) => (
         <LyricLine
           activeColor={activeColor}
           inactiveColor={inactiveColor}

@@ -4,6 +4,7 @@ import {
   NeteaseTrack
 } from "@mahiru/ui/public/models/netease";
 import { CacheStore } from "@mahiru/ui/public/store/cache";
+import { NeteaseImageSize } from "@mahiru/ui/public/enum";
 
 export default class _NeteaseImageSource {
   //region cache
@@ -44,12 +45,15 @@ export default class _NeteaseImageSource {
     return null;
   }
 
-  static async local(track: NeteaseTrack, download: boolean) {
-    return _NeteaseImageSource.try(NeteaseNetworkImage.fromTrackCover(track), download);
+  static async local(track: NeteaseTrack, download: boolean, size: NeteaseImageSize) {
+    return _NeteaseImageSource.try(
+      NeteaseNetworkImage.fromTrackCover(track).setSize(size),
+      download
+    );
   }
 
-  static notwork(track: NeteaseTrack) {
-    return NeteaseNetworkImage.fromTrackCover(track);
+  static notwork(track: NeteaseTrack, size: NeteaseImageSize) {
+    return NeteaseNetworkImage.fromTrackCover(track).setSize(size);
   }
 
   static async download(image: NeteaseNetworkImage) {

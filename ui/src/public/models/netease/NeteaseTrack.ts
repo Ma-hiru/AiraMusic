@@ -177,15 +177,15 @@ export class NeteaseTrack implements NeteaseTrackModel {
     }
   }
 
-  artist() {
-    return this.ar.map((artist) => artist.name);
+  get artist() {
+    return this.ar.map((artist) => artist.name) || [];
   }
 
-  translate() {
+  get translate() {
     return this.tns?.[0];
   }
 
-  splitTitle() {
+  get splitTitle() {
     const title = this.name;
     const result = { main: title?.trim() || "", sub: "" };
     if (!title) return result;

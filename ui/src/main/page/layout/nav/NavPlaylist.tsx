@@ -94,7 +94,7 @@ const RowComponent: VirtualListRow<
         )}>
         <div
           className={cx(
-            `flex-1 flex justify-center items-center mr-3 py-1`,
+            `w-[calc(50%-var(--spacing)*3)] flex justify-center items-center py-1 rounded-md`,
             !extra.opened && "hover:bg-black/5"
           )}>
           <NeteaseImage
@@ -103,14 +103,14 @@ const RowComponent: VirtualListRow<
             image={NeteaseNetworkImage.fromPlaylistCover(data)
               .setSize(NeteaseImageSize.xs)
               .setAlt(data.name)}
-            className="w-[50%] rounded-md"
+            className="w-[60%] rounded-md"
           />
         </div>
         <div
           className={cx(
             `
-              flex-1 flex overflow-x-hidden flex-col justify-center items-start
-              mr-3 py-1 relative -left-3
+              w-[calc(50%+var(--spacing)*3)] flex overflow-x-hidden flex-col justify-center items-start
+              py-1 pr-3
               ease-in-out transition-all duration-300
             `,
             !extra.opened && "opacity-0"

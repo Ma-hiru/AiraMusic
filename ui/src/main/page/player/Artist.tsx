@@ -1,37 +1,12 @@
-import { FC, memo, useCallback, useEffect, useRef } from "react";
+import { FC, memo } from "react";
 import { Heart, MessageSquare } from "lucide-react";
-import { usePlayerStore } from "@mahiru/ui/main/store/player";
-import { useInfoWindow } from "@mahiru/ui/main/hooks/useInfoWindow";
 import { useHeart } from "@mahiru/ui/public/hooks/useHeart";
-import { CommentType } from "@mahiru/ui/public/enum";
+import AppInstance from "@mahiru/ui/main/entry/instance";
 
 const Artist: FC<object> = () => {
-  const { PlayerTrackStatus } = usePlayerStore(["PlayerTrackStatus"]);
+  const player = AppInstance.usePlayer();
   const { likeChange, isTrackLiked } = useHeart();
-  const track = PlayerTrackStatus?.track;
-  const lastTrackID = useRef(track?.id);
-
-  const { openInfoWindow, commentsDisplayType, opened } = useInfoWindow();
-
-  const handleOpenComments = useCallback(
-    (track?: NeteaseTrack) => {
-      if (!track) return;
-      openInfoWindow("comments", {
-        id: track.id,
-        type: CommentType.Song,
-        track
-      });
-    },
-    [openInfoWindow]
-  );
-
-  useEffect(() => {
-    if (opened && commentsDisplayType === "subscribe" && track?.id !== lastTrackID.current) {
-      handleOpenComments(track);
-      lastTrackID.current = track?.id;
-    }
-    // 监听track变化
-  }, [commentsDisplayType, handleOpenComments, opened, track]);
+  const track = player.current.track?.track;
 
   return (
     <div className="relative w-full flex justify-between gap-1 overflow-hidden items-center text-white/50 h-3.5 text-[12px] select-none">
@@ -57,7 +32,7 @@ const Artist: FC<object> = () => {
         <MessageSquare
           color="white"
           fill="white"
-          onClick={() => handleOpenComments(track)}
+          // onClick={() => handleOpenComments(track)}
           className="size-4 scale-90 text-white/50  hover:opacity-50 active:scale-90 active:text-white cursor-pointer select-none shadow-lg ease-in-out duration-300 transition-all opacity-80"
         />
       </div>

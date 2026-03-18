@@ -3,16 +3,20 @@ import { CacheStoreForObject } from "./object";
 import { CacheStoreForStore } from "./store";
 import { CacheStoreForOther } from "./other";
 import { CacheStoreForRemove } from "./remove";
+import { cacheRequest } from "@mahiru/ui/public/store/cache/request";
 
-export class CacheStoreClass {
-  readonly check = new CacheStoreForCheck();
-  readonly object = new CacheStoreForObject();
-  readonly store = new CacheStoreForStore();
-  readonly other = new CacheStoreForOther();
-  readonly remove = new CacheStoreForRemove();
+export class CacheStore {
+  static readonly check = new CacheStoreForCheck();
+  static readonly object = new CacheStoreForObject();
+  static readonly store = new CacheStoreForStore();
+  static readonly other = new CacheStoreForOther();
+  static readonly remove = new CacheStoreForRemove();
+  static dispose() {
+    return cacheRequest({
+      url: "/api/exit"
+    });
+  }
 }
-
-export const CacheStore = new CacheStoreClass();
 
 export function AddCacheStore(_: Function, ctx: ClassDecoratorContext) {
   ctx.addInitializer(function (this) {
@@ -25,5 +29,5 @@ export function AddCacheStore(_: Function, ctx: ClassDecoratorContext) {
 }
 
 export interface WithCacheStore {
-  readonly cacheStore: CacheStoreClass;
+  readonly cacheStore: CacheStore;
 }

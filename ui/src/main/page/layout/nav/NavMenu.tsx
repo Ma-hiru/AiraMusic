@@ -20,6 +20,7 @@ const NavMenu: FC<NavMenuProps> = ({ barOpened }) => {
         const active = RoutePathConstants.match(location, path);
         return (
           <div
+            key={path}
             className={cx(
               `
               flex flex-row h-12 items-center mx-3 rounded-md
@@ -37,7 +38,7 @@ const NavMenu: FC<NavMenuProps> = ({ barOpened }) => {
             }}>
             <span
               className={cx(
-                "flex-1 h-full mr-3 flex items-center justify-center font-bold rounded-md",
+                "w-[calc(50%-var(--spacing)*3)] h-full flex items-center justify-center font-bold rounded-md",
                 !barOpened && "hover:bg-black/5"
               )}>
               {icon}
@@ -45,7 +46,7 @@ const NavMenu: FC<NavMenuProps> = ({ barOpened }) => {
             <span
               className={cx(
                 `
-                  flex-1 h-full mr-3 relative -left-3
+                  w-[calc(50%+var(--spacing)*3)] h-full
                   flex items-center justify-start font-bold rounded-md
                   ease-in-out duration-300 transition-opacity
                 `,
