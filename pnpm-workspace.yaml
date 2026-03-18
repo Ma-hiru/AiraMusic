@@ -6,7 +6,10 @@ packages:
   - store
 
 onlyBuiltDependencies:
+  - '@applemusic-like-lyrics/lyric'
   - '@parcel/watcher'
   - electron
+  - electron-winstaller
+  - esbuild
 
 registry: https://registry.npmmirror.com
