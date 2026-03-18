@@ -1,5 +1,5 @@
 import { useCallback, useEffect } from "react";
-import { Renderer } from "@mahiru/ui/public/entry/renderer";
+import AppRenderer from "@mahiru/ui/public/entry/renderer";
 import { Log } from "@mahiru/ui/public/utils/dev";
 
 let loaded = false;
@@ -7,7 +7,7 @@ let loaded = false;
 function _requestLoaded(broadcast = false, hide = false) {
   if (loaded) return;
   loaded = true;
-  Renderer.event.loaded({ broadcast, hide });
+  AppRenderer.event.loaded({ broadcast, hide });
   Log.debug("App loaded");
 }
 
@@ -30,11 +30,11 @@ export function useAppLoaded(
   }, [requestLoaded, props?.timeout]);
 
   useEffect(() => {
-    Renderer.addMessageHandler(
+    AppRenderer.addMessageHandler(
       "otherWindowClosed",
       "main",
       () => {
-        Renderer.event.close({ broadcast: false });
+        AppRenderer.event.close({ broadcast: false });
       },
       { id: "onMainExit" }
     );

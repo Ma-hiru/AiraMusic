@@ -1,7 +1,7 @@
 import QRCode from "qrcode";
 import { useCallback, useEffect, useState } from "react";
 import { EqError, Log } from "@mahiru/ui/public/utils/dev";
-import { API } from "@mahiru/ui/public/api";
+import NCM_API from "@mahiru/ui/public/api";
 
 interface LoginQRCodeProps {
   qrOptions?: QRCode.QRCodeToDataURLOptions;
@@ -12,7 +12,7 @@ export function useLoginQRCode(props?: LoginQRCodeProps) {
   const { qrOptions, checkInterval = 3000 } = props || {};
   const [status, setStatus] = useState(QRCodeStatus.INITIALIZED);
   const [dataURL, setDataURL] = useState<Nullable<string>>(null);
-  const [result, setResult] = useState<Nullable<NeteaseLoginQrCheckResponse>>(null);
+  const [result, setResult] = useState<Nullable<NeteaseAPI.NeteaseLoginQrCheckResponse>>(null);
   const [key, setKey] = useState("");
 
   // 请求并生成二维码
@@ -91,8 +91,8 @@ export enum QRCodeStatus {
 }
 
 async function requestQRCode() {
-  const keyResult = await API.Auth.loginQrCodeKey();
-  const codeResult = await API.Auth.loginQrCodeCreate({ key: keyResult.data.unikey });
+  const keyResult = await NCM_API.Auth.loginQrCodeKey();
+  const codeResult = await NCM_API.Auth.loginQrCodeCreate({ key: keyResult.data.unikey });
   return {
     QRCodeKey: keyResult.data.unikey,
     QRCodeURL: codeResult.data.qrurl
@@ -101,7 +101,7 @@ async function requestQRCode() {
 
 async function checkQRCode(codeKey: string) {
   try {
-    const checkResult = await API.Auth.loginQrCodeCheck(codeKey);
+    const checkResult = await NCM_API.Auth.loginQrCodeCheck(codeKey);
     return { code: checkResult.code as QRCodeStatus, result: checkResult };
   } catch (err) {
     Log.error(

@@ -1,38 +1,40 @@
-import { useCallback } from "react";
-import { API } from "@mahiru/ui/public/api";
-import { Playlist } from "@mahiru/ui/public/entry/playlist";
-import { useLocalStore, useLocalStoreProxy } from "@mahiru/ui/public/store/local";
+import { useCallback, useMemo } from "react";
+import { useUserStore } from "@mahiru/ui/public/store/user";
+import { NeteaseTrack, NeteaseUser } from "@mahiru/ui/public/models/netease";
+import NCM_API from "@mahiru/ui/public/api";
 
 export const useHeart = () => {
-  const { User } = useLocalStore(["User"]);
-  const localStoreProxy = useLocalStoreProxy();
+  const { _user, updateUser } = useUserStore();
+  const user = useMemo(() => NeteaseUser.fromObject(_user), [_user]);
 
   const isTrackLiked = useCallback(
-    (track?: NeteaseTrackBase) => {
-      return Boolean(track && User.UserLikedTrackIDs.ids[track.id]);
+    (track?: NeteaseTrack) => {
+      return Boolean(track && user?.likedTrackIDs.ids[track.id]);
     },
-    [User.UserLikedTrackIDs.ids]
+    [user?.likedTrackIDs.ids]
   );
 
   const likeChange = useCallback(
     (track?: NeteaseTrack) => {
-      if (!track || !track.id) return;
+      if (!track || !user) return;
       const isLiked = isTrackLiked(track);
-      if (isLiked) {
-        delete localStoreProxy.User.UserLikedTrackIDs.ids[track.id];
-      } else {
-        localStoreProxy.User.UserLikedTrackIDs.ids[track.id] = true;
-      }
-      void API.Track.likeATrack({
+      updateUser(
+        user.copyWith({
+          likedTrackIDs: {
+            ids: {
+              ...user.likedTrackIDs.ids,
+              [track.id]: !isLiked
+            },
+            checkPoint: user.likedTrackIDs.checkPoint
+          }
+        })
+      );
+      void NCM_API.Track.star({
         id: track.id,
         like: !isLiked
       });
-      void Playlist.updateTrackLikedStatus({
-        track,
-        nextStatus: !isLiked
-      });
     },
-    [isTrackLiked, localStoreProxy.User.UserLikedTrackIDs.ids]
+    [isTrackLiked, updateUser, user]
   );
 
   return { isTrackLiked, likeChange };

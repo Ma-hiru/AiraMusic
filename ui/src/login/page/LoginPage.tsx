@@ -1,13 +1,13 @@
 import { useEffect } from "react";
 import { useStage } from "@mahiru/ui/public/hooks/useStage";
 import { QRCodeStatus, useLoginQRCode } from "@mahiru/ui/login/hooks/useLoginQRCode";
-import { Renderer } from "@mahiru/ui/public/entry/renderer";
 import { Stage } from "@mahiru/ui/public/enum";
 import { useAppLoaded } from "@mahiru/ui/public/hooks/useAppLoaded";
 
 import Control from "./Control";
 import QRCode from "./QRCode";
 import Tips from "./Tips";
+import AppRenderer from "@mahiru/ui/public/entry/renderer";
 
 export default function LoginPage() {
   useAppLoaded(true, { broadcast: true });
@@ -16,7 +16,10 @@ export default function LoginPage() {
   const { status, result, dataURL, update } = useLoginQRCode();
   useEffect(() => {
     if (status === QRCodeStatus.AUTHORIZED && result) {
-      Renderer.sendMessage("login", "main", result.cookie);
+      AppRenderer.sendMessage("login", "main", result.cookie);
+      setTimeout(() => {
+        AppRenderer.event.close({ broadcast: true });
+      }, 1000);
     }
   }, [status, result]);
 

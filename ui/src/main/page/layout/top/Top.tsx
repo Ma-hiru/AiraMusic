@@ -9,17 +9,19 @@ import TopSearch from "./TopSearch";
 import { useUserStore } from "@mahiru/ui/public/store/user";
 import { NeteaseUser } from "@mahiru/ui/public/models/netease";
 import TopLeft from "@mahiru/ui/main/page/layout/top/TopLeft";
+import AppRenderer from "@mahiru/ui/public/entry/renderer";
+import NeteaseSource from "@mahiru/ui/public/entry/source";
 
 const Top: FC<object> = () => {
   const { layout, updateLayout } = useLayoutStore();
-  const { _user } = useUserStore();
+  const { _user, updateUser } = useUserStore();
   const user = useMemo(() => NeteaseUser.fromObject(_user), [_user]);
   return (
     <Drag
       className={cx(
         `
           absolute h-10 left-0 right-0 top-0 pr-4
-          flex items-center opacity-50 z-30
+          flex items-center z-40
         `,
         layout.playModal ? "text-white" : "text-[#7b8290]"
       )}>
@@ -37,6 +39,17 @@ const Top: FC<object> = () => {
           onClick={() => {
             if (layout.playModal) {
               return updateLayout(layout.copy().setPlayModal(false));
+            }
+            if (!user?.isLoggedIn) {
+              AppRenderer.event.openInternalWindow("login");
+              AppRenderer.addMessageHandler(
+                "login",
+                "login",
+                (cookies) => {
+                  NeteaseSource.User.fromCookies(cookies).then(updateUser);
+                },
+                { once: true }
+              );
             }
           }}
         />

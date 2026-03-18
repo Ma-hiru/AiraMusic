@@ -70,8 +70,8 @@ export default class AppPlayer extends Listenable {
     this.disconnect = this.connect();
   }
 
-  setLyricVersion(next: Optional<LyricVersionType>) {
-    this.current.lyric?.versionChange(next);
+  setLyricVersion(next: Optional<"rm" | "tl">) {
+    this.current.lyric?.versionFSM(next);
     this.executeListeners();
   }
 

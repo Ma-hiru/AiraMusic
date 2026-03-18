@@ -185,6 +185,10 @@ export class NeteaseTrack implements NeteaseTrackModel {
     return this.tns?.[0];
   }
 
+  get aliaName() {
+    return this.alia[0];
+  }
+
   get splitTitle() {
     const title = this.name;
     const result = { main: title?.trim() || "", sub: "" };
@@ -225,7 +229,7 @@ export class NeteaseTrack implements NeteaseTrackModel {
     return "";
   }
 
-  formatTime(time: Optional<number>, unit: "ms" | "s" = "ms", split?: string) {
+  static formatTime(time: Optional<number>, unit: "ms" | "s" = "ms", split?: string) {
     if (!time) return "0:00";
     split ||= ":";
     let base;

@@ -1,27 +1,25 @@
-import { FC, memo, ReactNode, useEffect } from "react";
-import { usePlayerStore } from "@mahiru/ui/main/store/player";
+import { FC, memo, ReactNode, useEffect, useState } from "react";
 import { useUpdate } from "@mahiru/ui/public/hooks/useUpdate";
+import AppInstance from "@mahiru/ui/main/entry/instance";
 
 interface ProgressProps {
   render: (progress: PlayerProgress) => ReactNode;
 }
 
 const Progress: FC<ProgressProps> = ({ render }) => {
-  const { PlayerProgressGetter, PlayerCoreGetter } = usePlayerStore([
-    "PlayerProgressGetter",
-    "PlayerCoreGetter"
-  ]);
-  const progress = PlayerProgressGetter();
-  const player = PlayerCoreGetter();
-  const update = useUpdate();
+  const player = AppInstance.usePlayer();
+  const [data, setData] = useState<Nullable<ReactNode>>(null);
 
   useEffect(() => {
-    player.addEventListener("timeupdate", update);
-    return () => {
-      player.removeEventListener("timeupdate", update);
+    const update = () => {
+      setData(render(player.audio.progress));
     };
-  }, [player, update]);
+    player.audio.addEventListener("timeupdate", update, { passive: true });
+    return () => {
+      player.audio.removeEventListener("timeupdate", update);
+    };
+  }, [player.audio, render]);
 
-  return <>{render(progress)}</>;
+  return data;
 };
 export default memo(Progress);

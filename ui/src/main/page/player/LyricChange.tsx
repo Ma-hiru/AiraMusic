@@ -8,7 +8,7 @@ const LyricChange: FC<object> = () => {
   return (
     <div className="absolute right-8 bottom-10 text-white flex flex-col gap-2 select-none">
       <span
-        onClick={setRm}
+        onClick={() => player.setLyricVersion("rm")}
         className={cx(
           "size-5 text-[12px] font-semibold flex justify-center items-center overflow-hidden rounded-xs backdrop-blur-lg",
           {
@@ -21,7 +21,7 @@ const LyricChange: FC<object> = () => {
         音
       </span>
       <span
-        onClick={setTl}
+        onClick={() => player.setLyricVersion("tl")}
         className={cx(
           "size-5 text-[12px] font-semibold flex justify-center items-center overflow-hidden rounded-xs backdrop-blur-lg",
           {

@@ -1,29 +1,28 @@
 import { FC, memo, useMemo } from "react";
 import { motion } from "motion/react";
 import { css } from "@emotion/css";
-import { usePlayerStore } from "@mahiru/ui/main/store/player";
 import { usePlayProgress } from "@mahiru/ui/main/hooks/usePlayProgress";
 import { TrackQuality } from "@mahiru/ui/public/enum";
-import { NeteaseTrack } from "@mahiru/ui/public/entry/track";
-import { Time } from "@mahiru/ui/public/entry/time";
 
 import ProgressRender from "@mahiru/ui/main/componets/Progress";
 import Tag from "@mahiru/ui/public/components/public/Tag";
+import AppInstance from "@mahiru/ui/main/entry/instance";
+import { NeteaseTrack } from "@mahiru/ui/public/models/netease";
 
 const Progress: FC<object> = () => {
   const { barRef, bufferScope, percentScope, handleBarClick, handleBarMouseDown, chorusPercent } =
     usePlayProgress();
-  const { PlayerTrackStatus } = usePlayerStore(["PlayerTrackStatus"]);
+  const player = AppInstance.usePlayer();
   const quality = useMemo(() => {
     if (
-      PlayerTrackStatus?.quality?.level === TrackQuality.sq ||
-      PlayerTrackStatus?.quality?.level === TrackQuality.hr ||
-      PlayerTrackStatus?.quality?.level === TrackQuality.h
+      player.current.audio?.quality === TrackQuality.sq ||
+      player.current.audio?.quality === TrackQuality.hr ||
+      player.current.audio?.quality === TrackQuality.h
     ) {
-      return NeteaseTrack.mapTrackQualityToText(PlayerTrackStatus.quality.level);
+      return NeteaseTrack.qualityText(player.current.audio?.quality);
     }
     return null;
-  }, [PlayerTrackStatus?.quality?.level]);
+  }, [player]);
   return (
     <div className="w-[150px] sm:w-[200px] md:w-[250px] lg:w-[300px]">
       <div className="h-3 flex flex-col justify-center">
@@ -76,9 +75,9 @@ export default memo(Progress);
 const progressRenderMini = (progress: PlayerProgress) => {
   return (
     <div className="flex justify-end items-center gap-2">
-      <span>{Time.formatTrackTime(progress.currentTime, "s")}</span>
+      <span>{NeteaseTrack.formatTime(progress.currentTime, "s")}</span>
       <span className="opacity-50">/</span>
-      <span>{Time.formatTrackTime(progress.duration, "s")}</span>
+      <span>{NeteaseTrack.formatTime(progress.duration, "s")}</span>
     </div>
   );
 };
@@ -86,8 +85,8 @@ const progressRenderMini = (progress: PlayerProgress) => {
 const progressRenderFull = (progress: PlayerProgress) => {
   return (
     <>
-      <span>{Time.formatTrackTime(progress.currentTime, "s")}</span>
-      <span>{Time.formatTrackTime(progress.duration, "s")}</span>
+      <span>{NeteaseTrack.formatTime(progress.currentTime, "s")}</span>
+      <span>{NeteaseTrack.formatTime(progress.duration, "s")}</span>
     </>
   );
 };

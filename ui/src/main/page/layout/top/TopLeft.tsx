@@ -76,7 +76,7 @@ const TopLeft: FC<TopLeftProps> = ({ user, layout, onClick }) => {
             exit={{ opacity: 0, transition: { ease: "easeInOut", duration: 0.3 } }}
             animate={{ opacity: 1, transition: { ease: "easeInOut", duration: 0.3 } }}>
             <NoDrag onClick={onClick}>
-              <ChevronDown className="size-5 hover:opacity-50 active:scale-90 ease-in-out duration-300 transition-all" />
+              <ChevronDown className="size-5 hover:opacity-50 active:scale-90 ease-in-out duration-300 transition-all text-white" />
             </NoDrag>
           </motion.div>
         )}

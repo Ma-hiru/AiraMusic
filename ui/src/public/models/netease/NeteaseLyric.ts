@@ -32,7 +32,8 @@ export class NeteaseLyric implements FullVersionLyricLine {
       hasFull: this.full.length > 0,
       hasRaw: this.raw.length > 0,
       rmActive: this.currentVersion === "rm" || this.currentVersion === "full",
-      tlActive: this.currentVersion === "tl" || this.currentVersion === "full"
+      tlActive: this.currentVersion === "tl" || this.currentVersion === "full",
+      allActive: this.currentVersion === "full"
     };
   }
 
@@ -43,6 +44,25 @@ export class NeteaseLyric implements FullVersionLyricLine {
     const { hasRm, hasFull, hasTl } = this.versionInfo();
     if ((next === "rm" && hasRm) || (next === "tl" && hasTl) || (next === "full" && hasFull)) {
       this.currentVersion = next;
+    }
+  }
+
+  versionFSM(next: Optional<"rm" | "tl">) {
+    if (!next) return;
+    const { rmActive, tlActive, allActive } = this.versionInfo();
+
+    if ((!rmActive && next === "rm") || (!tlActive && next === "tl")) {
+      if ((rmActive && next === "tl") || (tlActive && next === "rm")) {
+        return this.versionChange("full");
+      }
+    } else {
+      if (allActive) {
+        if (next === "rm") return this.versionChange("tl");
+        if (next === "tl") return this.versionChange("rm");
+      }
+      if ((rmActive && next === "rm") || (tlActive && next === "tl")) {
+        this.versionChange("raw");
+      }
     }
   }
 

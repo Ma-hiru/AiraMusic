@@ -7,7 +7,7 @@ import PlayerBar from "./bar";
 import NavSide from "./nav";
 import Content from "./Content";
 import Float from "./float";
-// import PlayerModal from "./Modal";
+import PlayerModal from "./Modal";
 // import Background from "./Background";
 // import ThemeColor from "./ThemeColor";
 // import MusicSource from "./MusicSource";
@@ -33,17 +33,17 @@ const Layout: FC<object> = () => {
         relative w-screen h-screen overflow-hidden scrollbar-hide
         flex flex-row flex-nowrap
     `}>
-      <TopBar /> {/* h-10 z-30*/}
+      <TopBar /> {/* h-10 z-40*/}
       <NavSide />
       <Content />
       <PlayerBar /> {/*h-18 z-20*/}
+      <PlayerModal /> {/*z-30*/}
       {/*{stage >= Stage.Immediately && <MenuProvider />} /!*z-15*!/*/}
       {/*{stage >= Stage.Immediately && <ToastProvider />}*/}
       {/*{stage >= Stage.Immediately && <ModalProvider />}*/}
       {/*{stage >= Stage.Second && <ThemeColor />}*/}
       {/*{stage >= Stage.Second && <MusicSource />}*/}
       {/*{stage >= Stage.Finally && <Background />} /!* z-0 *!/*/}
-      {/*{stage >= Stage.Finally && <PlayerModal />} /!* z-20 *!/*/}
       <Float /> {/*z-10*/}
     </div>
   );
