@@ -27,7 +27,7 @@
   "private": true,
   "scripts": {
     "dev": "pnpm run-p dev:ui dev:app dev:electron",
-    "build": "pnpm i --frozen-lockfile && pnpm build:wasm && pnpm build:store && pnpm build:ui && pnpm build:app && pnpm build:electron",
+    "build": "pnpm build:wasm && pnpm build:store && pnpm build:ui && pnpm build:app && pnpm build:electron",
     "clear:cache": "rimraf ./wasm/target ./ui/node_modules/.vite",
     "clear:dist": "rimraf ./wasm/pkg ./app/dist ./ui/dist ./store/server",
     "dev:ui": "pnpm --filter @mahiru/ui run dev",
@@ -52,9 +52,7 @@
     "auto-commit:linux": "pnpm exec bash ./scripts/git-commit.sh"
   },
   "dependencies": {
-    "axios": "1.13.5",
-    "electron": "40.6.1",
-    "lodash-es": "4.17.23"
+    "electron": "40.6.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
@@ -78,7 +76,6 @@
     "typescript": "^5",
     "typescript-eslint": "^8.46.3"
   },
-  "packageManager": "pnpm@10.30.3",
   "engines": {
     "node": ">=20"
   }

@@ -32,6 +32,16 @@ export default defineConfig((options) => {
           ...(esbuildOptions.define || {}),
           ...genDefine(mode)
         };
+        esbuildOptions.banner = {
+          ...(esbuildOptions.banner || {}),
+          js: [
+            "import { createRequire as createRequireBanner } from 'node:module';",
+            "const require = createRequireBanner(import.meta.url);",
+            esbuildOptions.banner?.js || ""
+          ]
+            .filter(Boolean)
+            .join("\n")
+        };
         return esbuildOptions;
       }
     },
