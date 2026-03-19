@@ -111,6 +111,6 @@ export default class _NeteaseTrackSource {
   }
 
   static fromPlaylist(playlist: NeteaseAPI.NeteasePlaylistDetail) {
-    return _NeteasePlaylistSource.formID(playlist.id).then((p) => p.tracks);
+    return _NeteasePlaylistSource.fromID(playlist.id).then((p) => p.tracks);
   }
 }

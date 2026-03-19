@@ -5,76 +5,64 @@ import {
   RefObject,
   useEffect,
   useImperativeHandle,
-  useRef
+  useRef,
+  useState
 } from "react";
-import { ColorInstance } from "color";
 import { cx } from "@emotion/css";
 import { useScrollAutoHide } from "@mahiru/ui/public/hooks/useScrollAutoHide";
-import { useVirtualList } from "@mahiru/ui/public/hooks/useVirtualList";
 
-import TrackItem, { OnContextMenuFunc } from "@mahiru/ui/public/components/track_item/TrackItem";
-import VirtualList, { VirtualListRow } from "@mahiru/ui/public/components/virtual_list/VirtualList";
+import TrackItem, { TrackItemProps } from "@mahiru/ui/public/components/track_item";
+import VirtualList, { VirtualListRow } from "@mahiru/ui/public/components/virtual_list";
 import ListLoading from "@mahiru/ui/public/components/track_list/ListLoading";
+import { NeteaseHistory, NeteaseTrack, NeteaseTrackRecord } from "@mahiru/ui/public/models/netease";
+import { useHeart } from "@mahiru/ui/public/hooks/useHeart";
+import { useThemeColor } from "@mahiru/ui/public/hooks/useThemeColor";
+import { useUser } from "@mahiru/ui/public/store/user";
+import { PlaylistSource } from "@mahiru/ui/main/constants";
 
 export interface TrackListRef {
   containerRef: RefObject<Nullable<HTMLDivElement>>;
-  scrollToItem: NormalFunc<[item: number]>;
+  scrollToItem: NormalFunc<[item: number], Promise<void>>;
 }
 
 export interface TrackListProps {
-  tracks: NeteaseTrackBase[];
-  textColorOnMain: ColorInstance;
-  mainColor: ColorInstance;
-  source?: number;
+  id: Optional<number>;
+  tracks: NeteaseTrackRecord[] | NeteaseHistory[];
+  type: PlaylistSource;
   loading?: boolean;
-  requestMissedTracks?: number;
   paddingBottom?: number | string;
-  onVirtualListRangeUpdate?: NormalFunc<[range: IndexRange]>;
-  isLikedPlayList?: boolean;
-  currentTrackID?: number;
-  onPlay?: NormalFunc<[index: number]>;
-  onContextMenu?: OnContextMenuFunc;
+  activeID?: number;
   onListScroll?: NormalFunc;
-  fastLocation?: boolean;
-  showHeart?: boolean;
-  isTrackLiked?: NormalFunc<[track: NeteaseTrackBase], boolean>;
-  likeChange?: NormalFunc<[track: NeteaseTrackBase]>;
   className?: string;
-  overscan?: number;
+  onRangeUpdate?: NormalFunc<[range: IndexRange]>;
+  onClick: Optional<NormalFunc<[track: NeteaseTrackRecord | NeteaseHistory, index: number]>>;
+  onContext: Optional<NormalFunc<[track: NeteaseTrackRecord | NeteaseHistory, index: number]>>;
 }
 
 const TrackList: ForwardRefRenderFunction<TrackListRef, TrackListProps> = (
   {
-    source,
+    id,
     tracks,
-    onVirtualListRangeUpdate,
+    type,
     loading,
     paddingBottom,
-    requestMissedTracks,
-    mainColor,
-    textColorOnMain,
-    isLikedPlayList,
-    currentTrackID,
-    onPlay,
-    onContextMenu,
+    activeID,
     onListScroll,
-    fastLocation,
-    showHeart,
-    likeChange,
-    isTrackLiked,
     className,
-    overscan = 10
+    onContext,
+    onClick,
+    onRangeUpdate
   },
   ref
 ) => {
+  const user = useUser();
   const containerRef = useRef<HTMLDivElement>(null);
-  const { start, end, scrollToItem } = useVirtualList({
-    total: tracks.length,
-    containerRef,
-    overscan,
-    itemHeight: 50,
-    onRangeUpdate: onVirtualListRangeUpdate
-  });
+  const [scrollToItem, setScrollToItem] = useState<(index: number) => Promise<void>>(
+    async () => {}
+  );
+  const [fastLocation, setFastLocation] = useState(false);
+  const { isTrackLiked, likeChange } = useHeart();
+  const { mainColor, textColorOnMain } = useThemeColor();
 
   useScrollAutoHide(containerRef);
 
@@ -84,13 +72,21 @@ const TrackList: ForwardRefRenderFunction<TrackListRef, TrackListProps> = (
       top: 0,
       behavior: "instant"
     });
-  }, [source]);
+  }, [id]);
 
   useImperativeHandle(
     ref,
     () => ({
       containerRef,
-      scrollToItem
+      scrollToItem: (index) => {
+        const { promise, resolve } = Promise.withResolvers<void>();
+        setFastLocation(true);
+        scrollToItem(index).finally(() => {
+          setFastLocation(false);
+          resolve();
+        });
+        return promise;
+      }
     }),
     [scrollToItem]
   );
@@ -109,64 +105,55 @@ const TrackList: ForwardRefRenderFunction<TrackListRef, TrackListProps> = (
         <VirtualList
           items={tracks}
           extraData={{
-            isLikedList: isLikedPlayList,
-            currentTrackID,
-            textColorOnMain,
+            user,
+            type,
+            onClick,
+            onContext,
+            activeID,
             mainColor,
-            createPlayHandler: (index) => () => onPlay?.(index),
-            onContextMenu,
             fastLocation,
-            showHeart,
-            likeChange,
-            isLiked: isTrackLiked
+            textColor: textColorOnMain,
+            onLikeChange: (track) => likeChange(track.track),
+            checkLiked: isTrackLiked
           }}
           itemHeight={50}
           RowComponent={RowComponent}
           paddingBottom={paddingBottom}
-          start={start}
-          end={end}
+          containerRef={containerRef}
+          setScrollToItem={setScrollToItem}
+          onRangeUpdate={onRangeUpdate}
         />
       </div>
-      <ListLoading
-        loading={loading}
-        mainColor={mainColor}
-        requestMissedTracks={requestMissedTracks}
-      />
+      <ListLoading loading={loading} mainColor={mainColor} />
     </>
   );
 };
 
-const RowComponent: VirtualListRow<NeteaseTrackBase, ExtraData> = ({ index, items, extra }) => {
+type ExtraData = Omit<TrackItemProps, "index" | "track" | "total" | "active" | "liked"> & {
+  activeID?: number;
+  checkLiked: NormalFunc<[track?: NeteaseTrack], boolean>;
+};
+
+const RowComponent: VirtualListRow<NeteaseTrackRecord, ExtraData> = ({ index, items, extra }) => {
   return (
     <TrackItem
-      tracks={items}
-      trackIdx={index}
-      textColorOnMain={extra.textColorOnMain}
+      index={index}
+      track={items[index]!}
+      total={items.length}
+      active={items[index]!.id === extra.activeID}
+      textColor={extra.textColor}
       mainColor={extra.mainColor}
       fastLocation={extra.fastLocation}
-      isLikedList={extra.isLikedList}
-      active={items[index]?.id === extra.currentTrackID}
-      onSelectTrack={extra.createPlayHandler?.(index)}
-      onContextMenu={extra.onContextMenu}
-      likeChange={extra.likeChange}
-      isLiked={extra.isLiked}
-      showHeart={extra.showHeart}
+      onClick={extra.onClick}
+      onContext={extra.onContext}
+      onLikeChange={extra.onLikeChange}
+      liked={extra.checkLiked(items[index]?.track)}
+      type={extra.type}
+      user={extra.user}
     />
   );
 };
 
-type ExtraData = {
-  textColorOnMain: ColorInstance;
-  mainColor: ColorInstance;
-  createPlayHandler?: NormalFunc<[number], NormalFunc>;
-  currentTrackID?: Optional<number>;
-  onContextMenu?: OnContextMenuFunc;
-  fastLocation?: boolean;
-  isLikedList?: boolean;
-  showHeart?: boolean;
-  isLiked?: NormalFunc<[track: NeteaseTrackBase], boolean>;
-  likeChange?: NormalFunc<[track: NeteaseTrackBase]>;
-};
-
 TrackList.displayName = "TrackList";
+
 export default memo(forwardRef(TrackList));

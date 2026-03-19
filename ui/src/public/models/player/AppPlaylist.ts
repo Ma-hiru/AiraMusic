@@ -20,17 +20,7 @@ export default class AppPlaylist extends Listenable {
   }
 
   set shuffle(value) {
-    if (value) {
-      const current = this.current();
-      this.playlistBackup = this.playlist;
-      this.playlist = shuffle(this.playlist);
-      this.position = this.locate(current?.track.id);
-    } else {
-      const current = this.current();
-      this.playlist = this.playlistBackup;
-      this.position = this.locate(current?.track.id);
-    }
-    this._shuffle = value;
+    this.changeShuffle(value);
     this.executeListeners();
   }
 
@@ -108,21 +98,43 @@ export default class AppPlaylist extends Listenable {
     return this.playlist.findIndex((item) => item.track.id === id);
   }
 
+  private changeShuffle(value: boolean) {
+    if (value) {
+      const current = this.current();
+      this.playlistBackup = this.playlist;
+      this.playlist = shuffle(this.playlist);
+      this.position = this.locate(current?.track.id);
+    } else {
+      const current = this.current();
+      this.playlist = this.playlistBackup;
+      this.position = this.locate(current?.track.id);
+    }
+    this._shuffle = value;
+  }
+
   replace(list: NeteaseTrackRecord[], initPosition = -1) {
+    const shouldBackup = this.shuffle;
+    shouldBackup && this.changeShuffle(false);
     this.playlist = list;
     this.position = this.check(initPosition) ? initPosition : -1;
+    shouldBackup && this.changeShuffle(true);
     this.executeListeners();
     return this;
   }
 
   clear() {
+    const shouldBackup = this.shuffle;
+    shouldBackup && this.changeShuffle(false);
     this.playlist = [];
     this.position = -1;
+    shouldBackup && this.changeShuffle(true);
     this.executeListeners();
     return this;
   }
 
   remove(pos: number) {
+    const shouldBackup = this.shuffle;
+    shouldBackup && this.changeShuffle(false);
     if (!this.check(pos) || pos < 0) return this;
 
     this.playlist.splice(pos, 1);
@@ -137,11 +149,15 @@ export default class AppPlaylist extends Listenable {
       this.position = this.playlist.length - 1;
     }
 
+    shouldBackup && this.changeShuffle(true);
     this.executeListeners();
     return this;
   }
 
   add(record: NeteaseTrackRecord, position: "next" | "end") {
+    const shouldBackup = this.shuffle;
+    shouldBackup && this.changeShuffle(false);
+
     const existPos = this.locate(record.track.id);
     const isCurrent = existPos === this.position;
 
@@ -160,6 +176,25 @@ export default class AppPlaylist extends Listenable {
       }
     }
 
+    shouldBackup && this.changeShuffle(true);
+    this.executeListeners();
+    return this;
+  }
+
+  addList(records: NeteaseTrackRecord[]) {
+    const shouldBackup = this.shuffle;
+    shouldBackup && this.changeShuffle(false);
+
+    for (const record of records) {
+      const existPos = this.locate(record.id);
+      const isCurrent = existPos === this.position;
+
+      if (existPos !== -1) this.remove(existPos);
+      if (isCurrent) this.position = this.playlist.length - 1;
+      this.playlist.push(record);
+    }
+
+    shouldBackup && this.changeShuffle(true);
     this.executeListeners();
     return this;
   }

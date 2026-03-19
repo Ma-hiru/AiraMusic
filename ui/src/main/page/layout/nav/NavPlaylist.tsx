@@ -52,7 +52,7 @@ const NavPlaylist: FC<NavPlaylistProps> = ({ user, layout }) => {
 
   const onItemClick = useCallback(
     (item: NeteasePlaylistSummary) => {
-      navigate(RoutePathConstants.playlist(item.id, "playlist"));
+      navigate(RoutePathConstants.playlist(item.id, "normal"));
     },
     [navigate]
   );

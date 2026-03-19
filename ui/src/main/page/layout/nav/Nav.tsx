@@ -1,17 +1,15 @@
-import { FC, memo, useMemo } from "react";
+import { FC, memo } from "react";
 import { cx } from "@emotion/css";
 import { useLayoutStore } from "@mahiru/ui/main/store/layout";
-import { useUserStore } from "@mahiru/ui/public/store/user";
-import { NeteaseUser } from "@mahiru/ui/public/models/netease";
+import { useUser } from "@mahiru/ui/public/store/user";
 
 import NavPlayList from "./NavPlaylist";
 import NavSideDivider from "./NavDivider";
 import NavMenu from "./NavMenu";
 
 const Nav: FC<object> = () => {
-  const { _user } = useUserStore();
   const { layout, theme } = useLayoutStore();
-  const user = useMemo(() => NeteaseUser.fromObject(_user), [_user]);
+  const user = useUser();
   const displayPlaylist = (user?.playlistCount || 0) > 0;
 
   return (

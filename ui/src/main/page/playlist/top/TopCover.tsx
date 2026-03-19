@@ -1,39 +1,36 @@
-import { FC, memo, ReactEventHandler, useCallback } from "react";
+import { FC, memo, ReactEventHandler, useCallback, useMemo } from "react";
 import { Headphones } from "lucide-react";
 import { useLayoutStore } from "@mahiru/ui/main/store/layout";
-import { Playlist, PlaylistCacheEntry } from "@mahiru/ui/public/entry/playlist";
 import { NeteaseImageSize } from "@mahiru/ui/public/enum";
 
 import NeteaseImage from "@mahiru/ui/public/components/image/NeteaseImage";
+import { NeteaseNetworkImage, NeteasePlaylist } from "@mahiru/ui/public/models/netease";
 
 interface TopCoverProps {
-  entry: Nullable<PlaylistCacheEntry>;
+  summary: Nullable<NeteasePlaylist>;
 }
 
-const TopCover: FC<TopCoverProps> = ({ entry }) => {
-  const { UpdatePlayerTheme } = useLayoutStore(["PlayerTheme", "UpdatePlayerTheme"]);
+const TopCover: FC<TopCoverProps> = ({ summary }) => {
+  const { theme, updateTheme } = useLayoutStore();
   const onLoad = useCallback<ReactEventHandler<HTMLImageElement>>(
-    (e) =>
-      UpdatePlayerTheme({
-        BackgroundCover: e.currentTarget.src
-      }),
-    [UpdatePlayerTheme]
+    (e) => {
+      updateTheme(theme.copy().setBackgroundCover(e.currentTarget.src));
+    },
+    [theme, updateTheme]
   );
+  const image = useMemo(() => {
+    if (!summary) return null;
+    return NeteaseNetworkImage.fromPlaylistCover(summary)
+      .setSize(NeteaseImageSize.md)
+      .setAlt(summary.name);
+  }, [summary]);
+
   return (
     <div className="size-44 relative select-none">
-      <NeteaseImage
-        preview
-        className="size-44 rounded-md"
-        size={NeteaseImageSize.md}
-        src={entry?.playlist.coverImgUrl}
-        alt={entry?.playlist.name}
-        onLoad={onLoad}
-      />
+      <NeteaseImage cache preview image={image} className="size-44 rounded-md" onLoad={onLoad} />
       <div className="absolute right-1 top-1 flex gap-1 justify-center items-center text-white z-10 select-none">
         <Headphones className="size-3" />
-        <p className="text-[10px] align-middle">
-          {Playlist.formatPlayCount(entry?.playlist.playCount)}
-        </p>
+        <p className="text-[10px] align-middle">{summary?.playCountFormat()}</p>
       </div>
     </div>
   );

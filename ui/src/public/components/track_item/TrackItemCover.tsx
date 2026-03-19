@@ -1,11 +1,12 @@
-import { FC, memo } from "react";
 import { cx } from "@emotion/css";
-import { NeteaseImageSize } from "@mahiru/ui/public/enum/image";
+import { FC, memo, useMemo } from "react";
+import { NeteaseNetworkImage, NeteaseTrackRecord } from "@mahiru/ui/public/models/netease";
+import { NeteaseImageSize } from "@mahiru/ui/public/enum";
 
 import NeteaseImage from "@mahiru/ui/public/components/image/NeteaseImage";
 
 interface ListItemCoverProps {
-  track: NeteaseTrackBase;
+  track: NeteaseTrackRecord;
   isMainColorDark: boolean;
   disabled: boolean;
   onClick?: NormalFunc;
@@ -19,12 +20,15 @@ const TrackItemCover: FC<ListItemCoverProps> = ({
   isMainColorDark,
   fastLocation = false
 }) => {
+  const image = useMemo(
+    () =>
+      NeteaseNetworkImage.fromTrackCover(track.track)
+        .setSize(NeteaseImageSize.xs)
+        .setAlt(track.track.name),
+    [track.track]
+  );
   return (
     <NeteaseImage
-      onClick={() => {
-        if (disabled) return;
-        onClick?.();
-      }}
       className={cx(
         `
         size-8 rounded-md cursor-pointer select-none
@@ -33,13 +37,14 @@ const TrackItemCover: FC<ListItemCoverProps> = ({
       `,
         disabled && "cursor-not-allowed"
       )}
+      onClick={() => !disabled && onClick?.()}
+      cache
       imageClassName={(disabled && "cursor-not-allowed") || undefined}
-      src={track.al.picUrl}
-      alt={track.al.name}
-      size={NeteaseImageSize.xs}
+      image={image}
       pause={fastLocation}
       shadowColor={isMainColorDark ? "dark" : "light"}
     />
   );
 };
+
 export default memo(TrackItemCover);

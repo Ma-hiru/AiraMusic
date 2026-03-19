@@ -82,32 +82,33 @@ export default class AppUI {
     }
   }
 
-  static smoothScrollTo(element: Optional<HTMLElement>, scrollTop: number, duration?: number) {
-    if (!element || !Number.isFinite(scrollTop)) return;
-    if (scrollTop < 0) scrollTop = 0;
+  static smoothScrollTo(
+    element: Optional<HTMLElement>,
+    scrollTop: number,
+    duration?: number
+  ): Promise<void> {
+    if (!element || !Number.isFinite(scrollTop)) return Promise.resolve();
 
     const elementExtended = element as HTMLElement & {
       raf?: number;
+      resolve?: NormalFunc;
     };
+    if (elementExtended.raf) cancelAnimationFrame(elementExtended.raf);
+    if (elementExtended.resolve) elementExtended.resolve();
 
-    elementExtended.raf ||= 0;
-    if (elementExtended.raf) {
-      cancelAnimationFrame(elementExtended.raf);
-      elementExtended.raf = 0;
-    }
-
+    if (scrollTop < 0) scrollTop = 0;
     const start = element.scrollTop;
     const distance = scrollTop - start;
     if (Math.abs(distance) < 1) {
       element.scrollTop = scrollTop;
-      return;
+      return Promise.resolve();
     }
-
     if (!duration) {
       duration = clamp(Math.abs(distance) * 8, 200, 800);
     }
 
     let startTime = -1;
+    const { promise, resolve } = Promise.withResolvers<void>();
     const easeOutCubic = (t: number) => {
       return 1 - Math.pow(1 - t, 3);
     };
@@ -122,10 +123,13 @@ export default class AppUI {
         elementExtended.raf = requestAnimationFrame(animate);
       } else {
         elementExtended.raf = 0;
+        resolve();
       }
     };
 
+    elementExtended.resolve = resolve;
     elementExtended.raf = requestAnimationFrame(animate);
+    return promise;
   }
 
   static generatePalette(color: string) {

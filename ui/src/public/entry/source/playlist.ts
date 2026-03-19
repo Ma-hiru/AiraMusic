@@ -51,7 +51,7 @@ export default class _NeteasePlaylistSource {
     return response;
   }
 
-  static formID(id: number, signal?: AbortSignal) {
+  static fromID(id: number, signal?: AbortSignal) {
     return NCM_API.Playlist.detail(id, signal).then((response) =>
       _NeteasePlaylistSource.fromResponse(response)
     );
@@ -64,6 +64,6 @@ export default class _NeteasePlaylistSource {
   }
 
   static fromSummary(summary: NeteasePlaylistSummary | NeteaseAPI.NeteasePlaylistSummary) {
-    return _NeteasePlaylistSource.formID(summary.id);
+    return _NeteasePlaylistSource.fromID(summary.id);
   }
 }

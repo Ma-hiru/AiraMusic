@@ -20,4 +20,5 @@ const Loading: FC<LoadingProps> = (props) => {
     </motion.div>
   );
 };
+
 export default memo(Loading);

@@ -177,19 +177,19 @@ export class NeteaseTrack implements NeteaseTrackModel {
     }
   }
 
-  get artist() {
+  artist() {
     return this.ar.map((artist) => artist.name) || [];
   }
 
-  get translate() {
+  translate() {
     return this.tns?.[0];
   }
 
-  get aliaName() {
+  aliaName() {
     return this.alia[0];
   }
 
-  get splitTitle() {
+  splitTitle() {
     const title = this.name;
     const result = { main: title?.trim() || "", sub: "" };
     if (!title) return result;
@@ -213,7 +213,11 @@ export class NeteaseTrack implements NeteaseTrackModel {
     return result;
   }
 
-  formatDate(time?: number, split?: string) {
+  formatDate(split?: string) {
+    return NeteaseTrack.formatDate(this.publishTime, split);
+  }
+
+  static formatDate(time?: number, split?: string) {
     if (time) {
       const date = Dayjs(time);
       const now = Dayjs();
@@ -227,6 +231,10 @@ export class NeteaseTrack implements NeteaseTrackModel {
       }
     }
     return "";
+  }
+
+  formatTime(split?: string) {
+    return NeteaseTrack.formatTime(this.dt, "ms", split);
   }
 
   static formatTime(time: Optional<number>, unit: "ms" | "s" = "ms", split?: string) {

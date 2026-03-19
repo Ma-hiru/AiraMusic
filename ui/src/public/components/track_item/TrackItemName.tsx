@@ -1,12 +1,13 @@
 import { FC, memo } from "react";
 import { css, cx } from "@emotion/css";
 import { ColorInstance } from "color";
+import { NeteaseTrackRecord } from "@mahiru/ui/public/models/netease";
 
 interface ListItemNameProps {
-  track: NeteaseTrackBase;
+  track: NeteaseTrackRecord;
   disabled: boolean;
-  onClick?: NormalFunc;
   textColor: ColorInstance;
+  onClick?: NormalFunc;
 }
 
 const TrackItemName: FC<ListItemNameProps> = ({ track, disabled, onClick, textColor }) => {
@@ -34,21 +35,23 @@ const TrackItemName: FC<ListItemNameProps> = ({ track, disabled, onClick, textCo
     <div className="flex flex-col text-[14px] overflow-hidden">
       {/*歌曲标题*/}
       <div className="overflow-hidden flex-row truncate">
-        <span className={titleStyle} onClick={onClick}>
-          {track.name}
+        <span className={titleStyle} onClick={() => !disabled && onClick}>
+          {track.track.name}
         </span>
-        {(track.tns?.[0] || track.alia?.[0]) && (
-          <span className={subTitleStyle}>({track.tns?.[0] || track.alia?.[0]})</span>
+        {(track.track.translate() || track.track.aliaName()) && (
+          <span className={subTitleStyle}>
+            ({track.track.translate() || track.track.aliaName()})
+          </span>
         )}
       </div>
       {/*歌手、专辑*/}
       <div className={artistStyle}>
         <span className="truncate cursor-pointer hover:opacity-50 ease-in-out duration-300 transition-all active:scale-95">
-          {track.ar.map((ar) => ar.name).join(" / ")}
+          {track.track.artist().join(" / ")}
         </span>
         <span>-</span>
         <span className="truncate cursor-pointer hover:opacity-50 ease-in-out duration-300 transition-all active:scale-95">
-          {track.al.name}
+          {track.track.al.name}
         </span>
       </div>
     </div>

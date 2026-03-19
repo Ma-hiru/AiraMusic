@@ -1,28 +1,31 @@
 import { FC, memo } from "react";
-import { PlaylistCacheEntry } from "@mahiru/ui/public/entry/playlist";
 
 import TopCover from "./TopCover";
 import TopRight from "./TopRight";
 import TopInfo from "./TopInfo";
+import { NeteasePlaylist } from "@mahiru/ui/public/models/netease";
+import { PlaylistSource } from "@mahiru/ui/main/constants";
 
 interface TopProps {
-  entry: Nullable<PlaylistCacheEntry>;
+  type: PlaylistSource;
+  loading: boolean;
+  summary: Nullable<NeteasePlaylist>;
   searchTracks: NormalFunc<[k: string]>;
   onPlayAll: NormalFunc;
   onAddList: NormalFunc;
 }
 
-const Top: FC<TopProps> = ({ entry, searchTracks, onPlayAll, onAddList }) => {
+const Top: FC<TopProps> = ({ summary, searchTracks, onPlayAll, onAddList, type, loading }) => {
   return (
     <div className="grid grid-rows-1 grid-cols-[1fr_auto]">
       {/*Left*/}
       <div className="min-w-0 grid grid-rows-1 grid-cols-[auto_1fr] gap-4 items-center">
-        <TopCover entry={entry} />
+        <TopCover summary={summary} />
         {/*Info*/}
-        <TopInfo entry={entry} onAddList={onAddList} onPlayAll={onPlayAll} />
+        <TopInfo summary={summary} onAddList={onAddList} onPlayAll={onPlayAll} />
       </div>
       {/*Right*/}
-      <TopRight entry={entry} searchTracks={searchTracks} />
+      <TopRight summary={summary} type={type} searchTracks={searchTracks} />
     </div>
   );
 };

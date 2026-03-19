@@ -1,8 +1,7 @@
 import Color from "color";
 import { FC, memo, useEffect, useState } from "react";
-import { NeteaseTrack } from "@mahiru/ui/public/entry/track";
 
-import TrackItem from "@mahiru/ui/public/components/track_item/TrackItem";
+import TrackItem from "@mahiru/ui/public/components/track_item";
 
 interface SongResultProps {
   ids: number[];

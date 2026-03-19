@@ -1,3 +1,4 @@
+import AppUI from "@mahiru/ui/public/entry/ui";
 import { FC, memo, RefObject, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 export type VirtualListRow<T extends HasID, U> = FC<{
@@ -16,6 +17,7 @@ export interface VirtualListProps<T extends HasID, U> {
   onRangeUpdate?: NormalFunc<[range: IndexRange]>;
   overscan?: number;
   onItemClick?: NormalFunc<[item: T, index: number]>;
+  setScrollToItem?: NormalFunc<[scrollToItem: (index: number) => Promise<void>]>;
 }
 
 const VirtualList = <T extends HasID, U>({
@@ -27,15 +29,17 @@ const VirtualList = <T extends HasID, U>({
   containerRef,
   onRangeUpdate,
   overscan = 5,
-  onItemClick
+  onItemClick,
+  setScrollToItem
 }: VirtualListProps<T, U>) => {
-  const { start, end } = useVirtualList({
+  const { start, end, scrollToItem } = useVirtualList({
     total: items.length,
     containerRef,
     itemHeight,
     onRangeUpdate,
     overscan
   });
+
   const visibleItems = useMemo(() => items.slice(start, end), [end, items, start]);
   const finalHeight = useMemo(() => {
     const total = items.length;
@@ -48,6 +52,10 @@ const VirtualList = <T extends HasID, U>({
     }
     return { height };
   }, [itemHeight, items.length, paddingBottom]);
+
+  useEffect(() => {
+    setScrollToItem?.(scrollToItem);
+  }, [scrollToItem, setScrollToItem]);
   return (
     <div className="relative w-full will-change-auto contain-layout" style={finalHeight}>
       {visibleItems.map((item, i) => {
@@ -137,12 +145,9 @@ function useVirtualList(props: {
   const scrollToItem = useCallback(
     (index: number) => {
       const container = containerRef.current;
-      if (!container) return;
-      if (index < 0 || index >= total) return;
-      container.scrollTo({
-        top: index * itemHeight,
-        behavior: "smooth"
-      });
+      if (!container) return Promise.resolve();
+      if (index < 0 || index >= total) return Promise.resolve();
+      return AppUI.smoothScrollTo(container, index * itemHeight);
     },
     [containerRef, itemHeight, total]
   );

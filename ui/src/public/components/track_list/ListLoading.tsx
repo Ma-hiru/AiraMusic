@@ -27,4 +27,5 @@ const ListLoading: FC<ListLoadingProps> = ({ loading, mainColor, requestMissedTr
     </div>
   );
 };
+
 export default memo(ListLoading);

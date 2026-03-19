@@ -20,18 +20,3 @@ pub struct NeteaseTrack {
     pub id: f64,
     pub tns: Option<Vec<String>>,
 }
-
-#[derive(Deserialize)]
-pub struct TrackId {
-    pub id: f64,
-}
-
-#[derive(Deserialize)]
-pub struct NeteasePlaylistDetail {
-    pub trackIds: Vec<TrackId>,
-}
-
-#[derive(Deserialize)]
-pub struct NeteasePlaylistDetailResponsePart {
-    pub playlist: NeteasePlaylistDetail,
-}

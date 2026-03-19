@@ -14,15 +14,14 @@ export class RoutePathConstants {
     return `${this.playlistBase}?${search.toString()}`;
   }
 
-  static playlistParse() {
+  static playlistParse(location: Location, search: URLSearchParams) {
     const result = {
       source: null as Nullable<PlaylistSource>,
       id: null as Nullable<string>
     };
-    if (window.location.pathname.startsWith(this.playlistBase)) {
-      const url = new URL(window.location.href);
-      result.source = url.searchParams.get("source") as Nullable<PlaylistSource>;
-      result.id = url.searchParams.get("id");
+    if (location.pathname.startsWith(this.playlistBase)) {
+      result.source = search.get("source") as Nullable<PlaylistSource>;
+      result.id = search.get("id");
     }
     return result;
   }
@@ -37,4 +36,4 @@ export class RoutePathConstants {
   }
 }
 
-export type PlaylistSource = "like" | "history" | "recommend" | "playlist";
+export type PlaylistSource = "normal" | "album" | "search" | "like" | "history" | "other";

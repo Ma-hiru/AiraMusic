@@ -1,5 +1,5 @@
-import { FC, memo } from "react";
 import { cx } from "@emotion/css";
+import { FC, memo } from "react";
 import { AudioLines } from "lucide-react";
 
 interface ListItemIndexProps {
@@ -23,16 +23,13 @@ const TrackItemIndex: FC<ListItemIndexProps> = ({
     <span
       style={{ color }}
       className={cx(
-        "mr-[1px] max-w-max text-left text-[12px] font-semibold select-none",
-        total < 100 && "min-w-[16px]",
-        total >= 100 && "min-w-[24px]",
-        total >= 1000 && "min-w-[32px]"
+        "mr-px max-w-max text-left text-[12px] font-semibold select-none",
+        total < 100 && "min-w-4",
+        total >= 100 && "min-w-6",
+        total >= 1000 && "min-w-8"
       )}
-      onClick={() => {
-        if (disabled) return;
-        onClick?.();
-      }}>
-      {active ? <AudioLines className="size-[14px]" /> : (index + 1).toString().padStart(2, "0")}
+      onClick={() => !disabled && onClick?.()}>
+      {active ? <AudioLines className="size-3.5" /> : (index + 1).toString().padStart(2, "0")}
     </span>
   );
 };

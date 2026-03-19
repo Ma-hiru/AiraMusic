@@ -1,11 +1,11 @@
 import { FC, memo } from "react";
 import { TrackQuality } from "@mahiru/ui/public/enum";
-import { NeteaseTrack } from "@mahiru/ui/public/entry/track";
+import { NeteaseHistory, NeteaseTrack, NeteaseTrackRecord } from "@mahiru/ui/public/models/netease";
 
 import Tag from "@mahiru/ui/public/components/public/Tag";
 
 interface ListItemQualityProps {
-  track?: NeteaseTrackBase;
+  track?: NeteaseHistory | NeteaseTrackRecord;
   themeColor: string;
   bgColor: string;
   forceShow?: Optional<TrackQuality>;
@@ -17,12 +17,12 @@ const TrackItemQuality: FC<ListItemQualityProps> = ({ track, themeColor, bgColor
       <Tag
         backgroundColor={bgColor}
         textColor={themeColor}
-        text={NeteaseTrack.mapTrackQualityToText(forceShow)}
+        text={NeteaseTrack.qualityText(forceShow)}
       />
     );
   }
   if (!track) return null;
-  const qualities = NeteaseTrack.getTrackSourceQuality(track, undefined);
+  const qualities = track.track.quality(undefined);
   return qualities.map((quality) => {
     // 小于SQ不显示
     if (quality.level < TrackQuality.sq) return null;
@@ -35,9 +35,10 @@ const TrackItemQuality: FC<ListItemQualityProps> = ({ track, themeColor, bgColor
         key={quality.level}
         backgroundColor={bgColor}
         textColor={themeColor}
-        text={NeteaseTrack.mapTrackQualityToText(quality.level)}
+        text={NeteaseTrack.qualityText(quality.level)}
       />
     );
   });
 };
+
 export default memo(TrackItemQuality);

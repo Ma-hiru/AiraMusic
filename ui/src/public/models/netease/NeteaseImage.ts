@@ -1,9 +1,10 @@
 import { NeteaseImageSize } from "@mahiru/ui/public/enum";
 import {
+  NeteasePlaylistCreatorModel,
   NeteasePlaylistSummary,
   NeteaseTrack,
   NeteaseURL,
-  NeteaseUser
+  NeteaseUserModel
 } from "@mahiru/ui/public/models/netease";
 
 export class NeteaseNetworkImage {
@@ -84,14 +85,23 @@ export class NeteaseNetworkImage {
     });
   }
 
-  static fromUserAvatar(user: Optional<NeteaseUser>) {
+  static fromUserAvatar(user: Optional<NeteaseUserModel | NeteasePlaylistCreatorModel>) {
     if (!user) return null;
-    return new NeteaseNetworkImage({
-      url: user.profile.avatarUrl,
-      alt: user.profile.nickname,
-      sourceName: "other",
-      sourceID: ""
-    });
+    if ("profile" in user) {
+      return new NeteaseNetworkImage({
+        url: user.profile.avatarUrl,
+        alt: user.profile.nickname,
+        sourceName: "other",
+        sourceID: ""
+      });
+    } else {
+      return new NeteaseNetworkImage({
+        url: user.avatarUrl,
+        alt: user.nickname,
+        sourceName: "other",
+        sourceID: ""
+      });
+    }
   }
 }
 

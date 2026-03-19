@@ -1,64 +1,61 @@
 import { cx } from "@emotion/css";
-import { FC, memo, MouseEvent as ReactMouseEvent, useCallback, useMemo } from "react";
+import { FC, memo, useCallback } from "react";
 import { ColorInstance } from "color";
 import { useToast } from "@mahiru/ui/public/hooks/useToast";
 import { debounce } from "lodash-es";
+import { NeteaseHistory, NeteaseTrackRecord, NeteaseUser } from "@mahiru/ui/public/models/netease";
+import { PlaylistSource } from "@mahiru/ui/main/constants";
 
 import ListItemIndex from "./TrackItemIndex";
 import ListItemCover from "./TrackItemCover";
 import ListItemName from "./TrackItemName";
 import ListItemInfo from "./TrackItemInfo";
 
-export type OnContextMenuFunc = NormalFunc<
-  [e: ReactMouseEvent<HTMLDivElement>, track: NeteaseTrackBase]
->;
-
-interface ListItemProps {
-  textColorOnMain: ColorInstance;
+export interface TrackItemProps {
+  textColor: ColorInstance;
   mainColor: ColorInstance;
-  tracks: NeteaseTrackBase[];
-  trackIdx: number;
-  fastLocation?: boolean;
-  isLikedList?: boolean;
-  active?: boolean;
-  onSelectTrack?: NormalFunc;
-  onContextMenu?: OnContextMenuFunc;
-  showHeart?: boolean;
-  isLiked?: NormalFunc<[track: NeteaseTrackBase], boolean>;
-  likeChange?: NormalFunc<[track: NeteaseTrackBase]>;
+  track: NeteaseTrackRecord | NeteaseHistory;
+  total: number;
+  index: number;
+  fastLocation: boolean;
+  active: boolean;
+  liked: boolean;
+  onClick: Optional<NormalFunc<[track: NeteaseTrackRecord | NeteaseHistory, index: number]>>;
+  onContext: Optional<NormalFunc<[track: NeteaseTrackRecord | NeteaseHistory, index: number]>>;
+  onLikeChange: Optional<NormalFunc<[track: NeteaseTrackRecord | NeteaseHistory, index: number]>>;
+  type: PlaylistSource;
+  user: Optional<NeteaseUser>;
 }
 
-const TrackItem: FC<ListItemProps> = ({
-  trackIdx,
-  tracks,
+const TrackItem: FC<TrackItemProps> = ({
+  textColor,
   mainColor,
-  textColorOnMain,
-  active = false,
-  onSelectTrack,
+  track,
+  total,
+  index,
   fastLocation,
-  onContextMenu,
-  showHeart,
-  isLiked,
-  likeChange
+  active,
+  liked,
+  onClick,
+  onContext,
+  onLikeChange,
+  type,
+  user
 }) => {
-  const track = tracks[trackIdx]!;
-  const total = tracks.length;
-  const disabled = !track.playable;
   const { requestToast } = useToast();
-
+  const { playable, reason } = track.track.playable(user);
   const showDisableReason = useCallback(() => {
-    if (!disabled) return;
+    if (playable) return;
     requestToast({
-      type: "warn",
-      text: track.reason
+      type: "info",
+      text: reason
     });
-  }, [disabled, requestToast, track.reason]);
+  }, [playable, reason, requestToast]);
 
   return (
     <div
-      onContextMenu={(e) => onContextMenu?.(e, track)}
-      style={active ? { color: textColorOnMain.string() } : undefined}
-      key={track.id}
+      onContextMenu={() => playable && onContext?.(track, index)}
+      style={active ? { color: textColor.string() } : undefined}
       onMouseEnter={debounce(showDisableReason)}
       className={cx(
         `
@@ -67,41 +64,41 @@ const TrackItem: FC<ListItemProps> = ({
             ease-in-out transition-colors
         `,
         active ? "bg-(--theme-color-main) shadow-xs" : "hover:bg-black/10 active:bg-black/20",
-        disabled && "cursor-not-allowed! opacity-50"
+        !playable && "cursor-not-allowed! opacity-50"
       )}>
       {/*序号*/}
       <ListItemIndex
         total={total}
-        color={textColorOnMain.alpha(0.8).string()}
+        color={textColor.alpha(0.8).string()}
         active={active}
-        disabled={disabled}
-        index={trackIdx}
-        onClick={onSelectTrack}
+        disabled={!playable}
+        index={index}
+        onClick={() => onClick?.(track, index)}
       />
       {/*封面*/}
       <ListItemCover
         track={track}
-        onClick={onSelectTrack}
-        disabled={disabled}
+        onClick={() => onClick?.(track, index)}
+        disabled={!playable}
         isMainColorDark={mainColor.isDark()}
         fastLocation={fastLocation}
       />
       {/*名称*/}
       <ListItemName
         track={track}
-        textColor={textColorOnMain}
-        disabled={disabled}
-        onClick={onSelectTrack}
+        textColor={textColor}
+        disabled={!playable}
+        onClick={() => onClick?.(track, index)}
       />
       <ListItemInfo
         active={active}
-        disabled={disabled}
+        disabled={!playable}
         track={track}
         mainColor={mainColor}
-        textColorOnMain={textColorOnMain}
-        isLiked={isLiked}
-        likeChange={likeChange}
-        showHeart={showHeart}
+        textColor={textColor}
+        liked={liked}
+        onLikeChange={() => onLikeChange?.(track, index)}
+        type={type}
       />
     </div>
   );

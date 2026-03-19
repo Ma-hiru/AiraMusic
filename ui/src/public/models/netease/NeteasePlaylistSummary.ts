@@ -1,8 +1,10 @@
 export class NeteasePlaylistSummary implements NeteasePlaylistSummaryModel {
   //region fields
+  readonly description: string;
   readonly coverImgUrl: string;
   readonly createTime: number;
   readonly creator: {
+    readonly userId: number;
     readonly avatarUrl: string;
     readonly nickname: string;
     readonly signature: string;
@@ -38,6 +40,7 @@ export class NeteasePlaylistSummary implements NeteasePlaylistSummaryModel {
     this.trackUpdateTime = props.trackUpdateTime;
     this.updateTime = props.updateTime;
     this.userId = props.userId;
+    this.description = props.description || "";
   }
   //endregion
 
@@ -60,14 +63,19 @@ export class NeteasePlaylistSummary implements NeteasePlaylistSummaryModel {
 }
 
 //region Type Definitions
+
+export interface NeteasePlaylistCreatorModel {
+  userId: number;
+  avatarUrl: string;
+  nickname: string;
+  signature: string;
+}
+
 export interface NeteasePlaylistSummaryModel {
   coverImgUrl: string;
   createTime: number;
-  creator: {
-    avatarUrl: string;
-    nickname: string;
-    signature: string;
-  };
+  description: Nullable<string>;
+  creator: NeteasePlaylistCreatorModel;
   highQuality: boolean;
   id: number;
   name: string;
