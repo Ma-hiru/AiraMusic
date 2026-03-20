@@ -226,7 +226,7 @@ const PlaylistPage: FC<object> = () => {
   }, [id, requestToast, searcher, source, user?.likedPlaylist.id]);
 
   return (
-    <div className="w-full h-full px-12 pt-20 contain-style contain-size contain-layout">
+    <div className="w-full h-full px-12 pt-5 contain-style contain-size contain-layout">
       <Top
         type={source!}
         loading={playlist === null}

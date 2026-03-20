@@ -24,8 +24,9 @@ const NavMenu: FC<NavMenuProps> = ({ barOpened }) => {
             className={cx(
               `
               flex flex-row h-12 items-center mx-3 rounded-md
+              ease-in-out duration-300 transition-all
           `,
-              active ? "bg-(--theme-color-main)" : barOpened && "hover:bg-black/5"
+              active ? barOpened && "bg-(--theme-color-main)" : barOpened && "hover:bg-black/5"
             )}
             onClick={() => {
               if (path === RoutePathConstants.like && !isLoggedIn()) {
@@ -38,8 +39,12 @@ const NavMenu: FC<NavMenuProps> = ({ barOpened }) => {
             }}>
             <span
               className={cx(
-                "w-[calc(50%-var(--spacing)*3)] h-full flex items-center justify-center font-bold rounded-md",
-                !barOpened && "hover:bg-black/5"
+                `
+                    w-[calc(50%-var(--spacing)*3)] h-full
+                    flex items-center justify-center font-bold rounded-md
+                    ease-in-out duration-300 transition-all
+                `,
+                active ? "bg-(--theme-color-main)" : !barOpened && "hover:bg-black/5"
               )}>
               {icon}
             </span>

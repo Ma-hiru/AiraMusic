@@ -11,9 +11,10 @@ import AppUI from "@mahiru/ui/public/entry/ui";
 import { LayoutConfig } from "@mahiru/ui/main/store/layout/config";
 import NeteaseImage from "@mahiru/ui/public/components/image/NeteaseImage";
 import { NeteaseImageSize } from "@mahiru/ui/public/enum";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { RoutePathConstants } from "@mahiru/ui/main/constants";
 import { cx } from "@emotion/css";
+import { getLayoutStoreSnapshot } from "@mahiru/ui/main/store/layout";
 
 interface NavPlaylistProps {
   user: Nullable<NeteaseUser>;
@@ -22,29 +23,30 @@ interface NavPlaylistProps {
 
 const NavPlaylist: FC<NavPlaylistProps> = ({ user, layout }) => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
+  const { id, source } = RoutePathConstants.playlistParse(location, searchParams);
+
   const [fastLocation, setFastLocation] = useState(false);
   const containerRef = useRef<Nullable<HTMLDivElement>>(null);
   useScrollAutoHide(containerRef, 800, !layout.sideBar);
 
-  const gotoTop = useCallback((currentItem?: number) => {
-    return () => {
-      const container = containerRef.current;
-      if (container) {
-        if (currentItem && currentItem > 50) {
-          setFastLocation(true);
-          setTimeout(() => setFastLocation(true), Math.floor((currentItem / 10) * 100));
-        }
-        AppUI.smoothScrollTo(container, 0, 500);
-      }
-    };
+  const gotoTop = useCallback(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    setFastLocation(true);
+    AppUI.smoothScrollTo(container, 0, 500).finally(() => {
+      setFastLocation(false);
+    });
   }, []);
 
   const onRangeChange = useCallback(
     (range: IndexRange) => {
+      const { updateLayout } = getLayoutStoreSnapshot();
       if (range[0] > 5) {
-        layout.setScrollTop(gotoTop(range[0]));
+        updateLayout(layout.copy().setScrollTop(gotoTop));
       } else if (range[0] <= 5) {
-        layout.setScrollTop(undefined);
+        updateLayout(layout.copy().setScrollTop(undefined));
       }
     },
     [gotoTop, layout]
@@ -71,7 +73,7 @@ const NavPlaylist: FC<NavPlaylistProps> = ({ user, layout }) => {
         containerRef={containerRef}
         overscan={10}
         onRangeUpdate={onRangeChange}
-        extraData={{ fastLocation, opened: layout.sideBar }}
+        extraData={{ fastLocation, opened: layout.sideBar, activeID: Number(id) }}
         onItemClick={onItemClick}
       />
     </div>
@@ -81,21 +83,29 @@ export default memo(NavPlaylist);
 
 const RowComponent: VirtualListRow<
   NeteasePlaylistSummary,
-  { fastLocation: boolean; opened: boolean }
+  { fastLocation: boolean; opened: boolean; activeID: number }
 > = (props) => {
   const { index, items, extra } = props;
   const data = items[index]!;
+  const active = extra.activeID === data.id;
   return (
     <div className="w-40 px-3">
       <div
         className={cx(
-          `w-full flex flex-row rounded-md select-none cursor-pointer`,
-          extra.opened && "hover:bg-black/5"
+          `
+            w-full flex flex-row rounded-md select-none cursor-pointer
+            ease-in-out transition-all duration-300
+          `,
+          active ? extra.opened && "bg-(--theme-color-main)" : extra.opened && "hover:bg-black/5"
         )}>
         <div
           className={cx(
-            `w-[calc(50%-var(--spacing)*3)] flex justify-center items-center py-1 rounded-md`,
-            !extra.opened && "hover:bg-black/5"
+            `
+              w-[calc(50%-var(--spacing)*3)]
+              flex justify-center items-center py-1 rounded-md
+              ease-in-out transition-all duration-300
+            `,
+            active ? "bg-(--theme-color-main)" : !extra.opened && "hover:bg-black/5"
           )}>
           <NeteaseImage
             cache
