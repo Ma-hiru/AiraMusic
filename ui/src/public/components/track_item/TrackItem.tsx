@@ -1,5 +1,5 @@
 import { cx } from "@emotion/css";
-import { FC, memo, useCallback } from "react";
+import { FC, memo, MouseEvent as ReactMouseEvent, useCallback } from "react";
 import { ColorInstance } from "color";
 import { useToast } from "@mahiru/ui/public/hooks/useToast";
 import { debounce } from "lodash-es";
@@ -21,7 +21,15 @@ export interface TrackItemProps {
   active: boolean;
   liked: boolean;
   onClick: Optional<NormalFunc<[track: NeteaseTrackRecord | NeteaseHistory, index: number]>>;
-  onContext: Optional<NormalFunc<[track: NeteaseTrackRecord | NeteaseHistory, index: number]>>;
+  onContext: Optional<
+    NormalFunc<
+      [
+        e: ReactMouseEvent<HTMLDivElement, MouseEvent>,
+        track: NeteaseTrackRecord | NeteaseHistory,
+        index: number
+      ]
+    >
+  >;
   onLikeChange: Optional<NormalFunc<[track: NeteaseTrackRecord | NeteaseHistory, index: number]>>;
   type: PlaylistSource;
   user: Optional<NeteaseUser>;
@@ -54,7 +62,7 @@ const TrackItem: FC<TrackItemProps> = ({
 
   return (
     <div
-      onContextMenu={() => playable && onContext?.(track, index)}
+      onContextMenu={(e) => playable && onContext?.(e, track, index)}
       style={active ? { color: textColor.string() } : undefined}
       onMouseEnter={debounce(showDisableReason)}
       className={cx(

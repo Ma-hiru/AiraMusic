@@ -3,6 +3,7 @@ import {
   NeteasePlaylistCreatorModel,
   NeteasePlaylistSummary,
   NeteaseTrack,
+  NeteaseTrackRecord,
   NeteaseURL,
   NeteaseUserModel
 } from "@mahiru/ui/public/models/netease";
@@ -56,12 +57,22 @@ export class NeteaseNetworkImage {
     return new NeteaseNetworkImage(this);
   }
 
-  static fromTrackCover(track: NeteaseTrack | NeteaseAPI.NeteaseTrack) {
-    return new NeteaseNetworkImage({
-      url: track.al.picUrl,
-      sourceID: track.id,
-      sourceName: "track"
-    });
+  static fromTrackCover(track: NeteaseTrack | NeteaseTrackRecord | NeteaseAPI.NeteaseTrack) {
+    if ("al" in track) {
+      return new NeteaseNetworkImage({
+        url: track.al.picUrl,
+        sourceID: track.id,
+        sourceName: "track",
+        alt: track.name
+      });
+    } else {
+      return new NeteaseNetworkImage({
+        url: track.track.al.picUrl,
+        sourceID: track.id,
+        sourceName: "track",
+        alt: track.track.name
+      });
+    }
   }
 
   static fromPlaylistCover(

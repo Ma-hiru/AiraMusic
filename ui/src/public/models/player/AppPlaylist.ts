@@ -112,11 +112,11 @@ export default class AppPlaylist extends Listenable {
     this._shuffle = value;
   }
 
-  replace(list: NeteaseTrackRecord[], initPosition = -1) {
+  replace(list: NeteaseTrackRecord[], initPosition: number | NeteaseTrackRecord = -1) {
     const shouldBackup = this.shuffle;
     shouldBackup && this.changeShuffle(false);
     this.playlist = list;
-    this.position = this.check(initPosition) ? initPosition : -1;
+    this.jump(initPosition);
     shouldBackup && this.changeShuffle(true);
     this.executeListeners();
     return this;
@@ -199,15 +199,22 @@ export default class AppPlaylist extends Listenable {
     return this;
   }
 
-  jump(pos: number) {
-    if (this.check(pos) && this.position !== pos) {
-      this.position = pos;
-      this.executeListeners();
+  jump(pos: number | NeteaseTrackRecord) {
+    let position;
+    if (typeof pos === "number") {
+      position = pos;
+    } else {
+      position = this.playlist.findIndex((item) => item.id === pos.id);
     }
+    if (this.check(position) && this.position !== pos) {
+      this.position = position;
+    }
+    this.executeListeners();
     return this;
   }
 
   same(list: NeteaseTrackRecord[]) {
+    if (this.playlist === list) return true;
     if (this.playlist.length !== list.length) return false;
     for (let i = 0; i < this.playlist.length; i++) {
       if (this.playlist[i]!.track.id !== list[i]!.track.id) return false;
@@ -221,7 +228,9 @@ export default class AppPlaylist extends Listenable {
   }
 
   current() {
-    return this.playlist[this.position] || null;
+    const record = this.playlist[this.position];
+    if (!record || !record.track) return null;
+    return record;
   }
 
   peek(force = true) {

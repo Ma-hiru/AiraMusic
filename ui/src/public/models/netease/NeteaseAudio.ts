@@ -26,6 +26,7 @@ export class NeteaseNetworkAudio {
   }
 
   static async fromTrack(track: NeteaseTrack, preference: TrackQuality) {
+    track = NeteaseTrack.fromObject(track);
     const urlResponse = await NCM_API.Track.url(track.id, track.quality(preference));
     const meta = urlResponse.data[0];
     if (!meta) return null;

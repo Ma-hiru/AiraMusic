@@ -8,6 +8,7 @@ import NavSide from "./nav";
 import Content from "./Content";
 import Float from "./float";
 import PlayerModal from "./Modal";
+import MenuProvider from "@mahiru/ui/public/components/menu/MenuProvider";
 // import Background from "./Background";
 // import ThemeColor from "./ThemeColor";
 // import MusicSource from "./MusicSource";
@@ -44,6 +45,7 @@ const Layout: FC<object> = () => {
       {/*{stage >= Stage.Second && <ThemeColor />}*/}
       {/*{stage >= Stage.Second && <MusicSource />}*/}
       {/*{stage >= Stage.Finally && <Background />} /!* z-0 *!/*/}
+      <MenuProvider className="z-25" />
       <Float /> {/*z-10*/}
     </div>
   );

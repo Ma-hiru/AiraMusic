@@ -41,29 +41,54 @@ export class NeteaseLyric implements FullVersionLyricLine {
   versionChange(next: Optional<LyricVersionType>) {
     if (!next) return;
 
-    const { hasRm, hasFull, hasTl } = this.versionInfo();
-    if ((next === "rm" && hasRm) || (next === "tl" && hasTl) || (next === "full" && hasFull)) {
+    const { hasRm, hasFull, hasTl, hasRaw } = this.versionInfo();
+    if (
+      (next === "rm" && hasRm) ||
+      (next === "tl" && hasTl) ||
+      (next === "full" && hasFull) ||
+      (next === "raw" && hasRaw)
+    ) {
       this.currentVersion = next;
     }
   }
 
-  versionFSM(next: Optional<"rm" | "tl">) {
-    if (!next) return;
-    const { rmActive, tlActive, allActive } = this.versionInfo();
-
-    if ((!rmActive && next === "rm") || (!tlActive && next === "tl")) {
-      if ((rmActive && next === "tl") || (tlActive && next === "rm")) {
-        return this.versionChange("full");
+  versionFSM(next: LyricVersionType): LyricVersionType {
+    const { rmActive, tlActive, allActive, hasRaw } = this.versionInfo();
+    const active = () => {
+      if (next === "raw" && hasRaw) return true;
+      if (next === "full" && allActive) return true;
+      if (next === "rm" && rmActive) return true;
+      if (next === "tl" && tlActive) return true;
+    };
+    if (!active()) {
+      switch (this.currentVersion) {
+        case "full":
+          break;
+        case "raw":
+          return next;
+        case "rm":
+          if (next === "tl" || next === "full") return "full";
+          break;
+        case "tl":
+          if (next === "rm" || next === "full") return "full";
       }
     } else {
-      if (allActive) {
-        if (next === "rm") return this.versionChange("tl");
-        if (next === "tl") return this.versionChange("rm");
-      }
-      if ((rmActive && next === "rm") || (tlActive && next === "tl")) {
-        this.versionChange("raw");
+      switch (this.currentVersion) {
+        case "full":
+          if (next === "rm") return "tl";
+          if (next === "tl") return "rm";
+          if (next === "full") return "raw";
+          break;
+        case "raw":
+          break;
+        case "rm":
+          if (next === "rm" || next === "full") return "raw";
+          break;
+        case "tl":
+          if (next === "tl" || next === "full") return "raw";
       }
     }
+    return this.currentVersion;
   }
 
   /** 歌词版本选择，结合偏好和现有歌词，选出最合适的歌词版本，没有偏好默认显示翻译 */

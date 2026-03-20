@@ -1,6 +1,7 @@
 import { FC, Key, memo, ReactNode, useCallback, useLayoutEffect, useState } from "react";
 import { motion, useAnimate } from "motion/react";
 import { injectContextMenu } from "@mahiru/ui/public/hooks/useContextMenu";
+import { cx } from "@emotion/css";
 
 const DURATION = 0.15;
 
@@ -19,7 +20,7 @@ export type ContextMenuRender = {
   clientY: number;
 };
 
-const MenuProvider: FC<object> = () => {
+const MenuProvider: FC<{ className?: string }> = ({ className }) => {
   const [scope, animate] = useAnimate();
   const [visible, setVisible] = useState(false);
   const [render, setRender] = useState<Nullable<ContextMenuRender>>(null);
@@ -104,12 +105,15 @@ const MenuProvider: FC<object> = () => {
   return (
     <motion.div
       ref={scope}
-      className={`
+      className={cx(
+        `
           fixed z-15 w-40 overflow-hidden rounded-md
           bg-white/20 backdrop-blur-md p-1
           border border-neutral-700/10 shadow-lg
           pointer-events-none opacity-0
-      `}>
+      `,
+        className
+      )}>
       {!!render?.header && (
         <>
           <div className="px-1 h-10">{render.header}</div>

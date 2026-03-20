@@ -252,6 +252,21 @@ export class NeteaseTrack implements NeteaseTrackModel {
     return `${minutes}${split}${paddedSeconds}`;
   }
 
+  toSearchStruct() {
+    return {
+      id: this?.id || 0,
+      name: this?.name || "",
+      ar: this?.ar || [],
+      alia: this?.alia || [],
+      al: this?.al || { name: "" },
+      tns: this?.tns || []
+    };
+  }
+
+  static toSearchStructString(tracks: NeteaseTrack[]) {
+    return JSON.stringify(tracks.map((track) => track.toSearchStruct()));
+  }
+
   //region static methods
   /** 音质文本映射 */
   static qualityText(level: TrackQuality) {
@@ -288,6 +303,10 @@ export class NeteaseTrack implements NeteaseTrackModel {
     } else {
       return TrackQuality.l;
     }
+  }
+
+  static fromObject(object: NeteaseTrackModel | NeteaseTrack) {
+    return new NeteaseTrack(object);
   }
   //endregion
 }

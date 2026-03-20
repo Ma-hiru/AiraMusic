@@ -5,31 +5,32 @@ import AppInstance from "@mahiru/ui/main/entry/instance";
 const LyricChange: FC<object> = () => {
   const player = AppInstance.usePlayer();
   const { hasTl, hasRm, rmActive, tlActive } = player.current.lyric?.versionInfo() || {};
+
   return (
     <div className="absolute right-8 bottom-10 text-white flex flex-col gap-2 select-none">
       <span
-        onClick={() => player.setLyricVersion("rm")}
+        onClick={() => player.toggleLyricVersion("rm")}
         className={cx(
-          "size-5 text-[12px] font-semibold flex justify-center items-center overflow-hidden rounded-xs backdrop-blur-lg",
-          {
-            "bg-white text-black ": rmActive && hasRm,
-            "bg-white/20 ": !rmActive || !hasRm,
-            "cursor-not-allowed": !hasRm,
-            "cursor-pointer": hasRm
-          }
+          `
+            size-5 text-[12px] font-semibold
+            flex justify-center items-center overflow-hidden rounded-xs
+            backdrop-blur-lg
+        `,
+          rmActive ? "bg-white text-black " : "bg-white/20 ",
+          hasRm ? "cursor-pointer" : "cursor-not-allowed"
         )}>
         音
       </span>
       <span
-        onClick={() => player.setLyricVersion("tl")}
+        onClick={() => player.toggleLyricVersion("tl")}
         className={cx(
-          "size-5 text-[12px] font-semibold flex justify-center items-center overflow-hidden rounded-xs backdrop-blur-lg",
-          {
-            "bg-white text-black ": tlActive && hasTl,
-            "bg-white/20": !tlActive || !hasTl,
-            "cursor-not-allowed": !hasTl,
-            "cursor-pointer": hasTl
-          }
+          `
+            size-5 text-[12px] font-semibold
+            flex justify-center items-center overflow-hidden rounded-xs
+            backdrop-blur-lg
+        `,
+          tlActive ? "bg-white text-black " : "bg-white/20 ",
+          hasTl ? "cursor-pointer" : "cursor-not-allowed"
         )}>
         译
       </span>

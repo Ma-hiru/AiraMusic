@@ -26,13 +26,13 @@ const Float: FC<object> = () => {
         ease-in-out duration-300 transition-all
     `}>
       <AnimatePresence mode="sync">
-        {!layout.playModal && layout.scrollTop && (
-          <FloatItem key="scrollTop" onClick={layout.scrollTop}>
+        {!layout.playModal && layout.scrollTop() && (
+          <FloatItem key="scrollTop" onClick={layout.scrollTop() || undefined}>
             <ChevronUp className="size-5" />
           </FloatItem>
         )}
-        {!layout.playModal && layout.fastLocate && (
-          <FloatItem key="locate" onClick={layout.fastLocate}>
+        {!layout.playModal && layout.fastLocator() && (
+          <FloatItem key="locate" onClick={layout.fastLocator() || undefined}>
             <LocateFixed className="size-5" />
           </FloatItem>
         )}

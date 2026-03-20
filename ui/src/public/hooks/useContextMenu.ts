@@ -2,6 +2,7 @@ import { ContextMenuRender } from "@mahiru/ui/public/components/menu/MenuProvide
 import { useLayoutEffect } from "react";
 import { Log } from "@mahiru/ui/public/utils/dev";
 import { Errs } from "@mahiru/ui/public/entry/errs";
+import { createTrackContextMenu } from "@mahiru/ui/public/components/menu/TrackMenu";
 
 let setContextMenuData: NormalFunc<[data: Nullable<ContextMenuRender>]> = () => {
   Log.error(Errs.ContextMenuBeforeInject.create("setContextMenuData"));
@@ -41,7 +42,8 @@ export function useContextMenu() {
     setContextMenuVisible,
     get contextMenuVisible() {
       return contextMenuVisibleGetter();
-    }
+    },
+    createTrackContextMenu
   };
 }
 

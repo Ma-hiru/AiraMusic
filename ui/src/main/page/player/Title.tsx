@@ -4,9 +4,9 @@ import AppInstance from "@mahiru/ui/main/entry/instance";
 const Title: FC<object> = () => {
   const player = AppInstance.usePlayer();
   const track = player.current.track?.track;
-  const alias = track?.aliaName;
-  const ts = track?.translate;
-  const title = track?.splitTitle;
+  const ts = track?.translate?.();
+  const alias = track?.aliaName?.();
+  const title = track?.splitTitle?.();
   return (
     <div className="flex flex-col select-none w-full justify-end">
       <div className="text-white text-center">

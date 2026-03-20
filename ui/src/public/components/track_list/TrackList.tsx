@@ -2,6 +2,7 @@ import {
   forwardRef,
   ForwardRefRenderFunction,
   memo,
+  MouseEvent as ReactMouseEvent,
   RefObject,
   useEffect,
   useImperativeHandle,
@@ -36,7 +37,15 @@ export interface TrackListProps {
   className?: string;
   onRangeUpdate?: NormalFunc<[range: IndexRange]>;
   onClick: Optional<NormalFunc<[track: NeteaseTrackRecord | NeteaseHistory, index: number]>>;
-  onContext: Optional<NormalFunc<[track: NeteaseTrackRecord | NeteaseHistory, index: number]>>;
+  onContext: Optional<
+    NormalFunc<
+      [
+        e: ReactMouseEvent<HTMLDivElement, MouseEvent>,
+        track: NeteaseTrackRecord | NeteaseHistory,
+        index: number
+      ]
+    >
+  >;
 }
 
 const TrackList: ForwardRefRenderFunction<TrackListRef, TrackListProps> = (
@@ -58,7 +67,7 @@ const TrackList: ForwardRefRenderFunction<TrackListRef, TrackListProps> = (
   const user = useUser();
   const containerRef = useRef<HTMLDivElement>(null);
   const [scrollToItem, setScrollToItem] = useState<(index: number) => Promise<void>>(
-    async () => {}
+    () => async () => {}
   );
   const [fastLocation, setFastLocation] = useState(false);
   const { isTrackLiked, likeChange } = useHeart();
@@ -120,7 +129,7 @@ const TrackList: ForwardRefRenderFunction<TrackListRef, TrackListProps> = (
           RowComponent={RowComponent}
           paddingBottom={paddingBottom}
           containerRef={containerRef}
-          setScrollToItem={setScrollToItem}
+          setScrollToItem={(nextScrollToItem) => setScrollToItem(() => nextScrollToItem)}
           onRangeUpdate={onRangeUpdate}
         />
       </div>

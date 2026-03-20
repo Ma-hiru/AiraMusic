@@ -3,6 +3,7 @@ import { NeteasePlaylist } from "@mahiru/ui/public/models/netease/NeteasePlaylis
 
 export class NeteaseTrackRecord {
   readonly id: number;
+  readonly name: string;
   readonly sourceID;
   readonly sourceName;
   readonly track;
@@ -16,6 +17,7 @@ export class NeteaseTrackRecord {
     this.sourceName = props.sourceName;
     this.track = props.track;
     this.id = this.track.id;
+    this.name = this.track.name;
   }
 
   static fromObject(record: Optional<NeteaseTrackRecord>) {

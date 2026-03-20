@@ -2,21 +2,16 @@
 use serde::Deserialize;
 
 #[derive(Deserialize)]
-pub struct Al {
+pub struct Name {
     pub name: String,
 }
 
 #[derive(Deserialize)]
-pub struct Artist {
+pub struct NeteaseTrackSearchStruct {
     pub name: String,
-}
-
-#[derive(Deserialize)]
-pub struct NeteaseTrack {
-    pub name: String,
-    pub ar: Vec<Artist>,
+    pub ar: Vec<Name>,
     pub alia: Vec<String>,
-    pub al: Al,
+    pub al: Name,
     pub id: f64,
-    pub tns: Option<Vec<String>>,
+    pub tns: Vec<String>,
 }

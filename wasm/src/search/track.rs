@@ -1,13 +1,13 @@
 #![allow(non_snake_case)]
-
-use crate::search::model::NeteaseTrack;
+use crate::search::model::{Name, NeteaseTrackSearchStruct};
 use wasm_bindgen::prelude::wasm_bindgen;
 
 #[wasm_bindgen]
 pub struct SearchTrack {
     content: String,
-    parsed: Vec<NeteaseTrack>,
+    parsed: Vec<NeteaseTrackSearchStruct>,
 }
+
 #[wasm_bindgen]
 impl SearchTrack {
     #[wasm_bindgen(constructor)]
@@ -19,7 +19,8 @@ impl SearchTrack {
             };
             if !instance.content.is_empty() {
                 instance.parsed =
-                    serde_json::from_str::<Vec<NeteaseTrack>>(&instance.content).unwrap();
+                    serde_json::from_str::<Vec<NeteaseTrackSearchStruct>>(&instance.content)
+                        .unwrap();
             }
             instance
         } else {
@@ -32,32 +33,29 @@ impl SearchTrack {
 
     #[wasm_bindgen]
     pub fn search(&self, k: String) -> Vec<f64> {
+        let k = k.to_lowercase();
         self.parsed
             .iter()
             .filter(|track| {
                 // 歌曲名称
-                track.name.to_lowercase().contains(&k.to_lowercase())
+                track.name.to_lowercase().contains(&k)
                     // 专辑名称
-                    || track.al.name.to_lowercase().contains(&k.to_lowercase())
+                    || track.al.name.to_lowercase().contains(&k)
                     // 艺术家名称
                     || track
                         .ar
                         .iter()
-                        .any(|artist| artist.name.to_lowercase().contains(&k.to_lowercase()))
+                        .any(|Name{name}| name.to_lowercase().contains(&k))
                     // 别名
                     || track
                         .alia
                         .iter()
-                        .any(|alias| alias.to_lowercase().contains(&k.to_lowercase()))
+                        .any(|alias| alias.to_lowercase().contains(&k))
                     // 翻译名称
                     || track
                         .tns
-                        .as_ref()
-                        .map(|tns| {
-                            tns.iter()
-                                .any(|tn| tn.to_lowercase().contains(&k.to_lowercase()))
-                        })
-                        .unwrap_or(false)
+                        .iter()
+                        .any(|tns| tns.to_lowercase().contains(&k))
             })
             // 返回索引
             .map(|track| self.parsed.iter().position(|t| t.id == track.id).unwrap() as f64)
@@ -69,7 +67,8 @@ impl SearchTrack {
         if let Some(content) = content {
             self.content = content;
             if !self.content.is_empty() {
-                self.parsed = serde_json::from_str::<Vec<NeteaseTrack>>(&self.content).unwrap();
+                self.parsed =
+                    serde_json::from_str::<Vec<NeteaseTrackSearchStruct>>(&self.content).unwrap();
             } else {
                 self.parsed.clear();
             }
