@@ -1,27 +1,27 @@
 import { FC, memo, useMemo } from "react";
 import { SquarePen } from "lucide-react";
 import { NeteaseImageSize } from "@mahiru/ui/public/enum";
-import { useLayoutStore } from "@mahiru/ui/main/store/layout";
 import {
   NeteaseNetworkImage,
   NeteasePlaylist,
   NeteaseTrack
 } from "@mahiru/ui/public/models/netease";
+import { useUser } from "@mahiru/ui/public/store/user";
+import { PlaylistSource } from "@mahiru/ui/main/constants";
 
 import Search from "@mahiru/ui/public/components/public/Search";
-import { useUser } from "@mahiru/ui/public/store/user";
 import NeteaseImage from "@mahiru/ui/public/components/image/NeteaseImage";
-import { PlaylistType } from "@mahiru/ui/public/components/track_list/TrackList";
 
 interface TopRightProps {
   summary: Nullable<NeteasePlaylist>;
-  searchTracks: (k: string) => void;
-  type: PlaylistType;
+  type: PlaylistSource;
+  searchTracks: NormalFunc<[k: string]>;
+  setTying: NormalFunc<[typing: boolean]>;
 }
 
-const TopRight: FC<TopRightProps> = ({ summary, searchTracks, type }) => {
+const TopRight: FC<TopRightProps> = ({ summary, searchTracks, type, setTying }) => {
   const user = useUser();
-  const { other, updateOther } = useLayoutStore();
+
   const avatar = useMemo(() => {
     if (!summary) return;
     return NeteaseNetworkImage.fromUserAvatar(summary.creator)
@@ -39,12 +39,7 @@ const TopRight: FC<TopRightProps> = ({ summary, searchTracks, type }) => {
       </div>
       {/*Info*/}
       <div className="flex flex-col items-end justify-end">
-        <Search
-          searchTracks={searchTracks}
-          setIsTyping={(typing) => {
-            updateOther(other.copy().setTyping(typing));
-          }}
-        />
+        <Search searchTracks={searchTracks} setIsTyping={setTying} />
         <div className="flex items-center gap-2 mt-2 font-semibold">
           <NeteaseImage cache image={avatar} className="size-5 rounded-full select-none" />
           <span className="text-[12px]">{summary?.creator.nickname}</span>

@@ -2,6 +2,7 @@ import {
   FC,
   memo,
   MouseEvent as ReactMouseEvent,
+  startTransition,
   useCallback,
   useEffect,
   useMemo,
@@ -11,6 +12,7 @@ import {
 import { useLocation, useSearchParams } from "react-router-dom";
 import { RoutePathConstants } from "@mahiru/ui/main/constants";
 import {
+  NeteaseHistory,
   NeteaseNetworkImage,
   NeteasePlaylist,
   NeteaseTrack,
@@ -41,10 +43,10 @@ const PlaylistPage: FC<object> = () => {
 
   const { requestToast } = useToast();
   const [playlist, setPlaylist] = useState<Nullable<NeteasePlaylist>>(null);
-  const [tracks, setTracks] = useState<NeteaseTrackRecord[]>([]);
-  const currentVisibleItemIndex = useRef(0);
+  const [tracks, setTracks] = useState<NeteaseTrackRecord[] | NeteaseHistory[]>([]);
+  const totalTracks = useRef<NeteaseTrackRecord[] | NeteaseHistory[]>([]);
   const trackListRef = useRef<Nullable<TrackListRef>>(null);
-  const totalTracks = useRef<NeteaseTrackRecord[]>([]);
+  const currentVisibleItemIndex = useRef(0);
 
   // 搜索曲目
   const searcher = useMemo(() => new SearchTrack(), []);
@@ -125,7 +127,7 @@ const PlaylistPage: FC<object> = () => {
       const layout = getLayoutStoreSnapshot().layout;
       if (layout.scrollTop() !== scrollTop && start >= 10) {
         updateLayout(layout.copy().setScrollTop(scrollTop));
-      } else if (layout.scrollTop() !== undefined) {
+      } else if (layout.scrollTop() !== undefined && start < 10) {
         updateLayout(layout.copy().setScrollTop(undefined));
       }
       currentVisibleItemIndex.current = start;
@@ -159,12 +161,10 @@ const PlaylistPage: FC<object> = () => {
     const currentTrack = player.current.track;
     if (!currentTrack) return;
     const layout = getLayoutStoreSnapshot().layout;
-    if (
-      layout.fastLocator() !== fastLocator &&
-      tracks.findIndex((track) => track.id === currentTrack.id) !== -1
-    ) {
+    const exits = tracks.findIndex((track) => track.id === currentTrack.id);
+    if (layout.fastLocator() !== fastLocator && exits !== -1) {
       updateLayout(layout.copy().setFastLocator(fastLocator));
-    } else if (layout.fastLocator() !== undefined) {
+    } else if (layout.fastLocator() !== undefined && exits === -1) {
       updateLayout(layout.copy().setFastLocator(undefined));
     }
   }, [fastLocator, player, tracks, updateLayout]);
@@ -197,33 +197,49 @@ const PlaylistPage: FC<object> = () => {
 
   // 数据加载
   useEffect(() => {
-    if (!id && source !== "like") return;
-    const playlistID = source === "like" ? user?.likedPlaylist.id : Number(id);
-    if (!playlistID) return;
-
     let cancel = false;
-    NeteaseSource.Playlist.fromID(playlistID)
-      .then((list) => {
-        if (cancel) return;
-        setPlaylist(list);
+    if (source === "normal" || source === "like") {
+      const playlistID = source === "like" ? user?.likedPlaylist.id : Number(id);
+      playlistID &&
+        NeteaseSource.Playlist.fromID(playlistID)
+          .then((list) => {
+            if (cancel) return;
+            setPlaylist(list);
+            startTransition(() => {
+              if (cancel) return;
+              const tracks = NeteaseTrackRecord.fromPlaylist(list);
+              totalTracks.current = tracks;
+              setTracks(tracks);
 
-        const tracks = NeteaseTrackRecord.fromPlaylist(list);
-        totalTracks.current = tracks;
-        setTracks(tracks);
-
-        searcher.update(NeteaseTrack.toSearchStructString(list.tracks));
-      })
-      .catch((err) => {
-        Log.error(err);
-        requestToast({
-          type: "error",
-          text: "请求错误"
-        });
+              searcher.update(NeteaseTrack.toSearchStructString(list.tracks));
+            });
+          })
+          .catch((err) => {
+            Log.error(err);
+            requestToast({
+              type: "error",
+              text: "请求错误"
+            });
+          });
+    }
+    if (source === "history") {
+      setPlaylist(null);
+      startTransition(() => {
+        totalTracks.current = player.history.list;
+        setTracks(player.history.list);
+        searcher.update(player.history.toSearchStruct());
       });
+    }
     return () => {
       cancel = true;
+      startTransition(() => {
+        setPlaylist(null);
+        totalTracks.current = [];
+        setTracks([]);
+        searcher.update("[]");
+      });
     };
-  }, [id, requestToast, searcher, source, user?.likedPlaylist.id]);
+  }, [id, player.history, requestToast, searcher, source, user?.likedPlaylist.id]);
 
   return (
     <div className="w-full h-full px-12 pt-5 contain-style contain-size contain-layout">
@@ -234,8 +250,9 @@ const PlaylistPage: FC<object> = () => {
         onPlayAll={onReplace}
         onAddList={onAddList}
         searchTracks={searchTracks}
+        historyCount={player.history.count}
       />
-      <Divider />
+      {source !== "history" && playlist !== null && <Divider />}
       <div className="w-full h-[calc(100%-210px)] relative">
         <TrackList
           ref={trackListRef}

@@ -3,8 +3,8 @@ import { type Location } from "react-router-dom";
 export class RoutePathConstants {
   static readonly base = "/";
   static readonly home = "/home";
-  static readonly history = "/history";
   static readonly playlistBase = "/playlist";
+  static readonly history = this.playlist(null, "history");
   static readonly like = this.playlist(null, "like");
 
   static playlist(id: Optional<number | string>, source: Optional<PlaylistSource>) {

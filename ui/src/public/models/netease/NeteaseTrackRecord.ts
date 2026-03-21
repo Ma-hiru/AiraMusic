@@ -1,5 +1,6 @@
 import { NeteaseTrack } from "./NeteaseTrack";
 import { NeteasePlaylist } from "@mahiru/ui/public/models/netease/NeteasePlaylist";
+import { NeteaseHistory } from "@mahiru/ui/public/models/netease/NeteaseHistory";
 
 export class NeteaseTrackRecord {
   readonly id: number;
@@ -22,7 +23,7 @@ export class NeteaseTrackRecord {
 
   static fromObject(record: Optional<NeteaseTrackRecord>) {
     if (!record) return null;
-    return new NeteaseTrackRecord(record);
+    return new NeteaseTrackRecord({ ...record, track: NeteaseTrack.fromObject(record.track) });
   }
 
   static fromPlaylist(playlist: NeteasePlaylist) {
@@ -34,5 +35,13 @@ export class NeteaseTrackRecord {
           sourceName: "playlist"
         })
     );
+  }
+
+  static fromTrack(track: NeteaseTrackRecord, playDuration: number, time: number = Date.now()) {
+    return new NeteaseHistory({
+      ...track,
+      playDuration,
+      time
+    });
   }
 }

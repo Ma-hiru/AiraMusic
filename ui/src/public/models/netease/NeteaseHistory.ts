@@ -21,7 +21,9 @@ export class NeteaseHistory extends NeteaseTrackRecord {
     record: Optional<NeteaseTrackRecord | NeteaseHistory>
   ): Nullable<NeteaseTrackRecord | NeteaseHistory> {
     if (!record) return null;
-    if ("playDuration" in record) return new NeteaseHistory(record);
-    return new NeteaseTrackRecord(record);
+
+    if ("playDuration" in record)
+      return new NeteaseHistory({ ...record, track: NeteaseTrack.fromObject(record.track) });
+    return NeteaseTrackRecord.fromObject(record);
   }
 }

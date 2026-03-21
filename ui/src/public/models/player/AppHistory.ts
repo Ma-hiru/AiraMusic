@@ -1,13 +1,18 @@
-import { NeteaseHistory } from "@mahiru/ui/public/models/netease";
+import { NeteaseHistory, NeteaseTrack } from "@mahiru/ui/public/models/netease";
 import { Listenable } from "@mahiru/ui/public/models/Listenable";
+import NCM_API from "@mahiru/ui/public/api";
 
 export default class AppHistory extends Listenable {
-  readonly history;
+  readonly list;
   readonly maxLength;
 
-  constructor(props?: { history?: NeteaseHistory[]; maxLength?: number }) {
+  get count() {
+    return this.list.length;
+  }
+
+  constructor(props?: { list?: NeteaseHistory[]; maxLength?: number }) {
     super();
-    this.history = props?.history ?? [];
+    this.list = props?.list ?? [];
     this.maxLength = props?.maxLength ?? 500;
   }
 
@@ -16,32 +21,43 @@ export default class AppHistory extends Listenable {
   }
 
   locate(record: NeteaseHistory | number) {
-    if (typeof record === "number") return this.history.findIndex((h) => h.track.id === record);
-    return this.history.findIndex((h) => h.track.id === record.track.id);
+    if (typeof record === "number") return this.list.findIndex((h) => h.track.id === record);
+    return this.list.findIndex((h) => h.track.id === record.track.id);
   }
 
   add(record: NeteaseHistory) {
     const exitsPos = this.locate(record);
-    if (exitsPos !== -1) this.history.splice(exitsPos, 1);
-    this.history.unshift(record);
+    if (exitsPos !== -1) this.list.splice(exitsPos, 1);
+    this.list.unshift(record);
+    if (record.sourceName === "playlist" || record.sourceName === "album") {
+      void NCM_API.Track.scrobble({
+        id: record.id,
+        sourceid: record.sourceID,
+        time: Math.floor(record.playDuration / 1000)
+      });
+    }
     this.executeListeners();
   }
 
   remove(record: NeteaseHistory | number) {
     const exitsPos = this.locate(record);
-    if (exitsPos !== -1) this.history.splice(exitsPos, 1);
+    if (exitsPos !== -1) this.list.splice(exitsPos, 1);
     this.executeListeners();
+  }
+
+  toSearchStruct() {
+    return NeteaseTrack.toSearchStructString(this.list.map((h) => new NeteaseTrack(h.track)));
   }
 
   static save(instance: AppHistory) {
     return {
-      history: instance.history,
+      list: instance.list,
       maxLength: instance.maxLength
     };
   }
 
   static fromSave(save: ReturnType<typeof this.save>) {
-    save.history = <NeteaseHistory[]>save.history.map(NeteaseHistory.fromObject);
+    save.list = <NeteaseHistory[]>save?.list?.map(NeteaseHistory.fromObject) || [];
     return new AppHistory(save);
   }
 }

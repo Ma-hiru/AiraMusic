@@ -81,7 +81,7 @@ export class APP {
 
   private async stopAllServers() {
     Log.debug("stop all servers");
-    return new Promise((resolve) => {
+    return new Promise<void>((resolve) => {
       stopStoreServer();
       this.proxyServer?.close();
       this.neteaseMusicAPIServer
@@ -91,8 +91,8 @@ export class APP {
         })
         .catch((err) => {
           Log.debug(`failed to stop neteaseMusicAPIServer: ${err}`);
-        });
-      setTimeout(resolve, 5000);
+        })
+        .finally(resolve);
     });
   }
 

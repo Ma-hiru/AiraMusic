@@ -1,5 +1,6 @@
 import AppUI from "@mahiru/ui/public/entry/ui";
 import { FC, memo, RefObject, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Log } from "@mahiru/ui/public/utils/dev";
 
 export type VirtualListRow<T extends HasID, U> = FC<{
   items: T[];
@@ -147,6 +148,7 @@ function useVirtualList(props: {
       const container = containerRef.current;
       if (!container) return Promise.resolve();
       if (index < 0 || index >= total) return Promise.resolve();
+      Log.debug(`Scrolling to item ${index}, position ${index * itemHeight}px`);
       return AppUI.smoothScrollTo(container, index * itemHeight);
     },
     [containerRef, itemHeight, total]

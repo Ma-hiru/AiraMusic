@@ -1,4 +1,5 @@
 import {
+  NeteaseHistory,
   NeteaseLocalAudio,
   NeteaseLocalImage,
   NeteaseLyric,
@@ -95,6 +96,8 @@ export default class AppPlayer extends Listenable {
       if (!current) {
         this.status = AppPlayerStatus.idle;
       } else if (this.current.track?.track.id !== current.track.id) {
+        this.current.track &&
+          this.history.add(NeteaseHistory.fromTrack(this.current.track, this.audio.currentTime));
         void this.load(current, true);
       }
     });

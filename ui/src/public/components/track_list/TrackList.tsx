@@ -4,6 +4,7 @@ import {
   memo,
   MouseEvent as ReactMouseEvent,
   RefObject,
+  startTransition,
   useEffect,
   useImperativeHandle,
   useRef,
@@ -91,7 +92,9 @@ const TrackList: ForwardRefRenderFunction<TrackListRef, TrackListProps> = (
         const { promise, resolve } = Promise.withResolvers<void>();
         setFastLocation(true);
         scrollToItem(index).finally(() => {
-          setFastLocation(false);
+          startTransition(() => {
+            setFastLocation(false);
+          });
           resolve();
         });
         return promise;
@@ -133,7 +136,7 @@ const TrackList: ForwardRefRenderFunction<TrackListRef, TrackListProps> = (
           onRangeUpdate={onRangeUpdate}
         />
       </div>
-      <ListLoading loading={loading} mainColor={mainColor} />
+      <ListLoading loading={loading && type !== "history"} mainColor={mainColor} />
     </>
   );
 };
