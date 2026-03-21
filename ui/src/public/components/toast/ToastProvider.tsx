@@ -5,8 +5,9 @@ import { injectToast } from "@mahiru/ui/public/hooks/useToast";
 
 import ToastItem, { ToastItemData } from "@mahiru/ui/public/components/toast/ToastItem";
 import AppUI from "@mahiru/ui/public/entry/ui";
+import { cx } from "@emotion/css";
 
-const ToastProvider: FC<object> = () => {
+const ToastProvider: FC<{ className?: string }> = ({ className }) => {
   const [items, setItems] = useState<ToastItemData[]>([]);
   const { mainColor, textColorOnMain } = useThemeColor();
 
@@ -68,10 +69,13 @@ const ToastProvider: FC<object> = () => {
 
   return (
     <div
-      className={`
-        fixed top-4 left-1/2 -translate-x-1/2 z-50
+      className={cx(
+        `
+        fixed top-4 left-1/2 -translate-x-1/2
         flex flex-col gap-2
-    `}>
+    `,
+        className
+      )}>
       {/*prettier-ignore*/}
       <AnimatePresence mode="sync">
         {useMemo(() =>

@@ -12,7 +12,7 @@ import TopLeft from "@mahiru/ui/main/page/layout/top/TopLeft";
 import AppRenderer from "@mahiru/ui/public/entry/renderer";
 import NeteaseSource from "@mahiru/ui/public/entry/source";
 
-const Top: FC<object> = () => {
+const Top: FC<{ className?: string }> = ({ className }) => {
   const { layout, updateLayout } = useLayoutStore();
   const { _user, updateUser } = useUserStore();
   const user = useMemo(() => NeteaseUser.fromObject(_user), [_user]);
@@ -20,10 +20,11 @@ const Top: FC<object> = () => {
     <Drag
       className={cx(
         `
-          absolute h-10 left-0 right-0 top-0 pr-4
-          flex items-center z-40
+          absolute left-0 right-0 top-0 pr-4
+          flex items-center
         `,
-        layout.playModal ? "text-white" : "text-[#7b8290]"
+        layout.playModal ? "text-white" : "text-[#7b8290]",
+        className
       )}>
       <div
         className={cx(

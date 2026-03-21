@@ -1,6 +1,7 @@
 import { createZustandConfig } from "@mahiru/ui/public/utils/store";
 import AppUI from "@mahiru/ui/public/entry/ui";
 import Eq from "@mahiru/ui/public/models/Eq";
+import { SpectrumData, SpectrumOptions } from "@mahiru/ui/main/hooks/useSpectrumWorker";
 
 export const LayoutStoreConfig = createZustandConfig((set): LayoutStoreType => {
   return {
@@ -120,16 +121,52 @@ export class ThemeConfig extends Eq<ThemeConfig> {
 
 export class OtherConfig extends Eq<OtherConfig> {
   typing;
+  spectrumData;
+  spectrumReady;
+  spectrumOptions;
 
-  constructor(props?: { typing?: boolean }) {
+  eq(other: OtherConfig) {
+    const base = super.eq(other);
+    return (
+      base &&
+      this.spectrumOptions() === other.spectrumOptions() &&
+      this.spectrumData() === other.spectrumData()
+    );
+  }
+
+  constructor(props?: {
+    typing?: boolean;
+    spectrumReady?: boolean;
+    spectrumData?: () => Optional<SpectrumData>;
+    spectrumOptions?: () => Optional<SpectrumOptions>;
+  }) {
     super();
     this.typing = props?.typing ?? false;
+    this.spectrumReady = props?.spectrumReady ?? false;
+    this.spectrumData = props?.spectrumData || (() => null);
+    this.spectrumOptions = props?.spectrumOptions || (() => null);
   }
 
   setTyping(typing: boolean) {
     this.typing = typing;
     return this;
   }
+
+  setSpectrumOptions(spectrumOptions?: Optional<SpectrumOptions>) {
+    this.spectrumOptions = () => spectrumOptions;
+    return this;
+  }
+
+  setSpectrumData(spectrumData?: Optional<SpectrumData>) {
+    this.spectrumData = () => spectrumData;
+    return this;
+  }
+
+  setSpectrumReady(spectrumReady?: Optional<boolean>) {
+    this.spectrumReady = spectrumReady || false;
+    return this;
+  }
+
   copy() {
     return new OtherConfig(this);
   }

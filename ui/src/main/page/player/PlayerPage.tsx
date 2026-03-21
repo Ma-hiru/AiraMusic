@@ -9,7 +9,7 @@ import Lyric from "./Lyric";
 import LyricChange from "./LyricChange";
 import Title from "./Title";
 import Artist from "./Artist";
-// import Spectrum from "./Spectrum";
+import Spectrum from "./Spectrum";
 
 export const PlayerPage: FC = () => {
   const { stage } = useStage();
@@ -26,7 +26,7 @@ export const PlayerPage: FC = () => {
           <div className="h-40 w-full flex flex-col justify-center gap-2">
             {stage >= Stage.First && <Artist />}
             {stage >= Stage.Second && <Control />}
-            {/*{stage >= Stage.Finally && <Spectrum />}*/}
+            {stage >= Stage.Finally && <Spectrum />}
           </div>
         </div>
       </div>

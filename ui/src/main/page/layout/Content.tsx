@@ -8,7 +8,7 @@ const Content: FC<object> = () => {
     <div
       className={cx(
         `
-            relative flex-1 pb-18 pt-10 bg-white
+            relative flex-1 pb-18 pt-10
             ease-in-out duration-300 transition-all
           `
       )}>

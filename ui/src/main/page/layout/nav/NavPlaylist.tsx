@@ -64,6 +64,7 @@ const NavPlaylist: FC<NavPlaylistProps> = ({ user, layout }) => {
       className="
         w-full h-full relative overflow-y-auto overflow-x-hidden
         contain-content will-change-scroll scrollbar
+        text-(--text-color-on-main)
       "
       ref={containerRef}>
       <VirtualList

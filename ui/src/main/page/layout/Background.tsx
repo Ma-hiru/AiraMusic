@@ -1,12 +1,31 @@
-import { FC, memo } from "react";
+import { cx } from "@emotion/css";
+import { useMMCQ } from "@mahiru/ui/main/hooks/useMMCQ";
+import { FC, memo, useLayoutEffect } from "react";
 import { useLayoutStore } from "@mahiru/ui/main/store/layout";
 
 import AcrylicBackground from "@mahiru/ui/public/components/public/AcrylicBackground";
+import AppUI from "@mahiru/ui/public/entry/ui";
 
-const Background: FC<object> = () => {
+const Background: FC<{ className?: string }> = ({ className }) => {
   const { theme } = useLayoutStore();
+  const themeColors = useMMCQ(theme.backgroundCover, 64, 64, 5);
+
+  useLayoutEffect(() => {
+    const mainColor = themeColors[0] || AppUI.themeDefault.main;
+    const secondaryColor = themeColors[themeColors.length - 1] || AppUI.themeDefault.secondary;
+    const textColor = AppUI.calcTextColor(mainColor).string() || AppUI.themeDefault.textOnMain;
+
+    if (mainColor && secondaryColor) {
+      AppUI.theme = {
+        main: mainColor,
+        secondary: secondaryColor,
+        textOnMainColor: textColor
+      };
+    }
+  }, [themeColors]);
+
   return (
-    <div className="fixed left-0 top-0 inset-0 w-screen h-screen bg-[#f7f9fc] z-0">
+    <div className={cx("fixed left-0 top-0 inset-0 w-screen h-screen bg-[#f7f9fc]", className)}>
       <AcrylicBackground src={theme.backgroundCover} />
     </div>
   );

@@ -25,6 +25,7 @@ const NavMenu: FC<NavMenuProps> = ({ barOpened }) => {
               `
               flex flex-row h-12 items-center mx-3 rounded-md
               ease-in-out duration-300 transition-all
+              text-(--text-color-on-main)
           `,
               active ? barOpened && "bg-(--theme-color-main)" : barOpened && "hover:bg-black/5"
             )}

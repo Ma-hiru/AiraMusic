@@ -40,7 +40,7 @@ export default class AppAudio {
     this.audio.volume > 0 && this.audio.muted && (this.audio.muted = false);
   }
 
-  get currentTime() {
+  get currentTime(): number {
     return this.audio.currentTime;
   }
 

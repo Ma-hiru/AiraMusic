@@ -11,7 +11,6 @@ const BarSpectrum: FC<object> = () => {
   const { layout } = useLayoutStore();
   const { mainColor, secondaryColor } = useThemeColor();
   const player = AppInstance.usePlayer();
-
   return (
     <AudioSpectrum
       isPlaying={!layout.playModal && player.status === AppPlayerStatus.playing}

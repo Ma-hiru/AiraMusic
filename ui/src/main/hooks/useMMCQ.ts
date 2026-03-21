@@ -26,7 +26,7 @@ export function useMMCQ(
       })
         .then((res) => {
           const type = res.headers.get("Content-Type");
-          if (type && !type.includes("image")) {
+          if (type && !(type.includes("image") || type.includes("octet-stream"))) {
             throw Errs.FetchedNotImage.create("useMMCQ.ts");
           }
           return res.arrayBuffer();

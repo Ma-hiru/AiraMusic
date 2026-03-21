@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef } from "react";
-import { NeteaseImage } from "@mahiru/ui/public/entry/image";
 import { NeteaseImageSize } from "@mahiru/ui/public/enum";
+import { NeteaseURL } from "@mahiru/ui/public/models/netease";
+import AppInstance from "@mahiru/ui/main/entry/instance";
 
 export function useMediaSession(props: {
   play: NormalFunc<any>;
@@ -13,12 +14,11 @@ export function useMediaSession(props: {
   seekBackward: NormalFunc<[gap: number]>;
   seekTo: NormalFunc<[position: number]>;
   changeTime: NormalFunc<[position: number]>;
-  trackStatus: Nullable<PlayerTrackStatus>;
-  audio?: HTMLAudioElement;
 }) {
-  const { trackStatus, audio } = props;
   const getProps = useRef(props);
   const mediaMetadataSignatureRef = useRef("");
+  const player = AppInstance.usePlayer();
+  const track = player.current.track;
   getProps.current = props;
 
   useLayoutEffect(() => {
@@ -66,17 +66,16 @@ export function useMediaSession(props: {
 
   useLayoutEffect(() => {
     if (!window?.navigator?.mediaSession) return;
-    if (!trackStatus) return;
+    if (!track) return;
     const { mediaSession } = navigator;
-    const artist = trackStatus.track.ar.map((artist) => artist.name).join("&");
-    const artworkSrc =
-      NeteaseImage.setSize(trackStatus?.track.al.picUrl, NeteaseImageSize.lg) || "";
-    const signature = `${trackStatus?.track.id}|${artist}|${artworkSrc}`;
+    const artist = track.track.ar.map((artist) => artist.name).join("&");
+    const artworkSrc = NeteaseURL.setImageSize(track?.track.al.picUrl, NeteaseImageSize.lg) || "";
+    const signature = `${track?.track.id}|${artist}|${artworkSrc}`;
     if (mediaMetadataSignatureRef.current !== signature) {
       mediaSession.metadata = new MediaMetadata({
-        title: trackStatus.track.name,
+        title: track.track.name,
         artist,
-        album: trackStatus.track.al.name,
+        album: track.track.al.name,
         artwork: [
           {
             src: artworkSrc,
@@ -88,12 +87,12 @@ export function useMediaSession(props: {
       mediaSession.setPositionState(undefined);
       mediaMetadataSignatureRef.current = signature;
     }
-  }, [trackStatus]);
+  }, [track]);
 
   useEffect(() => {
     if (!window?.navigator?.mediaSession) return;
-    if (!audio) return;
     const { mediaSession } = navigator;
+    const audio = player.audio.instance;
 
     const updatePosition = () => {
       mediaSession.setPositionState({
@@ -117,7 +116,7 @@ export function useMediaSession(props: {
       audio.removeEventListener("ended", updatePlaybackState);
       audio.removeEventListener("timeupdate", updatePosition);
     };
-  }, [audio]);
+  }, [player.audio.instance]);
 
   useEffect(() => {
     if (!window?.navigator?.mediaSession) return;

@@ -1,10 +1,10 @@
 import { FC, HTMLAttributes, memo, useEffect, useMemo, useRef } from "react";
-import { SpectrumOptions } from "@mahiru/ui/main/hooks/useSpectrumWorker";
-import { usePlayerStore } from "@mahiru/ui/main/store/player";
+import { SpectrumData, SpectrumOptions } from "@mahiru/ui/main/hooks/useSpectrumWorker";
 import { IRenderer, RendererOptions } from "@mahiru/ui/main/componets/spectrum/renderers/IRenderer";
 import { WebGLRendererRust } from "@mahiru/ui/main/componets/spectrum/renderers/webgl-rust";
 import { Canvas2DRenderer } from "@mahiru/ui/main/componets/spectrum/renderers/canvas2d";
 import { useListenResize } from "@mahiru/ui/public/hooks/useListenResize";
+import { useLayoutStore } from "@mahiru/ui/main/store/layout";
 
 type AudioSpectrumProps = HTMLAttributes<HTMLCanvasElement> & {
   isPlaying: boolean;
@@ -30,21 +30,15 @@ const AudioSpectrum: FC<AudioSpectrumProps> = ({
   heightScale = 1,
   ...rest
 }) => {
-  const { SpectrumGetter, SetSpectrumOptions } = usePlayerStore([
-    "SpectrumGetter",
-    "SetSpectrumOptions"
-  ]);
+  const { other, updateOther } = useLayoutStore();
   const canvasRef = useRef<Nullable<HTMLCanvasElement>>(null);
   const rendererRef = useRef<Nullable<IRenderer>>(null);
   const playingRef = useRef(isPlaying);
-  playingRef.current = isPlaying;
-  const spectrum = SpectrumGetter();
-  const spectrumDataGetterRef = useRef<typeof spectrum.data>(null);
+  const spectrumDataRef = useRef<Optional<SpectrumData>>(null);
   const spectrumReadyRef = useRef<boolean>(false);
-  useEffect(() => {
-    spectrumDataGetterRef.current = spectrum.data;
-    spectrumReadyRef.current = spectrum.ready;
-  }, [spectrum.data, spectrum.ready]);
+  playingRef.current = isPlaying;
+  spectrumDataRef.current = other.spectrumData();
+  spectrumReadyRef.current = other.spectrumReady;
 
   const rendererFactory = useMemo(() => {
     return () => (renderer === "webgl-rust" ? new WebGLRendererRust() : new Canvas2DRenderer());
@@ -97,12 +91,16 @@ const AudioSpectrum: FC<AudioSpectrumProps> = ({
   useEffect(() => {
     let animationFrameId: number;
     const draw = () => {
-      const spectrumDataGetter = spectrumDataGetterRef.current;
-      if (!spectrumReadyRef.current || !playingRef.current || !spectrumDataGetter) {
-        animationFrameId = requestAnimationFrame(draw);
-        return;
+      const spectrumData = spectrumDataRef.current;
+      if (!spectrumReadyRef.current || !playingRef.current || !spectrumData) {
+        return requestIdleCallback(
+          () => {
+            animationFrameId = requestAnimationFrame(draw);
+          },
+          { timeout: 1000 }
+        );
       }
-      const { bands } = spectrumDataGetter();
+      const { bands } = spectrumData;
       if (bands.length) rendererRef.current?.draw(bands);
       animationFrameId = requestAnimationFrame(draw);
     };
@@ -113,8 +111,8 @@ const AudioSpectrum: FC<AudioSpectrumProps> = ({
   }, []);
   // 更新频谱选项
   useEffect(() => {
-    isPlaying && SetSpectrumOptions(spectrumOptions || null);
-  }, [SetSpectrumOptions, isPlaying, spectrumOptions]);
+    isPlaying && updateOther(other.copy().setSpectrumOptions(spectrumOptions));
+  }, [isPlaying, other, spectrumOptions, updateOther]);
   return <canvas ref={canvasRef} {...rest} />;
 };
 export default memo(AudioSpectrum);

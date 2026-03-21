@@ -6,8 +6,9 @@ import { useLayoutStore } from "@mahiru/ui/main/store/layout";
 import { RoutePathConstants } from "@mahiru/ui/main/constants";
 
 import FloatItem from "./FloatItem";
+import { cx } from "@emotion/css";
 
-const Float: FC<object> = () => {
+const Float: FC<{ className?: string }> = ({ className }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { layout, updateLayout } = useLayoutStore();
@@ -20,11 +21,14 @@ const Float: FC<object> = () => {
 
   return (
     <div
-      className={`
-        w-10 absolute right-6 bottom-24 z-10
+      className={cx(
+        `
+        w-10 absolute right-6 bottom-24
         flex flex-col gap-2 justify-center items-center
         ease-in-out duration-300 transition-all
-    `}>
+    `,
+        className
+      )}>
       <AnimatePresence mode="sync">
         {!layout.playModal && layout.scrollTop() && (
           <FloatItem key="scrollTop" onClick={layout.scrollTop() || undefined}>

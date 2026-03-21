@@ -1,16 +1,16 @@
 import { FC, memo } from "react";
-import { usePlayerStore } from "@mahiru/ui/main/store/player";
 import { useLayoutStore } from "@mahiru/ui/main/store/layout";
-import { PlayerFSMStatusEnum } from "@mahiru/ui/public/enum";
 
 import AudioSpectrum from "@mahiru/ui/main/componets/spectrum/AudioSpectrum";
+import AppInstance from "@mahiru/ui/main/entry/instance";
+import { AppPlayerStatus } from "@mahiru/ui/public/models/player";
 
 const Spectrum: FC<object> = () => {
-  const { PlayerFSMStatus } = usePlayerStore(["PlayerFSMStatus"]);
-  const { PlayerVisible } = useLayoutStore(["PlayerVisible"]);
+  const { layout } = useLayoutStore();
+  const player = AppInstance.usePlayer();
   return (
     <AudioSpectrum
-      isPlaying={PlayerVisible && PlayerFSMStatus === PlayerFSMStatusEnum.playing}
+      isPlaying={layout.playModal && player.status === AppPlayerStatus.playing}
       className="w-full h-5 mt-2"
       gap={2}
       renderer="webgl-rust"
@@ -25,4 +25,5 @@ const Spectrum: FC<object> = () => {
     />
   );
 };
+
 export default memo(Spectrum);
