@@ -1,6 +1,5 @@
 import { NeteaseTrack } from "./NeteaseTrack";
 import { NeteasePlaylist } from "@mahiru/ui/public/models/netease/NeteasePlaylist";
-import { NeteaseHistory } from "@mahiru/ui/public/models/netease/NeteaseHistory";
 
 export class NeteaseTrackRecord {
   readonly id: number;
@@ -35,13 +34,5 @@ export class NeteaseTrackRecord {
           sourceName: "playlist"
         })
     );
-  }
-
-  static fromTrack(track: NeteaseTrackRecord, playDuration: number, time: number = Date.now()) {
-    return new NeteaseHistory({
-      ...track,
-      playDuration,
-      time
-    });
   }
 }

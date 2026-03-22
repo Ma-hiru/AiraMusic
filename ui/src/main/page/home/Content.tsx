@@ -1,4 +1,4 @@
-import { FC, memo, UIEvent as ReactUIEvent, useCallback, useEffect, useRef } from "react";
+import { FC, memo, UIEvent as ReactUIEvent, useCallback, useRef } from "react";
 import { useScrollAutoHide } from "@mahiru/ui/public/hooks/useScrollAutoHide";
 import { useLayoutStore } from "@mahiru/ui/main/store/layout";
 import { useDelay } from "@mahiru/ui/public/hooks/useDelay";
@@ -9,7 +9,7 @@ import DailyRecommendPlaylist from "./daily_recommend_playlist";
 import RecommendPlaylist from "./recommend_playlist";
 
 const Content: FC<object> = () => {
-  const { UpdateScrollTop } = useLayoutStore(["UpdateScrollTop"]);
+  const { layout, updateLayout } = useLayoutStore();
   const containerRef = useRef<HTMLDivElement>(null);
   const delay = useDelay([200, 1000, 5000, 10000]);
   useScrollAutoHide(containerRef);
@@ -21,23 +21,14 @@ const Content: FC<object> = () => {
   const onScroll = useCallback(
     (e: ReactUIEvent) => {
       const scrollDistance = e.currentTarget.scrollTop;
-      if (scrollDistance > 500) {
-        UpdateScrollTop({ type: "home", callback: scrollTop });
-      } else {
-        UpdateScrollTop({ type: "none", callback: null });
+      if (layout.scrollTop() !== scrollTop && scrollDistance > 500) {
+        updateLayout(layout.copy().setScrollTop(scrollTop));
+      } else if (layout.scrollTop() !== undefined && scrollDistance <= 500) {
+        updateLayout(layout.copy().setScrollTop(undefined));
       }
     },
-    [UpdateScrollTop, scrollTop]
+    [layout, scrollTop, updateLayout]
   );
-
-  useEffect(() => {
-    return () => {
-      UpdateScrollTop({
-        type: "none",
-        callback: null
-      });
-    };
-  }, [UpdateScrollTop]);
 
   return (
     <div

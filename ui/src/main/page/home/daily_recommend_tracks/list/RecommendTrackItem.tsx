@@ -1,14 +1,14 @@
-import { FC, memo, useCallback } from "react";
+import { FC, memo, useCallback, useMemo } from "react";
 import { AudioLines, CirclePlay } from "lucide-react";
-import { usePlayerStore } from "@mahiru/ui/main/store/player";
-import { API } from "@mahiru/ui/public/api";
-import { NeteaseTrack } from "@mahiru/ui/public/entry/track";
 import { NeteaseImageSize } from "@mahiru/ui/public/enum";
 
 import NeteaseImage from "@mahiru/ui/public/components/image/NeteaseImage";
+import AppInstance from "@mahiru/ui/main/entry/instance";
+import NeteaseSource from "@mahiru/ui/public/entry/source";
+import { NeteaseNetworkImage, NeteaseTrackRecord } from "@mahiru/ui/public/models/netease";
 
 interface RecommendTrackItemProps {
-  song: DailyRecommendTracksDailySong;
+  song: NeteaseAPI.DailyRecommendTracksDailySong;
   mainColor: string;
   textColor: string;
   isMainColorDark: boolean;
@@ -20,24 +20,26 @@ const RecommendTrackItem: FC<RecommendTrackItemProps> = ({
   textColor,
   isMainColorDark
 }) => {
-  const { PlayerTrackStatus, PlayerCoreGetter } = usePlayerStore([
-    "PlayerTrackStatus",
-    "PlayerCoreGetter"
-  ]);
-  const player = PlayerCoreGetter();
-  const track = PlayerTrackStatus?.track;
-  const isPlaying = track?.id === song?.id;
+  const player = AppInstance.usePlayer();
+  const isPlaying = player.current.track?.id === song.id;
+  const image = useMemo(
+    () =>
+      NeteaseNetworkImage.fromURL(song.al.picUrl).setSize(NeteaseImageSize.md).setAlt(song.al.name),
+    [song.al.name, song.al.picUrl]
+  );
 
   const play = useCallback(async () => {
     if (isPlaying) return;
-    const detail = await API.Track.getTrackDetail(song.id);
-    const tracks = NeteaseTrack.tracksPrivilegeExtends(detail.songs, detail.privileges);
-    const track = tracks[0];
-    if (track && track.playable) {
-      player?.addTrack(track, song.al.id, "next");
-      player?.next(true);
-    }
-  }, [isPlaying, player, song.al.id, song.id]);
+    const track = await NeteaseSource.Track.fromID(song.id);
+    const record = new NeteaseTrackRecord({
+      track,
+      sourceName: "other",
+      sourceID: -1
+    });
+    player.playlist.add(record, "next");
+    player.playlist.jump(record);
+  }, [isPlaying, player.playlist, song.id]);
+
   return (
     <div className="w-full flex flex-col justify-center items-center p-2">
       <div
@@ -51,10 +53,9 @@ const RecommendTrackItem: FC<RecommendTrackItemProps> = ({
         onClick={play}>
         <div className="w-full aspect-square overflow-hidden relative rounded-md">
           <NeteaseImage
+            cache
             className="w-full h-full"
-            src={song.al.picUrl}
-            size={NeteaseImageSize.md}
-            alt={song.al.name}
+            image={image}
             shadowColor={isMainColorDark ? "dark" : "light"}
           />
           {!isPlaying && (

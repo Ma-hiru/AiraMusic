@@ -44,7 +44,23 @@ export class NeteasePlaylistSummary implements NeteasePlaylistSummaryModel {
   }
   //endregion
 
-  playCountFormat(playcount?: number) {
+  playCountFormat() {
+    if (!this.playCount) return "0";
+    if (this.playCount >= 100000000) {
+      return (this.playCount / 100000000).toFixed(1) + "亿";
+    } else if (this.playCount >= 10000) {
+      return (this.playCount / 10000).toFixed(1) + "万";
+    } else {
+      return this.playCount.toString();
+    }
+  }
+
+  //region static methods
+  static fromNeteaseAPI(playlist: NeteaseAPI.NeteasePlaylistSummary) {
+    return new NeteasePlaylistSummary(playlist);
+  }
+
+  static playCountFormat(playcount?: number) {
     if (!playcount) return "0";
     if (playcount >= 100000000) {
       return (playcount / 100000000).toFixed(1) + "亿";
@@ -53,11 +69,6 @@ export class NeteasePlaylistSummary implements NeteasePlaylistSummaryModel {
     } else {
       return playcount.toString();
     }
-  }
-
-  //region static methods
-  static fromNeteaseAPI(playlist: NeteaseAPI.NeteasePlaylistSummary) {
-    return new NeteasePlaylistSummary(playlist);
   }
   //endregion
 }

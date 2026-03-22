@@ -1,10 +1,11 @@
 import { FC, memo, useCallback, useEffect, useRef, useState } from "react";
 import { cx } from "@emotion/css";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { NeteaseImageSize } from "@mahiru/ui/public/enum/image";
 import { useThemeColor } from "@mahiru/ui/public/hooks/useThemeColor";
 
 import NeteaseImage from "@mahiru/ui/public/components/image/NeteaseImage";
+import { NeteaseNetworkImage } from "@mahiru/ui/public/models/netease";
+import { NeteaseImageSize } from "@mahiru/ui/public/enum";
 
 interface CarouselProps {
   items: { url: string; title?: string }[];
@@ -63,10 +64,11 @@ const Carousel: FC<CarouselProps> = ({
           {items.map((item, index) => (
             <div key={index} className="w-full shrink-0 flex-col relative">
               <NeteaseImage
+                cache
                 className="w-full h-full select-none rounded-md"
-                src={item.url}
-                size={NeteaseImageSize.raw}
-                alt={item.title || `carousel-item-${index}`}
+                image={NeteaseNetworkImage.fromURL(item.url)
+                  .setSize(NeteaseImageSize.raw)
+                  .setAlt(item.title || `carousel-item-${index}`)}
                 onClick={() => onClick?.(index)}
                 shadowColor={mainColor.isDark() ? "dark" : "light"}
               />

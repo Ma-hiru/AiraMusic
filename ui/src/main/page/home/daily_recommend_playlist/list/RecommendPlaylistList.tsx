@@ -6,7 +6,7 @@ import { useInnerWidth } from "@mahiru/ui/public/hooks/useInnerWidth";
 import RecommendTrackItem from "./RecommendPlaylistItem";
 
 interface RecommendTrackListProps {
-  recommend: DailyRecommendPlaylistResult[];
+  recommend: NeteaseAPI.DailyRecommendPlaylistResult[];
 }
 
 const RecommendPlaylistList: FC<RecommendTrackListProps> = ({ recommend }) => {

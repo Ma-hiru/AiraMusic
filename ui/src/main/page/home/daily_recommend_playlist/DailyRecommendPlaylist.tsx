@@ -1,16 +1,16 @@
 import Color from "color";
 import { FC, memo, useEffect, useState } from "react";
 import { useThemeColor } from "@mahiru/ui/public/hooks/useThemeColor";
-import { API } from "@mahiru/ui/public/api";
 
 import RecommendPlaylistList from "./list";
+import NCM_API from "@mahiru/ui/public/api";
 
 const DailyRecommendPlaylist: FC<object> = () => {
-  const [recommend, setRecommend] = useState<DailyRecommendPlaylistResult[]>([]);
+  const [recommend, setRecommend] = useState<NeteaseAPI.DailyRecommendPlaylistResult[]>([]);
   const { mainColor } = useThemeColor();
   const titleColor = Color("#000000").mix(Color(mainColor), 0.2).string();
   useEffect(() => {
-    API.Recommend.dailyRecommendPlaylist().then((result) => {
+    NCM_API.Playlist.recommendDaily().then((result) => {
       setRecommend(result.recommend);
     });
   }, []);

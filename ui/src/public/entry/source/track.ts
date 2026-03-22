@@ -107,7 +107,7 @@ export default class _NeteaseTrackSource {
   }
 
   static fromID(id: number) {
-    return _NeteaseTrackSource.fromIDs([id]);
+    return _NeteaseTrackSource.fromIDs([id]).then((response) => response[0]!);
   }
 
   static fromPlaylist(playlist: NeteaseAPI.NeteasePlaylistDetail) {

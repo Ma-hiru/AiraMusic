@@ -34,6 +34,10 @@ export default class AppPlayer extends Listenable {
     return this._status;
   }
 
+  get playing() {
+    return this.status === AppPlayerStatus.playing;
+  }
+
   set status(value) {
     if (this._status !== value) {
       this._status = value;
@@ -81,12 +85,15 @@ export default class AppPlayer extends Listenable {
   private connect() {
     const onPlaying = () => (this.status = AppPlayerStatus.playing);
     const onLoadStart = () => (this.status = AppPlayerStatus.loading);
+    const onLoadedData = () => (this.status = AppPlayerStatus.paused);
     const onPause = () => (this.status = AppPlayerStatus.paused);
     const onError = () => (this.status = AppPlayerStatus.error);
     const onEnded = () => this.playlist.next(false);
 
     this.audio.addEventListener("playing", onPlaying);
     this.audio.addEventListener("loadstart", onLoadStart);
+    this.audio.addEventListener("loadend", onLoadStart);
+    this.audio.addEventListener("loadeddata", onLoadedData);
     this.audio.addEventListener("pause", onPause);
     this.audio.addEventListener("error", onError);
     this.audio.addEventListener("ended", onEnded);
@@ -106,6 +113,7 @@ export default class AppPlayer extends Listenable {
       unsubscribe();
       this.audio.removeEventListener("playing", onPlaying);
       this.audio.removeEventListener("loadstart", onLoadStart);
+      this.audio.removeEventListener("loadeddata", onLoadedData);
       this.audio.removeEventListener("pause", onPause);
       this.audio.removeEventListener("error", onError);
       this.audio.removeEventListener("ended", onEnded);

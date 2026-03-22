@@ -26,4 +26,12 @@ export class NeteaseHistory extends NeteaseTrackRecord {
       return new NeteaseHistory({ ...record, track: NeteaseTrack.fromObject(record.track) });
     return NeteaseTrackRecord.fromObject(record);
   }
+
+  static fromTrack(track: NeteaseTrackRecord, playDuration: number, time: number = Date.now()) {
+    return new NeteaseHistory({
+      ...track,
+      playDuration,
+      time
+    });
+  }
 }

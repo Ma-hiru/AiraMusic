@@ -1,13 +1,13 @@
 import { FC, memo, useCallback, useEffect, useRef, useState } from "react";
 import { useLayoutStore } from "@mahiru/ui/main/store/layout";
-import { API } from "@mahiru/ui/public/api";
 
 import RecommendTrackTitle from "./RecommendTrackTitle";
 import RecommendTrackList from "./list";
+import NCM_API from "@mahiru/ui/public/api";
 
 const DailyRecommendTracks: FC<object> = () => {
-  const [recommend, setRecommend] = useState<DailyRecommendTracksDailySong[]>([]);
-  const { PlayerTheme, UpdatePlayerTheme } = useLayoutStore(["PlayerTheme", "UpdatePlayerTheme"]);
+  const [recommend, setRecommend] = useState<NeteaseAPI.DailyRecommendTracksDailySong[]>([]);
+  const { theme, updateTheme } = useLayoutStore();
   const containerRef = useRef<HTMLDivElement>(null);
 
   const lastPage = useCallback(() => {
@@ -28,18 +28,16 @@ const DailyRecommendTracks: FC<object> = () => {
   }, []);
 
   useEffect(() => {
-    API.Recommend.dailyRecommendTracks().then((result) => {
+    NCM_API.Track.recommendDaily().then((result) => {
       setRecommend(result.data.dailySongs);
     });
   }, []);
 
   useEffect(() => {
-    if (!PlayerTheme.BackgroundCover) {
-      UpdatePlayerTheme({
-        BackgroundCover: recommend[0]?.al.picUrl
-      });
+    if (!theme.backgroundCover) {
+      updateTheme(theme.copy().setBackgroundCover(recommend[0]?.al.picUrl));
     }
-  }, [PlayerTheme.BackgroundCover, UpdatePlayerTheme, recommend]);
+  }, [recommend, theme, updateTheme]);
   return (
     <div className="w-full overflow-hidden contain-layout">
       <RecommendTrackTitle lastPage={lastPage} nextPage={nextPage} />

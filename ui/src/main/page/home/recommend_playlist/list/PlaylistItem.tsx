@@ -1,13 +1,14 @@
-import { FC, memo, useCallback } from "react";
+import { FC, memo, useCallback, useMemo } from "react";
 import { CirclePlay } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { getPlaylistRouterPath } from "@mahiru/ui/main/hooks/usePlaylistRouter";
 import { NeteaseImageSize } from "@mahiru/ui/public/enum";
 
 import NeteaseImage from "@mahiru/ui/public/components/image/NeteaseImage";
+import { RoutePathConstants } from "@mahiru/ui/main/constants";
+import { NeteaseNetworkImage } from "@mahiru/ui/public/models/netease";
 
 interface RecommendTrackItemProps {
-  playlist: RecommendPlaylistResult;
+  playlist: NeteaseAPI.RecommendPlaylistResult;
   isMainColorDark: boolean;
   textColor: string;
 }
@@ -15,17 +16,23 @@ interface RecommendTrackItemProps {
 const PlaylistItem: FC<RecommendTrackItemProps> = ({ playlist, isMainColorDark, textColor }) => {
   const navigate = useNavigate();
   const play = useCallback(() => {
-    navigate(getPlaylistRouterPath(playlist.id, "recommend"));
+    navigate(RoutePathConstants.playlist(playlist.id, "normal"));
   }, [navigate, playlist.id]);
+  const image = useMemo(
+    () =>
+      NeteaseNetworkImage.fromURL(playlist.picUrl)
+        .setSize(NeteaseImageSize.md)
+        .setAlt(playlist.name),
+    [playlist.name, playlist.picUrl]
+  );
   return (
     <div className="w-full h-full flex flex-col justify-center items-center p-2">
       <div className="w-full h-full rounded-md">
         <div className="w-full overflow-hidden relative rounded-md shadow-lg">
           <NeteaseImage
+            cache
             className="w-full rounded-md"
-            src={playlist.picUrl}
-            size={NeteaseImageSize.md}
-            alt={playlist.name}
+            image={image}
             shadowColor={isMainColorDark ? "dark" : "light"}
           />
           <div
