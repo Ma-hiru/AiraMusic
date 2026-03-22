@@ -49,10 +49,10 @@ void main() {
     vec2 cRT = vec2(x + w - r, y + r);
     vec2 cLB = vec2(x + r, y + h - r);
     vec2 cRB = vec2(x + w - r, y + h - r);
-    
+
     bool inTopBand = p.y <= (y + r);
     bool inBottomBand = p.y >= (y + h - r);
-    
+
     if (r > 0.0) {
         if ((u_roundedCorners == 1 || u_roundedCorners == 3) && inTopBand) {
             if (p.x < (x + r)) {
@@ -244,13 +244,30 @@ impl WebGLRenderer {
         if count == 0 {
             return Ok(());
         }
-        let total_gap = self.gap * (count.saturating_sub(1) as f32);
-        let computed_bar_width = if let Some(bw) = self.bar_width {
-            bw.floor().max(1.0)
+        let gap_count = count.saturating_sub(1) as f32;
+        let preferred_gap = self.gap.max(0.0);
+        let preferred_bar_width = if let Some(bw) = self.bar_width {
+            bw.max(0.5)
         } else {
-            let available_width = (self.width - total_gap).max(1.0);
-            (available_width / count as f32).floor().max(2.0)
+            ((self.width - preferred_gap * gap_count).max(1.0) / count as f32).max(1.0)
         };
+
+        let preferred_total_width = preferred_bar_width * count as f32 + preferred_gap * gap_count;
+        let mut computed_bar_width = preferred_bar_width;
+        let mut computed_gap = preferred_gap;
+
+        // gap 优先遵循配置值：仅在溢出时压缩；有剩余空间时优先扩展自动 bar 或做居中留白。
+        if gap_count > 0.0 {
+            if preferred_total_width > self.width && preferred_total_width > 0.0 {
+                let scale = self.width / preferred_total_width;
+                computed_bar_width = (preferred_bar_width * scale).max(0.5);
+                computed_gap = preferred_gap * scale;
+            } else if preferred_total_width < self.width {
+                computed_bar_width = (self.width - preferred_gap * gap_count) / count as f32;
+            }
+        } else {
+            computed_bar_width = self.width.max(0.5);
+        }
 
         // 构建顶点数据（复用 Vec 容量）
         self.positions.clear();
@@ -263,33 +280,38 @@ impl WebGLRenderer {
         for (i, &band) in bands.iter().enumerate() {
             let v = band.clamp(0.0, 1.0).powf(0.9);
             let h = (v * self.height * self.height_scale).max(2.0);
-            let x = i as f32 * (computed_bar_width + self.gap);
+            let x = i as f32 * (computed_bar_width + computed_gap);
+            let draw_bar_width = if i + 1 == count {
+                (self.width - x).max(0.5)
+            } else {
+                computed_bar_width
+            };
             let y = self.height - h;
 
             // 两个三角形组成矩形
             self.positions.extend_from_slice(&[
                 x,
                 y,
-                x + computed_bar_width,
+                x + draw_bar_width,
                 y,
                 x,
                 y + h,
                 x,
                 y + h,
-                x + computed_bar_width,
+                x + draw_bar_width,
                 y,
-                x + computed_bar_width,
+                x + draw_bar_width,
                 y + h,
             ]);
 
             // rect info (x, y, w, h) 重复 6 次
-            let rect_info = [x, y, computed_bar_width, h];
+            let rect_info = [x, y, draw_bar_width, h];
             for _ in 0..6 {
                 self.rect_attribs.extend_from_slice(&rect_info);
             }
 
             // radius
-            let radius = 3.0_f32.min(computed_bar_width / 2.0).min(h / 2.0).floor();
+            let radius = 3.0_f32.min(draw_bar_width / 2.0).min(h / 2.0).floor();
             self.radii.extend_from_slice(&[radius; 6]);
         }
 

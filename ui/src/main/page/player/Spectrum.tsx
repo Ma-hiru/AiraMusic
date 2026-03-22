@@ -14,9 +14,9 @@ const Spectrum: FC<object> = () => {
       className="w-full h-5 mt-2"
       gap={2}
       renderer="webgl-rust"
-      barWidth={2}
       color="#ffffff"
       secondaryColor="#ffffff"
+      hideRightBands={15}
       roundedCorners="both"
       spectrumOptions={{
         numBands: 100,

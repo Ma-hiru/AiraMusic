@@ -12,6 +12,7 @@ type AudioSpectrumProps = HTMLAttributes<HTMLCanvasElement> & {
   secondaryColor?: string;
   gap?: number;
   barWidth?: number;
+  hideRightBands?: number;
   roundedCorners?: "top" | "bottom" | "both" | "none";
   renderer?: "canvas" | "webgl-rust";
   spectrumOptions?: SpectrumOptions;
@@ -25,6 +26,7 @@ const AudioSpectrum: FC<AudioSpectrumProps> = ({
   spectrumOptions,
   secondaryColor = "#ffffff",
   barWidth,
+  hideRightBands = 0,
   roundedCorners = "top",
   renderer = "canvas",
   heightScale = 1,
@@ -34,9 +36,11 @@ const AudioSpectrum: FC<AudioSpectrumProps> = ({
   const canvasRef = useRef<Nullable<HTMLCanvasElement>>(null);
   const rendererRef = useRef<Nullable<IRenderer>>(null);
   const playingRef = useRef(isPlaying);
+  const hideRightBandsRef = useRef(hideRightBands);
   const spectrumDataRef = useRef<Optional<SpectrumData>>(null);
   const spectrumReadyRef = useRef<boolean>(false);
   playingRef.current = isPlaying;
+  hideRightBandsRef.current = hideRightBands;
   spectrumDataRef.current = other.spectrumData();
   spectrumReadyRef.current = other.spectrumReady;
 
@@ -101,7 +105,15 @@ const AudioSpectrum: FC<AudioSpectrumProps> = ({
         );
       }
       const { bands } = spectrumData;
-      if (bands.length) rendererRef.current?.draw(bands);
+      if (bands.length) {
+        const hideCount = Math.max(0, Math.floor(hideRightBandsRef.current));
+        const visibleCount = Math.max(0, bands.length - hideCount);
+        if (visibleCount > 0) {
+          rendererRef.current?.draw(
+            visibleCount === bands.length ? bands : bands.subarray(0, visibleCount)
+          );
+        }
+      }
       animationFrameId = requestAnimationFrame(draw);
     };
     animationFrameId = requestAnimationFrame(draw);
@@ -110,9 +122,16 @@ const AudioSpectrum: FC<AudioSpectrumProps> = ({
     };
   }, []);
   // 更新频谱选项
+  const spectrumOptionsKey = useMemo(
+    () => JSON.stringify(spectrumOptions ?? null),
+    [spectrumOptions]
+  );
   useEffect(() => {
-    isPlaying && updateOther(other.copy().setSpectrumOptions(spectrumOptions));
-  }, [isPlaying, other, spectrumOptions, updateOther]);
+    if (!isPlaying) return;
+    const currentStoreOptionsKey = JSON.stringify(other.spectrumOptions() ?? null);
+    if (currentStoreOptionsKey === spectrumOptionsKey) return;
+    updateOther(other.copy().setSpectrumOptions(spectrumOptions));
+  }, [isPlaying, other, spectrumOptions, spectrumOptionsKey, updateOther]);
   return <canvas ref={canvasRef} {...rest} />;
 };
 export default memo(AudioSpectrum);

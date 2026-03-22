@@ -16,7 +16,7 @@ const BarSpectrum: FC<object> = () => {
       isPlaying={!layout.playModal && player.status === AppPlayerStatus.playing}
       gap={1}
       renderer="webgl-rust"
-      barWidth={3.8}
+      hideRightBands={80}
       heightScale={0.9}
       color={mainColor.isLight() ? mainColor.alpha(0.1).string() : mainColor.alpha(0.6).string()}
       secondaryColor={
@@ -26,7 +26,7 @@ const BarSpectrum: FC<object> = () => {
       }
       className="w-full h-full"
       spectrumOptions={{
-        numBands: 340,
+        numBands: 380,
         withPeaks: true
       }}
     />

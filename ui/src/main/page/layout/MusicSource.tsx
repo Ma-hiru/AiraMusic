@@ -96,7 +96,7 @@ const MusicSource: FC<object> = () => {
       numBands: 32,
       withPeaks: false,
       fpsLimit: 60,
-      ...other.spectrumOptions
+      ...(other.spectrumOptions() || {})
     }
   );
   useEffect(() => {

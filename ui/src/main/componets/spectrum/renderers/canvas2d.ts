@@ -30,26 +30,43 @@ export class Canvas2DRenderer implements IRenderer {
     } = opt;
     ctx.clearRect(0, 0, width, height);
     const count = bands.length;
-    const totalGap = gap * Math.max(0, count - 1);
-    let computedBarWidth: number;
-    if (typeof barWidth === "number" && barWidth > 0) {
-      computedBarWidth = Math.max(1, Math.floor(barWidth));
+    const gapCount = Math.max(0, count - 1);
+    const preferredGap = Math.max(0, gap);
+    const hasExplicitBarWidth = typeof barWidth === "number" && barWidth > 0;
+    const preferredBarWidth = hasExplicitBarWidth
+      ? (barWidth as number)
+      : Math.max(1, (width - preferredGap * gapCount) / Math.max(1, count));
+
+    const preferredTotalWidth = preferredBarWidth * count + preferredGap * gapCount;
+    let computedBarWidth = preferredBarWidth;
+    let computedGap = preferredGap;
+
+    // Respect configured gap as the preferred spacing; only compress when overflowing.
+    if (gapCount > 0) {
+      if (preferredTotalWidth > width && preferredTotalWidth > 0) {
+        const scale = width / preferredTotalWidth;
+        computedBarWidth = Math.max(0.5, preferredBarWidth * scale);
+        computedGap = preferredGap * scale;
+      } else if (preferredTotalWidth < width) {
+        computedBarWidth = (width - preferredGap * gapCount) / count;
+      }
     } else {
-      const availableWidth = Math.max(1, width - totalGap);
-      computedBarWidth = Math.max(2, Math.floor(availableWidth / count));
+      computedBarWidth = width;
     }
+
     for (let i = 0; i < count; i++) {
       const value = bands[i] ?? 0;
       const enhanced = Math.pow(Math.min(1, Math.max(0, value)), 0.9);
       const barHeight = Math.max(2, enhanced * height * heightScale);
-      const x = i * (computedBarWidth + gap);
+      const x = i * (computedBarWidth + computedGap);
+      const drawBarWidth = i === count - 1 ? Math.max(0.5, width - x) : computedBarWidth;
       const y = height - barHeight;
       const gradient = ctx.createLinearGradient(x, height, x, y);
       gradient.addColorStop(0, color);
       gradient.addColorStop(0.6, color);
       gradient.addColorStop(1, secondaryColor || color);
       ctx.fillStyle = gradient;
-      const radius = Math.min(3, Math.floor(computedBarWidth / 2), Math.floor(barHeight / 2));
+      const radius = Math.min(3, Math.floor(drawBarWidth / 2), Math.floor(barHeight / 2));
 
       let radii: number[];
       if (roundedCorners === "both") {
@@ -65,10 +82,10 @@ export class Canvas2DRenderer implements IRenderer {
 
       if (radii.some((r) => r > 0) && typeof (ctx as any).roundRect === "function") {
         ctx.beginPath();
-        ctx.roundRect(x, y, computedBarWidth, barHeight, radii);
+        ctx.roundRect(x, y, drawBarWidth, barHeight, radii);
         ctx.fill();
       } else {
-        ctx.fillRect(x, y, computedBarWidth, barHeight);
+        ctx.fillRect(x, y, drawBarWidth, barHeight);
       }
     }
   }
