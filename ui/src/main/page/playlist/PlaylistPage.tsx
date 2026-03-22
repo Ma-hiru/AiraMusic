@@ -32,6 +32,7 @@ import { useUser } from "@mahiru/ui/public/store/user";
 import { useContextMenu } from "@mahiru/ui/public/hooks/useContextMenu";
 import { TrackContextMenuOnClick } from "@mahiru/ui/public/components/menu/TrackMenu";
 import { getLayoutStoreSnapshot, useLayoutStore } from "@mahiru/ui/main/store/layout";
+import { cx } from "@emotion/css";
 
 const PlaylistPage: FC<object> = () => {
   const user = useUser();
@@ -253,7 +254,13 @@ const PlaylistPage: FC<object> = () => {
         historyCount={player.history.count}
       />
       {source !== "history" && playlist !== null && <Divider />}
-      <div className="w-full h-[calc(100%-210px)] relative">
+      <div
+        className={cx(
+          `
+            w-full h-[calc(100%-210px)] relative
+          `,
+          source === "history" && "h-full pb-18"
+        )}>
         <TrackList
           ref={trackListRef}
           tracks={tracks}

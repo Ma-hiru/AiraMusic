@@ -1,6 +1,7 @@
 import { createContext, useContext } from "react";
 import { Errs } from "@mahiru/ui/public/entry/errs";
 import { Log } from "@mahiru/ui/public/utils/dev";
+import { RoutePathConstants } from "@mahiru/ui/main/constants";
 
 export interface KeepAliveCtxType {
   activeKey?: string;
@@ -11,8 +12,7 @@ export const KeepAliveCtx = createContext<KeepAliveCtxType>({
 });
 
 export function KeepAliveBuildKey(pathname: string, search?: string) {
-  // playlist/:id 不分配独立缓存，统一使用 /playlist 作为 key
-  if (pathname.startsWith("/playlist/")) return "/playlist";
+  if (pathname === RoutePathConstants.playlistBase) return pathname;
   return `${pathname}${search ?? ""}`;
 }
 

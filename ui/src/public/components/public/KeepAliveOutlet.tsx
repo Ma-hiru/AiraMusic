@@ -5,7 +5,7 @@ import {
   useCallback,
   useEffect,
   useImperativeHandle,
-  useRef,
+  useMemo,
   useState
 } from "react";
 import { useLocation, useOutlet } from "react-router-dom";
@@ -28,60 +28,58 @@ const KeepAliveOutlet: ForwardRefRenderFunction<KeepAliveOutletRef, KeepAliveOut
   const outlet = useOutlet();
   const location = useLocation();
   const forceUpdate = useUpdate();
-  const cacheRef = useRef<Map<string, ReactNode>>(new Map());
+  const cacheMap = useMemo(() => new Map<string, ReactNode>(), []);
   const [activeKey, setActiveKey] = useState<string>();
 
-  const currentKey = cache ? KeepAliveBuildKey(location.pathname, location.search) : undefined;
+  useEffect(() => {
+    setActiveKey(cache ? KeepAliveBuildKey(location.pathname, location.search) : undefined);
+  }, [cache, location.pathname, location.search]);
 
   const clearCache = useCallback(
     (pathname: string) => {
       let removed = false;
-      cacheRef.current.forEach((_, key) => {
+      cacheMap.forEach((_, key) => {
         if (key === pathname || key.startsWith(`${pathname}?`)) {
-          cacheRef.current.delete(key);
+          cacheMap.delete(key);
           removed = true;
         }
       });
       removed && forceUpdate();
     },
-    [forceUpdate]
+    [cacheMap, forceUpdate]
   );
-  useImperativeHandle(ref, () => ({
-    clearCache
-  }));
 
-  useEffect(() => {
-    setActiveKey(currentKey);
-  }, [currentKey]);
+  useImperativeHandle(
+    ref,
+    () => ({
+      clearCache
+    }),
+    [clearCache]
+  );
 
   if (!cache) return outlet;
-  if (currentKey) {
-    cacheRef.current.set(currentKey, outlet);
-    // 超出上限时移除最旧的一个缓存
-    if (cacheRef.current.size > maxCache) {
-      const oldestKey = cacheRef.current.keys().next().value as string | undefined;
-      if (oldestKey && oldestKey !== currentKey) {
-        cacheRef.current.delete(oldestKey);
-      } else if (oldestKey) {
-        // 如果最旧的是当前 key，删除下一个
-        const iterator = cacheRef.current.keys();
-        iterator.next();
-        const nextKey = iterator.next().value as string | undefined;
-        if (nextKey) cacheRef.current.delete(nextKey);
-      }
+  if (activeKey && !cacheMap.has(activeKey)) cacheMap.set(activeKey, outlet);
+  if (cacheMap.size === 0) return null;
+  if (cacheMap.size > maxCache) {
+    const oldestKey = cacheMap.keys().next().value as string | undefined;
+    if (oldestKey && oldestKey !== activeKey) {
+      cacheMap.delete(oldestKey);
+    } else if (oldestKey) {
+      // 如果最旧的是当前 key，删除下一个
+      const iterator = cacheMap.keys();
+      iterator.next();
+      const nextKey = iterator.next().value as string | undefined;
+      if (nextKey) cacheMap.delete(nextKey);
     }
   }
 
-  const entries = Array.from(cacheRef.current.entries()).filter(([, node]) => Boolean(node));
-  if (entries.length === 0) return null;
-
   return (
     <KeepAliveCtx.Provider value={{ activeKey }}>
-      {entries.map(([key, element]) => (
+      {Array.from(cacheMap.entries()).map(([key, element]) => (
         <div
           key={key}
-          style={{ display: key === currentKey ? "block" : "none", width: "100%", height: "100%" }}
-          aria-hidden={key === currentKey ? undefined : "true"}>
+          style={{ display: key === activeKey ? "block" : "none", width: "100%", height: "100%" }}
+          aria-hidden={key === activeKey ? undefined : "true"}>
           {element}
         </div>
       ))}

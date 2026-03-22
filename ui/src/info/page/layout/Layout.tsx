@@ -3,7 +3,6 @@ import { FC, memo, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { defaultInfoCtxValue, InfoCtx } from "../../ctx/InfoCtx";
 import { useThemeSyncReceive } from "@mahiru/ui/public/hooks/useThemeSyncReceive";
-import { Renderer } from "@mahiru/ui/public/entry/renderer";
 import { useStage } from "@mahiru/ui/public/hooks/useStage";
 import { Stage } from "@mahiru/ui/public/enum";
 import { useAppLoaded } from "@mahiru/ui/public/hooks/useAppLoaded";
