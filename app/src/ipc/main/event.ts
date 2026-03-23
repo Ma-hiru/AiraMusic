@@ -54,31 +54,19 @@ const mainEventAPI = {
   openDevTools: (e) => {
     e.sender.openDevTools();
   },
-  close: (e, props) => {
-    const sender = BrowserWindow.fromWebContents(e.sender);
-    if (!sender) return;
-    if (props && props.broadcast) {
-      WindowManager.getAll().forEach(([, receiver]) => {
-        typedIpcMainSendMessage({
-          sender,
-          receiver,
-          type: "otherWindowClosed",
-          data: undefined
-        });
-      });
+  show: (e) => {
+    const win = BrowserWindow.fromWebContents(e.sender);
+    if (win && !win.isVisible()) {
+      win.show();
     }
-    sender.close();
+  },
+  close: (e) => {
+    BrowserWindow.fromWebContents(e.sender)?.close();
   },
   hidden: (e) => {
     const win = BrowserWindow.fromWebContents(e.sender);
     if (win && win.isVisible()) {
       win.hide();
-    }
-  },
-  visible: (e) => {
-    const win = BrowserWindow.fromWebContents(e.sender);
-    if (win && !win.isVisible()) {
-      win.show();
     }
   },
   minimize: (e) => {
@@ -142,33 +130,29 @@ const mainEventAPI = {
     const win = BrowserWindow.fromWebContents(e.sender);
     win?.setIgnoreMouseEvents(penetrate, { forward: true });
   },
-  loaded: (e, { broadcast, hide = false }) => {
-    const sender = BrowserWindow.fromWebContents(e.sender);
-    if (!sender) return;
-    if (broadcast) {
-      WindowManager.getAll().forEach(([, receiver]) => {
-        typedIpcMainSendMessage({
-          sender,
-          receiver,
-          type: "otherWindowLoaded",
-          data: undefined
-        });
-      });
-    }
-    if (hide) return;
-    sender.show();
-  },
   message: (e, message) => {
     const sender = BrowserWindow.fromWebContents(e.sender);
-    if (message.to === "main" && WindowManager.getId(sender) === "main") {
+    if (message.to === "process" && WindowManager.getId(sender) === "main") {
       typedIpcMainReceiveMessage(message.type, message.data);
     } else {
-      typedIpcMainSendMessage({
-        sender,
-        receiver: message.to,
-        type: message.type,
-        data: message.data
-      });
+      if (message.to === "all") {
+        WindowManager.getAll().forEach(([, receiver]) => {
+          if (sender === receiver) return;
+          typedIpcMainSendMessage({
+            sender,
+            receiver,
+            type: message.type,
+            data: message.data
+          });
+        });
+      } else {
+        typedIpcMainSendMessage({
+          sender,
+          receiver: message.to,
+          type: message.type,
+          data: message.data
+        });
+      }
     }
   },
   rememberCloseAppOption: (e, option) => {

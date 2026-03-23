@@ -14,7 +14,7 @@ type InvokeEventMaps = {
   hasOpenInternalWindow: [WindowType, boolean];
   storeKey: [never, string];
   checkOnlineStatus: [never, Promise<NetworkStatus>];
-  isMainWindow: [never, boolean];
+  currentWindowType: [never, WindowType];
   selectPath: [type: "dir" | "file", Promise<{ ok: boolean; path: string; error?: string }>];
 };
 
@@ -23,14 +23,13 @@ type NormalEventMaps = {
   rememberCloseAppOption: "exit" | "ask" | "tray";
   message: MessageDataSend<any>;
   /** window control */
-  close: undefined | { broadcast?: boolean };
+  close: never;
+  show: never;
   minimize: never;
   unminimize: never;
   maximize: never;
   unmaximize: never;
   hidden: never;
-  visible: never;
-  loaded: { broadcast: boolean; hide?: boolean };
   mousePenetrate: boolean;
   resizeWindow: Partial<{ x: number; y: number; width: number; height: number }>;
   moveWindow: Partial<{ x: number; y: number; deltaX: number; deltaY: number }>;
@@ -44,25 +43,34 @@ type NormalEventMaps = {
 /** Normal 事件的 Message 类型以及其参数 */
 type MessageTypeMap = {
   login: string;
-  playerControl: PlayerControlSync;
-  playerStatusSync: PlayerStatusSync;
-  requestPlayerStatusSync: undefined;
-  playerProgressSync: PlayerProgress;
-  requestPlayerProgressSync: undefined;
-  playerTrackSync: PlayerTrackStatus;
-  requestPlayerTrackSync: undefined;
-  themeSync: ThemeSync;
-  requestThemeSync: undefined;
-  infoSync: InfoSync;
-  reverseSync: {
-    commentsDisplayType?: "static" | "subscribe";
-    chooseLyricVersion?: LyricVersionType;
+  infoBus: {
+    backgroundCover: Undefinable<string>;
+    theme: {
+      mainColor: string;
+      secondaryColor: string;
+      textColor: string;
+    };
   };
-  otherWindowLoaded: undefined;
-  otherWindowClosed: undefined;
-  windowMaximizedChanged: boolean;
-  mainProcessExit: undefined;
-  checkImage: { url: string; alt?: string };
+  playerBus: {
+    id: number;
+    lyricVersion: LyricVersionType;
+    volume: number;
+    repeat: "off" | "one" | "all";
+    shuffle: boolean;
+  };
+  progressBus: {
+    currentTime: number;
+    duration: number;
+  };
+  playerActionBus: "next" | "previous" | "play" | "pause";
+  commentBus: {
+    id: number;
+    type: unknown;
+  };
+  windowBus: {
+    type: WindowType;
+    action: "open" | "close" | "focus";
+  };
 };
 
 /** Normal 事件的 Message 类型的发送参数 */

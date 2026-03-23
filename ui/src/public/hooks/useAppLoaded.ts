@@ -1,47 +1,34 @@
-import { useCallback, useEffect } from "react";
 import AppRenderer from "@mahiru/ui/public/entry/renderer";
-import { Log } from "@mahiru/ui/public/utils/dev";
+import { useEffect } from "react";
+import { currentWindowType } from "@mahiru/ui/public/utils/dev";
+import { Listenable } from "@mahiru/ui/public/models/Listenable";
 
 let loaded = false;
 
-function _requestLoaded(broadcast = false, hide = false) {
-  if (loaded) return;
-  loaded = true;
-  AppRenderer.event.loaded({ broadcast, hide });
-  Log.debug("App loaded");
-}
+AppRenderer.Message.listen("windowBus", "main", ({ action }) => {
+  if (action === "close") AppRenderer.Event.normal.close();
+});
 
-export function useAppLoaded(
-  condition?: boolean,
-  props?: { broadcast?: boolean; timeout?: number; hide?: boolean }
-) {
-  const requestLoaded = useCallback(() => {
-    _requestLoaded(props?.broadcast, props?.hide);
-  }, [props?.broadcast, props?.hide]);
-
+export function useAppLoaded(condition?: Optional<Promise<void>>) {
   useEffect(() => {
-    condition && requestLoaded();
-  }, [condition, requestLoaded]);
-
-  useEffect(() => {
-    if (loaded || props?.timeout === 0) return;
-    const timer = setTimeout(requestLoaded, props?.timeout || 10000);
-    return () => clearTimeout(timer);
-  }, [requestLoaded, props?.timeout]);
-
-  useEffect(() => {
-    AppRenderer.addMessageHandler(
-      "otherWindowClosed",
-      "main",
-      () => {
-        AppRenderer.event.close({ broadcast: false });
-      },
-      { id: "onMainExit" }
-    );
-  }, []);
-
-  return {
-    loaded,
-    requestLoaded
-  };
+    if (loaded) return;
+    (condition || Promise.resolve())
+      .then(() => {
+        AppRenderer.Event.normal.show();
+        AppRenderer.Message.send("windowBus", "all", {
+          type: currentWindowType,
+          action: "open"
+        });
+      })
+      .catch(() => {
+        AppRenderer.Event.normal.close();
+        AppRenderer.Message.send("windowBus", "all", {
+          type: currentWindowType,
+          action: "close"
+        });
+      })
+      .finally(() => {
+        loaded = true;
+      });
+  }, [condition]);
 }

@@ -1,6 +1,5 @@
 import { createEqError, createLog, LogLevel } from "@mahiru/log";
 import AppRenderer from "@mahiru/ui/public/entry/renderer";
-import { nextFrame } from "@mahiru/ui/public/utils/frame";
 
 function convertToLogLevel(env?: EnvLogLevel): LogLevel {
   if (!env) return LogLevel.TRACE;
@@ -22,20 +21,12 @@ function convertToLogLevel(env?: EnvLogLevel): LogLevel {
   }
 }
 
-let isMain = false;
-
-export const isMainWindow = () => isMain;
+export const currentWindowType = await AppRenderer.Event.invoke.currentWindowType();
 export const AppScheme = import.meta.env.APP_SCHEME;
 export const AppProtocol = import.meta.env.APP_PROTOCOL;
 export const isDev = import.meta.env.DEV;
 export const isRelease = import.meta.env.PROD;
 export const EqError = createEqError(isDev);
 export const Log = createLog(convertToLogLevel(import.meta.env.UI_LOG_LEVEL as EnvLogLevel));
-
-void nextFrame(() => {
-  AppRenderer.invoke.isMainWindow().then((is) => {
-    isMain = is;
-  });
-});
 
 isDev && Log.info("environment", import.meta.env);

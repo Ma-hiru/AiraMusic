@@ -6,4 +6,6 @@ type WindowType =
   | "external"
   | "info"
   | "tray"
-  | "image";
+  | "image"
+  | "process"
+  | "all";

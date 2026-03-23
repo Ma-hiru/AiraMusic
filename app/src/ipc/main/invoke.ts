@@ -152,9 +152,9 @@ const mainInvokeAPI = {
 
     return "ok";
   },
-  isMainWindow: (e) => {
+  currentWindowType: (e) => {
     const sender = BrowserWindow.fromWebContents(e.sender);
-    return WindowManager.getId(sender) === "main";
+    return WindowManager.getId(sender)!;
   }
 } satisfies MainInvokeAPI;
 
