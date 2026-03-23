@@ -13,7 +13,6 @@ import { createNeteaseMusicApiServer } from "../services/ncm";
 import { printDevInfo, storeKeyAccessToken } from "../utils/dev";
 import { EqError } from "../utils/err";
 import { Store } from "./store";
-import { typedIpcMainSendMessage } from "../ipc/main/typed";
 import { storeServerBinaryPath } from "../utils/path";
 
 export class APP {
@@ -102,12 +101,6 @@ export class APP {
     if (this.exiting) return;
     this.exiting = true;
     Log.debug("app exiting...");
-    typedIpcMainSendMessage({
-      sender: "main",
-      receiver: "main",
-      type: "mainProcessExit",
-      data: undefined
-    });
     Promise.allSettled([this.stopAllServers()]).finally(() => {
       Log.debug("app exited.");
       app.exit();

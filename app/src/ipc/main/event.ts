@@ -1,22 +1,21 @@
 import { BrowserWindow, ipcMain } from "electron";
-import { MainEventAPI, typedIpcMainReceiveMessage, typedIpcMainSendMessage } from "./typed";
+import { AppMessageIPC, MainEventAPI } from "./typed";
 import {
+  CreateImageWindow,
+  CreateInfoWindow,
   CreateLoginWindow,
   CreateLyricWindow,
   CreateMiniWindow,
-  CreateImageWindow,
-  CreateInfoWindow,
   WindowManager
 } from "../../window";
 import { CreateExternalWindow } from "../../window/external";
-import { Store } from "../../app/store";
 
 const mainEventAPI = {
-  openInternalWindow: (e, win) => {
+  openInternalWindow: (e, type) => {
     const sender = BrowserWindow.fromWebContents(e.sender);
     if (!sender) return;
     if (WindowManager.getId(sender) === "main") {
-      switch (win) {
+      switch (type) {
         case "login":
           return CreateLoginWindow();
         case "lyric":
@@ -30,19 +29,9 @@ const mainEventAPI = {
       }
     }
   },
-  closeInternalWindow: (e, win) => {
-    const sender = BrowserWindow.fromWebContents(e.sender);
-    if (!sender) return;
-    if (WindowManager.getId(sender) === "main") {
-      WindowManager.get(win)?.close();
-    }
-  },
-  focusInternalWindow: (e, win) => {
-    const sender = BrowserWindow.fromWebContents(e.sender);
-    if (!sender) return;
-    if (WindowManager.getId(sender) === "main") {
-      WindowManager.get(win)?.focus();
-    }
+  focusInternalWindow: (e, type) => {
+    const win = type ? WindowManager.get(type) : BrowserWindow.fromWebContents(e.sender);
+    win?.focus();
   },
   openExternalLink: (e, { title, url }) => {
     const sender = BrowserWindow.fromWebContents(e.sender);
@@ -51,63 +40,58 @@ const mainEventAPI = {
       return CreateExternalWindow(title, url);
     }
   },
-  openDevTools: (e) => {
-    e.sender.openDevTools();
+  openInternalDevTools: (e, type) => {
+    const win = type ? WindowManager.get(type) : BrowserWindow.fromWebContents(e.sender);
+    win?.webContents.openDevTools();
   },
-  show: (e) => {
-    const win = BrowserWindow.fromWebContents(e.sender);
-    if (win && !win.isVisible()) {
-      win.show();
-    }
+  showInternalWindow: (e, type) => {
+    const win = type ? WindowManager.get(type) : BrowserWindow.fromWebContents(e.sender);
+    win && !win.isVisible() && win.show();
   },
-  close: (e) => {
-    BrowserWindow.fromWebContents(e.sender)?.close();
+  closeInternalWindow: (e, type) => {
+    const win = type ? WindowManager.get(type) : BrowserWindow.fromWebContents(e.sender);
+    win?.close();
   },
-  hidden: (e) => {
-    const win = BrowserWindow.fromWebContents(e.sender);
-    if (win && win.isVisible()) {
-      win.hide();
-    }
+  hiddenInternalWindow: (e, type) => {
+    const win = type ? WindowManager.get(type) : BrowserWindow.fromWebContents(e.sender);
+    win?.isVisible() && win.hide();
   },
-  minimize: (e) => {
-    const win = BrowserWindow.fromWebContents(e.sender);
-    if (win && !win.isMinimized()) {
-      win.minimize();
-    }
+  minimizeInternalWindow: (e, type) => {
+    const win = type ? WindowManager.get(type) : BrowserWindow.fromWebContents(e.sender);
+    win && !win.isMinimized() && win.minimize();
   },
-  unminimize: (e) => {
-    const win = BrowserWindow.fromWebContents(e.sender);
-    if (win && win.isMinimized()) {
-      win.restore();
-    }
+  unminimizeInternalWindow: (e, type) => {
+    const win = type ? WindowManager.get(type) : BrowserWindow.fromWebContents(e.sender);
+    win?.isMinimized() && win.restore();
   },
-  maximize: (e) => {
-    const win = BrowserWindow.fromWebContents(e.sender);
-    if (win && !win.isMaximized()) {
-      win.maximize();
-    }
+  maximizeInternalWindow: (e, type) => {
+    const win = type ? WindowManager.get(type) : BrowserWindow.fromWebContents(e.sender);
+    win && !win.isMaximized() && win.maximize();
   },
-  unmaximize: (e) => {
-    const win = BrowserWindow.fromWebContents(e.sender);
-    if (win && win.isMaximized()) {
-      win.unmaximize();
-    }
+  unmaximizeInternalWindow: (e, type) => {
+    const win = type ? WindowManager.get(type) : BrowserWindow.fromWebContents(e.sender);
+    win?.isMaximized() && win.unmaximize();
   },
-  resizeWindow: (e, bounds) => {
-    const win = BrowserWindow.fromWebContents(e.sender);
+  resizeInternalWindow: (e, props) => {
+    const win = props.type
+      ? WindowManager.get(props.type)
+      : BrowserWindow.fromWebContents(e.sender);
     if (!win) return;
     const current = win.getBounds();
     const next = {
-      x: Math.floor(bounds.x ?? current.x),
-      y: Math.floor(bounds.y ?? current.y),
-      width: Math.floor(bounds.width ?? current.width),
-      height: Math.floor(bounds.height ?? current.height)
+      x: Math.floor(props.x ?? current.x),
+      y: Math.floor(props.y ?? current.y),
+      width: Math.floor(props.width ?? current.width),
+      height: Math.floor(props.height ?? current.height)
     };
     win.setBounds(next);
   },
-  moveWindow: (e, props) => {
-    const win = BrowserWindow.fromWebContents(e.sender);
+  moveInternalWindow: (e, props) => {
+    const win = props.type
+      ? WindowManager.get(props.type)
+      : BrowserWindow.fromWebContents(e.sender);
     if (!win) return;
+
     const { x, y, deltaX, deltaY } = props;
     if (x && y) {
       win.setBounds({
@@ -126,40 +110,28 @@ const mainEventAPI = {
       });
     }
   },
-  mousePenetrate: (e, penetrate) => {
-    const win = BrowserWindow.fromWebContents(e.sender);
-    win?.setIgnoreMouseEvents(penetrate, { forward: true });
+  mousePenetrateInternalWindow: (e, props) => {
+    const win = props.type
+      ? WindowManager.get(props.type)
+      : BrowserWindow.fromWebContents(e.sender);
+    win?.setIgnoreMouseEvents(props.penetrate, { forward: true });
   },
   message: (e, message) => {
     const sender = BrowserWindow.fromWebContents(e.sender);
-    if (message.to === "process" && WindowManager.getId(sender) === "main") {
-      typedIpcMainReceiveMessage(message.type, message.data);
-    } else {
-      if (message.to === "all") {
-        WindowManager.getAll().forEach(([, receiver]) => {
-          if (sender === receiver) return;
-          typedIpcMainSendMessage({
-            sender,
-            receiver,
-            type: message.type,
-            data: message.data
-          });
-        });
-      } else {
-        typedIpcMainSendMessage({
-          sender,
-          receiver: message.to,
-          type: message.type,
-          data: message.data
-        });
-      }
-    }
-  },
-  rememberCloseAppOption: (e, option) => {
-    const sender = BrowserWindow.fromWebContents(e.sender);
     if (!sender) return;
-    if (WindowManager.getId(sender) === "main") {
-      Store.set("closeAppOption", option);
+    if (message.to === "all") {
+      AppMessageIPC.sendAll({
+        sender,
+        type: message.type,
+        data: message.data
+      });
+    } else {
+      AppMessageIPC.send({
+        sender,
+        receiver: message.to,
+        type: message.type,
+        data: message.data
+      });
     }
   }
 } satisfies MainEventAPI;

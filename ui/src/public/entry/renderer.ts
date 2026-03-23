@@ -1,5 +1,4 @@
 import { EqError, Log } from "@mahiru/ui/public/utils/dev";
-import { Listenable } from "@mahiru/ui/public/models/Listenable";
 
 class AppMessage {
   private readonly listener = window.electron.listener;
@@ -8,7 +7,7 @@ class AppMessage {
   listen<T extends keyof MessageTypeMap, U extends WindowType | WindowType[] | null>(
     event: T,
     from: U,
-    callback: U extends null
+    callback: U extends null | "all"
       ? NormalFunc<[message: Omit<MessageDataReceive<T>, "type">]>
       : NormalFunc<[data: MessageDataReceive<T>["data"]]>,
     options?: {
@@ -62,123 +61,44 @@ class AppMessage {
     });
   }
 
-  sendProcess<T extends keyof MessageTypeMap>(type: T, data: MessageDataSend<T>["data"]) {
-    window.electron.event.message({
-      type,
-      to: "process",
-      data
+  connect() {
+    this.listener.message((message) => {
+      const eventHandlers = this.handlers.get(message.type);
+      if (eventHandlers) {
+        for (const [id, { once, from, callback }] of eventHandlers.entries()) {
+          try {
+            if (from === message.from) {
+              callback(message.data);
+              once && eventHandlers.delete(id);
+            } else if (from === null || from === "all") {
+              callback(message);
+              once && eventHandlers.delete(id);
+            }
+          } catch (err) {
+            Log.error(
+              new EqError({
+                raw: err,
+                label: "renderer.ts",
+                message: `error in message handler [id=${id}] for event [type=${message.type}]`
+              })
+            );
+            eventHandlers.delete(id);
+          }
+        }
+      }
     });
-  }
-
-  listenProcess<T extends keyof MessageTypeMap>(
-    event: T,
-    callback: NormalFunc<[data: MessageDataReceive<T>["data"]]>,
-    options?: {
-      id?: string;
-      once?: boolean;
-    }
-  ) {
-    const { id = crypto.randomUUID(), once = false } = options || {};
-    if (!this.handlers.has(event)) {
-      this.handlers.set(event, new Map());
-    }
-    this.handlers.get(event)!.set(id, { once, from: "process", callback });
-    return () => {
-      this.handlers.get(event)?.delete(id);
-    };
   }
 
   constructor() {
     if (!window.electron) {
-      Log.error("electron API is not available");
-    } else {
-      this.listener.message((message) => {
-        const eventHandlers = this.handlers.get(message.type);
-        if (eventHandlers) {
-          for (const [id, { once, from, callback }] of eventHandlers.entries()) {
-            try {
-              if (from === message.from) {
-                callback(message.data);
-                once && eventHandlers.delete(id);
-              } else if (from === null) {
-                callback(message);
-                once && eventHandlers.delete(id);
-              }
-            } catch (err) {
-              Log.error(
-                new EqError({
-                  raw: err,
-                  label: "renderer.ts",
-                  message: `error in message handler [id=${id}] for event [type=${message.type}]`
-                })
-              );
-              eventHandlers.delete(id);
-            }
-          }
-        }
-      });
+      Log.throw(
+        new EqError({
+          message: "electron API is not available",
+          label: "AppRender"
+        })
+      );
     }
-  }
-}
-
-class AppWindow extends Listenable {
-  readonly type: WindowType;
-  private readonly id: string;
-  private _opened: boolean;
-
-  get opened() {
-    return this._opened;
-  }
-
-  set opened(opened) {
-    this._opened = opened;
-    this.executeListeners();
-  }
-
-  constructor(type: WindowType) {
-    super();
-    this.type = type;
-    this._opened = false;
-    this.id = window.crypto.randomUUID();
-    AppRenderer.Message.listen(
-      "windowBus",
-      type,
-      ({ action }) => {
-        if (action === "open" || action === "focus") {
-          this.opened = true;
-        } else if (action === "close") {
-          this.opened = false;
-        }
-      },
-      {
-        id: this.id
-      }
-    );
-    AppRenderer.Event.invoke.hasOpenInternalWindow(type).then((opened) => {
-      this.opened = opened;
-    });
-  }
-
-  listen<T extends keyof MessageTypeMap, U = typeof this.type>(
-    event: T,
-    from: U,
-    callback: U extends null
-      ? NormalFunc<[message: Omit<MessageDataReceive<T>, "type">]>
-      : NormalFunc<[data: MessageDataReceive<T>["data"]]>,
-    options?: {
-      id?: string;
-      once?: boolean;
-    }
-  ): NormalFunc {
-    return AppRenderer.Message.listen(event, from, callback, options);
-  }
-
-  send<T extends keyof MessageTypeMap>(type: T, data: MessageDataSend<T>["data"]) {
-    return AppRenderer.Message.send(type, this.type, data);
-  }
-
-  [Symbol.dispose]() {
-    AppRenderer.Message.remove(this.id);
+    this.connect();
   }
 }
 
@@ -188,7 +108,6 @@ export default class AppRenderer {
     invoke: window.electron.invoke
   };
   static readonly Message = new AppMessage();
-  static readonly Window = AppWindow;
 }
 
 // region type

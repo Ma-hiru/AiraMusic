@@ -312,19 +312,6 @@ export class NeteaseTrack implements NeteaseTrackModel {
 }
 
 //region Type Definitions
-interface NeteaseTrackModel extends NeteaseAPI.NeteaseTrackBase {
-  al: NeteaseAPI.Al;
-  ar: NeteaseAPI.Ar[];
-  fee: 0 | 1 | 4 | 8;
-  mv: number;
-  no: number;
-  originCoverType: 0 | 1 | 2;
-  pop: number;
-  publishTime: number;
-  noCopyrightRcmd: any;
-  privilege: NeteaseAPI.NeteaseTrackPrivilege;
-}
-
 type TrackSourceQualityReturn<T extends TrackQuality | undefined> = T extends undefined
   ? (NeteaseAPI.NeteaseQualityLevels & { level: TrackQuality })[]
   : Undefinable<NeteaseAPI.NeteaseQualityLevels & { level: TrackQuality }>;

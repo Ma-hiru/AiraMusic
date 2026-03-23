@@ -1,5 +1,4 @@
 import { FC, memo, useCallback, useEffect, useState } from "react";
-import { useAppLoaded } from "@mahiru/ui/public/hooks/useAppLoaded";
 import { useThemeColor } from "@mahiru/ui/public/hooks/useThemeColor";
 import { BannerType } from "@mahiru/ui/public/enum";
 
@@ -20,7 +19,6 @@ const Banner: FC<object> = () => {
     });
   }, []);
 
-  useAppLoaded(!!banner.length);
   const { textColorOnMain } = useThemeColor();
   const handleClick = useCallback(
     async (i: number) => {
@@ -42,7 +40,7 @@ const Banner: FC<object> = () => {
           return;
         }
         case BannerType.web: {
-          AppRenderer.event.openExternalLink({
+          AppRenderer.Event.normal.openExternalLink({
             url: item.url,
             title: item.typeTitle
           });

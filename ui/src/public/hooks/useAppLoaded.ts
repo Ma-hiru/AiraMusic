@@ -1,31 +1,17 @@
-import AppRenderer from "@mahiru/ui/public/entry/renderer";
 import { useEffect } from "react";
-import { currentWindowType } from "@mahiru/ui/public/utils/dev";
-import { Listenable } from "@mahiru/ui/public/models/Listenable";
+import AppWindow from "@mahiru/ui/public/entry/window";
 
 let loaded = false;
-
-AppRenderer.Message.listen("windowBus", "main", ({ action }) => {
-  if (action === "close") AppRenderer.Event.normal.close();
-});
 
 export function useAppLoaded(condition?: Optional<Promise<void>>) {
   useEffect(() => {
     if (loaded) return;
     (condition || Promise.resolve())
       .then(() => {
-        AppRenderer.Event.normal.show();
-        AppRenderer.Message.send("windowBus", "all", {
-          type: currentWindowType,
-          action: "open"
-        });
+        AppWindow.current.show();
       })
       .catch(() => {
-        AppRenderer.Event.normal.close();
-        AppRenderer.Message.send("windowBus", "all", {
-          type: currentWindowType,
-          action: "close"
-        });
+        AppWindow.current.close();
       })
       .finally(() => {
         loaded = true;

@@ -11,6 +11,8 @@ import MusicSource from "./MusicSource";
 
 import MenuProvider from "@mahiru/ui/public/components/menu/MenuProvider";
 import ToastProvider from "@mahiru/ui/public/components/toast/ToastProvider";
+import { useAppLoaded } from "@mahiru/ui/public/hooks/useAppLoaded";
+import { Stage } from "@mahiru/ui/public/enum";
 
 const Layout: FC<object> = () => {
   const { stage } = useStage();
@@ -24,6 +26,8 @@ const Layout: FC<object> = () => {
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, []);
+
+  useAppLoaded();
   return (
     <div
       className={`
@@ -33,13 +37,13 @@ const Layout: FC<object> = () => {
       <TopBar className="h-10 z-30" />
       <NavSide />
       <Content />
-      <PlayerBar className="h-18 z-10" />
-      <PlayerModal className="z-20" />
-      <Background className="-z-10" />
-      <ToastProvider className="z-35" />
-      <MenuProvider className="z-15" />
-      <Float className="z-10" />
-      <MusicSource />
+      {stage >= Stage.Finally && <PlayerBar className="h-18 z-10" />}
+      {stage >= Stage.Finally && <PlayerModal className="z-20" />}
+      {stage >= Stage.Immediately && <Background className="-z-10" />}
+      {stage >= Stage.Immediately && <ToastProvider className="z-35" />}
+      {stage >= Stage.Immediately && <MenuProvider className="z-15" />}
+      {stage >= Stage.Second && <Float className="z-10" />}
+      {stage >= Stage.Second && <MusicSource />}
     </div>
   );
 };

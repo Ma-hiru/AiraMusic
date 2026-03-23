@@ -10,7 +10,7 @@ type InvokeEventMaps = {
   writeFile: [{ buffer: ArrayBuffer; name: string }, Promise<{ error?: string; ok: boolean }>];
   GPUInfo: [never, Promise<unknown>];
   platform: [never, NodeJS.Platform];
-  isMaximized: [never, boolean];
+  isMaximized: [WindowType, boolean];
   hasOpenInternalWindow: [WindowType, boolean];
   storeKey: [never, string];
   checkOnlineStatus: [never, Promise<NetworkStatus>];
@@ -20,24 +20,33 @@ type InvokeEventMaps = {
 
 /** Normal 事件类型以及参数 */
 type NormalEventMaps = {
-  rememberCloseAppOption: "exit" | "ask" | "tray";
   message: MessageDataSend<any>;
-  /** window control */
-  close: never;
-  show: never;
-  minimize: never;
-  unminimize: never;
-  maximize: never;
-  unmaximize: never;
-  hidden: never;
-  mousePenetrate: boolean;
-  resizeWindow: Partial<{ x: number; y: number; width: number; height: number }>;
-  moveWindow: Partial<{ x: number; y: number; deltaX: number; deltaY: number }>;
-  openDevTools: never;
+  resizeInternalWindow: {
+    type: Optional<WindowType>;
+    x?: number;
+    y?: number;
+    width?: number;
+    height?: number;
+  };
+  moveInternalWindow: {
+    type: Optional<WindowType>;
+    x?: number;
+    y?: number;
+    deltaX?: number;
+    deltaY?: number;
+  };
   openExternalLink: { url: string; title: string };
   openInternalWindow: WindowType;
-  closeInternalWindow: WindowType;
-  focusInternalWindow: WindowType;
+  openInternalDevTools: Optional<WindowType>;
+  closeInternalWindow: Optional<WindowType>;
+  focusInternalWindow: Optional<WindowType>;
+  hiddenInternalWindow: Optional<WindowType>;
+  showInternalWindow: Optional<WindowType>;
+  minimizeInternalWindow: Optional<WindowType>;
+  unminimizeInternalWindow: Optional<WindowType>;
+  maximizeInternalWindow: Optional<WindowType>;
+  unmaximizeInternalWindow: Optional<WindowType>;
+  mousePenetrateInternalWindow: { type: Optional<WindowType>; penetrate: boolean };
 };
 
 /** Normal 事件的 Message 类型以及其参数 */
@@ -52,24 +61,35 @@ type MessageTypeMap = {
     };
   };
   playerBus: {
-    id: number;
+    track: NeteaseTrackModel;
+    lyric: FullVersionLyricLine;
     lyricVersion: LyricVersionType;
     volume: number;
     repeat: "off" | "one" | "all";
     shuffle: boolean;
+    status: "playing" | "paused" | "error" | "idle" | "loading";
   };
   progressBus: {
     currentTime: number;
     duration: number;
   };
-  playerActionBus: "next" | "previous" | "play" | "pause";
+  playerActionBus: "next" | "previous" | "play" | "pause" | "exit";
   commentBus: {
     id: number;
     type: unknown;
   };
   windowBus: {
     type: WindowType;
-    action: "open" | "close" | "focus";
+    action:
+      | "ready"
+      | "close"
+      | "focus"
+      | "hide"
+      | "show"
+      | "maximize"
+      | "unmaximize"
+      | "minimize"
+      | "unminimize";
   };
 };
 

@@ -1,16 +1,30 @@
 import { userStoreSnapshot } from "@mahiru/ui/public/store/user";
 import { Log } from "@mahiru/ui/public/utils/dev";
 import { NeteaseUser } from "@mahiru/ui/public/models/netease";
-import AppPlayer, { createAppPlayerHook } from "@mahiru/ui/public/models/player/AppPlayer";
-import NeteaseSource from "@mahiru/ui/public/entry/source";
-import AppRenderer from "@mahiru/ui/public/entry/renderer";
 import { CacheStore } from "@mahiru/ui/public/store/cache";
+import AppPlayer from "@mahiru/ui/public/models/player/AppPlayer";
+import NeteaseSource from "@mahiru/ui/public/entry/source";
+import useListenableHook from "@mahiru/ui/public/hooks/useListenableHook";
 
 export default class AppInstance {
+  //region inner
   private static _player: Nullable<AppPlayer>;
   private static _usePlayer: Nullable<() => AppPlayer>;
   private static get userStore() {
     return userStoreSnapshot();
+  }
+
+  private static createAppPlayerHook(instance: Optional<AppPlayer>) {
+    const player = instance ?? new AppPlayer();
+
+    function useAppPlayer() {
+      return useListenableHook(player);
+    }
+
+    return {
+      player,
+      useAppPlayer
+    };
   }
 
   private static savePlayer() {
@@ -27,7 +41,7 @@ export default class AppInstance {
   }
 
   private static setupPlayer() {
-    const { player, useAppPlayer } = createAppPlayerHook(this.loadPlayer());
+    const { player, useAppPlayer } = this.createAppPlayerHook(this.loadPlayer());
     this._player = player;
     this._usePlayer = useAppPlayer;
     return this;
@@ -62,6 +76,11 @@ export default class AppInstance {
 
     return this;
   }
+  //endregion
+
+  static init() {
+    this.setupUser().setupPlayer();
+  }
 
   static get player() {
     if (!this._player) this.setupPlayer();
@@ -71,14 +90,6 @@ export default class AppInstance {
   static get usePlayer() {
     if (!this._usePlayer) this.setupPlayer();
     return this._usePlayer!;
-  }
-
-  static get renderer() {
-    return AppRenderer;
-  }
-
-  static init() {
-    this.setupUser().setupPlayer();
   }
 
   static dispose() {

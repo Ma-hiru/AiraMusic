@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, dialog } from "electron";
+import { app, BrowserWindow, dialog, ipcMain } from "electron";
 import { MainInvokeAPI } from "./typed";
 import { Log } from "../../utils/log";
 import { EqError } from "../../utils/err";
@@ -89,9 +89,8 @@ const mainInvokeAPI = {
     }
   },
   GPUInfo: async () => app.whenReady().then(() => app.getGPUInfo("complete")),
-  isMaximized: (e) => {
-    const win = BrowserWindow.fromWebContents(e.sender);
-    return win ? win.isMaximized() : false;
+  isMaximized: (e, type) => {
+    return WindowManager.get(type)?.isMaximized() ?? false;
   },
   platform: () => process.platform,
   hasOpenInternalWindow: (e, win) => {

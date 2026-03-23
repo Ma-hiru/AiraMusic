@@ -1,27 +1,39 @@
-type ThemeSync = {
-  mainColor: string;
-  secondaryColor: string;
-  textColorOnMain: string;
-  KMeansColor: string[];
-  backgroundImage: Undefinable<string>;
-};
+interface NeteaseTrackModel extends NeteaseAPI.NeteaseTrackBase {
+  al: NeteaseAPI.Al;
+  ar: NeteaseAPI.Ar[];
+  fee: 0 | 1 | 4 | 8;
+  mv: number;
+  no: number;
+  originCoverType: 0 | 1 | 2;
+  pop: number;
+  publishTime: number;
+  noCopyrightRcmd: any;
+  privilege: NeteaseAPI.NeteaseTrackPrivilege;
+}
 
-type PlayerStatusSync = {
-  volume: number;
-  repeat: "off" | "one" | "all";
-  shuffle: boolean;
-  position: number;
-  fsmState: number;
-  lyricPreference: LyricVersionType | null;
-  lyricVersion: LyricVersionType;
-};
+interface NeteasePlaylistCreatorModel {
+  userId: number;
+  avatarUrl: string;
+  nickname: string;
+  signature: string;
+}
 
-type PlayerControlSync =
-  | "play"
-  | "pause"
-  | "next"
-  | "last"
-  | "mute"
-  | "exit"
-  | "openInfoWindow"
-  | "openImageWindow";
+interface NeteasePlaylistSummaryModel {
+  coverImgUrl: string;
+  createTime: number;
+  description: Nullable<string>;
+  creator: NeteasePlaylistCreatorModel;
+  highQuality: boolean;
+  id: number;
+  name: string;
+  playCount: number;
+  privacy: number;
+  subscribed: boolean;
+  subscribedCount: number;
+  tags: string[];
+  trackCount: number;
+  trackNumberUpdateTime: number;
+  trackUpdateTime: number;
+  updateTime: number;
+  userId: number;
+}

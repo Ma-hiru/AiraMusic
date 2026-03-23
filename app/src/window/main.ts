@@ -7,7 +7,6 @@ import { WindowManager } from "./manager";
 import { preloadPath } from "../utils/path";
 import { isDev } from "../utils/dev";
 import { EqError } from "../utils/err";
-import { typedIpcMainSendMessage } from "../ipc/main/typed";
 
 export function CreateMainWindow() {
   if (WindowManager.checkAndShow("main")) return;
@@ -84,24 +83,6 @@ function registerWindowEvents(mainWindow: BrowserWindow) {
 
   mainWindow.on("moved", () => {
     Store.set("window", mainWindow.getBounds());
-  });
-
-  mainWindow.on("maximize", () => {
-    typedIpcMainSendMessage({
-      sender: "main",
-      receiver: "main",
-      type: "windowMaximizedChanged",
-      data: true
-    });
-  });
-
-  mainWindow.on("unmaximize", () => {
-    typedIpcMainSendMessage({
-      sender: "main",
-      receiver: "main",
-      type: "windowMaximizedChanged",
-      data: false
-    });
   });
 
   mainWindow.webContents.setWindowOpenHandler((e) => {

@@ -1,7 +1,7 @@
 import { clamp } from "lodash-es";
 import AppRenderer from "@mahiru/ui/public/entry/renderer";
 
-export const accessToken = await AppRenderer.invoke.storeKey().catch(() => "mahiru");
+export const accessToken = await AppRenderer.Event.invoke.storeKey().catch(() => "mahiru");
 
 export default class HTTPConstants {
   /**

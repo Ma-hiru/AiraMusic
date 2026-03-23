@@ -1,5 +1,5 @@
 import { NeteaseTrack } from "./NeteaseTrack";
-import { NeteasePlaylistSummary, NeteasePlaylistSummaryModel } from "./NeteasePlaylistSummary";
+import { NeteasePlaylistSummary } from "./NeteasePlaylistSummary";
 
 export class NeteasePlaylist extends NeteasePlaylistSummary implements NeteasePlaylistModel {
   //region fields

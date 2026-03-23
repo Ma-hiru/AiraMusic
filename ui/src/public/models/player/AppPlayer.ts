@@ -18,8 +18,6 @@ import AppHistory from "./AppHistory";
 
 import { Log } from "@mahiru/ui/public/utils/dev";
 import { userStoreSnapshot } from "@mahiru/ui/public/store/user";
-import { useUpdate } from "@mahiru/ui/public/hooks/useUpdate";
-import { useEffect } from "react";
 import { NeteaseImageSize } from "@mahiru/ui/public/enum";
 
 export default class AppPlayer extends Listenable {
@@ -230,20 +228,6 @@ export default class AppPlayer extends Listenable {
     this.playlist[Symbol.dispose]();
     this.history[Symbol.dispose]();
   }
-}
-
-export function createAppPlayerHook(instance: Optional<AppPlayer>) {
-  const player = instance ?? new AppPlayer();
-  function useAppPlayer() {
-    const update = useUpdate();
-    useEffect(() => player.addListener(update), [update]);
-    return player;
-  }
-
-  return {
-    player,
-    useAppPlayer
-  };
 }
 
 export const enum AppPlayerStatus {

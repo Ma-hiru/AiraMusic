@@ -1,4 +1,6 @@
 import { BrowserWindow, BrowserWindowConstructorOptions, Tray } from "electron";
+import { AppMessageIPC } from "../ipc/main/typed";
+import { Log } from "../utils/log";
 import NativeImage = Electron.NativeImage;
 
 export type WindowID = WindowType;
@@ -9,11 +11,10 @@ export enum WindowExits {
   DESTROY
 }
 
-export const WindowManager = new (class {
-  private readonly BrowserWindowList = new Map<WindowID, BrowserWindow>();
-  private readonly BrowserWindowListHasNoID = new Set<BrowserWindow>();
-  private tray: Nullable<Tray> = null;
-  constructor() {}
+export class WindowManager {
+  private static readonly BrowserWindowList = new Map<WindowID, BrowserWindow>();
+  private static readonly BrowserWindowListHasNoID = new Set<BrowserWindow>();
+  private static tray: Nullable<Tray> = null;
 
   /**
    * 创建一个浏览器窗口。
@@ -26,7 +27,7 @@ export const WindowManager = new (class {
    *   - `WindowExits.DESTROY`：销毁已存在的窗口。
    * @returns {BrowserWindow} 浏览器窗口实例。
    */
-  createBrowserWindow(
+  static createBrowserWindow(
     options?: BrowserWindowConstructorOptions,
     id?: WindowID,
     handleExits: WindowExits = WindowExits.IGNORE
@@ -61,22 +62,23 @@ export const WindowManager = new (class {
       this.BrowserWindowListHasNoID.add(window);
     }
     this.bindWindowCloseEvent(window, id);
+    this.bindWindowBus(window, id);
     return window;
   }
 
-  has(id: WindowID) {
+  static has(id: WindowID) {
     return this.BrowserWindowList.has(id);
   }
 
-  remove(id: WindowID) {
+  static remove(id: WindowID) {
     return this.BrowserWindowList.delete(id);
   }
 
-  get(id: WindowID) {
+  static get(id: WindowID) {
     return this.BrowserWindowList.get(id);
   }
 
-  getId(window: Optional<BrowserWindow>) {
+  static getId(window: Optional<BrowserWindow>) {
     if (window) {
       for (const [id, win] of this.BrowserWindowList) {
         if (win === window) return id;
@@ -85,19 +87,19 @@ export const WindowManager = new (class {
     return null;
   }
 
-  close(id: WindowID) {
+  static close(id: WindowID) {
     const window = this.BrowserWindowList.get(id);
     window && window.close();
     return !!window;
   }
 
-  destroy(id: WindowID) {
+  static destroy(id: WindowID) {
     const window = this.BrowserWindowList.get(id);
     window && window.destroy();
     return !!window;
   }
 
-  closeAll(ids?: WindowID[]) {
+  static closeAll(ids?: WindowID[]) {
     if (ids) {
       ids.forEach((id) => {
         const window = this.BrowserWindowList.get(id);
@@ -110,7 +112,7 @@ export const WindowManager = new (class {
     }
   }
 
-  destroyAll(ids?: WindowID[]) {
+  static destroyAll(ids?: WindowID[]) {
     if (ids) {
       ids.forEach((id) => {
         const window = this.BrowserWindowList.get(id);
@@ -123,15 +125,15 @@ export const WindowManager = new (class {
     }
   }
 
-  getAll() {
+  static getAll() {
     return Array.from(this.BrowserWindowList);
   }
 
-  getAllHasNoId() {
+  static getAllHasNoId() {
     return Array.from(this.BrowserWindowListHasNoID);
   }
 
-  checkAndShow(id: WindowID) {
+  static checkAndShow(id: WindowID) {
     const existingWindow = this.get(id);
     if (existingWindow) {
       if (existingWindow.isMinimized()) {
@@ -144,16 +146,16 @@ export const WindowManager = new (class {
     return existingWindow;
   }
 
-  getTray() {
+  static getTray() {
     return this.tray;
   }
 
-  initTray(image: NativeImage | string) {
+  static initTray(image: NativeImage | string) {
     this.tray ||= new Tray(image);
     return this.tray;
   }
 
-  private bindWindowCloseEvent(window: BrowserWindow, id?: WindowID) {
+  private static bindWindowCloseEvent(window: BrowserWindow, id?: WindowID) {
     window.on("closed", () => {
       if (id) {
         this.BrowserWindowList.delete(id);
@@ -162,4 +164,25 @@ export const WindowManager = new (class {
       }
     });
   }
-})();
+
+  private static bindWindowBus(window: BrowserWindow, type?: WindowID) {
+    if (!type) return;
+    const sendBusMessage = (action: MessageTypeMap["windowBus"]["action"]) => {
+      Log.debug("windowBus", `${type} - ${action}`);
+      AppMessageIPC.sendAll({
+        type: "windowBus",
+        sender: "process",
+        data: { type, action }
+      });
+    };
+    window.addListener("closed", () => sendBusMessage("close"));
+    window.addListener("unmaximize", () => sendBusMessage("unmaximize"));
+    window.addListener("maximize", () => sendBusMessage("maximize"));
+    window.addListener("minimize", () => sendBusMessage("minimize"));
+    window.addListener("restore", () => sendBusMessage("unminimize"));
+    window.addListener("hide", () => sendBusMessage("hide"));
+    window.addListener("show", () => sendBusMessage("show"));
+    window.addListener("focus", () => sendBusMessage("focus"));
+    window.addListener("ready-to-show", () => sendBusMessage("ready"));
+  }
+}

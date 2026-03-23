@@ -7,6 +7,7 @@ export interface Log {
   info: LogHandler;
   warn: LogHandler;
   error: LogHandler;
+  throw: LogHandler;
 }
 
 export interface LogHandler {
@@ -41,6 +42,10 @@ export function createLog(level: LogLevel, showTimestamp: boolean = false): Log 
       if (this.level <= LogLevel.ERROR) {
         console.error(handleLogInput(LogLevel.ERROR, showTimestamp, ...args));
       }
+    }
+    static throw(...args: CanString[]) {
+      this.error(...args);
+      throw new Error(handleLogInput(LogLevel.ERROR, showTimestamp, ...args));
     }
   };
 }

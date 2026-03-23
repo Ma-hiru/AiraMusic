@@ -72,33 +72,3 @@ export class NeteasePlaylistSummary implements NeteasePlaylistSummaryModel {
   }
   //endregion
 }
-
-//region Type Definitions
-
-export interface NeteasePlaylistCreatorModel {
-  userId: number;
-  avatarUrl: string;
-  nickname: string;
-  signature: string;
-}
-
-export interface NeteasePlaylistSummaryModel {
-  coverImgUrl: string;
-  createTime: number;
-  description: Nullable<string>;
-  creator: NeteasePlaylistCreatorModel;
-  highQuality: boolean;
-  id: number;
-  name: string;
-  playCount: number;
-  privacy: number;
-  subscribed: boolean;
-  subscribedCount: number;
-  tags: string[];
-  trackCount: number;
-  trackNumberUpdateTime: number;
-  trackUpdateTime: number;
-  updateTime: number;
-  userId: number;
-}
-//endregion

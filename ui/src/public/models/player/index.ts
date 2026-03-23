@@ -1,1 +1,1 @@
-export { default, createAppPlayerHook, AppPlayerStatus } from "./AppPlayer";
+export { default, AppPlayerStatus } from "./AppPlayer";

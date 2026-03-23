@@ -1,8 +1,8 @@
-import { typedIpcRenderOn } from "./typed";
+import AppTypedRendererIPC from "./typed";
 
 export const rendererEventListenerAPI = {
   message: (handler) => {
-    typedIpcRenderOn("message", (_e, data) => {
+    AppTypedRendererIPC.on("message", (_e, data) => {
       handler(data);
     });
   }

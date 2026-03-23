@@ -1,22 +1,22 @@
+import { Log } from "../utils/log";
+import { WindowExits, WindowManager } from "./manager";
+import { isLinux, isWindows } from "../utils/platform";
+import { join } from "node:path";
+import { preloadPath, staticAssetsDir } from "../utils/path";
 import {
-  nativeImage,
-  screen,
-  clipboard,
-  Tray,
   BrowserWindow,
+  clipboard,
   Menu,
   MenuItem,
-  MenuItemConstructorOptions
+  MenuItemConstructorOptions,
+  nativeImage,
+  screen,
+  Tray
 } from "electron";
-import { WindowExits, WindowManager } from "./manager";
-import { preloadPath, staticAssetsDir } from "../utils/path";
-import { join } from "node:path";
-import { isLinux, isWindows } from "../utils/platform";
-import { Log } from "../utils/log";
 import { getEffectiveWindowSize } from "../utils/screen";
 import { isDev } from "../utils/dev";
 import { EqError } from "../utils/err";
-import { addIpcMainReceiveMessageHandler, typedIpcMainSendMessage } from "../ipc/main/typed";
+import { AppMessageIPC } from "../ipc/main/typed";
 import { CreateInfoWindow } from "./info";
 
 export function registerTray() {
@@ -30,7 +30,7 @@ function createTray() {
   const icon = createIcon();
   const trayWin = createTrayWin();
   const tray = WindowManager.initTray(icon);
-  tray.setToolTip("music");
+  tray.setToolTip(process.env.APP_NAME);
   createMenu(tray, trayWin);
 }
 
@@ -80,15 +80,13 @@ function createTrayWin() {
   return TrayWindow;
 }
 
+let playerBus: Nullable<MessageTypeMap["playerBus"]> = null;
+
 function createMenu(tray: Tray, trayWin: Optional<BrowserWindow>) {
   if (isLinux) {
     setRawMenu(tray);
-    addIpcMainReceiveMessageHandler("playerTrackSync", (sync) => {
-      trackSync = sync;
-      setRawMenu(tray);
-    });
-    addIpcMainReceiveMessageHandler("playerStatusSync", (sync) => {
-      statusSync = sync;
+    AppMessageIPC.listenSelf("playerBus", (data) => {
+      playerBus = data;
       setRawMenu(tray);
     });
   } else {
@@ -111,9 +109,6 @@ function createMenu(tray: Tray, trayWin: Optional<BrowserWindow>) {
     trayWin.webContents.on("before-input-event", (_, input) => {
       if (input.key === "Escape") trayWin.hide();
     });
-    addIpcMainReceiveMessageHandler("playerTrackSync", ({ track }) => {
-      tray.setToolTip(track.name + track.ar.map((a) => a.name).join("&"));
-    });
   }
 }
 
@@ -129,78 +124,67 @@ function loadTrayWindowURL(trayWindow: Electron.BrowserWindow, port: string | nu
   });
 }
 
-let trackSync: Nullable<PlayerTrackStatus> = null;
-let statusSync: Nullable<PlayerStatusSync> = null;
 function setRawMenu(tray: Tray) {
-  Log.debug("tray", "create menu");
+  Log.debug("tray", "create raw menu");
   const items: (MenuItem | MenuItemConstructorOptions)[] = [
     {
-      label: statusSync?.fsmState === 4 ? "暂停" : "播放",
+      label: playerBus?.status === "playing" ? "暂停" : "播放",
       click: () => {
-        if (statusSync?.fsmState === 4) {
-          typedIpcMainSendMessage({
-            sender: "main",
-            receiver: "main",
-            type: "playerControl",
-            data: "pause"
-          });
-        } else {
-          typedIpcMainSendMessage({
-            sender: "main",
-            receiver: "main",
-            type: "playerControl",
-            data: "play"
-          });
-        }
+        AppMessageIPC.send({
+          sender: "process",
+          receiver: "main",
+          type: "playerActionBus",
+          data: playerBus?.status === "playing" ? "pause" : "play"
+        });
         setRawMenu(tray);
       }
     },
     {
       label: "上一首",
       click: () => {
-        typedIpcMainSendMessage({
-          sender: "main",
+        AppMessageIPC.send({
+          sender: "process",
           receiver: "main",
-          type: "playerControl",
-          data: "last"
+          type: "playerActionBus",
+          data: "previous"
         });
       }
     },
     {
       label: "下一首",
       click: () => {
-        typedIpcMainSendMessage({
-          sender: "main",
+        AppMessageIPC.send({
+          sender: "process",
           receiver: "main",
-          type: "playerControl",
+          type: "playerActionBus",
           data: "next"
         });
       }
     }
   ];
-  if (trackSync) {
+  if (playerBus) {
     items.push(
       ...[
         {
           label: "评论",
           click: () => {
-            if (!trackSync) return;
+            if (!playerBus) return;
             CreateInfoWindow();
             setTimeout(() => {
-              if (!trackSync) return;
-              typedIpcMainSendMessage({
-                sender: "main",
-                receiver: "info",
-                type: "infoSync",
-                data: {
-                  type: "comments",
-                  value: {
-                    type: 0,
-                    id: trackSync.track.id,
-                    track: trackSync.track
-                  }
-                }
-              });
+              if (!playerBus) return;
+              // AppMessageIPC.send({
+              //   sender: "process",
+              //   receiver: "info",
+              //   type: "infoSync",
+              //   data: {
+              //     type: "comments",
+              //     value: {
+              //       type: 0,
+              //       id: trackSync.track.id,
+              //       track: trackSync.track
+              //     }
+              //   }
+              // });
             }, 3000);
           }
         },
@@ -210,19 +194,19 @@ function setRawMenu(tray: Tray) {
             {
               label: "复制歌名",
               click: () => {
-                trackSync && clipboard.writeText(trackSync.track.name);
+                playerBus?.track && clipboard.writeText(playerBus.track.name);
               }
             },
             {
               label: "复制歌手名",
               click: () => {
-                trackSync && clipboard.writeText(trackSync.track.ar.map((a) => a.name).join("&"));
+                playerBus && clipboard.writeText(playerBus.track.ar.map((a) => a.name).join("&"));
               }
             },
             {
               label: "复制专辑名",
               click: () => {
-                trackSync && clipboard.writeText(trackSync.track.al.name);
+                playerBus && clipboard.writeText(playerBus.track.al.name);
               }
             }
           ]
@@ -241,10 +225,10 @@ function setRawMenu(tray: Tray) {
       {
         label: "退出",
         click: () => {
-          typedIpcMainSendMessage({
-            sender: "main",
+          AppMessageIPC.send({
+            sender: "process",
             receiver: "main",
-            type: "playerControl",
+            type: "playerActionBus",
             data: "exit"
           });
         }
