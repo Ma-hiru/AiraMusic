@@ -1,6 +1,6 @@
 import { app } from "electron";
 import { Server } from "node:http";
-import { LogLevel, LogLevelFromString } from "@mahiru/log";
+import { LogLevel, ParseLogLevel } from "@mahiru/log";
 import { Log } from "../utils/log";
 import { isMacOS } from "../utils/platform";
 import { commands } from "./commands";
@@ -62,7 +62,7 @@ export class APP {
         args,
         exitHandler,
         path: storeServerBinaryPath,
-        log: LogLevelFromString(process.env.APP_LOG_LEVEL) <= LogLevel.DEBUG,
+        log: ParseLogLevel(process.env.APP_LOG_LEVEL) <= LogLevel.DEBUG,
         logger: (data) => Log.debug("store", data.toString())
       });
     } catch (err) {
@@ -95,6 +95,20 @@ export class APP {
     });
   }
 
+  private cleanup() {
+    APP.clearer.forEach((cb) => {
+      try {
+        cb();
+      } catch (err) {
+        try {
+          Log.error(err);
+        } catch {
+          console.log(err);
+        }
+      }
+    });
+  }
+
   private exiting = false;
 
   exit() {
@@ -102,6 +116,7 @@ export class APP {
     this.exiting = true;
     Log.debug("app exiting...");
     Promise.allSettled([this.stopAllServers()]).finally(() => {
+      this.cleanup();
       Log.debug("app exited.");
       app.exit();
     });
@@ -116,5 +131,11 @@ export class APP {
     } else {
       app.quit();
     }
+  }
+
+  static clearer = new Set<NormalFunc>();
+
+  static addClearer(cb: NormalFunc) {
+    this.clearer.add(cb);
   }
 }

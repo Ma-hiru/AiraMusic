@@ -1,6 +1,5 @@
 import { contextBridge } from "electron";
 import { rendererEventAPI, rendererEventListenerAPI, rendererInvokeAPI } from "../ipc/render";
-import { Log } from "../utils/log";
 
 contextBridge.exposeInMainWorld("electron", {
   invoke: rendererInvokeAPI,
@@ -8,4 +7,4 @@ contextBridge.exposeInMainWorld("electron", {
   listener: rendererEventListenerAPI
 } satisfies Window["electron"]);
 
-Log.info("preload script loaded");
+console.log("preload script loaded");

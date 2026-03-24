@@ -24,10 +24,12 @@ export function LogLevelToString(level: LogLevel) {
   }
 }
 
-export function LogLevelFromString(
-  env?: "DEBUG" | "ERROR" | "INFO" | "NONE" | "TRACE" | "WARN" | string
+export function ParseLogLevel(
+  env: Optional<LogLevel | "DEBUG" | "ERROR" | "INFO" | "NONE" | "TRACE" | "WARN" | string>
 ): LogLevel {
-  switch (env?.toUpperCase()) {
+  if (!env) return LogLevel.TRACE;
+  if (typeof env === "number") return env;
+  switch (env.toUpperCase()) {
     case "TRACE":
       return LogLevel.TRACE;
     case "DEBUG":

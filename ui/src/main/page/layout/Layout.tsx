@@ -1,5 +1,10 @@
 import { FC, memo, useEffect } from "react";
 import { useStage } from "@mahiru/ui/public/hooks/useStage";
+import { useAppLoaded } from "@mahiru/ui/public/hooks/useAppLoaded";
+import { Stage } from "@mahiru/ui/public/enum";
+
+import MenuProvider from "@mahiru/ui/public/components/menu/MenuProvider";
+import ToastProvider from "@mahiru/ui/public/components/toast/ToastProvider";
 import TopBar from "./top";
 import PlayerBar from "./bar";
 import NavSide from "./nav";
@@ -8,11 +13,7 @@ import Float from "./float";
 import PlayerModal from "./Modal";
 import Background from "./Background";
 import MusicSource from "./MusicSource";
-
-import MenuProvider from "@mahiru/ui/public/components/menu/MenuProvider";
-import ToastProvider from "@mahiru/ui/public/components/toast/ToastProvider";
-import { useAppLoaded } from "@mahiru/ui/public/hooks/useAppLoaded";
-import { Stage } from "@mahiru/ui/public/enum";
+import Bus from "./Bus";
 
 const Layout: FC<object> = () => {
   const { stage } = useStage();
@@ -42,6 +43,7 @@ const Layout: FC<object> = () => {
       {stage >= Stage.Immediately && <Background className="-z-10" />}
       {stage >= Stage.Immediately && <ToastProvider className="z-35" />}
       {stage >= Stage.Immediately && <MenuProvider className="z-15" />}
+      {stage >= Stage.Second && <Bus />}
       {stage >= Stage.Second && <Float className="z-10" />}
       {stage >= Stage.Second && <MusicSource />}
     </div>

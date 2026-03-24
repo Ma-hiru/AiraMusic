@@ -15,9 +15,8 @@ import {
   NeteaseNetworkImage
 } from "@mahiru/ui/public/models/netease/NeteaseImage";
 import NeteaseSource from "@mahiru/ui/public/entry/source";
-import AppRenderer from "@mahiru/ui/public/entry/renderer";
 import { NeteaseImageSize } from "@mahiru/ui/public/enum";
-import { currentWindowType } from "@mahiru/ui/public/utils/dev";
+import AppWindow from "@mahiru/ui/public/entry/window";
 
 type ShadowLevel = "none" | "base" | "float";
 
@@ -113,42 +112,19 @@ const NeteaseImage: FC<ImageProps> = ({
   const wrapClick = useCallback(
     (e: ReactMouseEvent<HTMLImageElement>) => {
       if (preview && image) {
-        AppRenderer.Event.invoke.hasOpenInternalWindow("image").then((opened) => {
-          const sendImage = image.toNetworkImage().setSize(NeteaseImageSize.raw);
-          if (!opened) {
-            if (currentWindowType === "main") {
-              AppRenderer.Event.normal.openInternalWindow("image");
-              AppRenderer.Event.normal.focusInternalWindow("image");
-            } else {
-              // AppRenderer.sendMessage("playerControl", "main", "openImageWindow");
-            }
-            // AppRenderer.addMessageHandler(
-            //   "otherWindowLoaded",
-            //   "image",
-            //   () => {
-            //     AppRenderer.sendMessage("checkImage", "image", {
-            //       url: sendImage.src,
-            //       alt: alt ?? sendImage.alt
-            //     });
-            //   },
-            //   { id: "imageCheckHandler", once: true }
-            // );
-          } else {
-            // if (isMainWindow()) {
-            //   AppRenderer.event.focusInternalWindow("image");
-            // } else {
-            //   AppRenderer.sendMessage("playerControl", "main", "openImageWindow");
-            // }
-            // AppRenderer.sendMessage("checkImage", "image", {
-            //   url: sendImage.src,
-            //   alt: alt ?? sendImage.alt
-            // });
-          }
+        const imageWindow = AppWindow.from("image");
+        const sendImage = image.toNetworkImage().setSize(NeteaseImageSize.raw);
+        imageWindow.openThen(() => {
+          imageWindow.focus();
+          imageWindow.send("imageCheckerBus", {
+            url: sendImage.src,
+            alt: alt ?? sendImage.alt
+          });
         });
       }
       return onClick?.(e);
     },
-    [image, onClick, preview]
+    [alt, image, onClick, preview]
   );
 
   useEffect(() => {

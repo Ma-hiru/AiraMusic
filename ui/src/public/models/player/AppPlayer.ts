@@ -32,6 +32,21 @@ export default class AppPlayer extends Listenable {
     return this._status;
   }
 
+  get statusText() {
+    switch (this.status) {
+      case AppPlayerStatus.playing:
+        return "playing";
+      case AppPlayerStatus.paused:
+        return "paused";
+      case AppPlayerStatus.idle:
+        return "idle";
+      case AppPlayerStatus.error:
+        return "error";
+      case AppPlayerStatus.loading:
+        return "loading";
+    }
+  }
+
   get playing() {
     return this.status === AppPlayerStatus.playing;
   }
@@ -105,6 +120,7 @@ export default class AppPlayer extends Listenable {
           this.history.add(NeteaseHistory.fromTrack(this.current.track, this.audio.currentTime));
         void this.load(current, true);
       }
+      this.executeListeners();
     });
 
     return () => {

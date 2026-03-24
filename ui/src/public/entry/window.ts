@@ -1,6 +1,7 @@
 import AppRenderer from "@mahiru/ui/public/entry/renderer";
 import { Listenable } from "@mahiru/ui/public/models/Listenable";
 import { currentWindowType } from "@mahiru/ui/public/utils/dev";
+import AppInstance from "@mahiru/ui/main/entry/instance";
 
 export default class AppWindow extends Listenable {
   readonly type: WindowType;
@@ -98,6 +99,17 @@ export default class AppWindow extends Listenable {
     return AppRenderer.Message.listen(event, this.type, callback, options);
   }
 
+  listenAll<T extends keyof MessageTypeMap>(
+    event: T,
+    callback: NormalFunc<[message: Omit<MessageDataReceive<T>, "type">]>,
+    options?: {
+      id?: string;
+      once?: boolean;
+    }
+  ): NormalFunc {
+    return AppRenderer.Message.listen(event, "all", callback, options);
+  }
+
   send<T extends keyof MessageTypeMap>(type: T, data: MessageDataSend<T>["data"]) {
     return AppRenderer.Message.send(type, this.type, data);
   }
@@ -106,12 +118,30 @@ export default class AppWindow extends Listenable {
     AppRenderer.Event.normal.openInternalWindow(this.type);
   }
 
+  openThen(cb: NormalFunc) {
+    if (this.opened) return cb();
+    const listener = () => {
+      this.opened && cb();
+      this.opened && this.removeListener(listener);
+    };
+    this.addListener(listener);
+    this.open();
+  }
+
   devTools() {
     AppRenderer.Event.normal.openInternalDevTools(this.type);
   }
 
   close() {
-    AppRenderer.Event.normal.closeInternalWindow(this.type);
+    if (this.type === "main") {
+      this.hide();
+      AppInstance.player.audio.pause();
+      AppInstance.dispose().then(() => {
+        setTimeout(() => AppRenderer.Event.normal.closeInternalWindow("main"), 1000);
+      });
+    } else {
+      AppRenderer.Event.normal.closeInternalWindow(this.type);
+    }
   }
 
   focus() {
@@ -158,6 +188,10 @@ export default class AppWindow extends Listenable {
       type: this.type,
       ...props
     });
+  }
+
+  get isMainWindow() {
+    return this.type === "main";
   }
 
   [Symbol.dispose]() {

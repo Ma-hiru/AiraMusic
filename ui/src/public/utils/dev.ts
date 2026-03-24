@@ -1,32 +1,23 @@
-import { createEqError, createLog, LogLevel } from "@mahiru/log";
 import AppRenderer from "@mahiru/ui/public/entry/renderer";
+import { createEqError, createLog } from "@mahiru/log";
+import { ProcessLogger } from "@mahiru/ui/public/utils/logger";
 
-function convertToLogLevel(env?: EnvLogLevel): LogLevel {
-  if (!env) return LogLevel.TRACE;
-  switch (env.toUpperCase()) {
-    case "TRACE":
-      return LogLevel.TRACE;
-    case "DEBUG":
-      return LogLevel.DEBUG;
-    case "INFO":
-      return LogLevel.INFO;
-    case "WARN":
-      return LogLevel.WARN;
-    case "ERROR":
-      return LogLevel.ERROR;
-    case "NONE":
-      return LogLevel.NONE;
-    default:
-      return LogLevel.TRACE;
-  }
-}
+let _currentWindowType: Nullable<WindowType> = null;
 
-export const currentWindowType = await AppRenderer.Event.invoke.currentWindowType();
+export const currentWindowType = _currentWindowType!;
 export const AppScheme = import.meta.env.APP_SCHEME;
 export const AppProtocol = import.meta.env.APP_PROTOCOL;
 export const isDev = import.meta.env.DEV;
 export const isRelease = import.meta.env.PROD;
 export const EqError = createEqError(isDev);
-export const Log = createLog(convertToLogLevel(import.meta.env.UI_LOG_LEVEL as EnvLogLevel));
+export const Log = createLog(
+  import.meta.env.UI_LOG_LEVEL,
+  isDev ? console : new ProcessLogger(),
+  true
+);
+
+window.requestAnimationFrame(async () => {
+  _currentWindowType = await AppRenderer.Event.invoke.currentWindowType();
+});
 
 isDev && Log.info("environment", import.meta.env);

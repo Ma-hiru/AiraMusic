@@ -1,5 +1,6 @@
-import { LogLevel, LogLevelToString } from "./logLevel";
+import { LogLevel, LogLevelToString, ParseLogLevel } from "./logLevel";
 import { AnyToString, CanString } from "../string";
+import { LoggerWriter } from "./writer";
 
 export interface Log {
   trace: LogHandler;
@@ -15,32 +16,36 @@ export interface LogHandler {
   (label: CanString, ...messages: CanString[]): void;
 }
 
-export function createLog(level: LogLevel, showTimestamp: boolean = false): Log {
+export function createLog(
+  level: LogLevel | string,
+  witter: LoggerWriter = console,
+  showTimestamp = false
+): Log {
   return class {
-    private static readonly level = level;
+    private static readonly level = ParseLogLevel(level);
     static trace(...args: CanString[]) {
       if (this.level <= LogLevel.TRACE) {
-        console.trace(handleLogInput(LogLevel.TRACE, showTimestamp, ...args));
+        witter.trace(handleLogInput(LogLevel.TRACE, showTimestamp, ...args));
       }
     }
     static debug(...args: CanString[]) {
       if (this.level <= LogLevel.DEBUG) {
-        console.debug(handleLogInput(LogLevel.DEBUG, showTimestamp, ...args));
+        witter.debug(handleLogInput(LogLevel.DEBUG, showTimestamp, ...args));
       }
     }
     static info(...args: CanString[]) {
       if (this.level <= LogLevel.INFO) {
-        console.log(handleLogInput(LogLevel.INFO, showTimestamp, ...args));
+        witter.log(handleLogInput(LogLevel.INFO, showTimestamp, ...args));
       }
     }
     static warn(...args: CanString[]) {
       if (this.level <= LogLevel.WARN) {
-        console.warn(handleLogInput(LogLevel.WARN, showTimestamp, ...args));
+        witter.warn(handleLogInput(LogLevel.WARN, showTimestamp, ...args));
       }
     }
     static error(...args: CanString[]) {
       if (this.level <= LogLevel.ERROR) {
-        console.error(handleLogInput(LogLevel.ERROR, showTimestamp, ...args));
+        witter.error(handleLogInput(LogLevel.ERROR, showTimestamp, ...args));
       }
     }
     static throw(...args: CanString[]) {

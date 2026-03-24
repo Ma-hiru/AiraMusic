@@ -6,7 +6,7 @@ export default class AppAudio {
   readonly audio = new Audio();
   readonly addEventListener = this.audio.addEventListener.bind(this.audio);
   readonly removeEventListener = this.audio.removeEventListener.bind(this.audio);
-  readonly progress: PlayerProgress = {
+  readonly progress = {
     duration: 0,
     currentTime: 0,
     buffered: 0,

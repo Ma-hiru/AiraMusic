@@ -67,51 +67,80 @@ const LyricLine: FC<LyricLineProps> = ({
 
   return (
     <div
-      style={style}
       className={cx(
         `
-          w-full px-4 py-1 rounded-md
-          text-wrap select-none
-          hover:blur-none hover:bg-white/20
+          w-full px-4 py-1 rounded-md hover:blur-none hover:bg-white/20
           duration-500 ease-in-out transition-all
-          contain-content
-        `,
-        active ? "text-white" : "text-white/30 blur-[2px]",
-        crossAlign === "left" && "text-left",
-        crossAlign === "center" && "text-center",
-        crossAlign === "right" && "text-right"
+          contain-content leading-7
+    `,
+        active ? "text-white" : "text-white/30 blur-[2px]"
       )}>
-      {active ? (
-        line.words.map((word, index) => (
+      <div
+        style={style}
+        className={cx(
+          `
+            text-wrap select-none
+            duration-500 ease-in-out transition-all
+            contain-content
+            font-normal text-3xl
+        `,
+          active && "scale-102 font-medium",
+          crossAlign === "left" && "text-left",
+          crossAlign === "center" && "text-center",
+          crossAlign === "right" && "text-right"
+        )}>
+        {active ? (
+          line.words.map((word, index) => (
+            <LyricWord
+              key={index}
+              word={word}
+              activeColor={activeColor}
+              inactiveColor={inactiveColor}
+              fontSize={fontSize}
+              wordIndex={index}
+              currentWordIndex={wordIndex}
+              onClick={onClick}
+              lineActive={active}
+              singleWord={line.words.length === 1}
+            />
+          ))
+        ) : (
           <LyricWord
-            key={index}
-            word={word}
+            singleWord
+            wordIndex={0}
+            currentWordIndex={0}
+            word={allWord}
+            onClick={onClick}
             activeColor={activeColor}
             inactiveColor={inactiveColor}
             fontSize={fontSize}
-            wordIndex={index}
-            currentWordIndex={wordIndex}
-            onClick={onClick}
-            lineActive={active}
-            singleWord={line.words.length === 1}
           />
-        ))
-      ) : (
-        <LyricWord
-          singleWord
-          wordIndex={0}
-          currentWordIndex={0}
-          word={allWord}
-          onClick={onClick}
-          activeColor={activeColor}
-          inactiveColor={inactiveColor}
-          fontSize={fontSize}
-        />
-      )}
-      <div className="text-wrap" onClick={onClickLine}>
+        )}
+      </div>
+      <div
+        className={cx(
+          `
+            text-wrap select-none
+            duration-500 ease-in-out transition-all
+            contain-content
+            font-normal text-md
+          `,
+          active && "scale-102 font-medium"
+        )}
+        onClick={onClickLine}>
         {line.translatedLyric}
       </div>
-      <div className="text-wrap" onClick={onClickLine}>
+      <div
+        className={cx(
+          `
+            text-wrap select-none
+            duration-500 ease-in-out transition-all
+            contain-content
+            font-normal text-md
+          `,
+          active && "scale-102 font-medium"
+        )}
+        onClick={onClickLine}>
         {line.romanLyric}
       </div>
     </div>

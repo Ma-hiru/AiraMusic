@@ -61,10 +61,15 @@ type MessageTypeMap = {
     };
   };
   playerBus: {
-    track: NeteaseTrackModel;
-    lyric: FullVersionLyricLine;
-    lyricVersion: LyricVersionType;
-    volume: number;
+    track: Optional<{
+      id: number;
+      name: string;
+      sourceID: number;
+      sourceName: "playlist" | "album" | "other";
+      track: NeteaseTrackModel;
+    }>;
+    lyric: Optional<FullVersionLyricLine>;
+    lyricVersion: Optional<LyricVersionType>;
     repeat: "off" | "one" | "all";
     shuffle: boolean;
     status: "playing" | "paused" | "error" | "idle" | "loading";
@@ -72,6 +77,8 @@ type MessageTypeMap = {
   progressBus: {
     currentTime: number;
     duration: number;
+    volume: number;
+    buffered: number;
   };
   playerActionBus: "next" | "previous" | "play" | "pause" | "exit";
   commentBus: {
@@ -90,6 +97,10 @@ type MessageTypeMap = {
       | "unmaximize"
       | "minimize"
       | "unminimize";
+  };
+  imageCheckerBus: {
+    url: string;
+    alt?: string;
   };
 };
 

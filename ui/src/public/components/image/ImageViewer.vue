@@ -56,7 +56,7 @@
   import { clamp } from "lodash-es";
   import { ArrowLeftToLine, ArrowRightToLine, Download } from "lucide-vue-next";
   import { EqError, Log } from "@mahiru/ui/public/utils/dev";
-  import { Renderer } from "@mahiru/ui/public/entry/renderer";
+  import AppRenderer from "@mahiru/ui/public/entry/renderer";
 
   type ImageEntry = { url?: string; alt?: string };
 
@@ -118,7 +118,9 @@
           splitSrc[splitSrc.length - 1] ||
           current.value.url ||
           `unknown.${type}`;
-        const result = (await Renderer.invoke.writeFile(<{ buffer: ArrayBuffer; name: string }>{
+        const result = (await AppRenderer.Event.invoke.writeFile(<
+          { buffer: ArrayBuffer; name: string }
+        >{
           buffer,
           name
         })) as { error?: string; ok: boolean };

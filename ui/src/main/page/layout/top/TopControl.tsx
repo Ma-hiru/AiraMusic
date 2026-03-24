@@ -10,19 +10,11 @@ import {
 import { isDev } from "@mahiru/ui/public/utils/dev";
 
 import NoDrag from "@mahiru/ui/public/components/drag/NoDrag";
-import AppInstance from "@mahiru/ui/main/entry/instance";
 import AppWindow from "@mahiru/ui/public/entry/window";
 import useListenableHook from "@mahiru/ui/public/hooks/useListenableHook";
 
 const TopControl: FC = () => {
   const win = useListenableHook(AppWindow.current);
-  const close = () => {
-    win.hide();
-    AppInstance.player.audio.pause();
-    AppInstance.dispose().then(() => {
-      setTimeout(() => win.close(), 1000);
-    });
-  };
   const mini = () => {};
 
   return (
@@ -32,7 +24,7 @@ const TopControl: FC = () => {
       <ControlButton Icon={PictureInPicture} onClick={mini} />
       <ControlButton show={win.isMax} Icon={SquareMinus} onClick={() => win.unmaximize()} />
       <ControlButton show={!win.isMax} Icon={Square} onClick={() => win.maximize()} />
-      <ControlButton Icon={X} onClick={close} />
+      <ControlButton Icon={X} onClick={() => win.close()} />
     </NoDrag>
   );
 };

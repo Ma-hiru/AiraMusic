@@ -44,11 +44,10 @@ const LyricWord: FC<LyricWordProps> = ({
       onClick={handleClick}
       className={cx(
         `
-          relative inline
-          text-3xl font-semibold
+          relative inline font-normal
           duration-500 ease-in-out transition-all
         `,
-        active ? "text-white" : "text-white/30",
+        active ? "text-white font-medium" : "text-white/30",
         wordIndex > currentWordIndex && !singleWord ? "blur-[1.5px]" : "blur-none"
       )}>
       {word.word}

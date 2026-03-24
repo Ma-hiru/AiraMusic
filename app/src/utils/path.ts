@@ -6,18 +6,22 @@ export function appPathJoin(...paths: string[]): string {
   return join(app.getAppPath(), ...paths);
 }
 
+export function appResourcePathJoin(...paths: string[]) {
+  return join(process.resourcesPath, ...paths);
+}
+
+export function appExecPathJoin(...paths: string[]) {
+  return join(process.execPath, ...paths);
+}
+
 export const preloadPath = isDev()
   ? appPathJoin("dist", "preload", "index.js")
-  : join(process.resourcesPath, "preload.js");
+  : appResourcePathJoin("preload.js");
 
-export const staticUIDir = isDev()
-  ? appPathJoin("../ui", "dist")
-  : join(process.resourcesPath, "ui");
+export const staticUIDir = isDev() ? appPathJoin("../ui", "dist") : appResourcePathJoin("ui");
 
-export const staticAssetsDir = isDev()
-  ? appPathJoin("assets")
-  : join(process.resourcesPath, "assets");
+export const staticAssetsDir = isDev() ? appPathJoin("assets") : appResourcePathJoin("assets");
 
 export const storeServerBinaryPath = isDev()
   ? appPathJoin("../store", process.platform === "win32" ? "server.exe" : "server")
-  : join(process.resourcesPath, "bin", process.platform === "win32" ? "server.exe" : "server");
+  : appResourcePathJoin("bin", process.platform === "win32" ? "server.exe" : "server");

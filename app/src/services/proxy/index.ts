@@ -36,6 +36,17 @@ export function createProxyServer() {
       timeout: 15000
     })
   );
+  expressAPP.post("/log", (request, response) => {
+    if (
+      request.headers["content-type"] === "application/json" &&
+      typeof request.body === "string"
+    ) {
+      const { type, text } = JSON.parse(request.body || "{}");
+      Log[type as keyof typeof Log]?.(text);
+    }
+
+    response.status(204);
+  });
 
   return expressAPP.listen(port, "127.0.0.1");
 }

@@ -14,25 +14,25 @@
   import TopControlPure from "@mahiru/ui/public/components/public/TopControlPure.vue";
   import Drag from "@mahiru/ui/public/components/drag/Drag.vue";
   import ImageViewer from "@mahiru/ui/public/components/image/ImageViewer.vue";
+  import AppRenderer from "@mahiru/ui/public/entry/renderer";
   import { useAppLoadedVue } from "@mahiru/ui/public/hooks/useAppLoadedVue";
   import { onMounted, reactive, ref } from "vue";
-  import { Renderer } from "@mahiru/ui/public/entry/renderer";
 
-  const { requestLoaded } = useAppLoadedVue(undefined, { broadcast: true });
-  const images = reactive<{ url?: string; alt?: string }[]>([]);
+  const loading = ref(false);
+  const images = reactive<{ url: string; alt?: string }[]>([]);
   const showToolBar = ref(false);
 
+  useAppLoadedVue(loading);
+
   onMounted(() => {
-    Renderer.addMessageHandler("checkImage", ["main", "info"] satisfies WindowType[], (sync) => {
-      const exits = images.findIndex((image) => image.url === sync.url);
+    loading.value = true;
+    AppRenderer.Message.listen("imageCheckerBus", "all", (props) => {
+      const { url, alt } = props.data;
+      const exits = images.findIndex((image) => image.url === url);
       if (exits === -1) {
-        images.push({
-          url: sync.url || undefined,
-          alt: sync.alt || undefined
-        });
+        images.push({ url, alt });
       }
     });
-    requestLoaded();
   });
 </script>
 
