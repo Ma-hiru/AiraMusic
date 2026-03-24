@@ -1,4 +1,4 @@
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { app } from "electron";
 import { isDev } from "./dev";
 
@@ -11,7 +11,7 @@ export function appResourcePathJoin(...paths: string[]) {
 }
 
 export function appExecPathJoin(...paths: string[]) {
-  return join(process.execPath, ...paths);
+  return join(dirname(process.execPath), ...paths);
 }
 
 export const preloadPath = isDev()
