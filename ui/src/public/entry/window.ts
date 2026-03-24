@@ -137,7 +137,7 @@ export default class AppWindow extends Listenable {
       this.hide();
       AppInstance.player.audio.pause();
       AppInstance.dispose().then(() => {
-        setTimeout(() => AppRenderer.Event.normal.closeInternalWindow("main"), 1000);
+        setTimeout(() => AppRenderer.Event.normal.closeInternalWindow("main"), 2500);
       });
     } else {
       AppRenderer.Event.normal.closeInternalWindow(this.type);

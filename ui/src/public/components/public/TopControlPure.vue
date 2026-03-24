@@ -4,25 +4,25 @@
       v-if="isDev"
       :color="props.color"
       class="size-5 control-button"
-      @click="Renderer.event.openDevTools" />
+      @click="currentWindow.devTools()" />
     <Minus
       v-if="props.mini"
       :color="props.color"
       class="size-5 control-button"
-      @click="Renderer.event.minimize" />
+      @click="currentWindow.minimize()" />
     <Square
       v-if="props.maximizable"
-      v-show="isMax"
+      v-show="currentWindow.isMax"
       :color="props.color"
       class="size-5 control-button"
-      @click="maximize" />
+      @click="currentWindow.unmaximize()" />
     <SquareMinus
       v-if="props.maximizable"
-      v-show="!isMax"
+      v-show="!currentWindow.isMax"
       :color="props.color"
       class="size-5 control-button"
-      @click="maximize" />
-    <X :color="props.color" class="size-5 control-button" @click="close" />
+      @click="currentWindow.maximize()" />
+    <X :color="props.color" class="size-5 control-button" @click="currentWindow.close()" />
   </NoDrag>
 </template>
 
@@ -30,11 +30,10 @@
   import NoDrag from "@mahiru/ui/public/components/drag/NoDrag.vue";
   import { Chromium, Minus, Square, SquareMinus, X } from "lucide-vue-next";
   import { isDev } from "@mahiru/ui/public/utils/dev";
-  import { Renderer } from "@mahiru/ui/public/entry/renderer";
-  import { runCloseTask } from "@mahiru/ui/public/utils/close";
-  import { onMounted, ref } from "vue";
+  import useListenableHookVue from "@mahiru/ui/public/hooks/useListenableHookVue";
+  import AppWindow from "@mahiru/ui/public/entry/window";
 
-  const isMax = ref(false);
+  const currentWindow = useListenableHookVue(AppWindow.current);
 
   const props = withDefaults(
     defineProps<{
@@ -46,27 +45,6 @@
       mini: true
     }
   );
-
-  function close() {
-    Renderer.event.hidden();
-    runCloseTask();
-  }
-
-  function maximize() {
-    if (isMax.value) {
-      Renderer.event.unmaximize();
-      isMax.value = false;
-    } else {
-      Renderer.event.maximize();
-      isMax.value = true;
-    }
-  }
-
-  onMounted(() => {
-    Renderer.invoke.isMaximized().then((max) => {
-      isMax.value = max;
-    });
-  });
 </script>
 
 <style scoped lang="scss">

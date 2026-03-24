@@ -29,7 +29,7 @@ export default defineConfig(({ mode }) => {
           ]
         }
       }),
-      // vue()
+      vue()
     ],
     build: {
       outDir: join(__dirname, "dist"),
@@ -42,7 +42,7 @@ export default defineConfig(({ mode }) => {
           // mini: join(__dirname, "mini.html"),
           // lyric: join(__dirname, "lyric.html"),
           // tray: join(__dirname, "tray.html"),
-          // image: join(__dirname, "image.html")
+          image: join(__dirname, "image.html")
         }
       }
     },
