@@ -2,7 +2,7 @@ import { app } from "electron";
 import { APP } from ".";
 import { Log } from "../utils/log";
 import { isCreateTray } from "../utils/platform";
-import { CreateMainWindow, WindowManager, registerTray } from "../window";
+import { CreateMainWindow, registerTray, WindowManager } from "../window";
 
 export function registerAppEvents(instance: APP) {
   app.on("ready", () => {
@@ -18,5 +18,5 @@ export function registerAppEvents(instance: APP) {
 function handleExternalWindowEvents(instance: APP) {
   const mainWindow = WindowManager.get("main");
   if (!mainWindow) return;
-  mainWindow.on("close", instance.exit.bind(instance));
+  mainWindow.on("closed", instance.exit.bind(instance));
 }

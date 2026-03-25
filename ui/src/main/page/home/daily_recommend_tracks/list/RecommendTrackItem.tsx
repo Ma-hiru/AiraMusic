@@ -1,11 +1,11 @@
 import { FC, memo, useCallback, useMemo } from "react";
 import { AudioLines, CirclePlay } from "lucide-react";
-import { NeteaseImageSize } from "@mahiru/ui/public/enum";
 
 import NeteaseImage from "@mahiru/ui/public/components/image/NeteaseImage";
 import AppInstance from "@mahiru/ui/main/entry/instance";
 import NeteaseSource from "@mahiru/ui/public/entry/source";
 import { NeteaseNetworkImage, NeteaseTrackRecord } from "@mahiru/ui/public/models/netease";
+import ImageConstants from "@mahiru/ui/main/constants/image";
 
 interface RecommendTrackItemProps {
   song: NeteaseAPI.DailyRecommendTracksDailySong;
@@ -24,7 +24,9 @@ const RecommendTrackItem: FC<RecommendTrackItemProps> = ({
   const isPlaying = player.current.track?.id === song.id;
   const image = useMemo(
     () =>
-      NeteaseNetworkImage.fromURL(song.al.picUrl).setSize(NeteaseImageSize.md).setAlt(song.al.name),
+      NeteaseNetworkImage.fromURL(song.al.picUrl)
+        .setSize(ImageConstants.HomePageTrackCoverSize)
+        .setAlt(song.al.name),
     [song.al.name, song.al.picUrl]
   );
 

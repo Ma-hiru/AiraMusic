@@ -389,6 +389,7 @@
     justify-content: center;
     align-items: center;
     overflow: hidden;
+    user-select: none;
 
     &.active {
       top: 0;

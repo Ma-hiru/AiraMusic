@@ -1,11 +1,11 @@
 import { Log } from "@mahiru/ui/public/utils/dev";
 import AppRenderer from "@mahiru/ui/public/entry/renderer";
 
-export class NetClass {
-  completed: number[] = [];
-  cursor = 0;
+export default class AppNet {
+  static completed: number[] = [];
+  static cursor = 0;
 
-  constructor() {
+  static init() {
     const observer = new PerformanceObserver((list) => {
       const now = performance.now();
       list.getEntries().forEach(() => {
@@ -22,7 +22,7 @@ export class NetClass {
     });
   }
 
-  getStatus() {
+  static getStatus() {
     const now = performance.now();
     while (this.cursor < this.completed.length && this.completed[this.cursor]! < now - 1000) {
       this.cursor++;
@@ -36,15 +36,15 @@ export class NetClass {
     };
   }
 
-  async checkOnline(): Promise<NetworkStatus> {
+  static async checkOnline(): Promise<NetworkStatus> {
     if (!window.navigator.onLine) {
       return "offline";
     }
 
-    return await AppRenderer.invoke.checkOnlineStatus();
+    return await AppRenderer.Event.invoke.checkOnlineStatus();
   }
 
-  addNetworkChangeListener(callback: (online: boolean) => void) {
+  static addNetworkChangeListener(callback: (online: boolean) => void) {
     const onlineHandler = () => callback(true);
     const offlineHandler = () => callback(false);
     window.addEventListener("online", onlineHandler);
@@ -56,4 +56,6 @@ export class NetClass {
   }
 }
 
-export const Net = new NetClass();
+window.requestAnimationFrame(() => {
+  AppNet.init();
+});

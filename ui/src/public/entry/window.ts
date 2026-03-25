@@ -1,7 +1,7 @@
-import AppRenderer from "@mahiru/ui/public/entry/renderer";
 import { Listenable } from "@mahiru/ui/public/models/Listenable";
-import { currentWindowType } from "@mahiru/ui/public/utils/dev";
-import AppInstance from "@mahiru/ui/main/entry/instance";
+import AppRenderer from "@mahiru/ui/public/entry/renderer";
+
+export const currentWindowType = await AppRenderer.Event.invoke.currentWindowType();
 
 export default class AppWindow extends Listenable {
   readonly type: WindowType;
@@ -88,6 +88,25 @@ export default class AppWindow extends Listenable {
     });
   }
 
+  closeThen(cb: NormalFunc) {
+    if (!this.opened) cb();
+    const listener = () => {
+      !this.opened && cb();
+      !this.opened && this.removeListener(listener);
+    };
+    this.addListener(listener);
+    this.close();
+  }
+
+  onCloseThen(cb: NormalFunc) {
+    if (!this.opened) cb();
+    const listener = () => {
+      !this.opened && cb();
+      !this.opened && this.removeListener(listener);
+    };
+    this.addListener(listener);
+  }
+
   listen<T extends keyof MessageTypeMap>(
     event: T,
     callback: NormalFunc<[data: MessageDataReceive<T>["data"]]>,
@@ -97,6 +116,10 @@ export default class AppWindow extends Listenable {
     }
   ): NormalFunc {
     return AppRenderer.Message.listen(event, this.type, callback, options);
+  }
+
+  remove(id: string) {
+    return AppRenderer.Message.remove(id);
   }
 
   listenAll<T extends keyof MessageTypeMap>(
@@ -133,15 +156,7 @@ export default class AppWindow extends Listenable {
   }
 
   close() {
-    if (this.type === "main") {
-      this.hide();
-      AppInstance.player.audio.pause();
-      AppInstance.dispose().then(() => {
-        setTimeout(() => AppRenderer.Event.normal.closeInternalWindow("main"), 2500);
-      });
-    } else {
-      AppRenderer.Event.normal.closeInternalWindow(this.type);
-    }
+    AppRenderer.Event.normal.closeInternalWindow(this.type);
   }
 
   focus() {
@@ -192,6 +207,10 @@ export default class AppWindow extends Listenable {
 
   get isMainWindow() {
     return this.type === "main";
+  }
+
+  [Symbol.toPrimitive]() {
+    return this.type;
   }
 
   [Symbol.dispose]() {

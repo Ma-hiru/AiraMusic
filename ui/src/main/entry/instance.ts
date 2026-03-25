@@ -1,10 +1,8 @@
 import { userStoreSnapshot } from "@mahiru/ui/public/store/user";
-import { Log } from "@mahiru/ui/public/utils/dev";
-import { NeteaseUser } from "@mahiru/ui/public/models/netease";
 import { CacheStore } from "@mahiru/ui/public/store/cache";
 import AppPlayer from "@mahiru/ui/public/models/player/AppPlayer";
-import NeteaseSource from "@mahiru/ui/public/entry/source";
 import useListenableHook from "@mahiru/ui/public/hooks/useListenableHook";
+import AppAuth from "@mahiru/ui/public/entry/auth";
 
 export default class AppInstance {
   //region inner
@@ -48,32 +46,7 @@ export default class AppInstance {
   }
 
   private static setupUser() {
-    if (!NeteaseUser.isLoggedIn) return this;
-
-    const refresh = (user: Optional<NeteaseUser>) => {
-      if (user) {
-        this.userStore.updateUser(user);
-      } else {
-        Log.error("fetch user info failed, maybe cookies expired");
-        void NeteaseSource.User.logout();
-      }
-    };
-
-    const user = this.userStore._user;
-    if (user) {
-      NeteaseSource.User.refresh(user.profile)
-        .then(refresh)
-        .catch((err) => {
-          Log.error(`fetch user info failed: ${err}`);
-        });
-    } else {
-      NeteaseSource.User.fromCookies()
-        .then(refresh)
-        .catch((err) => {
-          Log.error(`fetch user info failed: ${err}`);
-        });
-    }
-
+    void AppAuth.setup();
     return this;
   }
   //endregion

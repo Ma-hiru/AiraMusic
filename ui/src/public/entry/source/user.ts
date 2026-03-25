@@ -79,7 +79,7 @@ export default class _NeteaseUserSource {
     }
   }
 
-  static async fromCookies(cookies?: string) {
+  static async fromCookies(cookies?: Optional<string>) {
     cookies && NeteaseCookie.set(cookies);
     if (NeteaseCookie.isLoggedIn()) {
       const { profile } = await NCM_API.User.account();

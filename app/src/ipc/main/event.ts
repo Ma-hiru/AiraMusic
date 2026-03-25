@@ -9,6 +9,7 @@ import {
   WindowManager
 } from "../../window";
 import { CreateExternalWindow } from "../../window/external";
+import { Log } from "../../utils/log";
 
 const mainEventAPI = {
   openInternalWindow: (e, type) => {
@@ -31,6 +32,7 @@ const mainEventAPI = {
   },
   focusInternalWindow: (e, type) => {
     const win = type ? WindowManager.get(type) : BrowserWindow.fromWebContents(e.sender);
+    Log.debug("focusInternalWindow", type, "win found:", !!win);
     win?.focus();
   },
   openExternalLink: (e, { title, url }) => {
@@ -42,34 +44,48 @@ const mainEventAPI = {
   },
   openInternalDevTools: (e, type) => {
     const win = type ? WindowManager.get(type) : BrowserWindow.fromWebContents(e.sender);
+    Log.debug("openInternalDevTools", type, "win found:", !!win);
     win?.webContents.openDevTools();
   },
   showInternalWindow: (e, type) => {
     const win = type ? WindowManager.get(type) : BrowserWindow.fromWebContents(e.sender);
+    Log.debug("showInternalWindow", type, "win found:", !!win);
     win && !win.isVisible() && win.show();
   },
   closeInternalWindow: (e, type) => {
     const win = type ? WindowManager.get(type) : BrowserWindow.fromWebContents(e.sender);
-    win?.close();
+    Log.debug("closeInternalWindow", type, "win found:", !!win);
+    if (!win || win.isDestroyed()) return;
+    try {
+      if (type && type !== "main") win.destroy();
+      else win.close();
+    } catch (err) {
+      Log.error("closeInternalWindow", type, err);
+    }
   },
   hiddenInternalWindow: (e, type) => {
     const win = type ? WindowManager.get(type) : BrowserWindow.fromWebContents(e.sender);
+    Log.debug("hiddenInternalWindow", type, "win found:", !!win);
     win?.isVisible() && win.hide();
   },
   minimizeInternalWindow: (e, type) => {
     const win = type ? WindowManager.get(type) : BrowserWindow.fromWebContents(e.sender);
+    Log.debug("minimizeInternalWindow", type, "win found:", !!win);
     win && !win.isMinimized() && win.minimize();
   },
   unminimizeInternalWindow: (e, type) => {
     const win = type ? WindowManager.get(type) : BrowserWindow.fromWebContents(e.sender);
+    Log.debug("unminimizeInternalWindow", type, "win found:", !!win);
     win?.isMinimized() && win.restore();
   },
   maximizeInternalWindow: (e, type) => {
     const win = type ? WindowManager.get(type) : BrowserWindow.fromWebContents(e.sender);
+    Log.debug("maximizeInternalWindow", type, "win found:", !!win);
     win && !win.isMaximized() && win.maximize();
   },
   unmaximizeInternalWindow: (e, type) => {
     const win = type ? WindowManager.get(type) : BrowserWindow.fromWebContents(e.sender);
+    Log.debug("unmaximizeInternalWindow", type, "win found:", !!win);
     win?.isMaximized() && win.unmaximize();
   },
   resizeInternalWindow: (e, props) => {

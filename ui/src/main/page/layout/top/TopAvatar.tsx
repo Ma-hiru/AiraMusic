@@ -2,13 +2,17 @@ import { FC, memo, useMemo } from "react";
 import { NeteaseNetworkImage } from "@mahiru/ui/public/models/netease/NeteaseImage";
 import NeteaseImage from "@mahiru/ui/public/components/image/NeteaseImage";
 import { NeteaseUser } from "@mahiru/ui/public/models/netease";
+import ImageConstants from "@mahiru/ui/main/constants/image";
 
 interface TopAvatarProps {
   user: Nullable<NeteaseUser>;
 }
 
 const TopAvatar: FC<TopAvatarProps> = ({ user }) => {
-  const avatar = useMemo(() => NeteaseNetworkImage.fromUserAvatar(user), [user]);
+  const avatar = useMemo(
+    () => NeteaseNetworkImage.fromUserAvatar(user)?.setSize(ImageConstants.TopMiniAvatarSize),
+    [user]
+  );
   return (
     avatar && (
       <NeteaseImage

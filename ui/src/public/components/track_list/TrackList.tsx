@@ -21,6 +21,7 @@ import { useHeart } from "@mahiru/ui/public/hooks/useHeart";
 import { useThemeColor } from "@mahiru/ui/public/hooks/useThemeColor";
 import { useUser } from "@mahiru/ui/public/store/user";
 import { PlaylistSource } from "@mahiru/ui/main/constants";
+import { NeteaseImageSize } from "@mahiru/ui/public/enum";
 
 export interface TrackListRef {
   containerRef: RefObject<Nullable<HTMLDivElement>>;
@@ -31,6 +32,7 @@ export interface TrackListProps {
   id: Optional<number>;
   tracks: NeteaseTrackRecord[] | NeteaseHistory[];
   type: PlaylistSource;
+  trackCoverSize: NeteaseImageSize;
   loading?: boolean;
   paddingBottom?: number | string;
   activeID?: number;
@@ -61,7 +63,8 @@ const TrackList: ForwardRefRenderFunction<TrackListRef, TrackListProps> = (
     className,
     onContext,
     onClick,
-    onRangeUpdate
+    onRangeUpdate,
+    trackCoverSize
   },
   ref
 ) => {
@@ -124,6 +127,7 @@ const TrackList: ForwardRefRenderFunction<TrackListRef, TrackListProps> = (
             activeID,
             mainColor,
             fastLocation,
+            trackCoverSize,
             textColor: textColorOnMain,
             onLikeChange: (track) => likeChange(track.track),
             checkLiked: isTrackLiked
@@ -144,6 +148,7 @@ const TrackList: ForwardRefRenderFunction<TrackListRef, TrackListProps> = (
 type ExtraData = Omit<TrackItemProps, "index" | "track" | "total" | "active" | "liked"> & {
   activeID?: number;
   checkLiked: NormalFunc<[track?: NeteaseTrack], boolean>;
+  trackCoverSize: NeteaseImageSize;
 };
 
 const RowComponent: VirtualListRow<NeteaseTrackRecord, ExtraData> = ({ index, items, extra }) => {
@@ -162,6 +167,7 @@ const RowComponent: VirtualListRow<NeteaseTrackRecord, ExtraData> = ({ index, it
       liked={extra.checkLiked(items[index]?.track)}
       type={extra.type}
       user={extra.user}
+      trackCoverSize={extra.trackCoverSize}
     />
   );
 };

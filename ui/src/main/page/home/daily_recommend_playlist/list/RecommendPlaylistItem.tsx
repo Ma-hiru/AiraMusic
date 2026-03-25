@@ -6,6 +6,7 @@ import { NeteaseImageSize } from "@mahiru/ui/public/enum";
 import NeteaseImage from "@mahiru/ui/public/components/image/NeteaseImage";
 import { RoutePathConstants } from "@mahiru/ui/main/constants";
 import { NeteaseNetworkImage, NeteasePlaylist } from "@mahiru/ui/public/models/netease";
+import ImageConstants from "@mahiru/ui/main/constants/image";
 
 interface RecommendTrackItemProps {
   playlist: NeteaseAPI.DailyRecommendPlaylistResult;
@@ -22,7 +23,7 @@ const RecommendPlaylistItem: FC<RecommendTrackItemProps> = ({
   const image = useMemo(
     () =>
       NeteaseNetworkImage.fromURL(playlist.picUrl)
-        .setSize(NeteaseImageSize.md)
+        .setSize(ImageConstants.HomePagePlaylistCoverSize)
         .setAlt(playlist.name),
     [playlist.picUrl, playlist.name]
   );

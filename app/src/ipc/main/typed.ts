@@ -50,7 +50,7 @@ export class AppMessageIPC {
       const handler = this.handlers.get(props.type);
       return handler?.forEach((cb) => {
         try {
-          cb(data);
+          cb(props.data);
         } catch (err) {
           Log.error({
             raw: err,
@@ -86,12 +86,20 @@ export class AppMessageIPC {
       receiverWindow = receiver;
     }
 
-    // 这里不是Send而是Receive，因为是从另一个窗口发过来的消息，接收方是另一个窗口，要转换成接收格式
-    receiverWindow.webContents.send("message", {
-      from: senderID,
-      type,
-      data
-    } satisfies MessageDataReceive<T>);
+    if (receiverWindow.isDestroyed() || receiverWindow.webContents.isDestroyed()) {
+      Log.info("AppMessageIPC", "receiver window is destroyed, skip sending message, type: ", type);
+      return;
+    }
+
+    try {
+      receiverWindow.webContents.send("message", {
+        from: senderID,
+        type,
+        data
+      } satisfies MessageDataReceive<T>);
+    } catch (err) {
+      Log.error("AppMessageIPC", "send message err, type: ", type, "err: ", err);
+    }
   }
 
   static sendAll<T extends keyof MessageTypeMap>(props: {
@@ -99,15 +107,17 @@ export class AppMessageIPC {
     type: T;
     data: MessageDataReceive<T>["data"];
   }) {
-    WindowManager.getAll().forEach(([, receiver]) => {
+    queueMicrotask(() => {
+      WindowManager.getAll().forEach(([, receiver]) => {
+        this.send({
+          ...props,
+          receiver
+        });
+      });
       this.send({
         ...props,
-        receiver
+        receiver: "process"
       });
-    });
-    this.send({
-      ...props,
-      receiver: "process"
     });
   }
 }

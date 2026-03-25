@@ -1,6 +1,5 @@
 import { FC, memo, useMemo } from "react";
 import { SquarePen } from "lucide-react";
-import { NeteaseImageSize } from "@mahiru/ui/public/enum";
 import {
   NeteaseNetworkImage,
   NeteasePlaylist,
@@ -11,6 +10,7 @@ import { PlaylistSource } from "@mahiru/ui/main/constants";
 
 import Search from "@mahiru/ui/public/components/public/Search";
 import NeteaseImage from "@mahiru/ui/public/components/image/NeteaseImage";
+import ImageConstants from "@mahiru/ui/main/constants/image";
 
 interface TopRightProps {
   summary: Nullable<NeteasePlaylist>;
@@ -23,10 +23,9 @@ const TopRight: FC<TopRightProps> = ({ summary, searchTracks, type, setTying }) 
   const user = useUser();
 
   const avatar = useMemo(() => {
-    if (!summary) return;
-    return NeteaseNetworkImage.fromUserAvatar(summary.creator)
-      ?.setSize(NeteaseImageSize.sm)
-      .setAlt(summary.creator.nickname);
+    return NeteaseNetworkImage.fromUserAvatar(summary?.creator)?.setSize(
+      ImageConstants.PlaylistPageCreatorAvatarSize
+    );
   }, [summary]);
 
   return (

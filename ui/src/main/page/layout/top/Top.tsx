@@ -1,4 +1,4 @@
-import { FC, memo, useMemo } from "react";
+import { FC, memo } from "react";
 import { cx } from "@emotion/css";
 import { useLayoutStore } from "@mahiru/ui/main/store/layout";
 import Drag from "@mahiru/ui/public/components/drag/Drag";
@@ -6,16 +6,16 @@ import TopControl from "./TopControl";
 import TopAvatar from "./TopAvatar";
 import TopDivider from "./TopDivider";
 import TopSearch from "./TopSearch";
-import { useUserStore } from "@mahiru/ui/public/store/user";
-import { NeteaseUser } from "@mahiru/ui/public/models/netease";
+import { useUser } from "@mahiru/ui/public/store/user";
 import TopLeft from "@mahiru/ui/main/page/layout/top/TopLeft";
-import AppRenderer from "@mahiru/ui/public/entry/renderer";
-import NeteaseSource from "@mahiru/ui/public/entry/source";
+import useListenableHook from "@mahiru/ui/public/hooks/useListenableHook";
+import AppWindow from "@mahiru/ui/public/entry/window";
+import AppAuth from "@mahiru/ui/public/entry/auth";
 
 const Top: FC<{ className?: string }> = ({ className }) => {
   const { layout, updateLayout } = useLayoutStore();
-  const { _user, updateUser } = useUserStore();
-  const user = useMemo(() => NeteaseUser.fromObject(_user), [_user]);
+  const user = useUser();
+  const loginWindow = useListenableHook(AppWindow.from("login"));
   return (
     <Drag
       className={cx(
@@ -42,15 +42,9 @@ const Top: FC<{ className?: string }> = ({ className }) => {
               return updateLayout(layout.copy().setPlayModal(false));
             }
             if (!user?.isLoggedIn) {
-              AppRenderer.event.openInternalWindow("login");
-              AppRenderer.addMessageHandler(
-                "login",
-                "login",
-                (cookies) => {
-                  NeteaseSource.User.fromCookies(cookies).then(updateUser);
-                },
-                { once: true }
-              );
+              loginWindow.openThen(() => {
+                loginWindow.listen("login", AppAuth.login, { once: true, id: "login" });
+              });
             }
           }}
         />

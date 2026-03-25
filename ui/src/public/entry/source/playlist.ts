@@ -1,8 +1,14 @@
 import NCM_API from "@mahiru/ui/public/api";
 import NeteaseTrackSource from "@mahiru/ui/public/entry/source/track";
-import { NeteasePlaylist, NeteasePlaylistSummary } from "@mahiru/ui/public/models/netease";
+import {
+  NeteaseNetworkImage,
+  NeteasePlaylist,
+  NeteasePlaylistSummary
+} from "@mahiru/ui/public/models/netease";
 import { CacheStore } from "@mahiru/ui/public/store/cache";
 import LRUMap from "@mahiru/ui/public/models/LRU";
+import _NeteaseImageSource from "@mahiru/ui/public/entry/source/image";
+import ImageConstants from "@mahiru/ui/main/constants/image";
 
 export default class _NeteasePlaylistSource {
   //region cache
@@ -21,7 +27,7 @@ export default class _NeteasePlaylistSource {
     );
   }
 
-  private static memoryCache = new LRUMap<number, NeteasePlaylist>(10);
+  private static memoryCache = new LRUMap<number, NeteasePlaylist>(10, 1000 * 60 * 60);
   //endregion
   /** 检查歌单tracks字段是否完整，不完整再额外请求 */
   private static async requestFullTracks(
@@ -36,7 +42,14 @@ export default class _NeteasePlaylistSource {
 
     const cache = await _NeteasePlaylistSource.getCache(playlist.id);
     if (cache?.playlist.updateTime === playlist.updateTime) {
-      return cache;
+      response.playlist.tracks = cache.playlist.tracks;
+      response.privileges = cache.privileges;
+
+      const cacheCover = NeteaseNetworkImage.fromPlaylistCover(response.playlist);
+      _NeteaseImageSource.remove(cacheCover.setSize(ImageConstants.PlaylistPageCoverSize));
+      _NeteaseImageSource.remove(cacheCover.setSize(ImageConstants.NavPlaylistCoverSize));
+
+      return response;
     }
 
     const entries = await NeteaseTrackSource.fromIDsRaw(

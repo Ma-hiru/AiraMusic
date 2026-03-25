@@ -1,10 +1,10 @@
 import { FC, memo, ReactEventHandler, useCallback, useMemo } from "react";
 import { Headphones } from "lucide-react";
 import { useLayoutStore } from "@mahiru/ui/main/store/layout";
-import { NeteaseImageSize } from "@mahiru/ui/public/enum";
 
 import NeteaseImage from "@mahiru/ui/public/components/image/NeteaseImage";
 import { NeteaseNetworkImage, NeteasePlaylist } from "@mahiru/ui/public/models/netease";
+import ImageConstants from "@mahiru/ui/main/constants/image";
 
 interface TopCoverProps {
   summary: Nullable<NeteasePlaylist>;
@@ -18,12 +18,11 @@ const TopCover: FC<TopCoverProps> = ({ summary }) => {
     },
     [theme, updateTheme]
   );
-  const image = useMemo(() => {
-    if (!summary) return null;
-    return NeteaseNetworkImage.fromPlaylistCover(summary)
-      .setSize(NeteaseImageSize.md)
-      .setAlt(summary.name);
-  }, [summary]);
+  const image = useMemo(
+    () =>
+      NeteaseNetworkImage.fromPlaylistCover(summary)?.setSize(ImageConstants.PlaylistPageCoverSize),
+    [summary]
+  );
 
   return (
     <div className="size-44 relative select-none">

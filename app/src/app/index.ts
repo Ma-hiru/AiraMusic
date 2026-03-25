@@ -8,12 +8,14 @@ import { registerAppEvents } from "./events";
 import { registerSchemes } from "./protocol";
 import { restartStoreServer, startStoreServer, stopStoreServer } from "../services/store";
 import { createProxyServer } from "../services/proxy";
-import { registerIpcMain } from "../ipc/main";
+import { registerIpcMain } from "./ipc";
 import { createNeteaseMusicApiServer } from "../services/ncm";
 import { printDevInfo, storeKeyAccessToken } from "../utils/dev";
 import { EqError } from "../utils/err";
 import { Store } from "./store";
 import { storeServerBinaryPath } from "../utils/path";
+
+export { Store } from "./store";
 
 export class APP {
   willQuitAPP!: boolean;

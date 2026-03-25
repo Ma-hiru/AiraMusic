@@ -7,6 +7,7 @@ import NeteaseImage from "@mahiru/ui/public/components/image/NeteaseImage";
 
 interface ListItemCoverProps {
   track: NeteaseTrackRecord;
+  trackCoverSize: NeteaseImageSize;
   isMainColorDark: boolean;
   disabled: boolean;
   onClick?: NormalFunc;
@@ -18,14 +19,15 @@ const TrackItemCover: FC<ListItemCoverProps> = ({
   onClick,
   disabled,
   isMainColorDark,
-  fastLocation = false
+  fastLocation = false,
+  trackCoverSize
 }) => {
   const image = useMemo(
     () =>
       NeteaseNetworkImage.fromTrackCover(track.track)
-        .setSize(NeteaseImageSize.xs)
+        .setSize(trackCoverSize)
         .setAlt(track.track.name),
-    [track.track]
+    [track.track, trackCoverSize]
   );
   return (
     <NeteaseImage

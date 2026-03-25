@@ -1,6 +1,5 @@
 import { NeteaseImageSize } from "@mahiru/ui/public/enum";
 import {
-  NeteasePlaylistCreatorModel,
   NeteasePlaylistSummary,
   NeteaseTrack,
   NeteaseTrackRecord,
@@ -75,17 +74,18 @@ export class NeteaseNetworkImage {
     }
   }
 
-  static fromPlaylistCover(
-    playlist:
-      | NeteaseAPI.NeteasePlaylistDetail
-      | NeteaseAPI.NeteasePlaylistSummary
-      | NeteasePlaylistSummary
-  ) {
+  static fromPlaylistCover<
+    T extends Optional<
+      NeteaseAPI.NeteasePlaylistDetail | NeteaseAPI.NeteasePlaylistSummary | NeteasePlaylistSummary
+    >
+  >(playlist: T): T extends Falsy ? null : NeteaseNetworkImage {
+    if (!playlist) return null as T extends Falsy ? null : NeteaseNetworkImage;
     return new NeteaseNetworkImage({
       url: playlist.coverImgUrl,
       sourceID: playlist.id,
-      sourceName: "playlist"
-    });
+      sourceName: "playlist",
+      alt: playlist.name || playlist.coverImgUrl
+    }) as T extends Falsy ? null : NeteaseNetworkImage;
   }
 
   static fromURL(url: string) {
@@ -96,22 +96,24 @@ export class NeteaseNetworkImage {
     });
   }
 
-  static fromUserAvatar(user: Optional<NeteaseUserModel | NeteasePlaylistCreatorModel>) {
-    if (!user) return null;
+  static fromUserAvatar<T extends Optional<NeteaseUserModel | NeteasePlaylistCreatorModel>>(
+    user: T
+  ): T extends Falsy ? null : NeteaseNetworkImage {
+    if (!user) return null as T extends Falsy ? null : NeteaseNetworkImage;
     if ("profile" in user) {
       return new NeteaseNetworkImage({
         url: user.profile.avatarUrl,
         alt: user.profile.nickname,
         sourceName: "other",
         sourceID: ""
-      });
+      }) as T extends Falsy ? null : NeteaseNetworkImage;
     } else {
       return new NeteaseNetworkImage({
         url: user.avatarUrl,
         alt: user.nickname,
         sourceName: "other",
         sourceID: ""
-      });
+      }) as T extends Falsy ? null : NeteaseNetworkImage;
     }
   }
 }

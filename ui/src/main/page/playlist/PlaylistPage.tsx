@@ -33,6 +33,7 @@ import { useContextMenu } from "@mahiru/ui/public/hooks/useContextMenu";
 import { TrackContextMenuOnClick } from "@mahiru/ui/public/components/menu/TrackMenu";
 import { getLayoutStoreSnapshot, useLayoutStore } from "@mahiru/ui/main/store/layout";
 import { cx } from "@emotion/css";
+import ImageConstants from "@mahiru/ui/main/constants/image";
 
 const PlaylistPage: FC<object> = () => {
   const user = useUser();
@@ -271,6 +272,7 @@ const PlaylistPage: FC<object> = () => {
           onClick={onPlay}
           onContext={onContextMenu}
           onRangeUpdate={onRangeUpdate}
+          trackCoverSize={ImageConstants.PlaylistPageTrackCoverSize}
         />
       </div>
     </div>

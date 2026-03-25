@@ -10,11 +10,11 @@ import {
 import AppUI from "@mahiru/ui/public/entry/ui";
 import { LayoutConfig } from "@mahiru/ui/main/store/layout/config";
 import NeteaseImage from "@mahiru/ui/public/components/image/NeteaseImage";
-import { NeteaseImageSize } from "@mahiru/ui/public/enum";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { RoutePathConstants } from "@mahiru/ui/main/constants";
 import { cx } from "@emotion/css";
 import { getLayoutStoreSnapshot } from "@mahiru/ui/main/store/layout";
+import ImageConstants from "@mahiru/ui/main/constants/image";
 
 interface NavPlaylistProps {
   user: Nullable<NeteaseUser>;
@@ -111,9 +111,9 @@ const RowComponent: VirtualListRow<
           <NeteaseImage
             cache
             pause={extra.fastLocation}
-            image={NeteaseNetworkImage.fromPlaylistCover(data)
-              .setSize(NeteaseImageSize.xs)
-              .setAlt(data.name)}
+            image={NeteaseNetworkImage.fromPlaylistCover(data).setSize(
+              ImageConstants.NavPlaylistCoverSize
+            )}
             className="w-[60%] rounded-md"
           />
         </div>

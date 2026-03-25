@@ -1,6 +1,7 @@
 import { FC, MouseEvent as ReactMouseEvent, useCallback, useRef } from "react";
 import { cx } from "@emotion/css";
-import { Renderer } from "@mahiru/ui/public/entry/renderer";
+import useListenableHook from "@mahiru/ui/public/hooks/useListenableHook";
+import AppWindow from "@mahiru/ui/public/entry/window";
 
 interface WindowResizeProps {
   disable: boolean;
@@ -22,21 +23,25 @@ export const WindowResize: FC<WindowResizeProps> = ({
   const resizeSession = useRef<Nullable<ResizeSession>>(null);
   const resizeRaf = useRef<Nullable<number>>(null);
   const pendingBounds = useRef<WindowBoundsPatch>({});
+  const currentWindow = useListenableHook(AppWindow.current);
 
   // 批量调度窗口尺寸变更
-  const dispatchBounds = useCallback((patch: WindowBoundsPatch) => {
-    // 合并当前 patch 到 pendingBounds：
-    // 如果在一帧内多次 mousemove，会把最新的 width/height/x/y 合并，保证最终提交的是最近一次的值（覆盖优先）
-    pendingBounds.current = { ...pendingBounds.current, ...patch };
-    if (resizeRaf.current !== null) return;
-    // 如果已经安排过一次 requestAnimationFrame 去提交更新，就不用再安排新的了
-    resizeRaf.current = requestAnimationFrame(() => {
-      resizeRaf.current = null;
-      if (!pendingBounds.current || Object.keys(pendingBounds.current).length === 0) return;
-      Renderer.event.resizeWindow(pendingBounds.current);
-      pendingBounds.current = {};
-    });
-  }, []);
+  const dispatchBounds = useCallback(
+    (patch: WindowBoundsPatch) => {
+      // 合并当前 patch 到 pendingBounds：
+      // 如果在一帧内多次 mousemove，会把最新的 width/height/x/y 合并，保证最终提交的是最近一次的值（覆盖优先）
+      pendingBounds.current = { ...pendingBounds.current, ...patch };
+      if (resizeRaf.current !== null) return;
+      // 如果已经安排过一次 requestAnimationFrame 去提交更新，就不用再安排新的了
+      resizeRaf.current = requestAnimationFrame(() => {
+        resizeRaf.current = null;
+        if (!pendingBounds.current || Object.keys(pendingBounds.current).length === 0) return;
+        currentWindow.resize(pendingBounds.current);
+        pendingBounds.current = {};
+      });
+    },
+    [currentWindow]
+  );
 
   // 处理鼠标移动以调整窗口大小
   const handleResizeMove = useCallback(

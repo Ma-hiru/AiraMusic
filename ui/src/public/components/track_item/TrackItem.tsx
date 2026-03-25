@@ -10,6 +10,7 @@ import ListItemIndex from "./TrackItemIndex";
 import ListItemCover from "./TrackItemCover";
 import ListItemName from "./TrackItemName";
 import ListItemInfo from "./TrackItemInfo";
+import { NeteaseImageSize } from "@mahiru/ui/public/enum";
 
 export interface TrackItemProps {
   textColor: ColorInstance;
@@ -33,6 +34,7 @@ export interface TrackItemProps {
   onLikeChange: Optional<NormalFunc<[track: NeteaseTrackRecord | NeteaseHistory, index: number]>>;
   type: PlaylistSource;
   user: Optional<NeteaseUser>;
+  trackCoverSize: NeteaseImageSize;
 }
 
 const TrackItem: FC<TrackItemProps> = ({
@@ -48,7 +50,8 @@ const TrackItem: FC<TrackItemProps> = ({
   onContext,
   onLikeChange,
   type,
-  user
+  user,
+  trackCoverSize
 }) => {
   const { requestToast } = useToast();
   const { playable, reason } = track.track.playable(user);
@@ -90,6 +93,7 @@ const TrackItem: FC<TrackItemProps> = ({
         disabled={!playable}
         isMainColorDark={mainColor.isDark()}
         fastLocation={fastLocation}
+        trackCoverSize={trackCoverSize}
       />
       {/*名称*/}
       <ListItemName

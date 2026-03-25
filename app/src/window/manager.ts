@@ -75,7 +75,10 @@ export class WindowManager {
   }
 
   static get(id: WindowID) {
-    return this.BrowserWindowList.get(id);
+    const win = this.BrowserWindowList.get(id);
+    if (!win) return null;
+    if (win.isDestroyed() || win.webContents.isDestroyed()) return null;
+    return win;
   }
 
   static getId(window: Optional<BrowserWindow>) {
@@ -169,11 +172,15 @@ export class WindowManager {
     if (!type) return;
     const sendBusMessage = (action: MessageTypeMap["windowBus"]["action"]) => {
       Log.debug("windowBus", `${type} - ${action}`);
-      AppMessageIPC.sendAll({
-        type: "windowBus",
-        sender: "process",
-        data: { type, action }
-      });
+      try {
+        AppMessageIPC.sendAll({
+          type: "windowBus",
+          sender: "process",
+          data: { type, action }
+        });
+      } catch (err) {
+        Log.error("windowBus", "dispatch error", `${type} - ${action}`, err);
+      }
     };
     window.addListener("closed", () => sendBusMessage("close"));
     window.addListener("unmaximize", () => sendBusMessage("unmaximize"));

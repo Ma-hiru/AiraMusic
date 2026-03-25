@@ -34,6 +34,10 @@ export default class _NeteaseImageSource {
     }
     return CacheStore.check.one(_NeteaseImageSource.getCacheKey(image));
   }
+
+  private static removeCache(image: NeteaseNetworkImage) {
+    return CacheStore.remove.one(_NeteaseImageSource.getCacheKey(image));
+  }
   //endregion
 
   static async try(image: NeteaseNetworkImage | NeteaseLocalImage, download: boolean) {
@@ -54,6 +58,10 @@ export default class _NeteaseImageSource {
 
   static notwork(track: NeteaseTrack, size: NeteaseImageSize) {
     return NeteaseNetworkImage.fromTrackCover(track).setSize(size);
+  }
+
+  static remove(image: NeteaseNetworkImage | NeteaseLocalImage) {
+    return this.removeCache(image);
   }
 
   static async download(image: NeteaseNetworkImage) {
