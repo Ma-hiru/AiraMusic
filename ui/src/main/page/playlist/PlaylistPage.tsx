@@ -19,7 +19,6 @@ import {
   NeteaseTrackRecord
 } from "@mahiru/ui/public/models/netease";
 import { Log } from "@mahiru/ui/public/utils/dev";
-import { useToast } from "@mahiru/ui/public/hooks/useToast";
 import { NeteaseImageSize } from "@mahiru/ui/public/enum";
 import { SearchTrack } from "@mahiru/wasm";
 import NeteaseSource from "@mahiru/ui/public/entry/source";
@@ -29,11 +28,12 @@ import Top from "./top";
 import Divider from "./Divider";
 import TrackList, { TrackListRef } from "@mahiru/ui/public/components/track_list";
 import { useUser } from "@mahiru/ui/public/store/user";
-import { useContextMenu } from "@mahiru/ui/public/hooks/useContextMenu";
 import { TrackContextMenuOnClick } from "@mahiru/ui/public/components/menu/TrackMenu";
 import { getLayoutStoreSnapshot, useLayoutStore } from "@mahiru/ui/main/store/layout";
 import { cx } from "@emotion/css";
 import ImageConstants from "@mahiru/ui/main/constants/image";
+import AppContextMenu from "@mahiru/ui/public/hooks/useContextMenu";
+import AppToast from "@mahiru/ui/public/entry/toast";
 
 const PlaylistPage: FC<object> = () => {
   const user = useUser();
@@ -43,7 +43,6 @@ const PlaylistPage: FC<object> = () => {
 
   Log.debug(`PlaylistPage params: id=${id}, source=${source}`);
 
-  const { requestToast } = useToast();
   const [playlist, setPlaylist] = useState<Nullable<NeteasePlaylist>>(null);
   const [tracks, setTracks] = useState<NeteaseTrackRecord[] | NeteaseHistory[]>([]);
   const totalTracks = useRef<NeteaseTrackRecord[] | NeteaseHistory[]>([]);
@@ -172,7 +171,8 @@ const PlaylistPage: FC<object> = () => {
   }, [fastLocator, player, tracks, updateLayout]);
 
   // 右键菜单
-  const { setContextMenuData, setContextMenuVisible, createTrackContextMenu } = useContextMenu();
+  const { setContextMenuData, setContextMenuVisible, createTrackContextMenu } =
+    AppContextMenu.useContextMenu();
   const contextMenuAction = useCallback<TrackContextMenuOnClick>(
     (type, track) => {
       switch (type) {
@@ -218,7 +218,7 @@ const PlaylistPage: FC<object> = () => {
           })
           .catch((err) => {
             Log.error(err);
-            requestToast({
+            AppToast.request({
               type: "error",
               text: "请求错误"
             });
@@ -241,7 +241,7 @@ const PlaylistPage: FC<object> = () => {
         searcher.update("[]");
       });
     };
-  }, [id, player.history, requestToast, searcher, source, user?.likedPlaylist.id]);
+  }, [id, player.history, searcher, source, user?.likedPlaylist.id]);
 
   return (
     <div className="w-full h-full px-12 pt-5 contain-style contain-size contain-layout">

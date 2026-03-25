@@ -3,7 +3,7 @@ import { NavConstants, RoutePathConstants } from "@mahiru/ui/main/constants";
 import { useLocation, useNavigate } from "react-router-dom";
 import { cx } from "@emotion/css";
 import { useUserStore } from "@mahiru/ui/public/store/user";
-import { useToast } from "@mahiru/ui/public/hooks/useToast";
+import AppToast from "@mahiru/ui/public/entry/toast";
 
 interface NavMenuProps {
   barOpened: boolean;
@@ -12,7 +12,6 @@ interface NavMenuProps {
 const NavMenu: FC<NavMenuProps> = ({ barOpened }) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { requestToast } = useToast();
   const { isLoggedIn } = useUserStore();
   return (
     <div className="flex flex-col gap-4 w-40 overflow-hidden">
@@ -31,7 +30,7 @@ const NavMenu: FC<NavMenuProps> = ({ barOpened }) => {
             )}
             onClick={() => {
               if (path === RoutePathConstants.like && !isLoggedIn()) {
-                return requestToast({
+                return AppToast.request({
                   type: "info",
                   text: "请先登录账号"
                 });

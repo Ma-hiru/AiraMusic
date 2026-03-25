@@ -1,7 +1,6 @@
 import { cx } from "@emotion/css";
 import { FC, memo, MouseEvent as ReactMouseEvent, useCallback } from "react";
 import { ColorInstance } from "color";
-import { useToast } from "@mahiru/ui/public/hooks/useToast";
 import { debounce } from "lodash-es";
 import { NeteaseHistory, NeteaseTrackRecord, NeteaseUser } from "@mahiru/ui/public/models/netease";
 import { PlaylistSource } from "@mahiru/ui/main/constants";
@@ -11,6 +10,7 @@ import ListItemCover from "./TrackItemCover";
 import ListItemName from "./TrackItemName";
 import ListItemInfo from "./TrackItemInfo";
 import { NeteaseImageSize } from "@mahiru/ui/public/enum";
+import AppToast from "@mahiru/ui/public/entry/toast";
 
 export interface TrackItemProps {
   textColor: ColorInstance;
@@ -53,15 +53,14 @@ const TrackItem: FC<TrackItemProps> = ({
   user,
   trackCoverSize
 }) => {
-  const { requestToast } = useToast();
   const { playable, reason } = track.track.playable(user);
   const showDisableReason = useCallback(() => {
     if (playable) return;
-    requestToast({
+    AppToast.request({
       type: "info",
       text: reason
     });
-  }, [playable, reason, requestToast]);
+  }, [playable, reason]);
 
   return (
     <div
