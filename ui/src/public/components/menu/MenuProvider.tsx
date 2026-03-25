@@ -1,7 +1,7 @@
 import { FC, Key, memo, ReactNode, useCallback, useLayoutEffect, useState } from "react";
 import { motion, useAnimate } from "motion/react";
-import { injectContextMenu } from "@mahiru/ui/public/hooks/useContextMenu";
 import { cx } from "@emotion/css";
+import AppContextMenu from "@mahiru/ui/public/hooks/useContextMenu";
 
 const DURATION = 0.15;
 
@@ -99,7 +99,7 @@ const MenuProvider: FC<{ className?: string }> = ({ className }) => {
   }, [closeContextMenuAnimate, moveContextMenu, openContextMenuAnimate, render, visible]);
 
   useLayoutEffect(() => {
-    injectContextMenu(setContextMenuRenderData, setContextMenuVisible, () => visible);
+    AppContextMenu.inject(setContextMenuRenderData, setContextMenuVisible, () => visible);
   }, [setContextMenuRenderData, setContextMenuVisible, visible]);
 
   return (

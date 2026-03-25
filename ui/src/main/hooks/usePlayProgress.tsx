@@ -9,7 +9,7 @@ import {
 } from "react";
 import { clamp, throttle } from "lodash-es";
 import AppInstance from "@mahiru/ui/main/entry/instance";
-import { AppPlayerStatus } from "@mahiru/ui/public/models/player";
+import { AppPlayerStatus } from "@mahiru/ui/public/entry/player";
 import NCM_API from "@mahiru/ui/public/api";
 
 export function usePlayProgress() {

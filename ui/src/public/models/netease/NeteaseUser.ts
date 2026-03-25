@@ -18,6 +18,7 @@ export class NeteaseUser implements NeteaseUserModel {
     this.userPlaylists = props.userPlaylists;
     this.refreshCookiesDate = props.refreshCookiesDate;
   }
+
   //endregion
 
   copyWith(props: Partial<NeteaseUserModel>) {
@@ -35,7 +36,7 @@ export class NeteaseUser implements NeteaseUserModel {
     return NeteaseCookie.isLoggedIn();
   }
 
-  get isVIP() {
+  isVIP() {
     return this.profile.vipType === 11;
   }
 
@@ -72,6 +73,10 @@ export class NeteaseUser implements NeteaseUserModel {
 
   static get isLoggedIn() {
     return NeteaseCookie.isLoggedIn();
+  }
+
+  static isVIP(user: Optional<NeteaseUser | NeteaseUserModel>) {
+    return user?.profile.vipType === 11;
   }
 }
 

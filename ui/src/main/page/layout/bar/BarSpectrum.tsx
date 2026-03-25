@@ -5,7 +5,7 @@ import { useThemeColor } from "@mahiru/ui/public/hooks/useThemeColor";
 
 import AudioSpectrum from "@mahiru/ui/main/componets/spectrum/AudioSpectrum";
 import AppInstance from "@mahiru/ui/main/entry/instance";
-import { AppPlayerStatus } from "@mahiru/ui/public/models/player";
+import { AppPlayerStatus } from "@mahiru/ui/public/entry/player";
 
 const BarSpectrum: FC<object> = () => {
   const { layout } = useLayoutStore();

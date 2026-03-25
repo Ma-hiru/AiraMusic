@@ -6,8 +6,8 @@ import {
 import { Copy, DiscAlbum, ListMusic, ListPlus, MessageSquare, Play } from "lucide-react";
 import { NeteaseImageSize } from "@mahiru/ui/public/enum";
 import { ContextMenuItem, ContextMenuRender } from "@mahiru/ui/public/components/menu/MenuProvider";
-import NeteaseImage from "@mahiru/ui/public/components/image/NeteaseImage";
 import { userStoreSnapshot } from "@mahiru/ui/public/store/user";
+import NeteaseImage from "@mahiru/ui/public/components/image/NeteaseImage";
 
 export type TrackContextMenuAction = "comment" | "album" | "play" | "nextPlay" | "addPlayList";
 

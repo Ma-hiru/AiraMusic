@@ -1,5 +1,5 @@
 import Dayjs from "dayjs";
-import { NeteaseUser } from "./NeteaseUser";
+import { NeteaseUser, NeteaseUserModel } from "./NeteaseUser";
 import { TrackBitmark, TrackQuality } from "@mahiru/ui/public/enum";
 
 export class NeteaseTrack implements NeteaseTrackModel {
@@ -70,7 +70,7 @@ export class NeteaseTrack implements NeteaseTrackModel {
   //endregion
 
   /** 判断NeteaseTrack是否可以播放 */
-  playable(user: Optional<NeteaseUser>) {
+  playable(user: Optional<NeteaseUser | NeteaseUserModel>) {
     const result = { playable: false, reason: "未知原因" };
     // 如果没有 privilege 信息，无法判断是否可播放，暂时不设置 reason
     if (!this.privilege) {
@@ -86,7 +86,7 @@ export class NeteaseTrack implements NeteaseTrackModel {
     // 0: 免费或无版权 1: VIP 歌曲 4: 购买专辑 8: 非会员可免费播放低音质，会员可播放高音质及下载
     if (this.fee === 1 || this.privilege.fee === 1) {
       // VIP 歌曲
-      if (NeteaseUser.isLoggedIn && user?.isVIP) {
+      if (NeteaseUser.isLoggedIn && NeteaseUser.isVIP(user)) {
         result.playable = true;
       } else {
         result.playable = false;

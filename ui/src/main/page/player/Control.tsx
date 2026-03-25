@@ -13,7 +13,7 @@ import {
 
 import Progress from "./Progress";
 import AppInstance from "@mahiru/ui/main/entry/instance";
-import { AppPlayerStatus } from "@mahiru/ui/public/models/player";
+import { AppPlayerStatus } from "@mahiru/ui/public/entry/player";
 
 const Control: FC<object> = () => {
   const player = AppInstance.usePlayer();

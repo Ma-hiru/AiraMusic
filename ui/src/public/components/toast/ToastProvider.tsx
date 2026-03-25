@@ -1,11 +1,11 @@
 import { FC, memo, startTransition, useCallback, useLayoutEffect, useMemo, useState } from "react";
 import { AnimatePresence, HTMLMotionProps, motion, MotionStyle } from "motion/react";
 import { useThemeColor } from "@mahiru/ui/public/hooks/useThemeColor";
-import { injectToast } from "@mahiru/ui/public/hooks/useToast";
 
 import ToastItem, { ToastItemData } from "@mahiru/ui/public/components/toast/ToastItem";
 import AppUI from "@mahiru/ui/public/entry/ui";
 import { cx } from "@emotion/css";
+import AppToast from "@mahiru/ui/public/entry/toast";
 
 const ToastProvider: FC<{ className?: string }> = ({ className }) => {
   const [items, setItems] = useState<ToastItemData[]>([]);
@@ -64,7 +64,7 @@ const ToastProvider: FC<{ className?: string }> = ({ className }) => {
   );
 
   useLayoutEffect(() => {
-    injectToast(requestToast, dispose);
+    AppToast.inject(requestToast, dispose);
   }, [dispose, requestToast]);
 
   return (

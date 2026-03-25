@@ -1,6 +1,8 @@
 import { shuffle } from "lodash-es";
 import { Listenable } from "@mahiru/ui/public/models/Listenable";
 import { NeteaseTrackRecord } from "@mahiru/ui/public/models/netease";
+import { userStoreSnapshot } from "@mahiru/ui/public/store/user";
+import AppToast from "@mahiru/ui/public/entry/toast";
 
 export default class AppPlaylist extends Listenable {
   //region fields
@@ -26,6 +28,10 @@ export default class AppPlaylist extends Listenable {
 
   get shuffle() {
     return this._shuffle;
+  }
+
+  private get user() {
+    return userStoreSnapshot()._user;
   }
 
   constructor(props?: {
@@ -240,7 +246,7 @@ export default class AppPlaylist extends Listenable {
     return peek;
   }
 
-  next(force = true) {
+  next(force = true): this {
     if (!force && this.repeat === "one") return this;
 
     let nextPos = this.position + 1;
@@ -255,11 +261,23 @@ export default class AppPlaylist extends Listenable {
     }
     this.position = nextPos;
 
+    const current = this.current();
+    if (current) {
+      const { playable, reason } = current.track.playable(this.user);
+      if (!playable) {
+        AppToast.request({
+          type: "error",
+          text: reason
+        });
+        return this.next(force);
+      }
+    }
+
     this.executeListeners();
     return this;
   }
 
-  last(force = true) {
+  last(force = true): this {
     if (!force && this.repeat === "one") return this;
 
     let lastPos = this.position - 1;
@@ -273,6 +291,18 @@ export default class AppPlaylist extends Listenable {
       }
     }
     this.position = lastPos;
+
+    const current = this.current();
+    if (current) {
+      const { playable, reason } = current.track.playable(this.user);
+      if (!playable) {
+        AppToast.request({
+          type: "error",
+          text: reason
+        });
+        return this.last(force);
+      }
+    }
 
     this.executeListeners();
     return this;

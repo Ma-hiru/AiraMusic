@@ -1,0 +1,22 @@
+import { ToastItemData } from "@mahiru/ui/public/components/toast/ToastItem";
+import { Log } from "@mahiru/ui/public/utils/dev";
+import { Errs } from "@mahiru/ui/public/entry/errs";
+
+export default class AppToast {
+  static request: NormalFunc<[data: Omit<ToastItemData, "id">], string> = () => {
+    Log.error(Errs.ToastBeforeInject.create("requestToast"));
+    return "";
+  };
+
+  static dispose: NormalFunc<[id: string]> = () => {
+    Log.error(Errs.ToastBeforeInject.create("disposeToast"));
+  };
+
+  static inject(
+    request: NormalFunc<[data: Omit<ToastItemData, "id">], string>,
+    dispose: NormalFunc<[id: string]>
+  ) {
+    AppToast.request = request;
+    AppToast.dispose = dispose;
+  }
+}

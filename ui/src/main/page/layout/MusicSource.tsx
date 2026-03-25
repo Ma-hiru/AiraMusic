@@ -5,7 +5,7 @@ import { useMediaSession } from "@mahiru/ui/main/hooks/useMediaSession";
 import AppInstance from "@mahiru/ui/main/entry/instance";
 import { useLayoutStore } from "@mahiru/ui/main/store/layout";
 import { useSpectrumWorker } from "@mahiru/ui/main/hooks/useSpectrumWorker";
-import { AppPlayerStatus } from "@mahiru/ui/public/models/player";
+import { AppPlayerStatus } from "@mahiru/ui/public/entry/player";
 
 const MusicSource: FC<object> = () => {
   const player = AppInstance.usePlayer();

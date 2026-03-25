@@ -11,7 +11,7 @@ import {
 import { motion, useAnimate } from "motion/react";
 import { X } from "lucide-react";
 import { cx } from "@emotion/css";
-import { injectModal } from "@mahiru/ui/public/hooks/useModal";
+import AppModal from "@mahiru/ui/public/entry/modal";
 
 export type ModalData = {
   content: ReactNode;
@@ -62,7 +62,7 @@ const ModalProvider: FC<object> = () => {
   }, [closeAnimate, openAnimate, visible]);
 
   useLayoutEffect(() => {
-    injectModal({
+    AppModal.inject({
       toggleModalVisible,
       setModalRenderData,
       getRender,

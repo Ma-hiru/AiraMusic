@@ -3,7 +3,7 @@ import { useLayoutStore } from "@mahiru/ui/main/store/layout";
 
 import AudioSpectrum from "@mahiru/ui/main/componets/spectrum/AudioSpectrum";
 import AppInstance from "@mahiru/ui/main/entry/instance";
-import { AppPlayerStatus } from "@mahiru/ui/public/models/player";
+import { AppPlayerStatus } from "@mahiru/ui/public/entry/player";
 
 const Spectrum: FC<object> = () => {
   const { layout } = useLayoutStore();
