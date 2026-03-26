@@ -57,7 +57,7 @@ export default class AppHistory extends Listenable {
   }
 
   static fromSave(save: ReturnType<typeof this.save>) {
-    save.list = <NeteaseHistory[]>save?.list?.map(NeteaseHistory.fromObject) || [];
+    save.list = <NeteaseHistory[]>save.list.map(NeteaseHistory.fromObject) || [];
     return new AppHistory(save);
   }
 }

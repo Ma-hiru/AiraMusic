@@ -7,7 +7,7 @@ export class NeteaseHistory extends NeteaseTrackRecord {
 
   constructor(props: {
     sourceID: number;
-    track: NeteaseTrack;
+    detail: NeteaseTrack;
     sourceName: "playlist" | "album" | "other";
     playDuration: number;
     time: number;
@@ -23,8 +23,11 @@ export class NeteaseHistory extends NeteaseTrackRecord {
     if (!record) return null;
 
     if ("playDuration" in record)
-      return new NeteaseHistory({ ...record, track: NeteaseTrack.fromObject(record.detail) });
-    return NeteaseTrackRecord.fromObject(record);
+      return new NeteaseHistory({ ...record, detail: NeteaseTrack.fromObject(record.detail) });
+    return NeteaseTrackRecord.fromObject({
+      ...record,
+      detail: NeteaseTrack.fromObject(record.detail)
+    });
   }
 
   static fromTrack(track: NeteaseTrackRecord, playDuration: number, time: number = Date.now()) {
