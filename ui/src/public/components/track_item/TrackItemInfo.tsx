@@ -30,7 +30,7 @@ const TrackItemInfo: FC<ListItemAlbumProps> = ({
   onLikeChange,
   type
 }) => {
-  const hasExplicit = track.track.checkBitmark(TrackBitmark.Explicit);
+  const hasExplicit = track.detail.checkBitmark(TrackBitmark.Explicit);
   return (
     <div className="flex gap-4 justify-end items-center">
       {hasExplicit && (
@@ -62,7 +62,7 @@ const TrackItemInfo: FC<ListItemAlbumProps> = ({
               `
             )}>
             {NeteaseTrack.formatTime((track as NeteaseHistory).playDuration, "s")} /{" "}
-            {track.track.formatTime()}
+            {track.detail.formatTime()}
           </div>
         </>
       ) : (
@@ -73,7 +73,7 @@ const TrackItemInfo: FC<ListItemAlbumProps> = ({
               color: ${active ? textColor.string() : "#7b8290cc"};
             `
           )}>
-          {track.track.formatTime()}
+          {track.detail.formatTime()}
         </div>
       )}
     </div>

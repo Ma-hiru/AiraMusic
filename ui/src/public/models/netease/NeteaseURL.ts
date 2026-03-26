@@ -51,7 +51,7 @@ export class NeteaseURL {
     if (!url || !url.startsWith("http")) {
       return <T extends Falsy ? undefined : string>(url || undefined);
     }
-    if (!Number.isFinite(size) || size < 0) {
+    if (!Number.isFinite(size) || (size < 0 && size !== NeteaseImageSize.raw)) {
       return <T extends Falsy ? undefined : string>(url || undefined);
     }
 

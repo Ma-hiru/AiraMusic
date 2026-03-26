@@ -1,5 +1,6 @@
 import { Listenable } from "@mahiru/ui/public/models/Listenable";
 import AppRenderer from "@mahiru/ui/public/entry/renderer";
+import { isDev } from "@mahiru/ui/public/utils/dev";
 
 export const currentWindowType = await AppRenderer.Event.invoke.currentWindowType();
 
@@ -152,7 +153,7 @@ export default class AppWindow extends Listenable {
   }
 
   devTools() {
-    AppRenderer.Event.normal.openInternalDevTools(this.type);
+    isDev && AppRenderer.Event.normal.openInternalDevTools(this.type);
   }
 
   close() {
@@ -230,6 +231,10 @@ export default class AppWindow extends Listenable {
 
   static get current() {
     return this.from(currentWindowType);
+  }
+
+  static get main() {
+    return this.from("main");
   }
 
   static get all() {

@@ -3,9 +3,13 @@ import { Volume, Volume1, Volume2, VolumeX } from "lucide-react";
 import { useThemeColor } from "@mahiru/ui/public/hooks/useThemeColor";
 import AppInstance from "@mahiru/ui/main/entry/instance";
 import { useUpdate } from "@mahiru/ui/public/hooks/useUpdate";
+import useListenableHook from "@mahiru/ui/public/hooks/useListenableHook";
+import AppWindow from "@mahiru/ui/public/entry/window";
+import AppBus from "@mahiru/ui/public/entry/bus";
 
 const BarBtns: FC<object> = () => {
   const { mainColor, textColorOnMain } = useThemeColor();
+  const lyricWindow = useListenableHook(AppWindow.from("lyric"));
   const player = AppInstance.usePlayer();
 
   const VolumeTag = (() => {
@@ -47,8 +51,17 @@ const BarBtns: FC<object> = () => {
         onClick={() => player.audio.mute()}
       />
       <span
-        // style={{ color: false ? mainColor.hex() : textColorOnMain.hex() }}
-        className="size-5 flex justify-center items-center font-semibold hover:opacity-50 select-none cursor-pointer ease-in-out duration-300 transition-all active:scale-90">
+        style={{ color: lyricWindow.opened ? mainColor.hex() : textColorOnMain.hex() }}
+        className="size-5 flex justify-center items-center font-semibold hover:opacity-50 select-none cursor-pointer ease-in-out duration-300 transition-all active:scale-90"
+        onClick={() => {
+          if (lyricWindow.opened) {
+            lyricWindow.close();
+          } else {
+            lyricWindow.openThen(() => {
+              AppBus.updater?.();
+            });
+          }
+        }}>
         词
       </span>
     </div>

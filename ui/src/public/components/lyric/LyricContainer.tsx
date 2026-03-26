@@ -22,9 +22,10 @@ interface LyricContainerProps {
   onWordClick?: NormalFunc<[startTime: number]>;
   activeColor?: string;
   inactiveColor?: string;
-  fontSize?: FontSize | number;
+  fontSize?: number;
   crossAlign?: "left" | "center" | "right";
   mainAlign?: "top" | "center" | "bottom";
+  spring?: boolean;
 }
 
 export interface LyricRef {
@@ -43,7 +44,8 @@ const LyricContainer: ForwardRefRenderFunction<LyricRef, LyricContainerProps> = 
     inactiveColor,
     fontSize,
     crossAlign,
-    mainAlign
+    mainAlign,
+    spring
   },
   ref
 ) => {
@@ -121,7 +123,7 @@ const LyricContainer: ForwardRefRenderFunction<LyricRef, LyricContainerProps> = 
           w-full h-full space-y-4
           scrollbar-hide overflow-y-scroll scroll-auto overflow-x-hidden
           transition-all duration-500 ease-in-out
-          contain-content mix-blend-plus-lighter
+          contain-content
       `,
         className
       )}>
@@ -138,6 +140,7 @@ const LyricContainer: ForwardRefRenderFunction<LyricRef, LyricContainerProps> = 
           timeManager={timeManagerRef.current!}
           active={currentLine === index}
           crossAlign={crossAlign}
+          spring={spring}
         />
       ))}
       <div className="h-[55%]" />

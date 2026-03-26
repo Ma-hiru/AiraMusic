@@ -115,7 +115,7 @@ export default class AppPlayer extends Listenable {
       const current = this.playlist.current();
       if (!current) {
         this.status = AppPlayerStatus.idle;
-      } else if (this.current.track?.track.id !== current.track.id) {
+      } else if (this.current.track?.detail.id !== current.detail.id) {
         this.current.track &&
           this.history.add(NeteaseHistory.fromTrack(this.current.track, this.audio.currentTime));
         void this.load(current, true);
@@ -140,14 +140,14 @@ export default class AppPlayer extends Listenable {
     this.controller.abort();
 
     if (!current) return;
-    Log.info(`loading track ${current.track.name}`);
+    Log.info(`loading track ${current.detail.name}`);
 
     this.current.track = current;
     const controller = new AbortController();
     this.controller = controller;
     this.status = AppPlayerStatus.loading;
 
-    this.loadAudio(current.track)
+    this.loadAudio(current.detail)
       .then((audio) => {
         if (controller.signal.aborted) return;
         if (audio) {
@@ -163,7 +163,7 @@ export default class AppPlayer extends Listenable {
         this.status = AppPlayerStatus.error;
       });
 
-    this.loadCover(current.track)
+    this.loadCover(current.detail)
       .then((cover) => {
         if (controller.signal.aborted) return;
         this.current.cover = cover;
@@ -173,7 +173,7 @@ export default class AppPlayer extends Listenable {
         Log.error(err);
       });
 
-    this.loadLyric(current.track)
+    this.loadLyric(current.detail)
       .then((lyric) => {
         if (controller.signal.aborted) return;
         this.current.lyric = lyric;

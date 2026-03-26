@@ -24,10 +24,10 @@ const TrackItemCover: FC<ListItemCoverProps> = ({
 }) => {
   const image = useMemo(
     () =>
-      NeteaseNetworkImage.fromTrackCover(track.track)
+      NeteaseNetworkImage.fromTrackCover(track.detail)
         .setSize(trackCoverSize)
-        .setAlt(track.track.name),
-    [track.track, trackCoverSize]
+        .setAlt(track.detail.name),
+    [track.detail, trackCoverSize]
   );
   return (
     <NeteaseImage

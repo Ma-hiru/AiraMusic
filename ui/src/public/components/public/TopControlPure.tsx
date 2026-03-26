@@ -1,71 +1,56 @@
-import { FC, memo, useCallback, useEffect, useState } from "react";
-import { Chromium, Minus, Square, SquareMinus, X } from "lucide-react";
+import { FC, memo } from "react";
+import { AppWindow as AppWindowIcon, Minus, Square, SquareMinus, X } from "lucide-react";
 import { isDev } from "@mahiru/ui/public/utils/dev";
+import { cx } from "@emotion/css";
 
 import NoDrag from "@mahiru/ui/public/components/drag/NoDrag";
-import AppRenderer from "@mahiru/ui/public/entry/renderer";
+import useListenableHook from "@mahiru/ui/public/hooks/useListenableHook";
+import AppWindow from "@mahiru/ui/public/entry/window";
 
 interface TopControlPurProps {
   maximizable?: boolean;
   mini?: boolean;
   color?: string;
+  className?: string;
 }
 
-const TopControlPure: FC<TopControlPurProps> = ({ maximizable, mini = true, color }) => {
-  const [isMax, setIsMax] = useState(false);
-
-  useEffect(() => {
-    AppRenderer.invoke.isMaximized().then(setIsMax);
-  }, []);
-
-  const maximize = useCallback(() => {
-    if (isMax) {
-      setIsMax(false);
-      AppRenderer.event.unmaximize();
-    } else {
-      setIsMax(true);
-      AppRenderer.event.maximize();
-    }
-  }, [isMax]);
-
-  const close = useCallback(() => {
-    AppRenderer.event.close({ broadcast: true });
-  }, []);
+const TopControlPure: FC<TopControlPurProps> = ({ maximizable, mini = true, color, className }) => {
+  const currentWindow = useListenableHook(AppWindow.current);
 
   return (
-    <NoDrag className="flex flex-row gap-4 select-none relative z-10">
+    <NoDrag className={cx(`flex flex-row gap-4 select-none relative z-50`, className)}>
       {isDev && (
-        <Chromium
+        <AppWindowIcon
           color={color}
           className="size-5 cursor-pointer hover:opacity-50 ease-in-out transition-all duration-300"
-          onClick={AppRenderer.event.openDevTools}
+          onClick={() => currentWindow.devTools()}
         />
       )}
       {mini && (
         <Minus
           color={color}
           className="size-5 cursor-pointer hover:opacity-50 ease-in-out transition-all duration-300"
-          onClick={AppRenderer.event.minimize}
+          onClick={() => currentWindow.minimize()}
         />
       )}
       {maximizable &&
-        (isMax ? (
+        (currentWindow.isMax ? (
           <SquareMinus
             color={color}
             className="size-5 cursor-pointer scale-80 hover:opacity-50 ease-in-out transition-all duration-300"
-            onClick={maximize}
+            onClick={() => currentWindow.maximize()}
           />
         ) : (
           <Square
             color={color}
             className="size-5 cursor-pointer scale-80 hover:opacity-50 ease-in-out transition-all duration-300"
-            onClick={maximize}
+            onClick={() => currentWindow.maximize()}
           />
         ))}
       <X
         color={color}
         className="size-5 cursor-pointer hover:opacity-50 ease-in-out transition-all duration-300"
-        onClick={close}
+        onClick={() => currentWindow.close()}
       />
     </NoDrag>
   );

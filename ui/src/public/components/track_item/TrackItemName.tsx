@@ -36,22 +36,22 @@ const TrackItemName: FC<ListItemNameProps> = ({ track, disabled, onClick, textCo
       {/*歌曲标题*/}
       <div className="overflow-hidden flex-row truncate">
         <span className={titleStyle} onClick={() => !disabled && onClick}>
-          {track.track.name}
+          {track.detail.name}
         </span>
-        {(track.track.translate() || track.track.aliaName()) && (
+        {(track.detail.translate() || track.detail.aliaName()) && (
           <span className={subTitleStyle}>
-            ({track.track.translate() || track.track.aliaName()})
+            ({track.detail.translate() || track.detail.aliaName()})
           </span>
         )}
       </div>
       {/*歌手、专辑*/}
       <div className={artistStyle}>
         <span className="truncate cursor-pointer hover:opacity-50 ease-in-out duration-300 transition-all active:scale-95">
-          {track.track.artist().join(" / ")}
+          {track.detail.artist().join(" / ")}
         </span>
         <span>-</span>
         <span className="truncate cursor-pointer hover:opacity-50 ease-in-out duration-300 transition-all active:scale-95">
-          {track.track.al.name}
+          {track.detail.al.name}
         </span>
       </div>
     </div>

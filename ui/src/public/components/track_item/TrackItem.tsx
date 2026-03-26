@@ -53,7 +53,7 @@ const TrackItem: FC<TrackItemProps> = ({
   user,
   trackCoverSize
 }) => {
-  const { playable, reason } = track.track.playable(user);
+  const { playable, reason } = track.detail.playable(user);
   const showDisableReason = useCallback(() => {
     if (playable) return;
     AppToast.request({

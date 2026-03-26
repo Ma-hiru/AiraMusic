@@ -8,10 +8,10 @@ import AppInstance from "@mahiru/ui/main/entry/instance";
 import NeteaseImage from "@mahiru/ui/public/components/image/NeteaseImage";
 
 const BarCover: FC<object> = () => {
-  const player = AppInstance.usePlayer();
   const { layout, updateLayout } = useLayoutStore();
-  const { track } = player.current.track || {};
   const { textColorOnMain } = useThemeColor();
+  const player = AppInstance.usePlayer();
+  const track = player.current.track?.detail;
   const image = useMemo(
     () =>
       track

@@ -1,15 +1,22 @@
-import { FC, memo } from "react";
+import { FC, memo, useMemo } from "react";
 import { QRCodeStatus } from "@mahiru/ui/login/hooks/useLoginQRCode";
 import { NeteaseImageSize } from "@mahiru/ui/public/enum";
-
+import { NeteaseNetworkImage } from "@mahiru/ui/public/models/netease";
 import NeteaseImage from "@mahiru/ui/public/components/image/NeteaseImage";
 
 interface TipsProps {
   status: QRCodeStatus;
-  result: Nullable<NeteaseLoginQrCheckResponse>;
+  result: Nullable<NeteaseAPI.NeteaseLoginQrCheckResponse>;
 }
 
 const Tips: FC<TipsProps> = ({ status, result }) => {
+  const image = useMemo(
+    () =>
+      NeteaseNetworkImage.fromURL(result?.avatarUrl)
+        ?.setSize(NeteaseImageSize.sm)
+        ?.setAlt(result?.nickname),
+    [result?.avatarUrl, result?.nickname]
+  );
   return (
     <div className="flex justify-center items-center flex-col">
       {status !== QRCodeStatus.WAITING_CONFIRM && (
@@ -22,9 +29,8 @@ const Tips: FC<TipsProps> = ({ status, result }) => {
       {status === QRCodeStatus.WAITING_CONFIRM && (
         <div className="flex justify-center items-center flex-col">
           <NeteaseImage
-            src={result?.avatarUrl}
-            size={NeteaseImageSize.sm}
-            alt={result?.nickname}
+            cache={false}
+            image={image}
             className="size-10 rounded-full"
             shadowColor={"light"}
           />

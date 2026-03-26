@@ -2,6 +2,7 @@ import NeteaseSource from "@mahiru/ui/public/entry/source";
 import { Log } from "@mahiru/ui/public/utils/dev";
 import { NeteaseUser, NeteaseUserModel } from "@mahiru/ui/public/models/netease";
 import { userStoreSnapshot } from "@mahiru/ui/public/store/user";
+import AppWindow from "@mahiru/ui/public/entry/window";
 
 export default class AppAuth {
   private static get userStore() {
@@ -22,6 +23,15 @@ export default class AppAuth {
       .catch((err) => {
         Log.error(`fetch user info failed: ${err}`);
       });
+  }
+
+  static createLoginWindow() {
+    const loginWindow = AppWindow.from("login");
+    if (!NeteaseUser.isLoggedIn) {
+      loginWindow.openThen(() => {
+        loginWindow.listen("login", AppAuth.login, { once: true, id: "login" });
+      });
+    }
   }
 
   static refresh(user: NeteaseUser | NeteaseUserModel) {

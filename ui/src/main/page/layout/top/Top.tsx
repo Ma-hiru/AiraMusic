@@ -1,21 +1,19 @@
 import { FC, memo } from "react";
 import { cx } from "@emotion/css";
 import { useLayoutStore } from "@mahiru/ui/main/store/layout";
+import { useUser } from "@mahiru/ui/public/store/user";
 import Drag from "@mahiru/ui/public/components/drag/Drag";
+import TopLeft from "@mahiru/ui/main/page/layout/top/TopLeft";
+import AppAuth from "@mahiru/ui/public/entry/auth";
+
 import TopControl from "./TopControl";
 import TopAvatar from "./TopAvatar";
 import TopDivider from "./TopDivider";
 import TopSearch from "./TopSearch";
-import { useUser } from "@mahiru/ui/public/store/user";
-import TopLeft from "@mahiru/ui/main/page/layout/top/TopLeft";
-import useListenableHook from "@mahiru/ui/public/hooks/useListenableHook";
-import AppWindow from "@mahiru/ui/public/entry/window";
-import AppAuth from "@mahiru/ui/public/entry/auth";
 
 const Top: FC<{ className?: string }> = ({ className }) => {
   const { layout, updateLayout } = useLayoutStore();
   const user = useUser();
-  const loginWindow = useListenableHook(AppWindow.from("login"));
   return (
     <Drag
       className={cx(
@@ -40,11 +38,8 @@ const Top: FC<{ className?: string }> = ({ className }) => {
           onClick={() => {
             if (layout.playModal) {
               return updateLayout(layout.copy().setPlayModal(false));
-            }
-            if (!user?.isLoggedIn) {
-              loginWindow.openThen(() => {
-                loginWindow.listen("login", AppAuth.login, { once: true, id: "login" });
-              });
+            } else {
+              AppAuth.createLoginWindow();
             }
           }}
         />

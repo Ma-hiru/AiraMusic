@@ -106,9 +106,9 @@ const PlaylistPage: FC<object> = () => {
       if (signal?.aborted) return;
       const [start, end] = range;
       const images = totalTracks.current.slice(start, end).map((track) => {
-        return NeteaseNetworkImage.fromTrackCover(track.track)
+        return NeteaseNetworkImage.fromTrackCover(track.detail)
           .setSize(NeteaseImageSize.xs)
-          .setAlt(track.track.name);
+          .setAlt(track.detail.name);
       });
       for (const image of images) {
         if (signal?.aborted) return;

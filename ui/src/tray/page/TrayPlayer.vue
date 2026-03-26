@@ -1,9 +1,13 @@
 <template>
   <div class="grid items-center grid-rows-1 grid-cols-[auto_1fr] px-2">
     <NeteaseImage
+      cache
       class="size-8 rounded-md select-none ease-in-out duration-300 transition-all"
-      :src="props.track?.al.picUrl"
-      :alt="props.track?.al.name"
+      :image="
+        NeteaseNetworkImage.fromTrackCover(props.track)
+          .setSize(NeteaseImageSize.sm)
+          .setAlt(props.track.al.name)
+      "
       :size="NeteaseImageSize.sm"
       shadowColor="light" />
     <div
@@ -19,9 +23,10 @@
 <script setup lang="ts" name="TrayPlayer">
   import NeteaseImage from "@mahiru/ui/public/components/image/NeteaseImage.vue";
   import { NeteaseImageSize } from "@mahiru/ui/public/enum";
+  import { NeteaseNetworkImage } from "@mahiru/ui/public/models/netease";
 
   const props = defineProps<{
-    track: Undefinable<NeteaseTrack>;
+    track: NeteaseTrackModel;
   }>();
 </script>
 

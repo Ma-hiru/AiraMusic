@@ -33,13 +33,15 @@ export class NeteaseNetworkImage {
     this.setSize(this.size);
   }
 
-  setSize(size: NeteaseImageSize | number) {
+  setSize(size: Optional<NeteaseImageSize | number>) {
+    if (!size) return this;
     this.url = NeteaseURL.setImageSize(this.url, size);
     this.size = size;
     return this;
   }
 
-  setAlt(alt: string) {
+  setAlt(alt: Optional<string>) {
+    if (!alt) return this;
     this.alt = alt;
     return this;
   }
@@ -56,21 +58,26 @@ export class NeteaseNetworkImage {
     return new NeteaseNetworkImage(this);
   }
 
-  static fromTrackCover(track: NeteaseTrack | NeteaseTrackRecord | NeteaseAPI.NeteaseTrack) {
+  static fromTrackCover<
+    T extends Optional<
+      NeteaseTrack | NeteaseTrackModel | NeteaseTrackRecord | NeteaseAPI.NeteaseTrack
+    >
+  >(track: T): T extends Falsy ? null : NeteaseNetworkImage {
+    if (!track) return null as T extends Falsy ? null : NeteaseNetworkImage;
     if ("al" in track) {
       return new NeteaseNetworkImage({
         url: track.al.picUrl,
         sourceID: track.id,
         sourceName: "track",
         alt: track.name
-      });
+      }) as T extends Falsy ? null : NeteaseNetworkImage;
     } else {
       return new NeteaseNetworkImage({
-        url: track.track.al.picUrl,
+        url: track.detail.al.picUrl,
         sourceID: track.id,
         sourceName: "track",
-        alt: track.track.name
-      });
+        alt: track.detail.name
+      }) as T extends Falsy ? null : NeteaseNetworkImage;
     }
   }
 
@@ -88,12 +95,13 @@ export class NeteaseNetworkImage {
     }) as T extends Falsy ? null : NeteaseNetworkImage;
   }
 
-  static fromURL(url: string) {
+  static fromURL<T extends Optional<string>>(url: T): T extends Falsy ? null : NeteaseNetworkImage {
+    if (!url) return null as T extends Falsy ? null : NeteaseNetworkImage;
     return new NeteaseNetworkImage({
       url,
       sourceID: url,
       sourceName: "other"
-    });
+    }) as T extends Falsy ? null : NeteaseNetworkImage;
   }
 
   static fromUserAvatar<T extends Optional<NeteaseUserModel | NeteasePlaylistCreatorModel>>(

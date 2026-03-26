@@ -1,34 +1,35 @@
+import AppWindow from "@mahiru/ui/public/entry/window";
+import useListenableHook from "@mahiru/ui/public/hooks/useListenableHook";
 import { useEffect } from "react";
-import { useStage } from "@mahiru/ui/public/hooks/useStage";
 import { QRCodeStatus, useLoginQRCode } from "@mahiru/ui/login/hooks/useLoginQRCode";
-import { Stage } from "@mahiru/ui/public/enum";
 import { useAppLoaded } from "@mahiru/ui/public/hooks/useAppLoaded";
 
-import Control from "./Control";
 import QRCode from "./QRCode";
 import Tips from "./Tips";
-import AppRenderer from "@mahiru/ui/public/entry/renderer";
+import Drag from "@mahiru/ui/public/components/drag/Drag";
+import TopControlPure from "@mahiru/ui/public/components/public/TopControlPure";
 
 export default function LoginPage() {
-  useAppLoaded(true, { broadcast: true });
-
-  const { stage } = useStage();
   const { status, result, dataURL, update } = useLoginQRCode();
+  const mainWindow = useListenableHook(AppWindow.from("main"));
+  const currentWindow = useListenableHook(AppWindow.current);
+
   useEffect(() => {
     if (status === QRCodeStatus.AUTHORIZED && result) {
-      AppRenderer.sendMessage("login", "main", result.cookie);
-      setTimeout(() => {
-        AppRenderer.event.close({ broadcast: true });
-      }, 1000);
+      mainWindow.send("login", result.cookie);
+      queueMicrotask(() => currentWindow.close());
     }
-  }, [status, result]);
+  }, [currentWindow, mainWindow, result, status]);
 
+  useAppLoaded();
   return (
     <div className="w-screen h-screen overflow-hidden">
-      {stage >= Stage.First && <Control />}
+      <Drag className="w-screen h-6 flex items-center justify-end absolute top-0 left-0 right-0 p-6 px-5">
+        <TopControlPure maximizable={false} />
+      </Drag>
       <div className="w-full h-full grid grid-rows-1 grid-cols-[1fr_1fr]">
-        {stage >= Stage.Second && <Tips status={status} result={result} />}
-        {stage >= Stage.Finally && <QRCode url={dataURL} update={update} status={status} />}
+        <Tips status={status} result={result} />
+        <QRCode url={dataURL} update={update} status={status} />
       </div>
     </div>
   );

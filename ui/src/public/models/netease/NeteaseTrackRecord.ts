@@ -6,30 +6,30 @@ export class NeteaseTrackRecord {
   readonly name: string;
   readonly sourceID;
   readonly sourceName;
-  readonly track;
+  readonly detail;
 
   constructor(props: {
     sourceID: number;
-    track: NeteaseTrack;
+    detail: NeteaseTrack;
     sourceName: "playlist" | "album" | "other";
   }) {
     this.sourceID = props.sourceID;
     this.sourceName = props.sourceName;
-    this.track = props.track;
-    this.id = this.track.id;
-    this.name = this.track.name;
+    this.detail = props.detail;
+    this.id = this.detail.id;
+    this.name = this.detail.name;
   }
 
   static fromObject(record: Optional<NeteaseTrackRecord>) {
     if (!record) return null;
-    return new NeteaseTrackRecord({ ...record, track: NeteaseTrack.fromObject(record.track) });
+    return new NeteaseTrackRecord({ ...record, detail: NeteaseTrack.fromObject(record.detail) });
   }
 
   static fromPlaylist(playlist: NeteasePlaylist) {
     return playlist.tracks.map(
-      (track) =>
+      (detail) =>
         new NeteaseTrackRecord({
-          track,
+          detail,
           sourceID: playlist.id,
           sourceName: "playlist"
         })

@@ -1,18 +1,23 @@
 <template>
   <div class="w-screen h-screen overflow-hidden bg-white rounded-md">
     <div class="px-1 py-2 w-40" ref="containerRef">
-      <TrayPlayer :track="track" />
-      <TrayDivider />
+      <TrayPlayer
+        v-if="Boolean(playerBus.data?.track?.detail)"
+        :track="playerBus.data?.track?.detail!" />
+      <TrayDivider v-if="Boolean(playerBus.data?.track?.detail)" />
       <TrayItem v-for="item in items" :icon="item.icon" :text="item.text" @click="item.click" />
     </div>
   </div>
 </template>
 
 <script setup lang="ts" name="Tray">
+  import AppBus from "@mahiru/ui/public/entry/bus";
+  import AppWindow from "@mahiru/ui/public/entry/window";
   import TrayItem from "@mahiru/ui/tray/page/TrayItem.vue";
   import TrayPlayer from "@mahiru/ui/tray/page/TrayPlayer.vue";
   import TrayDivider from "@mahiru/ui/tray/page/TrayDivider.vue";
-  import { Renderer } from "@mahiru/ui/public/entry/renderer";
+  import useListenableHookVue from "@mahiru/ui/public/hooks/useListenableHookVue";
+  import { computed, onMounted, onUnmounted, useTemplateRef, watch } from "vue";
   import {
     Copy,
     DiscAlbum,
@@ -24,138 +29,111 @@
     SkipBack,
     SkipForward
   } from "lucide-vue-next";
-  import { computed, onMounted, onUnmounted, toRaw, useTemplateRef, watch } from "vue";
-  import { useThemeSyncReceiveVue } from "@mahiru/ui/public/hooks/useThemeSyncReceiveVue";
-  import { usePlayerTrackSyncReceiveVue } from "@mahiru/ui/public/hooks/usePlayerTrackSyncReceiveVue";
-  import { usePlayerStatusSyncReceiveVue } from "@mahiru/ui/public/hooks/usePlayerStatusSyncReceiveVue";
-  import { PlayerFSMStatusEnum } from "@mahiru/ui/public/enum";
-  import { useAppLoadedVue } from "@mahiru/ui/public/hooks/useAppLoadedVue";
+  import AppUI from "@mahiru/ui/public/entry/ui";
 
-  const { themeSync } = useThemeSyncReceiveVue(true);
-  const { trackSync } = usePlayerTrackSyncReceiveVue();
-  const { playerStatusSync } = usePlayerStatusSyncReceiveVue();
-  const { requestLoaded } = useAppLoadedVue(undefined, { timeout: 0, broadcast: true, hide: true });
   const containerRef = useTemplateRef<HTMLDivElement>("containerRef");
-  const track = computed(() => trackSync.value?.track);
+  const playerBus = useListenableHookVue(AppBus.player);
+  const infoBus = useListenableHookVue(AppBus.info);
+  const currentWindow = useListenableHookVue(AppWindow.current);
+  const mainWindow = useListenableHookVue(AppWindow.main);
+  // Actions
+  function copy(text: Optional<string>) {
+    if (!text) return;
+    window.navigator.clipboard.writeText(text);
+  }
+  // Icons & Actions
   const items = computed(() => {
     const result = [
       {
         icon: SkipBack,
         text: "上一首",
-        click: () => Renderer.sendMessage("playerControl", "main", "last")
+        click: () => mainWindow.value.send("playerActionBus", "previous")
       },
       {
         icon: SkipForward,
         text: "下一首",
-        click: () => Renderer.sendMessage("playerControl", "main", "next")
+        click: () => mainWindow.value.send("playerActionBus", "next")
       },
       { icon: MicVocal, text: "歌手", click: () => {} },
       { icon: DiscAlbum, text: "专辑", click: () => {} },
       {
         icon: MessageSquare,
         text: "评论",
-        click: () => {
-          const trackRaw = toRaw(track.value);
-          if (!trackRaw) return;
-          openInfoWindow(() => {
-            Renderer.sendMessage("infoSync", "info", {
-              type: "comments",
-              value: {
-                type: 0,
-                id: trackRaw.id,
-                track: trackRaw
-              }
-            });
-          });
-        }
+        click: () => {}
       },
       {
         icon: Copy,
         text: "复制歌名",
-        click: () => copy(track.value?.name)
+        click: () => copy(playerBus.value.data?.track?.name)
       },
       {
         icon: Copy,
         text: "复制歌手名",
-        click: () => copy(track.value?.ar.map((a) => a.name).join(" / "))
+        click: () => copy(playerBus.value.data?.track?.detail?.ar.map((a) => a.name).join(" / "))
       },
       {
         icon: Copy,
         text: "复制专辑名",
-        click: () => copy(track.value?.al.name)
+        click: () => copy(playerBus.value.data?.track?.detail?.al.name)
       },
       {
         icon: LogOut,
         text: "退出",
-        click: () => Renderer.sendMessage("playerControl", "main", "exit")
+        click: () => mainWindow.value.send("playerActionBus", "exit")
       }
     ];
-    if (playerStatusSync.value?.fsmState === PlayerFSMStatusEnum.playing) {
+    if (playerBus.value.data?.status === "playing") {
       result.unshift({
         icon: Pause,
         text: "暂停",
-        click: () => Renderer.sendMessage("playerControl", "main", "pause")
+        click: () => mainWindow.value.send("playerActionBus", "pause")
       });
     } else {
       result.unshift({
         icon: Play,
         text: "播放",
-        click: () => Renderer.sendMessage("playerControl", "main", "play")
+        click: () => mainWindow.value.send("playerActionBus", "play")
       });
     }
     return result;
   });
-
-  function copy(text: Optional<string>) {
-    if (!text) return;
-    window.navigator.clipboard.writeText(text);
-  }
-
-  function openInfoWindow(cb: NormalFunc) {
-    Renderer.invoke.hasOpenInternalWindow("info").then((ok) => {
-      if (!ok) {
-        Renderer.sendMessage("playerControl", "main", "openInfoWindow");
-        Renderer.addMessageHandler("otherWindowLoaded", "info", cb, { once: true });
-      } else {
-        cb();
-      }
-    });
-  }
-
-  function resizeTrayWindow() {
-    const deltaX = window.innerWidth - (containerRef.value?.offsetWidth || window.innerWidth);
-    const deltaY = window.innerHeight - (containerRef.value?.offsetHeight || window.innerHeight);
-
-    Renderer.event.resizeWindow({
-      width: containerRef.value?.offsetWidth || window.innerWidth,
-      height: containerRef.value?.offsetHeight || window.innerHeight
-    });
-    Renderer.event.moveWindow({
-      x: window.screenX + deltaX,
-      y: window.screenY + deltaY
-    });
-  }
-
+  // 修改窗口标题
+  watch(playerBus, (playerBus) => {
+    const name = playerBus.data?.track?.name;
+    const artist = playerBus.data?.track?.detail.ar.map((a) => a.name).join(" / ");
+    if (name && artist) {
+      document.title = `${name} - ${artist}`;
+    }
+  });
+  watch(infoBus, (infoBus) => {
+    if (!infoBus.data) return;
+    console.log("infoBus", infoBus.data);
+    AppUI.theme = {
+      main: infoBus.data.theme.mainColor,
+      secondary: infoBus.data.theme.secondaryColor,
+      textOnMainColor: infoBus.data.theme.textColor
+    };
+  });
+  // 动态调整窗口大小
   let observer: ResizeObserver;
   onMounted(() => {
-    requestLoaded(true, true);
-    observer = new ResizeObserver(resizeTrayWindow);
+    observer = new ResizeObserver(() => {
+      const deltaX = window.innerWidth - (containerRef.value?.offsetWidth || window.innerWidth);
+      const deltaY = window.innerHeight - (containerRef.value?.offsetHeight || window.innerHeight);
+      currentWindow.value.resize({
+        width: containerRef.value?.offsetWidth || window.innerWidth,
+        height: containerRef.value?.offsetHeight || window.innerHeight
+      });
+      currentWindow.value.move({
+        x: window.screenX + deltaX,
+        y: window.screenY + deltaY
+      });
+    });
     containerRef.value && observer.observe(containerRef.value);
   });
   onUnmounted(() => {
     observer.disconnect();
   });
-
-  watch(
-    () => track.value?.id,
-    () => {
-      const name = track.value?.name;
-      const artist = track.value?.ar.map((a) => a.name).join(" / ");
-      if (name && artist) {
-        document.title = `${name} - ${artist}`;
-      }
-    }
-  );
 </script>
 
 <style scoped lang="scss"></style>

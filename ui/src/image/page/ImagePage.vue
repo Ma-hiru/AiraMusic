@@ -14,9 +14,9 @@
   import TopControlPure from "@mahiru/ui/public/components/public/TopControlPure.vue";
   import Drag from "@mahiru/ui/public/components/drag/Drag.vue";
   import ImageViewer from "@mahiru/ui/public/components/image/ImageViewer.vue";
-  import AppRenderer from "@mahiru/ui/public/entry/renderer";
   import { useAppLoadedVue } from "@mahiru/ui/public/hooks/useAppLoadedVue";
   import { onMounted, reactive, ref } from "vue";
+  import AppWindow from "@mahiru/ui/public/entry/window";
 
   const loading = ref(false);
   const images = reactive<{ url: string; alt?: string }[]>([]);
@@ -25,14 +25,14 @@
   useAppLoadedVue(loading);
 
   onMounted(() => {
-    loading.value = true;
-    AppRenderer.Message.listen("imageCheckerBus", "all", (props) => {
+    AppWindow.all.listenAll("imageCheckerBus", (props) => {
       const { url, alt } = props.data;
       const exits = images.findIndex((image) => image.url === url);
       if (exits === -1) {
         images.push({ url, alt });
       }
     });
+    loading.value = true;
   });
 </script>
 

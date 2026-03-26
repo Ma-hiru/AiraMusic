@@ -71,7 +71,7 @@
   const { playerStatusSync } = usePlayerStatusSyncReceiveVue();
 
   const track = computed(() => {
-    return trackSync.value?.track;
+    return trackSync.value?.detail;
   });
   const percent = computed(() => {
     return progressSync.value.duration

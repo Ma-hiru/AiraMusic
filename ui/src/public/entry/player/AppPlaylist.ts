@@ -54,7 +54,7 @@ export default class AppPlaylist extends Listenable {
     const current = instance.current();
     return {
       position: instance.shuffle
-        ? instance.playlistBackup.findIndex((item) => item.track.id === current?.track.id)
+        ? instance.playlistBackup.findIndex((item) => item.detail.id === current?.detail.id)
         : instance.position,
       repeat: instance.repeat,
       playlist: instance.shuffle ? instance.playlistBackup : instance.playlist,
@@ -101,7 +101,7 @@ export default class AppPlaylist extends Listenable {
 
   locate(id: Optional<number>) {
     if (typeof id !== "number") return -1;
-    return this.playlist.findIndex((item) => item.track.id === id);
+    return this.playlist.findIndex((item) => item.detail.id === id);
   }
 
   private changeShuffle(value: boolean) {
@@ -109,11 +109,11 @@ export default class AppPlaylist extends Listenable {
       const current = this.current();
       this.playlistBackup = this.playlist;
       this.playlist = shuffle(this.playlist);
-      this.position = this.locate(current?.track.id);
+      this.position = this.locate(current?.detail.id);
     } else {
       const current = this.current();
       this.playlist = this.playlistBackup;
-      this.position = this.locate(current?.track.id);
+      this.position = this.locate(current?.detail.id);
     }
     this._shuffle = value;
   }
@@ -164,7 +164,7 @@ export default class AppPlaylist extends Listenable {
     const shouldBackup = this.shuffle;
     shouldBackup && this.changeShuffle(false);
 
-    const existPos = this.locate(record.track.id);
+    const existPos = this.locate(record.detail.id);
     const isCurrent = existPos === this.position;
 
     if (isCurrent) {
@@ -223,7 +223,7 @@ export default class AppPlaylist extends Listenable {
     if (this.playlist === list) return true;
     if (this.playlist.length !== list.length) return false;
     for (let i = 0; i < this.playlist.length; i++) {
-      if (this.playlist[i]!.track.id !== list[i]!.track.id) return false;
+      if (this.playlist[i]!.detail.id !== list[i]!.detail.id) return false;
       if (this.playlist[i]!.sourceID !== list[i]!.sourceID) return false;
     }
     return true;
@@ -235,7 +235,7 @@ export default class AppPlaylist extends Listenable {
 
   current() {
     const record = this.playlist[this.position];
-    if (!record || !record.track) return null;
+    if (!record || !record.detail) return null;
     return record;
   }
 
@@ -263,7 +263,7 @@ export default class AppPlaylist extends Listenable {
 
     const current = this.current();
     if (current) {
-      const { playable, reason } = current.track.playable(this.user);
+      const { playable, reason } = current.detail.playable(this.user);
       if (!playable) {
         AppToast.request({
           type: "error",
@@ -294,7 +294,7 @@ export default class AppPlaylist extends Listenable {
 
     const current = this.current();
     if (current) {
-      const { playable, reason } = current.track.playable(this.user);
+      const { playable, reason } = current.detail.playable(this.user);
       if (!playable) {
         AppToast.request({
           type: "error",

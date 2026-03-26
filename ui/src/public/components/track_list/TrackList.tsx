@@ -129,7 +129,7 @@ const TrackList: ForwardRefRenderFunction<TrackListRef, TrackListProps> = (
             fastLocation,
             trackCoverSize,
             textColor: textColorOnMain,
-            onLikeChange: (track) => likeChange(track.track),
+            onLikeChange: (track) => likeChange(track.detail),
             checkLiked: isTrackLiked
           }}
           itemHeight={50}
@@ -164,7 +164,7 @@ const RowComponent: VirtualListRow<NeteaseTrackRecord, ExtraData> = ({ index, it
       onClick={extra.onClick}
       onContext={extra.onContext}
       onLikeChange={extra.onLikeChange}
-      liked={extra.checkLiked(items[index]?.track)}
+      liked={extra.checkLiked(items[index]?.detail)}
       type={extra.type}
       user={extra.user}
       trackCoverSize={extra.trackCoverSize}

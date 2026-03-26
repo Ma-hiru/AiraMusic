@@ -12,8 +12,9 @@ interface LyricLineProps {
   crossAlign?: "left" | "center" | "right";
   activeColor?: string;
   inactiveColor?: string;
-  fontSize?: FontSize | number;
+  fontSize?: number;
   onClick?: NormalFunc<[startTime: number]>;
+  spring?: boolean;
 }
 
 const LyricLine: FC<LyricLineProps> = ({
@@ -25,7 +26,8 @@ const LyricLine: FC<LyricLineProps> = ({
   activeColor,
   inactiveColor,
   fontSize,
-  crossAlign
+  crossAlign,
+  spring = true
 }) => {
   const [wordIndex, setWordIndex] = useState(-1);
 
@@ -64,6 +66,13 @@ const LyricLine: FC<LyricLineProps> = ({
     }),
     [active, activeColor, fontSize, inactiveColor]
   );
+  const substyle = useMemo(
+    () => ({
+      color: active ? activeColor : inactiveColor,
+      fontSize: typeof fontSize === "number" ? `${fontSize * 0.8}px` : fontSize
+    }),
+    [active, activeColor, fontSize, inactiveColor]
+  );
 
   return (
     <div
@@ -82,9 +91,10 @@ const LyricLine: FC<LyricLineProps> = ({
             text-wrap select-none
             duration-500 ease-in-out transition-all
             contain-content
-            font-normal text-3xl
+            font-semibold text-3xl
         `,
-          active && "scale-102 font-medium",
+          active && "font-medium",
+          spring && active && "scale-102",
           crossAlign === "left" && "text-left",
           crossAlign === "center" && "text-center",
           crossAlign === "right" && "text-right"
@@ -118,27 +128,37 @@ const LyricLine: FC<LyricLineProps> = ({
         )}
       </div>
       <div
+        style={substyle}
         className={cx(
           `
             text-wrap select-none
             duration-500 ease-in-out transition-all
             contain-content
-            font-normal text-md
+            font-normal
           `,
-          active && "scale-102 font-medium"
+          active && "font-medium",
+          spring && active && "scale-102",
+          crossAlign === "left" && "text-left",
+          crossAlign === "center" && "text-center",
+          crossAlign === "right" && "text-right"
         )}
         onClick={onClickLine}>
         {line.translatedLyric}
       </div>
       <div
+        style={substyle}
         className={cx(
           `
             text-wrap select-none
             duration-500 ease-in-out transition-all
             contain-content
-            font-normal text-md
+            font-normal
           `,
-          active && "scale-102 font-medium"
+          active && "font-medium",
+          spring && active && "scale-102",
+          crossAlign === "left" && "text-left",
+          crossAlign === "center" && "text-center",
+          crossAlign === "right" && "text-right"
         )}
         onClick={onClickLine}>
         {line.romanLyric}
@@ -146,4 +166,5 @@ const LyricLine: FC<LyricLineProps> = ({
     </div>
   );
 };
+
 export default memo(LyricLine);

@@ -17,11 +17,7 @@ const TopLeft: FC<TopLeftProps> = ({ user, layout, onClick }) => {
   const avatar = useMemo(() => NeteaseNetworkImage.fromUserAvatar(user), [user]);
 
   return (
-    <div
-      className="w-40 h-full text-black"
-      onClick={() => {
-        console.log("click");
-      }}>
+    <div className="w-40 h-full text-black">
       <AnimatePresence>
         {!layout.playModal ? (
           <motion.div

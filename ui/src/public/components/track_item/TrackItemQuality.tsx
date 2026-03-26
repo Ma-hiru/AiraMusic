@@ -22,7 +22,7 @@ const TrackItemQuality: FC<ListItemQualityProps> = ({ track, themeColor, bgColor
     );
   }
   if (!track) return null;
-  const qualities = track.track.quality(undefined);
+  const qualities = track.detail.quality(undefined);
   return qualities.map((quality) => {
     // 小于SQ不显示
     if (quality.level < TrackQuality.sq) return null;

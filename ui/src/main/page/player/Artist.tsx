@@ -6,7 +6,7 @@ import AppInstance from "@mahiru/ui/main/entry/instance";
 const Artist: FC<object> = () => {
   const player = AppInstance.usePlayer();
   const { likeChange, isTrackLiked } = useHeart();
-  const track = player.current.track?.track;
+  const track = player.current.track?.detail;
 
   return (
     <div className="relative w-full flex justify-between gap-1 overflow-hidden items-center text-white/50 h-3.5 text-[12px] select-none">

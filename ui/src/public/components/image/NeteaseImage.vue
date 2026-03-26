@@ -6,18 +6,18 @@
     <img
       v-bind="imageAttrs"
       class="w-full h-full object-cover aspect-square"
-      :src="src"
+      :src="(source as Nullable<NeteaseNetworkImage | NeteaseLocalImage>)?.src"
+      :alt="imageAttrs.alt ?? (source as Nullable<NeteaseNetworkImage | NeteaseLocalImage>)?.alt"
       :class="[props.imageClassName, error && 'invisible']"
       @error="handleLoadError" />
   </div>
 </template>
 <script setup lang="ts" name="NeteaseImage">
   import { computed, ImgHTMLAttributes, onUnmounted, ref, useAttrs, watch } from "vue";
+  import { NeteaseLocalImage, NeteaseNetworkImage } from "@mahiru/ui/public/models/netease";
+  import AppWindow from "@mahiru/ui/public/entry/window";
   import { NeteaseImageSize } from "@mahiru/ui/public/enum";
-  import { NeteaseImage as NeteaseImageUtils } from "@mahiru/ui/public/entry/image";
-  import { Options, useFileCacheVue } from "@mahiru/ui/public/hooks/useFileCacheVue";
-  import { AppScheme, isMainWindow } from "@mahiru/ui/public/utils/dev";
-  import { Renderer } from "@mahiru/ui/public/entry/renderer";
+  import NeteaseSource from "@mahiru/ui/public/entry/source";
 
   type ShadowLevel = "none" | "base" | "float";
   type ShadowColor = "light" | "dark";
@@ -43,11 +43,6 @@
   }));
   const props = withDefaults(
     defineProps<{
-      src?: string;
-      update?: boolean;
-      timeLimit?: number;
-      method?: string;
-      size?: NeteaseImageSize | number;
       imageClassName?: string;
       retryOnError?: boolean;
       retryDelay?: number;
@@ -55,13 +50,12 @@
       shadow?: ShadowLevel;
       shadowColor?: ShadowColor;
       pause?: boolean;
-      containerClass?: string;
       preview?: boolean;
+      image: Optional<NeteaseNetworkImage | NeteaseLocalImage>;
+      cache: boolean;
+      containerClass?: string;
     }>(),
     {
-      update: false,
-      method: "GET",
-      size: NeteaseImageSize.raw,
       retryCount: 2,
       retryDelay: 500,
       retryOnError: true,
@@ -74,77 +68,11 @@
   }>();
 
   const error = ref(false);
-  const sizedURL = computed(() => NeteaseImageUtils.setSize(props.src, props.size));
-  const cacheURL = computed(() =>
-    props.pause ? undefined : NeteaseImageUtils.fetchCacheURL(sizedURL.value)
-  );
-  const src = computed(() => {
-    return props.pause ? undefined : cachedCover.value || cacheURL.value;
-  });
-
-  let requestCache: Nullable<(controller?: AbortController) => void> = null;
-  const cacheOptions = computed<Options>(() => ({
-    update: props.update,
-    timeLimit: props.timeLimit,
-    method: props.method,
-    pause: !!cacheURL.value || props.pause,
-    onCacheHit: (file) => {
-      NeteaseImageUtils.storeCacheURL(sizedURL.value, file);
-    },
-    injectCacheRequest: (request) => {
-      requestCache = request;
-    }
-  }));
-  const cachedCover = useFileCacheVue(sizedURL, cacheOptions);
-
+  const source = ref<Optional<NeteaseNetworkImage | NeteaseLocalImage>>(null);
   const retryStatus = {
     token: 0,
     count: 0
   };
-
-  function wrapClick(e: MouseEvent) {
-    if (props.preview) {
-      const imageRawURL = NeteaseImageUtils.setSize(props.src, NeteaseImageSize.raw);
-      if (imageRawURL) {
-        Renderer.invoke.hasOpenInternalWindow("image").then((opened) => {
-          if (!opened) {
-            if (isMainWindow()) {
-              Renderer.event.openInternalWindow("image");
-              Renderer.event.focusInternalWindow("image");
-            } else {
-              Renderer.sendMessage("playerControl", "main", "openImageWindow");
-            }
-            Renderer.addMessageHandler(
-              "otherWindowLoaded",
-              "image",
-              () => {
-                Renderer.sendMessage("checkImage", "image", {
-                  url: imageRawURL,
-                  alt: imageAttrs.value.alt
-                });
-              },
-              { id: "imageCheckHandler", once: true }
-            );
-          } else {
-            if (isMainWindow()) {
-              Renderer.event.focusInternalWindow("image");
-            } else {
-              Renderer.sendMessage("playerControl", "main", "openImageWindow");
-            }
-            Renderer.sendMessage("checkImage", "image", {
-              url: imageRawURL,
-              alt: imageAttrs.value.alt
-            });
-          }
-        });
-      }
-    }
-    return emit("click", e);
-  }
-
-  function onCacheError() {
-    NeteaseImageUtils.storeCacheURL(sizedURL.value, null);
-  }
 
   function retry(image: HTMLImageElement) {
     if (!image.isConnected) return; // 图片已不在文档中，停止重试
@@ -163,7 +91,7 @@
     };
     const exec = () => {
       retryStatus.count += 1;
-      const newURL = new URL(sizedURL.value || image.src);
+      const newURL = new URL(image.src);
       newURL.searchParams.set("timestamp", Date.now().toString());
       image.src = newURL.toString();
       error.value = false;
@@ -176,34 +104,54 @@
   }
 
   function handleLoadError(e: Event) {
-    const image = e.currentTarget as HTMLImageElement;
-    const canFallback = sizedURL.value && image.src !== sizedURL.value && retryStatus.count === 0;
-    if (canFallback) {
-      // 如果还没有检查缓存
-      if (!cachedCover.value) requestCache?.();
+    const data = source.value as Nullable<NeteaseNetworkImage | NeteaseLocalImage>;
 
-      // 尝试使用原始尺寸图片
-      image.src = sizedURL.value!;
-      requestIdleCallback(onCacheError, { timeout: 500 });
-      return;
+    if (data?.isLocal && props.image) {
+      source.value = props.image.toNetworkImage();
+    } else if (data?.isNetwork && props.retryOnError) {
+      retry(e.target as HTMLImageElement);
     }
-    // 已经是原始URL或重试后仍然失败
-    error.value = true;
-    if (image.src.startsWith(AppScheme)) {
-      requestIdleCallback(onCacheError, { timeout: 500 });
+
+    return imageAttrs.value.onError?.(e as any);
+  }
+
+  function wrapClick(e: MouseEvent) {
+    if (props.preview && props.image) {
+      const imageWindow = AppWindow.from("image");
+      const sendImage = props.image.toNetworkImage().setSize(NeteaseImageSize.raw);
+      imageWindow.openThen(() => {
+        imageWindow.focus();
+        imageWindow.send("imageCheckerBus", {
+          url: sendImage.src,
+          alt: imageAttrs.value.alt ?? sendImage.alt
+        });
+      });
     }
-    if (props.retryOnError && props.retryCount > 0) {
-      retry(image);
-    }
+    return emit("click", e);
   }
 
   watch(
-    () => props.src,
+    () => props.image,
     () => {
       error.value = false;
       retryStatus.token = Date.now();
       retryStatus.count = 0;
     }
+  );
+
+  watch(
+    [() => props.pause, () => props.image?.src],
+    () => {
+      if (!props.image) return;
+      NeteaseSource.Image.try(props.image, props.cache).then((local) => {
+        if (local) {
+          source.value = local;
+        } else {
+          source.value = props.image;
+        }
+      });
+    },
+    { immediate: true }
   );
 
   onUnmounted(() => {

@@ -1,7 +1,7 @@
 import { createZustandConfig } from "@mahiru/ui/public/utils/store";
-import AppUI from "@mahiru/ui/public/entry/ui";
 import Eq from "@mahiru/ui/public/models/Eq";
 import { SpectrumData, SpectrumOptions } from "@mahiru/ui/main/hooks/useSpectrumWorker";
+import AppUI from "@mahiru/ui/public/entry/ui";
 
 export const LayoutStoreConfig = createZustandConfig((set): LayoutStoreType => {
   return {
@@ -89,11 +89,23 @@ export class LayoutConfig extends Eq<LayoutConfig> {
 export class ThemeConfig extends Eq<ThemeConfig> {
   backgroundCover;
   themeColors;
+  mainColor;
+  secondaryColor;
+  textColorOnMain;
 
-  constructor(props?: { backgroundCover: Undefinable<string>; themeColors: string[] }) {
+  constructor(props?: {
+    backgroundCover: Undefinable<string>;
+    themeColors: string[];
+    mainColor: Undefinable<string>;
+    secondaryColor: Undefinable<string>;
+    textColorOnMain: Undefinable<string>;
+  }) {
     super();
     this.backgroundCover = props?.backgroundCover;
     this.themeColors = props?.themeColors ?? [];
+    this.mainColor = props?.mainColor ?? AppUI.themeDefault.main;
+    this.secondaryColor = props?.secondaryColor ?? AppUI.themeDefault.secondary;
+    this.textColorOnMain = props?.textColorOnMain ?? AppUI.themeDefault.textOnMain;
   }
 
   setBackgroundCover(cover: Undefinable<string>) {
@@ -106,12 +118,19 @@ export class ThemeConfig extends Eq<ThemeConfig> {
     return this;
   }
 
-  get mainColor() {
-    return this.themeColors[0] || AppUI.themeDefault.main;
+  setMainColor(mainColor: string) {
+    this.mainColor = mainColor;
+    return this;
   }
 
-  get secondaryColor() {
-    return this.themeColors[1] || AppUI.themeDefault.secondary;
+  setSecondaryColor(secondaryColor: string) {
+    this.secondaryColor = secondaryColor;
+    return this;
+  }
+
+  setTextColorOnMain(textColorOnMain: string) {
+    this.textColorOnMain = textColorOnMain;
+    return this;
   }
 
   copy() {

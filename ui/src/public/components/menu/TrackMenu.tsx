@@ -46,7 +46,7 @@ function createHeader(track: NeteaseTrackRecord) {
       <div className="w-full overflow-hidden flex flex-col items-start justify-center px-2 select-none truncate">
         <p className="w-full font-semibold text-left text-[12px] truncate">{track.name}</p>
         <p className="w-full font-normal text-left text-[8px] opacity-50 truncate">
-          {track.track.artist().join(" / ")}
+          {track.detail.artist().join(" / ")}
         </p>
       </div>
     </div>
@@ -58,7 +58,7 @@ function createMenuItems(
   onClick?: TrackContextMenuOnClick
 ): ContextMenuItem[] {
   const { _user } = userStoreSnapshot();
-  const playable = track.track.playable(NeteaseUser.fromObject(_user));
+  const playable = track.detail.playable(NeteaseUser.fromObject(_user));
   const items: ContextMenuItem[] = [];
 
   items.push(
@@ -108,7 +108,7 @@ function createMenuItems(
       prefix: <div className="size-3.5" />,
       label: <p className="text-[12px]">复制专辑名</p>,
       onClick: () => {
-        window.navigator.clipboard.writeText(track.track.al.name).then(() => {
+        window.navigator.clipboard.writeText(track.detail.al.name).then(() => {
           //todo
         });
       }
@@ -117,7 +117,7 @@ function createMenuItems(
       prefix: <div className="size-3.5" />,
       label: <p className="text-[12px]">复制歌手名</p>,
       onClick: () => {
-        window.navigator.clipboard.writeText(track.track.artist().join(" ")).then(() => {
+        window.navigator.clipboard.writeText(track.detail.artist().join(" ")).then(() => {
           //todo
         });
       }

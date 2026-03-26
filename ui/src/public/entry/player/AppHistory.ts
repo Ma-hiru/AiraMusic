@@ -21,8 +21,8 @@ export default class AppHistory extends Listenable {
   }
 
   locate(record: NeteaseHistory | number) {
-    if (typeof record === "number") return this.list.findIndex((h) => h.track.id === record);
-    return this.list.findIndex((h) => h.track.id === record.track.id);
+    if (typeof record === "number") return this.list.findIndex((h) => h.detail.id === record);
+    return this.list.findIndex((h) => h.detail.id === record.detail.id);
   }
 
   add(record: NeteaseHistory) {
@@ -46,7 +46,7 @@ export default class AppHistory extends Listenable {
   }
 
   toSearchStruct() {
-    return NeteaseTrack.toSearchStructString(this.list.map((h) => new NeteaseTrack(h.track)));
+    return NeteaseTrack.toSearchStructString(this.list.map((h) => new NeteaseTrack(h.detail)));
   }
 
   static save(instance: AppHistory) {

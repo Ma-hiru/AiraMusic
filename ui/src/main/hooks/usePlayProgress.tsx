@@ -17,7 +17,7 @@ export function usePlayProgress() {
   const [bufferScope, bufferAnimate] = useAnimate();
   const [chorus, setChorus] = useState<NeteaseAPI.NeteaseChorusData[]>([]);
   const player = AppInstance.usePlayer();
-  const track = player.current.track?.track;
+  const track = player.current.track?.detail;
   const barRef = useRef<HTMLDivElement>(null);
   const dragPercentRef = useRef(0);
   const isDragging = useRef(false);

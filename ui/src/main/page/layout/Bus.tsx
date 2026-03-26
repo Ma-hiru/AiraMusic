@@ -1,14 +1,17 @@
-import { FC, memo, useCallback, useEffect } from "react";
-import useListenableHook from "@mahiru/ui/public/hooks/useListenableHook";
+import AppBus from "@mahiru/ui/public/entry/bus";
 import AppWindow from "@mahiru/ui/public/entry/window";
 import AppInstance from "@mahiru/ui/main/entry/instance";
+import useListenableHook from "@mahiru/ui/public/hooks/useListenableHook";
+import { FC, memo, useCallback, useEffect } from "react";
 import { useLayoutStore } from "@mahiru/ui/main/store/layout";
+import { useUpdate } from "@mahiru/ui/public/hooks/useUpdate";
 
 const Bus: FC<object> = () => {
   const { theme } = useLayoutStore();
   const windowAll = useListenableHook(AppWindow.all);
   const windowCurrent = useListenableHook(AppWindow.current);
   const player = useListenableHook(AppInstance.player);
+  const updater = useUpdate();
 
   const updateProgressBus = useCallback(() => {
     windowAll.send("progressBus", player.audio.progress);
@@ -25,14 +28,31 @@ const Bus: FC<object> = () => {
     });
   }, [player, windowAll]);
 
+  const updateInfoBus = useCallback(() => {
+    windowAll.send("infoBus", {
+      backgroundCover: theme.backgroundCover,
+      theme: {
+        mainColor: theme.mainColor,
+        secondaryColor: theme.secondaryColor,
+        textColor: theme.textColorOnMain
+      }
+    });
+  }, [
+    theme.backgroundCover,
+    theme.mainColor,
+    theme.secondaryColor,
+    theme.textColorOnMain,
+    windowAll
+  ]);
+
   useEffect(() => {
-    player.audio.addEventListener("progress", updateProgressBus, { passive: true });
+    player.audio.addEventListener("timeupdate", updateProgressBus, { passive: true });
     player.audio.addEventListener("play", updateProgressBus, { passive: true });
     player.audio.addEventListener("pause", updateProgressBus, { passive: true });
     player.audio.addEventListener("error", updateProgressBus, { passive: true });
     player.audio.addEventListener("loadstart", updateProgressBus, { passive: true });
     return () => {
-      player.audio.removeEventListener("progress", updateProgressBus);
+      player.audio.removeEventListener("timeupdate", updateProgressBus);
       player.audio.removeEventListener("play", updateProgressBus);
       player.audio.removeEventListener("pause", updateProgressBus);
       player.audio.removeEventListener("error", updateProgressBus);
@@ -42,16 +62,13 @@ const Bus: FC<object> = () => {
 
   useEffect(() => player.addListener(updatePlayerBus), [player, updatePlayerBus]);
 
+  useEffect(updateInfoBus, [updateInfoBus]);
+
   useEffect(() => {
-    windowAll.send("infoBus", {
-      backgroundCover: theme.backgroundCover,
-      theme: {
-        mainColor: theme.mainColor,
-        secondaryColor: theme.secondaryColor,
-        textColor: theme.secondaryColor
-      }
-    });
-  }, [theme.backgroundCover, theme.mainColor, theme.secondaryColor, windowAll]);
+    updatePlayerBus();
+    updateProgressBus();
+    updateInfoBus();
+  }, [updateInfoBus, updatePlayerBus, updateProgressBus, updater.count]);
 
   useEffect(() => {
     windowAll.listenAll("playerActionBus", ({ data }) => {
@@ -66,10 +83,20 @@ const Bus: FC<object> = () => {
           return player.playlist.next(true);
         case "exit":
           return windowCurrent.close();
+        case "toggle-lyric-version-rm":
+          AppInstance.player.toggleLyricVersion("rm");
+          return updater();
+        case "toggle-lyric-version-tl":
+          AppInstance.player.toggleLyricVersion("tl");
+          return updater();
+        case "update":
+          return updater();
       }
     });
-  }, [player.audio, player.playlist, windowAll, windowCurrent]);
-  return <></>;
+  }, [player.audio, player.playlist, updater, windowAll, windowCurrent]);
+
+  useEffect(() => AppBus.injectUpdater(updater), [updater]);
+  return null;
 };
 
 export default memo(Bus);

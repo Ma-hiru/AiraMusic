@@ -1,6 +1,6 @@
 <template>
   <div
-    class="flex items-center gap-1.5 px-2 py-1 rounded-md hover:bg-(--theme-color-main)/60 hover:text-(--text-color-on-main) cursor-pointer">
+    class="flex items-center gap-1.5 px-2 py-1 rounded-md hover:bg-(--theme-color-main) hover:text-(--text-color-on-main) cursor-pointer">
     <Icon size="14" />
     <span class="text-[12px]">{{ props.text }}</span>
   </div>

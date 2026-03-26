@@ -1,12 +1,12 @@
+import { onUnmounted, shallowRef, triggerRef } from "vue";
 import { Listenable } from "@mahiru/ui/public/models/Listenable";
-import { ref, triggerRef } from "vue";
 
 export default function useListenableHookVue<T extends Listenable>(listenable: T) {
-  const data = ref(listenable);
+  const state = shallowRef(listenable);
 
-  listenable.addListener(() => {
-    triggerRef(data);
-  });
+  const listener = () => triggerRef(state);
+  listenable.addListener(listener);
+  onUnmounted(() => listenable.removeListener(listener));
 
-  return data;
+  return state;
 }

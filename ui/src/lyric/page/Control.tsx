@@ -1,75 +1,80 @@
-import React, { FC, HTMLAttributes, memo, useCallback, useEffect, useRef, useState } from "react";
+import React, {
+  FC,
+  HTMLAttributes,
+  memo,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState
+} from "react";
 import { css, cx } from "@emotion/css";
-import { Renderer } from "@mahiru/ui/public/entry/renderer";
-import { useLyric } from "@mahiru/ui/public/hooks/useLyric";
 import { useManualAutoScroll } from "@mahiru/ui/public/hooks/useMarquee";
 import { AArrowDown, AArrowUp, LockKeyholeOpen, LucideLock } from "lucide-react";
 import { NeteaseImageSize } from "@mahiru/ui/public/enum";
-import { Time } from "@mahiru/ui/public/entry/time";
 
 import Drag from "@mahiru/ui/public/components/drag/Drag";
 import NeteaseImage from "@mahiru/ui/public/components/image/NeteaseImage";
 import NoDrag from "@mahiru/ui/public/components/drag/NoDrag";
+import useListenableHook from "@mahiru/ui/public/hooks/useListenableHook";
+import AppBus from "@mahiru/ui/public/entry/bus";
+import AppWindow from "@mahiru/ui/public/entry/window";
+import { NeteaseLyric, NeteaseNetworkImage, NeteaseTrack } from "@mahiru/ui/public/models/netease";
 
 type FontSize = `${number}px` | `${number}rem` | `${number}em`;
 
 type ControlProps = Omit<HTMLAttributes<HTMLDivElement>, "color"> & {
   showBg: boolean;
-  playerStatusSync: Nullable<PlayerStatusSync>;
-  trackSync: Nullable<PlayerTrackStatus>;
-  themeSync: ThemeSync;
-  currentTime: number;
-  duration: number;
   color?: string;
+  lyric: Nullable<NeteaseLyric>;
   setColor: NormalFunc<[color?: string]>;
   lock: boolean;
   setLock: NormalFunc<[lock: boolean]>;
-  fontSize: FontSize;
-  setFontSize: NormalFunc<[size: FontSize]>;
+  fontSize: number;
+  setFontSize: NormalFunc<[size: number]>;
 };
 
 const Control: FC<ControlProps> = ({
   showBg,
   color,
   lock,
-  playerStatusSync,
-  trackSync,
-  themeSync,
   setLock,
   setColor,
   fontSize,
   setFontSize,
-  currentTime,
-  duration,
+  lyric,
   ...rest
 }) => {
-  const track = trackSync?.track;
-  const [openColorSelect, setOpenColorSelect] = useState(false);
+  const playerBus = useListenableHook(AppBus.player);
+  const infoBus = useListenableHook(AppBus.info);
+  const progressBus = useListenableHook(AppBus.progress);
   const titleContainer = useRef<HTMLDivElement>(null);
+  const [openColorSelect, setOpenColorSelect] = useState(false);
+
+  const { rmActive, tlActive, hasTl, hasRm } = lyric?.versionInfo() || {};
+  const themeColor = infoBus.data?.theme.mainColor;
+  const track = playerBus.data?.track?.detail;
+  const image = useMemo(
+    () =>
+      NeteaseNetworkImage.fromTrackCover(track)?.setSize(NeteaseImageSize.xs).setAlt(track?.name),
+    [track]
+  );
 
   const upFontSize = useCallback(() => {
-    const currentSize = parseInt(fontSize.replace("px", ""), 10);
-    const newSize = Math.min(currentSize + 2, 72);
-    setFontSize(`${newSize}px`);
+    setFontSize(Math.min(fontSize + 2, 72));
   }, [fontSize, setFontSize]);
 
   const downFontSize = useCallback(() => {
-    const currentSize = parseInt(fontSize.replace("px", ""), 10);
-    const newSize = Math.max(currentSize - 2, 16);
-    setFontSize(`${newSize}px`);
+    setFontSize(Math.max(fontSize - 2, 14));
   }, [fontSize, setFontSize]);
 
-  const setLyricVersion = useCallback((version: LyricVersionType) => {
-    Renderer.sendMessage("reverseSync", "main", {
-      chooseLyricVersion: version
-    });
-  }, []);
-
-  const { hasRm, hasTl, rmActive, tlActive, setRm, setTl } = useLyric(
-    playerStatusSync?.lyricVersion,
-    setLyricVersion,
-    trackSync?.lyric
+  const setLyricVersion = useCallback(
+    (version: "toggle-lyric-version-rm" | "toggle-lyric-version-tl") => {
+      AppWindow.main.send("playerActionBus", version);
+    },
+    []
   );
+
   useManualAutoScroll(titleContainer, {
     speed: 10,
     auto: true,
@@ -79,7 +84,7 @@ const Control: FC<ControlProps> = ({
   });
 
   useEffect(() => {
-    lock && Renderer.event.mousePenetrate(true);
+    lock && AppWindow.current.mousePenetrate(true);
   }, [lock]);
 
   useEffect(() => {
@@ -92,7 +97,7 @@ const Control: FC<ControlProps> = ({
         "w-screen px-2 py-1",
         showBg && "bg-black/40",
         css`
-          color: ${color || themeSync.mainColor || "#ffffff"};
+          color: ${color || themeColor || "#ffffff"};
         `
       )}
       drag={showBg}
@@ -106,19 +111,19 @@ const Control: FC<ControlProps> = ({
           <NoDrag
             onClick={() => setOpenColorSelect(!openColorSelect)}
             className="relative size-4 rounded-sm cursor-pointer mr-1"
-            style={{ backgroundColor: color || themeSync.mainColor || "#ffffff" }}>
+            style={{ backgroundColor: color || themeColor || "#ffffff" }}>
             <NoDrag
               className="absolute top-full mt-2 flex justify-start items-center gap-1 ease-in-out duration-300 transition-opacity"
               style={{
                 opacity: openColorSelect ? 1 : 0,
                 pointerEvents: openColorSelect ? "auto" : "none"
               }}>
-              {themeSync.mainColor && (
+              {themeColor && (
                 <NoDrag
                   className="size-4 rounded-sm cursor-pointer text-[8px] font-semibold"
-                  style={{ backgroundColor: themeSync.mainColor }}
+                  style={{ backgroundColor: themeColor }}
                   onClick={() => {
-                    if (themeSync.mainColor) {
+                    if (themeColor) {
                       setColor(undefined);
                       setOpenColorSelect(false);
                     }
@@ -155,12 +160,7 @@ const Control: FC<ControlProps> = ({
           </NoDrag>
         </div>
         <div className="flex items-center gap-2">
-          <NeteaseImage
-            src={track?.al.picUrl}
-            size={NeteaseImageSize.xs}
-            alt={track?.name}
-            className="rounded-full size-5 shrink-0"
-          />
+          <NeteaseImage cache image={image} className="rounded-full size-5 shrink-0" />
           <div
             ref={titleContainer}
             className={cx(
@@ -180,8 +180,8 @@ const Control: FC<ControlProps> = ({
               <LucideLock
                 className="size-4 cursor-pointer hover:opacity-50 duration-300 ease-in-out transition-all active:scale-90"
                 onClick={() => setLock(false)}
-                onMouseOver={() => Renderer.event.mousePenetrate(false)}
-                onMouseLeave={() => Renderer.event.mousePenetrate(true)}
+                onMouseOver={() => AppWindow.current.mousePenetrate(false)}
+                onMouseLeave={() => AppWindow.current.mousePenetrate(true)}
               />
             ) : (
               <LockKeyholeOpen
@@ -194,7 +194,7 @@ const Control: FC<ControlProps> = ({
             className="flex gap-2 mx-2 ease-in-out duration-300 transition-all"
             style={{ width: lock ? 0 : "auto" }}>
             <NoDrag
-              onClick={setRm}
+              onClick={() => setLyricVersion("toggle-lyric-version-rm")}
               className={cx(
                 "size-4 text-[11px] font-semibold flex justify-center items-center overflow-hidden rounded-xs backdrop-blur-lg cursor-pointer",
                 {
@@ -208,7 +208,7 @@ const Control: FC<ControlProps> = ({
               音
             </NoDrag>
             <NoDrag
-              onClick={setTl}
+              onClick={() => setLyricVersion("toggle-lyric-version-tl")}
               className={cx(
                 "size-4 text-[11px] font-semibold flex justify-center items-center overflow-hidden rounded-xs backdrop-blur-lg cursor-pointer",
                 {
@@ -223,9 +223,9 @@ const Control: FC<ControlProps> = ({
             </NoDrag>
           </div>
           <span className="text-[12px] font-semibold">
-            {Time.formatTrackTime(currentTime, "s")}
+            {NeteaseTrack.formatTime(progressBus.data?.currentTime, "s")}
             {" / "}
-            {Time.formatTrackTime(duration, "s")}
+            {NeteaseTrack.formatTime(progressBus.data?.duration, "s")}
           </span>
         </div>
       </div>

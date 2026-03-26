@@ -1,54 +1,71 @@
 import { MouseEvent as ReactMouseEvent, useCallback, useEffect, useRef, useState } from "react";
 import { cx } from "@emotion/css";
-import { useStage } from "@mahiru/ui/public/hooks/useStage";
-import { useThemeSyncReceive } from "@mahiru/ui/public/hooks/useThemeSyncReceive";
-import { usePlayerProgressSyncReceive } from "@mahiru/ui/public/hooks/usePlayerProgressSyncReceive";
-import { usePlayerStatusSyncReceive } from "@mahiru/ui/public/hooks/usePlayerStatusSyncReceive";
-import { usePlayerTrackSyncReceive } from "@mahiru/ui/public/hooks/usePlayerTrackSyncReceive";
-import { PlayerFSMStatusEnum, Stage } from "@mahiru/ui/public/enum";
 import { WindowResize } from "@mahiru/ui/public/hooks/useWindowResize";
 import { useAppLoaded } from "@mahiru/ui/public/hooks/useAppLoaded";
 
 import LyricComponent, { LyricRef } from "@mahiru/ui/public/components/lyric/LyricContainer";
 import Control from "./Control";
+import useListenableHook from "@mahiru/ui/public/hooks/useListenableHook";
+import AppBus from "@mahiru/ui/public/entry/bus";
+import { NeteaseLyric } from "@mahiru/ui/public/models/netease";
 
 export default function LyricPage() {
-  useAppLoaded(true, { broadcast: true });
-
-  const { stage } = useStage();
+  useAppLoaded();
   const lyricRef = useRef<LyricRef>(null);
   const [showBg, setShowBg] = useState(false);
   const [lock, setLock] = useState(false);
   const [color, setColor] = useState(() => {
     return window.localStorage.getItem("lyricWindowColor") || undefined;
   });
-  const [fontSize, setFontSize] = useState<FontSize>(() => {
-    return (window.localStorage.getItem("lyricWindowFontSize") as FontSize) || "16px";
+  const [fontSize, setFontSize] = useState<number>(() => {
+    return Number(window.localStorage.getItem("lyricWindowFontSize")) || 16;
   });
   const showBgTimer = useRef<Nullable<ReturnType<typeof setTimeout>>>(null);
 
-  const { themeSync } = useThemeSyncReceive();
-  const { progressSync } = usePlayerProgressSyncReceive();
-  const { playerStatusSync } = usePlayerStatusSyncReceive();
-  const { trackSync } = usePlayerTrackSyncReceive();
-
+  const playerBus = useListenableHook(AppBus.player);
+  const infoBus = useListenableHook(AppBus.info);
+  const progressBus = useListenableHook(AppBus.progress);
   const getInfo = useRef({
-    progressSync,
-    playerStatusSync
+    playerBus,
+    infoBus,
+    progressBus
   });
-  getInfo.current.progressSync = progressSync;
-  getInfo.current.playerStatusSync = playerStatusSync;
+  getInfo.current = {
+    playerBus,
+    infoBus,
+    progressBus
+  };
 
+  const [lyric, setLyric] = useState<Nullable<NeteaseLyric>>(null);
+  const lastPlayerBus = useRef(playerBus.data);
+  useEffect(() => {
+    if (!playerBus.data?.lyric) {
+      setLyric(null);
+    } else if (
+      lastPlayerBus.current?.track?.id !== playerBus.data.track?.id ||
+      lastPlayerBus.current?.lyricVersion !== playerBus.data.lyricVersion
+    ) {
+      const newLyric = new NeteaseLyric(playerBus.data.lyric);
+      newLyric.versionChange(playerBus.data.lyricVersion);
+      setLyric(newLyric);
+      lastPlayerBus.current = playerBus.data;
+    }
+  }, [
+    playerBus.data,
+    playerBus.data?.lyric,
+    playerBus.data?.lyricVersion,
+    playerBus.data?.track?.id
+  ]);
   // 歌词播放同步
   useEffect(() => {
     let lastTime = 0;
-    let isRunning = playerStatusSync?.fsmState === PlayerFSMStatusEnum.playing;
+    let isRunning = playerBus.data?.status === "playing";
 
     const onFrame = (time: number) => {
       if (!isRunning) return;
 
-      const { playerStatusSync, progressSync } = getInfo.current;
-      if (playerStatusSync?.fsmState !== PlayerFSMStatusEnum.playing) {
+      const { playerBus, progressBus } = getInfo.current;
+      if (playerBus.data?.status !== "playing") {
         isRunning = false;
         return;
       }
@@ -58,7 +75,7 @@ export default function LyricPage() {
       lastTime = time;
 
       lyricRef.current?.update(delta);
-      lyricRef.current?.setCurrentTime(progressSync.currentTime * 1000 || 0);
+      lyricRef.current?.setCurrentTime((progressBus.data?.currentTime || 0) * 1000);
 
       requestAnimationFrame(onFrame);
     };
@@ -67,7 +84,7 @@ export default function LyricPage() {
     return () => {
       isRunning = false;
     };
-  }, [playerStatusSync?.fsmState]);
+  }, [playerBus.data?.status]);
   // 颜色变化
   useEffect(() => {
     if (color !== undefined) window.localStorage.setItem("lyricWindowColor", color);
@@ -75,7 +92,7 @@ export default function LyricPage() {
   }, [color]);
   // 字体大小变化
   useEffect(() => {
-    window.localStorage.setItem("lyricWindowFontSize", fontSize);
+    window.localStorage.setItem("lyricWindowFontSize", String(fontSize));
   }, [fontSize]);
 
   const handleClick = useCallback(
@@ -128,35 +145,30 @@ export default function LyricPage() {
         )}
         onClick={handleClick}
         onMouseOver={handleMouseOver}>
-        <div className={cx("w-full h-full overflow-hidden", lock && "pointer-events-none")}>
+        <div className={cx("w-full h-full p-2 overflow-hidden", lock && "pointer-events-none")}>
           <LyricComponent
             ref={lyricRef}
             fontSize={fontSize}
-            activeColor={(color ?? themeSync.mainColor) || "#ffffff"}
-            lyric={trackSync?.lyric}
-            version={playerStatusSync?.lyricVersion}
+            activeColor={(color ?? infoBus.data?.theme.mainColor) || "#ffffff"}
+            lyric={lyric}
+            version={lyric?.currentVersion}
             crossAlign="center"
             mainAlign="top"
+            spring={false}
           />
         </div>
       </div>
-      {stage >= Stage.First && (
-        <Control
-          playerStatusSync={playerStatusSync}
-          trackSync={trackSync}
-          themeSync={themeSync}
-          currentTime={progressSync.currentTime}
-          duration={progressSync.duration}
-          color={color}
-          setColor={setColor}
-          showBg={showBg}
-          lock={lock}
-          setLock={setLock}
-          fontSize={fontSize}
-          setFontSize={setFontSize}
-        />
-      )}
-      {stage >= Stage.Finally && <WindowResize disable={lock || !showBg} showArea={false} />}
+      <Control
+        lyric={lyric}
+        color={color}
+        setColor={setColor}
+        showBg={showBg}
+        lock={lock}
+        setLock={setLock}
+        fontSize={fontSize}
+        setFontSize={setFontSize}
+      />
+      <WindowResize disable={lock || !showBg} showArea={false} />
     </div>
   );
 }

@@ -2,7 +2,8 @@ import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
 import HTTPConstants from "@mahiru/ui/public/constants/http";
 import { Log } from "@mahiru/ui/public/utils/dev";
 import { nextIdle } from "@mahiru/ui/public/utils/frame";
-import NeteaseSource from "@mahiru/ui/public/entry/source";
+import AppToast from "@mahiru/ui/public/entry/toast";
+import AppAuth from "@mahiru/ui/public/entry/auth";
 
 export const apiRequest = axios.create({
   baseURL: HTTPConstants.NCMBaseURL,
@@ -33,7 +34,11 @@ apiRequest.interceptors.response.use(
       return Promise.reject(error);
     } else if (data.code === 301 && message.includes("需要登录")) {
       Log.warn("apiRequest.ts", "token has expired");
-      NeteaseSource.User.logout();
+      AppToast.request({
+        type: "info",
+        text: "登录状态已过期，请重新登录"
+      });
+      AppAuth.logout().then(AppAuth.createLoginWindow);
     } else if (
       data.code === HTTPConstants.RetryCode &&
       // 只有在请求过于频繁且请求幂等的情况下才自动重试，否则直接报错

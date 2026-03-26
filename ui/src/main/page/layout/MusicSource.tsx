@@ -14,7 +14,7 @@ const MusicSource: FC<object> = () => {
   const { updateWindowTitle, defaultTitle } = useWindowTitle();
   useEffect(() => {
     const title = player.current.track?.name;
-    const artist = player.current.track?.track.artist?.().join("&");
+    const artist = player.current.track?.detail.artist?.().join("&");
     if (title && artist) {
       updateWindowTitle(`${title} - ${artist}`);
     } else {

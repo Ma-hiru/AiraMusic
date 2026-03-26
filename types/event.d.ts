@@ -66,7 +66,7 @@ type MessageTypeMap = {
       name: string;
       sourceID: number;
       sourceName: "playlist" | "album" | "other";
-      track: NeteaseTrackModel;
+      detail: NeteaseTrackModel;
     }>;
     lyric: Optional<FullVersionLyricLine>;
     lyricVersion: Optional<LyricVersionType>;
@@ -80,7 +80,15 @@ type MessageTypeMap = {
     volume: number;
     buffered: number;
   };
-  playerActionBus: "next" | "previous" | "play" | "pause" | "exit";
+  playerActionBus:
+    | "next"
+    | "previous"
+    | "play"
+    | "pause"
+    | "exit"
+    | "update"
+    | "toggle-lyric-version-rm"
+    | "toggle-lyric-version-tl";
   commentBus: {
     id: number;
     type: unknown;

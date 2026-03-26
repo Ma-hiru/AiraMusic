@@ -200,13 +200,14 @@ function setRawMenu(tray: Tray) {
             {
               label: "复制歌手名",
               click: () => {
-                playerBus && clipboard.writeText(playerBus.track.ar.map((a) => a.name).join("&"));
+                playerBus?.track?.detail &&
+                  clipboard.writeText(playerBus.track.detail.ar.map((a) => a.name).join("&"));
               }
             },
             {
               label: "复制专辑名",
               click: () => {
-                playerBus && clipboard.writeText(playerBus.track.al.name);
+                playerBus?.track?.detail && clipboard.writeText(playerBus.track?.detail.al.name);
               }
             }
           ]

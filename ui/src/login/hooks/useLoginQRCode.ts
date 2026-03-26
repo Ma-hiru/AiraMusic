@@ -1,7 +1,7 @@
 import QRCode from "qrcode";
+import NCM_API from "@mahiru/ui/public/api";
 import { useCallback, useEffect, useState } from "react";
 import { EqError, Log } from "@mahiru/ui/public/utils/dev";
-import NCM_API from "@mahiru/ui/public/api";
 
 interface LoginQRCodeProps {
   qrOptions?: QRCode.QRCodeToDataURLOptions;
@@ -18,8 +18,7 @@ export function useLoginQRCode(props?: LoginQRCodeProps) {
   // 请求并生成二维码
   const fetchQRCode = useCallback(async () => {
     try {
-      const { QRCodeKey, QRCodeURL } = await requestQRCode();
-      const QRDataURL = await genCodeDataURL(QRCodeURL, {
+      const { QRCodeKey, QRDataURL } = await requestQRCode({
         width: 200,
         margin: 2,
         color: {
@@ -34,7 +33,7 @@ export function useLoginQRCode(props?: LoginQRCodeProps) {
     } catch (err) {
       Log.error(
         new EqError({
-          label: "hook/useQRCode.ts",
+          label: "useQRCode",
           message: "failed to request QR code",
           raw: err
         })
@@ -49,29 +48,46 @@ export function useLoginQRCode(props?: LoginQRCodeProps) {
   }, []);
   // 初始化时获取二维码
   useEffect(() => {
-    if (status === QRCodeStatus.INITIALIZED) {
-      void fetchQRCode();
-    }
+    status === QRCodeStatus.INITIALIZED && fetchQRCode();
   }, [fetchQRCode, status]);
   // 定时检查二维码状态
   useEffect(() => {
     if (key) {
       const timer = setInterval(() => {
-        checkQRCode(key).then((check) => {
-          setStatus(check.code);
-          setResult(check.result);
-          if (
-            check.code === QRCodeStatus.EXPIRED ||
-            check.code === QRCodeStatus.AUTHORIZED ||
-            check.code === QRCodeStatus.ERROR
-          ) {
+        checkQRCode(key)
+          .then((check) => {
+            setStatus(check.code);
+            setResult(check.result);
+            if (
+              check.code === QRCodeStatus.EXPIRED ||
+              check.code === QRCodeStatus.AUTHORIZED ||
+              check.code === QRCodeStatus.ERROR
+            ) {
+              clearInterval(timer);
+            }
+          })
+          .catch((err) => {
+            Log.error(
+              new EqError({
+                label: "useQRCode",
+                message: "failed to check QR code",
+                raw: err
+              })
+            );
+            setStatus(QRCodeStatus.ERROR);
+            setResult(null);
             clearInterval(timer);
-          }
-        });
+          });
       }, checkInterval);
       return () => clearInterval(timer);
     }
   }, [checkInterval, key]);
+  // 结果错误时设置Error状态
+  useEffect(() => {
+    if (status === QRCodeStatus.AUTHORIZED && !result?.cookie) {
+      setStatus(QRCodeStatus.ERROR);
+    }
+  }, [result?.cookie, status]);
 
   return {
     status,
@@ -90,42 +106,17 @@ export enum QRCodeStatus {
   INITIALIZED = 0
 }
 
-async function requestQRCode() {
+async function requestQRCode(options: QRCode.QRCodeToDataURLOptions) {
   const keyResult = await NCM_API.Auth.loginQrCodeKey();
   const codeResult = await NCM_API.Auth.loginQrCodeCreate({ key: keyResult.data.unikey });
+  const codeDataURL = await QRCode.toDataURL(codeResult.data.qrurl, options);
   return {
     QRCodeKey: keyResult.data.unikey,
-    QRCodeURL: codeResult.data.qrurl
+    QRDataURL: codeDataURL
   };
 }
 
 async function checkQRCode(codeKey: string) {
-  try {
-    const checkResult = await NCM_API.Auth.loginQrCodeCheck(codeKey);
-    return { code: checkResult.code as QRCodeStatus, result: checkResult };
-  } catch (err) {
-    Log.error(
-      new EqError({
-        label: "LoginPage.tsx:checkCode",
-        message: "failed to check QR code status",
-        raw: err
-      })
-    );
-    return { code: QRCodeStatus.ERROR, result: null };
-  }
-}
-
-async function genCodeDataURL(url: string, options: QRCode.QRCodeToDataURLOptions) {
-  try {
-    return await QRCode.toDataURL(url, options);
-  } catch (err) {
-    Log.error(
-      new EqError({
-        label: "LoginPage.tsx:genCodeDataURL",
-        message: "failed to generate QR code",
-        raw: err
-      })
-    );
-    return null;
-  }
+  const checkResult = await NCM_API.Auth.loginQrCodeCheck(codeKey);
+  return { code: checkResult.code as QRCodeStatus, result: checkResult };
 }

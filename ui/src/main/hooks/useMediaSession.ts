@@ -68,14 +68,14 @@ export function useMediaSession(props: {
     if (!window?.navigator?.mediaSession) return;
     if (!track) return;
     const { mediaSession } = navigator;
-    const artist = track.track.ar.map((artist) => artist.name).join("&");
-    const artworkSrc = NeteaseURL.setImageSize(track?.track.al.picUrl, NeteaseImageSize.lg) || "";
-    const signature = `${track?.track.id}|${artist}|${artworkSrc}`;
+    const artist = track.detail.ar.map((artist) => artist.name).join("&");
+    const artworkSrc = NeteaseURL.setImageSize(track?.detail.al.picUrl, NeteaseImageSize.lg) || "";
+    const signature = `${track?.detail.id}|${artist}|${artworkSrc}`;
     if (mediaMetadataSignatureRef.current !== signature) {
       mediaSession.metadata = new MediaMetadata({
-        title: track.track.name,
+        title: track.detail.name,
         artist,
-        album: track.track.al.name,
+        album: track.detail.al.name,
         artwork: [
           {
             src: artworkSrc,

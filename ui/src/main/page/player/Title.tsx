@@ -3,7 +3,7 @@ import AppInstance from "@mahiru/ui/main/entry/instance";
 
 const Title: FC<object> = () => {
   const player = AppInstance.usePlayer();
-  const track = player.current.track?.track;
+  const track = player.current.track?.detail;
   const ts = track?.translate?.();
   const alias = track?.aliaName?.();
   const title = track?.splitTitle?.();
