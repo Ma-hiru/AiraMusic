@@ -3,7 +3,7 @@ import AppWindow from "@mahiru/ui/public/entry/window";
 
 let loaded = false;
 
-export function useAppLoaded(condition?: Optional<Promise<void>>) {
+export function useAppLoaded(condition?: Optional<Promise<any>>) {
   useEffect(() => {
     if (loaded) return;
     (condition || Promise.resolve())

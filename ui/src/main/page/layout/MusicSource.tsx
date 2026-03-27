@@ -2,10 +2,10 @@ import { FC, memo, useEffect, useState } from "react";
 import { useWindowTitle } from "@mahiru/ui/public/hooks/useWindowTitle";
 import { ShortcutConfig, useKeyboardShortcut } from "@mahiru/ui/public/hooks/useKeyboardShortcut";
 import { useMediaSession } from "@mahiru/ui/main/hooks/useMediaSession";
-import AppInstance from "@mahiru/ui/main/entry/instance";
 import { useLayoutStore } from "@mahiru/ui/main/store/layout";
 import { useSpectrumWorker } from "@mahiru/ui/main/hooks/useSpectrumWorker";
 import { AppPlayerStatus } from "@mahiru/ui/public/entry/player";
+import AppInstance from "@mahiru/ui/main/entry/instance";
 
 const MusicSource: FC<object> = () => {
   const player = AppInstance.usePlayer();
@@ -74,6 +74,12 @@ const MusicSource: FC<object> = () => {
       });
     }
   }, [layout, other.typing, player, updateLayout]);
+  // 禁 Tab 键
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => e.key === "Tab" && e.preventDefault();
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, []);
   // 注册 Media Session API
   useMediaSession({
     play: () => player.audio.play(),

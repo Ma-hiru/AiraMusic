@@ -1,4 +1,4 @@
-import { FC, memo, useEffect } from "react";
+import { FC, memo, useEffect, useMemo } from "react";
 import { useStage } from "@mahiru/ui/public/hooks/useStage";
 import { useAppLoaded } from "@mahiru/ui/public/hooks/useAppLoaded";
 import { Stage } from "@mahiru/ui/public/enum";
@@ -17,18 +17,14 @@ import Bus from "./Bus";
 
 const Layout: FC<object> = () => {
   const { stage } = useStage();
-  // 禁 Tab
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === "Tab") {
-        e.preventDefault();
-      }
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, []);
+  const { promise, resolve } = useMemo(() => Promise.withResolvers<void>(), []);
 
-  useAppLoaded();
+  useAppLoaded(promise);
+
+  useEffect(() => {
+    stage >= Stage.Finally && resolve();
+  }, [resolve, stage]);
+
   return (
     <div
       className={`
