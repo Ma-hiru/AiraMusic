@@ -57,8 +57,14 @@ const mainEventAPI = {
     Log.debug("closeInternalWindow", type, "win found:", !!win);
     if (!win || win.isDestroyed()) return;
     try {
-      if (type && type !== "main") win.destroy();
-      else win.close();
+      if (type === "main") {
+        for (const [type, win] of WindowManager.getAll()) {
+          type !== "main" && win.destroy();
+        }
+        win.close();
+      } else {
+        win.destroy();
+      }
     } catch (err) {
       Log.error("closeInternalWindow", type, err);
     }

@@ -37,25 +37,13 @@ export default function LyricPage() {
   };
 
   const [lyric, setLyric] = useState<Nullable<NeteaseLyric>>(null);
-  const lastPlayerBus = useRef(playerBus.data);
   useEffect(() => {
-    if (!playerBus.data?.lyric) {
-      setLyric(null);
-    } else if (
-      lastPlayerBus.current?.track?.id !== playerBus.data.track?.id ||
-      lastPlayerBus.current?.lyricVersion !== playerBus.data.lyricVersion
-    ) {
-      const newLyric = new NeteaseLyric(playerBus.data.lyric);
-      newLyric.versionChange(playerBus.data.lyricVersion);
-      setLyric(newLyric);
-      lastPlayerBus.current = playerBus.data;
-    }
-  }, [
-    playerBus.data,
-    playerBus.data?.lyric,
-    playerBus.data?.lyricVersion,
-    playerBus.data?.track?.id
-  ]);
+    if (!playerBus.data?.lyric) return setLyric(null);
+    const newLyric = new NeteaseLyric(playerBus.data.lyric);
+    newLyric.versionChange(playerBus.data.lyricVersion);
+    setLyric(newLyric);
+  }, [playerBus.data?.lyric, playerBus.data?.lyricVersion]);
+
   // 歌词播放同步
   useEffect(() => {
     let lastTime = 0;
