@@ -1,1 +1,0 @@
-export { registerIpcMain } from "./main";

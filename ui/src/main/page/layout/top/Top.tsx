@@ -46,7 +46,7 @@ const Top: FC<{ className?: string }> = ({ className }) => {
       </div>
       <div className="flex-1 flex flex-row gap-4 items-center justify-end">
         <TopSearch />
-        <TopAvatar user={user} />
+        {layout.playModal && <TopAvatar user={user} />}
         <TopDivider />
         <TopControl />
       </div>

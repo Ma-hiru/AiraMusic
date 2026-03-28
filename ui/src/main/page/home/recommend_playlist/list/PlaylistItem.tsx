@@ -1,7 +1,6 @@
 import { FC, memo, useCallback, useMemo } from "react";
 import { CirclePlay } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { NeteaseImageSize } from "@mahiru/ui/public/enum";
 
 import NeteaseImage from "@mahiru/ui/public/components/image/NeteaseImage";
 import { RoutePathConstants } from "@mahiru/ui/main/constants";
