@@ -1,4 +1,4 @@
-import { FC, memo } from "react";
+import { FC, memo, useEffect } from "react";
 import {
   AppWindow as AppWindowIcon,
   Minus,
@@ -13,25 +13,54 @@ import NoDrag from "@mahiru/ui/public/components/drag/NoDrag";
 import AppWindow from "@mahiru/ui/public/entry/window";
 import useListenableHook from "@mahiru/ui/public/hooks/useListenableHook";
 import AppInstance from "@mahiru/ui/main/entry/instance";
+import AppBus from "@mahiru/ui/public/entry/bus";
 
 const TopControl: FC = () => {
-  const win = useListenableHook(AppWindow.current);
-  const close = () => {
-    win.hide();
-    AppInstance.player.audio.pause();
-    AppInstance.dispose().then(() => {
-      setTimeout(win.close, 2500);
-    });
+  const currentWindow = useListenableHook(AppWindow.current);
+  const miniWindow = useListenableHook(AppWindow.from("miniplayer"));
+
+  const close = async () => {
+    const { promise, resolve } = Promise.withResolvers<void>();
+    currentWindow.hide();
+    AppInstance.dispose().finally(resolve);
+    AppWindow.all.hide();
+
+    await promise;
+    currentWindow.close();
   };
-  const mini = () => {};
+
+  const mini = () => {
+    currentWindow.hide();
+    miniWindow.show();
+  };
+
+  useEffect(() => {
+    if (miniWindow.opened) return;
+    miniWindow.openThen(() => {
+      AppBus.updater?.();
+    });
+  }, [miniWindow]);
+
+  useEffect(
+    () => (miniWindow.isShow ? currentWindow.hide() : currentWindow.show()),
+    [currentWindow, miniWindow.isShow]
+  );
 
   return (
     <NoDrag className="flex flex-row gap-4 select-none">
-      <ControlButton show={isDev} Icon={AppWindowIcon} onClick={() => win.devTools()} />
-      <ControlButton Icon={Minus} onClick={() => win.minimize()} />
+      <ControlButton show={isDev} Icon={AppWindowIcon} onClick={() => currentWindow.devTools()} />
+      <ControlButton Icon={Minus} onClick={() => currentWindow.minimize()} />
       <ControlButton Icon={PictureInPicture} onClick={mini} />
-      <ControlButton show={win.isMax} Icon={SquareMinus} onClick={() => win.unmaximize()} />
-      <ControlButton show={!win.isMax} Icon={Square} onClick={() => win.maximize()} />
+      <ControlButton
+        show={currentWindow.isMax}
+        Icon={SquareMinus}
+        onClick={() => currentWindow.unmaximize()}
+      />
+      <ControlButton
+        show={!currentWindow.isMax}
+        Icon={Square}
+        onClick={() => currentWindow.maximize()}
+      />
       <ControlButton Icon={X} onClick={close} />
     </NoDrag>
   );

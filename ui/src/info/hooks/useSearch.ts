@@ -1,15 +1,16 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { debounce } from "lodash-es";
 import { SearchType } from "@mahiru/ui/public/enum";
-import { API } from "@mahiru/ui/public/api";
+import NCM_API from "@mahiru/ui/public/api";
 
 export function useSearch(size: number = 50) {
-  const [hotSearchList, setHotSearchList] = useState<NeteaseSearchHotListDetail[]>([]);
+  const [hotSearchList, setHotSearchList] = useState<NeteaseAPI.NeteaseSearchHotListDetail[]>([]);
   const [defaultSearchKeyword, setDefaultSearchKeyword] =
-    useState<Nullable<NeteaseSearchDefaultKeywords>>(null);
+    useState<Nullable<NeteaseAPI.NeteaseSearchDefaultKeywords>>(null);
   const [loading, setLoading] = useState(false);
   const [failed, setFailed] = useState(false);
-  const [searchResult, setSearchResult] = useState<Nullable<NeteaseSearchResult<"all">>>(null);
+  const [searchResult, setSearchResult] =
+    useState<Nullable<NeteaseAPI.NeteaseSearchResult<"all">>>(null);
   const [searchType, setSearchType] = useState<SearchType>(SearchType.COMPREHENSIVE);
   const [keywords, setKeywords] = useState("");
   const hasMore = useRef(false);
@@ -25,7 +26,7 @@ export function useSearch(size: number = 50) {
       if (!hasMore.current) return;
       setLoading(true);
       setFailed(false);
-      API.Search.search({
+      NCM_API.Search.search({
         keywords,
         type: searchType,
         searchType: "NORMAL",
@@ -42,7 +43,8 @@ export function useSearch(size: number = 50) {
               break;
             }
             case SearchType.SONG: {
-              const songsResult = (response as NeteaseSearchResultResponse<"song">).result;
+              const songsResult = (response as NeteaseAPI.NeteaseSearchResultResponse<"song">)
+                .result;
               setSearchResult(response.result);
               setTotalResult(songsResult.songCount);
               setCurrentPage(pageNo);
@@ -50,7 +52,8 @@ export function useSearch(size: number = 50) {
               break;
             }
             case SearchType.ALBUM: {
-              const albumsResult = (response as NeteaseSearchResultResponse<"album">).result;
+              const albumsResult = (response as NeteaseAPI.NeteaseSearchResultResponse<"album">)
+                .result;
               setSearchResult(response.result);
               setTotalResult(albumsResult.albumCount);
               setCurrentPage(pageNo);
@@ -58,7 +61,8 @@ export function useSearch(size: number = 50) {
               break;
             }
             case SearchType.ARTIST: {
-              const artistsResult = (response as NeteaseSearchResultResponse<"artist">).result;
+              const artistsResult = (response as NeteaseAPI.NeteaseSearchResultResponse<"artist">)
+                .result;
               setSearchResult(response.result);
               setTotalResult(artistsResult.artistCount);
               setCurrentPage(pageNo);
@@ -66,7 +70,9 @@ export function useSearch(size: number = 50) {
               break;
             }
             case SearchType.PLAYLIST: {
-              const playlistsResult = (response as NeteaseSearchResultResponse<"playlist">).result;
+              const playlistsResult = (
+                response as NeteaseAPI.NeteaseSearchResultResponse<"playlist">
+              ).result;
               setSearchResult(response.result);
               setTotalResult(playlistsResult.playlistCount);
               setCurrentPage(pageNo);
@@ -97,14 +103,14 @@ export function useSearch(size: number = 50) {
   }, [requestResult]);
 
   useEffect(() => {
-    API.Search.searchHotListDetail().then((response) => {
+    NCM_API.Search.hotListDetail().then((response) => {
       setHotSearchList(response.data);
     });
-    API.Search.searchDefaultKeywords().then((response) => {
+    NCM_API.Search.defaultKeywords().then((response) => {
       setDefaultSearchKeyword(response.data);
     });
     const timer = setInterval(() => {
-      API.Search.searchDefaultKeywords().then((response) => {
+      NCM_API.Search.defaultKeywords().then((response) => {
         setDefaultSearchKeyword(response.data);
       });
     }, 60000);
@@ -140,9 +146,9 @@ export const requestSuggest = debounce(searchSuggest, 300);
 
 function searchSuggest(
   keyword: string,
-  callback: NormalFunc<[result: NeteaseSearchSuggestionResponse["result"]]>
+  callback: NormalFunc<[result: NeteaseAPI.NeteaseSearchSuggestionResponse["result"]]>
 ) {
-  API.Search.searchSuggest(keyword).then((response) => {
+  NCM_API.Search.suggest(keyword).then((response) => {
     callback(response.result);
   });
 }

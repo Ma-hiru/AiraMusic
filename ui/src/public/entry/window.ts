@@ -8,6 +8,7 @@ export default class AppWindow extends Listenable {
   readonly type: WindowType;
   private readonly id: string;
   private _opened: boolean;
+  private _show: boolean;
   private _max: boolean;
   private _min: boolean;
 
@@ -29,6 +30,15 @@ export default class AppWindow extends Listenable {
     this.executeListeners();
   }
 
+  get isShow() {
+    return this._show;
+  }
+
+  set isShow(show) {
+    this._show = show;
+    this.executeListeners();
+  }
+
   get opened() {
     return this._opened;
   }
@@ -44,6 +54,7 @@ export default class AppWindow extends Listenable {
     this._opened = false;
     this._max = false;
     this._min = false;
+    this._show = false;
     this.id = window.crypto.randomUUID();
     AppRenderer.Message.listen(
       "windowBus",
@@ -53,10 +64,15 @@ export default class AppWindow extends Listenable {
         switch (action) {
           case "show": {
             this.opened = true;
+            this.isShow = true;
             break;
           }
           case "close": {
             this.opened = false;
+            break;
+          }
+          case "hide": {
+            this.isShow = false;
             break;
           }
           case "maximize": {

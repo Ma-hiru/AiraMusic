@@ -39,7 +39,7 @@ export default defineConfig(({ mode }) => {
           index: join(__dirname, "index.html"),
           // info: join(__dirname, "info.html"),
           login: join(__dirname, "login.html"),
-          // mini: join(__dirname, "mini.html"),
+          mini: join(__dirname, "mini.html"),
           lyric: join(__dirname, "lyric.html"),
           tray: join(__dirname, "tray.html"),
           image: join(__dirname, "image.html")

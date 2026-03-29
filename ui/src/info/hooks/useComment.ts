@@ -59,7 +59,7 @@ export function useComment({
           Log.error(
             new EqError({
               raw: err,
-              label: "hook/useComment.ts:requestComment",
+              label: "useComment",
               message: "failed to fetch comments"
             })
           );

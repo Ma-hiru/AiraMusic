@@ -1,8 +1,7 @@
 import { WindowID } from "../window";
 
-export const MAIN_WINDOW_TITLE = "simple-cloud-music";
+export const MAIN_WINDOW_TITLE = process.env.APP_NAME;
 export const MAIN_WINDOW_ID: WindowID = "main";
-export const WINDOW_LOAD_TIMEOUT = 15 * 1000; // 15 seconds
 /** 16:9 */
 export const DEFAULT_WINDOW_WIDTH_HEIGHT_RATIO = 1.7;
 /** 80% of the screen */

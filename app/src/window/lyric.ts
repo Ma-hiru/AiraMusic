@@ -5,7 +5,6 @@ import { Store } from "../app/store";
 import { isDev } from "../utils/dev";
 import { Log } from "../utils/log";
 import { EqError } from "../utils/err";
-import { CONSTANTS } from "@mahiru/app/src/constant";
 import { isLinux } from "../utils/platform";
 
 export function CreateLyricWindow() {
@@ -71,16 +70,4 @@ function loadLyricWindowURL(LyricWindow: Electron.BrowserWindow, port: string | 
       })
     );
   });
-  setTimeout(() => {
-    if (!WindowManager.get("lyric")?.isVisible()) {
-      // 超时仍未显示窗口，说明加载失败
-      Log.error(
-        new EqError({
-          label: "app/window/lyric.ts",
-          message: `lyric window failed to load within expected time`
-        })
-      );
-      WindowManager.get("lyric")?.close();
-    }
-  }, CONSTANTS.APP.WINDOW_LOAD_TIMEOUT);
 }

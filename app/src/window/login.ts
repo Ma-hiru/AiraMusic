@@ -5,7 +5,6 @@ import { isDev } from "../utils/dev";
 import { Log } from "../utils/log";
 import { EqError } from "../utils/err";
 import { BrowserWindow } from "electron";
-import { CONSTANTS } from "@mahiru/app/src/constant";
 
 export function CreateLoginWindow() {
   if (WindowManager.checkAndShow("login")) return;
@@ -51,16 +50,4 @@ function loadLoginWindowURL(LoginWindow: BrowserWindow, port: string | number) {
       })
     );
   });
-  setTimeout(() => {
-    if (!WindowManager.get("login")?.isVisible()) {
-      // 超时仍未显示窗口，说明加载失败
-      Log.error(
-        new EqError({
-          label: "app/window/login.ts",
-          message: `login window failed to load within expected time`
-        })
-      );
-      WindowManager.get("login")?.close();
-    }
-  }, CONSTANTS.APP.WINDOW_LOAD_TIMEOUT);
 }

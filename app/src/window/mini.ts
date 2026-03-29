@@ -1,11 +1,10 @@
-import { Store } from "../app/store";
+import { Store } from "../app";
 import { checkPositionOutScreenBounds, getEffectiveWindowSize } from "../utils/screen";
 import { WindowExits, WindowManager } from "./manager";
 import { preloadPath } from "../utils/path";
 import { isDev } from "../utils/dev";
 import { Log } from "../utils/log";
 import { EqError } from "../utils/err";
-import { CONSTANTS } from "@mahiru/app/src/constant";
 import { isLinux } from "../utils/platform";
 
 export function CreateMiniWindow() {
@@ -77,16 +76,4 @@ function loadMiniWindowURL(MiniplayerWindow: Electron.BrowserWindow, port: strin
       })
     );
   });
-  setTimeout(() => {
-    if (!WindowManager.get("miniplayer")?.isVisible()) {
-      // 超时仍未显示窗口，说明加载失败
-      Log.error(
-        new EqError({
-          label: "app/window/mini.ts",
-          message: `miniplayer window failed to load within expected time`
-        })
-      );
-      WindowManager.get("miniplayer")?.close();
-    }
-  }, CONSTANTS.APP.WINDOW_LOAD_TIMEOUT);
 }

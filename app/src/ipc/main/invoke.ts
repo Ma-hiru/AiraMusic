@@ -1,59 +1,13 @@
 import { app, BrowserWindow, dialog, ipcMain } from "electron";
 import { MainInvokeAPI } from "./typed";
-import { Log } from "../../utils/log";
-import { EqError } from "../../utils/err";
-import { fileURLToPath } from "node:url";
 import { WindowManager } from "../../window";
 import { storeKeyAccessToken } from "../../utils/dev";
 import Dns from "node:dns/promises";
 import Net from "node:net";
 import Https from "node:https";
 import Fs from "node:fs/promises";
-import Path from "node:path";
 
 const mainInvokeAPI = {
-  readFile: async (_, localPath) => {
-    try {
-      localPath.startsWith("file://") && (localPath = fileURLToPath(localPath));
-      localPath = Path.resolve(Path.normalize(localPath));
-      const data = await Fs.readFile(localPath);
-      return {
-        ok: true,
-        data: data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength)
-      };
-    } catch (err) {
-      Log.error(
-        new EqError({
-          raw: err,
-          message: `failed to read file at path: ${localPath}`,
-          label: "app/ipc/main/invoke.ts:readFile"
-        })
-      );
-      return {
-        ok: false
-      };
-    }
-  },
-  writeFile: async (_, { buffer, name }) => {
-    if (!buffer) return { ok: false, error: "buffer 为空" };
-
-    const { canceled, filePath } = await dialog.showSaveDialog({
-      title: "保存图片",
-      defaultPath: name
-    });
-    if (canceled) return { ok: false };
-    if (!filePath) return { ok: false, error: "非法路径" };
-    try {
-      await Fs.writeFile(filePath, Buffer.from(buffer));
-    } catch (err) {
-      return {
-        ok: false,
-        error: String(err)
-      };
-    }
-
-    return { ok: true };
-  },
   selectPath: async (_, type) => {
     const { canceled, filePath } = await dialog.showSaveDialog({
       title: type === "dir" ? "选择目录" : "选择文件"

@@ -117,11 +117,13 @@ export class APP {
     if (this.exiting) return;
     this.exiting = true;
     Log.debug("app exiting...");
-    Promise.allSettled([this.stopAllServers()]).finally(() => {
-      this.cleanup();
-      Log.debug("app exited.");
-      app.exit();
-    });
+    setTimeout(() => {
+      Promise.allSettled([this.stopAllServers()]).finally(() => {
+        this.cleanup();
+        Log.debug("app exited.");
+        app.exit();
+      });
+    }, 2500);
   }
 
   run() {

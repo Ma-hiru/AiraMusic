@@ -27,6 +27,7 @@ export default class AppInstance {
 
   private static savePlayer() {
     if (!this._player) return;
+    this.player.audio.pause();
     const data = JSON.stringify(AppPlayer.save(this._player));
     localStorage.setItem("app_player", data);
   }
