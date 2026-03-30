@@ -21,6 +21,8 @@ const Bus: FC<object> = () => {
       lyric: player.current.lyric,
       repeat: player.playlist.repeat,
       shuffle: player.playlist.shuffle,
+      rmActive: player.current?.rmActive || false,
+      tlActive: player.current?.tlActive || false,
       status: player.statusText
     });
   }, [player, windowAll]);

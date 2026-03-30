@@ -70,6 +70,8 @@ type MessageTypeMap = {
     repeat: "off" | "one" | "all";
     shuffle: boolean;
     status: "playing" | "paused" | "error" | "idle" | "loading";
+    rmActive: boolean;
+    tlActive: boolean;
   };
   progressBus: {
     currentTime: number;

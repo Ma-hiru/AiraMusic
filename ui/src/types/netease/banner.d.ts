@@ -18,4 +18,3 @@ namespace NeteaseAPI {
     rules: string[];
   }
 }
-

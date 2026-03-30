@@ -145,5 +145,4 @@ namespace NeteaseAPI {
       targetUrl: string;
     };
   }
-
 }

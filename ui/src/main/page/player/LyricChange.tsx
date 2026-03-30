@@ -4,7 +4,7 @@ import AppInstance from "@mahiru/ui/main/entry/instance";
 
 const LyricChange: FC<object> = () => {
   const player = AppInstance.usePlayer();
-  const { rmActive, rmExisted, tlActive, tlExisted } = player.current.lyric?.info || {};
+  const { rmExisted, tlExisted } = player.current.lyric?.info || {};
 
   return (
     <div className="absolute right-8 bottom-10 text-white flex flex-col gap-2 select-none">
@@ -16,7 +16,7 @@ const LyricChange: FC<object> = () => {
             flex justify-center items-center overflow-hidden rounded-xs
             backdrop-blur-lg
         `,
-          rmActive && rmExisted ? "bg-white text-black " : "bg-white/20 ",
+          player.current.rmActive && rmExisted ? "bg-white text-black " : "bg-white/20 ",
           rmExisted ? "cursor-pointer" : "cursor-not-allowed"
         )}>
         音
@@ -29,7 +29,7 @@ const LyricChange: FC<object> = () => {
             flex justify-center items-center overflow-hidden rounded-xs
             backdrop-blur-lg
         `,
-          tlActive && tlExisted ? "bg-white text-black " : "bg-white/20 ",
+          player.current.tlActive && tlExisted ? "bg-white text-black " : "bg-white/20 ",
           tlExisted ? "cursor-pointer" : "cursor-not-allowed"
         )}>
         译

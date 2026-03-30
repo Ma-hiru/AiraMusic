@@ -24,11 +24,13 @@ import { NeteaseLyric, NeteaseNetworkImage, NeteaseTrack } from "@mahiru/ui/publ
 type ControlProps = Omit<HTMLAttributes<HTMLDivElement>, "color"> & {
   showBg: boolean;
   color?: string;
+  fontSize: number;
+  lock: boolean;
+  rmActive: Optional<boolean>;
+  tlActive: Optional<boolean>;
   lyric: Nullable<NeteaseLyric>;
   setColor: NormalFunc<[color?: string]>;
-  lock: boolean;
   setLock: NormalFunc<[lock: boolean]>;
-  fontSize: number;
   setFontSize: NormalFunc<[size: number]>;
 };
 
@@ -41,6 +43,8 @@ const Control: FC<ControlProps> = ({
   fontSize,
   setFontSize,
   lyric,
+  rmActive,
+  tlActive,
   ...rest
 }) => {
   const playerBus = useListenableHook(AppBus.player);
@@ -49,7 +53,7 @@ const Control: FC<ControlProps> = ({
   const titleContainer = useRef<HTMLDivElement>(null);
   const [openColorSelect, setOpenColorSelect] = useState(false);
 
-  const { rmActive, tlActive, rmExisted, tlExisted } = lyric?.info || {};
+  const { rmExisted, tlExisted } = lyric?.info || {};
   const themeColor = infoBus.data?.theme.mainColor;
   const track = playerBus.data?.track?.detail;
   const image = useMemo(

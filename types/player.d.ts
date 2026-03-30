@@ -67,8 +67,6 @@ interface LyricLine {
 
 type NeteaseLyricModel = {
   data: LyricLine[];
-  rmActive?: boolean;
-  tlActive?: boolean;
   tips?: string;
   id?: number;
   rmExisted: boolean;

@@ -137,27 +137,29 @@ export default function LyricPage() {
         onMouseOver={handleMouseOver}>
         <div className={cx("w-full h-full p-2 overflow-hidden", lock && "pointer-events-none")}>
           <LyricComponent
+            mainAlign="top"
+            crossAlign="center"
+            lyric={lyric}
+            spring={false}
             ref={lyricRef}
             fontSize={fontSize}
+            rmActive={playerBus.data?.rmActive}
+            tlActive={playerBus.data?.tlActive}
             activeColor={(color ?? infoBus.data?.theme.mainColor) || "#ffffff"}
-            lyric={lyric}
-            rmActive={lyric?.rmActive}
-            tlActive={lyric?.tlActive}
-            crossAlign="center"
-            mainAlign="top"
-            spring={false}
           />
         </div>
       </div>
       <Control
+        lock={lock}
         lyric={lyric}
         color={color}
-        setColor={setColor}
         showBg={showBg}
-        lock={lock}
         setLock={setLock}
         fontSize={fontSize}
+        setColor={setColor}
         setFontSize={setFontSize}
+        rmActive={playerBus.data?.rmActive}
+        tlActive={playerBus.data?.tlActive}
       />
       <WindowResize disable={lock || !showBg} showArea={false} />
     </div>

@@ -64,8 +64,8 @@ const Lyric: FC<object> = () => {
       <LyricComponent
         ref={lyricRef}
         lyric={player.current.lyric}
-        rmActive={player.current.lyric?.rmActive}
-        tlActive={player.current.lyric?.tlActive}
+        rmActive={player.current?.rmActive}
+        tlActive={player.current?.tlActive}
         onWordClick={handleWordClick}
       />
     </div>

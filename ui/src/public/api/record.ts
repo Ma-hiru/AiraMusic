@@ -1,6 +1,4 @@
 // 听歌足迹 - 今日收听
 // 听歌足迹 - 总收听时长
 // 听歌足迹 - 本周/本月收听时长
-export default class _NeteaseRecordAPI {
-  
-}
+export default class _NeteaseRecordAPI {}
