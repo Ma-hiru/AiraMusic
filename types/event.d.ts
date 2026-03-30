@@ -66,8 +66,7 @@ type MessageTypeMap = {
       sourceName: "playlist" | "album" | "other";
       detail: NeteaseTrackModel;
     }>;
-    lyric: Optional<FullVersionLyricLine>;
-    lyricVersion: Optional<LyricVersionType>;
+    lyric: Optional<NeteaseLyricModel>;
     repeat: "off" | "one" | "all";
     shuffle: boolean;
     status: "playing" | "paused" | "error" | "idle" | "loading";

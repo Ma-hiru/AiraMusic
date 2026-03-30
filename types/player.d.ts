@@ -70,6 +70,7 @@ type NeteaseLyricModel = {
   rmActive?: boolean;
   tlActive?: boolean;
   tips?: string;
+  id?: number;
   rmExisted: boolean;
   tlExisted: boolean;
 };

@@ -10,7 +10,8 @@
   "main": "dist/app/main.mjs",
   "scripts": {
     "build": "tsup",
-    "dev": "tsup --watch"
+    "dev": "tsup --watch",
+    "clean:dist": "pnpm rimraf dist"
   },
   "dependencies": {
     "@neteasecloudmusicapienhanced/api": "^4.29.17",
@@ -28,6 +29,7 @@
     "@types/express": "^5.0.0",
     "@types/express-http-proxy": "^1.6.7",
     "@mahiru/log": "1.0.0",
-    "@mahiru/store": "1.0.0"
+    "@mahiru/store": "1.0.0",
+    "electron": "40.6.1"
   }
 }

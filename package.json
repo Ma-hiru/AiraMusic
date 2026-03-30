@@ -26,13 +26,17 @@
   "type": "module",
   "private": true,
   "scripts": {
+    "build": "pnpm clean && pnpm build:cache",
+    "build:cache": "pnpm build:wasm && pnpm build:store && pnpm build:ui && pnpm build:app && pnpm build:electron",
     "dev": "pnpm run-p dev:ui dev:app dev:electron",
-    "build": "pnpm build:wasm && pnpm build:store && pnpm build:ui && pnpm build:app && pnpm build:electron",
-    "clear:cache": "rimraf ./wasm/target ./ui/node_modules/.vite",
-    "clear:dist": "rimraf ./wasm/pkg ./app/dist ./ui/dist ./store/server",
     "dev:ui": "pnpm --filter @mahiru/ui run dev",
     "dev:app": "pnpm --filter airamusic run dev",
-    "dev:electron": "pnpm electron ./app",
+    "dev:electron": "pnpm wait-on http://localhost:8827 && pnpm wait-on app/dist/app/main.mjs && pnpm electronmon ./app --watch ./app/dist",
+    "clean": "pnpm clean:vite && pnpm clean:cargo && pnpm clean:go && pnpm clean:dist",
+    "clean:dist": "pnpm --filter @mahiru/wasm run clean:dist && pnpm --filter @mahiru/store run clean:dist && pnpm --filter @mahiru/ui run clean:dist && pnpm --filter airamusic run clean:dist",
+    "clean:vite": "pnpm rimraf ./ui/node_modules/.vite",
+    "clean:cargo": "pnpm --filter @mahiru/wasm run clean:cargo",
+    "clean:go": "pnpm --filter @mahiru/store run clean:go",
     "devtools:react": "pnpm exec react-devtools",
     "devtools:vue": "pnpm exec vue-devtools",
     "preview:ui": "pnpm --filter @mahiru/ui run preview",
@@ -51,9 +55,6 @@
     "auto-commit:win32": "pnpm exec pwsh ./scripts/git-commit.ps1",
     "auto-commit:linux": "pnpm exec bash ./scripts/git-commit.sh"
   },
-  "dependencies": {
-    "electron": "40.6.1"
-  },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
     "@types/lodash-es": "^4.17.12",
@@ -61,6 +62,7 @@
     "@typescript/native-preview": "7.0.0-dev.20251215.1",
     "@vue/devtools": "^8.0.5",
     "electron-builder": "^26.8.1",
+    "electronmon": "^2.0.4",
     "eslint": "^9.39.1",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.24",
@@ -73,7 +75,8 @@
     "run-script-os": "^1.1.6",
     "tsup": "^8.5.0",
     "typescript": "^5",
-    "typescript-eslint": "^8.46.3"
+    "typescript-eslint": "^8.46.3",
+    "wait-on": "^9.0.4"
   },
   "engines": {
     "node": ">=20"

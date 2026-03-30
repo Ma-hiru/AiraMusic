@@ -7,6 +7,10 @@ import LyricWord from "./LyricWord";
 interface LyricLineProps {
   index: number;
   line: LyricLine;
+  rmActive: Optional<boolean>;
+  tlActive: Optional<boolean>;
+  hasRm: Optional<boolean>;
+  hasTl: Optional<boolean>;
   timeManager: LyricTimeManager;
   active: boolean;
   crossAlign?: "left" | "center" | "right";
@@ -19,6 +23,10 @@ interface LyricLineProps {
 
 const LyricLine: FC<LyricLineProps> = ({
   line,
+  rmActive,
+  tlActive,
+  hasRm,
+  hasTl,
   timeManager,
   index,
   active,
@@ -46,15 +54,13 @@ const LyricLine: FC<LyricLineProps> = ({
       result = {
         startTime: line.startTime,
         endTime: line.endTime,
-        word: "",
-        romanWord: ""
+        word: ""
       };
     } else if (line.words.length >= 2) {
       result = {
         startTime: line.words[0]!.startTime,
         endTime: line.words[line.words.length - 1]!.endTime,
-        word: line.words.map((w) => w.word).join(""),
-        romanWord: line.words.map((w) => w.romanWord).join("")
+        word: line.words.map((w) => w.word).join("")
       };
     }
     return result;
@@ -127,42 +133,46 @@ const LyricLine: FC<LyricLineProps> = ({
           />
         )}
       </div>
-      <div
-        style={substyle}
-        className={cx(
-          `
+      {hasTl && tlActive && !!line.translatedLyric && (
+        <div
+          style={substyle}
+          className={cx(
+            `
             text-wrap select-none
             duration-500 ease-in-out transition-all
             contain-content
             font-normal
           `,
-          active && "font-medium",
-          spring && active && "scale-102",
-          crossAlign === "left" && "text-left",
-          crossAlign === "center" && "text-center",
-          crossAlign === "right" && "text-right"
-        )}
-        onClick={onClickLine}>
-        {line.translatedLyric}
-      </div>
-      <div
-        style={substyle}
-        className={cx(
-          `
+            active && "font-medium",
+            spring && active && "scale-102",
+            crossAlign === "left" && "text-left",
+            crossAlign === "center" && "text-center",
+            crossAlign === "right" && "text-right"
+          )}
+          onClick={onClickLine}>
+          {line.translatedLyric}
+        </div>
+      )}
+      {hasRm && rmActive && !!line.romanLyric && (
+        <div
+          style={substyle}
+          className={cx(
+            `
             text-wrap select-none
             duration-500 ease-in-out transition-all
             contain-content
             font-normal
           `,
-          active && "font-medium",
-          spring && active && "scale-102",
-          crossAlign === "left" && "text-left",
-          crossAlign === "center" && "text-center",
-          crossAlign === "right" && "text-right"
-        )}
-        onClick={onClickLine}>
-        {line.romanLyric}
-      </div>
+            active && "font-medium",
+            spring && active && "scale-102",
+            crossAlign === "left" && "text-left",
+            crossAlign === "center" && "text-center",
+            crossAlign === "right" && "text-right"
+          )}
+          onClick={onClickLine}>
+          {line.romanLyric}
+        </div>
+      )}
     </div>
   );
 };

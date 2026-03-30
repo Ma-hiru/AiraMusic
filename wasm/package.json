@@ -14,10 +14,10 @@
     "./pkg/snippets/*"
   ],
   "scripts": {
-    "clean": "rimraf pkg/package.json",
-    "clear": "rimraf pkg target",
+    "clean:cargo": "cargo clean",
+    "clean:dist": "pnpm rimraf pkg",
+    "build": "pnpm run-script-os && pnpm rimraf pkg/package.json",
     "build:win32": "wasm-pack build --target web --out-dir pkg --release",
-    "build:linux": "wasm-pack build --target web --out-dir pkg --dev",
-    "build": "pnpm run-script-os && pnpm clean"
+    "build:linux": "wasm-pack build --target web --out-dir pkg --dev"
   }
 }

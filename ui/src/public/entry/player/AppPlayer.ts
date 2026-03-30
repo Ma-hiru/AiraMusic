@@ -175,6 +175,8 @@ export default class AppPlayer extends Listenable {
     this.loadLyric(current.detail)
       .then((lyric) => {
         if (controller.signal.aborted) return;
+        lyric.setRmActive(!!this.current.lyric?.rmActive);
+        lyric.setTlActive(!!this.current.lyric?.tlActive);
         this.current.lyric = lyric;
         this.executeListeners();
       })

@@ -1,8 +1,8 @@
 import { defineConfig } from "tsup";
-import { loadEnv } from "../scripts/env";
+import AppEnv from "../scripts/env";
 
 function genDefine(mode: string) {
-  return Object.entries(loadEnv(mode)).reduce(
+  return Object.entries(AppEnv.load(mode)).reduce(
     (result, [key, value]) => {
       result[`process.env.${key}`] = JSON.stringify(value);
       return result;

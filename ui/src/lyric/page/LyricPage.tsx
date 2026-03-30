@@ -37,12 +37,14 @@ export default function LyricPage() {
   };
 
   const [lyric, setLyric] = useState<Nullable<NeteaseLyric>>(null);
+  const lyricKey = useRef("");
   useEffect(() => {
     if (!playerBus.data?.lyric) return setLyric(null);
     const newLyric = new NeteaseLyric(playerBus.data.lyric);
-    newLyric.versionChange(playerBus.data.lyricVersion);
+    if (newLyric.key === lyricKey.current) return;
+    lyricKey.current = newLyric.key;
     setLyric(newLyric);
-  }, [playerBus.data?.lyric, playerBus.data?.lyricVersion]);
+  }, [playerBus.data?.lyric]);
 
   // 歌词播放同步
   useEffect(() => {
@@ -139,7 +141,8 @@ export default function LyricPage() {
             fontSize={fontSize}
             activeColor={(color ?? infoBus.data?.theme.mainColor) || "#ffffff"}
             lyric={lyric}
-            version={lyric?.currentVersion}
+            rmActive={lyric?.rmActive}
+            tlActive={lyric?.tlActive}
             crossAlign="center"
             mainAlign="top"
             spring={false}

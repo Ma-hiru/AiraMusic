@@ -2,16 +2,14 @@ import AppBus from "@mahiru/ui/public/entry/bus";
 import AppWindow from "@mahiru/ui/public/entry/window";
 import AppInstance from "@mahiru/ui/main/entry/instance";
 import useListenableHook from "@mahiru/ui/public/hooks/useListenableHook";
-import { FC, memo, useCallback, useEffect } from "react";
+import { FC, memo, useCallback, useEffect, useRef } from "react";
 import { useLayoutStore } from "@mahiru/ui/main/store/layout";
-import { useUpdate } from "@mahiru/ui/public/hooks/useUpdate";
 
 const Bus: FC<object> = () => {
   const { theme } = useLayoutStore();
   const windowAll = useListenableHook(AppWindow.all);
   const windowCurrent = useListenableHook(AppWindow.current);
   const player = useListenableHook(AppInstance.player);
-  const updater = useUpdate();
 
   const updateProgressBus = useCallback(() => {
     windowAll.send("progressBus", player.audio.progress);
@@ -21,7 +19,6 @@ const Bus: FC<object> = () => {
     windowAll.send("playerBus", {
       track: player.current.track,
       lyric: player.current.lyric,
-      lyricVersion: player.current.lyric?.currentVersion,
       repeat: player.playlist.repeat,
       shuffle: player.playlist.shuffle,
       status: player.statusText
@@ -45,6 +42,18 @@ const Bus: FC<object> = () => {
     windowAll
   ]);
 
+  const updateBus = useRef(() => {
+    updatePlayerBus();
+    updateProgressBus();
+    updateInfoBus();
+  });
+
+  updateBus.current = () => {
+    updatePlayerBus();
+    updateProgressBus();
+    updateInfoBus();
+  };
+
   useEffect(() => {
     player.audio.addEventListener("timeupdate", updateProgressBus, { passive: true });
     player.audio.addEventListener("play", updateProgressBus, { passive: true });
@@ -65,13 +74,7 @@ const Bus: FC<object> = () => {
   useEffect(updateInfoBus, [updateInfoBus]);
 
   useEffect(() => {
-    updatePlayerBus();
-    updateProgressBus();
-    updateInfoBus();
-  }, [updateInfoBus, updatePlayerBus, updateProgressBus, updater.count]);
-
-  useEffect(() => {
-    windowAll.listenAll("playerActionBus", ({ data }) => {
+    windowAll.listenAll("playerActionBus", async ({ data }) => {
       switch (data) {
         case "play":
           return player.audio.play();
@@ -84,18 +87,21 @@ const Bus: FC<object> = () => {
         case "exit":
           return windowCurrent.close();
         case "toggle-lyric-version-rm":
-          AppInstance.player.toggleLyricVersion("rm");
-          return updater();
+          AppInstance.player.toggleLyric("rm");
+          AppInstance.player.afterUpdate(updateBus.current);
+          return;
         case "toggle-lyric-version-tl":
-          AppInstance.player.toggleLyricVersion("tl");
-          return updater();
+          AppInstance.player.toggleLyric("tl");
+          AppInstance.player.afterUpdate(updateBus.current);
+          return;
         case "update":
-          return updater();
+          return updateBus.current();
       }
     });
-  }, [player.audio, player.playlist, updater, windowAll, windowCurrent]);
+  }, [player.audio, player.playlist, windowAll, windowCurrent]);
 
-  useEffect(() => AppBus.injectUpdater(updater), [updater]);
+  useEffect(() => AppBus.injectUpdater(() => updateBus.current()), [updateBus]);
+
   return null;
 };
 

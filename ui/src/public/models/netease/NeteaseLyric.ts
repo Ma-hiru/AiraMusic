@@ -14,6 +14,7 @@ export class NeteaseLyric implements NeteaseLyricModel {
   readonly tips;
   readonly rmExisted;
   readonly tlExisted;
+  readonly id;
   rmActive;
   tlActive;
 
@@ -24,15 +25,37 @@ export class NeteaseLyric implements NeteaseLyricModel {
     this.tips = props.tips || "";
     this.tlActive = props.tlActive || false;
     this.rmActive = props.rmActive || false;
+    this.id = props.id;
   }
   //endregion
+
+  get key() {
+    return `${this.id || 0}_${this.rmActive}_${this.tlActive}_${this.tips}_${this.data?.length || 0}_${this.rmExisted}_${this.tlExisted}`;
+  }
 
   toggleRm() {
     this.rmExisted && (this.rmActive = !this.rmActive);
   }
 
+  setRmActive(value: boolean) {
+    this.rmExisted && (this.rmActive = value);
+  }
+
   toggleTl() {
     this.tlExisted && (this.tlActive = !this.tlActive);
+  }
+
+  setTlActive(value: boolean) {
+    this.tlExisted && (this.tlActive = value);
+  }
+
+  get info() {
+    return {
+      rmExisted: this.rmExisted,
+      tlExisted: this.tlExisted,
+      rmActive: this.rmActive,
+      tlActive: this.tlActive
+    };
   }
 
   static fromNeteaseAPIResponse(response: NeteaseAPI.NeteaseLyricResponse) {

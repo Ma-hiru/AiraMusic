@@ -4,15 +4,16 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "clean:dist": "pnpm rimraf dist"
   },
   "dependencies": {
-    "axios": "1.13.5",
     "@applemusic-like-lyrics/lyric": "0.3.0",
     "@emotion/css": "^11.13.5",
     "@mahiru/log": "1.0.0",
     "@mahiru/wasm": "1.0.0",
     "@tailwindcss/vite": "^4.1.17",
+    "axios": "1.13.5",
     "color": "^5.0.3",
     "culori": "^4.0.2",
     "dayjs": "^1.11.19",

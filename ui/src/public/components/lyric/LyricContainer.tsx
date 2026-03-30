@@ -13,7 +13,6 @@ import { LyricTimeManager } from "./LyricTimeManager";
 
 import LyricLine from "./LyricLine";
 import AppUI from "@mahiru/ui/public/entry/ui";
-import { NeteaseLyric } from "@mahiru/ui/public/models/netease";
 
 interface LyricContainerProps {
   lyric: Optional<NeteaseLyricModel>;
@@ -88,7 +87,7 @@ const LyricContainer: ForwardRefRenderFunction<LyricRef, LyricContainerProps> = 
   }, [mainAlign]);
 
   useLayoutEffect(() => {
-    timeManagerRef.current?.reset(lyric?.raw ?? NeteaseLyric.blankLyric.raw);
+    timeManagerRef.current?.reset(lyric?.data ?? []);
     setCurrentLine(-1);
     currentLineRef.current = -1;
     calcLayout();
@@ -130,13 +129,17 @@ const LyricContainer: ForwardRefRenderFunction<LyricRef, LyricContainerProps> = 
         className
       )}>
       <div className="h-[55%]" />
-      {(lyric?.[version] ?? NeteaseLyric.blankLyric.raw).map((line, index) => (
+      {(lyric?.data ?? []).map((line, index) => (
         <LyricLine
+          key={index}
+          line={line}
+          rmActive={rmActive}
+          tlActive={tlActive}
+          hasRm={lyric?.rmExisted}
+          hasTl={lyric?.tlExisted}
           activeColor={activeColor}
           inactiveColor={inactiveColor}
           fontSize={fontSize}
-          key={index}
-          line={line}
           index={index}
           onClick={onWordClick}
           timeManager={timeManagerRef.current!}

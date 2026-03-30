@@ -21,8 +21,6 @@ import AppBus from "@mahiru/ui/public/entry/bus";
 import AppWindow from "@mahiru/ui/public/entry/window";
 import { NeteaseLyric, NeteaseNetworkImage, NeteaseTrack } from "@mahiru/ui/public/models/netease";
 
-type FontSize = `${number}px` | `${number}rem` | `${number}em`;
-
 type ControlProps = Omit<HTMLAttributes<HTMLDivElement>, "color"> & {
   showBg: boolean;
   color?: string;
@@ -51,13 +49,14 @@ const Control: FC<ControlProps> = ({
   const titleContainer = useRef<HTMLDivElement>(null);
   const [openColorSelect, setOpenColorSelect] = useState(false);
 
-  const { rmActive, tlActive, hasTl, hasRm } = lyric?.versionInfo() || {};
+  const { rmActive, tlActive, rmExisted, tlExisted } = lyric?.info || {};
   const themeColor = infoBus.data?.theme.mainColor;
   const track = playerBus.data?.track?.detail;
   const image = useMemo(
     () =>
       NeteaseNetworkImage.fromTrackCover(track)?.setSize(NeteaseImageSize.xs).setAlt(track?.name),
-    [track]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [track?.id]
   );
 
   const upFontSize = useCallback(() => {
@@ -90,6 +89,25 @@ const Control: FC<ControlProps> = ({
   useEffect(() => {
     if (!showBg) setOpenColorSelect(false);
   }, [showBg]);
+
+  const lyricVersionIcon = useMemo(
+    () =>
+      [
+        {
+          label: "音",
+          active: rmActive,
+          existed: rmExisted,
+          version: "toggle-lyric-version-rm"
+        },
+        {
+          label: "译",
+          active: tlActive,
+          existed: tlExisted,
+          version: "toggle-lyric-version-tl"
+        }
+      ] as const,
+    [rmActive, rmExisted, tlActive, tlExisted]
+  );
 
   return (
     <Drag
@@ -193,34 +211,23 @@ const Control: FC<ControlProps> = ({
           <div
             className="flex gap-2 mx-2 ease-in-out duration-300 transition-all"
             style={{ width: lock ? 0 : "auto" }}>
-            <NoDrag
-              onClick={() => setLyricVersion("toggle-lyric-version-rm")}
-              className={cx(
-                "size-4 text-[11px] font-semibold flex justify-center items-center overflow-hidden rounded-xs backdrop-blur-lg cursor-pointer",
-                {
-                  "bg-white": rmActive && hasRm,
-                  "text-black": color === "#FFFFFF",
-                  "bg-white/20 ": !rmActive || !hasRm,
-                  "cursor-not-allowed": !hasRm,
-                  "cursor-pointer": hasRm
-                }
-              )}>
-              音
-            </NoDrag>
-            <NoDrag
-              onClick={() => setLyricVersion("toggle-lyric-version-tl")}
-              className={cx(
-                "size-4 text-[11px] font-semibold flex justify-center items-center overflow-hidden rounded-xs backdrop-blur-lg cursor-pointer",
-                {
-                  "bg-white": tlActive && hasTl,
-                  "text-black": color === "#FFFFFF",
-                  "bg-white/20": !tlActive || !hasTl,
-                  "cursor-not-allowed": !hasTl,
-                  "cursor-pointer": hasTl
-                }
-              )}>
-              译
-            </NoDrag>
+            {lyricVersionIcon.map(({ label, active, existed, version }) => (
+              <NoDrag
+                key={label}
+                onClick={() => setLyricVersion(version)}
+                className={cx(
+                  `
+                  size-4 text-[11px] font-semibold
+                  flex justify-center items-center overflow-hidden
+                  rounded-xs backdrop-blur-lg cursor-pointer
+                `,
+                  existed ? "cursor-pointer" : "cursor-not-allowed",
+                  active && existed ? "bg-white" : "bg-white/20",
+                  color === "#FFFFFF" && "text-black"
+                )}>
+                {label}
+              </NoDrag>
+            ))}
           </div>
           <span className="text-[12px] font-semibold">
             {NeteaseTrack.formatTime(progressBus.data?.currentTime, "s")}

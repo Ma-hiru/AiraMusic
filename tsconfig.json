@@ -31,6 +31,6 @@
       "*": ["./*"]
     }
   },
-  "include": ["app", "ui", "log", "types", "eslint.config.ts"],
+  "include": ["app", "ui", "log", "types", "eslint.config.ts", "scripts"],
   "exclude": ["node_modules", "dist", "temp"]
 }

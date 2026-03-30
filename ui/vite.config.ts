@@ -5,13 +5,13 @@ import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "vite";
 import { fileURLToPath } from "node:url";
 import { join } from "node:path";
-import { loadEnv, generateEnvType } from "../scripts/env";
+import AppEnv from "../scripts/env";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 
 export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode);
-  generateEnvType(env);
+  const env = AppEnv.load(mode);
+  AppEnv.type(env);
   const defineEnv: Record<string, string> = {};
   for (const k in env) {
     defineEnv[`import.meta.env.${k}`] = JSON.stringify(env[k]);
