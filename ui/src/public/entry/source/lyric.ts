@@ -7,15 +7,15 @@ export default class _NeteaseLyricSource {
   //region cache
   private static readonly cacheKey = "netease_lyric";
 
-  private static storeCache(id: number, lyric: FullVersionLyricLine) {
-    return CacheStore.object.store<FullVersionLyricLine>(
+  private static storeCache(id: number, lyric: NeteaseLyricModel) {
+    return CacheStore.object.store<NeteaseLyricModel>(
       _NeteaseLyricSource.cacheKey + "_" + id,
       lyric
     );
   }
 
   private static getCache(id: number) {
-    return CacheStore.object.fetch<FullVersionLyricLine>(_NeteaseLyricSource.cacheKey + "_" + id);
+    return CacheStore.object.fetch<NeteaseLyricModel>(_NeteaseLyricSource.cacheKey + "_" + id);
   }
   //endregion
 

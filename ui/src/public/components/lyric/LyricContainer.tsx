@@ -16,8 +16,9 @@ import AppUI from "@mahiru/ui/public/entry/ui";
 import { NeteaseLyric } from "@mahiru/ui/public/models/netease";
 
 interface LyricContainerProps {
-  lyric?: Optional<FullVersionLyricLine>;
-  version?: LyricVersionType;
+  lyric: Optional<NeteaseLyricModel>;
+  rmActive: Optional<boolean>;
+  tlActive: Optional<boolean>;
   className?: string;
   onWordClick?: NormalFunc<[startTime: number]>;
   activeColor?: string;
@@ -37,7 +38,8 @@ export interface LyricRef {
 const LyricContainer: ForwardRefRenderFunction<LyricRef, LyricContainerProps> = (
   {
     lyric,
-    version = "raw",
+    rmActive,
+    tlActive,
     className,
     onWordClick,
     activeColor,

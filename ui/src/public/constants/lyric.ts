@@ -1,26 +1,11 @@
-function getPreset(tips: string): FullVersionLyricLine {
-  return {
-    full: [],
-    rm: [],
-    tl: [],
-    raw: [
-      {
-        words: [
-          {
-            startTime: 0,
-            endTime: 999999999999,
-            word: tips,
-            romanWord: ""
-          }
-        ],
-        translatedLyric: "",
-        romanLyric: "",
-        startTime: 0,
-        endTime: 999999999999,
-        isBG: false,
-        isDuet: false
-      }
-    ]
+function getPreset(tips: string) {
+  return <NeteaseLyricModel>{
+    data: [],
+    rmActive: false,
+    tlActive: false,
+    rmExisted: false,
+    tlExisted: false,
+    tips
   };
 }
 
