@@ -3,6 +3,7 @@ import {
   ForwardRefRenderFunction,
   memo,
   useCallback,
+  useEffect,
   useImperativeHandle,
   useLayoutEffect,
   useRef,
@@ -10,6 +11,7 @@ import {
 } from "react";
 import { cx } from "@emotion/css";
 import { LyricTimeManager } from "./LyricTimeManager";
+import { debounce } from "lodash-es";
 
 import LyricLine from "./LyricLine";
 import AppUI from "@mahiru/ui/public/entry/ui";
@@ -116,6 +118,14 @@ const LyricContainer: ForwardRefRenderFunction<LyricRef, LyricContainerProps> = 
     [calcLayout]
   );
 
+  useEffect(() => {
+    const cb = debounce(calcLayout, 500);
+    window.addEventListener("resize", cb, { passive: true });
+    return () => {
+      window.removeEventListener("resize", cb);
+    };
+  }, [calcLayout]);
+
   return (
     <div
       ref={containerRef}
@@ -148,7 +158,20 @@ const LyricContainer: ForwardRefRenderFunction<LyricRef, LyricContainerProps> = 
           spring={spring}
         />
       ))}
-      <div className="h-[55%]" />
+      <div className="h-[55%] pt-10">
+        <div
+          className={cx(
+            `
+            w-full px-4 py-1 rounded-md hover:blur-none hover:bg-white/20
+          text-white/80 truncate font-semibold text-lg
+          `,
+            crossAlign === "left" && "text-left",
+            crossAlign === "center" && "text-center",
+            crossAlign === "right" && "text-right"
+          )}>
+          歌词贡献者：{lyric?.tips}
+        </div>
+      </div>
     </div>
   );
 };

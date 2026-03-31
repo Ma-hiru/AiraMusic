@@ -3,7 +3,7 @@ use super::model::{Lyric, LyricLine};
 use crate::lyric::utils::split_lyric_as_map;
 use regex::Regex;
 use serde_wasm_bindgen::{from_value, to_value};
-use wasm_bindgen::{JsValue, prelude::wasm_bindgen};
+use wasm_bindgen::{prelude::wasm_bindgen, JsValue};
 
 #[wasm_bindgen]
 pub fn parseNeteaseLyric(raw: JsValue, ts: JsValue, rm: JsValue) -> JsValue {
@@ -30,7 +30,14 @@ pub fn parseNeteaseLyric(raw: JsValue, ts: JsValue, rm: JsValue) -> JsValue {
     }
 
     to_value::<Lyric>(&Lyric {
-        data: raw_lyric,
+        data: raw_lyric
+            .into_iter()
+            .filter(|line| {
+                !(line.words.is_empty()
+                    && line.translatedLyric.is_empty()
+                    && line.romanLyric.is_empty())
+            })
+            .collect(),
         rmExisted,
         tlExisted,
     })

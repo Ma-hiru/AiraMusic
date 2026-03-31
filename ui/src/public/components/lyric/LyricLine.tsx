@@ -118,6 +118,7 @@ const LyricLine: FC<LyricLineProps> = ({
               onClick={onClick}
               lineActive={active}
               singleWord={line.words.length === 1}
+              timeManager={timeManager}
             />
           ))
         ) : (
@@ -130,6 +131,7 @@ const LyricLine: FC<LyricLineProps> = ({
             activeColor={activeColor}
             inactiveColor={inactiveColor}
             fontSize={fontSize}
+            timeManager={timeManager}
           />
         )}
       </div>

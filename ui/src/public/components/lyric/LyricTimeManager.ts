@@ -121,6 +121,10 @@ export class LyricTimeManager {
     return this;
   };
 
+  getCurrentTime() {
+    return this.currentTime;
+  }
+
   getCurrentIndex() {
     return {
       lineIndex: this.currentLineIndex,
