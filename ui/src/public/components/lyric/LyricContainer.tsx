@@ -15,6 +15,7 @@ import { debounce } from "lodash-es";
 
 import LyricLine from "./LyricLine";
 import AppUI from "@mahiru/ui/public/entry/ui";
+import LyricTips from "@mahiru/ui/public/components/lyric/LyricTips";
 
 interface LyricContainerProps {
   lyric: Optional<NeteaseLyricModel>;
@@ -159,18 +160,7 @@ const LyricContainer: ForwardRefRenderFunction<LyricRef, LyricContainerProps> = 
         />
       ))}
       <div className="h-[55%] pt-10">
-        <div
-          className={cx(
-            `
-            w-full px-4 py-1 rounded-md hover:blur-none hover:bg-white/20
-          text-white/80 truncate font-semibold text-lg
-          `,
-            crossAlign === "left" && "text-left",
-            crossAlign === "center" && "text-center",
-            crossAlign === "right" && "text-right"
-          )}>
-          歌词贡献者：{lyric?.tips}
-        </div>
+        <LyricTips crossAlign={crossAlign} tips={lyric?.tips} />
       </div>
     </div>
   );

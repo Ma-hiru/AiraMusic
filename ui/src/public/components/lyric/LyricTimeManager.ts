@@ -1,4 +1,6 @@
-export class LyricTimeManager {
+import { Listenable } from "@mahiru/ui/public/models/Listenable";
+
+export class LyricTimeManager extends Listenable {
   private lyric: LyricLine[];
   private currentTime = 0; // ms
   private currentLineIndex = -1;
@@ -8,6 +10,7 @@ export class LyricTimeManager {
   onWordChange: Nullable<NormalFunc<[{ lineIndex: number; wordIndex: number }]>> = null;
 
   constructor(lyric: LyricLine[]) {
+    super();
     this.lyric = lyric;
     if (
       this.lyric.length === 1 &&

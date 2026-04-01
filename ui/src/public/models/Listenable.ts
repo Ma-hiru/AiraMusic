@@ -1,11 +1,24 @@
 import { Log } from "@mahiru/ui/public/utils/dev";
 
 export abstract class Listenable {
-  private listeners = new Set<NormalFunc>();
+  private readonly listeners = new Set<NormalFunc>();
   private listenerTimer: Nullable<number> = null;
+  private updateMode: "async" | "sync" = "async";
   private updateGap = 100;
 
-  protected executeListeners() {
+  protected executeListeners(mode = this.updateMode) {
+    if (mode === "sync") {
+      for (const listener of this.listeners) {
+        try {
+          listener();
+        } catch (err) {
+          Log.error(err);
+          this.listeners.delete(listener);
+        }
+      }
+      return;
+    }
+
     this.listenerTimer && window.clearTimeout(this.listenerTimer);
     this.listenerTimer = window.setTimeout(() => {
       for (const listener of this.listeners) {
@@ -27,6 +40,10 @@ export abstract class Listenable {
 
   setUpdateGap(ms: number) {
     this.updateGap = Number.isFinite(ms) ? Math.max(Math.floor(ms), 0) : 100;
+  }
+
+  setUpdateMode(mode: typeof this.updateMode) {
+    this.updateMode = mode;
   }
 
   addListener(callback: NormalFunc) {
