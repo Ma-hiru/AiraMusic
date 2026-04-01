@@ -1,8 +1,8 @@
 import { screen } from "electron";
-import { CONSTANTS } from "../constant";
 import { isLinux } from "./platform";
+import { AppWindowConstants } from "../constant/win";
 
-const { DEFAULT_WINDOW_WIDTH_HEIGHT_RATIO, DEFAULT_WINDOW_COVER_RATIO } = CONSTANTS.APP;
+const { DEFAULT_WINDOW_WIDTH_HEIGHT_RATIO, DEFAULT_WINDOW_COVER_RATIO } = AppWindowConstants;
 
 export function getEffectiveWindowSize(
   coverRatio: number = DEFAULT_WINDOW_COVER_RATIO,

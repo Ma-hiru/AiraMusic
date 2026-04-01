@@ -34,7 +34,7 @@ const RecommendTrackItem: FC<RecommendTrackItemProps> = ({
     if (isPlaying) return;
     const track = await NeteaseSource.Track.fromID(song.id);
     const record = new NeteaseTrackRecord({
-      track,
+      detail: track,
       sourceName: "other",
       sourceID: -1
     });

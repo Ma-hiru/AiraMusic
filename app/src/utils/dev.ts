@@ -5,19 +5,16 @@ import { randomUUID } from "node:crypto";
 
 export const storeKeyAccessToken = `mahiru-access-token-${randomUUID()}`;
 
-export function isDev() {
-  return process.env.APP_MODE!.toLowerCase().includes("dev");
-}
+export const isDev = process.env.APP_MODE.toLowerCase().includes("dev");
 
 export function printDevInfo() {
   app.on("ready", () => {
-    const dev = isDev();
     const displays = getScreenInfo();
     Log.debug(
       "app/dev.ts:printDevInfo",
       "\n",
       "===================== App Dev Info =====================\n",
-      `Environment: ${dev ? "Development" : "Production"}\n`,
+      `Environment: ${isDev ? "Development" : "Production"}\n`,
       `Platform: ${process.platform}\n`,
       `Electron Version: ${process.versions.electron}\n`,
       `Node.js Version: ${process.versions.node}\n`,

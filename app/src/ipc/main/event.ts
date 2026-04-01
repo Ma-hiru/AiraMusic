@@ -1,64 +1,56 @@
 import { BrowserWindow, ipcMain } from "electron";
 import { AppMessageIPC, MainEventAPI } from "./typed";
-import {
-  CreateImageWindow,
-  CreateInfoWindow,
-  CreateLoginWindow,
-  CreateLyricWindow,
-  CreateMiniWindow,
-  WindowManager
-} from "../../window";
-import { CreateExternalWindow } from "../../window/external";
 import { Log } from "../../utils/log";
+import { AppWindowCreator, AppWindowManager, AppWindows } from "../../window";
 
 const mainEventAPI = {
   openInternalWindow: (e, type) => {
     const sender = BrowserWindow.fromWebContents(e.sender);
     if (!sender) return;
-    if (WindowManager.getId(sender) === "main") {
+    if (AppWindowManager.getId(sender) === "main") {
       switch (type) {
         case "login":
-          return CreateLoginWindow();
+          return AppWindowCreator.create(AppWindows.login);
         case "lyric":
-          return CreateLyricWindow();
+          return AppWindowCreator.create(AppWindows.lyric);
         case "miniplayer":
-          return CreateMiniWindow();
+          return AppWindowCreator.create(AppWindows.miniplayer);
         case "info":
-          return CreateInfoWindow();
+          return AppWindowCreator.create(AppWindows.info);
         case "image":
-          return CreateImageWindow();
+          return AppWindowCreator.create(AppWindows.image);
       }
     }
   },
   focusInternalWindow: (e, type) => {
-    const win = type ? WindowManager.get(type) : BrowserWindow.fromWebContents(e.sender);
+    const win = type ? AppWindowManager.get(type) : BrowserWindow.fromWebContents(e.sender);
     Log.debug("focusInternalWindow", type, "win found:", !!win);
     win?.focus();
   },
   openExternalLink: (e, { title, url }) => {
     const sender = BrowserWindow.fromWebContents(e.sender);
     if (!sender) return;
-    if (WindowManager.getId(sender) === "main") {
-      return CreateExternalWindow(title, url);
+    if (AppWindowManager.getId(sender) === "main") {
+      return AppWindowCreator.create(AppWindows.external(title, url));
     }
   },
   openInternalDevTools: (e, type) => {
-    const win = type ? WindowManager.get(type) : BrowserWindow.fromWebContents(e.sender);
+    const win = type ? AppWindowManager.get(type) : BrowserWindow.fromWebContents(e.sender);
     Log.debug("openInternalDevTools", type, "win found:", !!win);
     win?.webContents.openDevTools();
   },
   showInternalWindow: (e, type) => {
-    const win = type ? WindowManager.get(type) : BrowserWindow.fromWebContents(e.sender);
+    const win = type ? AppWindowManager.get(type) : BrowserWindow.fromWebContents(e.sender);
     Log.debug("showInternalWindow", type, "win found:", !!win);
     win && !win.isVisible() && win.show();
   },
   closeInternalWindow: (e, type) => {
-    const win = type ? WindowManager.get(type) : BrowserWindow.fromWebContents(e.sender);
+    const win = type ? AppWindowManager.get(type) : BrowserWindow.fromWebContents(e.sender);
     Log.debug("closeInternalWindow", type, "win found:", !!win);
     if (!win || win.isDestroyed()) return;
     try {
       if (type === "main") {
-        for (const [type, win] of WindowManager.getAll()) {
+        for (const [type, win] of AppWindowManager.getAll()) {
           type !== "main" && win.destroy();
         }
         win.close();
@@ -70,33 +62,33 @@ const mainEventAPI = {
     }
   },
   hiddenInternalWindow: (e, type) => {
-    const win = type ? WindowManager.get(type) : BrowserWindow.fromWebContents(e.sender);
+    const win = type ? AppWindowManager.get(type) : BrowserWindow.fromWebContents(e.sender);
     Log.debug("hiddenInternalWindow", type, "win found:", !!win);
     win?.isVisible() && win.hide();
   },
   minimizeInternalWindow: (e, type) => {
-    const win = type ? WindowManager.get(type) : BrowserWindow.fromWebContents(e.sender);
+    const win = type ? AppWindowManager.get(type) : BrowserWindow.fromWebContents(e.sender);
     Log.debug("minimizeInternalWindow", type, "win found:", !!win);
     win && !win.isMinimized() && win.minimize();
   },
   unminimizeInternalWindow: (e, type) => {
-    const win = type ? WindowManager.get(type) : BrowserWindow.fromWebContents(e.sender);
+    const win = type ? AppWindowManager.get(type) : BrowserWindow.fromWebContents(e.sender);
     Log.debug("unminimizeInternalWindow", type, "win found:", !!win);
     win?.isMinimized() && win.restore();
   },
   maximizeInternalWindow: (e, type) => {
-    const win = type ? WindowManager.get(type) : BrowserWindow.fromWebContents(e.sender);
+    const win = type ? AppWindowManager.get(type) : BrowserWindow.fromWebContents(e.sender);
     Log.debug("maximizeInternalWindow", type, "win found:", !!win);
     win && !win.isMaximized() && win.maximize();
   },
   unmaximizeInternalWindow: (e, type) => {
-    const win = type ? WindowManager.get(type) : BrowserWindow.fromWebContents(e.sender);
+    const win = type ? AppWindowManager.get(type) : BrowserWindow.fromWebContents(e.sender);
     Log.debug("unmaximizeInternalWindow", type, "win found:", !!win);
     win?.isMaximized() && win.unmaximize();
   },
   resizeInternalWindow: (e, props) => {
     const win = props.type
-      ? WindowManager.get(props.type)
+      ? AppWindowManager.get(props.type)
       : BrowserWindow.fromWebContents(e.sender);
     if (!win) return;
     const current = win.getBounds();
@@ -110,7 +102,7 @@ const mainEventAPI = {
   },
   moveInternalWindow: (e, props) => {
     const win = props.type
-      ? WindowManager.get(props.type)
+      ? AppWindowManager.get(props.type)
       : BrowserWindow.fromWebContents(e.sender);
     if (!win) return;
 
@@ -134,7 +126,7 @@ const mainEventAPI = {
   },
   mousePenetrateInternalWindow: (e, props) => {
     const win = props.type
-      ? WindowManager.get(props.type)
+      ? AppWindowManager.get(props.type)
       : BrowserWindow.fromWebContents(e.sender);
     win?.setIgnoreMouseEvents(props.penetrate, { forward: true });
   },

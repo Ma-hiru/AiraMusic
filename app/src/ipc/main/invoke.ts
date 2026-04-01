@@ -1,6 +1,6 @@
 import { app, BrowserWindow, dialog, ipcMain } from "electron";
 import { MainInvokeAPI } from "./typed";
-import { WindowManager } from "../../window";
+import { AppWindowManager } from "../../window";
 import { storeKeyAccessToken } from "../../utils/dev";
 import Dns from "node:dns/promises";
 import Net from "node:net";
@@ -44,13 +44,13 @@ const mainInvokeAPI = {
   },
   GPUInfo: async () => app.whenReady().then(() => app.getGPUInfo("complete")),
   isMaximized: (e, type) => {
-    return WindowManager.get(type)?.isMaximized() ?? false;
+    return AppWindowManager.get(type)?.isMaximized() ?? false;
   },
   platform: () => process.platform,
   hasOpenInternalWindow: (e, win) => {
     const sender = BrowserWindow.fromWebContents(e.sender);
     if (!sender) return false;
-    return WindowManager.has(win);
+    return AppWindowManager.has(win);
   },
   storeKey: () => storeKeyAccessToken,
   checkOnlineStatus: async (): Promise<NetworkStatus> => {
@@ -107,7 +107,7 @@ const mainInvokeAPI = {
   },
   currentWindowType: (e) => {
     const sender = BrowserWindow.fromWebContents(e.sender);
-    return WindowManager.getId(sender)!;
+    return AppWindowManager.getId(sender)!;
   }
 } satisfies MainInvokeAPI;
 

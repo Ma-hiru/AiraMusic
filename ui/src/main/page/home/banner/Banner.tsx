@@ -31,7 +31,7 @@ const Banner: FC<object> = () => {
           if (player.current.track?.id === id) return;
           const track = await NeteaseSource.Track.fromID(id);
           const record = new NeteaseTrackRecord({
-            track,
+            detail: track,
             sourceID: -1,
             sourceName: "other"
           });

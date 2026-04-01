@@ -1,18 +1,60 @@
 # AiraMusic
 
-一个基于 Electron + React + Vue + TypeScript 的桌面云音乐播放器项目。
+一个基于 Electron、React、Vue 和 TypeScript 构建的桌面端第三方网易云音乐播放器。
 
 ## 项目状态
 
-开发中（WIP）
+🚧 开发中（WIP）
 
-当前版本仍在持续迭代，功能与界面可能随版本频繁调整，暂不保证稳定性与兼容性。
+## 核心特性
 
-## 简要介绍
+- 多窗口架构：主界面、播放页、桌面歌词、托盘、图片查看等窗口独立运行，互不干扰。
+- 混合前端技术栈：主界面采用 React ，部分轻量窗口使用 Vue ，基于 Vite 多入口构建。
+- 分层与模块化设计：前后端逻辑解耦，采用多子包（workspace）组织，便于扩展。
+- 性能优化：使用 Rust（WASM）与 Go 实现部分高性能模块。
+- 音乐能力支持：基于 @neteasecloudmusicapienhanced/api 接入网易云音乐。
+- 使用 lucide 图标库。
 
-- 多窗口桌面播放器形态，包含主界面、托盘、歌词等独立页面。
-- 提供播放页与信息展示页等常用听歌交互。
-- 采用前后端分层与多子包组织，便于后续扩展能力。
+## 构建
+
+### 环境要求
+
+- Node.js
+- Rust
+- wasm-pack
+- Go
+
+安装 wasm-pack：
+
+```bash
+  cargo install wasm-pack
+```
+
+### 安装依赖
+
+```bash
+    # 使用yarn，避免electron-builder安装依赖时出现依赖缺失问题
+    yarn install --ignore-engines --frozen-lockfile
+```
+
+### 开发模式
+
+```bash
+    # 仅首次运行
+    pnpm build:wasm && pnpm build:store
+
+    pnpm dev
+```
+
+### 构建项目
+
+```bash
+  # 完整构建
+  pnpm build
+
+  # 使用缓存进行增量构建（作用于 Rust / Go）
+  pnpm build:cache
+```
 
 ## 界面展示
 

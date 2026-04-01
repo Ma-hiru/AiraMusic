@@ -3,7 +3,7 @@ import { Log } from "@mahiru/ui/public/utils/dev";
 
 export default class Device {
   private static get gpuDevice(): Promise<GPUDevice[]> {
-    return AppRenderer.invoke
+    return AppRenderer.Event.invoke
       .GPUInfo()
       .then((res) => res)
       .then((res) => {
@@ -42,7 +42,7 @@ export default class Device {
   }
 
   static get platform(): Promise<NodeJS.Platform | "unknown"> {
-    return AppRenderer.invoke.platform().catch((err) => {
+    return AppRenderer.Event.invoke.platform().catch((err) => {
       Log.error(err);
       return "unknown";
     });

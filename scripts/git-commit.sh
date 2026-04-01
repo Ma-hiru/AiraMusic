@@ -1,4 +1,4 @@
 #!/bin/bash
 git add .
-git commit -m "Auto-commit changes"
+git commit -m "auto-commit"
 git push

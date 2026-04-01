@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "pnpm tsgo --noEmit && vite build",
     "preview": "vite preview",
     "clean:dist": "pnpm rimraf dist"
   },

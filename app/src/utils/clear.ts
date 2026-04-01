@@ -2,7 +2,7 @@ import { app, session } from "electron";
 import { Log } from "./log";
 
 export function clearAllCache() {
-  app.on("ready", async () => {
+  app.whenReady().then(async () => {
     const ses = session.defaultSession;
     // 1. 清除各种存储
     await ses.clearStorageData({

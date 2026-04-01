@@ -6,7 +6,7 @@ import { staticUIDir } from "../../utils/path";
 import { isDev } from "../../utils/dev";
 
 export function createProxyServer() {
-  if (isDev()) return;
+  if (isDev) return;
   Log.debug("Create Express APP");
   const expressAPP = express();
   const port = process.env.EXPRESS_SERVER_PORT;

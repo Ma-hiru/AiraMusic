@@ -21,7 +21,7 @@ let _cachedProps: Nullable<Props> = null;
 let hasStopped = false;
 
 export function startStoreServer(props?: Optional<Props>) {
-  const { args = {}, log = isDev(), logger, exitHandler, path } = props || {};
+  const { args = {}, log = isDev, logger, exitHandler, path } = props || {};
   if (isRunning()) return getPID()!;
   if (path) setServerPath(path);
   enableServerConsole(log);

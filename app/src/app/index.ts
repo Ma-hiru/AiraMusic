@@ -2,36 +2,40 @@ import { app } from "electron";
 import { Server } from "node:http";
 import { LogLevel, ParseLogLevel } from "@mahiru/log";
 import { Log } from "../utils/log";
-import { isMacOS } from "../utils/platform";
-import { commands } from "./commands";
-import { registerAppEvents } from "./events";
-import { registerSchemes } from "./protocol";
+import { isCreateMpris } from "../utils/platform";
+import { AppProtocol } from "./protocol";
 import { restartStoreServer, startStoreServer, stopStoreServer } from "../services/store";
 import { createProxyServer } from "../services/proxy";
-import { registerIpcMain } from "./ipc";
 import { createNeteaseMusicApiServer } from "../services/ncm";
 import { printDevInfo, storeKeyAccessToken } from "../utils/dev";
 import { EqError } from "../utils/err";
-import { Store } from "./store";
 import { storeServerBinaryPath } from "../utils/path";
+import { AppTray, AppWindowCreator, AppWindows } from "../window";
+import { registerEventHandlers, registerInvokeHandlers } from "../ipc/main";
 
-export { Store } from "./store";
+export { AppStore } from "./store";
 
 export class APP {
-  willQuitAPP!: boolean;
-  neteaseMusicAPIServer!: ReturnType<typeof createNeteaseMusicApiServer>;
-  proxyServer?: Server;
-  cacheServer!: number;
+  private static clearer = new Set<NormalFunc>();
+  private exiting = false;
+  private neteaseMusicAPIServer!: ReturnType<typeof createNeteaseMusicApiServer>;
+  private proxyServer?: Server;
 
   private init() {
-    Log.debug("App initialize");
-    this.cacheServer = this.createStoreServer();
+    Log.debug("App initializing...");
+    this.createStoreServer();
     this.proxyServer = createProxyServer();
     this.neteaseMusicAPIServer = createNeteaseMusicApiServer();
-    this.willQuitAPP = !isMacOS;
-    registerSchemes();
-    registerIpcMain();
-    registerAppEvents(this);
+    AppProtocol.register();
+    app.addListener("ready", () => {
+      Log.debug("App ready");
+
+      registerInvokeHandlers();
+      registerEventHandlers();
+
+      AppWindowCreator.create(AppWindows.main).addListener("closed", this.exit.bind(this));
+      AppTray.register();
+    });
   }
 
   private createStoreServer() {
@@ -55,9 +59,6 @@ export class APP {
         this.exit();
       }
     };
-    const path = Store.get("settings").storePath;
-
-    if (path) args["path"] = path;
 
     try {
       return startStoreServer({
@@ -97,6 +98,17 @@ export class APP {
     });
   }
 
+  private commands() {
+    process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = "true";
+    if (isCreateMpris) {
+      app.commandLine.appendSwitch(
+        "enable-features",
+        "HardwareMediaKeyHandling,MediaSessionService"
+      );
+    }
+    app.commandLine.appendSwitch("enable-zero-copy");
+  }
+
   private cleanup() {
     APP.clearer.forEach((cb) => {
       try {
@@ -110,8 +122,6 @@ export class APP {
       }
     });
   }
-
-  private exiting = false;
 
   exit() {
     if (this.exiting) return;
@@ -127,7 +137,7 @@ export class APP {
   }
 
   run() {
-    commands();
+    this.commands();
     // 单实例锁，避免多开
     if (app.requestSingleInstanceLock()) {
       printDevInfo();
@@ -136,8 +146,6 @@ export class APP {
       app.quit();
     }
   }
-
-  static clearer = new Set<NormalFunc>();
 
   static addClearer(cb: NormalFunc) {
     this.clearer.add(cb);

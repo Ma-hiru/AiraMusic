@@ -127,6 +127,10 @@ const LyricContainer: ForwardRefRenderFunction<LyricRef, LyricContainerProps> = 
     };
   }, [calcLayout]);
 
+  useEffect(() => {
+    calcLayout();
+  }, [calcLayout, rmActive, tlActive]);
+
   return (
     <div
       ref={containerRef}

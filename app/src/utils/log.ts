@@ -13,7 +13,7 @@ class LoggerFileWriter implements LoggerWriter {
 
   constructor() {
     this.now = new Date();
-    this.dir = isDev() ? appPathJoin("logs") : appExecPathJoin("logs");
+    this.dir = isDev ? appPathJoin("logs") : appExecPathJoin("logs");
     this.fileName = `${this.now.getFullYear()}-${(this.now.getMonth() + 1).toString().padStart(2, "0")}-${this.now
       .getDate()
       .toString()
@@ -60,6 +60,6 @@ class LoggerFileWriter implements LoggerWriter {
 
 export const Log = createLog(
   process.env.APP_LOG_LEVEL,
-  isDev() ? console : new LoggerFileWriter(),
+  isDev ? console : new LoggerFileWriter(),
   true
 );

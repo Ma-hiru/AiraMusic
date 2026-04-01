@@ -37,7 +37,6 @@ export default defineConfig(({ mode }) => {
       rollupOptions: {
         input: {
           index: join(__dirname, "index.html"),
-          // info: join(__dirname, "info.html"),
           login: join(__dirname, "login.html"),
           mini: join(__dirname, "mini.html"),
           lyric: join(__dirname, "lyric.html"),

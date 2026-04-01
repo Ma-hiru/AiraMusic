@@ -7,3 +7,4 @@
 **/dist
 **/pkg
 pnpm-lock.yaml
+yarn.lock

@@ -1,9 +1,9 @@
 import { FC, memo, ReactNode, useEffect, useState } from "react";
-import { useUpdate } from "@mahiru/ui/public/hooks/useUpdate";
 import AppInstance from "@mahiru/ui/main/entry/instance";
+import AppAudio from "@mahiru/ui/public/entry/player/AppAudio";
 
 interface ProgressProps {
-  render: (progress: PlayerProgress) => ReactNode;
+  render: (progress: InstanceType<typeof AppAudio>["progress"]) => ReactNode;
 }
 
 const Progress: FC<ProgressProps> = ({ render }) => {

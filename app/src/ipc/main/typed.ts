@@ -1,5 +1,5 @@
 import { BrowserWindow, IpcMainEvent, IpcMainInvokeEvent } from "electron";
-import { WindowManager } from "../../window";
+import { AppWindowManager } from "../../window";
 import { Log } from "../../utils/log";
 
 export type MainEventAPI = {
@@ -68,18 +68,18 @@ export class AppMessageIPC {
     if (typeof sender === "string") {
       senderID = sender;
     } else {
-      const s = WindowManager.getId(sender);
+      const s = AppWindowManager.getId(sender);
       if (!s) return;
       senderID = s;
     }
 
     // 自己给自己发消息，没必要
     if (typeof receiver === "string" && senderID === receiver) return;
-    if (typeof receiver === "object" && WindowManager.get(senderID) === receiver) return;
+    if (typeof receiver === "object" && AppWindowManager.get(senderID) === receiver) return;
 
     let receiverWindow: BrowserWindow;
     if (typeof receiver === "string") {
-      const r = WindowManager.get(receiver);
+      const r = AppWindowManager.get(receiver);
       if (!r) return;
       receiverWindow = r;
     } else {
@@ -108,7 +108,7 @@ export class AppMessageIPC {
     data: MessageDataReceive<T>["data"];
   }) {
     queueMicrotask(() => {
-      WindowManager.getAll().forEach(([, receiver]) => {
+      AppWindowManager.getAll().forEach(([, receiver]) => {
         this.send({
           ...props,
           receiver

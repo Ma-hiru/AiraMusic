@@ -1,8 +1,9 @@
-export { WindowManager, type WindowID, WindowExits } from "./manager";
-export { MainWindow } from "./main";
-export { CreateMiniWindow } from "./mini";
-export { CreateLyricWindow } from "./lyric";
-export { CreateLoginWindow } from "./login";
-export { CreateImageWindow } from "./image";
-export { CreateInfoWindow } from "./info";
-export { registerTray } from "./tray";
+export {
+  AppWindowManager,
+  WindowExits,
+  AppWindowCreator,
+  type AppWindowCreatorProps
+} from "./manager";
+
+export { AppTray } from "./tray";
+export { AppWindows } from "./wins";

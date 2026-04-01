@@ -14,14 +14,14 @@ export function appExecPathJoin(...paths: string[]) {
   return join(dirname(process.execPath), ...paths);
 }
 
-export const preloadPath = isDev()
+export const preloadPath = isDev
   ? appPathJoin("dist", "preload", "index.js")
   : appResourcePathJoin("preload.js");
 
-export const staticUIDir = isDev() ? appPathJoin("../ui", "dist") : appResourcePathJoin("ui");
+export const staticUIDir = isDev ? appPathJoin("../ui", "dist") : appResourcePathJoin("ui");
 
-export const staticAssetsDir = isDev() ? appPathJoin("assets") : appResourcePathJoin("assets");
+export const staticAssetsDir = isDev ? appPathJoin("assets") : appResourcePathJoin("assets");
 
-export const storeServerBinaryPath = isDev()
-  ? appPathJoin("../store", process.platform === "win32" ? "server.exe" : "server")
+export const storeServerBinaryPath = isDev
+  ? appPathJoin("../store/dist", process.platform === "win32" ? "server.exe" : "server")
   : appResourcePathJoin("bin", process.platform === "win32" ? "server.exe" : "server");
