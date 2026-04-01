@@ -22,8 +22,8 @@
     }
   ],
   "linux": {
-    "target": "AppImage",
-    "icon": "app/assets/icon/logo.png",
+    "target": ["AppImage", "deb", "rpm"],
+    "icon": "app/assets/logo.png",
     "category": "Utility",
     "extraResources": [
       {
@@ -34,7 +34,7 @@
   },
   "win": {
     "target": "nsis",
-    "icon": "app/assets/icon/logo.png",
+    "icon": "app/assets/logo.png",
     "extraResources": [
       {
         "from": "store/dist/server.exe",

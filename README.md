@@ -1,4 +1,4 @@
-# AiraMusic
+# <img src="app/assets/logo.svg" width="28" /> AiraMusic
 
 一个基于 Electron、React、Vue 和 TypeScript 构建的桌面端第三方网易云音乐播放器。
 

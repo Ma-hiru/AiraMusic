@@ -2,6 +2,12 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import fs from "node:fs";
 
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const fontDir = join(__dirname, "../ui/public/fonts");
+const outDir = join(__dirname, "../ui/src/styles/font.scss");
+const head = "// Auto generated. DO NOT EDIT.\n";
+const content = fs.opendirSync(fontDir);
+const scss = <string[]>[];
 const level = [
   {
     name: "Thin",
@@ -28,6 +34,7 @@ const level = [
     weight: 900
   }
 ];
+
 function gen(fontName: string, fileName: string, weight: number) {
   return `
 @font-face {
@@ -39,13 +46,11 @@ function gen(fontName: string, fileName: string, weight: number) {
 }
 `;
 }
-const dir = dirname(fileURLToPath(new URL(import.meta.url)));
-const content = fs.opendirSync(dir);
-const scss = <string[]>[];
+
 for await (const entry of content) {
   if (entry.isDirectory()) {
     const fontName = entry.name.replaceAll("_", " ");
-    const files = fs.readdirSync(join(dir, entry.name)).filter((f) => f.includes("_"));
+    const files = fs.readdirSync(join(fontDir, entry.name)).filter((f) => f.includes("_"));
     const content = files.reduce((initial, file) => {
       initial += gen(fontName, file, level.find((l) => file.includes(l.name))!.weight!);
       return initial;
@@ -53,6 +58,6 @@ for await (const entry of content) {
     scss.push(content);
   }
 }
-const head = "// Auto generated. DO NOT EDIT.\n";
+
 const final = head + scss.join("");
-fs.writeFileSync(fileURLToPath(new URL("./font.scss", import.meta.url)), final, "utf-8");
+fs.writeFileSync(outDir, final, "utf-8");

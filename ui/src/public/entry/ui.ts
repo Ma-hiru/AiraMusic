@@ -58,9 +58,9 @@ export default class AppUI {
 
   static get themeDefault() {
     return {
-      main: "#fc3d49",
+      main: "#ff3b5c",
       textOnMain: "#000000",
-      secondary: "#ffffff"
+      secondary: "#ff6b81"
     };
   }
 

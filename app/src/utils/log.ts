@@ -1,7 +1,7 @@
 import { createLog, LoggerWriter } from "@mahiru/log";
-import { appExecPathJoin, appPathJoin } from "./path";
 import { isDev } from "./dev";
 import { createWriteStream, mkdirSync } from "node:fs";
+import { appUserDataJoin } from "./path";
 import { join } from "node:path";
 
 class LoggerFileWriter implements LoggerWriter {
@@ -13,7 +13,7 @@ class LoggerFileWriter implements LoggerWriter {
 
   constructor() {
     this.now = new Date();
-    this.dir = isDev ? appPathJoin("logs") : appExecPathJoin("logs");
+    this.dir = appUserDataJoin("logs");
     this.fileName = `${this.now.getFullYear()}-${(this.now.getMonth() + 1).toString().padStart(2, "0")}-${this.now
       .getDate()
       .toString()

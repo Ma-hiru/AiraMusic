@@ -1,0 +1,31 @@
+<!-- 由 ChatGPT 生成 -->
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="40%" r="70%">
+      <stop offset="0%" stop-color="#ff6b81"/>
+      <stop offset="100%" stop-color="#ff3b5c"/>
+    </radialGradient>
+    <linearGradient id="highlight" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="rgba(255,255,255,0.25)"/>
+      <stop offset="100%" stop-color="rgba(255,255,255,0.05)"/>
+    </linearGradient>
+  </defs>
+
+  <circle cx="256" cy="256" r="228" fill="url(#bg)"/>
+  <circle cx="256" cy="256" r="228" fill="url(#highlight)"/>
+
+  <g transform="translate(256,256) scale(1.45)">
+    <g transform="translate(-75,-95)">
+      <path d="M56 0 v170
+               a34 34 0 1 1 -18 -30
+               v-95
+               l100 -25
+               v130
+               a34 34 0 1 1 -18 -30
+               v-150 z"
+            fill="white"/>
+    </g>
+  </g>
+
+</svg>

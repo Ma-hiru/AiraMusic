@@ -1,4 +1,4 @@
-import { dirname, join } from "node:path";
+import { join } from "node:path";
 import { app } from "electron";
 import { isDev } from "./dev";
 
@@ -10,9 +10,13 @@ export function appResourcePathJoin(...paths: string[]) {
   return join(process.resourcesPath, ...paths);
 }
 
-export function appExecPathJoin(...paths: string[]) {
-  return join(dirname(process.execPath), ...paths);
+export function appUserDataJoin(...paths: string[]) {
+  return join(app.getPath("userData"), ...paths);
 }
+
+export const appLogoPath = isDev
+  ? appPathJoin("assets", "logo.png")
+  : appResourcePathJoin("assets", "logo.png");
 
 export const preloadPath = isDev
   ? appPathJoin("dist", "preload", "index.js")

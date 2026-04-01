@@ -1,8 +1,7 @@
 import { Log } from "../utils/log";
 import { AppWindowManager } from "./manager";
 import { isLinux } from "../utils/platform";
-import { join } from "node:path";
-import { staticAssetsDir } from "../utils/path";
+import { appLogoPath } from "../utils/path";
 import {
   BrowserWindow,
   clipboard,
@@ -28,8 +27,7 @@ export class AppTray {
   private static playerBus: Nullable<MessageTypeMap["playerBus"]> = null;
 
   private static createIcon() {
-    const iconPath = join(staticAssetsDir, "tray", "logo.png");
-    return nativeImage.createFromPath(iconPath);
+    return nativeImage.createFromPath(appLogoPath);
   }
 
   private static createMenu(tray: Tray) {

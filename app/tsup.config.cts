@@ -1,5 +1,8 @@
-import { defineConfig } from "tsup";
 import AppEnv from "../scripts/env";
+import { defineConfig } from "tsup";
+import { generateLogo } from "../scripts/logo";
+
+generateLogo();
 
 function genDefine(mode: string) {
   return Object.entries(AppEnv.load(mode)).reduce(
