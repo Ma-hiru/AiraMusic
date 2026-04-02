@@ -129,5 +129,7 @@ export class AppWindowManager {
     window.addListener("show", () => sendBusMessage("show"));
     window.addListener("focus", () => sendBusMessage("focus"));
     window.addListener("ready-to-show", () => sendBusMessage("ready"));
+    window.addListener("moved", () => sendBusMessage("moved"));
+    window.addListener("resized", () => sendBusMessage("resized"));
   }
 }

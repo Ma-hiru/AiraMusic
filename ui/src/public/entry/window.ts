@@ -1,8 +1,8 @@
-import { Listenable } from "@mahiru/ui/public/models/Listenable";
 import AppRenderer from "@mahiru/ui/public/entry/renderer";
-import { isDev } from "@mahiru/ui/public/utils/dev";
+import { Listenable } from "@mahiru/ui/public/models/Listenable";
+import { isDev, Log } from "@mahiru/ui/public/utils/dev";
 
-export const currentWindowType = await AppRenderer.Event.invoke.currentWindowType();
+const _currentWindowType = await AppRenderer.Event.invoke.currentWindowType();
 
 export default class AppWindow extends Listenable {
   readonly type: WindowType;
@@ -11,6 +11,8 @@ export default class AppWindow extends Listenable {
   private _show: boolean;
   private _max: boolean;
   private _min: boolean;
+  private _busListeners = new Map<MessageTypeMap["windowBus"]["action"], NormalFunc[]>();
+  static currentWindowType = _currentWindowType;
 
   get isMin() {
     return this._min;
@@ -46,6 +48,17 @@ export default class AppWindow extends Listenable {
   set opened(opened) {
     this._opened = opened;
     this.executeListeners();
+  }
+
+  get bounds() {
+    const { promise, resolve } = Promise.withResolvers<InvokeEventMaps["currentWindowBounds"][1]>();
+    AppRenderer.Event.invoke
+      .currentWindowBounds()
+      .then(resolve)
+      .catch(() =>
+        resolve({ x: 0, y: 0, width: 0, height: 0, workAreaHeight: 0, workAreaWidth: 0 })
+      );
+    return promise;
   }
 
   private constructor(type: WindowType) {
@@ -92,6 +105,18 @@ export default class AppWindow extends Listenable {
             break;
           }
         }
+        const listeners = this._busListeners.get(action) ?? [];
+        for (const listener of listeners) {
+          try {
+            listener();
+          } catch (error) {
+            Log.error(
+              "AppWindow",
+              `Error occurred while executing window bus listener for action "${action}":`,
+              error
+            );
+          }
+        }
       },
       {
         id: this.id
@@ -103,6 +128,19 @@ export default class AppWindow extends Listenable {
     AppRenderer.Event.invoke.isMaximized(type).then((isMax) => {
       this.isMax = isMax;
     });
+  }
+
+  bus(action: MessageTypeMap["windowBus"]["action"], cb: NormalFunc) {
+    const listeners = this._busListeners.get(action) ?? [];
+    listeners.push(cb);
+    this._busListeners.set(action, listeners);
+    return () => {
+      const listeners = this._busListeners.get(action) ?? [];
+      this._busListeners.set(
+        action,
+        listeners.filter((listener) => listener !== cb)
+      );
+    };
   }
 
   closeThen(cb: NormalFunc) {
@@ -246,7 +284,7 @@ export default class AppWindow extends Listenable {
   }
 
   static get current() {
-    return this.from(currentWindowType);
+    return this.from(_currentWindowType);
   }
 
   static get main() {

@@ -1,4 +1,5 @@
 import ElectronStore from "electron-store";
+import { isDev } from "../utils/dev";
 
 export type StoreType = Record<
   WindowType,
@@ -11,3 +12,5 @@ export type StoreType = Record<
 >;
 
 export const AppStore = new ElectronStore<StoreType>();
+
+isDev && AppStore.clear();

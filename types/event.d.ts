@@ -13,6 +13,17 @@ type InvokeEventMaps = {
   storeKey: [never, string];
   checkOnlineStatus: [never, Promise<NetworkStatus>];
   currentWindowType: [never, WindowType];
+  currentWindowBounds: [
+    never,
+    {
+      x: number;
+      y: number;
+      width: number;
+      height: number;
+      workAreaHeight: number;
+      workAreaWidth: number;
+    }
+  ];
   selectPath: [type: "dir" | "file", Promise<{ ok: boolean; path: string; error?: string }>];
 };
 
@@ -103,7 +114,9 @@ type MessageTypeMap = {
       | "maximize"
       | "unmaximize"
       | "minimize"
-      | "unminimize";
+      | "unminimize"
+      | "moved"
+      | "resized";
   };
   imageCheckerBus: {
     url: string;

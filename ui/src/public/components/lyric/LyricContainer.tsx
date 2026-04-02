@@ -21,6 +21,7 @@ interface LyricContainerProps {
   lyric: Optional<NeteaseLyricModel>;
   rmActive: Optional<boolean>;
   tlActive: Optional<boolean>;
+  playing?: Optional<boolean>;
   className?: string;
   onWordClick?: NormalFunc<[startTime: number]>;
   activeColor?: string;
@@ -42,6 +43,7 @@ const LyricContainer: ForwardRefRenderFunction<LyricRef, LyricContainerProps> = 
     lyric,
     rmActive,
     tlActive,
+    playing,
     className,
     onWordClick,
     activeColor,

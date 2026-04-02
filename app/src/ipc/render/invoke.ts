@@ -8,5 +8,6 @@ export const rendererInvokeAPI = {
   hasOpenInternalWindow: (win) => AppTypedRendererIPC.invoke("hasOpenInternalWindow", win),
   storeKey: () => AppTypedRendererIPC.invoke("storeKey"),
   checkOnlineStatus: () => AppTypedRendererIPC.invoke("checkOnlineStatus"),
-  currentWindowType: () => AppTypedRendererIPC.invoke("currentWindowType")
+  currentWindowType: () => AppTypedRendererIPC.invoke("currentWindowType"),
+  currentWindowBounds: () => AppTypedRendererIPC.invoke("currentWindowBounds")
 } satisfies RendererInvokeAPI;

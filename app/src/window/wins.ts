@@ -1,18 +1,42 @@
-import { getEffectiveWindowSize } from "../utils/screen";
 import { AppWindowCreatorProps, WindowExits } from "./manager";
 import { preloadPath } from "../utils/path";
 import { BrowserWindow } from "electron";
 import { isLinux } from "../utils/platform";
 import { AppWindowConstants } from "../constant/win";
 import { isDev } from "../utils/dev";
+import AppScreen from "../utils/screen";
 
 export class AppWindows {
+  private static clampSizeByArea(
+    baseWidth: number,
+    baseHeight: number,
+    maxWidth: number,
+    maxHeight: number
+  ) {
+    const safeBaseWidth = Math.max(1, Math.floor(baseWidth));
+    const safeBaseHeight = Math.max(1, Math.floor(baseHeight));
+    const safeMaxWidth = Math.max(1, Math.floor(maxWidth));
+    const safeMaxHeight = Math.max(1, Math.floor(maxHeight));
+    const scale = Math.min(1, safeMaxWidth / safeBaseWidth, safeMaxHeight / safeBaseHeight);
+
+    return {
+      width: Math.max(1, Math.floor(safeBaseWidth * scale)),
+      height: Math.max(1, Math.floor(safeBaseHeight * scale))
+    };
+  }
+
   static get login(): AppWindowCreatorProps {
-    const { effectiveWidth, effectiveHeight } = getEffectiveWindowSize(0.3);
+    const { width: baseWidth, height: baseHeight } = AppWindowConstants.WINDOW_BASE_SIZE.login;
+    const { width: maxWidth, height: maxHeight } = AppScreen.primary.getAreaBounds(
+      0.3,
+      baseWidth / baseHeight
+    );
+    const { width, height } = this.clampSizeByArea(baseWidth, baseHeight, maxWidth, maxHeight);
+
     return {
       options: {
-        width: effectiveWidth,
-        height: effectiveHeight,
+        width,
+        height,
         webPreferences: {
           preload: preloadPath
         },
@@ -34,11 +58,17 @@ export class AppWindows {
   }
 
   static get image(): AppWindowCreatorProps {
-    const { effectiveWidth, effectiveHeight } = getEffectiveWindowSize(0.5);
+    const { width: baseWidth, height: baseHeight } = AppWindowConstants.WINDOW_BASE_SIZE.image;
+    const { width: maxWidth, height: maxHeight } = AppScreen.primary.getAreaBounds(
+      0.5,
+      baseWidth / baseHeight
+    );
+    const { width, height } = this.clampSizeByArea(baseWidth, baseHeight, maxWidth, maxHeight);
+
     return {
       options: {
-        width: effectiveWidth,
-        height: effectiveHeight,
+        width,
+        height,
         webPreferences: {
           preload: preloadPath
         },
@@ -58,11 +88,17 @@ export class AppWindows {
   }
 
   static get lyric(): AppWindowCreatorProps {
-    const { effectiveWidth, effectiveHeight } = getEffectiveWindowSize(0.11, 6);
+    const { width: baseWidth, height: baseHeight } = AppWindowConstants.WINDOW_BASE_SIZE.lyric;
+    const { width: maxWidth, height: maxHeight } = AppScreen.primary.getAreaBounds(
+      0.11,
+      baseWidth / baseHeight
+    );
+    const { width, height } = this.clampSizeByArea(baseWidth, baseHeight, maxWidth, maxHeight);
+
     return {
       options: {
-        width: effectiveWidth,
-        height: effectiveHeight,
+        width,
+        height,
         transparent: true,
         backgroundColor: "#00000000",
         webPreferences: {
@@ -90,17 +126,44 @@ export class AppWindows {
   }
 
   static get miniplayer(): AppWindowCreatorProps {
-    const { effectiveWidth, effectiveHeight } = getEffectiveWindowSize(0.07, 4.4);
-    const { effectiveWidth: minWidth, effectiveHeight: minHeight } = getEffectiveWindowSize(
-      0.05,
-      4.4
+    const { width: baseWidth, height: baseHeight } =
+      AppWindowConstants.WINDOW_BASE_SIZE.miniplayer.default;
+    const { width: minBaseWidth, height: minBaseHeight } =
+      AppWindowConstants.WINDOW_BASE_SIZE.miniplayer.min;
+    const { width: maxBaseWidth, height: maxBaseHeight } =
+      AppWindowConstants.WINDOW_BASE_SIZE.miniplayer.max;
+    const { width: areaMaxWidth, height: areaMaxHeight } = AppScreen.primary.getAreaBounds(
+      0.07,
+      baseWidth / baseHeight
     );
-    const maxHeight = Math.floor(effectiveHeight * 1.2);
-    const maxWidth = Math.floor(effectiveWidth * 1.2);
+    const { width, height } = this.clampSizeByArea(
+      baseWidth,
+      baseHeight,
+      areaMaxWidth,
+      areaMaxHeight
+    );
+    const { width: areaMinWidth, height: areaMinHeight } = AppScreen.primary.getAreaBounds(
+      0.05,
+      baseWidth / baseHeight
+    );
+    const minSize = this.clampSizeByArea(minBaseWidth, minBaseHeight, areaMinWidth, areaMinHeight);
+    const minWidth = Math.min(minSize.width, width);
+    const minHeight = Math.min(minSize.height, height);
+    const { width: areaResizeMaxWidth, height: areaResizeMaxHeight } =
+      AppScreen.primary.getAreaBounds(0.09, baseWidth / baseHeight);
+    const maxSize = this.clampSizeByArea(
+      maxBaseWidth,
+      maxBaseHeight,
+      areaResizeMaxWidth,
+      areaResizeMaxHeight
+    );
+    const maxWidth = Math.max(maxSize.width, width);
+    const maxHeight = Math.max(maxSize.height, height);
+
     return {
       options: {
-        width: effectiveWidth,
-        height: effectiveHeight,
+        width,
+        height,
         webPreferences: {
           preload: preloadPath
         },
@@ -130,17 +193,49 @@ export class AppWindows {
   }
 
   static get main(): AppWindowCreatorProps {
-    const { effectiveWidth, effectiveHeight } = getEffectiveWindowSize();
-    const { effectiveWidth: minWidth, effectiveHeight: minHeight } = getEffectiveWindowSize(0.6);
+    const BASE_WIDTH = AppWindowConstants.DEFAULT_MAIN_WINDOW_BOUNDS.maxWidth;
+    const BASE_HEIGHT = AppWindowConstants.DEFAULT_MAIN_WINDOW_BOUNDS.maxHeight;
+
+    const { width: areaMaxWidth, height: areaMaxHeight } = AppScreen.primary.getAreaBounds(
+      AppWindowConstants.DEFAULT_WINDOW_COVER_RATIO,
+      BASE_WIDTH / BASE_HEIGHT
+    );
+    const { width: areaMinWidth, height: areaMinHeight } = AppScreen.primary.getAreaBounds(
+      0.6,
+      BASE_WIDTH / BASE_HEIGHT
+    );
+    const { width, height } = this.clampSizeByArea(
+      BASE_WIDTH,
+      BASE_HEIGHT,
+      areaMaxWidth,
+      areaMaxHeight
+    );
+
+    const minWidth = Math.min(
+      Math.min(areaMinWidth, AppWindowConstants.DEFAULT_MAIN_WINDOW_BOUNDS.minWidth),
+      width
+    );
+    const minHeight = Math.min(
+      Math.min(areaMinHeight, AppWindowConstants.DEFAULT_MAIN_WINDOW_BOUNDS.minHeight),
+      height
+    );
+    const maxWidth = Math.max(
+      width,
+      Math.min(areaMaxWidth, AppWindowConstants.DEFAULT_MAIN_WINDOW_BOUNDS.maxWidth)
+    );
+    const maxHeight = Math.max(
+      height,
+      Math.min(areaMaxHeight, AppWindowConstants.DEFAULT_MAIN_WINDOW_BOUNDS.maxHeight)
+    );
 
     return {
       options: {
-        width: effectiveWidth,
-        height: effectiveHeight,
-        minHeight: Math.min(minHeight, AppWindowConstants.DEFAULT_MAIN_WINDOW_BOUNDS.minHeight),
-        minWidth: Math.min(minWidth, AppWindowConstants.DEFAULT_MAIN_WINDOW_BOUNDS.minWidth),
-        maxWidth: AppWindowConstants.DEFAULT_MAIN_WINDOW_BOUNDS.maxWidth,
-        maxHeight: AppWindowConstants.DEFAULT_MAIN_WINDOW_BOUNDS.maxHeight,
+        width,
+        height,
+        minHeight,
+        minWidth,
+        maxWidth,
+        maxHeight,
         title: AppWindowConstants.MAIN_WINDOW_TITLE,
         titleBarStyle: "hidden",
         webPreferences: {
@@ -165,11 +260,18 @@ export class AppWindows {
   }
 
   static get trayOnWindows(): AppWindowCreatorProps {
-    const { effectiveWidth, effectiveHeight } = getEffectiveWindowSize(0.4, 0.4);
+    const { width: baseWidth, height: baseHeight } =
+      AppWindowConstants.WINDOW_BASE_SIZE.trayOnWindows;
+    const { width: maxWidth, height: maxHeight } = AppScreen.primary.getAreaBounds(
+      0.4,
+      baseWidth / baseHeight
+    );
+    const { width, height } = this.clampSizeByArea(baseWidth, baseHeight, maxWidth, maxHeight);
+
     return {
       options: {
-        width: effectiveWidth,
-        height: effectiveHeight,
+        width,
+        height,
         webPreferences: {
           preload: preloadPath
         },
@@ -192,11 +294,17 @@ export class AppWindows {
   }
 
   static get info(): AppWindowCreatorProps {
-    const { effectiveWidth, effectiveHeight } = getEffectiveWindowSize(0.5);
+    const { width: baseWidth, height: baseHeight } = AppWindowConstants.WINDOW_BASE_SIZE.info;
+    const { width: maxWidth, height: maxHeight } = AppScreen.primary.getAreaBounds(
+      0.5,
+      baseWidth / baseHeight
+    );
+    const { width, height } = this.clampSizeByArea(baseWidth, baseHeight, maxWidth, maxHeight);
+
     return {
       options: {
-        width: effectiveWidth,
-        height: effectiveHeight,
+        width,
+        height,
         webPreferences: {
           preload: preloadPath
         },
@@ -217,7 +325,13 @@ export class AppWindows {
   }
 
   static external(title: string, url: string): AppWindowCreatorProps {
-    const { effectiveWidth: width, effectiveHeight: height } = getEffectiveWindowSize(0.5);
+    const { width: baseWidth, height: baseHeight } = AppWindowConstants.WINDOW_BASE_SIZE.external;
+    const { width: maxWidth, height: maxHeight } = AppScreen.primary.getAreaBounds(
+      0.5,
+      baseWidth / baseHeight
+    );
+    const { width, height } = this.clampSizeByArea(baseWidth, baseHeight, maxWidth, maxHeight);
+
     return {
       options: {
         width,

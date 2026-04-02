@@ -2,9 +2,9 @@ import { Log } from "../../utils/log";
 import { isDev } from "../../utils/dev";
 import { EqError } from "../../utils/err";
 import { AppStore } from "../../app";
-import { checkPositionOutScreenBounds } from "../../utils/screen";
 import { AppWindowManager, WindowExits } from "./manager";
 import { BrowserWindow, BrowserWindowConstructorOptions } from "electron";
+import AppScreen from "../../utils/screen";
 
 export type AppWindowCreatorProps = {
   options: Optional<BrowserWindowConstructorOptions>;
@@ -28,7 +28,7 @@ export class AppWindowCreator {
 
     if (memoPos) {
       const { x, y, width, height } = this.getMemoPos(id);
-      checkPositionOutScreenBounds(x, y) ? win.center() : win.setBounds({ x, y, width, height });
+      AppScreen.isOutScreenDIPBounds(x, y) ? win.center() : win.setBounds({ x, y, width, height });
       win.on("resized", () => AppStore.set(id, win.getBounds()));
       win.on("moved", () => AppStore.set(id, win.getBounds()));
     } else {

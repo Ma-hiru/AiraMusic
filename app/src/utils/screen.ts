@@ -1,63 +1,117 @@
-import { screen } from "electron";
-import { isLinux } from "./platform";
+import { screen, Display } from "electron";
 import { AppWindowConstants } from "../constant/win";
 
-const { DEFAULT_WINDOW_WIDTH_HEIGHT_RATIO, DEFAULT_WINDOW_COVER_RATIO } = AppWindowConstants;
+export default class AppScreen {
+  private display: Display;
 
-export function getEffectiveWindowSize(
-  coverRatio: number = DEFAULT_WINDOW_COVER_RATIO,
-  widthHeightRatio: number = DEFAULT_WINDOW_WIDTH_HEIGHT_RATIO
-) {
-  const { effectiveScreenWidth, effectiveScreenHeight } = getEffectiveWorkAreaSize();
-  const targetHeight = Math.floor(effectiveScreenHeight * coverRatio);
-  const targetWidth = Math.floor(targetHeight * widthHeightRatio);
+  private constructor(display: Display) {
+    this.display = display;
+  }
 
-  if (targetWidth < effectiveScreenWidth) {
+  get logicalScreenSize() {
+    return this.display.size;
+  }
+
+  get logicalWorkAreaSize() {
+    return this.display.workAreaSize;
+  }
+
+  get scaleFactor() {
+    return this.display.scaleFactor;
+  }
+
+  get physicalScreenSize() {
+    const { width, height } = this.display.size;
+    const sf = this.display.scaleFactor;
     return {
-      effectiveWidth: targetWidth,
-      effectiveHeight: targetHeight
-    };
-  } else {
-    const adjustedWidth = Math.floor(effectiveScreenWidth * coverRatio);
-    const adjustedHeight = Math.floor(adjustedWidth / widthHeightRatio);
-    return {
-      effectiveWidth: adjustedWidth,
-      effectiveHeight: adjustedHeight
+      width: Math.floor(width * sf),
+      height: Math.floor(height * sf)
     };
   }
-}
 
-export function getEffectiveWorkAreaSize() {
-  const { width, height } = screen.getPrimaryDisplay().workAreaSize;
-  if (isLinux) {
-    const sf = screen.getPrimaryDisplay().scaleFactor;
+  get physicalWorkAreaSize() {
+    const { width, height } = this.display.workAreaSize;
+    const sf = this.display.scaleFactor;
     return {
-      effectiveScreenWidth: Math.floor(width / sf),
-      effectiveScreenHeight: Math.floor(height / sf)
+      width: Math.floor(width * sf),
+      height: Math.floor(height * sf)
     };
   }
-  return {
-    effectiveScreenWidth: width,
-    effectiveScreenHeight: height
-  };
-}
 
-export function checkPositionOutScreenBounds(x?: number, y?: number) {
-  return !(
-    typeof x === "number" &&
-    typeof y === "number" &&
-    screen
-      .getAllDisplays()
-      .some(
-        ({ bounds }) =>
-          x > bounds.x &&
-          x < bounds.x + bounds.width &&
-          y > bounds.y &&
-          y < bounds.y + bounds.height
-      )
-  );
-}
+  getAreaBounds(
+    coverRatio = AppWindowConstants.DEFAULT_WINDOW_COVER_RATIO,
+    widthHeightRatio = AppWindowConstants.DEFAULT_WINDOW_WIDTH_HEIGHT_RATIO
+  ) {
+    const { width, height } = this.logicalWorkAreaSize;
+    const targetHeight = Math.floor(height * coverRatio);
+    const targetWidth = Math.floor(targetHeight * widthHeightRatio);
 
-export function getScreenInfo() {
-  return screen.getAllDisplays();
+    if (targetWidth < width) {
+      return {
+        width: targetWidth,
+        height: targetHeight
+      };
+    } else {
+      const adjustedWidth = Math.floor(width * coverRatio);
+      const adjustedHeight = Math.floor(adjustedWidth / widthHeightRatio);
+      return {
+        width: adjustedWidth,
+        height: adjustedHeight
+      };
+    }
+  }
+
+  static get primary() {
+    return new AppScreen(screen.getPrimaryDisplay());
+  }
+
+  static getAllScreens() {
+    return screen.getAllDisplays().map((display) => new AppScreen(display));
+  }
+
+  static isOutScreenDIPBounds(x?: number, y?: number) {
+    return !(
+      typeof x === "number" &&
+      typeof y === "number" &&
+      screen
+        .getAllDisplays()
+        .some(
+          ({ bounds }) =>
+            x > bounds.x &&
+            x < bounds.x + bounds.width &&
+            y > bounds.y &&
+            y < bounds.y + bounds.height
+        )
+    );
+  }
+
+  [Symbol.toPrimitive]() {
+    return `
+   Display of ${this.display.id}
+     Info:
+           Primary: ${screen.getPrimaryDisplay().id === this.display.id ? "Yes" : "No"}
+           Internal: ${this.display.internal ? "Yes" : "No"}
+           Position: (${this.display.bounds.x}, ${this.display.bounds.y})
+           Rotation: ${this.display.rotation}°
+           Scale Factor: ${this.display.scaleFactor}
+           Size: ${this.display.size.width}@${this.display.size.height}
+           Touch Support: ${this.display.touchSupport}
+     Bounds:
+           X:      ${this.display.bounds.x}
+           Y:      ${this.display.bounds.y}
+           Width:  ${this.display.bounds.width}
+           Height: ${this.display.bounds.height}
+     Logical Work Area:
+           X:      ${this.display.workArea.x}
+           Y:      ${this.display.workArea.y}
+           Width:  ${this.display.workArea.width}
+           Height: ${this.display.workArea.height}
+     Logical Work Area Size:
+           Width:  ${this.display.workAreaSize.width}
+           Height: ${this.display.workAreaSize.height}
+     Color Properties:
+           Color Depth: ${this.display.colorDepth}
+           Color Space: ${this.display.colorSpace}
+  `;
+  }
 }

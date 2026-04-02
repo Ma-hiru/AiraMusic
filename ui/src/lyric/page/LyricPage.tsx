@@ -1,13 +1,20 @@
-import { MouseEvent as ReactMouseEvent, useCallback, useEffect, useRef, useState } from "react";
-import { cx } from "@emotion/css";
-import { WindowResize } from "@mahiru/ui/public/hooks/useWindowResize";
-import { useAppLoaded } from "@mahiru/ui/public/hooks/useAppLoaded";
-
 import LyricComponent, { LyricRef } from "@mahiru/ui/public/components/lyric/LyricContainer";
 import Control from "./Control";
 import useListenableHook from "@mahiru/ui/public/hooks/useListenableHook";
 import AppBus from "@mahiru/ui/public/entry/bus";
+import {
+  MouseEvent as ReactMouseEvent,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState
+} from "react";
+import { cx } from "@emotion/css";
+import { WindowResize } from "@mahiru/ui/public/hooks/useWindowResize";
+import { useAppLoaded } from "@mahiru/ui/public/hooks/useAppLoaded";
 import { NeteaseLyric } from "@mahiru/ui/public/models/netease";
+import AppWindow from "@mahiru/ui/public/entry/window";
 
 export default function LyricPage() {
   useAppLoaded();
@@ -21,7 +28,7 @@ export default function LyricPage() {
     return Number(window.localStorage.getItem("lyricWindowFontSize")) || 16;
   });
   const showBgTimer = useRef<Nullable<ReturnType<typeof setTimeout>>>(null);
-
+  // 监听播放器相关事件
   const playerBus = useListenableHook(AppBus.player);
   const infoBus = useListenableHook(AppBus.info);
   const progressBus = useListenableHook(AppBus.progress);
@@ -35,7 +42,7 @@ export default function LyricPage() {
     infoBus,
     progressBus
   };
-
+  // 歌词实例
   const [lyric, setLyric] = useState<Nullable<NeteaseLyric>>(null);
   const lyricKey = useRef("");
   useEffect(() => {
@@ -45,7 +52,6 @@ export default function LyricPage() {
     lyricKey.current = newLyric.key;
     setLyric(newLyric);
   }, [playerBus.data?.lyric]);
-
   // 歌词播放同步
   useEffect(() => {
     let lastTime = 0;
@@ -84,7 +90,7 @@ export default function LyricPage() {
   useEffect(() => {
     window.localStorage.setItem("lyricWindowFontSize", String(fontSize));
   }, [fontSize]);
-
+  // 点击或鼠标移入显示背景
   const handleClick = useCallback(
     (e: ReactMouseEvent) => {
       e.preventDefault();
@@ -102,7 +108,6 @@ export default function LyricPage() {
     },
     [lock, showBg]
   );
-
   const handleMouseOver = useCallback(
     (e: ReactMouseEvent) => {
       if (lock) return;
@@ -115,7 +120,6 @@ export default function LyricPage() {
     },
     [lock]
   );
-
   // 初始显示背景
   useEffect(() => {
     setShowBg(true);
@@ -124,9 +128,33 @@ export default function LyricPage() {
       setShowBg(false);
     }, 2500);
   }, []);
+  // control组件始终在屏幕边缘一侧，歌词组件在屏幕内部一侧
+  const [reverseControl, setReverseControl] = useState(true);
+  useLayoutEffect(() => {
+    const update = () => {
+      AppWindow.current.bounds.then(({ x, y, height, workAreaHeight }) => {
+        const screenHeight = window.screen.height;
+        if (y < screenHeight / 10) setReverseControl(true);
+        else if (y + height > (screenHeight * 9) / 10) setReverseControl(false);
+        console.log(y, height, workAreaHeight, screenHeight);
+        if (y + height > workAreaHeight) {
+          AppWindow.current.move({
+            x,
+            y: Math.max(workAreaHeight - height, 0)
+          });
+        }
+      });
+    };
+    update();
+    return AppWindow.current.bus("moved", update);
+  }, []);
 
   return (
-    <div className="w-screen h-screen overflow-hidden relative flex rounded-md flex-col-reverse">
+    <div
+      className={cx(
+        `w-screen h-screen overflow-hidden relative flex rounded-md`,
+        reverseControl ? "flex-col-reverse" : "flex-col"
+      )}>
       <div
         className={cx(
           "w-screen flex-1 relative overflow-hidden flex flex-col justify-center items-center ease-in-out transition-all duration-300",
@@ -137,7 +165,7 @@ export default function LyricPage() {
         onMouseOver={handleMouseOver}>
         <div className={cx("w-full h-full p-2 overflow-hidden", lock && "pointer-events-none")}>
           <LyricComponent
-            mainAlign="top"
+            mainAlign={reverseControl ? "top" : "bottom"}
             crossAlign="center"
             lyric={lyric}
             spring={false}

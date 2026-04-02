@@ -6,6 +6,7 @@ import Dns from "node:dns/promises";
 import Net from "node:net";
 import Https from "node:https";
 import Fs from "node:fs/promises";
+import AppScreen from "app/src/utils/screen";
 
 const mainInvokeAPI = {
   selectPath: async (_, type) => {
@@ -108,6 +109,18 @@ const mainInvokeAPI = {
   currentWindowType: (e) => {
     const sender = BrowserWindow.fromWebContents(e.sender);
     return AppWindowManager.getId(sender)!;
+  },
+  currentWindowBounds: (e) => {
+    const sender = BrowserWindow.fromWebContents(e.sender);
+    return {
+      x: 0,
+      y: 0,
+      width: 0,
+      height: 0,
+      workAreaHeight: AppScreen.primary.logicalWorkAreaSize.height,
+      workAreaWidth: AppScreen.primary.logicalWorkAreaSize.width,
+      ...(sender?.getBounds() ?? {})
+    };
   }
 } satisfies MainInvokeAPI;
 
