@@ -1,7 +1,8 @@
 import { BrowserWindow, BrowserWindowConstructorOptions, NativeImage, Tray } from "electron";
 import { AppMessageIPC } from "../../ipc/main/typed";
 import { Log } from "../../utils/log";
-
+import { isLinux } from "app/src/utils/platform";
+import { debounce } from "lodash-es";
 export enum WindowExits {
   IGNORE,
   CLOSE,
@@ -129,7 +130,18 @@ export class AppWindowManager {
     window.addListener("show", () => sendBusMessage("show"));
     window.addListener("focus", () => sendBusMessage("focus"));
     window.addListener("ready-to-show", () => sendBusMessage("ready"));
-    window.addListener("moved", () => sendBusMessage("moved"));
-    window.addListener("resized", () => sendBusMessage("resized"));
+    if (isLinux) {
+      window.addListener(
+        "move",
+        debounce(() => sendBusMessage("moved"), 500)
+      );
+      window.addListener(
+        "resize",
+        debounce(() => sendBusMessage("resized"), 500)
+      );
+    } else {
+      window.addListener("moved", () => sendBusMessage("moved"));
+      window.addListener("resized", () => sendBusMessage("resized"));
+    }
   }
 }

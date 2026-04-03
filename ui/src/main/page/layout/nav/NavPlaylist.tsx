@@ -25,7 +25,7 @@ const NavPlaylist: FC<NavPlaylistProps> = ({ user, layout }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
-  const { id, source } = RoutePathConstants.playlistParse(location, searchParams);
+  const { id } = RoutePathConstants.playlistParse(location, searchParams);
 
   const [fastLocation, setFastLocation] = useState(false);
   const containerRef = useRef<Nullable<HTMLDivElement>>(null);

@@ -5,7 +5,7 @@ import {
   NeteaseUserModel
 } from "@mahiru/ui/public/models/netease";
 
-export const UserStoreConfig = createZustandConfig((set, get): UserStoreType => {
+export const UserStoreConfig = createZustandConfig((set): UserStoreType => {
   return {
     _user: null,
     _settings: null,

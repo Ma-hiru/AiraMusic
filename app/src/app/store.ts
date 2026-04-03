@@ -1,5 +1,6 @@
 import ElectronStore from "electron-store";
 import { isDev } from "../utils/dev";
+import { Log } from "../utils/log";
 
 export type StoreType = Record<
   WindowType,
@@ -13,4 +14,7 @@ export type StoreType = Record<
 
 export const AppStore = new ElectronStore<StoreType>();
 
-isDev && AppStore.clear();
+if (isDev) {
+  Log.info("Clearing store in development mode");
+  AppStore.clear();
+}

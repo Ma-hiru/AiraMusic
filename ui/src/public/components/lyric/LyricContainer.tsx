@@ -43,7 +43,6 @@ const LyricContainer: ForwardRefRenderFunction<LyricRef, LyricContainerProps> = 
     lyric,
     rmActive,
     tlActive,
-    playing,
     className,
     onWordClick,
     activeColor,

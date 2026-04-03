@@ -25,8 +25,6 @@ type PromiseFunc<P extends any[] = never[], R = void> = (...args: P) => Promise<
 
 type IndexRange = [start: number, end: number];
 
-type UnPromise<T extends Promise<infer P>> = P;
-
 interface HasID {
   id: string | number;
 }

@@ -11,11 +11,13 @@ const __dirname = fileURLToPath(new URL(".", import.meta.url));
 
 export default defineConfig(({ mode }) => {
   const env = AppEnv.load(mode);
-  AppEnv.type(env);
+  mode === "development" && AppEnv.type(env);
+
   const defineEnv: Record<string, string> = {};
   for (const k in env) {
     defineEnv[`import.meta.env.${k}`] = JSON.stringify(env[k]);
   }
+
   return {
     define: defineEnv,
     plugins: [

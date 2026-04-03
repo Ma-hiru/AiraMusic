@@ -1,29 +1,39 @@
 import moduleDefs from "./ncmModDef";
-import { ensureAnonToken } from "./ensureAnonToken";
-import { EqError } from "../../utils/err";
+import os from "node:os";
+import { join } from "node:path";
+import { access, writeFile } from "node:fs/promises";
+
+const tokenPath = join(os.tmpdir(), "anonymous_token");
 
 type ServerModule = typeof import("@neteasecloudmusicapienhanced/api/server.js");
-let serverImpl: ServerModule["default"] | undefined;
 
-async function loadServer() {
-  if (!serverImpl) {
-    await ensureAnonToken();
-    const mod = await import("@neteasecloudmusicapienhanced/api/server.js");
-    serverImpl = mod.default;
+export default class NeteaseMusicApiService {
+  private static serverImpl: ServerModule["default"] | undefined;
+
+  private static async ensureAnonToken() {
+    try {
+      await access(tokenPath);
+    } catch {
+      await writeFile(tokenPath, "");
+    }
+    if (!process.env.NCM_API_ANON_TOKEN) {
+      process.env.NCM_API_ANON_TOKEN = tokenPath;
+    }
+    return tokenPath;
   }
-  return serverImpl;
-}
 
-export async function createNeteaseMusicApiServer() {
-  try {
+  private static async loadServer() {
+    if (!this.serverImpl) {
+      await this.ensureAnonToken();
+      const mod = await import("@neteasecloudmusicapienhanced/api/server.js");
+      this.serverImpl = mod.default;
+    }
+    return this.serverImpl;
+  }
+
+  static async create() {
     const port = Number(process.env.NCM_SERVER_PORT);
-    const server = await loadServer();
+    const server = await this.loadServer();
     return await server.serveNcmApi({ port, moduleDefs });
-  } catch (err) {
-    throw new EqError({
-      label: "app/netease.ts",
-      message: "Failed to start Netease Music API server",
-      raw: err
-    });
   }
 }

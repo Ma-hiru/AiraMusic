@@ -31,7 +31,7 @@
     "dev": "pnpm run-p --race dev:ui dev:app dev:electron",
     "dev:ui": "pnpm --filter @mahiru/ui run dev",
     "dev:app": "pnpm --filter airamusic run dev",
-    "dev:electron": "pnpm wait-on http://localhost:8827 && pnpm wait-on app/dist/app/main.mjs && pnpm electronmon ./app",
+    "dev:electron": "pnpm wait-on http://localhost:8827 && pnpm wait-on app/dist/app/main.mjs && pnpm electronmon ./app --inspect=9229",
     "clean": "pnpm clean:vite && pnpm clean:cargo && pnpm clean:go && pnpm clean:dist",
     "clean:dist": "pnpm --filter @mahiru/wasm run clean:dist && pnpm --filter @mahiru/store run clean:dist && pnpm --filter @mahiru/ui run clean:dist && pnpm --filter airamusic run clean:dist",
     "clean:vite": "pnpm rimraf ./ui/node_modules/.vite",

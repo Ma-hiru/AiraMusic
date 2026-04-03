@@ -5,6 +5,8 @@ import { AppStore } from "../../app";
 import { AppWindowManager, WindowExits } from "./manager";
 import { BrowserWindow, BrowserWindowConstructorOptions } from "electron";
 import AppScreen from "../../utils/screen";
+import { isLinux } from "app/src/utils/platform";
+import { debounce } from "lodash-es";
 
 export type AppWindowCreatorProps = {
   options: Optional<BrowserWindowConstructorOptions>;
@@ -20,17 +22,42 @@ export class AppWindowCreator {
     let win = AppWindowManager.checkAndShow(props.id);
     if (win) return win;
 
-    const { options, id, handleExits = WindowExits.IGNORE, memoPos, loadURL, onCreate } = props;
+    props.options ||= {};
+    props.handleExits ||= WindowExits.IGNORE;
+    const { options, id, handleExits, memoPos, loadURL, onCreate } = props;
+
+    if (memoPos) {
+      const { x, y, width, height } = this.getMemoPos(id);
+      if (!AppScreen.isOutScreenDIPBounds(x, y)) {
+        const { width: workAreaWidth, height: workAreaHeight } =
+          AppScreen.primary.logicalWorkAreaSize;
+        const nextWidth = Math.max(1, Math.min(Math.floor(width), workAreaWidth));
+        const nextHeight = Math.max(1, Math.min(Math.floor(height), workAreaHeight));
+        Log.info(
+          `Restoring window ${id} position from store: x=${x}, y=${y}, width=${nextWidth}, height=${nextHeight}`
+        );
+        options.x = x;
+        options.y = y;
+        options.width = nextWidth;
+        options.height = nextHeight;
+      }
+    }
+
     win ||= AppWindowManager.createBrowserWindow(options, id, handleExits);
 
     onCreate?.(win);
     win.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
+    win.unmaximize();
 
     if (memoPos) {
-      const { x, y, width, height } = this.getMemoPos(id);
-      AppScreen.isOutScreenDIPBounds(x, y) ? win.center() : win.setBounds({ x, y, width, height });
-      win.on("resized", () => AppStore.set(id, win.getBounds()));
-      win.on("moved", () => AppStore.set(id, win.getBounds()));
+      const saver = debounce(() => AppStore.set(id, win.getBounds()), 500);
+      if (isLinux) {
+        win.addListener("move", saver);
+        win.addListener("resize", saver);
+      } else {
+        win.addListener("resized", saver);
+        win.addListener("moved", saver);
+      }
     } else {
       win.center();
     }

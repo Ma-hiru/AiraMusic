@@ -22,7 +22,7 @@
     }
   ],
   "linux": {
-    "target": ["AppImage", "deb", "rpm"],
+    "target": ["deb"],
     "icon": "app/assets/logo.png",
     "category": "Utility",
     "extraResources": [

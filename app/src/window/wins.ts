@@ -4,6 +4,7 @@ import { BrowserWindow } from "electron";
 import { isLinux } from "../utils/platform";
 import { AppWindowConstants } from "../constant/win";
 import { isDev } from "../utils/dev";
+import { clamp } from "lodash-es";
 import AppScreen from "../utils/screen";
 
 export class AppWindows {
@@ -193,40 +194,18 @@ export class AppWindows {
   }
 
   static get main(): AppWindowCreatorProps {
-    const BASE_WIDTH = AppWindowConstants.DEFAULT_MAIN_WINDOW_BOUNDS.maxWidth;
-    const BASE_HEIGHT = AppWindowConstants.DEFAULT_MAIN_WINDOW_BOUNDS.maxHeight;
-
-    const { width: areaMaxWidth, height: areaMaxHeight } = AppScreen.primary.getAreaBounds(
+    const baseWidth = AppWindowConstants.DEFAULT_MAIN_WINDOW_BOUNDS.maxWidth;
+    const baseHeight = AppWindowConstants.DEFAULT_MAIN_WINDOW_BOUNDS.maxHeight;
+    const { width: workAreaWidth, height: workAreaHeight } = AppScreen.primary.logicalWorkAreaSize;
+    const { width: calcWidth, height: calcHeight } = AppScreen.primary.getAreaBounds(
       AppWindowConstants.DEFAULT_WINDOW_COVER_RATIO,
-      BASE_WIDTH / BASE_HEIGHT
-    );
-    const { width: areaMinWidth, height: areaMinHeight } = AppScreen.primary.getAreaBounds(
-      0.6,
-      BASE_WIDTH / BASE_HEIGHT
-    );
-    const { width, height } = this.clampSizeByArea(
-      BASE_WIDTH,
-      BASE_HEIGHT,
-      areaMaxWidth,
-      areaMaxHeight
+      baseWidth / baseHeight
     );
 
-    const minWidth = Math.min(
-      Math.min(areaMinWidth, AppWindowConstants.DEFAULT_MAIN_WINDOW_BOUNDS.minWidth),
-      width
-    );
-    const minHeight = Math.min(
-      Math.min(areaMinHeight, AppWindowConstants.DEFAULT_MAIN_WINDOW_BOUNDS.minHeight),
-      height
-    );
-    const maxWidth = Math.max(
-      width,
-      Math.min(areaMaxWidth, AppWindowConstants.DEFAULT_MAIN_WINDOW_BOUNDS.maxWidth)
-    );
-    const maxHeight = Math.max(
-      height,
-      Math.min(areaMaxHeight, AppWindowConstants.DEFAULT_MAIN_WINDOW_BOUNDS.maxHeight)
-    );
+    const width = Math.max(1, Math.min(baseWidth, calcWidth, workAreaWidth));
+    const height = Math.max(1, Math.min(baseHeight, calcHeight, workAreaHeight));
+    const minWidth = clamp(width, 1, AppWindowConstants.DEFAULT_MAIN_WINDOW_BOUNDS.minWidth);
+    const minHeight = clamp(height, 1, AppWindowConstants.DEFAULT_MAIN_WINDOW_BOUNDS.minHeight);
 
     return {
       options: {
@@ -234,16 +213,15 @@ export class AppWindows {
         height,
         minHeight,
         minWidth,
-        maxWidth,
-        maxHeight,
+        maxWidth: workAreaWidth,
+        maxHeight: workAreaHeight,
         title: AppWindowConstants.MAIN_WINDOW_TITLE,
         titleBarStyle: "hidden",
         webPreferences: {
-          preload: preloadPath,
-          experimentalFeatures: true,
           webgl: true,
-          webSecurity: false,
-          backgroundThrottling: false
+          preload: preloadPath,
+          backgroundThrottling: false,
+          webSecurity: false
         },
         frame: false,
         show: false

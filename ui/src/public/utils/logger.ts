@@ -4,13 +4,17 @@ export class ProcessLogger implements LoggerWriter {
   write(input: { type: string; text: string }) {
     input.text = input.text + " (renderer)";
     requestIdleCallback(() => {
-      void window.fetch("/log", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(input)
-      });
+      window
+        .fetch("/log", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(input)
+        })
+        .catch((err) => {
+          console.error("Failed to send log to main process:", err);
+        });
     });
   }
 
