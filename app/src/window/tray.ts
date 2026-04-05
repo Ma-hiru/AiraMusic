@@ -40,21 +40,24 @@ export class AppTray {
     } else {
       const trayWin =
         AppWindowManager.get("tray") || AppWindowCreator.create(AppWindows.trayOnWindows);
-      tray.on("click", () => {
+      tray.addListener("click", () => {
         Log.debug("tray", "click");
-        const mainWin = AppWindowManager.get("main");
-        mainWin?.isVisible() ? mainWin.focus() : mainWin?.show();
+        AppWindowManager.checkAndShow("main");
       });
-      tray.on("right-click", () => {
+      tray.addListener("double-click", () => {
+        Log.debug("tray", "double-click");
+        AppWindowManager.checkAndShow("main");
+      });
+      tray.addListener("right-click", () => {
         Log.debug("tray", "right-click");
         this.showCustomMenu(tray, trayWin);
       });
-      trayWin.on("blur", () => {
+      trayWin.addListener("blur", () => {
         if (!trayWin.webContents.isDevToolsOpened()) {
           trayWin.isVisible() && trayWin.hide();
         }
       });
-      trayWin.webContents.on("before-input-event", (_, input) => {
+      trayWin.webContents.addListener("before-input-event", (_, input) => {
         if (input.key === "Escape") trayWin.hide();
       });
     }

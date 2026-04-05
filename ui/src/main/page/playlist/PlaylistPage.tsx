@@ -2,12 +2,12 @@ import {
   FC,
   memo,
   MouseEvent as ReactMouseEvent,
-  startTransition,
   useCallback,
   useEffect,
   useMemo,
   useRef,
-  useState
+  useState,
+  useTransition
 } from "react";
 import { useLocation, useSearchParams } from "react-router-dom";
 import { RoutePathConstants } from "@mahiru/ui/main/constants";
@@ -40,6 +40,7 @@ const PlaylistPage: FC<object> = () => {
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const { id, source } = RoutePathConstants.playlistParse(location, searchParams);
+  const [isPending, startTransition] = useTransition();
 
   Log.debug(`PlaylistPage params: id=${id}, source=${source}`);
 
@@ -205,15 +206,13 @@ const PlaylistPage: FC<object> = () => {
       playlistID &&
         NeteaseSource.Playlist.fromID(playlistID)
           .then((list) => {
-            if (cancel) return;
-            setPlaylist(list);
             startTransition(() => {
               if (cancel) return;
               const tracks = NeteaseTrackRecord.fromPlaylist(list);
-              totalTracks.current = tracks;
-              setTracks(tracks);
-
               searcher.update(NeteaseTrack.toSearchStructString(list.tracks));
+              totalTracks.current = tracks;
+              setPlaylist(list);
+              setTracks(tracks);
             });
           })
           .catch((err) => {
@@ -225,21 +224,19 @@ const PlaylistPage: FC<object> = () => {
           });
     }
     if (source === "history") {
-      setPlaylist(null);
+      totalTracks.current = player.history.list;
       startTransition(() => {
-        totalTracks.current = player.history.list;
+        setPlaylist(null);
         setTracks(player.history.list);
         searcher.update(player.history.toSearchStruct());
       });
     }
     return () => {
       cancel = true;
-      startTransition(() => {
-        setPlaylist(null);
-        totalTracks.current = [];
-        setTracks([]);
-        searcher.update("[]");
-      });
+      totalTracks.current = [];
+      searcher.update("[]");
+      setPlaylist(null);
+      setTracks([]);
     };
   }, [id, player.history, searcher, source, user?.likedPlaylist.id]);
 
@@ -247,7 +244,7 @@ const PlaylistPage: FC<object> = () => {
     <div className="w-full h-full px-12 pt-5 contain-style contain-size contain-layout">
       <Top
         type={source!}
-        loading={playlist === null}
+        loading={isPending}
         summary={playlist}
         onPlayAll={onReplace}
         onAddList={onAddList}
@@ -267,7 +264,7 @@ const PlaylistPage: FC<object> = () => {
           tracks={tracks}
           id={playlist?.id}
           type={source!}
-          loading={playlist === null}
+          loading={isPending}
           activeID={player.current.track?.id}
           onClick={onPlay}
           onContext={onContextMenu}

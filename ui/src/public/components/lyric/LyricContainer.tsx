@@ -1,7 +1,7 @@
 import {
-  forwardRef,
-  ForwardRefRenderFunction,
+  FC,
   memo,
+  Ref,
   useCallback,
   useEffect,
   useImperativeHandle,
@@ -17,7 +17,14 @@ import LyricLine from "./LyricLine";
 import AppUI from "@mahiru/ui/public/entry/ui";
 import LyricTips from "@mahiru/ui/public/components/lyric/LyricTips";
 
+export interface LyricRef {
+  update: NormalFunc<[delta: number]>;
+  setCurrentTime: NormalFunc<[time: number]>;
+  calcLayout: NormalFunc<[]>;
+}
+
 interface LyricContainerProps {
+  ref: Ref<LyricRef>;
   lyric: Optional<NeteaseLyricModel>;
   rmActive: Optional<boolean>;
   tlActive: Optional<boolean>;
@@ -32,28 +39,20 @@ interface LyricContainerProps {
   spring?: boolean;
 }
 
-export interface LyricRef {
-  update: NormalFunc<[delta: number]>;
-  setCurrentTime: NormalFunc<[time: number]>;
-  calcLayout: NormalFunc<[]>;
-}
-
-const LyricContainer: ForwardRefRenderFunction<LyricRef, LyricContainerProps> = (
-  {
-    lyric,
-    rmActive,
-    tlActive,
-    className,
-    onWordClick,
-    activeColor,
-    inactiveColor,
-    fontSize,
-    crossAlign,
-    mainAlign,
-    spring
-  },
-  ref
-) => {
+const LyricContainer: FC<LyricContainerProps> = ({
+  ref,
+  lyric,
+  rmActive,
+  tlActive,
+  className,
+  onWordClick,
+  activeColor,
+  inactiveColor,
+  fontSize,
+  crossAlign,
+  mainAlign,
+  spring
+}) => {
   const [currentLine, setCurrentLine] = useState(-1);
   const containerRef = useRef<Nullable<HTMLDivElement>>(null);
   const currentLineRef = useRef(currentLine);
@@ -171,5 +170,4 @@ const LyricContainer: ForwardRefRenderFunction<LyricRef, LyricContainerProps> = 
   );
 };
 
-LyricContainer.displayName = "LyricContainer";
-export default memo(forwardRef(LyricContainer));
+export default memo(LyricContainer);

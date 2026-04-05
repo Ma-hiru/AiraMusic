@@ -41,9 +41,7 @@
       </NoDrag>
     </div>
     <NoDrag class="absolute right-1 top-1">
-      <X
-        class="size-4 hover:opacity-50 cursor-pointer active:text-white/80"
-        @click="currentWindow.hide()" />
+      <X class="size-4 hover:opacity-50 cursor-pointer active:text-white/80" @click="close" />
     </NoDrag>
   </Drag>
 </template>
@@ -55,7 +53,7 @@
   import NeteaseImage from "@mahiru/ui/public/components/image/NeteaseImage.vue";
   import useListenableHookVue from "@mahiru/ui/public/hooks/useListenableHookVue";
   import { Pause, Play, SkipBack, SkipForward, X } from "lucide-vue-next";
-  import { computed } from "vue";
+  import { computed, watch } from "vue";
   import { clamp } from "lodash-es";
   import { NeteaseNetworkImage } from "@mahiru/ui/public/models/netease";
   import { NeteaseImageSize } from "@mahiru/ui/public/enum";
@@ -73,5 +71,10 @@
   const image = computed(() => {
     return NeteaseNetworkImage.fromTrackCover(track.value)?.setSize(NeteaseImageSize.sm);
   });
+
+  function close() {
+    currentWindow.value.hide();
+    mainWindow.value.show();
+  }
 </script>
 <style scoped lang="scss"></style>

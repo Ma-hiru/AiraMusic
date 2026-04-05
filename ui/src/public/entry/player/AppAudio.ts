@@ -6,13 +6,16 @@ export default class AppAudio {
   readonly audio = new Audio();
   readonly addEventListener = this.audio.addEventListener.bind(this.audio);
   readonly removeEventListener = this.audio.removeEventListener.bind(this.audio);
+  private readonly removeEvents: NormalFunc;
+  private sourceRef: Nullable<MediaElementAudioSourceNode> = null;
+  private analyserRef: Nullable<AnalyserNode> = null;
+  private audioCtxRef: Nullable<AudioContext> = null;
   readonly progress = {
     duration: 0,
     currentTime: 0,
     buffered: 0,
     volume: 0
   };
-  private readonly removeEvents: NormalFunc;
 
   get instance() {
     return this.audio;
@@ -112,6 +115,30 @@ export default class AppAudio {
     play && this.play();
   }
 
+  get context() {
+    // 一个audioRef，只能被一个 MediaElementAudioSourceNode 绑定一次
+    if (this.sourceRef) {
+      return {
+        source: this.sourceRef,
+        analyser: this.analyserRef!,
+        ctx: this.audioCtxRef!
+      };
+    }
+    const ctx = new AudioContext();
+    const source = ctx.createMediaElementSource(this.instance);
+    const analyser = ctx.createAnalyser();
+    source.connect(analyser);
+    analyser.connect(ctx.destination);
+    this.sourceRef = source;
+    this.analyserRef = analyser;
+    this.audioCtxRef = ctx;
+    return {
+      source,
+      analyser,
+      ctx
+    };
+  }
+
   static save(instance: AppAudio) {
     return {
       src: instance.audio.src,
@@ -140,5 +167,11 @@ export default class AppAudio {
     this.audio.removeAttribute("src");
     this.audio.load();
     this.audio.remove();
+    this.analyserRef?.disconnect();
+    this.sourceRef?.disconnect();
+    this.audioCtxRef?.close().catch();
+    this.sourceRef = null;
+    this.analyserRef = null;
+    this.audioCtxRef = null;
   }
 }

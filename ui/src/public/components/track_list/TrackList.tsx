@@ -1,10 +1,9 @@
 import {
-  forwardRef,
-  ForwardRefRenderFunction,
+  FC,
   memo,
   MouseEvent as ReactMouseEvent,
+  Ref,
   RefObject,
-  startTransition,
   useEffect,
   useImperativeHandle,
   useRef,
@@ -29,6 +28,7 @@ export interface TrackListRef {
 }
 
 export interface TrackListProps {
+  ref: Ref<TrackListRef>;
   id: Optional<number>;
   tracks: NeteaseTrackRecord[] | NeteaseHistory[];
   type: PlaylistSource;
@@ -51,23 +51,21 @@ export interface TrackListProps {
   >;
 }
 
-const TrackList: ForwardRefRenderFunction<TrackListRef, TrackListProps> = (
-  {
-    id,
-    tracks,
-    type,
-    loading,
-    paddingBottom,
-    activeID,
-    onListScroll,
-    className,
-    onContext,
-    onClick,
-    onRangeUpdate,
-    trackCoverSize
-  },
-  ref
-) => {
+const TrackList: FC<TrackListProps> = ({
+  ref,
+  id,
+  tracks,
+  type,
+  loading,
+  paddingBottom,
+  activeID,
+  onListScroll,
+  className,
+  onContext,
+  onClick,
+  onRangeUpdate,
+  trackCoverSize
+}) => {
   const user = useUser();
   const containerRef = useRef<HTMLDivElement>(null);
   const [scrollToItem, setScrollToItem] = useState<(index: number) => Promise<void>>(
@@ -95,9 +93,7 @@ const TrackList: ForwardRefRenderFunction<TrackListRef, TrackListProps> = (
         const { promise, resolve } = Promise.withResolvers<void>();
         setFastLocation(true);
         scrollToItem(index).finally(() => {
-          startTransition(() => {
-            setFastLocation(false);
-          });
+          setFastLocation(false);
           resolve();
         });
         return promise;
@@ -172,6 +168,4 @@ const RowComponent: VirtualListRow<NeteaseTrackRecord, ExtraData> = ({ index, it
   );
 };
 
-TrackList.displayName = "TrackList";
-
-export default memo(forwardRef(TrackList));
+export default memo(TrackList);

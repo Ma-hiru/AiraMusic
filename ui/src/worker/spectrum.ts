@@ -5,6 +5,7 @@ let fftSize = 0;
 let numBands = 0;
 let sampleRate = 48000;
 let ready = false;
+let isInited = false;
 
 function postErr(msg: string) {
   self.postMessage({ type: "error", error: msg } satisfies SpectrumWorkerResult);
@@ -28,8 +29,10 @@ self.addEventListener("message", (ev: MessageEvent<SpectrumWorkerArgs>) => {
       ready = false;
       (async () => {
         try {
-          await init();
-          // 重新初始化时显式释放旧实例，避免依赖 GC 触发 wasm free
+          if (!isInited) {
+            await init();
+            isInited = true;
+          }
           try {
             analyser?.free();
           } catch {

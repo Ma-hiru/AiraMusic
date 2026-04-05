@@ -95,7 +95,7 @@ const MusicSource: FC<object> = () => {
   });
   // 注册频谱
   const { spectrumData, isReady } = useSpectrumWorker(
-    player.audio.instance,
+    player.audio,
     player.status === AppPlayerStatus.playing,
     {
       fftSize: 2048,

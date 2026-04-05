@@ -189,6 +189,7 @@ export class AppWindows {
       loadURL: (port: number) => `http://localhost:${port}/mini.html`,
       onCreate: (win: BrowserWindow) => {
         isLinux && win.setAlwaysOnTop(true, "screen-saver");
+        win.hide();
       }
     };
   }

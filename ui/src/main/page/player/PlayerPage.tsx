@@ -16,11 +16,11 @@ export const PlayerPage: FC = () => {
   return (
     <div className="w-screen h-screen relative">
       <div className="absolute w-1/2 h-screen z-10 flex justify-center items-center">
-        <div className="flex flex-col justify-center items-center ease-in-out duration-300 transition-all w-[150px] sm:w-[200px] md:w-[250px] lg:w-[300px] relative -top-1">
+        <div className="flex flex-col justify-center items-center ease-in-out duration-300 transition-all w-37.5 sm:w-50 md:w-62.5 lg:w-75 relative -top-1">
           <div className="h-25 w-full flex flex-col justify-end pb-4">
             {stage >= Stage.Immediately && <Title />}
           </div>
-          <div className="w-full h-[150px] sm:h-[200px] md:h-[250px] lg:h-[300px]">
+          <div className="w-full h-37.5 sm:h-50 md:h-62.5 lg:h-75">
             {stage >= Stage.Second && <Cover />}
           </div>
           <div className="h-40 w-full flex flex-col justify-center gap-2">

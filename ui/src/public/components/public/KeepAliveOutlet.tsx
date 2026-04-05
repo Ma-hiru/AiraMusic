@@ -1,7 +1,7 @@
 import {
-  forwardRef,
-  ForwardRefRenderFunction,
+  FC,
   ReactNode,
+  Ref,
   useCallback,
   useEffect,
   useImperativeHandle,
@@ -17,14 +17,12 @@ export type KeepAliveOutletRef = {
 };
 
 interface KeepAliveOutletProps {
+  ref?: Ref<KeepAliveOutletRef>;
   cache?: boolean;
   maxCache?: number;
 }
 
-const KeepAliveOutlet: ForwardRefRenderFunction<KeepAliveOutletRef, KeepAliveOutletProps> = (
-  { cache = true, maxCache = 10 },
-  ref
-) => {
+const KeepAliveOutlet: FC<KeepAliveOutletProps> = ({ ref, cache = true, maxCache = 10 }) => {
   const outlet = useOutlet();
   const location = useLocation();
   const forceUpdate = useUpdate();
@@ -49,13 +47,7 @@ const KeepAliveOutlet: ForwardRefRenderFunction<KeepAliveOutletRef, KeepAliveOut
     [cacheMap, forceUpdate]
   );
 
-  useImperativeHandle(
-    ref,
-    () => ({
-      clearCache
-    }),
-    [clearCache]
-  );
+  useImperativeHandle(ref, () => ({ clearCache }), [clearCache]);
 
   if (!cache) return outlet;
   if (activeKey && !cacheMap.has(activeKey)) cacheMap.set(activeKey, outlet);
@@ -86,4 +78,5 @@ const KeepAliveOutlet: ForwardRefRenderFunction<KeepAliveOutletRef, KeepAliveOut
     </KeepAliveCtx.Provider>
   );
 };
-export default forwardRef(KeepAliveOutlet);
+
+export default KeepAliveOutlet;

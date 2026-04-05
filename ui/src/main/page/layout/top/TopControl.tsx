@@ -15,6 +15,13 @@ import useListenableHook from "@mahiru/ui/public/hooks/useListenableHook";
 import AppInstance from "@mahiru/ui/main/entry/instance";
 import AppBus from "@mahiru/ui/public/entry/bus";
 
+const miniWindow = AppWindow.from("miniplayer");
+if (!miniWindow.opened) {
+  miniWindow.openThen(() => {
+    AppBus.updater?.();
+  });
+}
+
 const TopControl: FC = () => {
   const currentWindow = useListenableHook(AppWindow.current);
   const miniWindow = useListenableHook(AppWindow.from("miniplayer"));
@@ -30,21 +37,19 @@ const TopControl: FC = () => {
   };
 
   const mini = () => {
-    currentWindow.hide();
     miniWindow.show();
+    currentWindow.hide();
+    AppBus.updater?.();
   };
 
   useEffect(() => {
-    if (miniWindow.opened) return;
-    miniWindow.openThen(() => {
-      AppBus.updater?.();
-    });
-  }, [miniWindow]);
-
-  useEffect(
-    () => (miniWindow.isShow ? currentWindow.hide() : currentWindow.show()),
-    [currentWindow, miniWindow.isShow]
-  );
+    const sub1 = miniWindow.bus("show", () => currentWindow.hide());
+    const sub2 = currentWindow.bus("show", () => miniWindow.hide());
+    return () => {
+      sub1();
+      sub2();
+    };
+  }, [currentWindow, miniWindow]);
 
   return (
     <NoDrag className="flex flex-row gap-4 select-none">
