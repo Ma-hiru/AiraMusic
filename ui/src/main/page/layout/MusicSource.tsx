@@ -9,18 +9,18 @@ import AppInstance from "@mahiru/ui/main/entry/instance";
 
 const MusicSource: FC<object> = () => {
   const player = AppInstance.usePlayer();
+  const title = player.current.track?.name;
+  const artist = player.current.track?.detail.artist?.().join("&");
   const { other, layout, updateLayout, updateOther } = useLayoutStore();
   // 注册窗口标题
   const { updateWindowTitle, defaultTitle } = useWindowTitle();
   useEffect(() => {
-    const title = player.current.track?.name;
-    const artist = player.current.track?.detail.artist?.().join("&");
     if (title && artist) {
       updateWindowTitle(`${title} - ${artist}`);
     } else {
       updateWindowTitle(defaultTitle);
     }
-  }, [defaultTitle, player, updateWindowTitle]);
+  }, [artist, defaultTitle, title, updateWindowTitle]);
   // 注册局部键盘快捷键
   const [Shortcuts, setShortcuts] = useState<ShortcutConfig[]>([]);
   useKeyboardShortcut(Shortcuts);

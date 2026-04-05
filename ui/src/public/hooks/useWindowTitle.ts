@@ -1,6 +1,6 @@
 import { useCallback, useSyncExternalStore } from "react";
 
-const defaultTitle = document.title;
+const defaultTitle = import.meta.env.APP_NAME || document.title;
 
 export function useWindowTitle() {
   const windowTitle = useSyncExternalStore(

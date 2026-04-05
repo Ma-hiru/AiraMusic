@@ -1,19 +1,22 @@
 import { FC, memo } from "react";
-
+import { AppPlayerStatus } from "@mahiru/ui/public/entry/player";
 import { useLayoutStore } from "@mahiru/ui/main/store/layout";
 import { useThemeColor } from "@mahiru/ui/public/hooks/useThemeColor";
-
+import useListenableHook from "@mahiru/ui/public/hooks/useListenableHook";
+import AppWindow from "@mahiru/ui/public/entry/window";
 import AudioSpectrum from "@mahiru/ui/main/componets/spectrum/AudioSpectrum";
 import AppInstance from "@mahiru/ui/main/entry/instance";
-import { AppPlayerStatus } from "@mahiru/ui/public/entry/player";
 
 const BarSpectrum: FC<object> = () => {
   const { layout } = useLayoutStore();
   const { mainColor, secondaryColor } = useThemeColor();
+  const currentWindow = useListenableHook(AppWindow.current);
   const player = AppInstance.usePlayer();
   return (
     <AudioSpectrum
-      isPlaying={!layout.playModal && player.status === AppPlayerStatus.playing}
+      isPlaying={
+        !layout.playModal && player.status === AppPlayerStatus.playing && currentWindow.isShow
+      }
       gap={1}
       renderer="webgl-rust"
       hideRightBands={80}

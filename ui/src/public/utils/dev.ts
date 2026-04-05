@@ -1,8 +1,6 @@
 import { createEqError, createLog } from "@mahiru/log";
 import { ProcessLogger } from "@mahiru/ui/public/utils/logger";
 
-export const AppScheme = import.meta.env.APP_SCHEME;
-export const AppProtocol = import.meta.env.APP_PROTOCOL;
 export const isDev = import.meta.env.DEV;
 export const isRelease = import.meta.env.PROD;
 export const EqError = createEqError(isDev);
