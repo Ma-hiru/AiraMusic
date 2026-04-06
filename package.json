@@ -85,7 +85,7 @@
   "electronmon": {
     "patterns": [
       "!**/*",
-      "app/dist"
+      "app/dist/**/*"
     ]
   }
 }
