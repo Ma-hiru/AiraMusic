@@ -11,6 +11,7 @@ export default class AppWindow extends Listenable {
   private _show: boolean;
   private _max: boolean;
   private _min: boolean;
+  private _fullscreen: boolean;
   private _busListeners = new Map<MessageTypeMap["windowBus"]["action"], NormalFunc[]>();
   static currentWindowType = _currentWindowType;
 
@@ -41,6 +42,15 @@ export default class AppWindow extends Listenable {
     this.executeListeners();
   }
 
+  get isFullscreen() {
+    return this._fullscreen;
+  }
+
+  set isFullscreen(fullscreen) {
+    this._fullscreen = fullscreen;
+    this.executeListeners();
+  }
+
   get opened() {
     return this._opened;
   }
@@ -68,6 +78,7 @@ export default class AppWindow extends Listenable {
     this._max = false;
     this._min = false;
     this._show = false;
+    this._fullscreen = false;
     this.id = window.crypto.randomUUID();
     AppRenderer.Message.listen(
       "windowBus",
@@ -104,6 +115,14 @@ export default class AppWindow extends Listenable {
             this.isMin = false;
             break;
           }
+          case "enter-fullscreen": {
+            this.isFullscreen = true;
+            break;
+          }
+          case "leave-fullscreen": {
+            this.isFullscreen = false;
+            break;
+          }
         }
         const listeners = this._busListeners.get(action) ?? [];
         for (const listener of listeners) {
@@ -127,6 +146,9 @@ export default class AppWindow extends Listenable {
     });
     AppRenderer.Event.invoke.isMaximized(type).then((isMax) => {
       this.isMax = isMax;
+    });
+    AppRenderer.Event.invoke.isFullscreen(type).then((isFullscreen) => {
+      this.isFullscreen = isFullscreen;
     });
   }
 

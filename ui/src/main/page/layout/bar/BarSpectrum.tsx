@@ -1,5 +1,4 @@
 import { FC, memo } from "react";
-import { AppPlayerStatus } from "@mahiru/ui/public/entry/player";
 import { useLayoutStore } from "@mahiru/ui/main/store/layout";
 import { useThemeColor } from "@mahiru/ui/public/hooks/useThemeColor";
 import useListenableHook from "@mahiru/ui/public/hooks/useListenableHook";
@@ -15,7 +14,7 @@ const BarSpectrum: FC<object> = () => {
   return (
     <AudioSpectrum
       isPlaying={
-        !layout.playModal && player.status === AppPlayerStatus.playing && currentWindow.isShow
+        !layout.playModal && player.playing && currentWindow.isShow && !currentWindow.isMin
       }
       gap={1}
       renderer="webgl-rust"

@@ -5,12 +5,23 @@ import { userStoreSnapshot } from "@mahiru/ui/public/store/user";
 import AppToast from "@mahiru/ui/public/entry/toast";
 
 export default class AppPlaylist extends Listenable {
-  //region fields
+  //#region fields
   private playlist;
   private position;
   private playlistBackup;
+  private looplist = [];
   private _repeat;
   private _shuffle;
+  private _loop;
+
+  get loop() {
+    return this._loop;
+  }
+
+  private set loop(value) {
+    this._loop = value;
+    this.executeListeners();
+  }
 
   get repeat() {
     return this._repeat;
@@ -24,84 +35,6 @@ export default class AppPlaylist extends Listenable {
   set shuffle(value) {
     this.changeShuffle(value);
     this.executeListeners();
-  }
-
-  get shuffle() {
-    return this._shuffle;
-  }
-
-  private get user() {
-    return userStoreSnapshot()._user;
-  }
-
-  constructor(props?: {
-    position?: number | -1;
-    playlist?: NeteaseTrackRecord[];
-    repeat?: "off" | "one" | "all";
-    shuffle?: boolean;
-  }) {
-    super();
-    this.playlist = props?.playlist ?? [];
-    this.playlistBackup = props?.playlist ?? [];
-    this.position = props?.position ?? -1;
-    this._repeat = props?.repeat ?? "off";
-    this._shuffle = props?.shuffle ?? false;
-  }
-
-  //endregion
-
-  static save(instance: AppPlaylist) {
-    const current = instance.current();
-    return {
-      position: instance.shuffle
-        ? instance.playlistBackup.findIndex((item) => item.detail.id === current?.detail.id)
-        : instance.position,
-      repeat: instance.repeat,
-      playlist: instance.shuffle ? instance.playlistBackup : instance.playlist,
-      _shuffle: instance.shuffle
-    };
-  }
-
-  static fromSave(props: ReturnType<typeof this.save>) {
-    props.playlist = <NeteaseTrackRecord[]>props.playlist.map(NeteaseTrackRecord.fromObject);
-    const instance = new AppPlaylist(props);
-    instance.shuffle = props._shuffle;
-    return instance;
-  }
-
-  [Symbol.iterator]() {
-    let pos = -1;
-    return {
-      next: () => {
-        pos++;
-        return {
-          done: this.check(pos),
-          value: this.playlist[pos]
-        };
-      }
-    };
-  }
-
-  [Symbol.dispose]() {
-    super[Symbol.dispose]();
-    this.playlist = [];
-    this.playlistBackup = [];
-    this.position = -1;
-    this._shuffle = false;
-    this.repeat = "off";
-  }
-
-  list() {
-    return this.playlist;
-  }
-
-  pos() {
-    return this.position;
-  }
-
-  locate(id: Optional<number>) {
-    if (typeof id !== "number") return -1;
-    return this.playlist.findIndex((item) => item.detail.id === id);
   }
 
   private changeShuffle(value: boolean) {
@@ -118,7 +51,101 @@ export default class AppPlaylist extends Listenable {
     this._shuffle = value;
   }
 
-  replace(list: NeteaseTrackRecord[], initPosition: number | NeteaseTrackRecord = -1) {
+  get shuffle() {
+    return this._shuffle;
+  }
+
+  private get user() {
+    return userStoreSnapshot()._user;
+  }
+
+  constructor(props?: {
+    position?: number | -1;
+    playlist?: NeteaseTrackRecord[];
+    repeat?: "off" | "one" | "all";
+    shuffle?: boolean;
+    loop?: boolean;
+  }) {
+    super();
+    this.playlist = props?.playlist ?? [];
+    this.playlistBackup = props?.playlist ?? [];
+    this.position = props?.position ?? -1;
+    this._repeat = props?.repeat ?? "off";
+    this._shuffle = props?.shuffle ?? false;
+    this._loop = props?.loop ?? false;
+  }
+  //#endregion
+
+  //#region inner methods
+  static save(instance: AppPlaylist) {
+    const current = instance.current();
+    return {
+      position: instance.shuffle
+        ? instance.playlistBackup.findIndex((item) => item.detail.id === current?.detail.id)
+        : instance.position,
+      repeat: instance.repeat,
+      playlist: instance.shuffle ? instance.playlistBackup : instance.playlist,
+      _shuffle: instance.shuffle,
+      _loop: instance.loop
+    };
+  }
+
+  static fromSave(props: ReturnType<typeof this.save>) {
+    props.playlist = <NeteaseTrackRecord[]>props.playlist.map(NeteaseTrackRecord.fromObject);
+    const instance = new AppPlaylist(props);
+    instance.shuffle = props._shuffle;
+    instance.loop = props._loop;
+    return instance;
+  }
+
+  [Symbol.iterator]() {
+    let pos = -1;
+    return {
+      next: () => {
+        pos++;
+        return {
+          done: !this.check(pos),
+          value: this.playlist[pos]
+        };
+      }
+    };
+  }
+
+  [Symbol.dispose]() {
+    super[Symbol.dispose]();
+    this.playlist = [];
+    this.playlistBackup = [];
+    this.position = -1;
+    this._shuffle = false;
+    this._loop = false;
+    this.repeat = "off";
+  }
+
+  [Symbol.toPrimitive](hint: string) {
+    if (hint === "string") {
+      return `AppPlaylist(${this.playlist.length} tracks, position: ${this.position}, repeat: ${this.repeat}, shuffle: ${this.shuffle})`;
+    } else if (hint === "number") {
+      return this.position;
+    }
+    return this;
+  }
+  //#endregion
+
+  public list() {
+    return this.playlist;
+  }
+
+  public pos() {
+    return this.position;
+  }
+
+  public locate(source: Optional<number> | NeteaseTrackRecord) {
+    if (typeof source !== "number" && !source) return -1;
+    if (typeof source === "object") source = source.id;
+    return this.playlist.findIndex((item) => item.id === source);
+  }
+
+  public replace(list: NeteaseTrackRecord[], initPosition: number | NeteaseTrackRecord = -1) {
     const shouldBackup = this.shuffle;
     shouldBackup && this.changeShuffle(false);
     this.playlist = list;
@@ -128,7 +155,7 @@ export default class AppPlaylist extends Listenable {
     return this;
   }
 
-  clear() {
+  public clear() {
     const shouldBackup = this.shuffle;
     shouldBackup && this.changeShuffle(false);
     this.playlist = [];
@@ -138,7 +165,8 @@ export default class AppPlaylist extends Listenable {
     return this;
   }
 
-  remove(pos: number) {
+  public remove(pos: number | NeteaseTrackRecord) {
+    if (typeof pos !== "number") pos = this.locate(pos);
     const shouldBackup = this.shuffle;
     shouldBackup && this.changeShuffle(false);
     if (!this.check(pos) || pos < 0) return this;
@@ -160,7 +188,7 @@ export default class AppPlaylist extends Listenable {
     return this;
   }
 
-  add(record: NeteaseTrackRecord, position: "next" | "end") {
+  public add(record: NeteaseTrackRecord, position: "next" | "end") {
     const shouldBackup = this.shuffle;
     shouldBackup && this.changeShuffle(false);
 
@@ -187,7 +215,7 @@ export default class AppPlaylist extends Listenable {
     return this;
   }
 
-  addList(records: NeteaseTrackRecord[]) {
+  public addList(records: NeteaseTrackRecord[]) {
     const shouldBackup = this.shuffle;
     shouldBackup && this.changeShuffle(false);
 
@@ -205,7 +233,7 @@ export default class AppPlaylist extends Listenable {
     return this;
   }
 
-  jump(pos: number | NeteaseTrackRecord) {
+  public jump(pos: number | NeteaseTrackRecord) {
     let position;
     if (typeof pos === "number") {
       position = pos;
@@ -219,7 +247,7 @@ export default class AppPlaylist extends Listenable {
     return this;
   }
 
-  same(list: NeteaseTrackRecord[]) {
+  public same(list: NeteaseTrackRecord[]) {
     if (this.playlist === list) return true;
     if (this.playlist.length !== list.length) return false;
     for (let i = 0; i < this.playlist.length; i++) {
@@ -229,24 +257,25 @@ export default class AppPlaylist extends Listenable {
     return true;
   }
 
-  check(pos = this.position) {
+  public check(pos: number | NeteaseTrackRecord = this.position) {
+    if (typeof pos !== "number") return this.locate(pos) !== -1;
     return (pos >= 0 && pos < this.playlist.length) || (pos == -1 && this.playlist.length > 0);
   }
 
-  current() {
+  public current() {
     const record = this.playlist[this.position];
     if (!record || !record.detail) return null;
     return record;
   }
 
-  peek(force = true) {
+  public peek(force = true) {
     const currentPos = this.position;
     const peek = this.next(force).current();
     this.position = currentPos;
     return peek;
   }
 
-  next(force = true): this {
+  public next(force = true): this {
     if (!force && this.repeat === "one") return this;
 
     let nextPos = this.position + 1;
@@ -277,7 +306,7 @@ export default class AppPlaylist extends Listenable {
     return this;
   }
 
-  last(force = true): this {
+  public last(force = true): this {
     if (!force && this.repeat === "one") return this;
 
     let lastPos = this.position - 1;

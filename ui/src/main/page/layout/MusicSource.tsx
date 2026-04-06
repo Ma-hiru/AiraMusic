@@ -4,7 +4,6 @@ import { ShortcutConfig, useKeyboardShortcut } from "@mahiru/ui/public/hooks/use
 import { useMediaSession } from "@mahiru/ui/main/hooks/useMediaSession";
 import { useLayoutStore } from "@mahiru/ui/main/store/layout";
 import { useSpectrumWorker } from "@mahiru/ui/main/hooks/useSpectrumWorker";
-import { AppPlayerStatus } from "@mahiru/ui/public/entry/player";
 import AppInstance from "@mahiru/ui/main/entry/instance";
 
 const MusicSource: FC<object> = () => {
@@ -94,17 +93,13 @@ const MusicSource: FC<object> = () => {
     unmute: () => player.audio.unmute()
   });
   // 注册频谱
-  const { spectrumData, isReady } = useSpectrumWorker(
-    player.audio,
-    player.status === AppPlayerStatus.playing,
-    {
-      fftSize: 2048,
-      numBands: 32,
-      withPeaks: false,
-      fpsLimit: 60,
-      ...(other.spectrumOptions() || {})
-    }
-  );
+  const { spectrumData, isReady } = useSpectrumWorker(player.audio, player.playing, {
+    fftSize: 2048,
+    numBands: 32,
+    withPeaks: false,
+    fpsLimit: 60,
+    ...(other.spectrumOptions() || {})
+  });
   useEffect(() => {
     updateOther(other.copy().setSpectrumData(spectrumData.current).setSpectrumReady(isReady));
   }, [isReady, other, spectrumData, updateOther]);

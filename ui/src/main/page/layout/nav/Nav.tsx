@@ -20,7 +20,7 @@ const Nav: FC<object> = () => {
       className={cx(
         `
           grid grid-cols-1
-          pb-18 pt-11 overflow-hidden
+          pb-18 pt-12  overflow-hidden
           backdrop-blur-lg contain-layout
           ease-in-out duration-300 transition-all
           border-r border-r-gray-500/10

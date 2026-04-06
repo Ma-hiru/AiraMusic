@@ -6,6 +6,7 @@ export const rendererInvokeAPI = {
   isMaximized: (type) => AppTypedRendererIPC.invoke("isMaximized", type),
   platform: () => AppTypedRendererIPC.invoke("platform"),
   hasOpenInternalWindow: (win) => AppTypedRendererIPC.invoke("hasOpenInternalWindow", win),
+  isFullscreen: (type) => AppTypedRendererIPC.invoke("isFullscreen", type),
   storeKey: () => AppTypedRendererIPC.invoke("storeKey"),
   checkOnlineStatus: () => AppTypedRendererIPC.invoke("checkOnlineStatus"),
   currentWindowType: () => AppTypedRendererIPC.invoke("currentWindowType"),

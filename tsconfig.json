@@ -20,6 +20,8 @@
     "strictNullChecks": true,
     "noEmit": true,
     "jsx": "react-jsx",
+    "removeComments": true,
+    "sourceMap": false,
     "paths": {
       "@mahiru/ui/*": ["./ui/src/*"],
       "@mahiru/*": [

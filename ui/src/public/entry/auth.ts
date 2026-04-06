@@ -25,6 +25,10 @@ export default class AppAuth {
       });
   }
 
+  static get isLoggedIn() {
+    return NeteaseUser.isLoggedIn;
+  }
+
   static createLoginWindow() {
     const loginWindow = AppWindow.from("login");
     if (!NeteaseUser.isLoggedIn) {
@@ -45,6 +49,7 @@ export default class AppAuth {
   static logout() {
     return NeteaseSource.User.logout().then(() => {
       AppAuth.userStore.updateUser(null);
+      window.location.pathname = "/";
     });
   }
 

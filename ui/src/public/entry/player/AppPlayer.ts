@@ -9,16 +9,23 @@ import {
   NeteaseTrack,
   NeteaseTrackRecord
 } from "@mahiru/ui/public/models/netease";
-import NeteaseSource from "@mahiru/ui/public/entry/source";
 import { Listenable } from "@mahiru/ui/public/models/Listenable";
+import { Log } from "@mahiru/ui/public/utils/dev";
+import { userStoreSnapshot } from "@mahiru/ui/public/store/user";
+import { NeteaseImageSize } from "@mahiru/ui/public/enum";
 
 import AppAudio from "./AppAudio";
 import AppPlaylist from "./AppPlaylist";
 import AppHistory from "./AppHistory";
+import NeteaseSource from "@mahiru/ui/public/entry/source";
 
-import { Log } from "@mahiru/ui/public/utils/dev";
-import { userStoreSnapshot } from "@mahiru/ui/public/store/user";
-import { NeteaseImageSize } from "@mahiru/ui/public/enum";
+export const enum AppPlayerStatus {
+  idle = 1,
+  loading,
+  playing,
+  paused,
+  error
+}
 
 export default class AppPlayer extends Listenable {
   readonly current;
@@ -51,7 +58,23 @@ export default class AppPlayer extends Listenable {
     return this.status === AppPlayerStatus.playing;
   }
 
-  set status(value) {
+  get loading() {
+    return this.status === AppPlayerStatus.loading;
+  }
+
+  get error() {
+    return this.status === AppPlayerStatus.error;
+  }
+
+  get paused() {
+    return this.status === AppPlayerStatus.paused;
+  }
+
+  get idle() {
+    return this.status === AppPlayerStatus.idle;
+  }
+
+  private set status(value) {
     if (this._status !== value) {
       this._status = value;
       this.executeListeners();
@@ -90,15 +113,6 @@ export default class AppPlayer extends Listenable {
     };
     this._status = props?.status || AppPlayerStatus.idle;
     this.disconnect = this.connect();
-  }
-
-  toggleLyric(next: "rm" | "tl") {
-    if (next === "rm" && this.current.lyric?.rmExisted) {
-      this.current.rmActive = !this.current.rmActive;
-    } else if (next === "tl" && this.current.lyric?.tlExisted) {
-      this.current.tlActive = !this.current.tlActive;
-    }
-    this.executeListeners();
   }
 
   private connect() {
@@ -140,7 +154,7 @@ export default class AppPlayer extends Listenable {
     };
   }
 
-  controller = new AbortController();
+  private controller = new AbortController();
 
   private async load(current: Optional<NeteaseTrackRecord>, play = false) {
     this.controller.abort();
@@ -231,6 +245,7 @@ export default class AppPlayer extends Listenable {
       playlist: AppPlaylist.fromSave(save.playlist),
       history: AppHistory.fromSave(save.history),
       current: {
+        ...save.current,
         track: NeteaseTrackRecord.fromObject(save.current.track),
         cover: NeteaseLocalImage.fromObject(save.current.cover),
         audio: NeteaseLocalAudio.fromObject(save.current.audio),
@@ -250,12 +265,13 @@ export default class AppPlayer extends Listenable {
     this.playlist[Symbol.dispose]();
     this.history[Symbol.dispose]();
   }
-}
 
-export const enum AppPlayerStatus {
-  idle = 1,
-  loading,
-  playing,
-  paused,
-  error
+  public toggleLyric(next: "rm" | "tl") {
+    if (next === "rm" && this.current.lyric?.rmExisted) {
+      this.current.rmActive = !this.current.rmActive;
+    } else if (next === "tl" && this.current.lyric?.tlExisted) {
+      this.current.tlActive = !this.current.tlActive;
+    }
+    this.executeListeners();
+  }
 }

@@ -1,6 +1,6 @@
 import AppAudio from "@mahiru/ui/public/entry/player/AppAudio";
 import SpectrumWorker from "@mahiru/ui/worker/spectrum.ts?worker";
-import { useCallback, useEffect, useEffectEvent, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { EqError, Log } from "@mahiru/ui/public/utils/dev";
 
 export interface SpectrumData {

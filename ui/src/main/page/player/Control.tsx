@@ -13,12 +13,11 @@ import {
 
 import Progress from "./Progress";
 import AppInstance from "@mahiru/ui/main/entry/instance";
-import { AppPlayerStatus } from "@mahiru/ui/public/entry/player";
 
 const Control: FC<object> = () => {
   const player = AppInstance.usePlayer();
   const centerIcon = useMemo(() => {
-    if (player.status === AppPlayerStatus.playing) {
+    if (player.playing) {
       return (
         <Pause
           className="size-5 cursor-pointer hover:opacity-50 ease-in-out duration-300 transition-all active:scale-90"
@@ -26,7 +25,7 @@ const Control: FC<object> = () => {
           onClick={() => player.audio.pause()}
         />
       );
-    } else if (player.status === AppPlayerStatus.loading) {
+    } else if (player.loading) {
       return (
         <LoaderCircle
           className="animate-spin size-5 cursor-pointer hover:opacity-50 ease-in-out duration-300 transition-all active:scale-90"
@@ -41,7 +40,7 @@ const Control: FC<object> = () => {
         onClick={() => player.audio.play()}
       />
     );
-  }, [player.audio, player.status]);
+  }, [player.audio, player.loading, player.playing]);
 
   return (
     <div className="space-x-2 w-full">

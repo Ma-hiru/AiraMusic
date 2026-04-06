@@ -199,6 +199,7 @@ const PlaylistPage: FC<object> = () => {
   );
 
   // 数据加载
+  const [firstRender, setFirstRender] = useState(true);
   useEffect(() => {
     let cancel = false;
     if (source === "normal" || source === "like") {
@@ -221,6 +222,9 @@ const PlaylistPage: FC<object> = () => {
               type: "error",
               text: "请求错误"
             });
+          })
+          .finally(() => {
+            setFirstRender(false);
           });
     }
     if (source === "history") {
@@ -229,6 +233,7 @@ const PlaylistPage: FC<object> = () => {
         setPlaylist(null);
         setTracks(player.history.list);
         searcher.update(player.history.toSearchStruct());
+        setFirstRender(false);
       });
     }
     return () => {
@@ -244,7 +249,7 @@ const PlaylistPage: FC<object> = () => {
     <div className="w-full h-full px-12 pt-5 contain-style contain-size contain-layout">
       <Top
         type={source!}
-        loading={isPending}
+        loading={isPending || firstRender}
         summary={playlist}
         onPlayAll={onReplace}
         onAddList={onAddList}
@@ -264,7 +269,7 @@ const PlaylistPage: FC<object> = () => {
           tracks={tracks}
           id={playlist?.id}
           type={source!}
-          loading={isPending}
+          loading={isPending || firstRender}
           activeID={player.current.track?.id}
           onClick={onPlay}
           onContext={onContextMenu}

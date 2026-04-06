@@ -1,7 +1,6 @@
 import { FC, memo, ReactNode, useMemo } from "react";
 import { motion } from "motion/react";
 import { useThemeColor } from "@mahiru/ui/public/hooks/useThemeColor";
-import AppUI from "@mahiru/ui/public/entry/ui";
 
 interface FloatItemProps {
   children?: ReactNode;
@@ -9,14 +8,14 @@ interface FloatItemProps {
 }
 
 const FloatItem: FC<FloatItemProps> = ({ children, onClick }) => {
-  const { mainColor, secondaryColor } = useThemeColor();
+  const { mainColor, textColorOnMain } = useThemeColor();
 
   const style = useMemo(
     () => ({
-      background: AppUI.generatePalette(mainColor.string())["200"].string(),
-      color: secondaryColor.string()
+      color: mainColor.string(),
+      background: textColorOnMain.alpha(0.6).string()
     }),
-    [mainColor, secondaryColor]
+    [mainColor, textColorOnMain]
   );
 
   return (

@@ -1,7 +1,9 @@
-import { FC, memo } from "react";
+import { FC, memo, useRef } from "react";
 import { ListMusic, MessageSquare, Play } from "lucide-react";
 import { useThemeColor } from "@mahiru/ui/public/hooks/useThemeColor";
 import { NeteasePlaylist, NeteaseTrack } from "@mahiru/ui/public/models/netease";
+import { css, cx } from "@emotion/css";
+import { useScrollAutoHide } from "@mahiru/ui/public/hooks/useScrollAutoHide";
 
 interface TopInfoProps {
   summary: Nullable<NeteasePlaylist>;
@@ -11,27 +13,51 @@ interface TopInfoProps {
 
 const TopInfo: FC<TopInfoProps> = ({ summary, onPlayAll, onAddList }) => {
   const { textColorOnMain, mainColor } = useThemeColor();
+  const descriptionRef = useRef(null);
+  useScrollAutoHide(descriptionRef, 3000);
 
   return (
-    <div className="h-44 grid grid-cols-1 grid-rows-[auto_1fr_auto] overflow-hidden max-w-max">
+    <div className="w-full h-full grid grid-cols-1 grid-rows-[auto_1fr_auto] overflow-hidden max-w-max">
+      {/* title */}
       <div
         style={{ color: textColorOnMain.hex() }}
-        className="inline-block font-bold text-[26px] overflow-hidden truncate ease-in-out duration-300 transition-all">
-        {summary?.name || ""}
+        className={`
+          w-full font-bold text-[24px]
+          whitespace-pre-wrap leading-tight break-keep wrap-break-word
+        `}>
+        {summary?.name ?? "未知歌单"}
       </div>
+
+      {/* description */}
       <div
         style={{ color: textColorOnMain.alpha(0.8).string() }}
-        className="grid grid-rows-[1fr_auto] grid-cols-1 text-[12px] font-semibold overflow-hidden py-1">
-        <div className="w-full h-full whitespace-pre-wrap overflow-hidden text-ellipsis line-clamp-3">
-          {summary?.description || "暂无描述"}
+        className={`
+          w-full h-full flex flex-col gap-1
+          text-[12px] font-semibold overflow-hidden
+          py-1
+        `}>
+        <div
+          ref={descriptionRef}
+          className={cx(
+            `
+            flex-1 overflow-y-scroll leading-snug indent-0
+            whitespace-pre-wrap wrap-break-word break-keep
+          `,
+            css`
+              line-break: strict;
+            `
+          )}>
+          {summary?.description ?? "暂无描述"}
         </div>
-        <div className="flex flex-col">
+        <div className="flex shrink flex-col">
           <span className="select-none">歌曲数量 {Number(summary?.trackCount) || "-"}</span>
           <span className="select-none">
             更新时间 {NeteaseTrack.formatDate(summary?.trackUpdateTime) || "-"}
           </span>
         </div>
       </div>
+
+      {/* action */}
       <div className="flex items-center">
         <button
           style={{ backgroundColor: mainColor.hex(), color: textColorOnMain.hex() }}

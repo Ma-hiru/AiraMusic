@@ -26,9 +26,16 @@ const Search: FC<SearchProps> = ({ searchTracks, setIsTyping }) => {
           onFocus={() => setIsTyping(true)}
           onBlur={() => setIsTyping(false)}
           onChange={(e) => setValue(e.target.value)}
-          className="block h-6 px-3 rounded-full border border-gray-300/60 focus:outline-none text-[12px]  placeholder-black/10 pr-8 w-18 focus:w-48 ease-in-out transition-all duration-300 placeholder:select-none"
+          className={`
+            focus:outline-none focus:ring-1 focus:ring-(--text-color-on-main)/50
+            placeholder-(--text-color-on-main)/50 placeholder:select-none
+            block h-6 px-3 pr-8 w-18 focus:w-48 rounded-full
+            border border-(--text-color-on-main)/50
+            ease-in-out transition-all duration-300
+            text-[12px]
+          `}
         />
-        <SearchIcon className="absolute top-1/2 right-2 -translate-y-1/2 size-4 text-black/20" />
+        <SearchIcon className="absolute top-1/2 right-2 -translate-y-1/2 size-4 text-(--text-color-on-main)/50" />
       </div>
     </div>
   );

@@ -130,6 +130,8 @@ export class AppWindowManager {
     window.addListener("show", () => sendBusMessage("show"));
     window.addListener("focus", () => sendBusMessage("focus"));
     window.addListener("ready-to-show", () => sendBusMessage("ready"));
+    window.addListener("enter-full-screen", () => sendBusMessage("enter-fullscreen"));
+    window.addListener("leave-full-screen", () => sendBusMessage("leave-fullscreen"));
     if (isLinux) {
       window.addListener(
         "move",

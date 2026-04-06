@@ -35,14 +35,11 @@ const Top: FC<TopProps> = ({
 
   if (loading && type !== "history") return null;
   return type !== "history" ? (
-    <div className="grid grid-rows-1 grid-cols-[1fr_auto]">
-      {/*Left*/}
-      <div className="min-w-0 grid grid-rows-1 grid-cols-[auto_1fr] gap-4 items-center">
+    <div className="w-full h-45 grid grid-rows-1 grid-cols-[1fr_auto]">
+      <div className="min-w-0 grid grid-rows-1 grid-cols-[auto_1fr] gap-4 items-end">
         <TopCover summary={summary} />
-        {/*Info*/}
         <TopInfo summary={summary} onAddList={onAddList} onPlayAll={onPlayAll} />
       </div>
-      {/*Right*/}
       <TopRight summary={summary} type={type} searchTracks={searchTracks} setTying={setTyping} />
     </div>
   ) : (

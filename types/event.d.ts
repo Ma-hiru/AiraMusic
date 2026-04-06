@@ -25,6 +25,7 @@ type InvokeEventMaps = {
     }
   ];
   selectPath: [type: "dir" | "file", Promise<{ ok: boolean; path: string; error?: string }>];
+  isFullscreen: [WindowType, boolean];
 };
 
 /** Normal 事件类型以及参数 */
@@ -116,7 +117,9 @@ type MessageTypeMap = {
       | "minimize"
       | "unminimize"
       | "moved"
-      | "resized";
+      | "resized"
+      | "enter-fullscreen"
+      | "leave-fullscreen";
   };
   imageCheckerBus: {
     url: string;

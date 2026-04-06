@@ -29,7 +29,7 @@ const TopRight: FC<TopRightProps> = ({ summary, searchTracks, type, setTying }) 
   }, [summary]);
 
   return (
-    <div className="flex h-full flex-col justify-between items-end text-[12px] text-[#7b8290]/80">
+    <div className="flex h-full flex-col justify-between items-end text-[12px] text-(--text-color-on-main)/80">
       {/*EditBtn*/}
       <div className="size-5">
         {summary?.creator?.userId === user?.profile.userId && type !== "like" && (

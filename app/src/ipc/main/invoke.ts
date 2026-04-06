@@ -53,6 +53,11 @@ const mainInvokeAPI = {
     if (!sender) return false;
     return AppWindowManager.has(win);
   },
+  isFullscreen: (e, type) => {
+    const sender = BrowserWindow.fromWebContents(e.sender);
+    if (!sender) return false;
+    return AppWindowManager.get(type)?.isFullScreen() ?? false;
+  },
   storeKey: () => storeKeyAccessToken,
   checkOnlineStatus: async (): Promise<NetworkStatus> => {
     // Dns.resolve 可能因为各种原因失败，比如本地网络配置问题，但不代表当前网络不可用

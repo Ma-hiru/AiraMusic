@@ -2,18 +2,21 @@ import { FC, memo } from "react";
 import { cx } from "@emotion/css";
 import { useLayoutStore } from "@mahiru/ui/main/store/layout";
 import { useUser } from "@mahiru/ui/public/store/user";
+import AppWindow from "@mahiru/ui/public/entry/window";
 import Drag from "@mahiru/ui/public/components/drag/Drag";
-import TopLeft from "@mahiru/ui/main/page/layout/top/TopLeft";
-import AppAuth from "@mahiru/ui/public/entry/auth";
+import useListenableHook from "@mahiru/ui/public/hooks/useListenableHook";
 
 import TopControl from "./TopControl";
 import TopAvatar from "./TopAvatar";
 import TopDivider from "./TopDivider";
 import TopSearch from "./TopSearch";
+import TopLeft from "./TopLeft";
 
 const Top: FC<{ className?: string }> = ({ className }) => {
-  const { layout, updateLayout } = useLayoutStore();
+  const { layout } = useLayoutStore();
+  const isFullscreen = useListenableHook(AppWindow.current).isFullscreen;
   const user = useUser();
+
   return (
     <Drag
       className={cx(
@@ -21,7 +24,7 @@ const Top: FC<{ className?: string }> = ({ className }) => {
           absolute left-0 right-0 top-0 pr-4
           flex items-center
         `,
-        layout.playModal ? "text-white" : "text-[#7b8290]",
+        layout.playModal ? "text-white" : "text-(--text-color-on-main)",
         className
       )}>
       <div
@@ -32,19 +35,13 @@ const Top: FC<{ className?: string }> = ({ className }) => {
           `,
           layout.sideBar ? "w-40" : "w-20"
         )}>
-        <TopLeft
-          user={user}
-          layout={layout}
-          onClick={() => {
-            if (layout.playModal) {
-              return updateLayout(layout.copy().setPlayModal(false));
-            } else {
-              AppAuth.createLoginWindow();
-            }
-          }}
-        />
+        <TopLeft user={user} layout={layout} />
       </div>
-      <div className="flex-1 flex flex-row gap-4 items-center justify-end">
+      <div
+        className={cx(
+          `flex-1 flex flex-row gap-4 items-center justify-end`,
+          isFullscreen && "hidden"
+        )}>
         <TopSearch />
         {layout.playModal && <TopAvatar user={user} />}
         <TopDivider />
@@ -53,4 +50,5 @@ const Top: FC<{ className?: string }> = ({ className }) => {
     </Drag>
   );
 };
+
 export default memo(Top);

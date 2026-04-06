@@ -1,21 +1,46 @@
 import { cx } from "@emotion/css";
-import { FC, memo, useMemo } from "react";
+import { FC, memo, useCallback, useMemo, useRef } from "react";
 import { NeteaseNetworkImage, NeteaseUser } from "@mahiru/ui/public/models/netease";
 import { LayoutConfig } from "@mahiru/ui/main/store/layout/config";
 import { ChevronDown, UserCircle2 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import NeteaseImage from "@mahiru/ui/public/components/image/NeteaseImage";
 import NoDrag from "@mahiru/ui/public/components/drag/NoDrag";
+import AppAuth from "@mahiru/ui/public/entry/auth";
+import AppToast from "@mahiru/ui/public/entry/toast";
+import { getLayoutStoreSnapshot } from "@mahiru/ui/main/store/layout";
 
 interface TopLeftProps {
   user: Nullable<NeteaseUser>;
   layout: LayoutConfig;
-  onClick?: NormalFunc;
 }
 
-const TopLeft: FC<TopLeftProps> = ({ user, layout, onClick }) => {
+const TopLeft: FC<TopLeftProps> = ({ user, layout }) => {
   const avatar = useMemo(() => NeteaseNetworkImage.fromUserAvatar(user), [user]);
 
+  const updateLayout = getLayoutStoreSnapshot().updateLayout;
+  const lastClickTime = useRef(0);
+  const onClick = useCallback(() => {
+    if (layout.playModal) {
+      updateLayout(layout.copy().setPlayModal(false));
+    } else if (!AppAuth.isLoggedIn) {
+      AppAuth.createLoginWindow();
+    } else {
+      if (Date.now() - lastClickTime.current < 2000) {
+        AppToast.request({
+          type: "info",
+          text: "再次点击退出登录"
+        });
+      } else {
+        AppAuth.logout().finally(() => {
+          AppToast.request({
+            type: "success",
+            text: "已退出登录"
+          });
+        });
+      }
+    }
+  }, [layout, updateLayout]);
   return (
     <div className="w-40 h-full text-black">
       <AnimatePresence>
@@ -55,7 +80,7 @@ const TopLeft: FC<TopLeftProps> = ({ user, layout, onClick }) => {
               <p
                 className={cx(
                   `
-                  truncate font-semibold text-xs
+                  truncate font-semibold text-xs text-(--text-color-on-main)
                   ease-in-out duration-300 transition-opacity
               `,
                   !layout.sideBar && "opacity-0"
