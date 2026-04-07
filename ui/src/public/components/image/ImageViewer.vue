@@ -55,7 +55,7 @@
   import { computed, CSSProperties, onMounted, ref, useTemplateRef, watch } from "vue";
   import { clamp } from "lodash-es";
   import { ArrowLeftToLine, ArrowRightToLine, Download } from "lucide-vue-next";
-  import { EqError, Log } from "@mahiru/ui/public/utils/dev";
+  import { Log } from "@mahiru/ui/public/utils/dev";
   import AppRenderer from "@mahiru/ui/public/entry/renderer";
 
   type ImageEntry = { url?: string; alt?: string };
@@ -107,7 +107,7 @@
       try {
         let type = "";
         const buffer = await fetch(current.value.url).then((res) => {
-          if (!res.ok) throw new EqError({ message: "网络错误" });
+          if (!res.ok) Log.throw({ message: "网络错误" });
           const contentType = res.headers.get("content-type");
           if (contentType) type = contentType.split("/")[1]?.split(";")[0] || "jpg";
           return res.arrayBuffer();
