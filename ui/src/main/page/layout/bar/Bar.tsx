@@ -9,6 +9,7 @@ import BarControl from "./BarControl";
 import BarProgress from "./BarProgress";
 import BarBtns from "./BarBtns";
 import BarSpectrum from "./BarSpectrum";
+import AppErrorBoundary from "@mahiru/ui/public/components/fallback/AppErrorBoundary";
 
 const Bar: FC<{ className?: string }> = ({ className }) => {
   const { theme } = useLayoutStore();
@@ -28,16 +29,19 @@ const Bar: FC<{ className?: string }> = ({ className }) => {
       `,
         className
       )}>
-      <div className="w-full h-full grid grid-rows-1 backdrop-blur-md grid-cols-[1fr_auto_1fr] items-center select-none px-6 relative z-10">
-        <BarCover />
-        <BarControl />
-        <BarBtns />
-        <BarProgress />
-      </div>
-      <div className="absolute left-0 top-0 inset-0 pointer-events-none z-0">
-        <BarSpectrum />
-      </div>
+      <AppErrorBoundary name="PlayerBar" showError canReset className="w-full h-full">
+        <div className="w-full h-full grid grid-rows-1 backdrop-blur-md grid-cols-[1fr_auto_1fr] items-center select-none px-6 relative z-10">
+          <BarCover />
+          <BarControl />
+          <BarBtns />
+          <BarProgress />
+        </div>
+        <div className="absolute left-0 top-0 inset-0 pointer-events-none z-0">
+          <BarSpectrum />
+        </div>
+      </AppErrorBoundary>
     </div>
   );
 };
+
 export default memo(Bar);

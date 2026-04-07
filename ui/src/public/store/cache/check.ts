@@ -1,6 +1,6 @@
 import { cacheRequest } from "./request";
 import { CacheStoreBase } from "@mahiru/ui/public/store/cache/base";
-import { EqError, Log } from "@mahiru/ui/public/utils/dev";
+import { Log } from "@mahiru/ui/public/utils/dev";
 import AppNet from "@mahiru/ui/public/entry/net";
 
 type CheckRequestItem = {
@@ -51,13 +51,11 @@ export class CacheStoreForCheck extends CacheStoreBase {
         });
       })
       .catch((err) => {
-        Log.error(
-          new EqError({
-            raw: err,
-            message: "flushCheckCollections failed",
-            label: "CacheStoreForCheck"
-          })
-        );
+        Log.error({
+          raw: err,
+          message: "flushCheckCollections failed",
+          label: "CacheStoreForCheck"
+        });
         collections.forEach((item) => {
           item.resolve({ ok: false, index: this.BLANK_INDEX });
         });
@@ -73,13 +71,11 @@ export class CacheStoreForCheck extends CacheStoreBase {
       if (AppNet.getStatus().score < 0.7 || count >= 3) {
         Log.debug("Starting flushCheckOrStoreCollections store", collections.length);
         this.orStoreMulti(collections).catch((err) => {
-          Log.error(
-            new EqError({
-              raw: err,
-              message: "flushCheckOrStoreCollections store failed",
-              label: "CacheStoreForCheck"
-            })
-          );
+          Log.error({
+            raw: err,
+            message: "flushCheckOrStoreCollections store failed",
+            label: "CacheStoreForCheck"
+          });
         });
       } else {
         count++;

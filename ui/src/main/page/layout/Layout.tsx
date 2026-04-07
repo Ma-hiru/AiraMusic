@@ -5,6 +5,7 @@ import { Stage } from "@mahiru/ui/public/enum";
 
 import MenuProvider from "@mahiru/ui/public/components/menu/MenuProvider";
 import ToastProvider from "@mahiru/ui/public/components/toast/ToastProvider";
+import AppErrorBoundary from "@mahiru/ui/public/components/fallback/AppErrorBoundary";
 import TopBar from "./top";
 import PlayerBar from "./bar";
 import NavSide from "./nav";
@@ -36,12 +37,16 @@ const Layout: FC<object> = () => {
       <Content />
       {stage >= Stage.Finally && <PlayerBar className="h-18 z-10" />}
       {stage >= Stage.Finally && <PlayerModal className="z-20" />}
-      {stage >= Stage.Immediately && <Background className="-z-10" />}
-      {stage >= Stage.Immediately && <ToastProvider className="z-35" />}
-      {stage >= Stage.Immediately && <MenuProvider className="z-15" />}
-      {stage >= Stage.Second && <Bus />}
-      {stage >= Stage.Second && <Float className="z-10" />}
-      {stage >= Stage.Second && <MusicSource />}
+      <AppErrorBoundary name="Widget" showError={false} autoReset panicAfterReset>
+        {stage >= Stage.Immediately && <Background className="-z-10" />}
+        {stage >= Stage.Immediately && <ToastProvider className="z-35" />}
+        {stage >= Stage.Immediately && <MenuProvider className="z-15" />}
+        {stage >= Stage.Second && <Float className="z-10" />}
+      </AppErrorBoundary>
+      <AppErrorBoundary name="PlayerSource" panic>
+        {stage >= Stage.Second && <Bus />}
+        {stage >= Stage.Second && <MusicSource />}
+      </AppErrorBoundary>
     </div>
   );
 };

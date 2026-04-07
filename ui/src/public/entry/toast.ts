@@ -4,12 +4,12 @@ import { Errs } from "@mahiru/ui/public/entry/errs";
 
 export default class AppToast {
   static request: NormalFunc<[data: Omit<ToastItemData, "id">], string> = () => {
-    Log.error(Errs.ToastBeforeInject.create("requestToast"));
+    Log.error(Errs.ToastBeforeInject.derive("requestToast"));
     return "";
   };
 
   static dispose: NormalFunc<[id: string]> = () => {
-    Log.error(Errs.ToastBeforeInject.create("disposeToast"));
+    Log.error(Errs.ToastBeforeInject.derive("disposeToast"));
   };
 
   static inject(

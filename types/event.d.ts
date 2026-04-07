@@ -57,6 +57,7 @@ type NormalEventMaps = {
   maximizeInternalWindow: Optional<WindowType>;
   unmaximizeInternalWindow: Optional<WindowType>;
   mousePenetrateInternalWindow: { type: Optional<WindowType>; penetrate: boolean };
+  fatalError: { message: string; error?: string };
 };
 
 /** Normal 事件的 Message 类型以及其参数 */

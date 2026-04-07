@@ -11,6 +11,7 @@ import TopAvatar from "./TopAvatar";
 import TopDivider from "./TopDivider";
 import TopSearch from "./TopSearch";
 import TopLeft from "./TopLeft";
+import AppErrorBoundary from "@mahiru/ui/public/components/fallback/AppErrorBoundary";
 
 const Top: FC<{ className?: string }> = ({ className }) => {
   const { layout } = useLayoutStore();
@@ -27,26 +28,28 @@ const Top: FC<{ className?: string }> = ({ className }) => {
         layout.playModal ? "text-white" : "text-(--text-color-on-main)",
         className
       )}>
-      <div
-        className={cx(
-          `
+      <AppErrorBoundary name="Top" showError={false} autoReset panicAfterReset>
+        <div
+          className={cx(
+            `
             h-full overflow-hidden
             duration-300 ease-in-out transition-all
           `,
-          layout.sideBar ? "w-40" : "w-20"
-        )}>
-        <TopLeft user={user} layout={layout} />
-      </div>
-      <div
-        className={cx(
-          `flex-1 flex flex-row gap-4 items-center justify-end`,
-          isFullscreen && "hidden"
-        )}>
-        <TopSearch />
-        {layout.playModal && <TopAvatar user={user} />}
-        <TopDivider />
-        <TopControl />
-      </div>
+            layout.sideBar ? "w-40" : "w-20"
+          )}>
+          <TopLeft user={user} layout={layout} />
+        </div>
+        <div
+          className={cx(
+            `flex-1 flex flex-row gap-4 items-center justify-end`,
+            isFullscreen && "hidden"
+          )}>
+          <TopSearch />
+          {layout.playModal && <TopAvatar user={user} />}
+          <TopDivider />
+          <TopControl />
+        </div>
+      </AppErrorBoundary>
     </Drag>
   );
 };

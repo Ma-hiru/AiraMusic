@@ -1,7 +1,7 @@
 import QRCode from "qrcode";
 import NCM_API from "@mahiru/ui/public/api";
 import { useCallback, useEffect, useState } from "react";
-import { EqError, Log } from "@mahiru/ui/public/utils/dev";
+import { Log } from "@mahiru/ui/public/utils/dev";
 
 interface LoginQRCodeProps {
   qrOptions?: QRCode.QRCodeToDataURLOptions;
@@ -31,13 +31,11 @@ export function useLoginQRCode(props?: LoginQRCodeProps) {
       setKey(QRCodeKey);
       setStatus(QRCodeStatus.WAITING_SCAN);
     } catch (err) {
-      Log.error(
-        new EqError({
-          label: "useQRCode",
-          message: "failed to request QR code",
-          raw: err
-        })
-      );
+      Log.error({
+        label: "useQRCode",
+        message: "failed to request QR code",
+        raw: err
+      });
       setStatus(QRCodeStatus.ERROR);
     }
   }, [qrOptions]);
@@ -67,13 +65,11 @@ export function useLoginQRCode(props?: LoginQRCodeProps) {
             }
           })
           .catch((err) => {
-            Log.error(
-              new EqError({
-                label: "useQRCode",
-                message: "failed to check QR code",
-                raw: err
-              })
-            );
+            Log.error({
+              label: "useQRCode",
+              message: "failed to check QR code",
+              raw: err
+            });
             setStatus(QRCodeStatus.ERROR);
             setResult(null);
             clearInterval(timer);

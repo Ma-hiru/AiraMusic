@@ -1,115 +1,75 @@
 import { AnyToString } from "../string";
 
-export class EqErrorRaw {
-  readonly raw?: Error;
-  readonly label?: string;
-  readonly id?: number | string | symbol;
-  readonly message: string;
-  readonly dev;
+export type EqErrorProps = { id?: PropertyKey; raw?: any; label?: string; message: string };
 
-  constructor(
-    props: { raw?: any; label?: string; message: string; id?: number | string | symbol },
-    dev: boolean = false
-  ) {
-    const { raw, label, message, id } = props;
-    this.dev = dev;
-    this.raw = EqErrorRaw.anyToError(raw);
-    this.label = label;
-    this.message = message;
-    this.id = id;
+export class EqError {
+  readonly id;
+  readonly raw;
+  readonly label;
+  readonly message;
+  readonly [Symbol.toStringTag] = "EqError";
+
+  constructor(props: EqErrorProps | string) {
+    if (typeof props === "object") {
+      this.id = props.id ?? globalThis.crypto.randomUUID();
+      this.label = props.label;
+      this.message = props.message;
+      this.raw = EqError.anyToError(props.raw);
+    } else {
+      this.id = globalThis.crypto.randomUUID();
+      this.message = props;
+    }
   }
 
   eq(other: unknown, loose = true): other is this {
-    if (!EqErrorRaw.isEqError(other)) return false;
+    if (!EqError.isEqError(other)) return false;
     if (loose) return this.message === other.message;
     return (
-      this.getRawMessage() === other.getRawMessage() &&
-      this.message === other.message &&
-      this.id === other.id
+      this.rawMessage === other.rawMessage && this.message === other.message && this.id === other.id
     );
   }
 
-  create(label?: string, err?: any) {
-    return new EqErrorRaw(
-      {
-        label,
-        raw: err,
-        message: this.message
-      },
-      this.dev
-    );
+  derive(label?: string, err?: any) {
+    return new EqError({
+      label,
+      raw: err,
+      message: this.message,
+      id: this.id
+    });
   }
 
-  toString() {
-    if (this.label) {
-      if (this.raw) {
-        return `[${this.label}] ${this.message}: ${this.getRawMessage()}`;
-      } else {
-        return `[${this.label}] ${this.message}`;
-      }
-    } else {
-      if (this.raw) {
-        return `${this.message}: ${this.getRawMessage()}`;
-      } else {
-        return this.message;
-      }
-    }
-  }
-
-  print() {
-    console.error(this.toString());
-  }
-
-  printDEV() {
-    this.dev && console.error(this.toString());
-  }
-
-  printRELEASE() {
-    !this.dev && console.error(this.toString());
-  }
-
-  getRawMessage() {
-    if (EqErrorRaw.isEqError(this.raw)) {
-      return "\n  " + this.raw.message || "";
-    } else {
-      return this.raw?.message || "";
-    }
+  get rawMessage() {
+    return this.raw?.message ?? "";
   }
 
   static anyToError(source: any) {
-    if (source instanceof Error) {
-      return source;
-    } else if (source === null || source === undefined) {
-      return undefined;
-    } else {
-      return new Error(AnyToString(source));
-    }
+    if (source instanceof Error) return source;
+    else if (source === null || source === undefined) return undefined;
+    return new Error(AnyToString(source));
   }
 
-  static isEqError(err: unknown): err is EqErrorRaw {
-    if (!err) return false;
-    return err instanceof EqErrorRaw;
+  static isEqError(err: unknown): err is EqError {
+    return err instanceof EqError;
   }
-}
 
-type EqError = typeof EqErrorRaw & {
-  new (props: {
-    raw?: any;
-    label?: string;
-    message: string;
-    id?: number | string | symbol;
-  }): EqErrorRaw;
-};
+  static isErrorProps(props: any): props is EqErrorProps {
+    if (EqError.isEqError(props)) return true;
+    if (typeof props !== "object" || props === null || typeof props.message !== "string")
+      return false;
 
-export function createEqError(dev: boolean): EqError {
-  return class extends EqErrorRaw {
-    constructor(props: {
-      raw?: any;
-      label?: string;
-      message: string;
-      id?: number | string | symbol;
-    }) {
-      super(props, dev);
+    for (const key of Object.keys(props)) {
+      if (key !== "id" && key !== "raw" && key !== "label" && key !== "message") {
+        return false;
+      }
     }
-  };
+
+    return true;
+  }
+
+  [Symbol.toPrimitive]() {
+    let output = this.message;
+    if (this.label) output = `[${this.label}] ${output}`;
+    if (this.raw) output = `${output}: ${this.rawMessage}`;
+    return output;
+  }
 }

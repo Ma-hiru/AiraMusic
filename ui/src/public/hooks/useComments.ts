@@ -1,6 +1,6 @@
 import { useActionState } from "react";
 import { CommentSort, CommentType } from "@mahiru/ui/public/enum";
-import { EqError, Log } from "@mahiru/ui/public/utils/dev";
+import { Log } from "@mahiru/ui/public/utils/dev";
 import NCM_API from "@mahiru/ui/public/api";
 
 export function useComments() {
@@ -35,13 +35,11 @@ export function useComments() {
           failed: false
         });
       } catch (err) {
-        Log.error(
-          new EqError({
-            raw: err,
-            label: "useComment",
-            message: "failed to fetch comments"
-          })
-        );
+        Log.error({
+          raw: err,
+          label: "useComment",
+          message: "failed to fetch comments"
+        });
         return comments.copyWith({
           ...comments,
           failed: true

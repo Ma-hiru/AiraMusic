@@ -154,7 +154,7 @@ class Parser {
         tips: mt?.nickname
       };
     } catch (err) {
-      Log.error(Errs.LyricParseErr.create("parseNeteaseLyric", err));
+      Log.error(Errs.LyricParseErr.derive("parseNeteaseLyric", err));
       return <NeteaseLyricModel>{
         data: [],
         rmExisted: false,

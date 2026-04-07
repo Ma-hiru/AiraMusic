@@ -1,6 +1,6 @@
-import { AppWindowCreatorProps, WindowExits } from "./manager";
+import { AppWindowCreatorProps, AppWindowManager, WindowExits } from "./manager";
 import { preloadPath } from "../utils/path";
-import { BrowserWindow } from "electron";
+import { BrowserWindow, dialog } from "electron";
 import { isLinux } from "../utils/platform";
 import { AppWindowConstants } from "../constant/win";
 import { isDev } from "../utils/dev";
@@ -24,6 +24,12 @@ export class AppWindows {
       width: Math.max(1, Math.floor(safeBaseWidth * scale)),
       height: Math.max(1, Math.floor(safeBaseHeight * scale))
     };
+  }
+
+  static fatalError(message: string, error?: string) {
+    // TODO
+    dialog.showErrorBox("应用发生致命错误", `${message}\n ${error || ""}`);
+    AppWindowManager.get("main")?.close();
   }
 
   static get login(): AppWindowCreatorProps {

@@ -1,5 +1,5 @@
 import { BannerType, NeteaseImageSize } from "@mahiru/ui/public/enum";
-import { EqError, Log } from "@mahiru/ui/public/utils/dev";
+import { Log } from "@mahiru/ui/public/utils/dev";
 
 export class NeteaseURL {
   static parseBannerURL(url: string): { type: BannerType; id: number } {
@@ -32,13 +32,11 @@ export class NeteaseURL {
         }
       }
     } catch (err) {
-      Log.error(
-        new EqError({
-          message: "parseBannerURL error",
-          raw: err,
-          label: "parseBannerURL"
-        })
-      );
+      Log.error({
+        message: "parseBannerURL error",
+        raw: err,
+        label: "parseBannerURL"
+      });
     }
     return { type: BannerType.unknown, id: 0 };
   }

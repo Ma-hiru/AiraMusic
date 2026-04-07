@@ -19,7 +19,7 @@ export function KeepAliveBuildKey(pathname: string, search?: string) {
 export function useKeepAliveCtx() {
   const ctxValue = useContext(KeepAliveCtx);
   if (!ctxValue) {
-    Log.error(Errs.KeepAliveNoProvider.create("useKeepAliveCtx"));
+    Log.error(Errs.KeepAliveNoProvider.derive("useKeepAliveCtx"));
   }
   return ctxValue;
 }

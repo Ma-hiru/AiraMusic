@@ -34,7 +34,7 @@
 
 ```bash
     # 使用yarn，避免electron-builder安装依赖时出现依赖缺失问题
-    yarn install --ignore-engines --frozen-lockfile
+    yarn install --frozen-lockfile
 ```
 
 ### 开发模式

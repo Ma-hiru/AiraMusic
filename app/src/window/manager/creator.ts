@@ -1,10 +1,9 @@
+import AppScreen from "../../utils/screen";
 import { Log } from "../../utils/log";
 import { isDev } from "../../utils/dev";
-import { EqError } from "../../utils/err";
 import { AppStore } from "../../app";
 import { AppWindowManager, WindowExits } from "./manager";
 import { BrowserWindow, BrowserWindowConstructorOptions } from "electron";
-import AppScreen from "../../utils/screen";
 import { isLinux } from "app/src/utils/platform";
 import { debounce } from "lodash-es";
 
@@ -73,13 +72,11 @@ export class AppWindowCreator {
     const port = isDev ? process.env.VITE_SERVER_PORT! : process.env.EXPRESS_SERVER_PORT!;
     const url = loadURL(Number(port));
     win.loadURL(url).catch((err) => {
-      Log.error(
-        new EqError({
-          raw: err,
-          message: `failed to load window URL: ${url}`,
-          label: "AppWindowCreator"
-        })
-      );
+      Log.error({
+        raw: err,
+        message: `failed to load window URL: ${url}`,
+        label: "AppWindowCreator"
+      });
     });
     return win;
   }

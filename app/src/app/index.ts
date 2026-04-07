@@ -5,7 +5,6 @@ import { Log } from "../utils/log";
 import { isCreateMpris, isMacOS } from "../utils/platform";
 import { AppProtocol } from "./protocol";
 import { isDev, printDevInfo, storeKeyAccessToken } from "../utils/dev";
-import { EqError } from "../utils/err";
 import { storeServerBinaryPath } from "../utils/path";
 import { AppTray, AppWindowCreator, AppWindowManager, AppWindows } from "../window";
 import { registerEventHandlers, registerInvokeHandlers } from "../ipc/main";
@@ -51,13 +50,11 @@ export class APP {
       this.neteaseMusicApiService = AppServices.NeteaseMusicApi.create();
       !isDev && (this.proxyServer = AppServices.Proxy.create());
     } catch (err) {
-      Log.error(
-        new EqError({
-          raw: err,
-          message: "failed to initialize app services",
-          label: "App init"
-        })
-      );
+      Log.error({
+        raw: err,
+        message: "failed to initialize app services",
+        label: "App init"
+      });
       app.exit(-1);
     }
   }
@@ -66,13 +63,11 @@ export class APP {
     try {
       AppProtocol.register();
     } catch (err) {
-      Log.error(
-        new EqError({
-          raw: err,
-          message: "failed to register app protocol",
-          label: "App init"
-        })
-      );
+      Log.error({
+        raw: err,
+        message: "failed to register app protocol",
+        label: "App init"
+      });
       app.exit(-2);
     }
   }
@@ -82,13 +77,11 @@ export class APP {
       registerInvokeHandlers();
       registerEventHandlers();
     } catch (err) {
-      Log.error(
-        new EqError({
-          raw: err,
-          message: "failed to register ipc handlers",
-          label: "App init"
-        })
-      );
+      Log.error({
+        raw: err,
+        message: "failed to register ipc handlers",
+        label: "App init"
+      });
       app.exit(-3);
     }
   }
@@ -113,13 +106,11 @@ export class APP {
       });
       return mainWindow;
     } catch (err) {
-      Log.error(
-        new EqError({
-          raw: err,
-          message: "failed to launch main window",
-          label: "App init"
-        })
-      );
+      Log.error({
+        raw: err,
+        message: "failed to launch main window",
+        label: "App init"
+      });
       app.exit(-4);
     }
   }
@@ -128,13 +119,11 @@ export class APP {
     try {
       AppTray.register();
     } catch (err) {
-      Log.warn(
-        new EqError({
-          raw: err,
-          message: "failed to register app tray",
-          label: "App init"
-        })
-      );
+      Log.warn({
+        raw: err,
+        message: "failed to register app tray",
+        label: "App init"
+      });
     }
   }
 

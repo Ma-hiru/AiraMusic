@@ -60,7 +60,7 @@ export class Lock {
       }
 
       if (this.locked) {
-        return onError(Errs.AcquireLockError.create());
+        return onError(Errs.AcquireLockError.derive());
       } else {
         this.locked = true;
       }
@@ -70,7 +70,7 @@ export class Lock {
         if (result instanceof Promise) {
           result
             .then(resolve)
-            .catch((err) => onError(Errs.TaskRuntimeError.create(label || "tryRun-task", err)))
+            .catch((err) => onError(Errs.TaskRuntimeError.derive(label || "tryRun-task", err)))
             .finally(() => this.release());
         } else {
           this.release();
@@ -78,7 +78,7 @@ export class Lock {
         }
       } catch (err) {
         this.release();
-        onError(Errs.TaskRuntimeError.create(label || "tryRun-task", err));
+        onError(Errs.TaskRuntimeError.derive(label || "tryRun-task", err));
       }
     });
   }
@@ -95,7 +95,7 @@ export class Lock {
       this.acquire()
         .then(task)
         .then(resolve)
-        .catch((err) => reject(Errs.TaskRuntimeError.create(label || "run-task", err)))
+        .catch((err) => reject(Errs.TaskRuntimeError.derive(label || "run-task", err)))
         .finally(() => this.release());
     });
   }

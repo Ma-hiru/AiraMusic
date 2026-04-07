@@ -1,19 +1,27 @@
+import { EqError, EqErrorProps } from "../err";
 import { LogLevel, LogLevelToString, ParseLogLevel } from "./logLevel";
 import { AnyToString, CanString } from "../string";
 import { LoggerWriter } from "./writer";
 
 export interface Log {
+  format: LogHandler;
   trace: LogHandler;
   debug: LogHandler;
   info: LogHandler;
   warn: LogHandler;
-  error: LogHandler;
-  throw: LogHandler;
+  error: ErrorLogHandler;
+  throw: ErrorLogHandler;
 }
 
 export interface LogHandler {
-  (message: CanString): void;
-  (label: CanString, ...messages: CanString[]): void;
+  (message: CanString): string;
+  (label: CanString, ...messages: CanString[]): string;
+}
+
+export interface ErrorLogHandler {
+  (error: EqErrorProps): string;
+  (message: CanString): string;
+  (label: CanString, ...messages: CanString[]): string;
 }
 
 export function createLog(
@@ -23,65 +31,65 @@ export function createLog(
 ): Log {
   return class {
     private static readonly level = ParseLogLevel(level);
+
+    private static handleInput(level: LogLevel, ...args: CanString[] | [EqErrorProps]): string {
+      if (args.length === 1 && EqError.isErrorProps(args[0]))
+        return handleLogInput(level, showTimestamp, new EqError(args[0]));
+      const output = handleLogInput(level, showTimestamp, ...args);
+      if (this.level <= level) witter.log(output);
+      return output;
+    }
+
+    static format(...args: CanString[]) {
+      return handleLogInput(undefined, false, ...args);
+    }
+
     static trace(...args: CanString[]) {
-      if (this.level <= LogLevel.TRACE) {
-        witter.trace(handleLogInput(LogLevel.TRACE, showTimestamp, ...args));
-      }
+      return this.handleInput(LogLevel.TRACE, ...args);
     }
+
     static debug(...args: CanString[]) {
-      if (this.level <= LogLevel.DEBUG) {
-        witter.debug(handleLogInput(LogLevel.DEBUG, showTimestamp, ...args));
-      }
+      return this.handleInput(LogLevel.DEBUG, ...args);
     }
+
     static info(...args: CanString[]) {
-      if (this.level <= LogLevel.INFO) {
-        witter.log(handleLogInput(LogLevel.INFO, showTimestamp, ...args));
-      }
+      return this.handleInput(LogLevel.INFO, ...args);
     }
+
     static warn(...args: CanString[]) {
-      if (this.level <= LogLevel.WARN) {
-        witter.warn(handleLogInput(LogLevel.WARN, showTimestamp, ...args));
-      }
+      return this.handleInput(LogLevel.WARN, ...args);
     }
-    static error(...args: CanString[]) {
-      if (this.level <= LogLevel.ERROR) {
-        witter.error(handleLogInput(LogLevel.ERROR, showTimestamp, ...args));
-      }
+
+    static error(...args: CanString[] | [EqErrorProps]) {
+      return this.handleInput(LogLevel.ERROR, ...args);
     }
-    static throw(...args: CanString[]) {
+
+    static throw(...args: CanString[] | [EqErrorProps]): string {
       this.error(...args);
-      throw new Error(handleLogInput(LogLevel.ERROR, showTimestamp, ...args));
+      throw new EqError(handleLogInput(LogLevel.ERROR, showTimestamp, ...args));
     }
   };
 }
 
-function handleLogInput(
-  loglevel: LogLevel,
-  showTimestamp: boolean = false,
-  ...messages: CanString[]
-) {
+function handleLogInput(loglevel?: LogLevel, showTimestamp?: boolean, ...messages: CanString[]) {
+  let label = undefined;
   if (messages.length === 1) {
-    return handleLogText(undefined, [messages[0]], loglevel, showTimestamp);
+    [label, messages] = [undefined, [messages[0]]];
   } else if (messages.length > 1) {
-    return handleLogText(AnyToString(messages[0]), messages.slice(1), loglevel, showTimestamp);
+    [label, messages] = [AnyToString(messages[0]), messages.slice(1)];
   }
-  return "";
+  return handleLogText(label, messages, loglevel, showTimestamp);
 }
 
 function handleLogText(
-  label: string | undefined,
-  message: CanString[],
-  level: LogLevel,
-  showTimestamp = false
+  label?: string,
+  messages: CanString[] = [],
+  level?: LogLevel,
+  showTimestamp?: boolean
 ) {
-  let text: string;
-  if (typeof label === "string") {
-    text = `(${LogLevelToString(level)}) [${label}] ${message.map(AnyToString).join(" ")}`;
-  } else {
-    text = `(${LogLevelToString(level)}) ${message.map(AnyToString).join(" ")}`;
-  }
-  if (showTimestamp) {
-    text = `${new Date().toLocaleString()} ${text}`;
-  }
+  let text = `${messages.map(AnyToString).join(" ")}`;
+  if (label !== undefined) text = `[${label}] ${text}`;
+  if (level !== undefined) text = `(${LogLevelToString(level)}) ${text}`;
+  if (showTimestamp) text = `${new Date().toLocaleString()} ${text}`;
   return text;
 }

@@ -1,7 +1,7 @@
 import AppAudio from "@mahiru/ui/public/entry/player/AppAudio";
 import SpectrumWorker from "@mahiru/ui/worker/spectrum.ts?worker";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { EqError, Log } from "@mahiru/ui/public/utils/dev";
+import { Log } from "@mahiru/ui/public/utils/dev";
 
 export interface SpectrumData {
   bands: Float32Array;
@@ -104,13 +104,11 @@ export function useSpectrumWorker(
             break;
           }
           case "error": {
-            Log.error(
-              new EqError({
-                raw: data.error,
-                message: "spectrum worker error",
-                label: "useSpectrum"
-              })
-            );
+            Log.error({
+              raw: data.error,
+              message: "spectrum worker error",
+              label: "useSpectrum"
+            });
             break;
           }
           default:

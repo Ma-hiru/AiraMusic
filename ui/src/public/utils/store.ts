@@ -3,7 +3,7 @@ import { createJSONStorage, persist } from "zustand/middleware";
 import { create } from "zustand";
 import { useShallow } from "zustand/react/shallow";
 import { ZustandConfig } from "@mahiru/ui/types/zustand";
-import { EqError, isRelease, Log } from "@mahiru/ui/public/utils/dev";
+import { isRelease, Log } from "@mahiru/ui/public/utils/dev";
 import { useStableArray } from "@mahiru/ui/public/hooks/useStableArray";
 
 export function createZustandStore<T extends ZustandConfig<any>>(
@@ -29,13 +29,11 @@ export function createZustandStore<T extends ZustandConfig<any>>(
                 return migrate(persistedState, version, currentVersion);
               }
             } catch (e) {
-              Log.error(
-                new EqError({
-                  label: "ui/create.ts:createZustandStore",
-                  message: "persist migrate error",
-                  raw: e
-                })
-              );
+              Log.error({
+                label: "ui/create.ts:createZustandStore",
+                message: "persist migrate error",
+                raw: e
+              });
             }
             return persistedState;
           }

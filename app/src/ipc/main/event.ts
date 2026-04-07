@@ -147,6 +147,13 @@ const mainEventAPI = {
         data: message.data
       });
     }
+  },
+  fatalError: (e, { message, error }) => {
+    const sender = BrowserWindow.fromWebContents(e.sender);
+    if (!sender) return;
+    Log.error("Fatal Error", "sender:", AppWindowManager.getId(sender), message, error);
+    // TODO: AppWindowCreator.create(AppWindows.fatalError(message, error));
+    AppWindows.fatalError(message, error);
   }
 } satisfies MainEventAPI;
 

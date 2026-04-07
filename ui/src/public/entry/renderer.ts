@@ -1,4 +1,5 @@
-import { EqError, Log } from "@mahiru/ui/public/utils/dev";
+import { Log } from "@mahiru/ui/public/utils/dev";
+import { raw } from "express";
 
 class AppMessage {
   private readonly listener = window.electron.listener;
@@ -75,13 +76,11 @@ class AppMessage {
               once && eventHandlers.delete(id);
             }
           } catch (err) {
-            Log.error(
-              new EqError({
-                raw: err,
-                label: "renderer.ts",
-                message: `error in message handler [id=${id}] for event [type=${message.type}]`
-              })
-            );
+            Log.error({
+              raw: err,
+              label: "renderer.ts",
+              message: `error in message handler [id=${id}] for event [type=${message.type}]`
+            });
             eventHandlers.delete(id);
           }
         }
@@ -91,12 +90,10 @@ class AppMessage {
 
   constructor() {
     if (!window.electron) {
-      Log.throw(
-        new EqError({
-          message: "electron API is not available",
-          label: "AppRender"
-        })
-      );
+      Log.throw({
+        message: "electron API is not available",
+        label: "AppRender"
+      });
     }
     this.connect();
   }

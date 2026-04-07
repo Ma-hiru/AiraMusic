@@ -6,13 +6,13 @@ import { createTrackContextMenu } from "@mahiru/ui/public/components/menu/TrackM
 
 export default class AppContextMenu {
   private static setContextMenuData: NormalFunc<[data: Nullable<ContextMenuRender>]> = () => {
-    Log.error(Errs.ContextMenuBeforeInject.create("setContextMenuData"));
+    Log.error(Errs.ContextMenuBeforeInject.derive("setContextMenuData"));
   };
   private static setContextMenuVisible: NormalFunc<[show?: boolean]> = () => {
-    Log.error(Errs.ContextMenuBeforeInject.create("setContextMenuVisible"));
+    Log.error(Errs.ContextMenuBeforeInject.derive("setContextMenuVisible"));
   };
   private static contextMenuVisibleGetter: NormalFunc<[], boolean> = () => {
-    Log.error(Errs.ContextMenuBeforeInject.create("contextMenuVisibleGetter"));
+    Log.error(Errs.ContextMenuBeforeInject.derive("contextMenuVisibleGetter"));
     return false;
   };
 

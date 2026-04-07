@@ -3,7 +3,6 @@ import { createReadStream } from "node:fs";
 import { normalize } from "node:path";
 import { stat } from "node:fs/promises";
 import { Readable } from "node:stream";
-import { EqError } from "../utils/err";
 import { Log } from "../utils/log";
 import { app, protocol } from "electron";
 
@@ -33,13 +32,11 @@ export class AppProtocol {
             return this.localFile(request);
           }
         } catch (err) {
-          Log.error(
-            new EqError({
-              raw: err,
-              message: "protocol error",
-              label: "protocol"
-            })
-          );
+          Log.error({
+            raw: err,
+            message: "protocol error",
+            label: "protocol"
+          });
         }
         return new Response("Not Found", { status: 404 });
       });
@@ -98,13 +95,11 @@ export class AppProtocol {
         }
       });
     } catch (err) {
-      Log.error(
-        new EqError({
-          raw: err,
-          message: "protocol error",
-          label: "protocol"
-        })
-      );
+      Log.error({
+        raw: err,
+        message: "protocol error",
+        label: "protocol"
+      });
       return new Response("Not Found", { status: 404 });
     }
   }

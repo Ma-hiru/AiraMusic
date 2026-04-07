@@ -1,5 +1,6 @@
 export type CanString =
   | { toString: () => any }
+  | { [Symbol.toPrimitive]: (hint: string) => any }
   | undefined
   | object
   | string
@@ -7,15 +8,24 @@ export type CanString =
   | boolean
   | symbol
   | bigint
-  | unknown
-  | Function;
+  | Function
+  | unknown;
 
 export function AnyToString(input: CanString): string {
-  if (input && typeof input === "object") {
-    if (input instanceof Error) return input.stack || input.message;
+  if (typeof input === "function") return `[Function: ${input.name}]`;
+  if (typeof input === "object" && input !== null) {
+    if (input instanceof Error && input.message) return input.message + "\n" + input.stack;
+    if (Symbol.toPrimitive in input && typeof input[Symbol.toPrimitive] === "function") {
+      try {
+        const toPrimitive = input[Symbol.toPrimitive] as (hint: string) => any;
+        return AnyToString(toPrimitive("string"));
+      } catch (err) {
+        console.error(err);
+      }
+    }
     if (typeof input.toString === "function" && input.toString !== Object.prototype.toString) {
       try {
-        return String(input.toString());
+        return AnyToString(input.toString());
       } catch (err) {
         console.error(err);
       }
@@ -24,11 +34,7 @@ export function AnyToString(input: CanString): string {
       return JSON.stringify(input, null, 2);
     } catch (err) {
       console.error(err);
-      return String(input);
     }
-  }
-  if (typeof input === "function") {
-    return `[Function: ${input.name || "anonymous"}]`;
   }
   return String(input);
 }

@@ -18,5 +18,6 @@ export const rendererEventAPI = {
   unmaximizeInternalWindow: (payload) =>
     AppTypedRendererIPC.send("unmaximizeInternalWindow", payload),
   mousePenetrateInternalWindow: (payload) =>
-    AppTypedRendererIPC.send("mousePenetrateInternalWindow", payload)
+    AppTypedRendererIPC.send("mousePenetrateInternalWindow", payload),
+  fatalError: (payload) => AppTypedRendererIPC.send("fatalError", payload)
 } satisfies RendererEventAPI;

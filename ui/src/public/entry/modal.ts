@@ -4,17 +4,17 @@ import { Errs } from "@mahiru/ui/public/entry/errs";
 
 export default class AppModal {
   private static toggleModalVisible: NormalFunc<[visible?: boolean | undefined]> = () => {
-    Log.error(Errs.ModalBeforeInject.create("toggleModalVisible"));
+    Log.error(Errs.ModalBeforeInject.derive("toggleModalVisible"));
   };
   private static setModalRenderData: NormalFunc<[data: Nullable<ModalData>]> = () => {
-    Log.error(Errs.ModalBeforeInject.create("setModalRenderData"));
+    Log.error(Errs.ModalBeforeInject.derive("setModalRenderData"));
   };
   private static getRender: NormalFunc<[], Nullable<ModalData>> = () => {
-    Log.error(Errs.ModalBeforeInject.create("getRender"));
+    Log.error(Errs.ModalBeforeInject.derive("getRender"));
     return null;
   };
   static getVisible: NormalFunc<[], boolean> = () => {
-    Log.error(Errs.ModalBeforeInject.create("getVisible"));
+    Log.error(Errs.ModalBeforeInject.derive("getVisible"));
     return false;
   };
 

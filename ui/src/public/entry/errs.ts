@@ -1,4 +1,4 @@
-import { EqError } from "@mahiru/ui/public/utils/dev";
+import { EqError } from "@mahiru/log";
 
 export class Errs {
   static readonly CacheStoreErr = new EqError({

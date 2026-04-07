@@ -6375,6 +6375,11 @@ react-dom@^19.2.0:
   dependencies:
     scheduler "^0.27.0"
 
+react-error-boundary@^6.1.1:
+  version "6.1.1"
+  resolved "https://registry.npmmirror.com/react-error-boundary/-/react-error-boundary-6.1.1.tgz#491d655e86c32434ede852755bb649119fdddd89"
+  integrity sha512-BrYwPOdXi5mqkk5lw+Uvt0ThHx32rCt3BkukS4X23A2AIWDPSGX6iaWTc0y9TU/mHDA/6qOSGel+B2ERkOvD1w==
+
 react-router-dom@^7.9.5:
   version "7.13.1"
   resolved "https://registry.npmmirror.com/react-router-dom/-/react-router-dom-7.13.1.tgz#74c045acc333ca94612b889cd1b1e1ee9534dead"

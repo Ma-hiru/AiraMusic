@@ -316,4 +316,8 @@ export default class AppWindow extends Listenable {
   static get all() {
     return this.from("all");
   }
+
+  static panic(message: string, error?: string) {
+    AppRenderer.Event.normal.fatalError({ message, error });
+  }
 }
