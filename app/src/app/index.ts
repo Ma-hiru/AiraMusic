@@ -2,7 +2,7 @@ import { app } from "electron";
 import { Server } from "node:http";
 import { LogLevel, ParseLogLevel } from "@mahiru/log";
 import { Log } from "../utils/log";
-import { isCreateMpris, isMacOS } from "../utils/platform";
+import { isCreateMpris, isMacOS, isWindows } from "../utils/platform";
 import { AppProtocol } from "./protocol";
 import { isDev, printDevInfo, storeKeyAccessToken } from "../utils/dev";
 import { storeServerBinaryPath } from "../utils/path";
@@ -15,15 +15,16 @@ export { AppStore } from "./store";
 
 export class APP {
   private static clearer = new Set<NormalFunc>();
-  private exiting = false;
   private storeService!: Store;
   private neteaseMusicApiService!: Promise<
     Awaited<ReturnType<typeof AppServices.NeteaseMusicApi.create>>
   >;
+  private status: "initializing" | "running" | "exiting" = "initializing";
   private proxyServer?: Server;
 
   private init() {
     Log.info("App initializing...");
+    this.status = "initializing";
     this.createServices();
     this.registerAppProtocol();
     app.addListener("ready", () => {
@@ -31,6 +32,7 @@ export class APP {
       this.registerIPCHandlers();
       this.launchMainWindow();
       this.registerAppTray();
+      this.status = "running";
     });
   }
 
@@ -45,7 +47,13 @@ export class APP {
         },
         path: storeServerBinaryPath,
         enableConsole: ParseLogLevel(process.env.APP_LOG_LEVEL) <= LogLevel.DEBUG,
-        logger: (data) => Log.debug("store service", data.toString())
+        logger: (data) => Log.debug("store service", data.toString()),
+        onExit: (code) => {
+          if (this.status === "exiting") return;
+          AppWindows.fatalError(String(code));
+          AppWindowManager.get("main")?.close();
+          setTimeout(() => this.exit(), 5000);
+        }
       });
       this.neteaseMusicApiService = AppServices.NeteaseMusicApi.create();
       !isDev && (this.proxyServer = AppServices.Proxy.create());
@@ -127,18 +135,20 @@ export class APP {
     }
   }
 
-  private stopAllServers() {
-    Log.info("stop all servers");
-
-    const { promise, resolve } = Promise.withResolvers<void>();
-    this.storeService.stop();
-    this.proxyServer?.close();
-    this.neteaseMusicApiService
+  private async stopAllServers() {
+    if (!isWindows) {
+      Log.info("stopping store service by http (windows)");
+      await this.storeService
+        .stopByHttp(process.env.GO_SERVER_PORT!, storeKeyAccessToken)
+        .catch((err) => Log.error(`failed to stop store service by http: ${err}`));
+    }
+    await this.storeService
+      .stop()
+      .catch((err) => Log.error(`failed to stop store service: ${err}`));
+    await this.neteaseMusicApiService
       .then((ncm) => ncm?.server?.close())
-      .catch((err) => Log.error(`failed to stop neteaseMusicAPIServer: ${err}`))
-      .finally(resolve);
-
-    return promise;
+      .catch((err) => Log.error(`failed to stop neteaseMusicAPIServer: ${err}`));
+    this.proxyServer?.close();
   }
 
   private commands() {
@@ -168,13 +178,13 @@ export class APP {
   }
 
   exit() {
-    if (this.exiting) return;
-    this.exiting = true;
+    if (this.status === "exiting") return;
+    this.status = "exiting";
     Log.info("app exiting...");
     Promise.allSettled([this.stopAllServers()]).finally(() => {
       this.cleanup();
       Log.info("app exited.");
-      app.exit(1);
+      app.exit(0);
     });
   }
 

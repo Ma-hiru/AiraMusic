@@ -68,6 +68,5 @@ export default class AppInstance {
 
   static dispose() {
     this.savePlayer();
-    return CacheStore.dispose();
   }
 }

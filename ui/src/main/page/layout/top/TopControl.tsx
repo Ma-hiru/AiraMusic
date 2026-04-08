@@ -27,12 +27,9 @@ const TopControl: FC = () => {
   const miniWindow = useListenableHook(AppWindow.from("miniplayer"));
 
   const close = async () => {
-    const { promise, resolve } = Promise.withResolvers<void>();
     currentWindow.hide();
-    AppInstance.dispose().finally(resolve);
+    AppInstance.dispose();
     AppWindow.all.hide();
-
-    await promise;
     currentWindow.close();
   };
 

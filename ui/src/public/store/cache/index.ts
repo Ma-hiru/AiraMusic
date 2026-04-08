@@ -3,7 +3,6 @@ import { CacheStoreForObject } from "./object";
 import { CacheStoreForStore } from "./store";
 import { CacheStoreForOther } from "./other";
 import { CacheStoreForRemove } from "./remove";
-import { cacheRequest } from "@mahiru/ui/public/store/cache/request";
 
 export class CacheStore {
   static readonly check = new CacheStoreForCheck();
@@ -11,11 +10,6 @@ export class CacheStore {
   static readonly store = new CacheStoreForStore();
   static readonly other = new CacheStoreForOther();
   static readonly remove = new CacheStoreForRemove();
-  static dispose() {
-    return cacheRequest({
-      url: "/api/exit"
-    });
-  }
 }
 
 export function AddCacheStore(_: Function, ctx: ClassDecoratorContext) {

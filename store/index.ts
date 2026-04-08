@@ -9,7 +9,6 @@ const exeName = process.platform === "win32" ? "server.exe" : "server";
 const defaultServerPath = join(__dirname, "dist", exeName);
 
 export default class Store {
-  private applicationPath;
   private serverProc;
   private enableConsole;
   private _running;
@@ -18,8 +17,59 @@ export default class Store {
   private _errorHandler = new Set<NormalFunc<[err: Error]>>();
   private static instance: Nullable<Store> = null;
 
-  stop() {
-    return this.serverProc.kill("SIGTERM");
+  // 仅在类 Unix-like 系统上有效，Windows 几乎和强制杀死进程没有区别
+  // 通过 http 让服务端自己优雅退出，才能保证数据完整性
+  async stop(timeoutMs = 5000): Promise<boolean> {
+    if (!this._running) return true;
+    return new Promise<boolean>((resolve) => {
+      let timer: NodeJS.Timeout | null = null;
+      const onExit = () => finish(true);
+      const finish = (ok: boolean) => {
+        timer && clearTimeout(timer);
+        this.serverProc.removeListener("exit", onExit);
+        resolve(ok);
+      };
+      // 超时处理：如果在 timeoutMs 时间内进程没有退出，强制杀死进程
+      timer = setTimeout(() => {
+        if (!this._running) return finish(true);
+        try {
+          // kill 不会等待进程退出，而是立即返回
+          this.serverProc.kill("SIGKILL");
+        } catch (err) {
+          this._logger?.(Buffer.from("error while force killing server: " + err));
+        }
+        finish(false);
+      }, timeoutMs);
+
+      try {
+        // 正常流程：发送 SIGTERM，等待进程退出
+        this.serverProc.once("exit", onExit);
+        let sent = false;
+        if (process.platform !== "win32") {
+          sent = this.serverProc.kill("SIGTERM");
+        } else {
+          // Windows 上没有 SIGTERM，使用 SIGINT 代替
+          // 虽然效果可能和强制杀死差不多，但至少给了进程一个信号
+          sent = this.serverProc.kill("SIGINT");
+        }
+        sent = this.serverProc.kill("SIGTERM");
+        if (!sent && this._running) throw new Error("failed to send SIGTERM");
+      } catch (err) {
+        this._logger?.(Buffer.from("error while stopping server: " + err));
+        finish(!this._running);
+      }
+    });
+  }
+
+  // 通过 HTTP 接口请求退出
+  async stopByHttp(port: number, token: string) {
+    if (!this._running) return true;
+    return fetch(`http://localhost:${port}/api/exit`, {
+      method: "GET",
+      headers: { Authorization: token }
+    })
+      .then((res) => res.ok)
+      .catch(() => false);
   }
 
   onExit(handler: NormalFunc<[code: Nullable<number>]>) {
@@ -53,28 +103,26 @@ export default class Store {
       | ChildProcessByStdio<null, Readable, Readable> // ["ignore","pipe","pipe"]
       | ChildProcessByStdio<null, null, null>, // ["ignore","ignore","ignore"]
     props: {
-      path: string;
       enableConsole: boolean;
       logger: NormalFunc<[msg: Buffer]>;
     }
   ) {
     this.serverProc = process;
     this._running = true;
-    this.applicationPath = props.path;
     this.enableConsole = props.enableConsole;
     this._logger = props.logger;
     this.init();
   }
 
   private init() {
-    this.serverProc.on("exit", (code) => {
+    this.serverProc.addListener("exit", (code) => {
       if (this.enableConsole && this._logger) {
         this._logger(Buffer.from("server exited: " + code));
       } else {
         console.warn("server exited", code);
       }
       this._running = false;
-      this.stop();
+      Store.instance = null;
       for (const handler of this._exitHandler) {
         try {
           handler(code);
@@ -85,14 +133,14 @@ export default class Store {
       this._exitHandler.clear();
     });
 
-    this.serverProc.on("error", (err) => {
+    this.serverProc.addListener("error", (err) => {
       if (this.enableConsole && this._logger) {
         this._logger(Buffer.from("server error: " + err.message));
       } else {
         console.error("server error", err);
       }
       this._running = false;
-      this.stop();
+      Store.instance = null;
       for (const handler of this._errorHandler) {
         try {
           handler(err);
@@ -116,6 +164,7 @@ export default class Store {
     logger?: NormalFunc<[msg: Buffer]>;
     enableConsole?: boolean;
     path?: string;
+    onExit?: NormalFunc<[code?: number]>;
   }) {
     if (this.instance) return this.instance;
 
@@ -141,9 +190,9 @@ export default class Store {
     if (!serverProc) {
       throw new Error("failed to start server process.");
     }
+    if (props.onExit) serverProc.addListener("exit", props.onExit);
 
     this.instance = new Store(serverProc, {
-      path: props.path,
       enableConsole: props.enableConsole,
       logger: props.logger
     });

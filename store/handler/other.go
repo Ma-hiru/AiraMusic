@@ -2,11 +2,12 @@ package handler
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"os"
+	"runtime"
+	"store/cmd"
 	"store/file"
-	"time"
+	"syscall"
 
 	"github.com/gin-gonic/gin"
 )
@@ -196,22 +197,19 @@ func Move(ctx *gin.Context) {
 }
 
 func Exit(ctx *gin.Context) {
-	var store = file.GetStore()
-	var err = store.Destroy()
-	if err != nil {
-		ctx.JSON(200, gin.H{
-			"ok":      false,
-			"message": err.Error(),
-		})
-	} else {
-		ctx.JSON(200, gin.H{
-			"ok":      true,
-			"message": "exited successfully",
-		})
-	}
+	ctx.JSON(200, gin.H{
+		"ok":      true,
+		"message": "shutdown requested",
+	})
 	go func() {
-		fmt.Println("Exiting in 5 seconds...")
-		time.Sleep(5 * time.Second)
-		os.Exit(0)
+		// unix-like 系统可以通过发送 SIGTERM 信号来优雅地关闭进程
+		if runtime.GOOS == "linux" || runtime.GOOS == "darwin" {
+			if err := syscall.Kill(os.Getpid(), syscall.SIGTERM); err != nil {
+				log.Println("failed to send shutdown signal:", err)
+			}
+		} else {
+			// 其他系统（如 Windows）直接调用 Shutdown 函数
+			cmd.Shutdown()
+		}
 	}()
 }
