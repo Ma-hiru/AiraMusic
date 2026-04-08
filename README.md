@@ -33,27 +33,21 @@
 ### 安装依赖
 
 ```bash
-    # 使用yarn，避免electron-builder安装依赖时出现依赖缺失问题
-    yarn install --frozen-lockfile
+  # 使用yarn，避免electron-builder安装依赖时出现依赖缺失问题
+  yarn install --frozen-lockfile
 ```
 
 ### 开发模式
 
 ```bash
-    # 仅首次运行
-    pnpm build:wasm && pnpm build:store
-
-    pnpm dev
+  pnpm build:wasm && pnpm build:store  # 首次运行
+  pnpm dev
 ```
 
 ### 构建项目
 
 ```bash
-  # 完整构建
   pnpm build
-
-  # 使用缓存进行增量构建（作用于 Rust / Go）
-  pnpm build:cache
 ```
 
 ## 界面展示

@@ -26,8 +26,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "build": "pnpm clean && pnpm build:cache",
-    "build:cache": "pnpm build:wasm && pnpm build:store && pnpm build:ui && pnpm build:app && pnpm build:electron",
+    "build": "pnpm build:wasm && pnpm build:store && pnpm build:ui && pnpm build:app && pnpm build:electron",
     "dev": "pnpm run-p --race dev:ui dev:app dev:electron",
     "dev:ui": "pnpm --filter @mahiru/ui run dev",
     "dev:app": "pnpm --filter airamusic run dev",
