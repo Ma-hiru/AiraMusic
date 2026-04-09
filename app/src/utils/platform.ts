@@ -1,4 +1,7 @@
-function getLinuxDesktop() {
+export const isWindows = process.platform === "win32";
+export const isMacOS = process.platform === "darwin";
+export const isLinux = process.platform === "linux";
+export function getLinuxDesktop() {
   if (!isLinux) return null;
 
   const env = (
@@ -20,9 +23,3 @@ function getLinuxDesktop() {
 
   return null;
 }
-
-export const isWindows = process.platform === "win32";
-export const isMacOS = process.platform === "darwin";
-export const isLinux = process.platform === "linux";
-export const isCreateMpris = isLinux; // 是否创建 MPRIS 支持
-export const linuxDesktop = getLinuxDesktop();

@@ -2,7 +2,7 @@ import { app } from "electron";
 import { Server } from "node:http";
 import { LogLevel, ParseLogLevel } from "@mahiru/log";
 import { Log } from "../utils/log";
-import { isCreateMpris, isMacOS, isWindows } from "../utils/platform";
+import { isMacOS, isWindows } from "../utils/platform";
 import { AppProtocol } from "./protocol";
 import { isDev, printDevInfo, storeKeyAccessToken } from "../utils/dev";
 import { storeServerBinaryPath } from "../utils/path";
@@ -154,13 +154,6 @@ export class APP {
   private commands() {
     app.enableSandbox();
     process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = "true";
-    if (isCreateMpris) {
-      app.commandLine.appendSwitch(
-        "enable-features",
-        "HardwareMediaKeyHandling,MediaSessionService"
-      );
-    }
-    app.commandLine.appendSwitch("enable-zero-copy");
   }
 
   private cleanup() {
