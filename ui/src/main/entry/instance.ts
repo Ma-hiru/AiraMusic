@@ -1,5 +1,4 @@
 import { userStoreSnapshot } from "@mahiru/ui/public/store/user";
-import { CacheStore } from "@mahiru/ui/public/store/cache";
 import AppPlayer from "@mahiru/ui/public/entry/player/AppPlayer";
 import useListenableHook from "@mahiru/ui/public/hooks/useListenableHook";
 import AppAuth from "@mahiru/ui/public/entry/auth";

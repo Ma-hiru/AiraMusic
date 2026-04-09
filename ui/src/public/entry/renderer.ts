@@ -1,5 +1,4 @@
 import { Log } from "@mahiru/ui/public/utils/dev";
-import { raw } from "express";
 
 class AppMessage {
   private readonly listener = window.electron.listener;

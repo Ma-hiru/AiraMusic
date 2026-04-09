@@ -1,4 +1,4 @@
-import { FC, memo, useEffect, useMemo } from "react";
+import { FC, memo } from "react";
 import { useStage } from "@mahiru/ui/public/hooks/useStage";
 import { useAppLoaded } from "@mahiru/ui/public/hooks/useAppLoaded";
 import { Stage } from "@mahiru/ui/public/enum";
@@ -15,23 +15,18 @@ import PlayerModal from "./Modal";
 import Background from "./Background";
 import MusicSource from "./MusicSource";
 import Bus from "./Bus";
+import Mask from "./Mask";
 
 const Layout: FC<object> = () => {
   const { stage } = useStage();
-  const { promise, resolve } = useMemo(() => Promise.withResolvers<void>(), []);
-
-  useAppLoaded(promise);
-
-  useEffect(() => {
-    stage >= Stage.Finally && resolve();
-  }, [resolve, stage]);
-
+  useAppLoaded();
   return (
     <div
       className={`
         relative w-screen h-screen overflow-hidden scrollbar-hide
         flex flex-row flex-nowrap
     `}>
+      {stage < Stage.Finally && <Mask className="z-40" />}
       <TopBar className="h-10 z-30" />
       <NavSide />
       <Content />
