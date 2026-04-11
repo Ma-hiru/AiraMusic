@@ -10,9 +10,9 @@ const defaultServerPath = join(__dirname, "dist", exeName);
 
 export default class Store {
   private serverProc;
-  private enableConsole;
   private _running;
-  private _logger;
+  private readonly enableConsole;
+  private readonly _logger;
   private _exitHandler = new Set<NormalFunc<[code: Nullable<number>]>>();
   private _errorHandler = new Set<NormalFunc<[err: Error]>>();
   private static instance: Nullable<Store> = null;
@@ -44,15 +44,13 @@ export default class Store {
       try {
         // 正常流程：发送 SIGTERM，等待进程退出
         this.serverProc.once("exit", onExit);
-        let sent = false;
-        if (process.platform !== "win32") {
-          sent = this.serverProc.kill("SIGTERM");
-        } else {
-          // Windows 上没有 SIGTERM，使用 SIGINT 代替
-          // 虽然效果可能和强制杀死差不多，但至少给了进程一个信号
+        let sent: boolean;
+        if (process.platform === "win32") {
+          // Windows 上没有 SIGTERM 信号
           sent = this.serverProc.kill("SIGINT");
+        } else {
+          sent = this.serverProc.kill("SIGTERM");
         }
-        sent = this.serverProc.kill("SIGTERM");
         if (!sent && this._running) throw new Error("failed to send SIGTERM");
       } catch (err) {
         this._logger?.(Buffer.from("error while stopping server: " + err));

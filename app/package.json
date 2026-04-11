@@ -19,11 +19,7 @@
     "express": "^5.1.0",
     "express-http-proxy": "^2.1.2",
     "mime": "^4.1.0",
-    "lodash-es": "4.17.23",
-    "axios": "1.13.5",
-    "follow-redirects": "^1.15.11",
-    "form-data": "^4.0.5",
-    "proxy-from-env": "^1.1.0"
+    "lodash-es": "4.17.23"
   },
   "devDependencies": {
     "@types/express": "^5.0.0",

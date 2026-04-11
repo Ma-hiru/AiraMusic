@@ -2,6 +2,7 @@ import moduleDefs from "./ncmModDef";
 import os from "node:os";
 import { join } from "node:path";
 import { access, writeFile } from "node:fs/promises";
+import { EqError } from "@mahiru/log";
 
 const tokenPath = join(os.tmpdir(), "anonymous_token");
 
@@ -31,9 +32,14 @@ export default class NeteaseMusicApiService {
     return this.serverImpl;
   }
 
-  static async create() {
+  static async create(onError: NormalFunc<[err: Error]>) {
     const port = Number(process.env.NCM_SERVER_PORT);
-    const server = await this.loadServer();
-    return await server.serveNcmApi({ port, moduleDefs });
+    try {
+      const server = await this.loadServer();
+      return await server.serveNcmApi({ port, moduleDefs });
+    } catch (err) {
+      onError(EqError.anyToError(err)!);
+      return null;
+    }
   }
 }

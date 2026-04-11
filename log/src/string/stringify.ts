@@ -18,7 +18,7 @@ export function AnyToString(input: CanString): string {
     if (Symbol.toPrimitive in input && typeof input[Symbol.toPrimitive] === "function") {
       try {
         const toPrimitive = input[Symbol.toPrimitive] as (hint: string) => any;
-        return AnyToString(toPrimitive("string"));
+        return AnyToString(toPrimitive.apply(input, ["string"]));
       } catch (err) {
         console.error(err);
       }

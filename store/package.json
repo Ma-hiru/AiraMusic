@@ -3,15 +3,14 @@
   "version": "1.0.0",
   "main": "index.ts",
   "files": [
-    "server.exe",
-    "server",
+    "dist/*",
     "index.ts"
   ],
   "scripts": {
     "clean:go": "go clean --cache",
     "clean:dist": "pnpm rimraf server.exe server",
     "build": "pnpm run-script-os",
-    "build:win32": "set CGO_ENABLED=0 && go build -trimpath -ldflags \"-s -w -buildid=\" -o ./dist/server.exe -v main.go",
+    "build:win32": "set \"CGO_ENABLED=0\" && go build -trimpath -ldflags \"-s -w -buildid=\" -o ./dist/server.exe -v main.go",
     "build:linux": "CGO_ENABLED=0 && go build -trimpath -ldflags \"-s -w -buildid=\" -o ./dist/server -v main.go"
   }
 }

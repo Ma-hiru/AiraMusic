@@ -3,6 +3,7 @@ import {
   ImgHTMLAttributes,
   memo,
   MouseEvent as ReactMouseEvent,
+  startTransition,
   SyntheticEvent,
   useCallback,
   useEffect,
@@ -33,6 +34,12 @@ type ImageProps = Omit<ImgHTMLAttributes<HTMLImageElement>, "src"> & {
   preview?: boolean;
   image: Optional<NeteaseNetworkImage | NeteaseLocalImage>;
   cache: boolean;
+  cacheLazy?: boolean;
+  cacheLazyProps?: {
+    root?: Element | null;
+    rootMargin?: string;
+    threshold?: number;
+  };
 };
 
 const NeteaseImage: FC<ImageProps> = ({
@@ -52,10 +59,14 @@ const NeteaseImage: FC<ImageProps> = ({
   onClick,
   pause,
   preview,
+  cacheLazy = true,
+  cacheLazyProps,
   ...rest
 }) => {
+  const [visible, setVisible] = useState(false);
   const [error, setError] = useState(false);
   const [source, setSource] = useState<Nullable<NeteaseNetworkImage | NeteaseLocalImage>>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const retryStatus = useRef({
     token: 0,
     count: 0,
@@ -128,12 +139,36 @@ const NeteaseImage: FC<ImageProps> = ({
   );
 
   useEffect(() => {
-    if (pause || !image?.src) return;
+    const container = containerRef.current;
+    if (!container) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        if (entry?.isIntersecting) {
+          startTransition(() => setVisible(true));
+          observer.unobserve(entry.target);
+        }
+      },
+      {
+        root: null, // viewport
+        rootMargin: "150px", // 提前加载（关键）
+        threshold: 0,
+        ...cacheLazyProps
+      }
+    );
+
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, [cacheLazyProps]);
+
+  useEffect(() => {
+    if (pause || !image?.src || (cacheLazy && !visible)) return;
     NeteaseSource.Image.try(image, cache).then((local) => {
       if (local) setSource(local);
       else setSource(image);
     });
-  }, [cache, image, pause]);
+  }, [cache, cacheLazy, image, pause, visible]);
 
   // src变化时重置错误状态和重试状态
   useEffect(() => {
@@ -149,6 +184,7 @@ const NeteaseImage: FC<ImageProps> = ({
 
   return (
     <div
+      ref={containerRef}
       onClick={wrapClick}
       className={cx(
         `

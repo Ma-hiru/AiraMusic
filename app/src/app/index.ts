@@ -1,6 +1,6 @@
 import { app } from "electron";
 import { Server } from "node:http";
-import { LogLevel, ParseLogLevel } from "@mahiru/log";
+import { EqError, LogLevel, ParseLogLevel } from "@mahiru/log";
 import { Log } from "../utils/log";
 import { isMacOS, isWindows } from "../utils/platform";
 import { AppProtocol } from "./protocol";
@@ -17,29 +17,49 @@ export class APP {
   private static clearer = new Set<NormalFunc>();
   private proxyServer?: Server;
   private storeService?: Store;
-  private neteaseMusicApiService?: Promise<
-    Awaited<ReturnType<typeof AppServices.NeteaseMusicApi.create>>
-  >;
+  private neteaseMusicApiService?: ReturnType<typeof AppServices.NeteaseMusicApi.create>;
   private status: "initializing" | "running" | "exiting" = "initializing";
 
+  private get isExiting() {
+    return this.status === "exiting";
+  }
+
   private init() {
-    Log.info("App initializing...");
     this.status = "initializing";
-    this.createServices();
+    Log.info("App initializing...");
+
     this.registerAppProtocol();
+    if (this.isExiting) return;
+    Log.info("App protocol registered");
+
     app
       .whenReady()
       .then(() => {
         Log.info("App ready");
+
+        this.createServices();
+        if (this.isExiting) return;
+        Log.info("App services created");
+
         this.registerIPCHandlers();
+        if (this.isExiting) return;
+        Log.info("App ipc handlers registered");
+
         this.launchMainWindow();
+        if (this.isExiting) return;
+        Log.info("App main window launched");
+
         this.registerAppTray();
+        if (this.isExiting) return;
+        Log.info("App tray registered");
+
         this.status = "running";
+        Log.info("App running");
       })
       .catch((err) => {
         Log.error({
           raw: err,
-          message: "failed to initialize app",
+          message: "failed to initialize app, uncaught error",
           label: "App init"
         });
         app.exit(-5);
@@ -48,6 +68,14 @@ export class APP {
 
   private createServices() {
     try {
+      const handleLaunchError = (source: unknown) => {
+        if (this.status === "exiting") return;
+        const err = EqError.anyToError(source) || new Error(String(source));
+        Log.error(err);
+        AppWindows.fatalError(err.message, err.stack);
+        AppWindowManager.get("main")?.close();
+        setTimeout(() => this.exit(-1), 5000);
+      };
       this.storeService = AppServices.Store.create({
         args: {
           port: process.env.GO_SERVER_PORT!,
@@ -59,14 +87,14 @@ export class APP {
         enableConsole: ParseLogLevel(process.env.APP_LOG_LEVEL) <= LogLevel.DEBUG,
         logger: (data) => Log.debug("store service", data.toString()),
         onExit: (code) => {
-          if (this.status === "exiting") return;
-          AppWindows.fatalError(String(code));
-          AppWindowManager.get("main")?.close();
-          setTimeout(() => this.exit(-1), 5000);
+          handleLaunchError(new Error(`store service exited with code ${code}`));
         }
       });
-      this.neteaseMusicApiService = AppServices.NeteaseMusicApi.create();
-      !isDev && (this.proxyServer = AppServices.Proxy.create());
+      this.neteaseMusicApiService = AppServices.NeteaseMusicApi.create(handleLaunchError).catch((err) => {
+        handleLaunchError(err);
+        return null;
+      });
+      !isDev && (this.proxyServer = AppServices.Proxy.create(handleLaunchError));
     } catch (err) {
       Log.error({
         raw: err,
@@ -146,7 +174,7 @@ export class APP {
   }
 
   private async stopAllServers() {
-    if (!isWindows) {
+    if (isWindows) {
       Log.info("stopping store service by http (windows)");
       await this.storeService
         ?.stopByHttp(process.env.GO_SERVER_PORT!, storeKeyAccessToken)

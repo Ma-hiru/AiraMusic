@@ -2,7 +2,7 @@ import AppEnv from "../scripts/env";
 import { defineConfig } from "tsup";
 import { generateLogo } from "../scripts/logo";
 
-generateLogo();
+void generateLogo();
 
 function genDefine(mode: string) {
   return Object.entries(AppEnv.load(mode)).reduce(
@@ -59,7 +59,6 @@ export default defineConfig((options) => {
       clean: mode === "production",
       minify: mode === "production",
       external: ["electron", "esbuild", "esbuild/*", "node:*", "window"],
-      noExternal: ["@mahiru/log"]
     }
   ];
 });

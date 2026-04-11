@@ -31,6 +31,10 @@ const TrackItemCover: FC<ListItemCoverProps> = ({
   );
   return (
     <NeteaseImage
+      cache
+      cacheLazy={false}
+      image={image}
+      pause={fastLocation}
       className={cx(
         `
         size-8 rounded-md cursor-pointer select-none
@@ -40,10 +44,7 @@ const TrackItemCover: FC<ListItemCoverProps> = ({
         disabled && "cursor-not-allowed"
       )}
       onClick={() => !disabled && onClick?.()}
-      cache
       imageClassName={(disabled && "cursor-not-allowed") || undefined}
-      image={image}
-      pause={fastLocation}
       shadowColor={isMainColorDark ? "dark" : "light"}
     />
   );

@@ -5,8 +5,7 @@ import { Log } from "../../utils/log";
 import { staticUIDir } from "../../utils/path";
 
 export default class ProxyService {
-  static create() {
-    Log.info("Create Express Proxy Service");
+  static create(onError?: NormalFunc<[err: Error]>) {
     const expressAPP = express();
     const port = process.env.EXPRESS_SERVER_PORT;
     const ncmPort = process.env.NCM_SERVER_PORT;
@@ -47,6 +46,8 @@ export default class ProxyService {
       response.status(204);
     });
 
-    return expressAPP.listen(port, "127.0.0.1");
+    return expressAPP.listen(port, "127.0.0.1").on("error", (e) => {
+      onError?.(e);
+    });
   }
 }

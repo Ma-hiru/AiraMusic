@@ -3,11 +3,8 @@ package handler
 import (
 	"encoding/json"
 	"log"
-	"os"
-	"runtime"
 	"store/cmd"
 	"store/file"
-	"syscall"
 
 	"github.com/gin-gonic/gin"
 )
@@ -201,15 +198,5 @@ func Exit(ctx *gin.Context) {
 		"ok":      true,
 		"message": "shutdown requested",
 	})
-	go func() {
-		// unix-like 系统可以通过发送 SIGTERM 信号来优雅地关闭进程
-		if runtime.GOOS == "linux" || runtime.GOOS == "darwin" {
-			if err := syscall.Kill(os.Getpid(), syscall.SIGTERM); err != nil {
-				log.Println("failed to send shutdown signal:", err)
-			}
-		} else {
-			// 其他系统（如 Windows）直接调用 Shutdown 函数
-			cmd.Shutdown()
-		}
-	}()
+	go cmd.Shutdown()
 }
