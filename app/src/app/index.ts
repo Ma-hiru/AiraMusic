@@ -15,25 +15,35 @@ export { AppStore } from "./store";
 
 export class APP {
   private static clearer = new Set<NormalFunc>();
-  private storeService!: Store;
-  private neteaseMusicApiService!: Promise<
+  private proxyServer?: Server;
+  private storeService?: Store;
+  private neteaseMusicApiService?: Promise<
     Awaited<ReturnType<typeof AppServices.NeteaseMusicApi.create>>
   >;
   private status: "initializing" | "running" | "exiting" = "initializing";
-  private proxyServer?: Server;
 
   private init() {
     Log.info("App initializing...");
     this.status = "initializing";
     this.createServices();
     this.registerAppProtocol();
-    app.addListener("ready", () => {
-      Log.info("App ready");
-      this.registerIPCHandlers();
-      this.launchMainWindow();
-      this.registerAppTray();
-      this.status = "running";
-    });
+    app
+      .whenReady()
+      .then(() => {
+        Log.info("App ready");
+        this.registerIPCHandlers();
+        this.launchMainWindow();
+        this.registerAppTray();
+        this.status = "running";
+      })
+      .catch((err) => {
+        Log.error({
+          raw: err,
+          message: "failed to initialize app",
+          label: "App init"
+        });
+        app.exit(-5);
+      });
   }
 
   private createServices() {
@@ -52,7 +62,7 @@ export class APP {
           if (this.status === "exiting") return;
           AppWindows.fatalError(String(code));
           AppWindowManager.get("main")?.close();
-          setTimeout(() => this.exit(), 5000);
+          setTimeout(() => this.exit(-1), 5000);
         }
       });
       this.neteaseMusicApiService = AppServices.NeteaseMusicApi.create();
@@ -63,7 +73,7 @@ export class APP {
         message: "failed to initialize app services",
         label: "App init"
       });
-      app.exit(-1);
+      this.exit(-1);
     }
   }
 
@@ -76,7 +86,7 @@ export class APP {
         message: "failed to register app protocol",
         label: "App init"
       });
-      app.exit(-2);
+      this.exit(-2);
     }
   }
 
@@ -90,7 +100,7 @@ export class APP {
         message: "failed to register ipc handlers",
         label: "App init"
       });
-      app.exit(-3);
+      this.exit(-3);
     }
   }
 
@@ -119,7 +129,7 @@ export class APP {
         message: "failed to launch main window",
         label: "App init"
       });
-      app.exit(-4);
+      this.exit(-4);
     }
   }
 
@@ -139,14 +149,14 @@ export class APP {
     if (!isWindows) {
       Log.info("stopping store service by http (windows)");
       await this.storeService
-        .stopByHttp(process.env.GO_SERVER_PORT!, storeKeyAccessToken)
+        ?.stopByHttp(process.env.GO_SERVER_PORT!, storeKeyAccessToken)
         .catch((err) => Log.error(`failed to stop store service by http: ${err}`));
     }
     await this.storeService
-      .stop()
+      ?.stop()
       .catch((err) => Log.error(`failed to stop store service: ${err}`));
     await this.neteaseMusicApiService
-      .then((ncm) => ncm?.server?.close())
+      ?.then((ncm) => ncm?.server?.close())
       .catch((err) => Log.error(`failed to stop neteaseMusicAPIServer: ${err}`));
     this.proxyServer?.close();
   }
@@ -170,14 +180,14 @@ export class APP {
     });
   }
 
-  exit() {
+  exit(code = 0) {
     if (this.status === "exiting") return;
     this.status = "exiting";
     Log.info("app exiting...");
     Promise.allSettled([this.stopAllServers()]).finally(() => {
       this.cleanup();
       Log.info("app exited.");
-      app.exit(0);
+      app.exit(code);
     });
   }
 

@@ -19,18 +19,4 @@ export function useSettings() {
   return useMemo(() => NeteaseSettings.fromObject(_settings), [_settings]);
 }
 
-export function AddUserStore(_: Function, ctx: ClassDecoratorContext) {
-  ctx.addInitializer(function (this) {
-    Object.defineProperty(this.prototype, "userStore", {
-      get() {
-        return userStoreSnapshot();
-      }
-    });
-  });
-}
-
-export interface WithUserStore {
-  readonly userStore: UserStoreType;
-}
-
 export type { UserStoreType } from "./config";

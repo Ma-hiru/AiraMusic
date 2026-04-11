@@ -9,6 +9,7 @@ import { CacheStore } from "@mahiru/ui/public/store/cache";
 import LRUMap from "@mahiru/ui/public/models/LRU";
 import _NeteaseImageSource from "@mahiru/ui/public/entry/source/image";
 import ImageConstants from "@mahiru/ui/main/constants/image";
+import { userStoreSnapshot } from "../../store/user";
 
 export default class _NeteasePlaylistSource {
   //region cache
@@ -28,6 +29,18 @@ export default class _NeteasePlaylistSource {
   }
 
   private static memoryCache = new LRUMap<number, NeteasePlaylist>(10, 1000 * 60 * 60);
+
+  private static get userStore() {
+    return userStoreSnapshot();
+  }
+
+  private static get likedPlaylistID() {
+    return this.userStore._user?.likedPlaylist.id ?? -1;
+  }
+
+  private static get likedTrackIDsCheckPoint() {
+    return this.userStore._user?.likedTrackIDs.checkPoint ?? 0;
+  }
   //endregion
   /** 检查歌单tracks字段是否完整，不完整再额外请求 */
   private static async requestFullTracks(
@@ -44,11 +57,6 @@ export default class _NeteasePlaylistSource {
     if (cache?.playlist.updateTime === playlist.updateTime) {
       response.playlist.tracks = cache.playlist.tracks;
       response.privileges = cache.privileges;
-
-      const cacheCover = NeteaseNetworkImage.fromPlaylistCover(response.playlist);
-      _NeteaseImageSource.remove(cacheCover.setSize(ImageConstants.PlaylistPageCoverSize));
-      _NeteaseImageSource.remove(cacheCover.setSize(ImageConstants.NavPlaylistCoverSize));
-
       return response;
     }
 
@@ -68,14 +76,20 @@ export default class _NeteasePlaylistSource {
   }
 
   static fromID(id: number, signal?: AbortSignal) {
-    if (this.memoryCache.has(id)) {
-      return Promise.resolve(this.memoryCache.get(id)!);
+    let cachedID = id;
+    // 喜欢的歌曲歌单需要区分喜欢状态的变化，否则喜欢状态无法及时更新
+    if (id === _NeteasePlaylistSource.likedPlaylistID) {
+      // 使用 likedTrackIDs 的 checkPoint 作为缓存区分，likedTrackIDs 变化时 checkPoint 也会变化，从而使缓存失效，重新获取数据
+      cachedID = id + _NeteasePlaylistSource.likedTrackIDsCheckPoint!;
+    }
+    if (this.memoryCache.has(cachedID)) {
+      return Promise.resolve(this.memoryCache.get(cachedID)!);
     }
 
     return NCM_API.Playlist.detail(id, signal)
       .then((response) => _NeteasePlaylistSource.fromResponse(response))
       .then((response) => {
-        this.memoryCache.set(id, response);
+        this.memoryCache.set(cachedID, response);
         return response;
       });
   }

@@ -6,6 +6,7 @@ import { AppWindowConstants } from "../constant/win";
 import { isDev } from "../utils/dev";
 import { clamp } from "lodash-es";
 import AppScreen from "../utils/screen";
+import { Log } from "../utils/log";
 
 export class AppWindows {
   private static clampSizeByArea(
@@ -28,6 +29,7 @@ export class AppWindows {
 
   static fatalError(message: string, error?: string) {
     // TODO
+    Log.error({ label: "App fatalError", message, raw: error });
     dialog.showErrorBox("应用发生致命错误", `${message}\n ${error || ""}`);
     AppWindowManager.get("main")?.close();
   }

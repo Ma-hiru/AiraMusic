@@ -7,6 +7,6 @@ export default class ImageConstants {
   static readonly PlaylistPageCreatorAvatarSize = NeteaseImageSize.sm;
   static readonly NavPlaylistCoverSize = NeteaseImageSize.xs;
   static readonly PlaylistPageTrackCoverSize = NeteaseImageSize.xs;
-  static readonly HomePagePlaylistCoverSize = NeteaseImageSize.md;
-  static readonly HomePageTrackCoverSize = NeteaseImageSize.md;
+  static readonly HomePagePlaylistCoverSize = 180;
+  static readonly HomePageTrackCoverSize = 180;
 }

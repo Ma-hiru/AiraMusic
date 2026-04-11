@@ -25,7 +25,7 @@ export const useHeart = () => {
               ...user.likedTrackIDs.ids,
               [track.id]: !isLiked
             },
-            checkPoint: user.likedTrackIDs.checkPoint
+            checkPoint: Date.now()
           }
         })
       );

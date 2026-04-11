@@ -11,6 +11,7 @@ export class NeteaseNetworkImage {
   url;
   size;
   alt;
+  cacheKey;
   readonly sourceID;
   readonly sourceName;
 
@@ -24,12 +25,14 @@ export class NeteaseNetworkImage {
     sourceName: "track" | "playlist" | "other";
     size?: NeteaseImageSize | number;
     alt?: string;
+    cacheKey?: string;
   }) {
     this.url = props.url;
     this.sourceID = props.sourceID;
     this.sourceName = props.sourceName;
     this.size = props.size ?? NeteaseImageSize.raw;
     this.alt = props.alt;
+    this.cacheKey = props.cacheKey;
     this.setSize(this.size);
   }
 
@@ -37,6 +40,12 @@ export class NeteaseNetworkImage {
     if (!size) return this;
     this.url = NeteaseURL.setImageSize(this.url, size);
     this.size = size;
+    return this;
+  }
+
+  setCacheKey(cacheKey: Optional<string>) {
+    if (!cacheKey) return this;
+    this.cacheKey = cacheKey;
     return this;
   }
 

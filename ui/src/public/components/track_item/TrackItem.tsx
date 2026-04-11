@@ -1,7 +1,6 @@
 import { cx } from "@emotion/css";
 import { FC, memo, MouseEvent as ReactMouseEvent, useCallback } from "react";
 import { ColorInstance } from "color";
-import { debounce } from "lodash-es";
 import { NeteaseHistory, NeteaseTrackRecord, NeteaseUser } from "@mahiru/ui/public/models/netease";
 import { PlaylistSource } from "@mahiru/ui/main/constants";
 
@@ -66,7 +65,7 @@ const TrackItem: FC<TrackItemProps> = ({
     <div
       onContextMenu={(e) => playable && onContext?.(e, track, index)}
       style={active ? { color: textColor.string() } : undefined}
-      onMouseEnter={debounce(showDisableReason)}
+      onClick={playable ? undefined : showDisableReason}
       className={cx(
         `
             items-center grid grid-row-1 grid-cols-[auto_auto_1fr_auto_auto] gap-4

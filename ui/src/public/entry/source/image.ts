@@ -14,13 +14,14 @@ export default class _NeteaseImageSource {
     const suffix = image.sourceName === "other" ? `_${image.url}` : "";
     return (
       _NeteaseImageSource.cacheKey +
-      "_" +
-      image.sourceID +
-      "_" +
-      image.sourceName +
-      "_" +
-      image.size +
-      suffix
+        "_" +
+        image.sourceID +
+        "_" +
+        image.sourceName +
+        "_" +
+        image.size +
+        "_" +
+        image.cacheKey || "" + suffix
     );
   }
 

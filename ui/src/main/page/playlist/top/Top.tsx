@@ -1,13 +1,13 @@
 import { FC, memo } from "react";
+import { NeteasePlaylist } from "@mahiru/ui/public/models/netease";
+import { PlaylistSource } from "@mahiru/ui/main/constants";
+import { useLayoutStore } from "@mahiru/ui/main/store/layout";
 
 import TopCover from "./TopCover";
 import TopRight from "./TopRight";
 import TopInfo from "./TopInfo";
-import { NeteasePlaylist } from "@mahiru/ui/public/models/netease";
-import { PlaylistSource } from "@mahiru/ui/main/constants";
 import Title from "@mahiru/ui/main/componets/Title";
 import Search from "@mahiru/ui/public/components/public/Search";
-import { useLayoutStore } from "@mahiru/ui/main/store/layout";
 
 interface TopProps {
   type: PlaylistSource;
@@ -17,6 +17,7 @@ interface TopProps {
   onPlayAll: NormalFunc;
   onAddList: NormalFunc;
   historyCount: number;
+  coverCacheKey?: string;
 }
 
 const Top: FC<TopProps> = ({
@@ -26,7 +27,8 @@ const Top: FC<TopProps> = ({
   onAddList,
   type,
   loading,
-  historyCount
+  historyCount,
+  coverCacheKey
 }) => {
   const { other, updateOther } = useLayoutStore();
   const setTyping = (typing: boolean) => {
@@ -37,7 +39,7 @@ const Top: FC<TopProps> = ({
   return type !== "history" ? (
     <div className="w-full h-45 grid grid-rows-1 grid-cols-[1fr_auto]">
       <div className="min-w-0 grid grid-rows-1 grid-cols-[auto_1fr] gap-4 items-end">
-        <TopCover summary={summary} />
+        <TopCover summary={summary} coverCacheKey={coverCacheKey} />
         <TopInfo summary={summary} onAddList={onAddList} onPlayAll={onPlayAll} />
       </div>
       <TopRight summary={summary} type={type} searchTracks={searchTracks} setTying={setTyping} />

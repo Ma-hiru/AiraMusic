@@ -21,19 +21,19 @@ import {
 import { Log } from "@mahiru/ui/public/utils/dev";
 import { NeteaseImageSize } from "@mahiru/ui/public/enum";
 import { SearchTrack } from "@mahiru/wasm";
-import NeteaseSource from "@mahiru/ui/public/entry/source";
-import AppInstance from "@mahiru/ui/main/entry/instance";
-
-import Top from "./top";
-import Divider from "./Divider";
+import { cx } from "@emotion/css";
 import TrackList, { TrackListRef } from "@mahiru/ui/public/components/track_list";
 import { useUser } from "@mahiru/ui/public/store/user";
 import { TrackContextMenuOnClick } from "@mahiru/ui/public/components/menu/TrackMenu";
 import { getLayoutStoreSnapshot, useLayoutStore } from "@mahiru/ui/main/store/layout";
-import { cx } from "@emotion/css";
-import ImageConstants from "@mahiru/ui/main/constants/image";
+import { useUpdate } from "@mahiru/ui/public/hooks/useUpdate";
+import AppInstance from "@mahiru/ui/main/entry/instance";
 import AppContextMenu from "@mahiru/ui/public/hooks/useContextMenu";
 import AppToast from "@mahiru/ui/public/entry/toast";
+import NeteaseSource from "@mahiru/ui/public/entry/source";
+import ImageConstants from "@mahiru/ui/main/constants/image";
+import Top from "./top";
+import Divider from "./Divider";
 
 const PlaylistPage: FC<object> = () => {
   const user = useUser();
@@ -198,6 +198,17 @@ const PlaylistPage: FC<object> = () => {
     [contextMenuAction, createTrackContextMenu, setContextMenuData, setContextMenuVisible]
   );
 
+  // likedPlaylistID 和 likedTrackIDs.checkPoint
+  // 变化时获取歌单数据，更新喜欢状态
+  const update = useUpdate();
+  const likedStatusCheckPoint = useRef(user?.likedTrackIDs.checkPoint ?? 0);
+  useEffect(() => {
+    if (source !== "like") return;
+    if (likedStatusCheckPoint.current === user?.likedTrackIDs.checkPoint) return;
+    update();
+    likedStatusCheckPoint.current = user?.likedTrackIDs.checkPoint ?? 0;
+  }, [source, update, user?.likedTrackIDs.checkPoint]);
+
   // 数据加载
   const [firstRender, setFirstRender] = useState(true);
   useEffect(() => {
@@ -243,7 +254,15 @@ const PlaylistPage: FC<object> = () => {
       setPlaylist(null);
       setTracks([]);
     };
-  }, [id, player.history, searcher, source, user?.likedPlaylist.id]);
+  }, [
+    id,
+    player.history,
+    searcher,
+    source,
+    user?.likedPlaylist.id,
+    // likedTrackIDs 的变化会导致喜欢状态变化，喜欢状态变化时需要重新获取歌单数据，更新喜欢状态
+    update.count
+  ]);
 
   return (
     <div className="w-full h-full px-12 pt-5 contain-style contain-size contain-layout">
@@ -255,6 +274,7 @@ const PlaylistPage: FC<object> = () => {
         onAddList={onAddList}
         searchTracks={searchTracks}
         historyCount={player.history.count}
+        coverCacheKey={source === "like" ? String(user?.likedTrackIDs.checkPoint) : undefined}
       />
       {source !== "history" && playlist !== null && <Divider />}
       <div
