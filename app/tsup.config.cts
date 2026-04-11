@@ -58,7 +58,7 @@ export default defineConfig((options) => {
       sourcemap: mode === "development",
       clean: mode === "production",
       minify: mode === "production",
-      external: ["electron", "esbuild", "esbuild/*", "node:*", "window"],
+      external: ["electron", "esbuild", "esbuild/*", "node:*", "window"]
     }
   ];
 });

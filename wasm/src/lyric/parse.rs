@@ -27,6 +27,8 @@ pub fn parseNeteaseLyric(raw: JsValue, ts: JsValue, rm: JsValue) -> JsValue {
         line.romanLyric = rm_lyric_map.remove(&line.startTime).unwrap_or_default();
         // 解析行内歌词
         line.splice_inline_tl_lyric();
+        // 更新额外信息
+        line.update_extra_info();
     }
 
     to_value::<Lyric>(&Lyric {
@@ -46,8 +48,8 @@ pub fn parseNeteaseLyric(raw: JsValue, ts: JsValue, rm: JsValue) -> JsValue {
 
 #[wasm_bindgen]
 pub fn parseTranslatedLRC(raw: JsValue, reverse: bool) -> JsValue {
-    let parsedRawLRC = from_value::<Vec<LyricLine>>(raw).unwrap_or_default();
     let mut lastMatchedIndex = -1;
+    let parsedRawLRC = from_value::<Vec<LyricLine>>(raw).unwrap_or_default();
     let result = parsedRawLRC
         .iter()
         .enumerate()
@@ -68,6 +70,8 @@ pub fn parseTranslatedLRC(raw: JsValue, reverse: bool) -> JsValue {
                             .collect(),
                         romanLyric: rawLRC.romanLyric.clone(),
                         words: rawLRC.words.clone(),
+                        isBlank: None,
+                        isBackChorus: None,
                     };
                     if reverse {
                         newLine.romanLyric = parsedRawLRC[index + 1].romanLyric.clone();
@@ -85,7 +89,13 @@ pub fn parseTranslatedLRC(raw: JsValue, reverse: bool) -> JsValue {
                 lastMatchedIndex = -1;
             }
             result
-        });
+        })
+        .into_iter()
+        .map(|mut l| {
+            l.update_extra_info();
+            l
+        })
+        .collect();
 
     to_value::<Vec<LyricLine>>(&result).unwrap()
 }
@@ -129,6 +139,8 @@ mod tests {
                 endTime: 0,
                 romanLyric: "".into(),
                 translatedLyric: "".into(),
+                isBlank: None,
+                isBackChorus: None,
             };
             result.splice_inline_tl_lyric();
             println!("Input: '{}', \nResult: {:?} \n\n", input, result);

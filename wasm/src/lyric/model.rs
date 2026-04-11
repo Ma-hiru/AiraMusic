@@ -18,6 +18,8 @@ pub struct LyricLine {
     pub romanLyric: String,
     pub startTime: i32,
     pub endTime: i32,
+    pub isBlank: Option<bool>,
+    pub isBackChorus: Option<bool>,
 }
 
 #[derive(Tsify, Serialize, Default, Deserialize)]

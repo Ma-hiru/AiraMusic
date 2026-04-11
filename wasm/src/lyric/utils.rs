@@ -1,6 +1,7 @@
 use super::model::LyricLine;
 use regex::Regex;
 use std::collections::HashMap;
+use wasm_bindgen::prelude::wasm_bindgen;
 
 /// 将 RawLyricLine 列表转换为 HashMap，键为 startTime，值为拼接后的歌词字符串
 pub fn split_lyric_as_map(lines: Vec<LyricLine>) -> HashMap<i32, String> {
@@ -67,6 +68,12 @@ impl LyricLine {
         }
     }
 
+    /// 更新额外信息
+    pub fn update_extra_info(&mut self) {
+        self.isBlank = Some(self.is_blank());
+        self.isBackChorus = Some(self.is_back_chorus());
+    }
+
     /// 解析行内翻译歌词，返回 (原歌词, 翻译歌词)
     fn get_inline_tl_lyric(&self) -> (String, Option<String>) {
         const LYRIC_INLINE_SPLIT: [(&str, &str); 4] =
@@ -102,5 +109,48 @@ impl LyricLine {
         } else {
             (line, None)
         }
+    }
+
+    fn is_back_chorus(&self) -> bool {
+        LyricLineInfo::isBackChorus(self.words.iter().map(|w| w.word.clone()).collect())
+    }
+
+    fn is_blank(&self) -> bool {
+        LyricLineInfo::isBlank(self.words.iter().map(|w| w.word.clone()).collect())
+    }
+}
+
+#[wasm_bindgen]
+pub struct LyricLineInfo;
+
+#[wasm_bindgen]
+impl LyricLineInfo {
+    #[wasm_bindgen]
+    #[allow(non_snake_case)]
+    pub fn isBlank(line: String) -> bool {
+        line.trim().is_empty()
+    }
+
+    #[wasm_bindgen]
+    #[allow(non_snake_case)]
+    pub fn isBackChorus(line: String) -> bool {
+        let line = line.trim();
+        line.starts_with("[") && line.ends_with("]")
+            || line.starts_with("(") && line.ends_with(")")
+            || line.starts_with("（") && line.ends_with("）")
+            || line.starts_with("【") && line.ends_with("】")
+            || line.starts_with("〖") && line.ends_with("〗")
+            || line.starts_with("「") && line.ends_with("」")
+            || line.starts_with("『") && line.ends_with("』")
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::lyric::utils::LyricLineInfo;
+
+    #[test]
+    fn test_is_back_chorus() {
+        assert_eq!(LyricLineInfo::isBackChorus(" 「xxxxxx」 ".into()), true)
     }
 }

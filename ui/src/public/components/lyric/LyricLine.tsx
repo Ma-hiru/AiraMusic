@@ -37,15 +37,9 @@ const LyricLine: FC<LyricLineProps> = ({
   crossAlign = "left",
   spring = true
 }) => {
-  if (
-    !line.words
-      .map((w) => w.word)
-      .join("")
-      .trim()
-  ) {
+  if (line.isBlank || line.isBackChorus) {
     if (crossAlign === "left" || crossAlign === "center") crossAlign = "right";
     else if (crossAlign === "right") crossAlign = "left";
-    console.log(crossAlign);
   }
 
   const [wordIndex, setWordIndex] = useState(-1);

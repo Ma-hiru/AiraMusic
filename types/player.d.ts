@@ -63,6 +63,10 @@ interface LyricLine {
   startTime: number;
   /** 句子的结束时间，单位为毫秒 */
   endTime: number;
+  /** 是否为空白行 */
+  isBlank?: boolean;
+  /** 是否为和声行 */
+  isBackChorus?: boolean;
 }
 
 type NeteaseLyricModel = {

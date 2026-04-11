@@ -26,3 +26,18 @@
   /* 预 GPU 分配 */
   transform: translate3d(0, 0, 0);
 }
+
+.lyric-word {
+  display: inline-block;
+  position: relative;
+}
+
+.lyric-word-active {
+  transition: transform 0.25s ease-in;
+  transform: translateY(-5%);
+}
+
+.lyric-word-inactive {
+  transition: transform 0.25s ease;
+  transform: translateY(0);
+}

@@ -102,12 +102,15 @@ const LyricWord: FC<LyricWordProps> = ({
       onClick={handleClick}
       className={cx(
         `
-          relative inline-block font-normal whitespace-pre-wrap
-          duration-500 ease-in-out transition-all
+          lyric-word font-normal whitespace-pre-wrap
         `,
-        wordIndex > currentWordIndex && !singleWord ? "blur-[1.5px]" : "blur-none",
+        // 单行歌词高亮时直接变色
         singleWord && (active ? "text-white" : "text-white/30"),
-        !singleWord && (active ? "scale-100" : "scale-95")
+        // 非单行歌词且未高亮时模糊
+        !singleWord && wordIndex > currentWordIndex ? "blur-[1.5px]" : "blur-none",
+        !singleWord && wordIndex === currentWordIndex && active
+          ? "lyric-word-active"
+          : "lyric-word-inactive"
       )}>
       {word.word}
     </span>

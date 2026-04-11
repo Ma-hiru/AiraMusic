@@ -1,5 +1,16 @@
-import { parseLrc, parseQrc, parseTTML, parseYrc } from "@applemusic-like-lyrics/lyric";
-import { parseExternalLrc, parseNeteaseLyric, parseTranslatedLRC } from "@mahiru/wasm";
+import {
+  LyricLine as AMLyricLine,
+  parseLrc,
+  parseQrc,
+  parseTTML,
+  parseYrc
+} from "@applemusic-like-lyrics/lyric";
+import {
+  LyricLineInfo,
+  parseExternalLrc,
+  parseNeteaseLyric,
+  parseTranslatedLRC
+} from "@mahiru/wasm";
 import { Errs } from "@mahiru/ui/public/entry/errs";
 import {
   loadErrorLyricPreset,
@@ -86,11 +97,20 @@ class Parser {
     );
     return {
       lyric: <NeteaseLyricModel>{
-        data: ttml.lines,
+        data: ttml.lines.map(Parser.handleAMLyricLine),
         rmExisted: tlCount > ttml.lines.length / 2,
         tlExisted: rmCount > ttml.lines.length / 2
       },
       metadata: ttml.metadata
+    };
+  }
+
+  static handleAMLyricLine(line: AMLyricLine): LyricLine {
+    const rawLine = line.words.map((w) => w.word).join("");
+    return {
+      ...line,
+      isBlank: LyricLineInfo.isBlank(rawLine),
+      isBackChorus: LyricLineInfo.isBackChorus(rawLine)
     };
   }
 

@@ -1,6 +1,6 @@
 import { app } from "electron";
 import { Server } from "node:http";
-import { EqError, LogLevel, ParseLogLevel } from "@mahiru/log";
+import { LogLevel, ParseLogLevel } from "@mahiru/log";
 import { Log } from "../utils/log";
 import { isMacOS, isWindows } from "../utils/platform";
 import { AppProtocol } from "./protocol";
@@ -68,11 +68,10 @@ export class APP {
 
   private createServices() {
     try {
-      const handleLaunchError = (source: unknown) => {
+      const handleLaunchError = (err: Error) => {
         if (this.status === "exiting") return;
-        const err = EqError.anyToError(source) || new Error(String(source));
         Log.error(err);
-        AppWindows.fatalError(err.message, err.stack);
+        AppWindows.fatalError(err.message);
         AppWindowManager.get("main")?.close();
         setTimeout(() => this.exit(-1), 5000);
       };
@@ -90,10 +89,7 @@ export class APP {
           handleLaunchError(new Error(`store service exited with code ${code}`));
         }
       });
-      this.neteaseMusicApiService = AppServices.NeteaseMusicApi.create(handleLaunchError).catch((err) => {
-        handleLaunchError(err);
-        return null;
-      });
+      this.neteaseMusicApiService = AppServices.NeteaseMusicApi.create(handleLaunchError);
       !isDev && (this.proxyServer = AppServices.Proxy.create(handleLaunchError));
     } catch (err) {
       Log.error({
