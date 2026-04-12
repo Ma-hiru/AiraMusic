@@ -34,13 +34,11 @@ export default function LyricPage() {
   const progressBus = useListenableHook(AppBus.progress);
   const getInfo = useRef({
     playerBus,
-    infoBus,
-    progressBus
+    infoBus
   });
   getInfo.current = {
     playerBus,
-    infoBus,
-    progressBus
+    infoBus
   };
   // 歌词实例
   const [lyric, setLyric] = useState<Nullable<NeteaseLyric>>(null);
@@ -60,7 +58,7 @@ export default function LyricPage() {
     const onFrame = (time: number) => {
       if (!isRunning) return;
 
-      const { playerBus, progressBus } = getInfo.current;
+      const { playerBus } = getInfo.current;
       if (playerBus.data?.status !== "playing") {
         isRunning = false;
         return;
@@ -70,8 +68,8 @@ export default function LyricPage() {
       const delta = time - lastTime;
       lastTime = time;
 
+      // 自己更新时间
       lyricRef.current?.update(delta);
-      lyricRef.current?.setCurrentTime((progressBus.data?.currentTime || 0) * 1000);
 
       requestAnimationFrame(onFrame);
     };
@@ -81,6 +79,10 @@ export default function LyricPage() {
       isRunning = false;
     };
   }, [playerBus.data?.status]);
+  useEffect(() => {
+    // 关键时间点同步
+    lyricRef.current?.setCurrentTime((progressBus.data?.currentTime || 0) * 1000);
+  }, [progressBus.data?.currentTime]);
   // 颜色变化
   useEffect(() => {
     if (color !== undefined) window.localStorage.setItem("lyricWindowColor", color);

@@ -18,6 +18,8 @@
     "clean:dist": "pnpm rimraf pkg",
     "build": "pnpm run-script-os && pnpm rimraf pkg/package.json",
     "build:win32": "wasm-pack build --target web --out-dir pkg --release",
-    "build:linux": "wasm-pack build --target web --out-dir pkg --dev"
+    "build:linux": "wasm-pack build --target web --out-dir pkg --dev",
+    "lint": "cargo fmt && cargo clippy",
+    "test": "cargo test"
   }
 }

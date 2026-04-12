@@ -59,10 +59,10 @@ impl Smoother {
     }
 
     pub fn update_peaks(&mut self, current: &[f32]) -> Vec<f32> {
-        for i in 0..current.len() {
+        for (i, &current_val) in current.iter().enumerate() {
             // 如果当前值大于峰值，则更新峰值
-            if current[i] > self.peaks[i] {
-                self.peaks[i] = current[i];
+            if current_val > self.peaks[i] {
+                self.peaks[i] = current_val;
             } else {
                 // 否则按衰减速率降低峰值
                 self.peaks[i] *= self.peak_decay;

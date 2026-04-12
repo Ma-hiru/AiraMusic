@@ -29,7 +29,9 @@ impl SpectrumAutoProcessor {
             }
         }
         let norm_base_new = (1.0 + max_est * self.log_multiplier).log10().max(1e-6);
-        self.norm_base_ema = ((1.0 - self.ema_alpha) * self.norm_base_ema + self.ema_alpha * norm_base_new).max(1e-6);
+        self.norm_base_ema = ((1.0 - self.ema_alpha) * self.norm_base_ema
+            + self.ema_alpha * norm_base_new)
+            .max(1e-6);
         self.norm_base_ema
     }
 

@@ -1,6 +1,6 @@
-use crate::spectrum::window::{apply_window, WindowFunction};
-use rustfft::num_complex::Complex;
+use crate::spectrum::window::{WindowFunction, apply_window};
 use rustfft::FftPlanner;
+use rustfft::num_complex::Complex;
 
 pub fn compute_fft(samples: &[f32], window: WindowFunction) -> Vec<f32> {
     // 应用窗函数

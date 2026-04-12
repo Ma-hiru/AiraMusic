@@ -1,7 +1,43 @@
-use super::model::LyricLine;
+use super::model::{Lyric, LyricLine};
 use regex::Regex;
 use std::collections::HashMap;
 use wasm_bindgen::prelude::wasm_bindgen;
+
+#[wasm_bindgen]
+pub struct LyricLineInfo;
+
+#[wasm_bindgen]
+impl LyricLineInfo {
+    #[wasm_bindgen]
+    #[allow(non_snake_case)]
+    pub fn isBlank(line: String) -> bool {
+        line.trim().is_empty()
+    }
+
+    #[wasm_bindgen]
+    #[allow(non_snake_case)]
+    pub fn isBackChorus(line: String) -> bool {
+        Self::match_back_chorus(line.trim(), true, true)
+    }
+
+    pub fn match_back_chorus(line: &str, start: bool, end: bool) -> bool {
+        const PREDICT_CHARS: [(&str, &str); 9] = [
+            ("[", "]"),
+            ("(", ")"),
+            ("（", "）"),
+            ("【", "】"),
+            ("〖", "〗"),
+            ("「", "」"),
+            ("『", "』"),
+            ("\"", "\""),
+            ("'", "'"),
+        ];
+
+        PREDICT_CHARS
+            .iter()
+            .any(|(l, r)| (!start || line.starts_with(l)) && (!end || line.ends_with(r)))
+    }
+}
 
 /// 将 RawLyricLine 列表转换为 HashMap，键为 startTime，值为拼接后的歌词字符串
 pub fn split_lyric_as_map(lines: Vec<LyricLine>) -> HashMap<i32, String> {
@@ -74,6 +110,13 @@ impl LyricLine {
         self.isBackChorus = Some(self.is_back_chorus());
     }
 
+    pub fn line_to_string(&self) -> String {
+        self.words
+            .iter()
+            .map(|w| w.word.clone())
+            .collect::<String>()
+    }
+
     /// 解析行内翻译歌词，返回 (原歌词, 翻译歌词)
     fn get_inline_tl_lyric(&self) -> (String, Option<String>) {
         const LYRIC_INLINE_SPLIT: [(&str, &str); 4] =
@@ -120,28 +163,49 @@ impl LyricLine {
     }
 }
 
-#[wasm_bindgen]
-pub struct LyricLineInfo;
-
-#[wasm_bindgen]
-impl LyricLineInfo {
-    #[wasm_bindgen]
-    #[allow(non_snake_case)]
-    pub fn isBlank(line: String) -> bool {
-        line.trim().is_empty()
+impl Lyric {
+    pub fn update_extra_info(&mut self) {
+        for line in self.data.iter_mut() {
+            line.update_extra_info();
+        }
+        for (s, e) in self.is_back_chorus_with_multi_line() {
+            for i in s..=e {
+                self.data[i].isBackChorus = Some(true);
+            }
+        }
     }
 
-    #[wasm_bindgen]
-    #[allow(non_snake_case)]
-    pub fn isBackChorus(line: String) -> bool {
-        let line = line.trim();
-        line.starts_with("[") && line.ends_with("]")
-            || line.starts_with("(") && line.ends_with(")")
-            || line.starts_with("（") && line.ends_with("）")
-            || line.starts_with("【") && line.ends_with("】")
-            || line.starts_with("〖") && line.ends_with("〗")
-            || line.starts_with("「") && line.ends_with("」")
-            || line.starts_with("『") && line.ends_with("』")
+    fn is_back_chorus_with_multi_line(&self) -> Vec<(usize, usize)> {
+        let lines = self
+            .data
+            .iter()
+            .map(|l| l.line_to_string().trim().to_string())
+            .collect::<Vec<String>>();
+        let mut res: Vec<(usize, usize)> = vec![];
+
+        let mut start = std::collections::VecDeque::new();
+        let mut end = std::collections::VecDeque::new();
+        for (i, line) in lines.into_iter().enumerate() {
+            if LyricLineInfo::match_back_chorus(&line, true, false)
+                && !LyricLineInfo::match_back_chorus(&line, false, true)
+            {
+                start.push_back(i);
+            } else if !LyricLineInfo::match_back_chorus(&line, true, false)
+                && LyricLineInfo::match_back_chorus(&line, false, true)
+            {
+                end.push_back(i);
+            }
+        }
+
+        while !start.is_empty() && !end.is_empty() {
+            let s = start.pop_back().unwrap();
+            let e = end.pop_front().unwrap();
+            if s < e {
+                res.push((s, e));
+            }
+        }
+
+        res
     }
 }
 
@@ -151,6 +215,6 @@ mod test {
 
     #[test]
     fn test_is_back_chorus() {
-        assert_eq!(LyricLineInfo::isBackChorus(" 「xxxxxx」 ".into()), true)
+        assert!(LyricLineInfo::isBackChorus(" 「xxxxxx」 ".into()))
     }
 }

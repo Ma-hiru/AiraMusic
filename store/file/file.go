@@ -63,7 +63,7 @@ func LoadLocalStore(meta *StoreMeta) error {
 	if err != nil {
 		return fmt.Errorf("failed to open index file: %v", err)
 	}
-	defer indexFile.Close()
+	defer indexFile.Close() //nolint:errcheck
 
 	// 初始化存储结构
 	store = &Store{

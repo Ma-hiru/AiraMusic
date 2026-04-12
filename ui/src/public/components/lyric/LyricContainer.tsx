@@ -57,14 +57,19 @@ const LyricContainer: FC<LyricContainerProps> = ({
   const containerRef = useRef<Nullable<HTMLDivElement>>(null);
   const currentLineRef = useRef(currentLine);
   const timeManagerRef = useRef<Nullable<LyricTimeManager>>(null);
+  const mainAlignRef = useRef(mainAlign);
 
   if (timeManagerRef.current === null) {
     timeManagerRef.current = new LyricTimeManager([]);
   }
+  mainAlignRef.current = mainAlign;
 
+  // 计算布局的函数
   const calcLayout = useCallback(() => {
     const container = containerRef.current;
     const lineIndex = currentLineRef.current;
+    const mainAlign = mainAlignRef.current;
+
     if (!container) return;
     if (lineIndex === -1) {
       return AppUI.smoothScrollTo(container, 0);
@@ -87,8 +92,9 @@ const LyricContainer: FC<LyricContainerProps> = ({
     }
 
     AppUI.smoothScrollTo(container, scrollTop);
-  }, [mainAlign]);
+  }, []);
 
+  // 歌词变化时，重置时间管理器和当前行
   useLayoutEffect(() => {
     timeManagerRef.current?.reset(lyric?.data ?? []);
     setCurrentLine(-1);
@@ -96,6 +102,7 @@ const LyricContainer: FC<LyricContainerProps> = ({
     calcLayout();
   }, [calcLayout, lyric]);
 
+  // 歌词行变化时，滚动到对应位置
   useLayoutEffect(() => {
     const timeManager = timeManagerRef.current;
     if (!timeManager) return;
@@ -109,6 +116,7 @@ const LyricContainer: FC<LyricContainerProps> = ({
     };
   }, [calcLayout]);
 
+  // 暴露接口
   useImperativeHandle(
     ref,
     () => ({
@@ -119,6 +127,7 @@ const LyricContainer: FC<LyricContainerProps> = ({
     [calcLayout]
   );
 
+  // 窗口大小变化时，计算布局
   useEffect(() => {
     const cb = debounce(calcLayout, 500);
     window.addEventListener("resize", cb, { passive: true });
@@ -127,9 +136,10 @@ const LyricContainer: FC<LyricContainerProps> = ({
     };
   }, [calcLayout]);
 
+  // 布局参数变化时，计算布局
   useEffect(() => {
     calcLayout();
-  }, [calcLayout, rmActive, tlActive]);
+  }, [calcLayout, rmActive, tlActive, mainAlign, crossAlign]);
 
   return (
     <div

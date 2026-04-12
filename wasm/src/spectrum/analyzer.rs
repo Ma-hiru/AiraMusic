@@ -1,10 +1,10 @@
+use super::processor::SpectrumAutoProcessor;
 use super::smoothing::Smoother;
 use super::window::WindowFunction;
-use super::processor::SpectrumAutoProcessor;
 use js_sys::Date;
-use rustfft::num_complex::Complex;
 use rustfft::Fft;
 use rustfft::FftPlanner;
+use rustfft::num_complex::Complex;
 use std::sync::Arc;
 use wasm_bindgen::prelude::wasm_bindgen;
 
@@ -115,7 +115,11 @@ impl SpectrumAnalyzer {
         self.compute_fft_half(samples);
         // 分组频谱到指定频带
         let num_bands = self.num_bands;
-        SpectrumAnalyzer::group_logarithmic_into(num_bands, &self.spectrum_half, &mut self.bands_buf);
+        SpectrumAnalyzer::group_logarithmic_into(
+            num_bands,
+            &self.spectrum_half,
+            &mut self.bands_buf,
+        );
         // 应用平滑器
         let smoothed = self.smoother.smooth(&self.bands_buf);
         let mut processed = self.auto_processor.process_auto_ema(&smoothed);
@@ -126,13 +130,19 @@ impl SpectrumAnalyzer {
     pub fn analyze_with_peaks(&mut self, samples: &[f32]) -> Vec<f32> {
         self.compute_fft_half(samples);
         let num_bands = self.num_bands;
-        SpectrumAnalyzer::group_logarithmic_into(num_bands, &self.spectrum_half, &mut self.bands_buf);
+        SpectrumAnalyzer::group_logarithmic_into(
+            num_bands,
+            &self.spectrum_half,
+            &mut self.bands_buf,
+        );
         let (smoothed, peaks) = self.smoother.smooth_with_peaks(&self.bands_buf);
 
         // 关键：不要把 peaks 混进归一化基准，否则 bands 会被“压平/怪异”。
         // 以 smoothed（能量）更新 EMA 基准一次，然后用同一 norm_base 处理 smoothed 与 peaks。
         let norm_base = self.auto_processor.update_norm_base(&smoothed);
-        let mut processed_bands = self.auto_processor.apply_with_norm_base(&smoothed, norm_base);
+        let mut processed_bands = self
+            .auto_processor
+            .apply_with_norm_base(&smoothed, norm_base);
         self.smooth_frequency_inplace(&mut processed_bands);
         let processed_peaks = self.auto_processor.apply_with_norm_base(&peaks, norm_base);
 
@@ -140,8 +150,10 @@ impl SpectrumAnalyzer {
         self.combined_buf.clear();
         self.combined_buf.reserve(target_len);
         for i in 0..self.num_bands {
-            self.combined_buf.push(*processed_bands.get(i).unwrap_or(&0.0));
-            self.combined_buf.push(*processed_peaks.get(i).unwrap_or(&0.0));
+            self.combined_buf
+                .push(*processed_bands.get(i).unwrap_or(&0.0));
+            self.combined_buf
+                .push(*processed_peaks.get(i).unwrap_or(&0.0));
         }
 
         self.combined_buf.clone()
@@ -157,7 +169,11 @@ impl SpectrumAnalyzer {
         self.compute_fft_half(samples);
 
         let num_bands = self.num_bands;
-        SpectrumAnalyzer::group_logarithmic_into(num_bands, &self.spectrum_half, &mut self.bands_buf);
+        SpectrumAnalyzer::group_logarithmic_into(
+            num_bands,
+            &self.spectrum_half,
+            &mut self.bands_buf,
+        );
         let smoothed = self.smoother.smooth(&self.bands_buf);
 
         let mut processed = self.auto_processor.process_auto_ema(&smoothed);
@@ -177,12 +193,18 @@ impl SpectrumAnalyzer {
         self.compute_fft_half(samples);
 
         let num_bands = self.num_bands;
-        SpectrumAnalyzer::group_logarithmic_into(num_bands, &self.spectrum_half, &mut self.bands_buf);
+        SpectrumAnalyzer::group_logarithmic_into(
+            num_bands,
+            &self.spectrum_half,
+            &mut self.bands_buf,
+        );
         let (smoothed, peaks) = self.smoother.smooth_with_peaks(&self.bands_buf);
 
         // 同 analyze_with_peaks：EMA 基准仅基于 smoothed 更新一次，然后分别处理 bands/peaks。
         let norm_base = self.auto_processor.update_norm_base(&smoothed);
-        let mut processed_bands = self.auto_processor.apply_with_norm_base(&smoothed, norm_base);
+        let mut processed_bands = self
+            .auto_processor
+            .apply_with_norm_base(&smoothed, norm_base);
         self.smooth_frequency_inplace(&mut processed_bands);
         let processed_peaks = self.auto_processor.apply_with_norm_base(&peaks, norm_base);
 
@@ -190,8 +212,10 @@ impl SpectrumAnalyzer {
         self.combined_buf.clear();
         self.combined_buf.reserve(target_len);
         for i in 0..self.num_bands {
-            self.combined_buf.push(*processed_bands.get(i).unwrap_or(&0.0));
-            self.combined_buf.push(*processed_peaks.get(i).unwrap_or(&0.0));
+            self.combined_buf
+                .push(*processed_bands.get(i).unwrap_or(&0.0));
+            self.combined_buf
+                .push(*processed_peaks.get(i).unwrap_or(&0.0));
         }
 
         let out = self.combined_buf.clone();
@@ -290,6 +314,7 @@ impl SpectrumAnalyzer {
         }
         // 确保每个频带至少包含一个 bin，并且覆盖连续区间
         let mut prev_end: usize = 0;
+        #[allow(clippy::needless_range_loop)]
         for i in 0..num_bands {
             let normalized_start = (i as f32 / num_bands as f32).powf(2.0);
             let normalized_end = ((i + 1) as f32 / num_bands as f32).powf(2.0);
@@ -328,6 +353,7 @@ impl SpectrumAnalyzer {
         let mut bands = vec![0.0; self.num_bands];
         let bin_per_band = spectrum.len() / self.num_bands;
 
+        #[allow(clippy::needless_range_loop)]
         for i in 0..self.num_bands {
             let bin_start = i * bin_per_band;
             let bin_end = ((i + 1) * bin_per_band).min(spectrum.len());
@@ -344,6 +370,7 @@ impl SpectrumAnalyzer {
         let max_freq = self.sample_rate / 2.0;
         let max_mel = hz_to_mel(max_freq);
 
+        #[allow(clippy::needless_range_loop)]
         for i in 0..self.num_bands {
             let mel_start = (i as f32 / self.num_bands as f32) * max_mel;
             let mel_end = ((i + 1) as f32 / self.num_bands as f32) * max_mel;
@@ -384,7 +411,7 @@ fn build_window_coeffs(size: usize, window: WindowFunction) -> Vec<f32> {
         }
     };
 
-    (0..size).map(|i| w(i)).collect()
+    (0..size).map(w).collect()
 }
 
 #[inline]

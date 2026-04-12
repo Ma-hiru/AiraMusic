@@ -70,7 +70,7 @@ func download(id, url, method string, body io.Reader, header http.Header) file.I
 		log.Println(err)
 		return file.Index{}
 	}
-	defer resp.Body.Close()
+	defer resp.Body.Close() //nolint:errcheck
 	// 读取元数据
 	var fileType = resp.Header.Get("Content-Type")
 	var fileSize = resp.Header.Get("Content-Length")
@@ -142,7 +142,7 @@ func download(id, url, method string, body io.Reader, header http.Header) file.I
 			}
 
 			n, err := io.CopyBuffer(writer, rangeResp.Body, buffer)
-			rangeResp.Body.Close()
+			rangeResp.Body.Close() //nolint:errcheck
 
 			if err != nil {
 				store.EndWrite(id, url, false)
@@ -179,7 +179,7 @@ func fetch(ctx *gin.Context) {
 		log.Println(err)
 		return
 	}
-	defer storeFile.Close()
+	defer storeFile.Close() //nolint:errcheck
 	ctx.Status(200)
 	index.FillHeader(ctx)
 	var buffer = make([]byte, 24*1024)

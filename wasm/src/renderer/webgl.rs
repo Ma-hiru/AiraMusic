@@ -200,7 +200,13 @@ impl WebGLRenderer {
         gl.delete_program(Some(&self.program));
     }
 
-    pub fn draw(&mut self, bands: &[f32], color: &str, secondary_color: &str, rounded_corners: &str) -> Result<(), JsValue> {
+    pub fn draw(
+        &mut self,
+        bands: &[f32],
+        color: &str,
+        secondary_color: &str,
+        rounded_corners: &str,
+    ) -> Result<(), JsValue> {
         let gl = &self.gl;
 
         gl.use_program(Some(&self.program));

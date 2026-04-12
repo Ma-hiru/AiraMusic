@@ -3,7 +3,7 @@ use super::model::{Lyric, LyricLine};
 use crate::lyric::utils::split_lyric_as_map;
 use regex::Regex;
 use serde_wasm_bindgen::{from_value, to_value};
-use wasm_bindgen::{prelude::wasm_bindgen, JsValue};
+use wasm_bindgen::{JsValue, prelude::wasm_bindgen};
 
 #[wasm_bindgen]
 pub fn parseNeteaseLyric(raw: JsValue, ts: JsValue, rm: JsValue) -> JsValue {
@@ -27,11 +27,9 @@ pub fn parseNeteaseLyric(raw: JsValue, ts: JsValue, rm: JsValue) -> JsValue {
         line.romanLyric = rm_lyric_map.remove(&line.startTime).unwrap_or_default();
         // 解析行内歌词
         line.splice_inline_tl_lyric();
-        // 更新额外信息
-        line.update_extra_info();
     }
 
-    to_value::<Lyric>(&Lyric {
+    let mut lyric = Lyric {
         data: raw_lyric
             .into_iter()
             .filter(|line| {
@@ -42,8 +40,11 @@ pub fn parseNeteaseLyric(raw: JsValue, ts: JsValue, rm: JsValue) -> JsValue {
             .collect(),
         rmExisted,
         tlExisted,
-    })
-    .unwrap()
+    };
+    // 更新额外信息
+    lyric.update_extra_info();
+
+    to_value::<Lyric>(&lyric).unwrap()
 }
 
 #[wasm_bindgen]
@@ -80,10 +81,10 @@ pub fn parseTranslatedLRC(raw: JsValue, reverse: bool) -> JsValue {
                             rawLRC.words.clone().into_iter().map(|w| w.word).collect();
                     }
 
-                    result.push(LyricLine::from(newLine));
+                    result.push(newLine);
                     lastMatchedIndex = index as i32 + 1;
                 } else {
-                    result.push(LyricLine::from(rawLRC.clone()));
+                    result.push(rawLRC.clone());
                 }
             } else {
                 lastMatchedIndex = -1;

@@ -103,7 +103,7 @@ func createIndexFile(meta *StoreMeta) error {
 		return fmt.Errorf("failed to create index file: %v", err)
 	}
 	defer func() {
-		indexFile.Close()
+		indexFile.Close() //nolint:errcheck
 		if err != nil {
 			_ = os.Remove(indexPath)
 		}
@@ -154,7 +154,7 @@ func checkIndexFile(meta *StoreMeta) error {
 	if err != nil {
 		return fmt.Errorf("failed to open index file: %v", err)
 	}
-	defer indexFile.Close()
+	defer indexFile.Close() //nolint:errcheck
 	// 读取版本和创建时间
 	var scanner = bufio.NewScanner(indexFile)
 	for scanner.Scan() {

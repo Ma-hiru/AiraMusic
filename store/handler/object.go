@@ -95,7 +95,7 @@ func FetchObject(ctx *gin.Context) {
 		_, _ = store.Remove(index)
 		return
 	}
-	defer storeFile.Close()
+	defer storeFile.Close() //nolint:errcheck
 
 	ctx.Status(200)
 	if objType != "" && objField != "" {
@@ -185,7 +185,7 @@ func FetchObjectMulti(ctx *gin.Context) {
 			log.Println(err)
 			continue
 		}
-		storeFile.Close()
+		storeFile.Close() //nolint:errcheck
 		result = append(result, data)
 	}
 

@@ -345,7 +345,7 @@ func (Self *Store) EndWrite(id, url string, success bool) Index {
 	} else {
 		log.Println("Failed stating written file:", err)
 	}
-	wFile.file.Close()
+	wFile.file.Close() //nolint:errcheck
 
 	if !success {
 		_ = os.Remove(wFile.tmpPath)
@@ -414,14 +414,14 @@ func (Self *Store) Move(path string, progress chan<- MoveProgressChan) error {
 	var totalCount int64 = 0
 	var errorCount int64 = 0
 	var currentCount int64 = 0
-	var percent int64 = 0
+	var percent int64
 	for _, entry := range dirEntries {
 		if entry.IsDir() {
 			continue
 		}
 		totalCount += 1
 	}
-	Self.indexFile.Close()
+	Self.indexFile.Close() //nolint:errcheck
 	for _, entry := range dirEntries {
 		if entry.IsDir() {
 			continue
@@ -435,7 +435,6 @@ func (Self *Store) Move(path string, progress chan<- MoveProgressChan) error {
 			errorCount += 1
 		}
 		if progress != nil {
-			percent = (currentCount * 100) / totalCount
 			progress <- MoveProgressChan{
 				Total:   totalCount,
 				Current: currentCount,
@@ -517,7 +516,7 @@ func (Self *Store) storeIndex() error {
 	if err != nil {
 		return err
 	}
-	defer file.Close()
+	defer file.Close() //nolint:errcheck
 
 	// 写入版本和创建时间
 	err = writeIndexFileMeta(file, &Self.meta)

@@ -5,7 +5,7 @@ import { CacheStore } from "@mahiru/ui/public/store/cache";
 
 export default class _NeteaseLyricSource {
   //region cache
-  private static readonly cacheKey = "netease_lyric_v3";
+  private static readonly cacheKey = "netease_lyric_v6";
 
   private static storeCache(id: number, lyric: NeteaseLyricModel) {
     return CacheStore.object.store<NeteaseLyricModel>(
