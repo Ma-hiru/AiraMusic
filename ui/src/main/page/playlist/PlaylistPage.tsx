@@ -70,7 +70,6 @@ const PlaylistPage: FC<object> = () => {
     },
     [searcher]
   );
-
   // 播放曲目
   const player = AppInstance.usePlayer();
   const onPlay = useCallback(
@@ -84,20 +83,16 @@ const PlaylistPage: FC<object> = () => {
     },
     [player]
   );
-
   const onReplace = useCallback(() => {
     player.playlist.replace(tracks, 0);
   }, [player.playlist, tracks]);
-
   const onAddList = useCallback(() => {
     player.playlist.addList(tracks);
   }, [player.playlist, tracks]);
-
   // 回到顶部
   const scrollTop = useCallback(() => {
     trackListRef.current?.scrollToItem(0);
   }, []);
-
   const { updateLayout } = useLayoutStore(["updateLayout"]);
   // 历史最大滚动范围
   const maxRange = useRef<IndexRange>([0, 0]);
@@ -149,7 +144,6 @@ const PlaylistPage: FC<object> = () => {
     },
     [checkAndUpdateLastPreloadRange, scrollTop, tracks.length, updateLayout]
   );
-
   // 快速定位到当前播放歌曲
   const fastLocator = useCallback(() => {
     const track = player.current.track;
@@ -158,7 +152,6 @@ const PlaylistPage: FC<object> = () => {
     if (exits === -1) return;
     trackListRef.current?.scrollToItem(exits);
   }, [player, tracks]);
-
   useEffect(() => {
     const currentTrack = player.current.track;
     if (!currentTrack) return;
@@ -170,7 +163,6 @@ const PlaylistPage: FC<object> = () => {
       updateLayout(layout.copy().setFastLocator(undefined));
     }
   }, [fastLocator, player, tracks, updateLayout]);
-
   // 右键菜单
   const { setContextMenuData, setContextMenuVisible, createTrackContextMenu } =
     AppContextMenu.useContextMenu();
@@ -197,18 +189,6 @@ const PlaylistPage: FC<object> = () => {
     },
     [contextMenuAction, createTrackContextMenu, setContextMenuData, setContextMenuVisible]
   );
-
-  // likedPlaylistID 和 likedTrackIDs.checkPoint
-  // 变化时获取歌单数据，更新喜欢状态
-  const update = useUpdate();
-  const likedStatusCheckPoint = useRef(user?.likedTrackIDs.checkPoint ?? 0);
-  useEffect(() => {
-    if (source !== "like") return;
-    if (likedStatusCheckPoint.current === user?.likedTrackIDs.checkPoint) return;
-    update();
-    likedStatusCheckPoint.current = user?.likedTrackIDs.checkPoint ?? 0;
-  }, [source, update, user?.likedTrackIDs.checkPoint]);
-
   // 数据加载
   const [firstRender, setFirstRender] = useState(true);
   useEffect(() => {
@@ -249,20 +229,17 @@ const PlaylistPage: FC<object> = () => {
     }
     return () => {
       cancel = true;
+    };
+  }, [id, player.history, searcher, source, user?.likedPlaylist.id]);
+  // 切换歌单时重置状态
+  useEffect(() => {
+    startTransition(() => {
       totalTracks.current = [];
       searcher.update("[]");
       setPlaylist(null);
       setTracks([]);
-    };
-  }, [
-    id,
-    player.history,
-    searcher,
-    source,
-    user?.likedPlaylist.id,
-    // likedTrackIDs 的变化会导致喜欢状态变化，喜欢状态变化时需要重新获取歌单数据，更新喜欢状态
-    update.count
-  ]);
+    });
+  }, [id, source, searcher]);
 
   return (
     <div className="w-full h-full px-12 pt-5 contain-style contain-size contain-layout">
