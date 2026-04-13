@@ -6,6 +6,30 @@
 
 🚧 开发中（WIP）
 
+## 界面展示
+
+### 播放页
+
+![播放页1](docs/images/player.png)
+![播放页2](docs/images/player2.png)
+![播放页3](docs/images/player3.png)
+
+### 首页
+
+![首页](docs/images/home.png)
+
+### 主界面
+
+![主界面](docs/images/main.png)
+
+### 歌词页
+
+![桌面歌词](docs/images/lyric.png)
+
+### 托盘页
+
+![托盘](docs/images/tray.png)
+
 ## 核心特性
 
 - 多窗口架构：主界面、播放页、桌面歌词、托盘、图片查看等窗口独立运行，互不干扰。
@@ -49,27 +73,3 @@
 ```bash
   pnpm build
 ```
-
-## 界面展示
-
-### 播放页
-
-![播放页1](docs/images/player.png)
-![播放页2](docs/images/player2.png)
-![播放页3](docs/images/player3.png)
-
-### 首页
-
-![首页](docs/images/home.png)
-
-### 主界面
-
-![主界面](docs/images/main.png)
-
-### 歌词页
-
-![桌面歌词](docs/images/lyric.png)
-
-### 托盘页
-
-![托盘](docs/images/tray.png)
