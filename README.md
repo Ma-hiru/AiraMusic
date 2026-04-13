@@ -52,6 +52,12 @@
 
 ## 界面展示
 
+### 播放页
+
+![播放页1](docs/images/player.png)
+![播放页2](docs/images/player2.png)
+![播放页3](docs/images/player3.png)
+
 ### 首页
 
 ![首页](docs/images/home.png)
@@ -59,10 +65,6 @@
 ### 主界面
 
 ![主界面](docs/images/main.png)
-
-### 播放页
-
-![播放页](docs/images/player.png)
 
 ### 歌词页
 
