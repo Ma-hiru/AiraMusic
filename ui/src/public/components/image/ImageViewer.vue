@@ -56,7 +56,7 @@
   import { clamp } from "lodash-es";
   import { ArrowLeftToLine, ArrowRightToLine, Download } from "lucide-vue-next";
   import { Log } from "@mahiru/ui/public/utils/dev";
-  import AppRenderer from "@mahiru/ui/public/entry/renderer";
+  import ElectronServices from "@mahiru/ui/public/source/electron/services";
 
   type ImageEntry = { url?: string; alt?: string };
 
@@ -118,7 +118,7 @@
           splitSrc[splitSrc.length - 1] ||
           current.value.url ||
           `unknown.${type}`;
-        const result = (await AppRenderer.Event.invoke.writeFile(<
+        const result = (await ElectronServices.Renderer.Event.invoke.saveFile(<
           { buffer: ArrayBuffer; name: string }
         >{
           buffer,

@@ -1,0 +1,339 @@
+import { shuffle } from "lodash-es";
+import { Listenable } from "@mahiru/ui/public/utils/listenable";
+import { NeteaseTrackRecord } from "@mahiru/ui/public/source/netease/models";
+import { userStoreSnapshot } from "@mahiru/ui/public/store/user";
+import AppToast from "@mahiru/ui/public/components/toast";
+
+export default class AppPlaylist extends Listenable {
+  //#region fields
+  private playlist;
+  private position;
+  private playlistBackup;
+  private looplist = [];
+  private _repeat;
+  private _shuffle;
+  private _loop;
+
+  get loop() {
+    return this._loop;
+  }
+
+  private set loop(value) {
+    this._loop = value;
+    this.executeListeners();
+  }
+
+  get repeat() {
+    return this._repeat;
+  }
+
+  set repeat(value) {
+    this._repeat = value;
+    this.executeListeners();
+  }
+
+  set shuffle(value) {
+    this.changeShuffle(value);
+    this.executeListeners();
+  }
+
+  private changeShuffle(value: boolean) {
+    if (value) {
+      const current = this.current();
+      this.playlistBackup = this.playlist;
+      this.playlist = shuffle(this.playlist);
+      this.position = this.locate(current?.detail.id);
+    } else {
+      const current = this.current();
+      this.playlist = this.playlistBackup;
+      this.position = this.locate(current?.detail.id);
+    }
+    this._shuffle = value;
+  }
+
+  get shuffle() {
+    return this._shuffle;
+  }
+
+  private get user() {
+    return userStoreSnapshot()._user;
+  }
+
+  constructor(props?: {
+    position?: number | -1;
+    playlist?: NeteaseTrackRecord[];
+    repeat?: "off" | "one" | "all";
+    shuffle?: boolean;
+    loop?: boolean;
+  }) {
+    super();
+    this.playlist = props?.playlist ?? [];
+    this.playlistBackup = props?.playlist ?? [];
+    this.position = props?.position ?? -1;
+    this._repeat = props?.repeat ?? "off";
+    this._shuffle = props?.shuffle ?? false;
+    this._loop = props?.loop ?? false;
+  }
+  //#endregion
+
+  //#region inner methods
+  static save(instance: AppPlaylist) {
+    const current = instance.current();
+    return {
+      position: instance.shuffle
+        ? instance.playlistBackup.findIndex((item) => item.detail.id === current?.detail.id)
+        : instance.position,
+      repeat: instance.repeat,
+      playlist: instance.shuffle ? instance.playlistBackup : instance.playlist,
+      _shuffle: instance.shuffle,
+      _loop: instance.loop
+    };
+  }
+
+  static fromSave(props: ReturnType<typeof this.save>) {
+    props.playlist = <NeteaseTrackRecord[]>props.playlist.map(NeteaseTrackRecord.fromObject);
+    const instance = new AppPlaylist(props);
+    instance.shuffle = props._shuffle;
+    instance.loop = props._loop;
+    return instance;
+  }
+
+  [Symbol.iterator]() {
+    let pos = -1;
+    return {
+      next: () => {
+        pos++;
+        return {
+          done: !this.check(pos),
+          value: this.playlist[pos]
+        };
+      }
+    };
+  }
+
+  [Symbol.dispose]() {
+    super[Symbol.dispose]();
+    this.playlist = [];
+    this.playlistBackup = [];
+    this.position = -1;
+    this._shuffle = false;
+    this._loop = false;
+    this.repeat = "off";
+  }
+
+  [Symbol.toPrimitive](hint: string) {
+    if (hint === "string") {
+      return `AppPlaylist(${this.playlist.length} tracks, position: ${this.position}, repeat: ${this.repeat}, shuffle: ${this.shuffle})`;
+    } else if (hint === "number") {
+      return this.position;
+    }
+    return this;
+  }
+  //#endregion
+
+  public list() {
+    return this.playlist;
+  }
+
+  public pos() {
+    return this.position;
+  }
+
+  public locate(source: Optional<number> | NeteaseTrackRecord) {
+    if (typeof source !== "number" && !source) return -1;
+    if (typeof source === "object") source = source.id;
+    return this.playlist.findIndex((item) => item.id === source);
+  }
+
+  public replace(list: NeteaseTrackRecord[], initPosition: number | NeteaseTrackRecord = -1) {
+    const shouldBackup = this.shuffle;
+    shouldBackup && this.changeShuffle(false);
+    this.playlist = list;
+    this.jump(initPosition);
+    shouldBackup && this.changeShuffle(true);
+    this.executeListeners();
+    return this;
+  }
+
+  public clear() {
+    const shouldBackup = this.shuffle;
+    shouldBackup && this.changeShuffle(false);
+    this.playlist = [];
+    this.position = -1;
+    shouldBackup && this.changeShuffle(true);
+    this.executeListeners();
+    return this;
+  }
+
+  public remove(pos: number | NeteaseTrackRecord) {
+    if (typeof pos !== "number") pos = this.locate(pos);
+    const shouldBackup = this.shuffle;
+    shouldBackup && this.changeShuffle(false);
+    if (!this.check(pos) || pos < 0) return this;
+
+    this.playlist.splice(pos, 1);
+    if (pos >= this.position) {
+      // 删除位置在当前播放位置之后 或者 删除位置就是当前播放位置，不调整
+    } else if (pos < this.position) {
+      // 删除位置在当前播放位置之前，当前位置-1
+      this.position--;
+    }
+    // 检查当前位置是否合法
+    if (this.position >= this.playlist.length) {
+      this.position = this.playlist.length - 1;
+    }
+
+    shouldBackup && this.changeShuffle(true);
+    this.executeListeners();
+    return this;
+  }
+
+  public add(record: NeteaseTrackRecord, position: "next" | "end") {
+    const shouldBackup = this.shuffle;
+    shouldBackup && this.changeShuffle(false);
+
+    const existPos = this.locate(record.detail.id);
+    const isCurrent = existPos === this.position;
+
+    if (isCurrent) {
+      if (position === "end") {
+        this.remove(existPos);
+        this.playlist.push(record);
+        this.position = this.playlist.length - 1;
+      }
+    } else {
+      if (existPos !== -1) this.remove(existPos);
+      if (position === "end") {
+        this.playlist.push(record);
+      } else {
+        this.playlist.splice(this.position + 1, 0, record);
+      }
+    }
+
+    shouldBackup && this.changeShuffle(true);
+    this.executeListeners();
+    return this;
+  }
+
+  public addList(records: NeteaseTrackRecord[]) {
+    const shouldBackup = this.shuffle;
+    shouldBackup && this.changeShuffle(false);
+
+    for (const record of records) {
+      const existPos = this.locate(record.id);
+      const isCurrent = existPos === this.position;
+
+      if (existPos !== -1) this.remove(existPos);
+      if (isCurrent) this.position = this.playlist.length - 1;
+      this.playlist.push(record);
+    }
+
+    shouldBackup && this.changeShuffle(true);
+    this.executeListeners();
+    return this;
+  }
+
+  public jump(pos: number | NeteaseTrackRecord) {
+    let position;
+    if (typeof pos === "number") {
+      position = pos;
+    } else {
+      position = this.playlist.findIndex((item) => item.id === pos.id);
+    }
+    if (this.check(position) && this.position !== pos) {
+      this.position = position;
+    }
+    this.executeListeners();
+    return this;
+  }
+
+  public same(list: NeteaseTrackRecord[]) {
+    if (this.playlist === list) return true;
+    if (this.playlist.length !== list.length) return false;
+    for (let i = 0; i < this.playlist.length; i++) {
+      if (this.playlist[i]!.detail.id !== list[i]!.detail.id) return false;
+      if (this.playlist[i]!.sourceID !== list[i]!.sourceID) return false;
+    }
+    return true;
+  }
+
+  public check(pos: number | NeteaseTrackRecord = this.position) {
+    if (typeof pos !== "number") return this.locate(pos) !== -1;
+    return (pos >= 0 && pos < this.playlist.length) || (pos == -1 && this.playlist.length > 0);
+  }
+
+  public current() {
+    const record = this.playlist[this.position];
+    if (!record || !record.detail) return null;
+    return record;
+  }
+
+  public peek(force = true) {
+    const currentPos = this.position;
+    const peek = this.next(force).current();
+    this.position = currentPos;
+    return peek;
+  }
+
+  public next(force = true): this {
+    if (!force && this.repeat === "one") return this;
+
+    let nextPos = this.position + 1;
+    if (nextPos >= this.playlist.length) {
+      if (this.repeat === "all" && this.playlist.length >= 1) {
+        // 列表循环
+        nextPos = 0;
+      } else {
+        // 播放结束
+        nextPos = -1;
+      }
+    }
+    this.position = nextPos;
+
+    const current = this.current();
+    if (current) {
+      const { playable, reason } = current.detail.playable(this.user);
+      if (!playable) {
+        AppToast.request({
+          type: "error",
+          text: reason
+        });
+        return this.next(force);
+      }
+    }
+
+    this.executeListeners();
+    return this;
+  }
+
+  public last(force = true): this {
+    if (!force && this.repeat === "one") return this;
+
+    let lastPos = this.position - 1;
+    if (lastPos < 0) {
+      if (this.repeat === "all" && this.playlist.length >= 1) {
+        // 列表循环
+        lastPos = this.playlist.length - 1;
+      } else {
+        // 播放结束
+        lastPos = -1;
+      }
+    }
+    this.position = lastPos;
+
+    const current = this.current();
+    if (current) {
+      const { playable, reason } = current.detail.playable(this.user);
+      if (!playable) {
+        AppToast.request({
+          type: "error",
+          text: reason
+        });
+        return this.last(force);
+      }
+    }
+
+    this.executeListeners();
+    return this;
+  }
+}

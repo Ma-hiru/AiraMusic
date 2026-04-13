@@ -3,7 +3,7 @@ import {
   NeteaseSettingsModel,
   NeteaseUser,
   NeteaseUserModel
-} from "@mahiru/ui/public/models/netease";
+} from "@mahiru/ui/public/source/netease/models";
 
 export const UserStoreConfig = createZustandConfig((set): UserStoreType => {
   return {

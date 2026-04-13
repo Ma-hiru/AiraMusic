@@ -1,6 +1,6 @@
 import { cx } from "@emotion/css";
 import { FC, memo, useMemo } from "react";
-import { NeteaseNetworkImage, NeteaseTrackRecord } from "@mahiru/ui/public/models/netease";
+import { NeteaseNetworkImage, NeteaseTrackRecord } from "@mahiru/ui/public/source/netease/models";
 import { NeteaseImageSize } from "@mahiru/ui/public/enum";
 
 import NeteaseImage from "@mahiru/ui/public/components/image/NeteaseImage";

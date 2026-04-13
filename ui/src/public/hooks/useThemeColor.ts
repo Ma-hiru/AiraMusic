@@ -1,5 +1,5 @@
 import { useLayoutEffect, useRef, useState } from "react";
-import AppUI from "@mahiru/ui/public/entry/ui";
+import AppUI from "@mahiru/ui/public/player/ui";
 
 function getColor() {
   const { main, secondary, textOnMainColor } = AppUI.themeInstance;

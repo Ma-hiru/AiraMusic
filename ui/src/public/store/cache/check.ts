@@ -1,7 +1,7 @@
 import { cacheRequest } from "./request";
 import { CacheStoreBase } from "@mahiru/ui/public/store/cache/base";
 import { Log } from "@mahiru/ui/public/utils/dev";
-import AppNet from "@mahiru/ui/public/entry/net";
+import ElectronServices from "@mahiru/ui/public/source/electron/services";
 
 type CheckRequestItem = {
   id: string | number;
@@ -68,7 +68,7 @@ export class CacheStoreForCheck extends CacheStoreBase {
     this.flushCheckCollections(collections);
     let count = 0;
     const store = () => {
-      if (AppNet.getStatus().score < 0.7 || count >= 3) {
+      if (ElectronServices.Net.getStatus().score < 0.7 || count >= 3) {
         Log.debug("Starting flushCheckOrStoreCollections store", collections.length);
         this.orStoreMulti(collections).catch((err) => {
           Log.error({

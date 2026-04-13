@@ -25,6 +25,7 @@ type InvokeEventMaps = {
     }
   ];
   selectPath: [type: "dir" | "file", Promise<{ ok: boolean; path: string; error?: string }>];
+  saveFile: [{ buffer: ArrayBuffer; name: string }, Promise<{ ok: boolean; error?: string }>];
   isFullscreen: [WindowType, boolean];
 };
 

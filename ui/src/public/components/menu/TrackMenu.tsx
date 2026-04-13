@@ -2,7 +2,7 @@ import {
   NeteaseNetworkImage,
   NeteaseTrackRecord,
   NeteaseUser
-} from "@mahiru/ui/public/models/netease";
+} from "@mahiru/ui/public/source/netease/models";
 import { Copy, DiscAlbum, ListMusic, ListPlus, MessageSquare, Play } from "lucide-react";
 import { NeteaseImageSize } from "@mahiru/ui/public/enum";
 import { ContextMenuItem, ContextMenuRender } from "@mahiru/ui/public/components/menu/MenuProvider";

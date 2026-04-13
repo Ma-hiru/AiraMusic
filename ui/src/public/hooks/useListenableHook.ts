@@ -1,4 +1,4 @@
-import { Listenable } from "@mahiru/ui/public/models/Listenable";
+import { Listenable } from "@mahiru/ui/public/utils/listenable";
 import { useUpdate } from "@mahiru/ui/public/hooks/useUpdate";
 import { useEffect } from "react";
 

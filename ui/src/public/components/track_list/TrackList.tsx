@@ -15,11 +15,15 @@ import { useScrollAutoHide } from "@mahiru/ui/public/hooks/useScrollAutoHide";
 import TrackItem, { TrackItemProps } from "@mahiru/ui/public/components/track_item";
 import VirtualList, { VirtualListRow } from "@mahiru/ui/public/components/virtual_list";
 import ListLoading from "@mahiru/ui/public/components/track_list/ListLoading";
-import { NeteaseHistory, NeteaseTrack, NeteaseTrackRecord } from "@mahiru/ui/public/models/netease";
+import {
+  NeteaseHistory,
+  NeteaseTrack,
+  NeteaseTrackRecord
+} from "@mahiru/ui/public/source/netease/models";
 import { useHeart } from "@mahiru/ui/public/hooks/useHeart";
 import { useThemeColor } from "@mahiru/ui/public/hooks/useThemeColor";
 import { useUser } from "@mahiru/ui/public/store/user";
-import { PlaylistSource } from "@mahiru/ui/main/constants";
+import { PlaylistSource } from "@mahiru/ui/windows/main/constants";
 import { NeteaseImageSize } from "@mahiru/ui/public/enum";
 
 export interface TrackListRef {

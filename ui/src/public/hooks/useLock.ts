@@ -1,4 +1,4 @@
-import { Errs } from "@mahiru/ui/public/entry/errs";
+import { Errs } from "@mahiru/ui/public/constants/errs";
 
 type Task<T> = NormalFunc<[], T | Promise<T>>;
 

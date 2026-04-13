@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import AppWindow from "@mahiru/ui/public/entry/window";
+import ElectronServices from "@mahiru/ui/public/source/electron/services";
 
 let loaded = false;
 
@@ -8,10 +8,10 @@ export function useAppLoaded(condition?: Optional<Promise<any>>) {
     if (loaded) return;
     (condition || Promise.resolve())
       .then(() => {
-        AppWindow.current.show();
+        ElectronServices.Window.current.show();
       })
       .catch(() => {
-        AppWindow.current.close();
+        ElectronServices.Window.current.close();
       })
       .finally(() => {
         loaded = true;

@@ -11,7 +11,7 @@ import {
 import { motion, useAnimate } from "motion/react";
 import { X } from "lucide-react";
 import { cx } from "@emotion/css";
-import AppModal from "@mahiru/ui/public/entry/modal";
+import AppModal from "./use";
 
 export type ModalData = {
   content: ReactNode;

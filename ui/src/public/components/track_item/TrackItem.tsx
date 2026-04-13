@@ -1,15 +1,19 @@
 import { cx } from "@emotion/css";
 import { FC, memo, MouseEvent as ReactMouseEvent, useCallback } from "react";
 import { ColorInstance } from "color";
-import { NeteaseHistory, NeteaseTrackRecord, NeteaseUser } from "@mahiru/ui/public/models/netease";
-import { PlaylistSource } from "@mahiru/ui/main/constants";
+import {
+  NeteaseHistory,
+  NeteaseTrackRecord,
+  NeteaseUser
+} from "@mahiru/ui/public/source/netease/models";
+import { PlaylistSource } from "@mahiru/ui/windows/main/constants";
 
 import ListItemIndex from "./TrackItemIndex";
 import ListItemCover from "./TrackItemCover";
 import ListItemName from "./TrackItemName";
 import ListItemInfo from "./TrackItemInfo";
 import { NeteaseImageSize } from "@mahiru/ui/public/enum";
-import AppToast from "@mahiru/ui/public/entry/toast";
+import AppToast from "@mahiru/ui/public/components/toast";
 
 export interface TrackItemProps {
   textColor: ColorInstance;

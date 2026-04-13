@@ -3,11 +3,15 @@ import { css, cx } from "@emotion/css";
 import { Heart } from "lucide-react";
 import { ColorInstance } from "color";
 import { TrackBitmark } from "@mahiru/ui/public/enum";
-import { NeteaseHistory, NeteaseTrack, NeteaseTrackRecord } from "@mahiru/ui/public/models/netease";
+import {
+  NeteaseHistory,
+  NeteaseTrack,
+  NeteaseTrackRecord
+} from "@mahiru/ui/public/source/netease/models";
 
 import ListItemQuality from "./TrackItemQuality";
 import Tag from "@mahiru/ui/public/components/public/Tag";
-import { PlaylistSource } from "@mahiru/ui/main/constants";
+import { PlaylistSource } from "@mahiru/ui/windows/main/constants";
 
 interface ListItemAlbumProps {
   track: NeteaseTrackRecord | NeteaseHistory;

@@ -1,4 +1,4 @@
-import { Listenable } from "@mahiru/ui/public/models/Listenable";
+import { Listenable } from "@mahiru/ui/public/utils/listenable";
 
 export class LyricTimeManager extends Listenable {
   private lyric: LyricLine[];

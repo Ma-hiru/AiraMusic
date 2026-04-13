@@ -1,7 +1,7 @@
 import { ContextMenuRender } from "@mahiru/ui/public/components/menu/MenuProvider";
 import { useLayoutEffect } from "react";
 import { Log } from "@mahiru/ui/public/utils/dev";
-import { Errs } from "@mahiru/ui/public/entry/errs";
+import { Errs } from "@mahiru/ui/public/constants/errs";
 import { createTrackContextMenu } from "@mahiru/ui/public/components/menu/TrackMenu";
 
 export default class AppContextMenu {

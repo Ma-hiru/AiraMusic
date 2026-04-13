@@ -14,10 +14,10 @@
 </template>
 <script setup lang="ts" name="NeteaseImage">
   import { computed, ImgHTMLAttributes, onUnmounted, ref, useAttrs, watch } from "vue";
-  import { NeteaseLocalImage, NeteaseNetworkImage } from "@mahiru/ui/public/models/netease";
-  import AppWindow from "@mahiru/ui/public/entry/window";
+  import { NeteaseLocalImage, NeteaseNetworkImage } from "@mahiru/ui/public/source/netease/models";
+
   import { NeteaseImageSize } from "@mahiru/ui/public/enum";
-  import NeteaseSource from "@mahiru/ui/public/entry/source";
+  import NeteaseServices from "@mahiru/ui/public/source/netease/services";
 
   type ShadowLevel = "none" | "base" | "float";
   type ShadowColor = "light" | "dark";
@@ -143,7 +143,7 @@
     [() => props.pause, () => props.image?.src],
     () => {
       if (!props.image) return;
-      NeteaseSource.Image.try(props.image, props.cache).then((local) => {
+      NeteaseServices.Image.try(props.image, props.cache).then((local) => {
         if (local) {
           source.value = local;
         } else {

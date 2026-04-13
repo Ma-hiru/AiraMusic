@@ -5,7 +5,7 @@ import { cx } from "@emotion/css";
 
 import NoDrag from "@mahiru/ui/public/components/drag/NoDrag";
 import useListenableHook from "@mahiru/ui/public/hooks/useListenableHook";
-import AppWindow from "@mahiru/ui/public/entry/window";
+import ElectronServices from "@mahiru/ui/public/source/electron/services";
 
 interface TopControlPurProps {
   maximizable?: boolean;
@@ -15,7 +15,7 @@ interface TopControlPurProps {
 }
 
 const TopControlPure: FC<TopControlPurProps> = ({ maximizable, mini = true, color, className }) => {
-  const currentWindow = useListenableHook(AppWindow.current);
+  const currentWindow = useListenableHook(ElectronServices.Window.current);
 
   return (
     <NoDrag className={cx(`flex flex-row gap-4 select-none relative z-50`, className)}>

@@ -1,7 +1,9 @@
 import { clamp } from "lodash-es";
-import AppRenderer from "@mahiru/ui/public/entry/renderer";
+import ElectronServices from "@mahiru/ui/public/source/electron/services";
 
-export const accessToken = await AppRenderer.Event.invoke.storeKey().catch(() => "mahiru");
+export const accessToken = await ElectronServices.Renderer.Event.invoke
+  .storeKey()
+  .catch(() => "mahiru");
 
 export default class HTTPConstants {
   /**

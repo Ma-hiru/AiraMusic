@@ -1,7 +1,7 @@
 import { createContext, useContext } from "react";
-import { Errs } from "@mahiru/ui/public/entry/errs";
+import { Errs } from "@mahiru/ui/public/constants/errs";
 import { Log } from "@mahiru/ui/public/utils/dev";
-import { RoutePathConstants } from "@mahiru/ui/main/constants";
+import { RoutePathConstants } from "@mahiru/ui/windows/main/constants";
 
 export interface KeepAliveCtxType {
   activeKey?: string;

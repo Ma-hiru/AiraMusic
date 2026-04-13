@@ -19,7 +19,7 @@ const LyricTips: FC<LyricTipsProps> = ({ tips, crossAlign }) => {
         crossAlign === "center" && "text-center",
         crossAlign === "right" && "text-right"
       )}>
-      歌词贡献者：{tips}
+      {tips}
     </div>
   );
 };

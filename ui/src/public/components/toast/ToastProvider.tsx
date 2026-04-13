@@ -1,11 +1,10 @@
 import { FC, memo, startTransition, useCallback, useLayoutEffect, useMemo, useState } from "react";
 import { AnimatePresence, HTMLMotionProps, motion, MotionStyle } from "motion/react";
 import { useThemeColor } from "@mahiru/ui/public/hooks/useThemeColor";
-
 import ToastItem, { ToastItemData } from "@mahiru/ui/public/components/toast/ToastItem";
-import AppUI from "@mahiru/ui/public/entry/ui";
 import { cx } from "@emotion/css";
-import AppToast from "@mahiru/ui/public/entry/toast";
+import AppUI from "@mahiru/ui/public/player/ui";
+import AppToast from "./use";
 
 const ToastProvider: FC<{ className?: string }> = ({ className }) => {
   const [items, setItems] = useState<ToastItemData[]>([]);

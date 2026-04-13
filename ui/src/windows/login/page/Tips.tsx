@@ -1,0 +1,62 @@
+import { FC, memo, useMemo } from "react";
+import { QRCodeStatus } from "@mahiru/ui/windows/login/hooks/useLoginQRCode";
+import { NeteaseImageSize } from "@mahiru/ui/public/enum";
+import { NeteaseNetworkImage } from "@mahiru/ui/public/source/netease/models";
+import NeteaseImage from "@mahiru/ui/public/components/image/NeteaseImage";
+
+interface TipsProps {
+  status: QRCodeStatus;
+  result: Nullable<NeteaseAPI.NeteaseLoginQrCheckResponse>;
+}
+
+const Tips: FC<TipsProps> = ({ status, result }) => {
+  const image = useMemo(
+    () =>
+      NeteaseNetworkImage.fromURL(result?.avatarUrl)
+        ?.setSize(NeteaseImageSize.sm)
+        ?.setAlt(result?.nickname),
+    [result?.avatarUrl, result?.nickname]
+  );
+  return (
+    <div className="flex justify-center items-center flex-col">
+      {status !== QRCodeStatus.WAITING_CONFIRM && (
+        <div className="flex justify-center items-center flex-col">
+          <img src="/images/netease-music.png" alt="netease-music" className="size-10" />
+          <span className="font-bold mt-4">登录网易云音乐</span>
+          <span className="text-xs text-gray-600/50 mt-1">{mapQRCodeStatusToText(status)}</span>
+        </div>
+      )}
+      {status === QRCodeStatus.WAITING_CONFIRM && (
+        <div className="flex justify-center items-center flex-col">
+          <NeteaseImage
+            cache={false}
+            image={image}
+            className="size-10 rounded-full"
+            shadowColor={"light"}
+          />
+          <span className="font-bold mt-4">{result?.nickname}</span>
+        </div>
+      )}
+    </div>
+  );
+};
+export default memo(Tips);
+
+function mapQRCodeStatusToText(status: QRCodeStatus) {
+  switch (status) {
+    case QRCodeStatus.WAITING_SCAN:
+      return "等待扫描";
+    case QRCodeStatus.WAITING_CONFIRM:
+      return "等待确认";
+    case QRCodeStatus.AUTHORIZED:
+      return "已授权";
+    case QRCodeStatus.EXPIRED:
+      return "二维码已过期";
+    case QRCodeStatus.ERROR:
+      return "登录出错";
+    case QRCodeStatus.INITIALIZED:
+      return "初始化";
+    default:
+      return "未知状态";
+  }
+}

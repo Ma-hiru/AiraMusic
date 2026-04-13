@@ -2,6 +2,7 @@ import AppTypedRendererIPC from "./typed";
 
 export const rendererInvokeAPI = {
   selectPath: (data) => AppTypedRendererIPC.invoke("selectPath", data),
+  saveFile: (data) => AppTypedRendererIPC.invoke("saveFile", data),
   GPUInfo: () => AppTypedRendererIPC.invoke("GPUInfo"),
   isMaximized: (type) => AppTypedRendererIPC.invoke("isMaximized", type),
   platform: () => AppTypedRendererIPC.invoke("platform"),

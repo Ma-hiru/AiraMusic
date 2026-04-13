@@ -1,7 +1,7 @@
 import { FC, memo } from "react";
 import { css, cx } from "@emotion/css";
 import { ColorInstance } from "color";
-import { NeteaseTrackRecord } from "@mahiru/ui/public/models/netease";
+import { NeteaseTrackRecord } from "@mahiru/ui/public/source/netease/models";
 
 interface ListItemNameProps {
   track: NeteaseTrackRecord;

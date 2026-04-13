@@ -31,9 +31,9 @@
   import { AppWindow as AppWindowIcon, Minus, Square, SquareMinus, X } from "lucide-vue-next";
   import { isDev } from "@mahiru/ui/public/utils/dev";
   import useListenableHookVue from "@mahiru/ui/public/hooks/useListenableHookVue";
-  import AppWindow from "@mahiru/ui/public/entry/window";
+  import ElectronServices from "@mahiru/ui/public/source/electron/services";
 
-  const currentWindow = useListenableHookVue(AppWindow.current);
+  const currentWindow = useListenableHookVue(ElectronServices.Window.current);
 
   const props = withDefaults(
     defineProps<{

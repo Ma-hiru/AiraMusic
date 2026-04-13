@@ -1,7 +1,7 @@
 import { useCallback, useMemo } from "react";
 import { useUserStore } from "@mahiru/ui/public/store/user";
-import { NeteaseTrack, NeteaseUser } from "@mahiru/ui/public/models/netease";
-import NCM_API from "@mahiru/ui/public/api";
+import { NeteaseTrack, NeteaseUser } from "@mahiru/ui/public/source/netease/models";
+import NeteaseAPI from "@mahiru/ui/public/source/netease/api";
 
 export const useHeart = () => {
   const { _user, updateUser } = useUserStore();
@@ -29,7 +29,7 @@ export const useHeart = () => {
           }
         })
       );
-      void NCM_API.Track.star({
+      void NeteaseAPI.Track.star({
         id: track.id,
         like: !isLiked
       });

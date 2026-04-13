@@ -7,6 +7,25 @@ use wasm_bindgen::prelude::wasm_bindgen;
 pub struct LyricLineInfo;
 
 #[wasm_bindgen]
+pub struct BackChorusWithMultiLine {
+    pub start: usize,
+    pub end: usize,
+}
+impl From<(usize, usize)> for BackChorusWithMultiLine {
+    fn from(value: (usize, usize)) -> Self {
+        BackChorusWithMultiLine {
+            start: value.0,
+            end: value.1,
+        }
+    }
+}
+impl From<BackChorusWithMultiLine> for (usize, usize) {
+    fn from(value: BackChorusWithMultiLine) -> Self {
+        (value.start, value.end)
+    }
+}
+
+#[wasm_bindgen]
 impl LyricLineInfo {
     #[wasm_bindgen]
     #[allow(non_snake_case)]
@@ -36,6 +55,40 @@ impl LyricLineInfo {
         PREDICT_CHARS
             .iter()
             .any(|(l, r)| (!start || line.starts_with(l)) && (!end || line.ends_with(r)))
+    }
+
+    #[wasm_bindgen]
+    #[allow(non_snake_case)]
+    pub fn isBackChorusWithMultiLine(lines: Vec<String>) -> Vec<BackChorusWithMultiLine> {
+        let mut res: Vec<(usize, usize)> = vec![];
+        let lines = lines
+            .iter()
+            .map(|l| l.trim().to_string())
+            .collect::<Vec<String>>();
+
+        let mut start = std::collections::VecDeque::new();
+        let mut end = std::collections::VecDeque::new();
+        for (i, line) in lines.into_iter().enumerate() {
+            if Self::match_back_chorus(&line, true, false)
+                && !Self::match_back_chorus(&line, false, true)
+            {
+                start.push_back(i);
+            } else if !Self::match_back_chorus(&line, true, false)
+                && Self::match_back_chorus(&line, false, true)
+            {
+                end.push_back(i);
+            }
+        }
+
+        while !start.is_empty() && !end.is_empty() {
+            let s = start.pop_back().unwrap();
+            let e = end.pop_front().unwrap();
+            if s < e {
+                res.push((s, e));
+            }
+        }
+
+        res.into_iter().map(From::from).collect()
     }
 }
 
@@ -176,36 +229,15 @@ impl Lyric {
     }
 
     fn is_back_chorus_with_multi_line(&self) -> Vec<(usize, usize)> {
-        let lines = self
-            .data
-            .iter()
-            .map(|l| l.line_to_string().trim().to_string())
-            .collect::<Vec<String>>();
-        let mut res: Vec<(usize, usize)> = vec![];
-
-        let mut start = std::collections::VecDeque::new();
-        let mut end = std::collections::VecDeque::new();
-        for (i, line) in lines.into_iter().enumerate() {
-            if LyricLineInfo::match_back_chorus(&line, true, false)
-                && !LyricLineInfo::match_back_chorus(&line, false, true)
-            {
-                start.push_back(i);
-            } else if !LyricLineInfo::match_back_chorus(&line, true, false)
-                && LyricLineInfo::match_back_chorus(&line, false, true)
-            {
-                end.push_back(i);
-            }
-        }
-
-        while !start.is_empty() && !end.is_empty() {
-            let s = start.pop_back().unwrap();
-            let e = end.pop_front().unwrap();
-            if s < e {
-                res.push((s, e));
-            }
-        }
-
-        res
+        LyricLineInfo::isBackChorusWithMultiLine(
+            self.data
+                .iter()
+                .map(|l| l.line_to_string().trim().to_string())
+                .collect::<Vec<String>>(),
+        )
+        .into_iter()
+        .map(From::from)
+        .collect()
     }
 }
 

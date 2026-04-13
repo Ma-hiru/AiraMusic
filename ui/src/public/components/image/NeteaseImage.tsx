@@ -14,10 +14,10 @@ import { cx } from "@emotion/css";
 import {
   NeteaseLocalImage,
   NeteaseNetworkImage
-} from "@mahiru/ui/public/models/netease/NeteaseImage";
-import NeteaseSource from "@mahiru/ui/public/entry/source";
+} from "@mahiru/ui/public/source/netease/models/NeteaseImage";
 import { NeteaseImageSize } from "@mahiru/ui/public/enum";
-import AppWindow from "@mahiru/ui/public/entry/window";
+import NeteaseServices from "@mahiru/ui/public/source/netease/services";
+import ElectronServices from "@mahiru/ui/public/source/electron/services";
 
 type ShadowLevel = "none" | "base" | "float";
 
@@ -123,7 +123,7 @@ const NeteaseImage: FC<ImageProps> = ({
   const wrapClick = useCallback(
     (e: ReactMouseEvent<HTMLImageElement>) => {
       if (preview && image) {
-        const imageWindow = AppWindow.from("image");
+        const imageWindow = ElectronServices.Window.from("image");
         const sendImage = image.toNetworkImage().setSize(NeteaseImageSize.raw);
         imageWindow.openThen(() => {
           imageWindow.focus();
@@ -164,7 +164,7 @@ const NeteaseImage: FC<ImageProps> = ({
 
   useEffect(() => {
     if (pause || !image?.src || (cacheLazy && !visible)) return;
-    NeteaseSource.Image.try(image, cache).then((local) => {
+    NeteaseServices.Image.try(image, cache).then((local) => {
       if (local) setSource(local);
       else setSource(image);
     });

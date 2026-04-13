@@ -43,8 +43,22 @@ const mainInvokeAPI = {
       };
     }
   },
+  saveFile: async (_, { buffer, name }) => {
+    const { canceled, filePath } = await dialog.showSaveDialog({
+      title: "保存文件",
+      defaultPath: name
+    });
+    if (canceled) return { ok: false, error: "取消保存" };
+    if (!filePath) return { ok: false, error: "无效路径" };
+    try {
+      await Fs.writeFile(filePath, Buffer.from(buffer));
+      return { ok: true };
+    } catch (e) {
+      return { ok: false, error: String(e) };
+    }
+  },
   GPUInfo: async () => app.whenReady().then(() => app.getGPUInfo("complete")),
-  isMaximized: (e, type) => {
+  isMaximized: (_, type) => {
     return AppWindowManager.get(type)?.isMaximized() ?? false;
   },
   platform: () => process.platform,

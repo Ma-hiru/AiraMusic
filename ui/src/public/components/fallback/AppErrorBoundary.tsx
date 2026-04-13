@@ -1,10 +1,10 @@
-import AppWindow from "@mahiru/ui/public/entry/window";
 import { FC, memo, ReactNode, useCallback, useRef } from "react";
 import { ErrorBoundary, FallbackProps } from "react-error-boundary";
 import { Log } from "@mahiru/ui/public/utils/dev";
 import { cx } from "@emotion/css";
 import { CircleX } from "lucide-react";
-import AppToast from "../../entry/toast";
+import AppToast from "../toast";
+import ElectronServices from "@mahiru/ui/public/source/electron/services";
 
 interface AppErrorBoundaryProps {
   name: string;
@@ -42,8 +42,11 @@ const AppErrorBoundary: FC<AppErrorBoundaryProps> = ({
       Log.error(`AppErrorBoundary(${name})`, error);
 
       if (panic) {
-        AppWindow.panic(panicMessage || `AppErrorBoundary(${name})`, Log.format(error));
-        AppWindow.current.close();
+        ElectronServices.Window.panic(
+          panicMessage || `AppErrorBoundary(${name})`,
+          Log.format(error)
+        );
+        ElectronServices.Window.current.close();
         return null;
       }
 
@@ -55,8 +58,11 @@ const AppErrorBoundary: FC<AppErrorBoundaryProps> = ({
       } else if (resetCount.current >= autoResetMaxCount) {
         Log.error(`AppErrorBoundary(${name}) exceeded auto reset limit`);
         if (panicAfterReset) {
-          AppWindow.panic(panicMessage || `AppErrorBoundary(${name})`, Log.format(error));
-          AppWindow.current.close();
+          ElectronServices.Window.panic(
+            panicMessage || `AppErrorBoundary(${name})`,
+            Log.format(error)
+          );
+          ElectronServices.Window.current.close();
           return null;
         }
       }

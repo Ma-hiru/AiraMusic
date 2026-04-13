@@ -1,7 +1,7 @@
 import { useActionState } from "react";
 import { CommentSort, CommentType } from "@mahiru/ui/public/enum";
 import { Log } from "@mahiru/ui/public/utils/dev";
-import NCM_API from "@mahiru/ui/public/api";
+import NeteaseAPI from "@mahiru/ui/public/source/netease/api";
 
 export function useComments() {
   return useActionState<CommentState, requestCommentProps>(
@@ -16,7 +16,7 @@ export function useComments() {
         });
       }
       try {
-        const response = await NCM_API.Comment.get({
+        const response = await NeteaseAPI.Comment.get({
           id,
           pageSize,
           pageNo,

@@ -14,7 +14,7 @@ import { LyricTimeManager } from "./LyricTimeManager";
 import { debounce } from "lodash-es";
 
 import LyricLine from "./LyricLine";
-import AppUI from "@mahiru/ui/public/entry/ui";
+import AppUI from "@mahiru/ui/public/player/ui";
 import LyricTips from "@mahiru/ui/public/components/lyric/LyricTips";
 
 export interface LyricRef {
@@ -141,6 +141,8 @@ const LyricContainer: FC<LyricContainerProps> = ({
     calcLayout();
   }, [calcLayout, rmActive, tlActive, mainAlign, crossAlign]);
 
+  const lyricLines = lyric?.data ?? [];
+
   return (
     <div
       ref={containerRef}
@@ -153,8 +155,8 @@ const LyricContainer: FC<LyricContainerProps> = ({
       `,
         className
       )}>
-      <div className="h-[55%]" />
-      {(lyric?.data ?? []).map((line, index) => (
+      <div className={cx("h-[55%]", lyricLines.length === 0 && "h-0")} />
+      {lyricLines.map((line, index) => (
         <LyricLine
           key={index}
           line={line}
@@ -173,7 +175,7 @@ const LyricContainer: FC<LyricContainerProps> = ({
           spring={spring}
         />
       ))}
-      <div className="h-[55%] pt-10">
+      <div className={cx("h-[55%] pt-10", lyricLines.length === 0 && "h-0 pt-0")}>
         <LyricTips crossAlign={crossAlign} tips={lyric?.tips} />
       </div>
     </div>
