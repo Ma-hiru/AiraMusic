@@ -9,6 +9,7 @@ pub struct LyricWord {
     pub startTime: i32,
     pub endTime: i32,
     pub word: String,
+    pub inlineNote: Option<bool>,
 }
 
 #[derive(Tsify, Serialize, Deserialize, Debug, Clone)]
@@ -27,4 +28,5 @@ pub struct Lyric {
     pub data: Vec<LyricLine>,
     pub rmExisted: bool,
     pub tlExisted: bool,
+    pub noteExisted: bool,
 }

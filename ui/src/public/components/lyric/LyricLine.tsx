@@ -9,6 +9,7 @@ interface LyricLineProps {
   line: LyricLine;
   rmActive: Optional<boolean>;
   tlActive: Optional<boolean>;
+  noteActive: Optional<boolean>;
   hasRm: Optional<boolean>;
   hasTl: Optional<boolean>;
   timeManager: LyricTimeManager;
@@ -25,6 +26,7 @@ const LyricLine: FC<LyricLineProps> = ({
   line,
   rmActive,
   tlActive,
+  noteActive,
   hasRm,
   hasTl,
   timeManager,
@@ -41,7 +43,6 @@ const LyricLine: FC<LyricLineProps> = ({
     if (crossAlign === "left" || crossAlign === "center") crossAlign = "right";
     else if (crossAlign === "right") crossAlign = "left";
   }
-
   const [wordIndex, setWordIndex] = useState(-1);
 
   const onClickLine = useCallback(() => {
@@ -65,7 +66,10 @@ const LyricLine: FC<LyricLineProps> = ({
       result = {
         startTime: line.words[0]!.startTime,
         endTime: line.words[line.words.length - 1]!.endTime,
-        word: line.words.map((w) => w.word).join("")
+        word: line.words
+          .filter((w) => !w.inlineNote)
+          .map((w) => w.word)
+          .join("")
       };
     }
     return result;
@@ -91,7 +95,7 @@ const LyricLine: FC<LyricLineProps> = ({
         `
           w-full px-4 py-1 rounded-md hover:blur-none hover:bg-white/20
           duration-500 ease-in-out transition-all
-          contain-content leading-7
+          contain-layout leading-7
     `,
         active ? "text-white" : "text-white/30 blur-[2px]"
       )}>
@@ -101,7 +105,7 @@ const LyricLine: FC<LyricLineProps> = ({
           `
             text-wrap select-none
             duration-500 ease-in-out transition-all
-            contain-content
+            contain-layout
             font-semibold text-3xl
         `,
           active && "font-medium",
@@ -111,21 +115,36 @@ const LyricLine: FC<LyricLineProps> = ({
           crossAlign === "right" && "text-right"
         )}>
         {active ? (
-          line.words.map((word, index) => (
-            <LyricWord
-              key={index}
-              word={word}
-              activeColor={activeColor}
-              inactiveColor={inactiveColor}
-              fontSize={fontSize}
-              wordIndex={index}
-              currentWordIndex={wordIndex}
-              onClick={onClick}
-              lineActive={active}
-              singleWord={line.words.length === 1}
-              timeManager={timeManager}
-            />
-          ))
+          line.words.map((word, index) => {
+            let inlineNoteContent = "";
+            if (noteActive && !word.inlineNote && line.words[index + 1]?.inlineNote) {
+              for (let i = index + 1; i < line.words.length; i++) {
+                if (line.words[i]?.inlineNote) {
+                  inlineNoteContent += line.words[i]!.word;
+                } else {
+                  break;
+                }
+              }
+            }
+            return (
+              !word.inlineNote && (
+                <LyricWord
+                  key={index}
+                  word={word}
+                  notesContent={inlineNoteContent || undefined}
+                  activeColor={activeColor}
+                  inactiveColor={inactiveColor}
+                  fontSize={fontSize}
+                  wordIndex={index}
+                  currentWordIndex={wordIndex}
+                  onClick={onClick}
+                  lineActive={active}
+                  singleWord={line.words.length === 1}
+                  timeManager={timeManager}
+                />
+              )
+            );
+          })
         ) : (
           <LyricWord
             singleWord

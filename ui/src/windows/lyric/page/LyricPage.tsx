@@ -175,6 +175,7 @@ export default function LyricPage() {
             fontSize={fontSize}
             rmActive={playerBus.data?.rmActive}
             tlActive={playerBus.data?.tlActive}
+            noteActive={playerBus.data?.noteActive}
             activeColor={(color ?? infoBus.data?.theme.mainColor) || "#ffffff"}
           />
         </div>

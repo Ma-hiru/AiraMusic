@@ -5,7 +5,7 @@ import { CacheStore } from "@mahiru/ui/public/store/cache";
 
 export default class _NeteaseLyricSource {
   //region cache
-  private static readonly cacheKey = "netease_lyric_v7";
+  private static readonly cacheKey = "netease_lyric_v9";
 
   private static storeCache(id: number, lyric: NeteaseLyricModel) {
     return CacheStore.object.store<NeteaseLyricModel>(
@@ -19,7 +19,7 @@ export default class _NeteaseLyricSource {
   }
   //endregion
 
-  static async fromID(id: number) {
+  static async id(id: number) {
     const cache = await _NeteaseLyricSource.getCache(id);
     if (cache) return new NeteaseLyric(cache);
 
@@ -43,7 +43,7 @@ export default class _NeteaseLyricSource {
     return lyric;
   }
 
-  static fromTrack(track: NeteaseTrack) {
-    return _NeteaseLyricSource.fromID(track.id);
+  static track(track: NeteaseTrack) {
+    return _NeteaseLyricSource.id(track.id);
   }
 }

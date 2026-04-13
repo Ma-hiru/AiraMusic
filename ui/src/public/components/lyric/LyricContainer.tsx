@@ -28,6 +28,7 @@ interface LyricContainerProps {
   lyric: Optional<NeteaseLyricModel>;
   rmActive: Optional<boolean>;
   tlActive: Optional<boolean>;
+  noteActive: Optional<boolean>;
   playing?: Optional<boolean>;
   className?: string;
   onWordClick?: NormalFunc<[startTime: number]>;
@@ -44,6 +45,7 @@ const LyricContainer: FC<LyricContainerProps> = ({
   lyric,
   rmActive,
   tlActive,
+  noteActive,
   className,
   onWordClick,
   activeColor,
@@ -91,7 +93,7 @@ const LyricContainer: FC<LyricContainerProps> = ({
       scrollTop = lineOffsetTop - containerHeight / 2 + lineHeight / 2;
     }
 
-    AppUI.smoothScrollTo(container, scrollTop);
+    return AppUI.smoothScrollTo(container, scrollTop);
   }, []);
 
   // 歌词变化时，重置时间管理器和当前行
@@ -139,7 +141,7 @@ const LyricContainer: FC<LyricContainerProps> = ({
   // 布局参数变化时，计算布局
   useEffect(() => {
     calcLayout();
-  }, [calcLayout, rmActive, tlActive, mainAlign, crossAlign]);
+  }, [calcLayout, rmActive, tlActive, mainAlign, crossAlign, noteActive]);
 
   const lyricLines = lyric?.data ?? [];
 
@@ -162,6 +164,7 @@ const LyricContainer: FC<LyricContainerProps> = ({
           line={line}
           rmActive={rmActive}
           tlActive={tlActive}
+          noteActive={noteActive}
           hasRm={lyric?.rmExisted}
           hasTl={lyric?.tlExisted}
           activeColor={activeColor}

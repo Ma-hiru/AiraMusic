@@ -195,7 +195,7 @@ const PlaylistPage: FC<object> = () => {
     if (source === "normal" || source === "like") {
       const playlistID = source === "like" ? user?.likedPlaylist.id : Number(id);
       playlistID &&
-        NeteaseServices.Playlist.fromID(playlistID)
+        NeteaseServices.Playlist.id(playlistID)
           .then((list) => {
             startTransition(() => {
               if (cancel) return;

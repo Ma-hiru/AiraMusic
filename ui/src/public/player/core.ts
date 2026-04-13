@@ -97,6 +97,7 @@ export default class AppPlayer extends Listenable {
       cover: Nullable<NeteaseNetworkImage | NeteaseLocalImage>;
       rmActive?: boolean;
       tlActive?: boolean;
+      noteActive?: boolean;
     };
   }) {
     super();
@@ -109,7 +110,8 @@ export default class AppPlayer extends Listenable {
       audio: null,
       cover: null,
       rmActive: false,
-      tlActive: false
+      tlActive: false,
+      noteActive: false
     };
     this._status = props?.status || AppPlayerStatus.idle;
     this.disconnect = this.connect();
@@ -227,7 +229,7 @@ export default class AppPlayer extends Listenable {
   }
 
   private async loadLyric(track: NeteaseTrack) {
-    return NeteaseServices.Lyric.fromTrack(track);
+    return NeteaseServices.Lyric.track(track);
   }
 
   static save(instance: AppPlayer) {
@@ -266,11 +268,13 @@ export default class AppPlayer extends Listenable {
     this.history[Symbol.dispose]();
   }
 
-  public toggleLyric(next: "rm" | "tl") {
+  public toggleLyric(next: "rm" | "tl" | "note") {
     if (next === "rm" && this.current.lyric?.rmExisted) {
       this.current.rmActive = !this.current.rmActive;
     } else if (next === "tl" && this.current.lyric?.tlExisted) {
       this.current.tlActive = !this.current.tlActive;
+    } else if (next === "note" && this.current.lyric?.noteExisted) {
+      this.current.noteActive = !this.current.noteActive;
     }
     this.executeListeners();
   }

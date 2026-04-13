@@ -6,6 +6,7 @@ interface LyricWordProps {
   word: LyricWord;
   wordIndex: number;
   currentWordIndex: number;
+  notesContent?: string;
   activeColor?: string;
   inactiveColor?: string;
   fontSize?: FontSize | number;
@@ -18,6 +19,7 @@ interface LyricWordProps {
 const LyricWord: FC<LyricWordProps> = ({
   word,
   wordIndex,
+  notesContent,
   currentWordIndex,
   lineActive = false,
   singleWord = false,
@@ -96,23 +98,40 @@ const LyricWord: FC<LyricWordProps> = ({
   );
 
   return (
-    <span
-      ref={spanRef}
-      style={style}
-      onClick={handleClick}
-      className={cx(
-        `
-          lyric-word font-normal whitespace-pre-wrap
+    <span className="inline-block relative">
+      <span
+        ref={spanRef}
+        style={style}
+        onClick={handleClick}
+        className={cx(
+          `
+          lyric-word font-semibold whitespace-pre-wrap
         `,
-        // 单行歌词高亮时直接变色
-        singleWord && (active ? "text-white" : "text-white/30"),
-        // 非单行歌词且未高亮时模糊
-        !singleWord && wordIndex > currentWordIndex ? "blur-[1.5px]" : "blur-none",
-        !singleWord && wordIndex === currentWordIndex && active
-          ? "lyric-word-active"
-          : "lyric-word-inactive"
-      )}>
-      {word.word}
+          // 单行歌词高亮时直接变色
+          singleWord && (active ? "text-white" : "text-white/30"),
+          // 非单行歌词且未高亮时模糊
+          !singleWord && wordIndex > currentWordIndex ? "blur-[1.5px]" : "blur-none",
+          !singleWord && wordIndex === currentWordIndex && active
+            ? "lyric-word-active"
+            : "lyric-word-inactive"
+        )}>
+        {word.word}
+      </span>
+      {notesContent && (
+        <span
+          className={cx(
+            `absolute left-1/2 -translate-x-1/2 -translate-y-full top-1/3 z-10 whitespace-nowrap scale-45`,
+            // 单行歌词高亮时直接变色
+            singleWord && (active ? "text-white" : "text-white/30"),
+            // 非单行歌词且未高亮时模糊
+            !singleWord && wordIndex > currentWordIndex ? "blur-[1.5px]" : "blur-none",
+            !singleWord && wordIndex === currentWordIndex && active
+              ? "lyric-word-active"
+              : "lyric-word-inactive"
+          )}>
+          {notesContent}
+        </span>
+      )}
     </span>
   );
 };

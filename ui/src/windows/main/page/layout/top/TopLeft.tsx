@@ -41,6 +41,18 @@ const TopLeft: FC<TopLeftProps> = ({ user, layout }) => {
       }
     }
   }, [layout, updateLayout]);
+
+  const AvatarImage = useMemo(() => {
+    return (
+      <NeteaseImage
+        cacheLazy={false}
+        preview={false}
+        cache={true}
+        image={avatar}
+        className="size-6.5 rounded-full"
+      />
+    );
+  }, [avatar]);
   return (
     <div className="w-40 h-full text-black">
       <AnimatePresence>
@@ -49,8 +61,8 @@ const TopLeft: FC<TopLeftProps> = ({ user, layout }) => {
             key="user"
             className="w-full h-full flex flex-row px-3 relative top-1 select-none"
             initial={{ opacity: 0 }}
-            exit={{ opacity: 0, transition: { ease: "easeInOut", duration: 0.3 } }}
-            animate={{ opacity: 1, transition: { ease: "easeInOut", duration: 0.3 } }}>
+            exit={{ opacity: 0, transition: { ease: "easeIn", duration: 0.6 } }}
+            animate={{ opacity: 1, transition: { ease: "easeIn", duration: 0.6 } }}>
             <div
               className={`
                 w-[calc(50%-var(--spacing)*3)] flex justify-center items-center
@@ -59,12 +71,7 @@ const TopLeft: FC<TopLeftProps> = ({ user, layout }) => {
               `}>
               {user?.isLoggedIn ? (
                 <NoDrag className="rounded-full" onClick={onClick}>
-                  <NeteaseImage
-                    preview={false}
-                    cache={true}
-                    image={avatar}
-                    className="size-6.5 rounded-full"
-                  />
+                  {AvatarImage}
                 </NoDrag>
               ) : (
                 <NoDrag onClick={onClick}>
@@ -94,8 +101,8 @@ const TopLeft: FC<TopLeftProps> = ({ user, layout }) => {
             key="back"
             className="w-20 h-full flex items-center justify-center  cursor-pointer"
             initial={{ opacity: 0 }}
-            exit={{ opacity: 0, transition: { ease: "easeInOut", duration: 0.3 } }}
-            animate={{ opacity: 1, transition: { ease: "easeInOut", duration: 0.3 } }}>
+            exit={{ opacity: 0, transition: { ease: "easeIn", duration: 0.6 } }}
+            animate={{ opacity: 1, transition: { ease: "easeIn", duration: 0.6 } }}>
             <NoDrag onClick={onClick}>
               <ChevronDown className="size-5 hover:opacity-50 active:scale-90 ease-in-out duration-300 transition-all text-white" />
             </NoDrag>

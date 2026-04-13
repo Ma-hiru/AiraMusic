@@ -46,6 +46,8 @@ interface LyricWord {
   endTime: number;
   /** 单词内容 */
   word: string;
+  /** 是否为内嵌注释，比如日文汉字的平假名和片假名 */
+  inlineNote?: boolean;
 }
 
 /** 一行歌词，存储多个单词 */
@@ -75,4 +77,5 @@ type NeteaseLyricModel = {
   id?: number;
   rmExisted: boolean;
   tlExisted: boolean;
+  noteExisted: boolean;
 };

@@ -18,7 +18,7 @@ export default class NeteaseAuth {
   }
 
   static login(cookies: Optional<string>) {
-    return NeteaseServices.User.fromCookies(cookies)
+    return NeteaseServices.User.cookies(cookies)
       .then(NeteaseAuth.update)
       .catch((err) => {
         Log.error(`fetch user info failed: ${err}`);

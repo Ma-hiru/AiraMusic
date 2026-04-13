@@ -25,12 +25,14 @@ export class NeteaseLyric implements NeteaseLyricModel {
   readonly tips;
   readonly rmExisted;
   readonly tlExisted;
+  readonly noteExisted;
   readonly id;
 
   constructor(props: Partial<NeteaseLyricModel>) {
     this.data = props.data || [];
     this.rmExisted = props.rmExisted || false;
     this.tlExisted = props.tlExisted || false;
+    this.noteExisted = props.noteExisted || false;
     this.tips = props.tips || "";
     this.id = props.id;
   }
@@ -43,7 +45,10 @@ export class NeteaseLyric implements NeteaseLyricModel {
   get info() {
     return {
       rmExisted: this.rmExisted,
-      tlExisted: this.tlExisted
+      tlExisted: this.tlExisted,
+      noteExisted: this.noteExisted,
+      lineCount: this.data.length,
+      tips: this.tips
     };
   }
 
@@ -125,6 +130,15 @@ class Parser {
       }
     }
 
+    for (const line of res) {
+      const inlineNotes = LyricLineInfo.isInlineNote(line.words.map((w) => w.word));
+      for (const { start, end } of inlineNotes) {
+        for (let i = start; i <= end && i < line.words.length; i++) {
+          line.words[i]!.inlineNote = true;
+        }
+      }
+    }
+
     return res;
   }
 
@@ -192,7 +206,8 @@ class Parser {
       return <NeteaseLyricModel>{
         data: [],
         rmExisted: false,
-        tlExisted: false
+        tlExisted: false,
+        noteExisted: false
       };
     }
   }

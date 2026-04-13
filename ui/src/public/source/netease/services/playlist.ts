@@ -69,7 +69,7 @@ export default class _NeteasePlaylistSource {
     return response;
   }
 
-  static fromID(id: number, signal?: AbortSignal) {
+  static id(id: number, signal?: AbortSignal) {
     let cachedID = id;
     // 喜欢的歌曲歌单需要区分喜欢状态的变化，否则喜欢状态无法及时更新
     if (id === _NeteasePlaylistSource.likedPlaylistID) {
@@ -81,20 +81,20 @@ export default class _NeteasePlaylistSource {
     }
 
     return NeteaseAPI.Playlist.detail(id, signal)
-      .then((response) => _NeteasePlaylistSource.fromResponse(response))
+      .then((response) => _NeteasePlaylistSource.response(response))
       .then((response) => {
         this.memoryCache.set(cachedID, response);
         return response;
       });
   }
 
-  static fromResponse(response: NeteaseAPI.NeteasePlaylistDetailResponse) {
+  static response(response: NeteaseAPI.NeteasePlaylistDetailResponse) {
     return _NeteasePlaylistSource
       .requestFullTracks(response)
       .then(NeteasePlaylist.fromNeteaseAPIResponse);
   }
 
-  static fromSummary(summary: NeteasePlaylistSummary | NeteaseAPI.NeteasePlaylistSummary) {
-    return _NeteasePlaylistSource.fromID(summary.id);
+  static summary(summary: NeteasePlaylistSummary | NeteaseAPI.NeteasePlaylistSummary) {
+    return _NeteasePlaylistSource.id(summary.id);
   }
 }

@@ -38,6 +38,7 @@ pub fn parseNeteaseLyric(raw: JsValue, ts: JsValue, rm: JsValue) -> JsValue {
                     && line.romanLyric.is_empty())
             })
             .collect(),
+        noteExisted: false,
         rmExisted,
         tlExisted,
     };
@@ -135,6 +136,7 @@ mod tests {
                     word: input.into(),
                     startTime: 0,
                     endTime: 0,
+                    inlineNote: None,
                 }],
                 startTime: 0,
                 endTime: 0,

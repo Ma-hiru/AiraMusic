@@ -5,6 +5,7 @@ function getPreset(tips: string) {
     tlActive: false,
     rmExisted: false,
     tlExisted: false,
+    noteExisted: false,
     tips
   };
 }

@@ -3,95 +3,6 @@ use regex::Regex;
 use std::collections::HashMap;
 use wasm_bindgen::prelude::wasm_bindgen;
 
-#[wasm_bindgen]
-pub struct LyricLineInfo;
-
-#[wasm_bindgen]
-pub struct BackChorusWithMultiLine {
-    pub start: usize,
-    pub end: usize,
-}
-impl From<(usize, usize)> for BackChorusWithMultiLine {
-    fn from(value: (usize, usize)) -> Self {
-        BackChorusWithMultiLine {
-            start: value.0,
-            end: value.1,
-        }
-    }
-}
-impl From<BackChorusWithMultiLine> for (usize, usize) {
-    fn from(value: BackChorusWithMultiLine) -> Self {
-        (value.start, value.end)
-    }
-}
-
-#[wasm_bindgen]
-impl LyricLineInfo {
-    #[wasm_bindgen]
-    #[allow(non_snake_case)]
-    pub fn isBlank(line: String) -> bool {
-        line.trim().is_empty()
-    }
-
-    #[wasm_bindgen]
-    #[allow(non_snake_case)]
-    pub fn isBackChorus(line: String) -> bool {
-        Self::match_back_chorus(line.trim(), true, true)
-    }
-
-    pub fn match_back_chorus(line: &str, start: bool, end: bool) -> bool {
-        const PREDICT_CHARS: [(&str, &str); 9] = [
-            ("[", "]"),
-            ("(", ")"),
-            ("（", "）"),
-            ("【", "】"),
-            ("〖", "〗"),
-            ("「", "」"),
-            ("『", "』"),
-            ("\"", "\""),
-            ("'", "'"),
-        ];
-
-        PREDICT_CHARS
-            .iter()
-            .any(|(l, r)| (!start || line.starts_with(l)) && (!end || line.ends_with(r)))
-    }
-
-    #[wasm_bindgen]
-    #[allow(non_snake_case)]
-    pub fn isBackChorusWithMultiLine(lines: Vec<String>) -> Vec<BackChorusWithMultiLine> {
-        let mut res: Vec<(usize, usize)> = vec![];
-        let lines = lines
-            .iter()
-            .map(|l| l.trim().to_string())
-            .collect::<Vec<String>>();
-
-        let mut start = std::collections::VecDeque::new();
-        let mut end = std::collections::VecDeque::new();
-        for (i, line) in lines.into_iter().enumerate() {
-            if Self::match_back_chorus(&line, true, false)
-                && !Self::match_back_chorus(&line, false, true)
-            {
-                start.push_back(i);
-            } else if !Self::match_back_chorus(&line, true, false)
-                && Self::match_back_chorus(&line, false, true)
-            {
-                end.push_back(i);
-            }
-        }
-
-        while !start.is_empty() && !end.is_empty() {
-            let s = start.pop_back().unwrap();
-            let e = end.pop_front().unwrap();
-            if s < e {
-                res.push((s, e));
-            }
-        }
-
-        res.into_iter().map(From::from).collect()
-    }
-}
-
 /// 将 RawLyricLine 列表转换为 HashMap，键为 startTime，值为拼接后的歌词字符串
 pub fn split_lyric_as_map(lines: Vec<LyricLine>) -> HashMap<i32, String> {
     if lines.is_empty() {
@@ -110,6 +21,149 @@ pub fn split_lyric_as_map(lines: Vec<LyricLine>) -> HashMap<i32, String> {
                 },
             )
             .collect()
+    }
+}
+
+#[wasm_bindgen]
+pub struct IndexTuple {
+    pub start: usize,
+    pub end: usize,
+}
+impl From<(usize, usize)> for IndexTuple {
+    fn from(value: (usize, usize)) -> Self {
+        IndexTuple {
+            start: value.0,
+            end: value.1,
+        }
+    }
+}
+impl From<IndexTuple> for (usize, usize) {
+    fn from(value: IndexTuple) -> Self {
+        (value.start, value.end)
+    }
+}
+
+const PREDICATE_CHARS: [(&str, &str); 9] = [
+    ("[", "]"),
+    ("(", ")"),
+    ("（", "）"),
+    ("【", "】"),
+    ("〖", "〗"),
+    ("「", "」"),
+    ("『", "』"),
+    ("\"", "\""),
+    ("'", "'"),
+];
+
+#[wasm_bindgen]
+pub struct LyricLineInfo;
+#[wasm_bindgen]
+impl LyricLineInfo {
+    #[wasm_bindgen]
+    #[allow(non_snake_case)]
+    pub fn isBlank(line: String) -> bool {
+        line.trim().is_empty()
+    }
+
+    #[wasm_bindgen]
+    #[allow(non_snake_case)]
+    pub fn isBackChorus(line: String) -> bool {
+        Self::match_predicate_chars(line.trim(), true, true)
+    }
+
+    #[wasm_bindgen]
+    #[allow(non_snake_case)]
+    pub fn isBackChorusWithMultiLine(lines: Vec<String>) -> Vec<IndexTuple> {
+        let mut res: Vec<(usize, usize)> = vec![];
+        let lines = lines
+            .iter()
+            .map(|l| l.trim().to_string())
+            .collect::<Vec<String>>();
+
+        let mut start = std::collections::VecDeque::new();
+        let mut end = std::collections::VecDeque::new();
+        for (i, line) in lines.into_iter().enumerate() {
+            if Self::match_predicate_chars(&line, true, false)
+                && !Self::match_predicate_chars(&line, false, true)
+            {
+                start.push_back(i);
+            } else if !Self::match_predicate_chars(&line, true, false)
+                && Self::match_predicate_chars(&line, false, true)
+            {
+                end.push_back(i);
+            }
+        }
+
+        while !start.is_empty() && !end.is_empty() {
+            let s = start.pop_back().unwrap();
+            let e = end.pop_front().unwrap();
+            if s < e {
+                res.push((s, e));
+            }
+        }
+
+        res.into_iter().map(From::from).collect()
+    }
+
+    #[wasm_bindgen]
+    #[allow(non_snake_case)]
+    pub fn isInlineNote(words: Vec<String>) -> Vec<IndexTuple> {
+        let mut res = vec![];
+
+        let mut start = vec![];
+        let mut end = vec![];
+        for (i, word) in words.into_iter().enumerate() {
+            if Self::match_predicate_chars(&word, true, false) {
+                start.push(i);
+            } else if Self::match_predicate_chars(&word, false, true) {
+                end.push(i);
+            }
+        }
+
+        if start.len() != end.len() {
+            return res;
+        }
+        for (s, e) in start.into_iter().zip(end.into_iter()) {
+            res.push((s, e).into());
+        }
+
+        res
+    }
+
+    pub fn match_predicate_chars(line: &str, start: bool, end: bool) -> bool {
+        PREDICATE_CHARS
+            .iter()
+            .any(|(l, r)| (!start || line.starts_with(l)) && (!end || line.ends_with(r)))
+    }
+}
+
+impl Lyric {
+    pub fn update_extra_info(&mut self) {
+        for line in self.data.iter_mut() {
+            line.update_extra_info();
+        }
+        for (s, e) in self.is_back_chorus_with_multi_line() {
+            for i in s..=e {
+                self.data[i].isBackChorus = Some(true);
+            }
+        }
+        self.noteExisted = self
+            .data
+            .iter()
+            .map(|line| &line.words)
+            .any(|words| words.iter().any(|w| w.inlineNote.is_some()));
+    }
+
+    fn is_back_chorus_with_multi_line(&self) -> Vec<(usize, usize)> {
+        LyricLineInfo::isBackChorusWithMultiLine(
+            self.data
+                .iter()
+                .map(|l| l.line_to_string().trim().to_string())
+                .collect::<Vec<String>>(),
+        )
+        .into_iter()
+        .map(From::from)
+        .collect()
     }
 }
 
@@ -159,6 +213,27 @@ impl LyricLine {
 
     /// 更新额外信息
     pub fn update_extra_info(&mut self) {
+        let words = self
+            .words
+            .iter()
+            .map(|w| w.word.clone())
+            .collect::<Vec<String>>();
+        let note_index = LyricLineInfo::isInlineNote(words.clone())
+            .into_iter()
+            .map(From::from)
+            .collect::<Vec<(usize, usize)>>();
+
+        for (s, e) in note_index {
+            match words.get(s.saturating_sub(1)) {
+                Some(prev) if !prev.is_empty() => {
+                    for i in s..=e {
+                        self.words[i].inlineNote = Some(true);
+                    }
+                }
+                _ => continue,
+            };
+        }
+
         self.isBlank = Some(self.is_blank());
         self.isBackChorus = Some(self.is_back_chorus());
     }
@@ -213,31 +288,6 @@ impl LyricLine {
 
     fn is_blank(&self) -> bool {
         LyricLineInfo::isBlank(self.words.iter().map(|w| w.word.clone()).collect())
-    }
-}
-
-impl Lyric {
-    pub fn update_extra_info(&mut self) {
-        for line in self.data.iter_mut() {
-            line.update_extra_info();
-        }
-        for (s, e) in self.is_back_chorus_with_multi_line() {
-            for i in s..=e {
-                self.data[i].isBackChorus = Some(true);
-            }
-        }
-    }
-
-    fn is_back_chorus_with_multi_line(&self) -> Vec<(usize, usize)> {
-        LyricLineInfo::isBackChorusWithMultiLine(
-            self.data
-                .iter()
-                .map(|l| l.line_to_string().trim().to_string())
-                .collect::<Vec<String>>(),
-        )
-        .into_iter()
-        .map(From::from)
-        .collect()
     }
 }
 

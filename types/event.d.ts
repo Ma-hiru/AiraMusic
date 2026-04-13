@@ -86,6 +86,7 @@ type MessageTypeMap = {
     status: "playing" | "paused" | "error" | "idle" | "loading";
     rmActive: boolean;
     tlActive: boolean;
+    noteActive: boolean;
   };
   progressBus: {
     currentTime: number;

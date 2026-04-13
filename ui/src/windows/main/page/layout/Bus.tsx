@@ -23,6 +23,7 @@ const Bus: FC<object> = () => {
       shuffle: player.playlist.shuffle,
       rmActive: player.current?.rmActive || false,
       tlActive: player.current?.tlActive || false,
+      noteActive: player.current?.noteActive || false,
       status: player.statusText
     });
   }, [player, windowAll]);
