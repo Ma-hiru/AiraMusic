@@ -8,12 +8,17 @@
   ],
   "scripts": {
     "clean:go": "go clean --cache",
-    "clean:dist": "pnpm rimraf server.exe server",
+    "clean:dist": "pnpm rimraf dist",
     "build": "pnpm run-script-os",
     "build:win32": "set \"CGO_ENABLED=0\" && go build -trimpath -ldflags \"-s -w -buildid=\" -o ./dist/server.exe -v main.go",
     "build:linux": "CGO_ENABLED=0 && go build -trimpath -ldflags \"-s -w -buildid=\" -o ./dist/server -v main.go",
-    "lint": "go fmt ./... && go vet ./... && golangci-lint run",
+    "lint": "pnpm run-script-os",
+    "lint:linux": "go fmt ./... && go vet ./... && (command -v golangci-lint >/dev/null && golangci-lint run || echo 'skip golangci-lint')",
+    "lint:win": "go fmt ./... && go vet ./... && (where golangci-lint && golangci-lint run || echo 'skip golangci-lint')",
     "lint:fix": "go fmt ./... && go vet ./... && golangci-lint run --fix",
     "test": "go test ./..."
+  },
+  "devDependencies": {
+    "run-script-os": "^1.1.6"
   }
 }

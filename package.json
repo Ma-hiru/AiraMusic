@@ -26,13 +26,13 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "build": "pnpm check && pnpm lint && pnpm test && pnpm build:wasm && pnpm build:store && pnpm build:ui && pnpm build:app && pnpm build:electron",
+    "build": "pnpm lint && pnpm test && pnpm build:wasm && pnpm check && pnpm build:store && pnpm build:ui && pnpm build:app && pnpm build:electron",
     "dev": "pnpm run-p --race dev:ui dev:app dev:electron",
     "dev:ui": "pnpm --filter @mahiru/ui run dev",
     "dev:app": "pnpm --filter airamusic run dev",
     "dev:electron": "pnpm wait-on http://localhost:8827 && pnpm wait-on app/dist/app/main.mjs && pnpm electronmon ./app --inspect=9229",
     "clean": "pnpm clean:vite && pnpm clean:cargo && pnpm clean:go && pnpm clean:dist",
-    "clean:dist": "pnpm --filter @mahiru/wasm run clean:dist && pnpm --filter @mahiru/store run clean:dist && pnpm --filter @mahiru/ui run clean:dist && pnpm --filter airamusic run clean:dist",
+    "clean:dist": "pnpm rimraf dist && pnpm --filter @mahiru/wasm run clean:dist && pnpm --filter @mahiru/store run clean:dist && pnpm --filter @mahiru/ui run clean:dist && pnpm --filter airamusic run clean:dist",
     "clean:vite": "pnpm rimraf ./ui/node_modules/.vite",
     "clean:cargo": "pnpm --filter @mahiru/wasm run clean:cargo",
     "clean:go": "pnpm --filter @mahiru/store run clean:go",
@@ -54,10 +54,7 @@
     "lint:store": "pnpm --filter @mahiru/store run lint",
     "test": "pnpm test:wasm && pnpm test:store",
     "test:wasm": "pnpm --filter @mahiru/wasm run test",
-    "test:store": "pnpm --filter @mahiru/store run test",
-    "auto-commit": "pnpm run-script-os",
-    "auto-commit:win32": "pnpm exec pwsh ./scripts/git-commit.ps1",
-    "auto-commit:linux": "pnpm exec bash ./scripts/git-commit.sh"
+    "test:store": "pnpm --filter @mahiru/store run test"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
