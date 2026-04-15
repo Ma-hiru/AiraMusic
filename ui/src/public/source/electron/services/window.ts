@@ -1,10 +1,10 @@
 import { Listenable } from "@mahiru/ui/public/utils/listenable";
 import { isDev, Log } from "@mahiru/ui/public/utils/dev";
-import AppRenderer from "@mahiru/ui/public/source/electron/services/renderer";
+import _AppRenderer from "@mahiru/ui/public/source/electron/services/renderer";
 
-const _currentWindowType = await AppRenderer.Event.invoke.currentWindowType();
+const _currentWindowType = await _AppRenderer.Event.invoke.currentWindowType();
 
-export default class AppWindow extends Listenable {
+export default class _AppWindow extends Listenable {
   readonly type: WindowType;
   private readonly id: string;
   private _opened: boolean;
@@ -62,7 +62,7 @@ export default class AppWindow extends Listenable {
 
   get bounds() {
     const { promise, resolve } = Promise.withResolvers<InvokeEventMaps["currentWindowBounds"][1]>();
-    AppRenderer.Event.invoke
+    _AppRenderer.Event.invoke
       .currentWindowBounds()
       .then(resolve)
       .catch(() =>
@@ -80,7 +80,7 @@ export default class AppWindow extends Listenable {
     this._show = false;
     this._fullscreen = false;
     this.id = window.crypto.randomUUID();
-    AppRenderer.Message.listen(
+    _AppRenderer.Message.listen(
       "windowBus",
       "process",
       ({ type, action }) => {
@@ -141,13 +141,13 @@ export default class AppWindow extends Listenable {
         id: this.id
       }
     );
-    AppRenderer.Event.invoke.hasOpenInternalWindow(type).then((opened) => {
+    _AppRenderer.Event.invoke.hasOpenInternalWindow(type).then((opened) => {
       this.opened = opened;
     });
-    AppRenderer.Event.invoke.isMaximized(type).then((isMax) => {
+    _AppRenderer.Event.invoke.isMaximized(type).then((isMax) => {
       this.isMax = isMax;
     });
-    AppRenderer.Event.invoke.isFullscreen(type).then((isFullscreen) => {
+    _AppRenderer.Event.invoke.isFullscreen(type).then((isFullscreen) => {
       this.isFullscreen = isFullscreen;
     });
   }
@@ -192,11 +192,11 @@ export default class AppWindow extends Listenable {
       once?: boolean;
     }
   ): NormalFunc {
-    return AppRenderer.Message.listen(event, this.type, callback, options);
+    return _AppRenderer.Message.listen(event, this.type, callback, options);
   }
 
   remove(id: string) {
-    return AppRenderer.Message.remove(id);
+    return _AppRenderer.Message.remove(id);
   }
 
   listenAll<T extends keyof MessageTypeMap>(
@@ -207,15 +207,15 @@ export default class AppWindow extends Listenable {
       once?: boolean;
     }
   ): NormalFunc {
-    return AppRenderer.Message.listen(event, "all", callback, options);
+    return _AppRenderer.Message.listen(event, "all", callback, options);
   }
 
   send<T extends keyof MessageTypeMap>(type: T, data: MessageDataSend<T>["data"]) {
-    return AppRenderer.Message.send(type, this.type, data);
+    return _AppRenderer.Message.send(type, this.type, data);
   }
 
   open() {
-    AppRenderer.Event.normal.openInternalWindow(this.type);
+    _AppRenderer.Event.normal.openInternalWindow(this.type);
   }
 
   openThen(cb: NormalFunc) {
@@ -229,57 +229,57 @@ export default class AppWindow extends Listenable {
   }
 
   devTools() {
-    isDev && AppRenderer.Event.normal.openInternalDevTools(this.type);
+    isDev && _AppRenderer.Event.normal.openInternalDevTools(this.type);
   }
 
   close() {
-    AppRenderer.Event.normal.closeInternalWindow(this.type);
+    _AppRenderer.Event.normal.closeInternalWindow(this.type);
   }
 
   focus() {
-    AppRenderer.Event.normal.focusInternalWindow(this.type);
+    _AppRenderer.Event.normal.focusInternalWindow(this.type);
   }
 
   hide() {
-    AppRenderer.Event.normal.hiddenInternalWindow(this.type);
+    _AppRenderer.Event.normal.hiddenInternalWindow(this.type);
   }
 
   maximize() {
-    AppRenderer.Event.normal.maximizeInternalWindow(this.type);
+    _AppRenderer.Event.normal.maximizeInternalWindow(this.type);
   }
 
   unmaximize() {
-    AppRenderer.Event.normal.unmaximizeInternalWindow(this.type);
+    _AppRenderer.Event.normal.unmaximizeInternalWindow(this.type);
   }
 
   minimize() {
-    AppRenderer.Event.normal.minimizeInternalWindow(this.type);
+    _AppRenderer.Event.normal.minimizeInternalWindow(this.type);
   }
 
   unminimize() {
-    AppRenderer.Event.normal.unminimizeInternalWindow(this.type);
+    _AppRenderer.Event.normal.unminimizeInternalWindow(this.type);
   }
 
   show() {
-    AppRenderer.Event.normal.showInternalWindow(this.type);
+    _AppRenderer.Event.normal.showInternalWindow(this.type);
   }
 
   mousePenetrate(penetrate: boolean) {
-    AppRenderer.Event.normal.mousePenetrateInternalWindow({
+    _AppRenderer.Event.normal.mousePenetrateInternalWindow({
       type: this.type,
       penetrate
     });
   }
 
   resize(props: Partial<NormalEventMaps["resizeInternalWindow"]>) {
-    AppRenderer.Event.normal.resizeInternalWindow({
+    _AppRenderer.Event.normal.resizeInternalWindow({
       ...props,
       type: this.type
     });
   }
 
   move(props: Partial<NormalEventMaps["moveInternalWindow"]>) {
-    AppRenderer.Event.normal.moveInternalWindow({
+    _AppRenderer.Event.normal.moveInternalWindow({
       type: this.type,
       ...props
     });
@@ -295,15 +295,15 @@ export default class AppWindow extends Listenable {
 
   [Symbol.dispose]() {
     super[Symbol.dispose]();
-    AppRenderer.Message.remove(this.id);
+    _AppRenderer.Message.remove(this.id);
   }
 
-  private static winCache = new Map<WindowType, AppWindow>();
+  private static winCache = new Map<WindowType, _AppWindow>();
 
   static from(type: WindowType) {
     if (this.winCache.has(type)) return this.winCache.get(type)!;
 
-    const instance = new AppWindow(type);
+    const instance = new _AppWindow(type);
     this.winCache.set(type, instance);
     return instance;
   }
@@ -321,6 +321,6 @@ export default class AppWindow extends Listenable {
   }
 
   static panic(message: string, error?: string) {
-    AppRenderer.Event.normal.fatalError({ message, error });
+    _AppRenderer.Event.normal.fatalError({ message, error });
   }
 }

@@ -5,6 +5,7 @@ import NeteasePlaylistSource from "@mahiru/ui/public/source/netease/services/pla
 import NeteaseCommentSource from "@mahiru/ui/public/source/netease/services/comment";
 import NeteaseAudioSource from "@mahiru/ui/public/source/netease/services/audio";
 import NeteaseUserSource from "@mahiru/ui/public/source/netease/services/user";
+import NeteaseAuth from "@mahiru/ui/public/source/netease/services/auth";
 
 export default class NeteaseServices {
   static readonly Audio = NeteaseAudioSource;
@@ -14,4 +15,5 @@ export default class NeteaseServices {
   static readonly Playlist = NeteasePlaylistSource;
   static readonly Track = NeteaseTrackSource;
   static readonly User = NeteaseUserSource;
+  static readonly Auth = NeteaseAuth;
 }

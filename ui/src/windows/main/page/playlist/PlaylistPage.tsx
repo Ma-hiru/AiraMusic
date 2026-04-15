@@ -7,7 +7,7 @@ import {
   useMemo,
   useRef,
   useState,
-  useTransition
+  startTransition
 } from "react";
 import { useLocation, useSearchParams } from "react-router-dom";
 import { RoutePathConstants } from "@mahiru/ui/windows/main/constants";
@@ -33,13 +33,17 @@ import NeteaseServices from "@mahiru/ui/public/source/netease/services";
 import ImageConstants from "@mahiru/ui/windows/main/constants/image";
 import Top from "./top";
 import Divider from "./Divider";
+import AppErrorBoundary from "@mahiru/ui/public/components/fallback/AppErrorBoundary";
+import ThrowIf from "@mahiru/ui/public/components/fallback/ThrowIf";
+import { useUpdate } from "@mahiru/ui/public/hooks/useUpdate";
+import AppLoading from "@mahiru/ui/public/components/fallback/AppLoading";
 
 const PlaylistPage: FC<object> = () => {
   const user = useUser();
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const { id, source } = RoutePathConstants.playlistParse(location, searchParams);
-  const [isPending, startTransition] = useTransition();
+  const [status, setStatus] = useState<"error" | "loading" | "loaded">("loading");
 
   Log.debug(`PlaylistPage params: id=${id}, source=${source}`);
 
@@ -188,13 +192,29 @@ const PlaylistPage: FC<object> = () => {
     },
     [contextMenuAction, createTrackContextMenu, setContextMenuData, setContextMenuVisible]
   );
+  // 切换歌单时重置状态
+  const update = useUpdate();
+  const reload = useCallback(() => {
+    startTransition(() => {
+      setStatus("loading");
+      update();
+    });
+  }, [update]);
+  useEffect(() => {
+    startTransition(() => {
+      totalTracks.current = [];
+      searcher.update("[]");
+      setPlaylist(null);
+      setTracks([]);
+      setStatus("loading");
+    });
+  }, [id, source, searcher]);
   // 数据加载
-  const [firstRender, setFirstRender] = useState(true);
   useEffect(() => {
     let cancel = false;
     if (source === "normal" || source === "like") {
       const playlistID = source === "like" ? user?.likedPlaylist.id : Number(id);
-      playlistID &&
+      if (playlistID) {
         NeteaseServices.Playlist.id(playlistID)
           .then((list) => {
             startTransition(() => {
@@ -204,75 +224,86 @@ const PlaylistPage: FC<object> = () => {
               totalTracks.current = tracks;
               setPlaylist(list);
               setTracks(tracks);
+              setStatus("loaded");
             });
           })
           .catch((err) => {
+            if (cancel) return;
+            startTransition(() => setStatus("error"));
             Log.error(err);
             AppToast.request({
               type: "error",
               text: "请求错误"
             });
-          })
-          .finally(() => {
-            setFirstRender(false);
           });
+      }
     }
     if (source === "history") {
       totalTracks.current = player.history.list;
       startTransition(() => {
+        if (cancel) return;
         setPlaylist(null);
         setTracks(player.history.list);
+        setStatus("loaded");
         searcher.update(player.history.toSearchStruct());
-        setFirstRender(false);
       });
     }
     return () => {
       cancel = true;
     };
-  }, [id, player.history, searcher, source, user?.likedPlaylist.id]);
-  // 切换歌单时重置状态
-  useEffect(() => {
-    startTransition(() => {
-      totalTracks.current = [];
-      searcher.update("[]");
-      setPlaylist(null);
-      setTracks([]);
-    });
-  }, [id, source, searcher]);
+  }, [
+    id,
+    player.history,
+    searcher,
+    source,
+    user?.likedPlaylist.id,
+    // 手动添加reload依赖
+    update.count
+  ]);
 
   return (
     <div className="w-full h-full px-12 pt-5 contain-style contain-size contain-layout">
-      <Top
-        type={source!}
-        loading={isPending || firstRender}
-        summary={playlist}
-        onPlayAll={onReplace}
-        onAddList={onAddList}
-        searchTracks={searchTracks}
-        historyCount={player.history.count}
-        coverCacheKey={source === "like" ? String(user?.likedTrackIDs.checkPoint) : undefined}
-      />
-      {source !== "history" && playlist !== null && <Divider />}
-      <div
-        className={cx(
-          `
+      <AppErrorBoundary
+        className="w-full h-full"
+        showError
+        canReset
+        name="PlaylistPage"
+        onReset={reload}>
+        <ThrowIf when={status === "error"} message="歌曲加载失败" />
+        <AppLoading loading={status === "loading"} className="w-full h-full">
+          <Top
+            type={source!}
+            loading={false}
+            summary={playlist}
+            onPlayAll={onReplace}
+            onAddList={onAddList}
+            searchTracks={searchTracks}
+            historyCount={player.history.count}
+            coverCacheKey={source === "like" ? String(user?.likedTrackIDs.checkPoint) : undefined}
+          />
+          {source !== "history" && playlist !== null && <Divider />}
+          <div
+            className={cx(
+              `
             w-full h-[calc(100%-210px)] relative
           `,
-          source === "history" && "h-full pb-18"
-        )}>
-        <TrackList
-          ref={trackListRef}
-          tracks={tracks}
-          id={playlist?.id}
-          type={source!}
-          loading={isPending || firstRender}
-          activeID={player.current.track?.id}
-          onClick={onPlay}
-          onContext={onContextMenu}
-          onRangeUpdate={onRangeUpdate}
-          trackCoverSize={ImageConstants.PlaylistPageTrackCoverSize}
-        />
-      </div>
+              source === "history" && "h-full pb-18"
+            )}>
+            <TrackList
+              ref={trackListRef}
+              tracks={tracks}
+              id={playlist?.id}
+              type={source!}
+              loading={false}
+              activeID={player.current.track?.id}
+              onClick={onPlay}
+              onContext={onContextMenu}
+              onRangeUpdate={onRangeUpdate}
+              trackCoverSize={ImageConstants.PlaylistPageTrackCoverSize}
+            />
+          </div>
+        </AppLoading>
+      </AppErrorBoundary>
     </div>
   );
 };

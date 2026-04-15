@@ -1,7 +1,9 @@
-import { FC, memo } from "react";
+import { FC, memo, useEffect } from "react";
 import { useStage } from "@mahiru/ui/public/hooks/useStage";
 import { useAppLoaded } from "@mahiru/ui/public/hooks/useAppLoaded";
 import { Stage } from "@mahiru/ui/public/enum";
+import { useUser } from "@mahiru/ui/public/store/user";
+import NeteaseServices from "@mahiru/ui/public/source/netease/services";
 
 import AppToast from "@mahiru/ui/public/components/toast";
 import MenuProvider from "@mahiru/ui/public/components/menu/MenuProvider";
@@ -19,7 +21,11 @@ import Mask from "./Mask";
 
 const Layout: FC<object> = () => {
   const { stage } = useStage();
+  const user = useUser();
   useAppLoaded();
+  useEffect(() => {
+    !user?.isLoggedIn && NeteaseServices.Auth.createLoginWindow();
+  }, [user?.isLoggedIn]);
   return (
     <div
       className={`

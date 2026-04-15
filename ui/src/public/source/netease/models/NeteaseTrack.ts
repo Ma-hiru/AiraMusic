@@ -190,23 +190,26 @@ export class NeteaseTrack implements NeteaseTrackModel {
   }
 
   splitTitle() {
-    const title = this.name;
-    const result = { main: title?.trim() || "", sub: "" };
+    const title = this.name?.trim() ?? "";
+    const result = { main: title, sub: "" };
     if (!title) return result;
 
     const regex = /^(.*?)\s*(\([^()]*\)|（[^（）]*）|\[[^[\]]*]|【[^【】]*】|-[^-\s][^-]*-)\s*$/;
     const match = title.match(regex);
     if (!match) return result;
 
-    result.main = match[1]?.trim() || "";
+    result.main = match[1]?.trim() ?? "";
     result.sub =
       match[2]
         ?.trim()
         .replace(/^[（([【-]\s*/, "")
-        .replace(/[）)\]】-]\s*$/, "") || "";
+        .replace(/[）)\]】-]\s*$/, "") ?? "";
 
     if (result.sub === title.trim()) {
       result.main = title.trim();
+      result.sub = "";
+    }
+    if (result.sub === result.main) {
       result.sub = "";
     }
 

@@ -3,6 +3,7 @@ import { ErrorBoundary, FallbackProps } from "react-error-boundary";
 import { Log } from "@mahiru/ui/public/utils/dev";
 import { cx } from "@emotion/css";
 import { CircleX } from "lucide-react";
+import { EqError } from "@mahiru/log";
 import AppToast from "../toast";
 import ElectronServices from "@mahiru/ui/public/source/electron/services";
 
@@ -17,6 +18,7 @@ interface AppErrorBoundaryProps {
   canReset?: boolean;
   panic?: boolean;
   panicMessage?: string;
+  onReset?: NormalFunc;
 }
 
 const AppErrorBoundary: FC<AppErrorBoundaryProps> = ({
@@ -29,17 +31,21 @@ const AppErrorBoundary: FC<AppErrorBoundaryProps> = ({
   canReset = true,
   showError = true,
   panic = false,
-  panicMessage
+  panicMessage,
+  onReset
 }) => {
   const resetCount = useRef(0);
   const fallbackRender = useCallback(
     (props: FallbackProps) => {
-      const { error, resetErrorBoundary } = props;
+      const { error, resetErrorBoundary: restComponent } = props;
+      const resetErrorBoundary = (...args: unknown[]) => {
+        restComponent(...args);
+        onReset?.();
+      };
       AppToast.request({
         type: "error",
-        text: `组件 ${name} 发生错误了`
+        text: EqError.anyToError(error)?.message || `发生错误了`
       });
-      Log.error(`AppErrorBoundary(${name})`, error);
 
       if (panic) {
         ElectronServices.Window.panic(
@@ -72,13 +78,13 @@ const AppErrorBoundary: FC<AppErrorBoundaryProps> = ({
       return (
         <div
           className={cx(
-            "flex items-center justify-center font-semibold text-(--theme-color-main) leading-loose ",
+            "w-full h-full flex items-center justify-center font-semibold text-(--theme-color-main) leading-loose",
             className
           )}>
           {canReset ? (
             <button
               onClick={resetErrorBoundary}
-              className="inline hover:text-(--theme-color-main) active:scale-95 duration-200 ease-in-out transition-all cursor-pointer hover:bg-(--theme-color-main)/10 rounded-md">
+              className="px-2 py-1 inline hover:text-(--theme-color-main) active:scale-95 duration-200 ease-in-out transition-all cursor-pointer hover:bg-(--theme-color-main)/10 rounded-md">
               <CircleX className="mr-2 inline" /> 发生错误了，点击重载
             </button>
           ) : (
@@ -96,6 +102,7 @@ const AppErrorBoundary: FC<AppErrorBoundaryProps> = ({
       canReset,
       className,
       name,
+      onReset,
       panic,
       panicAfterReset,
       panicMessage,

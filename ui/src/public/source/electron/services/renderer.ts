@@ -1,6 +1,6 @@
 import { Log } from "@mahiru/ui/public/utils/dev";
 
-class AppMessage {
+class _AppMessage {
   private readonly listener = window.electron.listener;
   private readonly handlers: HandlerMapType = new Map();
 
@@ -98,12 +98,12 @@ class AppMessage {
   }
 }
 
-export default class AppRenderer {
+export default class _AppRenderer {
   static readonly Event = {
     normal: window.electron.event,
     invoke: window.electron.invoke
   };
-  static readonly Message = new AppMessage();
+  static readonly Message = new _AppMessage();
 }
 
 // region type

@@ -4,11 +4,12 @@ import { NeteaseNetworkImage, NeteaseUser } from "@mahiru/ui/public/source/netea
 import { LayoutConfig } from "@mahiru/ui/windows/main/store/layout/config";
 import { ChevronDown, UserCircle2 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
+import { getLayoutStoreSnapshot } from "@mahiru/ui/windows/main/store/layout";
+import NeteaseServices from "@mahiru/ui/public/source/netease/services";
+
 import NeteaseImage from "@mahiru/ui/public/components/image/NeteaseImage";
 import NoDrag from "@mahiru/ui/public/components/drag/NoDrag";
-import NeteaseAuth from "@mahiru/ui/public/source/netease/auth";
 import AppToast from "@mahiru/ui/public/components/toast";
-import { getLayoutStoreSnapshot } from "@mahiru/ui/windows/main/store/layout";
 
 interface TopLeftProps {
   user: Nullable<NeteaseUser>;
@@ -23,8 +24,8 @@ const TopLeft: FC<TopLeftProps> = ({ user, layout }) => {
   const onClick = useCallback(() => {
     if (layout.playModal) {
       updateLayout(layout.copy().setPlayModal(false));
-    } else if (!NeteaseAuth.isLoggedIn) {
-      NeteaseAuth.createLoginWindow();
+    } else if (!NeteaseServices.Auth.isLoggedIn) {
+      NeteaseServices.Auth.createLoginWindow();
     } else {
       if (Date.now() - lastClickTime.current < 2000) {
         AppToast.request({
@@ -32,7 +33,7 @@ const TopLeft: FC<TopLeftProps> = ({ user, layout }) => {
           text: "再次点击退出登录"
         });
       } else {
-        NeteaseAuth.logout().finally(() => {
+        NeteaseServices.Auth.logout().finally(() => {
           AppToast.request({
             type: "success",
             text: "已退出登录"

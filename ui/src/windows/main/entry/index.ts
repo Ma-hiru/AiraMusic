@@ -1,7 +1,7 @@
 import { userStoreSnapshot } from "@mahiru/ui/public/store/user";
 import AppPlayer from "@mahiru/ui/public/player/core";
 import useListenableHook from "@mahiru/ui/public/hooks/useListenableHook";
-import NeteaseAuth from "@mahiru/ui/public/source/netease/auth";
+import NeteaseServices from "@mahiru/ui/public/source/netease/services";
 
 export default class AppEntry {
   //region inner
@@ -46,7 +46,7 @@ export default class AppEntry {
   }
 
   private static setupUser() {
-    void NeteaseAuth.setup();
+    void NeteaseServices.Auth.setup();
     return this;
   }
   //endregion

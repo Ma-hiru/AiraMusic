@@ -1,7 +1,7 @@
 import { Log } from "@mahiru/ui/public/utils/dev";
-import AppRenderer from "@mahiru/ui/public/source/electron/services/renderer";
+import _AppRenderer from "@mahiru/ui/public/source/electron/services/renderer";
 
-export default class AppNet {
+export default class _AppNet {
   static completed: number[] = [];
   static cursor = 0;
 
@@ -41,7 +41,7 @@ export default class AppNet {
       return "offline";
     }
 
-    return await AppRenderer.Event.invoke.checkOnlineStatus();
+    return await _AppRenderer.Event.invoke.checkOnlineStatus();
   }
 
   static addNetworkChangeListener(callback: (online: boolean) => void) {
@@ -57,5 +57,5 @@ export default class AppNet {
 }
 
 window.requestAnimationFrame(() => {
-  AppNet.init();
+  _AppNet.init();
 });

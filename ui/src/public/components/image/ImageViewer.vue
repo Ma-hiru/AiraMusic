@@ -25,6 +25,7 @@
         color="#ffffff"
         @click.passive="nextImage" />
     </div>
+    <AppLoading class="viewer" :loading="status === 'loading'" />
     <div
       ref="viewerRef"
       class="viewer"
@@ -37,14 +38,9 @@
         :src="current?.url"
         :alt="current?.alt"
         :style="imgStyle"
-        :class="[
-          status === 'loaded' ? '' : 'hidden',
-          status === 'loading' ? 'animate-pulse' : '',
-          status === 'error' ? 'hidden' : ''
-        ]"
+        :class="status === 'loaded' ? 'opacity-100' : 'opacity-0'"
         ref="imageRef"
         draggable="false"
-        @loadstart="status = 'loading'"
         @load="status = 'loaded'"
         @error="status = 'error'" />
     </div>
@@ -57,12 +53,13 @@
   import { ArrowLeftToLine, ArrowRightToLine, Download } from "lucide-vue-next";
   import { Log } from "@mahiru/ui/public/utils/dev";
   import ElectronServices from "@mahiru/ui/public/source/electron/services";
+  import AppLoading from "@mahiru/ui/public/components/fallback/AppLoading.vue";
 
   type ImageEntry = { url?: string; alt?: string };
 
   const viewerRef = useTemplateRef<HTMLDivElement>("viewerRef");
   const imageRef = useTemplateRef<HTMLImageElement>("imageRef");
-  const status = ref<"idle" | "loading" | "error" | "loaded">("idle");
+  const status = ref<"loading" | "error" | "loaded">("loading");
   const props = defineProps<{ images: ImageEntry[] }>();
   const index = ref(0);
   const current = computed<ImageEntry>(() => {
@@ -92,7 +89,7 @@
     () => [props.images, props.images.length],
     () => {
       if (index.value !== props.images.length - 1) {
-        status.value = "idle";
+        status.value = "loading";
         index.value = Math.max(0, props.images.length - 1);
       }
     }
@@ -360,6 +357,7 @@
     justify-content: center;
     align-items: center;
     user-select: none;
+    position: relative;
   }
 
   img {

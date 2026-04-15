@@ -1,9 +1,9 @@
 import { Log } from "@mahiru/ui/public/utils/dev";
-import AppRenderer from "@mahiru/ui/public/source/electron/services/renderer";
+import _AppRenderer from "@mahiru/ui/public/source/electron/services/renderer";
 
-export default class AppDevice {
+export default class _AppDevice {
   private static get gpuDevice(): Promise<GPUDevice[]> {
-    return AppRenderer.Event.invoke
+    return _AppRenderer.Event.invoke
       .GPUInfo()
       .then((res) => res)
       .then((res) => {
@@ -42,7 +42,7 @@ export default class AppDevice {
   }
 
   static get platform(): Promise<NodeJS.Platform | "unknown"> {
-    return AppRenderer.Event.invoke.platform().catch((err) => {
+    return _AppRenderer.Event.invoke.platform().catch((err) => {
       Log.error(err);
       return "unknown";
     });

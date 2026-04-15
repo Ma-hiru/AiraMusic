@@ -1,4 +1,4 @@
-import { FC, memo, useCallback, useEffect, useState } from "react";
+import { FC, memo, startTransition, useCallback, useEffect, useState } from "react";
 import { useThemeColor } from "@mahiru/ui/public/hooks/useThemeColor";
 import { BannerType } from "@mahiru/ui/public/enum";
 
@@ -9,15 +9,29 @@ import NeteaseAPI from "@mahiru/ui/public/source/netease/api";
 import { NeteaseTrackRecord, NeteaseURL } from "@mahiru/ui/public/source/netease/models";
 import NeteaseServices from "@mahiru/ui/public/source/netease/services";
 import ElectronServices from "@mahiru/ui/public/source/electron/services";
+import { useUpdate } from "@mahiru/ui/public/hooks/useUpdate";
+import AppErrorBoundary from "@mahiru/ui/public/components/fallback/AppErrorBoundary";
+import ThrowIf from "@mahiru/ui/public/components/fallback/ThrowIf";
 
 const Banner: FC<object> = () => {
   const [banner, setBanner] = useState<NeteaseAPI.NeteaseBanner[]>([]);
+  const [status, setStatus] = useState<"loading" | "error" | "loaded">("loading");
   const player = AppEntry.usePlayer();
+
+  const reload = useUpdate();
   useEffect(() => {
-    NeteaseAPI.Home.banner().then((result) => {
-      setBanner(result.banners);
-    });
-  }, []);
+    setStatus("loading");
+    NeteaseAPI.Home.banner()
+      .then((result) => {
+        startTransition(() => {
+          setBanner(result.banners);
+          setStatus("loaded");
+        });
+      })
+      .catch(() => {
+        startTransition(() => setStatus("error"));
+      });
+  }, [reload.count]);
 
   const { textColorOnMain } = useThemeColor();
   const handleClick = useCallback(
@@ -52,15 +66,18 @@ const Banner: FC<object> = () => {
   );
   return (
     <div className="w-full px-2">
-      <Carousel
-        className="h-56"
-        items={banner.map((b) => ({
-          url: b.bigImageUrl,
-          title: b.typeTitle
-        }))}
-        titleColor={textColorOnMain.string()}
-        onClick={handleClick}
-      />
+      <AppErrorBoundary name="Banner" className="h-56 w-full" showError canReset onReset={reload}>
+        <ThrowIf when={status === "error"} message="Banner加载失败" />
+        <Carousel
+          className="h-56"
+          items={banner.map((b) => ({
+            url: b.bigImageUrl,
+            title: b.typeTitle
+          }))}
+          titleColor={textColorOnMain.string()}
+          onClick={handleClick}
+        />
+      </AppErrorBoundary>
     </div>
   );
 };
