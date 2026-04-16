@@ -18,7 +18,7 @@ const RecommendPlaylist: FC<object> = () => {
   const reload = useUpdate();
   useEffect(() => {
     setStatus("loading");
-    NeteaseAPI.Playlist.recommend(60)
+    NeteaseAPI.Playlist.recommend(120)
       .then((result) => {
         startTransition(() => {
           setRecommend(result.result);

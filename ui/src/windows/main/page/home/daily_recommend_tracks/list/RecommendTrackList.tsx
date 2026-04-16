@@ -1,7 +1,6 @@
 import { FC, memo, RefObject } from "react";
 import { css, cx } from "@emotion/css";
 import { useThemeColor } from "@mahiru/ui/public/hooks/useThemeColor";
-import { useInnerWidth } from "@mahiru/ui/public/hooks/useInnerWidth";
 
 import RecommendTrackItem from "./RecommendTrackItem";
 
@@ -12,16 +11,18 @@ interface RecommendTrackListProps {
 
 const RecommendTrackList: FC<RecommendTrackListProps> = ({ recommend, containerRef }) => {
   const { mainColor, textColorOnMain } = useThemeColor();
-  const innerWidth = useInnerWidth();
+  // const innerWidth = useInnerWidth();
   return (
     <div
       ref={containerRef}
       className={cx(
-        "relative w-full my-2 overflow-y-auto scrollbar-hide scroll-smooth ",
+        "relative w-full my-2 overflow-y-hidden overflow-x-scroll scrollbar-hide scroll-smooth contain-content",
         css`
           display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+          grid-auto-columns: minmax(150px, 1fr);
+          //grid-auto-columns: calc(100% / \${Math.floor(innerWidth / 170)});
           grid-auto-flow: column;
-          grid-auto-columns: calc(100% / ${Math.floor(innerWidth / 170)});
           scroll-snap-type: x mandatory;
         `
       )}>
