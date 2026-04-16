@@ -1,4 +1,3 @@
-import { AddCacheStore, WithCacheStore } from "@mahiru/ui/public/store/cache";
 import { apiRequest } from "@mahiru/ui/public/source/netease/api/request";
 import { Log } from "@mahiru/ui/public/utils/dev";
 
@@ -14,7 +13,6 @@ type TTMLyricMeta = {
   rawLyricFile: string;
 };
 
-@AddCacheStore
 export default class _NeteaseLyricAPI {
   private ttmLyricMeta = new Set<string>();
   private loadedMeta = false;
@@ -96,5 +94,3 @@ export default class _NeteaseLyricAPI {
       });
   }
 }
-
-export interface _NeteaseLyricAPIClass extends WithCacheStore {}

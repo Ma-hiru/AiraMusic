@@ -52,7 +52,7 @@ const DailyRecommendTracks: FC<object> = () => {
     if (theme.backgroundCover || !cover) return;
     updateTheme(theme.copy().setBackgroundCover(cover));
   }, [recommend, theme, updateTheme]);
-  console.log("status", status);
+
   return (
     <div className="w-full overflow-hidden contain-layout">
       <RecommendTrackTitle lastPage={lastPage} nextPage={nextPage} />

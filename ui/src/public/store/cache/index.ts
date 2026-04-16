@@ -11,17 +11,3 @@ export class CacheStore {
   static readonly other = new CacheStoreForOther();
   static readonly remove = new CacheStoreForRemove();
 }
-
-export function AddCacheStore(_: Function, ctx: ClassDecoratorContext) {
-  ctx.addInitializer(function (this) {
-    Object.defineProperty(this.prototype, "cacheStore", {
-      get() {
-        return CacheStore;
-      }
-    });
-  });
-}
-
-export interface WithCacheStore {
-  readonly cacheStore: CacheStore;
-}
