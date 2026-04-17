@@ -2,7 +2,7 @@ import NeteaseAPI from "@mahiru/ui/public/source/netease/api";
 import NeteaseTrackSource from "@mahiru/ui/public/source/netease/services/track";
 import { NeteasePlaylist, NeteasePlaylistSummary } from "@mahiru/ui/public/source/netease/models";
 import { CacheStore } from "@mahiru/ui/public/store/cache";
-import LRUMap from "@mahiru/ui/public/utils/lru";
+import { LRUCacheWithTime } from "@mahiru/ui/public/utils/lru";
 import { userStoreSnapshot } from "../../../store/user";
 
 export default class _NeteasePlaylistSource {
@@ -22,7 +22,7 @@ export default class _NeteasePlaylistSource {
     );
   }
 
-  private static memoryCache = new LRUMap<number, NeteasePlaylist>(10, 1000 * 60 * 60);
+  private static memoryCache = new LRUCacheWithTime<number, NeteasePlaylist>(10, 1000 * 60 * 60);
 
   private static get userStore() {
     return userStoreSnapshot();
@@ -76,9 +76,8 @@ export default class _NeteasePlaylistSource {
       // 使用 likedTrackIDs 的 checkPoint 作为缓存区分，likedTrackIDs 变化时 checkPoint 也会变化，从而使缓存失效，重新获取数据
       cachedID = id + _NeteasePlaylistSource.likedTrackIDsCheckPoint!;
     }
-    if (this.memoryCache.has(cachedID)) {
-      return Promise.resolve(this.memoryCache.get(cachedID)!);
-    }
+    const cache = this.memoryCache.get(cachedID);
+    if (cache) return Promise.resolve(cache);
 
     return NeteaseAPI.Playlist.detail(id, signal)
       .then((response) => _NeteasePlaylistSource.response(response))
