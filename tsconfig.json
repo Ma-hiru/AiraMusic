@@ -23,16 +23,16 @@
     "removeComments": true,
     "sourceMap": false,
     "paths": {
-      "@mahiru/ui/*": ["./ui/src/*"],
+      "@mahiru/ui/*": ["./packages/ui/src/*"],
       "@mahiru/*": [
-        "./*/src/index.ts",
-        "./*/src/index.tsx",
-        "./*/index.ts",
-        "./*/index.tsx"
+        "./packages/*/src/index.ts",
+        "./packages/*/src/index.tsx",
+        "./packages/*/index.ts",
+        "./packages/*/index.tsx"
       ],
       "*": ["./*"]
     }
   },
-  "include": ["app", "ui", "log", "types", "eslint.config.ts", "scripts"],
+  "include": ["packages/**/*", "types", "eslint.config.ts", "scripts"],
   "exclude": ["node_modules", "dist", "temp"]
 }

@@ -3,8 +3,8 @@ import { Log } from "../../utils/log";
 import { isDev } from "../../utils/dev";
 import { AppStore } from "../../app";
 import { AppWindowManager, WindowExits } from "./manager";
+import { isLinux } from "../../utils/platform";
 import { BrowserWindow, BrowserWindowConstructorOptions } from "electron";
-import { isLinux } from "app/src/utils/platform";
 import { debounce } from "lodash-es";
 
 export type AppWindowCreatorProps = {

@@ -21,7 +21,13 @@ const RecommendPlaylist: FC<object> = () => {
     NeteaseAPI.Playlist.recommend(120)
       .then((result) => {
         startTransition(() => {
-          setRecommend(result.result);
+          const set = new Set<string>();
+          const filtered = result.result.filter((item) => {
+            if (set.has(String(item.id))) return false;
+            set.add(String(item.id));
+            return true;
+          });
+          setRecommend(filtered);
           setStatus("loaded");
         });
       })

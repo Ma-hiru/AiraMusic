@@ -3,15 +3,15 @@
   "version": "1.0.0",
   "scripts": {
     "dev": "vite",
-    "build": "pnpm tsgo --noEmit && vite build",
+    "build": "tsgo --noEmit && vite build",
     "preview": "vite preview",
-    "clean:dist": "pnpm rimraf dist"
+    "clean:dist": "rimraf dist"
   },
   "dependencies": {
     "@applemusic-like-lyrics/lyric": "0.3.0",
     "@emotion/css": "^11.13.5",
-    "@mahiru/log": "1.0.0",
-    "@mahiru/wasm": "1.0.0",
+    "@mahiru/log": "workspace:*",
+    "@mahiru/wasm": "workspace:*",
     "@tailwindcss/vite": "^4.1.17",
     "@vueuse/core": "^14.2.1",
     "axios": "1.13.5",

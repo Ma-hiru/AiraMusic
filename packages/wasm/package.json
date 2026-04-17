@@ -15,8 +15,8 @@
   ],
   "scripts": {
     "clean:cargo": "cargo clean",
-    "clean:dist": "pnpm rimraf pkg",
-    "build": "pnpm run-script-os && pnpm rimraf pkg/package.json",
+    "clean:dist": "rimraf pkg",
+    "build": "run-script-os && rimraf pkg/package.json",
     "build:win32": "wasm-pack build --target web --out-dir pkg --release",
     "build:linux": "wasm-pack build --target web --out-dir pkg --dev",
     "lint": "cargo fmt && cargo clippy",

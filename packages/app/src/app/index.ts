@@ -68,12 +68,15 @@ export class APP {
 
   private createServices() {
     try {
-      const handleLaunchError = (err: Error) => {
+      const handleLaunchError = (err: Error, name: string) => {
         if (this.status === "exiting") return;
         Log.error(err);
         AppWindows.fatalError(err.message);
         AppWindowManager.get("main")?.close();
-        setTimeout(() => this.exit(-1), 5000);
+        setTimeout(
+          () => this.exit(-1, `Failed to initialize ${name} service: ${err.message}`),
+          5000
+        );
       };
       this.storeService = AppServices.Store.create({
         args: {
@@ -86,18 +89,25 @@ export class APP {
         enableConsole: ParseLogLevel(process.env.APP_LOG_LEVEL) <= LogLevel.DEBUG,
         logger: (data) => Log.debug("store service", data.toString()),
         onExit: (code) => {
-          handleLaunchError(new Error(`store service exited with code ${code}`));
+          handleLaunchError(new Error(`store service exited with code ${code}`), "store");
         }
       });
-      this.neteaseMusicApiService = AppServices.NeteaseMusicApi.create(handleLaunchError);
-      !isDev && (this.proxyServer = AppServices.Proxy.create(handleLaunchError));
+      this.neteaseMusicApiService = AppServices.NeteaseMusicApi.create((err) =>
+        handleLaunchError(err, "Netease Music API")
+      );
+      !isDev &&
+        (this.proxyServer = AppServices.Proxy.create((err) => handleLaunchError(err, "Proxy")));
     } catch (err) {
       Log.error({
         raw: err,
         message: "failed to initialize app services",
         label: "App init"
       });
-      this.exit(-1);
+      this.exit(
+        -1,
+        "Failed to initialize app services, reason: " +
+          (err instanceof Error ? err.message : String(err))
+      );
     }
   }
 
@@ -110,7 +120,7 @@ export class APP {
         message: "failed to register app protocol",
         label: "App init"
       });
-      this.exit(-2);
+      this.exit(-2, "Failed to register app protocol");
     }
   }
 
@@ -124,7 +134,7 @@ export class APP {
         message: "failed to register ipc handlers",
         label: "App init"
       });
-      this.exit(-3);
+      this.exit(-3, "Failed to register ipc handlers");
     }
   }
 
@@ -141,10 +151,10 @@ export class APP {
         AppWindowManager.checkAndShow("main");
       });
       mainWindow.addListener("closed", () => {
-        if (!isMacOS) this.exit();
+        if (!isMacOS) this.exit(0, "Main window closed");
       });
       app.addListener("window-all-closed", () => {
-        if (!isMacOS) this.exit();
+        if (!isMacOS) this.exit(0, "All windows closed");
       });
       return mainWindow;
     } catch (err) {
@@ -153,7 +163,7 @@ export class APP {
         message: "failed to launch main window",
         label: "App init"
       });
-      this.exit(-4);
+      this.exit(-4, "Failed to launch main window");
     }
   }
 
@@ -204,10 +214,10 @@ export class APP {
     });
   }
 
-  exit(code = 0) {
+  exit(code = 0, reason: string) {
     if (this.status === "exiting") return;
     this.status = "exiting";
-    Log.info("app exiting...");
+    Log.info("app exiting, reason: " + reason);
     Promise.allSettled([this.stopAllServers()]).finally(() => {
       this.cleanup();
       Log.info("app exited.");

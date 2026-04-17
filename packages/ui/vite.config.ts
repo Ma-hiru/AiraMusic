@@ -6,7 +6,7 @@ import react, { reactCompilerPreset } from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import { fileURLToPath } from "node:url";
 import { join } from "node:path";
-import AppEnv from "../scripts/env";
+import AppEnv from "../../scripts/env";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 

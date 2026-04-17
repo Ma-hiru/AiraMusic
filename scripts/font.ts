@@ -3,8 +3,8 @@ import { dirname, join } from "node:path";
 import fs from "node:fs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const fontDir = join(__dirname, "../ui/public/fonts");
-const outDir = join(__dirname, "../ui/src/styles/font.scss");
+const fontDir = join(__dirname, "../packages/ui/public/fonts");
+const outDir = join(__dirname, "../packages/ui/src/styles/font.scss");
 const head = "// Auto generated. DO NOT EDIT.\n";
 const content = fs.opendirSync(fontDir);
 const scss = <string[]>[];

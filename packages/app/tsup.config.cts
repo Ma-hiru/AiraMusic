@@ -1,6 +1,6 @@
-import AppEnv from "../scripts/env";
+import AppEnv from "../../scripts/env";
 import { defineConfig } from "tsup";
-import { generateLogo } from "../scripts/logo";
+import { generateLogo } from "../../scripts/logo";
 
 void generateLogo();
 

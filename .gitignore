@@ -19,3 +19,10 @@ app/logs
 
 temp
 .idea
+
+.yarn/*
+!.yarn/releases
+!.yarn/plugins
+!.yarn/sdks
+!.yarn/patches
+!.yarn/versions

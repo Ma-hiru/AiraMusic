@@ -3,41 +3,41 @@
   "executableName": "AiraMusic",
   "productName": "AiraMusic",
   "directories": {
-    "app": "app",
+    "app": "packages/app",
     "output": "dist"
   },
   "files": ["dist/**/*", "package.json"],
   "extraResources": [
     {
-      "from": "ui/dist",
+      "from": "packages/ui/dist",
       "to": "ui"
     },
     {
-      "from": "app/dist/preload/index.js",
+      "from": "packages/app/dist/preload/index.js",
       "to": "preload.js"
     },
     {
-      "from": "app/assets",
+      "from": "packages/app/assets",
       "to": "assets"
     }
   ],
   "linux": {
     "target": ["deb"],
-    "icon": "app/assets/logo.png",
+    "icon": "packages/app/assets/logo.png",
     "category": "Utility",
     "extraResources": [
       {
-        "from": "store/dist/server",
+        "from": "packages/store/dist/server",
         "to": "bin/server"
       }
     ]
   },
   "win": {
     "target": "nsis",
-    "icon": "app/assets/logo.png",
+    "icon": "packages/app/assets/logo.png",
     "extraResources": [
       {
-        "from": "store/dist/server.exe",
+        "from": "packages/store/dist/server.exe",
         "to": "bin/server.exe"
       }
     ]

@@ -57,19 +57,18 @@
 ### 安装依赖
 
 ```bash
-  # 使用yarn，避免electron-builder安装依赖时出现依赖缺失问题
   yarn install --frozen-lockfile
 ```
 
 ### 开发模式
 
 ```bash
-  pnpm build:wasm && pnpm build:store  # 首次运行
-  pnpm dev
+  yarn build:wasm && yarn build:store  # 首次运行
+  yarn dev
 ```
 
 ### 构建项目
 
 ```bash
-  pnpm build
+  yarn build
 ```

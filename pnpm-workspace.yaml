@@ -1,8 +1,0 @@
-packages:
-  - app
-  - ui
-  - wasm
-  - log
-  - store
-
-registry: https://registry.npmmirror.com

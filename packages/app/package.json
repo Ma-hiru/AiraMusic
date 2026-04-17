@@ -11,21 +11,21 @@
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
-    "clean:dist": "pnpm rimraf dist"
+    "clean:dist": "rimraf dist"
   },
   "dependencies": {
     "@neteasecloudmusicapienhanced/api": "^4.29.17",
     "electron-store": "^11.0.2",
     "express": "^5.1.0",
     "express-http-proxy": "^2.1.2",
-    "mime": "^4.1.0",
-    "lodash-es": "4.17.23"
+    "lodash-es": "4.17.23",
+    "mime": "^4.1.0"
   },
   "devDependencies": {
+    "@mahiru/log": "workspace:*",
+    "@mahiru/store": "workspace:*",
     "@types/express": "^5.0.0",
     "@types/express-http-proxy": "^1.6.7",
-    "@mahiru/log": "1.0.0",
-    "@mahiru/store": "1.0.0",
     "electron": "40.6.1"
   }
 }
