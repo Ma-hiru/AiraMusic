@@ -5,12 +5,12 @@ import Provider from "./ToastProvider";
 
 export default class AppToast {
   static request: NormalFunc<[data: Omit<ToastItemData, "id">], string> = () => {
-    Log.error(Errs.ToastBeforeInject.derive("requestToast"));
+    Log.warn(Errs.ToastBeforeInject.derive("requestToast"));
     return "";
   };
 
   static dispose: NormalFunc<[id: string]> = () => {
-    Log.error(Errs.ToastBeforeInject.derive("disposeToast"));
+    Log.warn(Errs.ToastBeforeInject.derive("disposeToast"));
   };
 
   static inject(

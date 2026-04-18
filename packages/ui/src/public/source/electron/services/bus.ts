@@ -6,7 +6,7 @@ class AppPlayerBus extends Listenable {
 
   constructor() {
     super();
-    _AppWindow.all.listenAll("playerBus", ({ data }) => {
+    _AppWindow.all.listenMessageAll("playerBus", ({ data }) => {
       this.data = data;
       this.executeListeners();
     });
@@ -18,7 +18,7 @@ class AppProgressBus extends Listenable {
 
   constructor() {
     super();
-    _AppWindow.all.listenAll("progressBus", ({ data }) => {
+    _AppWindow.all.listenMessageAll("progressBus", ({ data }) => {
       this.data = data;
       this.executeListeners();
     });
@@ -30,7 +30,7 @@ class AppInfoBus extends Listenable {
 
   constructor() {
     super();
-    _AppWindow.all.listenAll("infoBus", ({ data }) => {
+    _AppWindow.all.listenMessageAll("infoBus", ({ data }) => {
       this.data = data;
       this.executeListeners();
     });

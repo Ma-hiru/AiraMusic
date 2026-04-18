@@ -25,7 +25,7 @@
   useAppLoadedVue(loading);
 
   onMounted(() => {
-    ElectronServices.Window.all.listenAll("imageCheckerBus", (props) => {
+    ElectronServices.Window.all.listenMessageAll("imageCheckerBus", (props) => {
       const { url, alt } = props.data;
       const exits = images.findIndex((image) => image.url === url);
       if (exits === -1) {

@@ -1,37 +1,61 @@
-import { FC, memo, startTransition, useCallback, useEffect, useState } from "react";
+import { FC, memo, startTransition, useCallback, useEffect, useRef, useState } from "react";
 import { useThemeColor } from "@mahiru/ui/public/hooks/useThemeColor";
 import { BannerType } from "@mahiru/ui/public/enum";
-
-import Carousel from "@mahiru/ui/public/components/public/Carousel";
+import { useUpdate } from "@mahiru/ui/public/hooks/useUpdate";
 import { Log } from "@mahiru/ui/public/utils/dev";
-import AppEntry from "@mahiru/ui/windows/main/entry";
-import NeteaseAPI from "@mahiru/ui/public/source/netease/api";
 import { NeteaseTrackRecord, NeteaseURL } from "@mahiru/ui/public/source/netease/models";
+import NeteaseAPI from "@mahiru/ui/public/source/netease/api";
 import NeteaseServices from "@mahiru/ui/public/source/netease/services";
 import ElectronServices from "@mahiru/ui/public/source/electron/services";
-import { useUpdate } from "@mahiru/ui/public/hooks/useUpdate";
-import AppErrorBoundary from "@mahiru/ui/public/components/fallback/AppErrorBoundary";
+import AppEntry from "@mahiru/ui/windows/main/entry";
+
+import Carousel from "@mahiru/ui/public/components/public/Carousel";
+import AppErrorBoundary, {
+  AppErrorBoundaryRef
+} from "@mahiru/ui/public/components/fallback/AppErrorBoundary";
 import ThrowIf from "@mahiru/ui/public/components/fallback/ThrowIf";
 
 const Banner: FC<object> = () => {
   const [banner, setBanner] = useState<NeteaseAPI.NeteaseBanner[]>([]);
   const [status, setStatus] = useState<"loading" | "error" | "loaded">("loading");
+  const errRef = useRef<AppErrorBoundaryRef>({});
   const player = AppEntry.usePlayer();
 
-  const reload = useUpdate();
-  useEffect(() => {
+  const update = useUpdate();
+
+  const reload = useCallback(() => {
     setStatus("loading");
-    NeteaseAPI.Home.banner()
-      .then((result) => {
-        startTransition(() => {
-          setBanner(result.banners);
-          setStatus("loaded");
-        });
-      })
-      .catch(() => {
-        startTransition(() => setStatus("error"));
-      });
-  }, [reload.count]);
+    setBanner([]);
+    update();
+  }, [update]);
+
+  useEffect(() => {
+    if (banner.length !== 0) return;
+    let cancel = false;
+    const unsubscribe = ElectronServices.Net.autoRetryRequest(
+      () => {
+        errRef.current.resetComponent?.();
+        setStatus("loading");
+        return NeteaseAPI.Home.banner();
+      },
+      (ok, result) => {
+        if (cancel) return;
+        if (ok) {
+          startTransition(() => {
+            setBanner(result.banners);
+            setStatus("loaded");
+          });
+        } else {
+          startTransition(() => setStatus("error"));
+        }
+      },
+      () => banner.length !== 0
+    );
+    return () => {
+      cancel = true;
+      unsubscribe();
+    };
+  }, [banner.length, update.count]);
 
   const { textColorOnMain } = useThemeColor();
   const handleClick = useCallback(
@@ -66,8 +90,15 @@ const Banner: FC<object> = () => {
   );
   return (
     <div className="w-full px-2">
-      <AppErrorBoundary name="Banner" className="h-56 w-full" showError canReset onReset={reload}>
-        <ThrowIf when={status === "error"} message="Banner加载失败" />
+      <AppErrorBoundary
+        ref={errRef}
+        name="Banner"
+        className="h-56 w-full"
+        showError
+        canReset
+        onReset={reload}
+        toast={false}>
+        <ThrowIf when={status === "error"} />
         <Carousel
           className="h-56"
           items={banner.map((b) => ({

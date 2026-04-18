@@ -1,16 +1,17 @@
 import { Log } from "@mahiru/ui/public/utils/dev";
 
 export abstract class Listenable {
-  private readonly listeners = new Set<NormalFunc>();
+  private readonly listeners = new Map<NormalFunc, { id: string; once: boolean }>();
   private listenerTimer: Nullable<number> = null;
   private updateMode: "async" | "sync" = "async";
   private updateGap = 100;
 
   protected executeListeners(mode = this.updateMode) {
     if (mode === "sync") {
-      for (const listener of this.listeners) {
+      for (const [listener, { once }] of this.listeners) {
         try {
           listener();
+          once && this.listeners.delete(listener);
         } catch (err) {
           Log.error(err);
           this.listeners.delete(listener);
@@ -21,10 +22,11 @@ export abstract class Listenable {
 
     this.listenerTimer && window.clearTimeout(this.listenerTimer);
     this.listenerTimer = window.setTimeout(() => {
-      for (const listener of this.listeners) {
+      for (const [listener, { once }] of this.listeners) {
         requestAnimationFrame(() => {
           try {
             listener();
+            once && this.listeners.delete(listener);
           } catch (err) {
             Log.error(err);
             this.listeners.delete(listener);
@@ -46,14 +48,29 @@ export abstract class Listenable {
     this.updateMode = mode;
   }
 
-  addListener(callback: NormalFunc) {
-    this.listeners.add(callback);
-    return () => {
+  addListener(callback: NormalFunc, props: { once?: boolean; id?: string } = {}) {
+    props.once ??= false;
+    props.id ??= window.crypto.randomUUID();
+    this.listeners.set(callback, { id: props.id, once: props.once });
+
+    const unsubscriber = () => {
       this.listeners.delete(callback);
     };
+    unsubscriber.id = props.id;
+
+    return unsubscriber;
   }
 
-  removeListener(callback: NormalFunc) {
+  removeListener(callback: NormalFunc | string) {
+    if (typeof callback === "string") {
+      for (const [listener, { id }] of this.listeners) {
+        if (id === callback) {
+          this.listeners.delete(listener);
+          break;
+        }
+      }
+      return;
+    }
     this.listeners.delete(callback);
   }
 
@@ -95,11 +112,11 @@ export class Listener extends Listenable {
     super.clearAllListeners();
   }
 
-  add(callback: NormalFunc) {
-    return super.addListener(callback);
+  add(callback: NormalFunc, props?: { once?: boolean; id?: string }) {
+    return super.addListener(callback, props);
   }
 
-  remove(callback: NormalFunc) {
+  remove(callback: NormalFunc | string) {
     super.removeListener(callback);
   }
 }

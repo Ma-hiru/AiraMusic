@@ -184,7 +184,7 @@ export default class _AppWindow extends Listenable {
     this.addListener(listener);
   }
 
-  listen<T extends keyof MessageTypeMap>(
+  listenMessage<T extends keyof MessageTypeMap>(
     event: T,
     callback: NormalFunc<[data: MessageDataReceive<T>["data"]]>,
     options?: {
@@ -195,11 +195,11 @@ export default class _AppWindow extends Listenable {
     return _AppRenderer.Message.listen(event, this.type, callback, options);
   }
 
-  remove(id: string) {
+  removeMessageHandler(id: string) {
     return _AppRenderer.Message.remove(id);
   }
 
-  listenAll<T extends keyof MessageTypeMap>(
+  listenMessageAll<T extends keyof MessageTypeMap>(
     event: T,
     callback: NormalFunc<[message: Omit<MessageDataReceive<T>, "type">]>,
     options?: {

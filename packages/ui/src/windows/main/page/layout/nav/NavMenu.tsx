@@ -2,7 +2,7 @@ import { FC, memo } from "react";
 import { NavConstants, RoutePathConstants } from "@mahiru/ui/windows/main/constants";
 import { useLocation, useNavigate } from "react-router-dom";
 import { cx } from "@emotion/css";
-import { useUserStore } from "@mahiru/ui/public/store/user";
+import { NeteaseUser } from "@mahiru/ui/public/source/netease/models";
 import AppToast from "@mahiru/ui/public/components/toast";
 
 interface NavMenuProps {
@@ -12,7 +12,7 @@ interface NavMenuProps {
 const NavMenu: FC<NavMenuProps> = ({ barOpened }) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { isLoggedIn } = useUserStore();
+
   return (
     <div className="flex flex-col gap-4 w-40 overflow-hidden">
       {NavConstants.navs.map(({ icon, label, path }) => {
@@ -29,7 +29,7 @@ const NavMenu: FC<NavMenuProps> = ({ barOpened }) => {
               active ? barOpened && "bg-(--theme-color-main)" : barOpened && "hover:bg-black/5"
             )}
             onClick={() => {
-              if (path === RoutePathConstants.like && !isLoggedIn()) {
+              if (path === RoutePathConstants.like && !NeteaseUser.isLoggedIn) {
                 return AppToast.request({
                   type: "info",
                   text: "请先登录账号"

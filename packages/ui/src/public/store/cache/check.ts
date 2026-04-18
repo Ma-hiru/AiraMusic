@@ -68,7 +68,7 @@ export class CacheStoreForCheck extends CacheStoreBase {
     this.flushCheckCollections(collections);
     let count = 0;
     const store = () => {
-      if (ElectronServices.Net.getStatus().score < 0.7 || count >= 3) {
+      if (ElectronServices.Net.quality.score < 0.7 || count >= 3) {
         Log.debug("Starting flushCheckOrStoreCollections store", collections.length);
         this.orStoreMulti(collections).catch((err) => {
           Log.error({

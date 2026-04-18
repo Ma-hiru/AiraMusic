@@ -37,6 +37,7 @@ import AppErrorBoundary from "@mahiru/ui/public/components/fallback/AppErrorBoun
 import ThrowIf from "@mahiru/ui/public/components/fallback/ThrowIf";
 import { useUpdate } from "@mahiru/ui/public/hooks/useUpdate";
 import AppLoading from "@mahiru/ui/public/components/fallback/AppLoading";
+import ElectronServices from "@mahiru/ui/public/source/electron/services";
 
 const PlaylistPage: FC<object> = () => {
   const user = useUser();
@@ -260,6 +261,11 @@ const PlaylistPage: FC<object> = () => {
     // 手动添加reload依赖
     update.count
   ]);
+  useEffect(() => {
+    return ElectronServices.Net.onOnlineChange(() => {
+      ElectronServices.Net.isOnline && reload();
+    });
+  }, [reload]);
 
   return (
     <div className="w-full h-full px-12 pt-5 contain-style contain-size contain-layout">

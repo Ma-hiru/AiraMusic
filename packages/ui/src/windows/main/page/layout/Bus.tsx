@@ -77,7 +77,7 @@ const Bus: FC<object> = () => {
   useEffect(updateInfoBus, [updateInfoBus]);
 
   useEffect(() => {
-    windowAll.listenAll("playerActionBus", async ({ data }) => {
+    windowAll.listenMessageAll("playerActionBus", async ({ data }) => {
       switch (data) {
         case "play":
           return player.audio.play();

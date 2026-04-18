@@ -1,4 +1,4 @@
-import { FC, memo, ReactNode, useCallback, useRef } from "react";
+import { FC, memo, ReactNode, RefObject, useCallback, useRef } from "react";
 import { ErrorBoundary, FallbackProps } from "react-error-boundary";
 import { Log } from "@mahiru/ui/public/utils/dev";
 import { cx } from "@emotion/css";
@@ -7,9 +7,13 @@ import { EqError } from "@mahiru/log";
 import AppToast from "../toast";
 import ElectronServices from "@mahiru/ui/public/source/electron/services";
 
+export type AppErrorBoundaryRef = { resetComponent?: NormalFunc };
+
 interface AppErrorBoundaryProps {
   name: string;
   children: ReactNode;
+  ref?: RefObject<{ resetComponent?: NormalFunc }>;
+  toast?: boolean;
   className?: string;
   autoReset?: boolean;
   autoResetMaxCount?: number;
@@ -25,6 +29,8 @@ const AppErrorBoundary: FC<AppErrorBoundaryProps> = ({
   name,
   children,
   className,
+  ref,
+  toast = true,
   autoResetMaxCount = 3,
   autoReset = false,
   panicAfterReset = false,
@@ -34,18 +40,32 @@ const AppErrorBoundary: FC<AppErrorBoundaryProps> = ({
   panicMessage,
   onReset
 }) => {
+  if (ref) ref.current ??= { resetComponent: undefined };
+
   const resetCount = useRef(0);
   const fallbackRender = useCallback(
     (props: FallbackProps) => {
-      const { error, resetErrorBoundary: restComponent } = props;
+      const { error, resetErrorBoundary: resetComponent } = props;
+      let isRested = false;
+      ref &&
+        (ref.current = {
+          resetComponent: () => {
+            if (isRested) return;
+            isRested = true;
+            resetComponent();
+          }
+        });
       const resetErrorBoundary = (...args: unknown[]) => {
-        restComponent(...args);
+        if (isRested) return;
+        isRested = true;
+        resetComponent(...args);
         onReset?.();
       };
-      AppToast.request({
-        type: "error",
-        text: EqError.anyToError(error)?.message || `发生错误了`
-      });
+      toast &&
+        AppToast.request({
+          type: "error",
+          text: EqError.anyToError(error)?.message || `发生错误了`
+        });
 
       if (panic) {
         ElectronServices.Window.panic(
@@ -85,12 +105,12 @@ const AppErrorBoundary: FC<AppErrorBoundaryProps> = ({
             <button
               onClick={resetErrorBoundary}
               className="px-2 py-1 inline hover:text-(--theme-color-main) active:scale-95 duration-200 ease-in-out transition-all cursor-pointer hover:bg-(--theme-color-main)/10 rounded-md">
-              <CircleX className="mr-2 inline" /> 发生错误了，点击重载
+              <CircleX className="mr-2 inline" /> 加载错误，点击重载
             </button>
           ) : (
             <p className="whitespace-pre-wrap break-keep">
               <CircleX className="mr-2 inline" />
-              <span>发生错误了</span>
+              <span>加载错误了</span>
             </p>
           )}
         </div>
@@ -106,7 +126,9 @@ const AppErrorBoundary: FC<AppErrorBoundaryProps> = ({
       panic,
       panicAfterReset,
       panicMessage,
-      showError
+      ref,
+      showError,
+      toast
     ]
   );
   return <ErrorBoundary fallbackRender={fallbackRender} children={children} />;
