@@ -1,6 +1,7 @@
 import { cacheRequest } from "./request";
-import { CacheStoreBase } from "@mahiru/ui/public/store/cache/base";
 import { Log } from "@mahiru/ui/public/utils/dev";
+import { RequestCollector } from "@mahiru/ui/public/utils/collector";
+import { CacheStoreUtils } from "@mahiru/ui/public/store/cache/utils";
 import ElectronServices from "@mahiru/ui/public/source/electron/services";
 
 type CheckRequestItem = {
@@ -17,19 +18,18 @@ type CheckOrStoreRequestItem = {
   resolve: NormalFunc<[value: CacheCheckResult | PromiseLike<CacheCheckResult>]>;
 };
 
-export class CacheStoreForCheck extends CacheStoreBase {
+export class CacheStoreForCheck {
   checkCollectionsKey = "cache-check-collections";
   checkOrStoreCollectionsKey = "cache-check-or-store-collections";
 
   constructor() {
-    super();
-    this.registerRequestCollection<CheckRequestItem>(
+    RequestCollector.register<CheckRequestItem>(
       this.checkCollectionsKey,
       100,
       150,
       this.flushCheckCollections.bind(this)
     );
-    this.registerRequestCollection<CheckOrStoreRequestItem>(
+    RequestCollector.register<CheckOrStoreRequestItem>(
       this.checkOrStoreCollectionsKey,
       100,
       150,
@@ -44,9 +44,9 @@ export class CacheStoreForCheck extends CacheStoreBase {
       .then((res) => {
         collections.forEach((item, index) => {
           if (res.ok) {
-            item.resolve(res.results[index] || { ok: false, index: this.BLANK_INDEX });
+            item.resolve(res.results[index] || { ok: false, index: CacheStoreUtils.BLANK_INDEX });
           } else {
-            item.resolve({ ok: false, index: this.BLANK_INDEX });
+            item.resolve({ ok: false, index: CacheStoreUtils.BLANK_INDEX });
           }
         });
       })
@@ -57,7 +57,7 @@ export class CacheStoreForCheck extends CacheStoreBase {
           label: "CacheStoreForCheck"
         });
         collections.forEach((item) => {
-          item.resolve({ ok: false, index: this.BLANK_INDEX });
+          item.resolve({ ok: false, index: CacheStoreUtils.BLANK_INDEX });
         });
       });
   }
@@ -87,7 +87,7 @@ export class CacheStoreForCheck extends CacheStoreBase {
 
   one(id: string | number, timeLimit?: number) {
     return new Promise<CacheCheckResult>((resolve) => {
-      this.addRequestToCollection<CheckRequestItem>(this.checkCollectionsKey, {
+      RequestCollector.add<CheckRequestItem>(this.checkCollectionsKey, {
         id,
         timeLimit,
         resolve
@@ -124,7 +124,7 @@ export class CacheStoreForCheck extends CacheStoreBase {
     if (method === "GET") {
       return new Promise<CacheCheckResult>((resolve) => {
         if (signal?.aborted) return;
-        this.addRequestToCollection<CheckOrStoreRequestItem>(this.checkOrStoreCollectionsKey, {
+        RequestCollector.add<CheckOrStoreRequestItem>(this.checkOrStoreCollectionsKey, {
           id: String(id),
           url,
           update,
@@ -133,8 +133,8 @@ export class CacheStoreForCheck extends CacheStoreBase {
         });
       });
     } else {
-      url = this.encode(url);
-      id = this.encode(id);
+      url = CacheStoreUtils.encode(url);
+      id = CacheStoreUtils.encode(id);
       return cacheRequest("/api/check-store", {
         method,
         params: { id, url, update, timeLimit },

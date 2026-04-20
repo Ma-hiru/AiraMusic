@@ -3,6 +3,7 @@ import { isDev, Log } from "@mahiru/ui/public/utils/dev";
 import _AppRenderer from "@mahiru/ui/public/source/electron/services/renderer";
 
 const _currentWindowType = await _AppRenderer.Event.invoke.currentWindowType();
+const _runtimeID = await _AppRenderer.Event.invoke.runtimeID();
 
 export default class _AppWindow extends Listenable {
   readonly type: WindowType;
@@ -14,6 +15,7 @@ export default class _AppWindow extends Listenable {
   private _fullscreen: boolean;
   private _busListeners = new Map<MessageTypeMap["windowBus"]["action"], NormalFunc[]>();
   static currentWindowType = _currentWindowType;
+  static runtimeID = _runtimeID;
 
   get isMin() {
     return this._min;

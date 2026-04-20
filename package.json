@@ -23,7 +23,7 @@
   "private": true,
   "scripts": {
     "build": "yarn lint && yarn test && yarn build:wasm && yarn check && yarn build:store && yarn build:ui && yarn build:app && yarn build:electron",
-    "dev": "yarn dlx npm-run-all --parallel --race dev:ui dev:app dev:electron",
+    "dev": "yarn npm-run-all --parallel --race dev:ui dev:app dev:electron",
     "dev:ui": "yarn workspace @mahiru/ui dev",
     "dev:app": "yarn workspace airamusic dev",
     "dev:electron": "yarn wait-on http://localhost:8827 && yarn wait-on packages/app/dist/app/main.mjs && yarn electronmon ./packages/app --inspect=9229",

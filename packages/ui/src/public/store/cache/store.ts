@@ -1,10 +1,10 @@
 import { cacheRequest } from "./request";
-import { CacheStoreBase } from "./base";
+import { CacheStoreUtils } from "@mahiru/ui/public/store/cache/utils";
 
-export class CacheStoreForStore extends CacheStoreBase {
+export class CacheStoreForStore {
   one(url: string, id = url, method = "GET") {
-    url = this.encode(url);
-    id = this.encode(id);
+    url = CacheStoreUtils.encode(url);
+    id = CacheStoreUtils.encode(id);
     return cacheRequest("/api/store/async", { method, params: { id, url } });
   }
 

@@ -14,13 +14,6 @@ import useListenableHook from "@mahiru/ui/public/hooks/useListenableHook";
 import AppEntry from "@mahiru/ui/windows/main/entry";
 import ElectronServices from "@mahiru/ui/public/source/electron/services";
 
-const miniWindow = ElectronServices.Window.from("miniplayer");
-if (!miniWindow.opened) {
-  miniWindow.openThen(() => {
-    ElectronServices.Bus.updater?.();
-  });
-}
-
 const TopControl: FC = () => {
   const currentWindow = useListenableHook(ElectronServices.Window.current);
   const miniWindow = useListenableHook(ElectronServices.Window.from("miniplayer"));
@@ -46,6 +39,10 @@ const TopControl: FC = () => {
       sub2();
     };
   }, [currentWindow, miniWindow]);
+
+  useEffect(() => {
+    ElectronServices.Bus.updater?.();
+  }, []);
 
   return (
     <NoDrag className="flex flex-row gap-4 select-none">

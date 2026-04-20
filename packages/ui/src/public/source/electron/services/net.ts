@@ -2,13 +2,14 @@ import { Log } from "@mahiru/ui/public/utils/dev";
 import { Listener } from "@mahiru/ui/public/utils/listenable";
 import _AppRenderer from "./renderer";
 import { EqError } from "@mahiru/log/src/err";
+import Init from "@mahiru/ui/public/utils/init";
 
 export default class _AppNet {
   static completed: number[] = [];
   static cursor = 0;
   static listener = new Listener();
 
-  static init() {
+  static _init() {
     const observer = new PerformanceObserver((list) => {
       const now = performance.now();
       list.getEntries().forEach(() => {
@@ -103,6 +104,4 @@ export default class _AppNet {
   static offOnlineChange = this.listener.remove.bind(this.listener);
 }
 
-window.queueMicrotask(() => {
-  _AppNet.init();
-});
+Init.initMicrotask(_AppNet);

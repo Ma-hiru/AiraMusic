@@ -1,9 +1,9 @@
 import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
 import { Log } from "@mahiru/ui/public/utils/dev";
-import { nextIdle } from "@mahiru/ui/public/utils/frame";
 import HTTPConstants from "@mahiru/ui/public/constants/http";
 import AppToast from "@mahiru/ui/public/components/toast";
 import NeteaseServices from "@mahiru/ui/public/source/netease/services";
+import { EqError } from "@mahiru/log/src/err";
 
 export const apiRequest = axios.create({
   baseURL: HTTPConstants.NCMBaseURL,
@@ -19,7 +19,13 @@ apiRequest.interceptors.response.use(
   (response) => response.data,
   (error) => {
     if (axios.isCancel(error)) {
-      return Promise.reject(error);
+      return Promise.reject(
+        new EqError({
+          label: "apiRequest",
+          message: "ncm api request canceled",
+          raw: error
+        })
+      );
     }
 
     const config: Undefinable<ExtendedAxiosRequestConfig> = error?.config;
@@ -49,12 +55,10 @@ apiRequest.interceptors.response.use(
       if (config.__retryCount < HTTPConstants.MaxRetries) {
         const delayTime = HTTPConstants.backoff(++config.__retryCount);
 
-        nextIdle(1000).then(() => {
-          Log.trace(
-            `apiRequest.ts<${config.url}>`,
-            `retry ${config.__retryCount}/${HTTPConstants.MaxRetries} after ${delayTime}ms`
-          );
-        });
+        Log.trace(
+          `apiRequest.ts<${config.url}>`,
+          `retry ${config.__retryCount}/${HTTPConstants.MaxRetries} after ${delayTime}ms`
+        );
 
         return delay(delayTime, <AbortSignal>config.signal)
           .then(() => apiRequest(config))
@@ -62,7 +66,13 @@ apiRequest.interceptors.response.use(
       }
     }
 
-    return Promise.reject(error);
+    return Promise.reject(
+      new EqError({
+        label: "apiRequest",
+        message: `ncm api request failed: ${data.code} ${data.message}`,
+        raw: error
+      })
+    );
   }
 );
 

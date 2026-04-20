@@ -1,9 +1,9 @@
 import { accessToken, cacheRequest } from "./request";
-import { CacheStoreBase } from "./base";
+import { CacheStoreUtils } from "@mahiru/ui/public/store/cache/utils";
 
-export class CacheStoreForOther extends CacheStoreBase {
+export class CacheStoreForOther {
   fetch<T>(id: string | number): Promise<T> {
-    id = this.encode(id);
+    id = CacheStoreUtils.encode(id);
     return cacheRequest("/api/fetch", { method: "GET", params: { id } });
   }
 
@@ -14,7 +14,7 @@ export class CacheStoreForOther extends CacheStoreBase {
     >,
     onDone: Nullable<NormalFunc<[data: string]>>
   ) {
-    const es = new EventSource(`/api/move?path=${this.encode(path)}&key=${accessToken}`);
+    const es = new EventSource(`/api/move?path=${CacheStoreUtils.encode(path)}&key=${accessToken}`);
     es.addEventListener("done", (e) => {
       es.close();
       onDone?.(e.data);

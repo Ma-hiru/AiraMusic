@@ -1,18 +1,17 @@
 import { ContextMenuRender } from "@mahiru/ui/public/components/menu/MenuProvider";
 import { useLayoutEffect } from "react";
 import { Log } from "@mahiru/ui/public/utils/dev";
-import { Errs } from "@mahiru/ui/public/constants/errs";
 import { createTrackContextMenu } from "@mahiru/ui/public/components/menu/TrackMenu";
 
 export default class AppContextMenu {
   private static setContextMenuData: NormalFunc<[data: Nullable<ContextMenuRender>]> = () => {
-    Log.error(Errs.ContextMenuBeforeInject.derive("setContextMenuData"));
+    Log.warn("AppContextMenu", "ContextMenu is not provided in this app");
   };
   private static setContextMenuVisible: NormalFunc<[show?: boolean]> = () => {
-    Log.error(Errs.ContextMenuBeforeInject.derive("setContextMenuVisible"));
+    Log.warn("AppContextMenu", "ContextMenu is not provided in this app");
   };
   private static contextMenuVisibleGetter: NormalFunc<[], boolean> = () => {
-    Log.error(Errs.ContextMenuBeforeInject.derive("contextMenuVisibleGetter"));
+    Log.warn("AppContextMenu", "ContextMenu is not provided in this app");
     return false;
   };
 

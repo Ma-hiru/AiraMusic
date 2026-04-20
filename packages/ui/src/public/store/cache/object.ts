@@ -1,7 +1,7 @@
 import { cacheRequest } from "@mahiru/ui/public/store/cache/request";
-import { CacheStoreBase } from "./base";
+import { CacheStoreUtils } from "@mahiru/ui/public/store/cache/utils";
 
-export class CacheStoreForObject extends CacheStoreBase {
+export class CacheStoreForObject {
   store<T extends object>(id: string, data: T) {
     return cacheRequest({
       url: "/api/object/store",
@@ -31,7 +31,7 @@ export class CacheStoreForObject extends CacheStoreBase {
       objField: string | number | "length";
     }
   ): Promise<Nullable<T>> {
-    id = this.encode(id);
+    id = CacheStoreUtils.encode(id);
     return cacheRequest<any, T | null>("/api/object/fetch", {
       method: "GET",
       params: { id, timeLimit, ...(parts || {}) }

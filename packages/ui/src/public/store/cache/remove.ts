@@ -1,27 +1,22 @@
 import { cacheRequest } from "./request";
-import { CacheStoreBase } from "./base";
+import { RequestCollector } from "@mahiru/ui/public/utils/collector";
+import { CacheStoreUtils } from "@mahiru/ui/public/store/cache/utils";
 
-export class CacheStoreForRemove extends CacheStoreBase {
+export class CacheStoreForRemove {
   removeCollectionsKey = "cache-remove-collections";
 
   constructor() {
-    super();
-    this.registerRequestCollection<string>(
-      this.removeCollectionsKey,
-      1000,
-      5000,
-      this.multi.bind(this)
-    );
+    RequestCollector.register<string>(this.removeCollectionsKey, 1000, 5000, this.multi.bind(this));
   }
 
   one(id: number | string) {
-    this.addRequestToCollection<string>(this.removeCollectionsKey, String(id));
+    RequestCollector.add<string>(this.removeCollectionsKey, String(id));
     // id = this.encode(id);
     // return cacheRequest("/api/remove/async", { method: "GET", params: { id } });
   }
 
   oneSync(id: number | string): Promise<CacheCheckResult> {
-    id = this.encode(id);
+    id = CacheStoreUtils.encode(id);
     return cacheRequest("/api/remove", { method: "GET", params: { id } });
   }
 

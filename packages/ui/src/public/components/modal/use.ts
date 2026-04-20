@@ -1,21 +1,20 @@
 import { ModalData } from "@mahiru/ui/public/components/modal/ModalProvider";
 import { Log } from "@mahiru/ui/public/utils/dev";
-import { Errs } from "@mahiru/ui/public/constants/errs";
 import Provider from "./ModalProvider";
 
 export default class AppModal {
   private static toggleModalVisible: NormalFunc<[visible?: boolean | undefined]> = () => {
-    Log.error(Errs.ModalBeforeInject.derive("toggleModalVisible"));
+    Log.warn("AppModal", "Modal is not provided in this app");
   };
   private static setModalRenderData: NormalFunc<[data: Nullable<ModalData>]> = () => {
-    Log.error(Errs.ModalBeforeInject.derive("setModalRenderData"));
+    Log.warn("AppModal", "Modal is not provided in this app");
   };
   private static getRender: NormalFunc<[], Nullable<ModalData>> = () => {
-    Log.error(Errs.ModalBeforeInject.derive("getRender"));
+    Log.warn("AppModal", "Modal is not provided in this app");
     return null;
   };
   static getVisible: NormalFunc<[], boolean> = () => {
-    Log.error(Errs.ModalBeforeInject.derive("getVisible"));
+    Log.warn("AppModal", "Modal is not provided in this app");
     return false;
   };
 

@@ -5,10 +5,15 @@ import {
 } from "@mahiru/ui/public/source/netease/models";
 import { CacheStore } from "@mahiru/ui/public/store/cache";
 import { NeteaseImageSize } from "@mahiru/ui/public/enum";
+import { LRUCacheWithTime } from "@mahiru/ui/public/utils/lru";
 
 export default class _NeteaseImageSource {
   //region cache
   private static readonly cacheKey = "netease_image";
+  private static readonly memoryCache = new LRUCacheWithTime<string, NeteaseLocalImage>(
+    5000,
+    1000 * 60 * 60 * 24
+  );
 
   private static getCacheKey(image: NeteaseNetworkImage) {
     const suffix = image.sourceName === "other" ? `_${image.url}` : "";
@@ -25,11 +30,20 @@ export default class _NeteaseImageSource {
     );
   }
 
-  private static storeCache(image: NeteaseNetworkImage) {
+  private static downloadCache(image: NeteaseNetworkImage) {
     return CacheStore.store.one(image.url, _NeteaseImageSource.getCacheKey(image));
   }
 
+  private static setMemoryCache(image: NeteaseLocalImage) {
+    _NeteaseImageSource.memoryCache.set(_NeteaseImageSource.getCacheKey(image), image);
+    return image;
+  }
+
   private static getCache(image: NeteaseNetworkImage, download?: boolean) {
+    const cache = _NeteaseImageSource.memoryCache.get(_NeteaseImageSource.getCacheKey(image));
+    if (cache) {
+      return Promise.resolve({ ok: true, image: cache });
+    }
     if (download) {
       return CacheStore.check.orStoreOne(image.url, _NeteaseImageSource.getCacheKey(image));
     }
@@ -37,6 +51,7 @@ export default class _NeteaseImageSource {
   }
 
   private static removeCache(image: NeteaseNetworkImage) {
+    _NeteaseImageSource.memoryCache.delete(_NeteaseImageSource.getCacheKey(image));
     return CacheStore.remove.one(_NeteaseImageSource.getCacheKey(image));
   }
   //endregion
@@ -45,7 +60,10 @@ export default class _NeteaseImageSource {
     if ("localURL" in image) return image;
     const check = await _NeteaseImageSource.getCache(image, download);
     if (check.ok) {
-      return NeteaseLocalImage.fromNetworkImage(image, check.index.file);
+      if ("image" in check) return check.image;
+      return _NeteaseImageSource.setMemoryCache(
+        NeteaseLocalImage.fromNetworkImage(image, check.index.file)
+      );
     }
     return null;
   }
@@ -66,6 +84,6 @@ export default class _NeteaseImageSource {
   }
 
   static async download(image: NeteaseNetworkImage) {
-    return _NeteaseImageSource.storeCache(image);
+    return _NeteaseImageSource.downloadCache(image);
   }
 }

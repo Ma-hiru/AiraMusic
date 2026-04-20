@@ -1,16 +1,15 @@
 import { ToastItemData } from "@mahiru/ui/public/components/toast/ToastItem";
 import { Log } from "@mahiru/ui/public/utils/dev";
-import { Errs } from "@mahiru/ui/public/constants/errs";
 import Provider from "./ToastProvider";
 
 export default class AppToast {
   static request: NormalFunc<[data: Omit<ToastItemData, "id">], string> = () => {
-    Log.warn(Errs.ToastBeforeInject.derive("requestToast"));
+    Log.warn("AppToast", "Toast is not provided in this app");
     return "";
   };
 
   static dispose: NormalFunc<[id: string]> = () => {
-    Log.warn(Errs.ToastBeforeInject.derive("disposeToast"));
+    Log.warn("AppToast", "Toast is not provided in this app");
   };
 
   static inject(

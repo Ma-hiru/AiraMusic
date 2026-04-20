@@ -115,7 +115,7 @@
           splitSrc[splitSrc.length - 1] ||
           current.value.url ||
           `unknown.${type}`;
-        const result = (await ElectronServices.Renderer.Event.invoke.saveFile(<
+        const result = (await ElectronServices.IPC.Event.invoke.saveFile(<
           { buffer: ArrayBuffer; name: string }
         >{
           buffer,

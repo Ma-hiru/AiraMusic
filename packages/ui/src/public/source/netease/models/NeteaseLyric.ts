@@ -11,7 +11,6 @@ import {
   parseNeteaseLyric,
   parseTranslatedLRC
 } from "@mahiru/wasm";
-import { Errs } from "@mahiru/ui/public/constants/errs";
 import {
   loadErrorLyricPreset,
   noLyricPreset,
@@ -202,7 +201,11 @@ class Parser {
         tips: mt?.nickname ? `歌词贡献者：${mt.nickname}` : ""
       };
     } catch (err) {
-      Log.error(Errs.LyricParseErr.derive("parseNeteaseLyric", err));
+      Log.error({
+        label: "parseNeteaseLyric",
+        message: "parseNeteaseLyric failed",
+        raw: err
+      });
       return <NeteaseLyricModel>{
         data: [],
         rmExisted: false,

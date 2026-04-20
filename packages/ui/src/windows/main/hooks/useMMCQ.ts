@@ -1,7 +1,6 @@
 import { extractPalette, FilterOptions } from "@mahiru/wasm";
 import { useEffect, useState } from "react";
 import { Log } from "@mahiru/ui/public/utils/dev";
-import { Errs } from "@mahiru/ui/public/constants/errs";
 import { useStableArray } from "@mahiru/ui/public/hooks/useStableArray";
 
 const cache: Record<string, string[]> = {};
@@ -27,7 +26,14 @@ export function useMMCQ(
         .then((res) => {
           const type = res.headers.get("Content-Type");
           if (type && !(type.includes("image") || type.includes("octet-stream"))) {
-            throw Errs.FetchedNotImage.derive("useMMCQ.ts");
+            Log.throw({
+              message: "invalid image type",
+              label: "useMMCQ",
+              raw: {
+                type,
+                imageURL
+              }
+            });
           }
           return res.arrayBuffer();
         })
@@ -49,7 +55,7 @@ export function useMMCQ(
           Log.error({
             raw: err,
             message: "failed to extract palette using MMCQ",
-            label: "useMMCQ.ts"
+            label: "useMMCQ"
           });
         });
     });

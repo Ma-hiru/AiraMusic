@@ -11,5 +11,6 @@ export const rendererInvokeAPI = {
   storeKey: () => AppTypedRendererIPC.invoke("storeKey"),
   checkOnlineStatus: () => AppTypedRendererIPC.invoke("checkOnlineStatus"),
   currentWindowType: () => AppTypedRendererIPC.invoke("currentWindowType"),
-  currentWindowBounds: () => AppTypedRendererIPC.invoke("currentWindowBounds")
+  currentWindowBounds: () => AppTypedRendererIPC.invoke("currentWindowBounds"),
+  runtimeID: () => AppTypedRendererIPC.invoke("runtimeID")
 } satisfies RendererInvokeAPI;

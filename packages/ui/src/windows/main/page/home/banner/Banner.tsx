@@ -78,7 +78,7 @@ const Banner: FC<object> = () => {
           return;
         }
         case BannerType.web: {
-          ElectronServices.Renderer.Event.normal.openExternalLink({
+          ElectronServices.IPC.Event.normal.openExternalLink({
             url: item.url,
             title: item.typeTitle
           });

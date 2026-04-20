@@ -10,4 +10,5 @@ export class CacheStore {
   static readonly store = new CacheStoreForStore();
   static readonly other = new CacheStoreForOther();
   static readonly remove = new CacheStoreForRemove();
+  static readonly browser = window.localStorage;
 }

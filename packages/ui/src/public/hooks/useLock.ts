@@ -1,4 +1,4 @@
-import { Errs } from "@mahiru/ui/public/constants/errs";
+import { EqError } from "@mahiru/log/src/err";
 
 type Task<T> = NormalFunc<[], T | Promise<T>>;
 
@@ -60,7 +60,12 @@ export class Lock {
       }
 
       if (this.locked) {
-        return onError(Errs.AcquireLockError.derive());
+        return onError(
+          new EqError({
+            message: "lock acquire failed",
+            label: label || "tryRun-lock"
+          })
+        );
       } else {
         this.locked = true;
       }
@@ -70,7 +75,15 @@ export class Lock {
         if (result instanceof Promise) {
           result
             .then(resolve)
-            .catch((err) => onError(Errs.TaskRuntimeError.derive(label || "tryRun-task", err)))
+            .catch((err) =>
+              onError(
+                new EqError({
+                  message: "task execution failed",
+                  label: label || "tryRun-task",
+                  raw: err
+                })
+              )
+            )
             .finally(() => this.release());
         } else {
           this.release();
@@ -78,14 +91,19 @@ export class Lock {
         }
       } catch (err) {
         this.release();
-        onError(Errs.TaskRuntimeError.derive(label || "tryRun-task", err));
+        onError(
+          new EqError({
+            message: "task execution failed",
+            label: label || "tryRun-task",
+            raw: err
+          })
+        );
       }
     });
   }
 
   /**
    * @desc 运行一个任务，锁定时一直等待，任务执行失败时抛出错误
-   * @throws {Lock.TaskRuntimeError} 如果任务执行失败则抛出此错误
    * @param task 要执行的任务
    * @param label 任务标签，用于错误提示
    * @returns 任务的返回值
@@ -95,7 +113,15 @@ export class Lock {
       this.acquire()
         .then(task)
         .then(resolve)
-        .catch((err) => reject(Errs.TaskRuntimeError.derive(label || "run-task", err)))
+        .catch((err) =>
+          reject(
+            new EqError({
+              message: "task execution failed",
+              label: label || "run-task",
+              raw: err
+            })
+          )
+        )
         .finally(() => this.release());
     });
   }

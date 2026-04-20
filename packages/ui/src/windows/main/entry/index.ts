@@ -2,6 +2,7 @@ import { userStoreSnapshot } from "@mahiru/ui/public/store/user";
 import AppPlayer from "@mahiru/ui/public/player/core";
 import useListenableHook from "@mahiru/ui/public/hooks/useListenableHook";
 import NeteaseServices from "@mahiru/ui/public/source/netease/services";
+import ElectronServices from "@mahiru/ui/public/source/electron/services";
 
 export default class AppEntry {
   //region inner
@@ -49,10 +50,23 @@ export default class AppEntry {
     void NeteaseServices.Auth.setup();
     return this;
   }
+
+  private static setupMini() {
+    ElectronServices.Once.do("setupMini", () => {
+      const miniWindow = ElectronServices.Window.from("miniplayer");
+      setTimeout(() => {
+        if (!miniWindow.opened) {
+          miniWindow.openThen(() => {
+            ElectronServices.Bus.updater?.();
+          });
+        }
+      }, 7000);
+    });
+  }
   //endregion
 
-  static init() {
-    this.setupUser().setupPlayer();
+  static _init() {
+    this.setupUser().setupPlayer().setupMini();
   }
 
   static get player() {

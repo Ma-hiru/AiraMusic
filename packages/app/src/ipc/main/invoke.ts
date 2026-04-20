@@ -1,7 +1,7 @@
 import { app, BrowserWindow, dialog, ipcMain } from "electron";
 import { MainInvokeAPI } from "./typed";
 import { AppWindowManager } from "../../window";
-import { storeKeyAccessToken } from "../../utils/dev";
+import { runtimeID, storeKeyAccessToken } from "../../utils/dev";
 import AppScreen from "../../utils/screen";
 import Dns from "node:dns/promises";
 import Net from "node:net";
@@ -140,7 +140,8 @@ const mainInvokeAPI = {
       workAreaWidth: AppScreen.primary.logicalWorkAreaSize.width,
       ...(sender?.getBounds() ?? {})
     };
-  }
+  },
+  runtimeID: () => runtimeID
 } satisfies MainInvokeAPI;
 
 export function registerInvokeHandlers() {
