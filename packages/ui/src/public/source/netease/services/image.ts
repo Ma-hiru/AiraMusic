@@ -6,6 +6,7 @@ import {
 import { CacheStore } from "@mahiru/ui/public/store/cache";
 import { NeteaseImageSize } from "@mahiru/ui/public/enum";
 import { LRUCacheWithTime } from "@mahiru/ui/public/utils/lru";
+import { Log } from "@mahiru/ui/public/utils/dev";
 
 export default class _NeteaseImageSource {
   //region cache
@@ -16,18 +17,8 @@ export default class _NeteaseImageSource {
   );
 
   private static getCacheKey(image: NeteaseNetworkImage) {
-    const suffix = image.sourceName === "other" ? `_${image.url}` : "";
-    return (
-      _NeteaseImageSource.cacheKey +
-        "_" +
-        image.sourceID +
-        "_" +
-        image.sourceName +
-        "_" +
-        image.size +
-        "_" +
-        image.cacheKey || "" + suffix
-    );
+    const suffix = image.sourceName === "other" ? image.url : "";
+    return `${_NeteaseImageSource.cacheKey}_${image.sourceName}_${image.sourceID}_${image.size}_${image.cacheKey ?? ""}_${suffix}`;
   }
 
   private static downloadCache(image: NeteaseNetworkImage) {
@@ -42,6 +33,7 @@ export default class _NeteaseImageSource {
   private static getCache(image: NeteaseNetworkImage, download?: boolean) {
     const cache = _NeteaseImageSource.memoryCache.get(_NeteaseImageSource.getCacheKey(image));
     if (cache) {
+      Log.debug("image cache hit");
       return Promise.resolve({ ok: true, image: cache });
     }
     if (download) {
@@ -56,7 +48,7 @@ export default class _NeteaseImageSource {
   }
   //endregion
 
-  static async try(image: NeteaseNetworkImage | NeteaseLocalImage, download: boolean) {
+  static async tryFromCache(image: NeteaseNetworkImage | NeteaseLocalImage, download: boolean) {
     if ("localURL" in image) return image;
     const check = await _NeteaseImageSource.getCache(image, download);
     if (check.ok) {
@@ -69,7 +61,7 @@ export default class _NeteaseImageSource {
   }
 
   static async local(track: NeteaseTrack, download: boolean, size: NeteaseImageSize) {
-    return _NeteaseImageSource.try(
+    return _NeteaseImageSource.tryFromCache(
       NeteaseNetworkImage.fromTrackCover(track).setSize(size),
       download
     );

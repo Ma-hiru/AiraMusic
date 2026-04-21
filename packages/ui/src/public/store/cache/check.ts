@@ -39,7 +39,6 @@ export class CacheStoreForCheck {
 
   private flushCheckCollections(collections: CheckRequestItem[]) {
     if (collections.length === 0) return;
-    Log.debug("Starting flushCheckCollections", collections.length);
     this.multi(collections)
       .then((res) => {
         collections.forEach((item, index) => {
@@ -64,12 +63,10 @@ export class CacheStoreForCheck {
 
   private flushCheckOrStoreCollections(collections: CheckOrStoreRequestItem[]) {
     if (collections.length === 0) return;
-    Log.debug("Starting flushCheckOrStoreCollections check", collections.length);
     this.flushCheckCollections(collections);
     let count = 0;
     const store = () => {
       if (ElectronServices.Net.quality.score < 0.7 || count >= 3) {
-        Log.debug("Starting flushCheckOrStoreCollections store", collections.length);
         this.orStoreMulti(collections).catch((err) => {
           Log.error({
             raw: err,

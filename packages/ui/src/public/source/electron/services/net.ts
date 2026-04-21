@@ -33,9 +33,9 @@ export default class _AppNet {
         }, 5000);
       }
 
-      Log.info("Network status", this.isOnline ? "online" : "offline");
+      Log.info("AppNet", "network status changed", this.isOnline ? "online" : "offline");
     };
-    Log.info("Network status", window.navigator.onLine ? "online" : "offline");
+    Log.info("AppNet", "network status changed", window.navigator.onLine ? "online" : "offline");
     window.addEventListener("online", status, { passive: true });
     window.addEventListener("offline", status, {
       passive: true
@@ -49,7 +49,6 @@ export default class _AppNet {
     }
     const recent = this.completed.length - this.cursor;
     const score = Math.min(1, recent / 12);
-    Log.debug("Network quality", "score", score, "recent", recent);
     return {
       score,
       recent

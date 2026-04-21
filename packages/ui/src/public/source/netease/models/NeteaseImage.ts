@@ -22,7 +22,7 @@ export class NeteaseNetworkImage {
   constructor(props: {
     url: string;
     sourceID: number | string;
-    sourceName: "track" | "playlist" | "other";
+    sourceName: "track" | "playlist" | "avatar" | "other";
     size?: NeteaseImageSize | number;
     alt?: string;
     cacheKey?: string;
@@ -121,15 +121,17 @@ export class NeteaseNetworkImage {
       return new NeteaseNetworkImage({
         url: user.profile.avatarUrl,
         alt: user.profile.nickname,
-        sourceName: "other",
-        sourceID: ""
+        sourceID: user.profile.userId,
+        cacheKey: user.profile.avatarUrl,
+        sourceName: "avatar"
       }) as T extends Falsy ? null : NeteaseNetworkImage;
     } else {
       return new NeteaseNetworkImage({
         url: user.avatarUrl,
         alt: user.nickname,
-        sourceName: "other",
-        sourceID: ""
+        sourceID: user.userId,
+        cacheKey: user.avatarUrl,
+        sourceName: "avatar"
       }) as T extends Falsy ? null : NeteaseNetworkImage;
     }
   }
@@ -142,7 +144,7 @@ export class NeteaseLocalImage extends NeteaseNetworkImage {
   constructor(props: {
     url: string;
     sourceID: number | string;
-    sourceName: "track" | "playlist" | "other";
+    sourceName: "track" | "playlist" | "avatar" | "other";
     size?: NeteaseImageSize | number;
     localURL: string;
     localSize?: NeteaseImageSize | number;

@@ -164,7 +164,7 @@ const NeteaseImage: FC<ImageProps> = ({
 
   useEffect(() => {
     if (pause || !image?.src || (cacheLazy && !visible)) return;
-    NeteaseServices.Image.try(image, cache).then((local) => {
+    NeteaseServices.Image.tryFromCache(image, cache).then((local) => {
       if (local) setSource(local);
       else setSource(image);
     });

@@ -2,12 +2,12 @@ import {
   FC,
   memo,
   MouseEvent as ReactMouseEvent,
+  startTransition,
   useCallback,
   useEffect,
   useMemo,
   useRef,
-  useState,
-  startTransition
+  useState
 } from "react";
 import { useLocation, useSearchParams } from "react-router-dom";
 import { RoutePathConstants } from "@mahiru/ui/windows/main/constants";
@@ -45,8 +45,6 @@ const PlaylistPage: FC<object> = () => {
   const [searchParams] = useSearchParams();
   const { id, source } = RoutePathConstants.playlistParse(location, searchParams);
   const [status, setStatus] = useState<"error" | "loading" | "loaded">("loading");
-
-  Log.debug(`PlaylistPage params: id=${id}, source=${source}`);
 
   const [playlist, setPlaylist] = useState<Nullable<NeteasePlaylist>>(null);
   const [tracks, setTracks] = useState<NeteaseTrackRecord[] | NeteaseHistory[]>([]);
@@ -212,6 +210,8 @@ const PlaylistPage: FC<object> = () => {
   }, [id, source, searcher]);
   // 数据加载
   useEffect(() => {
+    Log.debug("PlaylistPage", `params: id=${id}, source=${source}`);
+
     let cancel = false;
     if (source === "normal" || source === "like") {
       const playlistID = source === "like" ? user?.likedPlaylist.id : Number(id);

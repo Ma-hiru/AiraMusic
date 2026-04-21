@@ -143,7 +143,7 @@
     [() => props.pause, () => props.image?.src],
     () => {
       if (!props.image) return;
-      NeteaseServices.Image.try(props.image, props.cache).then((local) => {
+      NeteaseServices.Image.tryFromCache(props.image, props.cache).then((local) => {
         if (local) {
           source.value = local;
         } else {
