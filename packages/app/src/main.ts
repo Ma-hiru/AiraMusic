@@ -1,4 +1,5 @@
-import { APP } from "./app";
+import Entry from "./entry";
 
-const app = new APP();
-app.run();
+const app = Entry.create();
+
+Entry.run(app);

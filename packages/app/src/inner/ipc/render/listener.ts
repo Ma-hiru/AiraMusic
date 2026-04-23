@@ -1,4 +1,4 @@
-import AppTypedRendererIPC from "./typed";
+import { AppTypedRendererIPC } from "./typed";
 
 export const rendererEventListenerAPI = {
   message: (handler) => {

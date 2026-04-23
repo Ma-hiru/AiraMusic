@@ -2,7 +2,7 @@ import { AppWindowCreatorProps, AppWindowManager, WindowExits } from "./manager"
 import { preloadPath } from "../utils/path";
 import { BrowserWindow, dialog } from "electron";
 import { isLinux } from "../utils/platform";
-import { AppWindowConstants } from "../constant/win";
+import { AppWindowConstants } from "../constants/win";
 import { isDev } from "../utils/dev";
 import { clamp } from "lodash-es";
 import AppScreen from "../utils/screen";

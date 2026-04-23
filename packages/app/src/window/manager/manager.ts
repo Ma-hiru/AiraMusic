@@ -1,5 +1,4 @@
 import { BrowserWindow, BrowserWindowConstructorOptions, NativeImage, Tray } from "electron";
-import { AppMessageIPC } from "../../ipc/main/typed";
 import { Log } from "../../utils/log";
 import { isLinux } from "../../utils/platform";
 import { debounce } from "lodash-es";
@@ -8,6 +7,7 @@ export enum WindowExits {
   CLOSE,
   DESTROY
 }
+import AppIpcMessage from "../../inner/ipc/message";
 
 export class AppWindowManager {
   private static readonly BrowserWindowList = new Map<WindowType, BrowserWindow>();
@@ -108,7 +108,7 @@ export class AppWindowManager {
     const sendBusMessage = (action: MessageTypeMap["windowBus"]["action"]) => {
       Log.debug("windowBus", `${type} - ${action}`);
       try {
-        AppMessageIPC.sendAll({
+        AppIpcMessage.sendAll({
           type: "windowBus",
           sender: "process",
           data: { type, action }

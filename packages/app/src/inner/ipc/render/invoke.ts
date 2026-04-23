@@ -1,4 +1,4 @@
-import AppTypedRendererIPC from "./typed";
+import { AppTypedRendererIPC } from "./typed";
 
 export const rendererInvokeAPI = {
   selectPath: (data) => AppTypedRendererIPC.invoke("selectPath", data),

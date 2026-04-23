@@ -1,5 +1,7 @@
-import { screen, Display } from "electron";
-import { AppWindowConstants } from "../constant/win";
+import { screen, Display, app } from "electron";
+import { AppWindowConstants } from "../constants/win";
+import { Log } from "./log";
+import { isDev } from "./dev";
 
 export default class AppScreen {
   private display: Display;
@@ -83,6 +85,27 @@ export default class AppScreen {
             y < bounds.y + bounds.height
         )
     );
+  }
+
+  static printScreenInfo() {
+    app.on("ready", () => {
+      const displays = AppScreen.getAllScreens();
+      Log.debug(
+        "app/dev.ts:printDevInfo",
+        "\n",
+        "===================== App Dev Info =====================\n",
+        `Environment: ${isDev ? "Development" : "Production"}\n`,
+        `Platform: ${process.platform}\n`,
+        `Electron Version: ${process.versions.electron}\n`,
+        `Node.js Version: ${process.versions.node}\n`,
+        `V8 Version: ${process.versions.v8}\n`,
+        `Chrome Version: ${process.versions.chrome}\n`,
+        `Screen Count: ${displays.length}\n`,
+        `Displays:`,
+        displays.map(String).join("\n"),
+        "========================================================="
+      );
+    });
   }
 
   [Symbol.toPrimitive]() {

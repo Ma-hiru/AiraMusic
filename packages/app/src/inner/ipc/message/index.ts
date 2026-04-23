@@ -1,6 +1,6 @@
 import { BrowserWindow, IpcMainEvent, IpcMainInvokeEvent } from "electron";
-import { AppWindowManager } from "../../window";
-import { Log } from "../../utils/log";
+import { AppWindowManager } from "../../../window";
+import { Log } from "../../../utils/log";
 
 export type MainEventAPI = {
   [K in NormalEvent]: NormalFunc<[IpcMainEvent, NormalEventPayload<K>]>;
@@ -10,7 +10,7 @@ export type MainInvokeAPI = {
   [K in InvokeEvent]: NormalFunc<[IpcMainInvokeEvent, InvokeEventArgs<K>], InvokeEventPayload<K>>;
 };
 
-export class AppMessageIPC {
+export default class AppIpcMessage {
   private static readonly handlers = new Map<
     keyof MessageTypeMap,
     NormalFunc<[data: MessageDataReceive<any>["data"]]>[]

@@ -4,6 +4,7 @@ import { AnyToString, CanString } from "../string";
 import { LoggerWriter } from "./writer";
 
 export interface Log {
+  currentLevel: LogLevel;
   format: LogHandler;
   trace: LogHandler;
   debug: LogHandler;
@@ -29,14 +30,15 @@ export function createLog(
   witter: LoggerWriter = console,
   showTimestamp = false
 ): Log {
+  const currentLevel = ParseLogLevel(level);
   return class {
-    private static readonly level = ParseLogLevel(level);
+    static readonly currentLevel = currentLevel;
 
     private static handleInput(level: LogLevel, ...args: CanString[] | [EqErrorProps]): string {
       if (args.length === 1 && EqError.isErrorProps(args[0]))
         return handleLogInput(level, showTimestamp, new EqError(args[0]));
       const output = handleLogInput(level, showTimestamp, ...args);
-      if (this.level <= level) witter.log(output);
+      if (this.currentLevel <= level) witter.log(output);
       return output;
     }
 

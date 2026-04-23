@@ -1,7 +1,7 @@
 import AppScreen from "../../utils/screen";
 import { Log } from "../../utils/log";
 import { isDev } from "../../utils/dev";
-import { AppStore } from "../../app";
+import { AppStore } from "../../inner/store";
 import { AppWindowManager, WindowExits } from "./manager";
 import { isLinux } from "../../utils/platform";
 import { BrowserWindow, BrowserWindowConstructorOptions } from "electron";

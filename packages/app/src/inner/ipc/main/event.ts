@@ -1,7 +1,7 @@
 import { BrowserWindow, ipcMain } from "electron";
-import { AppMessageIPC, MainEventAPI } from "./typed";
-import { Log } from "../../utils/log";
-import { AppWindowCreator, AppWindowManager, AppWindows } from "../../window";
+import { Log } from "../../../utils/log";
+import { AppWindowCreator, AppWindowManager, AppWindows } from "../../../window";
+import AppIpcMessage, { MainEventAPI } from "../../../inner/ipc/message";
 
 const mainEventAPI = {
   openInternalWindow: (e, type) => {
@@ -134,13 +134,13 @@ const mainEventAPI = {
     const sender = BrowserWindow.fromWebContents(e.sender);
     if (!sender) return;
     if (message.to === "all") {
-      AppMessageIPC.sendAll({
+      AppIpcMessage.sendAll({
         sender,
         type: message.type,
         data: message.data
       });
     } else {
-      AppMessageIPC.send({
+      AppIpcMessage.send({
         sender,
         receiver: message.to,
         type: message.type,

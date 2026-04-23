@@ -1,6 +1,6 @@
 import { ipcRenderer, IpcRendererEvent } from "electron";
 
-export default class AppTypedRendererIPC {
+export class AppTypedRendererIPC {
   static on<T extends keyof RendererEventListenerAPI>(
     event: T,
     handler: NormalFunc<

@@ -1,4 +1,4 @@
-import { createLog, LoggerWriter } from "@mahiru/log";
+import { createLog, LoggerWriter, LogLevel, ParseLogLevel, Log } from "@mahiru/log";
 import { isDev } from "./dev";
 import { createWriteStream, mkdirSync } from "node:fs";
 import { appPathJoin, appUserDataJoin } from "./path";
@@ -58,8 +58,14 @@ class LoggerFileWriter implements LoggerWriter {
   }
 }
 
-export const Log = createLog(
-  process.env.APP_LOG_LEVEL,
-  isDev ? console : new LoggerFileWriter(),
-  true
+type ExtendLog = Log & {
+  EnvLevel: LogLevel;
+};
+
+const Log = <ExtendLog>(
+  createLog(process.env.APP_LOG_LEVEL, isDev ? console : new LoggerFileWriter(), true)
 );
+
+Log.EnvLevel = ParseLogLevel(process.env.APP_LOG_LEVEL);
+
+export { Log, type ExtendLog };

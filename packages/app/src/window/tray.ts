@@ -12,9 +12,9 @@ import {
   screen,
   Tray
 } from "electron";
-import { AppMessageIPC } from "../ipc/main/typed";
 import { AppWindowCreator } from "./manager";
 import { AppWindows } from "./wins";
+import AppIpcMessage from "../inner/ipc/message";
 
 export class AppTray {
   static register() {
@@ -33,7 +33,7 @@ export class AppTray {
   private static createMenu(tray: Tray) {
     if (isLinux) {
       this.showRawMenu(tray);
-      AppMessageIPC.listenSelf("playerBus", (data) => {
+      AppIpcMessage.listenSelf("playerBus", (data) => {
         this.playerBus = data;
         this.showRawMenu(tray);
       });
@@ -63,7 +63,7 @@ export class AppTray {
     }
 
     tray.setToolTip(process.env.APP_NAME);
-    AppMessageIPC.listenSelf("playerBus", (data) => {
+    AppIpcMessage.listenSelf("playerBus", (data) => {
       const track = data.track?.detail;
       track?.name
         ? tray.setToolTip(`${process.env.APP_NAME} - ${track.name}`)
@@ -77,7 +77,7 @@ export class AppTray {
       {
         label: this.playerBus?.status === "playing" ? "暂停" : "播放",
         click: () => {
-          AppMessageIPC.send({
+          AppIpcMessage.send({
             sender: "process",
             receiver: "main",
             type: "playerActionBus",
@@ -89,7 +89,7 @@ export class AppTray {
       {
         label: "上一首",
         click: () => {
-          AppMessageIPC.send({
+          AppIpcMessage.send({
             sender: "process",
             receiver: "main",
             type: "playerActionBus",
@@ -100,7 +100,7 @@ export class AppTray {
       {
         label: "下一首",
         click: () => {
-          AppMessageIPC.send({
+          AppIpcMessage.send({
             sender: "process",
             receiver: "main",
             type: "playerActionBus",
@@ -163,7 +163,7 @@ export class AppTray {
         {
           label: "退出",
           click: () => {
-            AppMessageIPC.send({
+            AppIpcMessage.send({
               sender: "process",
               receiver: "main",
               type: "playerActionBus",

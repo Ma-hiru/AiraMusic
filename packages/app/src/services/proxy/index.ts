@@ -40,7 +40,8 @@ export default class ProxyService {
         typeof request.body === "string"
       ) {
         const { type, text } = JSON.parse(request.body || "{}");
-        Log[type as keyof typeof Log]?.(text);
+        // @ts-expect-error
+        Log[type]?.(text);
       }
 
       response.status(204);

@@ -22,7 +22,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "build": "yarn lint && yarn test && yarn build:wasm && yarn check && yarn build:store && yarn build:ui && yarn build:app && yarn build:electron",
+    "build": "yarn test && yarn build:wasm && yarn check && yarn lint && yarn build:store && yarn build:ui && yarn build:app && yarn build:electron",
     "dev": "yarn npm-run-all --parallel --race dev:ui dev:app dev:electron",
     "dev:ui": "yarn workspace @mahiru/ui dev",
     "dev:app": "yarn workspace airamusic dev",
