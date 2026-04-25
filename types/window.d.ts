@@ -8,4 +8,5 @@ type WindowType =
   | "tray"
   | "image"
   | "process"
+  | "comments"
   | "all";

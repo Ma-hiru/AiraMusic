@@ -17,9 +17,13 @@ export type AppWindowCreatorProps = {
 };
 
 export class AppWindowCreator {
-  static create(props: AppWindowCreatorProps) {
+  static create<T extends AppWindowCreatorProps | null>(
+    props: T
+  ): T extends null ? null : BrowserWindow {
+    if (!props) return null as T extends null ? null : BrowserWindow;
+
     let win = AppWindowManager.checkAndShow(props.id);
-    if (win) return win;
+    if (win) return win as T extends null ? null : BrowserWindow;
 
     props.options ||= {};
     props.handleExits ||= WindowExits.IGNORE;
@@ -33,7 +37,7 @@ export class AppWindowCreator {
         const nextWidth = Math.max(1, Math.min(Math.floor(width), workAreaWidth));
         const nextHeight = Math.max(1, Math.min(Math.floor(height), workAreaHeight));
         Log.info(
-          `Restoring window ${id} position from store: x=${x}, y=${y}, width=${nextWidth}, height=${nextHeight}`
+          `Restoring window(${id}) position from store: x=${x}, y=${y}, width=${nextWidth}, height=${nextHeight}`
         );
         options.x = x;
         options.y = y;
@@ -61,7 +65,7 @@ export class AppWindowCreator {
       win.center();
     }
 
-    return this.loadURL(win, loadURL);
+    return this.loadURL(win, loadURL) as T extends null ? null : BrowserWindow;
   }
 
   private static getMemoPos(id: WindowType) {

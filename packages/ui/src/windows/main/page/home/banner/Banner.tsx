@@ -4,6 +4,7 @@ import { BannerType } from "@mahiru/ui/public/enum";
 import { useUpdate } from "@mahiru/ui/public/hooks/useUpdate";
 import { Log } from "@mahiru/ui/public/utils/dev";
 import { NeteaseTrackRecord, NeteaseURL } from "@mahiru/ui/public/source/netease/models";
+import { useNavigate } from "react-router-dom";
 import NeteaseAPI from "@mahiru/ui/public/source/netease/api";
 import NeteaseServices from "@mahiru/ui/public/source/netease/services";
 import ElectronServices from "@mahiru/ui/public/source/electron/services";
@@ -14,12 +15,14 @@ import AppErrorBoundary, {
   AppErrorBoundaryRef
 } from "@mahiru/ui/public/components/fallback/AppErrorBoundary";
 import ThrowIf from "@mahiru/ui/public/components/fallback/ThrowIf";
+import { RoutePathConstants } from "@mahiru/ui/windows/main/constants";
 
 const Banner: FC<object> = () => {
   const [banner, setBanner] = useState<NeteaseAPI.NeteaseBanner[]>([]);
   const [status, setStatus] = useState<"loading" | "error" | "loaded">("loading");
   const errRef = useRef<AppErrorBoundaryRef>({});
   const player = AppEntry.usePlayer();
+  const navigate = useNavigate();
 
   const update = useUpdate();
 
@@ -84,9 +87,13 @@ const Banner: FC<object> = () => {
           });
           return;
         }
+        case BannerType.playlist: {
+          navigate(RoutePathConstants.playlist(id, "normal"));
+          return;
+        }
       }
     },
-    [banner, player]
+    [banner, navigate, player]
   );
   return (
     <div className="w-full px-2">

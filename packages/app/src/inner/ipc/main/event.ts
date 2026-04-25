@@ -8,18 +8,7 @@ const mainEventAPI = {
     const sender = BrowserWindow.fromWebContents(e.sender);
     if (!sender) return;
     if (AppWindowManager.getId(sender) === "main") {
-      switch (type) {
-        case "login":
-          return AppWindowCreator.create(AppWindows.login);
-        case "lyric":
-          return AppWindowCreator.create(AppWindows.lyric);
-        case "miniplayer":
-          return AppWindowCreator.create(AppWindows.miniplayer);
-        case "info":
-          return AppWindowCreator.create(AppWindows.info);
-        case "image":
-          return AppWindowCreator.create(AppWindows.image);
-      }
+      return AppWindowCreator.create(AppWindows.get(type));
     }
   },
   focusInternalWindow: (e, type) => {

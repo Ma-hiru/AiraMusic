@@ -2,6 +2,7 @@ import { FC, memo } from "react";
 import { Heart, MessageSquare } from "lucide-react";
 import { useHeart } from "@mahiru/ui/public/hooks/useHeart";
 import AppEntry from "@mahiru/ui/windows/main/entry";
+import ElectronServices from "@mahiru/ui/public/source/electron/services";
 
 const Artist: FC<object> = () => {
   const player = AppEntry.usePlayer();
@@ -32,7 +33,10 @@ const Artist: FC<object> = () => {
         <MessageSquare
           color="white"
           fill="white"
-          // onClick={() => handleOpenComments(track)}
+          onClick={() => {
+            console.log("comments");
+            ElectronServices.Window.from("comments").open();
+          }}
           className="size-4 scale-90 text-white/50  hover:opacity-50 active:scale-90 active:text-white cursor-pointer select-none shadow-lg ease-in-out duration-300 transition-all opacity-80"
         />
       </div>

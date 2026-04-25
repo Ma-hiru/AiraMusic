@@ -13,7 +13,13 @@ export class NeteaseURL {
     const isOrpheus = url.startsWith("orpheus");
     const isHttp = url.startsWith("http");
     const unknown = { type: BannerType.unknown, id: 0 };
-    const types = [BannerType.song, BannerType.web, BannerType.album, BannerType.unknown];
+    const types = [
+      BannerType.song,
+      BannerType.web,
+      BannerType.album,
+      BannerType.unknown,
+      BannerType.playlist
+    ];
     try {
       if (isOrpheus) {
         const [type, id] = url.split("://")[1]!.split("/")!;
