@@ -1,7 +1,7 @@
-import { FC, memo, useCallback, useEffect, useRef, useState } from "react";
+import { FC, memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useThemeInjectFromBus } from "@mahiru/ui/public/hooks/useThemeInjectFromBus";
 import { requestCommentProps, useComments } from "@mahiru/ui/public/hooks/useComments";
-import { CommentSort, CommentType } from "@mahiru/ui/public/enum";
+import { CommentSort, CommentType, NeteaseImageSize } from "@mahiru/ui/public/enum";
 import useListenableHook from "@mahiru/ui/public/hooks/useListenableHook";
 import ElectronServices from "@mahiru/ui/public/source/electron/services";
 
@@ -12,9 +12,16 @@ import Content from "./Content";
 import AppLoading from "@mahiru/ui/public/components/fallback/AppLoading";
 import AppErrorBoundary from "@mahiru/ui/public/components/fallback/AppErrorBoundary";
 import ThrowIf from "@mahiru/ui/public/components/fallback/ThrowIf";
+import AcrylicBackground from "@mahiru/ui/public/components/public/AcrylicBackground";
+import { NeteaseNetworkImage } from "@mahiru/ui/public/source/netease/models";
+import { CacheStore } from "@mahiru/ui/public/store/cache";
 
 const CommentsPage: FC<object> = () => {
   const commentBus = useListenableHook(ElectronServices.Bus.comment);
+  const playerBus = useListenableHook(ElectronServices.Bus.player);
+  const [dynamicContent, setDynamicContent] = useState(() => {
+    return CacheStore.browser.getOne("comments-dynamic-content") === "true";
+  });
   const [props, setProps] = useState<Nullable<requestCommentProps>>(null);
   const [comments, status] = useComments(props);
   const [sortType, setSortType] = useState(CommentSort.Hot);
@@ -82,10 +89,32 @@ const CommentsPage: FC<object> = () => {
       pageNo: props.pageNo + 1
     });
   }, [status]);
+  const background = useMemo(() => {
+    const src = playerBus.data?.track?.detail.al.picUrl;
+    if (!src) return undefined;
+    return NeteaseNetworkImage.fromURL(src).setSize(NeteaseImageSize.sm).src;
+  }, [playerBus.data?.track?.detail.al.picUrl]);
+
+  useEffect(() => {
+    const track = playerBus.data?.track;
+    if (!track) return;
+    if (dynamicContent) {
+      CacheStore.browser.setOne("comments-dynamic-content", "true");
+      ElectronServices.Bus.comment.commit({
+        id: track.id,
+        type: "track"
+      });
+    } else {
+      CacheStore.browser.setOne("comments-dynamic-content", "false");
+    }
+  }, [dynamicContent, playerBus.data?.track]);
 
   return (
-    <div className="w-screen h-screen pt-10 overflow-hidden gird grid-rows-[auto,1fr]">
+    <div className="w-screen h-screen pt-10 overflow-hidden gird grid-rows-[auto,1fr] relative">
       <Control className="h-10 absolute top-0 left-0 right-0 z-10" />
+      <div className="fixed inset-0 z-[-1]">
+        <AcrylicBackground src={background} />
+      </div>
       <AppErrorBoundary canReset toast={false} name="CommentsPage" onReset={reload}>
         <ThrowIf when={status === "error"} message="加载评论失败" />
         <AppLoading loading={status === "loading"}>
@@ -95,6 +124,8 @@ const CommentsPage: FC<object> = () => {
             sortType={sortType}
             setSortType={setSortType}
             totalComment={comments.totalComment}
+            dynamicContent={dynamicContent}
+            setDynamicContent={setDynamicContent}
           />
           <Content
             className="h-[calc(100vh-160px)]"
@@ -102,6 +133,8 @@ const CommentsPage: FC<object> = () => {
             comments={comments.data}
             onEnded={requestNextPage}
             loading={status === "loading"}
+            type={commentBus.data?.type}
+            sourceID={commentBus.data?.id}
           />
         </AppLoading>
       </AppErrorBoundary>

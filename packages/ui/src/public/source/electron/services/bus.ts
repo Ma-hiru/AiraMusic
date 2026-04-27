@@ -63,6 +63,11 @@ class AppCommentsBus extends Listenable {
   send(data: MessageDataSend<"commentBus">["data"]) {
     _AppWindow.from("comments").send("commentBus", data);
   }
+
+  commit(data: MessageTypeMap["commentBus"]) {
+    this.data = data;
+    this.executeListeners();
+  }
 }
 
 class AppPlayerActionBus extends Listenable {

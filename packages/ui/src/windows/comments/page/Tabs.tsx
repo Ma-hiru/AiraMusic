@@ -3,23 +3,42 @@ import { CommentSort } from "@mahiru/ui/public/enum";
 import { cx } from "@emotion/css";
 import SectionTab from "@mahiru/ui/public/components/tab/SectionTab";
 import { CommentSortText } from "@mahiru/ui/public/enum/comments";
+import Switch from "@mahiru/ui/public/components/switch/Switch";
 
 interface TabsProps {
   sortType: CommentSort;
-  setSortType: (sortType: CommentSort) => void;
+  setSortType: NormalFunc<[sortType: CommentSort]>;
+  dynamicContent: boolean;
+  setDynamicContent: NormalFunc<[dynamicContent: boolean]>;
   totalComment: number;
   className?: string;
 }
 
-const Tabs: FC<TabsProps> = ({ className, sortType, setSortType, totalComment }) => {
+const Tabs: FC<TabsProps> = ({
+  className,
+  sortType,
+  setSortType,
+  totalComment,
+  dynamicContent,
+  setDynamicContent
+}) => {
   return (
     <div className={cx("w-full flex items-center justify-between px-3", className)}>
-      <div className="text-sm text-gray-500 font-bold">{totalComment} 条评论</div>
-      <SectionTab
-        data={Object.values(CommentSortText)}
-        activeIndex={sortType - 1}
-        onChange={(index) => setSortType(index + 1)}
-      />
+      <h1 className="text-[12px] text-(--theme-color-main) font-medium">
+        <p className="inline-block font-bold">{totalComment}</p> 条评论
+      </h1>
+      <div className="flex items-center justify-end gap-1">
+        <Switch
+          label="动态"
+          checked={dynamicContent}
+          onClick={() => setDynamicContent(!dynamicContent)}
+        />
+        <SectionTab
+          data={Object.values(CommentSortText)}
+          activeIndex={sortType - 1}
+          onChange={(index) => setSortType(index + 1)}
+        />
+      </div>
     </div>
   );
 };
