@@ -66,7 +66,13 @@ export default class Store {
       method: "GET",
       headers: { Authorization: token }
     })
-      .then((res) => res.ok)
+      .then(
+        () =>
+          new Promise<boolean>((resolve) => {
+            // 等待 2.5 秒后再检查进程是否退出
+            setTimeout(() => resolve(!this._running), 2500);
+          })
+      )
       .catch(() => false);
   }
 

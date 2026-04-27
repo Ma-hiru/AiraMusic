@@ -14,28 +14,26 @@ export default class _AppOnce {
   private static record = new Set<string>();
 
   static _init() {
-    const cache: Nullable<OnceRecordCache> = JSON.parse(
-      CacheStore.browser.getItem(_AppOnce.cacheKey) ?? "null"
-    );
+    const cache = CacheStore.browser.getOne<OnceRecordCache>(_AppOnce.cacheKey);
 
     if (cache && cache.id === _AppOnce.cacheID) {
       this.record = new Set(cache.record);
     } else {
       this.record = new Set();
-      CacheStore.browser.setItem(
-        _AppOnce.cacheKey,
-        JSON.stringify({ id: _AppOnce.cacheID, record: [] })
-      );
+      CacheStore.browser.setOne<OnceRecordCache>(_AppOnce.cacheKey, {
+        id: _AppOnce.cacheID,
+        record: []
+      });
     }
   }
 
   private static updateCache(id: string) {
     _AppOnce.record.add(id);
     requestIdleCallback(() => {
-      CacheStore.browser.setItem(
-        _AppOnce.cacheKey,
-        JSON.stringify({ id: _AppOnce.cacheID, record: [..._AppOnce.record] })
-      );
+      CacheStore.browser.setOne<OnceRecordCache>(_AppOnce.cacheKey, {
+        id: _AppOnce.cacheID,
+        record: [..._AppOnce.record]
+      });
     });
   }
 

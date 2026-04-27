@@ -102,6 +102,9 @@ namespace NeteaseAPI {
     titleImage: number;
     titleImageUrl: null;
     trackCount: number;
+    /**
+     * 歌曲ID列表并不一定实际对应tracks数据，存在歌单包含下架歌曲的可能
+     * */
     trackIds: TrackId[];
     trackNumberUpdateTime: number;
     tracks: NeteaseTrack[];

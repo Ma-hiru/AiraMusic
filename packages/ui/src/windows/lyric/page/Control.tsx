@@ -77,7 +77,7 @@ const Control: FC<ControlProps> = ({
 
   const setLyricVersion = useCallback(
     (version: "toggle-lyric-version-rm" | "toggle-lyric-version-tl") => {
-      ElectronServices.Window.main.send("playerActionBus", version);
+      ElectronServices.Bus.playerAction.send(version);
     },
     []
   );

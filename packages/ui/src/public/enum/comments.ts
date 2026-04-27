@@ -22,3 +22,9 @@ export enum CommentSort {
   Hot = 2,
   Time = 3
 }
+
+export const CommentSortText = {
+  [CommentSort.Recommend]: "推荐",
+  [CommentSort.Hot]: "最热",
+  [CommentSort.Time]: "最新"
+};

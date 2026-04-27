@@ -2,12 +2,13 @@ import { BrowserWindow, BrowserWindowConstructorOptions, NativeImage, Tray } fro
 import { Log } from "../../utils/log";
 import { isLinux } from "../../utils/platform";
 import { debounce } from "lodash-es";
+import AppIpcMessage from "../../inner/ipc/message";
+
 export enum WindowExits {
   IGNORE,
   CLOSE,
   DESTROY
 }
-import AppIpcMessage from "../../inner/ipc/message";
 
 export class AppWindowManager {
   private static readonly BrowserWindowList = new Map<WindowType, BrowserWindow>();
@@ -128,6 +129,7 @@ export class AppWindowManager {
     window.addListener("restore", () => sendBusMessage("unminimize"));
     window.addListener("hide", () => sendBusMessage("hide"));
     window.addListener("show", () => sendBusMessage("show"));
+    window.addListener("blur", () => sendBusMessage("blur"));
     window.addListener("focus", () => sendBusMessage("focus"));
     window.addListener("ready-to-show", () => sendBusMessage("ready"));
     window.addListener("enter-full-screen", () => sendBusMessage("enter-fullscreen"));

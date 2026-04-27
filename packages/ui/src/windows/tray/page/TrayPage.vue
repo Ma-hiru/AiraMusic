@@ -28,13 +28,13 @@
     SkipBack,
     SkipForward
   } from "lucide-vue-next";
-  import AppUI from "@mahiru/ui/public/player/ui";
+  import { useThemeInjectFromBusVue } from "@mahiru/ui/public/hooks/useThemeInjectFromBusVue";
 
   const containerRef = useTemplateRef<HTMLDivElement>("containerRef");
   const playerBus = useListenableHookVue(ElectronServices.Bus.player);
-  const infoBus = useListenableHookVue(ElectronServices.Bus.info);
   const currentWindow = useListenableHookVue(ElectronServices.Window.current);
-  const mainWindow = useListenableHookVue(ElectronServices.Window.main);
+  // 主题
+  useThemeInjectFromBusVue();
   // Actions
   function copy(text: Optional<string>) {
     if (!text) return;
@@ -46,19 +46,28 @@
       {
         icon: SkipBack,
         text: "上一首",
-        click: () => mainWindow.value.send("playerActionBus", "previous")
+        click: () => ElectronServices.Bus.playerAction.send("previous")
       },
       {
         icon: SkipForward,
         text: "下一首",
-        click: () => mainWindow.value.send("playerActionBus", "next")
+        click: () => ElectronServices.Bus.playerAction.send("next")
       },
       { icon: MicVocal, text: "歌手", click: () => {} },
       { icon: DiscAlbum, text: "专辑", click: () => {} },
       {
         icon: MessageSquare,
         text: "评论",
-        click: () => {}
+        click: () => {
+          const id = playerBus.value.data?.track?.id;
+          if (!id) return;
+          ElectronServices.Window.from("comments").openThen(() => {
+            ElectronServices.Bus.comment.send({
+              id,
+              type: "track"
+            });
+          });
+        }
       },
       {
         icon: Copy,
@@ -78,20 +87,20 @@
       {
         icon: LogOut,
         text: "退出",
-        click: () => mainWindow.value.send("playerActionBus", "exit")
+        click: () => ElectronServices.Bus.playerAction.send("exit")
       }
     ];
     if (playerBus.value.data?.status === "playing") {
       result.unshift({
         icon: Pause,
         text: "暂停",
-        click: () => mainWindow.value.send("playerActionBus", "pause")
+        click: () => ElectronServices.Bus.playerAction.send("pause")
       });
     } else {
       result.unshift({
         icon: Play,
         text: "播放",
-        click: () => mainWindow.value.send("playerActionBus", "play")
+        click: () => ElectronServices.Bus.playerAction.send("play")
       });
     }
     return result;
@@ -103,15 +112,6 @@
     if (name && artist) {
       document.title = `${name} - ${artist}`;
     }
-  });
-  watch(infoBus, (infoBus) => {
-    if (!infoBus.data) return;
-    console.log("infoBus", infoBus.data);
-    AppUI.theme = {
-      main: infoBus.data.theme.mainColor,
-      secondary: infoBus.data.theme.secondaryColor,
-      textOnMainColor: infoBus.data.theme.textColor
-    };
   });
   // 动态调整窗口大小
   let observer: ResizeObserver;

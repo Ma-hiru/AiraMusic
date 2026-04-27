@@ -70,7 +70,7 @@ const Banner: FC<object> = () => {
       switch (type) {
         case BannerType.song: {
           if (player.current.track?.id === id) return;
-          const track = await NeteaseServices.Track.fromID(id);
+          const track = await NeteaseServices.Track.idEnsure(id);
           const record = new NeteaseTrackRecord({
             detail: track,
             sourceID: -1,

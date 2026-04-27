@@ -19,6 +19,7 @@ const Cover: FC<object> = () => {
     <NeteaseImage
       cache
       preview
+      cacheLazy={false}
       image={image}
       className="w-full h-full rounded-lg ease-in-out duration-300 transition-all select-none"
       onLoad={onLoad}

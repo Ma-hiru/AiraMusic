@@ -11,7 +11,7 @@ export default class _NeteaseAudioSource {
   private static readonly cacheKey = "netease_audio";
 
   private static storeCache(audio: NeteaseNetworkAudio) {
-    return CacheStore.store.one(
+    return CacheStore.local.store.one(
       audio.url,
       `${_NeteaseAudioSource.cacheKey}_${audio.id}_${audio.quality}`
     );
@@ -19,12 +19,14 @@ export default class _NeteaseAudioSource {
 
   private static getCache(audio: NeteaseNetworkAudio, download?: boolean) {
     if (download) {
-      return CacheStore.check.orStoreOne(
+      return CacheStore.local.check.orStoreOne(
         audio.url,
         `${_NeteaseAudioSource.cacheKey}_${audio.id}_${audio.quality}`
       );
     }
-    return CacheStore.check.one(`${_NeteaseAudioSource.cacheKey}_${audio.id}_${audio.quality}`);
+    return CacheStore.local.check.one(
+      `${_NeteaseAudioSource.cacheKey}_${audio.id}_${audio.quality}`
+    );
   }
   //endregion
 

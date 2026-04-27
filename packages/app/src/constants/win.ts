@@ -75,7 +75,7 @@ export class AppWindowConstants {
     },
     comments: {
       base: {
-        width: 600,
+        width: 750,
         height: 2048
       }
     },

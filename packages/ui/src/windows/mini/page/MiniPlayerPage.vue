@@ -22,21 +22,21 @@
       <NoDrag class="flex items-center gap-2 justify-center">
         <SkipBack
           class="size-3 hover:scale-90 hover:opacity-50 active:scale-80 cursor-pointer ease-in-out transition-all duration-300"
-          @click="mainWindow.send('playerActionBus', 'previous')"
+          @click="ElectronServices.Bus.playerAction.send('previous')"
           fill="#171b20" />
         <Pause
           v-if="playerBus.data?.status === 'playing'"
           class="size-3 hover:scale-90 hover:opacity-50 active:scale-80 cursor-pointer ease-in-out transition-all duration-300"
-          @click="mainWindow.send('playerActionBus', 'pause')"
+          @click="ElectronServices.Bus.playerAction.send('pause')"
           fill="#171b20" />
         <Play
           v-else
           class="size-3 hover:scale-90 hover:opacity-50 active:scale-80 cursor-pointer ease-in-out transition-all duration-300"
-          @click="mainWindow.send('playerActionBus', 'play')"
+          @click="ElectronServices.Bus.playerAction.send('play')"
           fill="#171b20" />
         <SkipForward
           class="size-3 hover:scale-90 hover:opacity-50 active:scale-80 cursor-pointer ease-in-out transition-all duration-300"
-          @click="mainWindow.send('playerActionBus', 'next')"
+          @click="ElectronServices.Bus.playerAction.send('next')"
           fill="#171b20" />
       </NoDrag>
     </div>

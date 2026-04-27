@@ -8,11 +8,23 @@ import { NeteaseImageSize } from "@mahiru/ui/public/enum";
 import { LRUCacheWithTime } from "@mahiru/ui/public/utils/lru";
 import { Log } from "@mahiru/ui/public/utils/dev";
 
+interface LocalFn {
+  (
+    image: NeteaseNetworkImage | NeteaseLocalImage,
+    download: boolean
+  ): Promise<NeteaseLocalImage | null>;
+  (
+    track: NeteaseTrack,
+    download: boolean,
+    size: NeteaseImageSize
+  ): Promise<NeteaseLocalImage | null>;
+}
+
 export default class _NeteaseImageSource {
   //region cache
   private static readonly cacheKey = "netease_image";
   private static readonly memoryCache = new LRUCacheWithTime<string, NeteaseLocalImage>(
-    5000,
+    1500,
     1000 * 60 * 60 * 24
   );
 
@@ -22,7 +34,7 @@ export default class _NeteaseImageSource {
   }
 
   private static downloadCache(image: NeteaseNetworkImage) {
-    return CacheStore.store.one(image.url, _NeteaseImageSource.getCacheKey(image));
+    return CacheStore.local.store.one(image.url, _NeteaseImageSource.getCacheKey(image));
   }
 
   private static setMemoryCache(image: NeteaseLocalImage) {
@@ -37,18 +49,21 @@ export default class _NeteaseImageSource {
       return Promise.resolve({ ok: true, image: cache });
     }
     if (download) {
-      return CacheStore.check.orStoreOne(image.url, _NeteaseImageSource.getCacheKey(image));
+      return CacheStore.local.check.orStoreOne(image.url, _NeteaseImageSource.getCacheKey(image));
     }
-    return CacheStore.check.one(_NeteaseImageSource.getCacheKey(image));
+    return CacheStore.local.check.one(_NeteaseImageSource.getCacheKey(image));
   }
 
   private static removeCache(image: NeteaseNetworkImage) {
     _NeteaseImageSource.memoryCache.delete(_NeteaseImageSource.getCacheKey(image));
-    return CacheStore.remove.one(_NeteaseImageSource.getCacheKey(image));
+    return CacheStore.local.remove.one(_NeteaseImageSource.getCacheKey(image));
   }
   //endregion
 
-  static async tryFromCache(image: NeteaseNetworkImage | NeteaseLocalImage, download: boolean) {
+  private static async localImage(
+    image: NeteaseNetworkImage | NeteaseLocalImage,
+    download: boolean
+  ) {
     if ("localURL" in image) return image;
     const check = await _NeteaseImageSource.getCache(image, download);
     if (check.ok) {
@@ -60,12 +75,21 @@ export default class _NeteaseImageSource {
     return null;
   }
 
-  static async local(track: NeteaseTrack, download: boolean, size: NeteaseImageSize) {
-    return _NeteaseImageSource.tryFromCache(
+  private static async localTrack(track: NeteaseTrack, download: boolean, size: NeteaseImageSize) {
+    return _NeteaseImageSource.localImage(
       NeteaseNetworkImage.fromTrackCover(track).setSize(size),
       download
     );
   }
+
+  static readonly local = ((...args) => {
+    if (args.length === 3) {
+      return _NeteaseImageSource.localTrack(...(args as [NeteaseTrack, boolean, NeteaseImageSize]));
+    }
+    return _NeteaseImageSource.localImage(
+      ...(args as unknown as [NeteaseNetworkImage | NeteaseLocalImage, boolean])
+    );
+  }) as LocalFn;
 
   static notwork(track: NeteaseTrack, size: NeteaseImageSize) {
     return NeteaseNetworkImage.fromTrackCover(track).setSize(size);

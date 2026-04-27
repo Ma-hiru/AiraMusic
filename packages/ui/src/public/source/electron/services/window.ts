@@ -13,6 +13,7 @@ export default class _AppWindow extends Listenable {
   private _max: boolean;
   private _min: boolean;
   private _fullscreen: boolean;
+  private _focus: boolean;
   private _busListeners = new Map<MessageTypeMap["windowBus"]["action"], NormalFunc[]>();
   static currentWindowType = _currentWindowType;
   static runtimeID = _runtimeID;
@@ -53,6 +54,15 @@ export default class _AppWindow extends Listenable {
     this.executeListeners();
   }
 
+  get isFocus() {
+    return this._focus;
+  }
+
+  set isFocus(focus) {
+    this._focus = focus;
+    this.executeListeners();
+  }
+
   get opened() {
     return this._opened;
   }
@@ -80,6 +90,7 @@ export default class _AppWindow extends Listenable {
     this._max = false;
     this._min = false;
     this._show = false;
+    this._focus = false;
     this._fullscreen = false;
     this.id = window.crypto.randomUUID();
     _AppRenderer.Message.listen(
@@ -95,14 +106,21 @@ export default class _AppWindow extends Listenable {
           }
           case "close": {
             this.opened = false;
+            this.isShow = false;
+            this.isMax = false;
+            this.isMin = false;
+            this.isFullscreen = false;
             break;
           }
           case "hide": {
             this.isShow = false;
+            this.opened = true;
             break;
           }
           case "maximize": {
             this.isMax = true;
+            this.opened = true;
+            this.isShow = true;
             break;
           }
           case "unmaximize": {
@@ -111,6 +129,8 @@ export default class _AppWindow extends Listenable {
           }
           case "minimize": {
             this.isMin = true;
+            this.opened = true;
+            this.isShow = true;
             break;
           }
           case "unminimize": {
@@ -119,10 +139,26 @@ export default class _AppWindow extends Listenable {
           }
           case "enter-fullscreen": {
             this.isFullscreen = true;
+            this.opened = true;
+            this.isShow = true;
             break;
           }
           case "leave-fullscreen": {
             this.isFullscreen = false;
+            break;
+          }
+          case "focus": {
+            this.isFocus = true;
+            this.opened = true;
+            this.isShow = true;
+            break;
+          }
+          case "blur": {
+            this.isFocus = false;
+            break;
+          }
+          case "ready": {
+            this.opened = true;
             break;
           }
         }
@@ -223,7 +259,7 @@ export default class _AppWindow extends Listenable {
   openThen(cb: NormalFunc) {
     if (this.opened) return cb();
     const listener = () => {
-      this.opened && cb();
+      this.opened && setTimeout(() => cb(), 1000);
       this.opened && this.removeListener(listener);
     };
     this.addListener(listener);

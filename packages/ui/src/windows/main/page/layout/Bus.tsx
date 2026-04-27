@@ -7,16 +7,17 @@ import { useLayoutStore } from "@mahiru/ui/windows/main/store/layout";
 
 const Bus: FC<object> = () => {
   const { theme } = useLayoutStore();
-  const windowAll = useListenableHook(ElectronServices.Window.all);
   const windowCurrent = useListenableHook(ElectronServices.Window.current);
-  const player = useListenableHook(AppEntry.player);
+  const playerActionBus = useListenableHook(ElectronServices.Bus.playerAction);
+  const updaterBus = useListenableHook(ElectronServices.Bus.updateBus);
+  const player = AppEntry.usePlayer();
 
   const updateProgressBus = useCallback(() => {
-    windowAll.send("progressBus", player.audio.progress);
-  }, [player.audio.progress, windowAll]);
+    ElectronServices.Bus.progress.send(player.audio.progress);
+  }, [player.audio.progress]);
 
   const updatePlayerBus = useCallback(() => {
-    windowAll.send("playerBus", {
+    ElectronServices.Bus.player.send({
       track: player.current.track,
       lyric: player.current.lyric,
       repeat: player.playlist.repeat,
@@ -26,10 +27,10 @@ const Bus: FC<object> = () => {
       noteActive: player.current?.noteActive || false,
       status: player.statusText
     });
-  }, [player, windowAll]);
+  }, [player]);
 
   const updateInfoBus = useCallback(() => {
-    windowAll.send("infoBus", {
+    ElectronServices.Bus.info.send({
       backgroundCover: theme.backgroundCover,
       theme: {
         mainColor: theme.mainColor,
@@ -37,13 +38,7 @@ const Bus: FC<object> = () => {
         textColor: theme.textColorOnMain
       }
     });
-  }, [
-    theme.backgroundCover,
-    theme.mainColor,
-    theme.secondaryColor,
-    theme.textColorOnMain,
-    windowAll
-  ]);
+  }, [theme.backgroundCover, theme.mainColor, theme.secondaryColor, theme.textColorOnMain]);
 
   const updateBus = useRef(() => {
     updatePlayerBus();
@@ -77,31 +72,63 @@ const Bus: FC<object> = () => {
   useEffect(updateInfoBus, [updateInfoBus]);
 
   useEffect(() => {
-    windowAll.listenMessageAll("playerActionBus", async ({ data }) => {
-      switch (data) {
+    const actions = playerActionBus.data;
+    if (actions.length === 0) return;
+
+    for (const action of actions) {
+      switch (action) {
         case "play":
-          return player.audio.play();
+          player.audio.play();
+          break;
         case "pause":
-          return player.audio.pause();
+          player.audio.pause();
+          break;
         case "previous":
-          return player.playlist.last(true);
+          player.playlist.last(true);
+          break;
         case "next":
-          return player.playlist.next(true);
+          player.playlist.next(true);
+          break;
         case "exit":
-          return windowCurrent.close();
+          windowCurrent.close();
+          break;
         case "toggle-lyric-version-rm":
           AppEntry.player.toggleLyric("rm");
           AppEntry.player.afterUpdate(updateBus.current);
-          return;
+          break;
         case "toggle-lyric-version-tl":
           AppEntry.player.toggleLyric("tl");
           AppEntry.player.afterUpdate(updateBus.current);
-          return;
+          break;
         case "update":
-          return updateBus.current();
+          updateBus.current();
+          break;
       }
-    });
-  }, [player.audio, player.playlist, windowAll, windowCurrent]);
+    }
+
+    playerActionBus.finish();
+  }, [player.audio, player.playlist, playerActionBus, playerActionBus.data, windowCurrent]);
+
+  useEffect(() => {
+    const actions = updaterBus.data;
+    if (actions.length === 0) return;
+
+    for (const action of actions) {
+      switch (action) {
+        case "player":
+          updatePlayerBus();
+          break;
+        case "progress":
+          updateProgressBus();
+          break;
+        case "info":
+          updateInfoBus();
+          break;
+      }
+    }
+
+    updaterBus.finish();
+  }, [updateInfoBus, updatePlayerBus, updateProgressBus, updaterBus]);
 
   useEffect(() => ElectronServices.Bus.injectUpdater(() => updateBus.current()), [updateBus]);
 

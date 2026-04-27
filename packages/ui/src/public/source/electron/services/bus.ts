@@ -11,6 +11,10 @@ class AppPlayerBus extends Listenable {
       this.executeListeners();
     });
   }
+
+  send(data: MessageDataSend<"playerBus">["data"]) {
+    _AppWindow.all.send("playerBus", data);
+  }
 }
 
 class AppProgressBus extends Listenable {
@@ -22,6 +26,10 @@ class AppProgressBus extends Listenable {
       this.data = data;
       this.executeListeners();
     });
+  }
+
+  send(data: MessageDataSend<"progressBus">["data"]) {
+    _AppWindow.all.send("progressBus", data);
   }
 }
 
@@ -35,6 +43,67 @@ class AppInfoBus extends Listenable {
       this.executeListeners();
     });
   }
+
+  send(data: MessageDataSend<"infoBus">["data"]) {
+    _AppWindow.all.send("infoBus", data);
+  }
+}
+
+class AppCommentsBus extends Listenable {
+  data: Nullable<MessageTypeMap["commentBus"]> = null;
+
+  constructor() {
+    super();
+    _AppWindow.all.listenMessageAll("commentBus", ({ data }) => {
+      this.data = data;
+      this.executeListeners();
+    });
+  }
+
+  send(data: MessageDataSend<"commentBus">["data"]) {
+    _AppWindow.from("comments").send("commentBus", data);
+  }
+}
+
+class AppPlayerActionBus extends Listenable {
+  data: MessageTypeMap["playerActionBus"][] = [];
+
+  constructor() {
+    super();
+    _AppWindow.all.listenMessageAll("playerActionBus", ({ data }) => {
+      console.log("playerActionBus", data);
+      this.data = [...this.data, data];
+      this.executeListeners();
+    });
+  }
+
+  send(data: MessageDataSend<"playerActionBus">["data"]) {
+    _AppWindow.main.send("playerActionBus", data);
+  }
+
+  finish() {
+    this.data = [];
+  }
+}
+
+class AppUpdateBus extends Listenable {
+  data: MessageTypeMap["updateBus"][] = [];
+
+  constructor() {
+    super();
+    _AppWindow.all.listenMessageAll("updateBus", ({ data }) => {
+      this.data = [...this.data, data];
+      this.executeListeners();
+    });
+  }
+
+  send(data: MessageDataSend<"updateBus">["data"]) {
+    _AppWindow.all.send("updateBus", data);
+  }
+
+  finish() {
+    this.data = [];
+  }
 }
 
 export default class _AppBus {
@@ -42,6 +111,9 @@ export default class _AppBus {
   private static playerBus = new AppPlayerBus();
   private static progressBus = new AppProgressBus();
   private static infoBus = new AppInfoBus();
+  private static commentBus = new AppCommentsBus();
+  private static playerActionBus = new AppPlayerActionBus();
+  static updateBus = new AppUpdateBus();
 
   static get player() {
     return _AppBus.playerBus;
@@ -53,6 +125,14 @@ export default class _AppBus {
 
   static get info() {
     return _AppBus.infoBus;
+  }
+
+  static get comment() {
+    return _AppBus.commentBus;
+  }
+
+  static get playerAction() {
+    return _AppBus.playerActionBus;
   }
 
   static get updater() {

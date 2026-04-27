@@ -66,7 +66,7 @@ export default class _NeteaseAuth {
   private static retryEnabled = false;
   private static retryTimer: Nullable<number> = null;
 
-  static retrySetup() {
+  private static retrySetup() {
     if (_NeteaseAuth.hasSetup) return;
     if (_NeteaseAuth.retryEnabled) return;
 

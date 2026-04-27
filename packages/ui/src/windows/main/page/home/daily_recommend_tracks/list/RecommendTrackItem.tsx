@@ -32,7 +32,7 @@ const RecommendTrackItem: FC<RecommendTrackItemProps> = ({
 
   const play = useCallback(async () => {
     if (isPlaying) return;
-    const track = await NeteaseServices.Track.fromID(song.id);
+    const track = await NeteaseServices.Track.idEnsure(song.id);
     const record = new NeteaseTrackRecord({
       detail: track,
       sourceName: "other",

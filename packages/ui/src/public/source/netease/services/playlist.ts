@@ -7,17 +7,17 @@ import { userStoreSnapshot } from "../../../store/user";
 
 export default class _NeteasePlaylistSource {
   //region cache
-  private static readonly cacheKey = "netease_playlist_detail";
+  private static readonly cacheKey = "netease_playlist_detail_v1";
 
   private static storeCache(response: NeteaseAPI.NeteasePlaylistDetailResponse) {
-    return CacheStore.object.store(
+    return CacheStore.local.object.store(
       _NeteasePlaylistSource.cacheKey + "_" + response.playlist.id,
       response
     );
   }
 
   private static getCache(id: number) {
-    return CacheStore.object.fetch<NeteaseAPI.NeteasePlaylistDetailResponse>(
+    return CacheStore.local.object.fetch<NeteaseAPI.NeteasePlaylistDetailResponse>(
       _NeteasePlaylistSource.cacheKey + "_" + id
     );
   }
@@ -48,23 +48,41 @@ export default class _NeteasePlaylistSource {
     }
 
     const cache = await _NeteasePlaylistSource.getCache(playlist.id);
-    if (cache?.playlist.updateTime === playlist.updateTime) {
-      response.playlist.tracks = cache.playlist.tracks;
+    if (
+      cache?.playlist.updateTime === playlist.updateTime &&
+      cache.playlist.trackNumberUpdateTime === playlist.trackNumberUpdateTime &&
+      cache.playlist.trackUpdateTime === playlist.trackUpdateTime
+    ) {
       response.privileges = cache.privileges;
+      response.playlist.tracks = cache.playlist.tracks;
+      response.playlist.trackCount = cache.playlist.trackCount;
+      response.playlist.trackIds = cache.playlist.trackIds;
       return response;
     }
 
-    const entries = await NeteaseTrackSource.fromIDsRaw(
+    const entries = await NeteaseTrackSource._raw(
       playlist.trackIds.slice(playlist.tracks.length, playlist.trackCount),
       maxPerRequest,
       concurrency
     );
-    for (const { track, privilege } of entries) {
+
+    let index = 0;
+    for (const entry of entries) {
+      if (!entry) {
+        // 存在歌曲下架的情况，找不到的歌曲会被过滤掉，所以需要更新trackCount
+        response.playlist.trackIds.splice(index, 1);
+        response.playlist.trackCount--;
+        continue;
+      }
+      const { track, privilege } = entry;
       response.playlist.tracks.push(track);
       response.privileges.push(privilege);
+      index++;
     }
 
-    void _NeteasePlaylistSource.storeCache(response);
+    window.requestIdleCallback(() => _NeteasePlaylistSource.storeCache(response), {
+      timeout: 1000
+    });
 
     return response;
   }

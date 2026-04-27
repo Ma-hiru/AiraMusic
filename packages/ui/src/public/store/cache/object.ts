@@ -2,7 +2,7 @@ import { cacheRequest } from "@mahiru/ui/public/store/cache/request";
 import { CacheStoreUtils } from "@mahiru/ui/public/store/cache/utils";
 
 export class CacheStoreForObject {
-  store<T extends object>(id: string, data: T) {
+  store<T>(id: string, data: T) {
     return cacheRequest({
       url: "/api/object/store",
       method: "POST",
@@ -10,7 +10,7 @@ export class CacheStoreForObject {
     });
   }
 
-  storeMulti<T extends object>(list: { id: string; data: T }[]) {
+  storeMulti<T>(list: { id: string; data: T }[]) {
     return cacheRequest({
       url: "/api/object/store/multi",
       method: "POST",
@@ -39,12 +39,14 @@ export class CacheStoreForObject {
   }
 
   fetchMulti<T>(ids: string[]): Promise<Nullable<T>[]> {
-    return cacheRequest({
+    return cacheRequest<any, Nullable<{ id: string; data: T }>[]>({
       url: "/api/object/fetch/multi",
       method: "POST",
       data: {
         ids
       }
+    }).then((response) => {
+      return response.map((item) => item?.data ?? null);
     });
   }
 }

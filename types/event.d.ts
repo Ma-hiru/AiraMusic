@@ -106,7 +106,7 @@ type MessageTypeMap = {
     | "toggle-lyric-version-tl";
   commentBus: {
     id: number;
-    type: unknown;
+    type: "track" | "album" | "playlist";
   };
   windowBus: {
     type: WindowType;
@@ -123,12 +123,14 @@ type MessageTypeMap = {
       | "moved"
       | "resized"
       | "enter-fullscreen"
-      | "leave-fullscreen";
+      | "leave-fullscreen"
+      | "blur";
   };
   imageCheckerBus: {
     url: string;
     alt?: string;
   };
+  updateBus: "info" | "player" | "progress";
 };
 
 /** Normal 事件的 Message 类型的发送参数 */
