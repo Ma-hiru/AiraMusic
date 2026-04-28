@@ -165,9 +165,9 @@ export default function LyricPage() {
         )}
         onClick={handleClick}
         onMouseOver={handleMouseOver}>
-        <div className={cx("w-full h-full p-2 overflow-hidden", lock && "pointer-events-none")}>
+        <div className={cx("w-full h-full overflow-hidden contain-strict", lock && "pointer-events-none")}>
           <LyricComponent
-            mainAlign={reverseControl ? "top" : "bottom"}
+            mainAlign="center"
             crossAlign="center"
             lyric={lyric}
             spring={false}

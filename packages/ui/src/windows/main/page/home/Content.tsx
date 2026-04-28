@@ -8,6 +8,7 @@ import DailyRecommendTracks from "./daily_recommend_tracks";
 import DailyRecommendPlaylist from "./daily_recommend_playlist";
 import RecommendPlaylist from "./recommend_playlist";
 import { useUser } from "@mahiru/ui/public/store/user";
+import { css, cx } from "@emotion/css";
 
 const Content: FC<object> = () => {
   const { layout, updateLayout } = useLayoutStore();
@@ -35,7 +36,12 @@ const Content: FC<object> = () => {
   return (
     <div
       ref={containerRef}
-      className="w-full h-full overflow-y-auto scrollbar will-change-scroll contain-strict"
+      className={cx(
+        `w-full h-full overflow-y-auto scrollbar will-change-scroll contain-strict`,
+        css`
+          content-visibility: auto;
+        `
+      )}
       onScroll={onScroll}>
       {delay(200) && <Banner />}
       {delay(1000) && user?.isLoggedIn && (

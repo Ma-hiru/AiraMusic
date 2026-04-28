@@ -98,7 +98,7 @@ const LyricWord: FC<LyricWordProps> = ({
   );
 
   return (
-    <span className="inline-block relative">
+    <span className="inline-block relative contain-layout">
       <span
         ref={spanRef}
         style={style}

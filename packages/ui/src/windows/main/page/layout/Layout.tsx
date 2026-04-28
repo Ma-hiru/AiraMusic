@@ -36,8 +36,8 @@ const Layout: FC<object> = () => {
       <TopBar className="h-10 z-30" />
       <NavSide />
       <Content />
-      {stage >= Stage.Finally && <PlayerBar className="h-18 z-10" />}
-      {stage >= Stage.Finally && <PlayerModal className="z-20" />}
+      {stage >= Stage.Finally && <PlayerBar className="h-18 contain-strict z-10" />}
+      {stage >= Stage.Finally && <PlayerModal className="contain-strict z-20" />}
       <AppErrorBoundary name="Widget" showError={false} autoReset panicAfterReset>
         {stage >= Stage.Immediately && <Background className="-z-10" />}
         {stage >= Stage.Immediately && <AppToast.Provider className="z-35" />}

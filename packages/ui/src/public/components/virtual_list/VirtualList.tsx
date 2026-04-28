@@ -58,7 +58,7 @@ const VirtualList = <T extends HasID, U>({
     setScrollToItem?.(scrollToItem);
   }, [scrollToItem, setScrollToItem]);
   return (
-    <div className="relative w-full will-change-auto contain-layout" style={finalHeight}>
+    <div className="relative w-full will-change-auto contain-strict" style={finalHeight}>
       {visibleItems.map((item, i) => {
         const realIndex = start + i;
         return (
@@ -89,7 +89,6 @@ function useVirtualList(props: {
 }) {
   const { total, containerRef, overscan, itemHeight, onRangeUpdate } = props;
   const ticking = useRef(false);
-  const scrollTopRef = useRef(0);
   const visibleStartRef = useRef(0);
   const [visibleStart, setVisibleStart] = useState(0);
   const [visibleCount, setVisibleCount] = useState(1);
@@ -101,20 +100,17 @@ function useVirtualList(props: {
     const calcVisibleCount = () => {
       const containerHeight = container.clientHeight;
       const nextCount = Math.max(1, Math.ceil(containerHeight / itemHeight));
-      setVisibleCount((prev) => (prev === nextCount ? prev : nextCount));
+      setVisibleCount(nextCount);
     };
-
-    calcVisibleCount();
     const resizeObserver = new ResizeObserver(calcVisibleCount);
     resizeObserver.observe(container);
+    calcVisibleCount();
 
     const onScroll = () => {
       if (!ticking.current) {
         ticking.current = true;
         requestAnimationFrame(() => {
-          const top = container.scrollTop;
-          scrollTopRef.current = top;
-          const nextVisibleStart = Math.floor(top / itemHeight);
+          const nextVisibleStart = Math.floor(container.scrollTop / itemHeight);
           if (visibleStartRef.current !== nextVisibleStart) {
             visibleStartRef.current = nextVisibleStart;
             setVisibleStart(nextVisibleStart);

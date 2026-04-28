@@ -113,7 +113,7 @@ const TrackList: FC<TrackListProps> = ({
         className={cx(
           `
           w-full h-full overflow-y-auto scrollbar
-          contain-content will-change-scroll
+          contain-strict will-change-scroll
         `,
           className
         )}>

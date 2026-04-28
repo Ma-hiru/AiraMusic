@@ -60,7 +60,7 @@ const Lyric: FC<object> = () => {
   }, [player]);
 
   return (
-    <div className="absolute top-0 left-[48%] w-1/2 h-full overflow-hidden">
+    <div className="absolute top-0 left-[48%] w-1/2 h-full overflow-hidden contain-strict">
       <LyricComponent
         ref={lyricRef}
         lyric={player.current.lyric}
@@ -68,6 +68,7 @@ const Lyric: FC<object> = () => {
         tlActive={player.current?.tlActive}
         noteActive={player.current?.noteActive}
         onWordClick={handleWordClick}
+        className="contain-strict"
       />
     </div>
   );
