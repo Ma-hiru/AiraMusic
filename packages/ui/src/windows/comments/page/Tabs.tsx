@@ -4,6 +4,7 @@ import { cx } from "@emotion/css";
 import SectionTab from "@mahiru/ui/public/components/tab/SectionTab";
 import { CommentSortText } from "@mahiru/ui/public/enum/comments";
 import Switch from "@mahiru/ui/public/components/switch/Switch";
+import { FormatNumber } from "@mahiru/ui/public/utils/format";
 
 interface TabsProps {
   sortType: CommentSort;
@@ -25,7 +26,7 @@ const Tabs: FC<TabsProps> = ({
   return (
     <div className={cx("w-full flex items-center justify-between px-3", className)}>
       <h1 className="text-[12px] text-(--theme-color-main) font-medium">
-        <p className="inline-block font-bold">{totalComment}</p> 条评论
+        <p className="inline-block font-bold">{FormatNumber.count(totalComment)}</p> 条评论
       </h1>
       <div className="flex items-center justify-end gap-1">
         <Switch
@@ -42,4 +43,5 @@ const Tabs: FC<TabsProps> = ({
     </div>
   );
 };
+
 export default memo(Tabs);

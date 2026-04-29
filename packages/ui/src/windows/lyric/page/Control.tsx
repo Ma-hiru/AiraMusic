@@ -24,6 +24,7 @@ import NeteaseImage from "@mahiru/ui/public/components/image/NeteaseImage";
 import NoDrag from "@mahiru/ui/public/components/drag/NoDrag";
 import useListenableHook from "@mahiru/ui/public/hooks/useListenableHook";
 import ElectronServices from "@mahiru/ui/public/source/electron/services";
+import { FormatNumber } from "@mahiru/ui/public/utils/format";
 
 type ControlProps = Omit<HTMLAttributes<HTMLDivElement>, "color"> & {
   showBg: boolean;
@@ -238,9 +239,9 @@ const Control: FC<ControlProps> = ({
             ))}
           </div>
           <span className="text-[12px] font-semibold">
-            {NeteaseTrack.formatTime(progressBus.data?.currentTime, "s")}
+            {FormatNumber.duration(progressBus.data?.currentTime, "s")}
             {" / "}
-            {NeteaseTrack.formatTime(progressBus.data?.duration, "s")}
+            {FormatNumber.duration(progressBus.data?.duration, "s")}
           </span>
         </div>
       </div>

@@ -8,6 +8,7 @@ import { cx } from "@emotion/css";
 import NeteaseAPI from "@mahiru/ui/public/source/netease/api";
 
 import NeteaseImage from "@mahiru/ui/public/components/image/NeteaseImage";
+import { FormatNumber } from "@mahiru/ui/public/utils/format";
 
 interface ItemProps {
   data: NeteaseAPI.NeteaseComment;
@@ -52,7 +53,7 @@ const Item: FC<ItemProps> = ({ data, sourceID, type }) => {
         <NeteaseImage
           cache
           cacheLazy
-          className="size-10 rounded-full shrink-0"
+          className="size-8 rounded-full shrink-0"
           image={NeteaseNetworkImage.fromURL(data.user.avatarUrl)
             ?.setSize(NeteaseImageSize.sm)
             .setAlt(data.user.nickname)}
@@ -61,7 +62,7 @@ const Item: FC<ItemProps> = ({ data, sourceID, type }) => {
           <h1 className="font-semibold text-xs flex flex-col items-start justify-start">
             <span className="text-(--theme-color-main)">{data.user.nickname}</span>
             <span className="text-(--theme-color-main)/60 text-xs text-[10px] opacity-80">
-              {data.user.locationInfo} {dayjs(data.time).format("YYYY-MM-DD HH:mm")}
+              {data.ipLocation.location} {FormatNumber.time(data.time)}
             </span>
           </h1>
           <p className="text-xs text-(--theme-color-main)/90">{data.content}</p>
@@ -97,7 +98,7 @@ const Item: FC<ItemProps> = ({ data, sourceID, type }) => {
                 "leading-3",
                 data.liked ? "text-red-500" : "text-(--theme-color-main)"
               )}>
-              {formatLikedCount(data.likedCount)}
+              {FormatNumber.count(data.likedCount)}
             </span>
           </div>
         </div>
@@ -107,21 +108,3 @@ const Item: FC<ItemProps> = ({ data, sourceID, type }) => {
 };
 
 export default memo(Item);
-
-function formatTime(time: number) {
-  const before = dayjs(time);
-  const now = dayjs();
-  if (now.diff(before, "minute") <= 1) {
-    return "刚刚";
-  } else if (now.diff(before, "day") <= 0) {
-    return before.format("HH:mm");
-  }
-  return dayjs(time).format("YYYY-MM-DD HH:mm");
-}
-
-function formatLikedCount(likedCount: number) {
-  if (likedCount >= 1000) {
-    return `${(likedCount / 1000).toFixed(1)}k`;
-  }
-  return likedCount;
-}

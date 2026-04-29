@@ -66,9 +66,9 @@ const CommentsPage: FC<object> = () => {
 
   useThemeInjectFromBus();
   useEffect(() => {
-    ElectronServices.Bus.updateBus.send("player");
-    ElectronServices.Bus.updateBus.send("info");
-  }, []);
+    ElectronServices.Bus.mainBusUpdater.send("player");
+    ElectronServices.Bus.mainBusUpdater.send("info");
+  }, [dynamicContent]);
   useEffect(
     () => reload(),
     [

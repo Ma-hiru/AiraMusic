@@ -9,7 +9,7 @@ const Bus: FC<object> = () => {
   const { theme } = useLayoutStore();
   const windowCurrent = useListenableHook(ElectronServices.Window.current);
   const playerActionBus = useListenableHook(ElectronServices.Bus.playerAction);
-  const updaterBus = useListenableHook(ElectronServices.Bus.updateBus);
+  const mainBusUpdater = useListenableHook(ElectronServices.Bus.mainBusUpdater);
   const player = AppEntry.usePlayer();
 
   const updateProgressBus = useCallback(() => {
@@ -74,7 +74,6 @@ const Bus: FC<object> = () => {
   useEffect(() => {
     const actions = playerActionBus.data;
     if (actions.length === 0) return;
-
     for (const action of actions) {
       switch (action) {
         case "play":
@@ -105,14 +104,19 @@ const Bus: FC<object> = () => {
           break;
       }
     }
-
     playerActionBus.finish();
-  }, [player.audio, player.playlist, playerActionBus, playerActionBus.data, windowCurrent]);
-
+  }, [
+    player.audio,
+    player.playlist,
+    // 监听变化数据
+    playerActionBus.data,
+    playerActionBus,
+    windowCurrent
+  ]);
+  
   useEffect(() => {
-    const actions = updaterBus.data;
+    const actions = mainBusUpdater.data;
     if (actions.length === 0) return;
-
     for (const action of actions) {
       switch (action) {
         case "player":
@@ -126,11 +130,22 @@ const Bus: FC<object> = () => {
           break;
       }
     }
+    mainBusUpdater.finish();
+  }, [
+    updateInfoBus,
+    updatePlayerBus,
+    updateProgressBus,
+    // 监听变化数据
+    mainBusUpdater.data,
+    mainBusUpdater
+  ]);
 
-    updaterBus.finish();
-  }, [updateInfoBus, updatePlayerBus, updateProgressBus, updaterBus]);
-
-  useEffect(() => ElectronServices.Bus.injectUpdater(() => updateBus.current()), [updateBus]);
+  useEffect(() => {
+    AppEntry.busUpdater = () => updateBus.current();
+    return () => {
+      AppEntry.busUpdater = undefined;
+    };
+  }, [updateBus]);
 
   return null;
 };

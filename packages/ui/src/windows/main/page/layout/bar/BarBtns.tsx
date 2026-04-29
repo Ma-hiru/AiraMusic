@@ -57,7 +57,7 @@ const BarBtns: FC<object> = () => {
             lyricWindow.close();
           } else {
             lyricWindow.openThen(() => {
-              ElectronServices.Bus.updater?.();
+              AppEntry.busUpdater?.();
             });
           }
         }}>

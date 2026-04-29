@@ -2,14 +2,14 @@
   <Drag
     class="w-screen h-screen overflow-hidden relative bg-white rounded-md text-black grid grid-rows-1 grid-cols-[auto_1fr] px-2 py-1 items-center select-none">
     <div class="h-12 w-12 rounded-md overflow-hidden border border-gray-300/50">
-      <NeteaseImage cache :image="image" style="width: 100%; height: 100%" shadow-color="dark" />
+      <NeteaseImage :cache="true" :image="image" style="width: 100%; height: 100%" shadow-color="dark" />
     </div>
     <div class="h-full w-full flex flex-col justify-center px-2 gap-1.5 overflow-hidden">
       <div class="flex items-center justify-center gap-1">
         <span class="text-[12px] font-bold truncate">{{ track?.name }}</span>
         <span class="text-[12px]"> - </span>
         <span class="text-[10px] font-medium truncate opacity-50">
-          {{ track?.ar.map((a) => a.name).join("/") }}
+          {{ track?.ar?.map((a) => a.name).join("/") }}
         </span>
       </div>
       <div class="grid grid-rows-1 grid-cols-[1fr_auto] items-center justify-center gap-1">

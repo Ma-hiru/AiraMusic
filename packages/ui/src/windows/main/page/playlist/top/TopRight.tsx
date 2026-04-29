@@ -1,16 +1,13 @@
 import { FC, memo, useMemo } from "react";
 import { SquarePen } from "lucide-react";
-import {
-  NeteaseNetworkImage,
-  NeteasePlaylist,
-  NeteaseTrack
-} from "@mahiru/ui/public/source/netease/models";
+import { NeteaseNetworkImage, NeteasePlaylist } from "@mahiru/ui/public/source/netease/models";
 import { useUser } from "@mahiru/ui/public/store/user";
 import { PlaylistSource } from "@mahiru/ui/windows/main/constants";
 
 import Search from "@mahiru/ui/public/components/public/Search";
 import NeteaseImage from "@mahiru/ui/public/components/image/NeteaseImage";
 import ImageConstants from "@mahiru/ui/windows/main/constants/image";
+import { FormatNumber } from "@mahiru/ui/public/utils/format";
 
 interface TopRightProps {
   summary: Nullable<NeteasePlaylist>;
@@ -42,7 +39,7 @@ const TopRight: FC<TopRightProps> = ({ summary, searchTracks, type, setTying }) 
         <div className="flex items-center gap-2 mt-2 font-semibold">
           <NeteaseImage cache image={avatar} className="size-5 rounded-full select-none" />
           <span className="text-[12px]">{summary?.creator.nickname}</span>
-          <span className="select-none">{NeteaseTrack.formatDate(summary?.createTime)} 创建</span>
+          <span className="select-none">{FormatNumber.time(summary?.createTime)} 创建</span>
         </div>
       </div>
     </div>

@@ -5,6 +5,7 @@ import { NeteasePlaylist, NeteaseTrack } from "@mahiru/ui/public/source/netease/
 import { css, cx } from "@emotion/css";
 import { useScrollAutoHide } from "@mahiru/ui/public/hooks/useScrollAutoHide";
 import ElectronServices from "@mahiru/ui/public/source/electron/services";
+import { FormatNumber } from "@mahiru/ui/public/utils/format";
 
 interface TopInfoProps {
   summary: Nullable<NeteasePlaylist>;
@@ -53,7 +54,7 @@ const TopInfo: FC<TopInfoProps> = ({ summary, onPlayAll, onAddList }) => {
         <div className="flex shrink flex-col">
           <span className="select-none">歌曲数量 {Number(summary?.trackCount) || "-"}</span>
           <span className="select-none">
-            更新时间 {NeteaseTrack.formatDate(summary?.trackUpdateTime) || "-"}
+            更新时间 {FormatNumber.time(summary?.trackUpdateTime) || "-"}
           </span>
         </div>
       </div>
@@ -84,21 +85,10 @@ const TopInfo: FC<TopInfoProps> = ({ summary, onPlayAll, onAddList }) => {
           className="overflow-hidden px-2 py-1 text-[12px] mr-2 cursor-pointer font-semibold flex items-center gap-1 active:scale-95 shadow-2xl select-none min-w-max ease-in-out duration-300 transition-all hover:opacity-60 space-x-0.5">
           <MessageSquare size={16} />
           <span>评论</span>
-          <span>{commentPosition(summary?.commentCount)}</span>
+          <span>{FormatNumber.count(summary?.commentCount)}</span>
         </button>
       </div>
     </div>
   );
 };
 export default memo(TopInfo);
-
-function commentPosition(count?: number) {
-  if (!count) {
-    return "";
-  }
-  if (count > 999) {
-    return "999+";
-  } else {
-    return count.toString();
-  }
-}

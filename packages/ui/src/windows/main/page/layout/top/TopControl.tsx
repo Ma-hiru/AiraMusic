@@ -28,7 +28,7 @@ const TopControl: FC = () => {
   const mini = () => {
     miniWindow.show();
     currentWindow.hide();
-    ElectronServices.Bus.updater?.();
+    AppEntry.busUpdater?.();
   };
 
   useEffect(() => {
@@ -41,7 +41,7 @@ const TopControl: FC = () => {
   }, [currentWindow, miniWindow]);
 
   useEffect(() => {
-    ElectronServices.Bus.updater?.();
+    AppEntry.busUpdater?.();
   }, []);
 
   return (

@@ -9,6 +9,7 @@ import Tag from "@mahiru/ui/public/components/public/Tag";
 import AppEntry from "@mahiru/ui/windows/main/entry";
 import { NeteaseTrack } from "@mahiru/ui/public/source/netease/models";
 import AppAudio from "@mahiru/ui/public/player/audio";
+import { FormatNumber } from "@mahiru/ui/public/utils/format";
 
 const Progress: FC<object> = () => {
   const { barRef, bufferScope, percentScope, handleBarClick, handleBarMouseDown, chorusPercent } =
@@ -76,9 +77,9 @@ export default memo(Progress);
 const progressRenderMini = (progress: InstanceType<typeof AppAudio>["progress"]) => {
   return (
     <div className="flex justify-end items-center gap-2">
-      <span>{NeteaseTrack.formatTime(progress.currentTime, "s")}</span>
+      <span>{FormatNumber.duration(progress.currentTime, "s")}</span>
       <span className="opacity-50">/</span>
-      <span>{NeteaseTrack.formatTime(progress.duration, "s")}</span>
+      <span>{FormatNumber.duration(progress.duration, "s")}</span>
     </div>
   );
 };
@@ -86,8 +87,8 @@ const progressRenderMini = (progress: InstanceType<typeof AppAudio>["progress"])
 const progressRenderFull = (progress: InstanceType<typeof AppAudio>["progress"]) => {
   return (
     <>
-      <span>{NeteaseTrack.formatTime(progress.currentTime, "s")}</span>
-      <span>{NeteaseTrack.formatTime(progress.duration, "s")}</span>
+      <span>{FormatNumber.duration(progress.currentTime, "s")}</span>
+      <span>{FormatNumber.duration(progress.duration, "s")}</span>
     </>
   );
 };

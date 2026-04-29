@@ -18,6 +18,7 @@
 
   import { NeteaseImageSize } from "@mahiru/ui/public/enum";
   import NeteaseServices from "@mahiru/ui/public/source/netease/services";
+  import ElectronServices from "@mahiru/ui/public/source/electron/services";
 
   type ShadowLevel = "none" | "base" | "float";
   type ShadowColor = "light" | "dark";
@@ -117,7 +118,7 @@
 
   function wrapClick(e: MouseEvent) {
     if (props.preview && props.image) {
-      const imageWindow = AppWindow.from("image");
+      const imageWindow = ElectronServices.Window.from("image");
       const sendImage = props.image.toNetworkImage().setSize(NeteaseImageSize.raw);
       imageWindow.openThen(() => {
         imageWindow.focus();
@@ -143,7 +144,7 @@
     [() => props.pause, () => props.image?.src],
     () => {
       if (!props.image) return;
-      NeteaseServices.Image.tryFromCache(props.image, props.cache).then((local) => {
+      NeteaseServices.Image.local(props.image, props.cache).then((local) => {
         if (local) {
           source.value = local;
         } else {

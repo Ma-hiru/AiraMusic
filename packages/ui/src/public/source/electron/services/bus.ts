@@ -91,7 +91,7 @@ class AppPlayerActionBus extends Listenable {
   }
 }
 
-class AppUpdateBus extends Listenable {
+class AppUpdateMainBus extends Listenable {
   data: MessageTypeMap["updateBus"][] = [];
 
   constructor() {
@@ -112,13 +112,12 @@ class AppUpdateBus extends Listenable {
 }
 
 export default class _AppBus {
-  private static _updater: Nullable<NormalFunc> = null;
   private static playerBus = new AppPlayerBus();
   private static progressBus = new AppProgressBus();
   private static infoBus = new AppInfoBus();
   private static commentBus = new AppCommentsBus();
   private static playerActionBus = new AppPlayerActionBus();
-  static updateBus = new AppUpdateBus();
+  private static updateMainBus = new AppUpdateMainBus();
 
   static get player() {
     return _AppBus.playerBus;
@@ -136,15 +135,11 @@ export default class _AppBus {
     return _AppBus.commentBus;
   }
 
+  static get mainBusUpdater() {
+    return _AppBus.updateMainBus;
+  }
+
   static get playerAction() {
     return _AppBus.playerActionBus;
-  }
-
-  static get updater() {
-    return _AppBus._updater;
-  }
-
-  static injectUpdater(updater: NormalFunc) {
-    _AppBus._updater = updater;
   }
 }

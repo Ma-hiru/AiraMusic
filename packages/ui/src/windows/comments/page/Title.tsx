@@ -14,6 +14,7 @@ import ElectronServices from "@mahiru/ui/public/source/electron/services";
 import NeteaseAPI from "@mahiru/ui/public/source/netease/api";
 import NeteaseServices from "@mahiru/ui/public/source/netease/services";
 import { NeteaseImageSize } from "@mahiru/ui/public/enum";
+import { FormatNumber } from "@mahiru/ui/public/utils/format";
 
 interface TitleProps {
   commentBus: typeof ElectronServices.Bus.comment;
@@ -51,7 +52,7 @@ const Title: FC<TitleProps> = ({ className, commentBus }) => {
       const tags: string[] = [];
       if (res.data.language && res.data.language !== "未知") tags.push(res.data.language);
       if (Array.isArray(res.data.mvIds) && res.data.mvIds.length > 0) tags.push("MV");
-      if (res.data.publishTime) tags.push(dayjs(res.data.publishTime).format("YYYY-MM-DD"));
+      if (res.data.publishTime) tags.push(FormatNumber.time(res.data.publishTime));
       startTransition(() => setTags(tags));
     });
 

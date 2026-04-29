@@ -12,6 +12,7 @@ import {
 import ListItemQuality from "./TrackItemQuality";
 import Tag from "@mahiru/ui/public/components/public/Tag";
 import { PlaylistSource } from "@mahiru/ui/windows/main/constants";
+import { FormatNumber } from "@mahiru/ui/public/utils/format";
 
 interface ListItemAlbumProps {
   track: NeteaseTrackRecord | NeteaseHistory;
@@ -56,7 +57,7 @@ const TrackItemInfo: FC<ListItemAlbumProps> = ({
                 color: ${active ? textColor.string() : "#7b8290cc"};
               `
             )}>
-            {NeteaseTrack.formatDate((track as NeteaseHistory).time)}
+            {FormatNumber.time((track as NeteaseHistory).time)}
           </div>
           <div
             className={cx(
@@ -65,8 +66,8 @@ const TrackItemInfo: FC<ListItemAlbumProps> = ({
                 color: ${active ? textColor.string() : "#7b8290cc"};
               `
             )}>
-            {NeteaseTrack.formatTime((track as NeteaseHistory).playDuration, "s")} /{" "}
-            {track.detail.formatTime()}
+            {FormatNumber.duration((track as NeteaseHistory).playDuration, "s")} /{" "}
+            {track.detail.formatDuration()}
           </div>
         </>
       ) : (
@@ -77,7 +78,7 @@ const TrackItemInfo: FC<ListItemAlbumProps> = ({
               color: ${active ? textColor.string() : "#7b8290cc"};
             `
           )}>
-          {track.detail.formatTime()}
+          {track.detail.formatDuration()}
         </div>
       )}
     </div>

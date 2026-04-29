@@ -8,6 +8,7 @@ export default class AppEntry {
   //region inner
   private static _player: Nullable<AppPlayer>;
   private static _usePlayer: Nullable<() => AppPlayer>;
+  private static _innerUpdater = new Map<string, NormalFunc>();
   private static get userStore() {
     return userStoreSnapshot();
   }
@@ -57,7 +58,7 @@ export default class AppEntry {
       setTimeout(() => {
         if (!miniWindow.opened) {
           miniWindow.openThen(() => {
-            ElectronServices.Bus.updater?.();
+            AppEntry.busUpdater?.();
           });
         }
       }, 7000);
@@ -81,5 +82,25 @@ export default class AppEntry {
 
   static dispose() {
     this.savePlayer();
+  }
+
+  static registerInnerUpdater(id: string, updater: NormalFunc) {
+    AppEntry._innerUpdater.set(id, updater);
+    return () => {
+      AppEntry._innerUpdater.delete(id);
+    };
+  }
+
+  static getInnerUpdater(id: string) {
+    return AppEntry._innerUpdater.get(id);
+  }
+
+  static get busUpdater() {
+    return AppEntry.getInnerUpdater("main-bus");
+  }
+
+  static set busUpdater(fn: Undefinable<NormalFunc>) {
+    if (!fn) return;
+    AppEntry.registerInnerUpdater("main-bus", fn);
   }
 }
