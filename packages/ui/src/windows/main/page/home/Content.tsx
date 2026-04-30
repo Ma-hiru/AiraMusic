@@ -36,12 +36,7 @@ const Content: FC<object> = () => {
   return (
     <div
       ref={containerRef}
-      className={cx(
-        `w-full h-full overflow-y-auto scrollbar will-change-scroll contain-strict`,
-        css`
-          content-visibility: auto;
-        `
-      )}
+      className={cx(`w-full h-full overflow-y-auto scrollbar will-change-scroll contain-strict`)}
       onScroll={onScroll}>
       {delay(200) && <Banner />}
       {delay(1000) && user?.isLoggedIn && (

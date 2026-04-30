@@ -1,12 +1,12 @@
+import { cx } from "@emotion/css";
 import { FC, memo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ChevronLeft, ChevronUp, LocateFixed, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { AnimatePresence } from "motion/react";
 import { useLayoutStore } from "@mahiru/ui/windows/main/store/layout";
-import { RoutePathConstants } from "@mahiru/ui/windows/main/constants";
 
 import FloatItem from "./FloatItem";
-import { cx } from "@emotion/css";
+import { RoutePathMain } from "@mahiru/ui/public/routes";
 
 const Float: FC<{ className?: string }> = ({ className }) => {
   const navigate = useNavigate();
@@ -15,8 +15,8 @@ const Float: FC<{ className?: string }> = ({ className }) => {
 
   // 在首页或根路径时不显示返回按钮
   const hiddenBack = !(
-    RoutePathConstants.match(location, RoutePathConstants.home) ||
-    RoutePathConstants.match(location, RoutePathConstants.base)
+    RoutePathMain.match(location, RoutePathMain.home) ||
+    RoutePathMain.match(location, RoutePathMain.base)
   );
 
   return (

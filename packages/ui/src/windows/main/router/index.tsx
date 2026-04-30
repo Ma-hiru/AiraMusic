@@ -1,24 +1,24 @@
 import { createBrowserRouter, Navigate } from "react-router-dom";
-import { RoutePathConstants } from "@mahiru/ui/windows/main/constants/routes";
-import Layout from "@mahiru/ui/windows/main/page/layout/Layout";
-import PlaylistPage from "@mahiru/ui/windows/main/page/playlist/PlaylistPage";
-import HomePage from "@mahiru/ui/windows/main/page/home/HomePage";
+import { RoutePathMain } from "@mahiru/ui/public/routes";
+import Layout from "../page/layout/Layout";
+import HomePage from "../page/home/HomePage";
+import PlaylistPage from "../page/playlist/PlaylistPage";
 
-export const router = createBrowserRouter([
+export const MainRouter = createBrowserRouter([
   {
-    path: RoutePathConstants.base,
+    path: RoutePathMain.base,
     element: <Layout />,
     children: [
       {
         index: true,
-        element: <Navigate to={RoutePathConstants.home} replace />
+        element: <Navigate to={RoutePathMain.home} replace />
       },
       {
-        path: RoutePathConstants.home,
+        path: RoutePathMain.home,
         element: <HomePage />
       },
       {
-        path: RoutePathConstants.playlistBase,
+        path: RoutePathMain.playlist.base,
         element: <PlaylistPage />
       }
     ]

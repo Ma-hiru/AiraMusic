@@ -41,7 +41,8 @@ export default defineConfig(({ mode }) => {
           lyric: join(__dirname, "lyric.html"),
           tray: join(__dirname, "tray.html"),
           image: join(__dirname, "image.html"),
-          comments: join(__dirname, "comments.html")
+          comments: join(__dirname, "comments.html"),
+          display: join(__dirname, "display.html")
         }
       }
     },

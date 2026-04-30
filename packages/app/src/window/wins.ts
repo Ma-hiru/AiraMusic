@@ -204,9 +204,9 @@ export class AppWindows {
     };
   }
 
-  static get info(): AppWindowCreatorProps {
+  static get display(): AppWindowCreatorProps {
     const { width, height } = AppScreen.primary.adaptiveWindowSizePreset(
-      AppWindowConstants.WINDOW_BASE_SIZE.info
+      AppWindowConstants.WINDOW_BASE_SIZE.display
     );
     return {
       options: {
@@ -222,9 +222,9 @@ export class AppWindows {
         skipTaskbar: false
       },
       memoPos: true,
-      id: "info",
+      id: "display",
       handleExits: WindowExits.IGNORE,
-      loadURL: (port: number) => `http://localhost:${port}/info.html`,
+      loadURL: (port: number) => `http://localhost:${port}/display.html`,
       onCreate: (win: BrowserWindow) => {
         isDev && win.webContents.openDevTools();
       }

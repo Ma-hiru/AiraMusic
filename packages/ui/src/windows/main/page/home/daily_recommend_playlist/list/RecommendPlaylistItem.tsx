@@ -1,12 +1,12 @@
 import { FC, memo, useCallback, useMemo } from "react";
 import { CirclePlay, Headphones } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { NeteaseImageSize } from "@mahiru/ui/public/enum";
+import { NeteaseImageSize, PlaylistSource } from "@mahiru/ui/public/enum";
+import { NeteaseNetworkImage, NeteasePlaylist } from "@mahiru/ui/public/source/netease/models";
+import { RoutePathMain } from "@mahiru/ui/public/routes";
+import ImageConstants from "@mahiru/ui/windows/main/constants/image";
 
 import NeteaseImage from "@mahiru/ui/public/components/image/NeteaseImage";
-import { RoutePathConstants } from "@mahiru/ui/windows/main/constants";
-import { NeteaseNetworkImage, NeteasePlaylist } from "@mahiru/ui/public/source/netease/models";
-import ImageConstants from "@mahiru/ui/windows/main/constants/image";
 
 interface RecommendTrackItemProps {
   playlist: NeteaseAPI.DailyRecommendPlaylistResult;
@@ -35,7 +35,7 @@ const RecommendPlaylistItem: FC<RecommendTrackItemProps> = ({
     [playlist.creator.avatarUrl, playlist.creator.nickname]
   );
   const play = useCallback(() => {
-    navigate(RoutePathConstants.playlist(playlist.id, "normal"));
+    navigate(RoutePathMain.playlist.generate(playlist.id, PlaylistSource.Normal));
   }, [navigate, playlist.id]);
   return (
     <div className="w-full h-full flex flex-col justify-center items-center p-2">

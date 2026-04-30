@@ -6,14 +6,13 @@ import {
   NeteaseTrackRecord,
   NeteaseUser
 } from "@mahiru/ui/public/source/netease/models";
-import { PlaylistSource } from "@mahiru/ui/windows/main/constants";
+import { NeteaseImageSize, PlaylistSource } from "@mahiru/ui/public/enum";
+import AppToast from "@mahiru/ui/public/components/toast";
 
 import ListItemIndex from "./TrackItemIndex";
 import ListItemCover from "./TrackItemCover";
 import ListItemName from "./TrackItemName";
 import ListItemInfo from "./TrackItemInfo";
-import { NeteaseImageSize } from "@mahiru/ui/public/enum";
-import AppToast from "@mahiru/ui/public/components/toast";
 
 export interface TrackItemProps {
   textColor: ColorInstance;

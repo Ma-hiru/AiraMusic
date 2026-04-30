@@ -1,7 +1,7 @@
 import { FC, memo } from "react";
 import { NeteasePlaylist } from "@mahiru/ui/public/source/netease/models";
-import { PlaylistSource } from "@mahiru/ui/windows/main/constants";
 import { useLayoutStore } from "@mahiru/ui/windows/main/store/layout";
+import { PlaylistSource } from "@mahiru/ui/public/enum";
 
 import TopCover from "./TopCover";
 import TopRight from "./TopRight";

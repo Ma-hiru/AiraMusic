@@ -1,6 +1,6 @@
 import { FC, memo, startTransition, useCallback, useEffect, useRef, useState } from "react";
 import { useThemeColor } from "@mahiru/ui/public/hooks/useThemeColor";
-import { BannerType } from "@mahiru/ui/public/enum";
+import { BannerType, PlaylistSource } from "@mahiru/ui/public/enum";
 import { useUpdate } from "@mahiru/ui/public/hooks/useUpdate";
 import { Log } from "@mahiru/ui/public/utils/dev";
 import { NeteaseTrackRecord, NeteaseURL } from "@mahiru/ui/public/source/netease/models";
@@ -15,7 +15,7 @@ import AppErrorBoundary, {
   AppErrorBoundaryRef
 } from "@mahiru/ui/public/components/fallback/AppErrorBoundary";
 import ThrowIf from "@mahiru/ui/public/components/fallback/ThrowIf";
-import { RoutePathConstants } from "@mahiru/ui/windows/main/constants";
+import { RoutePathMain } from "@mahiru/ui/public/routes";
 
 const Banner: FC<object> = () => {
   const [banner, setBanner] = useState<NeteaseAPI.NeteaseBanner[]>([]);
@@ -88,7 +88,7 @@ const Banner: FC<object> = () => {
           return;
         }
         case BannerType.playlist: {
-          navigate(RoutePathConstants.playlist(id, "normal"));
+          navigate(RoutePathMain.playlist.generate(id, PlaylistSource.Normal));
           return;
         }
       }

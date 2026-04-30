@@ -1,6 +1,6 @@
 import { createContext, useContext } from "react";
 import { Log } from "@mahiru/ui/public/utils/dev";
-import { RoutePathConstants } from "@mahiru/ui/windows/main/constants";
+import { RoutePathMain } from "@mahiru/ui/public/routes";
 
 export interface KeepAliveCtxType {
   activeKey?: string;
@@ -11,7 +11,7 @@ export const KeepAliveCtx = createContext<KeepAliveCtxType>({
 });
 
 export function KeepAliveBuildKey(pathname: string, search?: string) {
-  if (pathname === RoutePathConstants.playlistBase) return pathname;
+  if (pathname === RoutePathMain.playlist.base) return pathname;
   return `${pathname}${search ?? ""}`;
 }
 

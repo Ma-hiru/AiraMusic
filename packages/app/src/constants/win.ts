@@ -67,7 +67,7 @@ export class AppWindowConstants {
         height: 450
       }
     },
-    info: {
+    display: {
       base: {
         width: 1024,
         height: 600

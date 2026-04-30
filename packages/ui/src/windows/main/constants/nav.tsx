@@ -1,6 +1,6 @@
 import { Clock, Heart, House } from "lucide-react";
 import { ReactNode } from "react";
-import { RoutePathConstants } from "@mahiru/ui/windows/main/constants/routes";
+import { RoutePathMain } from "@mahiru/ui/public/routes";
 
 export type NavData = {
   icon: ReactNode;
@@ -13,17 +13,17 @@ export class NavConstants {
     {
       icon: <House className="w-full aspect-square" />,
       label: "推荐",
-      path: RoutePathConstants.home
+      path: RoutePathMain.home
     },
     {
       icon: <Heart className="w-full aspect-square" />,
       label: "喜欢",
-      path: RoutePathConstants.like
+      path: RoutePathMain.playlist.like
     },
     {
       icon: <Clock className="w-full aspect-square" />,
       label: "历史",
-      path: RoutePathConstants.history
+      path: RoutePathMain.playlist.history
     }
   ];
 }

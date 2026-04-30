@@ -1,11 +1,12 @@
 import { FC, memo, useCallback, useMemo } from "react";
 import { CirclePlay } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { NeteaseNetworkImage } from "@mahiru/ui/public/source/netease/models";
+import { RoutePathMain } from "@mahiru/ui/public/routes";
+import { PlaylistSource } from "@mahiru/ui/public/enum";
+import ImageConstants from "@mahiru/ui/windows/main/constants/image";
 
 import NeteaseImage from "@mahiru/ui/public/components/image/NeteaseImage";
-import { RoutePathConstants } from "@mahiru/ui/windows/main/constants";
-import { NeteaseNetworkImage } from "@mahiru/ui/public/source/netease/models";
-import ImageConstants from "@mahiru/ui/windows/main/constants/image";
 
 interface RecommendTrackItemProps {
   playlist: NeteaseAPI.RecommendPlaylistResult;
@@ -16,7 +17,7 @@ interface RecommendTrackItemProps {
 const PlaylistItem: FC<RecommendTrackItemProps> = ({ playlist, isMainColorDark, textColor }) => {
   const navigate = useNavigate();
   const play = useCallback(() => {
-    navigate(RoutePathConstants.playlist(playlist.id, "normal"));
+    navigate(RoutePathMain.playlist.generate(playlist.id, PlaylistSource.Normal));
   }, [navigate, playlist.id]);
   const image = useMemo(
     () =>

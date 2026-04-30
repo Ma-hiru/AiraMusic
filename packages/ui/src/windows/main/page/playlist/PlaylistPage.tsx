@@ -10,7 +10,6 @@ import {
   useState
 } from "react";
 import { useLocation, useSearchParams } from "react-router-dom";
-import { RoutePathConstants } from "@mahiru/ui/windows/main/constants";
 import {
   NeteaseHistory,
   NeteaseNetworkImage,
@@ -26,24 +25,26 @@ import TrackList, { TrackListRef } from "@mahiru/ui/public/components/track_list
 import { useUser } from "@mahiru/ui/public/store/user";
 import { TrackContextMenuOnClick } from "@mahiru/ui/public/components/menu/TrackMenu";
 import { getLayoutStoreSnapshot, useLayoutStore } from "@mahiru/ui/windows/main/store/layout";
+import { useUpdate } from "@mahiru/ui/public/hooks/useUpdate";
+import { RoutePathMain } from "@mahiru/ui/public/routes";
 import AppEntry from "@mahiru/ui/windows/main/entry";
 import AppContextMenu from "@mahiru/ui/public/hooks/useContextMenu";
 import AppToast from "@mahiru/ui/public/components/toast";
 import NeteaseServices from "@mahiru/ui/public/source/netease/services";
+import ElectronServices from "@mahiru/ui/public/source/electron/services";
 import ImageConstants from "@mahiru/ui/windows/main/constants/image";
+
 import Top from "./top";
 import Divider from "./Divider";
 import AppErrorBoundary from "@mahiru/ui/public/components/fallback/AppErrorBoundary";
 import ThrowIf from "@mahiru/ui/public/components/fallback/ThrowIf";
-import { useUpdate } from "@mahiru/ui/public/hooks/useUpdate";
 import AppLoading from "@mahiru/ui/public/components/fallback/AppLoading";
-import ElectronServices from "@mahiru/ui/public/source/electron/services";
 
 const PlaylistPage: FC<object> = () => {
   const user = useUser();
   const location = useLocation();
   const [searchParams] = useSearchParams();
-  const { id, source } = RoutePathConstants.playlistParse(location, searchParams);
+  const { id, source } = RoutePathMain.playlist.parse(location, searchParams);
   const [status, setStatus] = useState<"error" | "loading" | "loaded">("loading");
 
   const [playlist, setPlaylist] = useState<Nullable<NeteasePlaylist>>(null);

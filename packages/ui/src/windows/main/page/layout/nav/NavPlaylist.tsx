@@ -1,7 +1,5 @@
 import { FC, memo, useCallback, useRef, useState } from "react";
 import { useScrollAutoHide } from "@mahiru/ui/public/hooks/useScrollAutoHide";
-
-import VirtualList, { VirtualListRow } from "@mahiru/ui/public/components/virtual_list/VirtualList";
 import {
   NeteaseNetworkImage,
   NeteasePlaylistSummary,
@@ -11,10 +9,13 @@ import AppUI from "@mahiru/ui/public/player/ui";
 import { LayoutConfig } from "@mahiru/ui/windows/main/store/layout/config";
 import NeteaseImage from "@mahiru/ui/public/components/image/NeteaseImage";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
-import { RoutePathConstants } from "@mahiru/ui/windows/main/constants";
 import { cx } from "@emotion/css";
 import { getLayoutStoreSnapshot } from "@mahiru/ui/windows/main/store/layout";
+import { RoutePathMain } from "@mahiru/ui/public/routes";
+import { PlaylistSource } from "@mahiru/ui/public/enum";
 import ImageConstants from "@mahiru/ui/windows/main/constants/image";
+
+import VirtualList, { VirtualListRow } from "@mahiru/ui/public/components/virtual_list/VirtualList";
 
 interface NavPlaylistProps {
   user: Nullable<NeteaseUser>;
@@ -25,7 +26,7 @@ const NavPlaylist: FC<NavPlaylistProps> = ({ user, layout }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
-  const { id } = RoutePathConstants.playlistParse(location, searchParams);
+  const { id } = RoutePathMain.playlist.parse(location, searchParams);
 
   const [fastLocation, setFastLocation] = useState(false);
   const containerRef = useRef<Nullable<HTMLDivElement>>(null);
@@ -54,7 +55,7 @@ const NavPlaylist: FC<NavPlaylistProps> = ({ user, layout }) => {
 
   const onItemClick = useCallback(
     (item: NeteasePlaylistSummary) => {
-      navigate(RoutePathConstants.playlist(item.id, "normal"));
+      navigate(RoutePathMain.playlist.generate(item.id, PlaylistSource.Normal));
     },
     [navigate]
   );

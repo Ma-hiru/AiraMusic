@@ -4,7 +4,7 @@ type WindowType =
   | "lyric"
   | "miniplayer"
   | "external"
-  | "info"
+  | "display"
   | "tray"
   | "image"
   | "process"

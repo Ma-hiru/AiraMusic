@@ -113,7 +113,7 @@ const Bus: FC<object> = () => {
     playerActionBus,
     windowCurrent
   ]);
-  
+
   useEffect(() => {
     const actions = mainBusUpdater.data;
     if (actions.length === 0) return;

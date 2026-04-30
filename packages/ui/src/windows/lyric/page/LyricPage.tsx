@@ -165,7 +165,11 @@ export default function LyricPage() {
         )}
         onClick={handleClick}
         onMouseOver={handleMouseOver}>
-        <div className={cx("w-full h-full overflow-hidden contain-strict", lock && "pointer-events-none")}>
+        <div
+          className={cx(
+            "w-full h-full overflow-hidden contain-strict",
+            lock && "pointer-events-none"
+          )}>
           <LyricComponent
             mainAlign="center"
             crossAlign="center"

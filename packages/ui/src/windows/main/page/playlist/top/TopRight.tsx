@@ -2,12 +2,12 @@ import { FC, memo, useMemo } from "react";
 import { SquarePen } from "lucide-react";
 import { NeteaseNetworkImage, NeteasePlaylist } from "@mahiru/ui/public/source/netease/models";
 import { useUser } from "@mahiru/ui/public/store/user";
-import { PlaylistSource } from "@mahiru/ui/windows/main/constants";
+import { FormatNumber } from "@mahiru/ui/public/utils/format";
+import { PlaylistSource } from "@mahiru/ui/public/enum";
+import ImageConstants from "@mahiru/ui/windows/main/constants/image";
 
 import Search from "@mahiru/ui/public/components/public/Search";
 import NeteaseImage from "@mahiru/ui/public/components/image/NeteaseImage";
-import ImageConstants from "@mahiru/ui/windows/main/constants/image";
-import { FormatNumber } from "@mahiru/ui/public/utils/format";
 
 interface TopRightProps {
   summary: Nullable<NeteasePlaylist>;
