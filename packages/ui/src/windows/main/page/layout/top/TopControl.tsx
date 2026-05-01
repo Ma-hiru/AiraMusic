@@ -32,8 +32,8 @@ const TopControl: FC = () => {
   };
 
   useEffect(() => {
-    const sub1 = miniWindow.bus("show", () => currentWindow.hide());
-    const sub2 = currentWindow.bus("show", () => miniWindow.hide());
+    const sub1 = miniWindow.addEventListener("show", () => currentWindow.hide());
+    const sub2 = currentWindow.addEventListener("show", () => miniWindow.hide());
     return () => {
       sub1();
       sub2();

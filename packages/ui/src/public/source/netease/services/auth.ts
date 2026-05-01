@@ -27,25 +27,24 @@ export default class _NeteaseAuth {
     return NeteaseUser.isLoggedIn;
   }
 
-  static createLoginWindow() {
+  static async createLoginWindow() {
     const loginWindow = ElectronServices.Window.from("login");
     if (!NeteaseUser.isLoggedIn) {
       loginWindow.removeMessageHandler("login");
-      loginWindow.openThen(() => {
-        loginWindow.listenMessage(
-          "login",
-          (cookies) => {
-            _NeteaseAuth.login(cookies).catch(() => {
-              Log.error("login failed, maybe cookies invalid");
-              AppToast.request({
-                type: "error",
-                text: "登录失败，请重试"
-              });
+      await loginWindow.openAwait();
+      loginWindow.listenMessage(
+        "login",
+        (cookies) => {
+          _NeteaseAuth.login(cookies).catch(() => {
+            Log.error("login failed, maybe cookies invalid");
+            AppToast.request({
+              type: "error",
+              text: "登录失败，请重试"
             });
-          },
-          { once: true, id: "login" }
-        );
-      });
+          });
+        },
+        { once: true, id: "login" }
+      );
     }
   }
 

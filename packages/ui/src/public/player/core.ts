@@ -189,6 +189,7 @@ export default class AppPlayer extends Listenable {
       .then((cover) => {
         if (controller.signal.aborted) return;
         this.current.cover = cover;
+        this.current.cover.setAlt(current.detail.al.name || current.detail.name);
         this.executeListeners();
       })
       .catch((err) => {

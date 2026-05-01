@@ -43,7 +43,7 @@
     "build:electron:linux": "yarn electron-builder build --linux",
     "build:electron:win32": "yarn electron-builder build --windows",
     "commit": "yarn check && yarn lint && yarn auto-commit",
-    "check": "yarn tsgo --noEmit",
+    "check": "yarn tsgo --noEmit && yarn workspace @mahiru/ui check",
     "lint": "yarn check && yarn lint:ts && yarn lint:wasm && yarn lint:store",
     "lint:ts": "yarn prettier --write . && yarn eslint . --fix",
     "lint:wasm": "yarn workspace @mahiru/wasm lint",

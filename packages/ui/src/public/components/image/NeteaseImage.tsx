@@ -121,16 +121,15 @@ const NeteaseImage: FC<ImageProps> = ({
   );
 
   const wrapClick = useCallback(
-    (e: ReactMouseEvent<HTMLImageElement>) => {
+    async (e: ReactMouseEvent<HTMLImageElement>) => {
       if (preview && image) {
         const imageWindow = ElectronServices.Window.from("image");
         const sendImage = image.toNetworkImage().setSize(NeteaseImageSize.raw);
-        imageWindow.openThen(() => {
-          imageWindow.focus();
-          imageWindow.send("imageCheckerBus", {
-            url: sendImage.src,
-            alt: alt ?? sendImage.alt
-          });
+        await imageWindow.openAwait();
+        imageWindow.focus();
+        imageWindow.send("imageCheckerBus", {
+          url: sendImage.src,
+          alt: alt || sendImage.alt
         });
       }
       return onClick?.(e);

@@ -52,13 +52,12 @@ const BarBtns: FC<object> = () => {
       <span
         style={{ color: lyricWindow.opened ? mainColor.hex() : textColorOnMain.hex() }}
         className="size-5 flex justify-center items-center font-semibold hover:opacity-50 select-none cursor-pointer ease-in-out duration-300 transition-all active:scale-90"
-        onClick={() => {
+        onClick={async () => {
           if (lyricWindow.opened) {
             lyricWindow.close();
           } else {
-            lyricWindow.openThen(() => {
-              AppEntry.busUpdater?.();
-            });
+            await lyricWindow.openAwait();
+            AppEntry.busUpdater?.();
           }
         }}>
         词

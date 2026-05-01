@@ -116,16 +116,15 @@
     return imageAttrs.value.onError?.(e as any);
   }
 
-  function wrapClick(e: MouseEvent) {
+  async function wrapClick(e: MouseEvent) {
     if (props.preview && props.image) {
       const imageWindow = ElectronServices.Window.from("image");
       const sendImage = props.image.toNetworkImage().setSize(NeteaseImageSize.raw);
-      imageWindow.openThen(() => {
-        imageWindow.focus();
-        imageWindow.send("imageCheckerBus", {
-          url: sendImage.src,
-          alt: imageAttrs.value.alt ?? sendImage.alt
-        });
+      await imageWindow.openAwait();
+      imageWindow.focus();
+      imageWindow.send("imageCheckerBus", {
+        url: sendImage.src,
+        alt: imageAttrs.value.alt ?? sendImage.alt
       });
     }
     return emit("click", e);

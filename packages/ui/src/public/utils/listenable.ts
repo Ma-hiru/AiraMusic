@@ -1,39 +1,66 @@
 import { Log } from "@mahiru/ui/public/utils/dev";
 
-export abstract class Listenable {
+export abstract class Listenable<EventName = string> {
+  private readonly listenableName;
   private readonly listeners = new Map<NormalFunc, { id: string; once: boolean }>();
+  private readonly eventListeners = new Map<
+    EventName,
+    Map<NormalFunc, { id: string; once: boolean }>
+  >();
   private listenerTimer: Nullable<number> = null;
-  private updateMode: "async" | "sync" = "async";
-  private updateGap = 100;
+  private listenerMicrotaskPending = false;
+  private updateMode: "microtask" | "sync" | "debounce" = "debounce";
+  private updateGap = 100; // ms
 
-  protected executeListeners(mode = this.updateMode) {
-    if (mode === "sync") {
-      for (const [listener, { once }] of this.listeners) {
-        try {
-          listener();
-          once && this.listeners.delete(listener);
-        } catch (err) {
-          Log.error(err);
-          this.listeners.delete(listener);
-        }
+  constructor(name?: string) {
+    this.listenableName = name;
+  }
+
+  private flushListeners(event?: EventName) {
+    const execute = (listeners: typeof this.listeners) => {
+      for (const [listener, options] of [...listeners.entries()]) {
+        options.once && listeners.delete(listener);
+        this.wrapListener(listener)();
       }
-      return;
-    }
+    };
+    const eventListeners = event && this.eventListeners.get(event);
+    eventListeners && execute(eventListeners);
+    execute(this.listeners);
+  }
 
-    this.listenerTimer && window.clearTimeout(this.listenerTimer);
-    this.listenerTimer = window.setTimeout(() => {
-      for (const [listener, { once }] of this.listeners) {
-        requestAnimationFrame(() => {
-          try {
-            listener();
-            once && this.listeners.delete(listener);
-          } catch (err) {
-            Log.error(err);
-            this.listeners.delete(listener);
-          }
+  protected wrapListener(
+    listener: NormalFunc,
+    label = this.listenableName || "Listenable",
+    message = `Executing ${label} listener error`
+  ) {
+    return () => {
+      try {
+        return listener();
+      } catch (raw) {
+        Log.error({ message, label, raw });
+      }
+    };
+  }
+
+  protected executeListeners(event?: EventName, mode = this.updateMode) {
+    switch (mode) {
+      case "sync":
+        return this.flushListeners(event);
+      case "microtask":
+        if (this.listenerMicrotaskPending) return;
+        this.listenerMicrotaskPending = true;
+        return queueMicrotask(() => {
+          this.listenerMicrotaskPending = false;
+          this.flushListeners(event);
         });
-      }
-    }, this.updateGap);
+      case "debounce":
+        this.listenerTimer && window.clearTimeout(this.listenerTimer);
+        this.listenerTimer = window.setTimeout(() => {
+          this.listenerTimer = null;
+          this.flushListeners(event);
+        }, this.updateGap);
+        return;
+    }
   }
 
   protected clearAllListeners() {
@@ -61,6 +88,25 @@ export abstract class Listenable {
     return unsubscriber;
   }
 
+  addEventListener(
+    event: EventName,
+    callback: NormalFunc,
+    props: { once?: boolean; id?: string } = {}
+  ) {
+    props.once ??= false;
+    props.id ??= window.crypto.randomUUID();
+    const listeners = this.eventListeners.get(event) ?? new Map();
+    listeners.set(callback, { id: props.id, once: props.once });
+    this.eventListeners.set(event, listeners);
+
+    const unsubscriber = () => {
+      this.eventListeners.get(event)?.delete(callback);
+    };
+    unsubscriber.id = props.id;
+
+    return unsubscriber;
+  }
+
   removeListener(callback: NormalFunc | string) {
     if (typeof callback === "string") {
       for (const [listener, { id }] of this.listeners) {
@@ -72,6 +118,19 @@ export abstract class Listenable {
       return;
     }
     this.listeners.delete(callback);
+  }
+
+  removeEventListener(event: EventName, callback: NormalFunc | string) {
+    if (typeof callback === "string") {
+      for (const [listener, { id }] of this.eventListeners.get(event) ?? []) {
+        if (id === callback) {
+          this.eventListeners.get(event)?.delete(listener);
+          break;
+        }
+      }
+      return;
+    }
+    this.eventListeners.get(event)?.delete(callback);
   }
 
   afterUpdate<T extends Undefinable<NormalFunc> = undefined>(

@@ -58,14 +58,13 @@
       {
         icon: MessageSquare,
         text: "评论",
-        click: () => {
+        click: async () => {
           const id = playerBus.value.data?.track?.id;
           if (!id) return;
-          ElectronServices.Window.from("comments").openThen(() => {
-            ElectronServices.Bus.comment.send({
-              id,
-              type: "track"
-            });
+          await ElectronServices.Window.from("comments").openAwait();
+          ElectronServices.Bus.comment.send({
+            id,
+            type: "track"
           });
         }
       },

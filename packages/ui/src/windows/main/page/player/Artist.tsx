@@ -33,14 +33,12 @@ const Artist: FC<object> = () => {
         <MessageSquare
           color="white"
           fill="white"
-          onClick={() => {
+          onClick={async () => {
             if (!track) return;
-            ElectronServices.Window.from("comments").openThen(() => {
-              console.log("comments");
-              ElectronServices.Bus.comment.send({
-                id: track.id,
-                type: "track"
-              });
+            await ElectronServices.Window.from("comments").openAwait();
+            ElectronServices.Bus.comment.send({
+              id: track.id,
+              type: "track"
             });
           }}
           className="size-4 scale-90 text-white/50  hover:opacity-50 active:scale-90 active:text-white cursor-pointer select-none shadow-lg ease-in-out duration-300 transition-all opacity-80"

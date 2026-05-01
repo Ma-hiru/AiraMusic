@@ -148,7 +148,7 @@ export default function LyricPage() {
       });
     };
     update();
-    return ElectronServices.Window.current.bus("moved", update);
+    return ElectronServices.Window.current.addEventListener("moved", update);
   }, []);
 
   return (

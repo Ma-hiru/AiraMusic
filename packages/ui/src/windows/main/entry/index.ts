@@ -55,11 +55,10 @@ export default class AppEntry {
   private static setupMini() {
     ElectronServices.Once.do("setupMini", () => {
       const miniWindow = ElectronServices.Window.from("miniplayer");
-      setTimeout(() => {
+      setTimeout(async () => {
         if (!miniWindow.opened) {
-          miniWindow.openThen(() => {
-            AppEntry.busUpdater?.();
-          });
+          await miniWindow.openAwait();
+          AppEntry.busUpdater?.();
         }
       }, 7000);
     });

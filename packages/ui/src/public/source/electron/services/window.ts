@@ -1,11 +1,13 @@
 import { Listenable } from "@mahiru/ui/public/utils/listenable";
-import { isDev, Log } from "@mahiru/ui/public/utils/dev";
+import { isDev } from "@mahiru/ui/public/utils/dev";
 import _AppRenderer from "@mahiru/ui/public/source/electron/services/renderer";
 
 const _currentWindowType = await _AppRenderer.Event.invoke.currentWindowType();
 const _runtimeID = await _AppRenderer.Event.invoke.runtimeID();
 
-export default class _AppWindow extends Listenable {
+export type WindowBusEvent = MessageTypeMap["windowBus"]["action"];
+
+export default class _AppWindow extends Listenable<WindowBusEvent> {
   readonly type: WindowType;
   private readonly id: string;
   private _opened: boolean;
@@ -14,7 +16,6 @@ export default class _AppWindow extends Listenable {
   private _min: boolean;
   private _fullscreen: boolean;
   private _focus: boolean;
-  private _busListeners = new Map<MessageTypeMap["windowBus"]["action"], NormalFunc[]>();
   static currentWindowType = _currentWindowType;
   static runtimeID = _runtimeID;
 
@@ -84,7 +85,7 @@ export default class _AppWindow extends Listenable {
   }
 
   private constructor(type: WindowType) {
-    super();
+    super(`AppWindow(${type})`);
     this.type = type;
     this._opened = false;
     this._max = false;
@@ -93,130 +94,113 @@ export default class _AppWindow extends Listenable {
     this._focus = false;
     this._fullscreen = false;
     this.id = window.crypto.randomUUID();
-    _AppRenderer.Message.listen(
-      "windowBus",
-      "process",
-      ({ type, action }) => {
-        if (type !== this.type) return;
-        switch (action) {
-          case "show": {
-            this.opened = true;
-            this.isShow = true;
-            break;
-          }
-          case "close": {
-            this.opened = false;
-            this.isShow = false;
-            this.isMax = false;
-            this.isMin = false;
-            this.isFullscreen = false;
-            break;
-          }
-          case "hide": {
-            this.isShow = false;
-            this.opened = true;
-            break;
-          }
-          case "maximize": {
-            this.isMax = true;
-            this.opened = true;
-            this.isShow = true;
-            break;
-          }
-          case "unmaximize": {
-            this.isMax = false;
-            break;
-          }
-          case "minimize": {
-            this.isMin = true;
-            this.opened = true;
-            this.isShow = true;
-            break;
-          }
-          case "unminimize": {
-            this.isMin = false;
-            break;
-          }
-          case "enter-fullscreen": {
-            this.isFullscreen = true;
-            this.opened = true;
-            this.isShow = true;
-            break;
-          }
-          case "leave-fullscreen": {
-            this.isFullscreen = false;
-            break;
-          }
-          case "focus": {
-            this.isFocus = true;
-            this.opened = true;
-            this.isShow = true;
-            break;
-          }
-          case "blur": {
-            this.isFocus = false;
-            break;
-          }
-          case "ready": {
-            this.opened = true;
-            break;
-          }
-        }
-        const listeners = this._busListeners.get(action) ?? [];
-        for (const listener of listeners) {
-          try {
-            listener();
-          } catch (error) {
-            Log.error(
-              "AppWindow",
-              `Error occurred while executing window bus listener for action "${action}":`,
-              error
-            );
-          }
-        }
-      },
-      {
-        id: this.id
-      }
-    );
-    _AppRenderer.Event.invoke.hasOpenInternalWindow(type).then((opened) => {
+    this.initStatus();
+  }
+
+  private initStatus() {
+    _AppRenderer.Message.listen("windowBus", "process", this.updateStatus.bind(this), {
+      id: this.id
+    });
+    _AppRenderer.Event.invoke.hasOpenInternalWindow(this.type).then((opened) => {
       this.opened = opened;
     });
-    _AppRenderer.Event.invoke.isMaximized(type).then((isMax) => {
+    _AppRenderer.Event.invoke.isMaximized(this.type).then((isMax) => {
       this.isMax = isMax;
     });
-    _AppRenderer.Event.invoke.isFullscreen(type).then((isFullscreen) => {
+    _AppRenderer.Event.invoke.isFullscreen(this.type).then((isFullscreen) => {
       this.isFullscreen = isFullscreen;
     });
   }
 
-  bus(action: MessageTypeMap["windowBus"]["action"], cb: NormalFunc) {
-    const listeners = this._busListeners.get(action) ?? [];
-    listeners.push(cb);
-    this._busListeners.set(action, listeners);
-    return () => {
-      const listeners = this._busListeners.get(action) ?? [];
-      this._busListeners.set(
-        action,
-        listeners.filter((listener) => listener !== cb)
-      );
-    };
+  private updateStatus({ type, action }: MessageDataReceive<"windowBus">["data"]) {
+    if (type !== this.type) return;
+    switch (action) {
+      case "show": {
+        this.opened = true;
+        this.isShow = true;
+        break;
+      }
+      case "close": {
+        this.opened = false;
+        this.isShow = false;
+        this.isMax = false;
+        this.isMin = false;
+        this.isFullscreen = false;
+        break;
+      }
+      case "hide": {
+        this.isShow = false;
+        this.opened = true;
+        break;
+      }
+      case "maximize": {
+        this.isMax = true;
+        this.opened = true;
+        this.isShow = true;
+        break;
+      }
+      case "unmaximize": {
+        this.isMax = false;
+        break;
+      }
+      case "minimize": {
+        this.isMin = true;
+        this.opened = true;
+        this.isShow = true;
+        break;
+      }
+      case "unminimize": {
+        this.isMin = false;
+        break;
+      }
+      case "enter-fullscreen": {
+        this.isFullscreen = true;
+        this.opened = true;
+        this.isShow = true;
+        break;
+      }
+      case "leave-fullscreen": {
+        this.isFullscreen = false;
+        break;
+      }
+      case "focus": {
+        this.isFocus = true;
+        this.opened = true;
+        this.isShow = true;
+        break;
+      }
+      case "blur": {
+        this.isFocus = false;
+        break;
+      }
+      case "ready": {
+        this.opened = true;
+        break;
+      }
+    }
+    this.executeListeners(action);
   }
 
   closeThen(cb: NormalFunc) {
-    if (!this.opened) cb();
+    if (!this.opened) return this.wrapListener(cb)();
     const listener = () => {
-      !this.opened && cb();
+      !this.opened && this.wrapListener(cb)();
       !this.opened && this.removeListener(listener);
     };
     this.addListener(listener);
     this.close();
   }
 
+  closeAwait() {
+    return new Promise<void>((resolve) => {
+      this.closeThen(resolve);
+    });
+  }
+
   onCloseThen(cb: NormalFunc) {
-    if (!this.opened) cb();
+    if (!this.opened) return this.wrapListener(cb)();
     const listener = () => {
-      !this.opened && cb();
+      !this.opened && this.wrapListener(cb)();
       !this.opened && this.removeListener(listener);
     };
     this.addListener(listener);
@@ -257,13 +241,17 @@ export default class _AppWindow extends Listenable {
   }
 
   openThen(cb: NormalFunc) {
-    if (this.opened) return cb();
+    if (this.opened) return this.wrapListener(cb)();
     const listener = () => {
-      this.opened && setTimeout(() => cb(), 1000);
+      this.opened && setTimeout(this.wrapListener(cb), 1000);
       this.opened && this.removeListener(listener);
     };
     this.addListener(listener);
     this.open();
+  }
+
+  openAwait() {
+    return new Promise<void>((resolve) => this.openThen(resolve));
   }
 
   devTools() {
@@ -328,7 +316,7 @@ export default class _AppWindow extends Listenable {
   }
 
   [Symbol.toPrimitive]() {
-    return this.type;
+    return `AppWindow(${this.type})`;
   }
 
   [Symbol.dispose]() {
@@ -360,5 +348,9 @@ export default class _AppWindow extends Listenable {
 
   static panic(message: string, error?: string) {
     _AppRenderer.Event.normal.fatalError({ message, error });
+  }
+
+  static [Symbol.dispose]() {
+    this.winCache.clear();
   }
 }

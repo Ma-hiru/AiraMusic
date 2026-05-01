@@ -1,11 +1,11 @@
 import { FC, memo, useRef } from "react";
 import { ListMusic, MessageSquare, Play } from "lucide-react";
 import { useThemeColor } from "@mahiru/ui/public/hooks/useThemeColor";
-import { NeteasePlaylist, NeteaseTrack } from "@mahiru/ui/public/source/netease/models";
+import { NeteasePlaylist } from "@mahiru/ui/public/source/netease/models";
 import { css, cx } from "@emotion/css";
 import { useScrollAutoHide } from "@mahiru/ui/public/hooks/useScrollAutoHide";
-import ElectronServices from "@mahiru/ui/public/source/electron/services";
 import { FormatNumber } from "@mahiru/ui/public/utils/format";
+import ElectronServices from "@mahiru/ui/public/source/electron/services";
 
 interface TopInfoProps {
   summary: Nullable<NeteasePlaylist>;
@@ -75,10 +75,11 @@ const TopInfo: FC<TopInfoProps> = ({ summary, onPlayAll, onAddList }) => {
         </button>
         <button
           style={{ color: mainColor.hex() }}
-          onClick={() => {
+          onClick={async () => {
             if (!summary?.id) return;
+            await ElectronServices.Window.from("comments").openAwait();
             ElectronServices.Bus.comment.send({
-              id: summary?.id,
+              id: summary.id,
               type: "playlist"
             });
           }}
