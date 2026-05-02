@@ -8,7 +8,7 @@ import {
 import AppUI from "@mahiru/ui/public/player/ui";
 import { LayoutConfig } from "@mahiru/ui/windows/main/store/layout/config";
 import NeteaseImage from "@mahiru/ui/public/components/image/NeteaseImage";
-import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { cx } from "@emotion/css";
 import { getLayoutStoreSnapshot } from "@mahiru/ui/windows/main/store/layout";
 import { RoutePathMain } from "@mahiru/ui/public/routes";
@@ -25,8 +25,7 @@ interface NavPlaylistProps {
 const NavPlaylist: FC<NavPlaylistProps> = ({ user, layout }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [searchParams] = useSearchParams();
-  const { id } = RoutePathMain.playlist.parse(location, searchParams);
+  const { id } = RoutePathMain.playlist.parseQuery(location);
 
   const [fastLocation, setFastLocation] = useState(false);
   const containerRef = useRef<Nullable<HTMLDivElement>>(null);
@@ -55,7 +54,7 @@ const NavPlaylist: FC<NavPlaylistProps> = ({ user, layout }) => {
 
   const onItemClick = useCallback(
     (item: NeteasePlaylistSummary) => {
-      navigate(RoutePathMain.playlist.generate(item.id, PlaylistSource.Normal));
+      navigate(RoutePathMain.playlist.withQuery(item.id, PlaylistSource.Normal));
     },
     [navigate]
   );
@@ -81,6 +80,7 @@ const NavPlaylist: FC<NavPlaylistProps> = ({ user, layout }) => {
     </div>
   );
 };
+
 export default memo(NavPlaylist);
 
 const RowComponent: VirtualListRow<
@@ -91,7 +91,7 @@ const RowComponent: VirtualListRow<
   const data = items[index]!;
   const active = extra.activeID === data.id;
   return (
-    <div className="w-40 px-3">
+    <div className="w-(--side-bar-expand-width) px-3">
       <div
         className={cx(
           `

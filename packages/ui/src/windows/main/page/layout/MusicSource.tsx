@@ -9,7 +9,7 @@ import AppEntry from "@mahiru/ui/windows/main/entry";
 const MusicSource: FC<object> = () => {
   const player = AppEntry.usePlayer();
   const title = player.current.track?.name;
-  const artist = player.current.track?.detail.artist?.().join("&");
+  const artist = player.current.track?.detail.artist?.join("&");
   const { other, layout, updateLayout, updateOther } = useLayoutStore();
   // 注册窗口标题
   const { updateWindowTitle, defaultTitle } = useWindowTitle();

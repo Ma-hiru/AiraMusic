@@ -1,3 +1,4 @@
+export * from "./NeteaseAlbum";
 export * from "./NeteaseAudio";
 export * from "./NeteaseCookie";
 export * from "./NeteaseHistory";

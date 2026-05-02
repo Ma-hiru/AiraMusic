@@ -35,7 +35,7 @@ const RecommendPlaylistItem: FC<RecommendTrackItemProps> = ({
     [playlist.creator.avatarUrl, playlist.creator.nickname]
   );
   const play = useCallback(() => {
-    navigate(RoutePathMain.playlist.generate(playlist.id, PlaylistSource.Normal));
+    navigate(RoutePathMain.playlist.withQuery(playlist.id, PlaylistSource.Normal));
   }, [navigate, playlist.id]);
   return (
     <div className="w-full h-full flex flex-col justify-center items-center p-2">

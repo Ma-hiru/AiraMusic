@@ -52,6 +52,8 @@ export interface TrackListProps {
       ]
     >
   >;
+  onClickArtist: Optional<NormalFunc<[id: number]>>;
+  onClickAlbum: Optional<NormalFunc<[id: number]>>;
 }
 
 const TrackList: FC<TrackListProps> = ({
@@ -67,6 +69,8 @@ const TrackList: FC<TrackListProps> = ({
   onContext,
   onClick,
   onRangeUpdate,
+  onClickArtist,
+  onClickAlbum,
   trackCoverSize
 }) => {
   const user = useUser();
@@ -104,6 +108,7 @@ const TrackList: FC<TrackListProps> = ({
     }),
     [scrollToItem]
   );
+
   return (
     <>
       <div
@@ -128,6 +133,8 @@ const TrackList: FC<TrackListProps> = ({
             fastLocation,
             trackCoverSize,
             textColor: textColorOnMain,
+            onClickArtist,
+            onClickAlbum,
             onLikeChange: (track) => likeChange(track.detail),
             checkLiked: isTrackLiked
           }}
@@ -163,6 +170,8 @@ const RowComponent: VirtualListRow<NeteaseTrackRecord, ExtraData> = ({ index, it
       onClick={extra.onClick}
       onContext={extra.onContext}
       onLikeChange={extra.onLikeChange}
+      onClickArtist={extra.onClickArtist}
+      onClickAlbum={extra.onClickAlbum}
       liked={extra.checkLiked(items[index]?.detail)}
       type={extra.type}
       user={extra.user}

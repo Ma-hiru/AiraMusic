@@ -39,6 +39,19 @@ export class RoutePath<const T extends Props> {
     return path === location.pathname + location.search + location.hash;
   }
 
+  static withQuery<Q extends Record<string, unknown>>(base: string, props: Q) {
+    const search = new URLSearchParams();
+    search.set("query", encodeURIComponent(JSON.stringify(props)));
+    return `${base}?${search.toString()}`;
+  }
+
+  static parseQuery<Q extends Record<string, unknown>>(location: Location): Q {
+    const search = new URLSearchParams(location.search);
+    const query = search.get("query");
+    if (query) return JSON.parse(decodeURIComponent(query));
+    return {} as Q;
+  }
+
   static create<const T extends Props>(props: T): RoutePathInstance<T> {
     return new RoutePath(props) as RoutePathInstance<T>;
   }

@@ -6,7 +6,7 @@ export default class _NeteaseAlbumAPI {
    * @param id 专辑 id
    */
   static content(id: number) {
-    return apiRequest<{ id: number }, NeteaseAPI.NeteaseAPIResponse>({
+    return apiRequest<{ id: number }, NeteaseAPI.NeteaseAlbumContentResponse>({
       url: "/album",
       method: "get",
       params: {
@@ -40,7 +40,10 @@ export default class _NeteaseAlbumAPI {
    * @param id 专辑id
    */
   static detail(id: number) {
-    return apiRequest<{ id: number; timestamp: number }, NeteaseAPI.NeteaseAPIResponse>({
+    return apiRequest<
+      { id: number; timestamp: number },
+      NeteaseAPI.NeteaseAlbumDynamicDetailResponse
+    >({
       url: "/album/detail/dynamic",
       method: "get",
       params: { id, timestamp: Date.now() }

@@ -16,7 +16,7 @@ const BarProgress: FC<object> = () => {
       ref={barRef}
       className={cx(
         `
-          fixed w-screen h-1 bottom-18 overflow-hidden
+          absolute w-screen h-1 bottom-(--playbar-height) overflow-hidden contain-strict
           shadow-[0_5px_10px_-5px_rgba(0,0,0,0.15)] backdrop-blur-lg
           cursor-pointer ease-in-out transition-all duration-300 hover:h-2
         `,

@@ -33,6 +33,8 @@ export interface TrackItemProps {
       ]
     >
   >;
+  onClickArtist: Optional<NormalFunc<[id: number]>>;
+  onClickAlbum: Optional<NormalFunc<[id: number]>>;
   onLikeChange: Optional<NormalFunc<[track: NeteaseTrackRecord | NeteaseHistory, index: number]>>;
   type: PlaylistSource;
   user: Optional<NeteaseUser>;
@@ -51,6 +53,8 @@ const TrackItem: FC<TrackItemProps> = ({
   onClick,
   onContext,
   onLikeChange,
+  onClickArtist,
+  onClickAlbum,
   type,
   user,
   trackCoverSize
@@ -102,7 +106,10 @@ const TrackItem: FC<TrackItemProps> = ({
         textColor={textColor}
         disabled={!playable}
         onClick={() => onClick?.(track, index)}
+        onClickAlbum={onClickAlbum}
+        onClickArtist={onClickArtist}
       />
+      {/*信息*/}
       <ListItemInfo
         active={active}
         disabled={!playable}

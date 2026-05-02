@@ -15,7 +15,7 @@ const NavMenu: FC<NavMenuProps> = ({ barOpened }) => {
   const navigate = useNavigate();
 
   return (
-    <div className="flex flex-col gap-4 w-40 overflow-hidden">
+    <div className="flex flex-col gap-4 w-(--side-bar-expand-width) overflow-hidden">
       {NavConstants.navs.map(({ icon, label, path }) => {
         const active = RoutePathMain.match(location, path);
         return (

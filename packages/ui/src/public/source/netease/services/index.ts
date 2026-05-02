@@ -6,8 +6,10 @@ import _NeteaseCommentSource from "@mahiru/ui/public/source/netease/services/com
 import _NeteaseAudioSource from "@mahiru/ui/public/source/netease/services/audio";
 import _NeteaseUserSource from "@mahiru/ui/public/source/netease/services/user";
 import _NeteaseAuth from "@mahiru/ui/public/source/netease/services/auth";
+import _NeteaseAlbumSource from "@mahiru/ui/public/source/netease/services/album";
 
 export default class NeteaseServices {
+  static readonly Album = _NeteaseAlbumSource;
   static readonly Audio = _NeteaseAudioSource;
   static readonly Comment = _NeteaseCommentSource;
   static readonly Image = _NeteaseImageSource;

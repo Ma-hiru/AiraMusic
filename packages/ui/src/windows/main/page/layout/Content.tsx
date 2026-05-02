@@ -9,8 +9,9 @@ const Content: FC<object> = () => {
     <div
       className={cx(
         `
-            relative flex-1 pb-18 pt-10
+            relative flex-1 pb-(--playbar-height) pt-(--top-control-height)
             ease-in-out duration-300 transition-all
+            contain-strict
           `
       )}>
       <AppErrorBoundary name="Content" showError canReset className="h-full w-full">

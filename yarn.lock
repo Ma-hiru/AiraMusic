@@ -2980,9 +2980,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"airamusic@workspace:packages/app":
+"aira-music@workspace:packages/app":
   version: 0.0.0-use.local
-  resolution: "airamusic@workspace:packages/app"
+  resolution: "aira-music@workspace:packages/app"
   dependencies:
     "@mahiru/log": "workspace:*"
     "@mahiru/store": "workspace:*"

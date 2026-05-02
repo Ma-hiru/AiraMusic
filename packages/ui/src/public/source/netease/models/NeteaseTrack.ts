@@ -1,4 +1,3 @@
-import Dayjs from "dayjs";
 import { NeteaseUser, NeteaseUserModel } from "./NeteaseUser";
 import { TrackBitmark, TrackQuality } from "@mahiru/ui/public/enum";
 import { FormatNumber } from "@mahiru/ui/public/utils/format";
@@ -179,16 +178,20 @@ export class NeteaseTrack implements NeteaseTrackModel {
     }
   }
 
-  artist() {
+  get artist() {
     return this.ar.map((artist) => artist.name) || [];
   }
 
-  translate() {
+  get translate() {
     return this.tns?.[0];
   }
 
-  aliaName() {
+  get aliaName() {
     return this.alia[0];
+  }
+
+  translateAndAliaName(split = " - ") {
+    return [this.translate, this.aliaName].filter(Boolean).join(split);
   }
 
   splitTitle() {

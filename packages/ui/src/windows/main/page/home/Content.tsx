@@ -8,7 +8,7 @@ import DailyRecommendTracks from "./daily_recommend_tracks";
 import DailyRecommendPlaylist from "./daily_recommend_playlist";
 import RecommendPlaylist from "./recommend_playlist";
 import { useUser } from "@mahiru/ui/public/store/user";
-import { css, cx } from "@emotion/css";
+import { cx } from "@emotion/css";
 
 const Content: FC<object> = () => {
   const { layout, updateLayout } = useLayoutStore();

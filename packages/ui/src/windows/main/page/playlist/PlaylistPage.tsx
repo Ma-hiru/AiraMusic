@@ -9,7 +9,7 @@ import {
   useRef,
   useState
 } from "react";
-import { useLocation, useSearchParams } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   NeteaseHistory,
   NeteaseNetworkImage,
@@ -26,7 +26,7 @@ import { useUser } from "@mahiru/ui/public/store/user";
 import { TrackContextMenuOnClick } from "@mahiru/ui/public/components/menu/TrackMenu";
 import { getLayoutStoreSnapshot, useLayoutStore } from "@mahiru/ui/windows/main/store/layout";
 import { useUpdate } from "@mahiru/ui/public/hooks/useUpdate";
-import { RoutePathMain } from "@mahiru/ui/public/routes";
+import { RoutePath, RoutePathMain } from "@mahiru/ui/public/routes";
 import AppEntry from "@mahiru/ui/windows/main/entry";
 import AppContextMenu from "@mahiru/ui/public/hooks/useContextMenu";
 import AppToast from "@mahiru/ui/public/components/toast";
@@ -42,9 +42,8 @@ import AppLoading from "@mahiru/ui/public/components/fallback/AppLoading";
 
 const PlaylistPage: FC<object> = () => {
   const user = useUser();
-  const location = useLocation();
-  const [searchParams] = useSearchParams();
-  const { id, source } = RoutePathMain.playlist.parse(location, searchParams);
+  const navigate = useNavigate();
+  const { id, source } = RoutePathMain.playlist.parseQuery(useLocation());
   const [status, setStatus] = useState<"error" | "loading" | "loaded">("loading");
 
   const [playlist, setPlaylist] = useState<Nullable<NeteasePlaylist>>(null);
@@ -267,9 +266,21 @@ const PlaylistPage: FC<object> = () => {
       ElectronServices.Net.isOnline && reload();
     });
   }, [reload]);
-
+  // 跳转歌手和专辑页
+  const onClickAlbum = useCallback(
+    (id: number) => {
+      navigate(RoutePath.withQuery(RoutePathMain.album, { id }));
+    },
+    [navigate]
+  );
+  const onClickArtist = useCallback(
+    (id: number) => {
+      navigate(RoutePath.withQuery(RoutePathMain.artist, { id }));
+    },
+    [navigate]
+  );
   return (
-    <div className="w-full h-full px-12 pt-5 contain-style contain-size contain-layout">
+    <div className="router-container">
       <AppErrorBoundary
         className="w-full h-full"
         showError
@@ -306,6 +317,8 @@ const PlaylistPage: FC<object> = () => {
               onClick={onPlay}
               onContext={onContextMenu}
               onRangeUpdate={onRangeUpdate}
+              onClickAlbum={onClickAlbum}
+              onClickArtist={onClickArtist}
               trackCoverSize={ImageConstants.PlaylistPageTrackCoverSize}
             />
           </div>

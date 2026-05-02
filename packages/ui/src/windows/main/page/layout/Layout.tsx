@@ -33,10 +33,10 @@ const Layout: FC<object> = () => {
         flex flex-row flex-nowrap
     `}>
       {stage < Stage.Finally && <Mask className="z-40" />}
-      <TopBar className="h-10 z-30" />
+      <TopBar className="h-(--top-control-height) z-30 contain-strict" />
       <NavSide />
       <Content />
-      {stage >= Stage.Finally && <PlayerBar className="h-18 contain-strict z-10" />}
+      {stage >= Stage.Finally && <PlayerBar className="h-(--playbar-height) z-10 contain-layout" />}
       {stage >= Stage.Finally && <PlayerModal className="contain-strict z-20" />}
       <AppErrorBoundary name="Widget" showError={false} autoReset panicAfterReset>
         {stage >= Stage.Immediately && <Background className="-z-10" />}

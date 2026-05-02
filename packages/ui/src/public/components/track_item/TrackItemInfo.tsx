@@ -79,4 +79,5 @@ const TrackItemInfo: FC<ListItemAlbumProps> = ({
     </div>
   );
 };
+
 export default memo(TrackItemInfo);

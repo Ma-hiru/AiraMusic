@@ -13,11 +13,7 @@ import { useManualAutoScroll } from "@mahiru/ui/public/hooks/useMarquee";
 import { AArrowDown, AArrowUp, LockKeyholeOpen, LucideLock } from "lucide-react";
 import { NeteaseImageSize } from "@mahiru/ui/public/enum";
 
-import {
-  NeteaseLyric,
-  NeteaseNetworkImage,
-  NeteaseTrack
-} from "@mahiru/ui/public/source/netease/models";
+import { NeteaseLyric, NeteaseNetworkImage } from "@mahiru/ui/public/source/netease/models";
 
 import Drag from "@mahiru/ui/public/components/drag/Drag";
 import NeteaseImage from "@mahiru/ui/public/components/image/NeteaseImage";

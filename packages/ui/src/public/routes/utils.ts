@@ -8,18 +8,19 @@ export class PlaylistPathUtils {
 
   constructor(base?: string) {
     this.base = base || "/playlist";
-    this.history = this.generate(null, PlaylistSource.History);
-    this.like = this.generate(null, PlaylistSource.Like);
+    this.history = this.withQuery(null, PlaylistSource.History);
+    this.like = this.withQuery(null, PlaylistSource.Like);
   }
 
-  generate(id: Optional<number | string>, source: Optional<PlaylistSource>) {
+  withQuery(id: Optional<number | string>, source: Optional<PlaylistSource>) {
     const search = new URLSearchParams();
     id && search.set("id", String(id));
     source && search.set("source", String(source));
     return `${this.base}?${search.toString()}`;
   }
 
-  parse(location: Location, search: URLSearchParams) {
+  parseQuery(location: Location) {
+    const search = new URLSearchParams(location.search);
     const result = {
       source: null as Nullable<PlaylistSource>,
       id: null as Nullable<string>

@@ -8,13 +8,12 @@ import {
 import { useCacheRequest } from "@mahiru/ui/public/utils/cache";
 import { useThemeColor } from "@mahiru/ui/public/hooks/useThemeColor";
 import { Log } from "@mahiru/ui/public/utils/dev";
-import dayjs from "dayjs";
+import { NeteaseImageSize } from "@mahiru/ui/public/enum";
+import { FormatNumber } from "@mahiru/ui/public/utils/format";
 import NeteaseImage from "@mahiru/ui/public/components/image/NeteaseImage";
 import ElectronServices from "@mahiru/ui/public/source/electron/services";
 import NeteaseAPI from "@mahiru/ui/public/source/netease/api";
 import NeteaseServices from "@mahiru/ui/public/source/netease/services";
-import { NeteaseImageSize } from "@mahiru/ui/public/enum";
-import { FormatNumber } from "@mahiru/ui/public/utils/format";
 
 interface TitleProps {
   commentBus: typeof ElectronServices.Bus.comment;
@@ -95,7 +94,7 @@ const Title: FC<TitleProps> = ({ className, commentBus }) => {
         {commentBus.data?.type === "track" && (
           <>
             <h1 className="font-semibold text-sm truncate">{track?.name}</h1>
-            <h2 className="font-medium text-xs">{track?.artist().join(" / ")}</h2>
+            <h2 className="font-medium text-xs">{track?.artist.join(" / ")}</h2>
             <div className="flex flex-row items-center justify-start gap-1 flex-wrap">
               {tags.map((tag) => {
                 return (

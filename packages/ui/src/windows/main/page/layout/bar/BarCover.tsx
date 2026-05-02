@@ -40,7 +40,7 @@ const BarCover: FC<object> = () => {
         <div
           className="text-xs text-center font-medium text-gray-500 truncate opacity-70"
           style={{ color: textColorOnMain.string() }}>
-          {track?.artist?.()?.join(" / ")}
+          {track?.artist?.join(" / ")}
         </div>
       </div>
     </div>

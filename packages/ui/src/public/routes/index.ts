@@ -1,18 +1,24 @@
 import { RoutePath } from "./base";
 
-export const RoutePathMain = RoutePath.create({
-  base: "/",
-  playlistBase: "/playlist",
-  routes: [{ name: "home", path: "/home" }]
-});
-
-export const RoutePathDisplay = RoutePath.create({
+const RoutePathMain = RoutePath.create({
   base: "/",
   playlistBase: "/playlist",
   routes: [
-    { name: "artist", path: "/artist/:id" },
-    { name: "album", path: "/album/:id" },
+    { name: "home", path: "/home" },
+    { name: "artist", path: "/artist" },
+    { name: "album", path: "/album" }
+  ]
+});
+
+const RoutePathDisplay = RoutePath.create({
+  base: "/",
+  playlistBase: "/playlist",
+  routes: [
+    { name: "artist", path: "/artist" },
+    { name: "album", path: "/album" },
     { name: "search", path: "/search" },
     { name: "blank", path: "/blank" }
   ]
 });
+
+export { RoutePath, RoutePathMain, RoutePathDisplay };

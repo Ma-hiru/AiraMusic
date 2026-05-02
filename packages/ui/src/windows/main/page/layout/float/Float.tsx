@@ -4,9 +4,9 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { ChevronLeft, ChevronUp, LocateFixed, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { AnimatePresence } from "motion/react";
 import { useLayoutStore } from "@mahiru/ui/windows/main/store/layout";
+import { RoutePathMain } from "@mahiru/ui/public/routes";
 
 import FloatItem from "./FloatItem";
-import { RoutePathMain } from "@mahiru/ui/public/routes";
 
 const Float: FC<{ className?: string }> = ({ className }) => {
   const navigate = useNavigate();

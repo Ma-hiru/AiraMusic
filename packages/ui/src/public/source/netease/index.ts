@@ -3,7 +3,7 @@ import _NeteaseAPI from "./api";
 import * as _NeteaseModels from "./models";
 
 export default class Netease {
-  API = _NeteaseAPI;
-  Services = _NeteaseServices;
-  Models = _NeteaseModels;
+  static API = _NeteaseAPI;
+  static Services = _NeteaseServices;
+  static Models = _NeteaseModels;
 }

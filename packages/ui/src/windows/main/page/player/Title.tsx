@@ -4,8 +4,8 @@ import AppEntry from "@mahiru/ui/windows/main/entry";
 const Title: FC<object> = () => {
   const player = AppEntry.usePlayer();
   const track = player.current.track?.detail;
-  const ts = track?.translate?.();
-  const alias = track?.aliaName?.();
+  const ts = track?.translate;
+  const alias = track?.aliaName;
   const title = track?.splitTitle?.();
   return (
     <div className="flex flex-col select-none w-full justify-end">

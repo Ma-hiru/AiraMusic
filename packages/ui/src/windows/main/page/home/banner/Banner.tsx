@@ -88,7 +88,7 @@ const Banner: FC<object> = () => {
           return;
         }
         case BannerType.playlist: {
-          navigate(RoutePathMain.playlist.generate(id, PlaylistSource.Normal));
+          navigate(RoutePathMain.playlist.withQuery(id, PlaylistSource.Normal));
           return;
         }
       }

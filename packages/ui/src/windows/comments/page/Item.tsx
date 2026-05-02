@@ -1,4 +1,3 @@
-import dayjs from "dayjs";
 import { FC, memo, useCallback, useState } from "react";
 import { NeteaseNetworkImage } from "@mahiru/ui/public/source/netease/models";
 import { CommentType, NeteaseImageSize } from "@mahiru/ui/public/enum";

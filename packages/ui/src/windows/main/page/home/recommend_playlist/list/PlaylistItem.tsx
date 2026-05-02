@@ -17,7 +17,7 @@ interface RecommendTrackItemProps {
 const PlaylistItem: FC<RecommendTrackItemProps> = ({ playlist, isMainColorDark, textColor }) => {
   const navigate = useNavigate();
   const play = useCallback(() => {
-    navigate(RoutePathMain.playlist.generate(playlist.id, PlaylistSource.Normal));
+    navigate(RoutePathMain.playlist.withQuery(playlist.id, PlaylistSource.Normal));
   }, [navigate, playlist.id]);
   const image = useMemo(
     () =>

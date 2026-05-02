@@ -8,49 +8,74 @@ interface ListItemNameProps {
   disabled: boolean;
   textColor: ColorInstance;
   onClick?: NormalFunc;
+  onClickArtist: Optional<NormalFunc<[id: number]>>;
+  onClickAlbum: Optional<NormalFunc<[id: number]>>;
 }
 
-const TrackItemName: FC<ListItemNameProps> = ({ track, disabled, onClick, textColor }) => {
-  const titleStyle = cx(
-    "cursor-pointer font-bold hover:opacity-50 ease-in-out duration-300 transition-all truncate select-none active:scale-95",
-    disabled && "cursor-not-allowed! opacity-50",
-    css`
-      color: ${textColor.string()};
-    `
-  );
-  const subTitleStyle = cx(
-    "w-2 overflow-hidden ml-2 ease-in-out duration-300 transition-all truncate select-none",
-    css`
-      color: ${textColor.alpha(0.3).string()};
-    `
-  );
-  const artistStyle = cx(
-    "text-[12px] flex overflow-hidden gap-2 truncate select-none",
-    disabled && "cursor-not-allowed! opacity-50",
-    css`
-      color: ${textColor.alpha(0.6).string()};
-    `
-  );
+const TrackItemName: FC<ListItemNameProps> = ({
+  track,
+  disabled,
+  onClick,
+  textColor,
+  onClickArtist,
+  onClickAlbum
+}) => {
+  const translateAndAliaName = track.detail.translateAndAliaName();
   return (
     <div className="flex flex-col text-[14px] overflow-hidden">
       {/*歌曲标题*/}
       <div className="overflow-hidden flex-row truncate">
-        <span className={titleStyle} onClick={() => !disabled && onClick}>
+        <span
+          className={cx(
+            "cursor-pointer font-bold hover:opacity-50 ease-in-out duration-300 transition-all truncate select-none active:scale-95",
+            disabled && "cursor-not-allowed! opacity-50",
+            css`
+              color: ${textColor.string()};
+            `
+          )}
+          onClick={() => !disabled && onClick?.()}>
           {track.detail.name}
         </span>
-        {(track.detail.translate() || track.detail.aliaName()) && (
-          <span className={subTitleStyle}>
-            ({track.detail.translate() || track.detail.aliaName()})
+        {translateAndAliaName && (
+          <span
+            className={cx(
+              "w-2 overflow-hidden ml-2 ease-in-out duration-300 transition-all truncate select-none",
+              css`
+                color: ${textColor.alpha(0.3).string()};
+              `
+            )}>
+            ({translateAndAliaName})
           </span>
         )}
       </div>
       {/*歌手、专辑*/}
-      <div className={artistStyle}>
-        <span className="truncate cursor-pointer hover:opacity-50 ease-in-out duration-300 transition-all active:scale-95">
-          {track.detail.artist().join(" / ")}
+      <div
+        className={cx(
+          "text-[12px] flex overflow-hidden gap-2 truncate select-none",
+          disabled && "cursor-not-allowed! opacity-50",
+          css`
+            color: ${textColor.alpha(0.6).string()};
+          `
+        )}>
+        <span className="truncate space-x-0.5">
+          {track.detail.ar.map((ar, index) => {
+            return (
+              <>
+                <span
+                  className="inline-block cursor-pointer hover:opacity-50 ease-in-out duration-300 transition-all active:scale-95"
+                  key={ar.id}
+                  onClick={() => onClickArtist?.(ar.id)}>
+                  {ar.name}
+                </span>
+                {index < track.detail.ar.length - 1 && <span className="inline-block">/</span>}
+              </>
+            );
+          })}
         </span>
         <span>-</span>
-        <span className="truncate cursor-pointer hover:opacity-50 ease-in-out duration-300 transition-all active:scale-95">
+        <span
+          className="truncate cursor-pointer hover:opacity-50 ease-in-out duration-300 transition-all active:scale-95"
+          onClick={() => onClickAlbum?.(track.detail.al.id)}>
           {track.detail.al.name}
         </span>
       </div>

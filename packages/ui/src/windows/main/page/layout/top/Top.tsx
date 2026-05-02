@@ -35,7 +35,7 @@ const Top: FC<{ className?: string }> = ({ className }) => {
             h-full overflow-hidden
             duration-300 ease-in-out transition-all
           `,
-            layout.sideBar ? "w-40" : "w-20"
+            layout.sideBar ? "w-(--side-bar-expand-width)" : "w-(--side-bar-collapse-width)"
           )}>
           <TopLeft user={user} layout={layout} />
         </div>

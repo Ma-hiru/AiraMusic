@@ -21,13 +21,13 @@ const Nav: FC<object> = () => {
       className={cx(
         `
           grid grid-cols-1
-          pb-18 pt-12  overflow-hidden
-          backdrop-blur-lg contain-layout
+          pb-(--playbar-height) pt-[calc(var(--top-control-height)+10px)]  overflow-hidden
+          backdrop-blur-lg contain-strict
           ease-in-out duration-300 transition-all
           border-r border-r-gray-500/10
         `,
         theme.backgroundCover ? "bg-[#f0f3f6]/20" : "bg-[#f0f3f6]",
-        layout.sideBar ? "w-40" : "w-20"
+        layout.sideBar ? "w-(--side-bar-expand-width)" : "w-(--side-bar-collapse-width)"
       )}>
       <AppErrorBoundary name="NavMenu" showError={false} autoReset panicAfterReset>
         {stage >= Stage.Immediately && <NavMenu barOpened={layout.sideBar} />}

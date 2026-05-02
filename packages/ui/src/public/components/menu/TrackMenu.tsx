@@ -46,7 +46,7 @@ function createHeader(track: NeteaseTrackRecord) {
       <div className="w-full overflow-hidden flex flex-col items-start justify-center px-2 select-none truncate">
         <p className="w-full font-semibold text-left text-[12px] truncate">{track.name}</p>
         <p className="w-full font-normal text-left text-[8px] opacity-50 truncate">
-          {track.detail.artist().join(" / ")}
+          {track.detail.artist.join(" / ")}
         </p>
       </div>
     </div>
@@ -117,7 +117,7 @@ function createMenuItems(
       prefix: <div className="size-3.5" />,
       label: <p className="text-[12px]">复制歌手名</p>,
       onClick: () => {
-        window.navigator.clipboard.writeText(track.detail.artist().join(" ")).then(() => {
+        window.navigator.clipboard.writeText(track.detail.artist?.join(" ")).then(() => {
           //todo
         });
       }
