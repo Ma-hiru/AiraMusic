@@ -85,6 +85,26 @@ const PlaylistPage: FC<object> = () => {
     },
     [player]
   );
+  const addToPlaylistNext = useCallback(
+    (track: NeteaseTrackRecord) => {
+      player.playlist.add(track, "next");
+    },
+    [player.playlist]
+  );
+  const addToPlaylistLast = useCallback(
+    (track: NeteaseTrackRecord) => {
+      player.playlist.add(track, "end");
+    },
+    [player.playlist]
+  );
+  const openComment = useCallback(async (track: NeteaseTrackRecord) => {
+    if (!track) return;
+    await ElectronServices.Window.from("comments").openAwait();
+    ElectronServices.Bus.comment.send({
+      id: track.id,
+      type: "track"
+    });
+  }, []);
   const onReplace = useCallback(() => {
     player.playlist.replace(tracks, 0);
   }, [player.playlist, tracks]);
@@ -173,9 +193,22 @@ const PlaylistPage: FC<object> = () => {
       switch (type) {
         case "play":
           onPlay(track);
+          break;
+        case "album":
+          navigate(RoutePath.withQuery(RoutePathMain.album, { id: track.detail.al.id }));
+          break;
+        case "nextPlay":
+          addToPlaylistNext(track);
+          break;
+        case "addPlayList":
+          addToPlaylistLast(track);
+          break;
+        case "comment":
+          void openComment(track);
+          break;
       }
     },
-    [onPlay]
+    [addToPlaylistLast, addToPlaylistNext, navigate, onPlay, openComment]
   );
   const onContextMenu = useCallback(
     (e: ReactMouseEvent<HTMLDivElement, MouseEvent>, track: NeteaseTrackRecord) => {

@@ -39,7 +39,9 @@ const TopRight: FC<TopRightProps> = ({ summary, searchTracks, type, setTying }) 
         <div className="flex items-center gap-2 mt-2 font-semibold">
           <NeteaseImage cache image={avatar} className="size-5 rounded-full select-none" />
           <span className="text-[12px]">{summary?.creator.nickname}</span>
-          <span className="select-none">{FormatNumber.time(summary?.createTime)} 创建</span>
+          <span className="select-none">
+            <span className="underline">{FormatNumber.time(summary?.createTime)}</span> 创建
+          </span>
         </div>
       </div>
     </div>

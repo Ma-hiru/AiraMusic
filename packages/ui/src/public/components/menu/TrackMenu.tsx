@@ -8,6 +8,7 @@ import { NeteaseImageSize } from "@mahiru/ui/public/enum";
 import { ContextMenuItem, ContextMenuRender } from "@mahiru/ui/public/components/menu/MenuProvider";
 import { userStoreSnapshot } from "@mahiru/ui/public/store/user";
 import NeteaseImage from "@mahiru/ui/public/components/image/NeteaseImage";
+import AppToast from "@mahiru/ui/public/components/toast";
 
 export type TrackContextMenuAction = "comment" | "album" | "play" | "nextPlay" | "addPlayList";
 
@@ -100,7 +101,10 @@ function createMenuItems(
       label: <p className="text-[12px]">复制歌曲名</p>,
       onClick: () => {
         window.navigator.clipboard.writeText(track.name).then(() => {
-          //todo
+          AppToast.request({
+            type: "success",
+            text: "复制成功"
+          });
         });
       }
     },
@@ -109,7 +113,10 @@ function createMenuItems(
       label: <p className="text-[12px]">复制专辑名</p>,
       onClick: () => {
         window.navigator.clipboard.writeText(track.detail.al.name).then(() => {
-          //todo
+          AppToast.request({
+            type: "success",
+            text: "复制成功"
+          });
         });
       }
     },
@@ -118,7 +125,10 @@ function createMenuItems(
       label: <p className="text-[12px]">复制歌手名</p>,
       onClick: () => {
         window.navigator.clipboard.writeText(track.detail.artist?.join(" ")).then(() => {
-          //todo
+          AppToast.request({
+            type: "success",
+            text: "复制成功"
+          });
         });
       }
     }

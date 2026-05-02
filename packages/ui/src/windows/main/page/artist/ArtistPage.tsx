@@ -3,9 +3,8 @@ import { useLocation } from "react-router-dom";
 import { RoutePath } from "@mahiru/ui/public/routes";
 
 const ArtistPage: FC<object> = () => {
-  const location = useLocation();
-  const { id } = RoutePath.parseQuery<{ id: number }>(location);
-  return <div className="router-container"></div>;
+  const { id } = RoutePath.parseQuery<{ id: number }>(useLocation());
+  return <div className="router-container">{id}</div>;
 };
 
 export default memo(ArtistPage);

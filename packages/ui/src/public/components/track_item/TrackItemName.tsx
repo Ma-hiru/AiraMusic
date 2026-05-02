@@ -1,4 +1,4 @@
-import { FC, memo } from "react";
+import { FC, Fragment, memo } from "react";
 import { css, cx } from "@emotion/css";
 import { ColorInstance } from "color";
 import { NeteaseTrackRecord } from "@mahiru/ui/public/source/netease/models";
@@ -60,15 +60,14 @@ const TrackItemName: FC<ListItemNameProps> = ({
         <span className="truncate space-x-0.5">
           {track.detail.ar.map((ar, index) => {
             return (
-              <>
+              <Fragment key={ar.id}>
                 <span
                   className="inline-block cursor-pointer hover:opacity-50 ease-in-out duration-300 transition-all active:scale-95"
-                  key={ar.id}
                   onClick={() => onClickArtist?.(ar.id)}>
                   {ar.name}
                 </span>
                 {index < track.detail.ar.length - 1 && <span className="inline-block">/</span>}
-              </>
+              </Fragment>
             );
           })}
         </span>

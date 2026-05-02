@@ -1,11 +1,11 @@
 import NeteaseAPI from "@mahiru/ui/public/source/netease/api";
 import _NeteaseTrackSource from "./track";
-import { NeteaseAlbum } from "@mahiru/ui/public/source/netease/models";
+import { NeteaseAlbum, NeteaseTrackRecord } from "@mahiru/ui/public/source/netease/models";
 import { CacheStore } from "@mahiru/ui/public/store/cache";
 
 export default class _NeteaseAlbumSource {
   //region cache
-  private static readonly cacheKey = "netease_album_detail_v1";
+  private static readonly cacheKey = "netease_album_detail_v2";
 
   private static storeCache(album: NeteaseAlbum) {
     CacheStore.memory.setOne(_NeteaseAlbumSource.cacheKey + "_" + album.content.id, album);
@@ -26,7 +26,16 @@ export default class _NeteaseAlbumSource {
   //endregion
 
   private static requestFullTracks(ids: number[]) {
-    return _NeteaseTrackSource.ids(ids);
+    return _NeteaseTrackSource.ids(ids).then((tracks) => {
+      return tracks.map(
+        (track) =>
+          new NeteaseTrackRecord({
+            detail: track,
+            sourceID: track.al.id,
+            sourceName: "album"
+          })
+      );
+    });
   }
 
   static async id(id: number) {
@@ -46,8 +55,10 @@ export default class _NeteaseAlbumSource {
     return album;
   }
 
-  static dynamic(id: number | NeteaseAlbum) {
-    id = typeof id === "number" ? id : id.content.id;
-    return NeteaseAPI.Album.detail(id);
+  static dynamic<T extends Optional<number | NeteaseAlbum>>(
+    id: T
+  ): T extends Falsy ? null : Promise<NeteaseAPI.NeteaseAlbumDynamicDetailResponse> {
+    const res = !id ? null : NeteaseAPI.Album.detail(typeof id === "number" ? id : id.content.id);
+    return res as T extends Falsy ? null : Promise<NeteaseAPI.NeteaseAlbumDynamicDetailResponse>;
   }
 }
