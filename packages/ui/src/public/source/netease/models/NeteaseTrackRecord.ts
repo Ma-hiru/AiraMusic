@@ -20,9 +20,14 @@ export class NeteaseTrackRecord {
     this.name = this.detail.name;
   }
 
-  static fromObject(record: Optional<NeteaseTrackRecord>) {
-    if (!record) return null;
-    return new NeteaseTrackRecord({ ...record, detail: NeteaseTrack.fromObject(record.detail) });
+  static fromObject<T extends Optional<NeteaseTrackRecord>>(
+    record: T
+  ): T extends Falsy ? null : NeteaseTrackRecord {
+    if (!record) return null as T extends Falsy ? null : NeteaseTrackRecord;
+    return new NeteaseTrackRecord({
+      ...record,
+      detail: NeteaseTrack.fromObject(record.detail)
+    }) as T extends Falsy ? null : NeteaseTrackRecord;
   }
 
   static fromPlaylist(playlist: NeteasePlaylist) {

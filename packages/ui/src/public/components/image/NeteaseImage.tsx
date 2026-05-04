@@ -126,7 +126,6 @@ const NeteaseImage: FC<ImageProps> = ({
         const imageWindow = ElectronServices.Window.from("image");
         const sendImage = image.toNetworkImage().setSize(NeteaseImageSize.raw);
         await imageWindow.openAwait();
-        imageWindow.focus();
         imageWindow.send("imageCheckerBus", {
           url: sendImage.src,
           alt: alt || sendImage.alt

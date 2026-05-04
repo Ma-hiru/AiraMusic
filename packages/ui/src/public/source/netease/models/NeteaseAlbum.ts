@@ -18,7 +18,7 @@ export class NeteaseAlbum {
     if (!obj) return null as T extends Falsy ? null : NeteaseAlbum;
     return new NeteaseAlbum({
       content: obj.content,
-      tracks: obj.tracks
+      tracks: obj.tracks.map(NeteaseTrackRecord.fromObject)
     }) as T extends Falsy ? null : NeteaseAlbum;
   }
 }

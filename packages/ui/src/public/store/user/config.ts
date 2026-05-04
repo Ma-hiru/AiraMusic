@@ -14,12 +14,12 @@ export const UserStoreConfig = createZustandConfig((set): UserStoreType => {
     },
     updateUser(user) {
       set((draft) => {
-        draft._user = user;
+        draft._user = user ?? null;
       });
     },
     updateSettings(settings) {
       set((draft) => {
-        draft._settings = settings;
+        draft._settings = settings ?? null;
       });
     }
   };
@@ -29,6 +29,6 @@ export type UserStoreType = {
   _user: Nullable<NeteaseUserModel>;
   _settings: Nullable<NeteaseSettingsModel>;
   isLoggedIn: () => boolean;
-  updateUser(user: Nullable<NeteaseUserModel>): void;
-  updateSettings(settings: Nullable<NeteaseSettingsModel>): void;
+  updateUser(user: Optional<NeteaseUserModel>): void;
+  updateSettings(settings: Optional<NeteaseSettingsModel>): void;
 };

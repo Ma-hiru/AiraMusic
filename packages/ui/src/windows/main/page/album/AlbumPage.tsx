@@ -1,69 +1,134 @@
-import { FC, memo, startTransition, useCallback, useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
-import { RoutePath } from "@mahiru/ui/public/routes";
-import { NeteaseAlbum } from "@mahiru/ui/public/source/netease/models";
-import { Log } from "@mahiru/ui/public/utils/dev";
-import { useUpdate } from "@mahiru/ui/public/hooks/useUpdate";
-import NeteaseServices from "@mahiru/ui/public/source/netease/services";
+import { FC, memo, MouseEvent as ReactMouseEvent, useCallback, useRef } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { RoutePath, RoutePathMain } from "@mahiru/ui/public/routes";
+import { NeteaseTrackRecord } from "@mahiru/ui/public/source/netease/models";
+import { useUserTrackManager } from "@mahiru/ui/public/hooks/useUserTrackManager";
+import AppEntry from "@mahiru/ui/windows/main/entry";
+import ImageConstants from "@mahiru/ui/windows/main/constants/image";
+import AppContextMenu from "@mahiru/ui/public/hooks/useContextMenu";
+import ElectronServices from "@mahiru/ui/public/source/electron/services";
 
-import AppLoading from "@mahiru/ui/public/components/fallback/AppLoading";
-import AppErrorBoundary from "@mahiru/ui/public/components/fallback/AppErrorBoundary";
-import ThrowIf from "@mahiru/ui/public/components/fallback/ThrowIf";
+import Album, { AlbumPageRef } from "@mahiru/ui/public/components/page/album/AlbumPage";
 
 const AlbumPage: FC<object> = () => {
   const { id } = RoutePath.parseQuery<{ id: number }>(useLocation());
-  const [status, setStatus] = useState<"loading" | "error" | "success">("loading");
-  const [album, setAlbum] = useState<Nullable<NeteaseAlbum>>(null);
-  const [dynamic, setDynamic] =
-    useState<Nullable<NeteaseAPI.NeteaseAlbumDynamicDetailResponse>>(null);
+  const { playableManager, heartManager } = useUserTrackManager();
+  const albumRef = useRef<Nullable<AlbumPageRef>>(null);
+  const navigate = useNavigate();
 
-  const update = useUpdate();
-  const reload = useCallback(() => {
-    setStatus("loading");
-    setAlbum(null);
-    setDynamic(null);
-    update();
-  }, [update]);
-
-  useEffect(() => {
-    if (!id) return;
-    let cancel = false;
-
-    const tasks = [NeteaseServices.Album.id(id), NeteaseServices.Album.dynamic(id)] as const;
-    setStatus("loading");
-    Promise.all(tasks)
-      .then(([album, dynamic]) => {
-        if (cancel) return;
-        startTransition(() => {
-          setAlbum(album);
-          setDynamic(dynamic);
-          setStatus("success");
-        });
-      })
-      .catch((err) => {
-        if (cancel) return;
-        Log.error(err);
-        startTransition(() => {
-          setStatus("error");
-        });
+  const player = AppEntry.usePlayer();
+  const onPlay = useCallback(
+    (track: NeteaseTrackRecord) => {
+      const tracks = albumRef.current?.album?.tracks;
+      if (!tracks) return;
+      if (player.current.track?.id === track.id) return;
+      if (player.playlist.same(tracks)) {
+        player.playlist.jump(track);
+      } else {
+        player.playlist.replace(tracks, track);
+      }
+    },
+    [player]
+  );
+  const addToPlaylistNext = useCallback(
+    (track: NeteaseTrackRecord) => {
+      player.playlist.add(track, "next");
+    },
+    [player.playlist]
+  );
+  const addToPlaylistLast = useCallback(
+    (track: NeteaseTrackRecord) => {
+      player.playlist.add(track, "end");
+    },
+    [player.playlist]
+  );
+  const openComment = useCallback(async (track: NeteaseTrackRecord) => {
+    if (!track) return;
+    await ElectronServices.Window.from("comments").openAwait();
+    ElectronServices.Bus.comment.send({
+      id: track.id,
+      type: "track"
+    });
+  }, []);
+  const onReplace = useCallback(() => {
+    const tracks = albumRef.current?.album?.tracks;
+    if (!tracks) return;
+    player.playlist.replace(tracks, 0);
+  }, [player.playlist]);
+  const onAddList = useCallback(() => {
+    const tracks = albumRef.current?.album?.tracks;
+    if (!tracks) return;
+    player.playlist.addList(tracks);
+  }, [player.playlist]);
+  // 跳转歌手和专辑页
+  const onClickAlbum = useCallback(
+    (id: number) => {
+      navigate(RoutePath.withQuery(RoutePathMain.album, { id }));
+    },
+    [navigate]
+  );
+  const onClickArtist = useCallback(
+    (id: number) => {
+      navigate(RoutePath.withQuery(RoutePathMain.artist, { id }));
+    },
+    [navigate]
+  );
+  // 右键菜单
+  const { create, createTrackContextMenu } = AppContextMenu.use();
+  const onContextMenu = useCallback(
+    (e: ReactMouseEvent<HTMLDivElement, MouseEvent>, track: NeteaseTrackRecord) => {
+      create(createTrackContextMenu, {
+        track,
+        clientX: e.clientX,
+        clientY: e.clientY,
+        onClick: (type, track) => {
+          switch (type) {
+            case "play":
+              onPlay(track);
+              break;
+            case "album":
+              navigate(RoutePath.withQuery(RoutePathMain.album, { id: track.detail.al.id }));
+              break;
+            case "nextPlay":
+              addToPlaylistNext(track);
+              break;
+            case "addPlayList":
+              addToPlaylistLast(track);
+              break;
+            case "comment":
+              void openComment(track);
+              break;
+          }
+        }
       });
-
-    return () => {
-      cancel = true;
-    };
-  }, [
-    id,
-    // reload
-    update.count
-  ]);
+    },
+    [
+      addToPlaylistLast,
+      addToPlaylistNext,
+      create,
+      createTrackContextMenu,
+      navigate,
+      onPlay,
+      openComment
+    ]
+  );
 
   return (
-    <div className="router-container">
-      <AppErrorBoundary name="AlbumPage" canReset className="w-full h-full" toast onReset={reload}>
-        <ThrowIf when={status === "error"} message="加载专辑失败" />
-        <AppLoading loading={status === "loading"}></AppLoading>
-      </AppErrorBoundary>
-    </div>
+    <Album
+      id={id}
+      ref={albumRef}
+      className="router-container"
+      heartManager={heartManager}
+      playableManager={playableManager}
+      activeTrackID={player.current.track?.id}
+      onClick={onPlay}
+      onClickAlbum={onClickAlbum}
+      onClickArtist={onClickArtist}
+      onContext={onContextMenu}
+      onAddList={onAddList}
+      onPlayAll={onReplace}
+      coverSize={ImageConstants.AlbumPageCoverSize}
+    />
   );
 };
 

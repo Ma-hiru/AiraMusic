@@ -4,6 +4,7 @@ export default class ImageConstants {
   static readonly TopAvatarSize = NeteaseImageSize.md;
   static readonly TopMiniAvatarSize = NeteaseImageSize.sm;
   static readonly PlaylistPageCoverSize = NeteaseImageSize.md;
+  static readonly AlbumPageCoverSize = NeteaseImageSize.md;
   static readonly PlaylistPageCreatorAvatarSize = NeteaseImageSize.sm;
   static readonly NavPlaylistCoverSize = NeteaseImageSize.xs;
   static readonly PlaylistPageTrackCoverSize = NeteaseImageSize.xs;

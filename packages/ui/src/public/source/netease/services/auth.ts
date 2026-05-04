@@ -37,7 +37,7 @@ export default class _NeteaseAuth {
         (cookies) => {
           _NeteaseAuth.login(cookies).catch(() => {
             Log.error("login failed, maybe cookies invalid");
-            AppToast.request({
+            AppToast.show({
               type: "error",
               text: "登录失败，请重试"
             });
@@ -107,7 +107,7 @@ export default class _NeteaseAuth {
       _NeteaseAuth.createLoginWindow();
       return Promise.resolve();
     } else if (!ElectronServices.Net.isOnline) {
-      AppToast.request({
+      AppToast.show({
         type: "error",
         text: "当前无网络连接，无法获取用户信息，请检查网络连接"
       });
@@ -123,7 +123,7 @@ export default class _NeteaseAuth {
           _NeteaseAuth.hasSetup = true;
         })
         .catch((err) => {
-          AppToast.request({
+          AppToast.show({
             type: "error",
             text: "获取用户信息失败，请检查网络连接或重新登录"
           });
@@ -142,7 +142,7 @@ export default class _NeteaseAuth {
           _NeteaseAuth.hasSetup = true;
         })
         .catch((err) => {
-          AppToast.request({
+          AppToast.show({
             type: "error",
             text: "获取用户信息失败，请检查网络连接或重新登录"
           });

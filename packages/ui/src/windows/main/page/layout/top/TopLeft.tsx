@@ -28,13 +28,13 @@ const TopLeft: FC<TopLeftProps> = ({ user, layout }) => {
       NeteaseServices.Auth.createLoginWindow();
     } else {
       if (Date.now() - lastClickTime.current < 2000) {
-        AppToast.request({
+        AppToast.show({
           type: "info",
           text: "再次点击退出登录"
         });
       } else {
         NeteaseServices.Auth.logout().finally(() => {
-          AppToast.request({
+          AppToast.show({
             type: "success",
             text: "已退出登录"
           });

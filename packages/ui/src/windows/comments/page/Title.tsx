@@ -1,6 +1,7 @@
 import { cx } from "@emotion/css";
 import { FC, memo, startTransition, useEffect, useMemo, useRef, useState } from "react";
 import {
+  NeteaseAlbum,
   NeteaseNetworkImage,
   NeteasePlaylist,
   NeteaseTrack
@@ -25,6 +26,7 @@ const Title: FC<TitleProps> = ({ className, commentBus }) => {
   const { mainColor, textColorOnMain } = useThemeColor();
   const [track, setTrack] = useState<Nullable<NeteaseTrack>>(null);
   const [playlist, setPlaylist] = useState<Nullable<NeteasePlaylist>>(null);
+  const [album, setAlbum] = useState<Nullable<NeteaseAlbum>>(null);
   const cover = useMemo(() => {
     if (commentBus.data?.type === "track") {
       return NeteaseNetworkImage.fromTrackCover(track)
@@ -34,8 +36,12 @@ const Title: FC<TitleProps> = ({ className, commentBus }) => {
       return NeteaseNetworkImage.fromPlaylistCover(playlist)
         ?.setSize(NeteaseImageSize.sm)
         .setAlt(playlist?.name);
+    } else if (commentBus.data?.type === "album") {
+      return NeteaseNetworkImage.fromAlbumCover(album)
+        ?.setSize(NeteaseImageSize.sm)
+        .setAlt(album?.content.name);
     }
-  }, [commentBus.data?.type, playlist, track]);
+  }, [album, commentBus.data?.type, playlist, track]);
 
   const buildCacheKey = useRef((id: number) => id).current;
   const ugcSongRequestCache = useCacheRequest(NeteaseAPI.Wiki.ugcSong, buildCacheKey, "memory");
@@ -75,6 +81,13 @@ const Title: FC<TitleProps> = ({ className, commentBus }) => {
         .catch((err) => {
           Log.error(err);
           setPlaylist(null);
+        });
+    } else if (commentBus.data.type === "album") {
+      NeteaseServices.Album.id(commentBus.data?.id)
+        .then(setAlbum)
+        .catch((err) => {
+          Log.error(err);
+          setAlbum(null);
         });
     }
   }, [commentBus.data?.id, commentBus.data?.type]);
@@ -116,6 +129,12 @@ const Title: FC<TitleProps> = ({ className, commentBus }) => {
           <>
             <h1 className="font-semibold text-sm truncate">{playlist?.name}</h1>
             <h2 className="font-medium text-xs">{playlist?.creator?.nickname}</h2>
+          </>
+        )}
+        {commentBus.data?.type === "album" && (
+          <>
+            <h1 className="font-semibold text-sm truncate">{album?.content.name}</h1>
+            <h2 className="font-medium text-xs">{album?.content.artist.name}</h2>
           </>
         )}
       </div>

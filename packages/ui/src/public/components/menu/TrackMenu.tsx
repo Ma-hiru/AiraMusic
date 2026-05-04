@@ -21,14 +21,14 @@ export function createTrackContextMenu(props: {
   clientY: number;
   track: NeteaseTrackRecord;
   onClick?: TrackContextMenuOnClick;
-}) {
+}): ContextMenuRender {
   const { clientX, clientY, track, onClick } = props;
   return {
     header: createHeader(track),
     items: createMenuItems(track, onClick),
     clientX,
     clientY
-  } satisfies ContextMenuRender;
+  };
 }
 
 function createHeader(track: NeteaseTrackRecord) {
@@ -101,7 +101,7 @@ function createMenuItems(
       label: <p className="text-[12px]">复制歌曲名</p>,
       onClick: () => {
         window.navigator.clipboard.writeText(track.name).then(() => {
-          AppToast.request({
+          AppToast.show({
             type: "success",
             text: "复制成功"
           });
@@ -113,7 +113,7 @@ function createMenuItems(
       label: <p className="text-[12px]">复制专辑名</p>,
       onClick: () => {
         window.navigator.clipboard.writeText(track.detail.al.name).then(() => {
-          AppToast.request({
+          AppToast.show({
             type: "success",
             text: "复制成功"
           });
@@ -125,7 +125,7 @@ function createMenuItems(
       label: <p className="text-[12px]">复制歌手名</p>,
       onClick: () => {
         window.navigator.clipboard.writeText(track.detail.artist?.join(" ")).then(() => {
-          AppToast.request({
+          AppToast.show({
             type: "success",
             text: "复制成功"
           });

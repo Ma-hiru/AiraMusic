@@ -121,7 +121,6 @@
       const imageWindow = ElectronServices.Window.from("image");
       const sendImage = props.image.toNetworkImage().setSize(NeteaseImageSize.raw);
       await imageWindow.openAwait();
-      imageWindow.focus();
       imageWindow.send("imageCheckerBus", {
         url: sendImage.src,
         alt: imageAttrs.value.alt ?? sendImage.alt

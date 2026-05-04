@@ -1,5 +1,4 @@
 import { FC, memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useThemeInjectFromBus } from "@mahiru/ui/public/hooks/useThemeInjectFromBus";
 import { requestCommentProps, useComments } from "@mahiru/ui/public/hooks/useComments";
 import { CommentSort, CommentType, NeteaseImageSize } from "@mahiru/ui/public/enum";
 import useListenableHook from "@mahiru/ui/public/hooks/useListenableHook";
@@ -64,7 +63,6 @@ const CommentsPage: FC<object> = () => {
     });
   }, []);
 
-  useThemeInjectFromBus();
   useEffect(() => {
     ElectronServices.Bus.mainBusUpdater.send("player");
     ElectronServices.Bus.mainBusUpdater.send("info");

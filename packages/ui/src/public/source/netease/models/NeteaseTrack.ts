@@ -112,6 +112,10 @@ export class NeteaseTrack implements NeteaseTrackModel {
     return result;
   }
 
+  static playable(track: NeteaseTrack, user: Optional<NeteaseUser | NeteaseUserModel>) {
+    return track.playable(user);
+  }
+
   /** 解析歌曲Bitmark */
   checkBitmark(flag: TrackBitmark) {
     const mark = this?.mark;

@@ -15,7 +15,16 @@ export default class AppContextMenu {
     return false;
   };
 
-  static useContextMenu() {
+  private static readonly create = <U extends unknown[]>(
+    creator: NormalFunc<U, ContextMenuRender>,
+    ...props: U
+  ) => {
+    AppContextMenu.setContextMenuData?.(creator(...props));
+    AppContextMenu.setContextMenuVisible?.(true);
+    return AppContextMenu.contextMenuVisibleGetter;
+  };
+
+  static use() {
     // eslint-disable-next-line react-hooks/rules-of-hooks
     useLayoutEffect(() => {
       return () => {
@@ -25,28 +34,24 @@ export default class AppContextMenu {
     }, []);
 
     return {
-      setContextMenuData: AppContextMenu.setContextMenuData,
-      setContextMenuVisible: AppContextMenu.setContextMenuVisible,
-      get contextMenuVisible() {
-        return AppContextMenu.contextMenuVisibleGetter();
-      },
+      create: this.create,
       createTrackContextMenu
     };
-  }
-
-  static inject(
-    setData: NormalFunc<[data: Nullable<ContextMenuRender>]>,
-    setVisible: NormalFunc<[show?: boolean]>,
-    visibleGetter: NormalFunc<[], boolean>
-  ) {
-    AppContextMenu.setContextMenuData = setData;
-    AppContextMenu.setContextMenuVisible = setVisible;
-    AppContextMenu.contextMenuVisibleGetter = visibleGetter;
   }
 
   static close() {
     if (!AppContextMenu.contextMenuVisibleGetter?.()) return;
     AppContextMenu.setContextMenuVisible?.(false);
+  }
+
+  static _inject(hooks: {
+    setData: typeof AppContextMenu.setContextMenuData;
+    setVisible: typeof AppContextMenu.setContextMenuVisible;
+    visibleGetter: typeof AppContextMenu.contextMenuVisibleGetter;
+  }) {
+    AppContextMenu.setContextMenuData = hooks.setData;
+    AppContextMenu.setContextMenuVisible = hooks.setVisible;
+    AppContextMenu.contextMenuVisibleGetter = hooks.visibleGetter;
   }
 }
 

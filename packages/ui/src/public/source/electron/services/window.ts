@@ -241,7 +241,10 @@ export default class _AppWindow extends Listenable<WindowBusEvent> {
   }
 
   openThen(cb: NormalFunc) {
-    if (this.opened) return this.wrapListener(cb)();
+    if (this.opened) {
+      this.focus();
+      return this.wrapListener(cb)();
+    }
     const listener = () => {
       this.opened && setTimeout(this.wrapListener(cb), 1000);
       this.opened && this.removeListener(listener);

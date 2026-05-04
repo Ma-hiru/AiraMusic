@@ -31,7 +31,7 @@ const NavMenu: FC<NavMenuProps> = ({ barOpened }) => {
             )}
             onClick={() => {
               if (path === RoutePathMain.playlist.like && !NeteaseUser.isLoggedIn) {
-                return AppToast.request({
+                return AppToast.show({
                   type: "info",
                   text: "请先登录账号"
                 });

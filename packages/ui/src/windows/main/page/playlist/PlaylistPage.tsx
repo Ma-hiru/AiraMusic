@@ -1,7 +1,6 @@
 import {
   FC,
   memo,
-  MouseEvent as ReactMouseEvent,
   startTransition,
   useCallback,
   useEffect,
@@ -21,9 +20,12 @@ import { Log } from "@mahiru/ui/public/utils/dev";
 import { NeteaseImageSize } from "@mahiru/ui/public/enum";
 import { SearchTrack } from "@mahiru/wasm";
 import { cx } from "@emotion/css";
-import TrackList, { TrackListRef } from "@mahiru/ui/public/components/track_list";
+import TrackList, {
+  TrackListClickFunc,
+  TrackListContextMenuFunc,
+  TrackListRef
+} from "@mahiru/ui/public/components/track_list";
 import { useUser } from "@mahiru/ui/public/store/user";
-import { TrackContextMenuOnClick } from "@mahiru/ui/public/components/menu/TrackMenu";
 import { getLayoutStoreSnapshot, useLayoutStore } from "@mahiru/ui/windows/main/store/layout";
 import { useUpdate } from "@mahiru/ui/public/hooks/useUpdate";
 import { RoutePath, RoutePathMain } from "@mahiru/ui/public/routes";
@@ -39,10 +41,12 @@ import Divider from "./Divider";
 import AppErrorBoundary from "@mahiru/ui/public/components/fallback/AppErrorBoundary";
 import ThrowIf from "@mahiru/ui/public/components/fallback/ThrowIf";
 import AppLoading from "@mahiru/ui/public/components/fallback/AppLoading";
+import { useUserTrackManager } from "@mahiru/ui/public/hooks/useUserTrackManager";
 
 const PlaylistPage: FC<object> = () => {
   const user = useUser();
   const navigate = useNavigate();
+  const { heartManager, playableManager } = useUserTrackManager();
   const { id, source } = RoutePathMain.playlist.parseQuery(useLocation());
   const [status, setStatus] = useState<"error" | "loading" | "loaded">("loading");
 
@@ -74,8 +78,8 @@ const PlaylistPage: FC<object> = () => {
   );
   // 播放曲目
   const player = AppEntry.usePlayer();
-  const onPlay = useCallback(
-    (track: NeteaseTrackRecord) => {
+  const onPlay = useCallback<TrackListClickFunc>(
+    (track) => {
       if (player.current.track?.id === track.id) return;
       if (player.playlist.same(totalTracks.current)) {
         player.playlist.jump(track);
@@ -186,43 +190,43 @@ const PlaylistPage: FC<object> = () => {
     }
   }, [fastLocator, player, tracks, updateLayout]);
   // 右键菜单
-  const { setContextMenuData, setContextMenuVisible, createTrackContextMenu } =
-    AppContextMenu.useContextMenu();
-  const contextMenuAction = useCallback<TrackContextMenuOnClick>(
-    (type, track) => {
-      switch (type) {
-        case "play":
-          onPlay(track);
-          break;
-        case "album":
-          navigate(RoutePath.withQuery(RoutePathMain.album, { id: track.detail.al.id }));
-          break;
-        case "nextPlay":
-          addToPlaylistNext(track);
-          break;
-        case "addPlayList":
-          addToPlaylistLast(track);
-          break;
-        case "comment":
-          void openComment(track);
-          break;
-      }
+  const { create, createTrackContextMenu } = AppContextMenu.use();
+  const onContextMenu = useCallback<TrackListContextMenuFunc>(
+    (e, track) => {
+      create(createTrackContextMenu, {
+        track,
+        clientX: e.clientX,
+        clientY: e.clientY,
+        onClick: (type, track) => {
+          switch (type) {
+            case "play":
+              onPlay(track, /** unused */ 0);
+              break;
+            case "album":
+              navigate(RoutePath.withQuery(RoutePathMain.album, { id: track.detail.al.id }));
+              break;
+            case "nextPlay":
+              addToPlaylistNext(track);
+              break;
+            case "addPlayList":
+              addToPlaylistLast(track);
+              break;
+            case "comment":
+              void openComment(track);
+              break;
+          }
+        }
+      });
     },
-    [addToPlaylistLast, addToPlaylistNext, navigate, onPlay, openComment]
-  );
-  const onContextMenu = useCallback(
-    (e: ReactMouseEvent<HTMLDivElement, MouseEvent>, track: NeteaseTrackRecord) => {
-      setContextMenuData?.(
-        createTrackContextMenu({
-          track,
-          clientX: e.clientX,
-          clientY: e.clientY,
-          onClick: contextMenuAction
-        })
-      );
-      setContextMenuVisible?.(true);
-    },
-    [contextMenuAction, createTrackContextMenu, setContextMenuData, setContextMenuVisible]
+    [
+      addToPlaylistLast,
+      addToPlaylistNext,
+      create,
+      createTrackContextMenu,
+      navigate,
+      onPlay,
+      openComment
+    ]
   );
   // 切换歌单时重置状态
   const update = useUpdate();
@@ -265,7 +269,7 @@ const PlaylistPage: FC<object> = () => {
             if (cancel) return;
             startTransition(() => setStatus("error"));
             Log.error(err);
-            AppToast.request({
+            AppToast.show({
               type: "error",
               text: "请求错误"
             });
@@ -312,6 +316,7 @@ const PlaylistPage: FC<object> = () => {
     },
     [navigate]
   );
+
   return (
     <div className="router-container">
       <AppErrorBoundary
@@ -345,13 +350,14 @@ const PlaylistPage: FC<object> = () => {
               tracks={tracks}
               id={playlist?.id}
               type={source!}
-              loading={false}
               activeID={player.current.track?.id}
               onClick={onPlay}
               onContext={onContextMenu}
               onRangeUpdate={onRangeUpdate}
               onClickAlbum={onClickAlbum}
               onClickArtist={onClickArtist}
+              heartManager={heartManager}
+              playableManager={playableManager}
               trackCoverSize={ImageConstants.PlaylistPageTrackCoverSize}
             />
           </div>

@@ -1,12 +1,12 @@
 import { cx } from "@emotion/css";
-import { FC, memo, MouseEvent as ReactMouseEvent, useCallback } from "react";
+import { memo, useCallback } from "react";
 import { ColorInstance } from "color";
-import {
-  NeteaseHistory,
-  NeteaseTrackRecord,
-  NeteaseUser
-} from "@mahiru/ui/public/source/netease/models";
+import { NeteaseHistory, NeteaseTrackRecord } from "@mahiru/ui/public/source/netease/models";
 import { NeteaseImageSize, PlaylistSource } from "@mahiru/ui/public/enum";
+import type {
+  TrackListClickFunc,
+  TrackListContextMenuFunc
+} from "@mahiru/ui/public/components/track_list";
 import AppToast from "@mahiru/ui/public/components/toast";
 
 import ListItemIndex from "./TrackItemIndex";
@@ -14,34 +14,35 @@ import ListItemCover from "./TrackItemCover";
 import ListItemName from "./TrackItemName";
 import ListItemInfo from "./TrackItemInfo";
 
-export interface TrackItemProps {
+export interface TrackItemLikeChangeFunc<
+  T extends NeteaseTrackRecord | NeteaseHistory = NeteaseTrackRecord | NeteaseHistory
+> {
+  (track: T, index: number): void;
+}
+
+export interface TrackItemProps<
+  T extends NeteaseTrackRecord | NeteaseHistory = NeteaseTrackRecord | NeteaseHistory
+> {
   textColor: ColorInstance;
   mainColor: ColorInstance;
-  track: NeteaseTrackRecord | NeteaseHistory;
+  track: T;
   total: number;
   index: number;
+  playable: boolean;
+  reason: string;
   fastLocation: boolean;
   active: boolean;
   liked: boolean;
-  onClick: Optional<NormalFunc<[track: NeteaseTrackRecord | NeteaseHistory, index: number]>>;
-  onContext: Optional<
-    NormalFunc<
-      [
-        e: ReactMouseEvent<HTMLDivElement, MouseEvent>,
-        track: NeteaseTrackRecord | NeteaseHistory,
-        index: number
-      ]
-    >
-  >;
+  onClick: Optional<TrackListClickFunc<T>>;
+  onContext: Optional<TrackListContextMenuFunc<T>>;
   onClickArtist: Optional<NormalFunc<[id: number]>>;
   onClickAlbum: Optional<NormalFunc<[id: number]>>;
-  onLikeChange: Optional<NormalFunc<[track: NeteaseTrackRecord | NeteaseHistory, index: number]>>;
+  onLikeChange: Optional<TrackItemLikeChangeFunc<T>>;
   type: PlaylistSource;
-  user: Optional<NeteaseUser>;
   trackCoverSize: NeteaseImageSize;
 }
 
-const TrackItem: FC<TrackItemProps> = ({
+const TrackItem = <T extends NeteaseTrackRecord | NeteaseHistory>({
   textColor,
   mainColor,
   track,
@@ -56,13 +57,13 @@ const TrackItem: FC<TrackItemProps> = ({
   onClickArtist,
   onClickAlbum,
   type,
-  user,
+  playable,
+  reason,
   trackCoverSize
-}) => {
-  const { playable, reason } = track.detail.playable(user);
+}: TrackItemProps<T>) => {
   const showDisableReason = useCallback(() => {
     if (playable) return;
-    AppToast.request({
+    AppToast.show({
       type: "info",
       text: reason
     });
@@ -92,17 +93,20 @@ const TrackItem: FC<TrackItemProps> = ({
         onClick={() => onClick?.(track, index)}
       />
       {/*封面*/}
-      <ListItemCover
-        track={track}
-        onClick={() => onClick?.(track, index)}
-        disabled={!playable}
-        isMainColorDark={mainColor.isDark()}
-        fastLocation={fastLocation}
-        trackCoverSize={trackCoverSize}
-      />
+      {type !== PlaylistSource.Album && (
+        <ListItemCover
+          track={track}
+          onClick={() => onClick?.(track, index)}
+          disabled={!playable}
+          isMainColorDark={mainColor.isDark()}
+          fastLocation={fastLocation}
+          trackCoverSize={trackCoverSize}
+        />
+      )}
       {/*名称*/}
       <ListItemName
         track={track}
+        type={type}
         textColor={textColor}
         disabled={!playable}
         onClick={() => onClick?.(track, index)}
@@ -124,4 +128,4 @@ const TrackItem: FC<TrackItemProps> = ({
   );
 };
 
-export default memo(TrackItem);
+export default memo(TrackItem) as typeof TrackItem;

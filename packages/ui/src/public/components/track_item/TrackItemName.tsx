@@ -2,6 +2,7 @@ import { FC, Fragment, memo } from "react";
 import { css, cx } from "@emotion/css";
 import { ColorInstance } from "color";
 import { NeteaseTrackRecord } from "@mahiru/ui/public/source/netease/models";
+import { PlaylistSource } from "@mahiru/ui/public/enum";
 
 interface ListItemNameProps {
   track: NeteaseTrackRecord;
@@ -10,6 +11,7 @@ interface ListItemNameProps {
   onClick?: NormalFunc;
   onClickArtist: Optional<NormalFunc<[id: number]>>;
   onClickAlbum: Optional<NormalFunc<[id: number]>>;
+  type: PlaylistSource;
 }
 
 const TrackItemName: FC<ListItemNameProps> = ({
@@ -18,7 +20,8 @@ const TrackItemName: FC<ListItemNameProps> = ({
   onClick,
   textColor,
   onClickArtist,
-  onClickAlbum
+  onClickAlbum,
+  type
 }) => {
   const translateAndAliaName = track.detail.translateAndAliaName();
   return (
@@ -71,12 +74,16 @@ const TrackItemName: FC<ListItemNameProps> = ({
             );
           })}
         </span>
-        <span>-</span>
-        <span
-          className="truncate cursor-pointer hover:opacity-50 ease-in-out duration-300 transition-all active:scale-95"
-          onClick={() => onClickAlbum?.(track.detail.al.id)}>
-          {track.detail.al.name}
-        </span>
+        {type !== PlaylistSource.Album && (
+          <>
+            <span>-</span>
+            <span
+              className="truncate cursor-pointer hover:opacity-50 ease-in-out duration-300 transition-all active:scale-95"
+              onClick={() => onClickAlbum?.(track.detail.al.id)}>
+              {track.detail.al.name}
+            </span>
+          </>
+        )}
       </div>
     </div>
   );

@@ -1,1 +1,8 @@
-export { default, type TrackListRef, type TrackListProps } from "./TrackList";
+export {
+  default,
+  type TrackListRef,
+  type TrackListProps,
+  type TrackListContextMenuFunc,
+  type TrackListClickFunc,
+  type TrackListPlayableManager
+} from "./TrackList";

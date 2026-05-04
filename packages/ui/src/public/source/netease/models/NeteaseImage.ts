@@ -1,5 +1,6 @@
 import { NeteaseImageSize } from "@mahiru/ui/public/enum";
 import {
+  NeteaseAlbum,
   NeteasePlaylistSummary,
   NeteaseTrack,
   NeteaseTrackRecord,
@@ -22,7 +23,7 @@ export class NeteaseNetworkImage {
   constructor(props: {
     url: string;
     sourceID: number | string;
-    sourceName: "track" | "playlist" | "avatar" | "other";
+    sourceName: "track" | "playlist" | "avatar" | "other" | "album";
     size?: NeteaseImageSize | number;
     alt?: string;
     cacheKey?: string;
@@ -104,6 +105,18 @@ export class NeteaseNetworkImage {
     }) as T extends Falsy ? null : NeteaseNetworkImage;
   }
 
+  static fromAlbumCover<T extends Optional<NeteaseAlbum>>(
+    album: T
+  ): T extends Falsy ? null : NeteaseNetworkImage {
+    if (!album) return null as T extends Falsy ? null : NeteaseNetworkImage;
+    return new NeteaseNetworkImage({
+      url: album.content.picUrl,
+      sourceID: album.content.id,
+      sourceName: "album",
+      alt: album.content.name || album.content.picUrl
+    }) as T extends Falsy ? null : NeteaseNetworkImage;
+  }
+
   static fromURL<T extends Optional<string>>(url: T): T extends Falsy ? null : NeteaseNetworkImage {
     if (!url) return null as T extends Falsy ? null : NeteaseNetworkImage;
     return new NeteaseNetworkImage({
@@ -144,7 +157,7 @@ export class NeteaseLocalImage extends NeteaseNetworkImage {
   constructor(props: {
     url: string;
     sourceID: number | string;
-    sourceName: "track" | "playlist" | "avatar" | "other";
+    sourceName: "track" | "playlist" | "avatar" | "other" | "album";
     size?: NeteaseImageSize | number;
     localURL: string;
     localSize?: NeteaseImageSize | number;

@@ -1,12 +1,14 @@
 import { FC, memo } from "react";
 import { Heart, MessageSquare } from "lucide-react";
 import { useHeart } from "@mahiru/ui/public/hooks/useHeart";
+import { useUserTrackManager } from "@mahiru/ui/public/hooks/useUserTrackManager";
 import AppEntry from "@mahiru/ui/windows/main/entry";
 import ElectronServices from "@mahiru/ui/public/source/electron/services";
 
 const Artist: FC<object> = () => {
   const player = AppEntry.usePlayer();
-  const { likeChange, isTrackLiked } = useHeart();
+  const { heartManager } = useUserTrackManager();
+  const { likedChange, checkLiked } = useHeart(heartManager);
   const track = player.current.track?.detail;
 
   return (
@@ -25,10 +27,10 @@ const Artist: FC<object> = () => {
       </div>
       <div className="flex justify-center items-center gap-2 pr-1">
         <Heart
-          color={isTrackLiked(track) ? "white" : undefined}
-          fill={isTrackLiked(track) ? "white" : "transparent"}
+          color={checkLiked(track) ? "white" : undefined}
+          fill={checkLiked(track) ? "white" : "transparent"}
           className="size-4 text-white/50  hover:opacity-50 active:scale-90 cursor-pointer select-none shadow-lg ease-in-out duration-300 transition-all opacity-80"
-          onClick={() => likeChange(track)}
+          onClick={() => likedChange(track)}
         />
         <MessageSquare
           color="white"

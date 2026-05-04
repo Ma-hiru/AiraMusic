@@ -1,5 +1,6 @@
-import { useLayoutEffect, useRef, useState } from "react";
 import AppUI from "@mahiru/ui/public/player/ui";
+import { useLayoutEffect, useRef, useState } from "react";
+import { useThemeInjectFromBus } from "@mahiru/ui/public/hooks/useThemeInjectFromBus";
 
 function getColor() {
   const { main, secondary, textOnMainColor } = AppUI.themeInstance;
@@ -11,8 +12,9 @@ function getColor() {
 }
 
 export function useThemeColor() {
-  const [themeColor, setThemeColor] = useState(getColor);
+  useThemeInjectFromBus();
 
+  const [themeColor, setThemeColor] = useState(getColor);
   const updateColor = useRef(() => {
     setThemeColor((prev) => {
       const next = getColor();

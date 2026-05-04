@@ -1,41 +1,56 @@
-import { useCallback, useMemo } from "react";
-import { useUserStore } from "@mahiru/ui/public/store/user";
-import { NeteaseTrack, NeteaseUser } from "@mahiru/ui/public/source/netease/models";
+import { useCallback, useRef } from "react";
+import { NeteaseTrack, NeteaseTrackRecord } from "@mahiru/ui/public/source/netease/models";
 import NeteaseAPI from "@mahiru/ui/public/source/netease/api";
 
-export const useHeart = () => {
-  const { _user, updateUser } = useUserStore();
-  const user = useMemo(() => NeteaseUser.fromObject(_user), [_user]);
+type TrackLikeSource = {
+  ids: Record<number, boolean>;
+  checkPoint: number;
+};
 
-  const isTrackLiked = useCallback(
-    (track?: NeteaseTrack) => {
-      return Boolean(track && user?.likedTrackIDs.ids[track.id]);
-    },
-    [user?.likedTrackIDs.ids]
-  );
+export interface HeartManager {
+  get TrackLikedSource(): Optional<TrackLikeSource>;
+  set TrackLikedSource(source: Optional<TrackLikeSource>);
+}
 
-  const likeChange = useCallback(
-    (track?: NeteaseTrack) => {
-      if (!track || !user) return;
-      const isLiked = isTrackLiked(track);
-      updateUser(
-        user.copyWith({
-          likedTrackIDs: {
-            ids: {
-              ...user.likedTrackIDs.ids,
-              [track.id]: !isLiked
-            },
-            checkPoint: Date.now()
-          }
-        })
-      );
+export function useHeart(manager: Optional<HeartManager>) {
+  const managerRef = useRef(manager);
+  managerRef.current = manager;
+
+  const checkLiked = useCallback((track?: NeteaseTrack) => {
+    if (!track) return false;
+    const manager = managerRef.current;
+    if (!manager) return false;
+    const source = manager.TrackLikedSource;
+    if (!source) return false;
+    return Boolean(source.ids[track.id]);
+  }, []);
+
+  const likedChange = useCallback(
+    (track?: NeteaseTrack | NeteaseTrackRecord) => {
+      if (!track) return;
+      const manager = managerRef.current;
+      if (!manager) return;
+      const source = manager.TrackLikedSource;
+      if (!source) return;
+
+      const isLiked = checkLiked("detail" in track ? track.detail : track);
+      manager.TrackLikedSource = {
+        ids: {
+          ...source.ids,
+          [track.id]: !isLiked
+        },
+        checkPoint: Date.now()
+      };
       void NeteaseAPI.Track.star({
         id: track.id,
         like: !isLiked
       });
     },
-    [isTrackLiked, updateUser, user]
+    [checkLiked]
   );
 
-  return { isTrackLiked, likeChange };
-};
+  return {
+    checkLiked,
+    likedChange
+  };
+}

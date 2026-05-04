@@ -10,7 +10,7 @@ const ToastProvider: FC<{ className?: string }> = ({ className }) => {
   const [items, setItems] = useState<ToastItemData[]>([]);
   const { mainColor, textColorOnMain } = useThemeColor();
 
-  const requestToast = useCallback((data: Omit<ToastItemData, "id">) => {
+  const show = useCallback((data: Omit<ToastItemData, "id">) => {
     const id = window.crypto.randomUUID();
     startTransition(() => {
       setItems((prev) => {
@@ -23,7 +23,9 @@ const ToastProvider: FC<{ className?: string }> = ({ className }) => {
   }, []);
 
   const dispose = useCallback((id: string) => {
-    setItems((prev) => prev.filter((item) => item.id !== id));
+    startTransition(() => {
+      setItems((prev) => prev.filter((item) => item.id !== id));
+    });
   }, []);
 
   const computedStyle = useMemo(() => {
@@ -33,16 +35,10 @@ const ToastProvider: FC<{ className?: string }> = ({ className }) => {
     return { color: textColor, backgroundColor, borderColor };
   }, [mainColor, textColorOnMain]);
 
-  /*prettier-ignore*/
-  const Render = useCallback((
-     items: ToastItemData[],
-     style: MotionStyle,
-     dispose: NormalFunc<[id: string]>
-    ) => {
+  const Render = useCallback(
+    (items: ToastItemData[], style: MotionStyle) => {
       return items.map((item) => (
         <motion.div
-          layout
-          drag="x"
           className={`
               px-2 py-1
               border border-solid rounded-sm shadow-lg
@@ -50,21 +46,16 @@ const ToastProvider: FC<{ className?: string }> = ({ className }) => {
           `}
           key={item.id}
           style={style}
-          onDragEnd={(_, info) =>
-            Math.abs(info.offset.x) > 100 && dispose(item.id!)
-          }
-          {...ContainerProps}
-        >
+          onDragEnd={(_, info) => Math.abs(info.offset.x) > 100 && dispose(item.id!)}
+          {...ContainerProps}>
           <ToastItem data={item} id={item.id!} onDispose={dispose} />
         </motion.div>
       ));
     },
-    []
+    [dispose]
   );
 
-  useLayoutEffect(() => {
-    AppToast.inject(requestToast, dispose);
-  }, [dispose, requestToast]);
+  useLayoutEffect(() => AppToast._inject({ show, dispose }), [dispose, show]);
 
   return (
     <div
@@ -72,19 +63,17 @@ const ToastProvider: FC<{ className?: string }> = ({ className }) => {
         `
         fixed top-4 left-1/2 -translate-x-1/2
         flex flex-col gap-2
-    `,
+      `,
         className
       )}>
       {/*prettier-ignore*/}
       <AnimatePresence mode="sync">
-        {useMemo(() =>
-          Render(items, computedStyle, dispose),
-          [Render, computedStyle, items, dispose]
-        )}
+        {Render(items, computedStyle)}
       </AnimatePresence>
     </div>
   );
 };
+
 export default memo(ToastProvider);
 
 const ContainerProps: HTMLMotionProps<"div"> = {
@@ -105,6 +94,8 @@ const ContainerProps: HTMLMotionProps<"div"> = {
   },
   whileHover: { scale: 1.05 },
   whileDrag: { cursor: "grabbing" },
+  layout: true,
+  drag: "x",
   dragConstraints: { left: 0, right: 0 },
   dragElastic: { left: 0.5, right: 0.5 }
 };

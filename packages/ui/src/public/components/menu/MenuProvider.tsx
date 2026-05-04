@@ -99,7 +99,11 @@ const MenuProvider: FC<{ className?: string }> = ({ className }) => {
   }, [closeContextMenuAnimate, moveContextMenu, openContextMenuAnimate, render, visible]);
 
   useLayoutEffect(() => {
-    AppContextMenu.inject(setContextMenuRenderData, setContextMenuVisible, () => visible);
+    AppContextMenu._inject({
+      setData: setContextMenuRenderData,
+      setVisible: setContextMenuVisible,
+      visibleGetter: () => visible
+    });
   }, [setContextMenuRenderData, setContextMenuVisible, visible]);
 
   return (

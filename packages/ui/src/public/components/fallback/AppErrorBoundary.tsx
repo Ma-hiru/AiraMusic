@@ -62,7 +62,7 @@ const AppErrorBoundary: FC<AppErrorBoundaryProps> = ({
         onReset?.();
       };
       toast &&
-        AppToast.request({
+        AppToast.show({
           type: "error",
           text: EqError.anyToError(error)?.message || `发生错误了`
         });

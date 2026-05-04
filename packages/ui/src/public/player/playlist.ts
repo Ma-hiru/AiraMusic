@@ -294,7 +294,7 @@ export default class AppPlaylist extends Listenable {
     if (current) {
       const { playable, reason } = current.detail.playable(this.user);
       if (!playable) {
-        AppToast.request({
+        AppToast.show({
           type: "error",
           text: reason
         });
@@ -325,7 +325,7 @@ export default class AppPlaylist extends Listenable {
     if (current) {
       const { playable, reason } = current.detail.playable(this.user);
       if (!playable) {
-        AppToast.request({
+        AppToast.show({
           type: "error",
           text: reason
         });

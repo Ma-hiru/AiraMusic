@@ -40,7 +40,7 @@ apiRequest.interceptors.response.use(
       return Promise.reject(error);
     } else if (data.code === 301 && message.includes("需要登录")) {
       Log.warn("apiRequest.ts", "token has expired");
-      AppToast.request({
+      AppToast.show({
         type: "info",
         text: "登录状态已过期，请重新登录"
       });

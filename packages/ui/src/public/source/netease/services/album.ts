@@ -18,9 +18,7 @@ export default class _NeteaseAlbumSource {
   private static getCache(id: number) {
     const cache = CacheStore.memory.getOne<NeteaseAlbum>(_NeteaseAlbumSource.cacheKey + "_" + id);
     if (cache) return cache;
-    return CacheStore.local.object
-      .fetch<NeteaseAlbum>(_NeteaseAlbumSource.cacheKey + "_" + id)
-      .then(NeteaseAlbum.fromObject);
+    return CacheStore.local.object.fetch<NeteaseAlbum>(_NeteaseAlbumSource.cacheKey + "_" + id);
   }
 
   //endregion
@@ -40,7 +38,7 @@ export default class _NeteaseAlbumSource {
 
   static async id(id: number) {
     const cache = await _NeteaseAlbumSource.getCache(id);
-    if (cache) return cache;
+    if (cache) return NeteaseAlbum.fromObject(cache);
 
     const content = await NeteaseAPI.Album.content(id);
     const tracks = await _NeteaseAlbumSource.requestFullTracks(
