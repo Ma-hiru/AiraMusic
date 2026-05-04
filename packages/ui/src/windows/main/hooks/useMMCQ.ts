@@ -7,8 +7,8 @@ const cache: Record<string, string[]> = {};
 
 export function useMMCQ(
   imageURL: Optional<string>,
-  dst_width: number = 64,
-  dst_height: number = 64,
+  dst_width: number = 128,
+  dst_height: number = 128,
   count: number = 5,
   options: Optional<FilterOptions> = null
 ) {

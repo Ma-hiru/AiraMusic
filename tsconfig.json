@@ -33,6 +33,12 @@
       "*": ["./*"]
     }
   },
-  "include": ["packages/**/*", "types", "eslint.config.ts", "scripts"],
+  "include": [
+    "packages/**/*",
+    "types",
+    "eslint.config.ts",
+    "scripts",
+    "tests/**/*"
+  ],
   "exclude": ["node_modules", "dist", "temp"]
 }

@@ -8,7 +8,7 @@ import AppUI from "@mahiru/ui/public/player/ui";
 
 const Background: FC<{ className?: string }> = ({ className }) => {
   const { theme, updateTheme } = useLayoutStore();
-  const themeColors = useMMCQ(theme.backgroundCover, 64, 64, 5);
+  const themeColors = useMMCQ(theme.backgroundCover);
 
   useLayoutEffect(() => {
     const mainColor = themeColors[0] || AppUI.themeDefault.main;

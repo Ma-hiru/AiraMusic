@@ -12,10 +12,9 @@
 node_modules
 target
 dist
-tests
-test
 deploy
 app/logs
+coverage
 
 temp
 .idea
