@@ -31,7 +31,8 @@
         "./packages/*/index.tsx"
       ],
       "*": ["./*"]
-    }
+    },
+    "types": ["vitest/globals"]
   },
   "include": [
     "packages/**/*",

@@ -22,7 +22,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "build": "yarn test && yarn build:wasm && yarn check && yarn lint && yarn build:store && yarn build:ui && yarn build:app && yarn build:electron",
+    "build": "yarn build:wasm && yarn test && yarn check && yarn lint && yarn build:store && yarn build:ui && yarn build:app && yarn build:electron",
     "dev": "yarn npm-run-all --parallel --race dev:ui dev:app dev:electron",
     "dev:ui": "yarn workspace @mahiru/ui dev",
     "dev:app": "yarn workspace aira-music dev",
@@ -43,8 +43,8 @@
     "build:electron:linux": "yarn electron-builder build --linux",
     "build:electron:win32": "yarn electron-builder build --windows",
     "commit": "yarn check && yarn lint && yarn auto-commit",
-    "check": "yarn tsgo --noEmit && yarn workspace @mahiru/ui check",
-    "lint": "yarn check && yarn lint:ts && yarn lint:wasm && yarn lint:store",
+    "check": "yarn vue-tsc --noEmit",
+    "lint": "yarn lint:ts && yarn lint:wasm && yarn lint:store",
     "lint:ts": "yarn prettier --write . && yarn eslint . --fix",
     "lint:wasm": "yarn workspace @mahiru/wasm lint",
     "lint:store": "yarn workspace @mahiru/store lint",
@@ -79,6 +79,7 @@
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.46.3",
     "vitest": "^4.1.5",
+    "vue-tsc": "^3.2.7",
     "wait-on": "^9.0.4"
   },
   "engines": {

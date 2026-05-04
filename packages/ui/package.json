@@ -3,8 +3,7 @@
   "version": "1.0.0",
   "scripts": {
     "dev": "vite",
-    "check": "vue-tsc --noEmit",
-    "build": "yarn check && vite build",
+    "build": "vite build",
     "preview": "vite preview",
     "clean:dist": "rimraf dist"
   },
@@ -53,7 +52,6 @@
     "immer": "^11.1.4",
     "sass-embedded": "^1.93.3",
     "vite": "8.0.5",
-    "vite-plugin-wasm": "^3.5.0",
-    "vue-tsc": "^3.2.7"
+    "vite-plugin-wasm": "^3.5.0"
   }
 }

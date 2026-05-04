@@ -10,7 +10,7 @@ function genDefine(mode: string) {
       result[`process.env.${key}`] = JSON.stringify(value);
       return result;
     },
-    <Record<string, string>>{}
+    {} as Record<string, string>
   );
 }
 
