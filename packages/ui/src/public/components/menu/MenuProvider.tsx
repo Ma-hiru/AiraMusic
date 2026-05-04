@@ -1,7 +1,7 @@
 import { FC, Key, memo, ReactNode, useCallback, useLayoutEffect, useState } from "react";
 import { motion, useAnimate } from "motion/react";
 import { cx } from "@emotion/css";
-import AppContextMenu from "@mahiru/ui/public/hooks/useContextMenu";
+import AppContextMenu from "./use";
 
 const DURATION = 0.15;
 

@@ -30,7 +30,7 @@ import { getLayoutStoreSnapshot, useLayoutStore } from "@mahiru/ui/windows/main/
 import { useUpdate } from "@mahiru/ui/public/hooks/useUpdate";
 import { RoutePath, RoutePathMain } from "@mahiru/ui/public/routes";
 import AppEntry from "@mahiru/ui/windows/main/entry";
-import AppContextMenu from "@mahiru/ui/public/hooks/useContextMenu";
+import AppContextMenu from "@mahiru/ui/public/components/menu";
 import AppToast from "@mahiru/ui/public/components/toast";
 import NeteaseServices from "@mahiru/ui/public/source/netease/services";
 import ElectronServices from "@mahiru/ui/public/source/electron/services";

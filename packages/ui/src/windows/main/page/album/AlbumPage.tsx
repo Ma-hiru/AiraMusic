@@ -5,7 +5,7 @@ import { NeteaseTrackRecord } from "@mahiru/ui/public/source/netease/models";
 import { useUserTrackManager } from "@mahiru/ui/public/hooks/useUserTrackManager";
 import AppEntry from "@mahiru/ui/windows/main/entry";
 import ImageConstants from "@mahiru/ui/windows/main/constants/image";
-import AppContextMenu from "@mahiru/ui/public/hooks/useContextMenu";
+import AppContextMenu from "@mahiru/ui/public/components/menu";
 import ElectronServices from "@mahiru/ui/public/source/electron/services";
 
 import Album, { AlbumPageRef } from "@mahiru/ui/public/components/page/album/AlbumPage";
