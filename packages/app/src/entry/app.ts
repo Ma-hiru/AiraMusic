@@ -41,7 +41,7 @@ export class APP {
 
       this.storeService = AppServices.Store.create({
         args: {
-          port: process.env.GO_SERVER_PORT!,
+          port: Number(process.env.GO_SERVER_PORT!),
           scheme: process.env.APP_SCHEME!,
           "scheme-hostname": process.env.APP_SCHEME_FILE_HOSTNAME!,
           key: storeKeyAccessToken

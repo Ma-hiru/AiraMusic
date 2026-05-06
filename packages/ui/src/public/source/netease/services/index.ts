@@ -7,9 +7,11 @@ import _NeteaseAudioSource from "@mahiru/ui/public/source/netease/services/audio
 import _NeteaseUserSource from "@mahiru/ui/public/source/netease/services/user";
 import _NeteaseAuth from "@mahiru/ui/public/source/netease/services/auth";
 import _NeteaseAlbumSource from "@mahiru/ui/public/source/netease/services/album";
+import _NeteaseArtistSource from "@mahiru/ui/public/source/netease/services/artist";
 
 export default class NeteaseServices {
   static readonly Album = _NeteaseAlbumSource;
+  static readonly Artist = _NeteaseArtistSource;
   static readonly Audio = _NeteaseAudioSource;
   static readonly Comment = _NeteaseCommentSource;
   static readonly Image = _NeteaseImageSource;

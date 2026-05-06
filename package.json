@@ -49,7 +49,7 @@
     "lint:wasm": "yarn workspace @mahiru/wasm lint",
     "lint:store": "yarn workspace @mahiru/store lint",
     "test": "yarn test:ts && yarn test:wasm && yarn test:store",
-    "test:ts": "yarn vitest run",
+    "test:ts": "yarn workspace @mahiru/ui test && yarn workspace aira-music test",
     "test:wasm": "yarn workspace @mahiru/wasm test",
     "test:store": "yarn workspace @mahiru/store test"
   },

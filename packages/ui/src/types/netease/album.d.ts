@@ -24,7 +24,7 @@ namespace NeteaseAPI {
   interface NeteaseAlbumContentResponse extends NeteaseAPIResponse {
     album: NeteaseAlbumContent;
     resourceState: boolean;
-    songs: Song[];
+    songs: AlbumSong[];
   }
 
   interface NeteaseAlbumContent {
@@ -122,7 +122,7 @@ namespace NeteaseAPI {
     type: string;
   }
 
-  interface Song {
+  interface AlbumSong {
     a: null;
     al: Al;
     alia: string[];

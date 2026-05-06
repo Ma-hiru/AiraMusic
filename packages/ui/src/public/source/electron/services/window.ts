@@ -1,9 +1,9 @@
 import { Listenable } from "@mahiru/ui/public/utils/listenable";
-import { isDev } from "@mahiru/ui/public/utils/dev";
+import { isDev, isTest } from "@mahiru/ui/public/utils/dev";
 import _AppRenderer from "@mahiru/ui/public/source/electron/services/renderer";
 
-const _currentWindowType = await _AppRenderer.Event.invoke.currentWindowType();
-const _runtimeID = await _AppRenderer.Event.invoke.runtimeID();
+const _currentWindowType = isTest ? "main" : await _AppRenderer.Event.invoke.currentWindowType();
+const _runtimeID = isTest ? "" : await _AppRenderer.Event.invoke.runtimeID();
 
 export type WindowBusEvent = MessageTypeMap["windowBus"]["action"];
 

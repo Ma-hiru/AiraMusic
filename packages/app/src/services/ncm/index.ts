@@ -32,8 +32,10 @@ export default class NeteaseMusicApiService {
     return this.serverImpl;
   }
 
-  static async create(onError: NormalFunc<[err: Error]>) {
-    const port = Number(process.env.NCM_SERVER_PORT);
+  static async create(
+    onError: NormalFunc<[err: Error]>,
+    port = Number(process.env.NCM_SERVER_PORT)
+  ) {
     try {
       const server = await this.loadServer();
       return await server.serveNcmApi({ port, moduleDefs });

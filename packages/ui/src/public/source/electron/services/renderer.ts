@@ -1,7 +1,7 @@
 import { Log } from "@mahiru/ui/public/utils/dev";
 
 class _AppMessage {
-  private readonly listener = window.electron.listener;
+  private readonly listener = window?.electron?.listener;
   private readonly handlers: HandlerMapType = new Map();
 
   listen<T extends keyof MessageTypeMap, U extends WindowType | WindowType[] | null>(
@@ -89,12 +89,13 @@ class _AppMessage {
 
   constructor() {
     if (!window.electron) {
-      Log.throw({
+      Log.error({
         message: "electron API is not available",
         label: "AppRender"
       });
+    } else {
+      this.connect();
     }
-    this.connect();
   }
 }
 

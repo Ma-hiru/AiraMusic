@@ -66,6 +66,12 @@ export default defineConfig(({ mode }) => {
           rewrite: (path) => path.replace(/^\/cache/, "")
         }
       }
+    },
+    test: {
+      include: ["tests/**/*.test.{ts,tsx,cts,mts,js,cjs,mjs}"],
+      globals: true,
+      environment: "jsdom",
+      setupFiles: ["./tests/setup.ts"]
     }
   };
 });

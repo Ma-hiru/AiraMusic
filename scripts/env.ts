@@ -2,8 +2,6 @@ import { fileURLToPath } from "node:url";
 import { join } from "node:path";
 import { readFileSync, writeFileSync } from "node:fs";
 
-const __dirname = fileURLToPath(new URL(".", import.meta.url));
-
 type EnvName = string;
 
 type EnvValue = string | number | boolean;
@@ -11,10 +9,23 @@ type EnvValue = string | number | boolean;
 export type Env = Record<EnvName, EnvValue>;
 
 export default class AppEnv {
-  static envDir = join(__dirname, "../");
-  static defaultTypeFilePath = join(__dirname, "../types/env.d.ts");
+  static envDir: string;
+  static defaultTypeFilePath: string;
+
+  static setEnvPath(dir?: string, typeFilePath?: string) {
+    try {
+      this.envDir = dir ?? join(fileURLToPath(new URL(".", import.meta.url)), "../");
+      this.defaultTypeFilePath =
+        typeFilePath ?? join(fileURLToPath(new URL(".", import.meta.url)), "../types/env.d.ts");
+    } catch (err) {
+      console.error("setEnvPath", err);
+      this.envDir = join(process.cwd(), "./");
+      this.defaultTypeFilePath = join(process.cwd(), "./types/env.d.ts");
+    }
+  }
 
   static load(mode?: string) {
+    if (!AppEnv.envDir) AppEnv.setEnvPath();
     console.log(`Loading env for mode: ${mode || "default"}`);
     return AppEnv.getEnvNames(mode).reduce(
       (env, name) => {
@@ -26,7 +37,8 @@ export default class AppEnv {
     );
   }
 
-  static type(env: Env, file = AppEnv.defaultTypeFilePath) {
+  static type(env: Env) {
+    if (!AppEnv.defaultTypeFilePath) AppEnv.setEnvPath();
     const contentLines: string[] = [];
     for (const key in env) {
       contentLines.push(`readonly ${key}: ${typeof env[key]};`);
@@ -43,7 +55,7 @@ declare namespace NodeJS {
 }
 `;
 
-    writeFileSync(file, content, "utf-8");
+    writeFileSync(AppEnv.defaultTypeFilePath, content, "utf-8");
   }
 
   private static getEnvNames(mode?: string) {

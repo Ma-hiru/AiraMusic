@@ -30,16 +30,16 @@ export class CacheStoreForObject {
       objType: "object" | "array";
       objField: string | number | "length";
     }
-  ): Promise<Nullable<T>> {
+  ): Promise<Nullable<RawObject<T>>> {
     id = CacheStoreUtils.encode(id);
-    return cacheRequest<any, T | null>("/api/object/fetch", {
+    return cacheRequest<any, RawObject<T> | null>("/api/object/fetch", {
       method: "GET",
       params: { id, timeLimit, ...(parts || {}) }
     });
   }
 
-  fetchMulti<T>(ids: string[]): Promise<Nullable<T>[]> {
-    return cacheRequest<any, Nullable<{ id: string; data: T }>[]>({
+  fetchMulti<T>(ids: string[]): Promise<Nullable<RawObject<T>>[]> {
+    return cacheRequest<any, Nullable<{ id: string; data: RawObject<T> }>[]>({
       url: "/api/object/fetch/multi",
       method: "POST",
       data: {

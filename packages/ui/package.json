@@ -5,7 +5,8 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "clean:dist": "rimraf dist"
+    "clean:dist": "rimraf dist",
+    "test": "vitest run"
   },
   "dependencies": {
     "@applemusic-like-lyrics/lyric": "0.3.0",

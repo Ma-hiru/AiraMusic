@@ -11,7 +11,8 @@
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
-    "clean:dist": "rimraf dist"
+    "clean:dist": "rimraf dist",
+    "test": "vitest run"
   },
   "dependencies": {
     "@neteasecloudmusicapienhanced/api": "^4.29.17",

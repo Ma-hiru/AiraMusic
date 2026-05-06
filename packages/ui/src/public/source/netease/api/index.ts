@@ -1,4 +1,5 @@
 import _NeteaseAlbumAPI from "@mahiru/ui/public/source/netease/api/album";
+import _NeteaseArtistAPI from "@mahiru/ui/public/source/netease/api/artist";
 import _NeteaseAuthAPI from "@mahiru/ui/public/source/netease/api/auth";
 import _NeteaseCommentAPI from "@mahiru/ui/public/source/netease/api/comment";
 import _NeteaseHomeAPI from "@mahiru/ui/public/source/netease/api/home";
@@ -13,6 +14,7 @@ import _NeteaseWikiAPI from "@mahiru/ui/public/source/netease/api/wiki";
 
 export default class NeteaseAPI {
   static readonly Album = _NeteaseAlbumAPI;
+  static readonly Artist = _NeteaseArtistAPI;
   static readonly Auth = _NeteaseAuthAPI;
   static readonly Comment = _NeteaseCommentAPI;
   static readonly Home = _NeteaseHomeAPI;

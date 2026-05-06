@@ -29,6 +29,14 @@ interface HasID {
   id: string | number;
 }
 
+type ExcludeFunction<V> = V extends (...args: any[]) => any ? never : V;
+
+type RawObject<T> = T extends object
+  ? {
+      [K in keyof T]: ExcludeFunction<T[K]>;
+    }
+  : T;
+
 type NetworkStatus =
   | "offline" // 系统无网络
   | "dns_error" // DNS 无法解析

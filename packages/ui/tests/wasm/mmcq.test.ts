@@ -2,7 +2,7 @@ import { extractPalette } from "@mahiru/wasm";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 
-const imagePath = join(process.cwd(), "./packages/app/assets/logo.png");
+const imagePath = join(process.cwd(), "../app/assets/logo.png");
 
 describe("test mmcq", () => {
   it("should not be empty, and length should be 5", async () => {

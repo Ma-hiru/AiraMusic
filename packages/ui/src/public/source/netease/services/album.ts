@@ -36,7 +36,7 @@ export default class _NeteaseAlbumSource {
     });
   }
 
-  static async id(id: number) {
+  static async id(id: number): Promise<NeteaseAlbum> {
     const cache = await _NeteaseAlbumSource.getCache(id);
     if (cache) return NeteaseAlbum.fromObject(cache);
 
@@ -50,6 +50,7 @@ export default class _NeteaseAlbumSource {
     });
 
     await _NeteaseAlbumSource.storeCache(album);
+
     return album;
   }
 
