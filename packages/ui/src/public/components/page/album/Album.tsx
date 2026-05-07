@@ -1,25 +1,8 @@
-import {
-  FC,
-  memo,
-  MouseEvent as ReactMouseEvent,
-  Ref,
-  startTransition,
-  useCallback,
-  useEffect,
-  useImperativeHandle,
-  useRef,
-  useState
-} from "react";
-import {
-  NeteaseAlbum,
-  NeteaseHistory,
-  NeteaseTrackRecord
-} from "@mahiru/ui/public/source/netease/models";
+import { FC, memo, MouseEvent as ReactMouseEvent, Ref, useCallback, useImperativeHandle, useRef } from "react";
+import { NeteaseAlbum, NeteaseHistory, NeteaseTrackRecord } from "@mahiru/ui/public/source/netease/models";
 import { cx } from "@emotion/css";
-import { Log } from "@mahiru/ui/public/utils/dev";
 import { NeteaseImageSize, PlaylistSource } from "@mahiru/ui/public/enum";
 import { HeartManager } from "@mahiru/ui/public/hooks/useHeart";
-import { useUpdate } from "@mahiru/ui/public/hooks/useUpdate";
 import ImageConstants from "@mahiru/ui/windows/main/constants/image";
 import NeteaseServices from "@mahiru/ui/public/source/netease/services";
 
@@ -28,10 +11,9 @@ import Divider from "./Divider";
 import AppLoading from "@mahiru/ui/public/components/fallback/AppLoading";
 import AppErrorBoundary from "@mahiru/ui/public/components/fallback/AppErrorBoundary";
 import ThrowIf from "@mahiru/ui/public/components/fallback/ThrowIf";
-import TrackList, {
-  TrackListPlayableManager,
-  TrackListRef
-} from "@mahiru/ui/public/components/track_list/TrackList";
+import TrackList, { TrackListPlayableManager, TrackListRef } from "@mahiru/ui/public/components/track_list/TrackList";
+import { useRequestAutoRun, useRequestStatusWrap } from "@mahiru/ui/public/hooks/useRequestWrap";
+import NeteaseAlbumDynamicDetailResponse = NeteaseAPI.NeteaseAlbumDynamicDetailResponse;
 
 export type AlbumPageRef = {
   trackListRef: Nullable<TrackListRef>;
@@ -81,50 +63,21 @@ const Album: FC<AlbumPageProps> = ({
   heartManager,
   playableManager
 }) => {
-  const [status, setStatus] = useState<"loading" | "error" | "success">("loading");
-  const [album, setAlbum] = useState<Nullable<NeteaseAlbum>>(null);
-  const [dynamic, setDynamic] =
-    useState<Nullable<NeteaseAPI.NeteaseAlbumDynamicDetailResponse>>(null);
-
-  const update = useUpdate();
-  const reload = useCallback(() => {
-    setStatus("loading");
-    setAlbum(null);
-    setDynamic(null);
-    update();
-  }, [update]);
-
-  useEffect(() => {
-    if (!id) return;
-    let cancel = false;
-
-    const tasks = [NeteaseServices.Album.id(id), NeteaseServices.Album.dynamic(id)] as const;
-    setStatus("loading");
-    Promise.all(tasks)
-      .then(([album, dynamic]) => {
-        if (cancel) return;
-        startTransition(() => {
-          setAlbum(album);
-          setDynamic(dynamic);
-          setStatus("success");
-        });
-      })
-      .catch((err) => {
-        if (cancel) return;
-        Log.error(err);
-        startTransition(() => {
-          setStatus("error");
-        });
-      });
-
-    return () => {
-      cancel = true;
-    };
-  }, [
-    id,
-    // reload
-    update.count
-  ]);
+  const requestData = useCallback(
+    (
+      id: number
+    ): Promise<[Nullable<NeteaseAlbum>, Nullable<NeteaseAlbumDynamicDetailResponse>]> => {
+      if (!id) return Promise.resolve([null, null]);
+      return Promise.all([
+        NeteaseServices.Album.id(id),
+        NeteaseServices.Album.dynamic(id)
+      ] as const);
+    },
+    []
+  );
+  const { status, data, fetchData } = useRequestStatusWrap(requestData);
+  const { reload } = useRequestAutoRun(fetchData, [id]);
+  const [album, dynamic] = data ?? [null, null];
 
   const trackListRef = useRef<Nullable<TrackListRef>>(null);
   useImperativeHandle(
@@ -140,7 +93,7 @@ const Album: FC<AlbumPageProps> = ({
 
   return (
     <div className={cx("w-full h-full", className)}>
-      <AppErrorBoundary name="AlbumPage" canReset className="w-full h-full" toast onReset={reload}>
+      <AppErrorBoundary name="Album" canReset className="w-full h-full" toast onReset={reload}>
         <ThrowIf when={status === "error"} message="加载专辑失败" />
         <AppLoading loading={status === "loading"}>
           <Top

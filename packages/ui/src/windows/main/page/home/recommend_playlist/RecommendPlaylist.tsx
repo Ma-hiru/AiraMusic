@@ -1,9 +1,7 @@
 import Color from "color";
-import { FC, memo, startTransition, useCallback, useEffect, useRef, useState } from "react";
+import { FC, memo, useMemo, useRef } from "react";
 import { useThemeColor } from "@mahiru/ui/public/hooks/useThemeColor";
-import { useUpdate } from "@mahiru/ui/public/hooks/useUpdate";
 import NeteaseAPI from "@mahiru/ui/public/source/netease/api";
-import ElectronServices from "@mahiru/ui/public/source/electron/services";
 
 import PlaylistList from "./list";
 import AppErrorBoundary, {
@@ -11,55 +9,24 @@ import AppErrorBoundary, {
 } from "@mahiru/ui/public/components/fallback/AppErrorBoundary";
 import ThrowIf from "@mahiru/ui/public/components/fallback/ThrowIf";
 import AppLoading from "@mahiru/ui/public/components/fallback/AppLoading";
+import { useRequestAutoRetry, useRequestStatusWrap } from "@mahiru/ui/public/hooks/useRequestWrap";
 
 const RecommendPlaylist: FC<object> = () => {
-  const [recommend, setRecommend] = useState<NeteaseAPI.RecommendPlaylistResult[]>([]);
-  const [status, setStatus] = useState<"loading" | "error" | "loaded">("loading");
   const { mainColor } = useThemeColor();
+  const { status, data, fetchData } = useRequestStatusWrap(NeteaseAPI.Playlist.recommend);
+  const { reload } = useRequestAutoRetry(fetchData, [120], () => (data?.result ?? []).length !== 0);
   const errRef = useRef<AppErrorBoundaryRef>({});
   const titleColor = Color("#000000").mix(Color(mainColor), 0.2).string();
+  const recommend = useMemo(() => {
+    if (!data || !data.result) return [];
+    const set = new Set<string>();
+    return data.result.filter((item) => {
+      if (set.has(String(item.id))) return false;
+      set.add(String(item.id));
+      return true;
+    });
+  }, [data]);
 
-  const update = useUpdate();
-
-  const reload = useCallback(() => {
-    setStatus("loading");
-    setRecommend([]);
-    update();
-  }, [update]);
-
-  useEffect(() => {
-    if (recommend.length !== 0) return;
-    let cancel = false;
-    const unsubscribe = ElectronServices.Net.autoRetryRequest(
-      () => {
-        errRef.current.resetComponent?.();
-        setStatus("loading");
-        return NeteaseAPI.Playlist.recommend(120);
-      },
-      (ok, result) => {
-        if (cancel) return;
-        if (ok) {
-          startTransition(() => {
-            const set = new Set<string>();
-            const filtered = result.result.filter((item) => {
-              if (set.has(String(item.id))) return false;
-              set.add(String(item.id));
-              return true;
-            });
-            setRecommend(filtered);
-            setStatus("loaded");
-          });
-        } else {
-          startTransition(() => setStatus("error"));
-        }
-      },
-      () => recommend.length !== 0
-    );
-    return () => {
-      cancel = true;
-      unsubscribe();
-    };
-  }, [recommend.length, update.count]);
   return (
     <div className="w-full overflow-hidden contain-layout pb-18">
       <h1 className="font-bold text-lg" style={{ color: titleColor }}>

@@ -1,8 +1,8 @@
 import { Log } from "@mahiru/ui/public/utils/dev";
 import { Listener } from "@mahiru/ui/public/utils/listenable";
-import _AppRenderer from "./renderer";
 import { EqError } from "@mahiru/log/src/err";
 import Init from "@mahiru/ui/public/utils/init";
+import _AppRenderer from "./renderer";
 
 export default class _AppNet {
   static completed: number[] = [];

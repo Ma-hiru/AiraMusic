@@ -8,7 +8,7 @@ import ImageConstants from "@mahiru/ui/windows/main/constants/image";
 import AppContextMenu from "@mahiru/ui/public/components/menu";
 import ElectronServices from "@mahiru/ui/public/source/electron/services";
 
-import Album, { AlbumPageRef } from "@mahiru/ui/public/components/page/album/AlbumPage";
+import Album, { AlbumPageRef } from "@mahiru/ui/public/components/page/album/Album";
 
 const AlbumPage: FC<object> = () => {
   const { id } = RoutePath.parseQuery<{ id: number }>(useLocation());

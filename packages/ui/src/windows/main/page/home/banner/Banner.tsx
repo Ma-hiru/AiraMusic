@@ -1,7 +1,6 @@
-import { FC, memo, startTransition, useCallback, useEffect, useRef, useState } from "react";
+import { FC, memo, useCallback, useMemo, useRef } from "react";
 import { useThemeColor } from "@mahiru/ui/public/hooks/useThemeColor";
 import { BannerType, PlaylistSource } from "@mahiru/ui/public/enum";
-import { useUpdate } from "@mahiru/ui/public/hooks/useUpdate";
 import { Log } from "@mahiru/ui/public/utils/dev";
 import { NeteaseTrackRecord, NeteaseURL } from "@mahiru/ui/public/source/netease/models";
 import { useNavigate } from "react-router-dom";
@@ -16,51 +15,17 @@ import AppErrorBoundary, {
 } from "@mahiru/ui/public/components/fallback/AppErrorBoundary";
 import ThrowIf from "@mahiru/ui/public/components/fallback/ThrowIf";
 import { RoutePathMain } from "@mahiru/ui/public/routes";
+import { useRequestAutoRetry, useRequestStatusWrap } from "@mahiru/ui/public/hooks/useRequestWrap";
 
 const Banner: FC<object> = () => {
-  const [banner, setBanner] = useState<NeteaseAPI.NeteaseBanner[]>([]);
-  const [status, setStatus] = useState<"loading" | "error" | "loaded">("loading");
+  const { textColorOnMain } = useThemeColor();
+  const { status, data, fetchData } = useRequestStatusWrap(NeteaseAPI.Home.banner);
+  const { reload } = useRequestAutoRetry(fetchData, [], () => banner.length !== 0);
+  const banner = useMemo(() => data?.banners ?? [], [data?.banners]);
   const errRef = useRef<AppErrorBoundaryRef>({});
   const player = AppEntry.usePlayer();
   const navigate = useNavigate();
 
-  const update = useUpdate();
-
-  const reload = useCallback(() => {
-    setStatus("loading");
-    setBanner([]);
-    update();
-  }, [update]);
-
-  useEffect(() => {
-    if (banner.length !== 0) return;
-    let cancel = false;
-    const unsubscribe = ElectronServices.Net.autoRetryRequest(
-      () => {
-        errRef.current.resetComponent?.();
-        setStatus("loading");
-        return NeteaseAPI.Home.banner();
-      },
-      (ok, result) => {
-        if (cancel) return;
-        if (ok) {
-          startTransition(() => {
-            setBanner(result.banners);
-            setStatus("loaded");
-          });
-        } else {
-          startTransition(() => setStatus("error"));
-        }
-      },
-      () => banner.length !== 0
-    );
-    return () => {
-      cancel = true;
-      unsubscribe();
-    };
-  }, [banner.length, update.count]);
-
-  const { textColorOnMain } = useThemeColor();
   const handleClick = useCallback(
     async (i: number) => {
       const item = banner[i];
@@ -95,6 +60,7 @@ const Banner: FC<object> = () => {
     },
     [banner, navigate, player]
   );
+
   return (
     <div className="w-full px-2">
       <AppErrorBoundary

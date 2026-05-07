@@ -1,8 +1,6 @@
 import Color from "color";
-import { FC, memo, startTransition, useCallback, useEffect, useRef, useState } from "react";
+import { FC, memo, useRef } from "react";
 import { useThemeColor } from "@mahiru/ui/public/hooks/useThemeColor";
-import { useUpdate } from "@mahiru/ui/public/hooks/useUpdate";
-import ElectronServices from "@mahiru/ui/public/source/electron/services";
 import NeteaseAPI from "@mahiru/ui/public/source/netease/api";
 
 import AppErrorBoundary, {
@@ -11,49 +9,16 @@ import AppErrorBoundary, {
 import ThrowIf from "@mahiru/ui/public/components/fallback/ThrowIf";
 import RecommendPlaylistList from "./list";
 import AppLoading from "@mahiru/ui/public/components/fallback/AppLoading";
+import { useRequestAutoRetry, useRequestStatusWrap } from "@mahiru/ui/public/hooks/useRequestWrap";
 
 const DailyRecommendPlaylist: FC<object> = () => {
-  const [recommend, setRecommend] = useState<NeteaseAPI.DailyRecommendPlaylistResult[]>([]);
-  const [status, setStatus] = useState<"loading" | "error" | "loaded">("loading");
   const { mainColor } = useThemeColor();
+  const { status, data, fetchData } = useRequestStatusWrap(NeteaseAPI.Playlist.recommendDaily);
+  const { reload } = useRequestAutoRetry(fetchData, [], () => (data?.recommend ?? []).length !== 0);
+  const recommend = data?.recommend ?? [];
   const errRef = useRef<AppErrorBoundaryRef>({});
   const titleColor = Color("#000000").mix(Color(mainColor), 0.2).string();
 
-  const update = useUpdate();
-
-  const reload = useCallback(() => {
-    setStatus("loading");
-    setRecommend([]);
-    update();
-  }, [update]);
-
-  useEffect(() => {
-    if (recommend.length !== 0) return;
-    let cancel = false;
-    const unsubscribe = ElectronServices.Net.autoRetryRequest(
-      () => {
-        errRef.current.resetComponent?.();
-        setStatus("loading");
-        return NeteaseAPI.Playlist.recommendDaily();
-      },
-      (ok, result) => {
-        if (cancel) return;
-        if (ok) {
-          startTransition(() => {
-            setRecommend(result.recommend);
-            setStatus("loaded");
-          });
-        } else {
-          startTransition(() => setStatus("error"));
-        }
-      },
-      () => recommend.length !== 0
-    );
-    return () => {
-      cancel = true;
-      unsubscribe();
-    };
-  }, [recommend.length, update.count]);
   return (
     <div className="w-full overflow-hidden contain-layout">
       <h1 className="font-bold text-lg" style={{ color: titleColor }}>

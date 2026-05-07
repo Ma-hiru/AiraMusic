@@ -1,8 +1,6 @@
-import { FC, memo, startTransition, useCallback, useEffect, useRef, useState } from "react";
+import { FC, memo, useCallback, useEffect, useMemo, useRef } from "react";
 import { useLayoutStore } from "@mahiru/ui/windows/main/store/layout";
-import { useUpdate } from "@mahiru/ui/public/hooks/useUpdate";
 import AppLoading from "@mahiru/ui/public/components/fallback/AppLoading";
-import ElectronServices from "@mahiru/ui/public/source/electron/services";
 
 import RecommendTrackTitle from "./RecommendTrackTitle";
 import RecommendTrackList from "./list";
@@ -11,11 +9,17 @@ import AppErrorBoundary, {
   AppErrorBoundaryRef
 } from "@mahiru/ui/public/components/fallback/AppErrorBoundary";
 import ThrowIf from "@mahiru/ui/public/components/fallback/ThrowIf";
+import { useRequestAutoRetry, useRequestStatusWrap } from "@mahiru/ui/public/hooks/useRequestWrap";
 
 const DailyRecommendTracks: FC<object> = () => {
-  const [recommend, setRecommend] = useState<NeteaseAPI.DailyRecommendTracksDailySong[]>([]);
-  const [status, setStatus] = useState<"loading" | "error" | "loaded">("loading");
   const { theme, updateTheme } = useLayoutStore();
+  const { status, data, fetchData } = useRequestStatusWrap(NeteaseAPI.Track.recommendDaily);
+  const { reload } = useRequestAutoRetry(
+    fetchData,
+    [],
+    () => (data?.data.dailySongs ?? []).length !== 0
+  );
+  const recommend = useMemo(() => data?.data.dailySongs ?? [], [data?.data.dailySongs]);
   const errRef = useRef<AppErrorBoundaryRef>({});
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -35,42 +39,6 @@ const DailyRecommendTracks: FC<object> = () => {
       });
     }
   }, []);
-
-  const update = useUpdate();
-
-  const reload = useCallback(() => {
-    setStatus("loading");
-    setRecommend([]);
-    update();
-  }, [update]);
-
-  useEffect(() => {
-    if (recommend.length !== 0) return;
-    let cancel = false;
-    const unsubscribe = ElectronServices.Net.autoRetryRequest(
-      () => {
-        errRef.current.resetComponent?.();
-        setStatus("loading");
-        return NeteaseAPI.Track.recommendDaily();
-      },
-      (ok, result) => {
-        if (cancel) return;
-        if (ok) {
-          startTransition(() => {
-            setRecommend(result.data.dailySongs);
-            setStatus("loaded");
-          });
-        } else {
-          startTransition(() => setStatus("error"));
-        }
-      },
-      () => recommend.length !== 0
-    );
-    return () => {
-      cancel = true;
-      unsubscribe();
-    };
-  }, [recommend.length, update.count]);
 
   useEffect(() => {
     const cover = recommend[0]?.al.picUrl;
