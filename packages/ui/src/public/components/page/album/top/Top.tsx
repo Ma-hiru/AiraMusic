@@ -12,13 +12,27 @@ interface TopProps {
   dynamic: Nullable<NeteaseAPI.NeteaseAlbumDynamicDetailResponse>;
   coverCacheKey?: string;
   coverSize: NeteaseImageSize;
+  onCoverLoaded?: NormalFunc<[cover: string]>;
 }
 
-const Top: FC<TopProps> = ({ onPlayAll, onAddList, album, dynamic, coverCacheKey, coverSize }) => {
+const Top: FC<TopProps> = ({
+  onPlayAll,
+  onAddList,
+  album,
+  dynamic,
+  coverCacheKey,
+  coverSize,
+  onCoverLoaded
+}) => {
   return (
     <div className="w-full h-45 grid grid-rows-1 grid-cols-[1fr_auto]">
       <div className="min-w-0 grid grid-rows-1 grid-cols-[auto_1fr] gap-4 items-end">
-        <TopCover size={coverSize} album={album} coverCacheKey={coverCacheKey} />
+        <TopCover
+          size={coverSize}
+          album={album}
+          coverCacheKey={coverCacheKey}
+          onCoverLoaded={onCoverLoaded}
+        />
         <TopInfo album={album} dynamic={dynamic} onAddList={onAddList} onPlayAll={onPlayAll} />
       </div>
       <div />

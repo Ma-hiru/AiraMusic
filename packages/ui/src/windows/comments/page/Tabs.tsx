@@ -35,6 +35,7 @@ const Tabs: FC<TabsProps> = ({
           onClick={() => setDynamicContent(!dynamicContent)}
         />
         <SectionTab
+          className="text-[10px]"
           data={Object.values(CommentSortText)}
           activeIndex={sortType - 1}
           onChange={(index) => setSortType(index + 1)}

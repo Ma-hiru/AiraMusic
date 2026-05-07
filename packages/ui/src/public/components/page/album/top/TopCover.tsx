@@ -1,4 +1,4 @@
-import { FC, memo, useMemo } from "react";
+import { FC, memo, ReactEventHandler, useCallback, useMemo } from "react";
 import { NeteaseAlbum, NeteaseNetworkImage } from "@mahiru/ui/public/source/netease/models";
 import NeteaseImage from "@mahiru/ui/public/components/image/NeteaseImage";
 import { NeteaseImageSize } from "@mahiru/ui/public/enum";
@@ -7,9 +7,16 @@ interface TopCoverProps {
   album: Nullable<NeteaseAlbum>;
   coverCacheKey?: string;
   size: NeteaseImageSize;
+  onCoverLoaded?: NormalFunc<[cover: string]>;
 }
 
-const TopCover: FC<TopCoverProps> = ({ album, coverCacheKey, size }) => {
+const TopCover: FC<TopCoverProps> = ({ album, coverCacheKey, size, onCoverLoaded }) => {
+  const onLoaded: ReactEventHandler<HTMLImageElement> = useCallback(
+    (e) => {
+      onCoverLoaded?.(e.currentTarget.src);
+    },
+    [onCoverLoaded]
+  );
   return (
     <div className="size-44 relative select-none">
       <NeteaseImage
@@ -20,6 +27,7 @@ const TopCover: FC<TopCoverProps> = ({ album, coverCacheKey, size }) => {
           [album, coverCacheKey, size]
         )}
         className="size-44 rounded-md"
+        onLoad={onLoaded}
       />
     </div>
   );

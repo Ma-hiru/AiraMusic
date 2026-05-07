@@ -39,6 +39,7 @@ interface AlbumPageProps {
   onClickArtist: Optional<NormalFunc<[id: number]>>;
   onClickAlbum: Optional<NormalFunc<[id: number]>>;
   onRangeUpdate?: NormalFunc<[range: IndexRange]>;
+  onCoverLoaded?: NormalFunc<[cover: string]>;
   className?: string;
   coverSize: NeteaseImageSize;
   onAddList: NormalFunc;
@@ -56,6 +57,7 @@ const Album: FC<AlbumPageProps> = ({
   onClickArtist,
   onClickAlbum,
   onRangeUpdate,
+  onCoverLoaded,
   className,
   coverSize,
   onAddList,
@@ -102,6 +104,7 @@ const Album: FC<AlbumPageProps> = ({
             dynamic={dynamic}
             onAddList={onAddList}
             onPlayAll={onPlayAll}
+            onCoverLoaded={onCoverLoaded}
           />
           <Divider />
           {album && (

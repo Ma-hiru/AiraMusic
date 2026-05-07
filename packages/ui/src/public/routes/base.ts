@@ -45,10 +45,18 @@ export class RoutePath<const T extends Props> {
     return `${base}?${search.toString()}`;
   }
 
-  static parseQuery<Q extends Record<string, unknown>>(location: Location): Q {
+  static queryCache = new Map<string, Record<string, unknown>>();
+  static parseQuery<Q extends Record<string, unknown>>(location: Location, prefix: string): Q {
+    if (!location.pathname.includes(prefix)) {
+      return (this.queryCache.get(prefix) ?? {}) as Q;
+    }
     const search = new URLSearchParams(location.search);
     const query = search.get("query");
-    if (query) return JSON.parse(decodeURIComponent(query));
+    if (query) {
+      const res = JSON.parse(decodeURIComponent(query));
+      this.queryCache.set(prefix, res);
+      return res as Q;
+    }
     return {} as Q;
   }
 

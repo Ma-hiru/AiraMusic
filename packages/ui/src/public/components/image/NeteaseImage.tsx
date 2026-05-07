@@ -194,11 +194,7 @@ const NeteaseImage: FC<ImageProps> = ({
       )}>
       <img
         {...rest}
-        className={cx(
-          "w-full h-full object-cover aspect-square",
-          error && "invisible",
-          imageClassName
-        )}
+        className={cx("w-full h-full object-cover", error && "invisible", imageClassName)}
         src={source?.src}
         alt={alt ?? source?.alt}
         loading={loading}

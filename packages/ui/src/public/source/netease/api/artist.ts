@@ -44,7 +44,8 @@ export default class _NeteaseArtistAPI {
    * @param id 歌手 id
    * @param t 1: 关注, 0: 取消关注, 默认为 1
    * */
-  static subscribe(id: number, t: 1 | 0 = 1) {
+  static subscribe(id: number, t: 1 | 0 | boolean = 1) {
+    t = Number(t) as 1 | 0;
     return apiRequest<unknown, NeteaseAPI.NeteaseAPIResponse>({
       url: "/artist/sub",
       method: "POST",

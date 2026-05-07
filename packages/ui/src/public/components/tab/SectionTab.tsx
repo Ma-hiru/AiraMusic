@@ -1,6 +1,5 @@
 import { FC, memo, ReactNode } from "react";
 import { cx } from "@emotion/css";
-import AppUI from "@mahiru/ui/public/player/ui";
 
 interface TabProps {
   data: (string | ReactNode)[];
@@ -8,19 +7,24 @@ interface TabProps {
   onChange?: NormalFunc<[index: number]>;
   className?: string;
 }
-AppUI;
+
 const SectionTab: FC<TabProps> = ({ data, activeIndex, onChange, className }) => {
   return (
     <div
       className={cx(
-        "inline-block space-x-0.5 border-2 border-(--theme-color-main) rounded-full px-0.5 py-0.5 font-bold text-[10px] md:text-sm lg:text-base bg-(--theme-color-main)/10 text-(--theme-color-main)",
+        `
+         space-x-0.5 border-2 border-(--theme-color-main)
+         rounded-full px-px py-px font-semibold
+         inline-flex items-center justify-center gap-1
+         bg-(--theme-color-main)/10 text-(--theme-color-main)
+        `,
         className
       )}>
       {data.map((item, index) => (
         <span
           key={index}
           className={cx(
-            "cursor-pointer hover:bg-(--theme-color-main) hover:text-(--text-color-on-main) hover:rounded-full px-2 py-0.5 transition-all duration-300 ease-in-out",
+            "cursor-pointer hover:bg-(--theme-color-main) hover:text-(--text-color-on-main) hover:rounded-full px-1.5 py-px transition-all duration-300 ease-in-out",
             activeIndex === index
               ? "bg-(--theme-color-main) text-(--text-color-on-main) rounded-full"
               : "bg-transparent"
@@ -32,4 +36,5 @@ const SectionTab: FC<TabProps> = ({ data, activeIndex, onChange, className }) =>
     </div>
   );
 };
+
 export default memo(SectionTab);

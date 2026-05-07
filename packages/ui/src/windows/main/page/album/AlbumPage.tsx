@@ -1,4 +1,4 @@
-import { FC, memo, MouseEvent as ReactMouseEvent, useCallback, useRef } from "react";
+import { FC, memo, MouseEvent as ReactMouseEvent, useCallback, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { RoutePath, RoutePathMain } from "@mahiru/ui/public/routes";
 import { NeteaseTrackRecord } from "@mahiru/ui/public/source/netease/models";
@@ -9,12 +9,15 @@ import AppContextMenu from "@mahiru/ui/public/components/menu";
 import ElectronServices from "@mahiru/ui/public/source/electron/services";
 
 import Album, { AlbumPageRef } from "@mahiru/ui/public/components/page/album/Album";
+import { getLayoutStoreSnapshot } from "@mahiru/ui/windows/main/store/layout";
+import { useRouterActive } from "@mahiru/ui/public/hooks/useRouterActive";
 
 const AlbumPage: FC<object> = () => {
-  const { id } = RoutePath.parseQuery<{ id: number }>(useLocation());
-  const { playableManager, heartManager } = useUserTrackManager();
+  const location = useLocation();
   const albumRef = useRef<Nullable<AlbumPageRef>>(null);
   const navigate = useNavigate();
+  const { id } = RoutePath.parseQuery<{ id: number }>(location, RoutePathMain.album);
+  const { playableManager, heartManager } = useUserTrackManager();
 
   const player = AppEntry.usePlayer();
   const onPlay = useCallback(
@@ -113,6 +116,17 @@ const AlbumPage: FC<object> = () => {
     ]
   );
 
+  const active = useRouterActive(location);
+  const coverRef = useRef("");
+  const onCoverLoaded = useCallback((cover: string) => {
+    const { theme, updateTheme } = getLayoutStoreSnapshot();
+    updateTheme(theme.copy().setBackgroundCover(cover));
+    coverRef.current = cover;
+  }, []);
+  useEffect(() => {
+    active && onCoverLoaded(coverRef.current);
+  }, [active, onCoverLoaded]);
+
   return (
     <Album
       id={id}
@@ -127,6 +141,7 @@ const AlbumPage: FC<object> = () => {
       onContext={onContextMenu}
       onAddList={onAddList}
       onPlayAll={onReplace}
+      onCoverLoaded={onCoverLoaded}
       coverSize={ImageConstants.AlbumPageCoverSize}
     />
   );

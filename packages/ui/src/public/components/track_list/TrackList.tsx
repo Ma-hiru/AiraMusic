@@ -45,16 +45,16 @@ export interface TrackListPlayableManager {
 }
 
 export interface TrackListProps<T extends NeteaseTrackRecord[] | NeteaseHistory[]> {
-  ref: Ref<TrackListRef>;
-  id: Optional<number>;
-  tracks: T;
-  type: PlaylistSource;
-  trackCoverSize: NeteaseImageSize;
+  ref?: Ref<TrackListRef>;
   paddingBottom?: number | string;
   activeID?: number;
   onListScroll?: NormalFunc;
   className?: string;
   onRangeUpdate?: NormalFunc<[range: IndexRange]>;
+  id: Optional<number>;
+  tracks: T;
+  type: PlaylistSource;
+  trackCoverSize: NeteaseImageSize;
   onClick: Optional<TrackListClickFunc<T[number]>>;
   onContext: Optional<TrackListContextMenuFunc<T[number]>>;
   onClickArtist: Optional<NormalFunc<[id: number]>>;
