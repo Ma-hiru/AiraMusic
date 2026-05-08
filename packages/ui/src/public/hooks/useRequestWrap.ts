@@ -1,11 +1,14 @@
-import { startTransition, useCallback, useEffect, useRef, useState } from "react";
+import { startTransition, useCallback, useEffect, useState } from "react";
 import { Log } from "@mahiru/ui/public/utils/dev";
 import { useStableArray } from "@mahiru/ui/public/hooks/useStableArray";
 import { useUpdate } from "@mahiru/ui/public/hooks/useUpdate";
+import { useLatestRef } from "@mahiru/ui/public/hooks/useLatestRef";
 import _AppNet from "@mahiru/ui/public/source/electron/services/net";
 
+export type RequestStatus = "loading" | "error" | "success";
+
 export function useRequestStatusWrap<R, Args extends unknown[]>(request: PromiseFunc<Args, R>) {
-  const [status, setStatus] = useState<"loading" | "error" | "success">("loading");
+  const [status, setStatus] = useState<RequestStatus>("loading");
   const [data, setData] = useState<Nullable<R>>(null);
 
   const fetchData: PromiseFunc<[signal: AbortSignal, props: Args]> = useCallback(
@@ -47,9 +50,8 @@ export function useRequestAutoRun<Args extends unknown[]>(
   /** 与React dependency comparison一致，只比较数组元素 */
   props: Args
 ) {
-  const requestRef = useRef(request);
+  const requestRef = useLatestRef(request);
   const stableProps = useStableArray(props);
-  requestRef.current = request;
 
   const reload = useUpdate();
 
@@ -61,7 +63,7 @@ export function useRequestAutoRun<Args extends unknown[]>(
     request(cancel.signal, stableProps);
 
     return () => cancel.abort();
-  }, [stableProps, reload.count]);
+  }, [stableProps, reload.count, requestRef]);
 
   return {
     reload
@@ -74,11 +76,9 @@ export function useRequestAutoRetry<Args extends unknown[]>(
   props: Args,
   skip?: NormalFunc<[], boolean>
 ) {
-  const requestRef = useRef(request);
-  const skipRef = useRef(skip);
+  const requestRef = useLatestRef(request);
+  const skipRef = useLatestRef(skip);
   const stableProps = useStableArray(props);
-  requestRef.current = request;
-  skipRef.current = skip;
 
   const reload = useUpdate();
 
@@ -99,7 +99,7 @@ export function useRequestAutoRetry<Args extends unknown[]>(
       cancel.abort();
       unsubscribe();
     };
-  }, [stableProps, reload.count]);
+  }, [stableProps, reload.count, skipRef, requestRef]);
 
   return {
     reload

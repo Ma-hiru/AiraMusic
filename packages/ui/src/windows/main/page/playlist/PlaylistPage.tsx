@@ -34,7 +34,7 @@ import AppContextMenu from "@mahiru/ui/public/components/menu";
 import AppToast from "@mahiru/ui/public/components/toast";
 import NeteaseServices from "@mahiru/ui/public/source/netease/services";
 import ElectronServices from "@mahiru/ui/public/source/electron/services";
-import ImageConstants from "@mahiru/ui/windows/main/constants/image";
+import ImageConstants from "@mahiru/ui/public/constants/image";
 
 import Top from "./top";
 import Divider from "./Divider";

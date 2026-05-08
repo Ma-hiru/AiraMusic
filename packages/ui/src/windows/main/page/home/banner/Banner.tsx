@@ -14,7 +14,7 @@ import AppErrorBoundary, {
   AppErrorBoundaryRef
 } from "@mahiru/ui/public/components/fallback/AppErrorBoundary";
 import ThrowIf from "@mahiru/ui/public/components/fallback/ThrowIf";
-import { RoutePathMain } from "@mahiru/ui/public/routes";
+import { RoutePath, RoutePathMain } from "@mahiru/ui/public/routes";
 import { useRequestAutoRetry, useRequestStatusWrap } from "@mahiru/ui/public/hooks/useRequestWrap";
 
 const Banner: FC<object> = () => {
@@ -56,6 +56,8 @@ const Banner: FC<object> = () => {
           navigate(RoutePathMain.playlist.withQuery(id, PlaylistSource.Normal));
           return;
         }
+        case BannerType.album:
+          return navigate(RoutePath.withQuery(RoutePathMain.album, { id }));
       }
     },
     [banner, navigate, player]

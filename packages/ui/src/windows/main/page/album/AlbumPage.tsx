@@ -4,7 +4,7 @@ import { RoutePath, RoutePathMain } from "@mahiru/ui/public/routes";
 import { NeteaseTrackRecord } from "@mahiru/ui/public/source/netease/models";
 import { useUserTrackManager } from "@mahiru/ui/public/hooks/useUserTrackManager";
 import AppEntry from "@mahiru/ui/windows/main/entry";
-import ImageConstants from "@mahiru/ui/windows/main/constants/image";
+import ImageConstants from "@mahiru/ui/public/constants/image";
 import AppContextMenu from "@mahiru/ui/public/components/menu";
 import ElectronServices from "@mahiru/ui/public/source/electron/services";
 

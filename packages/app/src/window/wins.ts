@@ -1,5 +1,5 @@
 import { AppWindowCreatorProps, AppWindowManager, WindowExits } from "./manager";
-import { preloadPath } from "../utils/path";
+import { appLogoPath, preloadPath } from "../utils/path";
 import { BrowserWindow, dialog } from "electron";
 import { isLinux } from "../utils/platform";
 import { AppWindowConstants } from "../constants/win";
@@ -10,6 +10,7 @@ import AppScreen from "../utils/screen";
 export class AppWindows {
   static fatalError(message: string, error?: string) {
     // TODO
+
     Log.error({ label: "App fatalError", message, raw: error });
     dialog.showErrorBox("应用发生致命错误", `${message}\n ${error || ""}`);
     AppWindowManager.get("main")?.close();
@@ -34,7 +35,8 @@ export class AppWindows {
         frame: false,
         type: "toolbar",
         skipTaskbar: true,
-        show: false
+        show: false,
+        icon: appLogoPath
       },
       id: "login",
       handleExits: WindowExits.DESTROY,
@@ -61,7 +63,8 @@ export class AppWindows {
         frame: false,
         skipTaskbar: false,
         show: false,
-        center: true
+        center: true,
+        icon: appLogoPath
       },
       id: "image",
       handleExits: WindowExits.IGNORE,
@@ -93,7 +96,8 @@ export class AppWindows {
         frame: false,
         type: "toolbar",
         skipTaskbar: true,
-        show: false
+        show: false,
+        icon: appLogoPath
       },
       id: "lyric",
       handleExits: WindowExits.DESTROY,
@@ -129,7 +133,8 @@ export class AppWindows {
         frame: false,
         type: "toolbar",
         skipTaskbar: true,
-        show: false
+        show: false,
+        icon: appLogoPath
       },
       id: "miniplayer",
       handleExits: WindowExits.IGNORE,
@@ -162,7 +167,8 @@ export class AppWindows {
           webSecurity: false
         },
         frame: false,
-        show: false
+        show: false,
+        icon: appLogoPath
       },
       memoPos: true,
       id: "main",
@@ -195,7 +201,8 @@ export class AppWindows {
         frame: false,
         type: "toolbar",
         skipTaskbar: true,
-        show: false
+        show: false,
+        icon: appLogoPath
       },
       id: "tray",
       handleExits: WindowExits.IGNORE,
@@ -219,7 +226,8 @@ export class AppWindows {
         resizable: true,
         titleBarStyle: "hidden",
         frame: false,
-        skipTaskbar: false
+        skipTaskbar: false,
+        icon: appLogoPath
       },
       memoPos: true,
       id: "display",
@@ -246,7 +254,8 @@ export class AppWindows {
         resizable: true,
         titleBarStyle: "hidden",
         frame: false,
-        skipTaskbar: false
+        skipTaskbar: false,
+        icon: appLogoPath
       },
       memoPos: true,
       id: "comments",
@@ -271,7 +280,9 @@ export class AppWindows {
         resizable: true,
         minimizable: true,
         maximizable: true,
-        frame: true
+        frame: true,
+        autoHideMenuBar: true,
+        icon: appLogoPath
       },
       id: "external",
       handleExits: WindowExits.DESTROY,

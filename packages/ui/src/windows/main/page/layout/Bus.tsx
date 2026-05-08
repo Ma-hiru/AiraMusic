@@ -1,15 +1,14 @@
-import AppEntry from "@mahiru/ui/windows/main/entry";
-import ElectronServices from "@mahiru/ui/public/source/electron/services";
-import useListenableHook from "@mahiru/ui/public/hooks/useListenableHook";
-
+import { useListenable } from "@mahiru/ui/public/hooks/useListenable";
 import { FC, memo, useCallback, useEffect, useRef } from "react";
 import { useLayoutStore } from "@mahiru/ui/windows/main/store/layout";
+import AppEntry from "@mahiru/ui/windows/main/entry";
+import ElectronServices from "@mahiru/ui/public/source/electron/services";
 
 const Bus: FC<object> = () => {
   const { theme } = useLayoutStore();
-  const windowCurrent = useListenableHook(ElectronServices.Window.current);
-  const playerActionBus = useListenableHook(ElectronServices.Bus.playerAction);
-  const mainBusUpdater = useListenableHook(ElectronServices.Bus.mainBusUpdater);
+  const windowCurrent = useListenable(ElectronServices.Window.current);
+  const playerActionBus = useListenable(ElectronServices.Bus.playerAction);
+  const mainBusUpdater = useListenable(ElectronServices.Bus.mainBusUpdater);
   const player = AppEntry.usePlayer();
 
   const updateProgressBus = useCallback(() => {

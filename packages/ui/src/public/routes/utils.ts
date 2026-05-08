@@ -19,7 +19,11 @@ export class PlaylistPathUtils {
     return `${this.base}?${search.toString()}`;
   }
 
+  queryCache = new Map<string, { source: Nullable<PlaylistSource>; id: Nullable<string> }>();
   parseQuery(location: Location) {
+    if (!location.pathname.includes(this.base)) {
+      return this.queryCache.get(this.base) || { source: null, id: null };
+    }
     const search = new URLSearchParams(location.search);
     const result = {
       source: null as Nullable<PlaylistSource>,
@@ -29,6 +33,8 @@ export class PlaylistPathUtils {
       result.source = search.get("source") as Nullable<PlaylistSource>;
       result.id = search.get("id");
     }
+
+    this.queryCache.set(this.base, result);
     return result;
   }
 }

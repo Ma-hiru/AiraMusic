@@ -1,5 +1,5 @@
-import useListenableHook from "@mahiru/ui/public/hooks/useListenableHook";
-import ElectronServices from "@mahiru/ui/public/source/electron/services";
+import { cx } from "@emotion/css";
+import { useListenable } from "@mahiru/ui/public/hooks/useListenable";
 import {
   MouseEvent as ReactMouseEvent,
   useCallback,
@@ -8,10 +8,10 @@ import {
   useRef,
   useState
 } from "react";
-import { cx } from "@emotion/css";
 import { WindowResize } from "@mahiru/ui/public/hooks/useWindowResize";
 import { useAppLoaded } from "@mahiru/ui/public/hooks/useAppLoaded";
 import { NeteaseLyric } from "@mahiru/ui/public/source/netease/models";
+import ElectronServices from "@mahiru/ui/public/source/electron/services";
 
 import Control from "./Control";
 import LyricComponent, { LyricRef } from "@mahiru/ui/public/components/lyric/LyricContainer";
@@ -29,9 +29,9 @@ export default function LyricPage() {
   });
   const showBgTimer = useRef<Nullable<ReturnType<typeof setTimeout>>>(null);
   // 监听播放器相关事件
-  const playerBus = useListenableHook(ElectronServices.Bus.player);
-  const infoBus = useListenableHook(ElectronServices.Bus.info);
-  const progressBus = useListenableHook(ElectronServices.Bus.progress);
+  const playerBus = useListenable(ElectronServices.Bus.player);
+  const infoBus = useListenable(ElectronServices.Bus.info);
+  const progressBus = useListenable(ElectronServices.Bus.progress);
   const getInfo = useRef({
     playerBus,
     infoBus

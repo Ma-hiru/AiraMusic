@@ -2,7 +2,7 @@ import { FC, memo } from "react";
 import { cx } from "@emotion/css";
 import { useLayoutStore } from "@mahiru/ui/windows/main/store/layout";
 import { useUser } from "@mahiru/ui/public/store/user";
-import useListenableHook from "@mahiru/ui/public/hooks/useListenableHook";
+import { useListenable } from "@mahiru/ui/public/hooks/useListenable";
 import ElectronServices from "@mahiru/ui/public/source/electron/services";
 
 import TopControl from "./TopControl";
@@ -15,7 +15,7 @@ import Drag from "@mahiru/ui/public/components/drag/Drag";
 
 const Top: FC<{ className?: string }> = ({ className }) => {
   const { layout } = useLayoutStore();
-  const isFullscreen = useListenableHook(ElectronServices.Window.current).isFullscreen;
+  const isFullscreen = useListenable(ElectronServices.Window.current).isFullscreen;
   const user = useUser();
 
   return (

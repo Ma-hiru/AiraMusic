@@ -30,10 +30,10 @@
   import NoDrag from "@mahiru/ui/public/components/drag/NoDrag.vue";
   import { AppWindow as AppWindowIcon, Minus, Square, SquareMinus, X } from "lucide-vue-next";
   import { isDev } from "@mahiru/ui/public/utils/dev";
-  import useListenableHookVue from "@mahiru/ui/public/hooks/useListenableHookVue";
+  import { useListenable } from "@mahiru/ui/public/hooks/useListenableVue";
   import ElectronServices from "@mahiru/ui/public/source/electron/services";
 
-  const currentWindow = useListenableHookVue(ElectronServices.Window.current);
+  const currentWindow = useListenable(ElectronServices.Window.current);
 
   const props = withDefaults(
     defineProps<{

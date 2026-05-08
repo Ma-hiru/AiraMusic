@@ -34,6 +34,7 @@ type ImageProps = Omit<ImgHTMLAttributes<HTMLImageElement>, "src"> & {
   preview?: boolean;
   image: Optional<NeteaseNetworkImage | NeteaseLocalImage>;
   cache: boolean;
+  draggable?: boolean;
   cacheLazy?: boolean;
   cacheLazyProps?: {
     root?: Element | null;
@@ -61,6 +62,7 @@ const NeteaseImage: FC<ImageProps> = ({
   preview,
   cacheLazy = true,
   cacheLazyProps,
+  draggable = false,
   ...rest
 }) => {
   const [visible, setVisible] = useState(false);
@@ -150,7 +152,7 @@ const NeteaseImage: FC<ImageProps> = ({
       },
       {
         root: null, // viewport
-        rootMargin: "150px", // 提前加载（关键）
+        rootMargin: "300px", // 提前加载（关键）
         threshold: 0,
         ...cacheLazyProps
       }
@@ -194,6 +196,7 @@ const NeteaseImage: FC<ImageProps> = ({
       )}>
       <img
         {...rest}
+        draggable={draggable}
         className={cx("w-full h-full object-cover", error && "invisible", imageClassName)}
         src={source?.src}
         alt={alt ?? source?.alt}

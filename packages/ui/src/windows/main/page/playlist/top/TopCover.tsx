@@ -2,7 +2,7 @@ import { FC, memo, ReactEventHandler, useCallback, useMemo } from "react";
 import { Headphones } from "lucide-react";
 import { useLayoutStore } from "@mahiru/ui/windows/main/store/layout";
 import { NeteaseNetworkImage, NeteasePlaylist } from "@mahiru/ui/public/source/netease/models";
-import ImageConstants from "@mahiru/ui/windows/main/constants/image";
+import ImageConstants from "@mahiru/ui/public/constants/image";
 
 import NeteaseImage from "@mahiru/ui/public/components/image/NeteaseImage";
 

@@ -27,11 +27,11 @@ export default class _NeteaseArtistAPI {
 
   /**
    * 调用此接口,可获得歌手专辑内容
-   * @param id 歌手 id
-   * @param limit 返回数量,默认为 30
-   * @param offset 偏移数量,默认为 0
    * */
-  static albums(id: number, limit = 30, offset = 0) {
+  static albums(props: { id: number; pageSize?: number; pageNo?: number }) {
+    const { id, pageSize = 30, pageNo = 1 } = props;
+    const offset = (pageNo - 1) * pageSize;
+    const limit = pageSize;
     return apiRequest<unknown, NeteaseAPI.NeteaseArtistAlbumResponse>({
       url: "/artist/album",
       method: "GET",

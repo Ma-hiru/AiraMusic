@@ -1,13 +1,12 @@
-import { FC, memo, useEffect, useRef } from "react";
 import { cx } from "@emotion/css";
-import { Log } from "@mahiru/ui/public/utils/dev";
+import { FC, memo, useCallback, useRef } from "react";
 
 import Item from "./Item";
-import AppLoading from "@mahiru/ui/public/components/fallback/AppLoading";
+import InfiniteList from "../../../public/components/infinite/InfiniteList";
 
 interface ContentProps {
   comments: NeteaseAPI.NeteaseComment[];
-  onEnded: NormalFunc;
+  onEnded: NormalFunc | PromiseFunc;
   hasMore: boolean;
   loading: boolean;
   sourceID?: number;
@@ -24,53 +23,22 @@ const Content: FC<ContentProps> = ({
   sourceID,
   type
 }) => {
-  const rootRef = useRef<HTMLDivElement>(null);
-  const loadingRef = useRef<HTMLDivElement>(null);
-
-  const propsRef = useRef({
-    hasMore,
-    loading
-  });
-  propsRef.current = {
-    hasMore,
-    loading
-  };
-
-  useEffect(() => {
-    const root = rootRef.current;
-    const target = loadingRef.current;
-    if (!root || !target) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const { hasMore, loading } = propsRef.current;
-        if (!hasMore || loading) return;
-        if (entries[0]?.isIntersecting) {
-          Log.info("comments soon ended, load more");
-          onEnded();
-        }
-      },
-      {
-        root,
-        rootMargin: "150px",
-        threshold: 0
-      }
-    );
-    observer.observe(target);
-    return () => {
-      observer.disconnect();
-    };
-  }, [hasMore, onEnded]);
+  const buildKey = useRef((item: NeteaseAPI.NeteaseComment) => item.commentId);
+  const render = useCallback(
+    (item: NeteaseAPI.NeteaseComment) => <Item data={item} sourceID={sourceID} type={type} />,
+    [sourceID, type]
+  );
 
   return (
-    <div
-      ref={rootRef}
-      className={cx("w-full overflow-y-auto scrollbar scrollbar-show px-3 py-2", className)}>
-      {comments.map((item) => (
-        <Item key={item.commentId} data={item} sourceID={sourceID} type={type} />
-      ))}
-      <AppLoading ref={loadingRef} wrap loading={hasMore} />
-    </div>
+    <InfiniteList
+      items={comments}
+      hasMore={hasMore}
+      isLoading={loading}
+      buildKey={buildKey.current}
+      className={cx("px-3 py-2", className)}
+      render={render}
+      onLoadMore={onEnded}
+    />
   );
 };
 

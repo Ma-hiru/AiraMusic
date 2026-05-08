@@ -11,6 +11,7 @@
   "dependencies": {
     "@applemusic-like-lyrics/lyric": "0.3.0",
     "@emotion/css": "^11.13.5",
+    "@heroicons/react": "^2.2.0",
     "@mahiru/log": "workspace:*",
     "@mahiru/wasm": "workspace:*",
     "@tailwindcss/vite": "^4.1.17",

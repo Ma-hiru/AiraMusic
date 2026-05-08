@@ -1,10 +1,10 @@
 import { watch } from "vue";
+import { useListenable } from "@mahiru/ui/public/hooks/useListenableVue";
 import ElectronServices from "@mahiru/ui/public/source/electron/services";
 import AppUI from "@mahiru/ui/public/player/ui";
-import useListenableHookVue from "@mahiru/ui/public/hooks/useListenableHookVue";
 
 export function useThemeInjectFromBusVue() {
-  const infoBus = useListenableHookVue(ElectronServices.Bus.info);
+  const infoBus = useListenable(ElectronServices.Bus.info);
   watch(infoBus, (infoBus) => {
     if (!infoBus.data) return;
     AppUI.theme = {

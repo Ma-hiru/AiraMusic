@@ -25,18 +25,18 @@ const Header: FC<HeaderProps> = ({
 }) => {
   return (
     <div className={cx("w-full", className)}>
-      <div className="w-full h-48 flex flex-row justify-start items-start gap-8">
+      <div className="w-full h-49 flex flex-row-reverse justify-start items-start">
         <Avatar className="h-full shrink-0" artist={artist} onAvatarLoaded={onAvatarLoaded} />
         <Info className="h-full flex-1" artist={artist}>
           <Tabs
-            className="self-end text-[12px] mt-2"
+            className="text-[12px] mt-2 relative left-6"
             tabsItem={tabsItem}
             activeIndex={activeIndex}
             onChange={onChange}
           />
         </Info>
       </div>
-      <div className="w-full h-0.5 my-4 bg-[#7b8290]/10" />
+      <div className="w-full h-0.5 my-2 bg-[#7b8290]/10" />
     </div>
   );
 };

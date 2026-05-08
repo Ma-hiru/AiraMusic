@@ -2,7 +2,7 @@ import { FC, memo, useMemo } from "react";
 import { NeteaseNetworkImage } from "@mahiru/ui/public/source/netease/models/NeteaseImage";
 import NeteaseImage from "@mahiru/ui/public/components/image/NeteaseImage";
 import { NeteaseUser } from "@mahiru/ui/public/source/netease/models";
-import ImageConstants from "@mahiru/ui/windows/main/constants/image";
+import ImageConstants from "@mahiru/ui/public/constants/image";
 
 interface TopAvatarProps {
   user: Nullable<NeteaseUser>;

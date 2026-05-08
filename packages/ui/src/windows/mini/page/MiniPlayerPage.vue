@@ -53,18 +53,18 @@
   import Drag from "@mahiru/ui/public/components/drag/Drag.vue";
   import NoDrag from "@mahiru/ui/public/components/drag/NoDrag.vue";
   import NeteaseImage from "@mahiru/ui/public/components/image/NeteaseImage.vue";
-  import useListenableHookVue from "@mahiru/ui/public/hooks/useListenableHookVue";
   import ElectronServices from "@mahiru/ui/public/source/electron/services";
+  import { useListenable } from "@mahiru/ui/public/hooks/useListenableVue";
   import { Pause, Play, SkipBack, SkipForward, X } from "lucide-vue-next";
   import { computed } from "vue";
   import { clamp } from "lodash-es";
   import { NeteaseNetworkImage } from "@mahiru/ui/public/source/netease/models";
   import { NeteaseImageSize } from "@mahiru/ui/public/enum";
 
-  const mainWindow = useListenableHookVue(ElectronServices.Window.main);
-  const currentWindow = useListenableHookVue(ElectronServices.Window.current);
-  const playerBus = useListenableHookVue(ElectronServices.Bus.player);
-  const progressBus = useListenableHookVue(ElectronServices.Bus.progress);
+  const mainWindow = useListenable(ElectronServices.Window.main);
+  const currentWindow = useListenable(ElectronServices.Window.current);
+  const playerBus = useListenable(ElectronServices.Bus.player);
+  const progressBus = useListenable(ElectronServices.Bus.progress);
   const track = computed(() => playerBus.value.data?.track?.detail);
   const percent = computed(() => {
     const currentTime = progressBus.value.data?.currentTime || 0;

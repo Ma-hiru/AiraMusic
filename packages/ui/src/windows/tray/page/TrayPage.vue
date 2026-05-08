@@ -15,7 +15,7 @@
   import TrayPlayer from "@mahiru/ui/windows/tray/page/TrayPlayer.vue";
   import TrayDivider from "@mahiru/ui/windows/tray/page/TrayDivider.vue";
   import ElectronServices from "@mahiru/ui/public/source/electron/services";
-  import useListenableHookVue from "@mahiru/ui/public/hooks/useListenableHookVue";
+  import { useListenable } from "@mahiru/ui/public/hooks/useListenableVue";
   import { computed, onMounted, onUnmounted, useTemplateRef, watch } from "vue";
   import {
     Copy,
@@ -31,8 +31,8 @@
   import { useThemeInjectFromBusVue } from "@mahiru/ui/public/hooks/useThemeInjectFromBusVue";
 
   const containerRef = useTemplateRef<HTMLDivElement>("containerRef");
-  const playerBus = useListenableHookVue(ElectronServices.Bus.player);
-  const currentWindow = useListenableHookVue(ElectronServices.Window.current);
+  const playerBus = useListenable(ElectronServices.Bus.player);
+  const currentWindow = useListenable(ElectronServices.Window.current);
   // 主题
   useThemeInjectFromBusVue();
   // Actions

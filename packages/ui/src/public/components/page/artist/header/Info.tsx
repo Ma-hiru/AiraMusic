@@ -58,25 +58,24 @@ const Info: FC<InfoProps> = ({ className, artist, children }) => {
   return (
     <div
       className={cx(
-        `
-        flex flex-col justify-center items-end overflow-hidden text-(--theme-color-main)
-       `,
+        "flex flex-col items-start justify-start text-(--text-color-on-main)",
         className
       )}>
-      <div className="flex-1 shirink-0 w-full flex flex-col items-end justify-center gap-1">
-        <div
-          className={cx(
-            "relative inline-flex flex-col items-start text-3xl font-bold",
-            alias && "pt-5"
-          )}>
-          {alias && (
-            <h2 className="absolute left-0 top-0 w-full truncate text-center text-sm font-semibold opacity-70 select-all">
-              {alias}
-            </h2>
-          )}
-          <h1 className="whitespace-nowrap select-all">{artistName}</h1>
-        </div>
-        <p className="text-sm font-light select-all">粉丝: {FormatNumber.count(fansCount)}</p>
+      <div
+        className={cx(
+          "relative inline-flex flex-col items-start text-3xl font-bold",
+          alias && "pt-5"
+        )}>
+        {alias && (
+          <h2 className="absolute left-0 top-0 w-full truncate text-center text-sm font-semibold opacity-70 select-all">
+            {alias}
+          </h2>
+        )}
+        <h1 className="whitespace-nowrap select-all">{artistName}</h1>
+      </div>
+      <div className="text-sm inline-block font-light select-all mt-auto">
+        <span> 粉丝: {FormatNumber.count(fansCount)}</span>
+        <span className="ml-2 mr-1">/</span>
         <button
           onClick={follow}
           className={cx(`
@@ -88,10 +87,11 @@ const Info: FC<InfoProps> = ({ className, artist, children }) => {
           {followText}
         </button>
       </div>
-      <p className="max-h-1/3 text-sm font-light line-clamp-3 text-right select-text">
+
+      <p className="self-start line-clamp-3 text-[12px] font-light text-left select-all max-w-1/2">
         {artist?.detail.artist.briefDesc}
       </p>
-      {children}
+      <div className="self-end">{children}</div>
     </div>
   );
 };

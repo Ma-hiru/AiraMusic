@@ -22,6 +22,7 @@ import {
 import TrackItem, { type TrackItemProps } from "@mahiru/ui/public/components/track_item";
 import VirtualList, { VirtualListRow } from "@mahiru/ui/public/components/virtual_list";
 import { HeartManager, useHeart } from "@mahiru/ui/public/hooks/useHeart";
+import AppEmpty from "@mahiru/ui/public/components/fallback/AppEmpty";
 
 export interface TrackListRef {
   containerRef: RefObject<Nullable<HTMLDivElement>>;
@@ -161,16 +162,20 @@ const TrackList = <T extends NeteaseTrackRecord[] | NeteaseHistory[]>({
         className
       )}
       children={
-        <VirtualList
-          items={tracks}
-          extraData={extra}
-          itemHeight={50}
-          RowComponent={RowComponent}
-          paddingBottom={paddingBottom}
-          containerRef={containerRef}
-          setScrollToItem={(nextScrollToItem) => setScrollToItem(() => nextScrollToItem)}
-          onRangeUpdate={onRangeUpdate}
-        />
+        tracks.length > 0 ? (
+          <VirtualList
+            items={tracks}
+            extraData={extra}
+            itemHeight={50}
+            RowComponent={RowComponent}
+            paddingBottom={paddingBottom}
+            containerRef={containerRef}
+            setScrollToItem={(nextScrollToItem) => setScrollToItem(() => nextScrollToItem)}
+            onRangeUpdate={onRangeUpdate}
+          />
+        ) : (
+          <AppEmpty tips="暂无歌曲" />
+        )
       }
     />
   );

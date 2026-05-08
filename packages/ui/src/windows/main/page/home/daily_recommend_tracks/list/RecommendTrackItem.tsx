@@ -5,7 +5,7 @@ import NeteaseImage from "@mahiru/ui/public/components/image/NeteaseImage";
 import AppEntry from "@mahiru/ui/windows/main/entry";
 import NeteaseServices from "@mahiru/ui/public/source/netease/services";
 import { NeteaseNetworkImage, NeteaseTrackRecord } from "@mahiru/ui/public/source/netease/models";
-import ImageConstants from "@mahiru/ui/windows/main/constants/image";
+import ImageConstants from "@mahiru/ui/public/constants/image";
 
 interface RecommendTrackItemProps {
   song: NeteaseAPI.DailyRecommendTracksDailySong;
@@ -56,7 +56,7 @@ const RecommendTrackItem: FC<RecommendTrackItemProps> = ({
         <div className="w-full aspect-square overflow-hidden relative rounded-md">
           <NeteaseImage
             cache
-            className="w-full h-full"
+            className="w-full h-full aspect-square"
             image={image}
             shadowColor={isMainColorDark ? "dark" : "light"}
           />

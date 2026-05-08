@@ -1,9 +1,21 @@
-import { FC, memo, MouseEvent as ReactMouseEvent, Ref, useCallback, useImperativeHandle, useRef } from "react";
-import { NeteaseAlbum, NeteaseHistory, NeteaseTrackRecord } from "@mahiru/ui/public/source/netease/models";
+import {
+  FC,
+  memo,
+  MouseEvent as ReactMouseEvent,
+  Ref,
+  useCallback,
+  useImperativeHandle,
+  useRef
+} from "react";
+import {
+  NeteaseAlbum,
+  NeteaseHistory,
+  NeteaseTrackRecord
+} from "@mahiru/ui/public/source/netease/models";
 import { cx } from "@emotion/css";
 import { NeteaseImageSize, PlaylistSource } from "@mahiru/ui/public/enum";
 import { HeartManager } from "@mahiru/ui/public/hooks/useHeart";
-import ImageConstants from "@mahiru/ui/windows/main/constants/image";
+import ImageConstants from "@mahiru/ui/public/constants/image";
 import NeteaseServices from "@mahiru/ui/public/source/netease/services";
 
 import Top from "./top";
@@ -11,7 +23,10 @@ import Divider from "./Divider";
 import AppLoading from "@mahiru/ui/public/components/fallback/AppLoading";
 import AppErrorBoundary from "@mahiru/ui/public/components/fallback/AppErrorBoundary";
 import ThrowIf from "@mahiru/ui/public/components/fallback/ThrowIf";
-import TrackList, { TrackListPlayableManager, TrackListRef } from "@mahiru/ui/public/components/track_list/TrackList";
+import TrackList, {
+  TrackListPlayableManager,
+  TrackListRef
+} from "@mahiru/ui/public/components/track_list/TrackList";
 import { useRequestAutoRun, useRequestStatusWrap } from "@mahiru/ui/public/hooks/useRequestWrap";
 import NeteaseAlbumDynamicDetailResponse = NeteaseAPI.NeteaseAlbumDynamicDetailResponse;
 

@@ -1,6 +1,6 @@
 import { userStoreSnapshot } from "@mahiru/ui/public/store/user";
+import { useListenable } from "@mahiru/ui/public/hooks/useListenable";
 import AppPlayer from "@mahiru/ui/public/player/core";
-import useListenableHook from "@mahiru/ui/public/hooks/useListenableHook";
 import NeteaseServices from "@mahiru/ui/public/source/netease/services";
 import ElectronServices from "@mahiru/ui/public/source/electron/services";
 
@@ -17,7 +17,7 @@ export default class AppEntry {
     const player = instance ?? new AppPlayer();
 
     function useAppPlayer() {
-      return useListenableHook(player);
+      return useListenable(player);
     }
 
     return {

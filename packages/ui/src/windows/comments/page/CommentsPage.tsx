@@ -1,7 +1,9 @@
-import { FC, memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { requestCommentProps, useComments } from "@mahiru/ui/public/hooks/useComments";
+import { FC, memo, useEffect, useMemo, useState } from "react";
+import { useComments } from "@mahiru/ui/public/hooks/useComments";
 import { CommentSort, CommentType, NeteaseImageSize } from "@mahiru/ui/public/enum";
-import useListenableHook from "@mahiru/ui/public/hooks/useListenableHook";
+import { NeteaseNetworkImage } from "@mahiru/ui/public/source/netease/models";
+import { CacheStore } from "@mahiru/ui/public/store/cache";
+import { useListenable } from "@mahiru/ui/public/hooks/useListenable";
 import ElectronServices from "@mahiru/ui/public/source/electron/services";
 
 import Control from "./Control";
@@ -12,81 +14,39 @@ import AppLoading from "@mahiru/ui/public/components/fallback/AppLoading";
 import AppErrorBoundary from "@mahiru/ui/public/components/fallback/AppErrorBoundary";
 import ThrowIf from "@mahiru/ui/public/components/fallback/ThrowIf";
 import AcrylicBackground from "@mahiru/ui/public/components/public/AcrylicBackground";
-import { NeteaseNetworkImage } from "@mahiru/ui/public/source/netease/models";
-import { CacheStore } from "@mahiru/ui/public/store/cache";
 
 const CommentsPage: FC<object> = () => {
-  const commentBus = useListenableHook(ElectronServices.Bus.comment);
-  const playerBus = useListenableHook(ElectronServices.Bus.player);
+  const commentBus = useListenable(ElectronServices.Bus.comment);
+  const playerBus = useListenable(ElectronServices.Bus.player);
   const [dynamicContent, setDynamicContent] = useState(() => {
     return CacheStore.browser.getOne("comments-dynamic-content") === "true";
   });
-  const [props, setProps] = useState<Nullable<requestCommentProps>>(null);
-  const [comments, status] = useComments(props);
+  const [id, setId] = useState(0);
+  const [type, setType] = useState(CommentType.Song);
   const [sortType, setSortType] = useState(CommentSort.Hot);
+  const { comments, status, loadMore } = useComments({ id, type, sortType });
 
-  const propsRef = useRef({
-    sortType,
-    commentBus,
-    comments,
-    props
-  });
-  propsRef.current = {
-    sortType,
-    commentBus,
-    comments,
-    props
-  };
-  const reload = useCallback(() => {
-    const commentBus = propsRef.current.commentBus;
-    const sortType = propsRef.current.sortType;
-    let type;
-    switch (commentBus.data?.type) {
-      case "track":
-        type = CommentType.Song;
-        break;
+  useEffect(() => {
+    if (!commentBus.data) return;
+    setId(commentBus.data.id);
+    switch (commentBus.data.type) {
       case "album":
-        type = CommentType.Album;
+        setType(CommentType.Album);
         break;
       case "playlist":
-        type = CommentType.Playlist;
+        setType(CommentType.Playlist);
+        break;
+      case "track":
+        setType(CommentType.Song);
         break;
     }
-    const id = commentBus.data?.id;
-    if (id == null || type == null) return;
-    setProps({
-      id,
-      type,
-      pageNo: 1,
-      pageSize: 20,
-      sortType: sortType
-    });
-  }, []);
+  }, [commentBus.data]);
 
   useEffect(() => {
     ElectronServices.Bus.mainBusUpdater.send("player");
     ElectronServices.Bus.mainBusUpdater.send("info");
   }, [dynamicContent]);
-  useEffect(
-    () => reload(),
-    [
-      // id改变刷新数据
-      commentBus.data?.id,
-      commentBus.data?.type,
-      reload,
-      sortType
-    ]
-  );
 
-  const requestNextPage = useCallback(() => {
-    const comments = propsRef.current.comments;
-    const props = propsRef.current.props;
-    if (props == null || !comments.hasMore || status === "loading") return;
-    setProps({
-      ...props,
-      pageNo: props.pageNo + 1
-    });
-  }, [status]);
   const background = useMemo(() => {
     const src = playerBus.data?.track?.detail.al.picUrl;
     if (!src) return undefined;
@@ -113,9 +73,9 @@ const CommentsPage: FC<object> = () => {
       <div className="fixed inset-0 z-[-1]">
         <AcrylicBackground src={background} />
       </div>
-      <AppErrorBoundary canReset toast={false} name="CommentsPage" onReset={reload}>
+      <AppErrorBoundary canReset toast={false} name="CommentsPage" onReset={loadMore}>
         <ThrowIf when={status === "error"} message="加载评论失败" />
-        <AppLoading loading={status === "loading"}>
+        <AppLoading loading={comments.data.length === 0 && status !== "success"}>
           <Title className="h-25" commentBus={commentBus} />
           <Tabs
             className="h-5"
@@ -129,7 +89,7 @@ const CommentsPage: FC<object> = () => {
             className="h-[calc(100vh-160px)]"
             hasMore={comments.hasMore}
             comments={comments.data}
-            onEnded={requestNextPage}
+            onEnded={loadMore}
             loading={status === "loading"}
             type={commentBus.data?.type}
             sourceID={commentBus.data?.id}

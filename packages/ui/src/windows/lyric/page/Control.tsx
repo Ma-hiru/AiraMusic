@@ -14,13 +14,13 @@ import { AArrowDown, AArrowUp, LockKeyholeOpen, LucideLock } from "lucide-react"
 import { NeteaseImageSize } from "@mahiru/ui/public/enum";
 
 import { NeteaseLyric, NeteaseNetworkImage } from "@mahiru/ui/public/source/netease/models";
+import { useListenable } from "@mahiru/ui/public/hooks/useListenable";
+import { FormatNumber } from "@mahiru/ui/public/utils/format";
+import ElectronServices from "@mahiru/ui/public/source/electron/services";
 
 import Drag from "@mahiru/ui/public/components/drag/Drag";
 import NeteaseImage from "@mahiru/ui/public/components/image/NeteaseImage";
 import NoDrag from "@mahiru/ui/public/components/drag/NoDrag";
-import useListenableHook from "@mahiru/ui/public/hooks/useListenableHook";
-import ElectronServices from "@mahiru/ui/public/source/electron/services";
-import { FormatNumber } from "@mahiru/ui/public/utils/format";
 
 type ControlProps = Omit<HTMLAttributes<HTMLDivElement>, "color"> & {
   showBg: boolean;
@@ -48,9 +48,9 @@ const Control: FC<ControlProps> = ({
   tlActive,
   ...rest
 }) => {
-  const playerBus = useListenableHook(ElectronServices.Bus.player);
-  const infoBus = useListenableHook(ElectronServices.Bus.info);
-  const progressBus = useListenableHook(ElectronServices.Bus.progress);
+  const playerBus = useListenable(ElectronServices.Bus.player);
+  const infoBus = useListenable(ElectronServices.Bus.info);
+  const progressBus = useListenable(ElectronServices.Bus.progress);
   const titleContainer = useRef<HTMLDivElement>(null);
   const [openColorSelect, setOpenColorSelect] = useState(false);
 

@@ -2,6 +2,7 @@ import { createZustandConfig } from "@mahiru/ui/public/utils/store";
 import Eq from "@mahiru/ui/public/utils/eq";
 import { SpectrumData, SpectrumOptions } from "@mahiru/ui/windows/main/hooks/useSpectrumWorker";
 import AppUI from "@mahiru/ui/public/player/ui";
+import { CacheStore } from "@mahiru/ui/public/store/cache";
 
 export const LayoutStoreConfig = createZustandConfig((set): LayoutStoreType => {
   return {
@@ -11,11 +12,23 @@ export const LayoutStoreConfig = createZustandConfig((set): LayoutStoreType => {
     updateLayout(layout) {
       set((draft) => {
         if (!draft.layout.eq(layout)) draft.layout = layout;
+        requestIdleCallback(() => {
+          CacheStore.browser.setOne("layout.sideBar", layout.sideBar ?? false);
+        });
       });
     },
     updateTheme(theme) {
       set((draft) => {
         if (!draft.theme.eq(theme)) draft.theme = theme;
+        requestIdleCallback(() => {
+          CacheStore.browser.setOne(
+            "layoutStore.theme.backgroundCover",
+            theme.backgroundCover ?? null
+          );
+          CacheStore.browser.setOne("layoutStore.theme.mainColor", theme.mainColor);
+          CacheStore.browser.setOne("layoutStore.theme.secondaryColor", theme.secondaryColor);
+          CacheStore.browser.setOne("layoutStore.theme.textColorOnMain", theme.textColorOnMain);
+        });
       });
     },
     updateOther(other) {
@@ -55,7 +68,7 @@ export class LayoutConfig extends Eq<LayoutConfig> {
     fastLocator?: () => Optional<NormalFunc>;
   }) {
     super();
-    this.sideBar = props?.sideBar ?? false;
+    this.sideBar = props?.sideBar ?? CacheStore.browser.getOne("layout.sideBar") ?? false;
     this.playModal = props?.playModal ?? false;
     this.scrollTop = props?.scrollTop || (() => null);
     this.fastLocator = props?.fastLocator || (() => null);
@@ -101,11 +114,23 @@ export class ThemeConfig extends Eq<ThemeConfig> {
     textColorOnMain: Undefinable<string>;
   }) {
     super();
-    this.backgroundCover = props?.backgroundCover;
+    this.backgroundCover =
+      props?.backgroundCover ??
+      CacheStore.browser.getOne("layoutStore.theme.backgroundCover") ??
+      undefined;
     this.themeColors = props?.themeColors ?? [];
-    this.mainColor = props?.mainColor ?? AppUI.themeDefault.main;
-    this.secondaryColor = props?.secondaryColor ?? AppUI.themeDefault.secondary;
-    this.textColorOnMain = props?.textColorOnMain ?? AppUI.themeDefault.textOnMain;
+    this.mainColor =
+      props?.mainColor ??
+      CacheStore.browser.getOne("layoutStore.theme.mainColor") ??
+      AppUI.themeDefault.main;
+    this.secondaryColor =
+      props?.secondaryColor ??
+      CacheStore.browser.getOne("layoutStore.theme.secondaryColor") ??
+      AppUI.themeDefault.secondary;
+    this.textColorOnMain =
+      props?.textColorOnMain ??
+      CacheStore.browser.getOne("layoutStore.theme.textColorOnMain") ??
+      AppUI.themeDefault.textOnMain;
   }
 
   setBackgroundCover(cover: Undefinable<string>) {

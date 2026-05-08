@@ -8,12 +8,13 @@ import {
   useCallback,
   useEffect,
   useImperativeHandle,
+  useMemo,
   useRef,
   useState
 } from "react";
 import { useRequestAutoRun, useRequestStatusWrap } from "@mahiru/ui/public/hooks/useRequestWrap";
 import { NeteaseArtist, NeteaseTrackRecord } from "@mahiru/ui/public/source/netease/models";
-import ImageConstants from "@mahiru/ui/windows/main/constants/image";
+import ImageConstants from "@mahiru/ui/public/constants/image";
 import NeteaseServices from "@mahiru/ui/public/source/netease/services";
 
 import Header from "./header";
@@ -74,7 +75,12 @@ const Artist: FC<ArtistProps> = ({
     if (artist) onLoadedData?.(artist);
   }, [artist, onLoadedData]);
 
-  const tabsItems = ["歌曲", "专辑"];
+  const tabsItems = useMemo(() => {
+    const tabs = ["热门歌曲", "专辑"];
+    artist?.hotTracks.length && (tabs[0] += ` ${artist?.hotTracks.length}`);
+    artist?.detail.artist.albumSize && (tabs[1] += ` ${artist?.detail.artist.albumSize}`);
+    return tabs;
+  }, [artist?.detail.artist.albumSize, artist?.hotTracks.length]);
   const [activeTab, setActiveTab] = useState(0);
 
   const trackListRef = useRef<Nullable<TrackListRef>>(null);
@@ -118,7 +124,7 @@ const Artist: FC<ArtistProps> = ({
               trackCoverSize={ImageConstants.PlaylistPageTrackCoverSize}
             />
           )}
-          {activeTab === 1 && <AlbumList className="flex-1" id={id} />}
+          {activeTab === 1 && <AlbumList className="flex-1" id={id} onClick={onClickAlbum} />}
         </AppLoading>
       </AppErrorBoundary>
     </div>

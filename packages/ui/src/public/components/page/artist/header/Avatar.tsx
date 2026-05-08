@@ -28,6 +28,7 @@ const Avatar: FC<AvatarProps> = ({ className, artist, onAvatarLoaded }) => {
     <div className={className}>
       <NeteaseImage
         cache
+        preview
         className="h-full rounded-full aspect-square"
         image={avatar}
         cacheLazy={false}

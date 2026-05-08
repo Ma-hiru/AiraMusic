@@ -937,6 +937,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@heroicons/react@npm:^2.2.0":
+  version: 2.2.0
+  resolution: "@heroicons/react@npm:2.2.0"
+  peerDependencies:
+    react: ">= 16 || ^19.0.0-rc"
+  checksum: 10c0/f8d3cf689b56716339c91df3542f3948115042d1e70e6bc940a3f3e347c0bc78b56aa563917fbd7ce097fe2f38ebb21bffb0db39be914cbc545a754bddae9ab4
+  languageName: node
+  linkType: hard
+
 "@humanfs/core@npm:^0.19.1":
   version: 0.19.1
   resolution: "@humanfs/core@npm:0.19.1"
@@ -1284,6 +1293,7 @@ __metadata:
     "@babel/core": "npm:^7.29.0"
     "@emotion/css": "npm:^11.13.5"
     "@eslint/js": "npm:^9.39.1"
+    "@heroicons/react": "npm:^2.2.0"
     "@mahiru/log": "workspace:*"
     "@mahiru/wasm": "workspace:*"
     "@rolldown/plugin-babel": "npm:^0.2.2"

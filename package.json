@@ -88,7 +88,7 @@
   "electronmon": {
     "patterns": [
       "!**/*",
-      "app/dist/**/*"
+      "./packages/app/dist/**/*"
     ]
   },
   "packageManager": "yarn@4.14.1"

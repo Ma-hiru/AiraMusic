@@ -13,7 +13,7 @@ import { cx } from "@emotion/css";
 import { getLayoutStoreSnapshot } from "@mahiru/ui/windows/main/store/layout";
 import { RoutePathMain } from "@mahiru/ui/public/routes";
 import { PlaylistSource } from "@mahiru/ui/public/enum";
-import ImageConstants from "@mahiru/ui/windows/main/constants/image";
+import ImageConstants from "@mahiru/ui/public/constants/image";
 
 import VirtualList, { VirtualListRow } from "@mahiru/ui/public/components/virtual_list/VirtualList";
 

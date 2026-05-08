@@ -6,6 +6,7 @@
     <img
       v-bind="imageAttrs"
       class="w-full h-full object-cover aspect-square"
+      :draggable="props.draggable"
       :src="(source as Nullable<NeteaseNetworkImage | NeteaseLocalImage>)?.src"
       :alt="imageAttrs.alt ?? (source as Nullable<NeteaseNetworkImage | NeteaseLocalImage>)?.alt"
       :class="[props.imageClassName, error && 'invisible']"
@@ -54,6 +55,7 @@
       preview?: boolean;
       image: Optional<NeteaseNetworkImage | NeteaseLocalImage>;
       cache: boolean;
+      draggable?: boolean;
       containerClass?: string;
     }>(),
     {
@@ -61,7 +63,8 @@
       retryDelay: 500,
       retryOnError: true,
       shadow: "base",
-      shadowColor: "light"
+      shadowColor: "light",
+      draggable: false
     }
   );
   const emit = defineEmits<{

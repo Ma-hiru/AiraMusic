@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { NeteaseNetworkImage } from "@mahiru/ui/public/source/netease/models";
 import { RoutePathMain } from "@mahiru/ui/public/routes";
 import { PlaylistSource } from "@mahiru/ui/public/enum";
-import ImageConstants from "@mahiru/ui/windows/main/constants/image";
+import ImageConstants from "@mahiru/ui/public/constants/image";
 
 import NeteaseImage from "@mahiru/ui/public/components/image/NeteaseImage";
 
@@ -32,7 +32,7 @@ const PlaylistItem: FC<RecommendTrackItemProps> = ({ playlist, isMainColorDark, 
         <div className="w-full overflow-hidden relative rounded-md shadow-lg">
           <NeteaseImage
             cache
-            className="w-full rounded-md"
+            className="w-full rounded-md aspect-square"
             image={image}
             shadowColor={isMainColorDark ? "dark" : "light"}
           />
