@@ -1,4 +1,4 @@
-import { FC, memo, MouseEvent as ReactMouseEvent, useCallback, useEffect, useRef } from "react";
+import { FC, memo, useCallback, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { RoutePath, RoutePathMain } from "@mahiru/ui/public/routes";
 import { getLayoutStoreSnapshot } from "@mahiru/ui/windows/main/store/layout";
@@ -10,7 +10,6 @@ import {
   ElectronServicesWindow
 } from "@mahiru/ui/public/source/electron/services";
 import AppEntry from "@mahiru/ui/windows/main/entry";
-import AppContextMenu from "@mahiru/ui/public/components/menu";
 
 import Artist, { ArtistRef } from "@mahiru/ui/public/components/page/artist/Artist";
 
@@ -79,49 +78,12 @@ const ArtistPage: FC<object> = () => {
   );
   const onClickArtist = useCallback(
     (id: number) => {
+      if (id === artistRef.current?.artist?.id) return;
       navigate(RoutePath.withQuery(RoutePathMain.artist, { id }));
     },
     [navigate]
   );
-  // 右键菜单
-  const { create, createTrackContextMenu } = AppContextMenu.useMenu();
-  const onContextMenu = useCallback(
-    (e: ReactMouseEvent<HTMLDivElement, MouseEvent>, track: NeteaseTrackRecord) => {
-      create(createTrackContextMenu, {
-        track,
-        clientX: e.clientX,
-        clientY: e.clientY,
-        onClick: (type, track) => {
-          switch (type) {
-            case "play":
-              onPlay(track);
-              break;
-            case "album":
-              navigate(RoutePath.withQuery(RoutePathMain.album, { id: track.detail.al.id }));
-              break;
-            case "nextPlay":
-              addToPlaylistNext(track);
-              break;
-            case "addPlayList":
-              addToPlaylistLast(track);
-              break;
-            case "comment":
-              void openComment(track);
-              break;
-          }
-        }
-      });
-    },
-    [
-      addToPlaylistLast,
-      addToPlaylistNext,
-      create,
-      createTrackContextMenu,
-      navigate,
-      onPlay,
-      openComment
-    ]
-  );
+
   const { playableManager, heartManager } = useUserTrackManager();
 
   const onPageAction = useCallback(async () => {
@@ -143,11 +105,13 @@ const ArtistPage: FC<object> = () => {
       onClick={onPlay}
       onClickAlbum={onClickAlbum}
       onClickArtist={onClickArtist}
-      onContext={onContextMenu}
       heartManager={heartManager}
       playableManager={playableManager}
       pageActionType="out"
       onPageAction={onPageAction}
+      addToPlaylistNext={addToPlaylistNext}
+      addToPlaylistLast={addToPlaylistLast}
+      openComment={openComment}
     />
   );
 };

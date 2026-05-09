@@ -5,6 +5,7 @@ import { CacheStore } from "@mahiru/ui/public/store/cache";
 import { useListenable } from "@mahiru/ui/public/hooks/useListenable";
 import { useThemeInjectFromBus } from "@mahiru/ui/public/hooks/useThemeInjectFromBus";
 import { ElectronServicesBus } from "@mahiru/ui/public/source/electron/services";
+import AppToast from "@mahiru/ui/public/components/toast";
 
 import Control from "./Control";
 import Title from "./Title";
@@ -94,6 +95,7 @@ const CommentsPage: FC<object> = () => {
           />
         </AppLoading>
       </AppErrorBoundary>
+      <AppToast.Provider className="top-10" />
     </div>
   );
 };

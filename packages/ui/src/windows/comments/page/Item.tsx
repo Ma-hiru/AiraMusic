@@ -3,11 +3,13 @@ import { NeteaseNetworkImage } from "@mahiru/ui/public/source/netease/models";
 import { CommentType, NeteaseImageSize } from "@mahiru/ui/public/enum";
 import { useThemeColor } from "@mahiru/ui/public/hooks/useThemeColor";
 import { ThumbsUp } from "lucide-react";
-import { cx } from "@emotion/css";
 import { NeteaseAPIComment } from "@mahiru/ui/public/source/netease/api";
 
 import NeteaseImage from "@mahiru/ui/public/components/image/NeteaseImage";
 import { FormatNumber } from "@mahiru/ui/public/utils/format";
+import { cx } from "@emotion/css";
+import AppToast from "@mahiru/ui/public/components/toast";
+import { Log } from "@mahiru/ui/public/utils/dev";
 
 interface ItemProps {
   data: NeteaseAPI.NeteaseComment;
@@ -33,13 +35,28 @@ const Item: FC<ItemProps> = ({ data, sourceID, type }) => {
           commentType = CommentType.Playlist;
           break;
       }
-      if (!commentType) return;
-      await NeteaseAPIComment.like({
+      if (commentType == null) return;
+      setLiked(props.like);
+      NeteaseAPIComment.like({
         cid: props.commentID,
         id: sourceID,
         t: props.like ? 1 : 0,
         type: commentType
-      });
+      })
+        .then(() => {
+          AppToast.show({
+            type: "success",
+            text: props.like ? "点赞成功" : "取消点赞成功"
+          });
+        })
+        .catch((err) => {
+          Log.error(err);
+          AppToast.show({
+            type: "error",
+            text: "点赞失败"
+          });
+          setLiked(!props.like);
+        });
     },
     [sourceID, type]
   );
@@ -68,35 +85,27 @@ const Item: FC<ItemProps> = ({ data, sourceID, type }) => {
           <div
             style={{ color: data.liked ? mainColor.string() : undefined }}
             className="text-xs opacity-80 font-medium flex flex-row items-center justify-end gap-1 px-1 py-0.5 rounded-md cursor-pointer">
-            {liked ? (
-              <ThumbsUp
-                className="size-3 inline-block text-red-500"
-                fill="#fb2c36"
-                onClick={async () => {
-                  await like({
-                    commentID: data.commentId,
-                    like: !liked
-                  });
-                  setLiked(false);
-                }}
-              />
-            ) : (
-              <ThumbsUp
-                className="size-3 inline-block text-(--theme-color-main)"
-                onClick={async () => {
-                  await like({
-                    commentID: data.commentId,
-                    like: !liked
-                  });
-                  setLiked(true);
-                }}
-              />
-            )}
-            <span
+            <ThumbsUp
               className={cx(
-                "leading-3",
-                data.liked ? "text-red-500" : "text-(--theme-color-main)"
-              )}>
+                "size-3 inline-block",
+                liked ? "text-red-500" : "text-(--theme-color-main)"
+              )}
+              fill={liked ? "#fb2c36" : "transparent"}
+              onClick={() =>
+                like({
+                  commentID: data.commentId,
+                  like: !liked
+                })
+              }
+            />
+            <span
+              className={cx("leading-3", liked ? "text-red-500" : "text-(--theme-color-main)")}
+              onClick={() =>
+                like({
+                  commentID: data.commentId,
+                  like: !liked
+                })
+              }>
               {FormatNumber.count(data.likedCount)}
             </span>
           </div>

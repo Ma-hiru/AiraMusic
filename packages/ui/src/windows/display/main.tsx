@@ -1,12 +1,15 @@
 import "@mahiru/ui/styles/index.scss";
+import wasm from "@mahiru/wasm";
 import { createRoot } from "react-dom/client";
 import { StrictMode } from "react";
 import App from "./App";
 
-const element = document.getElementById("root")!;
-const root = createRoot(element);
-root.render(
-  <StrictMode>
-    <App />
-  </StrictMode>
-);
+wasm().then(() => {
+  const element = document.getElementById("root")!;
+  const root = createRoot(element);
+  root.render(
+    <StrictMode>
+      <App />
+    </StrictMode>
+  );
+});

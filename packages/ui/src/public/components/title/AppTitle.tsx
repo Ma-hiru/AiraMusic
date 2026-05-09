@@ -7,7 +7,7 @@ interface TitleProps {
   slot?: ReactNode;
 }
 
-const Title: FC<TitleProps> = ({ title, slot, className }) => {
+const AppTitle: FC<TitleProps> = ({ title, slot, className }) => {
   return (
     <div
       className={cx(
@@ -22,4 +22,5 @@ const Title: FC<TitleProps> = ({ title, slot, className }) => {
     </div>
   );
 };
-export default memo(Title);
+
+export default memo(AppTitle);

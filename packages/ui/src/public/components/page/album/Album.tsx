@@ -16,6 +16,8 @@ import { cx } from "@emotion/css";
 import { NeteaseImageSize, PlaylistSource } from "@mahiru/ui/public/enum";
 import { HeartManager } from "@mahiru/ui/public/hooks/useHeart";
 import { NeteaseServicesAlbum } from "@mahiru/ui/public/source/netease/services";
+import { useRequestAutoRun, useRequestStatusWrap } from "@mahiru/ui/public/hooks/useRequestWrap";
+import AppContextMenu from "@mahiru/ui/public/components/menu";
 import ImageConstants from "@mahiru/ui/public/constants/image";
 
 import Top from "./top";
@@ -27,8 +29,6 @@ import TrackList, {
   TrackListPlayableManager,
   TrackListRef
 } from "@mahiru/ui/public/components/track_list/TrackList";
-import { useRequestAutoRun, useRequestStatusWrap } from "@mahiru/ui/public/hooks/useRequestWrap";
-import NeteaseAlbumDynamicDetailResponse = NeteaseAPI.NeteaseAlbumDynamicDetailResponse;
 
 export type AlbumPageRef = {
   trackListRef: Nullable<TrackListRef>;
@@ -42,19 +42,13 @@ interface AlbumPageProps {
   id: number;
   activeTrackID: Undefinable<number>;
   onClick: Optional<NormalFunc<[track: NeteaseTrackRecord | NeteaseHistory, index: number]>>;
-  onContext: Optional<
-    NormalFunc<
-      [
-        e: ReactMouseEvent<HTMLDivElement, MouseEvent>,
-        track: NeteaseTrackRecord | NeteaseHistory,
-        index: number
-      ]
-    >
-  >;
   onClickArtist: Optional<NormalFunc<[id: number]>>;
   onClickAlbum: Optional<NormalFunc<[id: number]>>;
   onRangeUpdate?: NormalFunc<[range: IndexRange]>;
   onCoverLoaded?: NormalFunc<[cover: string]>;
+  addToPlaylistNext: NormalFunc<[track: NeteaseTrackRecord]>;
+  addToPlaylistLast: NormalFunc<[track: NeteaseTrackRecord]>;
+  openComment: NormalFunc<[track: NeteaseTrackRecord]>;
   className?: string;
   coverSize: NeteaseImageSize;
   onAddList: NormalFunc;
@@ -70,7 +64,6 @@ const Album: FC<AlbumPageProps> = ({
   id,
   activeTrackID,
   onClick,
-  onContext,
   onClickArtist,
   onClickAlbum,
   onRangeUpdate,
@@ -82,12 +75,17 @@ const Album: FC<AlbumPageProps> = ({
   heartManager,
   playableManager,
   pageActionType,
-  onPageAction
+  onPageAction,
+  addToPlaylistNext,
+  addToPlaylistLast,
+  openComment
 }) => {
   const requestData = useCallback(
     (
       id: number
-    ): Promise<[Nullable<NeteaseAlbum>, Nullable<NeteaseAlbumDynamicDetailResponse>]> => {
+    ): Promise<
+      [Nullable<NeteaseAlbum>, Nullable<NeteaseAPI.NeteaseAlbumDynamicDetailResponse>]
+    > => {
       if (!id) return Promise.resolve([null, null]);
       return Promise.all([NeteaseServicesAlbum.id(id), NeteaseServicesAlbum.dynamic(id)] as const);
     },
@@ -109,8 +107,48 @@ const Album: FC<AlbumPageProps> = ({
     [album, dynamic, reload]
   );
 
+  // 右键菜单
+  const { create, createTrackContextMenu } = AppContextMenu.useMenu();
+  const onContextMenu = useCallback(
+    (e: ReactMouseEvent<HTMLDivElement, MouseEvent>, track: NeteaseTrackRecord) => {
+      create(createTrackContextMenu, {
+        track,
+        clientX: e.clientX,
+        clientY: e.clientY,
+        onClick: (type, track) => {
+          switch (type) {
+            case "play":
+              onClick?.(track, /* unused */ 0);
+              break;
+            case "album":
+              onClickAlbum?.(track.detail.al.id);
+              break;
+            case "nextPlay":
+              addToPlaylistNext(track);
+              break;
+            case "addPlayList":
+              addToPlaylistLast(track);
+              break;
+            case "comment":
+              void openComment(track);
+              break;
+          }
+        }
+      });
+    },
+    [
+      addToPlaylistLast,
+      addToPlaylistNext,
+      create,
+      createTrackContextMenu,
+      onClick,
+      onClickAlbum,
+      openComment
+    ]
+  );
+
   return (
-    <div className={cx("w-full h-full", className)}>
+    <div className={cx("w-full h-full flex flex-col", className)}>
       <AppErrorBoundary name="Album" canReset className="w-full h-full" toast onReset={reload}>
         <ThrowIf when={status === "error"} message="加载专辑失败" />
         <AppLoading loading={status === "loading"}>
@@ -127,6 +165,7 @@ const Album: FC<AlbumPageProps> = ({
           <Divider />
           {album && (
             <TrackList
+              className="flex-1"
               heartManager={heartManager}
               playableManager={playableManager}
               ref={trackListRef}
@@ -135,7 +174,7 @@ const Album: FC<AlbumPageProps> = ({
               type={PlaylistSource.Album}
               activeID={activeTrackID}
               onClick={onClick}
-              onContext={onContext}
+              onContext={onContextMenu}
               onRangeUpdate={onRangeUpdate}
               onClickAlbum={onClickAlbum}
               onClickArtist={onClickArtist}

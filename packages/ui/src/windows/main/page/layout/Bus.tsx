@@ -207,18 +207,24 @@ const Bus: FC<object> = () => {
 
   const navigate = useNavigate();
   useEffect(() => {
-    return ElectronServicesWindow.get("display").listenMessage("mergeDisplay", ({ id, type }) => {
-      switch (type) {
+    return ElectronServicesWindow.get("display").listenMessage("mergeDisplay", (data) => {
+      switch (data.type) {
         case "album":
-          navigate(RoutePath.withQuery(RoutePathMain.album, { id }));
+          navigate(RoutePath.withQuery(RoutePathMain.album, { id: data.id }));
           break;
         case "artist":
-          navigate(RoutePath.withQuery(RoutePathMain.artist, { id }));
+          navigate(RoutePath.withQuery(RoutePathMain.artist, { id: data.id }));
           break;
         case "playlist":
-          navigate(RoutePathMain.playlist.withQuery(id, PlaylistSource.Normal));
+          navigate(
+            RoutePathMain.playlist.withQuery(
+              data.id,
+              data.source === "like" ? PlaylistSource.Like : PlaylistSource.Normal
+            )
+          );
           break;
       }
+      ElectronServicesWindow.current.focus();
     });
   }, [navigate]);
 

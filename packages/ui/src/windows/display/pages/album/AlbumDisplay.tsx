@@ -1,4 +1,4 @@
-import { FC, memo, MouseEvent as ReactMouseEvent, useCallback, useRef } from "react";
+import { FC, memo, useCallback, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { RoutePath, RoutePathDisplay, RoutePathMain } from "@mahiru/ui/public/routes";
 import { NeteaseTrackRecord } from "@mahiru/ui/public/source/netease/models";
@@ -10,7 +10,6 @@ import {
 import { useListenable } from "@mahiru/ui/public/hooks/useListenable";
 import { useBack } from "@mahiru/ui/windows/display/ctx/back";
 import ImageConstants from "@mahiru/ui/public/constants/image";
-import AppContextMenu from "@mahiru/ui/public/components/menu";
 
 import Album, { AlbumPageRef } from "@mahiru/ui/public/components/page/album/Album";
 
@@ -83,6 +82,7 @@ const AlbumDisplay: FC<object> = () => {
   // 跳转歌手和专辑页
   const onClickAlbum = useCallback(
     (id: number) => {
+      if (id === albumRef.current?.album?.content.id) return;
       navigate(RoutePath.withQuery(RoutePathDisplay.album, { id }));
     },
     [navigate]
@@ -92,45 +92,6 @@ const AlbumDisplay: FC<object> = () => {
       navigate(RoutePath.withQuery(RoutePathDisplay.artist, { id }));
     },
     [navigate]
-  );
-  // 右键菜单
-  const { create, createTrackContextMenu } = AppContextMenu.useMenu();
-  const onContextMenu = useCallback(
-    (e: ReactMouseEvent<HTMLDivElement, MouseEvent>, track: NeteaseTrackRecord) => {
-      create(createTrackContextMenu, {
-        track,
-        clientX: e.clientX,
-        clientY: e.clientY,
-        onClick: (type, track) => {
-          switch (type) {
-            case "play":
-              onPlay(track);
-              break;
-            case "album":
-              navigate(RoutePath.withQuery(RoutePathMain.album, { id: track.detail.al.id }));
-              break;
-            case "nextPlay":
-              addToPlaylistNext(track);
-              break;
-            case "addPlayList":
-              addToPlaylistLast(track);
-              break;
-            case "comment":
-              void openComment(track);
-              break;
-          }
-        }
-      });
-    },
-    [
-      addToPlaylistLast,
-      addToPlaylistNext,
-      create,
-      createTrackContextMenu,
-      navigate,
-      onPlay,
-      openComment
-    ]
   );
 
   const { markBack } = useBack();
@@ -147,19 +108,21 @@ const AlbumDisplay: FC<object> = () => {
     <Album
       id={id}
       ref={albumRef}
-      className="router-container"
+      className="w-full h-full"
       heartManager={heartManager}
       playableManager={playableManager}
       activeTrackID={playerBus.data?.track?.id}
       onClick={onPlay}
       onClickAlbum={onClickAlbum}
       onClickArtist={onClickArtist}
-      onContext={onContextMenu}
       onAddList={onAddList}
       onPlayAll={onReplace}
       pageActionType="out"
       onPageAction={onPageAction}
       coverSize={ImageConstants.AlbumPageCoverSize}
+      addToPlaylistLast={addToPlaylistLast}
+      addToPlaylistNext={addToPlaylistNext}
+      openComment={openComment}
     />
   );
 };

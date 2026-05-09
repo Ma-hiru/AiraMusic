@@ -4,6 +4,7 @@ import { HeartManager } from "@mahiru/ui/public/hooks/useHeart";
 import {
   FC,
   memo,
+  MouseEvent as ReactMouseEvent,
   Ref,
   useCallback,
   useEffect,
@@ -15,6 +16,7 @@ import {
 import { useRequestAutoRun, useRequestStatusWrap } from "@mahiru/ui/public/hooks/useRequestWrap";
 import { NeteaseArtist, NeteaseTrackRecord } from "@mahiru/ui/public/source/netease/models";
 import { NeteaseServicesArtist } from "@mahiru/ui/public/source/netease/services";
+import AppContextMenu from "@mahiru/ui/public/components/menu";
 import ImageConstants from "@mahiru/ui/public/constants/image";
 
 import Header from "./header";
@@ -24,7 +26,6 @@ import AppLoading from "@mahiru/ui/public/components/fallback/AppLoading";
 import ThrowIf from "@mahiru/ui/public/components/fallback/ThrowIf";
 import TrackList, {
   TrackListClickFunc,
-  TrackListContextMenuFunc,
   TrackListPlayableManager,
   TrackListRef
 } from "@mahiru/ui/public/components/track_list";
@@ -45,9 +46,11 @@ interface ArtistProps {
   heartManager: Optional<HeartManager>;
   playableManager: Optional<TrackListPlayableManager>;
   onClick: Optional<TrackListClickFunc<NeteaseTrackRecord>>;
-  onContext: Optional<TrackListContextMenuFunc<NeteaseTrackRecord>>;
   onClickArtist: Optional<NormalFunc<[id: number]>>;
   onClickAlbum: Optional<NormalFunc<[id: number]>>;
+  addToPlaylistNext: NormalFunc<[track: NeteaseTrackRecord]>;
+  addToPlaylistLast: NormalFunc<[track: NeteaseTrackRecord]>;
+  openComment: NormalFunc<[track: NeteaseTrackRecord]>;
   pageActionType?: "enter" | "out" | "none";
   onPageAction?: NormalFunc;
 }
@@ -62,11 +65,13 @@ const Artist: FC<ArtistProps> = ({
   heartManager,
   playableManager,
   onClick,
-  onContext,
   onClickArtist,
   onClickAlbum,
   pageActionType,
-  onPageAction
+  onPageAction,
+  addToPlaylistNext,
+  addToPlaylistLast,
+  openComment
 }) => {
   const requestData = useCallback((id: number) => {
     if (id <= 0 || !id) return Promise.resolve(null);
@@ -98,8 +103,55 @@ const Artist: FC<ArtistProps> = ({
     [artist, reload]
   );
 
+  const [trackListMounted, setTrackListMounted] = useState(false);
+  const [albumListMounted, setAlbumListMounted] = useState(false);
+  useEffect(() => {
+    if (activeTab === 0) setTrackListMounted(true);
+    else setAlbumListMounted(true);
+  }, [activeTab]);
+
+  // 右键菜单
+  const { create, createTrackContextMenu } = AppContextMenu.useMenu();
+  const onContextMenu = useCallback(
+    (e: ReactMouseEvent<HTMLDivElement, MouseEvent>, track: NeteaseTrackRecord) => {
+      create(createTrackContextMenu, {
+        track,
+        clientX: e.clientX,
+        clientY: e.clientY,
+        onClick: (type, track) => {
+          switch (type) {
+            case "play":
+              onClick?.(track, /* unused */ 0);
+              break;
+            case "album":
+              onClickAlbum?.(track.detail.al.id);
+              break;
+            case "nextPlay":
+              addToPlaylistNext(track);
+              break;
+            case "addPlayList":
+              addToPlaylistLast(track);
+              break;
+            case "comment":
+              void openComment(track);
+              break;
+          }
+        }
+      });
+    },
+    [
+      addToPlaylistLast,
+      addToPlaylistNext,
+      create,
+      createTrackContextMenu,
+      onClick,
+      onClickAlbum,
+      openComment
+    ]
+  );
+
   return (
-    <div className={cx("overflow-hidden flex flex-col ", className)}>
+    <div className={cx("flex flex-col ", className)}>
       <AppErrorBoundary name="Artist" canReset toast onReset={reload}>
         <ThrowIf when={status === "error"} message="歌手加载失败" />
         <AppLoading loading={status === "loading"}>
@@ -113,11 +165,11 @@ const Artist: FC<ArtistProps> = ({
             pageActionType={pageActionType}
             onPageAction={onPageAction}
           />
-          {activeTab === 0 && (
+          {trackListMounted && (
             <TrackList
               ref={trackListRef}
               id={id}
-              className="flex-1"
+              className={cx("flex-1", activeTab !== 0 && "hidden")}
               activeID={activeTrackID}
               tracks={artist?.hotTracks ?? []}
               type={PlaylistSource.Normal}
@@ -126,11 +178,17 @@ const Artist: FC<ArtistProps> = ({
               onClickAlbum={onClickAlbum}
               onClickArtist={onClickArtist}
               onClick={onClick}
-              onContext={onContext}
+              onContext={onContextMenu}
               trackCoverSize={ImageConstants.PlaylistPageTrackCoverSize}
             />
           )}
-          {activeTab === 1 && <AlbumList className="flex-1" id={id} onClick={onClickAlbum} />}
+          {albumListMounted && (
+            <AlbumList
+              className={cx("flex-1 pb-4 pt-2", activeTab !== 1 && "hidden")}
+              id={id}
+              onClick={onClickAlbum}
+            />
+          )}
         </AppLoading>
       </AppErrorBoundary>
     </div>

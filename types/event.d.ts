@@ -131,10 +131,16 @@ type MessageTypeMap = {
     alt?: string;
   };
   updateBus: "info" | "player" | "progress";
-  displayBus: {
-    id: number;
-    type: "playlist" | "album" | "artist";
-  };
+  displayBus:
+    | {
+        id: number;
+        type: "album" | "artist";
+      }
+    | {
+        id: number;
+        type: "playlist";
+        source: "normal" | "like";
+      };
   mergeDisplay: MessageTypeMap["displayBus"];
   playerChangeBus:
     | {

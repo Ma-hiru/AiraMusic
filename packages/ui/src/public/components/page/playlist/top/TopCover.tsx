@@ -1,6 +1,5 @@
 import { FC, memo, ReactEventHandler, useCallback, useMemo } from "react";
 import { Headphones } from "lucide-react";
-import { useLayoutStore } from "@mahiru/ui/windows/main/store/layout";
 import { NeteaseNetworkImage, NeteasePlaylist } from "@mahiru/ui/public/source/netease/models";
 import ImageConstants from "@mahiru/ui/public/constants/image";
 
@@ -9,15 +8,15 @@ import NeteaseImage from "@mahiru/ui/public/components/image/NeteaseImage";
 interface TopCoverProps {
   summary: Nullable<NeteasePlaylist>;
   coverCacheKey?: string;
+  onCoverLoaded?: NormalFunc<[src: string]>;
 }
 
-const TopCover: FC<TopCoverProps> = ({ summary, coverCacheKey }) => {
-  const { theme, updateTheme } = useLayoutStore();
+const TopCover: FC<TopCoverProps> = ({ summary, coverCacheKey, onCoverLoaded }) => {
   const onLoad = useCallback<ReactEventHandler<HTMLImageElement>>(
     (e) => {
-      updateTheme(theme.copy().setBackgroundCover(e.currentTarget.src));
+      onCoverLoaded?.(e.currentTarget.src);
     },
-    [theme, updateTheme]
+    [onCoverLoaded]
   );
   const image = useMemo(
     () =>

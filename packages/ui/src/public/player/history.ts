@@ -46,7 +46,10 @@ export default class AppHistory extends Listenable {
   }
 
   toSearchStruct() {
-    return NeteaseTrack.toSearchStructString(this.list.map((h) => new NeteaseTrack(h.detail)));
+    return AppHistory.toSearchStruct(this.list);
+  }
+  static toSearchStruct(list: NeteaseHistory[]) {
+    return NeteaseTrack.toSearchStructString(list.map((h) => new NeteaseTrack(h.detail)));
   }
 
   static save(instance: AppHistory) {

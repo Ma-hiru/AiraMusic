@@ -1,12 +1,12 @@
 import { FC, memo } from "react";
 
 import Content from "./Content";
-import Title from "@mahiru/ui/windows/main/componets/Title";
+import AppTitle from "@mahiru/ui/public/components/title/AppTitle";
 
 const HomePage: FC<object> = () => {
   return (
     <div className="router-container">
-      <Title title="推荐" />
+      <AppTitle title="推荐" />
       <Content />
     </div>
   );
