@@ -1,5 +1,5 @@
-import NeteaseAPI from "@mahiru/ui/public/source/netease/api";
 import NeteaseTrackSource from "@mahiru/ui/public/source/netease/services/track";
+import { NeteaseAPIPlaylist } from "@mahiru/ui/public/source/netease/api";
 import { NeteasePlaylist, NeteasePlaylistSummary } from "@mahiru/ui/public/source/netease/models";
 import { CacheStore } from "@mahiru/ui/public/store/cache";
 import { LRUCacheWithTime } from "@mahiru/ui/public/utils/lru";
@@ -97,7 +97,7 @@ export default class _NeteasePlaylistSource {
     const cache = this.memoryCache.get(cachedID);
     if (cache) return Promise.resolve(cache);
 
-    return NeteaseAPI.Playlist.detail(id, signal)
+    return NeteaseAPIPlaylist.detail(id, signal)
       .then((response) => _NeteasePlaylistSource.response(response))
       .then((response) => {
         this.memoryCache.set(cachedID, response);

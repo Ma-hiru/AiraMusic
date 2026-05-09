@@ -14,8 +14,8 @@ import {
 } from "react";
 import { useRequestAutoRun, useRequestStatusWrap } from "@mahiru/ui/public/hooks/useRequestWrap";
 import { NeteaseArtist, NeteaseTrackRecord } from "@mahiru/ui/public/source/netease/models";
+import { NeteaseServicesArtist } from "@mahiru/ui/public/source/netease/services";
 import ImageConstants from "@mahiru/ui/public/constants/image";
-import NeteaseServices from "@mahiru/ui/public/source/netease/services";
 
 import Header from "./header";
 import AlbumList from "./album";
@@ -48,6 +48,8 @@ interface ArtistProps {
   onContext: Optional<TrackListContextMenuFunc<NeteaseTrackRecord>>;
   onClickArtist: Optional<NormalFunc<[id: number]>>;
   onClickAlbum: Optional<NormalFunc<[id: number]>>;
+  pageActionType?: "enter" | "out" | "none";
+  onPageAction?: NormalFunc;
 }
 
 const Artist: FC<ArtistProps> = ({
@@ -62,11 +64,13 @@ const Artist: FC<ArtistProps> = ({
   onClick,
   onContext,
   onClickArtist,
-  onClickAlbum
+  onClickAlbum,
+  pageActionType,
+  onPageAction
 }) => {
   const requestData = useCallback((id: number) => {
     if (id <= 0 || !id) return Promise.resolve(null);
-    return NeteaseServices.Artist.id(id);
+    return NeteaseServicesArtist.id(id);
   }, []);
   const { status, data: artist, fetchData } = useRequestStatusWrap(requestData);
   const { reload } = useRequestAutoRun(fetchData, [id]);
@@ -106,6 +110,8 @@ const Artist: FC<ArtistProps> = ({
             tabsItem={tabsItems}
             activeIndex={activeTab}
             onChange={setActiveTab}
+            pageActionType={pageActionType}
+            onPageAction={onPageAction}
           />
           {activeTab === 0 && (
             <TrackList

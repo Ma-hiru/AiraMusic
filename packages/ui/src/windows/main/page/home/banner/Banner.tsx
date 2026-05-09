@@ -4,9 +4,11 @@ import { BannerType, PlaylistSource } from "@mahiru/ui/public/enum";
 import { Log } from "@mahiru/ui/public/utils/dev";
 import { NeteaseTrackRecord, NeteaseURL } from "@mahiru/ui/public/source/netease/models";
 import { useNavigate } from "react-router-dom";
-import NeteaseAPI from "@mahiru/ui/public/source/netease/api";
-import NeteaseServices from "@mahiru/ui/public/source/netease/services";
-import ElectronServices from "@mahiru/ui/public/source/electron/services";
+import { NeteaseAPIHome } from "@mahiru/ui/public/source/netease/api";
+import { NeteaseServicesTrack } from "@mahiru/ui/public/source/netease/services";
+import { ElectronServicesIPC } from "@mahiru/ui/public/source/electron/services";
+import { RoutePath, RoutePathMain } from "@mahiru/ui/public/routes";
+import { useRequestAutoRetry, useRequestStatusWrap } from "@mahiru/ui/public/hooks/useRequestWrap";
 import AppEntry from "@mahiru/ui/windows/main/entry";
 
 import Carousel from "@mahiru/ui/public/components/public/Carousel";
@@ -14,12 +16,10 @@ import AppErrorBoundary, {
   AppErrorBoundaryRef
 } from "@mahiru/ui/public/components/fallback/AppErrorBoundary";
 import ThrowIf from "@mahiru/ui/public/components/fallback/ThrowIf";
-import { RoutePath, RoutePathMain } from "@mahiru/ui/public/routes";
-import { useRequestAutoRetry, useRequestStatusWrap } from "@mahiru/ui/public/hooks/useRequestWrap";
 
 const Banner: FC<object> = () => {
   const { textColorOnMain } = useThemeColor();
-  const { status, data, fetchData } = useRequestStatusWrap(NeteaseAPI.Home.banner);
+  const { status, data, fetchData } = useRequestStatusWrap(NeteaseAPIHome.banner);
   const { reload } = useRequestAutoRetry(fetchData, [], () => banner.length !== 0);
   const banner = useMemo(() => data?.banners ?? [], [data?.banners]);
   const errRef = useRef<AppErrorBoundaryRef>({});
@@ -35,7 +35,7 @@ const Banner: FC<object> = () => {
       switch (type) {
         case BannerType.song: {
           if (player.current.track?.id === id) return;
-          const track = await NeteaseServices.Track.idEnsure(id);
+          const track = await NeteaseServicesTrack.idEnsure(id);
           const record = new NeteaseTrackRecord({
             detail: track,
             sourceID: -1,
@@ -46,7 +46,7 @@ const Banner: FC<object> = () => {
           return;
         }
         case BannerType.web: {
-          ElectronServices.IPC.Event.normal.openExternalLink({
+          ElectronServicesIPC.Event.normal.openExternalLink({
             url: item.url,
             title: item.typeTitle
           });

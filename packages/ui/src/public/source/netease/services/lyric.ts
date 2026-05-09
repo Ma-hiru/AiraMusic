@@ -1,4 +1,4 @@
-import NeteaseAPI from "@mahiru/ui/public/source/netease/api";
+import { NeteaseAPILyric } from "@mahiru/ui/public/source/netease/api";
 import { Log } from "@mahiru/ui/public/utils/dev";
 import { NeteaseLyric, NeteaseTrack } from "@mahiru/ui/public/source/netease/models";
 import { CacheStore } from "@mahiru/ui/public/store/cache";
@@ -28,8 +28,8 @@ export default class _NeteaseLyricSource {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 1500);
     const [ttml, response] = await Promise.allSettled([
-      NeteaseAPI.Lyric.getTTM(id, controller.signal),
-      NeteaseAPI.Lyric.getYRC(id)
+      NeteaseAPILyric.getTTM(id, controller.signal),
+      NeteaseAPILyric.getYRC(id)
     ]).finally(() => clearTimeout(timer));
 
     let lyric = NeteaseLyric.blankLyric;

@@ -16,10 +16,9 @@
 <script setup lang="ts" name="NeteaseImage">
   import { computed, ImgHTMLAttributes, onUnmounted, ref, useAttrs, watch } from "vue";
   import { NeteaseLocalImage, NeteaseNetworkImage } from "@mahiru/ui/public/source/netease/models";
-
   import { NeteaseImageSize } from "@mahiru/ui/public/enum";
-  import NeteaseServices from "@mahiru/ui/public/source/netease/services";
-  import ElectronServices from "@mahiru/ui/public/source/electron/services";
+  import { NeteaseServicesImage } from "@mahiru/ui/public/source/netease/services";
+  import { ElectronServicesWindow } from "@mahiru/ui/public/source/electron/services";
 
   type ShadowLevel = "none" | "base" | "float";
   type ShadowColor = "light" | "dark";
@@ -121,7 +120,7 @@
 
   async function wrapClick(e: MouseEvent) {
     if (props.preview && props.image) {
-      const imageWindow = ElectronServices.Window.from("image");
+      const imageWindow = ElectronServicesWindow.get("image");
       const sendImage = props.image.toNetworkImage().setSize(NeteaseImageSize.raw);
       await imageWindow.openAwait();
       imageWindow.send("imageCheckerBus", {
@@ -145,7 +144,7 @@
     [() => props.pause, () => props.image?.src],
     () => {
       if (!props.image) return;
-      NeteaseServices.Image.local(props.image, props.cache).then((local) => {
+      NeteaseServicesImage.local(props.image, props.cache).then((local) => {
         if (local) {
           source.value = local;
         } else {

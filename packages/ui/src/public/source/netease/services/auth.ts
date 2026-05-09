@@ -1,8 +1,11 @@
 import { Log } from "@mahiru/ui/public/utils/dev";
 import { NeteaseUser, NeteaseUserModel } from "@mahiru/ui/public/source/netease/models";
 import { userStoreSnapshot } from "@mahiru/ui/public/store/user";
-import NeteaseServices from "@mahiru/ui/public/source/netease/services";
-import ElectronServices from "@mahiru/ui/public/source/electron/services";
+import { NeteaseServicesUser } from "@mahiru/ui/public/source/netease/services";
+import {
+  ElectronServicesNet,
+  ElectronServicesWindow
+} from "@mahiru/ui/public/source/electron/services";
 import HTTPConstants from "@mahiru/ui/public/constants/http";
 import AppToast from "@mahiru/ui/public/components/toast";
 
@@ -20,7 +23,7 @@ export default class _NeteaseAuth {
   }
 
   static login(cookies: Optional<string>) {
-    return NeteaseServices.User.cookies(cookies).then(_NeteaseAuth.update);
+    return NeteaseServicesUser.cookies(cookies).then(_NeteaseAuth.update);
   }
 
   static get isLoggedIn() {
@@ -28,7 +31,7 @@ export default class _NeteaseAuth {
   }
 
   static async createLoginWindow() {
-    const loginWindow = ElectronServices.Window.from("login");
+    const loginWindow = ElectronServicesWindow.get("login");
     if (!NeteaseUser.isLoggedIn) {
       loginWindow.removeMessageHandler("login");
       await loginWindow.openAwait();
@@ -49,11 +52,11 @@ export default class _NeteaseAuth {
   }
 
   static refresh(user: NeteaseUser | NeteaseUserModel) {
-    return NeteaseServices.User.refresh(user.profile).then(_NeteaseAuth.update);
+    return NeteaseServicesUser.refresh(user.profile).then(_NeteaseAuth.update);
   }
 
   static logout() {
-    return NeteaseServices.User.logout().then(() => {
+    return NeteaseServicesUser.logout().then(() => {
       _NeteaseAuth.userStore.updateUser(null);
       window.location.pathname = "/";
     });
@@ -73,7 +76,7 @@ export default class _NeteaseAuth {
 
     const endRetry = () => {
       _NeteaseAuth.retryEnabled = false;
-      ElectronServices.Net.offOnlineChange("setup_user");
+      ElectronServicesNet.offOnlineChange("setup_user");
       _NeteaseAuth.retryTimer && window.clearInterval(_NeteaseAuth.retryTimer);
     };
     const doTrySetup = () => {
@@ -92,8 +95,8 @@ export default class _NeteaseAuth {
         });
     };
 
-    if (!ElectronServices.Net.isOnline) {
-      ElectronServices.Net.onOnlineChange(doTrySetup, { id: "setup_user" });
+    if (!ElectronServicesNet.isOnline) {
+      ElectronServicesNet.onOnlineChange(doTrySetup, { id: "setup_user" });
     } else {
       _NeteaseAuth.retryTimer && window.clearInterval(_NeteaseAuth.retryTimer);
       _NeteaseAuth.retryTimer = window.setInterval(doTrySetup, HTTPConstants.Timeout);
@@ -106,7 +109,7 @@ export default class _NeteaseAuth {
       _NeteaseAuth.hasSetup = true;
       _NeteaseAuth.createLoginWindow();
       return Promise.resolve();
-    } else if (!ElectronServices.Net.isOnline) {
+    } else if (!ElectronServicesNet.isOnline) {
       AppToast.show({
         type: "error",
         text: "当前无网络连接，无法获取用户信息，请检查网络连接"

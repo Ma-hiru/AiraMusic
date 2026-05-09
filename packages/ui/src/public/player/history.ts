@@ -1,6 +1,6 @@
 import { NeteaseHistory, NeteaseTrack } from "@mahiru/ui/public/source/netease/models";
 import { Listenable } from "@mahiru/ui/public/utils/listenable";
-import NeteaseAPI from "@mahiru/ui/public/source/netease/api";
+import { NeteaseAPITrack } from "@mahiru/ui/public/source/netease/api";
 
 export default class AppHistory extends Listenable {
   readonly list;
@@ -30,7 +30,7 @@ export default class AppHistory extends Listenable {
     if (exitsPos !== -1) this.list.splice(exitsPos, 1);
     this.list.unshift(record);
     if (record.sourceName === "playlist" || record.sourceName === "album") {
-      void NeteaseAPI.Track.scrobble({
+      void NeteaseAPITrack.scrobble({
         id: record.id,
         sourceid: record.sourceID,
         time: Math.floor(record.playDuration / 1000)

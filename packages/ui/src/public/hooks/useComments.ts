@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { RequestStatus } from "@mahiru/ui/public/hooks/useRequestWrap";
 import { useLatestRef } from "@mahiru/ui/public/hooks/useLatestRef";
 import { Log } from "@mahiru/ui/public/utils/dev";
-import NCM from "@mahiru/ui/public/source/netease/api";
+import { NeteaseAPIComment } from "@mahiru/ui/public/source/netease/api";
 
 export type CommentState = {
   data: NeteaseAPI.NeteaseComment[];
@@ -41,7 +41,7 @@ export function useComments(props: {
     if (!hasMore || isLoading) return;
 
     setStatus("loading");
-    NCM.Comment.get({
+    NeteaseAPIComment.get({
       id,
       pageNo: currentPageNo + 1,
       pageSize: pageSize || 25,

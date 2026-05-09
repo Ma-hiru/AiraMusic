@@ -1,19 +1,19 @@
 import { FC, memo, useCallback, useEffect, useMemo, useRef } from "react";
 import { useLayoutStore } from "@mahiru/ui/windows/main/store/layout";
-import AppLoading from "@mahiru/ui/public/components/fallback/AppLoading";
+import { NeteaseAPITrack } from "@mahiru/ui/public/source/netease/api";
+import { useRequestAutoRetry, useRequestStatusWrap } from "@mahiru/ui/public/hooks/useRequestWrap";
 
 import RecommendTrackTitle from "./RecommendTrackTitle";
 import RecommendTrackList from "./list";
-import NeteaseAPI from "@mahiru/ui/public/source/netease/api";
 import AppErrorBoundary, {
   AppErrorBoundaryRef
 } from "@mahiru/ui/public/components/fallback/AppErrorBoundary";
 import ThrowIf from "@mahiru/ui/public/components/fallback/ThrowIf";
-import { useRequestAutoRetry, useRequestStatusWrap } from "@mahiru/ui/public/hooks/useRequestWrap";
+import AppLoading from "@mahiru/ui/public/components/fallback/AppLoading";
 
 const DailyRecommendTracks: FC<object> = () => {
   const { theme, updateTheme } = useLayoutStore();
-  const { status, data, fetchData } = useRequestStatusWrap(NeteaseAPI.Track.recommendDaily);
+  const { status, data, fetchData } = useRequestStatusWrap(NeteaseAPITrack.recommendDaily);
   const { reload } = useRequestAutoRetry(
     fetchData,
     [],

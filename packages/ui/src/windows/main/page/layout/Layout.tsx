@@ -3,11 +3,12 @@ import { useStage } from "@mahiru/ui/public/hooks/useStage";
 import { useAppLoaded } from "@mahiru/ui/public/hooks/useAppLoaded";
 import { Stage } from "@mahiru/ui/public/enum";
 import { useUser } from "@mahiru/ui/public/store/user";
-import NeteaseServices from "@mahiru/ui/public/source/netease/services";
-
+import { NeteaseServicesAuth } from "@mahiru/ui/public/source/netease/services";
 import AppToast from "@mahiru/ui/public/components/toast";
-import MenuProvider from "@mahiru/ui/public/components/menu/MenuProvider";
+import AppContextMenu from "@mahiru/ui/public/components/menu";
+
 import AppErrorBoundary from "@mahiru/ui/public/components/fallback/AppErrorBoundary";
+import AppMask from "@mahiru/ui/public/components/fallback/AppMask";
 import TopBar from "./top";
 import PlayerBar from "./bar";
 import NavSide from "./nav";
@@ -17,22 +18,22 @@ import PlayerModal from "./Modal";
 import Background from "./Background";
 import MusicSource from "./MusicSource";
 import Bus from "./Bus";
-import Mask from "./Mask";
 
 const Layout: FC<object> = () => {
   const { stage } = useStage();
   const user = useUser();
   useAppLoaded();
   useEffect(() => {
-    !user?.isLoggedIn && NeteaseServices.Auth.createLoginWindow();
+    !user?.isLoggedIn && NeteaseServicesAuth.createLoginWindow();
   }, [user?.isLoggedIn]);
+
   return (
     <div
       className={`
         relative w-screen h-screen overflow-hidden scrollbar-hide
         flex flex-row flex-nowrap
     `}>
-      {stage < Stage.Finally && <Mask className="z-40" />}
+      {stage < Stage.Finally && <AppMask className="z-40 bg-white" />}
       <TopBar className="h-(--top-control-height) z-30 contain-strict" />
       <NavSide />
       <Content />
@@ -41,7 +42,7 @@ const Layout: FC<object> = () => {
       <AppErrorBoundary name="Widget" showError={false} autoReset panicAfterReset>
         {stage >= Stage.Immediately && <Background className="-z-10" />}
         {stage >= Stage.Immediately && <AppToast.Provider className="z-35" />}
-        {stage >= Stage.Immediately && <MenuProvider className="z-15" />}
+        {stage >= Stage.Immediately && <AppContextMenu.Provider className="z-15" />}
         {stage >= Stage.Second && <Float className="z-10" />}
       </AppErrorBoundary>
       <AppErrorBoundary name="PlayerSource" panic>

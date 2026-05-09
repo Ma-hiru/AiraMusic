@@ -1,6 +1,6 @@
 import { NeteaseTrack } from "./NeteaseTrack";
 import { TrackQuality } from "@mahiru/ui/public/enum";
-import NeteaseAPI from "@mahiru/ui/public/source/netease/api";
+import { NeteaseAPITrack } from "@mahiru/ui/public/source/netease/api";
 
 export class NeteaseNetworkAudio {
   readonly url: string;
@@ -27,7 +27,7 @@ export class NeteaseNetworkAudio {
 
   static async fromTrack(track: NeteaseTrack, preference: TrackQuality) {
     track = NeteaseTrack.fromObject(track);
-    const urlResponse = await NeteaseAPI.Track.url(track.id, track.quality(preference));
+    const urlResponse = await NeteaseAPITrack.url(track.id, track.quality(preference));
     const meta = urlResponse.data[0];
     if (!meta) return null;
     return new NeteaseNetworkAudio({

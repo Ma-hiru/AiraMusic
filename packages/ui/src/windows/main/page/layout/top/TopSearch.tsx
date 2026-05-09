@@ -1,21 +1,21 @@
 import { FC, memo, useEffect, useState } from "react";
 import { Search } from "lucide-react";
+import { NeteaseAPISearch } from "@mahiru/ui/public/source/netease/api";
 import NoDrag from "@mahiru/ui/public/components/drag/NoDrag";
-import NeteaseAPI from "@mahiru/ui/public/source/netease/api";
 
 const TopSearch: FC<object> = () => {
   const [defaultKeywords, setDefaultKeywords] =
     useState<Nullable<NeteaseAPI.NeteaseSearchDefaultKeywords>>(null);
 
   useEffect(() => {
-    NeteaseAPI.Search.defaultKeywords().then((response) => {
+    NeteaseAPISearch.defaultKeywords().then((response) => {
       setDefaultKeywords(response.data);
     });
   }, []);
 
   useEffect(() => {
     const timer = setInterval(() => {
-      NeteaseAPI.Search.defaultKeywords().then((response) => {
+      NeteaseAPISearch.defaultKeywords().then((response) => {
         setDefaultKeywords(response.data);
       });
     }, 60000);

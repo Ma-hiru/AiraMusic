@@ -20,20 +20,23 @@ import { Log } from "@mahiru/ui/public/utils/dev";
 import { NeteaseImageSize } from "@mahiru/ui/public/enum";
 import { SearchTrack } from "@mahiru/wasm";
 import { cx } from "@emotion/css";
-import TrackList, {
-  TrackListClickFunc,
-  TrackListContextMenuFunc,
-  TrackListRef
-} from "@mahiru/ui/public/components/track_list";
 import { useUser } from "@mahiru/ui/public/store/user";
 import { getLayoutStoreSnapshot, useLayoutStore } from "@mahiru/ui/windows/main/store/layout";
 import { useUpdate } from "@mahiru/ui/public/hooks/useUpdate";
 import { RoutePath, RoutePathMain } from "@mahiru/ui/public/routes";
+import { useUserTrackManager } from "@mahiru/ui/public/hooks/useUserTrackManager";
+import {
+  NeteaseServicesImage,
+  NeteaseServicesPlaylist
+} from "@mahiru/ui/public/source/netease/services";
+import {
+  ElectronServicesBus,
+  ElectronServicesNet,
+  ElectronServicesWindow
+} from "@mahiru/ui/public/source/electron/services";
 import AppEntry from "@mahiru/ui/windows/main/entry";
 import AppContextMenu from "@mahiru/ui/public/components/menu";
 import AppToast from "@mahiru/ui/public/components/toast";
-import NeteaseServices from "@mahiru/ui/public/source/netease/services";
-import ElectronServices from "@mahiru/ui/public/source/electron/services";
 import ImageConstants from "@mahiru/ui/public/constants/image";
 
 import Top from "./top";
@@ -41,7 +44,11 @@ import Divider from "./Divider";
 import AppErrorBoundary from "@mahiru/ui/public/components/fallback/AppErrorBoundary";
 import ThrowIf from "@mahiru/ui/public/components/fallback/ThrowIf";
 import AppLoading from "@mahiru/ui/public/components/fallback/AppLoading";
-import { useUserTrackManager } from "@mahiru/ui/public/hooks/useUserTrackManager";
+import TrackList, {
+  TrackListClickFunc,
+  TrackListContextMenuFunc,
+  TrackListRef
+} from "@mahiru/ui/public/components/track_list";
 
 const PlaylistPage: FC<object> = () => {
   const user = useUser();
@@ -103,8 +110,8 @@ const PlaylistPage: FC<object> = () => {
   );
   const openComment = useCallback(async (track: NeteaseTrackRecord) => {
     if (!track) return;
-    await ElectronServices.Window.from("comments").openAwait();
-    ElectronServices.Bus.comment.send({
+    await ElectronServicesWindow.get("comments").openAwait();
+    ElectronServicesBus.comment.send({
       id: track.id,
       type: "track"
     });
@@ -134,7 +141,7 @@ const PlaylistPage: FC<object> = () => {
       });
       for (const image of images) {
         if (signal?.aborted) return;
-        void NeteaseServices.Image.download(image);
+        void NeteaseServicesImage.download(image);
       }
     },
     []
@@ -190,7 +197,7 @@ const PlaylistPage: FC<object> = () => {
     }
   }, [fastLocator, player, tracks, updateLayout]);
   // 右键菜单
-  const { create, createTrackContextMenu } = AppContextMenu.use();
+  const { create, createTrackContextMenu } = AppContextMenu.useMenu();
   const onContextMenu = useCallback<TrackListContextMenuFunc>(
     (e, track) => {
       create(createTrackContextMenu, {
@@ -253,7 +260,7 @@ const PlaylistPage: FC<object> = () => {
     if (source === "normal" || source === "like") {
       const playlistID = source === "like" ? user?.likedPlaylist.id : Number(id);
       if (playlistID) {
-        NeteaseServices.Playlist.id(playlistID)
+        NeteaseServicesPlaylist.id(playlistID)
           .then((list) => {
             startTransition(() => {
               if (cancel) return;
@@ -299,8 +306,8 @@ const PlaylistPage: FC<object> = () => {
     update.count
   ]);
   useEffect(() => {
-    return ElectronServices.Net.onOnlineChange(() => {
-      ElectronServices.Net.isOnline && reload();
+    return ElectronServicesNet.onOnlineChange(() => {
+      ElectronServicesNet.isOnline && reload();
     });
   }, [reload]);
   // 跳转歌手和专辑页

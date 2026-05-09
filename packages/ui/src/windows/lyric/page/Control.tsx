@@ -12,11 +12,13 @@ import { css, cx } from "@emotion/css";
 import { useManualAutoScroll } from "@mahiru/ui/public/hooks/useMarquee";
 import { AArrowDown, AArrowUp, LockKeyholeOpen, LucideLock } from "lucide-react";
 import { NeteaseImageSize } from "@mahiru/ui/public/enum";
-
 import { NeteaseLyric, NeteaseNetworkImage } from "@mahiru/ui/public/source/netease/models";
 import { useListenable } from "@mahiru/ui/public/hooks/useListenable";
 import { FormatNumber } from "@mahiru/ui/public/utils/format";
-import ElectronServices from "@mahiru/ui/public/source/electron/services";
+import {
+  ElectronServicesBus,
+  ElectronServicesWindow
+} from "@mahiru/ui/public/source/electron/services";
 
 import Drag from "@mahiru/ui/public/components/drag/Drag";
 import NeteaseImage from "@mahiru/ui/public/components/image/NeteaseImage";
@@ -48,9 +50,9 @@ const Control: FC<ControlProps> = ({
   tlActive,
   ...rest
 }) => {
-  const playerBus = useListenable(ElectronServices.Bus.player);
-  const infoBus = useListenable(ElectronServices.Bus.info);
-  const progressBus = useListenable(ElectronServices.Bus.progress);
+  const playerBus = useListenable(ElectronServicesBus.player);
+  const infoBus = useListenable(ElectronServicesBus.info);
+  const progressBus = useListenable(ElectronServicesBus.progress);
   const titleContainer = useRef<HTMLDivElement>(null);
   const [openColorSelect, setOpenColorSelect] = useState(false);
 
@@ -74,7 +76,7 @@ const Control: FC<ControlProps> = ({
 
   const setLyricVersion = useCallback(
     (version: "toggle-lyric-version-rm" | "toggle-lyric-version-tl") => {
-      ElectronServices.Bus.playerAction.send(version);
+      ElectronServicesBus.playerAction.send(version);
     },
     []
   );
@@ -88,7 +90,7 @@ const Control: FC<ControlProps> = ({
   });
 
   useEffect(() => {
-    lock && ElectronServices.Window.current.mousePenetrate(true);
+    lock && ElectronServicesWindow.current.mousePenetrate(true);
   }, [lock]);
 
   useEffect(() => {
@@ -203,8 +205,8 @@ const Control: FC<ControlProps> = ({
               <LucideLock
                 className="size-4 cursor-pointer hover:opacity-50 duration-300 ease-in-out transition-all active:scale-90"
                 onClick={() => setLock(false)}
-                onMouseOver={() => ElectronServices.Window.current.mousePenetrate(false)}
-                onMouseLeave={() => ElectronServices.Window.current.mousePenetrate(true)}
+                onMouseOver={() => ElectronServicesWindow.current.mousePenetrate(false)}
+                onMouseLeave={() => ElectronServicesWindow.current.mousePenetrate(true)}
               />
             ) : (
               <LockKeyholeOpen

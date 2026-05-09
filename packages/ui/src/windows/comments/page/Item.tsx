@@ -4,7 +4,7 @@ import { CommentType, NeteaseImageSize } from "@mahiru/ui/public/enum";
 import { useThemeColor } from "@mahiru/ui/public/hooks/useThemeColor";
 import { ThumbsUp } from "lucide-react";
 import { cx } from "@emotion/css";
-import NeteaseAPI from "@mahiru/ui/public/source/netease/api";
+import { NeteaseAPIComment } from "@mahiru/ui/public/source/netease/api";
 
 import NeteaseImage from "@mahiru/ui/public/components/image/NeteaseImage";
 import { FormatNumber } from "@mahiru/ui/public/utils/format";
@@ -34,7 +34,7 @@ const Item: FC<ItemProps> = ({ data, sourceID, type }) => {
           break;
       }
       if (!commentType) return;
-      await NeteaseAPI.Comment.like({
+      await NeteaseAPIComment.like({
         cid: props.commentID,
         id: sourceID,
         t: props.like ? 1 : 0,

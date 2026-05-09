@@ -1,145 +1,150 @@
 import { Listenable } from "@mahiru/ui/public/utils/listenable";
 import _AppWindow from "@mahiru/ui/public/source/electron/services/window";
 
-class AppPlayerBus extends Listenable {
-  data: Nullable<MessageTypeMap["playerBus"]> = null;
+export abstract class Bus<T extends keyof MessageTypeMap> extends Listenable {
+  type: T;
+  data: Nullable<MessageTypeMap[T]> = null;
 
-  constructor() {
+  protected constructor(type: T) {
     super();
-    _AppWindow.all.listenMessageAll("playerBus", ({ data }) => {
+    this.type = type;
+    _AppWindow.all.listenMessageAll(type, ({ data }) => {
       this.data = data;
       this.executeListeners();
     });
   }
 
-  send(data: MessageDataSend<"playerBus">["data"]) {
-    _AppWindow.all.send("playerBus", data);
-  }
-}
-
-class AppProgressBus extends Listenable {
-  data: Nullable<MessageTypeMap["progressBus"]> = null;
-
-  constructor() {
-    super();
-    _AppWindow.all.listenMessageAll("progressBus", ({ data }) => {
-      this.data = data;
-      this.executeListeners();
-    });
+  send(data: MessageDataSend<T>["data"]) {
+    _AppWindow.all.send(this.type, data);
   }
 
-  send(data: MessageDataSend<"progressBus">["data"]) {
-    _AppWindow.all.send("progressBus", data);
-  }
-}
-
-class AppInfoBus extends Listenable {
-  data: Nullable<MessageTypeMap["infoBus"]> = null;
-
-  constructor() {
-    super();
-    _AppWindow.all.listenMessageAll("infoBus", ({ data }) => {
-      this.data = data;
-      this.executeListeners();
-    });
-  }
-
-  send(data: MessageDataSend<"infoBus">["data"]) {
-    _AppWindow.all.send("infoBus", data);
-  }
-}
-
-class AppCommentsBus extends Listenable {
-  data: Nullable<MessageTypeMap["commentBus"]> = null;
-
-  constructor() {
-    super();
-    _AppWindow.all.listenMessageAll("commentBus", ({ data }) => {
-      this.data = data;
-      this.executeListeners();
-    });
-  }
-
-  send(data: MessageDataSend<"commentBus">["data"]) {
-    _AppWindow.from("comments").send("commentBus", data);
-  }
-
-  commit(data: MessageTypeMap["commentBus"]) {
+  commit(data: MessageTypeMap[T]) {
     this.data = data;
     this.executeListeners();
   }
 }
 
-class AppPlayerActionBus extends Listenable {
-  data: MessageTypeMap["playerActionBus"][] = [];
+export abstract class BusArray<T extends keyof MessageTypeMap> extends Listenable {
+  type: T;
+  data: MessageTypeMap[T][] = [];
 
-  constructor() {
+  protected constructor(type: T) {
     super();
-    _AppWindow.all.listenMessageAll("playerActionBus", ({ data }) => {
-      console.log("playerActionBus", data);
+    this.type = type;
+    _AppWindow.all.listenMessageAll(type, ({ data }) => {
       this.data = [...this.data, data];
       this.executeListeners();
     });
   }
 
-  send(data: MessageDataSend<"playerActionBus">["data"]) {
-    _AppWindow.main.send("playerActionBus", data);
-  }
-
-  finish() {
-    this.data = [];
+  send(data: MessageDataSend<T>["data"]) {
+    _AppWindow.main.send(this.type, data);
   }
 }
 
-class AppUpdateMainBus extends Listenable {
-  data: MessageTypeMap["updateBus"][] = [];
-
+class AppPlayerBus extends Bus<"playerBus"> {
   constructor() {
-    super();
-    _AppWindow.all.listenMessageAll("updateBus", ({ data }) => {
-      this.data = [...this.data, data];
-      this.executeListeners();
-    });
+    super("playerBus");
   }
+}
 
-  send(data: MessageDataSend<"updateBus">["data"]) {
-    _AppWindow.all.send("updateBus", data);
+class AppProgressBus extends Bus<"progressBus"> {
+  constructor() {
+    super("progressBus");
   }
+}
 
-  finish() {
-    this.data = [];
+class AppInfoBus extends Bus<"infoBus"> {
+  constructor() {
+    super("infoBus");
+  }
+}
+
+class AppCommentsBus extends Bus<"commentBus"> {
+  constructor() {
+    super("commentBus");
+  }
+}
+
+class AppPlayerActionBus extends BusArray<"playerActionBus"> {
+  constructor() {
+    super("playerActionBus");
+  }
+}
+
+class AppUpdateMainBus extends BusArray<"updateBus"> {
+  constructor() {
+    super("updateBus");
+  }
+}
+
+class AppDisplayBus extends Bus<"displayBus"> {
+  constructor() {
+    super("displayBus");
+  }
+}
+
+class AppPlayerChangeBus extends BusArray<"playerChangeBus"> {
+  constructor() {
+    super("playerChangeBus");
   }
 }
 
 export default class _AppBus {
-  private static playerBus = new AppPlayerBus();
-  private static progressBus = new AppProgressBus();
-  private static infoBus = new AppInfoBus();
-  private static commentBus = new AppCommentsBus();
-  private static playerActionBus = new AppPlayerActionBus();
-  private static updateMainBus = new AppUpdateMainBus();
+  private static readonly BusCollections = {
+    playerBus: new AppPlayerBus(),
+    progressBus: new AppProgressBus(),
+    infoBus: new AppInfoBus(),
+    commentBus: new AppCommentsBus(),
+    playerActionBus: new AppPlayerActionBus(),
+    updateMainBus: new AppUpdateMainBus(),
+    displayBUs: new AppDisplayBus(),
+    playerChangeBus: new AppPlayerChangeBus()
+  };
 
   static get player() {
-    return _AppBus.playerBus;
+    return _AppBus.BusCollections.playerBus;
   }
 
   static get progress() {
-    return _AppBus.progressBus;
+    return _AppBus.BusCollections.progressBus;
   }
 
   static get info() {
-    return _AppBus.infoBus;
+    return _AppBus.BusCollections.infoBus;
   }
 
   static get comment() {
-    return _AppBus.commentBus;
+    return _AppBus.BusCollections.commentBus;
   }
 
   static get mainBusUpdater() {
-    return _AppBus.updateMainBus;
+    return _AppBus.BusCollections.updateMainBus;
   }
 
   static get playerAction() {
-    return _AppBus.playerActionBus;
+    return _AppBus.BusCollections.playerActionBus;
+  }
+
+  static get display() {
+    return _AppBus.BusCollections.displayBUs;
+  }
+
+  static get playerChange() {
+    return _AppBus.BusCollections.playerChangeBus;
+  }
+
+  static get collections() {
+    return Object.entries(_AppBus.BusCollections).map(([, bus]) => bus);
+  }
+
+  static clear<T extends keyof MessageTypeMap>(type: T) {
+    for (const bus of _AppBus.collections) {
+      if (bus.type === type) {
+        if (Array.isArray(bus.data)) return (bus.data = []);
+        if (typeof bus.data === "object") return (bus.data = null);
+        return;
+      }
+    }
   }
 }

@@ -1,3 +1,4 @@
+import { cx } from "@emotion/css";
 import { FC, memo, ReactEventHandler, useCallback, useMemo } from "react";
 import { NeteaseArtist, NeteaseNetworkImage } from "@mahiru/ui/public/source/netease/models";
 import NeteaseImage from "@mahiru/ui/public/components/image/NeteaseImage";
@@ -25,7 +26,7 @@ const Avatar: FC<AvatarProps> = ({ className, artist, onAvatarLoaded }) => {
   );
 
   return (
-    <div className={className}>
+    <div className={cx("relative", className)}>
       <NeteaseImage
         cache
         preview

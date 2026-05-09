@@ -4,8 +4,8 @@ import { Log } from "@mahiru/ui/public/utils/dev";
 import { cx } from "@emotion/css";
 import { CircleX } from "lucide-react";
 import { EqError } from "@mahiru/log";
+import { ElectronServicesWindow } from "@mahiru/ui/public/source/electron/services";
 import AppToast from "../toast";
-import ElectronServices from "@mahiru/ui/public/source/electron/services";
 
 export type AppErrorBoundaryRef = { resetComponent?: NormalFunc };
 
@@ -46,6 +46,8 @@ const AppErrorBoundary: FC<AppErrorBoundaryProps> = ({
   const fallbackRender = useCallback(
     (props: FallbackProps) => {
       const { error, resetErrorBoundary: resetComponent } = props;
+      Log.error(error);
+
       let isRested = false;
       ref &&
         (ref.current = {
@@ -68,11 +70,11 @@ const AppErrorBoundary: FC<AppErrorBoundaryProps> = ({
         });
 
       if (panic) {
-        ElectronServices.Window.panic(
+        ElectronServicesWindow.panic(
           panicMessage || `AppErrorBoundary(${name})`,
           Log.format(error)
         );
-        ElectronServices.Window.current.close();
+        ElectronServicesWindow.current.close();
         return null;
       }
 
@@ -84,11 +86,11 @@ const AppErrorBoundary: FC<AppErrorBoundaryProps> = ({
       } else if (resetCount.current >= autoResetMaxCount) {
         Log.error(`AppErrorBoundary(${name}) exceeded auto reset limit`);
         if (panicAfterReset) {
-          ElectronServices.Window.panic(
+          ElectronServicesWindow.panic(
             panicMessage || `AppErrorBoundary(${name})`,
             Log.format(error)
           );
-          ElectronServices.Window.current.close();
+          ElectronServicesWindow.current.close();
           return null;
         }
       }

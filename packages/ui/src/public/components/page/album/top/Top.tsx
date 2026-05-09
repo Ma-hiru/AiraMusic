@@ -1,9 +1,10 @@
-import { FC, memo } from "react";
+import { FC, memo, useMemo } from "react";
 import { NeteaseAlbum } from "packages/ui/src/public/source/netease/models";
 import { NeteaseImageSize } from "@mahiru/ui/public/enum";
 
 import TopCover from "./TopCover";
 import TopInfo from "./TopInfo";
+import { SquareArrowRightEnter, SquareArrowRightExit } from "lucide-react";
 
 interface TopProps {
   onPlayAll: NormalFunc;
@@ -13,6 +14,8 @@ interface TopProps {
   coverCacheKey?: string;
   coverSize: NeteaseImageSize;
   onCoverLoaded?: NormalFunc<[cover: string]>;
+  pageActionType?: "enter" | "out" | "none";
+  onPageAction?: NormalFunc;
 }
 
 const Top: FC<TopProps> = ({
@@ -22,8 +25,27 @@ const Top: FC<TopProps> = ({
   dynamic,
   coverCacheKey,
   coverSize,
-  onCoverLoaded
+  onCoverLoaded,
+  pageActionType = "none",
+  onPageAction
 }) => {
+  const action = useMemo(() => {
+    if (pageActionType === "enter")
+      return (
+        <SquareArrowRightEnter
+          className="size-5 text-(--theme-color-main) hover:opacity-50 ease-in-out transition-all duration-300 cursor-pointer active:scale-90"
+          onClick={onPageAction}
+        />
+      );
+    if (pageActionType === "out")
+      return (
+        <SquareArrowRightExit
+          className="size-5 text-(--theme-color-main) hover:opacity-50 ease-in-out transition-all duration-300 cursor-pointer active:scale-90"
+          onClick={onPageAction}
+        />
+      );
+    return null;
+  }, [onPageAction, pageActionType]);
   return (
     <div className="w-full h-45 grid grid-rows-1 grid-cols-[1fr_auto]">
       <div className="min-w-0 grid grid-rows-1 grid-cols-[auto_1fr] gap-4 items-end">
@@ -35,7 +57,7 @@ const Top: FC<TopProps> = ({
         />
         <TopInfo album={album} dynamic={dynamic} onAddList={onAddList} onPlayAll={onPlayAll} />
       </div>
-      <div />
+      <div className="flex items-end justify-end">{action}</div>
     </div>
   );
 };

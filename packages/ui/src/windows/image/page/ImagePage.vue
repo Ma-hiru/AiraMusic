@@ -14,7 +14,7 @@
   import TopControlPure from "@mahiru/ui/public/components/public/TopControlPure.vue";
   import Drag from "@mahiru/ui/public/components/drag/Drag.vue";
   import ImageViewer from "@mahiru/ui/public/components/image/ImageViewer.vue";
-  import ElectronServices from "@mahiru/ui/public/source/electron/services";
+  import { ElectronServicesWindow } from "@mahiru/ui/public/source/electron/services";
   import { useAppLoadedVue } from "@mahiru/ui/public/hooks/useAppLoadedVue";
   import { onMounted, reactive, ref } from "vue";
 
@@ -25,7 +25,7 @@
   useAppLoadedVue(loading);
 
   onMounted(() => {
-    ElectronServices.Window.all.listenMessageAll("imageCheckerBus", (props) => {
+    ElectronServicesWindow.all.listenMessageAll("imageCheckerBus", (props) => {
       const { url, alt } = props.data;
       const exits = images.findIndex((image) => image.url === url);
       if (exits === -1) {

@@ -2,14 +2,14 @@ import { FC, memo } from "react";
 import { useLayoutStore } from "@mahiru/ui/windows/main/store/layout";
 import { useThemeColor } from "@mahiru/ui/public/hooks/useThemeColor";
 import { useListenable } from "@mahiru/ui/public/hooks/useListenable";
+import { ElectronServicesWindow } from "@mahiru/ui/public/source/electron/services";
 import AudioSpectrum from "@mahiru/ui/windows/main/componets/spectrum/AudioSpectrum";
 import AppEntry from "@mahiru/ui/windows/main/entry";
-import ElectronServices from "@mahiru/ui/public/source/electron/services";
 
 const BarSpectrum: FC<object> = () => {
   const { layout } = useLayoutStore();
   const { mainColor, secondaryColor } = useThemeColor();
-  const currentWindow = useListenable(ElectronServices.Window.current);
+  const currentWindow = useListenable(ElectronServicesWindow.current);
   const player = AppEntry.usePlayer();
   return (
     <AudioSpectrum

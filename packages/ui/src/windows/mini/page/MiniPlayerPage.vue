@@ -26,21 +26,21 @@
       <NoDrag class="flex items-center gap-2 justify-center">
         <SkipBack
           class="size-3 hover:scale-90 hover:opacity-50 active:scale-80 cursor-pointer ease-in-out transition-all duration-300"
-          @click="ElectronServices.Bus.playerAction.send('previous')"
+          @click="ElectronServicesBus.playerAction.send('previous')"
           fill="#171b20" />
         <Pause
           v-if="playerBus.data?.status === 'playing'"
           class="size-3 hover:scale-90 hover:opacity-50 active:scale-80 cursor-pointer ease-in-out transition-all duration-300"
-          @click="ElectronServices.Bus.playerAction.send('pause')"
+          @click="ElectronServicesBus.playerAction.send('pause')"
           fill="#171b20" />
         <Play
           v-else
           class="size-3 hover:scale-90 hover:opacity-50 active:scale-80 cursor-pointer ease-in-out transition-all duration-300"
-          @click="ElectronServices.Bus.playerAction.send('play')"
+          @click="ElectronServicesBus.playerAction.send('play')"
           fill="#171b20" />
         <SkipForward
           class="size-3 hover:scale-90 hover:opacity-50 active:scale-80 cursor-pointer ease-in-out transition-all duration-300"
-          @click="ElectronServices.Bus.playerAction.send('next')"
+          @click="ElectronServicesBus.playerAction.send('next')"
           fill="#171b20" />
       </NoDrag>
     </div>
@@ -53,7 +53,10 @@
   import Drag from "@mahiru/ui/public/components/drag/Drag.vue";
   import NoDrag from "@mahiru/ui/public/components/drag/NoDrag.vue";
   import NeteaseImage from "@mahiru/ui/public/components/image/NeteaseImage.vue";
-  import ElectronServices from "@mahiru/ui/public/source/electron/services";
+  import {
+    ElectronServicesBus,
+    ElectronServicesWindow
+  } from "@mahiru/ui/public/source/electron/services";
   import { useListenable } from "@mahiru/ui/public/hooks/useListenableVue";
   import { Pause, Play, SkipBack, SkipForward, X } from "lucide-vue-next";
   import { computed } from "vue";
@@ -61,10 +64,10 @@
   import { NeteaseNetworkImage } from "@mahiru/ui/public/source/netease/models";
   import { NeteaseImageSize } from "@mahiru/ui/public/enum";
 
-  const mainWindow = useListenable(ElectronServices.Window.main);
-  const currentWindow = useListenable(ElectronServices.Window.current);
-  const playerBus = useListenable(ElectronServices.Bus.player);
-  const progressBus = useListenable(ElectronServices.Bus.progress);
+  const mainWindow = useListenable(ElectronServicesWindow.main);
+  const currentWindow = useListenable(ElectronServicesWindow.current);
+  const playerBus = useListenable(ElectronServicesBus.player);
+  const progressBus = useListenable(ElectronServicesBus.progress);
   const track = computed(() => playerBus.value.data?.track?.detail);
   const percent = computed(() => {
     const currentTime = progressBus.value.data?.currentTime || 0;

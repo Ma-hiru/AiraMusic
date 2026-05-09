@@ -1,5 +1,5 @@
 import QRCode from "qrcode";
-import NeteaseAPI from "@mahiru/ui/public/source/netease/api";
+import { NeteaseAPIAuth } from "@mahiru/ui/public/source/netease/api";
 import { useCallback, useEffect, useState } from "react";
 import { Log } from "@mahiru/ui/public/utils/dev";
 
@@ -103,8 +103,8 @@ export enum QRCodeStatus {
 }
 
 async function requestQRCode(options: QRCode.QRCodeToDataURLOptions) {
-  const keyResult = await NeteaseAPI.Auth.loginQrCodeKey();
-  const codeResult = await NeteaseAPI.Auth.loginQrCodeCreate({ key: keyResult.data.unikey });
+  const keyResult = await NeteaseAPIAuth.loginQrCodeKey();
+  const codeResult = await NeteaseAPIAuth.loginQrCodeCreate({ key: keyResult.data.unikey });
   const codeDataURL = await QRCode.toDataURL(codeResult.data.qrurl, options);
   return {
     QRCodeKey: keyResult.data.unikey,
@@ -113,6 +113,6 @@ async function requestQRCode(options: QRCode.QRCodeToDataURLOptions) {
 }
 
 async function checkQRCode(codeKey: string) {
-  const checkResult = await NeteaseAPI.Auth.loginQrCodeCheck(codeKey);
+  const checkResult = await NeteaseAPIAuth.loginQrCodeCheck(codeKey);
   return { code: checkResult.code as QRCodeStatus, result: checkResult };
 }

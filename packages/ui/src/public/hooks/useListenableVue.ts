@@ -1,8 +1,10 @@
 import { onUnmounted, shallowRef, triggerRef } from "vue";
 import { Listenable } from "@mahiru/ui/public/utils/listenable";
 
-export function useListenable<T extends Listenable>(listenable: T) {
+export function useListenable<T extends Listenable>(listenable: T, disable = false) {
   const state = shallowRef(listenable);
+
+  if (disable) return state;
 
   const listener = () => triggerRef(state);
   listenable.addListener(listener);

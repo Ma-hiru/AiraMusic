@@ -1,6 +1,6 @@
 import { useCallback, useRef } from "react";
 import { NeteaseTrack, NeteaseTrackRecord } from "@mahiru/ui/public/source/netease/models";
-import NeteaseAPI from "@mahiru/ui/public/source/netease/api";
+import { NeteaseAPITrack } from "@mahiru/ui/public/source/netease/api";
 
 type TrackLikeSource = {
   ids: Record<number, boolean>;
@@ -41,7 +41,7 @@ export function useHeart(manager: Optional<HeartManager>) {
         },
         checkPoint: Date.now()
       };
-      void NeteaseAPI.Track.star({
+      void NeteaseAPITrack.star({
         id: track.id,
         like: !isLiked
       });

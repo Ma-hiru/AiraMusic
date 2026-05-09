@@ -3,7 +3,7 @@ import { FC, memo } from "react";
 import { AppWindow as AppWindowIcon, Minus, Square, SquareMinus, X } from "lucide-react";
 import { isDev } from "@mahiru/ui/public/utils/dev";
 import { useListenable } from "@mahiru/ui/public/hooks/useListenable";
-import ElectronServices from "@mahiru/ui/public/source/electron/services";
+import { ElectronServicesWindow } from "@mahiru/ui/public/source/electron/services";
 
 import NoDrag from "@mahiru/ui/public/components/drag/NoDrag";
 
@@ -15,7 +15,7 @@ interface TopControlPurProps {
 }
 
 const TopControlPure: FC<TopControlPurProps> = ({ maximizable, mini = true, color, className }) => {
-  const currentWindow = useListenable(ElectronServices.Window.current);
+  const currentWindow = useListenable(ElectronServicesWindow.current);
 
   return (
     <NoDrag className={cx(`flex flex-row gap-4 select-none relative z-50`, className)}>

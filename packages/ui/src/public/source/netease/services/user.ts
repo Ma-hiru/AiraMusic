@@ -1,11 +1,11 @@
 import { Log } from "@mahiru/ui/public/utils/dev";
 import { NeteaseCookie, NeteaseUser } from "@mahiru/ui/public/source/netease/models";
-import NeteaseAPI from "@mahiru/ui/public/source/netease/api";
+import { NeteaseAPIAuth, NeteaseAPIUser } from "@mahiru/ui/public/source/netease/api";
 
 export default class _NeteaseUserSource {
   private static async getUserPlaylist(uid: number) {
     if (uid) {
-      const { playlist } = await NeteaseAPI.User.playlist({ uid, limit: 30 });
+      const { playlist } = await NeteaseAPIUser.playlist({ uid, limit: 30 });
       const userPlaylists: NeteaseAPI.NeteasePlaylistSummary[] = [];
       const starPlaylists: NeteaseAPI.NeteasePlaylistSummary[] = [];
       const likedPlaylist: NeteaseAPI.NeteasePlaylistSummary = playlist.shift()!;
@@ -30,8 +30,8 @@ export default class _NeteaseUserSource {
 
   private static async getUserProfile(uid: number) {
     const [detailResponse, likedResponse] = await Promise.allSettled([
-      NeteaseAPI.User.detail(uid),
-      NeteaseAPI.User.likedTracks(uid)
+      NeteaseAPIUser.detail(uid),
+      NeteaseAPIUser.likedTracks(uid)
     ]);
 
     if (detailResponse.status === "fulfilled" && likedResponse.status === "fulfilled") {
@@ -82,7 +82,7 @@ export default class _NeteaseUserSource {
   static async cookies(cookies?: Optional<string>) {
     cookies && NeteaseCookie.set(cookies);
     if (NeteaseCookie.isLoggedIn()) {
-      const { profile } = await NeteaseAPI.User.account();
+      const { profile } = await NeteaseAPIUser.account();
       return await _NeteaseUserSource.refresh(profile);
     } else {
       Log.error("no cookies");
@@ -91,7 +91,7 @@ export default class _NeteaseUserSource {
   }
 
   static async logout() {
-    await NeteaseAPI.Auth.logout();
+    await NeteaseAPIAuth.logout();
     NeteaseCookie.clearLoggedIn();
   }
 }

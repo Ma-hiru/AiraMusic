@@ -2,8 +2,11 @@ import { FC, memo } from "react";
 import { Heart, MessageSquare } from "lucide-react";
 import { useHeart } from "@mahiru/ui/public/hooks/useHeart";
 import { useUserTrackManager } from "@mahiru/ui/public/hooks/useUserTrackManager";
+import {
+  ElectronServicesBus,
+  ElectronServicesWindow
+} from "@mahiru/ui/public/source/electron/services";
 import AppEntry from "@mahiru/ui/windows/main/entry";
-import ElectronServices from "@mahiru/ui/public/source/electron/services";
 
 const Artist: FC<object> = () => {
   const player = AppEntry.usePlayer();
@@ -37,8 +40,8 @@ const Artist: FC<object> = () => {
           fill="white"
           onClick={async () => {
             if (!track) return;
-            await ElectronServices.Window.from("comments").openAwait();
-            ElectronServices.Bus.comment.send({
+            await ElectronServicesWindow.get("comments").openAwait();
+            ElectronServicesBus.comment.send({
               id: track.id,
               type: "track"
             });

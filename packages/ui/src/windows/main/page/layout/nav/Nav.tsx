@@ -11,7 +11,7 @@ import NavSideDivider from "./NavDivider";
 import NavMenu from "./NavMenu";
 
 const Nav: FC<object> = () => {
-  const { layout, theme } = useLayoutStore();
+  const { layout } = useLayoutStore();
   const { stage } = useStage();
   const user = useUser();
   const displayPlaylist = (user?.playlistCount || 0) > 0;
@@ -24,9 +24,8 @@ const Nav: FC<object> = () => {
           pb-(--playbar-height) pt-[calc(var(--top-control-height)+10px)]  overflow-hidden
           backdrop-blur-lg contain-strict
           ease-in-out duration-300 transition-all
-          border-r border-r-gray-500/10
+          border-r border-r-gray-500/10 bg-[#f0f3f6]/20
         `,
-        theme.backgroundCover ? "bg-[#f0f3f6]/20" : "bg-[#f0f3f6]",
         layout.sideBar ? "w-(--side-bar-expand-width)" : "w-(--side-bar-collapse-width)"
       )}>
       <AppErrorBoundary name="NavMenu" showError={false} autoReset panicAfterReset>

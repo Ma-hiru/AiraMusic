@@ -5,17 +5,17 @@ interface MaskProps {
   className?: string;
 }
 
-const Mask: FC<MaskProps> = ({ className }) => {
+const AppMask: FC<MaskProps> = ({ className }) => {
   return (
     <div
       className={cx(
-        "w-screen h-screen fixed flex justify-center items-center flex-col bg-white gap-4",
+        "w-screen h-screen fixed flex justify-center items-center flex-col gap-4 top-0",
         className
       )}>
       <img src="/images/logo.svg" alt="logo" className="size-16" />
-      <p className="text-lg font-bold">{import.meta.env.APP_NAME}</p>
+      <p className="text-lg font-bold text-(--text-color-on-main)">{import.meta.env.APP_NAME}</p>
     </div>
   );
 };
 
-export default memo(Mask);
+export default memo(AppMask);

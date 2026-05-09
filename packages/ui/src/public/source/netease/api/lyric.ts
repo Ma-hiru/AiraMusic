@@ -14,10 +14,10 @@ type TTMLyricMeta = {
 };
 
 export default class _NeteaseLyricAPI {
-  private ttmLyricMeta = new Set<string>();
-  private loadedMeta = false;
+  private static ttmLyricMeta = new Set<string>();
+  private static loadedMeta = false;
 
-  get(id: number) {
+  static get(id: number) {
     return apiRequest<{ id: number }, NeteaseAPI.NeteaseLyricResponse>({
       url: "/lyric/new",
       method: "get",
@@ -27,7 +27,7 @@ export default class _NeteaseLyricAPI {
     });
   }
 
-  getYRC(id: number) {
+  static getYRC(id: number) {
     return <Promise<NeteaseAPI.NeteaseLyricResponseNew>>fetch(
       `https://music.163.com/api/song/lyric/v1?tv=0&lv=0&rv=0&kv=0&yv=0&ytv=0&yrv=0&cp=false&id=${id}`,
       {
@@ -37,7 +37,7 @@ export default class _NeteaseLyricAPI {
     ).then((res) => res.json());
   }
 
-  getTTM(id: number, signal?: AbortSignal) {
+  static getTTM(id: number, signal?: AbortSignal) {
     return this.getTTMLyricMetadata()
       .then(() => {
         if (!this.loadedMeta || !this.ttmLyricMeta.has(String(id))) return null;
@@ -61,7 +61,7 @@ export default class _NeteaseLyricAPI {
       .catch(() => null);
   }
 
-  private parseTTMLyricMetadata(jsonl: string) {
+  private static parseTTMLyricMetadata(jsonl: string) {
     return jsonl.split("\n").reduce((count, line) => {
       if (!line) return count;
       try {
@@ -78,7 +78,7 @@ export default class _NeteaseLyricAPI {
     }, 0);
   }
 
-  private getTTMLyricMetadata() {
+  private static getTTMLyricMetadata() {
     if (this.loadedMeta) return Promise.resolve();
     return fetch(
       "https://raw.githubusercontent.com/Steve-xmh/amll-ttml-db/refs/heads/main/metadata/raw-lyrics-index.jsonl"

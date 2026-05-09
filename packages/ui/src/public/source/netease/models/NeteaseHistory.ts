@@ -8,7 +8,7 @@ export class NeteaseHistory extends NeteaseTrackRecord {
   constructor(props: {
     sourceID: number;
     detail: NeteaseTrack;
-    sourceName: "playlist" | "album" | "other";
+    sourceName: NeteaseTrackRecordSourceType;
     playDuration: number;
     time: number;
   }) {

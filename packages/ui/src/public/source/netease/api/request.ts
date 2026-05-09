@@ -1,9 +1,9 @@
 import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
 import { Log } from "@mahiru/ui/public/utils/dev";
+import { EqError } from "@mahiru/log/src/err";
+import { NeteaseServicesAuth } from "@mahiru/ui/public/source/netease/services";
 import HTTPConstants from "@mahiru/ui/public/constants/http";
 import AppToast from "@mahiru/ui/public/components/toast";
-import NeteaseServices from "@mahiru/ui/public/source/netease/services";
-import { EqError } from "@mahiru/log/src/err";
 
 export const apiRequest = axios.create({
   baseURL: HTTPConstants.NCMBaseURL,
@@ -44,7 +44,7 @@ apiRequest.interceptors.response.use(
         type: "info",
         text: "登录状态已过期，请重新登录"
       });
-      NeteaseServices.Auth.logout().then(NeteaseServices.Auth.createLoginWindow);
+      NeteaseServicesAuth.logout().then(NeteaseServicesAuth.createLoginWindow);
     } else if (
       data.code === HTTPConstants.RetryCode &&
       // 只有在请求过于频繁且请求幂等的情况下才自动重试，否则直接报错

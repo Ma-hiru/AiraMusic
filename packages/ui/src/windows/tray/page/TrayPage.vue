@@ -14,7 +14,10 @@
   import TrayItem from "@mahiru/ui/windows/tray/page/TrayItem.vue";
   import TrayPlayer from "@mahiru/ui/windows/tray/page/TrayPlayer.vue";
   import TrayDivider from "@mahiru/ui/windows/tray/page/TrayDivider.vue";
-  import ElectronServices from "@mahiru/ui/public/source/electron/services";
+  import {
+    ElectronServicesBus,
+    ElectronServicesWindow
+  } from "@mahiru/ui/public/source/electron/services";
   import { useListenable } from "@mahiru/ui/public/hooks/useListenableVue";
   import { computed, onMounted, onUnmounted, useTemplateRef, watch } from "vue";
   import {
@@ -28,13 +31,13 @@
     SkipBack,
     SkipForward
   } from "lucide-vue-next";
-  import { useThemeInjectFromBusVue } from "@mahiru/ui/public/hooks/useThemeInjectFromBusVue";
+  import { useThemeInjectFromBus } from "@mahiru/ui/public/hooks/useThemeInjectFromBusVue";
 
   const containerRef = useTemplateRef<HTMLDivElement>("containerRef");
-  const playerBus = useListenable(ElectronServices.Bus.player);
-  const currentWindow = useListenable(ElectronServices.Window.current);
+  const playerBus = useListenable(ElectronServicesBus.player);
+  const currentWindow = useListenable(ElectronServicesWindow.current);
   // 主题
-  useThemeInjectFromBusVue();
+  useThemeInjectFromBus();
   // Actions
   function copy(text: Optional<string>) {
     if (!text) return;
@@ -46,12 +49,12 @@
       {
         icon: SkipBack,
         text: "上一首",
-        click: () => ElectronServices.Bus.playerAction.send("previous")
+        click: () => ElectronServicesBus.playerAction.send("previous")
       },
       {
         icon: SkipForward,
         text: "下一首",
-        click: () => ElectronServices.Bus.playerAction.send("next")
+        click: () => ElectronServicesBus.playerAction.send("next")
       },
       { icon: MicVocal, text: "歌手", click: () => {} },
       { icon: DiscAlbum, text: "专辑", click: () => {} },
@@ -61,8 +64,8 @@
         click: async () => {
           const id = playerBus.value.data?.track?.id;
           if (!id) return;
-          await ElectronServices.Window.from("comments").openAwait();
-          ElectronServices.Bus.comment.send({
+          await ElectronServicesWindow.get("comments").openAwait();
+          ElectronServicesBus.comment.send({
             id,
             type: "track"
           });
@@ -86,20 +89,20 @@
       {
         icon: LogOut,
         text: "退出",
-        click: () => ElectronServices.Bus.playerAction.send("exit")
+        click: () => ElectronServicesBus.playerAction.send("exit")
       }
     ];
     if (playerBus.value.data?.status === "playing") {
       result.unshift({
         icon: Pause,
         text: "暂停",
-        click: () => ElectronServices.Bus.playerAction.send("pause")
+        click: () => ElectronServicesBus.playerAction.send("pause")
       });
     } else {
       result.unshift({
         icon: Play,
         text: "播放",
-        click: () => ElectronServices.Bus.playerAction.send("play")
+        click: () => ElectronServicesBus.playerAction.send("play")
       });
     }
     return result;

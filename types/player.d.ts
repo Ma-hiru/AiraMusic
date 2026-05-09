@@ -79,3 +79,5 @@ type NeteaseLyricModel = {
   tlExisted: boolean;
   noteExisted: boolean;
 };
+
+type NeteaseTrackRecordSourceType = "playlist" | "album" | "other";

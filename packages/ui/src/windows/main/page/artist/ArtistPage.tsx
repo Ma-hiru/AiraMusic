@@ -5,8 +5,11 @@ import { getLayoutStoreSnapshot } from "@mahiru/ui/windows/main/store/layout";
 import { useRouterActive } from "@mahiru/ui/public/hooks/useRouterActive";
 import { NeteaseTrackRecord } from "@mahiru/ui/public/source/netease/models";
 import { useUserTrackManager } from "@mahiru/ui/public/hooks/useUserTrackManager";
+import {
+  ElectronServicesBus,
+  ElectronServicesWindow
+} from "@mahiru/ui/public/source/electron/services";
 import AppEntry from "@mahiru/ui/windows/main/entry";
-import ElectronServices from "@mahiru/ui/public/source/electron/services";
 import AppContextMenu from "@mahiru/ui/public/components/menu";
 
 import Artist, { ArtistRef } from "@mahiru/ui/public/components/page/artist/Artist";
@@ -46,20 +49,22 @@ const ArtistPage: FC<object> = () => {
   );
   const addToPlaylistNext = useCallback(
     (track: NeteaseTrackRecord) => {
+      if (player.current.track?.id === track.id) return;
       player.playlist.add(track, "next");
     },
-    [player.playlist]
+    [player]
   );
   const addToPlaylistLast = useCallback(
     (track: NeteaseTrackRecord) => {
+      if (player.current.track?.id === track.id) return;
       player.playlist.add(track, "end");
     },
-    [player.playlist]
+    [player]
   );
   const openComment = useCallback(async (track: NeteaseTrackRecord) => {
     if (!track) return;
-    await ElectronServices.Window.from("comments").openAwait();
-    ElectronServices.Bus.comment.send({
+    await ElectronServicesWindow.get("comments").openAwait();
+    ElectronServicesBus.comment.send({
       id: track.id,
       type: "track"
     });
@@ -79,7 +84,7 @@ const ArtistPage: FC<object> = () => {
     [navigate]
   );
   // 右键菜单
-  const { create, createTrackContextMenu } = AppContextMenu.use();
+  const { create, createTrackContextMenu } = AppContextMenu.useMenu();
   const onContextMenu = useCallback(
     (e: ReactMouseEvent<HTMLDivElement, MouseEvent>, track: NeteaseTrackRecord) => {
       create(createTrackContextMenu, {
@@ -118,6 +123,16 @@ const ArtistPage: FC<object> = () => {
     ]
   );
   const { playableManager, heartManager } = useUserTrackManager();
+
+  const onPageAction = useCallback(async () => {
+    await ElectronServicesWindow.get("display").openAwait();
+    ElectronServicesBus.display.send({
+      id,
+      type: "artist"
+    });
+    navigate(-1);
+  }, [id, navigate]);
+
   return (
     <Artist
       ref={artistRef}
@@ -131,6 +146,8 @@ const ArtistPage: FC<object> = () => {
       onContext={onContextMenu}
       heartManager={heartManager}
       playableManager={playableManager}
+      pageActionType="out"
+      onPageAction={onPageAction}
     />
   );
 };

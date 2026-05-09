@@ -1,10 +1,11 @@
-import { FC, memo } from "react";
+import { FC, memo, useMemo } from "react";
 import { NeteaseArtist } from "@mahiru/ui/public/source/netease/models";
 
 import Avatar from "./Avatar";
 import Info from "./Info";
 import Tabs from "./Tabs";
 import { cx } from "@emotion/css";
+import { SquareArrowRightEnter, SquareArrowRightExit } from "lucide-react";
 
 interface HeaderProps {
   className?: string;
@@ -13,6 +14,8 @@ interface HeaderProps {
   tabsItem: string[];
   activeIndex: number;
   onChange?: NormalFunc<[index: number]>;
+  pageActionType?: "enter" | "out" | "none";
+  onPageAction?: NormalFunc;
 }
 
 const Header: FC<HeaderProps> = ({
@@ -21,19 +24,41 @@ const Header: FC<HeaderProps> = ({
   onAvatarLoaded,
   tabsItem,
   activeIndex,
-  onChange
+  onChange,
+  pageActionType = "none",
+  onPageAction
 }) => {
+  const action = useMemo(() => {
+    if (pageActionType === "enter")
+      return (
+        <SquareArrowRightEnter
+          className="size-5 text-(--theme-color-main) hover:opacity-50 ease-in-out transition-all duration-300 cursor-pointer active:scale-90"
+          onClick={onPageAction}
+        />
+      );
+    if (pageActionType === "out")
+      return (
+        <SquareArrowRightExit
+          className="size-5 text-(--theme-color-main) hover:opacity-50 ease-in-out transition-all duration-300 cursor-pointer active:scale-90"
+          onClick={onPageAction}
+        />
+      );
+    return null;
+  }, [onPageAction, pageActionType]);
   return (
     <div className={cx("w-full", className)}>
       <div className="w-full h-49 flex flex-row-reverse justify-start items-start">
         <Avatar className="h-full shrink-0" artist={artist} onAvatarLoaded={onAvatarLoaded} />
         <Info className="h-full flex-1" artist={artist}>
-          <Tabs
-            className="text-[12px] mt-2 relative left-6"
-            tabsItem={tabsItem}
-            activeIndex={activeIndex}
-            onChange={onChange}
-          />
+          <div className="flex mt-2 flex-row justify-end items-center">
+            <span className="relative left-2">{action}</span>
+            <Tabs
+              className="text-[12px] relative left-6"
+              tabsItem={tabsItem}
+              activeIndex={activeIndex}
+              onChange={onChange}
+            />
+          </div>
         </Info>
       </div>
       <div className="w-full h-0.5 my-2 bg-[#7b8290]/10" />

@@ -11,13 +11,17 @@ import { useThemeColor } from "@mahiru/ui/public/hooks/useThemeColor";
 import { Log } from "@mahiru/ui/public/utils/dev";
 import { NeteaseImageSize } from "@mahiru/ui/public/enum";
 import { FormatNumber } from "@mahiru/ui/public/utils/format";
+import { ElectronServicesBus } from "@mahiru/ui/public/source/electron/services";
+import { NeteaseAPIWiki } from "@mahiru/ui/public/source/netease/api";
+import {
+  NeteaseServicesAlbum,
+  NeteaseServicesPlaylist,
+  NeteaseServicesTrack
+} from "@mahiru/ui/public/source/netease/services";
 import NeteaseImage from "@mahiru/ui/public/components/image/NeteaseImage";
-import ElectronServices from "@mahiru/ui/public/source/electron/services";
-import NeteaseAPI from "@mahiru/ui/public/source/netease/api";
-import NeteaseServices from "@mahiru/ui/public/source/netease/services";
 
 interface TitleProps {
-  commentBus: typeof ElectronServices.Bus.comment;
+  commentBus: typeof ElectronServicesBus.comment;
   className?: string;
 }
 
@@ -44,7 +48,7 @@ const Title: FC<TitleProps> = ({ className, commentBus }) => {
   }, [album, commentBus.data?.type, playlist, track]);
 
   const buildCacheKey = useRef((id: number) => id).current;
-  const ugcSongRequestCache = useCacheRequest(NeteaseAPI.Wiki.ugcSong, buildCacheKey, "memory");
+  const ugcSongRequestCache = useCacheRequest(NeteaseAPIWiki.ugcSong, buildCacheKey, "memory");
   useEffect(() => {
     if (!track || commentBus.data?.type !== "track") {
       setTags([]);
@@ -69,21 +73,21 @@ const Title: FC<TitleProps> = ({ className, commentBus }) => {
   useEffect(() => {
     if (!commentBus.data?.id) return;
     if (commentBus.data.type === "track") {
-      NeteaseServices.Track.idEnsure(commentBus.data?.id)
+      NeteaseServicesTrack.idEnsure(commentBus.data?.id)
         .then(setTrack)
         .catch((err) => {
           Log.error(err);
           setTrack(null);
         });
     } else if (commentBus.data.type === "playlist") {
-      NeteaseServices.Playlist.id(commentBus.data?.id)
+      NeteaseServicesPlaylist.id(commentBus.data?.id)
         .then(setPlaylist)
         .catch((err) => {
           Log.error(err);
           setPlaylist(null);
         });
     } else if (commentBus.data.type === "album") {
-      NeteaseServices.Album.id(commentBus.data?.id)
+      NeteaseServicesAlbum.id(commentBus.data?.id)
         .then(setAlbum)
         .catch((err) => {
           Log.error(err);

@@ -16,8 +16,8 @@ import {
   NeteaseNetworkImage
 } from "@mahiru/ui/public/source/netease/models/NeteaseImage";
 import { NeteaseImageSize } from "@mahiru/ui/public/enum";
-import NeteaseServices from "@mahiru/ui/public/source/netease/services";
-import ElectronServices from "@mahiru/ui/public/source/electron/services";
+import { NeteaseServicesImage } from "@mahiru/ui/public/source/netease/services";
+import { ElectronServicesWindow } from "@mahiru/ui/public/source/electron/services";
 
 type ShadowLevel = "none" | "base" | "float";
 
@@ -125,7 +125,7 @@ const NeteaseImage: FC<ImageProps> = ({
   const wrapClick = useCallback(
     async (e: ReactMouseEvent<HTMLImageElement>) => {
       if (preview && image) {
-        const imageWindow = ElectronServices.Window.from("image");
+        const imageWindow = ElectronServicesWindow.get("image");
         const sendImage = image.toNetworkImage().setSize(NeteaseImageSize.raw);
         await imageWindow.openAwait();
         imageWindow.send("imageCheckerBus", {
@@ -164,7 +164,7 @@ const NeteaseImage: FC<ImageProps> = ({
 
   useEffect(() => {
     if (pause || !image?.src || (cacheLazy && !visible)) return;
-    NeteaseServices.Image.local(image, cache).then((local) => {
+    NeteaseServicesImage.local(image, cache).then((local) => {
       if (local) setSource(local);
       else setSource(image);
     });

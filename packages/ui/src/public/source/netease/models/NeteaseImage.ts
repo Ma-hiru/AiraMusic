@@ -1,12 +1,10 @@
+import { NeteaseURL } from "./NeteaseURL";
+import { NeteaseAlbum } from "./NeteaseAlbum";
+import { NeteaseTrack } from "./NeteaseTrack";
+import { NeteaseUserModel } from "./NeteaseUser";
+import { NeteaseTrackRecord } from "./NeteaseTrackRecord";
 import { NeteaseImageSize } from "@mahiru/ui/public/enum";
-import {
-  NeteaseAlbum,
-  NeteasePlaylistSummary,
-  NeteaseTrack,
-  NeteaseTrackRecord,
-  NeteaseURL,
-  NeteaseUserModel
-} from ".";
+import { NeteasePlaylistSummary } from "./NeteasePlaylistSummary";
 
 export class NeteaseNetworkImage {
   url;

@@ -1,5 +1,5 @@
 import pLimit from "p-limit";
-import NeteaseAPI from "@mahiru/ui/public/source/netease/api";
+import { NeteaseAPITrack } from "@mahiru/ui/public/source/netease/api";
 import { CacheStore } from "@mahiru/ui/public/store/cache";
 import { NeteaseTrack } from "@mahiru/ui/public/source/netease/models";
 import { Log } from "@mahiru/ui/public/utils/dev";
@@ -89,7 +89,7 @@ export default class _NeteaseTrackSource {
     }
     const requestResults = await Promise.all(
       chunks.map((chunk) => {
-        return limit(() => NeteaseAPI.Track.detail(chunk));
+        return limit(() => NeteaseAPITrack.detail(chunk));
       })
     );
     // 将请求结果扁平化

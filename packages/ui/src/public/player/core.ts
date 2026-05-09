@@ -13,11 +13,15 @@ import { Listenable } from "@mahiru/ui/public/utils/listenable";
 import { Log } from "@mahiru/ui/public/utils/dev";
 import { userStoreSnapshot } from "@mahiru/ui/public/store/user";
 import { NeteaseImageSize } from "@mahiru/ui/public/enum";
+import {
+  NeteaseServicesAudio,
+  NeteaseServicesImage,
+  NeteaseServicesLyric
+} from "@mahiru/ui/public/source/netease/services";
 
 import AppAudio from "./audio";
 import AppPlaylist from "./playlist";
 import AppHistory from "./history";
-import NeteaseServices from "@mahiru/ui/public/source/netease/services";
 
 export const enum AppPlayerStatus {
   idle = 1,
@@ -211,26 +215,26 @@ export default class AppPlayer extends Listenable {
     track: NeteaseTrack
   ): Promise<Nullable<NeteaseLocalAudio | NeteaseNetworkAudio>> {
     const preference = this.userStore._settings?.preference ?? NeteaseSettings.default.preference;
-    const local = await NeteaseServices.Audio.local(track, preference, false);
+    const local = await NeteaseServicesAudio.local(track, preference, false);
     if (local) return local;
-    const network = await NeteaseServices.Audio.network(track, preference);
+    const network = await NeteaseServicesAudio.network(track, preference);
     if (network) {
-      window.setTimeout(() => NeteaseServices.Audio.download(network), 10000);
+      window.setTimeout(() => NeteaseServicesAudio.download(network), 10000);
       return network;
     }
     return null;
   }
 
   private async loadCover(track: NeteaseTrack): Promise<NeteaseNetworkImage | NeteaseLocalImage> {
-    const local = await NeteaseServices.Image.local(track, false, NeteaseImageSize.lg);
+    const local = await NeteaseServicesImage.local(track, false, NeteaseImageSize.lg);
     if (local) return local;
-    const network = NeteaseServices.Image.notwork(track, NeteaseImageSize.lg);
-    window.setTimeout(() => NeteaseServices.Image.download(network), 10000);
+    const network = NeteaseServicesImage.notwork(track, NeteaseImageSize.lg);
+    window.setTimeout(() => NeteaseServicesImage.download(network), 10000);
     return network;
   }
 
   private async loadLyric(track: NeteaseTrack) {
-    return NeteaseServices.Lyric.track(track);
+    return NeteaseServicesLyric.track(track);
   }
 
   static save(instance: AppPlayer) {

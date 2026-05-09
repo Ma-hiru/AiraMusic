@@ -3,12 +3,12 @@ import { Volume, Volume1, Volume2, VolumeX } from "lucide-react";
 import { useThemeColor } from "@mahiru/ui/public/hooks/useThemeColor";
 import { useUpdate } from "@mahiru/ui/public/hooks/useUpdate";
 import { useListenable } from "@mahiru/ui/public/hooks/useListenable";
+import { ElectronServicesWindow } from "@mahiru/ui/public/source/electron/services";
 import AppEntry from "@mahiru/ui/windows/main/entry";
-import ElectronServices from "@mahiru/ui/public/source/electron/services";
 
 const BarBtns: FC<object> = () => {
   const { mainColor, textColorOnMain } = useThemeColor();
-  const lyricWindow = useListenable(ElectronServices.Window.from("lyric"));
+  const lyricWindow = useListenable(ElectronServicesWindow.get("lyric"));
   const player = AppEntry.usePlayer();
 
   const VolumeTag = (() => {

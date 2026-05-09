@@ -1,5 +1,5 @@
-import NeteaseAPI from "@mahiru/ui/public/source/netease/api";
 import _NeteaseTrackSource from "./track";
+import { NeteaseAPIArtist } from "@mahiru/ui/public/source/netease/api";
 import { NeteaseArtist, NeteaseTrackRecord } from "@mahiru/ui/public/source/netease/models";
 import { CacheStore } from "@mahiru/ui/public/store/cache";
 
@@ -34,7 +34,7 @@ export default class _NeteaseArtistSource {
   }
 
   static async id(id: number): Promise<NeteaseArtist> {
-    const followInfos = await NeteaseAPI.Artist.followCount(id);
+    const followInfos = await NeteaseAPIArtist.followCount(id);
 
     const cache = await _NeteaseArtistSource.getCache(id);
     if (cache) {
@@ -42,9 +42,9 @@ export default class _NeteaseArtistSource {
       return NeteaseArtist.fromObject(cache);
     }
 
-    const detail = await NeteaseAPI.Artist.detail(id);
-    const desc = await NeteaseAPI.Artist.desc(id);
-    const hotTracks = await NeteaseAPI.Artist.hotTracks(id).then(({ songs }) => {
+    const detail = await NeteaseAPIArtist.detail(id);
+    const desc = await NeteaseAPIArtist.desc(id);
+    const hotTracks = await NeteaseAPIArtist.hotTracks(id).then(({ songs }) => {
       return _NeteaseArtistSource.requestFullTracks(songs.map((track) => track.id));
     });
 

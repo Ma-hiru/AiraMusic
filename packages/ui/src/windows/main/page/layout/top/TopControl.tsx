@@ -9,19 +9,19 @@ import {
 } from "lucide-react";
 import { isDev } from "@mahiru/ui/public/utils/dev";
 import { useListenable } from "@mahiru/ui/public/hooks/useListenable";
+import { ElectronServicesWindow } from "@mahiru/ui/public/source/electron/services";
 import AppEntry from "@mahiru/ui/windows/main/entry";
-import ElectronServices from "@mahiru/ui/public/source/electron/services";
 
 import NoDrag from "@mahiru/ui/public/components/drag/NoDrag";
 
 const TopControl: FC = () => {
-  const currentWindow = useListenable(ElectronServices.Window.current);
-  const miniWindow = useListenable(ElectronServices.Window.from("miniplayer"));
+  const currentWindow = useListenable(ElectronServicesWindow.current);
+  const miniWindow = useListenable(ElectronServicesWindow.get("miniplayer"));
 
   const close = async () => {
     currentWindow.hide();
     AppEntry.dispose();
-    ElectronServices.Window.all.hide();
+    ElectronServicesWindow.all.hide();
     currentWindow.close();
   };
 

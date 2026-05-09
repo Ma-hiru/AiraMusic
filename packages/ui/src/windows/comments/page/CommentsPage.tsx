@@ -1,10 +1,10 @@
-import { FC, memo, useEffect, useMemo, useState } from "react";
+import { FC, memo, useEffect, useState } from "react";
 import { useComments } from "@mahiru/ui/public/hooks/useComments";
-import { CommentSort, CommentType, NeteaseImageSize } from "@mahiru/ui/public/enum";
-import { NeteaseNetworkImage } from "@mahiru/ui/public/source/netease/models";
+import { CommentSort, CommentType } from "@mahiru/ui/public/enum";
 import { CacheStore } from "@mahiru/ui/public/store/cache";
 import { useListenable } from "@mahiru/ui/public/hooks/useListenable";
-import ElectronServices from "@mahiru/ui/public/source/electron/services";
+import { useThemeInjectFromBus } from "@mahiru/ui/public/hooks/useThemeInjectFromBus";
+import { ElectronServicesBus } from "@mahiru/ui/public/source/electron/services";
 
 import Control from "./Control";
 import Title from "./Title";
@@ -16,8 +16,8 @@ import ThrowIf from "@mahiru/ui/public/components/fallback/ThrowIf";
 import AcrylicBackground from "@mahiru/ui/public/components/public/AcrylicBackground";
 
 const CommentsPage: FC<object> = () => {
-  const commentBus = useListenable(ElectronServices.Bus.comment);
-  const playerBus = useListenable(ElectronServices.Bus.player);
+  const commentBus = useListenable(ElectronServicesBus.comment);
+  const playerBus = useListenable(ElectronServicesBus.player);
   const [dynamicContent, setDynamicContent] = useState(() => {
     return CacheStore.browser.getOne("comments-dynamic-content") === "true";
   });
@@ -25,6 +25,8 @@ const CommentsPage: FC<object> = () => {
   const [type, setType] = useState(CommentType.Song);
   const [sortType, setSortType] = useState(CommentSort.Hot);
   const { comments, status, loadMore } = useComments({ id, type, sortType });
+
+  useThemeInjectFromBus();
 
   useEffect(() => {
     if (!commentBus.data) return;
@@ -43,22 +45,18 @@ const CommentsPage: FC<object> = () => {
   }, [commentBus.data]);
 
   useEffect(() => {
-    ElectronServices.Bus.mainBusUpdater.send("player");
-    ElectronServices.Bus.mainBusUpdater.send("info");
+    ElectronServicesBus.mainBusUpdater.send("player");
+    ElectronServicesBus.mainBusUpdater.send("info");
   }, [dynamicContent]);
 
-  const background = useMemo(() => {
-    const src = playerBus.data?.track?.detail.al.picUrl;
-    if (!src) return undefined;
-    return NeteaseNetworkImage.fromURL(src).setSize(NeteaseImageSize.sm).src;
-  }, [playerBus.data?.track?.detail.al.picUrl]);
+  const InfoBus = useListenable(ElectronServicesBus.info);
 
   useEffect(() => {
     const track = playerBus.data?.track;
     if (!track) return;
     if (dynamicContent) {
       CacheStore.browser.setOne("comments-dynamic-content", "true");
-      ElectronServices.Bus.comment.commit({
+      ElectronServicesBus.comment.commit({
         id: track.id,
         type: "track"
       });
@@ -71,7 +69,7 @@ const CommentsPage: FC<object> = () => {
     <div className="w-screen h-screen pt-10 overflow-hidden gird grid-rows-[auto,1fr] relative">
       <Control className="h-10 absolute top-0 left-0 right-0 z-10" />
       <div className="fixed inset-0 z-[-1]">
-        <AcrylicBackground src={background} />
+        <AcrylicBackground src={InfoBus.data?.backgroundCover} />
       </div>
       <AppErrorBoundary canReset toast={false} name="CommentsPage" onReset={loadMore}>
         <ThrowIf when={status === "error"} message="加载评论失败" />

@@ -15,8 +15,8 @@ import {
 import { cx } from "@emotion/css";
 import { NeteaseImageSize, PlaylistSource } from "@mahiru/ui/public/enum";
 import { HeartManager } from "@mahiru/ui/public/hooks/useHeart";
+import { NeteaseServicesAlbum } from "@mahiru/ui/public/source/netease/services";
 import ImageConstants from "@mahiru/ui/public/constants/image";
-import NeteaseServices from "@mahiru/ui/public/source/netease/services";
 
 import Top from "./top";
 import Divider from "./Divider";
@@ -61,6 +61,8 @@ interface AlbumPageProps {
   onPlayAll: NormalFunc;
   heartManager: HeartManager;
   playableManager: TrackListPlayableManager;
+  pageActionType?: "enter" | "out" | "none";
+  onPageAction?: NormalFunc;
 }
 
 const Album: FC<AlbumPageProps> = ({
@@ -78,17 +80,16 @@ const Album: FC<AlbumPageProps> = ({
   onAddList,
   onPlayAll,
   heartManager,
-  playableManager
+  playableManager,
+  pageActionType,
+  onPageAction
 }) => {
   const requestData = useCallback(
     (
       id: number
     ): Promise<[Nullable<NeteaseAlbum>, Nullable<NeteaseAlbumDynamicDetailResponse>]> => {
       if (!id) return Promise.resolve([null, null]);
-      return Promise.all([
-        NeteaseServices.Album.id(id),
-        NeteaseServices.Album.dynamic(id)
-      ] as const);
+      return Promise.all([NeteaseServicesAlbum.id(id), NeteaseServicesAlbum.dynamic(id)] as const);
     },
     []
   );
@@ -120,6 +121,8 @@ const Album: FC<AlbumPageProps> = ({
             onAddList={onAddList}
             onPlayAll={onPlayAll}
             onCoverLoaded={onCoverLoaded}
+            pageActionType={pageActionType}
+            onPageAction={onPageAction}
           />
           <Divider />
           {album && (

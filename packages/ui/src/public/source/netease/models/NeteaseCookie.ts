@@ -1,5 +1,5 @@
+import { NeteaseAPIAuth } from "@mahiru/ui/public/source/netease/api";
 import Cookies from "js-cookie";
-import NeteaseAPI from "@mahiru/ui/public/source/netease/api";
 
 export class NeteaseCookie {
   static set(raw: string) {
@@ -34,7 +34,7 @@ export class NeteaseCookie {
 
   static async refresh() {
     if (!NeteaseCookie.isLoggedIn()) return false;
-    return NeteaseAPI.Auth.refreshCookie()
+    return NeteaseAPIAuth.refreshCookie()
       .then(() => true)
       .catch(() => false);
   }

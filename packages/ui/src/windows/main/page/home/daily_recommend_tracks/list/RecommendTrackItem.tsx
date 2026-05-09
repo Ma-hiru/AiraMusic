@@ -1,11 +1,11 @@
 import { FC, memo, useCallback, useMemo } from "react";
 import { AudioLines, CirclePlay } from "lucide-react";
+import { NeteaseServicesTrack } from "@mahiru/ui/public/source/netease/services";
+import { NeteaseNetworkImage, NeteaseTrackRecord } from "@mahiru/ui/public/source/netease/models";
+import AppEntry from "@mahiru/ui/windows/main/entry";
+import ImageConstants from "@mahiru/ui/public/constants/image";
 
 import NeteaseImage from "@mahiru/ui/public/components/image/NeteaseImage";
-import AppEntry from "@mahiru/ui/windows/main/entry";
-import NeteaseServices from "@mahiru/ui/public/source/netease/services";
-import { NeteaseNetworkImage, NeteaseTrackRecord } from "@mahiru/ui/public/source/netease/models";
-import ImageConstants from "@mahiru/ui/public/constants/image";
 
 interface RecommendTrackItemProps {
   song: NeteaseAPI.DailyRecommendTracksDailySong;
@@ -32,7 +32,7 @@ const RecommendTrackItem: FC<RecommendTrackItemProps> = ({
 
   const play = useCallback(async () => {
     if (isPlaying) return;
-    const track = await NeteaseServices.Track.idEnsure(song.id);
+    const track = await NeteaseServicesTrack.idEnsure(song.id);
     const record = new NeteaseTrackRecord({
       detail: track,
       sourceName: "other",

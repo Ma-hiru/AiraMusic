@@ -1,8 +1,11 @@
 import { userStoreSnapshot } from "@mahiru/ui/public/store/user";
 import { useListenable } from "@mahiru/ui/public/hooks/useListenable";
+import { NeteaseServicesAuth } from "@mahiru/ui/public/source/netease/services";
+import {
+  ElectronServicesOnce,
+  ElectronServicesWindow
+} from "@mahiru/ui/public/source/electron/services";
 import AppPlayer from "@mahiru/ui/public/player/core";
-import NeteaseServices from "@mahiru/ui/public/source/netease/services";
-import ElectronServices from "@mahiru/ui/public/source/electron/services";
 
 export default class AppEntry {
   //region inner
@@ -48,13 +51,13 @@ export default class AppEntry {
   }
 
   private static setupUser() {
-    void NeteaseServices.Auth.setup();
+    void NeteaseServicesAuth.setup();
     return this;
   }
 
   private static setupMini() {
-    ElectronServices.Once.do("setupMini", () => {
-      const miniWindow = ElectronServices.Window.from("miniplayer");
+    ElectronServicesOnce.do("setupMini", () => {
+      const miniWindow = ElectronServicesWindow.get("miniplayer");
       setTimeout(async () => {
         if (!miniWindow.opened) {
           await miniWindow.openAwait();

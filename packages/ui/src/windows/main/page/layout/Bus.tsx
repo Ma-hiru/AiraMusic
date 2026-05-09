@@ -1,22 +1,32 @@
 import { useListenable } from "@mahiru/ui/public/hooks/useListenable";
 import { FC, memo, useCallback, useEffect, useRef } from "react";
 import { useLayoutStore } from "@mahiru/ui/windows/main/store/layout";
+import {
+  ElectronServicesBus,
+  ElectronServicesWindow
+} from "@mahiru/ui/public/source/electron/services";
 import AppEntry from "@mahiru/ui/windows/main/entry";
-import ElectronServices from "@mahiru/ui/public/source/electron/services";
+import { NeteaseServicesTrack } from "@mahiru/ui/public/source/netease/services";
+import { NeteaseTrackRecord } from "@mahiru/ui/public/source/netease/models";
+import { Log } from "@mahiru/ui/public/utils/dev";
+import { useNavigate } from "react-router-dom";
+import { RoutePath, RoutePathMain } from "@mahiru/ui/public/routes";
+import { PlaylistSource } from "@mahiru/ui/public/enum";
 
 const Bus: FC<object> = () => {
   const { theme } = useLayoutStore();
-  const windowCurrent = useListenable(ElectronServices.Window.current);
-  const playerActionBus = useListenable(ElectronServices.Bus.playerAction);
-  const mainBusUpdater = useListenable(ElectronServices.Bus.mainBusUpdater);
+  const windowCurrent = useListenable(ElectronServicesWindow.current);
+  const playerActionBus = useListenable(ElectronServicesBus.playerAction);
+  const playerChangeBus = useListenable(ElectronServicesBus.playerChange);
+  const mainBusUpdater = useListenable(ElectronServicesBus.mainBusUpdater);
   const player = AppEntry.usePlayer();
 
   const updateProgressBus = useCallback(() => {
-    ElectronServices.Bus.progress.send(player.audio.progress);
+    ElectronServicesBus.progress.send(player.audio.progress);
   }, [player.audio.progress]);
 
   const updatePlayerBus = useCallback(() => {
-    ElectronServices.Bus.player.send({
+    ElectronServicesBus.player.send({
       track: player.current.track,
       lyric: player.current.lyric,
       repeat: player.playlist.repeat,
@@ -29,7 +39,7 @@ const Bus: FC<object> = () => {
   }, [player]);
 
   const updateInfoBus = useCallback(() => {
-    ElectronServices.Bus.info.send({
+    ElectronServicesBus.info.send({
       backgroundCover: theme.backgroundCover,
       theme: {
         mainColor: theme.mainColor,
@@ -103,15 +113,8 @@ const Bus: FC<object> = () => {
           break;
       }
     }
-    playerActionBus.finish();
-  }, [
-    player.audio,
-    player.playlist,
-    // 监听变化数据
-    playerActionBus.data,
-    playerActionBus,
-    windowCurrent
-  ]);
+    ElectronServicesBus.clear("playerActionBus");
+  }, [player.audio, player.playlist, playerActionBus.data, windowCurrent]);
 
   useEffect(() => {
     const actions = mainBusUpdater.data;
@@ -129,15 +132,71 @@ const Bus: FC<object> = () => {
           break;
       }
     }
-    mainBusUpdater.finish();
-  }, [
-    updateInfoBus,
-    updatePlayerBus,
-    updateProgressBus,
-    // 监听变化数据
-    mainBusUpdater.data,
-    mainBusUpdater
-  ]);
+    ElectronServicesBus.clear("updateBus");
+  }, [updateInfoBus, updatePlayerBus, updateProgressBus, mainBusUpdater.data]);
+
+  // 是否正在应用更改
+  const applyingChanges = useRef(false);
+  // 变更队列
+  const appliedChangesQueue = useRef<MessageTypeMap["playerChangeBus"][]>([]);
+  const applyPlayerChanges = useCallback(async () => {
+    if (applyingChanges.current) return;
+    applyingChanges.current = true;
+
+    let change: Undefinable<MessageTypeMap["playerChangeBus"]>;
+    while ((change = appliedChangesQueue.current.shift())) {
+      try {
+        if (change.type === "replacePlaylistAndPlay") {
+          const { trackID, trackIdx, sourceType, sourceID, allIDs } = change;
+          if (player.current.track?.id === trackID) continue;
+
+          const tracks = await NeteaseServicesTrack.ids(allIDs);
+          const records = tracks.map(
+            (detail) => new NeteaseTrackRecord({ detail, sourceID, sourceName: sourceType })
+          );
+
+          const track = records[trackIdx] ?? records[0];
+          if (!track) continue;
+          if (player.playlist.same(records)) {
+            player.playlist.jump(track);
+          } else {
+            player.playlist.replace(records, track);
+          }
+        } else if (change.type === "addListToPlaylistEnd") {
+          const { sourceType, sourceID, allIDs } = change;
+          const tracks = await NeteaseServicesTrack.ids(allIDs);
+          const records = tracks.map(
+            (detail) => new NeteaseTrackRecord({ detail, sourceID, sourceName: sourceType })
+          );
+          player.playlist.addList(records);
+        } else if (change.type === "addToPlaylistNext" || change.type === "addToPlaylistLast") {
+          const { sourceID, sourceType, trackID, type } = change;
+          if (player.current.track?.id === trackID) continue;
+
+          const track = new NeteaseTrackRecord({
+            detail: await NeteaseServicesTrack.idEnsure(trackID),
+            sourceName: sourceType,
+            sourceID: sourceID
+          });
+          player.playlist.add(track, type === "addToPlaylistNext" ? "next" : "end");
+        }
+      } catch (err) {
+        Log.error("Bus", "applyPlayerChangesError:", err);
+      }
+    }
+
+    applyingChanges.current = false;
+  }, [player]);
+  useEffect(() => {
+    const changes = playerChangeBus.data;
+    if (changes.length === 0) return;
+    // 添加变更数据到队列
+    appliedChangesQueue.current.push(...changes);
+    // 清空变更数据
+    ElectronServicesBus.clear("playerChangeBus");
+    // 启动变更应用
+    void applyPlayerChanges();
+  }, [applyPlayerChanges, playerChangeBus.data]);
 
   useEffect(() => {
     AppEntry.busUpdater = () => updateBus.current();
@@ -145,6 +204,23 @@ const Bus: FC<object> = () => {
       AppEntry.busUpdater = undefined;
     };
   }, [updateBus]);
+
+  const navigate = useNavigate();
+  useEffect(() => {
+    return ElectronServicesWindow.get("display").listenMessage("mergeDisplay", ({ id, type }) => {
+      switch (type) {
+        case "album":
+          navigate(RoutePath.withQuery(RoutePathMain.album, { id }));
+          break;
+        case "artist":
+          navigate(RoutePath.withQuery(RoutePathMain.artist, { id }));
+          break;
+        case "playlist":
+          navigate(RoutePathMain.playlist.withQuery(id, PlaylistSource.Normal));
+          break;
+      }
+    });
+  }, [navigate]);
 
   return null;
 };

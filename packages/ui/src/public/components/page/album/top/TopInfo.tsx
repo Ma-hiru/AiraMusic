@@ -5,7 +5,10 @@ import { NeteaseAlbum } from "@mahiru/ui/public/source/netease/models";
 import { css, cx } from "@emotion/css";
 import { useScrollAutoHide } from "@mahiru/ui/public/hooks/useScrollAutoHide";
 import { FormatNumber } from "@mahiru/ui/public/utils/format";
-import ElectronServices from "@mahiru/ui/public/source/electron/services";
+import {
+  ElectronServicesBus,
+  ElectronServicesWindow
+} from "@mahiru/ui/public/source/electron/services";
 
 interface TopInfoProps {
   album: Nullable<NeteaseAlbum>;
@@ -78,8 +81,8 @@ const TopInfo: FC<TopInfoProps> = ({ album, dynamic, onPlayAll, onAddList }) => 
           style={{ color: mainColor.hex() }}
           onClick={async () => {
             if (!album?.content?.id) return;
-            await ElectronServices.Window.from("comments").openAwait();
-            ElectronServices.Bus.comment.send({
+            await ElectronServicesWindow.get("comments").openAwait();
+            ElectronServicesBus.comment.send({
               id: album.content.id,
               type: "album"
             });

@@ -1,6 +1,5 @@
 import { cx } from "@emotion/css";
 import { FC, memo } from "react";
-import { useLayoutStore } from "@mahiru/ui/windows/main/store/layout";
 import { useThemeColor } from "@mahiru/ui/public/hooks/useThemeColor";
 import AppUI from "@mahiru/ui/public/player/ui";
 
@@ -12,15 +11,12 @@ import BarSpectrum from "./BarSpectrum";
 import AppErrorBoundary from "@mahiru/ui/public/components/fallback/AppErrorBoundary";
 
 const Bar: FC<{ className?: string }> = ({ className }) => {
-  const { theme } = useLayoutStore();
   const { textColorOnMain } = useThemeColor();
-  // const { stage } = useStage();
+
   return (
     <div
       style={{
-        background: theme.backgroundCover
-          ? AppUI.WHITE_COLOR.mix(textColorOnMain, 0.5).alpha(0.1).string()
-          : AppUI.WHITE_COLOR.alpha(0.8).string()
+        background: AppUI.WHITE_COLOR.mix(textColorOnMain, 0.5).alpha(0.1).string()
       }}
       className={cx(
         `

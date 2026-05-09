@@ -1,5 +1,5 @@
-import NeteaseAPI from "@mahiru/ui/public/source/netease/api";
 import _NeteaseTrackSource from "./track";
+import { NeteaseAPIAlbum } from "@mahiru/ui/public/source/netease/api";
 import { NeteaseAlbum, NeteaseTrackRecord } from "@mahiru/ui/public/source/netease/models";
 import { CacheStore } from "@mahiru/ui/public/store/cache";
 
@@ -40,7 +40,7 @@ export default class _NeteaseAlbumSource {
     const cache = await _NeteaseAlbumSource.getCache(id);
     if (cache) return NeteaseAlbum.fromObject(cache);
 
-    const content = await NeteaseAPI.Album.content(id);
+    const content = await NeteaseAPIAlbum.content(id);
     const tracks = await _NeteaseAlbumSource.requestFullTracks(
       content.songs.map((song) => song.id)
     );
@@ -57,7 +57,7 @@ export default class _NeteaseAlbumSource {
   static dynamic<T extends Optional<number | NeteaseAlbum>>(
     id: T
   ): T extends Falsy ? null : Promise<NeteaseAPI.NeteaseAlbumDynamicDetailResponse> {
-    const res = !id ? null : NeteaseAPI.Album.detail(typeof id === "number" ? id : id.content.id);
+    const res = !id ? null : NeteaseAPIAlbum.detail(typeof id === "number" ? id : id.content.id);
     return res as T extends Falsy ? null : Promise<NeteaseAPI.NeteaseAlbumDynamicDetailResponse>;
   }
 }

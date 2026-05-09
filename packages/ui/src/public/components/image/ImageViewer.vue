@@ -52,7 +52,7 @@
   import { clamp } from "lodash-es";
   import { ArrowLeftToLine, ArrowRightToLine, Download } from "lucide-vue-next";
   import { Log } from "@mahiru/ui/public/utils/dev";
-  import ElectronServices from "@mahiru/ui/public/source/electron/services";
+  import { ElectronServicesIPC } from "@mahiru/ui/public/source/electron/services";
   import AppLoading from "@mahiru/ui/public/components/fallback/AppLoading.vue";
 
   type ImageEntry = { url?: string; alt?: string };
@@ -115,7 +115,7 @@
           splitSrc[splitSrc.length - 1] ||
           current.value.url ||
           `unknown.${type}`;
-        const result = (await ElectronServices.IPC.Event.invoke.saveFile(<
+        const result = (await ElectronServicesIPC.Event.invoke.saveFile(<
           { buffer: ArrayBuffer; name: string }
         >{
           buffer,

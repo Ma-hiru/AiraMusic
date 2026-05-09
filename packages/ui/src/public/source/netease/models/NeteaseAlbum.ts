@@ -1,4 +1,4 @@
-import { NeteaseTrackRecord } from "@mahiru/ui/public/source/netease/models/NeteaseTrackRecord";
+import { NeteaseTrackRecord } from "./NeteaseTrackRecord";
 
 export class NeteaseAlbum {
   tracks: NeteaseTrackRecord[];

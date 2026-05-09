@@ -7,35 +7,38 @@ import ArtistDisplay from "../pages/artist/ArtistDisplay";
 import PlaylistDisplay from "../pages/playlist/PlaylistDisplay";
 import SearchDisplay from "../pages/search/SearchDisplay";
 
-export const DisplayRouter = createBrowserRouter([
-  {
-    path: RoutePathDisplay.base,
-    element: <LayoutDisplay />,
-    children: [
-      {
-        index: true,
-        element: <Navigate to={RoutePathDisplay.blank} replace />
-      },
-      {
-        path: RoutePathDisplay.blank,
-        element: <BlankDisplay />
-      },
-      {
-        path: RoutePathDisplay.album,
-        element: <AlbumDisplay />
-      },
-      {
-        path: RoutePathDisplay.artist,
-        element: <ArtistDisplay />
-      },
-      {
-        path: RoutePathDisplay.playlist.base,
-        element: <PlaylistDisplay />
-      },
-      {
-        path: RoutePathDisplay.search,
-        element: <SearchDisplay />
-      }
-    ]
-  }
-]);
+export const DisplayRouter = createBrowserRouter(
+  [
+    {
+      path: RoutePathDisplay.base,
+      element: <LayoutDisplay />,
+      children: [
+        {
+          index: true,
+          element: <Navigate to={RoutePathDisplay.blank} replace />
+        },
+        {
+          path: RoutePathDisplay.blank,
+          element: <BlankDisplay />
+        },
+        {
+          path: RoutePathDisplay.album,
+          element: <AlbumDisplay />
+        },
+        {
+          path: RoutePathDisplay.artist,
+          element: <ArtistDisplay />
+        },
+        {
+          path: RoutePathDisplay.playlist.base,
+          element: <PlaylistDisplay />
+        },
+        {
+          path: RoutePathDisplay.search,
+          element: <SearchDisplay />
+        }
+      ]
+    }
+  ],
+  { basename: "/display.html" }
+);

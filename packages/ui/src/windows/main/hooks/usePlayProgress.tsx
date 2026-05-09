@@ -1,8 +1,8 @@
 import { useAnimate } from "motion/react";
 import { MouseEvent as ReactMouseEvent, useCallback, useEffect, useRef, useState } from "react";
 import { clamp, throttle } from "lodash-es";
+import { NeteaseAPITrack } from "@mahiru/ui/public/source/netease/api";
 import AppEntry from "@mahiru/ui/windows/main/entry";
-import NeteaseAPI from "@mahiru/ui/public/source/netease/api";
 
 export function usePlayProgress() {
   const [percentScope, percentAnimate] = useAnimate();
@@ -117,7 +117,7 @@ export function usePlayProgress() {
     const fetchChorus = async () => {
       if (!player.current.track) return;
       try {
-        const response = await NeteaseAPI.Track.chorus(player.current.track.id);
+        const response = await NeteaseAPITrack.chorus(player.current.track.id);
         const duration = player.audio.instance.duration;
         setChorus(response.chorus);
         setChorusPercent(

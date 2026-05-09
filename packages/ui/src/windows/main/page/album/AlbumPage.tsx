@@ -3,10 +3,13 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { RoutePath, RoutePathMain } from "@mahiru/ui/public/routes";
 import { NeteaseTrackRecord } from "@mahiru/ui/public/source/netease/models";
 import { useUserTrackManager } from "@mahiru/ui/public/hooks/useUserTrackManager";
+import {
+  ElectronServicesBus,
+  ElectronServicesWindow
+} from "@mahiru/ui/public/source/electron/services";
 import AppEntry from "@mahiru/ui/windows/main/entry";
 import ImageConstants from "@mahiru/ui/public/constants/image";
 import AppContextMenu from "@mahiru/ui/public/components/menu";
-import ElectronServices from "@mahiru/ui/public/source/electron/services";
 
 import Album, { AlbumPageRef } from "@mahiru/ui/public/components/page/album/Album";
 import { getLayoutStoreSnapshot } from "@mahiru/ui/windows/main/store/layout";
@@ -35,20 +38,22 @@ const AlbumPage: FC<object> = () => {
   );
   const addToPlaylistNext = useCallback(
     (track: NeteaseTrackRecord) => {
+      if (player.current.track?.id === track.id) return;
       player.playlist.add(track, "next");
     },
-    [player.playlist]
+    [player]
   );
   const addToPlaylistLast = useCallback(
     (track: NeteaseTrackRecord) => {
+      if (player.current.track?.id === track.id) return;
       player.playlist.add(track, "end");
     },
-    [player.playlist]
+    [player]
   );
   const openComment = useCallback(async (track: NeteaseTrackRecord) => {
     if (!track) return;
-    await ElectronServices.Window.from("comments").openAwait();
-    ElectronServices.Bus.comment.send({
+    await ElectronServicesWindow.get("comments").openAwait();
+    ElectronServicesBus.comment.send({
       id: track.id,
       type: "track"
     });
@@ -77,7 +82,7 @@ const AlbumPage: FC<object> = () => {
     [navigate]
   );
   // 右键菜单
-  const { create, createTrackContextMenu } = AppContextMenu.use();
+  const { create, createTrackContextMenu } = AppContextMenu.useMenu();
   const onContextMenu = useCallback(
     (e: ReactMouseEvent<HTMLDivElement, MouseEvent>, track: NeteaseTrackRecord) => {
       create(createTrackContextMenu, {
@@ -127,6 +132,15 @@ const AlbumPage: FC<object> = () => {
     active && onCoverLoaded(coverRef.current);
   }, [active, onCoverLoaded]);
 
+  const onPageAction = useCallback(async () => {
+    await ElectronServicesWindow.get("display").openAwait();
+    ElectronServicesBus.display.send({
+      id,
+      type: "album"
+    });
+    navigate(-1);
+  }, [id, navigate]);
+
   return (
     <Album
       id={id}
@@ -142,6 +156,8 @@ const AlbumPage: FC<object> = () => {
       onAddList={onAddList}
       onPlayAll={onReplace}
       onCoverLoaded={onCoverLoaded}
+      pageActionType="out"
+      onPageAction={onPageAction}
       coverSize={ImageConstants.AlbumPageCoverSize}
     />
   );

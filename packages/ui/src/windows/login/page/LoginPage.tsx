@@ -2,7 +2,7 @@ import { useListenable } from "@mahiru/ui/public/hooks/useListenable";
 import { useEffect } from "react";
 import { QRCodeStatus, useLoginQRCode } from "@mahiru/ui/windows/login/hooks/useLoginQRCode";
 import { useAppLoaded } from "@mahiru/ui/public/hooks/useAppLoaded";
-import ElectronServices from "@mahiru/ui/public/source/electron/services";
+import { ElectronServicesWindow } from "@mahiru/ui/public/source/electron/services";
 
 import QRCode from "./QRCode";
 import Tips from "./Tips";
@@ -11,8 +11,8 @@ import TopControlPure from "@mahiru/ui/public/components/public/TopControlPure";
 
 export default function LoginPage() {
   const { status, result, dataURL, update } = useLoginQRCode();
-  const mainWindow = useListenable(ElectronServices.Window.from("main"));
-  const currentWindow = useListenable(ElectronServices.Window.current);
+  const mainWindow = useListenable(ElectronServicesWindow.get("main"));
+  const currentWindow = useListenable(ElectronServicesWindow.current);
 
   useEffect(() => {
     if (status === QRCodeStatus.AUTHORIZED && result) {

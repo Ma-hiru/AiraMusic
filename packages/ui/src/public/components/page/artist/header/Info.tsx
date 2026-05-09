@@ -2,7 +2,7 @@ import { cx } from "@emotion/css";
 import { FC, memo, ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { NeteaseArtist } from "@mahiru/ui/public/source/netease/models";
 import { FormatNumber } from "@mahiru/ui/public/utils/format";
-import NeteaseAPI from "@mahiru/ui/public/source/netease/api";
+import { NeteaseAPIArtist } from "@mahiru/ui/public/source/netease/api";
 import AppToast from "@mahiru/ui/public/components/toast";
 
 interface InfoProps {
@@ -33,7 +33,7 @@ const Info: FC<InfoProps> = ({ className, artist, children }) => {
     if (followed) setHasFollowedDays("");
 
     loading.current = true;
-    NeteaseAPI.Artist.subscribe(artist.id, !followed)
+    NeteaseAPIArtist.subscribe(artist.id, !followed)
       .then(() => {
         AppToast.show({
           type: "success",

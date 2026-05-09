@@ -1,5 +1,6 @@
 import { FC, memo, useRef } from "react";
-import NeteaseAPI from "@mahiru/ui/public/source/netease/api";
+import { NeteaseAPIPlaylist } from "@mahiru/ui/public/source/netease/api";
+import { useRequestAutoRetry, useRequestStatusWrap } from "@mahiru/ui/public/hooks/useRequestWrap";
 
 import AppErrorBoundary, {
   AppErrorBoundaryRef
@@ -7,10 +8,9 @@ import AppErrorBoundary, {
 import ThrowIf from "@mahiru/ui/public/components/fallback/ThrowIf";
 import RecommendPlaylistList from "./list";
 import AppLoading from "@mahiru/ui/public/components/fallback/AppLoading";
-import { useRequestAutoRetry, useRequestStatusWrap } from "@mahiru/ui/public/hooks/useRequestWrap";
 
 const DailyRecommendPlaylist: FC<object> = () => {
-  const { status, data, fetchData } = useRequestStatusWrap(NeteaseAPI.Playlist.recommendDaily);
+  const { status, data, fetchData } = useRequestStatusWrap(NeteaseAPIPlaylist.recommendDaily);
   const { reload } = useRequestAutoRetry(fetchData, [], () => (data?.recommend ?? []).length !== 0);
   const recommend = data?.recommend ?? [];
   const errRef = useRef<AppErrorBoundaryRef>({});

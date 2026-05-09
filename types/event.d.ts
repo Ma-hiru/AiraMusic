@@ -78,7 +78,7 @@ type MessageTypeMap = {
       id: number;
       name: string;
       sourceID: number;
-      sourceName: "playlist" | "album" | "other";
+      sourceName: NeteaseTrackRecordSourceType;
       detail: NeteaseTrackModel;
     }>;
     lyric: Optional<NeteaseLyricModel>;
@@ -131,6 +131,32 @@ type MessageTypeMap = {
     alt?: string;
   };
   updateBus: "info" | "player" | "progress";
+  displayBus: {
+    id: number;
+    type: "playlist" | "album" | "artist";
+  };
+  mergeDisplay: MessageTypeMap["displayBus"];
+  playerChangeBus:
+    | {
+        type: "addToPlaylistNext" | "addToPlaylistLast";
+        trackID: number;
+        sourceID: number;
+        sourceType: NeteaseTrackRecordSourceType;
+      }
+    | {
+        type: "replacePlaylistAndPlay";
+        trackID: number;
+        trackIdx: number;
+        sourceID: number;
+        sourceType: NeteaseTrackRecordSourceType;
+        allIDs: number[];
+      }
+    | {
+        type: "addListToPlaylistEnd";
+        sourceID: number;
+        sourceType: NeteaseTrackRecordSourceType;
+        allIDs: number[];
+      };
 };
 
 /** Normal 事件的 Message 类型的发送参数 */

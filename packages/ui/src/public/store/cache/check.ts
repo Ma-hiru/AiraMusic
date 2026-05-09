@@ -2,7 +2,7 @@ import { cacheRequest } from "./request";
 import { Log } from "@mahiru/ui/public/utils/dev";
 import { RequestCollector } from "@mahiru/ui/public/utils/collector";
 import { CacheStoreUtils } from "@mahiru/ui/public/store/cache/utils";
-import ElectronServices from "@mahiru/ui/public/source/electron/services";
+import { ElectronServicesNet } from "@mahiru/ui/public/source/electron/services";
 
 type CheckRequestItem = {
   id: string | number;
@@ -66,7 +66,7 @@ export class CacheStoreForCheck {
     this.flushCheckCollections(collections);
     let count = 0;
     const store = () => {
-      if (ElectronServices.Net.quality.score < 0.7 || count >= 3) {
+      if (ElectronServicesNet.quality.score < 0.7 || count >= 3) {
         this.orStoreMulti(collections).catch((err) => {
           Log.error({
             raw: err,

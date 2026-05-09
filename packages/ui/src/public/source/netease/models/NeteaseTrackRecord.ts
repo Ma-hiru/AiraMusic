@@ -1,5 +1,5 @@
 import { NeteaseTrack } from "./NeteaseTrack";
-import { NeteasePlaylist } from "@mahiru/ui/public/source/netease/models/NeteasePlaylist";
+import { NeteasePlaylist } from "./NeteasePlaylist";
 
 export class NeteaseTrackRecord {
   readonly id: number;
@@ -11,7 +11,7 @@ export class NeteaseTrackRecord {
   constructor(props: {
     sourceID: number;
     detail: NeteaseTrack;
-    sourceName: "playlist" | "album" | "other";
+    sourceName: NeteaseTrackRecordSourceType;
   }) {
     this.sourceID = props.sourceID;
     this.sourceName = props.sourceName;

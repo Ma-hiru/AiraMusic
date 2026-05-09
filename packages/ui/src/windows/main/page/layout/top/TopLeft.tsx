@@ -5,7 +5,7 @@ import { LayoutConfig } from "@mahiru/ui/windows/main/store/layout/config";
 import { ChevronDown, UserCircle2 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { getLayoutStoreSnapshot } from "@mahiru/ui/windows/main/store/layout";
-import NeteaseServices from "@mahiru/ui/public/source/netease/services";
+import { NeteaseServicesAuth } from "@mahiru/ui/public/source/netease/services";
 
 import NeteaseImage from "@mahiru/ui/public/components/image/NeteaseImage";
 import NoDrag from "@mahiru/ui/public/components/drag/NoDrag";
@@ -24,8 +24,8 @@ const TopLeft: FC<TopLeftProps> = ({ user, layout }) => {
   const onClick = useCallback(() => {
     if (layout.playModal) {
       updateLayout(layout.copy().setPlayModal(false));
-    } else if (!NeteaseServices.Auth.isLoggedIn) {
-      NeteaseServices.Auth.createLoginWindow();
+    } else if (!NeteaseServicesAuth.isLoggedIn) {
+      NeteaseServicesAuth.createLoginWindow();
     } else {
       if (Date.now() - lastClickTime.current < 2000) {
         AppToast.show({
@@ -33,7 +33,7 @@ const TopLeft: FC<TopLeftProps> = ({ user, layout }) => {
           text: "再次点击退出登录"
         });
       } else {
-        NeteaseServices.Auth.logout().finally(() => {
+        NeteaseServicesAuth.logout().finally(() => {
           AppToast.show({
             type: "success",
             text: "已退出登录"

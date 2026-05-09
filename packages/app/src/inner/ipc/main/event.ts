@@ -7,9 +7,7 @@ const mainEventAPI = {
   openInternalWindow: (e, type) => {
     const sender = BrowserWindow.fromWebContents(e.sender);
     if (!sender) return;
-    if (AppWindowManager.getId(sender) === "main") {
-      return AppWindowCreator.create(AppWindows.get(type));
-    }
+    return AppWindowCreator.create(AppWindows.get(type));
   },
   focusInternalWindow: (e, type) => {
     const win = type ? AppWindowManager.get(type) : BrowserWindow.fromWebContents(e.sender);

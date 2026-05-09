@@ -11,7 +11,10 @@ import {
 import { WindowResize } from "@mahiru/ui/public/hooks/useWindowResize";
 import { useAppLoaded } from "@mahiru/ui/public/hooks/useAppLoaded";
 import { NeteaseLyric } from "@mahiru/ui/public/source/netease/models";
-import ElectronServices from "@mahiru/ui/public/source/electron/services";
+import {
+  ElectronServicesBus,
+  ElectronServicesWindow
+} from "@mahiru/ui/public/source/electron/services";
 
 import Control from "./Control";
 import LyricComponent, { LyricRef } from "@mahiru/ui/public/components/lyric/LyricContainer";
@@ -29,9 +32,9 @@ export default function LyricPage() {
   });
   const showBgTimer = useRef<Nullable<ReturnType<typeof setTimeout>>>(null);
   // 监听播放器相关事件
-  const playerBus = useListenable(ElectronServices.Bus.player);
-  const infoBus = useListenable(ElectronServices.Bus.info);
-  const progressBus = useListenable(ElectronServices.Bus.progress);
+  const playerBus = useListenable(ElectronServicesBus.player);
+  const infoBus = useListenable(ElectronServicesBus.info);
+  const progressBus = useListenable(ElectronServicesBus.progress);
   const getInfo = useRef({
     playerBus,
     infoBus
@@ -134,13 +137,12 @@ export default function LyricPage() {
   const [reverseControl, setReverseControl] = useState(true);
   useLayoutEffect(() => {
     const update = () => {
-      ElectronServices.Window.current.bounds.then(({ x, y, height, workAreaHeight }) => {
+      ElectronServicesWindow.current.bounds.then(({ x, y, height, workAreaHeight }) => {
         const screenHeight = window.screen.height;
         if (y < screenHeight / 10) setReverseControl(true);
         else if (y + height > (screenHeight * 9) / 10) setReverseControl(false);
-        console.log(y, height, workAreaHeight, screenHeight);
         if (y + height > workAreaHeight) {
-          ElectronServices.Window.current.move({
+          ElectronServicesWindow.current.move({
             x,
             y: Math.max(workAreaHeight - height, 0)
           });
@@ -148,7 +150,7 @@ export default function LyricPage() {
       });
     };
     update();
-    return ElectronServices.Window.current.addEventListener("moved", update);
+    return ElectronServicesWindow.current.addEventListener("moved", update);
   }, []);
 
   return (

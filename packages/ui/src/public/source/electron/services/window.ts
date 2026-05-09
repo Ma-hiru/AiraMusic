@@ -329,7 +329,7 @@ export default class _AppWindow extends Listenable<WindowBusEvent> {
 
   private static winCache = new Map<WindowType, _AppWindow>();
 
-  static from(type: WindowType) {
+  static get(type: WindowType) {
     if (this.winCache.has(type)) return this.winCache.get(type)!;
 
     const instance = new _AppWindow(type);
@@ -338,15 +338,15 @@ export default class _AppWindow extends Listenable<WindowBusEvent> {
   }
 
   static get current() {
-    return this.from(_currentWindowType);
+    return this.get(_currentWindowType);
   }
 
   static get main() {
-    return this.from("main");
+    return this.get("main");
   }
 
   static get all() {
-    return this.from("all");
+    return this.get("all");
   }
 
   static panic(message: string, error?: string) {

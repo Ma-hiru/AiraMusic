@@ -1,4 +1,4 @@
-import NeteaseAPI from "@mahiru/ui/public/source/netease/api";
+import { NeteaseAPISearch } from "@mahiru/ui/public/source/netease/api";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { debounce } from "lodash-es";
 import { SearchType } from "@mahiru/ui/public/enum";
@@ -26,7 +26,7 @@ export function useSearch(size: number = 50) {
       if (!hasMore.current) return;
       setLoading(true);
       setFailed(false);
-      NeteaseAPI.Search.search({
+      NeteaseAPISearch.search({
         keywords,
         type: searchType,
         searchType: "NORMAL",
@@ -103,14 +103,14 @@ export function useSearch(size: number = 50) {
   }, [requestResult]);
 
   useEffect(() => {
-    NeteaseAPI.Search.hotListDetail().then((response) => {
+    NeteaseAPISearch.hotListDetail().then((response) => {
       setHotSearchList(response.data);
     });
-    NeteaseAPI.Search.defaultKeywords().then((response) => {
+    NeteaseAPISearch.defaultKeywords().then((response) => {
       setDefaultSearchKeyword(response.data);
     });
     const timer = setInterval(() => {
-      NeteaseAPI.Search.defaultKeywords().then((response) => {
+      NeteaseAPISearch.defaultKeywords().then((response) => {
         setDefaultSearchKeyword(response.data);
       });
     }, 60000);
@@ -148,7 +148,7 @@ function searchSuggest(
   keyword: string,
   callback: NormalFunc<[result: NeteaseAPI.NeteaseSearchSuggestionResponse["result"]]>
 ) {
-  NeteaseAPI.Search.suggest(keyword).then((response) => {
+  NeteaseAPISearch.suggest(keyword).then((response) => {
     callback(response.result);
   });
 }

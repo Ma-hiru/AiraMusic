@@ -3,7 +3,7 @@ import { RequestStatus } from "@mahiru/ui/public/hooks/useRequestWrap";
 import { useImmer } from "use-immer";
 import { useLatestRef } from "@mahiru/ui/public/hooks/useLatestRef";
 import { Log } from "@mahiru/ui/public/utils/dev";
-import NCM from "@mahiru/ui/public/source/netease/api";
+import { NeteaseAPIArtist } from "@mahiru/ui/public/source/netease/api";
 
 export function useAlbum(props: { id: number; pageSize?: number }) {
   const [status, setStatus] = useState<RequestStatus | "idle">("idle");
@@ -25,7 +25,7 @@ export function useAlbum(props: { id: number; pageSize?: number }) {
     if (isLoading || !hasMore) return;
 
     setStatus("loading");
-    NCM.Artist.albums({
+    NeteaseAPIArtist.albums({
       id,
       pageSize: pageSize || 20,
       pageNo: currentPageNo + 1
