@@ -1,11 +1,15 @@
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 import { getLayoutStoreSnapshot } from "@mahiru/ui/windows/main/store/layout";
 import { useLatestRef } from "@mahiru/ui/public/hooks/useLatestRef";
+import { useLocation } from "react-router-dom";
+import { useRouterActive } from "@mahiru/ui/public/hooks/useRouterActive";
 
 export function useLocateOrScrollTopRegister(props: {
   getScrollTopFunc?: NormalFunc<[], Optional<NormalFunc>>;
   getFastLocateFunc?: NormalFunc<[], Optional<NormalFunc>>;
 }) {
+  const location = useLocation();
+  const active = useRouterActive(location);
   const propsRef = useLatestRef(props);
 
   const canScrollTop = useCallback(
@@ -37,6 +41,16 @@ export function useLocateOrScrollTopRegister(props: {
     },
     [propsRef]
   );
+
+  useEffect(() => {
+    if (!active) {
+      canScrollTop(false);
+      canFastLocate(false);
+    } else {
+      canScrollTop(true);
+      canFastLocate(true);
+    }
+  }, [active, canFastLocate, canScrollTop]);
 
   return {
     canScrollTop,
