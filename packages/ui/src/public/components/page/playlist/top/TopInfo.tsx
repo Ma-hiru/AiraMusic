@@ -80,7 +80,7 @@ const TopInfo: FC<TopInfoProps> = ({ summary, onPlayAll, onAddList }) => {
           style={{ color: mainColor.hex() }}
           onClick={async () => {
             if (!summary?.id) return;
-            await ElectronServicesWindow.get("comments").openAwait();
+            await ElectronServicesWindow.comment.openAwait();
             ElectronServicesBus.comment.send({
               id: summary.id,
               type: "playlist"

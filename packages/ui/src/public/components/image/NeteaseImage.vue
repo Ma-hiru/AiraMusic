@@ -120,10 +120,9 @@
 
   async function wrapClick(e: MouseEvent) {
     if (props.preview && props.image) {
-      const imageWindow = ElectronServicesWindow.get("image");
       const sendImage = props.image.toNetworkImage().setSize(NeteaseImageSize.raw);
-      await imageWindow.openAwait();
-      imageWindow.send("imageCheckerBus", {
+      await ElectronServicesWindow.image.openAwait();
+      ElectronServicesWindow.image.send("imageCheckerBus", {
         url: sendImage.src,
         alt: imageAttrs.value.alt ?? sendImage.alt
       });

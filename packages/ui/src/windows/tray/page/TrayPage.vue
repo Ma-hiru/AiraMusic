@@ -64,7 +64,7 @@
         click: async () => {
           const id = playerBus.value.data?.track?.id;
           if (!id) return;
-          await ElectronServicesWindow.get("comments").openAwait();
+          await ElectronServicesWindow.comment.openAwait();
           ElectronServicesBus.comment.send({
             id,
             type: "track"

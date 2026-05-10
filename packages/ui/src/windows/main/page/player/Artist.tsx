@@ -40,7 +40,7 @@ const Artist: FC<object> = () => {
           fill="white"
           onClick={async () => {
             if (!track) return;
-            await ElectronServicesWindow.get("comments").openAwait();
+            await ElectronServicesWindow.comment.openAwait();
             ElectronServicesBus.comment.send({
               id: track.id,
               type: "track"

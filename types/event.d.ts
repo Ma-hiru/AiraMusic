@@ -140,6 +140,10 @@ type MessageTypeMap = {
         id: number;
         type: "playlist";
         source: "normal" | "like";
+      }
+    | {
+        type: "search";
+        keyword?: string;
       };
   mergeDisplay: MessageTypeMap["displayBus"];
   playerChangeBus:

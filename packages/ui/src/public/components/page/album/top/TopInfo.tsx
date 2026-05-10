@@ -81,7 +81,7 @@ const TopInfo: FC<TopInfoProps> = ({ album, dynamic, onPlayAll, onAddList }) => 
           style={{ color: mainColor.hex() }}
           onClick={async () => {
             if (!album?.content?.id) return;
-            await ElectronServicesWindow.get("comments").openAwait();
+            await ElectronServicesWindow.comment.openAwait();
             ElectronServicesBus.comment.send({
               id: album.content.id,
               type: "album"

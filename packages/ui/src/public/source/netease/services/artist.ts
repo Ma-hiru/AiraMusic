@@ -20,14 +20,14 @@ export default class _NeteaseArtistSource {
 
   //endregion
 
-  private static requestFullTracks(ids: number[]) {
+  private static requestFullTracks(artistID: number, ids: number[]) {
     return _NeteaseTrackSource.ids(ids).then((tracks) => {
       return tracks.map(
         (track) =>
           new NeteaseTrackRecord({
             detail: track,
-            sourceID: track.al.id,
-            sourceName: "album"
+            sourceID: artistID,
+            sourceName: "other"
           })
       );
     });
@@ -45,7 +45,10 @@ export default class _NeteaseArtistSource {
     const detail = await NeteaseAPIArtist.detail(id);
     const desc = await NeteaseAPIArtist.desc(id);
     const hotTracks = await NeteaseAPIArtist.hotTracks(id).then(({ songs }) => {
-      return _NeteaseArtistSource.requestFullTracks(songs.map((track) => track.id));
+      return _NeteaseArtistSource.requestFullTracks(
+        id,
+        songs.map((track) => track.id)
+      );
     });
 
     const artist = NeteaseArtist.fromNeteaseAPIs({

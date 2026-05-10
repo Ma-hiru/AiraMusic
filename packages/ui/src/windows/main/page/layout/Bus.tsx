@@ -207,7 +207,7 @@ const Bus: FC<object> = () => {
 
   const navigate = useNavigate();
   useEffect(() => {
-    return ElectronServicesWindow.get("display").listenMessage("mergeDisplay", (data) => {
+    return ElectronServicesWindow.display.listenMessage("mergeDisplay", (data) => {
       switch (data.type) {
         case "album":
           navigate(RoutePath.withQuery(RoutePathMain.album, { id: data.id }));

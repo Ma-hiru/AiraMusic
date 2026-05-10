@@ -337,6 +337,18 @@ export default class _AppWindow extends Listenable<WindowBusEvent> {
     return instance;
   }
 
+  static get comment() {
+    return this.get("comments");
+  }
+
+  static get display() {
+    return this.get("display");
+  }
+
+  static get image() {
+    return this.get("image");
+  }
+
   static get current() {
     return this.get(_currentWindowType);
   }
