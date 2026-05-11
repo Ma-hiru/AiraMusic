@@ -4,9 +4,9 @@ import { RoutePath, RoutePathMain } from "@mahiru/ui/public/routes";
 import { useUserTrackManager } from "@mahiru/ui/public/hooks/useUserTrackManager";
 import { ElectronServicesBus } from "@mahiru/ui/public/source/electron/services";
 import { useListenable } from "@mahiru/ui/public/hooks/useListenable";
-import { useArtistOrAlbumDisplayJump } from "../../ hooks/useArtistOrAlbumDisplayJump";
-import { usePlayerChangeActionFromDisplay } from "@mahiru/ui/windows/display/ hooks/usePlayerChangeActionFromDisplay";
-import { useDisplayPageAction } from "@mahiru/ui/windows/display/ hooks/useDisplayPageAction";
+import { useArtistOrAlbumDisplayJump } from "@mahiru/ui/windows/display/hooks/useArtistOrAlbumDisplayJump";
+import { usePlayerChangeActionFromDisplay } from "@mahiru/ui/windows/display/hooks/usePlayerChangeActionFromDisplay";
+import { useDisplayPageAction } from "@mahiru/ui/windows/display/hooks/useDisplayPageAction";
 import ImageConstants from "@mahiru/ui/public/constants/image";
 
 import Album, { AlbumPageRef } from "@mahiru/ui/public/components/page/album/Album";

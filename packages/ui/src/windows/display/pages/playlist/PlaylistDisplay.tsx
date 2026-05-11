@@ -6,9 +6,9 @@ import { useUserTrackManager } from "@mahiru/ui/public/hooks/useUserTrackManager
 import { ElectronServicesBus } from "@mahiru/ui/public/source/electron/services";
 import { useListenable } from "@mahiru/ui/public/hooks/useListenable";
 import { PlaylistSource } from "@mahiru/ui/public/enum";
-import { useArtistOrAlbumDisplayJump } from "../../ hooks/useArtistOrAlbumDisplayJump";
-import { usePlayerChangeActionFromDisplay } from "@mahiru/ui/windows/display/ hooks/usePlayerChangeActionFromDisplay";
-import { useDisplayPageAction } from "@mahiru/ui/windows/display/ hooks/useDisplayPageAction";
+import { useArtistOrAlbumDisplayJump } from "@mahiru/ui/windows/display/hooks/useArtistOrAlbumDisplayJump";
+import { usePlayerChangeActionFromDisplay } from "@mahiru/ui/windows/display/hooks/usePlayerChangeActionFromDisplay";
+import { useDisplayPageAction } from "@mahiru/ui/windows/display/hooks/useDisplayPageAction";
 
 import Playlist, { PlaylistRef } from "@mahiru/ui/public/components/page/playlist/Playlist";
 

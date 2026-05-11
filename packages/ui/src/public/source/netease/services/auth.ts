@@ -1,8 +1,5 @@
 import { Log } from "@mahiru/ui/public/utils/dev";
-import {
-  NeteaseUser,
-  NeteaseUserModel
-} from "@mahiru/ui/public/source/netease/models";
+import { NeteaseUser, NeteaseUserModel } from "@mahiru/ui/public/source/netease/models";
 import { userStoreSnapshot } from "@mahiru/ui/public/store/user";
 import { NeteaseServicesUser } from "@mahiru/ui/public/source/netease/services";
 import {
@@ -83,8 +80,7 @@ export default class _NeteaseAuth {
       _NeteaseAuth.retryTimer && window.clearInterval(_NeteaseAuth.retryTimer);
     };
     const doTrySetup = () => {
-      if (_NeteaseAuth.hasSetup || !_NeteaseAuth.retryEnabled)
-        return endRetry();
+      if (_NeteaseAuth.hasSetup || !_NeteaseAuth.retryEnabled) return endRetry();
       _NeteaseAuth
         .setup()
         .then(() => (_NeteaseAuth.hasSetup = true))
@@ -93,9 +89,7 @@ export default class _NeteaseAuth {
           Log.error(err);
           _NeteaseAuth.retryCount++;
           if (_NeteaseAuth.retryCount >= _NeteaseAuth.retryLimit) {
-            Log.error(
-              `Failed to setup user after ${_NeteaseAuth.retryLimit} attempts, giving up`
-            );
+            Log.error(`Failed to setup user after ${_NeteaseAuth.retryLimit} attempts, giving up`);
             endRetry();
           }
         });
@@ -105,10 +99,7 @@ export default class _NeteaseAuth {
       ElectronServicesNet.onOnlineChange(doTrySetup, { id: "setup_user" });
     } else {
       _NeteaseAuth.retryTimer && window.clearInterval(_NeteaseAuth.retryTimer);
-      _NeteaseAuth.retryTimer = window.setInterval(
-        doTrySetup,
-        HTTPConstants.Timeout
-      );
+      _NeteaseAuth.retryTimer = window.setInterval(doTrySetup, HTTPConstants.Timeout);
     }
   }
 
