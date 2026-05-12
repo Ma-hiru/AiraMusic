@@ -2,7 +2,7 @@ import { FC, memo, useMemo } from "react";
 import { SquareArrowRightEnter, SquareArrowRightExit, SquarePen } from "lucide-react";
 import { NeteaseNetworkImage, NeteasePlaylist } from "@mahiru/ui/public/source/netease/models";
 import { useUser } from "@mahiru/ui/public/store/user";
-import { FormatNumber } from "@mahiru/ui/public/utils/format";
+import { FormatNumber } from "../../../../lib/format";
 import { PlaylistSource } from "@mahiru/ui/public/enum";
 import ImageConstants from "@mahiru/ui/public/constants/image";
 

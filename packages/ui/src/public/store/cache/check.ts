@@ -1,5 +1,5 @@
 import { cacheRequest } from "./request";
-import { Log } from "@mahiru/ui/public/utils/dev";
+import { Log } from "@mahiru/ui/public/constants/dev";
 import { RequestCollector } from "@mahiru/ui/public/utils/collector";
 import { CacheStoreUtils } from "@mahiru/ui/public/store/cache/utils";
 import { ElectronServicesNet } from "@mahiru/ui/public/source/electron/services";

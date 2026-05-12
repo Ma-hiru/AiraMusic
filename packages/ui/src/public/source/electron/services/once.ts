@@ -1,4 +1,4 @@
-import { Log } from "@mahiru/ui/public/utils/dev";
+import { Log } from "@mahiru/ui/public/constants/dev";
 import { CacheStore } from "@mahiru/ui/public/store/cache";
 import _AppWindow from "./window";
 import Init from "@mahiru/ui/public/utils/init";

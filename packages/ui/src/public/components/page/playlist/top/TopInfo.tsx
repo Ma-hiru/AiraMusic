@@ -4,7 +4,7 @@ import { useThemeColor } from "@mahiru/ui/public/hooks/useThemeColor";
 import { NeteasePlaylist } from "@mahiru/ui/public/source/netease/models";
 import { css, cx } from "@emotion/css";
 import { useScrollAutoHide } from "@mahiru/ui/public/hooks/useScrollAutoHide";
-import { FormatNumber } from "@mahiru/ui/public/utils/format";
+import { FormatNumber } from "../../../../lib/format";
 import {
   ElectronServicesBus,
   ElectronServicesWindow

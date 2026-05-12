@@ -1,4 +1,4 @@
-import { createZustandConfig } from "@mahiru/ui/public/utils/store";
+import { createZustandConfig } from "../../../../public/lib/store";
 import Eq from "@mahiru/ui/public/utils/eq";
 import { SpectrumData, SpectrumOptions } from "@mahiru/ui/windows/main/hooks/useSpectrumWorker";
 import AppUI from "@mahiru/ui/public/player/ui";

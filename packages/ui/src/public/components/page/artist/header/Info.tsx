@@ -1,7 +1,7 @@
 import { cx } from "@emotion/css";
 import { FC, memo, ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { NeteaseArtist } from "@mahiru/ui/public/source/netease/models";
-import { FormatNumber } from "@mahiru/ui/public/utils/format";
+import { FormatNumber } from "../../../../lib/format";
 import { NeteaseAPIArtist } from "@mahiru/ui/public/source/netease/api";
 import AppToast from "@mahiru/ui/public/components/toast";
 

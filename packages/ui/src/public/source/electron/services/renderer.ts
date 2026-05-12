@@ -1,4 +1,4 @@
-import { Log } from "@mahiru/ui/public/utils/dev";
+import { Log } from "@mahiru/ui/public/constants/dev";
 
 class _AppMessage {
   private readonly listener = window?.electron?.listener;

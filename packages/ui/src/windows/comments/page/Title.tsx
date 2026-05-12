@@ -8,9 +8,9 @@ import {
 } from "@mahiru/ui/public/source/netease/models";
 import { useCacheRequest } from "@mahiru/ui/public/utils/cache";
 import { useThemeColor } from "@mahiru/ui/public/hooks/useThemeColor";
-import { Log } from "@mahiru/ui/public/utils/dev";
+import { Log } from "../../../public/constants/dev";
 import { NeteaseImageSize } from "@mahiru/ui/public/enum";
-import { FormatNumber } from "@mahiru/ui/public/utils/format";
+import { FormatNumber } from "../../../public/lib/format";
 import { ElectronServicesBus } from "@mahiru/ui/public/source/electron/services";
 import { NeteaseAPIWiki } from "@mahiru/ui/public/source/netease/api";
 import {

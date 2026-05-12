@@ -29,7 +29,7 @@
 <script setup lang="ts" name="TopControlPure">
   import NoDrag from "@mahiru/ui/public/components/drag/NoDrag.vue";
   import { AppWindow as AppWindowIcon, Minus, Square, SquareMinus, X } from "lucide-vue-next";
-  import { isDev } from "@mahiru/ui/public/utils/dev";
+  import { isDev } from "@mahiru/ui/public/constants/dev";
   import { useListenable } from "@mahiru/ui/public/hooks/useListenableVue";
   import { ElectronServicesWindow } from "@mahiru/ui/public/source/electron/services";
 

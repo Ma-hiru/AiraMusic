@@ -10,7 +10,7 @@ import {
   NeteaseTrackRecord
 } from "@mahiru/ui/public/source/netease/models";
 import { Listenable } from "@mahiru/ui/public/utils/listenable";
-import { Log } from "@mahiru/ui/public/utils/dev";
+import { Log } from "@mahiru/ui/public/constants/dev";
 import { userStoreSnapshot } from "@mahiru/ui/public/store/user";
 import { NeteaseImageSize } from "@mahiru/ui/public/enum";
 import {

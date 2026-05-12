@@ -51,7 +51,7 @@
   import { computed, CSSProperties, onMounted, ref, useTemplateRef, watch } from "vue";
   import { clamp } from "lodash-es";
   import { ArrowLeftToLine, ArrowRightToLine, Download } from "lucide-vue-next";
-  import { Log } from "@mahiru/ui/public/utils/dev";
+  import { Log } from "@mahiru/ui/public/constants/dev";
   import { ElectronServicesIPC } from "@mahiru/ui/public/source/electron/services";
   import AppLoading from "@mahiru/ui/public/components/fallback/AppLoading.vue";
 

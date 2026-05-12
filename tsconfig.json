@@ -29,9 +29,7 @@
         "./packages/*/src/index.tsx",
         "./packages/*/index.ts",
         "./packages/*/index.tsx"
-      ],
-      "aira-music": ["./packages/app/src/index.ts"],
-      "*": ["./*"]
+      ]
     },
     "types": ["vitest/globals"]
   },

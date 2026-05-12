@@ -1,6 +1,6 @@
 import AppUI from "@mahiru/ui/public/player/ui";
 import { FC, memo, RefObject, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Log } from "@mahiru/ui/public/utils/dev";
+import { Log } from "@mahiru/ui/public/constants/dev";
 
 export type VirtualListRow<T extends HasID, U> = FC<{
   items: T[];

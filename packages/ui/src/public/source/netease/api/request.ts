@@ -1,5 +1,5 @@
 import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
-import { Log } from "@mahiru/ui/public/utils/dev";
+import { Log } from "@mahiru/ui/public/constants/dev";
 import { EqError } from "@mahiru/log/src/err";
 import { NeteaseServicesAuth } from "@mahiru/ui/public/source/netease/services";
 import HTTPConstants from "@mahiru/ui/public/constants/http";

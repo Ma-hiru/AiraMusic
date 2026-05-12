@@ -1,5 +1,5 @@
 import { NeteaseAPILyric } from "@mahiru/ui/public/source/netease/api";
-import { Log } from "@mahiru/ui/public/utils/dev";
+import { Log } from "@mahiru/ui/public/constants/dev";
 import { NeteaseLyric, NeteaseTrack } from "@mahiru/ui/public/source/netease/models";
 import { CacheStore } from "@mahiru/ui/public/store/cache";
 

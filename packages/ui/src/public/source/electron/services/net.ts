@@ -1,4 +1,4 @@
-import { Log } from "@mahiru/ui/public/utils/dev";
+import { Log } from "@mahiru/ui/public/constants/dev";
 import { Listener } from "@mahiru/ui/public/utils/listenable";
 import { EqError } from "@mahiru/log/src/err";
 import Init from "@mahiru/ui/public/utils/init";

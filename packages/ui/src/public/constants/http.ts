@@ -1,5 +1,5 @@
 import { clamp } from "lodash-es";
-import { isTest } from "@mahiru/ui/public/utils/dev";
+import { isTest } from "./dev";
 import _AppRenderer from "@mahiru/ui/public/source/electron/services/renderer";
 
 export const accessToken = isTest

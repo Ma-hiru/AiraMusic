@@ -1,6 +1,6 @@
 import { FC, memo, ReactNode, RefObject, useCallback, useRef } from "react";
 import { ErrorBoundary, FallbackProps } from "react-error-boundary";
-import { Log } from "@mahiru/ui/public/utils/dev";
+import { Log } from "@mahiru/ui/public/constants/dev";
 import { cx } from "@emotion/css";
 import { CircleX } from "lucide-react";
 import { EqError } from "@mahiru/log";

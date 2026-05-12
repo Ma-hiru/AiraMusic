@@ -1,7 +1,7 @@
 import { FC, memo, useCallback, useMemo, useRef } from "react";
 import { useThemeColor } from "@mahiru/ui/public/hooks/useThemeColor";
 import { BannerType, PlaylistSource } from "@mahiru/ui/public/enum";
-import { Log } from "@mahiru/ui/public/utils/dev";
+import { Log } from "../../../../../public/constants/dev";
 import { NeteaseTrackRecord, NeteaseURL } from "@mahiru/ui/public/source/netease/models";
 import { useNavigate } from "react-router-dom";
 import { NeteaseAPIHome } from "@mahiru/ui/public/source/netease/api";

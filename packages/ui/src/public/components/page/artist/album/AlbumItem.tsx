@@ -1,6 +1,6 @@
 import { FC, memo, useMemo } from "react";
 import { NeteaseNetworkImage } from "@mahiru/ui/public/source/netease/models";
-import { FormatNumber } from "@mahiru/ui/public/utils/format";
+import { FormatNumber } from "../../../../lib/format";
 import ImageConstants from "@mahiru/ui/public/constants/image";
 
 import NeteaseImage from "@mahiru/ui/public/components/image/NeteaseImage";

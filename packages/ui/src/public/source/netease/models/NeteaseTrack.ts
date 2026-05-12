@@ -1,6 +1,6 @@
 import { NeteaseUser, NeteaseUserModel } from "./NeteaseUser";
 import { TrackBitmark, TrackQuality } from "@mahiru/ui/public/enum";
-import { FormatNumber } from "@mahiru/ui/public/utils/format";
+import { FormatNumber } from "../../../lib/format";
 
 export class NeteaseTrack implements NeteaseTrackModel {
   //region NeteaseTrackModel fields

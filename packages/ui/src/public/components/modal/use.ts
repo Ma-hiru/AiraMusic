@@ -1,5 +1,5 @@
 import { ModalData } from "@mahiru/ui/public/components/modal/ModalProvider";
-import { Log } from "@mahiru/ui/public/utils/dev";
+import { Log } from "@mahiru/ui/public/constants/dev";
 import Provider from "./ModalProvider";
 
 export default class AppModal {

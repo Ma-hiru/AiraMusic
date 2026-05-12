@@ -4,7 +4,7 @@ import { Heart } from "lucide-react";
 import { ColorInstance } from "color";
 import { PlaylistSource, TrackBitmark } from "@mahiru/ui/public/enum";
 import { NeteaseHistory, NeteaseTrackRecord } from "@mahiru/ui/public/source/netease/models";
-import { FormatNumber } from "@mahiru/ui/public/utils/format";
+import { FormatNumber } from "../../lib/format";
 
 import ListItemQuality from "./TrackItemQuality";
 import Tag from "@mahiru/ui/public/components/public/Tag";

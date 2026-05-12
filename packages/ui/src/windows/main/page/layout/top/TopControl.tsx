@@ -7,7 +7,7 @@ import {
   SquareMinus,
   X
 } from "lucide-react";
-import { isDev } from "@mahiru/ui/public/utils/dev";
+import { isDev } from "../../../../../public/constants/dev";
 import { useListenable } from "@mahiru/ui/public/hooks/useListenable";
 import { ElectronServicesWindow } from "@mahiru/ui/public/source/electron/services";
 import AppEntry from "@mahiru/ui/windows/main/entry";

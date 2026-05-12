@@ -9,7 +9,7 @@ import Tag from "@mahiru/ui/public/components/public/Tag";
 import AppEntry from "@mahiru/ui/windows/main/entry";
 import { NeteaseTrack } from "@mahiru/ui/public/source/netease/models";
 import AppAudio from "@mahiru/ui/public/player/audio";
-import { FormatNumber } from "@mahiru/ui/public/utils/format";
+import { FormatNumber } from "../../../../public/lib/format";
 
 const Progress: FC<object> = () => {
   const { barRef, bufferScope, percentScope, handleBarClick, handleBarMouseDown, chorusPercent } =

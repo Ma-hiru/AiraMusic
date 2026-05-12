@@ -3,7 +3,7 @@ import { useImmer } from "use-immer";
 import { useCallback, useEffect, useState } from "react";
 import { RequestStatus } from "@mahiru/ui/public/hooks/useRequestWrap";
 import { useLatestRef } from "@mahiru/ui/public/hooks/useLatestRef";
-import { Log } from "@mahiru/ui/public/utils/dev";
+import { Log } from "@mahiru/ui/public/constants/dev";
 import { NeteaseAPIComment } from "@mahiru/ui/public/source/netease/api";
 
 export type CommentState = {

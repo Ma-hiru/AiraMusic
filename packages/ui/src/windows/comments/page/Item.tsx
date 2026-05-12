@@ -6,10 +6,10 @@ import { ThumbsUp } from "lucide-react";
 import { NeteaseAPIComment } from "@mahiru/ui/public/source/netease/api";
 
 import NeteaseImage from "@mahiru/ui/public/components/image/NeteaseImage";
-import { FormatNumber } from "@mahiru/ui/public/utils/format";
+import { FormatNumber } from "../../../public/lib/format";
 import { cx } from "@emotion/css";
 import AppToast from "@mahiru/ui/public/components/toast";
-import { Log } from "@mahiru/ui/public/utils/dev";
+import { Log } from "../../../public/constants/dev";
 
 interface ItemProps {
   data: NeteaseAPI.NeteaseComment;

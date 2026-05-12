@@ -16,7 +16,7 @@ import {
   noLyricPreset,
   pureMusicLyricPreset
 } from "@mahiru/ui/public/constants/lyric";
-import { Log } from "@mahiru/ui/public/utils/dev";
+import { Log } from "@mahiru/ui/public/constants/dev";
 
 export class NeteaseLyric implements NeteaseLyricModel {
   //region fields

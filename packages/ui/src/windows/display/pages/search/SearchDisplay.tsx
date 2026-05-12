@@ -13,6 +13,7 @@ const SearchDisplay: FC<object> = () => {
       onJumpAlbum={null}
       onJumpArtist={null}
       onJumpPlaylist={null}
+      onJumpTrack={null}
       className="w-full h-full text-(--text-color-on-main)"
       placeholder={keyword}
     />

@@ -1,4 +1,4 @@
-import { createZustandShallowStore, createZustandStore } from "@mahiru/ui/public/utils/store";
+import { createZustandShallowStore, createZustandStore } from "../../../../public/lib/store";
 import { LayoutStoreConfig, LayoutStoreType } from "./config";
 
 export type { LayoutStoreType } from "./config";

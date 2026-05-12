@@ -1,7 +1,7 @@
 import { cx } from "@emotion/css";
 import { FC, memo } from "react";
 import { AppWindow as AppWindowIcon, Minus, Square, SquareMinus, X } from "lucide-react";
-import { isDev } from "@mahiru/ui/public/utils/dev";
+import { isDev } from "@mahiru/ui/public/constants/dev";
 import { useListenable } from "@mahiru/ui/public/hooks/useListenable";
 import { ElectronServicesWindow } from "@mahiru/ui/public/source/electron/services";
 

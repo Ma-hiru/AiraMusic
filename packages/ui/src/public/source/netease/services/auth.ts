@@ -1,4 +1,4 @@
-import { Log } from "@mahiru/ui/public/utils/dev";
+import { Log } from "@mahiru/ui/public/constants/dev";
 import { NeteaseUser, NeteaseUserModel } from "@mahiru/ui/public/source/netease/models";
 import { userStoreSnapshot } from "@mahiru/ui/public/store/user";
 import { NeteaseServicesUser } from "@mahiru/ui/public/source/netease/services";

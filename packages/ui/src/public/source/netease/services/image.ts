@@ -6,7 +6,7 @@ import {
 import { CacheStore } from "@mahiru/ui/public/store/cache";
 import { NeteaseImageSize } from "@mahiru/ui/public/enum";
 import { LRUCacheWithTime } from "@mahiru/ui/public/utils/lru";
-import { Log } from "@mahiru/ui/public/utils/dev";
+import { Log } from "@mahiru/ui/public/constants/dev";
 
 interface LocalFn {
   (

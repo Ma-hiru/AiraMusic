@@ -8,7 +8,7 @@ import {
 import AppEntry from "@mahiru/ui/windows/main/entry";
 import { NeteaseServicesTrack } from "@mahiru/ui/public/source/netease/services";
 import { NeteaseTrackRecord } from "@mahiru/ui/public/source/netease/models";
-import { Log } from "@mahiru/ui/public/utils/dev";
+import { Log } from "../../../../public/constants/dev";
 import { useNavigate } from "react-router-dom";
 import { RoutePath, RoutePathMain } from "@mahiru/ui/public/routes";
 import { PlaylistSource } from "@mahiru/ui/public/enum";

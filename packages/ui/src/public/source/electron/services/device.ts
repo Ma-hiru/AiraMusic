@@ -1,4 +1,4 @@
-import { Log } from "@mahiru/ui/public/utils/dev";
+import { Log } from "@mahiru/ui/public/constants/dev";
 import _AppRenderer from "@mahiru/ui/public/source/electron/services/renderer";
 
 export default class _AppDevice {

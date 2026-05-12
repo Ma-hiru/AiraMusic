@@ -34,7 +34,7 @@ import {
   NeteaseServicesPlaylist
 } from "@mahiru/ui/public/source/netease/services";
 import { useUpdate } from "@mahiru/ui/public/hooks/useUpdate";
-import { Log } from "@mahiru/ui/public/utils/dev";
+import { Log } from "@mahiru/ui/public/constants/dev";
 import { RequestStatus } from "@mahiru/ui/public/hooks/useRequestWrap";
 import { HeartManager } from "@mahiru/ui/public/hooks/useHeart";
 import AppContextMenu from "@mahiru/ui/public/components/menu";

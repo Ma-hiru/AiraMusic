@@ -1,5 +1,5 @@
 import { startTransition, useCallback, useEffect, useState } from "react";
-import { Log } from "@mahiru/ui/public/utils/dev";
+import { Log } from "@mahiru/ui/public/constants/dev";
 import { useStableArray } from "@mahiru/ui/public/hooks/useStableArray";
 import { useUpdate } from "@mahiru/ui/public/hooks/useUpdate";
 import { useLatestRef } from "@mahiru/ui/public/hooks/useLatestRef";

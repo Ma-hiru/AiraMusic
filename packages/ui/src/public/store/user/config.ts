@@ -1,4 +1,4 @@
-import { createZustandConfig } from "@mahiru/ui/public/utils/store";
+import { createZustandConfig } from "../../lib/store";
 import {
   NeteaseSettingsModel,
   NeteaseUser,

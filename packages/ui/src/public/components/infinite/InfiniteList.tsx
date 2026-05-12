@@ -9,7 +9,7 @@ import {
   useRef
 } from "react";
 import { useLatestRef } from "@mahiru/ui/public/hooks/useLatestRef";
-import { Log } from "@mahiru/ui/public/utils/dev";
+import { Log } from "@mahiru/ui/public/constants/dev";
 import AppLoading from "@mahiru/ui/public/components/fallback/AppLoading";
 import AppEmpty from "@mahiru/ui/public/components/fallback/AppEmpty";
 import { cx } from "@emotion/css";

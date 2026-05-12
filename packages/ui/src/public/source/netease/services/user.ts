@@ -1,4 +1,4 @@
-import { Log } from "@mahiru/ui/public/utils/dev";
+import { Log } from "@mahiru/ui/public/constants/dev";
 import { NeteaseCookie, NeteaseUser } from "@mahiru/ui/public/source/netease/models";
 import { NeteaseAPIAuth, NeteaseAPIUser } from "@mahiru/ui/public/source/netease/api";
 

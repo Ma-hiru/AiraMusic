@@ -4,7 +4,7 @@ import { cx } from "@emotion/css";
 import SectionTab from "@mahiru/ui/public/components/tab/SectionTab";
 import { CommentSortText } from "@mahiru/ui/public/enum/comments";
 import Switch from "@mahiru/ui/public/components/switch/Switch";
-import { FormatNumber } from "@mahiru/ui/public/utils/format";
+import { FormatNumber } from "../../../public/lib/format";
 
 interface TabsProps {
   sortType: CommentSort;

@@ -14,7 +14,7 @@ import { AArrowDown, AArrowUp, LockKeyholeOpen, LucideLock } from "lucide-react"
 import { NeteaseImageSize } from "@mahiru/ui/public/enum";
 import { NeteaseLyric, NeteaseNetworkImage } from "@mahiru/ui/public/source/netease/models";
 import { useListenable } from "@mahiru/ui/public/hooks/useListenable";
-import { FormatNumber } from "@mahiru/ui/public/utils/format";
+import { FormatNumber } from "../../../public/lib/format";
 import {
   ElectronServicesBus,
   ElectronServicesWindow

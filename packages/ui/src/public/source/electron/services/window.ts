@@ -1,5 +1,5 @@
 import { Listenable } from "@mahiru/ui/public/utils/listenable";
-import { isDev, isTest } from "@mahiru/ui/public/utils/dev";
+import { isDev, isTest } from "@mahiru/ui/public/constants/dev";
 import _AppRenderer from "@mahiru/ui/public/source/electron/services/renderer";
 
 const _currentWindowType = isTest ? "main" : await _AppRenderer.Event.invoke.currentWindowType();
