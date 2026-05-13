@@ -1,11 +1,11 @@
-import AppScreen from "../../utils/screen";
-import { Log } from "../../utils/log";
-import { isDev } from "../../utils/dev";
-import { AppStore } from "../../inner/store";
-import { AppWindowManager, WindowExits } from "./manager";
-import { isLinux } from "../../utils/platform";
-import { BrowserWindow, BrowserWindowConstructorOptions } from "electron";
 import { debounce } from "lodash-es";
+import { Log } from "@mahiru/app/utils/log";
+import { isDev } from "@mahiru/app/utils/dev";
+import { AppStore } from "@mahiru/app/inner/store";
+import { AppWindowManager, WindowExits } from "./manager";
+import { isLinux } from "@mahiru/app/utils/platform";
+import { BrowserWindow, BrowserWindowConstructorOptions } from "electron";
+import AppScreen from "@mahiru/app/utils/screen";
 
 export type AppWindowCreatorProps = {
   options: Optional<BrowserWindowConstructorOptions>;

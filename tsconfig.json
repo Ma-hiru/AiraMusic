@@ -24,6 +24,7 @@
     "sourceMap": false,
     "paths": {
       "@mahiru/ui/*": ["./packages/ui/src/*"],
+      "@mahiru/app/*": ["./packages/app/src/*"],
       "@mahiru/*": [
         "./packages/*/src/index.ts",
         "./packages/*/src/index.tsx",

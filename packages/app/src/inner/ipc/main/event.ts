@@ -1,7 +1,7 @@
 import { BrowserWindow, ipcMain } from "electron";
-import { Log } from "../../../utils/log";
-import { AppWindowCreator, AppWindowManager, AppWindows } from "../../../window";
-import AppIpcMessage, { MainEventAPI } from "../../../inner/ipc/message";
+import { Log } from "@mahiru/app/utils/log";
+import { AppWindowCreator, AppWindowManager, AppWindows } from "@mahiru/app/window";
+import AppIpcMessage, { MainEventAPI } from "@mahiru/app/inner/ipc/message";
 
 const mainEventAPI = {
   openInternalWindow: (e, type) => {

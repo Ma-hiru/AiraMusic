@@ -1,5 +1,5 @@
 import Store from "@mahiru/store";
-import { Log } from "../../utils/log";
+import { Log } from "@mahiru/app/utils/log";
 
 export default class StoreService {
   static create(

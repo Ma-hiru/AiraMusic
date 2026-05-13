@@ -1,8 +1,8 @@
 import { BrowserWindow, BrowserWindowConstructorOptions, NativeImage, Tray } from "electron";
-import { Log } from "../../utils/log";
-import { isLinux } from "../../utils/platform";
+import { Log } from "@mahiru/app/utils/log";
+import { isLinux } from "@mahiru/app/utils/platform";
 import { debounce } from "lodash-es";
-import AppIpcMessage from "../../inner/ipc/message";
+import AppIpcMessage from "@mahiru/app/inner/ipc/message";
 
 export enum WindowExits {
   IGNORE,

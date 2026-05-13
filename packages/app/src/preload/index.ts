@@ -1,5 +1,5 @@
 import { contextBridge } from "electron";
-import AppIPCRender from "../inner/ipc/render";
+import AppIPCRender from "@mahiru/app/inner/ipc/render";
 
 contextBridge.exposeInMainWorld("electron", {
   invoke: AppIPCRender.invoke,

@@ -1,6 +1,6 @@
 import ElectronStore from "electron-store";
-import { isDev } from "../utils/dev";
-import { Log } from "../utils/log";
+import { isDev } from "@mahiru/app/utils/dev";
+import { Log } from "@mahiru/app/utils/log";
 
 export type StoreType = Record<
   WindowType,

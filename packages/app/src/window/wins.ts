@@ -1,11 +1,11 @@
-import { AppWindowCreatorProps, AppWindowManager, WindowExits } from "./manager";
-import { appLogoPath, preloadPath } from "../utils/path";
 import { BrowserWindow, dialog } from "electron";
-import { isLinux } from "../utils/platform";
-import { AppWindowConstants } from "../constants/win";
-import { isDev } from "../utils/dev";
-import { Log } from "../utils/log";
-import AppScreen from "../utils/screen";
+import { AppWindowCreatorProps, AppWindowManager, WindowExits } from "./manager";
+import { appLogoPath, preloadPath } from "@mahiru/app/utils/path";
+import { isLinux } from "@mahiru/app/utils/platform";
+import { AppWindowConstants } from "@mahiru/app/constants/win";
+import { isDev } from "@mahiru/app/utils/dev";
+import { Log } from "@mahiru/app/utils/log";
+import AppScreen from "@mahiru/app/utils/screen";
 
 export class AppWindows {
   static fatalError(message: string, error?: string) {

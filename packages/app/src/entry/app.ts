@@ -1,14 +1,14 @@
 import { app } from "electron";
-import { Log } from "../utils/log";
-import { AppProtocol } from "../inner/protocol";
 import { LogLevel } from "@mahiru/log";
-import { isMacOS, isWindows } from "../utils/platform";
-import { isDev, storeKeyAccessToken } from "../utils/dev";
-import { storeServerBinaryPath } from "../utils/path";
-import { AppTray, AppWindowCreator, AppWindowManager, AppWindows } from "../window";
-import AppIpcMain from "../inner/ipc/main";
-import AppServices from "../services";
-import AppScreen from "../utils/screen";
+import { Log } from "@mahiru/app/utils/log";
+import { AppProtocol } from "@mahiru/app/inner/protocol";
+import { storeServerBinaryPath } from "@mahiru/app/utils/path";
+import { isMacOS, isWindows } from "@mahiru/app/utils/platform";
+import { isDev, storeKeyAccessToken } from "@mahiru/app/utils/dev";
+import { AppTray, AppWindowCreator, AppWindowManager, AppWindows } from "@mahiru/app/window";
+import AppIpcMain from "@mahiru/app/inner/ipc/main";
+import AppServices from "@mahiru/app/services";
+import AppScreen from "@mahiru/app/utils/screen";
 
 export class APP {
   private proxyServer?: ReturnType<typeof AppServices.Proxy.create>;

@@ -1,8 +1,8 @@
 import express from "express";
 import expressProxy from "express-http-proxy";
 import { join } from "node:path";
-import { Log } from "../../utils/log";
-import { staticUIDir } from "../../utils/path";
+import { Log } from "@mahiru/app/utils/log";
+import { staticUIDir } from "@mahiru/app/utils/path";
 
 export default class ProxyService {
   static create(onError?: NormalFunc<[err: Error]>) {

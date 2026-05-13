@@ -1,7 +1,7 @@
-import { Log } from "../utils/log";
 import { AppWindowManager } from "./manager";
-import { isLinux } from "../utils/platform";
-import { appLogoPath } from "../utils/path";
+import { Log } from "@mahiru/app/utils/log";
+import { isLinux } from "@mahiru/app/utils/platform";
+import { appLogoPath } from "@mahiru/app/utils/path";
 import {
   BrowserWindow,
   clipboard,
@@ -14,7 +14,7 @@ import {
 } from "electron";
 import { AppWindowCreator } from "./manager";
 import { AppWindows } from "./wins";
-import AppIpcMessage from "../inner/ipc/message";
+import AppIpcMessage from "@mahiru/app/inner/ipc/message";
 
 export class AppTray {
   static register() {

@@ -1,10 +1,10 @@
 import mime from "mime";
-import { createReadStream } from "node:fs";
+import { app, protocol } from "electron";
+import { Readable } from "node:stream";
 import { normalize } from "node:path";
 import { stat } from "node:fs/promises";
-import { Readable } from "node:stream";
-import { Log } from "../utils/log";
-import { app, protocol } from "electron";
+import { createReadStream } from "node:fs";
+import { Log } from "@mahiru/app/utils/log";
 
 export class AppProtocol {
   private static init = false;

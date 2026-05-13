@@ -1,4 +1,4 @@
-import Entry from "./entry";
+import Entry from "@mahiru/app/entry";
 
 const app = Entry.create();
 

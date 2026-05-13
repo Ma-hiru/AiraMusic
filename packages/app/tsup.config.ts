@@ -1,6 +1,10 @@
 import AppEnv from "../../scripts/env";
+import path from "node:path";
 import { defineConfig } from "tsup";
 import { generateLogo } from "../../scripts/logo";
+import { fileURLToPath } from "node:url";
+
+const __dirname = fileURLToPath(new URL(".", import.meta.url));
 
 void generateLogo();
 
@@ -24,6 +28,7 @@ export default defineConfig((options) => {
       format: ["esm"],
       platform: "node",
       target: "node20",
+      bundle: true,
       sourcemap: mode === "development",
       clean: mode === "production",
       minify: mode === "production",
@@ -31,6 +36,10 @@ export default defineConfig((options) => {
       external: ["electron", "esbuild", "esbuild/*", "node:*", "window"],
       noExternal: ["@mahiru/log", "@mahiru/store"],
       esbuildOptions: (esbuildOptions) => {
+        esbuildOptions.alias = {
+          ...(esbuildOptions.alias || {}),
+          "@mahiru/app": path.resolve(__dirname, "./src")
+        };
         esbuildOptions.define = {
           ...(esbuildOptions.define || {}),
           ...genDefine(mode)
