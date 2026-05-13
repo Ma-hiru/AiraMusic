@@ -13,6 +13,7 @@
     "@emotion/css": "^11.13.5",
     "@heroicons/react": "^2.2.0",
     "@mahiru/log": "workspace:*",
+    "@mahiru/message": "workspace:*",
     "@mahiru/wasm": "workspace:*",
     "@tailwindcss/vite": "^4.1.17",
     "@vueuse/core": "^14.2.1",

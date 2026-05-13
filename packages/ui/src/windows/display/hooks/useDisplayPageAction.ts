@@ -3,12 +3,13 @@ import { useCallback } from "react";
 import { ElectronServicesWindow } from "@mahiru/ui/public/source/electron/services";
 import { useLatestRef } from "@mahiru/ui/public/hooks/useLatestRef";
 import { useNavigate } from "react-router-dom";
+import type { MessageData } from "@mahiru/message/renderer";
 
 /** 多窗口页面跳转动作 */
 export function useDisplayPageAction(
   data:
-    | Nullable<MessageDataSend<"mergeDisplay">["data"]>
-    | NormalFunc<[], Nullable<MessageDataSend<"mergeDisplay">["data"]>>
+    | Nullable<MessageData<"mergeDisplay">>
+    | NormalFunc<[], Nullable<MessageData<"mergeDisplay">>>
 ) {
   if (typeof data === "function") data = data();
   const { markBack } = useBack();

@@ -1,7 +1,13 @@
-import { Log } from "@mahiru/log";
+import { createLog, Log as LogInstance, LogLevel } from "@mahiru/log";
 
-export let Log: Nullable<Log> = null;
+const DefaultLog = createLog(LogLevel.WARN, console, true);
 
-export function setLogger(logger: Log) {
+export let Log = DefaultLog;
+
+export function setLogger(logger: Optional<LogInstance>) {
+  if (!logger) {
+    Log = DefaultLog;
+    return;
+  }
   Log = logger;
 }

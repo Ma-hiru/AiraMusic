@@ -1,9 +1,24 @@
-import { MessageData, MessageEvent } from "../type/message";
+import { Message, MessageData, MessageDirection, MessageEvent } from "../type/message";
 import { BrowserWindow } from "electron";
 import { Log } from "../utils/log";
+import { WindowManager } from "./window";
+import { RegisteredForwardEventName, MainSelfName } from "../constants";
 
 const handlers = new Map<MessageEvent, Set<NormalFunc<[data: MessageData<any>]>>>();
-export const MainSelfName = "process";
+
+function wrapCallback<A extends unknown[], R>(callback: NormalFunc<A, R>, type: MessageEvent) {
+  return (...args: A) => {
+    try {
+      return callback(...args);
+    } catch (err) {
+      Log.error({
+        raw: err,
+        message: `error in message handler for event type ${type}`,
+        label: "AppMessage"
+      });
+    }
+  };
+}
 
 export function listen<T extends MessageEvent>(
   type: T,
@@ -22,12 +37,6 @@ export function remove<T extends MessageEvent>(
   handlers.get(type)?.delete(callback);
 }
 
-function wrapCallback<T extends NormalFunc<infer A, infer R>>(callback: T) {
-  return (...args) => {
-    callback(...args);
-  };
-}
-
 export function send<T extends MessageEvent>(props: {
   sender: Optional<WindowType | BrowserWindow>;
   receiver: Optional<WindowType | BrowserWindow>;
@@ -40,15 +49,7 @@ export function send<T extends MessageEvent>(props: {
   if (props.receiver === MainSelfName) {
     const handler = handlers.get(props.type);
     return handler?.forEach((cb) => {
-      try {
-        cb(props.data);
-      } catch (err) {
-        Log?.error({
-          raw: err,
-          message: `error in message handler for event [type=${props.type}]`,
-          label: "AppMessage"
-        });
-      }
+      wrapCallback(cb, props.type)(props.data);
     });
   }
 
@@ -59,18 +60,18 @@ export function send<T extends MessageEvent>(props: {
   if (typeof sender === "string") {
     senderID = sender;
   } else {
-    const s = AppWindowManager.getId(sender);
+    const s = WindowManager.getId(sender);
     if (!s) return;
     senderID = s;
   }
 
-  // 自己给自己发消息，没必要
+  // 自己给自己发消息，没必要（不应该经过转发，而是renderer自己commit给自己）
   if (typeof receiver === "string" && senderID === receiver) return;
-  if (typeof receiver === "object" && AppWindowManager.get(senderID) === receiver) return;
+  if (typeof receiver === "object" && WindowManager.get(senderID) === receiver) return;
 
   let receiverWindow: BrowserWindow;
   if (typeof receiver === "string") {
-    const r = AppWindowManager.get(receiver);
+    const r = WindowManager.get(receiver);
     if (!r) return;
     receiverWindow = r;
   } else {
@@ -78,28 +79,28 @@ export function send<T extends MessageEvent>(props: {
   }
 
   if (receiverWindow.isDestroyed() || receiverWindow.webContents.isDestroyed()) {
-    Log.info("AppMessageIPC", "receiver window is destroyed, skip sending message, type: ", type);
+    Log.info("AppMessage", "receiver window is destroyed, skip sending message, type: ", type);
     return;
   }
 
   try {
-    receiverWindow.webContents.send("message", {
+    receiverWindow.webContents.send(RegisteredForwardEventName, {
       from: senderID,
       type,
       data
-    } satisfies MessageDataReceive<T>);
+    } satisfies Message<T, MessageDirection["receive"]>);
   } catch (err) {
-    Log?.error("AppMessageIPC", "send message err, type: ", type, "err: ", err);
+    Log.error("AppMessage", "send message err, type: ", type, "err: ", err);
   }
 }
 
-function sendAll<T extends MessageEvent>(props: {
+export function sendAll<T extends MessageEvent>(props: {
   sender: Optional<WindowType | BrowserWindow>;
   type: T;
-  data: MessageDataReceive<T>["data"];
+  data: MessageData<T>;
 }) {
   queueMicrotask(() => {
-    AppWindowManager.getAll().forEach(([, receiver]) => {
+    WindowManager.getAll().forEach(([, receiver]) => {
       send({
         ...props,
         receiver

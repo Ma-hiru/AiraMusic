@@ -7,6 +7,14 @@ type WindowType =
   | "display"
   | "tray"
   | "image"
-  | "process"
   | "comments"
-  | "all";
+  | WindowTypeProcess
+  | WindowTypeAll;
+
+type WindowTypeAll = "all";
+
+type WindowTypeProcess = "process";
+
+type WindowTypeWithoutAll = Exclude<WindowType, WindowTypeAll>;
+
+type WindowBrowserType = Exclude<WindowType, WindowTypeAll | WindowTypeProcess>;

@@ -44,3 +44,7 @@ type NetworkStatus =
   | "tls_error" // TLS / 证书异常（常见于劫持）
   | "http_blocked" // HTTP 被阻断 / 重定向
   | "ok"; // 网络正常
+
+interface CanInit {
+  _init: NormalFunc;
+}

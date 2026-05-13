@@ -25,11 +25,6 @@ Object.defineProperty(window, "electron", {
       get: () => {
         return () => {};
       }
-    }),
-    listener: new Proxy(<typeof window.electron.listener>{}, {
-      get: () => {
-        return () => {};
-      }
     })
   },
   configurable: true,

@@ -1,11 +1,17 @@
 import { Listenable } from "@mahiru/ui/public/utils/listenable";
 import { isDev, isTest } from "@mahiru/ui/public/constants/dev";
+import type {
+  Message,
+  MessageData,
+  MessageDirection,
+  MessageEvent
+} from "@mahiru/message/renderer";
 import _AppRenderer from "@mahiru/ui/public/source/electron/services/renderer";
 
 const _currentWindowType = isTest ? "main" : await _AppRenderer.Event.invoke.currentWindowType();
 const _runtimeID = isTest ? "" : await _AppRenderer.Event.invoke.runtimeID();
 
-export type WindowBusEvent = MessageTypeMap["windowBus"]["action"];
+export type WindowBusEvent = MessageData<"windowBus">["action"];
 
 export default class _AppWindow extends Listenable<WindowBusEvent> {
   readonly type: WindowType;
@@ -112,7 +118,7 @@ export default class _AppWindow extends Listenable<WindowBusEvent> {
     });
   }
 
-  private updateStatus({ type, action }: MessageDataReceive<"windowBus">["data"]) {
+  private updateStatus({ type, action }: MessageData<"windowBus">) {
     if (type !== this.type) return;
     switch (action) {
       case "show": {
@@ -206,9 +212,9 @@ export default class _AppWindow extends Listenable<WindowBusEvent> {
     this.addListener(listener);
   }
 
-  listenMessage<T extends keyof MessageTypeMap>(
+  listenMessage<T extends MessageEvent>(
     event: T,
-    callback: NormalFunc<[data: MessageDataReceive<T>["data"]]>,
+    callback: NormalFunc<[data: MessageData<T>]>,
     options?: {
       id?: string;
       once?: boolean;
@@ -221,18 +227,18 @@ export default class _AppWindow extends Listenable<WindowBusEvent> {
     return _AppRenderer.Message.remove(id);
   }
 
-  listenMessageAll<T extends keyof MessageTypeMap>(
+  listenMessageAll<T extends MessageEvent>(
     event: T,
-    callback: NormalFunc<[message: Omit<MessageDataReceive<T>, "type">]>,
+    callback: NormalFunc<[message: Message<T, MessageDirection["receive"]>]>,
     options?: {
       id?: string;
       once?: boolean;
     }
   ): NormalFunc {
-    return _AppRenderer.Message.listen(event, "all", callback, options);
+    return _AppRenderer.Message.listen(event, "all" satisfies WindowTypeAll, callback, options);
   }
 
-  send<T extends keyof MessageTypeMap>(type: T, data: MessageDataSend<T>["data"]) {
+  send<T extends MessageEvent>(type: T, data: MessageData<T>) {
     return _AppRenderer.Message.send(type, this.type, data);
   }
 

@@ -2,7 +2,7 @@ import { BrowserWindow, BrowserWindowConstructorOptions, NativeImage, Tray } fro
 import { Log } from "@mahiru/app/utils/log";
 import { isLinux } from "@mahiru/app/utils/platform";
 import { debounce } from "lodash-es";
-import AppIpcMessage from "@mahiru/app/inner/ipc/message";
+import { AppMessageChannel, MessageData } from "@mahiru/message/main";
 
 export enum WindowExits {
   IGNORE,
@@ -106,10 +106,10 @@ export class AppWindowManager {
 
   private static bindWindowBus(window: BrowserWindow, type?: WindowType) {
     if (!type) return;
-    const sendBusMessage = (action: MessageTypeMap["windowBus"]["action"]) => {
+    const sendBusMessage = (action: MessageData<"windowBus">["action"]) => {
       Log.debug("windowBus", `${type} - ${action}`);
       try {
-        AppIpcMessage.sendAll({
+        AppMessageChannel.commitAll({
           type: "windowBus",
           sender: "process",
           data: { type, action }

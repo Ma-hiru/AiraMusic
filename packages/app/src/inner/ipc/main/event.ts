@@ -1,7 +1,8 @@
-import { BrowserWindow, ipcMain } from "electron";
 import { Log } from "@mahiru/app/utils/log";
+import { AppMessageChannel } from "@mahiru/message/main";
+import { BrowserWindow, ipcMain } from "electron";
 import { AppWindowCreator, AppWindowManager, AppWindows } from "@mahiru/app/window";
-import AppIpcMessage, { MainEventAPI } from "@mahiru/app/inner/ipc/message";
+import { MainEventAPI } from "@mahiru/app/inner/ipc/message";
 
 const mainEventAPI = {
   openInternalWindow: (e, type) => {
@@ -117,24 +118,6 @@ const mainEventAPI = {
       : BrowserWindow.fromWebContents(e.sender);
     win?.setIgnoreMouseEvents(props.penetrate, { forward: true });
   },
-  message: (e, message) => {
-    const sender = BrowserWindow.fromWebContents(e.sender);
-    if (!sender) return;
-    if (message.to === "all") {
-      AppIpcMessage.sendAll({
-        sender,
-        type: message.type,
-        data: message.data
-      });
-    } else {
-      AppIpcMessage.send({
-        sender,
-        receiver: message.to,
-        type: message.type,
-        data: message.data
-      });
-    }
-  },
   fatalError: (e, { message, error }) => {
     const sender = BrowserWindow.fromWebContents(e.sender);
     if (!sender) return;
@@ -148,4 +131,5 @@ export function registerEventHandlers() {
   Object.entries(mainEventAPI).forEach(([event, handler]) => {
     ipcMain.on(event, handler);
   });
+  AppMessageChannel.register(AppWindowManager, Log);
 }

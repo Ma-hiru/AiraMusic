@@ -2,6 +2,7 @@ import { AppWindowManager } from "./manager";
 import { Log } from "@mahiru/app/utils/log";
 import { isLinux } from "@mahiru/app/utils/platform";
 import { appLogoPath } from "@mahiru/app/utils/path";
+import { AppMessageChannel, type MessageData } from "@mahiru/message/main";
 import {
   BrowserWindow,
   clipboard,
@@ -14,7 +15,6 @@ import {
 } from "electron";
 import { AppWindowCreator } from "./manager";
 import { AppWindows } from "./wins";
-import AppIpcMessage from "@mahiru/app/inner/ipc/message";
 
 export class AppTray {
   static register() {
@@ -24,7 +24,7 @@ export class AppTray {
     }
   }
 
-  private static playerBus: Nullable<MessageTypeMap["playerBus"]> = null;
+  private static playerBus: Nullable<MessageData<"playerBus">> = null;
 
   private static createIcon() {
     return nativeImage.createFromPath(appLogoPath);
@@ -33,7 +33,7 @@ export class AppTray {
   private static createMenu(tray: Tray) {
     if (isLinux) {
       this.showRawMenu(tray);
-      AppIpcMessage.listenSelf("playerBus", (data) => {
+      AppMessageChannel.listen("playerBus", (data) => {
         this.playerBus = data;
         this.showRawMenu(tray);
       });
@@ -63,7 +63,7 @@ export class AppTray {
     }
 
     tray.setToolTip(process.env.APP_NAME);
-    AppIpcMessage.listenSelf("playerBus", (data) => {
+    AppMessageChannel.listen("playerBus", (data) => {
       const track = data.track?.detail;
       track?.name
         ? tray.setToolTip(`${process.env.APP_NAME} - ${track.name}`)
@@ -77,7 +77,7 @@ export class AppTray {
       {
         label: this.playerBus?.status === "playing" ? "暂停" : "播放",
         click: () => {
-          AppIpcMessage.send({
+          AppMessageChannel.commit({
             sender: "process",
             receiver: "main",
             type: "playerActionBus",
@@ -89,7 +89,7 @@ export class AppTray {
       {
         label: "上一首",
         click: () => {
-          AppIpcMessage.send({
+          AppMessageChannel.commit({
             sender: "process",
             receiver: "main",
             type: "playerActionBus",
@@ -100,7 +100,7 @@ export class AppTray {
       {
         label: "下一首",
         click: () => {
-          AppIpcMessage.send({
+          AppMessageChannel.commit({
             sender: "process",
             receiver: "main",
             type: "playerActionBus",
@@ -115,11 +115,26 @@ export class AppTray {
           {
             label: "评论",
             click: () => {
-              if (!this.playerBus) return;
-              setTimeout(() => {
-                if (!this.playerBus) return;
-                //todo
-              }, 3000);
+              const track = this.playerBus?.track;
+              if (!track) return;
+              const open = () => {
+                setTimeout(() => {
+                  AppMessageChannel.commit({
+                    sender: "process",
+                    receiver: "comments",
+                    type: "commentBus",
+                    data: {
+                      id: track.id,
+                      type: "track"
+                    }
+                  });
+                }, 1500);
+              };
+              if (!AppWindowManager.has("comments")) {
+                AppWindowCreator.create(AppWindows.get("comments"))?.once("show", open);
+              } else {
+                open();
+              }
             }
           },
           {
@@ -163,7 +178,7 @@ export class AppTray {
         {
           label: "退出",
           click: () => {
-            AppIpcMessage.send({
+            AppMessageChannel.commit({
               sender: "process",
               receiver: "main",
               type: "playerActionBus",

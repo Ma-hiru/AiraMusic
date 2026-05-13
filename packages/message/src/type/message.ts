@@ -80,7 +80,7 @@ type MessageEventValue = {
         type: "search";
         keyword?: string;
       };
-  mergeDisplay: MessageTypeMap["displayBus"];
+  mergeDisplay: MessageEventValue["displayBus"];
   playerChangeBus:
     | {
         type: "addToPlaylistNext" | "addToPlaylistLast";

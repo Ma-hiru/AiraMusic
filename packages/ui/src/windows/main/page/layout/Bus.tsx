@@ -5,13 +5,14 @@ import {
   ElectronServicesBus,
   ElectronServicesWindow
 } from "@mahiru/ui/public/source/electron/services";
-import AppEntry from "@mahiru/ui/windows/main/entry";
 import { NeteaseServicesTrack } from "@mahiru/ui/public/source/netease/services";
 import { NeteaseTrackRecord } from "@mahiru/ui/public/source/netease/models";
-import { Log } from "../../../../public/constants/dev";
+import { Log } from "@mahiru/ui/public/constants/dev";
 import { useNavigate } from "react-router-dom";
 import { RoutePath, RoutePathMain } from "@mahiru/ui/public/routes";
 import { PlaylistSource } from "@mahiru/ui/public/enum";
+import { MessageData } from "@mahiru/message/renderer";
+import AppEntry from "@mahiru/ui/windows/main/entry";
 
 const Bus: FC<object> = () => {
   const { theme } = useLayoutStore();
@@ -138,12 +139,12 @@ const Bus: FC<object> = () => {
   // 是否正在应用更改
   const applyingChanges = useRef(false);
   // 变更队列
-  const appliedChangesQueue = useRef<MessageTypeMap["playerChangeBus"][]>([]);
+  const appliedChangesQueue = useRef<MessageData<"playerChangeBus">[]>([]);
   const applyPlayerChanges = useCallback(async () => {
     if (applyingChanges.current) return;
     applyingChanges.current = true;
 
-    let change: Undefinable<MessageTypeMap["playerChangeBus"]>;
+    let change: Undefinable<MessageData<"playerChangeBus">>;
     while ((change = appliedChangesQueue.current.shift())) {
       try {
         if (change.type === "replacePlaylistAndPlay") {

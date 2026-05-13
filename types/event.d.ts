@@ -32,7 +32,6 @@ type InvokeEventMaps = {
 
 /** Normal 事件类型以及参数 */
 type NormalEventMaps = {
-  message: MessageDataSend<any>;
   resizeInternalWindow: {
     type: Optional<WindowType>;
     x?: number;
@@ -60,127 +59,6 @@ type NormalEventMaps = {
   unmaximizeInternalWindow: Optional<WindowType>;
   mousePenetrateInternalWindow: { type: Optional<WindowType>; penetrate: boolean };
   fatalError: { message: string; error?: string };
-};
-
-/** Normal 事件的 Message 类型以及其参数 */
-type MessageTypeMap = {
-  login: string;
-  infoBus: {
-    backgroundCover: Undefinable<string>;
-    theme: {
-      mainColor: string;
-      secondaryColor: string;
-      textColor: string;
-    };
-  };
-  playerBus: {
-    track: Optional<{
-      id: number;
-      name: string;
-      sourceID: number;
-      sourceName: NeteaseTrackRecordSourceType;
-      detail: NeteaseTrackModel;
-    }>;
-    lyric: Optional<NeteaseLyricModel>;
-    repeat: "off" | "one" | "all";
-    shuffle: boolean;
-    status: "playing" | "paused" | "error" | "idle" | "loading";
-    rmActive: boolean;
-    tlActive: boolean;
-    noteActive: boolean;
-  };
-  progressBus: {
-    currentTime: number;
-    duration: number;
-    volume: number;
-    buffered: number;
-  };
-  playerActionBus:
-    | "next"
-    | "previous"
-    | "play"
-    | "pause"
-    | "exit"
-    | "update"
-    | "toggle-lyric-version-rm"
-    | "toggle-lyric-version-tl";
-  commentBus: {
-    id: number;
-    type: "track" | "album" | "playlist";
-  };
-  windowBus: {
-    type: WindowType;
-    action:
-      | "ready"
-      | "close"
-      | "focus"
-      | "hide"
-      | "show"
-      | "maximize"
-      | "unmaximize"
-      | "minimize"
-      | "unminimize"
-      | "moved"
-      | "resized"
-      | "enter-fullscreen"
-      | "leave-fullscreen"
-      | "blur";
-  };
-  imageCheckerBus: {
-    url: string;
-    alt?: string;
-  };
-  updateBus: "info" | "player" | "progress";
-  displayBus:
-    | {
-        id: number;
-        type: "album" | "artist";
-      }
-    | {
-        id: number;
-        type: "playlist";
-        source: "normal" | "like";
-      }
-    | {
-        type: "search";
-        keyword?: string;
-      };
-  mergeDisplay: MessageTypeMap["displayBus"];
-  playerChangeBus:
-    | {
-        type: "addToPlaylistNext" | "addToPlaylistLast";
-        trackID: number;
-        sourceID: number;
-        sourceType: NeteaseTrackRecordSourceType;
-      }
-    | {
-        type: "replacePlaylistAndPlay";
-        trackID: number;
-        trackIdx: number;
-        sourceID: number;
-        sourceType: NeteaseTrackRecordSourceType;
-        allIDs: number[];
-      }
-    | {
-        type: "addListToPlaylistEnd";
-        sourceID: number;
-        sourceType: NeteaseTrackRecordSourceType;
-        allIDs: number[];
-      };
-};
-
-/** Normal 事件的 Message 类型的发送参数 */
-type MessageDataSend<T extends keyof MessageTypeMap> = {
-  to: WindowType;
-  data: MessageTypeMap[T];
-  type: T;
-};
-
-/** Normal 事件的 Message 类型的接收参数 */
-type MessageDataReceive<T extends keyof MessageTypeMap> = {
-  from: WindowType;
-  data: MessageTypeMap[T];
-  type: T;
 };
 
 /**
@@ -218,7 +96,3 @@ type RendererInvokeEventHandler<T extends InvokeEvent> =
   InvokeEventArgs<T> extends never
     ? () => Promise<InvokeEventPayload<T>>
     : (param: InvokeEventArgs<T>) => Promise<InvokeEventPayload<T>>;
-/** renderer 侧 Normal 事件监听API（注册监听Normal事件的监听器） */
-type RendererEventListenerAPI = {
-  message: (handler: (message: MessageDataReceive<any>) => void) => void;
-};

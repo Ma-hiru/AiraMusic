@@ -3,7 +3,6 @@ declare global {
     electron: {
       invoke: RendererInvokeAPI;
       event: RendererEventAPI;
-      listener: RendererEventListenerAPI;
     };
   }
 }

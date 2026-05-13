@@ -1,16 +1,16 @@
-import { AppTypedRendererIPC } from "./typed";
+import { ipcRenderer } from "electron";
 
 export const rendererInvokeAPI = {
-  selectPath: (data) => AppTypedRendererIPC.invoke("selectPath", data),
-  saveFile: (data) => AppTypedRendererIPC.invoke("saveFile", data),
-  GPUInfo: () => AppTypedRendererIPC.invoke("GPUInfo"),
-  isMaximized: (type) => AppTypedRendererIPC.invoke("isMaximized", type),
-  platform: () => AppTypedRendererIPC.invoke("platform"),
-  hasOpenInternalWindow: (win) => AppTypedRendererIPC.invoke("hasOpenInternalWindow", win),
-  isFullscreen: (type) => AppTypedRendererIPC.invoke("isFullscreen", type),
-  storeKey: () => AppTypedRendererIPC.invoke("storeKey"),
-  checkOnlineStatus: () => AppTypedRendererIPC.invoke("checkOnlineStatus"),
-  currentWindowType: () => AppTypedRendererIPC.invoke("currentWindowType"),
-  currentWindowBounds: () => AppTypedRendererIPC.invoke("currentWindowBounds"),
-  runtimeID: () => AppTypedRendererIPC.invoke("runtimeID")
+  selectPath: (data) => ipcRenderer.invoke("selectPath", data),
+  saveFile: (data) => ipcRenderer.invoke("saveFile", data),
+  GPUInfo: () => ipcRenderer.invoke("GPUInfo"),
+  isMaximized: (type) => ipcRenderer.invoke("isMaximized", type),
+  platform: () => ipcRenderer.invoke("platform"),
+  hasOpenInternalWindow: (win) => ipcRenderer.invoke("hasOpenInternalWindow", win),
+  isFullscreen: (type) => ipcRenderer.invoke("isFullscreen", type),
+  storeKey: () => ipcRenderer.invoke("storeKey"),
+  checkOnlineStatus: () => ipcRenderer.invoke("checkOnlineStatus"),
+  currentWindowType: () => ipcRenderer.invoke("currentWindowType"),
+  currentWindowBounds: () => ipcRenderer.invoke("currentWindowBounds"),
+  runtimeID: () => ipcRenderer.invoke("runtimeID")
 } satisfies RendererInvokeAPI;

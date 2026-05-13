@@ -2,5 +2,7 @@
   "name": "@mahiru/message",
   "type": "module",
   "version": "1.0.0",
-  "main": "src/index.ts"
+  "dependencies": {
+    "@mahiru/log": "workspace:*"
+  }
 }

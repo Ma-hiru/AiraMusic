@@ -5,12 +5,11 @@ import {
 } from "@mahiru/ui/public/source/electron/services";
 import { useLatestRef } from "@mahiru/ui/public/hooks/useLatestRef";
 import { useNavigate } from "react-router-dom";
+import type { MessageData } from "@mahiru/message/renderer";
 
 /** 多窗口页面跳转动作 */
 export function usePageAction(
-  data:
-    | Nullable<MessageDataSend<"displayBus">["data"]>
-    | NormalFunc<[], Nullable<MessageDataSend<"displayBus">["data"]>>
+  data: Nullable<MessageData<"displayBus">> | NormalFunc<[], Nullable<MessageData<"displayBus">>>
 ) {
   if (typeof data === "function") data = data();
 

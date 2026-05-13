@@ -1,23 +1,20 @@
-import { AppTypedRendererIPC } from "./typed";
+import { ipcRenderer } from "electron";
 
 export const rendererEventAPI = {
-  message: (payload) => AppTypedRendererIPC.send("message", payload),
-  resizeInternalWindow: (payload) => AppTypedRendererIPC.send("resizeInternalWindow", payload),
-  moveInternalWindow: (payload) => AppTypedRendererIPC.send("moveInternalWindow", payload),
-  openExternalLink: (payload) => AppTypedRendererIPC.send("openExternalLink", payload),
-  openInternalWindow: (payload) => AppTypedRendererIPC.send("openInternalWindow", payload),
-  openInternalDevTools: (payload) => AppTypedRendererIPC.send("openInternalDevTools", payload),
-  closeInternalWindow: (payload) => AppTypedRendererIPC.send("closeInternalWindow", payload),
-  focusInternalWindow: (payload) => AppTypedRendererIPC.send("focusInternalWindow", payload),
-  hiddenInternalWindow: (payload) => AppTypedRendererIPC.send("hiddenInternalWindow", payload),
-  showInternalWindow: (payload) => AppTypedRendererIPC.send("showInternalWindow", payload),
-  minimizeInternalWindow: (payload) => AppTypedRendererIPC.send("minimizeInternalWindow", payload),
-  unminimizeInternalWindow: (payload) =>
-    AppTypedRendererIPC.send("unminimizeInternalWindow", payload),
-  maximizeInternalWindow: (payload) => AppTypedRendererIPC.send("maximizeInternalWindow", payload),
-  unmaximizeInternalWindow: (payload) =>
-    AppTypedRendererIPC.send("unmaximizeInternalWindow", payload),
+  resizeInternalWindow: (payload) => ipcRenderer.send("resizeInternalWindow", payload),
+  moveInternalWindow: (payload) => ipcRenderer.send("moveInternalWindow", payload),
+  openExternalLink: (payload) => ipcRenderer.send("openExternalLink", payload),
+  openInternalWindow: (payload) => ipcRenderer.send("openInternalWindow", payload),
+  openInternalDevTools: (payload) => ipcRenderer.send("openInternalDevTools", payload),
+  closeInternalWindow: (payload) => ipcRenderer.send("closeInternalWindow", payload),
+  focusInternalWindow: (payload) => ipcRenderer.send("focusInternalWindow", payload),
+  hiddenInternalWindow: (payload) => ipcRenderer.send("hiddenInternalWindow", payload),
+  showInternalWindow: (payload) => ipcRenderer.send("showInternalWindow", payload),
+  minimizeInternalWindow: (payload) => ipcRenderer.send("minimizeInternalWindow", payload),
+  unminimizeInternalWindow: (payload) => ipcRenderer.send("unminimizeInternalWindow", payload),
+  maximizeInternalWindow: (payload) => ipcRenderer.send("maximizeInternalWindow", payload),
+  unmaximizeInternalWindow: (payload) => ipcRenderer.send("unmaximizeInternalWindow", payload),
   mousePenetrateInternalWindow: (payload) =>
-    AppTypedRendererIPC.send("mousePenetrateInternalWindow", payload),
-  fatalError: (payload) => AppTypedRendererIPC.send("fatalError", payload)
+    ipcRenderer.send("mousePenetrateInternalWindow", payload),
+  fatalError: (payload) => ipcRenderer.send("fatalError", payload)
 } satisfies RendererEventAPI;

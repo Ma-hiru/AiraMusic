@@ -25,6 +25,9 @@
     "paths": {
       "@mahiru/ui/*": ["./packages/ui/src/*"],
       "@mahiru/app/*": ["./packages/app/src/*"],
+      "@mahiru/message/main": ["./packages/message/main.ts"],
+      "@mahiru/message/renderer": ["./packages/message/renderer.ts"],
+      "@mahiru/message/preload": ["./packages/message/preload.ts"],
       "@mahiru/*": [
         "./packages/*/src/index.ts",
         "./packages/*/src/index.tsx",

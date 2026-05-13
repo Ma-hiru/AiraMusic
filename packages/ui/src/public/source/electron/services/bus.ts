@@ -1,9 +1,10 @@
 import { Listenable } from "@mahiru/ui/public/utils/listenable";
+import { MessageEvent, MessageData } from "@mahiru/message/renderer";
 import _AppWindow from "@mahiru/ui/public/source/electron/services/window";
 
-export abstract class Bus<T extends keyof MessageTypeMap> extends Listenable {
+export abstract class Bus<T extends MessageEvent> extends Listenable {
   type: T;
-  data: Nullable<MessageTypeMap[T]> = null;
+  data: Nullable<MessageData<T>> = null;
 
   protected constructor(type: T) {
     super();
@@ -14,19 +15,19 @@ export abstract class Bus<T extends keyof MessageTypeMap> extends Listenable {
     });
   }
 
-  send(data: MessageDataSend<T>["data"]) {
+  send(data: MessageData<T>) {
     _AppWindow.all.send(this.type, data);
   }
 
-  commit(data: MessageTypeMap[T]) {
+  commit(data: MessageData<T>) {
     this.data = data;
     this.executeListeners();
   }
 }
 
-export abstract class BusArray<T extends keyof MessageTypeMap> extends Listenable {
+export abstract class BusArray<T extends MessageEvent> extends Listenable {
   type: T;
-  data: MessageTypeMap[T][] = [];
+  data: MessageData<T>[] = [];
 
   protected constructor(type: T) {
     super();
@@ -37,7 +38,7 @@ export abstract class BusArray<T extends keyof MessageTypeMap> extends Listenabl
     });
   }
 
-  send(data: MessageDataSend<T>["data"]) {
+  send(data: MessageData<T>) {
     _AppWindow.main.send(this.type, data);
   }
 }
@@ -138,7 +139,7 @@ export default class _AppBus {
     return Object.entries(_AppBus.BusCollections).map(([, bus]) => bus);
   }
 
-  static clear<T extends keyof MessageTypeMap>(type: T) {
+  static clear<T extends MessageEvent>(type: T) {
     for (const bus of _AppBus.collections) {
       if (bus.type === type) {
         if (Array.isArray(bus.data)) return (bus.data = []);
