@@ -1,8 +1,8 @@
 import { FC, memo } from "react";
 import { cx } from "@emotion/css";
 
-import KeepAliveOutlet from "@mahiru/ui/public/components/public/KeepAliveOutlet";
-import AppErrorBoundary from "@mahiru/ui/public/components/fallback/AppErrorBoundary";
+import KeepAliveOutlet from "@mahiru/ui/common/components/public/KeepAliveOutlet";
+import AppErrorBoundary from "@mahiru/ui/common/components/fallback/AppErrorBoundary";
 
 const Content: FC<object> = () => {
   return (

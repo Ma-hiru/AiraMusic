@@ -21,9 +21,9 @@
 </template>
 
 <script setup lang="ts" name="TrayPlayer">
-  import NeteaseImage from "@mahiru/ui/public/components/image/NeteaseImage.vue";
-  import { NeteaseImageSize } from "@mahiru/ui/public/enum";
-  import { NeteaseNetworkImage } from "@mahiru/ui/public/source/netease/models";
+  import NeteaseImage from "@mahiru/ui/common/components/image/NeteaseImage.vue";
+  import { NeteaseImageSize } from "@mahiru/ui/common/enum";
+  import { NeteaseNetworkImage } from "@mahiru/ui/common/source/netease/models";
 
   const props = defineProps<{
     track: NeteaseTrackModel;

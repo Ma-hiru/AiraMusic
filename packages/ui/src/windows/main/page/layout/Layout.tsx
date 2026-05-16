@@ -1,14 +1,14 @@
 import { FC, memo, useEffect } from "react";
-import { useStage } from "@mahiru/ui/public/hooks/useStage";
-import { useAppLoaded } from "@mahiru/ui/public/hooks/useAppLoaded";
-import { Stage } from "@mahiru/ui/public/enum";
-import { useUser } from "@mahiru/ui/public/store/user";
-import { NeteaseServicesAuth } from "@mahiru/ui/public/source/netease/services";
-import AppToast from "@mahiru/ui/public/components/toast";
-import AppContextMenu from "@mahiru/ui/public/components/menu";
+import { useStage } from "@mahiru/ui/common/hooks/useStage";
+import { useAppLoaded } from "@mahiru/ui/common/hooks/useAppLoaded";
+import { Stage } from "@mahiru/ui/common/enum";
+import { useUser } from "@mahiru/ui/common/store/user";
+import { NeteaseServicesAuth } from "@mahiru/ui/common/source/netease/services";
+import AppToast from "@mahiru/ui/common/components/toast";
+import AppContextMenu from "@mahiru/ui/common/components/menu";
 
-import AppErrorBoundary from "@mahiru/ui/public/components/fallback/AppErrorBoundary";
-import AppMask from "@mahiru/ui/public/components/fallback/AppMask";
+import AppErrorBoundary from "@mahiru/ui/common/components/fallback/AppErrorBoundary";
+import AppMask from "@mahiru/ui/common/components/fallback/AppMask";
 import TopBar from "./top";
 import PlayerBar from "./bar";
 import NavSide from "./nav";

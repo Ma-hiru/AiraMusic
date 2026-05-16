@@ -1,16 +1,16 @@
-import { useListenable } from "@mahiru/ui/public/hooks/useListenable";
+import { useListenable } from "@mahiru/ui/common/hooks/useListenable";
 import { FC, memo, useCallback, useEffect, useRef } from "react";
 import { useLayoutStore } from "@mahiru/ui/windows/main/store/layout";
 import {
   ElectronServicesBus,
   ElectronServicesWindow
-} from "@mahiru/ui/public/source/electron/services";
-import { NeteaseServicesTrack } from "@mahiru/ui/public/source/netease/services";
-import { NeteaseTrackRecord } from "@mahiru/ui/public/source/netease/models";
-import { Log } from "@mahiru/ui/public/constants/dev";
+} from "@mahiru/ui/common/source/electron/services";
+import { NeteaseServicesTrack } from "@mahiru/ui/common/source/netease/services";
+import { NeteaseTrackRecord } from "@mahiru/ui/common/source/netease/models";
+import { Log } from "@mahiru/ui/common/constants/dev";
 import { useNavigate } from "react-router-dom";
-import { RoutePath, RoutePathMain } from "@mahiru/ui/public/routes";
-import { PlaylistSource } from "@mahiru/ui/public/enum";
+import { RoutePath, RoutePathMain } from "@mahiru/ui/common/routes";
+import { PlaylistSource } from "@mahiru/ui/common/enum";
 import { MessageData } from "@mahiru/message/renderer";
 import AppEntry from "@mahiru/ui/windows/main/entry";
 

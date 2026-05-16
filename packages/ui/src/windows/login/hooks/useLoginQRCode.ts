@@ -1,7 +1,7 @@
 import QRCode from "qrcode";
-import { NeteaseAPIAuth } from "@mahiru/ui/public/source/netease/api";
+import { NeteaseAPIAuth } from "@mahiru/ui/common/source/netease/api";
 import { useCallback, useEffect, useState } from "react";
-import { Log } from "../../../public/constants/dev";
+import { Log } from "@mahiru/ui/common/constants/dev";
 
 interface LoginQRCodeProps {
   qrOptions?: QRCode.QRCodeToDataURLOptions;

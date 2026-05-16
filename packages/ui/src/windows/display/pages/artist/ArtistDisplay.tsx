@@ -1,14 +1,14 @@
 import { FC, memo, useRef } from "react";
 import { useLocation } from "react-router-dom";
-import { RoutePath, RoutePathDisplay } from "@mahiru/ui/public/routes";
-import { useUserTrackManager } from "@mahiru/ui/public/hooks/useUserTrackManager";
-import { ElectronServicesBus } from "@mahiru/ui/public/source/electron/services";
-import { useListenable } from "@mahiru/ui/public/hooks/useListenable";
+import { RoutePath, RoutePathDisplay } from "@mahiru/ui/common/routes";
+import { useUserTrackManager } from "@mahiru/ui/common/hooks/useUserTrackManager";
+import { ElectronServicesBus } from "@mahiru/ui/common/source/electron/services";
+import { useListenable } from "@mahiru/ui/common/hooks/useListenable";
 import { useArtistOrAlbumDisplayJump } from "@mahiru/ui/windows/display/hooks/useArtistOrAlbumDisplayJump";
 import { useDisplayPageAction } from "@mahiru/ui/windows/display/hooks/useDisplayPageAction";
 import { usePlayerChangeActionFromDisplay } from "@mahiru/ui/windows/display/hooks/usePlayerChangeActionFromDisplay";
 
-import Artist, { ArtistRef } from "@mahiru/ui/public/components/page/artist/Artist";
+import Artist, { ArtistRef } from "@mahiru/ui/common/components/page/artist/Artist";
 
 const ArtistDisplay: FC<object> = () => {
   const location = useLocation();

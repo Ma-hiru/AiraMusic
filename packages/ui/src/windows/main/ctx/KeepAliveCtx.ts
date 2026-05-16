@@ -1,6 +1,6 @@
 import { createContext, useContext } from "react";
-import { Log } from "../../../public/constants/dev";
-import { RoutePathMain } from "@mahiru/ui/public/routes";
+import { Log } from "@mahiru/ui/common/constants/dev";
+import { RoutePathMain } from "@mahiru/ui/common/routes";
 
 export interface KeepAliveCtxType {
   activeKey?: string;

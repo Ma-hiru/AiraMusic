@@ -1,6 +1,6 @@
 import { FC, memo } from "react";
 import { css, cx } from "@emotion/css";
-import { useThemeColor } from "@mahiru/ui/public/hooks/useThemeColor";
+import { useThemeColor } from "@mahiru/ui/common/hooks/useThemeColor";
 
 import PlaylistItem from "./PlaylistItem";
 

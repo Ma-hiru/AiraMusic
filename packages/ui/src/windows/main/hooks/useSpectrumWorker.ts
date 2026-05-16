@@ -1,7 +1,7 @@
-import AppAudio from "@mahiru/ui/public/player/audio";
+import AppAudio from "@mahiru/ui/common/player/audio";
 import SpectrumWorker from "@mahiru/ui/worker/spectrum.ts?worker";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Log } from "../../../public/constants/dev";
+import { Log } from "@mahiru/ui/common/constants/dev";
 
 export interface SpectrumData {
   bands: Float32Array;

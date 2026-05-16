@@ -1,7 +1,7 @@
 import { useCallback } from "react";
-import { RoutePath, RoutePathDisplay } from "@mahiru/ui/public/routes";
+import { RoutePath, RoutePathDisplay } from "@mahiru/ui/common/routes";
 import { useNavigate } from "react-router-dom";
-import { useLatestRef } from "@mahiru/ui/public/hooks/useLatestRef";
+import { useLatestRef } from "@mahiru/ui/common/hooks/useLatestRef";
 
 /** 跳转歌手和专辑页 */
 export function useArtistOrAlbumDisplayJump(

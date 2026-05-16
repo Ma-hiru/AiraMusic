@@ -4,7 +4,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { ChevronLeft, ChevronUp, LocateFixed, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { AnimatePresence } from "motion/react";
 import { useLayoutStore } from "@mahiru/ui/windows/main/store/layout";
-import { RoutePathMain } from "@mahiru/ui/public/routes";
+import { RoutePathMain } from "@mahiru/ui/common/routes";
 
 import FloatItem from "./FloatItem";
 

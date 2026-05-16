@@ -7,6 +7,7 @@ import Net from "node:net";
 import Https from "node:https";
 import Fs from "node:fs/promises";
 import AppScreen from "@mahiru/app/utils/screen";
+import { AppStore } from "@mahiru/app/inner/store";
 
 const mainInvokeAPI = {
   selectPath: async (_, type) => {

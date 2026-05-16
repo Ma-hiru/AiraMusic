@@ -1,8 +1,8 @@
 import { FC, memo } from "react";
 import { useLayoutStore } from "@mahiru/ui/windows/main/store/layout";
-import { useThemeColor } from "@mahiru/ui/public/hooks/useThemeColor";
-import { useListenable } from "@mahiru/ui/public/hooks/useListenable";
-import { ElectronServicesWindow } from "@mahiru/ui/public/source/electron/services";
+import { useThemeColor } from "@mahiru/ui/common/hooks/useThemeColor";
+import { useListenable } from "@mahiru/ui/common/hooks/useListenable";
+import { ElectronServicesWindow } from "@mahiru/ui/common/source/electron/services";
 import AudioSpectrum from "@mahiru/ui/windows/main/componets/spectrum/AudioSpectrum";
 import AppEntry from "@mahiru/ui/windows/main/entry";
 

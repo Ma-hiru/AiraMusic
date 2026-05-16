@@ -11,11 +11,11 @@
 </template>
 
 <script setup lang="ts" name="ImagePage">
-  import TopControlPure from "@mahiru/ui/public/components/public/TopControlPure.vue";
-  import Drag from "@mahiru/ui/public/components/drag/Drag.vue";
-  import ImageViewer from "@mahiru/ui/public/components/image/ImageViewer.vue";
-  import { ElectronServicesWindow } from "@mahiru/ui/public/source/electron/services";
-  import { useAppLoadedVue } from "@mahiru/ui/public/hooks/useAppLoadedVue";
+  import TopControlPure from "@mahiru/ui/common/components/public/TopControlPure.vue";
+  import Drag from "@mahiru/ui/common/components/drag/Drag.vue";
+  import ImageViewer from "@mahiru/ui/common/components/image/ImageViewer.vue";
+  import { ElectronServicesWindow } from "@mahiru/ui/common/source/electron/services";
+  import { useAppLoadedVue } from "@mahiru/ui/common/hooks/useAppLoadedVue";
   import { onMounted, reactive, ref } from "vue";
 
   const loading = ref(false);

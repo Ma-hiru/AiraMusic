@@ -1,23 +1,23 @@
 import { FC, memo, useEffect, useMemo, useState } from "react";
-import { useListenable } from "@mahiru/ui/public/hooks/useListenable";
+import { useListenable } from "@mahiru/ui/common/hooks/useListenable";
 import { useNavigate } from "react-router-dom";
-import { RoutePath, RoutePathDisplay } from "@mahiru/ui/public/routes";
-import { PlaylistSource } from "@mahiru/ui/public/enum";
+import { RoutePath, RoutePathDisplay } from "@mahiru/ui/common/routes";
+import { PlaylistSource } from "@mahiru/ui/common/enum";
 import {
   ElectronServicesBus,
   ElectronServicesWindow
-} from "@mahiru/ui/public/source/electron/services";
-import { useThemeInjectFromBus } from "@mahiru/ui/public/hooks/useThemeInjectFromBus";
+} from "@mahiru/ui/common/source/electron/services";
+import { useThemeInjectFromBus } from "@mahiru/ui/common/hooks/useThemeInjectFromBus";
 
-import KeepAliveOutlet from "@mahiru/ui/public/components/public/KeepAliveOutlet";
-import AppErrorBoundary from "@mahiru/ui/public/components/fallback/AppErrorBoundary";
-import AppToast from "@mahiru/ui/public/components/toast";
-import AppContextMenu from "@mahiru/ui/public/components/menu";
-import AcrylicBackground from "@mahiru/ui/public/components/public/AcrylicBackground";
-import TopControlPure from "@mahiru/ui/public/components/public/TopControlPure";
-import Drag from "@mahiru/ui/public/components/drag/Drag";
+import KeepAliveOutlet from "@mahiru/ui/common/components/public/KeepAliveOutlet";
+import AppErrorBoundary from "@mahiru/ui/common/components/fallback/AppErrorBoundary";
+import AppToast from "@mahiru/ui/common/components/toast";
+import AppContextMenu from "@mahiru/ui/common/components/menu";
+import AcrylicBackground from "@mahiru/ui/common/components/public/AcrylicBackground";
+import TopControlPure from "@mahiru/ui/common/components/public/TopControlPure";
+import Drag from "@mahiru/ui/common/components/drag/Drag";
 import { BackCtx } from "@mahiru/ui/windows/display/ctx/back";
-import TopBack from "@mahiru/ui/public/components/top_control/TopBack";
+import TopBack from "@mahiru/ui/common/components/top_control/TopBack";
 
 const LayoutDisplay: FC<object> = () => {
   useThemeInjectFromBus();

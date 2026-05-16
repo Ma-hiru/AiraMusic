@@ -1,12 +1,12 @@
 import AppEntry from "@mahiru/ui/windows/main/entry";
 import { useCallback } from "react";
-import { TrackListClickFunc } from "@mahiru/ui/public/components/track_list";
-import { NeteaseTrackRecord } from "@mahiru/ui/public/source/netease/models";
+import { TrackListClickFunc } from "@mahiru/ui/common/components/track_list";
+import { NeteaseTrackRecord } from "@mahiru/ui/common/source/netease/models";
 import {
   ElectronServicesBus,
   ElectronServicesWindow
-} from "@mahiru/ui/public/source/electron/services";
-import { useLatestRef } from "@mahiru/ui/public/hooks/useLatestRef";
+} from "@mahiru/ui/common/source/electron/services";
+import { useLatestRef } from "@mahiru/ui/common/hooks/useLatestRef";
 
 export function usePlayerChangeAction(getTracks: NormalFunc<[], NeteaseTrackRecord[]>) {
   const player = AppEntry.usePlayer();

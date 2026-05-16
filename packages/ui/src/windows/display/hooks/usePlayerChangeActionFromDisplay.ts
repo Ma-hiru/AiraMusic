@@ -1,10 +1,10 @@
 import { useCallback } from "react";
-import { NeteaseTrackRecord } from "@mahiru/ui/public/source/netease/models";
+import { NeteaseTrackRecord } from "@mahiru/ui/common/source/netease/models";
 import {
   ElectronServicesBus,
   ElectronServicesWindow
-} from "@mahiru/ui/public/source/electron/services";
-import { useLatestRef } from "@mahiru/ui/public/hooks/useLatestRef";
+} from "@mahiru/ui/common/source/electron/services";
+import { useLatestRef } from "@mahiru/ui/common/hooks/useLatestRef";
 
 /** 从多窗口页面触发播放器变更 */
 export function usePlayerChangeActionFromDisplay(props: {

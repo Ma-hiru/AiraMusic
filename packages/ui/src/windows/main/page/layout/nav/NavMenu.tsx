@@ -2,9 +2,9 @@ import { FC, memo } from "react";
 import { NavConstants } from "@mahiru/ui/windows/main/constants";
 import { useLocation, useNavigate } from "react-router-dom";
 import { cx } from "@emotion/css";
-import { NeteaseUser } from "@mahiru/ui/public/source/netease/models";
-import { RoutePathMain } from "@mahiru/ui/public/routes";
-import AppToast from "@mahiru/ui/public/components/toast";
+import { NeteaseUser } from "@mahiru/ui/common/source/netease/models";
+import { RoutePathMain } from "@mahiru/ui/common/routes";
+import AppToast from "@mahiru/ui/common/components/toast";
 
 interface NavMenuProps {
   barOpened: boolean;

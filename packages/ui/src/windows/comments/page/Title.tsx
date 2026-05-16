@@ -5,20 +5,20 @@ import {
   NeteaseNetworkImage,
   NeteasePlaylist,
   NeteaseTrack
-} from "@mahiru/ui/public/source/netease/models";
-import { useCacheRequest } from "@mahiru/ui/public/utils/cache";
-import { useThemeColor } from "@mahiru/ui/public/hooks/useThemeColor";
-import { Log } from "../../../public/constants/dev";
-import { NeteaseImageSize } from "@mahiru/ui/public/enum";
-import { FormatNumber } from "../../../public/lib/format";
-import { ElectronServicesBus } from "@mahiru/ui/public/source/electron/services";
-import { NeteaseAPIWiki } from "@mahiru/ui/public/source/netease/api";
+} from "@mahiru/ui/common/source/netease/models";
+import { useCacheRequest } from "@mahiru/ui/common/utils/cache";
+import { useThemeColor } from "@mahiru/ui/common/hooks/useThemeColor";
+import { Log } from "@mahiru/ui/common/constants/dev";
+import { NeteaseImageSize } from "@mahiru/ui/common/enum";
+import { FormatNumber } from "@mahiru/ui/common/lib/format";
+import { ElectronServicesBus } from "@mahiru/ui/common/source/electron/services";
+import { NeteaseAPIWiki } from "@mahiru/ui/common/source/netease/api";
 import {
   NeteaseServicesAlbum,
   NeteaseServicesPlaylist,
   NeteaseServicesTrack
-} from "@mahiru/ui/public/source/netease/services";
-import NeteaseImage from "@mahiru/ui/public/components/image/NeteaseImage";
+} from "@mahiru/ui/common/source/netease/services";
+import NeteaseImage from "@mahiru/ui/common/components/image/NeteaseImage";
 
 interface TitleProps {
   commentBus: typeof ElectronServicesBus.comment;

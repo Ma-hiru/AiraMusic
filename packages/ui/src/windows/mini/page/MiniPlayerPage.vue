@@ -50,19 +50,19 @@
   </Drag>
 </template>
 <script setup lang="ts">
-  import Drag from "@mahiru/ui/public/components/drag/Drag.vue";
-  import NoDrag from "@mahiru/ui/public/components/drag/NoDrag.vue";
-  import NeteaseImage from "@mahiru/ui/public/components/image/NeteaseImage.vue";
+  import Drag from "@mahiru/ui/common/components/drag/Drag.vue";
+  import NoDrag from "@mahiru/ui/common/components/drag/NoDrag.vue";
+  import NeteaseImage from "@mahiru/ui/common/components/image/NeteaseImage.vue";
   import {
     ElectronServicesBus,
     ElectronServicesWindow
-  } from "@mahiru/ui/public/source/electron/services";
-  import { useListenable } from "@mahiru/ui/public/hooks/useListenableVue";
+  } from "@mahiru/ui/common/source/electron/services";
+  import { useListenable } from "@mahiru/ui/common/hooks/useListenableVue";
   import { Pause, Play, SkipBack, SkipForward, X } from "lucide-vue-next";
   import { computed } from "vue";
   import { clamp } from "lodash-es";
-  import { NeteaseNetworkImage } from "@mahiru/ui/public/source/netease/models";
-  import { NeteaseImageSize } from "@mahiru/ui/public/enum";
+  import { NeteaseNetworkImage } from "@mahiru/ui/common/source/netease/models";
+  import { NeteaseImageSize } from "@mahiru/ui/common/enum";
 
   const mainWindow = useListenable(ElectronServicesWindow.main);
   const currentWindow = useListenable(ElectronServicesWindow.current);

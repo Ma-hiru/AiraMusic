@@ -1,7 +1,7 @@
 import { FC, memo } from "react";
 import { motion } from "motion/react";
 import { css, cx } from "@emotion/css";
-import { useThemeColor } from "@mahiru/ui/public/hooks/useThemeColor";
+import { useThemeColor } from "@mahiru/ui/common/hooks/useThemeColor";
 import { usePlayProgress } from "@mahiru/ui/windows/main/hooks/usePlayProgress";
 
 const BarProgress: FC<object> = () => {

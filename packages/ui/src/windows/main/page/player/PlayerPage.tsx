@@ -1,6 +1,6 @@
 import { FC } from "react";
-import { useStage } from "@mahiru/ui/public/hooks/useStage";
-import { Stage } from "@mahiru/ui/public/enum";
+import { useStage } from "@mahiru/ui/common/hooks/useStage";
+import { Stage } from "@mahiru/ui/common/enum";
 
 import Cover from "./Cover";
 import Control from "./Control";

@@ -1,13 +1,13 @@
 import { FC, memo, UIEvent as ReactUIEvent, useCallback, useRef } from "react";
-import { useScrollAutoHide } from "@mahiru/ui/public/hooks/useScrollAutoHide";
+import { useScrollAutoHide } from "@mahiru/ui/common/hooks/useScrollAutoHide";
 import { useLayoutStore } from "@mahiru/ui/windows/main/store/layout";
-import { useDelay } from "@mahiru/ui/public/hooks/useDelay";
+import { useDelay } from "@mahiru/ui/common/hooks/useDelay";
 
 import Banner from "./banner";
 import DailyRecommendTracks from "./daily_recommend_tracks";
 import DailyRecommendPlaylist from "./daily_recommend_playlist";
 import RecommendPlaylist from "./recommend_playlist";
-import { useUser } from "@mahiru/ui/public/store/user";
+import { useUser } from "@mahiru/ui/common/store/user";
 import { cx } from "@emotion/css";
 
 const Content: FC<object> = () => {

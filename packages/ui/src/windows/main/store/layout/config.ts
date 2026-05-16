@@ -1,8 +1,8 @@
-import { createZustandConfig } from "../../../../public/lib/store";
-import Eq from "@mahiru/ui/public/utils/eq";
+import { createZustandConfig } from "@mahiru/ui/common/lib/store";
+import Eq from "@mahiru/ui/common/utils/eq";
 import { SpectrumData, SpectrumOptions } from "@mahiru/ui/windows/main/hooks/useSpectrumWorker";
-import AppUI from "@mahiru/ui/public/player/ui";
-import { CacheStore } from "@mahiru/ui/public/store/cache";
+import AppUI from "@mahiru/ui/common/player/ui";
+import { CacheStore } from "@mahiru/ui/common/store/cache";
 
 export const LayoutStoreConfig = createZustandConfig((set): LayoutStoreType => {
   return {

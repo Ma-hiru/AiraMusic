@@ -17,8 +17,8 @@
   import {
     ElectronServicesBus,
     ElectronServicesWindow
-  } from "@mahiru/ui/public/source/electron/services";
-  import { useListenable } from "@mahiru/ui/public/hooks/useListenableVue";
+  } from "@mahiru/ui/common/source/electron/services";
+  import { useListenable } from "@mahiru/ui/common/hooks/useListenableVue";
   import { computed, onMounted, onUnmounted, useTemplateRef, watch } from "vue";
   import {
     Copy,
@@ -31,7 +31,7 @@
     SkipBack,
     SkipForward
   } from "lucide-vue-next";
-  import { useThemeInjectFromBus } from "@mahiru/ui/public/hooks/useThemeInjectFromBusVue";
+  import { useThemeInjectFromBus } from "@mahiru/ui/common/hooks/useThemeInjectFromBusVue";
 
   const containerRef = useTemplateRef<HTMLDivElement>("containerRef");
   const playerBus = useListenable(ElectronServicesBus.player);

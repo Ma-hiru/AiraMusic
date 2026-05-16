@@ -1,14 +1,14 @@
 import { FC, memo, useRef } from "react";
 import { useLocation } from "react-router-dom";
-import { RoutePath, RoutePathMain } from "@mahiru/ui/public/routes";
-import { useUserTrackManager } from "@mahiru/ui/public/hooks/useUserTrackManager";
+import { RoutePath, RoutePathMain } from "@mahiru/ui/common/routes";
+import { useUserTrackManager } from "@mahiru/ui/common/hooks/useUserTrackManager";
 import { useArtistOrAlbumPageJump } from "@mahiru/ui/windows/main/hooks/useArtistOrAlbumPageJump";
 import { usePageAction } from "@mahiru/ui/windows/main/hooks/usePageAction";
 import { useCoverLoadedAndSetTheme } from "@mahiru/ui/windows/main/hooks/useCoverLoadedAndSetTheme";
 import { usePlayerChangeAction } from "@mahiru/ui/windows/main/hooks/usePlayerChangeAction";
-import ImageConstants from "@mahiru/ui/public/constants/image";
+import ImageConstants from "@mahiru/ui/common/constants/image";
 
-import Album, { AlbumPageRef } from "@mahiru/ui/public/components/page/album/Album";
+import Album, { AlbumPageRef } from "@mahiru/ui/common/components/page/album/Album";
 
 const AlbumPage: FC<object> = () => {
   const location = useLocation();

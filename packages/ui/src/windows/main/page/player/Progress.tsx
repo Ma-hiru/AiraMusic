@@ -2,14 +2,14 @@ import { FC, memo, useMemo } from "react";
 import { motion } from "motion/react";
 import { css } from "@emotion/css";
 import { usePlayProgress } from "@mahiru/ui/windows/main/hooks/usePlayProgress";
-import { TrackQuality } from "@mahiru/ui/public/enum";
+import { TrackQuality } from "@mahiru/ui/common/enum";
 
 import ProgressRender from "@mahiru/ui/windows/main/componets/Progress";
-import Tag from "@mahiru/ui/public/components/public/Tag";
+import Tag from "@mahiru/ui/common/components/public/Tag";
 import AppEntry from "@mahiru/ui/windows/main/entry";
-import { NeteaseTrack } from "@mahiru/ui/public/source/netease/models";
-import AppAudio from "@mahiru/ui/public/player/audio";
-import { FormatNumber } from "../../../../public/lib/format";
+import { NeteaseTrack } from "@mahiru/ui/common/source/netease/models";
+import AppAudio from "@mahiru/ui/common/player/audio";
+import { FormatNumber } from "@mahiru/ui/common/lib/format";
 
 const Progress: FC<object> = () => {
   const { barRef, bufferScope, percentScope, handleBarClick, handleBarMouseDown, chorusPercent } =

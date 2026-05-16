@@ -1,7 +1,7 @@
 import { FC, memo } from "react";
 
 import Content from "./Content";
-import AppTitle from "@mahiru/ui/public/components/title/AppTitle";
+import AppTitle from "@mahiru/ui/common/components/title/AppTitle";
 
 const HomePage: FC<object> = () => {
   return (

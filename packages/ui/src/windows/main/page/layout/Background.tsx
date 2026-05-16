@@ -3,8 +3,8 @@ import { useMMCQ } from "@mahiru/ui/windows/main/hooks/useMMCQ";
 import { FC, memo, useLayoutEffect } from "react";
 import { useLayoutStore } from "@mahiru/ui/windows/main/store/layout";
 
-import AcrylicBackground from "@mahiru/ui/public/components/public/AcrylicBackground";
-import AppUI from "@mahiru/ui/public/player/ui";
+import AcrylicBackground from "@mahiru/ui/common/components/public/AcrylicBackground";
+import AppUI from "@mahiru/ui/common/player/ui";
 
 const Background: FC<{ className?: string }> = ({ className }) => {
   const { theme, updateTheme } = useLayoutStore();

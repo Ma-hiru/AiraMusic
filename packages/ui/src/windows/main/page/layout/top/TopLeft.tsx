@@ -1,15 +1,15 @@
 import { cx } from "@emotion/css";
 import { FC, memo, useCallback, useMemo, useRef } from "react";
-import { NeteaseNetworkImage, NeteaseUser } from "@mahiru/ui/public/source/netease/models";
+import { NeteaseNetworkImage, NeteaseUser } from "@mahiru/ui/common/source/netease/models";
 import { LayoutConfig } from "@mahiru/ui/windows/main/store/layout/config";
 import { ChevronDown, UserCircle2 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { getLayoutStoreSnapshot } from "@mahiru/ui/windows/main/store/layout";
-import { NeteaseServicesAuth } from "@mahiru/ui/public/source/netease/services";
+import { NeteaseServicesAuth } from "@mahiru/ui/common/source/netease/services";
 
-import NeteaseImage from "@mahiru/ui/public/components/image/NeteaseImage";
-import NoDrag from "@mahiru/ui/public/components/drag/NoDrag";
-import AppToast from "@mahiru/ui/public/components/toast";
+import NeteaseImage from "@mahiru/ui/common/components/image/NeteaseImage";
+import NoDrag from "@mahiru/ui/common/components/drag/NoDrag";
+import AppToast from "@mahiru/ui/common/components/toast";
 
 interface TopLeftProps {
   user: Nullable<NeteaseUser>;

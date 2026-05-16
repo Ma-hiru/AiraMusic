@@ -1,9 +1,9 @@
 import { FC, memo, useCallback, useEffect, WheelEvent } from "react";
 import { Volume, Volume1, Volume2, VolumeX } from "lucide-react";
-import { useThemeColor } from "@mahiru/ui/public/hooks/useThemeColor";
-import { useUpdate } from "@mahiru/ui/public/hooks/useUpdate";
-import { useListenable } from "@mahiru/ui/public/hooks/useListenable";
-import { ElectronServicesWindow } from "@mahiru/ui/public/source/electron/services";
+import { useThemeColor } from "@mahiru/ui/common/hooks/useThemeColor";
+import { useUpdate } from "@mahiru/ui/common/hooks/useUpdate";
+import { useListenable } from "@mahiru/ui/common/hooks/useListenable";
+import { ElectronServicesWindow } from "@mahiru/ui/common/source/electron/services";
 import AppEntry from "@mahiru/ui/windows/main/entry";
 
 const BarBtns: FC<object> = () => {

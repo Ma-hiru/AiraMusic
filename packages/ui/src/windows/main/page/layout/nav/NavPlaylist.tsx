@@ -1,21 +1,21 @@
 import { FC, memo, useCallback, useRef, useState } from "react";
-import { useScrollAutoHide } from "@mahiru/ui/public/hooks/useScrollAutoHide";
+import { useScrollAutoHide } from "@mahiru/ui/common/hooks/useScrollAutoHide";
 import {
   NeteaseNetworkImage,
   NeteasePlaylistSummary,
   NeteaseUser
-} from "@mahiru/ui/public/source/netease/models";
-import AppUI from "@mahiru/ui/public/player/ui";
+} from "@mahiru/ui/common/source/netease/models";
+import AppUI from "@mahiru/ui/common/player/ui";
 import { LayoutConfig } from "@mahiru/ui/windows/main/store/layout/config";
-import NeteaseImage from "@mahiru/ui/public/components/image/NeteaseImage";
+import NeteaseImage from "@mahiru/ui/common/components/image/NeteaseImage";
 import { useLocation, useNavigate } from "react-router-dom";
 import { cx } from "@emotion/css";
 import { getLayoutStoreSnapshot } from "@mahiru/ui/windows/main/store/layout";
-import { RoutePathMain } from "@mahiru/ui/public/routes";
-import { PlaylistSource } from "@mahiru/ui/public/enum";
-import ImageConstants from "@mahiru/ui/public/constants/image";
+import { RoutePathMain } from "@mahiru/ui/common/routes";
+import { PlaylistSource } from "@mahiru/ui/common/enum";
+import ImageConstants from "@mahiru/ui/common/constants/image";
 
-import VirtualList, { VirtualListRow } from "@mahiru/ui/public/components/virtual_list/VirtualList";
+import VirtualList, { VirtualListRow } from "@mahiru/ui/common/components/virtual_list/VirtualList";
 
 interface NavPlaylistProps {
   user: Nullable<NeteaseUser>;

@@ -1,13 +1,13 @@
-import { useListenable } from "@mahiru/ui/public/hooks/useListenable";
+import { useListenable } from "@mahiru/ui/common/hooks/useListenable";
 import { useEffect } from "react";
 import { QRCodeStatus, useLoginQRCode } from "@mahiru/ui/windows/login/hooks/useLoginQRCode";
-import { useAppLoaded } from "@mahiru/ui/public/hooks/useAppLoaded";
-import { ElectronServicesWindow } from "@mahiru/ui/public/source/electron/services";
+import { useAppLoaded } from "@mahiru/ui/common/hooks/useAppLoaded";
+import { ElectronServicesWindow } from "@mahiru/ui/common/source/electron/services";
 
 import QRCode from "./QRCode";
 import Tips from "./Tips";
-import Drag from "@mahiru/ui/public/components/drag/Drag";
-import TopControlPure from "@mahiru/ui/public/components/public/TopControlPure";
+import Drag from "@mahiru/ui/common/components/drag/Drag";
+import TopControlPure from "@mahiru/ui/common/components/public/TopControlPure";
 
 export default function LoginPage() {
   const { status, result, dataURL, update } = useLoginQRCode();

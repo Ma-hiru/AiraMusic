@@ -1,7 +1,7 @@
 import { useBack } from "@mahiru/ui/windows/display/ctx/back";
 import { useCallback } from "react";
-import { ElectronServicesWindow } from "@mahiru/ui/public/source/electron/services";
-import { useLatestRef } from "@mahiru/ui/public/hooks/useLatestRef";
+import { ElectronServicesWindow } from "@mahiru/ui/common/source/electron/services";
+import { useLatestRef } from "@mahiru/ui/common/hooks/useLatestRef";
 import { useNavigate } from "react-router-dom";
 import type { MessageData } from "@mahiru/message/renderer";
 

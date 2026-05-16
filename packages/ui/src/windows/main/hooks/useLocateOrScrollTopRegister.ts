@@ -1,8 +1,8 @@
 import { useCallback, useEffect } from "react";
 import { getLayoutStoreSnapshot } from "@mahiru/ui/windows/main/store/layout";
-import { useLatestRef } from "@mahiru/ui/public/hooks/useLatestRef";
+import { useLatestRef } from "@mahiru/ui/common/hooks/useLatestRef";
 import { useLocation } from "react-router-dom";
-import { useRouterActive } from "@mahiru/ui/public/hooks/useRouterActive";
+import { useRouterActive } from "@mahiru/ui/common/hooks/useRouterActive";
 
 export function useLocateOrScrollTopRegister(props: {
   getScrollTopFunc?: NormalFunc<[], Optional<NormalFunc>>;

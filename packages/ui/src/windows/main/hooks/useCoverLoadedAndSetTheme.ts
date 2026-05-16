@@ -1,4 +1,4 @@
-import { useRouterActive } from "@mahiru/ui/public/hooks/useRouterActive";
+import { useRouterActive } from "@mahiru/ui/common/hooks/useRouterActive";
 import { useCallback, useEffect, useRef } from "react";
 import { getLayoutStoreSnapshot } from "@mahiru/ui/windows/main/store/layout";
 import { useLocation } from "react-router-dom";

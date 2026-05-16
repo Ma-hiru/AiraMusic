@@ -3,7 +3,7 @@ import wasm from "@mahiru/wasm";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import AppEntry from "@mahiru/ui/windows/main/entry";
-import Init from "@mahiru/ui/public/utils/init";
+import Init from "@mahiru/ui/common/utils/init";
 
 wasm().then(() => {
   Init.initSync(AppEntry, {

@@ -1,11 +1,11 @@
 import { FC, memo, useMemo } from "react";
-import { useThemeColor } from "@mahiru/ui/public/hooks/useThemeColor";
-import { NeteaseImageSize } from "@mahiru/ui/public/enum";
-import { NeteaseNetworkImage } from "@mahiru/ui/public/source/netease/models";
+import { useThemeColor } from "@mahiru/ui/common/hooks/useThemeColor";
+import { NeteaseImageSize } from "@mahiru/ui/common/enum";
+import { NeteaseNetworkImage } from "@mahiru/ui/common/source/netease/models";
 import { useLayoutStore } from "@mahiru/ui/windows/main/store/layout";
 
 import AppEntry from "@mahiru/ui/windows/main/entry";
-import NeteaseImage from "@mahiru/ui/public/components/image/NeteaseImage";
+import NeteaseImage from "@mahiru/ui/common/components/image/NeteaseImage";
 
 const BarCover: FC<object> = () => {
   const { layout, updateLayout } = useLayoutStore();

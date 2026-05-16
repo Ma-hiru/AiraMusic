@@ -1,15 +1,15 @@
 import { FC, memo, useCallback, useState } from "react";
-import { NeteaseNetworkImage } from "@mahiru/ui/public/source/netease/models";
-import { CommentType, NeteaseImageSize } from "@mahiru/ui/public/enum";
-import { useThemeColor } from "@mahiru/ui/public/hooks/useThemeColor";
+import { NeteaseNetworkImage } from "@mahiru/ui/common/source/netease/models";
+import { CommentType, NeteaseImageSize } from "@mahiru/ui/common/enum";
+import { useThemeColor } from "@mahiru/ui/common/hooks/useThemeColor";
 import { ThumbsUp } from "lucide-react";
-import { NeteaseAPIComment } from "@mahiru/ui/public/source/netease/api";
+import { NeteaseAPIComment } from "@mahiru/ui/common/source/netease/api";
 
-import NeteaseImage from "@mahiru/ui/public/components/image/NeteaseImage";
-import { FormatNumber } from "../../../public/lib/format";
+import NeteaseImage from "@mahiru/ui/common/components/image/NeteaseImage";
+import { FormatNumber } from "@mahiru/ui/common/lib/format";
 import { cx } from "@emotion/css";
-import AppToast from "@mahiru/ui/public/components/toast";
-import { Log } from "../../../public/constants/dev";
+import AppToast from "@mahiru/ui/common/components/toast";
+import { Log } from "@mahiru/ui/common/constants/dev";
 
 interface ItemProps {
   data: NeteaseAPI.NeteaseComment;

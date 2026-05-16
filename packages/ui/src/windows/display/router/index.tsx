@@ -1,5 +1,5 @@
 import { createBrowserRouter, Navigate } from "react-router-dom";
-import { RoutePathDisplay } from "@mahiru/ui/public/routes";
+import { RoutePathDisplay } from "@mahiru/ui/common/routes";
 import LayoutDisplay from "../pages/layout/LayoutDisplay";
 import BlankDisplay from "../pages/blank/BlankDisplay";
 import AlbumDisplay from "../pages/album/AlbumDisplay";

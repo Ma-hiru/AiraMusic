@@ -1,20 +1,20 @@
 import { FC, memo, useEffect, useState } from "react";
-import { useComments } from "@mahiru/ui/public/hooks/useComments";
-import { CommentSort, CommentType } from "@mahiru/ui/public/enum";
-import { CacheStore } from "@mahiru/ui/public/store/cache";
-import { useListenable } from "@mahiru/ui/public/hooks/useListenable";
-import { useThemeInjectFromBus } from "@mahiru/ui/public/hooks/useThemeInjectFromBus";
-import { ElectronServicesBus } from "@mahiru/ui/public/source/electron/services";
-import AppToast from "@mahiru/ui/public/components/toast";
+import { useComments } from "@mahiru/ui/common/hooks/useComments";
+import { CommentSort, CommentType } from "@mahiru/ui/common/enum";
+import { CacheStore } from "@mahiru/ui/common/store/cache";
+import { useListenable } from "@mahiru/ui/common/hooks/useListenable";
+import { useThemeInjectFromBus } from "@mahiru/ui/common/hooks/useThemeInjectFromBus";
+import { ElectronServicesBus } from "@mahiru/ui/common/source/electron/services";
+import AppToast from "@mahiru/ui/common/components/toast";
 
 import Control from "./Control";
 import Title from "./Title";
 import Tabs from "./Tabs";
 import Content from "./Content";
-import AppLoading from "@mahiru/ui/public/components/fallback/AppLoading";
-import AppErrorBoundary from "@mahiru/ui/public/components/fallback/AppErrorBoundary";
-import ThrowIf from "@mahiru/ui/public/components/fallback/ThrowIf";
-import AcrylicBackground from "@mahiru/ui/public/components/public/AcrylicBackground";
+import AppLoading from "@mahiru/ui/common/components/fallback/AppLoading";
+import AppErrorBoundary from "@mahiru/ui/common/components/fallback/AppErrorBoundary";
+import ThrowIf from "@mahiru/ui/common/components/fallback/ThrowIf";
+import AcrylicBackground from "@mahiru/ui/common/components/public/AcrylicBackground";
 
 const CommentsPage: FC<object> = () => {
   const commentBus = useListenable(ElectronServicesBus.comment);

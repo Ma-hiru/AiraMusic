@@ -1,11 +1,11 @@
 import { FC, memo, useCallback, useEffect, useState } from "react";
 import { Search } from "lucide-react";
-import { NeteaseAPISearch } from "@mahiru/ui/public/source/netease/api";
-import NoDrag from "@mahiru/ui/public/components/drag/NoDrag";
+import { NeteaseAPISearch } from "@mahiru/ui/common/source/netease/api";
+import NoDrag from "@mahiru/ui/common/components/drag/NoDrag";
 import {
   ElectronServicesBus,
   ElectronServicesWindow
-} from "@mahiru/ui/public/source/electron/services";
+} from "@mahiru/ui/common/source/electron/services";
 
 const TopSearch: FC<object> = () => {
   const [defaultKeywords, setDefaultKeywords] =

@@ -1,10 +1,10 @@
 import { FC, memo } from "react";
-import { CommentSort } from "@mahiru/ui/public/enum";
+import { CommentSort } from "@mahiru/ui/common/enum";
 import { cx } from "@emotion/css";
-import SectionTab from "@mahiru/ui/public/components/tab/SectionTab";
-import { CommentSortText } from "@mahiru/ui/public/enum/comments";
-import Switch from "@mahiru/ui/public/components/switch/Switch";
-import { FormatNumber } from "../../../public/lib/format";
+import SectionTab from "@mahiru/ui/common/components/tab/SectionTab";
+import { CommentSortText } from "@mahiru/ui/common/enum/comments";
+import Switch from "@mahiru/ui/common/components/switch/Switch";
+import { FormatNumber } from "@mahiru/ui/common/lib/format";
 
 interface TabsProps {
   sortType: CommentSort;

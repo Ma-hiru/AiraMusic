@@ -1,21 +1,21 @@
 import { FC, memo, useCallback, useMemo, useRef } from "react";
-import { useThemeColor } from "@mahiru/ui/public/hooks/useThemeColor";
-import { BannerType, PlaylistSource } from "@mahiru/ui/public/enum";
-import { Log } from "../../../../../public/constants/dev";
-import { NeteaseTrackRecord, NeteaseURL } from "@mahiru/ui/public/source/netease/models";
+import { useThemeColor } from "@mahiru/ui/common/hooks/useThemeColor";
+import { BannerType, PlaylistSource } from "@mahiru/ui/common/enum";
+import { Log } from "@mahiru/ui/common/constants/dev";
+import { NeteaseTrackRecord, NeteaseURL } from "@mahiru/ui/common/source/netease/models";
 import { useNavigate } from "react-router-dom";
-import { NeteaseAPIHome } from "@mahiru/ui/public/source/netease/api";
-import { NeteaseServicesTrack } from "@mahiru/ui/public/source/netease/services";
-import { ElectronServicesIPC } from "@mahiru/ui/public/source/electron/services";
-import { RoutePath, RoutePathMain } from "@mahiru/ui/public/routes";
-import { useRequestAutoRetry, useRequestStatusWrap } from "@mahiru/ui/public/hooks/useRequestWrap";
+import { NeteaseAPIHome } from "@mahiru/ui/common/source/netease/api";
+import { NeteaseServicesTrack } from "@mahiru/ui/common/source/netease/services";
+import { ElectronServicesIPC } from "@mahiru/ui/common/source/electron/services";
+import { RoutePath, RoutePathMain } from "@mahiru/ui/common/routes";
+import { useRequestAutoRetry, useRequestStatusWrap } from "@mahiru/ui/common/hooks/useRequestWrap";
 import AppEntry from "@mahiru/ui/windows/main/entry";
 
-import Carousel from "@mahiru/ui/public/components/public/Carousel";
+import Carousel from "@mahiru/ui/common/components/public/Carousel";
 import AppErrorBoundary, {
   AppErrorBoundaryRef
-} from "@mahiru/ui/public/components/fallback/AppErrorBoundary";
-import ThrowIf from "@mahiru/ui/public/components/fallback/ThrowIf";
+} from "@mahiru/ui/common/components/fallback/AppErrorBoundary";
+import ThrowIf from "@mahiru/ui/common/components/fallback/ThrowIf";
 
 const Banner: FC<object> = () => {
   const { textColorOnMain } = useThemeColor();

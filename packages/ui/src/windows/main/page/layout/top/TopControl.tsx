@@ -7,12 +7,12 @@ import {
   SquareMinus,
   X
 } from "lucide-react";
-import { isDev } from "../../../../../public/constants/dev";
-import { useListenable } from "@mahiru/ui/public/hooks/useListenable";
-import { ElectronServicesWindow } from "@mahiru/ui/public/source/electron/services";
+import { isDev } from "@mahiru/ui/common/constants/dev";
+import { useListenable } from "@mahiru/ui/common/hooks/useListenable";
+import { ElectronServicesWindow } from "@mahiru/ui/common/source/electron/services";
 import AppEntry from "@mahiru/ui/windows/main/entry";
 
-import NoDrag from "@mahiru/ui/public/components/drag/NoDrag";
+import NoDrag from "@mahiru/ui/common/components/drag/NoDrag";
 
 const TopControl: FC = () => {
   const currentWindow = useListenable(ElectronServicesWindow.current);

@@ -1,10 +1,10 @@
 import { FC, memo } from "react";
 import { cx } from "@emotion/css";
 import { useLayoutStore } from "@mahiru/ui/windows/main/store/layout";
-import { useUser } from "@mahiru/ui/public/store/user";
-import { useStage } from "@mahiru/ui/public/hooks/useStage";
-import { Stage } from "@mahiru/ui/public/enum";
-import AppErrorBoundary from "@mahiru/ui/public/components/fallback/AppErrorBoundary";
+import { useUser } from "@mahiru/ui/common/store/user";
+import { useStage } from "@mahiru/ui/common/hooks/useStage";
+import { Stage } from "@mahiru/ui/common/enum";
+import AppErrorBoundary from "@mahiru/ui/common/components/fallback/AppErrorBoundary";
 
 import NavPlayList from "./NavPlaylist";
 import NavSideDivider from "./NavDivider";

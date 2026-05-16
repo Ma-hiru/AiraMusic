@@ -1,5 +1,5 @@
 import { createBrowserRouter, Navigate } from "react-router-dom";
-import { RoutePathMain } from "@mahiru/ui/public/routes";
+import { RoutePathMain } from "@mahiru/ui/common/routes";
 import Layout from "../page/layout/Layout";
 import HomePage from "../page/home/HomePage";
 import PlaylistPage from "../page/playlist/PlaylistPage";

@@ -1,11 +1,11 @@
 import { FC, memo, useCallback, useMemo } from "react";
 import { AudioLines, CirclePlay } from "lucide-react";
-import { NeteaseServicesTrack } from "@mahiru/ui/public/source/netease/services";
-import { NeteaseNetworkImage, NeteaseTrackRecord } from "@mahiru/ui/public/source/netease/models";
+import { NeteaseServicesTrack } from "@mahiru/ui/common/source/netease/services";
+import { NeteaseNetworkImage, NeteaseTrackRecord } from "@mahiru/ui/common/source/netease/models";
 import AppEntry from "@mahiru/ui/windows/main/entry";
-import ImageConstants from "@mahiru/ui/public/constants/image";
+import ImageConstants from "@mahiru/ui/common/constants/image";
 
-import NeteaseImage from "@mahiru/ui/public/components/image/NeteaseImage";
+import NeteaseImage from "@mahiru/ui/common/components/image/NeteaseImage";
 
 interface RecommendTrackItemProps {
   song: NeteaseAPI.DailyRecommendTracksDailySong;

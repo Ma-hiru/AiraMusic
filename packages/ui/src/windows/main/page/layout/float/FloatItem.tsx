@@ -1,6 +1,6 @@
 import { FC, memo, ReactNode, useMemo } from "react";
 import { motion } from "motion/react";
-import { useThemeColor } from "@mahiru/ui/public/hooks/useThemeColor";
+import { useThemeColor } from "@mahiru/ui/common/hooks/useThemeColor";
 
 interface FloatItemProps {
   children?: ReactNode;

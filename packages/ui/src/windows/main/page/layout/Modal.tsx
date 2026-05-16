@@ -2,7 +2,7 @@ import { FC, memo } from "react";
 import { cx } from "@emotion/css";
 import { useLayoutStore } from "@mahiru/ui/windows/main/store/layout";
 import PlayerPage from "@mahiru/ui/windows/main/page/player/PlayerPage";
-import AppErrorBoundary from "@mahiru/ui/public/components/fallback/AppErrorBoundary";
+import AppErrorBoundary from "@mahiru/ui/common/components/fallback/AppErrorBoundary";
 
 const Modal: FC<{ className?: string }> = ({ className }) => {
   const { layout } = useLayoutStore();

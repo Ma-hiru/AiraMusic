@@ -1,16 +1,16 @@
 import { FC, memo, useRef } from "react";
 import { useLocation } from "react-router-dom";
-import { useUser } from "@mahiru/ui/public/store/user";
-import { RoutePathDisplay } from "@mahiru/ui/public/routes";
-import { useUserTrackManager } from "@mahiru/ui/public/hooks/useUserTrackManager";
-import { ElectronServicesBus } from "@mahiru/ui/public/source/electron/services";
-import { useListenable } from "@mahiru/ui/public/hooks/useListenable";
-import { PlaylistSource } from "@mahiru/ui/public/enum";
+import { useUser } from "@mahiru/ui/common/store/user";
+import { RoutePathDisplay } from "@mahiru/ui/common/routes";
+import { useUserTrackManager } from "@mahiru/ui/common/hooks/useUserTrackManager";
+import { ElectronServicesBus } from "@mahiru/ui/common/source/electron/services";
+import { useListenable } from "@mahiru/ui/common/hooks/useListenable";
+import { PlaylistSource } from "@mahiru/ui/common/enum";
 import { useArtistOrAlbumDisplayJump } from "@mahiru/ui/windows/display/hooks/useArtistOrAlbumDisplayJump";
 import { usePlayerChangeActionFromDisplay } from "@mahiru/ui/windows/display/hooks/usePlayerChangeActionFromDisplay";
 import { useDisplayPageAction } from "@mahiru/ui/windows/display/hooks/useDisplayPageAction";
 
-import Playlist, { PlaylistRef } from "@mahiru/ui/public/components/page/playlist/Playlist";
+import Playlist, { PlaylistRef } from "@mahiru/ui/common/components/page/playlist/Playlist";
 
 const PlaylistDisplay: FC<object> = () => {
   const user = useUser();

@@ -1,13 +1,13 @@
 import { FC, memo, useRef } from "react";
-import { NeteaseAPIPlaylist } from "@mahiru/ui/public/source/netease/api";
-import { useRequestAutoRetry, useRequestStatusWrap } from "@mahiru/ui/public/hooks/useRequestWrap";
+import { NeteaseAPIPlaylist } from "@mahiru/ui/common/source/netease/api";
+import { useRequestAutoRetry, useRequestStatusWrap } from "@mahiru/ui/common/hooks/useRequestWrap";
 
 import AppErrorBoundary, {
   AppErrorBoundaryRef
-} from "@mahiru/ui/public/components/fallback/AppErrorBoundary";
-import ThrowIf from "@mahiru/ui/public/components/fallback/ThrowIf";
+} from "@mahiru/ui/common/components/fallback/AppErrorBoundary";
+import ThrowIf from "@mahiru/ui/common/components/fallback/ThrowIf";
 import RecommendPlaylistList from "./list";
-import AppLoading from "@mahiru/ui/public/components/fallback/AppLoading";
+import AppLoading from "@mahiru/ui/common/components/fallback/AppLoading";
 
 const DailyRecommendPlaylist: FC<object> = () => {
   const { status, data, fetchData } = useRequestStatusWrap(NeteaseAPIPlaylist.recommendDaily);

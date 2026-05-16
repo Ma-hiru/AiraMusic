@@ -1,6 +1,6 @@
 import { FC, memo } from "react";
 
-import AcrylicBackground from "@mahiru/ui/public/components/public/AcrylicBackground";
+import AcrylicBackground from "@mahiru/ui/common/components/public/AcrylicBackground";
 import { useLayoutStore } from "@mahiru/ui/windows/main/store/layout";
 
 const Background: FC<object> = () => {

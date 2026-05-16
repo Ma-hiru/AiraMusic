@@ -1,5 +1,5 @@
 import { cx } from "@emotion/css";
-import { useListenable } from "@mahiru/ui/public/hooks/useListenable";
+import { useListenable } from "@mahiru/ui/common/hooks/useListenable";
 import {
   MouseEvent as ReactMouseEvent,
   useCallback,
@@ -8,16 +8,16 @@ import {
   useRef,
   useState
 } from "react";
-import { WindowResize } from "@mahiru/ui/public/hooks/useWindowResize";
-import { useAppLoaded } from "@mahiru/ui/public/hooks/useAppLoaded";
-import { NeteaseLyric } from "@mahiru/ui/public/source/netease/models";
+import { WindowResize } from "@mahiru/ui/common/hooks/useWindowResize";
+import { useAppLoaded } from "@mahiru/ui/common/hooks/useAppLoaded";
+import { NeteaseLyric } from "@mahiru/ui/common/source/netease/models";
 import {
   ElectronServicesBus,
   ElectronServicesWindow
-} from "@mahiru/ui/public/source/electron/services";
+} from "@mahiru/ui/common/source/electron/services";
 
 import Control from "./Control";
-import LyricComponent, { LyricRef } from "@mahiru/ui/public/components/lyric/LyricContainer";
+import LyricComponent, { LyricRef } from "@mahiru/ui/common/components/lyric/LyricContainer";
 
 export default function LyricPage() {
   useAppLoaded();

@@ -1,15 +1,15 @@
 import { FC, memo, useCallback, useEffect, useMemo, useRef } from "react";
 import { useLayoutStore } from "@mahiru/ui/windows/main/store/layout";
-import { NeteaseAPITrack } from "@mahiru/ui/public/source/netease/api";
-import { useRequestAutoRetry, useRequestStatusWrap } from "@mahiru/ui/public/hooks/useRequestWrap";
+import { NeteaseAPITrack } from "@mahiru/ui/common/source/netease/api";
+import { useRequestAutoRetry, useRequestStatusWrap } from "@mahiru/ui/common/hooks/useRequestWrap";
 
 import RecommendTrackTitle from "./RecommendTrackTitle";
 import RecommendTrackList from "./list";
 import AppErrorBoundary, {
   AppErrorBoundaryRef
-} from "@mahiru/ui/public/components/fallback/AppErrorBoundary";
-import ThrowIf from "@mahiru/ui/public/components/fallback/ThrowIf";
-import AppLoading from "@mahiru/ui/public/components/fallback/AppLoading";
+} from "@mahiru/ui/common/components/fallback/AppErrorBoundary";
+import ThrowIf from "@mahiru/ui/common/components/fallback/ThrowIf";
+import AppLoading from "@mahiru/ui/common/components/fallback/AppLoading";
 
 const DailyRecommendTracks: FC<object> = () => {
   const { theme, updateTheme } = useLayoutStore();

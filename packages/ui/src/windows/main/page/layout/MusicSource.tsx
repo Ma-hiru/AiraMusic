@@ -1,6 +1,6 @@
 import { FC, memo, useEffect, useState } from "react";
-import { useWindowTitle } from "@mahiru/ui/public/hooks/useWindowTitle";
-import { ShortcutConfig, useKeyboardShortcut } from "@mahiru/ui/public/hooks/useKeyboardShortcut";
+import { useWindowTitle } from "@mahiru/ui/common/hooks/useWindowTitle";
+import { ShortcutConfig, useKeyboardShortcut } from "@mahiru/ui/common/hooks/useKeyboardShortcut";
 import { useMediaSession } from "@mahiru/ui/windows/main/hooks/useMediaSession";
 import { useLayoutStore } from "@mahiru/ui/windows/main/store/layout";
 import { useSpectrumWorker } from "@mahiru/ui/windows/main/hooks/useSpectrumWorker";

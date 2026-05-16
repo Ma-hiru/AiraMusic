@@ -1,7 +1,7 @@
 import { extractPalette, FilterOptions } from "@mahiru/wasm";
 import { useEffect, useState } from "react";
-import { Log } from "../../../public/constants/dev";
-import { useStableArray } from "@mahiru/ui/public/hooks/useStableArray";
+import { Log } from "@mahiru/ui/common/constants/dev";
+import { useStableArray } from "@mahiru/ui/common/hooks/useStableArray";
 
 const cache: Record<string, string[]> = {};
 

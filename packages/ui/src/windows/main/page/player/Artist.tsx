@@ -1,11 +1,11 @@
 import { FC, memo, useCallback } from "react";
 import { Heart, MessageSquare } from "lucide-react";
-import { useHeart } from "@mahiru/ui/public/hooks/useHeart";
-import { useUserTrackManager } from "@mahiru/ui/public/hooks/useUserTrackManager";
+import { useHeart } from "@mahiru/ui/common/hooks/useHeart";
+import { useUserTrackManager } from "@mahiru/ui/common/hooks/useUserTrackManager";
 import {
   ElectronServicesBus,
   ElectronServicesWindow
-} from "@mahiru/ui/public/source/electron/services";
+} from "@mahiru/ui/common/source/electron/services";
 import AppEntry from "@mahiru/ui/windows/main/entry";
 import { useArtistOrAlbumPageJump } from "@mahiru/ui/windows/main/hooks/useArtistOrAlbumPageJump";
 import { getLayoutStoreSnapshot } from "@mahiru/ui/windows/main/store/layout";

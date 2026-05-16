@@ -1,15 +1,15 @@
 import { FC, memo, useRef } from "react";
 import { useLocation } from "react-router-dom";
-import { RoutePath, RoutePathMain } from "@mahiru/ui/public/routes";
-import { useUserTrackManager } from "@mahiru/ui/public/hooks/useUserTrackManager";
-import { ElectronServicesBus } from "@mahiru/ui/public/source/electron/services";
-import { useListenable } from "@mahiru/ui/public/hooks/useListenable";
+import { RoutePath, RoutePathMain } from "@mahiru/ui/common/routes";
+import { useUserTrackManager } from "@mahiru/ui/common/hooks/useUserTrackManager";
+import { ElectronServicesBus } from "@mahiru/ui/common/source/electron/services";
+import { useListenable } from "@mahiru/ui/common/hooks/useListenable";
 import { useArtistOrAlbumDisplayJump } from "@mahiru/ui/windows/display/hooks/useArtistOrAlbumDisplayJump";
 import { usePlayerChangeActionFromDisplay } from "@mahiru/ui/windows/display/hooks/usePlayerChangeActionFromDisplay";
 import { useDisplayPageAction } from "@mahiru/ui/windows/display/hooks/useDisplayPageAction";
-import ImageConstants from "@mahiru/ui/public/constants/image";
+import ImageConstants from "@mahiru/ui/common/constants/image";
 
-import Album, { AlbumPageRef } from "@mahiru/ui/public/components/page/album/Album";
+import Album, { AlbumPageRef } from "@mahiru/ui/common/components/page/album/Album";
 
 const AlbumDisplay: FC<object> = () => {
   const location = useLocation();

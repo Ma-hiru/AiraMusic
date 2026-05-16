@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef } from "react";
-import { NeteaseImageSize } from "@mahiru/ui/public/enum";
-import { NeteaseURL } from "@mahiru/ui/public/source/netease/models";
+import { NeteaseImageSize } from "@mahiru/ui/common/enum";
+import { NeteaseURL } from "@mahiru/ui/common/source/netease/models";
 import AppEntry from "@mahiru/ui/windows/main/entry";
 
 export function useMediaSession(props: {

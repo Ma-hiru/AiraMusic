@@ -9,20 +9,20 @@ import React, {
   useState
 } from "react";
 import { css, cx } from "@emotion/css";
-import { useManualAutoScroll } from "@mahiru/ui/public/hooks/useMarquee";
+import { useManualAutoScroll } from "@mahiru/ui/common/hooks/useMarquee";
 import { AArrowDown, AArrowUp, LockKeyholeOpen, LucideLock } from "lucide-react";
-import { NeteaseImageSize } from "@mahiru/ui/public/enum";
-import { NeteaseLyric, NeteaseNetworkImage } from "@mahiru/ui/public/source/netease/models";
-import { useListenable } from "@mahiru/ui/public/hooks/useListenable";
-import { FormatNumber } from "../../../public/lib/format";
+import { NeteaseImageSize } from "@mahiru/ui/common/enum";
+import { NeteaseLyric, NeteaseNetworkImage } from "@mahiru/ui/common/source/netease/models";
+import { useListenable } from "@mahiru/ui/common/hooks/useListenable";
+import { FormatNumber } from "@mahiru/ui/common/lib/format";
 import {
   ElectronServicesBus,
   ElectronServicesWindow
-} from "@mahiru/ui/public/source/electron/services";
+} from "@mahiru/ui/common/source/electron/services";
 
-import Drag from "@mahiru/ui/public/components/drag/Drag";
-import NeteaseImage from "@mahiru/ui/public/components/image/NeteaseImage";
-import NoDrag from "@mahiru/ui/public/components/drag/NoDrag";
+import Drag from "@mahiru/ui/common/components/drag/Drag";
+import NeteaseImage from "@mahiru/ui/common/components/image/NeteaseImage";
+import NoDrag from "@mahiru/ui/common/components/drag/NoDrag";
 
 type ControlProps = Omit<HTMLAttributes<HTMLDivElement>, "color"> & {
   showBg: boolean;

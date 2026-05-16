@@ -1,6 +1,6 @@
 import { FC, memo, ReactEventHandler, useCallback } from "react";
 import { useLayoutStore } from "@mahiru/ui/windows/main/store/layout";
-import NeteaseImage from "@mahiru/ui/public/components/image/NeteaseImage";
+import NeteaseImage from "@mahiru/ui/common/components/image/NeteaseImage";
 import AppEntry from "@mahiru/ui/windows/main/entry";
 
 const Cover: FC<object> = () => {

@@ -48,3 +48,5 @@ type NetworkStatus =
 interface CanInit {
   _init: NormalFunc;
 }
+
+type JsonValue = null | boolean | number | string | JsonValue[] | { [key: string]: JsonValue };

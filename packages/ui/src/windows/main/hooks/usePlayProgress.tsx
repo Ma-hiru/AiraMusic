@@ -1,7 +1,7 @@
 import { useAnimate } from "motion/react";
 import { MouseEvent as ReactMouseEvent, useCallback, useEffect, useRef, useState } from "react";
 import { clamp, throttle } from "lodash-es";
-import { NeteaseAPITrack } from "@mahiru/ui/public/source/netease/api";
+import { NeteaseAPITrack } from "@mahiru/ui/common/source/netease/api";
 import AppEntry from "@mahiru/ui/windows/main/entry";
 
 export function usePlayProgress() {

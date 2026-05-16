@@ -6,7 +6,7 @@ import {
 } from "@mahiru/ui/windows/main/componets/spectrum/renderers/IRenderer";
 import { WebGLRendererRust } from "@mahiru/ui/windows/main/componets/spectrum/renderers/webgl-rust";
 import { Canvas2DRenderer } from "@mahiru/ui/windows/main/componets/spectrum/renderers/canvas2d";
-import { useListenResize } from "@mahiru/ui/public/hooks/useListenResize";
+import { useListenResize } from "@mahiru/ui/common/hooks/useListenResize";
 import { useLayoutStore } from "@mahiru/ui/windows/main/store/layout";
 
 type AudioSpectrumProps = HTMLAttributes<HTMLCanvasElement> & {

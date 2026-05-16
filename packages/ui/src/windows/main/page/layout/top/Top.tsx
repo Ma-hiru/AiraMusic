@@ -1,17 +1,17 @@
 import { FC, memo } from "react";
 import { cx } from "@emotion/css";
 import { useLayoutStore } from "@mahiru/ui/windows/main/store/layout";
-import { useUser } from "@mahiru/ui/public/store/user";
-import { useListenable } from "@mahiru/ui/public/hooks/useListenable";
-import { ElectronServicesWindow } from "@mahiru/ui/public/source/electron/services";
+import { useUser } from "@mahiru/ui/common/store/user";
+import { useListenable } from "@mahiru/ui/common/hooks/useListenable";
+import { ElectronServicesWindow } from "@mahiru/ui/common/source/electron/services";
 
 import TopControl from "./TopControl";
 import TopAvatar from "./TopAvatar";
 import TopDivider from "./TopDivider";
 import TopSearch from "./TopSearch";
 import TopLeft from "./TopLeft";
-import AppErrorBoundary from "@mahiru/ui/public/components/fallback/AppErrorBoundary";
-import Drag from "@mahiru/ui/public/components/drag/Drag";
+import AppErrorBoundary from "@mahiru/ui/common/components/fallback/AppErrorBoundary";
+import Drag from "@mahiru/ui/common/components/drag/Drag";
 
 const Top: FC<{ className?: string }> = ({ className }) => {
   const { layout } = useLayoutStore();

@@ -1,6 +1,6 @@
 import { FC, memo, ReactNode, useEffect, useState } from "react";
 import AppEntry from "@mahiru/ui/windows/main/entry";
-import AppAudio from "@mahiru/ui/public/player/audio";
+import AppAudio from "@mahiru/ui/common/player/audio";
 
 interface ProgressProps {
   render: (progress: InstanceType<typeof AppAudio>["progress"]) => ReactNode;

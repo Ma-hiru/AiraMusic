@@ -1,11 +1,11 @@
-import { userStoreSnapshot } from "@mahiru/ui/public/store/user";
-import { useListenable } from "@mahiru/ui/public/hooks/useListenable";
-import { NeteaseServicesAuth } from "@mahiru/ui/public/source/netease/services";
+import { userStoreSnapshot } from "@mahiru/ui/common/store/user";
+import { useListenable } from "@mahiru/ui/common/hooks/useListenable";
+import { NeteaseServicesAuth } from "@mahiru/ui/common/source/netease/services";
 import {
   ElectronServicesOnce,
   ElectronServicesWindow
-} from "@mahiru/ui/public/source/electron/services";
-import AppPlayer from "@mahiru/ui/public/player/core";
+} from "@mahiru/ui/common/source/electron/services";
+import AppPlayer from "@mahiru/ui/common/player/core";
 
 export default class AppEntry {
   //region inner

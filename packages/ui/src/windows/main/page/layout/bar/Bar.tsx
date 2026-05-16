@@ -1,14 +1,14 @@
 import { cx } from "@emotion/css";
 import { FC, memo } from "react";
-import { useThemeColor } from "@mahiru/ui/public/hooks/useThemeColor";
-import AppUI from "@mahiru/ui/public/player/ui";
+import { useThemeColor } from "@mahiru/ui/common/hooks/useThemeColor";
+import AppUI from "@mahiru/ui/common/player/ui";
 
 import BarCover from "./BarCover";
 import BarControl from "./BarControl";
 import BarProgress from "./BarProgress";
 import BarBtns from "./BarBtns";
 import BarSpectrum from "./BarSpectrum";
-import AppErrorBoundary from "@mahiru/ui/public/components/fallback/AppErrorBoundary";
+import AppErrorBoundary from "@mahiru/ui/common/components/fallback/AppErrorBoundary";
 
 const Bar: FC<{ className?: string }> = ({ className }) => {
   const { textColorOnMain } = useThemeColor();

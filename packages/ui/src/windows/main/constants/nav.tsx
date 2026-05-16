@@ -1,6 +1,6 @@
 import { Clock, Heart, House } from "lucide-react";
 import { ReactNode } from "react";
-import { RoutePathMain } from "@mahiru/ui/public/routes";
+import { RoutePathMain } from "@mahiru/ui/common/routes";
 
 export type NavData = {
   icon: ReactNode;
