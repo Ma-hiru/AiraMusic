@@ -1,8 +1,10 @@
-import { useCallback, useEffect } from "react";
-import { getLayoutStoreSnapshot } from "@mahiru/ui/windows/main/store/layout";
+import { useCallback, useEffect, useMemo } from "react";
 import { useLatestRef } from "@mahiru/ui/common/hooks/useLatestRef";
 import { useLocation } from "react-router-dom";
 import { useRouterActive } from "@mahiru/ui/common/hooks/useRouterActive";
+import { useAtom } from "jotai";
+import { scrollActionsAtom } from "@mahiru/ui/windows/main/atoms/layout";
+import { debounce } from "lodash-es";
 
 export function useLocateOrScrollTopRegister(props: {
   getScrollTopFunc?: NormalFunc<[], Optional<NormalFunc>>;
@@ -11,35 +13,47 @@ export function useLocateOrScrollTopRegister(props: {
   const location = useLocation();
   const active = useRouterActive(location);
   const propsRef = useLatestRef(props);
+  const [scrollActions, setScrollActions] = useAtom(scrollActionsAtom);
+
+  const atomRef = useLatestRef(scrollActions);
 
   const canScrollTop = useCallback(
     (enable: boolean) => {
       if (!propsRef.current.getScrollTopFunc) return;
-      const layout = getLayoutStoreSnapshot().layout;
-      const updateLayout = getLayoutStoreSnapshot().updateLayout;
       const scrollTop = propsRef.current.getScrollTopFunc();
-      if (layout.scrollTop() !== scrollTop && enable) {
-        updateLayout(layout.copy().setScrollTop(scrollTop));
-      } else if (layout.scrollTop() !== undefined && !enable) {
-        updateLayout(layout.copy().setScrollTop(undefined));
+
+      if (atomRef.current.scrollTop !== scrollTop && enable) {
+        setScrollActions({
+          ...atomRef.current,
+          scrollTop
+        });
+      } else if (atomRef.current.scrollTop && !enable) {
+        setScrollActions({
+          ...atomRef.current,
+          scrollTop: null
+        });
       }
     },
-    [propsRef]
+    [atomRef, propsRef, setScrollActions]
   );
 
   const canFastLocate = useCallback(
     (enable: boolean) => {
       if (!propsRef.current.getFastLocateFunc) return;
-      const layout = getLayoutStoreSnapshot().layout;
       const fastLocator = propsRef.current.getFastLocateFunc();
-      const updateLayout = getLayoutStoreSnapshot().updateLayout;
-      if (layout.fastLocator() !== fastLocator && enable) {
-        updateLayout(layout.copy().setFastLocator(fastLocator));
-      } else if (layout.fastLocator() !== undefined && !enable) {
-        updateLayout(layout.copy().setFastLocator(undefined));
+      if (atomRef.current.fastLocate !== fastLocator && enable) {
+        setScrollActions({
+          ...atomRef.current,
+          fastLocate: fastLocator
+        });
+      } else if (atomRef.current.fastLocate && !enable) {
+        setScrollActions({
+          ...atomRef.current,
+          fastLocate: null
+        });
       }
     },
-    [propsRef]
+    [atomRef, propsRef, setScrollActions]
   );
 
   useEffect(() => {
@@ -53,7 +67,13 @@ export function useLocateOrScrollTopRegister(props: {
   }, [active, canFastLocate, canScrollTop]);
 
   return {
-    canScrollTop,
-    canFastLocate
+    canScrollTop: useMemo(
+      () => debounce(canScrollTop, 1000, { leading: true, trailing: true }),
+      [canScrollTop]
+    ),
+    canFastLocate: useMemo(
+      () => debounce(canFastLocate, 1000, { leading: true, trailing: true }),
+      [canFastLocate]
+    )
   };
 }

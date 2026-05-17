@@ -6,12 +6,14 @@ import {
   ElectronServicesBus,
   ElectronServicesWindow
 } from "@mahiru/ui/common/source/electron/services";
-import AppEntry from "@mahiru/ui/windows/main/entry";
 import { useArtistOrAlbumPageJump } from "@mahiru/ui/windows/main/hooks/useArtistOrAlbumPageJump";
-import { getLayoutStoreSnapshot } from "@mahiru/ui/windows/main/store/layout";
+import { useSetAtom } from "jotai";
+import { playModalAtom } from "@mahiru/ui/windows/main/atoms/layout";
+import AppEntry from "@mahiru/ui/windows/main/entry";
 
 const Artist: FC<object> = () => {
   const player = AppEntry.usePlayer();
+  const setPlayModal = useSetAtom(playModalAtom);
   const { heartManager } = useUserTrackManager();
   const { likedChange, checkLiked } = useHeart(heartManager);
   const { jumpArtistPage } = useArtistOrAlbumPageJump();
@@ -20,10 +22,9 @@ const Artist: FC<object> = () => {
   const jump = useCallback(
     (id: number) => {
       jumpArtistPage(id);
-      const { layout, updateLayout } = getLayoutStoreSnapshot();
-      layout.playModal && updateLayout(layout.copy().setPlayModal(false));
+      setPlayModal(false);
     },
-    [jumpArtistPage]
+    [jumpArtistPage, setPlayModal]
   );
 
   return (

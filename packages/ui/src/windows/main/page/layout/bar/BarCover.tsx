@@ -2,13 +2,14 @@ import { FC, memo, useMemo } from "react";
 import { useThemeColor } from "@mahiru/ui/common/hooks/useThemeColor";
 import { NeteaseImageSize } from "@mahiru/ui/common/enum";
 import { NeteaseNetworkImage } from "@mahiru/ui/common/source/netease/models";
-import { useLayoutStore } from "@mahiru/ui/windows/main/store/layout";
+import { useSetAtom } from "jotai";
+import { playModalAtom } from "@mahiru/ui/windows/main/atoms/layout";
 
 import AppEntry from "@mahiru/ui/windows/main/entry";
 import NeteaseImage from "@mahiru/ui/common/components/image/NeteaseImage";
 
 const BarCover: FC<object> = () => {
-  const { layout, updateLayout } = useLayoutStore();
+  const setPlayModal = useSetAtom(playModalAtom);
   const { textColorOnMain } = useThemeColor();
   const player = AppEntry.usePlayer();
   const track = player.current.track?.detail;
@@ -26,9 +27,7 @@ const BarCover: FC<object> = () => {
         cache
         className="h-12 w-12 min-w-12 min-h-12 rounded-md cursor-pointer"
         image={image}
-        onClick={() => {
-          updateLayout(layout.copy().setPlayModal(!layout.playModal));
-        }}
+        onClick={() => setPlayModal(true)}
         shadow={track?.al.picUrl ? "base" : "none"}
       />
       <div className="w-full pl-2 pr-6 flex flex-col items-start overflow-hidden">

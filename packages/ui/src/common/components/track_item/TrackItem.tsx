@@ -3,10 +3,7 @@ import { memo, useCallback } from "react";
 import { ColorInstance } from "color";
 import { NeteaseHistory, NeteaseTrackRecord } from "../../source/netease/models";
 import { NeteaseImageSize, PlaylistSource } from "../../enum";
-import type {
-  TrackListClickFunc,
-  TrackListContextMenuFunc
-} from "../../components/track_list";
+import type { TrackListClickFunc, TrackListContextMenuFunc } from "../../components/track_list";
 import AppToast from "../../components/toast";
 
 import ListItemIndex from "./TrackItemIndex";

@@ -6,30 +6,29 @@ import {
   NeteaseUser
 } from "@mahiru/ui/common/source/netease/models";
 import AppUI from "@mahiru/ui/common/player/ui";
-import { LayoutConfig } from "@mahiru/ui/windows/main/store/layout/config";
 import NeteaseImage from "@mahiru/ui/common/components/image/NeteaseImage";
 import { useLocation, useNavigate } from "react-router-dom";
 import { cx } from "@emotion/css";
-import { getLayoutStoreSnapshot } from "@mahiru/ui/windows/main/store/layout";
 import { RoutePathMain } from "@mahiru/ui/common/routes";
 import { PlaylistSource } from "@mahiru/ui/common/enum";
+import { useLocateOrScrollTopRegister } from "@mahiru/ui/windows/main/hooks/useLocateOrScrollTopRegister";
 import ImageConstants from "@mahiru/ui/common/constants/image";
 
 import VirtualList, { VirtualListRow } from "@mahiru/ui/common/components/virtual_list/VirtualList";
 
 interface NavPlaylistProps {
   user: Nullable<NeteaseUser>;
-  layout: LayoutConfig;
+  sidebarOpen: boolean;
 }
 
-const NavPlaylist: FC<NavPlaylistProps> = ({ user, layout }) => {
+const NavPlaylist: FC<NavPlaylistProps> = ({ user, sidebarOpen }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { id } = RoutePathMain.playlist.parseQuery(location);
 
   const [fastLocation, setFastLocation] = useState(false);
   const containerRef = useRef<Nullable<HTMLDivElement>>(null);
-  useScrollAutoHide(containerRef, 800, !layout.sideBar);
+  useScrollAutoHide(containerRef, 800, !sidebarOpen);
 
   const gotoTop = useCallback(() => {
     const container = containerRef.current;
@@ -40,17 +39,9 @@ const NavPlaylist: FC<NavPlaylistProps> = ({ user, layout }) => {
     });
   }, []);
 
-  const onRangeChange = useCallback(
-    (range: IndexRange) => {
-      const { updateLayout } = getLayoutStoreSnapshot();
-      if (range[0] > 5) {
-        updateLayout(layout.copy().setScrollTop(gotoTop));
-      } else if (range[0] <= 5) {
-        updateLayout(layout.copy().setScrollTop(undefined));
-      }
-    },
-    [gotoTop, layout]
-  );
+  const { canScrollTop } = useLocateOrScrollTopRegister({
+    getScrollTopFunc: () => gotoTop
+  });
 
   const onItemClick = useCallback(
     (item: NeteasePlaylistSummary) => {
@@ -73,8 +64,8 @@ const NavPlaylist: FC<NavPlaylistProps> = ({ user, layout }) => {
         itemHeight={57}
         containerRef={containerRef}
         overscan={10}
-        onRangeUpdate={onRangeChange}
-        extraData={{ fastLocation, opened: layout.sideBar, activeID: Number(id) }}
+        onRangeUpdate={(range) => canScrollTop(range[0] > 5)}
+        extraData={{ fastLocation, opened: sidebarOpen, activeID: Number(id) }}
         onItemClick={onItemClick}
       />
     </div>

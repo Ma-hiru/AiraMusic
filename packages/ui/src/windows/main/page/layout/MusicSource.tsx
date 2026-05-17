@@ -2,15 +2,21 @@ import { FC, memo, useEffect, useState } from "react";
 import { useWindowTitle } from "@mahiru/ui/common/hooks/useWindowTitle";
 import { ShortcutConfig, useKeyboardShortcut } from "@mahiru/ui/common/hooks/useKeyboardShortcut";
 import { useMediaSession } from "@mahiru/ui/windows/main/hooks/useMediaSession";
-import { useLayoutStore } from "@mahiru/ui/windows/main/store/layout";
 import { useSpectrumWorker } from "@mahiru/ui/windows/main/hooks/useSpectrumWorker";
+import { useAtomValue, useSetAtom } from "jotai";
+import {
+  spectrumDataAtom,
+  spectrumOptionsAtom,
+  spectrumReadyAtom
+} from "@mahiru/ui/windows/main/atoms/spectrum";
+import { playModalAtom, typingAtom } from "@mahiru/ui/windows/main/atoms/layout";
 import AppEntry from "@mahiru/ui/windows/main/entry";
 
 const MusicSource: FC<object> = () => {
   const player = AppEntry.usePlayer();
   const title = player.current.track?.name;
   const artist = player.current.track?.detail.artist?.join("&");
-  const { other, layout, updateLayout, updateOther } = useLayoutStore();
+
   // 注册窗口标题
   const { updateWindowTitle, defaultTitle } = useWindowTitle();
   useEffect(() => {
@@ -21,10 +27,12 @@ const MusicSource: FC<object> = () => {
     }
   }, [artist, defaultTitle, title, updateWindowTitle]);
   // 注册局部键盘快捷键
+  const setPlayModal = useSetAtom(playModalAtom);
+  const typing = useAtomValue(typingAtom);
   const [Shortcuts, setShortcuts] = useState<ShortcutConfig[]>([]);
   useKeyboardShortcut(Shortcuts);
   useEffect(() => {
-    if (other.typing) {
+    if (typing) {
       setShortcuts([
         {
           key: "ArrowRight",
@@ -57,7 +65,7 @@ const MusicSource: FC<object> = () => {
           key: "M",
           description: "切换播放页",
           modifiers: ["alt"],
-          callback: () => updateLayout(layout.copy().setPlayModal(!layout.playModal))
+          callback: () => setPlayModal((playModal) => !playModal)
         }
       ]);
     } else {
@@ -72,7 +80,7 @@ const MusicSource: FC<object> = () => {
         ];
       });
     }
-  }, [layout, other.typing, player, updateLayout]);
+  }, [player.audio, player.playlist, setPlayModal, typing]);
   // 禁 Tab 键
   useEffect(() => {
     const handler = (e: KeyboardEvent) => e.key === "Tab" && e.preventDefault();
@@ -93,16 +101,20 @@ const MusicSource: FC<object> = () => {
     unmute: () => player.audio.unmute()
   });
   // 注册频谱
+  const setSpectrumData = useSetAtom(spectrumDataAtom);
+  const setSpectrumReady = useSetAtom(spectrumReadyAtom);
+  const spectrumOptions = useAtomValue(spectrumOptionsAtom);
   const { spectrumData, isReady } = useSpectrumWorker(player.audio, player.playing, {
     fftSize: 2048,
     numBands: 32,
     withPeaks: false,
     fpsLimit: 60,
-    ...(other.spectrumOptions() || {})
+    ...spectrumOptions
   });
   useEffect(() => {
-    updateOther(other.copy().setSpectrumData(spectrumData.current).setSpectrumReady(isReady));
-  }, [isReady, other, spectrumData, updateOther]);
+    setSpectrumData(spectrumData.current);
+    setSpectrumReady(isReady);
+  }, [isReady, setSpectrumData, setSpectrumReady, spectrumData]);
 
   return null;
 };

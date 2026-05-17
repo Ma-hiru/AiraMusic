@@ -1,9 +1,6 @@
 import { useLayoutEffect } from "react";
 import { useListenable } from "../hooks/useListenable";
-import {
-  ElectronServicesBus,
-  ElectronServicesWindow
-} from "../source/electron/services";
+import { ElectronServicesBus, ElectronServicesWindow } from "../source/electron/services";
 import AppUI from "../player/ui";
 
 const needInject = !ElectronServicesWindow.current.isMainWindow;

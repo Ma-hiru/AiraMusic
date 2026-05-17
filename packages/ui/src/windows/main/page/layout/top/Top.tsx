@@ -1,9 +1,10 @@
 import { FC, memo } from "react";
 import { cx } from "@emotion/css";
-import { useLayoutStore } from "@mahiru/ui/windows/main/store/layout";
 import { useUser } from "@mahiru/ui/common/store/user";
 import { useListenable } from "@mahiru/ui/common/hooks/useListenable";
 import { ElectronServicesWindow } from "@mahiru/ui/common/source/electron/services";
+import { useAtomValue } from "jotai";
+import { playModalAtom, sidebarAtom } from "@mahiru/ui/windows/main/atoms/layout";
 
 import TopControl from "./TopControl";
 import TopAvatar from "./TopAvatar";
@@ -14,9 +15,10 @@ import AppErrorBoundary from "@mahiru/ui/common/components/fallback/AppErrorBoun
 import Drag from "@mahiru/ui/common/components/drag/Drag";
 
 const Top: FC<{ className?: string }> = ({ className }) => {
-  const { layout } = useLayoutStore();
-  const isFullscreen = useListenable(ElectronServicesWindow.current).isFullscreen;
+  const playModal = useAtomValue(playModalAtom);
+  const sidebar = useAtomValue(sidebarAtom);
   const user = useUser();
+  const isFullscreen = useListenable(ElectronServicesWindow.current).isFullscreen;
 
   return (
     <Drag
@@ -25,7 +27,7 @@ const Top: FC<{ className?: string }> = ({ className }) => {
           absolute left-0 right-0 top-0 pr-4
           flex items-center
         `,
-        layout.playModal ? "text-white" : "text-(--text-color-on-main)",
+        playModal ? "text-white" : "text-(--text-color-on-main)",
         className
       )}>
       <AppErrorBoundary name="Top" showError={false} autoReset panicAfterReset>
@@ -35,9 +37,9 @@ const Top: FC<{ className?: string }> = ({ className }) => {
             h-full overflow-hidden
             duration-300 ease-in-out transition-all
           `,
-            layout.sideBar ? "w-(--side-bar-expand-width)" : "w-(--side-bar-collapse-width)"
+            sidebar ? "w-(--side-bar-expand-width)" : "w-(--side-bar-collapse-width)"
           )}>
-          <TopLeft user={user} layout={layout} />
+          <TopLeft user={user} />
         </div>
         <div
           className={cx(
@@ -45,7 +47,7 @@ const Top: FC<{ className?: string }> = ({ className }) => {
             isFullscreen && "hidden"
           )}>
           <TopSearch />
-          {layout.playModal && <TopAvatar user={user} />}
+          {playModal && <TopAvatar user={user} />}
           <TopDivider />
           <TopControl />
         </div>

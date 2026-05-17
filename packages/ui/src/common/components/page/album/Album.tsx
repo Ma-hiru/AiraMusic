@@ -7,11 +7,7 @@ import {
   useImperativeHandle,
   useRef
 } from "react";
-import {
-  NeteaseAlbum,
-  NeteaseHistory,
-  NeteaseTrackRecord
-} from "../../../source/netease/models";
+import { NeteaseAlbum, NeteaseHistory, NeteaseTrackRecord } from "../../../source/netease/models";
 import { cx } from "@emotion/css";
 import { NeteaseImageSize, PlaylistSource } from "../../../enum";
 import { HeartManager } from "../../../hooks/useHeart";

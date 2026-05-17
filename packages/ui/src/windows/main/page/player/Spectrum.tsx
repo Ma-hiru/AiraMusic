@@ -1,18 +1,19 @@
 import { FC, memo } from "react";
-import { useLayoutStore } from "@mahiru/ui/windows/main/store/layout";
 import { useListenable } from "@mahiru/ui/common/hooks/useListenable";
 import { ElectronServicesWindow } from "@mahiru/ui/common/source/electron/services";
+import { useAtomValue } from "jotai";
+import { playModalAtom } from "@mahiru/ui/windows/main/atoms/layout";
 import AppEntry from "@mahiru/ui/windows/main/entry";
 
 import AudioSpectrum from "@mahiru/ui/windows/main/componets/spectrum/AudioSpectrum";
 
 const Spectrum: FC<object> = () => {
-  const { layout } = useLayoutStore();
+  const playModal = useAtomValue(playModalAtom);
   const player = AppEntry.usePlayer();
   const currentWindow = useListenable(ElectronServicesWindow.current);
   return (
     <AudioSpectrum
-      isPlaying={layout.playModal && player.playing && currentWindow.isShow && !currentWindow.isMin}
+      isPlaying={playModal && player.playing && currentWindow.isShow && !currentWindow.isMin}
       className="w-full h-5 mt-2"
       gap={2}
       renderer="webgl-rust"

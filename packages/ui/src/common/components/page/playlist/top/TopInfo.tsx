@@ -5,10 +5,7 @@ import { NeteasePlaylist } from "../../../../source/netease/models";
 import { css, cx } from "@emotion/css";
 import { useScrollAutoHide } from "../../../../hooks/useScrollAutoHide";
 import { FormatNumber } from "../../../../lib/format";
-import {
-  ElectronServicesBus,
-  ElectronServicesWindow
-} from "../../../../source/electron/services";
+import { ElectronServicesBus, ElectronServicesWindow } from "../../../../source/electron/services";
 
 interface TopInfoProps {
   summary: Nullable<NeteasePlaylist>;

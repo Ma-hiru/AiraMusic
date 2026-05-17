@@ -1,6 +1,5 @@
 import { useListenable } from "@mahiru/ui/common/hooks/useListenable";
 import { FC, memo, useCallback, useEffect, useRef } from "react";
-import { useLayoutStore } from "@mahiru/ui/windows/main/store/layout";
 import {
   ElectronServicesBus,
   ElectronServicesWindow
@@ -12,10 +11,12 @@ import { useNavigate } from "react-router-dom";
 import { RoutePath, RoutePathMain } from "@mahiru/ui/common/routes";
 import { PlaylistSource } from "@mahiru/ui/common/enum";
 import { MessageData } from "@mahiru/message/renderer";
+import { useAtomValue } from "jotai";
+import { themeAtom } from "@mahiru/ui/windows/main/atoms/theme";
 import AppEntry from "@mahiru/ui/windows/main/entry";
 
 const Bus: FC<object> = () => {
-  const { theme } = useLayoutStore();
+  const theme = useAtomValue(themeAtom);
   const windowCurrent = useListenable(ElectronServicesWindow.current);
   const playerActionBus = useListenable(ElectronServicesBus.playerAction);
   const playerChangeBus = useListenable(ElectronServicesBus.playerChange);
@@ -41,7 +42,7 @@ const Bus: FC<object> = () => {
 
   const updateInfoBus = useCallback(() => {
     ElectronServicesBus.info.send({
-      backgroundCover: theme.backgroundCover,
+      backgroundCover: theme.backgroundCover ?? undefined,
       theme: {
         mainColor: theme.mainColor,
         secondaryColor: theme.secondaryColor,

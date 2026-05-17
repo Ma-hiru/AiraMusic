@@ -2,10 +2,7 @@ import { Log } from "@mahiru/ui/common/constants/dev";
 import { NeteaseUser, NeteaseUserModel } from "../../../source/netease/models";
 import { userStoreSnapshot } from "../../../store/user";
 import { NeteaseServicesUser } from "../../../source/netease/services";
-import {
-  ElectronServicesNet,
-  ElectronServicesWindow
-} from "../../../source/electron/services";
+import { ElectronServicesNet, ElectronServicesWindow } from "../../../source/electron/services";
 import HTTPConstants from "@mahiru/ui/common/constants/http";
 import AppToast from "../../../components/toast";
 

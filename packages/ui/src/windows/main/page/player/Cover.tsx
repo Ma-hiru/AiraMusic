@@ -1,18 +1,18 @@
 import { FC, memo, ReactEventHandler, useCallback } from "react";
-import { useLayoutStore } from "@mahiru/ui/windows/main/store/layout";
-import NeteaseImage from "@mahiru/ui/common/components/image/NeteaseImage";
+import { useSetAtom } from "jotai";
+import { backgroundCoverAtom } from "@mahiru/ui/windows/main/atoms/theme";
 import AppEntry from "@mahiru/ui/windows/main/entry";
 
+import NeteaseImage from "@mahiru/ui/common/components/image/NeteaseImage";
+
 const Cover: FC<object> = () => {
-  const { theme, updateTheme } = useLayoutStore();
+  const setBackgroundCover = useSetAtom(backgroundCoverAtom);
   const player = AppEntry.usePlayer();
   const image = player.current.cover;
 
   const onLoad = useCallback<ReactEventHandler<HTMLImageElement>>(
-    (e) => {
-      updateTheme(theme.copy().setBackgroundCover(e.currentTarget.src));
-    },
-    [theme, updateTheme]
+    (e) => setBackgroundCover(e.currentTarget.src),
+    [setBackgroundCover]
   );
 
   return (
@@ -27,4 +27,5 @@ const Cover: FC<object> = () => {
     />
   );
 };
+
 export default memo(Cover);

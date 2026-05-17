@@ -1,9 +1,6 @@
 import { watch } from "vue";
 import { useListenable } from "../hooks/useListenableVue";
-import {
-  ElectronServicesBus,
-  ElectronServicesWindow
-} from "../source/electron/services";
+import { ElectronServicesBus, ElectronServicesWindow } from "../source/electron/services";
 import AppUI from "../player/ui";
 
 const needInject = !ElectronServicesWindow.current.isMainWindow;

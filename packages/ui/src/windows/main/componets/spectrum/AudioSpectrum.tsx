@@ -7,7 +7,12 @@ import {
 import { WebGLRendererRust } from "@mahiru/ui/windows/main/componets/spectrum/renderers/webgl-rust";
 import { Canvas2DRenderer } from "@mahiru/ui/windows/main/componets/spectrum/renderers/canvas2d";
 import { useListenResize } from "@mahiru/ui/common/hooks/useListenResize";
-import { useLayoutStore } from "@mahiru/ui/windows/main/store/layout";
+import { useAtom, useAtomValue } from "jotai";
+import {
+  spectrumDataAtom,
+  spectrumOptionsAtom,
+  spectrumReadyAtom
+} from "@mahiru/ui/windows/main/atoms/spectrum";
 
 type AudioSpectrumProps = HTMLAttributes<HTMLCanvasElement> & {
   isPlaying: boolean;
@@ -26,7 +31,7 @@ const AudioSpectrum: FC<AudioSpectrumProps> = ({
   color = "#ffffff",
   gap = 2,
   isPlaying,
-  spectrumOptions,
+  spectrumOptions: options = null,
   secondaryColor = "#ffffff",
   barWidth,
   hideRightBands = 0,
@@ -35,7 +40,9 @@ const AudioSpectrum: FC<AudioSpectrumProps> = ({
   heightScale = 1,
   ...rest
 }) => {
-  const { other, updateOther } = useLayoutStore();
+  const [spectrumOptions, setSpectrumOptions] = useAtom(spectrumOptionsAtom);
+  const spectrumReady = useAtomValue(spectrumReadyAtom);
+  const spectrumData = useAtomValue(spectrumDataAtom);
   const canvasRef = useRef<Nullable<HTMLCanvasElement>>(null);
   const rendererRef = useRef<Nullable<IRenderer>>(null);
   const playingRef = useRef(isPlaying);
@@ -44,8 +51,8 @@ const AudioSpectrum: FC<AudioSpectrumProps> = ({
   const spectrumReadyRef = useRef<boolean>(false);
   playingRef.current = isPlaying;
   hideRightBandsRef.current = hideRightBands;
-  spectrumDataRef.current = other.spectrumData();
-  spectrumReadyRef.current = other.spectrumReady;
+  spectrumDataRef.current = spectrumData;
+  spectrumReadyRef.current = spectrumReady;
 
   const rendererFactory = useMemo(() => {
     return () => (renderer === "webgl-rust" ? new WebGLRendererRust() : new Canvas2DRenderer());
@@ -124,17 +131,16 @@ const AudioSpectrum: FC<AudioSpectrumProps> = ({
       cancelAnimationFrame(animationFrameId);
     };
   }, []);
-  // 更新频谱选项
-  const spectrumOptionsKey = useMemo(
-    () => JSON.stringify(spectrumOptions ?? null),
-    [spectrumOptions]
-  );
+
+  // 更新频谱选项(在激活时)
+  const spectrumOptionsKey = useMemo(() => JSON.stringify(options), [options]);
   useEffect(() => {
     if (!isPlaying) return;
-    const currentStoreOptionsKey = JSON.stringify(other.spectrumOptions() ?? null);
-    if (currentStoreOptionsKey === spectrumOptionsKey) return;
-    updateOther(other.copy().setSpectrumOptions(spectrumOptions));
-  }, [isPlaying, other, spectrumOptions, spectrumOptionsKey, updateOther]);
+    if (JSON.stringify(spectrumOptions) === spectrumOptionsKey) return;
+    setSpectrumOptions(options);
+  }, [isPlaying, options, setSpectrumOptions, spectrumOptions, spectrumOptionsKey]);
+
   return <canvas ref={canvasRef} {...rest} />;
 };
+
 export default memo(AudioSpectrum);

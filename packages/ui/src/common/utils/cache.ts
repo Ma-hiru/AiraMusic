@@ -1,7 +1,4 @@
-import {
-  CacheObjectAsyncInterface,
-  CacheObjectInterface
-} from "../store/cache/utils";
+import { CacheObjectAsyncInterface, CacheObjectInterface } from "../store/cache/utils";
 import { CacheStore } from "../store/cache";
 import { useMemo } from "react";
 

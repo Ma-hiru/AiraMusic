@@ -1,31 +1,31 @@
 import { cx } from "@emotion/css";
 import { FC, memo, useCallback, useMemo, useRef } from "react";
 import { NeteaseNetworkImage, NeteaseUser } from "@mahiru/ui/common/source/netease/models";
-import { LayoutConfig } from "@mahiru/ui/windows/main/store/layout/config";
 import { ChevronDown, UserCircle2 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
-import { getLayoutStoreSnapshot } from "@mahiru/ui/windows/main/store/layout";
 import { NeteaseServicesAuth } from "@mahiru/ui/common/source/netease/services";
+import { useAtom, useAtomValue } from "jotai";
+import { playModalAtom, sidebarAtom } from "@mahiru/ui/windows/main/atoms/layout";
+import AppToast from "@mahiru/ui/common/components/toast";
 
 import NeteaseImage from "@mahiru/ui/common/components/image/NeteaseImage";
 import NoDrag from "@mahiru/ui/common/components/drag/NoDrag";
-import AppToast from "@mahiru/ui/common/components/toast";
 
 interface TopLeftProps {
   user: Nullable<NeteaseUser>;
-  layout: LayoutConfig;
 }
 
-const TopLeft: FC<TopLeftProps> = ({ user, layout }) => {
+const TopLeft: FC<TopLeftProps> = ({ user }) => {
   const avatar = useMemo(() => NeteaseNetworkImage.fromUserAvatar(user), [user]);
+  const sideBar = useAtomValue(sidebarAtom);
+  const [playModal, setPlayModal] = useAtom(playModalAtom);
 
-  const updateLayout = getLayoutStoreSnapshot().updateLayout;
   const lastClickTime = useRef(0);
-  const onClick = useCallback(() => {
-    if (layout.playModal) {
-      updateLayout(layout.copy().setPlayModal(false));
+  const onClick = useCallback(async () => {
+    if (playModal) {
+      setPlayModal(false);
     } else if (!NeteaseServicesAuth.isLoggedIn) {
-      NeteaseServicesAuth.createLoginWindow();
+      await NeteaseServicesAuth.createLoginWindow();
     } else {
       if (Date.now() - lastClickTime.current < 2000) {
         AppToast.show({
@@ -41,7 +41,7 @@ const TopLeft: FC<TopLeftProps> = ({ user, layout }) => {
         });
       }
     }
-  }, [layout, updateLayout]);
+  }, [playModal, setPlayModal]);
 
   const AvatarImage = useMemo(() => {
     return (
@@ -57,7 +57,7 @@ const TopLeft: FC<TopLeftProps> = ({ user, layout }) => {
   return (
     <div className="w-40 h-full text-black">
       <AnimatePresence>
-        {!layout.playModal ? (
+        {!playModal ? (
           <motion.div
             key="user"
             className="w-full h-full flex flex-row px-3 relative top-1 select-none"
@@ -91,7 +91,7 @@ const TopLeft: FC<TopLeftProps> = ({ user, layout }) => {
                   truncate font-semibold text-xs text-(--text-color-on-main)
                   ease-in-out duration-300 transition-opacity
               `,
-                  !layout.sideBar && "opacity-0"
+                  !sideBar && "opacity-0"
                 )}>
                 {user?.isLoggedIn ? user?.profile.nickname : "未登录"}
               </p>

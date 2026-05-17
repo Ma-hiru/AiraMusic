@@ -1,7 +1,6 @@
-import { FC, memo, useCallback, useRef } from "react";
+import { FC, memo, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import { useUser } from "@mahiru/ui/common/store/user";
-import { getLayoutStoreSnapshot } from "@mahiru/ui/windows/main/store/layout";
 import { RoutePathMain } from "@mahiru/ui/common/routes";
 import { useUserTrackManager } from "@mahiru/ui/common/hooks/useUserTrackManager";
 import { PlaylistSource } from "@mahiru/ui/common/enum";
@@ -9,9 +8,11 @@ import { useArtistOrAlbumPageJump } from "@mahiru/ui/windows/main/hooks/useArtis
 import { usePageAction } from "@mahiru/ui/windows/main/hooks/usePageAction";
 import { usePlayerChangeAction } from "@mahiru/ui/windows/main/hooks/usePlayerChangeAction";
 import { useCoverLoadedAndSetTheme } from "@mahiru/ui/windows/main/hooks/useCoverLoadedAndSetTheme";
+import { useLocateOrScrollTopRegister } from "@mahiru/ui/windows/main/hooks/useLocateOrScrollTopRegister";
+import { useSetAtom } from "jotai";
+import { typingAtom } from "@mahiru/ui/windows/main/atoms/layout";
 
 import Playlist, { PlaylistRef } from "@mahiru/ui/common/components/page/playlist/Playlist";
-import { useLocateOrScrollTopRegister } from "@mahiru/ui/windows/main/hooks/useLocateOrScrollTopRegister";
 
 const PlaylistPage: FC<object> = () => {
   const user = useUser();
@@ -47,10 +48,7 @@ const PlaylistPage: FC<object> = () => {
   });
   const { onCoverLoaded } = useCoverLoadedAndSetTheme();
 
-  const setIsTyping = useCallback((typing: boolean) => {
-    const { other, updateOther } = getLayoutStoreSnapshot();
-    updateOther(other.copy().setTyping(typing));
-  }, []);
+  const setIsTyping = useSetAtom(typingAtom);
 
   return (
     <Playlist

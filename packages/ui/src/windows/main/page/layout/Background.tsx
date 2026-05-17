@@ -1,14 +1,25 @@
 import { cx } from "@emotion/css";
 import { useMMCQ } from "@mahiru/ui/windows/main/hooks/useMMCQ";
 import { FC, memo, useLayoutEffect } from "react";
-import { useLayoutStore } from "@mahiru/ui/windows/main/store/layout";
-
-import AcrylicBackground from "@mahiru/ui/common/components/public/AcrylicBackground";
+import { useAtomValue, useSetAtom } from "jotai";
+import {
+  backgroundCoverAtom,
+  mainColorAtom,
+  secondaryColorAtom,
+  textColorOnMainAtom,
+  themeColorsAtom
+} from "@mahiru/ui/windows/main/atoms/theme";
 import AppUI from "@mahiru/ui/common/player/ui";
 
+import AcrylicBackground from "@mahiru/ui/common/components/public/AcrylicBackground";
+
 const Background: FC<{ className?: string }> = ({ className }) => {
-  const { theme, updateTheme } = useLayoutStore();
-  const themeColors = useMMCQ(theme.backgroundCover);
+  const setThemeColor = useSetAtom(themeColorsAtom);
+  const setMainColor = useSetAtom(mainColorAtom);
+  const setSecondaryColor = useSetAtom(secondaryColorAtom);
+  const setTextColorOnMain = useSetAtom(textColorOnMainAtom);
+  const backgroundCover = useAtomValue(backgroundCoverAtom);
+  const themeColors = useMMCQ(backgroundCover);
 
   useLayoutEffect(() => {
     const mainColor = themeColors[0] || AppUI.themeDefault.main;
@@ -21,20 +32,16 @@ const Background: FC<{ className?: string }> = ({ className }) => {
         secondary: secondaryColor,
         textOnMainColor: textColor
       };
-      updateTheme(
-        theme
-          .copy()
-          .setThemeColors(themeColors)
-          .setMainColor(mainColor)
-          .setSecondaryColor(secondaryColor)
-          .setTextColorOnMain(textColor)
-      );
+      setThemeColor(themeColors);
+      setMainColor(mainColor);
+      setSecondaryColor(secondaryColor);
+      setTextColorOnMain(textColor);
     }
-  }, [theme, themeColors, updateTheme]);
+  }, [setMainColor, setSecondaryColor, setTextColorOnMain, setThemeColor, themeColors]);
 
   return (
     <div className={cx("fixed left-0 top-0 inset-0 w-screen h-screen bg-[#f7f9fc]", className)}>
-      <AcrylicBackground src={theme.backgroundCover} />
+      <AcrylicBackground src={backgroundCover ?? undefined} />
     </div>
   );
 };

@@ -11,10 +11,7 @@ import {
   useState
 } from "react";
 import { cx } from "@emotion/css";
-import {
-  NeteaseLocalImage,
-  NeteaseNetworkImage
-} from "../../source/netease/models/NeteaseImage";
+import { NeteaseLocalImage, NeteaseNetworkImage } from "../../source/netease/models/NeteaseImage";
 import { NeteaseImageSize } from "../../enum";
 import { NeteaseServicesImage } from "../../source/netease/services";
 import { ElectronServicesWindow } from "../../source/electron/services";

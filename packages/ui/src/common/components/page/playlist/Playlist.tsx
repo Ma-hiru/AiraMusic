@@ -29,10 +29,7 @@ import {
 import { SearchTrack } from "@mahiru/wasm";
 import { ElectronServicesNet } from "../../../source/electron/services";
 import { NeteaseImageSize, PlaylistSource } from "../../../enum";
-import {
-  NeteaseServicesImage,
-  NeteaseServicesPlaylist
-} from "../../../source/netease/services";
+import { NeteaseServicesImage, NeteaseServicesPlaylist } from "../../../source/netease/services";
 import { useUpdate } from "../../../hooks/useUpdate";
 import { Log } from "@mahiru/ui/common/constants/dev";
 import { RequestStatus } from "../../../hooks/useRequestWrap";

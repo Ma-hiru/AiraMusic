@@ -13,11 +13,7 @@ import { cx } from "@emotion/css";
 import { useScrollAutoHide } from "../../hooks/useScrollAutoHide";
 import { useThemeColor } from "../../hooks/useThemeColor";
 import { NeteaseImageSize, PlaylistSource } from "../../enum";
-import {
-  NeteaseHistory,
-  NeteaseTrack,
-  NeteaseTrackRecord
-} from "../../source/netease/models";
+import { NeteaseHistory, NeteaseTrack, NeteaseTrackRecord } from "../../source/netease/models";
 
 import TrackItem, { type TrackItemProps } from "../../components/track_item";
 import VirtualList, { VirtualListRow } from "../../components/virtual_list";

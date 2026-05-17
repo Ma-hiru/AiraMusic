@@ -1,21 +1,25 @@
-import { UserStoreConfig, UserStoreType } from "./config";
-import { createZustandShallowStore, createZustandStore } from "../../lib/store";
 import { useMemo } from "react";
-import { NeteaseSettings, NeteaseUser } from "../../source/netease/models";
+import { UserStoreInitializer, UserStoreType } from "./config";
+import { createStoreSelectors, createZustandStore } from "@mahiru/ui/common/lib/store";
+import { NeteaseSettings, NeteaseUser } from "@mahiru/ui/common/source/netease/models";
 
-const userStore = createZustandStore(UserStoreConfig, "user", true);
+export const useUserStore = createZustandStore<UserStoreType>(UserStoreInitializer, {
+  name: "user",
+  version: 1,
+  persist: true
+});
 
-export const useUserStore = createZustandShallowStore<UserStoreType>(userStore);
+export const useUserStorePick = createStoreSelectors<UserStoreType>(useUserStore);
 
-export const userStoreSnapshot = userStore.getState.bind(userStore);
+export const userStoreSnapshot = useUserStore.getState.bind(useUserStore);
 
 export function useUser() {
-  const { _user } = useUserStore();
+  const { _user } = useUserStorePick(["_user"]);
   return useMemo(() => NeteaseUser.fromObject(_user), [_user]);
 }
 
 export function useSettings() {
-  const { _settings } = useUserStore();
+  const { _settings } = useUserStorePick(["_settings"]);
   return useMemo(() => NeteaseSettings.fromObject(_settings), [_settings]);
 }
 

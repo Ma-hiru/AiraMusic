@@ -3,15 +3,24 @@ import { FC, memo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ChevronLeft, ChevronUp, LocateFixed, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { AnimatePresence } from "motion/react";
-import { useLayoutStore } from "@mahiru/ui/windows/main/store/layout";
 import { RoutePathMain } from "@mahiru/ui/common/routes";
+import { useAtom, useAtomValue } from "jotai";
+import {
+  playModalAtom,
+  scrollActionsAtom,
+  sidebarAtom
+} from "@mahiru/ui/windows/main/atoms/layout";
 
 import FloatItem from "./FloatItem";
 
 const Float: FC<{ className?: string }> = ({ className }) => {
+  const playModal = useAtomValue(playModalAtom);
+  const scrollActions = useAtomValue(scrollActionsAtom);
+  const [sidebar, setSidebar] = useAtom(sidebarAtom);
   const navigate = useNavigate();
   const location = useLocation();
-  const { layout, updateLayout } = useLayoutStore();
+  const scrollTop = scrollActions.scrollTop;
+  const fastLocator = scrollActions.fastLocate;
 
   // 在首页或根路径时不显示返回按钮
   const hiddenBack = !(
@@ -30,32 +39,24 @@ const Float: FC<{ className?: string }> = ({ className }) => {
         className
       )}>
       <AnimatePresence mode="sync">
-        {!layout.playModal && layout.scrollTop() && (
-          <FloatItem key="scrollTop" onClick={layout.scrollTop() || undefined}>
+        {!playModal && scrollTop && (
+          <FloatItem key="scrollTop" onClick={scrollTop ?? undefined}>
             <ChevronUp className="size-5" />
           </FloatItem>
         )}
-        {!layout.playModal && layout.fastLocator() && (
-          <FloatItem key="locate" onClick={layout.fastLocator() || undefined}>
+        {!playModal && fastLocator && (
+          <FloatItem key="locate" onClick={fastLocator ?? undefined}>
             <LocateFixed className="size-5" />
           </FloatItem>
         )}
-        {!layout.playModal && hiddenBack && (
+        {!playModal && hiddenBack && (
           <FloatItem key="back" onClick={() => navigate(-1)}>
             <ChevronLeft className="size-5" />
           </FloatItem>
         )}
-        {!layout.playModal && (
-          <FloatItem
-            key="sidebar"
-            onClick={() => {
-              updateLayout(layout.copy().setSideBar(!layout.sideBar));
-            }}>
-            {layout.sideBar ? (
-              <PanelLeftClose className="size-5" />
-            ) : (
-              <PanelLeftOpen className="size-5" />
-            )}
+        {!playModal && (
+          <FloatItem key="sidebar" onClick={() => setSidebar(!sidebar)}>
+            {sidebar ? <PanelLeftClose className="size-5" /> : <PanelLeftOpen className="size-5" />}
           </FloatItem>
         )}
       </AnimatePresence>

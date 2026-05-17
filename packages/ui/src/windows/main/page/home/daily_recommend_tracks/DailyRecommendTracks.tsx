@@ -1,7 +1,8 @@
+import { useAtom } from "jotai";
 import { FC, memo, useCallback, useEffect, useMemo, useRef } from "react";
-import { useLayoutStore } from "@mahiru/ui/windows/main/store/layout";
 import { NeteaseAPITrack } from "@mahiru/ui/common/source/netease/api";
 import { useRequestAutoRetry, useRequestStatusWrap } from "@mahiru/ui/common/hooks/useRequestWrap";
+import { backgroundCoverAtom } from "@mahiru/ui/windows/main/atoms/theme";
 
 import RecommendTrackTitle from "./RecommendTrackTitle";
 import RecommendTrackList from "./list";
@@ -12,7 +13,7 @@ import ThrowIf from "@mahiru/ui/common/components/fallback/ThrowIf";
 import AppLoading from "@mahiru/ui/common/components/fallback/AppLoading";
 
 const DailyRecommendTracks: FC<object> = () => {
-  const { theme, updateTheme } = useLayoutStore();
+  const [backgroundCover, setBackgroundCover] = useAtom(backgroundCoverAtom);
   const { status, data, fetchData } = useRequestStatusWrap(NeteaseAPITrack.recommendDaily);
   const { reload } = useRequestAutoRetry(
     fetchData,
@@ -42,9 +43,9 @@ const DailyRecommendTracks: FC<object> = () => {
 
   useEffect(() => {
     const cover = recommend[0]?.al.picUrl;
-    if (theme.backgroundCover || !cover) return;
-    updateTheme(theme.copy().setBackgroundCover(cover));
-  }, [recommend, theme, updateTheme]);
+    if (backgroundCover || !cover) return;
+    setBackgroundCover(cover);
+  }, [backgroundCover, recommend, setBackgroundCover]);
 
   return (
     <div className="w-full overflow-hidden contain-layout">
