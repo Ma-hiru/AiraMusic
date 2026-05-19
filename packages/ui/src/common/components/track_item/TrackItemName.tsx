@@ -63,7 +63,7 @@ const TrackItemName: FC<ListItemNameProps> = ({
         <span className="truncate space-x-0.5">
           {track.detail.ar.map((ar, index) => {
             return (
-              <Fragment key={ar.id}>
+              <Fragment key={ar.name + ar.id}>
                 <span
                   className="inline-block cursor-pointer hover:opacity-50 ease-in-out duration-300 transition-all active:scale-95"
                   onClick={() => onClickArtist?.(ar.id)}>

@@ -1,21 +1,17 @@
 import { cx } from "@emotion/css";
 import { FC, memo, Ref } from "react";
-import { useThemeColor } from "../../hooks/useThemeColor";
 import { ArchiveBoxXMarkIcon } from "@heroicons/react/24/outline";
 
 interface AppEmptyProps {
   ref?: Ref<HTMLDivElement>;
-  color?: string;
   className?: string;
   tips?: string;
 }
 
-const AppEmpty: FC<AppEmptyProps> = ({ ref, color, className, tips = "暂无数据" }) => {
-  const { mainColor } = useThemeColor();
+const AppEmpty: FC<AppEmptyProps> = ({ ref, className, tips = "暂无数据" }) => {
   return (
     <div
       ref={ref}
-      style={{ color: color || mainColor.hex() }}
       className={cx(
         "px-2 py-1 w-full h-full flex flex-col gap-2 justify-center items-center",
         className
@@ -25,4 +21,5 @@ const AppEmpty: FC<AppEmptyProps> = ({ ref, color, className, tips = "暂无数�
     </div>
   );
 };
+
 export default memo(AppEmpty);

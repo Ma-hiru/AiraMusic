@@ -25,7 +25,7 @@ const AppLoading: FC<ListLoadingProps> = ({
   const { mainColor } = useThemeColor();
   if (!loading) {
     if (wrap) return <div ref={ref}>{children}</div>;
-    return <>{children}</>;
+    return children;
   }
   return (
     <div
