@@ -1,4 +1,4 @@
-import { FC, memo, useCallback, useMemo, useRef } from "react";
+import { FC, memo, useCallback, useRef } from "react";
 import { useThemeColor } from "@mahiru/ui/common/hooks/useThemeColor";
 import { BannerType, PlaylistSource } from "@mahiru/ui/common/enum";
 import { Log } from "@mahiru/ui/common/constants/dev";
@@ -18,10 +18,15 @@ import AppErrorBoundary, {
 import ThrowIf from "@mahiru/ui/common/components/fallback/ThrowIf";
 
 const Banner: FC<object> = () => {
+  const {
+    status,
+    data: banner = [],
+    fetchData
+  } = useRequestStatusWrap(
+    useCallback(() => NeteaseAPIHome.banner().then((res) => res.banners), [])
+  );
   const { textColorOnMain } = useThemeColor();
-  const { status, data, fetchData } = useRequestStatusWrap(NeteaseAPIHome.banner);
   const { reload } = useRequestAutoRetry(fetchData, [], () => banner.length !== 0);
-  const banner = useMemo(() => data?.banners ?? [], [data?.banners]);
   const errRef = useRef<AppErrorBoundaryRef>({});
   const player = AppEntry.usePlayer();
   const navigate = useNavigate();

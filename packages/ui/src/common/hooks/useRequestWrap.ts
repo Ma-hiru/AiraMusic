@@ -9,7 +9,7 @@ export type RequestStatus = "loading" | "error" | "success";
 
 export function useRequestStatusWrap<R, Args extends unknown[]>(request: PromiseFunc<Args, R>) {
   const [status, setStatus] = useState<RequestStatus>("loading");
-  const [data, setData] = useState<Nullable<R>>(null);
+  const [data, setData] = useState<Undefinable<R>>();
 
   const fetchData: PromiseFunc<[signal: AbortSignal, props: Args]> = useCallback(
     async (...args) => {
@@ -31,7 +31,7 @@ export function useRequestStatusWrap<R, Args extends unknown[]>(request: Promise
           Log.error(err);
           startTransition(() => {
             setStatus("error");
-            setData(null);
+            setData(undefined);
           });
         });
     },

@@ -1,5 +1,5 @@
 import { useAtom } from "jotai";
-import { FC, memo, useCallback, useEffect, useMemo, useRef } from "react";
+import { FC, memo, useCallback, useEffect, useRef } from "react";
 import { NeteaseAPITrack } from "@mahiru/ui/common/source/netease/api";
 import { useRequestAutoRetry, useRequestStatusWrap } from "@mahiru/ui/common/hooks/useRequestWrap";
 import { backgroundCoverAtom } from "@mahiru/ui/windows/main/atoms/theme";
@@ -14,13 +14,15 @@ import AppLoading from "@mahiru/ui/common/components/fallback/AppLoading";
 
 const DailyRecommendTracks: FC<object> = () => {
   const [backgroundCover, setBackgroundCover] = useAtom(backgroundCoverAtom);
-  const { status, data, fetchData } = useRequestStatusWrap(NeteaseAPITrack.recommendDaily);
-  const { reload } = useRequestAutoRetry(
-    fetchData,
-    [],
-    () => (data?.data.dailySongs ?? []).length !== 0
+  const {
+    status,
+    data: recommend = [],
+    fetchData
+  } = useRequestStatusWrap(
+    useCallback(() => NeteaseAPITrack.recommendDaily().then((res) => res.data.dailySongs), [])
   );
-  const recommend = useMemo(() => data?.data.dailySongs ?? [], [data?.data.dailySongs]);
+  const { reload } = useRequestAutoRetry(fetchData, [], () => recommend.length !== 0);
+
   const errRef = useRef<AppErrorBoundaryRef>({});
   const containerRef = useRef<HTMLDivElement>(null);
 

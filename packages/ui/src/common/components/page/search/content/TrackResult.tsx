@@ -32,8 +32,6 @@ interface TrackResultProps {
   playableManager: TrackListPlayableManager;
 }
 
-const blankTracks: NeteaseTrackRecord[] = [];
-
 const TrackResult: FC<TrackResultProps> = ({
   ref,
   className,
@@ -48,7 +46,11 @@ const TrackResult: FC<TrackResultProps> = ({
   addToPlaylistNext,
   openComment
 }) => {
-  const { status, data, fetchData } = useRequestStatusWrap(
+  const {
+    status,
+    data: tracks = [],
+    fetchData
+  } = useRequestStatusWrap(
     useCallback(async (keywords?: string) => {
       if (!keywords) return [];
       const res = await NeteaseAPISearch.search<"song">({
@@ -70,7 +72,6 @@ const TrackResult: FC<TrackResultProps> = ({
     }, [])
   );
   const { reload } = useRequestAutoRun(fetchData, [keywords]);
-  const tracks = data ?? blankTracks;
 
   // 右键菜单
   const { create, createTrackContextMenu } = AppContextMenu.useMenu();

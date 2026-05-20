@@ -1,4 +1,4 @@
-import { FC, memo } from "react";
+import { FC, memo, useCallback } from "react";
 import { cx } from "@emotion/css";
 import { useRequestAutoRetry, useRequestStatusWrap } from "@mahiru/ui/common/hooks/useRequestWrap";
 import { NeteaseAPISearch } from "@mahiru/ui/common/source/netease/api";
@@ -12,9 +12,15 @@ interface HotRecommendProps {
 }
 
 const HotRecommend: FC<HotRecommendProps> = ({ className, onSearch }) => {
-  const { status, data, fetchData } = useRequestStatusWrap(NeteaseAPISearch.hotListDetail);
-  const { reload } = useRequestAutoRetry(fetchData, [], () => !!data);
-  const list = data?.data ?? [];
+  const {
+    status,
+    data: list = [],
+    fetchData
+  } = useRequestStatusWrap(
+    useCallback(async () => NeteaseAPISearch.hotListDetail().then((res) => res.data), [])
+  );
+  const { reload } = useRequestAutoRetry(fetchData, [], () => !!list.length);
+
   console.log(list);
   return (
     <div className={cx("flex flex-col justify-center items-center", className)}>

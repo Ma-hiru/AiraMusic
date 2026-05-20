@@ -19,9 +19,7 @@ interface SearchProps {
   ref?: Ref<SearchRef>;
   className?: string;
   defaultKeyword: Optional<string>;
-  onJumpAlbum: Optional<NormalFunc<[id: number]>>;
-  onJumpArtist: Optional<NormalFunc<[id: number]>>;
-  onJumpPlaylist: Optional<NormalFunc<[id: number]>>;
+  onClickPlaylist: Optional<NormalFunc<[id: number]>>;
   activeTrackID: Undefinable<number>;
   onClickTrack: Optional<NormalFunc<[track: NeteaseTrackRecord | NeteaseHistory, index: number]>>;
   onClickArtist: Optional<NormalFunc<[id: number]>>;
@@ -38,9 +36,7 @@ const Search: FC<SearchProps> = ({
   ref,
   className,
   defaultKeyword,
-  onJumpPlaylist,
-  onJumpArtist,
-  onJumpAlbum,
+  onClickPlaylist,
   activeTrackID,
   onClickTrack,
   onClickArtist,
@@ -54,11 +50,11 @@ const Search: FC<SearchProps> = ({
 }) => {
   const [keyword, setKeyword] = useState("");
   const [tabs, setTabs] = useState<"tracks" | "albums" | "playlists" | "artists">("tracks");
-  const inputRef = useRef<SearchInputRef>(null);
   const [trackListMounted, setTrackListMounted] = useState(false);
   const [albumListMounted, setAlbumListMounted] = useState(false);
   const [artistListMounted, setArtistListMounted] = useState(false);
   const [playlistListMounted, setPlaylistListMounted] = useState(false);
+  const inputRef = useRef<SearchInputRef>(null);
   const trackResultRef = useRef<TrackResultRef>(null);
 
   useEffect(() => {
@@ -122,21 +118,21 @@ const Search: FC<SearchProps> = ({
         <AlbumResult
           className={cx("flex-1", (tabs !== "albums" || !keyword) && "hidden")}
           keywords={keyword}
-          onJumpAlbum={onJumpAlbum}
+          onJumpAlbum={onClickAlbum}
         />
       )}
       {artistListMounted && (
         <ArtistResult
           className={cx("flex-1", (tabs !== "artists" || !keyword) && "hidden")}
           keywords={keyword}
-          onJumpArtist={onJumpArtist}
+          onJumpArtist={onClickArtist}
         />
       )}
       {playlistListMounted && (
         <PlaylistResult
           className={cx("flex-1", (tabs !== "playlists" || !keyword) && "hidden")}
           keywords={keyword}
-          onJumpPlaylist={onJumpPlaylist}
+          onJumpPlaylist={onClickPlaylist}
         />
       )}
     </div>

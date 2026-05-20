@@ -87,9 +87,12 @@ const Album: FC<AlbumPageProps> = ({
     },
     []
   );
-  const { status, data, fetchData } = useRequestStatusWrap(requestData);
+  const {
+    status,
+    data: [album, dynamic] = [null, null],
+    fetchData
+  } = useRequestStatusWrap(requestData);
   const { reload } = useRequestAutoRun(fetchData, [id]);
-  const [album, dynamic] = data ?? [null, null];
 
   const trackListRef = useRef<Nullable<TrackListRef>>(null);
   useImperativeHandle(

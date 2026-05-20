@@ -77,7 +77,7 @@ const Artist: FC<ArtistProps> = ({
     if (id <= 0 || !id) return Promise.resolve(null);
     return NeteaseServicesArtist.id(id);
   }, []);
-  const { status, data: artist, fetchData } = useRequestStatusWrap(requestData);
+  const { status, data: artist = null, fetchData } = useRequestStatusWrap(requestData);
   const { reload } = useRequestAutoRun(fetchData, [id]);
 
   useEffect(() => {

@@ -1,14 +1,14 @@
 import { FC, memo, useRef } from "react";
 import { RoutePath, RoutePathDisplay } from "@mahiru/ui/common/routes";
 import { useLocation } from "react-router-dom";
-
-import Search, { SearchRef } from "@mahiru/ui/common/components/page/search/Search";
 import { useArtistOrAlbumDisplayJump } from "@mahiru/ui/windows/display/hooks/useArtistOrAlbumDisplayJump";
 import { usePlayerChangeActionFromDisplay } from "@mahiru/ui/windows/display/hooks/usePlayerChangeActionFromDisplay";
 import { useUserTrackManager } from "@mahiru/ui/common/hooks/useUserTrackManager";
 import { useListenable } from "@mahiru/ui/common/hooks/useListenable";
 import { ElectronServicesBus } from "@mahiru/ui/common/source/electron/services";
 import ImageConstants from "@mahiru/ui/common/constants/image";
+
+import Search, { SearchRef } from "@mahiru/ui/common/components/page/search/Search";
 
 const SearchDisplay: FC<object> = () => {
   const location = useLocation();
@@ -27,9 +27,7 @@ const SearchDisplay: FC<object> = () => {
     <Search
       className="w-full h-full text-(--text-color-on-main)"
       ref={searchRef}
-      onJumpAlbum={null}
-      onJumpArtist={null}
-      onJumpPlaylist={null}
+      onClickPlaylist={null}
       onClickAlbum={jumpAlbumDisplay}
       onClickArtist={jumpArtistDisplay}
       addToPlaylistNext={addTrackToPlaylistNext}
