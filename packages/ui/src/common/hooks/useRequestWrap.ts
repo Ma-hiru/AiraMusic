@@ -27,8 +27,8 @@ export function useRequestStatusWrap<R, Args extends unknown[]>(request: Promise
           });
         })
         .catch((err) => {
+          Log.info("useRequestStatusWrap", err);
           if (signal.aborted) return;
-          Log.error(err);
           startTransition(() => {
             setStatus("error");
             setData(undefined);

@@ -36,7 +36,8 @@ export class AppWindows {
         type: "toolbar",
         skipTaskbar: true,
         show: false,
-        icon: appLogoPath
+        icon: appLogoPath,
+        alwaysOnTop: true
       },
       id: "login",
       handleExits: WindowExits.DESTROY,

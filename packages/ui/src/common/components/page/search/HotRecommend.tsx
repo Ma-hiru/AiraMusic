@@ -21,7 +21,6 @@ const HotRecommend: FC<HotRecommendProps> = ({ className, onSearch }) => {
   );
   const { reload } = useRequestAutoRetry(fetchData, [], () => !!list.length);
 
-  console.log(list);
   return (
     <div className={cx("flex flex-col justify-center items-center", className)}>
       <AppErrorBoundary name="HotRecommend" canReset onReset={reload} toast>
@@ -42,10 +41,12 @@ const HotRecommend: FC<HotRecommendProps> = ({ className, onSearch }) => {
                       transition-all ease-in-out duration-300
                     `}
                     onClick={() => onSearch(item.searchWord)}>
-                    <span className="font-semibold">{(index + 1).toString().padStart(2, "0")}</span>
+                    <span className="font-semibold">
+                      {(index + 1).toString().padStart(2, "0")}.
+                    </span>
                     <span className="line-clamp-1">{item.searchWord}</span>
                     {item.iconUrl && (
-                      <img className="size-4" src={item.iconUrl} alt={item.iconType.toString()} />
+                      <img className="size-3" src={item.iconUrl} alt={item.iconType.toString()} />
                     )}
                   </div>
                 );
@@ -54,7 +55,6 @@ const HotRecommend: FC<HotRecommendProps> = ({ className, onSearch }) => {
           </section>
         </AppLoading>
       </AppErrorBoundary>
-      <div></div>
     </div>
   );
 };

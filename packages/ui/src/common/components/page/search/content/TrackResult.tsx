@@ -1,4 +1,11 @@
-import { FC, MouseEvent as ReactMouseEvent, Ref, useCallback, useImperativeHandle } from "react";
+import {
+  FC,
+  MouseEvent as ReactMouseEvent,
+  Ref,
+  useCallback,
+  useEffect,
+  useImperativeHandle
+} from "react";
 import { NeteaseAPISearch } from "@mahiru/ui/common/source/netease/api";
 import { NeteaseImageSize, PlaylistSource, SearchType } from "@mahiru/ui/common/enum";
 import { NeteaseServicesTrack } from "@mahiru/ui/common/source/netease/services";
@@ -14,6 +21,7 @@ import AppContextMenu from "@mahiru/ui/common/components/menu";
 
 export type TrackResultRef = {
   tracks: NeteaseTrackRecord[];
+  count: number;
 };
 
 interface TrackResultProps {
@@ -30,6 +38,8 @@ interface TrackResultProps {
   coverSize: NeteaseImageSize;
   heartManager: HeartManager;
   playableManager: TrackListPlayableManager;
+  active: boolean;
+  setCount: NormalFunc<[count: number]>;
 }
 
 const TrackResult: FC<TrackResultProps> = ({
@@ -44,7 +54,9 @@ const TrackResult: FC<TrackResultProps> = ({
   activeTrackID,
   addToPlaylistLast,
   addToPlaylistNext,
-  openComment
+  openComment,
+  active,
+  setCount
 }) => {
   const {
     status,
@@ -116,14 +128,20 @@ const TrackResult: FC<TrackResultProps> = ({
   useImperativeHandle(
     ref,
     () => ({
-      tracks
+      tracks,
+      count: tracks.length
     }),
     [tracks]
   );
+
+  useEffect(() => {
+    active && setCount(tracks.length);
+  }, [active, setCount, tracks.length]);
+
   return (
     <AppErrorBoundary name="TrackSearchResult" canReset toast onReset={reload}>
       <ThrowIf when={status === "error"} message="歌曲加载失败" />
-      <AppLoading loading={status === "loading"}>
+      <AppLoading loading={status === "loading" && active}>
         <TrackList
           id={null}
           className={className}

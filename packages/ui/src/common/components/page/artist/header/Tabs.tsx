@@ -15,6 +15,7 @@ const Tabs: FC<TabsProps> = ({ className, tabsItem, activeIndex, onChange }) => 
       data={tabsItem}
       activeIndex={activeIndex}
       onChange={onChange}
+      mode="less-theme"
     />
   );
 };

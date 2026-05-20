@@ -1,6 +1,5 @@
 import { userStoreSnapshot } from "@mahiru/ui/common/store/user";
 import { useListenable } from "@mahiru/ui/common/hooks/useListenable";
-import { NeteaseServicesAuth } from "@mahiru/ui/common/source/netease/services";
 import {
   ElectronServicesOnce,
   ElectronServicesWindow
@@ -50,11 +49,6 @@ export default class AppEntry {
     return this;
   }
 
-  private static setupUser() {
-    void NeteaseServicesAuth.setup();
-    return this;
-  }
-
   private static setupMini() {
     ElectronServicesOnce.do("setupMini", () => {
       const miniWindow = ElectronServicesWindow.get("miniplayer");
@@ -69,7 +63,7 @@ export default class AppEntry {
   //endregion
 
   static _init() {
-    this.setupUser().setupPlayer().setupMini();
+    this.setupPlayer().setupMini();
   }
 
   static get player() {

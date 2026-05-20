@@ -18,6 +18,7 @@ import PlayerModal from "./Modal";
 import Background from "./Background";
 import MusicSource from "./MusicSource";
 import Bus from "./Bus";
+import User from "./User";
 
 const Layout: FC<object> = () => {
   const { stage } = useStage();
@@ -48,6 +49,7 @@ const Layout: FC<object> = () => {
       <AppErrorBoundary name="PlayerSource" panic>
         {stage >= Stage.Second && <Bus />}
         {stage >= Stage.Second && <MusicSource />}
+        {stage >= Stage.Immediately && <User />}
       </AppErrorBoundary>
     </div>
   );

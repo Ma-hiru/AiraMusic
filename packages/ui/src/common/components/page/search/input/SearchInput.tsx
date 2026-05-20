@@ -208,6 +208,10 @@ const SearchInput: FC<SearchInputProps> = ({ className, onSearch, ref, setTabs }
         `,
           focus && "text-(--theme-color-main)"
         )}
+        onClick={() => {
+          setKeyword(keyword || recommendKeyword || "");
+          onSearch(keyword || recommendKeyword || "");
+        }}
       />
     </div>
   );

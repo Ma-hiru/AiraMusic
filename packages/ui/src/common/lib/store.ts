@@ -8,7 +8,6 @@ type CreateStoreOptions<T> = {
   name?: string;
   persist?: boolean;
   version?: number;
-  partialize?: PersistOptions<T>["partialize"];
   migrate?: PersistOptions<T>["migrate"];
 };
 
@@ -22,7 +21,7 @@ export function createZustandStore<T extends object>(
   initializer: StateCreator<T, [["zustand/immer", never]]>,
   options: CreateStoreOptions<T> = {}
 ) {
-  const { name, persist: shouldPersist = false, version = 1, partialize, migrate } = options;
+  const { name, persist: shouldPersist = false, version = 1, migrate } = options;
 
   const immerInitializer = immer(initializer);
   if (!shouldPersist) return create<T>()(immerInitializer);
@@ -32,7 +31,7 @@ export function createZustandStore<T extends object>(
     name: name!,
     version,
     migrate,
-    partialize,
+
     storage: createJSONStorage(() => localStorage)
   });
 

@@ -32,14 +32,14 @@ const Header: FC<HeaderProps> = ({
     if (pageActionType === "enter")
       return (
         <SquareArrowRightEnter
-          className="size-5 text-(--theme-color-main) hover:opacity-50 ease-in-out transition-all duration-300 cursor-pointer active:scale-90"
+          className="size-5 hover:opacity-50 ease-in-out transition-all duration-300 cursor-pointer active:scale-90"
           onClick={onPageAction}
         />
       );
     if (pageActionType === "out")
       return (
         <SquareArrowRightExit
-          className="size-5 text-(--theme-color-main) hover:opacity-50 ease-in-out transition-all duration-300 cursor-pointer active:scale-90"
+          className="size-5 hover:opacity-50 ease-in-out transition-all duration-300 cursor-pointer active:scale-90"
           onClick={onPageAction}
         />
       );

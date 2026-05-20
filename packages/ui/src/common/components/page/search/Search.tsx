@@ -10,6 +10,7 @@ import { TrackResultRef } from "@mahiru/ui/common/components/page/search/content
 
 import SearchInput from "./input";
 import HotRecommend from "./HotRecommend";
+import SectionTab from "@mahiru/ui/common/components/tab/SectionTab";
 
 export type SearchRef = {
   tracks: NeteaseTrackRecord[];
@@ -31,6 +32,20 @@ interface SearchProps {
   heartManager: HeartManager;
   playableManager: TrackListPlayableManager;
 }
+
+const tabsName = ["单曲", "专辑", "歌单", "歌手"];
+const mapTabsToIdx = {
+  tracks: 0,
+  albums: 1,
+  playlists: 2,
+  artists: 3
+} as const;
+const mapIdxToTabs: Record<number, "tracks" | "albums" | "playlists" | "artists"> = {
+  0: "tracks",
+  1: "albums",
+  2: "playlists",
+  3: "artists"
+};
 
 const Search: FC<SearchProps> = ({
   ref,
@@ -54,6 +69,7 @@ const Search: FC<SearchProps> = ({
   const [albumListMounted, setAlbumListMounted] = useState(false);
   const [artistListMounted, setArtistListMounted] = useState(false);
   const [playlistListMounted, setPlaylistListMounted] = useState(false);
+  const [count, setCount] = useState(0);
   const inputRef = useRef<SearchInputRef>(null);
   const trackResultRef = useRef<TrackResultRef>(null);
 
@@ -97,6 +113,23 @@ const Search: FC<SearchProps> = ({
           inputRef.current?.setKeyword(k);
         }}
       />
+      <section
+        className={cx(
+          `w-full shrink-0 flex justify-between items-center m-2`,
+          !keyword && "hidden"
+        )}>
+        <div className="font-semibold text-2xl flex gap-1 items-end">
+          <h1>{tabsName[mapTabsToIdx[tabs]]}</h1>
+          <p className="opacity-80 font-medium text-base">{count}条结果</p>
+        </div>
+        <SectionTab
+          data={tabsName}
+          activeIndex={mapTabsToIdx[tabs]}
+          onChange={(idx) => setTabs(mapIdxToTabs[idx]!)}
+          mode="less-theme"
+          className="text-[12px]"
+        />
+      </section>
       {trackListMounted && (
         <TrackResult
           ref={trackResultRef}
@@ -112,6 +145,8 @@ const Search: FC<SearchProps> = ({
           coverSize={coverSize}
           heartManager={heartManager}
           playableManager={playableManager}
+          active={tabs === "tracks"}
+          setCount={setCount}
         />
       )}
       {albumListMounted && (
@@ -119,6 +154,8 @@ const Search: FC<SearchProps> = ({
           className={cx("flex-1", (tabs !== "albums" || !keyword) && "hidden")}
           keywords={keyword}
           onJumpAlbum={onClickAlbum}
+          active={tabs === "albums"}
+          setCount={setCount}
         />
       )}
       {artistListMounted && (
