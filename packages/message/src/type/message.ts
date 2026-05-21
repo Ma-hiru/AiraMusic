@@ -79,6 +79,9 @@ type MessageEventValue = {
     | {
         type: "search";
         keyword?: string;
+      }
+    | {
+        type: "settings";
       };
   mergeDisplay: MessageEventValue["displayBus"];
   playerChangeBus:

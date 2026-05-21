@@ -41,7 +41,7 @@ namespace NeteaseAPI {
     hideSerialComments: null;
     hideSerialTips: null;
     highlight: boolean;
-    ipLocation: IpLocation;
+    ipLocation: IpLocation | null;
     likeAnimationMap: { [key: string]: any };
     liked: boolean;
     likedCount: number;

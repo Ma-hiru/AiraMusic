@@ -4,11 +4,12 @@ import {
   NeteaseUser,
   type NeteaseUserModel
 } from "@mahiru/ui/common/source/netease/models";
+import { defaultSettings } from "@mahiru/ui/common/source/netease/models/NeteaseSettings";
 
 export const UserStoreInitializer = createZustandInitializer<UserStoreType>((set) => {
   return {
     _user: null,
-    _settings: null,
+    _settings: defaultSettings,
     isLoggedIn: () => {
       return NeteaseUser.isLoggedIn;
     },
@@ -19,7 +20,7 @@ export const UserStoreInitializer = createZustandInitializer<UserStoreType>((set
     },
     updateSettings(settings) {
       set((draft) => {
-        draft._settings = settings ?? null;
+        draft._settings = settings;
       });
     }
   };
@@ -27,8 +28,8 @@ export const UserStoreInitializer = createZustandInitializer<UserStoreType>((set
 
 export type UserStoreType = {
   _user: Nullable<NeteaseUserModel>;
-  _settings: Nullable<NeteaseSettingsModel>;
+  _settings: NeteaseSettingsModel;
   isLoggedIn: () => boolean;
   updateUser(user: Optional<NeteaseUserModel>): void;
-  updateSettings(settings: Optional<NeteaseSettingsModel>): void;
+  updateSettings(settings: NeteaseSettingsModel): void;
 };

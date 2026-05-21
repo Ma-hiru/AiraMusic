@@ -6,6 +6,7 @@ import AlbumDisplay from "../pages/album/AlbumDisplay";
 import ArtistDisplay from "../pages/artist/ArtistDisplay";
 import PlaylistDisplay from "../pages/playlist/PlaylistDisplay";
 import SearchDisplay from "../pages/search/SearchDisplay";
+import SettingsDisplay from "../pages/settings/SettingsDisplay";
 
 export const DisplayRouter = createBrowserRouter(
   [
@@ -36,6 +37,10 @@ export const DisplayRouter = createBrowserRouter(
         {
           path: RoutePathDisplay.search,
           element: <SearchDisplay />
+        },
+        {
+          path: RoutePathDisplay.settings,
+          element: <SettingsDisplay />
         }
       ]
     }

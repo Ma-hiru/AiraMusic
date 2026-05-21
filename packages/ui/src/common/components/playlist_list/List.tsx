@@ -1,8 +1,9 @@
-import { type FC, memo } from "react";
+import { type FC, memo, type Ref } from "react";
 import Item from "./Item";
 import { cx } from "@emotion/css";
 
 interface ListProps {
+  ref?: Ref<HTMLDivElement>;
   list: { id: number; name: string; picUrl: string; trackCount?: number; playCount?: number }[];
   shadowColor?: "dark" | "light";
   coverSize?: number;
@@ -10,9 +11,17 @@ interface ListProps {
   onClickItem?: NormalFunc<[id: number]>;
 }
 
-const PlaylistList: FC<ListProps> = ({ className, list, shadowColor, coverSize, onClickItem }) => {
+const PlaylistList: FC<ListProps> = ({
+  ref,
+  className,
+  list,
+  shadowColor,
+  coverSize,
+  onClickItem
+}) => {
   return (
     <div
+      ref={ref}
       className={cx(
         "relative w-full my-2 gap-2 grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] items-start content-stretch",
         className

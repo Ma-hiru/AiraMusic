@@ -17,7 +17,8 @@ const RoutePathDisplay = RoutePath.create({
     { name: "artist", path: "/artist" },
     { name: "album", path: "/album" },
     { name: "search", path: "/search" },
-    { name: "blank", path: "/blank" }
+    { name: "blank", path: "/blank" },
+    { name: "settings", path: "/settings" },
   ]
 });
 

@@ -1,12 +1,15 @@
 import { cx } from "@emotion/css";
-import { type FC, memo, useCallback, useMemo, useRef } from "react";
+import { type FC, memo, useCallback, useMemo } from "react";
 import { NeteaseNetworkImage, NeteaseUser } from "@mahiru/ui/common/source/netease/models";
 import { ChevronDown, UserCircle2 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { NeteaseServicesAuth } from "@mahiru/ui/common/source/netease/services";
 import { useAtom, useAtomValue } from "jotai";
 import { playModalAtom, sidebarAtom } from "@mahiru/ui/windows/main/atoms/layout";
-import AppToast from "@mahiru/ui/common/components/toast";
+import {
+  ElectronServicesBus,
+  ElectronServicesWindow
+} from "@mahiru/ui/common/source/electron/services";
 
 import NeteaseImage from "@mahiru/ui/common/components/image/NeteaseImage";
 import NoDrag from "@mahiru/ui/common/components/drag/NoDrag";
@@ -20,26 +23,14 @@ const TopLeft: FC<TopLeftProps> = ({ user }) => {
   const sideBar = useAtomValue(sidebarAtom);
   const [playModal, setPlayModal] = useAtom(playModalAtom);
 
-  const lastClickTime = useRef(0);
   const onClick = useCallback(async () => {
     if (playModal) {
       setPlayModal(false);
     } else if (!NeteaseServicesAuth.isLoggedIn) {
       await NeteaseServicesAuth.createLoginWindow();
     } else {
-      if (Date.now() - lastClickTime.current < 2000) {
-        AppToast.show({
-          type: "info",
-          text: "再次点击退出登录"
-        });
-      } else {
-        NeteaseServicesAuth.logout().finally(() => {
-          AppToast.show({
-            type: "success",
-            text: "已退出登录"
-          });
-        });
-      }
+      await ElectronServicesWindow.display.openAwait();
+      ElectronServicesBus.display.send({ type: "settings" });
     }
   }, [playModal, setPlayModal]);
 

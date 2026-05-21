@@ -47,6 +47,8 @@ const LayoutDisplay: FC<object> = () => {
           RoutePath.withQuery(RoutePathDisplay.search, { keyword: displayBus.data.keyword })
         );
         break;
+      case "settings":
+        navigate(RoutePath.withQuery(RoutePathDisplay.settings, {}));
     }
     ElectronServicesBus.clear("displayBus");
     ElectronServicesWindow.current.focus();

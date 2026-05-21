@@ -78,7 +78,7 @@ const Item: FC<ItemProps> = ({ data, sourceID, type }) => {
           <h1 className="font-semibold text-xs flex flex-col items-start justify-start">
             <span className="text-(--theme-color-main)">{data.user.nickname}</span>
             <span className="text-(--theme-color-main)/60 text-xs text-[10px] opacity-80">
-              {data.ipLocation.location} {FormatNumber.time(data.time)}
+              {data.ipLocation?.location} {FormatNumber.time(data.time)}
             </span>
           </h1>
           <p className="text-xs text-(--theme-color-main)/90">{data.content}</p>

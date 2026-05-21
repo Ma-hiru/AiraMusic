@@ -8,6 +8,7 @@ import ThrowIf from "@mahiru/ui/common/components/fallback/ThrowIf";
 import AppLoading from "@mahiru/ui/common/components/fallback/AppLoading";
 import AppEmpty from "@mahiru/ui/common/components/fallback/AppEmpty";
 import PlaylistList from "@mahiru/ui/common/components/playlist_list";
+import { cx } from "@emotion/css";
 
 interface PlaylistResultProps {
   className?: string;
@@ -48,7 +49,7 @@ const PlaylistResult: FC<PlaylistResultProps> = ({
     active && setCount(list.length);
   }, [active, list.length, setCount]);
 
-  const containerRef = useRef<HTMLUListElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   useScrollAutoHide(containerRef, 3000);
 
   return (
@@ -58,7 +59,8 @@ const PlaylistResult: FC<PlaylistResultProps> = ({
         {list.length === 0 && <AppEmpty className={className} tips="没有结果" />}
         {list.length > 0 && (
           <PlaylistList
-            className={className}
+            ref={containerRef}
+            className={cx("overflow-y-auto scrollbar scrollbar-show", className)}
             onClickItem={onJumpPlaylist ?? undefined}
             list={list.map((l) => ({
               id: l.id,
