@@ -1,5 +1,5 @@
 <template>
-  <div class="w-screen h-screen overflow-hidden bg-white rounded-md">
+  <div class="w-screen h-screen overflow-hidden bg-white text-black rounded-md">
     <div class="px-1 py-2 w-40" ref="containerRef">
       <TrayPlayer
         v-if="Boolean(playerBus.data?.track?.detail)"

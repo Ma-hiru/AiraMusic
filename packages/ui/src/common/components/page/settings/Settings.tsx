@@ -1,5 +1,6 @@
 import { cx } from "@emotion/css";
 import { type FC, memo, type ReactNode, useCallback, useMemo } from "react";
+import type { LucideIcon } from "lucide-react";
 import {
   AudioLines,
   BadgeCheck,
@@ -13,7 +14,6 @@ import {
   SlidersHorizontal,
   UserRound
 } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
 import { NeteaseImageSize, TrackQuality } from "@mahiru/ui/common/enum";
 import {
   NeteaseNetworkImage,

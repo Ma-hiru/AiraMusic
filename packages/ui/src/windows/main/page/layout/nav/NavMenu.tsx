@@ -5,6 +5,7 @@ import { cx } from "@emotion/css";
 import { NeteaseUser } from "@mahiru/ui/common/source/netease/models";
 import { RoutePathMain } from "@mahiru/ui/common/routes";
 import AppToast from "@mahiru/ui/common/components/toast";
+import { useArtistOrAlbumPageJump } from "@mahiru/ui/windows/main/hooks/useArtistOrAlbumPageJump";
 
 interface NavMenuProps {
   barOpened: boolean;
@@ -13,6 +14,7 @@ interface NavMenuProps {
 const NavMenu: FC<NavMenuProps> = ({ barOpened }) => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { jumpPlaylistPage } = useArtistOrAlbumPageJump();
 
   return (
     <div className="flex flex-col gap-4 w-(--side-bar-expand-width) overflow-hidden">
@@ -36,7 +38,12 @@ const NavMenu: FC<NavMenuProps> = ({ barOpened }) => {
                   text: "请先登录账号"
                 });
               }
-              !active && navigate(path);
+              if (active) return;
+              if (path === RoutePathMain.playlist.like) {
+                jumpPlaylistPage(0, "like");
+              } else {
+                navigate(path);
+              }
             }}>
             <span
               className={cx(

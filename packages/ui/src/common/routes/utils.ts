@@ -12,7 +12,7 @@ export class PlaylistPathUtils {
     this.like = this.withQuery(null, PlaylistSource.Like);
   }
 
-  withQuery(id: Optional<number | string>, source: Optional<PlaylistSource>) {
+  withQuery(id: Optional<number | string>, source: "normal" | "like" | "history") {
     const search = new URLSearchParams();
     id && search.set("id", String(id));
     source && search.set("source", String(source));

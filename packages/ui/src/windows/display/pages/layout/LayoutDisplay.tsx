@@ -1,6 +1,6 @@
 import { type FC, memo, useEffect, useMemo, useState } from "react";
 import { useListenable } from "@mahiru/ui/common/hooks/useListenable";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { RoutePath, RoutePathDisplay } from "@mahiru/ui/common/routes";
 import { PlaylistSource } from "@mahiru/ui/common/enum";
 import {
@@ -18,41 +18,46 @@ import TopControlPure from "@mahiru/ui/common/components/public/TopControlPure";
 import Drag from "@mahiru/ui/common/components/drag/Drag";
 import { BackCtx } from "@mahiru/ui/windows/display/ctx/back";
 import TopBack from "@mahiru/ui/common/components/top_control/TopBack";
+import { useLatestRef } from "@mahiru/ui/common/hooks/useLatestRef";
 
 const LayoutDisplay: FC<object> = () => {
   useThemeInjectFromBus();
 
   const navigate = useNavigate();
+  const location = useLocation();
+  const pathRef = useLatestRef(location.pathname + location.search);
   const displayBus = useListenable(ElectronServicesBus.display);
   useEffect(() => {
     if (!displayBus.data) return;
+    const path = pathRef.current;
 
+    let target = path;
     switch (displayBus.data.type) {
       case "playlist":
-        navigate(
-          RoutePathDisplay.playlist.withQuery(
-            displayBus.data.id,
-            displayBus.data.source === "like" ? PlaylistSource.Like : PlaylistSource.Normal
-          )
+        target = RoutePathDisplay.playlist.withQuery(
+          displayBus.data.id,
+          displayBus.data.source === "like" ? PlaylistSource.Like : PlaylistSource.Normal
         );
         break;
       case "album":
-        navigate(RoutePath.withQuery(RoutePathDisplay.album, { id: displayBus.data.id }));
+        target = RoutePath.withQuery(RoutePathDisplay.album, { id: displayBus.data.id });
         break;
       case "artist":
-        navigate(RoutePath.withQuery(RoutePathDisplay.artist, { id: displayBus.data.id }));
+        target = RoutePath.withQuery(RoutePathDisplay.artist, { id: displayBus.data.id });
         break;
       case "search":
-        navigate(
-          RoutePath.withQuery(RoutePathDisplay.search, { keyword: displayBus.data.keyword })
-        );
+        target = RoutePath.withQuery(RoutePathDisplay.search, {
+          keyword: displayBus.data.keyword
+        });
         break;
       case "settings":
-        navigate(RoutePath.withQuery(RoutePathDisplay.settings, {}));
+        target = RoutePath.withQuery(RoutePathDisplay.settings, {});
     }
+    path !== target && navigate(target);
+
     ElectronServicesBus.clear("displayBus");
     ElectronServicesWindow.current.focus();
-  }, [displayBus.data, navigate]);
+  }, [displayBus.data, navigate, pathRef]);
   useEffect(() => {
     ElectronServicesBus.mainBusUpdater.send("info");
     ElectronServicesBus.mainBusUpdater.send("player");

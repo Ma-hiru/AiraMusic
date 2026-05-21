@@ -2,10 +2,8 @@ import { type FC, memo, useCallback, useRef } from "react";
 import { useScrollAutoHide } from "@mahiru/ui/common/hooks/useScrollAutoHide";
 import { useDelay } from "@mahiru/ui/common/hooks/useDelay";
 import { useUser } from "@mahiru/ui/common/store/user";
-import { useNavigate } from "react-router-dom";
-import { RoutePathMain } from "@mahiru/ui/common/routes";
-import { PlaylistSource } from "@mahiru/ui/common/enum";
 import { useLocateOrScrollTopRegister } from "@mahiru/ui/windows/main/hooks/useLocateOrScrollTopRegister";
+import { useArtistOrAlbumPageJump } from "@mahiru/ui/windows/main/hooks/useArtistOrAlbumPageJump";
 
 import Banner from "./banner";
 import DailyRecommendTracks from "./daily_recommend_tracks";
@@ -25,14 +23,7 @@ const HomePage: FC<object> = () => {
   const { canScrollTop } = useLocateOrScrollTopRegister({
     getScrollTopFunc: () => scrollTop
   });
-
-  const navigate = useNavigate();
-  const jumpPlaylist = useCallback(
-    (id: number) => {
-      navigate(RoutePathMain.playlist.withQuery(id, PlaylistSource.Normal));
-    },
-    [navigate]
-  );
+  const { jumpPlaylistPage } = useArtistOrAlbumPageJump();
 
   return (
     <div
@@ -48,15 +39,18 @@ const HomePage: FC<object> = () => {
       )}
       {delay(3000) && user?.isLoggedIn && (
         <DailyRecommendPlaylist
-          onClickItem={jumpPlaylist}
+          onClickItem={(id) => jumpPlaylistPage(id, "normal")}
           key={user.profile.userId + "-daily-playlist"}
         />
       )}
       {user?.isLoggedIn
         ? delay(5000) && (
-            <RecommendPlaylist onClickItem={jumpPlaylist} key={user.profile.userId + "-playlist"} />
+            <RecommendPlaylist
+              onClickItem={(id) => jumpPlaylistPage(id, "normal")}
+              key={user.profile.userId + "-playlist"}
+            />
           )
-        : delay(1000) && <RecommendPlaylist onClickItem={jumpPlaylist} />}
+        : delay(1000) && <RecommendPlaylist onClickItem={(id) => jumpPlaylistPage(id, "normal")} />}
     </div>
   );
 };

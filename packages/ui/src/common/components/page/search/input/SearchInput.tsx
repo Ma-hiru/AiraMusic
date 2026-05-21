@@ -114,16 +114,18 @@ const SearchInput: FC<SearchInputProps> = ({ className, onSearch, ref, setTabs }
   );
 
   return (
-    <div className={cx(`w-full h-10 flex items-center justify-center gap-2 relative`, className)}>
-      <section className="h-8 w-4/5 md:w-1/2 relative">
+    <div className={cx("relative flex h-11 w-full items-center justify-center gap-2", className)}>
+      <section className="relative h-11 w-full max-w-3xl">
         <input
           ref={inputRef}
           type="text"
           className={`
-            text-sm border border-(--text-color-on-main) rounded-full px-4 pr-6 py-1 outline-none
-            focus:ring-2 focus:ring-(--theme-color-main) focus:border-transparent
-            transition-all duration-300 ease-in-out focus:text-(--theme-color-main)
-            placeholder:text-(--text-color-on-main)/50 w-full
+            h-full w-full rounded-lg border border-zinc-950/10 bg-white/62
+            px-4 pr-9 text-sm font-semibold text-zinc-800 outline-none
+            shadow-[0_10px_30px_rgba(0,0,0,0.08)] backdrop-blur-xl
+            transition-all duration-300 ease-in-out
+            placeholder:text-zinc-400
+            focus:border-(--theme-color-main) focus:bg-white/82 focus:text-zinc-950
         `}
           value={keyword}
           placeholder={recommendKeyword ?? "请输入搜索关键词"}
@@ -144,11 +146,12 @@ const SearchInput: FC<SearchInputProps> = ({ className, onSearch, ref, setTabs }
           onClick={() => {
             setKeyword("");
             setSuggestions(null);
+            onSearch("");
           }}
           className={cx(
             `
-              size-4 absolute right-2 top-2 text-(--theme-color-main)
-              hover:bg-(--theme-color-main)/10 rounded-full
+              absolute right-3 top-1/2 size-4 -translate-y-1/2 text-(--theme-color-main)
+              rounded-full hover:bg-(--theme-color-main)/10
               transition-all duration-300 ease-in-out cursor-pointer
             `,
             focus ? "opacity-100" : "opacity-0"
@@ -165,19 +168,24 @@ const SearchInput: FC<SearchInputProps> = ({ className, onSearch, ref, setTabs }
           }}
         />
       </section>
-      <Search
+      <button
+        type="button"
+        title="搜索"
         className={cx(
           `
-          cursor-pointer hover:text-(--theme-color-main)/50 size-6
-          transition-all duration-300 ease-in-out active:scale-95
+          flex size-11 shrink-0 items-center justify-center rounded-lg border border-zinc-950/10
+          bg-zinc-950 text-white shadow-[0_10px_30px_rgba(0,0,0,0.14)]
+          transition-all duration-300 ease-in-out hover:bg-(--theme-color-main)
+          hover:text-(--text-color-on-main) active:scale-95
         `,
-          focus && "text-(--theme-color-main)"
+          focus && "border-(--theme-color-main)"
         )}
         onClick={() => {
           setKeyword(keyword || recommendKeyword || "");
           onSearch(keyword || recommendKeyword || "");
-        }}
-      />
+        }}>
+        <Search className="size-5" />
+      </button>
     </div>
   );
 };

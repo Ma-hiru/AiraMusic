@@ -7,11 +7,11 @@ import {
 } from "@mahiru/ui/common/source/netease/models";
 import AppUI from "@mahiru/ui/common/player/ui";
 import NeteaseImage from "@mahiru/ui/common/components/image/NeteaseImage";
-import { useLocation, useNavigate } from "react-router-dom";
 import { cx } from "@emotion/css";
-import { RoutePathMain } from "@mahiru/ui/common/routes";
-import { PlaylistSource } from "@mahiru/ui/common/enum";
 import { useLocateOrScrollTopRegister } from "@mahiru/ui/windows/main/hooks/useLocateOrScrollTopRegister";
+import { useArtistOrAlbumPageJump } from "@mahiru/ui/windows/main/hooks/useArtistOrAlbumPageJump";
+import { useLocation } from "react-router-dom";
+import { RoutePathMain } from "@mahiru/ui/common/routes";
 import ImageConstants from "@mahiru/ui/common/constants/image";
 
 import VirtualList, {
@@ -24,7 +24,6 @@ interface NavPlaylistProps {
 }
 
 const NavPlaylist: FC<NavPlaylistProps> = ({ user, sidebarOpen }) => {
-  const navigate = useNavigate();
   const location = useLocation();
   const { id } = RoutePathMain.playlist.parseQuery(location);
 
@@ -45,11 +44,10 @@ const NavPlaylist: FC<NavPlaylistProps> = ({ user, sidebarOpen }) => {
     getScrollTopFunc: () => gotoTop
   });
 
+  const { jumpPlaylistPage } = useArtistOrAlbumPageJump();
   const onItemClick = useCallback(
-    (item: NeteasePlaylistSummary) => {
-      navigate(RoutePathMain.playlist.withQuery(item.id, PlaylistSource.Normal));
-    },
-    [navigate]
+    (item: NeteasePlaylistSummary) => jumpPlaylistPage(item.id, "normal"),
+    [jumpPlaylistPage]
   );
 
   return (

@@ -3,6 +3,7 @@ import { useThemeColor } from "@mahiru/ui/common/hooks/useThemeColor";
 import { useListenable } from "@mahiru/ui/common/hooks/useListenable";
 import { useAtomValue } from "jotai";
 import { playModalAtom } from "@mahiru/ui/windows/main/atoms/layout";
+import { useSettings } from "@mahiru/ui/common/store/user";
 import { ElectronServicesWindow } from "@mahiru/ui/common/source/electron/services";
 import AudioSpectrum from "@mahiru/ui/windows/main/componets/spectrum/AudioSpectrum";
 import AppEntry from "@mahiru/ui/windows/main/entry";
@@ -12,6 +13,8 @@ const BarSpectrum: FC<object> = () => {
   const { mainColor, secondaryColor } = useThemeColor();
   const currentWindow = useListenable(ElectronServicesWindow.current);
   const player = AppEntry.usePlayer();
+  const settings = useSettings();
+  if (!settings.performance.barSpectrum) return null;
   return (
     <AudioSpectrum
       isPlaying={!playModal && player.playing && currentWindow.isShow && !currentWindow.isMin}
