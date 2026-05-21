@@ -1,5 +1,14 @@
 import { cx } from "@emotion/css";
-import { FC, memo, ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  type FC,
+  memo,
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState
+} from "react";
 import { NeteaseArtist } from "../../../../source/netease/models";
 import { FormatNumber } from "../../../../lib/format";
 import { NeteaseAPIArtist } from "../../../../source/netease/api";

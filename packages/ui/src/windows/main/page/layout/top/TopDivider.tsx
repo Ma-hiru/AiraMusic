@@ -1,4 +1,4 @@
-import { FC, HTMLAttributes, memo } from "react";
+import { type FC, type HTMLAttributes, memo } from "react";
 import { cx } from "@emotion/css";
 
 const TopDivider: FC<HTMLAttributes<HTMLSpanElement>> = ({ className, ...props }) => {

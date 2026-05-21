@@ -1,4 +1,4 @@
-import { IRenderer, RendererOptions } from "./IRenderer";
+import { type IRenderer, type RendererOptions } from "./IRenderer";
 
 export class Canvas2DRenderer implements IRenderer {
   private ctx: CanvasRenderingContext2D | null = null;

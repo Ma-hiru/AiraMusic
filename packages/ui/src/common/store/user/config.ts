@@ -1,8 +1,8 @@
 import { createZustandInitializer } from "@mahiru/ui/common/lib/store";
 import {
-  NeteaseSettingsModel,
+  type NeteaseSettingsModel,
   NeteaseUser,
-  NeteaseUserModel
+  type NeteaseUserModel
 } from "@mahiru/ui/common/source/netease/models";
 
 export const UserStoreInitializer = createZustandInitializer<UserStoreType>((set) => {

@@ -1,4 +1,4 @@
-import { FC, memo, useCallback, useRef } from "react";
+import { type FC, memo, useCallback, useRef } from "react";
 import { useThemeColor } from "@mahiru/ui/common/hooks/useThemeColor";
 import { BannerType, PlaylistSource } from "@mahiru/ui/common/enum";
 import { Log } from "@mahiru/ui/common/constants/dev";
@@ -13,7 +13,7 @@ import AppEntry from "@mahiru/ui/windows/main/entry";
 
 import Carousel from "@mahiru/ui/common/components/public/Carousel";
 import AppErrorBoundary, {
-  AppErrorBoundaryRef
+  type AppErrorBoundaryRef
 } from "@mahiru/ui/common/components/fallback/AppErrorBoundary";
 import ThrowIf from "@mahiru/ui/common/components/fallback/ThrowIf";
 

@@ -1,4 +1,4 @@
-import { FC, memo, useRef } from "react";
+import { type FC, memo, useRef } from "react";
 import { RoutePath, RoutePathDisplay } from "@mahiru/ui/common/routes";
 import { useLocation } from "react-router-dom";
 import { useArtistOrAlbumDisplayJump } from "@mahiru/ui/windows/display/hooks/useArtistOrAlbumDisplayJump";
@@ -8,7 +8,7 @@ import { useListenable } from "@mahiru/ui/common/hooks/useListenable";
 import { ElectronServicesBus } from "@mahiru/ui/common/source/electron/services";
 import ImageConstants from "@mahiru/ui/common/constants/image";
 
-import Search, { SearchRef } from "@mahiru/ui/common/components/page/search/Search";
+import Search, { type SearchRef } from "@mahiru/ui/common/components/page/search";
 
 const SearchDisplay: FC<object> = () => {
   const location = useLocation();
@@ -16,7 +16,8 @@ const SearchDisplay: FC<object> = () => {
   const playerBus = useListenable(ElectronServicesBus.player);
   const { heartManager, playableManager } = useUserTrackManager();
   const { keyword } = RoutePath.parseQuery<{ keyword?: string }>(location, RoutePathDisplay.search);
-  const { jumpArtistDisplay, jumpAlbumDisplay } = useArtistOrAlbumDisplayJump();
+  const { jumpArtistDisplay, jumpAlbumDisplay, jumpPlaylistDisplay } =
+    useArtistOrAlbumDisplayJump();
   const { addTrackToPlaylistLast, addTrackToPlaylistNext, onTrackPlay, openTrackComment } =
     usePlayerChangeActionFromDisplay({
       getTracks: () => searchRef.current?.tracks ?? [],
@@ -27,7 +28,7 @@ const SearchDisplay: FC<object> = () => {
     <Search
       className="w-full h-full text-(--text-color-on-main)"
       ref={searchRef}
-      onClickPlaylist={null}
+      onClickPlaylist={jumpPlaylistDisplay}
       onClickAlbum={jumpAlbumDisplay}
       onClickArtist={jumpArtistDisplay}
       addToPlaylistNext={addTrackToPlaylistNext}

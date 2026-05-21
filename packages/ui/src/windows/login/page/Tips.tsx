@@ -1,4 +1,4 @@
-import { FC, memo, useMemo } from "react";
+import { type FC, memo, useMemo } from "react";
 import { QRCodeStatus } from "@mahiru/ui/windows/login/hooks/useLoginQRCode";
 import { NeteaseImageSize } from "@mahiru/ui/common/enum";
 import { NeteaseNetworkImage } from "@mahiru/ui/common/source/netease/models";

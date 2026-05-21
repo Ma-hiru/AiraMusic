@@ -14,7 +14,7 @@
   </div>
 </template>
 <script setup lang="ts" name="NeteaseImage">
-  import { computed, ImgHTMLAttributes, onUnmounted, ref, useAttrs, watch } from "vue";
+  import { computed, type ImgHTMLAttributes, onUnmounted, ref, useAttrs, watch } from "vue";
   import { NeteaseLocalImage, NeteaseNetworkImage } from "@mahiru/ui/common/source/netease/models";
   import { NeteaseImageSize } from "@mahiru/ui/common/enum";
   import { NeteaseServicesImage } from "@mahiru/ui/common/source/netease/services";

@@ -1,7 +1,7 @@
-import { FC, memo } from "react";
+import { type FC, memo } from "react";
 import { css, cx } from "@emotion/css";
 import { Heart } from "lucide-react";
-import { ColorInstance } from "color";
+import { type ColorInstance } from "color";
 import { PlaylistSource, TrackBitmark } from "../../enum";
 import { NeteaseHistory, NeteaseTrackRecord } from "../../source/netease/models";
 import { FormatNumber } from "../../lib/format";

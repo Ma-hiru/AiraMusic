@@ -1,4 +1,4 @@
-import { FC, memo } from "react";
+import { type FC, memo } from "react";
 import AppEntry from "@mahiru/ui/windows/main/entry";
 
 const Title: FC<object> = () => {

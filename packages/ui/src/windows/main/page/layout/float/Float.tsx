@@ -1,5 +1,5 @@
 import { cx } from "@emotion/css";
-import { FC, memo } from "react";
+import { type FC, memo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ChevronLeft, ChevronUp, LocateFixed, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { AnimatePresence } from "motion/react";

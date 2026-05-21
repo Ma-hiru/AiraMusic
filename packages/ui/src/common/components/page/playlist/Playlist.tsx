@@ -1,9 +1,9 @@
 import { cx } from "@emotion/css";
 import {
-  FC,
+  type FC,
   memo,
-  Ref,
-  RefObject,
+  type Ref,
+  type RefObject,
   startTransition,
   useCallback,
   useEffect,
@@ -20,7 +20,7 @@ import {
   NeteaseTrackRecord,
   NeteaseUser
 } from "../../../source/netease/models";
-import {
+import type {
   TrackListClickFunc,
   TrackListContextMenuFunc,
   TrackListPlayableManager,
@@ -32,8 +32,8 @@ import { NeteaseImageSize, PlaylistSource } from "../../../enum";
 import { NeteaseServicesImage, NeteaseServicesPlaylist } from "../../../source/netease/services";
 import { useUpdate } from "../../../hooks/useUpdate";
 import { Log } from "@mahiru/ui/common/constants/dev";
-import { RequestStatus } from "../../../hooks/useRequestWrap";
-import { HeartManager } from "../../../hooks/useHeart";
+import { type RequestStatus } from "../../../hooks/useRequestWrap";
+import { type HeartManager } from "../../../hooks/useHeart";
 import AppContextMenu from "../../../components/menu";
 import AppToast from "../../../components/toast";
 import ImageConstants from "@mahiru/ui/common/constants/image";

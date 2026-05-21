@@ -1,4 +1,4 @@
-import { FC, memo, useEffect } from "react";
+import { type FC, memo, useEffect } from "react";
 import { useStage } from "@mahiru/ui/common/hooks/useStage";
 import { useAppLoaded } from "@mahiru/ui/common/hooks/useAppLoaded";
 import { Stage } from "@mahiru/ui/common/enum";

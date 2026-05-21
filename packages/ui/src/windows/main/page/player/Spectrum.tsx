@@ -1,4 +1,4 @@
-import { FC, memo } from "react";
+import { type FC, memo } from "react";
 import { useListenable } from "@mahiru/ui/common/hooks/useListenable";
 import { ElectronServicesWindow } from "@mahiru/ui/common/source/electron/services";
 import { useAtomValue } from "jotai";

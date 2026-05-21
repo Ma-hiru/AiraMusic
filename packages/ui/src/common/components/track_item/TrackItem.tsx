@@ -1,6 +1,6 @@
 import { cx } from "@emotion/css";
 import { memo, useCallback } from "react";
-import { ColorInstance } from "color";
+import { type ColorInstance } from "color";
 import { NeteaseHistory, NeteaseTrackRecord } from "../../source/netease/models";
 import { NeteaseImageSize, PlaylistSource } from "../../enum";
 import type { TrackListClickFunc, TrackListContextMenuFunc } from "../../components/track_list";

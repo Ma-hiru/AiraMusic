@@ -1,4 +1,4 @@
-import { ModalData } from "../../components/modal/ModalProvider";
+import { type ModalData } from "../../components/modal/ModalProvider";
 import { Log } from "@mahiru/ui/common/constants/dev";
 import Provider from "./ModalProvider";
 

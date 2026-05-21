@@ -1,4 +1,4 @@
-import { FC, memo, useCallback, useState } from "react";
+import { type FC, memo, useCallback, useState } from "react";
 import { NeteaseNetworkImage } from "@mahiru/ui/common/source/netease/models";
 import { CommentType, NeteaseImageSize } from "@mahiru/ui/common/enum";
 import { useThemeColor } from "@mahiru/ui/common/hooks/useThemeColor";

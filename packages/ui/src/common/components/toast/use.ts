@@ -1,4 +1,4 @@
-import { ToastItemData } from "../../components/toast/ToastItem";
+import { type ToastItemData } from "../../components/toast/ToastItem";
 import { Log } from "@mahiru/ui/common/constants/dev";
 import Provider from "./ToastProvider";
 

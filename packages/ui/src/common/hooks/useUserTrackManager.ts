@@ -1,7 +1,7 @@
 import { useUser, useUserStore } from "../store/user";
 import { useCallback, useMemo } from "react";
-import { HeartManager } from "../hooks/useHeart";
-import { TrackListPlayableManager } from "../components/track_list";
+import { type HeartManager } from "../hooks/useHeart";
+import { type TrackListPlayableManager } from "../components/track_list";
 import { NeteaseTrack } from "../source/netease/models";
 
 /** 基于userStore管理喜欢状态和播放状态 */

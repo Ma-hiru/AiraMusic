@@ -1,6 +1,6 @@
 import React, {
-  FC,
-  HTMLAttributes,
+  type FC,
+  type HTMLAttributes,
   memo,
   useCallback,
   useEffect,

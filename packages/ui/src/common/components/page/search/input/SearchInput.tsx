@@ -1,7 +1,7 @@
 import {
-  FC,
+  type FC,
   memo,
-  Ref,
+  type Ref,
   useCallback,
   useImperativeHandle,
   useLayoutEffect,
@@ -9,13 +9,14 @@ import {
   useRef,
   useState
 } from "react";
-import { DiscAlbum, ListMusic, Music2, Search, User, X } from "lucide-react";
+import { Search, X } from "lucide-react";
 import { cx } from "@emotion/css";
 import { NeteaseAPISearch } from "@mahiru/ui/common/source/netease/api";
 import { useLatestRef } from "@mahiru/ui/common/hooks/useLatestRef";
 import { Log } from "@mahiru/ui/common/constants/dev";
 import { debounce } from "lodash-es";
 import { useSearchRecommend } from "@mahiru/ui/common/hooks/useSearchRecommend";
+import SearchSuggestions, { type Suggestion } from "./SearchSuggestions";
 
 export type SearchInputRef = {
   isFocus: boolean;
@@ -59,7 +60,7 @@ const SearchInput: FC<SearchInputProps> = ({ className, onSearch, ref, setTabs }
 
   const debouncedGetSuggestions = useMemo(() => debounce(getSuggestions, 300), [getSuggestions]);
 
-  const renderSuggestions = useMemo(() => {
+  const renderSuggestions = useMemo<Suggestion[]>(() => {
     if (!suggestions) return [];
     const { albums = [], artists = [], playlists = [], songs = [] } = suggestions;
     return [
@@ -153,52 +154,16 @@ const SearchInput: FC<SearchInputProps> = ({ className, onSearch, ref, setTabs }
             focus ? "opacity-100" : "opacity-0"
           )}
         />
-        <ul
+        <SearchSuggestions
           ref={ulRef}
-          className={cx(
-            `
-              absolute w-full top-10 space-y-2 p-1
-              bg-white/10 text-(--text-color-on-main) rounded-md shadow-md
-              backdrop-blur-sm transition-all ease-in-out duration-300 z-50
-            `
-          )}>
-          {renderSuggestions.map((suggestion) => {
-            let Icon;
-            switch (suggestion.type) {
-              case "tracks":
-                Icon = Music2;
-                break;
-              case "albums":
-                Icon = DiscAlbum;
-                break;
-              case "playlists":
-                Icon = ListMusic;
-                break;
-              case "artists":
-                Icon = User;
-                break;
-            }
-            return (
-              <li
-                key={suggestion.id}
-                className={`
-                  text-sm flex justify-start items-center gap-1
-                  px-1.5 py-0.5 rounded-full h-6 text-(--theme-color-main)
-                  hover:bg-(--theme-color-main) hover:text-(--text-color-on-main)
-                  transition-all ease-in-out duration-300 cursor-pointer
-                `}
-                onClick={() => {
-                  setKeyword(suggestion.name);
-                  setSuggestions(null);
-                  onSearch(suggestion.name);
-                  setTabs(suggestion.type);
-                }}>
-                <Icon className="size-4 inline-block shrink-0" />
-                <p className="flex-1 truncate">{suggestion.name}</p>
-              </li>
-            );
-          })}
-        </ul>
+          suggestions={renderSuggestions}
+          onClick={(suggestion) => {
+            setKeyword(suggestion.name);
+            setSuggestions(null);
+            onSearch(suggestion.name);
+            setTabs(suggestion.type);
+          }}
+        />
       </section>
       <Search
         className={cx(

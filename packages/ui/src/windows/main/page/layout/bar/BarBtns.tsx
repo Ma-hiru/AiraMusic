@@ -1,4 +1,4 @@
-import { FC, memo, useCallback, useEffect, WheelEvent } from "react";
+import { type FC, memo, useCallback, useEffect, type WheelEvent } from "react";
 import { Volume, Volume1, Volume2, VolumeX } from "lucide-react";
 import { useThemeColor } from "@mahiru/ui/common/hooks/useThemeColor";
 import { useUpdate } from "@mahiru/ui/common/hooks/useUpdate";

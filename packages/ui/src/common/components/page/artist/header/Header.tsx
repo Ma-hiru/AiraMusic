@@ -1,4 +1,4 @@
-import { FC, memo, useMemo } from "react";
+import { type FC, memo, useMemo } from "react";
 import { NeteaseArtist } from "../../../../source/netease/models";
 
 import Avatar from "./Avatar";

@@ -1,4 +1,4 @@
-import { FC, memo, useMemo } from "react";
+import { type FC, memo, useMemo } from "react";
 import { motion } from "motion/react";
 import { css } from "@emotion/css";
 import { usePlayProgress } from "@mahiru/ui/windows/main/hooks/usePlayProgress";

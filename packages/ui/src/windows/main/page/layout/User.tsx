@@ -1,4 +1,4 @@
-import { FC, useEffect } from "react";
+import { type FC, useEffect } from "react";
 import { NeteaseServicesAuth } from "@mahiru/ui/common/source/netease/services";
 import { useRequestAutoRetry, useRequestStatusWrap } from "@mahiru/ui/common/hooks/useRequestWrap";
 import AppToast from "@mahiru/ui/common/components/toast";

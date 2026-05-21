@@ -1,4 +1,4 @@
-import { IRenderer, RendererOptions } from "./IRenderer";
+import { type IRenderer, type RendererOptions } from "./IRenderer";
 import { WebGLRenderer as WasmWebGLRenderer } from "@mahiru/wasm";
 
 export class WebGLRendererRust implements IRenderer {

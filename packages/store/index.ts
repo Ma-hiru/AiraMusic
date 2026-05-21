@@ -1,7 +1,7 @@
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { existsSync } from "node:fs";
-import { ChildProcessByStdio, spawn } from "node:child_process";
+import { type ChildProcessByStdio, spawn } from "node:child_process";
 import { Readable } from "node:stream";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));

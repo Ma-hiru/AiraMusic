@@ -1,4 +1,4 @@
-import { FC, memo, useMemo } from "react";
+import { type FC, memo, useMemo } from "react";
 import { LoaderCircle, Pause, Play, SkipBack, SkipForward } from "lucide-react";
 import { useThemeColor } from "@mahiru/ui/common/hooks/useThemeColor";
 import AppEntry from "@mahiru/ui/windows/main/entry";

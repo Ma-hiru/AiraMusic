@@ -1,4 +1,4 @@
-import { FC, memo, useEffect, useMemo, useState } from "react";
+import { type FC, memo, useEffect, useMemo, useState } from "react";
 import { useListenable } from "@mahiru/ui/common/hooks/useListenable";
 import { useNavigate } from "react-router-dom";
 import { RoutePath, RoutePathDisplay } from "@mahiru/ui/common/routes";

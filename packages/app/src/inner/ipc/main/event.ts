@@ -2,7 +2,7 @@ import { Log } from "@mahiru/app/utils/log";
 import { AppMessageChannel } from "@mahiru/message/main";
 import { BrowserWindow, ipcMain } from "electron";
 import { AppWindowCreator, AppWindowManager, AppWindows } from "@mahiru/app/window";
-import { MainEventAPI } from "@mahiru/app/inner/ipc/message";
+import type { MainEventAPI } from "@mahiru/app/inner/ipc/message";
 
 const mainEventAPI = {
   openInternalWindow: (e, type) => {

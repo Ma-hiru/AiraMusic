@@ -1,7 +1,7 @@
 import {
-  FC,
+  type FC,
   memo,
-  Ref,
+  type Ref,
   useCallback,
   useEffect,
   useImperativeHandle,

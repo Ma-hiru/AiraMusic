@@ -1,8 +1,11 @@
-import { FC, HTMLAttributes, memo, useEffect, useMemo, useRef } from "react";
-import { SpectrumData, SpectrumOptions } from "@mahiru/ui/windows/main/hooks/useSpectrumWorker";
+import { type FC, type HTMLAttributes, memo, useEffect, useMemo, useRef } from "react";
+import type {
+  SpectrumData,
+  SpectrumOptions
+} from "@mahiru/ui/windows/main/hooks/useSpectrumWorker";
 import {
-  IRenderer,
-  RendererOptions
+  type IRenderer,
+  type RendererOptions
 } from "@mahiru/ui/windows/main/componets/spectrum/renderers/IRenderer";
 import { WebGLRendererRust } from "@mahiru/ui/windows/main/componets/spectrum/renderers/webgl-rust";
 import { Canvas2DRenderer } from "@mahiru/ui/windows/main/componets/spectrum/renderers/canvas2d";

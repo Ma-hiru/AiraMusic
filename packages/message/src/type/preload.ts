@@ -1,4 +1,4 @@
-import { Message, MessageDirection } from "./message";
+import type { Message, MessageDirection } from "./message";
 
 export type ExtendedMessageChannelAPI = {
   _message: {

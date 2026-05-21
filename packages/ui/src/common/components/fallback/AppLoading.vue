@@ -10,14 +10,12 @@
 </template>
 
 <script setup lang="ts" name="AppLoading">
-  import { ReactNode } from "react";
   import Loading from "@mahiru/ui/common/components/public/Loading.vue";
 
   const props = withDefaults(
     defineProps<{
       loading: boolean;
       color?: string;
-      children?: ReactNode;
       tips?: string;
     }>(),
     {

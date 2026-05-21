@@ -5,7 +5,7 @@ import { CacheStoreForOther } from "./other";
 import { CacheStoreForRemove } from "./remove";
 import { BrowserCache } from "./browser";
 import { MemoryCache } from "./memory";
-import { CacheObjectAsyncInterface } from "./utils";
+import { type CacheObjectAsyncInterface } from "./utils";
 import { Log } from "@mahiru/ui/common/constants/dev";
 
 const local = {

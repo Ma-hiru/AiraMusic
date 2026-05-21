@@ -1,5 +1,5 @@
 import {
-  LyricLine as AMLyricLine,
+  type LyricLine as AMLyricLine,
   parseLrc,
   parseQrc,
   parseTTML,

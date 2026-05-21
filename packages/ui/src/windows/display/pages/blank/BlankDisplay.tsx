@@ -1,4 +1,4 @@
-import { FC, memo, useEffect } from "react";
+import { type FC, memo, useEffect } from "react";
 import { useBack } from "@mahiru/ui/windows/display/ctx/back";
 import { useLocation } from "react-router-dom";
 import { RoutePathDisplay } from "@mahiru/ui/common/routes";

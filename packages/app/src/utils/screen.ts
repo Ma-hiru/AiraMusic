@@ -1,12 +1,12 @@
-import { app, Display, screen } from "electron";
+import { app, type Display, screen } from "electron";
 import { Log } from "./log";
 import { isDev } from "./dev";
 import { clamp } from "lodash-es";
 import {
   AppWindowConstants,
-  WindowSize,
-  WindowSizePreset,
-  WindowSizePresetBase
+  type WindowSize,
+  type WindowSizePreset,
+  type WindowSizePresetBase
 } from "../constants/win";
 
 type AdaptiveWindowSizePresetReturn<

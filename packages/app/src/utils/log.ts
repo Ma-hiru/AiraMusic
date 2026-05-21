@@ -1,4 +1,10 @@
-import { createLog, LoggerWriter, LogLevel, ParseLogLevel, Log } from "@mahiru/log";
+import {
+  createLog,
+  type LoggerWriter,
+  LogLevel,
+  ParseLogLevel,
+  type Log as LogInstance
+} from "@mahiru/log";
 import { isDev } from "./dev";
 import { createWriteStream, mkdirSync } from "node:fs";
 import { appPathJoin, appUserDataJoin } from "./path";
@@ -58,7 +64,7 @@ class LoggerFileWriter implements LoggerWriter {
   }
 }
 
-type ExtendLog = Log & {
+type ExtendLog = LogInstance & {
   EnvLevel: LogLevel;
 };
 

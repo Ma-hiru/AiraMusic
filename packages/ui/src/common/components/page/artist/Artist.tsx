@@ -1,11 +1,11 @@
 import { cx } from "@emotion/css";
 import { PlaylistSource } from "../../../enum";
-import { HeartManager } from "../../../hooks/useHeart";
+import { type HeartManager } from "../../../hooks/useHeart";
 import {
-  FC,
+  type FC,
   memo,
-  MouseEvent as ReactMouseEvent,
-  Ref,
+  type MouseEvent as ReactMouseEvent,
+  type Ref,
   useCallback,
   useEffect,
   useImperativeHandle,
@@ -25,9 +25,9 @@ import AppErrorBoundary from "../../../components/fallback/AppErrorBoundary";
 import AppLoading from "../../../components/fallback/AppLoading";
 import ThrowIf from "../../../components/fallback/ThrowIf";
 import TrackList, {
-  TrackListClickFunc,
-  TrackListPlayableManager,
-  TrackListRef
+  type TrackListClickFunc,
+  type TrackListPlayableManager,
+  type TrackListRef
 } from "../../../components/track_list";
 
 export type ArtistRef = {

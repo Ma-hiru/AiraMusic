@@ -1,4 +1,4 @@
-import { FC, memo, useEffect } from "react";
+import { type FC, memo, useEffect } from "react";
 import {
   AppWindow as AppWindowIcon,
   Minus,

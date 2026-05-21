@@ -4,7 +4,7 @@ import { isDev } from "@mahiru/app/utils/dev";
 import { AppStore } from "@mahiru/app/inner/store";
 import { AppWindowManager, WindowExits } from "./manager";
 import { isLinux } from "@mahiru/app/utils/platform";
-import { BrowserWindow, BrowserWindowConstructorOptions } from "electron";
+import { BrowserWindow, type BrowserWindowConstructorOptions } from "electron";
 import AppScreen from "@mahiru/app/utils/screen";
 
 export type AppWindowCreatorProps = {

@@ -1,5 +1,5 @@
-import { FC, memo, ReactNode } from "react";
-import { AnimatePresence, HTMLElements, HTMLMotionProps, motion } from "motion/react";
+import { type FC, memo, type ReactNode } from "react";
+import { AnimatePresence, type HTMLElements, type HTMLMotionProps, motion } from "motion/react";
 
 type TransitionProps<T extends keyof HTMLElements> = HTMLMotionProps<T> & {
   asChild?: boolean;

@@ -1,5 +1,5 @@
 import { cx } from "@emotion/css";
-import { FC, MouseEvent as ReactMouseEvent, useCallback, useRef } from "react";
+import { type FC, type MouseEvent as ReactMouseEvent, useCallback, useRef } from "react";
 import { useListenable } from "../hooks/useListenable";
 import { ElectronServicesWindow } from "../source/electron/services";
 

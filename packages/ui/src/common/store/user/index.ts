@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { UserStoreInitializer, UserStoreType } from "./config";
+import { UserStoreInitializer, type UserStoreType } from "./config";
 import { createStoreSelectors, createZustandStore } from "@mahiru/ui/common/lib/store";
 import { NeteaseSettings, NeteaseUser } from "@mahiru/ui/common/source/netease/models";
 

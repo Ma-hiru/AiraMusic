@@ -1,4 +1,4 @@
-import { FC, memo, useRef } from "react";
+import { type FC, memo, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import { RoutePath, RoutePathMain } from "@mahiru/ui/common/routes";
 import { useUserTrackManager } from "@mahiru/ui/common/hooks/useUserTrackManager";
@@ -9,7 +9,7 @@ import { usePlayerChangeActionFromDisplay } from "@mahiru/ui/windows/display/hoo
 import { useDisplayPageAction } from "@mahiru/ui/windows/display/hooks/useDisplayPageAction";
 import ImageConstants from "@mahiru/ui/common/constants/image";
 
-import Album, { AlbumPageRef } from "@mahiru/ui/common/components/page/album/Album";
+import Album, { type AlbumPageRef } from "@mahiru/ui/common/components/page/album";
 
 const AlbumDisplay: FC<object> = () => {
   const location = useLocation();

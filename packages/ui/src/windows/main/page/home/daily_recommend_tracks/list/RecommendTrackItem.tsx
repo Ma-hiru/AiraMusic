@@ -1,4 +1,4 @@
-import { FC, memo, useCallback, useMemo } from "react";
+import { type FC, memo, useCallback, useMemo } from "react";
 import { AudioLines, CirclePlay } from "lucide-react";
 import { NeteaseServicesTrack } from "@mahiru/ui/common/source/netease/services";
 import { NeteaseNetworkImage, NeteaseTrackRecord } from "@mahiru/ui/common/source/netease/models";

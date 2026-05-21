@@ -1,4 +1,4 @@
-import { FC, memo, useRef } from "react";
+import { type FC, memo, useRef } from "react";
 import { ListMusic, MessageSquare, Play } from "lucide-react";
 import { useThemeColor } from "../../../../hooks/useThemeColor";
 import { NeteaseAlbum } from "../../../../source/netease/models";

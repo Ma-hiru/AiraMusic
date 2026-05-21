@@ -1,4 +1,4 @@
-import { FC, memo } from "react";
+import { type FC, memo } from "react";
 import { CommentSort } from "@mahiru/ui/common/enum";
 import { cx } from "@emotion/css";
 import SectionTab from "@mahiru/ui/common/components/tab/SectionTab";

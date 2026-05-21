@@ -1,5 +1,5 @@
 import { cx } from "@emotion/css";
-import { FC, memo, startTransition, useEffect, useMemo, useRef, useState } from "react";
+import { type FC, memo, startTransition, useEffect, useMemo, useRef, useState } from "react";
 import {
   NeteaseAlbum,
   NeteaseNetworkImage,

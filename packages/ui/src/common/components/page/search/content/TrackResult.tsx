@@ -1,7 +1,7 @@
 import {
-  FC,
-  MouseEvent as ReactMouseEvent,
-  Ref,
+  type FC,
+  type MouseEvent as ReactMouseEvent,
+  type Ref,
   useCallback,
   useEffect,
   useImperativeHandle
@@ -14,9 +14,9 @@ import { useRequestAutoRun, useRequestStatusWrap } from "@mahiru/ui/common/hooks
 import AppErrorBoundary from "@mahiru/ui/common/components/fallback/AppErrorBoundary";
 import ThrowIf from "@mahiru/ui/common/components/fallback/ThrowIf";
 import AppLoading from "@mahiru/ui/common/components/fallback/AppLoading";
-import TrackList, { TrackListPlayableManager } from "@mahiru/ui/common/components/track_list";
+import TrackList, { type TrackListPlayableManager } from "@mahiru/ui/common/components/track_list";
 import ImageConstants from "@mahiru/ui/common/constants/image";
-import { HeartManager } from "@mahiru/ui/common/hooks/useHeart";
+import { type HeartManager } from "@mahiru/ui/common/hooks/useHeart";
 import AppContextMenu from "@mahiru/ui/common/components/menu";
 
 export type TrackResultRef = {
@@ -140,7 +140,7 @@ const TrackResult: FC<TrackResultProps> = ({
 
   return (
     <AppErrorBoundary name="TrackSearchResult" canReset toast onReset={reload}>
-      <ThrowIf when={status === "error"} message="歌曲加载失败" />
+      <ThrowIf when={status === "error" && active} message="歌曲加载失败" />
       <AppLoading loading={status === "loading" && active}>
         <TrackList
           id={null}
@@ -155,6 +155,7 @@ const TrackResult: FC<TrackResultProps> = ({
           onContext={onContextMenu}
           onClickAlbum={onClickAlbum}
           onClickArtist={onClickArtist}
+          emptyTips="没有结果"
         />
       </AppLoading>
     </AppErrorBoundary>

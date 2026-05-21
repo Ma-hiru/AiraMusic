@@ -214,7 +214,9 @@ export default class AppPlayer extends Listenable {
   private async loadAudio(
     track: NeteaseTrack
   ): Promise<Nullable<NeteaseLocalAudio | NeteaseNetworkAudio>> {
-    const preference = this.userStore._settings?.preference ?? NeteaseSettings.default.preference;
+    const preference =
+      this.userStore._settings?.trackQuality.quality ??
+      NeteaseSettings.default.trackQuality.quality;
     const local = await NeteaseServicesAudio.local(track, preference, false);
     if (local) return local;
     const network = await NeteaseServicesAudio.network(track, preference);

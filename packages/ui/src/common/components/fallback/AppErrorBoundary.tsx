@@ -1,5 +1,5 @@
-import { FC, memo, ReactNode, RefObject, useCallback, useRef } from "react";
-import { ErrorBoundary, FallbackProps } from "react-error-boundary";
+import { type FC, memo, type ReactNode, type RefObject, useCallback, useRef } from "react";
+import { ErrorBoundary, type FallbackProps } from "react-error-boundary";
 import { Log } from "@mahiru/ui/common/constants/dev";
 import { cx } from "@emotion/css";
 import { CircleX } from "lucide-react";

@@ -1,7 +1,7 @@
 import {
-  FC,
-  ReactNode,
-  Ref,
+  type FC,
+  type ReactNode,
+  type Ref,
   useCallback,
   useEffect,
   useImperativeHandle,

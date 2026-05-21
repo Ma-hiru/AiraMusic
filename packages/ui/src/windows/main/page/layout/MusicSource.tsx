@@ -1,6 +1,9 @@
-import { FC, memo, useEffect, useState } from "react";
+import { type FC, memo, useEffect, useState } from "react";
 import { useWindowTitle } from "@mahiru/ui/common/hooks/useWindowTitle";
-import { ShortcutConfig, useKeyboardShortcut } from "@mahiru/ui/common/hooks/useKeyboardShortcut";
+import {
+  type ShortcutConfig,
+  useKeyboardShortcut
+} from "@mahiru/ui/common/hooks/useKeyboardShortcut";
 import { useMediaSession } from "@mahiru/ui/windows/main/hooks/useMediaSession";
 import { useSpectrumWorker } from "@mahiru/ui/windows/main/hooks/useSpectrumWorker";
 import { useAtomValue, useSetAtom } from "jotai";

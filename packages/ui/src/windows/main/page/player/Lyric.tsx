@@ -1,6 +1,6 @@
-import { FC, memo, useCallback, useEffect, useRef } from "react";
+import { type FC, memo, useCallback, useEffect, useRef } from "react";
 
-import LyricComponent, { LyricRef } from "@mahiru/ui/common/components/lyric/LyricContainer";
+import LyricComponent, { type LyricRef } from "@mahiru/ui/common/components/lyric/LyricContainer";
 import AppEntry from "@mahiru/ui/windows/main/entry";
 
 const Lyric: FC<object> = () => {

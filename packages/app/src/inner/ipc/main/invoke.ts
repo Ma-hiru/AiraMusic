@@ -1,13 +1,12 @@
 import { app, BrowserWindow, dialog, ipcMain } from "electron";
 import { AppWindowManager } from "@mahiru/app/window";
 import { runtimeID, storeKeyAccessToken } from "@mahiru/app/utils/dev";
-import { MainInvokeAPI } from "../message";
+import { type MainInvokeAPI } from "../message";
 import Dns from "node:dns/promises";
 import Net from "node:net";
 import Https from "node:https";
 import Fs from "node:fs/promises";
 import AppScreen from "@mahiru/app/utils/screen";
-import { AppStore } from "@mahiru/app/inner/store";
 
 const mainInvokeAPI = {
   selectPath: async (_, type) => {

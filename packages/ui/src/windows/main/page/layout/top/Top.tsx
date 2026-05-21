@@ -1,4 +1,4 @@
-import { FC, memo } from "react";
+import { type FC, memo } from "react";
 import { cx } from "@emotion/css";
 import { useUser } from "@mahiru/ui/common/store/user";
 import { useListenable } from "@mahiru/ui/common/hooks/useListenable";

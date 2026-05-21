@@ -1,8 +1,8 @@
 import {
   memo,
-  MouseEvent as ReactMouseEvent,
-  Ref,
-  RefObject,
+  type MouseEvent as ReactMouseEvent,
+  type Ref,
+  type RefObject,
   useEffect,
   useImperativeHandle,
   useMemo,
@@ -16,8 +16,8 @@ import { NeteaseImageSize, PlaylistSource } from "../../enum";
 import { NeteaseHistory, NeteaseTrack, NeteaseTrackRecord } from "../../source/netease/models";
 
 import TrackItem, { type TrackItemProps } from "../../components/track_item";
-import VirtualList, { VirtualListRow } from "../../components/virtual_list";
-import { HeartManager, useHeart } from "../../hooks/useHeart";
+import VirtualList, { type VirtualListRow } from "../../components/virtual_list";
+import { type HeartManager, useHeart } from "../../hooks/useHeart";
 import AppEmpty from "../../components/fallback/AppEmpty";
 
 export interface TrackListRef {
@@ -58,6 +58,7 @@ export interface TrackListProps<T extends NeteaseTrackRecord[] | NeteaseHistory[
   onClickAlbum: Optional<NormalFunc<[id: number]>>;
   heartManager: Optional<HeartManager>;
   playableManager: Optional<TrackListPlayableManager>;
+  emptyTips?: string;
 }
 
 const TrackList = <T extends NeteaseTrackRecord[] | NeteaseHistory[]>({
@@ -76,7 +77,8 @@ const TrackList = <T extends NeteaseTrackRecord[] | NeteaseHistory[]>({
   onClickAlbum,
   trackCoverSize,
   heartManager,
-  playableManager
+  playableManager,
+  emptyTips = "暂无歌曲"
 }: TrackListProps<T>) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [scrollToItem, setScrollToItem] = useState<(index: number) => Promise<void>>(
@@ -170,7 +172,7 @@ const TrackList = <T extends NeteaseTrackRecord[] | NeteaseHistory[]>({
             onRangeUpdate={onRangeUpdate}
           />
         ) : (
-          <AppEmpty tips="暂无歌曲" />
+          <AppEmpty tips={emptyTips} />
         )
       }
     />

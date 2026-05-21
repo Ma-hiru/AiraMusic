@@ -1,4 +1,4 @@
-import { FC, HTMLAttributes, memo } from "react";
+import { type FC, type HTMLAttributes, memo } from "react";
 import { css, cx } from "@emotion/css";
 
 interface DragProps extends HTMLAttributes<HTMLDivElement> {

@@ -1,4 +1,4 @@
-import { FC, memo, ReactEventHandler, useCallback } from "react";
+import { type FC, memo, type ReactEventHandler, useCallback } from "react";
 import { useSetAtom } from "jotai";
 import { backgroundCoverAtom } from "@mahiru/ui/windows/main/atoms/theme";
 import AppEntry from "@mahiru/ui/windows/main/entry";

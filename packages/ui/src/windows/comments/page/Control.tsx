@@ -1,4 +1,4 @@
-import { FC, memo } from "react";
+import { type FC, memo } from "react";
 import TopControlPure from "@mahiru/ui/common/components/public/TopControlPure";
 import Drag from "@mahiru/ui/common/components/drag/Drag";
 import { cx } from "@emotion/css";

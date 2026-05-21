@@ -1,4 +1,4 @@
-import { FC, memo } from "react";
+import { type FC, memo } from "react";
 import { TrackQuality } from "../../enum";
 import { NeteaseHistory, NeteaseTrack, NeteaseTrackRecord } from "../../source/netease/models";
 

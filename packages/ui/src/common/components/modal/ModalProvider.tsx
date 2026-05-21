@@ -1,7 +1,7 @@
 import {
-  FC,
+  type FC,
   memo,
-  ReactNode,
+  type ReactNode,
   useCallback,
   useDeferredValue,
   useLayoutEffect,

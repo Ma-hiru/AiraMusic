@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { RequestStatus } from "../hooks/useRequestWrap";
+import { type RequestStatus } from "../hooks/useRequestWrap";
 import { useImmer } from "use-immer";
 import { useLatestRef } from "../hooks/useLatestRef";
 import { Log } from "@mahiru/ui/common/constants/dev";

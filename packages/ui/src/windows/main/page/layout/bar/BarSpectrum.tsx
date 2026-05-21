@@ -1,4 +1,4 @@
-import { FC, memo } from "react";
+import { type FC, memo } from "react";
 import { useThemeColor } from "@mahiru/ui/common/hooks/useThemeColor";
 import { useListenable } from "@mahiru/ui/common/hooks/useListenable";
 import { useAtomValue } from "jotai";

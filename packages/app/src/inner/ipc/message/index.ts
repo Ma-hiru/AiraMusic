@@ -1,4 +1,4 @@
-import { IpcMainEvent, IpcMainInvokeEvent } from "electron";
+import type { IpcMainEvent, IpcMainInvokeEvent } from "electron";
 
 export type MainEventAPI = {
   [K in NormalEvent]: NormalFunc<[IpcMainEvent, NormalEventPayload<K>]>;

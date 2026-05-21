@@ -1,6 +1,6 @@
 import { cx } from "@emotion/css";
 import { RotateCcw } from "lucide-react";
-import { FC, memo, useEffect, useState } from "react";
+import { type FC, memo, useEffect, useState } from "react";
 import { QRCodeStatus } from "@mahiru/ui/windows/login/hooks/useLoginQRCode";
 
 interface QRCodeProps {

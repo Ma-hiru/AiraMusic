@@ -1,4 +1,4 @@
-import { FC, memo } from "react";
+import { type FC, memo } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface RecommendTrackTitleProps {

@@ -1,4 +1,4 @@
-import Color, { ColorInstance } from "color";
+import Color, { type ColorInstance } from "color";
 import { converter, formatHex } from "culori";
 import { clamp } from "lodash-es";
 import { Listener } from "../utils/listenable";

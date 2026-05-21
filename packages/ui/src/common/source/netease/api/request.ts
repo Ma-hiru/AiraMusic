@@ -1,4 +1,4 @@
-import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
+import axios, { type AxiosRequestConfig, type AxiosResponse } from "axios";
 import { Log } from "@mahiru/ui/common/constants/dev";
 import { EqError } from "@mahiru/log/src/err";
 import { NeteaseServicesAuth } from "../../../source/netease/services";

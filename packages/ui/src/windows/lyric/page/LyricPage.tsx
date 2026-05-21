@@ -1,7 +1,7 @@
 import { cx } from "@emotion/css";
 import { useListenable } from "@mahiru/ui/common/hooks/useListenable";
 import {
-  MouseEvent as ReactMouseEvent,
+  type MouseEvent as ReactMouseEvent,
   useCallback,
   useEffect,
   useLayoutEffect,
@@ -17,7 +17,7 @@ import {
 } from "@mahiru/ui/common/source/electron/services";
 
 import Control from "./Control";
-import LyricComponent, { LyricRef } from "@mahiru/ui/common/components/lyric/LyricContainer";
+import LyricComponent, { type LyricRef } from "@mahiru/ui/common/components/lyric/LyricContainer";
 
 export default function LyricPage() {
   useAppLoaded();

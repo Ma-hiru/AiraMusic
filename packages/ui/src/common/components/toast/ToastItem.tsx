@@ -1,4 +1,4 @@
-import { FC, memo, useEffect, useRef } from "react";
+import { type FC, memo, useEffect, useRef } from "react";
 import { motion } from "motion/react";
 import { Ban, CircleAlert, CircleCheck, Info } from "lucide-react";
 

@@ -1,5 +1,5 @@
-import { AppWindowManager } from "./manager";
 import { Log } from "@mahiru/app/utils/log";
+import { AppWindowManager } from "./manager";
 import { isLinux } from "@mahiru/app/utils/platform";
 import { appLogoPath } from "@mahiru/app/utils/path";
 import { AppMessageChannel, type MessageData } from "@mahiru/message/main";
@@ -8,7 +8,7 @@ import {
   clipboard,
   Menu,
   MenuItem,
-  MenuItemConstructorOptions,
+  type MenuItemConstructorOptions,
   nativeImage,
   screen,
   Tray

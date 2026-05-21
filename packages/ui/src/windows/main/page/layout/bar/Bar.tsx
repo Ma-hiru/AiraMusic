@@ -1,5 +1,5 @@
 import { cx } from "@emotion/css";
-import { FC, memo } from "react";
+import { type FC, memo } from "react";
 import { useThemeColor } from "@mahiru/ui/common/hooks/useThemeColor";
 import AppUI from "@mahiru/ui/common/player/ui";
 

@@ -1,4 +1,4 @@
-import { createLog, Log as LogInstance, LogLevel } from "@mahiru/log";
+import { createLog, type Log as LogInstance, LogLevel } from "@mahiru/log";
 
 const DefaultLog = createLog(LogLevel.WARN, console, true);
 

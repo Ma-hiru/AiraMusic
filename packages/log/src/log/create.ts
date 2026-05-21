@@ -1,7 +1,7 @@
-import { EqError, EqErrorProps } from "../err";
+import { EqError, type EqErrorProps } from "../err";
 import { LogLevel, LogLevelToString, ParseLogLevel } from "./logLevel";
-import { AnyToString, CanString } from "../string";
-import { LoggerWriter } from "./writer";
+import { AnyToString, type CanString } from "../string";
+import type { LoggerWriter } from "./writer";
 
 export interface Log {
   currentLevel: LogLevel;

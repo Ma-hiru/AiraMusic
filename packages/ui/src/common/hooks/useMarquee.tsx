@@ -1,4 +1,4 @@
-import { RefObject, useEffect, useRef } from "react";
+import { type RefObject, useEffect, useRef } from "react";
 
 type Opts = {
   /** 像素/秒 单位，默认 50 */

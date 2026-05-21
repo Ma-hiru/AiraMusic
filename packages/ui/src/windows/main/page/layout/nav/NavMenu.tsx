@@ -1,4 +1,4 @@
-import { FC, memo } from "react";
+import { type FC, memo } from "react";
 import { NavConstants } from "@mahiru/ui/windows/main/constants";
 import { useLocation, useNavigate } from "react-router-dom";
 import { cx } from "@emotion/css";

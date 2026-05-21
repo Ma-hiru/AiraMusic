@@ -1,4 +1,4 @@
-import { FC } from "react";
+import { type FC } from "react";
 import { useStage } from "@mahiru/ui/common/hooks/useStage";
 import { Stage } from "@mahiru/ui/common/enum";
 

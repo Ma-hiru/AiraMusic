@@ -1,5 +1,5 @@
 import { Clock, Heart, House } from "lucide-react";
-import { ReactNode } from "react";
+import { type ReactNode } from "react";
 import { RoutePathMain } from "@mahiru/ui/common/routes";
 
 export type NavData = {

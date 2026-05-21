@@ -1,4 +1,4 @@
-import { FC, memo } from "react";
+import { type FC, memo } from "react";
 import { cx } from "@emotion/css";
 import AppEntry from "@mahiru/ui/windows/main/entry";
 

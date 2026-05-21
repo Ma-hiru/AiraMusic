@@ -1,6 +1,6 @@
 import { cx } from "@emotion/css";
 import { useMMCQ } from "@mahiru/ui/windows/main/hooks/useMMCQ";
-import { FC, memo, useLayoutEffect } from "react";
+import { type FC, memo, useLayoutEffect } from "react";
 import { useAtomValue, useSetAtom } from "jotai";
 import {
   backgroundCoverAtom,

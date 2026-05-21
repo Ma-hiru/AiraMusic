@@ -1,4 +1,4 @@
-import { FC, memo, useDeferredValue, useEffect, useMemo, useState } from "react";
+import { type FC, memo, useDeferredValue, useEffect, useMemo, useState } from "react";
 import { Search as SearchIcon } from "lucide-react";
 import { debounce } from "lodash-es";
 

@@ -1,5 +1,5 @@
 import { cx } from "@emotion/css";
-import { FC, memo, useCallback, useMemo, useRef } from "react";
+import { type FC, memo, useCallback, useMemo, useRef } from "react";
 import { NeteaseNetworkImage, NeteaseUser } from "@mahiru/ui/common/source/netease/models";
 import { ChevronDown, UserCircle2 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";

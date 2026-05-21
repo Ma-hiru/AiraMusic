@@ -1,4 +1,4 @@
-import { Message, MessageData, MessageDirection, MessageEvent } from "../type/message";
+import type { Message, MessageData, MessageDirection, MessageEvent } from "../type/message";
 import { BrowserWindow } from "electron";
 import { Log } from "../utils/log";
 import { WindowManager } from "./window";

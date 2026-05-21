@@ -1,4 +1,4 @@
-import { FC, memo, useCallback } from "react";
+import { type FC, memo, useCallback } from "react";
 import { Search } from "lucide-react";
 import NoDrag from "@mahiru/ui/common/components/drag/NoDrag";
 import {

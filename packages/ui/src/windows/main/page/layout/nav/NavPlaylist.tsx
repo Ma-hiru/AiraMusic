@@ -1,4 +1,4 @@
-import { FC, memo, useCallback, useRef, useState } from "react";
+import { type FC, memo, useCallback, useRef, useState } from "react";
 import { useScrollAutoHide } from "@mahiru/ui/common/hooks/useScrollAutoHide";
 import {
   NeteaseNetworkImage,
@@ -14,7 +14,9 @@ import { PlaylistSource } from "@mahiru/ui/common/enum";
 import { useLocateOrScrollTopRegister } from "@mahiru/ui/windows/main/hooks/useLocateOrScrollTopRegister";
 import ImageConstants from "@mahiru/ui/common/constants/image";
 
-import VirtualList, { VirtualListRow } from "@mahiru/ui/common/components/virtual_list/VirtualList";
+import VirtualList, {
+  type VirtualListRow
+} from "@mahiru/ui/common/components/virtual_list/VirtualList";
 
 interface NavPlaylistProps {
   user: Nullable<NeteaseUser>;

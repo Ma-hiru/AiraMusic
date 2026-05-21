@@ -1,6 +1,6 @@
-import { FC, Fragment, memo } from "react";
+import { type FC, Fragment, memo } from "react";
 import { css, cx } from "@emotion/css";
-import { ColorInstance } from "color";
+import { type ColorInstance } from "color";
 import { NeteaseTrackRecord } from "../../source/netease/models";
 import { PlaylistSource } from "../../enum";
 

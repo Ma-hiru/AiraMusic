@@ -1,8 +1,8 @@
 import {
-  FC,
+  type FC,
   memo,
-  MouseEvent as ReactMouseEvent,
-  Ref,
+  type MouseEvent as ReactMouseEvent,
+  type Ref,
   useCallback,
   useImperativeHandle,
   useRef
@@ -10,7 +10,7 @@ import {
 import { NeteaseAlbum, NeteaseHistory, NeteaseTrackRecord } from "../../../source/netease/models";
 import { cx } from "@emotion/css";
 import { NeteaseImageSize, PlaylistSource } from "../../../enum";
-import { HeartManager } from "../../../hooks/useHeart";
+import { type HeartManager } from "../../../hooks/useHeart";
 import { NeteaseServicesAlbum } from "../../../source/netease/services";
 import { useRequestAutoRun, useRequestStatusWrap } from "../../../hooks/useRequestWrap";
 import AppContextMenu from "../../../components/menu";
@@ -22,8 +22,8 @@ import AppLoading from "../../../components/fallback/AppLoading";
 import AppErrorBoundary from "../../../components/fallback/AppErrorBoundary";
 import ThrowIf from "../../../components/fallback/ThrowIf";
 import TrackList, {
-  TrackListPlayableManager,
-  TrackListRef
+  type TrackListPlayableManager,
+  type TrackListRef
 } from "../../../components/track_list/TrackList";
 
 export type AlbumPageRef = {

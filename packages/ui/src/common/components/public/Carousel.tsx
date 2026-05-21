@@ -1,4 +1,4 @@
-import { FC, memo, useCallback, useEffect, useRef, useState } from "react";
+import { type FC, memo, useCallback, useEffect, useRef, useState } from "react";
 import { cx } from "@emotion/css";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useThemeColor } from "../../hooks/useThemeColor";

@@ -1,4 +1,4 @@
-import { NeteaseUser, NeteaseUserModel } from "./NeteaseUser";
+import { NeteaseUser, type NeteaseUserModel } from "./NeteaseUser";
 import { TrackBitmark, TrackQuality } from "../../../enum";
 import { FormatNumber } from "../../../lib/format";
 

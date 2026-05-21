@@ -1,7 +1,7 @@
 import {
   memo,
-  PointerEvent as ReactPointerEvent,
-  RefObject,
+  type PointerEvent as ReactPointerEvent,
+  type RefObject,
   useEffect,
   useMemo,
   useRef,

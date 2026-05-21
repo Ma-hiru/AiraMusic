@@ -1,4 +1,4 @@
-import { FC, memo, useCallback } from "react";
+import { type FC, memo, useCallback } from "react";
 import { cx } from "@emotion/css";
 import { useRequestAutoRetry, useRequestStatusWrap } from "@mahiru/ui/common/hooks/useRequestWrap";
 import { NeteaseAPISearch } from "@mahiru/ui/common/source/netease/api";

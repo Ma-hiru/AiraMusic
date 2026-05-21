@@ -1,4 +1,4 @@
-import { FC, memo, useCallback, useLayoutEffect, useMemo, useState } from "react";
+import { type FC, memo, useCallback, useLayoutEffect, useMemo, useState } from "react";
 import { LyricTimeManager } from "./LyricTimeManager";
 import { cx } from "@emotion/css";
 

@@ -1,4 +1,4 @@
-import { FC, memo, useMemo } from "react";
+import { type FC, memo, useMemo } from "react";
 import { SquareArrowRightEnter, SquareArrowRightExit, SquarePen } from "lucide-react";
 import { NeteaseNetworkImage, NeteasePlaylist } from "../../../../source/netease/models";
 import { useUser } from "../../../../store/user";

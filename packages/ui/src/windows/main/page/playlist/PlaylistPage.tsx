@@ -1,4 +1,4 @@
-import { FC, memo, useRef } from "react";
+import { type FC, memo, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import { useUser } from "@mahiru/ui/common/store/user";
 import { RoutePathMain } from "@mahiru/ui/common/routes";
@@ -12,7 +12,7 @@ import { useLocateOrScrollTopRegister } from "@mahiru/ui/windows/main/hooks/useL
 import { useSetAtom } from "jotai";
 import { typingAtom } from "@mahiru/ui/windows/main/atoms/layout";
 
-import Playlist, { PlaylistRef } from "@mahiru/ui/common/components/page/playlist/Playlist";
+import Playlist, { type PlaylistRef } from "@mahiru/ui/common/components/page/playlist";
 
 const PlaylistPage: FC<object> = () => {
   const user = useUser();

@@ -1,5 +1,5 @@
 import { PlaylistSource } from "../enum";
-import { Location } from "react-router-dom";
+import { type Location } from "react-router-dom";
 
 export class PlaylistPathUtils {
   readonly base;

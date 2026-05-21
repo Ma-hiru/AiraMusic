@@ -1,12 +1,12 @@
 import { cx } from "@emotion/css";
-import { FC, memo, Ref, useEffect, useImperativeHandle, useRef, useState } from "react";
+import { type FC, memo, type Ref, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { AlbumResult, ArtistResult, PlaylistResult, TrackResult } from "./content";
-import { SearchInputRef } from "@mahiru/ui/common/components/page/search/input/SearchInput";
+import type { SearchInputRef } from "@mahiru/ui/common/components/page/search/input/SearchInput";
 import { NeteaseHistory, NeteaseTrackRecord } from "@mahiru/ui/common/source/netease/models";
 import { NeteaseImageSize } from "@mahiru/ui/common/enum";
-import { HeartManager } from "@mahiru/ui/common/hooks/useHeart";
-import { TrackListPlayableManager } from "@mahiru/ui/common/components/track_list";
-import { TrackResultRef } from "@mahiru/ui/common/components/page/search/content/TrackResult";
+import type { HeartManager } from "@mahiru/ui/common/hooks/useHeart";
+import type { TrackListPlayableManager } from "@mahiru/ui/common/components/track_list";
+import type { TrackResultRef } from "@mahiru/ui/common/components/page/search/content/TrackResult";
 
 import SearchInput from "./input";
 import HotRecommend from "./HotRecommend";
@@ -163,6 +163,8 @@ const Search: FC<SearchProps> = ({
           className={cx("flex-1", (tabs !== "artists" || !keyword) && "hidden")}
           keywords={keyword}
           onJumpArtist={onClickArtist}
+          active={tabs === "artists"}
+          setCount={setCount}
         />
       )}
       {playlistListMounted && (
@@ -170,6 +172,8 @@ const Search: FC<SearchProps> = ({
           className={cx("flex-1", (tabs !== "playlists" || !keyword) && "hidden")}
           keywords={keyword}
           onJumpPlaylist={onClickPlaylist}
+          active={tabs === "playlists"}
+          setCount={setCount}
         />
       )}
     </div>

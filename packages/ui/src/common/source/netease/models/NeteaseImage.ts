@@ -1,7 +1,7 @@
 import { NeteaseURL } from "./NeteaseURL";
 import { NeteaseAlbum } from "./NeteaseAlbum";
 import { NeteaseTrack } from "./NeteaseTrack";
-import { NeteaseUserModel } from "./NeteaseUser";
+import { type NeteaseUserModel } from "./NeteaseUser";
 import { NeteaseTrackRecord } from "./NeteaseTrackRecord";
 import { NeteaseImageSize } from "../../../enum";
 import { NeteasePlaylistSummary } from "./NeteasePlaylistSummary";

@@ -1,5 +1,5 @@
 import { BrowserWindow, dialog } from "electron";
-import { AppWindowCreatorProps, AppWindowManager, WindowExits } from "./manager";
+import { type AppWindowCreatorProps, AppWindowManager, WindowExits } from "./manager";
 import { appLogoPath, preloadPath } from "@mahiru/app/utils/path";
 import { isLinux } from "@mahiru/app/utils/platform";
 import { AppWindowConstants } from "@mahiru/app/constants/win";

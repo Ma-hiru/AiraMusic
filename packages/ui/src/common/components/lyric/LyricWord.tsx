@@ -1,4 +1,12 @@
-import { CSSProperties, FC, memo, useCallback, useLayoutEffect, useMemo, useRef } from "react";
+import {
+  type CSSProperties,
+  type FC,
+  memo,
+  useCallback,
+  useLayoutEffect,
+  useMemo,
+  useRef
+} from "react";
 import { cx } from "@emotion/css";
 import { LyricTimeManager } from "../../components/lyric/LyricTimeManager";
 

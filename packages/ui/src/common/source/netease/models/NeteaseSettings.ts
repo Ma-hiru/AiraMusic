@@ -1,14 +1,34 @@
 import { TrackQuality } from "../../../enum";
 
 export class NeteaseSettings implements NeteaseSettingsModel {
-  preference: TrackQuality;
+  trackQuality;
+  performance;
+  cache;
+  window;
 
   constructor(props: NeteaseSettingsModel) {
-    this.preference = props.preference;
+    this.trackQuality = props.trackQuality;
+    this.performance = props.performance;
+    this.cache = props.cache;
+    this.window = props.window;
   }
 
   static readonly default = new NeteaseSettings({
-    preference: TrackQuality.h
+    trackQuality: {
+      uid: 0,
+      quality: TrackQuality.h
+    },
+    performance: {
+      barSpectrum: true
+    },
+    cache: {
+      maxCacheSize: 1024 * 1024 * 1024 * 5, // 5GB
+      maxCacheTime: 7 * 24 * 60 * 60 * 1000, // 7天
+      cachePath: ""
+    },
+    window: {
+      defaultUseDisplayWindow: false
+    }
   });
 
   static fromObject(settings: Optional<NeteaseSettingsModel>) {
@@ -18,5 +38,19 @@ export class NeteaseSettings implements NeteaseSettingsModel {
 }
 
 export interface NeteaseSettingsModel {
-  preference: TrackQuality;
+  trackQuality: {
+    uid: number;
+    quality: TrackQuality;
+  };
+  performance: {
+    barSpectrum: boolean;
+  };
+  window: {
+    defaultUseDisplayWindow: boolean;
+  };
+  cache: {
+    maxCacheSize: number;
+    maxCacheTime: number;
+    cachePath: string;
+  };
 }

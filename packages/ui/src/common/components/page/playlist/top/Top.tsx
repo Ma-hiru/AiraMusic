@@ -1,4 +1,4 @@
-import { FC, memo } from "react";
+import { type FC, memo } from "react";
 import { NeteasePlaylist } from "../../../../source/netease/models";
 import { PlaylistSource } from "../../../../enum";
 

@@ -1,4 +1,4 @@
-import { FC, memo, useCallback } from "react";
+import { type FC, memo, useCallback } from "react";
 import { Heart, MessageSquare } from "lucide-react";
 import { useHeart } from "@mahiru/ui/common/hooks/useHeart";
 import { useUserTrackManager } from "@mahiru/ui/common/hooks/useUserTrackManager";

@@ -1,5 +1,5 @@
 import { cx } from "@emotion/css";
-import { FC, memo, useCallback, useRef } from "react";
+import { type FC, memo, useCallback, useRef } from "react";
 
 import Item from "./Item";
 import InfiniteList from "@mahiru/ui/common/components/infinite/InfiniteList";

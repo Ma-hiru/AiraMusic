@@ -1,5 +1,5 @@
 import { cx } from "@emotion/css";
-import { FC, memo, useMemo } from "react";
+import { type FC, memo, useMemo } from "react";
 import { NeteaseNetworkImage, NeteaseTrackRecord } from "../../source/netease/models";
 import { NeteaseImageSize } from "../../enum";
 

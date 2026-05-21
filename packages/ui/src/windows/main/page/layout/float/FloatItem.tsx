@@ -1,4 +1,4 @@
-import { FC, memo, ReactNode, useMemo } from "react";
+import { type FC, memo, type ReactNode, useMemo } from "react";
 import { motion } from "motion/react";
 import { useThemeColor } from "@mahiru/ui/common/hooks/useThemeColor";
 

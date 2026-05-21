@@ -1,4 +1,4 @@
-import { MaybeRef, onMounted, unref, watch } from "vue";
+import { type MaybeRef, onMounted, unref, watch } from "vue";
 import { ElectronServicesWindow } from "../source/electron/services";
 
 let loaded = false;

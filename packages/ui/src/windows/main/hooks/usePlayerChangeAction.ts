@@ -1,6 +1,6 @@
 import AppEntry from "@mahiru/ui/windows/main/entry";
 import { useCallback } from "react";
-import { TrackListClickFunc } from "@mahiru/ui/common/components/track_list";
+import { type TrackListClickFunc } from "@mahiru/ui/common/components/track_list";
 import { NeteaseTrackRecord } from "@mahiru/ui/common/source/netease/models";
 import {
   ElectronServicesBus,

@@ -1,7 +1,15 @@
-import { FC, memo, startTransition, useCallback, useLayoutEffect, useMemo, useState } from "react";
-import { AnimatePresence, HTMLMotionProps, motion, MotionStyle } from "motion/react";
+import {
+  type FC,
+  memo,
+  startTransition,
+  useCallback,
+  useLayoutEffect,
+  useMemo,
+  useState
+} from "react";
+import { AnimatePresence, type HTMLMotionProps, motion, type MotionStyle } from "motion/react";
 import { useThemeColor } from "../../hooks/useThemeColor";
-import ToastItem, { ToastItemData } from "../../components/toast/ToastItem";
+import ToastItem, { type ToastItemData } from "../../components/toast/ToastItem";
 import { cx } from "@emotion/css";
 import AppUI from "../../player/ui";
 import AppToast from "./use";

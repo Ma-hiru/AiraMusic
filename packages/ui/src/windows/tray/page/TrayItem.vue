@@ -7,7 +7,7 @@
 </template>
 
 <script setup lang="ts" name="TrayItem">
-  import { Component, computed } from "vue";
+  import { type Component, computed } from "vue";
 
   const props = defineProps<{ icon: Component; text: string }>();
   const Icon = computed(() => props.icon);

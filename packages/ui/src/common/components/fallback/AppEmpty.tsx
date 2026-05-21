@@ -1,5 +1,5 @@
 import { cx } from "@emotion/css";
-import { FC, memo, Ref } from "react";
+import { type FC, memo, type Ref } from "react";
 import { ArchiveBoxXMarkIcon } from "@heroicons/react/24/outline";
 
 interface AppEmptyProps {

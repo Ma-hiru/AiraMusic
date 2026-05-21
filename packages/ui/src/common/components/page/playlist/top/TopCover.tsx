@@ -1,4 +1,4 @@
-import { FC, memo, ReactEventHandler, useCallback, useMemo } from "react";
+import { type FC, memo, type ReactEventHandler, useCallback, useMemo } from "react";
 import { Headphones } from "lucide-react";
 import { NeteaseNetworkImage, NeteasePlaylist } from "../../../../source/netease/models";
 import ImageConstants from "@mahiru/ui/common/constants/image";

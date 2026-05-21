@@ -1,4 +1,4 @@
-import { RefObject, useEffect } from "react";
+import { type RefObject, useEffect } from "react";
 import { useUpdate } from "../hooks/useUpdate";
 
 export function useListenResize(dom: RefObject<Nullable<HTMLElement>>) {

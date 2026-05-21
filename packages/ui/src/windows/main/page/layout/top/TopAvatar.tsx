@@ -1,4 +1,4 @@
-import { FC, memo, useMemo } from "react";
+import { type FC, memo, useMemo } from "react";
 import { NeteaseNetworkImage } from "@mahiru/ui/common/source/netease/models/NeteaseImage";
 import NeteaseImage from "@mahiru/ui/common/components/image/NeteaseImage";
 import { NeteaseUser } from "@mahiru/ui/common/source/netease/models";

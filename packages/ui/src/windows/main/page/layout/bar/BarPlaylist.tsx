@@ -1,4 +1,4 @@
-import { FC, memo } from "react";
+import { type FC, memo } from "react";
 
 const BarPlaylist: FC<object> = () => {
   return <></>;

@@ -1,5 +1,5 @@
 import { cx } from "@emotion/css";
-import { FC, memo } from "react";
+import { type FC, memo } from "react";
 import { AppWindow as AppWindowIcon, Minus, Square, SquareMinus, X } from "lucide-react";
 import { isDev } from "@mahiru/ui/common/constants/dev";
 import { useListenable } from "../../hooks/useListenable";

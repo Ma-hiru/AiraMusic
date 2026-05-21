@@ -1,7 +1,7 @@
 import { CommentSort, CommentType } from "../enum";
 import { useImmer } from "use-immer";
 import { useCallback, useEffect, useState } from "react";
-import { RequestStatus } from "../hooks/useRequestWrap";
+import { type RequestStatus } from "../hooks/useRequestWrap";
 import { useLatestRef } from "../hooks/useLatestRef";
 import { Log } from "@mahiru/ui/common/constants/dev";
 import { NeteaseAPIComment } from "../source/netease/api";

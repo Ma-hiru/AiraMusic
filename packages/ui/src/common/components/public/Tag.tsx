@@ -1,4 +1,4 @@
-import { FC, memo, ReactNode } from "react";
+import { type FC, memo, type ReactNode } from "react";
 import { css, cx } from "@emotion/css";
 
 interface TagProps {

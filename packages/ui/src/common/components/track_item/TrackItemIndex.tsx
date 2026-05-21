@@ -1,5 +1,5 @@
 import { cx } from "@emotion/css";
-import { FC, memo } from "react";
+import { type FC, memo } from "react";
 import { AudioLines } from "lucide-react";
 
 interface ListItemIndexProps {

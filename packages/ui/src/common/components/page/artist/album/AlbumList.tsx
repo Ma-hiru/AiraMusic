@@ -1,4 +1,4 @@
-import { FC, memo } from "react";
+import { type FC, memo } from "react";
 import InfiniteContainer from "../../../../components/infinite/InfiniteContainer";
 import { useAlbum } from "../../../../hooks/useAlbum";
 

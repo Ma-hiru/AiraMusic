@@ -1,4 +1,4 @@
-import { LoggerWriter } from "@mahiru/log";
+import { type LoggerWriter } from "@mahiru/log";
 
 export class ProcessLogger implements LoggerWriter {
   write(input: { type: string; text: string }) {

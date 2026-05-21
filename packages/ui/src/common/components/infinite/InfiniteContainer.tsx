@@ -1,4 +1,4 @@
-import { FC, memo, ReactNode, useCallback, useEffect, useRef } from "react";
+import { type FC, memo, type ReactNode, useCallback, useEffect, useRef } from "react";
 import { useLatestRef } from "../../hooks/useLatestRef";
 import { Log } from "@mahiru/ui/common/constants/dev";
 import AppLoading from "../../components/fallback/AppLoading";

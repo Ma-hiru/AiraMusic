@@ -1,8 +1,8 @@
 import {
-  CSSProperties,
-  Key,
+  type CSSProperties,
+  type Key,
   memo,
-  ReactNode,
+  type ReactNode,
   useCallback,
   useEffect,
   useMemo,

@@ -48,7 +48,7 @@
 </template>
 
 <script setup lang="ts" name="ImageViewer">
-  import { computed, CSSProperties, onMounted, ref, useTemplateRef, watch } from "vue";
+  import { computed, type CSSProperties, onMounted, ref, useTemplateRef, watch } from "vue";
   import { clamp } from "lodash-es";
   import { ArrowLeftToLine, ArrowRightToLine, Download } from "lucide-vue-next";
   import { Log } from "@mahiru/ui/common/constants/dev";

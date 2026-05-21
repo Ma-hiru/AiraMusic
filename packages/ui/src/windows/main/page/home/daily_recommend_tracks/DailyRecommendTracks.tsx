@@ -1,5 +1,5 @@
 import { useAtom } from "jotai";
-import { FC, memo, useCallback, useEffect, useRef } from "react";
+import { type FC, memo, useCallback, useEffect, useRef } from "react";
 import { NeteaseAPITrack } from "@mahiru/ui/common/source/netease/api";
 import { useRequestAutoRetry, useRequestStatusWrap } from "@mahiru/ui/common/hooks/useRequestWrap";
 import { backgroundCoverAtom } from "@mahiru/ui/windows/main/atoms/theme";
@@ -7,7 +7,7 @@ import { backgroundCoverAtom } from "@mahiru/ui/windows/main/atoms/theme";
 import RecommendTrackTitle from "./RecommendTrackTitle";
 import RecommendTrackList from "./list";
 import AppErrorBoundary, {
-  AppErrorBoundaryRef
+  type AppErrorBoundaryRef
 } from "@mahiru/ui/common/components/fallback/AppErrorBoundary";
 import ThrowIf from "@mahiru/ui/common/components/fallback/ThrowIf";
 import AppLoading from "@mahiru/ui/common/components/fallback/AppLoading";

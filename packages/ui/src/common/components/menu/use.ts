@@ -1,4 +1,4 @@
-import { ContextMenuRender } from "../../components/menu/MenuProvider";
+import { type ContextMenuRender } from "../../components/menu/MenuProvider";
 import { useLayoutEffect } from "react";
 import { Log } from "@mahiru/ui/common/constants/dev";
 import { createTrackContextMenu } from "./TrackMenu";

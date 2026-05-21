@@ -1,12 +1,10 @@
 import Loading from "../../components/public/Loading";
-import { FC, memo, ReactNode, RefObject } from "react";
-import { useThemeColor } from "../../hooks/useThemeColor";
+import { type FC, memo, type ReactNode, type RefObject } from "react";
 import { cx } from "@emotion/css";
 
 interface ListLoadingProps {
   ref?: RefObject<Nullable<HTMLDivElement>>;
   loading: boolean;
-  color?: string;
   children?: ReactNode;
   className?: string;
   tips?: string;
@@ -18,11 +16,9 @@ const AppLoading: FC<ListLoadingProps> = ({
   children,
   className,
   tips = "数据努力加载中",
-  color,
   ref,
   wrap
 }) => {
-  const { mainColor } = useThemeColor();
   if (!loading) {
     if (wrap) return <div ref={ref}>{children}</div>;
     return children;
@@ -30,7 +26,6 @@ const AppLoading: FC<ListLoadingProps> = ({
   return (
     <div
       ref={ref}
-      style={{ color: color || mainColor.hex() }}
       className={cx(
         "px-2 py-1 w-full h-full flex flex-col gap-2 justify-center items-center",
         className

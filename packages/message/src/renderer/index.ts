@@ -1,6 +1,6 @@
-import { Log as Logger } from "@mahiru/log";
 import { Log, setLogger } from "../utils/log";
-import { Message, MessageEvent, MessageData, MessageDirection } from "../type/message";
+import type { Log as Logger } from "@mahiru/log";
+import type { Message, MessageEvent, MessageData, MessageDirection } from "../type/message";
 import type { ExtendedMessageChannelAPI } from "../type/preload";
 
 const electronAPI = window.electron as unknown as ExtendedMessageChannelAPI;

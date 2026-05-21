@@ -1,4 +1,4 @@
-import { FC, memo, useRef } from "react";
+import { type FC, memo, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import { useUser } from "@mahiru/ui/common/store/user";
 import { RoutePathDisplay } from "@mahiru/ui/common/routes";
@@ -10,7 +10,7 @@ import { useArtistOrAlbumDisplayJump } from "@mahiru/ui/windows/display/hooks/us
 import { usePlayerChangeActionFromDisplay } from "@mahiru/ui/windows/display/hooks/usePlayerChangeActionFromDisplay";
 import { useDisplayPageAction } from "@mahiru/ui/windows/display/hooks/useDisplayPageAction";
 
-import Playlist, { PlaylistRef } from "@mahiru/ui/common/components/page/playlist/Playlist";
+import Playlist, { type PlaylistRef } from "@mahiru/ui/common/components/page/playlist";
 
 const PlaylistDisplay: FC<object> = () => {
   const user = useUser();

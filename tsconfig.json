@@ -16,7 +16,7 @@
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": false,
     "resolveJsonModule": true,
-    "verbatimModuleSyntax": false,
+    "verbatimModuleSyntax": true,
     "strictNullChecks": true,
     "noEmit": true,
     "jsx": "react-jsx",

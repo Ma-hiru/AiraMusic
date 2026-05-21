@@ -1,4 +1,4 @@
-import { FC, memo } from "react";
+import { type FC, memo } from "react";
 import { useAtomValue } from "jotai";
 import { backgroundCoverAtom } from "@mahiru/ui/windows/main/atoms/theme";
 

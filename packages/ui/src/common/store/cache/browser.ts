@@ -1,4 +1,4 @@
-import { CacheObjectInterface } from "../../store/cache/utils";
+import { type CacheObjectInterface } from "../../store/cache/utils";
 
 export class BrowserCache implements CacheObjectInterface {
   getOne<T>(id: string): Undefinable<T> {

@@ -1,4 +1,12 @@
-import { FC, Key, memo, ReactNode, useCallback, useLayoutEffect, useState } from "react";
+import {
+  type FC,
+  type Key,
+  memo,
+  type ReactNode,
+  useCallback,
+  useLayoutEffect,
+  useState
+} from "react";
 import { motion, useAnimate } from "motion/react";
 import { cx } from "@emotion/css";
 import AppContextMenu from "./use";

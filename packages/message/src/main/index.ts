@@ -1,4 +1,4 @@
-import { Log } from "@mahiru/log";
+import type { Log } from "@mahiru/log";
 import { injectWindowManager, type WindowManagerInstance } from "./window";
 import { registerForwardHandler, unregisterForwardHandler, addForwardChecker } from "./forward";
 import { setLogger } from "../utils/log";

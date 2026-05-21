@@ -1,4 +1,4 @@
-import { FC, memo, useEffect, useState } from "react";
+import { type FC, memo, useEffect, useState } from "react";
 import { useComments } from "@mahiru/ui/common/hooks/useComments";
 import { CommentSort, CommentType } from "@mahiru/ui/common/enum";
 import { CacheStore } from "@mahiru/ui/common/store/cache";

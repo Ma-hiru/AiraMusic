@@ -1,5 +1,5 @@
 import { Log } from "@mahiru/ui/common/constants/dev";
-import { NeteaseUser, NeteaseUserModel } from "../../../source/netease/models";
+import { NeteaseUser, type NeteaseUserModel } from "../../../source/netease/models";
 import { userStoreSnapshot } from "../../../store/user";
 import { NeteaseServicesUser } from "../../../source/netease/services";
 import { ElectronServicesWindow } from "../../../source/electron/services";

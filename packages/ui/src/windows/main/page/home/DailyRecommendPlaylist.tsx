@@ -1,15 +1,13 @@
-import { FC, memo, useCallback, useRef } from "react";
+import { memo, useCallback } from "react";
 import { NeteaseAPIPlaylist } from "@mahiru/ui/common/source/netease/api";
 import { useRequestAutoRetry, useRequestStatusWrap } from "@mahiru/ui/common/hooks/useRequestWrap";
 
-import AppErrorBoundary, {
-  AppErrorBoundaryRef
-} from "@mahiru/ui/common/components/fallback/AppErrorBoundary";
+import AppErrorBoundary from "@mahiru/ui/common/components/fallback/AppErrorBoundary";
 import ThrowIf from "@mahiru/ui/common/components/fallback/ThrowIf";
-import RecommendPlaylistList from "./list";
 import AppLoading from "@mahiru/ui/common/components/fallback/AppLoading";
+import PlaylistList from "@mahiru/ui/common/components/playlist_list";
 
-const DailyRecommendPlaylist: FC<object> = () => {
+const DailyRecommendPlaylist = ({ onClickItem }: { onClickItem?: NormalFunc<[id: number]> }) => {
   const {
     status,
     data: recommend = [],
@@ -19,13 +17,10 @@ const DailyRecommendPlaylist: FC<object> = () => {
   );
   const { reload } = useRequestAutoRetry(fetchData, [], () => recommend.length !== 0);
 
-  const errRef = useRef<AppErrorBoundaryRef>({});
-
   return (
     <div className="w-full overflow-hidden contain-layout">
       <h1 className="font-bold text-lg text-(--text-color-on-main)">每日推荐歌单</h1>
       <AppErrorBoundary
-        ref={errRef}
         name="DailyRecommendPlaylist"
         className="w-full h-auto"
         showError
@@ -33,11 +28,12 @@ const DailyRecommendPlaylist: FC<object> = () => {
         toast={false}
         onReset={reload}>
         <ThrowIf when={status === "error"} />
-        <AppLoading loading={status === "loading"} className="h-auto w-full">
-          <RecommendPlaylistList recommend={recommend} />
+        <AppLoading loading={status === "loading"} className="h-fit w-full">
+          <PlaylistList list={recommend} onClickItem={onClickItem} />
         </AppLoading>
       </AppErrorBoundary>
     </div>
   );
 };
+
 export default memo(DailyRecommendPlaylist);
