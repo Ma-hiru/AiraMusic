@@ -1,0 +1,8 @@
+.display-container {
+  padding-top: calc(var(--spacing) * 10); /* 2.5rem = 40px */
+  padding-inline: calc(var(--spacing) * 6); /* 1.5rem = 24px */
+  padding-bottom: calc(var(--spacing) * 6); /* 1.5rem = 24px */
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+}

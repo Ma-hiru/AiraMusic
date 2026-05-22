@@ -151,7 +151,7 @@ const Artist: FC<ArtistProps> = ({
   );
 
   return (
-    <div className={cx("flex flex-col ", className)}>
+    <div className={cx("flex flex-col", className)}>
       <AppErrorBoundary name="Artist" canReset toast onReset={reload}>
         <ThrowIf when={status === "error"} message="歌手加载失败" />
         <AppLoading loading={status === "loading"}>

@@ -41,7 +41,7 @@ const Background: FC<{ className?: string }> = ({ className }) => {
 
   return (
     <div className={cx("fixed left-0 top-0 inset-0 w-screen h-screen bg-[#f7f9fc]", className)}>
-      <AcrylicBackground src={backgroundCover ?? undefined} />
+      <AcrylicBackground src={backgroundCover ?? undefined} opacity={0.65} blur={60} />
     </div>
   );
 };

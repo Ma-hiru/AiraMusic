@@ -47,7 +47,7 @@ const PlaylistDisplay: FC<object> = () => {
       id={id}
       source={source}
       user={user}
-      className="w-full h-full"
+      className="display-container pb-0!"
       onClickAlbum={jumpAlbumDisplay}
       onClickArtist={jumpArtistDisplay}
       onAddList={onAddList}

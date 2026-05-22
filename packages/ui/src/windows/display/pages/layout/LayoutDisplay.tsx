@@ -77,8 +77,8 @@ const LayoutDisplay: FC<object> = () => {
   );
 
   return (
-    <div className="w-screen h-screen relative overflow-hidden px-6 pt-10">
-      <Drag className="absolute w-screen top-0 right-0 h-10  flex flex-row justify-between items-center px-4 text-(--text-color-on-main)">
+    <div className="w-screen h-screen relative overflow-hidden">
+      <Drag className="absolute w-screen top-0 right-0 h-10  flex flex-row justify-between items-center px-4 text-(--text-color-on-main) z-50">
         <TopBack
           exclude={[RoutePathDisplay.blank]}
           routePath={RoutePathDisplay}
@@ -88,7 +88,7 @@ const LayoutDisplay: FC<object> = () => {
       </Drag>
       <AppErrorBoundary name="LayoutDisplayContent" showError canReset>
         <div className="fixed inset-0 z-[-1]">
-          <AcrylicBackground src={InfoBus.data?.backgroundCover} />
+          <AcrylicBackground src={InfoBus.data?.backgroundCover} opacity={0.65} blur={60} />
         </div>
         <BackCtx value={backCtxValue}>
           <KeepAliveOutlet maxCache={3} />

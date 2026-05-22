@@ -24,12 +24,14 @@ import {
 } from "@mahiru/ui/common/source/netease/models";
 
 import NeteaseImage from "@mahiru/ui/common/components/image/NeteaseImage";
+import Card from "@mahiru/ui/common/components/card/Card";
 
 interface SettingsProps {
   user: Nullable<NeteaseUser>;
   settings: NeteaseSettings;
   updateUser: NormalFunc<[user: Optional<NeteaseUserModel>]>;
   updateSettings: NormalFunc<[settings: NeteaseSettingsModel]>;
+  className?: string;
 }
 
 const GB = 1024 ** 3;
@@ -79,7 +81,7 @@ const qualityOptions: {
   }
 ];
 
-const Settings: FC<SettingsProps> = ({ user, settings, updateSettings, updateUser }) => {
+const Settings: FC<SettingsProps> = ({ user, settings, updateSettings, updateUser, className }) => {
   const avatar = useMemo(
     () => NeteaseNetworkImage.fromUserAvatar(user)?.setSize(NeteaseImageSize.sm),
     [user]
@@ -139,25 +141,17 @@ const Settings: FC<SettingsProps> = ({ user, settings, updateSettings, updateUse
   const profileSignature = user?.profile.signature || "暂无签名";
 
   return (
-    <div className="h-full min-h-0 overflow-y-auto scrollbar-hide text-zinc-950">
+    <div className={cx("h-full min-h-0 overflow-y-auto scrollbar-hide text-zinc-950", className)}>
       <section
         className={cx(
           `
-          min-h-full pb-6
-          grid grid-cols-1 xl:grid-cols-[minmax(260px,0.82fr)_minmax(520px,1.58fr)]
+          min-h-full
+          grid grid-cols-1 lg:grid-cols-[minmax(260px,0.82fr)_minmax(520px,1.58fr)]
           gap-4
         `
         )}>
         <aside className="flex min-h-0 flex-col gap-4">
-          <section
-            className={cx(
-              `
-              relative overflow-hidden rounded-lg border border-white/45
-              bg-[linear-gradient(145deg,rgba(255,255,255,0.82),rgba(255,255,255,0.36))]
-              p-4 shadow-[0_18px_50px_rgba(0,0,0,0.14)] backdrop-blur-2xl
-            `
-            )}>
-            <div className="absolute inset-x-0 top-0 h-1 bg-(--theme-color-main)" />
+          <Card>
             <div className="flex items-center gap-3">
               {avatar ? (
                 <NeteaseImage
@@ -184,13 +178,11 @@ const Settings: FC<SettingsProps> = ({ user, settings, updateSettings, updateUse
                 </p>
               </div>
             </div>
-
             <div className="mt-5 grid grid-cols-3 gap-2">
               <MiniStat label="创建" value={user?.userPlaylists.length ?? 0} />
               <MiniStat label="收藏" value={user?.starPlaylists.length ?? 0} />
               <MiniStat label="模式" value={user?.isVIP() ? "VIP" : "普通"} />
             </div>
-
             <button
               type="button"
               title="退出登录"
@@ -207,27 +199,9 @@ const Settings: FC<SettingsProps> = ({ user, settings, updateSettings, updateUse
               <LogOut className="size-3.5" />
               退出当前账号
             </button>
-          </section>
-
-          <section
-            className={cx(
-              `
-              rounded-lg border border-white/40 bg-white/42 p-4
-              shadow-[0_12px_35px_rgba(0,0,0,0.10)] backdrop-blur-2xl
-            `
-            )}>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-[11px] font-black uppercase tracking-[0.22em] text-zinc-500">
-                  Current
-                </p>
-                <h2 className="mt-1 text-2xl font-black tracking-normal">播放策略</h2>
-              </div>
-              <div className="flex size-10 items-center justify-center rounded-md bg-zinc-950 text-white">
-                <Radio className="size-5" />
-              </div>
-            </div>
-            <div className="mt-5 space-y-3">
+          </Card>
+          <Card title="播放策略" subTitle="Current" Icon={Radio}>
+            <div className="space-y-3">
               <SignalLine
                 label="默认音质"
                 value={quality?.detail ?? "HD"}
@@ -244,56 +218,16 @@ const Settings: FC<SettingsProps> = ({ user, settings, updateSettings, updateUse
                 percent={Math.min(100, Math.round((cacheTimeDays / 30) * 100))}
               />
             </div>
-          </section>
+          </Card>
         </aside>
-
         <main className="min-h-0 space-y-4">
-          <section
-            className={cx(
-              `
-              rounded-lg border border-white/45 bg-white/50 p-4
-              shadow-[0_18px_55px_rgba(0,0,0,0.12)] backdrop-blur-2xl
-            `
-            )}>
-            <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-              <div>
-                <p className="text-[11px] font-black uppercase tracking-[0.22em] text-zinc-500">
-                  AiraMusic Settings
-                </p>
-                <h2 className="mt-1 text-3xl font-black tracking-normal">声音与窗口</h2>
-              </div>
-              <div className="flex items-center gap-2 rounded-md border border-zinc-950/10 bg-white/45 px-3 py-2 text-[12px] font-bold text-zinc-600">
-                <SlidersHorizontal className="size-4 text-(--theme-color-main)" />
-                {quality?.label ?? "极高"} ·{" "}
-                {settings.performance.barSpectrum ? "频谱开启" : "安静模式"}
-              </div>
-            </div>
-
+          <Card title="音质" subTitle="Qulity" Icon={SlidersHorizontal}>
             <div className="mt-5 grid grid-cols-1 gap-2 lg:grid-cols-5">
               {qualityOptions.map((option) => {
                 const active = settings.trackQuality.quality === option.value;
                 return (
-                  <button
-                    key={option.value}
-                    type="button"
-                    title={`切换到${option.label}音质`}
-                    onClick={() => updateQuality(option.value)}
-                    className={cx(
-                      `
-                      group relative min-h-28 overflow-hidden rounded-md border p-3 text-left
-                      transition-all duration-300 active:scale-[0.98]
-                    `,
-                      active
-                        ? "border-zinc-950 bg-zinc-950 text-white shadow-[0_16px_35px_rgba(0,0,0,0.22)]"
-                        : "border-zinc-950/10 bg-white/40 text-zinc-700 hover:border-(--theme-color-main)/50 hover:bg-white/70"
-                    )}>
-                    <div
-                      className={cx(
-                        "h-1.5 w-10 rounded-full transition-all duration-300 group-hover:w-14",
-                        option.tone
-                      )}
-                    />
-                    <div className="mt-5 flex items-start justify-between gap-2">
+                  <Card key={option.value} onClick={() => updateQuality(option.value)}>
+                    <div className="flex items-start justify-between gap-2">
                       <div>
                         <p className="text-lg font-black tracking-normal">{option.label}</p>
                         <p
@@ -313,13 +247,12 @@ const Settings: FC<SettingsProps> = ({ user, settings, updateSettings, updateUse
                       )}>
                       {option.detail}
                     </p>
-                  </button>
+                  </Card>
                 );
               })}
             </div>
-          </section>
-
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          </Card>
+          <section className="grid grid-cols-1 gap-4 lg:grid-cols-2">
             <SettingsGroup icon={Gauge} title="性能" eyebrow="Performance">
               <ToggleRow
                 icon={AudioLines}
@@ -350,7 +283,6 @@ const Settings: FC<SettingsProps> = ({ user, settings, updateSettings, updateUse
                 }
               />
             </SettingsGroup>
-
             <SettingsGroup icon={HardDrive} title="缓存" eyebrow="Cache">
               <RangeRow
                 title="缓存容量"
@@ -371,15 +303,8 @@ const Settings: FC<SettingsProps> = ({ user, settings, updateSettings, updateUse
                 onChange={(value) => updateCache({ maxCacheTime: value * DAY })}
               />
             </SettingsGroup>
-          </div>
-
-          <section
-            className={cx(
-              `
-              rounded-lg border border-white/40 bg-white/46 p-4
-              shadow-[0_12px_35px_rgba(0,0,0,0.10)] backdrop-blur-2xl
-            `
-            )}>
+          </section>
+          <Card>
             <div className="flex items-center gap-3">
               <div className="flex size-10 items-center justify-center rounded-md bg-zinc-950 text-white">
                 <Folder className="size-5" />
@@ -420,7 +345,7 @@ const Settings: FC<SettingsProps> = ({ user, settings, updateSettings, updateUse
                 使用默认
               </button>
             </div>
-          </section>
+          </Card>
         </main>
       </section>
     </div>
@@ -468,13 +393,7 @@ const SettingsGroup: FC<{
   children: ReactNode;
 }> = memo(({ icon: Icon, title, eyebrow, children }) => {
   return (
-    <section
-      className={cx(
-        `
-        rounded-lg border border-white/40 bg-white/46 p-4
-        shadow-[0_12px_35px_rgba(0,0,0,0.10)] backdrop-blur-2xl
-      `
-      )}>
+    <Card>
       <div className="mb-3 flex items-center gap-3">
         <div className="flex size-10 items-center justify-center rounded-md bg-zinc-950 text-white">
           <Icon className="size-5" />
@@ -487,7 +406,7 @@ const SettingsGroup: FC<{
         </div>
       </div>
       <div className="divide-y divide-zinc-950/10">{children}</div>
-    </section>
+    </Card>
   );
 });
 

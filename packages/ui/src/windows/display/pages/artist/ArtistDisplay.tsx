@@ -32,10 +32,10 @@ const ArtistDisplay: FC<object> = () => {
 
   return (
     <Artist
+      id={id}
       ref={artistRef}
       activeTrackID={playerBus.data?.track?.id}
-      className="w-full h-full"
-      id={id}
+      className="display-container pb-0!"
       onClick={onTrackPlay}
       onClickAlbum={jumpAlbumDisplay}
       onClickArtist={jumpArtistDisplay}

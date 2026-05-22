@@ -11,6 +11,7 @@ const SettingsDisplay: FC<object> = () => {
 
   return (
     <Settings
+      className="display-container"
       user={user}
       settings={settings}
       updateSettings={updateSettings}

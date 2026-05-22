@@ -65,7 +65,7 @@ const AlbumResult: FC<AlbumResultProps> = ({
           <ul
             ref={containerRef}
             className={cx(
-              "overflow-y-auto scrollbar scrollbar-show grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] items-start content-stretch gap-8 p-2",
+              "w-full h-full contain-strict overflow-y-auto scrollbar scrollbar-show grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] items-start content-stretch gap-8 p-2",
               className
             )}>
             {list.map((item) => {

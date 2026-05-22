@@ -42,7 +42,7 @@ const AlbumDisplay: FC<object> = () => {
     <Album
       id={id}
       ref={albumRef}
-      className="w-full h-full"
+      className="display-container pb-0!"
       heartManager={heartManager}
       playableManager={playableManager}
       activeTrackID={playerBus.data?.track?.id}

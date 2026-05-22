@@ -60,7 +60,10 @@ const PlaylistResult: FC<PlaylistResultProps> = ({
         {list.length > 0 && (
           <PlaylistList
             ref={containerRef}
-            className={cx("overflow-y-auto scrollbar scrollbar-show", className)}
+            className={cx(
+              "w-full h-full contain-strict overflow-y-auto scrollbar scrollbar-show",
+              className
+            )}
             onClickItem={onJumpPlaylist ?? undefined}
             list={list.map((l) => ({
               id: l.id,

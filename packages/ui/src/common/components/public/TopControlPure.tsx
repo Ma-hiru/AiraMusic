@@ -18,7 +18,7 @@ const TopControlPure: FC<TopControlPurProps> = ({ maximizable, mini = true, colo
   const currentWindow = useListenable(ElectronServicesWindow.current);
 
   return (
-    <NoDrag className={cx(`flex flex-row gap-4 select-none relative z-50`, className)}>
+    <NoDrag className={cx(`flex flex-row gap-4 select-none relative`, className)}>
       {isDev && (
         <AppWindowIcon
           color={color}

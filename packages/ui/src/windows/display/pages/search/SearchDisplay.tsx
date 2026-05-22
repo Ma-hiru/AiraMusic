@@ -26,7 +26,7 @@ const SearchDisplay: FC<object> = () => {
     });
   return (
     <Search
-      className="w-full h-full text-(--text-color-on-main)"
+      className="display-container"
       ref={searchRef}
       onClickPlaylist={jumpPlaylistDisplay}
       onClickAlbum={jumpAlbumDisplay}

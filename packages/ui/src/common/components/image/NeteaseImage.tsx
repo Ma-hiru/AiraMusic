@@ -3,6 +3,7 @@ import {
   type ImgHTMLAttributes,
   memo,
   type MouseEvent as ReactMouseEvent,
+  type ReactNode,
   startTransition,
   type SyntheticEvent,
   useCallback,
@@ -38,6 +39,7 @@ type ImageProps = Omit<ImgHTMLAttributes<HTMLImageElement>, "src"> & {
     rootMargin?: string;
     threshold?: number;
   };
+  fallback?: ReactNode;
 };
 
 const NeteaseImage: FC<ImageProps> = ({
@@ -60,6 +62,7 @@ const NeteaseImage: FC<ImageProps> = ({
   cacheLazy = true,
   cacheLazyProps,
   draggable = false,
+  fallback,
   ...rest
 }) => {
   const [visible, setVisible] = useState(false);
@@ -183,23 +186,22 @@ const NeteaseImage: FC<ImageProps> = ({
       ref={containerRef}
       onClick={wrapClick}
       className={cx(
-        `
-          bg-white/10 backdrop-blur-sm
-          border-none overflow-hidden
-        `,
+        "overflow-hidden",
         shadow && shadowMap[shadow][shadowColor],
+        error && !fallback && "bg-white/10 backdrop-blur-sm",
         className
       )}>
       <img
         {...rest}
         draggable={draggable}
-        className={cx("w-full h-full object-cover", error && "invisible", imageClassName)}
+        className={cx("w-full h-full object-cover", error && "invisible w-0 h-0", imageClassName)}
         src={source?.src}
         alt={alt ?? source?.alt}
         loading={loading}
         decoding={decoding}
         onError={handleLoadError}
       />
+      {error && fallback}
     </div>
   );
 };

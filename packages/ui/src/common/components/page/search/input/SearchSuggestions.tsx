@@ -20,9 +20,9 @@ const SearchSuggestions: FC<SearchSuggestionsProps> = ({ suggestions, onClick, r
       ref={ref}
       className={cx(
         `
-        absolute top-12 z-50 w-full space-y-1.5 rounded-lg border border-zinc-950/10
-        bg-white/82 p-1 text-zinc-900 shadow-[0_18px_45px_rgba(0,0,0,0.16)]
-        backdrop-blur-2xl transition-all ease-in-out duration-300
+        absolute top-12 z-60 w-full space-y-1.5 rounded-lg border border-white/30
+         bg-white/20 backdrop-blur-[10px]   p-1 text-(--theme-color-on-main) shadow-md
+          transition-all ease-in-out duration-300
         `
       )}>
       {suggestions.map((suggestion) => {
