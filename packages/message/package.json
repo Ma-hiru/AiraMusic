@@ -2,6 +2,11 @@
   "name": "@mahiru/message",
   "type": "module",
   "version": "1.0.0",
+  "files": [
+    "main.ts",
+    "renderer.ts",
+    "renderer.ts"
+  ],
   "dependencies": {
     "@mahiru/log": "workspace:*"
   }

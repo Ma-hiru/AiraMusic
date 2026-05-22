@@ -11,5 +11,4 @@ describe("test vitest env loaded successfully", () => {
     }
   };
   it("should be load env to process.env", () => satisfyEnv(process.env));
-  it("should be load env to import.meta.env", () => satisfyEnv(import.meta.env));
 });

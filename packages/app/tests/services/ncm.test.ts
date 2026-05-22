@@ -1,4 +1,4 @@
-import NeteaseMusicApiService from "aira-music/src/services/ncm";
+import NeteaseMusicApiService from "@mahiru/app/services/ncm";
 
 describe("test ncm server", () => {
   const port = 5000;

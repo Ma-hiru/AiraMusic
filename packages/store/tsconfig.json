@@ -1,0 +1,14 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "target": "esnext",
+    "lib": ["ESNext"],
+    "composite": true,
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "types": ["node"],
+    "outDir": "dist"
+  },
+  "files": ["index.ts"],
+  "include": ["../../types/**/*"]
+}

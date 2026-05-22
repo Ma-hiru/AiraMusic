@@ -9,8 +9,8 @@ import {
   useRef,
   useState
 } from "react";
-import { DiscAlbum, ListMusic, Music2, UserRound } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { DiscAlbum, ListMusic, Music2, UserRound } from "lucide-react";
 import { AlbumResult, ArtistResult, PlaylistResult, TrackResult } from "./content";
 import type { SearchInputRef } from "@mahiru/ui/common/components/page/search/input/SearchInput";
 import { NeteaseHistory, NeteaseTrackRecord } from "@mahiru/ui/common/source/netease/models";

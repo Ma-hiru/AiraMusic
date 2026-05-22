@@ -1,42 +1,7 @@
 {
-  "compilerOptions": {
-    "target": "ESNext",
-    "useDefineForClassFields": true,
-    "lib": ["ESNext", "DOM", "DOM.Iterable", "WebWorker"],
-    "allowJs": false,
-    "skipLibCheck": true,
-    "esModuleInterop": true,
-    "ignoreDeprecations": "6.0",
-    "allowSyntheticDefaultImports": true,
-    "strict": true,
-    "forceConsistentCasingInFileNames": false,
-    "noUncheckedIndexedAccess": true,
-    "useUnknownInCatchVariables": true,
-    "module": "ESNext",
-    "moduleResolution": "bundler",
-    "allowImportingTsExtensions": false,
-    "resolveJsonModule": true,
-    "verbatimModuleSyntax": true,
-    "strictNullChecks": true,
-    "noEmit": true,
-    "jsx": "react-jsx",
-    "removeComments": true,
-    "sourceMap": false,
-    "paths": {
-      "@mahiru/ui/*": ["./packages/ui/src/*"],
-      "@mahiru/app/*": ["./packages/app/src/*"],
-      "@mahiru/message/main": ["./packages/message/main.ts"],
-      "@mahiru/message/renderer": ["./packages/message/renderer.ts"],
-      "@mahiru/message/preload": ["./packages/message/preload.ts"],
-      "@mahiru/*": [
-        "./packages/*/src/index.ts",
-        "./packages/*/src/index.tsx",
-        "./packages/*/index.ts",
-        "./packages/*/index.tsx"
-      ]
-    },
-    "types": ["vitest/globals"]
-  },
-  "include": ["packages/**/*", "types", "eslint.config.ts", "scripts", "tests/**/*"],
-  "exclude": ["node_modules", "dist", "temp"]
+  "files": [],
+  "references": [
+    { "path": "./packages/ui/tsconfig.json" },
+    { "path": "./packages/app/tsconfig.json" }
+  ]
 }

@@ -1,0 +1,17 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ESNext"],
+    "types": ["vitest/globals", "node"],
+    "noEmit": true,
+    "paths": {
+      "@mahiru/app/*": ["../src/*"]
+    }
+  },
+  "references": [
+    { "path": "../tsconfig.json" },
+    { "path": "../../log/tsconfig.json" },
+    { "path": "../../message/tsconfig.json" }
+  ],
+  "include": [".", "../../../types/**/*"]
+}

@@ -1,0 +1,14 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "target": "esnext",
+    "lib": ["ESNext", "DOM"],
+    "composite": true,
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "types": ["node"],
+    "outDir": "dist"
+  },
+  "references": [{ "path": "../log/tsconfig.json" }],
+  "include": ["../../types/**/*", "."]
+}

@@ -1,0 +1,19 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ESNext", "DOM", "DOM.Iterable", "WebWorker"],
+    "types": ["vitest/globals", "vite/client", "node"],
+    "jsx": "react-jsx",
+    "noEmit": true,
+    "paths": {
+      "@mahiru/ui/*": ["../src/*"]
+    }
+  },
+  "references": [
+    { "path": "../tsconfig.json" },
+    { "path": "../../log/tsconfig.json" },
+    { "path": "../../message/tsconfig.json" },
+    { "path": "../../wasm/tsconfig.json" }
+  ],
+  "include": [".", "../../../types/**/*"]
+}
