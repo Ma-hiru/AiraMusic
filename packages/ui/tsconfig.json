@@ -4,8 +4,11 @@
     "lib": ["ESNext", "DOM", "DOM.Iterable", "WebWorker"],
     "types": ["vite/client"],
     "jsx": "react-jsx",
-    "tsBuildInfoFile": "./node_modules/.buildinfo",
-    "noEmit": true,
+    "noEmit": false,
+    "composite": true,
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "outDir": "./dist-types",
     "paths": {
       "@mahiru/ui/*": ["./src/*"]
     }

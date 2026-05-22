@@ -1,8 +1,16 @@
 import AppEnv from "../../scripts/env";
 import { defineConfig } from "vitest/config";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const __dirname = fileURLToPath(new URL(".", import.meta.url));
 
 export default defineConfig({
+  resolve: {
+    alias: {
+      "@mahiru/app": join(__dirname, "src")
+    }
+  },
   test: {
     include: ["tests/**/*.test.{ts,tsx,cts,mts,js,cjs,mjs}"],
     globals: true,
@@ -13,7 +21,7 @@ export default defineConfig({
 });
 
 function loadEnv() {
-  AppEnv.setEnvPath(join(process.cwd(), "../../"));
+  AppEnv.setEnvPath(join(__dirname, "../../"));
   const loadedEnv = AppEnv.load("test");
   const defineEnv: Record<string, string> = {};
   for (const k in loadedEnv) {

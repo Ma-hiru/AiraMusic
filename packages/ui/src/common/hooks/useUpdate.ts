@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 
-interface Update {
+export interface Update {
   (): void;
   count: number;
 }

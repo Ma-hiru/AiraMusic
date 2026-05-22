@@ -4,6 +4,7 @@
     "lib": ["ESNext"],
     "types": ["vitest/globals", "node"],
     "noEmit": true,
+    "tsBuildInfoFile": "../node_modules/.buildinfo-tests",
     "paths": {
       "@mahiru/app/*": ["../src/*"]
     }
@@ -11,6 +12,7 @@
   "references": [
     { "path": "../tsconfig.json" },
     { "path": "../../log/tsconfig.json" },
+    { "path": "../../store/tsconfig.json" },
     { "path": "../../message/tsconfig.json" }
   ],
   "include": [".", "../../../types/**/*"]

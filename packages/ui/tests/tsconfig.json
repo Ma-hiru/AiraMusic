@@ -5,6 +5,7 @@
     "types": ["vitest/globals", "vite/client", "node"],
     "jsx": "react-jsx",
     "noEmit": true,
+    "tsBuildInfoFile": "../node_modules/.buildinfo-tests",
     "paths": {
       "@mahiru/ui/*": ["../src/*"]
     }

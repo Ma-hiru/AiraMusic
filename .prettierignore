@@ -5,6 +5,7 @@
 **/node_modules
 **/.idea
 **/dist
+**/dist-types
 **/pkg
 pnpm-lock.yaml
 yarn.lock

@@ -1,4 +1,4 @@
-import { EqError } from "@mahiru/log/src/err";
+import { EqError } from "@mahiru/log";
 
 type Task<T> = NormalFunc<[], T | Promise<T>>;
 
@@ -6,7 +6,7 @@ export class Lock {
   private locked = false;
   private queue: NormalFunc[] = [];
 
-  acquire() {
+  acquire(): Promise<void> {
     if (!this.locked) {
       this.locked = true;
       return Promise.resolve();
@@ -134,7 +134,7 @@ export class OwnershipLock {
   /**
    * 尝试成为 owner
    */
-  acquire() {
+  acquire(): symbol | undefined {
     if (this.owner) return;
     const token = Symbol(`lock-owner-${Date.now()}`);
     this.owner = token;

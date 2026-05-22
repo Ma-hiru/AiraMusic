@@ -1,6 +1,6 @@
 import axios, { type AxiosRequestConfig, type AxiosResponse } from "axios";
 import { Log } from "@mahiru/ui/common/constants/dev";
-import { EqError } from "@mahiru/log/src/err";
+import { EqError } from "@mahiru/log";
 import { NeteaseServicesAuth } from "../../../source/netease/services";
 import HTTPConstants from "@mahiru/ui/common/constants/http";
 import AppToast from "../../../components/toast";

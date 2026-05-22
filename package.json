@@ -29,7 +29,7 @@
     "dev:electron": "yarn wait-on http://localhost:8827 && yarn wait-on packages/app/dist/app/main.mjs && yarn electronmon ./packages/app --inspect=9229",
     "clean": "yarn clean:vite && yarn clean:cargo && yarn clean:go && yarn clean:dist",
     "clean:dist": "yarn rimraf dist && yarn workspace @mahiru/wasm clean:dist && yarn workspace @mahiru/store clean:dist && yarn workspace @mahiru/ui clean:dist && yarn workspace aira-music clean:dist",
-    "clean:vite": "yarn rimraf ./ui/node_modules/.vite",
+    "clean:vite": "yarn rimraf ./packages/ui/node_modules/.vite",
     "clean:cargo": "yarn workspace @mahiru/wasm clean:cargo",
     "clean:go": "yarn workspace @mahiru/store clean:go",
     "devtools:react": "yarn dlx react-devtools",

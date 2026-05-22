@@ -1,6 +1,6 @@
 import axios from "axios";
 import HTTPConstants from "@mahiru/ui/common/constants/http";
-import { EqError } from "@mahiru/log/src/err";
+import { EqError } from "@mahiru/log";
 
 export const cacheRequest = axios.create({
   baseURL: HTTPConstants.CacheBaseURL,

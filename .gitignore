@@ -12,6 +12,7 @@
 node_modules
 target
 dist
+dist-types
 deploy
 app/logs
 coverage

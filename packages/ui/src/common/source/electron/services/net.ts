@@ -1,6 +1,6 @@
 import { Log } from "@mahiru/ui/common/constants/dev";
 import { Listener } from "../../../utils/listenable";
-import { EqError } from "@mahiru/log/src/err";
+import { EqError } from "@mahiru/log";
 import Init from "../../../utils/init";
 import _AppRenderer from "./renderer";
 
