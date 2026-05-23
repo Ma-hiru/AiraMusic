@@ -5,7 +5,8 @@
   "files": [
     "main.ts",
     "renderer.ts",
-    "renderer.ts"
+    "renderer.ts",
+    "src"
   ],
   "dependencies": {
     "@mahiru/log": "workspace:*"

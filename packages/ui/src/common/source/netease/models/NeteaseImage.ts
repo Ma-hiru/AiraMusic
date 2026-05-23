@@ -165,7 +165,7 @@ export class NeteaseLocalImage extends NeteaseNetworkImage {
     this.localSize = props.localSize ?? props.size ?? NeteaseImageSize.raw;
   }
 
-  get src() {
+  override get src() {
     return this.localURL;
   }
 

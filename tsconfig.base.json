@@ -7,6 +7,13 @@
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "strict": true,
+    "noImplicitOverride": true,
+    "allowUnreachableCode": false,
+    "allowUnusedLabels": false,
+    "exactOptionalPropertyTypes": false,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitReturns": false,
+    "noPropertyAccessFromIndexSignature": true,
     "forceConsistentCasingInFileNames": true,
     "noUncheckedIndexedAccess": true,
     "useUnknownInCatchVariables": true,
@@ -15,7 +22,6 @@
     "allowImportingTsExtensions": false,
     "resolveJsonModule": true,
     "verbatimModuleSyntax": true,
-    "strictNullChecks": true,
     "removeComments": true,
     "sourceMap": false
   }

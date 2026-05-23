@@ -263,7 +263,7 @@ export default class AppPlayer extends Listenable {
     });
   }
 
-  [Symbol.dispose]() {
+  override [Symbol.dispose]() {
     this.disconnect();
     this.current.track = null;
     this.current.lyric = null;

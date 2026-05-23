@@ -111,7 +111,7 @@ export default class AppPlaylist extends Listenable {
     };
   }
 
-  [Symbol.dispose]() {
+  override [Symbol.dispose]() {
     super[Symbol.dispose]();
     this.playlist = [];
     this.playlistBackup = [];

@@ -34,7 +34,7 @@ export default defineConfig((options) => {
       minify: mode === "production",
       dts: false,
       external: ["electron", "esbuild", "esbuild/*", "node:*", "window"],
-      noExternal: ["@mahiru/log", "@mahiru/store", "@mahiru/message"],
+      noExternal: ["@mahiru/*"],
       esbuildOptions: (esbuildOptions) => {
         esbuildOptions.alias = {
           ...(esbuildOptions.alias || {}),

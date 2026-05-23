@@ -5,10 +5,10 @@ export function getLinuxDesktop() {
   if (!isLinux) return null;
 
   const env = (
-    process.env.XDG_CURRENT_DESKTOP ||
-    process.env.DESKTOP_SESSION ||
-    process.env.GDMSESSION ||
-    process.env.XDG_SESSION_DESKTOP ||
+    process.env["XDG_CURRENT_DESKTOP"] ||
+    process.env["DESKTOP_SESSION"] ||
+    process.env["GDMSESSION"] ||
+    process.env["XDG_SESSION_DESKTOP"] ||
     ""
   ).toLowerCase();
 

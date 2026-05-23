@@ -328,7 +328,7 @@ export default class _AppWindow extends Listenable<WindowBusEvent> {
     return `AppWindow(${this.type})`;
   }
 
-  [Symbol.dispose]() {
+  override [Symbol.dispose]() {
     super[Symbol.dispose]();
     _AppRenderer.Message.remove(this.id);
   }

@@ -2,6 +2,8 @@
   "name": "@mahiru/store",
   "version": "1.0.0",
   "main": "index.ts",
+  "type": "module",
+  "types": "dist/index.d.ts",
   "files": [
     "dist/*",
     "index.ts"

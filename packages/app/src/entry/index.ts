@@ -6,7 +6,7 @@ export default class Entry {
 
   private static commands() {
     app.enableSandbox();
-    process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = "true";
+    process.env["ELECTRON_DISABLE_SECURITY_WARNINGS"] = "true";
   }
 
   static create() {

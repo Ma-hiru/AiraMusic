@@ -16,7 +16,7 @@ export default class AppHistory extends Listenable {
     this.maxLength = props?.maxLength ?? 500;
   }
 
-  [Symbol.dispose]() {
+  override [Symbol.dispose]() {
     super[Symbol.dispose]();
   }
 

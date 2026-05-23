@@ -11,7 +11,8 @@
     "outDir": "./dist-types",
     "paths": {
       "@mahiru/ui/*": ["./src/*"]
-    }
+    },
+    "assumeChangesOnlyAffectDirectDependencies": true
   },
   "references": [
     { "path": "../log/tsconfig.json" },

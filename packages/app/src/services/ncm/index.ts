@@ -17,8 +17,8 @@ export default class NeteaseMusicApiService {
     } catch {
       await writeFile(tokenPath, "");
     }
-    if (!process.env.NCM_API_ANON_TOKEN) {
-      process.env.NCM_API_ANON_TOKEN = tokenPath;
+    if (!process.env["NCM_API_ANON_TOKEN"]) {
+      process.env["NCM_API_ANON_TOKEN"] = tokenPath;
     }
     return tokenPath;
   }

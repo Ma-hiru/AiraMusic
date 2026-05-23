@@ -1,6 +1,7 @@
 {
   "name": "@mahiru/log",
   "type": "module",
+  "types": "dist-types/src/index.d.ts",
   "version": "1.0.0",
   "main": "src/index.ts"
 }

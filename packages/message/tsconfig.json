@@ -5,9 +5,10 @@
     "lib": ["ESNext", "DOM"],
     "composite": true,
     "declaration": true,
+    "declarationMap": true,
     "emitDeclarationOnly": true,
     "types": ["node"],
-    "outDir": "dist"
+    "outDir": "dist-types"
   },
   "references": [{ "path": "../log/tsconfig.json" }],
   "include": ["../../types/**/*", "."]

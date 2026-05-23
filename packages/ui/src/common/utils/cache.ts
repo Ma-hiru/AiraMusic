@@ -2,17 +2,17 @@ import type { CacheObjectAsyncInterface, CacheObjectInterface } from "../store/c
 import { CacheStore } from "../store/cache";
 import { useMemo } from "react";
 
-export function useCacheRequest<A extends unknown[], R>(
-  request: (...args: A) => Promise<R>,
-  buildKey: (...args: A) => string | number,
+export function useCacheRequest<A extends readonly unknown[], R>(
+  request: PromiseFunc<A, R>,
+  buildKey: NormalFunc<A, string | number>,
   type: "memory" | "browser" | "local"
 ): typeof request {
   return useMemo(() => createCacheRequest(request, buildKey, type), [buildKey, request, type]);
 }
 
-export function createCacheRequest<A extends unknown[], R>(
-  request: (...args: A) => Promise<R>,
-  buildKey: (...args: A) => string | number,
+export function createCacheRequest<A extends readonly unknown[], R>(
+  request: PromiseFunc<A, R>,
+  buildKey: NormalFunc<A, string | number>,
   type: "memory" | "browser" | "local"
 ) {
   const cache = getCacheManager(type);

@@ -8,23 +8,38 @@
 
 ## 界面展示
 
+### 多窗口
+
+![所有窗口](docs/images/all_windows.png)
+![双窗口](docs/images/tow_windows.png)
+
+## 歌单
+
+![歌单](docs/images/playlist.png)
+
 ### 播放页
 
 ![播放页1](docs/images/player.png)
 ![播放页2](docs/images/player2.png)
 ![播放页3](docs/images/player3.png)
 
+## 专辑
+
+![专辑](docs/images/album.png)
+
+### 歌手
+
+![歌手2](docs/images/artist.png)
+![歌手2](docs/images/artist_album.png)
+
+## 搜索
+
+![搜索](docs/images/search.png)
+
 ### 首页
 
-![首页](docs/images/home.png)
-
-### 主界面
-
-![主界面](docs/images/main.png)
-
-### 歌词页
-
-![桌面歌词](docs/images/lyric.png)
+![首页1](docs/images/home.png)
+![首页2](docs/images/home2.png)
 
 ### 托盘页
 
@@ -32,7 +47,7 @@
 
 ## 核心特性
 
-- 多窗口架构：主界面、播放页、桌面歌词、托盘、图片查看等窗口独立运行，互不干扰。
+- 多窗口架构：主界面、搜索设置、歌单、桌面歌词、托盘、图片查看等窗口独立运行，互不干扰。
 - 混合前端技术栈：主界面采用 React ，部分轻量窗口使用 Vue ，基于 Vite 多入口构建。
 - 分层与模块化设计：前后端逻辑解耦，采用多子包（workspace）组织，便于扩展。
 - 性能优化：使用 Rust（WASM）与 Go 实现部分高性能模块。

@@ -17,7 +17,7 @@ export class NeteaseHistory extends NeteaseTrackRecord {
     this.time = props.time;
   }
 
-  static fromObject<U extends NeteaseTrackRecord | NeteaseHistory, T extends Optional<U>>(
+  static override fromObject<U extends NeteaseTrackRecord | NeteaseHistory, T extends Optional<U>>(
     record: T
   ): T extends Falsy ? null : U {
     if (!record) return null as T extends Falsy ? null : U;
