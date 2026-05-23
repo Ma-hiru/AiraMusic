@@ -1,4 +1,4 @@
-import dayjs from "dayjs";
+import dayjs, { type OpUnitType, type QUnitType } from "dayjs";
 
 export class FormatNumber {
   static count(count: Optional<number>) {
@@ -37,5 +37,23 @@ export class FormatNumber {
     const seconds = Math.floor((time % (60 * base)) / base);
     const paddedSeconds = seconds.toString().padStart(2, "0");
     return `${minutes}${split}${paddedSeconds}`;
+  }
+
+  static diff(timestamp: Optional<number>, unit: QUnitType | OpUnitType) {
+    if (timestamp == null) return 0;
+    const now = dayjs();
+    const before = dayjs(timestamp);
+    return now.diff(before, unit);
+  }
+
+  static yearsAndDays(timestamp: Optional<number>) {
+    if (timestamp == null) return "-天";
+    const start = dayjs(timestamp);
+    const today = dayjs();
+    const years = today.diff(start, "year");
+    const afterYears = start.add(years, "year");
+    const days = Math.max(today.diff(afterYears, "day"), 1);
+    if (years <= 0) return `${days}天`;
+    return `${years}年${days}天`;
   }
 }

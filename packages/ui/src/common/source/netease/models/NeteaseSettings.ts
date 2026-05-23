@@ -8,7 +8,7 @@ export interface NeteaseSettingsModel {
   performance: {
     barSpectrum: boolean;
   };
-  window: {
+  preference: {
     defaultUseDisplayWindow: boolean;
   };
   cache: {
@@ -31,7 +31,7 @@ export const defaultSettings: NeteaseSettingsModel = {
     maxCacheTime: 7 * 24 * 60 * 60 * 1000, // 7天
     cachePath: ""
   },
-  window: {
+  preference: {
     defaultUseDisplayWindow: false
   }
 };
@@ -40,13 +40,13 @@ export class NeteaseSettings implements NeteaseSettingsModel {
   trackQuality;
   performance;
   cache;
-  window;
+  preference;
 
   constructor(props: NeteaseSettingsModel) {
     this.trackQuality = props.trackQuality;
     this.performance = props.performance;
     this.cache = props.cache;
-    this.window = props.window;
+    this.preference = props.preference;
   }
 
   static readonly default = new NeteaseSettings(defaultSettings);

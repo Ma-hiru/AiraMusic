@@ -12,7 +12,7 @@ import {
   useState
 } from "react";
 import { cx } from "@emotion/css";
-import { NeteaseLocalImage, NeteaseNetworkImage } from "../../source/netease/models/NeteaseImage";
+import { NeteaseLocalImage, NeteaseNetworkImage } from "@mahiru/ui/common/source/netease/models";
 import { NeteaseImageSize } from "../../enum";
 import { NeteaseServicesImage } from "../../source/netease/services";
 import { ElectronServicesWindow } from "../../source/electron/services";
@@ -181,14 +181,21 @@ const NeteaseImage: FC<ImageProps> = ({
     };
   }, [image]);
 
+  const shadowBaseLight = shadow === "base" && shadowColor === "light";
+  const shadowBaseDark = shadow === "base" && shadowColor === "dark";
+  const shadowFloatLight = shadow === "float" && shadowColor === "light";
+  const shadowFloatDark = shadow === "float" && shadowColor === "dark";
   return (
     <div
       ref={containerRef}
       onClick={wrapClick}
       className={cx(
         "overflow-hidden",
-        shadow && shadowMap[shadow][shadowColor],
         error && !fallback && "bg-white/10 backdrop-blur-sm",
+        shadowBaseDark && "shadow-sm",
+        shadowBaseLight && "shadow-[0_1px_2px_rgba(0,0,0,0.12)]",
+        shadowFloatDark && "shadow-[0_0_0_1px_rgba(255,255,255,0.06),0_8px_24px_rgba(0,0,0,0.4)]",
+        shadowFloatLight && "shadow-[0_0_0_1px_rgba(0,0,0,0.04),0_4px_12px_rgba(0,0,0,0.18)]",
         className
       )}>
       <img
@@ -205,19 +212,5 @@ const NeteaseImage: FC<ImageProps> = ({
     </div>
   );
 };
-export default memo(NeteaseImage);
 
-const shadowMap = {
-  float: {
-    dark: "shadow-[0_0_0_1px_rgba(255,255,255,0.06),0_8px_24px_rgba(0,0,0,0.4)]",
-    light: "shadow-[0_0_0_1px_rgba(0,0,0,0.04),0_4px_12px_rgba(0,0,0,0.18)]"
-  },
-  base: {
-    dark: "shadow-sm",
-    light: "shadow-[0_1px_2px_rgba(0,0,0,0.12)]"
-  },
-  none: {
-    dark: "",
-    light: ""
-  }
-} as const;
+export default memo(NeteaseImage);

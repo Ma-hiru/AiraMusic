@@ -24,7 +24,7 @@ export function useArtistOrAlbumPageJump(
   const jumpAlbumPage = useCallback(
     (id: number) => {
       if (id === propsRef.current.currentAlbumID) return;
-      if (settingsRef.current.window.defaultUseDisplayWindow) {
+      if (settingsRef.current.preference.defaultUseDisplayWindow) {
         return ElectronServicesWindow.display.openAwait().then(() => {
           ElectronServicesBus.display.send({
             type: "album",
@@ -40,7 +40,7 @@ export function useArtistOrAlbumPageJump(
   const jumpArtistPage = useCallback(
     (id: number) => {
       if (id === propsRef.current.currentArtistID) return;
-      if (settingsRef.current.window.defaultUseDisplayWindow) {
+      if (settingsRef.current.preference.defaultUseDisplayWindow) {
         return ElectronServicesWindow.display.openAwait().then(() => {
           ElectronServicesBus.display.send({
             type: "artist",
@@ -57,7 +57,7 @@ export function useArtistOrAlbumPageJump(
     (id: number, source: "normal" | "like" | "history") => {
       if (source !== "like" && id === Number(playlistRef.current.id)) return;
       if (playlistRef.current.source === "like" && !id) return;
-      if (settingsRef.current.window.defaultUseDisplayWindow && source !== "history") {
+      if (settingsRef.current.preference.defaultUseDisplayWindow && source !== "history") {
         return ElectronServicesWindow.display.openAwait().then(() => {
           ElectronServicesBus.display.send({
             type: "playlist",
