@@ -22,7 +22,7 @@ const TopCover: FC<TopCoverProps> = ({ summary, coverCacheKey, onCoverLoaded }) 
     () =>
       NeteaseNetworkImage.fromPlaylistCover(summary)
         ?.setSize(ImageConstants.PlaylistPageCoverSize)
-        .setCacheKey(coverCacheKey),
+        .setCacheKey((coverCacheKey ?? "") + (summary?.updateTime ?? "")),
     [summary, coverCacheKey]
   );
 

@@ -7,6 +7,8 @@ export interface NeteaseSettingsModel {
   };
   performance: {
     barSpectrum: boolean;
+    playerSpectrum: boolean;
+    spectrumFps: number;
   };
   preference: {
     defaultUseDisplayWindow: boolean;
@@ -24,7 +26,9 @@ export const defaultSettings: NeteaseSettingsModel = {
     quality: TrackQuality.h
   },
   performance: {
-    barSpectrum: true
+    barSpectrum: true,
+    playerSpectrum: true,
+    spectrumFps: 30
   },
   cache: {
     maxCacheSize: 1024 * 1024 * 1024 * 5, // 5GB

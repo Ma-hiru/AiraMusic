@@ -51,7 +51,7 @@ const SettingsContent: FC<SettingsContentProps> = ({ user, settings, updateSetti
     [patchSettings, settings.cache]
   );
   return (
-    <main className="space-y-4">
+    <main className="lg:h-full lg:contain-strict space-y-4 lg:overflow-y-auto scrollbar lg:scrollbar-show">
       <Quality data={settings.trackQuality} updateQuality={updateQuality} />
       <Performance data={settings.performance} patchSettings={patchSettings} />
       <Preference data={settings.preference} patchSettings={patchSettings} />

@@ -5,7 +5,7 @@ import { CacheStore } from "../../../store/cache";
 
 export default class _NeteaseLyricSource {
   //region cache
-  private static readonly cacheKey = "netease_lyric_v9";
+  private static readonly cacheKey = "netease_lyric_v12";
 
   private static storeCache(id: number, lyric: NeteaseLyricModel) {
     return CacheStore.local.object.store<NeteaseLyricModel>(

@@ -14,31 +14,48 @@ interface QualityProps {
 const Quality: FC<QualityProps> = ({ data, updateQuality }) => {
   return (
     <Card title="音质" subTitle="Qulity" Icon={SlidersHorizontal}>
-      <div className="mt-5 grid grid-cols-1 gap-2 lg:grid-cols-5">
+      <div className="mt-5 grid grid-cols-[repeat(auto-fill,minmax(8rem,1fr))] gap-3">
         {qualityOptions.map((option) => {
           const active = data.quality === option.value;
           return (
             <Card key={option.value} onClick={() => updateQuality(option.value)}>
-              <div className="flex items-start justify-between gap-2">
-                <div>
-                  <p className="text-lg font-black tracking-normal">{option.label}</p>
+              <div className="flex justify-between gap-1 h-full">
+                <section className="flex flex-col justify-between items-start h-full">
+                  <div
+                    className={cx(
+                      "text-md font-black tracking-normal flex justify-center items-center gap-1",
+                      active && "text-(--theme-color-main)"
+                    )}>
+                    {option.label}
+                  </div>
                   <p
                     className={cx(
-                      "mt-1 text-[11px] font-bold",
-                      active ? "text-white/60" : "text-zinc-500"
+                      "mt-1 text-[11px] font-bold shrink-0",
+                      active && "text-(--theme-color-main)"
                     )}>
                     {option.description}
                   </p>
-                </div>
-                {active && <Check className="size-4 shrink-0 text-(--theme-color-main)" />}
+                </section>
+                <section className="flex flex-col justify-between items-end h-full">
+                  <Check
+                    className={cx(
+                      "size-3.5 shrink-0 text-(--theme-color-main)",
+                      !active && "opacity-0"
+                    )}
+                  />
+                  {option.vip && (
+                    <span
+                      className={cx(
+                        `
+                          text-[8px] font-black rounded-sm px-1.5 border border-white/30
+                        `,
+                        active && "bg-(--theme-color-main) text-(--text-color-on-main)"
+                      )}>
+                      VIP
+                    </span>
+                  )}
+                </section>
               </div>
-              <p
-                className={cx(
-                  "absolute bottom-2 right-3 text-[11px] font-black",
-                  active ? "text-white/45" : "text-zinc-400"
-                )}>
-                {option.detail}
-              </p>
             </Card>
           );
         })}
@@ -49,46 +66,32 @@ const Quality: FC<QualityProps> = ({ data, updateQuality }) => {
 
 export default memo(Quality);
 
-const qualityOptions: {
-  label: string;
-  detail: string;
-  value: TrackQuality;
-  tone: string;
-  description: string;
-}[] = [
+const qualityOptions = [
   {
-    label: "流畅",
-    detail: "128K",
+    label: "128K",
     value: TrackQuality.l,
-    tone: "bg-emerald-500",
-    description: "移动网络友好"
+    description: "标准"
   },
   {
-    label: "均衡",
-    detail: "192K",
+    label: "192K",
     value: TrackQuality.m,
-    tone: "bg-sky-500",
-    description: "日常播放"
+    description: "平衡"
   },
   {
-    label: "极高",
-    detail: "320K",
+    label: "320K",
     value: TrackQuality.h,
-    tone: "bg-(--theme-color-main)",
-    description: "默认推荐"
+    description: "极高"
   },
   {
-    label: "无损",
-    detail: "SQ",
+    label: "SQ",
     value: TrackQuality.sq,
-    tone: "bg-amber-400",
-    description: "收藏曲库"
+    description: "无损",
+    vip: true
   },
   {
-    label: "母带",
-    detail: "Hi-Res",
+    label: "Hi-Res",
     value: TrackQuality.hr,
-    tone: "bg-fuchsia-500",
-    description: "优先最高质量"
+    description: "高解析度无损",
+    vip: true
   }
 ];

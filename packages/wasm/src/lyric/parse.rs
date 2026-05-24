@@ -1,32 +1,96 @@
 #![allow(non_snake_case)]
 use super::model::{Lyric, LyricLine};
-use crate::lyric::utils::split_lyric_as_map;
+use crate::lyric::utils::{split_lyric_as_lines, take_nearest_lyric_line};
 use regex::Regex;
 use serde_wasm_bindgen::{from_value, to_value};
 use wasm_bindgen::{JsValue, prelude::wasm_bindgen};
 
+/// 网易云的原文/翻译/音译经常存在几十到几百毫秒的时间轴偏移。
+/// 这里不做严格 startTime 相等匹配，而是在较小窗口内找最近行，避免官方数据轻微错位时整行丢失。
+const LYRIC_MATCH_TOLERANCE_MS: i32 = 300;
+
+/// JS 侧调用的网易云歌词入口。
+///
+/// `raw` 是主歌词，`ts` 是翻译，`rm` 是音译；三者都已经由 JS 侧的 AMLL parser
+/// 转成相同的 `LyricLine` 结构后传进来。这里负责把三份歌词按时间线合并成展示层模型。
 #[wasm_bindgen]
 pub fn parseNeteaseLyric(raw: JsValue, ts: JsValue, rm: JsValue) -> JsValue {
-    let mut raw_lyric = from_value::<Vec<LyricLine>>(raw).unwrap_or_default();
+    let raw_lyric = from_value::<Vec<LyricLine>>(raw).unwrap_or_default();
+    let ts_lyric = from_value::<Vec<LyricLine>>(ts).unwrap_or_default();
+    let rm_lyric = from_value::<Vec<LyricLine>>(rm).unwrap_or_default();
+
+    to_value::<Lyric>(&parse_netease_lyric_lines(raw_lyric, ts_lyric, rm_lyric)).unwrap()
+}
+
+/// 合并原文、翻译、音译，并补齐展示层需要的派生信息。
+///
+/// 解析顺序很重要：
+/// 1. 先用容错时间匹配外部翻译/音译；
+/// 2. 再解析主歌词里的行内翻译，因为行内翻译应覆盖该行 `translatedLyric`；
+/// 3. 最后统一更新空行、对唱、注音等额外标记。
+fn parse_netease_lyric_lines(
+    mut raw_lyric: Vec<LyricLine>,
+    ts_lyric: Vec<LyricLine>,
+    rm_lyric: Vec<LyricLine>,
+) -> Lyric {
     if raw_lyric.is_empty() {
-        return to_value::<Lyric>(&Lyric::default()).unwrap();
+        return Lyric::default();
     }
 
-    let mut ts_lyric_map = split_lyric_as_map(from_value::<Vec<LyricLine>>(ts).unwrap_or_default());
-    let mut rm_lyric_map = split_lyric_as_map(from_value::<Vec<LyricLine>>(rm).unwrap_or_default());
-    let rmExisted = rm_lyric_map.len() >= raw_lyric.len() / 2;
-    let tlExisted = ts_lyric_map.len() >= raw_lyric.len() / 2;
+    let raw_lyric_count = raw_lyric
+        .iter()
+        .filter(|line| !line.words.is_empty())
+        .count();
+    let mut ts_lyric_lines = split_lyric_as_lines(ts_lyric);
+    let mut rm_lyric_lines = split_lyric_as_lines(rm_lyric);
+    let mut rm_matched_count = 0;
+    let mut tl_matched_count = 0;
+    let mut inline_tl_matched_count = 0;
 
-    for line in raw_lyric.iter_mut() {
+    // 对每一行记录“下一条非空原文”的时间。
+    // 当翻译行同时接近当前行和下一行时，优先留给更近的那一行，避免提前消费下一行翻译。
+    let mut next_raw_start_times = vec![None; raw_lyric.len()];
+    let mut next_raw_start_time = None;
+    for index in (0..raw_lyric.len()).rev() {
+        next_raw_start_times[index] = next_raw_start_time;
+        if !raw_lyric[index].words.is_empty() {
+            next_raw_start_time = Some(raw_lyric[index].startTime);
+        }
+    }
+
+    for (index, line) in raw_lyric.iter_mut().enumerate() {
         // 跳过空行
         if line.words.is_empty() {
             continue;
         }
-        // 查找对应的翻译和罗马音
-        line.translatedLyric = ts_lyric_map.remove(&line.startTime).unwrap_or_default();
-        line.romanLyric = rm_lyric_map.remove(&line.startTime).unwrap_or_default();
-        // 解析行内歌词
-        line.splice_inline_tl_lyric();
+        // 查找对应的翻译和罗马音。
+        // `take_nearest_lyric_line` 会从候选列表中移除命中的行，保证重复时间戳也按顺序一一消费。
+        line.translatedLyric = take_nearest_lyric_line(
+            &mut ts_lyric_lines,
+            line.startTime,
+            next_raw_start_times[index],
+            LYRIC_MATCH_TOLERANCE_MS,
+        )
+        .unwrap_or_default();
+        line.romanLyric = take_nearest_lyric_line(
+            &mut rm_lyric_lines,
+            line.startTime,
+            next_raw_start_times[index],
+            LYRIC_MATCH_TOLERANCE_MS,
+        )
+        .unwrap_or_default();
+        // 解析行内歌词，例如 `Hello (你好)` 或 `原文〖翻译〗`。
+        // 这类翻译可能只出现在少数行，所以不能用全曲覆盖率阈值来决定是否存在翻译。
+        if line.splice_inline_tl_lyric() {
+            inline_tl_matched_count += 1;
+        }
+
+        if !line.translatedLyric.trim().is_empty() {
+            tl_matched_count += 1;
+        }
+        if !line.romanLyric.trim().is_empty() {
+            rm_matched_count += 1;
+        }
     }
 
     let mut lyric = Lyric {
@@ -39,15 +103,28 @@ pub fn parseNeteaseLyric(raw: JsValue, ts: JsValue, rm: JsValue) -> JsValue {
             })
             .collect(),
         noteExisted: false,
-        rmExisted,
-        tlExisted,
+        rmExisted: is_extra_lyric_existed(rm_matched_count, raw_lyric_count),
+        // 外部翻译用覆盖率判断；行内翻译只要解析出任意一行，就应该允许 UI 打开翻译展示。
+        tlExisted: inline_tl_matched_count > 0
+            || is_extra_lyric_existed(tl_matched_count, raw_lyric_count),
     };
     // 更新额外信息
     lyric.update_extra_info();
 
-    to_value::<Lyric>(&lyric).unwrap()
+    lyric
 }
 
+fn is_extra_lyric_existed(matched_count: usize, raw_count: usize) -> bool {
+    matched_count > 0 && matched_count * 2 >= raw_count.max(1)
+}
+
+/// 解析“翻译和原文交错写在同一个 LRC 文件里”的格式。
+///
+/// 常见形态是：
+/// - 第 N 行：有时间戳、有原文，且 `startTime == endTime`；
+/// - 第 N+1 行：同时间点开始，内容实际是翻译。
+///
+/// `reverse` 用于处理少数源文件里翻译和原文顺序反过来的情况。
 #[wasm_bindgen]
 pub fn parseTranslatedLRC(raw: JsValue, reverse: bool) -> JsValue {
     let mut lastMatchedIndex = -1;
@@ -113,7 +190,7 @@ pub fn parseExternalLrc(lyric: String) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::lyric::model::LyricWord;
+    use crate::lyric::model::{LyricLine, LyricWord};
 
     #[test]
     fn test_parse_tl_lyric_inline() {
@@ -147,6 +224,49 @@ mod tests {
             };
             result.splice_inline_tl_lyric();
             println!("Input: '{}', \nResult: {:?} \n\n", input, result);
+        }
+    }
+
+    #[test]
+    fn test_extra_lyric_existed_requires_matched_line() {
+        assert!(!is_extra_lyric_existed(0, 1));
+        assert!(is_extra_lyric_existed(1, 1));
+        assert!(is_extra_lyric_existed(2, 4));
+        assert!(!is_extra_lyric_existed(1, 4));
+    }
+
+    #[test]
+    fn test_sparse_inline_translation_marks_translation_existed() {
+        let lyric = parse_netease_lyric_lines(
+            vec![
+                test_line(0, "Hello (你好)"),
+                test_line(1000, "plain one"),
+                test_line(2000, "plain two"),
+                test_line(3000, "plain three"),
+            ],
+            vec![],
+            vec![],
+        );
+
+        assert!(lyric.tlExisted);
+        assert_eq!(lyric.data[0].words[0].word, "Hello");
+        assert_eq!(lyric.data[0].translatedLyric, "你好");
+    }
+
+    fn test_line(start_time: i32, text: &str) -> LyricLine {
+        LyricLine {
+            words: vec![LyricWord {
+                word: text.into(),
+                startTime: start_time,
+                endTime: start_time,
+                inlineNote: None,
+            }],
+            startTime: start_time,
+            endTime: start_time,
+            romanLyric: "".into(),
+            translatedLyric: "".into(),
+            isBlank: None,
+            isBackChorus: None,
         }
     }
 }

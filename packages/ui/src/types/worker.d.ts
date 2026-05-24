@@ -5,7 +5,6 @@ type SpectrumWorkerArgs =
       numBands: number;
       withPeaks: boolean;
       sampleRate: number;
-      fpsLimit?: number;
     }
   | { type: "analyze"; data: Float32Array }
   | { type: "analyzeWithPeaks"; data: Float32Array }

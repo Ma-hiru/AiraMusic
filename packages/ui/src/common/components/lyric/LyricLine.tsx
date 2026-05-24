@@ -126,6 +126,7 @@ const LyricLine: FC<LyricLineProps> = ({
                 }
               }
             }
+            inlineNoteContent = trimInlineNoteContent(inlineNoteContent);
             return (
               !word.inlineNote && (
                 <LyricWord
@@ -204,3 +205,18 @@ const LyricLine: FC<LyricLineProps> = ({
 };
 
 export default memo(LyricLine);
+
+const inlineNotePredicates = [
+  ["(", ")"],
+  ["（", "）"]
+] as const;
+
+function trimInlineNoteContent(content: string) {
+  const trimmed = content.trim();
+  for (const [left, right] of inlineNotePredicates) {
+    if (trimmed.startsWith(left) && trimmed.endsWith(right)) {
+      return trimmed.slice(left.length, trimmed.length - right.length).trim();
+    }
+  }
+  return trimmed;
+}

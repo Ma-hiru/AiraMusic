@@ -2,7 +2,7 @@ import { useCallback } from "react";
 import { RoutePath, RoutePathMain } from "@mahiru/ui/common/routes";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useLatestRef } from "@mahiru/ui/common/hooks/useLatestRef";
-import { useSettings } from "@mahiru/ui/common/store/user";
+import { useSettings } from "@mahiru/ui/common/store/settings";
 import {
   ElectronServicesBus,
   ElectronServicesWindow

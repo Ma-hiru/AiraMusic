@@ -284,7 +284,7 @@ impl WebGLRenderer {
         self.radii.reserve(count * 6);
 
         for (i, &band) in bands.iter().enumerate() {
-            let v = band.clamp(0.0, 1.0).powf(0.9);
+            let v = band.clamp(0.0, 1.0);
             let h = (v * self.height * self.height_scale).max(2.0);
             let x = i as f32 * (computed_bar_width + computed_gap);
             let draw_bar_width = if i + 1 == count {

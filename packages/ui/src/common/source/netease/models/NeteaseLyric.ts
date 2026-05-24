@@ -91,20 +91,24 @@ class Parser {
 
   static parseTTMLyric(context: string) {
     const ttml = parseTTML(context);
-    const { tlCount, rmCount } = ttml.lines.reduce(
+    const data = Parser.handleAMLyricLine(ttml.lines);
+    const { tlCount, rmCount, noteCount } = data.reduce(
       (count, line) => {
         line.translatedLyric && count.tlCount++;
         line.romanLyric && count.rmCount++;
+        line.words.some((word) => word.inlineNote) && count.noteCount++;
         return count;
       },
-      { tlCount: 0, rmCount: 0 }
+      { tlCount: 0, rmCount: 0, noteCount: 0 }
     );
+    const lyricLineCount = data.filter((line) => !line.isBlank).length;
 
     return {
       lyric: <NeteaseLyricModel>{
-        data: Parser.handleAMLyricLine(ttml.lines),
-        rmExisted: tlCount > ttml.lines.length / 2,
-        tlExisted: rmCount > ttml.lines.length / 2
+        data,
+        rmExisted: Parser.hasExtraLyric(rmCount, lyricLineCount),
+        tlExisted: Parser.hasExtraLyric(tlCount, lyricLineCount),
+        noteExisted: noteCount > 0
       },
       metadata: ttml.metadata
     };
@@ -118,7 +122,7 @@ class Parser {
       return {
         ...line,
         isBlank: LyricLineInfo.isBlank(rawLyric),
-        isBackChorus: LyricLineInfo.isBackChorus(rawLyric)
+        isBackChorus: line.isBG || line.isDuet || LyricLineInfo.isBackChorus(rawLyric)
       };
     });
     const backChorus = LyricLineInfo.isBackChorusWithMultiLine(rawLyrics);
@@ -129,16 +133,40 @@ class Parser {
       }
     }
 
-    for (const line of res) {
-      const inlineNotes = LyricLineInfo.isInlineNote(line.words.map((w) => w.word));
-      for (const { start, end } of inlineNotes) {
-        for (let i = start; i <= end && i < line.words.length; i++) {
-          line.words[i]!.inlineNote = true;
+    const inlineNotes = res.map((line) =>
+      LyricLineInfo.isInlineNote(line.words.map((w) => w.word))
+    );
+    if (Parser.shouldUseInlineNotes(rawLyrics, inlineNotes)) {
+      for (const [lineIndex, line] of res.entries()) {
+        const notes = inlineNotes[lineIndex] ?? [];
+        for (const { start, end } of notes) {
+          for (let i = start; i <= end && i < line.words.length; i++) {
+            line.words[i]!.inlineNote = true;
+          }
         }
       }
     }
 
     return res;
+  }
+
+  static shouldUseInlineNotes(
+    rawLyrics: string[],
+    inlineNotes: { start: number; end: number }[][]
+  ) {
+    const lineCount = rawLyrics.filter((line) => !LyricLineInfo.isBlank(line)).length;
+    const candidateLineCount = inlineNotes.filter((notes) => notes.length > 0).length;
+    const candidateCount = inlineNotes.reduce((count, notes) => count + notes.length, 0);
+
+    if (lineCount <= 3) {
+      return lineCount > 0 && candidateLineCount === lineCount && candidateCount >= 2;
+    }
+
+    return candidateLineCount >= 3 && candidateLineCount * 2 >= lineCount;
+  }
+
+  static hasExtraLyric(count: number, total: number) {
+    return count > 0 && count * 2 >= Math.max(total, 1);
   }
 
   /** 处理和解析歌词响应 */

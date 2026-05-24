@@ -19,7 +19,7 @@ const Preference: FC<PreferenceSettings> = ({ data, patchSettings }) => {
       <ToggleRow
         icon={Monitor}
         title="默认使用展示窗"
-        description="从主窗口打开内容时优先投到 Display 窗口。"
+        description="从主窗口打开内容（歌单、歌手、专辑等页面）时优先分离到独立窗口。"
         checked={data.defaultUseDisplayWindow}
         onClick={() =>
           patchSettings({

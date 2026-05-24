@@ -48,7 +48,12 @@ export default defineConfig(({ mode }) => {
     },
     resolve: {
       alias: {
-        "@mahiru/ui": join(__dirname, "./src")
+        "@mahiru/ui": join(__dirname, "./src"),
+        ...(mode === "test"
+          ? {
+              "@applemusic-like-lyrics/lyric": join(__dirname, "./tests/mocks/amllLyric.ts")
+            }
+          : {})
       }
     },
     server: {

@@ -111,7 +111,6 @@ const MusicSource: FC<object> = () => {
     fftSize: 2048,
     numBands: 32,
     withPeaks: false,
-    fpsLimit: 60,
     ...spectrumOptions
   });
   useEffect(() => {

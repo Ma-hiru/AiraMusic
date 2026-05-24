@@ -1,5 +1,5 @@
 import { type FC, memo } from "react";
-import { AudioLines, Gauge } from "lucide-react";
+import { AudioLines, AudioWaveform, Dock, Gauge } from "lucide-react";
 import {
   NeteaseSettings,
   type NeteaseSettingsModel
@@ -7,6 +7,7 @@ import {
 
 import ToggleRow from "./toggle-row";
 import Card from "@mahiru/ui/common/components/card/Card";
+import RangeRow from "@mahiru/ui/common/components/page/settings/content/range-row";
 
 export interface PerformanceSettings {
   data: NeteaseSettings["performance"];
@@ -17,15 +18,46 @@ const Performance: FC<PerformanceSettings> = ({ data, patchSettings }) => {
   return (
     <Card Icon={Gauge} title="性能" subTitle="Performance">
       <ToggleRow
-        icon={AudioLines}
+        icon={Dock}
         title="播放栏频谱"
-        description="让底部播放栏跟着音乐轻微呼吸。"
+        description="是否展示播放栏的频谱，关闭可以节省性能"
         checked={data.barSpectrum}
         onClick={() =>
           patchSettings({
             performance: {
               ...data,
               barSpectrum: !data.barSpectrum
+            }
+          })
+        }
+      />
+      <ToggleRow
+        icon={AudioLines}
+        title="播放页频谱"
+        description="是否展示播放页的频谱，关闭可以节省性能"
+        checked={data.playerSpectrum}
+        onClick={() =>
+          patchSettings({
+            performance: {
+              ...data,
+              playerSpectrum: !data.playerSpectrum
+            }
+          })
+        }
+      />
+      <RangeRow
+        icon={AudioWaveform}
+        title="频谱帧率"
+        min={15}
+        max={60}
+        step={5}
+        rangeValue={data.spectrumFps}
+        value={data.spectrumFps + " FPS"}
+        onChange={(value) =>
+          patchSettings({
+            performance: {
+              ...data,
+              spectrumFps: value
             }
           })
         }

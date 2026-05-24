@@ -6,7 +6,11 @@ use wasm_bindgen::prelude::wasm_bindgen;
 ///   + 问题：直接截取有限长度信号相当于乘以矩形窗，会在频域产生高幅度旁瓣（泄露）。
 ///   + 作用：用平滑的窗减少边界突变，从而降低旁瓣能量，但会增宽主瓣（降低频率分辨率）。
 ///   + 使用方法：在计算 FFT 前对时域样本做 element-wise 相乘，然后再 FFT。若需要恢复幅值，可能要做归一化补偿。
-///   + 常见窗及特性：None（矩形窗）——主瓣最窄、旁瓣最高；Hanning（Hann）——旁瓣低、分辨率中等；Hamming——与 Hann 类似、旁瓣略高但峰值保持好；Blackman——旁瓣很低但主瓣较宽。
+///   + 常见窗及特性：
+///     - None（矩形窗）——主瓣最窄、旁瓣最高；
+///     - Hanning（Hann）——旁瓣低、分辨率中等；
+///     - Hamming——与 Hann 类似、旁瓣略高但峰值保持好；
+///     - Blackman——旁瓣很低但主瓣较宽。 \
 ///   + 选择依据：是否优先抑制旁瓣（选 Blackman/Hann）或优先频率分辨率（选矩形/无窗）。
 #[derive(Clone, Copy)]
 #[wasm_bindgen]
@@ -52,17 +56,15 @@ fn blackman_window(n: usize, size: usize) -> f32 {
     A0 - A1 * cosine(n, size, 1.0) + A2 * cosine(n, size, 2.0)
 }
 
-pub fn apply_window(samples: &[f32], window: WindowFunction) -> Vec<f32> {
-    let size = samples.len();
+pub fn build_window_coeffs(size: usize, window: WindowFunction) -> Vec<f32> {
+    if size <= 1 {
+        return vec![1.0; size];
+    }
     let weight = match window {
         WindowFunction::None => |_n, _size| 1.0,
         WindowFunction::Hanning => hanning_window,
         WindowFunction::Hamming => hamming_window,
         WindowFunction::Blackman => blackman_window,
     };
-    samples
-        .iter()
-        .enumerate()
-        .map(|(i, &sample)| sample * weight(i, size))
-        .collect()
+    (0..size).map(|i| weight(i, size)).collect()
 }

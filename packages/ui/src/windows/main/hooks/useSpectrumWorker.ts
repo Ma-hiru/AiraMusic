@@ -1,7 +1,8 @@
-import AppAudio from "@mahiru/ui/common/player/audio";
+import type AppAudio from "@mahiru/ui/common/player/audio";
 import SpectrumWorker from "@mahiru/ui/worker/spectrum.ts?worker";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Log } from "@mahiru/ui/common/constants/dev";
+import { useLatestRef } from "@mahiru/ui/common/hooks/useLatestRef";
 
 export interface SpectrumData {
   bands: Float32Array;
@@ -12,7 +13,7 @@ export type SpectrumOptions = {
   fftSize?: number;
   numBands?: number;
   withPeaks?: boolean;
-  /** 频谱分析计算限帧（在 wasm/rust 端生效），0/undefined 表示不限制 */
+  /** 频谱分析计算限帧（在 UI 端减少 worker 投递），0/undefined 表示不限制 */
   fpsLimit?: number;
 };
 
@@ -24,12 +25,17 @@ export function useSpectrumWorker(
   const { fftSize = 2048, numBands = 64, withPeaks = false, fpsLimit } = options;
   const workerRef = useRef<Nullable<Worker>>(null);
   const animationFrameRef = useRef<number>(0);
+  const lastPostAtRef = useRef(Number.NEGATIVE_INFINITY);
+  const pendingRef = useRef(false);
   const samplesRef = useRef<Nullable<Float32Array<ArrayBuffer>>>(null);
-  const spectrumData = useRef<SpectrumData>({
-    bands: new Float32Array(numBands),
-    peaks: withPeaks ? new Float32Array(numBands) : undefined
-  });
   const [isReady, setIsReady] = useState(false);
+  const spectrumData = useRef<Nullable<SpectrumData>>(null);
+  if (spectrumData.current === null) {
+    spectrumData.current = {
+      bands: new Float32Array(numBands),
+      peaks: withPeaks ? new Float32Array(numBands) : undefined
+    };
+  }
 
   const setSmoothing = useCallback((factor: number) => {
     workerRef.current?.postMessage({
@@ -42,7 +48,18 @@ export function useSpectrumWorker(
     workerRef.current?.postMessage({ type: "reset" } satisfies SpectrumWorkerArgs);
   }, []);
 
+  const propsRef = useLatestRef({
+    audio,
+    fpsLimit,
+    isReady,
+    isPlaying,
+    withPeaks,
+    fftSize,
+    numBands
+  });
+
   const updateSpectrum = useCallback(() => {
+    const { audio, fpsLimit, isReady, isPlaying, withPeaks } = propsRef.current;
     const analyser = audio.context.analyser;
     const worker = workerRef.current;
     const samples = samplesRef.current;
@@ -50,8 +67,22 @@ export function useSpectrumWorker(
       animationFrameRef.current = requestAnimationFrame(updateSpectrum);
       return;
     }
+    const now = performance.now();
+    if (fpsLimit && fpsLimit > 0) {
+      const minInterval = 1000 / fpsLimit;
+      if (now - lastPostAtRef.current < minInterval) {
+        animationFrameRef.current = requestAnimationFrame(updateSpectrum);
+        return;
+      }
+    }
+    if (pendingRef.current) {
+      animationFrameRef.current = requestAnimationFrame(updateSpectrum);
+      return;
+    }
     analyser.getFloatTimeDomainData(samples);
     const payload = samples.slice();
+    pendingRef.current = true;
+    lastPostAtRef.current = now;
     worker.postMessage(
       {
         type: withPeaks ? "analyzeWithPeaks" : "analyze",
@@ -60,7 +91,7 @@ export function useSpectrumWorker(
       [payload.buffer]
     );
     animationFrameRef.current = requestAnimationFrame(updateSpectrum);
-  }, [audio, isReady, isPlaying, withPeaks]);
+  }, [propsRef]);
 
   // 初始化 SpectrumWorker，随着 fftSize、numBands、withPeaks 变化而重新初始化
   useEffect(() => {
@@ -75,6 +106,7 @@ export function useSpectrumWorker(
     if (!workerRef.current) {
       workerRef.current = new SpectrumWorker();
       workerRef.current.addEventListener("message", (e: MessageEvent<SpectrumWorkerResult>) => {
+        pendingRef.current = false;
         const data = e.data;
         if (!data) return;
         switch (data.type) {
@@ -83,6 +115,7 @@ export function useSpectrumWorker(
             break;
           }
           case "spectrum": {
+            if (!spectrumData.current) break;
             if (data.bands instanceof Float32Array) {
               const arr = spectrumData.current.bands;
               arr.set(data.bands.subarray(0, arr.length));
@@ -91,6 +124,7 @@ export function useSpectrumWorker(
           }
           case "spectrumWithPeaks": {
             if (data.data instanceof Float32Array) {
+              if (!spectrumData.current) break;
               const d = data.data;
               const bandsArr = spectrumData.current.bands;
               const peaksArr = (spectrumData.current.peaks ||= new Float32Array(numBands));
@@ -122,23 +156,31 @@ export function useSpectrumWorker(
       sampleRate: audioCtx.sampleRate,
       fftSize: analyser.fftSize,
       numBands,
-      withPeaks,
-      fpsLimit
+      withPeaks
     } satisfies SpectrumWorkerArgs);
 
     return () => {
       setIsReady(false);
       workerRef.current?.terminate();
       workerRef.current = null;
+      pendingRef.current = false;
+      lastPostAtRef.current = Number.NEGATIVE_INFINITY;
       samplesRef.current = null;
     };
-  }, [fftSize, fpsLimit, numBands, withPeaks, audio]);
+  }, [fftSize, numBands, withPeaks, audio]);
   // 当 numBands 或 withPeaks 变化时，更新 spectrumData 的结构
   useEffect(() => {
-    spectrumData.current = {
-      bands: new Float32Array(numBands),
-      peaks: withPeaks ? new Float32Array(numBands) : undefined
-    };
+    if (!spectrumData.current) return;
+    if (spectrumData.current.bands.length !== numBands) {
+      spectrumData.current.bands = new Float32Array(numBands);
+    }
+    if (withPeaks) {
+      if (!spectrumData.current.peaks || spectrumData.current.peaks.length !== numBands) {
+        spectrumData.current.peaks = new Float32Array(numBands);
+      }
+    } else {
+      spectrumData.current.peaks = undefined;
+    }
   }, [numBands, withPeaks]);
   // 根据 isPlaying 和 isReady 状态，启动或停止频谱数据的更新循环
   useEffect(() => {

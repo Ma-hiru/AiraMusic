@@ -56,7 +56,7 @@ export class Canvas2DRenderer implements IRenderer {
 
     for (let i = 0; i < count; i++) {
       const value = bands[i] ?? 0;
-      const enhanced = Math.pow(Math.min(1, Math.max(0, value)), 0.9);
+      const enhanced = Math.min(1, Math.max(0, value));
       const barHeight = Math.max(2, enhanced * height * heightScale);
       const x = i * (computedBarWidth + computedGap);
       const drawBarWidth = i === count - 1 ? Math.max(0.5, width - x) : computedBarWidth;

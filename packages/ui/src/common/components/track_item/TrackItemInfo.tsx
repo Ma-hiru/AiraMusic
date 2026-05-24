@@ -21,7 +21,6 @@ interface ListItemAlbumProps {
 
 const TrackItemInfo: FC<ListItemAlbumProps> = ({
   track,
-  active,
   disabled,
   textColor,
   mainColor,

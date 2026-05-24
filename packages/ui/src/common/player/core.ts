@@ -5,19 +5,18 @@ import {
   NeteaseLyric,
   NeteaseNetworkAudio,
   NeteaseNetworkImage,
-  NeteaseSettings,
   NeteaseTrack,
   NeteaseTrackRecord
 } from "../source/netease/models";
 import { Listenable } from "../utils/listenable";
 import { Log } from "@mahiru/ui/common/constants/dev";
-import { userStoreSnapshot } from "../store/user";
 import { NeteaseImageSize } from "../enum";
 import {
   NeteaseServicesAudio,
   NeteaseServicesImage,
   NeteaseServicesLyric
 } from "../source/netease/services";
+import { settingsStoreSnapshot } from "@mahiru/ui/common/store/settings";
 
 import AppAudio from "./audio";
 import AppPlaylist from "./playlist";
@@ -85,8 +84,8 @@ export default class AppPlayer extends Listenable {
     }
   }
 
-  private get userStore() {
-    return userStoreSnapshot();
+  private get settingsStore() {
+    return settingsStoreSnapshot();
   }
 
   constructor(props?: {
@@ -214,9 +213,7 @@ export default class AppPlayer extends Listenable {
   private async loadAudio(
     track: NeteaseTrack
   ): Promise<Nullable<NeteaseLocalAudio | NeteaseNetworkAudio>> {
-    const preference =
-      this.userStore._settings?.trackQuality.quality ??
-      NeteaseSettings.default.trackQuality.quality;
+    const preference = this.settingsStore._settings.trackQuality.quality;
     const local = await NeteaseServicesAudio.local(track, preference, false);
     if (local) return local;
     const network = await NeteaseServicesAudio.network(track, preference);

@@ -7,20 +7,25 @@ pub struct Smoother {
     previous: Vec<f32>,
     /// 峰值保持值
     peaks: Vec<f32>,
-    /// 平滑因子，范围 [0.0, 1.0]，值越大平滑效果越明显
-    smoothing_factor: f32,
+    /// 上升时的平滑因子，越小响应越快
+    attack_factor: f32,
+    /// 下降时的平滑因子，越大回落越慢
+    release_factor: f32,
     /// 峰值衰减速率
     peak_decay: f32,
     /// 峰值保持阈值
     peak_threshold: f32,
 }
+
 impl Smoother {
     pub fn new(size: usize, smoothing_factor: f32, peak_decay: f32) -> Self {
+        let (attack_factor, release_factor) = smoothing_factors(smoothing_factor);
         Self {
             previous: vec![0.0; size],
             peaks: vec![0.0; size],
-            smoothing_factor: smoothing_factor.clamp(0.0, 1.0),
-            peak_decay,
+            attack_factor,
+            release_factor,
+            peak_decay: peak_decay.clamp(0.0, 1.0),
             peak_threshold: 0.01,
         }
     }
@@ -31,21 +36,29 @@ impl Smoother {
     }
 
     pub fn set_smoothing_factor(&mut self, factor: f32) {
-        self.smoothing_factor = factor.clamp(0.0, 1.0);
+        let (attack_factor, release_factor) = smoothing_factors(factor);
+        self.attack_factor = attack_factor;
+        self.release_factor = release_factor;
     }
 
     pub fn set_peak_decay(&mut self, decay: f32) {
-        self.peak_decay = decay.max(0.0);
+        self.peak_decay = decay.clamp(0.0, 1.0);
     }
 
     pub fn smooth(&mut self, current: &[f32]) -> Vec<f32> {
+        if self.previous.len() != current.len() {
+            self.previous.resize(current.len(), 0.0);
+        }
         let mut result = vec![0.0; current.len()];
 
         for i in 0..current.len() {
-            // 计算峰值保持 EMA: smoothed = previous * smoothing_factor + current * (1 - smoothing_factor)
-            result[i] = self.previous[i] * self.smoothing_factor
-                + current[i] * (1.0 - self.smoothing_factor);
-            // 更新历史峰值
+            let previous = self.previous[i];
+            let factor = if current[i] >= previous {
+                self.attack_factor
+            } else {
+                self.release_factor
+            };
+            result[i] = previous * factor + current[i] * (1.0 - factor);
             self.previous[i] = result[i];
         }
 
@@ -59,19 +72,51 @@ impl Smoother {
     }
 
     pub fn update_peaks(&mut self, current: &[f32]) -> Vec<f32> {
+        if self.peaks.len() != current.len() {
+            self.peaks.resize(current.len(), 0.0);
+        }
         for (i, &current_val) in current.iter().enumerate() {
-            // 如果当前值大于峰值，则更新峰值
             if current_val > self.peaks[i] {
                 self.peaks[i] = current_val;
             } else {
-                // 否则按衰减速率降低峰值
                 self.peaks[i] *= self.peak_decay;
             }
-            // 低于阈值的峰值重置为 0
             if self.peaks[i] < self.peak_threshold {
                 self.peaks[i] = 0.0;
             }
         }
         self.peaks.clone()
+    }
+}
+
+fn smoothing_factors(factor: f32) -> (f32, f32) {
+    let release_factor = factor.clamp(0.0, 0.98);
+    let attack_factor = (release_factor * 0.35).clamp(0.0, 0.5);
+    (attack_factor, release_factor)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn smooth_uses_fast_attack_and_slow_release() {
+        let mut smoother = Smoother::new(1, 0.8, 0.95);
+
+        let attacked = smoother.smooth(&[1.0])[0];
+        let released = smoother.smooth(&[0.0])[0];
+
+        assert!((attacked - 0.72).abs() < 0.0001);
+        assert!((released - 0.576).abs() < 0.0001);
+    }
+
+    #[test]
+    fn peak_decay_is_clamped_to_a_valid_multiplier() {
+        let mut smoother = Smoother::new(1, 0.8, 2.0);
+        smoother.update_peaks(&[1.0]);
+
+        let peaks = smoother.update_peaks(&[0.0]);
+
+        assert_eq!(peaks[0], 1.0);
     }
 }

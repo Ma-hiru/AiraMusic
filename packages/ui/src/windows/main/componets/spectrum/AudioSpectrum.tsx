@@ -1,8 +1,5 @@
 import { type FC, type HTMLAttributes, memo, useEffect, useMemo, useRef } from "react";
-import type {
-  SpectrumData,
-  SpectrumOptions
-} from "@mahiru/ui/windows/main/hooks/useSpectrumWorker";
+import type { SpectrumOptions } from "@mahiru/ui/windows/main/hooks/useSpectrumWorker";
 import {
   type IRenderer,
   type RendererOptions
@@ -16,6 +13,7 @@ import {
   spectrumOptionsAtom,
   spectrumReadyAtom
 } from "@mahiru/ui/windows/main/atoms/spectrum";
+import { useLatestRef } from "@mahiru/ui/common/hooks/useLatestRef";
 
 type AudioSpectrumProps = HTMLAttributes<HTMLCanvasElement> & {
   isPlaying: boolean;
@@ -48,14 +46,10 @@ const AudioSpectrum: FC<AudioSpectrumProps> = ({
   const spectrumData = useAtomValue(spectrumDataAtom);
   const canvasRef = useRef<Nullable<HTMLCanvasElement>>(null);
   const rendererRef = useRef<Nullable<IRenderer>>(null);
-  const playingRef = useRef(isPlaying);
-  const hideRightBandsRef = useRef(hideRightBands);
-  const spectrumDataRef = useRef<Optional<SpectrumData>>(null);
-  const spectrumReadyRef = useRef<boolean>(false);
-  playingRef.current = isPlaying;
-  hideRightBandsRef.current = hideRightBands;
-  spectrumDataRef.current = spectrumData;
-  spectrumReadyRef.current = spectrumReady;
+  const playingRef = useLatestRef(isPlaying);
+  const hideRightBandsRef = useLatestRef(hideRightBands);
+  const spectrumDataRef = useLatestRef(spectrumData);
+  const spectrumReadyRef = useLatestRef(spectrumReady);
 
   const rendererFactory = useMemo(() => {
     return () => (renderer === "webgl-rust" ? new WebGLRendererRust() : new Canvas2DRenderer());
@@ -110,12 +104,8 @@ const AudioSpectrum: FC<AudioSpectrumProps> = ({
     const draw = () => {
       const spectrumData = spectrumDataRef.current;
       if (!spectrumReadyRef.current || !playingRef.current || !spectrumData) {
-        return requestIdleCallback(
-          () => {
-            animationFrameId = requestAnimationFrame(draw);
-          },
-          { timeout: 1000 }
-        );
+        animationFrameId = requestAnimationFrame(draw);
+        return;
       }
       const { bands } = spectrumData;
       if (bands.length) {
@@ -133,7 +123,7 @@ const AudioSpectrum: FC<AudioSpectrumProps> = ({
     return () => {
       cancelAnimationFrame(animationFrameId);
     };
-  }, []);
+  }, [hideRightBandsRef, playingRef, spectrumDataRef, spectrumReadyRef]);
 
   // 更新频谱选项(在激活时)
   const spectrumOptionsKey = useMemo(() => JSON.stringify(options), [options]);

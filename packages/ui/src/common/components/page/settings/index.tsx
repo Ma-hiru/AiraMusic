@@ -27,23 +27,18 @@ const Settings: FC<SettingsProps> = ({
   login
 }) => {
   return (
-    <div
+    <section
       className={cx(
-        "h-full min-h-0 overflow-y-auto scrollbar-hide text-(--text-color-on-main)",
+        `
+          h-full overflow-y-auto lg:overflow-hidden scrollbar scrollbar-show
+          lg:scrollbar-hidden text-(--text-color-on-main)
+          grid grid-cols-1 lg:grid-cols-[minmax(260px,0.82fr)_minmax(520px,1.58fr)] gap-4
+        `,
         className
       )}>
-      <section
-        className={cx(
-          `
-          min-h-full
-          grid grid-cols-1 lg:grid-cols-[minmax(260px,0.82fr)_minmax(520px,1.58fr)]
-          gap-4
-        `
-        )}>
-        <SettingsAside user={user} settings={settings} logout={logout} login={login} />
-        <SettingsContent user={user} settings={settings} updateSettings={updateSettings} />
-      </section>
-    </div>
+      <SettingsAside user={user} settings={settings} logout={logout} login={login} />
+      <SettingsContent user={user} settings={settings} updateSettings={updateSettings} />
+    </section>
   );
 };
 
