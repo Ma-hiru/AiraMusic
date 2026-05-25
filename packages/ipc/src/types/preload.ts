@@ -12,8 +12,6 @@ export type RendererInvokeSender = <E extends InvokeEvent>(
   arg: InvokeEventArgs<E>
 ) => Promise<InvokeEventPayload<E>>;
 
-
-
 export type Api = {
   event: RendererEventSender;
   invoke: RendererInvokeSender;

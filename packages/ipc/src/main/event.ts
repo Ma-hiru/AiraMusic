@@ -1,5 +1,5 @@
 import { ipcMain, type IpcMainEvent } from "electron";
-import type { NormalEvent, NormalEventPayload } from "@/types/event";
+import type { NormalEvent, NormalEventPayload } from "../types/event";
 
 export function registerEventHandlers(handlerMap: {
   [K in NormalEvent]: NormalFunc<[IpcMainEvent, NormalEventPayload<K>]>;

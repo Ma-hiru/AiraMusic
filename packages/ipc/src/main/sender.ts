@@ -1,8 +1,8 @@
 import { BrowserWindow } from "electron";
-import { Log } from "@/inject/log";
-import { MainSelfName, RegisteredForwardEventName } from "@/constants/message";
-import { WindowManager } from "@/inject/window";
-import type { Message, MessageData, MessageDirection, MessageEvent } from "@/types/message";
+import { Log } from "../inject/log";
+import { MainSelfName, RegisteredForwardEventName } from "../constants/message";
+import { WindowManager } from "../inject/window";
+import type { Message, MessageData, MessageDirection, MessageEvent } from "../types/message";
 
 const handlers = new Map<MessageEvent, Set<NormalFunc<[data: MessageData<any>]>>>();
 

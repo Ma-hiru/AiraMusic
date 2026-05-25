@@ -1,7 +1,7 @@
 import { contextBridge, ipcRenderer } from "electron";
-import { RegisteredForwardEventName } from "@/constants/message";
-import { ApiKey } from "@/constants/preload";
-import type { Api } from "@/types/preload";
+import { RegisteredForwardEventName } from "../constants/message";
+import { ApiKey } from "../constants/preload";
+import type { Api } from "../types/preload";
 
 contextBridge.exposeInMainWorld(ApiKey, {
   invoke: (event, arg) => ipcRenderer.invoke(event, arg),

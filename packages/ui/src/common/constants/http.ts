@@ -4,7 +4,7 @@ import _AppRenderer from "../source/electron/services/renderer";
 
 export const accessToken = isTest
   ? ""
-  : await _AppRenderer.Event.invoke.storeKey().catch(() => "mahiru");
+  : await _AppRenderer.Event.invoke("storeKey", undefined).catch(() => "mahiru");
 
 export default class HTTPConstants {
   /**

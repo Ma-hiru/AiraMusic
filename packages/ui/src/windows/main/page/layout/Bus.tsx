@@ -10,7 +10,7 @@ import { Log } from "@mahiru/ui/common/constants/dev";
 import { useNavigate } from "react-router-dom";
 import { RoutePath, RoutePathMain } from "@mahiru/ui/common/routes";
 import { PlaylistSource } from "@mahiru/ui/common/enum";
-import { type MessageData } from "@mahiru/message/renderer";
+import { type MessageData } from "@mahiru/ipc/renderer";
 import { useAtomValue } from "jotai";
 import { themeAtom } from "@mahiru/ui/windows/main/atoms/theme";
 import AppEntry from "@mahiru/ui/windows/main/entry";

@@ -1,7 +1,7 @@
 import { BrowserWindow, ipcMain } from "electron";
 import { send, sendAll } from "./sender";
-import { RegisteredForwardEventName } from "@/constants/message";
-import type { Message, MessageDirection, MessageEvent } from "@/types/message";
+import { RegisteredForwardEventName } from "../constants/message";
+import type { Message, MessageDirection, MessageEvent } from "../types/message";
 
 const checker = new Set<ForwardChecker<any>>();
 

@@ -3,8 +3,7 @@ import _AppRenderer from "../../../source/electron/services/renderer";
 
 export default class _AppDevice {
   private static get gpuDevice(): Promise<GPUDevice[]> {
-    return _AppRenderer.Event.invoke
-      .GPUInfo()
+    return _AppRenderer.Event.invoke("GPUInfo", undefined)
       .then((res) => res)
       .then((res) => {
         if (res && typeof res === "object" && "gpuDevice" in res && Array.isArray(res?.gpuDevice)) {
@@ -42,7 +41,7 @@ export default class _AppDevice {
   }
 
   static get platform(): Promise<NodeJS.Platform | "unknown"> {
-    return _AppRenderer.Event.invoke.platform().catch((err) => {
+    return _AppRenderer.Event.invoke("platform", undefined).catch((err) => {
       Log.error(err);
       return "unknown";
     });

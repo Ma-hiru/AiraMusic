@@ -11,22 +11,3 @@ beforeAll(async () => {
     module_or_path: wasmBytes
   });
 });
-
-Object.defineProperty(window, "electron", {
-  value: {
-    invoke: new Proxy(<typeof window.electron.invoke>{}, {
-      get: () => {
-        return () => {
-          return Promise.resolve("");
-        };
-      }
-    }),
-    event: new Proxy(<typeof window.electron.event>{}, {
-      get: () => {
-        return () => {};
-      }
-    })
-  },
-  configurable: true,
-  writable: true
-});

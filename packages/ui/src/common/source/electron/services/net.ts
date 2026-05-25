@@ -57,7 +57,7 @@ export default class _AppNet {
 
   static get status(): Promise<NetworkStatus> {
     if (!window.navigator.onLine) return Promise.resolve("offline");
-    return Promise.resolve(_AppRenderer.Event.invoke.checkOnlineStatus());
+    return Promise.resolve(_AppRenderer.Event.invoke("checkOnlineStatus", undefined));
   }
 
   static get isOnline() {

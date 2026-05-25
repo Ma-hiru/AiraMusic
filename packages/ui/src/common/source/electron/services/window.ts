@@ -1,15 +1,12 @@
 import { Listenable } from "../../../utils/listenable";
 import { isDev, isTest } from "@mahiru/ui/common/constants/dev";
-import type {
-  Message,
-  MessageData,
-  MessageDirection,
-  MessageEvent
-} from "@mahiru/message/renderer";
+import type { Message, MessageData, MessageDirection, MessageEvent } from "@mahiru/ipc/renderer";
 import _AppRenderer from "../../../source/electron/services/renderer";
 
-const _currentWindowType = isTest ? "main" : await _AppRenderer.Event.invoke.currentWindowType();
-const _runtimeID = isTest ? "" : await _AppRenderer.Event.invoke.runtimeID();
+const _currentWindowType = isTest
+  ? "main"
+  : await _AppRenderer.Event.invoke("currentWindowType", undefined);
+const _runtimeID = isTest ? "" : await _AppRenderer.Event.invoke("runtimeID", undefined);
 
 export type WindowBusEvent = MessageData<"windowBus">["action"];
 
@@ -80,9 +77,15 @@ export default class _AppWindow extends Listenable<WindowBusEvent> {
   }
 
   get bounds() {
-    const { promise, resolve } = Promise.withResolvers<InvokeEventMaps["currentWindowBounds"][1]>();
-    _AppRenderer.Event.invoke
-      .currentWindowBounds()
+    const { promise, resolve } = Promise.withResolvers<{
+      x: number;
+      y: number;
+      width: number;
+      height: number;
+      workAreaHeight: number;
+      workAreaWidth: number;
+    }>();
+    _AppRenderer.Event.invoke("currentWindowBounds", undefined)
       .then(resolve)
       .catch(() =>
         resolve({ x: 0, y: 0, width: 0, height: 0, workAreaHeight: 0, workAreaWidth: 0 })
@@ -107,13 +110,13 @@ export default class _AppWindow extends Listenable<WindowBusEvent> {
     _AppRenderer.Message.listen("windowBus", "process", this.updateStatus.bind(this), {
       id: this.id
     });
-    _AppRenderer.Event.invoke.hasOpenInternalWindow(this.type).then((opened) => {
+    _AppRenderer.Event.invoke("hasOpenInternalWindow", this.type).then((opened) => {
       this.opened = opened;
     });
-    _AppRenderer.Event.invoke.isMaximized(this.type).then((isMax) => {
+    _AppRenderer.Event.invoke("isMaximized", this.type).then((isMax) => {
       this.isMax = isMax;
     });
-    _AppRenderer.Event.invoke.isFullscreen(this.type).then((isFullscreen) => {
+    _AppRenderer.Event.invoke("isFullscreen", this.type).then((isFullscreen) => {
       this.isFullscreen = isFullscreen;
     });
   }
@@ -264,57 +267,59 @@ export default class _AppWindow extends Listenable<WindowBusEvent> {
   }
 
   devTools() {
-    isDev && _AppRenderer.Event.normal.openInternalDevTools(this.type);
+    isDev && _AppRenderer.Event.normal("openInternalDevTools", this.type);
   }
 
   close() {
-    _AppRenderer.Event.normal.closeInternalWindow(this.type);
+    _AppRenderer.Event.normal("closeInternalWindow", this.type);
   }
 
   focus() {
-    _AppRenderer.Event.normal.focusInternalWindow(this.type);
+    _AppRenderer.Event.normal("focusInternalWindow", this.type);
   }
 
   hide() {
-    _AppRenderer.Event.normal.hiddenInternalWindow(this.type);
+    _AppRenderer.Event.normal("hiddenInternalWindow", this.type);
   }
 
   maximize() {
-    _AppRenderer.Event.normal.maximizeInternalWindow(this.type);
+    _AppRenderer.Event.normal("maximizeInternalWindow", this.type);
   }
 
   unmaximize() {
-    _AppRenderer.Event.normal.unmaximizeInternalWindow(this.type);
+    _AppRenderer.Event.normal("unmaximizeInternalWindow", this.type);
   }
 
   minimize() {
-    _AppRenderer.Event.normal.minimizeInternalWindow(this.type);
+    _AppRenderer.Event.normal("minimizeInternalWindow", this.type);
   }
 
   unminimize() {
-    _AppRenderer.Event.normal.unminimizeInternalWindow(this.type);
+    _AppRenderer.Event.normal("unminimizeInternalWindow", this.type);
   }
 
   show() {
-    _AppRenderer.Event.normal.showInternalWindow(this.type);
+    _AppRenderer.Event.normal("showInternalWindow", this.type);
   }
 
   mousePenetrate(penetrate: boolean) {
-    _AppRenderer.Event.normal.mousePenetrateInternalWindow({
+    _AppRenderer.Event.normal("mousePenetrateInternalWindow", {
       type: this.type,
       penetrate
     });
   }
 
-  resize(props: Partial<NormalEventMaps["resizeInternalWindow"]>) {
-    _AppRenderer.Event.normal.resizeInternalWindow({
+  resize(
+    props: Partial<{ type: WindowType; x: number; y: number; width: number; height: number }>
+  ) {
+    _AppRenderer.Event.normal("resizeInternalWindow", {
       ...props,
       type: this.type
     });
   }
 
-  move(props: Partial<NormalEventMaps["moveInternalWindow"]>) {
-    _AppRenderer.Event.normal.moveInternalWindow({
+  move(props: Partial<{ type: WindowType; x: number; y: number; deltaX: number; deltaY: number }>) {
+    _AppRenderer.Event.normal("moveInternalWindow", {
       type: this.type,
       ...props
     });
@@ -368,7 +373,7 @@ export default class _AppWindow extends Listenable<WindowBusEvent> {
   }
 
   static panic(message: string, error?: string) {
-    _AppRenderer.Event.normal.fatalError({ message, error });
+    _AppRenderer.Event.normal("fatalError", { message, error });
   }
 
   static [Symbol.dispose]() {

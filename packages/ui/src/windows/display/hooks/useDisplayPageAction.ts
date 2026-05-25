@@ -3,7 +3,7 @@ import { useCallback } from "react";
 import { ElectronServicesWindow } from "@mahiru/ui/common/source/electron/services";
 import { useLatestRef } from "@mahiru/ui/common/hooks/useLatestRef";
 import { useNavigate } from "react-router-dom";
-import type { MessageData } from "@mahiru/message/renderer";
+import type { MessageData } from "@mahiru/ipc/renderer";
 
 /** 多窗口页面跳转动作 */
 export function useDisplayPageAction(
