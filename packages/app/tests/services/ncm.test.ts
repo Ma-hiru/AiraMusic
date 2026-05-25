@@ -2,15 +2,17 @@ import NeteaseMusicApiService from "@mahiru/app/services/ncm";
 
 describe("test ncm server", () => {
   const port = 5000;
-  let ncm: Awaited<ReturnType<typeof NeteaseMusicApiService.create>>;
+  let ncm: NeteaseMusicApiService;
   beforeAll(async () => {
-    ncm = await NeteaseMusicApiService.create((err) => {
-      console.error("ncm api server start error: ", err);
-    }, port);
+    ncm = new NeteaseMusicApiService({
+      onError: (err) => console.error("ncm api server start error: ", err),
+      port
+    });
+    await new Promise((r) => setTimeout(r, 1000));
   });
   afterAll(async () => {
     try {
-      ncm?.server?.close();
+      ncm?.stop();
     } catch (err) {
       console.error("ncm api server close error: ", err);
     }

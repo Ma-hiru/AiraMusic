@@ -4,26 +4,27 @@ import { join } from "node:path";
 import { access, writeFile } from "node:fs/promises";
 import { EqError } from "@mahiru/log";
 
-const tokenPath = join(os.tmpdir(), "anonymous_token");
-
 type ServerModule = typeof import("@neteasecloudmusicapienhanced/api/server.js");
 
 export default class NeteaseMusicApiService {
-  private static serverImpl: ServerModule["default"] | undefined;
+  private serverImpl?: ServerModule["default"];
+  private instance;
+  onError: NormalFunc<[err: Error]>;
+  port: number;
+  tokenPath = join(os.tmpdir(), "anonymous_token");
 
-  private static async ensureAnonToken() {
+  private async ensureAnonToken() {
     try {
-      await access(tokenPath);
+      await access(this.tokenPath);
     } catch {
-      await writeFile(tokenPath, "");
+      await writeFile(this.tokenPath, "");
     }
     if (!process.env["NCM_API_ANON_TOKEN"]) {
-      process.env["NCM_API_ANON_TOKEN"] = tokenPath;
+      process.env["NCM_API_ANON_TOKEN"] = this.tokenPath;
     }
-    return tokenPath;
   }
 
-  private static async loadServer() {
+  private async loadServer() {
     if (!this.serverImpl) {
       await this.ensureAnonToken();
       const mod = await import("@neteasecloudmusicapienhanced/api/server.js");
@@ -32,16 +33,23 @@ export default class NeteaseMusicApiService {
     return this.serverImpl;
   }
 
-  static async create(
-    onError: NormalFunc<[err: Error]>,
-    port = Number(process.env.NCM_SERVER_PORT)
-  ) {
+  private async create() {
     try {
       const server = await this.loadServer();
-      return await server.serveNcmApi({ port, moduleDefs });
+      return server.serveNcmApi({ port: this.port, moduleDefs });
     } catch (err) {
-      onError(EqError.anyToError(err)!);
+      this.onError(EqError.anyToError(err)!);
       return null;
     }
+  }
+
+  async stop() {
+    await this.instance?.then((ncm) => ncm?.server?.close());
+  }
+
+  constructor(props: { onError: NormalFunc<[err: Error]>; port: number }) {
+    this.port = props.port;
+    this.onError = props.onError;
+    this.instance = this.create();
   }
 }

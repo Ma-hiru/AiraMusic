@@ -13,7 +13,7 @@
   "references": [
     { "path": "../tsconfig.json" },
     { "path": "../../log/tsconfig.json" },
-    { "path": "../../message/tsconfig.json" },
+    { "path": "../../ipc/tsconfig.json" },
     { "path": "../../wasm/tsconfig.json" }
   ],
   "include": [".", "../../../types/**/*"]

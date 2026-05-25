@@ -1,21 +1,25 @@
 import express from "express";
 import expressProxy from "express-http-proxy";
 import { join } from "node:path";
-import { Log } from "@mahiru/app/utils/log";
-import { staticUIDir } from "@mahiru/app/utils/path";
+import { MainPathResolver } from "@/lib/path-resolver";
 
 export default class ProxyService {
-  static create(onError?: NormalFunc<[err: Error]>) {
-    const expressAPP = express();
-    const port = process.env.EXPRESS_SERVER_PORT;
-    const ncmPort = process.env.NCM_SERVER_PORT;
-    const cachePort = process.env.GO_SERVER_PORT;
+  instance;
+  onError;
 
+  constructor(props: {
+    onError?: NormalFunc<[err: Error]>;
+    port: number;
+    ncmPort: number;
+    storePort: number;
+  }) {
+    this.onError = props.onError;
+    const expressAPP = express();
     const serveHtml = (file: string) => (_req: express.Request, res: express.Response) => {
-      res.sendFile(join(staticUIDir, file));
+      res.sendFile(join(MainPathResolver.staticUIDir, file));
     };
 
-    expressAPP.use("/", express.static(staticUIDir));
+    expressAPP.use("/", express.static(MainPathResolver.staticUIDir));
     expressAPP.get("/login", serveHtml("login.html"));
     expressAPP.get("/info", serveHtml("info.html"));
     expressAPP.get("/lyric", serveHtml("lyric.html"));
@@ -24,13 +28,13 @@ export default class ProxyService {
     expressAPP.get("/mini", serveHtml("mini.html"));
     expressAPP.use(
       "/api",
-      expressProxy(`http://127.0.0.1:${ncmPort}`, {
+      expressProxy(`http://127.0.0.1:${props.ncmPort}`, {
         timeout: 15000
       })
     );
     expressAPP.use(
       "/cache",
-      expressProxy(`http://127.0.0.1:${cachePort}`, {
+      expressProxy(`http://127.0.0.1:${props.storePort}`, {
         timeout: 15000
       })
     );
@@ -39,16 +43,19 @@ export default class ProxyService {
         request.headers["content-type"] === "application/json" &&
         typeof request.body === "string"
       ) {
-        const { type, text } = JSON.parse(request.body || "{}");
-        // @ts-expect-error
-        Log[type]?.(text);
+        const { type, text } = <Record<string, string>>JSON.parse(request.body || "{}");
+        // TODO
       }
 
       response.status(204);
     });
 
-    return expressAPP.listen(port, "127.0.0.1").on("error", (e) => {
-      onError?.(e);
+    this.instance = expressAPP.listen(props.port, "127.0.0.1").on("error", (e) => {
+      this.onError?.(e);
     });
+  }
+
+  stop() {
+    this.instance.close();
   }
 }

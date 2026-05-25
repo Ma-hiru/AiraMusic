@@ -4,9 +4,9 @@ import { Readable } from "node:stream";
 import { normalize } from "node:path";
 import { stat } from "node:fs/promises";
 import { createReadStream } from "node:fs";
-import { Log } from "@mahiru/app/utils/log";
+import { Log } from "@/lib/log";
 
-export class AppProtocol {
+export class MainProtocol {
   private static init = false;
 
   static register() {

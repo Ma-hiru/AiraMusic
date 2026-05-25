@@ -1271,17 +1271,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@mahiru/log@workspace:*, @mahiru/log@workspace:packages/log":
+"@mahiru/ipc@workspace:*, @mahiru/ipc@workspace:packages/ipc":
   version: 0.0.0-use.local
-  resolution: "@mahiru/log@workspace:packages/log"
+  resolution: "@mahiru/ipc@workspace:packages/ipc"
+  dependencies:
+    "@mahiru/log": "workspace:*"
   languageName: unknown
   linkType: soft
 
-"@mahiru/message@workspace:*, @mahiru/message@workspace:packages/message":
+"@mahiru/log@workspace:*, @mahiru/log@workspace:packages/log":
   version: 0.0.0-use.local
-  resolution: "@mahiru/message@workspace:packages/message"
-  dependencies:
-    "@mahiru/log": "workspace:*"
+  resolution: "@mahiru/log@workspace:packages/log"
   languageName: unknown
   linkType: soft
 
@@ -1302,8 +1302,8 @@ __metadata:
     "@emotion/css": "npm:^11.13.5"
     "@eslint/js": "npm:^9.39.1"
     "@heroicons/react": "npm:^2.2.0"
+    "@mahiru/ipc": "workspace:*"
     "@mahiru/log": "workspace:*"
-    "@mahiru/message": "workspace:*"
     "@mahiru/wasm": "workspace:*"
     "@rolldown/plugin-babel": "npm:^0.2.2"
     "@tailwindcss/vite": "npm:^4.1.17"
@@ -3387,8 +3387,8 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "aira-music@workspace:packages/app"
   dependencies:
+    "@mahiru/ipc": "workspace:*"
     "@mahiru/log": "workspace:*"
-    "@mahiru/message": "workspace:*"
     "@mahiru/store": "workspace:*"
     "@neteasecloudmusicapienhanced/api": "npm:^4.29.17"
     "@types/express": "npm:^5.0.0"

@@ -9,14 +9,14 @@
     "emitDeclarationOnly": true,
     "outDir": "./dist-types",
     "paths": {
-      "@mahiru/app/*": ["./src/*"]
+      "@/*": ["./src/*"]
     },
     "assumeChangesOnlyAffectDirectDependencies": true
   },
   "references": [
     { "path": "../log/tsconfig.json" },
     { "path": "../store/tsconfig.json" },
-    { "path": "../message/tsconfig.json" }
+    { "path": "../ipc/tsconfig.json" }
   ],
   "include": ["src/**/*", "../../types/**/*"]
 }

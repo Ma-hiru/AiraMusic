@@ -1,147 +1,105 @@
 import { app } from "electron";
-import { LogLevel } from "@mahiru/log";
-import { Log } from "@mahiru/app/utils/log";
-import { AppProtocol } from "@mahiru/app/inner/protocol";
-import { storeServerBinaryPath } from "@mahiru/app/utils/path";
-import { isMacOS, isWindows } from "@mahiru/app/utils/platform";
-import { isDev, storeKeyAccessToken } from "@mahiru/app/utils/dev";
-import { AppTray, AppWindowCreator, AppWindowManager, AppWindows } from "@mahiru/app/window";
-import AppIpcMain from "@mahiru/app/inner/ipc/main";
-import AppServices from "@mahiru/app/services";
-import AppScreen from "@mahiru/app/utils/screen";
+import { MainProtocol } from "@/inner/protocol";
+import { MainExitCodeConstants } from "@/constants/exit-code";
+import { Log } from "@/lib/log";
+import { MainWindowCreator } from "@/lib/window-creator";
+import { MainWindowPreset } from "@/lib/window-preset";
+import { MainWindowManager } from "@/lib/window-manager";
+import { MainTray } from "@/lib/tray";
+import { MainScreenResolver } from "@/lib/screen-resolver";
+import { MainServices } from "@/services";
+import { ipcInit } from "@/inner/ipc";
 
-export class APP {
-  private proxyServer?: ReturnType<typeof AppServices.Proxy.create>;
-  private storeService?: ReturnType<typeof AppServices.Store.create>;
-  private neteaseMusicApiService?: ReturnType<typeof AppServices.NeteaseMusicApi.create>;
-  private status: "initializing" | "running" | "exiting" = "initializing";
+/**
+ * @desc 应用实例 \
+ * 管理服务编排，IPC注册，窗口管理，自定义协议等
+ * */
+export class MainApp {
+  private _services?: MainServices;
+  private _status: "initializing" | "running" | "exiting" = "initializing";
 
   /** @desc 是否进入退出流程 */
   private get isExiting() {
-    return this.status === "exiting";
+    return this._status === "exiting";
   }
 
   /**
    * @desc 创建并启动服务 \
    * error: exit \
-   * code: -1
+   * code: MainExitCodeConstants.SERVICES_START_ERROR
    * */
   private createServices() {
-    try {
-      const handleLaunchError = (err: Error, name: string) => {
-        if (this.status === "exiting") return;
-        Log.error(err);
-        AppWindows.fatalError(err.message);
-        AppWindowManager.get("main")?.close();
-        setTimeout(
-          () => this.exit(-1, `Failed to initialize ${name} service: ${err.message}`),
-          5000
+    this._services = new MainServices({
+      services: ["ncm", "proxy", "store"],
+      onError: (service, msg, err) => {
+        Log.error(`service(${service})`, msg, err);
+        this.exit(
+          MainExitCodeConstants.SERVICES_START_ERROR,
+          `failed to initialize ${service} service`
         );
-      };
-
-      this.storeService = AppServices.Store.create({
-        args: {
-          port: Number(process.env.GO_SERVER_PORT!),
-          scheme: process.env.APP_SCHEME!,
-          "scheme-hostname": process.env.APP_SCHEME_FILE_HOSTNAME!,
-          key: storeKeyAccessToken
-        },
-        path: storeServerBinaryPath,
-        enableConsole: Log.EnvLevel <= LogLevel.DEBUG,
-        logger: (data) => Log.debug("store service", data.toString()),
-        onExit: (code) => {
-          handleLaunchError(new Error(`store service exited with code ${code}`), "store");
-        }
-      });
-
-      this.neteaseMusicApiService = AppServices.NeteaseMusicApi.create((err) =>
-        handleLaunchError(err, "Netease Music API")
-      );
-
-      !isDev &&
-        (this.proxyServer = AppServices.Proxy.create((err) => handleLaunchError(err, "Proxy")));
-    } catch (err) {
-      Log.error({
-        raw: err,
-        message: "failed to initialize app services",
-        label: "App init"
-      });
-      this.exit(
-        -1,
-        "Failed to initialize app services, reason: " +
-          (err instanceof Error ? err.message : String(err))
-      );
-    }
+      }
+    });
   }
 
   /**
    * @desc 注册自定义协议 \
    * error exit \
-   * code -2
+   * code MainExitCodeConstants.REGISTER_PROTOCOL_FAILED
    * */
   private registerAppProtocol() {
     try {
-      AppProtocol.register();
+      MainProtocol.register();
     } catch (err) {
-      Log.error({
-        raw: err,
-        message: "failed to register app protocol",
-        label: "App init"
-      });
-      this.exit(-2, "Failed to register app protocol");
+      Log.error("protocol", "failed to register app protocol", err);
+      this.exit(MainExitCodeConstants.REGISTER_PROTOCOL_FAILED, "failed to register app protocol");
     }
   }
 
   /**
    * @desc 注册 IPC 处理函数 \
    * error： exit \
-   * code： -3
+   * code： MainExitCodeConstants.REGISTER_IPC_HANDLERS_FAILED
    * */
   private registerIPCHandlers() {
     try {
-      AppIpcMain.registerEventHandlers();
-      AppIpcMain.registerInvokeHandlers();
+      ipcInit();
     } catch (err) {
-      Log.error({
-        raw: err,
-        message: "failed to register ipc handlers",
-        label: "App init"
-      });
-      this.exit(-3, "Failed to register ipc handlers");
+      Log.error("ipc", "failed to register ipc handlers", err);
+      this.exit(
+        MainExitCodeConstants.REGISTER_IPC_HANDLERS_FAILED,
+        "failed to register ipc handlers"
+      );
     }
   }
 
   /**
    * @desc 创建并显示主窗口 \
    * error: exit \
-   * code: -4
+   * code: MainExitCodeConstants.LAUNCH_MAIN_RENDERER_FAILED
    * */
   private launchMainWindow() {
     try {
-      const mainWindow = AppWindowCreator.create(AppWindows.main);
-      mainWindow.addListener("close", (e) => {
-        if (isMacOS) {
+      const mainWindow = MainWindowCreator.create(MainWindowPreset.main);
+      if (process.platform === "darwin") {
+        mainWindow.addListener("close", (e) => {
           e.preventDefault();
           mainWindow.hide();
-        }
-      });
-      app.addListener("activate", () => {
-        AppWindowManager.checkAndShow("main");
-      });
-      mainWindow.addListener("closed", () => {
-        if (!isMacOS) this.exit(0, "Main window closed");
-      });
-      app.addListener("window-all-closed", () => {
-        if (!isMacOS) this.exit(0, "All windows closed");
-      });
+        });
+        app.addListener("activate", () => {
+          MainWindowManager.checkAndShow("main");
+        });
+      } else {
+        mainWindow.addListener("closed", () => {
+          this.exit(MainExitCodeConstants.NORMAL_EXIT, "");
+        });
+        app.addListener("window-all-closed", () => {
+          this.exit(MainExitCodeConstants.NORMAL_EXIT, "");
+        });
+      }
       return mainWindow;
     } catch (err) {
-      Log.error({
-        raw: err,
-        message: "failed to launch main window",
-        label: "App init"
-      });
-      this.exit(-4, "Failed to launch main window");
+      Log.error("window", "failed to launch main window", err);
+      this.exit(MainExitCodeConstants.LAUNCH_MAIN_RENDERER_FAILED, "failed to launch main window");
     }
   }
 
@@ -151,48 +109,40 @@ export class APP {
    * */
   private registerAppTray() {
     try {
-      AppTray.register();
+      MainTray.register();
     } catch (err) {
-      Log.warn({
-        raw: err,
-        message: "failed to register app tray",
-        label: "App init"
-      });
+      Log.warn("tary", "failed to register app tray", err);
     }
   }
 
   /**
    * @desc 停止所有服务
    * */
-  private async stopAllServers() {
-    if (isWindows) {
-      Log.info("stopping store service by http (windows)");
-      await this.storeService
-        ?.stopByHttp(process.env.GO_SERVER_PORT!, storeKeyAccessToken)
-        .catch((err) => Log.error(`failed to stop store service by http: ${err}`));
-    }
-    await this.storeService
-      ?.stop()
-      .catch((err) => Log.error(`failed to stop store service: ${err}`));
-    await this.neteaseMusicApiService
-      ?.then((ncm) => ncm?.server?.close())
-      .catch((err) => Log.error(`failed to stop neteaseMusicAPIServer: ${err}`));
-    this.proxyServer?.close();
+  private stopAllServers() {
+    return Promise.allSettled(
+      this._services?.services.map((s) => this._services?.stopService(s)) ?? []
+    );
   }
 
+  /** 输出信息 */
   private printInfo() {
-    AppScreen.printScreenInfo();
+    MainScreenResolver.printScreenInfo();
+  }
+
+  /** 当前状态 */
+  get status() {
+    return this._status;
   }
 
   /** 应用初始化，
    * @desc 按照顺序执行各个步骤，步骤失败会导致应用退出， \
    * 具体退出码和原因会根据失败的步骤不同而不同 \
-   * 出现内部未被捕获的错误时，退出 code 为-5
+   * 出现内部未被捕获的错误时，退出 code 为 MainExitCodeConstants.UNCAUGHT_ERROR
    * */
   init() {
     this.printInfo(); // 打印信息
 
-    this.status = "initializing"; // 初始化状态
+    this._status = "initializing"; // 初始化状态
     Log.info("App initializing...");
 
     this.registerAppProtocol(); // 注册自定义应用协议
@@ -220,16 +170,12 @@ export class APP {
         if (this.isExiting) return;
         Log.info("App tray registered");
 
-        this.status = "running"; // 修改状态，完成初始化
+        this._status = "running"; // 修改状态，完成初始化
         Log.info("App running");
       })
       .catch((err) => {
-        Log.error({
-          raw: err,
-          message: "failed to initialize app, uncaught error",
-          label: "App init"
-        });
-        app.exit(-5);
+        Log.error("app init", "failed to initialize app, uncaught error", err);
+        this.exit(MainExitCodeConstants.UNCAUGHT_ERROR, "failed to initialize app, uncaught error");
       });
   }
 
@@ -238,12 +184,16 @@ export class APP {
    * 最终都会调用 app.exit(code) 退出应用 \
    * code为负数时是非正常退出，等于0为正常退出
    * */
-  exit(code = 0, reason: string) {
-    if (this.status === "exiting") return;
-    this.status = "exiting";
-    Log.info("app exiting, reason: " + reason);
-    Promise.allSettled([this.stopAllServers()]).finally(() => {
-      Log.info("app exited.");
+  exit(code: number, reason: string) {
+    if (this._status === "exiting") return;
+    this._status = "exiting";
+
+    // 异常退出输出错误日志
+    if (code !== MainExitCodeConstants.NORMAL_EXIT) {
+      Log.error("app exit", reason);
+    }
+
+    this.stopAllServers().finally(() => {
       app.exit(code);
     });
   }

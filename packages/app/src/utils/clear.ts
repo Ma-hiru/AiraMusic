@@ -1,5 +1,5 @@
 import { app, session } from "electron";
-import { Log } from "./log";
+import { Log } from "@/lib/log";
 
 export function clearAllCache() {
   app.whenReady().then(async () => {

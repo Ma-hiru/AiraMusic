@@ -1,17 +1,14 @@
 import Store from "@mahiru/store";
-import { Log } from "@mahiru/app/utils/log";
 
 export default class StoreService {
-  static create(
-    props: Omit<Parameters<typeof Store.run>[0], "args"> & { args: Record<string, string | number> }
-  ) {
-    const instance = Store.run({
-      ...props,
-      args: Object.entries(props.args)
-        .map(([flag, value]) => [flag.startsWith("--") ? flag : `--${flag}`, String(value)])
-        .flat()
-    });
-    Log.debug("Store instance created, pid: " + instance.pid);
-    return instance;
+  instance;
+
+  constructor(props: Parameters<typeof Store.run>[0]) {
+    this.instance = Store.run(props);
+  }
+
+  async stop() {
+    if (process.platform === "win32") await this.instance.stopByHttp();
+    await this.instance.stop();
   }
 }

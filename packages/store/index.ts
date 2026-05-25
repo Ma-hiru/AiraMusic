@@ -10,6 +10,8 @@ const defaultServerPath = join(__dirname, "dist", exeName);
 
 export default class Store {
   private serverProc;
+  private port;
+  private token;
   private _running;
   private readonly enableConsole;
   private readonly _logger;
@@ -60,11 +62,11 @@ export default class Store {
   }
 
   // 通过 HTTP 接口请求退出
-  async stopByHttp(port: number, token: string) {
+  async stopByHttp(): Promise<boolean> {
     if (!this._running) return true;
-    return fetch(`http://localhost:${port}/api/exit`, {
+    return fetch(`http://localhost:${this.port}/api/exit`, {
       method: "GET",
-      headers: { Authorization: token }
+      headers: { Authorization: this.token }
     })
       .then(
         () =>
@@ -109,12 +111,16 @@ export default class Store {
     props: {
       enableConsole: boolean;
       logger: NormalFunc<[msg: Buffer]>;
+      port: number;
+      token: string;
     }
   ) {
     this.serverProc = process;
     this._running = true;
     this.enableConsole = props.enableConsole;
     this._logger = props.logger;
+    this.port = props.port;
+    this.token = props.token;
     this.init();
   }
 
@@ -163,8 +169,16 @@ export default class Store {
     }
   }
 
+  static handleArgs(args: Record<string, number | string>): string[] {
+    return Object.entries(args)
+      .map(([flag, value]) => [flag.startsWith("--") ? flag : `--${flag}`, String(value)])
+      .flat();
+  }
+
   static run(props: {
-    args: string[];
+    args: Record<string, string | number>;
+    port: number;
+    token: string;
     logger?: NormalFunc<[msg: Buffer]>;
     enableConsole?: boolean;
     path?: string;
@@ -172,6 +186,7 @@ export default class Store {
   }) {
     if (this.instance) return this.instance;
 
+    props.args = { ...props.args, port: props.port, key: props.token };
     props.path ||= defaultServerPath;
     props.logger ||= (b: Buffer) => console.log("[store service stdout]", b.toString());
     props.enableConsole ??= true;
@@ -182,11 +197,11 @@ export default class Store {
 
     let serverProc;
     if (props.enableConsole) {
-      serverProc = spawn(props.path, props.args, {
+      serverProc = spawn(props.path, Store.handleArgs(props.args), {
         stdio: ["ignore", "pipe", "pipe"]
       });
     } else {
-      serverProc = spawn(props.path, props.args, {
+      serverProc = spawn(props.path, Store.handleArgs(props.args), {
         stdio: ["ignore", "ignore", "ignore"]
       });
     }
@@ -198,7 +213,9 @@ export default class Store {
 
     this.instance = new Store(serverProc, {
       enableConsole: props.enableConsole,
-      logger: props.logger
+      logger: props.logger,
+      port: props.port,
+      token: props.token
     });
 
     return this.instance;

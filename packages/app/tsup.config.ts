@@ -38,7 +38,7 @@ export default defineConfig((options) => {
       esbuildOptions: (esbuildOptions) => {
         esbuildOptions.alias = {
           ...(esbuildOptions.alias || {}),
-          "@mahiru/app": path.resolve(__dirname, "./src")
+          "@": path.resolve(__dirname, "./src")
         };
         esbuildOptions.define = {
           ...(esbuildOptions.define || {}),

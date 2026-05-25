@@ -8,7 +8,8 @@ const __dirname = fileURLToPath(new URL(".", import.meta.url));
 export default defineConfig({
   resolve: {
     alias: {
-      "@mahiru/app": join(__dirname, "src")
+      "@mahiru/app": join(__dirname, "src"),
+      "@": join(__dirname, "tests")
     }
   },
   test: {

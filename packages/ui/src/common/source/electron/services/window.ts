@@ -243,7 +243,7 @@ export default class _AppWindow extends Listenable<WindowBusEvent> {
   }
 
   open() {
-    _AppRenderer.Event.normal.openInternalWindow(this.type);
+    _AppRenderer.Event.normal("openInternalWindow", this.type);
   }
 
   openThen(cb: NormalFunc) {
