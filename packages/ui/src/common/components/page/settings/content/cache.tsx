@@ -8,7 +8,7 @@ import {
 
 import RangeRow from "./range-row";
 import BaseItem from "./base-item";
-import Card from "@mahiru/ui/common/components/card/Card";
+import Card from "../../../card/card";
 
 interface CacheProps {
   data: NeteaseSettings["cache"];

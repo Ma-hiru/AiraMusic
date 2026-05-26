@@ -1,6 +1,6 @@
 import { createZustandInitializer } from "@mahiru/ui/common/lib/store";
 import { type NeteaseSettingsModel } from "@mahiru/ui/common/source/netease/models";
-import { defaultSettings } from "@mahiru/ui/common/source/netease/models/NeteaseSettings";
+import { defaultSettings } from "@mahiru/ui/common/source/netease/models/netease-settings";
 
 export const SettingsStoreInitializer = createZustandInitializer<SettingsStoreType>((set) => {
   return {

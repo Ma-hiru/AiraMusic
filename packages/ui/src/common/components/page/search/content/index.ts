@@ -1,4 +1,4 @@
-export { default as AlbumResult } from "./AlbumResult";
-export { default as ArtistResult } from "./ArtistResult";
-export { default as PlaylistResult } from "./PlaylistResult";
-export { default as TrackResult } from "./TrackResult";
+export { default as AlbumResult } from "./album-result";
+export { default as ArtistResult } from "./artist-result";
+export { default as PlaylistResult } from "./playlist-result";
+export { default as TrackResult } from "./track-result";

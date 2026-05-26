@@ -1,8 +1,8 @@
-import { type ContextMenuRender } from "../../components/menu/MenuProvider";
+import { type ContextMenuRender } from "./menu-provider";
 import { useLayoutEffect } from "react";
 import { Log } from "@mahiru/ui/common/constants/dev";
-import { createTrackContextMenu } from "./TrackMenu";
-import MenuProvider from "./MenuProvider";
+import { createTrackContextMenu } from "./track-menu";
+import MenuProvider from "./menu-provider";
 
 export default class AppContextMenu {
   static _setContextMenuData: NormalFunc<[data: Nullable<ContextMenuRender>]> = () => {

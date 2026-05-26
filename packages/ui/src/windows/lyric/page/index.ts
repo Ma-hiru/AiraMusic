@@ -1,1 +1,1 @@
-export { default } from "./LyricPage";
+export { default } from "./lyric-page";

@@ -1,6 +1,6 @@
-import { type ToastItemData } from "../../components/toast/ToastItem";
+import { type ToastItemData } from "./toast-item";
 import { Log } from "@mahiru/ui/common/constants/dev";
-import Provider from "./ToastProvider";
+import Provider from "./toast-provider";
 
 export default class AppToast {
   static show: NormalFunc<[data: Omit<ToastItemData, "id">], string> = () => {

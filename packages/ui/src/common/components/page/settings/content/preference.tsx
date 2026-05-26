@@ -6,7 +6,7 @@ import {
 } from "@mahiru/ui/common/source/netease/models";
 
 import ToggleRow from "./toggle-row";
-import Card from "@mahiru/ui/common/components/card/Card";
+import Card from "../../../card/card";
 
 interface PreferenceSettings {
   data: NeteaseSettings["preference"];

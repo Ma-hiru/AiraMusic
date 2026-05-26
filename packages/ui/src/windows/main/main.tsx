@@ -1,4 +1,4 @@
-import App from "./App";
+import App from "./app";
 import wasm from "@mahiru/wasm";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";

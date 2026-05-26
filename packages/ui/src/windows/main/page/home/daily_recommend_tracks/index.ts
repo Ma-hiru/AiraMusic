@@ -1,1 +1,1 @@
-export { default } from "./DailyRecommendTracks";
+export { default } from "./daily-recommend-tracks";

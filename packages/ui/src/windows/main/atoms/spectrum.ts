@@ -2,7 +2,7 @@ import { atom } from "jotai";
 import type {
   SpectrumData,
   SpectrumOptions
-} from "@mahiru/ui/windows/main/hooks/useSpectrumWorker";
+} from "@mahiru/ui/windows/main/hooks/use-spectrum-worker";
 
 export const spectrumReadyAtom = atom(false);
 

@@ -1,1 +1,1 @@
-export { default } from "./RecommendTrackList";
+export { default } from "./recommend-track-list";

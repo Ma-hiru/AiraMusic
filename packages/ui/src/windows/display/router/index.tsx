@@ -1,12 +1,12 @@
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import { RoutePathDisplay } from "@mahiru/ui/common/routes";
-import LayoutDisplay from "../pages/layout/LayoutDisplay";
-import BlankDisplay from "../pages/blank/BlankDisplay";
-import AlbumDisplay from "../pages/album/AlbumDisplay";
-import ArtistDisplay from "../pages/artist/ArtistDisplay";
-import PlaylistDisplay from "../pages/playlist/PlaylistDisplay";
-import SearchDisplay from "../pages/search/SearchDisplay";
-import SettingsDisplay from "../pages/settings/SettingsDisplay";
+import LayoutDisplay from "../pages/layout/layout-display";
+import BlankDisplay from "../pages/blank/blank-display";
+import AlbumDisplay from "../pages/album/album-display";
+import ArtistDisplay from "../pages/artist/artist-display";
+import PlaylistDisplay from "../pages/playlist/playlist-display";
+import SearchDisplay from "../pages/search/search-display";
+import SettingsDisplay from "../pages/settings/settings-display";
 
 export const DisplayRouter = createBrowserRouter(
   [

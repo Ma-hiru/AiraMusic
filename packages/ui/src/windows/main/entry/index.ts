@@ -1,5 +1,5 @@
 import { userStoreSnapshot } from "@mahiru/ui/common/store/user";
-import { useListenable } from "@mahiru/ui/common/hooks/useListenable";
+import { useListenable } from "@mahiru/ui/common/hooks/use-listenable";
 import {
   ElectronServicesOnce,
   ElectronServicesWindow

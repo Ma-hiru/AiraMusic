@@ -4,7 +4,7 @@ import { Check, SlidersHorizontal } from "lucide-react";
 import { NeteaseSettings } from "@mahiru/ui/common/source/netease/models";
 import { TrackQuality } from "@mahiru/ui/common/enum";
 
-import Card from "@mahiru/ui/common/components/card/Card";
+import Card from "../../../card/card";
 
 interface QualityProps {
   data: NeteaseSettings["trackQuality"];

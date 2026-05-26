@@ -6,8 +6,8 @@ import { getCityNameByCode } from "@mahiru/ui/common/utils/city-code";
 import { FormatNumber } from "@mahiru/ui/common/lib/format";
 
 import MiniStat from "./mini-stat";
-import Card from "@mahiru/ui/common/components/card/Card";
-import NeteaseImage from "@mahiru/ui/common/components/image/NeteaseImage";
+import Card from "../../../card/card";
+import NeteaseImage from "../../../image/netease-image";
 
 interface UserDetailProps {
   user: Nullable<NeteaseUser>;

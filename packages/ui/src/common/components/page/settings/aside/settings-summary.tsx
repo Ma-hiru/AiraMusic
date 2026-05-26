@@ -4,7 +4,7 @@ import { Radio } from "lucide-react";
 import { TrackQuality } from "@mahiru/ui/common/enum";
 
 import MiniStat from "./mini-stat";
-import Card from "@mahiru/ui/common/components/card/Card";
+import Card from "../../../card/card";
 
 interface SummaryProps {
   settings: NeteaseSettings;

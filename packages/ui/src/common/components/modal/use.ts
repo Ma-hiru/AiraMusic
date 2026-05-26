@@ -1,6 +1,6 @@
-import { type ModalData } from "../../components/modal/ModalProvider";
+import { type ModalData } from "./modal-provider";
 import { Log } from "@mahiru/ui/common/constants/dev";
-import Provider from "./ModalProvider";
+import Provider from "./modal-provider";
 
 export default class AppModal {
   private static toggleModalVisible: NormalFunc<[visible?: boolean | undefined]> = () => {
