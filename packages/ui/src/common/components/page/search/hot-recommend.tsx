@@ -2,13 +2,11 @@ import { type FC, memo, useCallback, useEffect, useState } from "react";
 import { cx } from "@emotion/css";
 import { Search, TrendingUp } from "lucide-react";
 import { useRequestAutoRetry, useRequestStatusWrap } from "@/common/hooks/use-request-wrap";
-import { NeteaseAPISearch } from "@/common/source/netease/api";
+import { NeteaseAPISearch } from "@/common/netease/api";
 import { RendererFormat } from "@/common/lib/format";
-
-import AppErrorBoundary from "@/common/components/fallback/app-error-boundary";
 import AppLoading from "@/common/components/fallback/app-loading";
-import ThrowIf from "@/common/components/fallback/throw-if";
 import Card from "@/common/components/card";
+import AppError from "@/common/components/fallback/app-error";
 
 interface HotRecommendProps {
   className?: string;
@@ -28,8 +26,7 @@ const HotRecommend: FC<HotRecommendProps> = ({ className, onSearch }) => {
   const others = list.slice(4, 30);
 
   return (
-    <AppErrorBoundary name="HotRecommend" canReset onReset={reload} toast>
-      <ThrowIf when={status === "error"} message="获取热门搜索失败" />
+    <AppError reset={reload} when={status === "error"} message="获取热门搜索失败">
       <AppLoading loading={status === "loading"} className="h-full">
         <Card
           className={cx(className, "flex flex-col")}
@@ -111,7 +108,7 @@ const HotRecommend: FC<HotRecommendProps> = ({ className, onSearch }) => {
           }
         />
       </AppLoading>
-    </AppErrorBoundary>
+    </AppError>
   );
 };
 

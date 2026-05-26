@@ -1,5 +1,6 @@
 import { useCallback } from "react";
-import { ElectronServicesBus, ElectronServicesWindow } from "@/common/source/electron/services";
+import { RendererWindow } from "@/common/lib/window";
+import { RendererEventBus } from "@/common/lib/bus";
 import { useLatestRef } from "@/common/hooks/use-latest-ref";
 import { useNavigate } from "react-router-dom";
 import type { MessageData } from "@mahiru/ipc/renderer";
@@ -15,8 +16,8 @@ export function usePageAction(
 
   const onPageAction = useCallback(async () => {
     if (!dataRef.current) return;
-    await ElectronServicesWindow.display.openAwait();
-    ElectronServicesBus.display.send(dataRef.current);
+    await RendererWindow.display.openAwait();
+    RendererEventBus.display.send(dataRef.current);
     navigate(-1);
   }, [dataRef, navigate]);
 

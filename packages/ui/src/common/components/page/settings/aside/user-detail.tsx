@@ -1,6 +1,6 @@
 import { type FC, memo, useEffect, useMemo, useState } from "react";
 import { LogIn, LogOut, UserRound } from "lucide-react";
-import { NeteaseNetworkImage, NeteaseUser } from "@/common/source/netease/models";
+import { NeteaseNetworkImage, NeteaseUser } from "@/common/netease/models";
 import { cx } from "@emotion/css";
 import { getCityNameByCode } from "@/common/utils/city-code";
 import { RendererFormat } from "@/common/lib/format";

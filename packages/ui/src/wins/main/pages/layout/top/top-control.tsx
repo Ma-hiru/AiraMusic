@@ -9,19 +9,19 @@ import {
 } from "lucide-react";
 import { RendererRuntime } from "@/common/lib/runtime";
 import { useListenable } from "@/common/hooks/use-listenable";
-import { ElectronServicesWindow } from "@/common/source/electron/services";
-import AppEntry from "../../../../main/entry";
+import { RendererWindow } from "@/common/lib/window";
+import AppEntry from "@/wins/main/entry";
 
 import NoDrag from "@/common/components/drag/no-drag";
 
 const TopControl: FC = () => {
-  const currentWindow = useListenable(ElectronServicesWindow.current);
-  const miniWindow = useListenable(ElectronServicesWindow.get("miniplayer"));
+  const currentWindow = useListenable(RendererWindow.current);
+  const miniWindow = useListenable(RendererWindow.get("miniplayer"));
 
   const close = async () => {
     currentWindow.hide();
     AppEntry.dispose();
-    ElectronServicesWindow.all.hide();
+    RendererWindow.all.hide();
     currentWindow.close();
   };
 
@@ -47,7 +47,7 @@ const TopControl: FC = () => {
   return (
     <NoDrag className="flex flex-row gap-4 select-none">
       <ControlButton
-        show={RendererRuntime.isDev}
+        show={ import.meta.env.DEV}
         Icon={AppWindowIcon}
         onClick={() => currentWindow.devTools()}
       />

@@ -1,6 +1,6 @@
 import { type FC, memo } from "react";
 import { TrackQuality } from "@/common/enum";
-import { NeteaseHistory, NeteaseTrack, NeteaseTrackRecord } from "@/common/source/netease/models";
+import { NeteaseHistory, NeteaseTrack, NeteaseTrackRecord } from "@/common/netease/models";
 
 import Tag from "@/common/components/public/tag";
 

@@ -1,5 +1,5 @@
 import { type MaybeRef, onMounted, unref, watch } from "vue";
-import { ElectronServicesWindow } from "@/common/source/electron/services";
+import { RendererWindow } from "@/common/lib/window";
 
 let loaded = false;
 
@@ -8,7 +8,7 @@ export function useAppLoadedVue(condition?: MaybeRef<boolean>) {
   if (condition === undefined) {
     onMounted(() => {
       loaded = true;
-      ElectronServicesWindow.current.show();
+      RendererWindow.current.show();
     });
   } else {
     let stop: NormalFunc | null = null;
@@ -18,7 +18,7 @@ export function useAppLoadedVue(condition?: MaybeRef<boolean>) {
         if (!value) return;
 
         loaded = true;
-        ElectronServicesWindow.current.show();
+        RendererWindow.current.show();
         stop?.();
       },
       { immediate: true }

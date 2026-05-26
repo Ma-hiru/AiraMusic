@@ -1,6 +1,6 @@
 import { type FC, memo } from "react";
 import { useAtomValue } from "jotai";
-import { backgroundCoverAtom } from "../../../main/atoms/theme";
+import { backgroundCoverAtom } from "@/wins/main/atoms/theme";
 
 import AcrylicBackground from "@/common/components/public/acrylic-background";
 

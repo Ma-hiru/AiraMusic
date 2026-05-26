@@ -1,7 +1,7 @@
 import { type FC, memo, useCallback, useEffect, useRef } from "react";
 
 import LyricComponent, { type LyricRef } from "@/common/components/lyric/lyric-container";
-import AppEntry from "../../../main/entry";
+import AppEntry from "@/wins/main/entry";
 
 const Lyric: FC<object> = () => {
   const player = AppEntry.usePlayer();

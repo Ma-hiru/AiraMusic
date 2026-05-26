@@ -23,7 +23,6 @@
   will-change: transform;
   contain: layout paint size style;
   backface-visibility: hidden;
-  /* 预 GPU 分配 */
   transform: translate3d(0, 0, 0);
 }
 

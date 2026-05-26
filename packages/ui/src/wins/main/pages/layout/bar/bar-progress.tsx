@@ -2,7 +2,7 @@ import { type FC, memo } from "react";
 import { motion } from "motion/react";
 import { css, cx } from "@emotion/css";
 import { useThemeColor } from "@/common/hooks/use-theme-color";
-import { usePlayProgress } from "../../../../main/hooks/use-play-progress";
+import { usePlayProgress } from "@/wins/main/hooks/use-play-progress";
 
 const BarProgress: FC<object> = () => {
   const { mainColor, textColorOnMain } = useThemeColor();

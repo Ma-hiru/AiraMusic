@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { SettingsStoreInitializer, type SettingsStoreType } from "./config";
 import { RendererZustandStoreCreator } from "@/common/lib/store";
-import { NeteaseSettings } from "@/common/source/netease/models";
+import { NeteaseSettings } from "@/common/netease/models";
 
 export const useSettingsStore = RendererZustandStoreCreator.createZustandStore<SettingsStoreType>(
   SettingsStoreInitializer,

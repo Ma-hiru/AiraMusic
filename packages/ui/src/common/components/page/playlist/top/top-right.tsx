@@ -1,6 +1,6 @@
 import { type FC, memo, useMemo } from "react";
 import { SquareArrowRightEnter, SquareArrowRightExit, SquarePen } from "lucide-react";
-import { NeteaseNetworkImage, NeteasePlaylist } from "@/common/source/netease/models";
+import { NeteaseNetworkImage, NeteasePlaylist } from "@/common/netease/models";
 import { useUser } from "@/common/store/user";
 import { RendererFormat } from "@/common/lib/format";
 import { PlaylistSource } from "@/common/enum";

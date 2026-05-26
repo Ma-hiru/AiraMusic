@@ -14,7 +14,8 @@
   import TrayItem from "@/wins/tray/page/tray-item.vue";
   import TrayPlayer from "@/wins/tray/page/tray-player.vue";
   import TrayDivider from "@/wins/tray/page/tray-divider.vue";
-  import { ElectronServicesBus, ElectronServicesWindow } from "@/common/source/electron/services";
+  import { RendererWindow } from "@/common/lib/window";
+  import { RendererEventBus } from "@/common/lib/bus";
   import { useListenable } from "@/common/hooks/use-listenable-vue";
   import { computed, onMounted, onUnmounted, useTemplateRef, watch } from "vue";
   import {
@@ -31,8 +32,8 @@
   import { useThemeInjectFromBus } from "@/common/hooks/use-theme-inject-from-bus-vue";
 
   const containerRef = useTemplateRef<HTMLDivElement>("containerRef");
-  const playerBus = useListenable(ElectronServicesBus.player);
-  const currentWindow = useListenable(ElectronServicesWindow.current);
+  const playerBus = useListenable(RendererEventBus.player);
+  const currentWindow = useListenable(RendererWindow.current);
   // 主题
   useThemeInjectFromBus();
   // Actions
@@ -46,12 +47,12 @@
       {
         icon: SkipBack,
         text: "上一首",
-        click: () => ElectronServicesBus.playerAction.send("previous")
+        click: () => RendererEventBus.playerAction.send("previous")
       },
       {
         icon: SkipForward,
         text: "下一首",
-        click: () => ElectronServicesBus.playerAction.send("next")
+        click: () => RendererEventBus.playerAction.send("next")
       },
       { icon: MicVocal, text: "歌手", click: () => {} },
       { icon: DiscAlbum, text: "专辑", click: () => {} },
@@ -61,8 +62,8 @@
         click: async () => {
           const id = playerBus.value.data?.track?.id;
           if (!id) return;
-          await ElectronServicesWindow.comment.openAwait();
-          ElectronServicesBus.comment.send({
+          await RendererWindow.comment.openAwait();
+          RendererEventBus.comment.send({
             id,
             type: "track"
           });
@@ -86,20 +87,20 @@
       {
         icon: LogOut,
         text: "退出",
-        click: () => ElectronServicesBus.playerAction.send("exit")
+        click: () => RendererEventBus.playerAction.send("exit")
       }
     ];
     if (playerBus.value.data?.status === "playing") {
       result.unshift({
         icon: Pause,
         text: "暂停",
-        click: () => ElectronServicesBus.playerAction.send("pause")
+        click: () => RendererEventBus.playerAction.send("pause")
       });
     } else {
       result.unshift({
         icon: Play,
         text: "播放",
-        click: () => ElectronServicesBus.playerAction.send("play")
+        click: () => RendererEventBus.playerAction.send("play")
       });
     }
     return result;

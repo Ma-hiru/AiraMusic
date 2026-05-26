@@ -1,7 +1,7 @@
 import { type FC, memo, useMemo } from "react";
-import { QRCodeStatus } from "../../login/hooks/use-login-qr-code";
+import { QRCodeStatus } from "@/wins/login/hooks/use-login-qr-code";
 import { NeteaseImageSize } from "@/common/enum";
-import { NeteaseNetworkImage } from "@/common/source/netease/models";
+import { NeteaseNetworkImage } from "@/common/netease/models";
 import NeteaseImage from "@/common/components/image/netease-image";
 
 interface TipsProps {

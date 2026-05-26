@@ -1,11 +1,11 @@
 import { type FC, memo, useMemo } from "react";
 import { useThemeColor } from "@/common/hooks/use-theme-color";
 import { NeteaseImageSize } from "@/common/enum";
-import { NeteaseNetworkImage } from "@/common/source/netease/models";
+import { NeteaseNetworkImage } from "@/common/netease/models";
 import { useSetAtom } from "jotai";
-import { playModalAtom } from "../../../../main/atoms/layout";
+import { playModalAtom } from "@/wins/main/atoms/layout";
 
-import AppEntry from "../../../../main/entry";
+import AppEntry from "@/wins/main/entry";
 import NeteaseImage from "@/common/components/image/netease-image";
 
 const BarCover: FC<object> = () => {

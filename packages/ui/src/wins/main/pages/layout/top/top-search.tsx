@@ -1,15 +1,16 @@
 import { type FC, memo, useCallback } from "react";
 import { Search } from "lucide-react";
 import NoDrag from "@/common/components/drag/no-drag";
-import { ElectronServicesBus, ElectronServicesWindow } from "@/common/source/electron/services";
+import { RendererWindow } from "@/common/lib/window";
+import { RendererEventBus } from "@/common/lib/bus";
 import { useSearchRecommend } from "@/common/hooks/use-search-recommend";
 
 const TopSearch: FC<object> = () => {
   const defaultKeywords = useSearchRecommend();
 
   const openSearch = useCallback(async (keyword?: string) => {
-    await ElectronServicesWindow.display.openAwait();
-    ElectronServicesBus.display.send({
+    await RendererWindow.display.openAwait();
+    RendererEventBus.display.send({
       type: "search",
       keyword
     });

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { NeteaseAPISearch } from "@/common/source/netease/api";
+import { NeteaseAPISearch } from "@/common/netease/api";
 
 export function useSearchRecommend() {
   const [defaultKeywords, setDefaultKeywords] =

@@ -1,6 +1,6 @@
 import { type FC, memo } from "react";
 import { Monitor, Palette } from "lucide-react";
-import { NeteaseSettings, type NeteaseSettingsModel } from "@/common/source/netease/models";
+import { NeteaseSettings, type NeteaseSettingsModel } from "@/common/netease/models";
 
 import ToggleRow from "./toggle-row";
 import Card from "@/common/components/card";

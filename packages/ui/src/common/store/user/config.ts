@@ -1,5 +1,5 @@
 import { RendererZustandStoreCreator } from "@/common/lib/store";
-import { NeteaseUser, type NeteaseUserModel } from "@/common/source/netease/models";
+import { NeteaseUser, type NeteaseUserModel } from "@/common/netease/models";
 
 export const UserStoreInitializer =
   RendererZustandStoreCreator.createZustandInitializer<UserStoreType>((set) => {

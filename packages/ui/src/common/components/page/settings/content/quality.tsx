@@ -1,7 +1,7 @@
 import { cx } from "@emotion/css";
 import { type FC, memo } from "react";
 import { Check, SlidersHorizontal } from "lucide-react";
-import { NeteaseSettings } from "@/common/source/netease/models";
+import { NeteaseSettings } from "@/common/netease/models";
 import { TrackQuality } from "@/common/enum";
 
 import Card from "@/common/components/card";

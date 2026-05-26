@@ -1,5 +1,5 @@
 import { type FC, memo } from "react";
-import { NeteasePlaylist } from "@/common/source/netease/models";
+import { NeteasePlaylist } from "@/common/netease/models";
 import { PlaylistSource } from "@/common/enum";
 
 import TopCover from "./top-cover";

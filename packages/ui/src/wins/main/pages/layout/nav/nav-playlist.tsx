@@ -1,15 +1,11 @@
 import { type FC, memo, useCallback, useRef, useState } from "react";
 import { useScrollAutoHide } from "@/common/hooks/use-scroll-auto-hide";
-import {
-  NeteaseNetworkImage,
-  NeteasePlaylistSummary,
-  NeteaseUser
-} from "@/common/source/netease/models";
+import { NeteaseNetworkImage, NeteasePlaylistSummary, NeteaseUser } from "@/common/netease/models";
 import RendererTheme from "@/common/player/ui";
 import NeteaseImage from "@/common/components/image/netease-image";
 import { cx } from "@emotion/css";
-import { useLocateOrScrollTopRegister } from "../../../../main/hooks/use-locate-or-scroll-top-register";
-import { useArtistOrAlbumPageJump } from "../../../../main/hooks/use-artist-or-album-page-jump";
+import { useLocateOrScrollTopRegister } from "@/wins/main/hooks/use-locate-or-scroll-top-register";
+import { useArtistOrAlbumPageJump } from "@/wins/main/hooks/use-artist-or-album-page-jump";
 import { useLocation } from "react-router-dom";
 import { RoutePathMain } from "@/common/routes";
 import RendererImageConstants from "@/common/constants/image";

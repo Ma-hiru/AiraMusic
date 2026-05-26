@@ -1,5 +1,5 @@
 import { cx } from "@emotion/css";
-import { useMMCQ } from "../../../main/hooks/use-mmcq";
+import { useMMCQ } from "@/wins/main/hooks/use-mmcq";
 import { type FC, memo, useLayoutEffect } from "react";
 import { useAtomValue, useSetAtom } from "jotai";
 import {
@@ -8,7 +8,7 @@ import {
   secondaryColorAtom,
   textColorOnMainAtom,
   themeColorsAtom
-} from "../../../main/atoms/theme";
+} from "@/wins/main/atoms/theme";
 import RendererTheme from "@/common/player/ui";
 
 import AcrylicBackground from "@/common/components/public/acrylic-background";

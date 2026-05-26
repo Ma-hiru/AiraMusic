@@ -1,6 +1,6 @@
-import { NeteaseHistory, NeteaseTrack } from "@/common/source/netease/models";
+import { NeteaseHistory, NeteaseTrack } from "@/common/netease/models";
 import { Listenable } from "@/common/utils/listenable";
-import { NeteaseAPITrack } from "@/common/source/netease/api";
+import { NeteaseAPITrack } from "@/common/netease/api";
 
 export default class RendererPlayerHistory extends Listenable {
   readonly list;

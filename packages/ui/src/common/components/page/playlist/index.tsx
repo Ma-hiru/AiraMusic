@@ -19,17 +19,17 @@ import {
   NeteaseTrack,
   NeteaseTrackRecord,
   NeteaseUser
-} from "@/common/source/netease/models";
+} from "@/common/netease/models";
 import type {
   TrackListClickFunc,
   TrackListContextMenuFunc,
   TrackListPlayableManager,
   TrackListRef
 } from "@/common/components/track_list";
+import TrackList from "@/common/components/track_list";
 import { SearchTrack } from "@mahiru/wasm";
-import { ElectronServicesNet } from "@/common/source/electron/services";
 import { NeteaseImageSize, PlaylistSource } from "@/common/enum";
-import { NeteaseServicesImage, NeteaseServicesPlaylist } from "@/common/source/netease/services";
+import { NeteaseServicesImage, NeteaseServicesPlaylist } from "@/common/netease/services";
 import { useUpdate } from "@/common/hooks/use-update";
 import { Log } from "@/common/lib/log";
 import { type RequestStatus } from "@/common/hooks/use-request-wrap";
@@ -41,10 +41,9 @@ import RendererPlayerHistory from "@/common/player/history";
 
 import Top from "./top";
 import Divider from "./divider";
-import AppErrorBoundary from "@/common/components/fallback/app-error-boundary";
-import ThrowIf from "@/common/components/fallback/throw-if";
 import AppLoading from "@/common/components/fallback/app-loading";
-import TrackList from "@/common/components/track_list";
+import { RendererNet } from "@/common/lib/net";
+import AppError from "@/common/components/fallback/app-error";
 
 export type PlaylistRef = {
   tracks: NeteaseTrackRecord[] | NeteaseHistory[];
@@ -303,8 +302,8 @@ const Playlist: FC<PlaylistProps> = ({
     update.count
   ]);
   useEffect(() => {
-    return ElectronServicesNet.onOnlineChange(() => {
-      ElectronServicesNet.isOnline && reload();
+    return RendererNet.onOnlineChange(() => {
+      RendererNet.isOnline && reload();
     });
   }, [reload]);
 
@@ -323,13 +322,7 @@ const Playlist: FC<PlaylistProps> = ({
 
   return (
     <div className={className}>
-      <AppErrorBoundary
-        className="w-full h-full"
-        showError
-        canReset
-        name="PlaylistPage"
-        onReset={reload}>
-        <ThrowIf when={status === "error"} message="歌曲加载失败" />
+      <AppError reset={reload} message="歌曲加载失败" when={status === "error"}>
         <AppLoading loading={status === "loading"} className="w-full h-full">
           <Top
             type={source!}
@@ -370,7 +363,7 @@ const Playlist: FC<PlaylistProps> = ({
             />
           </div>
         </AppLoading>
-      </AppErrorBoundary>
+      </AppError>
     </div>
   );
 };

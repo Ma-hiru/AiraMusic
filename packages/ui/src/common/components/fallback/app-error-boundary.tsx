@@ -1,11 +1,10 @@
 import { type FC, memo, type ReactNode, type RefObject, useCallback, useRef } from "react";
 import { ErrorBoundary, type FallbackProps } from "react-error-boundary";
 import { Log } from "@/common/lib/log";
-import { cx } from "@emotion/css";
-import { CircleX } from "lucide-react";
 import { EqError } from "@mahiru/log";
-import { ElectronServicesWindow } from "@/common/source/electron/services";
+import { RendererWindow } from "@/common/lib/window";
 import AppToast from "@/common/components/toast";
+import AppError from "@/common/components/fallback/app-error";
 
 export type AppErrorBoundaryRef = { resetComponent?: NormalFunc };
 
@@ -70,11 +69,8 @@ const AppErrorBoundary: FC<AppErrorBoundaryProps> = ({
         });
 
       if (panic) {
-        ElectronServicesWindow.panic(
-          panicMessage || `AppErrorBoundary(${name})`,
-          Log.format(error)
-        );
-        ElectronServicesWindow.current.close();
+        RendererWindow.panic(panicMessage || `AppErrorBoundary(${name})`, Log.format(error));
+        RendererWindow.current.close();
         return null;
       }
 
@@ -86,37 +82,14 @@ const AppErrorBoundary: FC<AppErrorBoundaryProps> = ({
       } else if (resetCount.current >= autoResetMaxCount) {
         Log.error(`AppErrorBoundary(${name}) exceeded auto reset limit`);
         if (panicAfterReset) {
-          ElectronServicesWindow.panic(
-            panicMessage || `AppErrorBoundary(${name})`,
-            Log.format(error)
-          );
-          ElectronServicesWindow.current.close();
+          RendererWindow.panic(panicMessage || `AppErrorBoundary(${name})`, Log.format(error));
+          RendererWindow.current.close();
           return null;
         }
       }
 
       if (!showError) return null;
-
-      return (
-        <div
-          className={cx(
-            "w-full h-full flex items-center justify-center font-semibold text-(--theme-color-main) leading-loose",
-            className
-          )}>
-          {canReset ? (
-            <button
-              onClick={resetErrorBoundary}
-              className="px-2 py-1 inline hover:text-(--theme-color-main) active:scale-95 duration-200 ease-in-out transition-all cursor-pointer hover:bg-(--theme-color-main)/10 rounded-md">
-              <CircleX className="mr-2 inline" /> 加载错误，点击重载
-            </button>
-          ) : (
-            <p className="whitespace-pre-wrap break-keep">
-              <CircleX className="mr-2 inline" />
-              <span>加载错误了</span>
-            </p>
-          )}
-        </div>
-      );
+      return <AppError className={className} reset={onReset} />;
     },
     [
       autoReset,
@@ -133,6 +106,7 @@ const AppErrorBoundary: FC<AppErrorBoundaryProps> = ({
       toast
     ]
   );
+
   return <ErrorBoundary fallbackRender={fallbackRender} children={children} />;
 };
 

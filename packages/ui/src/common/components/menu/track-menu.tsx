@@ -1,8 +1,4 @@
-import {
-  NeteaseNetworkImage,
-  NeteaseTrackRecord,
-  NeteaseUser
-} from "@/common/source/netease/models";
+import { NeteaseNetworkImage, NeteaseTrackRecord, NeteaseUser } from "@/common/netease/models";
 import { Copy, DiscAlbum, ListMusic, ListPlus, MessageSquare, Play } from "lucide-react";
 import { NeteaseImageSize } from "@/common/enum";
 import type { ContextMenuItem, ContextMenuRender } from "./menu-provider";

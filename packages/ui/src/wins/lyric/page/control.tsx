@@ -12,10 +12,11 @@ import { css, cx } from "@emotion/css";
 import { useManualAutoScroll } from "@/common/hooks/use-marquee";
 import { AArrowDown, AArrowUp, LockKeyholeOpen, LucideLock } from "lucide-react";
 import { NeteaseImageSize } from "@/common/enum";
-import { NeteaseLyric, NeteaseNetworkImage } from "@/common/source/netease/models";
+import { NeteaseLyric, NeteaseNetworkImage } from "@/common/netease/models";
 import { useListenable } from "@/common/hooks/use-listenable";
 import { RendererFormat } from "@/common/lib/format";
-import { ElectronServicesBus, ElectronServicesWindow } from "@/common/source/electron/services";
+import { RendererWindow } from "@/common/lib/window";
+import { RendererEventBus } from "@/common/lib/bus";
 
 import Drag from "@/common/components/drag/drag";
 import NeteaseImage from "@/common/components/image/netease-image";
@@ -47,9 +48,9 @@ const Control: FC<ControlProps> = ({
   tlActive,
   ...rest
 }) => {
-  const playerBus = useListenable(ElectronServicesBus.player);
-  const infoBus = useListenable(ElectronServicesBus.info);
-  const progressBus = useListenable(ElectronServicesBus.progress);
+  const playerBus = useListenable(RendererEventBus.player);
+  const infoBus = useListenable(RendererEventBus.info);
+  const progressBus = useListenable(RendererEventBus.progress);
   const titleContainer = useRef<HTMLDivElement>(null);
   const [openColorSelect, setOpenColorSelect] = useState(false);
 
@@ -73,7 +74,7 @@ const Control: FC<ControlProps> = ({
 
   const setLyricVersion = useCallback(
     (version: "toggle-lyric-version-rm" | "toggle-lyric-version-tl") => {
-      ElectronServicesBus.playerAction.send(version);
+      RendererEventBus.playerAction.send(version);
     },
     []
   );
@@ -87,7 +88,7 @@ const Control: FC<ControlProps> = ({
   });
 
   useEffect(() => {
-    lock && ElectronServicesWindow.current.mousePenetrate(true);
+    lock && RendererWindow.current.mousePenetrate(true);
   }, [lock]);
 
   useEffect(() => {
@@ -202,8 +203,8 @@ const Control: FC<ControlProps> = ({
               <LucideLock
                 className="size-4 cursor-pointer hover:opacity-50 duration-300 ease-in-out transition-all active:scale-90"
                 onClick={() => setLock(false)}
-                onMouseOver={() => ElectronServicesWindow.current.mousePenetrate(false)}
-                onMouseLeave={() => ElectronServicesWindow.current.mousePenetrate(true)}
+                onMouseOver={() => RendererWindow.current.mousePenetrate(false)}
+                onMouseLeave={() => RendererWindow.current.mousePenetrate(true)}
               />
             ) : (
               <LockKeyholeOpen

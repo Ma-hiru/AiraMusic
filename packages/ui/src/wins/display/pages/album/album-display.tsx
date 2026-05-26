@@ -2,11 +2,11 @@ import { type FC, memo, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import { RoutePath, RoutePathMain } from "@/common/routes";
 import { useUserTrackManager } from "@/common/hooks/use-user-track-manager";
-import { ElectronServicesBus } from "@/common/source/electron/services";
 import { useListenable } from "@/common/hooks/use-listenable";
-import { useArtistOrAlbumDisplayJump } from "../../../display/hooks/use-artist-or-album-display-jump";
-import { usePlayerChangeActionFromDisplay } from "../../../display/hooks/use-player-change-action-from-display";
-import { useDisplayPageAction } from "../../../display/hooks/use-display-page-action";
+import { useArtistOrAlbumDisplayJump } from "@/wins/display/hooks/use-artist-or-album-display-jump";
+import { usePlayerChangeActionFromDisplay } from "@/wins/display/hooks/use-player-change-action-from-display";
+import { useDisplayPageAction } from "@/wins/display/hooks/use-display-page-action";
+import { RendererEventBus } from "@/common/lib/bus";
 import RendererImageConstants from "@/common/constants/image";
 
 import Album, { type AlbumPageRef } from "@/common/components/page/album";
@@ -14,7 +14,7 @@ import Album, { type AlbumPageRef } from "@/common/components/page/album";
 const AlbumDisplay: FC<object> = () => {
   const location = useLocation();
   const albumRef = useRef<Nullable<AlbumPageRef>>(null);
-  const playerBus = useListenable(ElectronServicesBus.player);
+  const playerBus = useListenable(RendererEventBus.player);
   const { id } = RoutePath.parseQuery<{ id: number }>(location, RoutePathMain.album);
   const { playableManager, heartManager } = useUserTrackManager();
 

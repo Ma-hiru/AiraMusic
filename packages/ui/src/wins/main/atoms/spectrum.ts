@@ -1,5 +1,5 @@
 import { atom } from "jotai";
-import type { SpectrumData, SpectrumOptions } from "../../main/hooks/use-spectrum-worker";
+import type { SpectrumData, SpectrumOptions } from "@/wins/main/hooks/use-spectrum-worker";
 
 export const spectrumReadyAtom = atom(false);
 

@@ -1,6 +1,6 @@
 import { shuffle } from "lodash-es";
 import { Listenable } from "@/common/utils/listenable";
-import { NeteaseTrackRecord } from "@/common/source/netease/models";
+import { NeteaseTrackRecord } from "@/common/netease/models";
 import { userStoreSnapshot } from "@/common/store/user";
 import AppToast from "@/common/components/toast";
 

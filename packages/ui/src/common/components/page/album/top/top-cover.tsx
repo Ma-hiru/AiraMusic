@@ -1,5 +1,5 @@
 import { type FC, memo, type ReactEventHandler, useCallback, useMemo } from "react";
-import { NeteaseAlbum, NeteaseNetworkImage } from "@/common/source/netease/models";
+import { NeteaseAlbum, NeteaseNetworkImage } from "@/common/netease/models";
 import { NeteaseImageSize } from "@/common/enum";
 import NeteaseImage from "@/common/components/image/netease-image";
 

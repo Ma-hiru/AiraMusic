@@ -1,21 +1,18 @@
-import { type FC, memo, useCallback, useRef } from "react";
+import { type FC, memo, useCallback } from "react";
 import { useThemeColor } from "@/common/hooks/use-theme-color";
 import { BannerType, PlaylistSource } from "@/common/enum";
 import { Log } from "@/common/lib/log";
-import { NeteaseTrackRecord, NeteaseURL } from "@/common/source/netease/models";
+import { NeteaseTrackRecord, NeteaseURL } from "@/common/netease/models";
 import { useNavigate } from "react-router-dom";
-import { NeteaseAPIHome } from "@/common/source/netease/api";
-import { NeteaseServicesTrack } from "@/common/source/netease/services";
-import { ElectronServicesIPC } from "@/common/source/electron/services";
+import { NeteaseAPIHome } from "@/common/netease/api";
+import { NeteaseServicesTrack } from "@/common/netease/services";
 import { RoutePath, RoutePathMain } from "@/common/routes";
 import { useRequestAutoRetry, useRequestStatusWrap } from "@/common/hooks/use-request-wrap";
-import AppEntry from "../../../../main/entry";
+import { RendererIPC } from "@/common/lib/ipc";
+import AppEntry from "@/wins/main/entry";
 
 import Carousel from "@/common/components/public/carousel";
-import AppErrorBoundary, {
-  type AppErrorBoundaryRef
-} from "@/common/components/fallback/app-error-boundary";
-import ThrowIf from "@/common/components/fallback/throw-if";
+import AppError from "@/common/components/fallback/app-error";
 
 const Banner: FC<object> = () => {
   const {
@@ -27,7 +24,6 @@ const Banner: FC<object> = () => {
   );
   const { textColorOnMain } = useThemeColor();
   const { reload } = useRequestAutoRetry(fetchData, [], () => banner.length !== 0);
-  const errRef = useRef<AppErrorBoundaryRef>({});
   const player = AppEntry.usePlayer();
   const navigate = useNavigate();
 
@@ -51,7 +47,7 @@ const Banner: FC<object> = () => {
           return;
         }
         case BannerType.web: {
-          ElectronServicesIPC.Event.normal("openExternalLink", {
+          RendererIPC.Event("openExternalLink", {
             url: item.url,
             title: item.typeTitle
           });
@@ -70,15 +66,7 @@ const Banner: FC<object> = () => {
 
   return (
     <div className="w-full px-2">
-      <AppErrorBoundary
-        ref={errRef}
-        name="Banner"
-        className="h-56 w-full"
-        showError
-        canReset
-        onReset={reload}
-        toast={false}>
-        <ThrowIf when={status === "error"} />
+      <AppError reset={reload} when={status === "error"}>
         <Carousel
           className="h-56"
           items={banner.map((b) => ({
@@ -88,7 +76,7 @@ const Banner: FC<object> = () => {
           titleColor={textColorOnMain.string()}
           onClick={handleClick}
         />
-      </AppErrorBoundary>
+      </AppError>
     </div>
   );
 };

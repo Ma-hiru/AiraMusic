@@ -12,10 +12,10 @@ import {
   useState
 } from "react";
 import { cx } from "@emotion/css";
-import { NeteaseLocalImage, NeteaseNetworkImage } from "@/common/source/netease/models";
+import { NeteaseLocalImage, NeteaseNetworkImage } from "@/common/netease/models";
 import { NeteaseImageSize } from "@/common/enum";
-import { NeteaseServicesImage } from "@/common/source/netease/services";
-import { ElectronServicesWindow } from "@/common/source/electron/services";
+import { NeteaseServicesImage } from "@/common/netease/services";
+import { RendererWindow } from "@/common/lib/window";
 
 type ShadowLevel = "none" | "base" | "float";
 
@@ -126,8 +126,8 @@ const NeteaseImage: FC<ImageProps> = ({
     async (e: ReactMouseEvent<HTMLImageElement>) => {
       if (preview && image) {
         const sendImage = image.toNetworkImage().setSize(NeteaseImageSize.raw);
-        await ElectronServicesWindow.image.openAwait();
-        ElectronServicesWindow.image.send("imageCheckerBus", {
+        await RendererWindow.image.openAwait();
+        RendererWindow.image.send("imageCheckerBus", {
           url: sendImage.src,
           alt: alt || sendImage.alt
         });

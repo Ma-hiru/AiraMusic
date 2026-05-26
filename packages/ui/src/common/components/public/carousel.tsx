@@ -2,7 +2,7 @@ import { type FC, memo, useCallback, useEffect, useRef, useState } from "react";
 import { cx } from "@emotion/css";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useThemeColor } from "@/common/hooks/use-theme-color";
-import { NeteaseNetworkImage } from "@/common/source/netease/models";
+import { NeteaseNetworkImage } from "@/common/netease/models";
 import { NeteaseImageSize } from "@/common/enum";
 
 import NeteaseImage from "@/common/components/image/netease-image";

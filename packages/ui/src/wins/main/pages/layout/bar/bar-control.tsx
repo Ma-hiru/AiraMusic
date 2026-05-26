@@ -1,7 +1,7 @@
 import { type FC, memo, useMemo } from "react";
 import { LoaderCircle, Pause, Play, SkipBack, SkipForward } from "lucide-react";
 import { useThemeColor } from "@/common/hooks/use-theme-color";
-import AppEntry from "../../../../main/entry";
+import AppEntry from "@/wins/main/entry";
 
 const BarControl: FC<object> = () => {
   const player = AppEntry.usePlayer();

@@ -1,8 +1,8 @@
 import { type FC, memo, useCallback, useMemo } from "react";
 import { AudioLines, CirclePlay } from "lucide-react";
-import { NeteaseServicesTrack } from "@/common/source/netease/services";
-import { NeteaseNetworkImage, NeteaseTrackRecord } from "@/common/source/netease/models";
-import AppEntry from "../../../../../main/entry";
+import { NeteaseServicesTrack } from "@/common/netease/services";
+import { NeteaseNetworkImage, NeteaseTrackRecord } from "@/common/netease/models";
+import AppEntry from "@/wins/main/entry";
 import RendererImageConstants from "@/common/constants/image";
 
 import NeteaseImage from "@/common/components/image/netease-image";

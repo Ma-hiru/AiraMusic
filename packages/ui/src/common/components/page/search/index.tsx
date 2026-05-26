@@ -13,7 +13,7 @@ import type { LucideIcon } from "lucide-react";
 import { DiscAlbum, ListMusic, Music2, UserRound } from "lucide-react";
 import { AlbumResult, ArtistResult, PlaylistResult, TrackResult } from "./content";
 import type { SearchInputRef } from "./input/search-input";
-import { NeteaseHistory, NeteaseTrackRecord } from "@/common/source/netease/models";
+import { NeteaseHistory, NeteaseTrackRecord } from "@/common/netease/models";
 import { NeteaseImageSize } from "@/common/enum";
 import type { HeartManager } from "@/common/hooks/use-heart";
 import type { TrackListPlayableManager } from "@/common/components/track_list";

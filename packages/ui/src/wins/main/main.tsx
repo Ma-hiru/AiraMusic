@@ -2,7 +2,7 @@ import App from "./app";
 import wasm from "@mahiru/wasm";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import AppEntry from "../main/entry";
+import AppEntry from "@/wins/main/entry";
 import Init from "@/common/utils/init";
 
 wasm().then(() => {

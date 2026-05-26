@@ -1,16 +1,15 @@
 import { type FC, useCallback, useEffect, useRef } from "react";
 import { useRequestAutoRun, useRequestStatusWrap } from "@/common/hooks/use-request-wrap";
-import { NeteaseAPISearch } from "@/common/source/netease/api";
+import { NeteaseAPISearch } from "@/common/netease/api";
 import { SearchType } from "@/common/enum";
 import { useScrollAutoHide } from "@/common/hooks/use-scroll-auto-hide";
-import AppErrorBoundary from "@/common/components/fallback/app-error-boundary";
-import ThrowIf from "@/common/components/fallback/throw-if";
 import AppLoading from "@/common/components/fallback/app-loading";
 import AppEmpty from "@/common/components/fallback/app-empty";
 import { cx } from "@emotion/css";
-import { NeteaseNetworkImage } from "@/common/source/netease/models";
+import { NeteaseNetworkImage } from "@/common/netease/models";
 import RendererImageConstants from "@/common/constants/image";
 import NeteaseImage from "@/common/components/image/netease-image";
+import AppError from "@/common/components/fallback/app-error";
 
 interface ArtistResultProps {
   className?: string;
@@ -55,8 +54,7 @@ const ArtistResult: FC<ArtistResultProps> = ({
   useScrollAutoHide(containerRef, 3000);
 
   return (
-    <AppErrorBoundary name="ArtistResult" toast canReset onReset={reload}>
-      <ThrowIf when={status === "error" && active} message="歌手加载失败" />
+    <AppError reset={reload} when={status === "error" && active} message="歌手加载失败">
       <AppLoading loading={status === "loading" && active}>
         {list.length === 0 && <AppEmpty className={className} tips="没有结果" />}
         {list.length > 0 && (
@@ -96,7 +94,7 @@ const ArtistResult: FC<ArtistResultProps> = ({
           </ul>
         )}
       </AppLoading>
-    </AppErrorBoundary>
+    </AppError>
   );
 };
 

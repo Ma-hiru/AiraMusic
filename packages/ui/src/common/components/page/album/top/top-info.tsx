@@ -1,11 +1,12 @@
 import { type FC, memo, useRef } from "react";
 import { ListMusic, MessageSquare, Play } from "lucide-react";
 import { useThemeColor } from "@/common/hooks/use-theme-color";
-import { NeteaseAlbum } from "@/common/source/netease/models";
+import { NeteaseAlbum } from "@/common/netease/models";
 import { css, cx } from "@emotion/css";
 import { useScrollAutoHide } from "@/common/hooks/use-scroll-auto-hide";
 import { RendererFormat } from "@/common/lib/format";
-import { ElectronServicesBus, ElectronServicesWindow } from "@/common/source/electron/services";
+import { RendererEventBus } from "@/common/lib/bus";
+import { RendererWindow } from "@/common/lib/window";
 
 interface TopInfoProps {
   album: Nullable<NeteaseAlbum>;
@@ -78,8 +79,8 @@ const TopInfo: FC<TopInfoProps> = ({ album, dynamic, onPlayAll, onAddList }) => 
           style={{ color: mainColor.hex() }}
           onClick={async () => {
             if (!album?.content?.id) return;
-            await ElectronServicesWindow.comment.openAwait();
-            ElectronServicesBus.comment.send({
+            await RendererWindow.comment.openAwait();
+            RendererEventBus.comment.send({
               id: album.content.id,
               type: "album"
             });

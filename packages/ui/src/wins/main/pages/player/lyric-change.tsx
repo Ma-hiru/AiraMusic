@@ -1,6 +1,6 @@
 import { type FC, memo } from "react";
 import { cx } from "@emotion/css";
-import AppEntry from "../../../main/entry";
+import AppEntry from "@/wins/main/entry";
 
 const LyricChange: FC<object> = () => {
   const player = AppEntry.usePlayer();

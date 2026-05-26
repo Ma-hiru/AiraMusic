@@ -3,19 +3,19 @@ import { useLocation } from "react-router-dom";
 import { useUser } from "@/common/store/user";
 import { RoutePathDisplay } from "@/common/routes";
 import { useUserTrackManager } from "@/common/hooks/use-user-track-manager";
-import { ElectronServicesBus } from "@/common/source/electron/services";
 import { useListenable } from "@/common/hooks/use-listenable";
 import { PlaylistSource } from "@/common/enum";
-import { useArtistOrAlbumDisplayJump } from "../../../display/hooks/use-artist-or-album-display-jump";
-import { usePlayerChangeActionFromDisplay } from "../../../display/hooks/use-player-change-action-from-display";
-import { useDisplayPageAction } from "../../../display/hooks/use-display-page-action";
+import { useArtistOrAlbumDisplayJump } from "@/wins/display/hooks/use-artist-or-album-display-jump";
+import { usePlayerChangeActionFromDisplay } from "@/wins/display/hooks/use-player-change-action-from-display";
+import { useDisplayPageAction } from "@/wins/display/hooks/use-display-page-action";
+import { RendererEventBus } from "@/common/lib/bus";
 
 import Playlist, { type PlaylistRef } from "@/common/components/page/playlist";
 
 const PlaylistDisplay: FC<object> = () => {
   const user = useUser();
   const playlistRef = useRef<Nullable<PlaylistRef>>(null);
-  const playerBus = useListenable(ElectronServicesBus.player);
+  const playerBus = useListenable(RendererEventBus.player);
   const { heartManager, playableManager } = useUserTrackManager();
   const { id, source } = RoutePathDisplay.playlist.parseQuery(useLocation());
 

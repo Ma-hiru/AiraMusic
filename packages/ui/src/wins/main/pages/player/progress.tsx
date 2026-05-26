@@ -1,13 +1,13 @@
 import { type FC, memo, useMemo } from "react";
 import { motion } from "motion/react";
 import { css } from "@emotion/css";
-import { usePlayProgress } from "../../../main/hooks/use-play-progress";
+import { usePlayProgress } from "@/wins/main/hooks/use-play-progress";
 import { TrackQuality } from "@/common/enum";
 
-import ProgressRender from "../../../main/componets/progress";
+import ProgressRender from "@/wins/main/componets/progress";
 import Tag from "@/common/components/public/tag";
-import AppEntry from "../../../main/entry";
-import { NeteaseTrack } from "@/common/source/netease/models";
+import AppEntry from "@/wins/main/entry";
+import { NeteaseTrack } from "@/common/netease/models";
 import RendererPlayerAudio from "@/common/player/audio";
 import { RendererFormat } from "@/common/lib/format";
 

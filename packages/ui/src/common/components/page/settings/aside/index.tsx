@@ -1,5 +1,5 @@
 import { type FC, memo } from "react";
-import { NeteaseSettings, NeteaseUser } from "@/common/source/netease/models";
+import { NeteaseSettings, NeteaseUser } from "@/common/netease/models";
 
 import UserDetail from "./user-detail";
 import SettingsSummary from "./settings-summary";

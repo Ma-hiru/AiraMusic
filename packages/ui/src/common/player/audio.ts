@@ -1,6 +1,6 @@
 import { Log } from "@/common/lib/log";
 import { clamp } from "lodash-es";
-import { NeteaseLocalAudio, NeteaseNetworkAudio } from "@/common/source/netease/models";
+import { NeteaseLocalAudio, NeteaseNetworkAudio } from "@/common/netease/models";
 
 export default class RendererPlayerAudio {
   readonly audio = new Audio();

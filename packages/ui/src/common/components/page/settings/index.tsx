@@ -1,10 +1,6 @@
 import { cx } from "@emotion/css";
 import { type FC, memo } from "react";
-import {
-  NeteaseSettings,
-  type NeteaseSettingsModel,
-  NeteaseUser
-} from "@/common/source/netease/models";
+import { NeteaseSettings, type NeteaseSettingsModel, NeteaseUser } from "@/common/netease/models";
 
 import SettingsAside from "./aside";
 import SettingsContent from "./content";

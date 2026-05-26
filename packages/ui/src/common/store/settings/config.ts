@@ -1,6 +1,6 @@
 import { RendererZustandStoreCreator } from "@/common/lib/store";
-import { defaultSettings } from "@/common/source/netease/models/netease-settings";
-import { type NeteaseSettingsModel } from "@/common/source/netease/models";
+import { defaultSettings } from "@/common/netease/models/netease-settings";
+import { type NeteaseSettingsModel } from "@/common/netease/models";
 
 export const SettingsStoreInitializer =
   RendererZustandStoreCreator.createZustandInitializer<SettingsStoreType>((set) => {

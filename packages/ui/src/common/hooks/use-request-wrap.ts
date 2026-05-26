@@ -3,7 +3,7 @@ import { Log } from "@/common/lib/log";
 import { useStableArray } from "./use-stable-array";
 import { useUpdate } from "./use-update";
 import { useLatestRef } from "./use-latest-ref";
-import _AppNet from "@/common/source/electron/services/net";
+import { RendererNet } from "@/common/lib/net";
 
 export type RequestStatus = "loading" | "error" | "success";
 
@@ -85,7 +85,7 @@ export function useRequestAutoRetry<Args extends unknown[]>(
   useEffect(() => {
     const cancel = new AbortController();
 
-    const unsubscribe = _AppNet.autoRetryRequest(
+    const unsubscribe = RendererNet.autoRetryRequest(
       () => {
         Log.info("requestAutoRetry", "trigger run");
         const request = requestRef.current;

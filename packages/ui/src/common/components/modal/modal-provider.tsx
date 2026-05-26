@@ -22,7 +22,7 @@ export type ModalData = {
   onClose?: NormalFunc<[], void | boolean>;
 };
 
-const ModalProvider: FC<object> = () => {
+const ModalProvider: FC<{ className?: string }> = ({ className }) => {
   const [render, setRender] = useState<Nullable<ModalData>>(null);
   const [visible, setVisible] = useState(false);
   const [scope, animate] = useAnimate();
@@ -82,7 +82,12 @@ const ModalProvider: FC<object> = () => {
   }, [render, toggleModalVisible]);
 
   return (
-    <div className={cx(`fixed inset-0 z-50 flex items-center justify-center`, hidden && "hidden")}>
+    <div
+      className={cx(
+        `fixed inset-0 z-50 flex items-center justify-center`,
+        hidden && "hidden",
+        className
+      )}>
       <div className="absolute inset-0 z-0 bg-black/10" onClick={handleClose} />
       <motion.div
         ref={scope}

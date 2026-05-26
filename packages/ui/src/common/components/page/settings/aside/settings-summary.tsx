@@ -1,5 +1,5 @@
 import { type FC, memo, useMemo } from "react";
-import { NeteaseSettings } from "@/common/source/netease/models";
+import { NeteaseSettings } from "@/common/netease/models";
 import { Radio } from "lucide-react";
 import { TrackQuality } from "@/common/enum";
 

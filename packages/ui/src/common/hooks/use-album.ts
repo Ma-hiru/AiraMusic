@@ -3,7 +3,7 @@ import { type RequestStatus } from "./use-request-wrap";
 import { useImmer } from "use-immer";
 import { useLatestRef } from "./use-latest-ref";
 import { Log } from "@/common/lib/log";
-import { NeteaseAPIArtist } from "@/common/source/netease/api";
+import { NeteaseAPIArtist } from "@/common/netease/api";
 
 export function useAlbum(props: { id: number; pageSize?: number }) {
   const [status, setStatus] = useState<RequestStatus | "idle">("idle");
@@ -46,7 +46,7 @@ export function useAlbum(props: { id: number; pageSize?: number }) {
       });
   }, [albumRef, propsRef, setAlbum, statusRef]);
 
-  useEffect(() => {
+  const reset = useCallback(() => {
     setAlbum({
       data: [],
       totalAlbum: 0,
@@ -54,8 +54,10 @@ export function useAlbum(props: { id: number; pageSize?: number }) {
       currentPageNo: 0,
       hasMore: true
     });
-  }, [
-    setAlbum,
+  }, [setAlbum]);
+
+  useEffect(reset, [
+    reset,
     // props变化时重置状态
     props.id,
     props.pageSize
@@ -69,7 +71,8 @@ export function useAlbum(props: { id: number; pageSize?: number }) {
   return {
     album,
     loadMore,
-    status
+    status,
+    reset
   };
 }
 

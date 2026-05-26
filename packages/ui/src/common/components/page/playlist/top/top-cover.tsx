@@ -1,6 +1,6 @@
 import { type FC, memo, type ReactEventHandler, useCallback, useMemo } from "react";
 import { Headphones } from "lucide-react";
-import { NeteaseNetworkImage, NeteasePlaylist } from "@/common/source/netease/models";
+import { NeteaseNetworkImage, NeteasePlaylist } from "@/common/netease/models";
 import RendererImageConstants from "@/common/constants/image";
 
 import NeteaseImage from "@/common/components/image/netease-image";

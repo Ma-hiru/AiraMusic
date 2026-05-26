@@ -3,8 +3,8 @@ import { useAlbum } from "@/common/hooks/use-album";
 import { css, cx } from "@emotion/css";
 
 import AlbumItem from "./album-item";
-import ThrowIf from "@/common/components/fallback/throw-if";
 import InfiniteContainer from "@/common/components/infinite/infinite-container";
+import AppError from "@/common/components/fallback/app-error";
 
 interface AlbumListProps {
   id: number;
@@ -13,11 +13,10 @@ interface AlbumListProps {
 }
 
 const AlbumList: FC<AlbumListProps> = ({ id, className, onClick }) => {
-  const { album, status, loadMore } = useAlbum({ id });
+  const { album, status, loadMore, reset } = useAlbum({ id });
 
   return (
-    <>
-      <ThrowIf when={status === "error"} message="专辑加载失败" />
+    <AppError reset={reset} when={status === "error"} message="专辑加载失败">
       <InfiniteContainer
         className={className}
         hasMore={album.hasMore}
@@ -39,7 +38,7 @@ const AlbumList: FC<AlbumListProps> = ({ id, className, onClick }) => {
           </div>
         )}
       </InfiniteContainer>
-    </>
+    </AppError>
   );
 };
 

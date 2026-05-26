@@ -1,7 +1,7 @@
 import { type FC, Fragment, memo } from "react";
 import { css, cx } from "@emotion/css";
 import { type ColorInstance } from "color";
-import { NeteaseTrackRecord } from "@/common/source/netease/models";
+import { NeteaseTrackRecord } from "@/common/netease/models";
 import { PlaylistSource } from "@/common/enum";
 
 interface ListItemNameProps {

@@ -1,31 +1,32 @@
 import { useListenable } from "@/common/hooks/use-listenable";
 import { type FC, memo, useCallback, useEffect, useRef } from "react";
-import { ElectronServicesBus, ElectronServicesWindow } from "@/common/source/electron/services";
-import { NeteaseServicesTrack } from "@/common/source/netease/services";
-import { NeteaseTrackRecord } from "@/common/source/netease/models";
+import { RendererWindow } from "@/common/lib/window";
+import { RendererEventBus } from "@/common/lib/bus";
+import { NeteaseServicesTrack } from "@/common/netease/services";
+import { NeteaseTrackRecord } from "@/common/netease/models";
 import { Log } from "@/common/lib/log";
 import { useNavigate } from "react-router-dom";
 import { RoutePath, RoutePathMain } from "@/common/routes";
 import { PlaylistSource } from "@/common/enum";
 import { type MessageData } from "@mahiru/ipc/renderer";
 import { useAtomValue } from "jotai";
-import { themeAtom } from "../../../main/atoms/theme";
-import AppEntry from "../../../main/entry";
+import { themeAtom } from "@/wins/main/atoms/theme";
+import AppEntry from "@/wins/main/entry";
 
 const Bus: FC<object> = () => {
   const theme = useAtomValue(themeAtom);
-  const windowCurrent = useListenable(ElectronServicesWindow.current);
-  const playerActionBus = useListenable(ElectronServicesBus.playerAction);
-  const playerChangeBus = useListenable(ElectronServicesBus.playerChange);
-  const mainBusUpdater = useListenable(ElectronServicesBus.mainBusUpdater);
+  const windowCurrent = useListenable(RendererWindow.current);
+  const playerActionBus = useListenable(RendererEventBus.playerAction);
+  const playerChangeBus = useListenable(RendererEventBus.playerChange);
+  const mainBusUpdater = useListenable(RendererEventBus.mainBusUpdater);
   const player = AppEntry.usePlayer();
 
   const updateProgressBus = useCallback(() => {
-    ElectronServicesBus.progress.send(player.audio.progress);
+    RendererEventBus.progress.send(player.audio.progress);
   }, [player.audio.progress]);
 
   const updatePlayerBus = useCallback(() => {
-    ElectronServicesBus.player.send({
+    RendererEventBus.player.send({
       track: player.current.track,
       lyric: player.current.lyric,
       repeat: player.playlist.repeat,
@@ -38,7 +39,7 @@ const Bus: FC<object> = () => {
   }, [player]);
 
   const updateInfoBus = useCallback(() => {
-    ElectronServicesBus.info.send({
+    RendererEventBus.info.send({
       backgroundCover: theme.backgroundCover ?? undefined,
       theme: {
         mainColor: theme.mainColor,
@@ -112,7 +113,7 @@ const Bus: FC<object> = () => {
           break;
       }
     }
-    ElectronServicesBus.clear("playerActionBus");
+    RendererEventBus.clear("playerActionBus");
   }, [player.audio, player.playlist, playerActionBus.data, windowCurrent]);
 
   useEffect(() => {
@@ -131,7 +132,7 @@ const Bus: FC<object> = () => {
           break;
       }
     }
-    ElectronServicesBus.clear("updateBus");
+    RendererEventBus.clear("updateBus");
   }, [updateInfoBus, updatePlayerBus, updateProgressBus, mainBusUpdater.data]);
 
   // 是否正在应用更改
@@ -192,7 +193,7 @@ const Bus: FC<object> = () => {
     // 添加变更数据到队列
     appliedChangesQueue.current.push(...changes);
     // 清空变更数据
-    ElectronServicesBus.clear("playerChangeBus");
+    RendererEventBus.clear("playerChangeBus");
     // 启动变更应用
     void applyPlayerChanges();
   }, [applyPlayerChanges, playerChangeBus.data]);
@@ -206,7 +207,7 @@ const Bus: FC<object> = () => {
 
   const navigate = useNavigate();
   useEffect(() => {
-    return ElectronServicesWindow.display.listenMessage("mergeDisplay", (data) => {
+    return RendererWindow.display.listenMessage("mergeDisplay", (data) => {
       switch (data.type) {
         case "album":
           navigate(RoutePath.withQuery(RoutePathMain.album, { id: data.id }));
@@ -223,7 +224,7 @@ const Bus: FC<object> = () => {
           );
           break;
       }
-      ElectronServicesWindow.current.focus();
+      RendererWindow.current.focus();
     });
   }, [navigate]);
 

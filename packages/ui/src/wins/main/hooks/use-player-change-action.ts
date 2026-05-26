@@ -1,8 +1,9 @@
-import AppEntry from "../../main/entry";
+import AppEntry from "@/wins/main/entry";
 import { useCallback } from "react";
 import { type TrackListClickFunc } from "@/common/components/track_list";
-import { NeteaseTrackRecord } from "@/common/source/netease/models";
-import { ElectronServicesBus, ElectronServicesWindow } from "@/common/source/electron/services";
+import { NeteaseTrackRecord } from "@/common/netease/models";
+import { RendererWindow } from "@/common/lib/window";
+import { RendererEventBus } from "@/common/lib/bus";
 import { useLatestRef } from "@/common/hooks/use-latest-ref";
 
 export function usePlayerChangeAction(getTracks: NormalFunc<[], NeteaseTrackRecord[]>) {
@@ -39,8 +40,8 @@ export function usePlayerChangeAction(getTracks: NormalFunc<[], NeteaseTrackReco
 
   const openTrackComment = useCallback(async (track: NeteaseTrackRecord) => {
     if (!track) return;
-    await ElectronServicesWindow.comment.openAwait();
-    ElectronServicesBus.comment.send({
+    await RendererWindow.comment.openAwait();
+    RendererEventBus.comment.send({
       id: track.id,
       type: "track"
     });

@@ -3,7 +3,7 @@ import { useStage } from "@/common/hooks/use-stage";
 import { useAppLoaded } from "@/common/hooks/use-app-loaded";
 import { Stage } from "@/common/enum";
 import { useUser } from "@/common/store/user";
-import { NeteaseServicesAuth } from "@/common/source/netease/services";
+import { NeteaseServicesAuth } from "@/common/netease/services";
 import AppToast from "@/common/components/toast";
 import AppContextMenu from "@/common/components/menu";
 
@@ -19,6 +19,7 @@ import Background from "./background";
 import MusicSource from "./music-source";
 import Bus from "./bus";
 import User from "./user";
+import AppModal from "@/common/components/modal";
 
 const Layout: FC<object> = () => {
   const { stage } = useStage();
@@ -42,8 +43,9 @@ const Layout: FC<object> = () => {
       {stage >= Stage.Finally && <PlayerModal className="contain-strict z-20" />}
       <AppErrorBoundary name="Widget" showError={false} autoReset panicAfterReset>
         {stage >= Stage.Immediately && <Background className="-z-10" />}
-        {stage >= Stage.Immediately && <AppToast.Provider className="z-35" />}
-        {stage >= Stage.Immediately && <AppContextMenu.Provider className="z-15" />}
+        {stage >= Stage.Second && <AppToast.Provider className="z-35" />}
+        {stage >= Stage.Finally && <AppContextMenu.Provider className="z-15" />}
+        {stage >= Stage.Finally && <AppModal.Provider className="z-35" />}
         {stage >= Stage.Second && <Float className="z-10" />}
       </AppErrorBoundary>
       <AppErrorBoundary name="PlayerSource" panic>

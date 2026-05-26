@@ -4,7 +4,7 @@ import { useUser } from "@/common/store/user";
 import { useStage } from "@/common/hooks/use-stage";
 import { Stage } from "@/common/enum";
 import { useAtomValue } from "jotai";
-import { sidebarAtom } from "../../../../main/atoms/layout";
+import { sidebarAtom } from "@/wins/main/atoms/layout";
 import AppErrorBoundary from "@/common/components/fallback/app-error-boundary";
 
 import NavPlayList from "./nav-playlist";

@@ -1,17 +1,17 @@
 import { type FC, memo } from "react";
 import { useListenable } from "@/common/hooks/use-listenable";
-import { ElectronServicesWindow } from "@/common/source/electron/services";
+import { RendererWindow } from "@/common/lib/window";
 import { useAtomValue } from "jotai";
-import { playModalAtom } from "../../../main/atoms/layout";
+import { playModalAtom } from "@/wins/main/atoms/layout";
 import { useSettings } from "@/common/store/settings";
-import AppEntry from "../../../main/entry";
+import AppEntry from "@/wins/main/entry";
 
-import AudioSpectrum from "../../../main/componets/spectrum/audio-spectrum";
+import AudioSpectrum from "@/wins/main/componets/spectrum/audio-spectrum";
 
 const Spectrum: FC<object> = () => {
   const playModal = useAtomValue(playModalAtom);
   const player = AppEntry.usePlayer();
-  const currentWindow = useListenable(ElectronServicesWindow.current);
+  const currentWindow = useListenable(RendererWindow.current);
   const settings = useSettings();
 
   if (!settings.performance.playerSpectrum) return null;

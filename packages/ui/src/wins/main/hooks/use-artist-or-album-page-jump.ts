@@ -3,7 +3,8 @@ import { RoutePath, RoutePathMain } from "@/common/routes";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useLatestRef } from "@/common/hooks/use-latest-ref";
 import { useSettings } from "@/common/store/settings";
-import { ElectronServicesBus, ElectronServicesWindow } from "@/common/source/electron/services";
+import { RendererWindow } from "@/common/lib/window";
+import { RendererEventBus } from "@/common/lib/bus";
 
 /** 跳转歌手和专辑页 */
 export function useArtistOrAlbumPageJump(
@@ -22,8 +23,8 @@ export function useArtistOrAlbumPageJump(
     (id: number) => {
       if (id === propsRef.current.currentAlbumID) return;
       if (settingsRef.current.preference.defaultUseDisplayWindow) {
-        return ElectronServicesWindow.display.openAwait().then(() => {
-          ElectronServicesBus.display.send({
+        return RendererWindow.display.openAwait().then(() => {
+          RendererEventBus.display.send({
             type: "album",
             id
           });
@@ -38,8 +39,8 @@ export function useArtistOrAlbumPageJump(
     (id: number) => {
       if (id === propsRef.current.currentArtistID) return;
       if (settingsRef.current.preference.defaultUseDisplayWindow) {
-        return ElectronServicesWindow.display.openAwait().then(() => {
-          ElectronServicesBus.display.send({
+        return RendererWindow.display.openAwait().then(() => {
+          RendererEventBus.display.send({
             type: "artist",
             id
           });
@@ -55,8 +56,8 @@ export function useArtistOrAlbumPageJump(
       if (source !== "like" && id === Number(playlistRef.current.id)) return;
       if (playlistRef.current.source === "like" && !id) return;
       if (settingsRef.current.preference.defaultUseDisplayWindow && source !== "history") {
-        return ElectronServicesWindow.display.openAwait().then(() => {
-          ElectronServicesBus.display.send({
+        return RendererWindow.display.openAwait().then(() => {
+          RendererEventBus.display.send({
             type: "playlist",
             source,
             id

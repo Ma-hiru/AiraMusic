@@ -1,5 +1,4 @@
 import { createLog, type LoggerWriter } from "@mahiru/log";
-import { RendererRuntime } from "@/common/lib/runtime";
 
 export class ProcessLogger implements LoggerWriter {
   write(input: { type: string; text: string }) {
@@ -38,8 +37,8 @@ export class ProcessLogger implements LoggerWriter {
 
 export const Log = createLog(
   import.meta.env.UI_LOG_LEVEL,
-  RendererRuntime.isDev ? console : new ProcessLogger(),
+  import.meta.env.DEV ? console : new ProcessLogger(),
   true
 );
 
-RendererRuntime.isDev && Log.info("environment", import.meta.env);
+import.meta.env.DEV && Log.info("environment", import.meta.env);

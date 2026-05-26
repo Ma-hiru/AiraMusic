@@ -1,5 +1,5 @@
 import { type FC, memo } from "react";
-import AppEntry from "../../../main/entry";
+import AppEntry from "@/wins/main/entry";
 
 const Title: FC<object> = () => {
   const player = AppEntry.usePlayer();

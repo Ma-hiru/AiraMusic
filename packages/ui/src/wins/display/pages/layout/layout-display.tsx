@@ -3,7 +3,8 @@ import { useListenable } from "@/common/hooks/use-listenable";
 import { useLocation, useNavigate } from "react-router-dom";
 import { RoutePath, RoutePathDisplay } from "@/common/routes";
 import { PlaylistSource } from "@/common/enum";
-import { ElectronServicesBus, ElectronServicesWindow } from "@/common/source/electron/services";
+import { RendererWindow } from "@/common/lib/window";
+import { RendererEventBus } from "@/common/lib/bus";
 import { useThemeInjectFromBus } from "@/common/hooks/use-theme-inject-from-bus";
 
 import KeepAliveOutlet from "@/common/components/public/keep-alive-outlet";
@@ -13,7 +14,7 @@ import AppContextMenu from "@/common/components/menu";
 import AcrylicBackground from "@/common/components/public/acrylic-background";
 import TopControlPure from "@/common/components/top/control";
 import Drag from "@/common/components/drag/drag";
-import { BackCtx } from "../../../display/ctx/back";
+import { BackCtx } from "@/wins/display/ctx/back";
 import TopBack from "@/common/components/top/back";
 import { useLatestRef } from "@/common/hooks/use-latest-ref";
 
@@ -23,7 +24,7 @@ const LayoutDisplay: FC<object> = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const pathRef = useLatestRef(location.pathname + location.search);
-  const displayBus = useListenable(ElectronServicesBus.display);
+  const displayBus = useListenable(RendererEventBus.display);
   useEffect(() => {
     if (!displayBus.data) return;
     const path = pathRef.current;
@@ -52,15 +53,15 @@ const LayoutDisplay: FC<object> = () => {
     }
     path !== target && navigate(target);
 
-    ElectronServicesBus.clear("displayBus");
-    ElectronServicesWindow.current.focus();
+    RendererEventBus.clear("displayBus");
+    RendererWindow.current.focus();
   }, [displayBus.data, navigate, pathRef]);
   useEffect(() => {
-    ElectronServicesBus.mainBusUpdater.send("info");
-    ElectronServicesBus.mainBusUpdater.send("player");
+    RendererEventBus.mainBusUpdater.send("info");
+    RendererEventBus.mainBusUpdater.send("player");
   }, []);
 
-  const InfoBus = useListenable(ElectronServicesBus.info);
+  const InfoBus = useListenable(RendererEventBus.info);
 
   const [back, setBack] = useState(false);
   const backCtxValue = useMemo(

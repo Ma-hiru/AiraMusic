@@ -1,9 +1,9 @@
 import { type FC, memo, useCallback, useState } from "react";
-import { NeteaseNetworkImage } from "@/common/source/netease/models";
+import { NeteaseNetworkImage } from "@/common/netease/models";
 import { CommentType, NeteaseImageSize } from "@/common/enum";
 import { useThemeColor } from "@/common/hooks/use-theme-color";
 import { ThumbsUp } from "lucide-react";
-import { NeteaseAPIComment } from "@/common/source/netease/api";
+import { NeteaseAPIComment } from "@/common/netease/api";
 
 import NeteaseImage from "@/common/components/image/netease-image";
 import { RendererFormat } from "@/common/lib/format";

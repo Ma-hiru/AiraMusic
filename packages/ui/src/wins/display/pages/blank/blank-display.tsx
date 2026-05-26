@@ -1,8 +1,8 @@
 import { type FC, memo, useEffect } from "react";
-import { useBack } from "../../../display/ctx/back";
+import { useBack } from "@/wins/display/ctx/back";
 import { useLocation } from "react-router-dom";
 import { RoutePathDisplay } from "@/common/routes";
-import { ElectronServicesWindow } from "@/common/source/electron/services";
+import { RendererWindow } from "@/common/lib/window";
 
 import AppMask from "@/common/components/fallback/app-mask";
 
@@ -14,7 +14,7 @@ const BlankDisplay: FC<object> = () => {
   useEffect(() => {
     const active = RoutePathDisplay.match(location, RoutePathDisplay.blank);
     if (!back || !active) return;
-    ElectronServicesWindow.current.close();
+    RendererWindow.current.close();
   }, [back, location]);
 
   return <AppMask />;

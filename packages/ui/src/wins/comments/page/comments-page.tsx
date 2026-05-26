@@ -4,7 +4,6 @@ import { CommentSort, CommentType } from "@/common/enum";
 import { CacheStore } from "@/common/store/cache";
 import { useListenable } from "@/common/hooks/use-listenable";
 import { useThemeInjectFromBus } from "@/common/hooks/use-theme-inject-from-bus";
-import { ElectronServicesBus } from "@/common/source/electron/services";
 import AppToast from "@/common/components/toast";
 
 import Control from "./control";
@@ -12,13 +11,13 @@ import Title from "./title";
 import Tabs from "./tabs";
 import Content from "./content";
 import AppLoading from "@/common/components/fallback/app-loading";
-import AppErrorBoundary from "@/common/components/fallback/app-error-boundary";
-import ThrowIf from "@/common/components/fallback/throw-if";
 import AcrylicBackground from "@/common/components/public/acrylic-background";
+import { RendererEventBus } from "@/common/lib/bus";
+import AppError from "@/common/components/fallback/app-error";
 
 const CommentsPage: FC<object> = () => {
-  const commentBus = useListenable(ElectronServicesBus.comment);
-  const playerBus = useListenable(ElectronServicesBus.player);
+  const commentBus = useListenable(RendererEventBus.comment);
+  const playerBus = useListenable(RendererEventBus.player);
   const [dynamicContent, setDynamicContent] = useState(() => {
     return CacheStore.browser.getOne("comments-dynamic-content") === "true";
   });
@@ -46,18 +45,18 @@ const CommentsPage: FC<object> = () => {
   }, [commentBus.data]);
 
   useEffect(() => {
-    ElectronServicesBus.mainBusUpdater.send("player");
-    ElectronServicesBus.mainBusUpdater.send("info");
+    RendererEventBus.mainBusUpdater.send("player");
+    RendererEventBus.mainBusUpdater.send("info");
   }, [dynamicContent]);
 
-  const InfoBus = useListenable(ElectronServicesBus.info);
+  const InfoBus = useListenable(RendererEventBus.info);
 
   useEffect(() => {
     const track = playerBus.data?.track;
     if (!track) return;
     if (dynamicContent) {
       CacheStore.browser.setOne("comments-dynamic-content", "true");
-      ElectronServicesBus.comment.commit({
+      RendererEventBus.comment.commit({
         id: track.id,
         type: "track"
       });
@@ -72,8 +71,7 @@ const CommentsPage: FC<object> = () => {
       <div className="fixed inset-0 z-[-1]">
         <AcrylicBackground src={InfoBus.data?.backgroundCover} />
       </div>
-      <AppErrorBoundary canReset toast={false} name="CommentsPage" onReset={loadMore}>
-        <ThrowIf when={status === "error"} message="加载评论失败" />
+      <AppError reset={loadMore} when={status === "error"} message="加载评论失败">
         <AppLoading loading={comments.data.length === 0 && status !== "success"}>
           <Title className="h-25" commentBus={commentBus} />
           <Tabs
@@ -94,7 +92,7 @@ const CommentsPage: FC<object> = () => {
             sourceID={commentBus.data?.id}
           />
         </AppLoading>
-      </AppErrorBoundary>
+      </AppError>
       <AppToast.Provider className="top-10" />
     </div>
   );

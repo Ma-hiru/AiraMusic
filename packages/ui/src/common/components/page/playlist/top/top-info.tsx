@@ -1,11 +1,12 @@
 import { type FC, memo, useRef } from "react";
 import { ListMusic, MessageSquare, Play } from "lucide-react";
 import { useThemeColor } from "@/common/hooks/use-theme-color";
-import { NeteasePlaylist } from "@/common/source/netease/models";
+import { NeteasePlaylist } from "@/common/netease/models";
 import { css, cx } from "@emotion/css";
 import { useScrollAutoHide } from "@/common/hooks/use-scroll-auto-hide";
 import { RendererFormat } from "@/common/lib/format";
-import { ElectronServicesBus, ElectronServicesWindow } from "@/common/source/electron/services";
+import { RendererWindow } from "@/common/lib/window";
+import { RendererEventBus } from "@/common/lib/bus";
 
 interface TopInfoProps {
   summary: Nullable<NeteasePlaylist>;
@@ -44,6 +45,7 @@ const TopInfo: FC<TopInfoProps> = ({ summary, onPlayAll, onAddList }) => {
             `
             flex-1 overflow-y-scroll leading-snug indent-0
             whitespace-pre-wrap wrap-break-word break-keep
+            scrollbar
           `,
             css`
               line-break: strict;
@@ -77,13 +79,18 @@ const TopInfo: FC<TopInfoProps> = ({ summary, onPlayAll, onAddList }) => {
           style={{ color: mainColor.hex() }}
           onClick={async () => {
             if (!summary?.id) return;
-            await ElectronServicesWindow.comment.openAwait();
-            ElectronServicesBus.comment.send({
+            await RendererWindow.comment.openAwait();
+            RendererEventBus.comment.send({
               id: summary.id,
               type: "playlist"
             });
           }}
-          className="overflow-hidden px-2 py-1 text-[12px] mr-2 cursor-pointer font-semibold flex items-center gap-1 active:scale-95 shadow-2xl select-none min-w-max ease-in-out duration-300 transition-all hover:opacity-60 space-x-0.5">
+          className={`
+            overflow-hidden px-2 py-1 text-[12px] mr-2 cursor-pointer font-semibold
+            flex items-center gap-1 active:scale-95 shadow-2xl select-none min-w-max
+            ease-in-out duration-300 transition-all
+            hover:opacity-60 space-x-0.5
+          `}>
           <MessageSquare size={16} />
           <span>评论</span>
           <span>{RendererFormat.count(summary?.commentCount)}</span>

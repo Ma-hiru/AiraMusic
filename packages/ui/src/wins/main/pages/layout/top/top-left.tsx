@@ -1,12 +1,13 @@
 import { cx } from "@emotion/css";
 import { type FC, memo, useCallback, useMemo } from "react";
-import { NeteaseNetworkImage, NeteaseUser } from "@/common/source/netease/models";
+import { NeteaseNetworkImage, NeteaseUser } from "@/common/netease/models";
 import { ChevronDown, UserCircle2 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
-import { NeteaseServicesAuth } from "@/common/source/netease/services";
+import { NeteaseServicesAuth } from "@/common/netease/services";
 import { useAtom, useAtomValue } from "jotai";
-import { playModalAtom, sidebarAtom } from "../../../../main/atoms/layout";
-import { ElectronServicesBus, ElectronServicesWindow } from "@/common/source/electron/services";
+import { playModalAtom, sidebarAtom } from "@/wins/main/atoms/layout";
+import { RendererWindow } from "@/common/lib/window";
+import { RendererEventBus } from "@/common/lib/bus";
 
 import NeteaseImage from "@/common/components/image/netease-image";
 import NoDrag from "@/common/components/drag/no-drag";
@@ -26,8 +27,8 @@ const TopLeft: FC<TopLeftProps> = ({ user }) => {
     } else if (!NeteaseServicesAuth.isLoggedIn) {
       await NeteaseServicesAuth.createLoginWindow();
     } else {
-      await ElectronServicesWindow.display.openAwait();
-      ElectronServicesBus.display.send({ type: "settings" });
+      await RendererWindow.display.openAwait();
+      RendererEventBus.display.send({ type: "settings" });
     }
   }, [playModal, setPlayModal]);
 

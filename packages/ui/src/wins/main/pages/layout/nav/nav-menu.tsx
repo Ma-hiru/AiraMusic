@@ -1,11 +1,11 @@
 import { type FC, memo } from "react";
-import { NavConstants } from "../../../../main/constants";
+import { NavConstants } from "@/wins/main/constants";
 import { useLocation, useNavigate } from "react-router-dom";
 import { cx } from "@emotion/css";
-import { NeteaseUser } from "@/common/source/netease/models";
+import { NeteaseUser } from "@/common/netease/models";
 import { RoutePathMain } from "@/common/routes";
 import AppToast from "@/common/components/toast";
-import { useArtistOrAlbumPageJump } from "../../../../main/hooks/use-artist-or-album-page-jump";
+import { useArtistOrAlbumPageJump } from "@/wins/main/hooks/use-artist-or-album-page-jump";
 
 interface NavMenuProps {
   barOpened: boolean;

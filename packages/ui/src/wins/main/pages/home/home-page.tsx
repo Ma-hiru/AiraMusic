@@ -2,8 +2,8 @@ import { type FC, memo, useCallback, useRef } from "react";
 import { useScrollAutoHide } from "@/common/hooks/use-scroll-auto-hide";
 import { useDelay } from "@/common/hooks/use-delay";
 import { useUser } from "@/common/store/user";
-import { useLocateOrScrollTopRegister } from "../../../main/hooks/use-locate-or-scroll-top-register";
-import { useArtistOrAlbumPageJump } from "../../../main/hooks/use-artist-or-album-page-jump";
+import { useLocateOrScrollTopRegister } from "@/wins/main/hooks/use-locate-or-scroll-top-register";
+import { useArtistOrAlbumPageJump } from "@/wins/main/hooks/use-artist-or-album-page-jump";
 
 import Banner from "./banner";
 import DailyRecommendTracks from "./daily_recommend_tracks";

@@ -3,7 +3,7 @@ import { useLatestRef } from "@/common/hooks/use-latest-ref";
 import { useLocation } from "react-router-dom";
 import { useRouterActive } from "@/common/hooks/use-router-active";
 import { useAtom } from "jotai";
-import { scrollActionsAtom } from "../../main/atoms/layout";
+import { scrollActionsAtom } from "@/wins/main/atoms/layout";
 import { debounce } from "lodash-es";
 
 export function useLocateOrScrollTopRegister(props: {

@@ -1,5 +1,5 @@
 import { Log } from "@/common/lib/log";
-import _AppWindow from "@/common/source/electron/services/window";
+import { RendererWindow } from "@/common/lib/window";
 
 interface CanInit {
   _init: () => void;
@@ -28,7 +28,7 @@ export default class Init {
 
       if (options.onError) options.onError(e);
       if ("panic" in options && options.panic)
-        _AppWindow.panic(options.panicMessage ?? "init error");
+        RendererWindow.panic(options.panicMessage ?? "init error");
     }
   }
   static initMicrotask(obj: CanInit, options: InitOptions = {}) {

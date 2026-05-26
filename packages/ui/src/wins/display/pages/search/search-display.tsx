@@ -1,11 +1,11 @@
 import { type FC, memo, useRef } from "react";
 import { RoutePath, RoutePathDisplay } from "@/common/routes";
 import { useLocation } from "react-router-dom";
-import { useArtistOrAlbumDisplayJump } from "../../../display/hooks/use-artist-or-album-display-jump";
-import { usePlayerChangeActionFromDisplay } from "../../../display/hooks/use-player-change-action-from-display";
+import { useArtistOrAlbumDisplayJump } from "@/wins/display/hooks/use-artist-or-album-display-jump";
+import { usePlayerChangeActionFromDisplay } from "@/wins/display/hooks/use-player-change-action-from-display";
 import { useUserTrackManager } from "@/common/hooks/use-user-track-manager";
 import { useListenable } from "@/common/hooks/use-listenable";
-import { ElectronServicesBus } from "@/common/source/electron/services";
+import { RendererEventBus } from "@/common/lib/bus";
 import RendererImageConstants from "@/common/constants/image";
 
 import Search, { type SearchRef } from "@/common/components/page/search";
@@ -13,7 +13,7 @@ import Search, { type SearchRef } from "@/common/components/page/search";
 const SearchDisplay: FC<object> = () => {
   const location = useLocation();
   const searchRef = useRef<SearchRef>(null);
-  const playerBus = useListenable(ElectronServicesBus.player);
+  const playerBus = useListenable(RendererEventBus.player);
   const { heartManager, playableManager } = useUserTrackManager();
   const { keyword } = RoutePath.parseQuery<{ keyword?: string }>(location, RoutePathDisplay.search);
   const { jumpArtistDisplay, jumpAlbumDisplay, jumpPlaylistDisplay } =

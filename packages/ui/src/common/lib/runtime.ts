@@ -1,14 +1,14 @@
-import _AppRenderer from "@/common/source/electron/services/renderer";
+import { RendererIPC } from "@/common/lib/ipc";
+import Init from "@/common/utils/init";
 
 export class RendererRuntime {
   static id = "";
-  static readonly isDev = import.meta.env.DEV;
-  static readonly isRelease = import.meta.env.PROD;
-  static readonly isTest = String(import.meta.env.APP_TEST) === "true";
+  static readonly isTest = String(import.meta.env.APP_TEST).toLowerCase() === "true";
+  static async _init() {
+    RendererRuntime.id = RendererRuntime.isTest
+      ? ""
+      : await RendererIPC.Invoke("runtimeID", undefined);
+  }
 }
 
-requestAnimationFrame(async () => {
-  RendererRuntime.id = RendererRuntime.isTest
-    ? ""
-    : await _AppRenderer.Event.invoke("runtimeID", undefined);
-});
+Init.initMicrotask(RendererRuntime);

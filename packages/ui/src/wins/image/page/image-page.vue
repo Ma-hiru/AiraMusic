@@ -14,7 +14,7 @@
   import TopControlPure from "@/common/components/top/control.vue";
   import Drag from "@/common/components/drag/drag.vue";
   import ImageViewer from "@/common/components/image/image-viewer.vue";
-  import { ElectronServicesWindow } from "@/common/source/electron/services";
+  import { RendererWindow } from "@/common/lib/window";
   import { useAppLoadedVue } from "@/common/hooks/use-app-loaded-vue";
   import { onMounted, reactive, ref } from "vue";
 
@@ -25,7 +25,7 @@
   useAppLoadedVue(loading);
 
   onMounted(() => {
-    ElectronServicesWindow.all.listenMessageAll("imageCheckerBus", (props) => {
+    RendererWindow.all.listenMessageAll("imageCheckerBus", (props) => {
       const { url, alt } = props.data;
       const exits = images.findIndex((image) => image.url === url);
       if (exits === -1) {

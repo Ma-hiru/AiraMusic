@@ -1,7 +1,7 @@
 import { cx } from "@emotion/css";
 import { type FC, memo, useMemo } from "react";
 import { CirclePlay, Headphones } from "lucide-react";
-import { NeteaseNetworkImage, NeteasePlaylistSummary } from "@/common/source/netease/models";
+import { NeteaseNetworkImage, NeteasePlaylistSummary } from "@/common/netease/models";
 import RendererImageConstants from "@/common/constants/image";
 
 import NeteaseImage from "@/common/components/image/netease-image";

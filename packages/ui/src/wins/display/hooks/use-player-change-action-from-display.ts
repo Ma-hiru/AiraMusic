@@ -1,6 +1,7 @@
 import { useCallback } from "react";
-import { NeteaseTrackRecord } from "@/common/source/netease/models";
-import { ElectronServicesBus, ElectronServicesWindow } from "@/common/source/electron/services";
+import { NeteaseTrackRecord } from "@/common/netease/models";
+import { RendererWindow } from "@/common/lib/window";
+import { RendererEventBus } from "@/common/lib/bus";
 import { useLatestRef } from "@/common/hooks/use-latest-ref";
 
 /** 从多窗口页面触发播放器变更 */
@@ -15,7 +16,7 @@ export function usePlayerChangeActionFromDisplay(props: {
     (track: NeteaseTrackRecord) => {
       const tracks = propsRef.current.getTracks();
       if (!tracks || !tracks[0]) return;
-      ElectronServicesBus.playerChange.send({
+      RendererEventBus.playerChange.send({
         type: "replacePlaylistAndPlay",
         sourceType: track.sourceName,
         trackIdx: tracks.findIndex((t) => t.id === track.id),
@@ -29,7 +30,7 @@ export function usePlayerChangeActionFromDisplay(props: {
 
   const addTrackToPlaylistNext = useCallback((track: NeteaseTrackRecord) => {
     if (!track) return;
-    ElectronServicesBus.playerChange.send({
+    RendererEventBus.playerChange.send({
       type: "addToPlaylistNext",
       sourceType: track.sourceName,
       sourceID: track.sourceID,
@@ -39,7 +40,7 @@ export function usePlayerChangeActionFromDisplay(props: {
 
   const addTrackToPlaylistLast = useCallback((track: NeteaseTrackRecord) => {
     if (!track) return;
-    ElectronServicesBus.playerChange.send({
+    RendererEventBus.playerChange.send({
       type: "addToPlaylistLast",
       sourceType: track.sourceName,
       sourceID: track.sourceID,
@@ -49,8 +50,8 @@ export function usePlayerChangeActionFromDisplay(props: {
 
   const openTrackComment = useCallback(async (track: NeteaseTrackRecord) => {
     if (!track) return;
-    await ElectronServicesWindow.comment.openAwait();
-    ElectronServicesBus.comment.send({
+    await RendererWindow.comment.openAwait();
+    RendererEventBus.comment.send({
       id: track.id,
       type: "track"
     });
@@ -60,7 +61,7 @@ export function usePlayerChangeActionFromDisplay(props: {
     const tracks = propsRef.current.getTracks();
     const { sourceID, sourceType } = propsRef.current;
     if (!tracks || !tracks[0]) return;
-    ElectronServicesBus.playerChange.send({
+    RendererEventBus.playerChange.send({
       sourceID,
       sourceType,
       type: "replacePlaylistAndPlay",
@@ -74,7 +75,7 @@ export function usePlayerChangeActionFromDisplay(props: {
     const tracks = propsRef.current.getTracks();
     const { sourceID, sourceType } = propsRef.current;
     if (!tracks || !tracks[0]) return;
-    ElectronServicesBus.playerChange.send({
+    RendererEventBus.playerChange.send({
       sourceID,
       sourceType,
       type: "addListToPlaylistEnd",

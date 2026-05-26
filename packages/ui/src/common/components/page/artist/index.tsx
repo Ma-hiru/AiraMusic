@@ -14,21 +14,20 @@ import {
   useState
 } from "react";
 import { useRequestAutoRun, useRequestStatusWrap } from "@/common/hooks/use-request-wrap";
-import { NeteaseArtist, NeteaseTrackRecord } from "@/common/source/netease/models";
-import { NeteaseServicesArtist } from "@/common/source/netease/services";
+import { NeteaseArtist, NeteaseTrackRecord } from "@/common/netease/models";
+import { NeteaseServicesArtist } from "@/common/netease/services";
 import AppContextMenu from "@/common/components/menu";
 import RendererImageConstants from "@/common/constants/image";
 
 import Header from "./header";
 import AlbumList from "./album";
-import AppErrorBoundary from "@/common/components/fallback/app-error-boundary";
 import AppLoading from "@/common/components/fallback/app-loading";
-import ThrowIf from "@/common/components/fallback/throw-if";
 import TrackList, {
   type TrackListClickFunc,
   type TrackListPlayableManager,
   type TrackListRef
 } from "@/common/components/track_list";
+import AppError from "@/common/components/fallback/app-error";
 
 export type ArtistRef = {
   reload: NormalFunc;
@@ -152,8 +151,7 @@ const Artist: FC<ArtistProps> = ({
 
   return (
     <div className={cx("flex flex-col", className)}>
-      <AppErrorBoundary name="Artist" canReset toast onReset={reload}>
-        <ThrowIf when={status === "error"} message="歌手加载失败" />
+      <AppError reset={reload} message="歌手加载失败" when={status === "error"}>
         <AppLoading loading={status === "loading"}>
           <Header
             className="shrink-0"
@@ -190,7 +188,7 @@ const Artist: FC<ArtistProps> = ({
             />
           )}
         </AppLoading>
-      </AppErrorBoundary>
+      </AppError>
     </div>
   );
 };

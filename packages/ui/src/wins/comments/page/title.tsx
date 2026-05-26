@@ -5,23 +5,23 @@ import {
   NeteaseNetworkImage,
   NeteasePlaylist,
   NeteaseTrack
-} from "@/common/source/netease/models";
+} from "@/common/netease/models";
 import { useCacheRequest } from "@/common/utils/cache";
 import { useThemeColor } from "@/common/hooks/use-theme-color";
 import { Log } from "@/common/lib/log";
 import { NeteaseImageSize } from "@/common/enum";
 import { RendererFormat } from "@/common/lib/format";
-import { ElectronServicesBus } from "@/common/source/electron/services";
-import { NeteaseAPIWiki } from "@/common/source/netease/api";
+import { NeteaseAPIWiki } from "@/common/netease/api";
 import {
   NeteaseServicesAlbum,
   NeteaseServicesPlaylist,
   NeteaseServicesTrack
-} from "@/common/source/netease/services";
+} from "@/common/netease/services";
+import { RendererEventBus } from "@/common/lib/bus";
 import NeteaseImage from "@/common/components/image/netease-image";
 
 interface TitleProps {
-  commentBus: typeof ElectronServicesBus.comment;
+  commentBus: typeof RendererEventBus.comment;
   className?: string;
 }
 

@@ -1,5 +1,5 @@
 import { type FC, useEffect } from "react";
-import { NeteaseServicesAuth } from "@/common/source/netease/services";
+import { NeteaseServicesAuth } from "@/common/netease/services";
 import { useRequestAutoRetry, useRequestStatusWrap } from "@/common/hooks/use-request-wrap";
 import AppToast from "@/common/components/toast";
 import { Log } from "@/common/lib/log";

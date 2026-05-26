@@ -1,16 +1,14 @@
 import { useAtom } from "jotai";
 import { type FC, memo, useCallback, useEffect, useRef } from "react";
-import { NeteaseAPITrack } from "@/common/source/netease/api";
+import { NeteaseAPITrack } from "@/common/netease/api";
 import { useRequestAutoRetry, useRequestStatusWrap } from "@/common/hooks/use-request-wrap";
-import { backgroundCoverAtom } from "../../../../main/atoms/theme";
+import { backgroundCoverAtom } from "@/wins/main/atoms/theme";
 
 import RecommendTrackTitle from "./recommend-track-title";
 import RecommendTrackList from "./list";
-import AppErrorBoundary, {
-  type AppErrorBoundaryRef
-} from "@/common/components/fallback/app-error-boundary";
-import ThrowIf from "@/common/components/fallback/throw-if";
+import { type AppErrorBoundaryRef } from "@/common/components/fallback/app-error-boundary";
 import AppLoading from "@/common/components/fallback/app-loading";
+import AppError from "@/common/components/fallback/app-error";
 
 const DailyRecommendTracks: FC<object> = () => {
   const [backgroundCover, setBackgroundCover] = useAtom(backgroundCoverAtom);
@@ -52,19 +50,11 @@ const DailyRecommendTracks: FC<object> = () => {
   return (
     <div className="w-full overflow-hidden contain-layout">
       <RecommendTrackTitle lastPage={lastPage} nextPage={nextPage} />
-      <AppErrorBoundary
-        ref={errRef}
-        className="w-full h-auto"
-        showError
-        canReset
-        name="DailyRecommendTracks"
-        onReset={reload}
-        toast={false}>
-        <ThrowIf when={status === "error"} />
+      <AppError reset={reload} when={status === "error"}>
         <AppLoading loading={status === "loading"} className="w-full h-auto">
           <RecommendTrackList recommend={recommend} containerRef={containerRef} />
         </AppLoading>
-      </AppErrorBoundary>
+      </AppError>
     </div>
   );
 };

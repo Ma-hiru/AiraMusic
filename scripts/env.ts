@@ -24,9 +24,9 @@ export default class AppEnv {
     }
   }
 
-  static load(mode?: string) {
+  static load(mode?: string, log: boolean = true) {
     if (!AppEnv.envDir) AppEnv.setEnvPath();
-    console.log(`Loading env for mode: ${mode || "default"}`);
+    log && console.log(`Loading env for mode: ${mode || "default"}`);
     return AppEnv.getEnvNames(mode).reduce(
       (env, name) => {
         const parsedEnv = AppEnv.parseEnv(join(AppEnv.envDir, name));

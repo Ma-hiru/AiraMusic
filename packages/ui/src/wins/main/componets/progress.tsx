@@ -1,5 +1,5 @@
 import { type FC, memo, type ReactNode, useEffect, useState } from "react";
-import AppEntry from "../../main/entry";
+import AppEntry from "@/wins/main/entry";
 import RendererPlayerAudio from "@/common/player/audio";
 
 interface ProgressProps {

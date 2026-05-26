@@ -1,7 +1,7 @@
 import { cx } from "@emotion/css";
 import { type FC, type MouseEvent as ReactMouseEvent, useCallback, useRef } from "react";
 import { useListenable } from "./use-listenable";
-import { ElectronServicesWindow } from "@/common/source/electron/services";
+import { RendererWindow } from "@/common/lib/window";
 
 interface WindowResizeProps {
   disable: boolean;
@@ -23,7 +23,7 @@ export const WindowResize: FC<WindowResizeProps> = ({
   const resizeSession = useRef<Nullable<ResizeSession>>(null);
   const resizeRaf = useRef<Nullable<number>>(null);
   const pendingBounds = useRef<WindowBoundsPatch>({});
-  const currentWindow = useListenable(ElectronServicesWindow.current);
+  const currentWindow = useListenable(RendererWindow.current);
 
   // 批量调度窗口尺寸变更
   const dispatchBounds = useCallback(

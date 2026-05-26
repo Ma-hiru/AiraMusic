@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 
 import Progress from "./progress";
-import AppEntry from "../../../main/entry";
+import AppEntry from "@/wins/main/entry";
 
 const Control: FC<object> = () => {
   const player = AppEntry.usePlayer();

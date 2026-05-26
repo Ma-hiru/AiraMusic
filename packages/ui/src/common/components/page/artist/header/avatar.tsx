@@ -1,6 +1,6 @@
 import { cx } from "@emotion/css";
 import { type FC, memo, type ReactEventHandler, useCallback, useMemo } from "react";
-import { NeteaseArtist, NeteaseNetworkImage } from "@/common/source/netease/models";
+import { NeteaseArtist, NeteaseNetworkImage } from "@/common/netease/models";
 import NeteaseImage from "@/common/components/image/netease-image";
 import { NeteaseImageSize } from "@/common/enum";
 

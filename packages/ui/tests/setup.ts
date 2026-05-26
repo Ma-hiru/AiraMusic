@@ -2,6 +2,15 @@ import "@testing-library/jest-dom/vitest";
 import init from "@mahiru/wasm";
 import { join } from "node:path";
 import { readFile } from "node:fs/promises";
+import { afterEach, vi } from "vitest";
+import { resetLogMock } from "./mock/log";
+
+vi.mock("@/common/lib/log", async () => await import("./mock/log"));
+vi.mock("@mahiru/ui/common/lib/log", async () => await import("./mock/log"));
+
+afterEach(() => {
+  resetLogMock();
+});
 
 const wasmPath = join(process.cwd(), "../wasm/pkg/wasm_bg.wasm");
 

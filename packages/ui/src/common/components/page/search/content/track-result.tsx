@@ -6,18 +6,17 @@ import {
   useEffect,
   useImperativeHandle
 } from "react";
-import { NeteaseAPISearch } from "@/common/source/netease/api";
+import { NeteaseAPISearch } from "@/common/netease/api";
 import { NeteaseImageSize, PlaylistSource, SearchType } from "@/common/enum";
-import { NeteaseServicesTrack } from "@/common/source/netease/services";
-import { NeteaseHistory, NeteaseTrackRecord } from "@/common/source/netease/models";
+import { NeteaseServicesTrack } from "@/common/netease/services";
+import { NeteaseHistory, NeteaseTrackRecord } from "@/common/netease/models";
 import { useRequestAutoRun, useRequestStatusWrap } from "@/common/hooks/use-request-wrap";
-import AppErrorBoundary from "@/common/components/fallback/app-error-boundary";
-import ThrowIf from "@/common/components/fallback/throw-if";
-import AppLoading from "@/common/components/fallback/app-loading";
-import TrackList, { type TrackListPlayableManager } from "@/common/components/track_list";
-import RendererImageConstants from "@/common/constants/image";
 import { type HeartManager } from "@/common/hooks/use-heart";
 import AppContextMenu from "@/common/components/menu";
+import RendererImageConstants from "@/common/constants/image";
+import AppLoading from "@/common/components/fallback/app-loading";
+import TrackList, { type TrackListPlayableManager } from "@/common/components/track_list";
+import AppError from "@/common/components/fallback/app-error";
 
 export type TrackResultRef = {
   tracks: NeteaseTrackRecord[];
@@ -139,8 +138,7 @@ const TrackResult: FC<TrackResultProps> = ({
   }, [active, setCount, tracks.length]);
 
   return (
-    <AppErrorBoundary name="TrackSearchResult" canReset toast onReset={reload}>
-      <ThrowIf when={status === "error" && active} message="歌曲加载失败" />
+    <AppError reset={reload} when={status === "error" && active} message="歌曲加载失败">
       <AppLoading loading={status === "loading" && active}>
         <TrackList
           id={null}
@@ -158,7 +156,7 @@ const TrackResult: FC<TrackResultProps> = ({
           emptyTips="没有结果"
         />
       </AppLoading>
-    </AppErrorBoundary>
+    </AppError>
   );
 };
 

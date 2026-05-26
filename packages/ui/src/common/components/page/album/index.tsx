@@ -7,11 +7,11 @@ import {
   useImperativeHandle,
   useRef
 } from "react";
-import { NeteaseAlbum, NeteaseHistory, NeteaseTrackRecord } from "@/common/source/netease/models";
+import { NeteaseAlbum, NeteaseHistory, NeteaseTrackRecord } from "@/common/netease/models";
 import { cx } from "@emotion/css";
 import { NeteaseImageSize, PlaylistSource } from "@/common/enum";
 import { type HeartManager } from "@/common/hooks/use-heart";
-import { NeteaseServicesAlbum } from "@/common/source/netease/services";
+import { NeteaseServicesAlbum } from "@/common/netease/services";
 import { useRequestAutoRun, useRequestStatusWrap } from "@/common/hooks/use-request-wrap";
 import AppContextMenu from "@/common/components/menu";
 import RendererImageConstants from "@/common/constants/image";
@@ -19,12 +19,11 @@ import RendererImageConstants from "@/common/constants/image";
 import Top from "./top";
 import Divider from "./divider";
 import AppLoading from "@/common/components/fallback/app-loading";
-import AppErrorBoundary from "@/common/components/fallback/app-error-boundary";
-import ThrowIf from "@/common/components/fallback/throw-if";
 import TrackList, {
   type TrackListPlayableManager,
   type TrackListRef
 } from "@/common/components/track_list";
+import AppError from "@/common/components/fallback/app-error";
 
 export type AlbumPageRef = {
   trackListRef: Nullable<TrackListRef>;
@@ -148,8 +147,7 @@ const Album: FC<AlbumPageProps> = ({
 
   return (
     <div className={cx("w-full h-full flex flex-col", className)}>
-      <AppErrorBoundary name="Album" canReset className="w-full h-full" toast onReset={reload}>
-        <ThrowIf when={status === "error"} message="加载专辑失败" />
+      <AppError reset={reload} message="加载专辑失败" when={status === "error"}>
         <AppLoading loading={status === "loading"}>
           <Top
             coverSize={coverSize}
@@ -181,7 +179,7 @@ const Album: FC<AlbumPageProps> = ({
             />
           )}
         </AppLoading>
-      </AppErrorBoundary>
+      </AppError>
     </div>
   );
 };

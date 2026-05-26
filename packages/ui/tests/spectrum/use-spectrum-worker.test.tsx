@@ -2,66 +2,16 @@ import { act, cleanup, renderHook } from "@testing-library/react";
 import {
   type SpectrumOptions,
   useSpectrumWorker
-} from "../../src/wins/main/hooks/use-spectrum-worker";
-
-type SpectrumWorkerResult =
-  | { type: "ready" }
-  | { type: "spectrum"; bands: Float32Array }
-  | { type: "spectrumWithPeaks"; data: Float32Array }
-  | { type: "error"; error: string };
-
-type MockWorkerInstance = {
-  messages: Array<{ message: any; transfer?: Transferable[] }>;
-  terminated: boolean;
-  emit(data: SpectrumWorkerResult): void;
-};
+} from "@mahiru/ui/wins/main/hooks/use-spectrum-worker";
+import { type MockSpectrumWorkerInstance, spectrumWorkerMock } from "../mock/spectrum-worker";
 
 type RenderHookProps = {
   isPlaying: boolean;
   options: SpectrumOptions;
 };
 
-const workerState = vi.hoisted(() => ({
-  instances: [] as MockWorkerInstance[]
-}));
-
-vi.mock("@mahiru/ui/common/constants/dev", () => ({
-  Log: {
-    error: vi.fn()
-  }
-}));
-
-vi.mock("@mahiru/ui/worker/spectrum.ts?worker", () => {
-  class MockSpectrumWorker {
-    messages: Array<{ message: any; transfer?: Transferable[] }> = [];
-    listeners: Array<(event: MessageEvent<SpectrumWorkerResult>) => void> = [];
-    terminated = false;
-
-    constructor() {
-      workerState.instances.push(this);
-    }
-
-    postMessage(message: any, transfer?: Transferable[]) {
-      this.messages.push({ message, transfer });
-    }
-
-    addEventListener(type: string, listener: (event: MessageEvent<SpectrumWorkerResult>) => void) {
-      if (type === "message") {
-        this.listeners.push(listener);
-      }
-    }
-
-    terminate() {
-      this.terminated = true;
-    }
-
-    emit(data: SpectrumWorkerResult) {
-      for (const listener of this.listeners) {
-        listener({ data } as MessageEvent<SpectrumWorkerResult>);
-      }
-    }
-  }
-
+vi.mock("@mahiru/ui/worker/spectrum.ts?worker", async () => {
+  const { MockSpectrumWorker } = await import("../mock/spectrum-worker");
   return { default: MockSpectrumWorker };
 });
 
@@ -72,7 +22,7 @@ describe("useSpectrumWorker", () => {
   let originalCancelRaf: typeof cancelAnimationFrame;
 
   beforeEach(() => {
-    workerState.instances.length = 0;
+    spectrumWorkerMock.instances.length = 0;
     rafCallbacks = [];
     now = 0;
     originalRaf = globalThis.requestAnimationFrame;
@@ -266,12 +216,12 @@ function createAudioMock() {
 }
 
 function latestWorker() {
-  const worker = workerState.instances.at(-1);
+  const worker = spectrumWorkerMock.instances.at(-1);
   expect(worker).toBeDefined();
   return worker!;
 }
 
-function analyzeMessages(worker: MockWorkerInstance) {
+function analyzeMessages(worker: MockSpectrumWorkerInstance) {
   return worker.messages.filter(({ message }) => message.type === "analyze");
 }
 

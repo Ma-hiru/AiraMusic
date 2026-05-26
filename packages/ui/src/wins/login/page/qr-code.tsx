@@ -1,7 +1,7 @@
 import { cx } from "@emotion/css";
 import { RotateCcw } from "lucide-react";
 import { type FC, memo, useEffect, useState } from "react";
-import { QRCodeStatus } from "../../login/hooks/use-login-qr-code";
+import { QRCodeStatus } from "@/wins/login/hooks/use-login-qr-code";
 
 interface QRCodeProps {
   url: Nullable<string>;

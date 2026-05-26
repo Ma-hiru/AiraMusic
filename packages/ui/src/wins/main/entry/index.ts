@@ -1,6 +1,7 @@
 import { userStoreSnapshot } from "@/common/store/user";
 import { useListenable } from "@/common/hooks/use-listenable";
-import { ElectronServicesOnce, ElectronServicesWindow } from "@/common/source/electron/services";
+import { RendererWindow } from "@/common/lib/window";
+import { RendererOnce } from "@/common/lib/once";
 import AppPlayer from "@/common/player/core";
 
 export default class AppEntry {
@@ -47,8 +48,8 @@ export default class AppEntry {
   }
 
   private static setupMini() {
-    ElectronServicesOnce.do("setupMini", () => {
-      const miniWindow = ElectronServicesWindow.get("miniplayer");
+    RendererOnce.do("setupMini", () => {
+      const miniWindow = RendererWindow.get("miniplayer");
       setTimeout(async () => {
         if (!miniWindow.opened) {
           await miniWindow.openAwait();

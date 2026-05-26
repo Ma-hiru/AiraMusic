@@ -17,7 +17,7 @@ interface LyricWordProps {
   notesContent?: string;
   activeColor?: string;
   inactiveColor?: string;
-  fontSize?: FontSize | number;
+  fontSize?: number;
   lineActive?: boolean;
   singleWord?: boolean;
   onClick?: NormalFunc<[startTime: number]>;

@@ -1,10 +1,10 @@
 import { type FC, memo, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import { RoutePath, RoutePathMain } from "@/common/routes";
-import { useArtistOrAlbumPageJump } from "../../../main/hooks/use-artist-or-album-page-jump";
-import { usePageAction } from "../../../main/hooks/use-page-action";
-import { usePlayerChangeAction } from "../../../main/hooks/use-player-change-action";
-import { useCoverLoadedAndSetTheme } from "../../../main/hooks/use-cover-loaded-and-set-theme";
+import { useArtistOrAlbumPageJump } from "@/wins/main/hooks/use-artist-or-album-page-jump";
+import { usePageAction } from "@/wins/main/hooks/use-page-action";
+import { usePlayerChangeAction } from "@/wins/main/hooks/use-player-change-action";
+import { useCoverLoadedAndSetTheme } from "@/wins/main/hooks/use-cover-loaded-and-set-theme";
 import { useUserTrackManager } from "@/common/hooks/use-user-track-manager";
 
 import Artist, { type ArtistRef } from "@/common/components/page/artist";

@@ -2,7 +2,7 @@ import { type FC, memo } from "react";
 import { Heart } from "lucide-react";
 import { type ColorInstance } from "color";
 import { PlaylistSource, TrackBitmark } from "@/common/enum";
-import { NeteaseHistory, NeteaseTrackRecord } from "@/common/source/netease/models";
+import { NeteaseHistory, NeteaseTrackRecord } from "@/common/netease/models";
 import { RendererFormat } from "@/common/lib/format";
 
 import ListItemQuality from "./quality";

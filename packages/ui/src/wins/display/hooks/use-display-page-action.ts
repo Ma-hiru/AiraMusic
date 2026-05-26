@@ -1,6 +1,6 @@
-import { useBack } from "../../display/ctx/back";
+import { useBack } from "@/wins/display/ctx/back";
 import { useCallback } from "react";
-import { ElectronServicesWindow } from "@/common/source/electron/services";
+import { RendererWindow } from "@/common/lib/window";
 import { useLatestRef } from "@/common/hooks/use-latest-ref";
 import { useNavigate } from "react-router-dom";
 import type { MessageData } from "@mahiru/ipc/renderer";
@@ -18,7 +18,7 @@ export function useDisplayPageAction(
 
   const onPageAction = useCallback(async () => {
     if (!dataRef.current) return;
-    ElectronServicesWindow.main.send("mergeDisplay", dataRef.current);
+    RendererWindow.main.send("mergeDisplay", dataRef.current);
     markBack();
     navigate(-1);
   }, [dataRef, markBack, navigate]);

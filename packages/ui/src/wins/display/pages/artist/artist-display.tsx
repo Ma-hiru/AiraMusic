@@ -2,18 +2,18 @@ import { type FC, memo, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import { RoutePath, RoutePathDisplay } from "@/common/routes";
 import { useUserTrackManager } from "@/common/hooks/use-user-track-manager";
-import { ElectronServicesBus } from "@/common/source/electron/services";
 import { useListenable } from "@/common/hooks/use-listenable";
-import { useArtistOrAlbumDisplayJump } from "../../../display/hooks/use-artist-or-album-display-jump";
-import { useDisplayPageAction } from "../../../display/hooks/use-display-page-action";
-import { usePlayerChangeActionFromDisplay } from "../../../display/hooks/use-player-change-action-from-display";
+import { useArtistOrAlbumDisplayJump } from "@/wins/display/hooks/use-artist-or-album-display-jump";
+import { useDisplayPageAction } from "@/wins/display/hooks/use-display-page-action";
+import { usePlayerChangeActionFromDisplay } from "@/wins/display/hooks/use-player-change-action-from-display";
+import { RendererEventBus } from "@/common/lib/bus";
 
 import Artist, { type ArtistRef } from "@/common/components/page/artist";
 
 const ArtistDisplay: FC<object> = () => {
   const location = useLocation();
   const artistRef = useRef<ArtistRef>(null);
-  const playerBus = useListenable(ElectronServicesBus.player);
+  const playerBus = useListenable(RendererEventBus.player);
   const { playableManager, heartManager } = useUserTrackManager();
   const { id } = RoutePath.parseQuery<{ id: number }>(location, RoutePathDisplay.artist);
   const { addTrackToPlaylistLast, addTrackToPlaylistNext, onTrackPlay, openTrackComment } =

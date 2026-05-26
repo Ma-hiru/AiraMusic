@@ -7,8 +7,8 @@ import {
   useState
 } from "react";
 import { clamp, throttle } from "lodash-es";
-import { NeteaseAPITrack } from "@/common/source/netease/api";
-import AppEntry from "../../main/entry";
+import { NeteaseAPITrack } from "@/common/netease/api";
+import AppEntry from "@/wins/main/entry";
 
 export function usePlayProgress() {
   const [percentScope, percentAnimate] = useAnimate();

@@ -1,12 +1,13 @@
 import { useLayoutEffect } from "react";
 import { useListenable } from "./use-listenable";
-import { ElectronServicesBus, ElectronServicesWindow } from "@/common/source/electron/services";
+import { RendererWindow } from "@/common/lib/window";
+import { RendererEventBus } from "@/common/lib/bus";
 import RendererTheme from "@/common/player/ui";
 
-const needInject = !ElectronServicesWindow.current.isMainWindow;
+const needInject = !RendererWindow.current.isMainWindow;
 
 export function useThemeInjectFromBus() {
-  const infoBus = useListenable(ElectronServicesBus.info, !needInject);
+  const infoBus = useListenable(RendererEventBus.info, !needInject);
 
   useLayoutEffect(() => {
     if (!needInject) return;

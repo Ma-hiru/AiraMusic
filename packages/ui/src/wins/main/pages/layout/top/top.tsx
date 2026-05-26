@@ -2,9 +2,9 @@ import { type FC, memo } from "react";
 import { cx } from "@emotion/css";
 import { useUser } from "@/common/store/user";
 import { useListenable } from "@/common/hooks/use-listenable";
-import { ElectronServicesWindow } from "@/common/source/electron/services";
+import { RendererWindow } from "@/common/lib/window";
 import { useAtomValue } from "jotai";
-import { playModalAtom, sidebarAtom } from "../../../../main/atoms/layout";
+import { playModalAtom, sidebarAtom } from "@/wins/main/atoms/layout";
 
 import TopControl from "./top-control";
 import TopAvatar from "./top-avatar";
@@ -18,7 +18,7 @@ const Top: FC<{ className?: string }> = ({ className }) => {
   const playModal = useAtomValue(playModalAtom);
   const sidebar = useAtomValue(sidebarAtom);
   const user = useUser();
-  const isFullscreen = useListenable(ElectronServicesWindow.current).isFullscreen;
+  const isFullscreen = useListenable(RendererWindow.current).isFullscreen;
 
   return (
     <Drag

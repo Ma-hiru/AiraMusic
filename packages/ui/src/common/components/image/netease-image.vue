@@ -15,10 +15,10 @@
 </template>
 <script setup lang="ts" name="NeteaseImage">
   import { computed, type ImgHTMLAttributes, onUnmounted, ref, useAttrs, watch } from "vue";
-  import { NeteaseLocalImage, NeteaseNetworkImage } from "@/common/source/netease/models";
+  import { NeteaseLocalImage, NeteaseNetworkImage } from "@/common/netease/models";
   import { NeteaseImageSize } from "@/common/enum";
-  import { NeteaseServicesImage } from "@/common/source/netease/services";
-  import { ElectronServicesWindow } from "@/common/source/electron/services";
+  import { NeteaseServicesImage } from "@/common/netease/services";
+  import { RendererWindow } from "@/common/lib/window";
 
   type ShadowLevel = "none" | "base" | "float";
   type ShadowColor = "light" | "dark";
@@ -121,8 +121,8 @@
   async function wrapClick(e: MouseEvent) {
     if (props.preview && props.image) {
       const sendImage = props.image.toNetworkImage().setSize(NeteaseImageSize.raw);
-      await ElectronServicesWindow.image.openAwait();
-      ElectronServicesWindow.image.send("imageCheckerBus", {
+      await RendererWindow.image.openAwait();
+      RendererWindow.image.send("imageCheckerBus", {
         url: sendImage.src,
         alt: imageAttrs.value.alt ?? sendImage.alt
       });

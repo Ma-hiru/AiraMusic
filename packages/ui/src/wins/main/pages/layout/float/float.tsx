@@ -5,7 +5,7 @@ import { ChevronLeft, ChevronUp, LocateFixed, PanelLeftClose, PanelLeftOpen } fr
 import { AnimatePresence } from "motion/react";
 import { RoutePathMain } from "@/common/routes";
 import { useAtom, useAtomValue } from "jotai";
-import { playModalAtom, scrollActionsAtom, sidebarAtom } from "../../../../main/atoms/layout";
+import { playModalAtom, scrollActionsAtom, sidebarAtom } from "@/wins/main/atoms/layout";
 
 import FloatItem from "./float-item";
 

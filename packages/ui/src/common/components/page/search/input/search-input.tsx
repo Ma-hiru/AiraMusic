@@ -11,7 +11,7 @@ import {
 } from "react";
 import { Search, X } from "lucide-react";
 import { cx } from "@emotion/css";
-import { NeteaseAPISearch } from "@/common/source/netease/api";
+import { NeteaseAPISearch } from "@/common/netease/api";
 import { useLatestRef } from "@/common/hooks/use-latest-ref";
 import { Log } from "@/common/lib/log";
 import { debounce } from "lodash-es";

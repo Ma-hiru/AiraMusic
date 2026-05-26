@@ -7,14 +7,14 @@ import {
   NeteaseNetworkImage,
   NeteaseTrack,
   NeteaseTrackRecord
-} from "@/common/source/netease/models";
+} from "@/common/netease/models";
 import { Listenable } from "@/common/utils/listenable";
 import { NeteaseImageSize } from "@/common/enum";
 import {
   NeteaseServicesAudio,
   NeteaseServicesImage,
   NeteaseServicesLyric
-} from "@/common/source/netease/services";
+} from "@/common/netease/services";
 import { settingsStoreSnapshot } from "@/common/store/settings";
 import { Log } from "@/common/lib/log";
 

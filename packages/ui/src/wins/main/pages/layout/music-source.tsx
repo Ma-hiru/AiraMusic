@@ -1,16 +1,16 @@
 import { type FC, memo, useEffect, useState } from "react";
 import { useWindowTitle } from "@/common/hooks/use-window-title";
 import { type ShortcutConfig, useKeyboardShortcut } from "@/common/hooks/use-keyboard-shortcut";
-import { useMediaSession } from "../../../main/hooks/use-media-session";
-import { useSpectrumWorker } from "../../../main/hooks/use-spectrum-worker";
+import { useMediaSession } from "@/wins/main/hooks/use-media-session";
+import { useSpectrumWorker } from "@/wins/main/hooks/use-spectrum-worker";
 import { useAtomValue, useSetAtom } from "jotai";
 import {
   spectrumDataAtom,
   spectrumOptionsAtom,
   spectrumReadyAtom
-} from "../../../main/atoms/spectrum";
-import { playModalAtom, typingAtom } from "../../../main/atoms/layout";
-import AppEntry from "../../../main/entry";
+} from "@/wins/main/atoms/spectrum";
+import { playModalAtom, typingAtom } from "@/wins/main/atoms/layout";
+import AppEntry from "@/wins/main/entry";
 
 const MusicSource: FC<object> = () => {
   const player = AppEntry.usePlayer();

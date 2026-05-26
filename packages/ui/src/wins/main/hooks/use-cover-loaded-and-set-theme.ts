@@ -2,7 +2,7 @@ import { useRouterActive } from "@/common/hooks/use-router-active";
 import { useCallback, useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import { useSetAtom } from "jotai";
-import { backgroundCoverAtom } from "../../main/atoms/theme";
+import { backgroundCoverAtom } from "@/wins/main/atoms/theme";
 
 export function useCoverLoadedAndSetTheme() {
   const location = useLocation();

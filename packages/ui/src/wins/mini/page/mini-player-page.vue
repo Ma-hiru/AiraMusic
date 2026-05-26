@@ -26,21 +26,21 @@
       <NoDrag class="flex items-center gap-2 justify-center">
         <SkipBack
           class="size-3 hover:scale-90 hover:opacity-50 active:scale-80 cursor-pointer ease-in-out transition-all duration-300"
-          @click="ElectronServicesBus.playerAction.send('previous')"
+          @click="RendererEventBus.playerAction.send('previous')"
           fill="#171b20" />
         <Pause
           v-if="playerBus.data?.status === 'playing'"
           class="size-3 hover:scale-90 hover:opacity-50 active:scale-80 cursor-pointer ease-in-out transition-all duration-300"
-          @click="ElectronServicesBus.playerAction.send('pause')"
+          @click="RendererEventBus.playerAction.send('pause')"
           fill="#171b20" />
         <Play
           v-else
           class="size-3 hover:scale-90 hover:opacity-50 active:scale-80 cursor-pointer ease-in-out transition-all duration-300"
-          @click="ElectronServicesBus.playerAction.send('play')"
+          @click="RendererEventBus.playerAction.send('play')"
           fill="#171b20" />
         <SkipForward
           class="size-3 hover:scale-90 hover:opacity-50 active:scale-80 cursor-pointer ease-in-out transition-all duration-300"
-          @click="ElectronServicesBus.playerAction.send('next')"
+          @click="RendererEventBus.playerAction.send('next')"
           fill="#171b20" />
       </NoDrag>
     </div>
@@ -53,18 +53,19 @@
   import Drag from "@/common/components/drag/drag.vue";
   import NoDrag from "@/common/components/drag/no-drag.vue";
   import NeteaseImage from "@/common/components/image/netease-image.vue";
-  import { ElectronServicesBus, ElectronServicesWindow } from "@/common/source/electron/services";
+  import { RendererWindow } from "@/common/lib/window";
+  import { RendererEventBus } from "@/common/lib/bus";
   import { useListenable } from "@/common/hooks/use-listenable-vue";
   import { Pause, Play, SkipBack, SkipForward, X } from "lucide-vue-next";
   import { computed } from "vue";
   import { clamp } from "lodash-es";
-  import { NeteaseNetworkImage } from "@/common/source/netease/models";
+  import { NeteaseNetworkImage } from "@/common/netease/models";
   import { NeteaseImageSize } from "@/common/enum";
 
-  const mainWindow = useListenable(ElectronServicesWindow.main);
-  const currentWindow = useListenable(ElectronServicesWindow.current);
-  const playerBus = useListenable(ElectronServicesBus.player);
-  const progressBus = useListenable(ElectronServicesBus.progress);
+  const mainWindow = useListenable(RendererWindow.main);
+  const currentWindow = useListenable(RendererWindow.current);
+  const playerBus = useListenable(RendererEventBus.player);
+  const progressBus = useListenable(RendererEventBus.progress);
   const track = computed(() => playerBus.value.data?.track?.detail);
   const percent = computed(() => {
     const currentTime = progressBus.value.data?.currentTime || 0;

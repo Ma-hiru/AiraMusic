@@ -1,5 +1,5 @@
 import { type FC, memo, useCallback } from "react";
-import { type NeteaseSettingsModel, NeteaseUser } from "@/common/source/netease/models";
+import { type NeteaseSettingsModel, NeteaseUser } from "@/common/netease/models";
 import { TrackQuality } from "@/common/enum";
 
 import Cache from "./cache";

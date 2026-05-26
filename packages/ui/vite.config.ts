@@ -48,15 +48,16 @@ export default defineConfig(({ mode }) => {
     },
     resolve: {
       alias: {
-        "@": join(__dirname, "./src"),
-        "@mahiru/ui": join(__dirname, "./src"),
+        "@": join(__dirname, "./src"), // src
+        "@mahiru/ui": join(__dirname, "./src"), // vitest
         ...(mode === "test"
           ? {
-              "@applemusic-like-lyrics/lyric": join(__dirname, "./tests/mocks/amll-lyric.ts")
+              "@applemusic-like-lyrics/lyric": join(__dirname, "./tests/mock/amll-lyric.ts")
             }
           : {})
       }
     },
+    clearScreen: false,
     server: {
       port: Number(env.VITE_SERVER_PORT),
       proxy: {

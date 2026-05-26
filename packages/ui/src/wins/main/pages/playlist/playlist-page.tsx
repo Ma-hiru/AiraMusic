@@ -4,13 +4,13 @@ import { useUser } from "@/common/store/user";
 import { RoutePathMain } from "@/common/routes";
 import { useUserTrackManager } from "@/common/hooks/use-user-track-manager";
 import { PlaylistSource } from "@/common/enum";
-import { useArtistOrAlbumPageJump } from "../../../main/hooks/use-artist-or-album-page-jump";
-import { usePageAction } from "../../../main/hooks/use-page-action";
-import { usePlayerChangeAction } from "../../../main/hooks/use-player-change-action";
-import { useCoverLoadedAndSetTheme } from "../../../main/hooks/use-cover-loaded-and-set-theme";
-import { useLocateOrScrollTopRegister } from "../../../main/hooks/use-locate-or-scroll-top-register";
+import { useArtistOrAlbumPageJump } from "@/wins/main/hooks/use-artist-or-album-page-jump";
+import { usePageAction } from "@/wins/main/hooks/use-page-action";
+import { usePlayerChangeAction } from "@/wins/main/hooks/use-player-change-action";
+import { useCoverLoadedAndSetTheme } from "@/wins/main/hooks/use-cover-loaded-and-set-theme";
+import { useLocateOrScrollTopRegister } from "@/wins/main/hooks/use-locate-or-scroll-top-register";
 import { useSetAtom } from "jotai";
-import { typingAtom } from "../../../main/atoms/layout";
+import { typingAtom } from "@/wins/main/atoms/layout";
 
 import Playlist, { type PlaylistRef } from "@/common/components/page/playlist";
 

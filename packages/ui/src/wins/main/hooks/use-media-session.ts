@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef } from "react";
 import { NeteaseImageSize } from "@/common/enum";
-import { NeteaseURL } from "@/common/source/netease/models";
-import AppEntry from "../../main/entry";
+import { NeteaseURL } from "@/common/netease/models";
+import AppEntry from "@/wins/main/entry";
 
 export function useMediaSession(props: {
   play: NormalFunc<any>;

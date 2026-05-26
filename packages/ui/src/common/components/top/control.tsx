@@ -2,10 +2,10 @@ import { cx } from "@emotion/css";
 import { type FC, memo } from "react";
 import { AppWindow as AppWindowIcon, Minus, Square, SquareMinus, X } from "lucide-react";
 import { useListenable } from "@/common/hooks/use-listenable";
-import { ElectronServicesWindow } from "@/common/source/electron/services";
 import { RendererRuntime } from "@/common/lib/runtime";
 
 import NoDrag from "@/common/components/drag/no-drag";
+import { RendererWindow } from "@/common/lib/window";
 
 interface TopControlProps {
   maximizable?: boolean;
@@ -15,11 +15,11 @@ interface TopControlProps {
 }
 
 const TopControlPure: FC<TopControlProps> = ({ maximizable, mini = true, color, className }) => {
-  const currentWindow = useListenable(ElectronServicesWindow.current);
+  const currentWindow = useListenable(RendererWindow.current);
 
   return (
     <NoDrag className={cx(`flex flex-row gap-4 select-none relative`, className)}>
-      {RendererRuntime.isDev && (
+      { import.meta.env.DEV && (
         <AppWindowIcon
           color={color}
           className="size-5 cursor-pointer hover:opacity-50 ease-in-out transition-all duration-300"

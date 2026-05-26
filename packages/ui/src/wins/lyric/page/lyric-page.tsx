@@ -10,8 +10,9 @@ import {
 } from "react";
 import { WindowResize } from "@/common/hooks/use-window-resize";
 import { useAppLoaded } from "@/common/hooks/use-app-loaded";
-import { NeteaseLyric } from "@/common/source/netease/models";
-import { ElectronServicesBus, ElectronServicesWindow } from "@/common/source/electron/services";
+import { NeteaseLyric } from "@/common/netease/models";
+import { RendererWindow } from "@/common/lib/window";
+import { RendererEventBus } from "@/common/lib/bus";
 
 import Control from "./control";
 import LyricComponent, { type LyricRef } from "@/common/components/lyric/lyric-container";
@@ -29,9 +30,9 @@ export default function LyricPage() {
   });
   const showBgTimer = useRef<Nullable<ReturnType<typeof setTimeout>>>(null);
   // 监听播放器相关事件
-  const playerBus = useListenable(ElectronServicesBus.player);
-  const infoBus = useListenable(ElectronServicesBus.info);
-  const progressBus = useListenable(ElectronServicesBus.progress);
+  const playerBus = useListenable(RendererEventBus.player);
+  const infoBus = useListenable(RendererEventBus.info);
+  const progressBus = useListenable(RendererEventBus.progress);
   const getInfo = useRef({
     playerBus,
     infoBus
@@ -134,12 +135,12 @@ export default function LyricPage() {
   const [reverseControl, setReverseControl] = useState(true);
   useLayoutEffect(() => {
     const update = () => {
-      ElectronServicesWindow.current.bounds.then(({ x, y, height, workAreaHeight }) => {
+      RendererWindow.current.bounds.then(({ x, y, height, workAreaHeight }) => {
         const screenHeight = window.screen.height;
         if (y < screenHeight / 10) setReverseControl(true);
         else if (y + height > (screenHeight * 9) / 10) setReverseControl(false);
         if (y + height > workAreaHeight) {
-          ElectronServicesWindow.current.move({
+          RendererWindow.current.move({
             x,
             y: Math.max(workAreaHeight - height, 0)
           });
@@ -147,7 +148,7 @@ export default function LyricPage() {
       });
     };
     update();
-    return ElectronServicesWindow.current.addEventListener("moved", update);
+    return RendererWindow.current.addEventListener("moved", update);
   }, []);
 
   return (

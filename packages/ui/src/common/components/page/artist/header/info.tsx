@@ -9,9 +9,9 @@ import {
   useRef,
   useState
 } from "react";
-import { NeteaseArtist } from "@/common/source/netease/models";
+import { NeteaseArtist } from "@/common/netease/models";
 import { RendererFormat } from "@/common/lib/format";
-import { NeteaseAPIArtist } from "@/common/source/netease/api";
+import { NeteaseAPIArtist } from "@/common/netease/api";
 import AppToast from "@/common/components/toast";
 
 interface InfoProps {

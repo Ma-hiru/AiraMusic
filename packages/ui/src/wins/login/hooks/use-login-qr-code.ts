@@ -1,5 +1,5 @@
 import QRCode from "qrcode";
-import { NeteaseAPIAuth } from "@/common/source/netease/api";
+import { NeteaseAPIAuth } from "@/common/netease/api";
 import { useCallback, useEffect, useState } from "react";
 import { Log } from "@/common/lib/log";
 

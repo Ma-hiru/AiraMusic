@@ -1,7 +1,7 @@
 import { type FC, memo, useMemo } from "react";
-import { NeteaseNetworkImage } from "@/common/source/netease/models/netease-image";
+import { NeteaseNetworkImage } from "@/common/netease/models/netease-image";
 import NeteaseImage from "@/common/components/image/netease-image";
-import { NeteaseUser } from "@/common/source/netease/models";
+import { NeteaseUser } from "@/common/netease/models";
 import RendererImageConstants from "@/common/constants/image";
 
 interface TopAvatarProps {

@@ -2,11 +2,12 @@ import { type FC, memo, useCallback } from "react";
 import { Heart, MessageSquare } from "lucide-react";
 import { useHeart } from "@/common/hooks/use-heart";
 import { useUserTrackManager } from "@/common/hooks/use-user-track-manager";
-import { ElectronServicesBus, ElectronServicesWindow } from "@/common/source/electron/services";
-import { useArtistOrAlbumPageJump } from "../../../main/hooks/use-artist-or-album-page-jump";
+import { RendererWindow } from "@/common/lib/window";
+import { RendererEventBus } from "@/common/lib/bus";
+import { useArtistOrAlbumPageJump } from "@/wins/main/hooks/use-artist-or-album-page-jump";
 import { useSetAtom } from "jotai";
-import { playModalAtom } from "../../../main/atoms/layout";
-import AppEntry from "../../../main/entry";
+import { playModalAtom } from "@/wins/main/atoms/layout";
+import AppEntry from "@/wins/main/entry";
 
 const Artist: FC<object> = () => {
   const player = AppEntry.usePlayer();
@@ -52,8 +53,8 @@ const Artist: FC<object> = () => {
           fill="white"
           onClick={async () => {
             if (!track) return;
-            await ElectronServicesWindow.comment.openAwait();
-            ElectronServicesBus.comment.send({
+            await RendererWindow.comment.openAwait();
+            RendererEventBus.comment.send({
               id: track.id,
               type: "track"
             });

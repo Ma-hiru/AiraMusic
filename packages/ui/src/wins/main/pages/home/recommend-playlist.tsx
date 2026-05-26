@@ -1,11 +1,9 @@
 import { memo, useMemo } from "react";
-import { NeteaseAPIPlaylist } from "@/common/source/netease/api";
+import { NeteaseAPIPlaylist } from "@/common/netease/api";
 import { useRequestAutoRetry, useRequestStatusWrap } from "@/common/hooks/use-request-wrap";
-
-import AppErrorBoundary from "@/common/components/fallback/app-error-boundary";
-import ThrowIf from "@/common/components/fallback/throw-if";
 import AppLoading from "@/common/components/fallback/app-loading";
 import PlaylistList from "@/common/components/playlist_list";
+import AppError from "@/common/components/fallback/app-error";
 
 const RecommendPlaylist = ({ onClickItem }: { onClickItem?: NormalFunc<[id: number]> }) => {
   const { status, data, fetchData } = useRequestStatusWrap(NeteaseAPIPlaylist.recommend);
@@ -23,18 +21,11 @@ const RecommendPlaylist = ({ onClickItem }: { onClickItem?: NormalFunc<[id: numb
   return (
     <div className="w-full overflow-hidden contain-layout">
       <h1 className="font-bold text-lg text-(--text-color-on-main)">推荐歌单</h1>
-      <AppErrorBoundary
-        name="RecommendPlaylist"
-        className="w-full h-auto"
-        showError
-        canReset
-        toast={false}
-        onReset={reload}>
-        <ThrowIf when={status === "error"} />
+      <AppError when={status === "error"} reset={reload}>
         <AppLoading loading={status === "loading"} className="h-auto w-full">
           <PlaylistList list={recommend} onClickItem={onClickItem} />
         </AppLoading>
-      </AppErrorBoundary>
+      </AppError>
     </div>
   );
 };

@@ -1,18 +1,18 @@
 import { type FC, type HTMLAttributes, memo, useEffect, useMemo, useRef } from "react";
-import type { SpectrumOptions } from "../../../main/hooks/use-spectrum-worker";
+import type { SpectrumOptions } from "@/wins/main/hooks/use-spectrum-worker";
 import {
   type IRenderer,
   type RendererOptions
-} from "../../../main/componets/spectrum/renderers/i-renderer";
-import { WebGLRendererRust } from "../../../main/componets/spectrum/renderers/webgl-rust";
-import { Canvas2DRenderer } from "../../../main/componets/spectrum/renderers/canvas2d";
+} from "@/wins/main/componets/spectrum/renderers/i-renderer";
+import { WebGLRendererRust } from "@/wins/main/componets/spectrum/renderers/webgl-rust";
+import { Canvas2DRenderer } from "@/wins/main/componets/spectrum/renderers/canvas2d";
 import { useListenResize } from "@/common/hooks/use-listen-resize";
 import { useAtom, useAtomValue } from "jotai";
 import {
   spectrumDataAtom,
   spectrumOptionsAtom,
   spectrumReadyAtom
-} from "../../../main/atoms/spectrum";
+} from "@/wins/main/atoms/spectrum";
 import { useLatestRef } from "@/common/hooks/use-latest-ref";
 
 type AudioSpectrumProps = HTMLAttributes<HTMLCanvasElement> & {

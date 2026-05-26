@@ -1,7 +1,7 @@
 import { type FC, memo, type ReactEventHandler, useCallback } from "react";
 import { useSetAtom } from "jotai";
-import { backgroundCoverAtom } from "../../../main/atoms/theme";
-import AppEntry from "../../../main/entry";
+import { backgroundCoverAtom } from "@/wins/main/atoms/theme";
+import AppEntry from "@/wins/main/entry";
 
 import NeteaseImage from "@/common/components/image/netease-image";
 

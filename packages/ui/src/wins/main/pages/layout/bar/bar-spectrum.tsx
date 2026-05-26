@@ -2,17 +2,17 @@ import { type FC, memo } from "react";
 import { useThemeColor } from "@/common/hooks/use-theme-color";
 import { useListenable } from "@/common/hooks/use-listenable";
 import { useAtomValue } from "jotai";
-import { playModalAtom } from "../../../../main/atoms/layout";
-import { ElectronServicesWindow } from "@/common/source/electron/services";
+import { playModalAtom } from "@/wins/main/atoms/layout";
+import { RendererWindow } from "@/common/lib/window";
 import { useSettings } from "@/common/store/settings";
 
-import AudioSpectrum from "../../../../main/componets/spectrum/audio-spectrum";
-import AppEntry from "../../../../main/entry";
+import AudioSpectrum from "@/wins/main/componets/spectrum/audio-spectrum";
+import AppEntry from "@/wins/main/entry";
 
 const BarSpectrum: FC<object> = () => {
   const playModal = useAtomValue(playModalAtom);
   const { mainColor, secondaryColor } = useThemeColor();
-  const currentWindow = useListenable(ElectronServicesWindow.current);
+  const currentWindow = useListenable(RendererWindow.current);
   const player = AppEntry.usePlayer();
   const settings = useSettings();
 

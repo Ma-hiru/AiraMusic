@@ -1,10 +1,10 @@
 import { clamp } from "lodash-es";
 import { RendererRuntime } from "@/common/lib/runtime";
-import _AppRenderer from "@/common/source/electron/services/renderer";
+import { RendererIPC } from "@/common/lib/ipc";
 
 export const accessToken = RendererRuntime.isTest
   ? ""
-  : await _AppRenderer.Event.invoke("storeKey", undefined).catch(() => "mahiru");
+  : await RendererIPC.Invoke("storeKey", undefined).catch(() => "mahiru");
 
 export default class RendererHTTPConstants {
   /**

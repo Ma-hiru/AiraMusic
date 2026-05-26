@@ -1,5 +1,5 @@
 import { type FC, memo, useMemo } from "react";
-import { NeteaseAlbum } from "@/common/source/netease/models";
+import { NeteaseAlbum } from "@/common/netease/models";
 import { NeteaseImageSize } from "@/common/enum";
 
 import TopCover from "./top-cover";

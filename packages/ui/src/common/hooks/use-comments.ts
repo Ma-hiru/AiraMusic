@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { type RequestStatus } from "./use-request-wrap";
 import { useLatestRef } from "./use-latest-ref";
 import { Log } from "@/common/lib/log";
-import { NeteaseAPIComment } from "@/common/source/netease/api";
+import { NeteaseAPIComment } from "@/common/netease/api";
 
 export type CommentState = {
   data: NeteaseAPI.NeteaseComment[];

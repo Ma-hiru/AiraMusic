@@ -1,6 +1,6 @@
 import { type FC, memo } from "react";
 import { useUser } from "@/common/store/user";
-import { NeteaseServicesAuth } from "@/common/source/netease/services";
+import { NeteaseServicesAuth } from "@/common/netease/services";
 import { settingsStoreSnapshot, useSettings } from "@/common/store/settings";
 
 import Settings from "@/common/components/page/settings";
