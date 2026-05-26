@@ -1,8 +1,8 @@
 import pLimit from "p-limit";
-import { NeteaseAPITrack } from "../../../source/netease/api";
-import { CacheStore } from "../../../store/cache";
-import { NeteaseTrack } from "../../../source/netease/models";
-import { Log } from "@mahiru/ui/common/constants/dev";
+import { NeteaseAPITrack } from "@/common/source/netease/api";
+import { CacheStore } from "@/common/store/cache";
+import { NeteaseTrack } from "@/common/source/netease/models";
+import { Log } from "@/common/lib/log";
 import _NeteasePlaylistSource from "./playlist";
 
 type CacheEntry = {

@@ -1,5 +1,5 @@
-import { apiRequest } from "../../../source/netease/api/request";
-import { CommentSort, CommentType } from "../../../enum/comments";
+import { apiRequest } from "@/common/source/netease/api/request";
+import { CommentSort, CommentType } from "@/common/enum";
 
 export default class _NeteaseCommentAPI {
   static get(params: {

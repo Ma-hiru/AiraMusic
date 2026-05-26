@@ -1,6 +1,6 @@
 import dayjs, { type OpUnitType, type QUnitType } from "dayjs";
 
-export class FormatNumber {
+export class RendererFormat {
   static count(count: Optional<number>) {
     if ((!count && count !== 0) || !Number.isFinite(count)) return "";
     if (count >= 10000) {

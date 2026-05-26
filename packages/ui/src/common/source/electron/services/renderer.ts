@@ -1,7 +1,5 @@
-import { RendererMessageChannel, init, ApiKey, type Api } from "@mahiru/ipc/renderer";
-import { Log } from "@mahiru/ui/common/constants/dev";
-
-init(Log);
+import { type Api, ApiKey, init, RendererMessageChannel } from "@mahiru/ipc/renderer";
+import { Log } from "@/common/lib/log";
 
 // @ts-expect-error
 const API = globalThis[ApiKey] as Api;
@@ -13,3 +11,7 @@ export default class _AppRenderer {
   };
   static readonly Message = RendererMessageChannel;
 }
+
+requestAnimationFrame(() => {
+  init(Log);
+});

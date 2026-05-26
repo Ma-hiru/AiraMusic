@@ -1,19 +1,20 @@
-import { createZustandInitializer } from "@mahiru/ui/common/lib/store";
-import { NeteaseUser, type NeteaseUserModel } from "@mahiru/ui/common/source/netease/models";
+import { RendererZustandStoreCreator } from "@/common/lib/store";
+import { NeteaseUser, type NeteaseUserModel } from "@/common/source/netease/models";
 
-export const UserStoreInitializer = createZustandInitializer<UserStoreType>((set) => {
-  return {
-    _user: null,
-    isLoggedIn: () => {
-      return NeteaseUser.isLoggedIn;
-    },
-    updateUser(user) {
-      set((draft) => {
-        draft._user = user ?? null;
-      });
-    }
-  };
-});
+export const UserStoreInitializer =
+  RendererZustandStoreCreator.createZustandInitializer<UserStoreType>((set) => {
+    return {
+      _user: null,
+      isLoggedIn: () => {
+        return NeteaseUser.isLoggedIn;
+      },
+      updateUser(user) {
+        set((draft) => {
+          draft._user = user ?? null;
+        });
+      }
+    };
+  });
 
 export type UserStoreType = {
   _user: Nullable<NeteaseUserModel>;

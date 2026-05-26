@@ -1,5 +1,5 @@
-import { apiRequest } from "../../../source/netease/api/request";
-import { Log } from "@mahiru/ui/common/constants/dev";
+import { apiRequest } from "@/common/source/netease/api/request";
+import { Log } from "@/common/lib/log";
 
 type TTMLyricMeta = {
   metadata: [

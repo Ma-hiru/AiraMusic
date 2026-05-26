@@ -10,7 +10,6 @@
     "emitDeclarationOnly": true,
     "outDir": "./dist-types",
     "paths": {
-      "@mahiru/ui/*": ["./src/*"],
       "@/*": ["./src/*"]
     },
     "assumeChangesOnlyAffectDirectDependencies": true

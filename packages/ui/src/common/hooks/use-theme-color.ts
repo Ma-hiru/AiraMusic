@@ -1,8 +1,8 @@
-import AppUI from "../player/ui";
+import RendererTheme from "@/common/player/ui";
 import { useLayoutEffect, useRef, useState } from "react";
 
 function getColor() {
-  const { main, secondary, textOnMainColor } = AppUI.themeInstance;
+  const { main, secondary, textOnMainColor } = RendererTheme.themeInstance;
   return {
     mainColor: main,
     secondaryColor: secondary,
@@ -22,7 +22,7 @@ export function useThemeColor() {
     });
   }).current;
 
-  useLayoutEffect(() => AppUI.addListener(updateColor), [updateColor]);
+  useLayoutEffect(() => RendererTheme.addListener(updateColor), [updateColor]);
 
   return themeColor;
 }

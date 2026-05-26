@@ -11,11 +11,11 @@ import {
 } from "react";
 import { Search, X } from "lucide-react";
 import { cx } from "@emotion/css";
-import { NeteaseAPISearch } from "@mahiru/ui/common/source/netease/api";
-import { useLatestRef } from "@mahiru/ui/common/hooks/use-latest-ref";
-import { Log } from "@mahiru/ui/common/constants/dev";
+import { NeteaseAPISearch } from "@/common/source/netease/api";
+import { useLatestRef } from "@/common/hooks/use-latest-ref";
+import { Log } from "@/common/lib/log";
 import { debounce } from "lodash-es";
-import { useSearchRecommend } from "@mahiru/ui/common/hooks/use-search-recommend";
+import { useSearchRecommend } from "@/common/hooks/use-search-recommend";
 import SearchSuggestions, { type Suggestion } from "./search-suggestions";
 
 export type SearchInputRef = {

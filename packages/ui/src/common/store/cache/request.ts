@@ -1,17 +1,17 @@
 import axios from "axios";
-import HTTPConstants from "@mahiru/ui/common/constants/http";
+import RendererHTTPConstants from "@/common/constants/http";
 import { EqError } from "@mahiru/log";
 
 export const cacheRequest = axios.create({
-  baseURL: HTTPConstants.CacheBaseURL,
-  timeout: HTTPConstants.Timeout,
+  baseURL: RendererHTTPConstants.CacheBaseURL,
+  timeout: RendererHTTPConstants.Timeout,
   withCredentials: true,
   headers: {
-    Authorization: HTTPConstants.CacheAccessToken
+    Authorization: RendererHTTPConstants.CacheAccessToken
   }
 });
 
-export const accessToken = HTTPConstants.CacheAccessToken;
+export const accessToken = RendererHTTPConstants.CacheAccessToken;
 
 cacheRequest.interceptors.response.use(
   (response) => {

@@ -1,6 +1,6 @@
 import { NeteaseUser, type NeteaseUserModel } from "./netease-user";
-import { TrackBitmark, TrackQuality } from "../../../enum";
-import { FormatNumber } from "../../../lib/format";
+import { TrackBitmark, TrackQuality } from "@/common/enum";
+import { RendererFormat } from "@/common/lib/format";
 
 export class NeteaseTrack implements NeteaseTrackModel {
   //region NeteaseTrackModel fields
@@ -226,11 +226,11 @@ export class NeteaseTrack implements NeteaseTrackModel {
   }
 
   formatDate(split?: string) {
-    return FormatNumber.time(this.publishTime, split);
+    return RendererFormat.time(this.publishTime, split);
   }
 
   formatDuration(split?: string) {
-    return FormatNumber.duration(this.dt, "ms", split);
+    return RendererFormat.duration(this.dt, "ms", split);
   }
 
   toSearchStruct() {

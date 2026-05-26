@@ -1,5 +1,5 @@
-import { LRUCacheWithTime } from "../../utils/lru";
-import { type CacheObjectInterface } from "../../store/cache/utils";
+import { LRUCacheWithTime } from "@/common/utils/lru";
+import { type CacheObjectInterface } from "@/common/store/cache/utils";
 
 export class MemoryCache implements CacheObjectInterface {
   private cache = new LRUCacheWithTime<string, any>(5000, 1000 * 60 * 60);

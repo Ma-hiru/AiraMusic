@@ -19,31 +19,31 @@ import {
   NeteaseTrack,
   NeteaseTrackRecord,
   NeteaseUser
-} from "../../../source/netease/models";
+} from "@/common/source/netease/models";
 import type {
   TrackListClickFunc,
   TrackListContextMenuFunc,
   TrackListPlayableManager,
   TrackListRef
-} from "../../../components/track_list";
+} from "@/common/components/track_list";
 import { SearchTrack } from "@mahiru/wasm";
-import { ElectronServicesNet } from "../../../source/electron/services";
-import { NeteaseImageSize, PlaylistSource } from "../../../enum";
-import { NeteaseServicesImage, NeteaseServicesPlaylist } from "../../../source/netease/services";
-import { useUpdate } from "../../../hooks/use-update";
-import { Log } from "@mahiru/ui/common/constants/dev";
-import { type RequestStatus } from "../../../hooks/use-request-wrap";
-import { type HeartManager } from "../../../hooks/use-heart";
-import AppContextMenu from "../../../components/menu";
-import AppToast from "../../../components/toast";
-import ImageConstants from "@mahiru/ui/common/constants/image";
-import AppHistory from "../../../player/history";
+import { ElectronServicesNet } from "@/common/source/electron/services";
+import { NeteaseImageSize, PlaylistSource } from "@/common/enum";
+import { NeteaseServicesImage, NeteaseServicesPlaylist } from "@/common/source/netease/services";
+import { useUpdate } from "@/common/hooks/use-update";
+import { Log } from "@/common/lib/log";
+import { type RequestStatus } from "@/common/hooks/use-request-wrap";
+import { type HeartManager } from "@/common/hooks/use-heart";
+import AppContextMenu from "@/common/components/menu";
+import AppToast from "@/common/components/toast";
+import RendererImageConstants from "@/common/constants/image";
+import RendererPlayerHistory from "@/common/player/history";
 
 import Top from "./top";
 import Divider from "./divider";
-import AppErrorBoundary from "../../fallback/app-error-boundary";
-import ThrowIf from "../../fallback/throw-if";
-import AppLoading from "../../fallback/app-loading";
+import AppErrorBoundary from "@/common/components/fallback/app-error-boundary";
+import ThrowIf from "@/common/components/fallback/throw-if";
+import AppLoading from "@/common/components/fallback/app-loading";
 import TrackList from "@/common/components/track_list";
 
 export type PlaylistRef = {
@@ -286,7 +286,7 @@ const Playlist: FC<PlaylistProps> = ({
         setPlaylist(null);
         setTracks(historyList);
         setStatus("success");
-        searcher.update(AppHistory.toSearchStruct(historyList));
+        searcher.update(RendererPlayerHistory.toSearchStruct(historyList));
       });
     }
 
@@ -366,7 +366,7 @@ const Playlist: FC<PlaylistProps> = ({
               onClickArtist={onClickArtist}
               heartManager={heartManager}
               playableManager={playableManager}
-              trackCoverSize={ImageConstants.PlaylistPageTrackCoverSize}
+              trackCoverSize={RendererImageConstants.PlaylistPageTrackCoverSize}
             />
           </div>
         </AppLoading>

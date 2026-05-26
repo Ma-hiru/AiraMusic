@@ -1,10 +1,10 @@
 import { cx } from "@emotion/css";
 import { memo, useCallback } from "react";
 import { type ColorInstance } from "color";
-import { NeteaseHistory, NeteaseTrackRecord } from "../../source/netease/models";
-import { NeteaseImageSize, PlaylistSource } from "../../enum";
-import type { TrackListClickFunc, TrackListContextMenuFunc } from "../../components/track_list";
-import AppToast from "../../components/toast";
+import { NeteaseHistory, NeteaseTrackRecord } from "@/common/source/netease/models";
+import { NeteaseImageSize, PlaylistSource } from "@/common/enum";
+import type { TrackListClickFunc, TrackListContextMenuFunc } from "@/common/components/track_list";
+import AppToast from "@/common/components/toast";
 
 import ListItemIndex from "./idx";
 import ListItemCover from "./cover";

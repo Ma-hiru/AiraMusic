@@ -1,4 +1,4 @@
-import { apiRequest } from "../../../source/netease/api/request";
+import { apiRequest } from "@/common/source/netease/api/request";
 
 // 精品歌单分类 => 精品歌单
 // 推荐歌单

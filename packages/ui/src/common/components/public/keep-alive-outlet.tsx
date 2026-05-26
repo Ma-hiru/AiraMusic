@@ -9,8 +9,8 @@ import {
   useState
 } from "react";
 import { useLocation, useOutlet } from "react-router-dom";
-import { useUpdate } from "../../hooks/use-update";
-import { KeepAliveBuildKey, KeepAliveCtx } from "@mahiru/ui/windows/main/ctx/keep-alive-ctx";
+import { useUpdate } from "@/common/hooks/use-update";
+import { KeepAliveBuildKey, KeepAliveCtx } from "../../../wins/main/ctx/keep-alive-ctx";
 
 export type KeepAliveOutletRef = {
   clearCache: (pathname: string) => void;

@@ -1,14 +1,11 @@
 import { cx } from "@emotion/css";
 import { type FC, memo, useMemo } from "react";
 import { Boxes, Clock8, Folder, HardDrive } from "lucide-react";
-import {
-  NeteaseSettings,
-  type NeteaseSettingsModel
-} from "@mahiru/ui/common/source/netease/models";
+import { NeteaseSettings, type NeteaseSettingsModel } from "@/common/source/netease/models";
 
 import RangeRow from "./range-row";
 import BaseItem from "./base-item";
-import Card from "../../../card/card";
+import Card from "@/common/components/card";
 
 interface CacheProps {
   data: NeteaseSettings["cache"];

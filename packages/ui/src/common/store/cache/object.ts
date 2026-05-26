@@ -1,5 +1,5 @@
-import { cacheRequest } from "../../store/cache/request";
-import { CacheStoreUtils } from "../../store/cache/utils";
+import { cacheRequest } from "@/common/store/cache/request";
+import { CacheStoreUtils } from "@/common/store/cache/utils";
 
 export class CacheStoreForObject {
   store<T>(id: string, data: T) {

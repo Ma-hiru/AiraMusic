@@ -4,7 +4,7 @@ import {
   NeteaseSettings,
   type NeteaseSettingsModel,
   NeteaseUser
-} from "@mahiru/ui/common/source/netease/models";
+} from "@/common/source/netease/models";
 
 import SettingsAside from "./aside";
 import SettingsContent from "./content";

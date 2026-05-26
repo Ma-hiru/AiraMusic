@@ -1,7 +1,7 @@
 import _NeteaseTrackSource from "./track";
-import { NeteaseAPIArtist } from "../../../source/netease/api";
-import { NeteaseArtist, NeteaseTrackRecord } from "../../../source/netease/models";
-import { CacheStore } from "../../../store/cache";
+import { NeteaseAPIArtist } from "@/common/source/netease/api";
+import { NeteaseArtist, NeteaseTrackRecord } from "@/common/source/netease/models";
+import { CacheStore } from "@/common/store/cache";
 
 export default class _NeteaseArtistSource {
   //region cache

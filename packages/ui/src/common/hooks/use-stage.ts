@@ -1,5 +1,5 @@
 import { startTransition, useEffect, useRef, useState } from "react";
-import { Stage } from "../enum/stage";
+import { Stage } from "@/common/enum";
 
 export function useStage() {
   const [stage, setStage] = useState(Stage.Immediately);

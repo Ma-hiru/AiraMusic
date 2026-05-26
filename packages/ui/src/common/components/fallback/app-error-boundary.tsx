@@ -1,11 +1,11 @@
 import { type FC, memo, type ReactNode, type RefObject, useCallback, useRef } from "react";
 import { ErrorBoundary, type FallbackProps } from "react-error-boundary";
-import { Log } from "@mahiru/ui/common/constants/dev";
+import { Log } from "@/common/lib/log";
 import { cx } from "@emotion/css";
 import { CircleX } from "lucide-react";
 import { EqError } from "@mahiru/log";
-import { ElectronServicesWindow } from "../../source/electron/services";
-import AppToast from "../toast";
+import { ElectronServicesWindow } from "@/common/source/electron/services";
+import AppToast from "@/common/components/toast";
 
 export type AppErrorBoundaryRef = { resetComponent?: NormalFunc };
 

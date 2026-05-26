@@ -1,6 +1,6 @@
 import { cx } from "@emotion/css";
-import { PlaylistSource } from "../../../enum";
-import { type HeartManager } from "../../../hooks/use-heart";
+import { PlaylistSource } from "@/common/enum";
+import { type HeartManager } from "@/common/hooks/use-heart";
 import {
   type FC,
   memo,
@@ -13,22 +13,22 @@ import {
   useRef,
   useState
 } from "react";
-import { useRequestAutoRun, useRequestStatusWrap } from "../../../hooks/use-request-wrap";
-import { NeteaseArtist, NeteaseTrackRecord } from "../../../source/netease/models";
-import { NeteaseServicesArtist } from "../../../source/netease/services";
-import AppContextMenu from "../../../components/menu";
-import ImageConstants from "@mahiru/ui/common/constants/image";
+import { useRequestAutoRun, useRequestStatusWrap } from "@/common/hooks/use-request-wrap";
+import { NeteaseArtist, NeteaseTrackRecord } from "@/common/source/netease/models";
+import { NeteaseServicesArtist } from "@/common/source/netease/services";
+import AppContextMenu from "@/common/components/menu";
+import RendererImageConstants from "@/common/constants/image";
 
 import Header from "./header";
 import AlbumList from "./album";
-import AppErrorBoundary from "../../fallback/app-error-boundary";
-import AppLoading from "../../fallback/app-loading";
-import ThrowIf from "../../fallback/throw-if";
+import AppErrorBoundary from "@/common/components/fallback/app-error-boundary";
+import AppLoading from "@/common/components/fallback/app-loading";
+import ThrowIf from "@/common/components/fallback/throw-if";
 import TrackList, {
   type TrackListClickFunc,
   type TrackListPlayableManager,
   type TrackListRef
-} from "../../../components/track_list";
+} from "@/common/components/track_list";
 
 export type ArtistRef = {
   reload: NormalFunc;
@@ -179,7 +179,7 @@ const Artist: FC<ArtistProps> = ({
               onClickArtist={onClickArtist}
               onClick={onClick}
               onContext={onContextMenu}
-              trackCoverSize={ImageConstants.PlaylistPageTrackCoverSize}
+              trackCoverSize={RendererImageConstants.PlaylistPageTrackCoverSize}
             />
           )}
           {albumListMounted && (

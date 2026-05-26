@@ -1,10 +1,14 @@
-import { NeteaseNetworkImage, NeteaseTrackRecord, NeteaseUser } from "../../source/netease/models";
+import {
+  NeteaseNetworkImage,
+  NeteaseTrackRecord,
+  NeteaseUser
+} from "@/common/source/netease/models";
 import { Copy, DiscAlbum, ListMusic, ListPlus, MessageSquare, Play } from "lucide-react";
-import { NeteaseImageSize } from "../../enum";
+import { NeteaseImageSize } from "@/common/enum";
 import type { ContextMenuItem, ContextMenuRender } from "./menu-provider";
-import { userStoreSnapshot } from "../../store/user";
-import NeteaseImage from "../image/netease-image";
-import AppToast from "../../components/toast";
+import { userStoreSnapshot } from "@/common/store/user";
+import NeteaseImage from "@/common/components/image/netease-image";
+import AppToast from "@/common/components/toast";
 
 export type TrackContextMenuAction = "comment" | "album" | "play" | "nextPlay" | "addPlayList";
 

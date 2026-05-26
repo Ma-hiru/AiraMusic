@@ -1,12 +1,11 @@
-import { Listenable } from "../../../utils/listenable";
-import { isDev, isTest } from "@mahiru/ui/common/constants/dev";
+import { Listenable } from "@/common/utils/listenable";
+import { RendererRuntime } from "@/common/lib/runtime";
+import _AppRenderer from "@/common/source/electron/services/renderer";
 import type { Message, MessageData, MessageDirection, MessageEvent } from "@mahiru/ipc/renderer";
-import _AppRenderer from "../../../source/electron/services/renderer";
 
-const _currentWindowType = isTest
+const _currentWindowType = RendererRuntime.isTest
   ? "main"
   : await _AppRenderer.Event.invoke("currentWindowType", undefined);
-const _runtimeID = isTest ? "" : await _AppRenderer.Event.invoke("runtimeID", undefined);
 
 export type WindowBusEvent = MessageData<"windowBus">["action"];
 
@@ -20,7 +19,6 @@ export default class _AppWindow extends Listenable<WindowBusEvent> {
   private _fullscreen: boolean;
   private _focus: boolean;
   static currentWindowType = _currentWindowType;
-  static runtimeID = _runtimeID;
 
   get isMin() {
     return this._min;
@@ -267,7 +265,7 @@ export default class _AppWindow extends Listenable<WindowBusEvent> {
   }
 
   devTools() {
-    isDev && _AppRenderer.Event.normal("openInternalDevTools", this.type);
+    RendererRuntime.isDev && _AppRenderer.Event.normal("openInternalDevTools", this.type);
   }
 
   close() {

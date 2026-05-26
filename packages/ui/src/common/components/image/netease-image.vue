@@ -15,10 +15,10 @@
 </template>
 <script setup lang="ts" name="NeteaseImage">
   import { computed, type ImgHTMLAttributes, onUnmounted, ref, useAttrs, watch } from "vue";
-  import { NeteaseLocalImage, NeteaseNetworkImage } from "@mahiru/ui/common/source/netease/models";
-  import { NeteaseImageSize } from "@mahiru/ui/common/enum";
-  import { NeteaseServicesImage } from "@mahiru/ui/common/source/netease/services";
-  import { ElectronServicesWindow } from "@mahiru/ui/common/source/electron/services";
+  import { NeteaseLocalImage, NeteaseNetworkImage } from "@/common/source/netease/models";
+  import { NeteaseImageSize } from "@/common/enum";
+  import { NeteaseServicesImage } from "@/common/source/netease/services";
+  import { ElectronServicesWindow } from "@/common/source/electron/services";
 
   type ShadowLevel = "none" | "base" | "float";
   type ShadowColor = "light" | "dark";

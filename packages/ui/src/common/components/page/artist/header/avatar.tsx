@@ -1,8 +1,8 @@
 import { cx } from "@emotion/css";
 import { type FC, memo, type ReactEventHandler, useCallback, useMemo } from "react";
-import { NeteaseArtist, NeteaseNetworkImage } from "../../../../source/netease/models";
-import NeteaseImage from "../../../image/netease-image";
-import { NeteaseImageSize } from "../../../../enum";
+import { NeteaseArtist, NeteaseNetworkImage } from "@/common/source/netease/models";
+import NeteaseImage from "@/common/components/image/netease-image";
+import { NeteaseImageSize } from "@/common/enum";
 
 interface AvatarProps {
   className?: string;

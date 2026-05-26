@@ -1,10 +1,10 @@
 import { shuffle } from "lodash-es";
-import { Listenable } from "../utils/listenable";
-import { NeteaseTrackRecord } from "../source/netease/models";
-import { userStoreSnapshot } from "../store/user";
-import AppToast from "../components/toast";
+import { Listenable } from "@/common/utils/listenable";
+import { NeteaseTrackRecord } from "@/common/source/netease/models";
+import { userStoreSnapshot } from "@/common/store/user";
+import AppToast from "@/common/components/toast";
 
-export default class AppPlaylist extends Listenable {
+export default class RendererPlayerPlaylist extends Listenable {
   //#region fields
   private playlist;
   private position;
@@ -77,7 +77,7 @@ export default class AppPlaylist extends Listenable {
   //#endregion
 
   //#region inner methods
-  static save(instance: AppPlaylist) {
+  static save(instance: RendererPlayerPlaylist) {
     const current = instance.current();
     return {
       position: instance.shuffle
@@ -92,7 +92,7 @@ export default class AppPlaylist extends Listenable {
 
   static fromSave(props: ReturnType<typeof this.save>) {
     props.playlist = <NeteaseTrackRecord[]>props.playlist.map(NeteaseTrackRecord.fromObject);
-    const instance = new AppPlaylist(props);
+    const instance = new RendererPlayerPlaylist(props);
     instance.shuffle = props._shuffle;
     instance.loop = props._loop;
     return instance;

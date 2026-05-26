@@ -1,7 +1,7 @@
 import { cx } from "@emotion/css";
 import { type FC, type MouseEvent as ReactMouseEvent, useCallback, useRef } from "react";
 import { useListenable } from "./use-listenable";
-import { ElectronServicesWindow } from "../source/electron/services";
+import { ElectronServicesWindow } from "@/common/source/electron/services";
 
 interface WindowResizeProps {
   disable: boolean;

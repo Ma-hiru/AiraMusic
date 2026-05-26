@@ -8,10 +8,10 @@ import {
   useState
 } from "react";
 import { AnimatePresence, type HTMLMotionProps, motion, type MotionStyle } from "motion/react";
-import { useThemeColor } from "../../hooks/use-theme-color";
+import { useThemeColor } from "@/common/hooks/use-theme-color";
 import ToastItem, { type ToastItemData } from "./toast-item";
 import { cx } from "@emotion/css";
-import AppUI from "../../player/ui";
+import RendererTheme from "@/common/player/ui";
 import AppToast from "./use";
 
 const ToastProvider: FC<{ className?: string }> = ({ className }) => {
@@ -38,7 +38,7 @@ const ToastProvider: FC<{ className?: string }> = ({ className }) => {
 
   const computedStyle = useMemo(() => {
     const textColor = textColorOnMain.string();
-    const backgroundColor = mainColor.mix(AppUI.WHITE_COLOR, 0.6).alpha(0.92).string();
+    const backgroundColor = mainColor.mix(RendererTheme.WHITE_COLOR, 0.6).alpha(0.92).string();
     const borderColor = mainColor.alpha(0.25).string();
     return { color: textColor, backgroundColor, borderColor };
   }, [mainColor, textColorOnMain]);

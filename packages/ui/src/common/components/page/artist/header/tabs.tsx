@@ -1,5 +1,5 @@
 import { type FC, memo } from "react";
-import SectionTab from "../../../tab";
+import SectionTab from "@/common/components/tab";
 
 interface TabsProps {
   className?: string;

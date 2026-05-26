@@ -1,0 +1,6 @@
+import "@/styles/index.scss";
+import { createApp } from "vue";
+import MiniPlayerPage from "./page/mini-player-page.vue";
+
+const app = createApp(MiniPlayerPage);
+app.mount("#app");

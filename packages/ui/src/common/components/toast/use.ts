@@ -1,5 +1,5 @@
 import { type ToastItemData } from "./toast-item";
-import { Log } from "@mahiru/ui/common/constants/dev";
+import { Log } from "@/common/lib/log";
 import Provider from "./toast-provider";
 
 export default class AppToast {

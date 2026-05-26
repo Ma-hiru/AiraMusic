@@ -1,10 +1,10 @@
 import { type FC, memo } from "react";
-import InfiniteContainer from "../../../infinite/infinite-container";
-import { useAlbum } from "../../../../hooks/use-album";
+import { useAlbum } from "@/common/hooks/use-album";
+import { css, cx } from "@emotion/css";
 
 import AlbumItem from "./album-item";
-import ThrowIf from "../../../fallback/throw-if";
-import { css, cx } from "@emotion/css";
+import ThrowIf from "@/common/components/fallback/throw-if";
+import InfiniteContainer from "@/common/components/infinite/infinite-container";
 
 interface AlbumListProps {
   id: number;

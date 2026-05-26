@@ -1,4 +1,4 @@
-import { Log } from "@mahiru/ui/common/constants/dev";
+import { Log } from "@/common/lib/log";
 
 export class RequestCollector {
   private static readonly requestCollections = new Map<string, any[]>();

@@ -1,6 +1,6 @@
-import { Listenable } from "../../../utils/listenable";
+import { Listenable } from "@/common/utils/listenable";
 import type { MessageEvent, MessageData } from "@mahiru/ipc/renderer";
-import _AppWindow from "../../../source/electron/services/window";
+import _AppWindow from "@/common/source/electron/services/window";
 
 export abstract class Bus<T extends MessageEvent> extends Listenable {
   type: T;

@@ -1,13 +1,13 @@
 import axios, { type AxiosRequestConfig, type AxiosResponse } from "axios";
-import { Log } from "@mahiru/ui/common/constants/dev";
+import { Log } from "@/common/lib/log";
 import { EqError } from "@mahiru/log";
-import { NeteaseServicesAuth } from "../../../source/netease/services";
-import HTTPConstants from "@mahiru/ui/common/constants/http";
-import AppToast from "../../../components/toast";
+import { NeteaseServicesAuth } from "@/common/source/netease/services";
+import RendererHTTPConstants from "@/common/constants/http";
+import AppToast from "@/common/components/toast";
 
 export const apiRequest = axios.create({
-  baseURL: HTTPConstants.NCMBaseURL,
-  timeout: HTTPConstants.Timeout,
+  baseURL: RendererHTTPConstants.NCMBaseURL,
+  timeout: RendererHTTPConstants.Timeout,
   withCredentials: true
 });
 
@@ -46,18 +46,18 @@ apiRequest.interceptors.response.use(
       });
       NeteaseServicesAuth.logout().then(NeteaseServicesAuth.createLoginWindow);
     } else if (
-      data.code === HTTPConstants.RetryCode &&
+      data.code === RendererHTTPConstants.RetryCode &&
       // 只有在请求过于频繁且请求幂等的情况下才自动重试，否则直接报错
-      message.includes(HTTPConstants.RetryMessageKeyword) &&
-      HTTPConstants.IdempotentMethods.includes(method)
+      message.includes(RendererHTTPConstants.RetryMessageKeyword) &&
+      RendererHTTPConstants.IdempotentMethods.includes(method)
     ) {
       config.__retryCount ??= 0;
-      if (config.__retryCount < HTTPConstants.MaxRetries) {
-        const delayTime = HTTPConstants.backoff(++config.__retryCount);
+      if (config.__retryCount < RendererHTTPConstants.MaxRetries) {
+        const delayTime = RendererHTTPConstants.backoff(++config.__retryCount);
 
         Log.trace(
           `apiRequest.ts<${config.url}>`,
-          `retry ${config.__retryCount}/${HTTPConstants.MaxRetries} after ${delayTime}ms`
+          `retry ${config.__retryCount}/${RendererHTTPConstants.MaxRetries} after ${delayTime}ms`
         );
 
         return delay(delayTime, <AbortSignal>config.signal)

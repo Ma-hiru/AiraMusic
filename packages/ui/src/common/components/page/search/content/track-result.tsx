@@ -6,18 +6,18 @@ import {
   useEffect,
   useImperativeHandle
 } from "react";
-import { NeteaseAPISearch } from "@mahiru/ui/common/source/netease/api";
-import { NeteaseImageSize, PlaylistSource, SearchType } from "@mahiru/ui/common/enum";
-import { NeteaseServicesTrack } from "@mahiru/ui/common/source/netease/services";
-import { NeteaseHistory, NeteaseTrackRecord } from "@mahiru/ui/common/source/netease/models";
-import { useRequestAutoRun, useRequestStatusWrap } from "@mahiru/ui/common/hooks/use-request-wrap";
-import AppErrorBoundary from "../../../fallback/app-error-boundary";
-import ThrowIf from "../../../fallback/throw-if";
-import AppLoading from "../../../fallback/app-loading";
-import TrackList, { type TrackListPlayableManager } from "@mahiru/ui/common/components/track_list";
-import ImageConstants from "@mahiru/ui/common/constants/image";
-import { type HeartManager } from "@mahiru/ui/common/hooks/use-heart";
-import AppContextMenu from "@mahiru/ui/common/components/menu";
+import { NeteaseAPISearch } from "@/common/source/netease/api";
+import { NeteaseImageSize, PlaylistSource, SearchType } from "@/common/enum";
+import { NeteaseServicesTrack } from "@/common/source/netease/services";
+import { NeteaseHistory, NeteaseTrackRecord } from "@/common/source/netease/models";
+import { useRequestAutoRun, useRequestStatusWrap } from "@/common/hooks/use-request-wrap";
+import AppErrorBoundary from "@/common/components/fallback/app-error-boundary";
+import ThrowIf from "@/common/components/fallback/throw-if";
+import AppLoading from "@/common/components/fallback/app-loading";
+import TrackList, { type TrackListPlayableManager } from "@/common/components/track_list";
+import RendererImageConstants from "@/common/constants/image";
+import { type HeartManager } from "@/common/hooks/use-heart";
+import AppContextMenu from "@/common/components/menu";
 
 export type TrackResultRef = {
   tracks: NeteaseTrackRecord[];
@@ -147,7 +147,7 @@ const TrackResult: FC<TrackResultProps> = ({
           className={className}
           tracks={tracks}
           activeID={activeTrackID}
-          trackCoverSize={ImageConstants.PlaylistPageTrackCoverSize}
+          trackCoverSize={RendererImageConstants.PlaylistPageTrackCoverSize}
           type={PlaylistSource.Search}
           playableManager={playableManager}
           heartManager={heartManager}

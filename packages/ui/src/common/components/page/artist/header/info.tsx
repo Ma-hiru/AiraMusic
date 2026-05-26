@@ -9,10 +9,10 @@ import {
   useRef,
   useState
 } from "react";
-import { NeteaseArtist } from "../../../../source/netease/models";
-import { FormatNumber } from "../../../../lib/format";
-import { NeteaseAPIArtist } from "../../../../source/netease/api";
-import AppToast from "../../../../components/toast";
+import { NeteaseArtist } from "@/common/source/netease/models";
+import { RendererFormat } from "@/common/lib/format";
+import { NeteaseAPIArtist } from "@/common/source/netease/api";
+import AppToast from "@/common/components/toast";
 
 interface InfoProps {
   className?: string;
@@ -83,7 +83,7 @@ const Info: FC<InfoProps> = ({ className, artist, children }) => {
         <h1 className="whitespace-nowrap select-all">{artistName}</h1>
       </div>
       <div className="text-sm inline-block font-light select-all mt-auto">
-        <span> 粉丝: {FormatNumber.count(fansCount)}</span>
+        <span> 粉丝: {RendererFormat.count(fansCount)}</span>
         <span className="ml-2 mr-1">/</span>
         <button
           onClick={follow}

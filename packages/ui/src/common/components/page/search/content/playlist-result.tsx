@@ -1,13 +1,13 @@
 import { type FC, useCallback, useEffect, useRef } from "react";
-import { useRequestAutoRun, useRequestStatusWrap } from "@mahiru/ui/common/hooks/use-request-wrap";
-import { NeteaseAPISearch } from "@mahiru/ui/common/source/netease/api";
-import { SearchType } from "@mahiru/ui/common/enum";
-import { useScrollAutoHide } from "@mahiru/ui/common/hooks/use-scroll-auto-hide";
-import AppErrorBoundary from "../../../fallback/app-error-boundary";
-import ThrowIf from "../../../fallback/throw-if";
-import AppLoading from "../../../fallback/app-loading";
-import AppEmpty from "../../../fallback/app-empty";
-import PlaylistList from "@mahiru/ui/common/components/playlist_list";
+import { useRequestAutoRun, useRequestStatusWrap } from "@/common/hooks/use-request-wrap";
+import { NeteaseAPISearch } from "@/common/source/netease/api";
+import { SearchType } from "@/common/enum";
+import { useScrollAutoHide } from "@/common/hooks/use-scroll-auto-hide";
+import AppErrorBoundary from "@/common/components/fallback/app-error-boundary";
+import ThrowIf from "@/common/components/fallback/throw-if";
+import AppLoading from "@/common/components/fallback/app-loading";
+import AppEmpty from "@/common/components/fallback/app-empty";
+import PlaylistList from "@/common/components/playlist_list";
 import { cx } from "@emotion/css";
 
 interface PlaylistResultProps {

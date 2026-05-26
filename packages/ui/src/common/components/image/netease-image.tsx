@@ -12,10 +12,10 @@ import {
   useState
 } from "react";
 import { cx } from "@emotion/css";
-import { NeteaseLocalImage, NeteaseNetworkImage } from "@mahiru/ui/common/source/netease/models";
-import { NeteaseImageSize } from "../../enum";
-import { NeteaseServicesImage } from "../../source/netease/services";
-import { ElectronServicesWindow } from "../../source/electron/services";
+import { NeteaseLocalImage, NeteaseNetworkImage } from "@/common/source/netease/models";
+import { NeteaseImageSize } from "@/common/enum";
+import { NeteaseServicesImage } from "@/common/source/netease/services";
+import { ElectronServicesWindow } from "@/common/source/electron/services";
 
 type ShadowLevel = "none" | "base" | "float";
 

@@ -1,15 +1,19 @@
 import { useMemo } from "react";
 import { UserStoreInitializer, type UserStoreType } from "./config";
-import { createStoreSelectors, createZustandStore } from "@mahiru/ui/common/lib/store";
-import { NeteaseUser } from "@mahiru/ui/common/source/netease/models";
+import { RendererZustandStoreCreator } from "@/common/lib/store";
+import { NeteaseUser } from "@/common/source/netease/models";
 
-export const useUserStore = createZustandStore<UserStoreType>(UserStoreInitializer, {
-  name: "user",
-  version: 1,
-  persist: true
-});
+export const useUserStore = RendererZustandStoreCreator.createZustandStore<UserStoreType>(
+  UserStoreInitializer,
+  {
+    name: "user",
+    version: 1,
+    persist: true
+  }
+);
 
-export const useUserStorePick = createStoreSelectors<UserStoreType>(useUserStore);
+export const useUserStorePick =
+  RendererZustandStoreCreator.createStoreSelectors<UserStoreType>(useUserStore);
 
 export const userStoreSnapshot = useUserStore.getState.bind(useUserStore);
 

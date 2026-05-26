@@ -1,18 +1,18 @@
 import { clamp } from "lodash-es";
-import { isTest } from "./dev";
-import _AppRenderer from "../source/electron/services/renderer";
+import { RendererRuntime } from "@/common/lib/runtime";
+import _AppRenderer from "@/common/source/electron/services/renderer";
 
-export const accessToken = isTest
+export const accessToken = RendererRuntime.isTest
   ? ""
   : await _AppRenderer.Event.invoke("storeKey", undefined).catch(() => "mahiru");
 
-export default class HTTPConstants {
+export default class RendererHTTPConstants {
   /**
    * 开发模式通过vite代理访问API服务器地址 \
    * 生产模式通过express代理访问API服务器地址
    * */
-  static readonly NCMBaseURL = isTest ? undefined : "/api";
-  static readonly CacheBaseURL = isTest ? undefined : "/cache";
+  static readonly NCMBaseURL = "/api";
+  static readonly CacheBaseURL = "/cache";
   static readonly ProcessLogURL = "/log";
   static readonly CacheAccessToken = accessToken;
   static readonly Timeout = 15 * 1000;
@@ -34,9 +34,9 @@ export default class HTTPConstants {
     return (
       Math.random() *
       clamp(
-        HTTPConstants.RetryDelay * 2 ** (retryCount - 1),
-        HTTPConstants.RetryDelay,
-        HTTPConstants.MaxRetryDelay
+        RendererHTTPConstants.RetryDelay * 2 ** (retryCount - 1),
+        RendererHTTPConstants.RetryDelay,
+        RendererHTTPConstants.MaxRetryDelay
       )
     );
   }

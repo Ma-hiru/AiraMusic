@@ -1,12 +1,12 @@
 import { type FC, memo } from "react";
-import { NeteasePlaylist } from "../../../../source/netease/models";
-import { PlaylistSource } from "../../../../enum";
+import { NeteasePlaylist } from "@/common/source/netease/models";
+import { PlaylistSource } from "@/common/enum";
 
 import TopCover from "./top-cover";
 import TopRight from "./top-right";
 import TopInfo from "./top-info";
-import Search from "../../../public/search";
-import AppTitle from "../../../title";
+import AppTitle from "@/common/components/title";
+import Search from "@/common/components/public/search";
 
 interface TopProps {
   type: PlaylistSource;

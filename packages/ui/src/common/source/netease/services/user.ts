@@ -1,6 +1,6 @@
-import { Log } from "@mahiru/ui/common/constants/dev";
-import { NeteaseCookie, NeteaseUser } from "../../../source/netease/models";
-import { NeteaseAPIAuth, NeteaseAPIUser } from "../../../source/netease/api";
+import { Log } from "@/common/lib/log";
+import { NeteaseCookie, NeteaseUser } from "@/common/source/netease/models";
+import { NeteaseAPIAuth, NeteaseAPIUser } from "@/common/source/netease/api";
 
 export default class _NeteaseUserSource {
   private static async getUserPlaylist(uid: number) {

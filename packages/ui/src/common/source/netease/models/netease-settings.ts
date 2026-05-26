@@ -1,4 +1,4 @@
-import { TrackQuality } from "@mahiru/ui/common/enum";
+import { TrackQuality } from "@/common/enum";
 
 export interface NeteaseSettingsModel {
   trackQuality: {

@@ -13,15 +13,15 @@ import type { LucideIcon } from "lucide-react";
 import { DiscAlbum, ListMusic, Music2, UserRound } from "lucide-react";
 import { AlbumResult, ArtistResult, PlaylistResult, TrackResult } from "./content";
 import type { SearchInputRef } from "./input/search-input";
-import { NeteaseHistory, NeteaseTrackRecord } from "@mahiru/ui/common/source/netease/models";
-import { NeteaseImageSize } from "@mahiru/ui/common/enum";
-import type { HeartManager } from "@mahiru/ui/common/hooks/use-heart";
-import type { TrackListPlayableManager } from "@mahiru/ui/common/components/track_list";
+import { NeteaseHistory, NeteaseTrackRecord } from "@/common/source/netease/models";
+import { NeteaseImageSize } from "@/common/enum";
+import type { HeartManager } from "@/common/hooks/use-heart";
+import type { TrackListPlayableManager } from "@/common/components/track_list";
 import type { TrackResultRef } from "./content/track-result";
 
 import SearchInput from "./input";
 import HotRecommend from "./hot-recommend";
-import Card from "../../card/card";
+import Card from "@/common/components/card";
 
 export type SearchRef = {
   tracks: NeteaseTrackRecord[];

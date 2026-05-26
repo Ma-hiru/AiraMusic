@@ -1,5 +1,5 @@
-import { apiRequest } from "../../../source/netease/api/request";
-import { NeteaseMusicLevel } from "../../../enum/track";
+import { apiRequest } from "@/common/source/netease/api/request";
+import { NeteaseMusicLevel } from "@/common/enum";
 
 export default class _NeteaseTrackAPI {
   /**

@@ -1,4 +1,4 @@
-import { PlaylistPathUtils } from "../routes/utils";
+import type { PlaylistPathUtils } from "@/common/routes/utils";
 
 export type RouteItem = {
   name: string;

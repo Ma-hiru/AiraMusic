@@ -1,10 +1,10 @@
 import { cx } from "@emotion/css";
 import { type FC, memo } from "react";
 import { Check, SlidersHorizontal } from "lucide-react";
-import { NeteaseSettings } from "@mahiru/ui/common/source/netease/models";
-import { TrackQuality } from "@mahiru/ui/common/enum";
+import { NeteaseSettings } from "@/common/source/netease/models";
+import { TrackQuality } from "@/common/enum";
 
-import Card from "../../../card/card";
+import Card from "@/common/components/card";
 
 interface QualityProps {
   data: NeteaseSettings["trackQuality"];

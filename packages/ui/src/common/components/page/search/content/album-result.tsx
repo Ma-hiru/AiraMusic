@@ -1,18 +1,18 @@
 import { type FC, useCallback, useEffect, useRef } from "react";
-import { useRequestAutoRun, useRequestStatusWrap } from "@mahiru/ui/common/hooks/use-request-wrap";
-import { NeteaseAPISearch } from "@mahiru/ui/common/source/netease/api";
-import { SearchType } from "@mahiru/ui/common/enum";
+import { useRequestAutoRun, useRequestStatusWrap } from "@/common/hooks/use-request-wrap";
+import { NeteaseAPISearch } from "@/common/source/netease/api";
+import { SearchType } from "@/common/enum";
 import { cx } from "@emotion/css";
-import { useScrollAutoHide } from "@mahiru/ui/common/hooks/use-scroll-auto-hide";
-import { FormatNumber } from "@mahiru/ui/common/lib/format";
-import { NeteaseNetworkImage } from "@mahiru/ui/common/source/netease/models";
-import ImageConstants from "@mahiru/ui/common/constants/image";
+import { useScrollAutoHide } from "@/common/hooks/use-scroll-auto-hide";
+import { RendererFormat } from "@/common/lib/format";
+import { NeteaseNetworkImage } from "@/common/source/netease/models";
+import RendererImageConstants from "@/common/constants/image";
 
-import NeteaseImage from "../../../image/netease-image";
-import AppErrorBoundary from "../../../fallback/app-error-boundary";
-import ThrowIf from "../../../fallback/throw-if";
-import AppLoading from "../../../fallback/app-loading";
-import AppEmpty from "../../../fallback/app-empty";
+import NeteaseImage from "@/common/components/image/netease-image";
+import AppErrorBoundary from "@/common/components/fallback/app-error-boundary";
+import ThrowIf from "@/common/components/fallback/throw-if";
+import AppLoading from "@/common/components/fallback/app-loading";
+import AppEmpty from "@/common/components/fallback/app-empty";
 
 interface AlbumResultProps {
   className?: string;
@@ -71,7 +71,7 @@ const AlbumResult: FC<AlbumResultProps> = ({
             {list.map((item) => {
               const cover = NeteaseNetworkImage.fromURL(item.picUrl)
                 .setAlt(item.name)
-                .setSize(ImageConstants.AlbumListCoverSize);
+                .setSize(RendererImageConstants.AlbumListCoverSize);
               return (
                 <li
                   key={item.id}
@@ -90,7 +90,7 @@ const AlbumResult: FC<AlbumResultProps> = ({
                     shadowColor="light"
                   />
                   <h2 className="text-[12px] opacity-50 text-center ">
-                    {FormatNumber.time(item.publishTime)}
+                    {RendererFormat.time(item.publishTime)}
                   </h2>
                   <h1 className="font-bold text-sm leading-4 text-center line-clamp-2">
                     {item.name}

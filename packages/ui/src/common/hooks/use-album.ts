@@ -2,8 +2,8 @@ import { useCallback, useEffect, useState } from "react";
 import { type RequestStatus } from "./use-request-wrap";
 import { useImmer } from "use-immer";
 import { useLatestRef } from "./use-latest-ref";
-import { Log } from "@mahiru/ui/common/constants/dev";
-import { NeteaseAPIArtist } from "../source/netease/api";
+import { Log } from "@/common/lib/log";
+import { NeteaseAPIArtist } from "@/common/source/netease/api";
 
 export function useAlbum(props: { id: number; pageSize?: number }) {
   const [status, setStatus] = useState<RequestStatus | "idle">("idle");

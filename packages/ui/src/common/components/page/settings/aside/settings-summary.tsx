@@ -1,10 +1,10 @@
 import { type FC, memo, useMemo } from "react";
-import { NeteaseSettings } from "@mahiru/ui/common/source/netease/models";
+import { NeteaseSettings } from "@/common/source/netease/models";
 import { Radio } from "lucide-react";
-import { TrackQuality } from "@mahiru/ui/common/enum";
+import { TrackQuality } from "@/common/enum";
 
 import MiniStat from "./mini-stat";
-import Card from "../../../card/card";
+import Card from "@/common/components/card";
 
 interface SummaryProps {
   settings: NeteaseSettings;

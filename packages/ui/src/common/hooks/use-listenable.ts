@@ -1,4 +1,4 @@
-import { Listenable } from "../utils/listenable";
+import { Listenable } from "@/common/utils/listenable";
 import { useUpdate } from "./use-update";
 import { useEffect } from "react";
 

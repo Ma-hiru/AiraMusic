@@ -1,13 +1,13 @@
 import { type FC, memo, useEffect, useMemo, useState } from "react";
 import { LogIn, LogOut, UserRound } from "lucide-react";
-import { NeteaseNetworkImage, NeteaseUser } from "@mahiru/ui/common/source/netease/models";
+import { NeteaseNetworkImage, NeteaseUser } from "@/common/source/netease/models";
 import { cx } from "@emotion/css";
-import { getCityNameByCode } from "@mahiru/ui/common/utils/city-code";
-import { FormatNumber } from "@mahiru/ui/common/lib/format";
+import { getCityNameByCode } from "@/common/utils/city-code";
+import { RendererFormat } from "@/common/lib/format";
 
 import MiniStat from "./mini-stat";
-import Card from "../../../card/card";
-import NeteaseImage from "../../../image/netease-image";
+import Card from "@/common/components/card";
+import NeteaseImage from "@/common/components/image/netease-image";
 
 interface UserDetailProps {
   user: Nullable<NeteaseUser>;
@@ -20,7 +20,7 @@ const UserDetail: FC<UserDetailProps> = ({ user, logout, login }) => {
   const profileSignature = user?.profile.signature || "暂无签名";
   const profileName = user?.profile.nickname ?? user?.profile.userId ?? "未登录";
   const avatar = useMemo(() => NeteaseNetworkImage.fromUserAvatar(user)?.setSize(150), [user]);
-  const joinTime = FormatNumber.yearsAndDays(user?.profile.createTime);
+  const joinTime = RendererFormat.yearsAndDays(user?.profile.createTime);
   const fans = user?.profile.followeds ?? 0;
 
   useEffect(() => {

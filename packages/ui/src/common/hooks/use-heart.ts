@@ -1,6 +1,6 @@
 import { useCallback, useRef } from "react";
-import { NeteaseTrack, NeteaseTrackRecord } from "../source/netease/models";
-import { NeteaseAPITrack } from "../source/netease/api";
+import { NeteaseTrack, NeteaseTrackRecord } from "@/common/source/netease/models";
+import { NeteaseAPITrack } from "@/common/source/netease/api";
 
 type TrackLikeSource = {
   ids: Record<number, boolean>;

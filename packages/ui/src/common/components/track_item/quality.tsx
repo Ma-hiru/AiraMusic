@@ -1,8 +1,8 @@
 import { type FC, memo } from "react";
-import { TrackQuality } from "../../enum";
-import { NeteaseHistory, NeteaseTrack, NeteaseTrackRecord } from "../../source/netease/models";
+import { TrackQuality } from "@/common/enum";
+import { NeteaseHistory, NeteaseTrack, NeteaseTrackRecord } from "@/common/source/netease/models";
 
-import Tag from "../public/tag";
+import Tag from "@/common/components/public/tag";
 
 interface ListItemQualityProps {
   track?: NeteaseHistory | NeteaseTrackRecord;

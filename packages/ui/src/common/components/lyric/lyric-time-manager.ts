@@ -1,4 +1,4 @@
-import { Listenable } from "../../utils/listenable";
+import { Listenable } from "@/common/utils/listenable";
 
 export class LyricTimeManager extends Listenable {
   private lyric: LyricLine[];

@@ -1,16 +1,16 @@
 import { type FC, useCallback, useEffect, useRef } from "react";
-import { useRequestAutoRun, useRequestStatusWrap } from "@mahiru/ui/common/hooks/use-request-wrap";
-import { NeteaseAPISearch } from "@mahiru/ui/common/source/netease/api";
-import { SearchType } from "@mahiru/ui/common/enum";
-import { useScrollAutoHide } from "@mahiru/ui/common/hooks/use-scroll-auto-hide";
-import AppErrorBoundary from "../../../fallback/app-error-boundary";
-import ThrowIf from "../../../fallback/throw-if";
-import AppLoading from "../../../fallback/app-loading";
-import AppEmpty from "../../../fallback/app-empty";
+import { useRequestAutoRun, useRequestStatusWrap } from "@/common/hooks/use-request-wrap";
+import { NeteaseAPISearch } from "@/common/source/netease/api";
+import { SearchType } from "@/common/enum";
+import { useScrollAutoHide } from "@/common/hooks/use-scroll-auto-hide";
+import AppErrorBoundary from "@/common/components/fallback/app-error-boundary";
+import ThrowIf from "@/common/components/fallback/throw-if";
+import AppLoading from "@/common/components/fallback/app-loading";
+import AppEmpty from "@/common/components/fallback/app-empty";
 import { cx } from "@emotion/css";
-import { NeteaseNetworkImage } from "@mahiru/ui/common/source/netease/models";
-import ImageConstants from "@mahiru/ui/common/constants/image";
-import NeteaseImage from "../../../image/netease-image";
+import { NeteaseNetworkImage } from "@/common/source/netease/models";
+import RendererImageConstants from "@/common/constants/image";
+import NeteaseImage from "@/common/components/image/netease-image";
 
 interface ArtistResultProps {
   className?: string;
@@ -69,7 +69,7 @@ const ArtistResult: FC<ArtistResultProps> = ({
             {list.map((item) => {
               const cover = NeteaseNetworkImage.fromURL(item.picUrl)
                 ?.setAlt(item.name)
-                ?.setSize(ImageConstants.AlbumListCoverSize);
+                ?.setSize(RendererImageConstants.AlbumListCoverSize);
               return (
                 <li
                   key={item.id}

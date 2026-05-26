@@ -51,9 +51,9 @@
   import { computed, type CSSProperties, onMounted, ref, useTemplateRef, watch } from "vue";
   import { clamp } from "lodash-es";
   import { ArrowLeftToLine, ArrowRightToLine, Download } from "lucide-vue-next";
-  import { Log } from "@mahiru/ui/common/constants/dev";
-  import { ElectronServicesIPC } from "@mahiru/ui/common/source/electron/services";
-  import AppLoading from "@mahiru/ui/common/components/fallback/app-loading.vue";
+  import { Log } from "@/common/lib/log";
+  import { ElectronServicesIPC } from "@/common/source/electron/services";
+  import AppLoading from "@/common/components/fallback/app-loading.vue";
 
   type ImageEntry = { url?: string; alt?: string };
 

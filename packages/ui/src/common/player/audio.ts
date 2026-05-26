@@ -1,8 +1,8 @@
+import { Log } from "@/common/lib/log";
 import { clamp } from "lodash-es";
-import { Log } from "@mahiru/ui/common/constants/dev";
-import { NeteaseLocalAudio, NeteaseNetworkAudio } from "../source/netease/models";
+import { NeteaseLocalAudio, NeteaseNetworkAudio } from "@/common/source/netease/models";
 
-export default class AppAudio {
+export default class RendererPlayerAudio {
   readonly audio = new Audio();
   readonly addEventListener = this.audio.addEventListener.bind(this.audio);
   readonly removeEventListener = this.audio.removeEventListener.bind(this.audio);
@@ -139,7 +139,7 @@ export default class AppAudio {
     };
   }
 
-  static save(instance: AppAudio) {
+  static save(instance: RendererPlayerAudio) {
     return {
       src: instance.audio.src,
       volume: instance.volume,
@@ -148,7 +148,7 @@ export default class AppAudio {
   }
 
   static fromSave(save: ReturnType<typeof this.save>) {
-    const instance = new AppAudio();
+    const instance = new RendererPlayerAudio();
     instance.volume = save.volume;
     instance.pause();
     instance.audio.addEventListener(

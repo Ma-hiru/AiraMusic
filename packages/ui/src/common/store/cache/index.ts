@@ -6,7 +6,7 @@ import { CacheStoreForRemove } from "./remove";
 import { BrowserCache } from "./browser";
 import { MemoryCache } from "./memory";
 import { type CacheObjectAsyncInterface } from "./utils";
-import { Log } from "@mahiru/ui/common/constants/dev";
+import { Log } from "@/common/lib/log";
 
 const local = {
   check: new CacheStoreForCheck(),

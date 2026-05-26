@@ -1,8 +1,8 @@
 import { cacheRequest } from "./request";
-import { Log } from "@mahiru/ui/common/constants/dev";
-import { RequestCollector } from "../../utils/collector";
-import { CacheStoreUtils } from "../../store/cache/utils";
-import { ElectronServicesNet } from "../../source/electron/services";
+import { Log } from "@/common/lib/log";
+import { RequestCollector } from "@/common/utils/collector";
+import { CacheStoreUtils } from "@/common/store/cache/utils";
+import { ElectronServicesNet } from "@/common/source/electron/services";
 
 type CheckRequestItem = {
   id: string | number;

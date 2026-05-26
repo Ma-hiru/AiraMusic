@@ -3,7 +3,7 @@ import { NeteaseAlbum } from "./netease-album";
 import { NeteaseTrack } from "./netease-track";
 import { type NeteaseUserModel } from "./netease-user";
 import { NeteaseTrackRecord } from "./netease-track-record";
-import { NeteaseImageSize } from "../../../enum";
+import { NeteaseImageSize } from "@/common/enum";
 import { NeteasePlaylistSummary } from "./netease-playlist-summary";
 
 export class NeteaseNetworkImage {

@@ -1,4 +1,4 @@
-import { apiRequest } from "../../../source/netease/api/request";
+import { apiRequest } from "@/common/source/netease/api/request";
 
 export default class _NeteaseArtistAPI {
   /**

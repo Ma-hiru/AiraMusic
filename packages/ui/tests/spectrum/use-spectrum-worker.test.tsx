@@ -2,7 +2,7 @@ import { act, cleanup, renderHook } from "@testing-library/react";
 import {
   type SpectrumOptions,
   useSpectrumWorker
-} from "@mahiru/ui/windows/main/hooks/use-spectrum-worker";
+} from "../../src/wins/main/hooks/use-spectrum-worker";
 
 type SpectrumWorkerResult =
   | { type: "ready" }

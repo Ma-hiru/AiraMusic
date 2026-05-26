@@ -1,6 +1,6 @@
 import { NeteaseTrack } from "./netease-track";
-import { TrackQuality } from "../../../enum";
-import { NeteaseAPITrack } from "../../../source/netease/api";
+import { TrackQuality } from "@/common/enum";
+import { NeteaseAPITrack } from "@/common/source/netease/api";
 
 export class NeteaseNetworkAudio {
   readonly url: string;

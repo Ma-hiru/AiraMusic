@@ -1,9 +1,9 @@
-import { Log } from "@mahiru/ui/common/constants/dev";
-import { NeteaseUser, type NeteaseUserModel } from "../../../source/netease/models";
-import { userStoreSnapshot } from "../../../store/user";
-import { NeteaseServicesUser } from "../../../source/netease/services";
-import { ElectronServicesWindow } from "../../../source/electron/services";
-import AppToast from "../../../components/toast";
+import { Log } from "@/common/lib/log";
+import { NeteaseUser, type NeteaseUserModel } from "@/common/source/netease/models";
+import { userStoreSnapshot } from "@/common/store/user";
+import { NeteaseServicesUser } from "@/common/source/netease/services";
+import { ElectronServicesWindow } from "@/common/source/electron/services";
+import AppToast from "@/common/components/toast";
 
 export default class _NeteaseAuth {
   private static get userStore() {

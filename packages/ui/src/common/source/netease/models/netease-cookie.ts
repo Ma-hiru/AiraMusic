@@ -1,4 +1,4 @@
-import { NeteaseAPIAuth } from "../../../source/netease/api";
+import { NeteaseAPIAuth } from "@/common/source/netease/api";
 import Cookies from "js-cookie";
 
 export class NeteaseCookie {

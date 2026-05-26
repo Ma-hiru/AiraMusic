@@ -8,12 +8,12 @@ import {
   useMemo,
   useRef
 } from "react";
-import { useLatestRef } from "../../hooks/use-latest-ref";
-import { Log } from "@mahiru/ui/common/constants/dev";
-import AppLoading from "../fallback/app-loading";
-import AppEmpty from "../fallback/app-empty";
+import { useLatestRef } from "@/common/hooks/use-latest-ref";
+import { Log } from "@/common/lib/log";
+import AppLoading from "@/common/components/fallback/app-loading";
+import AppEmpty from "@/common/components/fallback/app-empty";
 import { cx } from "@emotion/css";
-import { useScrollAutoHide } from "../../hooks/use-scroll-auto-hide";
+import { useScrollAutoHide } from "@/common/hooks/use-scroll-auto-hide";
 
 export type InfiniteList<T> = {
   /**

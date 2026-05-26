@@ -1,9 +1,9 @@
 import { cx } from "@emotion/css";
 import { type FC, memo, useMemo } from "react";
-import { NeteaseNetworkImage, NeteaseTrackRecord } from "../../source/netease/models";
-import { NeteaseImageSize } from "../../enum";
+import { NeteaseNetworkImage, NeteaseTrackRecord } from "@/common/source/netease/models";
+import { NeteaseImageSize } from "@/common/enum";
 
-import NeteaseImage from "../image/netease-image";
+import NeteaseImage from "@/common/components/image/netease-image";
 
 interface ListItemCoverProps {
   track: NeteaseTrackRecord;

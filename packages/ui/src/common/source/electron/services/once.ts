@@ -1,7 +1,8 @@
-import { Log } from "@mahiru/ui/common/constants/dev";
-import { CacheStore } from "../../../store/cache";
+import { Log } from "@/common/lib/log";
+import { CacheStore } from "@/common/store/cache";
+import { RendererRuntime } from "@/common/lib/runtime";
 import _AppWindow from "./window";
-import Init from "../../../utils/init";
+import Init from "@/common/utils/init";
 
 type OnceRecordCache = {
   id: string;
@@ -10,7 +11,7 @@ type OnceRecordCache = {
 
 export default class _AppOnce {
   private static readonly cacheKey = "once-record";
-  private static readonly cacheID = _AppWindow.currentWindowType + "_" + _AppWindow.runtimeID;
+  private static readonly cacheID = _AppWindow.currentWindowType + "_" + RendererRuntime.id;
   private static record = new Set<string>();
 
   static _init() {

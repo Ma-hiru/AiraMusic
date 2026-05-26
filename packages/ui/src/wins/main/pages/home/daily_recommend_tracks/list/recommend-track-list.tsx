@@ -1,0 +1,42 @@
+import { type FC, memo, type RefObject } from "react";
+import { css, cx } from "@emotion/css";
+import { useThemeColor } from "@/common/hooks/use-theme-color";
+
+import RecommendTrackItem from "./recommend-track-item";
+
+interface RecommendTrackListProps {
+  recommend: NeteaseAPI.DailyRecommendTracksDailySong[];
+  containerRef: RefObject<Nullable<HTMLDivElement>>;
+}
+
+const RecommendTrackList: FC<RecommendTrackListProps> = ({ recommend, containerRef }) => {
+  const { mainColor, textColorOnMain } = useThemeColor();
+  // const innerWidth = useInnerWidth();
+  return (
+    <div
+      ref={containerRef}
+      className={cx(
+        "relative w-full my-2 overflow-y-hidden overflow-x-scroll scrollbar-hide scroll-smooth contain-content",
+        css`
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+          grid-auto-columns: minmax(150px, 1fr);
+          //grid-auto-columns: calc(100% / \${Math.floor(innerWidth / 170)});
+          grid-auto-flow: column;
+          scroll-snap-type: x mandatory;
+        `
+      )}>
+      {recommend.map((song) => (
+        <div key={song.id} className="snap-start">
+          <RecommendTrackItem
+            song={song}
+            mainColor={mainColor.alpha(0.5).string()}
+            isMainColorDark={mainColor.isDark()}
+            textColor={textColorOnMain.string()}
+          />
+        </div>
+      ))}
+    </div>
+  );
+};
+export default memo(RecommendTrackList);

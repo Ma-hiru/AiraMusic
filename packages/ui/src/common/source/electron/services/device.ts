@@ -1,5 +1,5 @@
-import { Log } from "@mahiru/ui/common/constants/dev";
-import _AppRenderer from "../../../source/electron/services/renderer";
+import { Log } from "@/common/lib/log";
+import _AppRenderer from "@/common/source/electron/services/renderer";
 
 export default class _AppDevice {
   private static get gpuDevice(): Promise<GPUDevice[]> {

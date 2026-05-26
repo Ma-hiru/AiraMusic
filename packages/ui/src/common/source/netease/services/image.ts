@@ -2,11 +2,11 @@ import {
   NeteaseLocalImage,
   NeteaseNetworkImage,
   NeteaseTrack
-} from "../../../source/netease/models";
-import { CacheStore } from "../../../store/cache";
-import { NeteaseImageSize } from "../../../enum";
-import { LRUCacheWithTime } from "../../../utils/lru";
-import { Log } from "@mahiru/ui/common/constants/dev";
+} from "@/common/source/netease/models";
+import { CacheStore } from "@/common/store/cache";
+import { NeteaseImageSize } from "@/common/enum";
+import { LRUCacheWithTime } from "@/common/utils/lru";
+import { Log } from "@/common/lib/log";
 
 interface LocalFn {
   (

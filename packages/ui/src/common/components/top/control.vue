@@ -1,7 +1,7 @@
 <template>
   <NoDrag class="flex flex-row gap-4 select-none relative z-50">
     <AppWindowIcon
-      v-if="isDev"
+      v-if="RendererRuntime.isDev"
       :color="props.color"
       class="size-5 control-button"
       @click="currentWindow.devTools()" />
@@ -27,11 +27,11 @@
 </template>
 
 <script setup lang="ts" name="TopControlPure">
-  import NoDrag from "@mahiru/ui/common/components/drag/no-drag.vue";
+  import NoDrag from "@/common/components/drag/no-drag.vue";
   import { AppWindow as AppWindowIcon, Minus, Square, SquareMinus, X } from "lucide-vue-next";
-  import { isDev } from "@mahiru/ui/common/constants/dev";
-  import { useListenable } from "@mahiru/ui/common/hooks/use-listenable-vue";
-  import { ElectronServicesWindow } from "@mahiru/ui/common/source/electron/services";
+  import { useListenable } from "@/common/hooks/use-listenable-vue";
+  import { ElectronServicesWindow } from "@/common/source/electron/services";
+  import { RendererRuntime } from "@/common/lib/runtime";
 
   const currentWindow = useListenable(ElectronServicesWindow.current);
 

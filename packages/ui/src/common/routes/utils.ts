@@ -1,4 +1,4 @@
-import { PlaylistSource } from "../enum";
+import { PlaylistSource } from "@/common/enum";
 import { type Location } from "react-router-dom";
 
 export class PlaylistPathUtils {

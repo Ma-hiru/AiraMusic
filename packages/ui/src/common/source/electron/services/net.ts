@@ -1,7 +1,7 @@
-import { Log } from "@mahiru/ui/common/constants/dev";
-import { Listener } from "../../../utils/listenable";
+import { Log } from "@/common/lib/log";
+import { Listener } from "@/common/utils/listenable";
 import { EqError } from "@mahiru/log";
-import Init from "../../../utils/init";
+import Init from "@/common/utils/init";
 import _AppRenderer from "./renderer";
 
 export default class _AppNet {

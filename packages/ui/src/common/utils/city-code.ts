@@ -1,4 +1,4 @@
-import { Log } from "@mahiru/ui/common/constants/dev";
+import { Log } from "@/common/lib/log";
 
 let cityCodeMap: Nullable<Record<number | string, string>> = null;
 

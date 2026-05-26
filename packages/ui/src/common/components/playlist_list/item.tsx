@@ -1,13 +1,10 @@
 import { cx } from "@emotion/css";
 import { type FC, memo, useMemo } from "react";
 import { CirclePlay, Headphones } from "lucide-react";
-import {
-  NeteaseNetworkImage,
-  NeteasePlaylistSummary
-} from "@mahiru/ui/common/source/netease/models";
-import ImageConstants from "@mahiru/ui/common/constants/image";
+import { NeteaseNetworkImage, NeteasePlaylistSummary } from "@/common/source/netease/models";
+import RendererImageConstants from "@/common/constants/image";
 
-import NeteaseImage from "../image/netease-image";
+import NeteaseImage from "@/common/components/image/netease-image";
 
 interface ItemProps {
   cover: string;
@@ -33,7 +30,7 @@ const Item: FC<ItemProps> = ({
   const image = useMemo(
     () =>
       NeteaseNetworkImage.fromURL(cover)
-        .setSize(coverSize ?? ImageConstants.HomePagePlaylistCoverSize)
+        .setSize(coverSize ?? RendererImageConstants.HomePagePlaylistCoverSize)
         .setAlt(name),
     [cover, coverSize, name]
   );

@@ -14,7 +14,7 @@ import { LyricTimeManager } from "./lyric-time-manager";
 import { debounce } from "lodash-es";
 
 import LyricLine from "./lyric-line";
-import AppUI from "../../player/ui";
+import RendererTheme from "@/common/player/ui";
 import LyricTips from "./lyric-tips";
 
 export interface LyricRef {
@@ -74,7 +74,7 @@ const LyricContainer: FC<LyricContainerProps> = ({
 
     if (!container) return;
     if (lineIndex === -1) {
-      return AppUI.smoothScrollTo(container, 0);
+      return RendererTheme.smoothScrollTo(container, 0);
     }
 
     const activeLine = container.children[lineIndex + 1] as Nullable<HTMLElement>;
@@ -93,7 +93,7 @@ const LyricContainer: FC<LyricContainerProps> = ({
       scrollTop = lineOffsetTop - containerHeight / 2 + lineHeight / 2;
     }
 
-    return AppUI.smoothScrollTo(container, scrollTop);
+    return RendererTheme.smoothScrollTo(container, scrollTop);
   }, []);
 
   // 歌词变化时，重置时间管理器和当前行

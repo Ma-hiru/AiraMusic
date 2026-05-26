@@ -1,5 +1,5 @@
 import { type FC, memo, useMemo } from "react";
-import { NeteaseArtist } from "../../../../source/netease/models";
+import { NeteaseArtist } from "@/common/source/netease/models";
 
 import Avatar from "./avatar";
 import Info from "./info";

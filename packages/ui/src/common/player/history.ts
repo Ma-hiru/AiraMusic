@@ -1,8 +1,8 @@
-import { NeteaseHistory, NeteaseTrack } from "../source/netease/models";
-import { Listenable } from "../utils/listenable";
-import { NeteaseAPITrack } from "../source/netease/api";
+import { NeteaseHistory, NeteaseTrack } from "@/common/source/netease/models";
+import { Listenable } from "@/common/utils/listenable";
+import { NeteaseAPITrack } from "@/common/source/netease/api";
 
-export default class AppHistory extends Listenable {
+export default class RendererPlayerHistory extends Listenable {
   readonly list;
   readonly maxLength;
 
@@ -46,13 +46,13 @@ export default class AppHistory extends Listenable {
   }
 
   toSearchStruct() {
-    return AppHistory.toSearchStruct(this.list);
+    return RendererPlayerHistory.toSearchStruct(this.list);
   }
   static toSearchStruct(list: NeteaseHistory[]) {
     return NeteaseTrack.toSearchStructString(list.map((h) => new NeteaseTrack(h.detail)));
   }
 
-  static save(instance: AppHistory) {
+  static save(instance: RendererPlayerHistory) {
     return {
       list: instance.list,
       maxLength: instance.maxLength
@@ -61,6 +61,6 @@ export default class AppHistory extends Listenable {
 
   static fromSave(save: ReturnType<typeof this.save>) {
     save.list = <NeteaseHistory[]>save.list.map(NeteaseHistory.fromObject) || [];
-    return new AppHistory(save);
+    return new RendererPlayerHistory(save);
   }
 }

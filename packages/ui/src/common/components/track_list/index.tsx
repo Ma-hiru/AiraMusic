@@ -10,15 +10,15 @@ import {
   useState
 } from "react";
 import { cx } from "@emotion/css";
-import { useScrollAutoHide } from "../../hooks/use-scroll-auto-hide";
-import { useThemeColor } from "../../hooks/use-theme-color";
-import { NeteaseImageSize, PlaylistSource } from "../../enum";
-import { NeteaseHistory, NeteaseTrack, NeteaseTrackRecord } from "../../source/netease/models";
+import { useScrollAutoHide } from "@/common/hooks/use-scroll-auto-hide";
+import { useThemeColor } from "@/common/hooks/use-theme-color";
+import { NeteaseImageSize, PlaylistSource } from "@/common/enum";
+import { NeteaseHistory, NeteaseTrack, NeteaseTrackRecord } from "@/common/source/netease/models";
+import { type HeartManager, useHeart } from "@/common/hooks/use-heart";
 
-import TrackItem, { type TrackItemProps } from "../../components/track_item";
-import VirtualList, { type VirtualListRow } from "../../components/virtual_list";
-import { type HeartManager, useHeart } from "../../hooks/use-heart";
-import AppEmpty from "../fallback/app-empty";
+import TrackItem, { type TrackItemProps } from "@/common/components/track_item";
+import VirtualList, { type VirtualListRow } from "@/common/components/virtual_list";
+import AppEmpty from "@/common/components/fallback/app-empty";
 
 export interface TrackListRef {
   containerRef: RefObject<Nullable<HTMLDivElement>>;

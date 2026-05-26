@@ -10,7 +10,7 @@
 </template>
 
 <script setup lang="ts" name="AppLoading">
-  import Loading from "@mahiru/ui/common/components/fallback/loading.vue";
+  import Loading from "@/common/components/fallback/loading.vue";
 
   const props = withDefaults(
     defineProps<{

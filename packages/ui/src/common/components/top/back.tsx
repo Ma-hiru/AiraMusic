@@ -1,9 +1,10 @@
 import { type FC, memo, useCallback, useEffect, useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
-import NoDrag from "../drag/no-drag";
-import { RoutePath } from "../../routes";
-import { useStableArray } from "../../hooks/use-stable-array";
+import { RoutePath } from "@/common/routes";
+import { useStableArray } from "@/common/hooks/use-stable-array";
+
+import NoDrag from "@/common/components/drag/no-drag";
 
 interface TopBackProps {
   className?: string;

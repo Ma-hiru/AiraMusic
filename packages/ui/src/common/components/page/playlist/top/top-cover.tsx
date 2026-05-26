@@ -1,9 +1,9 @@
 import { type FC, memo, type ReactEventHandler, useCallback, useMemo } from "react";
 import { Headphones } from "lucide-react";
-import { NeteaseNetworkImage, NeteasePlaylist } from "../../../../source/netease/models";
-import ImageConstants from "@mahiru/ui/common/constants/image";
+import { NeteaseNetworkImage, NeteasePlaylist } from "@/common/source/netease/models";
+import RendererImageConstants from "@/common/constants/image";
 
-import NeteaseImage from "../../../image/netease-image";
+import NeteaseImage from "@/common/components/image/netease-image";
 
 interface TopCoverProps {
   summary: Nullable<NeteasePlaylist>;
@@ -21,7 +21,7 @@ const TopCover: FC<TopCoverProps> = ({ summary, coverCacheKey, onCoverLoaded }) 
   const image = useMemo(
     () =>
       NeteaseNetworkImage.fromPlaylistCover(summary)
-        ?.setSize(ImageConstants.PlaylistPageCoverSize)
+        ?.setSize(RendererImageConstants.PlaylistPageCoverSize)
         .setCacheKey((coverCacheKey ?? "") + (summary?.updateTime ?? "")),
     [summary, coverCacheKey]
   );

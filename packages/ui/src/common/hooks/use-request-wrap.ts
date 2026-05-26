@@ -1,9 +1,9 @@
 import { startTransition, useCallback, useEffect, useState } from "react";
-import { Log } from "@mahiru/ui/common/constants/dev";
+import { Log } from "@/common/lib/log";
 import { useStableArray } from "./use-stable-array";
 import { useUpdate } from "./use-update";
 import { useLatestRef } from "./use-latest-ref";
-import _AppNet from "../source/electron/services/net";
+import _AppNet from "@/common/source/electron/services/net";
 
 export type RequestStatus = "loading" | "error" | "success";
 

@@ -11,12 +11,8 @@ import {
   parseNeteaseLyric,
   parseTranslatedLRC
 } from "@mahiru/wasm";
-import {
-  loadErrorLyricPreset,
-  noLyricPreset,
-  pureMusicLyricPreset
-} from "@mahiru/ui/common/constants/lyric";
-import { Log } from "@mahiru/ui/common/constants/dev";
+import { RendererLyricConstants } from "@/common/constants/lyric";
+import { Log } from "@/common/lib/log";
 
 export class NeteaseLyric implements NeteaseLyricModel {
   //region fields
@@ -65,15 +61,15 @@ export class NeteaseLyric implements NeteaseLyricModel {
   }
 
   static get blankLyric() {
-    return new NeteaseLyric(noLyricPreset);
+    return new NeteaseLyric(RendererLyricConstants.noLyricPreset);
   }
 
   static get pureMusicLyric() {
-    return new NeteaseLyric(pureMusicLyricPreset);
+    return new NeteaseLyric(RendererLyricConstants.pureMusicLyricPreset);
   }
 
   static get loadErrorLyric() {
-    return new NeteaseLyric(loadErrorLyricPreset);
+    return new NeteaseLyric(RendererLyricConstants.loadErrorLyricPreset);
   }
 }
 
@@ -175,7 +171,7 @@ class Parser {
   ): NeteaseLyricModel {
     if (!response?.lrc?.lyric && !response?.yrc)
       // 没有任何歌词
-      return noLyricPreset;
+      return RendererLyricConstants.noLyricPreset;
 
     let parsedLyric;
     const LRC = response.lrc;
@@ -194,9 +190,9 @@ class Parser {
     }
 
     if (!parsedLyric) {
-      return noLyricPreset;
+      return RendererLyricConstants.noLyricPreset;
     } else if (parsedLyric.data.length === 0) {
-      return pureMusicLyricPreset;
+      return RendererLyricConstants.pureMusicLyricPreset;
     } else {
       return parsedLyric;
     }

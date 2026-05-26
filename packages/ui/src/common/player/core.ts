@@ -7,20 +7,20 @@ import {
   NeteaseNetworkImage,
   NeteaseTrack,
   NeteaseTrackRecord
-} from "../source/netease/models";
-import { Listenable } from "../utils/listenable";
-import { Log } from "@mahiru/ui/common/constants/dev";
-import { NeteaseImageSize } from "../enum";
+} from "@/common/source/netease/models";
+import { Listenable } from "@/common/utils/listenable";
+import { NeteaseImageSize } from "@/common/enum";
 import {
   NeteaseServicesAudio,
   NeteaseServicesImage,
   NeteaseServicesLyric
-} from "../source/netease/services";
-import { settingsStoreSnapshot } from "@mahiru/ui/common/store/settings";
+} from "@/common/source/netease/services";
+import { settingsStoreSnapshot } from "@/common/store/settings";
+import { Log } from "@/common/lib/log";
 
-import AppAudio from "./audio";
-import AppPlaylist from "./playlist";
-import AppHistory from "./history";
+import RendererPlayerAudio from "./audio";
+import RendererPlayerPlaylist from "./playlist";
+import RendererPlayerHistory from "./history";
 
 export const enum AppPlayerStatus {
   idle = 1,
@@ -89,9 +89,9 @@ export default class AppPlayer extends Listenable {
   }
 
   constructor(props?: {
-    audio?: AppAudio;
-    playlist?: AppPlaylist;
-    history?: AppHistory;
+    audio?: RendererPlayerAudio;
+    playlist?: RendererPlayerPlaylist;
+    history?: RendererPlayerHistory;
     status?: AppPlayerStatus;
     current?: {
       track: Nullable<NeteaseTrackRecord>;
@@ -104,9 +104,9 @@ export default class AppPlayer extends Listenable {
     };
   }) {
     super();
-    this.audio = props?.audio || new AppAudio();
-    this.playlist = props?.playlist || new AppPlaylist();
-    this.history = props?.history || new AppHistory();
+    this.audio = props?.audio || new RendererPlayerAudio();
+    this.playlist = props?.playlist || new RendererPlayerPlaylist();
+    this.history = props?.history || new RendererPlayerHistory();
     this.current = props?.current || {
       track: null,
       lyric: null,
@@ -238,18 +238,18 @@ export default class AppPlayer extends Listenable {
 
   static save(instance: AppPlayer) {
     return {
-      audio: AppAudio.save(instance.audio),
-      playlist: AppPlaylist.save(instance.playlist),
-      history: AppHistory.save(instance.history),
+      audio: RendererPlayerAudio.save(instance.audio),
+      playlist: RendererPlayerPlaylist.save(instance.playlist),
+      history: RendererPlayerHistory.save(instance.history),
       current: instance.current
     };
   }
 
   static fromSave(save: ReturnType<typeof this.save>) {
     return new AppPlayer({
-      audio: AppAudio.fromSave(save.audio),
-      playlist: AppPlaylist.fromSave(save.playlist),
-      history: AppHistory.fromSave(save.history),
+      audio: RendererPlayerAudio.fromSave(save.audio),
+      playlist: RendererPlayerPlaylist.fromSave(save.playlist),
+      history: RendererPlayerHistory.fromSave(save.history),
       current: {
         ...save.current,
         track: NeteaseTrackRecord.fromObject(save.current.track),

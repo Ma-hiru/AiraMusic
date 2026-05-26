@@ -1,5 +1,5 @@
-import { BannerType, NeteaseImageSize } from "../../../enum";
-import { Log } from "@mahiru/ui/common/constants/dev";
+import { BannerType, NeteaseImageSize } from "@/common/enum";
+import { Log } from "@/common/lib/log";
 
 export class NeteaseURL {
   static parseBannerURL(url: string): { type: BannerType; id: number } {

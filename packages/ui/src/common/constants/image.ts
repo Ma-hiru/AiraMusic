@@ -1,6 +1,6 @@
-import { NeteaseImageSize } from "../enum";
+import { NeteaseImageSize } from "@/common/enum";
 
-export default class ImageConstants {
+export default class RendererImageConstants {
   static readonly TopAvatarSize = NeteaseImageSize.md;
   static readonly TopMiniAvatarSize = NeteaseImageSize.sm;
   static readonly PlaylistPageCoverSize = NeteaseImageSize.md;

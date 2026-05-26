@@ -1,9 +1,9 @@
 import { type FC, memo, useMemo } from "react";
-import { NeteaseNetworkImage } from "../../../../source/netease/models";
-import { FormatNumber } from "../../../../lib/format";
-import ImageConstants from "@mahiru/ui/common/constants/image";
+import { NeteaseNetworkImage } from "@/common/source/netease/models";
+import { RendererFormat } from "@/common/lib/format";
+import RendererImageConstants from "@/common/constants/image";
 
-import NeteaseImage from "../../../image/netease-image";
+import NeteaseImage from "@/common/components/image/netease-image";
 
 interface AlbumItemProps {
   data: NeteaseAPI.ArtistAlbum;
@@ -14,7 +14,7 @@ const AlbumItem: FC<AlbumItemProps> = ({ data, onClick }) => {
   const cover = useMemo(() => {
     return NeteaseNetworkImage.fromURL(data.picUrl)
       .setAlt(data.name)
-      .setSize(ImageConstants.AlbumListCoverSize);
+      .setSize(RendererImageConstants.AlbumListCoverSize);
   }, [data.name, data.picUrl]);
   return (
     <div
@@ -33,7 +33,9 @@ const AlbumItem: FC<AlbumItemProps> = ({ data, onClick }) => {
         shadow="float"
         shadowColor="light"
       />
-      <h2 className="text-[12px] opacity-50 text-center ">{FormatNumber.time(data.publishTime)}</h2>
+      <h2 className="text-[12px] opacity-50 text-center ">
+        {RendererFormat.time(data.publishTime)}
+      </h2>
       <h1 className="font-bold text-base leading-4 text-center line-clamp-1">{data.name}</h1>
     </div>
   );

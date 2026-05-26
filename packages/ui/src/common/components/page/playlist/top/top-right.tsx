@@ -1,13 +1,13 @@
 import { type FC, memo, useMemo } from "react";
 import { SquareArrowRightEnter, SquareArrowRightExit, SquarePen } from "lucide-react";
-import { NeteaseNetworkImage, NeteasePlaylist } from "../../../../source/netease/models";
-import { useUser } from "../../../../store/user";
-import { FormatNumber } from "../../../../lib/format";
-import { PlaylistSource } from "../../../../enum";
-import ImageConstants from "@mahiru/ui/common/constants/image";
+import { NeteaseNetworkImage, NeteasePlaylist } from "@/common/source/netease/models";
+import { useUser } from "@/common/store/user";
+import { RendererFormat } from "@/common/lib/format";
+import { PlaylistSource } from "@/common/enum";
+import RendererImageConstants from "@/common/constants/image";
 
-import Search from "../../../public/search";
-import NeteaseImage from "../../../image/netease-image";
+import Search from "@/common/components/public/search";
+import NeteaseImage from "@/common/components/image/netease-image";
 
 interface TopRightProps {
   summary: Nullable<NeteasePlaylist>;
@@ -30,7 +30,7 @@ const TopRight: FC<TopRightProps> = ({
 
   const avatar = useMemo(() => {
     return NeteaseNetworkImage.fromUserAvatar(summary?.creator)?.setSize(
-      ImageConstants.PlaylistPageCreatorAvatarSize
+      RendererImageConstants.PlaylistPageCreatorAvatarSize
     );
   }, [summary]);
 
@@ -70,7 +70,7 @@ const TopRight: FC<TopRightProps> = ({
           <NeteaseImage cache image={avatar} className="size-5 rounded-full select-none" />
           <span className="text-[12px]">{summary?.creator.nickname}</span>
           <span className="select-none">
-            <span className="underline">{FormatNumber.time(summary?.createTime)}</span> 创建
+            <span className="underline">{RendererFormat.time(summary?.createTime)}</span> 创建
           </span>
         </div>
       </div>

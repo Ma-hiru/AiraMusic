@@ -1,17 +1,14 @@
 import { type FC, memo, useCallback, useEffect, useState } from "react";
 import { cx } from "@emotion/css";
 import { Search, TrendingUp } from "lucide-react";
-import {
-  useRequestAutoRetry,
-  useRequestStatusWrap
-} from "@mahiru/ui/common/hooks/use-request-wrap";
-import { NeteaseAPISearch } from "@mahiru/ui/common/source/netease/api";
+import { useRequestAutoRetry, useRequestStatusWrap } from "@/common/hooks/use-request-wrap";
+import { NeteaseAPISearch } from "@/common/source/netease/api";
+import { RendererFormat } from "@/common/lib/format";
 
-import AppErrorBoundary from "../../fallback/app-error-boundary";
-import AppLoading from "../../fallback/app-loading";
-import ThrowIf from "../../fallback/throw-if";
-import Card from "../../card/card";
-import { FormatNumber } from "@mahiru/ui/common/lib/format";
+import AppErrorBoundary from "@/common/components/fallback/app-error-boundary";
+import AppLoading from "@/common/components/fallback/app-loading";
+import ThrowIf from "@/common/components/fallback/throw-if";
+import Card from "@/common/components/card";
 
 interface HotRecommendProps {
   className?: string;
@@ -62,7 +59,7 @@ const HotRecommend: FC<HotRecommendProps> = ({ className, onSearch }) => {
                           {(index + 1).toString().padStart(2, "0")}
                         </span>
                         <span className="truncate text-[11px] font-bold">
-                          {FormatNumber.count(item.score)}
+                          {RendererFormat.count(item.score)}
                         </span>
                       </div>
                       <div className="flex items-center justify-between gap-2">

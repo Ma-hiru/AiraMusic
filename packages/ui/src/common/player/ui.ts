@@ -1,9 +1,9 @@
 import Color, { type ColorInstance } from "color";
 import { converter, formatHex } from "culori";
 import { clamp } from "lodash-es";
-import { Listener } from "../utils/listenable";
+import { Listener } from "@/common/utils/listenable";
 
-export default class AppUI {
+export default class RendererTheme {
   static readonly BLACK_COLOR = Color("#000000");
   static readonly WHITE_COLOR = Color("#FFFFFF");
   static readonly themeCSSNameMain = "--theme-color-main";

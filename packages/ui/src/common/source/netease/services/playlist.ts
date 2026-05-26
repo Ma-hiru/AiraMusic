@@ -1,9 +1,9 @@
-import NeteaseTrackSource from "../../../source/netease/services/track";
-import { NeteaseAPIPlaylist } from "../../../source/netease/api";
-import { NeteasePlaylist, NeteasePlaylistSummary } from "../../../source/netease/models";
-import { CacheStore } from "../../../store/cache";
-import { LRUCacheWithTime } from "../../../utils/lru";
-import { userStoreSnapshot } from "../../../store/user";
+import NeteaseTrackSource from "@/common/source/netease/services/track";
+import { NeteaseAPIPlaylist } from "@/common/source/netease/api";
+import { NeteasePlaylist, NeteasePlaylistSummary } from "@/common/source/netease/models";
+import { CacheStore } from "@/common/store/cache";
+import { LRUCacheWithTime } from "@/common/utils/lru";
+import { userStoreSnapshot } from "@/common/store/user";
 
 export default class _NeteasePlaylistSource {
   //region cache

@@ -1,12 +1,12 @@
 import { type FC, memo } from "react";
 import { Heart } from "lucide-react";
 import { type ColorInstance } from "color";
-import { PlaylistSource, TrackBitmark } from "../../enum";
-import { NeteaseHistory, NeteaseTrackRecord } from "../../source/netease/models";
-import { FormatNumber } from "../../lib/format";
+import { PlaylistSource, TrackBitmark } from "@/common/enum";
+import { NeteaseHistory, NeteaseTrackRecord } from "@/common/source/netease/models";
+import { RendererFormat } from "@/common/lib/format";
 
 import ListItemQuality from "./quality";
-import Tag from "../public/tag";
+import Tag from "@/common/components/public/tag";
 
 interface ListItemAlbumProps {
   track: NeteaseTrackRecord | NeteaseHistory;
@@ -43,10 +43,10 @@ const TrackItemInfo: FC<ListItemAlbumProps> = ({
       {type === "history" ? (
         <>
           <div className="text-[12px] font-medium">
-            {FormatNumber.time((track as NeteaseHistory).time)}
+            {RendererFormat.time((track as NeteaseHistory).time)}
           </div>
           <div className="text-[12px] font-medium">
-            {FormatNumber.duration((track as NeteaseHistory).playDuration, "s")} /{" "}
+            {RendererFormat.duration((track as NeteaseHistory).playDuration, "s")} /{" "}
             {track.detail.formatDuration()}
           </div>
         </>

@@ -1,7 +1,7 @@
 import { type FC, memo, type ReactEventHandler, useCallback, useMemo } from "react";
-import { NeteaseAlbum, NeteaseNetworkImage } from "../../../../source/netease/models";
-import { NeteaseImageSize } from "../../../../enum";
-import NeteaseImage from "../../../image/netease-image";
+import { NeteaseAlbum, NeteaseNetworkImage } from "@/common/source/netease/models";
+import { NeteaseImageSize } from "@/common/enum";
+import NeteaseImage from "@/common/components/image/netease-image";
 
 interface TopCoverProps {
   album: Nullable<NeteaseAlbum>;

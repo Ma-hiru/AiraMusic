@@ -1,13 +1,10 @@
 import { type FC, memo } from "react";
 import { AudioLines, AudioWaveform, Dock, Gauge } from "lucide-react";
-import {
-  NeteaseSettings,
-  type NeteaseSettingsModel
-} from "@mahiru/ui/common/source/netease/models";
+import { NeteaseSettings, type NeteaseSettingsModel } from "@/common/source/netease/models";
 
 import ToggleRow from "./toggle-row";
-import Card from "../../../card/card";
-import RangeRow from "@mahiru/ui/common/components/page/settings/content/range-row";
+import Card from "@/common/components/card";
+import RangeRow from "@/common/components/page/settings/content/range-row";
 
 export interface PerformanceSettings {
   data: NeteaseSettings["performance"];

@@ -1,5 +1,5 @@
-import { apiRequest } from "../../../source/netease/api/request";
-import { SearchType } from "../../../enum/search";
+import { apiRequest } from "@/common/source/netease/api/request";
+import { SearchType } from "@/common/enum/search";
 
 export default class _NeteaseSearchAPI {
   /**

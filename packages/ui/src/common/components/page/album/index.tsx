@@ -7,20 +7,20 @@ import {
   useImperativeHandle,
   useRef
 } from "react";
-import { NeteaseAlbum, NeteaseHistory, NeteaseTrackRecord } from "../../../source/netease/models";
+import { NeteaseAlbum, NeteaseHistory, NeteaseTrackRecord } from "@/common/source/netease/models";
 import { cx } from "@emotion/css";
-import { NeteaseImageSize, PlaylistSource } from "../../../enum";
-import { type HeartManager } from "../../../hooks/use-heart";
-import { NeteaseServicesAlbum } from "../../../source/netease/services";
-import { useRequestAutoRun, useRequestStatusWrap } from "../../../hooks/use-request-wrap";
-import AppContextMenu from "../../../components/menu";
-import ImageConstants from "@mahiru/ui/common/constants/image";
+import { NeteaseImageSize, PlaylistSource } from "@/common/enum";
+import { type HeartManager } from "@/common/hooks/use-heart";
+import { NeteaseServicesAlbum } from "@/common/source/netease/services";
+import { useRequestAutoRun, useRequestStatusWrap } from "@/common/hooks/use-request-wrap";
+import AppContextMenu from "@/common/components/menu";
+import RendererImageConstants from "@/common/constants/image";
 
 import Top from "./top";
 import Divider from "./divider";
-import AppLoading from "../../fallback/app-loading";
-import AppErrorBoundary from "../../fallback/app-error-boundary";
-import ThrowIf from "../../fallback/throw-if";
+import AppLoading from "@/common/components/fallback/app-loading";
+import AppErrorBoundary from "@/common/components/fallback/app-error-boundary";
+import ThrowIf from "@/common/components/fallback/throw-if";
 import TrackList, {
   type TrackListPlayableManager,
   type TrackListRef
@@ -177,7 +177,7 @@ const Album: FC<AlbumPageProps> = ({
               onRangeUpdate={onRangeUpdate}
               onClickAlbum={onClickAlbum}
               onClickArtist={onClickArtist}
-              trackCoverSize={ImageConstants.PlaylistPageTrackCoverSize}
+              trackCoverSize={RendererImageConstants.PlaylistPageTrackCoverSize}
             />
           )}
         </AppLoading>

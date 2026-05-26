@@ -1,5 +1,5 @@
-import { Log } from "@mahiru/ui/common/constants/dev";
-import _AppWindow from "../source/electron/services/window";
+import { Log } from "@/common/lib/log";
+import _AppWindow from "@/common/source/electron/services/window";
 
 interface CanInit {
   _init: () => void;

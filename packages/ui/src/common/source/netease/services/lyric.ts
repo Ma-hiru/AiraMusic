@@ -1,7 +1,7 @@
-import { NeteaseAPILyric } from "../../../source/netease/api";
-import { Log } from "@mahiru/ui/common/constants/dev";
-import { NeteaseLyric, NeteaseTrack } from "../../../source/netease/models";
-import { CacheStore } from "../../../store/cache";
+import { NeteaseAPILyric } from "@/common/source/netease/api";
+import { Log } from "@/common/lib/log";
+import { NeteaseLyric, NeteaseTrack } from "@/common/source/netease/models";
+import { CacheStore } from "@/common/store/cache";
 
 export default class _NeteaseLyricSource {
   //region cache

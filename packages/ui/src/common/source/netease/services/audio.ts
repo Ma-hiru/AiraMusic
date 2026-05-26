@@ -1,10 +1,10 @@
-import { CacheStore } from "../../../store/cache";
-import { TrackQuality } from "../../../enum";
+import { CacheStore } from "@/common/store/cache";
+import { TrackQuality } from "@/common/enum";
 import {
   NeteaseLocalAudio,
   NeteaseNetworkAudio,
   NeteaseTrack
-} from "../../../source/netease/models";
+} from "@/common/source/netease/models";
 
 export default class _NeteaseAudioSource {
   //region cache
