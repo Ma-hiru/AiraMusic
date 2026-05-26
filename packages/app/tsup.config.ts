@@ -1,6 +1,6 @@
 import AppEnv from "../../scripts/env";
 import path from "node:path";
-import { defineConfig } from "tsup";
+import { defineConfig, type Options } from "tsup";
 import { generateLogo } from "../../scripts/logo";
 import { fileURLToPath } from "node:url";
 
@@ -21,41 +21,54 @@ function genDefine(mode: string) {
 // noinspection JSUnusedGlobalSymbols
 export default defineConfig((options) => {
   const mode = options.watch ? "development" : "production";
+  const baseOptions: Options = {
+    format: ["esm"],
+    platform: "node",
+    target: "node20",
+    bundle: true,
+    sourcemap: mode === "development",
+    clean: mode === "production",
+    minify: mode === "production",
+    dts: false,
+    external: ["electron", "esbuild", "esbuild/*", "node:*", "window"],
+    noExternal: ["@mahiru/*"],
+    esbuildOptions: (esbuildOptions) => {
+      esbuildOptions.alias = {
+        ...(esbuildOptions.alias || {}),
+        "@": path.resolve(__dirname, "./src") // src
+      };
+      esbuildOptions.define = {
+        ...(esbuildOptions.define || {}),
+        ...genDefine(mode)
+      };
+      esbuildOptions.banner = {
+        ...(esbuildOptions.banner || {}),
+        js: [
+          "import { createRequire as createRequireBanner } from 'node:module';",
+          "const require = createRequireBanner(import.meta.url);",
+          esbuildOptions.banner?.js || ""
+        ]
+          .filter(Boolean)
+          .join("\n")
+      };
+      return esbuildOptions;
+    }
+  };
   return [
     {
       entry: ["src/main.ts"],
       outDir: "dist/app",
-      format: ["esm"],
-      platform: "node",
-      target: "node20",
-      bundle: true,
-      sourcemap: mode === "development",
-      clean: mode === "production",
-      minify: mode === "production",
-      dts: false,
-      external: ["electron", "esbuild", "esbuild/*", "node:*", "window"],
-      noExternal: ["@mahiru/*"],
-      esbuildOptions: (esbuildOptions) => {
-        esbuildOptions.alias = {
-          ...(esbuildOptions.alias || {}),
-          "@": path.resolve(__dirname, "./src") // src
-        };
-        esbuildOptions.define = {
-          ...(esbuildOptions.define || {}),
-          ...genDefine(mode)
-        };
-        esbuildOptions.banner = {
-          ...(esbuildOptions.banner || {}),
-          js: [
-            "import { createRequire as createRequireBanner } from 'node:module';",
-            "const require = createRequireBanner(import.meta.url);",
-            esbuildOptions.banner?.js || ""
-          ]
-            .filter(Boolean)
-            .join("\n")
-        };
-        return esbuildOptions;
-      }
+      ...baseOptions
+    },
+    {
+      entry: ["src/services/ncm/child.ts"],
+      outDir: "dist/app/ncm",
+      ...baseOptions
+    },
+    {
+      entry: ["src/services/proxy/child.ts"],
+      outDir: "dist/app/proxy",
+      ...baseOptions
     },
     {
       entry: ["src/preload/index.ts"],

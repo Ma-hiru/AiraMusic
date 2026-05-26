@@ -265,7 +265,7 @@ export class RendererWindow extends Listenable<RendererWindowEvent> {
   }
 
   devTools() {
-     import.meta.env.DEV && RendererIPC.Event("openInternalDevTools", this.type);
+    import.meta.env.DEV && RendererIPC.Event("openInternalDevTools", this.type);
   }
 
   close() {

@@ -7,11 +7,9 @@ import {
   SquareMinus,
   X
 } from "lucide-react";
-import { RendererRuntime } from "@/common/lib/runtime";
 import { useListenable } from "@/common/hooks/use-listenable";
 import { RendererWindow } from "@/common/lib/window";
 import AppEntry from "@/wins/main/entry";
-
 import NoDrag from "@/common/components/drag/no-drag";
 
 const TopControl: FC = () => {
@@ -47,7 +45,7 @@ const TopControl: FC = () => {
   return (
     <NoDrag className="flex flex-row gap-4 select-none">
       <ControlButton
-        show={ import.meta.env.DEV}
+        show={import.meta.env.DEV}
         Icon={AppWindowIcon}
         onClick={() => currentWindow.devTools()}
       />

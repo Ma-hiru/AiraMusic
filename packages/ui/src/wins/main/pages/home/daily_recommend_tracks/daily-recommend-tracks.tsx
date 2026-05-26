@@ -3,10 +3,8 @@ import { type FC, memo, useCallback, useEffect, useRef } from "react";
 import { NeteaseAPITrack } from "@/common/netease/api";
 import { useRequestAutoRetry, useRequestStatusWrap } from "@/common/hooks/use-request-wrap";
 import { backgroundCoverAtom } from "@/wins/main/atoms/theme";
-
 import RecommendTrackTitle from "./recommend-track-title";
 import RecommendTrackList from "./list";
-import { type AppErrorBoundaryRef } from "@/common/components/fallback/app-error-boundary";
 import AppLoading from "@/common/components/fallback/app-loading";
 import AppError from "@/common/components/fallback/app-error";
 
@@ -21,7 +19,6 @@ const DailyRecommendTracks: FC<object> = () => {
   );
   const { reload } = useRequestAutoRetry(fetchData, [], () => recommend.length !== 0);
 
-  const errRef = useRef<AppErrorBoundaryRef>({});
   const containerRef = useRef<HTMLDivElement>(null);
 
   const lastPage = useCallback(() => {
