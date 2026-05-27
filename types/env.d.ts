@@ -13,7 +13,6 @@ interface ENV {
   readonly APP_NAME: string;
   readonly APP_DESC: string;
   readonly APP_SCHEME: string;
-  readonly APP_PROTOCOL: string;
   readonly APP_SCHEME_FILE_HOSTNAME: string;
 }
 

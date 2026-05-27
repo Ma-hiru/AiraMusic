@@ -1,5 +1,5 @@
 import { RendererIPC } from "@/common/lib/ipc";
-import Init from "@/common/utils/init";
+import { initAsync } from "@/common/utils/init";
 
 export class RendererRuntime {
   static id = "";
@@ -11,4 +11,4 @@ export class RendererRuntime {
   }
 }
 
-Init.initMicrotask(RendererRuntime);
+initAsync(RendererRuntime);

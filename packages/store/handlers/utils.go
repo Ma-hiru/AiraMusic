@@ -1,4 +1,4 @@
-package handler
+package handlers
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 	"log"
 	"net/http"
 	neturl "net/url"
-	"store/file"
+	"store/core"
 	"store/utils"
 	"strconv"
 	"strings"
@@ -48,16 +48,16 @@ func getOptionQuery(ctx *gin.Context) (update bool, timeLimit int64) {
 	return
 }
 
-func download(id, url, method string, body io.Reader, header http.Header) file.Index {
+func download(id, url, method string, body io.Reader, header http.Header) core.Index {
 	if url == "" {
-		return file.Index{}
+		return core.Index{}
 	}
 	var httpClient = http.DefaultClient
 	// 创建新请求 保留原始请求的方法和头
 	var request, err = http.NewRequest(method, url, body)
 	if err != nil {
 		log.Println(err)
-		return file.Index{}
+		return core.Index{}
 	}
 	// 复制请求头
 	for key, values := range header {
@@ -68,7 +68,7 @@ func download(id, url, method string, body io.Reader, header http.Header) file.I
 	resp, err := httpClient.Do(request)
 	if err != nil {
 		log.Println(err)
-		return file.Index{}
+		return core.Index{}
 	}
 	defer resp.Body.Close() //nolint:errcheck
 	// 读取元数据
@@ -97,23 +97,23 @@ func download(id, url, method string, body io.Reader, header http.Header) file.I
 		etag, reader, err = utils.PeekForHash(resp.Body)
 		if err != nil {
 			log.Println(err)
-			return file.Index{}
+			return core.Index{}
 		}
 	}
 	// 开始缓存
-	var store = file.GetStore()
+	var store = core.GetStore()
 	var buffer = make([]byte, 32*1024)
 	var writer = store.BeginWrite(url, fileName, fileType, fileSize, etag, lastModified)
 	if writer == utils.BlankWriter {
 		log.Println("already exits writing for:", url)
-		return file.Index{}
+		return core.Index{}
 	}
 
 	written, err := io.CopyBuffer(writer, reader, buffer)
 	if err != nil {
 		store.EndWrite(id, url, false)
 		log.Println("error storing file:", err)
-		return file.Index{}
+		return core.Index{}
 	}
 
 	// 处理断点续传
@@ -138,7 +138,7 @@ func download(id, url, method string, body io.Reader, header http.Header) file.I
 			if err != nil {
 				store.EndWrite(id, url, false)
 				log.Println("range request error:", err)
-				return file.Index{}
+				return core.Index{}
 			}
 
 			n, err := io.CopyBuffer(writer, rangeResp.Body, buffer)
@@ -147,7 +147,7 @@ func download(id, url, method string, body io.Reader, header http.Header) file.I
 			if err != nil {
 				store.EndWrite(id, url, false)
 				log.Println("range write error:", err)
-				return file.Index{}
+				return core.Index{}
 			}
 
 			written += n
@@ -162,7 +162,7 @@ func download(id, url, method string, body io.Reader, header http.Header) file.I
 
 func fetch(ctx *gin.Context) {
 	var id, _ = getRequireQuery(ctx)
-	var store = file.GetStore()
+	var store = core.GetStore()
 	var index, ok = store.Check(id)
 	if !ok {
 		ctx.Status(404)

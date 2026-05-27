@@ -1,9 +1,10 @@
 import { app, utilityProcess, type UtilityProcess } from "electron";
 import { fileURLToPath } from "node:url";
 import { Log } from "@/lib/log";
+import { type MainServicesType, MainServicesInstance } from "@/types/service";
 
 export type MainChildEntryOptions = {
-  serviceName: string;
+  serviceName: MainServicesType;
   childPath: string;
   metaUrl: string;
   env?: NodeJS.ProcessEnv;
@@ -12,12 +13,12 @@ export type MainChildEntryOptions = {
   onError: NormalFunc<[err: Error]>;
 };
 
-export abstract class MainChildEntry<
+export abstract class MainChildService<
   ParentMessage extends { type: "start" | "stop" },
   ChildMessage extends { type: string }
-> {
+> extends MainServicesInstance {
   readonly childPath: string;
-  readonly serviceName: string;
+  readonly serviceName: MainServicesType;
   readonly onError: NormalFunc<[err: Error]>;
   readonly stopTimeout: number;
   readonly env?: NodeJS.ProcessEnv;
@@ -27,7 +28,8 @@ export abstract class MainChildEntry<
   protected startPromise?: Promise<void>;
   protected stopping = false;
 
-  constructor(options: MainChildEntryOptions) {
+  protected constructor(options: MainChildEntryOptions) {
+    super();
     this.serviceName = options.serviceName;
     this.childPath = fileURLToPath(new URL(options.childPath, options.metaUrl));
     this.onError = options.onError;
@@ -37,6 +39,10 @@ export abstract class MainChildEntry<
     if (options.autoStart ?? true) {
       this.startPromise = this.start();
     }
+  }
+
+  override name() {
+    return this.serviceName;
   }
 
   async ready() {
@@ -63,7 +69,7 @@ export abstract class MainChildEntry<
     this.starting = false;
   }
 
-  async stop() {
+  override async stop() {
     const child = this.child;
     if (!child) return;
 

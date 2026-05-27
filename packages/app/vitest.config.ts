@@ -8,9 +8,8 @@ const __dirname = fileURLToPath(new URL(".", import.meta.url));
 export default defineConfig({
   resolve: {
     alias: {
-      // packages/app 不需要使用vite打包，所以不会 "@" 别名冲突
       "@mahiru/app": join(__dirname, "src"), // vitest
-      "@": join(__dirname, "tests") // vitest
+      "@": join(__dirname, "src") // vitest => import src(inner)
     }
   },
   test: {

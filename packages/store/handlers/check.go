@@ -1,7 +1,7 @@
-package handler
+package handlers
 
 import (
-	"store/file"
+	"store/core"
 
 	"github.com/gin-gonic/gin"
 )
@@ -9,12 +9,12 @@ import (
 func Check(ctx *gin.Context) {
 	var id, _ = getRequireQuery(ctx)
 	var _, timeLimit = getOptionQuery(ctx)
-	var store = file.GetStore()
+	var store = core.GetStore()
 	var index, ok = store.Check(id)
 	if !ok || timeLimit > 0 && index.IsExpiredMill(timeLimit) {
 		ctx.JSON(200, gin.H{
 			"ok":    false,
-			"index": file.Index{},
+			"index": core.Index{},
 		})
 		return
 	}
@@ -45,7 +45,7 @@ func CheckMulti(ctx *gin.Context) {
 		return
 	}
 
-	var store = file.GetStore()
+	var store = core.GetStore()
 	var result = make([]gin.H, 0, len(requestParam.Items))
 	var timeLimit = requestParam.TimeLimit
 	for _, item := range requestParam.Items {
@@ -53,7 +53,7 @@ func CheckMulti(ctx *gin.Context) {
 		if !ok {
 			result = append(result, gin.H{
 				"ok":    false,
-				"index": file.Index{},
+				"index": core.Index{},
 			})
 			continue
 		}
@@ -61,7 +61,7 @@ func CheckMulti(ctx *gin.Context) {
 		if needUpdate {
 			result = append(result, gin.H{
 				"ok":    false,
-				"index": file.Index{},
+				"index": core.Index{},
 			})
 			continue
 		}

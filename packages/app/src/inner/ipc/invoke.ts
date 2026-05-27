@@ -2,11 +2,15 @@ import { app, BrowserWindow, dialog } from "electron";
 import { MainWindowManager } from "@/lib/window-manager";
 import { MainRuntime } from "@/lib/runtime";
 import { MainScreenResolver } from "@/lib/screen-resolver";
+import { MainKeyValueStore } from "@/lib/key-value-store";
+import { Log } from "@/lib/log";
 import type { InvokeHandlers } from "@mahiru/ipc/main";
 import Dns from "node:dns/promises";
 import Net from "node:net";
 import Https from "node:https";
 import Fs from "node:fs/promises";
+import { MainCacheStoreConstants } from "@/constants/store";
+import { mergeCacheStoreConfig } from "@/utils/merge";
 
 export const invokeHandlers: InvokeHandlers = {
   selectPath: async (_, type) => {
@@ -141,5 +145,18 @@ export const invokeHandlers: InvokeHandlers = {
       ...(sender?.getBounds() ?? {})
     };
   },
-  runtimeID: () => MainRuntime.id
+  runtimeID: () => MainRuntime.id,
+  updateCacheStoreConfig: (e, config) => {
+    try {
+      const res = mergeCacheStoreConfig(config);
+      if (res.ok) MainKeyValueStore.set("cache", res.config);
+      return res;
+    } catch (err) {
+      Log.error("invoke(updateCacheStoreConfig)", err);
+      return { ok: false, reason: "配置修改错误" };
+    }
+  },
+  fetchCacheStoreConfig: () => {
+    return MainKeyValueStore.get("cache", MainCacheStoreConstants.DEFAULT_CONFIG);
+  }
 };

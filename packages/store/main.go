@@ -5,20 +5,21 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"store/args"
 	"store/cmd"
-	"store/env"
-	"store/file"
+	"store/core"
 	"store/routes"
 	"syscall"
 )
 
 func main() {
-	var flags = env.LoadFlags()
+	var flags = args.LoadArgs()
 
-	go cmd.InitStore(flags.Path, file.StoreOption{
+	go cmd.InitStore(flags.Path, core.StoreOption{
 		FileScheme:     flags.Scheme,
-		FileSchemeHost: flags.SchemeHostname,
+		FileSchemeHost: flags.AssetsHostname,
 		TimeLimit:      flags.Ttl,
+		Capacity:       flags.Capacity,
 	})
 
 	go cmd.InitHTTP("127.0.0.1:"+fmt.Sprint(flags.Port), flags.Key, routes.RegisterRoutes)

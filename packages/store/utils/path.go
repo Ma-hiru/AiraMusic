@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 )
@@ -46,4 +47,13 @@ func FilePathToSchemeURL(path, scheme, schemeHostname string) string {
 		return fmt.Sprintf("%s://%s/%s", scheme, schemeHostname, encoded)
 	}
 	return encoded
+}
+
+// GetDefaultStorePath 获取默认的存储路径，通常位于用户的缓存目录下。
+func GetDefaultStorePath() string {
+	var userCachePath, err = os.UserCacheDir()
+	if err != nil {
+		userCachePath = os.TempDir()
+	}
+	return filepath.Join(userCachePath, "mahiru", "music")
 }

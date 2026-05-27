@@ -71,47 +71,20 @@ class ProxyChildService {
       };
 
       app.use("/", express.static(message.staticUIDir));
-
-      app.get("/login", serveHtml("login.html"));
-      app.get("/info", serveHtml("info.html"));
-      app.get("/lyric", serveHtml("lyric.html"));
-      app.get("/image", serveHtml("image.html"));
       app.get("/tray", serveHtml("tray.html"));
       app.get("/mini", serveHtml("mini.html"));
-
       app.use(
         "/api",
         expressProxy(`http://127.0.0.1:${message.ncmPort}`, {
           timeout: 15000
         })
       );
-
       app.use(
         "/cache",
         expressProxy(`http://127.0.0.1:${message.storePort}`, {
           timeout: 15000
         })
       );
-
-      app.post("/log", express.text({ type: "application/json" }), (req, res) => {
-        try {
-          if (typeof req.body === "string") {
-            const { type = "", text = "" } = JSON.parse(req.body || "{}") as Record<string, string>;
-
-            this.send({
-              type: "log",
-              payload: {
-                type,
-                text
-              }
-            });
-          }
-        } catch (err) {
-          this.sendError(err);
-        }
-
-        res.sendStatus(204);
-      });
 
       this.instance = app.listen(message.port, "127.0.0.1");
 

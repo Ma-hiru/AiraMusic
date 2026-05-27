@@ -1,22 +1,22 @@
-package handler
+package handlers
 
 import (
 	"encoding/json"
 	"log"
 	"store/cmd"
-	"store/file"
+	"store/core"
 
 	"github.com/gin-gonic/gin"
 )
 
 func Remove(ctx *gin.Context) {
 	var id, _ = getRequireQuery(ctx)
-	var store = file.GetStore()
+	var store = core.GetStore()
 	var index, ok = store.Check(id)
 	if !ok {
 		ctx.JSON(200, gin.H{
 			"ok":    false,
-			"index": file.Index{},
+			"index": core.Index{},
 		})
 		return
 	}
@@ -24,7 +24,7 @@ func Remove(ctx *gin.Context) {
 	if err != nil {
 		ctx.JSON(200, gin.H{
 			"ok":    false,
-			"index": file.Index{},
+			"index": core.Index{},
 		})
 		log.Println(err)
 		return
@@ -37,7 +37,7 @@ func Remove(ctx *gin.Context) {
 
 func RemoveAsync(ctx *gin.Context) {
 	var id, _ = getRequireQuery(ctx)
-	var store = file.GetStore()
+	var store = core.GetStore()
 	var index, ok = store.Check(id)
 	if !ok {
 		ctx.JSON(200, gin.H{
@@ -69,14 +69,14 @@ func RemoveMulti(ctx *gin.Context) {
 		})
 		return
 	}
-	var store = file.GetStore()
+	var store = core.GetStore()
 	var results = make([]gin.H, 0, len(requestParam.Ids))
 	for _, id := range requestParam.Ids {
 		var index, ok = store.Check(id)
 		if !ok {
 			results = append(results, gin.H{
 				"ok":    false,
-				"index": file.Index{},
+				"index": core.Index{},
 			})
 			continue
 		}
@@ -84,7 +84,7 @@ func RemoveMulti(ctx *gin.Context) {
 		if err != nil {
 			results = append(results, gin.H{
 				"ok":    false,
-				"index": file.Index{},
+				"index": core.Index{},
 			})
 			log.Println(err)
 			continue
@@ -102,7 +102,7 @@ func RemoveMulti(ctx *gin.Context) {
 }
 
 func Clear(ctx *gin.Context) {
-	var store = file.GetStore()
+	var store = core.GetStore()
 	count, err := store.Clear()
 	if err != nil {
 		ctx.Status(500)
@@ -116,7 +116,7 @@ func Clear(ctx *gin.Context) {
 }
 
 func Count(ctx *gin.Context) {
-	var store = file.GetStore()
+	var store = core.GetStore()
 	var count = store.Count()
 	ctx.JSON(200, gin.H{
 		"ok":    true,
@@ -125,7 +125,7 @@ func Count(ctx *gin.Context) {
 }
 
 func Info(ctx *gin.Context) {
-	var store = file.GetStore()
+	var store = core.GetStore()
 	var size = store.Size()
 	var count = store.Count()
 	var path = store.Path()
@@ -138,7 +138,7 @@ func Info(ctx *gin.Context) {
 }
 
 func RemoveInvalid(ctx *gin.Context) {
-	var store = file.GetStore()
+	var store = core.GetStore()
 	var err = store.ClearInvalidFile()
 	if err != nil {
 		ctx.Status(500)
@@ -151,7 +151,7 @@ func RemoveInvalid(ctx *gin.Context) {
 }
 
 func Size(ctx *gin.Context) {
-	var store = file.GetStore()
+	var store = core.GetStore()
 	var size = store.Size()
 	ctx.JSON(200, gin.H{
 		"ok":   true,
@@ -160,7 +160,7 @@ func Size(ctx *gin.Context) {
 }
 
 func SizeCategories(ctx *gin.Context) {
-	var store = file.GetStore()
+	var store = core.GetStore()
 	var image, audio, video, other = store.SizeByCategory()
 	ctx.JSON(200, gin.H{
 		"ok":    true,
@@ -177,8 +177,8 @@ func Move(ctx *gin.Context) {
 		ctx.SSEvent("done", "missing path parameter")
 		return
 	}
-	var store = file.GetStore()
-	var progress = make(chan file.MoveProgressChan, 100)
+	var store = core.GetStore()
+	var progress = make(chan core.MoveProgressChan, 100)
 	go func() {
 		var err = store.Move(newPath, progress)
 		if err != nil {

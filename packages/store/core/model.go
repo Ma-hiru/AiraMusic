@@ -1,4 +1,4 @@
-package file
+package core
 
 import (
 	"os"
@@ -32,6 +32,7 @@ type StoreOption struct {
 	FileScheme     string
 	FileSchemeHost string
 	TimeLimit      time.Duration
+	Capacity       uint64
 }
 
 type Index struct {

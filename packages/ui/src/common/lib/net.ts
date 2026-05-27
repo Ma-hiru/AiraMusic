@@ -2,7 +2,7 @@ import { Log } from "@/common/lib/log";
 import { Listener } from "@/common/utils/listenable";
 import { EqError } from "@mahiru/log";
 import { RendererIPC } from "@/common/lib/ipc";
-import Init from "@/common/utils/init";
+import { initAsync } from "@/common/utils/init";
 
 export class RendererNet {
   static completed: number[] = [];
@@ -103,4 +103,4 @@ export class RendererNet {
   static offOnlineChange = this.listener.remove.bind(this.listener);
 }
 
-Init.initMicrotask(RendererNet);
+initAsync(RendererNet);

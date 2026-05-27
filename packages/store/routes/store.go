@@ -1,12 +1,12 @@
 package routes
 
 import (
-	"store/handler"
+	"store/handlers"
 
 	"github.com/gin-gonic/gin"
 )
 
 func storeRoutes(app *gin.Engine) {
-	app.Any("/api/store/async", handler.StoreAsync)
-	app.POST("/api/store/async/multi", handler.StoreAsyncMulti)
+	app.Any("/api/store/async", handlers.StoreAsync)
+	app.POST("/api/store/async/multi", handlers.StoreAsyncMulti)
 }

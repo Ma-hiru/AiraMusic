@@ -22,6 +22,14 @@ export type InvokeEventMaps = {
   saveFile: [{ buffer: ArrayBuffer; name: string }, Promise<{ ok: boolean; error?: string }>];
   isFullscreen: [WindowType, boolean];
   runtimeID: [undefined, string];
+  updateCacheStoreConfig: [
+    { ttl?: string; path?: string; capacity?: number },
+    (
+      | { ok: true; config: { ttl: string; path: string; capacity: number } }
+      | { ok: false; reason: string }
+    )
+  ];
+  fetchCacheStoreConfig: [undefined, { ttl: string; path: string; capacity: number }];
 };
 
 /** Invoke 事件类型 */

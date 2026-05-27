@@ -2,113 +2,85 @@ import { LogLevel } from "@mahiru/log";
 import { Log } from "@/lib/log";
 import { MainRuntime } from "@/lib/runtime";
 import { MainPathResolver } from "@/lib/path-resolver";
+import { MainPortResolver } from "@/lib/port";
+import { MainServicesBase, type MainServicesCreator } from "@/lib/service";
+import { MainKeyValueStore } from "@/lib/key-value-store";
+import { MainCacheStoreConstants } from "@/constants/store";
+import type { MainServicesType } from "@/types/service";
 import NeteaseMusicApiService from "./ncm";
 import ProxyService from "./proxy";
 import StoreService from "./store";
 
-export type MainServicesType = "store" | "ncm" | "proxy";
-
-export class MainServices {
-  private proxyService?: ProxyService;
-  private storeService?: StoreService;
-  private neteaseMusicApiService?: NeteaseMusicApiService;
-  public onError;
-  public readonly services;
-
+export class MainServices extends MainServicesBase {
   constructor(props: {
     services: readonly MainServicesType[];
     onError: NormalFunc<[service: MainServicesType, msg: string, err?: unknown]>;
   }) {
-    this.onError = props.onError;
-    this.services = [...new Set(props.services)];
-    for (const service of this.services) {
-      switch (service) {
-        case "ncm":
-          this.createNCMService();
-          break;
-        case "store":
-          this.createStoreService();
-          break;
-        case "proxy":
-          this.createProxyService();
-          break;
-      }
-    }
+    super(props);
   }
 
-  private printServiceLog(service: MainServicesType, msg: string) {
-    Log.debug(`MainService(${service})`, msg);
+  protected override async resolvePort() {
+    const ncm = await MainPortResolver.resolve(
+      "ncm",
+      MainPortResolver.candidates({
+        preferred: MainPortResolver.parse(process.env.NCM_SERVER_PORT),
+        gap: 5,
+        count: 5
+      })
+    );
+    const proxy = await MainPortResolver.resolve(
+      "proxy",
+      MainPortResolver.candidates({
+        preferred: MainPortResolver.parse(process.env.EXPRESS_SERVER_PORT),
+        gap: 5,
+        count: 5
+      })
+    );
+    const store = await MainPortResolver.resolve(
+      "store",
+      MainPortResolver.candidates({
+        preferred: MainPortResolver.parse(process.env.GO_SERVER_PORT),
+        gap: 5,
+        count: 5
+      })
+    );
+    return { ncm, store, proxy };
   }
 
-  private createStoreService() {
-    try {
-      this.storeService = new StoreService({
-        args: {
-          scheme: process.env.APP_SCHEME!,
-          "scheme-hostname": process.env.APP_SCHEME_FILE_HOSTNAME!
-        },
+  protected override readonly creators: Record<MainServicesType, MainServicesCreator> = {
+    store: (ports) => {
+      const { capacity, path, ttl } = MainKeyValueStore.get(
+        "cache",
+        MainCacheStoreConstants.DEFAULT_CONFIG
+      );
+      return new StoreService({
+        ttl,
+        capacity,
+        serviceName: "store",
+        scheme: process.env.APP_SCHEME,
+        assetsHostname: process.env.APP_SCHEME_FILE_HOSTNAME,
+        storePath: path,
+        port: ports.store,
         path: MainPathResolver.storeServerBinaryPath,
-        port: Number(process.env.GO_SERVER_PORT!),
         token: MainRuntime.storeAccessToken,
         enableConsole: Log.EnvLevel <= LogLevel.DEBUG,
         logger: (data) => this.printServiceLog("store", data.toString()),
         onExit: (code) => this.onError("store", `exited with code ${code}`)
       });
-    } catch (err) {
-      this.onError("store", "create error", err);
-    }
-  }
-
-  private createNCMService() {
-    try {
-      this.neteaseMusicApiService = new NeteaseMusicApiService({
-        onError: (err) => this.onError("ncm", "create error", err),
-        port: Number(process.env.NCM_SERVER_PORT)
+    },
+    ncm: (ports) => {
+      return new NeteaseMusicApiService({
+        onError: (err: Error) => this.onError("ncm", "create error", err),
+        port: ports.ncm
       });
-    } catch (err) {
-      this.onError("ncm", "create error", err);
-    }
-  }
-
-  private createProxyService() {
-    try {
-      const port = Number(process.env.EXPRESS_SERVER_PORT);
-      const ncmPort = Number(process.env.NCM_SERVER_PORT);
-      const storePort = Number(process.env.GO_SERVER_PORT);
-      this.proxyService = new ProxyService({
-        onError: (err) => this.onError("proxy", "internal error", err),
-        port,
-        ncmPort,
-        storePort
+    },
+    proxy: ({ ncm, store, proxy }) => {
+      return new ProxyService({
+        onError: (err: Error) => this.onError("proxy", "internal error", err),
+        port: proxy,
+        ncmPort: ncm,
+        storePort: store
       });
-    } catch (err) {
-      this.onError("proxy", "create error", err);
     }
-  }
-
-  private checkService(service: MainServicesType) {
-    const started = this.services.includes(service);
-    if (!started) return false;
-    switch (service) {
-      case "ncm":
-        return !!this.neteaseMusicApiService;
-      case "proxy":
-        return !!this.proxyService;
-      case "store":
-        return !!this.storeService;
-    }
-  }
-
-  stopService(service: MainServicesType) {
-    if (!this.checkService(service)) return Promise.resolve();
-    switch (service) {
-      case "store":
-        return this.storeService!.stop();
-      case "ncm":
-        return this.neteaseMusicApiService!.stop();
-      case "proxy":
-        this.proxyService!.stop();
-        return Promise.resolve();
-    }
-  }
+  };
 }

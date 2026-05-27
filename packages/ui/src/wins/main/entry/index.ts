@@ -49,8 +49,8 @@ export default class AppEntry {
 
   private static setupMini() {
     RendererOnce.do("setupMini", () => {
-      const miniWindow = RendererWindow.get("miniplayer");
       setTimeout(async () => {
+        const miniWindow = RendererWindow.get("miniplayer");
         if (!miniWindow.opened) {
           await miniWindow.openAwait();
           AppEntry.busUpdater?.();

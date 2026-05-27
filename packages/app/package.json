@@ -20,7 +20,8 @@
     "express": "^5.1.0",
     "express-http-proxy": "^2.1.2",
     "lodash-es": "4.17.23",
-    "mime": "^4.1.0"
+    "mime": "^4.1.0",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@mahiru/ipc": "workspace:*",
@@ -28,6 +29,7 @@
     "@mahiru/store": "workspace:*",
     "@types/express": "^5.0.0",
     "@types/express-http-proxy": "^1.6.7",
-    "electron": "40.6.1"
+    "electron": "40.6.1",
+    "tsx": "^4.22.3"
   }
 }

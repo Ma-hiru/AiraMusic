@@ -2,25 +2,25 @@ package routes
 
 import (
 	"net/http"
-	"store/handler"
+	"store/handlers"
 
 	"github.com/gin-gonic/gin"
 )
 
 func otherRoutes(app *gin.Engine) {
-	app.GET("/api/remove", handler.Remove)
-	app.GET("/api/remove/async", handler.RemoveAsync)
-	app.POST("/api/remove/multi", handler.RemoveMulti)
-	app.GET("/api/remove/invalid", handler.RemoveInvalid)
-	app.GET("/api/size", handler.Size)
-	app.GET("/api/size/categories", handler.SizeCategories)
-	app.GET("/api/clear", handler.Clear)
-	app.GET("/api/count", handler.Count)
-	app.GET("/api/info", handler.Info)
-	app.GET("/api/move", handler.Move)
-	app.GET("/api/cancel", handler.Cancel)
-	app.POST("/api/cancel/multi", handler.CancelMulti)
-	app.GET("/api/exit", handler.Exit)
+	app.GET("/api/remove", handlers.Remove)
+	app.GET("/api/remove/async", handlers.RemoveAsync)
+	app.POST("/api/remove/multi", handlers.RemoveMulti)
+	app.GET("/api/remove/invalid", handlers.RemoveInvalid)
+	app.GET("/api/size", handlers.Size)
+	app.GET("/api/size/categories", handlers.SizeCategories)
+	app.GET("/api/clear", handlers.Clear)
+	app.GET("/api/count", handlers.Count)
+	app.GET("/api/info", handlers.Info)
+	app.GET("/api/move", handlers.Move)
+	app.GET("/api/cancel", handlers.Cancel)
+	app.POST("/api/cancel/multi", handlers.CancelMulti)
+	app.GET("/api/exit", handlers.Exit)
 	app.GET("/.well-known/appspecific/com.chrome.devtools.json", func(c *gin.Context) {
 		c.Status(http.StatusNoContent)
 	})

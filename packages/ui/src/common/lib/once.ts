@@ -2,7 +2,7 @@ import { Log } from "@/common/lib/log";
 import { CacheStore } from "@/common/store/cache";
 import { RendererRuntime } from "@/common/lib/runtime";
 import { RendererWindow } from "@/common/lib/window";
-import Init from "@/common/utils/init";
+import { initAsync } from "@/common/utils/init";
 
 type OnceRecordCache = {
   id: string;
@@ -53,4 +53,4 @@ export class RendererOnce {
   }
 }
 
-Init.initMicrotask(RendererOnce);
+initAsync(RendererOnce);

@@ -60,7 +60,7 @@ export class MainWindowCreator {
   }
 
   private static getMemoPos(id: WindowType) {
-    return MainKeyValueStore.get(id) || { x: 0, y: 0, width: 0, height: 0 };
+    return MainKeyValueStore.get(id, { x: 0, y: 0, width: 0, height: 0 });
   }
 
   private static loadURL(win: BrowserWindow, loadURL: NormalFunc<[port: number], string>) {

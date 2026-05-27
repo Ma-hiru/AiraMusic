@@ -6,8 +6,7 @@
     "noEmit": true,
     "tsBuildInfoFile": "../node_modules/.buildinfo-tests",
     "paths": {
-      "@mahiru/app/*": ["../src/*"],
-      "@/*": ["./*"]
+      "@mahiru/app/*": ["../src/*"]
     }
   },
   "references": [

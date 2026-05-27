@@ -1,55 +1,28 @@
 import { Log } from "@/common/lib/log";
-import { RendererWindow } from "@/common/lib/window";
 
-interface CanInit {
-  _init: () => void;
+export interface CanInit {
+  _init(): void | Promise<void>;
 }
 
-type InitOptions =
-  | {
-      onError?: (e: unknown) => void;
-    }
-  | {
-      panic: boolean;
-      panicMessage: string;
-      onError?: (e: unknown) => void;
-    };
+export function initAsync(object: CanInit) {
+  const init = wrap(() => object._init());
+  if (queueMicrotask == null) {
+    setTimeout(init, 0);
+    return;
+  }
+  queueMicrotask(init);
+}
 
-export default class Init {
-  private static execute(obj: CanInit, options: InitOptions = {}) {
+export function initSync(object: CanInit) {
+  wrap(() => object._init())();
+}
+
+function wrap(init: NormalFunc) {
+  return () => {
     try {
-      obj._init();
-    } catch (e) {
-      Log.error({
-        label: "init",
-        message: "init error",
-        raw: e
-      });
-
-      if (options.onError) options.onError(e);
-      if ("panic" in options && options.panic)
-        RendererWindow.panic(options.panicMessage ?? "init error");
+      init();
+    } catch (err) {
+      Log.error("init", err);
     }
-  }
-  static initMicrotask(obj: CanInit, options: InitOptions = {}) {
-    window.queueMicrotask(() => {
-      this.execute(obj, options);
-    });
-  }
-
-  static initNextIdle(obj: CanInit, options: InitOptions = {}) {
-    window.requestIdleCallback(() => {
-      this.execute(obj, options);
-    });
-  }
-
-  static initNextFrame(obj: CanInit, options: InitOptions = {}) {
-    window.requestAnimationFrame(() => {
-      this.execute(obj, options);
-    });
-  }
-
-  static initSync(obj: CanInit, options: InitOptions = {}) {
-    this.execute(obj, options);
-  }
+  };
 }

@@ -14,7 +14,7 @@ export class MainPathResolver {
   }
 
   static appUserDataJoin(...paths: string[]) {
-    return join(app.getPath("userData"), ...paths);
+    return join(app.getPath("userData"), "inner", ...paths);
   }
 
   static appLogoPath = isDev

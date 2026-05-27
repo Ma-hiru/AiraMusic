@@ -1,7 +1,7 @@
-package handler
+package handlers
 
 import (
-	"store/file"
+	"store/core"
 
 	"github.com/gin-gonic/gin"
 )
@@ -9,14 +9,14 @@ import (
 func CheckOrStoreAsync(ctx *gin.Context) {
 	var id, url = getRequireQuery(ctx)
 	var update, timeLimit = getOptionQuery(ctx)
-	var store = file.GetStore()
+	var store = core.GetStore()
 	var index, ok = store.Check(id)
 	var needUpdate = !ok || update || timeLimit > 0 && index.IsExpiredMill(timeLimit)
 	if needUpdate {
 		go download(id, url, ctx.Request.Method, ctx.Request.Body, ctx.Request.Header)
 		ctx.JSON(200, gin.H{
 			"ok":    false,
-			"index": file.Index{},
+			"index": core.Index{},
 		})
 		return
 	}
@@ -37,7 +37,7 @@ func CheckOrStoreAsyncMulti(ctx *gin.Context) {
 		return
 	}
 
-	var store = file.GetStore()
+	var store = core.GetStore()
 	var result = make([]gin.H, 0, len(requestParam.Items))
 	for _, item := range requestParam.Items {
 		var index, ok = store.Check(item.Id)
@@ -49,7 +49,7 @@ func CheckOrStoreAsyncMulti(ctx *gin.Context) {
 			}
 			result = append(result, gin.H{
 				"ok":    false,
-				"index": file.Index{},
+				"index": core.Index{},
 			})
 			continue
 		}

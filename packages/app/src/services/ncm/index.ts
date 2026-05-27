@@ -1,9 +1,9 @@
-import { MainChildEntry } from "@/lib/child";
+import { MainChildService } from "@/lib/child";
 import type { NCMChildMessage, NCMParentMessage } from "@/types/ncm.child";
 import { join } from "node:path";
 import os from "node:os";
 
-export default class NeteaseMusicApiService extends MainChildEntry<
+export default class NeteaseMusicApiService extends MainChildService<
   NCMParentMessage,
   NCMChildMessage
 > {
@@ -11,7 +11,7 @@ export default class NeteaseMusicApiService extends MainChildEntry<
 
   constructor(props: { onError: NormalFunc<[err: Error]>; port: number }) {
     super({
-      serviceName: "ncm-api",
+      serviceName: "ncm",
       childPath: "./ncm/child.mjs",
       metaUrl: import.meta.url,
       autoStart: true,

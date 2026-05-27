@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"store/file"
+	"store/core"
 	"sync"
 	"time"
 )
@@ -28,7 +28,7 @@ func Shutdown() {
 			})
 		}
 
-		if store := file.GetStore(); store != nil {
+		if store := core.GetStore(); store != nil {
 			wg.Go(func() {
 				fmt.Println("Shutting down store...")
 				_ = store.Destroy()

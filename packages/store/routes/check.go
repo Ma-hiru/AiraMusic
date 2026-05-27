@@ -1,12 +1,12 @@
 package routes
 
 import (
-	"store/handler"
+	"store/handlers"
 
 	"github.com/gin-gonic/gin"
 )
 
 func checkRoutes(app *gin.Engine) {
-	app.GET("/api/check", handler.Check)
-	app.POST("/api/check/multi", handler.CheckMulti)
+	app.GET("/api/check", handlers.Check)
+	app.POST("/api/check/multi", handlers.CheckMulti)
 }

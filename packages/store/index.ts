@@ -169,16 +169,23 @@ export default class Store {
     }
   }
 
-  static handleArgs(args: Record<string, number | string>): string[] {
+  static handleArgs(args: Record<string, number | string | null>): string[] {
     return Object.entries(args)
+      .filter((a): a is [string, number | string] => a[1] !== null)
       .map(([flag, value]) => [flag.startsWith("--") ? flag : `--${flag}`, String(value)])
       .flat();
   }
 
   static run(props: {
-    args: Record<string, string | number>;
+    args?: Record<string, string | number | null>;
     port: number;
     token: string;
+    scheme: string;
+    storePath: Nullable<string>;
+    assetsHostname: string;
+    /** eg: "24h" */
+    ttl: Nullable<string>;
+    capacity: Nullable<number>;
     logger?: NormalFunc<[msg: Buffer]>;
     enableConsole?: boolean;
     path?: string;
@@ -186,7 +193,16 @@ export default class Store {
   }) {
     if (this.instance) return this.instance;
 
-    props.args = { ...props.args, port: props.port, key: props.token };
+    props.args = {
+      ...props.args,
+      port: props.port,
+      key: props.token,
+      ttl: props.ttl,
+      scheme: props.scheme,
+      "assets-hostname": props.assetsHostname,
+      path: props.storePath,
+      capacity: props.capacity
+    };
     props.path ||= defaultServerPath;
     props.logger ||= (b: Buffer) => console.log("[store service stdout]", b.toString());
     props.enableConsole ??= true;

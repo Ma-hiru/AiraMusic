@@ -1,11 +1,11 @@
-package handler
+package handlers
 
 import (
 	"encoding/json"
 	"io"
 	"log"
 	"net/http"
-	"store/file"
+	"store/core"
 	"store/utils"
 	"strconv"
 
@@ -27,7 +27,7 @@ func StoreObject(ctx *gin.Context) {
 		return
 	}
 
-	var store = file.GetStore()
+	var store = core.GetStore()
 	var index, err = store.Store(requestParam.Id, "application/json", []byte(requestParam.Data))
 	if err != nil {
 		ctx.JSON(200, gin.H{
@@ -56,7 +56,7 @@ func StoreObjectMulti(ctx *gin.Context) {
 		})
 		return
 	}
-	var store = file.GetStore()
+	var store = core.GetStore()
 
 	for _, item := range requestParam.Items {
 		var _, err = store.Store(item.Id, "application/json", []byte(item.Data))
@@ -76,7 +76,7 @@ func FetchObject(ctx *gin.Context) {
 	var objType = ctx.Query("objType")   // object / array
 	var objField = ctx.Query("objField") // field / index / length
 
-	var store = file.GetStore()
+	var store = core.GetStore()
 	var index, ok = store.Check(id)
 	if !ok {
 		ctx.Status(http.StatusNoContent)
@@ -162,7 +162,7 @@ func FetchObjectMulti(ctx *gin.Context) {
 		})
 		return
 	}
-	var store = file.GetStore()
+	var store = core.GetStore()
 
 	var result [][]byte
 	for _, id := range requestParam.IDs {
