@@ -9,6 +9,7 @@ interface RangeRowProps {
   value: number | string;
   min: number;
   max: number;
+  unit?: string;
   step: number;
   debounced?: boolean;
   rangeValue: number;
@@ -25,6 +26,7 @@ const RangeRow: FC<RangeRowProps> = ({
   rangeValue,
   onChange,
   icon,
+  unit,
   debounced = true
 }) => {
   const debouncedHandler = useMemo(() => {
@@ -52,8 +54,12 @@ const RangeRow: FC<RangeRowProps> = ({
             className="h-2 w-full cursor-pointer accent-(--theme-color-main)"
           />
           <div className="flex items-center justify-between text-[10px] font-bold ">
-            <span>{min}</span>
-            <span>{max}</span>
+            <span>
+              {min} {unit}
+            </span>
+            <span>
+              {max} {unit}
+            </span>
           </div>
         </>
       }

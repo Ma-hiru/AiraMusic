@@ -47,6 +47,7 @@ const Performance: FC<PerformanceSettings> = ({ data, patchSettings }) => {
         title="频谱帧率"
         min={15}
         max={60}
+        unit="FPS"
         step={5}
         rangeValue={data.spectrumFps}
         value={data.spectrumFps + " FPS"}

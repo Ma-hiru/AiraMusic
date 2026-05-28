@@ -11,7 +11,6 @@
 ### 多窗口
 
 ![所有窗口](docs/images/all_windows.png)
-![双窗口](docs/images/tow_windows.png)
 
 ## 歌单
 
@@ -23,14 +22,19 @@
 ![播放页2](docs/images/player2.png)
 ![播放页3](docs/images/player3.png)
 
-## 专辑
+## 设置
 
-![专辑](docs/images/album.png)
+![设置1](docs/images/settings.png)
+![设置2](docs/images/settings2.png)
 
 ### 歌手
 
 ![歌手2](docs/images/artist.png)
 ![歌手2](docs/images/artist_album.png)
+
+## 专辑
+
+![专辑](docs/images/album.png)
 
 ## 搜索
 

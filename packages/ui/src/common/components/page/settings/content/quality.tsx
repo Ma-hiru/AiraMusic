@@ -5,20 +5,32 @@ import { NeteaseSettings } from "@/common/netease/models";
 import { TrackQuality } from "@/common/enum";
 
 import Card from "@/common/components/card";
+import AppToast from "@/common/components/toast";
 
 interface QualityProps {
+  vip: boolean;
   data: NeteaseSettings["trackQuality"];
   updateQuality: NormalFunc<[quality: TrackQuality]>;
 }
 
-const Quality: FC<QualityProps> = ({ data, updateQuality }) => {
+const Quality: FC<QualityProps> = ({ data, updateQuality, vip }) => {
   return (
     <Card title="音质" subTitle="Qulity" Icon={SlidersHorizontal}>
       <div className="mt-5 grid grid-cols-[repeat(auto-fill,minmax(8rem,1fr))] gap-3">
         {qualityOptions.map((option) => {
           const active = data.quality === option.value;
           return (
-            <Card key={option.value} onClick={() => updateQuality(option.value)}>
+            <Card
+              key={option.value}
+              onClick={() => {
+                if (option.vip && !vip) {
+                  return AppToast.show({
+                    type: "info",
+                    text: "会员专享"
+                  });
+                }
+                updateQuality(option.value);
+              }}>
               <div className="flex justify-between gap-1 h-full">
                 <section className="flex flex-col justify-between items-start h-full">
                   <div

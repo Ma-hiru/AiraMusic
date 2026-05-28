@@ -120,6 +120,7 @@ const Cache: FC<CacheProps> = ({ cacheStoreConfig, cacheStoreSizes, updateCacheS
       <RangeRow
         icon={Boxes}
         title="缓存容量"
+        unit="GB"
         value={`${capacityGB}GB`}
         min={1}
         max={20}
@@ -131,6 +132,7 @@ const Cache: FC<CacheProps> = ({ cacheStoreConfig, cacheStoreSizes, updateCacheS
       <RangeRow
         icon={Clock8}
         title="保留时间"
+        unit="天"
         value={`${ttlDays}天`}
         min={1}
         max={30}
@@ -159,7 +161,7 @@ const Cache: FC<CacheProps> = ({ cacheStoreConfig, cacheStoreSizes, updateCacheS
         }
       />
       <BaseItem
-        className={cx("py-0!", movingPercent === null || (movingPercent >= 100 && "hidden"))}>
+        className={cx("py-0!", (movingPercent === null || movingPercent >= 100) && "hidden")}>
         <div className="w-full flex flex-col gap-3">
           <div className="w-full rounded-md bg-white/30 h-1.5 overflow-hidden">
             <span
