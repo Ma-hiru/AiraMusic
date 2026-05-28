@@ -52,44 +52,38 @@ func CreateLocalStore(dir string) (*StoreMeta, error) {
 	return &meta, ErrStoreExist
 }
 
-func LoadLocalStore(meta *StoreMeta) error {
+func LoadLocalStore(meta *StoreMeta, opt StoreOption) (*Store, error) {
+	// 检查索引文件
 	var err = checkIndexFile(meta)
 	if err != nil {
-		return fmt.Errorf("failed to check index file: %v", err)
+		return nil, fmt.Errorf("failed to check index file: %v", err)
 	}
-
+	// 打开索引文件
 	var indexPath = filepath.Join(meta.storeDir, meta.indexName)
 	indexFile, err := os.Open(indexPath)
 	if err != nil {
-		return fmt.Errorf("failed to open index file: %v", err)
+		return nil, fmt.Errorf("failed to open index file: %v", err)
 	}
-	defer indexFile.Close() //nolint:errcheck
-
-	// 初始化存储结构
+	// 创建store实例
 	store = &Store{
-		meta: *meta,
+		meta:   *meta,
+		option: opt,
 
-		indexFile:       indexFile,
-		indexFileLock:   sync.Mutex{},
+		indexHandle:     &IndexHandle{file: indexFile, mutex: sync.Mutex{}},
 		indexMapped:     make(map[string]Index),
 		indexMappedLock: sync.RWMutex{},
 
 		currentWriteMapped:     make(map[string]*WritingFile),
 		currentWriteMappedLock: sync.RWMutex{},
 	}
-
-	store.loadIndex(indexFile)
+	// 加载索引数据
+	store.loadIndex()
 	// 以追加模式重新打开索引文件
+	store.indexHandle.file.Close() //nolint:errcheck
 	indexFile, err = os.OpenFile(indexPath, os.O_APPEND|os.O_RDWR, 0666)
 	if err != nil {
-		return fmt.Errorf("failed to open index file for appending: %v", err)
+		return nil, fmt.Errorf("failed to open index file for appending: %v", err)
 	}
-	store.indexFile = indexFile
-	return nil
-}
-
-func SetStoreOption(opt StoreOption) {
-	if store != nil {
-		store.option = opt
-	}
+	store.indexHandle.file = indexFile
+	return store, nil
 }

@@ -28,7 +28,7 @@ func StoreObject(ctx *gin.Context) {
 	}
 
 	var store = core.GetStore()
-	var index, err = store.Store(requestParam.Id, "application/json", []byte(requestParam.Data))
+	var index, err = store.StoreBytes(requestParam.Id, "application/json", []byte(requestParam.Data))
 	if err != nil {
 		ctx.JSON(200, gin.H{
 			"ok":    false,
@@ -59,7 +59,7 @@ func StoreObjectMulti(ctx *gin.Context) {
 	var store = core.GetStore()
 
 	for _, item := range requestParam.Items {
-		var _, err = store.Store(item.Id, "application/json", []byte(item.Data))
+		var _, err = store.StoreBytes(item.Id, "application/json", []byte(item.Data))
 		if err != nil {
 			log.Println(err)
 		}
@@ -77,22 +77,22 @@ func FetchObject(ctx *gin.Context) {
 	var objField = ctx.Query("objField") // field / index / length
 
 	var store = core.GetStore()
-	var index, ok = store.Check(id)
+	var index, ok = store.CheckByID(id)
 	if !ok {
 		ctx.Status(http.StatusNoContent)
 		return
 	}
 	if timeLimit > 0 && index.IsExpiredMill(timeLimit) {
 		ctx.Status(http.StatusNoContent)
-		_, _ = store.Remove(index)
+		_, _ = store.RemoveByIdx(index)
 		return
 	}
 
-	var storeFile, err = store.Fetch(index)
+	var storeFile, err = store.FetchByReader(index)
 	if err != nil {
 		ctx.Status(http.StatusNoContent)
 		log.Println(err)
-		_, _ = store.Remove(index)
+		_, _ = store.RemoveByIdx(index)
 		return
 	}
 	defer storeFile.Close() //nolint:errcheck
@@ -166,13 +166,13 @@ func FetchObjectMulti(ctx *gin.Context) {
 
 	var result [][]byte
 	for _, id := range requestParam.IDs {
-		var index, ok = store.Check(id)
+		var index, ok = store.CheckByID(id)
 		if !ok {
 			result = append(result, []byte("null"))
 			continue
 		}
 
-		var storeFile, err = store.Fetch(index)
+		var storeFile, err = store.FetchByReader(index)
 		if err != nil {
 			result = append(result, []byte("null"))
 			log.Println(err)

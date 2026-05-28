@@ -163,7 +163,7 @@ func download(id, url, method string, body io.Reader, header http.Header) core.I
 func fetch(ctx *gin.Context) {
 	var id, _ = getRequireQuery(ctx)
 	var store = core.GetStore()
-	var index, ok = store.Check(id)
+	var index, ok = store.CheckByID(id)
 	if !ok {
 		ctx.Status(404)
 		return
@@ -173,7 +173,7 @@ func fetch(ctx *gin.Context) {
 		ctx.Status(http.StatusNotModified)
 		return
 	}
-	var storeFile, err = store.Fetch(index)
+	var storeFile, err = store.FetchByReader(index)
 	if err != nil {
 		ctx.Status(500)
 		log.Println(err)

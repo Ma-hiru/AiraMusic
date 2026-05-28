@@ -2,6 +2,7 @@ package utils
 
 import (
 	"fmt"
+	"io"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -56,4 +57,37 @@ func GetDefaultStorePath() string {
 		userCachePath = os.TempDir()
 	}
 	return filepath.Join(userCachePath, "mahiru", "music")
+}
+
+func GetTempDir() string {
+	var tempDir = os.TempDir()
+	var dir = filepath.Join(tempDir, "mahiru_music_temp")
+	if err := EnsureDir(dir, 0775); err != nil {
+		return tempDir
+	}
+	return dir
+}
+
+// MoveFileByCopy 通过复制的方式移动文件，适用于跨设备移动文件的情况。如果失败，不会删除源文件。
+func MoveFileByCopy(src, dst string) bool {
+	input, err := os.Open(src)
+	if err != nil {
+		return false
+	}
+	defer input.Close() //nolint:errcheck
+
+	output, err := os.Create(dst)
+	if err != nil {
+		return false
+	}
+	defer output.Close() //nolint:errcheck
+
+	if _, err = io.Copy(output, input); err != nil {
+		_ = os.Remove(dst) //nolint:errcheck
+		return false
+	} else {
+		// 复制成功后删除源文件
+		_ = os.Remove(src) //nolint:errcheck
+		return true
+	}
 }

@@ -10,7 +10,7 @@ func CheckOrStoreAsync(ctx *gin.Context) {
 	var id, url = getRequireQuery(ctx)
 	var update, timeLimit = getOptionQuery(ctx)
 	var store = core.GetStore()
-	var index, ok = store.Check(id)
+	var index, ok = store.CheckByID(id)
 	var needUpdate = !ok || update || timeLimit > 0 && index.IsExpiredMill(timeLimit)
 	if needUpdate {
 		go download(id, url, ctx.Request.Method, ctx.Request.Body, ctx.Request.Header)
@@ -40,7 +40,7 @@ func CheckOrStoreAsyncMulti(ctx *gin.Context) {
 	var store = core.GetStore()
 	var result = make([]gin.H, 0, len(requestParam.Items))
 	for _, item := range requestParam.Items {
-		var index, ok = store.Check(item.Id)
+		var index, ok = store.CheckByID(item.Id)
 		var needUpdate = !ok || item.Update || item.TimeLimit > 0 && index.IsExpiredMill(item.TimeLimit)
 		if needUpdate {
 			item.Id, item.Url = handleURLAndID(item.Id, item.Url)

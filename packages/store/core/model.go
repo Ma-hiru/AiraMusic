@@ -10,8 +10,7 @@ type Store struct {
 	meta   StoreMeta
 	option StoreOption
 
-	indexFile       *os.File
-	indexFileLock   sync.Mutex
+	indexHandle     *IndexHandle
 	indexMapped     map[string]Index // ID <-> Index
 	indexMappedLock sync.RWMutex
 
@@ -56,4 +55,16 @@ type WritingFile struct {
 	etag         string
 	lastModified string
 	file         *os.File
+}
+
+type MoveProgressChan struct {
+	Total   int64 `json:"total"`
+	Current int64 `json:"current"`
+	Percent int64 `json:"percent"`
+	Failed  int64 `json:"failed"`
+}
+
+type IndexHandle struct {
+	file  *os.File
+	mutex sync.Mutex
 }

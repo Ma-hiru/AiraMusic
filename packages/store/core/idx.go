@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"store/utils"
@@ -39,13 +38,13 @@ func NewIndex(id, path string, options ...IndexOption) Index {
 func WithFileInfo(
 	url,
 	name,
-	fileType,
+	mimeType,
 	size string,
 ) IndexOption {
 	return func(i *Index) {
 		i.Url = url
 		i.Name = name
-		i.Type = fileType
+		i.Type = mimeType
 		i.Size = size
 	}
 }
@@ -96,9 +95,9 @@ func (Self Index) FillHeader(ctx *gin.Context) {
 }
 
 // 创建index文件
-func createIndexFile(meta *StoreMeta) error {
+func createIndexFile(meta *StoreMeta) (err error) {
 	var indexPath = filepath.Join(meta.storeDir, meta.indexName)
-	var indexFile, err = os.Create(indexPath)
+	indexFile, err := os.Create(indexPath)
 	if err != nil {
 		return fmt.Errorf("failed to create index file: %v", err)
 	}
@@ -108,36 +107,10 @@ func createIndexFile(meta *StoreMeta) error {
 			_ = os.Remove(indexPath)
 		}
 	}()
-	err = writeIndexFileMeta(indexFile, meta)
-	return err
-}
-
-// 写入index文件meta
-func writeIndexFileMeta(indexFile *os.File, meta *StoreMeta) error {
-	_, err := indexFile.Write([]byte("version: " + strconv.Itoa(meta.version) + "\n"))
-	if err != nil {
-		return err
-	}
-	_, err = indexFile.Write([]byte("createTime: " + strconv.FormatInt(meta.createTime, 10) + "\n"))
-	if err != nil {
-		return err
-	}
-	return indexFile.Sync()
-}
-
-// 写入index文件索引信息
-func writeIndexFileData(indexFile *os.File, indexData []Index) error {
-	for _, index := range indexData {
-		var line, err = json.Marshal(index)
-		if err != nil {
-			return err
-		}
-		_, err = indexFile.Write(append(line, '\n'))
-		if err != nil {
-			return err
-		}
-	}
-	return indexFile.Sync()
+	var handle = &IndexHandle{file: indexFile}
+	handle.mutex.Lock()
+	defer handle.mutex.Unlock()
+	return handle.WriteMeta(meta)
 }
 
 // 检查路径和读取version
@@ -173,15 +146,48 @@ func checkIndexFile(meta *StoreMeta) error {
 			break
 		}
 	}
+	if err := scanner.Err(); err != nil {
+		return fmt.Errorf("failed to read index file: %v", err)
+	}
 	if meta.version == 0 || meta.createTime == 0 {
 		return fmt.Errorf("invalid index file format")
 	}
 	return nil
 }
 
-// 读取index文件索引信息
-func readIndexFile(indexFile io.Reader) []Index {
-	var scanner = bufio.NewScanner(indexFile)
+// WriteMeta 写入index文件meta，无锁
+func (Self *IndexHandle) WriteMeta(meta *StoreMeta) error {
+	_, err := Self.file.Write([]byte("version: " + strconv.Itoa(meta.version) + "\n"))
+	if err != nil {
+		return err
+	}
+	_, err = Self.file.Write([]byte("createTime: " + strconv.FormatInt(meta.createTime, 10) + "\n"))
+	if err != nil {
+		return err
+	}
+	return Self.file.Sync()
+}
+
+// WriteIdxs 写入index文件索引信息，无锁
+func (Self *IndexHandle) WriteIdxs(idxs []Index) error {
+	for _, index := range idxs {
+		var line, err = json.Marshal(index)
+		if err != nil {
+			return err
+		}
+		_, err = Self.file.Write(append(line, '\n'))
+		if err != nil {
+			return err
+		}
+	}
+	return Self.file.Sync()
+}
+
+// ReadIdxs 读取index文件索引信息
+func (Self *IndexHandle) ReadIdxs() []Index {
+	Self.mutex.Lock()
+	defer Self.mutex.Unlock()
+	var scanner = bufio.NewScanner(Self.file)
 	var indices []Index
 	for scanner.Scan() {
 		var line = scanner.Text()
@@ -197,5 +203,54 @@ func readIndexFile(indexFile io.Reader) []Index {
 
 		indices = append(indices, idx)
 	}
+	if err := scanner.Err(); err != nil {
+		fmt.Printf("failed to read index file: %v\n", err)
+		return make([]Index, 0)
+	}
 	return indices
+}
+
+// AppendIdx 追加索引到index文件末尾
+func (Self *IndexHandle) AppendIdx(idx Index) error {
+	Self.mutex.Lock()
+	defer Self.mutex.Unlock()
+	var line, err = json.Marshal(idx)
+	if err != nil {
+		return err
+	}
+	_, err = Self.file.Write(append(line, '\n'))
+	if err != nil {
+		return err
+	}
+	return Self.file.Sync()
+}
+
+// Destroy 销毁索引文件，存储meta和idxs
+func (Self *IndexHandle) Destroy(meta *StoreMeta, idxs []Index) error {
+	Self.mutex.Lock()
+	defer Self.mutex.Unlock()
+	// 先销毁索引文件句柄，覆盖索引，清空文件
+	_ = Self.file.Close()
+	var path = filepath.Join(meta.storeDir, meta.indexName)
+	// 以覆盖写入的方式重新创建索引文件，如果索引文件不存在则创建，存在则清空内容后写入
+	var file, err = os.OpenFile(path, os.O_TRUNC|os.O_WRONLY, 0666)
+	if err != nil {
+		return err
+	}
+	Self.file = file
+	defer Self.file.Close() //nolint:errcheck
+
+	// 写入版本和创建时间
+	err = Self.WriteMeta(meta)
+	if err != nil {
+		return err
+	}
+
+	// 写入所有索引
+	err = Self.WriteIdxs(idxs)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

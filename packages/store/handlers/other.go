@@ -12,7 +12,7 @@ import (
 func Remove(ctx *gin.Context) {
 	var id, _ = getRequireQuery(ctx)
 	var store = core.GetStore()
-	var index, ok = store.Check(id)
+	var index, ok = store.CheckByID(id)
 	if !ok {
 		ctx.JSON(200, gin.H{
 			"ok":    false,
@@ -20,7 +20,7 @@ func Remove(ctx *gin.Context) {
 		})
 		return
 	}
-	success, err := store.Remove(index)
+	success, err := store.RemoveByIdx(index)
 	if err != nil {
 		ctx.JSON(200, gin.H{
 			"ok":    false,
@@ -38,7 +38,7 @@ func Remove(ctx *gin.Context) {
 func RemoveAsync(ctx *gin.Context) {
 	var id, _ = getRequireQuery(ctx)
 	var store = core.GetStore()
-	var index, ok = store.Check(id)
+	var index, ok = store.CheckByID(id)
 	if !ok {
 		ctx.JSON(200, gin.H{
 			"ok": false,
@@ -46,7 +46,7 @@ func RemoveAsync(ctx *gin.Context) {
 		return
 	}
 	go func() {
-		_, err := store.Remove(index)
+		_, err := store.RemoveByIdx(index)
 		if err != nil {
 			log.Println(err)
 		}
@@ -72,7 +72,7 @@ func RemoveMulti(ctx *gin.Context) {
 	var store = core.GetStore()
 	var results = make([]gin.H, 0, len(requestParam.Ids))
 	for _, id := range requestParam.Ids {
-		var index, ok = store.Check(id)
+		var index, ok = store.CheckByID(id)
 		if !ok {
 			results = append(results, gin.H{
 				"ok":    false,
@@ -80,7 +80,7 @@ func RemoveMulti(ctx *gin.Context) {
 			})
 			continue
 		}
-		success, err := store.Remove(index)
+		success, err := store.RemoveByIdx(index)
 		if err != nil {
 			results = append(results, gin.H{
 				"ok":    false,
@@ -117,7 +117,7 @@ func Clear(ctx *gin.Context) {
 
 func Count(ctx *gin.Context) {
 	var store = core.GetStore()
-	var count = store.Count()
+	var count = store.ItemCount()
 	ctx.JSON(200, gin.H{
 		"ok":    true,
 		"count": count,
@@ -126,8 +126,8 @@ func Count(ctx *gin.Context) {
 
 func Info(ctx *gin.Context) {
 	var store = core.GetStore()
-	var size = store.Size()
-	var count = store.Count()
+	var size = store.TotalBytes()
+	var count = store.ItemCount()
 	var path = store.Path()
 	ctx.JSON(200, gin.H{
 		"ok":    true,
@@ -152,7 +152,7 @@ func RemoveInvalid(ctx *gin.Context) {
 
 func Size(ctx *gin.Context) {
 	var store = core.GetStore()
-	var size = store.Size()
+	var size = store.TotalBytes()
 	ctx.JSON(200, gin.H{
 		"ok":   true,
 		"size": size,
@@ -161,7 +161,7 @@ func Size(ctx *gin.Context) {
 
 func SizeCategories(ctx *gin.Context) {
 	var store = core.GetStore()
-	var image, audio, video, other = store.SizeByCategory()
+	var image, audio, video, other = store.TotalBytesByCategory()
 	ctx.JSON(200, gin.H{
 		"ok":    true,
 		"image": image,

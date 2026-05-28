@@ -10,7 +10,7 @@ func Check(ctx *gin.Context) {
 	var id, _ = getRequireQuery(ctx)
 	var _, timeLimit = getOptionQuery(ctx)
 	var store = core.GetStore()
-	var index, ok = store.Check(id)
+	var index, ok = store.CheckByID(id)
 	if !ok || timeLimit > 0 && index.IsExpiredMill(timeLimit) {
 		ctx.JSON(200, gin.H{
 			"ok":    false,
@@ -49,7 +49,7 @@ func CheckMulti(ctx *gin.Context) {
 	var result = make([]gin.H, 0, len(requestParam.Items))
 	var timeLimit = requestParam.TimeLimit
 	for _, item := range requestParam.Items {
-		var index, ok = store.Check(item.Id)
+		var index, ok = store.CheckByID(item.Id)
 		if !ok {
 			result = append(result, gin.H{
 				"ok":    false,
