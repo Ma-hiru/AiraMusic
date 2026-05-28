@@ -8,8 +8,17 @@ export type MainServicesCreator = NormalFunc<
 
 export abstract class MainServicesBase {
   private readonly instances: Map<MainServicesType, Nullable<MainServicesInstance>> = new Map();
+  private readyPromise: Promise<void>;
   public readonly services: readonly MainServicesType[];
   public onError;
+
+  getInstance(service: MainServicesType) {
+    return this.instances.get(service);
+  }
+
+  ready() {
+    return this.readyPromise;
+  }
 
   protected constructor(props: {
     services: readonly MainServicesType[];
@@ -17,6 +26,8 @@ export abstract class MainServicesBase {
   }) {
     this.onError = props.onError;
     this.services = [...new Set(props.services)];
+    const { promise, resolve } = Promise.withResolvers<void>();
+    this.readyPromise = promise;
     this.resolvePort().then((ports) => {
       for (const service of this.services) {
         this.instances.set(
@@ -24,6 +35,13 @@ export abstract class MainServicesBase {
           this.wrapServiceCreator(service, this.creators[service])(ports)
         );
       }
+      Promise.all(
+        this.services.map((service) => {
+          const instance = this.instances.get(service);
+          if (!instance) return Promise.resolve();
+          return instance.ready();
+        })
+      ).finally(resolve);
     });
   }
 

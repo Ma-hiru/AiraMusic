@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"log"
+	"net/http"
 	"store/cmd"
 	"store/core"
 
@@ -199,4 +200,8 @@ func Exit(ctx *gin.Context) {
 		"message": "shutdown requested",
 	})
 	go cmd.Shutdown()
+}
+
+func Ping(ctx *gin.Context) {
+	ctx.Data(http.StatusOK, "text/plain", []byte("ok"))
 }

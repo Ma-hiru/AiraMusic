@@ -79,4 +79,10 @@ export default class ProxyService extends MainChildService<ProxyParentMessage, P
         break;
     }
   }
+
+  override async ready() {
+    await this.startPromise;
+    // 有时子进程虽然ready了，但服务还没完全启动，等一会儿
+    return new Promise<void>((resolve) => setTimeout(resolve, 1000));
+  }
 }

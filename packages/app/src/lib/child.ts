@@ -45,7 +45,7 @@ export abstract class MainChildService<
     return this.serviceName;
   }
 
-  async ready() {
+  override async ready() {
     await this.startPromise;
   }
 

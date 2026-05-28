@@ -125,5 +125,12 @@ export const eventHandlers: EventHandlers = {
     Log.error("Fatal Error", "sender:", MainWindowManager.getId(sender), message, error);
     // TODO: MainWindowCreator.create(AppWindows.fatalError(message, error));
     MainWindowPreset.fatalError(message, error);
+  },
+  log: (e, { level, message }) => {
+    const sender = BrowserWindow.fromWebContents(e.sender);
+    if (!sender) return;
+    const name = MainWindowManager.getId(sender);
+    if (!Log[level] || !message) return;
+    Log[level](`Renderer(${name})`, message);
   }
 };

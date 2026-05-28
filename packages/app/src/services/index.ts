@@ -19,6 +19,10 @@ export class MainServices extends MainServicesBase {
     super(props);
   }
 
+  ports() {
+    return this.resolvePort();
+  }
+
   protected override async resolvePort() {
     const ncm = await MainPortResolver.resolve(
       "ncm",
@@ -48,6 +52,20 @@ export class MainServices extends MainServicesBase {
   }
 
   protected override readonly creators: Record<MainServicesType, MainServicesCreator> = {
+    proxy: ({ ncm, store, proxy }) => {
+      return new ProxyService({
+        onError: (err: Error) => this.onError("proxy", "internal error", err),
+        port: proxy,
+        ncmPort: ncm,
+        storePort: store
+      });
+    },
+    ncm: (ports) => {
+      return new NeteaseMusicApiService({
+        onError: (err: Error) => this.onError("ncm", "create error", err),
+        port: ports.ncm
+      });
+    },
     store: (ports) => {
       const { capacity, path, ttl } = MainKeyValueStore.get(
         "cache",
@@ -66,20 +84,6 @@ export class MainServices extends MainServicesBase {
         enableConsole: Log.EnvLevel <= LogLevel.DEBUG,
         logger: (data) => this.printServiceLog("store", data.toString()),
         onExit: (code) => this.onError("store", `exited with code ${code}`)
-      });
-    },
-    ncm: (ports) => {
-      return new NeteaseMusicApiService({
-        onError: (err: Error) => this.onError("ncm", "create error", err),
-        port: ports.ncm
-      });
-    },
-    proxy: ({ ncm, store, proxy }) => {
-      return new ProxyService({
-        onError: (err: Error) => this.onError("proxy", "internal error", err),
-        port: proxy,
-        ncmPort: ncm,
-        storePort: store
       });
     }
   };

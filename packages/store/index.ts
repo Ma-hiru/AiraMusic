@@ -78,6 +78,16 @@ export default class Store {
       .catch(() => false);
   }
 
+  async ping(): Promise<boolean> {
+    return fetch(`http://localhost:${this.port}/api/ping`, {
+      method: "GET",
+      headers: { Authorization: this.token }
+    })
+      .then((res) => res.text())
+      .then((text) => text.toLocaleLowerCase().trim() === "ok")
+      .catch(() => false);
+  }
+
   onExit(handler: NormalFunc<[code: Nullable<number>]>) {
     this._exitHandler.add(handler);
     return () => this._exitHandler.delete(handler);

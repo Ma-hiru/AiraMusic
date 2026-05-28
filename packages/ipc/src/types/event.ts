@@ -27,6 +27,7 @@ export type NormalEventMaps = {
   unmaximizeInternalWindow: Optional<WindowType>;
   mousePenetrateInternalWindow: { type: Optional<WindowType>; penetrate: boolean };
   fatalError: { message: string; error?: string };
+  log: { level: "trace" | "debug" | "info" | "warn" | "error"; message: string };
 };
 
 /** Normal 事件类型 */

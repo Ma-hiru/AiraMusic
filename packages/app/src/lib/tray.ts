@@ -14,6 +14,8 @@ import { MainPathResolver } from "@/lib/path-resolver";
 import { MainWindowCreator } from "@/lib/window-creator";
 import { Log } from "@/lib/log";
 import { MainWindowPreset } from "@/lib/window-preset";
+import { MainHandle } from "@/lib/handle";
+import { MainExitCodeConstants } from "@/constants/exit-code";
 
 export class MainTray {
   static register() {
@@ -182,6 +184,10 @@ export class MainTray {
               receiver: "main",
               type: "playerActionBus",
               data: "exit"
+            });
+            setTimeout(() => {
+              const app = MainHandle.get();
+              app?.exit(MainExitCodeConstants.NORMAL_EXIT, "user exit");
             });
           }
         }

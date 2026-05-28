@@ -23,6 +23,10 @@ export class MainApp {
     return this._status === "exiting";
   }
 
+  get services() {
+    return this._services;
+  }
+
   /**
    * @desc 创建并启动服务 \
    * error: exit \
@@ -39,6 +43,7 @@ export class MainApp {
         );
       }
     });
+    return this._services.ready();
   }
 
   /**
@@ -78,6 +83,7 @@ export class MainApp {
    * code: MainExitCodeConstants.LAUNCH_MAIN_RENDERER_FAILED
    * */
   private launchMainWindow() {
+    this._services;
     try {
       const mainWindow = MainWindowCreator.create(MainWindowPreset.main);
       if (process.platform === "darwin") {
@@ -154,24 +160,26 @@ export class MainApp {
       .then(() => {
         Log.info("App ready");
 
-        this.createServices(); // 创建服务
-        if (this.isExiting) return;
-        Log.info("App services created");
-
         this.registerIPCHandlers(); // 注册IPC
         if (this.isExiting) return;
         Log.info("App ipc handlers registered");
 
-        this.launchMainWindow(); // 启动窗口
+        const ready = this.createServices(); // 创建服务
         if (this.isExiting) return;
-        Log.info("App main window launched");
+        Log.info("App services created");
 
-        this.registerAppTray(); // 注册托盘
-        if (this.isExiting) return;
-        Log.info("App tray registered");
+        ready.then(() => {
+          this.launchMainWindow(); // 启动窗口
+          if (this.isExiting) return;
+          Log.info("App main window launched");
 
-        this._status = "running"; // 修改状态，完成初始化
-        Log.info("App running");
+          this.registerAppTray(); // 注册托盘
+          if (this.isExiting) return;
+          Log.info("App tray registered");
+
+          this._status = "running"; // 修改状态，完成初始化
+          Log.info("App running");
+        });
       })
       .catch((err) => {
         Log.error("app init", "failed to initialize app, uncaught error", err);

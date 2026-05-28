@@ -35,10 +35,31 @@ export function createLog(
     static readonly currentLevel = currentLevel;
 
     private static handleInput(level: LogLevel, ...args: CanString[] | [EqErrorProps]): string {
-      if (args.length === 1 && EqError.isErrorProps(args[0]))
-        return handleLogInput(level, showTimestamp, new EqError(args[0]));
-      const output = handleLogInput(level, showTimestamp, ...args);
-      if (this.currentLevel <= level) witter.log(output);
+      let output: string;
+      if (args.length === 1 && EqError.isErrorProps(args[0])) {
+        output = handleLogInput(level, showTimestamp, new EqError(args[0]));
+      } else {
+        output = handleLogInput(level, showTimestamp, ...args);
+      }
+      if (this.currentLevel <= level) {
+        switch (level) {
+          case LogLevel.TRACE:
+            witter.trace(output);
+            break;
+          case LogLevel.DEBUG:
+            witter.debug(output);
+            break;
+          case LogLevel.INFO:
+            witter.log(output);
+            break;
+          case LogLevel.WARN:
+            witter.warn(output);
+            break;
+          case LogLevel.ERROR:
+            witter.error(output);
+            break;
+        }
+      }
       return output;
     }
 

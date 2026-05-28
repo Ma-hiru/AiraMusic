@@ -5,6 +5,7 @@ import { BrowserWindow } from "electron";
 import { MainWindowManager } from "@/lib/window-manager";
 import { MainScreenResolver } from "@/lib/screen-resolver";
 import { MainRuntime } from "@/lib/runtime";
+import { MainHandle } from "@/lib/handle";
 import type { AppWindowCreatorProps } from "@/types/window";
 
 export class MainWindowCreator {
@@ -63,18 +64,29 @@ export class MainWindowCreator {
     return MainKeyValueStore.get(id, { x: 0, y: 0, width: 0, height: 0 });
   }
 
-  private static loadURL(win: BrowserWindow, loadURL: NormalFunc<[port: number], string>) {
-    const port = MainRuntime.isDev
-      ? process.env.VITE_SERVER_PORT!
-      : process.env.EXPRESS_SERVER_PORT!;
-    const url = loadURL(Number(port));
-    win.loadURL(url).catch((err) => {
-      Log.error({
-        raw: err,
-        message: `failed to load window URL: ${url}`,
-        label: "AppWindowCreator"
+  private static loadURL(win: BrowserWindow, resolver: NormalFunc<[port: number], string>) {
+    const services = MainHandle.get()?.services;
+    if (!services) {
+      throw new Error("services should be ready before loading window URL");
+    }
+
+    services.ready().then(() => {
+      services.ports().then(({ proxy }) => {
+        const port = MainRuntime.isDev ? process.env.VITE_SERVER_PORT! : proxy;
+        const url = resolver(Number(port));
+        win
+          .loadURL(url)
+          .then(() => Log.info("AppWindowCreator", `Window loaded URL: ${url}`))
+          .catch((err) => {
+            Log.error({
+              raw: err,
+              message: `failed to load window URL: ${url}`,
+              label: "AppWindowCreator"
+            });
+          });
       });
     });
+
     return win;
   }
 }

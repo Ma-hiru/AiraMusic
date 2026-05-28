@@ -1,37 +1,43 @@
 import { createLog, type LoggerWriter } from "@mahiru/log";
+import { initAsync } from "@/common/utils/init";
+import { RendererIPC } from "./ipc";
+
+let write: Nullable<
+  NormalFunc<
+    [
+      props: {
+        level: "info" | "warn" | "error" | "trace" | "debug";
+        message: string;
+      }
+    ]
+  >
+> = null;
 
 export class ProcessLogger implements LoggerWriter {
-  write(input: { type: string; text: string }) {
-    input.text = input.text + " (renderer)";
-    requestIdleCallback(() => {
-      window
-        .fetch("/log", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify(input)
-        })
-        .catch((err) => {
-          console.error("Failed to send log to main process:", err);
-        });
-    });
+  log(input: string) {
+    write?.({ level: "info", message: input });
   }
 
-  log(input: string) {
-    this.write({ type: "log", text: input });
-  }
   warn(input: string) {
-    this.write({ type: "warn", text: input });
+    write?.({ level: "warn", message: input });
   }
+
   error(input: string) {
-    this.write({ type: "error", text: input });
+    write?.({ level: "error", message: input });
   }
+
   trace(input: string) {
-    this.write({ type: "trace", text: input });
+    write?.({ level: "trace", message: input });
   }
+
   debug(input: string) {
-    this.write({ type: "debug", text: input });
+    write?.({ level: "debug", message: input });
+  }
+
+  static _init() {
+    write = ({ message, level }) => {
+      RendererIPC.Event("log", { level, message });
+    };
   }
 }
 
@@ -42,3 +48,5 @@ export const Log = createLog(
 );
 
 import.meta.env.DEV && Log.info("environment", import.meta.env);
+
+import.meta.env.DEV && initAsync(ProcessLogger);

@@ -21,6 +21,7 @@ func otherRoutes(app *gin.Engine) {
 	app.GET("/api/cancel", handlers.Cancel)
 	app.POST("/api/cancel/multi", handlers.CancelMulti)
 	app.GET("/api/exit", handlers.Exit)
+	app.GET("/api/ping", handlers.Ping)
 	app.GET("/.well-known/appspecific/com.chrome.devtools.json", func(c *gin.Context) {
 		c.Status(http.StatusNoContent)
 	})
