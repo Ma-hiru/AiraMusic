@@ -85,9 +85,9 @@ func MoveFileByCopy(src, dst string) bool {
 	if _, err = io.Copy(output, input); err != nil {
 		_ = os.Remove(dst) //nolint:errcheck
 		return false
-	} else {
-		// 复制成功后删除源文件
-		_ = os.Remove(src) //nolint:errcheck
-		return true
 	}
+
+	// 复制成功后删除源文件
+	_ = os.Remove(src) //nolint:errcheck
+	return true
 }

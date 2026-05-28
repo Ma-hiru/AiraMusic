@@ -1,16 +1,18 @@
 import { type FC, memo, type ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
+import { cx } from "@emotion/css";
 
 interface BaseItemProps {
-  icon: LucideIcon;
+  icon?: LucideIcon;
+  className?: string;
   children: ReactNode;
 }
 
-const BaseItem: FC<BaseItemProps> = ({ icon: Icon, children }) => {
+const BaseItem: FC<BaseItemProps> = ({ icon: Icon, children, className }) => {
   return (
-    <div className="flex items-center gap-3 py-3">
+    <div className={cx("flex items-center gap-3 py-3", className)}>
       <div className="flex size-9 shrink-0 items-center justify-center">
-        <Icon className="size-4" />
+        {Icon && <Icon className="size-4" />}
       </div>
       <div className="flex-1">{children}</div>
     </div>

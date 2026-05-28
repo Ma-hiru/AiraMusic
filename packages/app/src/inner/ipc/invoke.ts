@@ -14,11 +14,13 @@ import { mergeCacheStoreConfig } from "@/utils/merge";
 
 export const invokeHandlers: InvokeHandlers = {
   selectPath: async (_, type) => {
-    const { canceled, filePath } = await dialog.showSaveDialog({
-      title: type === "dir" ? "选择目录" : "选择文件"
+    const { canceled, filePaths } = await dialog.showOpenDialog({
+      title: type === "dir" ? "选择目录" : "选择文件",
+      properties: [type === "dir" ? "openDirectory" : "openFile"]
     });
     if (canceled) return { ok: false, path: "" };
-    if (filePath) return { ok: false, path: "", error: "无效路径" };
+    const filePath = filePaths[0];
+    if (!filePath) return { ok: false, path: "", error: "无效路径" };
     try {
       const status = await Fs.stat(filePath);
       if (type === "dir" && status.isFile()) {

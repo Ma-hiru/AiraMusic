@@ -180,16 +180,22 @@ func Move(ctx *gin.Context) {
 	}
 	var store = core.GetStore()
 	var progress = make(chan core.MoveProgressChan, 100)
+	var moveErr = make(chan error, 1)
 	go func() {
 		var err = store.Move(newPath, progress)
 		if err != nil {
 			log.Println(err)
 		}
+		moveErr <- err
 		close(progress)
 	}()
 	for p := range progress {
 		var data, _ = json.Marshal(p)
 		ctx.SSEvent("message", string(data))
+	}
+	if err := <-moveErr; err != nil {
+		ctx.SSEvent("done", err.Error())
+		return
 	}
 	ctx.SSEvent("done", "")
 }

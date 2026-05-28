@@ -1,6 +1,7 @@
 import { type FC, memo, useCallback } from "react";
 import { type NeteaseSettingsModel, NeteaseUser } from "@/common/netease/models";
 import { TrackQuality } from "@/common/enum";
+import type { InvokeEventPayload } from "@mahiru/ipc/renderer";
 
 import Cache from "./cache";
 import Quality from "./quality";
@@ -11,9 +12,21 @@ interface SettingsContentProps {
   user: Nullable<NeteaseUser>;
   settings: NeteaseSettingsModel;
   updateSettings: NormalFunc<[settings: NeteaseSettingsModel]>;
+  cacheStoreSizes: Nullable<CacheStoreSizeCategories>;
+  cacheStoreConfig: Nullable<InvokeEventPayload<"fetchCacheStoreConfig">>;
+  updateCacheStoreConfig: PromiseFunc<
+    [config: Partial<InvokeEventPayload<"fetchCacheStoreConfig">>]
+  >;
 }
 
-const SettingsContent: FC<SettingsContentProps> = ({ user, settings, updateSettings }) => {
+const SettingsContent: FC<SettingsContentProps> = ({
+  user,
+  settings,
+  updateSettings,
+  cacheStoreConfig,
+  cacheStoreSizes,
+  updateCacheStoreConfig
+}) => {
   const patchSettings = useCallback(
     (patch: Partial<NeteaseSettingsModel>) => {
       updateSettings({
@@ -39,23 +52,16 @@ const SettingsContent: FC<SettingsContentProps> = ({ user, settings, updateSetti
     [patchSettings, settings.trackQuality, user?.profile.userId]
   );
 
-  const updateCache = useCallback(
-    (patch: Partial<NeteaseSettingsModel["cache"]>) => {
-      patchSettings({
-        cache: {
-          ...settings.cache,
-          ...patch
-        }
-      });
-    },
-    [patchSettings, settings.cache]
-  );
   return (
     <main className="lg:h-full lg:contain-strict space-y-4 lg:overflow-y-auto scrollbar lg:scrollbar-show">
       <Quality data={settings.trackQuality} updateQuality={updateQuality} />
       <Performance data={settings.performance} patchSettings={patchSettings} />
       <Preference data={settings.preference} patchSettings={patchSettings} />
-      <Cache data={settings.cache} updateCache={updateCache} />
+      <Cache
+        updateCacheStoreConfig={updateCacheStoreConfig}
+        cacheStoreConfig={cacheStoreConfig}
+        cacheStoreSizes={cacheStoreSizes}
+      />
     </main>
   );
 };

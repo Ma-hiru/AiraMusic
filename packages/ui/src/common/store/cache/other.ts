@@ -14,7 +14,9 @@ export class CacheStoreForOther {
     >,
     onDone: Nullable<NormalFunc<[data: string]>>
   ) {
-    const es = new EventSource(`/api/move?path=${CacheStoreUtils.encode(path)}&key=${accessToken}`);
+    const es = new EventSource(
+      `/cache/api/move?path=${CacheStoreUtils.encode(path)}&key=${accessToken}`
+    );
     es.addEventListener("done", (e) => {
       es.close();
       onDone?.(e.data);
@@ -41,17 +43,11 @@ export class CacheStoreForOther {
     return cacheRequest("/api/count");
   }
 
-  sizeCategories(): Promise<{
-    ok: boolean;
-    image: number;
-    audio: number;
-    video: number;
-    other: number;
-  }> {
+  sizeCategories(): Promise<{ ok: boolean } & CacheStoreSizeCategories> {
     return cacheRequest("/api/size/categories");
   }
 
   info(): Promise<{ ok: boolean; size: number; count: number; path: string }> {
-    return cacheRequest("/api/size/categories");
+    return cacheRequest("/api/info");
   }
 }

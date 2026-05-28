@@ -56,4 +56,36 @@ export class RendererFormat {
     if (years <= 0) return `${days}天`;
     return `${years}年${days}天`;
   }
+
+  static convertBytes(bytes: Optional<number>, unit: "GB" | "MB" | "KB" | "B" | "b") {
+    if (bytes == null || !Number.isFinite(bytes) || bytes <= 0) {
+      return 0;
+    }
+
+    let value: number | string;
+    if (unit === "GB") {
+      value = bytes / 1024 ** 3;
+    } else if (unit === "MB") {
+      value = bytes / 1024 ** 2;
+    } else if (unit === "KB") {
+      value = bytes / 1024 ** 1;
+    } else if (unit === "B") {
+      value = bytes;
+    } else {
+      value = bytes * 8;
+    }
+
+    if (!Number.isInteger(value)) value = value.toFixed(1);
+
+    return Number(value);
+  }
+
+  static size(bytes: Optional<number>) {
+    if (bytes == null || !Number.isFinite(bytes) || bytes <= 0) return "0";
+    if (bytes < 1) return RendererFormat.convertBytes(bytes, "b") + "b";
+    else if (bytes < 1024 ** 1) return RendererFormat.convertBytes(bytes, "B") + "B";
+    else if (bytes < 1024 ** 2) return RendererFormat.convertBytes(bytes, "KB") + "KB";
+    else if (bytes < 1024 ** 3) return RendererFormat.convertBytes(bytes, "MB") + "MB";
+    return RendererFormat.convertBytes(bytes, "GB") + "GB";
+  }
 }

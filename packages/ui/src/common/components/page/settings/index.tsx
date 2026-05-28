@@ -1,9 +1,13 @@
 import { cx } from "@emotion/css";
-import { type FC, memo } from "react";
+import { type FC, memo, useCallback, useEffect, useState } from "react";
 import { NeteaseSettings, type NeteaseSettingsModel, NeteaseUser } from "@/common/netease/models";
+import { RendererIPC } from "@/common/lib/ipc";
+import type { InvokeEventPayload } from "@mahiru/ipc/renderer";
 
 import SettingsAside from "./aside";
 import SettingsContent from "./content";
+import AppToast from "@/common/components/toast";
+import { CacheStore } from "@/common/store/cache";
 
 interface SettingsProps {
   user: Nullable<NeteaseUser>;
@@ -22,6 +26,55 @@ const Settings: FC<SettingsProps> = ({
   logout,
   login
 }) => {
+  const [cacheStoreSizes, setCacheStoreSizes] = useState<Nullable<CacheStoreSizeCategories>>(null);
+  const [cacheStoreConfig, setCacheStoreConfig] =
+    useState<Nullable<InvokeEventPayload<"fetchCacheStoreConfig">>>(null);
+
+  const getCacheStoreConfig = useCallback(async () => {
+    const config = await RendererIPC.Invoke("fetchCacheStoreConfig", undefined).catch(() => {
+      AppToast.show({
+        type: "error",
+        text: "加载缓存配置失败"
+      });
+      return null;
+    });
+    setCacheStoreConfig(config);
+    return config;
+  }, []);
+
+  const updateCacheStoreConfig = useCallback(
+    async (config: Partial<InvokeEventPayload<"fetchCacheStoreConfig">>) => {
+      const res = await RendererIPC.Invoke("updateCacheStoreConfig", config);
+      if (res.ok) {
+        setCacheStoreConfig(res.config);
+      } else {
+        AppToast.show({
+          type: "error",
+          text: res.reason
+        });
+      }
+    },
+    []
+  );
+
+  const getCacheStoreStatus = useCallback(async () => {
+    const status = await CacheStore.local.other.sizeCategories();
+    if (status.ok) {
+      setCacheStoreSizes(status);
+    } else {
+      AppToast.show({
+        type: "error",
+        text: "加载缓存状态失败"
+      });
+      setCacheStoreSizes(null);
+    }
+  }, []);
+
+  useEffect(() => {
+    void getCacheStoreConfig();
+    void getCacheStoreStatus();
+  }, [getCacheStoreConfig, getCacheStoreStatus]);
+
   return (
     <section
       className={cx(
@@ -33,7 +86,14 @@ const Settings: FC<SettingsProps> = ({
         className
       )}>
       <SettingsAside user={user} settings={settings} logout={logout} login={login} />
-      <SettingsContent user={user} settings={settings} updateSettings={updateSettings} />
+      <SettingsContent
+        user={user}
+        settings={settings}
+        updateSettings={updateSettings}
+        cacheStoreConfig={cacheStoreConfig}
+        cacheStoreSizes={cacheStoreSizes}
+        updateCacheStoreConfig={updateCacheStoreConfig}
+      />
     </section>
   );
 };

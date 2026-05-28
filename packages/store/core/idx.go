@@ -102,7 +102,7 @@ func createIndexFile(meta *StoreMeta) (err error) {
 		return fmt.Errorf("failed to create index file: %v", err)
 	}
 	defer func() {
-		indexFile.Close() //nolint:errcheck
+		_ = indexFile.Close() //nolint:errcheck
 		if err != nil {
 			_ = os.Remove(indexPath)
 		}

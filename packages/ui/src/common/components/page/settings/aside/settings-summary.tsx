@@ -45,6 +45,9 @@ const SettingsSummary: FC<SummaryProps> = ({ settings }) => {
         <MiniStat label="默认音质" value={quality} />
         <MiniStat label="缓存容量" value={`${cacheSizeGB}GB`} />
         <MiniStat label="缓存保留" value={`${cacheTimeDays}天`} />
+        {(settings.performance.playerSpectrum || settings.performance.barSpectrum) && (
+          <MiniStat label="频谱帧率" value={`${settings.performance.spectrumFps}FPS`} />
+        )}
       </div>
     </Card>
   );

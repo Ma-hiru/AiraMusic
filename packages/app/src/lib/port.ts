@@ -43,15 +43,15 @@ export class MainPortResolver {
 
   static async resolve(name: MainServicesType, candidates: Iterable<number> & { host?: string }) {
     if (this.stored.get(name)) return this.stored.get(name)!;
-    Log.trace("port", name, "no stored port, then use candidates");
+    Log.debug("port", name, "no stored port, then use candidates");
     for (const port of candidates) {
-      Log.trace("port", name, "get candidate =", port);
+      Log.debug("port", name, "get candidate =", port);
       if (await this.available(port, candidates.host ?? "127.0.0.1")) {
-        Log.trace("port", name, "find port", port);
+        Log.debug("port", name, "find port", port);
         this.stored.set(name, port);
         return port;
       } else {
-        Log.trace("port", name, "candidate port can't use, port =", port);
+        Log.debug("port", name, "candidate port can't use, port =", port);
       }
     }
 

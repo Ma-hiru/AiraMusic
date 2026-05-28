@@ -1,7 +1,7 @@
 import { Log, setLogger } from "../inject/log";
 import { ApiKey } from "../constants/preload";
 import type { Log as Logger } from "@mahiru/log";
-import type { Message, MessageEvent, MessageData, MessageDirection } from "../types/message";
+import type { Message, MessageData, MessageDirection, MessageEvent } from "../types/message";
 import type { Api } from "../types/preload";
 
 // @ts-expect-error ApiKey是preload注入的，不存在于标准的globalThis
@@ -122,3 +122,12 @@ export { ApiKey } from "../constants/preload";
 export type { Api } from "../types/preload";
 
 export type { MessageData, MessageEvent, Message, MessageDirection } from "../types/message";
+
+export type { NormalEvent, NormalEventMaps, NormalEventPayload } from "../types/event";
+
+export type {
+  InvokeEvent,
+  InvokeEventArgs,
+  InvokeEventMaps,
+  InvokeEventPayload
+} from "../types/invoke";

@@ -38,3 +38,10 @@ type CacheStoreAsyncRequest = {
   }[];
   method: string;
 };
+
+type CacheStoreSizeCategories = {
+  image: number;
+  audio: number;
+  video: number;
+  other: number;
+};

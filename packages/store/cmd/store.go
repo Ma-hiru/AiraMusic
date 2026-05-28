@@ -13,7 +13,7 @@ func InitStore(storePath string, storeOption core.StoreOption) {
 	var store *core.Store
 	var err error
 
-	if meta, err = core.CreateLocalStore(storePath); !errors.Is(err, core.ErrStoreExist) {
+	if meta, err = core.CreateLocalStore(storePath); !errors.Is(err, core.ErrStoreExist) && err != nil {
 		fmt.Println("Failed to create local store:", err)
 		os.Exit(114514)
 	}

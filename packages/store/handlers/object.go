@@ -185,7 +185,7 @@ func FetchObjectMulti(ctx *gin.Context) {
 			log.Println(err)
 			continue
 		}
-		storeFile.Close() //nolint:errcheck
+		_ = storeFile.Close() //nolint:errcheck
 		result = append(result, data)
 	}
 

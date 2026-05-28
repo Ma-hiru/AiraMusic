@@ -79,7 +79,7 @@ func LoadLocalStore(meta *StoreMeta, opt StoreOption) (*Store, error) {
 	// 加载索引数据
 	store.loadIndex()
 	// 以追加模式重新打开索引文件
-	store.indexHandle.file.Close() //nolint:errcheck
+	_ = store.indexHandle.file.Close() //nolint:errcheck
 	indexFile, err = os.OpenFile(indexPath, os.O_APPEND|os.O_RDWR, 0666)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open index file for appending: %v", err)

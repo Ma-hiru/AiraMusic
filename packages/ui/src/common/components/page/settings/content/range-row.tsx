@@ -10,6 +10,7 @@ interface RangeRowProps {
   min: number;
   max: number;
   step: number;
+  debounced?: boolean;
   rangeValue: number;
   onChange: NormalFunc<[value: number]>;
   icon: LucideIcon;
@@ -23,9 +24,13 @@ const RangeRow: FC<RangeRowProps> = ({
   step,
   rangeValue,
   onChange,
-  icon
+  icon,
+  debounced = true
 }) => {
-  const debouncedHandler = useMemo(() => debounce(onChange, 300), [onChange]);
+  const debouncedHandler = useMemo(() => {
+    if (debounced) return debounce(onChange, 300);
+    return onChange;
+  }, [debounced, onChange]);
   return (
     <BaseItem
       icon={icon}

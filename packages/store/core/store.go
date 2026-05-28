@@ -14,6 +14,7 @@ import (
 )
 
 // #region CURD 操作
+
 // CheckByID 检查指定 id 的文件是否已存在于存储中，存在则返回对应的索引和 true，否则返回 false
 func (Self *Store) CheckByID(id string) (index Index, exist bool) {
 	Self.indexMappedLock.RLock()
@@ -184,7 +185,7 @@ func (Self *Store) EndWrite(id, url string, success bool) Index {
 	} else {
 		log.Println("Failed stating written file:", err)
 	}
-	wFile.file.Close() //nolint:errcheck
+	_ = wFile.file.Close() //nolint:errcheck
 
 	if !success {
 		_ = os.Remove(wFile.tmpPath)
@@ -246,6 +247,7 @@ func (Self *Store) Move(path string, progress chan<- MoveProgressChan) error {
 	if path == "" {
 		return fmt.Errorf("target path is empty")
 	}
+	path = filepath.Clean(path)
 	if path == Self.meta.storeDir {
 		return fmt.Errorf("target path is the same as Current store path")
 	}
@@ -272,7 +274,7 @@ func (Self *Store) Move(path string, progress chan<- MoveProgressChan) error {
 		return err
 	}
 
-	var totalCount int64 = 0
+	var fileEntries = make([]os.DirEntry, 0, len(dirEntries))
 	var errorCount int64 = 0
 	var currentCount int64 = 0
 	var percent int64
@@ -280,21 +282,60 @@ func (Self *Store) Move(path string, progress chan<- MoveProgressChan) error {
 		if entry.IsDir() {
 			continue
 		}
-		totalCount += 1
+		fileEntries = append(fileEntries, entry)
+	}
+	sort.SliceStable(fileEntries, func(i, j int) bool {
+		if fileEntries[i].Name() == Self.meta.indexName {
+			return false
+		}
+		if fileEntries[j].Name() == Self.meta.indexName {
+			return true
+		}
+		return false
+	})
+	var totalCount = int64(len(fileEntries))
+	if totalCount == 0 {
+		Self.indexMappedLock.Unlock()
+		Self.currentWriteMappedLock.Unlock()
+		Self.indexHandle.mutex.Unlock()
+		return nil
 	}
 	// 移动文件时先关闭索引文件句柄，移动完成后再重新打开索引文件句柄，避免移动过程中索引文件被占用导致的错误
-	Self.indexHandle.file.Close() //nolint:errcheck
-	for _, entry := range dirEntries {
-		if entry.IsDir() {
-			continue
+	_ = Self.indexHandle.file.Close() //nolint:errcheck
+
+	type movedFile struct {
+		src string
+		dst string
+	}
+	var movedFiles = make([]movedFile, 0, len(fileEntries))
+	var moveFile = func(srcPath string, destPath string) error {
+		if err := os.Rename(srcPath, destPath); err != nil {
+			if !utils.MoveFileByCopy(srcPath, destPath) {
+				return err
+			}
 		}
+		return nil
+	}
+	var reopenIndexHandle = func(dir string) error {
+		var indexPath = filepath.Join(dir, Self.meta.indexName)
+		var indexFile, err = os.OpenFile(indexPath, os.O_APPEND|os.O_RDWR, 0666)
+		if err != nil {
+			return err
+		}
+		Self.indexHandle.file = indexFile
+		return nil
+	}
+
+	for _, entry := range fileEntries {
 		var srcPath = filepath.Join(Self.meta.storeDir, entry.Name())
 		var destPath = filepath.Join(path, entry.Name())
-		err = os.Rename(srcPath, destPath)
+		err = moveFile(srcPath, destPath)
 		currentCount += 1
 		percent = (currentCount * 100) / totalCount
 		if err != nil {
 			errorCount += 1
+		} else {
+			movedFiles = append(movedFiles, movedFile{src: srcPath, dst: destPath})
 		}
 		if progress != nil {
 			progress <- MoveProgressChan{
@@ -305,6 +346,25 @@ func (Self *Store) Move(path string, progress chan<- MoveProgressChan) error {
 			}
 		}
 	}
+
+	if errorCount > 0 {
+		for i := len(movedFiles) - 1; i >= 0; i-- {
+			if err := moveFile(movedFiles[i].dst, movedFiles[i].src); err != nil {
+				log.Println("Failed to rollback moved file:", err)
+			}
+		}
+		if err = reopenIndexHandle(Self.meta.storeDir); err != nil {
+			Self.indexMappedLock.Unlock()
+			Self.currentWriteMappedLock.Unlock()
+			Self.indexHandle.mutex.Unlock()
+			return fmt.Errorf("failed to move %d of %d files and failed to reopen index: %w", errorCount, totalCount, err)
+		}
+		Self.indexMappedLock.Unlock()
+		Self.currentWriteMappedLock.Unlock()
+		Self.indexHandle.mutex.Unlock()
+		return fmt.Errorf("failed to move %d of %d files", errorCount, totalCount)
+	}
+
 	// 更新存储目录
 	Self.meta.storeDir = filepath.Clean(path)
 	// 更新索引中的路径信息
@@ -330,6 +390,7 @@ func (Self *Store) Move(path string, progress chan<- MoveProgressChan) error {
 //#endregion
 
 // #region 统计操作
+
 // ItemCount 返回当前存储的文件数量
 func (Self *Store) ItemCount() int {
 	Self.indexMappedLock.RLock()
@@ -383,6 +444,7 @@ func (Self *Store) TotalBytesByCategory() (image uint64, audio uint64, video uin
 // #endregion
 
 // #region 生命周期操作
+
 // Destroy 销毁文件句柄，保存索引到文件
 func (Self *Store) Destroy() error {
 	return Self.destroyIdxHandle()
@@ -510,7 +572,7 @@ func (Self *Store) LimitCapacity() error {
 	})
 
 	var deletedSize uint64 = 0
-	var deletedCount int = 0
+	var deletedCount = 0
 	for _, index := range indexes {
 		// 删除文件后，如果容量已满足限制，则停止删除
 		if currentSize-deletedSize <= capacity {
@@ -543,6 +605,7 @@ func (Self *Store) LimitCapacity() error {
 // #endregion
 
 // #region 其他操作
+
 // Path 返回存储目录路径
 func (Self *Store) Path() string {
 	return Self.meta.storeDir
@@ -589,8 +652,7 @@ func (Self *Store) destroyIdxHandle() error {
 		indexData = append(indexData, index)
 	}
 	Self.indexMappedLock.RUnlock()
-	Self.indexHandle.Destroy(&Self.meta, indexData)
-	return nil
+	return Self.indexHandle.Destroy(&Self.meta, indexData)
 }
 
 // 强制更新存储索引并重建索引文件句柄，如果失败，由于无法继续使用存储，直接 panic
