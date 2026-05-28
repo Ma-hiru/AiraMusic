@@ -85,7 +85,13 @@ const Settings: FC<SettingsProps> = ({
         `,
         className
       )}>
-      <SettingsAside user={user} settings={settings} logout={logout} login={login} />
+      <SettingsAside
+        user={user}
+        settings={settings}
+        cacheStoreConfig={cacheStoreConfig}
+        logout={logout}
+        login={login}
+      />
       <SettingsContent
         user={user}
         settings={settings}

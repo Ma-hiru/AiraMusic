@@ -1,7 +1,9 @@
 <template>
   <div class="w-full h-full relative" @mousemove.passive="toggleToolBar(true)">
     <slot class="absolute" name="default" />
-    <div class="viewer-title" :class="toolBarVisible && 'active'">
+    <div
+      class="viewer-title bg-(--text-color-on-main)/50 backdrop-blur-md text-(--theme-color-main)"
+      :class="toolBarVisible && 'active'">
       <span class="max-w-2/3 truncate text-center">
         {{ current.alt || current.url }}
       </span>
@@ -9,20 +11,19 @@
         {{ ` (${index + 1}/${props.images.length}) ` }}
       </span>
     </div>
-    <div class="viewer-button" :class="toolBarVisible && 'active'">
+    <div
+      class="viewer-button bg-(--text-color-on-main)/50 backdrop-blur-md text-(--theme-color-main)"
+      :class="toolBarVisible && 'active'">
       <ArrowLeftToLine
         v-if="props.images.length > 1"
         class="cursor-pointer hover:opacity-50 active:scale-90 duration-300 transition-all ease-in-out size-5"
-        color="#ffffff"
         @click.passive="lastImage" />
       <Download
         class="cursor-pointer hover:opacity-50 active:scale-90 duration-300 transition-all ease-in-out size-5"
-        color="#ffffff"
         @click.passive="saveImage" />
       <ArrowRightToLine
         v-if="props.images.length > 1"
         class="cursor-pointer hover:opacity-50 active:scale-90 duration-300 transition-all ease-in-out size-5"
-        color="#ffffff"
         @click.passive="nextImage" />
     </div>
     <AppLoading class="viewer" :loading="status === 'loading'" />
@@ -53,10 +54,12 @@
   import { ArrowLeftToLine, ArrowRightToLine, Download } from "lucide-vue-next";
   import { Log } from "@/common/lib/log";
   import { RendererIPC } from "@/common/lib/ipc";
+  import { useThemeInjectFromBus } from "@/common/hooks/use-theme-inject-from-bus-vue";
   import AppLoading from "@/common/components/fallback/app-loading.vue";
 
   type ImageEntry = { url?: string; alt?: string };
 
+  useThemeInjectFromBus();
   const viewerRef = useTemplateRef<HTMLDivElement>("viewerRef");
   const imageRef = useTemplateRef<HTMLImageElement>("imageRef");
   const status = ref<"loading" | "error" | "loaded">("loading");
@@ -371,7 +374,6 @@
     position: absolute;
     left: 0;
     right: 0;
-    background: rgba(0, 0, 0, 0.7);
     backdrop-filter: blur(2px);
     z-index: 5;
     height: 36px;
@@ -381,7 +383,6 @@
   .viewer-title {
     @include tool-bar;
     top: -36px;
-    color: white;
     font-weight: 500;
     display: flex;
     justify-content: center;

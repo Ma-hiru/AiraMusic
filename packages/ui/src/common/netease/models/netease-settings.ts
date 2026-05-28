@@ -9,14 +9,10 @@ export interface NeteaseSettingsModel {
     barSpectrum: boolean;
     playerSpectrum: boolean;
     spectrumFps: number;
+    windowPreload: boolean;
   };
   preference: {
     defaultUseDisplayWindow: boolean;
-  };
-  cache: {
-    maxCacheSize: number;
-    maxCacheTime: number;
-    cachePath: string;
   };
 }
 
@@ -28,12 +24,8 @@ export const defaultSettings: NeteaseSettingsModel = {
   performance: {
     barSpectrum: true,
     playerSpectrum: true,
-    spectrumFps: 30
-  },
-  cache: {
-    maxCacheSize: 1024 * 1024 * 1024 * 5, // 5GB
-    maxCacheTime: 7 * 24 * 60 * 60 * 1000, // 7天
-    cachePath: ""
+    spectrumFps: 30,
+    windowPreload: true
   },
   preference: {
     defaultUseDisplayWindow: false
@@ -43,13 +35,11 @@ export const defaultSettings: NeteaseSettingsModel = {
 export class NeteaseSettings implements NeteaseSettingsModel {
   trackQuality;
   performance;
-  cache;
   preference;
 
   constructor(props: NeteaseSettingsModel) {
     this.trackQuality = props.trackQuality;
     this.performance = props.performance;
-    this.cache = props.cache;
     this.preference = props.preference;
   }
 

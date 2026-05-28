@@ -32,8 +32,7 @@ const SettingsContent: FC<SettingsContentProps> = ({
       updateSettings({
         trackQuality: patch.trackQuality ?? { ...settings.trackQuality },
         performance: patch.performance ?? { ...settings.performance },
-        preference: patch.preference ?? { ...settings.preference },
-        cache: patch.cache ?? { ...settings.cache }
+        preference: patch.preference ?? { ...settings.preference }
       });
     },
     [settings, updateSettings]
