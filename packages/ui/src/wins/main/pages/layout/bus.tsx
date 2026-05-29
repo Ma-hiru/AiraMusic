@@ -18,7 +18,7 @@ import { useLatestRef } from "@/common/hooks/use-latest-ref";
 const Bus: FC<object> = () => {
   const theme = useAtomValue(themeAtom);
   const player = AppEntry.usePlayer();
-  const { selected, views, setDevice } = useAudioOutput(player.audio.instance);
+  const { selected, views, setDevice } = useAudioOutput(player.audio.outputTarget);
 
   //#region -------- 需要推送给别人的BUS --------
   // 1. progress、info、player 歌曲、歌词、主题、进度信息
@@ -47,11 +47,6 @@ const Bus: FC<object> = () => {
       }
     });
   }, [theme.backgroundCover, theme.mainColor, theme.secondaryColor, theme.textColorOnMain]);
-  const updateBus = useLatestRef(() => {
-    updatePlayerBus();
-    updateProgressBus();
-    updateInfoBus();
-  });
   useEffect(() => {
     player.audio.addEventListener("timeupdate", updateProgressBus, { passive: true });
     player.audio.addEventListener("play", updateProgressBus, { passive: true });
@@ -70,13 +65,33 @@ const Bus: FC<object> = () => {
   useEffect(updateInfoBus, [updateInfoBus]);
 
   // 2. outputBus 播放设备推送
-  useEffect(() => {
-    console.log(views);
+  const updateOutputs = useCallback(() => {
     RendererEventBus.output.send({
       selected,
-      views
+      views: views.map((v) => {
+        let displayName;
+        if (v.label === v.displayName) {
+          displayName = v.label;
+        } else if (v.label && v.displayName) {
+          displayName = `${v.displayName}(${v.label})`;
+        } else {
+          displayName = v.label || v.displayName || "Unknown Device";
+        }
+        return {
+          deviceId: v.deviceId,
+          displayName
+        };
+      })
     });
   }, [selected, views]);
+  useEffect(updateOutputs, [updateOutputs]);
+
+  const updateBus = useLatestRef(() => {
+    updatePlayerBus();
+    updateProgressBus();
+    updateInfoBus();
+    updateOutputs();
+  });
   //#endregion
 
   //#region -------- 需要接收并处理的BUS/消息 --------
@@ -135,10 +150,13 @@ const Bus: FC<object> = () => {
         case "info":
           updateInfoBus();
           break;
+        case "output":
+          updateOutputs();
+          break;
       }
     }
     RendererEventBus.clear("updateBus");
-  }, [updateInfoBus, updatePlayerBus, updateProgressBus, mainBusUpdater.data]);
+  }, [updateInfoBus, updatePlayerBus, updateProgressBus, mainBusUpdater.data, updateOutputs]);
 
   // 3. playerChangeBus 播放列表变化处理
   const playerChangeBus = useListenable(RendererEventBus.playerChange);

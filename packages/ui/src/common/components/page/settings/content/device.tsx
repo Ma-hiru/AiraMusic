@@ -1,5 +1,6 @@
-import { type FC, memo } from "react";
 import { cx } from "@emotion/css";
+import { type FC, memo, useEffect } from "react";
+import { RendererWindow } from "@/common/lib/window";
 
 import Card from "@/common/components/card";
 
@@ -8,13 +9,17 @@ interface DeviceProps {
   updateOutput: NormalFunc<[deviceId: string]>;
 }
 
-const device: FC<DeviceProps> = ({ output, updateOutput }) => {
+const Device: FC<DeviceProps> = ({ output, updateOutput }) => {
+  useEffect(() => {
+    RendererWindow.main.send("updateBus", "output");
+  }, []);
   return (
     <Card title="播放设备" subTitle="Devices">
       <div className="w-full flex flex-col gap-3">
         {output.views.map((v) => {
           return (
             <div
+              key={v.deviceId}
               className={cx(
                 `
                   hover:opacity-50 active:scale-95
@@ -33,4 +38,4 @@ const device: FC<DeviceProps> = ({ output, updateOutput }) => {
   );
 };
 
-export default memo(device);
+export default memo(Device);

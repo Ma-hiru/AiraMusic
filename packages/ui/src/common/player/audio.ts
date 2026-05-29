@@ -4,6 +4,7 @@ import { NeteaseLocalAudio, NeteaseNetworkAudio } from "@/common/netease/models"
 
 export default class RendererPlayerAudio {
   readonly audio = new Audio();
+  readonly outputTarget: RendererAudioOutputTarget = { audio: this.audio, context: null };
   readonly addEventListener = this.audio.addEventListener.bind(this.audio);
   readonly removeEventListener = this.audio.removeEventListener.bind(this.audio);
   private readonly removeEvents: NormalFunc;
@@ -132,6 +133,8 @@ export default class RendererPlayerAudio {
     this.sourceRef = source;
     this.analyserRef = analyser;
     this.audioCtxRef = ctx;
+    this.outputTarget.context = ctx as RendererSinkableAudioContext;
+    this.syncAudioContextSink();
     return {
       source,
       analyser,
@@ -173,5 +176,21 @@ export default class RendererPlayerAudio {
     this.sourceRef = null;
     this.analyserRef = null;
     this.audioCtxRef = null;
+    this.outputTarget.context = null;
+  }
+
+  /** 创建ctx时，同步 sinkId（如果有），空或默认时设置为 this.audio.sinkId */
+  private syncAudioContextSink() {
+    const context = this.outputTarget.context;
+    if (!context?.setSinkId) return;
+    const sinkId =
+      this.outputTarget.sinkId && this.outputTarget.sinkId !== "default"
+        ? this.outputTarget.sinkId
+        : this.audio.sinkId;
+    if (!sinkId) return;
+
+    context.setSinkId(sinkId).catch((err) => {
+      Log.warn("RendererPlayerAudio", "failed to sync AudioContext sink", err);
+    });
   }
 }

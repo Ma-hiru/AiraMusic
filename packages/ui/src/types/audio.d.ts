@@ -25,3 +25,16 @@ type RendererSinkableAudioElement = HTMLMediaElement & {
   sinkId?: string;
   setSinkId?: (sinkId: string) => Promise<void>;
 };
+
+type RendererAudioSinkId = string | { type: "none" };
+
+type RendererSinkableAudioContext = AudioContext & {
+  sinkId?: RendererAudioSinkId;
+  setSinkId?: (sinkId: RendererAudioSinkId) => Promise<void>;
+};
+
+type RendererAudioOutputTarget = {
+  audio: RendererSinkableAudioElement;
+  context: Nullable<RendererSinkableAudioContext>;
+  sinkId?: string;
+};

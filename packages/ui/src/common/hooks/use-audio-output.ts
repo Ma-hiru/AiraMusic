@@ -5,7 +5,7 @@ import { RendererOutput } from "@/common/lib/output";
 import { useEffect, useRef, useState } from "react";
 import { useLatestRef } from "@/common/hooks/use-latest-ref";
 
-export function useAudioOutput(audio: HTMLAudioElement) {
+export function useAudioOutput(target: RendererAudioOutputTarget) {
   const output = useListenable(RendererOutput);
   const [views, setViews] = useState<RendererAudioOutputDeviceView[]>([]);
   const [selected, setSelected] = useState(output.DEFAULT_DEVICE_ID);
@@ -27,7 +27,7 @@ export function useAudioOutput(audio: HTMLAudioElement) {
       })
       .then(setViews);
   }, [
-    audio,
+    target,
     selectedRef,
     output,
     /** 内部变化，不体现在对象身上，需再次获取列表才知道是否现有的设备改变 */
@@ -36,22 +36,26 @@ export function useAudioOutput(audio: HTMLAudioElement) {
 
   // 自动切换音频设备
   useEffect(() => {
-    if (output.currentID(audio) === selected) return;
+    if (output.currentID(target) === selected) return;
 
     let promise;
     if (selected === output.DEFAULT_DEVICE_ID) {
-      promise = output.setDefault(audio);
+      promise = output.setDefault(target);
     } else {
-      promise = output.set(audio, selected);
+      promise = output.set(target, selected);
     }
-    promise.catch((err) => {
-      Log.error("useAudioOutput", err);
-      AppToast.show({
-        type: "error",
-        text: "切换音频设备失败"
+    promise
+      .catch((err) => {
+        Log.error("useAudioOutput", err);
+        AppToast.show({
+          type: "error",
+          text: "切换音频设备失败"
+        });
+      })
+      .finally(() => {
+        setSelected(output.currentID(target));
       });
-    });
-  }, [audio, output, selected]);
+  }, [output, selected, target]);
 
   return {
     views,

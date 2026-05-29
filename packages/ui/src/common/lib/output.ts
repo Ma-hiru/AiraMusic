@@ -4,10 +4,10 @@ import { Log } from "@/common/lib/log";
 class _RendererOutput extends Listenable {
   readonly DEFAULT_DEVICE_ID = "default";
 
-  private onChange() {
+  private readonly onChange = () => {
     Log.info("deviceChange");
     this.executeListeners();
-  }
+  };
 
   constructor() {
     super("RendererOutput");
@@ -15,7 +15,7 @@ class _RendererOutput extends Listenable {
   }
 
   override [Symbol.dispose]() {
-    navigator.mediaDevices.removeEventListener("devicechange", this.onChange);
+    navigator.mediaDevices?.removeEventListener?.("devicechange", this.onChange);
     super[Symbol.dispose]();
   }
 
@@ -60,54 +60,38 @@ class _RendererOutput extends Listenable {
     return devices.find((d) => d.isDefault) ?? devices[0] ?? null;
   }
 
-  public currentID(audio: RendererSinkableAudioElement) {
-    return audio.sinkId || this.DEFAULT_DEVICE_ID;
+  public currentID(target: RendererAudioOutputTarget) {
+    const { audio, context, sinkId } = target;
+    return this.readSinkId(context?.sinkId) || sinkId || audio.sinkId || this.DEFAULT_DEVICE_ID;
   }
 
-  async currentDevice(audio: RendererSinkableAudioElement) {
+  async currentDevice(target: RendererAudioOutputTarget) {
     const devices = await this.devices();
-    const currentID = this.currentID(audio);
+    const currentID = this.currentID(target);
     return (
       devices.find((d) => d.deviceId === currentID) ?? devices.find((d) => d.isDefault) ?? null
     );
   }
 
-  async isCurrentAvailable(audio: RendererSinkableAudioElement) {
-    const currentID = this.currentID(audio);
+  async isCurrentAvailable(target: RendererAudioOutputTarget) {
+    const currentID = this.currentID(target);
     if (currentID === this.DEFAULT_DEVICE_ID) return true;
     const devices = await this.devices();
     return devices.some((d) => d.deviceId === currentID);
   }
 
-  async set(audio: RendererSinkableAudioElement, deviceId: string) {
-    if (!audio.setSinkId) {
-      throw new Error("当前环境不支持 setSinkId");
-    }
-
-    try {
-      await audio.setSinkId(deviceId);
-    } catch (error) {
-      console.error("[RendererOutput.setSinkId failed]", {
-        deviceId,
-        currentSinkId: audio.sinkId,
-        readyState: audio.readyState,
-        error,
-        name: error instanceof DOMException ? error.name : undefined,
-        message: error instanceof Error ? error.message : String(error)
-      });
-
-      throw error;
-    }
+  private isSetting = false;
+  async set(target: RendererAudioOutputTarget, deviceId: string) {
+    await this.setSinkId(target, deviceId, deviceId);
   }
 
-  async setDefault(audio: RendererSinkableAudioElement) {
-    if (!audio.setSinkId) throw new Error("当前环境不支持切换输出");
+  async setDefault(target: RendererAudioOutputTarget) {
     try {
-      // 规空字符串表示 user-agent 默认输出设备
-      await audio.setSinkId("");
+      // 空字符串表示 user-agent 默认输出设备。
+      await this.setSinkId(target, "", this.DEFAULT_DEVICE_ID);
     } catch {
-      // 可用写法
-      await audio.setSinkId(this.DEFAULT_DEVICE_ID);
+      // Chromium 的枚举列表也可能暴露 "default" 这个设备 ID。
+      await this.setSinkId(target, this.DEFAULT_DEVICE_ID, this.DEFAULT_DEVICE_ID);
     }
   }
 
@@ -182,6 +166,62 @@ class _RendererOutput extends Listenable {
       case "unknown":
         return 12;
     }
+  }
+
+  private readSinkId(sinkId: Undefinable<RendererAudioSinkId>) {
+    return typeof sinkId === "string" && sinkId.length > 0 ? sinkId : undefined;
+  }
+
+  private async setSinkId(
+    target: RendererAudioOutputTarget,
+    apiSinkId: string,
+    selectedDeviceId: string
+  ) {
+    const { audio, context } = target;
+    if (!audio.setSinkId && !context?.setSinkId) throw new Error("当前环境不支持切换输出");
+    if (this.isSetting) return;
+    this.isSetting = true;
+
+    try {
+      if (context?.setSinkId) {
+        try {
+          await context.setSinkId(apiSinkId);
+          target.sinkId = selectedDeviceId;
+          return;
+        } catch (error) {
+          throw this.createSinkError(target, selectedDeviceId, error, "AudioContext.setSinkId");
+        }
+      }
+      if (audio.setSinkId) {
+        try {
+          await audio.setSinkId(apiSinkId);
+          target.sinkId = selectedDeviceId;
+          return;
+        } catch (error) {
+          throw this.createSinkError(target, selectedDeviceId, error, "HTMLMediaElement.setSinkId");
+        }
+      }
+    } finally {
+      this.isSetting = false;
+    }
+  }
+
+  private createSinkError(
+    target: RendererAudioOutputTarget,
+    deviceId: string,
+    error: unknown,
+    phase: string
+  ) {
+    return {
+      phase,
+      deviceId,
+      currentSinkId: target.audio.sinkId,
+      audioContextSinkId: target.context?.sinkId,
+      readyState: target.audio.readyState,
+      error,
+      name: error instanceof DOMException ? error.name : undefined,
+      message: error instanceof Error ? error.message : String(error)
+    };
   }
 }
 

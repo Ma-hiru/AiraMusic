@@ -65,7 +65,7 @@ type MessageEventValue = {
     url: string;
     alt?: string;
   };
-  updateBus: "info" | "player" | "progress";
+  updateBus: "info" | "player" | "progress" | "output";
   displayBus:
     | {
         id: number;
