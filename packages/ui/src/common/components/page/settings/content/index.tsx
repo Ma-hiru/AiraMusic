@@ -7,11 +7,14 @@ import Cache from "./cache";
 import Quality from "./quality";
 import Performance from "./performance";
 import Preference from "./preference";
+import Device from "./device";
 
 interface SettingsContentProps {
   user: Nullable<NeteaseUser>;
   settings: NeteaseSettingsModel;
   updateSettings: NormalFunc<[settings: NeteaseSettingsModel]>;
+  output: { selected: string; views: { displayName: string; deviceId: string }[] };
+  updateOutput: NormalFunc<[deviceId: string]>;
   cacheStoreSizes: Nullable<CacheStoreSizeCategories>;
   cacheStoreConfig: Nullable<InvokeEventPayload<"fetchCacheStoreConfig">>;
   updateCacheStoreConfig: PromiseFunc<
@@ -25,7 +28,9 @@ const SettingsContent: FC<SettingsContentProps> = ({
   updateSettings,
   cacheStoreConfig,
   cacheStoreSizes,
-  updateCacheStoreConfig
+  updateCacheStoreConfig,
+  output,
+  updateOutput
 }) => {
   const patchSettings = useCallback(
     (patch: Partial<NeteaseSettingsModel>) => {
@@ -58,6 +63,7 @@ const SettingsContent: FC<SettingsContentProps> = ({
         data={settings.trackQuality}
         updateQuality={updateQuality}
       />
+      <Device output={output} updateOutput={updateOutput} />
       <Performance data={settings.performance} patchSettings={patchSettings} />
       <Preference data={settings.preference} patchSettings={patchSettings} />
       <Cache

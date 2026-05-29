@@ -13,6 +13,8 @@ interface SettingsProps {
   user: Nullable<NeteaseUser>;
   settings: NeteaseSettings;
   updateSettings: NormalFunc<[settings: NeteaseSettingsModel]>;
+  output: { selected: string; views: { displayName: string; deviceId: string }[] };
+  updateOutput: NormalFunc<[deviceId: string]>;
   logout: NormalFunc;
   login: NormalFunc;
   className?: string;
@@ -24,7 +26,9 @@ const Settings: FC<SettingsProps> = ({
   updateSettings,
   className,
   logout,
-  login
+  login,
+  updateOutput,
+  output
 }) => {
   const [cacheStoreSizes, setCacheStoreSizes] = useState<Nullable<CacheStoreSizeCategories>>(null);
   const [cacheStoreConfig, setCacheStoreConfig] =
@@ -95,6 +99,8 @@ const Settings: FC<SettingsProps> = ({
       <SettingsContent
         user={user}
         settings={settings}
+        output={output}
+        updateOutput={updateOutput}
         updateSettings={updateSettings}
         cacheStoreConfig={cacheStoreConfig}
         cacheStoreSizes={cacheStoreSizes}

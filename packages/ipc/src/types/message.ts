@@ -105,6 +105,11 @@ type MessageEventValue = {
         sourceType: NeteaseTrackRecordSourceType;
         allIDs: number[];
       };
+  outputBus: {
+    selected: string;
+    views: { displayName: string; deviceId: string }[];
+  };
+  changeOutput: string;
 };
 
 export type MessageEvent = keyof MessageEventValue;

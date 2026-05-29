@@ -11,21 +11,10 @@ export abstract class Listenable<EventName = string> {
   private listenerMicrotaskPending = false;
   private updateMode: "microtask" | "sync" | "debounce" = "debounce";
   private updateGap = 100; // ms
+  public _innerCount = 0;
 
   constructor(name?: string) {
     this.listenableName = name;
-  }
-
-  private flushListeners(event?: EventName) {
-    const execute = (listeners: typeof this.listeners) => {
-      for (const [listener, options] of [...listeners.entries()]) {
-        options.once && listeners.delete(listener);
-        this.wrapListener(listener)();
-      }
-    };
-    const eventListeners = event && this.eventListeners.get(event);
-    eventListeners && execute(eventListeners);
-    execute(this.listeners);
   }
 
   protected wrapListener(
@@ -40,6 +29,24 @@ export abstract class Listenable<EventName = string> {
         Log.error({ message, label, raw });
       }
     };
+  }
+
+  private flushListeners(event?: EventName) {
+    const execute = (listeners: typeof this.listeners) => {
+      for (const [listener, options] of [...listeners.entries()]) {
+        options.once && listeners.delete(listener);
+        this.wrapListener(listener)();
+      }
+    };
+    if (event) {
+      // 指明事件时，触发事件回调
+      const eventListeners = this.eventListeners.get(event);
+      eventListeners && execute(eventListeners);
+    }
+    // 触发通用回调
+    execute(this.listeners);
+    // 增加内部计数器
+    this._innerCount++;
   }
 
   protected executeListeners(event?: EventName, mode = this.updateMode) {
@@ -67,15 +74,15 @@ export abstract class Listenable<EventName = string> {
     this.listeners.clear();
   }
 
-  setUpdateGap(ms: number) {
+  public setUpdateGap(ms: number) {
     this.updateGap = Number.isFinite(ms) ? Math.max(Math.floor(ms), 0) : 100;
   }
 
-  setUpdateMode(mode: typeof this.updateMode) {
+  public setUpdateMode(mode: typeof this.updateMode) {
     this.updateMode = mode;
   }
 
-  addListener(callback: NormalFunc, props: { once?: boolean; id?: string } = {}) {
+  public addListener(callback: NormalFunc, props: { once?: boolean; id?: string } = {}) {
     props.once ??= false;
     props.id ??= window.crypto.randomUUID();
     this.listeners.set(callback, { id: props.id, once: props.once });
@@ -88,7 +95,7 @@ export abstract class Listenable<EventName = string> {
     return unsubscriber;
   }
 
-  addEventListener(
+  public addEventListener(
     event: EventName,
     callback: NormalFunc,
     props: { once?: boolean; id?: string } = {}
@@ -107,7 +114,7 @@ export abstract class Listenable<EventName = string> {
     return unsubscriber;
   }
 
-  removeListener(callback: NormalFunc | string) {
+  public removeListener(callback: NormalFunc | string) {
     if (typeof callback === "string") {
       for (const [listener, { id }] of this.listeners) {
         if (id === callback) {
@@ -120,7 +127,7 @@ export abstract class Listenable<EventName = string> {
     this.listeners.delete(callback);
   }
 
-  removeEventListener(event: EventName, callback: NormalFunc | string) {
+  public removeEventListener(event: EventName, callback: NormalFunc | string) {
     if (typeof callback === "string") {
       for (const [listener, { id }] of this.eventListeners.get(event) ?? []) {
         if (id === callback) {
@@ -133,7 +140,7 @@ export abstract class Listenable<EventName = string> {
     this.eventListeners.get(event)?.delete(callback);
   }
 
-  afterUpdate<T extends Undefinable<NormalFunc> = undefined>(
+  public afterUpdate<T extends Undefinable<NormalFunc> = undefined>(
     cb?: T
   ): T extends Falsy ? Promise<void> : void {
     if (!cb) {

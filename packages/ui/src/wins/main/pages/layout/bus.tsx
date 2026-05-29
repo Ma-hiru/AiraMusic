@@ -12,19 +12,19 @@ import { type MessageData } from "@mahiru/ipc/renderer";
 import { useAtomValue } from "jotai";
 import { themeAtom } from "@/wins/main/atoms/theme";
 import AppEntry from "@/wins/main/entry";
+import { useAudioOutput } from "@/common/hooks/use-audio-output";
+import { useLatestRef } from "@/common/hooks/use-latest-ref";
 
 const Bus: FC<object> = () => {
   const theme = useAtomValue(themeAtom);
-  const windowCurrent = useListenable(RendererWindow.current);
-  const playerActionBus = useListenable(RendererEventBus.playerAction);
-  const playerChangeBus = useListenable(RendererEventBus.playerChange);
-  const mainBusUpdater = useListenable(RendererEventBus.mainBusUpdater);
   const player = AppEntry.usePlayer();
+  const { selected, views, setDevice } = useAudioOutput(player.audio.instance);
 
+  //#region -------- 需要推送给别人的BUS --------
+  // 1. progress、info、player 歌曲、歌词、主题、进度信息
   const updateProgressBus = useCallback(() => {
     RendererEventBus.progress.send(player.audio.progress);
   }, [player.audio.progress]);
-
   const updatePlayerBus = useCallback(() => {
     RendererEventBus.player.send({
       track: player.current.track,
@@ -37,7 +37,6 @@ const Bus: FC<object> = () => {
       status: player.statusText
     });
   }, [player]);
-
   const updateInfoBus = useCallback(() => {
     RendererEventBus.info.send({
       backgroundCover: theme.backgroundCover ?? undefined,
@@ -48,19 +47,11 @@ const Bus: FC<object> = () => {
       }
     });
   }, [theme.backgroundCover, theme.mainColor, theme.secondaryColor, theme.textColorOnMain]);
-
-  const updateBus = useRef(() => {
+  const updateBus = useLatestRef(() => {
     updatePlayerBus();
     updateProgressBus();
     updateInfoBus();
   });
-
-  updateBus.current = () => {
-    updatePlayerBus();
-    updateProgressBus();
-    updateInfoBus();
-  };
-
   useEffect(() => {
     player.audio.addEventListener("timeupdate", updateProgressBus, { passive: true });
     player.audio.addEventListener("play", updateProgressBus, { passive: true });
@@ -75,11 +66,23 @@ const Bus: FC<object> = () => {
       player.audio.removeEventListener("loadstart", updateProgressBus);
     };
   }, [player.audio, updateProgressBus]);
-
   useEffect(() => player.addListener(updatePlayerBus), [player, updatePlayerBus]);
-
   useEffect(updateInfoBus, [updateInfoBus]);
 
+  // 2. outputBus 播放设备推送
+  useEffect(() => {
+    console.log(views);
+    RendererEventBus.output.send({
+      selected,
+      views
+    });
+  }, [selected, views]);
+  //#endregion
+
+  //#region -------- 需要接收并处理的BUS/消息 --------
+  // 1. playerAction 播放动作，比如上一首、下一首等
+  const windowCurrent = useListenable(RendererWindow.current);
+  const playerActionBus = useListenable(RendererEventBus.playerAction);
   useEffect(() => {
     const actions = playerActionBus.data;
     if (actions.length === 0) return;
@@ -114,8 +117,10 @@ const Bus: FC<object> = () => {
       }
     }
     RendererEventBus.clear("playerActionBus");
-  }, [player.audio, player.playlist, playerActionBus.data, windowCurrent]);
+  }, [player.audio, player.playlist, playerActionBus.data, updateBus, windowCurrent]);
 
+  // 2. mainBusUpdater 请求式bus, 请求bus再次推送
+  const mainBusUpdater = useListenable(RendererEventBus.mainBusUpdater);
   useEffect(() => {
     const actions = mainBusUpdater.data;
     if (actions.length === 0) return;
@@ -135,6 +140,8 @@ const Bus: FC<object> = () => {
     RendererEventBus.clear("updateBus");
   }, [updateInfoBus, updatePlayerBus, updateProgressBus, mainBusUpdater.data]);
 
+  // 3. playerChangeBus 播放列表变化处理
+  const playerChangeBus = useListenable(RendererEventBus.playerChange);
   // 是否正在应用更改
   const applyingChanges = useRef(false);
   // 变更队列
@@ -198,13 +205,7 @@ const Bus: FC<object> = () => {
     void applyPlayerChanges();
   }, [applyPlayerChanges, playerChangeBus.data]);
 
-  useEffect(() => {
-    AppEntry.busUpdater = () => updateBus.current();
-    return () => {
-      AppEntry.busUpdater = undefined;
-    };
-  }, [updateBus]);
-
+  // 4. 处理 display 合并消息
   const navigate = useNavigate();
   useEffect(() => {
     return RendererWindow.display.listenMessage("mergeDisplay", (data) => {
@@ -227,6 +228,25 @@ const Bus: FC<object> = () => {
       RendererWindow.current.focus();
     });
   }, [navigate]);
+
+  // 5. 处理设备切换
+  const viewsRef = useLatestRef(views);
+  useEffect(() => {
+    return RendererWindow.display.listenMessage("changeOutput", (deviceId) => {
+      const views = viewsRef.current;
+      if (!views.find((v) => v.deviceId === deviceId)) return;
+      setDevice(deviceId);
+    });
+  }, [setDevice, viewsRef]);
+  //#endregion
+
+  // 将bus更新函数挂载，可以在其他地方使用
+  useEffect(() => {
+    AppEntry.busUpdater = () => updateBus.current();
+    return () => {
+      AppEntry.busUpdater = undefined;
+    };
+  }, [updateBus]);
 
   return null;
 };

@@ -91,6 +91,12 @@ class PlayerChangeBus extends BusArray<"playerChangeBus"> {
   }
 }
 
+class OutputBus extends Bus<"outputBus"> {
+  constructor() {
+    super("outputBus");
+  }
+}
+
 export class RendererEventBus {
   private static readonly BusCollections = {
     playerBus: new PlayerBus(),
@@ -100,7 +106,8 @@ export class RendererEventBus {
     playerActionBus: new PlayerActionBus(),
     updateMainBus: new UpdateMainBus(),
     displayBUs: new DisplayBus(),
-    playerChangeBus: new PlayerChangeBus()
+    playerChangeBus: new PlayerChangeBus(),
+    output: new OutputBus()
   };
 
   static get player() {
@@ -133,6 +140,10 @@ export class RendererEventBus {
 
   static get playerChange() {
     return RendererEventBus.BusCollections.playerChangeBus;
+  }
+
+  static get output() {
+    return RendererEventBus.BusCollections.output;
   }
 
   static get collections() {

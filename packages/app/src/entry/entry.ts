@@ -1,4 +1,4 @@
-import { app } from "electron";
+import { app, session } from "electron";
 import { MainApp } from "./app";
 import { MainExitCodeConstants } from "@/constants/exit-code";
 
@@ -13,6 +13,34 @@ export class MainEntry {
     this.instance = instance;
   }
 
+  private permissions() {
+    const allowPermissions = new Set(["speaker-selection"]);
+    const isTrustedOrigin = (url: string) => {
+      return (
+        url.startsWith("file://") ||
+        url.startsWith("http://localhost:") ||
+        url.startsWith("http://127.0.0.1:") ||
+        url.startsWith(`${process.env.APP_SCHEME}://`)
+      );
+    };
+    app.whenReady().then(() => {
+      session.defaultSession.setPermissionRequestHandler(
+        (webContents, permission, callback, details) => {
+          const url = details.requestingUrl || webContents.getURL();
+          if (!isTrustedOrigin(url)) return callback(false);
+          callback(allowPermissions.has(permission));
+        }
+      );
+      session.defaultSession.setPermissionCheckHandler(
+        (_, permission, requestingOrigin, details) => {
+          const url = details.requestingUrl || requestingOrigin;
+          if (!isTrustedOrigin(url)) return false;
+          return allowPermissions.has(permission);
+        }
+      );
+    });
+  }
+
   private commands() {
     app.enableSandbox();
     process.env["ELECTRON_DISABLE_SECURITY_WARNINGS"] = "true";
@@ -20,6 +48,7 @@ export class MainEntry {
 
   tryRun() {
     this.commands();
+    this.permissions();
     // 单实例锁，避免多开
     if (app.requestSingleInstanceLock()) {
       this.instance.init();

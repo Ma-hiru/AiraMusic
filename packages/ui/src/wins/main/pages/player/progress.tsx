@@ -14,7 +14,6 @@ const Progress: FC<object> = () => {
     usePlayProgress();
   const player = AppEntry.usePlayer();
   const quality = player.current.audio?.quality;
-  console.log("detail", player.current.track?.detail);
 
   return (
     <div className="w-37.5 sm:w-50 md:w-62.5 lg:w-75">
