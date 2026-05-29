@@ -2,11 +2,11 @@
  * 音质等级对应的码率
  */
 export const enum TrackQuality {
-  l = 128000,
-  m = 192000,
-  h = 320000,
-  sq = 990000,
-  hr = 9990000
+  l = "128K",
+  m = "192K",
+  h = "320K",
+  sq = "SQ",
+  hr = "Hi-Res"
 }
 
 /**

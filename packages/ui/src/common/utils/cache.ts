@@ -1,5 +1,5 @@
-import type { CacheObjectAsyncInterface, CacheObjectInterface } from "@/common/store/cache/utils";
-import { CacheStore } from "@/common/store/cache";
+import type { CacheObjectAsyncInterface, CacheObjectInterface } from "@/common/lib/cache/utils";
+import { RendererCache } from "@/common/lib/cache";
 import { useMemo } from "react";
 
 export function useCacheRequest<A extends readonly unknown[], R>(
@@ -32,10 +32,10 @@ function getCacheManager(
 ): CacheObjectInterface | CacheObjectAsyncInterface {
   switch (type) {
     case "memory":
-      return CacheStore.memory;
+      return RendererCache.memory;
     case "browser":
-      return CacheStore.browser;
+      return RendererCache.browser;
     case "local":
-      return CacheStore.localSatisfiesInterface;
+      return RendererCache.localSatisfiesInterface;
   }
 }

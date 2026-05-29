@@ -10,7 +10,7 @@ import RangeRow from "./range-row";
 import BaseItem from "./base-item";
 import DonutChart from "./donut-chart";
 import Card from "@/common/components/card";
-import { CacheStore } from "@/common/store/cache";
+import { RendererCache } from "@/common/lib/cache";
 
 interface CacheProps {
   cacheStoreSizes: Nullable<CacheStoreSizeCategories>;
@@ -67,7 +67,7 @@ const Cache: FC<CacheProps> = ({ cacheStoreConfig, cacheStoreSizes, updateCacheS
     });
 
     return new Promise<boolean>((resolve) => {
-      CacheStore.local.other.move(
+      RendererCache.local.other.move(
         path,
         (data) => data && setMovingPercent(data.percent),
         (err) => {
@@ -121,24 +121,22 @@ const Cache: FC<CacheProps> = ({ cacheStoreConfig, cacheStoreSizes, updateCacheS
         icon={Boxes}
         title="缓存容量"
         unit="GB"
-        value={`${capacityGB}GB`}
         min={1}
         max={20}
         step={1}
         debounced={false}
-        rangeValue={capacityRangeValue}
+        value={capacityRangeValue}
         onChange={setCapacityRangeValue}
       />
       <RangeRow
         icon={Clock8}
         title="保留时间"
         unit="天"
-        value={`${ttlDays}天`}
         min={1}
         max={30}
         step={1}
         debounced={false}
-        rangeValue={ttlRangeValue}
+        value={ttlRangeValue}
         onChange={setTtlRangeValue}
       />
       <BaseItem

@@ -1,7 +1,7 @@
-import { userStoreSnapshot } from "@/common/store/user";
 import { useListenable } from "@/common/hooks/use-listenable";
 import { RendererWindow } from "@/common/lib/window";
 import { RendererOnce } from "@/common/lib/once";
+import { RendererCache } from "@/common/lib/cache";
 import AppPlayer from "@/common/player/core";
 
 export default class AppEntry {
@@ -9,9 +9,6 @@ export default class AppEntry {
   private static _player: Nullable<AppPlayer>;
   private static _usePlayer: Nullable<() => AppPlayer>;
   private static _innerUpdater = new Map<string, NormalFunc>();
-  private static get userStore() {
-    return userStoreSnapshot();
-  }
 
   private static createAppPlayerHook(instance: Optional<AppPlayer>) {
     const player = instance ?? new AppPlayer();
@@ -28,15 +25,14 @@ export default class AppEntry {
 
   private static savePlayer() {
     if (!this._player) return;
-    this.player.audio.pause();
-    const data = JSON.stringify(AppPlayer.save(this._player));
-    localStorage.setItem("app_player", data);
+    this._player.audio.pause();
+    RendererCache.browser.setOne("app_player", AppPlayer.save(this._player));
   }
 
   private static loadPlayer() {
     if (this._player) return this._player;
-    const data = localStorage.getItem("app_player");
-    if (data) return AppPlayer.fromSave(JSON.parse(data));
+    const data = RendererCache.browser.getOne<ReturnType<typeof AppPlayer.save>>("app_player");
+    if (data) return AppPlayer.fromSave(data);
     return null;
   }
 
@@ -49,13 +45,13 @@ export default class AppEntry {
 
   private static setupMini() {
     RendererOnce.do("setupMini", () => {
+      const miniWindow = RendererWindow.get("miniplayer");
+      miniWindow.open();
+      miniWindow.hide();
       setTimeout(async () => {
-        const miniWindow = RendererWindow.get("miniplayer");
-        if (!miniWindow.opened) {
-          await miniWindow.openAwait();
-          AppEntry.busUpdater?.();
-        }
-      }, 7000);
+        await miniWindow.openAwait();
+        AppEntry.busUpdater?.();
+      }, 5000);
     });
   }
   //endregion

@@ -1,5 +1,5 @@
 import { cacheRequest } from "./request";
-import { CacheStoreUtils } from "@/common/store/cache/utils";
+import { CacheStoreUtils } from "@/common/lib/cache/utils";
 
 export class CacheStoreForStore {
   one(url: string, id = url, method = "GET") {

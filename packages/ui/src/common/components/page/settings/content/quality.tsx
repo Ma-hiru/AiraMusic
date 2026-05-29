@@ -38,7 +38,7 @@ const Quality: FC<QualityProps> = ({ data, updateQuality, vip }) => {
                       "text-md font-black tracking-normal flex justify-center items-center gap-1",
                       active && "text-(--theme-color-main)"
                     )}>
-                    {option.label}
+                    {option.value}
                   </div>
                   <p
                     className={cx(
@@ -80,28 +80,23 @@ export default memo(Quality);
 
 const qualityOptions = [
   {
-    label: "128K",
     value: TrackQuality.l,
     description: "标准"
   },
   {
-    label: "192K",
     value: TrackQuality.m,
     description: "平衡"
   },
   {
-    label: "320K",
     value: TrackQuality.h,
     description: "极高"
   },
   {
-    label: "SQ",
     value: TrackQuality.sq,
     description: "无损",
     vip: true
   },
   {
-    label: "Hi-Res",
     value: TrackQuality.hr,
     description: "高解析度无损",
     vip: true

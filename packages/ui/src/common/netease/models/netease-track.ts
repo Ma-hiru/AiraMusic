@@ -124,62 +124,18 @@ export class NeteaseTrack implements NeteaseTrackModel {
   }
 
   /** 获取歌曲音质信息 */
-  quality<T extends TrackQuality | undefined>(preference: T): TrackSourceQualityReturn<T> {
-    const availableQualities: (NeteaseAPI.NeteaseQualityLevels & {
-      level: TrackQuality;
-    })[] = [];
-    // 收集可用的音质等级,从低到高
-    if (this.l)
-      availableQualities.push({
-        ...this.l,
-        level: TrackQuality.l
+  qualities(isVip: Undefinable<boolean>) {
+    const res = [];
+    if (this.hr) res.push({ ...this.hr, label: TrackQuality.hr });
+    if (this.sq) res.push({ ...this.sq, label: TrackQuality.sq });
+    if (this.h) res.push({ ...this.h, label: TrackQuality.h });
+    if (this.m) res.push({ ...this.m, label: TrackQuality.m });
+    if (this.l) res.push({ ...this.l, label: TrackQuality.l });
+    if (isVip !== undefined)
+      return res.filter((q) => {
+        return !(!isVip && (q.label === TrackQuality.sq || q.label === TrackQuality.hr));
       });
-    if (this.m)
-      availableQualities.push({
-        ...this.m,
-        level: TrackQuality.m
-      });
-    if (this.h)
-      availableQualities.push({
-        ...this.h,
-        level: TrackQuality.h
-      });
-    if (this.sq)
-      availableQualities.push({
-        ...this.sq,
-        level: TrackQuality.sq
-      });
-    if (this.hr)
-      availableQualities.push({
-        ...this.hr,
-        level: TrackQuality.hr
-      });
-    // 如果没有指定偏好质量，则返回所有可用质量，并按码率从高到低排序
-    availableQualities.sort((b, a) => (a.br || 0) - (b.br || 0));
-    if (preference === undefined) {
-      return availableQualities as TrackSourceQualityReturn<T>;
-    } else {
-      // 如果指定了偏好质量，先尝试返回该质量等级
-      const alreadyExits = availableQualities.find((available) => available.level === preference);
-      if (alreadyExits) return alreadyExits as TrackSourceQualityReturn<T>;
-      // 如果偏好质量是Hi-Res，则直接返回最高质量
-      if (preference === TrackQuality.hr) {
-        return availableQualities[0] as TrackSourceQualityReturn<T>;
-      }
-      // 否则返回最接近偏好质量的音质等级
-      let selectedQuality: Undefinable<NeteaseAPI.NeteaseQualityLevels> = availableQualities[0];
-      if (selectedQuality) {
-        let minDiff = Math.abs((selectedQuality.br || 0) - preference);
-        for (const quality of availableQualities) {
-          const diff = Math.abs((quality.br || 0) - preference);
-          if (diff < minDiff) {
-            minDiff = diff;
-            selectedQuality = quality;
-          }
-        }
-      }
-      return selectedQuality as TrackSourceQualityReturn<T>;
-    }
+    return res;
   }
 
   get artist() {
@@ -249,22 +205,6 @@ export class NeteaseTrack implements NeteaseTrackModel {
   }
 
   //region static methods
-  /** 音质文本映射 */
-  static qualityText(level: TrackQuality) {
-    switch (level) {
-      case TrackQuality.l:
-        return "L";
-      case TrackQuality.m:
-        return "M";
-      case TrackQuality.h:
-        return "HD";
-      case TrackQuality.sq:
-        return "SQ";
-      case TrackQuality.hr:
-        return "Hi-Res";
-    }
-  }
-
   static fromNeteaseAPI(
     apiTrack: NeteaseAPI.NeteaseTrack,
     privilege: NeteaseAPI.NeteaseTrackPrivilege
@@ -272,28 +212,8 @@ export class NeteaseTrack implements NeteaseTrackModel {
     return new NeteaseTrack({ ...apiTrack, privilege });
   }
 
-  static qualityParse(meta: NeteaseAPI.NeteaseSongUrlItem) {
-    if (meta.br >= TrackQuality.hr) {
-      return TrackQuality.hr;
-    } else if (meta.br >= TrackQuality.sq) {
-      return TrackQuality.sq;
-    } else if (meta.br >= TrackQuality.h) {
-      return TrackQuality.h;
-    } else if (meta.br >= TrackQuality.m) {
-      return TrackQuality.m;
-    } else {
-      return TrackQuality.l;
-    }
-  }
-
   static fromObject(object: NeteaseTrackModel | NeteaseTrack) {
     return new NeteaseTrack(object);
   }
   //endregion
 }
-
-//region Type Definitions
-type TrackSourceQualityReturn<T extends TrackQuality | undefined> = T extends undefined
-  ? (NeteaseAPI.NeteaseQualityLevels & { level: TrackQuality })[]
-  : Undefinable<NeteaseAPI.NeteaseQualityLevels & { level: TrackQuality }>;
-//endregion

@@ -1,6 +1,6 @@
 import pLimit from "p-limit";
 import { NeteaseAPITrack } from "@/common/netease/api";
-import { CacheStore } from "@/common/store/cache";
+import { RendererCache } from "@/common/lib/cache";
 import { NeteaseTrack } from "@/common/netease/models";
 import { Log } from "@/common/lib/log";
 import _NeteasePlaylistSource from "./playlist";
@@ -15,11 +15,11 @@ export default class _NeteaseTrackSource {
   private static readonly notFoundKey = "netease_track_not_found";
 
   private static getNotFoundIds() {
-    return CacheStore.browser.getOne<number[]>(this.notFoundKey) ?? [];
+    return RendererCache.browser.getOne<number[]>(this.notFoundKey) ?? [];
   }
 
   private static setNotFound(id: number) {
-    return CacheStore.browser.setOne(
+    return RendererCache.browser.setOne(
       this.notFoundKey,
       (_NeteaseTrackSource.getNotFoundIds() ?? []).concat(id)
     );
@@ -30,7 +30,7 @@ export default class _NeteaseTrackSource {
   }
 
   private static getCache(ids: number[]) {
-    return CacheStore.local.object.fetchMulti<CacheEntry>(
+    return RendererCache.local.object.fetchMulti<CacheEntry>(
       ids.map((id) => _NeteaseTrackSource.getCacheKey(id))
     );
   }
@@ -39,7 +39,7 @@ export default class _NeteaseTrackSource {
     tracks: NeteaseAPI.NeteaseTrack[],
     privileges: NeteaseAPI.NeteaseTrackPrivilege[]
   ) {
-    return CacheStore.local.object.storeMulti<CacheEntry>(
+    return RendererCache.local.object.storeMulti<CacheEntry>(
       tracks.map((track, index) => {
         return {
           id: _NeteaseTrackSource.getCacheKey(track.id),

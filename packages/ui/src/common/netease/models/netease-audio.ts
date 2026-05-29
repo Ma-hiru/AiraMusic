@@ -1,6 +1,4 @@
-import { NeteaseTrack } from "./netease-track";
 import { TrackQuality } from "@/common/enum";
-import { NeteaseAPITrack } from "@/common/netease/api";
 
 export class NeteaseNetworkAudio {
   readonly url: string;
@@ -11,6 +9,11 @@ export class NeteaseNetworkAudio {
     this.quality = props.quality;
     this.url = props.url;
     this.id = props.id;
+  }
+
+  /** 当前最优地址 */
+  get src() {
+    return this.url;
   }
 
   toNetworkAudio() {
@@ -24,18 +27,6 @@ export class NeteaseNetworkAudio {
   isLocal() {
     return NeteaseCommonAudio.isLocal(this);
   }
-
-  static async fromTrack(track: NeteaseTrack, preference: TrackQuality) {
-    track = NeteaseTrack.fromObject(track);
-    const urlResponse = await NeteaseAPITrack.url(track.id, track.quality(preference));
-    const meta = urlResponse.data[0];
-    if (!meta) return null;
-    return new NeteaseNetworkAudio({
-      id: track.id,
-      url: meta.url,
-      quality: NeteaseTrack.qualityParse(meta)
-    });
-  }
 }
 
 export class NeteaseLocalAudio extends NeteaseNetworkAudio {
@@ -46,11 +37,15 @@ export class NeteaseLocalAudio extends NeteaseNetworkAudio {
     this.localURL = props.localURL;
   }
 
-  static fromNetworkImage(image: NeteaseNetworkAudio, localURL: string) {
+  override get src() {
+    return this.localURL || this.url;
+  }
+
+  static fromNetwork(network: NeteaseNetworkAudio, localURL: string) {
     return new NeteaseLocalAudio({
-      id: image.id,
-      url: image.url,
-      quality: image.quality,
+      id: network.id,
+      url: network.url,
+      quality: network.quality,
       localURL
     });
   }

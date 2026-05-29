@@ -1,31 +1,34 @@
 import { NeteaseAPILyric } from "@/common/netease/api";
 import { Log } from "@/common/lib/log";
 import { NeteaseLyric, NeteaseTrack } from "@/common/netease/models";
-import { CacheStore } from "@/common/store/cache";
+import { RendererCache } from "@/common/lib/cache";
 
 export default class _NeteaseLyricSource {
   //region cache
   private static readonly cacheKey = "netease_lyric_v12";
 
   private static storeCache(id: number, lyric: NeteaseLyricModel) {
-    return CacheStore.local.object.store<NeteaseLyricModel>(
+    return RendererCache.local.object.store<NeteaseLyricModel>(
       _NeteaseLyricSource.cacheKey + "_" + id,
       lyric
     );
   }
 
   private static getCache(id: number) {
-    return CacheStore.local.object.fetch<NeteaseLyricModel>(
+    return RendererCache.local.object.fetch<NeteaseLyricModel>(
       _NeteaseLyricSource.cacheKey + "_" + id
     );
   }
   //endregion
 
-  static async id(id: number) {
+  static async id(id: number, _controller?: AbortController) {
     const cache = await _NeteaseLyricSource.getCache(id);
     if (cache) return new NeteaseLyric(cache);
 
     const controller = new AbortController();
+    _controller?.signal.addEventListener("abort", () => {
+      controller.abort();
+    });
     const timer = setTimeout(() => controller.abort(), 1500);
     const [ttml, response] = await Promise.allSettled([
       NeteaseAPILyric.getTTM(id, controller.signal),
@@ -45,7 +48,7 @@ export default class _NeteaseLyricSource {
     return lyric;
   }
 
-  static track(track: NeteaseTrack) {
-    return _NeteaseLyricSource.id(track.id);
+  static track(track: NeteaseTrack, controller?: AbortController) {
+    return _NeteaseLyricSource.id(track.id, controller);
   }
 }

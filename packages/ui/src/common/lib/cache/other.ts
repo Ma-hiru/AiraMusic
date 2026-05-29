@@ -1,5 +1,5 @@
 import { accessToken, cacheRequest } from "./request";
-import { CacheStoreUtils } from "@/common/store/cache/utils";
+import { CacheStoreUtils } from "@/common/lib/cache/utils";
 
 export class CacheStoreForOther {
   fetch<T>(id: string | number): Promise<T> {

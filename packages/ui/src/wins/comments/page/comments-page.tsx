@@ -1,7 +1,7 @@
 import { type FC, memo, useEffect, useState } from "react";
 import { useComments } from "@/common/hooks/use-comments";
 import { CommentSort, CommentType } from "@/common/enum";
-import { CacheStore } from "@/common/store/cache";
+import { RendererCache } from "@/common/lib/cache";
 import { useListenable } from "@/common/hooks/use-listenable";
 import { useThemeInjectFromBus } from "@/common/hooks/use-theme-inject-from-bus";
 import AppToast from "@/common/components/toast";
@@ -19,7 +19,7 @@ const CommentsPage: FC<object> = () => {
   const commentBus = useListenable(RendererEventBus.comment);
   const playerBus = useListenable(RendererEventBus.player);
   const [dynamicContent, setDynamicContent] = useState(() => {
-    return CacheStore.browser.getOne("comments-dynamic-content") === "true";
+    return RendererCache.browser.getOne("comments-dynamic-content") === "true";
   });
   const [id, setId] = useState(0);
   const [type, setType] = useState(CommentType.Song);
@@ -55,13 +55,13 @@ const CommentsPage: FC<object> = () => {
     const track = playerBus.data?.track;
     if (!track) return;
     if (dynamicContent) {
-      CacheStore.browser.setOne("comments-dynamic-content", "true");
+      RendererCache.browser.setOne("comments-dynamic-content", "true");
       RendererEventBus.comment.commit({
         id: track.id,
         type: "track"
       });
     } else {
-      CacheStore.browser.setOne("comments-dynamic-content", "false");
+      RendererCache.browser.setOne("comments-dynamic-content", "false");
     }
   }, [dynamicContent, playerBus.data?.track]);
 

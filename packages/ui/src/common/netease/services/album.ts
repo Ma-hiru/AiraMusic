@@ -1,24 +1,26 @@
 import _NeteaseTrackSource from "./track";
 import { NeteaseAPIAlbum } from "@/common/netease/api";
 import { NeteaseAlbum, NeteaseTrackRecord } from "@/common/netease/models";
-import { CacheStore } from "@/common/store/cache";
+import { RendererCache } from "@/common/lib/cache";
 
 export default class _NeteaseAlbumSource {
   //region cache
   private static readonly cacheKey = "netease_album_detail_v2";
 
   private static storeCache(album: NeteaseAlbum) {
-    CacheStore.memory.setOne(_NeteaseAlbumSource.cacheKey + "_" + album.content.id, album);
-    return CacheStore.local.object.store(
+    RendererCache.memory.setOne(_NeteaseAlbumSource.cacheKey + "_" + album.content.id, album);
+    return RendererCache.local.object.store(
       _NeteaseAlbumSource.cacheKey + "_" + album.content.id,
       album
     );
   }
 
   private static getCache(id: number) {
-    const cache = CacheStore.memory.getOne<NeteaseAlbum>(_NeteaseAlbumSource.cacheKey + "_" + id);
+    const cache = RendererCache.memory.getOne<NeteaseAlbum>(
+      _NeteaseAlbumSource.cacheKey + "_" + id
+    );
     if (cache) return cache;
-    return CacheStore.local.object.fetch<NeteaseAlbum>(_NeteaseAlbumSource.cacheKey + "_" + id);
+    return RendererCache.local.object.fetch<NeteaseAlbum>(_NeteaseAlbumSource.cacheKey + "_" + id);
   }
 
   //endregion

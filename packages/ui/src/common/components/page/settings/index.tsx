@@ -7,7 +7,7 @@ import type { InvokeEventPayload } from "@mahiru/ipc/renderer";
 import SettingsAside from "./aside";
 import SettingsContent from "./content";
 import AppToast from "@/common/components/toast";
-import { CacheStore } from "@/common/store/cache";
+import { RendererCache } from "@/common/lib/cache";
 
 interface SettingsProps {
   user: Nullable<NeteaseUser>;
@@ -58,7 +58,7 @@ const Settings: FC<SettingsProps> = ({
   );
 
   const getCacheStoreStatus = useCallback(async () => {
-    const status = await CacheStore.local.other.sizeCategories();
+    const status = await RendererCache.local.other.sizeCategories();
     if (status.ok) {
       setCacheStoreSizes(status);
     } else {

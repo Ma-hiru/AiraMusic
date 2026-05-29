@@ -110,7 +110,7 @@ export default class RendererPlayerAudio {
 
   load(source: NeteaseNetworkAudio | NeteaseLocalAudio, play: boolean) {
     this.pause();
-    this.audio.src = "localURL" in source ? source.localURL : source.url;
+    this.audio.src = source.src;
     this.audio.load();
     play && this.play();
   }

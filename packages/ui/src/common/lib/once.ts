@@ -1,5 +1,5 @@
 import { Log } from "@/common/lib/log";
-import { CacheStore } from "@/common/store/cache";
+import { RendererCache } from "@/common/lib/cache";
 import { RendererRuntime } from "@/common/lib/runtime";
 import { RendererWindow } from "@/common/lib/window";
 import { initAsync } from "@/common/utils/init";
@@ -15,13 +15,13 @@ export class RendererOnce {
   private static record = new Set<string>();
 
   static _init() {
-    const cache = CacheStore.browser.getOne<OnceRecordCache>(RendererOnce.cacheKey);
+    const cache = RendererCache.browser.getOne<OnceRecordCache>(RendererOnce.cacheKey);
 
     if (cache && cache.id === RendererOnce.cacheID) {
       this.record = new Set(cache.record);
     } else {
       this.record = new Set();
-      CacheStore.browser.setOne<OnceRecordCache>(RendererOnce.cacheKey, {
+      RendererCache.browser.setOne<OnceRecordCache>(RendererOnce.cacheKey, {
         id: RendererOnce.cacheID,
         record: []
       });
@@ -30,8 +30,8 @@ export class RendererOnce {
 
   private static updateCache(id: string) {
     RendererOnce.record.add(id);
-    requestIdleCallback(() => {
-      CacheStore.browser.setOne<OnceRecordCache>(RendererOnce.cacheKey, {
+    queueMicrotask(() => {
+      RendererCache.browser.setOne<OnceRecordCache>(RendererOnce.cacheKey, {
         id: RendererOnce.cacheID,
         record: [...RendererOnce.record]
       });
@@ -40,9 +40,9 @@ export class RendererOnce {
 
   static do(id: string, cb: NormalFunc) {
     if (RendererOnce.record.has(id)) return;
-    RendererOnce.updateCache(id);
     try {
       cb();
+      RendererOnce.updateCache(id);
     } catch (e) {
       Log.error({
         label: "once",

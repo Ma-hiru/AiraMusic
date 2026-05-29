@@ -52,7 +52,7 @@ class LocalSatisfiesInterface implements CacheObjectAsyncInterface {
   }
 }
 
-export class CacheStore {
+export class RendererCache {
   static readonly local = local;
   static readonly browser = browser;
   static readonly memory = memory;

@@ -120,6 +120,7 @@ export default class AppPlayer extends Listenable {
     this.disconnect = this.connect();
   }
 
+  /** 监听事件，绑定状态机 */
   private connect() {
     const onPlaying = () => (this.status = AppPlayerStatus.playing);
     const onLoadStart = () => (this.status = AppPlayerStatus.loading);
@@ -159,20 +160,17 @@ export default class AppPlayer extends Listenable {
     };
   }
 
+  /** 加载资源（音频、封面、歌词） */
   private controller = new AbortController();
-
   private async load(current: Optional<NeteaseTrackRecord>, play = false) {
-    this.controller.abort();
-
     if (!current) return;
-    Log.info(`loading track ${current.detail.name}`);
-
-    this.current.track = current;
+    this.controller.abort();
     const controller = new AbortController();
     this.controller = controller;
+    this.current.track = current;
     this.status = AppPlayerStatus.loading;
 
-    this.loadAudio(current.detail)
+    this.loadAudio(current.detail, controller)
       .then((audio) => {
         if (controller.signal.aborted) return;
         if (audio) {
@@ -183,59 +181,82 @@ export default class AppPlayer extends Listenable {
           this.status = AppPlayerStatus.error;
         }
       })
+      .then(() => {
+        if (controller.signal.aborted) return;
+        this.loadCover(current.detail, controller)
+          .then((cover) => {
+            if (controller.signal.aborted) return;
+            this.current.cover = cover;
+            this.current.cover.setAlt(current.detail.al.name || current.detail.name);
+            this.executeListeners();
+          })
+          .catch((err) => {
+            Log.error(err);
+          });
+
+        this.loadLyric(current.detail, controller)
+          .then((lyric) => {
+            if (controller.signal.aborted) return;
+            this.current.lyric = lyric;
+            this.executeListeners();
+          })
+          .catch((err) => {
+            Log.error(err);
+          });
+      })
       .catch((err) => {
         Log.error(err);
         this.status = AppPlayerStatus.error;
       });
-
-    this.loadCover(current.detail)
-      .then((cover) => {
-        if (controller.signal.aborted) return;
-        this.current.cover = cover;
-        this.current.cover.setAlt(current.detail.al.name || current.detail.name);
-        this.executeListeners();
-      })
-      .catch((err) => {
-        Log.error(err);
-      });
-
-    this.loadLyric(current.detail)
-      .then((lyric) => {
-        if (controller.signal.aborted) return;
-        this.current.lyric = lyric;
-        this.executeListeners();
-      })
-      .catch((err) => {
-        Log.error(err);
-      });
   }
 
+  /** 加载音频地址 */
+  private downloadAudioTimer = 0;
   private async loadAudio(
-    track: NeteaseTrack
+    track: NeteaseTrack,
+    controller: AbortController
   ): Promise<Nullable<NeteaseLocalAudio | NeteaseNetworkAudio>> {
     const preference = this.settingsStore._settings.trackQuality.quality;
-    const local = await NeteaseServicesAudio.local(track, preference, false);
-    if (local) return local;
-    const network = await NeteaseServicesAudio.network(track, preference);
-    if (network) {
-      window.setTimeout(() => NeteaseServicesAudio.download(network), 10000);
-      return network;
+    if (controller.signal.aborted) return null;
+    const audio = await NeteaseServicesAudio.track(track, preference, false);
+
+    // 如果10s后没有切换歌曲，那么可以进行缓存
+    if (audio) {
+      this.downloadAudioTimer && window.clearTimeout(this.downloadAudioTimer);
+      this.downloadAudioTimer = window.setTimeout(() => {
+        if (controller.signal.aborted) return;
+        NeteaseServicesAudio.download(audio);
+      }, 10000);
     }
-    return null;
+
+    return audio;
   }
 
-  private async loadCover(track: NeteaseTrack): Promise<NeteaseNetworkImage | NeteaseLocalImage> {
+  /** 加载封面 */
+  private downloadCoverTimer = 0;
+  private async loadCover(
+    track: NeteaseTrack,
+    controller: AbortController
+  ): Promise<NeteaseNetworkImage | NeteaseLocalImage> {
     const local = await NeteaseServicesImage.local(track, false, NeteaseImageSize.lg);
     if (local) return local;
+
     const network = NeteaseServicesImage.notwork(track, NeteaseImageSize.lg);
-    window.setTimeout(() => NeteaseServicesImage.download(network), 10000);
+    this.downloadCoverTimer && window.clearTimeout(this.downloadCoverTimer);
+    this.downloadCoverTimer = window.setTimeout(() => {
+      if (controller.signal.aborted) return null;
+      NeteaseServicesImage.download(network);
+    }, 10000);
+
     return network;
   }
 
-  private async loadLyric(track: NeteaseTrack) {
-    return NeteaseServicesLyric.track(track);
+  /** 加载歌词 */
+  private async loadLyric(track: NeteaseTrack, controller: AbortController) {
+    return NeteaseServicesLyric.track(track, controller);
   }
 
+  /** 持久化对象 */
   static save(instance: AppPlayer) {
     return {
       audio: RendererPlayerAudio.save(instance.audio),
@@ -245,6 +266,7 @@ export default class AppPlayer extends Listenable {
     };
   }
 
+  /** 恢复持久化 */
   static fromSave(save: ReturnType<typeof this.save>) {
     return new AppPlayer({
       audio: RendererPlayerAudio.fromSave(save.audio),
@@ -260,6 +282,18 @@ export default class AppPlayer extends Listenable {
     });
   }
 
+  /** 歌词切换 */
+  public toggleLyric(next: "rm" | "tl" | "note") {
+    if (next === "rm" && this.current.lyric?.rmExisted) {
+      this.current.rmActive = !this.current.rmActive;
+    } else if (next === "tl" && this.current.lyric?.tlExisted) {
+      this.current.tlActive = !this.current.tlActive;
+    } else if (next === "note" && this.current.lyric?.noteExisted) {
+      this.current.noteActive = !this.current.noteActive;
+    }
+    this.executeListeners();
+  }
+
   override [Symbol.dispose]() {
     this.disconnect();
     this.current.track = null;
@@ -270,16 +304,5 @@ export default class AppPlayer extends Listenable {
     this.audio[Symbol.dispose]();
     this.playlist[Symbol.dispose]();
     this.history[Symbol.dispose]();
-  }
-
-  public toggleLyric(next: "rm" | "tl" | "note") {
-    if (next === "rm" && this.current.lyric?.rmExisted) {
-      this.current.rmActive = !this.current.rmActive;
-    } else if (next === "tl" && this.current.lyric?.tlExisted) {
-      this.current.tlActive = !this.current.tlActive;
-    } else if (next === "note" && this.current.lyric?.noteExisted) {
-      this.current.noteActive = !this.current.noteActive;
-    }
-    this.executeListeners();
   }
 }

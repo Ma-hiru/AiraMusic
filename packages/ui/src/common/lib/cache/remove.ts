@@ -1,6 +1,6 @@
 import { cacheRequest } from "./request";
 import { RequestCollector } from "@/common/utils/collector";
-import { CacheStoreUtils } from "@/common/store/cache/utils";
+import { CacheStoreUtils } from "@/common/lib/cache/utils";
 
 export class CacheStoreForRemove {
   removeCollectionsKey = "cache-remove-collections";

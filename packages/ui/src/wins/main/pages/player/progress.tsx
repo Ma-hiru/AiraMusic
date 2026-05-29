@@ -1,30 +1,21 @@
-import { type FC, memo, useMemo } from "react";
+import { type FC, memo } from "react";
 import { motion } from "motion/react";
 import { css } from "@emotion/css";
 import { usePlayProgress } from "@/wins/main/hooks/use-play-progress";
-import { TrackQuality } from "@/common/enum";
+import { RendererFormat } from "@/common/lib/format";
+import AppEntry from "@/wins/main/entry";
+import RendererPlayerAudio from "@/common/player/audio";
 
 import ProgressRender from "@/wins/main/componets/progress";
 import Tag from "@/common/components/public/tag";
-import AppEntry from "@/wins/main/entry";
-import { NeteaseTrack } from "@/common/netease/models";
-import RendererPlayerAudio from "@/common/player/audio";
-import { RendererFormat } from "@/common/lib/format";
 
 const Progress: FC<object> = () => {
   const { barRef, bufferScope, percentScope, handleBarClick, handleBarMouseDown, chorusPercent } =
     usePlayProgress();
   const player = AppEntry.usePlayer();
-  const quality = useMemo(() => {
-    if (
-      player.current.audio?.quality === TrackQuality.sq ||
-      player.current.audio?.quality === TrackQuality.hr ||
-      player.current.audio?.quality === TrackQuality.h
-    ) {
-      return NeteaseTrack.qualityText(player.current.audio?.quality);
-    }
-    return null;
-  }, [player]);
+  const quality = player.current.audio?.quality;
+  console.log("detail", player.current.track?.detail);
+
   return (
     <div className="w-37.5 sm:w-50 md:w-62.5 lg:w-75">
       <div className="h-3 flex flex-col justify-center">

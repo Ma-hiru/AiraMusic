@@ -49,8 +49,7 @@ const Performance: FC<PerformanceSettings> = ({ data, patchSettings }) => {
         max={60}
         unit="FPS"
         step={5}
-        rangeValue={data.spectrumFps}
-        value={data.spectrumFps + " FPS"}
+        value={data.spectrumFps}
         onChange={(value) =>
           patchSettings({
             performance: {

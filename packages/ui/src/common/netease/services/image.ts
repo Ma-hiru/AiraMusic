@@ -1,5 +1,5 @@
 import { NeteaseLocalImage, NeteaseNetworkImage, NeteaseTrack } from "@/common/netease/models";
-import { CacheStore } from "@/common/store/cache";
+import { RendererCache } from "@/common/lib/cache";
 import { NeteaseImageSize } from "@/common/enum";
 import { LRUCacheWithTime } from "@/common/utils/lru";
 import { Log } from "@/common/lib/log";
@@ -30,7 +30,7 @@ export default class _NeteaseImageSource {
   }
 
   private static downloadCache(image: NeteaseNetworkImage) {
-    return CacheStore.local.store.one(image.url, _NeteaseImageSource.getCacheKey(image));
+    return RendererCache.local.store.one(image.url, _NeteaseImageSource.getCacheKey(image));
   }
 
   private static setMemoryCache(image: NeteaseLocalImage) {
@@ -45,14 +45,17 @@ export default class _NeteaseImageSource {
       return Promise.resolve({ ok: true, image: cache });
     }
     if (download) {
-      return CacheStore.local.check.orStoreOne(image.url, _NeteaseImageSource.getCacheKey(image));
+      return RendererCache.local.check.orStoreOne(
+        image.url,
+        _NeteaseImageSource.getCacheKey(image)
+      );
     }
-    return CacheStore.local.check.one(_NeteaseImageSource.getCacheKey(image));
+    return RendererCache.local.check.one(_NeteaseImageSource.getCacheKey(image));
   }
 
   private static removeCache(image: NeteaseNetworkImage) {
     _NeteaseImageSource.memoryCache.delete(_NeteaseImageSource.getCacheKey(image));
-    return CacheStore.local.remove.one(_NeteaseImageSource.getCacheKey(image));
+    return RendererCache.local.remove.one(_NeteaseImageSource.getCacheKey(image));
   }
   //endregion
 

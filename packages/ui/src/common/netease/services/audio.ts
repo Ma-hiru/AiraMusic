@@ -1,50 +1,77 @@
-import { CacheStore } from "@/common/store/cache";
+import { RendererCache } from "@/common/lib/cache";
 import { TrackQuality } from "@/common/enum";
-import { NeteaseLocalAudio, NeteaseNetworkAudio, NeteaseTrack } from "@/common/netease/models";
+import {
+  NeteaseLocalAudio,
+  NeteaseNetworkAudio,
+  NeteaseTrack,
+  NeteaseUser
+} from "@/common/netease/models";
+import { NeteaseAPITrack } from "@/common/netease/api";
+import { userStoreSnapshot } from "@/common/store/user";
 
 export default class _NeteaseAudioSource {
   //region cache
   private static readonly cacheKey = "netease_audio";
 
-  private static storeCache(audio: NeteaseNetworkAudio) {
-    return CacheStore.local.store.one(
+  private static storeMetaCache(audio: NeteaseNetworkAudio) {
+    RendererCache.memory.setOne(this.cacheKey + audio.id + audio.quality, audio);
+  }
+
+  private static getMetaCache(track: NeteaseTrack, preference: TrackQuality) {
+    return RendererCache.memory.getOne<NeteaseNetworkAudio>(this.cacheKey + track.id + preference);
+  }
+
+  private static storeAudioCache(audio: NeteaseNetworkAudio) {
+    return RendererCache.local.store.one(
       audio.url,
       `${_NeteaseAudioSource.cacheKey}_${audio.id}_${audio.quality}`
     );
   }
 
-  private static getCache(audio: NeteaseNetworkAudio, download?: boolean) {
+  private static getAudioCache(audio: NeteaseNetworkAudio, download?: boolean) {
     if (download) {
-      return CacheStore.local.check.orStoreOne(
+      return RendererCache.local.check.orStoreOne(
         audio.url,
         `${_NeteaseAudioSource.cacheKey}_${audio.id}_${audio.quality}`
       );
     }
-    return CacheStore.local.check.one(
+    return RendererCache.local.check.one(
       `${_NeteaseAudioSource.cacheKey}_${audio.id}_${audio.quality}`
     );
   }
   //endregion
 
-  private static async try(audio: NeteaseNetworkAudio, download: boolean) {
-    const check = await _NeteaseAudioSource.getCache(audio, download);
-    if (check.ok) {
-      return NeteaseLocalAudio.fromNetworkImage(audio, check.index.file);
-    }
-    return null;
+  private static async latestAudio(track: NeteaseTrack, preference: TrackQuality) {
+    track = NeteaseTrack.fromObject(track);
+    const isVip = NeteaseUser.isVIP(userStoreSnapshot()._user);
+    const qualities = track.qualities(isVip);
+    const quality = qualities.find((q) => q.label === preference) ?? qualities[0];
+    const urlResponse = await NeteaseAPITrack.url(track.id, quality);
+    const meta = urlResponse.data[0];
+    if (!meta) return null;
+    return new NeteaseNetworkAudio({
+      id: track.id,
+      url: meta.url,
+      quality: qualities.find((q) => q.br === meta.br)?.label ?? TrackQuality.h
+    });
   }
 
-  static async local(track: NeteaseTrack, preference: TrackQuality, download: boolean) {
-    const audio = await NeteaseNetworkAudio.fromTrack(track, preference);
-    if (!audio) return null;
-    return _NeteaseAudioSource.try(audio, download);
-  }
+  static async track(
+    track: NeteaseTrack,
+    preference: TrackQuality,
+    download: boolean
+  ): Promise<Nullable<NeteaseNetworkAudio | NeteaseLocalAudio>> {
+    const meta =
+      this.getMetaCache(track, preference) ?? (await this.latestAudio(track, preference));
+    if (!meta) return null;
 
-  static network(track: NeteaseTrack, preference: TrackQuality) {
-    return NeteaseNetworkAudio.fromTrack(track, preference);
+    const check = await this.getAudioCache(meta, download);
+    if (check.ok) return NeteaseLocalAudio.fromNetwork(meta, check.index.file);
+
+    return meta;
   }
 
   static download(audio: NeteaseNetworkAudio) {
-    return _NeteaseAudioSource.storeCache(audio);
+    return _NeteaseAudioSource.storeAudioCache(audio);
   }
 }

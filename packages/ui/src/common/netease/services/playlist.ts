@@ -1,7 +1,7 @@
 import NeteaseTrackSource from "@/common/netease/services/track";
 import { NeteaseAPIPlaylist } from "@/common/netease/api";
 import { NeteasePlaylist, NeteasePlaylistSummary } from "@/common/netease/models";
-import { CacheStore } from "@/common/store/cache";
+import { RendererCache } from "@/common/lib/cache";
 import { LRUCacheWithTime } from "@/common/utils/lru";
 import { userStoreSnapshot } from "@/common/store/user";
 
@@ -10,14 +10,14 @@ export default class _NeteasePlaylistSource {
   private static readonly cacheKey = "netease_playlist_detail_v1";
 
   private static storeCache(response: NeteaseAPI.NeteasePlaylistDetailResponse) {
-    return CacheStore.local.object.store(
+    return RendererCache.local.object.store(
       _NeteasePlaylistSource.cacheKey + "_" + response.playlist.id,
       response
     );
   }
 
   private static getCache(id: number) {
-    return CacheStore.local.object.fetch<NeteaseAPI.NeteasePlaylistDetailResponse>(
+    return RendererCache.local.object.fetch<NeteaseAPI.NeteasePlaylistDetailResponse>(
       _NeteasePlaylistSource.cacheKey + "_" + id
     );
   }
