@@ -11,6 +11,7 @@ import KeepAliveOutlet from "@/common/components/public/keep-alive-outlet";
 import AppErrorBoundary from "@/common/components/fallback/app-error-boundary";
 import AppToast from "@/common/components/toast";
 import AppContextMenu from "@/common/components/menu";
+import AppModal from "@/common/components/modal";
 import AcrylicBackground from "@/common/components/public/acrylic-background";
 import TopControlPure from "@/common/components/top/control";
 import Drag from "@/common/components/drag/drag";
@@ -93,6 +94,7 @@ const LayoutDisplay: FC<object> = () => {
         </BackCtx>
         <AppToast.Provider />
         <AppContextMenu.Provider />
+        <AppModal.Provider />
       </AppErrorBoundary>
     </div>
   );

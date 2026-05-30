@@ -1,43 +1,72 @@
-import { type ModalData } from "./modal-provider";
+import { useLayoutEffect } from "react";
+import { type ModalRender } from "./modal-provider";
 import { Log } from "@/common/lib/log";
+import { createPlaylistCoverModal } from "./playlist-cover-modal";
 import Provider from "./modal-provider";
 
 export default class AppModal {
-  private static toggleModalVisible: NormalFunc<[visible?: boolean | undefined]> = () => {
+  static _setModalData: NormalFunc<[data: Nullable<ModalRender>]> = () => {
     Log.warn("AppModal", "Modal is not provided in this app");
   };
-  private static setModalRenderData: NormalFunc<[data: Nullable<ModalData>]> = () => {
+
+  static _setModalVisible: NormalFunc<[show?: boolean]> = () => {
     Log.warn("AppModal", "Modal is not provided in this app");
   };
-  private static getRender: NormalFunc<[], Nullable<ModalData>> = () => {
+
+  private static renderGetter: NormalFunc<[], Nullable<ModalRender>> = () => {
     Log.warn("AppModal", "Modal is not provided in this app");
     return null;
   };
-  static getVisible: NormalFunc<[], boolean> = () => {
+
+  private static visibleGetter: NormalFunc<[], boolean> = () => {
     Log.warn("AppModal", "Modal is not provided in this app");
     return false;
   };
 
-  static useModal() {
-    return {
-      toggleModalVisible: AppModal.toggleModalVisible,
-      setModalRenderData: AppModal.setModalRenderData,
-      getRender: AppModal.getRender,
-      getVisible: AppModal.getVisible
-    };
+  static readonly _create = <U extends unknown[]>(
+    creator: NormalFunc<U, ModalRender>,
+    ...props: U
+  ) => {
+    AppModal._setModalData?.(creator(...props));
+    AppModal._setModalVisible?.(true);
+    return AppModal.visibleGetter;
+  };
+
+  static get useModal() {
+    return useModal;
   }
 
-  static inject(hooks: {
-    toggleModalVisible: typeof AppModal.toggleModalVisible;
-    setModalRenderData: typeof AppModal.setModalRenderData;
-    getRender: typeof AppModal.getRender;
-    getVisible: typeof AppModal.getVisible;
+  static close() {
+    if (!AppModal.visibleGetter?.()) return;
+    AppModal._setModalVisible?.(false);
+  }
+
+  static _inject(hooks: {
+    setData: typeof AppModal._setModalData;
+    setVisible: typeof AppModal._setModalVisible;
+    renderGetter: typeof AppModal.renderGetter;
+    visibleGetter: typeof AppModal.visibleGetter;
   }) {
-    AppModal.toggleModalVisible = hooks.toggleModalVisible;
-    AppModal.setModalRenderData = hooks.setModalRenderData;
-    AppModal.getRender = hooks.getRender;
-    AppModal.getVisible = hooks.getVisible;
+    AppModal._setModalData = hooks.setData;
+    AppModal._setModalVisible = hooks.setVisible;
+    AppModal.renderGetter = hooks.renderGetter;
+    AppModal.visibleGetter = hooks.visibleGetter;
   }
 
-  static Provider = Provider;
+  static readonly Provider = Provider;
+}
+
+function useModal() {
+  useLayoutEffect(() => {
+    return () => {
+      AppModal._setModalData?.(null);
+      AppModal._setModalVisible?.(false);
+    };
+  }, []);
+
+  return {
+    create: AppModal._create,
+    close: AppModal.close,
+    createPlaylistCoverModal
+  };
 }

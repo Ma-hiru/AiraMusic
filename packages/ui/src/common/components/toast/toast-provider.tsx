@@ -1,23 +1,12 @@
-import {
-  type FC,
-  memo,
-  startTransition,
-  useCallback,
-  useLayoutEffect,
-  useMemo,
-  useState
-} from "react";
-import { AnimatePresence, type HTMLMotionProps, motion, type MotionStyle } from "motion/react";
-import { useThemeColor } from "@/common/hooks/use-theme-color";
-import ToastItem, { type ToastItemData } from "./toast-item";
 import { cx } from "@emotion/css";
-import RendererTheme from "@/common/player/ui";
+import { type FC, memo, startTransition, useCallback, useLayoutEffect, useState } from "react";
+import { AnimatePresence, type HTMLMotionProps, motion } from "motion/react";
 import AppToast from "./use";
+
+import ToastItem, { type ToastItemData } from "./toast-item";
 
 const ToastProvider: FC<{ className?: string }> = ({ className }) => {
   const [items, setItems] = useState<ToastItemData[]>([]);
-  const { mainColor, textColorOnMain } = useThemeColor();
-
   const show = useCallback((data: Omit<ToastItemData, "id">) => {
     const id = window.crypto.randomUUID();
     startTransition(() => {
@@ -36,24 +25,16 @@ const ToastProvider: FC<{ className?: string }> = ({ className }) => {
     });
   }, []);
 
-  const computedStyle = useMemo(() => {
-    const textColor = textColorOnMain.string();
-    const backgroundColor = mainColor.mix(RendererTheme.WHITE_COLOR, 0.6).alpha(0.92).string();
-    const borderColor = mainColor.alpha(0.25).string();
-    return { color: textColor, backgroundColor, borderColor };
-  }, [mainColor, textColorOnMain]);
-
   const Render = useCallback(
-    (items: ToastItemData[], style: MotionStyle) => {
+    (items: ToastItemData[]) => {
       return items.map((item) => (
         <motion.div
           className={`
               px-2 py-1
-              border border-solid rounded-sm shadow-lg
-              select-none font-semibold text-[12px]
+              rounded-sm shadow-lg border border-white/30
+              select-none font-semibold text-[12px] bg-white/15 backdrop-blur-sm
           `}
           key={item.id}
-          style={style}
           onDragEnd={(_, info) => Math.abs(info.offset.x) > 100 && dispose(item.id!)}
           {...ContainerProps}>
           <ToastItem data={item} id={item.id!} onDispose={dispose} />
@@ -76,7 +57,7 @@ const ToastProvider: FC<{ className?: string }> = ({ className }) => {
       )}>
       {/*prettier-ignore*/}
       <AnimatePresence mode="sync">
-        {Render(items, computedStyle)}
+        {Render(items,  )}
       </AnimatePresence>
     </div>
   );

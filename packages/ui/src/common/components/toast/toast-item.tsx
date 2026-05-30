@@ -31,7 +31,7 @@ const ToastItem: FC<ToastItemProps> = ({ data, duration = 5000, onDispose, id })
 
   return (
     <motion.div
-      className="w-full gap-1 flex justify-start items-center"
+      className="w-full gap-1 flex justify-start items-center text-white"
       onMouseEnter={() => clearTimeout(timerRef.current)}
       onMouseLeave={() =>
         (timerRef.current = window.setTimeout(() => onDispose?.(data.id || id), duration))
@@ -49,11 +49,11 @@ function getTypeIcon(type: ToastItemData["type"]) {
     case "info":
       return <Info size={14} />;
     case "error":
-      return <Ban size={14} color={"#ff4d4f"} />;
+      return <Ban size={14} />;
     case "success":
-      return <CircleCheck size={14} color={"#52c41a"} />;
+      return <CircleCheck size={14} />;
     case "warn":
-      return <CircleAlert size={14} color={"#faad14"} />;
+      return <CircleAlert size={14} />;
     default:
       return null;
   }

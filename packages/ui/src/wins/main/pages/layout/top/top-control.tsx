@@ -11,6 +11,7 @@ import { useListenable } from "@/common/hooks/use-listenable";
 import { RendererWindow } from "@/common/lib/window";
 import AppEntry from "@/wins/main/entry";
 import NoDrag from "@/common/components/drag/no-drag";
+import AppToast from "@/common/components/toast";
 
 const TopControl: FC = () => {
   const currentWindow = useListenable(RendererWindow.current);
@@ -47,7 +48,12 @@ const TopControl: FC = () => {
       <ControlButton
         show={import.meta.env.DEV}
         Icon={AppWindowIcon}
-        onClick={() => currentWindow.devTools()}
+        onClick={() =>
+          AppToast.show({
+            type: "success",
+            text: "测试"
+          })
+        }
       />
       <ControlButton Icon={Minus} onClick={() => currentWindow.minimize()} />
       <ControlButton Icon={PictureInPicture} onClick={mini} />
