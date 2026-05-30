@@ -1,13 +1,22 @@
 import { cx } from "@emotion/css";
 import { type FC, memo, startTransition, useEffect, useMemo, useRef, useState } from "react";
-import { NeteaseAlbum, NeteaseNetworkImage, NeteasePlaylist, NeteaseTrack } from "@/common/netease/models";
+import {
+  NeteaseAlbum,
+  NeteaseNetworkImage,
+  NeteasePlaylist,
+  NeteaseTrack
+} from "@/common/netease/models";
 import { useCacheRequest } from "@/common/utils/cache";
 import { useThemeColor } from "@/common/hooks/use-theme-color";
 import { Log } from "@/common/lib/log";
 import { NeteaseImageSize } from "@/common/enum";
 import { RendererFormat } from "@/common/lib/format";
 import { NeteaseAPIWiki } from "@/common/netease/api";
-import { NeteaseServicesAlbum, NeteaseServicesPlaylist, NeteaseServicesTrack } from "@/common/netease/services";
+import {
+  NeteaseServicesAlbum,
+  NeteaseServicesPlaylist,
+  NeteaseServicesTrack
+} from "@/common/netease/services";
 import { RendererEventBus } from "@/common/lib/bus";
 import NeteaseImage from "@/common/components/image/netease-image";
 
