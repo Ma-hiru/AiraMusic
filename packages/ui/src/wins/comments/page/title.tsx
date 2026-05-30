@@ -1,22 +1,13 @@
 import { cx } from "@emotion/css";
 import { type FC, memo, startTransition, useEffect, useMemo, useRef, useState } from "react";
-import {
-  NeteaseAlbum,
-  NeteaseNetworkImage,
-  NeteasePlaylist,
-  NeteaseTrack
-} from "@/common/netease/models";
+import { NeteaseAlbum, NeteaseNetworkImage, NeteasePlaylist, NeteaseTrack } from "@/common/netease/models";
 import { useCacheRequest } from "@/common/utils/cache";
 import { useThemeColor } from "@/common/hooks/use-theme-color";
 import { Log } from "@/common/lib/log";
 import { NeteaseImageSize } from "@/common/enum";
 import { RendererFormat } from "@/common/lib/format";
 import { NeteaseAPIWiki } from "@/common/netease/api";
-import {
-  NeteaseServicesAlbum,
-  NeteaseServicesPlaylist,
-  NeteaseServicesTrack
-} from "@/common/netease/services";
+import { NeteaseServicesAlbum, NeteaseServicesPlaylist, NeteaseServicesTrack } from "@/common/netease/services";
 import { RendererEventBus } from "@/common/lib/bus";
 import NeteaseImage from "@/common/components/image/netease-image";
 
@@ -110,7 +101,7 @@ const Title: FC<TitleProps> = ({ className, commentBus }) => {
       <div className="flex flex-col items-start justify-center gap-0.5 overflow-hidden">
         {commentBus.data?.type === "track" && (
           <>
-            <h1 className="font-semibold text-sm truncate">{track?.name}</h1>
+            <h1 className="font-semibold text-sm line-clamp-1">{track?.name}</h1>
             <h2 className="font-medium text-xs">{track?.artist.join(" / ")}</h2>
             <div className="flex flex-row items-center justify-start gap-1 flex-wrap">
               {tags.map((tag) => {
@@ -131,13 +122,13 @@ const Title: FC<TitleProps> = ({ className, commentBus }) => {
         )}
         {commentBus.data?.type === "playlist" && (
           <>
-            <h1 className="font-semibold text-sm truncate">{playlist?.name}</h1>
+            <h1 className="font-semibold text-sm line-clamp-1">{playlist?.name}</h1>
             <h2 className="font-medium text-xs">{playlist?.creator?.nickname}</h2>
           </>
         )}
         {commentBus.data?.type === "album" && (
           <>
-            <h1 className="font-semibold text-sm truncate">{album?.content.name}</h1>
+            <h1 className="font-semibold text-sm line-clamp-1">{album?.content.name}</h1>
             <h2 className="font-medium text-xs">{album?.content.artist.name}</h2>
           </>
         )}

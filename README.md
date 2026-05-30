@@ -17,6 +17,13 @@
 ### 歌单
 
 ![歌单](docs/images/playlist.png)
+![歌单2](docs/images/playlist2.png)
+![播放列表](docs/images/list.png)
+
+### 专辑
+
+![专辑](docs/images/album.png)
+![专辑2](docs/images/album2.png)
 
 ### 播放页
 
@@ -34,10 +41,6 @@
 ![歌手2](docs/images/artist.png)
 ![歌手2](docs/images/artist_album.png)
 
-### 专辑
-
-![专辑](docs/images/album.png)
-
 ### 搜索
 
 ![搜索](docs/images/search.png)
@@ -53,7 +56,8 @@
 
 ## 依赖与架构
 
-AiraMusic 是一个 Yarn workspaces monorepo。桌面壳、渲染层、缓存服务和 WASM 能力分在不同 package 中，运行时由 Electron 主进程统一编排。
+AiraMusic 是一个 Yarn workspaces monorepo。桌面壳、渲染层、缓存服务和 WASM 能力分在不同 package 中，运行时由
+Electron 主进程统一编排。
 
 ```text
 packages/ui  ── 由 Vite 构建的多窗口渲染层
@@ -72,14 +76,14 @@ packages/wasm ── 渲染层使用的 Rust + wasm-bindgen 模块
 
 ### 工作区概览
 
-| Package          | 职责                                                                                                                                                  | 主要依赖                                                                                                                                                         |
-| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Package          | 职责                                                                                                                | 主要依赖                                                                                                                                                             |
+|------------------|-------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `packages/ui`    | 渲染层应用。Vite 构建 `index`、`login`、`mini`、`lyric`、`tray`、`image`、`comments`、`display` 等多个入口；主流程以 React 为主，部分小窗口使用 Vue。 | React 19, Vue 3, Vite 8, Tailwind CSS 4, SCSS, React Router 7, Zustand, Jotai, Motion, Lucide, Heroicons, Axios, `@applemusic-like-lyrics/lyric`, `@mahiru/wasm` |
-| `packages/app`   | Electron 主进程。负责应用启动、窗口管理、托盘注册、IPC handler、自定义协议、服务生命周期和 Electron 打包入口。                                        | Electron 40, tsup, `@neteasecloudmusicapienhanced/api`, Express, `express-http-proxy`, `electron-store`, Zod, `@mahiru/store`, `@mahiru/ipc`                     |
-| `packages/store` | 本地缓存服务。它是一个 Go HTTP 服务，渲染层通过 `/cache` 访问；同时提供 TypeScript 启动器，供 Electron 应用启动和停止服务进程。                       | Go 1.25, Gin, gin-contrib/cors                                                                                                                                   |
-| `packages/wasm`  | Rust WebAssembly 包，提供渲染层使用的原生性能工具。目前包含歌词解析、主题/图片颜色处理、频谱处理、搜索辅助和 WebGL renderer 支持。                    | Rust 2024, wasm-bindgen, wasm-pack, serde, tsify, image, rustfft, regex, web-sys                                                                                 |
-| `packages/ipc`   | 主进程和渲染层共享的 TypeScript IPC 类型定义，覆盖 invoke 和 message 契约。                                                                           | `@mahiru/log`                                                                                                                                                    |
-| `packages/log`   | app 和 renderer 共享的日志基础能力。                                                                                                                  | TypeScript                                                                                                                                                       |
+| `packages/app`   | Electron 主进程。负责应用启动、窗口管理、托盘注册、IPC handler、自定义协议、服务生命周期和 Electron 打包入口。                                            | Electron 40, tsup, `@neteasecloudmusicapienhanced/api`, Express, `express-http-proxy`, `electron-store`, Zod, `@mahiru/store`, `@mahiru/ipc`                     |
+| `packages/store` | 本地缓存服务。它是一个 Go HTTP 服务，渲染层通过 `/cache` 访问；同时提供 TypeScript 启动器，供 Electron 应用启动和停止服务进程。                              | Go 1.25, Gin, gin-contrib/cors                                                                                                                                   |
+| `packages/wasm`  | Rust WebAssembly 包，提供渲染层使用的原生性能工具。目前包含歌词解析、主题/图片颜色处理、频谱处理、搜索辅助和 WebGL renderer 支持。                                | Rust 2024, wasm-bindgen, wasm-pack, serde, tsify, image, rustfft, regex, web-sys                                                                                 |
+| `packages/ipc`   | 主进程和渲染层共享的 TypeScript IPC 类型定义，覆盖 invoke 和 message 契约。                                                            | `@mahiru/log`                                                                                                                                                    |
+| `packages/log`   | app 和 renderer 共享的日志基础能力。                                                                                         | TypeScript                                                                                                                                                       |
 
 ### 工具链
 

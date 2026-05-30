@@ -17,6 +17,13 @@ A desktop third-party NetEase Cloud Music player built with Electron, React, Vue
 ### Playlist
 
 ![Playlist](docs/images/playlist.png)
+![Playlist2](docs/images/playlist2.png)
+![list](docs/images/list.png)
+
+### Album
+
+![Album](docs/images/album.png)
+![Album2](docs/images/album2.png)
 
 ### Player
 
@@ -34,10 +41,6 @@ A desktop third-party NetEase Cloud Music player built with Electron, React, Vue
 ![Artist](docs/images/artist.png)
 ![Artist albums](docs/images/artist_album.png)
 
-### Album
-
-![Album](docs/images/album.png)
-
 ### Search
 
 ![Search](docs/images/search.png)
@@ -53,7 +56,8 @@ A desktop third-party NetEase Cloud Music player built with Electron, React, Vue
 
 ## Dependencies and Architecture
 
-AiraMusic is a Yarn workspaces monorepo. The desktop shell, renderer layer, cache service, and WASM utilities live in separate packages. At runtime, the Electron main process coordinates them.
+AiraMusic is a Yarn workspaces monorepo. The desktop shell, renderer layer, cache service, and WASM
+utilities live in separate packages. At runtime, the Electron main process coordinates them.
 
 ```text
 packages/ui  -- renderer windows built by Vite
@@ -73,7 +77,7 @@ packages/wasm -- Rust + wasm-bindgen modules used by the renderer
 ### Workspace Overview
 
 | Package          | Role                                                                                                                                                                                                                                          | Main dependencies                                                                                                                                                |
-| ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+|------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `packages/ui`    | Renderer application. Vite builds multiple renderer entries such as `index`, `login`, `mini`, `lyric`, `tray`, `image`, `comments`, and `display`. React is used for the main renderer flow, and Vue is also used by several smaller windows. | React 19, Vue 3, Vite 8, Tailwind CSS 4, SCSS, React Router 7, Zustand, Jotai, Motion, Lucide, Heroicons, Axios, `@applemusic-like-lyrics/lyric`, `@mahiru/wasm` |
 | `packages/app`   | Electron main process. It owns app startup, window management, tray registration, IPC handlers, custom protocol handling, service lifecycle, and Electron packaging input.                                                                    | Electron 40, tsup, `@neteasecloudmusicapienhanced/api`, Express, `express-http-proxy`, `electron-store`, Zod, `@mahiru/store`, `@mahiru/ipc`                     |
 | `packages/store` | Local cache store service. It is a Go HTTP service used by the renderer through `/cache`, and is wrapped by a TypeScript launcher so the Electron app can start and stop it.                                                                  | Go 1.25, Gin, gin-contrib/cors                                                                                                                                   |
