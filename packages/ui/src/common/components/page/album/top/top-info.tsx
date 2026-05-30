@@ -1,95 +1,61 @@
-import { type FC, memo, useRef } from "react";
-import { ListMusic, MessageSquare, Play } from "lucide-react";
-import { useThemeColor } from "@/common/hooks/use-theme-color";
+import { type FC, memo } from "react";
 import { NeteaseAlbum } from "@/common/netease/models";
-import { css, cx } from "@emotion/css";
-import { useScrollAutoHide } from "@/common/hooks/use-scroll-auto-hide";
-import { RendererFormat } from "@/common/lib/format";
+import { cx } from "@emotion/css";
 import { RendererEventBus } from "@/common/lib/bus";
 import { RendererWindow } from "@/common/lib/window";
+import { createAlbumStats } from "@/common/utils/playlist";
+import AppToast from "@/common/components/toast";
 
 interface TopInfoProps {
   album: Nullable<NeteaseAlbum>;
   dynamic: Nullable<NeteaseAPI.NeteaseAlbumDynamicDetailResponse>;
-  onPlayAll: NormalFunc;
   onAddList: NormalFunc;
 }
 
-const TopInfo: FC<TopInfoProps> = ({ album, dynamic, onPlayAll, onAddList }) => {
-  const { textColorOnMain, mainColor } = useThemeColor();
-  const descriptionRef = useRef(null);
-  useScrollAutoHide(descriptionRef, 3000);
-
+const TopInfo: FC<TopInfoProps> = ({ album, dynamic, onAddList }) => {
+  const status = createAlbumStats(album, dynamic);
   return (
-    <div className="w-full h-full grid grid-cols-1 grid-rows-[auto_1fr_auto] overflow-hidden max-w-max">
+    <div className="w-full h-full grid grid-cols-1 grid-rows-[auto_1fr_auto] gap-1 overflow-hidden max-w-max">
       {/* title */}
-      <div
-        style={{ color: textColorOnMain.hex() }}
-        className={`
-          w-full font-bold text-[24px]
-          whitespace-pre-wrap leading-tight break-keep wrap-break-word
-        `}>
+      <div className="w-full font-bold text-[24px] line-clamp-2">
         {album?.content.name ?? "未知专辑"}
       </div>
-
       {/* description */}
-      <div
-        style={{ color: textColorOnMain.alpha(0.8).string() }}
-        className={`
-          w-full h-full flex flex-col gap-1
-          text-[12px] font-semibold overflow-hidden
-          py-1
-        `}>
-        <div
-          ref={descriptionRef}
-          className={cx(
-            `
-            flex-1 overflow-y-scroll leading-snug indent-0
-            whitespace-pre-wrap wrap-break-word break-keep
-          `,
-            css`
-              line-break: strict;
-            `
-          )}>
-          {album?.content.description || "暂无描述"}
-        </div>
-        <div className="flex shrink flex-col">
-          <span className="select-none">歌曲数量 {Number(album?.tracks?.length) || "-"}</span>
-          <span className="select-none">
-            发布时间 {RendererFormat.time(album?.content.publishTime) || "-"}
-          </span>
-        </div>
+      <div className="w-full h-full text-[12px] font-semibold py-1 opacity-80 text-ellipsis">
+        {album?.content.description || "暂无描述"}
       </div>
-
-      {/* action */}
-      <div className="flex items-center">
-        <button
-          style={{ backgroundColor: mainColor.hex(), color: textColorOnMain.hex() }}
-          className="rounded-md px-2 py-1 text-[12px] mr-2 cursor-pointer font-semibold flex items-center gap-1 overflow-hidden active:scale-95 shadow-2xl select-none min-w-max ease-in-out duration-300 transition-all hover:opacity-60"
-          onClick={onPlayAll}>
-          <Play size={16} /> 全部播放
-        </button>
-        <button
-          style={{ color: mainColor.hex(), backgroundColor: textColorOnMain.hex() }}
-          className="rounded-md px-2 py-1 text-[12px] mr-2 cursor-pointer font-semibold flex items-center gap-1 overflow-hidden active:scale-95 shadow-2xl select-none min-w-max ease-in-out duration-300 transition-all hover:opacity-60"
-          onClick={onAddList}>
-          <ListMusic size={16} /> 加入列表
-        </button>
-        <button
-          style={{ color: mainColor.hex() }}
-          onClick={async () => {
-            if (!album?.content?.id) return;
-            await RendererWindow.comment.openAwait();
-            RendererEventBus.comment.send({
-              id: album.content.id,
-              type: "album"
-            });
-          }}
-          className="overflow-hidden px-2 py-1 text-[12px] mr-2 cursor-pointer font-semibold flex items-center gap-1 active:scale-95 shadow-2xl select-none min-w-max ease-in-out duration-300 transition-all hover:opacity-60 space-x-0.5">
-          <MessageSquare size={16} />
-          <span>评论</span>
-          <span>{RendererFormat.count(dynamic?.commentCount)}</span>
-        </button>
+      {/* status */}
+      <div className="w-fit flex flex-row flex-wrap gap-3 text-[11px] font-semibold">
+        {status.map(({ icon: Icon, label, value, isComment, isTrackCount }) => (
+          <div
+            key={label}
+            title={label}
+            className={cx(
+              "min-w-0 flex justify-start items-center gap-1 ease-in-out duration-300 transition-all",
+              (isComment || isTrackCount) && "hover:opacity-50 cursor-pointer"
+            )}
+            onClick={async () => {
+              if (isComment) {
+                if (!album) return;
+                await RendererWindow.comment.openAwait();
+                RendererEventBus.comment.send({
+                  id: album.content.id,
+                  type: "album"
+                });
+              } else if (isTrackCount) {
+                AppToast.show({
+                  type: "info",
+                  text: "已添加到播放列表"
+                });
+                onAddList();
+              }
+            }}>
+            <div className="flex items-center gap-1.5">
+              <Icon className="opacity-50 size-3.5 shrink-0" />
+            </div>
+            <p className="mt-0.5 truncate text-[12px] font-black opacity-85">{value}</p>
+          </div>
+        ))}
       </div>
     </div>
   );

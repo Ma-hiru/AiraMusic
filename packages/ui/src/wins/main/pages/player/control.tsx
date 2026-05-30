@@ -1,6 +1,8 @@
-import { type FC, memo, useMemo } from "react";
+import { type FC, memo, useCallback, useMemo } from "react";
+import { createPlayerPlaylistModal } from "@/wins/main/componets/player-playlist-modal";
 import {
   ArrowRightLeft,
+  ListMusic,
   LoaderCircle,
   Pause,
   Play,
@@ -13,6 +15,7 @@ import {
 
 import Progress from "./progress";
 import AppEntry from "@/wins/main/entry";
+import AppModal from "@/common/components/modal";
 
 const Control: FC<object> = () => {
   const player = AppEntry.usePlayer();
@@ -41,7 +44,10 @@ const Control: FC<object> = () => {
       />
     );
   }, [player.audio, player.loading, player.playing]);
-
+  const { create } = AppModal.useModal();
+  const openPlaylistModal = useCallback(() => {
+    create(createPlayerPlaylistModal);
+  }, [create]);
   return (
     <div className="space-x-2 w-full">
       <Progress />
@@ -82,6 +88,10 @@ const Control: FC<object> = () => {
               onClick={() => (player.playlist.repeat = "one")}
             />
           )}
+          <ListMusic
+            className="size-6 scale-85 cursor-pointer hover:opacity-50 ease-in-out duration-300 transition-all active:scale-90"
+            onClick={openPlaylistModal}
+          />
         </div>
       </div>
     </div>

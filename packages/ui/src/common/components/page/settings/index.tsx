@@ -2,12 +2,12 @@ import { cx } from "@emotion/css";
 import { type FC, memo, useCallback, useEffect, useState } from "react";
 import { NeteaseSettings, type NeteaseSettingsModel, NeteaseUser } from "@/common/netease/models";
 import { RendererIPC } from "@/common/lib/ipc";
+import { RendererCache } from "@/common/lib/cache";
 import type { InvokeEventPayload } from "@mahiru/ipc/renderer";
 
 import SettingsAside from "./aside";
 import SettingsContent from "./content";
 import AppToast from "@/common/components/toast";
-import { RendererCache } from "@/common/lib/cache";
 
 interface SettingsProps {
   user: Nullable<NeteaseUser>;
@@ -85,7 +85,7 @@ const Settings: FC<SettingsProps> = ({
         `
           h-full overflow-y-auto lg:overflow-hidden scrollbar scrollbar-show
           lg:scrollbar-hidden text-(--text-color-on-main)
-          grid grid-cols-1 lg:grid-cols-[minmax(260px,0.82fr)_minmax(520px,1.58fr)] gap-4
+          grid grid-cols-1 md:grid-cols-[minmax(260px,0.82fr)_minmax(520px,1.58fr)] gap-4
         `,
         className
       )}>

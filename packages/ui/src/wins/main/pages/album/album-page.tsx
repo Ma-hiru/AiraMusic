@@ -22,8 +22,7 @@ const AlbumPage: FC<object> = () => {
     addTrackToPlaylistNext,
     onTrackPlay,
     openTrackComment,
-    onAddList,
-    onReplace
+    onAddList
   } = usePlayerChangeAction(() => albumRef.current?.album?.tracks ?? []);
   const { jumpAlbumPage, jumpArtistPage } = useArtistOrAlbumPageJump({
     currentAlbumID: albumRef.current?.album?.content.id
@@ -46,7 +45,6 @@ const AlbumPage: FC<object> = () => {
       onClickAlbum={jumpAlbumPage}
       onClickArtist={jumpArtistPage}
       onAddList={onAddList}
-      onPlayAll={onReplace}
       onCoverLoaded={onCoverLoaded}
       pageActionType="out"
       onPageAction={onPageAction}

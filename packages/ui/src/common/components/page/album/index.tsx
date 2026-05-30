@@ -47,7 +47,6 @@ interface AlbumPageProps {
   className?: string;
   coverSize: NeteaseImageSize;
   onAddList: NormalFunc;
-  onPlayAll: NormalFunc;
   heartManager: HeartManager;
   playableManager: TrackListPlayableManager;
   pageActionType?: "enter" | "out" | "none";
@@ -66,7 +65,6 @@ const Album: FC<AlbumPageProps> = ({
   className,
   coverSize,
   onAddList,
-  onPlayAll,
   heartManager,
   playableManager,
   pageActionType,
@@ -154,7 +152,6 @@ const Album: FC<AlbumPageProps> = ({
             album={album}
             dynamic={dynamic}
             onAddList={onAddList}
-            onPlayAll={onPlayAll}
             onCoverLoaded={onCoverLoaded}
             pageActionType={pageActionType}
             onPageAction={onPageAction}

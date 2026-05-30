@@ -26,11 +26,11 @@ const Avatar: FC<AvatarProps> = ({ className, artist, onAvatarLoaded }) => {
   );
 
   return (
-    <div className={cx("relative", className)}>
+    <div title={artist?.name} className={cx("relative", className)}>
       <NeteaseImage
         cache
         preview
-        className="h-full rounded-full aspect-square"
+        className="h-full rounded-full aspect-square hover:scale-105 ease-in-out transition-all duration-300"
         image={avatar}
         cacheLazy={false}
         shadow="float"

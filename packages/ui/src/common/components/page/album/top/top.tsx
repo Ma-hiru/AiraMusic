@@ -7,7 +7,6 @@ import TopInfo from "./top-info";
 import { SquareArrowRightEnter, SquareArrowRightExit } from "lucide-react";
 
 interface TopProps {
-  onPlayAll: NormalFunc;
   onAddList: NormalFunc;
   album: Nullable<NeteaseAlbum>;
   dynamic: Nullable<NeteaseAPI.NeteaseAlbumDynamicDetailResponse>;
@@ -19,7 +18,6 @@ interface TopProps {
 }
 
 const Top: FC<TopProps> = ({
-  onPlayAll,
   onAddList,
   album,
   dynamic,
@@ -52,10 +50,11 @@ const Top: FC<TopProps> = ({
         <TopCover
           size={coverSize}
           album={album}
+          dynamic={dynamic}
           coverCacheKey={coverCacheKey}
           onCoverLoaded={onCoverLoaded}
         />
-        <TopInfo album={album} dynamic={dynamic} onAddList={onAddList} onPlayAll={onPlayAll} />
+        <TopInfo album={album} dynamic={dynamic} onAddList={onAddList} />
       </div>
       <div className="flex items-end justify-end">{action}</div>
     </div>

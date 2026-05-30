@@ -20,7 +20,6 @@ const AlbumDisplay: FC<object> = () => {
 
   const {
     onTrackPlay,
-    onReplace,
     onAddList,
     openTrackComment,
     addTrackToPlaylistNext,
@@ -50,7 +49,6 @@ const AlbumDisplay: FC<object> = () => {
       onClickAlbum={jumpAlbumDisplay}
       onClickArtist={jumpArtistDisplay}
       onAddList={onAddList}
-      onPlayAll={onReplace}
       pageActionType="out"
       onPageAction={onPageAction}
       coverSize={RendererImageConstants.AlbumPageCoverSize}

@@ -1,7 +1,7 @@
 import { useLayoutEffect } from "react";
 import { type ModalRender } from "./modal-provider";
 import { Log } from "@/common/lib/log";
-import { createPlaylistCoverModal } from "./playlist-cover-modal";
+import { createAlbumCoverModal, createPlaylistCoverModal } from "./playlist-cover-modal";
 import Provider from "./modal-provider";
 
 export default class AppModal {
@@ -67,6 +67,7 @@ function useModal() {
   return {
     create: AppModal._create,
     close: AppModal.close,
-    createPlaylistCoverModal
+    createPlaylistCoverModal,
+    createAlbumCoverModal
   };
 }

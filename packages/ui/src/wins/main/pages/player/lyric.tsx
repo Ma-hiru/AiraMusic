@@ -10,6 +10,7 @@ const Lyric: FC<object> = () => {
   const handleWordClick = useCallback(
     (timeMS: number) => {
       player.audio.currentTime = timeMS / 1000;
+      player.paused && player.audio.play();
     },
     [player]
   );

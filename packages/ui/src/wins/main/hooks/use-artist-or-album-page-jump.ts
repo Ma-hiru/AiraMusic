@@ -51,10 +51,11 @@ export function useArtistOrAlbumPageJump(
     [navigate, propsRef, settingsRef]
   );
 
+  const isPlaylistPage = location.pathname.includes(RoutePathMain.playlist.base);
   const jumpPlaylistPage = useCallback(
     (id: number, source: "normal" | "like" | "history") => {
-      if (source !== "like" && id === Number(playlistRef.current.id)) return;
-      if (playlistRef.current.source === "like" && !id) return;
+      if (source !== "like" && id === Number(playlistRef.current.id) && isPlaylistPage) return;
+      if (playlistRef.current.source === "like" && !id && isPlaylistPage) return;
       if (settingsRef.current.preference.defaultUseDisplayWindow && source !== "history") {
         return RendererWindow.display.openAwait().then(() => {
           RendererEventBus.display.send({
@@ -66,7 +67,7 @@ export function useArtistOrAlbumPageJump(
       }
       navigate(RoutePathMain.playlist.withQuery(id, source));
     },
-    [navigate, playlistRef, settingsRef]
+    [isPlaylistPage, navigate, playlistRef, settingsRef]
   );
 
   return {
