@@ -1,4 +1,5 @@
 import dayjs, { type OpUnitType, type QUnitType } from "dayjs";
+import { NeteaseMusicLevel, TrackQuality } from "@/common/enum";
 
 export class RendererFormat {
   static count(count: Optional<number>) {
@@ -87,5 +88,20 @@ export class RendererFormat {
     else if (bytes < 1024 ** 2) return RendererFormat.convertBytes(bytes, "KB") + "KB";
     else if (bytes < 1024 ** 3) return RendererFormat.convertBytes(bytes, "MB") + "MB";
     return RendererFormat.convertBytes(bytes, "GB") + "GB";
+  }
+
+  static musicLevel(quality: TrackQuality) {
+    switch (quality) {
+      case TrackQuality.l:
+        return NeteaseMusicLevel.standard;
+      case TrackQuality.m:
+        return NeteaseMusicLevel.higher;
+      case TrackQuality.h:
+        return NeteaseMusicLevel.exhigh;
+      case TrackQuality.sq:
+        return NeteaseMusicLevel.lossless;
+      case TrackQuality.hr:
+        return NeteaseMusicLevel.hires;
+    }
   }
 }

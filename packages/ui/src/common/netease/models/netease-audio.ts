@@ -1,14 +1,21 @@
 import { TrackQuality } from "@/common/enum";
 
 export class NeteaseNetworkAudio {
-  readonly url: string;
-  readonly quality: TrackQuality;
-  readonly id: number;
+  readonly url;
+  readonly quality;
+  readonly id;
+  readonly meta;
 
-  constructor(props: { url: string; quality: TrackQuality; id: number }) {
+  constructor(props: {
+    url: string;
+    quality: TrackQuality;
+    id: number;
+    meta: NeteaseAPI.NeteaseSongUrlNewItem;
+  }) {
     this.quality = props.quality;
     this.url = props.url;
     this.id = props.id;
+    this.meta = props.meta;
   }
 
   /** 当前最优地址 */
@@ -32,7 +39,13 @@ export class NeteaseNetworkAudio {
 export class NeteaseLocalAudio extends NeteaseNetworkAudio {
   readonly localURL: string;
 
-  constructor(props: { url: string; quality: TrackQuality; id: number; localURL: string }) {
+  constructor(props: {
+    url: string;
+    quality: TrackQuality;
+    id: number;
+    localURL: string;
+    meta: NeteaseAPI.NeteaseSongUrlNewItem;
+  }) {
     super(props);
     this.localURL = props.localURL;
   }
@@ -46,6 +59,7 @@ export class NeteaseLocalAudio extends NeteaseNetworkAudio {
       id: network.id,
       url: network.url,
       quality: network.quality,
+      meta: network.meta,
       localURL
     });
   }

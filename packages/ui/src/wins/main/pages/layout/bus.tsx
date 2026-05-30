@@ -14,6 +14,7 @@ import { themeAtom } from "@/wins/main/atoms/theme";
 import AppEntry from "@/wins/main/entry";
 import { useAudioOutput } from "@/common/hooks/use-audio-output";
 import { useLatestRef } from "@/common/hooks/use-latest-ref";
+import { RendererDevice } from "@/common/lib/device";
 
 const Bus: FC<object> = () => {
   const theme = useAtomValue(themeAtom);
@@ -66,22 +67,34 @@ const Bus: FC<object> = () => {
 
   // 2. outputBus 播放设备推送
   const updateOutputs = useCallback(() => {
-    RendererEventBus.output.send({
-      selected,
-      views: views.map((v) => {
-        let displayName;
-        if (v.label === v.displayName) {
-          displayName = v.label;
-        } else if (v.label && v.displayName) {
-          displayName = `${v.displayName}(${v.label})`;
-        } else {
-          displayName = v.label || v.displayName || "Unknown Device";
-        }
-        return {
-          deviceId: v.deviceId,
-          displayName
-        };
-      })
+    RendererDevice.platform.then((platform) => {
+      // window 自带分类
+      if (platform === "win32") {
+        return RendererEventBus.output.send({
+          selected,
+          views: views.map((v) => ({
+            deviceId: v.deviceId,
+            displayName: v.label
+          }))
+        });
+      }
+      RendererEventBus.output.send({
+        selected,
+        views: views.map((v) => {
+          let displayName;
+          if (v.label === v.displayName) {
+            displayName = v.label;
+          } else if (v.label && v.displayName) {
+            displayName = `${v.displayName}(${v.label})`;
+          } else {
+            displayName = v.label || v.displayName || "Unknown Device";
+          }
+          return {
+            deviceId: v.deviceId,
+            displayName
+          };
+        })
+      });
     });
   }, [selected, views]);
   useEffect(updateOutputs, [updateOutputs]);

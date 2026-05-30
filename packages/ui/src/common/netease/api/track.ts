@@ -29,7 +29,7 @@ export default class _NeteaseTrackAPI {
    * @param unblock 是否使用UnblockNeteaseMusic
    * */
   static urlNew(id: string | number, level: NeteaseMusicLevel, unblock = false) {
-    return apiRequest<any, NeteaseMusicLevel>({
+    return apiRequest<any, NeteaseAPI.NeteaseSongUrlNewResponse>({
       url: "/song/url/v1",
       params: {
         id,

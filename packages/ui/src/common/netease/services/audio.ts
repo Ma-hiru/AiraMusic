@@ -8,6 +8,7 @@ import {
 } from "@/common/netease/models";
 import { NeteaseAPITrack } from "@/common/netease/api";
 import { userStoreSnapshot } from "@/common/store/user";
+import { RendererFormat } from "@/common/lib/format";
 
 export default class _NeteaseAudioSource {
   //region cache
@@ -46,10 +47,14 @@ export default class _NeteaseAudioSource {
     const isVip = NeteaseUser.isVIP(userStoreSnapshot()._user);
     const qualities = track.qualities(isVip);
     const quality = qualities.find((q) => q.label === preference) ?? qualities[0];
-    const urlResponse = await NeteaseAPITrack.url(track.id, quality);
+    const urlResponse = await NeteaseAPITrack.urlNew(
+      track.id,
+      RendererFormat.musicLevel(quality?.label ?? TrackQuality.h)
+    );
     const meta = urlResponse.data[0];
-    if (!meta) return null;
+    if (!meta || !meta.url) return null;
     return new NeteaseNetworkAudio({
+      meta,
       id: track.id,
       url: meta.url,
       quality: qualities.find((q) => q.br === meta.br)?.label ?? TrackQuality.h
