@@ -27,7 +27,7 @@ const Bar: FC<{ className?: string }> = ({ className }) => {
       )}>
       <AppErrorBoundary name="PlayerBar" showError canReset className="w-full h-full">
         <BarProgress />
-        <div className="relative w-full h-full grid grid-rows-1 backdrop-blur-md grid-cols-[1fr_auto_1fr] items-center select-none px-6 z-10 contain-strict">
+        <div className="relative w-full h-full grid grid-rows-1 backdrop-blur-md grid-cols-[1fr_auto_1fr] items-center select-none px-6 z-10 contain-layout">
           <BarCover />
           <BarControl />
           <BarBtns />
