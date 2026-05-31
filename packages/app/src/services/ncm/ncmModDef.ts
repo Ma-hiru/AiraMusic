@@ -836,7 +836,7 @@ const moduleDefs: ModuleDefinition[] = [
   },
   {
     identifier: "personal_fm",
-    route: "/personal/fm",
+    route: "/personal_fm",
     module: require("@neteasecloudmusicapienhanced/api/module/personal_fm")
   },
   {

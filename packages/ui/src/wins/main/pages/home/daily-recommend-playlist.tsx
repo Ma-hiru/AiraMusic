@@ -1,9 +1,11 @@
 import { memo, useCallback } from "react";
 import { NeteaseAPIPlaylist } from "@/common/netease/api";
 import { useRequestAutoRetry, useRequestStatusWrap } from "@/common/hooks/use-request-wrap";
+import { Sparkles } from "lucide-react";
 import AppLoading from "@/common/components/fallback/app-loading";
 import PlaylistList from "@/common/components/playlist_list";
 import AppError from "@/common/components/fallback/app-error";
+import HomeSection from "./home-section";
 
 const DailyRecommendPlaylist = ({ onClickItem }: { onClickItem?: NormalFunc<[id: number]> }) => {
   const {
@@ -16,14 +18,19 @@ const DailyRecommendPlaylist = ({ onClickItem }: { onClickItem?: NormalFunc<[id:
   const { reload } = useRequestAutoRetry(fetchData, [], () => recommend.length !== 0);
 
   return (
-    <div className="w-full overflow-hidden contain-layout">
-      <h1 className="font-bold text-lg text-(--text-color-on-main)">每日推荐歌单</h1>
-      <AppError reset={reload} when={status === "error"}>
+    <HomeSection title="每日推荐歌单" subTitle="Daily Mix" Icon={Sparkles}>
+      <AppError reset={reload} when={status === "error"} message="加载每日推荐歌单失败">
         <AppLoading loading={status === "loading"} className="h-fit w-full">
-          <PlaylistList list={recommend} onClickItem={onClickItem} />
+          <PlaylistList
+            list={recommend.slice(0, 10).map((playlist) => ({
+              ...playlist,
+              playCount: playlist.playcount
+            }))}
+            onClickItem={onClickItem}
+          />
         </AppLoading>
       </AppError>
-    </div>
+    </HomeSection>
   );
 };
 

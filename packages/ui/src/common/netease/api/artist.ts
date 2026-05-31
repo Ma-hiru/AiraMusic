@@ -88,4 +88,17 @@ export default class _NeteaseArtistAPI {
       params: { id }
     });
   }
+
+  /**
+   * 歌手榜
+   * @desc 调用此接口, 可获取排行榜中的歌手榜
+   * @param type 地区: 1 华语, 2 欧美, 3 韩国, 4 日本; 不传为全部
+   * */
+  static toplist(type?: 1 | 2 | 3 | 4) {
+    return apiRequest<unknown, NeteaseAPI.NeteaseArtistToplistResponse>({
+      url: "/toplist/artist",
+      method: "GET",
+      params: { type }
+    });
+  }
 }

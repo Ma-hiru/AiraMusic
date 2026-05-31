@@ -164,7 +164,7 @@ export default class _NeteaseTrackAPI {
    * @note 需要登录
    * */
   static personalFM() {
-    return apiRequest<any, NeteaseAPI.NeteaseAPIResponse>({
+    return apiRequest<any, NeteaseAPI.NeteasePersonalFMResponse>({
       url: "/personal_fm",
       params: {
         timestamp: Date.now()

@@ -16,15 +16,23 @@ const TopInfo: FC<TopInfoProps> = ({ summary, onPlayAll, onAddList }) => {
   const status = createPlaylistStats(summary);
 
   return (
-    <div className="w-full h-full grid grid-cols-1 grid-rows-[auto_1fr_auto] gap-1 overflow-hidden max-w-max">
+    <div className="grid h-full w-full min-h-0 min-w-0 grid-cols-1 grid-rows-[auto_minmax(0,1fr)_auto] gap-1 overflow-hidden">
       {/* title */}
-      <div className="w-full font-bold text-[24px] line-clamp-2">{summary?.name ?? "未知歌单"}</div>
-      {/* description */}
-      <div className="w-full h-full text-[12px] font-semibold py-1 opacity-80 text-ellipsis">
-        {summary?.description ?? "暂无描述"}
+      <div className="min-w-0 overflow-hidden">
+        <p className="line-clamp-2 text-[24px] font-bold leading-tight wrap-break-word">
+          {summary?.name ?? "未知歌单"}
+        </p>
       </div>
+
+      {/* description */}
+      <div className="min-h-0 min-w-0 overflow-hidden py-1">
+        <p className="line-clamp-3 text-[12px] font-semibold leading-[1.4] opacity-80 wrap-break-word">
+          {summary?.description ?? "暂无描述"}
+        </p>
+      </div>
+
       {/* status */}
-      <div className="w-fit flex flex-row flex-wrap gap-3 text-[11px] font-semibold">
+      <div className="flex w-fit max-w-full shrink-0 flex-row flex-wrap gap-3 overflow-hidden text-[11px] font-semibold">
         {status.map(({ icon: Icon, label, value, isComment, isPlayCount, isTrackCount }) => (
           <div
             key={label}
@@ -56,7 +64,7 @@ const TopInfo: FC<TopInfoProps> = ({ summary, onPlayAll, onAddList }) => {
               }
             }}>
             <div className="flex items-center gap-1.5">
-              <Icon className="opacity-50 size-3.5 shrink-0" />
+              <Icon className="size-3.5 shrink-0 opacity-50" />
             </div>
             <p className="mt-0.5 truncate text-[12px] font-black opacity-85">{value}</p>
           </div>

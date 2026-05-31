@@ -344,4 +344,20 @@ namespace NeteaseAPI {
     startTime: number;
     ugcLocked: number;
   }
+
+  interface NeteasePersonalFMResponse extends NeteaseAPIResponse {
+    data: PersonalFMTrack[];
+    popAdjust: boolean;
+  }
+
+  interface PersonalFMTrack {
+    album?: {
+      id: number;
+      name: string;
+      picUrl: string;
+    };
+    artists?: { id: number; name: string }[];
+    id: number;
+    name: string;
+  }
 }

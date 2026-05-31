@@ -6,7 +6,7 @@ export default class _NeteaseHomeAPI {
    * @desc 调用此接口,可获取所有榜单 接口地址 : /toplist
    */
   static toplists() {
-    return apiRequest<any, NeteaseAPI.NeteaseAPIResponse>("/toplist");
+    return apiRequest<any, NeteaseAPI.NeteaseToplistResponse>("/toplist");
   }
 
   /**

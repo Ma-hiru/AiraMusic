@@ -1,19 +1,19 @@
-import { type FC, memo, useCallback, useRef } from "react";
+import { type FC, memo, useCallback, useRef, useState } from "react";
 import { useScrollAutoHide } from "@/common/hooks/use-scroll-auto-hide";
-import { useDelay } from "@/common/hooks/use-delay";
-import { useUser } from "@/common/store/user";
 import { useLocateOrScrollTopRegister } from "@/wins/main/hooks/use-locate-or-scroll-top-register";
-import { useArtistOrAlbumPageJump } from "@/wins/main/hooks/use-artist-or-album-page-jump";
 
 import Banner from "./banner";
-import DailyRecommendTracks from "./daily_recommend_tracks";
-import DailyRecommendPlaylist from "./daily-recommend-playlist";
-import RecommendPlaylist from "./recommend-playlist";
+import ForYouPanel from "./for-you-panel";
+import HomeChannelTabs from "./home-channel-tabs";
+import HomeChartsView from "./home-charts-view";
+import HomePlaylistsView from "./home-playlists-view";
+import HomeRecommendView from "./home-recommend-view";
+import HomeSongsArtistsView from "./home-songs-artists-view";
+import { type HomeChannelKey } from "./home-config";
 
 const HomePage: FC<object> = () => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const delay = useDelay([200, 1000, 3000, 5000]);
-  const user = useUser();
+  const [activeChannel, setActiveChannel] = useState<HomeChannelKey>("recommend");
   useScrollAutoHide(containerRef);
 
   const scrollTop = useCallback(() => {
@@ -23,34 +23,30 @@ const HomePage: FC<object> = () => {
   const { canScrollTop } = useLocateOrScrollTopRegister({
     getScrollTopFunc: () => scrollTop
   });
-  const { jumpPlaylistPage } = useArtistOrAlbumPageJump();
+
+  const changeChannel = useCallback((key: HomeChannelKey) => {
+    setActiveChannel(key);
+  }, []);
 
   return (
     <div
       ref={containerRef}
       onScroll={(e) => canScrollTop(e.currentTarget.scrollTop > 500)}
       className={`
-        router-container overflow-y-auto scrollbar pb-10
+        router-container overflow-y-auto scrollbar px-2 pb-10
         will-change-scroll contain-strict text-(--text-color-on-main)
       `}>
-      {delay(200) && <Banner />}
-      {delay(1000) && user?.isLoggedIn && (
-        <DailyRecommendTracks key={user.profile.userId + "-daily-tracks"} />
-      )}
-      {delay(3000) && user?.isLoggedIn && (
-        <DailyRecommendPlaylist
-          onClickItem={(id) => jumpPlaylistPage(id, "normal")}
-          key={user.profile.userId + "-daily-playlist"}
-        />
-      )}
-      {user?.isLoggedIn
-        ? delay(5000) && (
-            <RecommendPlaylist
-              onClickItem={(id) => jumpPlaylistPage(id, "normal")}
-              key={user.profile.userId + "-playlist"}
-            />
-          )
-        : delay(1000) && <RecommendPlaylist onClickItem={(id) => jumpPlaylistPage(id, "normal")} />}
+      <div className="flex flex-col gap-6">
+        <section className="grid grid-cols-1 gap-3 xl:grid-cols-[minmax(0,1.55fr)_minmax(280px,0.8fr)]">
+          <Banner />
+          <ForYouPanel />
+        </section>
+        <HomeChannelTabs active={activeChannel} onChange={changeChannel} />
+        {activeChannel === "recommend" && <HomeRecommendView />}
+        {activeChannel === "charts" && <HomeChartsView />}
+        {activeChannel === "playlists" && <HomePlaylistsView />}
+        {activeChannel === "songs-artists" && <HomeSongsArtistsView />}
+      </div>
     </div>
   );
 };

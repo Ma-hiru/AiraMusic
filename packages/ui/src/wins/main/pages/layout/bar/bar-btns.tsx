@@ -1,5 +1,5 @@
 import { cx } from "@emotion/css";
-import { type FC, memo, useCallback, useEffect, useRef, type WheelEvent } from "react";
+import { type FC, memo, useCallback, useEffect, type WheelEvent } from "react";
 import { ListMusic, Volume, Volume1, Volume2, VolumeX } from "lucide-react";
 import { useThemeColor } from "@/common/hooks/use-theme-color";
 import { useUpdate } from "@/common/hooks/use-update";

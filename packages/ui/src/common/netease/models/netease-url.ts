@@ -2,6 +2,10 @@ import { BannerType, NeteaseImageSize } from "@/common/enum";
 import { Log } from "@/common/lib/log";
 
 export class NeteaseURL {
+  private static isNeteaseImageURL(url: URL) {
+    return url.hostname === "music.126.net" || url.hostname.endsWith(".music.126.net");
+  }
+
   static parseBannerURL(url: string): { type: BannerType; id: number } {
     // examples:
     // 独家策划 https://y.music.163.com/g/yida/act/qianxi?page=50ccea950b38445f98458d3fc61ad72b
@@ -60,6 +64,10 @@ export class NeteaseURL {
     }
 
     const u = new URL(url);
+    if (NeteaseURL.isNeteaseImageURL(u)) {
+      u.search = "";
+    }
+
     if (size !== NeteaseImageSize.raw) {
       u.searchParams.set("param", `${size}y${size}`);
       u.searchParams.set("type", "webp");

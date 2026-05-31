@@ -1,5 +1,5 @@
 import { type FC, memo, useCallback } from "react";
-import { useThemeColor } from "@/common/hooks/use-theme-color";
+import { cx } from "@emotion/css";
 import { BannerType, PlaylistSource } from "@/common/enum";
 import { Log } from "@/common/lib/log";
 import { NeteaseTrackRecord, NeteaseURL } from "@/common/netease/models";
@@ -14,7 +14,11 @@ import AppEntry from "@/wins/main/entry";
 import Carousel from "@/common/components/public/carousel";
 import AppError from "@/common/components/fallback/app-error";
 
-const Banner: FC<object> = () => {
+interface BannerProps {
+  className?: string;
+}
+
+const Banner: FC<BannerProps> = ({ className }) => {
   const {
     status,
     data: banner = [],
@@ -22,7 +26,6 @@ const Banner: FC<object> = () => {
   } = useRequestStatusWrap(
     useCallback(() => NeteaseAPIHome.banner().then((res) => res.banners), [])
   );
-  const { textColorOnMain } = useThemeColor();
   const { reload } = useRequestAutoRetry(fetchData, [], () => banner.length !== 0);
   const player = AppEntry.usePlayer();
   const navigate = useNavigate();
@@ -65,15 +68,13 @@ const Banner: FC<object> = () => {
   );
 
   return (
-    <div className="w-full px-2">
+    <div className={cx("w-full px-2", className)}>
       <AppError reset={reload} when={status === "error"}>
         <Carousel
-          className="h-56"
           items={banner.map((b) => ({
             url: b.bigImageUrl,
             title: b.typeTitle
           }))}
-          titleColor={textColorOnMain.string()}
           onClick={handleClick}
         />
       </AppError>

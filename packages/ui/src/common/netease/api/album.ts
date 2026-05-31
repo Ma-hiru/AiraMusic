@@ -27,7 +27,7 @@ export default class _NeteaseAlbumAPI {
     /** ALL:全部,ZH:华语,EA:欧美,KR:韩国,JP:日本 */
     area?: "ALL" | "ZH" | "EA" | "KR" | "JP";
   }) {
-    return apiRequest({
+    return apiRequest<typeof params, NeteaseAPI.NeteaseNewAlbumsResponse>({
       url: "/album/new",
       method: "get",
       params

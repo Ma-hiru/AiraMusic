@@ -8,11 +8,26 @@ interface RecommendTrackTitleProps {
 
 const RecommendTrackTitle: FC<RecommendTrackTitleProps> = ({ lastPage, nextPage }) => {
   return (
-    <div className="flex justify-between items-center text-(--text-color-on-main)">
-      <h2 className="font-bold text-lg">每日精选歌曲</h2>
-      <div className="justify-center items-center flex gap-2">
-        <ChevronLeft className="size-4 cursor-pointer" onClick={lastPage} />
-        <ChevronRight className="size-4 cursor-pointer" onClick={nextPage} />
+    <div className="mb-3 flex items-end justify-between gap-3 px-2 text-(--text-color-on-main)">
+      <div className="min-w-0">
+        <p className="text-[10px] font-bold uppercase tracking-widest opacity-50">Daily Songs</p>
+        <h2 className="truncate text-xl font-black">每日精选歌曲</h2>
+      </div>
+      <div className="flex items-center justify-center gap-2">
+        <button
+          type="button"
+          title="上一页"
+          className="flex size-8 cursor-pointer items-center justify-center rounded-lg border border-white/20 bg-white/5 transition-all duration-300 hover:bg-(--theme-color-main) active:scale-95"
+          onClick={lastPage}>
+          <ChevronLeft className="size-4" />
+        </button>
+        <button
+          type="button"
+          title="下一页"
+          className="flex size-8 cursor-pointer items-center justify-center rounded-lg border border-white/20 bg-white/5 transition-all duration-300 hover:bg-(--theme-color-main) active:scale-95"
+          onClick={nextPage}>
+          <ChevronRight className="size-4" />
+        </button>
       </div>
     </div>
   );

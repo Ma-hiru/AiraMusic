@@ -291,6 +291,34 @@ namespace NeteaseAPI {
     };
   }
 
+  interface NeteaseArtistToplistResponse extends NeteaseAPIResponse {
+    list: {
+      artists: ToplistArtist[];
+      type: number;
+      updateTime: number;
+    };
+  }
+
+  interface ToplistArtist {
+    albumSize: number;
+    alias: string[];
+    briefDesc: string;
+    id: number;
+    img1v1Id: number;
+    img1v1Id_str?: string;
+    img1v1Url: string;
+    lastRank: number;
+    musicSize: number;
+    name: string;
+    picId: number;
+    picId_str?: string;
+    picUrl: string;
+    score: number;
+    topicPerson: number;
+    trans: string;
+    transNames?: string[];
+  }
+
   interface NeteaseArtistAlbumResponse extends NeteaseAPIResponse {
     artist: {
       albumSize: number;
@@ -369,7 +397,7 @@ namespace NeteaseAPI {
     picUrl: string;
     publishTime: number;
     size: number;
-    songs: string[];
+    songs: unknown[];
     status: number;
     subType: string;
     tags: string;

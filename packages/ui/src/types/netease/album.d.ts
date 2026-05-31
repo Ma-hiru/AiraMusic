@@ -27,6 +27,11 @@ namespace NeteaseAPI {
     songs: AlbumSong[];
   }
 
+  interface NeteaseNewAlbumsResponse extends NeteaseAPIResponse {
+    albums: ArtistAlbum[];
+    total: number;
+  }
+
   interface NeteaseAlbumContent {
     alias: string[];
     artist: {

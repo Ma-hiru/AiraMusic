@@ -49,6 +49,73 @@ namespace NeteaseAPI {
     total: number;
   }
 
+  interface NeteaseToplistResponse extends NeteaseAPIResponse {
+    artistToplist?: {
+      coverUrl: string;
+      name: string;
+      position: number;
+      upateFrequency: string;
+      updateFrequency: string;
+    };
+    list: NeteaseToplist[];
+  }
+
+  interface NeteaseToplist {
+    adType: number;
+    algType: null | string;
+    anonimous: boolean;
+    artists: null;
+    backgroundCoverId: number;
+    backgroundCoverUrl: null | string;
+    cloudTrackCount: number;
+    commentThreadId: string;
+    coverImgId: number;
+    coverImgId_str?: string;
+    coverImgUrl: string;
+    coverImageUrl: null | string;
+    coverText: null | string;
+    createTime: number;
+    creator: null;
+    description: null | string;
+    englishTitle: null | string;
+    highQuality: boolean;
+    iconImageUrl: null | string;
+    id: number;
+    mix: boolean;
+    name: string;
+    newImported: boolean;
+    opRecommend: boolean;
+    ordered: boolean;
+    originalCoverId: number;
+    playCount: number;
+    playlistType: string;
+    privacy: number;
+    promptedMgcInfo: null;
+    recommendInfo: null | RecommendInfo;
+    socialPlaylistCover: null | string;
+    specialType: number;
+    status: number;
+    subscribed: null | boolean;
+    subscribedCount: number;
+    subscribers: unknown[];
+    tags: string[];
+    titleImage: number;
+    titleImageUrl: null | string;
+    topTrackIds: null;
+    totalDuration: number;
+    trackCount: number;
+    trackNumberUpdateTime: number;
+    /** Current /toplist samples return null; older NCM variants may return preview track pairs. */
+    tracks: null | { first: string; second: string }[];
+    trackUpdateTime: number;
+    tsSongCount: number;
+    uiPlaylistType: string;
+    updateFrequency: string;
+    updateTime: number;
+    userId: number;
+    ToplistType?: string;
+  }
+
   interface NeteasePlaylistDetail {
     adType: number;
     algTags: null;

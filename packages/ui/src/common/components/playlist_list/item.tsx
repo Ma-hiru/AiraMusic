@@ -35,42 +35,47 @@ const Item: FC<ItemProps> = ({
     [cover, coverSize, name]
   );
   return (
-    <div
+    <button
+      type="button"
       className={cx(
-        "w-full h-full inline-flex flex-col justify-start items-start p-2 cursor-pointer",
+        `
+          group inline-flex h-full w-full min-w-0 cursor-pointer select-none flex-col
+          items-start justify-start p-2 text-left transition-all duration-300 ease-in-out
+          active:scale-[0.98]
+        `,
         className
       )}
       onClick={onClick}>
-      <div className="w-full h-full rounded-md">
-        <div className="w-full overflow-hidden relative rounded-md shadow-lg hover:scale-105 ease-in-out duration-300  transition-all">
+      <div className="h-full w-full rounded-lg">
+        <div className="relative aspect-square w-full overflow-hidden rounded-lg bg-white/10 shadow-md">
           <NeteaseImage
             cache
-            className="w-full rounded-md aspect-square"
+            className="size-full rounded-lg"
             image={image}
             shadowColor={shadowColor}
           />
           {typeof playCount === "number" && (
-            <div className="absolute right-1 top-1 flex gap-1 justify-center items-center hover:text-white z-10">
+            <div className="absolute right-1 top-1 z-10 flex items-center justify-center gap-1 rounded-md bg-black/35 px-1.5 py-0.5 text-white backdrop-blur-md">
               <Headphones className="size-3" />
-              <p className="text-[10px] align-middle">
+              <p className="text-[10px] font-semibold leading-none">
                 {NeteasePlaylistSummary.playCountFormat(playCount)}
               </p>
             </div>
           )}
-          <div className="absolute inset-0 flex justify-center items-center opacity-0 hover:opacity-100 bg-black/30 transition-opacity duration-300">
-            <CirclePlay className="size-5" color="#ffffff" />
+          <div className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition-all duration-300 group-hover:bg-black/25 group-hover:opacity-100">
+            <CirclePlay className="size-6 text-white" />
             {typeof trackCount === "number" && (
-              <div className="absolute left-1 bottom-1">
-                <p className="text-white font-semibold text-[10px]">{trackCount} 首</p>
+              <div className="absolute bottom-1 left-1 max-w-[calc(100%-0.5rem)] truncate rounded-md bg-black/40 px-1.5 py-0.5 text-white backdrop-blur-md">
+                <p className="text-[10px] font-bold leading-none">{trackCount} 首</p>
               </div>
             )}
           </div>
         </div>
-        <p className="mt-2 font-semibold text-[12px] line-clamp-2 hover:opacity-50 ease-in-out duration-300 transition-opacity">
+        <p className="mt-2 line-clamp-2 text-[12px] font-bold leading-4 text-(--text-color-on-main) transition-opacity duration-300 group-hover:opacity-70">
           {name}
         </p>
       </div>
-    </div>
+    </button>
   );
 };
 

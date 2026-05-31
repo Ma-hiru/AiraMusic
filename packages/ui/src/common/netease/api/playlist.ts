@@ -264,6 +264,8 @@ export default class _NeteasePlaylistAPI {
     cat: string;
     /** 取出歌单数量 , 默认为 50 */
     limit?: number;
+    /** 偏移数量 , 用于分页 , 如 :( 页数 -1)*50, 其中 50 为 limit 的值 */
+    offset?: number;
   }): Promise<NeteaseAPI.NeteaseTopPlaylistResponse> {
     return apiRequest({
       url: "/top/playlist",

@@ -15,6 +15,12 @@ interface CarouselProps {
   titleColor?: string;
 }
 
+const createCarouselImage = (url: string, title: Optional<string>) => {
+  return NeteaseNetworkImage.fromURL(url)
+    .setSize(NeteaseImageSize.raw)
+    .setAlt(title || "carousel-item");
+};
+
 const Carousel: FC<CarouselProps> = ({
   items,
   interval = 3000,
@@ -25,85 +31,147 @@ const Carousel: FC<CarouselProps> = ({
   const [index, setIndex] = useState(0);
   const { mainColor } = useThemeColor();
   const timerRef = useRef<Nullable<number>>(null);
+  const activeIndex = items.length ? Math.min(index, items.length - 1) : 0;
+  const activeItem = items[activeIndex];
+  const hasMultipleItems = items.length > 1;
 
   const next = useCallback(() => {
+    if (!items.length) return;
     setIndex((prevState) => (prevState + 1) % items.length);
   }, [items.length]);
   const prev = useCallback(() => {
+    if (!items.length) return;
     setIndex((prevState) => (prevState - 1 + items.length) % items.length);
   }, [items.length]);
   const stopAutoPlay = useCallback(() => {
-    if (timerRef.current) clearInterval(timerRef.current);
+    if (!timerRef.current) return;
+    clearInterval(timerRef.current);
+    timerRef.current = null;
   }, []);
   const startAutoPlay = useCallback(() => {
     stopAutoPlay();
+    if (items.length <= 1) return;
     timerRef.current = window.setInterval(next, interval);
-  }, [interval, next, stopAutoPlay]);
+  }, [interval, items.length, next, stopAutoPlay]);
 
   const goTo = useCallback(
     (i: number) => {
+      if (!items.length) return;
       setIndex(i % items.length);
     },
     [items.length]
   );
 
   useEffect(() => {
+    if (!hasMultipleItems) return stopAutoPlay;
     startAutoPlay();
     return stopAutoPlay;
-  }, [startAutoPlay, stopAutoPlay]);
+  }, [hasMultipleItems, startAutoPlay, stopAutoPlay]);
+
+  useEffect(() => {
+    if (index >= items.length) setIndex(0);
+  }, [index, items.length]);
+
+  if (!items.length) {
+    return (
+      <div
+        className={cx(
+          `
+            aspect-[2.55/1] min-h-40 w-full animate-pulse rounded-xl border border-white/15
+            bg-white/5 shadow-md
+          `,
+          className
+        )}
+      />
+    );
+  }
 
   return (
     <div
-      className={cx("relative w-full flex items-center justify-center mb-5", className)}
+      className={cx(
+        `
+          relative aspect-[2.55/1] min-h-40 w-full overflow-hidden rounded-xl border
+          border-white/15 bg-white/5 shadow-md
+        `,
+        className
+      )}
       onMouseEnter={stopAutoPlay}
       onMouseLeave={startAutoPlay}>
-      <div className="w-[89%] h-[89%] flex justify-center overflow-hidden">
-        <div
-          className="w-full flex transition-transform duration-300 ease-in-out rounded-md"
-          style={{ transform: `translateX(-${index * 100}%)` }}>
-          {items.map((item, index) => (
-            <div key={index} className="w-full shrink-0 flex-col relative">
-              <NeteaseImage
-                cache
-                className="w-full h-full select-none rounded-md"
-                image={NeteaseNetworkImage.fromURL(item.url)
-                  .setSize(NeteaseImageSize.raw)
-                  .setAlt(item.title || `carousel-item-${index}`)}
-                onClick={() => onClick?.(index)}
-                shadowColor={mainColor.isDark() ? "dark" : "light"}
-              />
-            </div>
-          ))}
-        </div>
-      </div>
-      <button
-        className="absolute left-3 top-1/2 -translate-y-1/2 bg-black/40 text-white rounded-full shadow-md hover:bg-black/60 transition-all ease-in-out duration-300 cursor-pointer active:scale-90"
-        onClick={prev}>
-        <ChevronLeft />
-      </button>
-      <button
-        className="absolute right-3 top-1/2 -translate-y-1/2 bg-black/40 text-white rounded-full shadow-md hover:bg-black/60 transition-all ease-in-out duration-300 cursor-pointer active:scale-90"
-        onClick={next}>
-        <ChevronRight />
-      </button>
-      <div className="absolute -bottom-4 flex justify-between items-center w-[90%] left-1/2 -translate-x-1/2 flex-row-reverse">
-        <p
-          className="font-semibold text-[14px] text-center"
-          style={{ color: titleColor || "#ffffff" }}>
-          {items[index]?.title}
-        </p>
-        <div className="flex gap-1">
-          {items.map((_, i) => (
-            <button
-              key={i}
-              onClick={() => goTo(i)}
-              className={cx(
-                "w-3 h-3 rounded-full transition-all ease-in-out duration-300 cursor-pointer active:scale-90",
-                i === index ? "bg-white" : "bg-white/30 hover:bg-white/70"
-              )}
+      {activeItem && (
+        <NeteaseImage
+          cache
+          pause={!activeItem}
+          className="absolute inset-0 scale-110 opacity-35 blur-2xl"
+          image={createCarouselImage(activeItem.url, activeItem.title)}
+          shadow="none"
+        />
+      )}
+      <div
+        className="relative z-10 flex size-full transition-transform duration-500 ease-in-out"
+        style={{ transform: `translateX(-${activeIndex * 100}%)` }}>
+        {items.map((item, index) => (
+          <div key={index} className="relative h-full w-full shrink-0">
+            <NeteaseImage
+              cache
+              className="size-full cursor-pointer select-none"
+              image={createCarouselImage(item.url, item.title || `carousel-item-${index}`)}
+              onClick={() => onClick?.(index)}
+              shadowColor={mainColor.isDark() ? "dark" : "light"}
             />
-          ))}
-        </div>
+          </div>
+        ))}
+      </div>
+      {hasMultipleItems && (
+        <>
+          <button
+            type="button"
+            aria-label="上一张"
+            className="
+              absolute left-3 top-1/2 z-20 flex size-9 -translate-y-1/2 cursor-pointer
+              items-center justify-center rounded-full bg-black/35 text-white shadow-md
+              backdrop-blur-md transition-all duration-300 ease-in-out hover:bg-black/55
+              active:scale-90
+            "
+            onClick={prev}>
+            <ChevronLeft className="size-5" />
+          </button>
+          <button
+            type="button"
+            aria-label="下一张"
+            className="
+              absolute right-3 top-1/2 z-20 flex size-9 -translate-y-1/2 cursor-pointer
+              items-center justify-center rounded-full bg-black/35 text-white shadow-md
+              backdrop-blur-md transition-all duration-300 ease-in-out hover:bg-black/55
+              active:scale-90
+            "
+            onClick={next}>
+            <ChevronRight className="size-5" />
+          </button>
+        </>
+      )}
+      <div className="absolute inset-x-0 bottom-0 z-20 flex items-end justify-between gap-3 bg-gradient-to-t from-black/60 via-black/20 to-transparent px-4 pb-3 pt-14">
+        <p className="truncate text-sm font-black" style={{ color: titleColor || "#ffffff" }}>
+          {activeItem?.title}
+        </p>
+        {hasMultipleItems && (
+          <div className="flex shrink-0 gap-1">
+            {items.map((_, i) => (
+              <button
+                key={i}
+                type="button"
+                aria-label={`切换到第 ${i + 1} 张`}
+                onClick={() => goTo(i)}
+                className={cx(
+                  `
+                  h-2.5 cursor-pointer rounded-full transition-all duration-300 ease-in-out
+                  active:scale-90
+                `,
+                  i === activeIndex ? "w-6 bg-white" : "w-2.5 bg-white/35 hover:bg-white/70"
+                )}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
