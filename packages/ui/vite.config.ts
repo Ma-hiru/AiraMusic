@@ -1,4 +1,3 @@
-import vue from "@vitejs/plugin-vue";
 import wasm from "vite-plugin-wasm";
 import tailwindcss from "@tailwindcss/vite";
 import babel from "@rolldown/plugin-babel";
@@ -23,7 +22,6 @@ export default defineConfig(({ mode }) => {
     define: defineEnv,
     plugins: [
       wasm(),
-      vue(),
       react(),
       tailwindcss(),
       babel({

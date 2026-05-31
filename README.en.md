@@ -1,6 +1,6 @@
 # <img src="packages/app/assets/logo.svg" width="28" /> AiraMusic
 
-A desktop third-party NetEase Cloud Music player built with Electron, React, Vue, and TypeScript.
+A desktop third-party NetEase Cloud Music player built with Electron, React, and TypeScript.
 
 [中文](README.md)
 
@@ -76,19 +76,19 @@ packages/wasm -- Rust + wasm-bindgen modules used by the renderer
 
 ### Workspace Overview
 
-| Package          | Role                                                                                                                                                                                                                                          | Main dependencies                                                                                                                                                |
-|------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `packages/ui`    | Renderer application. Vite builds multiple renderer entries such as `index`, `login`, `mini`, `lyric`, `tray`, `image`, `comments`, and `display`. React is used for the main renderer flow, and Vue is also used by several smaller windows. | React 19, Vue 3, Vite 8, Tailwind CSS 4, SCSS, React Router 7, Zustand, Jotai, Motion, Lucide, Heroicons, Axios, `@applemusic-like-lyrics/lyric`, `@mahiru/wasm` |
-| `packages/app`   | Electron main process. It owns app startup, window management, tray registration, IPC handlers, custom protocol handling, service lifecycle, and Electron packaging input.                                                                    | Electron 40, tsup, `@neteasecloudmusicapienhanced/api`, Express, `express-http-proxy`, `electron-store`, Zod, `@mahiru/store`, `@mahiru/ipc`                     |
-| `packages/store` | Local cache store service. It is a Go HTTP service used by the renderer through `/cache`, and is wrapped by a TypeScript launcher so the Electron app can start and stop it.                                                                  | Go 1.25, Gin, gin-contrib/cors                                                                                                                                   |
-| `packages/wasm`  | Rust WebAssembly package for renderer-side native-speed utilities. Current modules cover lyric parsing, theme/image color processing, spectrum processing, search helpers, and WebGL renderer support.                                        | Rust 2024, wasm-bindgen, wasm-pack, serde, tsify, image, rustfft, regex, web-sys                                                                                 |
-| `packages/ipc`   | Shared TypeScript IPC type definitions for main/renderer invoke and message contracts.                                                                                                                                                        | `@mahiru/log`                                                                                                                                                    |
-| `packages/log`   | Shared logging primitives used by app and renderer packages.                                                                                                                                                                                  | TypeScript                                                                                                                                                       |
+| Package          | Role                                                                                                                                                                                                   | Main dependencies                                                                                                                                         |
+|------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `packages/ui`    | Renderer application. Vite builds multiple renderer entries such as `index`, `login`, `mini`, `lyric`, `tray`, `image`, `comments`, and `display`; all renderer windows use React.                     | React 19, Vite 8, Tailwind CSS 4, SCSS, React Router 7, Zustand, Jotai, Motion, Lucide, Heroicons, Axios, `@applemusic-like-lyrics/lyric`, `@mahiru/wasm` |
+| `packages/app`   | Electron main process. It owns app startup, window management, tray registration, IPC handlers, custom protocol handling, service lifecycle, and Electron packaging input.                             | Electron 40, tsup, `@neteasecloudmusicapienhanced/api`, Express, `express-http-proxy`, `electron-store`, Zod, `@mahiru/store`, `@mahiru/ipc`              |
+| `packages/store` | Local cache store service. It is a Go HTTP service used by the renderer through `/cache`, and is wrapped by a TypeScript launcher so the Electron app can start and stop it.                           | Go 1.25, Gin, gin-contrib/cors                                                                                                                            |
+| `packages/wasm`  | Rust WebAssembly package for renderer-side native-speed utilities. Current modules cover lyric parsing, theme/image color processing, spectrum processing, search helpers, and WebGL renderer support. | Rust 2024, wasm-bindgen, wasm-pack, serde, tsify, image, rustfft, regex, web-sys                                                                          |
+| `packages/ipc`   | Shared TypeScript IPC type definitions for main/renderer invoke and message contracts.                                                                                                                 | `@mahiru/log`                                                                                                                                             |
+| `packages/log`   | Shared logging primitives used by app and renderer packages.                                                                                                                                           | TypeScript                                                                                                                                                |
 
 ### Tooling
 
 - Package manager: Yarn 4 workspaces.
-- TypeScript checks: project references with `vue-tsc -b`.
+- TypeScript checks: project references with `tsgo -b`.
 - Frontend tests: Vitest with jsdom.
 - Store service checks: `go test`, `go fmt`, `go vet`.
 - WASM checks: `cargo test`, `cargo fmt`, `cargo clippy`.
