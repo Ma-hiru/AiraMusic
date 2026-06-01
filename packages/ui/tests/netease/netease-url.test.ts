@@ -1,5 +1,5 @@
 import { NeteaseImageSize } from "../../src/common/enum";
-import { NeteaseURL } from "../../src/common/netease/models/netease-url";
+import { NeteaseURL } from "@mahiru/ui/common/netease/models";
 
 describe("NeteaseURL image sizing", () => {
   it("removes existing NetEase image operation query before adding a thumbnail size", () => {

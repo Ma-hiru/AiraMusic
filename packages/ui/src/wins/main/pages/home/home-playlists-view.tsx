@@ -1,11 +1,11 @@
 import { cx } from "@emotion/css";
-import { type FC, memo, useCallback, useEffect, useMemo, useState } from "react";
+import { type FC, memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ChevronDown, ListMusic, LoaderCircle, SlidersHorizontal } from "lucide-react";
 import { NeteaseAPIHome, NeteaseAPIPlaylist } from "@/common/netease/api";
 import { useUser } from "@/common/store/user";
 import { type RequestStatus } from "@/common/hooks/use-request-wrap";
 import { useArtistOrAlbumPageJump } from "@/wins/main/hooks/use-artist-or-album-page-jump";
-import { HOME_PLAYLIST_CATEGORY_GROUPS, HOME_PRIMARY_PLAYLIST_CATEGORIES } from "./home-config";
+import { RendererHomeConstants } from "@/wins/main/constants";
 
 import AppError from "@/common/components/fallback/app-error";
 import AppLoading from "@/common/components/fallback/app-loading";
@@ -121,7 +121,7 @@ const loadPlaylistCategory = async (
   };
 };
 
-const HomePlaylistsView: FC<object> = () => {
+const HomePlaylistsView: FC<{ className?: string }> = ({ className }) => {
   const user = useUser();
   const { jumpPlaylistPage } = useArtistOrAlbumPageJump();
   const [activeCategory, setActiveCategory] = useState("推荐歌单");
@@ -132,6 +132,7 @@ const HomePlaylistsView: FC<object> = () => {
   const [hasMore, setHasMore] = useState(false);
   const [cursor, setCursor] = useState<Undefinable<number>>();
   const [loadingMore, setLoadingMore] = useState(false);
+  const loadMoreSentinelRef = useRef<HTMLDivElement>(null);
 
   const loggedIn = !!user?.isLoggedIn;
 
@@ -187,12 +188,34 @@ const HomePlaylistsView: FC<object> = () => {
     }
   }, [activeCategory, cursor, hasMore, items.length, loadingMore, loggedIn, order]);
 
+  useEffect(() => {
+    const sentinel = loadMoreSentinelRef.current;
+    if (!sentinel || status !== "success" || !hasMore) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) void loadMore();
+      },
+      {
+        root: null,
+        rootMargin: "360px 0px",
+        threshold: 0
+      }
+    );
+
+    observer.observe(sentinel);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [hasMore, loadMore, status]);
+
   return (
-    <div className="flex flex-col gap-6">
-      <section className="rounded-lg border border-white/20 bg-white/5 p-3 shadow-md backdrop-blur-2xl">
+    <div className={cx("flex flex-col gap-6", className)}>
+      <section className="sticky top-2 z-30 rounded-lg border border-white/20 bg-white/5 p-3 shadow-md backdrop-blur-2xl">
         <div className="flex flex-col gap-3">
           <div className="flex flex-wrap items-center gap-2">
-            {HOME_PRIMARY_PLAYLIST_CATEGORIES.map((category) => (
+            {RendererHomeConstants.HOME_PRIMARY_PLAYLIST_CATEGORIES.map((category) => (
               <button
                 key={category}
                 type="button"
@@ -248,7 +271,7 @@ const HomePlaylistsView: FC<object> = () => {
           </div>
           {showCategoryPanel && (
             <div className="grid gap-4 rounded-lg border border-white/20 bg-black/10 p-3">
-              {HOME_PLAYLIST_CATEGORY_GROUPS.map((group) => (
+              {RendererHomeConstants.HOME_PLAYLIST_CATEGORY_GROUPS.map((group) => (
                 <div key={group.name} className="grid gap-2 md:grid-cols-[72px_minmax(0,1fr)]">
                   <p className="pt-1 text-sm font-black opacity-60">{group.name}</p>
                   <div className="flex flex-wrap gap-2">
@@ -274,7 +297,6 @@ const HomePlaylistsView: FC<object> = () => {
           )}
         </div>
       </section>
-
       <HomeSection title={selectedTitle} subTitle="Playlist Explore" Icon={ListMusic}>
         <AppError reset={reload} when={status === "error"} message="加载歌单失败">
           <AppLoading loading={status === "loading"} className="min-h-80">
@@ -283,22 +305,22 @@ const HomePlaylistsView: FC<object> = () => {
               onClickItem={(id) => jumpPlaylistPage(id, "normal")}
               className="grid-cols-[repeat(auto-fill,minmax(150px,1fr))]"
             />
-            {hasMore && (
-              <div className="mt-5 flex justify-center">
-                <button
-                  type="button"
-                  disabled={loadingMore}
-                  onClick={loadMore}
-                  className="
-                    flex h-10 cursor-pointer items-center gap-2 rounded-lg border border-white/20
-                    bg-white/5 px-4 text-sm font-black shadow-md transition-all duration-300
-                    hover:bg-(--theme-color-main) active:scale-[0.98] disabled:cursor-wait
-                  ">
+            <div
+              ref={loadMoreSentinelRef}
+              aria-hidden={!hasMore}
+              className="mt-5 flex min-h-14 items-center justify-center pb-18">
+              {hasMore ? (
+                <span className="flex items-center gap-2 text-xs font-black opacity-55">
                   {loadingMore && <LoaderCircle className="size-4 animate-spin" />}
-                  加载更多
-                </button>
-              </div>
-            )}
+                  {loadingMore ? "正在加载更多" : "继续下滑加载更多"}
+                </span>
+              ) : (
+                status === "success" &&
+                items.length > 0 && (
+                  <span className="text-xs font-black opacity-40">已经到底了</span>
+                )
+              )}
+            </div>
           </AppLoading>
         </AppError>
       </HomeSection>

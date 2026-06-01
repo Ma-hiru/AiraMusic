@@ -3,9 +3,8 @@ import { useLatestRef } from "@/common/hooks/use-latest-ref";
 import { Log } from "@/common/lib/log";
 import { cx } from "@emotion/css";
 import { useScrollAutoHide } from "@/common/hooks/use-scroll-auto-hide";
-
-import AppLoading from "@/common/components/fallback/app-loading";
 import AppEmpty from "@/common/components/fallback/app-empty";
+import { LoaderCircle } from "lucide-react";
 
 export type InfiniteContainerProps = {
   /**
@@ -33,7 +32,6 @@ export type InfiniteContainerProps = {
    */
   disabled?: boolean;
   className?: string;
-  LoadingFallback?: ReactNode;
   EmptyFallback?: ReactNode;
   children: Nullable<ReactNode>;
 };
@@ -46,7 +44,6 @@ const InfiniteContainer: FC<InfiniteContainerProps> = ({
   threshold = 0,
   disabled = false,
   className,
-  LoadingFallback = <AppLoading loading />,
   EmptyFallback = <AppEmpty />,
   children
 }) => {
@@ -110,7 +107,14 @@ const InfiniteContainer: FC<InfiniteContainerProps> = ({
       )}>
       {children}
       {isEmpty && !isLoading && EmptyFallback}
-      {isLoading && LoadingFallback}
+      {hasMore ? (
+        <div className="flex items-center justify-center gap-2 text-xs font-black opacity-55 text-center mt-3">
+          {isLoading && <LoaderCircle className="size-4 animate-spin" />}
+          {isLoading ? "正在加载更多" : "继续下滑加载更多"}
+        </div>
+      ) : (
+        <div className="text-xs font-black opacity-40 text-center block mt-3">已经到底了</div>
+      )}
       <span aria-hidden ref={sentinelRef} className="h-px" />
     </div>
   );

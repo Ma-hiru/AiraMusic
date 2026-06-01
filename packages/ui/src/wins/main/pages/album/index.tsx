@@ -29,13 +29,13 @@ const AlbumPage: FC<object> = () => {
   });
   const { onCoverLoaded } = useCoverLoadedAndSetTheme();
   const { onPageAction } = usePageAction({
-    id,
+    id: id!,
     type: "album"
   });
 
   return (
     <Album
-      id={id}
+      id={id!}
       ref={albumRef}
       className="router-container"
       heartManager={heartManager}

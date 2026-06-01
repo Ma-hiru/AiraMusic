@@ -104,4 +104,32 @@ export class RendererFormat {
         return NeteaseMusicLevel.hires;
     }
   }
+
+  static weekRecord(res: NeteaseAPI.NeteaseWeekDurationResponse) {
+    const total = res.data.listenTimeDistributionBlock.playDuration;
+    const details = res.data.listenTimeDistributionBlock.durationDetails;
+    const today = details[details.length - 1];
+    const weekDays = details.length;
+    const todayTrackCount = res.data.weekTodayListenBlock.songCount;
+    return {
+      total,
+      today,
+      details,
+      weekDays,
+      todayTrackCount
+    };
+  }
+
+  static monthRecord(res: NeteaseAPI.NeteaseMonthDurationResponse) {
+    const total = res.data.listenTimeDistributionBlock.playDuration;
+    const details = res.data.listenTimeDistributionBlock.durationDetails;
+    const today = details[details.length - 1] ?? 0;
+    const days = details.length;
+    return {
+      total,
+      today,
+      details,
+      days
+    };
+  }
 }

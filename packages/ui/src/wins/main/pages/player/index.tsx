@@ -1,4 +1,4 @@
-import { type FC } from "react";
+import { type FC, memo } from "react";
 import { useStage } from "@/common/hooks/use-stage";
 import { Stage } from "@/common/enum";
 
@@ -36,4 +36,5 @@ export const PlayerPage: FC = () => {
     </div>
   );
 };
-export default PlayerPage;
+
+export default memo(PlayerPage);

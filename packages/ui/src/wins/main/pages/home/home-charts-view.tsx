@@ -3,12 +3,13 @@ import { Trophy } from "lucide-react";
 import { NeteaseAPIHome } from "@/common/netease/api";
 import { useRequestAutoRetry, useRequestStatusWrap } from "@/common/hooks/use-request-wrap";
 import { useArtistOrAlbumPageJump } from "@/wins/main/hooks/use-artist-or-album-page-jump";
-import { HOME_FEATURED_TOPLIST_IDS } from "./home-config";
 
 import AppError from "@/common/components/fallback/app-error";
 import AppLoading from "@/common/components/fallback/app-loading";
 import HomeMediaGrid from "./home-media-grid";
 import HomeSection from "./home-section";
+import { cx } from "@emotion/css";
+import { RendererHomeConstants } from "@/wins/main/constants";
 
 const mapToplist = (item: NeteaseAPI.NeteaseToplist) => ({
   id: item.id,
@@ -19,7 +20,7 @@ const mapToplist = (item: NeteaseAPI.NeteaseToplist) => ({
   playCount: item.playCount
 });
 
-const HomeChartsView: FC<object> = () => {
+const HomeChartsView: FC<{ className?: string }> = ({ className }) => {
   const { jumpPlaylistPage } = useArtistOrAlbumPageJump();
   const {
     status,
@@ -31,7 +32,7 @@ const HomeChartsView: FC<object> = () => {
   const { reload } = useRequestAutoRetry(fetchData, [], () => toplists.length !== 0);
 
   const { featured, more } = useMemo(() => {
-    const featuredList = HOME_FEATURED_TOPLIST_IDS.map((id) =>
+    const featuredList = RendererHomeConstants.HOME_FEATURED_TOPLIST_IDS.map((id) =>
       toplists.find((item) => item.id === id)
     ).filter(Boolean) as NeteaseAPI.NeteaseToplist[];
     const featuredIds = new Set(featuredList.map((item) => item.id));
@@ -42,7 +43,7 @@ const HomeChartsView: FC<object> = () => {
   }, [toplists]);
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className={cx("flex flex-col gap-8", className)}>
       <HomeSection title="排行榜" subTitle="Charts" Icon={Trophy}>
         <AppError reset={reload} when={status === "error"} message="加载排行榜失败">
           <AppLoading loading={status === "loading"} className="min-h-60">

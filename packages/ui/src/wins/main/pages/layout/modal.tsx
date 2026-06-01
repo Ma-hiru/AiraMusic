@@ -3,7 +3,7 @@ import { cx } from "@emotion/css";
 import { useAtomValue } from "jotai";
 import { playModalAtom } from "@/wins/main/atoms/layout";
 
-import PlayerPage from "../player/player-page";
+import PlayerPage from "../player";
 import AppErrorBoundary from "@/common/components/fallback/app-error-boundary";
 
 const Modal: FC<{ className?: string }> = ({ className }) => {

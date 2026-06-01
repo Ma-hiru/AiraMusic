@@ -56,4 +56,5 @@ const Layout: FC<object> = () => {
     </div>
   );
 };
+
 export default memo(Layout);

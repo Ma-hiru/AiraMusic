@@ -23,7 +23,7 @@ const PlaylistList: FC<ListProps> = ({
     <div
       ref={ref}
       className={cx(
-        "relative w-full my-2 gap-2 grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] items-start content-stretch",
+        "relative w-full gap-2 grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] items-start content-stretch",
         className
       )}>
       {list.map((playlist) => (

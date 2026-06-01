@@ -5,31 +5,33 @@ import { NeteaseAPIArtist, NeteaseAPITrack } from "@/common/netease/api";
 import { NeteaseServicesTrack } from "@/common/netease/services";
 import { useRequestAutoRun, useRequestStatusWrap } from "@/common/hooks/use-request-wrap";
 import { useArtistOrAlbumPageJump } from "@/wins/main/hooks/use-artist-or-album-page-jump";
+import { RendererHomeConstants } from "@/wins/main/constants";
+import { createHomeTrackRecord } from "./home-track-record";
 import AppEntry from "@/wins/main/entry";
 import AppToast from "@/common/components/toast";
 import RendererImageConstants from "@/common/constants/image";
-import { HOME_ARTIST_AREAS, HOME_SONG_AREAS } from "./home-config";
-import { createHomeTrackRecord } from "./home-track-record";
 
 import AppError from "@/common/components/fallback/app-error";
 import AppLoading from "@/common/components/fallback/app-loading";
 import HomeMediaGrid from "./home-media-grid";
 import HomeSection from "./home-section";
 
-const HomeSongsArtistsView: FC<object> = () => {
+const HomeSongsArtistsView: FC<{ className?: string }> = ({ className }) => {
   const player = AppEntry.usePlayer();
   const { jumpArtistPage } = useArtistOrAlbumPageJump();
-  const [songArea, setSongArea] = useState<(typeof HOME_SONG_AREAS)[number]>(HOME_SONG_AREAS[0]!);
-  const [artistArea, setArtistArea] = useState<(typeof HOME_ARTIST_AREAS)[number]>(
-    HOME_ARTIST_AREAS[0]!
+  const [songArea, setSongArea] = useState<(typeof RendererHomeConstants.HOME_SONG_AREAS)[number]>(
+    RendererHomeConstants.HOME_SONG_AREAS[0]!
   );
+  const [artistArea, setArtistArea] = useState<
+    (typeof RendererHomeConstants.HOME_ARTIST_AREAS)[number]
+  >(RendererHomeConstants.HOME_ARTIST_AREAS[0]!);
 
   const {
     status: songStatus,
     data: songs = [],
     fetchData: fetchSongs
   } = useRequestStatusWrap(
-    useCallback((type: (typeof HOME_SONG_AREAS)[number]["type"]) => {
+    useCallback((type: (typeof RendererHomeConstants.HOME_SONG_AREAS)[number]["type"]) => {
       return NeteaseAPITrack.recommendNew(type).then((response) => response.data.slice(0, 40));
     }, [])
   );
@@ -40,7 +42,7 @@ const HomeSongsArtistsView: FC<object> = () => {
     data: artists = [],
     fetchData: fetchArtists
   } = useRequestStatusWrap(
-    useCallback((type: (typeof HOME_ARTIST_AREAS)[number]["type"]) => {
+    useCallback((type: (typeof RendererHomeConstants.HOME_ARTIST_AREAS)[number]["type"]) => {
       return NeteaseAPIArtist.toplist(type).then((response) => response.list.artists.slice(0, 30));
     }, [])
   );
@@ -86,10 +88,10 @@ const HomeSongsArtistsView: FC<object> = () => {
   );
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className={cx("flex flex-col gap-8", className)}>
       <HomeSection title="新歌速递" subTitle="New Songs" Icon={Music2}>
         <div className="mb-3 flex flex-wrap gap-2 px-2">
-          {HOME_SONG_AREAS.map((area) => (
+          {RendererHomeConstants.HOME_SONG_AREAS.map((area) => (
             <button
               key={area.type}
               type="button"
@@ -118,7 +120,7 @@ const HomeSongsArtistsView: FC<object> = () => {
 
       <HomeSection title="歌手推荐" subTitle="Artist Chart" Icon={UserRound}>
         <div className="mb-3 flex flex-wrap gap-2 px-2">
-          {HOME_ARTIST_AREAS.map((area) => (
+          {RendererHomeConstants.HOME_ARTIST_AREAS.map((area) => (
             <button
               key={area.label}
               type="button"

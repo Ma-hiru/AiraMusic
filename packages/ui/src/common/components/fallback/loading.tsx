@@ -1,23 +1,13 @@
-import { type FC, memo } from "react";
+import { type FC, type HtmlHTMLAttributes, memo } from "react";
 import { Loader } from "lucide-react";
-import { motion, type HTMLMotionProps } from "motion/react";
 
-export type LoadingProps = HTMLMotionProps<"div">;
+export type LoadingProps = HtmlHTMLAttributes<HTMLDivElement>;
 
 const Loading: FC<LoadingProps> = (props) => {
   return (
-    <motion.div
-      {...props}
-      initial={{ transformOrigin: "center" }}
-      animate={{
-        rotate: 360,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center"
-      }}
-      transition={{ repeat: Infinity, duration: 1, ease: "linear" }}>
-      <Loader />
-    </motion.div>
+    <div {...props}>
+      <Loader className="animate-spin" />
+    </div>
   );
 };
 

@@ -1,10 +1,10 @@
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import { RoutePathMain } from "@/common/routes";
-import Layout from "../pages/layout/layout";
-import HomePage from "../pages/home/home-page";
-import PlaylistPage from "../pages/playlist/playlist-page";
-import AlbumPage from "../pages/album/album-page";
-import ArtistPage from "../pages/artist/artist-page";
+import Layout from "../pages/layout";
+import HomePage from "../pages/home";
+import PlaylistPage from "../pages/playlist";
+import AlbumPage from "../pages/album";
+import ArtistPage from "../pages/artist";
 
 export const MainRouter = createBrowserRouter([
   {

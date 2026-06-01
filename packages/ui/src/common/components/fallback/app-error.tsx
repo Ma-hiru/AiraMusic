@@ -9,9 +9,17 @@ interface AppErrorProps {
   when?: boolean;
   children?: ReactNode;
   message?: string;
+  asChild?: boolean;
 }
 
-const AppError: FC<AppErrorProps> = ({ className, reset, when, children, message }) => {
+const AppError: FC<AppErrorProps> = ({
+  className,
+  reset,
+  when,
+  children,
+  message,
+  asChild = true
+}) => {
   useEffect(() => {
     if (when && message) {
       AppToast.show({
@@ -21,7 +29,12 @@ const AppError: FC<AppErrorProps> = ({ className, reset, when, children, message
     }
   }, [message, when]);
 
-  if (!when && children) return children;
+  if (!when && children) {
+    if (!asChild) {
+      return <div className={className} children={children} />;
+    }
+    return children;
+  }
 
   return (
     <div

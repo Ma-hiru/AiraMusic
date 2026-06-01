@@ -1,4 +1,4 @@
-import { NeteaseLyric } from "../../src/common/netease/models/netease-lyric";
+import { NeteaseLyric } from "@mahiru/ui/common/netease/models";
 import { setTTMLMock } from "../mock/amll-lyric";
 
 type AMLLyricLine = {

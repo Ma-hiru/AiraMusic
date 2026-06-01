@@ -1,0 +1,105 @@
+import { cx } from "@emotion/css";
+import { type FC, memo, useCallback, useEffect, useRef, useState } from "react";
+import { useScrollAutoHide } from "@/common/hooks/use-scroll-auto-hide";
+import { useLocateOrScrollTopRegister } from "@/wins/main/hooks/use-locate-or-scroll-top-register";
+import type { HomeChannelKey } from "@/wins/main/constants";
+
+import Banner from "./banner";
+import ForYouPanel from "./for-you-panel";
+import HomeChannelTabs from "./home-channel-tabs";
+import HomeChartsView from "./home-charts-view";
+import HomePlaylistsView from "./home-playlists-view";
+import HomeRecommendView from "./home-recommend-view";
+import HomeSongsArtistsView from "./home-songs-artists-view";
+import { useLocation, useNavigate } from "react-router-dom";
+import { RoutePath, RoutePathMain } from "@/common/routes";
+
+const HomePage: FC<object> = () => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [mounted, setMounted] = useState(0);
+  const { activeChannel = "recommend" } = RoutePath.parseQuery<{ activeChannel: HomeChannelKey }>(
+    location,
+    RoutePathMain.home
+  );
+  useScrollAutoHide(containerRef);
+
+  const scrollTop = useCallback(() => {
+    containerRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+  }, []);
+
+  const { canScrollTop } = useLocateOrScrollTopRegister({
+    getScrollTopFunc: () => scrollTop
+  });
+
+  const changeChannel = useCallback(
+    (activeChannel: HomeChannelKey) => {
+      navigate(RoutePath.withQuery(RoutePathMain.home, { activeChannel }));
+    },
+    [navigate]
+  );
+
+  useEffect(() => {
+    const activeChannelToIdx = (channel: HomeChannelKey) => {
+      switch (channel) {
+        case "recommend":
+          return 0;
+        case "charts":
+          return 1;
+        case "playlists":
+          return 2;
+        case "songs-artists":
+          return 3;
+      }
+    };
+    setMounted((bit) => bit | (1 << activeChannelToIdx(activeChannel)));
+  }, [activeChannel]);
+
+  return (
+    <div className="router-container pt-0! px-2!">
+      <div
+        ref={containerRef}
+        onScroll={(e) => canScrollTop(e.currentTarget.scrollTop > 500)}
+        className={`
+          w-full h-full
+          overflow-y-scroll overflow-x-hidden
+          flex flex-col gap-3
+          scrollbar scrollbar-show
+          px-5 will-change-scroll contain-strict
+          text-(--text-color-on-main)
+          relative
+        `}>
+        <HomeChannelTabs
+          sticky={activeChannel !== "playlists"}
+          active={activeChannel}
+          onChange={changeChannel}
+        />
+        {!!(mounted & 0b1) && (
+          <section
+            className={cx(
+              "grid grid-cols-[1fr_auto] gap-3 items-center",
+              activeChannel !== "recommend" && "hidden"
+            )}>
+            <Banner />
+            <ForYouPanel />
+          </section>
+        )}
+        {!!(mounted & 0b1) && (
+          <HomeRecommendView className={cx(activeChannel !== "recommend" && "hidden")} />
+        )}
+        {!!(mounted & 0b10) && (
+          <HomeChartsView className={cx(activeChannel !== "charts" && "hidden")} />
+        )}
+        {!!(mounted & 0b100) && (
+          <HomePlaylistsView className={cx(activeChannel !== "playlists" && "hidden")} />
+        )}
+        {!!(mounted & 0b1000) && (
+          <HomeSongsArtistsView className={cx(activeChannel !== "songs-artists" && "hidden")} />
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default memo(HomePage);

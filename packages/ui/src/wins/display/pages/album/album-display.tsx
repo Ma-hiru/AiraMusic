@@ -26,7 +26,7 @@ const AlbumDisplay: FC<object> = () => {
     addTrackToPlaylistLast
   } = usePlayerChangeActionFromDisplay({
     getTracks: () => albumRef.current?.album?.tracks ?? [],
-    sourceID: id,
+    sourceID: id!,
     sourceType: "album"
   });
   const { jumpArtistDisplay, jumpAlbumDisplay } = useArtistOrAlbumDisplayJump({
@@ -34,12 +34,12 @@ const AlbumDisplay: FC<object> = () => {
   });
   const { onPageAction } = useDisplayPageAction({
     type: "album",
-    id
+    id: id!
   });
 
   return (
     <Album
-      id={id}
+      id={id!}
       ref={albumRef}
       className="display-container pb-0!"
       heartManager={heartManager}

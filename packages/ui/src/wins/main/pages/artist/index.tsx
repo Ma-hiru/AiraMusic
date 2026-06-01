@@ -21,16 +21,16 @@ const ArtistPage: FC<object> = () => {
   });
   const { playableManager, heartManager } = useUserTrackManager();
   const { onPageAction } = usePageAction({
-    id,
+    id: id!,
     type: "artist"
   });
 
   return (
     <Artist
+      id={id!}
       ref={artistRef}
       activeTrackID={player.current.track?.id}
       className="router-container"
-      id={id}
       onAvatarLoaded={onCoverLoaded}
       onClick={onTrackPlay}
       onClickAlbum={jumpAlbumPage}

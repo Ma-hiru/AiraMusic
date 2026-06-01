@@ -19,7 +19,7 @@ const ArtistDisplay: FC<object> = () => {
   const { addTrackToPlaylistLast, addTrackToPlaylistNext, onTrackPlay, openTrackComment } =
     usePlayerChangeActionFromDisplay({
       getTracks: () => artistRef.current?.artist?.hotTracks ?? [],
-      sourceID: id,
+      sourceID: id!,
       sourceType: "other"
     });
   const { jumpArtistDisplay, jumpAlbumDisplay } = useArtistOrAlbumDisplayJump({
@@ -27,12 +27,12 @@ const ArtistDisplay: FC<object> = () => {
   });
   const { onPageAction } = useDisplayPageAction({
     type: "artist",
-    id
+    id: id!
   });
 
   return (
     <Artist
-      id={id}
+      id={id!}
       ref={artistRef}
       activeTrackID={playerBus.data?.track?.id}
       className="display-container pb-0!"

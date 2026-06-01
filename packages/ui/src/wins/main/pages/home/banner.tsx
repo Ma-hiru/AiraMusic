@@ -1,7 +1,5 @@
-import { type FC, memo, useCallback } from "react";
-import { cx } from "@emotion/css";
+import { type FC, memo, useCallback, useMemo } from "react";
 import { BannerType, PlaylistSource } from "@/common/enum";
-import { Log } from "@/common/lib/log";
 import { NeteaseTrackRecord, NeteaseURL } from "@/common/netease/models";
 import { useNavigate } from "react-router-dom";
 import { NeteaseAPIHome } from "@/common/netease/api";
@@ -11,7 +9,7 @@ import { useRequestAutoRetry, useRequestStatusWrap } from "@/common/hooks/use-re
 import { RendererIPC } from "@/common/lib/ipc";
 import AppEntry from "@/wins/main/entry";
 
-import Carousel from "@/common/components/public/carousel";
+import Carousel from "@/common/components/carousel";
 import AppError from "@/common/components/fallback/app-error";
 
 interface BannerProps {
@@ -19,23 +17,25 @@ interface BannerProps {
 }
 
 const Banner: FC<BannerProps> = ({ className }) => {
-  const {
-    status,
-    data: banner = [],
-    fetchData
-  } = useRequestStatusWrap(
-    useCallback(() => NeteaseAPIHome.banner().then((res) => res.banners), [])
-  );
-  const { reload } = useRequestAutoRetry(fetchData, [], () => banner.length !== 0);
-  const player = AppEntry.usePlayer();
   const navigate = useNavigate();
+  const player = AppEntry.usePlayer();
+  const getBanner = useCallback(() => NeteaseAPIHome.banner().then((res) => res.banners), []);
+  const { status, data: banners = [], fetchData } = useRequestStatusWrap(getBanner);
+  const { reload } = useRequestAutoRetry(fetchData, [], () => banners.length !== 0);
 
-  const handleClick = useCallback(
+  const bannerItems = useMemo(() => {
+    return banners.map((b) => ({
+      url: b.bigImageUrl,
+      title: b.typeTitle
+    }));
+  }, [banners]);
+
+  const resolveBanner = useCallback(
     async (i: number) => {
-      const item = banner[i];
+      const item = banners[i];
       if (!item) return;
       const { type, id } = NeteaseURL.parseBannerURL(item.url);
-      Log.debug("Banner clicked", item, type, id);
+
       switch (type) {
         case BannerType.song: {
           if (player.current.track?.id === id) return;
@@ -64,21 +64,14 @@ const Banner: FC<BannerProps> = ({ className }) => {
           return navigate(RoutePath.withQuery(RoutePathMain.album, { id }));
       }
     },
-    [banner, navigate, player]
+    [banners, navigate, player]
   );
 
   return (
-    <div className={cx("w-full px-2", className)}>
-      <AppError reset={reload} when={status === "error"}>
-        <Carousel
-          items={banner.map((b) => ({
-            url: b.bigImageUrl,
-            title: b.typeTitle
-          }))}
-          onClick={handleClick}
-        />
-      </AppError>
-    </div>
+    <AppError asChild={false} className={className} reset={reload} when={status === "error"}>
+      <Carousel items={bannerItems} onClick={resolveBanner} />
+    </AppError>
   );
 };
+
 export default memo(Banner);

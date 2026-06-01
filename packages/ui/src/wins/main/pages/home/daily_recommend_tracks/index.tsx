@@ -45,7 +45,7 @@ const DailyRecommendTracks: FC<object> = () => {
   }, [backgroundCover, recommend, setBackgroundCover]);
 
   return (
-    <div className="w-full overflow-hidden contain-layout">
+    <div className="w-full overflow-hidden contain-layout min-h-40">
       <RecommendTrackTitle lastPage={lastPage} nextPage={nextPage} />
       <AppError reset={reload} when={status === "error"}>
         <AppLoading loading={status === "loading"} className="w-full h-auto">
@@ -55,4 +55,5 @@ const DailyRecommendTracks: FC<object> = () => {
     </div>
   );
 };
+
 export default memo(DailyRecommendTracks);

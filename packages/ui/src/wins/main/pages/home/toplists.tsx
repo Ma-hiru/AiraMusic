@@ -2,10 +2,10 @@ import { type FC, memo, useCallback, useMemo } from "react";
 import { Trophy } from "lucide-react";
 import { NeteaseAPIHome } from "@/common/netease/api";
 import { useRequestAutoRetry, useRequestStatusWrap } from "@/common/hooks/use-request-wrap";
+import { RendererHomeConstants } from "@/wins/main/constants";
 
 import AppError from "@/common/components/fallback/app-error";
 import AppLoading from "@/common/components/fallback/app-loading";
-import { HOME_FEATURED_TOPLIST_IDS } from "./home-config";
 import HomeMediaGrid from "./home-media-grid";
 import HomeSection from "./home-section";
 
@@ -23,7 +23,7 @@ const Toplists: FC<ToplistsProps> = ({ onClickItem }) => {
   );
   const { reload } = useRequestAutoRetry(fetchData, [], () => toplists.length !== 0);
   const items = useMemo(() => {
-    const selected = HOME_FEATURED_TOPLIST_IDS.map((id) =>
+    const selected = RendererHomeConstants.HOME_FEATURED_TOPLIST_IDS.map((id) =>
       toplists.find((item) => item.id === id)
     ).filter(Boolean) as NeteaseAPI.NeteaseToplist[];
     const list = selected.length ? selected : toplists.slice(0, 5);

@@ -46,7 +46,10 @@ export class RoutePath<const T extends Props> {
   }
 
   static queryCache = new Map<string, Record<string, unknown>>();
-  static parseQuery<Q extends Record<string, unknown>>(location: Location, prefix: string): Q {
+  static parseQuery<Q extends Record<string, unknown>>(
+    location: Location,
+    prefix: string
+  ): Partial<Q> {
     if (!location.pathname.includes(prefix)) {
       return (this.queryCache.get(prefix) ?? {}) as Q;
     }

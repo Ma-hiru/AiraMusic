@@ -8,20 +8,21 @@ import NewAlbums from "./new-albums";
 import RecommendArtists from "./recommend-artists";
 import RecommendPlaylist from "./recommend-playlist";
 import Toplists from "./toplists";
+import { cx } from "@emotion/css";
 
-const HomeRecommendView: FC<object> = () => {
+const HomeRecommendView: FC<{ className?: string }> = ({ className }) => {
   const user = useUser();
   const { jumpPlaylistPage, jumpArtistPage, jumpAlbumPage } = useArtistOrAlbumPageJump();
 
   return (
-    <div className="flex flex-col gap-8">
-      {user?.isLoggedIn && <DailyRecommendTracks key={user.profile.userId + "-daily-tracks"} />}
+    <div className={cx("flex flex-col gap-3", className)}>
       {user?.isLoggedIn && (
         <DailyRecommendPlaylist
           onClickItem={(id) => jumpPlaylistPage(id, "normal")}
           key={user.profile.userId + "-daily-playlist"}
         />
       )}
+      {user?.isLoggedIn && <DailyRecommendTracks key={user.profile.userId + "-daily-tracks"} />}
       <RecommendPlaylist
         onClickItem={(id) => jumpPlaylistPage(id, "normal")}
         key={user?.isLoggedIn ? user.profile.userId + "-playlist" : "guest-playlist"}

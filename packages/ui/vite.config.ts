@@ -69,6 +69,9 @@ export default defineConfig(({ mode }) => {
           changeOrigin: true,
           rewrite: (path) => path.replace(/^\/cache/, "")
         }
+      },
+      watch: {
+        ignored: ["**/node_modules/**", "**/dist", "**/tests/**"]
       }
     },
     test: {
