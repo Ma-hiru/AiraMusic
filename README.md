@@ -2,8 +2,6 @@
 
 一个基于 Electron、React 和 TypeScript 构建的桌面端第三方网易云音乐播放器。
 
-[English](README.en.md)
-
 ## 项目状态
 
 🚧 开发中（WIP）
@@ -14,22 +12,33 @@
 
 ![所有窗口](docs/images/all_windows.png)
 
+### 播放页
+
+![播放页1](docs/images/player.png)
+![播放页2](docs/images/player2.png)
+![播放页3](docs/images/player3.png)
+
 ### 歌单
 
 ![歌单](docs/images/playlist.png)
 ![歌单2](docs/images/playlist2.png)
 ![播放列表](docs/images/list.png)
 
+### 首页
+
+![首页1](docs/images/home.png)
+![首页2](docs/images/home2.png)
+![首页3](docs/images/home3.png)
+![首页4](docs/images/home4.png)
+![首页5](docs/images/home5.png)
+![首页6](docs/images/home6.png)
+![首页7](docs/images/home7.png)
+![首页8](docs/images/home8.png)
+
 ### 专辑
 
 ![专辑](docs/images/album.png)
 ![专辑2](docs/images/album2.png)
-
-### 播放页
-
-![播放页1](docs/images/player.png)
-![播放页2](docs/images/player2.png)
-![播放页3](docs/images/player3.png)
 
 ### 设置
 
@@ -44,11 +53,6 @@
 ### 搜索
 
 ![搜索](docs/images/search.png)
-
-### 首页
-
-![首页1](docs/images/home.png)
-![首页2](docs/images/home2.png)
 
 ### 托盘页
 
