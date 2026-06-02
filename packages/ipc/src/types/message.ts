@@ -110,6 +110,15 @@ type MessageEventValue = {
     views: { displayName: string; deviceId: string }[];
   };
   changeOutput: string;
+  reactReadyBus:
+    | {
+        type: "ready";
+        sender: WindowType;
+      }
+    | {
+        type: "isReady";
+        target: WindowType;
+      };
 };
 
 export type MessageEvent = keyof MessageEventValue;

@@ -2,6 +2,8 @@ import { cx } from "@emotion/css";
 import { type FC, memo, useCallback, useEffect, useRef, useState } from "react";
 import { useScrollAutoHide } from "@/common/hooks/use-scroll-auto-hide";
 import { useLocateOrScrollTopRegister } from "@/wins/main/hooks/use-locate-or-scroll-top-register";
+import { useLocation, useNavigate } from "react-router-dom";
+import { RoutePath, RoutePathMain } from "@/common/routes";
 import type { HomeChannelKey } from "@/wins/main/constants";
 
 import Banner from "./banner";
@@ -11,8 +13,6 @@ import HomeChartsView from "./charts-view";
 import HomePlaylistsView from "./playlists-view";
 import HomeRecommendView from "./recommend-view";
 import HomeSongsArtistsView from "./songs-artists-view";
-import { useLocation, useNavigate } from "react-router-dom";
-import { RoutePath, RoutePathMain } from "@/common/routes";
 
 const HomePage: FC<object> = () => {
   const containerRef = useRef<HTMLDivElement>(null);

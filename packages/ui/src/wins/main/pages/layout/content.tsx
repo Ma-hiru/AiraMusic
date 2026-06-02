@@ -14,8 +14,8 @@ const Content: FC<object> = () => {
             contain-strict
           `
       )}>
-      <AppErrorBoundary name="Content" showError canReset className="h-full w-full">
-        <KeepAliveOutlet maxCache={3} />
+      <AppErrorBoundary name="Content" showError={false} canReset className="h-full w-full">
+        <KeepAliveOutlet maxCache={5} />
       </AppErrorBoundary>
     </div>
   );

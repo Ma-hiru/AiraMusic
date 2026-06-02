@@ -44,7 +44,7 @@ const TopInfo: FC<TopInfoProps> = ({ summary, onPlayAll, onAddList }) => {
             onClick={async () => {
               if (isComment) {
                 if (!summary?.id) return;
-                await RendererWindow.comment.openAwait();
+                await RendererWindow.comment.reactReadyAwait();
                 RendererEventBus.comment.send({
                   id: summary.id,
                   type: "playlist"

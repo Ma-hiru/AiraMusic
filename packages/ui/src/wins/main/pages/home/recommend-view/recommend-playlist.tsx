@@ -1,4 +1,4 @@
-import { memo, useCallback, useMemo } from "react";
+import { memo, useCallback, useEffect, useMemo } from "react";
 import { NeteaseAPIPlaylist } from "@/common/netease/api";
 import { useRequestAutoRetry, useRequestStatusWrap } from "@/common/hooks/use-request-wrap";
 import { ListMusic } from "lucide-react";
@@ -7,7 +7,13 @@ import PlaylistList from "@/common/components/playlist_list";
 import AppError from "@/common/components/fallback/app-error";
 import HomeSection from "@/wins/main/componets/home-section";
 
-const RecommendPlaylist = ({ onClickItem }: { onClickItem?: NormalFunc<[id: number]> }) => {
+const RecommendPlaylist = ({
+  onClickItem,
+  onDataLoaded
+}: {
+  onClickItem?: NormalFunc<[id: number]>;
+  onDataLoaded?: NormalFunc<[data: NeteaseAPI.RecommendPlaylistResult[]]>;
+}) => {
   const { status, data, fetchData } = useRequestStatusWrap(
     useCallback(() => NeteaseAPIPlaylist.recommend(12), [])
   );
@@ -21,6 +27,10 @@ const RecommendPlaylist = ({ onClickItem }: { onClickItem?: NormalFunc<[id: numb
       return true;
     });
   }, [data]);
+
+  useEffect(() => {
+    recommend.length && onDataLoaded?.(recommend);
+  }, [onDataLoaded, recommend]);
 
   return (
     <HomeSection title="推荐歌单" subTitle="Playlist Picks" Icon={ListMusic}>

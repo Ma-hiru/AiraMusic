@@ -95,7 +95,7 @@ const TrayPage: FC = () => {
 
   const openDisplay = useCallback(
     async (data: { type: "album" | "artist"; id: number }) => {
-      await RendererWindow.display.openAwait();
+      await RendererWindow.display.reactReadyAwait();
       RendererEventBus.display.send(data);
       hideTray();
     },
@@ -105,7 +105,7 @@ const TrayPage: FC = () => {
   const openComment = useCallback(async () => {
     const id = trackRecord?.id;
     if (!id) return;
-    await RendererWindow.comment.openAwait();
+    await RendererWindow.comment.reactReadyAwait();
     RendererEventBus.comment.send({
       id,
       type: "track"

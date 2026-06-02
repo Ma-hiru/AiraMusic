@@ -27,7 +27,7 @@ const TopLeft: FC<TopLeftProps> = ({ user }) => {
     } else if (!NeteaseServicesAuth.isLoggedIn) {
       await NeteaseServicesAuth.createLoginWindow();
     } else {
-      await RendererWindow.display.openAwait();
+      await RendererWindow.display.reactReadyAwait();
       RendererEventBus.display.send({ type: "settings" });
     }
   }, [playModal, setPlayModal]);

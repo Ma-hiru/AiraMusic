@@ -53,7 +53,7 @@ const Artist: FC<object> = () => {
           fill="white"
           onClick={async () => {
             if (!track) return;
-            await RendererWindow.comment.openAwait();
+            await RendererWindow.comment.reactReadyAwait();
             RendererEventBus.comment.send({
               id: track.id,
               type: "track"

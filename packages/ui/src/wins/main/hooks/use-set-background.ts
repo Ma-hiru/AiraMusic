@@ -5,8 +5,7 @@ import { useSetAtom } from "jotai";
 import { backgroundCoverAtom } from "@/wins/main/atoms/theme";
 
 export function useSetBackground() {
-  const location = useLocation();
-  const active = useRouterActive(location);
+  const active = useRouterActive(useLocation());
   const coverRef = useRef("");
   const setBackgroundCover = useSetAtom(backgroundCoverAtom);
 

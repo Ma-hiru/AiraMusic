@@ -1,8 +1,6 @@
-import { useAtom } from "jotai";
-import { type FC, memo, useCallback, useEffect, useRef } from "react";
+import { type FC, memo, useCallback, useRef } from "react";
 import { NeteaseAPITrack } from "@/common/netease/api";
 import { useRequestAutoRetry, useRequestStatusWrap } from "@/common/hooks/use-request-wrap";
-import { backgroundCoverAtom } from "@/wins/main/atoms/theme";
 
 import RecommendTrackTitle from "./title";
 import RecommendTrackList from "./list";
@@ -10,7 +8,6 @@ import AppLoading from "@/common/components/fallback/app-loading";
 import AppError from "@/common/components/fallback/app-error";
 
 const DailyRecommendTracks: FC<object> = () => {
-  const [backgroundCover, setBackgroundCover] = useAtom(backgroundCoverAtom);
   const {
     status,
     data: recommend = [],
@@ -38,12 +35,6 @@ const DailyRecommendTracks: FC<object> = () => {
       });
     }
   }, []);
-
-  useEffect(() => {
-    const cover = recommend[0]?.al.picUrl;
-    if (backgroundCover || !cover) return;
-    setBackgroundCover(cover);
-  }, [backgroundCover, recommend, setBackgroundCover]);
 
   return (
     <div className="w-full overflow-hidden contain-layout min-h-40">

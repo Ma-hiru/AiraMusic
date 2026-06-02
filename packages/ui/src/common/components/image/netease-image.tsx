@@ -126,7 +126,7 @@ const NeteaseImage: FC<ImageProps> = ({
     async (e: ReactMouseEvent<HTMLImageElement>) => {
       if (preview && image) {
         const sendImage = image.toNetworkImage().setSize(NeteaseImageSize.raw);
-        await RendererWindow.image.openAwait();
+        await RendererWindow.image.reactReadyAwait();
         RendererWindow.image.send("imageCheckerBus", {
           url: sendImage.src,
           alt: alt || sendImage.alt

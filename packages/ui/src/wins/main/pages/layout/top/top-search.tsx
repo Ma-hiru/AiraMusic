@@ -9,7 +9,7 @@ const TopSearch: FC<object> = () => {
   const defaultKeywords = useSearchRecommend();
 
   const openSearch = useCallback(async (keyword?: string) => {
-    await RendererWindow.display.openAwait();
+    await RendererWindow.display.reactReadyAwait();
     RendererEventBus.display.send({
       type: "search",
       keyword

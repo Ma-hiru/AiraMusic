@@ -23,7 +23,7 @@ export function usePageJump(
     (id: number) => {
       if (id === propsRef.current.currentAlbumID) return;
       if (settingsRef.current.preference.defaultUseDisplayWindow) {
-        return RendererWindow.display.openAwait().then(() => {
+        return RendererWindow.display.reactReadyAwait().then(() => {
           RendererEventBus.display.send({
             type: "album",
             id
@@ -39,7 +39,7 @@ export function usePageJump(
     (id: number) => {
       if (id === propsRef.current.currentArtistID) return;
       if (settingsRef.current.preference.defaultUseDisplayWindow) {
-        return RendererWindow.display.openAwait().then(() => {
+        return RendererWindow.display.reactReadyAwait().then(() => {
           RendererEventBus.display.send({
             type: "artist",
             id
@@ -57,7 +57,7 @@ export function usePageJump(
       if (source !== "like" && id === Number(playlistRef.current.id) && isPlaylistPage) return;
       if (playlistRef.current.source === "like" && !id && isPlaylistPage) return;
       if (settingsRef.current.preference.defaultUseDisplayWindow && source !== "history") {
-        return RendererWindow.display.openAwait().then(() => {
+        return RendererWindow.display.reactReadyAwait().then(() => {
           RendererEventBus.display.send({
             type: "playlist",
             source,

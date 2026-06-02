@@ -40,7 +40,7 @@ export function usePlayerActionInList(getTracks: NormalFunc<[], NeteaseTrackReco
 
   const openTrackComment = useCallback(async (track: NeteaseTrackRecord) => {
     if (!track) return;
-    await RendererWindow.comment.openAwait();
+    await RendererWindow.comment.reactReadyAwait();
     RendererEventBus.comment.send({
       id: track.id,
       type: "track"

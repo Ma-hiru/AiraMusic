@@ -1,5 +1,5 @@
 import { cx } from "@emotion/css";
-import { type FC, memo, useMemo } from "react";
+import { type FC, memo } from "react";
 
 import RendererImageConstants from "@/common/constants/image";
 import HomeMediaCard, { type HomeMediaItem } from "@/wins/main/componets/home-media-card";

@@ -43,7 +43,7 @@ const TopInfo: FC<TopInfoProps> = ({ album, dynamic, onAddList }) => {
             onClick={async () => {
               if (isComment) {
                 if (!album) return;
-                await RendererWindow.comment.openAwait();
+                await RendererWindow.comment.reactReadyAwait();
                 RendererEventBus.comment.send({
                   id: album.content.id,
                   type: "album"

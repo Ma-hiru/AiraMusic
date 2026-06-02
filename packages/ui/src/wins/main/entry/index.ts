@@ -49,7 +49,7 @@ export default class AppEntry {
       miniWindow.open();
       miniWindow.hide();
       setTimeout(async () => {
-        await miniWindow.openAwait();
+        await miniWindow.reactReadyAwait();
         AppEntry.busUpdater?.();
       }, 5000);
     });

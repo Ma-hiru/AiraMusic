@@ -16,7 +16,7 @@ export function useDisplayAction(
 
   const onPageAction = useCallback(async () => {
     if (!dataRef.current) return;
-    await RendererWindow.display.openAwait();
+    await RendererWindow.display.reactReadyAwait();
     RendererEventBus.display.send(dataRef.current);
     navigate(-1);
   }, [dataRef, navigate]);

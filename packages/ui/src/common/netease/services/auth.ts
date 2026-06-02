@@ -30,7 +30,7 @@ export default class _NeteaseAuth {
     const loginWindow = RendererWindow.get("login");
     if (!NeteaseUser.isLoggedIn) {
       loginWindow.removeMessageHandler("login");
-      await loginWindow.openAwait();
+      await loginWindow.reactReadyAwait();
       loginWindow.listenMessage(
         "login",
         (cookies) => {

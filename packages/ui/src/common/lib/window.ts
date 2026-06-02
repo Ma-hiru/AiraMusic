@@ -9,7 +9,7 @@ const _currentWindowType = RendererRuntime.isTest
 
 export type RendererWindowEvent = MessageData<"windowBus">["action"];
 
-export class RendererWindow extends Listenable<RendererWindowEvent> {
+export class RendererWindow extends Listenable<RendererWindowEvent | "react-ready"> {
   readonly type: WindowType;
   private readonly id: string;
   private _opened: boolean;
@@ -18,14 +18,15 @@ export class RendererWindow extends Listenable<RendererWindowEvent> {
   private _min: boolean;
   private _fullscreen: boolean;
   private _focus: boolean;
+  private _reactReady: boolean;
   static currentWindowType = _currentWindowType;
 
   get isMin() {
     return this._min;
   }
 
-  set isMin(isMin) {
-    this._min = isMin;
+  set isMin(min) {
+    this._min = min;
     this.executeListeners();
   }
 
@@ -91,6 +92,15 @@ export class RendererWindow extends Listenable<RendererWindowEvent> {
     return promise;
   }
 
+  get reactReady() {
+    return this._reactReady;
+  }
+
+  set reactReady(ready) {
+    this._reactReady = ready;
+    this.executeListeners("react-ready");
+  }
+
   private constructor(type: WindowType) {
     super(`AppWindow(${type})`);
     this.type = type;
@@ -100,6 +110,7 @@ export class RendererWindow extends Listenable<RendererWindowEvent> {
     this._show = false;
     this._focus = false;
     this._fullscreen = false;
+    this._reactReady = this.type === RendererWindow.currentWindowType;
     this.id = window.crypto.randomUUID();
     this.initStatus();
   }
@@ -117,6 +128,17 @@ export class RendererWindow extends Listenable<RendererWindowEvent> {
     RendererIPC.Invoke("isFullscreen", this.type).then((isFullscreen) => {
       this.isFullscreen = isFullscreen;
     });
+    if (
+      this.type !== RendererWindow.currentWindowType &&
+      this.type !== "all" &&
+      this.type !== "process"
+    ) {
+      RendererWindow.all.listenMessageAll("reactReadyBus", ({ data }) => {
+        if (data.type === "ready" && data.sender === this.type) {
+          this.reactReady = true;
+        }
+      });
+    }
   }
 
   private updateStatus({ type, action }: MessageData<"windowBus">) {
@@ -133,6 +155,7 @@ export class RendererWindow extends Listenable<RendererWindowEvent> {
         this.isMax = false;
         this.isMin = false;
         this.isFullscreen = false;
+        this.reactReady = false;
         break;
       }
       case "hide": {
@@ -148,6 +171,8 @@ export class RendererWindow extends Listenable<RendererWindowEvent> {
       }
       case "unmaximize": {
         this.isMax = false;
+        this.opened = true;
+        this.isShow = true;
         break;
       }
       case "minimize": {
@@ -158,6 +183,8 @@ export class RendererWindow extends Listenable<RendererWindowEvent> {
       }
       case "unminimize": {
         this.isMin = false;
+        this.opened = true;
+        this.isShow = true;
         break;
       }
       case "enter-fullscreen": {
@@ -168,6 +195,8 @@ export class RendererWindow extends Listenable<RendererWindowEvent> {
       }
       case "leave-fullscreen": {
         this.isFullscreen = false;
+        this.opened = true;
+        this.isShow = true;
         break;
       }
       case "focus": {
@@ -228,6 +257,7 @@ export class RendererWindow extends Listenable<RendererWindowEvent> {
     return RendererIPC.Message.remove(id);
   }
 
+  /** all专用 */
   listenMessageAll<T extends MessageEvent>(
     event: T,
     callback: NormalFunc<[message: Message<T, MessageDirection["receive"]>]>,
@@ -247,21 +277,27 @@ export class RendererWindow extends Listenable<RendererWindowEvent> {
     RendererIPC.Event("openInternalWindow", this.type);
   }
 
-  openThen(cb: NormalFunc) {
-    if (this.opened) {
+  reactReadyAwait() {
+    const { promise, resolve } = Promise.withResolvers<void>();
+    if (this.reactReady) {
       this.focus();
-      return this.wrapListener(cb)();
+      resolve();
+      return Promise.resolve();
     }
     const listener = () => {
-      this.opened && setTimeout(this.wrapListener(cb), 1000);
-      this.opened && this.removeListener(listener);
+      this.reactReady && this.removeListener(listener);
+      this.reactReady && resolve();
     };
     this.addListener(listener);
-    this.open();
-  }
-
-  openAwait() {
-    return new Promise<void>((resolve) => this.openThen(resolve));
+    if (this.opened) {
+      RendererIPC.Message.send("reactReadyBus", this.type, {
+        type: "isReady",
+        target: this.type
+      });
+    } else {
+      this.open();
+    }
+    return promise;
   }
 
   devTools() {
@@ -378,3 +414,18 @@ export class RendererWindow extends Listenable<RendererWindowEvent> {
     this.winCache.clear();
   }
 }
+
+queueMicrotask(() => {
+  const sendStatus = () => {
+    RendererWindow.all.send("reactReadyBus", {
+      type: "ready",
+      sender: _currentWindowType
+    });
+  };
+  RendererWindow.all.listenMessageAll("reactReadyBus", ({ data }) => {
+    if (data.type === "isReady" && data.target === _currentWindowType) {
+      sendStatus();
+    }
+  });
+  setTimeout(sendStatus, 200);
+});

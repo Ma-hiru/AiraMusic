@@ -22,7 +22,7 @@ export function createPlaylistCoverModal({
   const stats = createPlaylistStats(playlist);
   const openCover = async () => {
     const image = cover.toNetworkImage().setSize(NeteaseImageSize.raw);
-    await RendererWindow.image.openAwait();
+    await RendererWindow.image.reactReadyAwait();
     RendererWindow.image.send("imageCheckerBus", {
       url: image.src,
       alt: image.alt ?? playlist.name
@@ -62,7 +62,7 @@ export function createAlbumCoverModal({
   const stats = createAlbumStats(album, dynamic);
   const openCover = async () => {
     const image = cover.toNetworkImage().setSize(NeteaseImageSize.raw);
-    await RendererWindow.image.openAwait();
+    await RendererWindow.image.reactReadyAwait();
     RendererWindow.image.send("imageCheckerBus", {
       url: image.src,
       alt: image.alt ?? album.content.name

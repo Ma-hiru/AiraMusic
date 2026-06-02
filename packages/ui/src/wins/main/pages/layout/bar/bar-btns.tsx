@@ -64,7 +64,7 @@ const BarBtns: FC<object> = () => {
     if (lyricWindow.opened) {
       lyricWindow.close();
     } else {
-      await lyricWindow.openAwait();
+      await lyricWindow.reactReadyAwait();
       AppEntry.busUpdater?.();
     }
   }, [lyricWindow]);
