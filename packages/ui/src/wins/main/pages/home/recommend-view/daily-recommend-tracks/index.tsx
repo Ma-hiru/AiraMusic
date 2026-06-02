@@ -3,7 +3,8 @@ import { type FC, memo, useCallback, useEffect, useRef } from "react";
 import { NeteaseAPITrack } from "@/common/netease/api";
 import { useRequestAutoRetry, useRequestStatusWrap } from "@/common/hooks/use-request-wrap";
 import { backgroundCoverAtom } from "@/wins/main/atoms/theme";
-import RecommendTrackTitle from "./recommend-track-title";
+
+import RecommendTrackTitle from "./title";
 import RecommendTrackList from "./list";
 import AppLoading from "@/common/components/fallback/app-loading";
 import AppError from "@/common/components/fallback/app-error";

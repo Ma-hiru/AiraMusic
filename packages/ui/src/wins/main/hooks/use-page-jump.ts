@@ -7,7 +7,7 @@ import { RendererWindow } from "@/common/lib/window";
 import { RendererEventBus } from "@/common/lib/bus";
 
 /** 跳转歌手和专辑页 */
-export function useArtistOrAlbumPageJump(
+export function usePageJump(
   props: {
     currentArtistID?: number;
     currentAlbumID?: number;

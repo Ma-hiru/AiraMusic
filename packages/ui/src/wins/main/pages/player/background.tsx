@@ -1,11 +1,11 @@
 import { type FC, memo } from "react";
 import { useAtomValue } from "jotai";
-import { backgroundCoverAtom } from "@/wins/main/atoms/theme";
+import { playerBackgroundCoverAtom } from "@/wins/main/atoms/theme";
 
 import AcrylicBackground from "@/common/components/public/acrylic-background";
 
 const Background: FC<object> = () => {
-  const backgroundCover = useAtomValue(backgroundCoverAtom);
+  const backgroundCover = useAtomValue(playerBackgroundCoverAtom);
   return (
     <AcrylicBackground
       className="absolute inset-0"

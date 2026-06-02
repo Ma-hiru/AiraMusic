@@ -5,7 +5,7 @@ import RendererTheme from "@/common/player/ui";
 import NeteaseImage from "@/common/components/image/netease-image";
 import { cx } from "@emotion/css";
 import { useLocateOrScrollTopRegister } from "@/wins/main/hooks/use-locate-or-scroll-top-register";
-import { useArtistOrAlbumPageJump } from "@/wins/main/hooks/use-artist-or-album-page-jump";
+import { usePageJump } from "@/wins/main/hooks/use-page-jump";
 import { useLocation } from "react-router-dom";
 import { RoutePathMain } from "@/common/routes";
 import RendererImageConstants from "@/common/constants/image";
@@ -38,7 +38,7 @@ const NavPlaylist: FC<NavPlaylistProps> = ({ user, sidebarOpen }) => {
     getScrollTopFunc: () => gotoTop
   });
 
-  const { jumpPlaylistPage } = useArtistOrAlbumPageJump();
+  const { jumpPlaylistPage } = usePageJump();
   const onItemClick = useCallback(
     (item: NeteasePlaylistSummary) => jumpPlaylistPage(item.id, "normal"),
     [jumpPlaylistPage]

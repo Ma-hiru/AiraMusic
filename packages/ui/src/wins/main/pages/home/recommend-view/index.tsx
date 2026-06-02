@@ -1,18 +1,18 @@
+import { cx } from "@emotion/css";
 import { type FC, memo } from "react";
 import { useUser } from "@/common/store/user";
-import { useArtistOrAlbumPageJump } from "@/wins/main/hooks/use-artist-or-album-page-jump";
+import { usePageJump } from "@/wins/main/hooks/use-page-jump";
 
-import DailyRecommendTracks from "./daily_recommend_tracks";
+import DailyRecommendTracks from "./daily-recommend-tracks";
 import DailyRecommendPlaylist from "./daily-recommend-playlist";
 import NewAlbums from "./new-albums";
 import RecommendArtists from "./recommend-artists";
 import RecommendPlaylist from "./recommend-playlist";
 import Toplists from "./toplists";
-import { cx } from "@emotion/css";
 
 const HomeRecommendView: FC<{ className?: string }> = ({ className }) => {
   const user = useUser();
-  const { jumpPlaylistPage, jumpArtistPage, jumpAlbumPage } = useArtistOrAlbumPageJump();
+  const { jumpPlaylistPage, jumpArtistPage, jumpAlbumPage } = usePageJump();
 
   return (
     <div className={cx("flex flex-col gap-3", className)}>

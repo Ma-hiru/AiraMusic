@@ -4,10 +4,10 @@ import { useUser } from "@/common/store/user";
 import { RoutePathMain } from "@/common/routes";
 import { useUserTrackManager } from "@/common/hooks/use-user-track-manager";
 import { PlaylistSource } from "@/common/enum";
-import { useArtistOrAlbumPageJump } from "@/wins/main/hooks/use-artist-or-album-page-jump";
-import { usePageAction } from "@/wins/main/hooks/use-page-action";
-import { usePlayerChangeAction } from "@/wins/main/hooks/use-player-change-action";
-import { useCoverLoadedAndSetTheme } from "@/wins/main/hooks/use-cover-loaded-and-set-theme";
+import { usePageJump } from "@/wins/main/hooks/use-page-jump";
+import { useDisplayAction } from "@/wins/main/hooks/use-display-action";
+import { usePlayerActionInList } from "@/wins/main/hooks/use-player-action-in-list";
+import { useSetBackground } from "@/wins/main/hooks/use-set-background";
 import { useLocateOrScrollTopRegister } from "@/wins/main/hooks/use-locate-or-scroll-top-register";
 import { useSetAtom } from "jotai";
 import { typingAtom } from "@/wins/main/atoms/layout";
@@ -30,15 +30,15 @@ const PlaylistPage: FC<object> = () => {
     onTrackPlay,
     openTrackComment,
     player
-  } = usePlayerChangeAction(() => playlistRef.current?.totalTracks.current ?? []);
+  } = usePlayerActionInList(() => playlistRef.current?.totalTracks.current ?? []);
   // 注册滚动和定位回调
   const { canFastLocate, canScrollTop } = useLocateOrScrollTopRegister({
     getScrollTopFunc: () => playlistRef.current?.scrollTop,
     getFastLocateFunc: () => playlistRef.current?.fastLocator
   });
   // 跳转歌手和专辑页
-  const { jumpAlbumPage, jumpArtistPage } = useArtistOrAlbumPageJump();
-  const { onPageAction } = usePageAction(() => {
+  const { jumpAlbumPage, jumpArtistPage } = usePageJump();
+  const { onPageAction } = useDisplayAction(() => {
     if (source !== PlaylistSource.Normal && source !== PlaylistSource.Like) return null;
     return {
       id: Number(id),
@@ -46,7 +46,7 @@ const PlaylistPage: FC<object> = () => {
       source
     };
   });
-  const { onCoverLoaded } = useCoverLoadedAndSetTheme();
+  const { setBackground } = useSetBackground();
 
   const setIsTyping = useSetAtom(typingAtom);
 
@@ -73,7 +73,7 @@ const PlaylistPage: FC<object> = () => {
       pageActionType={source === PlaylistSource.History ? "none" : "out"}
       onPageAction={onPageAction}
       setIsTyping={setIsTyping}
-      onCoverLoaded={onCoverLoaded}
+      onCoverLoaded={setBackground}
       historyList={player.history.list}
     />
   );

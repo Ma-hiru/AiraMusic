@@ -4,49 +4,37 @@ import { Music2, UserRound } from "lucide-react";
 import { NeteaseAPIArtist, NeteaseAPITrack } from "@/common/netease/api";
 import { NeteaseServicesTrack } from "@/common/netease/services";
 import { useRequestAutoRun, useRequestStatusWrap } from "@/common/hooks/use-request-wrap";
-import { useArtistOrAlbumPageJump } from "@/wins/main/hooks/use-artist-or-album-page-jump";
-import { RendererHomeConstants } from "@/wins/main/constants";
-import { createHomeTrackRecord } from "./home-track-record";
+import { usePageJump } from "@/wins/main/hooks/use-page-jump";
+import { type ArtistArea, RendererHomeConstants, type SongArea } from "@/wins/main/constants";
+import { NeteaseTrackRecord } from "@/common/netease/models";
 import AppEntry from "@/wins/main/entry";
 import AppToast from "@/common/components/toast";
 import RendererImageConstants from "@/common/constants/image";
 
 import AppError from "@/common/components/fallback/app-error";
 import AppLoading from "@/common/components/fallback/app-loading";
-import HomeMediaGrid from "./home-media-grid";
-import HomeSection from "./home-section";
+import HomeMediaGrid from "@/wins/main/componets/home-media-grid";
+import HomeSection from "@/wins/main/componets/home-section";
 
 const HomeSongsArtistsView: FC<{ className?: string }> = ({ className }) => {
   const player = AppEntry.usePlayer();
-  const { jumpArtistPage } = useArtistOrAlbumPageJump();
-  const [songArea, setSongArea] = useState<(typeof RendererHomeConstants.HOME_SONG_AREAS)[number]>(
-    RendererHomeConstants.HOME_SONG_AREAS[0]!
+  const { jumpArtistPage } = usePageJump();
+  const [songArea, setSongArea] = useState<SongArea>(RendererHomeConstants.HOME_SONG_AREAS[0]);
+  const [artistArea, setArtistArea] = useState<ArtistArea>(
+    RendererHomeConstants.HOME_ARTIST_AREAS[0]
   );
-  const [artistArea, setArtistArea] = useState<
-    (typeof RendererHomeConstants.HOME_ARTIST_AREAS)[number]
-  >(RendererHomeConstants.HOME_ARTIST_AREAS[0]!);
 
+  // 获取歌曲
   const {
     status: songStatus,
     data: songs = [],
     fetchData: fetchSongs
   } = useRequestStatusWrap(
-    useCallback((type: (typeof RendererHomeConstants.HOME_SONG_AREAS)[number]["type"]) => {
+    useCallback((type: SongArea["type"]) => {
       return NeteaseAPITrack.recommendNew(type).then((response) => response.data.slice(0, 40));
     }, [])
   );
   const { reload: reloadSongs } = useRequestAutoRun(fetchSongs, [songArea.type]);
-
-  const {
-    status: artistStatus,
-    data: artists = [],
-    fetchData: fetchArtists
-  } = useRequestStatusWrap(
-    useCallback((type: (typeof RendererHomeConstants.HOME_ARTIST_AREAS)[number]["type"]) => {
-      return NeteaseAPIArtist.toplist(type).then((response) => response.list.artists.slice(0, 30));
-    }, [])
-  );
-  const { reload: reloadArtists } = useRequestAutoRun(fetchArtists, [artistArea.type]);
 
   const songItems = useMemo(
     () =>
@@ -59,6 +47,18 @@ const HomeSongsArtistsView: FC<{ className?: string }> = ({ className }) => {
       })),
     [songArea.label, songs]
   );
+
+  // 获取歌手
+  const {
+    status: artistStatus,
+    data: artists = [],
+    fetchData: fetchArtists
+  } = useRequestStatusWrap(
+    useCallback((type: ArtistArea["type"]) => {
+      return NeteaseAPIArtist.toplist(type).then((response) => response.list.artists.slice(0, 30));
+    }, [])
+  );
+  const { reload: reloadArtists } = useRequestAutoRun(fetchArtists, [artistArea.type]);
 
   const artistItems = useMemo(
     () =>
@@ -73,11 +73,16 @@ const HomeSongsArtistsView: FC<{ className?: string }> = ({ className }) => {
     [artists]
   );
 
+  // 播放歌曲
   const playSong = useCallback(
     async (id: number) => {
       try {
         const track = await NeteaseServicesTrack.idEnsure(id);
-        const record = createHomeTrackRecord(track);
+        const record = new NeteaseTrackRecord({
+          detail: track,
+          sourceID: -1,
+          sourceName: "other"
+        });
         player.playlist.add(record, "next");
         player.playlist.jump(record);
       } catch {
@@ -88,13 +93,12 @@ const HomeSongsArtistsView: FC<{ className?: string }> = ({ className }) => {
   );
 
   return (
-    <div className={cx("flex flex-col gap-8", className)}>
+    <div className={cx("flex flex-col gap-3", className)}>
       <HomeSection title="新歌速递" subTitle="New Songs" Icon={Music2}>
         <div className="mb-3 flex flex-wrap gap-2 px-2">
           {RendererHomeConstants.HOME_SONG_AREAS.map((area) => (
             <button
               key={area.type}
-              type="button"
               onClick={() => setSongArea(area)}
               className={cx(
                 `
@@ -117,7 +121,6 @@ const HomeSongsArtistsView: FC<{ className?: string }> = ({ className }) => {
           </AppLoading>
         </AppError>
       </HomeSection>
-
       <HomeSection title="歌手推荐" subTitle="Artist Chart" Icon={UserRound}>
         <div className="mb-3 flex flex-wrap gap-2 px-2">
           {RendererHomeConstants.HOME_ARTIST_AREAS.map((area) => (

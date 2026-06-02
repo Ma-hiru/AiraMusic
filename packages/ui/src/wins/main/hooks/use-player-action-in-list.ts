@@ -6,7 +6,7 @@ import { RendererWindow } from "@/common/lib/window";
 import { RendererEventBus } from "@/common/lib/bus";
 import { useLatestRef } from "@/common/hooks/use-latest-ref";
 
-export function usePlayerChangeAction(getTracks: NormalFunc<[], NeteaseTrackRecord[]>) {
+export function usePlayerActionInList(getTracks: NormalFunc<[], NeteaseTrackRecord[]>) {
   const player = AppEntry.usePlayer();
   const getTracksRef = useLatestRef(getTracks);
 

@@ -5,7 +5,7 @@ import { cx } from "@emotion/css";
 import { NeteaseUser } from "@/common/netease/models";
 import { RoutePathMain } from "@/common/routes";
 import AppToast from "@/common/components/toast";
-import { useArtistOrAlbumPageJump } from "@/wins/main/hooks/use-artist-or-album-page-jump";
+import { usePageJump } from "@/wins/main/hooks/use-page-jump";
 
 interface NavMenuProps {
   barOpened: boolean;
@@ -14,7 +14,7 @@ interface NavMenuProps {
 const NavMenu: FC<NavMenuProps> = ({ barOpened }) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { jumpPlaylistPage } = useArtistOrAlbumPageJump();
+  const { jumpPlaylistPage } = usePageJump();
 
   return (
     <div className="flex flex-col gap-4 w-(--side-bar-expand-width) overflow-hidden">

@@ -7,6 +7,11 @@ export const backgroundCoverAtom = atomWithStorage(
   null as Nullable<string>
 );
 
+export const playerBackgroundCoverAtom = atomWithStorage(
+  "theme.playerBackgroundCover",
+  null as Nullable<string>
+);
+
 export const themeColorsAtom = atomWithStorage("theme.themeColors", [] as string[]);
 
 export const mainColorAtom = atomWithStorage("theme.mainColor", RendererTheme.themeDefault.main);

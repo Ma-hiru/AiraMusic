@@ -1,35 +1,28 @@
 import { cx } from "@emotion/css";
 import { type FC, memo, useMemo } from "react";
-import { Headphones } from "lucide-react";
 import { NeteaseNetworkImage, NeteasePlaylistSummary } from "@/common/netease/models";
-import RendererImageConstants from "@/common/constants/image";
-
+import { Headphones } from "lucide-react";
 import NeteaseImage from "@/common/components/image/netease-image";
 
-export interface HomeMediaItem {
+export type HomeMediaItem = {
   id: number;
   name: string;
+  nameClampLine?: 1 | 2;
   coverUrl?: string;
   meta?: string;
   badge?: string;
   playCount?: number;
   shape?: "square" | "circle";
-}
-
-interface HomeMediaGridProps {
-  items: HomeMediaItem[];
-  coverSize?: number;
-  className?: string;
-  onClickItem?: NormalFunc<[id: number]>;
-}
+};
 
 interface HomeMediaCardProps {
   item: HomeMediaItem;
   coverSize: number;
   onClick?: NormalFunc<[id: number]>;
+  className?: string;
 }
 
-const HomeMediaCard: FC<HomeMediaCardProps> = ({ item, coverSize, onClick }) => {
+const HomeMediaCard: FC<HomeMediaCardProps> = ({ item, coverSize, onClick, className }) => {
   const image = useMemo(
     () => NeteaseNetworkImage.fromURL(item.coverUrl)?.setSize(coverSize).setAlt(item.name),
     [coverSize, item.coverUrl, item.name]
@@ -38,12 +31,14 @@ const HomeMediaCard: FC<HomeMediaCardProps> = ({ item, coverSize, onClick }) => 
 
   return (
     <button
-      type="button"
       onClick={() => onClick?.(item.id)}
-      className="
-        group min-w-0 cursor-pointer select-none p-2 text-left
-        transition-all duration-300 ease-in-out active:scale-[0.98]
-      ">
+      className={cx(
+        `
+          group min-w-0 cursor-pointer select-none p-2 text-left
+          transition-all duration-300 ease-in-out active:scale-[0.98]
+        `,
+        className
+      )}>
       <div className={cx("relative aspect-square w-full bg-white/10 shadow-md", roundedClass)}>
         <NeteaseImage
           cache
@@ -52,8 +47,8 @@ const HomeMediaCard: FC<HomeMediaCardProps> = ({ item, coverSize, onClick }) => 
         />
         <div
           className={cx(
-            "absolute inset-0 bg-black/0 transition-colors duration-300 group-hover:bg-black/25",
-            item.shape === "circle" && "rounded-full"
+            "absolute inset-0 bg-black/0 transition-colors duration-300 group-hover:bg-black/25 overflow-hidden",
+            item.shape === "circle" ? "rounded-full" : "rounded-md"
           )}
         />
         {typeof item.playCount === "number" && (
@@ -68,7 +63,15 @@ const HomeMediaCard: FC<HomeMediaCardProps> = ({ item, coverSize, onClick }) => 
           </div>
         )}
       </div>
-      <p className="mt-2 line-clamp-2 text-[12px] font-bold leading-4 text-(--text-color-on-main) transition-opacity duration-300 group-hover:opacity-70">
+      <p
+        className={cx(
+          `
+            mt-2 text-[12px] font-bold
+            leading-4 text-(--text-color-on-main)
+            transition-opacity duration-300 group-hover:opacity-70
+          `,
+          item.nameClampLine === 1 ? "line-clamp-1" : "line-clamp-2"
+        )}>
         {item.name}
       </p>
       {item.meta && (
@@ -78,23 +81,4 @@ const HomeMediaCard: FC<HomeMediaCardProps> = ({ item, coverSize, onClick }) => 
   );
 };
 
-const HomeMediaGrid: FC<HomeMediaGridProps> = ({
-  items,
-  coverSize = RendererImageConstants.HomePagePlaylistCoverSize,
-  className,
-  onClickItem
-}) => {
-  return (
-    <div
-      className={cx(
-        "grid w-full grid-cols-[repeat(auto-fill,minmax(140px,1fr))] items-start gap-1",
-        className
-      )}>
-      {items.map((item) => (
-        <HomeMediaCard key={item.id} item={item} coverSize={coverSize} onClick={onClickItem} />
-      ))}
-    </div>
-  );
-};
-
-export default memo(HomeMediaGrid);
+export default memo(HomeMediaCard);

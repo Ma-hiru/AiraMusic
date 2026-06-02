@@ -8,12 +8,12 @@ import TrackList, {
   type TrackListContextMenuFunc,
   type TrackListRef
 } from "@/common/components/track_list";
-import { useArtistOrAlbumPageJump } from "@/wins/main/hooks/use-artist-or-album-page-jump";
+import { usePageJump } from "@/wins/main/hooks/use-page-jump";
 import type { ModalRender } from "@/common/components/modal/modal-provider";
 import RendererImageConstants from "@/common/constants/image";
 import AppEntry from "@/wins/main/entry";
 import AppContextMenu from "@/common/components/menu";
-import { usePlayerChangeAction } from "@/wins/main/hooks/use-player-change-action";
+import { usePlayerActionInList } from "@/wins/main/hooks/use-player-action-in-list";
 
 export function createPlayerPlaylistModal(): ModalRender {
   return {
@@ -31,7 +31,7 @@ const PlayerPlaylistModalContent = () => {
   const player = AppEntry.usePlayer();
   const trackListRef = useRef<Nullable<TrackListRef>>(null);
   const { heartManager, playableManager } = useUserTrackManager();
-  const { jumpAlbumPage, jumpArtistPage } = useArtistOrAlbumPageJump();
+  const { jumpAlbumPage, jumpArtistPage } = usePageJump();
 
   const tracks = player.playlist.list();
   const activeIndex = player.playlist.pos();
@@ -69,7 +69,7 @@ const PlayerPlaylistModalContent = () => {
   );
 
   const { openTrackComment, addTrackToPlaylistLast, addTrackToPlaylistNext } =
-    usePlayerChangeAction(() => player.playlist.list());
+    usePlayerActionInList(() => player.playlist.list());
 
   // 右键菜单
   const { create, createTrackContextMenu } = AppContextMenu.useMenu();

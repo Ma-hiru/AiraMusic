@@ -1,5 +1,7 @@
 export class RendererHomeConstants {
-  static readonly HOME_FEATURED_TOPLIST_IDS = [19723756, 180106, 60198, 3812895, 60131];
+  static readonly HOME_FEATURED_TOPLIST_IDS = new Set([19723756, 180106, 60198, 3812895, 60131]);
+
+  static readonly HOME_PLAYLIST_ORDER = ["hot", "new"] as const;
 
   static readonly HOME_PRIMARY_PLAYLIST_CATEGORIES = [
     "推荐歌单",
@@ -12,7 +14,7 @@ export class RendererHomeConstants {
     "电子",
     "说唱",
     "ACG"
-  ];
+  ] as const;
 
   static readonly HOME_PLAYLIST_CATEGORY_GROUPS = [
     {
@@ -108,7 +110,7 @@ export class RendererHomeConstants {
         "00后"
       ]
     }
-  ];
+  ] as const;
 
   static readonly HOME_SONG_AREAS = [
     { label: "全部", caption: "All", type: 0 },
@@ -126,3 +128,12 @@ export class RendererHomeConstants {
     { label: "日本", caption: "Japan", type: 4 }
   ] as const;
 }
+
+export type PlaylistCategory =
+  (typeof RendererHomeConstants.HOME_PLAYLIST_CATEGORY_GROUPS)[number]["categories"][number];
+
+export type PlaylistOrder = (typeof RendererHomeConstants.HOME_PLAYLIST_ORDER)[number];
+
+export type SongArea = (typeof RendererHomeConstants.HOME_SONG_AREAS)[number];
+
+export type ArtistArea = (typeof RendererHomeConstants.HOME_ARTIST_AREAS)[number];

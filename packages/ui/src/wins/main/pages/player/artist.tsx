@@ -4,7 +4,7 @@ import { useHeart } from "@/common/hooks/use-heart";
 import { useUserTrackManager } from "@/common/hooks/use-user-track-manager";
 import { RendererWindow } from "@/common/lib/window";
 import { RendererEventBus } from "@/common/lib/bus";
-import { useArtistOrAlbumPageJump } from "@/wins/main/hooks/use-artist-or-album-page-jump";
+import { usePageJump } from "@/wins/main/hooks/use-page-jump";
 import { useSetAtom } from "jotai";
 import { playModalAtom } from "@/wins/main/atoms/layout";
 import AppEntry from "@/wins/main/entry";
@@ -14,7 +14,7 @@ const Artist: FC<object> = () => {
   const setPlayModal = useSetAtom(playModalAtom);
   const { heartManager } = useUserTrackManager();
   const { likedChange, checkLiked } = useHeart(heartManager);
-  const { jumpArtistPage } = useArtistOrAlbumPageJump();
+  const { jumpArtistPage } = usePageJump();
   const track = player.current.track?.detail;
 
   const jump = useCallback(

@@ -6,11 +6,11 @@ import type { HomeChannelKey } from "@/wins/main/constants";
 
 import Banner from "./banner";
 import ForYouPanel from "./for-you-panel";
-import HomeChannelTabs from "./home-channel-tabs";
-import HomeChartsView from "./home-charts-view";
-import HomePlaylistsView from "./home-playlists-view";
-import HomeRecommendView from "./home-recommend-view";
-import HomeSongsArtistsView from "./home-songs-artists-view";
+import HomeChannelTabs from "./channel-tabs";
+import HomeChartsView from "./charts-view";
+import HomePlaylistsView from "./playlists-view";
+import HomeRecommendView from "./recommend-view";
+import HomeSongsArtistsView from "./songs-artists-view";
 import { useLocation, useNavigate } from "react-router-dom";
 import { RoutePath, RoutePathMain } from "@/common/routes";
 

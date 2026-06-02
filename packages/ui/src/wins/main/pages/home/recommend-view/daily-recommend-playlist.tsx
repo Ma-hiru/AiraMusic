@@ -5,7 +5,7 @@ import { Sparkles } from "lucide-react";
 import AppLoading from "@/common/components/fallback/app-loading";
 import PlaylistList from "@/common/components/playlist_list";
 import AppError from "@/common/components/fallback/app-error";
-import HomeSection from "./home-section";
+import HomeSection from "@/wins/main/componets/home-section";
 
 const DailyRecommendPlaylist = ({ onClickItem }: { onClickItem?: NormalFunc<[id: number]> }) => {
   const {

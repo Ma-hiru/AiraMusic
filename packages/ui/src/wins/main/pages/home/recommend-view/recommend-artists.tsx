@@ -6,8 +6,8 @@ import RendererImageConstants from "@/common/constants/image";
 
 import AppError from "@/common/components/fallback/app-error";
 import AppLoading from "@/common/components/fallback/app-loading";
-import HomeMediaGrid from "./home-media-grid";
-import HomeSection from "./home-section";
+import HomeMediaGrid from "@/wins/main/componets/home-media-grid";
+import HomeSection from "@/wins/main/componets/home-section";
 
 interface RecommendArtistsProps {
   onClickItem?: NormalFunc<[id: number]>;
