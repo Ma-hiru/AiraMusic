@@ -11,4 +11,5 @@ export default class RendererImageConstants {
   static readonly PlaylistPageTrackCoverSize = NeteaseImageSize.xs;
   static readonly HomePagePlaylistCoverSize = 180;
   static readonly HomePageTrackCoverSize = 180;
+  static readonly IgnoredCacheId = 3136952023; // 私人雷达
 }

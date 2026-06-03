@@ -42,7 +42,12 @@ const TopCover: FC<TopCoverProps> = ({ summary, coverCacheKey, onCoverLoaded }) 
       disabled={!summary}
       onClick={openCoverModal}
       className="size-44 relative select-none hover:scale-102 ease-in-out transition-all duration-300">
-      <NeteaseImage cache image={image} className="size-44 rounded-md" onLoad={onLoad} />
+      <NeteaseImage
+        cache={summary?.id !== RendererImageConstants.IgnoredCacheId}
+        image={image}
+        className="size-44 rounded-md"
+        onLoad={onLoad}
+      />
     </button>
   );
 };
