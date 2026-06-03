@@ -20,13 +20,13 @@ const TopCover: FC<TopCoverProps> = ({ summary, coverCacheKey, onCoverLoaded }) 
     },
     [onCoverLoaded]
   );
-  const image = useMemo(
-    () =>
-      NeteaseNetworkImage.fromPlaylistCover(summary)
-        ?.setSize(RendererImageConstants.PlaylistPageCoverSize)
-        .setCacheKey((coverCacheKey ?? "") + (summary?.updateTime ?? "")),
-    [summary, coverCacheKey]
-  );
+  const image = useMemo(() => {
+    const cacheKey =
+      (coverCacheKey ?? "") + (summary?.updateTime ?? "") + (summary?.trackIds[0] ?? "");
+    return NeteaseNetworkImage.fromPlaylistCover(summary)
+      ?.setSize(RendererImageConstants.PlaylistPageCoverSize)
+      .setCacheKey(cacheKey);
+  }, [summary, coverCacheKey]);
 
   const openCoverModal = useCallback(() => {
     if (!summary) return;
@@ -42,8 +42,14 @@ const TopCover: FC<TopCoverProps> = ({ summary, coverCacheKey, onCoverLoaded }) 
       disabled={!summary}
       onClick={openCoverModal}
       className="size-44 relative select-none hover:scale-102 ease-in-out transition-all duration-300">
-      <NeteaseImage cache image={image} className="size-44 rounded-md" onLoad={onLoad} />
+      <NeteaseImage
+        cache={summary?.id !== RendererImageConstants.IgnoredCacheId}
+        image={image}
+        className="size-44 rounded-md"
+        onLoad={onLoad}
+      />
     </button>
   );
 };
+
 export default memo(TopCover);

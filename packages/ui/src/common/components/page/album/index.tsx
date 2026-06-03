@@ -17,13 +17,13 @@ import AppContextMenu from "@/common/components/menu";
 import RendererImageConstants from "@/common/constants/image";
 
 import Top from "./top";
-import Divider from "./divider";
 import AppLoading from "@/common/components/fallback/app-loading";
 import TrackList, {
   type TrackListPlayableManager,
   type TrackListRef
 } from "@/common/components/track_list";
 import AppError from "@/common/components/fallback/app-error";
+import Divider from "@/common/components/divider";
 
 export type AlbumPageRef = {
   trackListRef: Nullable<TrackListRef>;
@@ -156,7 +156,7 @@ const Album: FC<AlbumPageProps> = ({
             pageActionType={pageActionType}
             onPageAction={onPageAction}
           />
-          <Divider />
+          <Divider className="my-3" />
           {album && (
             <TrackList
               className="flex-1"

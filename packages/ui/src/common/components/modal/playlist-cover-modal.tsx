@@ -4,7 +4,7 @@ import { NeteaseAlbum, NeteaseNetworkImage, type NeteasePlaylist } from "@/commo
 import { RendererWindow } from "@/common/lib/window";
 import { createAlbumStats, createPlaylistStats } from "@/common/utils/playlist";
 import type { ModalRender } from "./modal-provider";
-import { type FC } from "react";
+import { type FC, Fragment } from "react";
 
 import NeteaseImage from "@/common/components/image/netease-image";
 
@@ -182,9 +182,9 @@ const CoverModal: FC<CoverModalProps> = ({
         </section>
         <section className="flex justify-between items-center">
           <div className="flex flex-wrap gap-2 shrink-0">
-            {tags.map((tag) => (
+            {tags.map((tag, index) => (
               <span
-                key={tag}
+                key={tag + index}
                 className="
                   rounded-md bg-(--theme-color-main) px-2 py-1 text-[10px] font-black
                   text-(--text-color-on-main)
@@ -197,8 +197,8 @@ const CoverModal: FC<CoverModalProps> = ({
             {persons.map(({ avatar, nickname }, index) => {
               const divider = index !== persons.length - 1;
               return (
-                <>
-                  <div key={nickname} className="flex min-w-0 items-center gap-1">
+                <Fragment key={nickname}>
+                  <div className="flex min-w-0 items-center gap-1">
                     {avatar && (
                       <NeteaseImage
                         cache
@@ -211,7 +211,7 @@ const CoverModal: FC<CoverModalProps> = ({
                     <p className="truncate text-[12px] font-black tracking-normal">{nickname}</p>
                   </div>
                   {divider && <span className="font-medium opacity-50">/</span>}
-                </>
+                </Fragment>
               );
             })}
           </section>

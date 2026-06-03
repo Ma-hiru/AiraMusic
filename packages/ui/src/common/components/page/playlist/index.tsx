@@ -34,16 +34,16 @@ import { useUpdate } from "@/common/hooks/use-update";
 import { Log } from "@/common/lib/log";
 import { type RequestStatus } from "@/common/hooks/use-request-wrap";
 import { type HeartManager } from "@/common/hooks/use-heart";
+import { RendererNet } from "@/common/lib/net";
 import AppContextMenu from "@/common/components/menu";
 import AppToast from "@/common/components/toast";
 import RendererImageConstants from "@/common/constants/image";
 import RendererPlayerHistory from "@/common/player/history";
 
 import Top from "./top";
-import Divider from "./divider";
 import AppLoading from "@/common/components/fallback/app-loading";
-import { RendererNet } from "@/common/lib/net";
 import AppError from "@/common/components/fallback/app-error";
+import Divider from "@/common/components/divider";
 
 export type PlaylistRef = {
   tracks: NeteaseTrackRecord[] | NeteaseHistory[];
@@ -338,7 +338,7 @@ const Playlist: FC<PlaylistProps> = ({
             pageActionType={pageActionType}
             coverCacheKey={source === "like" ? String(user?.likedTrackIDs.checkPoint) : undefined}
           />
-          {source !== "history" && playlist !== null && <Divider />}
+          {source !== "history" && playlist !== null && <Divider className="my-3" />}
           <div
             className={cx(
               `
