@@ -7,7 +7,6 @@ import {
   NeteaseTrack
 } from "@/common/netease/models";
 import { useCacheRequest } from "@/common/utils/cache";
-import { useThemeColor } from "@/common/hooks/use-theme-color";
 import { Log } from "@/common/lib/log";
 import { NeteaseImageSize } from "@/common/enum";
 import { RendererFormat } from "@/common/lib/format";
@@ -27,7 +26,6 @@ interface TitleProps {
 
 const Title: FC<TitleProps> = ({ className, commentBus }) => {
   const [tags, setTags] = useState<string[]>([]);
-  const { mainColor, textColorOnMain } = useThemeColor();
   const [track, setTrack] = useState<Nullable<NeteaseTrack>>(null);
   const [playlist, setPlaylist] = useState<Nullable<NeteasePlaylist>>(null);
   const [album, setAlbum] = useState<Nullable<NeteaseAlbum>>(null);
@@ -98,29 +96,30 @@ const Title: FC<TitleProps> = ({ className, commentBus }) => {
   return (
     <div
       className={cx(
-        "w-full flex flex-row items-center justify-center gap-2 px-8 overflow-hidden text-(--theme-color-main)",
+        "w-full flex flex-row items-center justify-center gap-2 px-8 overflow-hidden",
         className
       )}>
       <NeteaseImage
-        className="size-10 rounded-full shrink-0"
         cache
+        shadow="float"
+        className="size-10 rounded-full shrink-0 border"
         image={cover}
         cacheLazy={false}
       />
       <div className="flex flex-col items-start justify-center gap-0.5 overflow-hidden">
         {commentBus.data?.type === "track" && (
           <>
-            <h1 className="font-semibold text-sm line-clamp-1">{track?.name}</h1>
-            <h2 className="font-medium text-xs">{track?.artist.join(" / ")}</h2>
+            <h1 className="font-semibold text-sm line-clamp-1 text-(--theme-color-main)">
+              {track?.name}
+            </h1>
+            <h2 className="font-medium text-xs text-(--theme-color-main)">
+              {track?.artist.join(" / ")}
+            </h2>
             <div className="flex flex-row items-center justify-start gap-1 flex-wrap">
               {tags.map((tag) => {
                 return (
                   <span
-                    style={{
-                      backgroundColor: mainColor.string(),
-                      color: textColorOnMain.string()
-                    }}
-                    className="inline-block rounded-full px-1.5 py-0.5 text-[10px]"
+                    className="inline-block rounded-full px-1.5 py-0.5 text-[10px] bg-(--theme-color-main)"
                     key={tag}>
                     {tag}
                   </span>
@@ -131,14 +130,22 @@ const Title: FC<TitleProps> = ({ className, commentBus }) => {
         )}
         {commentBus.data?.type === "playlist" && (
           <>
-            <h1 className="font-semibold text-sm line-clamp-1">{playlist?.name}</h1>
-            <h2 className="font-medium text-xs">{playlist?.creator?.nickname}</h2>
+            <h1 className="font-semibold text-sm line-clamp-2 text-(--theme-color-main)">
+              {playlist?.name}
+            </h1>
+            <h2 className="font-medium text-xs text-(--theme-color-main)">
+              {playlist?.creator?.nickname}
+            </h2>
           </>
         )}
         {commentBus.data?.type === "album" && (
           <>
-            <h1 className="font-semibold text-sm line-clamp-1">{album?.content.name}</h1>
-            <h2 className="font-medium text-xs">{album?.content.artist.name}</h2>
+            <h1 className="font-semibold text-sm line-clamp-2 text-(--theme-color-main)">
+              {album?.content.name}
+            </h1>
+            <h2 className="font-medium text-xs text-(--theme-color-main)">
+              {album?.content.artist.name}
+            </h2>
           </>
         )}
       </div>

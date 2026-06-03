@@ -20,13 +20,13 @@ const TopCover: FC<TopCoverProps> = ({ summary, coverCacheKey, onCoverLoaded }) 
     },
     [onCoverLoaded]
   );
-  const image = useMemo(
-    () =>
-      NeteaseNetworkImage.fromPlaylistCover(summary)
-        ?.setSize(RendererImageConstants.PlaylistPageCoverSize)
-        .setCacheKey((coverCacheKey ?? "") + (summary?.updateTime ?? "")),
-    [summary, coverCacheKey]
-  );
+  const image = useMemo(() => {
+    const cacheKey =
+      (coverCacheKey ?? "") + (summary?.updateTime ?? "") + (summary?.trackIds[0] ?? "");
+    return NeteaseNetworkImage.fromPlaylistCover(summary)
+      ?.setSize(RendererImageConstants.PlaylistPageCoverSize)
+      .setCacheKey(cacheKey);
+  }, [summary, coverCacheKey]);
 
   const openCoverModal = useCallback(() => {
     if (!summary) return;
@@ -46,4 +46,5 @@ const TopCover: FC<TopCoverProps> = ({ summary, coverCacheKey, onCoverLoaded }) 
     </button>
   );
 };
+
 export default memo(TopCover);

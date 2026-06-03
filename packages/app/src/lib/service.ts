@@ -8,7 +8,7 @@ export type MainServicesCreator = NormalFunc<
 
 export abstract class MainServicesBase {
   private readonly instances: Map<MainServicesType, Nullable<MainServicesInstance>> = new Map();
-  private readyPromise: Promise<void>;
+  private readonly readyPromise: Promise<void>;
   public readonly services: readonly MainServicesType[];
   public onError;
 

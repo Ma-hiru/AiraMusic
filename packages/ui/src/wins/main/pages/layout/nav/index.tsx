@@ -8,8 +8,8 @@ import { sidebarAtom } from "@/wins/main/atoms/layout";
 import AppErrorBoundary from "@/common/components/fallback/app-error-boundary";
 
 import NavPlayList from "./nav-playlist";
-import NavSideDivider from "./nav-divider";
 import NavMenu from "./nav-menu";
+import Divider from "@/common/components/divider";
 
 const Nav: FC<object> = () => {
   const sidebar = useAtomValue(sidebarAtom);
@@ -32,7 +32,7 @@ const Nav: FC<object> = () => {
       <AppErrorBoundary name="NavMenu" showError={false} autoReset panicAfterReset>
         {stage >= Stage.Immediately && <NavMenu barOpened={sidebar} />}
       </AppErrorBoundary>
-      {stage >= Stage.Second && displayPlaylist && <NavSideDivider />}
+      {stage >= Stage.Second && displayPlaylist && <Divider className="my-4 mx-3" />}
       <AppErrorBoundary name="NavPlayList" showError canReset className="w-40">
         {stage >= Stage.Finally && displayPlaylist && (
           <NavPlayList user={user} sidebarOpen={sidebar} />

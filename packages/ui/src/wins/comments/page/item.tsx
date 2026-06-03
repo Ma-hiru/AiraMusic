@@ -4,12 +4,12 @@ import { CommentType, NeteaseImageSize } from "@/common/enum";
 import { useThemeColor } from "@/common/hooks/use-theme-color";
 import { ThumbsUp } from "lucide-react";
 import { NeteaseAPIComment } from "@/common/netease/api";
-
-import NeteaseImage from "@/common/components/image/netease-image";
 import { RendererFormat } from "@/common/lib/format";
 import { cx } from "@emotion/css";
-import AppToast from "@/common/components/toast";
 import { Log } from "@/common/lib/log";
+import AppToast from "@/common/components/toast";
+
+import NeteaseImage from "@/common/components/image/netease-image";
 
 interface ItemProps {
   data: NeteaseAPI.NeteaseComment;
@@ -69,27 +69,27 @@ const Item: FC<ItemProps> = ({ data, sourceID, type }) => {
         <NeteaseImage
           cache
           cacheLazy
-          className="size-8 rounded-full shrink-0"
+          className="size-8 rounded-full shrink-0 border"
+          shadow="base"
           image={NeteaseNetworkImage.fromURL(data.user.avatarUrl)
             ?.setSize(NeteaseImageSize.sm)
             .setAlt(data.user.nickname)}
         />
         <div className="space-y-1 w-full">
           <h1 className="font-semibold text-xs flex flex-col items-start justify-start">
-            <span className="text-(--theme-color-main)">{data.user.nickname}</span>
-            <span className="text-(--theme-color-main)/60 text-xs text-[10px] opacity-80">
+            <span className="">{data.user.nickname}</span>
+            <span className="opacity-50 text-xs text-[10px]">
               {data.ipLocation?.location} {RendererFormat.time(data.time)}
             </span>
           </h1>
-          <p className="text-xs text-(--theme-color-main)/90">{data.content}</p>
+          <p className="text-xs text-(--theme-color-main) bg-(--text-color-on-main)/40 p-1 rounded-lg rounded-tl-none">
+            {data.content}
+          </p>
           <div
             style={{ color: data.liked ? mainColor.string() : undefined }}
             className="text-xs opacity-80 font-medium flex flex-row items-center justify-end gap-1 px-1 py-0.5 rounded-md cursor-pointer">
             <ThumbsUp
-              className={cx(
-                "size-3 inline-block",
-                liked ? "text-red-500" : "text-(--theme-color-main)"
-              )}
+              className={cx("size-3 inline-block", liked && "text-red-500")}
               fill={liked ? "#fb2c36" : "transparent"}
               onClick={() =>
                 like({
@@ -99,7 +99,7 @@ const Item: FC<ItemProps> = ({ data, sourceID, type }) => {
               }
             />
             <span
-              className={cx("leading-3", liked ? "text-red-500" : "text-(--theme-color-main)")}
+              className={cx("leading-3", liked && "text-red-500")}
               onClick={() =>
                 like({
                   commentID: data.commentId,

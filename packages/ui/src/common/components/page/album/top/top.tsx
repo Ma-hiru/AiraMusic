@@ -45,7 +45,7 @@ const Top: FC<TopProps> = ({
     return null;
   }, [onPageAction, pageActionType]);
   return (
-    <div className="w-full h-45 grid grid-rows-1 grid-cols-[1fr_auto]">
+    <div className="w-full h-45 grid grid-rows-1 grid-cols-[3fr_1fr] gap-3">
       <div className="min-w-0 grid grid-rows-1 grid-cols-[auto_1fr] gap-4 items-end">
         <TopCover
           size={coverSize}

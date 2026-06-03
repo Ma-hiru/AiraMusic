@@ -24,16 +24,19 @@ const Tabs: FC<TabsProps> = ({
 }) => {
   return (
     <div className={cx("w-full flex items-center justify-between px-3", className)}>
-      <h1 className="text-[12px] text-(--theme-color-main) font-medium">
-        <p className="inline-block font-bold">{RendererFormat.count(totalComment)}</p> 条评论
+      <h1 className="text-[12px] font-medium">
+        <p className="inline-block font-bold">{RendererFormat.count(totalComment)}</p>
+        <span className="ml-2">条评论</span>
       </h1>
       <div className="flex items-center justify-end gap-1">
         <Switch
           label="动态"
+          mode="less-theme"
           checked={dynamicContent}
           onClick={() => setDynamicContent(!dynamicContent)}
         />
         <SectionTab
+          mode="less-theme"
           className="text-[10px]"
           data={Object.values(CommentSortText)}
           activeIndex={sortType - 1}

@@ -6,9 +6,10 @@ interface SwitchProps {
   label?: ReactNode;
   checked: boolean;
   onClick: NormalFunc;
+  mode?: "more-theme" | "less-theme";
 }
 
-const Switch: FC<SwitchProps> = ({ checked, onClick, className, label }) => {
+const Switch: FC<SwitchProps> = ({ checked, onClick, className, label, mode = "more-theme" }) => {
   return (
     <div
       className={cx(
@@ -20,7 +21,7 @@ const Switch: FC<SwitchProps> = ({ checked, onClick, className, label }) => {
         transition-all duration-300 ease-in-out`,
         checked
           ? "text-(--text-color-on-main) bg-(--theme-color-main) font-bold"
-          : "text-(--theme-color-main)",
+          : mode === "more-theme" && "text-(--theme-color-main)",
         className
       )}
       onClick={onClick}>
