@@ -35,11 +35,12 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 24
-          cache: yarn
-          cache-dependency-path: yarn.lock
 
       - name: Enable Corepack
         run: corepack enable
+
+      - name: Install dependencies
+        run: yarn install --immutable
 
       - name: Setup Go
         uses: actions/setup-go@v5
@@ -64,9 +65,6 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ hashFiles('packages/wasm/Cargo.lock') }}
           restore-keys: |
             ${{ runner.os }}-cargo-
-
-      - name: Install dependencies
-        run: yarn install --immutable
 
       - name: Check formatting
         run: yarn prettier --check .
