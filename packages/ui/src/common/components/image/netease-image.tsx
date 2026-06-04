@@ -186,11 +186,11 @@ const NeteaseImage: FC<ImageProps> = ({
   const shadowFloatLight = shadow === "float" && shadowColor === "light";
   const shadowFloatDark = shadow === "float" && shadowColor === "dark";
   return (
-    <div
+    <span
       ref={containerRef}
       onClick={wrapClick}
       className={cx(
-        "overflow-hidden",
+        "overflow-hidden block",
         error && !fallback && "bg-white/10 backdrop-blur-sm",
         shadowBaseDark && "shadow-sm",
         shadowBaseLight && "shadow-[0_1px_2px_rgba(0,0,0,0.12)]",
@@ -209,7 +209,7 @@ const NeteaseImage: FC<ImageProps> = ({
         onError={handleLoadError}
       />
       {error && fallback}
-    </div>
+    </span>
   );
 };
 

@@ -2,7 +2,11 @@ import { useListenable } from "@/common/hooks/use-listenable";
 import { type FC, memo, useCallback, useEffect, useRef } from "react";
 import { RendererWindow } from "@/common/lib/window";
 import { RendererEventBus } from "@/common/lib/bus";
-import { NeteaseServicesTrack } from "@/common/netease/services";
+import {
+  NeteaseServicesAlbum,
+  NeteaseServicesPlaylist,
+  NeteaseServicesTrack
+} from "@/common/netease/services";
 import { NeteaseTrackRecord } from "@/common/netease/models";
 import { Log } from "@/common/lib/log";
 import { useNavigate } from "react-router-dom";
@@ -177,9 +181,33 @@ const Bus: FC<object> = () => {
   const applyingChanges = useRef(false);
   // 变更队列
   const appliedChangesQueue = useRef<MessageData<"playerChangeBus">[]>([]);
+
   const applyPlayerChanges = useCallback(async () => {
     if (applyingChanges.current) return;
     applyingChanges.current = true;
+
+    const fetchTrackList = async (
+      sourceType: NeteaseTrackRecordSourceType,
+      sourceID: number,
+      allIDs: number[]
+    ) => {
+      switch (sourceType) {
+        case "playlist": {
+          const playlist = await NeteaseServicesPlaylist.id(sourceID);
+          return NeteaseTrackRecord.fromPlaylist(playlist);
+        }
+        case "album": {
+          const album = await NeteaseServicesAlbum.id(sourceID);
+          return album.tracks;
+        }
+        case "other": {
+          const tracks = await NeteaseServicesTrack.ids(allIDs);
+          return tracks.map(
+            (detail) => new NeteaseTrackRecord({ detail, sourceID, sourceName: sourceType })
+          );
+        }
+      }
+    };
 
     let change: Undefinable<MessageData<"playerChangeBus">>;
     while ((change = appliedChangesQueue.current.shift())) {
@@ -188,12 +216,9 @@ const Bus: FC<object> = () => {
           const { trackID, trackIdx, sourceType, sourceID, allIDs } = change;
           if (player.current.track?.id === trackID) continue;
 
-          const tracks = await NeteaseServicesTrack.ids(allIDs);
-          const records = tracks.map(
-            (detail) => new NeteaseTrackRecord({ detail, sourceID, sourceName: sourceType })
-          );
-
+          const records = await fetchTrackList(sourceType, sourceID, allIDs);
           const track = records[trackIdx] ?? records[0];
+
           if (!track) continue;
           if (player.playlist.same(records)) {
             player.playlist.jump(track);
@@ -202,10 +227,9 @@ const Bus: FC<object> = () => {
           }
         } else if (change.type === "addListToPlaylistEnd") {
           const { sourceType, sourceID, allIDs } = change;
-          const tracks = await NeteaseServicesTrack.ids(allIDs);
-          const records = tracks.map(
-            (detail) => new NeteaseTrackRecord({ detail, sourceID, sourceName: sourceType })
-          );
+
+          const records = await fetchTrackList(sourceType, sourceID, allIDs);
+
           player.playlist.addList(records);
         } else if (change.type === "addToPlaylistNext" || change.type === "addToPlaylistLast") {
           const { sourceID, sourceType, trackID, type } = change;

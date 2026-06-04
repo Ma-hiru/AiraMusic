@@ -6,8 +6,9 @@ import { useUpdate } from "@/common/hooks/use-update";
 import { useListenable } from "@/common/hooks/use-listenable";
 import { RendererWindow } from "@/common/lib/window";
 import { createPlayerPlaylistModal } from "@/wins/main/componets/player-playlist-modal";
-import AppModal from "@/common/components/modal";
 import AppEntry from "@/wins/main/entry";
+import AppModal from "@/common/components/modal";
+import Tooltip from "@/common/components/tooltip";
 import RangeSlider from "@/common/components/range";
 
 const WHEEL_VOLUME_STEP = 0.1;
@@ -38,7 +39,7 @@ const toggleMute = () => {
   }
   player.audio.mute();
 };
-const onWheel = (e: WheelEvent<HTMLDivElement>) => {
+const onWheel = (e: WheelEvent<HTMLElement>) => {
   // 向上滚增加音量，向下滚减少音量
   const delta = e.deltaY < 0 ? WHEEL_VOLUME_STEP : -WHEEL_VOLUME_STEP;
   player.audio.volume = Number((player.audio.volume + delta).toFixed(2));
@@ -77,34 +78,36 @@ const BarBtns: FC<object> = () => {
   }, [player.audio, update]);
 
   return (
-    <div className="flex gap-4 justify-end items-center h-full">
-      <section onWheel={onWheel} className="group relative flex size-5 items-center justify-center">
-        <div
-          className="
-            pointer-events-none absolute bottom-full left-1/2 z-30 flex -translate-x-1/2
-            translate-y-2 pb-3 opacity-0 transition-all duration-300 ease-in-out
-            group-hover:pointer-events-auto group-hover:translate-y-0 group-hover:opacity-100
-            group-focus-within:pointer-events-auto group-focus-within:translate-y-0
-            group-focus-within:opacity-100
-          ">
-          <div className="flex h-36 w-7.5 bg-white  flex-col items-center gap-3 rounded-md border border-white/50 py-3 shadow-sm backdrop-blur-2xl">
-            <p className="text-[10px] font-semibold text-(--text-color-on-main)">
-              {volumePercent}%
-            </p>
+    <div className="flex gap-4 justify-end items-center h-full ">
+      <Tooltip
+        interactive
+        tooltipRole="group"
+        tooltipLabel="音量调整"
+        placement="top"
+        onWheel={onWheel}
+        className="size-5 items-center justify-center"
+        contentClassName="
+          flex h-36 w-8 flex-col items-center gap-3 rounded-md border border-white/30
+          bg-white/50 px-0 py-3 text-(--theme-color-main)
+          shadow-[0_16px_30px_-18px_rgba(0,0,0,0.45)] backdrop-blur-2xl
+        "
+        content={
+          <>
+            <p className="text-[10px] font-black text-(--theme-color-main)">{volumePercent}%</p>
             <RangeSlider
               min={0}
               max={100}
               step={1}
-              colorReverse
               value={volumePercent}
               onChange={onVolumeChange}
               orientation="vertical"
               className="h-24"
             />
-          </div>
-        </div>
+          </>
+        }>
         <button
-          title={volumePercent <= 0 ? "已静音" : `音量 ${volumePercent}%`}
+          type="button"
+          aria-label={volumePercent <= 0 ? "已静音" : `音量 ${volumePercent}%`}
           onClick={toggleMute}
           className="
             size-5 flex items-center justify-center select-none cursor-pointer
@@ -112,9 +115,10 @@ const BarBtns: FC<object> = () => {
           ">
           <VolumeTag aria-hidden="true" color={iconColor} fill={iconColor} className="size-5" />
         </button>
-      </section>
+      </Tooltip>
       <button
         title="播放列表"
+        type="button"
         onClick={openPlaylistModal}
         className="
           size-5 flex items-center justify-center select-none cursor-pointer
@@ -125,6 +129,7 @@ const BarBtns: FC<object> = () => {
       </button>
       <button
         title="桌面歌词"
+        type="button"
         className={cx(
           `
           size-5 flex justify-center items-center font-semibold
