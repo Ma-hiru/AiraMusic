@@ -48,8 +48,9 @@ export default class _NeteaseTrackAPI {
   static detail(ids: string | number | number[]) {
     if (Array.isArray(ids)) ids = ids.join(",");
     return apiRequest<any, NeteaseAPI.NeteaseTrackDetailResponse>({
+      method: "POST",
       url: "/song/detail",
-      params: { ids }
+      data: { ids }
     });
   }
 

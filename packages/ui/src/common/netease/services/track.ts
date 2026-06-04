@@ -58,8 +58,8 @@ export default class _NeteaseTrackSource {
    *  */
   static async _raw(
     ids: NeteaseAPI.TrackId[] | number[],
-    maxPerRequest: number = 100,
-    concurrency: number = 5
+    maxPerRequest: number = 500,
+    concurrency: number = 3
   ) {
     // 如果传入的是TrackId对象数组，先提取出id
     if (ids.length === 0) return [];
