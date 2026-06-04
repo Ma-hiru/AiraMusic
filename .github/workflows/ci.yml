@@ -1,0 +1,110 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+  pull_request:
+    branches:
+      - main
+      - dev
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    env:
+      CI: true
+      CARGO_TERM_COLOR: always
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: packages/store/go.mod
+          cache-dependency-path: packages/store/go.sum
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+          components: rustfmt, clippy
+
+      - name: Cache Cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/wasm-pack
+            ~/.cargo/registry
+            ~/.cargo/git
+            packages/wasm/target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('packages/wasm/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: Check formatting
+        run: yarn prettier --check .
+
+      - name: Lint TypeScript
+        run: yarn eslint .
+
+      - name: Lint Rust
+        working-directory: packages/wasm
+        run: |
+          cargo fmt --check
+          cargo clippy --all-targets -- -D warnings
+
+      - name: Lint Go
+        working-directory: packages/store
+        run: |
+          gofmt_files="$(gofmt -l .)"
+          if [ -n "$gofmt_files" ]; then
+            echo "$gofmt_files"
+            exit 1
+          fi
+          go vet ./...
+
+      - name: Install wasm-pack
+        run: |
+          if ! command -v wasm-pack >/dev/null 2>&1; then
+            cargo install wasm-pack --version 0.13.1 --locked
+          fi
+
+      - name: Build WASM package
+        run: yarn build:wasm
+
+      - name: Type check
+        run: yarn check
+
+      - name: Test
+        run: yarn test
+
+      - name: Build packages
+        run: |
+          yarn build:store
+          yarn build:ui
+          yarn build:app
