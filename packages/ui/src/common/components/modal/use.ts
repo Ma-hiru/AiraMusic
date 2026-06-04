@@ -1,8 +1,8 @@
 import { useLayoutEffect } from "react";
-import { type ModalRender } from "./modal-provider";
+import Provider, { type ModalRender } from "./modal-provider";
 import { Log } from "@/common/lib/log";
 import { createAlbumCoverModal, createPlaylistCoverModal } from "./playlist-cover-modal";
-import Provider from "./modal-provider";
+import { createDialogModal } from "./dialog-modal";
 
 export default class AppModal {
   static _setModalData: NormalFunc<[data: Nullable<ModalRender>]> = () => {
@@ -68,6 +68,7 @@ function useModal() {
     create: AppModal._create,
     close: AppModal.close,
     createPlaylistCoverModal,
-    createAlbumCoverModal
+    createAlbumCoverModal,
+    createDialogModal
   };
 }

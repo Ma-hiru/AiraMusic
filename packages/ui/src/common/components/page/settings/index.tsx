@@ -105,6 +105,7 @@ const Settings: FC<SettingsProps> = ({
         cacheStoreConfig={cacheStoreConfig}
         cacheStoreSizes={cacheStoreSizes}
         updateCacheStoreConfig={updateCacheStoreConfig}
+        refreshSize={getCacheStoreStatus}
       />
     </section>
   );

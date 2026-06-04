@@ -20,6 +20,7 @@ interface SettingsContentProps {
   updateCacheStoreConfig: PromiseFunc<
     [config: Partial<InvokeEventPayload<"fetchCacheStoreConfig">>]
   >;
+  refreshSize: NormalFunc;
 }
 
 const SettingsContent: FC<SettingsContentProps> = ({
@@ -30,7 +31,8 @@ const SettingsContent: FC<SettingsContentProps> = ({
   cacheStoreSizes,
   updateCacheStoreConfig,
   output,
-  updateOutput
+  updateOutput,
+  refreshSize
 }) => {
   const patchSettings = useCallback(
     (patch: Partial<NeteaseSettingsModel>) => {
@@ -70,6 +72,7 @@ const SettingsContent: FC<SettingsContentProps> = ({
         updateCacheStoreConfig={updateCacheStoreConfig}
         cacheStoreConfig={cacheStoreConfig}
         cacheStoreSizes={cacheStoreSizes}
+        refreshSize={refreshSize}
       />
     </main>
   );

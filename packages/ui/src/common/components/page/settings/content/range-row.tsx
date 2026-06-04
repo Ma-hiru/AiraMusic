@@ -39,12 +39,12 @@ const RangeRow: FC<RangeRowProps> = ({
         <>
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-black tracking-normal">{title}</h3>
-            <span className="rounded-md px-2 py-1 text-[11px] font-black text-(--theme-color-main)">
+            <span className="rounded-md px-2 py-1 text-[11px] font-black">
               {value} {unit}
             </span>
           </div>
           <RangeSlider min={min} max={max} step={step} value={value} onChange={debouncedHandler} />
-          <div className="flex items-center justify-between text-[10px] font-bold mt-1">
+          <div className="flex items-center justify-between text-[10px] font-bold mt-1 opacity-50">
             <span>
               {min} {unit}
             </span>

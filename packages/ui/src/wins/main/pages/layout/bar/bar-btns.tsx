@@ -87,7 +87,7 @@ const BarBtns: FC<object> = () => {
             group-focus-within:pointer-events-auto group-focus-within:translate-y-0
             group-focus-within:opacity-100
           ">
-          <div className="flex h-36 w-7.5 bg-(--theme-color-main) flex-col items-center gap-3 rounded-md border border-white/50 py-3 shadow-sm backdrop-blur-2xl">
+          <div className="flex h-36 w-7.5 bg-white  flex-col items-center gap-3 rounded-md border border-white/50 py-3 shadow-sm backdrop-blur-2xl">
             <p className="text-[10px] font-semibold text-(--text-color-on-main)">
               {volumePercent}%
             </p>

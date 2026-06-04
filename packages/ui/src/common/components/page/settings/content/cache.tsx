@@ -4,13 +4,15 @@ import { Boxes, Clock8, Folder, HardDrive } from "lucide-react";
 import type { InvokeEventPayload } from "@mahiru/ipc/dist-types/src/types/invoke";
 import { RendererFormat } from "@/common/lib/format";
 import { RendererIPC } from "@/common/lib/ipc";
+import { RendererCache } from "@/common/lib/cache";
+import { Log } from "@/common/lib/log";
 import AppToast from "@/common/components/toast";
 
 import RangeRow from "./range-row";
 import BaseItem from "./base-item";
 import DonutChart from "./donut-chart";
 import Card from "@/common/components/card";
-import { RendererCache } from "@/common/lib/cache";
+import AppModal from "@/common/components/modal";
 
 interface CacheProps {
   cacheStoreSizes: Nullable<CacheStoreSizeCategories>;
@@ -18,9 +20,15 @@ interface CacheProps {
   updateCacheStoreConfig: PromiseFunc<
     [config: Partial<InvokeEventPayload<"fetchCacheStoreConfig">>]
   >;
+  refreshSize: NormalFunc;
 }
 
-const Cache: FC<CacheProps> = ({ cacheStoreConfig, cacheStoreSizes, updateCacheStoreConfig }) => {
+const Cache: FC<CacheProps> = ({
+  cacheStoreConfig,
+  cacheStoreSizes,
+  updateCacheStoreConfig,
+  refreshSize
+}) => {
   const capacityGB = useMemo(() => {
     return RendererFormat.convertBytes(cacheStoreConfig?.capacity, "GB");
   }, [cacheStoreConfig?.capacity]);
@@ -28,13 +36,17 @@ const Cache: FC<CacheProps> = ({ cacheStoreConfig, cacheStoreSizes, updateCacheS
     return Number(cacheStoreConfig?.ttl.replace("h", "") ?? 0) / 24;
   }, [cacheStoreConfig?.ttl]);
   const path = cacheStoreConfig?.path ?? "";
+  const { create, createDialogModal } = AppModal.useModal();
 
   const [capacityRangeValue, setCapacityRangeValue] = useState(capacityGB);
   const [ttlRangeValue, setTtlRangeValue] = useState(ttlDays);
   const [pathInputValue, setPathInputValue] = useState(path);
+  const [movingPercent, setMovingPercent] = useState<Nullable<number>>(null);
 
   const hasChanged =
     capacityRangeValue !== capacityGB || ttlDays !== ttlRangeValue || path !== pathInputValue;
+  const hasData = Object.values(cacheStoreSizes ?? {}).find((s) => s !== 0);
+
   const selectDirPath = useCallback(async () => {
     const res = await RendererIPC.Invoke("selectPath", "dir").then((res) => res);
     if (res.ok) {
@@ -53,8 +65,6 @@ const Cache: FC<CacheProps> = ({ cacheStoreConfig, cacheStoreSizes, updateCacheS
     setTtlRangeValue(ttlDays);
     setCapacityRangeValue(capacityGB);
   }, [capacityGB, path, ttlDays]);
-
-  const [movingPercent, setMovingPercent] = useState<Nullable<number>>(null);
 
   const moving = useRef(false);
   const moveStore = useCallback((path: string) => {
@@ -91,6 +101,43 @@ const Cache: FC<CacheProps> = ({ cacheStoreConfig, cacheStoreSizes, updateCacheS
     });
   }, []);
 
+  const clear = useCallback(() => {
+    create(createDialogModal, {
+      title: "清除缓存",
+      body: "是否要清除所有本地缓存？",
+      footer: null,
+      onConfirm: () => {
+        AppToast.show({
+          type: "info",
+          text: "清理缓存中"
+        });
+        RendererCache.local.other
+          .clear()
+          .then((res) => {
+            if (res.ok) {
+              AppToast.show({
+                type: "success",
+                text: `成功清理 ${res.count} 项缓存`
+              });
+            } else {
+              AppToast.show({
+                type: "error",
+                text: "清理缓存失败"
+              });
+            }
+          })
+          .catch((err) => {
+            Log.error(err);
+            AppToast.show({
+              type: "error",
+              text: "内部错误"
+            });
+          })
+          .finally(refreshSize);
+      }
+    });
+  }, [create, createDialogModal, refreshSize]);
+
   const saveChanges = async () => {
     if (!hasChanged) return;
     const config: Partial<{ ttl: string; path: string; capacity: number }> = {};
@@ -107,15 +154,16 @@ const Cache: FC<CacheProps> = ({ cacheStoreConfig, cacheStoreSizes, updateCacheS
     }
     if (Object.entries(config).length === 0) return;
     await updateCacheStoreConfig(config);
+    AppToast.show({
+      type: "success",
+      text: "保存成功"
+    });
   };
 
   useEffect(reset, [reset]);
+
   return (
-    <Card
-      className="ease-in-out duration-300 transition-all"
-      Icon={HardDrive}
-      title="缓存"
-      subTitle="Cache">
+    <Card Icon={HardDrive} title="缓存" subTitle="Cache">
       <DonutChart cacheStoreSizes={cacheStoreSizes} />
       <RangeRow
         icon={Boxes}
@@ -182,8 +230,9 @@ const Cache: FC<CacheProps> = ({ cacheStoreConfig, cacheStoreSizes, updateCacheS
       </BaseItem>
       <BaseItem>
         <div className="w-full flex justify-end gap-3">
-          <Button hasChanged={hasChanged} title="保存" onClick={saveChanges} />
-          <Button hasChanged={hasChanged} title="重置" onClick={reset} />
+          <Button disable={!hasChanged} title="保存" onClick={saveChanges} />
+          <Button disable={!hasChanged} title="重置" onClick={reset} />
+          <Button disable={!hasData} title="清空" onClick={clear} />
         </div>
       </BaseItem>
     </Card>
@@ -193,11 +242,11 @@ const Cache: FC<CacheProps> = ({ cacheStoreConfig, cacheStoreSizes, updateCacheS
 export default memo(Cache);
 
 const Button = ({
-  hasChanged,
+  disable,
   title,
   onClick
 }: {
-  hasChanged: boolean;
+  disable: boolean;
   title: string;
   onClick: NormalFunc;
 }) => {
@@ -213,9 +262,9 @@ const Button = ({
           hover:bg-(--theme-color-main) hover:text-(--text-color-on-main)
           active:scale-[0.98]
         `,
-        !hasChanged && "opacity-50 cursor-not-allowed",
-        hasChanged &&
-          "hover:bg-(--theme-color-main) hover:text-(--text-color-on-main)  active:scale-[0.98]"
+        disable
+          ? "opacity-50 cursor-not-allowed"
+          : "hover:bg-(--theme-color-main) hover:text-(--text-color-on-main)  active:scale-[0.98]"
       )}>
       {title}
     </button>

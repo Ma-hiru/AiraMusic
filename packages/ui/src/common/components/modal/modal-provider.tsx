@@ -26,6 +26,7 @@ export type ModalRender = {
   className?: string;
   contentClassName?: string;
   onClose?: NormalFunc<[], void | boolean>;
+  hiddenMaskBlur?: boolean;
 };
 
 const ModalProvider: FC<{ className?: string }> = ({ className }) => {
@@ -75,23 +76,15 @@ const ModalProvider: FC<{ className?: string }> = ({ className }) => {
   return (
     <div>
       <button
-        key="mask"
-        type="button"
-        aria-label="关闭弹窗"
         className={cx(
-          `
-            fixed inset-0 cursor-default bg-black/30
-            backdrop-blur-xl
-            `,
+          "fixed inset-0 cursor-default bg-black/30",
+          render?.hiddenMaskBlur ? "backdrop-blur-none" : "backdrop-blur-xl",
           !(visible && render) && "hidden",
           className
         )}
-        onClick={() => {
-          console.log("close");
-          (render?.closeOnMask ?? true) && close();
-        }}
+        onClick={() => (render?.closeOnMask ?? true) && close()}
       />
-      <AnimatePresence mode="wait" onExitComplete={() => !visible && setRender(null)}>
+      <AnimatePresence mode="sync" onExitComplete={() => !visible && setRender(null)}>
         {visible && render && (
           <motion.div
             key="modal"
@@ -113,7 +106,7 @@ const ModalProvider: FC<{ className?: string }> = ({ className }) => {
                 `
                 relative z-10 grid max-h-[min(86vh,720px)] w-full max-w-[calc(100vw-2rem)]
                 grid-rows-[auto_1fr_auto] overflow-hidden rounded-lg pointer-events-auto
-                border border-white/20 bg-white/15 shadow-2xl backdrop-blur-2xl
+                border border-white/20 bg-white/15 shadow-2xl backdrop-blur-xl
               `,
                 render.className
               )}
@@ -130,35 +123,37 @@ const ModalProvider: FC<{ className?: string }> = ({ className }) => {
               }}
               exit={{
                 opacity: 0,
-                scale: 0.98,
+                scale: 0.95,
                 y: 18,
                 transition: { duration: 0.2, ease: "easeInOut" }
               }}>
-              <header className="flex min-h-14 items-start justify-between gap-3 px-4 py-3">
-                <div className="min-w-0">
-                  {render.subTitle && (
-                    <p className="text-[10px] font-semibold uppercase tracking-widest opacity-50">
-                      {render.subTitle}
-                    </p>
-                  )}
-                  {render.title && (
-                    <h2 className="mt-0.5 truncate text-lg font-black tracking-normal">
-                      {render.title}
-                    </h2>
-                  )}
-                </div>
-                <button
-                  type="button"
-                  aria-label="关闭弹窗"
-                  onClick={close}
-                  className="
-                  flex size-8 shrink-0 items-center justify-center
-                  transition-all duration-300 ease-in-out
-                  hover:opacity-50 active:scale-95
-                ">
-                  <X className="size-4" />
-                </button>
-              </header>
+              {!!(render.title || render.subTitle) && (
+                <header className="flex min-h-14 items-start justify-between gap-3 px-4 py-3">
+                  <div className="min-w-0">
+                    {render.subTitle && (
+                      <p className="text-[10px] font-semibold uppercase tracking-widest opacity-50">
+                        {render.subTitle}
+                      </p>
+                    )}
+                    {render.title && (
+                      <h2 className="mt-0.5 truncate text-lg font-black tracking-normal">
+                        {render.title}
+                      </h2>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    aria-label="关闭弹窗"
+                    onClick={close}
+                    className={`
+                      flex size-8 shrink-0 items-center justify-center
+                      transition-all duration-300 ease-in-out
+                      hover:opacity-50 active:scale-95 cursor-pointer
+                    `}>
+                    <X className="size-4" />
+                  </button>
+                </header>
+              )}
               <div
                 className={cx(
                   "min-h-0 overflow-y-auto px-4 pb-4 scrollbar scrollbar-show",

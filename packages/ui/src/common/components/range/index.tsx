@@ -97,6 +97,7 @@ const RangeSlider: FC<RangeSliderProps> = ({
         `,
           colorReverse ? "bg-(--text-color-on-main)" : "bg-(--theme-color-main)"
         )}
+        title={String(value)}
         style={
           orientation === "vertical"
             ? { left: "50%", top: `${100 - percentage}%` }
