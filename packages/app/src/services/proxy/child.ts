@@ -76,13 +76,15 @@ class ProxyChildService {
       app.use(
         "/api",
         expressProxy(`http://127.0.0.1:${message.ncmPort}`, {
-          timeout: 15000
+          timeout: 15000,
+          parseReqBody: false
         })
       );
       app.use(
         "/cache",
         expressProxy(`http://127.0.0.1:${message.storePort}`, {
-          timeout: 15000
+          timeout: 15000,
+          parseReqBody: false
         })
       );
 
