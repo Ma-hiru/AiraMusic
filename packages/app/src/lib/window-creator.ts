@@ -1,5 +1,5 @@
 import { Log } from "@/lib/log";
-import { debounce } from "lodash-es";
+import { debounce, clamp } from "lodash-es";
 import { MainKeyValueStore } from "@/lib/key-value-store";
 import { BrowserWindow } from "electron";
 import { MainWindowManager } from "@/lib/window-manager";
@@ -25,9 +25,9 @@ export class MainWindowCreator {
       const { x, y, width, height } = this.getMemoPos(id);
       if (!MainScreenResolver.isOutScreenDIPBounds(x, y)) {
         const { width: workAreaWidth, height: workAreaHeight } =
-          MainScreenResolver.primary.logicalWorkAreaSize;
-        const nextWidth = Math.max(1, Math.min(Math.floor(width), workAreaWidth));
-        const nextHeight = Math.max(1, Math.min(Math.floor(height), workAreaHeight));
+          MainScreenResolver.primary.effectiveWorkAreaSize;
+        const nextWidth = clamp(Math.floor(width), 1, workAreaWidth);
+        const nextHeight = clamp(Math.floor(height), 1, workAreaHeight);
         Log.info(
           `Restoring window(${id}) position from store: x=${x}, y=${y}, width=${nextWidth}, height=${nextHeight}`
         );

@@ -25,7 +25,8 @@ export default defineConfig(({ mode }) => {
       react(),
       tailwindcss(),
       babel({
-        presets: [reactCompilerPreset()]
+        presets: [reactCompilerPreset()],
+        plugins: [["@babel/plugin-proposal-decorators", { version: "2023-11" }]]
       })
     ],
     build: {

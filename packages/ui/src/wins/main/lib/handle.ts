@@ -2,8 +2,12 @@ import { useListenable } from "@/common/hooks/use-listenable";
 import { RendererWindow } from "@/common/lib/window";
 import { RendererOnce } from "@/common/lib/once";
 import { RendererCache } from "@/common/lib/cache";
+import { Init } from "@/common/utils/init";
 import RendererPlayer from "@/common/player/core";
 
+@Init(() => {
+  RendererPlayerHandle.setupPlayer().setupMini();
+})
 export default class RendererPlayerHandle {
   //region inner
   private static _player: Nullable<RendererPlayer>;
@@ -44,21 +48,13 @@ export default class RendererPlayerHandle {
   }
 
   private static setupMini() {
-    RendererOnce.do("setupMini", () => {
+    RendererOnce.do("setupMini", async () => {
       const miniWindow = RendererWindow.get("miniplayer");
-      miniWindow.open();
-      miniWindow.hide();
-      setTimeout(async () => {
-        await miniWindow.reactReadyAwait();
-        RendererPlayerHandle.busUpdater?.();
-      }, 5000);
+      await miniWindow.reactReadyAwait();
+      RendererPlayerHandle.busUpdater?.();
     });
   }
   //endregion
-
-  static _init() {
-    this.setupPlayer().setupMini();
-  }
 
   static get player() {
     if (!this._player) this.setupPlayer();

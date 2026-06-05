@@ -9,15 +9,15 @@ import type { AppWindowCreatorProps } from "@/types/window";
 
 export class MainWindowPreset {
   static fatalError(message: string, error?: string) {
-    // TODO
-
     Log.error({ label: "App fatalError", message, raw: error });
     dialog.showErrorBox("应用发生致命错误", `${message}\n ${error || ""}`);
     MainWindowManager.get("main")?.close();
   }
 
   static get login(): AppWindowCreatorProps {
-    const { width, height } = MainScreenResolver.primary.adaptiveWindowSizePreset(
+    const {
+      base: { width, height }
+    } = MainScreenResolver.primary.adaptiveWindowSizePreset(
       MainWindowConstants.WINDOW_BASE_SIZE.login
     );
     return {
@@ -47,7 +47,9 @@ export class MainWindowPreset {
   }
 
   static get image(): AppWindowCreatorProps {
-    const { width, height } = MainScreenResolver.primary.adaptiveWindowSizePreset(
+    const {
+      base: { width, height }
+    } = MainScreenResolver.primary.adaptiveWindowSizePreset(
       MainWindowConstants.WINDOW_BASE_SIZE.image
     );
 
@@ -75,7 +77,9 @@ export class MainWindowPreset {
   }
 
   static get lyric(): AppWindowCreatorProps {
-    const { width, height } = MainScreenResolver.primary.adaptiveWindowSizePreset(
+    const {
+      base: { width, height }
+    } = MainScreenResolver.primary.adaptiveWindowSizePreset(
       MainWindowConstants.WINDOW_BASE_SIZE.lyric
     );
 
@@ -142,8 +146,8 @@ export class MainWindowPreset {
       memoPos: true,
       loadURL: (port: number) => `http://localhost:${port}/mini.html`,
       onCreate: (win: BrowserWindow) => {
-        process.platform === "linux" && win.setAlwaysOnTop(true, "screen-saver");
-        win.hide();
+        win.webContents.openDevTools();
+        // win.hide();
       }
     };
   }
@@ -183,7 +187,9 @@ export class MainWindowPreset {
   }
 
   static get trayOnWindows(): AppWindowCreatorProps {
-    const { width, height } = MainScreenResolver.primary.adaptiveWindowSizePreset(
+    const {
+      base: { width, height }
+    } = MainScreenResolver.primary.adaptiveWindowSizePreset(
       MainWindowConstants.WINDOW_BASE_SIZE.trayOnWindows
     );
     return {
@@ -213,7 +219,9 @@ export class MainWindowPreset {
   }
 
   static get display(): AppWindowCreatorProps {
-    const { width, height } = MainScreenResolver.primary.adaptiveWindowSizePreset(
+    const {
+      base: { width, height }
+    } = MainScreenResolver.primary.adaptiveWindowSizePreset(
       MainWindowConstants.WINDOW_BASE_SIZE.display
     );
     return {
@@ -241,7 +249,9 @@ export class MainWindowPreset {
   }
 
   static get comments(): AppWindowCreatorProps {
-    const { width, height } = MainScreenResolver.primary.adaptiveWindowSizePreset(
+    const {
+      base: { width, height }
+    } = MainScreenResolver.primary.adaptiveWindowSizePreset(
       MainWindowConstants.WINDOW_BASE_SIZE.comments
     );
     return {
@@ -269,7 +279,9 @@ export class MainWindowPreset {
   }
 
   static external(title: string, url: string): AppWindowCreatorProps {
-    const { width, height } = MainScreenResolver.primary.adaptiveWindowSizePreset(
+    const {
+      base: { width, height }
+    } = MainScreenResolver.primary.adaptiveWindowSizePreset(
       MainWindowConstants.WINDOW_BASE_SIZE.external
     );
 

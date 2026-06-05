@@ -1,10 +1,4 @@
 import { clamp } from "lodash-es";
-import { RendererRuntime } from "@/common/lib/runtime";
-import { RendererIPC } from "@/common/lib/ipc";
-
-export const accessToken = RendererRuntime.isTest
-  ? ""
-  : await RendererIPC.Invoke("storeKey", undefined).catch(() => "mahiru");
 
 export default class RendererHTTPConstants {
   /**
@@ -13,8 +7,6 @@ export default class RendererHTTPConstants {
    * */
   static readonly NCMBaseURL = "/api";
   static readonly CacheBaseURL = "/cache";
-  static readonly ProcessLogURL = "/log";
-  static readonly CacheAccessToken = accessToken;
   static readonly Timeout = 15 * 1000;
   /** 不会修改服务器状态的 HTTP 方法，重试时仅重试这些方法(幂等) */
   static readonly IdempotentMethods = ["get", "head", "options"];
