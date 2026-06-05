@@ -13,6 +13,7 @@ interface TopCoverProps {
 }
 
 const TopCover: FC<TopCoverProps> = ({ album, dynamic, coverCacheKey, size, onCoverLoaded }) => {
+  const cacheKey = (coverCacheKey ?? "") + album?.content.publishTime + album?.tracks[0]?.id;
   const onLoaded: ReactEventHandler<HTMLImageElement> = useCallback(
     (e) => {
       onCoverLoaded?.(e.currentTarget.src);
@@ -20,8 +21,8 @@ const TopCover: FC<TopCoverProps> = ({ album, dynamic, coverCacheKey, size, onCo
     [onCoverLoaded]
   );
   const cover = useMemo(
-    () => NeteaseNetworkImage.fromAlbumCover(album)?.setSize(size).setCacheKey(coverCacheKey),
-    [album, coverCacheKey, size]
+    () => NeteaseNetworkImage.fromAlbumCover(album)?.setSize(size).setCacheKey(cacheKey),
+    [album, cacheKey, size]
   );
   const { create, createAlbumCoverModal } = AppModal.useModal();
   const openCoverModal = useCallback(() => {
@@ -29,9 +30,9 @@ const TopCover: FC<TopCoverProps> = ({ album, dynamic, coverCacheKey, size, onCo
     create(createAlbumCoverModal, {
       album,
       dynamic,
-      coverCacheKey
+      coverCacheKey: cacheKey
     });
-  }, [album, coverCacheKey, create, createAlbumCoverModal, dynamic]);
+  }, [album, cacheKey, create, createAlbumCoverModal, dynamic]);
   return (
     <button
       type="button"

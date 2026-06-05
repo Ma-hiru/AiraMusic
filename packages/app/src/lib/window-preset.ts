@@ -47,16 +47,16 @@ export class MainWindowPreset {
   }
 
   static get image(): AppWindowCreatorProps {
-    const {
-      base: { width, height }
-    } = MainScreenResolver.primary.adaptiveWindowSizePreset(
+    const { base, min } = MainScreenResolver.primary.adaptiveWindowSizePreset(
       MainWindowConstants.WINDOW_BASE_SIZE.image
     );
 
     return {
       options: {
-        width,
-        height,
+        width: base.width,
+        height: base.height,
+        minHeight: min.height,
+        minWidth: min.width,
         webPreferences: {
           preload: MainPathResolver.preloadPath
         },
@@ -77,16 +77,18 @@ export class MainWindowPreset {
   }
 
   static get lyric(): AppWindowCreatorProps {
-    const {
-      base: { width, height }
-    } = MainScreenResolver.primary.adaptiveWindowSizePreset(
+    const { base, min, max } = MainScreenResolver.primary.adaptiveWindowSizePreset(
       MainWindowConstants.WINDOW_BASE_SIZE.lyric
     );
 
     return {
       options: {
-        width,
-        height,
+        width: base.width,
+        height: base.height,
+        minHeight: min.height,
+        maxHeight: max.height,
+        minWidth: min.width,
+        maxWidth: max.width,
         transparent: true,
         backgroundColor: "#00000000",
         webPreferences: {
@@ -97,6 +99,7 @@ export class MainWindowPreset {
         resizable: true,
         minimizable: false,
         maximizable: false,
+        fullscreen: false,
         titleBarStyle: "hidden",
         frame: false,
         type: "toolbar",
@@ -134,6 +137,7 @@ export class MainWindowPreset {
         maxWidth: max.width,
         minimizable: false,
         maximizable: false,
+        fullscreen: false,
         titleBarStyle: "hidden",
         frame: false,
         type: "toolbar",
@@ -218,15 +222,15 @@ export class MainWindowPreset {
   }
 
   static get display(): AppWindowCreatorProps {
-    const {
-      base: { width, height }
-    } = MainScreenResolver.primary.adaptiveWindowSizePreset(
+    const { min, base } = MainScreenResolver.primary.adaptiveWindowSizePreset(
       MainWindowConstants.WINDOW_BASE_SIZE.display
     );
     return {
       options: {
-        width,
-        height,
+        width: base.width,
+        height: base.height,
+        minHeight: min.height,
+        minWidth: min.width,
         webPreferences: {
           preload: MainPathResolver.preloadPath
         },
@@ -248,15 +252,19 @@ export class MainWindowPreset {
   }
 
   static get comments(): AppWindowCreatorProps {
-    const {
-      base: { width, height }
-    } = MainScreenResolver.primary.adaptiveWindowSizePreset(
+    const { base, max, min } = MainScreenResolver.primary.adaptiveWindowSizePreset(
       MainWindowConstants.WINDOW_BASE_SIZE.comments
     );
     return {
       options: {
-        width,
-        height,
+        width: base.width,
+        height: base.height,
+        minHeight: min.height,
+        maxHeight: max.height,
+        minWidth: min.width,
+        maxWidth: max.width,
+        fullscreen: false,
+        maximizable: false,
         webPreferences: {
           preload: MainPathResolver.preloadPath
         },
@@ -278,16 +286,16 @@ export class MainWindowPreset {
   }
 
   static external(title: string, url: string): AppWindowCreatorProps {
-    const {
-      base: { width, height }
-    } = MainScreenResolver.primary.adaptiveWindowSizePreset(
+    const { base, min } = MainScreenResolver.primary.adaptiveWindowSizePreset(
       MainWindowConstants.WINDOW_BASE_SIZE.external
     );
 
     return {
       options: {
-        width,
-        height,
+        width: base.width,
+        height: base.height,
+        minHeight: min.height,
+        minWidth: min.width,
         title: title || process.env.APP_NAME,
         resizable: true,
         minimizable: true,
