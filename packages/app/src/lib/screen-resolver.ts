@@ -48,9 +48,10 @@ export class MainScreenResolver {
   public adaptiveWindowSizePreset(preset: WindowSizePreset): ResolvedWindowSize {
     const { base } = preset;
     return {
+      // 对min、max也执行fit，避免base fit后出现base < min的情况
       base: this.resolveIdealFit(base),
-      min: preset.min ?? base,
-      max: preset.max ?? base
+      min: this.resolveIdealFit(preset.min ?? base),
+      max: this.resolveIdealFit(preset.max ?? base)
     };
   }
 

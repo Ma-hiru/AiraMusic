@@ -48,7 +48,7 @@ export class MainWindowConstants {
     // 评论：细长竖条
     comments: {
       base: { width: 300, height: 800 },
-      min: { width: 112.5, height: 300 },
+      min: { width: 112, height: 300 },
       max: { width: 450, height: 1200 }
     },
     // 外部网页窗

@@ -40,11 +40,13 @@ export class RendererOnce {
     });
   }
 
-  static do(id: string, cb: NormalFunc) {
-    RendererOnce.ready.then(() => {
+  static do(id: string, cb: NormalFunc | PromiseFunc) {
+    RendererOnce.ready.then(async () => {
       if (RendererOnce.record.has(id)) return;
       try {
-        cb();
+        // 使用await
+        // 避免当cb返回promise时，出现cb执行失败却仍然执行了同步代码中的缓存更新
+        await cb();
         RendererOnce.updateCache(id);
       } catch (e) {
         Log.error({

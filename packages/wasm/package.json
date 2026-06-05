@@ -19,7 +19,7 @@
     "build": "run-script-os && rimraf pkg/package.json",
     "build:win32": "wasm-pack build --target web --out-dir pkg --release",
     "build:linux": "wasm-pack build --target web --out-dir pkg --dev",
-    "lint": "cargo fmt && cargo clippy",
+    "lint": "cargo fmt && cargo clippy --all-targets -- -D warnings",
     "test": "cargo test"
   }
 }
