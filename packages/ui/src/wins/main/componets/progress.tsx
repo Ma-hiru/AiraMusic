@@ -1,5 +1,5 @@
 import { type FC, memo, type ReactNode, useEffect, useState } from "react";
-import AppEntry from "@/wins/main/entry";
+import RendererPlayerHandle from "@/wins/main/lib/handle";
 import RendererPlayerAudio from "@/common/player/audio";
 
 interface ProgressProps {
@@ -7,7 +7,7 @@ interface ProgressProps {
 }
 
 const Progress: FC<ProgressProps> = ({ render }) => {
-  const player = AppEntry.usePlayer();
+  const player = RendererPlayerHandle.usePlayer();
   const [data, setData] = useState<Nullable<ReactNode>>(null);
 
   useEffect(() => {

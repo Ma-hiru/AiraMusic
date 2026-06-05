@@ -11,7 +11,7 @@ import TrackList, {
 import { usePageJump } from "@/wins/main/hooks/use-page-jump";
 import type { ModalRender } from "@/common/components/modal/modal-provider";
 import RendererImageConstants from "@/common/constants/image";
-import AppEntry from "@/wins/main/entry";
+import RendererPlayerHandle from "@/wins/main/lib/handle";
 import AppContextMenu from "@/common/components/menu";
 import { usePlayerActionInList } from "@/wins/main/hooks/use-player-action-in-list";
 
@@ -28,7 +28,7 @@ export function createPlayerPlaylistModal(): ModalRender {
 
 // eslint-disable-next-line react-refresh/only-export-components
 const PlayerPlaylistModalContent = () => {
-  const player = AppEntry.usePlayer();
+  const player = RendererPlayerHandle.usePlayer();
   const trackListRef = useRef<Nullable<TrackListRef>>(null);
   const { heartManager, playableManager } = useUserTrackManager();
   const { jumpAlbumPage, jumpArtistPage } = usePageJump();

@@ -1,10 +1,10 @@
 import { type FC, memo, useCallback, useEffect, useRef } from "react";
 
 import LyricComponent, { type LyricRef } from "@/common/components/lyric/lyric-container";
-import AppEntry from "@/wins/main/entry";
+import RendererPlayerHandle from "@/wins/main/lib/handle";
 
 const Lyric: FC<object> = () => {
-  const player = AppEntry.usePlayer();
+  const player = RendererPlayerHandle.usePlayer();
   const lyricRef = useRef<Nullable<LyricRef>>(null);
 
   const handleWordClick = useCallback(

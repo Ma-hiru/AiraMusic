@@ -50,3 +50,5 @@ interface CanInit {
 }
 
 type JsonValue = null | boolean | number | string | JsonValue[] | { [key: string]: JsonValue };
+
+type AnyClass = abstract new (...args: any[]) => any;

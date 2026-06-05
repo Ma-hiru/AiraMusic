@@ -4,13 +4,13 @@ import { RendererWindow } from "@/common/lib/window";
 import { useAtomValue } from "jotai";
 import { playModalAtom } from "@/wins/main/atoms/layout";
 import { useSettings } from "@/common/store/settings";
-import AppEntry from "@/wins/main/entry";
+import RendererPlayerHandle from "@/wins/main/lib/handle";
 
 import AudioSpectrum from "@/wins/main/componets/spectrum/audio-spectrum";
 
 const Spectrum: FC<object> = () => {
   const playModal = useAtomValue(playModalAtom);
-  const player = AppEntry.usePlayer();
+  const player = RendererPlayerHandle.usePlayer();
   const currentWindow = useListenable(RendererWindow.current);
   const settings = useSettings();
 

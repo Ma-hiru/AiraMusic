@@ -14,11 +14,11 @@ import {
 } from "lucide-react";
 
 import Progress from "./progress";
-import AppEntry from "@/wins/main/entry";
+import RendererPlayerHandle from "@/wins/main/lib/handle";
 import AppModal from "@/common/components/modal";
 
 const Control: FC<object> = () => {
-  const player = AppEntry.usePlayer();
+  const player = RendererPlayerHandle.usePlayer();
   const centerIcon = useMemo(() => {
     if (player.playing) {
       return (

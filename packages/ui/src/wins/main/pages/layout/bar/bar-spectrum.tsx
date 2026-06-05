@@ -7,13 +7,13 @@ import { RendererWindow } from "@/common/lib/window";
 import { useSettings } from "@/common/store/settings";
 
 import AudioSpectrum from "@/wins/main/componets/spectrum/audio-spectrum";
-import AppEntry from "@/wins/main/entry";
+import RendererPlayerHandle from "@/wins/main/lib/handle";
 
 const BarSpectrum: FC<object> = () => {
   const playModal = useAtomValue(playModalAtom);
   const { mainColor, secondaryColor } = useThemeColor();
   const currentWindow = useListenable(RendererWindow.current);
-  const player = AppEntry.usePlayer();
+  const player = RendererPlayerHandle.usePlayer();
   const settings = useSettings();
 
   if (!settings.performance.barSpectrum) return null;

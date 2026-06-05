@@ -7,7 +7,7 @@ import { useRequestAutoRun, useRequestStatusWrap } from "@/common/hooks/use-requ
 import { usePageJump } from "@/wins/main/hooks/use-page-jump";
 import { type ArtistArea, RendererHomeConstants, type SongArea } from "@/wins/main/constants";
 import { NeteaseTrackRecord } from "@/common/netease/models";
-import AppEntry from "@/wins/main/entry";
+import RendererPlayerHandle from "@/wins/main/lib/handle";
 import AppToast from "@/common/components/toast";
 import RendererImageConstants from "@/common/constants/image";
 
@@ -17,7 +17,7 @@ import HomeMediaGrid from "@/wins/main/componets/home-media-grid";
 import HomeSection from "@/wins/main/componets/home-section";
 
 const HomeSongsArtistsView: FC<{ className?: string }> = ({ className }) => {
-  const player = AppEntry.usePlayer();
+  const player = RendererPlayerHandle.usePlayer();
   const { jumpArtistPage } = usePageJump();
   const [songArea, setSongArea] = useState<SongArea>(RendererHomeConstants.HOME_SONG_AREAS[0]);
   const [artistArea, setArtistArea] = useState<ArtistArea>(

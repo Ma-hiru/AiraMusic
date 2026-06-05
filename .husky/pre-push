@@ -1,8 +1,6 @@
 echo "Running full checks before push..."
 
-yarn check
-yarn lint
-yarn test
+yarn check && yarn lint && yarn test
 
 echo "Checking whether lint/format changed files..."
 git diff --exit-code

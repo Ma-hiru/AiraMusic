@@ -1,9 +1,9 @@
 import { type FC, memo } from "react";
 import { cx } from "@emotion/css";
-import AppEntry from "@/wins/main/entry";
+import RendererPlayerHandle from "@/wins/main/lib/handle";
 
 const LyricChange: FC<object> = () => {
-  const player = AppEntry.usePlayer();
+  const player = RendererPlayerHandle.usePlayer();
   const { rmExisted, tlExisted, noteExisted } = player.current.lyric?.info || {};
 
   return (

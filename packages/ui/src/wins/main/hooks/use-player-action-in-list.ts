@@ -1,4 +1,4 @@
-import AppEntry from "@/wins/main/entry";
+import RendererPlayerHandle from "@/wins/main/lib/handle";
 import { useCallback } from "react";
 import { type TrackListClickFunc } from "@/common/components/track_list";
 import { NeteaseTrackRecord } from "@/common/netease/models";
@@ -7,7 +7,7 @@ import { RendererEventBus } from "@/common/lib/bus";
 import { useLatestRef } from "@/common/hooks/use-latest-ref";
 
 export function usePlayerActionInList(getTracks: NormalFunc<[], NeteaseTrackRecord[]>) {
-  const player = AppEntry.usePlayer();
+  const player = RendererPlayerHandle.usePlayer();
   const getTracksRef = useLatestRef(getTracks);
 
   const onTrackPlay = useCallback<TrackListClickFunc>(

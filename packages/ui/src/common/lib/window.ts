@@ -1,11 +1,7 @@
-import type { Message, MessageData, MessageDirection, MessageEvent } from "@mahiru/ipc/renderer";
-import { RendererRuntime } from "@/common/lib/runtime";
 import { Listenable } from "@/common/utils/listenable";
 import { RendererIPC } from "@/common/lib/ipc";
-
-const _currentWindowType = RendererRuntime.isTest
-  ? "main"
-  : await RendererIPC.Invoke("currentWindowType", undefined);
+import { RendererRuntime } from "@/common/lib/runtime";
+import type { Message, MessageData, MessageDirection, MessageEvent } from "@mahiru/ipc/renderer";
 
 export type RendererWindowEvent = MessageData<"windowBus">["action"];
 
@@ -19,7 +15,6 @@ export class RendererWindow extends Listenable<RendererWindowEvent | "react-read
   private _fullscreen: boolean;
   private _focus: boolean;
   private _reactReady: boolean;
-  static currentWindowType = _currentWindowType;
 
   get isMin() {
     return this._min;
@@ -110,7 +105,7 @@ export class RendererWindow extends Listenable<RendererWindowEvent | "react-read
     this._show = false;
     this._focus = false;
     this._fullscreen = false;
-    this._reactReady = this.type === RendererWindow.currentWindowType;
+    this._reactReady = this.type === RendererRuntime.currentWindowType;
     this.id = window.crypto.randomUUID();
     this.initStatus();
   }
@@ -129,7 +124,7 @@ export class RendererWindow extends Listenable<RendererWindowEvent | "react-read
       this.isFullscreen = isFullscreen;
     });
     if (
-      this.type !== RendererWindow.currentWindowType &&
+      this.type !== RendererRuntime.currentWindowType &&
       this.type !== "all" &&
       this.type !== "process"
     ) {
@@ -395,7 +390,7 @@ export class RendererWindow extends Listenable<RendererWindowEvent | "react-read
   }
 
   static get current() {
-    return this.get(_currentWindowType);
+    return this.get(RendererRuntime.currentWindowType);
   }
 
   static get main() {
@@ -419,11 +414,11 @@ queueMicrotask(() => {
   const sendStatus = () => {
     RendererWindow.all.send("reactReadyBus", {
       type: "ready",
-      sender: _currentWindowType
+      sender: RendererRuntime.currentWindowType
     });
   };
   RendererWindow.all.listenMessageAll("reactReadyBus", ({ data }) => {
-    if (data.type === "isReady" && data.target === _currentWindowType) {
+    if (data.type === "isReady" && data.target === RendererRuntime.currentWindowType) {
       sendStatus();
     }
   });

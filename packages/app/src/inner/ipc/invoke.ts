@@ -142,8 +142,8 @@ export const invokeHandlers: InvokeHandlers = {
       y: 0,
       width: 0,
       height: 0,
-      workAreaHeight: MainScreenResolver.primary.logicalWorkAreaSize.height,
-      workAreaWidth: MainScreenResolver.primary.logicalWorkAreaSize.width,
+      workAreaHeight: MainScreenResolver.primary.effectiveWorkAreaSize.height,
+      workAreaWidth: MainScreenResolver.primary.effectiveWorkAreaSize.width,
       ...(sender?.getBounds() ?? {})
     };
   },

@@ -15,14 +15,14 @@ import { PlaylistSource } from "@/common/enum";
 import { type MessageData } from "@mahiru/ipc/renderer";
 import { useAtomValue } from "jotai";
 import { themeAtom } from "@/wins/main/atoms/theme";
-import AppEntry from "@/wins/main/entry";
+import RendererPlayerHandle from "@/wins/main/lib/handle";
 import { useAudioOutput } from "@/common/hooks/use-audio-output";
 import { useLatestRef } from "@/common/hooks/use-latest-ref";
 import { RendererDevice } from "@/common/lib/device";
 
 const Bus: FC<object> = () => {
   const theme = useAtomValue(themeAtom);
-  const player = AppEntry.usePlayer();
+  const player = RendererPlayerHandle.usePlayer();
   const { selected, views, setDevice } = useAudioOutput(player.audio.outputTarget);
 
   //#region -------- 需要推送给别人的BUS --------
@@ -136,12 +136,12 @@ const Bus: FC<object> = () => {
           windowCurrent.close();
           break;
         case "toggle-lyric-version-rm":
-          AppEntry.player.toggleLyric("rm");
-          AppEntry.player.afterUpdate(updateBus.current);
+          RendererPlayerHandle.player.toggleLyric("rm");
+          RendererPlayerHandle.player.afterUpdate(updateBus.current);
           break;
         case "toggle-lyric-version-tl":
-          AppEntry.player.toggleLyric("tl");
-          AppEntry.player.afterUpdate(updateBus.current);
+          RendererPlayerHandle.player.toggleLyric("tl");
+          RendererPlayerHandle.player.afterUpdate(updateBus.current);
           break;
         case "update":
           updateBus.current();
@@ -297,9 +297,9 @@ const Bus: FC<object> = () => {
 
   // 将bus更新函数挂载，可以在其他地方使用
   useEffect(() => {
-    AppEntry.busUpdater = () => updateBus.current();
+    RendererPlayerHandle.busUpdater = () => updateBus.current();
     return () => {
-      AppEntry.busUpdater = undefined;
+      RendererPlayerHandle.busUpdater = undefined;
     };
   }, [updateBus]);
 

@@ -3,7 +3,7 @@ import { motion } from "motion/react";
 import { css } from "@emotion/css";
 import { usePlayProgress } from "@/wins/main/hooks/use-play-progress";
 import { RendererFormat } from "@/common/lib/format";
-import AppEntry from "@/wins/main/entry";
+import RendererPlayerHandle from "@/wins/main/lib/handle";
 import RendererPlayerAudio from "@/common/player/audio";
 
 import ProgressRender from "@/wins/main/componets/progress";
@@ -12,7 +12,7 @@ import Tag from "@/common/components/public/tag";
 const Progress: FC<object> = () => {
   const { barRef, bufferScope, percentScope, handleBarClick, handleBarMouseDown, chorusPercent } =
     usePlayProgress();
-  const player = AppEntry.usePlayer();
+  const player = RendererPlayerHandle.usePlayer();
   const quality = player.current.audio?.quality;
 
   return (
