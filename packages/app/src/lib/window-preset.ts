@@ -146,8 +146,7 @@ export class MainWindowPreset {
       memoPos: true,
       loadURL: (port: number) => `http://localhost:${port}/mini.html`,
       onCreate: (win: BrowserWindow) => {
-        win.webContents.openDevTools();
-        // win.hide();
+        win.hide();
       }
     };
   }
