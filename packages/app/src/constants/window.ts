@@ -13,8 +13,7 @@ export class MainWindowConstants {
     // 主窗口
     main: {
       base: { width: 1080, height: 650 },
-      min: { width: 896, height: 539 },
-      max: { width: 1500, height: 903 }
+      min: { width: 896, height: 539 }
     },
     // 登录：小对话框（resizable: false）
     login: {
@@ -23,8 +22,7 @@ export class MainWindowConstants {
     // 图片查看器
     image: {
       base: { width: 1024, height: 600 },
-      min: { width: 800, height: 469 },
-      max: { width: 1600, height: 938 }
+      min: { width: 800, height: 469 }
     },
     // 桌面歌词条，宽高比 6:1
     lyric: {
@@ -45,20 +43,18 @@ export class MainWindowConstants {
     // 信息窗
     display: {
       base: { width: 1024, height: 600 },
-      min: { width: 800, height: 469 },
-      max: { width: 1400, height: 820 }
+      min: { width: 800, height: 469 }
     },
     // 评论：细长竖条
     comments: {
-      base: { width: 360, height: 1800 },
-      min: { width: 300, height: 600 },
-      max: { width: 480, height: 2400 }
+      base: { width: 300, height: 800 },
+      min: { width: 112.5, height: 300 },
+      max: { width: 450, height: 1200 }
     },
     // 外部网页窗
     external: {
       base: { width: 1024, height: 600 },
-      min: { width: 800, height: 469 },
-      max: { width: 1600, height: 938 }
+      min: { width: 800, height: 469 }
     }
   } satisfies Record<string, WindowSizePreset>;
 }

@@ -17,7 +17,7 @@ export function createPlaylistCoverModal({
 }): ModalRender {
   const cover = NeteaseNetworkImage.fromPlaylistCover(playlist)
     .setSize(NeteaseImageSize.lg)
-    .setCacheKey((coverCacheKey ?? "") + playlist.updateTime);
+    .setCacheKey(coverCacheKey);
   const avatar = NeteaseNetworkImage.fromUserAvatar(playlist.creator)?.setSize(NeteaseImageSize.sm);
   const stats = createPlaylistStats(playlist);
   const openCover = async () => {
@@ -57,7 +57,7 @@ export function createAlbumCoverModal({
 }) {
   const cover = NeteaseNetworkImage.fromAlbumCover(album)
     .setSize(NeteaseImageSize.lg)
-    .setCacheKey((coverCacheKey ?? "") + album.content.publishTime);
+    .setCacheKey(coverCacheKey);
 
   const stats = createAlbumStats(album, dynamic);
   const openCover = async () => {
