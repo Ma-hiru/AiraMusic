@@ -6,14 +6,14 @@ import { useUpdate } from "@/common/hooks/use-update";
 import { useListenable } from "@/common/hooks/use-listenable";
 import { RendererWindow } from "@/common/lib/window";
 import { createPlayerPlaylistModal } from "@/wins/main/componets/player-playlist-modal";
-import AppEntry from "@/wins/main/entry";
+import RendererPlayerHandle from "@/wins/main/lib/handle";
 import AppModal from "@/common/components/modal";
 import Tooltip from "@/common/components/tooltip";
 import RangeSlider from "@/common/components/range";
 
 const WHEEL_VOLUME_STEP = 0.1;
 const RESTORE_VOLUME = 0.5;
-const player = AppEntry.player;
+const player = RendererPlayerHandle.player;
 
 const getVolumeIcon = (volume: number) => {
   if (volume <= 0) {
@@ -49,7 +49,7 @@ const BarBtns: FC<object> = () => {
   const { textColorOnMain } = useThemeColor();
   const { create } = AppModal.useModal();
   const lyricWindow = useListenable(RendererWindow.get("lyric"));
-  const player = AppEntry.usePlayer();
+  const player = RendererPlayerHandle.usePlayer();
   const iconColor = textColorOnMain.hex();
   const muted = player.audio.instance.muted;
   const volume = muted ? 0 : player.audio.volume;
@@ -66,7 +66,7 @@ const BarBtns: FC<object> = () => {
       lyricWindow.close();
     } else {
       await lyricWindow.reactReadyAwait();
-      AppEntry.busUpdater?.();
+      RendererPlayerHandle.busUpdater?.();
     }
   }, [lyricWindow]);
 

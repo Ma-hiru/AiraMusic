@@ -1,8 +1,8 @@
 import { type FC, memo } from "react";
-import AppEntry from "@/wins/main/entry";
+import RendererPlayerHandle from "@/wins/main/lib/handle";
 
 const Title: FC<object> = () => {
-  const player = AppEntry.usePlayer();
+  const player = RendererPlayerHandle.usePlayer();
   const track = player.current.track?.detail;
   const ts = track?.translate;
   const alias = track?.aliaName;

@@ -22,7 +22,7 @@ import RendererPlayerAudio from "./audio";
 import RendererPlayerPlaylist from "./playlist";
 import RendererPlayerHistory from "./history";
 
-export const enum AppPlayerStatus {
+export const enum RendererPlayerStatus {
   idle = 1,
   loading,
   playing,
@@ -30,7 +30,7 @@ export const enum AppPlayerStatus {
   error
 }
 
-export default class AppPlayer extends Listenable {
+export default class RendererPlayer extends Listenable {
   readonly current;
   readonly audio;
   readonly playlist;
@@ -44,37 +44,37 @@ export default class AppPlayer extends Listenable {
 
   get statusText() {
     switch (this.status) {
-      case AppPlayerStatus.playing:
+      case RendererPlayerStatus.playing:
         return "playing";
-      case AppPlayerStatus.paused:
+      case RendererPlayerStatus.paused:
         return "paused";
-      case AppPlayerStatus.idle:
+      case RendererPlayerStatus.idle:
         return "idle";
-      case AppPlayerStatus.error:
+      case RendererPlayerStatus.error:
         return "error";
-      case AppPlayerStatus.loading:
+      case RendererPlayerStatus.loading:
         return "loading";
     }
   }
 
   get playing() {
-    return this.status === AppPlayerStatus.playing;
+    return this.status === RendererPlayerStatus.playing;
   }
 
   get loading() {
-    return this.status === AppPlayerStatus.loading;
+    return this.status === RendererPlayerStatus.loading;
   }
 
   get error() {
-    return this.status === AppPlayerStatus.error;
+    return this.status === RendererPlayerStatus.error;
   }
 
   get paused() {
-    return this.status === AppPlayerStatus.paused;
+    return this.status === RendererPlayerStatus.paused;
   }
 
   get idle() {
-    return this.status === AppPlayerStatus.idle;
+    return this.status === RendererPlayerStatus.idle;
   }
 
   private set status(value) {
@@ -92,7 +92,7 @@ export default class AppPlayer extends Listenable {
     audio?: RendererPlayerAudio;
     playlist?: RendererPlayerPlaylist;
     history?: RendererPlayerHistory;
-    status?: AppPlayerStatus;
+    status?: RendererPlayerStatus;
     current?: {
       track: Nullable<NeteaseTrackRecord>;
       lyric: Nullable<NeteaseLyric>;
@@ -116,17 +116,17 @@ export default class AppPlayer extends Listenable {
       tlActive: false,
       noteActive: false
     };
-    this._status = props?.status || AppPlayerStatus.idle;
+    this._status = props?.status || RendererPlayerStatus.idle;
     this.disconnect = this.connect();
   }
 
   /** 监听事件，绑定状态机 */
   private connect() {
-    const onPlaying = () => (this.status = AppPlayerStatus.playing);
-    const onLoadStart = () => (this.status = AppPlayerStatus.loading);
-    const onLoadedData = () => (this.status = AppPlayerStatus.paused);
-    const onPause = () => (this.status = AppPlayerStatus.paused);
-    const onError = () => (this.status = AppPlayerStatus.error);
+    const onPlaying = () => (this.status = RendererPlayerStatus.playing);
+    const onLoadStart = () => (this.status = RendererPlayerStatus.loading);
+    const onLoadedData = () => (this.status = RendererPlayerStatus.paused);
+    const onPause = () => (this.status = RendererPlayerStatus.paused);
+    const onError = () => (this.status = RendererPlayerStatus.error);
     const onEnded = () => this.playlist.next(false);
 
     this.audio.addEventListener("playing", onPlaying);
@@ -140,7 +140,7 @@ export default class AppPlayer extends Listenable {
     const unsubscribe = this.playlist.addListener(() => {
       const current = this.playlist.current();
       if (!current) {
-        this.status = AppPlayerStatus.idle;
+        this.status = RendererPlayerStatus.idle;
       } else if (this.current.track?.detail.id !== current.detail.id) {
         this.current.track &&
           this.history.add(NeteaseHistory.fromTrack(this.current.track, this.audio.currentTime));
@@ -168,7 +168,7 @@ export default class AppPlayer extends Listenable {
     const controller = new AbortController();
     this.controller = controller;
     this.current.track = current;
-    this.status = AppPlayerStatus.loading;
+    this.status = RendererPlayerStatus.loading;
 
     this.loadAudio(current.detail, controller)
       .then((audio) => {
@@ -178,7 +178,7 @@ export default class AppPlayer extends Listenable {
           this.current.audio = audio;
           this.executeListeners();
         } else {
-          this.status = AppPlayerStatus.error;
+          this.status = RendererPlayerStatus.error;
         }
       })
       .then(() => {
@@ -206,7 +206,7 @@ export default class AppPlayer extends Listenable {
       })
       .catch((err) => {
         Log.error(err);
-        this.status = AppPlayerStatus.error;
+        this.status = RendererPlayerStatus.error;
       });
   }
 
@@ -257,7 +257,7 @@ export default class AppPlayer extends Listenable {
   }
 
   /** 持久化对象 */
-  static save(instance: AppPlayer) {
+  static save(instance: RendererPlayer) {
     return {
       audio: RendererPlayerAudio.save(instance.audio),
       playlist: RendererPlayerPlaylist.save(instance.playlist),
@@ -268,7 +268,7 @@ export default class AppPlayer extends Listenable {
 
   /** 恢复持久化 */
   static fromSave(save: ReturnType<typeof this.save>) {
-    return new AppPlayer({
+    return new RendererPlayer({
       audio: RendererPlayerAudio.fromSave(save.audio),
       playlist: RendererPlayerPlaylist.fromSave(save.playlist),
       history: RendererPlayerHistory.fromSave(save.history),

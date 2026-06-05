@@ -10,10 +10,10 @@ import {
   spectrumReadyAtom
 } from "@/wins/main/atoms/spectrum";
 import { playModalAtom, typingAtom } from "@/wins/main/atoms/layout";
-import AppEntry from "@/wins/main/entry";
+import RendererPlayerHandle from "@/wins/main/lib/handle";
 
 const MusicSource: FC<object> = () => {
-  const player = AppEntry.usePlayer();
+  const player = RendererPlayerHandle.usePlayer();
   const title = player.current.track?.name;
   const artist = player.current.track?.detail.artist?.join("&");
 

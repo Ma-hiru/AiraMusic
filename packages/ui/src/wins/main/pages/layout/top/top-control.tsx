@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { useListenable } from "@/common/hooks/use-listenable";
 import { RendererWindow } from "@/common/lib/window";
-import AppEntry from "@/wins/main/entry";
+import RendererPlayerHandle from "@/wins/main/lib/handle";
 import NoDrag from "@/common/components/drag/no-drag";
 import AppToast from "@/common/components/toast";
 
@@ -19,7 +19,7 @@ const TopControl: FC = () => {
 
   const close = async () => {
     currentWindow.hide();
-    AppEntry.dispose();
+    RendererPlayerHandle.dispose();
     RendererWindow.all.hide();
     currentWindow.close();
   };
@@ -27,7 +27,7 @@ const TopControl: FC = () => {
   const mini = () => {
     miniWindow.show();
     currentWindow.hide();
-    AppEntry.busUpdater?.();
+    RendererPlayerHandle.busUpdater?.();
   };
 
   useEffect(() => {
@@ -40,7 +40,7 @@ const TopControl: FC = () => {
   }, [currentWindow, miniWindow]);
 
   useEffect(() => {
-    AppEntry.busUpdater?.();
+    RendererPlayerHandle.busUpdater?.();
   }, []);
 
   return (

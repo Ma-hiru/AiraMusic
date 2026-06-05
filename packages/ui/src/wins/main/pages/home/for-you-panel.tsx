@@ -12,7 +12,7 @@ import dayjs from "dayjs";
 import NeteaseImage from "@/common/components/image/netease-image";
 import AppError from "@/common/components/fallback/app-error";
 import AppLoading from "@/common/components/fallback/app-loading";
-import AppEntry from "@/wins/main/entry";
+import RendererPlayerHandle from "@/wins/main/lib/handle";
 
 interface StatItem {
   label: string;
@@ -69,7 +69,7 @@ const ForYouPanel: FC<object> = () => {
   );
 
   // 监听历史变化，实时刷新听歌数据
-  const history = useListenable(AppEntry.player.history);
+  const history = useListenable(RendererPlayerHandle.player.history);
   useEffect(() => {
     isLoggedIn && reload();
   }, [history.count, isLoggedIn, reload]);

@@ -7,10 +7,10 @@ import { RendererEventBus } from "@/common/lib/bus";
 import { usePageJump } from "@/wins/main/hooks/use-page-jump";
 import { useSetAtom } from "jotai";
 import { playModalAtom } from "@/wins/main/atoms/layout";
-import AppEntry from "@/wins/main/entry";
+import RendererPlayerHandle from "@/wins/main/lib/handle";
 
 const Artist: FC<object> = () => {
-  const player = AppEntry.usePlayer();
+  const player = RendererPlayerHandle.usePlayer();
   const setPlayModal = useSetAtom(playModalAtom);
   const { heartManager } = useUserTrackManager();
   const { likedChange, checkLiked } = useHeart(heartManager);

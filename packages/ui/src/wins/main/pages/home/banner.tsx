@@ -7,7 +7,7 @@ import { NeteaseServicesTrack } from "@/common/netease/services";
 import { RoutePath, RoutePathMain } from "@/common/routes";
 import { useRequestAutoRetry, useRequestStatusWrap } from "@/common/hooks/use-request-wrap";
 import { RendererIPC } from "@/common/lib/ipc";
-import AppEntry from "@/wins/main/entry";
+import RendererPlayerHandle from "@/wins/main/lib/handle";
 
 import Carousel from "@/common/components/carousel";
 import AppError from "@/common/components/fallback/app-error";
@@ -18,7 +18,7 @@ interface BannerProps {
 
 const Banner: FC<BannerProps> = ({ className }) => {
   const navigate = useNavigate();
-  const player = AppEntry.usePlayer();
+  const player = RendererPlayerHandle.usePlayer();
   const getBanner = useCallback(() => NeteaseAPIHome.banner().then((res) => res.banners), []);
   const { status, data: banners = [], fetchData } = useRequestStatusWrap(getBanner);
   const { reload } = useRequestAutoRetry(fetchData, [], () => banners.length !== 0);

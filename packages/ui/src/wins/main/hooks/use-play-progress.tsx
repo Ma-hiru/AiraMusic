@@ -8,14 +8,14 @@ import {
 } from "react";
 import { clamp, throttle } from "lodash-es";
 import { NeteaseAPITrack } from "@/common/netease/api";
-import AppEntry from "@/wins/main/entry";
+import RendererPlayerHandle from "@/wins/main/lib/handle";
 
 export function usePlayProgress() {
   const [percentScope, percentAnimate] = useAnimate();
   const [bufferScope, bufferAnimate] = useAnimate();
   const [chorus, setChorus] = useState<NeteaseAPI.NeteaseChorusData[]>([]);
   const [chorusPercent, setChorusPercent] = useState<number[]>([]);
-  const player = AppEntry.usePlayer();
+  const player = RendererPlayerHandle.usePlayer();
   const barRef = useRef<HTMLDivElement>(null);
   const dragPercentRef = useRef(0);
   const isDragging = useRef(false);

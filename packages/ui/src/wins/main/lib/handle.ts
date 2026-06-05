@@ -2,16 +2,16 @@ import { useListenable } from "@/common/hooks/use-listenable";
 import { RendererWindow } from "@/common/lib/window";
 import { RendererOnce } from "@/common/lib/once";
 import { RendererCache } from "@/common/lib/cache";
-import AppPlayer from "@/common/player/core";
+import RendererPlayer from "@/common/player/core";
 
-export default class AppEntry {
+export default class RendererPlayerHandle {
   //region inner
-  private static _player: Nullable<AppPlayer>;
-  private static _usePlayer: Nullable<() => AppPlayer>;
+  private static _player: Nullable<RendererPlayer>;
+  private static _usePlayer: Nullable<() => RendererPlayer>;
   private static _innerUpdater = new Map<string, NormalFunc>();
 
-  private static createAppPlayerHook(instance: Optional<AppPlayer>) {
-    const player = instance ?? new AppPlayer();
+  private static createAppPlayerHook(instance: Optional<RendererPlayer>) {
+    const player = instance ?? new RendererPlayer();
 
     function useAppPlayer() {
       return useListenable(player);
@@ -26,13 +26,13 @@ export default class AppEntry {
   private static savePlayer() {
     if (!this._player) return;
     this._player.audio.pause();
-    RendererCache.browser.setOne("app_player", AppPlayer.save(this._player));
+    RendererCache.browser.setOne("app_player", RendererPlayer.save(this._player));
   }
 
   private static loadPlayer() {
     if (this._player) return this._player;
-    const data = RendererCache.browser.getOne<ReturnType<typeof AppPlayer.save>>("app_player");
-    if (data) return AppPlayer.fromSave(data);
+    const data = RendererCache.browser.getOne<ReturnType<typeof RendererPlayer.save>>("app_player");
+    if (data) return RendererPlayer.fromSave(data);
     return null;
   }
 
@@ -50,7 +50,7 @@ export default class AppEntry {
       miniWindow.hide();
       setTimeout(async () => {
         await miniWindow.reactReadyAwait();
-        AppEntry.busUpdater?.();
+        RendererPlayerHandle.busUpdater?.();
       }, 5000);
     });
   }
@@ -75,22 +75,22 @@ export default class AppEntry {
   }
 
   static registerInnerUpdater(id: string, updater: NormalFunc) {
-    AppEntry._innerUpdater.set(id, updater);
+    RendererPlayerHandle._innerUpdater.set(id, updater);
     return () => {
-      AppEntry._innerUpdater.delete(id);
+      RendererPlayerHandle._innerUpdater.delete(id);
     };
   }
 
   static getInnerUpdater(id: string) {
-    return AppEntry._innerUpdater.get(id);
+    return RendererPlayerHandle._innerUpdater.get(id);
   }
 
   static get busUpdater() {
-    return AppEntry.getInnerUpdater("main-bus");
+    return RendererPlayerHandle.getInnerUpdater("main-bus");
   }
 
   static set busUpdater(fn: Undefinable<NormalFunc>) {
     if (!fn) return;
-    AppEntry.registerInnerUpdater("main-bus", fn);
+    RendererPlayerHandle.registerInnerUpdater("main-bus", fn);
   }
 }

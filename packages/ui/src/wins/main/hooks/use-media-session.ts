@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef } from "react";
 import { NeteaseImageSize } from "@/common/enum";
 import { NeteaseURL } from "@/common/netease/models";
-import AppEntry from "@/wins/main/entry";
+import RendererPlayerHandle from "@/wins/main/lib/handle";
 
 export function useMediaSession(props: {
   play: NormalFunc<any>;
@@ -17,7 +17,7 @@ export function useMediaSession(props: {
 }) {
   const getProps = useRef(props);
   const mediaMetadataSignatureRef = useRef("");
-  const player = AppEntry.usePlayer();
+  const player = RendererPlayerHandle.usePlayer();
   const track = player.current.track;
   getProps.current = props;
 

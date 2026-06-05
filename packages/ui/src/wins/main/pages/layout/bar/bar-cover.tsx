@@ -5,13 +5,13 @@ import { useSetAtom } from "jotai";
 import { playModalAtom } from "@/wins/main/atoms/layout";
 import { usePageJump } from "@/wins/main/hooks/use-page-jump";
 
-import AppEntry from "@/wins/main/entry";
+import RendererPlayerHandle from "@/wins/main/lib/handle";
 import NeteaseImage from "@/common/components/image/netease-image";
 
 const BarCover: FC<object> = () => {
   const { jumpArtistPage } = usePageJump();
   const setPlayModal = useSetAtom(playModalAtom);
-  const player = AppEntry.usePlayer();
+  const player = RendererPlayerHandle.usePlayer();
   const track = player.current.track?.detail;
   const image = useMemo(
     () =>
