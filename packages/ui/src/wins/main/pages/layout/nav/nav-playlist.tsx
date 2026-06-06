@@ -49,7 +49,6 @@ const NavPlaylist: FC<NavPlaylistProps> = ({ user, sidebarOpen }) => {
       className="
         w-full h-full relative overflow-y-auto overflow-x-hidden
         contain-content will-change-scroll scrollbar
-        text-(--text-color-on-main)
       "
       ref={containerRef}>
       <VirtualList
@@ -83,7 +82,9 @@ const RowComponent: VirtualListRow<
             w-full flex flex-row rounded-md select-none cursor-pointer
             ease-in-out transition-all duration-300
           `,
-          active ? extra.opened && "bg-(--theme-color-main)" : extra.opened && "hover:bg-black/5"
+          active
+            ? extra.opened && "bg-(--theme-color-main) text-(--text-color-on-main)"
+            : extra.opened && "hover:bg-black/5"
         )}>
         <div
           className={cx(
@@ -92,7 +93,9 @@ const RowComponent: VirtualListRow<
               flex justify-center items-center py-1 rounded-md
               ease-in-out transition-all duration-300
             `,
-            active ? "bg-(--theme-color-main)" : !extra.opened && "hover:bg-black/5"
+            active
+              ? "bg-(--theme-color-main) text-(--text-color-on-main)"
+              : !extra.opened && "hover:bg-black/5"
           )}>
           <NeteaseImage
             cache

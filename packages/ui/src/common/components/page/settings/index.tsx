@@ -84,8 +84,8 @@ const Settings: FC<SettingsProps> = ({
       className={cx(
         `
           h-full overflow-y-auto lg:overflow-hidden scrollbar scrollbar-show
-          lg:scrollbar-hidden text-(--text-color-on-main)
           grid grid-cols-1 md:grid-cols-[minmax(260px,0.82fr)_minmax(520px,1.58fr)] gap-4
+          lg:scrollbar-hidden
         `,
         className
       )}>

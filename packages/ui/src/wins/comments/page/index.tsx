@@ -69,7 +69,7 @@ const CommentsPage: FC<object> = () => {
     <div className="w-screen h-screen pt-10 overflow-hidden gird grid-rows-[auto,1fr] relative">
       <Control className="h-10 absolute top-0 left-0 right-0 z-10" />
       <div className="fixed inset-0 z-[-1]">
-        <AcrylicBackground src={InfoBus.data?.backgroundCover} />
+        <AcrylicBackground src={InfoBus.data?.backgroundCover} brightness={0.3} opacity={0.5} />
       </div>
       <AppError reset={loadMore} when={status === "error"} message="加载评论失败">
         <AppLoading loading={comments.data.length === 0 && status !== "success"}>

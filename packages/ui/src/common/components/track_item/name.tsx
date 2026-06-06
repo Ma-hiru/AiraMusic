@@ -1,13 +1,11 @@
 import { type FC, Fragment, memo } from "react";
-import { css, cx } from "@emotion/css";
-import { type ColorInstance } from "color";
+import { cx } from "@emotion/css";
 import { NeteaseTrackRecord } from "@/common/netease/models";
 import { PlaylistSource } from "@/common/enum";
 
 interface ListItemNameProps {
   track: NeteaseTrackRecord;
   disabled: boolean;
-  textColor: ColorInstance;
   onClick?: NormalFunc;
   onClickArtist: Optional<NormalFunc<[id: number]>>;
   onClickAlbum: Optional<NormalFunc<[id: number]>>;
@@ -18,7 +16,6 @@ const TrackItemName: FC<ListItemNameProps> = ({
   track,
   disabled,
   onClick,
-  textColor,
   onClickArtist,
   onClickAlbum,
   type
@@ -31,10 +28,7 @@ const TrackItemName: FC<ListItemNameProps> = ({
         <span
           className={cx(
             "cursor-pointer font-bold hover:opacity-50 ease-in-out duration-300 transition-all truncate select-none active:scale-95",
-            disabled && "cursor-not-allowed! opacity-50",
-            css`
-              color: ${textColor.string()};
-            `
+            disabled && "cursor-not-allowed! opacity-50"
           )}
           onClick={() => !disabled && onClick?.()}>
           {track.detail.name}
@@ -42,10 +36,7 @@ const TrackItemName: FC<ListItemNameProps> = ({
         {translateAndAliaName && (
           <span
             className={cx(
-              "w-2 overflow-hidden ml-2 ease-in-out duration-300 transition-all truncate select-none",
-              css`
-                color: ${textColor.alpha(0.3).string()};
-              `
+              "w-2 overflow-hidden ml-2 ease-in-out duration-300 transition-all truncate select-none opacity-50"
             )}>
             ({translateAndAliaName})
           </span>
@@ -54,11 +45,8 @@ const TrackItemName: FC<ListItemNameProps> = ({
       {/*歌手、专辑*/}
       <div
         className={cx(
-          "text-[12px] flex overflow-hidden gap-2 truncate select-none",
-          disabled && "cursor-not-allowed! opacity-50",
-          css`
-            color: ${textColor.alpha(0.6).string()};
-          `
+          "text-[12px] flex overflow-hidden gap-2 truncate select-none opacity-60",
+          disabled && "cursor-not-allowed! opacity-30"
         )}>
         <span className="truncate space-x-0.5">
           {track.detail.ar.map((ar, index) => {

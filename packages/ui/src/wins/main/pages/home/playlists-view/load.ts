@@ -19,7 +19,7 @@ const mapTopPlaylist = (item: HomePlaylistSource): HomeMediaItem => ({
   coverUrl: item.coverImgUrl,
   meta: item.copywriter || item.description || item.updateFrequency || undefined,
   playCount: item.playCount,
-  badge: item.tag
+  badge: (item.trackCount ?? 0) + " 首"
 });
 
 export function uniqueItems(items: HomeMediaItem[]) {

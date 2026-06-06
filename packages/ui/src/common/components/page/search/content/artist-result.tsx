@@ -6,10 +6,8 @@ import { useScrollAutoHide } from "@/common/hooks/use-scroll-auto-hide";
 import AppLoading from "@/common/components/fallback/app-loading";
 import AppEmpty from "@/common/components/fallback/app-empty";
 import { cx } from "@emotion/css";
-import { NeteaseNetworkImage } from "@/common/netease/models";
-import RendererImageConstants from "@/common/constants/image";
-import NeteaseImage from "@/common/components/image/netease-image";
 import AppError from "@/common/components/fallback/app-error";
+import HomeMediaGrid from "@/wins/main/componets/home-media-grid";
 
 interface ArtistResultProps {
   className?: string;
@@ -61,36 +59,22 @@ const ArtistResult: FC<ArtistResultProps> = ({
           <ul
             ref={containerRef}
             className={cx(
-              "w-full h-full contain-strict overflow-y-auto scrollbar scrollbar-show grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] items-start content-stretch gap-8 p-2",
+              "w-full h-full contain-strict overflow-y-auto scrollbar scrollbar-show",
               className
             )}>
-            {list.map((item) => {
-              const cover = NeteaseNetworkImage.fromURL(item.picUrl)
-                ?.setAlt(item.name)
-                ?.setSize(RendererImageConstants.AlbumListCoverSize);
-              return (
-                <li
-                  key={item.id}
-                  className="text-(--text-color-on-main) flex flex-col justify-center items-center gap-1"
-                  onClick={() => onJumpArtist?.(item.id)}>
-                  <NeteaseImage
-                    cache
-                    cacheLazy
-                    className={`
-                    w-full aspect-square rounded-full cursor-pointer
-                    transition-transform duration-300 ease-in-out
-                    hover:scale-105 active:scale-95
-                  `}
-                    image={cover}
-                    shadow="float"
-                    shadowColor="light"
-                  />
-                  <h1 className="font-bold text-sm leading-4 text-center line-clamp-2">
-                    {item.name}
-                  </h1>
-                </li>
-              );
-            })}
+            <HomeMediaGrid
+              onClickItem={onJumpArtist ?? undefined}
+              items={list.map((a) => {
+                return {
+                  id: a.id,
+                  name: a.name,
+                  coverUrl: a.picUrl ?? "",
+                  shape: "circle",
+                  badge: a.followed ? "已关注" : "未关注",
+                  meta: a.alias.join(" / ")
+                };
+              })}
+            />
           </ul>
         )}
       </AppLoading>

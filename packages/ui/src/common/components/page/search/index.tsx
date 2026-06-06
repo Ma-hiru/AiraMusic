@@ -115,7 +115,7 @@ const Search: FC<SearchProps> = ({
         title="搜索"
         subTitle="Search">
         <SearchInput
-          className="flex-1"
+          className="w-full flex flex-row justify-end"
           ref={inputRef}
           onSearch={applySearch}
           setTabs={(tab) => {

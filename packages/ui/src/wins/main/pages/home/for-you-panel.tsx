@@ -1,5 +1,5 @@
 import { type FC, memo, useCallback, useEffect, useMemo } from "react";
-import { CalendarDays, Clock3, type LucideIcon, Music2, LucideRefreshCw } from "lucide-react";
+import { CalendarDays, Clock3, type LucideIcon, LucideRefreshCw, Music2 } from "lucide-react";
 import { useUser } from "@/common/store/user";
 import { NeteaseAPIRecord } from "@/common/netease/api";
 import { RendererFormat } from "@/common/lib/format";
@@ -32,6 +32,11 @@ const ForYouPanel: FC<object> = () => {
     data: { weekRecords, monthRecords } = {}
   } = useRequestStatusWrap(
     useCallback(async () => {
+      if (!isLoggedIn)
+        return {
+          weekRecords: null,
+          monthRecords: null
+        };
       const weekRecords = await NeteaseAPIRecord.week()
         .then(RendererFormat.weekRecord)
         .catch(() => undefined);
@@ -42,7 +47,7 @@ const ForYouPanel: FC<object> = () => {
         weekRecords,
         monthRecords
       };
-    }, [])
+    }, [isLoggedIn])
   );
   const { reload } = useRequestAutoRun(fetchData, []);
 
@@ -71,18 +76,18 @@ const ForYouPanel: FC<object> = () => {
   // 监听历史变化，实时刷新听歌数据
   const history = useListenable(RendererPlayerHandle.player.history);
   useEffect(() => {
-    isLoggedIn && reload();
+    reload();
   }, [history.count, isLoggedIn, reload]);
 
   return (
     <aside
       className="
         relative h-full w-full min-w-100 overflow-hidden rounded-xl border border-white/15
-        bg-linear-to-br from-white/12 via-white/5 to-(--theme-color-main)/12 p-3
-        text-(--text-color-on-main) shadow-md backdrop-blur-2xl
+        bg-linear-to-br from-white/12 via-white/5 to-(--theme-color-main)/50 p-3
+        shadow-md backdrop-blur-2xl
         group
       ">
-      <div className="pointer-events-none absolute inset-0 bg-linear-to-t from-black/10 via-transparent to-white/10" />
+      <div className="pointer-events-none absolute inset-0 bg-linear-to-t from-black/10 via-transparent to-white/30" />
       <AppError when={status === "error"} message="听歌数据加载错误" reset={reload}>
         <AppLoading loading={status === "loading"} tips="听歌数据加载中">
           <div className="relative z-10 flex h-full min-h-0 flex-row justify-between gap-12">

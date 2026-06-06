@@ -8,7 +8,6 @@ import NeteaseImage from "@/common/components/image/netease-image";
 interface ListItemCoverProps {
   track: NeteaseTrackRecord;
   trackCoverSize: NeteaseImageSize;
-  isMainColorDark: boolean;
   disabled: boolean;
   onClick?: NormalFunc;
   fastLocation?: boolean;
@@ -18,7 +17,6 @@ const TrackItemCover: FC<ListItemCoverProps> = ({
   track,
   onClick,
   disabled,
-  isMainColorDark,
   fastLocation = false,
   trackCoverSize
 }) => {
@@ -45,7 +43,7 @@ const TrackItemCover: FC<ListItemCoverProps> = ({
       )}
       onClick={() => !disabled && onClick?.()}
       imageClassName={(disabled && "cursor-not-allowed") || undefined}
-      shadowColor={isMainColorDark ? "dark" : "light"}
+      shadowColor="light"
     />
   );
 };

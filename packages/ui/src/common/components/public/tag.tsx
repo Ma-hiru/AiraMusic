@@ -1,14 +1,12 @@
 import { type FC, memo, type ReactNode } from "react";
-import { css, cx } from "@emotion/css";
+import { cx } from "@emotion/css";
 
 interface TagProps {
-  backgroundColor: string;
-  textColor: string;
   text: ReactNode;
   className?: string;
 }
 
-const Tag: FC<TagProps> = ({ backgroundColor, textColor, text, className }) => {
+const Tag: FC<TagProps> = ({ text, className }) => {
   return (
     <div
       className={cx(
@@ -17,11 +15,8 @@ const Tag: FC<TagProps> = ({ backgroundColor, textColor, text, className }) => {
           text-center align-middle
           font-semibold opacity-80
           select-none
+          bg-(--text-color-on-main) text-(--theme-color-main)
         `,
-        css(`
-          background: ${backgroundColor};
-          color: ${textColor};
-        `),
         !text && "invisible",
         className
       )}>

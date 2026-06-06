@@ -36,7 +36,7 @@ const NewAlbums: FC<NewAlbumsProps> = ({ onClickItem }) => {
         name: album.name,
         coverUrl: album.picUrl,
         meta: getAlbumArtists(album),
-        badge: String(new Date(album.publishTime).getFullYear())
+        badge: album.subType
       })),
     [albums]
   );

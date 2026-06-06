@@ -6,8 +6,8 @@ import { SearchType } from "@/common/enum";
 import { useScrollAutoHide } from "@/common/hooks/use-scroll-auto-hide";
 import AppLoading from "@/common/components/fallback/app-loading";
 import AppEmpty from "@/common/components/fallback/app-empty";
-import PlaylistList from "@/common/components/playlist_list";
 import AppError from "@/common/components/fallback/app-error";
+import HomeMediaGrid from "@/wins/main/componets/home-media-grid";
 
 interface PlaylistResultProps {
   className?: string;
@@ -56,21 +56,24 @@ const PlaylistResult: FC<PlaylistResultProps> = ({
       <AppLoading loading={status === "loading" && active}>
         {list.length === 0 && <AppEmpty className={className} tips="没有结果" />}
         {list.length > 0 && (
-          <PlaylistList
+          <div
             ref={containerRef}
             className={cx(
               "w-full h-full contain-strict overflow-y-auto scrollbar scrollbar-show",
               className
-            )}
-            onClickItem={onJumpPlaylist ?? undefined}
-            list={list.map((l) => ({
-              id: l.id,
-              name: l.name,
-              playCount: l.playCount,
-              trackCount: l.trackCount,
-              picUrl: l.coverImgUrl
-            }))}
-          />
+            )}>
+            <HomeMediaGrid
+              onClickItem={onJumpPlaylist ?? undefined}
+              items={list.map((l) => ({
+                id: l.id,
+                name: l.name,
+                playCount: l.playCount,
+                badge: (l.trackCount ?? 0) + " 首",
+                coverUrl: l.coverImgUrl,
+                meta: l.subscribed ? "已收藏" : undefined
+              }))}
+            />
+          </div>
         )}
       </AppLoading>
     </AppError>

@@ -11,7 +11,6 @@ import {
 } from "react";
 import { cx } from "@emotion/css";
 import { useScrollAutoHide } from "@/common/hooks/use-scroll-auto-hide";
-import { useThemeColor } from "@/common/hooks/use-theme-color";
 import { NeteaseImageSize, PlaylistSource } from "@/common/enum";
 import { NeteaseHistory, NeteaseTrack, NeteaseTrackRecord } from "@/common/netease/models";
 import { type HeartManager, useHeart } from "@/common/hooks/use-heart";
@@ -85,7 +84,6 @@ const TrackList = <T extends NeteaseTrackRecord[] | NeteaseHistory[]>({
     () => async () => {}
   );
   const [fastLocation, setFastLocation] = useState(false);
-  const { mainColor, textColorOnMain: textColor } = useThemeColor();
   const { likedChange, checkLiked } = useHeart(heartManager);
 
   useScrollAutoHide(containerRef);
@@ -121,10 +119,8 @@ const TrackList = <T extends NeteaseTrackRecord[] | NeteaseHistory[]>({
       onClick,
       onContext,
       activeID,
-      mainColor,
       fastLocation,
       trackCoverSize,
-      textColor,
       onClickArtist,
       onClickAlbum,
       playableManager,
@@ -136,13 +132,11 @@ const TrackList = <T extends NeteaseTrackRecord[] | NeteaseHistory[]>({
       checkLiked,
       fastLocation,
       likedChange,
-      mainColor,
       onClick,
       onClickAlbum,
       onClickArtist,
       onContext,
       playableManager,
-      textColor,
       trackCoverSize,
       type
     ]
@@ -197,8 +191,6 @@ const RowComponent: VirtualListRow<NeteaseTrackRecord, ExtraData> = ({ index, it
       track={items[index]!}
       total={items.length}
       active={items[index]!.id === extra.activeID}
-      textColor={extra.textColor}
-      mainColor={extra.mainColor}
       fastLocation={extra.fastLocation}
       onClick={extra.onClick}
       onContext={extra.onContext}

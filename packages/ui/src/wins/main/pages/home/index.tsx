@@ -67,7 +67,6 @@ const HomePage: FC<object> = () => {
           flex flex-col gap-3
           scrollbar scrollbar-show
           px-5 will-change-scroll contain-strict
-          text-(--text-color-on-main)
           relative
         `}>
         <HomeChannelTabs

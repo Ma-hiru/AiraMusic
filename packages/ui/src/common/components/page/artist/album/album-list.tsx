@@ -1,10 +1,9 @@
 import { type FC, memo } from "react";
 import { useAlbum } from "@/common/hooks/use-album";
-import { css, cx } from "@emotion/css";
-
-import AlbumItem from "./album-item";
 import InfiniteContainer from "@/common/components/infinite/infinite-container";
 import AppError from "@/common/components/fallback/app-error";
+import HomeMediaGrid from "@/wins/main/componets/home-media-grid";
+import { RendererFormat } from "@/common/lib/format";
 
 interface AlbumListProps {
   id: number;
@@ -23,19 +22,17 @@ const AlbumList: FC<AlbumListProps> = ({ id, className, onClick }) => {
         isLoading={status === "loading"}
         onLoadMore={loadMore}>
         {album.data.length === 0 ? null : (
-          <div
-            className={cx(
-              "gap-8 px-4",
-              css`
-                display: grid;
-                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-                grid-auto-rows: auto;
-              `
-            )}>
-            {album.data.map((item) => (
-              <AlbumItem key={item.id} data={item} onClick={onClick} />
-            ))}
-          </div>
+          <HomeMediaGrid
+            onClickItem={onClick ?? undefined}
+            items={album.data.map((a) => ({
+              id: a.id,
+              name: a.name,
+              coverUrl: a.picUrl,
+              nameClampLine: 1,
+              badge: a.size + " 首",
+              meta: RendererFormat.time(a.publishTime)
+            }))}
+          />
         )}
       </InfiniteContainer>
     </AppError>

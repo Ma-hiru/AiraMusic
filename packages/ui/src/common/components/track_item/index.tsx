@@ -1,6 +1,5 @@
 import { cx } from "@emotion/css";
 import { memo, useCallback } from "react";
-import { type ColorInstance } from "color";
 import { NeteaseHistory, NeteaseTrackRecord } from "@/common/netease/models";
 import { NeteaseImageSize, PlaylistSource } from "@/common/enum";
 import type { TrackListClickFunc, TrackListContextMenuFunc } from "@/common/components/track_list";
@@ -20,8 +19,6 @@ export interface TrackItemLikeChangeFunc<
 export interface TrackItemProps<
   T extends NeteaseTrackRecord | NeteaseHistory = NeteaseTrackRecord | NeteaseHistory
 > {
-  textColor: ColorInstance;
-  mainColor: ColorInstance;
   track: T;
   total: number;
   index: number;
@@ -40,8 +37,6 @@ export interface TrackItemProps<
 }
 
 const TrackItem = <T extends NeteaseTrackRecord | NeteaseHistory>({
-  textColor,
-  mainColor,
   track,
   total,
   index,
@@ -69,7 +64,6 @@ const TrackItem = <T extends NeteaseTrackRecord | NeteaseHistory>({
   return (
     <div
       onContextMenu={(e) => playable && onContext?.(e, track, index)}
-      style={active ? { color: textColor.string() } : undefined}
       onClick={playable ? undefined : showDisableReason}
       className={cx(
         `
@@ -77,13 +71,14 @@ const TrackItem = <T extends NeteaseTrackRecord | NeteaseHistory>({
             rounded-md py-0.5 pl-2 mb-2
             ease-in-out transition-colors
         `,
-        active ? "bg-(--theme-color-main) shadow-xs" : "hover:bg-black/10 active:bg-black/20",
+        active
+          ? "bg-(--theme-color-main) text-(--text-color-on-main) shadow-xs"
+          : "hover:bg-black/10 active:bg-black/20",
         !playable && "cursor-not-allowed! opacity-50"
       )}>
       {/*序号*/}
       <ListItemIndex
         total={total}
-        color={textColor.alpha(0.8).string()}
         active={active}
         disabled={!playable}
         index={index}
@@ -95,7 +90,6 @@ const TrackItem = <T extends NeteaseTrackRecord | NeteaseHistory>({
           track={track}
           onClick={() => onClick?.(track, index)}
           disabled={!playable}
-          isMainColorDark={mainColor.isDark()}
           fastLocation={fastLocation}
           trackCoverSize={trackCoverSize}
         />
@@ -104,7 +98,6 @@ const TrackItem = <T extends NeteaseTrackRecord | NeteaseHistory>({
       <ListItemName
         track={track}
         type={type}
-        textColor={textColor}
         disabled={!playable}
         onClick={() => onClick?.(track, index)}
         onClickAlbum={onClickAlbum}
@@ -115,8 +108,6 @@ const TrackItem = <T extends NeteaseTrackRecord | NeteaseHistory>({
         active={active}
         disabled={!playable}
         track={track}
-        mainColor={mainColor}
-        textColor={textColor}
         liked={liked}
         onLikeChange={() => onLikeChange?.(track, index)}
         type={type}

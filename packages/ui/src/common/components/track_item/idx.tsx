@@ -6,22 +6,13 @@ interface ListItemIndexProps {
   index: number;
   total: number;
   active: boolean;
-  color: string;
   disabled: boolean;
   onClick?: NormalFunc;
 }
 
-const TrackItemIndex: FC<ListItemIndexProps> = ({
-  index,
-  total,
-  active,
-  onClick,
-  color,
-  disabled
-}) => {
+const TrackItemIndex: FC<ListItemIndexProps> = ({ index, total, active, onClick, disabled }) => {
   return (
     <span
-      style={{ color }}
       className={cx(
         "mr-px max-w-max text-left text-[12px] font-semibold select-none",
         total < 100 && "min-w-4",

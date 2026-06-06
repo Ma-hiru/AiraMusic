@@ -91,7 +91,7 @@ const ModalProvider: FC<{ className?: string }> = ({ className }) => {
             className={cx(
               `
               fixed inset-0 flex items-center justify-center
-              px-5 py-7 text-(--text-color-on-main) pointer-events-none
+              px-5 py-7 pointer-events-none
             `,
               className
             )}

@@ -109,17 +109,13 @@ const Title: FC<TitleProps> = ({ className, commentBus }) => {
       <div className="flex flex-col items-start justify-center gap-0.5 overflow-hidden">
         {commentBus.data?.type === "track" && (
           <>
-            <h1 className="font-semibold text-sm line-clamp-1 text-(--theme-color-main)">
-              {track?.name}
-            </h1>
-            <h2 className="font-medium text-xs text-(--theme-color-main)">
-              {track?.artist.join(" / ")}
-            </h2>
+            <h1 className="font-semibold text-sm line-clamp-1">{track?.name}</h1>
+            <h2 className="font-medium text-xs opacity-60">{track?.artist.join(" / ")}</h2>
             <div className="flex flex-row items-center justify-start gap-1 flex-wrap">
               {tags.map((tag) => {
                 return (
                   <span
-                    className="inline-block rounded-full px-1.5 py-0.5 text-[10px] bg-(--theme-color-main)"
+                    className="inline-block rounded-full px-1.5 py-0.5 text-[10px] bg-(--theme-color-main) text-(--text-color-on-main)"
                     key={tag}>
                     {tag}
                   </span>
@@ -130,22 +126,14 @@ const Title: FC<TitleProps> = ({ className, commentBus }) => {
         )}
         {commentBus.data?.type === "playlist" && (
           <>
-            <h1 className="font-semibold text-sm line-clamp-2 text-(--theme-color-main)">
-              {playlist?.name}
-            </h1>
-            <h2 className="font-medium text-xs text-(--theme-color-main)">
-              {playlist?.creator?.nickname}
-            </h2>
+            <h1 className="font-semibold text-sm line-clamp-2">{playlist?.name}</h1>
+            <h2 className="font-medium text-xs opacity-60">{playlist?.creator?.nickname}</h2>
           </>
         )}
         {commentBus.data?.type === "album" && (
           <>
-            <h1 className="font-semibold text-sm line-clamp-2 text-(--theme-color-main)">
-              {album?.content.name}
-            </h1>
-            <h2 className="font-medium text-xs text-(--theme-color-main)">
-              {album?.content.artist.name}
-            </h2>
+            <h1 className="font-semibold text-sm line-clamp-2">{album?.content.name}</h1>
+            <h2 className="font-medium text-xs opacity-60">{album?.content.artist.name}</h2>
           </>
         )}
       </div>

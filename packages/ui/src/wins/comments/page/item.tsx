@@ -62,7 +62,7 @@ const Item: FC<ItemProps> = ({ data, sourceID, type }) => {
   );
   return (
     <>
-      <div className="border-b border-(--theme-color-main)/10 m-2" />
+      <div className="border-b border-white/30 m-2" />
       <div
         key={data.commentId}
         className="text-sm font-medium flex flex-row items-start justify-start gap-2">
@@ -77,20 +77,18 @@ const Item: FC<ItemProps> = ({ data, sourceID, type }) => {
         />
         <div className="space-y-1 w-full">
           <h1 className="font-semibold text-xs flex flex-col items-start justify-start">
-            <span className="">{data.user.nickname}</span>
+            <span>{data.user.nickname}</span>
             <span className="opacity-50 text-xs text-[10px]">
               {data.ipLocation?.location} {RendererFormat.time(data.time)}
             </span>
           </h1>
-          <p className="text-xs text-(--theme-color-main) bg-(--text-color-on-main)/40 p-1 rounded-lg rounded-tl-none">
-            {data.content}
-          </p>
+          <p className="text-xs p-1 rounded-lg rounded-tl-none">{data.content}</p>
           <div
             style={{ color: data.liked ? mainColor.string() : undefined }}
             className="text-xs opacity-80 font-medium flex flex-row items-center justify-end gap-1 px-1 py-0.5 rounded-md cursor-pointer">
             <ThumbsUp
-              className={cx("size-3 inline-block", liked && "text-red-500")}
-              fill={liked ? "#fb2c36" : "transparent"}
+              className={cx("size-3 inline-block", liked && "text-(--theme-color-main)")}
+              fill={liked ? "currentColor" : "transparent"}
               onClick={() =>
                 like({
                   commentID: data.commentId,
@@ -99,7 +97,7 @@ const Item: FC<ItemProps> = ({ data, sourceID, type }) => {
               }
             />
             <span
-              className={cx("leading-3", liked && "text-red-500")}
+              className={cx("leading-3", liked && "text-(--theme-color-main)")}
               onClick={() =>
                 like({
                   commentID: data.commentId,

@@ -3,9 +3,9 @@ import { NeteaseAPIPlaylist } from "@/common/netease/api";
 import { useRequestAutoRetry, useRequestStatusWrap } from "@/common/hooks/use-request-wrap";
 import { ListMusic } from "lucide-react";
 import AppLoading from "@/common/components/fallback/app-loading";
-import PlaylistList from "@/common/components/playlist_list";
 import AppError from "@/common/components/fallback/app-error";
 import HomeSection from "@/wins/main/componets/home-section";
+import HomeMediaGrid from "@/wins/main/componets/home-media-grid";
 
 const RecommendPlaylist = ({
   onClickItem,
@@ -15,7 +15,7 @@ const RecommendPlaylist = ({
   onDataLoaded?: NormalFunc<[data: NeteaseAPI.RecommendPlaylistResult[]]>;
 }) => {
   const { status, data, fetchData } = useRequestStatusWrap(
-    useCallback(() => NeteaseAPIPlaylist.recommend(12), [])
+    useCallback(() => NeteaseAPIPlaylist.recommend(30), [])
   );
   const { reload } = useRequestAutoRetry(fetchData, [], () => (data?.result ?? []).length !== 0);
   const recommend = useMemo(() => {
@@ -36,7 +36,16 @@ const RecommendPlaylist = ({
     <HomeSection title="推荐歌单" subTitle="Playlist Picks" Icon={ListMusic}>
       <AppError when={status === "error"} reset={reload} message="加载推荐歌单失败">
         <AppLoading loading={status === "loading"} className="h-auto w-full">
-          <PlaylistList list={recommend} onClickItem={onClickItem} />
+          <HomeMediaGrid
+            items={recommend.map((r) => ({
+              name: r.name,
+              id: r.id,
+              coverUrl: r.picUrl,
+              playCount: r.playCount,
+              badge: (r.trackCount ?? 0) + " 首"
+            }))}
+            onClickItem={onClickItem}
+          />
         </AppLoading>
       </AppError>
     </HomeSection>

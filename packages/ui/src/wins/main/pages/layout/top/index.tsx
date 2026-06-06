@@ -11,7 +11,6 @@ import TopAvatar from "./top-avatar";
 import TopDivider from "./top-divider";
 import TopSearch from "./top-search";
 import TopLeft from "./top-left";
-import AppErrorBoundary from "@/common/components/fallback/app-error-boundary";
 import Drag from "@/common/components/drag/drag";
 
 const Top: FC<{ className?: string }> = ({ className }) => {
@@ -27,31 +26,28 @@ const Top: FC<{ className?: string }> = ({ className }) => {
           absolute left-0 right-0 top-0 pr-4
           flex items-center
         `,
-        playModal ? "text-white" : "text-(--text-color-on-main)",
         className
       )}>
-      <AppErrorBoundary name="Top" showError={false} autoReset panicAfterReset>
-        <div
-          className={cx(
-            `
+      <div
+        className={cx(
+          `
             h-full overflow-hidden
             duration-300 ease-in-out transition-all
           `,
-            sidebar ? "w-(--side-bar-expand-width)" : "w-(--side-bar-collapse-width)"
-          )}>
-          <TopLeft user={user} />
-        </div>
-        <div
-          className={cx(
-            `flex-1 flex flex-row gap-4 items-center justify-end`,
-            isFullscreen && "hidden"
-          )}>
-          <TopSearch />
-          {playModal && <TopAvatar user={user} />}
-          <TopDivider />
-          <TopControl />
-        </div>
-      </AppErrorBoundary>
+          sidebar ? "w-(--side-bar-expand-width)" : "w-(--side-bar-collapse-width)"
+        )}>
+        <TopLeft user={user} />
+      </div>
+      <div
+        className={cx(
+          `flex-1 flex flex-row gap-4 items-center justify-end`,
+          isFullscreen && "hidden"
+        )}>
+        <TopSearch />
+        {playModal && <TopAvatar user={user} />}
+        <TopDivider />
+        <TopControl />
+      </div>
     </Drag>
   );
 };

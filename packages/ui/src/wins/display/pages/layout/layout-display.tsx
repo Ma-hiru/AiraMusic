@@ -77,7 +77,7 @@ const LayoutDisplay: FC<object> = () => {
 
   return (
     <div className="w-screen h-screen relative overflow-hidden">
-      <Drag className="absolute w-screen top-0 right-0 h-10  flex flex-row justify-between items-center px-4 text-(--text-color-on-main) z-50">
+      <Drag className="absolute w-screen top-0 right-0 h-10  flex flex-row justify-between items-center px-4 z-50">
         <TopBack
           exclude={[RoutePathDisplay.blank]}
           routePath={RoutePathDisplay}

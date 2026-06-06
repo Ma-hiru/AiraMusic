@@ -8,8 +8,11 @@ import QRCode from "./qr-code";
 import Tips from "./tips";
 import Drag from "@/common/components/drag/drag";
 import TopControlPure from "@/common/components/top/control";
+import AcrylicBackground from "@/common/components/public/acrylic-background";
+import { RendererEventBus } from "@/common/lib/bus";
 
 export default function LoginPage() {
+  useAppLoaded();
   const { status, result, dataURL, update } = useLoginQRCode();
   const mainWindow = useListenable(RendererWindow.get("main"));
   const currentWindow = useListenable(RendererWindow.current);
@@ -21,9 +24,15 @@ export default function LoginPage() {
     }
   }, [currentWindow, mainWindow, result, status]);
 
-  useAppLoaded();
+  const infoBus = useListenable(RendererEventBus.info);
+  useEffect(() => {
+    RendererEventBus.mainBusUpdater.send("info");
+  }, []);
   return (
     <div className="w-screen h-screen overflow-hidden">
+      <div className="fixed inset-0 z-[-1]">
+        <AcrylicBackground className="absolute inset-0" src={infoBus.data?.backgroundCover} />
+      </div>
       <Drag className="w-screen h-6 flex items-center justify-end absolute top-0 left-0 right-0 p-6 px-5">
         <TopControlPure maximizable={false} />
       </Drag>

@@ -102,10 +102,15 @@ const HomeSongsArtistsView: FC<{ className?: string }> = ({ className }) => {
               onClick={() => setSongArea(area)}
               className={cx(
                 `
-                  h-9 cursor-pointer rounded-lg border border-white/20 px-3 text-sm font-bold
-                  transition-all duration-300 hover:bg-(--theme-color-main) active:scale-[0.98]
+                  h-9 cursor-pointer rounded-lg
+                  border border-white/20 px-3 text-sm font-bold
+                  transition-all duration-300
+                  hover:bg-(--theme-color-main) hover:text-(--text-color-on-main)
+                  active:scale-[0.98]
                 `,
-                area.type === songArea.type ? "bg-(--theme-color-main)" : "bg-white/5"
+                area.type === songArea.type
+                  ? "bg-(--theme-color-main) text-(--text-color-on-main)"
+                  : "bg-white/5"
               )}>
               {area.label}
             </button>
@@ -130,10 +135,15 @@ const HomeSongsArtistsView: FC<{ className?: string }> = ({ className }) => {
               onClick={() => setArtistArea(area)}
               className={cx(
                 `
-                  h-9 cursor-pointer rounded-lg border border-white/20 px-3 text-sm font-bold
-                  transition-all duration-300 hover:bg-(--theme-color-main) active:scale-[0.98]
+                  h-9 cursor-pointer rounded-lg
+                  border border-white/20 px-3 text-sm font-bold
+                  transition-all duration-300
+                  hover:bg-(--theme-color-main) hover:text-(--text-color-on-main)
+                  active:scale-[0.98]
                 `,
-                area.type === artistArea.type ? "bg-(--theme-color-main)" : "bg-white/5"
+                area.type === artistArea.type
+                  ? "bg-(--theme-color-main) text-(--text-color-on-main)"
+                  : "bg-white/5"
               )}>
               {area.label}
             </button>

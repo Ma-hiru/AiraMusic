@@ -52,7 +52,7 @@ const Progress: FC<object> = () => {
         </div>
       </div>
       <div className="w-full flex justify-between items-center text-white/50 backdrop-blur-lg text-[12px] mt-1 select-none">
-        {quality && <Tag text={quality} textColor="#99a1af" backgroundColor="white" />}
+        {quality && <Tag text={quality} />}
         {quality ? (
           <ProgressRender render={progressRenderMini} />
         ) : (

@@ -1,6 +1,7 @@
-import { type FC, memo, type ReactNode, useMemo } from "react";
+import { type FC, memo, type ReactNode } from "react";
 import { cx } from "@emotion/css";
 import { type LucideIcon } from "lucide-react";
+import HomeSection from "@/wins/main/componets/home-section";
 
 interface CardProps {
   title?: string;
@@ -12,26 +13,8 @@ interface CardProps {
 }
 
 const Card: FC<CardProps> = ({ title, subTitle, Icon, children, className, onClick }) => {
-  const header = useMemo(() => {
-    if (!subTitle && !title && !Icon) return null;
-    return (
-      <header className={cx("flex items-center justify-between gap-3", !!children && "mb-3")}>
-        <div className="shrink-0">
-          {subTitle && (
-            <p
-              className="text-[10px] font-semibold uppercase tracking-widest opacity-50"
-              children={subTitle}
-            />
-          )}
-          {title && <h1 className="truncate text-xl font-black tracking-normal" children={title} />}
-        </div>
-        <div className="size-5 shrink-0">{Icon && <Icon className="w-full h-full" />}</div>
-      </header>
-    );
-  }, [Icon, children, subTitle, title]);
-
   return (
-    <section
+    <HomeSection
       onClick={onClick}
       className={cx(
         `
@@ -39,10 +22,12 @@ const Card: FC<CardProps> = ({ title, subTitle, Icon, children, className, onCli
         shadow-md backdrop-blur-2xl
       `,
         className
-      )}>
-      {header}
-      {children}
-    </section>
+      )}
+      title={title}
+      subTitle={subTitle}
+      Icon={Icon}
+      children={children}
+    />
   );
 };
 

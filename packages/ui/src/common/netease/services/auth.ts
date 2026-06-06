@@ -54,7 +54,6 @@ export default class _NeteaseAuth {
   static logout() {
     return NeteaseServicesUser.logout().then(() => {
       _NeteaseAuth.userStore.updateUser(null);
-      window.location.pathname = "/";
     });
   }
 

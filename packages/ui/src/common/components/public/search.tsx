@@ -17,26 +17,24 @@ const Search: FC<SearchProps> = ({ searchTracks, setIsTyping }) => {
   }, [deferredValue, debouncedSearch]);
 
   return (
-    <div className="my-2 relative flex justify-end items-center font-semibold">
-      <div className="relative inline-block">
-        <input
-          value={value}
-          type="text"
-          placeholder="搜索"
-          onFocus={() => setIsTyping(true)}
-          onBlur={() => setIsTyping(false)}
-          onChange={(e) => setValue(e.target.value)}
-          className={`
-            focus:outline-none focus:ring-1 focus:ring-(--text-color-on-main)/50
-            placeholder-(--text-color-on-main)/50 placeholder:select-none
-            block h-6 px-3 pr-8 w-18 focus:w-48 rounded-full
-            border border-(--text-color-on-main)/50
-            ease-in-out transition-all duration-300
-            text-[12px]
-          `}
-        />
-        <SearchIcon className="absolute top-1/2 right-2 -translate-y-1/2 size-4 text-(--text-color-on-main)/50" />
-      </div>
+    <div className="my-2 font-semibold relative inline-block text-(--text-color)">
+      <input
+        value={value}
+        type="text"
+        placeholder="搜索"
+        onFocus={() => setIsTyping(true)}
+        onBlur={() => setIsTyping(false)}
+        onChange={(e) => setValue(e.target.value)}
+        className="
+          outline-(--text-color)
+          block h-6 px-3 pr-8 w-18 focus:w-48 rounded-full
+          border border-(--text-color)/30
+          placeholder:text-(--text-color)/50
+          ease-in-out transition-all duration-300
+          text-[12px]
+         "
+      />
+      <SearchIcon className="absolute top-1/2 right-2 -translate-y-1/2 size-4  opacity-50" />
     </div>
   );
 };

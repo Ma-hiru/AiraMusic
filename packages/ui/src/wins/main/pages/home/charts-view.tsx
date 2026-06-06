@@ -62,7 +62,7 @@ const HomeChartsView: FC<{ className?: string }> = ({ className }) => {
       <HomeSection title="排行榜" subTitle="Charts" Icon={Trophy}>
         <AppError reset={reload} when={status === "error"} message="加载排行榜失败">
           <AppLoading loading={status === "loading"} className="min-h-60">
-            <div className="grid grid-cols-1 gap-3 lg:grid-cols-[1.2fr_minmax(0,1fr)]">
+            <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
               <HomeSection
                 title="官方主榜"
                 subTitle="Featured"
@@ -74,8 +74,11 @@ const HomeChartsView: FC<{ className?: string }> = ({ className }) => {
                       type="button"
                       onClick={() => jumpPlaylistPage(item.id, "normal")}
                       className="
-                        flex min-h-14 cursor-pointer items-center gap-3 rounded-lg px-2 text-left
-                        transition-all duration-300 hover:bg-(--theme-color-main) active:scale-[0.99]
+                        flex min-h-14 cursor-pointer
+                        items-center gap-3 rounded-lg px-2 text-left
+                        transition-all duration-300
+                        hover:bg-(--theme-color-main) hover:text-(--text-color-on-main)
+                        active:scale-[0.98]
                       ">
                       <span className="w-8 shrink-0 text-center text-lg font-black opacity-70">
                         {index + 1}
@@ -104,7 +107,6 @@ const HomeChartsView: FC<{ className?: string }> = ({ className }) => {
               <HomeMediaGrid
                 items={gridFeatured}
                 onClickItem={(id) => jumpPlaylistPage(id, "normal")}
-                className=""
               />
             </div>
           </AppLoading>

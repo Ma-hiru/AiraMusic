@@ -114,11 +114,7 @@ const HomePlaylistsView: FC<{ className?: string }> = ({ className }) => {
       <HomeSection title={resolvedTitle} subTitle="Playlist Explore" Icon={ListMusic}>
         <AppError reset={reload} when={status === "error"} message="加载歌单失败">
           <AppLoading loading={status === "loading"} className="min-h-80">
-            <HomeMediaGrid
-              items={items}
-              onClickItem={(id) => jumpPlaylistPage(id, "normal")}
-              className="grid-cols-[repeat(auto-fill,minmax(150px,1fr))]"
-            />
+            <HomeMediaGrid items={items} onClickItem={(id) => jumpPlaylistPage(id, "normal")} />
             <div
               ref={loadMoreSentinelRef}
               aria-hidden={!hasMore}

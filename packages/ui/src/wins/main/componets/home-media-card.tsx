@@ -34,17 +34,13 @@ const HomeMediaCard: FC<HomeMediaCardProps> = ({ item, coverSize, onClick, class
       onClick={() => onClick?.(item.id)}
       className={cx(
         `
-          group min-w-0 cursor-pointer select-none p-2 text-left
+          group min-w-0 cursor-pointer p-2 text-left
           transition-all duration-300 ease-in-out active:scale-[0.98]
         `,
         className
       )}>
       <div className={cx("relative aspect-square w-full bg-white/10 shadow-md", roundedClass)}>
-        <NeteaseImage
-          cache
-          image={image}
-          className={cx("size-full object-cover transition-transform duration-500", roundedClass)}
-        />
+        <NeteaseImage cache image={image} className={cx("size-full object-cover", roundedClass)} />
         <div
           className={cx(
             "absolute inset-0 bg-black/0 transition-colors duration-300 group-hover:bg-black/25 overflow-hidden",
@@ -64,18 +60,20 @@ const HomeMediaCard: FC<HomeMediaCardProps> = ({ item, coverSize, onClick, class
         )}
       </div>
       <p
+        title={item.name}
         className={cx(
           `
-            mt-2 text-[12px] font-bold
-            leading-4 text-(--text-color-on-main)
-            transition-opacity duration-300 group-hover:opacity-70
+            mt-2 text-[12px] font-bold leading-4 group-hover:opacity-70
+            duration-300 ease-in-out transition-all
           `,
           item.nameClampLine === 1 ? "line-clamp-1" : "line-clamp-2"
         )}>
         {item.name}
       </p>
       {item.meta && (
-        <p className="mt-1 truncate text-[10px] font-semibold opacity-55">{item.meta}</p>
+        <p title={item.meta} className="mt-1 truncate text-[10px] font-semibold opacity-55">
+          {item.meta}
+        </p>
       )}
     </button>
   );

@@ -41,7 +41,7 @@ const ToggleRow: FC<ToggleRowProps> = ({ icon, title, description, checked, onCl
                   inline-block size-5 rounded-full shadow-sm
                   transition-all duration-300 ease-in-out
                 `,
-                checked ? "bg-(--theme-color-main)" : "bg-(--text-color-on-main)"
+                checked ? "bg-(--theme-color-main)" : "bg-(--text-color)"
               )}
             />
           </button>

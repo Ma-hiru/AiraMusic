@@ -27,9 +27,10 @@ const NavMenu: FC<NavMenuProps> = ({ barOpened }) => {
               `
               flex flex-row h-12 items-center mx-3 rounded-md
               ease-in-out duration-300 transition-all
-              text-(--text-color-on-main)
           `,
-              active ? barOpened && "bg-(--theme-color-main)" : barOpened && "hover:bg-black/5"
+              active
+                ? barOpened && "bg-(--theme-color-main) text-(--text-color-on-main)"
+                : barOpened && "hover:bg-black/5"
             )}
             onClick={() => {
               if (path === RoutePathMain.playlist.like && !NeteaseUser.isLoggedIn) {

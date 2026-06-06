@@ -5,6 +5,7 @@
   --theme-color-main: #fc3d49;
   --theme-color-secondary: #ffffff;
   --text-color-on-main: #000000;
+  --text-color: #ffffff;
 }
 
 html,
@@ -20,7 +21,7 @@ body {
   padding: 0;
   box-sizing: border-box;
   user-select: none;
-  color: var(--text-color-on-main);
+  color: var(--text-color);
 }
 
 img {

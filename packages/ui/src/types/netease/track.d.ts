@@ -279,7 +279,7 @@ namespace NeteaseAPI {
     djId: number;
     dt: number;
     entertainmentTags: null;
-    fee: number;
+    fee: 0 | 1 | 4 | 8;
     ftype: number;
     h: H;
     hr: null | Hr;
@@ -293,7 +293,7 @@ namespace NeteaseAPI {
     name: string;
     no: number;
     noCopyrightRcmd: null;
-    originCoverType: number;
+    originCoverType: 0 | 1 | 2;
     originSongSimpleData: null;
     pop: number;
     privilege: NeteaseTrackPrivilege;
