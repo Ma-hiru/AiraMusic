@@ -15,8 +15,7 @@ export function clearAllCache() {
         "serviceworkers",
         "shadercache",
         "websql"
-      ],
-      quotas: ["temporary"]
+      ]
     });
     // 2. 清除 HTTP/HTTPS 缓存
     await ses.clearCache();

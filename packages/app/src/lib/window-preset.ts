@@ -105,6 +105,7 @@ export class MainWindowPreset {
         type: "toolbar",
         skipTaskbar: true,
         show: false,
+        hasShadow: false,
         icon: MainPathResolver.appLogoPath
       },
       id: "lyric",

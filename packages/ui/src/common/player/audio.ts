@@ -111,8 +111,10 @@ export default class RendererPlayerAudio {
 
   load(source: NeteaseNetworkAudio | NeteaseLocalAudio, play: boolean) {
     this.pause();
+    this.audio.crossOrigin = "anonymous";
     this.audio.src = source.src;
     this.audio.load();
+    console.log("source", source.src);
     play && this.play();
   }
 

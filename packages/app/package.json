@@ -29,7 +29,7 @@
     "@mahiru/store": "workspace:*",
     "@types/express": "^5.0.0",
     "@types/express-http-proxy": "^1.6.7",
-    "electron": "40.6.1",
+    "electron": "42.3.3",
     "tsx": "^4.22.3"
   }
 }

@@ -19,7 +19,9 @@ export class MainProtocol {
           secure: true,
           standard: true,
           supportFetchAPI: true,
-          bypassCSP: true
+          bypassCSP: true,
+          stream: false,
+          corsEnabled: true
         }
       }
     ]);
@@ -58,7 +60,9 @@ export class MainProtocol {
       const contentType = mimeFromQuery || mime.getType(filePath) || "application/octet-stream";
       const commonHeaders = {
         "Accept-Ranges": "bytes",
-        "Content-Type": contentType
+        "Content-Type": contentType,
+        "Access-Control-Allow-Origin": "*",
+        "Cross-Origin-Resource-Policy": "cross-origin"
       } as Record<string, string>;
 
       if (rangeHeader && rangeHeader.startsWith("bytes=")) {

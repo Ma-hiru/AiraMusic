@@ -45,7 +45,6 @@ interface TooltipProps extends Omit<HTMLAttributes<HTMLElement>, "content"> {
   children: ReactNode;
   placement?: TooltipPlacement;
   popupClassName?: string;
-  contentClassName?: string;
   disabled?: boolean;
   interactive?: boolean;
   tooltipRole?: AriaRole;
@@ -57,7 +56,6 @@ const Tooltip: FC<TooltipProps> = ({
   children,
   placement = "top",
   popupClassName,
-  contentClassName,
   className,
   disabled = false,
   interactive = false,
@@ -106,7 +104,8 @@ const Tooltip: FC<TooltipProps> = ({
             `
               pointer-events-none absolute z-50 opacity-0
               transition-all duration-300 ease-in-out
-              group-hover/tooltip:opacity-100 group-focus-within/tooltip:opacity-100
+              group-hover/tooltip:opacity-100
+              group-focus-within/tooltip:opacity-100
             `,
             interactive &&
               "group-hover/tooltip:pointer-events-auto group-focus-within/tooltip:pointer-events-auto",
@@ -117,16 +116,7 @@ const Tooltip: FC<TooltipProps> = ({
             holding && placementClass.open,
             popupClassName
           )}>
-          <div
-            className={cx(
-              `
-                whitespace-nowrap rounded-md border border-white/30 bg-white/30 px-3
-                py-2 text-xs font-bold shadow-sm backdrop-blur-2xl
-              `,
-              contentClassName
-            )}>
-            {content}
-          </div>
+          {content}
         </div>
       )}
     </section>
