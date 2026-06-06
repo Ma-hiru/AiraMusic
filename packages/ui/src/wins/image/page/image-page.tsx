@@ -76,7 +76,7 @@ const ImagePage: FC = () => {
           "
         />
       </Drag>
-      <AppToast.Provider className="top-12 z-[70]" />
+      <AppToast.Provider className="top-12 z-70" />
     </div>
   );
 };

@@ -1,4 +1,4 @@
-import { useLayoutEffect } from "react";
+import { useInsertionEffect } from "react";
 import { useListenable } from "./use-listenable";
 import { RendererWindow } from "@/common/lib/window";
 import { RendererEventBus } from "@/common/lib/bus";
@@ -9,7 +9,7 @@ const needInject = !RendererWindow.current.isMainWindow;
 export function useThemeInjectFromBus() {
   const infoBus = useListenable(RendererEventBus.info, !needInject);
 
-  useLayoutEffect(() => {
+  useInsertionEffect(() => {
     if (!needInject) return;
     if (!infoBus.data?.theme) return;
     RendererTheme.theme = {

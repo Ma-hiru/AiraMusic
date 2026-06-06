@@ -179,7 +179,7 @@ const NeteaseImage: FC<ImageProps> = ({
     return () => {
       status.token = Date.now();
     };
-  }, [image]);
+  }, [image?.src]);
 
   const shadowBaseLight = shadow === "base" && shadowColor === "light";
   const shadowBaseDark = shadow === "base" && shadowColor === "dark";

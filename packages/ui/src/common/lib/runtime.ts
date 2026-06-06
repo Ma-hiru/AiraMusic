@@ -14,4 +14,5 @@ export class RendererRuntime {
   static readonly isTest = isTest;
   static readonly cacheAccessToken = accessToken;
   static readonly currentWindowType = currentWindowType;
+  static readonly name = import.meta.env.APP_NAME;
 }
