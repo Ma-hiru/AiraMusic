@@ -9,6 +9,7 @@
 当前主要支持：
 
 - Windows x64
+- Linux amd64
 
 ## 界面展示
 
