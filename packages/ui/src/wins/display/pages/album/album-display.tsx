@@ -7,6 +7,7 @@ import { useArtistOrAlbumDisplayJump } from "@/wins/display/hooks/use-artist-or-
 import { usePlayerChangeActionFromDisplay } from "@/wins/display/hooks/use-player-change-action-from-display";
 import { useDisplayPageAction } from "@/wins/display/hooks/use-display-page-action";
 import { RendererEventBus } from "@/common/lib/bus";
+import { useDisplayTitle } from "@/wins/display/hooks/use-display-title";
 import RendererImageConstants from "@/common/constants/image";
 
 import Album, { type AlbumPageRef } from "@/common/components/page/album";
@@ -36,6 +37,7 @@ const AlbumDisplay: FC<object> = () => {
     type: "album",
     id: id!
   });
+  const { updateTitle } = useDisplayTitle("album");
 
   return (
     <Album
@@ -55,6 +57,7 @@ const AlbumDisplay: FC<object> = () => {
       addToPlaylistLast={addTrackToPlaylistLast}
       addToPlaylistNext={addTrackToPlaylistNext}
       openComment={openTrackComment}
+      onDataLoaded={(a) => a.content.name && updateTitle(a.content.name)}
     />
   );
 };

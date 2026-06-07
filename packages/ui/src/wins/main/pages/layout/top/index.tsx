@@ -11,7 +11,7 @@ import TopAvatar from "./top-avatar";
 import TopDivider from "./top-divider";
 import TopSearch from "./top-search";
 import TopLeft from "./top-left";
-import Drag from "@/common/components/drag/drag";
+import Drag from "@/common/components/layout/drag/drag";
 
 const Top: FC<{ className?: string }> = ({ className }) => {
   const playModal = useAtomValue(playModalAtom);

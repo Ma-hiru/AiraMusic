@@ -6,7 +6,7 @@ import { playModalAtom } from "@/wins/main/atoms/layout";
 import { usePageJump } from "@/wins/main/hooks/use-page-jump";
 
 import RendererPlayerHandle from "@/wins/main/lib/handle";
-import NeteaseImage from "@/common/components/image/netease-image";
+import NeteaseImage from "@/common/components/display/image/netease-image";
 
 const BarCover: FC<object> = () => {
   const { jumpArtistPage } = usePageJump();

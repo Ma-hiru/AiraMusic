@@ -1,4 +1,4 @@
-import AppToast from "@/common/components/toast";
+import AppToast from "../components/display/toast";
 import { Log } from "@/common/lib/log";
 import { useListenable } from "@/common/hooks/use-listenable";
 import { RendererOutput } from "@/common/lib/output";

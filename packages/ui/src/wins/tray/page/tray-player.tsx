@@ -4,7 +4,8 @@ import { Disc3, Music2 } from "lucide-react";
 import { NeteaseImageSize } from "@/common/enum";
 import { RendererFormat } from "@/common/lib/format";
 import { NeteaseNetworkImage } from "@/common/netease/models";
-import NeteaseImage from "@/common/components/image/netease-image";
+import NeteaseImage from "@/common/components/display/image/netease-image";
+import { RendererWindow } from "@/common/lib/window";
 
 interface TrayPlayerProps {
   track: Optional<NeteaseTrackModel>;
@@ -30,8 +31,9 @@ const TrayPlayer: FC<TrayPlayerProps> = ({ track, status, currentTime, duration 
   return (
     <section
       className="
-        grid min-h-16 grid-cols-[auto_minmax(0,1fr)] items-center gap-3 rounded-lg
-        border border-black/6 bg-white px-2.5 py-2 shadow-[0_8px_24px_rgba(0,0,0,0.08)]
+        w-fit min-h-16 bg-white/10 backdrop-blur-2xl px-2.5 py-2
+        grid grid-cols-[auto_minmax(0,1fr)] items-center gap-3 rounded-lg
+        border border-black/6 shadow-[0_8px_24px_rgba(0,0,0,0.08)]
       ">
       <div className="relative size-11 overflow-hidden rounded-md bg-black/5">
         {cover ? (
@@ -40,11 +42,18 @@ const TrayPlayer: FC<TrayPlayerProps> = ({ track, status, currentTime, duration 
             cacheLazy={false}
             image={cover}
             shadow="none"
-            className="size-full"
-            imageClassName="object-cover"
+            className="size-full cursor-pointer hover:opacity-50 ease-in-out duration-300 transition-opacity"
+            onClick={async () => {
+              if (!cover) return;
+              await RendererWindow.image.reactReadyAwait();
+              RendererWindow.image.send("imageCheckerBus", {
+                url: cover.toNetworkImage().setSize(NeteaseImageSize.raw).src,
+                alt: cover.alt
+              });
+            }}
           />
         ) : (
-          <div className="flex size-full items-center justify-center text-black/35">
+          <div className="flex size-full items-center justify-center opacity-35">
             <Music2 className="size-5" />
           </div>
         )}
@@ -56,21 +65,19 @@ const TrayPlayer: FC<TrayPlayerProps> = ({ track, status, currentTime, duration 
       </div>
       <div className="min-w-0 space-y-1.5">
         <div className="min-w-0">
-          <p className="truncate text-[12px] font-black leading-4 text-black">
-            {track?.name || "暂无播放"}
-          </p>
-          <p className="truncate text-[10px] font-semibold leading-3 text-black/45">
+          <p className="truncate text-[12px] font-black leading-4">{track?.name || "暂无播放"}</p>
+          <p className="truncate text-[10px] font-semibold leading-3 opacity-45">
             {artist || track?.al.name || "AiraMusic"}
           </p>
         </div>
         <div className="grid grid-cols-[1fr_auto] items-center gap-2">
-          <div className="h-1 overflow-hidden rounded-full bg-black/8">
+          <div className="h-1 overflow-hidden rounded-full bg-white/50">
             <span
               className="block h-full rounded-full bg-(--theme-color-main) transition-[width] duration-300 ease-in-out"
               style={{ width: `${percent}%` }}
             />
           </div>
-          <span className="text-[9px] font-semibold text-black/40">
+          <span className="text-[9px] font-semibold opacity-40">
             {RendererFormat.duration(currentTime, "s")}
           </span>
         </div>

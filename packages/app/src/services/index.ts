@@ -4,7 +4,7 @@ import { MainRuntime } from "@/lib/runtime";
 import { MainPathResolver } from "@/lib/path-resolver";
 import { MainPortResolver } from "@/lib/port";
 import { MainServicesBase, type MainServicesCreator } from "@/lib/service";
-import { MainKeyValueStore } from "@/lib/key-value-store";
+import { MainStoreConfig } from "@/lib/key-value-store";
 import { MainCacheStoreConstants } from "@/constants/store";
 import type { MainServicesType } from "@/types/service";
 import NeteaseMusicApiService from "./ncm";
@@ -67,7 +67,7 @@ export class MainServices extends MainServicesBase {
       });
     },
     store: (ports) => {
-      const { capacity, path, ttl } = MainKeyValueStore.get(
+      const { capacity, path, ttl } = MainStoreConfig.get(
         "cache",
         MainCacheStoreConstants.DEFAULT_CONFIG
       );

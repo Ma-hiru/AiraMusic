@@ -6,8 +6,8 @@ import RendererImageConstants from "@/common/constants/image";
 
 import AppError from "@/common/components/fallback/app-error";
 import AppLoading from "@/common/components/fallback/app-loading";
-import HomeMediaGrid from "@/wins/main/componets/home-media-grid";
-import HomeSection from "@/wins/main/componets/home-section";
+import MediaGrid from "@/common/components/layout/media-grid";
+import Section from "@/common/components/layout/section";
 
 interface NewAlbumsProps {
   onClickItem?: NormalFunc<[id: number]>;
@@ -42,17 +42,17 @@ const NewAlbums: FC<NewAlbumsProps> = ({ onClickItem }) => {
   );
 
   return (
-    <HomeSection title="新碟上架" subTitle="New Albums" Icon={DiscAlbum}>
+    <Section title="新碟上架" subTitle="New Albums" Icon={DiscAlbum}>
       <AppError reset={reload} when={status === "error"} message="加载新碟失败">
         <AppLoading loading={status === "loading"} className="h-40">
-          <HomeMediaGrid
+          <MediaGrid
             items={items}
             coverSize={RendererImageConstants.AlbumListCoverSize}
             onClickItem={onClickItem}
           />
         </AppLoading>
       </AppError>
-    </HomeSection>
+    </Section>
   );
 };
 

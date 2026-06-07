@@ -7,9 +7,9 @@ import { useListenable } from "@/common/hooks/use-listenable";
 import { RendererWindow } from "@/common/lib/window";
 import { createPlayerPlaylistModal } from "@/wins/main/componets/player-playlist-modal";
 import RendererPlayerHandle from "@/wins/main/lib/handle";
-import AppModal from "@/common/components/modal";
-import Tooltip from "@/common/components/tooltip";
-import RangeSlider from "@/common/components/range";
+import AppModal from "@/common/components/display/modal";
+import Tooltip from "@/common/components/display/tooltip";
+import RangeSlider from "@/common/components/data-input/range";
 
 const WHEEL_VOLUME_STEP = 0.1;
 const RESTORE_VOLUME = 0.5;

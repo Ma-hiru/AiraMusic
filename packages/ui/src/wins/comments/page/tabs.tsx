@@ -1,8 +1,8 @@
 import { type FC, memo } from "react";
 import { CommentSort, CommentSortText } from "@/common/enum";
 import { cx } from "@emotion/css";
-import SectionTab from "@/common/components/tab";
-import Switch from "@/common/components/switch";
+import SectionTab from "@/common/components/data-input/tab";
+import Switch from "@/common/components/data-input/switch";
 import { RendererFormat } from "@/common/lib/format";
 
 interface TabsProps {

@@ -9,7 +9,7 @@ import { RendererEventBus } from "@/common/lib/bus";
 import { useRequestAutoRun, useRequestStatusWrap } from "@/common/hooks/use-request-wrap";
 import { useListenable } from "@/common/hooks/use-listenable";
 import dayjs from "dayjs";
-import NeteaseImage from "@/common/components/image/netease-image";
+import NeteaseImage from "@/common/components/display/image/netease-image";
 import AppError from "@/common/components/fallback/app-error";
 import AppLoading from "@/common/components/fallback/app-loading";
 import RendererPlayerHandle from "@/wins/main/lib/handle";

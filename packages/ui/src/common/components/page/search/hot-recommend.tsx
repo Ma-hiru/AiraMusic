@@ -5,7 +5,7 @@ import { useRequestAutoRetry, useRequestStatusWrap } from "@/common/hooks/use-re
 import { NeteaseAPISearch } from "@/common/netease/api";
 import { RendererFormat } from "@/common/lib/format";
 import AppLoading from "@/common/components/fallback/app-loading";
-import Card from "@/common/components/card";
+import Card from "@/common/components/layout/card";
 import AppError from "@/common/components/fallback/app-error";
 
 interface HotRecommendProps {

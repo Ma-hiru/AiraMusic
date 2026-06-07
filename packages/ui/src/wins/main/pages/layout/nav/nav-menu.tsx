@@ -4,8 +4,8 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { cx } from "@emotion/css";
 import { NeteaseUser } from "@/common/netease/models";
 import { RoutePathMain } from "@/common/routes";
-import AppToast from "@/common/components/toast";
 import { usePageJump } from "@/wins/main/hooks/use-page-jump";
+import AppToast from "@/common/components/display/toast";
 
 interface NavMenuProps {
   barOpened: boolean;
@@ -19,7 +19,7 @@ const NavMenu: FC<NavMenuProps> = ({ barOpened }) => {
   return (
     <div className="flex flex-col gap-4 w-(--side-bar-expand-width) overflow-hidden">
       {NavConstants.LAYOUT_NAV.map(({ icon, label, path }) => {
-        const active = RoutePathMain.match(location, path);
+        const active = RoutePathMain.matchPathname(location, path);
         return (
           <div
             key={path}

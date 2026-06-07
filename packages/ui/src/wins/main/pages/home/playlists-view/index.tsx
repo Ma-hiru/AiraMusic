@@ -2,17 +2,17 @@ import { cx } from "@emotion/css";
 import { type FC, memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ListMusic, LoaderCircle } from "lucide-react";
 import { useUser } from "@/common/store/user";
-import { type RequestStatus } from "@/common/hooks/use-request-wrap";
 import { usePageJump } from "@/wins/main/hooks/use-page-jump";
 import { loadPlaylistCategory, uniqueItems } from "@/wins/main/pages/home/playlists-view/load";
-import type { HomeMediaItem } from "@/wins/main/componets/home-media-card";
+import { type RequestStatus } from "@/common/hooks/use-request-wrap";
+import type { MediaItem } from "@/common/components/layout/media-grid/card";
 import type { PlaylistCategory, PlaylistOrder } from "@/wins/main/constants";
 
 import CategoryPanel from "./category-panel";
 import AppError from "@/common/components/fallback/app-error";
 import AppLoading from "@/common/components/fallback/app-loading";
-import HomeMediaGrid from "@/wins/main/componets/home-media-grid";
-import HomeSection from "@/wins/main/componets/home-section";
+import MediaGrid from "@/common/components/layout/media-grid";
+import Section from "@/common/components/layout/section";
 
 const HomePlaylistsView: FC<{ className?: string }> = ({ className }) => {
   const user = useUser();
@@ -22,7 +22,7 @@ const HomePlaylistsView: FC<{ className?: string }> = ({ className }) => {
   const [order, setOrder] = useState<PlaylistOrder>("hot");
   const [showCategoryPanel, setShowCategoryPanel] = useState(false);
   const [status, setStatus] = useState<RequestStatus>("loading");
-  const [items, setItems] = useState<HomeMediaItem[]>([]);
+  const [items, setItems] = useState<MediaItem[]>([]);
   const [hasMore, setHasMore] = useState(false);
   const [cursor, setCursor] = useState<number>();
   const [isLoading, setIsLoading] = useState(false);
@@ -111,10 +111,10 @@ const HomePlaylistsView: FC<{ className?: string }> = ({ className }) => {
         showCategoryPanel={showCategoryPanel}
         setShowCategoryPanel={setShowCategoryPanel}
       />
-      <HomeSection title={resolvedTitle} subTitle="Playlist Explore" Icon={ListMusic}>
+      <Section title={resolvedTitle} subTitle="Playlist Explore" Icon={ListMusic}>
         <AppError reset={reload} when={status === "error"} message="加载歌单失败">
           <AppLoading loading={status === "loading"} className="min-h-80">
-            <HomeMediaGrid items={items} onClickItem={(id) => jumpPlaylistPage(id, "normal")} />
+            <MediaGrid items={items} onClickItem={(id) => jumpPlaylistPage(id, "normal")} />
             <div
               ref={loadMoreSentinelRef}
               aria-hidden={!hasMore}
@@ -133,7 +133,7 @@ const HomePlaylistsView: FC<{ className?: string }> = ({ className }) => {
             </div>
           </AppLoading>
         </AppError>
-      </HomeSection>
+      </Section>
     </div>
   );
 };

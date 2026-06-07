@@ -48,10 +48,17 @@ const Bus: FC<object> = () => {
       theme: {
         mainColor: theme.mainColor,
         secondaryColor: theme.secondaryColor,
-        textColor: theme.textColorOnMain
+        textColor: theme.textColorOnMain,
+        textNormalColor: theme.textColor
       }
     });
-  }, [theme.backgroundCover, theme.mainColor, theme.secondaryColor, theme.textColorOnMain]);
+  }, [
+    theme.backgroundCover,
+    theme.mainColor,
+    theme.secondaryColor,
+    theme.textColor,
+    theme.textColorOnMain
+  ]);
   useEffect(() => {
     player.audio.addEventListener("timeupdate", updateProgressBus, { passive: true });
     player.audio.addEventListener("play", updateProgressBus, { passive: true });

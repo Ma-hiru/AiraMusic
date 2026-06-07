@@ -4,8 +4,8 @@ import { Check, SlidersHorizontal } from "lucide-react";
 import { NeteaseSettings } from "@/common/netease/models";
 import { TrackQuality } from "@/common/enum";
 
-import Card from "@/common/components/card";
-import AppToast from "@/common/components/toast";
+import Card from "@/common/components/layout/card";
+import AppToast from "@/common/components/display/toast";
 
 interface QualityProps {
   vip: boolean;

@@ -6,6 +6,7 @@ type MessageEventValue = {
       mainColor: string;
       secondaryColor: string;
       textColor: string;
+      textNormalColor: string;
     };
   };
   playerBus: {

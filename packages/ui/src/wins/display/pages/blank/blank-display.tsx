@@ -1,21 +1,23 @@
 import { type FC, memo, useEffect } from "react";
 import { useBack } from "@/wins/display/ctx/back";
-import { useLocation } from "react-router-dom";
-import { RoutePathDisplay } from "@/common/routes";
 import { RendererWindow } from "@/common/lib/window";
+import { useDisplayTitle } from "@/wins/display/hooks/use-display-title";
 
 import AppMask from "@/common/components/fallback/app-mask";
 
 const BlankDisplay: FC<object> = () => {
   const { back } = useBack();
-  const location = useLocation();
+  const { updateTitle, active } = useDisplayTitle("blank");
 
   // 退回到最初的路由时，关闭窗口
   useEffect(() => {
-    const active = RoutePathDisplay.match(location, RoutePathDisplay.blank);
     if (!back || !active) return;
     RendererWindow.current.close();
-  }, [back, location]);
+  }, [active, back, updateTitle]);
+
+  useEffect(() => {
+    updateTitle("");
+  }, [updateTitle]);
 
   return <AppMask />;
 };

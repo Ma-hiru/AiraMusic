@@ -3,7 +3,7 @@ import { NeteaseNetworkImage } from "@/common/netease/models";
 import { RendererFormat } from "@/common/lib/format";
 import RendererImageConstants from "@/common/constants/image";
 
-import NeteaseImage from "@/common/components/image/netease-image";
+import NeteaseImage from "@/common/components/display/image/netease-image";
 
 interface AlbumItemProps {
   data: NeteaseAPI.ArtistAlbum;

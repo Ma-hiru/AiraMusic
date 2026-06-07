@@ -2,7 +2,7 @@ import { app, BrowserWindow, dialog } from "electron";
 import { MainWindowManager } from "@/lib/window-manager";
 import { MainRuntime } from "@/lib/runtime";
 import { MainScreenResolver } from "@/lib/screen-resolver";
-import { MainKeyValueStore } from "@/lib/key-value-store";
+import { MainStoreConfig, MainStoreForRenderer } from "@/lib/key-value-store";
 import { Log } from "@/lib/log";
 import type { InvokeHandlers } from "@mahiru/ipc/main";
 import Dns from "node:dns/promises";
@@ -151,7 +151,7 @@ export const invokeHandlers: InvokeHandlers = {
   updateCacheStoreConfig: (e, config) => {
     try {
       const res = mergeCacheStoreConfig(config);
-      if (res.ok) MainKeyValueStore.set("cache", res.config);
+      if (res.ok) MainStoreConfig.set("cache", res.config);
       return res;
     } catch (err) {
       Log.error("invoke(updateCacheStoreConfig)", err);
@@ -159,6 +159,36 @@ export const invokeHandlers: InvokeHandlers = {
     }
   },
   fetchCacheStoreConfig: () => {
-    return MainKeyValueStore.get("cache", MainCacheStoreConstants.DEFAULT_CONFIG);
+    return MainStoreConfig.get("cache", MainCacheStoreConstants.DEFAULT_CONFIG);
+  },
+  setKeyValue: (_, { key, value }) => {
+    try {
+      MainStoreForRenderer.set(key, value);
+      return { ok: true };
+    } catch (err) {
+      Log.error(err);
+      return { ok: false, reason: "本地数据错误" };
+    }
+  },
+  getKeyValue: (_, key) => {
+    try {
+      const value = MainStoreForRenderer.get(key);
+      return {
+        ok: true,
+        value
+      };
+    } catch (err) {
+      Log.error(err);
+      return { ok: false, reason: "本地数据错误" };
+    }
+  },
+  deleteKeyValue: (_, key) => {
+    try {
+      MainStoreForRenderer.delete(key);
+      return { ok: true };
+    } catch (err) {
+      Log.error(err);
+      return { ok: false, reason: "本地数据错误" };
+    }
   }
 };

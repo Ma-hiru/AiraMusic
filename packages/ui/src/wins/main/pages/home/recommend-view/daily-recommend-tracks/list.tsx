@@ -2,7 +2,7 @@ import { type FC, memo, type RefObject } from "react";
 import { NeteaseImageSize } from "@/common/enum";
 import { NeteaseTrack, NeteaseTrackRecord } from "@/common/netease/models";
 
-import HomeMediaCard from "@/wins/main/componets/home-media-card";
+import HomeMediaCard from "@/common/components/layout/media-grid/card";
 import RendererPlayerHandle from "@/wins/main/lib/handle";
 
 interface RecommendTrackListProps {

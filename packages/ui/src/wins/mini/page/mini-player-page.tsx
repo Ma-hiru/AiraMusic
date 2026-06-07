@@ -1,6 +1,15 @@
 import { cx } from "@emotion/css";
-import { type LucideIcon, Music2, Pause, Play, SkipBack, SkipForward, X } from "lucide-react";
-import { type FC, Fragment, memo, useCallback, useMemo } from "react";
+import {
+  Disc3,
+  type LucideIcon,
+  Music2,
+  Pause,
+  Play,
+  SkipBack,
+  SkipForward,
+  X
+} from "lucide-react";
+import { type FC, Fragment, memo, useCallback, useEffect, useMemo } from "react";
 import { NeteaseImageSize } from "@/common/enum";
 import { useListenable } from "@/common/hooks/use-listenable";
 import { RendererEventBus } from "@/common/lib/bus";
@@ -9,13 +18,14 @@ import { NeteaseNetworkImage, NeteaseURL } from "@/common/netease/models";
 import { useThemeInjectFromBus } from "@/common/hooks/use-theme-inject-from-bus";
 import { RendererFormat } from "@/common/lib/format";
 
-import Drag from "@/common/components/drag/drag";
-import NoDrag from "@/common/components/drag/no-drag";
-import NeteaseImage from "@/common/components/image/netease-image";
-import AcrylicBackground from "@/common/components/public/acrylic-background";
+import Drag from "@/common/components/layout/drag/drag";
+import NoDrag from "@/common/components/layout/drag/no-drag";
+import NeteaseImage from "@/common/components/display/image/netease-image";
+import AcrylicBackground from "@/common/components/display/acrylic-background";
 
 const MiniPlayerPage: FC = () => {
   useThemeInjectFromBus();
+  const mainWindow = useListenable(RendererWindow.main);
   const playerBus = useListenable(RendererEventBus.player);
   const progressBus = useListenable(RendererEventBus.progress);
 
@@ -34,9 +44,21 @@ const MiniPlayerPage: FC = () => {
     RendererWindow.main.show();
     RendererWindow.main.focus();
   }, []);
+
   const togglePlay = useCallback(() => {
     RendererEventBus.playerAction.send(isPlaying ? "pause" : "play");
   }, [isPlaying]);
+
+  useEffect(() => {
+    RendererEventBus.mainBusUpdater.send("player");
+    RendererEventBus.mainBusUpdater.send("progress");
+  }, []);
+
+  useEffect(() => {
+    return mainWindow.addEventListener("show", () => {
+      RendererWindow.current.hide();
+    });
+  }, [mainWindow]);
 
   return (
     <Drag className={cx("relative overflow-hidden", !bg && "text-black")}>
@@ -76,6 +98,11 @@ const MiniPlayerPage: FC = () => {
             <div className="flex size-full items-center justify-center">
               <Music2 className="size-5" />
             </div>
+          )}
+          {playerBus.data?.status === "playing" && (
+            <span className="absolute right-0.5 top-0.5 flex size-2.5 items-center justify-center rounded-full bg-(--theme-color-main)">
+              <Disc3 className="size-2 animate-spin text-(--text-color-on-main)" />
+            </span>
           )}
         </NoDrag>
         <div className="grid min-w-0 grid-rows-[1fr_auto] gap-0.5">
@@ -131,7 +158,7 @@ const MiniPlayerPage: FC = () => {
             />
           </NoDrag>
         </div>
-        <div className="h-full flex flex-col justify-start items-end">
+        <div className="h-full flex flex-col justify-between items-end">
           <NoDrag>
             <button
               title="隐藏"
@@ -145,7 +172,7 @@ const MiniPlayerPage: FC = () => {
               <X className="size-3.5" />
             </button>
           </NoDrag>
-          <div className="font-medium text-[12px] absolute bottom-0">
+          <div className="font-medium text-[12px]">
             {RendererFormat.duration(progressBus.data?.currentTime, "s")} /{" "}
             {RendererFormat.duration(progressBus.data?.duration, "s")}
           </div>

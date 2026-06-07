@@ -5,8 +5,8 @@ import { PlaylistSource } from "@/common/enum";
 import TopCover from "./top-cover";
 import TopRight from "./top-right";
 import TopInfo from "./top-info";
-import AppTitle from "@/common/components/title";
-import Search from "@/common/components/public/search";
+import AppTitle from "@/common/components/display/title";
+import Search from "@/common/components/data-input/search";
 
 interface TopProps {
   type: PlaylistSource;

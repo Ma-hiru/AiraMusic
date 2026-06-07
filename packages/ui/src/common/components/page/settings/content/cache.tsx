@@ -6,13 +6,13 @@ import { RendererFormat } from "@/common/lib/format";
 import { RendererIPC } from "@/common/lib/ipc";
 import { RendererCache } from "@/common/lib/cache";
 import { Log } from "@/common/lib/log";
-import AppToast from "@/common/components/toast";
+import AppToast from "@/common/components/display/toast";
 
 import RangeRow from "./range-row";
 import BaseItem from "./base-item";
 import DonutChart from "./donut-chart";
-import Card from "@/common/components/card";
-import AppModal from "@/common/components/modal";
+import Card from "@/common/components/layout/card";
+import AppModal from "@/common/components/display/modal";
 
 interface CacheProps {
   cacheStoreSizes: Nullable<CacheStoreSizeCategories>;

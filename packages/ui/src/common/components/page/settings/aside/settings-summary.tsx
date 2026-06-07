@@ -5,7 +5,7 @@ import { RendererFormat } from "@/common/lib/format";
 import type { InvokeEventPayload } from "@mahiru/ipc/dist-types/src/types/invoke";
 
 import MiniStat from "./mini-stat";
-import Card from "@/common/components/card";
+import Card from "@/common/components/layout/card";
 
 interface SummaryProps {
   settings: NeteaseSettings;

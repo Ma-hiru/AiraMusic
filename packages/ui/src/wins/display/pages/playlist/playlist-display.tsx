@@ -9,6 +9,7 @@ import { useArtistOrAlbumDisplayJump } from "@/wins/display/hooks/use-artist-or-
 import { usePlayerChangeActionFromDisplay } from "@/wins/display/hooks/use-player-change-action-from-display";
 import { useDisplayPageAction } from "@/wins/display/hooks/use-display-page-action";
 import { RendererEventBus } from "@/common/lib/bus";
+import { useDisplayTitle } from "@/wins/display/hooks/use-display-title";
 
 import Playlist, { type PlaylistRef } from "@/common/components/page/playlist";
 
@@ -40,6 +41,7 @@ const PlaylistDisplay: FC<object> = () => {
       source
     };
   });
+  const { updateTitle } = useDisplayTitle("playlist");
 
   return (
     <Playlist
@@ -64,6 +66,7 @@ const PlaylistDisplay: FC<object> = () => {
       pageActionType="enter"
       onPageAction={onPageAction}
       historyList={[]}
+      onDataLoaded={(p) => p.name && updateTitle(p.name)}
     />
   );
 };

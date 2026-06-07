@@ -7,7 +7,7 @@ import { useScrollAutoHide } from "@/common/hooks/use-scroll-auto-hide";
 import AppLoading from "@/common/components/fallback/app-loading";
 import AppEmpty from "@/common/components/fallback/app-empty";
 import AppError from "@/common/components/fallback/app-error";
-import HomeMediaGrid from "@/wins/main/componets/home-media-grid";
+import HomeMediaGrid from "@/common/components/layout/media-grid";
 import { RendererFormat } from "@/common/lib/format";
 
 interface AlbumResultProps {

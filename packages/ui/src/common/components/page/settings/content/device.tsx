@@ -3,7 +3,7 @@ import { Check, ChevronDown, Monitor } from "lucide-react";
 import { type FC, memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { RendererWindow } from "@/common/lib/window";
 
-import Card from "@/common/components/card";
+import Card from "@/common/components/layout/card";
 import { useScrollAutoHide } from "@/common/hooks/use-scroll-auto-hide";
 
 interface DeviceProps {

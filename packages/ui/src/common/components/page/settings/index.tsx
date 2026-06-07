@@ -7,7 +7,7 @@ import type { InvokeEventPayload } from "@mahiru/ipc/renderer";
 
 import SettingsAside from "./aside";
 import SettingsContent from "./content";
-import AppToast from "@/common/components/toast";
+import AppToast from "@/common/components/display/toast";
 
 interface SettingsProps {
   user: Nullable<NeteaseUser>;

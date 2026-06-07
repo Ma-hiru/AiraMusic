@@ -2,7 +2,7 @@ import { type FC, memo, useCallback, useRef, useState } from "react";
 import { useScrollAutoHide } from "@/common/hooks/use-scroll-auto-hide";
 import { NeteaseNetworkImage, NeteasePlaylistSummary, NeteaseUser } from "@/common/netease/models";
 import RendererTheme from "@/common/player/ui";
-import NeteaseImage from "@/common/components/image/netease-image";
+import NeteaseImage from "@/common/components/display/image/netease-image";
 import { cx } from "@emotion/css";
 import { useLocateOrScrollTopRegister } from "@/wins/main/hooks/use-locate-or-scroll-top-register";
 import { usePageJump } from "@/wins/main/hooks/use-page-jump";
@@ -10,7 +10,7 @@ import { useLocation } from "react-router-dom";
 import { RoutePathMain } from "@/common/routes";
 import RendererImageConstants from "@/common/constants/image";
 
-import VirtualList, { type VirtualListRow } from "@/common/components/virtual_list";
+import VirtualList, { type VirtualListRow } from "@/common/components/layout/virtual_list";
 
 interface NavPlaylistProps {
   user: Nullable<NeteaseUser>;
@@ -35,7 +35,8 @@ const NavPlaylist: FC<NavPlaylistProps> = ({ user, sidebarOpen }) => {
   }, []);
 
   const { canScrollTop } = useLocateOrScrollTopRegister({
-    getScrollTopFunc: () => gotoTop
+    getScrollTopFunc: () => gotoTop,
+    page: "home"
   });
 
   const { jumpPlaylistPage } = usePageJump();

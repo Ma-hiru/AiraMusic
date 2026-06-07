@@ -7,7 +7,7 @@ import AppLoading from "@/common/components/fallback/app-loading";
 import AppEmpty from "@/common/components/fallback/app-empty";
 import { cx } from "@emotion/css";
 import AppError from "@/common/components/fallback/app-error";
-import HomeMediaGrid from "@/wins/main/componets/home-media-grid";
+import HomeMediaGrid from "@/common/components/layout/media-grid";
 
 interface ArtistResultProps {
   className?: string;

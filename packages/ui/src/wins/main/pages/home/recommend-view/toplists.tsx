@@ -6,8 +6,8 @@ import { RendererHomeConstants } from "@/wins/main/constants";
 
 import AppError from "@/common/components/fallback/app-error";
 import AppLoading from "@/common/components/fallback/app-loading";
-import HomeMediaGrid from "@/wins/main/componets/home-media-grid";
-import HomeSection from "@/wins/main/componets/home-section";
+import MediaGrid from "@/common/components/layout/media-grid";
+import Section from "@/common/components/layout/section";
 
 interface ToplistsProps {
   onClickItem?: NormalFunc<[id: number]>;
@@ -40,13 +40,13 @@ const Toplists: FC<ToplistsProps> = ({ onClickItem }) => {
     }));
   }, [toplists]);
   return (
-    <HomeSection title="排行榜" subTitle="Charts" Icon={Trophy}>
+    <Section title="排行榜" subTitle="Charts" Icon={Trophy}>
       <AppError reset={reload} when={status === "error"} message="加载排行榜失败">
         <AppLoading loading={status === "loading"} className="h-40">
-          <HomeMediaGrid items={gridItems} onClickItem={onClickItem} />
+          <MediaGrid items={gridItems} onClickItem={onClickItem} />
         </AppLoading>
       </AppError>
-    </HomeSection>
+    </Section>
   );
 };
 

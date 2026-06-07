@@ -4,8 +4,8 @@ import { useRequestAutoRetry, useRequestStatusWrap } from "@/common/hooks/use-re
 import { Sparkles } from "lucide-react";
 import AppLoading from "@/common/components/fallback/app-loading";
 import AppError from "@/common/components/fallback/app-error";
-import HomeSection from "@/wins/main/componets/home-section";
-import HomeMediaGrid from "@/wins/main/componets/home-media-grid";
+import Section from "@/common/components/layout/section";
+import MediaGrid from "@/common/components/layout/media-grid";
 
 const DailyRecommendPlaylist = ({
   onClickItem,
@@ -28,10 +28,10 @@ const DailyRecommendPlaylist = ({
   }, [onDataLoaded, recommend]);
 
   return (
-    <HomeSection title="每日推荐歌单" subTitle="Daily Mix" Icon={Sparkles}>
+    <Section title="每日推荐歌单" subTitle="Daily Mix" Icon={Sparkles}>
       <AppError reset={reload} when={status === "error"} message="加载每日推荐歌单失败">
         <AppLoading loading={status === "loading"} className="h-fit w-full">
-          <HomeMediaGrid
+          <MediaGrid
             items={recommend.map((r) => ({
               name: r.name,
               id: r.id,
@@ -43,7 +43,7 @@ const DailyRecommendPlaylist = ({
           />
         </AppLoading>
       </AppError>
-    </HomeSection>
+    </Section>
   );
 };
 

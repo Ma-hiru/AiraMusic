@@ -17,7 +17,7 @@ import {
   NeteaseServicesTrack
 } from "@/common/netease/services";
 import { RendererEventBus } from "@/common/lib/bus";
-import NeteaseImage from "@/common/components/image/netease-image";
+import NeteaseImage from "@/common/components/display/image/netease-image";
 
 interface TitleProps {
   commentBus: typeof RendererEventBus.comment;
@@ -93,6 +93,18 @@ const Title: FC<TitleProps> = ({ className, commentBus }) => {
         });
     }
   }, [commentBus.data?.id, commentBus.data?.type]);
+
+  useEffect(() => {
+    let name = `${import.meta.env.APP_NAME} 评论`;
+    if (commentBus.data?.type === "track" && track) {
+      name += ` - ${track.name}`;
+    } else if (commentBus.data?.type === "playlist" && playlist) {
+      name += ` - ${playlist.name}`;
+    } else if (commentBus.data?.type === "album" && album) {
+      name += ` - ${album.content.name}`;
+    }
+    document.title = name;
+  }, [album, commentBus.data?.type, playlist, track]);
   return (
     <div
       className={cx(

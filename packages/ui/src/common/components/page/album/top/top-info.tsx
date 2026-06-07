@@ -4,7 +4,7 @@ import { cx } from "@emotion/css";
 import { RendererEventBus } from "@/common/lib/bus";
 import { RendererWindow } from "@/common/lib/window";
 import { createAlbumStats } from "@/common/utils/playlist";
-import AppToast from "@/common/components/toast";
+import AppToast from "@/common/components/display/toast";
 
 interface TopInfoProps {
   album: Nullable<NeteaseAlbum>;

@@ -7,9 +7,9 @@ import { NeteaseAPIComment } from "@/common/netease/api";
 import { RendererFormat } from "@/common/lib/format";
 import { cx } from "@emotion/css";
 import { Log } from "@/common/lib/log";
-import AppToast from "@/common/components/toast";
+import AppToast from "@/common/components/display/toast";
 
-import NeteaseImage from "@/common/components/image/netease-image";
+import NeteaseImage from "@/common/components/display/image/netease-image";
 
 interface ItemProps {
   data: NeteaseAPI.NeteaseComment;

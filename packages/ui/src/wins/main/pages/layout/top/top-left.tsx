@@ -9,8 +9,8 @@ import { playModalAtom, sidebarAtom } from "@/wins/main/atoms/layout";
 import { RendererWindow } from "@/common/lib/window";
 import { RendererEventBus } from "@/common/lib/bus";
 
-import NeteaseImage from "@/common/components/image/netease-image";
-import NoDrag from "@/common/components/drag/no-drag";
+import NeteaseImage from "@/common/components/display/image/netease-image";
+import NoDrag from "@/common/components/layout/drag/no-drag";
 
 interface TopLeftProps {
   user: Nullable<NeteaseUser>;

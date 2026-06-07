@@ -32,9 +32,9 @@ export class MainWindowConstants {
     },
     // 迷你播放器：定高变宽，min/max 为 resize 边界
     miniplayer: {
-      base: { width: 250, height: 55 },
-      min: { width: 240, height: 55 },
-      max: { width: 280, height: 55 }
+      base: { width: 260, height: 68 },
+      min: { width: 240, height: 68 },
+      max: { width: 300, height: 68 }
     },
     // Windows 托盘弹窗
     trayOnWindows: {

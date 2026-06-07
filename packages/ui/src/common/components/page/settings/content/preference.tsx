@@ -3,7 +3,7 @@ import { Monitor, Palette } from "lucide-react";
 import { NeteaseSettings, type NeteaseSettingsModel } from "@/common/netease/models";
 
 import ToggleRow from "./toggle-row";
-import Card from "@/common/components/card";
+import Card from "@/common/components/layout/card";
 
 interface PreferenceSettings {
   data: NeteaseSettings["preference"];

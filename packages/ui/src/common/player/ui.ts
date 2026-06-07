@@ -2,18 +2,23 @@ import Color, { type ColorInstance } from "color";
 import { converter, formatHex } from "culori";
 import { clamp } from "lodash-es";
 import { Listener } from "@/common/utils/listenable";
+import { ensureInitClass, Init, initAsync } from "@/common/utils/init";
 
+@Init(() => {
+  const observer = new MutationObserver(() => RendererTheme.listener.execute());
+  observer.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ["style"]
+  });
+})
 export default class RendererTheme {
   static readonly BLACK_COLOR = Color("#000000");
   static readonly WHITE_COLOR = Color("#FFFFFF");
   static readonly themeCSSNameMain = "--theme-color-main";
   static readonly themeCSSNameSecondary = "--theme-color-secondary";
   static readonly themeCSSNameTextOnMain = "--text-color-on-main";
+  static readonly themeCSSNameText = "--text-color";
   private static readonly listener = new Listener();
-  private static readonly observer = new MutationObserver(
-    this.listener.execute.bind(this.listener)
-  );
-  private static hasInitObserver = false;
 
   static addListener(cb: NormalFunc) {
     return this.listener.add(cb);
@@ -23,17 +28,7 @@ export default class RendererTheme {
     return this.listener.remove(cb);
   }
 
-  static initObserver() {
-    if (this.hasInitObserver) return;
-    this.hasInitObserver = true;
-    this.observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ["style"]
-    });
-  }
-
   static get theme() {
-    this.initObserver();
     const styles = getComputedStyle(document.documentElement);
 
     const main = styles.getPropertyValue(this.themeCSSNameMain).trim() || this.themeDefault.main;
@@ -41,35 +36,41 @@ export default class RendererTheme {
       styles.getPropertyValue(this.themeCSSNameTextOnMain).trim() || this.themeDefault.textOnMain;
     const secondary =
       styles.getPropertyValue(this.themeCSSNameSecondary).trim() || this.themeDefault.secondary;
+    const textColor =
+      styles.getPropertyValue(this.themeCSSNameText).trim() || this.themeDefault.text;
 
     return {
       main,
       secondary,
-      textOnMainColor
+      textOnMainColor,
+      textColor
     };
   }
 
   static set theme(colors) {
-    const { main, secondary, textOnMainColor } = colors;
+    const { main, secondary, textOnMainColor, textColor } = colors;
     document.documentElement.style.setProperty(this.themeCSSNameMain, main);
     document.documentElement.style.setProperty(this.themeCSSNameSecondary, secondary);
     document.documentElement.style.setProperty(this.themeCSSNameTextOnMain, textOnMainColor);
+    document.documentElement.style.setProperty(this.themeCSSNameText, textColor);
   }
 
   static get themeDefault() {
     return {
       main: "#ff3b5c",
       textOnMain: "#000000",
-      secondary: "#ff6b81"
+      secondary: "#ff6b81",
+      text: "#000000"
     };
   }
 
   static get themeInstance() {
-    const { main, secondary, textOnMainColor } = this.theme;
+    const { main, secondary, textOnMainColor, textColor } = this.theme;
     return {
       main: Color(main),
       secondary: Color(secondary),
-      textOnMainColor: Color(textOnMainColor)
+      textOnMainColor: Color(textOnMainColor),
+      textColor: Color(textColor)
     };
   }
 
@@ -166,3 +167,5 @@ const Palette_SCALE: Record<LIGHTNESS_SCALE, number> = {
   800: 0.32,
   900: 0.22
 };
+
+initAsync(ensureInitClass(RendererTheme));

@@ -12,7 +12,7 @@ import {
 import { NeteaseArtist } from "@/common/netease/models";
 import { RendererFormat } from "@/common/lib/format";
 import { NeteaseAPIArtist } from "@/common/netease/api";
-import AppToast from "@/common/components/toast";
+import AppToast from "@/common/components/display/toast";
 
 interface InfoProps {
   className?: string;

@@ -1,6 +1,6 @@
 import { type FC, memo, useCallback, useEffect, useRef } from "react";
 
-import LyricComponent, { type LyricRef } from "@/common/components/lyric/lyric-container";
+import LyricComponent, { type LyricRef } from "@/common/components/display/lyric/lyric-container";
 import RendererPlayerHandle from "@/wins/main/lib/handle";
 
 const Lyric: FC<object> = () => {

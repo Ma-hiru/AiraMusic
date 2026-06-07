@@ -16,12 +16,12 @@ import type { SearchInputRef } from "./input/search-input";
 import { NeteaseHistory, NeteaseTrackRecord } from "@/common/netease/models";
 import { NeteaseImageSize } from "@/common/enum";
 import type { HeartManager } from "@/common/hooks/use-heart";
-import type { TrackListPlayableManager } from "@/common/components/track_list";
+import type { TrackListPlayableManager } from "@/common/components/display/track_list";
 import type { TrackResultRef } from "./content/track-result";
 
 import SearchInput from "./input";
 import HotRecommend from "./hot-recommend";
-import Card from "@/common/components/card";
+import Card from "@/common/components/layout/card";
 
 export type SearchRef = {
   tracks: NeteaseTrackRecord[];

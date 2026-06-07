@@ -8,7 +8,7 @@ import { sidebarAtom } from "@/wins/main/atoms/layout";
 
 import NavPlayList from "./nav-playlist";
 import NavMenu from "./nav-menu";
-import Divider from "@/common/components/divider";
+import Divider from "@/common/components/layout/divider";
 
 const Nav: FC<object> = () => {
   const sidebar = useAtomValue(sidebarAtom);

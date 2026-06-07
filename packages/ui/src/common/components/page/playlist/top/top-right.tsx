@@ -4,7 +4,7 @@ import { NeteasePlaylist } from "@/common/netease/models";
 import { useUser } from "@/common/store/user";
 import { PlaylistSource } from "@/common/enum";
 
-import Search from "@/common/components/public/search";
+import Search from "@/common/components/data-input/search";
 
 interface TopRightProps {
   summary: Nullable<NeteasePlaylist>;

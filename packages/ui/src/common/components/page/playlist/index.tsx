@@ -25,8 +25,8 @@ import type {
   TrackListContextMenuFunc,
   TrackListPlayableManager,
   TrackListRef
-} from "@/common/components/track_list";
-import TrackList from "@/common/components/track_list";
+} from "@/common/components/display/track_list";
+import TrackList from "@/common/components/display/track_list";
 import { SearchTrack } from "@mahiru/wasm";
 import { NeteaseImageSize, PlaylistSource } from "@/common/enum";
 import { NeteaseServicesImage, NeteaseServicesPlaylist } from "@/common/netease/services";
@@ -35,15 +35,15 @@ import { Log } from "@/common/lib/log";
 import { type RequestStatus } from "@/common/hooks/use-request-wrap";
 import { type HeartManager } from "@/common/hooks/use-heart";
 import { RendererNet } from "@/common/lib/net";
-import AppContextMenu from "@/common/components/menu";
-import AppToast from "@/common/components/toast";
+import AppContextMenu from "@/common/components/display/menu";
+import AppToast from "@/common/components/display/toast";
 import RendererImageConstants from "@/common/constants/image";
 import RendererPlayerHistory from "@/common/player/history";
 
 import Top from "./top";
 import AppLoading from "@/common/components/fallback/app-loading";
 import AppError from "@/common/components/fallback/app-error";
-import Divider from "@/common/components/divider";
+import Divider from "@/common/components/layout/divider";
 
 export type PlaylistRef = {
   tracks: NeteaseTrackRecord[] | NeteaseHistory[];
@@ -78,6 +78,7 @@ interface PlaylistProps {
   onPageAction?: NormalFunc;
   onCoverLoaded?: NormalFunc<[src: string]>;
   setIsTyping?: NormalFunc<[tying: boolean]>;
+  onDataLoaded?: NormalFunc<[playlist: NeteasePlaylist]>;
 }
 
 const Playlist: FC<PlaylistProps> = ({
@@ -103,7 +104,8 @@ const Playlist: FC<PlaylistProps> = ({
   pageActionType,
   onPageAction,
   onCoverLoaded,
-  setIsTyping
+  setIsTyping,
+  onDataLoaded
 }) => {
   const [status, setStatus] = useState<RequestStatus>("loading");
   const [playlist, setPlaylist] = useState<Nullable<NeteasePlaylist>>(null);
@@ -319,6 +321,10 @@ const Playlist: FC<PlaylistProps> = ({
     }),
     [fastLocator, scrollTop, tracks]
   );
+
+  useEffect(() => {
+    playlist && onDataLoaded?.(playlist);
+  }, [onDataLoaded, playlist]);
 
   return (
     <div className={className}>

@@ -27,7 +27,7 @@ const AlbumPage: FC<object> = () => {
   const { jumpAlbumPage, jumpArtistPage } = usePageJump({
     currentAlbumID: albumRef.current?.album?.content.id
   });
-  const { setBackground } = useSetBackground();
+  const { setBackground } = useSetBackground("album");
   const { onPageAction } = useDisplayAction({
     id: id!,
     type: "album"

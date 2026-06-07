@@ -1,4 +1,4 @@
-import { type FC, memo, useEffect } from "react";
+import { type FC, memo, useCallback, useEffect } from "react";
 import {
   AppWindow as AppWindowIcon,
   Minus,
@@ -10,25 +10,26 @@ import {
 import { useListenable } from "@/common/hooks/use-listenable";
 import { RendererWindow } from "@/common/lib/window";
 import RendererPlayerHandle from "@/wins/main/lib/handle";
-import NoDrag from "@/common/components/drag/no-drag";
-import AppToast from "@/common/components/toast";
+import NoDrag from "@/common/components/layout/drag/no-drag";
+import AppToast from "@/common/components/display/toast";
 
 const TopControl: FC = () => {
   const currentWindow = useListenable(RendererWindow.current);
   const miniWindow = useListenable(RendererWindow.get("miniplayer"));
 
-  const close = async () => {
-    currentWindow.hide();
-    RendererPlayerHandle.dispose();
+  const close = useCallback(async () => {
+    RendererWindow.current.hide();
     RendererWindow.all.hide();
-    currentWindow.close();
-  };
+    RendererPlayerHandle.dispose();
+    RendererWindow.current.close();
+  }, []);
 
-  const mini = () => {
-    miniWindow.show();
-    currentWindow.hide();
+  const mini = useCallback(() => {
+    RendererWindow.mini.show();
+    RendererWindow.mini.focus();
+    RendererWindow.current.hide();
     RendererPlayerHandle.busUpdater?.();
-  };
+  }, []);
 
   useEffect(() => {
     const sub1 = miniWindow.addEventListener("show", () => currentWindow.hide());
@@ -38,10 +39,6 @@ const TopControl: FC = () => {
       sub2();
     };
   }, [currentWindow, miniWindow]);
-
-  useEffect(() => {
-    RendererPlayerHandle.busUpdater?.();
-  }, []);
 
   return (
     <NoDrag className="flex flex-row gap-4 select-none">

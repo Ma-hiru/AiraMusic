@@ -30,7 +30,8 @@ const HomePage: FC<object> = () => {
   }, []);
 
   const { canScrollTop } = useLocateOrScrollTopRegister({
-    getScrollTopFunc: () => scrollTop
+    getScrollTopFunc: () => scrollTop,
+    page: "home"
   });
 
   const changeChannel = useCallback(

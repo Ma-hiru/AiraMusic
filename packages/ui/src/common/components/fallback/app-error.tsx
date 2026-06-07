@@ -1,7 +1,7 @@
 import { type FC, memo, type ReactNode, useEffect } from "react";
 import { cx } from "@emotion/css";
 import { CircleX } from "lucide-react";
-import AppToast from "@/common/components/toast";
+import AppToast from "@/common/components/display/toast";
 
 interface AppErrorProps {
   className?: string;

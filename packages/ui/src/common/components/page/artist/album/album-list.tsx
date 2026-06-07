@@ -1,8 +1,8 @@
 import { type FC, memo } from "react";
 import { useAlbum } from "@/common/hooks/use-album";
-import InfiniteContainer from "@/common/components/infinite/infinite-container";
+import InfiniteContainer from "@/common/components/layout/infinite/infinite-container";
 import AppError from "@/common/components/fallback/app-error";
-import HomeMediaGrid from "@/wins/main/componets/home-media-grid";
+import HomeMediaGrid from "@/common/components/layout/media-grid";
 import { RendererFormat } from "@/common/lib/format";
 
 interface AlbumListProps {

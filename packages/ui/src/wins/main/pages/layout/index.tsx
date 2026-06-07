@@ -4,9 +4,9 @@ import { useAppLoaded } from "@/common/hooks/use-app-loaded";
 import { Stage } from "@/common/enum";
 import { useUser } from "@/common/store/user";
 import { NeteaseServicesAuth } from "@/common/netease/services";
-import AppModal from "@/common/components/modal";
-import AppToast from "@/common/components/toast";
-import AppContextMenu from "@/common/components/menu";
+import AppModal from "@/common/components/display/modal";
+import AppToast from "@/common/components/display/toast";
+import AppContextMenu from "@/common/components/display/menu";
 
 import AppErrorBoundary from "@/common/components/fallback/app-error-boundary";
 import AppMask from "@/common/components/fallback/app-mask";

@@ -3,16 +3,18 @@ import { useEffect } from "react";
 import { QRCodeStatus, useLoginQRCode } from "@/wins/login/hooks/use-login-qr-code";
 import { useAppLoaded } from "@/common/hooks/use-app-loaded";
 import { RendererWindow } from "@/common/lib/window";
+import { RendererEventBus } from "@/common/lib/bus";
 
 import QRCode from "./qr-code";
 import Tips from "./tips";
-import Drag from "@/common/components/drag/drag";
-import TopControlPure from "@/common/components/top/control";
-import AcrylicBackground from "@/common/components/public/acrylic-background";
-import { RendererEventBus } from "@/common/lib/bus";
+import Drag from "@/common/components/layout/drag/drag";
+import TopControlPure from "@/common/components/layout/top/control";
+import AcrylicBackground from "@/common/components/display/acrylic-background";
+import { useThemeInjectFromBus } from "@/common/hooks/use-theme-inject-from-bus";
 
 export default function LoginPage() {
   useAppLoaded();
+  useThemeInjectFromBus();
   const { status, result, dataURL, update } = useLoginQRCode();
   const mainWindow = useListenable(RendererWindow.get("main"));
   const currentWindow = useListenable(RendererWindow.current);
@@ -25,6 +27,7 @@ export default function LoginPage() {
   }, [currentWindow, mainWindow, result, status]);
 
   const infoBus = useListenable(RendererEventBus.info);
+
   useEffect(() => {
     RendererEventBus.mainBusUpdater.send("info");
   }, []);

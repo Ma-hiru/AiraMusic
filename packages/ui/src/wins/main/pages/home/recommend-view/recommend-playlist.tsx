@@ -4,8 +4,8 @@ import { useRequestAutoRetry, useRequestStatusWrap } from "@/common/hooks/use-re
 import { ListMusic } from "lucide-react";
 import AppLoading from "@/common/components/fallback/app-loading";
 import AppError from "@/common/components/fallback/app-error";
-import HomeSection from "@/wins/main/componets/home-section";
-import HomeMediaGrid from "@/wins/main/componets/home-media-grid";
+import Section from "@/common/components/layout/section";
+import MediaGrid from "@/common/components/layout/media-grid";
 
 const RecommendPlaylist = ({
   onClickItem,
@@ -33,10 +33,10 @@ const RecommendPlaylist = ({
   }, [onDataLoaded, recommend]);
 
   return (
-    <HomeSection title="推荐歌单" subTitle="Playlist Picks" Icon={ListMusic}>
+    <Section title="推荐歌单" subTitle="Playlist Picks" Icon={ListMusic}>
       <AppError when={status === "error"} reset={reload} message="加载推荐歌单失败">
         <AppLoading loading={status === "loading"} className="h-auto w-full">
-          <HomeMediaGrid
+          <MediaGrid
             items={recommend.map((r) => ({
               name: r.name,
               id: r.id,
@@ -48,7 +48,7 @@ const RecommendPlaylist = ({
           />
         </AppLoading>
       </AppError>
-    </HomeSection>
+    </Section>
   );
 };
 

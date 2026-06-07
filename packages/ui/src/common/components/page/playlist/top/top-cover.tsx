@@ -2,8 +2,8 @@ import { type FC, memo, type ReactEventHandler, useCallback, useMemo } from "rea
 import { NeteaseNetworkImage, NeteasePlaylist } from "@/common/netease/models";
 import RendererImageConstants from "@/common/constants/image";
 
-import NeteaseImage from "@/common/components/image/netease-image";
-import AppModal from "@/common/components/modal";
+import NeteaseImage from "@/common/components/display/image/netease-image";
+import AppModal from "@/common/components/display/modal";
 
 interface TopCoverProps {
   summary: Nullable<NeteasePlaylist>;

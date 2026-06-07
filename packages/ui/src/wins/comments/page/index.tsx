@@ -5,14 +5,14 @@ import { RendererCache } from "@/common/lib/cache";
 import { useListenable } from "@/common/hooks/use-listenable";
 import { useThemeInjectFromBus } from "@/common/hooks/use-theme-inject-from-bus";
 import { RendererEventBus } from "@/common/lib/bus";
-import AppToast from "@/common/components/toast";
+import AppToast from "@/common/components/display/toast";
 
 import Control from "./control";
 import Title from "./title";
 import Tabs from "./tabs";
 import Content from "./content";
 import AppLoading from "@/common/components/fallback/app-loading";
-import AcrylicBackground from "@/common/components/public/acrylic-background";
+import AcrylicBackground from "@/common/components/display/acrylic-background";
 import AppError from "@/common/components/fallback/app-error";
 
 const CommentsPage: FC<object> = () => {

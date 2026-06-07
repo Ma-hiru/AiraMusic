@@ -3,7 +3,7 @@ import { Log } from "@/common/lib/log";
 import { EqError } from "@mahiru/log";
 import { NeteaseServicesAuth } from "@/common/netease/services";
 import RendererHTTPConstants from "@/common/constants/http";
-import AppToast from "@/common/components/toast";
+import AppToast from "@/common/components/display/toast";
 
 export const apiRequest = axios.create({
   baseURL: RendererHTTPConstants.NCMBaseURL,

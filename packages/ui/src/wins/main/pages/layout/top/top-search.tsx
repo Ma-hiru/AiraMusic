@@ -1,6 +1,6 @@
 import { type FC, memo, useCallback } from "react";
 import { Search } from "lucide-react";
-import NoDrag from "@/common/components/drag/no-drag";
+import NoDrag from "@/common/components/layout/drag/no-drag";
 import { RendererWindow } from "@/common/lib/window";
 import { RendererEventBus } from "@/common/lib/bus";
 import { useSearchRecommend } from "@/common/hooks/use-search-recommend";
