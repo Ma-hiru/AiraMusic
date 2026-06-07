@@ -5,6 +5,8 @@ import { normalize } from "node:path";
 import { stat } from "node:fs/promises";
 import { createReadStream } from "node:fs";
 import { Log } from "@/lib/log";
+import { MainHandle } from "@/lib/handle";
+import { isSubPath } from "@/utils/sub-path";
 
 export class MainProtocol {
   private static init = false;
@@ -51,7 +53,10 @@ export class MainProtocol {
       const url = new URL(request.url);
       // url.pathname === "/C:/Users/xxx.png"
       const filePath = normalize(decodeURIComponent(url.pathname.slice(1)));
-      // todo 限制访问权限
+      // 限制访问权限
+      const legal = isSubPath(MainHandle.allowedPath, filePath);
+      if (!legal) return new Response("Not Found", { status: 404 });
+      // 检查文件
       const fileStat = await stat(filePath);
       const total = fileStat.size;
       const rangeHeader = request.headers.get("range") ?? request.headers.get("Range");

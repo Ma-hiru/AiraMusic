@@ -11,6 +11,7 @@ import Https from "node:https";
 import Fs from "node:fs/promises";
 import { MainCacheStoreConstants } from "@/constants/store";
 import { mergeCacheStoreConfig } from "@/utils/merge";
+import { MainHandle } from "@/lib/handle";
 
 export const invokeHandlers: InvokeHandlers = {
   selectPath: async (_, type) => {
@@ -151,7 +152,10 @@ export const invokeHandlers: InvokeHandlers = {
   updateCacheStoreConfig: (e, config) => {
     try {
       const res = mergeCacheStoreConfig(config);
-      if (res.ok) MainStoreConfig.set("cache", res.config);
+      if (res.ok) {
+        MainStoreConfig.set("cache", res.config);
+        MainHandle.allowedPath = res.config.path;
+      }
       return res;
     } catch (err) {
       Log.error("invoke(updateCacheStoreConfig)", err);

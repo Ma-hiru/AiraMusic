@@ -20,7 +20,7 @@ const Section: FC<HomeSectionProps> = ({ title, subTitle, Icon, className, child
           {subTitle && (
             <p className="text-[10px] font-bold uppercase tracking-widest opacity-50">{subTitle}</p>
           )}
-          <h1 className="truncate text-xl font-black">{title}</h1>
+          {title && <h1 className="truncate text-xl font-black">{title}</h1>}
         </div>
         {Icon && (
           <div className="flex size-8 shrink-0 items-center justify-center rounded-lg">

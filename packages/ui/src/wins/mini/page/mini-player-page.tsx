@@ -197,9 +197,7 @@ const ControlButton = ({
 }) => {
   return (
     <button
-      type="button"
       title={label}
-      aria-label={label}
       onClick={onClick}
       className="
         flex size-5 items-center justify-center rounded-full outline-none

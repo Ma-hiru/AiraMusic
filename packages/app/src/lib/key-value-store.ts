@@ -3,6 +3,7 @@ import { MainRuntime } from "@/lib/runtime";
 import { Log } from "@/lib/log";
 import type { CacheStoreConfig } from "@/types/store";
 import { MainPathResolver } from "@/lib/path-resolver";
+import { MainCacheStoreConstants } from "@/constants/store";
 
 export type StoreType = {
   [k in WindowType | "cache"]: k extends "cache"
@@ -31,5 +32,7 @@ export const MainStoreForRenderer = new ElectronStore<Record<string, JsonValue>>
 
 if (MainRuntime.isDev) {
   Log.info("Clearing store in development mode");
+  const cacheConfig = MainStoreConfig.get("cache", MainCacheStoreConstants.DEFAULT_CONFIG);
   MainStoreConfig.clear();
+  MainStoreConfig.set("cache", cacheConfig);
 }

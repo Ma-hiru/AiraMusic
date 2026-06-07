@@ -114,7 +114,6 @@ export default class RendererPlayerAudio {
     this.audio.crossOrigin = "anonymous";
     this.audio.src = source.src;
     this.audio.load();
-    console.log("source", source.src);
     play && this.play();
   }
 
