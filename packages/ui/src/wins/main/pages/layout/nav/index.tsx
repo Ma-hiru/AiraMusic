@@ -5,11 +5,10 @@ import { useStage } from "@/common/hooks/use-stage";
 import { Stage } from "@/common/enum";
 import { useAtomValue } from "jotai";
 import { sidebarAtom } from "@/wins/main/atoms/layout";
-import AppErrorBoundary from "@/common/components/fallback/app-error-boundary";
 
 import NavPlayList from "./nav-playlist";
 import NavMenu from "./nav-menu";
-import Divider from "@/common/components/divider";
+import Divider from "@/common/components/layout/divider";
 
 const Nav: FC<object> = () => {
   const sidebar = useAtomValue(sidebarAtom);
@@ -29,15 +28,11 @@ const Nav: FC<object> = () => {
         `,
         sidebar ? "w-(--side-bar-expand-width)" : "w-(--side-bar-collapse-width)"
       )}>
-      <AppErrorBoundary name="NavMenu" showError={false} autoReset panicAfterReset>
-        {stage >= Stage.Immediately && <NavMenu barOpened={sidebar} />}
-      </AppErrorBoundary>
+      {stage >= Stage.Immediately && <NavMenu barOpened={sidebar} />}
       {stage >= Stage.Second && displayPlaylist && <Divider className="my-4 mx-3" />}
-      <AppErrorBoundary name="NavPlayList" showError canReset className="w-40">
-        {stage >= Stage.Finally && displayPlaylist && (
-          <NavPlayList user={user} sidebarOpen={sidebar} />
-        )}
-      </AppErrorBoundary>
+      {stage >= Stage.Finally && displayPlaylist && (
+        <NavPlayList user={user} sidebarOpen={sidebar} />
+      )}
     </div>
   );
 };

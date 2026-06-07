@@ -7,6 +7,7 @@ import { useArtistOrAlbumDisplayJump } from "@/wins/display/hooks/use-artist-or-
 import { useDisplayPageAction } from "@/wins/display/hooks/use-display-page-action";
 import { usePlayerChangeActionFromDisplay } from "@/wins/display/hooks/use-player-change-action-from-display";
 import { RendererEventBus } from "@/common/lib/bus";
+import { useDisplayTitle } from "@/wins/display/hooks/use-display-title";
 
 import Artist, { type ArtistRef } from "@/common/components/page/artist";
 
@@ -29,6 +30,7 @@ const ArtistDisplay: FC<object> = () => {
     type: "artist",
     id: id!
   });
+  const { updateTitle } = useDisplayTitle("artist");
 
   return (
     <Artist
@@ -46,6 +48,7 @@ const ArtistDisplay: FC<object> = () => {
       addToPlaylistNext={addTrackToPlaylistNext}
       addToPlaylistLast={addTrackToPlaylistLast}
       openComment={openTrackComment}
+      onDataLoaded={(a) => a.name && updateTitle(a.name)}
     />
   );
 };

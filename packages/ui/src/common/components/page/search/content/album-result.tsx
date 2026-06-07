@@ -4,14 +4,11 @@ import { NeteaseAPISearch } from "@/common/netease/api";
 import { SearchType } from "@/common/enum";
 import { cx } from "@emotion/css";
 import { useScrollAutoHide } from "@/common/hooks/use-scroll-auto-hide";
-import { RendererFormat } from "@/common/lib/format";
-import { NeteaseNetworkImage } from "@/common/netease/models";
-import RendererImageConstants from "@/common/constants/image";
-
-import NeteaseImage from "@/common/components/image/netease-image";
 import AppLoading from "@/common/components/fallback/app-loading";
 import AppEmpty from "@/common/components/fallback/app-empty";
 import AppError from "@/common/components/fallback/app-error";
+import HomeMediaGrid from "@/common/components/layout/media-grid";
+import { RendererFormat } from "@/common/lib/format";
 
 interface AlbumResultProps {
   className?: string;
@@ -63,39 +60,20 @@ const AlbumResult: FC<AlbumResultProps> = ({
           <ul
             ref={containerRef}
             className={cx(
-              "w-full h-full contain-strict overflow-y-auto scrollbar scrollbar-show grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] items-start content-stretch gap-8 p-2",
+              "w-full h-full contain-strict overflow-y-auto scrollbar scrollbar-show",
               className
             )}>
-            {list.map((item) => {
-              const cover = NeteaseNetworkImage.fromURL(item.picUrl)
-                .setAlt(item.name)
-                .setSize(RendererImageConstants.AlbumListCoverSize);
-              return (
-                <li
-                  key={item.id}
-                  className="text-(--text-color-on-main) flex flex-col justify-center items-center gap-1"
-                  onClick={() => onJumpAlbum?.(item.id)}>
-                  <NeteaseImage
-                    cache
-                    cacheLazy
-                    className={`
-                    w-full aspect-square rounded-md cursor-pointer
-                    transition-transform duration-300 ease-in-out
-                    hover:scale-105 active:scale-95
-                  `}
-                    image={cover}
-                    shadow="float"
-                    shadowColor="light"
-                  />
-                  <h2 className="text-[12px] opacity-50 text-center ">
-                    {RendererFormat.time(item.publishTime)}
-                  </h2>
-                  <h1 className="font-bold text-sm leading-4 text-center line-clamp-2">
-                    {item.name}
-                  </h1>
-                </li>
-              );
-            })}
+            <HomeMediaGrid
+              onClickItem={onJumpAlbum ?? undefined}
+              items={list.map((a) => ({
+                id: a.id,
+                name: a.name,
+                coverUrl: a.picUrl,
+                nameClampLine: 1,
+                badge: a.size + " 首",
+                meta: RendererFormat.time(a.publishTime)
+              }))}
+            />
           </ul>
         )}
       </AppLoading>

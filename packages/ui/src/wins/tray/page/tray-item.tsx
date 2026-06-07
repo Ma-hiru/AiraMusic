@@ -21,12 +21,12 @@ const TrayItem: FC<TrayItemProps> = ({ icon: Icon, text, active, danger, disable
       className={cx(
         `
           group flex h-8 w-full items-center gap-2 rounded-md px-2 text-left
-          text-[12px] font-semibold outline-none transition-all duration-200 ease-in-out
+          text-[12px] font-semibold outline-none transition-all duration-300 ease-in-out
           focus-visible:ring-2 focus-visible:ring-(--theme-color-main)/40
         `,
         active
           ? "bg-(--theme-color-main) text-(--text-color-on-main)"
-          : "text-black/72 hover:bg-black/6 hover:text-black active:scale-[0.98]",
+          : "hover:bg-black/20 active:scale-[0.98]",
         danger && "text-red-600 hover:bg-red-500/10 hover:text-red-700",
         disabled && "pointer-events-none opacity-35"
       )}>

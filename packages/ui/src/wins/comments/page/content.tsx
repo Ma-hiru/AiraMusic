@@ -2,7 +2,7 @@ import { cx } from "@emotion/css";
 import { type FC, memo, useCallback, useRef } from "react";
 
 import Item from "./item";
-import InfiniteList from "@/common/components/infinite/infinite-list";
+import InfiniteList from "@/common/components/layout/infinite/infinite-list";
 
 interface ContentProps {
   comments: NeteaseAPI.NeteaseComment[];

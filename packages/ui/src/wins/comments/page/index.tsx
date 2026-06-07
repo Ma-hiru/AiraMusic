@@ -5,14 +5,14 @@ import { RendererCache } from "@/common/lib/cache";
 import { useListenable } from "@/common/hooks/use-listenable";
 import { useThemeInjectFromBus } from "@/common/hooks/use-theme-inject-from-bus";
 import { RendererEventBus } from "@/common/lib/bus";
-import AppToast from "@/common/components/toast";
+import AppToast from "@/common/components/display/toast";
 
 import Control from "./control";
 import Title from "./title";
 import Tabs from "./tabs";
 import Content from "./content";
 import AppLoading from "@/common/components/fallback/app-loading";
-import AcrylicBackground from "@/common/components/public/acrylic-background";
+import AcrylicBackground from "@/common/components/display/acrylic-background";
 import AppError from "@/common/components/fallback/app-error";
 
 const CommentsPage: FC<object> = () => {
@@ -69,7 +69,7 @@ const CommentsPage: FC<object> = () => {
     <div className="w-screen h-screen pt-10 overflow-hidden gird grid-rows-[auto,1fr] relative">
       <Control className="h-10 absolute top-0 left-0 right-0 z-10" />
       <div className="fixed inset-0 z-[-1]">
-        <AcrylicBackground src={InfoBus.data?.backgroundCover} />
+        <AcrylicBackground src={InfoBus.data?.backgroundCover} brightness={0.3} opacity={0.5} />
       </div>
       <AppError reset={loadMore} when={status === "error"} message="加载评论失败">
         <AppLoading loading={comments.data.length === 0 && status !== "success"}>

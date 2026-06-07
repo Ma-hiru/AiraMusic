@@ -4,9 +4,9 @@ import { NeteaseNetworkImage, NeteasePlaylist } from "@/common/netease/models";
 import { RendererWindow } from "@/common/lib/window";
 import { RendererEventBus } from "@/common/lib/bus";
 import { createPlaylistStats } from "@/common/utils/playlist";
-import AppToast from "@/common/components/toast";
+import AppToast from "@/common/components/display/toast";
 import RendererImageConstants from "@/common/constants/image";
-import NeteaseImage from "@/common/components/image/netease-image";
+import NeteaseImage from "@/common/components/display/image/netease-image";
 
 interface TopInfoProps {
   summary: Nullable<NeteasePlaylist>;

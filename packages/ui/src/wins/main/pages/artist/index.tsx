@@ -13,7 +13,7 @@ const ArtistPage: FC<object> = () => {
   const location = useLocation();
   const artistRef = useRef<ArtistRef>(null);
   const { id } = RoutePath.parseQuery<{ id: number }>(location, RoutePathMain.artist);
-  const { setBackground } = useSetBackground();
+  const { setBackground } = useSetBackground("artist");
   const { onTrackPlay, addTrackToPlaylistNext, addTrackToPlaylistLast, openTrackComment, player } =
     usePlayerActionInList(() => artistRef.current?.artist?.hotTracks ?? []);
   const { jumpAlbumPage, jumpArtistPage } = usePageJump({

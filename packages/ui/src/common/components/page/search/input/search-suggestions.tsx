@@ -21,9 +21,9 @@ const SearchSuggestions: FC<SearchSuggestionsProps> = ({ suggestions, onClick, r
       className={cx(
         `
         absolute top-12 z-60 w-full space-y-1.5 rounded-lg border border-white/30
-         bg-white/20 backdrop-blur-[10px]   p-1 text-(--theme-color-on-main) shadow-md
-          transition-all ease-in-out duration-300
-        `
+        bg-white/50 backdrop-blur-lg p-1 text-(--theme-color-on-main) shadow-md
+        transition-all ease-in-out duration-300
+      `
       )}>
       {suggestions.map((suggestion) => {
         const Icon = getIcon(suggestion.type);

@@ -9,8 +9,8 @@ import { playModalAtom, sidebarAtom } from "@/wins/main/atoms/layout";
 import { RendererWindow } from "@/common/lib/window";
 import { RendererEventBus } from "@/common/lib/bus";
 
-import NeteaseImage from "@/common/components/image/netease-image";
-import NoDrag from "@/common/components/drag/no-drag";
+import NeteaseImage from "@/common/components/display/image/netease-image";
+import NoDrag from "@/common/components/layout/drag/no-drag";
 
 interface TopLeftProps {
   user: Nullable<NeteaseUser>;
@@ -44,7 +44,7 @@ const TopLeft: FC<TopLeftProps> = ({ user }) => {
     );
   }, [avatar]);
   return (
-    <div className="w-40 h-full text-black">
+    <div className="w-40 h-full">
       <AnimatePresence>
         {!playModal ? (
           <motion.div
@@ -77,7 +77,7 @@ const TopLeft: FC<TopLeftProps> = ({ user }) => {
               <p
                 className={cx(
                   `
-                  truncate font-semibold text-xs text-(--text-color-on-main)
+                  truncate font-semibold text-xs
                   ease-in-out duration-300 transition-opacity
               `,
                   !sideBar && "opacity-0"

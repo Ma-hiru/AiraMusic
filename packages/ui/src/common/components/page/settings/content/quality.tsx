@@ -4,8 +4,8 @@ import { Check, SlidersHorizontal } from "lucide-react";
 import { NeteaseSettings } from "@/common/netease/models";
 import { TrackQuality } from "@/common/enum";
 
-import Card from "@/common/components/card";
-import AppToast from "@/common/components/toast";
+import Card from "@/common/components/layout/card";
+import AppToast from "@/common/components/display/toast";
 
 interface QualityProps {
   vip: boolean;
@@ -22,6 +22,10 @@ const Quality: FC<QualityProps> = ({ data, updateQuality, vip }) => {
           return (
             <Card
               key={option.value}
+              className={cx(
+                "hover:opacity-50 ease-in-out duration-300 transition-opacity cursor-pointer",
+                active && "bg-(--theme-color-main)! text-(--text-color-on-main)"
+              )}
               onClick={() => {
                 if (option.vip && !vip) {
                   return AppToast.show({
@@ -31,37 +35,22 @@ const Quality: FC<QualityProps> = ({ data, updateQuality, vip }) => {
                 }
                 updateQuality(option.value);
               }}>
-              <div className="flex justify-between gap-1 h-full">
+              <div title={option.description} className="flex justify-between gap-1 h-full">
                 <section className="flex flex-col justify-between items-start h-full">
-                  <div
-                    className={cx(
-                      "text-md font-black tracking-normal flex justify-center items-center gap-1",
-                      active && "text-(--theme-color-main)"
-                    )}>
+                  <div className="text-md font-black tracking-normal flex justify-center items-center gap-1">
                     {option.value}
                   </div>
-                  <p
-                    className={cx(
-                      "mt-1 text-[11px] font-bold shrink-0",
-                      active && "text-(--theme-color-main)"
-                    )}>
-                    {option.description}
-                  </p>
+                  <p className="mt-1 text-[11px] font-bold shrink-0">{option.description}</p>
                 </section>
                 <section className="flex flex-col justify-between items-end h-full">
-                  <Check
-                    className={cx(
-                      "size-3.5 shrink-0 text-(--theme-color-main)",
-                      !active && "opacity-0"
-                    )}
-                  />
+                  <Check className={cx("size-3.5 shrink-0", !active && "opacity-0")} />
                   {option.vip && (
                     <span
                       className={cx(
                         `
                           text-[8px] font-black rounded-sm px-1.5 border border-white/30
                         `,
-                        active && "bg-(--theme-color-main) text-(--text-color-on-main)"
+                        active && "text-(--theme-color-main) bg-(--text-color-on-main)"
                       )}>
                       VIP
                     </span>

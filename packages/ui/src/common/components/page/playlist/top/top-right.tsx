@@ -4,7 +4,7 @@ import { NeteasePlaylist } from "@/common/netease/models";
 import { useUser } from "@/common/store/user";
 import { PlaylistSource } from "@/common/enum";
 
-import Search from "@/common/components/public/search";
+import Search from "@/common/components/data-input/search";
 
 interface TopRightProps {
   summary: Nullable<NeteasePlaylist>;
@@ -28,14 +28,14 @@ const TopRight: FC<TopRightProps> = ({
     if (pageActionType === "enter")
       return (
         <SquareArrowRightEnter
-          className="size-5 cursor-pointer select-none hover:text-[#7b8290]/50 active:text-[#7b8290]/90 ease-in-out transition-all duration-300"
+          className="size-5 cursor-pointer select-none ease-in-out transition-all duration-300 hover:opacity-50"
           onClick={onPageAction}
         />
       );
     if (pageActionType === "out")
       return (
         <SquareArrowRightExit
-          className="size-5 cursor-pointer select-none hover:text-[#7b8290]/50 active:text-[#7b8290]/90 ease-in-out transition-all duration-300"
+          className="size-5 cursor-pointer select-none ease-in-out transition-all duration-300 hover:opacity-50"
           onClick={onPageAction}
         />
       );
@@ -43,12 +43,12 @@ const TopRight: FC<TopRightProps> = ({
   }, [onPageAction, pageActionType]);
 
   return (
-    <div className="flex h-full flex-col justify-between items-end text-[12px] text-(--text-color-on-main)/80">
+    <div className="flex h-full flex-col justify-between items-end text-[12px]">
       <div className="flex items-center gap-2">
         {/*EditBtn*/}
         <div className="size-5">
           {summary?.creator?.userId === user?.profile.userId && type !== "like" && (
-            <SquarePen className="size-5 cursor-pointer select-none hover:text-[#7b8290]/50 active:text-[#7b8290]/90 ease-in-out transition-all duration-300" />
+            <SquarePen className="size-5 cursor-pointer select-none hover:opacity-50 ease-in-out transition-all duration-300" />
           )}
         </div>
         {action}

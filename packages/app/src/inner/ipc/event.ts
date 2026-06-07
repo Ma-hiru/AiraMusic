@@ -87,7 +87,10 @@ export const eventHandlers: EventHandlers = {
       width: Math.floor(props.width ?? current.width),
       height: Math.floor(props.height ?? current.height)
     };
+    const resizable = win.resizable;
+    win.setResizable(true);
     win.setBounds(next);
+    win.setResizable(resizable);
   },
   moveInternalWindow: (e, props) => {
     const win = props.type

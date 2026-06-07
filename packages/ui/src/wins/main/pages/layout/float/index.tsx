@@ -1,11 +1,12 @@
 import { cx } from "@emotion/css";
 import { type FC, memo } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { ChevronLeft, ChevronUp, LocateFixed, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { AnimatePresence } from "motion/react";
 import { RoutePathMain } from "@/common/routes";
 import { useAtom, useAtomValue } from "jotai";
 import { playModalAtom, scrollActionsAtom, sidebarAtom } from "@/wins/main/atoms/layout";
+import { useRouterActive } from "@/common/hooks/use-router-active";
 
 import FloatItem from "./float-item";
 
@@ -14,15 +15,11 @@ const Float: FC<{ className?: string }> = ({ className }) => {
   const scrollActions = useAtomValue(scrollActionsAtom);
   const [sidebar, setSidebar] = useAtom(sidebarAtom);
   const navigate = useNavigate();
-  const location = useLocation();
   const scrollTop = scrollActions.scrollTop;
   const fastLocator = scrollActions.fastLocate;
 
   // 在首页或根路径时不显示返回按钮
-  const hiddenBack = !(
-    RoutePathMain.match(location, RoutePathMain.home) ||
-    RoutePathMain.match(location, RoutePathMain.base)
-  );
+  const hiddenBack = !useRouterActive(RoutePathMain, "home");
 
   return (
     <div

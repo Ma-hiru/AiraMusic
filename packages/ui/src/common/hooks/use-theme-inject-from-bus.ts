@@ -1,4 +1,4 @@
-import { useLayoutEffect } from "react";
+import { useEffect, useInsertionEffect } from "react";
 import { useListenable } from "./use-listenable";
 import { RendererWindow } from "@/common/lib/window";
 import { RendererEventBus } from "@/common/lib/bus";
@@ -9,13 +9,18 @@ const needInject = !RendererWindow.current.isMainWindow;
 export function useThemeInjectFromBus() {
   const infoBus = useListenable(RendererEventBus.info, !needInject);
 
-  useLayoutEffect(() => {
+  useInsertionEffect(() => {
     if (!needInject) return;
     if (!infoBus.data?.theme) return;
     RendererTheme.theme = {
       main: infoBus.data.theme.mainColor,
       secondary: infoBus.data.theme.secondaryColor,
-      textOnMainColor: infoBus.data.theme.textColor
+      textOnMainColor: infoBus.data.theme.textColor,
+      textColor: infoBus.data.theme.textNormalColor
     };
   }, [infoBus.data?.theme]);
+
+  useEffect(() => {
+    RendererEventBus.mainBusUpdater.send("info");
+  }, []);
 }

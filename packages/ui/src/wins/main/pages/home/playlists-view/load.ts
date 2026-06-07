@@ -1,8 +1,8 @@
 import { NeteaseAPIHome, NeteaseAPIPlaylist } from "@/common/netease/api";
-import type { HomeMediaItem } from "@/wins/main/componets/home-media-card";
+import type { MediaItem } from "@/common/components/layout/media-grid/card";
 
 type PlaylistFetchResult = {
-  items: HomeMediaItem[];
+  items: MediaItem[];
   hasMore: boolean;
   cursor?: number;
 };
@@ -13,16 +13,16 @@ type HomePlaylistSource = NeteaseAPI.NeteaseTopPlaylist & {
   updateFrequency?: string;
 };
 
-const mapTopPlaylist = (item: HomePlaylistSource): HomeMediaItem => ({
+const mapTopPlaylist = (item: HomePlaylistSource): MediaItem => ({
   id: item.id,
   name: item.name,
   coverUrl: item.coverImgUrl,
   meta: item.copywriter || item.description || item.updateFrequency || undefined,
   playCount: item.playCount,
-  badge: item.tag
+  badge: (item.trackCount ?? 0) + " 首"
 });
 
-export function uniqueItems(items: HomeMediaItem[]) {
+export function uniqueItems(items: MediaItem[]) {
   const ids = new Set<number>();
   return items.filter((item) => {
     if (ids.has(item.id)) return false;
@@ -45,7 +45,7 @@ export async function loadPlaylistCategory(
     ]);
     const dailyItems =
       daily.status === "fulfilled" && daily.value
-        ? daily.value.recommend.map<HomeMediaItem>((item) => ({
+        ? daily.value.recommend.map<MediaItem>((item) => ({
             id: item.id,
             name: item.name,
             coverUrl: item.picUrl,
@@ -55,7 +55,7 @@ export async function loadPlaylistCategory(
         : [];
     const recommendItems =
       recommend.status === "fulfilled"
-        ? recommend.value.result.map<HomeMediaItem>((item) => ({
+        ? recommend.value.result.map<MediaItem>((item) => ({
             id: item.id,
             name: item.name,
             coverUrl: item.picUrl,

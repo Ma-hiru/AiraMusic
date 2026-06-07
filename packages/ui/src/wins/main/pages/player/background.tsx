@@ -2,7 +2,7 @@ import { type FC, memo } from "react";
 import { useAtomValue } from "jotai";
 import { playerBackgroundCoverAtom } from "@/wins/main/atoms/theme";
 
-import AcrylicBackground from "@/common/components/public/acrylic-background";
+import AcrylicBackground from "@/common/components/display/acrylic-background";
 
 const Background: FC<object> = () => {
   const backgroundCover = useAtomValue(playerBackgroundCoverAtom);

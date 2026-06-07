@@ -18,9 +18,9 @@ import { RendererFormat } from "@/common/lib/format";
 import { RendererWindow } from "@/common/lib/window";
 import { RendererEventBus } from "@/common/lib/bus";
 
-import Drag from "@/common/components/drag/drag";
-import NeteaseImage from "@/common/components/image/netease-image";
-import NoDrag from "@/common/components/drag/no-drag";
+import Drag from "@/common/components/layout/drag/drag";
+import NeteaseImage from "@/common/components/display/image/netease-image";
+import NoDrag from "@/common/components/layout/drag/no-drag";
 
 type ControlProps = Omit<HTMLAttributes<HTMLDivElement>, "color"> & {
   showBg: boolean;

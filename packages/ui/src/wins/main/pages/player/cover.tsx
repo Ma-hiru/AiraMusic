@@ -1,13 +1,12 @@
 import { type FC, memo, type ReactEventHandler, useCallback } from "react";
 import { useSetAtom } from "jotai";
-import { playerBackgroundCoverAtom } from "@/wins/main/atoms/theme";
+import { backgroundCoverAtom, playerBackgroundCoverAtom } from "@/wins/main/atoms/theme";
 import RendererPlayerHandle from "@/wins/main/lib/handle";
 
-import NeteaseImage from "@/common/components/image/netease-image";
-import { useSetBackground } from "@/wins/main/hooks/use-set-background";
+import NeteaseImage from "@/common/components/display/image/netease-image";
 
 const Cover: FC<object> = () => {
-  const { setBackground } = useSetBackground();
+  const setBackgroundCover = useSetAtom(backgroundCoverAtom);
   const setPlayerBackgroundCover = useSetAtom(playerBackgroundCoverAtom);
   const player = RendererPlayerHandle.usePlayer();
   const image = player.current.cover;
@@ -15,9 +14,9 @@ const Cover: FC<object> = () => {
   const onLoad = useCallback<ReactEventHandler<HTMLImageElement>>(
     (e) => {
       setPlayerBackgroundCover(e.currentTarget.src);
-      setBackground(e.currentTarget.src);
+      setBackgroundCover(e.currentTarget.src);
     },
-    [setBackground, setPlayerBackgroundCover]
+    [setBackgroundCover, setPlayerBackgroundCover]
   );
 
   return (

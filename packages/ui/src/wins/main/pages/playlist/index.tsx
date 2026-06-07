@@ -34,7 +34,8 @@ const PlaylistPage: FC<object> = () => {
   // 注册滚动和定位回调
   const { canFastLocate, canScrollTop } = useLocateOrScrollTopRegister({
     getScrollTopFunc: () => playlistRef.current?.scrollTop,
-    getFastLocateFunc: () => playlistRef.current?.fastLocator
+    getFastLocateFunc: () => playlistRef.current?.fastLocator,
+    page: "playlist"
   });
   // 跳转歌手和专辑页
   const { jumpAlbumPage, jumpArtistPage } = usePageJump();
@@ -46,7 +47,7 @@ const PlaylistPage: FC<object> = () => {
       source
     };
   });
-  const { setBackground } = useSetBackground();
+  const { setBackground } = useSetBackground("playlist");
 
   const setIsTyping = useSetAtom(typingAtom);
 

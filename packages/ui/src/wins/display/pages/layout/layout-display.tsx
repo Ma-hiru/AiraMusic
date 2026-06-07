@@ -5,19 +5,19 @@ import { RoutePath, RoutePathDisplay } from "@/common/routes";
 import { PlaylistSource } from "@/common/enum";
 import { RendererWindow } from "@/common/lib/window";
 import { RendererEventBus } from "@/common/lib/bus";
-import { useThemeInjectFromBus } from "@/common/hooks/use-theme-inject-from-bus";
-
-import KeepAliveOutlet from "@/common/components/public/keep-alive-outlet";
-import AppErrorBoundary from "@/common/components/fallback/app-error-boundary";
-import AppToast from "@/common/components/toast";
-import AppContextMenu from "@/common/components/menu";
-import AppModal from "@/common/components/modal";
-import AcrylicBackground from "@/common/components/public/acrylic-background";
-import TopControlPure from "@/common/components/top/control";
-import Drag from "@/common/components/drag/drag";
-import { BackCtx } from "@/wins/display/ctx/back";
-import TopBack from "@/common/components/top/back";
 import { useLatestRef } from "@/common/hooks/use-latest-ref";
+import { useThemeInjectFromBus } from "@/common/hooks/use-theme-inject-from-bus";
+import { BackCtx } from "@/wins/display/ctx/back";
+
+import KeepAliveOutlet from "@/common/components/other/keep-alive-outlet";
+import AppErrorBoundary from "@/common/components/fallback/app-error-boundary";
+import AppToast from "@/common/components/display/toast";
+import AppContextMenu from "@/common/components/display/menu";
+import AppModal from "@/common/components/display/modal";
+import AcrylicBackground from "@/common/components/display/acrylic-background";
+import TopControlPure from "@/common/components/layout/top/control";
+import Drag from "@/common/components/layout/drag/drag";
+import TopBack from "@/common/components/layout/top/back";
 
 const LayoutDisplay: FC<object> = () => {
   useThemeInjectFromBus();
@@ -77,12 +77,8 @@ const LayoutDisplay: FC<object> = () => {
 
   return (
     <div className="w-screen h-screen relative overflow-hidden">
-      <Drag className="absolute w-screen top-0 right-0 h-10  flex flex-row justify-between items-center px-4 text-(--text-color-on-main) z-50">
-        <TopBack
-          exclude={[RoutePathDisplay.blank]}
-          routePath={RoutePathDisplay}
-          onClick={() => setBack(true)}
-        />
+      <Drag className="absolute w-screen top-0 right-0 h-10  flex flex-row justify-between items-center px-4 z-50">
+        <TopBack exclude={["blank"]} routePath={RoutePathDisplay} onClick={() => setBack(true)} />
         <TopControlPure />
       </Drag>
       <AppErrorBoundary name="LayoutDisplayContent" showError canReset>

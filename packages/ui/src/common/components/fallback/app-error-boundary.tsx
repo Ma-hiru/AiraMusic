@@ -3,7 +3,7 @@ import { ErrorBoundary, type FallbackProps } from "react-error-boundary";
 import { Log } from "@/common/lib/log";
 import { EqError } from "@mahiru/log";
 import { RendererWindow } from "@/common/lib/window";
-import AppToast from "@/common/components/toast";
+import AppToast from "@/common/components/display/toast";
 import AppError from "@/common/components/fallback/app-error";
 
 export type AppErrorBoundaryRef = { resetComponent?: NormalFunc };

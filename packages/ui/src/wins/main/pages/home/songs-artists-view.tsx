@@ -8,13 +8,13 @@ import { usePageJump } from "@/wins/main/hooks/use-page-jump";
 import { type ArtistArea, RendererHomeConstants, type SongArea } from "@/wins/main/constants";
 import { NeteaseTrackRecord } from "@/common/netease/models";
 import RendererPlayerHandle from "@/wins/main/lib/handle";
-import AppToast from "@/common/components/toast";
+import AppToast from "@/common/components/display/toast";
 import RendererImageConstants from "@/common/constants/image";
 
 import AppError from "@/common/components/fallback/app-error";
 import AppLoading from "@/common/components/fallback/app-loading";
-import HomeMediaGrid from "@/wins/main/componets/home-media-grid";
-import HomeSection from "@/wins/main/componets/home-section";
+import MediaGrid from "@/common/components/layout/media-grid";
+import Section from "@/common/components/layout/section";
 
 const HomeSongsArtistsView: FC<{ className?: string }> = ({ className }) => {
   const player = RendererPlayerHandle.usePlayer();
@@ -94,7 +94,7 @@ const HomeSongsArtistsView: FC<{ className?: string }> = ({ className }) => {
 
   return (
     <div className={cx("flex flex-col gap-3", className)}>
-      <HomeSection title="新歌速递" subTitle="New Songs" Icon={Music2}>
+      <Section title="新歌速递" subTitle="New Songs" Icon={Music2}>
         <div className="mb-3 flex flex-wrap gap-2 px-2">
           {RendererHomeConstants.HOME_SONG_AREAS.map((area) => (
             <button
@@ -102,10 +102,15 @@ const HomeSongsArtistsView: FC<{ className?: string }> = ({ className }) => {
               onClick={() => setSongArea(area)}
               className={cx(
                 `
-                  h-9 cursor-pointer rounded-lg border border-white/20 px-3 text-sm font-bold
-                  transition-all duration-300 hover:bg-(--theme-color-main) active:scale-[0.98]
+                  h-9 cursor-pointer rounded-lg
+                  border border-white/20 px-3 text-sm font-bold
+                  transition-all duration-300
+                  hover:bg-(--theme-color-main) hover:text-(--text-color-on-main)
+                  active:scale-[0.98]
                 `,
-                area.type === songArea.type ? "bg-(--theme-color-main)" : "bg-white/5"
+                area.type === songArea.type
+                  ? "bg-(--theme-color-main) text-(--text-color-on-main)"
+                  : "bg-white/5"
               )}>
               {area.label}
             </button>
@@ -113,15 +118,15 @@ const HomeSongsArtistsView: FC<{ className?: string }> = ({ className }) => {
         </div>
         <AppError reset={reloadSongs} when={songStatus === "error"} message="加载新歌失败">
           <AppLoading loading={songStatus === "loading"} className="min-h-60">
-            <HomeMediaGrid
+            <MediaGrid
               items={songItems}
               coverSize={RendererImageConstants.AlbumListCoverSize}
               onClickItem={playSong}
             />
           </AppLoading>
         </AppError>
-      </HomeSection>
-      <HomeSection title="歌手推荐" subTitle="Artist Chart" Icon={UserRound}>
+      </Section>
+      <Section title="歌手推荐" subTitle="Artist Chart" Icon={UserRound}>
         <div className="mb-3 flex flex-wrap gap-2 px-2">
           {RendererHomeConstants.HOME_ARTIST_AREAS.map((area) => (
             <button
@@ -130,10 +135,15 @@ const HomeSongsArtistsView: FC<{ className?: string }> = ({ className }) => {
               onClick={() => setArtistArea(area)}
               className={cx(
                 `
-                  h-9 cursor-pointer rounded-lg border border-white/20 px-3 text-sm font-bold
-                  transition-all duration-300 hover:bg-(--theme-color-main) active:scale-[0.98]
+                  h-9 cursor-pointer rounded-lg
+                  border border-white/20 px-3 text-sm font-bold
+                  transition-all duration-300
+                  hover:bg-(--theme-color-main) hover:text-(--text-color-on-main)
+                  active:scale-[0.98]
                 `,
-                area.type === artistArea.type ? "bg-(--theme-color-main)" : "bg-white/5"
+                area.type === artistArea.type
+                  ? "bg-(--theme-color-main) text-(--text-color-on-main)"
+                  : "bg-white/5"
               )}>
               {area.label}
             </button>
@@ -141,14 +151,14 @@ const HomeSongsArtistsView: FC<{ className?: string }> = ({ className }) => {
         </div>
         <AppError reset={reloadArtists} when={artistStatus === "error"} message="加载歌手榜失败">
           <AppLoading loading={artistStatus === "loading"} className="min-h-60">
-            <HomeMediaGrid
+            <MediaGrid
               items={artistItems}
               coverSize={RendererImageConstants.AlbumListCoverSize}
               onClickItem={jumpArtistPage}
             />
           </AppLoading>
         </AppError>
-      </HomeSection>
+      </Section>
     </div>
   );
 };

@@ -12,10 +12,10 @@ import { NeteaseServicesTrack } from "@/common/netease/services";
 import { NeteaseHistory, NeteaseTrackRecord } from "@/common/netease/models";
 import { useRequestAutoRun, useRequestStatusWrap } from "@/common/hooks/use-request-wrap";
 import { type HeartManager } from "@/common/hooks/use-heart";
-import AppContextMenu from "@/common/components/menu";
+import AppContextMenu from "@/common/components/display/menu";
 import RendererImageConstants from "@/common/constants/image";
 import AppLoading from "@/common/components/fallback/app-loading";
-import TrackList, { type TrackListPlayableManager } from "@/common/components/track_list";
+import TrackList, { type TrackListPlayableManager } from "@/common/components/display/track_list";
 import AppError from "@/common/components/fallback/app-error";
 
 export type TrackResultRef = {

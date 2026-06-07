@@ -7,9 +7,9 @@ import { useListenable } from "@/common/hooks/use-listenable";
 import { RendererWindow } from "@/common/lib/window";
 import { createPlayerPlaylistModal } from "@/wins/main/componets/player-playlist-modal";
 import RendererPlayerHandle from "@/wins/main/lib/handle";
-import AppModal from "@/common/components/modal";
-import Tooltip from "@/common/components/tooltip";
-import RangeSlider from "@/common/components/range";
+import AppModal from "@/common/components/display/modal";
+import Tooltip from "@/common/components/display/tooltip";
+import RangeSlider from "@/common/components/data-input/range";
 
 const WHEEL_VOLUME_STEP = 0.1;
 const RESTORE_VOLUME = 0.5;
@@ -86,13 +86,13 @@ const BarBtns: FC<object> = () => {
         placement="top"
         onWheel={onWheel}
         className="size-5 items-center justify-center"
-        contentClassName="
-          flex h-36 w-8 flex-col items-center gap-3 rounded-md border border-white/30
-          bg-white/50 px-0 py-3 text-(--theme-color-main)
-          shadow-[0_16px_30px_-18px_rgba(0,0,0,0.45)] backdrop-blur-2xl
-        "
         content={
-          <>
+          <div
+            className="
+              flex h-36 w-8 flex-col items-center gap-3 rounded-md border border-white/30
+              bg-white px-0 py-3 text-(--theme-color-main)
+              shadow-[0_16px_30px_-18px_rgba(0,0,0,0.45)] backdrop-blur-2xl
+            ">
             <p className="text-[10px] font-black text-(--theme-color-main)">{volumePercent}%</p>
             <RangeSlider
               min={0}
@@ -103,7 +103,7 @@ const BarBtns: FC<object> = () => {
               orientation="vertical"
               className="h-24"
             />
-          </>
+          </div>
         }>
         <button
           type="button"

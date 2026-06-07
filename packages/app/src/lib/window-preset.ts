@@ -105,6 +105,7 @@ export class MainWindowPreset {
         type: "toolbar",
         skipTaskbar: true,
         show: false,
+        hasShadow: false,
         icon: MainPathResolver.appLogoPath
       },
       id: "lyric",
@@ -212,6 +213,9 @@ export class MainWindowPreset {
         type: "toolbar",
         skipTaskbar: true,
         show: false,
+        transparent: true,
+        backgroundColor: "#00000000",
+        hasShadow: false,
         icon: MainPathResolver.appLogoPath
       },
       id: "tray",

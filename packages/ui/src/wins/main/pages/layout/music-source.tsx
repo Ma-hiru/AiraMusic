@@ -1,5 +1,4 @@
 import { type FC, memo, useEffect, useState } from "react";
-import { useWindowTitle } from "@/common/hooks/use-window-title";
 import { type ShortcutConfig, useKeyboardShortcut } from "@/common/hooks/use-keyboard-shortcut";
 import { useMediaSession } from "@/wins/main/hooks/use-media-session";
 import { useSpectrumWorker } from "@/wins/main/hooks/use-spectrum-worker";
@@ -18,14 +17,13 @@ const MusicSource: FC<object> = () => {
   const artist = player.current.track?.detail.artist?.join("&");
 
   // 注册窗口标题
-  const { updateWindowTitle, defaultTitle } = useWindowTitle();
   useEffect(() => {
     if (title && artist) {
-      updateWindowTitle(`${title} - ${artist}`);
+      document.title = `${title} - ${artist}`;
     } else {
-      updateWindowTitle(defaultTitle);
+      document.title = import.meta.env.APP_NAME;
     }
-  }, [artist, defaultTitle, title, updateWindowTitle]);
+  }, [artist, title]);
   // 注册局部键盘快捷键
   const setPlayModal = useSetAtom(playModalAtom);
   const typing = useAtomValue(typingAtom);

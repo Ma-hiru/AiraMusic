@@ -6,8 +6,8 @@ import { getCityNameByCode } from "@/common/utils/city-code";
 import { RendererFormat } from "@/common/lib/format";
 
 import MiniStat from "./mini-stat";
-import Card from "@/common/components/card";
-import NeteaseImage from "@/common/components/image/netease-image";
+import Card from "@/common/components/layout/card";
+import NeteaseImage from "@/common/components/display/image/netease-image";
 
 interface UserDetailProps {
   user: Nullable<NeteaseUser>;

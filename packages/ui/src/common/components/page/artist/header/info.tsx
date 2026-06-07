@@ -12,7 +12,7 @@ import {
 import { NeteaseArtist } from "@/common/netease/models";
 import { RendererFormat } from "@/common/lib/format";
 import { NeteaseAPIArtist } from "@/common/netease/api";
-import AppToast from "@/common/components/toast";
+import AppToast from "@/common/components/display/toast";
 
 interface InfoProps {
   className?: string;
@@ -65,32 +65,30 @@ const Info: FC<InfoProps> = ({ className, artist, children }) => {
   }, [artist?.followInfos.followDay]);
 
   return (
-    <div
-      className={cx(
-        "flex flex-col items-start justify-start text-(--text-color-on-main)",
-        className
-      )}>
+    <div className={cx("flex flex-col items-start justify-start", className)}>
       <div
         className={cx(
           "relative inline-flex flex-col items-start text-3xl font-bold",
           alias && "pt-5"
         )}>
         {alias && (
-          <h2 className="absolute left-0 top-0 w-full truncate text-center text-sm font-semibold opacity-70 select-all">
+          <h2
+            title={alias}
+            className="absolute left-0 top-0 w-full truncate text-center text-sm font-semibold opacity-70 select-all">
             {alias}
           </h2>
         )}
         <h1 className="whitespace-nowrap select-all">{artistName}</h1>
       </div>
-      <div className="text-sm inline-block font-light select-all mt-auto">
+      <div className="text-sm inline-block font-light mt-auto select-none">
         <span> 粉丝: {RendererFormat.count(fansCount)}</span>
         <span className="ml-2 mr-1">/</span>
         <button
           onClick={follow}
           className={cx(`
             text-sm font-light cursor-pointer px-2 py-1 rounded-md
-            hover:bg-(--theme-color-main)/20 hover:text-(--text-color-on-main)
-            active:bg-(--theme-color-main)/50
+            hover:bg-(--theme-color-main) hover:text-(--text-color-on-main)
+            active:scale-98 select-none
             transition-all duration-300 ease-in-out
         `)}>
           {followText}

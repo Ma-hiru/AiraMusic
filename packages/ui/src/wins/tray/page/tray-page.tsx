@@ -4,23 +4,24 @@ import {
   DiscAlbum,
   ExternalLink,
   LogOut,
+  type LucideIcon,
   MessageSquare,
   MicVocal,
   Pause,
   Play,
   SkipBack,
-  SkipForward,
-  type LucideIcon
+  SkipForward
 } from "lucide-react";
-import AppToast from "@/common/components/toast";
 import { useListenable } from "@/common/hooks/use-listenable";
 import { useThemeInjectFromBus } from "@/common/hooks/use-theme-inject-from-bus";
 import { RendererEventBus } from "@/common/lib/bus";
 import { RendererWindow } from "@/common/lib/window";
+import AppToast from "@/common/components/display/toast";
 
 import TrayDivider from "./tray-divider";
 import TrayItem from "./tray-item";
 import TrayPlayer from "./tray-player";
+import AcrylicBackground from "@/common/components/display/acrylic-background";
 
 type TrayAction = {
   icon: LucideIcon;
@@ -35,8 +36,8 @@ const TrayPage: FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const playerBus = useListenable(RendererEventBus.player);
   const progressBus = useListenable(RendererEventBus.progress);
-  const mainWindow = useListenable(RendererWindow.main);
   const currentWindow = useListenable(RendererWindow.current);
+  const infoBus = useListenable(RendererEventBus.info);
   const trackRecord = playerBus.data?.track;
   const track = trackRecord?.detail;
   const isPlaying = playerBus.data?.status === "playing";
@@ -81,8 +82,6 @@ const TrayPage: FC = () => {
     document.title = track?.name && artistName ? `${track.name} - ${artistName}` : "AiraMusic";
   }, [artistName, track?.name]);
 
-  const hideTray = useCallback(() => currentWindow.hide(), [currentWindow]);
-
   const copy = useCallback(async (text: Optional<string>, label: string) => {
     if (!text) return;
     try {
@@ -93,14 +92,11 @@ const TrayPage: FC = () => {
     }
   }, []);
 
-  const openDisplay = useCallback(
-    async (data: { type: "album" | "artist"; id: number }) => {
-      await RendererWindow.display.reactReadyAwait();
-      RendererEventBus.display.send(data);
-      hideTray();
-    },
-    [hideTray]
-  );
+  const openDisplay = useCallback(async (data: { type: "album" | "artist"; id: number }) => {
+    await RendererWindow.display.reactReadyAwait();
+    RendererEventBus.display.send(data);
+    RendererWindow.current.hide();
+  }, []);
 
   const openComment = useCallback(async () => {
     const id = trackRecord?.id;
@@ -110,14 +106,14 @@ const TrayPage: FC = () => {
       id,
       type: "track"
     });
-    hideTray();
-  }, [hideTray, trackRecord?.id]);
+    RendererWindow.current.hide();
+  }, [trackRecord?.id]);
 
   const showMainWindow = useCallback(() => {
-    mainWindow.show();
-    mainWindow.focus();
-    hideTray();
-  }, [hideTray, mainWindow]);
+    RendererWindow.main.show();
+    RendererWindow.main.focus();
+    RendererWindow.current.hide();
+  }, []);
 
   const playbackActions = useMemo<TrayAction[]>(
     () => [
@@ -207,13 +203,21 @@ const TrayPage: FC = () => {
   );
 
   return (
-    <div className="h-screen w-screen overflow-hidden bg-transparent text-black">
+    <div className="h-screen w-screen overflow-hidden bg-transparent">
       <div
         ref={containerRef}
         className="
-          w-[13.5rem] rounded-xl border border-black/8 bg-white/96 p-2
-          shadow-[0_18px_50px_rgba(0,0,0,0.22)] backdrop-blur-xl
+          max-w-50 w-max rounded-xl border border-black/8
+          backdrop-blur-xl p-2 relative
         ">
+        <div className="fixed inset-0 z-[-1]">
+          <AcrylicBackground
+            brightness={0.5}
+            opacity={1}
+            className="rounded-xl overflow-hidden"
+            src={infoBus.data?.backgroundCover}
+          />
+        </div>
         <TrayPlayer
           track={track}
           status={playerBus.data?.status}

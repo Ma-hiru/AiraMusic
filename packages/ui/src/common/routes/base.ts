@@ -35,8 +35,12 @@ export class RoutePath<const T extends Props> {
     }
   }
 
-  public match(location: Location, path: string) {
-    return path === location.pathname + location.search + location.hash;
+  public matchPathname(location: Location, pathname: string) {
+    return RoutePath.matchPathname(location, this.base, pathname);
+  }
+
+  static matchPathname(location: Location, base: string, pathname: string) {
+    return (base + pathname).replace("//", "/") === location.pathname;
   }
 
   static withQuery<Q extends Record<string, unknown>>(base: string, props: Q) {

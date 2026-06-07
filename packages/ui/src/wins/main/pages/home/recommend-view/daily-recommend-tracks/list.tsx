@@ -1,8 +1,9 @@
-import { cx } from "@emotion/css";
 import { type FC, memo, type RefObject } from "react";
 import { NeteaseImageSize } from "@/common/enum";
+import { NeteaseTrack, NeteaseTrackRecord } from "@/common/netease/models";
 
-import HomeMediaCard from "@/wins/main/componets/home-media-card";
+import HomeMediaCard from "@/common/components/layout/media-grid/card";
+import RendererPlayerHandle from "@/wins/main/lib/handle";
 
 interface RecommendTrackListProps {
   recommend: NeteaseAPI.DailyRecommendTracksDailySong[];
@@ -13,15 +14,13 @@ const RecommendTrackList: FC<RecommendTrackListProps> = ({ recommend, containerR
   return (
     <div
       ref={containerRef}
-      className={cx(
-        `
+      className="
          relative w-full my-2 overflow-y-hidden
          overflow-x-scroll scrollbar-hide scroll-smooth contain-layout
          grid grid-cols-[repeat(auto_fill,minmax(150px,1fr))]
          grid-flow-col snap-x snap-mandatory auto-cols-[minmax(150px,1fr)]
          items-start gap-1
-        `
-      )}>
+      ">
       {recommend.map((song) => (
         <div key={song.id} className="snap-start">
           <HomeMediaCard
@@ -34,6 +33,16 @@ const RecommendTrackList: FC<RecommendTrackListProps> = ({ recommend, containerR
               coverUrl: song.al.picUrl,
               meta: song.ar.map((a) => a.name).join("/") ?? undefined,
               badge: song.reason ?? undefined
+            }}
+            onClick={() => {
+              if (RendererPlayerHandle.player.current.track?.id === song.id) return;
+              const track = new NeteaseTrackRecord({
+                sourceName: "other",
+                sourceID: 0,
+                detail: NeteaseTrack.fromObject(song)
+              });
+              RendererPlayerHandle.player.playlist.add(track, "next");
+              RendererPlayerHandle.player.playlist.jump(track);
             }}
             coverSize={NeteaseImageSize.sm}
           />

@@ -1,11 +1,11 @@
 import { useRouterActive } from "@/common/hooks/use-router-active";
 import { useCallback, useEffect, useRef } from "react";
-import { useLocation } from "react-router-dom";
 import { useSetAtom } from "jotai";
 import { backgroundCoverAtom } from "@/wins/main/atoms/theme";
+import { RoutePathMain } from "@/common/routes";
 
-export function useSetBackground() {
-  const active = useRouterActive(useLocation());
+export function useSetBackground(page: keyof typeof RoutePathMain) {
+  const active = useRouterActive(RoutePathMain, page);
   const coverRef = useRef("");
   const setBackgroundCover = useSetAtom(backgroundCoverAtom);
 

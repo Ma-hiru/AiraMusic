@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react";
-import { LyricTimeManager } from "@mahiru/ui/common/components/lyric/lyric-time-manager";
-import LyricLineComponent from "@mahiru/ui/common/components/lyric/lyric-line";
+import { LyricTimeManager } from "@mahiru/ui/common/components/display/lyric/lyric-time-manager";
+import LyricLineComponent from "@mahiru/ui/common/components/display/lyric/lyric-line";
 
 describe("LyricLine", () => {
   it("renders inline notes without predicate brackets", () => {

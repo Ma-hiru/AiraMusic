@@ -19,7 +19,7 @@ const HomeRecommendView: FC<{ className?: string }> = ({ className }) => {
   const user = useUser();
   const background = useAtomValue(backgroundCoverAtom);
   const [selectedCover, setSelectedCover] = useState("");
-  const { setBackground } = useSetBackground();
+  const { setBackground } = useSetBackground("home");
   const { jumpPlaylistPage, jumpArtistPage, jumpAlbumPage } = usePageJump();
 
   useEffect(() => {

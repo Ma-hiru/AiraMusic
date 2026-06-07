@@ -1,6 +1,6 @@
 import { type FC, memo } from "react";
-import TopControlPure from "@/common/components/top/control";
-import Drag from "@/common/components/drag/drag";
+import TopControlPure from "@/common/components/layout/top/control";
+import Drag from "@/common/components/layout/drag/drag";
 import { cx } from "@emotion/css";
 
 interface ControlProps {

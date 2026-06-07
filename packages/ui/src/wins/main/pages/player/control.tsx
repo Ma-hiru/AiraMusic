@@ -15,7 +15,7 @@ import {
 
 import Progress from "./progress";
 import RendererPlayerHandle from "@/wins/main/lib/handle";
-import AppModal from "@/common/components/modal";
+import AppModal from "@/common/components/display/modal";
 
 const Control: FC<object> = () => {
   const player = RendererPlayerHandle.usePlayer();

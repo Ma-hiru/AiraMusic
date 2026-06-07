@@ -3,7 +3,7 @@ import { NeteaseUser, type NeteaseUserModel } from "@/common/netease/models";
 import { userStoreSnapshot } from "@/common/store/user";
 import { NeteaseServicesUser } from "@/common/netease/services/index";
 import { RendererWindow } from "@/common/lib/window";
-import AppToast from "@/common/components/toast";
+import AppToast from "@/common/components/display/toast";
 
 export default class _NeteaseAuth {
   private static get userStore() {
@@ -54,7 +54,6 @@ export default class _NeteaseAuth {
   static logout() {
     return NeteaseServicesUser.logout().then(() => {
       _NeteaseAuth.userStore.updateUser(null);
-      window.location.pathname = "/";
     });
   }
 

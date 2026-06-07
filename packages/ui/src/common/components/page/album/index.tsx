@@ -4,6 +4,7 @@ import {
   type MouseEvent as ReactMouseEvent,
   type Ref,
   useCallback,
+  useEffect,
   useImperativeHandle,
   useRef
 } from "react";
@@ -13,7 +14,7 @@ import { NeteaseImageSize, PlaylistSource } from "@/common/enum";
 import { type HeartManager } from "@/common/hooks/use-heart";
 import { NeteaseServicesAlbum } from "@/common/netease/services";
 import { useRequestAutoRun, useRequestStatusWrap } from "@/common/hooks/use-request-wrap";
-import AppContextMenu from "@/common/components/menu";
+import AppContextMenu from "@/common/components/display/menu";
 import RendererImageConstants from "@/common/constants/image";
 
 import Top from "./top";
@@ -21,9 +22,9 @@ import AppLoading from "@/common/components/fallback/app-loading";
 import TrackList, {
   type TrackListPlayableManager,
   type TrackListRef
-} from "@/common/components/track_list";
+} from "@/common/components/display/track_list";
 import AppError from "@/common/components/fallback/app-error";
-import Divider from "@/common/components/divider";
+import Divider from "@/common/components/layout/divider";
 
 export type AlbumPageRef = {
   trackListRef: Nullable<TrackListRef>;
@@ -51,6 +52,7 @@ interface AlbumPageProps {
   playableManager: TrackListPlayableManager;
   pageActionType?: "enter" | "out" | "none";
   onPageAction?: NormalFunc;
+  onDataLoaded?: NormalFunc<[album: NeteaseAlbum]>;
 }
 
 const Album: FC<AlbumPageProps> = ({
@@ -71,7 +73,8 @@ const Album: FC<AlbumPageProps> = ({
   onPageAction,
   addToPlaylistNext,
   addToPlaylistLast,
-  openComment
+  openComment,
+  onDataLoaded
 }) => {
   const requestData = useCallback(
     (
@@ -142,6 +145,10 @@ const Album: FC<AlbumPageProps> = ({
       openComment
     ]
   );
+
+  useEffect(() => {
+    album && onDataLoaded?.(album);
+  }, [album, onDataLoaded]);
 
   return (
     <div className={cx("w-full h-full flex flex-col", className)}>

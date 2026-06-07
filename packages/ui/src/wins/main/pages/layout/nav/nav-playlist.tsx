@@ -2,7 +2,7 @@ import { type FC, memo, useCallback, useRef, useState } from "react";
 import { useScrollAutoHide } from "@/common/hooks/use-scroll-auto-hide";
 import { NeteaseNetworkImage, NeteasePlaylistSummary, NeteaseUser } from "@/common/netease/models";
 import RendererTheme from "@/common/player/ui";
-import NeteaseImage from "@/common/components/image/netease-image";
+import NeteaseImage from "@/common/components/display/image/netease-image";
 import { cx } from "@emotion/css";
 import { useLocateOrScrollTopRegister } from "@/wins/main/hooks/use-locate-or-scroll-top-register";
 import { usePageJump } from "@/wins/main/hooks/use-page-jump";
@@ -10,7 +10,7 @@ import { useLocation } from "react-router-dom";
 import { RoutePathMain } from "@/common/routes";
 import RendererImageConstants from "@/common/constants/image";
 
-import VirtualList, { type VirtualListRow } from "@/common/components/virtual_list";
+import VirtualList, { type VirtualListRow } from "@/common/components/layout/virtual_list";
 
 interface NavPlaylistProps {
   user: Nullable<NeteaseUser>;
@@ -35,7 +35,8 @@ const NavPlaylist: FC<NavPlaylistProps> = ({ user, sidebarOpen }) => {
   }, []);
 
   const { canScrollTop } = useLocateOrScrollTopRegister({
-    getScrollTopFunc: () => gotoTop
+    getScrollTopFunc: () => gotoTop,
+    page: "home"
   });
 
   const { jumpPlaylistPage } = usePageJump();
@@ -49,7 +50,6 @@ const NavPlaylist: FC<NavPlaylistProps> = ({ user, sidebarOpen }) => {
       className="
         w-full h-full relative overflow-y-auto overflow-x-hidden
         contain-content will-change-scroll scrollbar
-        text-(--text-color-on-main)
       "
       ref={containerRef}>
       <VirtualList
@@ -83,7 +83,9 @@ const RowComponent: VirtualListRow<
             w-full flex flex-row rounded-md select-none cursor-pointer
             ease-in-out transition-all duration-300
           `,
-          active ? extra.opened && "bg-(--theme-color-main)" : extra.opened && "hover:bg-black/5"
+          active
+            ? extra.opened && "bg-(--theme-color-main) text-(--text-color-on-main)"
+            : extra.opened && "hover:bg-black/5"
         )}>
         <div
           className={cx(
@@ -92,7 +94,9 @@ const RowComponent: VirtualListRow<
               flex justify-center items-center py-1 rounded-md
               ease-in-out transition-all duration-300
             `,
-            active ? "bg-(--theme-color-main)" : !extra.opened && "hover:bg-black/5"
+            active
+              ? "bg-(--theme-color-main) text-(--text-color-on-main)"
+              : !extra.opened && "hover:bg-black/5"
           )}>
           <NeteaseImage
             cache

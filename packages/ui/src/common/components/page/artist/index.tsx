@@ -16,7 +16,7 @@ import {
 import { useRequestAutoRun, useRequestStatusWrap } from "@/common/hooks/use-request-wrap";
 import { NeteaseArtist, NeteaseTrackRecord } from "@/common/netease/models";
 import { NeteaseServicesArtist } from "@/common/netease/services";
-import AppContextMenu from "@/common/components/menu";
+import AppContextMenu from "@/common/components/display/menu";
 import RendererImageConstants from "@/common/constants/image";
 
 import Header from "./header";
@@ -26,7 +26,7 @@ import TrackList, {
   type TrackListClickFunc,
   type TrackListPlayableManager,
   type TrackListRef
-} from "@/common/components/track_list";
+} from "@/common/components/display/track_list";
 import AppError from "@/common/components/fallback/app-error";
 
 export type ArtistRef = {
@@ -52,6 +52,7 @@ interface ArtistProps {
   openComment: NormalFunc<[track: NeteaseTrackRecord]>;
   pageActionType?: "enter" | "out" | "none";
   onPageAction?: NormalFunc;
+  onDataLoaded?: NormalFunc<[artist: NeteaseArtist]>;
 }
 
 const Artist: FC<ArtistProps> = ({
@@ -70,7 +71,8 @@ const Artist: FC<ArtistProps> = ({
   onPageAction,
   addToPlaylistNext,
   addToPlaylistLast,
-  openComment
+  openComment,
+  onDataLoaded
 }) => {
   const requestData = useCallback((id: number) => {
     if (id <= 0 || !id) return Promise.resolve(null);
@@ -148,6 +150,10 @@ const Artist: FC<ArtistProps> = ({
       openComment
     ]
   );
+
+  useEffect(() => {
+    artist && onDataLoaded?.(artist);
+  }, [artist, onDataLoaded]);
 
   return (
     <div className={cx("flex flex-col", className)}>

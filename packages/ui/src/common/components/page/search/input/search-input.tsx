@@ -114,8 +114,8 @@ const SearchInput: FC<SearchInputProps> = ({ className, onSearch, ref, setTabs }
   );
 
   return (
-    <div className={cx("relative flex items-center justify-end gap-2", className)}>
-      <section className="relative h-11 w-4/5 max-w-100">
+    <div className={cx("relative flex items-center gap-2", className)}>
+      <section className="relative h-10 w-4/5 max-w-100">
         <input
           ref={inputRef}
           type="text"
@@ -123,7 +123,7 @@ const SearchInput: FC<SearchInputProps> = ({ className, onSearch, ref, setTabs }
             h-full w-full rounded-full border border-white/30
             px-4 pr-9 text-sm font-semibold outline-none shadow-md
             transition-all duration-300 ease-in-out
-            focus:border-(--theme-color-main) focus:text-(--theme-color-main)
+            focus:border-(--theme-color-main)  
         `}
           value={keyword}
           placeholder={recommendKeyword ?? "请输入搜索关键词"}
@@ -171,7 +171,7 @@ const SearchInput: FC<SearchInputProps> = ({ className, onSearch, ref, setTabs }
         title="搜索"
         className={cx(
           `
-          flex size-11 shrink-0 items-center justify-center rounded-full border border-white/30 shadow-md
+          flex size-10 shrink-0 items-center justify-center rounded-full border border-white/30 shadow-md
           transition-all duration-300 ease-in-out hover:bg-(--theme-color-main)
           hover:text-(--text-color-on-main) active:scale-95
         `

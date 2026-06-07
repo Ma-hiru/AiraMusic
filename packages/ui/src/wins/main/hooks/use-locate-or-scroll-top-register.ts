@@ -1,17 +1,17 @@
 import { useCallback, useEffect, useMemo } from "react";
 import { useLatestRef } from "@/common/hooks/use-latest-ref";
-import { useLocation } from "react-router-dom";
 import { useRouterActive } from "@/common/hooks/use-router-active";
 import { useAtom } from "jotai";
 import { scrollActionsAtom } from "@/wins/main/atoms/layout";
 import { debounce } from "lodash-es";
+import { RoutePathMain } from "@/common/routes";
 
 export function useLocateOrScrollTopRegister(props: {
   getScrollTopFunc?: NormalFunc<[], Optional<NormalFunc>>;
   getFastLocateFunc?: NormalFunc<[], Optional<NormalFunc>>;
+  page: keyof typeof RoutePathMain;
 }) {
-  const location = useLocation();
-  const active = useRouterActive(location);
+  const active = useRouterActive(RoutePathMain, props.page);
   const propsRef = useLatestRef(props);
   const [scrollActions, setScrollActions] = useAtom(scrollActionsAtom);
 

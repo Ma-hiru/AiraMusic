@@ -8,14 +8,14 @@ import {
   useRef,
   useState
 } from "react";
-import { WindowResize } from "@/common/hooks/use-window-resize";
 import { useAppLoaded } from "@/common/hooks/use-app-loaded";
 import { NeteaseLyric } from "@/common/netease/models";
 import { RendererWindow } from "@/common/lib/window";
 import { RendererEventBus } from "@/common/lib/bus";
 
 import Control from "./control";
-import LyricComponent, { type LyricRef } from "@/common/components/lyric/lyric-container";
+import WindowResizeArea from "@/common/components/layout/window-resize-area";
+import LyricComponent, { type LyricRef } from "@/common/components/display/lyric/lyric-container";
 
 export default function LyricPage() {
   useAppLoaded();
@@ -196,7 +196,7 @@ export default function LyricPage() {
         rmActive={playerBus.data?.rmActive}
         tlActive={playerBus.data?.tlActive}
       />
-      <WindowResize disable={lock || !showBg} showArea={false} />
+      <WindowResizeArea disable={lock || !showBg} showArea={false} />
     </div>
   );
 }

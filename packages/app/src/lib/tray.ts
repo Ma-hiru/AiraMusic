@@ -43,11 +43,12 @@ export class MainTray {
         MainWindowManager.get("tray") || MainWindowCreator.create(MainWindowPreset.trayOnWindows)!;
       tray.addListener("click", () => {
         Log.debug("tray", "click");
-        MainWindowManager.checkAndShow("main");
+        this.showCustomMenu(tray, trayWin);
       });
       tray.addListener("double-click", () => {
         Log.debug("tray", "double-click");
         MainWindowManager.checkAndShow("main");
+        MainWindowManager.get("miniplayer")?.hide();
       });
       tray.addListener("right-click", () => {
         Log.debug("tray", "right-click");
@@ -174,6 +175,7 @@ export class MainTray {
           label: "显示",
           click: () => {
             MainWindowManager.checkAndShow("main");
+            MainWindowManager.get("miniplayer")?.hide();
           }
         },
         {

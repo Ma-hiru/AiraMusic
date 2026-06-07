@@ -9,7 +9,7 @@ import { useRequestAutoRetry, useRequestStatusWrap } from "@/common/hooks/use-re
 import { RendererIPC } from "@/common/lib/ipc";
 import RendererPlayerHandle from "@/wins/main/lib/handle";
 
-import Carousel from "@/common/components/carousel";
+import Carousel from "@/common/components/display/carousel";
 import AppError from "@/common/components/fallback/app-error";
 
 interface BannerProps {

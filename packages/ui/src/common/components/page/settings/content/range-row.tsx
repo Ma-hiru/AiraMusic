@@ -3,7 +3,7 @@ import { debounce } from "lodash-es";
 import type { LucideIcon } from "lucide-react";
 
 import BaseItem from "./base-item";
-import RangeSlider from "@/common/components/range";
+import RangeSlider from "@/common/components/data-input/range";
 
 interface RangeRowProps {
   title: string;

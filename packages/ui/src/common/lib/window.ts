@@ -397,6 +397,10 @@ export class RendererWindow extends Listenable<RendererWindowEvent | "react-read
     return this.get("main");
   }
 
+  static get mini() {
+    return this.get("miniplayer");
+  }
+
   static get all() {
     return this.get("all");
   }

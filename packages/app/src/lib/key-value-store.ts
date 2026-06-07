@@ -2,6 +2,8 @@ import ElectronStore from "electron-store";
 import { MainRuntime } from "@/lib/runtime";
 import { Log } from "@/lib/log";
 import type { CacheStoreConfig } from "@/types/store";
+import { MainPathResolver } from "@/lib/path-resolver";
+import { MainCacheStoreConstants } from "@/constants/store";
 
 export type StoreType = {
   [k in WindowType | "cache"]: k extends "cache"
@@ -14,9 +16,23 @@ export type StoreType = {
       };
 };
 
-export const MainKeyValueStore = new ElectronStore<StoreType>();
+export const MainStoreConfig = new ElectronStore<StoreType>({
+  name: "config",
+  encryptionKey: process.env.APP_NAME, // 仅仅是混淆而已，非安全用途
+  encryptionAlgorithm: "aes-256-cbc",
+  cwd: MainPathResolver.appUserDataJoin("key-value")
+});
+
+export const MainStoreForRenderer = new ElectronStore<Record<string, JsonValue>>({
+  name: "renderer",
+  encryptionKey: process.env.APP_NAME,
+  encryptionAlgorithm: "aes-256-cbc",
+  cwd: MainPathResolver.appUserDataJoin("key-value")
+});
 
 if (MainRuntime.isDev) {
   Log.info("Clearing store in development mode");
-  MainKeyValueStore.clear();
+  const cacheConfig = MainStoreConfig.get("cache", MainCacheStoreConstants.DEFAULT_CONFIG);
+  MainStoreConfig.clear();
+  MainStoreConfig.set("cache", cacheConfig);
 }

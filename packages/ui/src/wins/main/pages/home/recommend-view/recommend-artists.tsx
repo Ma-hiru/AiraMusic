@@ -6,8 +6,8 @@ import RendererImageConstants from "@/common/constants/image";
 
 import AppError from "@/common/components/fallback/app-error";
 import AppLoading from "@/common/components/fallback/app-loading";
-import HomeMediaGrid from "@/wins/main/componets/home-media-grid";
-import HomeSection from "@/wins/main/componets/home-section";
+import MediaGrid from "@/common/components/layout/media-grid";
+import Section from "@/common/components/layout/section";
 
 interface RecommendArtistsProps {
   onClickItem?: NormalFunc<[id: number]>;
@@ -36,17 +36,17 @@ const RecommendArtists: FC<RecommendArtistsProps> = ({ onClickItem }) => {
   );
 
   return (
-    <HomeSection title="推荐歌手" subTitle="Artist Chart" Icon={UserRound}>
+    <Section title="推荐歌手" subTitle="Artist Chart" Icon={UserRound}>
       <AppError reset={reload} when={status === "error"} message="加载歌手榜失败">
         <AppLoading loading={status === "loading"} className="h-40">
-          <HomeMediaGrid
+          <MediaGrid
             items={items}
             coverSize={RendererImageConstants.AlbumListCoverSize}
             onClickItem={onClickItem}
           />
         </AppLoading>
       </AppError>
-    </HomeSection>
+    </Section>
   );
 };
 

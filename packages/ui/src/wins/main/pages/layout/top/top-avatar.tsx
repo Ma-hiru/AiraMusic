@@ -1,6 +1,6 @@
 import { type FC, memo, useMemo } from "react";
 import { NeteaseNetworkImage } from "@/common/netease/models/netease-image";
-import NeteaseImage from "@/common/components/image/netease-image";
+import NeteaseImage from "@/common/components/display/image/netease-image";
 import { NeteaseUser } from "@/common/netease/models";
 import RendererImageConstants from "@/common/constants/image";
 

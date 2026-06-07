@@ -2,10 +2,10 @@ import { cx } from "@emotion/css";
 import { type FC, memo, useCallback, useEffect, useState } from "react";
 import { useAppLoaded } from "@/common/hooks/use-app-loaded";
 import { RendererWindow } from "@/common/lib/window";
-import Drag from "@/common/components/drag/drag";
-import ImageViewer, { type ImageViewerEntry } from "@/common/components/image/image-viewer";
-import TopControlPure from "@/common/components/top/control";
-import AppToast from "@/common/components/toast";
+import Drag from "@/common/components/layout/drag/drag";
+import ImageViewer, { type ImageViewerEntry } from "@/common/components/display/image/image-viewer";
+import TopControlPure from "@/common/components/layout/top/control";
+import AppToast from "@/common/components/display/toast";
 
 type ImageGalleryState = {
   images: ImageViewerEntry[];
@@ -76,7 +76,7 @@ const ImagePage: FC = () => {
           "
         />
       </Drag>
-      <AppToast.Provider className="top-12 z-[70]" />
+      <AppToast.Provider className="top-12 z-70" />
     </div>
   );
 };
