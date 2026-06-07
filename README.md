@@ -2,6 +2,14 @@
 
 一个基于 Electron、React 和 TypeScript 构建的桌面端第三方网易云音乐播放器。支持多窗口和动态主题取色。
 
+## 下载
+
+第一个预览版本已发布，可前往 [Releases](https://github.com/Ma-hiru/AiraMusic/releases) 页面下载。
+
+当前主要支持：
+
+- Windows x64
+
 ## 界面展示
 
 ### 多窗口
