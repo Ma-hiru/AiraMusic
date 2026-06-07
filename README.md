@@ -8,9 +8,11 @@
 
 ![所有窗口](docs/images/all_windows.png)
 
-### 托盘页
+### 托盘和迷你播放器
 
 ![托盘](docs/images/tray.png)
+
+![Mini](docs/images/mini.png)
 
 ### 播放页
 
