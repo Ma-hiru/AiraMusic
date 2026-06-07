@@ -1,16 +1,16 @@
 # <img src="packages/app/assets/logo.svg" width="28" /> AiraMusic
 
-一个基于 Electron、React 和 TypeScript 构建的桌面端第三方网易云音乐播放器。
-
-## 项目状态
-
-🚧 开发中（WIP）
+一个基于 Electron、React 和 TypeScript 构建的桌面端第三方网易云音乐播放器。支持多窗口和动态主题取色。
 
 ## 界面展示
 
 ### 多窗口
 
 ![所有窗口](docs/images/all_windows.png)
+
+### 托盘页
+
+![托盘](docs/images/tray.png)
 
 ### 播放页
 
@@ -22,6 +22,7 @@
 
 ![歌单](docs/images/playlist.png)
 ![歌单2](docs/images/playlist2.png)
+![歌单3](docs/images/playlist3.png)
 ![播放列表](docs/images/list.png)
 
 ### 首页
@@ -33,7 +34,11 @@
 ![首页5](docs/images/home5.png)
 ![首页6](docs/images/home6.png)
 ![首页7](docs/images/home7.png)
-![首页8](docs/images/home8.png)
+
+### 歌手
+
+![歌手2](docs/images/artist.png)
+![歌手2](docs/images/artist_album.png)
 
 ### 专辑
 
@@ -45,18 +50,11 @@
 ![设置1](docs/images/settings.png)
 ![设置2](docs/images/settings2.png)
 
-### 歌手
-
-![歌手2](docs/images/artist.png)
-![歌手2](docs/images/artist_album.png)
-
 ### 搜索
 
 ![搜索](docs/images/search.png)
-
-### 托盘页
-
-![托盘](docs/images/tray.png)
+![搜索2](docs/images/search2.png)
+![搜索3](docs/images/search3.png)
 
 ## 依赖与架构
 
