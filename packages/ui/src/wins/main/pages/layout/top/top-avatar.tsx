@@ -14,15 +14,16 @@ const TopAvatar: FC<TopAvatarProps> = ({ user }) => {
       NeteaseNetworkImage.fromUserAvatar(user)?.setSize(RendererImageConstants.TopMiniAvatarSize),
     [user]
   );
+
+  if (!user || !user.isLoggedIn) return null;
   return (
-    avatar && (
-      <NeteaseImage
-        preview={false}
-        cache={true}
-        image={avatar}
-        className="size-5 rounded-full select-none shadow-[0_10px_25px_-5px_rgba(0,0,0,0.25)]"
-      />
-    )
+    <NeteaseImage
+      title={user.profile.nickname}
+      preview={false}
+      cache={true}
+      image={avatar}
+      className="size-5 rounded-full select-none shadow-[0_10px_25px_-5px_rgba(0,0,0,0.25)]"
+    />
   );
 };
 export default memo(TopAvatar);

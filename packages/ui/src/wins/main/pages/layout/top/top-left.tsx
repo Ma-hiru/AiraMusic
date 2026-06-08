@@ -33,8 +33,10 @@ const TopLeft: FC<TopLeftProps> = ({ user }) => {
   }, [playModal, setPlayModal]);
 
   const AvatarImage = useMemo(() => {
+    if (!user) return null;
     return (
       <NeteaseImage
+        title={user?.profile.nickname}
         cacheLazy={false}
         preview={false}
         cache={true}
@@ -42,7 +44,8 @@ const TopLeft: FC<TopLeftProps> = ({ user }) => {
         className="size-6.5 rounded-full"
       />
     );
-  }, [avatar]);
+  }, [avatar, user]);
+
   return (
     <div className="w-40 h-full">
       <AnimatePresence>
