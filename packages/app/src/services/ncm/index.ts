@@ -1,9 +1,9 @@
-import { MainChildService } from "@/lib/child";
+import { MainChildEntry } from "@/lib/child-entry";
 import type { NCMChildMessage, NCMParentMessage } from "@/types/ncm.child";
 import { join } from "node:path";
 import os from "node:os";
 
-export default class NeteaseMusicApiService extends MainChildService<
+export default class NeteaseMusicApiService extends MainChildEntry<
   NCMParentMessage,
   NCMChildMessage
 > {
