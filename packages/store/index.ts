@@ -5,7 +5,7 @@ import { type ChildProcessByStdio, spawn } from "node:child_process";
 import { Readable } from "node:stream";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
-const exeName = process.platform === "win32" ? "server.exe" : "server";
+const exeName = process.platform === "win32" ? "aira-music-cache.exe" : "aira-music-cache";
 const defaultServerPath = join(__dirname, "dist", exeName);
 
 export default class Store {

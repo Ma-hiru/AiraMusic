@@ -83,7 +83,7 @@ export class MainServices extends MainServicesBase {
         token: MainRuntime.storeAccessToken,
         enableConsole: Log.EnvLevel <= LogLevel.DEBUG,
         logger: (data) => this.printServiceLog("store", data.toString()),
-        onExit: (code) => this.onError("store", `exited with code ${code}`)
+        onExit: (code) => code && code !== 0 && this.onError("store", `exited with code ${code}`)
       });
     }
   };

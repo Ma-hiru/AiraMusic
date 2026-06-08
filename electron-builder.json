@@ -1,6 +1,5 @@
 {
   "appId": "com.mahiru.airamusic",
-  "executableName": "AiraMusic",
   "productName": "AiraMusic",
   "directories": {
     "app": "packages/app",
@@ -44,8 +43,8 @@
     "category": "Utility",
     "extraResources": [
       {
-        "from": "packages/store/dist/server",
-        "to": "bin/server"
+        "from": "packages/store/dist/aira-music-cache",
+        "to": "bin/aira-music-cache"
       }
     ]
   },
@@ -67,8 +66,8 @@
     "icon": "packages/app/assets/logo.png",
     "extraResources": [
       {
-        "from": "packages/store/dist/server.exe",
-        "to": "bin/server.exe"
+        "from": "packages/store/dist/aira-music-cache.exe",
+        "to": "bin/aira-music-cache.exe"
       }
     ]
   }

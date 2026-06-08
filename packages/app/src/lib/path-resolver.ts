@@ -30,8 +30,14 @@ export class MainPathResolver {
   static staticAssetsDir = isDev ? this.appPathJoin("assets") : this.appResourcePathJoin("assets");
 
   static storeServerBinaryPath = isDev
-    ? this.appPathJoin("../store/dist", process.platform === "win32" ? "server.exe" : "server")
-    : this.appResourcePathJoin("bin", process.platform === "win32" ? "server.exe" : "server");
+    ? this.appPathJoin(
+        "../store/dist",
+        process.platform === "win32" ? "aira-music-cache.exe" : "aira-music-cache"
+      )
+    : this.appResourcePathJoin(
+        "bin",
+        process.platform === "win32" ? "aira-music-cache.exe" : "aira-music-cache"
+      );
 
   static logDir = isDev
     ? MainPathResolver.appPathJoin("logs")
