@@ -62,7 +62,7 @@ const Top: FC<TopProps> = ({
           <span className="opacity-30 scale-80">({historyCount} 记录)</span>
         </div>
       }
-      slot={<Search searchTracks={searchTracks} setIsTyping={setIsTyping} />}
+      slot={<Search onSearch={searchTracks} setIsTyping={setIsTyping} />}
     />
   );
 };

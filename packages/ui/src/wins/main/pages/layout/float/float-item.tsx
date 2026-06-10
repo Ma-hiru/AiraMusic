@@ -1,38 +1,35 @@
-import { type FC, memo, type ReactNode, useMemo } from "react";
+import { cx } from "@emotion/css";
 import { motion } from "motion/react";
-import { useThemeColor } from "@/common/hooks/use-theme-color";
+import { type FC, type Key, memo, type ReactNode } from "react";
 
 interface FloatItemProps {
   children?: ReactNode;
   onClick?: NormalFunc;
+  className?: string;
+  key?: Key;
 }
 
-const FloatItem: FC<FloatItemProps> = ({ children, onClick }) => {
-  const { mainColor, textColorOnMain } = useThemeColor();
-
-  const style = useMemo(
-    () => ({
-      color: mainColor.string(),
-      background: textColorOnMain.alpha(0.6).string()
-    }),
-    [mainColor, textColorOnMain]
-  );
-
+const FloatItem: FC<FloatItemProps> = ({ children, onClick, className, key }) => {
   return (
     <motion.div
+      key={key}
       onClick={onClick}
-      style={style}
       exit={{ opacity: 0, scale: 0, transition: { ease: "easeInOut", duration: 0.3 } }}
       initial={{ opacity: 0, scale: 0 }}
       animate={{ opacity: 1, scale: 1, transition: { ease: "easeInOut", duration: 0.6 } }}
-      whileHover={{ opacity: 0.5 }}
-      whileTap={{ scale: 0.9 }}
-      className="
+      whileHover={{ opacity: 0.7 }}
+      whileTap={{ scale: 0.98 }}
+      className={cx(
+        `
         cursor-pointer backdrop-blur-sm rounded-full p-1
-        flex items-center justify-center
-      ">
+        flex items-center justify-center text-(--theme-color-main)
+        bg-(--text-color-on-main)/60 contain-layout
+        `,
+        className
+      )}>
       {children}
     </motion.div>
   );
 };
+
 export default memo(FloatItem);

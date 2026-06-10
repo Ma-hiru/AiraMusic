@@ -55,7 +55,7 @@ const TopRight: FC<TopRightProps> = ({
       </div>
       {/*Info*/}
       <div className="flex flex-col items-end justify-end">
-        <Search searchTracks={searchTracks} setIsTyping={setTying} />
+        <Search onSearch={searchTracks} setIsTyping={setTying} />
       </div>
     </div>
   );
