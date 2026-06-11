@@ -203,16 +203,17 @@ const TrayPage: FC = () => {
   );
 
   return (
-    <div className="h-screen w-screen overflow-hidden bg-transparent">
+    <div className="h-screen w-screen overflow-hidden">
       <div
         ref={containerRef}
         className="
           max-w-50 w-max rounded-xl border border-black/8
-          backdrop-blur-xl p-2 relative
+          backdrop-blur-xl p-2 relative bg-white/80
         ">
         <div className="fixed inset-0 z-[-1]">
           <AcrylicBackground
-            brightness={0.5}
+            brightness={0.6}
+            blur={20}
             opacity={1}
             className="rounded-xl overflow-hidden"
             src={infoBus.data?.backgroundCover}

@@ -1,7 +1,7 @@
 import { Log } from "@/common/lib/log";
 import { RendererCache } from "@/common/lib/cache";
 import { RendererRuntime } from "@/common/lib/runtime";
-import { ensureInitClass, Init, initAsync } from "@/common/utils/init";
+import { ensureInitObject, Init, initAsync } from "@/common/utils/init";
 
 type OnceRecordCache = {
   id: string;
@@ -59,4 +59,4 @@ export class RendererOnce {
   }
 }
 
-initAsync(ensureInitClass(RendererOnce));
+initAsync(ensureInitObject(RendererOnce));

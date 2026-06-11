@@ -1,17 +1,29 @@
 import { Log } from "@/common/lib/log";
 
-interface CanInit {
-  _init(): void | Promise<void>;
-}
-
-type InitClass<T extends AnyClass = AnyClass> = T &
-  CanInit & {
-    readonly [INIT_MARK]: true;
-  };
-
 const INIT_MARK = Symbol("INIT_MARK");
 
-export function Init(cb: NormalFunc) {
+interface CanInit {
+  __init(): void | Promise<void>;
+}
+
+type InitObject = CanInit & {
+  readonly [INIT_MARK]: true;
+};
+
+function wrap(init: NormalFunc) {
+  return () => {
+    try {
+      init();
+    } catch (err) {
+      Log.error("init", err);
+    }
+  };
+}
+
+/**
+ * 自动在对象上生成 `__init` 方法，方法调用装饰器工厂捕获的闭包
+ * */
+function Init(cb: NormalFunc) {
   return function <T extends AnyClass>(_: T, context: ClassDecoratorContext<T>) {
     context.addInitializer(function () {
       Object.defineProperties(this, {
@@ -21,7 +33,7 @@ export function Init(cb: NormalFunc) {
           enumerable: false,
           configurable: false
         },
-        _init: {
+        __init: {
           value: function () {
             cb();
           },
@@ -34,15 +46,15 @@ export function Init(cb: NormalFunc) {
   };
 }
 
-export function ensureInitClass<T extends AnyClass>(cls: T): InitClass<T> {
-  if (!(INIT_MARK in cls)) {
+function ensureInitObject<T extends object>(object: T): InitObject {
+  if (!(INIT_MARK in object)) {
     throw new Error("Class must be decorated with @Init");
   }
-  return cls as InitClass<T>;
+  return object as unknown as InitObject;
 }
 
-export function initAsync(object: CanInit | InitClass) {
-  const init = wrap(() => object._init());
+function initAsync(object: CanInit | InitObject) {
+  const init = wrap(() => object.__init());
   if (queueMicrotask == null) {
     setTimeout(init, 0);
     return;
@@ -50,16 +62,9 @@ export function initAsync(object: CanInit | InitClass) {
   queueMicrotask(init);
 }
 
-export function initSync(object: CanInit | InitClass) {
-  wrap(() => object._init())();
+function initSync(object: CanInit | InitObject) {
+  wrap(() => object.__init())();
 }
 
-function wrap(init: NormalFunc) {
-  return () => {
-    try {
-      init();
-    } catch (err) {
-      Log.error("init", err);
-    }
-  };
-}
+export { INIT_MARK, Init, ensureInitObject, initAsync, initSync };
+export type { CanInit, InitObject };

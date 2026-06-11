@@ -13,6 +13,7 @@ import {
 import RendererTheme from "@/common/player/ui";
 
 import AcrylicBackground from "@/common/components/display/acrylic-background";
+import RendererPlayerHandle from "@/wins/main/lib/handle";
 
 const Background: FC<{ className?: string }> = ({ className }) => {
   const setThemeColor = useSetAtom(themeColorsAtom);
@@ -22,6 +23,7 @@ const Background: FC<{ className?: string }> = ({ className }) => {
   const setTextColor = useSetAtom(textColorAtom);
   const backgroundCover = useAtomValue(backgroundCoverAtom);
   const themeColors = useMMCQ(backgroundCover);
+  const player = RendererPlayerHandle.usePlayer();
 
   useLayoutEffect(() => {
     const mainColor = themeColors[0] || RendererTheme.themeDefault.main;
@@ -58,7 +60,15 @@ const Background: FC<{ className?: string }> = ({ className }) => {
         "fixed left-0 top-0 inset-0 w-screen h-screen bg-(--default-bg-color)",
         className
       )}>
-      <AcrylicBackground src={backgroundCover ?? undefined} opacity={0.65} />
+      <AcrylicBackground
+        fluid
+        fluidPaused={!player.playing}
+        fluidSpeed={5}
+        src={backgroundCover ?? undefined}
+        opacity={0.7}
+        brightness={0.35}
+        blur={60}
+      />
     </div>
   );
 };

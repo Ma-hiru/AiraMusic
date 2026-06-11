@@ -1,5 +1,5 @@
 import { createLog, type LoggerWriter } from "@mahiru/log";
-import { ensureInitClass, Init, initAsync } from "@/common/utils/init";
+import { ensureInitObject, Init, initAsync } from "@/common/utils/init";
 import { RendererIPC } from "./ipc";
 
 @Init(() => {
@@ -48,4 +48,4 @@ export const Log = createLog(
 
 import.meta.env.DEV && Log.info("environment", import.meta.env);
 
-import.meta.env.DEV && initAsync(ensureInitClass(ProcessLogger));
+import.meta.env.DEV && initAsync(ensureInitObject(ProcessLogger));

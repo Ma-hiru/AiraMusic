@@ -1,47 +1,36 @@
-import { type ContextMenuRender } from "./menu-provider";
-import { useLayoutEffect } from "react";
+import { useEffect } from "react";
 import { Log } from "@/common/lib/log";
 import { createTrackContextMenu } from "./track-menu";
-import MenuProvider from "./menu-provider";
+import { Inject } from "@/common/utils/inject";
+import MenuProvider, { type ContextMenuRender } from "./menu-provider";
 
+const defaultHandler = () => {
+  Log.warn(
+    "AppContextMenu",
+    "ContextMenu is not provided in this app, or running under React StrictMode"
+  );
+  return false;
+};
+
+@Inject
 export default class AppContextMenu {
-  static _setContextMenuData: NormalFunc<[data: Nullable<ContextMenuRender>]> = () => {
-    Log.warn("AppContextMenu", "ContextMenu is not provided in this app");
-  };
-  static _setContextMenuVisible: NormalFunc<[show?: boolean]> = () => {
-    Log.warn("AppContextMenu", "ContextMenu is not provided in this app");
-  };
-  private static contextMenuVisibleGetter: NormalFunc<[], boolean> = () => {
-    Log.warn("AppContextMenu", "ContextMenu is not provided in this app");
-    return false;
-  };
+  static __setContextMenuData: NormalFunc<[data: Nullable<ContextMenuRender>]> = defaultHandler;
+  static __setContextMenuVisible: NormalFunc<[show?: boolean]> = defaultHandler;
+  static __contextMenuVisibleGetter: NormalFunc<[], boolean> = defaultHandler;
 
-  static readonly _create = <U extends unknown[]>(
-    creator: NormalFunc<U, ContextMenuRender>,
-    ...props: U
-  ) => {
-    AppContextMenu._setContextMenuData?.(creator(...props));
-    AppContextMenu._setContextMenuVisible?.(true);
-    return AppContextMenu.contextMenuVisibleGetter;
-  };
+  static _create<U extends unknown[]>(creator: NormalFunc<U, ContextMenuRender>, ...props: U) {
+    AppContextMenu.__setContextMenuData?.(creator(...props));
+    AppContextMenu.__setContextMenuVisible?.(true);
+    return AppContextMenu.__contextMenuVisibleGetter;
+  }
 
   static get useMenu() {
     return useContextMenu;
   }
 
   static close() {
-    if (!AppContextMenu.contextMenuVisibleGetter?.()) return;
-    AppContextMenu._setContextMenuVisible?.(false);
-  }
-
-  static _inject(hooks: {
-    setData: typeof AppContextMenu._setContextMenuData;
-    setVisible: typeof AppContextMenu._setContextMenuVisible;
-    visibleGetter: typeof AppContextMenu.contextMenuVisibleGetter;
-  }) {
-    AppContextMenu._setContextMenuData = hooks.setData;
-    AppContextMenu._setContextMenuVisible = hooks.setVisible;
-    AppContextMenu.contextMenuVisibleGetter = hooks.visibleGetter;
+    if (!AppContextMenu.__contextMenuVisibleGetter?.()) return;
+    AppContextMenu.__setContextMenuVisible?.(false);
   }
 
   static readonly Provider = MenuProvider;
@@ -58,10 +47,10 @@ window.addEventListener("scroll", AppContextMenu.close, {
 });
 
 function useContextMenu() {
-  useLayoutEffect(() => {
+  useEffect(() => {
     return () => {
-      AppContextMenu._setContextMenuData?.(null);
-      AppContextMenu._setContextMenuVisible?.(false);
+      AppContextMenu.__setContextMenuData?.(null);
+      AppContextMenu.__setContextMenuVisible?.(false);
     };
   }, []);
 

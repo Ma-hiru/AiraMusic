@@ -5,15 +5,15 @@ import {
   type ReactNode,
   useCallback,
   useEffect,
-  useLayoutEffect,
   useRef,
   useState
 } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { X } from "lucide-react";
 import { cx } from "@emotion/css";
-import AppModal from "./use";
 import { useLatestRef } from "@/common/hooks/use-latest-ref";
+import { ensureInjectObject, useInject } from "@/common/utils/inject";
+import AppModal from "./use";
 
 export type ModalRender = {
   title?: ReactNode;
@@ -64,14 +64,12 @@ const ModalProvider: FC<{ className?: string }> = ({ className }) => {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [close, visible]);
 
-  useLayoutEffect(() => {
-    AppModal._inject({
-      setData: setModalRenderData,
-      setVisible: setModalVisible,
-      renderGetter: getRender,
-      visibleGetter: getVisible
-    });
-  }, [getRender, getVisible, setModalRenderData, setModalVisible]);
+  useInject(ensureInjectObject(AppModal), {
+    __setModalData: setModalRenderData,
+    __visibleGetter: getVisible,
+    __setModalVisible: setModalVisible,
+    __renderGetter: getRender
+  });
 
   return (
     <div>

@@ -65,9 +65,9 @@ const MiniPlayerPage: FC = () => {
       <section className="fixed inset-0 z-[-1]">
         <AcrylicBackground
           className="absolute inset-0"
-          blur={10}
-          brightness={0.5}
-          opacity={0.7}
+          blur={15}
+          brightness={0.6}
+          opacity={1}
           src={bg}
         />
       </section>

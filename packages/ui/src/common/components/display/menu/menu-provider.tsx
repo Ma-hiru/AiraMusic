@@ -5,10 +5,13 @@ import {
   type ReactNode,
   useCallback,
   useLayoutEffect,
+  useRef,
   useState
 } from "react";
 import { motion, useAnimate } from "motion/react";
 import { cx } from "@emotion/css";
+import { ensureInjectObject, useInject } from "@/common/utils/inject";
+import { useLatestRef } from "@/common/hooks/use-latest-ref";
 import AppContextMenu from "./use";
 
 const DURATION = 0.15;
@@ -106,13 +109,12 @@ const MenuProvider: FC<{ className?: string }> = ({ className }) => {
     }
   }, [closeContextMenuAnimate, moveContextMenu, openContextMenuAnimate, render, visible]);
 
-  useLayoutEffect(() => {
-    AppContextMenu._inject({
-      setData: setContextMenuRenderData,
-      setVisible: setContextMenuVisible,
-      visibleGetter: () => visible
-    });
-  }, [setContextMenuRenderData, setContextMenuVisible, visible]);
+  const visibleRef = useLatestRef(visible);
+  useInject(ensureInjectObject(AppContextMenu), {
+    __setContextMenuData: setContextMenuRenderData,
+    __setContextMenuVisible: setContextMenuVisible,
+    __contextMenuVisibleGetter: useRef(() => visibleRef.current).current
+  });
 
   return (
     <motion.div

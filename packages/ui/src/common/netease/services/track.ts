@@ -11,7 +11,7 @@ type CacheEntry = {
 };
 
 export default class _NeteaseTrackSource {
-  private static readonly cacheKey = "netease_tracks_v1";
+  private static readonly cacheKey = "netease_tracks_v2";
 
   private static getCacheKey(id: number) {
     return _NeteaseTrackSource.cacheKey + "_" + id;

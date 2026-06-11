@@ -40,13 +40,14 @@ const NavFloat: FC<NavFloatProps> = ({ setKeyword, sideBar, canScroll, onScrollT
 
   return (
     <section
-      onMouseOver={() => setHoverFloat(true)}
-      onMouseLeave={() => setHoverFloat(false)}
+      onMouseOver={() => sideBar && setHoverFloat(true)}
+      onMouseLeave={() => sideBar && setHoverFloat(false)}
       className={cx(
         `
         min-w-10 min-h-15 absolute right-2 bottom-20
         flex flex-col gap-2 justify-end items-end
-      `
+      `,
+        !sideBar && "pointer-events-none"
       )}>
       <AnimatePresence>
         {showFloat && canScroll && (

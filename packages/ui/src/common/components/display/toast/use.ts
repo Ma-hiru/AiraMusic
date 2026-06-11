@@ -1,20 +1,24 @@
 import { type ToastItemData } from "./toast-item";
 import { Log } from "@/common/lib/log";
+import { Inject } from "@/common/utils/inject";
 import Provider from "./toast-provider";
 
+const defaultHandler = () => {
+  Log.warn("AppToast", "Toast is not provided in this app, or running under React StrictMode");
+  return "";
+};
+
+@Inject
 export default class AppToast {
-  static show: NormalFunc<[data: Omit<ToastItemData, "id">], string> = () => {
-    Log.warn("AppToast", "Toast is not provided in this app");
-    return "";
-  };
+  static __show: NormalFunc<[data: Omit<ToastItemData, "id">], string> = defaultHandler;
+  static __dispose: NormalFunc<[id: string]> = defaultHandler;
 
-  static dispose: NormalFunc<[id: string]> = () => {
-    Log.warn("AppToast", "Toast is not provided in this app");
-  };
+  static get show() {
+    return AppToast.__show;
+  }
 
-  static _inject(hooks: { show: typeof AppToast.show; dispose: typeof AppToast.dispose }) {
-    AppToast.show = hooks.show;
-    AppToast.dispose = hooks.dispose;
+  static get dispose() {
+    return AppToast.__dispose;
   }
 
   static Provider = Provider;

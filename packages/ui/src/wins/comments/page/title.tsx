@@ -108,7 +108,7 @@ const Title: FC<TitleProps> = ({ className, commentBus }) => {
   return (
     <div
       className={cx(
-        "w-full flex flex-row items-center justify-center gap-2 px-8 overflow-hidden",
+        "w-full flex flex-col items-center justify-start gap-1 px-8 pb-2 overflow-hidden",
         className
       )}>
       <NeteaseImage
@@ -118,37 +118,41 @@ const Title: FC<TitleProps> = ({ className, commentBus }) => {
         image={cover}
         cacheLazy={false}
       />
-      <div className="flex flex-col items-start justify-center gap-0.5 overflow-hidden">
-        {commentBus.data?.type === "track" && (
-          <>
-            <h1 className="font-semibold text-sm line-clamp-1">{track?.name}</h1>
-            <h2 className="font-medium text-xs opacity-60">{track?.artist.join(" / ")}</h2>
-            <div className="flex flex-row items-center justify-start gap-1 flex-wrap">
-              {tags.map((tag) => {
-                return (
-                  <span
-                    className="inline-block rounded-full px-1.5 py-0.5 text-[10px] bg-(--theme-color-main) text-(--text-color-on-main)"
-                    key={tag}>
-                    {tag}
-                  </span>
-                );
-              })}
-            </div>
-          </>
-        )}
-        {commentBus.data?.type === "playlist" && (
-          <>
-            <h1 className="font-semibold text-sm line-clamp-2">{playlist?.name}</h1>
-            <h2 className="font-medium text-xs opacity-60">{playlist?.creator?.nickname}</h2>
-          </>
-        )}
-        {commentBus.data?.type === "album" && (
-          <>
-            <h1 className="font-semibold text-sm line-clamp-2">{album?.content.name}</h1>
-            <h2 className="font-medium text-xs opacity-60">{album?.content.artist.name}</h2>
-          </>
-        )}
-      </div>
+      {commentBus.data?.type === "track" && (
+        <>
+          <h1 className="font-semibold text-sm line-clamp-1 text-center">{track?.name}</h1>
+          <h2 className="font-medium text-xs opacity-60 line-clamp-1 text-center">
+            {track?.artist.join(" / ")}
+          </h2>
+          <div className="flex flex-row items-center justify-start gap-1 flex-wrap text-center">
+            {tags.map((tag) => {
+              return (
+                <span
+                  className="inline-block rounded-full px-1.5 py-0.5 text-[10px] bg-(--theme-color-main) text-(--text-color-on-main)"
+                  key={tag}>
+                  {tag}
+                </span>
+              );
+            })}
+          </div>
+        </>
+      )}
+      {commentBus.data?.type === "playlist" && (
+        <>
+          <h1 className="w-fit font-semibold text-sm line-clamp-1 text-center">{playlist?.name}</h1>
+          <h2 className="w-full font-medium text-xs line-clamp-1 opacity-60 text-center">
+            {playlist?.creator?.nickname}
+          </h2>
+        </>
+      )}
+      {commentBus.data?.type === "album" && (
+        <>
+          <h1 className="font-semibold text-sm line-clamp-1 text-center">{album?.content.name}</h1>
+          <h2 className="font-medium text-xs opacity-60 text-center">
+            {album?.content.artist.name}
+          </h2>
+        </>
+      )}
     </div>
   );
 };

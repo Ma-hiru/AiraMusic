@@ -454,21 +454,22 @@ const ImageViewer: FC<ImageViewerProps> = ({ images, index, onIndexChange, onToo
     <div
       className="relative h-full w-full overflow-hidden bg-[#050505] text-white"
       onMouseMove={() => showToolbar(true)}>
+      {/*背景*/}
       {current.url && (
         <img
-          aria-hidden="true"
           src={imageSrc}
           className={cx(
             `
-              pointer-events-none absolute inset-[-48px] h-[calc(100%+96px)] w-[calc(100%+96px)]
+              pointer-events-none absolute -inset-12 h-[calc(100%+96px)] w-[calc(100%+96px)]
               scale-105 object-cover opacity-0 blur-3xl transition-opacity duration-500
             `,
             status === "loaded" && "opacity-35"
           )}
+          alt={current.alt}
         />
       )}
-      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.52),rgba(0,0,0,0.86))]" />
 
+      {/*标题栏*/}
       <div
         className={cx(
           `
@@ -490,10 +491,9 @@ const ImageViewer: FC<ImageViewerProps> = ({ images, index, onIndexChange, onToo
         </div>
       </div>
 
+      {/*内容（图片）区域*/}
       <div
         ref={viewerRef}
-        role="img"
-        aria-label={current.alt || "图片预览"}
         className="relative z-10 flex h-full w-full items-center justify-center overflow-hidden"
         onWheel={handleWheel}
         onPointerDown={handlePointerDown}
@@ -553,6 +553,7 @@ const ImageViewer: FC<ImageViewerProps> = ({ images, index, onIndexChange, onToo
         )}
       </div>
 
+      {/*工具栏*/}
       <div
         className={cx(
           `
@@ -588,7 +589,7 @@ const ImageViewer: FC<ImageViewerProps> = ({ images, index, onIndexChange, onToo
           }}
           className={cx(
             `
-              flex h-9 min-w-[4.5rem] items-center justify-center gap-2 rounded-md px-2
+              flex h-9 min-w-18 items-center justify-center gap-2 rounded-md px-2
               text-[12px] font-semibold text-white/80 transition-all duration-200
               ease-in-out hover:bg-white/15 hover:text-white active:scale-95
               focus-visible:ring-2 focus-visible:ring-white/45
