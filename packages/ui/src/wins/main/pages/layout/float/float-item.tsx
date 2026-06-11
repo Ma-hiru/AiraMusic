@@ -6,13 +6,13 @@ interface FloatItemProps {
   children?: ReactNode;
   onClick?: NormalFunc;
   className?: string;
-  key?: Key;
+  motionKey?: Key;
 }
 
-const FloatItem: FC<FloatItemProps> = ({ children, onClick, className, key }) => {
+const FloatItem: FC<FloatItemProps> = ({ children, onClick, className, motionKey }) => {
   return (
     <motion.div
-      key={key}
+      key={motionKey}
       onClick={onClick}
       exit={{ opacity: 0, scale: 0, transition: { ease: "easeInOut", duration: 0.3 } }}
       initial={{ opacity: 0, scale: 0 }}

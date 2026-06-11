@@ -12,7 +12,6 @@ interface NavFloatProps {
   setKeyword: NormalFunc<[keyword: string]>;
   sideBar: boolean;
   canScroll: boolean;
-
   onScrollTop?: NormalFunc;
 }
 
@@ -51,7 +50,7 @@ const NavFloat: FC<NavFloatProps> = ({ setKeyword, sideBar, canScroll, onScrollT
       )}>
       <AnimatePresence>
         {showFloat && canScroll && (
-          <FloatItem key="scroll-top" onClick={onScrollTop}>
+          <FloatItem key="scroll-top" motionKey="scroll-top" onClick={onScrollTop}>
             <ArrowUp className="size-5" />
           </FloatItem>
         )}

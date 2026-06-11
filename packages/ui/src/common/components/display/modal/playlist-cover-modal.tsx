@@ -88,7 +88,7 @@ export function createAlbumCoverModal({
       <CoverModal
         name={album.content.name}
         desc={album.content.description}
-        tags={album.content.tags ? [album.content.tags] : []}
+        tags={[album.content.subType, album.content.tags]}
         persons={artist}
         cover={cover}
         onCoverOpen={openCover}
@@ -182,7 +182,7 @@ const CoverModal: FC<CoverModalProps> = ({
         </section>
         <section className="flex justify-between items-center">
           <div className="flex flex-wrap gap-2 shrink-0">
-            {tags.map((tag, index) => (
+            {tags.filter(Boolean).map((tag, index) => (
               <span
                 key={tag + index}
                 className="
