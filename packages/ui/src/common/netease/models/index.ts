@@ -4,7 +4,7 @@ export { NeteaseAlbum } from "./netease-album";
 export { NeteaseTrack } from "./netease-track";
 export { NeteaseArtist } from "./netease-artist";
 export { NeteaseCookie } from "./netease-cookie";
-export { NeteaseHistory } from "./netease-history";
+export { NeteaseHistoryRecord } from "./netease-history-record";
 export { NeteasePlaylist, type NullablePrivilegesPlaylistDetailResponse } from "./netease-playlist";
 export { NeteaseTrackRecord } from "./netease-track-record";
 export { NeteaseUser, type NeteaseUserModel } from "./netease-user";

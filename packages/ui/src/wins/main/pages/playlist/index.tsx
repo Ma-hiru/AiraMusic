@@ -71,11 +71,10 @@ const PlaylistPage: FC<object> = () => {
       activeTrackID={player.current.track?.id}
       canFastLocate={canFastLocate}
       canScrollTop={canScrollTop}
-      pageActionType={source === PlaylistSource.History ? "none" : "out"}
+      pageActionType="out"
       onPageAction={onPageAction}
       setIsTyping={setIsTyping}
       onCoverLoaded={setBackground}
-      historyList={player.history.list}
     />
   );
 };

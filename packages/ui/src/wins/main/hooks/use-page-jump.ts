@@ -53,10 +53,10 @@ export function usePageJump(
 
   const isPlaylistPage = location.pathname.includes(RoutePathMain.playlist.base);
   const jumpPlaylistPage = useCallback(
-    (id: number, source: "normal" | "like" | "history") => {
+    (id: number, source: "normal" | "like") => {
       if (source !== "like" && id === Number(playlistRef.current.id) && isPlaylistPage) return;
       if (playlistRef.current.source === "like" && !id && isPlaylistPage) return;
-      if (settingsRef.current.preference.defaultUseDisplayWindow && source !== "history") {
+      if (settingsRef.current.preference.defaultUseDisplayWindow) {
         return RendererWindow.display.reactReadyAwait().then(() => {
           RendererEventBus.display.send({
             type: "playlist",

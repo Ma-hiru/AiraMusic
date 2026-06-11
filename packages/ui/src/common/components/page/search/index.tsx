@@ -13,7 +13,7 @@ import type { LucideIcon } from "lucide-react";
 import { DiscAlbum, ListMusic, Music2, UserRound } from "lucide-react";
 import { AlbumResult, ArtistResult, PlaylistResult, TrackResult } from "./content";
 import type { SearchInputRef } from "./input/search-input";
-import { NeteaseHistory, NeteaseTrackRecord } from "@/common/netease/models";
+import { NeteaseHistoryRecord, NeteaseTrackRecord } from "@/common/netease/models";
 import { NeteaseImageSize } from "@/common/enum";
 import type { HeartManager } from "@/common/hooks/use-heart";
 import type { TrackListPlayableManager } from "@/common/components/display/track_list";
@@ -33,7 +33,9 @@ interface SearchProps {
   defaultKeyword: Optional<string>;
   onClickPlaylist: Optional<NormalFunc<[id: number]>>;
   activeTrackID: Undefinable<number>;
-  onClickTrack: Optional<NormalFunc<[track: NeteaseTrackRecord | NeteaseHistory, index: number]>>;
+  onClickTrack: Optional<
+    NormalFunc<[track: NeteaseTrackRecord | NeteaseHistoryRecord, index: number]>
+  >;
   onClickArtist: Optional<NormalFunc<[id: number]>>;
   onClickAlbum: Optional<NormalFunc<[id: number]>>;
   addToPlaylistNext: NormalFunc<[track: NeteaseTrackRecord]>;

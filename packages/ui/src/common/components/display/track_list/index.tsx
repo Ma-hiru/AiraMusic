@@ -12,7 +12,7 @@ import {
 import { cx } from "@emotion/css";
 import { useScrollAutoHide } from "@/common/hooks/use-scroll-auto-hide";
 import { NeteaseImageSize, PlaylistSource } from "@/common/enum";
-import { NeteaseHistory, NeteaseTrack, NeteaseTrackRecord } from "@/common/netease/models";
+import { NeteaseHistoryRecord, NeteaseTrack, NeteaseTrackRecord } from "@/common/netease/models";
 import { type HeartManager, useHeart } from "@/common/hooks/use-heart";
 
 import TrackItem, { type TrackItemProps } from "@/common/components/display/track_item";
@@ -25,13 +25,13 @@ export interface TrackListRef {
 }
 
 export interface TrackListContextMenuFunc<
-  T extends NeteaseTrackRecord | NeteaseHistory = NeteaseTrackRecord | NeteaseHistory
+  T extends NeteaseTrackRecord | NeteaseHistoryRecord = NeteaseTrackRecord | NeteaseHistoryRecord
 > {
   (e: ReactMouseEvent<HTMLDivElement, MouseEvent>, track: T, index: number): void;
 }
 
 export interface TrackListClickFunc<
-  T extends NeteaseTrackRecord | NeteaseHistory = NeteaseTrackRecord | NeteaseHistory
+  T extends NeteaseTrackRecord | NeteaseHistoryRecord = NeteaseTrackRecord | NeteaseHistoryRecord
 > {
   (track: T, index: number): void;
 }
@@ -40,7 +40,7 @@ export interface TrackListPlayableManager {
   (track: NeteaseTrack): { playable: boolean; reason: string };
 }
 
-export interface TrackListProps<T extends NeteaseTrackRecord[] | NeteaseHistory[]> {
+export interface TrackListProps<T extends NeteaseTrackRecord[] | NeteaseHistoryRecord[]> {
   ref?: Ref<TrackListRef>;
   paddingBottom?: number | string;
   activeID?: number;
@@ -60,7 +60,7 @@ export interface TrackListProps<T extends NeteaseTrackRecord[] | NeteaseHistory[
   emptyTips?: string;
 }
 
-const TrackList = <T extends NeteaseTrackRecord[] | NeteaseHistory[]>({
+const TrackList = <T extends NeteaseTrackRecord[] | NeteaseHistoryRecord[]>({
   ref,
   id,
   tracks,

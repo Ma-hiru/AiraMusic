@@ -1,4 +1,3 @@
-import { cx } from "@emotion/css";
 import {
   type FC,
   memo,
@@ -13,8 +12,6 @@ import {
   useState
 } from "react";
 import {
-  NeteaseHistory,
-  NeteaseNetworkImage,
   NeteasePlaylist,
   NeteaseTrack,
   NeteaseTrackRecord,
@@ -22,23 +19,22 @@ import {
 } from "@/common/netease/models";
 import type {
   TrackListClickFunc,
-  TrackListContextMenuFunc,
   TrackListPlayableManager,
   TrackListRef
 } from "@/common/components/display/track_list";
 import TrackList from "@/common/components/display/track_list";
 import { SearchTrack } from "@mahiru/wasm";
-import { NeteaseImageSize, PlaylistSource } from "@/common/enum";
-import { NeteaseServicesImage, NeteaseServicesPlaylist } from "@/common/netease/services";
+import { PlaylistSource } from "@/common/enum";
+import { NeteaseServicesPlaylist } from "@/common/netease/services";
 import { useUpdate } from "@/common/hooks/use-update";
+import { useTrackCoverPreload } from "@/common/hooks/use-track-cover-preload";
+import { useTrackContextMenu } from "@/common/hooks/use-track-context-menu";
 import { Log } from "@/common/lib/log";
 import { type RequestStatus } from "@/common/hooks/use-request-wrap";
 import { type HeartManager } from "@/common/hooks/use-heart";
 import { RendererNet } from "@/common/lib/net";
-import AppContextMenu from "@/common/components/display/menu";
 import AppToast from "@/common/components/display/toast";
 import RendererImageConstants from "@/common/constants/image";
-import RendererPlayerHistory from "@/common/player/history";
 
 import Top from "./top";
 import AppLoading from "@/common/components/fallback/app-loading";
@@ -46,8 +42,8 @@ import AppError from "@/common/components/fallback/app-error";
 import Divider from "@/common/components/layout/divider";
 
 export type PlaylistRef = {
-  tracks: NeteaseTrackRecord[] | NeteaseHistory[];
-  totalTracks: RefObject<NeteaseTrackRecord[] | NeteaseHistory[]>;
+  tracks: NeteaseTrackRecord[];
+  totalTracks: RefObject<NeteaseTrackRecord[]>;
   trackListRef: RefObject<Nullable<TrackListRef>>;
   currentVisibleItemIndex: RefObject<number>;
   scrollTop: NormalFunc;
@@ -72,7 +68,6 @@ interface PlaylistProps {
   canScrollTop: Optional<NormalFunc<[enable: boolean]>>;
   canFastLocate: Optional<NormalFunc<[enable: boolean]>>;
   activeTrackID?: number;
-  historyList: Undefinable<NeteaseHistory[]>;
   user: Nullable<NeteaseUser>;
   pageActionType?: "enter" | "out" | "none";
   onPageAction?: NormalFunc;
@@ -100,7 +95,6 @@ const Playlist: FC<PlaylistProps> = ({
   onClickAlbum,
   onClickArtist,
   activeTrackID,
-  historyList = [],
   pageActionType,
   onPageAction,
   onCoverLoaded,
@@ -109,10 +103,9 @@ const Playlist: FC<PlaylistProps> = ({
 }) => {
   const [status, setStatus] = useState<RequestStatus>("loading");
   const [playlist, setPlaylist] = useState<Nullable<NeteasePlaylist>>(null);
-  const [tracks, setTracks] = useState<NeteaseTrackRecord[] | NeteaseHistory[]>([]);
-  const totalTracks = useRef<NeteaseTrackRecord[] | NeteaseHistory[]>([]);
+  const [tracks, setTracks] = useState<NeteaseTrackRecord[]>([]);
+  const totalTracks = useRef<NeteaseTrackRecord[]>([]);
   const trackListRef = useRef<Nullable<TrackListRef>>(null);
-  const currentVisibleItemIndex = useRef(0);
 
   // 搜索曲目
   const searcher = useMemo(() => new SearchTrack(), []);
@@ -136,51 +129,14 @@ const Playlist: FC<PlaylistProps> = ({
   );
   // 回到顶部
   const scrollTop = useRef(() => trackListRef.current?.scrollToItem(0)).current;
-  // 历史最大滚动范围
-  const maxRange = useRef<IndexRange>([0, 0]);
-  // 检查并更新前一段预缓存范围
-  const checkAndUpdateLastPreloadRange = useCallback(
-    async (range: IndexRange, signal?: AbortSignal) => {
-      if (signal?.aborted) return;
-      const [start, end] = range;
-      const images = totalTracks.current.slice(start, end).map((track) => {
-        return NeteaseNetworkImage.fromTrackCover(track.detail)
-          .setSize(NeteaseImageSize.xs)
-          .setAlt(track.detail.name);
-      });
-      for (const image of images) {
-        if (signal?.aborted) return;
-        void NeteaseServicesImage.download(image);
-      }
-    },
-    []
-  );
-  // 虚拟列表范围更新回调
-  const coverCacheController = useRef<Nullable<AbortController>>(null);
-  const onRangeUpdate = useCallback(
-    async (range: IndexRange) => {
-      const [start, end] = range;
-      const controller = new AbortController();
-      coverCacheController.current?.abort();
-      coverCacheController.current = controller;
-      currentVisibleItemIndex.current = start;
-      canScrollTop?.(start >= 10);
-      // 搜索状态不处理预缓存
-      if (tracks.length !== totalTracks.current.length) return;
-      // 向上滚动不处理
-      if (start < maxRange.current[0]) return;
-      // 向下滚动，更新最大范围
-      maxRange.current = range;
-      // 如果开始位置是25的倍数再进行预缓存，减少调用次数
-      if (start % 25 === 0 && start !== 0) {
-        // 检查前一段范围，写入预缓存
-        if (start - 50 > 0) {
-          return checkAndUpdateLastPreloadRange([end - 25, end], controller.signal);
-        }
-      }
-    },
-    [canScrollTop, checkAndUpdateLastPreloadRange, tracks.length]
-  );
+  // 封面预缓存
+  const coverSize = RendererImageConstants.PlaylistPageTrackCoverSize;
+  const { currentVisibleItemIndex, onRangeUpdate } = useTrackCoverPreload({
+    totalTracks,
+    visibleCount: tracks.length,
+    canScrollTop,
+    coverSize
+  });
   // 快速定位到当前播放歌曲
   const fastLocator = useCallback(() => {
     if (!activeTrackID) return;
@@ -188,50 +144,20 @@ const Playlist: FC<PlaylistProps> = ({
     if (exits === -1) return;
     trackListRef.current?.scrollToItem(exits);
   }, [activeTrackID, tracks]);
+
   useEffect(() => {
     if (!activeTrackID) return;
     const exits = tracks.findIndex((track) => track.id === activeTrackID);
     canFastLocate?.(exits !== -1);
   }, [canFastLocate, activeTrackID, tracks]);
   // 右键菜单
-  const { create, createTrackContextMenu } = AppContextMenu.useMenu();
-  const onContextMenu = useCallback<TrackListContextMenuFunc>(
-    (e, track) => {
-      create(createTrackContextMenu, {
-        track,
-        clientX: e.clientX,
-        clientY: e.clientY,
-        onClick: (type, track) => {
-          switch (type) {
-            case "play":
-              onPlay(track, /** unused */ 0);
-              break;
-            case "album":
-              onClickAlbum(track.detail.al.id);
-              break;
-            case "nextPlay":
-              addToPlaylistNext(track);
-              break;
-            case "addPlayList":
-              addToPlaylistLast(track);
-              break;
-            case "comment":
-              void openComment(track);
-              break;
-          }
-        }
-      });
-    },
-    [
-      addToPlaylistLast,
-      addToPlaylistNext,
-      create,
-      createTrackContextMenu,
-      onClickAlbum,
-      onPlay,
-      openComment
-    ]
-  );
+  const { onContextMenu } = useTrackContextMenu({
+    onPlay,
+    onClickAlbum,
+    addToPlaylistNext,
+    addToPlaylistLast,
+    openComment
+  });
   // 切换歌单时重置状态
   const update = useUpdate();
   const reload = useCallback(() => {
@@ -251,8 +177,6 @@ const Playlist: FC<PlaylistProps> = ({
   }, [id, source, searcher]);
   // 数据加载
   useEffect(() => {
-    Log.debug("PlaylistPage", `params: id=${id}, source=${source}`);
-
     let cancel = false;
     if (source === "normal" || source === "like") {
       const playlistID = source === "like" ? user?.likedPlaylist.id : Number(id);
@@ -280,29 +204,19 @@ const Playlist: FC<PlaylistProps> = ({
           });
       }
     }
-    if (source === "history") {
-      totalTracks.current = historyList;
-      startTransition(() => {
-        if (cancel) return;
-        setPlaylist(null);
-        setTracks(historyList);
-        setStatus("success");
-        searcher.update(RendererPlayerHistory.toSearchStruct(historyList));
-      });
-    }
 
     return () => {
       cancel = true;
     };
   }, [
     id,
-    historyList,
     searcher,
     source,
     user?.likedPlaylist.id,
     // 手动添加reload依赖
     update.count
   ]);
+
   useEffect(() => {
     return RendererNet.onOnlineChange(() => {
       RendererNet.isOnline && reload();
@@ -319,7 +233,7 @@ const Playlist: FC<PlaylistProps> = ({
       scrollTop,
       fastLocator
     }),
-    [fastLocator, scrollTop, tracks]
+    [currentVisibleItemIndex, fastLocator, scrollTop, tracks]
   );
 
   useEffect(() => {
@@ -339,19 +253,12 @@ const Playlist: FC<PlaylistProps> = ({
             searchTracks={searchTracks}
             setIsTyping={setIsTyping}
             onCoverLoaded={onCoverLoaded}
-            historyCount={historyList.length}
             onPageAction={onPageAction}
             pageActionType={pageActionType}
             coverCacheKey={source === "like" ? String(user?.likedTrackIDs.checkPoint) : undefined}
           />
-          {source !== "history" && playlist !== null && <Divider className="my-3" />}
-          <div
-            className={cx(
-              `
-            w-full h-[calc(100%-210px)] relative
-          `,
-              source === "history" && "h-full pb-18"
-            )}>
+          {playlist !== null && <Divider className="my-3" />}
+          <div className="w-full h-[calc(100%-210px)] relative">
             <TrackList
               ref={trackListRef}
               tracks={tracks}
@@ -365,7 +272,7 @@ const Playlist: FC<PlaylistProps> = ({
               onClickArtist={onClickArtist}
               heartManager={heartManager}
               playableManager={playableManager}
-              trackCoverSize={RendererImageConstants.PlaylistPageTrackCoverSize}
+              trackCoverSize={coverSize}
             />
           </div>
         </AppLoading>

@@ -66,7 +66,18 @@ type MessageEventValue = {
     url: string;
     alt?: string;
   };
-  updateBus: "info" | "player" | "progress" | "output";
+  updateBus: "info" | "player" | "progress" | "output" | "history";
+  historyBus: {
+    list: {
+      id: number;
+      name: string;
+      sourceID: number;
+      sourceName: NeteaseTrackRecordSourceType;
+      detail: NeteaseTrackModel;
+      playDuration: number;
+      time: number;
+    }[];
+  };
   displayBus:
     | {
         id: number;
@@ -83,6 +94,9 @@ type MessageEventValue = {
       }
     | {
         type: "settings";
+      }
+    | {
+        type: "history";
       };
   mergeDisplay: MessageEventValue["displayBus"];
   playerChangeBus:

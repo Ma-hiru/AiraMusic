@@ -6,7 +6,8 @@ const RoutePathMain = RoutePath.create({
   routes: [
     { name: "home", path: "/home" },
     { name: "artist", path: "/artist" },
-    { name: "album", path: "/album" }
+    { name: "album", path: "/album" },
+    { name: "history", path: "/history" }
   ]
 });
 
@@ -18,7 +19,8 @@ const RoutePathDisplay = RoutePath.create({
     { name: "album", path: "/album" },
     { name: "search", path: "/search" },
     { name: "blank", path: "/blank" },
-    { name: "settings", path: "/settings" }
+    { name: "settings", path: "/settings" },
+    { name: "history", path: "/history" }
   ]
 });
 

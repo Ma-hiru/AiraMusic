@@ -1,11 +1,11 @@
-import { type FC, memo, useMemo } from "react";
+import { type FC, memo } from "react";
 import { NeteaseArtist } from "@/common/netease/models";
 
 import Avatar from "./avatar";
 import Info from "./info";
 import Tabs from "./tabs";
 import { cx } from "@emotion/css";
-import { SquareArrowRightEnter, SquareArrowRightExit } from "lucide-react";
+import PageAction from "@/common/components/display/page-action";
 
 interface HeaderProps {
   className?: string;
@@ -28,30 +28,15 @@ const Header: FC<HeaderProps> = ({
   pageActionType = "none",
   onPageAction
 }) => {
-  const action = useMemo(() => {
-    if (pageActionType === "enter")
-      return (
-        <SquareArrowRightEnter
-          className="size-5 hover:opacity-50 ease-in-out transition-all duration-300 cursor-pointer active:scale-90"
-          onClick={onPageAction}
-        />
-      );
-    if (pageActionType === "out")
-      return (
-        <SquareArrowRightExit
-          className="size-5 hover:opacity-50 ease-in-out transition-all duration-300 cursor-pointer active:scale-90"
-          onClick={onPageAction}
-        />
-      );
-    return null;
-  }, [onPageAction, pageActionType]);
   return (
     <div className={cx("w-full", className)}>
       <div className="w-full h-49 flex flex-row-reverse justify-start items-start">
         <Avatar className="h-full shrink-0" artist={artist} onAvatarLoaded={onAvatarLoaded} />
         <Info className="h-full flex-1" artist={artist}>
           <div className="flex mt-2 flex-row justify-end items-center">
-            <span className="relative left-2">{action}</span>
+            <span className="relative left-2">
+              <PageAction type={pageActionType} onClick={onPageAction} />
+            </span>
             <Tabs
               className="text-[12px] relative left-6"
               tabsItem={tabsItem}

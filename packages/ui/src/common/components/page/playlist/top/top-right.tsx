@@ -1,10 +1,11 @@
-import { type FC, memo, useMemo } from "react";
-import { SquareArrowRightEnter, SquareArrowRightExit, SquarePen } from "lucide-react";
+import { type FC, memo } from "react";
+import { SquarePen } from "lucide-react";
 import { NeteasePlaylist } from "@/common/netease/models";
 import { useUser } from "@/common/store/user";
 import { PlaylistSource } from "@/common/enum";
 
 import Search from "@/common/components/data-input/search";
+import PageAction from "@/common/components/display/page-action";
 
 interface TopRightProps {
   summary: Nullable<NeteasePlaylist>;
@@ -24,23 +25,6 @@ const TopRight: FC<TopRightProps> = ({
   onPageAction
 }) => {
   const user = useUser();
-  const action = useMemo(() => {
-    if (pageActionType === "enter")
-      return (
-        <SquareArrowRightEnter
-          className="size-5 cursor-pointer select-none ease-in-out transition-all duration-300 hover:opacity-50"
-          onClick={onPageAction}
-        />
-      );
-    if (pageActionType === "out")
-      return (
-        <SquareArrowRightExit
-          className="size-5 cursor-pointer select-none ease-in-out transition-all duration-300 hover:opacity-50"
-          onClick={onPageAction}
-        />
-      );
-    return null;
-  }, [onPageAction, pageActionType]);
 
   return (
     <div className="flex h-full flex-col justify-between items-end text-[12px]">
@@ -51,7 +35,7 @@ const TopRight: FC<TopRightProps> = ({
             <SquarePen className="size-5 cursor-pointer select-none hover:opacity-50 ease-in-out transition-all duration-300" />
           )}
         </div>
-        {action}
+        <PageAction type={pageActionType} onClick={onPageAction} />
       </div>
       {/*Info*/}
       <div className="flex flex-col items-end justify-end">

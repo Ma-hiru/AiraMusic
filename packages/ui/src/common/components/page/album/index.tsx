@@ -8,7 +8,7 @@ import {
   useImperativeHandle,
   useRef
 } from "react";
-import { NeteaseAlbum, NeteaseHistory, NeteaseTrackRecord } from "@/common/netease/models";
+import { NeteaseAlbum, NeteaseHistoryRecord, NeteaseTrackRecord } from "@/common/netease/models";
 import { cx } from "@emotion/css";
 import { NeteaseImageSize, PlaylistSource } from "@/common/enum";
 import { type HeartManager } from "@/common/hooks/use-heart";
@@ -37,7 +37,7 @@ interface AlbumPageProps {
   ref?: Ref<AlbumPageRef>;
   id: number;
   activeTrackID: Undefinable<number>;
-  onClick: Optional<NormalFunc<[track: NeteaseTrackRecord | NeteaseHistory, index: number]>>;
+  onClick: Optional<NormalFunc<[track: NeteaseTrackRecord | NeteaseHistoryRecord, index: number]>>;
   onClickArtist: Optional<NormalFunc<[id: number]>>;
   onClickAlbum: Optional<NormalFunc<[id: number]>>;
   onRangeUpdate?: NormalFunc<[range: IndexRange]>;
