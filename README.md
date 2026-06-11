@@ -16,6 +16,7 @@
 ### 多窗口
 
 ![所有窗口](docs/images/all_windows.png)
+![所有窗口2](docs/images/all_windows2.png)
 
 ### 托盘和迷你播放器
 
@@ -35,6 +36,10 @@
 ![歌单2](docs/images/playlist2.png)
 ![歌单3](docs/images/playlist3.png)
 ![播放列表](docs/images/list.png)
+
+## 播放历史
+
+![历史](docs/images/history.png)
 
 ### 首页
 
