@@ -51,6 +51,7 @@
     "test:ts": "yarn workspace @mahiru/ui test && yarn workspace aira-music test",
     "test:wasm": "yarn workspace @mahiru/wasm test",
     "test:store": "yarn workspace @mahiru/store test",
+    "push-check": "yarn npm-run-all --parallel check lint test",
     "postinstall": "husky"
   },
   "devDependencies": {
