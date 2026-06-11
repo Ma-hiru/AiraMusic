@@ -1,66 +1,45 @@
-import { useLayoutEffect } from "react";
-import Provider, { type ModalRender } from "./modal-provider";
+import { useEffect } from "react";
 import { Log } from "@/common/lib/log";
 import { createAlbumCoverModal, createPlaylistCoverModal } from "./playlist-cover-modal";
 import { createDialogModal } from "./dialog-modal";
+import { Inject } from "@/common/utils/inject";
+import Provider, { type ModalRender } from "./modal-provider";
 
+const defaultHandler = () => {
+  Log.warn("AppModal", "Modal is not provided in this app, or running under React StrictMode");
+  return null;
+};
+
+@Inject
 export default class AppModal {
-  static _setModalData: NormalFunc<[data: Nullable<ModalRender>]> = () => {
-    Log.warn("AppModal", "Modal is not provided in this app");
-  };
+  static __setModalData: NormalFunc<[data: Nullable<ModalRender>]> = defaultHandler;
+  static __setModalVisible: NormalFunc<[show?: boolean]> = defaultHandler;
+  static __renderGetter: NormalFunc<[], Nullable<ModalRender>> = defaultHandler;
+  static __visibleGetter: NormalFunc<[], boolean> = () => defaultHandler() || false;
 
-  static _setModalVisible: NormalFunc<[show?: boolean]> = () => {
-    Log.warn("AppModal", "Modal is not provided in this app");
-  };
-
-  private static renderGetter: NormalFunc<[], Nullable<ModalRender>> = () => {
-    Log.warn("AppModal", "Modal is not provided in this app");
-    return null;
-  };
-
-  private static visibleGetter: NormalFunc<[], boolean> = () => {
-    Log.warn("AppModal", "Modal is not provided in this app");
-    return false;
-  };
-
-  static readonly _create = <U extends unknown[]>(
-    creator: NormalFunc<U, ModalRender>,
-    ...props: U
-  ) => {
-    AppModal._setModalData?.(creator(...props));
-    AppModal._setModalVisible?.(true);
-    return AppModal.visibleGetter;
-  };
+  static _create<U extends unknown[]>(creator: NormalFunc<U, ModalRender>, ...props: U) {
+    AppModal.__setModalData?.(creator(...props));
+    AppModal.__setModalVisible?.(true);
+    return AppModal.__visibleGetter;
+  }
 
   static get useModal() {
     return useModal;
   }
 
   static close() {
-    if (!AppModal.visibleGetter?.()) return;
-    AppModal._setModalVisible?.(false);
-  }
-
-  static _inject(hooks: {
-    setData: typeof AppModal._setModalData;
-    setVisible: typeof AppModal._setModalVisible;
-    renderGetter: typeof AppModal.renderGetter;
-    visibleGetter: typeof AppModal.visibleGetter;
-  }) {
-    AppModal._setModalData = hooks.setData;
-    AppModal._setModalVisible = hooks.setVisible;
-    AppModal.renderGetter = hooks.renderGetter;
-    AppModal.visibleGetter = hooks.visibleGetter;
+    if (!AppModal.__visibleGetter?.()) return;
+    AppModal.__setModalVisible?.(false);
   }
 
   static readonly Provider = Provider;
 }
 
 function useModal() {
-  useLayoutEffect(() => {
+  useEffect(() => {
     return () => {
-      AppModal._setModalData?.(null);
-      AppModal._setModalVisible?.(false);
+      AppModal.__setModalData?.(null);
+      AppModal.__setModalVisible?.(false);
     };
   }, []);
 

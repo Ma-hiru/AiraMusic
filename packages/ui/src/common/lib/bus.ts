@@ -97,6 +97,12 @@ class OutputBus extends Bus<"outputBus"> {
   }
 }
 
+class HistoryBus extends Bus<"historyBus"> {
+  constructor() {
+    super("historyBus");
+  }
+}
+
 export class RendererEventBus {
   private static readonly BusCollections = {
     playerBus: new PlayerBus(),
@@ -107,7 +113,8 @@ export class RendererEventBus {
     updateMainBus: new UpdateMainBus(),
     displayBUs: new DisplayBus(),
     playerChangeBus: new PlayerChangeBus(),
-    output: new OutputBus()
+    output: new OutputBus(),
+    historyBus: new HistoryBus()
   };
 
   static get player() {
@@ -144,6 +151,10 @@ export class RendererEventBus {
 
   static get output() {
     return RendererEventBus.BusCollections.output;
+  }
+
+  static get history() {
+    return RendererEventBus.BusCollections.historyBus;
   }
 
   static get collections() {

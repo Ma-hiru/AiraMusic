@@ -51,6 +51,10 @@ const LayoutDisplay: FC<object> = () => {
         break;
       case "settings":
         target = RoutePath.withQuery(RoutePathDisplay.settings, {});
+        break;
+      case "history":
+        target = RoutePathDisplay.history;
+        break;
     }
     path !== target && navigate(target);
 

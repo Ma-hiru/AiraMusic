@@ -1,6 +1,5 @@
 {
   "appId": "com.mahiru.airamusic",
-  "executableName": "AiraMusic",
   "productName": "AiraMusic",
   "directories": {
     "app": "packages/app",
@@ -22,23 +21,53 @@
     }
   ],
   "linux": {
-    "target": ["deb"],
+    "target": [
+      {
+        "target": "AppImage",
+        "arch": ["x64"]
+      },
+      {
+        "target": "deb",
+        "arch": ["x64"]
+      },
+      {
+        "target": "rpm",
+        "arch": ["x64"]
+      },
+      {
+        "target": "tar.gz",
+        "arch": ["x64"]
+      }
+    ],
     "icon": "packages/app/assets/logo.png",
     "category": "Utility",
     "extraResources": [
       {
-        "from": "packages/store/dist/server",
-        "to": "bin/server"
+        "from": "packages/store/dist/aira-music-cache",
+        "to": "bin/aira-music-cache"
       }
     ]
   },
   "win": {
-    "target": "nsis",
+    "target": [
+      {
+        "target": "nsis",
+        "arch": ["x64"]
+      },
+      {
+        "target": "msi",
+        "arch": ["x64"]
+      },
+      {
+        "target": "portable",
+        "arch": ["x64"]
+      }
+    ],
     "icon": "packages/app/assets/logo.png",
     "extraResources": [
       {
-        "from": "packages/store/dist/server.exe",
-        "to": "bin/server.exe"
+        "from": "packages/store/dist/aira-music-cache.exe",
+        "to": "bin/aira-music-cache.exe"
       }
     ]
   }

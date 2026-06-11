@@ -3,12 +3,10 @@ import { type Location } from "react-router-dom";
 
 export class PlaylistPathUtils {
   readonly base;
-  readonly history;
   readonly like;
 
   constructor(base?: string) {
     this.base = base || "/playlist";
-    this.history = this.withQuery(null, PlaylistSource.History);
     this.like = this.withQuery(null, PlaylistSource.Like);
   }
 

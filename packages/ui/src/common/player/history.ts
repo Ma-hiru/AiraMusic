@@ -1,4 +1,4 @@
-import { NeteaseHistory, NeteaseTrack } from "@/common/netease/models";
+import { NeteaseHistoryRecord, NeteaseTrack } from "@/common/netease/models";
 import { Listenable } from "@/common/utils/listenable";
 import { NeteaseAPITrack } from "@/common/netease/api";
 
@@ -10,7 +10,7 @@ export default class RendererPlayerHistory extends Listenable {
     return this.list.length;
   }
 
-  constructor(props?: { list?: NeteaseHistory[]; maxLength?: number }) {
+  constructor(props?: { list?: NeteaseHistoryRecord[]; maxLength?: number }) {
     super();
     this.list = props?.list ?? [];
     this.maxLength = props?.maxLength ?? 500;
@@ -20,12 +20,12 @@ export default class RendererPlayerHistory extends Listenable {
     super[Symbol.dispose]();
   }
 
-  locate(record: NeteaseHistory | number) {
+  locate(record: NeteaseHistoryRecord | number) {
     if (typeof record === "number") return this.list.findIndex((h) => h.detail.id === record);
     return this.list.findIndex((h) => h.detail.id === record.detail.id);
   }
 
-  add(record: NeteaseHistory) {
+  add(record: NeteaseHistoryRecord) {
     const exitsPos = this.locate(record);
     if (exitsPos !== -1) this.list.splice(exitsPos, 1);
     this.list.unshift(record);
@@ -39,7 +39,7 @@ export default class RendererPlayerHistory extends Listenable {
     this.executeListeners();
   }
 
-  remove(record: NeteaseHistory | number) {
+  remove(record: NeteaseHistoryRecord | number) {
     const exitsPos = this.locate(record);
     if (exitsPos !== -1) this.list.splice(exitsPos, 1);
     this.executeListeners();
@@ -48,7 +48,7 @@ export default class RendererPlayerHistory extends Listenable {
   toSearchStruct() {
     return RendererPlayerHistory.toSearchStruct(this.list);
   }
-  static toSearchStruct(list: NeteaseHistory[]) {
+  static toSearchStruct(list: NeteaseHistoryRecord[]) {
     return NeteaseTrack.toSearchStructString(list.map((h) => new NeteaseTrack(h.detail)));
   }
 
@@ -60,7 +60,7 @@ export default class RendererPlayerHistory extends Listenable {
   }
 
   static fromSave(save: ReturnType<typeof this.save>) {
-    save.list = <NeteaseHistory[]>save.list.map(NeteaseHistory.fromObject) || [];
+    save.list = save.list.map(NeteaseHistoryRecord.fromHistoryObject);
     return new RendererPlayerHistory(save);
   }
 }

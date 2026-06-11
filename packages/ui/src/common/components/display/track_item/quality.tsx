@@ -1,11 +1,11 @@
 import { type FC, memo } from "react";
 import { TrackQuality } from "@/common/enum";
-import { NeteaseHistory, NeteaseTrackRecord } from "@/common/netease/models";
+import { NeteaseHistoryRecord, NeteaseTrackRecord } from "@/common/netease/models";
 
 import Tag from "@/common/components/display/tag";
 
 interface ListItemQualityProps {
-  track?: NeteaseHistory | NeteaseTrackRecord;
+  track?: NeteaseHistoryRecord | NeteaseTrackRecord;
   forceShow?: Optional<TrackQuality>;
 }
 

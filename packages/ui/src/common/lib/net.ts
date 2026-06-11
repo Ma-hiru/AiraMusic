@@ -2,7 +2,7 @@ import { Log } from "@/common/lib/log";
 import { Listener } from "@/common/utils/listenable";
 import { EqError } from "@mahiru/log";
 import { RendererIPC } from "@/common/lib/ipc";
-import { ensureInitClass, Init, initAsync } from "@/common/utils/init";
+import { ensureInitObject, Init, initAsync } from "@/common/utils/init";
 
 @Init(() => {
   const observer = new PerformanceObserver((list) => {
@@ -102,4 +102,4 @@ export class RendererNet {
   static offOnlineChange = this.listener.remove.bind(this.listener);
 }
 
-initAsync(ensureInitClass(RendererNet));
+initAsync(ensureInitObject(RendererNet));

@@ -5,6 +5,7 @@ import HomePage from "../pages/home";
 import PlaylistPage from "../pages/playlist";
 import AlbumPage from "../pages/album";
 import ArtistPage from "../pages/artist";
+import HistoryPage from "../pages/history";
 
 export const MainRouter = createBrowserRouter([
   {
@@ -30,6 +31,10 @@ export const MainRouter = createBrowserRouter([
       {
         path: RoutePathMain.artist,
         element: <ArtistPage />
+      },
+      {
+        path: RoutePathMain.history,
+        element: <HistoryPage />
       }
     ]
   }

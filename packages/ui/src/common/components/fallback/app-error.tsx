@@ -51,13 +51,13 @@ const AppError: FC<AppErrorProps> = ({
           className={`
             px-2 py-1 inline active:scale-95 cursor-pointer rounded-md
             hover:text-(--text-color-on-main) hover:bg-(--theme-color-main)
-            duration-200 ease-in-out transition-all
+            duration-200 ease-in-out transition-all text-center
           `}>
           <CircleX className="mr-2 inline" />
           <span>加载错误，点击重载</span>
         </button>
       ) : (
-        <p className="whitespace-pre-wrap break-keep">
+        <p className="whitespace-pre-wrap break-keep text-center">
           <CircleX className="mr-2 inline" />
           <span>加载出错了</span>
         </p>

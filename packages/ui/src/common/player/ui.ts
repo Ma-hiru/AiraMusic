@@ -2,7 +2,7 @@ import Color, { type ColorInstance } from "color";
 import { converter, formatHex } from "culori";
 import { clamp } from "lodash-es";
 import { Listener } from "@/common/utils/listenable";
-import { ensureInitClass, Init, initAsync } from "@/common/utils/init";
+import { ensureInitObject, Init, initAsync } from "@/common/utils/init";
 
 @Init(() => {
   const observer = new MutationObserver(() => RendererTheme.listener.execute());
@@ -168,4 +168,4 @@ const Palette_SCALE: Record<LIGHTNESS_SCALE, number> = {
   900: 0.22
 };
 
-initAsync(ensureInitClass(RendererTheme));
+initAsync(ensureInitObject(RendererTheme));

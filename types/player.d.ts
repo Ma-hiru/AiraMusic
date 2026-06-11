@@ -1,3 +1,11 @@
+interface Quality {
+  br: number;
+  fid: number;
+  size: number;
+  sr?: number;
+  vd: number;
+}
+
 interface NeteaseTrackModel {
   id: number;
   /** 歌曲标题 */
@@ -31,11 +39,11 @@ interface NeteaseTrackModel {
    *   例子:id 1859245776 和 1859306637 为同一首歌，前者 mark & 1048576 == 1048576,后者 mark &   1048576 == 0，因此前者是脏版。
    * */
   mark: number;
-  sq: null | Sq;
-  h: null | H;
-  hr: null | Hr;
-  l: null | L;
-  m: null | M;
+  sq: null | Quality;
+  h: null | Quality;
+  hr: null | Quality;
+  l: null | Quality;
+  m: null | Quality;
   fee: 0 | 1 | 4 | 8;
   mv: number;
   no: number;
@@ -43,7 +51,7 @@ interface NeteaseTrackModel {
   pop: number;
   publishTime: number;
   noCopyrightRcmd: any;
-  privilege: {
+  privilege: null | {
     /** 曲目 id。 */
     id: number;
     /** 付费类型标识（0 常见为免费，非 0 表示某种付费/VIP 限制，具体取值由服务端定义）。 */
@@ -68,7 +76,7 @@ interface NeteaseTrackModel {
     flag?: number;
     /** 其余仍会影响可播状态但暂未明确定义的字段。 */
     bd: null;
-    chargeInfoList: ChargeInfoList[];
+    chargeInfoList: { chargeMessage: null; chargeType: number; chargeUrl: null; rate: number }[];
     code: number;
     cp: number;
     /** 当前用户的该歌曲最高下载音质 */
@@ -78,7 +86,13 @@ interface NeteaseTrackModel {
     downloadMaxBrLevel: string;
     /** 免费用户的该歌曲播放音质 */
     flLevel: string;
-    freeTrialPrivilege: FreeTrialPrivilege;
+    freeTrialPrivilege: {
+      cannotListenReason: null;
+      listenType: null;
+      playReason: null;
+      resConsumable: boolean;
+      userConsumable: boolean;
+    };
     ignoreCache: null;
     /** 歌曲最高音质 */
     maxBrLevel: string;

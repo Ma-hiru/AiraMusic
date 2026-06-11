@@ -9,15 +9,20 @@ import AppToast from "@/common/components/display/toast";
 
 interface NavMenuProps {
   barOpened: boolean;
+  className?: string;
 }
 
-const NavMenu: FC<NavMenuProps> = ({ barOpened }) => {
+const NavMenu: FC<NavMenuProps> = ({ barOpened, className }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { jumpPlaylistPage } = usePageJump();
 
   return (
-    <div className="flex flex-col gap-4 w-(--side-bar-expand-width) overflow-hidden">
+    <div
+      className={cx(
+        "flex flex-col gap-4 w-(--side-bar-expand-width) overflow-hidden contain-layout",
+        className
+      )}>
       {NavConstants.LAYOUT_NAV.map(({ icon, label, path }) => {
         const active = RoutePathMain.matchPathname(location, path);
         return (

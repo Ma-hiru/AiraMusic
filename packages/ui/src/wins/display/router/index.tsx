@@ -7,6 +7,7 @@ import ArtistDisplay from "../pages/artist/artist-display";
 import PlaylistDisplay from "../pages/playlist/playlist-display";
 import SearchDisplay from "../pages/search/search-display";
 import SettingsDisplay from "../pages/settings/settings-display";
+import HistoryDisplay from "../pages/history/history-display";
 
 export const DisplayRouter = createBrowserRouter(
   [
@@ -41,6 +42,10 @@ export const DisplayRouter = createBrowserRouter(
         {
           path: RoutePathDisplay.settings,
           element: <SettingsDisplay />
+        },
+        {
+          path: RoutePathDisplay.history,
+          element: <HistoryDisplay />
         }
       ]
     }

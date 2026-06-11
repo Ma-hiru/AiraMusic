@@ -1,8 +1,8 @@
 import type { ProxyChildMessage, ProxyParentMessage } from "@/types/proxy.child";
-import { MainChildService } from "@/lib/child";
+import { MainChildEntry } from "../../lib/child-entry";
 import { MainPathResolver } from "@/lib/path-resolver";
 
-export default class ProxyService extends MainChildService<ProxyParentMessage, ProxyChildMessage> {
+export default class ProxyService extends MainChildEntry<ProxyParentMessage, ProxyChildMessage> {
   readonly port: number;
   readonly ncmPort: number;
   readonly storePort: number;

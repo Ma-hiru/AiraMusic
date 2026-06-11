@@ -1,10 +1,10 @@
-import { type FC, memo, useMemo } from "react";
+import { type FC, memo } from "react";
 import { NeteaseAlbum } from "@/common/netease/models";
 import { NeteaseImageSize } from "@/common/enum";
 
 import TopCover from "./top-cover";
 import TopInfo from "./top-info";
-import { SquareArrowRightEnter, SquareArrowRightExit } from "lucide-react";
+import PageAction from "@/common/components/display/page-action";
 
 interface TopProps {
   onAddList: NormalFunc;
@@ -27,23 +27,6 @@ const Top: FC<TopProps> = ({
   pageActionType = "none",
   onPageAction
 }) => {
-  const action = useMemo(() => {
-    if (pageActionType === "enter")
-      return (
-        <SquareArrowRightEnter
-          className="size-5 hover:opacity-50 ease-in-out transition-all duration-300 cursor-pointer active:scale-90"
-          onClick={onPageAction}
-        />
-      );
-    if (pageActionType === "out")
-      return (
-        <SquareArrowRightExit
-          className="size-5 hover:opacity-50 ease-in-out transition-all duration-300 cursor-pointer active:scale-90"
-          onClick={onPageAction}
-        />
-      );
-    return null;
-  }, [onPageAction, pageActionType]);
   return (
     <div className="w-full h-45 grid grid-rows-1 grid-cols-[3fr_1fr] gap-3">
       <div className="min-w-0 grid grid-rows-1 grid-cols-[auto_1fr] gap-4 items-end">
@@ -56,7 +39,9 @@ const Top: FC<TopProps> = ({
         />
         <TopInfo album={album} dynamic={dynamic} onAddList={onAddList} />
       </div>
-      <div className="flex items-end justify-end">{action}</div>
+      <div className="flex items-end justify-end">
+        <PageAction type={pageActionType} onClick={onPageAction} />
+      </div>
     </div>
   );
 };

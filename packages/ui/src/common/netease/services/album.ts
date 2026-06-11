@@ -5,7 +5,7 @@ import { RendererCache } from "@/common/lib/cache";
 
 export default class _NeteaseAlbumSource {
   //region cache
-  private static readonly cacheKey = "netease_album_detail_v2";
+  private static readonly cacheKey = "netease_album_detail_v4";
 
   private static storeCache(album: NeteaseAlbum) {
     RendererCache.memory.setOne(_NeteaseAlbumSource.cacheKey + "_" + album.content.id, album);

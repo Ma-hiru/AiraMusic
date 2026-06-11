@@ -56,7 +56,7 @@ export class NeteaseArtist {
       name: obj.name,
       detail: obj.detail,
       desc: obj.desc,
-      hotTracks: obj.hotTracks.map(NeteaseTrackRecord.fromObject),
+      hotTracks: obj.hotTracks.map(NeteaseTrackRecord.fromRecordObject),
       followInfos: obj.followInfos
     });
   }

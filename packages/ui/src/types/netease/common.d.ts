@@ -3,6 +3,5 @@ namespace NeteaseAPI {
     code: number;
     message?: string;
     msg?: string;
-    [property: string]: any;
   }
 }

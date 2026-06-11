@@ -1,6 +1,6 @@
 import { cx } from "@emotion/css";
 import { memo, useCallback } from "react";
-import { NeteaseHistory, NeteaseTrackRecord } from "@/common/netease/models";
+import { NeteaseHistoryRecord, NeteaseTrackRecord } from "@/common/netease/models";
 import { NeteaseImageSize, PlaylistSource } from "@/common/enum";
 import type {
   TrackListClickFunc,
@@ -14,13 +14,13 @@ import ListItemName from "./name";
 import ListItemInfo from "./info";
 
 export interface TrackItemLikeChangeFunc<
-  T extends NeteaseTrackRecord | NeteaseHistory = NeteaseTrackRecord | NeteaseHistory
+  T extends NeteaseTrackRecord | NeteaseHistoryRecord = NeteaseTrackRecord | NeteaseHistoryRecord
 > {
   (track: T, index: number): void;
 }
 
 export interface TrackItemProps<
-  T extends NeteaseTrackRecord | NeteaseHistory = NeteaseTrackRecord | NeteaseHistory
+  T extends NeteaseTrackRecord | NeteaseHistoryRecord = NeteaseTrackRecord | NeteaseHistoryRecord
 > {
   track: T;
   total: number;
@@ -39,7 +39,7 @@ export interface TrackItemProps<
   trackCoverSize: NeteaseImageSize;
 }
 
-const TrackItem = <T extends NeteaseTrackRecord | NeteaseHistory>({
+const TrackItem = <T extends NeteaseTrackRecord | NeteaseHistoryRecord>({
   track,
   total,
   index,

@@ -27,7 +27,7 @@ const AppLoading: FC<ListLoadingProps> = ({
     <div
       ref={ref}
       className={cx(
-        "px-2 py-1 w-full h-full flex flex-col gap-2 justify-center items-center",
+        "px-2 py-1 w-full h-full flex flex-col gap-2 justify-center items-center text-center",
         className
       )}>
       <Loading className="size-8" />

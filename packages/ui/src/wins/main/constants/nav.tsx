@@ -41,7 +41,7 @@ export class NavConstants {
     {
       icon: <Clock className="w-full aspect-square" />,
       label: "历史",
-      path: RoutePathMain.playlist.history
+      path: RoutePathMain.history
     }
   ];
   static readonly HOME_CHANNELS: HomeChannel[] = [

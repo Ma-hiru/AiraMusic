@@ -243,7 +243,7 @@ namespace NeteaseAPI {
     br: number;
     fid: number;
     size: number;
-    sr: number;
+    sr?: number;
     vd: number;
   }
 

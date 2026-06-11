@@ -1,6 +1,10 @@
 import NeteaseTrackSource from "@/common/netease/services/track";
 import { NeteaseAPIPlaylist } from "@/common/netease/api";
-import { NeteasePlaylist, NeteasePlaylistSummary } from "@/common/netease/models";
+import {
+  NeteasePlaylist,
+  NeteasePlaylistSummary,
+  type NullablePrivilegesPlaylistDetailResponse
+} from "@/common/netease/models";
 import { RendererCache } from "@/common/lib/cache";
 import { LRUCacheWithTime } from "@/common/utils/lru";
 import { userStoreSnapshot } from "@/common/store/user";
@@ -9,7 +13,7 @@ export default class _NeteasePlaylistSource {
   //region cache
   private static readonly cacheKey = "netease_playlist_detail_v1";
 
-  private static storeCache(response: NeteaseAPI.NeteasePlaylistDetailResponse) {
+  private static storeCache(response: NullablePrivilegesPlaylistDetailResponse) {
     return RendererCache.local.object.store(
       _NeteasePlaylistSource.cacheKey + "_" + response.playlist.id,
       response
@@ -17,7 +21,7 @@ export default class _NeteasePlaylistSource {
   }
 
   private static getCache(id: number) {
-    return RendererCache.local.object.fetch<NeteaseAPI.NeteasePlaylistDetailResponse>(
+    return RendererCache.local.object.fetch<NullablePrivilegesPlaylistDetailResponse>(
       _NeteasePlaylistSource.cacheKey + "_" + id
     );
   }
@@ -38,7 +42,7 @@ export default class _NeteasePlaylistSource {
   //endregion
   /** 检查歌单tracks字段是否完整，不完整再额外请求 */
   private static async requestFullTracks(
-    response: NeteaseAPI.NeteasePlaylistDetailResponse,
+    response: NullablePrivilegesPlaylistDetailResponse,
     maxPerRequest: number = 100,
     concurrency: number = 5
   ) {
@@ -69,7 +73,7 @@ export default class _NeteasePlaylistSource {
     let index = 0;
     for (const entry of entries) {
       if (!entry) {
-        // 存在歌曲下架的情况，找不到的歌曲会被过滤掉，所以需要更新trackCount
+        // 找不到的歌曲（可能是网络错误、或云端不存在）会被过滤掉，所以需要更新trackCount
         response.playlist.trackIds.splice(index, 1);
         response.playlist.trackCount--;
         continue;

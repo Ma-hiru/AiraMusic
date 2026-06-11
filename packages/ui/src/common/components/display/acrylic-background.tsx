@@ -1,5 +1,5 @@
 import { type FC, memo, useCallback, useEffect, useRef, useState } from "react";
-import { cx } from "@emotion/css";
+import { css, cx, keyframes } from "@emotion/css";
 
 interface AcrylicBackgroundProps {
   src?: string;
@@ -9,7 +9,93 @@ interface AcrylicBackgroundProps {
   className?: string;
   brightness?: number;
   duration?: number;
+  /** 流体背景：封面色彩缓慢旋转漂移。仅 transform/opacity 合成动画，模糊只栅格化一次。默认关闭 */
+  fluid?: boolean;
+  /** 流体速度倍率，1 为默认，越大越快。运行时修改会导致相位跳变 */
+  fluidSpeed?: number;
+  /** 暂停流体动画。冻结当前相位，恢复时从原位继续（无闪烁），暂停期间合成器不重绘，可与播放状态联动省电 */
+  fluidPaused?: boolean;
 }
+
+// 公转（translate 跟随 rotate 形成轨道）+ 自转 + 呼吸缩放，比纯旋转的动感明显得多
+const drift = keyframes`
+  0% { transform: rotate(0turn) translate(5%, 0) scale(1); }
+  50% { transform: rotate(0.5turn) translate(5%, 0) scale(1.25); }
+  100% { transform: rotate(1turn) translate(5%, 0) scale(1); }
+`;
+
+const driftReverse = keyframes`
+  0% { transform: rotate(1turn) translate(-6%, 0) scale(1.15); }
+  50% { transform: rotate(0.5turn) translate(-6%, 0) scale(1); }
+  100% { transform: rotate(0turn) translate(-6%, 0) scale(1.15); }
+`;
+
+const driftSlow = keyframes`
+  0% { transform: rotate(0turn) translate(0, 6%) scale(1.1); }
+  50% { transform: rotate(0.5turn) translate(0, 6%) scale(0.95); }
+  100% { transform: rotate(1turn) translate(0, 6%) scale(1.1); }
+`;
+
+const fadeIn = keyframes`
+  from { opacity: 0; }
+`;
+
+// 圆形色斑：旋转时不会露出矩形边角，重模糊把圆形边缘融进底图；screen 混合让色彩发光而非平铺
+const fluidLayerCls = css`
+  position: absolute;
+  aspect-ratio: 1 / 1;
+  border-radius: 50%;
+  object-fit: cover;
+  pointer-events: none;
+  mix-blend-mode: screen;
+  @media (prefers-reduced-motion: reduce) {
+    animation: none !important;
+  }
+`;
+
+interface FluidBlob {
+  animation: string;
+  /** 周期（秒），fluidSpeed = 1 时的值 */
+  cycle: number;
+  /** 负延迟错开各层初始相位 */
+  delay: number;
+  blurScale: number;
+  brightnessScale: number;
+  opacityScale: number;
+  pos: { width: string } & Partial<Record<"left" | "right" | "top" | "bottom", string>>;
+}
+
+const FLUID_BLOBS: FluidBlob[] = [
+  {
+    animation: drift,
+    cycle: 42,
+    delay: -7,
+    blurScale: 1.4,
+    brightnessScale: 1.5,
+    opacityScale: 1,
+    pos: { width: "72%", left: "-16%", top: "-24%" }
+  },
+  {
+    animation: driftReverse,
+    cycle: 58,
+    delay: -23,
+    blurScale: 1.6,
+    brightnessScale: 1.3,
+    opacityScale: 1,
+    pos: { width: "85%", right: "-22%", bottom: "-32%" }
+  },
+  {
+    animation: driftSlow,
+    cycle: 73,
+    delay: -41,
+    blurScale: 1.2,
+    brightnessScale: 1.6,
+    opacityScale: 0.75,
+    pos: { width: "55%", left: "28%", top: "30%" }
+  }
+];
+
+const imgClasses = "absolute inset-0 w-full h-full object-cover scale-110";
 
 const AcrylicBackground: FC<AcrylicBackgroundProps> = ({
   src,
@@ -18,7 +104,10 @@ const AcrylicBackground: FC<AcrylicBackgroundProps> = ({
   alt,
   className,
   brightness = 0.5,
-  duration = 800
+  duration = 800,
+  fluid = false,
+  fluidSpeed = 1,
+  fluidPaused = false
 }) => {
   const [current, setCurrent] = useState(src);
   const [next, setNext] = useState<string>();
@@ -26,11 +115,15 @@ const AcrylicBackground: FC<AcrylicBackgroundProps> = ({
   const timerRef = useRef<ReturnType<typeof setTimeout>>(null);
 
   useEffect(() => {
-    if (src !== current) {
+    if (src === current) return;
+    if (timerRef.current) clearTimeout(timerRef.current);
+    if (!src) {
+      setCurrent(undefined);
+      setNext(undefined);
+    } else {
       setNext(src);
-      setStage("idle");
-      if (timerRef.current) clearTimeout(timerRef.current);
     }
+    setStage("idle");
   }, [current, src]);
 
   // 组件卸载时清理定时器，避免内存泄漏
@@ -41,6 +134,7 @@ const AcrylicBackground: FC<AcrylicBackgroundProps> = ({
   }, []);
 
   const handleLoad = useCallback(() => {
+    // 双重 rAF 确保 opacity: 0 已提交，transition 才能生效
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         setStage("fade");
@@ -54,47 +148,77 @@ const AcrylicBackground: FC<AcrylicBackgroundProps> = ({
     });
   }, [duration, next]);
 
-  const imgClasses = "absolute inset-0 w-full h-full object-cover scale-110";
+  // 加载失败保留旧图
+  const handleError = useCallback(() => {
+    setNext(undefined);
+    setStage("idle");
+  }, []);
+
+  // saturate 原由毛玻璃层的 backdrop-filter 提供，并入图片 filter 后效果一致且免去每帧重采样
+  const imgFilter = `blur(${blur}px) brightness(${brightness}) saturate(1.8)`;
+  const fluidOpacity = Math.min(1, opacity * 1.4);
+  const speed = Math.max(0.1, fluidSpeed);
 
   return (
-    <div className={cx("relative w-full h-full overflow-hidden", className)}>
-      {/* 当前背景（淡出层） */}
-      <img
-        key={current}
-        src={current}
-        loading="lazy"
-        decoding="async"
-        alt={alt}
-        className={imgClasses}
-        style={{
-          transition: `opacity ${duration}ms ease`,
-          opacity: next ? 0 : opacity,
-          filter: `blur(${blur}px) brightness(${brightness})`
-        }}
-      />
-      {/* 下一张（淡入层） */}
+    <div className={cx("relative w-full h-full overflow-hidden", fluid && "isolate", className)}>
+      {/* 当前背景：仅在交叉淡化阶段开启 transition，提交新图时直接跳变（与淡入层像素一致，无闪烁） */}
+      {current && (
+        <img
+          src={current}
+          decoding="async"
+          draggable={false}
+          alt={alt ?? ""}
+          className={imgClasses}
+          style={{
+            transition: stage === "fade" ? `opacity ${duration}ms ease` : "none",
+            opacity: stage === "fade" ? 0 : opacity,
+            filter: imgFilter
+          }}
+        />
+      )}
+      {/* 下一张：加载完成后才开始交叉淡化，加载期间旧图保持可见 */}
       {next && (
         <img
           src={next}
           key={next}
-          alt="preload"
+          decoding="async"
+          draggable={false}
+          alt=""
           onLoad={handleLoad}
+          onError={handleError}
           className={imgClasses}
           style={{
-            transition: `opacity ${duration}ms ease, filter ${duration}ms ease`,
+            transition: `opacity ${duration}ms ease`,
             opacity: stage === "fade" ? opacity : 0,
-            filter: `blur(${stage === "fade" ? blur : blur * 2}px) brightness(${brightness})`
+            filter: imgFilter
           }}
         />
       )}
-      {/* 毛玻璃层 */}
+      {/* 流体层：三个轨道运动的封面色斑。play-state 只作用于漂移动画，换图淡入不受暂停影响 */}
+      {fluid &&
+        current &&
+        FLUID_BLOBS.map((blob, i) => (
+          <img
+            key={`fluid-${i}-${current}`}
+            src={current}
+            aria-hidden
+            alt=""
+            decoding="async"
+            draggable={false}
+            className={fluidLayerCls}
+            style={{
+              ...blob.pos,
+              opacity: fluidOpacity * blob.opacityScale,
+              filter: `blur(${blur * blob.blurScale}px) brightness(${brightness * blob.brightnessScale}) saturate(2)`,
+              animation: `${fadeIn} ${duration}ms ease both, ${blob.animation} ${blob.cycle / speed}s linear ${blob.delay / speed}s infinite`,
+              animationPlayState: `running, ${fluidPaused ? "paused" : "running"}`
+            }}
+          />
+        ))}
+      {/* 轻微提亮，替代原 backdrop-filter 毛玻璃层 */}
       <div
-        className="absolute inset-0"
-        style={{
-          backdropFilter: `blur(${blur * 0.8}px) saturate(180%)`,
-          WebkitBackdropFilter: `blur(${blur * 0.8}px) saturate(180%)`,
-          background: "rgba(255, 255, 255, 0.05)"
-        }}
+        className="absolute inset-0 pointer-events-none"
+        style={{ background: "rgba(255, 255, 255, 0.05)" }}
       />
     </div>
   );

@@ -65,7 +65,6 @@ const PlaylistDisplay: FC<object> = () => {
       canScrollTop={null}
       pageActionType="enter"
       onPageAction={onPageAction}
-      historyList={[]}
       onDataLoaded={(p) => p.name && updateTitle(p.name)}
     />
   );

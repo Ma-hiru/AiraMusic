@@ -43,7 +43,7 @@ export class NeteaseTrack implements NeteaseTrackModel {
   readonly l: Nullable<NeteaseAPI.L>;
   readonly m: Nullable<NeteaseAPI.M>;
   readonly sq: Nullable<NeteaseAPI.Sq>;
-  readonly privilege: NeteaseAPI.NeteaseTrackPrivilege;
+  readonly privilege: Nullable<NeteaseAPI.NeteaseTrackPrivilege>;
   readonly tns?: string[];
 
   constructor(props: NeteaseTrackModel) {
@@ -207,7 +207,7 @@ export class NeteaseTrack implements NeteaseTrackModel {
   //region static methods
   static fromNeteaseAPI(
     apiTrack: NeteaseAPI.NeteaseTrack,
-    privilege: NeteaseAPI.NeteaseTrackPrivilege
+    privilege: Nullable<NeteaseAPI.NeteaseTrackPrivilege>
   ) {
     return new NeteaseTrack({ ...apiTrack, privilege });
   }

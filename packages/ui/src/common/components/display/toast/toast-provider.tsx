@@ -1,6 +1,7 @@
 import { cx } from "@emotion/css";
-import { type FC, memo, startTransition, useCallback, useLayoutEffect, useState } from "react";
+import { type FC, memo, startTransition, useCallback, useState } from "react";
 import { AnimatePresence, type HTMLMotionProps, motion } from "motion/react";
+import { ensureInjectObject, useInject } from "@/common/utils/inject";
 import AppToast from "./use";
 
 import ToastItem, { type ToastItemData } from "./toast-item";
@@ -44,7 +45,10 @@ const ToastProvider: FC<{ className?: string }> = ({ className }) => {
     [dispose]
   );
 
-  useLayoutEffect(() => AppToast._inject({ show, dispose }), [dispose, show]);
+  useInject(ensureInjectObject(AppToast), {
+    __show: show,
+    __dispose: dispose
+  });
 
   return (
     <div

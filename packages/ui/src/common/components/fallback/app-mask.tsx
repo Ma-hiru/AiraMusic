@@ -9,7 +9,7 @@ const AppMask: FC<MaskProps> = ({ className }) => {
   return (
     <div
       className={cx(
-        "w-screen h-screen fixed flex justify-center items-center flex-col gap-4 top-0",
+        "w-screen h-screen fixed flex justify-center items-center flex-col gap-4 top-0 text-center",
         className
       )}>
       <img src="/images/logo.svg" alt="logo" className="size-16" />

@@ -9,7 +9,7 @@ import {
 import { NeteaseAPISearch } from "@/common/netease/api";
 import { NeteaseImageSize, PlaylistSource, SearchType } from "@/common/enum";
 import { NeteaseServicesTrack } from "@/common/netease/services";
-import { NeteaseHistory, NeteaseTrackRecord } from "@/common/netease/models";
+import { NeteaseHistoryRecord, NeteaseTrackRecord } from "@/common/netease/models";
 import { useRequestAutoRun, useRequestStatusWrap } from "@/common/hooks/use-request-wrap";
 import { type HeartManager } from "@/common/hooks/use-heart";
 import AppContextMenu from "@/common/components/display/menu";
@@ -28,7 +28,7 @@ interface TrackResultProps {
   className?: string;
   keywords?: string;
   activeTrackID: Undefinable<number>;
-  onClick: Optional<NormalFunc<[track: NeteaseTrackRecord | NeteaseHistory, index: number]>>;
+  onClick: Optional<NormalFunc<[track: NeteaseTrackRecord | NeteaseHistoryRecord, index: number]>>;
   onClickArtist: Optional<NormalFunc<[id: number]>>;
   onClickAlbum: Optional<NormalFunc<[id: number]>>;
   addToPlaylistNext: NormalFunc<[track: NeteaseTrackRecord]>;

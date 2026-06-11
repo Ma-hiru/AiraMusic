@@ -1,5 +1,5 @@
 import {
-  NeteaseHistory,
+  NeteaseHistoryRecord,
   NeteaseLocalAudio,
   NeteaseLocalImage,
   NeteaseLyric,
@@ -143,7 +143,9 @@ export default class RendererPlayer extends Listenable {
         this.status = RendererPlayerStatus.idle;
       } else if (this.current.track?.detail.id !== current.detail.id) {
         this.current.track &&
-          this.history.add(NeteaseHistory.fromTrack(this.current.track, this.audio.currentTime));
+          this.history.add(
+            NeteaseHistoryRecord.fromTrack(this.current.track, this.audio.currentTime)
+          );
         void this.load(current, true);
       }
       this.executeListeners();
@@ -274,7 +276,7 @@ export default class RendererPlayer extends Listenable {
       history: RendererPlayerHistory.fromSave(save.history),
       current: {
         ...save.current,
-        track: NeteaseTrackRecord.fromObject(save.current.track),
+        track: NeteaseTrackRecord.fromRecordObject(save.current.track),
         cover: NeteaseLocalImage.fromObject(save.current.cover),
         audio: NeteaseLocalAudio.fromObject(save.current.audio),
         lyric: NeteaseLyric.fromObject(save.current.lyric)

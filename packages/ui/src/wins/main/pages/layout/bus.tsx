@@ -76,7 +76,13 @@ const Bus: FC<object> = () => {
   useEffect(() => player.addListener(updatePlayerBus), [player, updatePlayerBus]);
   useEffect(updateInfoBus, [updateInfoBus]);
 
-  // 2. outputBus 播放设备推送
+  // 2. historyBus 播放历史推送
+  const updateHistoryBus = useCallback(() => {
+    RendererEventBus.history.send({ list: player.history.list });
+  }, [player.history]);
+  useEffect(() => player.history.addListener(updateHistoryBus), [player.history, updateHistoryBus]);
+
+  // 3. outputBus 播放设备推送
   const updateOutputs = useCallback(() => {
     RendererDevice.platform.then((platform) => {
       // window 自带分类
@@ -177,10 +183,20 @@ const Bus: FC<object> = () => {
         case "output":
           updateOutputs();
           break;
+        case "history":
+          updateHistoryBus();
+          break;
       }
     }
     RendererEventBus.clear("updateBus");
-  }, [updateInfoBus, updatePlayerBus, updateProgressBus, mainBusUpdater.data, updateOutputs]);
+  }, [
+    updateInfoBus,
+    updatePlayerBus,
+    updateProgressBus,
+    mainBusUpdater.data,
+    updateOutputs,
+    updateHistoryBus
+  ]);
 
   // 3. playerChangeBus 播放列表变化处理
   const playerChangeBus = useListenable(RendererEventBus.playerChange);
@@ -285,6 +301,9 @@ const Bus: FC<object> = () => {
               data.source === "like" ? PlaylistSource.Like : PlaylistSource.Normal
             )
           );
+          break;
+        case "history":
+          navigate(RoutePathMain.history);
           break;
       }
       RendererWindow.current.focus();

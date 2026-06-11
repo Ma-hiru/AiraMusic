@@ -91,7 +91,7 @@ export default class RendererPlayerPlaylist extends Listenable {
   }
 
   static fromSave(props: ReturnType<typeof this.save>) {
-    props.playlist = <NeteaseTrackRecord[]>props.playlist.map(NeteaseTrackRecord.fromObject);
+    props.playlist = <NeteaseTrackRecord[]>props.playlist.map(NeteaseTrackRecord.fromRecordObject);
     const instance = new RendererPlayerPlaylist(props);
     instance.shuffle = props._shuffle;
     instance.loop = props._loop;

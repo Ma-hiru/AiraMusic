@@ -5,8 +5,6 @@ import { PlaylistSource } from "@/common/enum";
 import TopCover from "./top-cover";
 import TopRight from "./top-right";
 import TopInfo from "./top-info";
-import AppTitle from "@/common/components/display/title";
-import Search from "@/common/components/data-input/search";
 
 interface TopProps {
   type: PlaylistSource;
@@ -15,7 +13,6 @@ interface TopProps {
   searchTracks: NormalFunc<[k: string]>;
   onPlayAll: NormalFunc;
   onAddList: NormalFunc;
-  historyCount: number;
   coverCacheKey?: string;
   onCoverLoaded?: NormalFunc<[src: string]>;
   setIsTyping?: NormalFunc<[tying: boolean]>;
@@ -30,15 +27,14 @@ const Top: FC<TopProps> = ({
   onAddList,
   type,
   loading,
-  historyCount,
   coverCacheKey,
   onCoverLoaded,
   setIsTyping = () => {},
   onPageAction,
   pageActionType
 }) => {
-  if (loading && type !== "history") return null;
-  return type !== "history" ? (
+  if (loading) return null;
+  return (
     <div className="w-full h-45 grid grid-rows-1 grid-cols-[3fr_1fr] gap-3">
       <div className="min-w-0 grid grid-rows-1 grid-cols-[auto_1fr] gap-4 items-end">
         <TopCover summary={summary} coverCacheKey={coverCacheKey} onCoverLoaded={onCoverLoaded} />
@@ -53,17 +49,6 @@ const Top: FC<TopProps> = ({
         onPageAction={onPageAction}
       />
     </div>
-  ) : (
-    <AppTitle
-      className="mb-4"
-      title={
-        <div className="flex items-center">
-          <span>历史记录</span>
-          <span className="opacity-30 scale-80">({historyCount} 记录)</span>
-        </div>
-      }
-      slot={<Search searchTracks={searchTracks} setIsTyping={setIsTyping} />}
-    />
   );
 };
 

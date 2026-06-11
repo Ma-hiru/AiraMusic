@@ -33,22 +33,22 @@ const Float: FC<{ className?: string }> = ({ className }) => {
       )}>
       <AnimatePresence mode="sync">
         {!playModal && scrollTop && (
-          <FloatItem key="scrollTop" onClick={scrollTop ?? undefined}>
+          <FloatItem key="scrollTop" motionKey="scrollTop" onClick={scrollTop ?? undefined}>
             <ChevronUp className="size-5" />
           </FloatItem>
         )}
         {!playModal && fastLocator && (
-          <FloatItem key="locate" onClick={fastLocator ?? undefined}>
+          <FloatItem key="locate" motionKey="locate" onClick={fastLocator ?? undefined}>
             <LocateFixed className="size-5" />
           </FloatItem>
         )}
         {!playModal && hiddenBack && (
-          <FloatItem key="back" onClick={() => navigate(-1)}>
+          <FloatItem key="back" motionKey="back" onClick={() => navigate(-1)}>
             <ChevronLeft className="size-5" />
           </FloatItem>
         )}
         {!playModal && (
-          <FloatItem key="sidebar" onClick={() => setSidebar(!sidebar)}>
+          <FloatItem key="sidebar" motionKey="sidebar" onClick={() => setSidebar(!sidebar)}>
             {sidebar ? <PanelLeftClose className="size-5" /> : <PanelLeftOpen className="size-5" />}
           </FloatItem>
         )}

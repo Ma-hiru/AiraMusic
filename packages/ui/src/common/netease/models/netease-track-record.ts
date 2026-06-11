@@ -2,8 +2,8 @@ import { NeteaseTrack } from "./netease-track";
 import { NeteasePlaylist } from "./netease-playlist";
 
 export class NeteaseTrackRecord {
-  readonly id: number;
-  readonly name: string;
+  readonly id;
+  readonly name;
   readonly sourceID;
   readonly sourceName;
   readonly detail;
@@ -20,7 +20,7 @@ export class NeteaseTrackRecord {
     this.name = this.detail.name;
   }
 
-  static fromObject<T extends Optional<NeteaseTrackRecord>>(
+  static fromRecordObject<T extends Optional<NeteaseTrackRecordWithModel>>(
     record: T
   ): T extends Falsy ? null : NeteaseTrackRecord {
     if (!record) return null as T extends Falsy ? null : NeteaseTrackRecord;
@@ -41,3 +41,7 @@ export class NeteaseTrackRecord {
     );
   }
 }
+
+type NeteaseTrackRecordWithModel = Omit<NeteaseTrackRecord, "detail"> & {
+  detail: NeteaseTrack | NeteaseTrackModel;
+};

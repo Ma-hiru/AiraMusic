@@ -66,14 +66,19 @@ const CommentsPage: FC<object> = () => {
   }, [dynamicContent, playerBus.data?.track]);
 
   return (
-    <div className="w-screen h-screen pt-10 overflow-hidden gird grid-rows-[auto,1fr] relative">
+    <div className="w-screen h-screen pt-10 overflow-hidden flex flex-col relative">
       <Control className="h-10 absolute top-0 left-0 right-0 z-10" />
       <div className="fixed inset-0 z-[-1]">
-        <AcrylicBackground src={InfoBus.data?.backgroundCover} brightness={0.3} opacity={0.5} />
+        <AcrylicBackground
+          src={InfoBus.data?.backgroundCover}
+          brightness={0.45}
+          opacity={0.7}
+          blur={40}
+        />
       </div>
       <AppError reset={loadMore} when={status === "error"} message="加载评论失败">
         <AppLoading loading={comments.data.length === 0 && status !== "success"}>
-          <Title className="h-25" commentBus={commentBus} />
+          <Title className="shrink-0" commentBus={commentBus} />
           <Tabs
             className="h-5"
             sortType={sortType}
@@ -83,7 +88,7 @@ const CommentsPage: FC<object> = () => {
             setDynamicContent={setDynamicContent}
           />
           <Content
-            className="h-[calc(100vh-160px)]"
+            className="flex-1"
             hasMore={comments.hasMore}
             comments={comments.data}
             onEnded={loadMore}
