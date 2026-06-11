@@ -1,6 +1,6 @@
 # <img src="packages/app/assets/logo.svg" width="28" /> AiraMusic
 
-一个基于 Electron、React 和 TypeScript 构建的桌面端第三方网易云音乐播放器。支持多窗口和动态主题取色。
+一个基于 Electron、React 和 TypeScript 构建的桌面端第三方网易云音乐播放器。基于 React 与 Electron 的第三方网易云音乐桌面客户端，支持以独立的多窗口（如评论、图片、歌单专辑、设置等）展示数据，支持动态取色、歌词展示、音乐频谱、桌面歌词、托盘和简单流体背景等功能。
 
 ## 下载
 
