@@ -8,10 +8,10 @@ import { playModalAtom, sidebarAtom } from "@/wins/main/atoms/layout";
 
 import TopControl from "./top-control";
 import TopAvatar from "./top-avatar";
-import TopDivider from "./top-divider";
 import TopSearch from "./top-search";
 import TopLeft from "./top-left";
 import Drag from "@/common/components/layout/drag/drag";
+import Divider from "@/common/components/layout/divider";
 
 const Top: FC<{ className?: string }> = ({ className }) => {
   const playModal = useAtomValue(playModalAtom);
@@ -45,7 +45,7 @@ const Top: FC<{ className?: string }> = ({ className }) => {
         )}>
         <TopSearch />
         {playModal && <TopAvatar user={user} />}
-        <TopDivider />
+        <Divider reverse />
         <TopControl />
       </div>
     </Drag>

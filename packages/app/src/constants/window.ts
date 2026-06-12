@@ -43,7 +43,7 @@ export class MainWindowConstants {
     // 信息窗
     display: {
       base: { width: 1024, height: 600 },
-      min: { width: 800, height: 469 }
+      min: { width: 720, height: 422 }
     },
     // 评论：细长竖条
     comments: {

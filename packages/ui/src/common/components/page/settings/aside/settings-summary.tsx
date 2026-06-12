@@ -22,7 +22,7 @@ const SettingsSummary: FC<SummaryProps> = ({ settings, cacheStoreConfig }) => {
 
   return (
     <Card title="设置概览" subTitle="Summary" Icon={Radio}>
-      <div className="grid grid-cols-[repeat(auto-fill,minmax(80px,1fr))] gap-2">
+      <div className="grid grid-cols-[repeat(auto-fill,minmax(70px,1fr))] gap-2">
         <MiniStat label="默认音质" value={settings.trackQuality.quality} />
         <MiniStat label="缓存容量" value={`${capacityGB}GB`} />
         <MiniStat label="缓存保留" value={`${ttlDays}天`} />

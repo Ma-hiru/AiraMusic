@@ -92,8 +92,8 @@ const LayoutDisplay: FC<object> = () => {
         <BackCtx value={backCtxValue}>
           <KeepAliveOutlet maxCache={3} />
         </BackCtx>
-        <AppToast.Provider />
-        <AppContextMenu.Provider />
+        <AppToast.Provider className="z-50!" />
+        <AppContextMenu.Provider className="z-50!" />
         <AppModal.Provider />
       </AppErrorBoundary>
     </div>
