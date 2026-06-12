@@ -1,9 +1,11 @@
-import { type FC, memo, useCallback, useMemo } from "react";
+import { cx } from "@emotion/css";
+import { type ComponentProps, type FC, memo, useCallback, useMemo } from "react";
 import { createPlayerPlaylistModal } from "@/wins/main/componets/player-playlist-modal";
 import {
   ArrowRightLeft,
   ListMusic,
   LoaderCircle,
+  type LucideIcon,
   Pause,
   Play,
   Repeat1,
@@ -12,89 +14,136 @@ import {
   SkipBack,
   SkipForward
 } from "lucide-react";
-
-import Progress from "./progress";
 import RendererPlayerHandle from "@/wins/main/lib/handle";
 import AppModal from "@/common/components/display/modal";
 
-const Control: FC<object> = () => {
+import Progress from "./progress";
+
+interface ControlProps {
+  className?: string;
+  containerClassName?: string;
+  itemClassName?: string;
+}
+
+const Control: FC<ControlProps> = ({ className, containerClassName, itemClassName }) => {
+  const { create } = AppModal.useModal();
   const player = RendererPlayerHandle.usePlayer();
+  const openPlaylistModal = useCallback(() => {
+    create(createPlayerPlaylistModal);
+  }, [create]);
+
   const centerIcon = useMemo(() => {
     if (player.playing) {
       return (
-        <Pause
-          className="size-5 cursor-pointer hover:opacity-50 ease-in-out duration-300 transition-all active:scale-90"
-          fill={"rgba(255,255,255,0.89)"}
+        <ControlBtn
+          icon={Pause}
+          fill="currentColor"
+          className="scale-85"
+          itemClassName={itemClassName}
           onClick={() => player.audio.pause()}
         />
       );
     } else if (player.loading) {
       return (
-        <LoaderCircle
-          className="animate-spin size-5 cursor-pointer hover:opacity-50 ease-in-out duration-300 transition-all active:scale-90"
-          color={"rgba(255,255,255,0.89)"}
+        <ControlBtn
+          icon={LoaderCircle}
+          className="animate-spin scale-85"
+          itemClassName={itemClassName}
+          color="currentColor"
         />
       );
     }
     return (
-      <Play
-        className="size-5 cursor-pointer hover:opacity-50 ease-in-out duration-300 transition-all active:scale-90"
-        fill={"rgba(255,255,255,0.89)"}
+      <ControlBtn
+        icon={Play}
+        fill="currentColor"
+        className="scale-85"
+        itemClassName={itemClassName}
         onClick={() => player.audio.play()}
       />
     );
-  }, [player.audio, player.loading, player.playing]);
-  const { create } = AppModal.useModal();
-  const openPlaylistModal = useCallback(() => {
-    create(createPlayerPlaylistModal);
-  }, [create]);
+  }, [itemClassName, player.audio, player.loading, player.playing]);
+
   return (
-    <div className="space-x-2 w-full">
+    <section className={containerClassName}>
       <Progress />
-      <div className="flex flex-row justify-center items-center gap-16 text-[rgba(255,255,255,0.89)] font-bold mt-2">
-        <div className="flex justify-center items-center gap-8">
-          <SkipBack
-            className="size-5 cursor-pointer hover:opacity-50 ease-in-out duration-300 transition-all active:scale-90"
-            fill={"rgba(255,255,255,0.89)"}
-            onClick={() => player.playlist.last(true)}
+      <div className={cx("flex justify-between items-center font-bold mt-2", className)}>
+        <ControlBtn
+          icon={SkipBack}
+          className="scale-85"
+          itemClassName={itemClassName}
+          fill="currentColor"
+          onClick={() => player.playlist.last(true)}
+        />
+        {centerIcon}
+        <ControlBtn
+          icon={SkipForward}
+          className="scale-85"
+          itemClassName={itemClassName}
+          fill="currentColor"
+          onClick={() => player.playlist.next(true)}
+        />
+        {player.playlist.shuffle ? (
+          <ControlBtn
+            icon={Shuffle}
+            className="scale-85"
+            itemClassName={itemClassName}
+            fill="currentColor"
+            onClick={() => (player.playlist.shuffle = false)}
           />
-          {centerIcon}
-          <SkipForward
-            className="size-5 cursor-pointer hover:opacity-50 ease-in-out duration-300 transition-all active:scale-90"
-            fill={"rgba(255,255,255,0.89)"}
-            onClick={() => player.playlist.next(true)}
+        ) : (
+          <ControlBtn
+            icon={ArrowRightLeft}
+            fill="currentColor"
+            itemClassName={itemClassName}
+            onClick={() => (player.playlist.shuffle = true)}
           />
-          {player.playlist.shuffle ? (
-            <Shuffle
-              className="size-6 scale-85 cursor-pointer hover:opacity-50 ease-in-out duration-300 transition-all active:scale-90"
-              fill={"rgba(255,255,255,0.89)"}
-              onClick={() => (player.playlist.shuffle = false)}
-            />
-          ) : (
-            <ArrowRightLeft
-              className="size-6 cursor-pointer hover:opacity-50 ease-in-out duration-300 transition-all active:scale-90"
-              fill={"rgba(255,255,255,0.89)"}
-              onClick={() => (player.playlist.shuffle = true)}
-            />
-          )}
-          {player.playlist.repeat !== "off" ? (
-            <Repeat1
-              className="size-6 cursor-pointer hover:opacity-50 ease-in-out duration-300 transition-all active:scale-90"
-              onClick={() => (player.playlist.repeat = "off")}
-            />
-          ) : (
-            <Repeat2
-              className="size-6 cursor-pointer hover:opacity-50 ease-in-out duration-300 transition-all active:scale-90"
-              onClick={() => (player.playlist.repeat = "one")}
-            />
-          )}
-          <ListMusic
-            className="size-6 scale-85 cursor-pointer hover:opacity-50 ease-in-out duration-300 transition-all active:scale-90"
-            onClick={openPlaylistModal}
+        )}
+        {player.playlist.repeat !== "off" ? (
+          <ControlBtn
+            icon={Repeat1}
+            itemClassName={itemClassName}
+            onClick={() => (player.playlist.repeat = "off")}
           />
-        </div>
+        ) : (
+          <ControlBtn
+            icon={Repeat2}
+            itemClassName={itemClassName}
+            onClick={() => (player.playlist.repeat = "one")}
+          />
+        )}
+        <ControlBtn
+          icon={ListMusic}
+          itemClassName={itemClassName}
+          className="scale-85"
+          onClick={openPlaylistModal}
+        />
       </div>
-    </div>
+    </section>
   );
 };
+
 export default memo(Control);
+
+const ControlBtn = ({
+  icon: Icon,
+  onClick,
+  className,
+  itemClassName,
+  ...rest
+}: ComponentProps<LucideIcon> & {
+  icon: LucideIcon;
+  itemClassName?: string;
+}) => {
+  return (
+    <Icon
+      className={cx(
+        "size-6 cursor-pointer hover:opacity-50 ease-in-out duration-300 transition-all active:scale-80",
+        className,
+        itemClassName
+      )}
+      onClick={onClick}
+      {...rest}
+    />
+  );
+};

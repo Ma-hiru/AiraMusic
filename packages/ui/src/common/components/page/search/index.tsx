@@ -136,11 +136,11 @@ const Search: FC<SearchProps> = ({
       {/*搜索结果*/}
       <section
         className={cx(
-          "grid flex-1 grid-cols-1 gap-3 lg:grid-cols-[220px_minmax(0,1fr)] grid-rows-[auto_1fr] lg:grid-rows-1",
+          "grid flex-1 grid-cols-1 gap-3 md:grid-cols-[220px_minmax(0,1fr)] grid-rows-[auto_1fr] md:grid-rows-1",
           !keyword && "hidden"
         )}>
         <Card title={count + "条"} subTitle="Matches" Icon={currentTab.icon}>
-          <div className="grid grid-cols-2 gap-2 lg:grid-cols-1">
+          <div className="grid grid-cols-2 gap-2 md:grid-cols-1">
             {tabOptions.map((option) => {
               const Icon = option.icon;
               const active = option.key === currentTab.key;

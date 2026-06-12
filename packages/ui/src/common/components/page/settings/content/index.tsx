@@ -7,6 +7,7 @@ import Cache from "./cache";
 import Quality from "./quality";
 import Performance from "./performance";
 import Preference from "./preference";
+import Shortcut from "./shortcut";
 import Device from "./device";
 
 interface SettingsContentProps {
@@ -39,7 +40,8 @@ const SettingsContent: FC<SettingsContentProps> = ({
       updateSettings({
         trackQuality: patch.trackQuality ?? { ...settings.trackQuality },
         performance: patch.performance ?? { ...settings.performance },
-        preference: patch.preference ?? { ...settings.preference }
+        preference: patch.preference ?? { ...settings.preference },
+        shortcuts: patch.shortcuts ?? { ...settings.shortcuts }
       });
     },
     [settings, updateSettings]
@@ -68,6 +70,7 @@ const SettingsContent: FC<SettingsContentProps> = ({
       <Device output={output} updateOutput={updateOutput} />
       <Performance data={settings.performance} patchSettings={patchSettings} />
       <Preference data={settings.preference} patchSettings={patchSettings} />
+      <Shortcut data={settings.shortcuts} patchSettings={patchSettings} />
       <Cache
         updateCacheStoreConfig={updateCacheStoreConfig}
         cacheStoreConfig={cacheStoreConfig}

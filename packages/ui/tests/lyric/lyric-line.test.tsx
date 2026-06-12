@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from "@testing-library/react";
-import { LyricTimeManager } from "@mahiru/ui/common/components/display/lyric/lyric-time-manager";
+import { TimeManager } from "@mahiru/ui/common/components/display/lyric/time-manager";
 import LyricLineComponent from "@mahiru/ui/common/components/display/lyric/lyric-line";
 
 describe("LyricLine", () => {
@@ -119,7 +119,7 @@ describe("LyricLine", () => {
         tlActive={false}
         hasRm={false}
         hasTl={false}
-        timeManager={new LyricTimeManager([line])}
+        timeManager={new TimeManager([line])}
         {...props}
       />
     );

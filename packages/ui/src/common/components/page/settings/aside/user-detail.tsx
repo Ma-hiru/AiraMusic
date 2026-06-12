@@ -62,7 +62,7 @@ const UserDetail: FC<UserDetailProps> = ({ user, logout, login }) => {
           <p className="mt-1 line-clamp-2 text-[12px] leading-5 opacity-50">{profileSignature}</p>
         </div>
       </div>
-      <div className="mt-5 grid grid-cols-[repeat(auto-fill,minmax(80px,1fr))] gap-2">
+      <div className="mt-5 grid grid-cols-[repeat(auto-fill,minmax(70px,1fr))] gap-2">
         <MiniStat label="城市" value={city} />
         <MiniStat label="粉丝" value={fans} />
         <MiniStat label="村龄" value={joinTime} />

@@ -10,6 +10,7 @@ import {
   textColorOnMainAtom,
   themeColorsAtom
 } from "@/wins/main/atoms/theme";
+import { useSettings } from "@/common/store/settings";
 import RendererTheme from "@/common/player/ui";
 
 import AcrylicBackground from "@/common/components/display/acrylic-background";
@@ -24,6 +25,7 @@ const Background: FC<{ className?: string }> = ({ className }) => {
   const backgroundCover = useAtomValue(backgroundCoverAtom);
   const themeColors = useMMCQ(backgroundCover);
   const player = RendererPlayerHandle.usePlayer();
+  const settings = useSettings();
 
   useLayoutEffect(() => {
     const mainColor = themeColors[0] || RendererTheme.themeDefault.main;
@@ -62,7 +64,7 @@ const Background: FC<{ className?: string }> = ({ className }) => {
       )}>
       <AcrylicBackground
         fluid
-        fluidPaused={!player.playing}
+        fluidPaused={!player.playing || !settings.performance.useHomeFluid}
         fluidSpeed={5}
         src={backgroundCover ?? undefined}
         opacity={0.7}

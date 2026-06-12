@@ -13,8 +13,8 @@ export class MainEntry {
     this.instance = instance;
   }
 
-  private permissions() {
-    const allowPermissions = new Set(["speaker-selection"]);
+  private permissions(permissions: string[]) {
+    const allowPermissions = new Set(permissions);
     const isTrustedOrigin = (url: string) => {
       return (
         url.startsWith("file://") ||
@@ -41,14 +41,17 @@ export class MainEntry {
     });
   }
 
-  private commands() {
+  private commands(commands: [the_switch: string, value?: string][]) {
     app.enableSandbox();
     process.env["ELECTRON_DISABLE_SECURITY_WARNINGS"] = "true";
+    for (const [the_switch, value] of commands) {
+      app.commandLine.appendSwitch(the_switch, value);
+    }
   }
 
   tryRun() {
-    this.commands();
-    this.permissions();
+    this.commands([]);
+    this.permissions(["speaker-selection", "clipboard-sanitized-write"]);
     // 单实例锁，避免多开
     if (app.requestSingleInstanceLock()) {
       this.instance.init();

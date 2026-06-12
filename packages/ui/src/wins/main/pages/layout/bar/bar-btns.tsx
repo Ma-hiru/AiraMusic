@@ -1,7 +1,6 @@
 import { cx } from "@emotion/css";
 import { type FC, memo, useCallback, useEffect, type WheelEvent } from "react";
 import { ListMusic, Volume, Volume1, Volume2, VolumeX } from "lucide-react";
-import { useThemeColor } from "@/common/hooks/use-theme-color";
 import { useUpdate } from "@/common/hooks/use-update";
 import { useListenable } from "@/common/hooks/use-listenable";
 import { RendererWindow } from "@/common/lib/window";
@@ -46,11 +45,9 @@ const onWheel = (e: WheelEvent<HTMLElement>) => {
 };
 
 const BarBtns: FC<object> = () => {
-  const { textColorOnMain } = useThemeColor();
   const { create } = AppModal.useModal();
   const lyricWindow = useListenable(RendererWindow.get("lyric"));
   const player = RendererPlayerHandle.usePlayer();
-  const iconColor = textColorOnMain.hex();
   const muted = player.audio.instance.muted;
   const volume = muted ? 0 : player.audio.volume;
   const volumePercent = Math.round(volume * 100);
@@ -89,9 +86,10 @@ const BarBtns: FC<object> = () => {
         content={
           <div
             className="
-              flex h-36 w-8 flex-col items-center gap-3 rounded-md border border-white/30
-              bg-white px-0 py-3 text-(--theme-color-main)
-              shadow-[0_16px_30px_-18px_rgba(0,0,0,0.45)] backdrop-blur-2xl
+              border border-white/30
+              flex h-36 w-8 flex-col items-center gap-3 rounded-md
+              bg-(--text-color)/80 px-0 py-3 text-(--theme-color-main)
+              backdrop-saturate-150 backdrop-blur-lg
             ">
             <p className="text-[10px] font-black text-(--theme-color-main)">{volumePercent}%</p>
             <RangeSlider
@@ -113,7 +111,7 @@ const BarBtns: FC<object> = () => {
             size-5 flex items-center justify-center select-none cursor-pointer
             hover:opacity-50 ease-in-out duration-300 transition-all active:scale-90
           ">
-          <VolumeTag aria-hidden="true" color={iconColor} fill={iconColor} className="size-5" />
+          <VolumeTag aria-hidden="true" fill="currentColor" className="size-5" />
         </button>
       </Tooltip>
       <button
@@ -123,7 +121,6 @@ const BarBtns: FC<object> = () => {
         className="
           size-5 flex items-center justify-center select-none cursor-pointer
           hover:opacity-50 ease-in-out duration-300 transition-all active:scale-90
-          text-(--text-color-on-main)
         ">
         <ListMusic className="size-5" />
       </button>
@@ -137,7 +134,7 @@ const BarBtns: FC<object> = () => {
           ease-in-out duration-300 transition-all
           active:scale-90
           `,
-          lyricWindow.opened ? "text-(--theme-color-main)" : "text-(--text-color-on-main)"
+          lyricWindow.opened && "text-(--theme-color-main)"
         )}
         onClick={openLyricWindow}>
         词

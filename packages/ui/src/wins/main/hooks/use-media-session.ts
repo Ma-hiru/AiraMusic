@@ -8,8 +8,6 @@ export function useMediaSession(props: {
   pause: NormalFunc<any>;
   lastTrack: NormalFunc<any>;
   nextTrack: NormalFunc<any>;
-  mute: NormalFunc<any>;
-  unmute: NormalFunc<any>;
   seekForward: NormalFunc<[gap: number]>;
   seekBackward: NormalFunc<[gap: number]>;
   seekTo: NormalFunc<[position: number]>;
@@ -24,31 +22,30 @@ export function useMediaSession(props: {
   useLayoutEffect(() => {
     if (!window?.navigator?.mediaSession) return;
     const { mediaSession } = navigator;
-    const { play, pause, lastTrack, nextTrack, seekTo, seekBackward, seekForward, changeTime } =
-      getProps.current;
 
+    // 统一通过 getProps.current 取最新回调，避免 handler 永远闭包住首次渲染的 props。
     const handlers: Record<MediaSessionAction, MediaSessionActionHandler | null> = {
-      play,
-      pause,
-      previoustrack: lastTrack,
-      nexttrack: nextTrack,
+      play: () => getProps.current.play(),
+      pause: () => getProps.current.pause(),
+      previoustrack: () => getProps.current.lastTrack(),
+      nexttrack: () => getProps.current.nextTrack(),
       stop: () => {
-        pause();
-        seekTo(0);
+        getProps.current.pause();
+        getProps.current.seekTo(0);
       },
       seekforward: () => {
-        seekForward(10);
+        getProps.current.seekForward(10);
       },
       seekbackward: () => {
-        seekBackward(10);
+        getProps.current.seekBackward(10);
       },
       seekto: (details) => {
-        if (details.seekTime) {
-          if (details.fastSeek) {
-            seekTo(details.seekTime);
-          } else {
-            changeTime(details.seekTime);
-          }
+        // seekTime 为 0（跳到开头）也是合法值，不能用 truthy 判断
+        if (details.seekTime == null) return;
+        if (details.fastSeek) {
+          getProps.current.seekTo(details.seekTime);
+        } else {
+          getProps.current.changeTime(details.seekTime);
         }
       },
       skipad: null
@@ -80,7 +77,7 @@ export function useMediaSession(props: {
           {
             src: artworkSrc,
             sizes: "500x500",
-            type: "image/jpg"
+            type: "image/jpeg"
           }
         ]
       });
@@ -95,10 +92,14 @@ export function useMediaSession(props: {
     const audio = player.audio.instance;
 
     const updatePosition = () => {
+      // metadata 未加载（NaN）或流媒体（Infinity）时 setPositionState 会抛 TypeError；
+      // position 超过 duration 同样会抛
+      const duration = audio.duration;
+      if (!Number.isFinite(duration)) return;
       mediaSession.setPositionState({
-        duration: audio.duration || 0,
+        duration,
         playbackRate: audio.playbackRate || 1,
-        position: audio.currentTime || 0
+        position: Math.min(Math.max(audio.currentTime || 0, 0), duration)
       });
     };
 

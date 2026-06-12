@@ -83,8 +83,8 @@ const Settings: FC<SettingsProps> = ({
     <section
       className={cx(
         `
-          h-full overflow-y-auto lg:overflow-hidden scrollbar scrollbar-show
-          grid grid-cols-1 md:grid-cols-[minmax(260px,0.82fr)_minmax(520px,1.58fr)] gap-4
+          h-full overflow-y-auto overflow-x-hidden lg:overflow-hidden scrollbar scrollbar-show
+          grid grid-cols-1 md:grid-cols-[minmax(200px,0.82fr)_minmax(520px,1.58fr)] gap-4
           lg:scrollbar-hidden
         `,
         className

@@ -76,7 +76,7 @@ const ModalProvider: FC<{ className?: string }> = ({ className }) => {
       <button
         className={cx(
           "fixed inset-0 cursor-default bg-black/30",
-          render?.hiddenMaskBlur ? "backdrop-blur-none" : "backdrop-blur-xl",
+          render?.hiddenMaskBlur ? "backdrop-blur-none" : "backdrop-saturate-150 backdrop-blur-lg",
           !(visible && render) && "hidden",
           className
         )}
@@ -104,7 +104,8 @@ const ModalProvider: FC<{ className?: string }> = ({ className }) => {
                 `
                 relative z-10 grid max-h-[min(86vh,720px)] w-full max-w-[calc(100vw-2rem)]
                 grid-rows-[auto_1fr_auto] overflow-hidden rounded-lg pointer-events-auto
-                border border-white/20 bg-white/15 shadow-2xl backdrop-blur-xl
+                border border-white/20 bg-white/15 shadow-2xl
+                backdrop-saturate-120 backdrop-blur-lg
               `,
                 render.className
               )}

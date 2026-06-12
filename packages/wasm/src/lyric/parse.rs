@@ -1,5 +1,6 @@
 #![allow(non_snake_case)]
 use super::model::{Lyric, LyricLine};
+use crate::lyric::normalize::repair_lyric_lines;
 use crate::lyric::utils::{split_lyric_as_lines, take_nearest_lyric_line};
 use regex::Regex;
 use serde_wasm_bindgen::{from_value, to_value};
@@ -9,10 +10,11 @@ use wasm_bindgen::{JsValue, prelude::wasm_bindgen};
 /// 这里不做严格 startTime 相等匹配，而是在较小窗口内找最近行，避免官方数据轻微错位时整行丢失。
 const LYRIC_MATCH_TOLERANCE_MS: i32 = 300;
 
-/// JS 侧调用的网易云歌词入口。
+/// JS 侧调用的网易云歌词入口
 ///
-/// `raw` 是主歌词，`ts` 是翻译，`rm` 是音译；三者都已经由 JS 侧的 AMLL parser
-/// 转成相同的 `LyricLine` 结构后传进来。这里负责把三份歌词按时间线合并成展示层模型。
+/// `raw` 是主歌词，`ts` 是翻译，`rm` 是音译
+/// 三者都已经由 JS 侧的 parser 转成相同的 `LyricLine` 结构后传进来
+/// 这里负责把三份歌词按时间线合并成展示层模型
 #[wasm_bindgen]
 pub fn parseNeteaseLyric(raw: JsValue, ts: JsValue, rm: JsValue) -> JsValue {
     let raw_lyric = from_value::<Vec<LyricLine>>(raw).unwrap_or_default();
@@ -22,11 +24,11 @@ pub fn parseNeteaseLyric(raw: JsValue, ts: JsValue, rm: JsValue) -> JsValue {
     to_value::<Lyric>(&parse_netease_lyric_lines(raw_lyric, ts_lyric, rm_lyric)).unwrap()
 }
 
-/// 合并原文、翻译、音译，并补齐展示层需要的派生信息。
+/// 合并原文、翻译、音译，并补齐派生信息。
 ///
-/// 解析顺序很重要：
+/// 解析顺序：
 /// 1. 先用容错时间匹配外部翻译/音译；
-/// 2. 再解析主歌词里的行内翻译，因为行内翻译应覆盖该行 `translatedLyric`；
+/// 2. 再解析主歌词里的行内翻译，行内翻译覆盖该行 `translatedLyric`；
 /// 3. 最后统一更新空行、对唱、注音等额外标记。
 fn parse_netease_lyric_lines(
     mut raw_lyric: Vec<LyricLine>,
@@ -36,6 +38,9 @@ fn parse_netease_lyric_lines(
     if raw_lyric.is_empty() {
         return Lyric::default();
     }
+
+    // 源数据（yrc/TTML）偶见异常时间轴，先修复再做翻译/音译的时间匹配。
+    repair_lyric_lines(&mut raw_lyric);
 
     let raw_lyric_count = raw_lyric
         .iter()
@@ -151,6 +156,8 @@ pub fn parseTranslatedLRC(raw: JsValue, reverse: bool) -> JsValue {
                         words: rawLRC.words.clone(),
                         isBlank: None,
                         isBackChorus: None,
+                        isBG: None,
+                        isDuet: None,
                     };
                     if reverse {
                         newLine.romanLyric = parsedRawLRC[index + 1].romanLyric.clone();
@@ -214,6 +221,7 @@ mod tests {
                     startTime: 0,
                     endTime: 0,
                     inlineNote: None,
+                    romanWord: None,
                 }],
                 startTime: 0,
                 endTime: 0,
@@ -221,6 +229,8 @@ mod tests {
                 translatedLyric: "".into(),
                 isBlank: None,
                 isBackChorus: None,
+                isBG: None,
+                isDuet: None,
             };
             result.splice_inline_tl_lyric();
             println!("Input: '{}', \nResult: {:?} \n\n", input, result);
@@ -260,6 +270,7 @@ mod tests {
                 startTime: start_time,
                 endTime: start_time,
                 inlineNote: None,
+                romanWord: None,
             }],
             startTime: start_time,
             endTime: start_time,
@@ -267,6 +278,8 @@ mod tests {
             translatedLyric: "".into(),
             isBlank: None,
             isBackChorus: None,
+            isBG: None,
+            isDuet: None,
         }
     }
 }

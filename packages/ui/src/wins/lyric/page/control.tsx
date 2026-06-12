@@ -9,7 +9,7 @@ import React, {
   useState
 } from "react";
 import { css, cx } from "@emotion/css";
-import { useManualAutoScroll } from "@/common/hooks/use-marquee";
+import { useMarquee } from "@/common/hooks/use-marquee";
 import { AArrowDown, AArrowUp, LockKeyholeOpen, LucideLock } from "lucide-react";
 import { NeteaseImageSize } from "@/common/enum";
 import { NeteaseLyric, NeteaseNetworkImage } from "@/common/netease/models";
@@ -79,9 +79,8 @@ const Control: FC<ControlProps> = ({
     []
   );
 
-  useManualAutoScroll(titleContainer, {
-    speed: 10,
-    auto: true,
+  useMarquee(titleContainer, {
+    speed: 20,
     pingPong: true,
     pauseOnHover: true,
     gapDuration: 2000
@@ -186,15 +185,13 @@ const Control: FC<ControlProps> = ({
           <NeteaseImage cache image={image} className="rounded-full size-5 shrink-0" />
           <div
             ref={titleContainer}
-            className={cx(
-              "text-[14px] font-semibold whitespace-nowrap max-w-[35vw] overflow-x-scroll",
-              css`
-                scrollbar-width: none;
-              `
-            )}>
-            <span>{track?.name}</span>
-            {track?.name && <span> - </span>}
-            <span>{track?.ar.map((a) => a.name).join("/")}</span>
+            className="text-[14px] font-semibold whitespace-nowrap max-w-[35vw] overflow-hidden">
+            {/* 跑马灯对第一个子元素做 transform 动画，内容需包裹在单个行内块里 */}
+            <span className="inline-block">
+              <span>{track?.name}</span>
+              {track?.name && <span> - </span>}
+              <span>{track?.ar.map((a) => a.name).join("/")}</span>
+            </span>
           </div>
         </div>
         <div className="w-full flex items-center justify-end">

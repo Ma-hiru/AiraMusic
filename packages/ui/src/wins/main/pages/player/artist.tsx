@@ -1,4 +1,4 @@
-import { type FC, memo, useCallback } from "react";
+import { type FC, Fragment, memo, useCallback, useRef } from "react";
 import { Heart, MessageSquare } from "lucide-react";
 import { useHeart } from "@/common/hooks/use-heart";
 import { useUserTrackManager } from "@/common/hooks/use-user-track-manager";
@@ -8,8 +8,14 @@ import { usePageJump } from "@/wins/main/hooks/use-page-jump";
 import { useSetAtom } from "jotai";
 import { playModalAtom } from "@/wins/main/atoms/layout";
 import RendererPlayerHandle from "@/wins/main/lib/handle";
+import { cx } from "@emotion/css";
+import { useMarquee } from "@/common/hooks/use-marquee";
 
-const Artist: FC<object> = () => {
+interface ArtistProps {
+  className?: string;
+}
+
+const Artist: FC<ArtistProps> = ({ className }) => {
   const player = RendererPlayerHandle.usePlayer();
   const setPlayModal = useSetAtom(playModalAtom);
   const { heartManager } = useUserTrackManager();
@@ -25,44 +31,61 @@ const Artist: FC<object> = () => {
     [jumpArtistPage, setPlayModal]
   );
 
+  const starTrack = useCallback(() => likedChange(track), [likedChange, track]);
+
+  const openComment = useCallback(async () => {
+    if (!track) return;
+    await RendererWindow.comment.reactReadyAwait();
+    RendererEventBus.comment.send({
+      id: track.id,
+      type: "track"
+    });
+  }, [track]);
+
+  const artistRef = useRef(null);
+  useMarquee(artistRef, {
+    speed: 20,
+    pingPong: true,
+    pauseOnHover: true,
+    gapDuration: 2000
+  });
+
   return (
-    <div className="relative w-full flex justify-between gap-1 overflow-hidden items-center text-white/50 h-3.5 text-[12px] select-none">
-      <div className="flex gap-1 justify-start items-center truncate">
-        {track?.ar?.map((a, index) => {
-          return (
-            <div key={a.id}>
-              <span
-                className="hover:opacity-50 cursor-pointer active:scale-90 ease-in-out duration-300 transition-all truncate"
-                onClick={() => jump(a.id)}>
-                {a.name}
-              </span>
-              {index < track?.ar.length - 1 ? <span className="text-white/20">/</span> : null}
-            </div>
-          );
-        })}
+    <section
+      className={cx("relative flex justify-between gap-1 items-center flex-nowrap", className)}>
+      <div
+        ref={artistRef}
+        className="flex-1 flex gap-1 items-center truncate overflow-hidden max-w-full">
+        <span className="inline-block">
+          {track?.ar?.map((a, index) => {
+            return (
+              <Fragment key={a.id}>
+                <a
+                  className="hover:opacity-50 cursor-pointer active:scale-98 ease-in-out duration-300 transition-all truncate text-[95%]"
+                  onClick={() => jump(a.id)}>
+                  {a.name}
+                </a>
+                {index < track?.ar.length - 1 && <span className="opacity-20 font-medium">/</span>}
+              </Fragment>
+            );
+          })}
+        </span>
       </div>
-      <div className="flex justify-center items-center gap-2 pr-1">
+      <div className="shrink-0 flex justify-center items-center gap-1 xl:gap-2">
         <Heart
-          color={checkLiked(track) ? "white" : undefined}
-          fill={checkLiked(track) ? "white" : "transparent"}
-          className="size-4 text-white/50  hover:opacity-50 active:scale-90 cursor-pointer select-none shadow-lg ease-in-out duration-300 transition-all opacity-80"
-          onClick={() => likedChange(track)}
+          color={checkLiked(track) ? "currentColor" : undefined}
+          fill={checkLiked(track) ? "currentColor" : "transparent"}
+          className="size-4 xl:size-4.5 hover:opacity-50 active:scale-98 cursor-pointer ease-in-out duration-300 transition-all"
+          onClick={starTrack}
         />
         <MessageSquare
-          color="white"
-          fill="white"
-          onClick={async () => {
-            if (!track) return;
-            await RendererWindow.comment.reactReadyAwait();
-            RendererEventBus.comment.send({
-              id: track.id,
-              type: "track"
-            });
-          }}
-          className="size-4 scale-90 text-white/50  hover:opacity-50 active:scale-90 active:text-white cursor-pointer select-none shadow-lg ease-in-out duration-300 transition-all opacity-80"
+          color="currentColor"
+          fill="currentColor"
+          onClick={openComment}
+          className="size-4 xl:size-4.5 scale-90 hover:opacity-50 active:scale-88 cursor-pointer ease-in-out duration-300 transition-all"
         />
       </div>
-    </div>
+    </section>
   );
 };
 export default memo(Artist);

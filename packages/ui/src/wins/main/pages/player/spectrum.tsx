@@ -7,8 +7,13 @@ import { useSettings } from "@/common/store/settings";
 import RendererPlayerHandle from "@/wins/main/lib/handle";
 
 import AudioSpectrum from "@/wins/main/componets/spectrum/audio-spectrum";
+import { cx } from "@emotion/css";
 
-const Spectrum: FC<object> = () => {
+interface SpectrumProps {
+  className?: string;
+}
+
+const Spectrum: FC<SpectrumProps> = ({ className }) => {
   const playModal = useAtomValue(playModalAtom);
   const player = RendererPlayerHandle.usePlayer();
   const currentWindow = useListenable(RendererWindow.current);
@@ -18,7 +23,7 @@ const Spectrum: FC<object> = () => {
   return (
     <AudioSpectrum
       isPlaying={playModal && player.playing && currentWindow.isShow && !currentWindow.isMin}
-      className="w-full h-5 mt-2"
+      className={cx("h-5 mt-2", className)}
       gap={2}
       renderer="webgl-rust"
       color="#ffffff"

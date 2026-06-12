@@ -668,6 +668,7 @@ mod test {
                     endTime: start_time,
                     word: word.into(),
                     inlineNote: None,
+                    romanWord: None,
                 })
                 .collect(),
             translatedLyric: "".into(),
@@ -676,6 +677,8 @@ mod test {
             endTime: start_time,
             isBlank: None,
             isBackChorus: None,
+            isBG: None,
+            isDuet: None,
         }
     }
 }

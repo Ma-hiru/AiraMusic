@@ -208,7 +208,7 @@ const TrayPage: FC = () => {
         ref={containerRef}
         className="
           max-w-50 w-max rounded-xl border border-black/8
-          backdrop-blur-xl p-2 relative bg-white/80
+          backdrop-saturate-150 backdrop-blur-xl p-2 relative bg-white/80
         ">
         <div className="fixed inset-0 z-[-1]">
           <AcrylicBackground

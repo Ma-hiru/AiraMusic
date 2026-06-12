@@ -1,7 +1,8 @@
-import { type FC, memo, useCallback, useEffect, useRef } from "react";
+import { type FC, memo, useCallback, useEffect, useMemo, useRef } from "react";
 
 import LyricComponent, { type LyricRef } from "@/common/components/display/lyric/lyric-container";
 import RendererPlayerHandle from "@/wins/main/lib/handle";
+import { useTailwindMediaQuery } from "@/common/hooks/use-tailwind-media-query";
 
 const Lyric: FC<object> = () => {
   const player = RendererPlayerHandle.usePlayer();
@@ -60,8 +61,17 @@ const Lyric: FC<object> = () => {
     };
   }, [player]);
 
+  const { sm, md, lg, xl, "2xl": xxl } = useTailwindMediaQuery();
+  const fontSize = useMemo(() => {
+    if (xxl) return 32;
+    if (xl) return 30;
+    if (lg) return 28;
+    if (md) return 25;
+    if (sm) return 23;
+  }, [lg, md, sm, xl, xxl]);
+
   return (
-    <div className="absolute top-0 left-[48%] w-1/2 h-full overflow-hidden contain-strict">
+    <div className="absolute top-0 left-[48%] w-1/2 h-full overflow-hidden contain-strict ">
       <LyricComponent
         ref={lyricRef}
         lyric={player.current.lyric}
@@ -69,6 +79,7 @@ const Lyric: FC<object> = () => {
         tlActive={player.current?.tlActive}
         noteActive={player.current?.noteActive}
         onWordClick={handleWordClick}
+        fontSize={fontSize}
         className="contain-strict"
       />
     </div>

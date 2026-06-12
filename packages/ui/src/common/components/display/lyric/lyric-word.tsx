@@ -1,3 +1,4 @@
+import { cx } from "@emotion/css";
 import {
   type CSSProperties,
   type FC,
@@ -7,8 +8,7 @@ import {
   useMemo,
   useRef
 } from "react";
-import { cx } from "@emotion/css";
-import { LyricTimeManager } from "./lyric-time-manager";
+import type { TimeManager } from "./time-manager";
 
 interface LyricWordProps {
   word: LyricWord;
@@ -17,11 +17,10 @@ interface LyricWordProps {
   notesContent?: string;
   activeColor?: string;
   inactiveColor?: string;
-  fontSize?: number;
   lineActive?: boolean;
   singleWord?: boolean;
   onClick?: NormalFunc<[startTime: number]>;
-  timeManager: LyricTimeManager;
+  timeManager: TimeManager;
 }
 
 const LyricWord: FC<LyricWordProps> = ({
@@ -33,7 +32,6 @@ const LyricWord: FC<LyricWordProps> = ({
   singleWord = false,
   activeColor,
   inactiveColor,
-  fontSize,
   onClick,
   timeManager
 }) => {
@@ -62,7 +60,7 @@ const LyricWord: FC<LyricWordProps> = ({
     const updateProgress = () => {
       const { current, start, end } = getTime();
       const duration = end - start;
-      let p = 0;
+      let p: number;
       if (duration > 0) {
         p = Math.max(0, Math.min(100, ((current - start) / duration) * 100));
       } else {
@@ -88,6 +86,17 @@ const LyricWord: FC<LyricWordProps> = ({
     return "0%";
   }, [singleWord, wordIndex, currentWordIndex, lineActive]);
 
+  // 上浮时长跟随词时长：快词快起避免拖影，慢词从容，封顶防止拖沓。
+  const wrapperStyle = useMemo(
+    () =>
+      ({
+        "--lyric-word-rise": `${Math.round(
+          Math.min(Math.max((word.endTime - word.startTime) * 0.8, 160), 420)
+        )}ms`
+      }) as CSSProperties,
+    [word.endTime, word.startTime]
+  );
+
   const style = useMemo(
     () =>
       ({
@@ -99,14 +108,13 @@ const LyricWord: FC<LyricWordProps> = ({
           : undefined,
         WebkitBackgroundClip: !singleWord ? "text" : undefined,
         WebkitTextFillColor: !singleWord ? "transparent" : undefined,
-        "--progress": progress,
-        fontSize: typeof fontSize === "number" ? `${fontSize}px` : fontSize
+        "--progress": progress
       }) as CSSProperties,
-    [active, activeColor, fontSize, inactiveColor, progress, singleWord]
+    [active, activeColor, inactiveColor, progress, singleWord]
   );
 
   return (
-    <span className="inline-block relative contain-layout">
+    <span className="inline-block relative contain-layout" style={wrapperStyle}>
       <span
         ref={spanRef}
         style={style}
@@ -115,8 +123,6 @@ const LyricWord: FC<LyricWordProps> = ({
           `
           lyric-word font-semibold whitespace-pre-wrap
         `,
-          // 单行歌词高亮时直接变色
-          singleWord && (active ? "text-white" : "text-white/30"),
           // 非单行歌词且未高亮时模糊
           !singleWord && wordIndex > currentWordIndex ? "blur-[1.5px]" : "blur-none",
           !singleWord && wordIndex === currentWordIndex && active
@@ -128,9 +134,7 @@ const LyricWord: FC<LyricWordProps> = ({
       {notesContent && (
         <span
           className={cx(
-            `absolute left-1/2 -translate-x-1/2 -translate-y-full top-1/3 z-10 whitespace-nowrap scale-45`,
-            // 单行歌词高亮时直接变色
-            singleWord && (active ? "text-white" : "text-white/30"),
+            `absolute left-1/2 -translate-x-1/2 -translate-y-full top-[45%] z-10 whitespace-nowrap scale-45`,
             // 非单行歌词且未高亮时模糊
             !singleWord && wordIndex > currentWordIndex ? "blur-[1.5px]" : "blur-none",
             !singleWord && wordIndex === currentWordIndex && active

@@ -122,7 +122,7 @@ const MenuProvider: FC<{ className?: string }> = ({ className }) => {
       className={cx(
         `
           fixed z-15 w-40 overflow-hidden rounded-md
-          bg-white/20 backdrop-blur-md p-1
+          bg-white/20 backdrop-saturate-150 backdrop-blur-lg p-1
           border border-neutral-700/10 shadow-lg
           pointer-events-none opacity-0
       `,
