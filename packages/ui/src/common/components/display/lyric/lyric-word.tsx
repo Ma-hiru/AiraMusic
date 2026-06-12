@@ -1,3 +1,4 @@
+import { cx } from "@emotion/css";
 import {
   type CSSProperties,
   type FC,
@@ -7,8 +8,7 @@ import {
   useMemo,
   useRef
 } from "react";
-import { cx } from "@emotion/css";
-import { LyricTimeManager } from "./lyric-time-manager";
+import type { TimeManager } from "./time-manager";
 
 interface LyricWordProps {
   word: LyricWord;
@@ -20,7 +20,7 @@ interface LyricWordProps {
   lineActive?: boolean;
   singleWord?: boolean;
   onClick?: NormalFunc<[startTime: number]>;
-  timeManager: LyricTimeManager;
+  timeManager: TimeManager;
 }
 
 const LyricWord: FC<LyricWordProps> = ({
@@ -60,7 +60,7 @@ const LyricWord: FC<LyricWordProps> = ({
     const updateProgress = () => {
       const { current, start, end } = getTime();
       const duration = end - start;
-      let p = 0;
+      let p: number;
       if (duration > 0) {
         p = Math.max(0, Math.min(100, ((current - start) / duration) * 100));
       } else {

@@ -10,6 +10,9 @@ pub struct LyricWord {
     pub endTime: i32,
     pub word: String,
     pub inlineNote: Option<bool>,
+    /// AMLL 解析结果中的可选字段，原样透传，避免歌词经过 wasm 往返时丢失数据。
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub romanWord: Option<String>,
 }
 
 #[derive(Tsify, Serialize, Deserialize, Debug, Clone)]
@@ -21,6 +24,12 @@ pub struct LyricLine {
     pub endTime: i32,
     pub isBlank: Option<bool>,
     pub isBackChorus: Option<bool>,
+    /// TTML 背景和声标记（AMLL parseTTML 产出），原样透传给 JS 侧使用。
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub isBG: Option<bool>,
+    /// TTML 对唱标记（AMLL parseTTML 产出），原样透传给 JS 侧使用。
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub isDuet: Option<bool>,
 }
 
 #[derive(Tsify, Serialize, Default, Deserialize)]

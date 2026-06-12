@@ -10,7 +10,7 @@ import {
   useState
 } from "react";
 import { cx } from "@emotion/css";
-import { LyricTimeManager } from "./lyric-time-manager";
+import { TimeManager } from "./time-manager";
 import { debounce } from "lodash-es";
 
 import LyricLine from "./lyric-line";
@@ -58,11 +58,11 @@ const LyricContainer: FC<LyricContainerProps> = ({
   const [currentLine, setCurrentLine] = useState(-1);
   const containerRef = useRef<Nullable<HTMLDivElement>>(null);
   const currentLineRef = useRef(currentLine);
-  const timeManagerRef = useRef<Nullable<LyricTimeManager>>(null);
+  const timeManagerRef = useRef<Nullable<TimeManager>>(null);
   const mainAlignRef = useRef(mainAlign);
 
   if (timeManagerRef.current === null) {
-    timeManagerRef.current = new LyricTimeManager([]);
+    timeManagerRef.current = new TimeManager([]);
   }
   mainAlignRef.current = mainAlign;
 
@@ -108,14 +108,12 @@ const LyricContainer: FC<LyricContainerProps> = ({
   useLayoutEffect(() => {
     const timeManager = timeManagerRef.current;
     if (!timeManager) return;
-    timeManager.onLineChange = ({ lineIndex }) => {
+    return timeManager.addEventListener("line-change", () => {
+      const lineIndex = timeManager.getCurrentLineIndex();
       setCurrentLine(lineIndex);
       currentLineRef.current = lineIndex;
       calcLayout();
-    };
-    return () => {
-      timeManager.dispose();
-    };
+    });
   }, [calcLayout]);
 
   // 暴露接口

@@ -72,6 +72,7 @@ export abstract class Listenable<EventName = string> {
 
   protected clearAllListeners() {
     this.listeners.clear();
+    this.eventListeners.clear();
   }
 
   public setUpdateGap(ms: number) {
@@ -165,7 +166,7 @@ export abstract class Listenable<EventName = string> {
   }
 
   [Symbol.dispose]() {
-    this.listeners.clear();
+    this.clearAllListeners();
   }
 }
 

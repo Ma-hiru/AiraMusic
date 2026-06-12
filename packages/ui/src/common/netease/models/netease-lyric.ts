@@ -7,6 +7,7 @@ import {
 } from "@applemusic-like-lyrics/lyric";
 import {
   LyricLineInfo,
+  normalizeLyricLines,
   parseExternalLrc,
   parseNeteaseLyric,
   parseTranslatedLRC
@@ -87,7 +88,9 @@ class Parser {
 
   static parseTTMLyric(context: string) {
     const ttml = parseTTML(context);
-    const data = Parser.handleAMLyricLine(ttml.lines);
+    // TTML 文件先修复
+    const lines = normalizeLyricLines(ttml.lines) as AMLyricLine[];
+    const data = Parser.handleAMLyricLine(lines);
     const { tlCount, rmCount, noteCount } = data.reduce(
       (count, line) => {
         line.translatedLyric && count.tlCount++;

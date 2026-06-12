@@ -1,6 +1,6 @@
-import { type FC, memo, useCallback, useLayoutEffect, useMemo, useState } from "react";
-import { LyricTimeManager } from "./lyric-time-manager";
 import { cx } from "@emotion/css";
+import { type FC, memo, useCallback, useLayoutEffect, useMemo, useState } from "react";
+import type { TimeManager } from "./time-manager";
 
 import LyricWord from "./lyric-word";
 
@@ -12,7 +12,7 @@ interface LyricLineProps {
   noteActive: Optional<boolean>;
   hasRm: Optional<boolean>;
   hasTl: Optional<boolean>;
-  timeManager: LyricTimeManager;
+  timeManager: TimeManager;
   active: boolean;
   crossAlign?: "left" | "center" | "right";
   activeColor?: string;
@@ -50,8 +50,9 @@ const LyricLine: FC<LyricLineProps> = ({
   }, [line.startTime, line.words, onClick]);
 
   useLayoutEffect(() => {
-    timeManager.addLineListener(index, setWordIndex);
-    return () => timeManager.removeLineListener(index);
+    return timeManager.addEventListener("word-change", () => {
+      setWordIndex(timeManager.getCurrentWordIndex());
+    });
   }, [timeManager, index]);
 
   const allWord = useMemo(() => {
