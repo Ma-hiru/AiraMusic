@@ -1,4 +1,5 @@
 import { TrackQuality } from "@/common/enum";
+import { RendererShortcutConstants, type ShortcutBindingMap } from "@/common/constants/shortcut";
 
 export interface NeteaseSettingsModel {
   trackQuality: {
@@ -16,6 +17,7 @@ export interface NeteaseSettingsModel {
   preference: {
     defaultUseDisplayWindow: boolean;
   };
+  shortcuts: ShortcutBindingMap;
 }
 
 export const defaultSettings: NeteaseSettingsModel = {
@@ -33,18 +35,22 @@ export const defaultSettings: NeteaseSettingsModel = {
   },
   preference: {
     defaultUseDisplayWindow: false
-  }
+  },
+  shortcuts: RendererShortcutConstants.defaultBindings
 };
 
 export class NeteaseSettings implements NeteaseSettingsModel {
   trackQuality;
   performance;
   preference;
+  shortcuts;
 
   constructor(props: NeteaseSettingsModel) {
     this.trackQuality = props.trackQuality;
     this.performance = props.performance;
     this.preference = props.preference;
+    // 兼容旧版本持久化数据：缺失的动作回填默认快捷键
+    this.shortcuts = { ...RendererShortcutConstants.defaultBindings, ...props.shortcuts };
   }
 
   static readonly default = new NeteaseSettings(defaultSettings);

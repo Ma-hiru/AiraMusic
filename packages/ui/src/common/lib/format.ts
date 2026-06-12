@@ -1,5 +1,6 @@
 import dayjs, { type OpUnitType, type QUnitType } from "dayjs";
 import { NeteaseMusicLevel, TrackQuality } from "@/common/enum";
+import { RendererShortcutConstants, type ShortcutBinding } from "@/common/constants/shortcut";
 
 export class RendererFormat {
   static count(count: Optional<number>) {
@@ -131,5 +132,14 @@ export class RendererFormat {
       details,
       days
     };
+  }
+
+  /** 把绑定格式化为 `Alt + →` 形式的展示文本 */
+  static shortcut(binding: ShortcutBinding): string {
+    const parts = (binding.modifiers ?? []).map(
+      (modifier) => RendererShortcutConstants.modifierLabels[modifier]
+    );
+    const key = RendererShortcutConstants.keyLabels[binding.key] ?? binding.key.toUpperCase();
+    return [...parts, key].join(" + ");
   }
 }

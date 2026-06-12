@@ -1,5 +1,7 @@
-import { type FC, memo, useEffect, useState } from "react";
+import { type FC, memo, useEffect, useMemo } from "react";
 import { type ShortcutConfig, useKeyboardShortcut } from "@/common/hooks/use-keyboard-shortcut";
+import { RendererShortcutConstants, type ShortcutAction } from "@/common/constants/shortcut";
+import { useSettings } from "@/common/store/settings";
 import { useMediaSession } from "@/wins/main/hooks/use-media-session";
 import { useSpectrumWorker } from "@/wins/main/hooks/use-spectrum-worker";
 import { useAtomValue, useSetAtom } from "jotai";
@@ -24,61 +26,32 @@ const MusicSource: FC<object> = () => {
       document.title = import.meta.env.APP_NAME;
     }
   }, [artist, title]);
-  // 注册局部键盘快捷键
+  // 注册局部键盘快捷键（绑定可在设置中自定义）
   const setPlayModal = useSetAtom(playModalAtom);
   const typing = useAtomValue(typingAtom);
-  const [Shortcuts, setShortcuts] = useState<ShortcutConfig[]>([]);
-  useKeyboardShortcut(Shortcuts);
-  useEffect(() => {
-    if (typing) {
-      setShortcuts([
-        {
-          key: "ArrowRight",
-          modifiers: ["alt"],
-          description: "下一首",
-          callback: () => player.playlist.next(true)
-        },
-        {
-          key: "ArrowLeft",
-          modifiers: ["alt"],
-          description: "上一首",
-          callback: () => player.playlist.last()
-        },
-        {
-          key: "ArrowUp",
-          description: "增加音量",
-          callback: () => (player.audio.volume += 0.1)
-        },
-        {
-          key: "ArrowDown",
-          description: "减少音量",
-          callback: () => (player.audio.volume -= 0.1)
-        },
-        {
-          key: "M",
-          description: "静音/取消静音",
-          callback: () => player.audio.mute()
-        },
-        {
-          key: "M",
-          description: "切换播放页",
-          modifiers: ["alt"],
-          callback: () => setPlayModal((playModal) => !playModal)
-        }
-      ]);
-    } else {
-      setShortcuts((shortcuts) => {
-        return [
-          ...shortcuts,
-          {
-            key: " ",
-            description: "播放/暂停",
-            callback: () => (player.audio.paused ? player.audio.play() : player.audio.pause())
-          }
-        ];
-      });
-    }
-  }, [player.audio, player.playlist, setPlayModal, typing]);
+  const shortcuts = useSettings().shortcuts;
+  const shortcutConfigs = useMemo<ShortcutConfig[]>(() => {
+    const actions: Record<ShortcutAction, () => void> = {
+      playToggle: () => (player.audio.paused ? player.audio.play() : player.audio.pause()),
+      prevTrack: () => player.playlist.last(),
+      nextTrack: () => player.playlist.next(true),
+      volumeUp: () => (player.audio.volume += 0.1),
+      volumeDown: () => (player.audio.volume -= 0.1),
+      muteToggle: () => (player.audio.instance.muted ? player.audio.unmute() : player.audio.mute()),
+      playModalToggle: () => setPlayModal((playModal) => !playModal)
+    };
+    return (
+      (Object.keys(actions) as ShortcutAction[])
+        // 输入框聚焦时只保留带修饰键的组合，避免吞掉正常输入
+        .filter((action) => !typing || (shortcuts[action].modifiers?.length ?? 0) > 0)
+        .map((action) => ({
+          ...shortcuts[action],
+          description: RendererShortcutConstants.actionLabels[action],
+          callback: actions[action]
+        }))
+    );
+  }, [player.audio, player.playlist, setPlayModal, shortcuts, typing]);
+  useKeyboardShortcut(shortcutConfigs);
   // 禁 Tab 键
   useEffect(() => {
     const handler = (e: KeyboardEvent) => e.key === "Tab" && e.preventDefault();
@@ -92,11 +65,9 @@ const MusicSource: FC<object> = () => {
     lastTrack: () => player.playlist.last(true),
     nextTrack: () => player.playlist.next(true),
     seekForward: (gap) => (player.audio.currentTime += gap),
-    seekBackward: (gap) => (player.audio.currentTime += gap),
+    seekBackward: (gap) => (player.audio.currentTime -= gap),
     seekTo: (time) => (player.audio.currentTime = time),
-    changeTime: (time) => (player.audio.currentTime = time),
-    mute: () => player.audio.mute(),
-    unmute: () => player.audio.unmute()
+    changeTime: (time) => (player.audio.currentTime = time)
   });
   // 注册频谱
   const setSpectrumData = useSetAtom(spectrumDataAtom);

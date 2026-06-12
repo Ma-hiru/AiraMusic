@@ -21,7 +21,7 @@ const Bar: FC<{ className?: string }> = ({ className }) => {
       className={cx(
         `
         absolute bottom-0 left-0 right-0 bg-white/30
-        backdrop-saturate-150 backdrop-blur-lg backdrop-saturate shadow-[0_10px_25px_-5px_rgba(0,0,0,0.25)]
+        backdrop-saturate-120 backdrop-blur-lg backdrop-saturate shadow-[0_10px_25px_-5px_rgba(0,0,0,0.25)]
       `,
         className
       )}>
