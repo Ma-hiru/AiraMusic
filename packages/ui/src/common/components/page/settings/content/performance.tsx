@@ -1,5 +1,5 @@
 import { type FC, memo } from "react";
-import { AudioLines, AudioWaveform, Dock, Gauge } from "lucide-react";
+import { AudioLines, AudioWaveform, Dock, Gauge, Sparkles } from "lucide-react";
 import { NeteaseSettings, type NeteaseSettingsModel } from "@/common/netease/models";
 
 import ToggleRow from "./toggle-row";
@@ -24,6 +24,34 @@ const Performance: FC<PerformanceSettings> = ({ data, patchSettings }) => {
             performance: {
               ...data,
               barSpectrum: !data.barSpectrum
+            }
+          })
+        }
+      />
+      <ToggleRow
+        icon={Sparkles}
+        title="播放页流体背景"
+        description="启用播放页的简单流体背景效果，播放暂停和页面关闭时会自动暂停，关闭可以节省性能"
+        checked={data.usePlayerFluid}
+        onClick={() =>
+          patchSettings({
+            performance: {
+              ...data,
+              usePlayerFluid: !data.usePlayerFluid
+            }
+          })
+        }
+      />
+      <ToggleRow
+        icon={Sparkles}
+        title="主窗口流体背景"
+        description="启用主窗口的简单流体背景效果，播放暂停时会自动暂停，关闭可以节省性能"
+        checked={data.useHomeFluid}
+        onClick={() =>
+          patchSettings({
+            performance: {
+              ...data,
+              useHomeFluid: !data.useHomeFluid
             }
           })
         }

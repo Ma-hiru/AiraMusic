@@ -10,6 +10,8 @@ export interface NeteaseSettingsModel {
     playerSpectrum: boolean;
     spectrumFps: number;
     windowPreload: boolean;
+    usePlayerFluid: boolean;
+    useHomeFluid: boolean;
   };
   preference: {
     defaultUseDisplayWindow: boolean;
@@ -25,7 +27,9 @@ export const defaultSettings: NeteaseSettingsModel = {
     barSpectrum: true,
     playerSpectrum: true,
     spectrumFps: 30,
-    windowPreload: true
+    windowPreload: true,
+    useHomeFluid: true,
+    usePlayerFluid: true
   },
   preference: {
     defaultUseDisplayWindow: false
