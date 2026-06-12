@@ -5,7 +5,11 @@ import RendererPlayerHandle from "@/wins/main/lib/handle";
 
 import NeteaseImage from "@/common/components/display/image/netease-image";
 
-const Cover: FC<object> = () => {
+interface CoverProps {
+  className?: string;
+}
+
+const Cover: FC<CoverProps> = ({ className }) => {
   const setBackgroundCover = useSetAtom(backgroundCoverAtom);
   const setPlayerBackgroundCover = useSetAtom(playerBackgroundCoverAtom);
   const player = RendererPlayerHandle.usePlayer();
@@ -20,15 +24,17 @@ const Cover: FC<object> = () => {
   );
 
   return (
-    <NeteaseImage
-      cache
-      preview
-      cacheLazy={false}
-      image={image}
-      className="w-full h-full rounded-lg ease-in-out duration-300 transition-all select-none"
-      onLoad={onLoad}
-      shadowColor="light"
-    />
+    <section className={className}>
+      <NeteaseImage
+        cache
+        preview
+        cacheLazy={false}
+        image={image}
+        className="size-full rounded-lg"
+        onLoad={onLoad}
+        shadowColor="light"
+      />
+    </section>
   );
 };
 

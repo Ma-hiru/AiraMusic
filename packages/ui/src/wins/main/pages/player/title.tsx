@@ -1,26 +1,30 @@
 import { type FC, memo } from "react";
 import RendererPlayerHandle from "@/wins/main/lib/handle";
+import { cx } from "@emotion/css";
 
-const Title: FC<object> = () => {
+interface TitleProps {
+  className?: string;
+}
+
+const Title: FC<TitleProps> = ({ className }) => {
   const player = RendererPlayerHandle.usePlayer();
   const track = player.current.track?.detail;
   const ts = track?.translate;
   const alias = track?.aliaName;
   const title = track?.splitTitle?.();
   return (
-    <div className="flex flex-col select-none w-full justify-end">
-      <div className="text-white text-center">
-        <span className="block w-full font-bold text-[24px] truncate">{title?.main}</span>
-        {!!title?.sub && (
-          <span className="block w-full opacity-50 text-[14px] truncate">{title.sub}</span>
-        )}
-        {ts ? (
-          <span className="block w-full opacity-50 text-[12px] truncate">{ts}</span>
-        ) : alias ? (
-          <span className="block w-full opacity-50 text-[12px] truncate">{alias}</span>
-        ) : null}
-      </div>
-    </div>
+    <section className={cx("flex flex-col justify-end text-center", className)}>
+      <h1 className="font-bold line-clamp-1" children={title?.main} />
+      <h2
+        className={cx("opacity-50 line-clamp-1 text-[80%]", !(ts || alias) && "hidden")}
+        children={ts || alias}
+      />
+      <h3
+        className={cx("opacity-50 line-clamp-1 text-[70%]", !title?.sub && "hidden")}
+        children={title?.sub}
+      />
+    </section>
   );
 };
+
 export default memo(Title);

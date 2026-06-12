@@ -16,7 +16,7 @@ const Progress: FC<object> = () => {
   const quality = player.current.audio?.quality;
 
   return (
-    <div className="w-37.5 sm:w-50 md:w-62.5 lg:w-75">
+    <div className="w-full">
       <div className="h-3 flex flex-col justify-center">
         <div
           ref={barRef}
@@ -26,13 +26,13 @@ const Progress: FC<object> = () => {
           <motion.span
             ref={percentScope}
             initial={{ width: 0 }}
-            className="absolute left-0 top-0 block h-full bg-white/50 backdrop-blur-lg"
+            className="absolute left-0 top-0 block h-full bg-white/50 backdrop-blur-lg rounded-full"
           />
           {/*缓冲区*/}
           <motion.span
             ref={bufferScope}
             initial={{ width: 0 }}
-            className="block h-full bg-white/30 backdrop-blur-lg"
+            className="block h-full bg-white/30 backdrop-blur-lg rounded-full"
           />
           {chorusPercent.map((percent, index) => {
             return (
@@ -51,8 +51,8 @@ const Progress: FC<object> = () => {
           })}
         </div>
       </div>
-      <div className="w-full flex justify-between items-center text-white/50 backdrop-blur-lg text-[12px] mt-1 select-none">
-        {quality && <Tag text={quality} className="bg-white/50! text-white!" />}
+      <div className="w-full flex justify-between items-center backdrop-blur-lg text-[12px] mt-1">
+        {quality && <Tag text={quality} className="text-(--text-color)! bg-(--text-color)/15!" />}
         {quality ? (
           <ProgressRender render={progressRenderMini} />
         ) : (
@@ -62,6 +62,7 @@ const Progress: FC<object> = () => {
     </div>
   );
 };
+
 export default memo(Progress);
 
 const progressRenderMini = (progress: InstanceType<typeof RendererPlayerAudio>["progress"]) => {

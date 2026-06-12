@@ -81,32 +81,25 @@ const LyricLine: FC<LyricLineProps> = ({
     }),
     [active, activeColor, fontSize, inactiveColor]
   );
-  const substyle = useMemo(
-    () => ({
-      color: active ? activeColor : inactiveColor,
-      fontSize: typeof fontSize === "number" ? `${fontSize * 0.8}px` : fontSize
-    }),
-    [active, activeColor, fontSize, inactiveColor]
-  );
 
   return (
-    <div
+    <section
+      style={style}
       className={cx(
         `
-          w-full px-4 py-1 rounded-md hover:blur-none hover:bg-white/20
+          w-full px-4 py-1 rounded-md hover:blur-none hover:bg-(--text-color)/20
           duration-500 ease-in-out transition-all
-          contain-layout leading-7
+          contain-layout leading-7 text-3xl
     `,
-        active ? "text-white" : "text-white/30 blur-[2px]"
+        !active && "blur-[2px] opacity-50"
       )}>
       <div
-        style={style}
         className={cx(
           `
             text-wrap select-none
             duration-500 ease-in-out transition-all
             contain-layout
-            font-semibold text-3xl
+            font-semibold
         `,
           active && "font-medium",
           spring && active && "scale-102",
@@ -135,7 +128,6 @@ const LyricLine: FC<LyricLineProps> = ({
                   notesContent={inlineNoteContent || undefined}
                   activeColor={activeColor}
                   inactiveColor={inactiveColor}
-                  fontSize={fontSize}
                   wordIndex={index}
                   currentWordIndex={wordIndex}
                   onClick={onClick}
@@ -155,40 +147,18 @@ const LyricLine: FC<LyricLineProps> = ({
             onClick={onClick}
             activeColor={activeColor}
             inactiveColor={inactiveColor}
-            fontSize={fontSize}
             timeManager={timeManager}
           />
         )}
       </div>
-      {hasTl && tlActive && !!line.translatedLyric && (
-        <div
-          style={substyle}
-          className={cx(
-            `
-            text-wrap select-none
-            duration-500 ease-in-out transition-all
-            contain-content
-            font-normal
-          `,
-            active && "font-medium",
-            spring && active && "scale-102",
-            crossAlign === "left" && "text-left",
-            crossAlign === "center" && "text-center",
-            crossAlign === "right" && "text-right"
-          )}
-          onClick={onClickLine}>
-          {line.translatedLyric}
-        </div>
-      )}
       {hasRm && rmActive && !!line.romanLyric && (
         <div
-          style={substyle}
           className={cx(
             `
             text-wrap select-none
             duration-500 ease-in-out transition-all
             contain-content
-            font-normal
+            font-normal text-[60%]
           `,
             active && "font-medium",
             spring && active && "scale-102",
@@ -200,7 +170,26 @@ const LyricLine: FC<LyricLineProps> = ({
           {line.romanLyric}
         </div>
       )}
-    </div>
+      {hasTl && tlActive && !!line.translatedLyric && (
+        <div
+          className={cx(
+            `
+            text-wrap select-none
+            duration-500 ease-in-out transition-all
+            contain-content
+            font-normal text-[60%]
+          `,
+            active && "font-medium",
+            spring && active && "scale-102",
+            crossAlign === "left" && "text-left",
+            crossAlign === "center" && "text-center",
+            crossAlign === "right" && "text-right"
+          )}
+          onClick={onClickLine}>
+          {line.translatedLyric}
+        </div>
+      )}
+    </section>
   );
 };
 

@@ -17,7 +17,6 @@ interface LyricWordProps {
   notesContent?: string;
   activeColor?: string;
   inactiveColor?: string;
-  fontSize?: number;
   lineActive?: boolean;
   singleWord?: boolean;
   onClick?: NormalFunc<[startTime: number]>;
@@ -33,7 +32,6 @@ const LyricWord: FC<LyricWordProps> = ({
   singleWord = false,
   activeColor,
   inactiveColor,
-  fontSize,
   onClick,
   timeManager
 }) => {
@@ -99,10 +97,9 @@ const LyricWord: FC<LyricWordProps> = ({
           : undefined,
         WebkitBackgroundClip: !singleWord ? "text" : undefined,
         WebkitTextFillColor: !singleWord ? "transparent" : undefined,
-        "--progress": progress,
-        fontSize: typeof fontSize === "number" ? `${fontSize}px` : fontSize
+        "--progress": progress
       }) as CSSProperties,
-    [active, activeColor, fontSize, inactiveColor, progress, singleWord]
+    [active, activeColor, inactiveColor, progress, singleWord]
   );
 
   return (
@@ -115,8 +112,6 @@ const LyricWord: FC<LyricWordProps> = ({
           `
           lyric-word font-semibold whitespace-pre-wrap
         `,
-          // 单行歌词高亮时直接变色
-          singleWord && (active ? "text-white" : "text-white/30"),
           // 非单行歌词且未高亮时模糊
           !singleWord && wordIndex > currentWordIndex ? "blur-[1.5px]" : "blur-none",
           !singleWord && wordIndex === currentWordIndex && active
@@ -129,8 +124,6 @@ const LyricWord: FC<LyricWordProps> = ({
         <span
           className={cx(
             `absolute left-1/2 -translate-x-1/2 -translate-y-full top-1/3 z-10 whitespace-nowrap scale-45`,
-            // 单行歌词高亮时直接变色
-            singleWord && (active ? "text-white" : "text-white/30"),
             // 非单行歌词且未高亮时模糊
             !singleWord && wordIndex > currentWordIndex ? "blur-[1.5px]" : "blur-none",
             !singleWord && wordIndex === currentWordIndex && active

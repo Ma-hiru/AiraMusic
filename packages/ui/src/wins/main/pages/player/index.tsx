@@ -1,6 +1,4 @@
 import { type FC, memo } from "react";
-import { useStage } from "@/common/hooks/use-stage";
-import { Stage } from "@/common/enum";
 
 import Cover from "./cover";
 import Control from "./control";
@@ -12,27 +10,22 @@ import Artist from "./artist";
 import Spectrum from "./spectrum";
 
 export const PlayerPage: FC = () => {
-  const { stage } = useStage();
   return (
     <div className="w-screen h-screen relative">
       <div className="absolute w-1/2 h-screen z-10 flex justify-center items-center">
-        <div className="flex flex-col justify-center items-center ease-in-out duration-300 transition-all w-37.5 sm:w-50 md:w-62.5 lg:w-75 relative -top-1">
-          <div className="h-25 w-full flex flex-col justify-end pb-4">
-            {stage >= Stage.Immediately && <Title />}
-          </div>
-          <div className="w-full h-37.5 sm:h-50 md:h-62.5 lg:h-75">
-            {stage >= Stage.Second && <Cover />}
-          </div>
+        <div className="flex flex-col justify-center items-center ease-in-out duration-300 transition-all w-30 sm:w-45 md:w-60 lg:w-75 xl:w-85 2xl:w-95 sm:text-sm md:text-base lg:text-lg xl:text-xl 2xl:text-2xl relative -top-1">
+          <Title className="w-full h-25 xl:h-30" />
+          <Cover className="w-full aspect-square mt-2" />
           <div className="h-40 w-full flex flex-col justify-center gap-2">
-            {stage >= Stage.First && <Artist />}
-            {stage >= Stage.Second && <Control />}
-            {stage >= Stage.Finally && <Spectrum />}
+            <Artist className="text-[80%] xl:text-[70%]" />
+            <Control itemClassName="sm:size-5! lg:size-6!" />
+            <Spectrum className="lg:h-7! 2xl:h-10!" />
           </div>
         </div>
       </div>
-      {stage >= Stage.Finally && <Background />}
-      {stage >= Stage.Finally && <Lyric />}
-      {stage >= Stage.Immediately && <LyricChange />}
+      <Background />
+      <Lyric />
+      <LyricChange />
     </div>
   );
 };
