@@ -84,7 +84,7 @@ const ForYouPanel: FC<object> = () => {
       className="
         relative h-full w-full min-w-100 overflow-hidden rounded-xl border border-white/15
         bg-linear-to-br from-white/12 via-white/5 to-(--theme-color-main)/50 p-3
-        shadow-md backdrop-blur-2xl
+        shadow-md backdrop-saturate-150 backdrop-blur-lg
         group
       ">
       <div className="pointer-events-none absolute inset-0 bg-linear-to-t from-black/10 via-transparent to-white/30" />

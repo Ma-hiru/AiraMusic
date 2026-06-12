@@ -148,7 +148,7 @@ const LyricContainer: FC<LyricContainerProps> = ({
       ref={containerRef}
       className={cx(
         `
-          w-full h-full space-y-4
+          w-full h-full space-y-3
           scrollbar-hide overflow-y-scroll scroll-auto overflow-x-hidden
           transition-all duration-500 ease-in-out
           contain-content

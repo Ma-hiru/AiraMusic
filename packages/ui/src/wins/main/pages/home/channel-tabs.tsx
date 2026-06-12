@@ -31,7 +31,7 @@ const HomeChannelTabs: FC<HomeChannelTabsProps> = ({
             className={cx(
               `
                 flex min-w-36 py-1 shrink-0 cursor-pointer items-center gap-3 rounded-lg
-                border border-white/20 px-3 text-left backdrop-blur-2xl
+                border border-white/20 px-3 text-left backdrop-saturate-150 backdrop-blur-lg
                 shadow-md transition-all duration-300 ease-in-out
                 hover:bg-(--theme-color-main) hover:text-(--text-color-on-main)
                 active:scale-[0.98]

@@ -86,6 +86,17 @@ const LyricWord: FC<LyricWordProps> = ({
     return "0%";
   }, [singleWord, wordIndex, currentWordIndex, lineActive]);
 
+  // 上浮时长跟随词时长：快词快起避免拖影，慢词从容，封顶防止拖沓。
+  const wrapperStyle = useMemo(
+    () =>
+      ({
+        "--lyric-word-rise": `${Math.round(
+          Math.min(Math.max((word.endTime - word.startTime) * 0.8, 160), 420)
+        )}ms`
+      }) as CSSProperties,
+    [word.endTime, word.startTime]
+  );
+
   const style = useMemo(
     () =>
       ({
@@ -103,7 +114,7 @@ const LyricWord: FC<LyricWordProps> = ({
   );
 
   return (
-    <span className="inline-block relative contain-layout">
+    <span className="inline-block relative contain-layout" style={wrapperStyle}>
       <span
         ref={spanRef}
         style={style}
@@ -123,7 +134,7 @@ const LyricWord: FC<LyricWordProps> = ({
       {notesContent && (
         <span
           className={cx(
-            `absolute left-1/2 -translate-x-1/2 -translate-y-full top-1/3 z-10 whitespace-nowrap scale-45`,
+            `absolute left-1/2 -translate-x-1/2 -translate-y-full top-[45%] z-10 whitespace-nowrap scale-45`,
             // 非单行歌词且未高亮时模糊
             !singleWord && wordIndex > currentWordIndex ? "blur-[1.5px]" : "blur-none",
             !singleWord && wordIndex === currentWordIndex && active

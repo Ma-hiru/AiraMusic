@@ -102,7 +102,7 @@ const HomeSongsArtistsView: FC<{ className?: string }> = ({ className }) => {
               onClick={() => setSongArea(area)}
               className={cx(
                 `
-                  h-9 cursor-pointer rounded-lg
+                  h-8 cursor-pointer rounded-lg
                   border border-white/20 px-3 text-sm font-bold
                   transition-all duration-300
                   hover:bg-(--theme-color-main) hover:text-(--text-color-on-main)
@@ -135,7 +135,7 @@ const HomeSongsArtistsView: FC<{ className?: string }> = ({ className }) => {
               onClick={() => setArtistArea(area)}
               className={cx(
                 `
-                  h-9 cursor-pointer rounded-lg
+                  h-8 cursor-pointer rounded-lg
                   border border-white/20 px-3 text-sm font-bold
                   transition-all duration-300
                   hover:bg-(--theme-color-main) hover:text-(--text-color-on-main)

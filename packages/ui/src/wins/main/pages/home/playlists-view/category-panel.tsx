@@ -24,7 +24,7 @@ const CategoryPanel: FC<CategoryPanelProps> = ({
     <section
       className={`
         sticky top-2 z-30 rounded-lg border border-white/20
-        bg-white/5 px-3 py-2 shadow-md backdrop-blur-2xl flex flex-col gap-3
+        bg-white/5 px-3 py-2 shadow-md backdrop-saturate-150 backdrop-blur-lg flex flex-col gap-3
     `}>
       <header className="flex flex-wrap items-center gap-2">
         {RendererHomeConstants.HOME_PRIMARY_PLAYLIST_CATEGORIES.map((category) => (

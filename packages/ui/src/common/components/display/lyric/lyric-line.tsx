@@ -90,7 +90,7 @@ const LyricLine: FC<LyricLineProps> = ({
         `
           w-full px-4 py-1 rounded-md hover:blur-none hover:bg-(--text-color)/20
           duration-500 ease-in-out transition-all
-          contain-layout leading-7 text-3xl
+          contain-layout leading-normal text-3xl
     `,
         !active && "blur-[2px] opacity-50"
       )}>
@@ -100,13 +100,13 @@ const LyricLine: FC<LyricLineProps> = ({
             text-wrap select-none
             duration-500 ease-in-out transition-all
             contain-layout
-            font-semibold
+            font-semibold flex
         `,
           active && "font-medium",
           spring && active && "scale-102",
-          crossAlign === "left" && "text-left",
-          crossAlign === "center" && "text-center",
-          crossAlign === "right" && "text-right"
+          crossAlign === "left" && "text-left justify-start",
+          crossAlign === "center" && "text-center justify-center",
+          crossAlign === "right" && "text-right justify-end"
         )}>
         {active ? (
           line.words.map((word, index) => {
