@@ -2,40 +2,7 @@ import { Log } from "@/common/lib/log";
 import { Listener } from "@/common/utils/listenable";
 import { EqError } from "@mahiru/log";
 import { RendererIPC } from "@/common/lib/ipc";
-import { ensureInitObject, Init, initAsync } from "@/common/utils/init";
 
-@Init(() => {
-  const observer = new PerformanceObserver((list) => {
-    const now = performance.now();
-    list.getEntries().forEach(() => {
-      RendererNet.completed.push(now);
-    });
-    if (RendererNet.completed.length > 5000) {
-      RendererNet.completed = RendererNet.completed.slice(RendererNet.cursor);
-      RendererNet.cursor = 0;
-    }
-  });
-  observer.observe({
-    entryTypes: ["resource"],
-    buffered: false
-  });
-  const status = () => {
-    if (!RendererNet.isOnline) RendererNet.listener.execute();
-    else {
-      // 有时候网络状态会在短时间内频繁变化，等 5 秒再通知，避免重复请求
-      window.setTimeout(() => {
-        RendererNet.listener.execute();
-      }, 5000);
-    }
-
-    Log.info("AppNet", "network status changed", RendererNet.isOnline ? "online" : "offline");
-  };
-  Log.info("AppNet", "network status changed", window.navigator.onLine ? "online" : "offline");
-  window.addEventListener("online", status, { passive: true });
-  window.addEventListener("offline", status, {
-    passive: true
-  });
-})
 export class RendererNet {
   static completed: number[] = [];
   static cursor = 0;
@@ -100,6 +67,37 @@ export class RendererNet {
   static onOnlineChange = this.listener.add.bind(this.listener);
 
   static offOnlineChange = this.listener.remove.bind(this.listener);
-}
 
-initAsync(ensureInitObject(RendererNet));
+  static {
+    queueMicrotask(() => {
+      const observer = new PerformanceObserver((list) => {
+        const now = performance.now();
+        list.getEntries().forEach(() => {
+          this.completed.push(now);
+        });
+        if (this.completed.length > 5000) {
+          this.completed = this.completed.slice(this.cursor);
+          this.cursor = 0;
+        }
+      });
+      observer.observe({
+        entryTypes: ["resource"],
+        buffered: false
+      });
+      const status = () => {
+        if (!this.isOnline) this.listener.execute();
+        else {
+          // 有时候网络状态会在短时间内频繁变化，等 5 秒再通知，避免重复请求
+          window.setTimeout(() => {
+            this.listener.execute();
+          }, 5000);
+        }
+
+        Log.info("AppNet", "network status changed", this.isOnline ? "online" : "offline");
+      };
+      Log.info("AppNet", "network status changed", window.navigator.onLine ? "online" : "offline");
+      window.addEventListener("online", status, { passive: true });
+      window.addEventListener("offline", status, { passive: true });
+    });
+  }
+}

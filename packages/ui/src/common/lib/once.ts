@@ -1,7 +1,6 @@
 import { Log } from "@/common/lib/log";
 import { RendererCache } from "@/common/lib/cache";
 import { RendererRuntime } from "@/common/lib/runtime";
-import { ensureInitObject, Init, initAsync } from "@/common/utils/init";
 
 type OnceRecordCache = {
   id: string;
@@ -10,19 +9,6 @@ type OnceRecordCache = {
 
 const { promise, resolve } = Promise.withResolvers<void>();
 
-@Init(() => {
-  const cache = RendererCache.browser.getOne<OnceRecordCache>(RendererOnce.cacheKey);
-  if (cache && cache.id === RendererOnce.cacheID) {
-    RendererOnce.record = new Set(cache.record);
-  } else {
-    RendererOnce.record = new Set();
-    RendererCache.browser.setOne<OnceRecordCache>(RendererOnce.cacheKey, {
-      id: RendererOnce.cacheID,
-      record: []
-    });
-  }
-  RendererOnce.setReady();
-})
 export class RendererOnce {
   private static readonly cacheKey = "once-record";
   private static readonly cacheID = RendererRuntime.currentWindowType + "_" + RendererRuntime.id;
@@ -57,6 +43,20 @@ export class RendererOnce {
       }
     });
   }
-}
 
-initAsync(ensureInitObject(RendererOnce));
+  static {
+    queueMicrotask(() => {
+      const cache = RendererCache.browser.getOne<OnceRecordCache>(this.cacheKey);
+      if (cache && cache.id === this.cacheID) {
+        this.record = new Set(cache.record);
+      } else {
+        this.record = new Set();
+        RendererCache.browser.setOne<OnceRecordCache>(this.cacheKey, {
+          id: this.cacheID,
+          record: []
+        });
+      }
+      this.setReady();
+    });
+  }
+}
