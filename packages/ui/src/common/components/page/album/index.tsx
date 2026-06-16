@@ -1,7 +1,6 @@
 import {
   type FC,
   memo,
-  type MouseEvent as ReactMouseEvent,
   type Ref,
   useCallback,
   useEffect,
@@ -14,7 +13,6 @@ import { NeteaseImageSize, PlaylistSource } from "@/common/enum";
 import { type HeartManager } from "@/common/hooks/use-heart";
 import { NeteaseServicesAlbum } from "@/common/netease/services";
 import { useRequestAutoRun, useRequestStatusWrap } from "@/common/hooks/use-request-wrap";
-import AppContextMenu from "@/common/components/display/menu";
 import RendererImageConstants from "@/common/constants/image";
 
 import Top from "./top";
@@ -25,6 +23,8 @@ import TrackList, {
 } from "@/common/components/display/track_list";
 import AppError from "@/common/components/fallback/app-error";
 import Divider from "@/common/components/layout/divider";
+import AppToast from "@/common/components/display/toast";
+import { useTrackContextMenu } from "@/common/hooks/use-track-context-menu";
 
 export type AlbumPageRef = {
   trackListRef: Nullable<TrackListRef>;
@@ -37,9 +37,9 @@ interface AlbumPageProps {
   ref?: Ref<AlbumPageRef>;
   id: number;
   activeTrackID: Undefinable<number>;
-  onClick: Optional<NormalFunc<[track: NeteaseTrackRecord | NeteaseHistoryRecord, index: number]>>;
-  onClickArtist: Optional<NormalFunc<[id: number]>>;
-  onClickAlbum: Optional<NormalFunc<[id: number]>>;
+  onClick: NormalFunc<[track: NeteaseTrackRecord | NeteaseHistoryRecord, index: number]>;
+  onClickArtist: NormalFunc<[id: number]>;
+  onClickAlbum: NormalFunc<[id: number]>;
   onRangeUpdate?: NormalFunc<[range: IndexRange]>;
   onCoverLoaded?: NormalFunc<[cover: string]>;
   addToPlaylistNext: NormalFunc<[track: NeteaseTrackRecord]>;
@@ -50,8 +50,8 @@ interface AlbumPageProps {
   onAddList: NormalFunc;
   heartManager: HeartManager;
   playableManager: TrackListPlayableManager;
-  pageActionType?: "enter" | "out" | "none";
-  onPageAction?: NormalFunc;
+  pageActionType: "enter" | "out" | "none";
+  onPageAction: NormalFunc;
   onDataLoaded?: NormalFunc<[album: NeteaseAlbum]>;
 }
 
@@ -76,17 +76,25 @@ const Album: FC<AlbumPageProps> = ({
   openComment,
   onDataLoaded
 }) => {
-  const requestData = useCallback(
-    (
-      id: number
-    ): Promise<
-      [Nullable<NeteaseAlbum>, Nullable<NeteaseAPI.NeteaseAlbumDynamicDetailResponse>]
-    > => {
-      if (!id) return Promise.resolve([null, null]);
-      return Promise.all([NeteaseServicesAlbum.id(id), NeteaseServicesAlbum.dynamic(id)] as const);
-    },
-    []
-  );
+  const requestData = useCallback(async (id: number) => {
+    if (!id) return Promise.resolve([null, null]);
+
+    const [album, dynamic] = await Promise.all([
+      NeteaseServicesAlbum.id(id),
+      NeteaseServicesAlbum.dynamic(id)
+    ]);
+    if (album.tracks.length === 0) {
+      AppToast.show({
+        type: "error",
+        text: "获取专辑歌曲失败，请稍后重试"
+      });
+    }
+
+    return [album, dynamic] as [
+      Nullable<NeteaseAlbum>,
+      Nullable<NeteaseAPI.NeteaseAlbumDynamicDetailResponse>
+    ];
+  }, []);
   const {
     status,
     data: [album, dynamic] = [null, null],
@@ -107,44 +115,13 @@ const Album: FC<AlbumPageProps> = ({
   );
 
   // 右键菜单
-  const { create, createTrackContextMenu } = AppContextMenu.useMenu();
-  const onContextMenu = useCallback(
-    (e: ReactMouseEvent<HTMLDivElement, MouseEvent>, track: NeteaseTrackRecord) => {
-      create(createTrackContextMenu, {
-        track,
-        clientX: e.clientX,
-        clientY: e.clientY,
-        onClick: (type, track) => {
-          switch (type) {
-            case "play":
-              onClick?.(track, /* unused */ 0);
-              break;
-            case "album":
-              onClickAlbum?.(track.detail.al.id);
-              break;
-            case "nextPlay":
-              addToPlaylistNext(track);
-              break;
-            case "addPlayList":
-              addToPlaylistLast(track);
-              break;
-            case "comment":
-              void openComment(track);
-              break;
-          }
-        }
-      });
-    },
-    [
-      addToPlaylistLast,
-      addToPlaylistNext,
-      create,
-      createTrackContextMenu,
-      onClick,
-      onClickAlbum,
-      openComment
-    ]
-  );
+  const { onContextMenu } = useTrackContextMenu({
+    addToPlaylistLast,
+    addToPlaylistNext,
+    onClickAlbum,
+    onPlay: onClick,
+    openComment
+  });
 
   useEffect(() => {
     album && onDataLoaded?.(album);

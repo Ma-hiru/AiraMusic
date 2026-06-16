@@ -5,15 +5,14 @@ import { useUserTrackManager } from "@/common/hooks/use-user-track-manager";
 import AppModal from "@/common/components/display/modal";
 import TrackList, {
   type TrackListClickFunc,
-  type TrackListContextMenuFunc,
   type TrackListRef
 } from "@/common/components/display/track_list";
 import { usePageJump } from "@/wins/main/hooks/use-page-jump";
+import { usePlayerActionInList } from "@/wins/main/hooks/use-player-action-in-list";
+import { useTrackContextMenu } from "@/common/hooks/use-track-context-menu";
 import type { ModalRender } from "@/common/components/display/modal/modal-provider";
 import RendererImageConstants from "@/common/constants/image";
 import RendererPlayerHandle from "@/wins/main/lib/handle";
-import AppContextMenu from "@/common/components/display/menu";
-import { usePlayerActionInList } from "@/wins/main/hooks/use-player-action-in-list";
 
 export function createPlayerPlaylistModal(): ModalRender {
   return {
@@ -72,44 +71,13 @@ const PlayerPlaylistModalContent = () => {
     usePlayerActionInList(() => player.playlist.list());
 
   // 右键菜单
-  const { create, createTrackContextMenu } = AppContextMenu.useMenu();
-  const onContextMenu = useCallback<TrackListContextMenuFunc>(
-    (e, track) => {
-      create(createTrackContextMenu, {
-        track,
-        clientX: e.clientX,
-        clientY: e.clientY,
-        onClick: (type, track) => {
-          switch (type) {
-            case "play":
-              onTrackPlay(track, /** unused */ 0);
-              break;
-            case "album":
-              onClickAlbum(track.detail.al.id);
-              break;
-            case "nextPlay":
-              addTrackToPlaylistNext(track);
-              break;
-            case "addPlayList":
-              addTrackToPlaylistLast(track);
-              break;
-            case "comment":
-              void openTrackComment(track);
-              break;
-          }
-        }
-      });
-    },
-    [
-      addTrackToPlaylistLast,
-      addTrackToPlaylistNext,
-      create,
-      createTrackContextMenu,
-      onClickAlbum,
-      onTrackPlay,
-      openTrackComment
-    ]
-  );
+  const { onContextMenu } = useTrackContextMenu({
+    addToPlaylistLast: addTrackToPlaylistLast,
+    addToPlaylistNext: addTrackToPlaylistNext,
+    onClickAlbum,
+    onPlay: onTrackPlay,
+    openComment: openTrackComment
+  });
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-3">
