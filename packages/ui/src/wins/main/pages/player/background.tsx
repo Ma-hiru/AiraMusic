@@ -14,7 +14,7 @@ const Background: FC<object> = () => {
     <AcrylicBackground
       fluid
       fluidPaused={!player.playing || !settings.performance.usePlayerFluid}
-      fluidSpeed={8}
+      fluidSpeed={3}
       className="absolute inset-0"
       src={backgroundCover ?? undefined}
       brightness={0.4}

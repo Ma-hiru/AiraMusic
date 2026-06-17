@@ -1,11 +1,9 @@
 import { type FC, memo } from "react";
 import { motion } from "motion/react";
 import { css, cx } from "@emotion/css";
-import { useThemeColor } from "@/common/hooks/use-theme-color";
 import { usePlayProgress } from "@/wins/main/hooks/use-play-progress";
 
 const BarProgress: FC<object> = () => {
-  const { mainColor, textColorOnMain } = useThemeColor();
   const { barRef, handleBarClick, handleBarMouseDown, bufferScope, percentScope, chorusPercent } =
     usePlayProgress();
 
@@ -26,28 +24,29 @@ const BarProgress: FC<object> = () => {
       <motion.span
         ref={percentScope}
         initial={{ width: 0 }}
-        style={{ background: mainColor.hex() }}
-        className="absolute left-0 top-0 block h-full"
+        className="absolute left-0 top-0 block h-full bg-(--theme-color-main) rounded-r-full"
       />
       {/*缓冲区*/}
       <motion.span
         ref={bufferScope}
         initial={{ width: 0 }}
-        className="block h-full bg-gray-500/20"
+        className="block h-full bg-(--text-color-on-main)/35 rounded-r-full"
       />
       {chorusPercent.map((percent, index) => {
         return (
           <span
             key={index}
-            className={css`
-              position: absolute;
-              top: 0;
-              left: ${percent}%;
-              height: 100%;
-              max-width: 5px;
-              aspect-ratio: 1 / 1;
-            `}
-            style={{ background: textColorOnMain.string() }}
+            className={cx(
+              "bg-(--text-color-on-main)",
+              css`
+                position: absolute;
+                top: 0;
+                left: ${percent}%;
+                height: 100%;
+                max-width: 4px;
+                aspect-ratio: 1 / 1;
+              `
+            )}
           />
         );
       })}

@@ -18,6 +18,8 @@ import RendererPlayerHandle from "@/wins/main/lib/handle";
 import AppModal from "@/common/components/display/modal";
 
 import Progress from "./progress";
+import { useSetAtom } from "jotai";
+import { playModalAtom } from "@/wins/main/atoms/layout";
 
 interface ControlProps {
   className?: string;
@@ -28,9 +30,12 @@ interface ControlProps {
 const Control: FC<ControlProps> = ({ className, containerClassName, itemClassName }) => {
   const { create } = AppModal.useModal();
   const player = RendererPlayerHandle.usePlayer();
+  const setPlayModalAtom = useSetAtom(playModalAtom);
   const openPlaylistModal = useCallback(() => {
-    create(createPlayerPlaylistModal);
-  }, [create]);
+    create(createPlayerPlaylistModal, () => {
+      setPlayModalAtom(false);
+    });
+  }, [create, setPlayModalAtom]);
 
   const centerIcon = useMemo(() => {
     if (player.playing) {

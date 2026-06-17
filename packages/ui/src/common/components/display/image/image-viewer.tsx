@@ -463,7 +463,7 @@ const ImageViewer: FC<ImageViewerProps> = ({ images, index, onIndexChange, onToo
               pointer-events-none absolute -inset-12 h-[calc(100%+96px)] w-[calc(100%+96px)]
               scale-105 object-cover opacity-0 blur-3xl transition-opacity duration-500
             `,
-            status === "loaded" && "opacity-35"
+            status === "loaded" && toolBarVisible ? "opacity-50" : "opacity-35"
           )}
           alt={current.alt}
         />

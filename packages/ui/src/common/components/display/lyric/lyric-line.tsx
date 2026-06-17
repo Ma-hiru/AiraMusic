@@ -100,7 +100,7 @@ const LyricLine: FC<LyricLineProps> = ({
             text-wrap select-none
             duration-500 ease-in-out transition-all
             contain-layout
-            font-semibold flex
+            font-semibold flex flex-wrap
         `,
           active && "font-medium",
           spring && active && "scale-102",

@@ -18,6 +18,7 @@ import {
 } from "@/common/netease/services";
 import { RendererEventBus } from "@/common/lib/bus";
 import NeteaseImage from "@/common/components/display/image/netease-image";
+import Marquee from "@/common/components/display/marquee";
 
 interface TitleProps {
   commentBus: typeof RendererEventBus.comment;
@@ -105,6 +106,13 @@ const Title: FC<TitleProps> = ({ className, commentBus }) => {
     }
     document.title = name;
   }, [album, commentBus.data?.type, playlist, track]);
+
+  const marqueeOpts = {
+    speed: 10,
+    pingPong: true,
+    pauseOnHover: true,
+    gapDuration: 2000
+  };
   return (
     <div
       className={cx(
@@ -120,10 +128,16 @@ const Title: FC<TitleProps> = ({ className, commentBus }) => {
       />
       {commentBus.data?.type === "track" && (
         <>
-          <h1 className="font-semibold text-sm line-clamp-1 text-center">{track?.name}</h1>
-          <h2 className="font-medium text-xs opacity-60 line-clamp-1 text-center">
-            {track?.artist.join(" / ")}
-          </h2>
+          <Marquee
+            text={track?.name}
+            className="font-semibold text-sm text-center"
+            options={marqueeOpts}
+          />
+          <Marquee
+            className="font-medium text-xs opacity-60 text-center"
+            text={track?.artist.join(" / ")}
+            options={marqueeOpts}
+          />
           <div className="flex flex-row items-center justify-start gap-1 flex-wrap text-center">
             {tags.map((tag) => {
               return (
@@ -139,18 +153,29 @@ const Title: FC<TitleProps> = ({ className, commentBus }) => {
       )}
       {commentBus.data?.type === "playlist" && (
         <>
-          <h1 className="w-fit font-semibold text-sm line-clamp-1 text-center">{playlist?.name}</h1>
-          <h2 className="w-full font-medium text-xs line-clamp-1 opacity-60 text-center">
-            {playlist?.creator?.nickname}
-          </h2>
+          <Marquee
+            text={playlist?.name}
+            className="font-semibold text-sm text-center"
+            options={marqueeOpts}
+          />
+          <Marquee
+            text={playlist?.creator?.nickname}
+            className="font-medium text-xs opacity-60 text-center"
+          />
         </>
       )}
       {commentBus.data?.type === "album" && (
         <>
-          <h1 className="font-semibold text-sm line-clamp-1 text-center">{album?.content.name}</h1>
-          <h2 className="font-medium text-xs opacity-60 text-center">
-            {album?.content.artist.name}
-          </h2>
+          <Marquee
+            text={album?.content.name}
+            className="font-semibold text-sm text-center"
+            options={marqueeOpts}
+          />
+          <Marquee
+            className="font-medium text-xs opacity-60 text-center"
+            text={album?.content.artist.name}
+            options={marqueeOpts}
+          />
         </>
       )}
     </div>

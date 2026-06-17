@@ -14,21 +14,22 @@ import type { ModalRender } from "@/common/components/display/modal/modal-provid
 import RendererImageConstants from "@/common/constants/image";
 import RendererPlayerHandle from "@/wins/main/lib/handle";
 
-export function createPlayerPlaylistModal(): ModalRender {
+export function createPlayerPlaylistModal(onJumpPage?: NormalFunc): ModalRender {
   return {
     title: "播放列表",
     subTitle: "Queue",
     width: 900,
     height: 640,
     contentClassName: "overflow-hidden! px-4 pb-4",
-    content: <PlayerPlaylistModalContent />
+    content: <PlayerPlaylistModalContent onJumpPage={onJumpPage} />
   };
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
-const PlayerPlaylistModalContent = () => {
+const PlayerPlaylistModalContent = (props: { onJumpPage?: NormalFunc }) => {
   const player = RendererPlayerHandle.usePlayer();
   const trackListRef = useRef<Nullable<TrackListRef>>(null);
+  const { onJumpPage } = props;
   const { heartManager, playableManager } = useUserTrackManager();
   const { jumpAlbumPage, jumpArtistPage } = usePageJump();
 
@@ -53,18 +54,20 @@ const PlayerPlaylistModalContent = () => {
 
   const onClickAlbum = useCallback(
     (id: number) => {
-      jumpAlbumPage(id);
+      void jumpAlbumPage(id);
       AppModal.close();
+      onJumpPage?.();
     },
-    [jumpAlbumPage]
+    [jumpAlbumPage, onJumpPage]
   );
 
   const onClickArtist = useCallback(
     (id: number) => {
-      jumpArtistPage(id);
+      void jumpArtistPage(id);
       AppModal.close();
+      onJumpPage?.();
     },
-    [jumpArtistPage]
+    [jumpArtistPage, onJumpPage]
   );
 
   const { openTrackComment, addTrackToPlaylistLast, addTrackToPlaylistNext } =

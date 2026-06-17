@@ -1,4 +1,4 @@
-import { type FC, memo } from "react";
+import { type FC, memo, useCallback } from "react";
 import { NavConstants } from "@/wins/main/constants";
 import { useLocation, useNavigate } from "react-router-dom";
 import { cx } from "@emotion/css";
@@ -13,9 +13,27 @@ interface NavMenuProps {
 }
 
 const NavMenu: FC<NavMenuProps> = ({ barOpened, className }) => {
+  const { jumpPlaylistPage, jumpHistoryPage } = usePageJump();
   const location = useLocation();
   const navigate = useNavigate();
-  const { jumpPlaylistPage } = usePageJump();
+
+  const jump = useCallback(
+    (path: string, active: boolean) => {
+      if (active) return;
+      if (path === RoutePathMain.history) return jumpHistoryPage();
+      if (path === RoutePathMain.playlist.like) {
+        if (!NeteaseUser.isLoggedIn) {
+          return AppToast.show({
+            type: "info",
+            text: "请先登录账号"
+          });
+        }
+        return jumpPlaylistPage(0, "like");
+      }
+      return navigate(path);
+    },
+    [jumpHistoryPage, jumpPlaylistPage, navigate]
+  );
 
   return (
     <div
@@ -32,25 +50,12 @@ const NavMenu: FC<NavMenuProps> = ({ barOpened, className }) => {
               `
               flex flex-row h-12 items-center mx-3 rounded-md
               ease-in-out duration-300 transition-all
-          `,
+            `,
               active
                 ? barOpened && "bg-(--theme-color-main) text-(--text-color-on-main)"
                 : barOpened && "hover:bg-black/5"
             )}
-            onClick={() => {
-              if (path === RoutePathMain.playlist.like && !NeteaseUser.isLoggedIn) {
-                return AppToast.show({
-                  type: "info",
-                  text: "请先登录账号"
-                });
-              }
-              if (active) return;
-              if (path === RoutePathMain.playlist.like) {
-                jumpPlaylistPage(0, "like");
-              } else {
-                navigate(path);
-              }
-            }}>
+            onClick={() => jump(path, active)}>
             <span
               className={cx(
                 `

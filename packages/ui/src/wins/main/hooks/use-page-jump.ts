@@ -20,59 +20,73 @@ export function usePageJump(
   const propsRef = useLatestRef(props);
 
   const jumpAlbumPage = useCallback(
-    (id: number) => {
+    async (id: number) => {
       if (id === propsRef.current.currentAlbumID) return;
+
       if (settingsRef.current.preference.defaultUseDisplayWindow) {
-        return RendererWindow.display.reactReadyAwait().then(() => {
-          RendererEventBus.display.send({
-            type: "album",
-            id
-          });
+        await RendererWindow.display.reactReadyAwait();
+        return RendererEventBus.display.send({
+          type: "album",
+          id
         });
       }
-      navigate(RoutePath.withQuery(RoutePathMain.album, { id }));
+
+      await navigate(RoutePath.withQuery(RoutePathMain.album, { id }));
     },
     [navigate, propsRef, settingsRef]
   );
 
   const jumpArtistPage = useCallback(
-    (id: number) => {
+    async (id: number) => {
       if (id === propsRef.current.currentArtistID) return;
+
       if (settingsRef.current.preference.defaultUseDisplayWindow) {
-        return RendererWindow.display.reactReadyAwait().then(() => {
-          RendererEventBus.display.send({
-            type: "artist",
-            id
-          });
+        await RendererWindow.display.reactReadyAwait();
+        return RendererEventBus.display.send({
+          type: "artist",
+          id
         });
       }
-      navigate(RoutePath.withQuery(RoutePathMain.artist, { id }));
+
+      await navigate(RoutePath.withQuery(RoutePathMain.artist, { id }));
     },
     [navigate, propsRef, settingsRef]
   );
 
   const isPlaylistPage = location.pathname.includes(RoutePathMain.playlist.base);
   const jumpPlaylistPage = useCallback(
-    (id: number, source: "normal" | "like") => {
+    async (id: number, source: "normal" | "like") => {
       if (source !== "like" && id === Number(playlistRef.current.id) && isPlaylistPage) return;
       if (playlistRef.current.source === "like" && !id && isPlaylistPage) return;
+
       if (settingsRef.current.preference.defaultUseDisplayWindow) {
-        return RendererWindow.display.reactReadyAwait().then(() => {
-          RendererEventBus.display.send({
-            type: "playlist",
-            source,
-            id
-          });
+        await RendererWindow.display.reactReadyAwait();
+        return RendererEventBus.display.send({
+          type: "playlist",
+          source,
+          id
         });
       }
-      navigate(RoutePathMain.playlist.withQuery(id, source));
+
+      await navigate(RoutePathMain.playlist.withQuery(id, source));
     },
     [isPlaylistPage, navigate, playlistRef, settingsRef]
   );
 
+  const jumpHistoryPage = useCallback(async () => {
+    if (settingsRef.current.preference.defaultUseDisplayWindow) {
+      await RendererWindow.display.reactReadyAwait();
+      return RendererEventBus.display.send({
+        type: "history"
+      });
+    }
+    await navigate(RoutePathMain.history);
+  }, [navigate, settingsRef]);
+
   return {
     jumpArtistPage,
     jumpAlbumPage,
-    jumpPlaylistPage
+    jumpPlaylistPage,
+    jumpHistoryPage
   };
 }

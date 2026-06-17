@@ -16,6 +16,7 @@ import { Log } from "@/lib/log";
 import { MainWindowPreset } from "@/lib/window-preset";
 import { MainHandle } from "@/lib/handle";
 import { MainExitCodeConstants } from "@/constants/exit-code";
+import { debounce } from "lodash-es";
 
 export class MainTray {
   static register() {
@@ -41,9 +42,10 @@ export class MainTray {
     } else {
       const trayWin =
         MainWindowManager.get("tray") || MainWindowCreator.create(MainWindowPreset.trayOnWindows)!;
+      const showMenu = debounce(() => this.showCustomMenu(tray, trayWin), 300);
       tray.addListener("click", () => {
         Log.debug("tray", "click");
-        this.showCustomMenu(tray, trayWin);
+        showMenu();
       });
       tray.addListener("double-click", () => {
         Log.debug("tray", "double-click");
@@ -52,7 +54,7 @@ export class MainTray {
       });
       tray.addListener("right-click", () => {
         Log.debug("tray", "right-click");
-        this.showCustomMenu(tray, trayWin);
+        showMenu();
       });
       trayWin.addListener("blur", () => {
         if (!trayWin.webContents.isDevToolsOpened()) {

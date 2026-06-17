@@ -5,11 +5,9 @@ import React, {
   useCallback,
   useEffect,
   useMemo,
-  useRef,
   useState
 } from "react";
 import { css, cx } from "@emotion/css";
-import { useMarquee } from "@/common/hooks/use-marquee";
 import { AArrowDown, AArrowUp, LockKeyholeOpen, LucideLock } from "lucide-react";
 import { NeteaseImageSize } from "@/common/enum";
 import { NeteaseLyric, NeteaseNetworkImage } from "@/common/netease/models";
@@ -21,6 +19,7 @@ import { RendererEventBus } from "@/common/lib/bus";
 import Drag from "@/common/components/layout/drag/drag";
 import NeteaseImage from "@/common/components/display/image/netease-image";
 import NoDrag from "@/common/components/layout/drag/no-drag";
+import Marquee from "@/common/components/display/marquee";
 
 type ControlProps = Omit<HTMLAttributes<HTMLDivElement>, "color"> & {
   showBg: boolean;
@@ -51,7 +50,6 @@ const Control: FC<ControlProps> = ({
   const playerBus = useListenable(RendererEventBus.player);
   const infoBus = useListenable(RendererEventBus.info);
   const progressBus = useListenable(RendererEventBus.progress);
-  const titleContainer = useRef<HTMLDivElement>(null);
   const [openColorSelect, setOpenColorSelect] = useState(false);
 
   const { rmExisted, tlExisted } = lyric?.info || {};
@@ -78,13 +76,6 @@ const Control: FC<ControlProps> = ({
     },
     []
   );
-
-  useMarquee(titleContainer, {
-    speed: 20,
-    pingPong: true,
-    pauseOnHover: true,
-    gapDuration: 2000
-  });
 
   useEffect(() => {
     lock && RendererWindow.current.mousePenetrate(true);
@@ -183,16 +174,18 @@ const Control: FC<ControlProps> = ({
         </div>
         <div className="flex items-center gap-2">
           <NeteaseImage cache image={image} className="rounded-full size-5 shrink-0" />
-          <div
-            ref={titleContainer}
-            className="text-[14px] font-semibold whitespace-nowrap max-w-[35vw] overflow-hidden">
-            {/* 跑马灯对第一个子元素做 transform 动画，内容需包裹在单个行内块里 */}
-            <span className="inline-block">
-              <span>{track?.name}</span>
-              {track?.name && <span> - </span>}
-              <span>{track?.ar.map((a) => a.name).join("/")}</span>
-            </span>
-          </div>
+          <Marquee
+            className="text-[14px] font-semibold whitespace-nowrap max-w-[35vw]!"
+            options={{
+              speed: 15,
+              pingPong: true,
+              pauseOnHover: true,
+              gapDuration: 2000
+            }}>
+            <span>{track?.name}</span>
+            {track?.name && <span> - </span>}
+            <span>{track?.ar.map((a) => a.name).join("/")}</span>
+          </Marquee>
         </div>
         <div className="w-full flex items-center justify-end">
           <NoDrag>
