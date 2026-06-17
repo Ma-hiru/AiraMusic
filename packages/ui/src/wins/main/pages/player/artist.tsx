@@ -1,3 +1,4 @@
+import { cx } from "@emotion/css";
 import { type FC, Fragment, memo, useCallback, useRef } from "react";
 import { Heart, MessageSquare } from "lucide-react";
 import { useHeart } from "@/common/hooks/use-heart";
@@ -7,9 +8,8 @@ import { RendererEventBus } from "@/common/lib/bus";
 import { usePageJump } from "@/wins/main/hooks/use-page-jump";
 import { useSetAtom } from "jotai";
 import { playModalAtom } from "@/wins/main/atoms/layout";
-import RendererPlayerHandle from "@/wins/main/lib/handle";
-import { cx } from "@emotion/css";
 import { useMarquee } from "@/common/hooks/use-marquee";
+import RendererPlayerHandle from "@/wins/main/lib/handle";
 
 interface ArtistProps {
   className?: string;
@@ -65,7 +65,9 @@ const Artist: FC<ArtistProps> = ({ className }) => {
                   onClick={() => jump(a.id)}>
                   {a.name}
                 </a>
-                {index < track?.ar.length - 1 && <span className="opacity-20 font-medium">/</span>}
+                {index < track?.ar.length - 1 && (
+                  <span className="opacity-80 font-medium mx-0.5">/</span>
+                )}
               </Fragment>
             );
           })}

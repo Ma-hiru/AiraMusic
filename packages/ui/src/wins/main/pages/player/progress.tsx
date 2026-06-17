@@ -3,15 +3,15 @@ import { motion } from "motion/react";
 import { css } from "@emotion/css";
 import { usePlayProgress } from "@/wins/main/hooks/use-play-progress";
 import { RendererFormat } from "@/common/lib/format";
+import { useProgress } from "@/wins/main/hooks/use-progress";
 import RendererPlayerHandle from "@/wins/main/lib/handle";
-import RendererPlayerAudio from "@/common/player/audio";
 
-import ProgressRender from "@/wins/main/componets/progress";
 import Tag from "@/common/components/display/tag";
 
 const Progress: FC<object> = () => {
   const { barRef, bufferScope, percentScope, handleBarClick, handleBarMouseDown, chorusPercent } =
     usePlayProgress();
+  const { progress } = useProgress();
   const player = RendererPlayerHandle.usePlayer();
   const quality = player.current.audio?.quality;
 
@@ -54,9 +54,16 @@ const Progress: FC<object> = () => {
       <div className="w-full flex justify-between items-center backdrop-blur-lg text-[12px] mt-1">
         {quality && <Tag text={quality} className="text-(--text-color)! bg-(--text-color)/15!" />}
         {quality ? (
-          <ProgressRender render={progressRenderMini} />
+          <div className="flex justify-end items-center">
+            <span>{RendererFormat.duration(progress.currentTime, "s")}</span>
+            <span className="opacity-50 mx-0.5">/</span>
+            <span>{RendererFormat.duration(progress.duration, "s")}</span>
+          </div>
         ) : (
-          <ProgressRender render={progressRenderFull} />
+          <>
+            <span>{RendererFormat.duration(progress.currentTime, "s")}</span>
+            <span>{RendererFormat.duration(progress.duration, "s")}</span>
+          </>
         )}
       </div>
     </div>
@@ -64,22 +71,3 @@ const Progress: FC<object> = () => {
 };
 
 export default memo(Progress);
-
-const progressRenderMini = (progress: InstanceType<typeof RendererPlayerAudio>["progress"]) => {
-  return (
-    <div className="flex justify-end items-center gap-2">
-      <span>{RendererFormat.duration(progress.currentTime, "s")}</span>
-      <span className="opacity-50">/</span>
-      <span>{RendererFormat.duration(progress.duration, "s")}</span>
-    </div>
-  );
-};
-
-const progressRenderFull = (progress: InstanceType<typeof RendererPlayerAudio>["progress"]) => {
-  return (
-    <>
-      <span>{RendererFormat.duration(progress.currentTime, "s")}</span>
-      <span>{RendererFormat.duration(progress.duration, "s")}</span>
-    </>
-  );
-};
