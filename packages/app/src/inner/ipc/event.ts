@@ -135,5 +135,13 @@ export const eventHandlers: EventHandlers = {
     const name = MainWindowManager.getId(sender);
     if (!Log[level] || !message) return;
     Log[level](`Renderer(${name})`, message);
+  },
+  pinInternalWindow: (e, { type, pin, level }) => {
+    const win = type ? MainWindowManager.get(type) : BrowserWindow.fromWebContents(e.sender);
+    if (process.platform === "linux") {
+      win?.setAlwaysOnTop(pin);
+    } else {
+      win?.setAlwaysOnTop(pin, level);
+    }
   }
 };

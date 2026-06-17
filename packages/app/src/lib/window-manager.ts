@@ -133,6 +133,7 @@ export class MainWindowManager {
     window.addListener("ready-to-show", () => sendBusMessage("ready"));
     window.addListener("enter-full-screen", () => sendBusMessage("enter-fullscreen"));
     window.addListener("leave-full-screen", () => sendBusMessage("leave-fullscreen"));
+    window.addListener("always-on-top-changed", () => sendBusMessage("always-on-top-changed"));
     if (process.platform === "linux") {
       window.addListener(
         "move",

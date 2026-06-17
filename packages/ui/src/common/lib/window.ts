@@ -15,6 +15,7 @@ export class RendererWindow extends Listenable<RendererWindowEvent | "react-read
   private _fullscreen: boolean;
   private _focus: boolean;
   private _reactReady: boolean;
+  private _pin: boolean;
 
   get isMin() {
     return this._min;
@@ -58,6 +59,15 @@ export class RendererWindow extends Listenable<RendererWindowEvent | "react-read
 
   set isFocus(focus) {
     this._focus = focus;
+    this.executeListeners();
+  }
+
+  get isPin() {
+    return this._pin;
+  }
+
+  set isPin(pin) {
+    this._pin = pin;
     this.executeListeners();
   }
 
@@ -105,6 +115,7 @@ export class RendererWindow extends Listenable<RendererWindowEvent | "react-read
     this._show = false;
     this._focus = false;
     this._fullscreen = false;
+    this._pin = false;
     this._reactReady = this.type === RendererRuntime.currentWindowType;
     this.id = window.crypto.randomUUID();
     this.initStatus();
@@ -114,15 +125,12 @@ export class RendererWindow extends Listenable<RendererWindowEvent | "react-read
     RendererIPC.Message.listen("windowBus", "process", this.updateStatus.bind(this), {
       id: this.id
     });
-    RendererIPC.Invoke("hasOpenInternalWindow", this.type).then((opened) => {
-      this.opened = opened;
-    });
-    RendererIPC.Invoke("isMaximized", this.type).then((isMax) => {
-      this.isMax = isMax;
-    });
-    RendererIPC.Invoke("isFullscreen", this.type).then((isFullscreen) => {
-      this.isFullscreen = isFullscreen;
-    });
+    RendererIPC.Invoke("hasOpenInternalWindow", this.type).then((opened) => (this.opened = opened));
+    RendererIPC.Invoke("isMaximized", this.type).then((isMax) => (this.isMax = isMax));
+    RendererIPC.Invoke("isFullscreen", this.type).then(
+      (isFullscreen) => (this.isFullscreen = isFullscreen)
+    );
+    RendererIPC.Invoke("isAlwaysOnTop", this.type).then((isPin) => (this.isPin = isPin));
     if (
       this.type !== RendererRuntime.currentWindowType &&
       this.type !== "all" &&
@@ -208,6 +216,9 @@ export class RendererWindow extends Listenable<RendererWindowEvent | "react-read
         this.opened = true;
         break;
       }
+      case "always-on-top-changed":
+        RendererIPC.Invoke("isAlwaysOnTop", this.type).then((isPin) => (this.isPin = isPin));
+        break;
     }
     this.executeListeners(action);
   }
@@ -351,6 +362,20 @@ export class RendererWindow extends Listenable<RendererWindowEvent | "react-read
     RendererIPC.Event("moveInternalWindow", {
       type: this.type,
       ...props
+    });
+  }
+
+  pin() {
+    RendererIPC.Event("pinInternalWindow", {
+      type: this.type,
+      pin: true
+    });
+  }
+
+  unpin() {
+    RendererIPC.Event("pinInternalWindow", {
+      type: this.type,
+      pin: false
     });
   }
 

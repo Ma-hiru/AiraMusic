@@ -83,7 +83,7 @@ const LayoutDisplay: FC<object> = () => {
     <div className="w-screen h-screen relative overflow-hidden">
       <Drag className="absolute w-screen top-0 right-0 h-10  flex flex-row justify-between items-center px-4 z-50">
         <TopBack exclude={["blank"]} routePath={RoutePathDisplay} onClick={() => setBack(true)} />
-        <TopControlPure />
+        <TopControlPure pin mini />
       </Drag>
       <AppErrorBoundary name="LayoutDisplayContent" showError canReset>
         <div className="fixed inset-0 z-[-1]">

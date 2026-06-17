@@ -60,7 +60,8 @@ type MessageEventValue = {
       | "resized"
       | "enter-fullscreen"
       | "leave-fullscreen"
-      | "blur";
+      | "blur"
+      | "always-on-top-changed";
   };
   imageCheckerBus: {
     url: string;

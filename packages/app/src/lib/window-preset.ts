@@ -113,7 +113,11 @@ export class MainWindowPreset {
       memoPos: true,
       loadURL: (port: number) => `http://localhost:${port}/lyric.html`,
       onCreate: (win: BrowserWindow) => {
-        process.platform === "linux" && win.setAlwaysOnTop(true, "screen-saver");
+        if (process.platform === "linux") {
+          win.setAlwaysOnTop(true);
+        } else {
+          win.setAlwaysOnTop(true, "floating");
+        }
       }
     };
   }
@@ -152,6 +156,11 @@ export class MainWindowPreset {
       loadURL: (port: number) => `http://localhost:${port}/mini.html`,
       onCreate: (win: BrowserWindow) => {
         win.hide();
+        if (process.platform === "linux") {
+          win.setAlwaysOnTop(true);
+        } else {
+          win.setAlwaysOnTop(true, "floating");
+        }
       }
     };
   }

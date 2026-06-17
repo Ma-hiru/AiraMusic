@@ -33,6 +33,7 @@ export type InvokeEventMaps = {
   getKeyValue: [string, { ok: true; value: JsonValue } | { ok: false; reason?: string }];
   deleteKeyValue: [string, { ok: false; reason?: string } | { ok: true }];
   setKeyValue: [{ key: string; value: JsonValue }, { ok: true } | { ok: false; reason?: string }];
+  isAlwaysOnTop: [WindowType, boolean];
 };
 
 /** Invoke 事件类型 */

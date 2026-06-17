@@ -194,5 +194,10 @@ export const invokeHandlers: InvokeHandlers = {
       Log.error(err);
       return { ok: false, reason: "本地数据错误" };
     }
+  },
+  isAlwaysOnTop: (e, type) => {
+    const sender = BrowserWindow.fromWebContents(e.sender);
+    if (!sender) return false;
+    return MainWindowManager.get(type)?.isAlwaysOnTop() ?? false;
   }
 };

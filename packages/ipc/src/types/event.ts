@@ -25,6 +25,20 @@ export type NormalEventMaps = {
   unminimizeInternalWindow: Optional<WindowType>;
   maximizeInternalWindow: Optional<WindowType>;
   unmaximizeInternalWindow: Optional<WindowType>;
+  pinInternalWindow: {
+    type: Optional<WindowType>;
+    pin: boolean;
+    level?:
+      | "normal"
+      | "floating"
+      | "torn-off-menu"
+      | "modal-panel"
+      | "main-menu"
+      | "status"
+      | "pop-up-menu"
+      | "screen-saver"
+      | "dock";
+  };
   mousePenetrateInternalWindow: { type: Optional<WindowType>; penetrate: boolean };
   fatalError: { message: string; error?: string };
   log: { level: "trace" | "debug" | "info" | "warn" | "error"; message: string };
