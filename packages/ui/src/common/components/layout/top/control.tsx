@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { useListenable } from "@/common/hooks/use-listenable";
 import { RendererWindow } from "@/common/lib/window";
+import { RendererDevice } from "@/common/lib/device";
 import NoDrag from "../drag/no-drag";
 import AppToast from "@/common/components/display/toast";
 
@@ -33,6 +34,15 @@ const TopControlPure: FC<TopControlProps> = ({
   // 确保依赖项是 isPin 而不是 currentWindow 这个稳定对象
   const isPin = currentWindow.isPin;
   const pinRender = useMemo(() => {
+    const checkPlatform = async () => {
+      const platform = await RendererDevice.platform;
+      if (platform === "linux") {
+        AppToast.show({
+          type: "warn",
+          text: "当前平台可能不支持"
+        });
+      }
+    };
     if (!pin) return null;
     if (isPin)
       return (
@@ -58,6 +68,7 @@ const TopControlPure: FC<TopControlProps> = ({
             type: "success",
             text: "已置顶"
           });
+          void checkPlatform();
         }}
       />
     );
