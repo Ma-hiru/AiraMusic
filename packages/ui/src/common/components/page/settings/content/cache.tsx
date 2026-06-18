@@ -7,12 +7,12 @@ import { RendererIPC } from "@/common/lib/ipc";
 import { RendererCache } from "@/common/lib/cache";
 import { Log } from "@/common/lib/log";
 import AppToast from "@/common/components/display/toast";
+import AppModal from "@/common/components/display/modal";
 
 import RangeRow from "./range-row";
 import BaseItem from "./base-item";
 import DonutChart from "./donut-chart";
 import Card from "@/common/components/layout/card";
-import AppModal from "@/common/components/display/modal";
 
 interface CacheProps {
   cacheStoreSizes: Nullable<CacheStoreSizeCategories>;
@@ -159,6 +159,21 @@ const Cache: FC<CacheProps> = ({
       text: "保存成功"
     });
   };
+  const refresh = useCallback(() => {
+    try {
+      refreshSize();
+      AppToast.show({
+        type: "success",
+        text: "刷新成功"
+      });
+    } catch (err) {
+      Log.error(err);
+      AppToast.show({
+        type: "error",
+        text: "刷新失败"
+      });
+    }
+  }, [refreshSize]);
 
   useEffect(reset, [reset]);
 
@@ -232,6 +247,7 @@ const Cache: FC<CacheProps> = ({
         <div className="w-full flex justify-end gap-3">
           <Button disable={!hasChanged} title="保存" onClick={saveChanges} />
           <Button disable={!hasChanged} title="重置" onClick={reset} />
+          <Button disable={false} title="刷新" onClick={refresh} />
           <Button disable={!hasData} title="清空" onClick={clear} />
         </div>
       </BaseItem>

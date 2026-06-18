@@ -9,6 +9,7 @@ import Performance from "./performance";
 import Preference from "./preference";
 import Shortcut from "./shortcut";
 import Device from "./device";
+import { cx } from "@emotion/css";
 
 interface SettingsContentProps {
   user: Nullable<NeteaseUser>;
@@ -22,6 +23,7 @@ interface SettingsContentProps {
     [config: Partial<InvokeEventPayload<"fetchCacheStoreConfig">>]
   >;
   refreshSize: NormalFunc;
+  className?: string;
 }
 
 const SettingsContent: FC<SettingsContentProps> = ({
@@ -33,7 +35,8 @@ const SettingsContent: FC<SettingsContentProps> = ({
   updateCacheStoreConfig,
   output,
   updateOutput,
-  refreshSize
+  refreshSize,
+  className
 }) => {
   const patchSettings = useCallback(
     (patch: Partial<NeteaseSettingsModel>) => {
@@ -61,7 +64,7 @@ const SettingsContent: FC<SettingsContentProps> = ({
   );
 
   return (
-    <main className="lg:h-full lg:contain-strict space-y-4 lg:overflow-y-auto scrollbar lg:scrollbar-show">
+    <main className={cx("w-full space-y-4 scrollbar contain-layout", className)}>
       <Quality
         vip={user?.isVIP() ?? false}
         data={settings.trackQuality}

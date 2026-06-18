@@ -83,9 +83,11 @@ const Settings: FC<SettingsProps> = ({
     <section
       className={cx(
         `
-          h-full overflow-y-auto overflow-x-hidden lg:overflow-hidden scrollbar scrollbar-show
-          grid grid-cols-1 md:grid-cols-[minmax(200px,0.82fr)_minmax(520px,1.58fr)] gap-4
-          lg:scrollbar-hidden
+          h-full grid gap-4 overflow-x-hidden contain-layout
+          overflow-y-auto md:overflow-y-hidden
+          justify-items-center md:justify-items-normal
+          grid-cols-1 md:grid-cols-[minmax(120px,1fr)_2fr]
+          scrollbar scrollbar-show md:scrollbar-hidden
         `,
         className
       )}>
@@ -106,6 +108,7 @@ const Settings: FC<SettingsProps> = ({
         cacheStoreSizes={cacheStoreSizes}
         updateCacheStoreConfig={updateCacheStoreConfig}
         refreshSize={getCacheStoreStatus}
+        className="md:h-full md:contain-strict md:overflow-y-auto md:scrollbar-show"
       />
     </section>
   );

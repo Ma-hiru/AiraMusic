@@ -63,9 +63,9 @@ const Background: FC<{ className?: string }> = ({ className }) => {
         className
       )}>
       <AcrylicBackground
-        fluid
-        fluidPaused={!player.playing || !settings.performance.useHomeFluid}
-        fluidSpeed={5}
+        fluid={settings.performance.useHomeFluid}
+        fluidPaused={settings.performance.homeFluidWithPlaying ? !player.playing : false}
+        fluidSpeed={settings.performance.homeFluidSpeed}
         src={backgroundCover ?? undefined}
         opacity={0.7}
         brightness={0.35}
