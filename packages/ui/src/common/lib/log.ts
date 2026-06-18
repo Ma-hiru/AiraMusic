@@ -1,5 +1,5 @@
 import { createLog, type LoggerWriter } from "@mahiru/log";
-import { RendererIPC } from "./ipc";
+import { RendererIPC } from "@mahiru/ipc/renderer";
 
 export class ProcessLogger implements LoggerWriter {
   static write: Nullable<
@@ -16,7 +16,8 @@ export class ProcessLogger implements LoggerWriter {
   static {
     if (import.meta.env.PROD) {
       queueMicrotask(() => {
-        ProcessLogger.write = (payload) => RendererIPC.Event("log", payload);
+        ProcessLogger.write = (payload) =>
+          RendererIPC.NormalChannel.send("event_debug_log", payload);
       });
     }
   }

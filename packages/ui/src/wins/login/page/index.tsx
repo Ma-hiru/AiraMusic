@@ -3,7 +3,6 @@ import { useEffect } from "react";
 import { QRCodeStatus, useLoginQRCode } from "@/wins/login/hooks/use-login-qr-code";
 import { useAppLoaded } from "@/common/hooks/use-app-loaded";
 import { RendererWindow } from "@/common/lib/window";
-import { RendererEventBus } from "@/common/lib/bus";
 import { useThemeInjectFromBus } from "@/common/hooks/use-theme-inject-from-bus";
 
 import QRCode from "./qr-code";
@@ -14,23 +13,18 @@ import AcrylicBackground from "@/common/components/display/acrylic-background";
 
 export default function LoginPage() {
   useAppLoaded();
-  useThemeInjectFromBus();
+  const themeBus = useThemeInjectFromBus();
   const { status, result, dataURL, update } = useLoginQRCode();
   const mainWindow = useListenable(RendererWindow.get("main"));
   const currentWindow = useListenable(RendererWindow.current);
 
   useEffect(() => {
     if (status === QRCodeStatus.AUTHORIZED && result) {
-      mainWindow.send("login", result.cookie);
+      mainWindow.send("message_dispatch_login", result.cookie);
       queueMicrotask(() => currentWindow.close());
     }
   }, [currentWindow, mainWindow, result, status]);
 
-  const infoBus = useListenable(RendererEventBus.info);
-
-  useEffect(() => {
-    RendererEventBus.mainBusUpdater.send("info");
-  }, []);
   return (
     <div className="w-screen h-screen overflow-hidden">
       <div className="fixed inset-0 z-[-1]">
@@ -38,7 +32,7 @@ export default function LoginPage() {
           fluid
           fluidSpeed={5}
           className="absolute inset-0"
-          src={infoBus.data?.backgroundCover}
+          src={themeBus.data?.backgroundCover}
           opacity={0.7}
           brightness={0.5}
           blur={30}

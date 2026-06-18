@@ -4,7 +4,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useLatestRef } from "@/common/hooks/use-latest-ref";
 import { useSettings } from "@/common/store/settings";
 import { RendererWindow } from "@/common/lib/window";
-import { RendererEventBus } from "@/common/lib/bus";
+import { RendererIPCMessageBus } from "@/common/lib/bus";
 
 /** 跳转歌手和专辑页 */
 export function usePageJump(
@@ -25,7 +25,7 @@ export function usePageJump(
 
       if (settingsRef.current.preference.defaultUseDisplayWindow) {
         await RendererWindow.display.reactReadyAwait();
-        return RendererEventBus.display.send({
+        return RendererIPCMessageBus.display.deliver({
           type: "album",
           id
         });
@@ -42,7 +42,7 @@ export function usePageJump(
 
       if (settingsRef.current.preference.defaultUseDisplayWindow) {
         await RendererWindow.display.reactReadyAwait();
-        return RendererEventBus.display.send({
+        return RendererIPCMessageBus.display.deliver({
           type: "artist",
           id
         });
@@ -61,7 +61,7 @@ export function usePageJump(
 
       if (settingsRef.current.preference.defaultUseDisplayWindow) {
         await RendererWindow.display.reactReadyAwait();
-        return RendererEventBus.display.send({
+        return RendererIPCMessageBus.display.deliver({
           type: "playlist",
           source,
           id
@@ -76,7 +76,7 @@ export function usePageJump(
   const jumpHistoryPage = useCallback(async () => {
     if (settingsRef.current.preference.defaultUseDisplayWindow) {
       await RendererWindow.display.reactReadyAwait();
-      return RendererEventBus.display.send({
+      return RendererIPCMessageBus.display.deliver({
         type: "history"
       });
     }

@@ -4,7 +4,7 @@ import { MainSelfName, RegisteredForwardEventName } from "../constants/message";
 import { WindowManager } from "../inject/window";
 import type { Message, MessageData, MessageDirection, MessageEvent } from "../types/message";
 
-export class MainMessageChannel {
+export class MessageChannel {
   static readonly forwardEventName = RegisteredForwardEventName;
   private static readonly checker = new Set<ForwardChecker<any>>();
   private static readonly handlers = new Map<
@@ -33,17 +33,17 @@ export class MainMessageChannel {
     const sender = BrowserWindow.fromWebContents(e.sender);
     if (!sender) return;
     // 使用[...checker]避免遍历过程中checker被修改
-    for (const check of [...MainMessageChannel.checker]) {
+    for (const check of [...MessageChannel.checker]) {
       if (!check(sender, message)) return;
     }
     if (message.to === "all") {
-      MainMessageChannel.commitAll({
+      MessageChannel.commitAll({
         sender,
         type: message.type,
         data: message.data
       });
     } else {
-      MainMessageChannel.commit({
+      MessageChannel.commit({
         sender,
         receiver: message.to,
         type: message.type,
@@ -53,28 +53,28 @@ export class MainMessageChannel {
   }
 
   static addForwardChecker<T extends MessageEvent>(check: ForwardChecker<T>) {
-    MainMessageChannel.checker.add(check);
+    MessageChannel.checker.add(check);
     return () => {
-      MainMessageChannel.checker.delete(check);
+      MessageChannel.checker.delete(check);
     };
   }
 
   static removeForwardChecker<T extends MessageEvent>(check: ForwardChecker<T>) {
-    MainMessageChannel.checker.delete(check);
+    MessageChannel.checker.delete(check);
   }
 
   static listen<T extends MessageEvent>(type: T, callback: NormalFunc<[data: MessageData<T>]>) {
-    MainMessageChannel.handlers.set(
+    MessageChannel.handlers.set(
       type,
-      (MainMessageChannel.handlers.get(type) ?? new Set()).add(callback)
+      (MessageChannel.handlers.get(type) ?? new Set()).add(callback)
     );
     return () => {
-      MainMessageChannel.remove(type, callback);
+      MessageChannel.remove(type, callback);
     };
   }
 
   static remove<T extends MessageEvent>(type: T, callback: NormalFunc<[data: MessageData<T>]>) {
-    MainMessageChannel.handlers.get(type)?.delete(callback);
+    MessageChannel.handlers.get(type)?.delete(callback);
   }
 
   static commit<T extends MessageEvent>(props: {
@@ -83,13 +83,13 @@ export class MainMessageChannel {
     type: T;
     data: MessageData<T>;
   }) {
-    // from main to main 直接返回
+    // from process to process 直接返回
     if (props.receiver === props.sender && props.sender === MainSelfName) return;
-    // from other to main 是常规发送给main的消息
+    // from other to process 是常规发送给 process 的消息
     if (props.receiver === MainSelfName) {
-      const handler = MainMessageChannel.handlers.get(props.type);
+      const handler = MessageChannel.handlers.get(props.type);
       return handler?.forEach((cb) => {
-        MainMessageChannel.wrapCallback(cb, props.type)(props.data);
+        MessageChannel.wrapCallback(cb, props.type)(props.data);
       });
     }
 
@@ -141,12 +141,12 @@ export class MainMessageChannel {
   }) {
     queueMicrotask(() => {
       WindowManager.getAll().forEach(([, receiver]) => {
-        MainMessageChannel.commit({
+        MessageChannel.commit({
           ...props,
           receiver
         });
       });
-      MainMessageChannel.commit({
+      MessageChannel.commit({
         ...props,
         receiver: "process"
       });
@@ -154,13 +154,13 @@ export class MainMessageChannel {
   }
 
   static {
-    ipcMain.on(RegisteredForwardEventName, MainMessageChannel.forwardHandler);
+    ipcMain.on(RegisteredForwardEventName, MessageChannel.forwardHandler);
   }
 
   static [Symbol.dispose]() {
-    ipcMain.off(RegisteredForwardEventName, MainMessageChannel.forwardHandler);
-    MainMessageChannel.checker.clear();
-    MainMessageChannel.handlers.clear();
+    ipcMain.off(RegisteredForwardEventName, MessageChannel.forwardHandler);
+    MessageChannel.checker.clear();
+    MessageChannel.handlers.clear();
   }
 }
 

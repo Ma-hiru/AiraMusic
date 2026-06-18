@@ -1,6 +1,9 @@
-type MessageEventValue = {
-  login: string;
-  infoBus: {
+/**
+ * - deliver 表示主要是 main to other
+ * - dispatch 表示主要是 other to main
+ * */
+type MessageBus = {
+  bus_deliver_theme: {
     backgroundCover: Undefinable<string>;
     theme: {
       mainColor: string;
@@ -9,7 +12,7 @@ type MessageEventValue = {
       textNormalColor: string;
     };
   };
-  playerBus: {
+  bus_deliver_track_meta: {
     track: Optional<{
       id: number;
       name: string;
@@ -25,26 +28,13 @@ type MessageEventValue = {
     tlActive: boolean;
     noteActive: boolean;
   };
-  progressBus: {
+  bus_deliver_track_progress: {
     currentTime: number;
     duration: number;
     volume: number;
     buffered: number;
   };
-  playerActionBus:
-    | "next"
-    | "previous"
-    | "play"
-    | "pause"
-    | "exit"
-    | "update"
-    | "toggle-lyric-version-rm"
-    | "toggle-lyric-version-tl";
-  commentBus: {
-    id: number;
-    type: "track" | "album" | "playlist";
-  };
-  windowBus: {
+  bus_deliver_window_event: {
     type: WindowType;
     action:
       | "ready"
@@ -63,12 +53,7 @@ type MessageEventValue = {
       | "blur"
       | "always-on-top-changed";
   };
-  imageCheckerBus: {
-    url: string;
-    alt?: string;
-  };
-  updateBus: "info" | "player" | "progress" | "output" | "history";
-  historyBus: {
+  bus_deliver_history: {
     list: {
       id: number;
       name: string;
@@ -79,28 +64,23 @@ type MessageEventValue = {
       time: number;
     }[];
   };
-  displayBus:
-    | {
-        id: number;
-        type: "album" | "artist";
-      }
-    | {
-        id: number;
-        type: "playlist";
-        source: "normal" | "like";
-      }
-    | {
-        type: "search";
-        keyword?: string;
-      }
-    | {
-        type: "settings";
-      }
-    | {
-        type: "history";
-      };
-  mergeDisplay: MessageEventValue["displayBus"];
-  playerChangeBus:
+  bus_deliver_device_output_views: {
+    selected: string;
+    views: { displayName: string; deviceId: string }[];
+  };
+  bus_deliver_react_ready:
+    | { type: "ready"; sender: WindowType }
+    | { type: "isReady"; target: WindowType };
+  bus_dispatch_update: "theme" | "track-meta" | "track-progress" | "output" | "history";
+  bus_deliver_preview: {
+    url: string;
+    alt?: string;
+  };
+  bus_deliver_comment: {
+    id: number;
+    type: "track" | "album" | "playlist";
+  };
+  bus_dispatch_playlist_action:
     | {
         type: "addToPlaylistNext" | "addToPlaylistLast";
         trackID: number;
@@ -121,23 +101,53 @@ type MessageEventValue = {
         sourceType: NeteaseTrackRecordSourceType;
         allIDs: number[];
       };
-  outputBus: {
-    selected: string;
-    views: { displayName: string; deviceId: string }[];
-  };
-  changeOutput: string;
-  reactReadyBus:
+  bus_dispatch_player_action:
+    | "next"
+    | "previous"
+    | "play"
+    | "pause"
+    | "exit"
+    | "update"
+    | "toggle-lyric-version-rm"
+    | "toggle-lyric-version-tl";
+  bus_display:
     | {
-        type: "ready";
-        sender: WindowType;
+        id: number;
+        type: "album" | "artist";
       }
     | {
-        type: "isReady";
-        target: WindowType;
+        id: number;
+        type: "playlist";
+        source: "normal" | "like";
+      }
+    | {
+        type: "search";
+        keyword?: string;
+      }
+    | {
+        type: "settings";
+      }
+    | {
+        type: "history";
       };
 };
 
+/**
+ * - deliver 表示是 main to other
+ * - dispatch 表示是 other to main
+ * */
+type MessageSingle = {
+  message_dispatch_login: string;
+  message_dispatch_device_output_set: string;
+};
+
+type MessageEventValue = MessageBus & MessageSingle;
+
 export type MessageEvent = keyof MessageEventValue;
+
+export type MessageBusEvent = keyof MessageBus;
+
+export type MessageSingleEvent = keyof MessageSingle;
 
 export type MessageData<T extends MessageEvent> = MessageEventValue[T];
 

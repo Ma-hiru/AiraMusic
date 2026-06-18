@@ -16,12 +16,12 @@ import {
   NeteaseServicesPlaylist,
   NeteaseServicesTrack
 } from "@/common/netease/services";
-import { RendererEventBus } from "@/common/lib/bus";
+import { RendererIPCMessageBus } from "@/common/lib/bus";
 import NeteaseImage from "@/common/components/display/image/netease-image";
 import Marquee from "@/common/components/display/marquee";
 
 interface TitleProps {
-  commentBus: typeof RendererEventBus.comment;
+  commentBus: typeof RendererIPCMessageBus.comment;
   className?: string;
 }
 

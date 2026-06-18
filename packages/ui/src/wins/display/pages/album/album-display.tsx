@@ -6,7 +6,7 @@ import { useListenable } from "@/common/hooks/use-listenable";
 import { useArtistOrAlbumDisplayJump } from "@/wins/display/hooks/use-artist-or-album-display-jump";
 import { usePlayerChangeActionFromDisplay } from "@/wins/display/hooks/use-player-change-action-from-display";
 import { useDisplayPageAction } from "@/wins/display/hooks/use-display-page-action";
-import { RendererEventBus } from "@/common/lib/bus";
+import { RendererIPCMessageBus } from "@/common/lib/bus";
 import { useDisplayTitle } from "@/wins/display/hooks/use-display-title";
 import RendererImageConstants from "@/common/constants/image";
 
@@ -15,7 +15,7 @@ import Album, { type AlbumPageRef } from "@/common/components/page/album";
 const AlbumDisplay: FC<object> = () => {
   const location = useLocation();
   const albumRef = useRef<Nullable<AlbumPageRef>>(null);
-  const playerBus = useListenable(RendererEventBus.player);
+  const trackMetaBus = useListenable(RendererIPCMessageBus.trackMeta);
   const { id } = RoutePath.parseQuery<{ id: number }>(location, RoutePathMain.album);
   const { playableManager, heartManager } = useUserTrackManager();
 
@@ -46,7 +46,7 @@ const AlbumDisplay: FC<object> = () => {
       className="display-container pb-0!"
       heartManager={heartManager}
       playableManager={playableManager}
-      activeTrackID={playerBus.data?.track?.id}
+      activeTrackID={trackMetaBus.data?.track?.id}
       onClick={onTrackPlay}
       onClickAlbum={jumpAlbumDisplay}
       onClickArtist={jumpArtistDisplay}

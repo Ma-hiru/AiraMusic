@@ -1,7 +1,8 @@
 import { cx } from "@emotion/css";
 import { type FC, memo, useCallback, useEffect, useState } from "react";
 import { useAppLoaded } from "@/common/hooks/use-app-loaded";
-import { RendererWindow } from "@/common/lib/window";
+import { useListenable } from "@/common/hooks/use-listenable";
+import { RendererIPCMessageBus } from "@/common/lib/bus";
 import Drag from "@/common/components/layout/drag/drag";
 import ImageViewer, { type ImageViewerEntry } from "@/common/components/display/image/image-viewer";
 import TopControlPure from "@/common/components/layout/top/control";
@@ -18,12 +19,12 @@ const ImagePage: FC = () => {
     index: 0
   });
   const [showToolBar, setShowToolBar] = useState(false);
+  const previewBus = useListenable(RendererIPCMessageBus.preview);
 
   useEffect(() => {
-    return RendererWindow.all.listenMessageAll("imageCheckerBus", (props) => {
-      const { url, alt } = props.data;
+    const previews = previewBus.data;
+    for (const { url, alt } of previews) {
       if (!url) return;
-
       setGallery((prev) => {
         const existed = prev.images.findIndex((image) => image.url === url);
         if (existed !== -1) {
@@ -37,8 +38,9 @@ const ImagePage: FC = () => {
           index: prev.images.length
         };
       });
-    });
-  }, []);
+    }
+    RendererIPCMessageBus.consume(previewBus.type);
+  }, [previewBus.data, previewBus.type]);
 
   useAppLoaded();
 

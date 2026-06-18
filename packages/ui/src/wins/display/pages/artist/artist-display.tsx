@@ -6,7 +6,7 @@ import { useListenable } from "@/common/hooks/use-listenable";
 import { useArtistOrAlbumDisplayJump } from "@/wins/display/hooks/use-artist-or-album-display-jump";
 import { useDisplayPageAction } from "@/wins/display/hooks/use-display-page-action";
 import { usePlayerChangeActionFromDisplay } from "@/wins/display/hooks/use-player-change-action-from-display";
-import { RendererEventBus } from "@/common/lib/bus";
+import { RendererIPCMessageBus } from "@/common/lib/bus";
 import { useDisplayTitle } from "@/wins/display/hooks/use-display-title";
 
 import Artist, { type ArtistRef } from "@/common/components/page/artist";
@@ -14,7 +14,7 @@ import Artist, { type ArtistRef } from "@/common/components/page/artist";
 const ArtistDisplay: FC<object> = () => {
   const location = useLocation();
   const artistRef = useRef<ArtistRef>(null);
-  const playerBus = useListenable(RendererEventBus.player);
+  const trackMetaBus = useListenable(RendererIPCMessageBus.trackMeta);
   const { playableManager, heartManager } = useUserTrackManager();
   const { id } = RoutePath.parseQuery<{ id: number }>(location, RoutePathDisplay.artist);
   const { addTrackToPlaylistLast, addTrackToPlaylistNext, onTrackPlay, openTrackComment } =
@@ -36,7 +36,7 @@ const ArtistDisplay: FC<object> = () => {
     <Artist
       id={id!}
       ref={artistRef}
-      activeTrackID={playerBus.data?.track?.id}
+      activeTrackID={trackMetaBus.data?.track?.id}
       className="display-container pb-0!"
       onClick={onTrackPlay}
       onClickAlbum={jumpAlbumDisplay}

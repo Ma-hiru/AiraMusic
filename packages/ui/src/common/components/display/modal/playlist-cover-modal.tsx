@@ -1,12 +1,13 @@
+import { type FC, Fragment } from "react";
 import { type LucideIcon, Maximize2 } from "lucide-react";
 import { NeteaseImageSize } from "@/common/enum";
 import { NeteaseAlbum, NeteaseNetworkImage, type NeteasePlaylist } from "@/common/netease/models";
 import { RendererWindow } from "@/common/lib/window";
 import { createAlbumStats, createPlaylistStats } from "@/common/utils/playlist";
 import type { ModalRender } from "./modal-provider";
-import { type FC, Fragment } from "react";
 
 import NeteaseImage from "@/common/components/display/image/netease-image";
+import { RendererIPCMessageBus } from "@/common/lib/bus";
 
 export function createPlaylistCoverModal({
   playlist,
@@ -23,7 +24,7 @@ export function createPlaylistCoverModal({
   const openCover = async () => {
     const image = cover.toNetworkImage().setSize(NeteaseImageSize.raw);
     await RendererWindow.image.reactReadyAwait();
-    RendererWindow.image.send("imageCheckerBus", {
+    RendererIPCMessageBus.preview.deliver({
       url: image.src,
       alt: image.alt ?? playlist.name
     });
@@ -63,7 +64,7 @@ export function createAlbumCoverModal({
   const openCover = async () => {
     const image = cover.toNetworkImage().setSize(NeteaseImageSize.raw);
     await RendererWindow.image.reactReadyAwait();
-    RendererWindow.image.send("imageCheckerBus", {
+    RendererIPCMessageBus.preview.deliver({
       url: image.src,
       alt: image.alt ?? album.content.name
     });

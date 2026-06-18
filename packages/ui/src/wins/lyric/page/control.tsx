@@ -14,7 +14,7 @@ import { NeteaseLyric, NeteaseNetworkImage } from "@/common/netease/models";
 import { useListenable } from "@/common/hooks/use-listenable";
 import { RendererFormat } from "@/common/lib/format";
 import { RendererWindow } from "@/common/lib/window";
-import { RendererEventBus } from "@/common/lib/bus";
+import { RendererIPCMessageBus } from "@/common/lib/bus";
 
 import Drag from "@/common/components/layout/drag/drag";
 import NeteaseImage from "@/common/components/display/image/netease-image";
@@ -47,14 +47,14 @@ const Control: FC<ControlProps> = ({
   tlActive,
   ...rest
 }) => {
-  const playerBus = useListenable(RendererEventBus.player);
-  const infoBus = useListenable(RendererEventBus.info);
-  const progressBus = useListenable(RendererEventBus.progress);
+  const trackMetaBus = useListenable(RendererIPCMessageBus.trackMeta);
+  const themeBus = useListenable(RendererIPCMessageBus.theme);
+  const progressBus = useListenable(RendererIPCMessageBus.progress);
   const [openColorSelect, setOpenColorSelect] = useState(false);
 
   const { rmExisted, tlExisted } = lyric?.info || {};
-  const themeColor = infoBus.data?.theme.mainColor;
-  const track = playerBus.data?.track?.detail;
+  const themeColor = themeBus.data?.theme.mainColor;
+  const track = trackMetaBus.data?.track?.detail;
   const image = useMemo(
     () =>
       NeteaseNetworkImage.fromTrackCover(track)?.setSize(NeteaseImageSize.xs).setAlt(track?.name),
@@ -72,13 +72,13 @@ const Control: FC<ControlProps> = ({
 
   const setLyricVersion = useCallback(
     (version: "toggle-lyric-version-rm" | "toggle-lyric-version-tl") => {
-      RendererEventBus.playerAction.send(version);
+      RendererIPCMessageBus.playerAction.deliver(version);
     },
     []
   );
 
   useEffect(() => {
-    lock && RendererWindow.current.mousePenetrate(true);
+    lock && RendererWindow.current.penetrate(true);
   }, [lock]);
 
   useEffect(() => {
@@ -193,8 +193,8 @@ const Control: FC<ControlProps> = ({
               <LucideLock
                 className="size-4 cursor-pointer hover:opacity-50 duration-300 ease-in-out transition-all active:scale-90"
                 onClick={() => setLock(false)}
-                onMouseOver={() => RendererWindow.current.mousePenetrate(false)}
-                onMouseLeave={() => RendererWindow.current.mousePenetrate(true)}
+                onMouseOver={() => RendererWindow.current.penetrate(false)}
+                onMouseLeave={() => RendererWindow.current.penetrate(true)}
               />
             ) : (
               <LockKeyholeOpen

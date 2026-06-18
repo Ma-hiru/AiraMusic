@@ -24,7 +24,7 @@ import {
   type WheelEvent as ReactWheelEvent
 } from "react";
 import { useThemeInjectFromBus } from "@/common/hooks/use-theme-inject-from-bus";
-import { RendererIPC } from "@/common/lib/ipc";
+import { RendererIPC } from "@mahiru/ipc/renderer";
 import { Log } from "@/common/lib/log";
 import { RendererWindow } from "@/common/lib/window";
 import AppToast from "@/common/components/display/toast";
@@ -263,7 +263,7 @@ const ImageViewer: FC<ImageViewerProps> = ({ images, index, onIndexChange, onToo
       const contentType = response.headers.get("content-type");
       const buffer = await response.arrayBuffer();
       const name = createDownloadName(current, contentType);
-      const result = await RendererIPC.Invoke("saveFile", { buffer, name });
+      const result = await RendererIPC.NormalChannel.send("invoke_fs_save", { buffer, name });
 
       if (!result.ok) {
         result.error && Log.error(result.error);

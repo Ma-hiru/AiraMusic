@@ -4,7 +4,7 @@ import { Heart, MessageSquare } from "lucide-react";
 import { useHeart } from "@/common/hooks/use-heart";
 import { useUserTrackManager } from "@/common/hooks/use-user-track-manager";
 import { RendererWindow } from "@/common/lib/window";
-import { RendererEventBus } from "@/common/lib/bus";
+import { RendererIPCMessageBus } from "@/common/lib/bus";
 import { usePageJump } from "@/wins/main/hooks/use-page-jump";
 import { useSetAtom } from "jotai";
 import { playModalAtom } from "@/wins/main/atoms/layout";
@@ -36,7 +36,7 @@ const Artist: FC<ArtistProps> = ({ className }) => {
   const openComment = useCallback(async () => {
     if (!track) return;
     await RendererWindow.comment.reactReadyAwait();
-    RendererEventBus.comment.send({
+    RendererIPCMessageBus.comment.deliver({
       id: track.id,
       type: "track"
     });

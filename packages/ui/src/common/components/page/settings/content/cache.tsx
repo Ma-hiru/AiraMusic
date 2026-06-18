@@ -3,7 +3,7 @@ import { type FC, memo, useCallback, useEffect, useMemo, useRef, useState } from
 import { Boxes, Clock8, Folder, HardDrive } from "lucide-react";
 import type { InvokeEventPayload } from "@mahiru/ipc/dist-types/src/types/invoke";
 import { RendererFormat } from "@/common/lib/format";
-import { RendererIPC } from "@/common/lib/ipc";
+import { RendererIPC } from "@mahiru/ipc/renderer";
 import { RendererCache } from "@/common/lib/cache";
 import { Log } from "@/common/lib/log";
 import AppToast from "@/common/components/display/toast";
@@ -16,9 +16,9 @@ import Card from "@/common/components/layout/card";
 
 interface CacheProps {
   cacheStoreSizes: Nullable<CacheStoreSizeCategories>;
-  cacheStoreConfig: Nullable<InvokeEventPayload<"fetchCacheStoreConfig">>;
+  cacheStoreConfig: Nullable<InvokeEventPayload<"invoke_cache_config_get">>;
   updateCacheStoreConfig: PromiseFunc<
-    [config: Partial<InvokeEventPayload<"fetchCacheStoreConfig">>]
+    [config: Partial<InvokeEventPayload<"invoke_cache_config_get">>]
   >;
   refreshSize: NormalFunc;
 }
@@ -48,7 +48,7 @@ const Cache: FC<CacheProps> = ({
   const hasData = Object.values(cacheStoreSizes ?? {}).find((s) => s !== 0);
 
   const selectDirPath = useCallback(async () => {
-    const res = await RendererIPC.Invoke("selectPath", "dir").then((res) => res);
+    const res = await RendererIPC.NormalChannel.send("invoke_fs_select", "dir").then((res) => res);
     if (res.ok) {
       setPathInputValue(res.path);
     } else {

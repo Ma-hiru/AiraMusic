@@ -1,9 +1,9 @@
 import { cx } from "@emotion/css";
 import { type FC, memo, useCallback, useEffect, useState } from "react";
 import { NeteaseSettings, type NeteaseSettingsModel, NeteaseUser } from "@/common/netease/models";
-import { RendererIPC } from "@/common/lib/ipc";
+import { RendererIPC } from "@mahiru/ipc/renderer";
 import { RendererCache } from "@/common/lib/cache";
-import type { InvokeEventPayload } from "@mahiru/ipc/renderer";
+import type { InvokeEventPayload } from "@mahiru/ipc/types";
 
 import SettingsAside from "./aside";
 import SettingsContent from "./content";
@@ -32,23 +32,25 @@ const Settings: FC<SettingsProps> = ({
 }) => {
   const [cacheStoreSizes, setCacheStoreSizes] = useState<Nullable<CacheStoreSizeCategories>>(null);
   const [cacheStoreConfig, setCacheStoreConfig] =
-    useState<Nullable<InvokeEventPayload<"fetchCacheStoreConfig">>>(null);
+    useState<Nullable<InvokeEventPayload<"invoke_cache_config_get">>>(null);
 
   const getCacheStoreConfig = useCallback(async () => {
-    const config = await RendererIPC.Invoke("fetchCacheStoreConfig", undefined).catch(() => {
-      AppToast.show({
-        type: "error",
-        text: "加载缓存配置失败"
-      });
-      return null;
-    });
+    const config = await RendererIPC.NormalChannel.send("invoke_cache_config_get", undefined).catch(
+      () => {
+        AppToast.show({
+          type: "error",
+          text: "加载缓存配置失败"
+        });
+        return null;
+      }
+    );
     setCacheStoreConfig(config);
     return config;
   }, []);
 
   const updateCacheStoreConfig = useCallback(
-    async (config: Partial<InvokeEventPayload<"fetchCacheStoreConfig">>) => {
-      const res = await RendererIPC.Invoke("updateCacheStoreConfig", config);
+    async (config: Partial<InvokeEventPayload<"invoke_cache_config_get">>) => {
+      const res = await RendererIPC.NormalChannel.send("invoke_cache_config_update", config);
       if (res.ok) {
         setCacheStoreConfig(res.config);
       } else {

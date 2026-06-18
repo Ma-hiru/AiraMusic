@@ -11,11 +11,12 @@ import {
 import { useAppLoaded } from "@/common/hooks/use-app-loaded";
 import { NeteaseLyric } from "@/common/netease/models";
 import { RendererWindow } from "@/common/lib/window";
-import { RendererEventBus } from "@/common/lib/bus";
+import { RendererIPCMessageBus } from "@/common/lib/bus";
 
 import Control from "./control";
 import WindowResizeArea from "@/common/components/layout/window-resize-area";
 import LyricComponent, { type LyricRef } from "@/common/components/display/lyric/lyric-container";
+import { useLatestRef } from "@/common/hooks/use-latest-ref";
 
 export default function LyricPage() {
   useAppLoaded();
@@ -30,37 +31,30 @@ export default function LyricPage() {
   });
   const showBgTimer = useRef<Nullable<ReturnType<typeof setTimeout>>>(null);
   // 监听播放器相关事件
-  const playerBus = useListenable(RendererEventBus.player);
-  const infoBus = useListenable(RendererEventBus.info);
-  const progressBus = useListenable(RendererEventBus.progress);
-  const getInfo = useRef({
-    playerBus,
-    infoBus
-  });
-  getInfo.current = {
-    playerBus,
-    infoBus
-  };
+  const trackMetaBus = useListenable(RendererIPCMessageBus.trackMeta);
+  const themeBus = useListenable(RendererIPCMessageBus.theme);
+  const progressBus = useListenable(RendererIPCMessageBus.progress);
+  const getInfo = useLatestRef({ trackMetaBus });
   // 歌词实例
   const [lyric, setLyric] = useState<Nullable<NeteaseLyric>>(null);
   const lyricKey = useRef("");
   useEffect(() => {
-    if (!playerBus.data?.lyric) return setLyric(null);
-    const newLyric = new NeteaseLyric(playerBus.data.lyric);
+    if (!trackMetaBus.data?.lyric) return setLyric(null);
+    const newLyric = new NeteaseLyric(trackMetaBus.data.lyric);
     if (newLyric.key === lyricKey.current) return;
     lyricKey.current = newLyric.key;
     setLyric(newLyric);
-  }, [playerBus.data?.lyric]);
+  }, [trackMetaBus.data?.lyric]);
   // 歌词播放同步
   useEffect(() => {
     let lastTime = 0;
-    let isRunning = playerBus.data?.status === "playing";
+    let isRunning = trackMetaBus.data?.status === "playing";
 
     const onFrame = (time: number) => {
       if (!isRunning) return;
 
-      const { playerBus } = getInfo.current;
-      if (playerBus.data?.status !== "playing") {
+      const { trackMetaBus } = getInfo.current;
+      if (trackMetaBus.data?.status !== "playing") {
         isRunning = false;
         return;
       }
@@ -79,7 +73,7 @@ export default function LyricPage() {
     return () => {
       isRunning = false;
     };
-  }, [playerBus.data?.status]);
+  }, [getInfo, trackMetaBus.data?.status]);
   useEffect(() => {
     // 关键时间点同步
     lyricRef.current?.setCurrentTime((progressBus.data?.currentTime || 0) * 1000);
@@ -177,10 +171,10 @@ export default function LyricPage() {
             spring={false}
             ref={lyricRef}
             fontSize={fontSize}
-            rmActive={playerBus.data?.rmActive}
-            tlActive={playerBus.data?.tlActive}
-            noteActive={playerBus.data?.noteActive}
-            activeColor={(color ?? infoBus.data?.theme.mainColor) || "#ffffff"}
+            rmActive={trackMetaBus.data?.rmActive}
+            tlActive={trackMetaBus.data?.tlActive}
+            noteActive={trackMetaBus.data?.noteActive}
+            activeColor={(color ?? themeBus.data?.theme.mainColor) || "#ffffff"}
           />
         </div>
       </div>
@@ -193,8 +187,8 @@ export default function LyricPage() {
         fontSize={fontSize}
         setColor={setColor}
         setFontSize={setFontSize}
-        rmActive={playerBus.data?.rmActive}
-        tlActive={playerBus.data?.tlActive}
+        rmActive={trackMetaBus.data?.rmActive}
+        tlActive={trackMetaBus.data?.tlActive}
       />
       <WindowResizeArea disable={lock || !showBg} showArea={false} />
     </div>

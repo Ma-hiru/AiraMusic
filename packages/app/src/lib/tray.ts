@@ -1,4 +1,4 @@
-import { MainMessageChannel, type MessageData } from "@mahiru/ipc/main";
+import { MainIPC } from "@mahiru/ipc/main";
 import {
   BrowserWindow,
   clipboard,
@@ -17,6 +17,7 @@ import { MainWindowPreset } from "@/lib/window-preset";
 import { MainHandle } from "@/lib/handle";
 import { MainExitCodeConstants } from "@/constants/exit-code";
 import { debounce } from "lodash-es";
+import type { MessageData } from "@mahiru/ipc/types";
 
 export class MainTray {
   static register() {
@@ -26,7 +27,7 @@ export class MainTray {
     }
   }
 
-  private static playerBus: Nullable<MessageData<"playerBus">> = null;
+  private static playerBus: Nullable<MessageData<"bus_deliver_track_meta">> = null;
 
   private static createIcon() {
     return nativeImage.createFromPath(MainPathResolver.appLogoPath);
@@ -35,7 +36,7 @@ export class MainTray {
   private static createMenu(tray: Tray) {
     if (process.platform === "linux") {
       this.showRawMenu(tray);
-      MainMessageChannel.listen("playerBus", (data) => {
+      MainIPC.MessageChannel.listen("bus_deliver_track_meta", (data) => {
         this.playerBus = data;
         this.showRawMenu(tray);
       });
@@ -67,7 +68,7 @@ export class MainTray {
     }
 
     tray.setToolTip(process.env.APP_NAME);
-    MainMessageChannel.listen("playerBus", (data) => {
+    MainIPC.MessageChannel.listen("bus_deliver_track_meta", (data) => {
       const track = data.track?.detail;
       track?.name
         ? tray.setToolTip(`${process.env.APP_NAME} - ${track.name}`)
@@ -81,10 +82,10 @@ export class MainTray {
       {
         label: this.playerBus?.status === "playing" ? "暂停" : "播放",
         click: () => {
-          MainMessageChannel.commit({
+          MainIPC.MessageChannel.commit({
             sender: "process",
             receiver: "main",
-            type: "playerActionBus",
+            type: "bus_dispatch_player_action",
             data: this.playerBus?.status === "playing" ? "pause" : "play"
           });
           this.showRawMenu(tray);
@@ -93,10 +94,10 @@ export class MainTray {
       {
         label: "上一首",
         click: () => {
-          MainMessageChannel.commit({
+          MainIPC.MessageChannel.commit({
             sender: "process",
             receiver: "main",
-            type: "playerActionBus",
+            type: "bus_dispatch_player_action",
             data: "previous"
           });
         }
@@ -104,10 +105,10 @@ export class MainTray {
       {
         label: "下一首",
         click: () => {
-          MainMessageChannel.commit({
+          MainIPC.MessageChannel.commit({
             sender: "process",
             receiver: "main",
-            type: "playerActionBus",
+            type: "bus_dispatch_player_action",
             data: "next"
           });
         }
@@ -123,10 +124,10 @@ export class MainTray {
               if (!track) return;
               const open = () => {
                 setTimeout(() => {
-                  MainMessageChannel.commit({
+                  MainIPC.MessageChannel.commit({
                     sender: "process",
                     receiver: "comments",
-                    type: "commentBus",
+                    type: "bus_deliver_comment",
                     data: {
                       id: track.id,
                       type: "track"
@@ -183,10 +184,10 @@ export class MainTray {
         {
           label: "退出",
           click: () => {
-            MainMessageChannel.commit({
+            MainIPC.MessageChannel.commit({
               sender: "process",
               receiver: "main",
-              type: "playerActionBus",
+              type: "bus_dispatch_player_action",
               data: "exit"
             });
             setTimeout(() => {

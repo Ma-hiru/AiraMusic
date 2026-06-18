@@ -6,7 +6,7 @@ import type { Api } from "../types/preload";
 // @ts-expect-error ApiKey是preload注入的，不存在于标准的globalThis
 const electronAPI = globalThis[ApiKey] as Api;
 
-export class RendererMessageChannel {
+export class MessageChannel {
   static readonly hasElectronAPI = !!electronAPI;
   private static readonly handlers = new Map<MessageEvent, Map<string, Handler>>();
 
@@ -56,7 +56,7 @@ export class RendererMessageChannel {
   }
 
   static send<T extends MessageEvent, U extends WindowType>(type: T, to: U, data: MessageData<T>) {
-    if (!RendererMessageChannel.hasElectronAPI) return;
+    if (!MessageChannel.hasElectronAPI) return;
     electronAPI.message.send({
       type,
       to,
@@ -65,7 +65,7 @@ export class RendererMessageChannel {
   }
 
   static {
-    if (RendererMessageChannel.hasElectronAPI) {
+    if (MessageChannel.hasElectronAPI) {
       electronAPI.message.listen((message) => {
         const eventHandlers = this.handlers.get(message.type);
         if (eventHandlers) {
@@ -99,7 +99,7 @@ export class RendererMessageChannel {
 
   static [Symbol.dispose]() {
     this.handlers.clear();
-    if (RendererMessageChannel.hasElectronAPI) {
+    if (MessageChannel.hasElectronAPI) {
       electronAPI.message.listen(() => {});
     }
   }

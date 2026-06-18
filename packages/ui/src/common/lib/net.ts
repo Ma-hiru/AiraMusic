@@ -1,7 +1,7 @@
 import { Log } from "@/common/lib/log";
 import { Listener } from "@/common/utils/listenable";
 import { EqError } from "@mahiru/log";
-import { RendererIPC } from "@/common/lib/ipc";
+import { RendererIPC } from "@mahiru/ipc/renderer";
 
 export class RendererNet {
   static completed: number[] = [];
@@ -23,7 +23,7 @@ export class RendererNet {
 
   static get status(): Promise<NetworkStatus> {
     if (!window.navigator.onLine) return Promise.resolve("offline");
-    return Promise.resolve(RendererIPC.Invoke("checkOnlineStatus", undefined));
+    return Promise.resolve(RendererIPC.NormalChannel.send("invoke_device_net", undefined));
   }
 
   static get isOnline() {

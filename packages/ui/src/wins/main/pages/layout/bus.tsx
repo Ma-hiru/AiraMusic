@@ -1,7 +1,7 @@
 import { useListenable } from "@/common/hooks/use-listenable";
 import { type FC, memo, useCallback, useEffect, useRef } from "react";
 import { RendererWindow } from "@/common/lib/window";
-import { RendererEventBus } from "@/common/lib/bus";
+import { RendererIPCMessageBus } from "@/common/lib/bus";
 import {
   NeteaseServicesAlbum,
   NeteaseServicesPlaylist,
@@ -12,13 +12,13 @@ import { Log } from "@/common/lib/log";
 import { useNavigate } from "react-router-dom";
 import { RoutePath, RoutePathMain } from "@/common/routes";
 import { PlaylistSource } from "@/common/enum";
-import { type MessageData } from "@mahiru/ipc/renderer";
 import { useAtomValue } from "jotai";
 import { themeAtom } from "@/wins/main/atoms/theme";
-import RendererPlayerHandle from "@/wins/main/lib/handle";
 import { useAudioOutput } from "@/common/hooks/use-audio-output";
 import { useLatestRef } from "@/common/hooks/use-latest-ref";
 import { RendererDevice } from "@/common/lib/device";
+import type { MessageData } from "@mahiru/ipc/types";
+import RendererPlayerHandle from "@/wins/main/lib/handle";
 
 const Bus: FC<object> = () => {
   const theme = useAtomValue(themeAtom);
@@ -28,10 +28,10 @@ const Bus: FC<object> = () => {
   //#region -------- 需要推送给别人的BUS --------
   // 1. progress、info、player 歌曲、歌词、主题、进度信息
   const updateProgressBus = useCallback(() => {
-    RendererEventBus.progress.send(player.audio.progress);
+    RendererIPCMessageBus.progress.deliver(player.audio.progress);
   }, [player.audio.progress]);
   const updatePlayerBus = useCallback(() => {
-    RendererEventBus.player.send({
+    RendererIPCMessageBus.trackMeta.deliver({
       track: player.current.track,
       lyric: player.current.lyric,
       repeat: player.playlist.repeat,
@@ -43,7 +43,7 @@ const Bus: FC<object> = () => {
     });
   }, [player]);
   const updateInfoBus = useCallback(() => {
-    RendererEventBus.info.send({
+    RendererIPCMessageBus.theme.deliver({
       backgroundCover: theme.backgroundCover ?? undefined,
       theme: {
         mainColor: theme.mainColor,
@@ -76,18 +76,18 @@ const Bus: FC<object> = () => {
   useEffect(() => player.addListener(updatePlayerBus), [player, updatePlayerBus]);
   useEffect(updateInfoBus, [updateInfoBus]);
 
-  // 2. historyBus 播放历史推送
+  // 2. historyBus 播放历史推送（仅display）
   const updateHistoryBus = useCallback(() => {
-    RendererEventBus.history.send({ list: player.history.list });
+    RendererIPCMessageBus.history.deliver({ list: player.history.list });
   }, [player.history]);
   useEffect(() => player.history.addListener(updateHistoryBus), [player.history, updateHistoryBus]);
 
-  // 3. outputBus 播放设备推送
+  // 3. outputBus 播放设备推送（仅display）
   const updateOutputs = useCallback(() => {
     RendererDevice.platform.then((platform) => {
       // window 自带分类
       if (platform === "win32") {
-        return RendererEventBus.output.send({
+        return RendererIPCMessageBus.output.deliver({
           selected,
           views: views.map((v) => ({
             deviceId: v.deviceId,
@@ -95,7 +95,7 @@ const Bus: FC<object> = () => {
           }))
         });
       }
-      RendererEventBus.output.send({
+      RendererIPCMessageBus.output.deliver({
         selected,
         views: views.map((v) => {
           let displayName;
@@ -127,7 +127,7 @@ const Bus: FC<object> = () => {
   //#region -------- 需要接收并处理的BUS/消息 --------
   // 1. playerAction 播放动作，比如上一首、下一首等
   const windowCurrent = useListenable(RendererWindow.current);
-  const playerActionBus = useListenable(RendererEventBus.playerAction);
+  const playerActionBus = useListenable(RendererIPCMessageBus.playerAction);
   useEffect(() => {
     const actions = playerActionBus.data;
     if (actions.length === 0) return;
@@ -161,23 +161,30 @@ const Bus: FC<object> = () => {
           break;
       }
     }
-    RendererEventBus.clear("playerActionBus");
-  }, [player.audio, player.playlist, playerActionBus.data, updateBus, windowCurrent]);
+    RendererIPCMessageBus.consume(playerActionBus.type);
+  }, [
+    player.audio,
+    player.playlist,
+    playerActionBus.data,
+    playerActionBus.type,
+    updateBus,
+    windowCurrent
+  ]);
 
   // 2. mainBusUpdater 请求式bus, 请求bus再次推送
-  const mainBusUpdater = useListenable(RendererEventBus.mainBusUpdater);
+  const mainBusUpdater = useListenable(RendererIPCMessageBus.updater);
   useEffect(() => {
     const actions = mainBusUpdater.data;
     if (actions.length === 0) return;
     for (const action of actions) {
       switch (action) {
-        case "player":
+        case "track-meta":
           updatePlayerBus();
           break;
-        case "progress":
+        case "track-progress":
           updateProgressBus();
           break;
-        case "info":
+        case "theme":
           updateInfoBus();
           break;
         case "output":
@@ -188,22 +195,23 @@ const Bus: FC<object> = () => {
           break;
       }
     }
-    RendererEventBus.clear("updateBus");
+    RendererIPCMessageBus.consume(mainBusUpdater.type);
   }, [
     updateInfoBus,
     updatePlayerBus,
     updateProgressBus,
-    mainBusUpdater.data,
     updateOutputs,
-    updateHistoryBus
+    updateHistoryBus,
+    mainBusUpdater.data,
+    mainBusUpdater.type
   ]);
 
   // 3. playerChangeBus 播放列表变化处理
-  const playerChangeBus = useListenable(RendererEventBus.playerChange);
+  const playlistActionBus = useListenable(RendererIPCMessageBus.playlistAction);
   // 是否正在应用更改
   const applyingChanges = useRef(false);
   // 变更队列
-  const appliedChangesQueue = useRef<MessageData<"playerChangeBus">[]>([]);
+  const appliedChangesQueue = useRef<MessageData<"bus_dispatch_playlist_action">[]>([]);
 
   const applyPlayerChanges = useCallback(async () => {
     if (applyingChanges.current) return;
@@ -232,7 +240,7 @@ const Bus: FC<object> = () => {
       }
     };
 
-    let change: Undefinable<MessageData<"playerChangeBus">>;
+    let change: Undefinable<MessageData<"bus_dispatch_playlist_action">>;
     while ((change = appliedChangesQueue.current.shift())) {
       try {
         if (change.type === "replacePlaylistAndPlay") {
@@ -273,32 +281,34 @@ const Bus: FC<object> = () => {
     applyingChanges.current = false;
   }, [player]);
   useEffect(() => {
-    const changes = playerChangeBus.data;
+    const changes = playlistActionBus.data;
     if (changes.length === 0) return;
     // 添加变更数据到队列
     appliedChangesQueue.current.push(...changes);
-    // 清空变更数据
-    RendererEventBus.clear("playerChangeBus");
     // 启动变更应用
     void applyPlayerChanges();
-  }, [applyPlayerChanges, playerChangeBus.data]);
+    RendererIPCMessageBus.consume(playlistActionBus.type);
+  }, [applyPlayerChanges, playlistActionBus.data, playlistActionBus.type]);
 
   // 4. 处理 display 合并消息
   const navigate = useNavigate();
+  const displayBus = useListenable(RendererIPCMessageBus.display);
   useEffect(() => {
-    return RendererWindow.display.listenMessage("mergeDisplay", (data) => {
-      switch (data.type) {
+    const data = displayBus.data;
+    if (!data) return;
+    for (const action of data) {
+      switch (action.type) {
         case "album":
-          navigate(RoutePath.withQuery(RoutePathMain.album, { id: data.id }));
+          navigate(RoutePath.withQuery(RoutePathMain.album, { id: action.id }));
           break;
         case "artist":
-          navigate(RoutePath.withQuery(RoutePathMain.artist, { id: data.id }));
+          navigate(RoutePath.withQuery(RoutePathMain.artist, { id: action.id }));
           break;
         case "playlist":
           navigate(
             RoutePathMain.playlist.withQuery(
-              data.id,
-              data.source === "like" ? PlaylistSource.Like : PlaylistSource.Normal
+              action.id,
+              action.source === "like" ? PlaylistSource.Like : PlaylistSource.Normal
             )
           );
           break;
@@ -306,18 +316,22 @@ const Bus: FC<object> = () => {
           navigate(RoutePathMain.history);
           break;
       }
-      RendererWindow.current.focus();
-    });
-  }, [navigate]);
+    }
+
+    RendererWindow.current.focus();
+  }, [displayBus.data, navigate]);
 
   // 5. 处理设备切换
   const viewsRef = useLatestRef(views);
   useEffect(() => {
-    return RendererWindow.display.listenMessage("changeOutput", (deviceId) => {
-      const views = viewsRef.current;
-      if (!views.find((v) => v.deviceId === deviceId)) return;
-      setDevice(deviceId);
-    });
+    return RendererWindow.display.listenMessage(
+      "message_dispatch_device_output_set",
+      (deviceId) => {
+        const views = viewsRef.current;
+        if (!views.find((v) => v.deviceId === deviceId)) return;
+        setDevice(deviceId);
+      }
+    );
   }, [setDevice, viewsRef]);
   //#endregion
 

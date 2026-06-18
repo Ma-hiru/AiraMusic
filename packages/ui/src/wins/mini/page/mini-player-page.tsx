@@ -12,7 +12,7 @@ import {
 import { type FC, Fragment, memo, useCallback, useEffect, useMemo } from "react";
 import { NeteaseImageSize } from "@/common/enum";
 import { useListenable } from "@/common/hooks/use-listenable";
-import { RendererEventBus } from "@/common/lib/bus";
+import { RendererIPCMessageBus } from "@/common/lib/bus";
 import { RendererWindow } from "@/common/lib/window";
 import { NeteaseNetworkImage, NeteaseURL } from "@/common/netease/models";
 import { useThemeInjectFromBus } from "@/common/hooks/use-theme-inject-from-bus";
@@ -27,12 +27,12 @@ import Marquee from "@/common/components/display/marquee";
 const MiniPlayerPage: FC = () => {
   useThemeInjectFromBus();
   const mainWindow = useListenable(RendererWindow.main);
-  const playerBus = useListenable(RendererEventBus.player);
-  const progressBus = useListenable(RendererEventBus.progress);
+  const trackMetaBus = useListenable(RendererIPCMessageBus.trackMeta);
+  const progressBus = useListenable(RendererIPCMessageBus.progress);
 
-  const track = playerBus.data?.track?.detail;
-  const album = playerBus.data?.track?.detail.al;
-  const isPlaying = playerBus.data?.status === "playing";
+  const track = trackMetaBus.data?.track?.detail;
+  const album = trackMetaBus.data?.track?.detail.al;
+  const isPlaying = trackMetaBus.data?.status === "playing";
   const bg = useMemo(
     () => NeteaseURL.setImageSize(track?.al.picUrl, NeteaseImageSize.sm),
     [track?.al.picUrl]
@@ -48,12 +48,12 @@ const MiniPlayerPage: FC = () => {
   }, []);
 
   const togglePlay = useCallback(() => {
-    RendererEventBus.playerAction.send(isPlaying ? "pause" : "play");
+    RendererIPCMessageBus.playerAction.deliver(isPlaying ? "pause" : "play");
   }, [isPlaying]);
 
   useEffect(() => {
-    RendererEventBus.mainBusUpdater.send("player");
-    RendererEventBus.mainBusUpdater.send("progress");
+    RendererIPCMessageBus.updater.deliver("track-meta");
+    RendererIPCMessageBus.updater.deliver("track-progress");
   }, []);
 
   useEffect(() => {
@@ -96,7 +96,7 @@ const MiniPlayerPage: FC = () => {
                 if (!cover) return;
                 const image = cover.toNetworkImage().setSize(NeteaseImageSize.raw);
                 await RendererWindow.image.reactReadyAwait();
-                RendererWindow.image.send("imageCheckerBus", {
+                RendererIPCMessageBus.preview.deliver({
                   url: image.src,
                   alt: image.alt
                 });
@@ -112,7 +112,7 @@ const MiniPlayerPage: FC = () => {
             <Disc3
               className={cx(
                 "size-2 text-(--text-color-on-main)",
-                playerBus.data?.status === "playing" && "animate-spin"
+                trackMetaBus.data?.status === "playing" && "animate-spin"
               )}
             />
           </span>
@@ -120,7 +120,7 @@ const MiniPlayerPage: FC = () => {
         <div className="grid min-w-0 grid-rows-[1fr_auto] gap-0.5">
           <div className="min-w-0 self-end">
             <Marquee
-              text={playerBus.data?.track?.name || "暂无播放"}
+              text={trackMetaBus.data?.track?.name || "暂无播放"}
               className="text-[12px] font-black leading-4"
               options={marqueeOpts}
             />
@@ -128,13 +128,13 @@ const MiniPlayerPage: FC = () => {
               className="text-[9px] font-semibold leading-3 opacity-80"
               options={marqueeOpts}>
               <span>
-                {playerBus.data?.track?.detail.ar.map((a, index) => {
+                {trackMetaBus.data?.track?.detail.ar.map((a, index) => {
                   return (
                     <Fragment key={a.id}>
                       <NoDrag
                         onClick={async () => {
                           await RendererWindow.display.reactReadyAwait();
-                          RendererEventBus.display.send({
+                          RendererIPCMessageBus.display.deliver({
                             type: "artist",
                             id: a.id
                           });
@@ -146,7 +146,7 @@ const MiniPlayerPage: FC = () => {
                           ">
                         {a.name}
                       </NoDrag>
-                      {index !== (playerBus.data?.track?.detail.ar.length ?? 0) - 1 && (
+                      {index !== (trackMetaBus.data?.track?.detail.ar.length ?? 0) - 1 && (
                         <span> / </span>
                       )}
                     </Fragment>
@@ -158,7 +158,7 @@ const MiniPlayerPage: FC = () => {
                 <NoDrag
                   onClick={async () => {
                     await RendererWindow.display.reactReadyAwait();
-                    RendererEventBus.display.send({
+                    RendererIPCMessageBus.display.deliver({
                       type: "album",
                       id: album.id
                     });
@@ -175,7 +175,7 @@ const MiniPlayerPage: FC = () => {
               filled
               icon={SkipBack}
               label="上一首"
-              onClick={() => RendererEventBus.playerAction.send("previous")}
+              onClick={() => RendererIPCMessageBus.playerAction.deliver("previous")}
             />
             <ControlButton
               filled
@@ -187,7 +187,7 @@ const MiniPlayerPage: FC = () => {
               filled
               icon={SkipForward}
               label="下一首"
-              onClick={() => RendererEventBus.playerAction.send("next")}
+              onClick={() => RendererIPCMessageBus.playerAction.deliver("next")}
             />
           </NoDrag>
         </div>

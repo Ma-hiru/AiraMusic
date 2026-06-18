@@ -1,9 +1,14 @@
 import { Listenable } from "@/common/utils/listenable";
-import { RendererIPC } from "@/common/lib/ipc";
 import { RendererRuntime } from "@/common/lib/runtime";
-import type { Message, MessageData, MessageDirection, MessageEvent } from "@mahiru/ipc/renderer";
+import { RendererIPC } from "@mahiru/ipc/renderer";
+import {
+  type Message,
+  type MessageData,
+  type MessageDirection,
+  type MessageSingleEvent
+} from "@mahiru/ipc/types";
 
-export type RendererWindowEvent = MessageData<"windowBus">["action"];
+export type RendererWindowEvent = MessageData<"bus_deliver_window_event">["action"];
 
 export class RendererWindow extends Listenable<RendererWindowEvent | "react-ready"> {
   readonly type: WindowType;
@@ -89,7 +94,7 @@ export class RendererWindow extends Listenable<RendererWindowEvent | "react-read
       workAreaHeight: number;
       workAreaWidth: number;
     }>();
-    RendererIPC.Invoke("currentWindowBounds", undefined)
+    RendererIPC.NormalChannel.send("invoke_window_bounds", undefined)
       .then(resolve)
       .catch(() =>
         resolve({ x: 0, y: 0, width: 0, height: 0, workAreaHeight: 0, workAreaWidth: 0 })
@@ -122,29 +127,44 @@ export class RendererWindow extends Listenable<RendererWindowEvent | "react-read
   }
 
   private initStatus() {
-    RendererIPC.Message.listen("windowBus", "process", this.updateStatus.bind(this), {
-      id: this.id
-    });
-    RendererIPC.Invoke("hasOpenInternalWindow", this.type).then((opened) => (this.opened = opened));
-    RendererIPC.Invoke("isMaximized", this.type).then((isMax) => (this.isMax = isMax));
-    RendererIPC.Invoke("isFullscreen", this.type).then(
+    RendererIPC.MessageChannel.listen(
+      "bus_deliver_window_event",
+      "process",
+      this.updateStatus.bind(this),
+      {
+        id: this.id
+      }
+    );
+    RendererIPC.NormalChannel.send("invoke_window_opened", this.type).then(
+      (opened) => (this.opened = opened)
+    );
+    RendererIPC.NormalChannel.send("invoke_window_maximized", this.type).then(
+      (isMax) => (this.isMax = isMax)
+    );
+    RendererIPC.NormalChannel.send("invoke_window_fullscreen", this.type).then(
       (isFullscreen) => (this.isFullscreen = isFullscreen)
     );
-    RendererIPC.Invoke("isAlwaysOnTop", this.type).then((isPin) => (this.isPin = isPin));
+    RendererIPC.NormalChannel.send("invoke_window_pinned", this.type).then(
+      (isPin) => (this.isPin = isPin)
+    );
     if (
       this.type !== RendererRuntime.currentWindowType &&
       this.type !== "all" &&
       this.type !== "process"
     ) {
-      RendererWindow.all.listenMessageAll("reactReadyBus", ({ data }) => {
-        if (data.type === "ready" && data.sender === this.type) {
-          this.reactReady = true;
+      RendererIPC.MessageChannel.listen(
+        "bus_deliver_react_ready",
+        "all" satisfies WindowTypeAll,
+        ({ data }) => {
+          if (data.type === "ready" && data.sender === this.type) {
+            this.reactReady = true;
+          }
         }
-      });
+      );
     }
   }
 
-  private updateStatus({ type, action }: MessageData<"windowBus">) {
+  private updateStatus({ type, action }: MessageData<"bus_deliver_window_event">) {
     if (type !== this.type) return;
     switch (action) {
       case "show": {
@@ -217,7 +237,9 @@ export class RendererWindow extends Listenable<RendererWindowEvent | "react-read
         break;
       }
       case "always-on-top-changed":
-        RendererIPC.Invoke("isAlwaysOnTop", this.type).then((isPin) => (this.isPin = isPin));
+        RendererIPC.NormalChannel.send("invoke_window_pinned", this.type).then(
+          (isPin) => (this.isPin = isPin)
+        );
         break;
     }
     this.executeListeners(action);
@@ -248,7 +270,7 @@ export class RendererWindow extends Listenable<RendererWindowEvent | "react-read
     this.addListener(listener);
   }
 
-  listenMessage<T extends MessageEvent>(
+  listenMessage<T extends MessageSingleEvent>(
     event: T,
     callback: NormalFunc<[data: MessageData<T>]>,
     options?: {
@@ -256,15 +278,11 @@ export class RendererWindow extends Listenable<RendererWindowEvent | "react-read
       once?: boolean;
     }
   ): NormalFunc {
-    return RendererIPC.Message.listen(event, this.type, callback, options);
-  }
-
-  removeMessageHandler(id: string) {
-    return RendererIPC.Message.remove(id);
+    return RendererIPC.MessageChannel.listen(event, this.type, callback, options);
   }
 
   /** all专用 */
-  listenMessageAll<T extends MessageEvent>(
+  listenMessageAll<T extends MessageSingleEvent>(
     event: T,
     callback: NormalFunc<[message: Message<T, MessageDirection["receive"]>]>,
     options?: {
@@ -272,15 +290,24 @@ export class RendererWindow extends Listenable<RendererWindowEvent | "react-read
       once?: boolean;
     }
   ): NormalFunc {
-    return RendererIPC.Message.listen(event, "all" satisfies WindowTypeAll, callback, options);
+    return RendererIPC.MessageChannel.listen(
+      event,
+      "all" satisfies WindowTypeAll,
+      callback,
+      options
+    );
   }
 
-  send<T extends MessageEvent>(type: T, data: MessageData<T>) {
-    return RendererIPC.Message.send(type, this.type, data);
+  removeMessageHandler(id: string) {
+    return RendererIPC.MessageChannel.remove(id);
+  }
+
+  send<T extends MessageSingleEvent>(type: T, data: MessageData<T>) {
+    return RendererIPC.MessageChannel.send(type, this.type, data);
   }
 
   open() {
-    RendererIPC.Event("openInternalWindow", this.type);
+    RendererIPC.NormalChannel.send("event_window_open", this.type);
   }
 
   reactReadyAwait() {
@@ -296,7 +323,7 @@ export class RendererWindow extends Listenable<RendererWindowEvent | "react-read
     };
     this.addListener(listener);
     if (this.opened) {
-      RendererIPC.Message.send("reactReadyBus", this.type, {
+      RendererIPC.MessageChannel.send("bus_deliver_react_ready", this.type, {
         type: "isReady",
         target: this.type
       });
@@ -307,43 +334,43 @@ export class RendererWindow extends Listenable<RendererWindowEvent | "react-read
   }
 
   devTools() {
-    import.meta.env.DEV && RendererIPC.Event("openInternalDevTools", this.type);
+    import.meta.env.DEV && RendererIPC.NormalChannel.send("event_window_debug", this.type);
   }
 
   close() {
-    RendererIPC.Event("closeInternalWindow", this.type);
+    RendererIPC.NormalChannel.send("event_window_close", this.type);
   }
 
   focus() {
-    RendererIPC.Event("focusInternalWindow", this.type);
+    RendererIPC.NormalChannel.send("event_window_focus", this.type);
   }
 
   hide() {
-    RendererIPC.Event("hiddenInternalWindow", this.type);
+    RendererIPC.NormalChannel.send("event_window_hidden", this.type);
   }
 
   maximize() {
-    RendererIPC.Event("maximizeInternalWindow", this.type);
+    RendererIPC.NormalChannel.send("event_window_maximize", this.type);
   }
 
   unmaximize() {
-    RendererIPC.Event("unmaximizeInternalWindow", this.type);
+    RendererIPC.NormalChannel.send("event_window_unmaximize", this.type);
   }
 
   minimize() {
-    RendererIPC.Event("minimizeInternalWindow", this.type);
+    RendererIPC.NormalChannel.send("event_window_minimize", this.type);
   }
 
   unminimize() {
-    RendererIPC.Event("unminimizeInternalWindow", this.type);
+    RendererIPC.NormalChannel.send("event_window_unminimize", this.type);
   }
 
   show() {
-    RendererIPC.Event("showInternalWindow", this.type);
+    RendererIPC.NormalChannel.send("event_window_show", this.type);
   }
 
-  mousePenetrate(penetrate: boolean) {
-    RendererIPC.Event("mousePenetrateInternalWindow", {
+  penetrate(penetrate: boolean) {
+    RendererIPC.NormalChannel.send("event_window_penetrate", {
       type: this.type,
       penetrate
     });
@@ -352,28 +379,28 @@ export class RendererWindow extends Listenable<RendererWindowEvent | "react-read
   resize(
     props: Partial<{ type: WindowType; x: number; y: number; width: number; height: number }>
   ) {
-    RendererIPC.Event("resizeInternalWindow", {
+    RendererIPC.NormalChannel.send("event_window_resize", {
       ...props,
       type: this.type
     });
   }
 
   move(props: Partial<{ type: WindowType; x: number; y: number; deltaX: number; deltaY: number }>) {
-    RendererIPC.Event("moveInternalWindow", {
+    RendererIPC.NormalChannel.send("event_window_move", {
       type: this.type,
       ...props
     });
   }
 
   pin() {
-    RendererIPC.Event("pinInternalWindow", {
+    RendererIPC.NormalChannel.send("event_window_pin", {
       type: this.type,
       pin: true
     });
   }
 
   unpin() {
-    RendererIPC.Event("pinInternalWindow", {
+    RendererIPC.NormalChannel.send("event_window_pin", {
       type: this.type,
       pin: false
     });
@@ -389,7 +416,7 @@ export class RendererWindow extends Listenable<RendererWindowEvent | "react-read
 
   override [Symbol.dispose]() {
     super[Symbol.dispose]();
-    RendererIPC.Message.remove(this.id);
+    RendererIPC.MessageChannel.remove(this.id);
   }
 
   private static winCache = new Map<WindowType, RendererWindow>();
@@ -431,25 +458,27 @@ export class RendererWindow extends Listenable<RendererWindowEvent | "react-read
   }
 
   static panic(message: string, error?: string) {
-    RendererIPC.Event("fatalError", { message, error });
+    RendererIPC.NormalChannel.send("event_debug_fatal", { message, error });
   }
 
   static [Symbol.dispose]() {
     this.winCache.clear();
   }
-}
 
-queueMicrotask(() => {
-  const sendStatus = () => {
-    RendererWindow.all.send("reactReadyBus", {
-      type: "ready",
-      sender: RendererRuntime.currentWindowType
+  static {
+    queueMicrotask(() => {
+      const sendStatus = () => {
+        RendererIPC.MessageChannel.send("bus_deliver_react_ready", "all", {
+          type: "ready",
+          sender: RendererRuntime.currentWindowType
+        });
+      };
+      RendererIPC.MessageChannel.listen("bus_deliver_react_ready", "all", ({ data }) => {
+        if (data.type === "isReady" && data.target === RendererRuntime.currentWindowType) {
+          sendStatus();
+        }
+      });
+      setTimeout(sendStatus, 200);
     });
-  };
-  RendererWindow.all.listenMessageAll("reactReadyBus", ({ data }) => {
-    if (data.type === "isReady" && data.target === RendererRuntime.currentWindowType) {
-      sendStatus();
-    }
-  });
-  setTimeout(sendStatus, 200);
-});
+  }
+}

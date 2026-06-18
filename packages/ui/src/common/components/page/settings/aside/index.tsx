@@ -11,7 +11,7 @@ interface SettingsAsideProps {
   settings: NeteaseSettings;
   login: NormalFunc;
   logout: NormalFunc;
-  cacheStoreConfig: Nullable<InvokeEventPayload<"fetchCacheStoreConfig">>;
+  cacheStoreConfig: Nullable<InvokeEventPayload<"invoke_cache_config_get">>;
   className?: string;
 }
 

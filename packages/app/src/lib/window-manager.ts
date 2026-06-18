@@ -6,7 +6,8 @@ import {
 } from "electron";
 import { Log } from "@/lib/log";
 import { debounce } from "lodash-es";
-import { MainMessageChannel, type MessageData } from "@mahiru/ipc/main";
+import { MainIPC } from "@mahiru/ipc/main";
+import type { MessageData } from "@mahiru/ipc/types";
 import type { WindowExits } from "@/types/window";
 
 export class MainWindowManager {
@@ -105,11 +106,11 @@ export class MainWindowManager {
 
   private static bindWindowBus(window: BrowserWindow, type?: WindowType) {
     if (!type) return;
-    const sendBusMessage = (action: MessageData<"windowBus">["action"]) => {
+    const sendBusMessage = (action: MessageData<"bus_deliver_window_event">["action"]) => {
       Log.debug("windowBus", `${type} - ${action}`);
       try {
-        MainMessageChannel.commitAll({
-          type: "windowBus",
+        MainIPC.MessageChannel.commitAll({
+          type: "bus_deliver_window_event",
           sender: "process",
           data: { type, action }
         });

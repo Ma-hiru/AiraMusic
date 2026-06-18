@@ -7,7 +7,7 @@ import { usePlayerChangeActionFromDisplay } from "@/wins/display/hooks/use-playe
 import { useArtistOrAlbumDisplayJump } from "@/wins/display/hooks/use-artist-or-album-display-jump";
 import { useDisplayPageAction } from "@/wins/display/hooks/use-display-page-action";
 import { useDisplayTitle } from "@/wins/display/hooks/use-display-title";
-import { RendererEventBus } from "@/common/lib/bus";
+import { RendererIPCMessageBus } from "@/common/lib/bus";
 import { RendererWindow } from "@/common/lib/window";
 import type { TrackListClickFunc } from "@/common/components/display/track_list";
 
@@ -15,8 +15,8 @@ import History, { type HistoryRef } from "@/common/components/page/history";
 
 const HistoryDisplay: FC<object> = () => {
   const historyRef = useRef<Nullable<HistoryRef>>(null);
-  const playerBus = useListenable(RendererEventBus.player);
-  const historyBus = useListenable(RendererEventBus.history);
+  const trackMetaBus = useListenable(RendererIPCMessageBus.trackMeta);
+  const historyBus = useListenable(RendererIPCMessageBus.history);
   const { heartManager, playableManager } = useUserTrackManager();
 
   // 进入页面或聚焦时请求 main 窗口推送最新历史
@@ -43,7 +43,7 @@ const HistoryDisplay: FC<object> = () => {
     (track) => {
       const tracks = historyListRef.current;
       if (!tracks.length) return;
-      RendererEventBus.playerChange.send({
+      RendererIPCMessageBus.playlistAction.deliver({
         type: "replacePlaylistAndPlay",
         sourceType: "other",
         sourceID: 0,
@@ -77,7 +77,7 @@ const HistoryDisplay: FC<object> = () => {
       addToPlaylistNext={addTrackToPlaylistNext}
       heartManager={heartManager}
       playableManager={playableManager}
-      activeTrackID={playerBus.data?.track?.id}
+      activeTrackID={trackMetaBus.data?.track?.id}
       canFastLocate={null}
       canScrollTop={null}
       pageActionType="enter"
@@ -88,4 +88,4 @@ const HistoryDisplay: FC<object> = () => {
 
 export default memo(HistoryDisplay);
 
-const fetchHistory = () => RendererEventBus.mainBusUpdater.send("history");
+const fetchHistory = () => RendererIPCMessageBus.updater.deliver("history");

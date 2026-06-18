@@ -5,7 +5,7 @@ import { useArtistOrAlbumDisplayJump } from "@/wins/display/hooks/use-artist-or-
 import { usePlayerChangeActionFromDisplay } from "@/wins/display/hooks/use-player-change-action-from-display";
 import { useUserTrackManager } from "@/common/hooks/use-user-track-manager";
 import { useListenable } from "@/common/hooks/use-listenable";
-import { RendererEventBus } from "@/common/lib/bus";
+import { RendererIPCMessageBus } from "@/common/lib/bus";
 import RendererImageConstants from "@/common/constants/image";
 
 import Search, { type SearchRef } from "@/common/components/page/search";
@@ -13,7 +13,7 @@ import Search, { type SearchRef } from "@/common/components/page/search";
 const SearchDisplay: FC<object> = () => {
   const location = useLocation();
   const searchRef = useRef<SearchRef>(null);
-  const playerBus = useListenable(RendererEventBus.player);
+  const trackMetaBus = useListenable(RendererIPCMessageBus.trackMeta);
   const { heartManager, playableManager } = useUserTrackManager();
   const { keyword } = RoutePath.parseQuery<{ keyword?: string }>(location, RoutePathDisplay.search);
   const { jumpArtistDisplay, jumpAlbumDisplay, jumpPlaylistDisplay } =
@@ -37,7 +37,7 @@ const SearchDisplay: FC<object> = () => {
       onClickTrack={onTrackPlay}
       heartManager={heartManager}
       playableManager={playableManager}
-      activeTrackID={playerBus.data?.track?.id}
+      activeTrackID={trackMetaBus.data?.track?.id}
       coverSize={RendererImageConstants.PlaylistPageTrackCoverSize}
       defaultKeyword={keyword}
     />

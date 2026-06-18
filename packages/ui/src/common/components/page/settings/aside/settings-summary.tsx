@@ -9,7 +9,7 @@ import Card from "@/common/components/layout/card";
 
 interface SummaryProps {
   settings: NeteaseSettings;
-  cacheStoreConfig: Nullable<InvokeEventPayload<"fetchCacheStoreConfig">>;
+  cacheStoreConfig: Nullable<InvokeEventPayload<"invoke_cache_config_get">>;
 }
 
 const SettingsSummary: FC<SummaryProps> = ({ settings, cacheStoreConfig }) => {

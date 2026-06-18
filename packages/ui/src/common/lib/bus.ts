@@ -1,172 +1,109 @@
-import type { MessageData, MessageEvent } from "@mahiru/ipc/renderer";
 import { Listenable } from "@/common/utils/listenable";
-import { RendererWindow } from "@/common/lib/window";
+import { RendererIPC } from "@mahiru/ipc/renderer";
+import type { MessageBusEvent, MessageData } from "@mahiru/ipc/types";
 
-export abstract class Bus<T extends MessageEvent> extends Listenable {
-  type: T;
-  data: Nullable<MessageData<T>> = null;
+export abstract class MessageBus<
+  T extends MessageBusEvent,
+  D extends "arr" | "obj" = "obj"
+> extends Listenable {
+  readonly type: T;
+  protected readonly defaultTarget;
+  private readonly unsubscriber;
 
-  protected constructor(type: T) {
+  protected constructor(type: T, defaultTarget: WindowType | WindowType[] = "all") {
     super();
     this.type = type;
-    RendererWindow.all.listenMessageAll(type, ({ data }) => {
-      this.data = data;
+    this.defaultTarget = defaultTarget;
+    this.unsubscriber = RendererIPC.MessageChannel.listen(type, "all", ({ data }) => {
+      this.append(data);
       this.executeListeners();
     });
   }
 
-  send(data: MessageData<T>) {
-    RendererWindow.all.send(this.type, data);
+  static _consume(bus: MessageBus<any>, flush = false) {
+    const data = bus.data;
+    bus.clear();
+    flush && bus.executeListeners();
+    return data;
   }
 
-  commit(data: MessageData<T>) {
-    this.data = data;
+  deliver(data: MessageData<T>, target = this.defaultTarget) {
+    const targets = Array.isArray(target) ? target : [target];
+    for (const t of targets) {
+      RendererIPC.MessageChannel.send(this.type, t, data);
+    }
+  }
+
+  dispatch(data: MessageData<T>) {
+    this.append(data);
     this.executeListeners();
   }
+
+  override [Symbol.dispose]() {
+    this.unsubscriber();
+    this.clear();
+    super[Symbol.dispose]();
+  }
+
+  abstract data: D extends "obj" ? Nullable<MessageData<T>> : MessageData<T>[];
+  protected abstract append(data: MessageData<T>): void;
+  protected abstract clear(): void;
 }
 
-export abstract class BusArray<T extends MessageEvent> extends Listenable {
-  type: T;
+export class MessageBusObj<T extends MessageBusEvent> extends MessageBus<T> {
+  data: Nullable<MessageData<T>> = null;
+
+  constructor(type: T, defaultTarget: WindowType | WindowType[] = "all") {
+    super(type, defaultTarget);
+  }
+
+  protected override append(data: MessageData<T>) {
+    this.data = data;
+  }
+
+  protected override clear() {
+    this.data = null;
+  }
+}
+
+export class MessageBusArray<T extends MessageBusEvent> extends MessageBus<T, "arr"> {
   data: MessageData<T>[] = [];
+  maxLen: number;
 
-  protected constructor(type: T) {
-    super();
-    this.type = type;
-    RendererWindow.all.listenMessageAll(type, ({ data }) => {
-      this.data = [...this.data, data];
-      this.executeListeners();
-    });
+  constructor(type: T, defaultTarget: WindowType | WindowType[] = "all", maxLen = 10) {
+    super(type, defaultTarget);
+    this.maxLen = maxLen;
   }
 
-  send(data: MessageData<T>) {
-    RendererWindow.main.send(this.type, data);
+  protected override append(data: MessageData<T>) {
+    this.data = [...this.data.slice(0, this.maxLen - 1), data]; // 新引用
   }
-}
 
-class PlayerBus extends Bus<"playerBus"> {
-  constructor() {
-    super("playerBus");
+  protected override clear() {
+    this.data = [];
   }
 }
 
-class ProgressBus extends Bus<"progressBus"> {
-  constructor() {
-    super("progressBus");
-  }
-}
+/**
+ * 对 ipc message 的 channel 单独封装
+ * */
+export class RendererIPCMessageBus {
+  static readonly trackMeta = new MessageBusObj("bus_deliver_track_meta");
+  static readonly progress = new MessageBusObj("bus_deliver_track_progress");
+  static readonly theme = new MessageBusObj("bus_deliver_theme");
+  static readonly comment = new MessageBusObj("bus_deliver_comment", "comments");
+  static readonly updater = new MessageBusArray("bus_dispatch_update", "main");
+  static readonly display = new MessageBusArray("bus_display", "display");
+  static readonly playerAction = new MessageBusArray("bus_dispatch_player_action", "main");
+  static readonly playlistAction = new MessageBusArray("bus_dispatch_playlist_action", "main");
+  static readonly output = new MessageBusObj("bus_deliver_device_output_views", "display");
+  static readonly history = new MessageBusObj("bus_deliver_history", "display");
+  static readonly preview = new MessageBusArray("bus_deliver_preview", "image");
 
-class InfoBus extends Bus<"infoBus"> {
-  constructor() {
-    super("infoBus");
-  }
-}
-
-class CommentsBus extends Bus<"commentBus"> {
-  constructor() {
-    super("commentBus");
-  }
-}
-
-class PlayerActionBus extends BusArray<"playerActionBus"> {
-  constructor() {
-    super("playerActionBus");
-  }
-}
-
-class UpdateMainBus extends BusArray<"updateBus"> {
-  constructor() {
-    super("updateBus");
-  }
-}
-
-class DisplayBus extends Bus<"displayBus"> {
-  constructor() {
-    super("displayBus");
-  }
-}
-
-class PlayerChangeBus extends BusArray<"playerChangeBus"> {
-  constructor() {
-    super("playerChangeBus");
-  }
-}
-
-class OutputBus extends Bus<"outputBus"> {
-  constructor() {
-    super("outputBus");
-  }
-}
-
-class HistoryBus extends Bus<"historyBus"> {
-  constructor() {
-    super("historyBus");
-  }
-}
-
-export class RendererEventBus {
-  private static readonly BusCollections = {
-    playerBus: new PlayerBus(),
-    progressBus: new ProgressBus(),
-    infoBus: new InfoBus(),
-    commentBus: new CommentsBus(),
-    playerActionBus: new PlayerActionBus(),
-    updateMainBus: new UpdateMainBus(),
-    displayBUs: new DisplayBus(),
-    playerChangeBus: new PlayerChangeBus(),
-    output: new OutputBus(),
-    historyBus: new HistoryBus()
-  };
-
-  static get player() {
-    return RendererEventBus.BusCollections.playerBus;
-  }
-
-  static get progress() {
-    return RendererEventBus.BusCollections.progressBus;
-  }
-
-  static get info() {
-    return RendererEventBus.BusCollections.infoBus;
-  }
-
-  static get comment() {
-    return RendererEventBus.BusCollections.commentBus;
-  }
-
-  static get mainBusUpdater() {
-    return RendererEventBus.BusCollections.updateMainBus;
-  }
-
-  static get playerAction() {
-    return RendererEventBus.BusCollections.playerActionBus;
-  }
-
-  static get display() {
-    return RendererEventBus.BusCollections.displayBUs;
-  }
-
-  static get playerChange() {
-    return RendererEventBus.BusCollections.playerChangeBus;
-  }
-
-  static get output() {
-    return RendererEventBus.BusCollections.output;
-  }
-
-  static get history() {
-    return RendererEventBus.BusCollections.historyBus;
-  }
-
-  static get collections() {
-    return Object.entries(RendererEventBus.BusCollections).map(([, bus]) => bus);
-  }
-
-  static clear<T extends MessageEvent>(type: T) {
-    for (const bus of RendererEventBus.collections) {
-      if (bus.type === type) {
-        if (Array.isArray(bus.data)) return (bus.data = []);
-        if (typeof bus.data === "object") return (bus.data = null);
-        return;
+  static consume(type: MessageBusEvent) {
+    for (const ins of Object.values(this) as MessageBus<any>[]) {
+      if (typeof ins === "object" && ins.type === type) {
+        MessageBus._consume(ins);
       }
     }
   }
