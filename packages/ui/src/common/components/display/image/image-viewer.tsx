@@ -8,6 +8,7 @@ import {
   ImageOff,
   type LucideIcon,
   RotateCcw,
+  RotateCw,
   ZoomIn,
   ZoomOut
 } from "lucide-react";
@@ -53,6 +54,7 @@ const MIN_SCALE = 0.25;
 const MAX_SCALE = 5;
 const WHEEL_STEP = 0.12;
 const BUTTON_ZOOM_STEP = 0.35;
+const ROTATE_STEP = 90;
 const DOUBLE_TAP_DELAY = 300;
 const DOUBLE_TAP_DISTANCE = 30;
 const MOVE_THRESHOLD = 10;
@@ -100,6 +102,7 @@ const ImageViewer: FC<ImageViewerProps> = ({ images, index, onIndexChange, onToo
   const [status, setStatus] = useState<"idle" | "loading" | "error" | "loaded">("idle");
   const [scale, setScale] = useState(1);
   const [translate, setTranslate] = useState({ x: 0, y: 0 });
+  const [rotation, setRotation] = useState(0);
   const [dragging, setDragging] = useState(false);
   const [toolBarVisible, setToolBarVisible] = useState(false);
   const [reloadToken, setReloadToken] = useState(0);
@@ -120,11 +123,11 @@ const ImageViewer: FC<ImageViewerProps> = ({ images, index, onIndexChange, onToo
 
   const imageStyle = useMemo<CSSProperties>(
     () => ({
-      transform: `translate(${translate.x}px, ${translate.y}px) scale(${scale})`,
+      transform: `translate(${translate.x}px, ${translate.y}px) rotate(${rotation}deg) scale(${scale})`,
       transition: dragging ? "none" : "transform 180ms ease",
       cursor: dragging ? "grabbing" : scale > 1 ? "grab" : "zoom-in"
     }),
-    [dragging, scale, translate.x, translate.y]
+    [dragging, rotation, scale, translate.x, translate.y]
   );
 
   const showToolbar = useCallback(
@@ -148,6 +151,7 @@ const ImageViewer: FC<ImageViewerProps> = ({ images, index, onIndexChange, onToo
   const resetTransform = useCallback(() => {
     setScale(1);
     setTranslate({ x: 0, y: 0 });
+    setRotation(0);
   }, []);
 
   const calcContainedImageSize = useCallback((image: HTMLImageElement) => {
@@ -167,32 +171,34 @@ const ImageViewer: FC<ImageViewerProps> = ({ images, index, onIndexChange, onToo
   }, []);
 
   const calcImageTranslateBounds = useCallback(
-    (nextScale = scale) => {
+    (nextScale = scale, nextRotation = rotation) => {
       const viewer = viewerRef.current;
       const image = imageRef.current;
       if (!viewer || !image) return { maxX: 0, maxY: 0 };
 
       const { width: baseW, height: baseH } = calcContainedImageSize(image);
-      const scaledW = baseW * nextScale;
-      const scaledH = baseH * nextScale;
+      // 旋转 90°/270° 时图片包围盒的宽高互换
+      const rotated = nextRotation % 180 !== 0;
+      const scaledW = (rotated ? baseH : baseW) * nextScale;
+      const scaledH = (rotated ? baseW : baseH) * nextScale;
 
       return {
         maxX: Math.max(0, (scaledW - viewer.clientWidth) / 2),
         maxY: Math.max(0, (scaledH - viewer.clientHeight) / 2)
       };
     },
-    [calcContainedImageSize, scale]
+    [calcContainedImageSize, rotation, scale]
   );
 
   const clampTranslate = useCallback(
-    (value: { x: number; y: number }, nextScale = scale) => {
-      const { maxX, maxY } = calcImageTranslateBounds(nextScale);
+    (value: { x: number; y: number }, nextScale = scale, nextRotation = rotation) => {
+      const { maxX, maxY } = calcImageTranslateBounds(nextScale, nextRotation);
       return {
         x: clamp(value.x, -maxX, maxX),
         y: clamp(value.y, -maxY, maxY)
       };
     },
-    [calcImageTranslateBounds, scale]
+    [calcImageTranslateBounds, rotation, scale]
   );
 
   const zoomAtPoint = useCallback(
@@ -232,6 +238,17 @@ const ImageViewer: FC<ImageViewerProps> = ({ images, index, onIndexChange, onToo
       showToolbar(true);
     },
     [scale, showToolbar, status, zoomAtPoint]
+  );
+
+  const rotate = useCallback(
+    (delta: number) => {
+      if (status !== "loaded") return;
+      const nextRotation = (((rotation + delta) % 360) + 360) % 360;
+      setRotation(nextRotation);
+      setTranslate((prev) => clampTranslate(prev, scale, nextRotation));
+      showToolbar(true);
+    },
+    [clampTranslate, rotation, scale, showToolbar, status]
   );
 
   const lastImage = useCallback(() => {
@@ -429,6 +446,12 @@ const ImageViewer: FC<ImageViewerProps> = ({ images, index, onIndexChange, onToo
           event.preventDefault();
           zoomFromCenter(-BUTTON_ZOOM_STEP);
           break;
+        case "r":
+        case "R":
+          if (event.ctrlKey || event.metaKey) break;
+          event.preventDefault();
+          rotate(ROTATE_STEP);
+          break;
         case "s":
         case "S":
           if (event.ctrlKey || event.metaKey) {
@@ -441,7 +464,7 @@ const ImageViewer: FC<ImageViewerProps> = ({ images, index, onIndexChange, onToo
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [lastImage, nextImage, resetTransform, saveImage, showToolbar, zoomFromCenter]);
+  }, [lastImage, nextImage, resetTransform, rotate, saveImage, showToolbar, zoomFromCenter]);
 
   useEffect(() => {
     return () => {
@@ -582,8 +605,8 @@ const ImageViewer: FC<ImageViewerProps> = ({ images, index, onIndexChange, onToo
         />
         <button
           type="button"
-          aria-label="重置缩放"
-          title="重置缩放"
+          aria-label="重置视图"
+          title="重置视图"
           disabled={status !== "loaded"}
           onClick={() => {
             resetTransform();
@@ -606,6 +629,12 @@ const ImageViewer: FC<ImageViewerProps> = ({ images, index, onIndexChange, onToo
           label="放大"
           disabled={status !== "loaded" || scale >= MAX_SCALE}
           onClick={() => zoomFromCenter(BUTTON_ZOOM_STEP)}
+        />
+        <MemoToolbarButton
+          icon={RotateCw}
+          label="向右旋转"
+          disabled={status !== "loaded"}
+          onClick={() => rotate(ROTATE_STEP)}
         />
         <MemoToolbarButton
           icon={Download}
