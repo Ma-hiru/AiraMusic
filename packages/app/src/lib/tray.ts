@@ -76,6 +76,63 @@ export class MainTray {
     });
   }
 
+  private static removeChecker: Nullable<NormalFunc> = null;
+  private static previousResolve: Nullable<NormalFunc> = null;
+  private static previousTimer: Nullable<NodeJS.Timeout> = null;
+  private static openCommentReady(promise?: Promise<void>, resolve?: NormalFunc) {
+    if (!promise || !resolve) {
+      const newPromise = Promise.withResolvers<void>();
+      promise = newPromise.promise;
+      resolve = newPromise.resolve;
+    }
+
+    const commentWin = MainWindowManager.get("comments");
+    if (commentWin) {
+      this.removeChecker?.();
+      this.previousResolve?.();
+      this.previousTimer && clearTimeout(this.previousTimer);
+
+      this.previousResolve = resolve;
+      this.previousTimer = setTimeout(() => {
+        this.removeChecker?.();
+        this.previousResolve?.();
+        this.removeChecker = null;
+        this.previousResolve = null;
+        this.previousTimer = null;
+      }, 5000);
+      this.removeChecker = MainIPC.MessageChannel.addForwardChecker((win, message) => {
+        if (
+          MainWindowManager.getId(win) === "comments" &&
+          message.type === "bus_deliver_react_ready" &&
+          (message.data as MessageData<"bus_deliver_react_ready">).type === "ready"
+        ) {
+          this.previousTimer && clearTimeout(this.previousTimer);
+          this.removeChecker?.();
+          this.removeChecker = null;
+          this.previousResolve = null;
+          resolve();
+        }
+        return true;
+      });
+
+      MainIPC.MessageChannel.commit({
+        sender: "process",
+        receiver: "comments",
+        type: "bus_deliver_react_ready",
+        data: {
+          type: "isReady",
+          target: "comments"
+        }
+      });
+    } else {
+      MainWindowCreator.create(MainWindowPreset.get("comments"))?.once("ready-to-show", () =>
+        this.openCommentReady(promise, resolve)
+      );
+    }
+
+    return promise;
+  }
+
   private static showRawMenu(tray: Tray) {
     Log.debug("tray", "create raw menu");
     const items: (MenuItem | MenuItemConstructorOptions)[] = [
@@ -122,24 +179,17 @@ export class MainTray {
             click: () => {
               const track = this.playerBus?.track;
               if (!track) return;
-              const open = () => {
-                setTimeout(() => {
-                  MainIPC.MessageChannel.commit({
-                    sender: "process",
-                    receiver: "comments",
-                    type: "bus_deliver_comment",
-                    data: {
-                      id: track.id,
-                      type: "track"
-                    }
-                  });
-                }, 1500);
-              };
-              if (!MainWindowManager.has("comments")) {
-                MainWindowCreator.create(MainWindowPreset.get("comments"))?.once("show", open);
-              } else {
-                open();
-              }
+              this.openCommentReady().then(() => {
+                MainIPC.MessageChannel.commit({
+                  sender: "process",
+                  receiver: "comments",
+                  type: "bus_deliver_comment",
+                  data: {
+                    id: track.id,
+                    type: "track"
+                  }
+                });
+              });
             }
           },
           {
