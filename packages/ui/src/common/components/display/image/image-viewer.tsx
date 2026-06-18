@@ -482,7 +482,8 @@ const ImageViewer: FC<ImageViewerProps> = ({ images, index, onIndexChange, onToo
           className="
             flex min-w-0 max-w-[min(76vw,780px)] items-center gap-2 rounded-md
             border border-white/10 bg-black/35 px-4 py-1.5 text-[12px] font-semibold
-            text-white/85 shadow-[0_8px_32px_rgba(0,0,0,0.25)] backdrop-blur-md
+            text-white/85 shadow-[0_8px_32px_rgba(0,0,0,0.25)]
+            backdrop-saturate-120 backdrop-blur-md
           ">
           <span className="truncate">{current.alt || current.url || "等待图片"}</span>
           {images.length > 1 && (
@@ -558,8 +559,9 @@ const ImageViewer: FC<ImageViewerProps> = ({ images, index, onIndexChange, onToo
         className={cx(
           `
             absolute bottom-4 left-1/2 z-30 flex -translate-x-1/2 items-center gap-1
-            rounded-lg border border-white/10 bg-black/45 px-2 py-1.5
-            shadow-[0_20px_60px_rgba(0,0,0,0.4)] backdrop-blur-xl
+            rounded-lg border border-white/10 bg-black/35 px-2 py-1.5
+            shadow-[0_20px_60px_rgba(0,0,0,0.4)]
+            backdrop-saturate-120 backdrop-blur-md
             transition-all duration-300 ease-in-out
           `,
           toolBarVisible

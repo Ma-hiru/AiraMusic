@@ -74,13 +74,14 @@ const ImagePage: FC = () => {
           color="#ffffff"
           className="
             rounded-md border border-white/10 bg-black/35 px-3 py-1.5
-            shadow-[0_8px_32px_rgba(0,0,0,0.25)] backdrop-blur-md
+            shadow-[0_8px_32px_rgba(0,0,0,0.25)]
+            backdrop-saturate-120 backdrop-blur-md
           "
           mini
           pin
         />
       </Drag>
-      <AppToast.Provider className="top-12 z-70" />
+      <AppToast.Provider className="top-12 z-70" itemContainerClassName="bg-black/35!" />
     </div>
   );
 };

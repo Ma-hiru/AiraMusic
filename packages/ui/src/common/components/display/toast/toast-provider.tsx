@@ -1,12 +1,18 @@
 import { cx } from "@emotion/css";
-import { type FC, memo, startTransition, useCallback, useState } from "react";
+import { memo, startTransition, useCallback, useState } from "react";
 import { AnimatePresence, type HTMLMotionProps, motion } from "motion/react";
 import { ensureInjectObject, useInject } from "@/common/utils/inject";
 import AppToast from "./use";
 
 import ToastItem, { type ToastItemData } from "./toast-item";
 
-const ToastProvider: FC<{ className?: string }> = ({ className }) => {
+const ToastProvider = ({
+  className,
+  itemContainerClassName
+}: {
+  className?: string;
+  itemContainerClassName?: string;
+}) => {
   const [items, setItems] = useState<ToastItemData[]>([]);
   const show = useCallback((data: Omit<ToastItemData, "id">) => {
     const id = window.crypto.randomUUID();
@@ -30,11 +36,16 @@ const ToastProvider: FC<{ className?: string }> = ({ className }) => {
     (items: ToastItemData[]) => {
       return items.map((item) => (
         <motion.div
-          className={`
-              px-2 py-1
-              rounded-sm shadow-lg border border-white/30
-              select-none font-semibold text-[12px] bg-white/15 backdrop-blur-sm
-          `}
+          className={cx(
+            `
+            px-2 py-1
+            rounded-sm border border-white/30
+            select-none font-semibold text-[12px]
+            backdrop-saturate-120 backdrop-blur-md
+            bg-black/15 shadow-[0_8px_32px_rgba(0,0,0,0.25)]
+           `,
+            itemContainerClassName
+          )}
           key={item.id}
           onDragEnd={(_, info) => Math.abs(info.offset.x) > 100 && dispose(item.id!)}
           {...ContainerProps}>
@@ -42,7 +53,7 @@ const ToastProvider: FC<{ className?: string }> = ({ className }) => {
         </motion.div>
       ));
     },
-    [dispose]
+    [dispose, itemContainerClassName]
   );
 
   useInject(ensureInjectObject(AppToast), {
@@ -61,7 +72,7 @@ const ToastProvider: FC<{ className?: string }> = ({ className }) => {
       )}>
       {/*prettier-ignore*/}
       <AnimatePresence mode="sync">
-        {Render(items,  )}
+        {Render(items)}
       </AnimatePresence>
     </div>
   );
