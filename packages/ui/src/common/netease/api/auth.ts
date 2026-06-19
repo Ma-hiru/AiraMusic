@@ -3,12 +3,15 @@ import { apiRequest } from "@/common/netease/api/request";
 export default class _NeteaseAuthAPI {
   /**
    * 手机登录
+   * @desc 支持密码登录与短信验证码登录，传入 `captcha` 后 `password` 失效
    */
   static loginWithPhone(params: {
     /** 手机号码 */
     phone: string;
     /** 密码 */
-    password: string;
+    password?: string;
+    /** 短信验证码，使用 `sendCaptcha` 获取，传入后 password 将失效 */
+    captcha?: string;
     /** 国家码，用于国外手机号登录，例如美国传入：1 */
     countrycode?: string;
     /** md5加密后的密码,传入后 password 将失效 */
@@ -16,6 +19,23 @@ export default class _NeteaseAuthAPI {
   }) {
     return apiRequest<typeof params, NeteaseAPI.NeteaseLoginResponse>({
       url: "/login/cellphone",
+      method: "post",
+      params
+    });
+  }
+
+  /**
+   * 发送短信验证码
+   * @desc 传入手机号码可发送登录用的短信验证码
+   */
+  static sendCaptcha(params: {
+    /** 手机号码 */
+    phone: string;
+    /** 国家区号，默认 86 即中国 */
+    ctcode?: string;
+  }) {
+    return apiRequest<typeof params, NeteaseAPI.NeteaseAPIResponse>({
+      url: "/captcha/sent",
       method: "post",
       params
     });
@@ -47,7 +67,7 @@ export default class _NeteaseAuthAPI {
       url: "/login/qr/key",
       method: "get",
       params: {
-        timestamp: new Date().getTime()
+        timestamp: Date.now()
       }
     });
   }
@@ -71,7 +91,7 @@ export default class _NeteaseAuthAPI {
       method: "get",
       params: {
         ...params,
-        timestamp: new Date().getTime()
+        timestamp: Date.now()
       }
     });
   }
@@ -88,7 +108,7 @@ export default class _NeteaseAuthAPI {
       method: "get",
       params: {
         key,
-        timestamp: new Date().getTime()
+        timestamp: Date.now()
       }
     });
   }

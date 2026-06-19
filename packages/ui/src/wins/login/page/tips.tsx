@@ -7,9 +7,10 @@ import NeteaseImage from "@/common/components/display/image/netease-image";
 interface TipsProps {
   status: QRCodeStatus;
   result: Nullable<NeteaseAPI.NeteaseLoginQrCheckResponse>;
+  loginType: "qr" | "captcha";
 }
 
-const Tips: FC<TipsProps> = ({ status, result }) => {
+const Tips: FC<TipsProps> = ({ status, result, loginType }) => {
   const image = useMemo(
     () =>
       NeteaseNetworkImage.fromURL(result?.avatarUrl)
@@ -17,16 +18,20 @@ const Tips: FC<TipsProps> = ({ status, result }) => {
         ?.setAlt(result?.nickname),
     [result?.avatarUrl, result?.nickname]
   );
+  // 仅扫码登录在待确认时展示用户头像
+  const waitingConfirm = loginType === "qr" && status === QRCodeStatus.WAITING_CONFIRM;
   return (
     <div className="flex justify-center items-center flex-col">
-      {status !== QRCodeStatus.WAITING_CONFIRM && (
+      {!waitingConfirm && (
         <div className="flex justify-center items-center flex-col">
           <img src="/images/netease-music.png" alt="netease-music" className="size-10" />
           <span className="font-bold mt-4">登录网易云音乐</span>
-          <span className="text-xs mt-1 opacity-80">{mapQRCodeStatusToText(status)}</span>
+          <span className="text-xs mt-1 opacity-80">
+            {loginType === "captcha" ? "短信验证码登录" : mapQRCodeStatusToText(status)}
+          </span>
         </div>
       )}
-      {status === QRCodeStatus.WAITING_CONFIRM && (
+      {waitingConfirm && (
         <div className="flex justify-center items-center flex-col">
           <NeteaseImage
             cache={false}

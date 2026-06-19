@@ -9,6 +9,7 @@ export type NCMParentMessage =
       type: "start";
       port: number;
       tokenPath?: string;
+      deviceIdPath?: string;
     }
   | {
       type: "stop";
