@@ -1,7 +1,10 @@
 import { useCallback } from "react";
 import { NeteaseTrackRecord } from "@/common/netease/models";
 import { createAddToPlaylistModal } from "@/common/components/display/modal/add-to-playlist-modal";
-import type { TrackListClickFunc, TrackListContextMenuFunc } from "@/common/components/display/track_list";
+import type {
+  TrackListClickFunc,
+  TrackListContextMenuFunc
+} from "@/common/components/display/track_list";
 import AppContextMenu from "@/common/components/display/menu";
 import AppModal from "@/common/components/display/modal";
 
