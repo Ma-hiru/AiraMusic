@@ -259,6 +259,7 @@ const Playlist: FC<PlaylistProps> = ({
             onPageAction={onPageAction}
             pageActionType={pageActionType}
             coverCacheKey={source === "like" ? String(user?.likedTrackIDs.checkPoint) : undefined}
+            onEdited={reload}
           />
           {playlist !== null && <Divider className="my-3" />}
           <div className="w-full h-[calc(100%-210px)] relative">

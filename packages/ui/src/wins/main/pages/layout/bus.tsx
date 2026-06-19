@@ -231,6 +231,7 @@ const Bus: FC<object> = () => {
           const album = await NeteaseServicesAlbum.id(sourceID);
           return album.tracks;
         }
+        case "fm":
         case "other": {
           const tracks = await NeteaseServicesTrack.ids(allIDs);
           return tracks.map(
