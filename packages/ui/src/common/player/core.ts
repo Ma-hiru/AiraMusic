@@ -16,7 +16,10 @@ import {
   NeteaseServicesLyric
 } from "@/common/netease/services";
 import { settingsStoreSnapshot } from "@/common/store/settings";
+import { userStoreSnapshot } from "@/common/store/user";
 import { Log } from "@/common/lib/log";
+import { throttle } from "lodash-es";
+import AppToast from "@/common/components/display/toast";
 
 import RendererPlayerAudio from "./audio";
 import RendererPlayerPlaylist from "./playlist";
@@ -106,6 +109,10 @@ export default class RendererPlayer extends Listenable {
     super();
     this.audio = props?.audio || new RendererPlayerAudio();
     this.playlist = props?.playlist || new RendererPlayerPlaylist();
+    this.playlist.bindPlayability(
+      (record) => record.detail.playable(userStoreSnapshot()._user),
+      throttle((reason: string) => AppToast.show({ type: "error", text: reason }), 1000)
+    );
     this.history = props?.history || new RendererPlayerHistory();
     this.current = props?.current || {
       track: null,

@@ -6,6 +6,8 @@ import { NeteaseUser } from "@/common/netease/models";
 import { RoutePathMain } from "@/common/routes";
 import { usePageJump } from "@/wins/main/hooks/use-page-jump";
 import AppToast from "@/common/components/display/toast";
+import { useSetAtom } from "jotai";
+import { fmModeAtom } from "@/wins/main/atoms/track";
 
 interface NavMenuProps {
   barOpened: boolean;
@@ -14,13 +16,18 @@ interface NavMenuProps {
 
 const NavMenu: FC<NavMenuProps> = ({ barOpened, className }) => {
   const { jumpPlaylistPage, jumpHistoryPage } = usePageJump();
+  const setFMMode = useSetAtom(fmModeAtom);
   const location = useLocation();
   const navigate = useNavigate();
+  const enableFM = useCallback(() => {
+    setFMMode(true);
+  }, [setFMMode]);
 
   const jump = useCallback(
     (path: string, active: boolean) => {
       if (active) return;
       if (path === RoutePathMain.history) return jumpHistoryPage();
+      if (path === RoutePathMain.fm) return enableFM();
       if (path === RoutePathMain.playlist.like) {
         if (!NeteaseUser.isLoggedIn) {
           return AppToast.show({
@@ -32,13 +39,13 @@ const NavMenu: FC<NavMenuProps> = ({ barOpened, className }) => {
       }
       return navigate(path);
     },
-    [jumpHistoryPage, jumpPlaylistPage, navigate]
+    [enableFM, jumpHistoryPage, jumpPlaylistPage, navigate]
   );
 
   return (
     <div
       className={cx(
-        "flex flex-col gap-4 w-(--side-bar-expand-width) overflow-hidden contain-layout",
+        "flex flex-col gap-3 w-(--side-bar-expand-width) overflow-hidden contain-layout",
         className
       )}>
       {NavConstants.LAYOUT_NAV.map(({ icon, label, path }) => {
@@ -46,6 +53,7 @@ const NavMenu: FC<NavMenuProps> = ({ barOpened, className }) => {
         return (
           <div
             key={path}
+            title={label}
             className={cx(
               `
               flex flex-row h-12 items-center mx-3 rounded-md

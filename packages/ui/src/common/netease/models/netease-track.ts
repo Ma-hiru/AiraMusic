@@ -72,27 +72,26 @@ export class NeteaseTrack implements NeteaseTrackModel {
 
   /** 判断NeteaseTrack是否可以播放 */
   playable(user: Optional<NeteaseUser | NeteaseUserModel>) {
-    const result = { playable: false, reason: "未知原因" };
-    // 如果没有 privilege 信息，无法判断是否可播放，暂时不设置 reason
+    const result = { playable: true, reason: "" };
+    // 如果没有 privilege 信息，无法判断是否可播放
     if (!this.privilege) {
+      result.playable = false;
       result.reason = "无法获取权限信息";
       return result;
     }
     // 播放权限 > 0 或者用户已登录且为云盘歌曲
     if (this.privilege.pl > 0 || (NeteaseUser.isLoggedIn && this.privilege?.cs)) {
-      result.playable = true;
       return result;
     }
 
     // 0: 免费或无版权 1: VIP 歌曲 4: 购买专辑 8: 非会员可免费播放低音质，会员可播放高音质及下载
-    if (this.fee === 1 || this.privilege.fee === 1) {
+    if (
+      (this.fee === 1 || this.privilege.fee === 1) && // vip
+      !(NeteaseUser.isLoggedIn && NeteaseUser.isVIP(user))
+    ) {
       // VIP 歌曲
-      if (NeteaseUser.isLoggedIn && NeteaseUser.isVIP(user)) {
-        result.playable = true;
-      } else {
-        result.playable = false;
-        result.reason = "VIP专属";
-      }
+      result.playable = false;
+      result.reason = "VIP专属";
     } else if (this.fee === 4 || this.privilege.fee === 4) {
       // 付费专辑
       result.playable = false;
@@ -105,8 +104,6 @@ export class NeteaseTrack implements NeteaseTrackModel {
       // st小于0时为灰色歌曲, 使用上传云盘的方法解灰后 st == 0。
       result.playable = false;
       result.reason = "已下架";
-    } else {
-      result.playable = true;
     }
 
     return result;
