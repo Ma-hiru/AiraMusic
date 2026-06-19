@@ -10,6 +10,9 @@ import { usePlayerChangeActionFromDisplay } from "@/wins/display/hooks/use-playe
 import { useDisplayPageAction } from "@/wins/display/hooks/use-display-page-action";
 import { RendererIPCMessageBus } from "@/common/lib/bus";
 import { useDisplayTitle } from "@/wins/display/hooks/use-display-title";
+import { useRouterActive } from "@/common/hooks/use-router-active";
+import { useScrollActionsRegister } from "@/common/hooks/use-scroll-actions-register";
+import { scrollActionsAtom } from "@/wins/display/atoms/layout";
 
 import Playlist, { type PlaylistRef } from "@/common/components/page/playlist";
 
@@ -43,6 +46,15 @@ const PlaylistDisplay: FC<object> = () => {
   });
   const { updateTitle } = useDisplayTitle("playlist");
 
+  // 注册滚动和定位回调（display 窗口）
+  const active = useRouterActive(RoutePathDisplay, "playlist");
+  const { canFastLocate, canScrollTop } = useScrollActionsRegister({
+    active,
+    atom: scrollActionsAtom,
+    getScrollTopFunc: () => playlistRef.current?.scrollTop,
+    getFastLocateFunc: () => playlistRef.current?.fastLocator
+  });
+
   return (
     <Playlist
       ref={playlistRef}
@@ -61,8 +73,8 @@ const PlaylistDisplay: FC<object> = () => {
       heartManager={heartManager}
       playableManager={playableManager}
       activeTrackID={trackMetaBus.data?.track?.id}
-      canFastLocate={null}
-      canScrollTop={null}
+      canFastLocate={canFastLocate}
+      canScrollTop={canScrollTop}
       pageActionType="enter"
       onPageAction={onPageAction}
       onDataLoaded={(p) => p.name && updateTitle(p.name)}

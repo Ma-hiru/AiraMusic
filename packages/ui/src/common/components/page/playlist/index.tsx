@@ -27,6 +27,7 @@ import { SearchTrack } from "@mahiru/wasm";
 import { PlaylistSource } from "@/common/enum";
 import { NeteaseServicesPlaylist } from "@/common/netease/services";
 import { useUpdate } from "@/common/hooks/use-update";
+import { useLatestRef } from "@/common/hooks/use-latest-ref";
 import { useTrackCoverPreload } from "@/common/hooks/use-track-cover-preload";
 import { useTrackContextMenu } from "@/common/hooks/use-track-context-menu";
 import { Log } from "@/common/lib/log";
@@ -137,17 +138,19 @@ const Playlist: FC<PlaylistProps> = ({
     canScrollTop,
     coverSize
   });
-  // 快速定位到当前播放歌曲
-  const fastLocator = useCallback(() => {
-    if (!activeTrackID) return;
-    const exits = tracks.findIndex((t) => t.id === activeTrackID);
-    if (exits === -1) return;
-    trackListRef.current?.scrollToItem(exits);
-  }, [activeTrackID, tracks]);
+  // 快速定位到当前播放歌曲（稳定引用，内部读取最新数据，避免频繁变更/旧闭包）
+  const activeTrackIDRef = useLatestRef(activeTrackID);
+  const tracksRef = useLatestRef(tracks);
+  const fastLocator = useRef(() => {
+    const id = activeTrackIDRef.current;
+    if (!id) return;
+    const idx = tracksRef.current.findIndex((t) => t.id === id);
+    if (idx === -1) return;
+    trackListRef.current?.scrollToItem(idx);
+  }).current;
 
   useEffect(() => {
-    if (!activeTrackID) return;
-    const exits = tracks.findIndex((track) => track.id === activeTrackID);
+    const exits = activeTrackID ? tracks.findIndex((track) => track.id === activeTrackID) : -1;
     canFastLocate?.(exits !== -1);
   }, [canFastLocate, activeTrackID, tracks]);
   // 右键菜单

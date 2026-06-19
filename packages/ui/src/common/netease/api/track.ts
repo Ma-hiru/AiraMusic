@@ -94,6 +94,23 @@ export default class _NeteaseTrackAPI {
     });
   }
 
+  static stateSubmit(params: {
+    /** 歌曲 id */
+    id: number;
+    /** 播放进度（秒），默认 0 */
+    progress: number;
+    /** 播放会话 ID（12 位大写字母和数字），不传则自动生成 */
+    sessionId?: string;
+    playMode?: "list_loop";
+    /** 资源类型，默认 song */
+    type?: "song";
+  }) {
+    return apiRequest<any, NeteaseAPI.NeteaseAPIResponse>({
+      url: "/relay/play/state/submit",
+      params: { ...params, timestamp: Date.now() }
+    });
+  }
+
   /**
    * 副歌时间
    * @desc 调用此接口, 传入歌曲 id, 获取副歌时间

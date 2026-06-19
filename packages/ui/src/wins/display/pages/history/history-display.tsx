@@ -7,6 +7,10 @@ import { usePlayerChangeActionFromDisplay } from "@/wins/display/hooks/use-playe
 import { useArtistOrAlbumDisplayJump } from "@/wins/display/hooks/use-artist-or-album-display-jump";
 import { useDisplayPageAction } from "@/wins/display/hooks/use-display-page-action";
 import { useDisplayTitle } from "@/wins/display/hooks/use-display-title";
+import { useRouterActive } from "@/common/hooks/use-router-active";
+import { useScrollActionsRegister } from "@/common/hooks/use-scroll-actions-register";
+import { scrollActionsAtom } from "@/wins/display/atoms/layout";
+import { RoutePathDisplay } from "@/common/routes";
 import { RendererIPCMessageBus } from "@/common/lib/bus";
 import { RendererWindow } from "@/common/lib/window";
 import type { TrackListClickFunc } from "@/common/components/display/track_list";
@@ -59,6 +63,15 @@ const HistoryDisplay: FC<object> = () => {
   const { onPageAction } = useDisplayPageAction({ type: "history" });
   const { updateTitle } = useDisplayTitle("history");
 
+  // 注册滚动和定位回调（display 窗口）
+  const active = useRouterActive(RoutePathDisplay, "history");
+  const { canFastLocate, canScrollTop } = useScrollActionsRegister({
+    active,
+    atom: scrollActionsAtom,
+    getScrollTopFunc: () => historyRef.current?.scrollTop,
+    getFastLocateFunc: () => historyRef.current?.fastLocator
+  });
+
   useEffect(
     () => updateTitle(`历史记录 ${historyList.length}条`),
     [historyList.length, updateTitle]
@@ -78,8 +91,8 @@ const HistoryDisplay: FC<object> = () => {
       heartManager={heartManager}
       playableManager={playableManager}
       activeTrackID={trackMetaBus.data?.track?.id}
-      canFastLocate={null}
-      canScrollTop={null}
+      canFastLocate={canFastLocate}
+      canScrollTop={canScrollTop}
       pageActionType="enter"
       onPageAction={onPageAction}
     />

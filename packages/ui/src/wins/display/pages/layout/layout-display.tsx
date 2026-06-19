@@ -18,6 +18,7 @@ import AcrylicBackground from "@/common/components/display/acrylic-background";
 import TopControlPure from "@/common/components/layout/top/control";
 import Drag from "@/common/components/layout/drag/drag";
 import TopBack from "@/common/components/layout/top/back";
+import DisplayFloat from "./float";
 
 const LayoutDisplay: FC<object> = () => {
   const themeBus = useThemeInjectFromBus();
@@ -94,6 +95,7 @@ const LayoutDisplay: FC<object> = () => {
         <BackCtx value={backCtxValue}>
           <KeepAliveOutlet maxCache={3} />
         </BackCtx>
+        <DisplayFloat />
         <AppToast.Provider className="z-50!" />
         <AppContextMenu.Provider className="z-50!" />
         <AppModal.Provider />
