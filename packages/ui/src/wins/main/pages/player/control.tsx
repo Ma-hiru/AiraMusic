@@ -12,14 +12,18 @@ import {
   Repeat2,
   Shuffle,
   SkipBack,
-  SkipForward
+  SkipForward,
+  Trash2
 } from "lucide-react";
+import { NeteaseAPITrack } from "@/common/netease/api";
+import { useAtomValue, useSetAtom } from "jotai";
+import { fmModeAtom } from "@/wins/main/atoms/track";
+import { playModalAtom } from "@/wins/main/atoms/layout";
 import RendererPlayerHandle from "@/wins/main/lib/handle";
 import AppModal from "@/common/components/display/modal";
+import AppToast from "@/common/components/display/toast";
 
 import Progress from "./progress";
-import { useSetAtom } from "jotai";
-import { playModalAtom } from "@/wins/main/atoms/layout";
 
 interface ControlProps {
   className?: string;
@@ -31,11 +35,23 @@ const Control: FC<ControlProps> = ({ className, containerClassName, itemClassNam
   const { create } = AppModal.useModal();
   const player = RendererPlayerHandle.usePlayer();
   const setPlayModalAtom = useSetAtom(playModalAtom);
+  const fmMode = useAtomValue(fmModeAtom);
   const openPlaylistModal = useCallback(() => {
     create(createPlayerPlaylistModal, () => {
       setPlayModalAtom(false);
     });
   }, [create, setPlayModalAtom]);
+
+  const dislike = useCallback(() => {
+    const current = player.current.track;
+    if (!current || !fmMode) return;
+    void NeteaseAPITrack.personalFMTrash(current.id);
+    player.playlist.remove(current);
+    AppToast.show({
+      type: "success",
+      text: `已移除 ${current.name}`
+    });
+  }, [fmMode, player]);
 
   const centerIcon = useMemo(() => {
     if (player.playing) {
@@ -75,10 +91,10 @@ const Control: FC<ControlProps> = ({ className, containerClassName, itemClassNam
       <div className={cx("flex justify-between items-center font-bold mt-2", className)}>
         <ControlBtn
           icon={SkipBack}
-          className="scale-85"
+          className={cx("scale-85", fmMode && "opacity-50 cursor-not-allowed!")}
           itemClassName={itemClassName}
           fill="currentColor"
-          onClick={() => player.playlist.last(true)}
+          onClick={() => !fmMode && player.playlist.last(true)}
         />
         {centerIcon}
         <ControlBtn
@@ -88,22 +104,31 @@ const Control: FC<ControlProps> = ({ className, containerClassName, itemClassNam
           fill="currentColor"
           onClick={() => player.playlist.next(true)}
         />
-        {player.playlist.shuffle ? (
+        {fmMode && (
           <ControlBtn
-            icon={Shuffle}
+            icon={Trash2}
             className="scale-85"
             itemClassName={itemClassName}
-            fill="currentColor"
-            onClick={() => (player.playlist.shuffle = false)}
-          />
-        ) : (
-          <ControlBtn
-            icon={ArrowRightLeft}
-            fill="currentColor"
-            itemClassName={itemClassName}
-            onClick={() => (player.playlist.shuffle = true)}
+            onClick={dislike}
           />
         )}
+        {!fmMode &&
+          (player.playlist.shuffle ? (
+            <ControlBtn
+              icon={Shuffle}
+              className="scale-85"
+              itemClassName={itemClassName}
+              fill="currentColor"
+              onClick={() => (player.playlist.shuffle = false)}
+            />
+          ) : (
+            <ControlBtn
+              icon={ArrowRightLeft}
+              fill="currentColor"
+              itemClassName={itemClassName}
+              onClick={() => (player.playlist.shuffle = true)}
+            />
+          ))}
         {player.playlist.repeat !== "off" ? (
           <ControlBtn
             icon={Repeat1}

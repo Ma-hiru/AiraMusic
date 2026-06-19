@@ -196,7 +196,7 @@ export default class _NeteaseTrackAPI {
    * */
   static personalFMTrash(id: number) {
     return apiRequest<any, NeteaseAPI.NeteaseAPIResponse>({
-      url: "/fm_trash",
+      url: "/fm/trash",
       params: {
         id,
         timestamp: Date.now()

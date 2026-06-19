@@ -68,6 +68,26 @@ export class NeteaseTrack implements NeteaseTrackModel {
     this.tns = props.tns;
     this.privilege = props.privilege;
     // 移除重复的翻译和别名
+    const coverage = new Set();
+    for (const ts of this.tns ?? []) {
+      for (const a of this.alia ?? []) {
+        ts === a && coverage.add(ts);
+      }
+    }
+    this.alia = this.alia.filter((a) => !coverage.has(a));
+    this.tns = this.tns
+      ?.map((ts) => {
+        for (const a of this.alia) {
+          ts = ts
+            .replace(a, "")
+            .replace("(", "")
+            .replace(")", "")
+            .replace("（", "")
+            .replace("）", "");
+        }
+        return ts;
+      })
+      .filter(Boolean);
     this.alia = (this.alia ?? []).filter((a) => !this.tns?.includes(a));
   }
   //endregion
