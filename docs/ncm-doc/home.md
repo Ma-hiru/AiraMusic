@@ -88,6 +88,7 @@ v4.29.9 加入了生成随机中国 IP 功能, 在请求时加上 `randomCNIP=tr
 5. 直接点`Continue`
 6. `PROJECT NAME`自己填,`FRAMEWORK PRESET` 选 `Other` 然后直接点 `Deploy` 接着等部署完成即可
 
+
 ## 腾讯云 serverless 部署
 
 因 `Vercel` 在国内访问太慢(不绑定自己的域名的情况下),在此提供腾讯云 serverless 部署方法
@@ -101,6 +102,7 @@ v4.29.9 加入了生成随机中国 IP 功能, 在请求时加上 `randomCNIP=tr
 5. 输入`应用名`,上传方式选择`代码仓库`,进行 GitHub 授权(如已授权可跳过这一步),代码仓库选择刚刚 fork 的项目
 6. 启动文件填入:
 
+
 ```
 #!/bin/bash
 export PORT=9000
@@ -113,16 +115,17 @@ export PORT=9000
   - 腾讯云 serverless 并不是免费的,前三个月有免费额度,之后收费
   - 当前(2024-08-24), 用此法创建的话, 会`默认`关联一个"日志服务-日志主题"(创建过程中没有提醒), 此服务是计量收费的
 
+
 ## 可以使用代理
 
 在 query 参数中加上 proxy=your-proxy 即可让这一次的请求使用 proxy
 
 ```javascript
 // 例子
-const url = `http://localhost:3000/song/url?id=33894312&proxy=http://121.196.226.246:84`;
+const url = `http://localhost:3000/song/url?id=33894312&proxy=http://121.196.226.246:84`
 fetch(url).then(function () {
   // do what you want
-});
+})
 
 // 结果
 // {"data":[{"id":33894312,"url":"http://m10.music.126.net/20180104125640/930a968b3fb04908b733506b3833e60b/ymusic/0fd6/4f65/43ed/a8772889f38dfcb91c04da915b301617.mp3","br":320000,"size":10691439,"md5":"a8772889f38dfcb91c04da915b301617","code":200,"expi":1200,"type":"mp3","gain":-2.0E-4,"fee":0,"uf":null,"payed":0,"flag":0,"canExtend":false}],"code": 200}
@@ -135,33 +138,36 @@ v3.3.0 后支持使用 PAC 代理,如 `?proxy=http://192.168.0.1/proxy.pac`
 v3.31.0 后支持 Node.js 调用,导入的方法为`module`内的文件名,返回内容包含`status`和`body`,`status`为状态码,`body`为请求返回内容,参考`module_example` 文件夹下的 `test.js`
 
 ```js
-const { login_cellphone, user_cloud } = require("@neteasecloudmusicapienhanced/api");
+const {
+  login_cellphone,
+  user_cloud,
+} = require('@neteasecloudmusicapienhanced/api')
 async function main() {
   try {
     const result = await login_cellphone({
-      phone: "手机号",
-      password: "密码"
-    });
-    console.log(result);
+      phone: '手机号',
+      password: '密码',
+    })
+    console.log(result)
     const result2 = await user_cloud({
-      cookie: result.body.cookie // 凭证
-    });
-    console.log(result2.body);
+      cookie: result.body.cookie, // 凭证
+    })
+    console.log(result2.body)
   } catch (error) {
-    console.log(error);
+    console.log(error)
   }
 }
-main();
+main()
 ```
 
 ## 支持 TypeScript
 
 ```ts
 // test.ts
-import { banner } from "@neteasecloudmusicapienhanced/api";
+import { banner } from '@neteasecloudmusicapienhanced/api'
 banner({ type: 0 }).then((res) => {
-  console.log(res);
-});
+  console.log(res)
+})
 ```
 
 ## Docker 容器运行
@@ -176,6 +182,7 @@ request 相关的环境变量
 4. HTTPS_PROXY
 5. no_proxy
 6. NO_PROXY
+
 
 ```shell
 docker pull moefurina/ncm-api
@@ -210,6 +217,7 @@ $ sudo docker run -d -p 3000:3000 netease-music-api
 - 请求参数模式下, 解密结果可直接带到 `/api.html` 继续调试
 - 需要返回值加密时, 可传 `e_r=1`, `weapi` 和 `eapi` 都支持
 - 目前支持算法 有 `weapi`, `eapi`, `linuxapi` 和 `xeapi` (xeapi 是一种不加密的特殊算法, 主要用于调试加密前的原始请求参数)
+
 
 ## 接口文档
 
@@ -265,12 +273,12 @@ AI 生成的图,仅供娱乐()
 
 #### 1. 手机登录
 
-**必选参数 :**  
+**必选参数 :**
 `phone`: 手机号码
 
 `password`: 密码
 
-**可选参数 :**  
+**可选参数 :**
 `countrycode`: 国家码，用于国外手机号登录，例如美国传入：`1`
 
 `md5_password`: md5 加密后的密码,传入后 `password` 参数将失效
@@ -429,11 +437,11 @@ body {
 
 ### 检测手机号码是否已注册
 
-说明 : 调用此接口 ,可检测手机号码是否已注册  
-**必选参数 :**  
+说明 : 调用此接口 ,可检测手机号码是否已注册
+**必选参数 :**
 `phone` : 手机号码
 
-**可选参数 :**  
+**可选参数 :**
 `countrycode`: 国家码，用于国外手机号，例如美国传入：`1` ,默认 86 即中国
 
 **接口地址 :** `/cellphone/existence/check`
@@ -442,7 +450,7 @@ body {
 
 ### 初始化昵称
 
-说明 : 刚注册的账号(需登录),调用此接口 ,可初始化昵称  
+说明 : 刚注册的账号(需登录),调用此接口 ,可初始化昵称
 **必选参数 :**
 `nickname` : 昵称
 
@@ -697,7 +705,7 @@ tags: 歌单标签
 
 说明 : 登录后调用此接口,使用`'Content-Type': 'multipart/form-data'`上传图片 formData(name 为'imgFile'),可更新歌单封面(参考:https://github.com/neteasecloudmusicapienhanced/api-enhanced/blob/main/public/playlist_cover_update.html)
 
-**必选参数 :**  
+**必选参数 :**
 `id`: 歌单 id 3143833470
 
 **可选参数 :**
@@ -727,7 +735,7 @@ tags: 歌单标签
 
 说明 : 登录后调用此接口,可以根据歌曲 id 顺序调整歌曲顺序
 
-**必选参数 :**  
+**必选参数 :**
 `pid`: 歌单 id
 
 `ids`: 歌曲 id 列表
@@ -1207,6 +1215,7 @@ tags: 歌单标签
 
 > 如果你设置 limit=50&offset=100，你就会得到第 101-150 首歌曲
 
+
 ### 歌单详情动态
 
 说明 : 调用后可获取歌单详情动态部分,如评论数,是否收藏,播放数
@@ -1400,7 +1409,7 @@ tags: 歌单标签
 
 ### 歌单收藏者
 
-说明 : 调用此接口 , 传入歌单 id 可获取歌单的所有收藏者  
+说明 : 调用此接口 , 传入歌单 id 可获取歌单的所有收藏者
 **必选参数 :**
 
 `id` : 歌单 id
@@ -1493,6 +1502,7 @@ tags: 歌单标签
 
 - （可能存在）JSON 歌曲元数据
 
+
 ```
 {"t":0,"c":[{"tx":"作曲: "},{"tx":"柳重言","li":"http://p1.music.126.net/Icj0IcaOjH2ZZpyAM-QGoQ==/6665239487822533.jpg","or":"orpheus://nm/artist/home?id=228547&type=artist"}]}
 {"t":5403,"c":[{"tx":"编曲: "},{"tx":"Alex San","li":"http://p1.music.126.net/pSbvYkrzZ1RFKqoh-fA9AQ==/109951166352922615.jpg","or":"orpheus://nm/artist/home?id=28984845&type=artist"}]}
@@ -1508,6 +1518,7 @@ tags: 歌单标签
 - `or`：云音乐 app 内路径；例中作用即打开艺术家主页
 
 * 逐字歌词
+
 
 ```
 [16210,3460](16210,670,0)还(16880,410,0)没...
@@ -1585,7 +1596,7 @@ tags: 歌单标签
 
 说明 : 调用此接口 , 传入资源 parentCommentId 和资源类型 type 和资源 id 参数, 可获得该资源的歌曲楼层评论
 
-**必选参数 :**  
+**必选参数 :**
 `parentCommentId`: 楼层评论 id
 
 `id` : 资源 id
@@ -1801,7 +1812,7 @@ tags: 歌单标签
 
 说明 : 调用此接口 , 传入资源类型和资源 id,以及排序方式,可获取对应资源的评论
 
-**必选参数 :**  
+**必选参数 :**
 `id` : 资源 id, 如歌曲 id,mv id
 
 `type`: 数字 , 资源类型 , 对应歌曲 , mv, 专辑 , 歌单 , 电台, 视频对应以下类型
@@ -1824,7 +1835,7 @@ tags: 歌单标签
 7: 电台
 ```
 
-**可选参数 :**  
+**可选参数 :**
 `pageNo`:分页参数,第 N 页,默认为 1
 
 `pageSize`:分页参数,每页多少条数据,默认 20
@@ -2197,7 +2208,7 @@ privilege:权限相关信息
 
 说明 : 调用此接口 , 可获得已收藏专辑列表
 
-**可选参数 :**  
+**可选参数 :**
 `limit`: 取出数量 , 默认为 25
 
 `offset`: 偏移数量 , 用于分页 , 如 :( 页数 -1)\*25, 其中 25 为 limit 的值 , 默认
@@ -2489,6 +2500,18 @@ privilege:权限相关信息
 
 **调用例子 :** `/scrobble?id=518066366&sourceid=36780169&time=291`
 
+### 提交歌曲播放状态
+
+说明 : 调用此接口可提交歌曲播放状态，支持会话追踪和播放模式记录，未传入 `sessionId` 时后端会自动生成
+
+**必选参数 :** `id`: 歌曲 id
+
+**可选参数 :** `sessionId`: 播放会话 ID（12 位大写字母和数字），不传则自动生成, `progress`: 播放进度（秒），默认 0, `playMode`: 播放模式，默认 `list_loop`, `type`: 资源类型，默认 `song`
+
+**接口地址 :** `/relay/play/state/submit`
+
+**调用例子 :** `/relay/play/state/submit?id=518066366&progress=30`
+
 ### 热门歌手
 
 说明 : 调用此接口 , 可获取热门歌手数据
@@ -2506,7 +2529,7 @@ privilege:权限相关信息
 
 说明 : 调用此接口 , 可获取全部 mv
 
-**可选参数 :**  
+**可选参数 :**
 `area`: 地区,可选值为全部,内地,港台,欧美,日本,韩国,不填则为全部
 `type`: 类型,可选值为全部,官方版,原生,现场版,网易出品,不填则为全部
 
@@ -2588,7 +2611,7 @@ privilege:权限相关信息
 
 **接口地址 :** `/program/recommend`
 
-**可选参数 :**  
+**可选参数 :**
 `limit`: 取出数量 , 默认为 10
 
 `offset`: 偏移数量 , 用于分页 , 如 :( 页数 -1)\*10, 其中 10 为 limit 的值 , 默认
@@ -2870,6 +2893,7 @@ type : 地区
 - 适合 Vercel、Netlify 等有请求体限制的平台
 - 需要前端配合实现
 
+
 #### 客户端直传相关接口
 
 **获取上传凭证**
@@ -2916,6 +2940,7 @@ type : 地区
 - `artist`: 艺术家
 - `album`: 专辑名
 
+
 #### 客户端直传流程
 
 1. 客户端计算文件 MD5
@@ -2923,11 +2948,12 @@ type : 地区
 3. 如果 `needUpload` 为 true,直接 PUT 文件到 `uploadUrl`
 4. 调用 `/cloud/upload/complete` 完成导入
 
+
 ### 云盘歌曲信息匹配纠正
 
 说明 : 登录后调用此接口,可对云盘歌曲信息匹配纠正,如需取消匹配,asid 需要传 0
 
-**必选参数 :**  
+**必选参数 :**
 `uid`: 用户 id
 
 `sid`: 云盘的歌曲 id
@@ -3398,7 +3424,7 @@ type='1009' 获取其 id, 如`/search?keywords= 代码时间 &type=1009`
 
 `limit` : 返回数量 , 默认为 30
 
-`offset` : 偏移数量，用于分页 , 如 :( 页数 -1)\*30, 其中 30 为 limit 的值 , 默认为 0  
+`offset` : 偏移数量，用于分页 , 如 :( 页数 -1)\*30, 其中 30 为 limit 的值 , 默认为 0
 **接口地址 :** `/album/list`
 
 **调用例子 :** `/album/list?limit=10`
@@ -3557,7 +3583,7 @@ type='1009' 获取其 id, 如`/search?keywords= 代码时间 &type=1009`
 
 **可选参数 :** `limit`: 取出评论数量 , 默认为 10
 
-`offset`: 偏移数量 , 用于分页 , 如 :( 评论页数 -1)\*10, 其中 10 为 limit 的值  
+`offset`: 偏移数量 , 用于分页 , 如 :( 评论页数 -1)\*10, 其中 10 为 limit 的值
 **接口地址 :** `/yunbei/tasks/expense`
 
 **调用例子 :** `/yunbei/tasks/expense?limit=1`
@@ -4195,6 +4221,7 @@ ONLINE 已发布
   - `voiceFeeType: 0`：返回免费的声音
   - `voiceFeeType: 1`：返回收费的声音
 
+
 ### 播客声音详情
 
 说明: 获取播客里的声音详情
@@ -4825,17 +4852,17 @@ bitrate = Math.floor(br / 1000)
 let local = encodeURIComponent(
   JSON.stringify([
     {
-      name: "アイニーブルー", // 歌曲名称
-      artist: "ZLMS", // 艺术家名称
-      album: "アイニーブルー" // 专辑名称
+      name: 'アイニーブルー', // 歌曲名称
+      artist: 'ZLMS', // 艺术家名称
+      album: 'アイニーブルー', // 专辑名称
     },
     {
-      name: "ファンタズマ",
-      artist: "sasakure.UK",
-      album: "未来イヴ"
-    }
-  ])
-);
+      name: 'ファンタズマ',
+      artist: 'sasakure.UK',
+      album: '未来イヴ',
+    },
+  ]),
+)
 ```
 
 **调用例子 :** `/playlist/import/name/task/create?local=${local}`
@@ -4846,7 +4873,7 @@ let local = encodeURIComponent(
 
 ```javascript
 let text = encodeURIComponent(`アイニーブルー ZLMS
-ファンタズマ sasakure.UK`);
+ファンタズマ sasakure.UK`)
 ```
 
 **调用例子 :** `/playlist/import/name/task/create?text=${text}`
@@ -4858,10 +4885,10 @@ let text = encodeURIComponent(`アイニーブルー ZLMS
 ```javascript
 let link = encodeURIComponent(
   JSON.stringify([
-    "https://i.y.qq.com/n2/m/share/details/taoge.html?id=7716341988&hosteuin=",
-    "https://i.y.qq.com/n2/m/share/details/taoge.html?id=8010042041&hosteuin="
-  ])
-);
+    'https://i.y.qq.com/n2/m/share/details/taoge.html?id=7716341988&hosteuin=',
+    'https://i.y.qq.com/n2/m/share/details/taoge.html?id=8010042041&hosteuin=',
+  ]),
+)
 ```
 
 歌单链接来源:
@@ -4950,11 +4977,11 @@ let data = encodeURIComponent(
     {
       translateType: 1,
       startTimeStamp: 800,
-      translateLyricsText: "让我逃走吧、声音已经枯萎",
-      originalLyricsText: "逃がし てくれって声を枯らした"
-    }
-  ])
-);
+      translateLyricsText: '让我逃走吧、声音已经枯萎',
+      originalLyricsText: '逃がし てくれって声を枯らした',
+    },
+  ]),
+)
 ```
 
 若需要修改摘录信息, 则需要填入参数`markId`, 修改对应的摘录信息
@@ -5049,6 +5076,7 @@ let data = encodeURIComponent(
 
 **调用例子:** `/broadcast/sub?id=5&t=1`
 
+
 ### 用户的创建歌单列表
 
 说明 : 调用此接口, 传入用户id, 获取用户的创建歌单列表
@@ -5122,6 +5150,7 @@ let data = encodeURIComponent(
 **接口地址 :** `/voicelist/my/created`
 
 **调用例子 :** `/voicelist/my/created`
+
 
 ### DIFM电台 - 分类
 
@@ -5301,7 +5330,7 @@ let data = encodeURIComponent(
 
 **接口地址 :** `/comment/report`
 
-\*_调用例子 :_ `/comment/report?id=2058263032&cid=123456789&reason=人身攻击`
+**调用例子 :* `/comment/report?id=2058263032&cid=123456789&reason=人身攻击`
 
 ### 多级行政区划数据
 
@@ -5372,6 +5401,16 @@ let data = encodeURIComponent(
 **接口地址 :** `/vip/sign/history`
 
 **调用例子 :** `/vip/sign/history`
+
+### 直接获取云盘歌曲下载链接
+
+说明 : 调用此接口, 传入云盘歌曲 id, 可直接获取云盘歌曲下载链接
+
+**必选参数 :** `id`: 云盘歌曲 id
+
+**接口地址 :** `/song/cloud/download`
+
+**调用例子 :** `/song/cloud/download?id=123456789`
 
 ## 离线访问此文档
 
