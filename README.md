@@ -1,10 +1,10 @@
 # <img src="packages/app/assets/logo.svg" width="28" /> AiraMusic
 
-一个基于 Electron、React 和 TypeScript 构建的桌面端第三方网易云音乐播放器。支持多窗口和动态主题取色。
+一个基于 Electron、React 和 TypeScript 构建的桌面端第三方网易云音乐播放器。基于 React 与 Electron 的第三方网易云音乐桌面客户端，支持以独立的多窗口（如评论、图片、歌单专辑、设置等）展示数据，支持动态取色、歌词展示、音乐频谱、桌面歌词、托盘和简单流体背景等功能。
 
 ## 下载
 
-第一个预览版本已发布，可前往 [Releases](https://github.com/Ma-hiru/AiraMusic/releases) 页面下载。
+第三个预览版本已发布，可前往 [Releases](https://github.com/Ma-hiru/AiraMusic/releases) 页面下载。
 
 当前主要支持：
 
@@ -16,6 +16,7 @@
 ### 多窗口
 
 ![所有窗口](docs/images/all_windows.png)
+![所有窗口2](docs/images/all_windows2.png)
 
 ### 托盘和迷你播放器
 
@@ -35,6 +36,10 @@
 ![歌单2](docs/images/playlist2.png)
 ![歌单3](docs/images/playlist3.png)
 ![播放列表](docs/images/list.png)
+
+## 播放历史
+
+![历史](docs/images/history.png)
 
 ### 首页
 
