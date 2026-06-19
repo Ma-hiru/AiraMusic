@@ -1,7 +1,7 @@
 import pLimit from "p-limit";
 import { NeteaseAPITrack } from "@/common/netease/api";
 import { RendererCache } from "@/common/lib/cache";
-import { NeteaseTrack } from "@/common/netease/models";
+import { NeteaseTrack, NeteaseTrackRecord } from "@/common/netease/models";
 import { Log } from "@/common/lib/log";
 import _NeteasePlaylistSource from "./playlist";
 
@@ -150,5 +150,20 @@ export default class _NeteaseTrackSource {
 
   static playlist(playlist: NeteaseAPI.NeteasePlaylistDetail) {
     return _NeteasePlaylistSource.id(playlist.id).then((p) => p.tracks);
+  }
+
+  /**
+   * 私人 FM / 漫游：拉取一批推荐歌曲并转为播放记录。
+   * FM 接口返回的是旧字段结构，这里只取 id，复用 {@link ids} 拿到完整、带权限、可缓存的模型。
+   * 需要登录，未登录或无推荐时返回空数组。
+   */
+  static async personalFM(): Promise<NeteaseTrackRecord[]> {
+    const res = await NeteaseAPITrack.personalFM();
+    const ids = (res.data ?? []).map((track) => track.id).filter(Boolean);
+    if (ids.length === 0) return [];
+    const tracks = await _NeteaseTrackSource.ids(ids);
+    return tracks.map(
+      (detail) => new NeteaseTrackRecord({ detail, sourceID: 0, sourceName: "fm" })
+    );
   }
 }

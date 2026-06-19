@@ -67,6 +67,8 @@ export class NeteaseTrack implements NeteaseTrackModel {
     this.sq = props.sq;
     this.tns = props.tns;
     this.privilege = props.privilege;
+    // 移除重复的翻译和别名
+    this.alia = (this.alia ?? []).filter((a) => !this.tns?.includes(a));
   }
   //endregion
 
