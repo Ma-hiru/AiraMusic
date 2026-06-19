@@ -186,4 +186,22 @@ export default class _NeteaseTrackAPI {
       }
     });
   }
+
+  static redCount(id: number) {
+    return apiRequest<
+      any,
+      NeteaseAPI.NeteaseAPIResponse & {
+        data: {
+          count: number;
+          countDesc: string;
+        };
+      }
+    >({
+      url: "/song/red/count",
+      params: {
+        id,
+        timestamp: Date.now()
+      }
+    });
+  }
 }

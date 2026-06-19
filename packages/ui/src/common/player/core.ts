@@ -277,8 +277,9 @@ export default class RendererPlayer extends Listenable {
 
   /** 恢复持久化 */
   static fromSave(save: ReturnType<typeof this.save>) {
-    return new RendererPlayer({
-      audio: RendererPlayerAudio.fromSave(save.audio),
+    const savedAudio = RendererPlayerAudio.fromSave(save.audio);
+    const instance = new RendererPlayer({
+      audio: savedAudio,
       playlist: RendererPlayerPlaylist.fromSave(save.playlist),
       history: RendererPlayerHistory.fromSave(save.history),
       current: {
@@ -289,6 +290,26 @@ export default class RendererPlayer extends Listenable {
         lyric: NeteaseLyric.fromObject(save.current.lyric)
       }
     });
+    queueMicrotask(async () => {
+      const audio = instance.current.audio;
+      if (!audio) return;
+
+      const ok = await fetch(audio.src)
+        .then((res) => res.ok)
+        .catch(() => false);
+
+      if (!ok) {
+        const track = instance.current.track;
+        if (!track) return;
+
+        const audio = await instance.loadAudio(track.detail, new AbortController());
+        if (!audio) return;
+
+        instance.audio.load(audio, false);
+        instance.audio.currentTime = savedAudio.currentTime;
+      }
+    });
+    return instance;
   }
 
   /** 歌词切换 */

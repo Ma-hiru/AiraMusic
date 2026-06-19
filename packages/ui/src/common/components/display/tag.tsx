@@ -11,7 +11,7 @@ const Tag: FC<TagProps> = ({ text, className }) => {
     <div
       className={cx(
         `
-          text-[8px] h-3 rounded-sm px-1
+          text-[8px] rounded-sm px-1
           text-center align-middle
           font-semibold opacity-80
           select-none

@@ -45,6 +45,7 @@ export function useHeart(manager: Optional<HeartManager>) {
         id: track.id,
         like: !isLiked
       });
+      return isLiked;
     },
     [checkLiked]
   );

@@ -70,7 +70,7 @@ const Control: FC<ControlProps> = ({ className, containerClassName, itemClassNam
   }, [itemClassName, player.audio, player.loading, player.playing]);
 
   return (
-    <section className={containerClassName}>
+    <section className={cx("contain-layout", containerClassName)}>
       <Progress />
       <div className={cx("flex justify-between items-center font-bold mt-2", className)}>
         <ControlBtn

@@ -43,13 +43,7 @@ export class MainTray {
     } else {
       const trayWin =
         MainWindowManager.get("tray") || MainWindowCreator.create(MainWindowPreset.trayOnWindows)!;
-      // 用于解决 Windows 上点击托盘图标时菜单闪烁的问题
-      let ignoredBlur = false;
-      const showMenu = debounce(() => {
-        ignoredBlur = true;
-        this.showCustomMenu(tray, trayWin);
-        setTimeout(() => (ignoredBlur = false), 100);
-      }, 300);
+      const showMenu = debounce(() => this.showCustomMenu(tray, trayWin), 300);
       tray.addListener("click", () => {
         Log.debug("tray", "click");
         showMenu();
@@ -64,7 +58,6 @@ export class MainTray {
         showMenu();
       });
       trayWin.addListener("blur", () => {
-        if (ignoredBlur) return;
         if (!trayWin.webContents.isDevToolsOpened()) {
           trayWin.isVisible() && trayWin.hide();
         }
@@ -286,8 +279,8 @@ export class MainTray {
       y = trayBounds.y + trayBounds.height + 4;
     }
 
-    trayWin.setPosition(x, y, false);
-    !trayWin.isVisible() && trayWin.show();
-    trayWin.focus();
+    trayWin.setPosition(x, y);
+    setTimeout(() => !trayWin.isVisible() && trayWin.showInactive(), 50);
+    setTimeout(() => trayWin.focus(), 100);
   }
 }

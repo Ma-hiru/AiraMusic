@@ -6,7 +6,7 @@ import Background from "./background";
 import Lyric from "./lyric";
 import LyricChange from "./lyric-change";
 import Title from "./title";
-import Artist from "./artist";
+import Meta from "./meta";
 import Spectrum from "./spectrum";
 
 export const PlayerPage: FC = () => {
@@ -17,7 +17,7 @@ export const PlayerPage: FC = () => {
           <Title className="w-full h-20 xl:h-30" />
           <Cover className="w-full aspect-square mt-2" />
           <div className="h-40 w-full flex flex-col justify-center gap-2">
-            <Artist className="text-[80%] xl:text-[70%]" />
+            <Meta className="text-[80%] xl:text-[70%]" />
             <Control itemClassName="sm:size-5! lg:size-6!" />
             <Spectrum className="lg:h-7! 2xl:h-10!" />
           </div>

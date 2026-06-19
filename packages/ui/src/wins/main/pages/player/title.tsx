@@ -18,8 +18,8 @@ const Title: FC<TitleProps> = ({ className }) => {
     if (!title?.sub) return null;
     return (
       <Marquee
-        className="opacity-50 text-[75%]"
-        text={title?.sub}
+        className="opacity-50 text-[65%] leading-normal"
+        text={title.sub}
         options={{
           speed: 15,
           pingPong: true,
@@ -29,12 +29,13 @@ const Title: FC<TitleProps> = ({ className }) => {
       />
     );
   }, [title?.sub]);
+
   const aliasTitle = useMemo(() => {
-    if (!(ts || alias)) return null;
+    if (!alias) return null;
     return (
       <Marquee
-        className="opacity-50 text-[70%]"
-        text={ts || alias}
+        className="opacity-50 text-[65%] leading-normal"
+        text={alias}
         options={{
           speed: 15,
           pingPong: true,
@@ -43,16 +44,33 @@ const Title: FC<TitleProps> = ({ className }) => {
         }}
       />
     );
-  }, [alias, ts]);
+  }, [alias]);
+
+  const tsTitle = useMemo(() => {
+    if (!ts) return null;
+    return (
+      <Marquee
+        className="opacity-50 text-[65%] leading-normal -mb-1"
+        text={ts}
+        options={{
+          speed: 15,
+          pingPong: true,
+          pauseOnHover: true,
+          gapDuration: 2000
+        }}
+      />
+    );
+  }, [ts]);
 
   useEffect(() => {}, []);
 
   const subTitleLonger = (title?.sub ?? "").length > (ts || alias || "").length;
 
   return (
-    <section className={cx("flex flex-col justify-end text-center", className)}>
+    <section className={cx("flex flex-col justify-end text-center contain-layout", className)}>
+      {tsTitle}
       <Marquee
-        className="font-bold"
+        className="font-bold leading-normal"
         text={title?.main}
         options={{
           speed: 10,
