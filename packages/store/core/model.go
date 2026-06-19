@@ -13,6 +13,10 @@ type Store struct {
 	indexHandle     *IndexHandle
 	indexMapped     map[string]Index // ID <-> Index
 	indexMappedLock sync.RWMutex
+	indexDirty      bool
+	indexDirtyLock  sync.Mutex
+	indexFlushLock  sync.Mutex
+	indexFlushTimer *time.Timer
 
 	currentWriteMapped     map[string]*WritingFile // URL <-> WritingFile
 	currentWriteMappedLock sync.RWMutex

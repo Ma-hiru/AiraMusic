@@ -157,30 +157,38 @@ func checkIndexFile(meta *StoreMeta) error {
 
 // WriteMeta 写入index文件meta，无锁
 func (Self *IndexHandle) WriteMeta(meta *StoreMeta) error {
-	_, err := Self.file.Write([]byte("version: " + strconv.Itoa(meta.version) + "\n"))
+	return writeMeta(Self.file, meta)
+}
+
+func writeMeta(file *os.File, meta *StoreMeta) error {
+	_, err := file.Write([]byte("version: " + strconv.Itoa(meta.version) + "\n"))
 	if err != nil {
 		return err
 	}
-	_, err = Self.file.Write([]byte("createTime: " + strconv.FormatInt(meta.createTime, 10) + "\n"))
+	_, err = file.Write([]byte("createTime: " + strconv.FormatInt(meta.createTime, 10) + "\n"))
 	if err != nil {
 		return err
 	}
-	return Self.file.Sync()
+	return file.Sync()
 }
 
 // WriteIdxs 写入index文件索引信息，无锁
 func (Self *IndexHandle) WriteIdxs(idxs []Index) error {
+	return writeIdxs(Self.file, idxs)
+}
+
+func writeIdxs(file *os.File, idxs []Index) error {
 	for _, index := range idxs {
 		var line, err = json.Marshal(index)
 		if err != nil {
 			return err
 		}
-		_, err = Self.file.Write(append(line, '\n'))
+		_, err = file.Write(append(line, '\n'))
 		if err != nil {
 			return err
 		}
 	}
-	return Self.file.Sync()
+	return file.Sync()
 }
 
 // ReadIdxs 读取index文件索引信息
@@ -225,32 +233,101 @@ func (Self *IndexHandle) AppendIdx(idx Index) error {
 	return Self.file.Sync()
 }
 
-// Destroy 销毁索引文件，存储meta和idxs
+// Destroy 覆盖写入索引并关闭句柄（终态，调用后 file 为 nil）
 func (Self *IndexHandle) Destroy(meta *StoreMeta, idxs []Index) error {
 	Self.mutex.Lock()
 	defer Self.mutex.Unlock()
-	// 先销毁索引文件句柄，覆盖索引，清空文件
-	_ = Self.file.Close()
+	return Self.rewriteLocked(meta, idxs)
+}
+
+// Rebuild 覆盖写入索引并原子重建句柄，全程持有 mutex
+func (Self *IndexHandle) Rebuild(meta *StoreMeta, idxs []Index) error {
+	Self.mutex.Lock()
+	defer Self.mutex.Unlock()
+	if err := Self.rewriteLocked(meta, idxs); err != nil {
+		return err
+	}
+	var indexPath = filepath.Join(meta.storeDir, meta.indexName)
+	var indexFile, err = os.OpenFile(indexPath, os.O_APPEND|os.O_RDWR, 0666)
+	if err != nil {
+		return fmt.Errorf("failed to reopen index file: %w", err)
+	}
+	Self.file = indexFile
+	return nil
+}
+
+// rewriteLocked 以临时文件 + 原子替换的方式覆盖写入索引，调用方需持有 mutex，
+// 完成后 Self.file 为 nil（句柄已关闭）
+func (Self *IndexHandle) rewriteLocked(meta *StoreMeta, idxs []Index) error {
 	var path = filepath.Join(meta.storeDir, meta.indexName)
-	// 以覆盖写入的方式重新创建索引文件，如果索引文件不存在则创建，存在则清空内容后写入
-	var file, err = os.OpenFile(path, os.O_TRUNC|os.O_WRONLY, 0666)
-	if err != nil {
-		return err
-	}
-	Self.file = file
-	defer Self.file.Close() //nolint:errcheck
+	var tempPath = path + ".tmp"
+	var backupPath = path + ".bak"
 
-	// 写入版本和创建时间
-	err = Self.WriteMeta(meta)
-	if err != nil {
-		return err
+	if Self.file != nil {
+		_ = Self.file.Close()
+		Self.file = nil
+	}
+	if err := os.Remove(tempPath); err != nil && !os.IsNotExist(err) {
+		return fmt.Errorf("failed to remove old temporary index file: %w", err)
 	}
 
-	// 写入所有索引
-	err = Self.WriteIdxs(idxs)
+	var file, err = os.OpenFile(tempPath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0666)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to create temporary index file: %w", err)
 	}
 
+	if err = writeMeta(file, meta); err != nil {
+		_ = file.Close()
+		_ = os.Remove(tempPath)
+		return fmt.Errorf("failed to write index metadata: %w", err)
+	}
+	if err = writeIdxs(file, idxs); err != nil {
+		_ = file.Close()
+		_ = os.Remove(tempPath)
+		return fmt.Errorf("failed to write index data: %w", err)
+	}
+	if err = file.Close(); err != nil {
+		_ = os.Remove(tempPath)
+		return fmt.Errorf("failed to close temporary index file: %w", err)
+	}
+
+	if err = replaceIndexFile(path, tempPath, backupPath); err != nil {
+		return err
+	}
+	return nil
+}
+
+func replaceIndexFile(path, tempPath, backupPath string) error {
+	if err := os.Remove(backupPath); err != nil && !os.IsNotExist(err) {
+		_ = os.Remove(tempPath)
+		return fmt.Errorf("failed to remove old backup index file: %w", err)
+	}
+
+	var hasOldIndex bool
+	if _, err := os.Stat(path); err == nil {
+		hasOldIndex = true
+		if err = os.Rename(path, backupPath); err != nil {
+			_ = os.Remove(tempPath)
+			return fmt.Errorf("failed to backup index file: %w", err)
+		}
+	} else if !os.IsNotExist(err) {
+		_ = os.Remove(tempPath)
+		return fmt.Errorf("failed to stat index file: %w", err)
+	}
+
+	if err := os.Rename(tempPath, path); err != nil {
+		if hasOldIndex {
+			if restoreErr := os.Rename(backupPath, path); restoreErr != nil {
+				_ = os.Remove(tempPath)
+				return fmt.Errorf("failed to replace index file: %w; failed to restore backup: %v", err, restoreErr)
+			}
+		}
+		_ = os.Remove(tempPath)
+		return fmt.Errorf("failed to replace index file: %w", err)
+	}
+
+	if hasOldIndex {
+		_ = os.Remove(backupPath)
+	}
 	return nil
 }

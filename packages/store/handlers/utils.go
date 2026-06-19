@@ -1,18 +1,41 @@
 package handlers
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"log"
+	"net"
 	"net/http"
 	neturl "net/url"
 	"store/core"
 	"store/utils"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
+
+const maxConcurrentDownloads = 16
+
+var downloadSlots = make(chan struct{}, maxConcurrentDownloads)
+
+// 限制连接建立与等待响应头的时间，避免无响应的服务器长时间占满并发
+// 不设置整体 Timeout，以免正常的大文件（音频/视频）下载被中断
+// TODO 发完响应头后可能反而卡死，等待队列无限制，可能堆积 goroutine
+var httpClient = &http.Client{
+	Transport: &http.Transport{
+		Proxy:                 http.ProxyFromEnvironment,
+		DialContext:           (&net.Dialer{Timeout: 15 * time.Second, KeepAlive: 30 * time.Second}).DialContext,
+		ForceAttemptHTTP2:     true,
+		MaxIdleConns:          100,
+		IdleConnTimeout:       90 * time.Second,
+		TLSHandshakeTimeout:   15 * time.Second,
+		ResponseHeaderTimeout: 30 * time.Second,
+		ExpectContinueTimeout: 1 * time.Second,
+	},
+}
 
 func getNameFromURL(url string) string {
 	var token = strings.Split(url, "/")
@@ -48,11 +71,39 @@ func getOptionQuery(ctx *gin.Context) (update bool, timeLimit int64) {
 	return
 }
 
+func queueDownload(id, url, method string, body io.Reader, header http.Header) {
+	if url == "" {
+		return
+	}
+	var bodyData []byte
+	if body != nil {
+		var err error
+		bodyData, err = io.ReadAll(body)
+		if err != nil {
+			log.Println("failed to read download request body:", err)
+			return
+		}
+	}
+	var requestHeader = header.Clone()
+
+	go func() {
+		downloadSlots <- struct{}{}
+		defer func() {
+			<-downloadSlots
+		}()
+
+		var requestBody io.Reader
+		if bodyData != nil {
+			requestBody = bytes.NewReader(bodyData)
+		}
+		download(id, url, method, requestBody, requestHeader)
+	}()
+}
+
 func download(id, url, method string, body io.Reader, header http.Header) core.Index {
 	if url == "" {
 		return core.Index{}
 	}
-	var httpClient = http.DefaultClient
 	// 创建新请求 保留原始请求的方法和头
 	var request, err = http.NewRequest(method, url, body)
 	if err != nil {

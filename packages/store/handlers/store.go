@@ -6,7 +6,7 @@ import (
 
 func StoreAsync(ctx *gin.Context) {
 	var id, url = getRequireQuery(ctx)
-	go download(id, url, ctx.Request.Method, ctx.Request.Body, ctx.Request.Header)
+	queueDownload(id, url, ctx.Request.Method, ctx.Request.Body, ctx.Request.Header)
 	ctx.JSON(200, gin.H{
 		"ok": true,
 	})
@@ -38,8 +38,7 @@ func StoreAsyncMulti(ctx *gin.Context) {
 		if item.Url == "" {
 			continue
 		}
-		// todo 控制下载数目
-		go download(item.Id, item.Url, requestParam.Method, nil, ctx.Request.Header)
+		queueDownload(item.Id, item.Url, requestParam.Method, nil, ctx.Request.Header)
 	}
 	ctx.JSON(200, gin.H{
 		"ok": true,
