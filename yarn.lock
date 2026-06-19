@@ -3635,7 +3635,6 @@ __metadata:
     express-http-proxy: "npm:^2.1.2"
     lodash-es: "npm:4.17.23"
     mime: "npm:^4.1.0"
-    tsup: "npm:^8.5.0"
     tsx: "npm:^4.22.3"
     zod: "npm:^4.4.3"
   languageName: unknown
