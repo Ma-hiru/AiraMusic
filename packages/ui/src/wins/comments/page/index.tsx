@@ -4,7 +4,7 @@ import { CommentSort, CommentType } from "@/common/enum";
 import { RendererCache } from "@/common/lib/cache";
 import { useListenable } from "@/common/hooks/use-listenable";
 import { useThemeInjectFromBus } from "@/common/hooks/use-theme-inject-from-bus";
-import { RendererEventBus } from "@/common/lib/bus";
+import { RendererIPCMessageBus } from "@/common/lib/bus";
 import AppToast from "@/common/components/display/toast";
 
 import Control from "./control";
@@ -16,8 +16,9 @@ import AcrylicBackground from "@/common/components/display/acrylic-background";
 import AppError from "@/common/components/fallback/app-error";
 
 const CommentsPage: FC<object> = () => {
-  const commentBus = useListenable(RendererEventBus.comment);
-  const playerBus = useListenable(RendererEventBus.player);
+  const commentBus = useListenable(RendererIPCMessageBus.comment);
+  const trackMetaBus = useListenable(RendererIPCMessageBus.trackMeta);
+  const themeBus = useThemeInjectFromBus();
   const [dynamicContent, setDynamicContent] = useState(() => {
     return RendererCache.browser.getOne("comments-dynamic-content") === "true";
   });
@@ -25,8 +26,6 @@ const CommentsPage: FC<object> = () => {
   const [type, setType] = useState(CommentType.Song);
   const [sortType, setSortType] = useState(CommentSort.Hot);
   const { comments, status, loadMore } = useComments({ id, type, sortType });
-
-  useThemeInjectFromBus();
 
   useEffect(() => {
     if (!commentBus.data) return;
@@ -45,32 +44,29 @@ const CommentsPage: FC<object> = () => {
   }, [commentBus.data]);
 
   useEffect(() => {
-    RendererEventBus.mainBusUpdater.send("player");
-    RendererEventBus.mainBusUpdater.send("info");
+    RendererIPCMessageBus.updater.deliver("track-meta");
   }, [dynamicContent]);
 
-  const InfoBus = useListenable(RendererEventBus.info);
-
   useEffect(() => {
-    const track = playerBus.data?.track;
+    const track = trackMetaBus.data?.track;
     if (!track) return;
     if (dynamicContent) {
       RendererCache.browser.setOne("comments-dynamic-content", "true");
-      RendererEventBus.comment.commit({
+      RendererIPCMessageBus.comment.dispatch({
         id: track.id,
         type: "track"
       });
     } else {
       RendererCache.browser.setOne("comments-dynamic-content", "false");
     }
-  }, [dynamicContent, playerBus.data?.track]);
+  }, [dynamicContent, trackMetaBus.data?.track]);
 
   return (
     <div className="w-screen h-screen pt-10 overflow-hidden flex flex-col relative">
       <Control className="h-10 absolute top-0 left-0 right-0 z-10" />
       <div className="fixed inset-0 z-[-1]">
         <AcrylicBackground
-          src={InfoBus.data?.backgroundCover}
+          src={themeBus.data?.backgroundCover}
           brightness={0.45}
           opacity={0.7}
           blur={40}

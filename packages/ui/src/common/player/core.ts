@@ -16,7 +16,10 @@ import {
   NeteaseServicesLyric
 } from "@/common/netease/services";
 import { settingsStoreSnapshot } from "@/common/store/settings";
+import { userStoreSnapshot } from "@/common/store/user";
 import { Log } from "@/common/lib/log";
+import { throttle } from "lodash-es";
+import AppToast from "@/common/components/display/toast";
 
 import RendererPlayerAudio from "./audio";
 import RendererPlayerPlaylist from "./playlist";
@@ -106,6 +109,10 @@ export default class RendererPlayer extends Listenable {
     super();
     this.audio = props?.audio || new RendererPlayerAudio();
     this.playlist = props?.playlist || new RendererPlayerPlaylist();
+    this.playlist.bindPlayability(
+      (record) => record.detail.playable(userStoreSnapshot()._user),
+      throttle((reason: string) => AppToast.show({ type: "error", text: reason }), 1000)
+    );
     this.history = props?.history || new RendererPlayerHistory();
     this.current = props?.current || {
       track: null,
@@ -270,8 +277,9 @@ export default class RendererPlayer extends Listenable {
 
   /** 恢复持久化 */
   static fromSave(save: ReturnType<typeof this.save>) {
-    return new RendererPlayer({
-      audio: RendererPlayerAudio.fromSave(save.audio),
+    const savedAudio = RendererPlayerAudio.fromSave(save.audio);
+    const instance = new RendererPlayer({
+      audio: savedAudio,
       playlist: RendererPlayerPlaylist.fromSave(save.playlist),
       history: RendererPlayerHistory.fromSave(save.history),
       current: {
@@ -282,6 +290,26 @@ export default class RendererPlayer extends Listenable {
         lyric: NeteaseLyric.fromObject(save.current.lyric)
       }
     });
+    queueMicrotask(async () => {
+      const audio = instance.current.audio;
+      if (!audio) return;
+
+      const ok = await fetch(audio.src)
+        .then((res) => res.ok)
+        .catch(() => false);
+
+      if (!ok) {
+        const track = instance.current.track;
+        if (!track) return;
+
+        const audio = await instance.loadAudio(track.detail, new AbortController());
+        if (!audio) return;
+
+        instance.audio.load(audio, false);
+        instance.audio.currentTime = savedAudio.currentTime;
+      }
+    });
+    return instance;
   }
 
   /** 歌词切换 */

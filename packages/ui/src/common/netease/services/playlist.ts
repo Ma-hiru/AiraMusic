@@ -118,4 +118,27 @@ export default class _NeteasePlaylistSource {
   static summary(summary: NeteasePlaylistSummary | NeteaseAPI.NeteasePlaylistSummary) {
     return _NeteasePlaylistSource.id(summary.id);
   }
+
+  //region 编辑相关
+  private static officialTagsCache: Nullable<string[]> = null;
+
+  /** 官方歌单标签列表（缓存），编辑歌单选择 tag 用，网易云只接受官方标签 */
+  static async categories(): Promise<string[]> {
+    if (_NeteasePlaylistSource.officialTagsCache) return _NeteasePlaylistSource.officialTagsCache;
+    const res = await NeteaseAPIPlaylist.category();
+    const tags = (res.sub ?? []).map((item) => item.name).filter(Boolean);
+    _NeteasePlaylistSource.officialTagsCache = tags;
+    return tags;
+  }
+
+  /** 编辑歌单后失效内存缓存，使下次 {@link id} 拿到最新元信息 */
+  static invalidate(id: number) {
+    _NeteasePlaylistSource.memoryCache.delete(id);
+    if (id === _NeteasePlaylistSource.likedPlaylistID) {
+      _NeteasePlaylistSource.memoryCache.delete(
+        id + _NeteasePlaylistSource.likedTrackIDsCheckPoint!
+      );
+    }
+  }
+  //endregion
 }

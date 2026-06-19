@@ -1,19 +1,13 @@
-import {
-  type FC,
-  type MouseEvent as ReactMouseEvent,
-  type Ref,
-  useCallback,
-  useEffect,
-  useImperativeHandle
-} from "react";
+import { type FC, type Ref, useCallback, useEffect, useImperativeHandle } from "react";
 import { NeteaseAPISearch } from "@/common/netease/api";
 import { NeteaseImageSize, PlaylistSource, SearchType } from "@/common/enum";
 import { NeteaseServicesTrack } from "@/common/netease/services";
 import { NeteaseHistoryRecord, NeteaseTrackRecord } from "@/common/netease/models";
 import { useRequestAutoRun, useRequestStatusWrap } from "@/common/hooks/use-request-wrap";
+import { useTrackContextMenu } from "@/common/hooks/use-track-context-menu";
 import { type HeartManager } from "@/common/hooks/use-heart";
-import AppContextMenu from "@/common/components/display/menu";
 import RendererImageConstants from "@/common/constants/image";
+
 import AppLoading from "@/common/components/fallback/app-loading";
 import TrackList, { type TrackListPlayableManager } from "@/common/components/display/track_list";
 import AppError from "@/common/components/fallback/app-error";
@@ -28,9 +22,9 @@ interface TrackResultProps {
   className?: string;
   keywords?: string;
   activeTrackID: Undefinable<number>;
-  onClick: Optional<NormalFunc<[track: NeteaseTrackRecord | NeteaseHistoryRecord, index: number]>>;
-  onClickArtist: Optional<NormalFunc<[id: number]>>;
-  onClickAlbum: Optional<NormalFunc<[id: number]>>;
+  onClick: NormalFunc<[track: NeteaseTrackRecord | NeteaseHistoryRecord, index: number]>;
+  onClickArtist: NormalFunc<[id: number]>;
+  onClickAlbum: NormalFunc<[id: number]>;
   addToPlaylistNext: NormalFunc<[track: NeteaseTrackRecord]>;
   addToPlaylistLast: NormalFunc<[track: NeteaseTrackRecord]>;
   openComment: NormalFunc<[track: NeteaseTrackRecord]>;
@@ -85,44 +79,13 @@ const TrackResult: FC<TrackResultProps> = ({
   const { reload } = useRequestAutoRun(fetchData, [keywords]);
 
   // 右键菜单
-  const { create, createTrackContextMenu } = AppContextMenu.useMenu();
-  const onContextMenu = useCallback(
-    (e: ReactMouseEvent<HTMLDivElement, MouseEvent>, track: NeteaseTrackRecord) => {
-      create(createTrackContextMenu, {
-        track,
-        clientX: e.clientX,
-        clientY: e.clientY,
-        onClick: (type, track) => {
-          switch (type) {
-            case "play":
-              onClick?.(track, /* unused */ 0);
-              break;
-            case "album":
-              onClickAlbum?.(track.detail.al.id);
-              break;
-            case "nextPlay":
-              addToPlaylistNext(track);
-              break;
-            case "addPlayList":
-              addToPlaylistLast(track);
-              break;
-            case "comment":
-              void openComment(track);
-              break;
-          }
-        }
-      });
-    },
-    [
-      addToPlaylistLast,
-      addToPlaylistNext,
-      create,
-      createTrackContextMenu,
-      onClick,
-      onClickAlbum,
-      openComment
-    ]
-  );
+  const { onContextMenu } = useTrackContextMenu({
+    addToPlaylistLast,
+    addToPlaylistNext,
+    onClickAlbum,
+    onPlay: onClick,
+    openComment
+  });
 
   useImperativeHandle(
     ref,

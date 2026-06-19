@@ -7,7 +7,7 @@ import { resetLogMock } from "./mock/log";
 
 vi.mock("@/common/lib/log", async () => await import("./mock/log"));
 vi.mock("@mahiru/ui/common/lib/log", async () => await import("./mock/log"));
-vi.mock("@/common/lib/ipc", async () => await import("./mock/ipc"));
+vi.mock("@mahiru/ipc/renderer", async () => await import("./mock/ipc"));
 
 afterEach(() => {
   resetLogMock();

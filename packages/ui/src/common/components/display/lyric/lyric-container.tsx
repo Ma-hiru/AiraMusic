@@ -17,6 +17,9 @@ import LyricLine from "./lyric-line";
 import RendererTheme from "@/common/player/ui";
 import LyricTips from "./lyric-tips";
 
+const edgeFadeMask =
+  "linear-gradient(to bottom, transparent 0, #000 min(12%, 56px), #000 calc(100% - min(12%, 56px)), transparent 100%)";
+
 export interface LyricRef {
   update: NormalFunc<[delta: number]>;
   setCurrentTime: NormalFunc<[time: number]>;
@@ -154,7 +157,11 @@ const LyricContainer: FC<LyricContainerProps> = ({
           contain-content
       `,
         className
-      )}>
+      )}
+      style={{
+        maskImage: edgeFadeMask,
+        WebkitMaskImage: edgeFadeMask
+      }}>
       <div className={cx("h-[55%]", lyricLines.length === 0 && "h-0")} />
       {lyricLines.map((line, index) => (
         <LyricLine

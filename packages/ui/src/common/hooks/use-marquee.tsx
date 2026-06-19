@@ -1,6 +1,7 @@
 import { type RefObject, useEffect } from "react";
+import { useUpdate } from "@/common/hooks/use-update";
 
-type MarqueeOpts = {
+export type MarqueeOpts = {
   /** 像素/秒 单位，默认 30 */
   speed?: number;
   /** 如果为 true，用 ping-pong（往返）模式；否则到末尾后瞬回起点并继续 */
@@ -20,6 +21,7 @@ type MarqueeOpts = {
  */
 export function useMarquee(containerRef: RefObject<Nullable<HTMLElement>>, opts: MarqueeOpts = {}) {
   const { speed = 30, pingPong = true, pauseOnHover = true, gapDuration = 1000 } = opts;
+  const update = useUpdate();
 
   useEffect(() => {
     const container = containerRef.current;
@@ -85,5 +87,9 @@ export function useMarquee(containerRef: RefObject<Nullable<HTMLElement>>, opts:
       }
       animation?.cancel();
     };
-  }, [containerRef, speed, pingPong, pauseOnHover, gapDuration]);
+  }, [containerRef, speed, pingPong, pauseOnHover, gapDuration, update.count]);
+
+  return {
+    update
+  };
 }

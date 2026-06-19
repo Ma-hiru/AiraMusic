@@ -2,7 +2,7 @@ import { type FC, memo, useCallback } from "react";
 import { Search } from "lucide-react";
 import NoDrag from "@/common/components/layout/drag/no-drag";
 import { RendererWindow } from "@/common/lib/window";
-import { RendererEventBus } from "@/common/lib/bus";
+import { RendererIPCMessageBus } from "@/common/lib/bus";
 import { useSearchRecommend } from "@/common/hooks/use-search-recommend";
 
 const TopSearch: FC<object> = () => {
@@ -10,7 +10,7 @@ const TopSearch: FC<object> = () => {
 
   const openSearch = useCallback(async (keyword?: string) => {
     await RendererWindow.display.reactReadyAwait();
-    RendererEventBus.display.send({
+    RendererIPCMessageBus.display.deliver({
       type: "search",
       keyword
     });

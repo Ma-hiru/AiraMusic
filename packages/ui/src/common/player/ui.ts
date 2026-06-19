@@ -2,15 +2,7 @@ import Color, { type ColorInstance } from "color";
 import { converter, formatHex } from "culori";
 import { clamp } from "lodash-es";
 import { Listener } from "@/common/utils/listenable";
-import { ensureInitObject, Init, initAsync } from "@/common/utils/init";
 
-@Init(() => {
-  const observer = new MutationObserver(() => RendererTheme.listener.execute());
-  observer.observe(document.documentElement, {
-    attributes: true,
-    attributeFilter: ["style"]
-  });
-})
 export default class RendererTheme {
   static readonly BLACK_COLOR = Color("#000000");
   static readonly WHITE_COLOR = Color("#FFFFFF");
@@ -151,6 +143,14 @@ export default class RendererTheme {
       })
     );
   }
+
+  static {
+    const observer = new MutationObserver(() => this.listener.execute());
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["style"]
+    });
+  }
 }
 
 export type LIGHTNESS_SCALE = 50 | 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900;
@@ -167,5 +167,3 @@ const Palette_SCALE: Record<LIGHTNESS_SCALE, number> = {
   800: 0.32,
   900: 0.22
 };
-
-initAsync(ensureInitObject(RendererTheme));

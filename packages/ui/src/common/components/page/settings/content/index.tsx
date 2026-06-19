@@ -1,7 +1,7 @@
 import { type FC, memo, useCallback } from "react";
 import { type NeteaseSettingsModel, NeteaseUser } from "@/common/netease/models";
 import { TrackQuality } from "@/common/enum";
-import type { InvokeEventPayload } from "@mahiru/ipc/renderer";
+import type { InvokeEventPayload } from "@mahiru/ipc/types";
 
 import Cache from "./cache";
 import Quality from "./quality";
@@ -9,6 +9,7 @@ import Performance from "./performance";
 import Preference from "./preference";
 import Shortcut from "./shortcut";
 import Device from "./device";
+import { cx } from "@emotion/css";
 
 interface SettingsContentProps {
   user: Nullable<NeteaseUser>;
@@ -17,11 +18,12 @@ interface SettingsContentProps {
   output: { selected: string; views: { displayName: string; deviceId: string }[] };
   updateOutput: NormalFunc<[deviceId: string]>;
   cacheStoreSizes: Nullable<CacheStoreSizeCategories>;
-  cacheStoreConfig: Nullable<InvokeEventPayload<"fetchCacheStoreConfig">>;
+  cacheStoreConfig: Nullable<InvokeEventPayload<"invoke_cache_config_get">>;
   updateCacheStoreConfig: PromiseFunc<
-    [config: Partial<InvokeEventPayload<"fetchCacheStoreConfig">>]
+    [config: Partial<InvokeEventPayload<"invoke_cache_config_get">>]
   >;
   refreshSize: NormalFunc;
+  className?: string;
 }
 
 const SettingsContent: FC<SettingsContentProps> = ({
@@ -33,7 +35,8 @@ const SettingsContent: FC<SettingsContentProps> = ({
   updateCacheStoreConfig,
   output,
   updateOutput,
-  refreshSize
+  refreshSize,
+  className
 }) => {
   const patchSettings = useCallback(
     (patch: Partial<NeteaseSettingsModel>) => {
@@ -61,7 +64,7 @@ const SettingsContent: FC<SettingsContentProps> = ({
   );
 
   return (
-    <main className="lg:h-full lg:contain-strict space-y-4 lg:overflow-y-auto scrollbar lg:scrollbar-show">
+    <main className={cx("w-full space-y-4 scrollbar contain-layout", className)}>
       <Quality
         vip={user?.isVIP() ?? false}
         data={settings.trackQuality}

@@ -3,7 +3,9 @@ import { apiRequest } from "@/common/netease/api/request";
 export default class _NeteaseRecordAPI {
   /** @desc 听歌足迹 - 今日收听 */
   static today() {
-    return apiRequest<unknown, NeteaseAPI.NeteaseToplistResponse>("/listen/data/today/song");
+    return apiRequest<unknown, NeteaseAPI.NeteaseToplistResponse>(
+      `/listen/data/today/song?timestamp=${Date.now()}`
+    );
   }
 
   /**
@@ -19,20 +21,20 @@ export default class _NeteaseRecordAPI {
           message: string;
         };
       }
-    >("/listen/data/total");
+    >(`/listen/data/total?timestamp=${Date.now()}`);
   }
 
   /** @desc 听歌足迹 - 本周收听时长 */
   static week() {
     return apiRequest<unknown, NeteaseAPI.NeteaseWeekDurationResponse>(
-      "/listen/data/realtime/report?type=week"
+      `/listen/data/realtime/report?type=week&timestamp=${Date.now()}`
     );
   }
 
   /** @desc 听歌足迹 - 本月收听时长 */
   static month() {
     return apiRequest<unknown, NeteaseAPI.NeteaseMonthDurationResponse>(
-      "/listen/data/realtime/report?type=month"
+      `/listen/data/realtime/report?type=month&timestamp=${Date.now()}`
     );
   }
 
@@ -42,8 +44,11 @@ export default class _NeteaseRecordAPI {
    * @param type type: 维度类型 周 week 月 month 年 year
    * */
   static report(type: "week" | "month" | "year", endTime?: number) {
-    return apiRequest<unknown, NeteaseAPI.NeteaseAPIResponse>("/listen/data/report", {
-      params: { type, endTime }
-    });
+    return apiRequest<unknown, NeteaseAPI.NeteaseAPIResponse>(
+      `/listen/data/report?timestamp=${Date.now()}`,
+      {
+        params: { type, endTime }
+      }
+    );
   }
 }

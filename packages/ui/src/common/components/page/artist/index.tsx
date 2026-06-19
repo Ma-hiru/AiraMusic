@@ -4,7 +4,6 @@ import { type HeartManager } from "@/common/hooks/use-heart";
 import {
   type FC,
   memo,
-  type MouseEvent as ReactMouseEvent,
   type Ref,
   useCallback,
   useEffect,
@@ -16,7 +15,7 @@ import {
 import { useRequestAutoRun, useRequestStatusWrap } from "@/common/hooks/use-request-wrap";
 import { NeteaseArtist, NeteaseTrackRecord } from "@/common/netease/models";
 import { NeteaseServicesArtist } from "@/common/netease/services";
-import AppContextMenu from "@/common/components/display/menu";
+import { useTrackContextMenu } from "@/common/hooks/use-track-context-menu";
 import RendererImageConstants from "@/common/constants/image";
 
 import Header from "./header";
@@ -44,14 +43,14 @@ interface ArtistProps {
   activeTrackID?: number;
   heartManager: Optional<HeartManager>;
   playableManager: Optional<TrackListPlayableManager>;
-  onClick: Optional<TrackListClickFunc<NeteaseTrackRecord>>;
-  onClickArtist: Optional<NormalFunc<[id: number]>>;
-  onClickAlbum: Optional<NormalFunc<[id: number]>>;
+  onClick: TrackListClickFunc<NeteaseTrackRecord>;
+  onClickArtist: NormalFunc<[id: number]>;
+  onClickAlbum: NormalFunc<[id: number]>;
   addToPlaylistNext: NormalFunc<[track: NeteaseTrackRecord]>;
   addToPlaylistLast: NormalFunc<[track: NeteaseTrackRecord]>;
   openComment: NormalFunc<[track: NeteaseTrackRecord]>;
-  pageActionType?: "enter" | "out" | "none";
-  onPageAction?: NormalFunc;
+  pageActionType: "enter" | "out" | "none";
+  onPageAction: NormalFunc;
   onDataLoaded?: NormalFunc<[artist: NeteaseArtist]>;
 }
 
@@ -112,44 +111,13 @@ const Artist: FC<ArtistProps> = ({
   }, [activeTab]);
 
   // 右键菜单
-  const { create, createTrackContextMenu } = AppContextMenu.useMenu();
-  const onContextMenu = useCallback(
-    (e: ReactMouseEvent<HTMLDivElement, MouseEvent>, track: NeteaseTrackRecord) => {
-      create(createTrackContextMenu, {
-        track,
-        clientX: e.clientX,
-        clientY: e.clientY,
-        onClick: (type, track) => {
-          switch (type) {
-            case "play":
-              onClick?.(track, /* unused */ 0);
-              break;
-            case "album":
-              onClickAlbum?.(track.detail.al.id);
-              break;
-            case "nextPlay":
-              addToPlaylistNext(track);
-              break;
-            case "addPlayList":
-              addToPlaylistLast(track);
-              break;
-            case "comment":
-              void openComment(track);
-              break;
-          }
-        }
-      });
-    },
-    [
-      addToPlaylistLast,
-      addToPlaylistNext,
-      create,
-      createTrackContextMenu,
-      onClick,
-      onClickAlbum,
-      openComment
-    ]
-  );
+  const { onContextMenu } = useTrackContextMenu({
+    addToPlaylistLast,
+    addToPlaylistNext,
+    onClickAlbum,
+    onPlay: onClick,
+    openComment
+  });
 
   useEffect(() => {
     artist && onDataLoaded?.(artist);

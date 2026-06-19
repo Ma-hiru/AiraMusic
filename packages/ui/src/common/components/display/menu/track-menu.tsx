@@ -1,12 +1,26 @@
 import { NeteaseNetworkImage, NeteaseTrackRecord, NeteaseUser } from "@/common/netease/models";
-import { Copy, DiscAlbum, ListMusic, ListPlus, MessageSquare, Play } from "lucide-react";
+import {
+  Copy,
+  DiscAlbum,
+  FolderPlus,
+  ListMusic,
+  ListPlus,
+  MessageSquare,
+  Play
+} from "lucide-react";
 import { NeteaseImageSize } from "@/common/enum";
 import type { ContextMenuItem, ContextMenuRender } from "./menu-provider";
 import { userStoreSnapshot } from "@/common/store/user";
 import NeteaseImage from "@/common/components/display/image/netease-image";
 import AppToast from "@/common/components/display/toast";
 
-export type TrackContextMenuAction = "comment" | "album" | "play" | "nextPlay" | "addPlayList";
+export type TrackContextMenuAction =
+  | "comment"
+  | "album"
+  | "play"
+  | "nextPlay"
+  | "addPlayList"
+  | "favPlaylist";
 
 export type TrackContextMenuOnClick = NormalFunc<
   [type: TrackContextMenuAction, track: NeteaseTrackRecord]
@@ -68,6 +82,11 @@ function createMenuItems(
       prefix: <MessageSquare size={14} />,
       label: <p className="text-[12px]">评论</p>,
       onClick: () => onClick?.("comment", track)
+    },
+    {
+      prefix: <FolderPlus size={14} />,
+      label: <p className="text-[12px]">收藏到歌单</p>,
+      onClick: () => onClick?.("favPlaylist", track)
     }
   );
 

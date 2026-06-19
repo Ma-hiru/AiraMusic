@@ -1,13 +1,14 @@
 /** Invoke 事件类型以及参数 */
 export type InvokeEventMaps = {
-  GPUInfo: [undefined, Promise<unknown>];
-  platform: [undefined, NodeJS.Platform];
-  isMaximized: [WindowType, boolean];
-  hasOpenInternalWindow: [WindowType, boolean];
-  storeKey: [undefined, string];
-  checkOnlineStatus: [undefined, Promise<NetworkStatus>];
-  currentWindowType: [undefined, WindowType];
-  currentWindowBounds: [
+  invoke_device_net: [undefined, Promise<NetworkStatus>];
+  invoke_device_gpu: [undefined, Promise<unknown>];
+  invoke_device_platform: [undefined, NodeJS.Platform];
+  invoke_window_id: [undefined, WindowType];
+  invoke_window_maximized: [WindowType, boolean];
+  invoke_window_opened: [WindowType, boolean];
+  invoke_window_pinned: [WindowType, boolean];
+  invoke_window_fullscreen: [WindowType, boolean];
+  invoke_window_bounds: [
     undefined,
     {
       x: number;
@@ -18,21 +19,24 @@ export type InvokeEventMaps = {
       workAreaWidth: number;
     }
   ];
-  selectPath: [type: "dir" | "file", Promise<{ ok: boolean; path: string; error?: string }>];
-  saveFile: [{ buffer: ArrayBuffer; name: string }, Promise<{ ok: boolean; error?: string }>];
-  isFullscreen: [WindowType, boolean];
-  runtimeID: [undefined, string];
-  updateCacheStoreConfig: [
+  invoke_runtime_token: [undefined, string];
+  invoke_runtime_id: [undefined, string];
+  invoke_fs_select: [type: "dir" | "file", Promise<{ ok: boolean; path: string; error?: string }>];
+  invoke_fs_save: [{ buffer: ArrayBuffer; name: string }, Promise<{ ok: boolean; error?: string }>];
+  invoke_store_get: [string, { ok: true; value: JsonValue } | { ok: false; reason?: string }];
+  invoke_store_set: [
+    { key: string; value: JsonValue },
+    { ok: true } | { ok: false; reason?: string }
+  ];
+  invoke_store_delete: [string, { ok: false; reason?: string } | { ok: true }];
+  invoke_cache_config_get: [undefined, { ttl: string; path: string; capacity: number }];
+  invoke_cache_config_update: [
     { ttl?: string; path?: string; capacity?: number },
     (
       | { ok: true; config: { ttl: string; path: string; capacity: number } }
       | { ok: false; reason: string }
     )
   ];
-  fetchCacheStoreConfig: [undefined, { ttl: string; path: string; capacity: number }];
-  getKeyValue: [string, { ok: true; value: JsonValue } | { ok: false; reason?: string }];
-  deleteKeyValue: [string, { ok: false; reason?: string } | { ok: true }];
-  setKeyValue: [{ key: string; value: JsonValue }, { ok: true } | { ok: false; reason?: string }];
 };
 
 /** Invoke 事件类型 */

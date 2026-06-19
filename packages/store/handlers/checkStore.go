@@ -13,7 +13,7 @@ func CheckOrStoreAsync(ctx *gin.Context) {
 	var index, ok = store.CheckByID(id)
 	var needUpdate = !ok || update || timeLimit > 0 && index.IsExpiredMill(timeLimit)
 	if needUpdate {
-		go download(id, url, ctx.Request.Method, ctx.Request.Body, ctx.Request.Header)
+		queueDownload(id, url, ctx.Request.Method, ctx.Request.Body, ctx.Request.Header)
 		ctx.JSON(200, gin.H{
 			"ok":    false,
 			"index": core.Index{},
@@ -45,7 +45,7 @@ func CheckOrStoreAsyncMulti(ctx *gin.Context) {
 		if needUpdate {
 			item.Id, item.Url = handleURLAndID(item.Id, item.Url)
 			if item.Url != "" {
-				go download(item.Id, item.Url, requestParam.Method, nil, ctx.Request.Header)
+				queueDownload(item.Id, item.Url, requestParam.Method, nil, ctx.Request.Header)
 			}
 			result = append(result, gin.H{
 				"ok":    false,

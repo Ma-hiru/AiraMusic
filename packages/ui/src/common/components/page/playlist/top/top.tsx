@@ -18,6 +18,7 @@ interface TopProps {
   setIsTyping?: NormalFunc<[tying: boolean]>;
   pageActionType?: "enter" | "out" | "none";
   onPageAction?: NormalFunc;
+  onEdited?: NormalFunc;
 }
 
 const Top: FC<TopProps> = ({
@@ -31,7 +32,8 @@ const Top: FC<TopProps> = ({
   onCoverLoaded,
   setIsTyping = () => {},
   onPageAction,
-  pageActionType
+  pageActionType,
+  onEdited
 }) => {
   if (loading) return null;
   return (
@@ -47,6 +49,7 @@ const Top: FC<TopProps> = ({
         setTying={setIsTyping}
         pageActionType={pageActionType}
         onPageAction={onPageAction}
+        onEdited={onEdited}
       />
     </div>
   );

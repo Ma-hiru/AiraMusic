@@ -5,6 +5,11 @@ const require = createRequire(import.meta.url);
 
 const moduleDefs: ModuleDefinition[] = [
   {
+    identifier: "relay_play_state_submit",
+    route: "/relay/play/state/submit",
+    module: require("@neteasecloudmusicapienhanced/api/module/relay_play_state_submit")
+  },
+  {
     identifier: "activate_init_profile",
     route: "/activate/init/profile",
     module: require("@neteasecloudmusicapienhanced/api/module/activate_init_profile")

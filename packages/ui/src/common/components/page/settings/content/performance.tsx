@@ -5,6 +5,7 @@ import { NeteaseSettings, type NeteaseSettingsModel } from "@/common/netease/mod
 import ToggleRow from "./toggle-row";
 import Card from "@/common/components/layout/card";
 import RangeRow from "@/common/components/page/settings/content/range-row";
+import BaseGroup from "@/common/components/page/settings/content/base-group";
 
 export interface PerformanceSettings {
   data: NeteaseSettings["performance"];
@@ -28,33 +29,100 @@ const Performance: FC<PerformanceSettings> = ({ data, patchSettings }) => {
           })
         }
       />
-      <ToggleRow
-        icon={Sparkles}
-        title="播放页流体背景"
-        description="启用播放页的简单流体背景效果，播放暂停和页面关闭时会自动暂停，关闭可以节省性能"
-        checked={data.usePlayerFluid}
-        onClick={() =>
-          patchSettings({
-            performance: {
-              ...data,
-              usePlayerFluid: !data.usePlayerFluid
+      <BaseGroup
+        items={[
+          <ToggleRow
+            icon={Sparkles}
+            title="播放页流体背景"
+            description="启用播放页的简单流体背景效果，关闭可以节省性能"
+            checked={data.usePlayerFluid}
+            onClick={() =>
+              patchSettings({
+                performance: {
+                  ...data,
+                  usePlayerFluid: !data.usePlayerFluid
+                }
+              })
             }
-          })
-        }
+          />,
+
+          <ToggleRow
+            title="播放页流体背景跟随音乐"
+            description="播放页的简单流体背景是否跟随音乐暂停"
+            checked={data.playerFluidWithPlaying}
+            onClick={() =>
+              patchSettings({
+                performance: {
+                  ...data,
+                  playerFluidWithPlaying: !data.playerFluidWithPlaying
+                }
+              })
+            }
+          />,
+          <RangeRow
+            title="播放页流体背景速度"
+            step={1}
+            min={1}
+            max={10}
+            value={data.playerFluidSpeed}
+            onChange={(value) =>
+              patchSettings({
+                performance: {
+                  ...data,
+                  playerFluidSpeed: value
+                }
+              })
+            }
+          />
+        ]}
+        expand={data.usePlayerFluid}
       />
-      <ToggleRow
-        icon={Sparkles}
-        title="主窗口流体背景"
-        description="启用主窗口的简单流体背景效果，播放暂停时会自动暂停，关闭可以节省性能"
-        checked={data.useHomeFluid}
-        onClick={() =>
-          patchSettings({
-            performance: {
-              ...data,
-              useHomeFluid: !data.useHomeFluid
+      <BaseGroup
+        items={[
+          <ToggleRow
+            icon={Sparkles}
+            title="主窗口流体背景"
+            description="启用主窗口的简单流体背景效果，关闭可以节省性能"
+            checked={data.useHomeFluid}
+            onClick={() =>
+              patchSettings({
+                performance: {
+                  ...data,
+                  useHomeFluid: !data.useHomeFluid
+                }
+              })
             }
-          })
-        }
+          />,
+          <ToggleRow
+            title="主窗口流体背景跟随音乐"
+            description="主窗口的简单流体背景是否跟随音乐暂停"
+            checked={data.homeFluidWithPlaying}
+            onClick={() =>
+              patchSettings({
+                performance: {
+                  ...data,
+                  homeFluidWithPlaying: !data.homeFluidWithPlaying
+                }
+              })
+            }
+          />,
+          <RangeRow
+            title="主窗口流体背景速度"
+            step={1}
+            min={1}
+            max={10}
+            value={data.homeFluidSpeed}
+            onChange={(value) =>
+              patchSettings({
+                performance: {
+                  ...data,
+                  homeFluidSpeed: value
+                }
+              })
+            }
+          />
+        ]}
+        expand={data.useHomeFluid}
       />
       <ToggleRow
         icon={AudioLines}

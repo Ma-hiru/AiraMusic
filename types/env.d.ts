@@ -14,6 +14,7 @@ interface ENV {
   readonly APP_DESC: string;
   readonly APP_SCHEME: string;
   readonly APP_SCHEME_FILE_HOSTNAME: string;
+  readonly APP_USER_MODEL_ID: string;
 }
 
 declare namespace NodeJS {

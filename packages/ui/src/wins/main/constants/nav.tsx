@@ -5,6 +5,7 @@ import {
   ListMusic,
   type LucideIcon,
   Music2,
+  Radio,
   Sparkles,
   Trophy
 } from "lucide-react";
@@ -37,6 +38,11 @@ export class NavConstants {
       icon: <Heart className="w-full aspect-square" />,
       label: "喜欢",
       path: RoutePathMain.playlist.like
+    },
+    {
+      icon: <Radio className="w-full aspect-square" />,
+      label: "漫游",
+      path: RoutePathMain.fm
     },
     {
       icon: <Clock className="w-full aspect-square" />,

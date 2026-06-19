@@ -5,16 +5,25 @@ import type { LucideIcon } from "lucide-react";
 import BaseItem from "./base-item";
 
 interface ToggleRowProps {
-  icon: LucideIcon;
+  icon?: LucideIcon;
   title: string;
   description: string;
   checked: boolean;
   onClick: NormalFunc;
+  emptyIcon?: boolean;
 }
 
-const ToggleRow: FC<ToggleRowProps> = ({ icon, title, description, checked, onClick }) => {
+const ToggleRow: FC<ToggleRowProps> = ({
+  icon,
+  title,
+  description,
+  checked,
+  onClick,
+  emptyIcon = false
+}) => {
   return (
     <BaseItem
+      emptyIcon={emptyIcon}
       icon={icon}
       children={
         <section className="flex items-center gap-3">

@@ -1,11 +1,12 @@
 import { vi } from "vitest";
 
+export function init() {}
+
 export const RendererIPC = {
-  Event: vi.fn(),
-  Invoke: () => {
-    return Promise.resolve();
+  NormalChannel: {
+    send: () => Promise.resolve()
   },
-  Message: vi.mockObject({
+  MessageChannel: vi.mockObject({
     listen: vi.fn(),
     send: vi.fn()
   }),

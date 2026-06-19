@@ -39,6 +39,10 @@ export class MainPathResolver {
         process.platform === "win32" ? "aira-music-cache.exe" : "aira-music-cache"
       );
 
+  static nativeTaskbarAddonPath = isDev
+    ? this.appPathJoin("../native/index.node")
+    : this.appResourcePathJoin("native", "index.node");
+
   static logDir = isDev
     ? MainPathResolver.appPathJoin("logs")
     : MainPathResolver.appUserDataJoin("logs");

@@ -8,9 +8,10 @@ import { usePageJump } from "@/wins/main/hooks/use-page-jump";
 import { useDisplayAction } from "@/wins/main/hooks/use-display-action";
 import { usePlayerActionInList } from "@/wins/main/hooks/use-player-action-in-list";
 import { useSetBackground } from "@/wins/main/hooks/use-set-background";
-import { useLocateOrScrollTopRegister } from "@/wins/main/hooks/use-locate-or-scroll-top-register";
 import { useSetAtom } from "jotai";
-import { typingAtom } from "@/wins/main/atoms/layout";
+import { useScrollActionsRegister } from "@/common/hooks/use-scroll-actions-register";
+import { useRouterActive } from "@/common/hooks/use-router-active";
+import { scrollActionsAtom, typingAtom } from "@/wins/main/atoms/layout";
 
 import Playlist, { type PlaylistRef } from "@/common/components/page/playlist";
 
@@ -32,10 +33,11 @@ const PlaylistPage: FC<object> = () => {
     player
   } = usePlayerActionInList(() => playlistRef.current?.totalTracks.current ?? []);
   // 注册滚动和定位回调
-  const { canFastLocate, canScrollTop } = useLocateOrScrollTopRegister({
+  const { canFastLocate, canScrollTop } = useScrollActionsRegister({
+    atom: scrollActionsAtom,
+    active: useRouterActive(RoutePathMain, "playlist"),
     getScrollTopFunc: () => playlistRef.current?.scrollTop,
-    getFastLocateFunc: () => playlistRef.current?.fastLocator,
-    page: "playlist"
+    getFastLocateFunc: () => playlistRef.current?.fastLocator
   });
   // 跳转歌手和专辑页
   const { jumpAlbumPage, jumpArtistPage } = usePageJump();

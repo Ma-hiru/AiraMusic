@@ -68,6 +68,10 @@
       {
         "from": "packages/store/dist/aira-music-cache.exe",
         "to": "bin/aira-music-cache.exe"
+      },
+      {
+        "from": "packages/native/index.node",
+        "to": "native/index.node"
       }
     ]
   }

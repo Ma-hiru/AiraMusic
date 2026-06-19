@@ -1,0 +1,22 @@
+{
+  "name": "@mahiru/native",
+  "type": "module",
+  "version": "1.0.0",
+  "main": "index.ts",
+  "types": "dist-types/index.d.ts",
+  "files": [
+    "dist-types/*",
+    "index.ts",
+    "index.node"
+  ],
+  "scripts": {
+    "build": "cargo build --release && tsx scripts/copy-artifact.ts",
+    "clean:cargo": "cargo clean",
+    "clean:dist": "tsx scripts/clean-dist.ts",
+    "lint": "cargo fmt && cargo clippy --all-targets -- -D warnings",
+    "test": "cargo test"
+  },
+  "devDependencies": {
+    "tsx": "^4.22.3"
+  }
+}

@@ -40,7 +40,7 @@ export default class _NeteaseAlbumSource {
 
   static async id(id: number): Promise<NeteaseAlbum> {
     const cache = await _NeteaseAlbumSource.getCache(id);
-    if (cache) return NeteaseAlbum.fromObject(cache);
+    if (cache && cache.tracks.length) return NeteaseAlbum.fromObject(cache);
 
     const content = await NeteaseAPIAlbum.content(id);
     const tracks = await _NeteaseAlbumSource.requestFullTracks(

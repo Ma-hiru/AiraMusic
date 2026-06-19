@@ -7,7 +7,7 @@ import { NeteaseServicesAuth } from "@/common/netease/services";
 import { useAtom, useAtomValue } from "jotai";
 import { playModalAtom, sidebarAtom } from "@/wins/main/atoms/layout";
 import { RendererWindow } from "@/common/lib/window";
-import { RendererEventBus } from "@/common/lib/bus";
+import { RendererIPCMessageBus } from "@/common/lib/bus";
 
 import NeteaseImage from "@/common/components/display/image/netease-image";
 import NoDrag from "@/common/components/layout/drag/no-drag";
@@ -28,7 +28,7 @@ const TopLeft: FC<TopLeftProps> = ({ user }) => {
       await NeteaseServicesAuth.createLoginWindow();
     } else {
       await RendererWindow.display.reactReadyAwait();
-      RendererEventBus.display.send({ type: "settings" });
+      RendererIPCMessageBus.display.deliver({ type: "settings" });
     }
   }, [playModal, setPlayModal]);
 

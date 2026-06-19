@@ -2,6 +2,7 @@ import { NeteaseTrack } from "./netease-track";
 import { NeteaseTrackRecord } from "@/common/netease/models/netease-track-record";
 
 export class NeteaseHistoryRecord extends NeteaseTrackRecord {
+  /** s 秒 */
   playDuration: number;
   time: number;
 

@@ -29,14 +29,14 @@ export default class RendererPlayerHistory extends Listenable {
     const exitsPos = this.locate(record);
     if (exitsPos !== -1) this.list.splice(exitsPos, 1);
     this.list.unshift(record);
-    if (record.sourceName === "playlist" || record.sourceName === "album") {
-      void NeteaseAPITrack.scrobble({
-        id: record.id,
-        sourceid: record.sourceID,
-        time: Math.floor(record.playDuration / 1000)
-      });
-    }
-    this.executeListeners();
+    NeteaseAPITrack.scrobble({
+      id: record.id,
+      sourceid:
+        record.sourceName === "playlist" || record.sourceName === "album"
+          ? record.sourceID
+          : record.id,
+      time: Math.floor(record.playDuration)
+    }).finally(() => this.executeListeners());
   }
 
   remove(record: NeteaseHistoryRecord | number) {

@@ -12,9 +12,9 @@ const Background: FC<object> = () => {
   const settings = useSettings();
   return (
     <AcrylicBackground
-      fluid
-      fluidPaused={!player.playing || !settings.performance.usePlayerFluid}
-      fluidSpeed={8}
+      fluid={settings.performance.usePlayerFluid}
+      fluidPaused={settings.performance.playerFluidWithPlaying ? !player.playing : false}
+      fluidSpeed={settings.performance.playerFluidSpeed}
       className="absolute inset-0"
       src={backgroundCover ?? undefined}
       brightness={0.4}

@@ -7,7 +7,11 @@ import { usePlayerChangeActionFromDisplay } from "@/wins/display/hooks/use-playe
 import { useArtistOrAlbumDisplayJump } from "@/wins/display/hooks/use-artist-or-album-display-jump";
 import { useDisplayPageAction } from "@/wins/display/hooks/use-display-page-action";
 import { useDisplayTitle } from "@/wins/display/hooks/use-display-title";
-import { RendererEventBus } from "@/common/lib/bus";
+import { useRouterActive } from "@/common/hooks/use-router-active";
+import { useScrollActionsRegister } from "@/common/hooks/use-scroll-actions-register";
+import { scrollActionsAtom } from "@/wins/display/atoms/layout";
+import { RoutePathDisplay } from "@/common/routes";
+import { RendererIPCMessageBus } from "@/common/lib/bus";
 import { RendererWindow } from "@/common/lib/window";
 import type { TrackListClickFunc } from "@/common/components/display/track_list";
 
@@ -15,8 +19,8 @@ import History, { type HistoryRef } from "@/common/components/page/history";
 
 const HistoryDisplay: FC<object> = () => {
   const historyRef = useRef<Nullable<HistoryRef>>(null);
-  const playerBus = useListenable(RendererEventBus.player);
-  const historyBus = useListenable(RendererEventBus.history);
+  const trackMetaBus = useListenable(RendererIPCMessageBus.trackMeta);
+  const historyBus = useListenable(RendererIPCMessageBus.history);
   const { heartManager, playableManager } = useUserTrackManager();
 
   // 进入页面或聚焦时请求 main 窗口推送最新历史
@@ -43,7 +47,7 @@ const HistoryDisplay: FC<object> = () => {
     (track) => {
       const tracks = historyListRef.current;
       if (!tracks.length) return;
-      RendererEventBus.playerChange.send({
+      RendererIPCMessageBus.playlistAction.deliver({
         type: "replacePlaylistAndPlay",
         sourceType: "other",
         sourceID: 0,
@@ -58,6 +62,15 @@ const HistoryDisplay: FC<object> = () => {
   const { jumpArtistDisplay, jumpAlbumDisplay } = useArtistOrAlbumDisplayJump();
   const { onPageAction } = useDisplayPageAction({ type: "history" });
   const { updateTitle } = useDisplayTitle("history");
+
+  // 注册滚动和定位回调（display 窗口）
+  const active = useRouterActive(RoutePathDisplay, "history");
+  const { canFastLocate, canScrollTop } = useScrollActionsRegister({
+    active,
+    atom: scrollActionsAtom,
+    getScrollTopFunc: () => historyRef.current?.scrollTop,
+    getFastLocateFunc: () => historyRef.current?.fastLocator
+  });
 
   useEffect(
     () => updateTitle(`历史记录 ${historyList.length}条`),
@@ -77,9 +90,9 @@ const HistoryDisplay: FC<object> = () => {
       addToPlaylistNext={addTrackToPlaylistNext}
       heartManager={heartManager}
       playableManager={playableManager}
-      activeTrackID={playerBus.data?.track?.id}
-      canFastLocate={null}
-      canScrollTop={null}
+      activeTrackID={trackMetaBus.data?.track?.id}
+      canFastLocate={canFastLocate}
+      canScrollTop={canScrollTop}
       pageActionType="enter"
       onPageAction={onPageAction}
     />
@@ -88,4 +101,4 @@ const HistoryDisplay: FC<object> = () => {
 
 export default memo(HistoryDisplay);
 
-const fetchHistory = () => RendererEventBus.mainBusUpdater.send("history");
+const fetchHistory = () => RendererIPCMessageBus.updater.deliver("history");

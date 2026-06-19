@@ -1,10 +1,10 @@
 import { cx } from "@emotion/css";
 import { Check, ChevronDown, Monitor } from "lucide-react";
 import { type FC, memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { RendererWindow } from "@/common/lib/window";
 
 import Card from "@/common/components/layout/card";
 import { useScrollAutoHide } from "@/common/hooks/use-scroll-auto-hide";
+import { RendererIPCMessageBus } from "@/common/lib/bus";
 
 interface DeviceProps {
   output: { selected: string; views: { displayName: string; deviceId: string }[] };
@@ -54,7 +54,7 @@ const Device: FC<DeviceProps> = ({ output, updateOutput }) => {
     if (output.views.length === 0) setOpened(false);
   }, [output.views.length]);
   useEffect(() => {
-    RendererWindow.main.send("updateBus", "output");
+    RendererIPCMessageBus.updater.deliver("output");
   }, []);
 
   return (

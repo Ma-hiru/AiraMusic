@@ -30,7 +30,11 @@ const Cover: FC<CoverProps> = ({ className }) => {
         preview
         cacheLazy={false}
         image={image}
-        className="size-full rounded-lg"
+        title={player.current.track?.detail.al.name ?? player.current.track?.detail.name}
+        className="
+          size-full rounded-lg hover:scale-101 cursor-pointer
+          ease-in-out duration-300 transition-all
+        "
         onLoad={onLoad}
         shadowColor="light"
       />

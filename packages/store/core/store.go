@@ -13,6 +13,8 @@ import (
 	"time"
 )
 
+const indexFlushDelay = 2 * time.Second
+
 // #region CURD 操作
 
 // CheckByID 检查指定 id 的文件是否已存在于存储中，存在则返回对应的索引和 true，否则返回 false
@@ -91,12 +93,10 @@ func (Self *Store) RemoveByID(id string) (bool, error) {
 		return false, err
 	}
 
-	// 没有立即更新文件中的索引文件，仅仅更新内存中的索引映射
-	// 关闭时才会将内存中的索引写入文件
-	// todo: 可以增加定时器定期将内存中的索引写入文件，或者每次删除后都更新文件中的索引？
 	Self.indexMappedLock.Lock()
 	delete(Self.indexMapped, id)
 	Self.indexMappedLock.Unlock()
+	Self.markIndexDirty()
 
 	return true, nil
 }
@@ -115,6 +115,7 @@ func (Self *Store) Clear() (int, error) {
 	}
 	Self.indexMapped = make(map[string]Index)
 	Self.indexMappedLock.Unlock()
+	Self.clearPendingIndexDirty()
 	Self.updateIdxHandle()
 	return count, nil
 }
@@ -383,6 +384,7 @@ func (Self *Store) Move(path string, progress chan<- MoveProgressChan) error {
 	Self.currentWriteMappedLock.Unlock()
 	Self.indexHandle.mutex.Unlock()
 
+	Self.clearPendingIndexDirty()
 	Self.updateIdxHandle()
 	return nil
 }
@@ -447,6 +449,10 @@ func (Self *Store) TotalBytesByCategory() (image uint64, audio uint64, video uin
 
 // Destroy 销毁文件句柄，保存索引到文件
 func (Self *Store) Destroy() error {
+	Self.clearPendingIndexDirty()
+	Self.indexFlushLock.Lock()
+	defer Self.indexFlushLock.Unlock()
+
 	return Self.destroyIdxHandle()
 }
 
@@ -538,6 +544,7 @@ func (Self *Store) ClearInvalidFile() error {
 	}
 	Self.indexMappedLock.Unlock()
 	// 最后更新存储索引，然后重建索引文件句柄
+	Self.clearPendingIndexDirty()
 	Self.updateIdxHandle()
 	var duration = time.Since(start)
 	fmt.Printf("Clearing invalid files completed in %s.\n", duration.String())
@@ -598,6 +605,9 @@ func (Self *Store) LimitCapacity() error {
 	if deletedCount >= 0 {
 		fmt.Printf("Deleted %d files to limit capacity, freed %d bytes.\n", deletedCount, deletedSize)
 	}
+	if deletedCount > 0 {
+		Self.flushDirtyIndex()
+	}
 
 	return nil
 }
@@ -644,36 +654,76 @@ func (Self *Store) appendIndex(idx Index) error {
 	return nil
 }
 
-// 将内存中的索引全部写入索引文件，覆盖写入，销毁 indexHandle 本函数在销毁存储时执行
-func (Self *Store) destroyIdxHandle() error {
+// 标记索引文件需要覆盖刷新，短时间内多次删除只触发一次刷新
+func (Self *Store) markIndexDirty() {
+	Self.indexDirtyLock.Lock()
+	defer Self.indexDirtyLock.Unlock()
+
+	Self.indexDirty = true
+	if Self.indexFlushTimer == nil {
+		Self.indexFlushTimer = time.AfterFunc(indexFlushDelay, func() {
+			Self.flushDirtyIndex()
+		})
+		return
+	}
+	Self.indexFlushTimer.Reset(indexFlushDelay)
+}
+
+func (Self *Store) clearPendingIndexDirty() {
+	Self.indexDirtyLock.Lock()
+	defer Self.indexDirtyLock.Unlock()
+
+	Self.indexDirty = false
+	if Self.indexFlushTimer != nil {
+		Self.indexFlushTimer.Stop()
+		Self.indexFlushTimer = nil
+	}
+}
+
+func (Self *Store) flushDirtyIndex() {
+	Self.indexDirtyLock.Lock()
+	if !Self.indexDirty {
+		Self.indexFlushTimer = nil
+		Self.indexDirtyLock.Unlock()
+		return
+	}
+	Self.indexDirty = false
+	if Self.indexFlushTimer != nil {
+		Self.indexFlushTimer.Stop()
+		Self.indexFlushTimer = nil
+	}
+	Self.indexDirtyLock.Unlock()
+
+	Self.updateIdxHandle()
+}
+
+// 快照当前内存中的索引
+func (Self *Store) snapshotIdxs() []Index {
 	Self.indexMappedLock.RLock()
+	defer Self.indexMappedLock.RUnlock()
 	var indexData = make([]Index, 0, len(Self.indexMapped))
 	for _, index := range Self.indexMapped {
 		indexData = append(indexData, index)
 	}
-	Self.indexMappedLock.RUnlock()
-	return Self.indexHandle.Destroy(&Self.meta, indexData)
+	return indexData
 }
 
-// 强制更新存储索引并重建索引文件句柄，如果失败，由于无法继续使用存储，直接 panic
+// 将内存中的索引全部写入索引文件，覆盖写入并关闭 indexHandle，本函数在销毁存储时执行
+func (Self *Store) destroyIdxHandle() error {
+	return Self.indexHandle.Destroy(&Self.meta, Self.snapshotIdxs())
+}
+
+// 强制更新存储索引并原子重建索引文件句柄，如果失败，由于无法继续使用存储，直接 panic
 func (Self *Store) updateIdxHandle() {
-	var err = Self.destroyIdxHandle()
-	if err != nil {
-		// todo 索引损坏
+	Self.indexFlushLock.Lock()
+	defer Self.indexFlushLock.Unlock()
+
+	// Rebuild 全程持有 indexHandle.mutex，覆盖写入并重开句柄，
+	// 避免出现 file == nil 的中间窗口与并发 AppendIdx 抢写
+	if err := Self.indexHandle.Rebuild(&Self.meta, Self.snapshotIdxs()); err != nil {
+		// 索引损坏
 		panic(err)
 	}
-
-	// 重新以追加读写方式打开索引文件
-	var indexPath = filepath.Join(Self.meta.storeDir, Self.meta.indexName)
-	indexFile, err := os.OpenFile(indexPath, os.O_APPEND|os.O_RDWR, 0666)
-	if err != nil {
-		// 无法打开索引文件
-		panic(err)
-	}
-
-	Self.indexHandle.mutex.Lock()
-	Self.indexHandle.file = indexFile
-	Self.indexHandle.mutex.Unlock()
 }
 
 // #endregion

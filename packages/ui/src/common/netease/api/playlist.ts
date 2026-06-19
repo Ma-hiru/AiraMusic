@@ -1,10 +1,5 @@
 import { apiRequest } from "@/common/netease/api/request";
 
-// 精品歌单分类 => 精品歌单
-// 推荐歌单
-// 每日推荐歌单（个性化推荐）
-// 歌单(网友精选碟)
-
 export default class _NeteasePlaylistAPI {
   /**
    * 获取歌单详情

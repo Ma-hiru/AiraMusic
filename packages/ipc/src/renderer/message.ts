@@ -1,18 +1,12 @@
-import { Log, setLogger } from "../inject/log";
+import { Log } from "../inject/log";
 import { ApiKey } from "../constants/preload";
-import type { Log as Logger } from "@mahiru/log";
 import type { Message, MessageData, MessageDirection, MessageEvent } from "../types/message";
 import type { Api } from "../types/preload";
 
 // @ts-expect-error ApiKey是preload注入的，不存在于标准的globalThis
 const electronAPI = globalThis[ApiKey] as Api;
 
-export function init(log: Logger) {
-  setLogger(log);
-  RendererMessageChannel._connect();
-}
-
-export class RendererMessageChannel {
+export class MessageChannel {
   static readonly hasElectronAPI = !!electronAPI;
   private static readonly handlers = new Map<MessageEvent, Map<string, Handler>>();
 
@@ -62,7 +56,7 @@ export class RendererMessageChannel {
   }
 
   static send<T extends MessageEvent, U extends WindowType>(type: T, to: U, data: MessageData<T>) {
-    if (!RendererMessageChannel.hasElectronAPI) return;
+    if (!MessageChannel.hasElectronAPI) return;
     electronAPI.message.send({
       type,
       to,
@@ -70,42 +64,44 @@ export class RendererMessageChannel {
     });
   }
 
-  static _connect() {
-    if (!RendererMessageChannel.hasElectronAPI) {
+  static {
+    if (MessageChannel.hasElectronAPI) {
+      electronAPI.message.listen((message) => {
+        const eventHandlers = this.handlers.get(message.type);
+        if (eventHandlers) {
+          for (const [id, { once, from, callback }] of eventHandlers.entries()) {
+            try {
+              if (from === message.from) {
+                callback(message.data);
+                once && eventHandlers.delete(id);
+              } else if (from === null || from === "all") {
+                callback(message);
+                once && eventHandlers.delete(id);
+              }
+            } catch (err) {
+              Log.error({
+                raw: err,
+                label: "renderer.ts",
+                message: `error in message handler [id=${id}] for event [type=${message.type}]`
+              });
+              eventHandlers.delete(id);
+            }
+          }
+        }
+      });
+    } else {
       Log.error({
         message: "electron API is not available",
         label: "AppMessage"
       });
-      return;
     }
-    electronAPI.message.listen((message) => {
-      const eventHandlers = this.handlers.get(message.type);
-      if (eventHandlers) {
-        for (const [id, { once, from, callback }] of eventHandlers.entries()) {
-          try {
-            if (from === message.from) {
-              callback(message.data);
-              once && eventHandlers.delete(id);
-            } else if (from === null || from === "all") {
-              callback(message);
-              once && eventHandlers.delete(id);
-            }
-          } catch (err) {
-            Log.error({
-              raw: err,
-              label: "renderer.ts",
-              message: `error in message handler [id=${id}] for event [type=${message.type}]`
-            });
-            eventHandlers.delete(id);
-          }
-        }
-      }
-    });
   }
 
   static [Symbol.dispose]() {
     this.handlers.clear();
-    setLogger(null);
+    if (MessageChannel.hasElectronAPI) {
+      electronAPI.message.listen(() => {});
+    }
   }
 }
 
@@ -116,18 +112,3 @@ type Handler = {
     | NormalFunc<[message: Message<any, MessageDirection["receive"]>]>
     | NormalFunc<[data: MessageData<any>]>;
 };
-
-export { ApiKey } from "../constants/preload";
-
-export type { Api } from "../types/preload";
-
-export type { MessageData, MessageEvent, Message, MessageDirection } from "../types/message";
-
-export type { NormalEvent, NormalEventMaps, NormalEventPayload } from "../types/event";
-
-export type {
-  InvokeEvent,
-  InvokeEventArgs,
-  InvokeEventMaps,
-  InvokeEventPayload
-} from "../types/invoke";

@@ -2,12 +2,8 @@ import { useListenable } from "@/common/hooks/use-listenable";
 import { RendererWindow } from "@/common/lib/window";
 import { RendererOnce } from "@/common/lib/once";
 import { RendererCache } from "@/common/lib/cache";
-import { Init } from "@/common/utils/init";
 import RendererPlayer from "@/common/player/core";
 
-@Init(() => {
-  RendererPlayerHandle.setupPlayer().setupMini();
-})
 export default class RendererPlayerHandle {
   //region inner
   private static _player: Nullable<RendererPlayer>;
@@ -88,5 +84,9 @@ export default class RendererPlayerHandle {
   static set busUpdater(fn: Undefinable<NormalFunc>) {
     if (!fn) return;
     RendererPlayerHandle.registerInnerUpdater("main-bus", fn);
+  }
+
+  static {
+    this.setupPlayer().setupMini();
   }
 }

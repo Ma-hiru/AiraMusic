@@ -1,9 +1,13 @@
+import { cx } from "@emotion/css";
 import { type FC, memo, useMemo } from "react";
 import { LoaderCircle, Pause, Play, SkipBack, SkipForward } from "lucide-react";
+import { useAtomValue } from "jotai";
+import { fmModeAtom } from "@/wins/main/atoms/track";
 import RendererPlayerHandle from "@/wins/main/lib/handle";
 
 const BarControl: FC<object> = () => {
   const player = RendererPlayerHandle.usePlayer();
+  const fmMode = useAtomValue(fmModeAtom);
 
   const centerIcon = useMemo(() => {
     if (player.playing) {
@@ -17,9 +21,12 @@ const BarControl: FC<object> = () => {
   return (
     <div className="flex justify-center items-center gap-6">
       <SkipBack
-        className="hover:opacity-60 active:scale-90 cursor-pointer ease-in-out transition-all duration-300 size-5"
+        className={cx(
+          "hover:opacity-60 active:scale-90 cursor-pointer ease-in-out transition-all duration-300 size-5",
+          fmMode && "cursor-not-allowed! opacity-50"
+        )}
         fill="currentColor"
-        onClick={() => player.playlist.last(true)}
+        onClick={() => !fmMode && player.playlist.last(true)}
       />
       <div
         className="hover:opacity-60 active:scale-90 cursor-pointer ease-in-out transition-all duration-300 text-(--theme-color-main) bg-(--text-color-on-main) p-2 rounded-full"

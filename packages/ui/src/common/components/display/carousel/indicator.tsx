@@ -18,10 +18,10 @@ const Indicator: FC<IndicatorProps> = ({
   length
 }) => {
   return (
-    <section className="absolute inset-x-0 bottom-0 z-20 flex items-end justify-between gap-3 bg-linear-to-t from-black/60 via-black/20 to-transparent px-4 pb-3 pt-14">
+    <section className="absolute inset-x-0 bottom-0 z-20 flex items-end justify-between gap-3 bg-linear-to-t from-black/60 via-black/20 to-transparent px-4 pb-3 pt-14 pointer-events-none">
       <p className="truncate text-sm font-black">{title}</p>
       {showDot && (
-        <div className="flex shrink-0 gap-1">
+        <div className="flex shrink-0 gap-1 pointer-events-auto">
           {iter(length).map((_, i) => {
             return (
               <button

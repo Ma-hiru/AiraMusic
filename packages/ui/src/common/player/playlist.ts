@@ -1,18 +1,26 @@
 import { shuffle } from "lodash-es";
 import { Listenable } from "@/common/utils/listenable";
 import { NeteaseTrackRecord } from "@/common/netease/models";
-import { userStoreSnapshot } from "@/common/store/user";
-import AppToast from "../components/display/toast";
+
+type PlayableResult = { playable: boolean; reason: string };
 
 export default class RendererPlayerPlaylist extends Listenable {
   //#region fields
-  private playlist;
-  private position;
-  private playlistBackup;
-  private looplist = [];
-  private _repeat;
-  private _shuffle;
-  private _loop;
+  /** 规范序 */
+  private tracks: NeteaseTrackRecord[];
+  /** 播放/显示序：tracks 下标的一个排列，shuffle 关时为 0..n-1，开时为打乱排列 */
+  private order: number[];
+  /** 当前位置：order 的下标（-1 表示空闲）current = tracks[order[cursor]] */
+  private cursor: number;
+  private _repeat: "off" | "one" | "all";
+  private _shuffle: boolean;
+  private _loop: boolean;
+  // 可播判定与不可播提示由外部（播放器）注入，使本类不依赖 UI/用户态、可独立测试
+  private playableOf: NormalFunc<[record: NeteaseTrackRecord], PlayableResult> = () => ({
+    playable: true,
+    reason: ""
+  });
+  private onUnplayable?: (reason: string) => void;
 
   get loop() {
     return this._loop;
@@ -37,26 +45,36 @@ export default class RendererPlayerPlaylist extends Listenable {
     this.executeListeners();
   }
 
-  private changeShuffle(value: boolean) {
-    if (value) {
-      const current = this.current();
-      this.playlistBackup = this.playlist;
-      this.playlist = shuffle(this.playlist);
-      this.position = this.locate(current?.detail.id);
-    } else {
-      const current = this.current();
-      this.playlist = this.playlistBackup;
-      this.position = this.locate(current?.detail.id);
-    }
-    this._shuffle = value;
-  }
-
   get shuffle() {
     return this._shuffle;
   }
 
-  private get user() {
-    return userStoreSnapshot()._user;
+  /** 切换随机，重建 order/cursor */
+  private changeShuffle(value: boolean) {
+    const headTrackIdx = this.order[this.cursor] ?? -1; // 当前曲目在 tracks 中的下标
+    this.rebuildOrder(value, headTrackIdx);
+    this._shuffle = value;
+  }
+
+  /**
+   * 重建 order/cursor。
+   * on 把 headTrackIdx 放在最前、其余打乱，cursor=0，当前曲目继续播，后续是新随机
+   */
+  private rebuildOrder(shuffleOn: boolean, headTrackIdx: number) {
+    const n = this.tracks.length;
+    const identity = Array.from({ length: n }, (_, i) => i);
+    if (!shuffleOn) {
+      this.order = identity;
+      this.cursor = headTrackIdx >= 0 && headTrackIdx < n ? headTrackIdx : -1;
+      return;
+    }
+    if (headTrackIdx >= 0 && headTrackIdx < n) {
+      this.order = [headTrackIdx, ...shuffle(identity.filter((i) => i !== headTrackIdx))];
+      this.cursor = 0;
+    } else {
+      this.order = shuffle(identity);
+      this.cursor = -1;
+    }
   }
 
   constructor(props?: {
@@ -67,45 +85,51 @@ export default class RendererPlayerPlaylist extends Listenable {
     loop?: boolean;
   }) {
     super();
-    this.playlist = props?.playlist ?? [];
-    this.playlistBackup = props?.playlist ?? [];
-    this.position = props?.position ?? -1;
+    this.tracks = props?.playlist ? [...props.playlist] : [];
     this._repeat = props?.repeat ?? "off";
     this._shuffle = props?.shuffle ?? false;
     this._loop = props?.loop ?? false;
+    this.order = [];
+    this.cursor = -1;
+    // position 是规范序下标，与 save 持久化的口径一致
+    this.rebuildOrder(this._shuffle, props?.position ?? -1);
   }
   //#endregion
 
   //#region inner methods
   static save(instance: RendererPlayerPlaylist) {
-    const current = instance.current();
     return {
-      position: instance.shuffle
-        ? instance.playlistBackup.findIndex((item) => item.detail.id === current?.detail.id)
-        : instance.position,
-      repeat: instance.repeat,
-      playlist: instance.shuffle ? instance.playlistBackup : instance.playlist,
-      _shuffle: instance.shuffle,
-      _loop: instance.loop
+      // 持久化规范序下标
+      position: instance.order[instance.cursor] ?? -1,
+      repeat: instance._repeat,
+      playlist: instance.tracks,
+      _shuffle: instance._shuffle,
+      _loop: instance._loop
     };
   }
 
   static fromSave(props: ReturnType<typeof this.save>) {
-    props.playlist = <NeteaseTrackRecord[]>props.playlist.map(NeteaseTrackRecord.fromRecordObject);
-    const instance = new RendererPlayerPlaylist(props);
-    instance.shuffle = props._shuffle;
-    instance.loop = props._loop;
-    return instance;
+    const playlist = props.playlist.map(
+      NeteaseTrackRecord.fromRecordObject
+    ) as NeteaseTrackRecord[];
+    return new RendererPlayerPlaylist({
+      playlist,
+      position: props.position,
+      repeat: props.repeat,
+      shuffle: props._shuffle,
+      loop: props._loop
+    });
   }
 
   [Symbol.iterator]() {
-    let pos = -1;
+    let i = -1;
     return {
       next: () => {
-        pos++;
+        i++;
+        const trackIdx = this.order[i];
         return {
-          done: !this.check(pos),
-          value: this.playlist[pos]
+          done: !this.check(i),
+          value: trackIdx === undefined ? undefined : this.tracks[trackIdx]
         };
       }
     };
@@ -113,9 +137,9 @@ export default class RendererPlayerPlaylist extends Listenable {
 
   override [Symbol.dispose]() {
     super[Symbol.dispose]();
-    this.playlist = [];
-    this.playlistBackup = [];
-    this.position = -1;
+    this.tracks = [];
+    this.order = [];
+    this.cursor = -1;
     this._shuffle = false;
     this._loop = false;
     this.repeat = "off";
@@ -123,216 +147,242 @@ export default class RendererPlayerPlaylist extends Listenable {
 
   [Symbol.toPrimitive](hint: string) {
     if (hint === "string") {
-      return `AppPlaylist(${this.playlist.length} tracks, position: ${this.position}, repeat: ${this.repeat}, shuffle: ${this.shuffle})`;
+      return `AppPlaylist(${this.order.length} tracks, position: ${this.cursor}, repeat: ${this.repeat}, shuffle: ${this.shuffle})`;
     } else if (hint === "number") {
-      return this.position;
+      return this.cursor;
     }
     return this;
+  }
+
+  /** 按显示序下标取track */
+  private recordAt(displayIdx: number): Nullable<NeteaseTrackRecord> {
+    const trackIdx = this.order[displayIdx];
+    if (trackIdx === undefined) return null;
+    const record = this.tracks[trackIdx];
+    return record && record.detail ? record : null;
   }
   //#endregion
 
   public list() {
-    return this.playlist;
+    return this.order.map((i) => this.tracks[i]!);
   }
 
   public pos() {
-    return this.position;
+    return this.cursor;
   }
 
+  /** 传入 id 或 record，返回其在显示序中的下标 */
   public locate(source: Optional<number> | NeteaseTrackRecord) {
     if (typeof source !== "number" && !source) return -1;
-    if (typeof source === "object") source = source.id;
-    return this.playlist.findIndex((item) => item.id === source);
+    const id = typeof source === "object" ? source.id : source;
+    return this.order.findIndex((i) => this.tracks[i]!.id === id);
   }
 
   public replace(list: NeteaseTrackRecord[], initPosition: number | NeteaseTrackRecord = -1) {
-    const shouldBackup = this.shuffle;
-    shouldBackup && this.changeShuffle(false);
-    this.playlist = list;
-    this.jump(initPosition);
-    shouldBackup && this.changeShuffle(true);
+    this.tracks = [...list];
+    const headTrackIdx =
+      typeof initPosition === "number"
+        ? initPosition
+        : this.tracks.findIndex((t) => t.id === initPosition.id);
+    this.rebuildOrder(this._shuffle, headTrackIdx);
     this.executeListeners();
     return this;
   }
 
   public clear() {
-    const shouldBackup = this.shuffle;
-    shouldBackup && this.changeShuffle(false);
-    this.playlist = [];
-    this.position = -1;
-    shouldBackup && this.changeShuffle(true);
+    this.tracks = [];
+    this.order = [];
+    this.cursor = -1;
     this.executeListeners();
     return this;
   }
 
   public remove(pos: number | NeteaseTrackRecord) {
-    if (typeof pos !== "number") pos = this.locate(pos);
-    const shouldBackup = this.shuffle;
-    shouldBackup && this.changeShuffle(false);
-    if (!this.check(pos) || pos < 0) return this;
+    const d = typeof pos === "number" ? pos : this.locate(pos);
+    if (d < 0 || d >= this.order.length) return this;
 
-    this.playlist.splice(pos, 1);
-    if (pos >= this.position) {
-      // 删除位置在当前播放位置之后 或者 删除位置就是当前播放位置，不调整
-    } else if (pos < this.position) {
-      // 删除位置在当前播放位置之前，当前位置-1
-      this.position--;
-    }
-    // 检查当前位置是否合法
-    if (this.position >= this.playlist.length) {
-      this.position = this.playlist.length - 1;
+    const trackIdx = this.order[d]!;
+    this.tracks.splice(trackIdx, 1);
+    this.order.splice(d, 1);
+    // tracks 压缩后，修正 order 中所有大于被删下标的引用
+    for (let i = 0; i < this.order.length; i++) {
+      if (this.order[i]! > trackIdx) this.order[i] = this.order[i]! - 1;
     }
 
-    shouldBackup && this.changeShuffle(true);
+    // 按显示序修正 cursor，删点在当前之前则 -1
+    // 删的是当前则保持（指向下一首）
+    // 越界则收回
+    if (d < this.cursor) this.cursor--;
+    if (this.cursor >= this.order.length) this.cursor = this.order.length - 1;
+
     this.executeListeners();
     return this;
   }
 
   public add(record: NeteaseTrackRecord, position: "next" | "end") {
-    const shouldBackup = this.shuffle;
-    shouldBackup && this.changeShuffle(false);
+    const existD = this.locate(record);
+    const isCurrent = existD !== -1 && existD === this.cursor;
 
-    const existPos = this.locate(record.detail.id);
-    const isCurrent = existPos === this.position;
-
-    if (isCurrent) {
-      if (position === "end") {
-        this.remove(existPos);
-        this.playlist.push(record);
-        this.position = this.playlist.length - 1;
-      }
-    } else {
-      if (existPos !== -1) this.remove(existPos);
-      if (position === "end") {
-        this.playlist.push(record);
-      } else {
-        this.playlist.splice(this.position + 1, 0, record);
-      }
+    // 当前曲目自己“下一首播放”无意义
+    if (isCurrent && position === "next") {
+      this.executeListeners();
+      return this;
     }
 
-    shouldBackup && this.changeShuffle(true);
+    // 去重：已存在则先移除（remove 会维护 tracks/order/cursor）
+    if (existD !== -1) this.remove(existD);
+
+    const trackIdx = this.tracks.length;
+    this.tracks.push(record);
+
+    if (position === "end") {
+      this.order.push(trackIdx);
+      if (isCurrent) this.cursor = this.order.length - 1; // 当前曲目被移到末尾，仍为当前
+    } else {
+      // 紧跟当前之后插入（cursor=-1 时插到最前），不重洗 → shuffle 下“下一首”保持有效
+      this.order.splice(this.cursor + 1, 0, trackIdx);
+    }
+
     this.executeListeners();
     return this;
   }
 
   public addList(records: NeteaseTrackRecord[]) {
-    const shouldBackup = this.shuffle;
-    shouldBackup && this.changeShuffle(false);
+    if (records.length === 0) return this;
 
-    for (const record of records) {
-      const existPos = this.locate(record.id);
-      const isCurrent = existPos === this.position;
-
-      if (existPos !== -1) this.remove(existPos);
-      if (isCurrent) this.position = this.playlist.length - 1;
-      this.playlist.push(record);
+    // 入参去重：同一 id 保留最后一次出现的位置（与逐个 add 的结果一致）
+    const incomingIds = new Set<number>();
+    const incoming: NeteaseTrackRecord[] = [];
+    for (let i = records.length - 1; i >= 0; i--) {
+      const record = records[i]!;
+      if (!incomingIds.has(record.id)) {
+        incomingIds.add(record.id);
+        incoming.push(record);
+      }
     }
+    incoming.reverse();
 
-    shouldBackup && this.changeShuffle(true);
+    const currentRecord = this.current();
+    const keptTracks = this.tracks.filter((t) => !incomingIds.has(t.id));
+    const keptDisplay = this.order
+      .map((i) => this.tracks[i]!)
+      .filter((t) => !incomingIds.has(t.id));
+    const newTracks = keptTracks.concat(incoming);
+    const newDisplay = keptDisplay.concat(incoming);
+
+    // 由 id→规范序下标 一次性重建 order
+    const trackIndexById = new Map<number, number>();
+    newTracks.forEach((t, idx) => trackIndexById.set(t.id, idx));
+
+    this.tracks = newTracks;
+    this.order = newDisplay.map((t) => trackIndexById.get(t.id)!);
+    this.cursor = currentRecord ? newDisplay.findIndex((t) => t.id === currentRecord.id) : -1;
+
     this.executeListeners();
     return this;
   }
 
   public jump(pos: number | NeteaseTrackRecord) {
-    let position;
-    if (typeof pos === "number") {
-      position = pos;
-    } else {
-      position = this.playlist.findIndex((item) => item.id === pos.id);
-    }
-    if (this.check(position) && this.position !== pos) {
-      this.position = position;
+    const target = typeof pos === "number" ? pos : this.locate(pos);
+    if (this.check(target) && this.cursor !== target) {
+      this.cursor = target;
     }
     this.executeListeners();
     return this;
   }
 
   public same(list: NeteaseTrackRecord[]) {
-    if (this.playlist === list) return true;
-    if (this.playlist.length !== list.length) return false;
-    for (let i = 0; i < this.playlist.length; i++) {
-      if (this.playlist[i]!.detail.id !== list[i]!.detail.id) return false;
-      if (this.playlist[i]!.sourceID !== list[i]!.sourceID) return false;
+    if (this.tracks.length !== list.length) return false;
+    for (let i = 0; i < this.tracks.length; i++) {
+      if (this.tracks[i]!.detail.id !== list[i]!.detail.id) return false;
+      if (this.tracks[i]!.sourceID !== list[i]!.sourceID) return false;
     }
     return true;
   }
 
-  public check(pos: number | NeteaseTrackRecord = this.position) {
+  public check(pos: number | NeteaseTrackRecord = this.cursor) {
     if (typeof pos !== "number") return this.locate(pos) !== -1;
-    return (pos >= 0 && pos < this.playlist.length) || (pos == -1 && this.playlist.length > 0);
+    return (pos >= 0 && pos < this.order.length) || (pos == -1 && this.order.length > 0);
   }
 
   public current() {
-    const record = this.playlist[this.position];
-    if (!record || !record.detail) return null;
-    return record;
+    return this.recordAt(this.cursor);
   }
 
-  public peek(force = true) {
-    const currentPos = this.position;
-    const peek = this.next(force).current();
-    this.position = currentPos;
-    return peek;
+  public bindPlayability(
+    playableOf: (record: NeteaseTrackRecord) => PlayableResult,
+    onUnplayable?: (reason: string) => void
+  ) {
+    this.playableOf = playableOf;
+    this.onUnplayable = onUnplayable;
+    return this;
+  }
+
+  /**
+   * 从 from 向 direction 走一步的显示序下标，含 repeat="all" 环绕
+   * 无环绕到头返回 -1
+   * */
+  private advance(direction: 1 | -1, from = this.cursor): number {
+    const len = this.order.length;
+    if (len === 0) return -1;
+    const pos = from + direction;
+    if (pos >= len) return this.repeat === "all" ? 0 : -1;
+    if (pos < 0) return this.repeat === "all" ? len - 1 : -1;
+    return pos;
+  }
+
+  /**
+   * 沿 direction 移动到下一个可播曲目，跳过不可播的
+   * 最多遍历整列一遍，避免"全员不可播 + repeat=all"时的无限递归
+   * 全不可播则置 -1
+   */
+  private moveToPlayable(direction: 1 | -1) {
+    const len = this.order.length;
+    let pos = this.advance(direction);
+    let skippedReason = "";
+
+    for (let tried = 0; tried < len; tried++) {
+      if (pos === -1) break;
+      const record = this.recordAt(pos);
+      if (record) {
+        const { playable, reason } = this.playableOf(record);
+        if (playable) {
+          this.cursor = pos;
+          skippedReason && this.onUnplayable?.(skippedReason);
+          return;
+        }
+        skippedReason ||= reason;
+      }
+      pos = this.advance(direction, pos);
+    }
+
+    this.cursor = -1;
+    skippedReason && this.onUnplayable?.(skippedReason);
+  }
+
+  public peek(force = true): Nullable<NeteaseTrackRecord> {
+    if (!force && this.repeat === "one") return this.current();
+    const len = this.order.length;
+    let pos = this.advance(1);
+    for (let tried = 0; tried < len; tried++) {
+      if (pos === -1) break;
+      const record = this.recordAt(pos);
+      if (record && this.playableOf(record).playable) return record;
+      pos = this.advance(1, pos);
+    }
+    return null;
   }
 
   public next(force = true): this {
     if (!force && this.repeat === "one") return this;
-
-    let nextPos = this.position + 1;
-    if (nextPos >= this.playlist.length) {
-      if (this.repeat === "all" && this.playlist.length >= 1) {
-        // 列表循环
-        nextPos = 0;
-      } else {
-        // 播放结束
-        nextPos = -1;
-      }
-    }
-    this.position = nextPos;
-
-    const current = this.current();
-    if (current) {
-      const { playable, reason } = current.detail.playable(this.user);
-      if (!playable) {
-        AppToast.show({
-          type: "error",
-          text: reason
-        });
-        return this.next(force);
-      }
-    }
-
+    this.moveToPlayable(1);
     this.executeListeners();
     return this;
   }
 
   public last(force = true): this {
     if (!force && this.repeat === "one") return this;
-
-    let lastPos = this.position - 1;
-    if (lastPos < 0) {
-      if (this.repeat === "all" && this.playlist.length >= 1) {
-        // 列表循环
-        lastPos = this.playlist.length - 1;
-      } else {
-        // 播放结束
-        lastPos = -1;
-      }
-    }
-    this.position = lastPos;
-
-    const current = this.current();
-    if (current) {
-      const { playable, reason } = current.detail.playable(this.user);
-      if (!playable) {
-        AppToast.show({
-          type: "error",
-          text: reason
-        });
-        return this.last(force);
-      }
-    }
-
+    this.moveToPlayable(-1);
     this.executeListeners();
     return this;
   }

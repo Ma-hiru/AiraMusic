@@ -1,12 +1,13 @@
-import App from "./app";
-import wasm from "@mahiru/wasm";
+import "@/styles/index.scss";
+import "@/styles/main.scss";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { ensureInitObject, initSync } from "@/common/utils/init";
-import RendererPlayerHandle from "@/wins/main/lib/handle";
+import { ipcInit } from "@/common/lib/ipc";
+import wasm from "@mahiru/wasm";
+import App from "./app";
 
 wasm().then(() => {
-  initSync(ensureInitObject(RendererPlayerHandle));
+  ipcInit();
   const element = document.getElementById("root")!;
   const root = createRoot(element);
   root.render(

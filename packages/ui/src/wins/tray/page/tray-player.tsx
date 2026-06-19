@@ -6,6 +6,7 @@ import { RendererFormat } from "@/common/lib/format";
 import { NeteaseNetworkImage } from "@/common/netease/models";
 import NeteaseImage from "@/common/components/display/image/netease-image";
 import { RendererWindow } from "@/common/lib/window";
+import { RendererIPCMessageBus } from "@/common/lib/bus";
 
 interface TrayPlayerProps {
   track: Optional<NeteaseTrackModel>;
@@ -46,7 +47,7 @@ const TrayPlayer: FC<TrayPlayerProps> = ({ track, status, currentTime, duration 
             onClick={async () => {
               if (!cover) return;
               await RendererWindow.image.reactReadyAwait();
-              RendererWindow.image.send("imageCheckerBus", {
+              RendererIPCMessageBus.preview.deliver({
                 url: cover.toNetworkImage().setSize(NeteaseImageSize.raw).src,
                 alt: cover.alt
               });

@@ -4,17 +4,17 @@ import { MainRuntime } from "@/lib/runtime";
 import { MainScreenResolver } from "@/lib/screen-resolver";
 import { MainStoreConfig, MainStoreForRenderer } from "@/lib/key-value-store";
 import { Log } from "@/lib/log";
-import type { InvokeHandlers } from "@mahiru/ipc/main";
+import { MainCacheStoreConstants } from "@/constants/store";
+import { mergeCacheStoreConfig } from "@/utils/merge";
+import { MainHandle } from "@/lib/handle";
+import type { InvokeHandlers } from "@mahiru/ipc/types";
 import Dns from "node:dns/promises";
 import Net from "node:net";
 import Https from "node:https";
 import Fs from "node:fs/promises";
-import { MainCacheStoreConstants } from "@/constants/store";
-import { mergeCacheStoreConfig } from "@/utils/merge";
-import { MainHandle } from "@/lib/handle";
 
 export const invokeHandlers: InvokeHandlers = {
-  selectPath: async (_, type) => {
+  invoke_fs_select: async (_, type) => {
     const { canceled, filePaths } = await dialog.showOpenDialog({
       title: type === "dir" ? "选择目录" : "选择文件",
       properties: [type === "dir" ? "openDirectory" : "openFile"]
@@ -50,7 +50,7 @@ export const invokeHandlers: InvokeHandlers = {
       };
     }
   },
-  saveFile: async (_, { buffer, name }) => {
+  invoke_fs_save: async (_, { buffer, name }) => {
     const { canceled, filePath } = await dialog.showSaveDialog({
       title: "保存文件",
       defaultPath: name
@@ -64,23 +64,9 @@ export const invokeHandlers: InvokeHandlers = {
       return { ok: false, error: String(e) };
     }
   },
-  GPUInfo: async () => app.whenReady().then(() => app.getGPUInfo("complete")),
-  isMaximized: (_, type) => {
-    return MainWindowManager.get(type)?.isMaximized() ?? false;
-  },
-  platform: () => process.platform,
-  hasOpenInternalWindow: (e, win) => {
-    const sender = BrowserWindow.fromWebContents(e.sender);
-    if (!sender) return false;
-    return MainWindowManager.has(win);
-  },
-  isFullscreen: (e, type) => {
-    const sender = BrowserWindow.fromWebContents(e.sender);
-    if (!sender) return false;
-    return MainWindowManager.get(type)?.isFullScreen() ?? false;
-  },
-  storeKey: () => MainRuntime.storeAccessToken,
-  checkOnlineStatus: async (): Promise<NetworkStatus> => {
+  invoke_device_gpu: async () => app.whenReady().then(() => app.getGPUInfo("complete")),
+  invoke_device_platform: () => process.platform,
+  invoke_device_net: async (): Promise<NetworkStatus> => {
     // Dns.resolve 可能因为各种原因失败，比如本地网络配置问题，但不代表当前网络不可用
     try {
       await Dns.resolve("www.baidu.com");
@@ -132,11 +118,16 @@ export const invokeHandlers: InvokeHandlers = {
 
     return "ok";
   },
-  currentWindowType: (e) => {
+  invoke_window_id: (e) => {
     const sender = BrowserWindow.fromWebContents(e.sender);
     return MainWindowManager.getId(sender)!;
   },
-  currentWindowBounds: (e) => {
+  invoke_window_pinned: (e, type) => {
+    const sender = BrowserWindow.fromWebContents(e.sender);
+    if (!sender) return false;
+    return MainWindowManager.get(type)?.isAlwaysOnTop() ?? false;
+  },
+  invoke_window_bounds: (e) => {
     const sender = BrowserWindow.fromWebContents(e.sender);
     return {
       x: 0,
@@ -148,8 +139,22 @@ export const invokeHandlers: InvokeHandlers = {
       ...(sender?.getBounds() ?? {})
     };
   },
-  runtimeID: () => MainRuntime.id,
-  updateCacheStoreConfig: (e, config) => {
+  invoke_window_maximized: (_, type) => {
+    return MainWindowManager.get(type)?.isMaximized() ?? false;
+  },
+  invoke_window_opened: (e, win) => {
+    const sender = BrowserWindow.fromWebContents(e.sender);
+    if (!sender) return false;
+    return MainWindowManager.has(win);
+  },
+  invoke_window_fullscreen: (e, type) => {
+    const sender = BrowserWindow.fromWebContents(e.sender);
+    if (!sender) return false;
+    return MainWindowManager.get(type)?.isFullScreen() ?? false;
+  },
+  invoke_runtime_id: () => MainRuntime.id,
+  invoke_runtime_token: () => MainRuntime.storeAccessToken,
+  invoke_cache_config_update: (e, config) => {
     try {
       const res = mergeCacheStoreConfig(config);
       if (res.ok) {
@@ -162,10 +167,10 @@ export const invokeHandlers: InvokeHandlers = {
       return { ok: false, reason: "配置修改错误" };
     }
   },
-  fetchCacheStoreConfig: () => {
+  invoke_cache_config_get: () => {
     return MainStoreConfig.get("cache", MainCacheStoreConstants.DEFAULT_CONFIG);
   },
-  setKeyValue: (_, { key, value }) => {
+  invoke_store_set: (_, { key, value }) => {
     try {
       MainStoreForRenderer.set(key, value);
       return { ok: true };
@@ -174,7 +179,7 @@ export const invokeHandlers: InvokeHandlers = {
       return { ok: false, reason: "本地数据错误" };
     }
   },
-  getKeyValue: (_, key) => {
+  invoke_store_get: (_, key) => {
     try {
       const value = MainStoreForRenderer.get(key);
       return {
@@ -186,7 +191,7 @@ export const invokeHandlers: InvokeHandlers = {
       return { ok: false, reason: "本地数据错误" };
     }
   },
-  deleteKeyValue: (_, key) => {
+  invoke_store_delete: (_, key) => {
     try {
       MainStoreForRenderer.delete(key);
       return { ok: true };

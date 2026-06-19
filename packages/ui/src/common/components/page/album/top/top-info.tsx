@@ -1,7 +1,7 @@
 import { type FC, memo } from "react";
 import { NeteaseAlbum } from "@/common/netease/models";
 import { cx } from "@emotion/css";
-import { RendererEventBus } from "@/common/lib/bus";
+import { RendererIPCMessageBus } from "@/common/lib/bus";
 import { RendererWindow } from "@/common/lib/window";
 import { createAlbumStats } from "@/common/utils/playlist";
 import AppToast from "@/common/components/display/toast";
@@ -44,7 +44,7 @@ const TopInfo: FC<TopInfoProps> = ({ album, dynamic, onAddList }) => {
               if (isComment) {
                 if (!album) return;
                 await RendererWindow.comment.reactReadyAwait();
-                RendererEventBus.comment.send({
+                RendererIPCMessageBus.comment.deliver({
                   id: album.content.id,
                   type: "album"
                 });

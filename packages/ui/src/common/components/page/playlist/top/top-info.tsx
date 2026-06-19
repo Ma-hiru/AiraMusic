@@ -2,7 +2,7 @@ import { cx } from "@emotion/css";
 import { type FC, memo, useMemo } from "react";
 import { NeteaseNetworkImage, NeteasePlaylist } from "@/common/netease/models";
 import { RendererWindow } from "@/common/lib/window";
-import { RendererEventBus } from "@/common/lib/bus";
+import { RendererIPCMessageBus } from "@/common/lib/bus";
 import { createPlaylistStats } from "@/common/utils/playlist";
 import AppToast from "@/common/components/display/toast";
 import RendererImageConstants from "@/common/constants/image";
@@ -60,7 +60,7 @@ const TopInfo: FC<TopInfoProps> = ({ summary, onPlayAll, onAddList }) => {
               if (isComment) {
                 if (!summary?.id) return;
                 await RendererWindow.comment.reactReadyAwait();
-                RendererEventBus.comment.send({
+                RendererIPCMessageBus.comment.deliver({
                   id: summary.id,
                   type: "playlist"
                 });

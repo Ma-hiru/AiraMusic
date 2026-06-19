@@ -5,7 +5,7 @@ import { NeteaseAPIRecord } from "@/common/netease/api";
 import { RendererFormat } from "@/common/lib/format";
 import { NeteaseNetworkImage } from "@/common/netease/models";
 import { RendererWindow } from "@/common/lib/window";
-import { RendererEventBus } from "@/common/lib/bus";
+import { RendererIPCMessageBus } from "@/common/lib/bus";
 import { useRequestAutoRun, useRequestStatusWrap } from "@/common/hooks/use-request-wrap";
 import { useListenable } from "@/common/hooks/use-listenable";
 import dayjs from "dayjs";
@@ -139,7 +139,7 @@ const ForYouPanel: FC<object> = () => {
                       className="size-10 rounded-full border cursor-pointer hover:scale-105 ease-in-out duration-300 transition-transform"
                       onClick={async () => {
                         await RendererWindow.display.reactReadyAwait();
-                        RendererEventBus.display.send({ type: "settings" });
+                        RendererIPCMessageBus.display.deliver({ type: "settings" });
                       }}
                       cacheLazy={false}
                       shadow="base"

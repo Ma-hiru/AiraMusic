@@ -1,9 +1,11 @@
 import { cx } from "@emotion/css";
 import { type FC, memo, useCallback, useEffect, useRef, useState } from "react";
 import { useScrollAutoHide } from "@/common/hooks/use-scroll-auto-hide";
-import { useLocateOrScrollTopRegister } from "@/wins/main/hooks/use-locate-or-scroll-top-register";
 import { useLocation, useNavigate } from "react-router-dom";
 import { RoutePath, RoutePathMain } from "@/common/routes";
+import { useRouterActive } from "@/common/hooks/use-router-active";
+import { scrollActionsAtom } from "@/wins/main/atoms/layout";
+import { useScrollActionsRegister } from "@/common/hooks/use-scroll-actions-register";
 import type { HomeChannelKey } from "@/wins/main/constants";
 
 import Banner from "./banner";
@@ -29,9 +31,10 @@ const HomePage: FC<object> = () => {
     containerRef.current?.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
 
-  const { canScrollTop } = useLocateOrScrollTopRegister({
-    getScrollTopFunc: () => scrollTop,
-    page: "home"
+  const { canScrollTop } = useScrollActionsRegister({
+    atom: scrollActionsAtom,
+    active: useRouterActive(RoutePathMain, "home"),
+    getScrollTopFunc: () => scrollTop
   });
 
   const changeChannel = useCallback(

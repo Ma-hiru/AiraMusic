@@ -3,7 +3,7 @@ import { useCallback } from "react";
 import { type TrackListClickFunc } from "@/common/components/display/track_list";
 import { NeteaseTrackRecord } from "@/common/netease/models";
 import { RendererWindow } from "@/common/lib/window";
-import { RendererEventBus } from "@/common/lib/bus";
+import { RendererIPCMessageBus } from "@/common/lib/bus";
 import { useLatestRef } from "@/common/hooks/use-latest-ref";
 
 export function usePlayerActionInList(getTracks: NormalFunc<[], NeteaseTrackRecord[]>) {
@@ -41,7 +41,7 @@ export function usePlayerActionInList(getTracks: NormalFunc<[], NeteaseTrackReco
   const openTrackComment = useCallback(async (track: NeteaseTrackRecord) => {
     if (!track) return;
     await RendererWindow.comment.reactReadyAwait();
-    RendererEventBus.comment.send({
+    RendererIPCMessageBus.comment.deliver({
       id: track.id,
       type: "track"
     });

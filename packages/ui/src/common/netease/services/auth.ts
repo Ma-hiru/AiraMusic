@@ -32,7 +32,7 @@ export default class _NeteaseAuth {
       loginWindow.removeMessageHandler("login");
       await loginWindow.reactReadyAwait();
       loginWindow.listenMessage(
-        "login",
+        "message_dispatch_login",
         (cookies) => {
           _NeteaseAuth.login(cookies).catch(() => {
             Log.error("login failed, maybe cookies invalid");

@@ -1,12 +1,6 @@
 import { createLog, type LoggerWriter } from "@mahiru/log";
-import { ensureInitObject, Init, initAsync } from "@/common/utils/init";
-import { RendererIPC } from "./ipc";
+import { RendererIPC } from "@mahiru/ipc/renderer";
 
-@Init(() => {
-  ProcessLogger.write = ({ message, level }) => {
-    RendererIPC.Event("log", { level, message });
-  };
-})
 export class ProcessLogger implements LoggerWriter {
   static write: Nullable<
     NormalFunc<
@@ -18,6 +12,15 @@ export class ProcessLogger implements LoggerWriter {
       ]
     >
   > = null;
+
+  static {
+    if (import.meta.env.PROD) {
+      queueMicrotask(() => {
+        ProcessLogger.write = (payload) =>
+          RendererIPC.NormalChannel.send("event_debug_log", payload);
+      });
+    }
+  }
 
   log(input: string) {
     ProcessLogger.write?.({ level: "info", message: input });
@@ -47,5 +50,3 @@ export const Log = createLog(
 );
 
 import.meta.env.DEV && Log.info("environment", import.meta.env);
-
-import.meta.env.DEV && initAsync(ensureInitObject(ProcessLogger));

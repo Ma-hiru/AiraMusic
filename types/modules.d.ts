@@ -40,10 +40,17 @@ declare module "@neteasecloudmusicapienhanced/api/server.js" {
 }
 
 declare module "@neteasecloudmusicapienhanced/api/module/*.js" {
-  export default function (query: any, request: (...args: any[]) => Promise<any>);
-  Promise<{
+  export default function (
+    query: any,
+    request: (...args: any[]) => Promise<any>
+  ): Promise<{
     status: number;
     body: any;
     cookie?: string[];
   }>;
+}
+
+declare module "@neteasecloudmusicapienhanced/api/generateConfig.js" {
+  const generateConfig: () => Promise<void>;
+  export default generateConfig;
 }

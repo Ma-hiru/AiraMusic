@@ -8,15 +8,18 @@ import { PlaylistSource } from "@/common/enum";
 import { useArtistOrAlbumDisplayJump } from "@/wins/display/hooks/use-artist-or-album-display-jump";
 import { usePlayerChangeActionFromDisplay } from "@/wins/display/hooks/use-player-change-action-from-display";
 import { useDisplayPageAction } from "@/wins/display/hooks/use-display-page-action";
-import { RendererEventBus } from "@/common/lib/bus";
+import { RendererIPCMessageBus } from "@/common/lib/bus";
 import { useDisplayTitle } from "@/wins/display/hooks/use-display-title";
+import { useRouterActive } from "@/common/hooks/use-router-active";
+import { useScrollActionsRegister } from "@/common/hooks/use-scroll-actions-register";
+import { scrollActionsAtom } from "@/wins/display/atoms/layout";
 
 import Playlist, { type PlaylistRef } from "@/common/components/page/playlist";
 
 const PlaylistDisplay: FC<object> = () => {
   const user = useUser();
   const playlistRef = useRef<Nullable<PlaylistRef>>(null);
-  const playerBus = useListenable(RendererEventBus.player);
+  const trackMetaBus = useListenable(RendererIPCMessageBus.trackMeta);
   const { heartManager, playableManager } = useUserTrackManager();
   const { id, source } = RoutePathDisplay.playlist.parseQuery(useLocation());
 
@@ -43,6 +46,15 @@ const PlaylistDisplay: FC<object> = () => {
   });
   const { updateTitle } = useDisplayTitle("playlist");
 
+  // 注册滚动和定位回调（display 窗口）
+  const active = useRouterActive(RoutePathDisplay, "playlist");
+  const { canFastLocate, canScrollTop } = useScrollActionsRegister({
+    active,
+    atom: scrollActionsAtom,
+    getScrollTopFunc: () => playlistRef.current?.scrollTop,
+    getFastLocateFunc: () => playlistRef.current?.fastLocator
+  });
+
   return (
     <Playlist
       ref={playlistRef}
@@ -60,9 +72,9 @@ const PlaylistDisplay: FC<object> = () => {
       addToPlaylistNext={addTrackToPlaylistNext}
       heartManager={heartManager}
       playableManager={playableManager}
-      activeTrackID={playerBus.data?.track?.id}
-      canFastLocate={null}
-      canScrollTop={null}
+      activeTrackID={trackMetaBus.data?.track?.id}
+      canFastLocate={canFastLocate}
+      canScrollTop={canScrollTop}
       pageActionType="enter"
       onPageAction={onPageAction}
       onDataLoaded={(p) => p.name && updateTitle(p.name)}

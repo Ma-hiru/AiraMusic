@@ -1,19 +1,78 @@
 import { cx } from "@emotion/css";
-import { type FC, memo } from "react";
-import { AppWindow as AppWindowIcon, Minus, Square, SquareMinus, X } from "lucide-react";
+import { type FC, memo, useMemo } from "react";
+import {
+  AppWindow as AppWindowIcon,
+  Minus,
+  Pin,
+  PinOff,
+  Square,
+  SquareMinus,
+  X
+} from "lucide-react";
 import { useListenable } from "@/common/hooks/use-listenable";
 import { RendererWindow } from "@/common/lib/window";
+import { RendererDevice } from "@/common/lib/device";
 import NoDrag from "../drag/no-drag";
+import AppToast from "@/common/components/display/toast";
 
 interface TopControlProps {
   maximizable?: boolean;
   mini?: boolean;
   color?: string;
+  pin?: boolean;
   className?: string;
 }
 
-const TopControlPure: FC<TopControlProps> = ({ maximizable, mini = true, color, className }) => {
+const TopControlPure: FC<TopControlProps> = ({
+  maximizable,
+  mini = true,
+  pin = false,
+  color,
+  className
+}) => {
   const currentWindow = useListenable(RendererWindow.current);
+  // 确保依赖项是 isPin 而不是 currentWindow 这个稳定对象
+  const isPin = currentWindow.isPin;
+  const pinRender = useMemo(() => {
+    const checkPlatform = async () => {
+      const platform = await RendererDevice.platform;
+      if (platform === "linux") {
+        AppToast.show({
+          type: "warn",
+          text: "当前平台可能不支持"
+        });
+      }
+    };
+    if (!pin) return null;
+    if (isPin)
+      return (
+        <PinOff
+          color={color}
+          className="size-5 scale-90 cursor-pointer hover:opacity-50 ease-in-out transition-all duration-300"
+          onClick={() => {
+            currentWindow.unpin();
+            AppToast.show({
+              type: "success",
+              text: "已取消置顶"
+            });
+          }}
+        />
+      );
+    return (
+      <Pin
+        color={color}
+        className="size-5 scale-90 cursor-pointer hover:opacity-50 ease-in-out transition-all duration-300"
+        onClick={() => {
+          currentWindow.pin();
+          AppToast.show({
+            type: "success",
+            text: "已置顶"
+          });
+          void checkPlatform();
+        }}
+      />
+    );
+  }, [color, currentWindow, isPin, pin]);
 
   return (
     <NoDrag className={cx(`flex flex-row gap-4 select-none relative`, className)}>
@@ -31,6 +90,7 @@ const TopControlPure: FC<TopControlProps> = ({ maximizable, mini = true, color, 
           onClick={() => currentWindow.minimize()}
         />
       )}
+      {pinRender}
       {maximizable &&
         (currentWindow.isMax ? (
           <SquareMinus

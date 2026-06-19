@@ -5,12 +5,12 @@ import { settingsStoreSnapshot, useSettings } from "@/common/store/settings";
 
 import Settings from "@/common/components/page/settings";
 import { useListenable } from "@/common/hooks/use-listenable";
-import { RendererEventBus } from "@/common/lib/bus";
+import { RendererIPCMessageBus } from "@/common/lib/bus";
 import { RendererOutput } from "@/common/lib/output";
 import { RendererWindow } from "@/common/lib/window";
 
 const SettingsDisplay: FC<object> = () => {
-  const outputBus = useListenable(RendererEventBus.output);
+  const outputBus = useListenable(RendererIPCMessageBus.output);
 
   const output = useMemo(() => {
     if (outputBus.data) return outputBus.data;
@@ -21,7 +21,7 @@ const SettingsDisplay: FC<object> = () => {
   }, [outputBus.data]);
 
   const updateOutput = useCallback((deviceId: string) => {
-    RendererWindow.main.send("changeOutput", deviceId);
+    RendererWindow.main.send("message_dispatch_device_output_set", deviceId);
   }, []);
   return (
     <Settings

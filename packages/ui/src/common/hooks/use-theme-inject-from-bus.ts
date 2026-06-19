@@ -1,13 +1,13 @@
 import { useEffect, useInsertionEffect } from "react";
 import { useListenable } from "./use-listenable";
 import { RendererWindow } from "@/common/lib/window";
-import { RendererEventBus } from "@/common/lib/bus";
+import { RendererIPCMessageBus } from "@/common/lib/bus";
 import RendererTheme from "@/common/player/ui";
 
 const needInject = !RendererWindow.current.isMainWindow;
 
 export function useThemeInjectFromBus() {
-  const infoBus = useListenable(RendererEventBus.info, !needInject);
+  const infoBus = useListenable(RendererIPCMessageBus.theme, !needInject);
 
   useInsertionEffect(() => {
     if (!needInject) return;
@@ -21,6 +21,8 @@ export function useThemeInjectFromBus() {
   }, [infoBus.data?.theme]);
 
   useEffect(() => {
-    RendererEventBus.mainBusUpdater.send("info");
+    RendererIPCMessageBus.updater.deliver("theme");
   }, []);
+
+  return infoBus;
 }

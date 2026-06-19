@@ -15,7 +15,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@neteasecloudmusicapienhanced/api": "^4.29.17",
+    "@neteasecloudmusicapienhanced/api": "4.35.1",
     "electron-store": "^11.0.2",
     "express": "^5.1.0",
     "express-http-proxy": "^2.1.2",
@@ -26,6 +26,7 @@
   "devDependencies": {
     "@mahiru/ipc": "workspace:*",
     "@mahiru/log": "workspace:*",
+    "@mahiru/native": "workspace:*",
     "@mahiru/store": "workspace:*",
     "@types/express": "^5.0.0",
     "@types/express-http-proxy": "^1.6.7",

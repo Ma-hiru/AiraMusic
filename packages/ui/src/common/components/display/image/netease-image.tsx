@@ -16,6 +16,7 @@ import { NeteaseLocalImage, NeteaseNetworkImage } from "@/common/netease/models"
 import { NeteaseImageSize } from "@/common/enum";
 import { NeteaseServicesImage } from "@/common/netease/services";
 import { RendererWindow } from "@/common/lib/window";
+import { RendererIPCMessageBus } from "@/common/lib/bus";
 
 type ShadowLevel = "none" | "base" | "float";
 
@@ -127,7 +128,7 @@ const NeteaseImage: FC<ImageProps> = ({
       if (preview && image) {
         const sendImage = image.toNetworkImage().setSize(NeteaseImageSize.raw);
         await RendererWindow.image.reactReadyAwait();
-        RendererWindow.image.send("imageCheckerBus", {
+        RendererIPCMessageBus.preview.deliver({
           url: sendImage.src,
           alt: alt || sendImage.alt
         });

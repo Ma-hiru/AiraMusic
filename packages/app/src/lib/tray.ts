@@ -1,4 +1,4 @@
-import { MainMessageChannel, type MessageData } from "@mahiru/ipc/main";
+import { MainIPC } from "@mahiru/ipc/main";
 import {
   BrowserWindow,
   clipboard,
@@ -16,6 +16,8 @@ import { Log } from "@/lib/log";
 import { MainWindowPreset } from "@/lib/window-preset";
 import { MainHandle } from "@/lib/handle";
 import { MainExitCodeConstants } from "@/constants/exit-code";
+import { debounce } from "lodash-es";
+import type { MessageData } from "@mahiru/ipc/types";
 
 export class MainTray {
   static register() {
@@ -25,7 +27,7 @@ export class MainTray {
     }
   }
 
-  private static playerBus: Nullable<MessageData<"playerBus">> = null;
+  private static playerBus: Nullable<MessageData<"bus_deliver_track_meta">> = null;
 
   private static createIcon() {
     return nativeImage.createFromPath(MainPathResolver.appLogoPath);
@@ -34,16 +36,17 @@ export class MainTray {
   private static createMenu(tray: Tray) {
     if (process.platform === "linux") {
       this.showRawMenu(tray);
-      MainMessageChannel.listen("playerBus", (data) => {
+      MainIPC.MessageChannel.listen("bus_deliver_track_meta", (data) => {
         this.playerBus = data;
         this.showRawMenu(tray);
       });
     } else {
       const trayWin =
         MainWindowManager.get("tray") || MainWindowCreator.create(MainWindowPreset.trayOnWindows)!;
+      const showMenu = debounce(() => this.showCustomMenu(tray, trayWin), 300);
       tray.addListener("click", () => {
         Log.debug("tray", "click");
-        this.showCustomMenu(tray, trayWin);
+        showMenu();
       });
       tray.addListener("double-click", () => {
         Log.debug("tray", "double-click");
@@ -52,7 +55,7 @@ export class MainTray {
       });
       tray.addListener("right-click", () => {
         Log.debug("tray", "right-click");
-        this.showCustomMenu(tray, trayWin);
+        showMenu();
       });
       trayWin.addListener("blur", () => {
         if (!trayWin.webContents.isDevToolsOpened()) {
@@ -65,12 +68,69 @@ export class MainTray {
     }
 
     tray.setToolTip(process.env.APP_NAME);
-    MainMessageChannel.listen("playerBus", (data) => {
+    MainIPC.MessageChannel.listen("bus_deliver_track_meta", (data) => {
       const track = data.track?.detail;
       track?.name
         ? tray.setToolTip(`${process.env.APP_NAME} - ${track.name}`)
         : tray.setToolTip(process.env.APP_NAME);
     });
+  }
+
+  private static removeChecker: Nullable<NormalFunc> = null;
+  private static previousResolve: Nullable<NormalFunc> = null;
+  private static previousTimer: Nullable<NodeJS.Timeout> = null;
+  private static openCommentReady(promise?: Promise<void>, resolve?: NormalFunc) {
+    if (!promise || !resolve) {
+      const newPromise = Promise.withResolvers<void>();
+      promise = newPromise.promise;
+      resolve = newPromise.resolve;
+    }
+
+    const commentWin = MainWindowManager.get("comments");
+    if (commentWin) {
+      this.removeChecker?.();
+      this.previousResolve?.();
+      this.previousTimer && clearTimeout(this.previousTimer);
+
+      this.previousResolve = resolve;
+      this.previousTimer = setTimeout(() => {
+        this.removeChecker?.();
+        this.previousResolve?.();
+        this.removeChecker = null;
+        this.previousResolve = null;
+        this.previousTimer = null;
+      }, 5000);
+      this.removeChecker = MainIPC.MessageChannel.addForwardChecker((win, message) => {
+        if (
+          MainWindowManager.getId(win) === "comments" &&
+          message.type === "bus_deliver_react_ready" &&
+          (message.data as MessageData<"bus_deliver_react_ready">).type === "ready"
+        ) {
+          this.previousTimer && clearTimeout(this.previousTimer);
+          this.removeChecker?.();
+          this.removeChecker = null;
+          this.previousResolve = null;
+          resolve();
+        }
+        return true;
+      });
+
+      MainIPC.MessageChannel.commit({
+        sender: "process",
+        receiver: "comments",
+        type: "bus_deliver_react_ready",
+        data: {
+          type: "isReady",
+          target: "comments"
+        }
+      });
+    } else {
+      MainWindowCreator.create(MainWindowPreset.get("comments"))?.once("ready-to-show", () =>
+        this.openCommentReady(promise, resolve)
+      );
+    }
+
+    return promise;
   }
 
   private static showRawMenu(tray: Tray) {
@@ -79,10 +139,10 @@ export class MainTray {
       {
         label: this.playerBus?.status === "playing" ? "暂停" : "播放",
         click: () => {
-          MainMessageChannel.commit({
+          MainIPC.MessageChannel.commit({
             sender: "process",
             receiver: "main",
-            type: "playerActionBus",
+            type: "bus_dispatch_player_action",
             data: this.playerBus?.status === "playing" ? "pause" : "play"
           });
           this.showRawMenu(tray);
@@ -91,10 +151,10 @@ export class MainTray {
       {
         label: "上一首",
         click: () => {
-          MainMessageChannel.commit({
+          MainIPC.MessageChannel.commit({
             sender: "process",
             receiver: "main",
-            type: "playerActionBus",
+            type: "bus_dispatch_player_action",
             data: "previous"
           });
         }
@@ -102,10 +162,10 @@ export class MainTray {
       {
         label: "下一首",
         click: () => {
-          MainMessageChannel.commit({
+          MainIPC.MessageChannel.commit({
             sender: "process",
             receiver: "main",
-            type: "playerActionBus",
+            type: "bus_dispatch_player_action",
             data: "next"
           });
         }
@@ -119,24 +179,17 @@ export class MainTray {
             click: () => {
               const track = this.playerBus?.track;
               if (!track) return;
-              const open = () => {
-                setTimeout(() => {
-                  MainMessageChannel.commit({
-                    sender: "process",
-                    receiver: "comments",
-                    type: "commentBus",
-                    data: {
-                      id: track.id,
-                      type: "track"
-                    }
-                  });
-                }, 1500);
-              };
-              if (!MainWindowManager.has("comments")) {
-                MainWindowCreator.create(MainWindowPreset.get("comments"))?.once("show", open);
-              } else {
-                open();
-              }
+              this.openCommentReady().then(() => {
+                MainIPC.MessageChannel.commit({
+                  sender: "process",
+                  receiver: "comments",
+                  type: "bus_deliver_comment",
+                  data: {
+                    id: track.id,
+                    type: "track"
+                  }
+                });
+              });
             }
           },
           {
@@ -181,10 +234,10 @@ export class MainTray {
         {
           label: "退出",
           click: () => {
-            MainMessageChannel.commit({
+            MainIPC.MessageChannel.commit({
               sender: "process",
               receiver: "main",
-              type: "playerActionBus",
+              type: "bus_dispatch_player_action",
               data: "exit"
             });
             setTimeout(() => {
@@ -226,8 +279,8 @@ export class MainTray {
       y = trayBounds.y + trayBounds.height + 4;
     }
 
-    trayWin.setPosition(x, y, false);
-    !trayWin.isVisible() && trayWin.show();
-    trayWin.focus();
+    trayWin.setPosition(x, y);
+    setTimeout(() => !trayWin.isVisible() && trayWin.showInactive(), 50);
+    setTimeout(() => trayWin.focus(), 100);
   }
 }

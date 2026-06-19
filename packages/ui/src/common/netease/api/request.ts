@@ -2,6 +2,7 @@ import axios, { type AxiosRequestConfig, type AxiosResponse } from "axios";
 import { Log } from "@/common/lib/log";
 import { EqError } from "@mahiru/log";
 import { NeteaseServicesAuth } from "@/common/netease/services";
+import { NeteaseCookie } from "@/common/netease/models";
 import RendererHTTPConstants from "@/common/constants/http";
 import AppToast from "@/common/components/display/toast";
 
@@ -38,7 +39,7 @@ apiRequest.interceptors.response.use(
       !config && Log.warn("apiRequest.ts", "no config in error");
       !data && Log.warn("apiRequest.ts", "no response data in error");
       return Promise.reject(error);
-    } else if (data.code === 301 && message.includes("需要登录")) {
+    } else if (data.code === 301 && message.includes("登录") && NeteaseCookie.isLoggedIn()) {
       Log.warn("apiRequest.ts", "token has expired");
       AppToast.show({
         type: "info",

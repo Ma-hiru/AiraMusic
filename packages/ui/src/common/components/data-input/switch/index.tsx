@@ -6,26 +6,29 @@ interface SwitchProps {
   label?: ReactNode;
   checked: boolean;
   onClick: NormalFunc;
-  mode?: "more-theme" | "less-theme";
 }
 
-const Switch: FC<SwitchProps> = ({ checked, onClick, className, label, mode = "more-theme" }) => {
+const Switch: FC<SwitchProps> = ({ checked, onClick, className, label }) => {
   return (
     <div
       className={cx(
         `
-        flex justify-center items-center
+        flex justify-center items-center relative
         font-bold text-[10px] text-center
-        px-2 py-0.5 rounded-full cursor-pointer
-        hover:text-(--text-color-on-main) hover:bg-(--theme-color-main)
-        transition-all duration-300 ease-in-out`,
-        checked
-          ? "text-(--text-color-on-main) bg-(--theme-color-main) font-bold"
-          : mode === "more-theme" && "text-(--theme-color-main)",
+        p-0.5 cursor-pointer
+        transition-all duration-300 ease-in-out
+        group hover:text-(--theme-color-main)
+        `,
         className
       )}
       onClick={onClick}>
       {label}
+      <span
+        className={cx(
+          "absolute w-full h-0.5 bottom-0 bg-(--theme-color-main) hidden",
+          checked && "inline-block"
+        )}
+      />
     </div>
   );
 };

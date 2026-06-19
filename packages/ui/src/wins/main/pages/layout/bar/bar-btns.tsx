@@ -1,12 +1,17 @@
 import { cx } from "@emotion/css";
 import { type FC, memo, useCallback, useEffect, type WheelEvent } from "react";
-import { ListMusic, Volume, Volume1, Volume2, VolumeX } from "lucide-react";
+import { ListMusic, Trash2, Volume, Volume1, Volume2, VolumeX } from "lucide-react";
 import { useUpdate } from "@/common/hooks/use-update";
 import { useListenable } from "@/common/hooks/use-listenable";
 import { RendererWindow } from "@/common/lib/window";
 import { createPlayerPlaylistModal } from "@/wins/main/componets/player-playlist-modal";
+import { useAtomValue } from "jotai";
+import { fmModeAtom } from "@/wins/main/atoms/track";
+import { NeteaseAPITrack } from "@/common/netease/api";
 import RendererPlayerHandle from "@/wins/main/lib/handle";
 import AppModal from "@/common/components/display/modal";
+import AppToast from "@/common/components/display/toast";
+
 import Tooltip from "@/common/components/display/tooltip";
 import RangeSlider from "@/common/components/data-input/range";
 
@@ -52,6 +57,8 @@ const BarBtns: FC<object> = () => {
   const volume = muted ? 0 : player.audio.volume;
   const volumePercent = Math.round(volume * 100);
   const VolumeTag = getVolumeIcon(volume);
+  const fmMode = useAtomValue(fmModeAtom);
+
   const update = useUpdate();
 
   const openPlaylistModal = useCallback(() => {
@@ -74,8 +81,32 @@ const BarBtns: FC<object> = () => {
     };
   }, [player.audio, update]);
 
+  const dislike = useCallback(() => {
+    const current = player.current.track;
+    if (!current || !fmMode) return;
+    void NeteaseAPITrack.personalFMTrash(current.id);
+    player.playlist.remove(current);
+    AppToast.show({
+      type: "success",
+      text: `已移除 ${current.name}`
+    });
+  }, [fmMode, player]);
+
   return (
     <div className="flex gap-4 justify-end items-center h-full ">
+      {fmMode && (
+        <button
+          title="不再推荐"
+          type="button"
+          onClick={dislike}
+          className="
+            size-5 flex items-center justify-center select-none cursor-pointer
+            hover:opacity-50 ease-in-out duration-300 transition-all active:scale-90
+          ">
+          <Trash2 className="size-5" />
+        </button>
+      )}
+
       <Tooltip
         interactive
         tooltipRole="group"

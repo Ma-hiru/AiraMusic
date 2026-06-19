@@ -153,15 +153,22 @@ export default class RendererPlayerAudio {
 
   static fromSave(save: ReturnType<typeof this.save>) {
     const instance = new RendererPlayerAudio();
-    instance.volume = save.volume;
     instance.pause();
-    instance.audio.addEventListener(
-      "loadedmetadata",
-      () => (instance.currentTime = save.currentTime),
-      { once: true }
-    );
+    instance.volume = save.volume;
     instance.audio.src = save.src;
-    instance.audio.load();
+
+    try {
+      instance.audio.load();
+      if (typeof instance.audio.fastSeek === "function") {
+        instance.audio.fastSeek(save.currentTime);
+      } else {
+        instance.audio.currentTime = save.currentTime;
+      }
+    } catch (err) {
+      Log.error("RendererPlayerAudio", "缓存失效", err);
+      instance.audio.currentTime = save.currentTime;
+    }
+
     return instance;
   }
 

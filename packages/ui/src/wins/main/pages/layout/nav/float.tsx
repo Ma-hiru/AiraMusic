@@ -6,7 +6,7 @@ import { typingAtom } from "@/wins/main/atoms/layout";
 import { AnimatePresence, motion } from "motion/react";
 import { debounce } from "lodash-es";
 
-import FloatItem from "@/wins/main/pages/layout/float/float-item";
+import FloatItem from "@/common/components/layout/float/float-item";
 
 interface NavFloatProps {
   setKeyword: NormalFunc<[keyword: string]>;
@@ -50,12 +50,12 @@ const NavFloat: FC<NavFloatProps> = ({ setKeyword, sideBar, canScroll, onScrollT
         !sideBar && "pointer-events-none"
       )}>
       <AnimatePresence>
-        {showFloat && canScroll && (
+        {showFloat && canScroll && sideBar && (
           <FloatItem key="scroll-top" motionKey="scroll-top" onClick={onScrollTop}>
             <ArrowUp className="size-5" />
           </FloatItem>
         )}
-        {showFloat && (
+        {showFloat && sideBar && (
           <motion.div
             key="search"
             exit={{ opacity: 0, scale: 0 }}

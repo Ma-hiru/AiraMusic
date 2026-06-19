@@ -4,9 +4,11 @@ import { useUserTrackManager } from "@/common/hooks/use-user-track-manager";
 import { usePageJump } from "@/wins/main/hooks/use-page-jump";
 import { useDisplayAction } from "@/wins/main/hooks/use-display-action";
 import { usePlayerActionInList } from "@/wins/main/hooks/use-player-action-in-list";
-import { useLocateOrScrollTopRegister } from "@/wins/main/hooks/use-locate-or-scroll-top-register";
 import { useSetAtom } from "jotai";
-import { typingAtom } from "@/wins/main/atoms/layout";
+import { scrollActionsAtom, typingAtom } from "@/wins/main/atoms/layout";
+import { useRouterActive } from "@/common/hooks/use-router-active";
+import { useScrollActionsRegister } from "@/common/hooks/use-scroll-actions-register";
+import { RoutePathMain } from "@/common/routes";
 
 import History, { type HistoryRef } from "@/common/components/page/history";
 
@@ -27,11 +29,13 @@ const HistoryPage: FC<object> = () => {
     return player.history.addListener(sync);
   }, [player.history]);
   // 注册滚动和定位回调
-  const { canFastLocate, canScrollTop } = useLocateOrScrollTopRegister({
+  const { canFastLocate, canScrollTop } = useScrollActionsRegister({
+    atom: scrollActionsAtom,
+    active: useRouterActive(RoutePathMain, "history"),
     getScrollTopFunc: () => historyRef.current?.scrollTop,
-    getFastLocateFunc: () => historyRef.current?.fastLocator,
-    page: "history"
+    getFastLocateFunc: () => historyRef.current?.fastLocator
   });
+
   // 跳转歌手和专辑页
   const { jumpAlbumPage, jumpArtistPage } = usePageJump();
   const { onPageAction } = useDisplayAction({ type: "history" });

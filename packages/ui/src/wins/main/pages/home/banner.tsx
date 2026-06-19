@@ -6,7 +6,7 @@ import { NeteaseAPIHome } from "@/common/netease/api";
 import { NeteaseServicesTrack } from "@/common/netease/services";
 import { RoutePath, RoutePathMain } from "@/common/routes";
 import { useRequestAutoRetry, useRequestStatusWrap } from "@/common/hooks/use-request-wrap";
-import { RendererIPC } from "@/common/lib/ipc";
+import { RendererIPC } from "@mahiru/ipc/renderer";
 import RendererPlayerHandle from "@/wins/main/lib/handle";
 
 import Carousel from "@/common/components/display/carousel";
@@ -50,7 +50,7 @@ const Banner: FC<BannerProps> = ({ className }) => {
           return;
         }
         case BannerType.web: {
-          RendererIPC.Event("openExternalLink", {
+          RendererIPC.NormalChannel.send("event_window_external", {
             url: item.url,
             title: item.typeTitle
           });

@@ -2,6 +2,12 @@
   "name": "@mahiru/ipc",
   "type": "module",
   "version": "1.0.0",
+  "files": [
+    "main.ts",
+    "renderer.ts",
+    "preload.ts",
+    "types.ts"
+  ],
   "dependencies": {
     "@mahiru/log": "workspace:*"
   }

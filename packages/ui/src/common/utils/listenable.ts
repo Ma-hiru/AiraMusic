@@ -1,6 +1,6 @@
 import { Log } from "@/common/lib/log";
 
-export abstract class Listenable<EventName = string> {
+export abstract class Listenable<const EventName = string> {
   private readonly listenableName;
   private readonly listeners = new Map<NormalFunc, { id: string; once: boolean }>();
   private readonly eventListeners = new Map<
@@ -11,6 +11,7 @@ export abstract class Listenable<EventName = string> {
   private listenerMicrotaskPending = false;
   private updateMode: "microtask" | "sync" | "debounce" = "debounce";
   private updateGap = 100; // ms
+  protected beforeFlushListeners?: NormalFunc<[event?: EventName], boolean | void>;
   public _innerCount = 0;
 
   constructor(name?: string) {
@@ -32,6 +33,7 @@ export abstract class Listenable<EventName = string> {
   }
 
   private flushListeners(event?: EventName) {
+    if (this.beforeFlushListeners?.(event) === false) return;
     const execute = (listeners: typeof this.listeners) => {
       for (const [listener, options] of [...listeners.entries()]) {
         options.once && listeners.delete(listener);

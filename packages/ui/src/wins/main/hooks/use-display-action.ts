@@ -1,13 +1,13 @@
 import { useCallback } from "react";
 import { RendererWindow } from "@/common/lib/window";
-import { RendererEventBus } from "@/common/lib/bus";
+import { RendererIPCMessageBus } from "@/common/lib/bus";
 import { useLatestRef } from "@/common/hooks/use-latest-ref";
 import { useNavigate } from "react-router-dom";
-import type { MessageData } from "@mahiru/ipc/renderer";
+import type { MessageData } from "@mahiru/ipc/types";
 
 /** 多窗口页面跳转动作 */
 export function useDisplayAction(
-  data: Nullable<MessageData<"displayBus">> | NormalFunc<[], Nullable<MessageData<"displayBus">>>
+  data: Nullable<MessageData<"bus_display">> | NormalFunc<[], Nullable<MessageData<"bus_display">>>
 ) {
   if (typeof data === "function") data = data();
 
@@ -17,7 +17,7 @@ export function useDisplayAction(
   const onPageAction = useCallback(async () => {
     if (!dataRef.current) return;
     await RendererWindow.display.reactReadyAwait();
-    RendererEventBus.display.send(dataRef.current);
+    RendererIPCMessageBus.display.deliver(dataRef.current);
     navigate(-1);
   }, [dataRef, navigate]);
 

@@ -30,8 +30,7 @@ const Tabs: FC<TabsProps> = ({
       </h1>
       <div className="flex items-center justify-end gap-1">
         <Switch
-          label="动态"
-          mode="less-theme"
+          label="跟随"
           checked={dynamicContent}
           onClick={() => setDynamicContent(!dynamicContent)}
         />

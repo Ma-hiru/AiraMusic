@@ -1,9 +1,9 @@
 import { Log } from "@/common/lib/log";
-import { RendererIPC } from "@/common/lib/ipc";
+import { RendererIPC } from "@mahiru/ipc/renderer";
 
 export class RendererDevice {
   private static get gpuDevice(): Promise<GPUDevice[]> {
-    return RendererIPC.Invoke("GPUInfo", undefined)
+    return RendererIPC.NormalChannel.send("invoke_device_gpu", undefined)
       .then((res) => res)
       .then((res) => {
         if (res && typeof res === "object" && "gpuDevice" in res && Array.isArray(res?.gpuDevice)) {
@@ -41,7 +41,7 @@ export class RendererDevice {
   }
 
   static get platform(): Promise<NodeJS.Platform | "unknown"> {
-    return RendererIPC.Invoke("platform", undefined).catch((err) => {
+    return RendererIPC.NormalChannel.send("invoke_device_platform", undefined).catch((err) => {
       Log.error(err);
       return "unknown";
     });

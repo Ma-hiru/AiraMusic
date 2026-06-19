@@ -1,7 +1,7 @@
 import pLimit from "p-limit";
 import { NeteaseAPITrack } from "@/common/netease/api";
 import { RendererCache } from "@/common/lib/cache";
-import { NeteaseTrack } from "@/common/netease/models";
+import { NeteaseTrack, NeteaseTrackRecord } from "@/common/netease/models";
 import { Log } from "@/common/lib/log";
 import _NeteasePlaylistSource from "./playlist";
 
@@ -150,5 +150,15 @@ export default class _NeteaseTrackSource {
 
   static playlist(playlist: NeteaseAPI.NeteasePlaylistDetail) {
     return _NeteasePlaylistSource.id(playlist.id).then((p) => p.tracks);
+  }
+
+  static async personalFM(): Promise<NeteaseTrackRecord[]> {
+    const res = await NeteaseAPITrack.personalFM();
+    const ids = (res.data ?? []).map((track) => track.id).filter(Boolean);
+    if (ids.length === 0) return [];
+    const tracks = await _NeteaseTrackSource.ids(ids);
+    return tracks.map(
+      (detail) => new NeteaseTrackRecord({ detail, sourceID: 0, sourceName: "fm" })
+    );
   }
 }

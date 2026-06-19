@@ -1,7 +1,8 @@
-import { MainChildEntry } from "@/lib/child-entry";
-import type { NCMChildMessage, NCMParentMessage } from "@/types/ncm.child";
-import { join } from "node:path";
 import os from "node:os";
+import { MainChildEntry } from "@/lib/child-entry";
+import { MainPathResolver } from "@/lib/path-resolver";
+import { join } from "node:path";
+import type { NCMChildMessage, NCMParentMessage } from "@/types/ncm.child";
 
 export default class NeteaseMusicApiService extends MainChildEntry<
   NCMParentMessage,
@@ -38,7 +39,8 @@ export default class NeteaseMusicApiService extends MainChildEntry<
     return {
       type: "start",
       port: this.port,
-      tokenPath: join(os.tmpdir(), "anonymous_token")
+      tokenPath: join(os.tmpdir(), "anonymous_token"),
+      deviceIdPath: MainPathResolver.appUserDataJoin("ncm", "deviceId")
     };
   }
 

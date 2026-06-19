@@ -12,7 +12,7 @@ import {
 import { type FC, Fragment, memo, useCallback, useEffect, useMemo } from "react";
 import { NeteaseImageSize } from "@/common/enum";
 import { useListenable } from "@/common/hooks/use-listenable";
-import { RendererEventBus } from "@/common/lib/bus";
+import { RendererIPCMessageBus } from "@/common/lib/bus";
 import { RendererWindow } from "@/common/lib/window";
 import { NeteaseNetworkImage, NeteaseURL } from "@/common/netease/models";
 import { useThemeInjectFromBus } from "@/common/hooks/use-theme-inject-from-bus";
@@ -22,15 +22,17 @@ import Drag from "@/common/components/layout/drag/drag";
 import NoDrag from "@/common/components/layout/drag/no-drag";
 import NeteaseImage from "@/common/components/display/image/netease-image";
 import AcrylicBackground from "@/common/components/display/acrylic-background";
+import Marquee from "@/common/components/display/marquee";
 
 const MiniPlayerPage: FC = () => {
   useThemeInjectFromBus();
   const mainWindow = useListenable(RendererWindow.main);
-  const playerBus = useListenable(RendererEventBus.player);
-  const progressBus = useListenable(RendererEventBus.progress);
+  const trackMetaBus = useListenable(RendererIPCMessageBus.trackMeta);
+  const progressBus = useListenable(RendererIPCMessageBus.progress);
 
-  const track = playerBus.data?.track?.detail;
-  const isPlaying = playerBus.data?.status === "playing";
+  const track = trackMetaBus.data?.track?.detail;
+  const album = trackMetaBus.data?.track?.detail.al;
+  const isPlaying = trackMetaBus.data?.status === "playing";
   const bg = useMemo(
     () => NeteaseURL.setImageSize(track?.al.picUrl, NeteaseImageSize.sm),
     [track?.al.picUrl]
@@ -46,12 +48,12 @@ const MiniPlayerPage: FC = () => {
   }, []);
 
   const togglePlay = useCallback(() => {
-    RendererEventBus.playerAction.send(isPlaying ? "pause" : "play");
+    RendererIPCMessageBus.playerAction.deliver(isPlaying ? "pause" : "play");
   }, [isPlaying]);
 
   useEffect(() => {
-    RendererEventBus.mainBusUpdater.send("player");
-    RendererEventBus.mainBusUpdater.send("progress");
+    RendererIPCMessageBus.updater.deliver("track-meta");
+    RendererIPCMessageBus.updater.deliver("track-progress");
   }, []);
 
   useEffect(() => {
@@ -59,6 +61,13 @@ const MiniPlayerPage: FC = () => {
       RendererWindow.current.hide();
     });
   }, [mainWindow]);
+
+  const marqueeOpts = {
+    speed: 10,
+    pingPong: true,
+    pauseOnHover: true,
+    gapDuration: 2000
+  };
 
   return (
     <Drag className={cx("relative overflow-hidden", !bg && "text-black")}>
@@ -87,7 +96,7 @@ const MiniPlayerPage: FC = () => {
                 if (!cover) return;
                 const image = cover.toNetworkImage().setSize(NeteaseImageSize.raw);
                 await RendererWindow.image.reactReadyAwait();
-                RendererWindow.image.send("imageCheckerBus", {
+                RendererIPCMessageBus.preview.deliver({
                   url: image.src,
                   alt: image.alt
                 });
@@ -99,50 +108,74 @@ const MiniPlayerPage: FC = () => {
               <Music2 className="size-5" />
             </div>
           )}
-          {playerBus.data?.status === "playing" && (
-            <span className="absolute right-0.5 top-0.5 flex size-2.5 items-center justify-center rounded-full bg-(--theme-color-main)">
-              <Disc3 className="size-2 animate-spin text-(--text-color-on-main)" />
-            </span>
-          )}
+          <span className="absolute right-0.5 top-0.5 flex size-2.5 items-center justify-center rounded-full bg-(--theme-color-main)">
+            <Disc3
+              className={cx(
+                "size-2 text-(--text-color-on-main)",
+                trackMetaBus.data?.status === "playing" && "animate-spin"
+              )}
+            />
+          </span>
         </NoDrag>
         <div className="grid min-w-0 grid-rows-[1fr_auto] gap-0.5">
           <div className="min-w-0 self-end">
-            <h1 className="truncate text-[12px] font-black leading-4">
-              {playerBus.data?.track?.name || "暂无播放"}
-            </h1>
-            <h2 className="truncate text-[9px] font-semibold leading-3  opacity-80">
-              {playerBus.data?.track?.detail.ar.map((a, index) => {
-                return (
-                  <Fragment key={a.id}>
-                    <NoDrag
-                      onClick={async () => {
-                        await RendererWindow.display.reactReadyAwait();
-                        RendererEventBus.display.send({
-                          type: "artist",
-                          id: a.id
-                        });
-                      }}
-                      title={a.name}
-                      className="
-                      inline cursor-pointer hover:opacity-50
-                      ease-in-out duration-300 transition-all
-                    ">
-                      {a.name}
-                    </NoDrag>
-                    {index !== (playerBus.data?.track?.detail.ar.length ?? 0) - 1 && (
-                      <span> / </span>
-                    )}
-                  </Fragment>
-                );
-              })}
-            </h2>
+            <Marquee
+              text={trackMetaBus.data?.track?.name || "暂无播放"}
+              className="text-[12px] font-black leading-4"
+              options={marqueeOpts}
+            />
+            <Marquee
+              className="text-[9px] font-semibold leading-3 opacity-80"
+              options={marqueeOpts}>
+              <span>
+                {trackMetaBus.data?.track?.detail.ar.map((a, index) => {
+                  return (
+                    <Fragment key={a.id}>
+                      <NoDrag
+                        onClick={async () => {
+                          await RendererWindow.display.reactReadyAwait();
+                          RendererIPCMessageBus.display.deliver({
+                            type: "artist",
+                            id: a.id
+                          });
+                        }}
+                        title={a.name}
+                        className="
+                            inline cursor-pointer hover:opacity-50
+                            ease-in-out duration-300 transition-all
+                          ">
+                        {a.name}
+                      </NoDrag>
+                      {index !== (trackMetaBus.data?.track?.detail.ar.length ?? 0) - 1 && (
+                        <span> / </span>
+                      )}
+                    </Fragment>
+                  );
+                })}
+              </span>
+              {album && <span> - </span>}
+              {album && (
+                <NoDrag
+                  onClick={async () => {
+                    await RendererWindow.display.reactReadyAwait();
+                    RendererIPCMessageBus.display.deliver({
+                      type: "album",
+                      id: album.id
+                    });
+                  }}
+                  title={album.name}
+                  className="inline cursor-pointer hover:opacity-50 ease-in-out duration-300 transition-all">
+                  {album.name}
+                </NoDrag>
+              )}
+            </Marquee>
           </div>
           <NoDrag className="flex items-center justify-start gap-1">
             <ControlButton
               filled
               icon={SkipBack}
               label="上一首"
-              onClick={() => RendererEventBus.playerAction.send("previous")}
+              onClick={() => RendererIPCMessageBus.playerAction.deliver("previous")}
             />
             <ControlButton
               filled
@@ -154,7 +187,7 @@ const MiniPlayerPage: FC = () => {
               filled
               icon={SkipForward}
               label="下一首"
-              onClick={() => RendererEventBus.playerAction.send("next")}
+              onClick={() => RendererIPCMessageBus.playerAction.deliver("next")}
             />
           </NoDrag>
         </div>
@@ -172,9 +205,10 @@ const MiniPlayerPage: FC = () => {
               <X className="size-3.5" />
             </button>
           </NoDrag>
-          <div className="font-medium text-[12px]">
-            {RendererFormat.duration(progressBus.data?.currentTime, "s")} /{" "}
-            {RendererFormat.duration(progressBus.data?.duration, "s")}
+          <div className="font-medium text-[12px] group absolute bottom-0">
+            <span>{RendererFormat.duration(progressBus.data?.currentTime, "s")}</span>
+            <span className="mx-0.5">/</span>
+            <span>{RendererFormat.duration(progressBus.data?.duration, "s")}</span>
           </div>
         </div>
       </section>

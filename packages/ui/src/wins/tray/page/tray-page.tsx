@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { useListenable } from "@/common/hooks/use-listenable";
 import { useThemeInjectFromBus } from "@/common/hooks/use-theme-inject-from-bus";
-import { RendererEventBus } from "@/common/lib/bus";
+import { RendererIPCMessageBus } from "@/common/lib/bus";
 import { RendererWindow } from "@/common/lib/window";
 import AppToast from "@/common/components/display/toast";
 
@@ -34,13 +34,13 @@ type TrayAction = {
 
 const TrayPage: FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const playerBus = useListenable(RendererEventBus.player);
-  const progressBus = useListenable(RendererEventBus.progress);
+  const trackMetaBus = useListenable(RendererIPCMessageBus.trackMeta);
+  const progressBus = useListenable(RendererIPCMessageBus.progress);
   const currentWindow = useListenable(RendererWindow.current);
-  const infoBus = useListenable(RendererEventBus.info);
-  const trackRecord = playerBus.data?.track;
+  const themeBus = useListenable(RendererIPCMessageBus.theme);
+  const trackRecord = trackMetaBus.data?.track;
   const track = trackRecord?.detail;
-  const isPlaying = playerBus.data?.status === "playing";
+  const isPlaying = trackMetaBus.data?.status === "playing";
   const artistName = track?.ar.map((item) => item.name).join(" / ");
   const firstArtistID = track?.ar.find((item) => item.id > 0)?.id;
   const albumID = track?.al.id && track.al.id > 0 ? track.al.id : undefined;
@@ -94,7 +94,7 @@ const TrayPage: FC = () => {
 
   const openDisplay = useCallback(async (data: { type: "album" | "artist"; id: number }) => {
     await RendererWindow.display.reactReadyAwait();
-    RendererEventBus.display.send(data);
+    RendererIPCMessageBus.display.deliver(data);
     RendererWindow.current.hide();
   }, []);
 
@@ -102,7 +102,7 @@ const TrayPage: FC = () => {
     const id = trackRecord?.id;
     if (!id) return;
     await RendererWindow.comment.reactReadyAwait();
-    RendererEventBus.comment.send({
+    RendererIPCMessageBus.comment.deliver({
       id,
       type: "track"
     });
@@ -121,17 +121,17 @@ const TrayPage: FC = () => {
         icon: isPlaying ? Pause : Play,
         text: isPlaying ? "暂停" : "播放",
         active: true,
-        onClick: () => RendererEventBus.playerAction.send(isPlaying ? "pause" : "play")
+        onClick: () => RendererIPCMessageBus.playerAction.deliver(isPlaying ? "pause" : "play")
       },
       {
         icon: SkipBack,
         text: "上一首",
-        onClick: () => RendererEventBus.playerAction.send("previous")
+        onClick: () => RendererIPCMessageBus.playerAction.deliver("previous")
       },
       {
         icon: SkipForward,
         text: "下一首",
-        onClick: () => RendererEventBus.playerAction.send("next")
+        onClick: () => RendererIPCMessageBus.playerAction.deliver("next")
       }
     ],
     [isPlaying]
@@ -196,7 +196,7 @@ const TrayPage: FC = () => {
         icon: LogOut,
         text: "退出",
         danger: true,
-        onClick: () => RendererEventBus.playerAction.send("exit")
+        onClick: () => RendererIPCMessageBus.playerAction.deliver("exit")
       }
     ],
     [showMainWindow]
@@ -216,12 +216,12 @@ const TrayPage: FC = () => {
             blur={20}
             opacity={1}
             className="rounded-xl overflow-hidden"
-            src={infoBus.data?.backgroundCover}
+            src={themeBus.data?.backgroundCover}
           />
         </div>
         <TrayPlayer
           track={track}
-          status={playerBus.data?.status}
+          status={trackMetaBus.data?.status}
           currentTime={progressBus.data?.currentTime}
           duration={progressBus.data?.duration}
         />

@@ -3,22 +3,22 @@ import { type FC, memo, useCallback, useEffect, useMemo, useRef, useState } from
 import { Boxes, Clock8, Folder, HardDrive } from "lucide-react";
 import type { InvokeEventPayload } from "@mahiru/ipc/dist-types/src/types/invoke";
 import { RendererFormat } from "@/common/lib/format";
-import { RendererIPC } from "@/common/lib/ipc";
+import { RendererIPC } from "@mahiru/ipc/renderer";
 import { RendererCache } from "@/common/lib/cache";
 import { Log } from "@/common/lib/log";
 import AppToast from "@/common/components/display/toast";
+import AppModal from "@/common/components/display/modal";
 
 import RangeRow from "./range-row";
 import BaseItem from "./base-item";
 import DonutChart from "./donut-chart";
 import Card from "@/common/components/layout/card";
-import AppModal from "@/common/components/display/modal";
 
 interface CacheProps {
   cacheStoreSizes: Nullable<CacheStoreSizeCategories>;
-  cacheStoreConfig: Nullable<InvokeEventPayload<"fetchCacheStoreConfig">>;
+  cacheStoreConfig: Nullable<InvokeEventPayload<"invoke_cache_config_get">>;
   updateCacheStoreConfig: PromiseFunc<
-    [config: Partial<InvokeEventPayload<"fetchCacheStoreConfig">>]
+    [config: Partial<InvokeEventPayload<"invoke_cache_config_get">>]
   >;
   refreshSize: NormalFunc;
 }
@@ -48,7 +48,7 @@ const Cache: FC<CacheProps> = ({
   const hasData = Object.values(cacheStoreSizes ?? {}).find((s) => s !== 0);
 
   const selectDirPath = useCallback(async () => {
-    const res = await RendererIPC.Invoke("selectPath", "dir").then((res) => res);
+    const res = await RendererIPC.NormalChannel.send("invoke_fs_select", "dir").then((res) => res);
     if (res.ok) {
       setPathInputValue(res.path);
     } else {
@@ -159,6 +159,21 @@ const Cache: FC<CacheProps> = ({
       text: "保存成功"
     });
   };
+  const refresh = useCallback(() => {
+    try {
+      refreshSize();
+      AppToast.show({
+        type: "success",
+        text: "刷新成功"
+      });
+    } catch (err) {
+      Log.error(err);
+      AppToast.show({
+        type: "error",
+        text: "刷新失败"
+      });
+    }
+  }, [refreshSize]);
 
   useEffect(reset, [reset]);
 
@@ -232,6 +247,7 @@ const Cache: FC<CacheProps> = ({
         <div className="w-full flex justify-end gap-3">
           <Button disable={!hasChanged} title="保存" onClick={saveChanges} />
           <Button disable={!hasChanged} title="重置" onClick={reset} />
+          <Button disable={false} title="刷新" onClick={refresh} />
           <Button disable={!hasData} title="清空" onClick={clear} />
         </div>
       </BaseItem>

@@ -1,10 +1,12 @@
 import { useCallback } from "react";
 import { NeteaseTrackRecord } from "@/common/netease/models";
+import { createAddToPlaylistModal } from "@/common/components/display/modal/add-to-playlist-modal";
 import type {
   TrackListClickFunc,
   TrackListContextMenuFunc
 } from "@/common/components/display/track_list";
 import AppContextMenu from "@/common/components/display/menu";
+import AppModal from "@/common/components/display/modal";
 
 /** 歌曲右键菜单 */
 export function useTrackContextMenu(props: {
@@ -16,6 +18,7 @@ export function useTrackContextMenu(props: {
 }) {
   const { onPlay, onClickAlbum, addToPlaylistNext, addToPlaylistLast, openComment } = props;
   const { create, createTrackContextMenu } = AppContextMenu.useMenu();
+  const { create: createModal } = AppModal.useModal();
 
   const onContextMenu = useCallback<TrackListContextMenuFunc>(
     (e, track) => {
@@ -40,6 +43,9 @@ export function useTrackContextMenu(props: {
             case "comment":
               void openComment(track);
               break;
+            case "favPlaylist":
+              createModal(createAddToPlaylistModal, { track });
+              break;
           }
         }
       });
@@ -48,6 +54,7 @@ export function useTrackContextMenu(props: {
       addToPlaylistLast,
       addToPlaylistNext,
       create,
+      createModal,
       createTrackContextMenu,
       onClickAlbum,
       onPlay,
