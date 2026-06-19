@@ -26,6 +26,7 @@
   "devDependencies": {
     "@mahiru/ipc": "workspace:*",
     "@mahiru/log": "workspace:*",
+    "@mahiru/native": "workspace:*",
     "@mahiru/store": "workspace:*",
     "@types/express": "^5.0.0",
     "@types/express-http-proxy": "^1.6.7",

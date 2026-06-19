@@ -1676,6 +1676,14 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@mahiru/native@workspace:*, @mahiru/native@workspace:packages/native":
+  version: 0.0.0-use.local
+  resolution: "@mahiru/native@workspace:packages/native"
+  dependencies:
+    tsx: "npm:^4.22.3"
+  languageName: unknown
+  linkType: soft
+
 "@mahiru/store@workspace:*, @mahiru/store@workspace:packages/store":
   version: 0.0.0-use.local
   resolution: "@mahiru/store@workspace:packages/store"
@@ -3616,6 +3624,7 @@ __metadata:
   dependencies:
     "@mahiru/ipc": "workspace:*"
     "@mahiru/log": "workspace:*"
+    "@mahiru/native": "workspace:*"
     "@mahiru/store": "workspace:*"
     "@neteasecloudmusicapienhanced/api": "npm:4.35.1"
     "@types/express": "npm:^5.0.0"
@@ -3626,6 +3635,7 @@ __metadata:
     express-http-proxy: "npm:^2.1.2"
     lodash-es: "npm:4.17.23"
     mime: "npm:^4.1.0"
+    tsup: "npm:^8.5.0"
     tsx: "npm:^4.22.3"
     zod: "npm:^4.4.3"
   languageName: unknown

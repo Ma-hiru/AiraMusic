@@ -1,6 +1,7 @@
 import { nativeImage, type ThumbarButton } from "electron";
 import { MainIPC } from "@mahiru/ipc/main";
 import { MainWindowManager } from "@/lib/window-manager";
+import { NativeTaskbarCover } from "@/lib/native-taskbar";
 import { Log } from "@/lib/log";
 
 type TaskbarButtonIcon = "next" | "pause" | "play" | "previous";
@@ -10,6 +11,7 @@ export class MainTaskBarCoverPreview {
   private static hasTrack = false;
   private static cover?: string;
   private static syncedCover?: string;
+  private static syncedCoverBytes?: Uint8Array;
   private static coverBuildID = 0;
   private static icons: Nullable<Record<TaskbarButtonIcon, Electron.NativeImage>> = null;
   /**
@@ -187,22 +189,54 @@ export class MainTaskBarCoverPreview {
     }
   }
 
+  private static coverHandle(): Nullable<Buffer> {
+    return MainWindowManager.get("main")?.getNativeWindowHandle() ?? null;
+  }
+
+  private static async capturePreview(): Promise<Nullable<Uint8Array>> {
+    const mainWin = MainWindowManager.get("main");
+    if (!mainWin || mainWin.isDestroyed()) return null;
+
+    return mainWin
+      .capturePage()
+      .then((image) => (image.isEmpty() ? null : image.toPNG()))
+      .catch((err) => {
+        Log.warn("taskbar", "failed to capture taskbar live preview", err);
+        return null;
+      });
+  }
+
   private static async updateCover() {
+    // 原生模块未就绪时直接跳过
+    if (!NativeTaskbarCover.isSupported()) return;
+    const handle = this.coverHandle();
+    if (!handle) return;
+
     const currentCover = this.cover;
     const buildID = ++this.coverBuildID;
     if (!currentCover) {
       this.syncedCover = undefined;
-      // TODO: native clear
+      this.syncedCoverBytes = undefined;
+      NativeTaskbarCover.setCover(handle, null);
       return;
     }
-    if (currentCover === this.syncedCover) return;
+    if (currentCover === this.syncedCover && this.syncedCoverBytes) {
+      const preview = await this.capturePreview();
+      if (buildID !== this.coverBuildID || currentCover !== this.cover) return;
+      preview && NativeTaskbarCover.setCover(handle, this.syncedCoverBytes, preview);
+      return;
+    }
 
-    const cover = await this.fetchCover(currentCover);
+    const [cover, preview] = await Promise.all([
+      this.fetchCover(currentCover),
+      this.capturePreview()
+    ]);
     if (buildID !== this.coverBuildID || currentCover !== this.cover) return;
 
     if (cover) {
       this.syncedCover = currentCover;
-      // TODO: native
+      this.syncedCoverBytes = cover;
+      NativeTaskbarCover.setCover(handle, cover, preview);
     }
   }
 
