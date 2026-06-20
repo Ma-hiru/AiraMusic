@@ -42,21 +42,14 @@ const Item: FC<ItemProps> = ({ data, sourceID, type }) => {
         id: sourceID,
         t: props.like ? 1 : 0,
         type: commentType
-      })
-        .then(() => {
-          AppToast.show({
-            type: "success",
-            text: props.like ? "点赞成功" : "取消点赞成功"
-          });
-        })
-        .catch((err) => {
-          Log.error(err);
-          AppToast.show({
-            type: "error",
-            text: "点赞失败"
-          });
-          setLiked(!props.like);
+      }).catch((err) => {
+        Log.error(err);
+        AppToast.show({
+          type: "error",
+          text: "操作失败"
         });
+        setLiked(!props.like);
+      });
     },
     [sourceID, type]
   );

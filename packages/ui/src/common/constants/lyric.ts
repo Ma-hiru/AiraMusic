@@ -1,13 +1,26 @@
 export class RendererLyricConstants {
   static getPreset(tips: string) {
     return <NeteaseLyricModel>{
-      data: [],
+      data: [
+        {
+          words: [
+            {
+              startTime: 0,
+              endTime: 999999,
+              word: tips
+            }
+          ],
+          translatedLyric: "",
+          romanLyric: "",
+          startTime: 0,
+          endTime: 999999
+        }
+      ],
       rmActive: false,
       tlActive: false,
       rmExisted: false,
       tlExisted: false,
-      noteExisted: false,
-      tips
+      noteExisted: false
     };
   }
 

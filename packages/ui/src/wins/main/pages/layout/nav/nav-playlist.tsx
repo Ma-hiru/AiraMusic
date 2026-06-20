@@ -10,14 +10,15 @@ import {
 } from "react";
 import { useScrollAutoHide } from "@/common/hooks/use-scroll-auto-hide";
 import { NeteaseNetworkImage, NeteasePlaylistSummary, NeteaseUser } from "@/common/netease/models";
-import RendererTheme from "@/common/player/ui";
-import NeteaseImage from "@/common/components/display/image/netease-image";
 import { cx } from "@emotion/css";
 import { usePageJump } from "@/wins/main/hooks/use-page-jump";
 import { useLocation } from "react-router-dom";
 import { RoutePathMain } from "@/common/routes";
+import { Lock } from "lucide-react";
+import RendererTheme from "@/common/player/ui";
 import RendererImageConstants from "@/common/constants/image";
 
+import NeteaseImage from "@/common/components/display/image/netease-image";
 import VirtualList, { type VirtualListRow } from "@/common/components/layout/virtual_list";
 import AppEmpty from "@/common/components/fallback/app-empty";
 
@@ -44,9 +45,9 @@ const NavPlaylist: FC<NavPlaylistProps> = ({
   setCanScrollTop,
   keyword
 }) => {
-  const { id } = RoutePathMain.playlist.parseQuery(useLocation());
-  const [fastLocation, setFastLocation] = useState(false);
+  const { id } = RoutePathMain.playlist.parseQuery(useLocation(), false);
   const { jumpPlaylistPage } = usePageJump();
+  const [fastLocation, setFastLocation] = useState(false);
 
   const containerRef = useRef<Nullable<HTMLDivElement>>(null);
 
@@ -81,7 +82,6 @@ const NavPlaylist: FC<NavPlaylistProps> = ({
   }, []);
 
   useImperativeHandle(ref, () => ({ scrollTop }), [scrollTop]);
-
   return (
     <div
       className={cx(
@@ -100,7 +100,7 @@ const NavPlaylist: FC<NavPlaylistProps> = ({
         containerRef={containerRef}
         overscan={10}
         onRangeUpdate={(range) => setCanScrollTop(range[0] > 5)}
-        extraData={{ fastLocation, opened: sidebarOpen, activeID: Number(id) }}
+        extraData={{ fastLocation, opened: sidebarOpen, activeID: Number(id), category }}
         onItemClick={onItemClick}
       />
     </div>
@@ -111,10 +111,11 @@ export default memo(NavPlaylist);
 
 const RowComponent: VirtualListRow<
   NeteasePlaylistSummary,
-  { fastLocation: boolean; opened: boolean; activeID: number }
+  { fastLocation: boolean; opened: boolean; activeID: number; category: "user" | "star" }
 > = (props) => {
   const { index, items, extra } = props;
   const data = items[index]!;
+  const isPrivate = extra.category === "user" && NeteasePlaylistSummary.isPrivacy(data);
   const active = extra.activeID === data.id;
   return (
     <div className="w-(--side-bar-expand-width) px-3">
@@ -122,7 +123,7 @@ const RowComponent: VirtualListRow<
         className={cx(
           `
             w-full flex flex-row rounded-md select-none cursor-pointer
-            ease-in-out transition-all duration-300
+            ease-in-out transition-all duration-300 group
           `,
           active
             ? extra.opened && "bg-(--theme-color-main) text-(--text-color-on-main)"
@@ -131,7 +132,7 @@ const RowComponent: VirtualListRow<
         <div
           className={cx(
             `
-              w-[calc(50%-var(--spacing)*3)]
+              w-[calc(50%-var(--spacing)*3)] relative overflow-hidden
               flex justify-center items-center py-1 rounded-md
               ease-in-out transition-all duration-300
             `,
@@ -147,6 +148,11 @@ const RowComponent: VirtualListRow<
             )}
             className="w-[60%] rounded-md"
           />
+          {isPrivate && (
+            <div className="absolute w-[60%] aspect-square left-[20%] justify-center items-center bg-black/30 rounded-md hidden group-hover:flex">
+              <Lock className="size-3" />
+            </div>
+          )}
         </div>
         <div
           className={cx(
@@ -157,8 +163,8 @@ const RowComponent: VirtualListRow<
             `,
             !extra.opened && "opacity-0"
           )}>
-          <span className="text-xs w-full font-semibold truncate">{data.name}</span>
-          <span className="text-xs w-full font-normal opacity-50">{data.trackCount} 首</span>
+          <span className="text-[11px] w-full font-semibold line-clamp-2">{data.name}</span>
+          <span className="text-[10px] w-full font-normal opacity-50">{data.trackCount} 首</span>
         </div>
       </div>
     </div>

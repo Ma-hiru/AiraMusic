@@ -60,15 +60,8 @@ export class NeteasePlaylistSummary implements NeteasePlaylistSummaryModel {
     return new NeteasePlaylistSummary(playlist);
   }
 
-  static playCountFormat(playcount?: number) {
-    if (!playcount) return "0";
-    if (playcount >= 100000000) {
-      return (playcount / 100000000).toFixed(1) + "亿";
-    } else if (playcount >= 10000) {
-      return (playcount / 10000).toFixed(1) + "万";
-    } else {
-      return playcount.toString();
-    }
+  static isPrivacy(playlist: NeteaseAPI.NeteasePlaylistSummary | NeteasePlaylistSummaryModel) {
+    return playlist?.privacy === 10;
   }
   //endregion
 }

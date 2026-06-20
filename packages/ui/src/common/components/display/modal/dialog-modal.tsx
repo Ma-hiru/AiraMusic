@@ -1,4 +1,5 @@
 import { type ReactNode, useMemo } from "react";
+import AppModal from "./use";
 import type { ModalRender } from "@/common/components/display/modal/modal-provider";
 
 export function createDialogModal({
@@ -23,7 +24,6 @@ export function createDialogModal({
     content: <Dialog body={body} footer={footer} onConfirm={onConfirm} />,
     onClose: onCancel,
     width: width ?? 400,
-    hiddenMaskBlur: true,
     height
   };
 }
@@ -57,7 +57,10 @@ const Dialog = ({
             transition-all ease-in-out duration-300
             active:scale-96
           `}
-          onClick={onConfirm}>
+          onClick={() => {
+            onConfirm?.();
+            AppModal.close();
+          }}>
           确认
         </button>
       </footer>

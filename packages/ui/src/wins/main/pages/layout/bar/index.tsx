@@ -1,6 +1,7 @@
 import { cx } from "@emotion/css";
 import { type FC, memo } from "react";
 import { useThemeColor } from "@/common/hooks/use-theme-color";
+import { useSettings } from "@/common/store/settings";
 import RendererTheme from "@/common/player/ui";
 
 import BarCover from "./bar-cover";
@@ -12,7 +13,7 @@ import AppErrorBoundary from "@/common/components/fallback/app-error-boundary";
 
 const Bar: FC<{ className?: string }> = ({ className }) => {
   const { textColorOnMain } = useThemeColor();
-
+  const settings = useSettings();
   return (
     <div
       style={{
@@ -32,9 +33,11 @@ const Bar: FC<{ className?: string }> = ({ className }) => {
           <BarControl />
           <BarBtns />
         </div>
-        <div className="absolute left-0 top-0 inset-0 pointer-events-none z-0">
-          <BarSpectrum />
-        </div>
+        {settings.performance.barSpectrum && (
+          <div className="absolute left-0 top-0 inset-0 pointer-events-none z-0">
+            <BarSpectrum />
+          </div>
+        )}
       </AppErrorBoundary>
     </div>
   );

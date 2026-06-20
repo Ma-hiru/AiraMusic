@@ -36,11 +36,18 @@ export class RoutePath<const T extends Props> {
   }
 
   public matchPathname(location: Location, pathname: string) {
-    return RoutePath.matchPathname(location, this.base, pathname);
+    const playlistBase = this.playlist?.base ?? "";
+    return RoutePath.matchPathname(
+      location,
+      this.base,
+      pathname,
+      !!playlistBase && pathname.startsWith(playlistBase)
+    );
   }
 
-  static matchPathname(location: Location, base: string, pathname: string) {
-    return (base + pathname).replace("//", "/") === location.pathname;
+  static matchPathname(location: Location, base: string, pathname: string, full = false) {
+    const path = full ? location.pathname + location.search : location.pathname;
+    return (base + pathname).replace("//", "/") === path;
   }
 
   static withQuery<Q extends Record<string, unknown>>(base: string, props: Q) {

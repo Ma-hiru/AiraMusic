@@ -18,7 +18,8 @@ export function useTrackContextMenu(props: {
 }) {
   const { onPlay, onClickAlbum, addToPlaylistNext, addToPlaylistLast, openComment } = props;
   const { create, createTrackContextMenu } = AppContextMenu.useMenu();
-  const { create: createModal } = AppModal.useModal();
+  // fix: 直接用静态方法，避免 useModal() 注册的副作用
+  const createModal = AppModal._create;
 
   const onContextMenu = useCallback<TrackListContextMenuFunc>(
     (e, track) => {

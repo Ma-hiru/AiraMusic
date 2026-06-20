@@ -6,12 +6,14 @@ import {
   NeteaseNetworkAudio,
   NeteaseNetworkImage,
   NeteaseTrack,
-  NeteaseTrackRecord
+  NeteaseTrackRecord,
+  NeteaseUser
 } from "@/common/netease/models";
 import { Listenable } from "@/common/utils/listenable";
 import { NeteaseImageSize } from "@/common/enum";
 import {
   NeteaseServicesAudio,
+  NeteaseServicesAuth,
   NeteaseServicesImage,
   NeteaseServicesLyric
 } from "@/common/netease/services";
@@ -127,22 +129,41 @@ export default class RendererPlayer extends Listenable {
     this.disconnect = this.connect();
   }
 
+  private checkStatus() {
+    // 如果是登录且为会员，但是任然只能获取到预览资源，可能是登录过期
+    if (
+      NeteaseUser.isVIP(userStoreSnapshot()._user) &&
+      this.audio.progress.duration < 30 &&
+      NeteaseUser.isLoggedIn
+    ) {
+      NeteaseServicesAuth.checkLoggedIn().then((check) => {
+        if (!check) {
+          AppToast.show({ type: "info", text: "登录过期" });
+          void NeteaseServicesAuth.logout();
+        }
+      });
+    }
+  }
+
   /** 监听事件，绑定状态机 */
   private connect() {
-    const onPlaying = () => (this.status = RendererPlayerStatus.playing);
+    const onPlaying = () => {
+      this.checkStatus();
+      this.status = RendererPlayerStatus.playing;
+    };
     const onLoadStart = () => (this.status = RendererPlayerStatus.loading);
     const onLoadedData = () => (this.status = RendererPlayerStatus.paused);
     const onPause = () => (this.status = RendererPlayerStatus.paused);
     const onError = () => (this.status = RendererPlayerStatus.error);
     const onEnded = () => this.playlist.next(false);
 
-    this.audio.addEventListener("playing", onPlaying);
-    this.audio.addEventListener("loadstart", onLoadStart);
-    this.audio.addEventListener("loadend", onLoadStart);
-    this.audio.addEventListener("loadeddata", onLoadedData);
-    this.audio.addEventListener("pause", onPause);
-    this.audio.addEventListener("error", onError);
-    this.audio.addEventListener("ended", onEnded);
+    this.audio.addEventListener("playing", onPlaying, { passive: true });
+    this.audio.addEventListener("loadstart", onLoadStart, { passive: true });
+    this.audio.addEventListener("loadend", onLoadStart, { passive: true });
+    this.audio.addEventListener("loadeddata", onLoadedData, { passive: true });
+    this.audio.addEventListener("pause", onPause, { passive: true });
+    this.audio.addEventListener("error", onError, { passive: true });
+    this.audio.addEventListener("ended", onEnded, { passive: true });
 
     const unsubscribe = this.playlist.addListener(() => {
       const current = this.playlist.current();

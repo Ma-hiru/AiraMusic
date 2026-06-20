@@ -12,7 +12,9 @@ export default class RendererPlayerAudio {
   private analyserRef: Nullable<AnalyserNode> = null;
   private audioCtxRef: Nullable<AudioContext> = null;
   readonly progress = {
+    /** 单位: s */
     duration: 0,
+    /** 单位: s */
     currentTime: 0,
     buffered: 0,
     volume: 0

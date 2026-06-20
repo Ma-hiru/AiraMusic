@@ -26,7 +26,7 @@ const Tabs: FC<TabsProps> = ({
     <div className={cx("w-full flex items-center justify-between px-3", className)}>
       <h1 className="text-[12px] font-medium">
         <p className="inline-block font-bold">{RendererFormat.count(totalComment)}</p>
-        <span className="ml-2">条评论</span>
+        <span className="ml-1">条评论</span>
       </h1>
       <div className="flex items-center justify-end gap-1">
         <Switch

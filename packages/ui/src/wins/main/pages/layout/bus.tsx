@@ -30,7 +30,7 @@ const Bus: FC<object> = () => {
   const updateProgressBus = useCallback(() => {
     RendererIPCMessageBus.progress.deliver(player.audio.progress);
   }, [player.audio.progress]);
-  const updatePlayerBus = useCallback(() => {
+  const updateMetaBus = useCallback(() => {
     RendererIPCMessageBus.trackMeta.deliver({
       track: player.current.track,
       lyric: player.current.lyric,
@@ -42,13 +42,14 @@ const Bus: FC<object> = () => {
       status: player.statusText
     });
   }, [player]);
-  const updateInfoBus = useCallback(() => {
+  const updateThemeBus = useCallback(() => {
     RendererIPCMessageBus.theme.deliver({
       backgroundCover: theme.backgroundCover ?? undefined,
       theme: {
         mainColor: theme.mainColor,
         secondaryColor: theme.secondaryColor,
-        textColor: theme.textColorOnMain,
+        textColorOnMain: theme.textColorOnMain,
+        textColorOnSecondary: theme.textColorOnSecondary,
         textNormalColor: theme.textColor
       }
     });
@@ -57,7 +58,8 @@ const Bus: FC<object> = () => {
     theme.mainColor,
     theme.secondaryColor,
     theme.textColor,
-    theme.textColorOnMain
+    theme.textColorOnMain,
+    theme.textColorOnSecondary
   ]);
   useEffect(() => {
     player.audio.addEventListener("timeupdate", updateProgressBus, { passive: true });
@@ -73,8 +75,8 @@ const Bus: FC<object> = () => {
       player.audio.removeEventListener("loadstart", updateProgressBus);
     };
   }, [player.audio, updateProgressBus]);
-  useEffect(() => player.addListener(updatePlayerBus), [player, updatePlayerBus]);
-  useEffect(updateInfoBus, [updateInfoBus]);
+  useEffect(() => player.addListener(updateMetaBus), [player, updateMetaBus]);
+  useEffect(updateThemeBus, [updateThemeBus]);
 
   // 2. historyBus 播放历史推送（仅display）
   const updateHistoryBus = useCallback(() => {
@@ -117,9 +119,9 @@ const Bus: FC<object> = () => {
   useEffect(updateOutputs, [updateOutputs]);
 
   const updateBus = useLatestRef(() => {
-    updatePlayerBus();
+    updateMetaBus();
     updateProgressBus();
-    updateInfoBus();
+    updateThemeBus();
     updateOutputs();
   });
   //#endregion
@@ -179,13 +181,13 @@ const Bus: FC<object> = () => {
     for (const action of actions) {
       switch (action) {
         case "track-meta":
-          updatePlayerBus();
+          updateMetaBus();
           break;
         case "track-progress":
           updateProgressBus();
           break;
         case "theme":
-          updateInfoBus();
+          updateThemeBus();
           break;
         case "output":
           updateOutputs();
@@ -197,8 +199,8 @@ const Bus: FC<object> = () => {
     }
     RendererIPCMessageBus.consume(mainBusUpdater.type);
   }, [
-    updateInfoBus,
-    updatePlayerBus,
+    updateThemeBus,
+    updateMetaBus,
     updateProgressBus,
     updateOutputs,
     updateHistoryBus,

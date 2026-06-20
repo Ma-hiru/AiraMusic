@@ -1,8 +1,9 @@
 import { cx } from "@emotion/css";
 import { type FC, memo, useMemo } from "react";
-import { NeteaseNetworkImage, NeteasePlaylistSummary } from "@/common/netease/models";
+import { NeteaseNetworkImage } from "@/common/netease/models";
 import { Headphones } from "lucide-react";
 import NeteaseImage from "@/common/components/display/image/netease-image";
+import { RendererFormat } from "@/common/lib/format";
 
 export type MediaItem = {
   id: number;
@@ -50,7 +51,7 @@ const MediaCard: FC<MediaCardProps> = ({ item, coverSize, onClick, className }) 
         {typeof item.playCount === "number" && (
           <div className="absolute right-1 top-1 flex items-center gap-1 rounded-md bg-black/35 px-1.5 py-0.5 text-[10px] font-semibold text-white backdrop-blur-md">
             <Headphones className="size-3" />
-            <span>{NeteasePlaylistSummary.playCountFormat(item.playCount)}</span>
+            <span>{RendererFormat.count(item.playCount)}</span>
           </div>
         )}
         {item.badge && (

@@ -37,15 +37,13 @@ const TrayPage: FC = () => {
   const trackMetaBus = useListenable(RendererIPCMessageBus.trackMeta);
   const progressBus = useListenable(RendererIPCMessageBus.progress);
   const currentWindow = useListenable(RendererWindow.current);
-  const themeBus = useListenable(RendererIPCMessageBus.theme);
+  const themeBus = useThemeInjectFromBus();
   const trackRecord = trackMetaBus.data?.track;
   const track = trackRecord?.detail;
   const isPlaying = trackMetaBus.data?.status === "playing";
   const artistName = track?.ar.map((item) => item.name).join(" / ");
   const firstArtistID = track?.ar.find((item) => item.id > 0)?.id;
   const albumID = track?.al.id && track.al.id > 0 ? track.al.id : undefined;
-
-  useThemeInjectFromBus();
 
   useLayoutEffect(() => {
     const container = containerRef.current;

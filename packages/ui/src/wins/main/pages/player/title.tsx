@@ -46,11 +46,14 @@ const Title: FC<TitleProps> = ({ className }) => {
     );
   }, [alias]);
 
-  const tsTitle = useMemo(() => {
-    if (!ts) return null;
-    return (
+  useEffect(() => {}, []);
+
+  const subTitleLonger = (title?.sub ?? "").length > (alias || "").length;
+
+  return (
+    <section className={cx("flex flex-col justify-end text-center contain-layout", className)}>
       <Marquee
-        className="opacity-50 text-[65%] leading-normal -mb-1"
+        className="opacity-50 text-[70%] leading-normal"
         text={ts}
         options={{
           speed: 15,
@@ -59,16 +62,6 @@ const Title: FC<TitleProps> = ({ className }) => {
           gapDuration: 2000
         }}
       />
-    );
-  }, [ts]);
-
-  useEffect(() => {}, []);
-
-  const subTitleLonger = (title?.sub ?? "").length > (ts || alias || "").length;
-
-  return (
-    <section className={cx("flex flex-col justify-end text-center contain-layout", className)}>
-      {tsTitle}
       <Marquee
         className="font-bold leading-normal"
         text={title?.main}

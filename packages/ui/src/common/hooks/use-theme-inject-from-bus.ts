@@ -1,28 +1,42 @@
-import { useEffect, useInsertionEffect } from "react";
+import { useEffect, useInsertionEffect, useRef } from "react";
 import { useListenable } from "./use-listenable";
 import { RendererWindow } from "@/common/lib/window";
 import { RendererIPCMessageBus } from "@/common/lib/bus";
 import RendererTheme from "@/common/player/ui";
 
 const needInject = !RendererWindow.current.isMainWindow;
+let isInjectedID = "";
 
 export function useThemeInjectFromBus() {
-  const infoBus = useListenable(RendererIPCMessageBus.theme, !needInject);
+  const themeBus = useListenable(RendererIPCMessageBus.theme, !needInject);
+  const id = useRef("");
 
   useInsertionEffect(() => {
     if (!needInject) return;
-    if (!infoBus.data?.theme) return;
+    if (!themeBus.data?.theme) return;
+    if (isInjectedID !== id.current) return;
+
+    const uuid = window.crypto.randomUUID();
+    isInjectedID = uuid;
+    id.current = uuid;
+
     RendererTheme.theme = {
-      main: infoBus.data.theme.mainColor,
-      secondary: infoBus.data.theme.secondaryColor,
-      textOnMainColor: infoBus.data.theme.textColor,
-      textColor: infoBus.data.theme.textNormalColor
+      main: themeBus.data.theme.mainColor,
+      secondary: themeBus.data.theme.secondaryColor,
+      textOnMainColor: themeBus.data.theme.textColorOnMain,
+      textOnSecondaryColor: themeBus.data.theme.textColorOnSecondary,
+      textColor: themeBus.data.theme.textNormalColor
     };
-  }, [infoBus.data?.theme]);
+    return () => {
+      isInjectedID = "";
+      id.current = "";
+    };
+  }, [themeBus.data?.theme]);
 
   useEffect(() => {
+    if (isInjectedID !== id.current) return;
     RendererIPCMessageBus.updater.deliver("theme");
   }, []);
 
-  return infoBus;
+  return themeBus;
 }

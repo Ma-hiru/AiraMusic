@@ -3,6 +3,7 @@ import { NeteaseUser, type NeteaseUserModel } from "@/common/netease/models";
 import { userStoreSnapshot } from "@/common/store/user";
 import { NeteaseServicesUser } from "@/common/netease/services/index";
 import { RendererWindow } from "@/common/lib/window";
+import { NeteaseAPIAuth } from "@/common/netease/api";
 import AppToast from "@/common/components/display/toast";
 
 export default class _NeteaseAuth {
@@ -74,5 +75,11 @@ export default class _NeteaseAuth {
         return true;
       });
     }
+  }
+
+  static checkLoggedIn() {
+    return NeteaseAPIAuth.status()
+      .then((res) => res.code === 200)
+      .catch(() => false);
   }
 }
