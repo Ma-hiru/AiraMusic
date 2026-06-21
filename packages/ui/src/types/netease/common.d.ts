@@ -4,4 +4,12 @@ namespace NeteaseAPI {
     message?: string;
     msg?: string;
   }
+
+  interface NeteaseAPIResponseNew {
+    status: number;
+    cookie: string[];
+    body: {
+      code: number;
+    };
+  }
 }

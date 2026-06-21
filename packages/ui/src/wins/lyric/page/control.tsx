@@ -29,6 +29,7 @@ type ControlProps = Omit<HTMLAttributes<HTMLDivElement>, "color"> & {
   rmActive: Optional<boolean>;
   tlActive: Optional<boolean>;
   lyric: Nullable<NeteaseLyric>;
+  themeColor?: string;
   setColor: NormalFunc<[color?: string]>;
   setLock: NormalFunc<[lock: boolean]>;
   setFontSize: NormalFunc<[size: number]>;
@@ -45,15 +46,13 @@ const Control: FC<ControlProps> = ({
   lyric,
   rmActive,
   tlActive,
+  themeColor,
   ...rest
 }) => {
   const trackMetaBus = useListenable(RendererIPCMessageBus.trackMeta);
-  const themeBus = useListenable(RendererIPCMessageBus.theme);
   const progressBus = useListenable(RendererIPCMessageBus.progress);
   const [openColorSelect, setOpenColorSelect] = useState(false);
-
   const { rmExisted, tlExisted } = lyric?.info || {};
-  const themeColor = themeBus.data?.theme.mainColor;
   const track = trackMetaBus.data?.track?.detail;
   const image = useMemo(
     () =>

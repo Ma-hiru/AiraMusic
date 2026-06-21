@@ -5,12 +5,23 @@ import { RendererShortcutConstants, type ShortcutBinding } from "@/common/consta
 export class RendererFormat {
   static count(count: Optional<number>) {
     if ((!count && count !== 0) || !Number.isFinite(count)) return "";
-    if (count >= 10000) {
-      return `${(count / 10000).toFixed(1)}w+`;
-    } else if (count >= 1000) {
-      return `${(count / 1000).toFixed(1)}k+`;
+
+    let div = 1;
+    let unit = "";
+    if (count >= 100_000_000) {
+      div = 100_000_000;
+      unit = "B";
+    } else if (count >= 10_000) {
+      div = 10_000;
+      unit = "W";
+    } else if (count >= 1_000) {
+      div = 1_000;
+      unit = "K";
     }
-    return String(count);
+
+    const res = count / div;
+
+    return `${Number.isInteger(res) ? res : res.toFixed(1)}${unit}`;
   }
 
   static time(millTimestamp: Optional<number>, split?: string) {

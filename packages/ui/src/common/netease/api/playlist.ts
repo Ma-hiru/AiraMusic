@@ -143,9 +143,24 @@ export default class _NeteasePlaylistAPI {
     type?: "NORMAL" | "VIDEO";
   }) {
     params.type ||= "NORMAL";
-    return apiRequest<any, NeteaseAPI.NeteaseAPIResponse>({
+    return apiRequest<
+      any,
+      NeteaseAPI.NeteaseAPIResponse & { playlist: NeteaseAPI.NeteasePlaylistSummary }
+    >({
       url: "/playlist/create",
       params: { ...params, timestamp: Date.now() }
+    });
+  }
+
+  /**
+   * 公开隐私歌单
+   * @desc 将当前用户的隐私歌单公开。仅支持单向操作
+   * @param id 歌单 id
+   */
+  static setPublic(id: number) {
+    return apiRequest<any, NeteaseAPI.NeteaseAPIResponse>({
+      url: "/playlist/privacy",
+      params: { id, timestamp: Date.now() }
     });
   }
 
@@ -153,7 +168,7 @@ export default class _NeteasePlaylistAPI {
    * 对歌单添加或删除歌曲
    * @desc 调用此接口 , 可以添加歌曲到歌单或者从歌单删除某首歌曲 ( 需要登录 )
    */
-  static modify(params: {
+  static modify(data: {
     /** 从歌单增加单曲为 `add`, 删除为 `del` */
     op: "add" | "del";
     /** 歌单 id */
@@ -161,10 +176,19 @@ export default class _NeteasePlaylistAPI {
     /** 歌曲 id,可多个,用逗号隔开 */
     tracks: number | number[] | string;
   }) {
-    if (Array.isArray(params.tracks)) params.tracks = params.tracks.join(",");
-    return apiRequest<any, NeteaseAPI.NeteaseAPIResponse>({
+    if (Array.isArray(data.tracks)) data.tracks = data.tracks.join(",");
+    return apiRequest<
+      any,
+      NeteaseAPI.NeteaseAPIResponseNew & {
+        body: {
+          code: number;
+        };
+      }
+    >({
       url: "/playlist/tracks",
-      params: { ...params, timestamp: Date.now() }
+      method: "POST",
+      params: { timestamp: Date.now() },
+      data: data
     });
   }
 

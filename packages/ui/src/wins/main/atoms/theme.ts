@@ -26,6 +26,11 @@ export const textColorOnMainAtom = atomWithStorage(
   RendererTheme.themeDefault.textOnMain
 );
 
+export const textColorOnSecondaryAtom = atomWithStorage(
+  "theme.textColorOnSecondary",
+  RendererTheme.themeDefault.textOnSecondary
+);
+
 export const textColorAtom = atomWithStorage("theme.textColor", RendererTheme.themeDefault.text);
 
 export const themeAtom = atom((get) => {
@@ -35,6 +40,7 @@ export const themeAtom = atom((get) => {
     mainColor: get(mainColorAtom),
     secondaryColor: get(secondaryColorAtom),
     textColorOnMain: get(textColorOnMainAtom),
+    textColorOnSecondary: get(textColorOnSecondaryAtom),
     textColor: get(textColorAtom)
   };
 });

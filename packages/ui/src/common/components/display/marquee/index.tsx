@@ -21,6 +21,7 @@ const Marquee: FC<MarqueeProps> = ({ className, text, itemClassName, options, ch
       speed: 15
     }
   );
+  if (!text && !children) return;
   return (
     <h1
       ref={titleRef}

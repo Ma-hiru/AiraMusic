@@ -8,6 +8,7 @@ import { useDisplayPageAction } from "@/wins/display/hooks/use-display-page-acti
 import { usePlayerChangeActionFromDisplay } from "@/wins/display/hooks/use-player-change-action-from-display";
 import { RendererIPCMessageBus } from "@/common/lib/bus";
 import { useDisplayTitle } from "@/wins/display/hooks/use-display-title";
+import { useTrackAddToPlaylist } from "@/common/hooks/use-track-add-to-playlist";
 
 import Artist, { type ArtistRef } from "@/common/components/page/artist";
 
@@ -31,6 +32,7 @@ const ArtistDisplay: FC<object> = () => {
     id: id!
   });
   const { updateTitle } = useDisplayTitle("artist");
+  const { addTrackToPlaylist } = useTrackAddToPlaylist();
 
   return (
     <Artist
@@ -47,6 +49,7 @@ const ArtistDisplay: FC<object> = () => {
       onPageAction={onPageAction}
       addToPlaylistNext={addTrackToPlaylistNext}
       addToPlaylistLast={addTrackToPlaylistLast}
+      addTrackToPlaylist={addTrackToPlaylist}
       openComment={openTrackComment}
       onDataLoaded={(a) => a.name && updateTitle(a.name)}
     />

@@ -13,6 +13,7 @@ import { scrollActionsAtom } from "@/wins/display/atoms/layout";
 import { RoutePathDisplay } from "@/common/routes";
 import { RendererIPCMessageBus } from "@/common/lib/bus";
 import { RendererWindow } from "@/common/lib/window";
+import { useTrackAddToPlaylist } from "@/common/hooks/use-track-add-to-playlist";
 import type { TrackListClickFunc } from "@/common/components/display/track_list";
 
 import History, { type HistoryRef } from "@/common/components/page/history";
@@ -62,6 +63,7 @@ const HistoryDisplay: FC<object> = () => {
   const { jumpArtistDisplay, jumpAlbumDisplay } = useArtistOrAlbumDisplayJump();
   const { onPageAction } = useDisplayPageAction({ type: "history" });
   const { updateTitle } = useDisplayTitle("history");
+  const { addTrackToPlaylist } = useTrackAddToPlaylist();
 
   // 注册滚动和定位回调（display 窗口）
   const active = useRouterActive(RoutePathDisplay, "history");
@@ -88,6 +90,7 @@ const HistoryDisplay: FC<object> = () => {
       openComment={openTrackComment}
       addToPlaylistLast={addTrackToPlaylistLast}
       addToPlaylistNext={addTrackToPlaylistNext}
+      addTrackToPlaylist={addTrackToPlaylist}
       heartManager={heartManager}
       playableManager={playableManager}
       activeTrackID={trackMetaBus.data?.track?.id}

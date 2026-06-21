@@ -1,6 +1,6 @@
 import { type FC, type Ref, useCallback, useEffect, useImperativeHandle } from "react";
 import { NeteaseAPISearch } from "@/common/netease/api";
-import { NeteaseImageSize, PlaylistSource, SearchType } from "@/common/enum";
+import { NeteaseImageSize, SearchType } from "@/common/enum";
 import { NeteaseServicesTrack } from "@/common/netease/services";
 import { NeteaseHistoryRecord, NeteaseTrackRecord } from "@/common/netease/models";
 import { useRequestAutoRun, useRequestStatusWrap } from "@/common/hooks/use-request-wrap";
@@ -27,6 +27,7 @@ interface TrackResultProps {
   onClickAlbum: NormalFunc<[id: number]>;
   addToPlaylistNext: NormalFunc<[track: NeteaseTrackRecord]>;
   addToPlaylistLast: NormalFunc<[track: NeteaseTrackRecord]>;
+  addTrackToPlaylist: NormalFunc<[track: NeteaseTrackRecord]>;
   openComment: NormalFunc<[track: NeteaseTrackRecord]>;
   coverSize: NeteaseImageSize;
   heartManager: HeartManager;
@@ -47,6 +48,7 @@ const TrackResult: FC<TrackResultProps> = ({
   activeTrackID,
   addToPlaylistLast,
   addToPlaylistNext,
+  addTrackToPlaylist,
   openComment,
   active,
   setCount
@@ -84,7 +86,8 @@ const TrackResult: FC<TrackResultProps> = ({
     addToPlaylistNext,
     onClickAlbum,
     onPlay: onClick,
-    openComment
+    openComment,
+    addTrackToPlaylist
   });
 
   useImperativeHandle(
@@ -109,7 +112,7 @@ const TrackResult: FC<TrackResultProps> = ({
           tracks={tracks}
           activeID={activeTrackID}
           trackCoverSize={RendererImageConstants.PlaylistPageTrackCoverSize}
-          type={PlaylistSource.Search}
+          type="normal"
           playableManager={playableManager}
           heartManager={heartManager}
           onClick={onClick}

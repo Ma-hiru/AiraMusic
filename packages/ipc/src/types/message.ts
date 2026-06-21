@@ -8,7 +8,8 @@ type MessageBus = {
     theme: {
       mainColor: string;
       secondaryColor: string;
-      textColor: string;
+      textColorOnMain: string;
+      textColorOnSecondary: string;
       textNormalColor: string;
     };
   };
@@ -130,6 +131,19 @@ type MessageBus = {
     | {
         type: "history";
       };
+  bus_modify_source:
+    | {
+        type: "playlist-update";
+        id: Nullable<number | string>;
+        source: Nullable<"like" | "normal">;
+      }
+    | {
+        type: "user-playlist";
+      }
+    | {
+        type: "remove-playlist";
+        id: Nullable<number | string>;
+      };
 };
 
 /**
@@ -139,6 +153,7 @@ type MessageBus = {
 type MessageSingle = {
   message_dispatch_login: string;
   message_dispatch_device_output_set: string;
+  message_dispatch_cache_has_clear: boolean;
 };
 
 type MessageEventValue = MessageBus & MessageSingle;

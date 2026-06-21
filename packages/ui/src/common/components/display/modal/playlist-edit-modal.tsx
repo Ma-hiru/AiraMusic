@@ -1,9 +1,9 @@
 import { type ChangeEvent, type FC, useEffect, useRef, useState } from "react";
 import { cx } from "@emotion/css";
-import { ImagePlus } from "lucide-react";
+import { Globe, ImagePlus, Lock } from "lucide-react";
 import { NeteaseAPIPlaylist } from "@/common/netease/api";
 import { NeteaseServicesPlaylist } from "@/common/netease/services";
-import { type NeteasePlaylist } from "@/common/netease/models";
+import { type NeteasePlaylist, NeteasePlaylistSummary } from "@/common/netease/models";
 import { Log } from "@/common/lib/log";
 import type { ModalRender } from "./modal-provider";
 import AppToast from "@/common/components/display/toast";
@@ -43,6 +43,10 @@ const PlaylistEditForm: FC<{
   const [preview, setPreview] = useState(playlist.coverImgUrl);
   const [saving, setSaving] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  const [isPrivate, setIsPrivate] = useState(() => NeteasePlaylistSummary.isPrivacy(playlist));
+  const [confirmingPublic, setConfirmingPublic] = useState(false);
+  const [settingPublic, setSettingPublic] = useState(false);
 
   // 拉取官方标签
   useEffect(() => {
@@ -108,13 +112,11 @@ const PlaylistEditForm: FC<{
         tags
       });
       if (coverFile) await NeteaseAPIPlaylist.updateCover(playlist.id, coverFile);
-      // 清除缓存
-      NeteaseServicesPlaylist.invalidate(playlist.id);
+      onSaved?.();
       AppToast.show({
         type: "success",
         text: "已保存"
       });
-      onSaved?.();
       AppModal.close();
     } catch (err) {
       Log.error(err);
@@ -124,6 +126,27 @@ const PlaylistEditForm: FC<{
       });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const onSetPublic = async () => {
+    if (settingPublic) return;
+    setSettingPublic(true);
+    try {
+      const res = await NeteaseAPIPlaylist.setPublic(playlist.id);
+      if (res.code !== 200) {
+        AppToast.show({ type: "info", text: res.message || res.msg || "操作失败" });
+        return;
+      }
+      setIsPrivate(false);
+      setConfirmingPublic(false);
+      onSaved?.();
+      AppToast.show({ type: "success", text: "已设为公开" });
+    } catch (err) {
+      Log.error(err);
+      AppToast.show({ type: "error", text: "操作失败，请重试" });
+    } finally {
+      setSettingPublic(false);
     }
   };
 
@@ -206,6 +229,54 @@ const PlaylistEditForm: FC<{
             })
           )}
         </div>
+      </div>
+      {/* 可见性 */}
+      <div className="flex items-center justify-between rounded-md bg-white/5 px-3 py-2">
+        <span className="flex items-center gap-2">
+          {isPrivate ? (
+            <Lock className="size-4 opacity-70" />
+          ) : (
+            <Globe className="size-4 opacity-70" />
+          )}
+          <span className="flex flex-col">
+            <span className="font-bold">{isPrivate ? "隐私歌单" : "公开歌单"}</span>
+            <span className="text-[11px] opacity-50">
+              {isPrivate ? "仅自己可见" : "已公开，网易云不支持转回隐私"}
+            </span>
+          </span>
+        </span>
+        {isPrivate &&
+          (confirmingPublic ? (
+            <span className="flex items-center gap-2">
+              <button
+                type="button"
+                disabled={settingPublic}
+                onClick={onSetPublic}
+                className="
+                  rounded-md bg-(--theme-color-main) px-3 py-1 font-bold text-(--text-color-on-main)
+                  transition-all active:scale-96 disabled:opacity-50
+                ">
+                {settingPublic ? "处理中..." : "确认公开（不可撤销）"}
+              </button>
+              <button
+                type="button"
+                disabled={settingPublic}
+                onClick={() => setConfirmingPublic(false)}
+                className="rounded-md px-3 py-1 font-bold hover:bg-white/10 transition-all active:scale-96 disabled:opacity-50">
+                取消
+              </button>
+            </span>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setConfirmingPublic(true)}
+              className="
+                rounded-md px-3 py-1 font-bold hover:text-(--text-color-on-main) hover:bg-(--theme-color-main)
+                transition-all active:scale-96
+              ">
+              设为公开
+            </button>
+          ))}
       </div>
       {/* 操作 */}
       <div className="flex justify-end gap-2">

@@ -1,4 +1,3 @@
-import { PlaylistSource } from "@/common/enum";
 import { type Location } from "react-router-dom";
 
 export class PlaylistPathUtils {
@@ -7,32 +6,36 @@ export class PlaylistPathUtils {
 
   constructor(base?: string) {
     this.base = base || "/playlist";
-    this.like = this.withQuery(null, PlaylistSource.Like);
+    this.like = this.withQuery(null, "like");
   }
 
-  withQuery(id: Optional<number | string>, source: "normal" | "like" | "history") {
+  withQuery(id: Optional<number | string>, source: "normal" | "like") {
     const search = new URLSearchParams();
     id && search.set("id", String(id));
     source && search.set("source", String(source));
     return `${this.base}?${search.toString()}`;
   }
 
-  queryCache = new Map<string, { source: Nullable<PlaylistSource>; id: Nullable<string> }>();
-  parseQuery(location: Location) {
-    if (!location.pathname.includes(this.base)) {
-      return this.queryCache.get(this.base) || { source: null, id: null };
-    }
-    const search = new URLSearchParams(location.search);
-    const result = {
-      source: null as Nullable<PlaylistSource>,
-      id: null as Nullable<string>
-    };
-    if (location.pathname.startsWith(this.base)) {
-      result.source = search.get("source") as Nullable<PlaylistSource>;
-      result.id = search.get("id");
+  queryCache: { source: Nullable<"normal" | "like">; id: Nullable<string> } = {
+    source: null,
+    id: null
+  };
+  parseQuery(location: Location, cache = true) {
+    if (!location.pathname.startsWith(this.base)) {
+      if (cache) return this.queryCache;
+      return {
+        source: null,
+        id: null
+      };
     }
 
-    this.queryCache.set(this.base, result);
+    const search = new URLSearchParams(location.search);
+    const result = {
+      source: search.get("source") as Nullable<"normal" | "like">,
+      id: search.get("id")
+    };
+    cache && (this.queryCache = result);
+
     return result;
   }
 }

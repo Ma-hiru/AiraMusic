@@ -1,16 +1,9 @@
 import { type FC, memo, useCallback, useEffect } from "react";
-import {
-  AppWindow as AppWindowIcon,
-  Minus,
-  PictureInPicture,
-  Square,
-  SquareMinus,
-  X
-} from "lucide-react";
+import { PictureInPicture } from "lucide-react";
 import { useListenable } from "@/common/hooks/use-listenable";
 import { RendererWindow } from "@/common/lib/window";
 import RendererPlayerHandle from "@/wins/main/lib/handle";
-import NoDrag from "@/common/components/layout/drag/no-drag";
+import Control from "@/common/components/layout/top/control";
 
 const TopControl: FC = () => {
   const currentWindow = useListenable(RendererWindow.current);
@@ -19,7 +12,7 @@ const TopControl: FC = () => {
   const close = useCallback(async () => {
     RendererWindow.current.hide();
     RendererWindow.all.hide();
-    RendererPlayerHandle.dispose();
+    RendererPlayerHandle[Symbol.dispose]();
     RendererWindow.current.close();
   }, []);
 
@@ -27,7 +20,6 @@ const TopControl: FC = () => {
     RendererWindow.mini.show();
     RendererWindow.mini.focus();
     RendererWindow.current.hide();
-    RendererPlayerHandle.busUpdater?.();
   }, []);
 
   useEffect(() => {
@@ -40,48 +32,13 @@ const TopControl: FC = () => {
   }, [currentWindow, miniWindow]);
 
   return (
-    <NoDrag className="flex flex-row gap-4 select-none">
-      <ControlButton
-        show={import.meta.env.DEV}
-        Icon={AppWindowIcon}
-        onClick={() => currentWindow.devTools()}
-      />
-      <ControlButton Icon={Minus} onClick={() => currentWindow.minimize()} />
-      <ControlButton Icon={PictureInPicture} onClick={mini} />
-      <ControlButton
-        show={currentWindow.isMax}
-        Icon={SquareMinus}
-        onClick={() => currentWindow.unmaximize()}
-      />
-      <ControlButton
-        show={!currentWindow.isMax}
-        Icon={Square}
-        onClick={() => currentWindow.maximize()}
-      />
-      <ControlButton Icon={X} onClick={close} />
-    </NoDrag>
-  );
-};
-
-type ControlButtonProps = {
-  Icon: ButtonItem;
-  show?: boolean;
-  onClick?: NormalFunc;
-};
-
-type ButtonItem = FC<{
-  className: string;
-  onClick?: NormalFunc;
-}>;
-
-const ControlButton: FC<ControlButtonProps> = ({ Icon, onClick, show = true }) => {
-  return (
-    show && (
-      <Icon
-        className="size-5 cursor-pointer hover:opacity-50 ease-in-out transition-all duration-300 active:scale-85"
-        onClick={onClick}
-      />
-    )
+    <Control
+      onClose={close}
+      appends={{
+        icon: PictureInPicture,
+        onClick: mini
+      }}
+    />
   );
 };
 

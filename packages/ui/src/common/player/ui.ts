@@ -9,6 +9,7 @@ export default class RendererTheme {
   static readonly themeCSSNameMain = "--theme-color-main";
   static readonly themeCSSNameSecondary = "--theme-color-secondary";
   static readonly themeCSSNameTextOnMain = "--text-color-on-main";
+  static readonly themeCSSNameTextOnSecondary = "--text-color-on-secondary";
   static readonly themeCSSNameText = "--text-color";
   private static readonly listener = new Listener();
 
@@ -26,6 +27,9 @@ export default class RendererTheme {
     const main = styles.getPropertyValue(this.themeCSSNameMain).trim() || this.themeDefault.main;
     const textOnMainColor =
       styles.getPropertyValue(this.themeCSSNameTextOnMain).trim() || this.themeDefault.textOnMain;
+    const textOnSecondaryColor =
+      styles.getPropertyValue(this.themeCSSNameTextOnSecondary).trim() ||
+      this.themeDefault.textOnSecondary;
     const secondary =
       styles.getPropertyValue(this.themeCSSNameSecondary).trim() || this.themeDefault.secondary;
     const textColor =
@@ -35,15 +39,20 @@ export default class RendererTheme {
       main,
       secondary,
       textOnMainColor,
+      textOnSecondaryColor,
       textColor
     };
   }
 
   static set theme(colors) {
-    const { main, secondary, textOnMainColor, textColor } = colors;
+    const { main, secondary, textOnMainColor, textColor, textOnSecondaryColor } = colors;
     document.documentElement.style.setProperty(this.themeCSSNameMain, main);
     document.documentElement.style.setProperty(this.themeCSSNameSecondary, secondary);
     document.documentElement.style.setProperty(this.themeCSSNameTextOnMain, textOnMainColor);
+    document.documentElement.style.setProperty(
+      this.themeCSSNameTextOnSecondary,
+      textOnSecondaryColor
+    );
     document.documentElement.style.setProperty(this.themeCSSNameText, textColor);
   }
 
@@ -52,17 +61,19 @@ export default class RendererTheme {
       main: "#ff3b5c",
       textOnMain: "#000000",
       secondary: "#ff6b81",
-      text: "#000000"
+      text: "#000000",
+      textOnSecondary: "#000000"
     };
   }
 
   static get themeInstance() {
-    const { main, secondary, textOnMainColor, textColor } = this.theme;
+    const { main, secondary, textOnMainColor, textColor, textOnSecondaryColor } = this.theme;
     return {
       main: Color(main),
       secondary: Color(secondary),
       textOnMainColor: Color(textOnMainColor),
-      textColor: Color(textColor)
+      textColor: Color(textColor),
+      textOnSecondaryColor: Color(textOnSecondaryColor)
     };
   }
 

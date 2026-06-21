@@ -12,7 +12,7 @@ import PhoneCaptcha from "./phone-captcha";
 import LoginTabs from "./login-tabs";
 import Drag from "@/common/components/layout/drag/drag";
 import NoDrag from "@/common/components/layout/drag/no-drag";
-import TopControlPure from "@/common/components/layout/top/control";
+import Control from "@/common/components/layout/top/control";
 import AcrylicBackground from "@/common/components/display/acrylic-background";
 import AppToast from "@/common/components/display/toast";
 
@@ -59,7 +59,7 @@ export default function LoginPage() {
         />
       </div>
       <Drag className="w-screen h-6 flex items-center justify-end absolute top-0 left-0 right-0 p-6 px-5">
-        <TopControlPure maximizable={false} />
+        <Control max={false} />
       </Drag>
       <div className="w-full h-full flex flex-col items-center justify-center gap-2 py-10">
         <NoDrag className="shrink-0">

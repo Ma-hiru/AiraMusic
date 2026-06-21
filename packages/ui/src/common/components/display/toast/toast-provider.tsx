@@ -18,6 +18,10 @@ const ToastProvider = ({
     const id = window.crypto.randomUUID();
     startTransition(() => {
       setItems((prev) => {
+        // 去重
+        const find = prev.find((item) => item.text === data.text && item.type === data.type);
+        if (find) return prev;
+
         const newItems = [...prev, { ...data, id }];
         newItems.length > 5 && newItems.shift();
         return newItems;

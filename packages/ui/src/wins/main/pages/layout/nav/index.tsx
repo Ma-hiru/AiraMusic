@@ -5,6 +5,7 @@ import { useStage } from "@/common/hooks/use-stage";
 import { Stage } from "@/common/enum";
 import { useAtomValue } from "jotai";
 import { sidebarAtom } from "@/wins/main/atoms/layout";
+import { RendererIPCMessageBus } from "@/common/lib/bus";
 
 import NavMenu from "./nav-menu";
 import NavFloat from "./float";
@@ -24,13 +25,19 @@ const Nav: FC<object> = () => {
 
   const onScrollTop = useCallback(() => playlistRef.current?.scrollTop(), []);
 
+  const onCreated = useCallback(() => {
+    RendererIPCMessageBus.modified.twoWay({
+      type: "user-playlist"
+    });
+  }, []);
+
   return (
     <section
       className={cx(
         `
           flex flex-col relative
           pb-(--playbar-height) pt-[calc(var(--top-control-height)+10px)]  overflow-hidden
-          backdrop-saturate-120 backdrop-blur-lg contain-strict
+          backdrop-saturate-150 backdrop-blur-lg contain-strict
           ease-in-out duration-300 transition-all
           border-r border-r-gray-500/10 bg-[#f0f3f6]/20
         `,
@@ -57,6 +64,7 @@ const Nav: FC<object> = () => {
         canScroll={canScrollTop}
         sideBar={sidebar}
         onScrollTop={onScrollTop}
+        onCreated={onCreated}
       />
     </section>
   );

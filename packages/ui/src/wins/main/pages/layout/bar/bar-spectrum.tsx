@@ -23,12 +23,8 @@ const BarSpectrum: FC<object> = () => {
       gap={1}
       renderer="webgl-rust"
       heightScale={0.9}
-      color={mainColor.isLight() ? mainColor.alpha(0.1).string() : mainColor.alpha(0.6).string()}
-      secondaryColor={
-        secondaryColor.isLight()
-          ? secondaryColor.alpha(0.5).string()
-          : secondaryColor.alpha(0.8).string()
-      }
+      color={mainColor.string()}
+      secondaryColor={secondaryColor.string()}
       className="w-full h-full"
       spectrumOptions={{
         numBands: 300,

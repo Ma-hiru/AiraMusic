@@ -54,8 +54,8 @@ const TopLeft: FC<TopLeftProps> = ({ user }) => {
             key="user"
             className="w-full h-full flex flex-row px-3 relative top-1 select-none"
             initial={{ opacity: 0 }}
-            exit={{ opacity: 0, transition: { ease: "easeIn", duration: 0.6 } }}
-            animate={{ opacity: 1, transition: { ease: "easeIn", duration: 0.6 } }}>
+            exit={{ opacity: 0, transition: { ease: "easeInOut", duration: 0.5 } }}
+            animate={{ opacity: 1, transition: { ease: "easeInOut", duration: 0.3 } }}>
             <div
               className={`
                 w-[calc(50%-var(--spacing)*3)] flex justify-center items-center
@@ -94,8 +94,8 @@ const TopLeft: FC<TopLeftProps> = ({ user }) => {
             key="back"
             className="w-20 h-full flex items-center justify-center  cursor-pointer"
             initial={{ opacity: 0 }}
-            exit={{ opacity: 0, transition: { ease: "easeIn", duration: 0.6 } }}
-            animate={{ opacity: 1, transition: { ease: "easeIn", duration: 0.6 } }}>
+            exit={{ opacity: 0, transition: { ease: "easeInOut", duration: 0.3 } }}
+            animate={{ opacity: 1, transition: { ease: "easeInOut", duration: 0.6 } }}>
             <NoDrag onClick={onClick}>
               <ChevronDown className="size-5 hover:opacity-50 active:scale-90 ease-in-out duration-300 transition-all text-white" />
             </NoDrag>

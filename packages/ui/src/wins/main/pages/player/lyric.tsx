@@ -1,8 +1,8 @@
 import { type FC, memo, useCallback, useEffect, useMemo, useRef } from "react";
-
-import LyricComponent, { type LyricRef } from "@/common/components/display/lyric/lyric-container";
-import RendererPlayerHandle from "@/wins/main/lib/handle";
 import { useTailwindMediaQuery } from "@/common/hooks/use-tailwind-media-query";
+
+import LyricComponent, { type LyricRef } from "@/common/components/display/lyric";
+import RendererPlayerHandle from "@/wins/main/lib/handle";
 
 const Lyric: FC<object> = () => {
   const player = RendererPlayerHandle.usePlayer();

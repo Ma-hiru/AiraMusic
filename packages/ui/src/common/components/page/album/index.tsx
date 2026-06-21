@@ -9,7 +9,7 @@ import {
 } from "react";
 import { NeteaseAlbum, NeteaseHistoryRecord, NeteaseTrackRecord } from "@/common/netease/models";
 import { cx } from "@emotion/css";
-import { NeteaseImageSize, PlaylistSource } from "@/common/enum";
+import { NeteaseImageSize } from "@/common/enum";
 import { type HeartManager } from "@/common/hooks/use-heart";
 import { NeteaseServicesAlbum } from "@/common/netease/services";
 import { useRequestAutoRun, useRequestStatusWrap } from "@/common/hooks/use-request-wrap";
@@ -44,6 +44,7 @@ interface AlbumPageProps {
   onCoverLoaded?: NormalFunc<[cover: string]>;
   addToPlaylistNext: NormalFunc<[track: NeteaseTrackRecord]>;
   addToPlaylistLast: NormalFunc<[track: NeteaseTrackRecord]>;
+  addTrackToPlaylist: NormalFunc<[track: NeteaseTrackRecord]>;
   openComment: NormalFunc<[track: NeteaseTrackRecord]>;
   className?: string;
   coverSize: NeteaseImageSize;
@@ -74,7 +75,8 @@ const Album: FC<AlbumPageProps> = ({
   addToPlaylistNext,
   addToPlaylistLast,
   openComment,
-  onDataLoaded
+  onDataLoaded,
+  addTrackToPlaylist
 }) => {
   const requestData = useCallback(async (id: number) => {
     if (!id) return Promise.resolve([null, null]);
@@ -120,7 +122,8 @@ const Album: FC<AlbumPageProps> = ({
     addToPlaylistNext,
     onClickAlbum,
     onPlay: onClick,
-    openComment
+    openComment,
+    addTrackToPlaylist
   });
 
   useEffect(() => {
@@ -149,7 +152,7 @@ const Album: FC<AlbumPageProps> = ({
               ref={trackListRef}
               tracks={album.tracks}
               id={album.content.id}
-              type={PlaylistSource.Album}
+              type="album"
               activeID={activeTrackID}
               onClick={onClick}
               onContext={onContextMenu}

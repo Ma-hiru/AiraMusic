@@ -6,6 +6,7 @@ import { useDisplayAction } from "@/wins/main/hooks/use-display-action";
 import { usePlayerActionInList } from "@/wins/main/hooks/use-player-action-in-list";
 import { useSetBackground } from "@/wins/main/hooks/use-set-background";
 import { useUserTrackManager } from "@/common/hooks/use-user-track-manager";
+import { useTrackAddToPlaylist } from "@/common/hooks/use-track-add-to-playlist";
 
 import Artist, { type ArtistRef } from "@/common/components/page/artist";
 
@@ -24,6 +25,7 @@ const ArtistPage: FC<object> = () => {
     id: id!,
     type: "artist"
   });
+  const { addTrackToPlaylist } = useTrackAddToPlaylist();
 
   return (
     <Artist
@@ -41,6 +43,7 @@ const ArtistPage: FC<object> = () => {
       onPageAction={onPageAction}
       addToPlaylistNext={addTrackToPlaylistNext}
       addToPlaylistLast={addTrackToPlaylistLast}
+      addTrackToPlaylist={addTrackToPlaylist}
       openComment={openTrackComment}
     />
   );

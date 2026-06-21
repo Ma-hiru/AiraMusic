@@ -34,6 +34,11 @@ export abstract class MessageBus<
     }
   }
 
+  twoWay(data: MessageData<T>, target = this.defaultTarget) {
+    this.deliver(data, target);
+    this.dispatch(data);
+  }
+
   dispatch(data: MessageData<T>) {
     this.append(data);
     this.executeListeners();
@@ -99,6 +104,7 @@ export class RendererIPCMessageBus {
   static readonly output = new MessageBusObj("bus_deliver_device_output_views", "display");
   static readonly history = new MessageBusObj("bus_deliver_history", "display");
   static readonly preview = new MessageBusArray("bus_deliver_preview", "image");
+  static readonly modified = new MessageBusArray("bus_modify_source", ["main", "display"]);
 
   static consume(type: MessageBusEvent) {
     for (const ins of Object.values(this) as MessageBus<any>[]) {

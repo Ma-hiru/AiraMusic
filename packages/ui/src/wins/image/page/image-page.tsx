@@ -3,9 +3,10 @@ import { type FC, memo, useCallback, useEffect, useState } from "react";
 import { useAppLoaded } from "@/common/hooks/use-app-loaded";
 import { useListenable } from "@/common/hooks/use-listenable";
 import { RendererIPCMessageBus } from "@/common/lib/bus";
+import { useThemeInjectFromBus } from "@/common/hooks/use-theme-inject-from-bus";
 import Drag from "@/common/components/layout/drag/drag";
 import ImageViewer, { type ImageViewerEntry } from "@/common/components/display/image/image-viewer";
-import TopControlPure from "@/common/components/layout/top/control";
+import Control from "@/common/components/layout/top/control";
 import AppToast from "@/common/components/display/toast";
 
 type ImageGalleryState = {
@@ -43,6 +44,7 @@ const ImagePage: FC = () => {
   }, [previewBus.data, previewBus.type]);
 
   useAppLoaded();
+  useThemeInjectFromBus();
 
   const handleIndexChange = useCallback((nextIndex: number) => {
     setGallery((prev) => {
@@ -70,7 +72,7 @@ const ImagePage: FC = () => {
           `,
           showToolBar ? "translate-y-0 opacity-100" : "-translate-y-4 opacity-0"
         )}>
-        <TopControlPure
+        <Control
           color="#ffffff"
           className="
             rounded-md border border-white/10 bg-black/35 px-3 py-1.5

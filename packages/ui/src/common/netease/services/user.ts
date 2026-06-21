@@ -1,11 +1,17 @@
 import { Log } from "@/common/lib/log";
-import { NeteaseCookie, NeteaseUser } from "@/common/netease/models";
+import {
+  NeteaseCookie,
+  NeteasePlaylistSummary,
+  NeteaseUser,
+  type NeteaseUserModel
+} from "@/common/netease/models";
 import { NeteaseAPIAuth, NeteaseAPIUser } from "@/common/netease/api";
+import { userStoreSnapshot } from "@/common/store/user";
 
 export default class _NeteaseUserSource {
   private static async getUserPlaylist(uid: number) {
     if (uid) {
-      const { playlist } = await NeteaseAPIUser.playlist({ uid, limit: 30 });
+      const { playlist } = await NeteaseAPIUser.playlist({ uid });
       const userPlaylists: NeteaseAPI.NeteasePlaylistSummary[] = [];
       const starPlaylists: NeteaseAPI.NeteasePlaylistSummary[] = [];
       const likedPlaylist: NeteaseAPI.NeteasePlaylistSummary = playlist.shift()!;
@@ -76,6 +82,19 @@ export default class _NeteaseUserSource {
     } catch (err) {
       Log.error(`refresh user info error: ${err}`);
       return null;
+    }
+  }
+
+  static async refreshUserPlaylist(user: NeteaseUserModel) {
+    if (!NeteaseCookie.isLoggedIn()) return null;
+    const playlist = await _NeteaseUserSource.getUserPlaylist(user.userId);
+    if (playlist) {
+      userStoreSnapshot().updateUser({
+        ...user,
+        userPlaylists: playlist.userPlaylists.map(NeteasePlaylistSummary.fromNeteaseAPI),
+        starPlaylists: playlist.starPlaylists.map(NeteasePlaylistSummary.fromNeteaseAPI),
+        likedPlaylist: NeteasePlaylistSummary.fromNeteaseAPI(playlist.likedPlaylist)
+      });
     }
   }
 

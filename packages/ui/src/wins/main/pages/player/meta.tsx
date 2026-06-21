@@ -41,7 +41,11 @@ const Meta: FC<ArtistProps> = ({ className }) => {
 
   useEffect(() => {
     const id = track?.id;
-    if (!id) return;
+    if (!id) {
+      setCommentCount(null);
+      setRedCount(null);
+      return;
+    }
 
     let cancel = false;
     NeteaseAPITrack.redCount(id)
@@ -77,56 +81,51 @@ const Meta: FC<ArtistProps> = ({ className }) => {
   return (
     <section
       className={cx(
-        "relative flex justify-between gap-1 items-center flex-nowrap mt-px contain-layout",
+        "relative flex flex-row justify-between gap-1 items-center flex-nowrap contain-layout",
         className
       )}>
-      <div className="flex-1">
+      <div className="flex-1 flex justify-start gap-1">
         {quality && (
           <Tag
             text={quality}
-            className="w-fit! text-(--text-color)! bg-(--text-color)/30! text-[9px]"
+            className="w-fit! text-(--text-color)! bg-(--text-color)/30! text-[70%]"
           />
         )}
       </div>
-      <div
-        className={cx(
-          "shrink-0 flex justify-center items-center gap-3.5 xl:gap-4",
-          redCount === null && commentCount === null && "gap-1!"
-        )}>
-        <section className="relative">
+      <div className={cx("shrink-0 flex justify-center items-center gap-1")}>
+        <section
+          className={cx(
+            "flex justify-center items-center gap-1 bg-white/30 rounded-full px-1.5 py-px hover:opacity-50 active:scale-98 cursor-pointer ease-in-out duration-300 transition-all",
+            redCount === null && "bg-transparent!"
+          )}
+          onClick={starTrack}>
+          {redCount !== null && (
+            <span className="text-[70%] leading-normal">{RendererFormat.count(redCount)}</span>
+          )}
           <Heart
             color={checkLiked(track) ? "currentColor" : undefined}
             fill={checkLiked(track) ? "currentColor" : "transparent"}
-            className="size-3.5 xl:size-4 hover:opacity-50 active:scale-98 cursor-pointer ease-in-out duration-300 transition-all"
-            onClick={starTrack}
+            className="size-3.5 xl:size-4"
           />
-          {redCount !== null && (
-            <span
-              className={cx(
-                "absolute font-black left-1/2 -translate-x-[40%] bottom-[75%] text-[7.5px] lg:bottom-[85%]"
-              )}>
-              {RendererFormat.count(redCount)}
-            </span>
-          )}
         </section>
-        <section className="relative">
+        <section
+          className={cx(
+            "flex justify-center items-center gap-1 bg-white/30 rounded-full px-1.5 py-px hover:opacity-50 active:scale-98 cursor-pointer ease-in-out duration-300 transition-all",
+            commentCount === null && "bg-transparent!"
+          )}
+          onClick={openComment}>
+          {commentCount !== null && (
+            <span className="text-[70%] leading-normal">{RendererFormat.count(commentCount)}</span>
+          )}
           <MessageSquare
             color="currentColor"
             fill="currentColor"
-            onClick={openComment}
-            className="size-3.5 xl:size-4 scale-90 hover:opacity-50 active:scale-88 cursor-pointer ease-in-out duration-300 transition-all"
+            className="size-3.5 scale-90 xl:size-4"
           />
-          {commentCount !== null && (
-            <span
-              className={cx(
-                "absolute font-black left-1/2 -translate-x-[40%] bottom-[75%] text-[7.5px] lg:bottom-[85%]"
-              )}>
-              {RendererFormat.count(commentCount)}
-            </span>
-          )}
         </section>
       </div>
     </section>
   );
 };
+
 export default memo(Meta);

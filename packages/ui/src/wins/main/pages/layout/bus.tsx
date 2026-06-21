@@ -9,14 +9,15 @@ import {
 } from "@/common/netease/services";
 import { NeteaseTrackRecord } from "@/common/netease/models";
 import { Log } from "@/common/lib/log";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { RoutePath, RoutePathMain } from "@/common/routes";
-import { PlaylistSource } from "@/common/enum";
 import { useAtomValue } from "jotai";
 import { themeAtom } from "@/wins/main/atoms/theme";
 import { useAudioOutput } from "@/common/hooks/use-audio-output";
 import { useLatestRef } from "@/common/hooks/use-latest-ref";
 import { RendererDevice } from "@/common/lib/device";
+import { RendererModified } from "@/common/lib/modified";
+import { useUser } from "@/common/store/user";
 import type { MessageData } from "@mahiru/ipc/types";
 import RendererPlayerHandle from "@/wins/main/lib/handle";
 
@@ -30,7 +31,7 @@ const Bus: FC<object> = () => {
   const updateProgressBus = useCallback(() => {
     RendererIPCMessageBus.progress.deliver(player.audio.progress);
   }, [player.audio.progress]);
-  const updatePlayerBus = useCallback(() => {
+  const updateMetaBus = useCallback(() => {
     RendererIPCMessageBus.trackMeta.deliver({
       track: player.current.track,
       lyric: player.current.lyric,
@@ -42,13 +43,14 @@ const Bus: FC<object> = () => {
       status: player.statusText
     });
   }, [player]);
-  const updateInfoBus = useCallback(() => {
+  const updateThemeBus = useCallback(() => {
     RendererIPCMessageBus.theme.deliver({
       backgroundCover: theme.backgroundCover ?? undefined,
       theme: {
         mainColor: theme.mainColor,
         secondaryColor: theme.secondaryColor,
-        textColor: theme.textColorOnMain,
+        textColorOnMain: theme.textColorOnMain,
+        textColorOnSecondary: theme.textColorOnSecondary,
         textNormalColor: theme.textColor
       }
     });
@@ -57,7 +59,8 @@ const Bus: FC<object> = () => {
     theme.mainColor,
     theme.secondaryColor,
     theme.textColor,
-    theme.textColorOnMain
+    theme.textColorOnMain,
+    theme.textColorOnSecondary
   ]);
   useEffect(() => {
     player.audio.addEventListener("timeupdate", updateProgressBus, { passive: true });
@@ -73,8 +76,8 @@ const Bus: FC<object> = () => {
       player.audio.removeEventListener("loadstart", updateProgressBus);
     };
   }, [player.audio, updateProgressBus]);
-  useEffect(() => player.addListener(updatePlayerBus), [player, updatePlayerBus]);
-  useEffect(updateInfoBus, [updateInfoBus]);
+  useEffect(() => player.addListener(updateMetaBus), [player, updateMetaBus]);
+  useEffect(updateThemeBus, [updateThemeBus]);
 
   // 2. historyBus 播放历史推送（仅display）
   const updateHistoryBus = useCallback(() => {
@@ -117,10 +120,11 @@ const Bus: FC<object> = () => {
   useEffect(updateOutputs, [updateOutputs]);
 
   const updateBus = useLatestRef(() => {
-    updatePlayerBus();
+    updateMetaBus();
     updateProgressBus();
-    updateInfoBus();
+    updateThemeBus();
     updateOutputs();
+    updateHistoryBus();
   });
   //#endregion
 
@@ -131,6 +135,8 @@ const Bus: FC<object> = () => {
   useEffect(() => {
     const actions = playerActionBus.data;
     if (actions.length === 0) return;
+    RendererIPCMessageBus.consume(playerActionBus.type);
+
     for (const action of actions) {
       switch (action) {
         case "play":
@@ -161,7 +167,6 @@ const Bus: FC<object> = () => {
           break;
       }
     }
-    RendererIPCMessageBus.consume(playerActionBus.type);
   }, [
     player.audio,
     player.playlist,
@@ -176,16 +181,18 @@ const Bus: FC<object> = () => {
   useEffect(() => {
     const actions = mainBusUpdater.data;
     if (actions.length === 0) return;
+    RendererIPCMessageBus.consume(mainBusUpdater.type);
+
     for (const action of actions) {
       switch (action) {
         case "track-meta":
-          updatePlayerBus();
+          updateMetaBus();
           break;
         case "track-progress":
           updateProgressBus();
           break;
         case "theme":
-          updateInfoBus();
+          updateThemeBus();
           break;
         case "output":
           updateOutputs();
@@ -195,10 +202,9 @@ const Bus: FC<object> = () => {
           break;
       }
     }
-    RendererIPCMessageBus.consume(mainBusUpdater.type);
   }, [
-    updateInfoBus,
-    updatePlayerBus,
+    updateThemeBus,
+    updateMetaBus,
     updateProgressBus,
     updateOutputs,
     updateHistoryBus,
@@ -284,11 +290,12 @@ const Bus: FC<object> = () => {
   useEffect(() => {
     const changes = playlistActionBus.data;
     if (changes.length === 0) return;
+    RendererIPCMessageBus.consume(playlistActionBus.type);
+
     // 添加变更数据到队列
     appliedChangesQueue.current.push(...changes);
     // 启动变更应用
     void applyPlayerChanges();
-    RendererIPCMessageBus.consume(playlistActionBus.type);
   }, [applyPlayerChanges, playlistActionBus.data, playlistActionBus.type]);
 
   // 4. 处理 display 合并消息
@@ -309,7 +316,7 @@ const Bus: FC<object> = () => {
           navigate(
             RoutePathMain.playlist.withQuery(
               action.id,
-              action.source === "like" ? PlaylistSource.Like : PlaylistSource.Normal
+              action.source === "like" ? "like" : "normal"
             )
           );
           break;
@@ -334,15 +341,50 @@ const Bus: FC<object> = () => {
       }
     );
   }, [setDevice, viewsRef]);
-  //#endregion
 
-  // 将bus更新函数挂载，可以在其他地方使用
+  // 6. 处理资源修改重载请求
+  const modifiedBus = useListenable(RendererIPCMessageBus.modified);
+  // 用 ref 读取最新 user/location 不然容易依赖循环
+  const userRef = useLatestRef(useUser());
+  const locationRef = useLatestRef(useLocation());
   useEffect(() => {
-    RendererPlayerHandle.busUpdater = () => updateBus.current();
-    return () => {
-      RendererPlayerHandle.busUpdater = undefined;
-    };
-  }, [updateBus]);
+    const modifies = modifiedBus.data;
+    if (modifies.length === 0) return;
+    RendererIPCMessageBus.consume(modifiedBus.type);
+
+    for (const m of modifies) {
+      switch (m.type) {
+        case "playlist-update":
+          RendererModified.mark({
+            type: "playlist",
+            id: m.id,
+            source: m.source
+          });
+          break;
+        case "user-playlist": {
+          const user = userRef.current;
+          user &&
+            RendererModified.mark({
+              type: "userPlaylist",
+              user
+            });
+          break;
+        }
+        case "remove-playlist": {
+          const { id } = RoutePathMain.playlist.parseQuery(locationRef.current, false);
+          if (id !== m.id) break;
+          RendererModified.mark({
+            navigate,
+            type: "removePlaylist",
+            id: m.id,
+            homePath: RoutePathMain.home
+          });
+          break;
+        }
+      }
+    }
+  }, [modifiedBus.data, modifiedBus.type, navigate, userRef, locationRef]);
+  //#endregion
 
   return null;
 };

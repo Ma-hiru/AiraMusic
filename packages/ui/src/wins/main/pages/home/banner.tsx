@@ -1,5 +1,5 @@
 import { type FC, memo, useCallback, useMemo } from "react";
-import { BannerType, PlaylistSource } from "@/common/enum";
+import { BannerType } from "@/common/enum";
 import { NeteaseTrackRecord, NeteaseURL } from "@/common/netease/models";
 import { useNavigate } from "react-router-dom";
 import { NeteaseAPIHome } from "@/common/netease/api";
@@ -57,7 +57,7 @@ const Banner: FC<BannerProps> = ({ className }) => {
           return;
         }
         case BannerType.playlist: {
-          navigate(RoutePathMain.playlist.withQuery(id, PlaylistSource.Normal));
+          navigate(RoutePathMain.playlist.withQuery(id, "normal"));
           return;
         }
         case BannerType.album:

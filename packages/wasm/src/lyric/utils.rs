@@ -125,6 +125,24 @@ const BACK_CHORUS_PREDICATE_CHARS: [(&str, &str); 11] = [
     ("‘", "’"),
 ];
 
+/// 跨行对唱/背景检测使用的符号：只保留「左右不同」的成对符号。
+///
+/// 直引号 `"` / `'` 左右相同，且常在一行中间成对出现（如 `"きっときっと" そうやって今も`）。
+/// 若把它们当作跨行起止符，会把一个行首引号一直配到很多行之后的另一个引号，
+/// 导致中间多行被错误并入背景（见 STYX HELIX）。整行被同一对直引号包裹的情况仍由
+/// 单行 `isBackChorus` 覆盖，因此这里安全地排除直引号。
+const MULTI_LINE_BACK_CHORUS_PREDICATE_CHARS: [(&str, &str); 9] = [
+    ("[", "]"),
+    ("(", ")"),
+    ("（", "）"),
+    ("【", "】"),
+    ("〖", "〗"),
+    ("「", "」"),
+    ("『", "』"),
+    ("“", "”"),
+    ("‘", "’"),
+];
+
 /// 行内注音只接受普通括号。
 ///
 /// 其它括号如 `【】`、`〖〗` 在歌词里更常见于翻译或强调文本，不作为日语 ruby 注音候选。
@@ -191,7 +209,7 @@ impl LyricLineInfo {
             }
 
             if let Some((_, right)) =
-                Self::find_start_predicate(&line, &BACK_CHORUS_PREDICATE_CHARS)
+                Self::find_start_predicate(&line, &MULTI_LINE_BACK_CHORUS_PREDICATE_CHARS)
                 && !line.ends_with(right)
             {
                 start = Some((i, right));
@@ -337,6 +355,80 @@ impl LyricLineInfo {
     }
 }
 
+/// 把单个 word 里「内嵌的假名注音」拆成独立的 word。
+///
+/// 网易云逐字歌词（yrc）里注音本就是独立 word（`声` / `（こえ）`），但纯 LRC
+/// 常把假名写在同一行字符串里（如 `儚（はかな）い日々（ひび）`），整行只有一个 word，
+/// 现有按 word 边界做的注音检测就抓不到。这里把形如 `…（かな）…` 的假名括号片段单独切出来，
+/// 让后续 `inline_note_ranges` 能像处理 yrc 一样识别注音。
+///
+/// 只切「括号内确为假名」的片段，普通英文/中文括号（如 `(translation)`）保持不动，
+/// 避免破坏非注音文本。括号内容不是假名时原样保留。
+fn split_word_furigana(word: &str) -> Vec<String> {
+    let chars: Vec<char> = word.chars().collect();
+    let mut parts: Vec<String> = Vec::new();
+    let mut buf = String::new();
+    let mut i = 0;
+
+    while i < chars.len() {
+        let close = match chars[i] {
+            '（' => Some('）'),
+            '(' => Some(')'),
+            _ => None,
+        };
+
+        if let Some(close_ch) = close
+            && let Some(j) = (i + 1..chars.len()).find(|&k| chars[k] == close_ch)
+        {
+            let content: String = chars[i + 1..j].iter().collect();
+            if LyricLineInfo::is_inline_note_content(content.trim()) {
+                if !buf.is_empty() {
+                    parts.push(std::mem::take(&mut buf));
+                }
+                parts.push(chars[i..=j].iter().collect());
+                i = j + 1;
+                continue;
+            }
+        }
+
+        buf.push(chars[i]);
+        i += 1;
+    }
+
+    if !buf.is_empty() {
+        parts.push(buf);
+    }
+    if parts.is_empty() {
+        parts.push(String::new());
+    }
+    parts
+}
+
+/// 对一行内所有 word 应用 [`split_word_furigana`]，拆出的片段沿用原 word 的时间轴。
+///
+/// 幂等：已经是独立注音 word（如 `（こえ）`）再次调用不会继续拆分。
+fn split_line_furigana(line: &mut LyricLine) {
+    if line.words.len() == 1 && !line.words[0].word.contains(['（', '(']) {
+        return;
+    }
+
+    let mut new_words = Vec::with_capacity(line.words.len());
+    for word in &line.words {
+        let parts = split_word_furigana(&word.word);
+        if parts.len() <= 1 {
+            new_words.push(word.clone());
+            continue;
+        }
+        for part in parts {
+            let mut next = word.clone();
+            next.word = part;
+            next.inlineNote = None;
+            new_words.push(next);
+        }
+    }
+    line.words = new_words;
+}
+
 impl Lyric {
     /// 更新整首歌词的派生信息。
     ///
@@ -344,6 +436,8 @@ impl Lyric {
     /// 这样多次调用保持幂等，不会因为上一次写入的 `inlineNote` 干扰本次判断。
     pub fn update_extra_info(&mut self) {
         for line in self.data.iter_mut() {
+            // 先把纯 LRC 里内嵌的假名注音拆成独立 word，注音检测才能识别（见 Across the Destiny）。
+            split_line_furigana(line);
             line.update_line_info();
         }
         for (s, e) in self.is_back_chorus_with_multi_line() {
@@ -555,6 +649,88 @@ mod test {
         assert!(LyricLineInfo::isBackChorus(" 「xxxxxx」 ".into()));
         assert!(LyricLineInfo::isBackChorus(" “xxxxxx” ".into()));
         assert!(!LyricLineInfo::isBackChorus(" 「xxxxxx） ".into()));
+    }
+
+    #[test]
+    fn test_multiline_back_chorus_ignores_straight_quotes() {
+        // STYX HELIX: 行内的直引号 "きっときっと" 不应开启一段跨越多行的背景区间。
+        let result = LyricLineInfo::isBackChorusWithMultiLine(vec![
+            "\"きっときっと\" そうやって今も".into(),
+            "虚しい 輪を描いてる".into(),
+            "For now, see you again".into(),
+            "ただただ 進んで ゆくだけ\"Restart\"".into(),
+        ]);
+
+        assert!(result.is_empty());
+    }
+
+    #[test]
+    fn test_split_word_furigana_only_splits_kana() {
+        // 假名注音被切出独立片段
+        assert_eq!(
+            super::split_word_furigana("儚（はかな）い日々（ひび）"),
+            vec![
+                "儚".to_string(),
+                "（はかな）".to_string(),
+                "い日々".to_string(),
+                "（ひび）".to_string(),
+            ]
+        );
+        // 英文括号原样保留，不当作注音切分
+        assert_eq!(
+            super::split_word_furigana("Hello (world)"),
+            vec!["Hello (world)".to_string()]
+        );
+        // 已是独立注音 word，保持不变（幂等）
+        assert_eq!(
+            super::split_word_furigana("（こえ）"),
+            vec!["（こえ）".to_string()]
+        );
+    }
+
+    #[test]
+    fn test_lrc_embedded_furigana_detected_as_notes() {
+        // Across the Destiny: 纯 LRC 把假名写在同一行字符串里，应被拆分并识别为注音。
+        let mut lyric = Lyric {
+            data: vec![
+                test_line(49970, vec!["儚（はかな）い日々（ひび） 積（つ）もっていく"]),
+                test_line(53970, vec!["淡（あわ）く広（ひろ）がる草原（そうげん）に"]),
+                test_line(
+                    56970,
+                    vec!["風（かぜ）が吹（ふ）いて 胸（むね）に眠（ねむ）る"],
+                ),
+                test_line(
+                    103970,
+                    vec!["今（いま） 輝（かがや）きだす 散（ち）らばっていた"],
+                ),
+            ],
+            rmExisted: false,
+            tlExisted: false,
+            noteExisted: false,
+        };
+
+        lyric.update_extra_info();
+
+        assert!(lyric.noteExisted);
+        let first = &lyric.data[0];
+        assert!(
+            first
+                .words
+                .iter()
+                .any(|w| w.word == "（はかな）" && w.inlineNote == Some(true))
+        );
+        // 拆分后拼回原文应保持不变
+        let joined: String = first.words.iter().map(|w| w.word.clone()).collect();
+        assert_eq!(joined, "儚（はかな）い日々（ひび） 積（つ）もっていく");
+
+        // 再次调用保持幂等，不会重复拆分或丢失注音标记
+        lyric.update_extra_info();
+        assert!(lyric.noteExisted);
+        let joined_again: String = lyric.data[0].words.iter().map(|w| w.word.clone()).collect();
+        assert_eq!(
+            joined_again,
+            "儚（はかな）い日々（ひび） 積（つ）もっていく"
+        );
     }
 
     #[test]

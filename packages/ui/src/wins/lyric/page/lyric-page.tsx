@@ -12,11 +12,12 @@ import { useAppLoaded } from "@/common/hooks/use-app-loaded";
 import { NeteaseLyric } from "@/common/netease/models";
 import { RendererWindow } from "@/common/lib/window";
 import { RendererIPCMessageBus } from "@/common/lib/bus";
+import { useLatestRef } from "@/common/hooks/use-latest-ref";
+import { useThemeInjectFromBus } from "@/common/hooks/use-theme-inject-from-bus";
 
 import Control from "./control";
 import WindowResizeArea from "@/common/components/layout/window-resize-area";
-import LyricComponent, { type LyricRef } from "@/common/components/display/lyric/lyric-container";
-import { useLatestRef } from "@/common/hooks/use-latest-ref";
+import LyricComponent, { type LyricRef } from "@/common/components/display/lyric";
 
 export default function LyricPage() {
   useAppLoaded();
@@ -32,7 +33,7 @@ export default function LyricPage() {
   const showBgTimer = useRef<Nullable<ReturnType<typeof setTimeout>>>(null);
   // 监听播放器相关事件
   const trackMetaBus = useListenable(RendererIPCMessageBus.trackMeta);
-  const themeBus = useListenable(RendererIPCMessageBus.theme);
+  const themeBus = useThemeInjectFromBus();
   const progressBus = useListenable(RendererIPCMessageBus.progress);
   const getInfo = useLatestRef({ trackMetaBus });
   // 歌词实例
@@ -189,6 +190,7 @@ export default function LyricPage() {
         setFontSize={setFontSize}
         rmActive={trackMetaBus.data?.rmActive}
         tlActive={trackMetaBus.data?.tlActive}
+        themeColor={themeBus.data?.theme.mainColor}
       />
       <WindowResizeArea disable={lock || !showBg} showArea={false} />
     </div>

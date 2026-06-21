@@ -1,7 +1,10 @@
 import { useEffect } from "react";
 import { Log } from "@/common/lib/log";
-import { createAlbumCoverModal, createPlaylistCoverModal } from "./playlist-cover-modal";
+import { createAddToPlaylistModal } from "./add-to-playlist-modal";
 import { createDialogModal } from "./dialog-modal";
+import { createAlbumCoverModal, createPlaylistCoverModal } from "./playlist-cover-modal";
+import { createPlaylistCreateModal } from "./playlist-create-modal";
+import { createPlaylistEditModal } from "./playlist-edit-modal";
 import { Inject } from "@/common/utils/inject";
 import Provider, { type ModalRender } from "./modal-provider";
 
@@ -48,6 +51,9 @@ function useModal() {
     close: AppModal.close,
     createPlaylistCoverModal,
     createAlbumCoverModal,
-    createDialogModal
+    createDialogModal,
+    createAddToPlaylistModal,
+    createPlaylistCreateModal,
+    createPlaylistEditModal
   };
 }

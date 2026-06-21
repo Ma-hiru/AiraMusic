@@ -135,4 +135,12 @@ export default class _NeteaseAuthAPI {
       method: "post"
     });
   }
+
+  /**
+   * 登录状态
+   * @desc 调用此接口, 可获取登录状态
+   * */
+  static status() {
+    return apiRequest<never, NeteaseAPI.NeteaseAPIResponse>("/login/status");
+  }
 }

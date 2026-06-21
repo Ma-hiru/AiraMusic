@@ -37,13 +37,13 @@ export default class _NeteaseUserAPI {
     /** 用户 id */
     uid: number;
     /** 返回数量 , 默认为 30 */
-    limit: number;
+    limit?: number;
     /** 偏移数量，用于分页 , 如 :( 页数 -1)*30, 其中 30 为 limit 的值 , 默认为 0 */
     offset?: number;
   }) {
     return apiRequest<any, NeteaseAPI.NeteaseUserPlaylistResponse>({
       url: "/user/playlist",
-      params
+      params: { ...params, timestamp: Date.now() }
     });
   }
 

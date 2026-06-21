@@ -1,7 +1,7 @@
 import { cx } from "@emotion/css";
 import { memo, useCallback } from "react";
 import { NeteaseHistoryRecord, NeteaseTrackRecord } from "@/common/netease/models";
-import { NeteaseImageSize, PlaylistSource } from "@/common/enum";
+import { NeteaseImageSize } from "@/common/enum";
 import type {
   TrackListClickFunc,
   TrackListContextMenuFunc
@@ -35,8 +35,12 @@ export interface TrackItemProps<
   onClickArtist: Optional<NormalFunc<[id: number]>>;
   onClickAlbum: Optional<NormalFunc<[id: number]>>;
   onLikeChange: Optional<TrackItemLikeChangeFunc<T>>;
-  type: PlaylistSource;
+  type: "album" | "history" | "like" | "normal";
   trackCoverSize: NeteaseImageSize;
+  /** 批量选择模式：整行点击切换勾选，禁用播放/跳转 */
+  selectionMode?: boolean;
+  selected?: boolean;
+  onToggleSelect?: NormalFunc;
 }
 
 const TrackItem = <T extends NeteaseTrackRecord | NeteaseHistoryRecord>({
@@ -54,7 +58,10 @@ const TrackItem = <T extends NeteaseTrackRecord | NeteaseHistoryRecord>({
   type,
   playable,
   reason,
-  trackCoverSize
+  trackCoverSize,
+  selectionMode,
+  selected,
+  onToggleSelect
 }: TrackItemProps<T>) => {
   const showDisableReason = useCallback(() => {
     if (playable) return;
@@ -66,19 +73,30 @@ const TrackItem = <T extends NeteaseTrackRecord | NeteaseHistoryRecord>({
 
   return (
     <div
-      onContextMenu={(e) => playable && onContext?.(e, track, index)}
-      onClick={playable ? undefined : showDisableReason}
+      onContextMenu={(e) => !selectionMode && playable && onContext?.(e, track, index)}
+      onClick={playable || selectionMode ? undefined : showDisableReason}
       className={cx(
         `
-            items-center grid grid-row-1 grid-cols-[auto_auto_1fr_auto_auto] gap-4
+            relative items-center grid grid-row-1 grid-cols-[auto_auto_1fr_auto_auto] gap-4
             rounded-md py-0.5 pl-2 mb-2
             ease-in-out transition-colors
         `,
         active
           ? "bg-(--theme-color-main) text-(--text-color-on-main) shadow-xs"
-          : "hover:bg-black/10 active:bg-black/20",
-        !playable && "cursor-not-allowed! opacity-50"
+          : selected
+            ? "bg-(--theme-color-main)/15"
+            : "hover:bg-black/10 active:bg-black/20",
+        !playable && !selectionMode && "cursor-not-allowed! opacity-50"
       )}>
+      {/* 选择模式下的整行点击层 */}
+      {selectionMode && (
+        <button
+          type="button"
+          aria-label="选择歌曲"
+          onClick={() => onToggleSelect?.()}
+          className="absolute inset-0 z-10 cursor-pointer"
+        />
+      )}
       {/*序号*/}
       <ListItemIndex
         total={total}
@@ -86,9 +104,11 @@ const TrackItem = <T extends NeteaseTrackRecord | NeteaseHistoryRecord>({
         disabled={!playable}
         index={index}
         onClick={() => onClick?.(track, index)}
+        selectionMode={selectionMode}
+        selected={selected}
       />
       {/*封面*/}
-      {type !== PlaylistSource.Album && (
+      {type !== "album" && (
         <ListItemCover
           track={track}
           onClick={() => onClick?.(track, index)}

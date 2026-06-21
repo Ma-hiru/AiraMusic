@@ -5,7 +5,7 @@ import { RendererCache } from "@/common/lib/cache";
 
 export default class _NeteaseLyricSource {
   //region cache
-  private static readonly cacheKey = "netease_lyric_v14";
+  private static readonly cacheKey = "netease_lyric_v18";
 
   private static storeCache(id: number, lyric: NeteaseLyricModel) {
     return RendererCache.local.object.store<NeteaseLyricModel>(
@@ -23,7 +23,7 @@ export default class _NeteaseLyricSource {
 
   static async id(id: number, _controller?: AbortController) {
     const cache = await _NeteaseLyricSource.getCache(id);
-    if (cache) return new NeteaseLyric(cache);
+    if (cache && cache.data.length >= 2) return new NeteaseLyric(cache);
 
     const controller = new AbortController();
     _controller?.signal.addEventListener("abort", () => {
@@ -35,14 +35,14 @@ export default class _NeteaseLyricSource {
       NeteaseAPILyric.getYRC(id)
     ]).finally(() => clearTimeout(timer));
 
-    let lyric = NeteaseLyric.blankLyric;
+    let lyric = NeteaseLyric.loadErrorLyric;
     if (ttml.status === "fulfilled" && ttml.value) {
       Log.debug("use ttml lyric id:" + id);
       lyric = NeteaseLyric.fromTTMLyric(ttml.value);
-      void _NeteaseLyricSource.storeCache(id, lyric);
+      lyric.data.length && void _NeteaseLyricSource.storeCache(id, lyric);
     } else if (response.status === "fulfilled") {
       lyric = NeteaseLyric.fromNeteaseAPIResponse(response.value);
-      void _NeteaseLyricSource.storeCache(id, lyric);
+      lyric.data.length && void _NeteaseLyricSource.storeCache(id, lyric);
     }
 
     return lyric;

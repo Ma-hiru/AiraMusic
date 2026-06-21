@@ -13,6 +13,7 @@ import RangeRow from "./range-row";
 import BaseItem from "./base-item";
 import DonutChart from "./donut-chart";
 import Card from "@/common/components/layout/card";
+import { RendererWindow } from "@/common/lib/window";
 
 interface CacheProps {
   cacheStoreSizes: Nullable<CacheStoreSizeCategories>;
@@ -106,11 +107,14 @@ const Cache: FC<CacheProps> = ({
       title: "清除缓存",
       body: "是否要清除所有本地缓存？",
       footer: null,
+      important: true,
       onConfirm: () => {
+        AppModal.close();
         AppToast.show({
           type: "info",
           text: "清理缓存中"
         });
+        RendererWindow.main.send("message_dispatch_cache_has_clear", true);
         RendererCache.local.other
           .clear()
           .then((res) => {

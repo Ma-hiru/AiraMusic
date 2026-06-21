@@ -30,6 +30,7 @@ import { Log } from "@/common/lib/log";
 import { RendererWindow } from "@/common/lib/window";
 import AppToast from "@/common/components/display/toast";
 import AppLoading from "@/common/components/fallback/app-loading";
+import Marquee from "@/common/components/display/marquee";
 
 export type ImageViewerEntry = {
   url?: string;
@@ -297,7 +298,6 @@ const ImageViewer: FC<ImageViewerProps> = ({ images, index, onIndexChange, onToo
   const handleWheel = useCallback(
     (event: ReactWheelEvent<HTMLDivElement>) => {
       if (status !== "loaded") return;
-      event.preventDefault();
       const delta = event.deltaY > 0 ? -WHEEL_STEP : WHEEL_STEP;
       zoomAtPoint(event.clientX, event.clientY, clamp(scale + delta, MIN_SCALE, MAX_SCALE));
       showToolbar(true);
@@ -503,12 +503,20 @@ const ImageViewer: FC<ImageViewerProps> = ({ images, index, onIndexChange, onToo
         )}>
         <div
           className="
-            flex min-w-0 max-w-[min(76vw,780px)] items-center gap-2 rounded-md
+            flex min-w-0 max-w-[60%] items-center gap-2 rounded-md
             border border-white/10 bg-black/35 px-4 py-1.5 text-[12px] font-semibold
             text-white/85 shadow-[0_8px_32px_rgba(0,0,0,0.25)]
             backdrop-saturate-120 backdrop-blur-md
           ">
-          <span className="truncate">{current.alt || current.url || "等待图片"}</span>
+          <Marquee
+            text={current.alt || current.url || "等待图片"}
+            options={{
+              speed: 10,
+              pauseOnHover: true,
+              pingPong: true,
+              gapDuration: 2000
+            }}
+          />
           {images.length > 1 && (
             <span className="shrink-0 text-white/55">{`${index + 1}/${images.length}`}</span>
           )}

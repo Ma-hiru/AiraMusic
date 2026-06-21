@@ -6,7 +6,8 @@ import {
   ListMusic,
   ListPlus,
   MessageSquare,
-  Play
+  Play,
+  Trash2
 } from "lucide-react";
 import { NeteaseImageSize } from "@/common/enum";
 import type { ContextMenuItem, ContextMenuRender } from "./menu-provider";
@@ -20,7 +21,8 @@ export type TrackContextMenuAction =
   | "play"
   | "nextPlay"
   | "addPlayList"
-  | "favPlaylist";
+  | "favPlaylist"
+  | "removeFromPlaylist";
 
 export type TrackContextMenuOnClick = NormalFunc<
   [type: TrackContextMenuAction, track: NeteaseTrackRecord]
@@ -31,11 +33,13 @@ export function createTrackContextMenu(props: {
   clientY: number;
   track: NeteaseTrackRecord;
   onClick?: TrackContextMenuOnClick;
+  /** 是否显示「从歌单删除」（仅自建歌单页可用） */
+  canRemove?: boolean;
 }): ContextMenuRender {
-  const { clientX, clientY, track, onClick } = props;
+  const { clientX, clientY, track, onClick, canRemove } = props;
   return {
     header: createHeader(track),
-    items: createMenuItems(track, onClick),
+    items: createMenuItems(track, onClick, canRemove),
     clientX,
     clientY
   };
@@ -66,7 +70,8 @@ function createHeader(track: NeteaseTrackRecord) {
 
 function createMenuItems(
   track: NeteaseTrackRecord,
-  onClick?: TrackContextMenuOnClick
+  onClick?: TrackContextMenuOnClick,
+  canRemove?: boolean
 ): ContextMenuItem[] {
   const { _user } = userStoreSnapshot();
   const playable = track.detail.playable(NeteaseUser.fromObject(_user));
@@ -108,6 +113,14 @@ function createMenuItems(
         onClick: () => onClick?.("addPlayList", track)
       }
     );
+  }
+
+  if (canRemove) {
+    items.push({
+      prefix: <Trash2 size={14} />,
+      label: <p className="text-[12px]">从歌单删除</p>,
+      onClick: () => onClick?.("removeFromPlaylist", track)
+    });
   }
 
   items.push(

@@ -70,7 +70,6 @@ const BarBtns: FC<object> = () => {
       lyricWindow.close();
     } else {
       await lyricWindow.reactReadyAwait();
-      RendererPlayerHandle.busUpdater?.();
     }
   }, [lyricWindow]);
 

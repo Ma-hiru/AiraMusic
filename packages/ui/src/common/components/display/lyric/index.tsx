@@ -16,6 +16,7 @@ import { debounce } from "lodash-es";
 import LyricLine from "./lyric-line";
 import RendererTheme from "@/common/player/ui";
 import LyricTips from "./lyric-tips";
+import { useLatestRef } from "@/common/hooks/use-latest-ref";
 
 const edgeFadeMask =
   "linear-gradient(to bottom, transparent 0, #000 min(12%, 56px), #000 calc(100% - min(12%, 56px)), transparent 100%)";
@@ -59,6 +60,7 @@ const LyricContainer: FC<LyricContainerProps> = ({
   spring
 }) => {
   const [currentLine, setCurrentLine] = useState(-1);
+  const [scrolling, setScrolling] = useState(false);
   const containerRef = useRef<Nullable<HTMLDivElement>>(null);
   const currentLineRef = useRef(currentLine);
   const timeManagerRef = useRef<Nullable<TimeManager>>(null);
@@ -70,7 +72,9 @@ const LyricContainer: FC<LyricContainerProps> = ({
   mainAlignRef.current = mainAlign;
 
   // 计算布局的函数
+  const innerScrolling = useRef(false);
   const calcLayout = useCallback(() => {
+    innerScrolling.current = true;
     const container = containerRef.current;
     const lineIndex = currentLineRef.current;
     const mainAlign = mainAlignRef.current;
@@ -96,7 +100,9 @@ const LyricContainer: FC<LyricContainerProps> = ({
       scrollTop = lineOffsetTop - containerHeight / 2 + lineHeight / 2;
     }
 
-    return RendererTheme.smoothScrollTo(container, scrollTop);
+    return RendererTheme.smoothScrollTo(container, scrollTop).finally(
+      () => (innerScrolling.current = false)
+    );
   }, []);
 
   // 歌词变化时，重置时间管理器和当前行
@@ -108,6 +114,7 @@ const LyricContainer: FC<LyricContainerProps> = ({
   }, [calcLayout, lyric]);
 
   // 歌词行变化时，滚动到对应位置
+  const scrollingRef = useLatestRef(scrolling);
   useLayoutEffect(() => {
     const timeManager = timeManagerRef.current;
     if (!timeManager) return;
@@ -115,9 +122,9 @@ const LyricContainer: FC<LyricContainerProps> = ({
       const lineIndex = timeManager.getCurrentLineIndex();
       setCurrentLine(lineIndex);
       currentLineRef.current = lineIndex;
-      calcLayout();
+      !scrollingRef.current && calcLayout();
     });
-  }, [calcLayout]);
+  }, [calcLayout, scrollingRef]);
 
   // 暴露接口
   useImperativeHandle(
@@ -146,6 +153,17 @@ const LyricContainer: FC<LyricContainerProps> = ({
 
   const lyricLines = lyric?.data ?? [];
 
+  const scrollTimer = useRef(0);
+  const onScroll = useCallback(() => {
+    if (innerScrolling.current) return;
+    scrollTimer.current && clearTimeout(scrollTimer.current);
+    scrollTimer.current = window.setTimeout(() => {
+      setScrolling(false);
+      calcLayout();
+    }, 3000);
+    setScrolling(true);
+  }, [calcLayout]);
+
   return (
     <div
       ref={containerRef}
@@ -161,7 +179,8 @@ const LyricContainer: FC<LyricContainerProps> = ({
       style={{
         maskImage: edgeFadeMask,
         WebkitMaskImage: edgeFadeMask
-      }}>
+      }}
+      onScroll={onScroll}>
       <div className={cx("h-[55%]", lyricLines.length === 0 && "h-0")} />
       {lyricLines.map((line, index) => (
         <LyricLine
@@ -183,7 +202,7 @@ const LyricContainer: FC<LyricContainerProps> = ({
           spring={spring}
         />
       ))}
-      <div className={cx("h-[55%] pt-10", lyricLines.length === 0 && "h-0 pt-0")}>
+      <div className={cx("h-[55%]", lyricLines.length === 0 && "h-0 pt-0")}>
         <LyricTips crossAlign={crossAlign} tips={lyric?.tips} />
       </div>
     </div>

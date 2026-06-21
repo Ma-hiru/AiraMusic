@@ -312,16 +312,27 @@ export class RendererWindow extends Listenable<RendererWindowEvent | "react-read
 
   reactReadyAwait() {
     const { promise, resolve } = Promise.withResolvers<void>();
+
+    promise.finally(() => {
+      // 新建窗口自动分发一次基本的 bus
+      // 额外的 bus 可以自行 dispatch
+      RendererIPC.MessageChannel.commit("bus_dispatch_update", ["theme", "track-meta"]);
+    });
+
     if (this.reactReady) {
       this.focus();
       resolve();
-      return Promise.resolve();
+      return promise;
     }
+
+    let removeListener: Undefinable<NormalFunc> = undefined;
     const listener = () => {
-      this.reactReady && this.removeListener(listener);
-      this.reactReady && resolve();
+      if (!this.reactReady) return;
+      removeListener?.();
+      resolve();
     };
-    this.addListener(listener);
+    removeListener = this.addEventListener("react-ready", listener);
+
     if (this.opened) {
       RendererIPC.MessageChannel.send("bus_deliver_react_ready", this.type, {
         type: "isReady",
@@ -330,6 +341,7 @@ export class RendererWindow extends Listenable<RendererWindowEvent | "react-read
     } else {
       this.open();
     }
+
     return promise;
   }
 

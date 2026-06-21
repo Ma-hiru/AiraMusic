@@ -1,6 +1,6 @@
 import { type FC, memo } from "react";
 import { Heart } from "lucide-react";
-import { PlaylistSource, TrackBitmark } from "@/common/enum";
+import { TrackBitmark } from "@/common/enum";
 import { NeteaseHistoryRecord, NeteaseTrackRecord } from "@/common/netease/models";
 import { RendererFormat } from "@/common/lib/format";
 
@@ -12,8 +12,8 @@ interface ListItemAlbumProps {
   active: boolean;
   disabled: boolean;
   liked: boolean;
-  type: PlaylistSource;
   onLikeChange?: NormalFunc;
+  type: "album" | "history" | "like" | "normal";
 }
 
 const TrackItemInfo: FC<ListItemAlbumProps> = ({ track, disabled, liked, onLikeChange, type }) => {

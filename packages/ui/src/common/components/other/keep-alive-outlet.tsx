@@ -10,7 +10,6 @@ import {
 } from "react";
 import { useLocation, useOutlet } from "react-router-dom";
 import { useUpdate } from "@/common/hooks/use-update";
-import { KeepAliveBuildKey, KeepAliveCtx } from "@/wins/main/ctx/keep-alive-ctx";
 
 export type KeepAliveOutletRef = {
   clearCache: (pathname: string) => void;
@@ -30,8 +29,8 @@ const KeepAliveOutlet: FC<KeepAliveOutletProps> = ({ ref, cache = true, maxCache
   const [activeKey, setActiveKey] = useState<string>();
 
   useEffect(() => {
-    setActiveKey(cache ? KeepAliveBuildKey(location.pathname, location.search) : undefined);
-  }, [cache, location.pathname, location.search]);
+    setActiveKey(cache ? location.pathname : undefined);
+  }, [cache, location.pathname]);
 
   const clearCache = useCallback(
     (pathname: string) => {
@@ -66,7 +65,7 @@ const KeepAliveOutlet: FC<KeepAliveOutletProps> = ({ ref, cache = true, maxCache
   }
 
   return (
-    <KeepAliveCtx value={{ activeKey }}>
+    <>
       {Array.from(cacheMap.entries()).map(([key, element]) => (
         <div
           key={key}
@@ -75,7 +74,7 @@ const KeepAliveOutlet: FC<KeepAliveOutletProps> = ({ ref, cache = true, maxCache
           {element}
         </div>
       ))}
-    </KeepAliveCtx>
+    </>
   );
 };
 

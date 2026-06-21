@@ -2,7 +2,6 @@ import { useCallback } from "react";
 import { RoutePath, RoutePathDisplay } from "@/common/routes";
 import { useNavigate } from "react-router-dom";
 import { useLatestRef } from "@/common/hooks/use-latest-ref";
-import { PlaylistSource } from "@/common/enum";
 
 /** 跳转歌手和专辑页 */
 export function useArtistOrAlbumDisplayJump(
@@ -29,7 +28,7 @@ export function useArtistOrAlbumDisplayJump(
   );
   const jumpPlaylistDisplay = useCallback(
     (id: number) => {
-      navigate(RoutePathDisplay.playlist.withQuery(id, PlaylistSource.Normal));
+      navigate(RoutePathDisplay.playlist.withQuery(id, "normal"));
     },
     [navigate]
   );

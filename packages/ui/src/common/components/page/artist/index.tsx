@@ -1,5 +1,4 @@
 import { cx } from "@emotion/css";
-import { PlaylistSource } from "@/common/enum";
 import { type HeartManager } from "@/common/hooks/use-heart";
 import {
   type FC,
@@ -48,6 +47,7 @@ interface ArtistProps {
   onClickAlbum: NormalFunc<[id: number]>;
   addToPlaylistNext: NormalFunc<[track: NeteaseTrackRecord]>;
   addToPlaylistLast: NormalFunc<[track: NeteaseTrackRecord]>;
+  addTrackToPlaylist: NormalFunc<[track: NeteaseTrackRecord]>;
   openComment: NormalFunc<[track: NeteaseTrackRecord]>;
   pageActionType: "enter" | "out" | "none";
   onPageAction: NormalFunc;
@@ -71,7 +71,8 @@ const Artist: FC<ArtistProps> = ({
   addToPlaylistNext,
   addToPlaylistLast,
   openComment,
-  onDataLoaded
+  onDataLoaded,
+  addTrackToPlaylist
 }) => {
   const requestData = useCallback((id: number) => {
     if (id <= 0 || !id) return Promise.resolve(null);
@@ -116,7 +117,8 @@ const Artist: FC<ArtistProps> = ({
     addToPlaylistNext,
     onClickAlbum,
     onPlay: onClick,
-    openComment
+    openComment,
+    addTrackToPlaylist
   });
 
   useEffect(() => {
@@ -144,7 +146,7 @@ const Artist: FC<ArtistProps> = ({
               className={cx("flex-1", activeTab !== 0 && "hidden")}
               activeID={activeTrackID}
               tracks={artist?.hotTracks ?? []}
-              type={PlaylistSource.Normal}
+              type="normal"
               heartManager={heartManager}
               playableManager={playableManager}
               onClickAlbum={onClickAlbum}

@@ -1,13 +1,12 @@
 import { type FC, memo } from "react";
 import { NeteasePlaylist } from "@/common/netease/models";
-import { PlaylistSource } from "@/common/enum";
 
 import TopCover from "./top-cover";
 import TopRight from "./top-right";
 import TopInfo from "./top-info";
 
 interface TopProps {
-  type: PlaylistSource;
+  editable: boolean;
   loading: boolean;
   summary: Nullable<NeteasePlaylist>;
   searchTracks: NormalFunc<[k: string]>;
@@ -19,6 +18,9 @@ interface TopProps {
   pageActionType?: "enter" | "out" | "none";
   onPageAction?: NormalFunc;
   onEdited?: NormalFunc;
+  onDeleted?: NormalFunc;
+  selectionMode?: boolean;
+  onToggleSelectionMode?: NormalFunc;
 }
 
 const Top: FC<TopProps> = ({
@@ -26,14 +28,17 @@ const Top: FC<TopProps> = ({
   searchTracks,
   onPlayAll,
   onAddList,
-  type,
+  editable,
   loading,
   coverCacheKey,
   onCoverLoaded,
   setIsTyping = () => {},
   onPageAction,
   pageActionType,
-  onEdited
+  onEdited,
+  onDeleted,
+  selectionMode,
+  onToggleSelectionMode
 }) => {
   if (loading) return null;
   return (
@@ -44,12 +49,15 @@ const Top: FC<TopProps> = ({
       </div>
       <TopRight
         summary={summary}
-        type={type}
+        editable={editable}
         searchTracks={searchTracks}
         setTying={setIsTyping}
         pageActionType={pageActionType}
         onPageAction={onPageAction}
         onEdited={onEdited}
+        onDeleted={onDeleted}
+        selectionMode={selectionMode}
+        onToggleSelectionMode={onToggleSelectionMode}
       />
     </div>
   );
