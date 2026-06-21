@@ -86,7 +86,11 @@ fn parse_netease_lyric_lines(
         .unwrap_or_default();
         // 解析行内歌词，例如 `Hello (你好)` 或 `原文〖翻译〗`。
         // 这类翻译可能只出现在少数行，所以不能用全曲覆盖率阈值来决定是否存在翻译。
-        if line.splice_inline_tl_lyric() {
+        //
+        // 但只有在「没有外部翻译」时才把原文末尾的括号当作行内翻译：
+        // 否则会把原文里的背景和声/英文回声（如 `大空の下...(I wanna take you away.)`）
+        // 误当成翻译，覆盖掉来自 tlyric 的真正翻译（见 Sky is the Limit）。
+        if line.translatedLyric.trim().is_empty() && line.splice_inline_tl_lyric() {
             inline_tl_matched_count += 1;
         }
 
@@ -261,6 +265,33 @@ mod tests {
         assert!(lyric.tlExisted);
         assert_eq!(lyric.data[0].words[0].word, "Hello");
         assert_eq!(lyric.data[0].translatedLyric, "你好");
+    }
+
+    #[test]
+    fn test_inline_tl_does_not_override_external_translation() {
+        // Sky is the Limit: 原文末尾的英文背景和声 (I wanna take you away.) 不应覆盖外部翻译。
+        let lyric = parse_netease_lyric_lines(
+            vec![test_line(73660, "大空の下...(I wanna take you away.)")],
+            vec![test_line(73660, "苍空之下(我想带你四处游历)")],
+            vec![],
+        );
+
+        assert_eq!(lyric.data[0].translatedLyric, "苍空之下(我想带你四处游历)");
+        // 原文保留括号里的背景和声，不被当成翻译切走。
+        assert_eq!(
+            lyric.data[0].words[0].word,
+            "大空の下...(I wanna take you away.)"
+        );
+        assert!(lyric.tlExisted);
+    }
+
+    #[test]
+    fn test_inline_tl_still_applies_without_external_translation() {
+        let lyric = parse_netease_lyric_lines(vec![test_line(0, "Hello (你好)")], vec![], vec![]);
+
+        assert_eq!(lyric.data[0].translatedLyric, "你好");
+        assert_eq!(lyric.data[0].words[0].word, "Hello");
+        assert!(lyric.tlExisted);
     }
 
     fn test_line(start_time: i32, text: &str) -> LyricLine {

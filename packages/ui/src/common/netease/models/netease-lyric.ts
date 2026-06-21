@@ -188,6 +188,13 @@ class Parser {
     const meta = response.transUser;
     if (YRC && YRC.lyric) {
       parsedLyric = Parser.parseNeteaseLyric(YRC, YRCTranslated, YRCRoman, "YRC", meta);
+      // fallback
+      if (parsedLyric && !parsedLyric.rmExisted && LRC?.lyric && LRCRoman?.lyric) {
+        const lineLevel = Parser.parseNeteaseLyric(LRC, LRCTranslated, LRCRoman, "LRC", meta);
+        if (lineLevel?.rmExisted) {
+          parsedLyric = lineLevel;
+        }
+      }
     } else if (LRC && LRC.lyric) {
       parsedLyric = Parser.parseNeteaseLyric(LRC, LRCTranslated, LRCRoman, "LRC", meta);
     }
