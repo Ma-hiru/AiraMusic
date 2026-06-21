@@ -9,6 +9,7 @@ import { usePlayerActionInList } from "@/wins/main/hooks/use-player-action-in-li
 import RendererImageConstants from "@/common/constants/image";
 
 import Album, { type AlbumPageRef } from "@/common/components/page/album";
+import { useTrackAddToPlaylist } from "@/common/hooks/use-track-add-to-playlist";
 
 const AlbumPage: FC<object> = () => {
   const location = useLocation();
@@ -32,6 +33,7 @@ const AlbumPage: FC<object> = () => {
     id: id!,
     type: "album"
   });
+  const { addTrackToPlaylist } = useTrackAddToPlaylist();
 
   return (
     <Album
@@ -51,6 +53,7 @@ const AlbumPage: FC<object> = () => {
       coverSize={RendererImageConstants.AlbumPageCoverSize}
       addToPlaylistLast={addTrackToPlaylistLast}
       addToPlaylistNext={addTrackToPlaylistNext}
+      addTrackToPlaylist={addTrackToPlaylist}
       openComment={openTrackComment}
     />
   );

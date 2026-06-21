@@ -1,23 +1,34 @@
 import { type FC, memo, useEffect, useMemo, useRef, useState } from "react";
 import { cx } from "@emotion/css";
-import { ArrowUp, SearchIcon } from "lucide-react";
+import { ArrowUp, Plus, SearchIcon } from "lucide-react";
 import { useSetAtom } from "jotai";
 import { typingAtom } from "@/wins/main/atoms/layout";
 import { AnimatePresence, motion } from "motion/react";
 import { debounce } from "lodash-es";
+import { useUser } from "@/common/store/user";
 
 import FloatItem from "@/common/components/layout/float/float-item";
+import AppModal from "@/common/components/display/modal";
 
 interface NavFloatProps {
   setKeyword: NormalFunc<[keyword: string]>;
   sideBar: boolean;
   canScroll: boolean;
   onScrollTop?: NormalFunc;
+  onCreated?: NormalFunc<[playlist: NeteaseAPI.NeteasePlaylistSummary]>;
 }
 
-const NavFloat: FC<NavFloatProps> = ({ setKeyword, sideBar, canScroll, onScrollTop }) => {
+const NavFloat: FC<NavFloatProps> = ({
+  setKeyword,
+  sideBar,
+  canScroll,
+  onScrollTop,
+  onCreated
+}) => {
+  const user = useUser();
   const setTyping = useSetAtom(typingAtom);
   const inputRef = useRef<HTMLInputElement>(null);
+  const { create, createPlaylistCreateModal } = AppModal.useModal();
   const [value, setValue] = useState("");
   const [showInput, setShowInput] = useState(false);
   const debouncedSearch = useMemo(() => debounce(setKeyword, 300), [setKeyword]);
@@ -53,6 +64,14 @@ const NavFloat: FC<NavFloatProps> = ({ setKeyword, sideBar, canScroll, onScrollT
         {showFloat && canScroll && sideBar && (
           <FloatItem key="scroll-top" motionKey="scroll-top" onClick={onScrollTop}>
             <ArrowUp className="size-5" />
+          </FloatItem>
+        )}
+        {showFloat && sideBar && user?.isLoggedIn && (
+          <FloatItem
+            key="create-playlist"
+            motionKey="create-playlist"
+            onClick={() => create(createPlaylistCreateModal, { onTyping: setTyping, onCreated })}>
+            <Plus className="size-5" />
           </FloatItem>
         )}
         {showFloat && sideBar && (

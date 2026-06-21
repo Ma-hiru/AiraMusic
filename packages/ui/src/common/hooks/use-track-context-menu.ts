@@ -1,12 +1,10 @@
 import { useCallback } from "react";
 import { NeteaseTrackRecord } from "@/common/netease/models";
-import { createAddToPlaylistModal } from "@/common/components/display/modal/add-to-playlist-modal";
 import type {
   TrackListClickFunc,
   TrackListContextMenuFunc
 } from "@/common/components/display/track_list";
 import AppContextMenu from "@/common/components/display/menu";
-import AppModal from "@/common/components/display/modal";
 
 /** 歌曲右键菜单 */
 export function useTrackContextMenu(props: {
@@ -15,11 +13,19 @@ export function useTrackContextMenu(props: {
   addToPlaylistNext: NormalFunc<[track: NeteaseTrackRecord]>;
   addToPlaylistLast: NormalFunc<[track: NeteaseTrackRecord]>;
   openComment: NormalFunc<[track: NeteaseTrackRecord]>;
+  addTrackToPlaylist: NormalFunc<[track: NeteaseTrackRecord]>;
+  removeFromPlaylist?: NormalFunc<[track: NeteaseTrackRecord]>;
 }) {
-  const { onPlay, onClickAlbum, addToPlaylistNext, addToPlaylistLast, openComment } = props;
+  const {
+    onPlay,
+    onClickAlbum,
+    addToPlaylistNext,
+    addToPlaylistLast,
+    openComment,
+    removeFromPlaylist,
+    addTrackToPlaylist
+  } = props;
   const { create, createTrackContextMenu } = AppContextMenu.useMenu();
-  // fix: 直接用静态方法，避免 useModal() 注册的副作用
-  const createModal = AppModal._create;
 
   const onContextMenu = useCallback<TrackListContextMenuFunc>(
     (e, track) => {
@@ -27,6 +33,7 @@ export function useTrackContextMenu(props: {
         track,
         clientX: e.clientX,
         clientY: e.clientY,
+        canRemove: !!removeFromPlaylist,
         onClick: (type, track) => {
           switch (type) {
             case "play":
@@ -45,7 +52,10 @@ export function useTrackContextMenu(props: {
               void openComment(track);
               break;
             case "favPlaylist":
-              createModal(createAddToPlaylistModal, { track });
+              addTrackToPlaylist?.(track);
+              break;
+            case "removeFromPlaylist":
+              removeFromPlaylist?.(track);
               break;
           }
         }
@@ -54,12 +64,13 @@ export function useTrackContextMenu(props: {
     [
       addToPlaylistLast,
       addToPlaylistNext,
+      addTrackToPlaylist,
       create,
-      createModal,
       createTrackContextMenu,
       onClickAlbum,
       onPlay,
-      openComment
+      openComment,
+      removeFromPlaylist
     ]
   );
 

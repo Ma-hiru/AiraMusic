@@ -13,7 +13,7 @@ const AppMask: FC<MaskProps> = ({ className }) => {
         className
       )}>
       <img src="/images/logo.svg" alt="logo" className="size-16" />
-      <p className="text-lg font-bold text-(--text-color-on-main)">{import.meta.env.APP_NAME}</p>
+      <p className="text-lg font-bold">{import.meta.env.APP_NAME}</p>
     </div>
   );
 };

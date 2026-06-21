@@ -5,6 +5,7 @@ import { useStage } from "@/common/hooks/use-stage";
 import { Stage } from "@/common/enum";
 import { useAtomValue } from "jotai";
 import { sidebarAtom } from "@/wins/main/atoms/layout";
+import { RendererIPCMessageBus } from "@/common/lib/bus";
 
 import NavMenu from "./nav-menu";
 import NavFloat from "./float";
@@ -23,6 +24,12 @@ const Nav: FC<object> = () => {
   const displayPlaylist = (user?.playlistCount || 0) > 0;
 
   const onScrollTop = useCallback(() => playlistRef.current?.scrollTop(), []);
+
+  const onCreated = useCallback(() => {
+    RendererIPCMessageBus.modified.twoWay({
+      type: "user-playlist"
+    });
+  }, []);
 
   return (
     <section
@@ -57,6 +64,7 @@ const Nav: FC<object> = () => {
         canScroll={canScrollTop}
         sideBar={sidebar}
         onScrollTop={onScrollTop}
+        onCreated={onCreated}
       />
     </section>
   );

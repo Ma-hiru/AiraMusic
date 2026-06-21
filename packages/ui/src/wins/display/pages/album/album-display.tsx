@@ -8,6 +8,7 @@ import { usePlayerChangeActionFromDisplay } from "@/wins/display/hooks/use-playe
 import { useDisplayPageAction } from "@/wins/display/hooks/use-display-page-action";
 import { RendererIPCMessageBus } from "@/common/lib/bus";
 import { useDisplayTitle } from "@/wins/display/hooks/use-display-title";
+import { useTrackAddToPlaylist } from "@/common/hooks/use-track-add-to-playlist";
 import RendererImageConstants from "@/common/constants/image";
 
 import Album, { type AlbumPageRef } from "@/common/components/page/album";
@@ -38,6 +39,7 @@ const AlbumDisplay: FC<object> = () => {
     id: id!
   });
   const { updateTitle } = useDisplayTitle("album");
+  const { addTrackToPlaylist } = useTrackAddToPlaylist();
 
   return (
     <Album
@@ -56,6 +58,7 @@ const AlbumDisplay: FC<object> = () => {
       coverSize={RendererImageConstants.AlbumPageCoverSize}
       addToPlaylistLast={addTrackToPlaylistLast}
       addToPlaylistNext={addTrackToPlaylistNext}
+      addTrackToPlaylist={addTrackToPlaylist}
       openComment={openTrackComment}
       onDataLoaded={(a) => a.content.name && updateTitle(a.content.name)}
     />

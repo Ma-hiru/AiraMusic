@@ -12,7 +12,7 @@ const TopControl: FC = () => {
   const close = useCallback(async () => {
     RendererWindow.current.hide();
     RendererWindow.all.hide();
-    RendererPlayerHandle.dispose();
+    RendererPlayerHandle[Symbol.dispose]();
     RendererWindow.current.close();
   }, []);
 
@@ -20,7 +20,6 @@ const TopControl: FC = () => {
     RendererWindow.mini.show();
     RendererWindow.mini.focus();
     RendererWindow.current.hide();
-    RendererPlayerHandle.busUpdater?.();
   }, []);
 
   useEffect(() => {

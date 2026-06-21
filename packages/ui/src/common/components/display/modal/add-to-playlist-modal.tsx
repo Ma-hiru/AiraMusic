@@ -11,43 +11,57 @@ import AppToast from "@/common/components/display/toast";
 import AppModal from "./use";
 import type { ModalRender } from "./modal-provider";
 
-export function createAddToPlaylistModal({ track }: { track: NeteaseTrackRecord }): ModalRender {
+export function createAddToPlaylistModal({
+  tracks,
+  onCreated,
+  excludeId
+}: {
+  tracks: NeteaseTrackRecord[];
+  onCreated: Optional<NormalFunc<[pid: number]>>;
+  /** 排除的歌单 id（通常是当前所在歌单，避免把歌曲加回自己） */
+  excludeId?: number;
+}): ModalRender {
   return {
     title: "收藏到歌单",
-    subTitle: track.name,
+    subTitle: tracks.length === 1 ? tracks[0]?.name : `共 ${tracks.length} 首`,
     width: 500,
-    content: <AddToPlaylistList track={track} />
+    content: <AddToPlaylistList tracks={tracks} onCreated={onCreated} excludeId={excludeId} />
   };
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
-const AddToPlaylistList: FC<{ track: NeteaseTrackRecord }> = ({ track }) => {
+const AddToPlaylistList: FC<{
+  tracks: NeteaseTrackRecord[];
+  onCreated: Optional<NormalFunc<[pid: number]>>;
+  excludeId?: number;
+}> = ({ tracks, onCreated, excludeId }) => {
   const user = useUser();
   // 正在添加的歌单 id，避免重复点击
   const [adding, setAdding] = useState<Nullable<number>>(null);
-  // 只列出自己创建的歌单
-  const playlists = user?.userPlaylists ?? [];
+  // 只列出自己创建的歌单，排除当前所在歌单
+  const playlists = (user?.userPlaylists ?? []).filter((p) => p.id !== excludeId);
 
   const addTo = async (pid: number) => {
-    if (adding != null) return;
+    if (adding != null || tracks.length === 0) return;
     setAdding(pid);
     try {
       const res = await NeteaseAPIPlaylist.modify({
         op: "add",
         pid,
-        tracks: [track.id]
+        tracks: tracks.map((t) => t.id)
       });
-      if (res.code === 200) {
+      if (res.status === 200) {
         NeteaseServicesPlaylist.invalidate(pid);
+        onCreated?.(pid);
         AppToast.show({
           type: "success",
-          text: "已添加到歌单"
+          text: tracks.length === 1 ? "已添加到歌单" : `已添加 ${tracks.length} 首`
         });
         AppModal.close();
       } else {
         AppToast.show({
           type: "info",
-          text: res.message || res.msg || "添加失败"
+          text: "添加失败"
         });
       }
     } catch (err) {
@@ -68,7 +82,12 @@ const AddToPlaylistList: FC<{ track: NeteaseTrackRecord }> = ({ track }) => {
   return (
     <div className="flex flex-col gap-1">
       {playlists.map((p) => {
-        const cover = NeteaseNetworkImage.fromPlaylistCover(p).setSize(NeteaseImageSize.xs);
+        const cover = NeteaseNetworkImage.fromPlaylistCover(p)
+          .setSize(NeteaseImageSize.xs)
+          .setCacheKey(
+            `${p.updateTime}-${p.trackCount}-${p.trackUpdateTime}-${p.trackNumberUpdateTime}`
+          );
+
         return (
           <button
             key={p.id}

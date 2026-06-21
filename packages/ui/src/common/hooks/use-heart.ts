@@ -10,6 +10,7 @@ type TrackLikeSource = {
 export interface HeartManager {
   get TrackLikedSource(): Optional<TrackLikeSource>;
   set TrackLikedSource(source: Optional<TrackLikeSource>);
+  onLikedSynced: NormalFunc;
 }
 
 export function useHeart(manager: Optional<HeartManager>) {
@@ -41,10 +42,14 @@ export function useHeart(manager: Optional<HeartManager>) {
         },
         checkPoint: Date.now()
       };
-      void NeteaseAPITrack.star({
+
+      NeteaseAPITrack.star({
         id: track.id,
         like: !isLiked
+      }).finally(() => {
+        manager.onLikedSynced();
       });
+
       return isLiked;
     },
     [checkLiked]

@@ -3,6 +3,7 @@ import { NeteaseCookie } from "./netease-cookie";
 
 export class NeteaseUser implements NeteaseUserModel {
   //region fields
+  readonly userId;
   readonly refreshCookiesDate;
   readonly profile;
   readonly likedTrackIDs;
@@ -17,18 +18,20 @@ export class NeteaseUser implements NeteaseUserModel {
     this.starPlaylists = props.starPlaylists;
     this.userPlaylists = props.userPlaylists;
     this.refreshCookiesDate = props.refreshCookiesDate;
+    this.userId = props.profile.userId;
   }
 
   //endregion
 
   copyWith(props: Partial<NeteaseUserModel>) {
     return new NeteaseUser({
-      profile: props.profile || this.profile,
-      likedTrackIDs: props.likedTrackIDs || this.likedTrackIDs,
-      likedPlaylist: props.likedPlaylist || this.likedPlaylist,
-      starPlaylists: props.starPlaylists || this.starPlaylists,
-      userPlaylists: props.userPlaylists || this.userPlaylists,
-      refreshCookiesDate: props.refreshCookiesDate || this.refreshCookiesDate
+      userId: props.userId ?? this.userId,
+      profile: props.profile ?? this.profile,
+      likedTrackIDs: props.likedTrackIDs ?? this.likedTrackIDs,
+      likedPlaylist: props.likedPlaylist ?? this.likedPlaylist,
+      starPlaylists: props.starPlaylists ?? this.starPlaylists,
+      userPlaylists: props.userPlaylists ?? this.userPlaylists,
+      refreshCookiesDate: props.refreshCookiesDate ?? this.refreshCookiesDate
     });
   }
 
@@ -57,6 +60,7 @@ export class NeteaseUser implements NeteaseUserModel {
   }) {
     props.refreshCookiesDate ??= new Date().getDate();
     return new NeteaseUser({
+      userId: props.profile.userId,
       refreshCookiesDate: props.refreshCookiesDate,
       profile: props.profile,
       likedTrackIDs: props.likedTrackIDs,
@@ -81,6 +85,7 @@ export class NeteaseUser implements NeteaseUserModel {
 }
 
 export interface NeteaseUserModel {
+  userId: number;
   profile: NeteaseAPI.NeteaseUserDetailResponse["profile"];
   likedTrackIDs: {
     ids: Record<number, boolean>;

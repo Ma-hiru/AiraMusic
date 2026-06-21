@@ -2,13 +2,13 @@ import { type FC, memo, useEffect, useMemo, useState } from "react";
 import { useListenable } from "@/common/hooks/use-listenable";
 import { useLocation, useNavigate } from "react-router-dom";
 import { RoutePath, RoutePathDisplay } from "@/common/routes";
-import { PlaylistSource } from "@/common/enum";
 import { RendererWindow } from "@/common/lib/window";
 import { RendererIPCMessageBus } from "@/common/lib/bus";
 import { useLatestRef } from "@/common/hooks/use-latest-ref";
 import { useSettings } from "@/common/store/settings";
 import { useThemeInjectFromBus } from "@/common/hooks/use-theme-inject-from-bus";
 import { BackCtx } from "@/wins/display/ctx/back";
+import { RendererModified } from "@/common/lib/modified";
 
 import KeepAliveOutlet from "@/common/components/other/keep-alive-outlet";
 import AppErrorBoundary from "@/common/components/fallback/app-error-boundary";
@@ -27,11 +27,14 @@ const LayoutDisplay: FC<object> = () => {
   const location = useLocation();
   const settings = useSettings();
   const pathRef = useLatestRef(location.pathname + location.search);
+  const locationRef = useLatestRef(location);
   const displayBus = useListenable(RendererIPCMessageBus.display);
+  const modifiedBus = useListenable(RendererIPCMessageBus.modified);
 
   useEffect(() => {
     const data = displayBus.data;
     if (!data.length) return;
+    RendererIPCMessageBus.consume(displayBus.type);
 
     const path = pathRef.current;
     let target = path;
@@ -41,7 +44,7 @@ const LayoutDisplay: FC<object> = () => {
         case "playlist":
           target = RoutePathDisplay.playlist.withQuery(
             action.id,
-            action.source === "like" ? PlaylistSource.Like : PlaylistSource.Normal
+            action.source === "like" ? "like" : "normal"
           );
           break;
         case "album":
@@ -66,12 +69,39 @@ const LayoutDisplay: FC<object> = () => {
 
     path !== target && navigate(target);
     RendererWindow.current.focus();
-    RendererIPCMessageBus.consume(displayBus.type);
   }, [navigate, pathRef, displayBus.data, displayBus.type]);
 
   useEffect(() => {
     RendererIPCMessageBus.updater.deliver("track-meta");
   }, []);
+
+  useEffect(() => {
+    const modifies = modifiedBus.data;
+    RendererIPCMessageBus.consume(modifiedBus.type);
+
+    for (const m of modifies) {
+      switch (m.type) {
+        case "playlist-update":
+          RendererModified.mark({
+            type: "playlist",
+            source: m.source,
+            id: m.id
+          });
+          break;
+        case "remove-playlist": {
+          const { id } = RoutePathDisplay.playlist.parseQuery(locationRef.current, false);
+          if (id !== m.id) break;
+          RendererModified.mark({
+            navigate,
+            type: "removePlaylist",
+            id: m.id,
+            homePath: RoutePathDisplay.blank
+          });
+          break;
+        }
+      }
+    }
+  }, [modifiedBus.data, modifiedBus.type, navigate, locationRef]);
 
   const [back, setBack] = useState(false);
   const backCtxValue = useMemo(

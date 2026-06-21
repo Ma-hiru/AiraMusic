@@ -131,6 +131,19 @@ type MessageBus = {
     | {
         type: "history";
       };
+  bus_modify_source:
+    | {
+        type: "playlist-update";
+        id: Nullable<number | string>;
+        source: Nullable<"like" | "normal">;
+      }
+    | {
+        type: "user-playlist";
+      }
+    | {
+        type: "remove-playlist";
+        id: Nullable<number | string>;
+      };
 };
 
 /**

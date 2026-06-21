@@ -8,7 +8,6 @@ export default class RendererPlayerHandle {
   //region inner
   private static _player: Nullable<RendererPlayer>;
   private static _usePlayer: Nullable<() => RendererPlayer>;
-  private static _innerUpdater = new Map<string, NormalFunc>();
 
   private static createAppPlayerHook(instance: Optional<RendererPlayer>) {
     const player = instance ?? new RendererPlayer();
@@ -47,7 +46,6 @@ export default class RendererPlayerHandle {
     RendererOnce.do("setupMini", async () => {
       const miniWindow = RendererWindow.get("miniplayer");
       await miniWindow.reactReadyAwait();
-      RendererPlayerHandle.busUpdater?.();
     });
   }
   //endregion
@@ -62,28 +60,8 @@ export default class RendererPlayerHandle {
     return this._usePlayer!;
   }
 
-  static dispose() {
+  static [Symbol.dispose]() {
     this.savePlayer();
-  }
-
-  static registerInnerUpdater(id: string, updater: NormalFunc) {
-    RendererPlayerHandle._innerUpdater.set(id, updater);
-    return () => {
-      RendererPlayerHandle._innerUpdater.delete(id);
-    };
-  }
-
-  static getInnerUpdater(id: string) {
-    return RendererPlayerHandle._innerUpdater.get(id);
-  }
-
-  static get busUpdater() {
-    return RendererPlayerHandle.getInnerUpdater("main-bus");
-  }
-
-  static set busUpdater(fn: Undefinable<NormalFunc>) {
-    if (!fn) return;
-    RendererPlayerHandle.registerInnerUpdater("main-bus", fn);
   }
 
   static {

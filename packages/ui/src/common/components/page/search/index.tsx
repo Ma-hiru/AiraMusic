@@ -38,6 +38,7 @@ interface SearchProps {
   onClickAlbum: NormalFunc<[id: number]>;
   addToPlaylistNext: NormalFunc<[track: NeteaseTrackRecord]>;
   addToPlaylistLast: NormalFunc<[track: NeteaseTrackRecord]>;
+  addTrackToPlaylist: NormalFunc<[track: NeteaseTrackRecord]>;
   openComment: NormalFunc<[track: NeteaseTrackRecord]>;
   coverSize: NeteaseImageSize;
   heartManager: HeartManager;
@@ -70,6 +71,7 @@ const Search: FC<SearchProps> = ({
   onClickAlbum,
   addToPlaylistNext,
   addToPlaylistLast,
+  addTrackToPlaylist,
   openComment,
   coverSize,
   heartManager,
@@ -183,6 +185,7 @@ const Search: FC<SearchProps> = ({
               onClickAlbum={onClickAlbum}
               addToPlaylistNext={addToPlaylistNext}
               addToPlaylistLast={addToPlaylistLast}
+              addTrackToPlaylist={addTrackToPlaylist}
               openComment={openComment}
               coverSize={coverSize}
               heartManager={heartManager}

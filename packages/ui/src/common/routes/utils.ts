@@ -1,4 +1,3 @@
-import { PlaylistSource } from "@/common/enum";
 import { type Location } from "react-router-dom";
 
 export class PlaylistPathUtils {
@@ -7,17 +6,17 @@ export class PlaylistPathUtils {
 
   constructor(base?: string) {
     this.base = base || "/playlist";
-    this.like = this.withQuery(null, PlaylistSource.Like);
+    this.like = this.withQuery(null, "like");
   }
 
-  withQuery(id: Optional<number | string>, source: "normal" | "like" | "history") {
+  withQuery(id: Optional<number | string>, source: "normal" | "like") {
     const search = new URLSearchParams();
     id && search.set("id", String(id));
     source && search.set("source", String(source));
     return `${this.base}?${search.toString()}`;
   }
 
-  queryCache: { source: Nullable<PlaylistSource>; id: Nullable<string> } = {
+  queryCache: { source: Nullable<"normal" | "like">; id: Nullable<string> } = {
     source: null,
     id: null
   };
@@ -32,7 +31,7 @@ export class PlaylistPathUtils {
 
     const search = new URLSearchParams(location.search);
     const result = {
-      source: search.get("source") as Nullable<PlaylistSource>,
+      source: search.get("source") as Nullable<"normal" | "like">,
       id: search.get("id")
     };
     cache && (this.queryCache = result);

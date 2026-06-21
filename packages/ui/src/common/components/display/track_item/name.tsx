@@ -1,7 +1,6 @@
 import { type FC, Fragment, memo } from "react";
 import { cx } from "@emotion/css";
 import { NeteaseTrackRecord } from "@/common/netease/models";
-import { PlaylistSource } from "@/common/enum";
 
 interface ListItemNameProps {
   track: NeteaseTrackRecord;
@@ -9,7 +8,7 @@ interface ListItemNameProps {
   onClick?: NormalFunc;
   onClickArtist: Optional<NormalFunc<[id: number]>>;
   onClickAlbum: Optional<NormalFunc<[id: number]>>;
-  type: PlaylistSource;
+  type: "album" | "history" | "like" | "normal";
 }
 
 const TrackItemName: FC<ListItemNameProps> = ({
@@ -62,7 +61,7 @@ const TrackItemName: FC<ListItemNameProps> = ({
             );
           })}
         </span>
-        {type !== PlaylistSource.Album && (
+        {type !== "album" && (
           <>
             <span>-</span>
             <span

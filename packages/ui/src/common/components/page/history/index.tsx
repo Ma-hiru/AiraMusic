@@ -19,7 +19,6 @@ import type {
 } from "@/common/components/display/track_list";
 import TrackList from "@/common/components/display/track_list";
 import { SearchTrack } from "@mahiru/wasm";
-import { PlaylistSource } from "@/common/enum";
 import { type HeartManager } from "@/common/hooks/use-heart";
 import { useTrackCoverPreload } from "@/common/hooks/use-track-cover-preload";
 import { useLatestRef } from "@/common/hooks/use-latest-ref";
@@ -47,6 +46,7 @@ interface HistoryProps {
   playableManager: Optional<TrackListPlayableManager>;
   addToPlaylistNext: NormalFunc<[track: NeteaseTrackRecord]>;
   addToPlaylistLast: NormalFunc<[track: NeteaseTrackRecord]>;
+  addTrackToPlaylist: NormalFunc<[track: NeteaseTrackRecord]>;
   openComment: NormalFunc<[track: NeteaseTrackRecord]>;
   onClickAlbum: NormalFunc<[id: number]>;
   onClickArtist: NormalFunc<[id: number]>;
@@ -67,6 +67,7 @@ const History: FC<HistoryProps> = ({
   playableManager,
   addToPlaylistNext,
   addToPlaylistLast,
+  addTrackToPlaylist,
   openComment,
   onClickAlbum,
   onClickArtist,
@@ -141,7 +142,8 @@ const History: FC<HistoryProps> = ({
     onClickAlbum,
     addToPlaylistNext,
     addToPlaylistLast,
-    openComment
+    openComment,
+    addTrackToPlaylist
   });
 
   useImperativeHandle(
@@ -171,7 +173,7 @@ const History: FC<HistoryProps> = ({
           ref={trackListRef}
           tracks={tracks}
           id={null}
-          type={PlaylistSource.History}
+          type="history"
           activeID={activeTrackID}
           onClick={onPlay}
           onContext={onContextMenu}

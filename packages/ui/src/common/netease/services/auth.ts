@@ -19,6 +19,7 @@ export default class _NeteaseAuth {
     _NeteaseAuth.userStore.updateUser(user);
   }
 
+  /** 不传cookie时会检测 localStorage，仍然没有就返回null */
   static login(cookies: Optional<string>) {
     return NeteaseServicesUser.cookies(cookies).then(_NeteaseAuth.update);
   }
@@ -49,7 +50,7 @@ export default class _NeteaseAuth {
   }
 
   static refresh(user: NeteaseUser | NeteaseUserModel) {
-    return NeteaseServicesUser.refresh(user.profile).then(_NeteaseAuth.update);
+    return NeteaseServicesUser.refresh(user).then(_NeteaseAuth.update);
   }
 
   static logout() {

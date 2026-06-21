@@ -3,6 +3,7 @@ import { useCallback, useMemo } from "react";
 import { type HeartManager } from "./use-heart";
 import { type TrackListPlayableManager } from "../components/display/track_list";
 import { NeteaseTrack } from "@/common/netease/models";
+import { RendererIPCMessageBus } from "@/common/lib/bus";
 
 /** 基于userStore管理喜欢状态和播放状态 */
 export function useUserTrackManager() {
@@ -16,6 +17,13 @@ export function useUserTrackManager() {
       },
       set TrackLikedSource(likedTrackIDs) {
         updateUser(user?.copyWith({ likedTrackIDs }));
+      },
+      onLikedSynced() {
+        RendererIPCMessageBus.modified.twoWay({
+          type: "playlist-update",
+          id: null,
+          source: "like"
+        });
       }
     }),
     [updateUser, user]

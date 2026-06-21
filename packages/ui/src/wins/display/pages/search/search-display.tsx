@@ -6,6 +6,7 @@ import { usePlayerChangeActionFromDisplay } from "@/wins/display/hooks/use-playe
 import { useUserTrackManager } from "@/common/hooks/use-user-track-manager";
 import { useListenable } from "@/common/hooks/use-listenable";
 import { RendererIPCMessageBus } from "@/common/lib/bus";
+import { useTrackAddToPlaylist } from "@/common/hooks/use-track-add-to-playlist";
 import RendererImageConstants from "@/common/constants/image";
 
 import Search, { type SearchRef } from "@/common/components/page/search";
@@ -24,6 +25,8 @@ const SearchDisplay: FC<object> = () => {
       sourceID: 0,
       sourceType: "other"
     });
+  const { addTrackToPlaylist } = useTrackAddToPlaylist();
+
   return (
     <Search
       className="display-container"
@@ -33,6 +36,7 @@ const SearchDisplay: FC<object> = () => {
       onClickArtist={jumpArtistDisplay}
       addToPlaylistNext={addTrackToPlaylistNext}
       addToPlaylistLast={addTrackToPlaylistLast}
+      addTrackToPlaylist={addTrackToPlaylist}
       openComment={openTrackComment}
       onClickTrack={onTrackPlay}
       heartManager={heartManager}

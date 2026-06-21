@@ -107,6 +107,7 @@ const Cache: FC<CacheProps> = ({
       title: "清除缓存",
       body: "是否要清除所有本地缓存？",
       footer: null,
+      important: true,
       onConfirm: () => {
         AppModal.close();
         AppToast.show({

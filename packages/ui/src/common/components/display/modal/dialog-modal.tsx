@@ -1,6 +1,7 @@
 import { type ReactNode, useMemo } from "react";
 import AppModal from "./use";
 import type { ModalRender } from "@/common/components/display/modal/modal-provider";
+import { cx } from "@emotion/css";
 
 export function createDialogModal({
   title,
@@ -9,7 +10,8 @@ export function createDialogModal({
   onCancel,
   onConfirm,
   width,
-  height
+  height,
+  important
 }: {
   title: string;
   body: ReactNode;
@@ -18,10 +20,11 @@ export function createDialogModal({
   onCancel?: NormalFunc;
   width?: number;
   height?: number;
+  important?: boolean;
 }): ModalRender {
   return {
     title,
-    content: <Dialog body={body} footer={footer} onConfirm={onConfirm} />,
+    content: <Dialog body={body} footer={footer} onConfirm={onConfirm} important={important} />,
     onClose: onCancel,
     width: width ?? 400,
     height
@@ -32,11 +35,13 @@ export function createDialogModal({
 const Dialog = ({
   onConfirm,
   body,
-  footer
+  footer,
+  important
 }: {
   onConfirm?: NormalFunc;
   body?: ReactNode;
   footer?: ReactNode;
+  important?: boolean;
 }) => {
   const renderBody = useMemo(() => {
     if (typeof body !== "string") return body;
@@ -51,12 +56,16 @@ const Dialog = ({
     return (
       <footer className="w-full flex flex-row justify-end items-center gap-2 mt-3">
         <button
-          className={`
+          className={cx(
+            `
             px-2.5 py-1 rounded-md cursor-pointer text-sm
-            hover:bg-(--theme-color-main) hover:text-(--text-color-on-main)
             transition-all ease-in-out duration-300
             active:scale-96
-          `}
+          `,
+            important
+              ? "bg-red-500/80 text-white hover:opacity-50"
+              : "hover:bg-(--theme-color-main) hover:text-(--text-color-on-main)"
+          )}
           onClick={() => {
             onConfirm?.();
             AppModal.close();
@@ -65,7 +74,7 @@ const Dialog = ({
         </button>
       </footer>
     );
-  }, [footer, onConfirm]);
+  }, [footer, important, onConfirm]);
 
   return (
     <section className="w-full h-full">

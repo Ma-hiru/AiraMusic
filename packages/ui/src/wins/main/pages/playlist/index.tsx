@@ -1,9 +1,8 @@
-import { type FC, memo, useRef } from "react";
+import { type FC, memo, useCallback, useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import { useUser } from "@/common/store/user";
 import { RoutePathMain } from "@/common/routes";
 import { useUserTrackManager } from "@/common/hooks/use-user-track-manager";
-import { PlaylistSource } from "@/common/enum";
 import { usePageJump } from "@/wins/main/hooks/use-page-jump";
 import { useDisplayAction } from "@/wins/main/hooks/use-display-action";
 import { usePlayerActionInList } from "@/wins/main/hooks/use-player-action-in-list";
@@ -12,6 +11,9 @@ import { useSetAtom } from "jotai";
 import { useScrollActionsRegister } from "@/common/hooks/use-scroll-actions-register";
 import { useRouterActive } from "@/common/hooks/use-router-active";
 import { scrollActionsAtom, typingAtom } from "@/wins/main/atoms/layout";
+import { useTrackAddToPlaylist } from "@/common/hooks/use-track-add-to-playlist";
+import { RendererModified } from "@/common/lib/modified";
+import { RendererIPCMessageBus } from "@/common/lib/bus";
 
 import Playlist, { type PlaylistRef } from "@/common/components/page/playlist";
 
@@ -42,7 +44,7 @@ const PlaylistPage: FC<object> = () => {
   // 跳转歌手和专辑页
   const { jumpAlbumPage, jumpArtistPage } = usePageJump();
   const { onPageAction } = useDisplayAction(() => {
-    if (source !== PlaylistSource.Normal && source !== PlaylistSource.Like) return null;
+    if (source !== "normal" && source !== "like") return null;
     return {
       id: Number(id),
       type: "playlist",
@@ -50,8 +52,35 @@ const PlaylistPage: FC<object> = () => {
     };
   });
   const { setBackground } = useSetBackground("playlist");
+  // 当前歌单不应出现
+  const { addTrackToPlaylist, addTracksToPlaylist } = useTrackAddToPlaylist(
+    source === "normal" && id ? Number(id) : undefined
+  );
 
   const setIsTyping = useSetAtom(typingAtom);
+
+  const onEdited = useCallback(() => {
+    RendererIPCMessageBus.modified.twoWay({
+      type: "user-playlist"
+    });
+  }, []);
+
+  const onDeleted = useCallback(() => {
+    RendererIPCMessageBus.modified.twoWay({ type: "user-playlist" });
+    RendererIPCMessageBus.modified.twoWay({ type: "remove-playlist", id });
+  }, [id]);
+
+  useEffect(() => {
+    if (!id && !source) return;
+    return RendererModified.listen(
+      {
+        type: "playlist",
+        id,
+        source
+      },
+      () => playlistRef.current?.reload()
+    );
+  }, [id, source]);
 
   return (
     <Playlist
@@ -65,9 +94,13 @@ const PlaylistPage: FC<object> = () => {
       onAddList={onAddList}
       onPlay={onTrackPlay}
       onReplace={onReplace}
+      onEdited={onEdited}
+      onDeleted={onDeleted}
       openComment={openTrackComment}
       addToPlaylistLast={addTrackToPlaylistLast}
       addToPlaylistNext={addTrackToPlaylistNext}
+      addTrackToPlaylist={addTrackToPlaylist}
+      addTracksToPlaylist={addTracksToPlaylist}
       heartManager={heartManager}
       playableManager={playableManager}
       activeTrackID={player.current.track?.id}

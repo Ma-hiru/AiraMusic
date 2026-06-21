@@ -9,6 +9,7 @@ import { scrollActionsAtom, typingAtom } from "@/wins/main/atoms/layout";
 import { useRouterActive } from "@/common/hooks/use-router-active";
 import { useScrollActionsRegister } from "@/common/hooks/use-scroll-actions-register";
 import { RoutePathMain } from "@/common/routes";
+import { useTrackAddToPlaylist } from "@/common/hooks/use-track-add-to-playlist";
 
 import History, { type HistoryRef } from "@/common/components/page/history";
 
@@ -39,6 +40,7 @@ const HistoryPage: FC<object> = () => {
   // 跳转歌手和专辑页
   const { jumpAlbumPage, jumpArtistPage } = usePageJump();
   const { onPageAction } = useDisplayAction({ type: "history" });
+  const { addTrackToPlaylist } = useTrackAddToPlaylist();
 
   const setIsTyping = useSetAtom(typingAtom);
 
@@ -53,6 +55,7 @@ const HistoryPage: FC<object> = () => {
       openComment={openTrackComment}
       addToPlaylistLast={addTrackToPlaylistLast}
       addToPlaylistNext={addTrackToPlaylistNext}
+      addTrackToPlaylist={addTrackToPlaylist}
       heartManager={heartManager}
       playableManager={playableManager}
       activeTrackID={player.current.track?.id}
