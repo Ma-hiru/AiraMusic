@@ -1,6 +1,7 @@
 # <img src="packages/app/assets/logo.svg" width="28" /> AiraMusic
 
-一个基于 Electron、React 和 TypeScript 构建的桌面端第三方网易云音乐播放器。基于 React 与 Electron 的第三方网易云音乐桌面客户端，支持以独立的多窗口（如评论、图片、歌单专辑、设置等）展示数据，支持动态取色、歌词展示、音乐频谱、桌面歌词、托盘和简单流体背景等功能。
+一个基于 Electron、React 和 TypeScript 构建的桌面端第三方网易云音乐播放器。基于 React 与 Electron
+的第三方网易云音乐桌面客户端，支持以独立的多窗口（如评论、图片、歌单专辑、设置等）展示数据，支持动态取色、歌词展示、音乐频谱、桌面歌词、托盘和简单流体背景等功能。
 
 ## 下载
 
@@ -35,6 +36,7 @@
 ![歌单](docs/images/playlist.png)
 ![歌单2](docs/images/playlist2.png)
 ![歌单3](docs/images/playlist3.png)
+![歌单4](docs/images/playlist4.png)
 ![播放列表](docs/images/list.png)
 
 ## 播放历史
@@ -65,6 +67,8 @@
 
 ![设置1](docs/images/settings.png)
 ![设置2](docs/images/settings2.png)
+![设置3](docs/images/settings3.png)
+![设置4](docs/images/settings4.png)
 
 ### 搜索
 
@@ -74,7 +78,8 @@
 
 ## 依赖与架构
 
-AiraMusic 是一个 Yarn workspaces monorepo。桌面壳、渲染层、缓存服务、WASM 与原生插件能力分在不同 package 中，运行时由
+AiraMusic 是一个 Yarn workspaces monorepo。桌面壳、渲染层、缓存服务、WASM 与原生插件能力分在不同 package
+中，运行时由
 Electron 主进程统一编排。
 
 ```text
@@ -96,21 +101,21 @@ packages/native ── 主进程使用的 Rust + napi-rs 原生插件（Windows 
 
 ### 工作区概览
 
-| Package          | 职责                                                                                                 | 主要依赖                                                                                                                                                      |
-|------------------|----------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `packages/ui`    | 渲染层应用。Vite 构建 `index`、`login`、`mini`、`lyric`、`tray`、`image`、`comments`、`display` 等多个入口，全部使用 React。 | React 19, Vite 8, Tailwind CSS 4, SCSS, React Router 7, Zustand, Jotai, Motion, Lucide, Heroicons, Axios, `@applemusic-like-lyrics/lyric`, `@mahiru/wasm` |
+| Package           | 职责                                                                                                 | 主要依赖                                                                                                                                                           |
+|-------------------|----------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `packages/ui`     | 渲染层应用。Vite 构建 `index`、`login`、`mini`、`lyric`、`tray`、`image`、`comments`、`display` 等多个入口，全部使用 React。 | React 19, Vite 8, Tailwind CSS 4, SCSS, React Router 7, Zustand, Jotai, Motion, Lucide, Heroicons, Axios, `@applemusic-like-lyrics/lyric`, `@mahiru/wasm`      |
 | `packages/app`    | Electron 主进程。负责应用启动、窗口管理、托盘注册、IPC handler、自定义协议、服务生命周期和 Electron 打包入口。                             | Electron 42, tsup, `@neteasecloudmusicapienhanced/api`, Express, `express-http-proxy`, `electron-store`, Zod, `@mahiru/store`, `@mahiru/native`, `@mahiru/ipc` |
-| `packages/store`  | 本地缓存服务。它是一个 Go HTTP 服务，渲染层通过 `/cache` 访问；同时提供 TypeScript 启动器，供 Electron 应用启动和停止服务进程。               | Go 1.26, Gin, gin-contrib/cors                                                                                                                            |
-| `packages/wasm`   | Rust WebAssembly 包，提供渲染层使用的原生性能工具。目前包含歌词解析、主题/图片颜色处理、频谱处理、搜索辅助和 WebGL renderer 支持。                 | Rust 2024, wasm-bindgen, wasm-pack, serde, tsify, image, rustfft, regex, web-sys                                                                          |
-| `packages/native` | 主进程使用的 napi-rs 原生插件。提供 Windows 任务栏自定义封面缩略图与实时预览（live preview）能力，非 Windows 平台为空实现。                     | Rust 2024, napi-rs 3, image, windows-sys, once_cell                                                                                                       |
-| `packages/ipc`    | 主进程和渲染层共享的 TypeScript IPC 类型定义，覆盖 invoke 和 message 契约。                                             | `@mahiru/log`                                                                                                                                             |
-| `packages/log`    | app 和 renderer 共享的日志基础能力。                                                                          | TypeScript                                                                                                                                                |
+| `packages/store`  | 本地缓存服务。它是一个 Go HTTP 服务，渲染层通过 `/cache` 访问；同时提供 TypeScript 启动器，供 Electron 应用启动和停止服务进程。               | Go 1.26, Gin, gin-contrib/cors                                                                                                                                 |
+| `packages/wasm`   | Rust WebAssembly 包，提供渲染层使用的原生性能工具。目前包含歌词解析、主题/图片颜色处理、频谱处理、搜索辅助和 WebGL renderer 支持。                 | Rust 2024, wasm-bindgen, wasm-pack, serde, tsify, image, rustfft, regex, web-sys                                                                               |
+| `packages/native` | 主进程使用的 napi-rs 原生插件。提供 Windows 任务栏自定义封面缩略图，非 Windows 平台为空实现。                                       | Rust 2024, napi-rs 3, image, windows-sys, once_cell                                                                                                            |
+| `packages/ipc`    | 主进程和渲染层共享的 TypeScript IPC 类型定义，覆盖 invoke 和 message 契约。                                             | `@mahiru/log`                                                                                                                                                  |
+| `packages/log`    | app 和 renderer 共享的日志基础能力。                                                                          | TypeScript                                                                                                                                                     |
 
 ### 工具链
 
 - 包管理：Yarn 4 workspaces。
 - TypeScript 检查：基于 project references，使用 `tsgo -b`。
-- 前端测试：Vitest + jsdom。
+- 测试：Vitest。
 - 缓存服务检查：`go test`、`go fmt`、`go vet`。
 - WASM / 原生插件检查：`cargo test`、`cargo fmt`、`cargo clippy`。
 - 应用打包：`electron-builder`。

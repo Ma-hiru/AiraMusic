@@ -12,10 +12,10 @@
     </linearGradient>
   </defs>
 
-  <circle cx="256" cy="256" r="228" fill="url(#bg)"/>
-  <circle cx="256" cy="256" r="228" fill="url(#highlight)"/>
+  <circle cx="256" cy="256" r="248" fill="url(#bg)"/>
+  <circle cx="256" cy="256" r="248" fill="url(#highlight)"/>
 
-  <g transform="translate(256,256) scale(1.45)">
+  <g transform="translate(256,256) scale(1.58)">
     <g transform="translate(-75,-95)">
       <path d="M56 0 v170
                a34 34 0 1 1 -18 -30
