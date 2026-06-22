@@ -5,7 +5,7 @@
 
 ## 下载
 
-第三个预览版本已发布，可前往 [Releases](https://github.com/Ma-hiru/AiraMusic/releases) 页面下载。
+第四个预览版本已发布，可前往 [Releases](https://github.com/Ma-hiru/AiraMusic/releases) 页面下载。
 
 当前主要支持：
 
