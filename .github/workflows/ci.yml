@@ -71,7 +71,7 @@ jobs:
       - name: Install wasm-pack
         run: |
           if ! command -v wasm-pack >/dev/null 2>&1; then
-            cargo install wasm-pack --version 0.13.1 --locked
+            cargo install wasm-pack --version 0.15.0 --locked
           fi
 
       - name: Build native binaries
