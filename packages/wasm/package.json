@@ -16,10 +16,9 @@
   "scripts": {
     "clean:cargo": "cargo clean",
     "clean:dist": "rimraf pkg",
-    "build": "run-script-os && rimraf pkg/package.json",
-    "build:win32": "wasm-pack build --target web --out-dir pkg --release",
-    "build:linux": "wasm-pack build --target web --out-dir pkg --dev",
+    "build": "wasm-pack build --target web --out-dir pkg --release && rimraf pkg/package.json",
     "lint": "cargo fmt && cargo clippy --all-targets -- -D warnings",
+    "lint:check": "cargo fmt --check && cargo clippy --all-targets -- -D warnings",
     "test": "cargo test"
   }
 }

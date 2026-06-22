@@ -8,5 +8,4 @@
 **/dist-types
 **/pkg
 **/*.md
-pnpm-lock.yaml
 yarn.lock

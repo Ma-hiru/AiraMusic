@@ -9,7 +9,7 @@ import { MainTray } from "@/lib/tray";
 import { MainScreenResolver } from "@/lib/screen-resolver";
 import { MainServices } from "@/services";
 import { ipcInit } from "@/inner/ipc";
-import { MainTaskBarCoverPreview } from "@/lib/taskbar_cover";
+import { MainTaskBarCoverPreview } from "@/lib/taskbar-cover";
 
 /**
  * @desc 应用实例 \
@@ -195,7 +195,7 @@ export class MainApp {
         if (this.isExiting) return;
         Log.info("App tray registered");
 
-        await this.registerTaskBar(); // 注册任务栏
+        this.registerTaskBar(); // 注册任务栏
         if (this.isExiting) return;
         Log.info("App taskbar registered");
 
