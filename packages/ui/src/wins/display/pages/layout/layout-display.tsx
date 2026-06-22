@@ -7,6 +7,7 @@ import { RendererIPCMessageBus } from "@/common/lib/bus";
 import { useLatestRef } from "@/common/hooks/use-latest-ref";
 import { useSettings } from "@/common/store/settings";
 import { useThemeInjectFromBus } from "@/common/hooks/use-theme-inject-from-bus";
+import { useDisplayTitle } from "@/wins/display/hooks/use-display-title";
 import { BackCtx } from "@/wins/display/ctx/back";
 import { RendererModified } from "@/common/lib/modified";
 
@@ -113,6 +114,8 @@ const LayoutDisplay: FC<object> = () => {
     }),
     [back]
   );
+
+  useDisplayTitle();
 
   return (
     <div className="w-screen h-screen relative overflow-hidden">

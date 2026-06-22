@@ -78,6 +78,8 @@
 
 ## 依赖与架构
 
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/Ma-hiru/AiraMusic)
+
 AiraMusic 是一个 Yarn workspaces monorepo。桌面壳、渲染层、缓存服务、WASM 与原生插件能力分在不同 package
 中，运行时由
 Electron 主进程统一编排。

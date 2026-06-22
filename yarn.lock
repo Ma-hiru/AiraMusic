@@ -1736,6 +1736,7 @@ __metadata:
     react-router-dom: "npm:^7.9.5"
     rolldown: "npm:^1.0.2"
     sass-embedded: "npm:^1.93.3"
+    simple-icons: "npm:^16.24.0"
     tailwindcss: "npm:^4.1.17"
     use-immer: "npm:^0.11.0"
     vite: "npm:8.0.5"
@@ -11050,6 +11051,13 @@ __metadata:
   version: 4.1.0
   resolution: "signal-exit@npm:4.1.0"
   checksum: 10c0/41602dce540e46d599edba9d9860193398d135f7ff72cab629db5171516cfae628d21e7bfccde1bbfdf11c48726bc2a6d1a8fb8701125852fbfda7cf19c6aa83
+  languageName: node
+  linkType: hard
+
+"simple-icons@npm:^16.24.0":
+  version: 16.24.0
+  resolution: "simple-icons@npm:16.24.0"
+  checksum: 10c0/00c26c6fda47c6b5770a86b69e99aa1eefca5325ff3fe2255d434b2c74ebd2f911b872edcccb8525f0fae58c3c37bc85ab4bff751f5c15f206500ae4a8216373
   languageName: node
   linkType: hard
 

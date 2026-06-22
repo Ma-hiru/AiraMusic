@@ -1,6 +1,7 @@
 import { app, session } from "electron";
 import { MainApp } from "./app";
 import { MainExitCodeConstants } from "@/constants/exit-code";
+import { MainHandle } from "@/lib/handle";
 
 /**
  * @desc 程序的入口 \
@@ -15,26 +16,18 @@ export class MainEntry {
 
   private permissions(permissions: string[]) {
     const allowPermissions = new Set(permissions);
-    const isTrustedOrigin = (url: string) => {
-      return (
-        url.startsWith("file://") ||
-        url.startsWith("http://localhost:") ||
-        url.startsWith("http://127.0.0.1:") ||
-        url.startsWith(`${process.env.APP_SCHEME}://`)
-      );
-    };
     app.whenReady().then(() => {
       session.defaultSession.setPermissionRequestHandler(
         (webContents, permission, callback, details) => {
           const url = details.requestingUrl || webContents.getURL();
-          if (!isTrustedOrigin(url)) return callback(false);
+          if (!MainHandle.isTrustedOrigin(url)) return callback(false);
           callback(allowPermissions.has(permission));
         }
       );
       session.defaultSession.setPermissionCheckHandler(
         (_, permission, requestingOrigin, details) => {
           const url = details.requestingUrl || requestingOrigin;
-          if (!isTrustedOrigin(url)) return false;
+          if (!MainHandle.isTrustedOrigin(url)) return false;
           return allowPermissions.has(permission);
         }
       );

@@ -99,6 +99,7 @@ const Settings: FC<SettingsProps> = ({
         cacheStoreConfig={cacheStoreConfig}
         logout={logout}
         login={login}
+        className="md:h-full md:contain-strict md:overflow-y-auto md:scrollbar-show md:pr-1"
       />
       <SettingsContent
         user={user}
@@ -110,7 +111,7 @@ const Settings: FC<SettingsProps> = ({
         cacheStoreSizes={cacheStoreSizes}
         updateCacheStoreConfig={updateCacheStoreConfig}
         refreshSize={getCacheStoreStatus}
-        className="md:h-full md:contain-strict md:overflow-y-auto md:scrollbar-show"
+        className="md:h-full md:contain-strict md:overflow-y-auto md:scrollbar-show md:pr-1"
       />
     </section>
   );
