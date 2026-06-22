@@ -60,31 +60,13 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
             packages/wasm/target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('packages/wasm/Cargo.lock') }}
+            packages/native/target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('packages/wasm/Cargo.lock', 'packages/native/Cargo.lock') }}
           restore-keys: |
             ${{ runner.os }}-cargo-
 
-      - name: Check formatting
-        run: yarn prettier --check .
-
-      - name: Lint TypeScript
-        run: yarn eslint .
-
-      - name: Lint Rust
-        working-directory: packages/wasm
-        run: |
-          cargo fmt --check
-          cargo clippy --all-targets -- -D warnings
-
-      - name: Lint Go
-        working-directory: packages/store
-        run: |
-          gofmt_files="$(gofmt -l .)"
-          if [ -n "$gofmt_files" ]; then
-            echo "$gofmt_files"
-            exit 1
-          fi
-          go vet ./...
+      - name: Lint
+        run: yarn lint:check
 
       - name: Install wasm-pack
         run: |
@@ -92,8 +74,8 @@ jobs:
             cargo install wasm-pack --version 0.13.1 --locked
           fi
 
-      - name: Build WASM package
-        run: yarn build:wasm
+      - name: Build native binaries
+        run: yarn build:bin
 
       - name: Type check
         run: yarn check
@@ -101,8 +83,7 @@ jobs:
       - name: Test
         run: yarn test
 
-      - name: Build packages
+      - name: Build desktop bundles
         run: |
-          yarn build:store
           yarn build:ui
           yarn build:app

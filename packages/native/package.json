@@ -14,6 +14,7 @@
     "clean:cargo": "cargo clean",
     "clean:dist": "tsx scripts/clean-dist.ts",
     "lint": "cargo fmt && cargo clippy --all-targets -- -D warnings",
+    "lint:check": "cargo fmt --check && cargo clippy --all-targets -- -D warnings",
     "test": "cargo test"
   },
   "devDependencies": {

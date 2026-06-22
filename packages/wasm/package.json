@@ -18,6 +18,7 @@
     "clean:dist": "rimraf pkg",
     "build": "wasm-pack build --target web --out-dir pkg --release && rimraf pkg/package.json",
     "lint": "cargo fmt && cargo clippy --all-targets -- -D warnings",
+    "lint:check": "cargo fmt --check && cargo clippy --all-targets -- -D warnings",
     "test": "cargo test"
   }
 }
