@@ -9,7 +9,7 @@ import TrackList, {
 import { usePageJump } from "@/wins/main/hooks/use-page-jump";
 import { usePlayerActionInList } from "@/wins/main/hooks/use-player-action-in-list";
 import { useTrackContextMenu } from "@/common/hooks/use-track-context-menu";
-import { useTrackAddToPlaylist } from "@/common/hooks/use-track-add-to-playlist";
+import { openTrackAddToPlaylist } from "@/common/hooks/use-track-add-to-playlist";
 import type { ModalRender } from "@/common/components/display/modal/modal-provider";
 import RendererImageConstants from "@/common/constants/image";
 import RendererPlayerHandle from "@/wins/main/lib/handle";
@@ -72,7 +72,6 @@ const PlayerPlaylistModalContent = (props: { onJumpPage?: NormalFunc }) => {
 
   const { openTrackComment, addTrackToPlaylistLast, addTrackToPlaylistNext } =
     usePlayerActionInList(() => player.playlist.list());
-  const { addTrackToPlaylist } = useTrackAddToPlaylist();
 
   // 右键菜单
   const { onContextMenu } = useTrackContextMenu({
@@ -81,7 +80,7 @@ const PlayerPlaylistModalContent = (props: { onJumpPage?: NormalFunc }) => {
     onClickAlbum,
     onPlay: onTrackPlay,
     openComment: openTrackComment,
-    addTrackToPlaylist
+    addTrackToPlaylist: openTrackAddToPlaylist
   });
 
   return (
