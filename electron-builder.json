@@ -57,10 +57,6 @@
       {
         "target": "msi",
         "arch": ["x64"]
-      },
-      {
-        "target": "portable",
-        "arch": ["x64"]
       }
     ],
     "icon": "packages/app/assets/logo.png",

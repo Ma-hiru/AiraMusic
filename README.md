@@ -74,7 +74,7 @@
 
 ## 依赖与架构
 
-AiraMusic 是一个 Yarn workspaces monorepo。桌面壳、渲染层、缓存服务和 WASM 能力分在不同 package 中，运行时由
+AiraMusic 是一个 Yarn workspaces monorepo。桌面壳、渲染层、缓存服务、WASM 与原生插件能力分在不同 package 中，运行时由
 Electron 主进程统一编排。
 
 ```text
@@ -87,9 +87,11 @@ packages/app ── Electron 主进程
     ├── 注册 IPC handler 和自定义应用协议
     ├── 在 utility process 中启动网易云 API 服务
     ├── 在 utility process 中启动 Express 代理服务
-    └── 通过 @mahiru/store 启动 Go 缓存服务二进制
+    ├── 通过 @mahiru/store 启动 Go 缓存服务二进制
+    └── 通过 @mahiru/native 设置 Windows 任务栏封面缩略图（仅 Windows）
 
-packages/wasm ── 渲染层使用的 Rust + wasm-bindgen 模块
+packages/wasm   ── 渲染层使用的 Rust + wasm-bindgen 模块
+packages/native ── 主进程使用的 Rust + napi-rs 原生插件（Windows 任务栏缩略图）
 ```
 
 ### 工作区概览
@@ -97,11 +99,12 @@ packages/wasm ── 渲染层使用的 Rust + wasm-bindgen 模块
 | Package          | 职责                                                                                                 | 主要依赖                                                                                                                                                      |
 |------------------|----------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `packages/ui`    | 渲染层应用。Vite 构建 `index`、`login`、`mini`、`lyric`、`tray`、`image`、`comments`、`display` 等多个入口，全部使用 React。 | React 19, Vite 8, Tailwind CSS 4, SCSS, React Router 7, Zustand, Jotai, Motion, Lucide, Heroicons, Axios, `@applemusic-like-lyrics/lyric`, `@mahiru/wasm` |
-| `packages/app`   | Electron 主进程。负责应用启动、窗口管理、托盘注册、IPC handler、自定义协议、服务生命周期和 Electron 打包入口。                             | Electron 40, tsup, `@neteasecloudmusicapienhanced/api`, Express, `express-http-proxy`, `electron-store`, Zod, `@mahiru/store`, `@mahiru/ipc`              |
-| `packages/store` | 本地缓存服务。它是一个 Go HTTP 服务，渲染层通过 `/cache` 访问；同时提供 TypeScript 启动器，供 Electron 应用启动和停止服务进程。               | Go 1.25, Gin, gin-contrib/cors                                                                                                                            |
-| `packages/wasm`  | Rust WebAssembly 包，提供渲染层使用的原生性能工具。目前包含歌词解析、主题/图片颜色处理、频谱处理、搜索辅助和 WebGL renderer 支持。                 | Rust 2024, wasm-bindgen, wasm-pack, serde, tsify, image, rustfft, regex, web-sys                                                                          |
-| `packages/ipc`   | 主进程和渲染层共享的 TypeScript IPC 类型定义，覆盖 invoke 和 message 契约。                                             | `@mahiru/log`                                                                                                                                             |
-| `packages/log`   | app 和 renderer 共享的日志基础能力。                                                                          | TypeScript                                                                                                                                                |
+| `packages/app`    | Electron 主进程。负责应用启动、窗口管理、托盘注册、IPC handler、自定义协议、服务生命周期和 Electron 打包入口。                             | Electron 42, tsup, `@neteasecloudmusicapienhanced/api`, Express, `express-http-proxy`, `electron-store`, Zod, `@mahiru/store`, `@mahiru/native`, `@mahiru/ipc` |
+| `packages/store`  | 本地缓存服务。它是一个 Go HTTP 服务，渲染层通过 `/cache` 访问；同时提供 TypeScript 启动器，供 Electron 应用启动和停止服务进程。               | Go 1.26, Gin, gin-contrib/cors                                                                                                                            |
+| `packages/wasm`   | Rust WebAssembly 包，提供渲染层使用的原生性能工具。目前包含歌词解析、主题/图片颜色处理、频谱处理、搜索辅助和 WebGL renderer 支持。                 | Rust 2024, wasm-bindgen, wasm-pack, serde, tsify, image, rustfft, regex, web-sys                                                                          |
+| `packages/native` | 主进程使用的 napi-rs 原生插件。提供 Windows 任务栏自定义封面缩略图与实时预览（live preview）能力，非 Windows 平台为空实现。                     | Rust 2024, napi-rs 3, image, windows-sys, once_cell                                                                                                       |
+| `packages/ipc`    | 主进程和渲染层共享的 TypeScript IPC 类型定义，覆盖 invoke 和 message 契约。                                             | `@mahiru/log`                                                                                                                                             |
+| `packages/log`    | app 和 renderer 共享的日志基础能力。                                                                          | TypeScript                                                                                                                                                |
 
 ### 工具链
 
@@ -109,7 +112,7 @@ packages/wasm ── 渲染层使用的 Rust + wasm-bindgen 模块
 - TypeScript 检查：基于 project references，使用 `tsgo -b`。
 - 前端测试：Vitest + jsdom。
 - 缓存服务检查：`go test`、`go fmt`、`go vet`。
-- WASM 检查：`cargo test`、`cargo fmt`、`cargo clippy`。
+- WASM / 原生插件检查：`cargo test`、`cargo fmt`、`cargo clippy`。
 - 应用打包：`electron-builder`。
 
 ## 构建
@@ -136,7 +139,7 @@ packages/wasm ── 渲染层使用的 Rust + wasm-bindgen 模块
 ### 开发模式
 
 ```bash
-  yarn build:wasm && yarn build:store  # 首次运行
+  yarn build:bin  # 首次运行
   yarn dev
 ```
 
