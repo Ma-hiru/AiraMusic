@@ -117,11 +117,9 @@ const RowComponent: VirtualListRow<
   const data = items[index]!;
   const isPrivate = extra.category === "user" && NeteasePlaylistSummary.isPrivacy(data);
   const active = extra.activeID === data.id;
-  const cover = NeteaseNetworkImage.fromPlaylistCover(data)
-    .setSize(RendererImageConstants.NavPlaylistCoverSize)
-    .setCacheKey(
-      `${data.updateTime}-${data.trackCount}-${data.trackUpdateTime}-${data.trackNumberUpdateTime}`
-    );
+  const cover = NeteaseNetworkImage.fromPlaylistCover(data).setSize(
+    RendererImageConstants.NavPlaylistCoverSize
+  );
   return (
     <div className="w-(--side-bar-expand-width) px-3">
       <div

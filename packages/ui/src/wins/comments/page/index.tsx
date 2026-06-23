@@ -1,4 +1,4 @@
-import { type FC, memo, useEffect, useState } from "react";
+import { type FC, memo, useEffect, useRef, useState } from "react";
 import { useComments } from "@/common/hooks/use-comments";
 import { CommentSort, CommentType } from "@/common/enum";
 import { RendererCache } from "@/common/lib/cache";
@@ -47,19 +47,24 @@ const CommentsPage: FC<object> = () => {
     RendererIPCMessageBus.updater.deliver("track-meta");
   }, [dynamicContent]);
 
+  const lastTrackID = useRef(trackMetaBus.data?.track?.id);
   useEffect(() => {
     const track = trackMetaBus.data?.track;
+    const playing = trackMetaBus.data?.status === "playing";
     if (!track) return;
     if (dynamicContent) {
       RendererCache.browser.setOne("comments-dynamic-content", "true");
-      RendererIPCMessageBus.comment.dispatch({
-        id: track.id,
-        type: "track"
-      });
+      if (lastTrackID.current !== track.id && playing) {
+        RendererIPCMessageBus.comment.dispatch({
+          id: track.id,
+          type: "track"
+        });
+        lastTrackID.current = track.id;
+      }
     } else {
       RendererCache.browser.setOne("comments-dynamic-content", "false");
     }
-  }, [dynamicContent, trackMetaBus.data?.track]);
+  }, [dynamicContent, trackMetaBus.data?.status, trackMetaBus.data?.track]);
 
   return (
     <div className="w-screen h-screen pt-10 overflow-hidden flex flex-col relative">

@@ -82,12 +82,7 @@ const AddToPlaylistList: FC<{
   return (
     <div className="flex flex-col gap-1">
       {playlists.map((p) => {
-        const cover = NeteaseNetworkImage.fromPlaylistCover(p)
-          .setSize(NeteaseImageSize.xs)
-          .setCacheKey(
-            `${p.updateTime}-${p.trackCount}-${p.trackUpdateTime}-${p.trackNumberUpdateTime}`
-          );
-
+        const cover = NeteaseNetworkImage.fromPlaylistCover(p).setSize(NeteaseImageSize.xs);
         return (
           <button
             key={p.id}

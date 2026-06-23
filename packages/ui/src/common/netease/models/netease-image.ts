@@ -42,9 +42,12 @@ export class NeteaseNetworkImage {
     return this;
   }
 
+  private __appendKey = false;
   setCacheKey(cacheKey: Optional<string>) {
     if (!cacheKey) return this;
-    this.cacheKey = cacheKey;
+    if (this.__appendKey) {
+      this.cacheKey += cacheKey;
+    }
     return this;
   }
 
@@ -95,12 +98,15 @@ export class NeteaseNetworkImage {
     >
   >(playlist: T): T extends Falsy ? null : NeteaseNetworkImage {
     if (!playlist) return null as T extends Falsy ? null : NeteaseNetworkImage;
-    return new NeteaseNetworkImage({
+    const instance = new NeteaseNetworkImage({
       url: playlist.coverImgUrl,
       sourceID: playlist.id,
       sourceName: "playlist",
-      alt: playlist.name || playlist.coverImgUrl
+      alt: playlist.name || playlist.coverImgUrl,
+      cacheKey: `${playlist.updateTime}-${playlist.trackCount}-${playlist.trackUpdateTime}-${playlist.trackNumberUpdateTime}`
     }) as T extends Falsy ? null : NeteaseNetworkImage;
+    instance!.__appendKey = true;
+    return instance;
   }
 
   static fromAlbumCover<T extends Optional<NeteaseAlbum>>(
