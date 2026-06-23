@@ -74,19 +74,31 @@ export default class _NeteaseTrackAPI {
   }
 
   /**
-   * 听歌打卡
-   * @desc 调用此接口 , 传入音乐 id, 来源 id，歌曲时间 time，更新听歌排行数据
+   * 听歌打卡 v2 NCBL加密版
+   * @desc 调用此接口，使用桌面客户端 NCBL 加密日志格式上报听歌记录
    */
-  static scrobble(params: {
+  static scrobbleV2(params: {
     /** 歌曲 id */
     id: number;
-    /** 歌单或专辑 id */
-    sourceid: number;
-    /** 歌曲播放时间,单位为秒 */
-    time?: number;
+    /** 歌曲播放时间，单位为秒 */
+    time: number;
+    /** 来源列表 id */
+    sourceid?: number;
+    /** 来源名称(默认 list) */
+    source?: string;
+    /** 歌曲名 */
+    name?: string;
+    /** 艺术家 */
+    artist?: string;
+    /** 码率(默认 320) */
+    bitrate?: number;
+    /** 音质等级(默认 exhigh) */
+    level?: string;
+    /**  歌曲总时长(秒) */
+    total?: number;
   }) {
     return apiRequest<any, NeteaseAPI.NeteaseAPIResponse>({
-      url: "/scrobble",
+      url: "/scrobble/v1",
       params: {
         ...params,
         timestamp: Date.now()

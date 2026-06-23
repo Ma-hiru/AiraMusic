@@ -82,26 +82,16 @@ export class MainProtocol {
           });
         }
         const chunkSize = end - start + 1;
-        const nodeStream = createReadStream(filePath, { start, end });
-        const webStream = Readable.toWeb(nodeStream);
-        return new Response(webStream as ReadableStream, {
-          status: 206,
-          headers: {
-            ...commonHeaders,
-            "Content-Length": chunkSize.toString(),
-            "Content-Range": `bytes ${start}-${end}/${total}`
-          }
+        return this.streamResponse(filePath, { start, end }, request.signal, 206, {
+          ...commonHeaders,
+          "Content-Length": chunkSize.toString(),
+          "Content-Range": `bytes ${start}-${end}/${total}`
         });
       }
 
-      const nodeStream = createReadStream(filePath);
-      const webStream = Readable.toWeb(nodeStream);
-      return new Response(webStream as ReadableStream, {
-        status: 200,
-        headers: {
-          ...commonHeaders,
-          "Content-Length": total.toString()
-        }
+      return this.streamResponse(filePath, undefined, request.signal, 200, {
+        ...commonHeaders,
+        "Content-Length": total.toString()
       });
     } catch (err) {
       Log.error({
@@ -111,6 +101,31 @@ export class MainProtocol {
       });
       return new Response("Not Found", { status: 404 });
     }
+  }
+
+  private static streamResponse(
+    filePath: string,
+    options: { start: number; end: number } | undefined,
+    signal: AbortSignal,
+    status: number,
+    headers: Record<string, string>
+  ) {
+    const nodeStream = options ? createReadStream(filePath, options) : createReadStream(filePath);
+
+    if (signal.aborted) {
+      nodeStream.destroy();
+    } else {
+      const onAbort = () => nodeStream.destroy();
+      signal.addEventListener("abort", onAbort, { once: true });
+      // 中止/客户端断开时 destroy() 会触发 close
+      nodeStream.once("close", () => signal.removeEventListener("abort", onAbort));
+    }
+    // 读取错误
+    nodeStream.once("error", (err) => {
+      Log.warn("protocol", "read stream error", err);
+    });
+
+    return new Response(Readable.toWeb(nodeStream) as ReadableStream, { status, headers });
   }
 
   private static parseRange(rangeHeader: string, size: number) {
