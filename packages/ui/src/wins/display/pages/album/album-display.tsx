@@ -7,7 +7,7 @@ import { useArtistOrAlbumDisplayJump } from "@/wins/display/hooks/use-artist-or-
 import { usePlayerChangeActionFromDisplay } from "@/wins/display/hooks/use-player-change-action-from-display";
 import { useDisplayPageAction } from "@/wins/display/hooks/use-display-page-action";
 import { RendererIPCMessageBus } from "@/common/lib/bus";
-import { useDisplayTitle } from "@/wins/display/hooks/use-display-title";
+import { useDisplayTitleRegister } from "@/wins/display/hooks/use-display-title";
 import { useTrackAddToPlaylist } from "@/common/hooks/use-track-add-to-playlist";
 import RendererImageConstants from "@/common/constants/image";
 
@@ -38,7 +38,7 @@ const AlbumDisplay: FC<object> = () => {
     type: "album",
     id: id!
   });
-  const { updateTitle } = useDisplayTitle("album");
+  const { setTitle } = useDisplayTitleRegister("album", "专辑");
   const { addTrackToPlaylist } = useTrackAddToPlaylist();
 
   return (
@@ -60,7 +60,12 @@ const AlbumDisplay: FC<object> = () => {
       addToPlaylistNext={addTrackToPlaylistNext}
       addTrackToPlaylist={addTrackToPlaylist}
       openComment={openTrackComment}
-      onDataLoaded={(a) => a.content.name && updateTitle(a.content.name)}
+      onDataLoaded={(album) => {
+        if (!album) return;
+        const name = album.content.name;
+        const artist = album.content.artists.map((a) => a.name).join("&");
+        return setTitle(`${name} - ${artist}`);
+      }}
     />
   );
 };

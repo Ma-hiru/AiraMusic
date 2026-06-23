@@ -185,8 +185,13 @@ impl LyricLineInfo {
     #[allow(non_snake_case)]
     /// 识别跨多行的对唱/转述段落。
     ///
-    /// 例如第一行以 `「` 开头、第二行以 `」` 结尾时，返回两行的闭区间。
-    /// 这里只保留一个打开中的区间，遇到匹配右符号就收束，防止跨段落过度吞行。
+    /// 例如第一行以 `「` 开头、若干行之后才出现匹配的 `」`，返回这几行的闭区间。
+    /// 采用「左右符号计数」的而非简单的首尾匹配：
+    /// - 起始行必须以左符号开头，且该行内左右符号净未闭合（深度 > 0）才开启区间；
+    ///   因此 `「そばにいる…」ただそれだけで` 这类行内已闭合的引号不会被误当作跨行起点
+    ///   （见 late in autumn）。
+    /// - 区间在累计深度回到 0 的那一行收束，能正确处理收尾行带正文（`…」のこと`）
+    ///   以及行内嵌套（`「…「…」…」`），不会提前或滞后收束
     pub fn isBackChorusWithMultiLine(lines: Vec<String>) -> Vec<IndexTuple> {
         let mut res: Vec<(usize, usize)> = vec![];
         let lines = lines
@@ -194,25 +199,33 @@ impl LyricLineInfo {
             .map(|l| l.trim().to_string())
             .collect::<Vec<String>>();
 
-        let mut start: Option<(usize, &'static str)> = None;
+        // 开启状态：起始行号、该对符号、当前累计未闭合深度。
+        let mut open: Option<(usize, &'static str, &'static str, i32)> = None;
         for (i, line) in lines.into_iter().enumerate() {
             if line.is_empty() {
                 continue;
             }
 
-            if let Some((start_index, right)) = start {
-                if line.ends_with(right) {
+            if let Some((start_index, left, right, depth)) = open {
+                let new_depth = depth + Self::delimiter_depth(&line, left, right);
+                if new_depth <= 0 {
                     res.push((start_index, i));
-                    start = None;
+                    open = None;
+                } else {
+                    open = Some((start_index, left, right, new_depth));
                 }
                 continue;
             }
 
-            if let Some((_, right)) =
+            // 只有行首左符号才视为对唱/背景候选（避免行内注音括号被当成开启），
+            // 且该符号在本行内净未闭合时才开启跨行区间。
+            if let Some((left, right)) =
                 Self::find_start_predicate(&line, &MULTI_LINE_BACK_CHORUS_PREDICATE_CHARS)
-                && !line.ends_with(right)
             {
-                start = Some((i, right));
+                let depth = Self::delimiter_depth(&line, left, right);
+                if depth > 0 {
+                    open = Some((i, left, right, depth));
+                }
             }
         }
 
@@ -249,6 +262,15 @@ impl LyricLineInfo {
             .iter()
             .find(|(left, _)| line.starts_with(left))
             .copied()
+    }
+
+    /// 统计一行内某对符号的「净未闭合深度」：左符号出现次数减右符号出现次数。
+    ///
+    /// 正数表示本行净开启了若干左符号（需后续行闭合），`<= 0` 表示行内已自洽闭合。
+    /// 仅用于左右不同的成对符号（`MULTI_LINE_BACK_CHORUS_PREDICATE_CHARS` 已排除直引号），
+    /// 因此 `matches` 不会把同一字符既算作左又算作右。
+    fn delimiter_depth(line: &str, left: &str, right: &str) -> i32 {
+        line.matches(left).count() as i32 - line.matches(right).count() as i32
     }
 
     /// 在一行逐词歌词中定位注音区间。
@@ -731,6 +753,61 @@ mod test {
             joined_again,
             "儚（はかな）い日々（ひび） 積（つ）もっていく"
         );
+    }
+
+    #[test]
+    fn test_multiline_back_chorus_ignores_inline_closed_pair() {
+        // late in autumn: 行首的 `「…」` 已在本行内闭合，后面还有正文，
+        // 不应作为跨行背景的起点，把后续多行一路并入背景，直到下一处 `」`。
+        let result = LyricLineInfo::isBackChorusWithMultiLine(vec![
+            "「そばにいる…」ただそれだけで".into(),
+            "ずっと遥か先も".into(),
+            "生きていける筈だとそう思った".into(),
+            "呟いた「ごめんね」".into(),
+        ]);
+
+        assert!(result.is_empty());
+    }
+
+    #[test]
+    fn test_multiline_back_chorus_closes_on_line_with_trailing_text() {
+        // 收尾行的右符号后面还有正文（`baz」qux`）：基于深度计数仍应在该行收束，
+        // 而不是因为不以 `」` 结尾就一路吞到文件末尾。
+        let result = LyricLineInfo::isBackChorusWithMultiLine(vec![
+            "「foo".into(),
+            "bar".into(),
+            "baz」qux".into(),
+            "normal".into(),
+        ]);
+
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0].start, 0);
+        assert_eq!(result[0].end, 2);
+    }
+
+    #[test]
+    fn test_multiline_back_chorus_handles_nested_pairs() {
+        // 行内嵌套的 `「重要」` 不应提前收束外层区间：深度在中间行回到 1，到末行才归零。
+        let result = LyricLineInfo::isBackChorusWithMultiLine(vec![
+            "「これは".into(),
+            "すごく「重要」な".into(),
+            "ことだ」".into(),
+        ]);
+
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0].start, 0);
+        assert_eq!(result[0].end, 2);
+    }
+
+    #[test]
+    fn test_multiline_back_chorus_opens_when_inline_pair_then_unclosed() {
+        // 行首 `「A」` 已闭合，但同一行又出现未闭合的 `「B`：净深度仍为 1，应开启区间。
+        let result =
+            LyricLineInfo::isBackChorusWithMultiLine(vec!["「A」「B".into(), "C」".into()]);
+
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0].start, 0);
+        assert_eq!(result[0].end, 1);
     }
 
     #[test]

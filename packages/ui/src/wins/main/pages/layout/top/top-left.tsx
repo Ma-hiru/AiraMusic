@@ -11,13 +11,18 @@ import { RendererIPCMessageBus } from "@/common/lib/bus";
 
 import NeteaseImage from "@/common/components/display/image/netease-image";
 import NoDrag from "@/common/components/layout/drag/no-drag";
+import RendererImageConstants from "@/common/constants/image";
 
 interface TopLeftProps {
   user: Nullable<NeteaseUser>;
 }
 
 const TopLeft: FC<TopLeftProps> = ({ user }) => {
-  const avatar = useMemo(() => NeteaseNetworkImage.fromUserAvatar(user), [user]);
+  const avatar = useMemo(
+    () =>
+      NeteaseNetworkImage.fromUserAvatar(user)?.setSize(RendererImageConstants.TopMiniAvatarSize),
+    [user]
+  );
   const sideBar = useAtomValue(sidebarAtom);
   const [playModal, setPlayModal] = useAtom(playModalAtom);
 
@@ -105,4 +110,5 @@ const TopLeft: FC<TopLeftProps> = ({ user }) => {
     </div>
   );
 };
+
 export default memo(TopLeft);

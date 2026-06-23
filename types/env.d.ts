@@ -11,6 +11,7 @@ interface ENV {
   readonly UI_LOG_LEVEL: string;
   readonly APP_LOG_LEVEL: string;
   readonly APP_NAME: string;
+  readonly APP_VERSION: string;
   readonly APP_DESC: string;
   readonly APP_SCHEME: string;
   readonly APP_SCHEME_FILE_HOSTNAME: string;

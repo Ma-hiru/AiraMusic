@@ -1,5 +1,5 @@
 import { PlaylistPathUtils } from "./utils";
-import { type Location } from "react-router-dom";
+import type { Location } from "react-router-dom";
 import type { PlaylistPathUtilsType, PlaylistProps, Props, RouteFields, RouteList } from "./type";
 
 type RoutePathInstance<T extends Props> = RoutePath<T> &
@@ -35,17 +35,12 @@ export class RoutePath<const T extends Props> {
     }
   }
 
-  public matchPathname(location: Location, pathname: string) {
-    const playlistBase = this.playlist?.base ?? "";
-    return RoutePath.matchPathname(
-      location,
-      this.base,
-      pathname,
-      !!playlistBase && pathname.startsWith(playlistBase)
-    );
+  public matchPathname(location: Location, pathname: string | PlaylistPathUtils) {
+    pathname = pathname instanceof PlaylistPathUtils ? pathname.base : pathname;
+    return RoutePath.match(location, this.base, pathname, false);
   }
 
-  static matchPathname(location: Location, base: string, pathname: string, full = false) {
+  static match(location: Location, base: string, pathname: string, full: boolean) {
     const path = full ? location.pathname + location.search : location.pathname;
     return (base + pathname).replace("//", "/") === path;
   }

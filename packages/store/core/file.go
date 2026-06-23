@@ -5,14 +5,17 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"store/utils"
 	"sync"
+
+	"store/utils"
 )
 
-var store *Store
-var ErrStoreExist = errors.New("store exist")
-var CurrentStoreVersion = 1
-var StoreIndexName = "index"
+var (
+	store               *Store
+	ErrStoreExist       = errors.New("store exist")
+	CurrentStoreVersion = 1
+	StoreIndexName      = "index"
+)
 
 func GetStore() *Store {
 	return store
@@ -47,7 +50,6 @@ func CreateLocalStore(dir string) (*StoreMeta, error) {
 
 	if fileInfo.IsDir() {
 		StoreIndexName = StoreIndexName + "_" + utils.RandString(8)
-
 	}
 	return &meta, ErrStoreExist
 }

@@ -17,6 +17,7 @@ import {
   NeteaseServicesTrack
 } from "@/common/netease/services";
 import { RendererIPCMessageBus } from "@/common/lib/bus";
+import { RendererWindow } from "@/common/lib/window";
 import NeteaseImage from "@/common/components/display/image/netease-image";
 import Marquee from "@/common/components/display/marquee";
 
@@ -96,7 +97,7 @@ const Title: FC<TitleProps> = ({ className, commentBus }) => {
   }, [commentBus.data?.id, commentBus.data?.type]);
 
   useEffect(() => {
-    let name = `${import.meta.env.APP_NAME} 评论`;
+    let name = "评论";
     if (commentBus.data?.type === "track" && track) {
       name += ` - ${track.name}`;
     } else if (commentBus.data?.type === "playlist" && playlist) {
@@ -104,7 +105,8 @@ const Title: FC<TitleProps> = ({ className, commentBus }) => {
     } else if (commentBus.data?.type === "album" && album) {
       name += ` - ${album.content.name}`;
     }
-    document.title = name;
+    window.document.title = name;
+    RendererWindow.current.title(name);
   }, [album, commentBus.data?.type, playlist, track]);
 
   const marqueeOpts = {

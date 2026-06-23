@@ -15,6 +15,8 @@ export type NormalEventMaps = {
     deltaY?: number;
   };
   event_window_external: { url: string; title: string };
+  event_window_browser: { url: string };
+  event_window_title: { type: WindowType; title: string };
   event_window_open: WindowType;
   event_window_debug: Optional<WindowType>;
   event_window_close: Optional<WindowType>;

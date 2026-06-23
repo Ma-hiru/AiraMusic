@@ -1,0 +1,27 @@
+version: "2"
+
+linters:
+  default: standard
+  enable:
+    - bodyclose
+    - misspell
+    - unconvert
+    - unused
+  exclusions:
+    generated: lax
+    presets:
+      - common-false-positives
+      - std-error-handling
+    rules:
+      - path: _test\.go
+        linters:
+          - errcheck
+
+formatters:
+  enable:
+    - gofmt
+    - goimports
+  settings:
+    goimports:
+      local-prefixes:
+        - store

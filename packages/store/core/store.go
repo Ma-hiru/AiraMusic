@@ -7,10 +7,11 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
-	"store/utils"
 	"strconv"
 	"strings"
 	"time"
+
+	"store/utils"
 )
 
 const indexFlushDelay = 2 * time.Second

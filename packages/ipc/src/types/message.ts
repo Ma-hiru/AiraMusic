@@ -154,6 +154,7 @@ type MessageSingle = {
   message_dispatch_login: string;
   message_dispatch_device_output_set: string;
   message_dispatch_cache_has_clear: boolean;
+  message_dispatch_need_login: boolean;
 };
 
 type MessageEventValue = MessageBus & MessageSingle;

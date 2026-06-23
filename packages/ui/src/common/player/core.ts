@@ -21,8 +21,8 @@ import { settingsStoreSnapshot } from "@/common/store/settings";
 import { userStoreSnapshot } from "@/common/store/user";
 import { Log } from "@/common/lib/log";
 import { throttle } from "lodash-es";
+import { Status } from "@/common/netease/services/auth";
 import AppToast from "@/common/components/display/toast";
-
 import RendererPlayerAudio from "./audio";
 import RendererPlayerPlaylist from "./playlist";
 import RendererPlayerHistory from "./history";
@@ -137,7 +137,7 @@ export default class RendererPlayer extends Listenable {
       NeteaseUser.isLoggedIn
     ) {
       NeteaseServicesAuth.checkLoggedIn().then((check) => {
-        if (!check) {
+        if (check === Status.Expired) {
           AppToast.show({ type: "info", text: "登录过期" });
           void NeteaseServicesAuth.logout();
         }
@@ -145,35 +145,57 @@ export default class RendererPlayer extends Listenable {
     }
   }
 
+  private playDurationMS = 0;
+
   /** 监听事件，绑定状态机 */
   private connect() {
+    let last = 0;
     const onPlaying = () => {
+      last = performance.now();
       this.checkStatus();
       this.status = RendererPlayerStatus.playing;
     };
     const onLoadStart = () => (this.status = RendererPlayerStatus.loading);
+    const onWaiting = () => (this.status = RendererPlayerStatus.loading);
     const onLoadedData = () => (this.status = RendererPlayerStatus.paused);
     const onPause = () => (this.status = RendererPlayerStatus.paused);
     const onError = () => (this.status = RendererPlayerStatus.error);
     const onEnded = () => this.playlist.next(false);
+    const onTimeupdate = () => {
+      const now = performance.now();
+      if (now > last && last !== 0) {
+        const delta = now - last;
+        this.playDurationMS += delta;
+      }
+      last = now;
+    };
 
     this.audio.addEventListener("playing", onPlaying, { passive: true });
     this.audio.addEventListener("loadstart", onLoadStart, { passive: true });
     this.audio.addEventListener("loadend", onLoadStart, { passive: true });
+    this.audio.addEventListener("waiting", onWaiting, { passive: true });
+    this.audio.addEventListener("stalled", onWaiting, { passive: true });
     this.audio.addEventListener("loadeddata", onLoadedData, { passive: true });
     this.audio.addEventListener("pause", onPause, { passive: true });
     this.audio.addEventListener("error", onError, { passive: true });
     this.audio.addEventListener("ended", onEnded, { passive: true });
+    this.audio.addEventListener("timeupdate", onTimeupdate, { passive: true });
 
     const unsubscribe = this.playlist.addListener(() => {
       const current = this.playlist.current();
       if (!current) {
         this.status = RendererPlayerStatus.idle;
+        this.audio.currentTime = 0;
       } else if (this.current.track?.detail.id !== current.detail.id) {
-        this.current.track &&
+        if (this.current.track && this.playDurationMS > 2_000) {
           this.history.add(
-            NeteaseHistoryRecord.fromTrack(this.current.track, this.audio.currentTime)
+            NeteaseHistoryRecord.fromTrack(
+              this.current.track,
+              Math.floor(this.playDurationMS / 1_000)
+            )
           );
+        }
+        this.playDurationMS = 0;
         void this.load(current, true);
       }
       this.executeListeners();
@@ -183,10 +205,13 @@ export default class RendererPlayer extends Listenable {
       unsubscribe();
       this.audio.removeEventListener("playing", onPlaying);
       this.audio.removeEventListener("loadstart", onLoadStart);
+      this.audio.removeEventListener("waiting", onWaiting);
+      this.audio.removeEventListener("stalled", onWaiting);
       this.audio.removeEventListener("loadeddata", onLoadedData);
       this.audio.removeEventListener("pause", onPause);
       this.audio.removeEventListener("error", onError);
       this.audio.removeEventListener("ended", onEnded);
+      this.audio.removeEventListener("timeupdate", onTimeupdate);
     };
   }
 
@@ -250,8 +275,8 @@ export default class RendererPlayer extends Listenable {
     if (controller.signal.aborted) return null;
     const audio = await NeteaseServicesAudio.track(track, preference, false);
 
-    // 如果10s后没有切换歌曲，那么可以进行缓存
-    if (audio) {
+    // 如果10s后没有切换歌曲，那么可以缓存非本地资源
+    if (audio && !audio.isLocal()) {
       this.downloadAudioTimer && window.clearTimeout(this.downloadAudioTimer);
       this.downloadAudioTimer = window.setTimeout(() => {
         if (controller.signal.aborted) return;
@@ -315,8 +340,12 @@ export default class RendererPlayer extends Listenable {
       const audio = instance.current.audio;
       if (!audio) return;
 
-      const ok = await fetch(audio.src)
-        .then((res) => res.ok)
+      // 仅探测文件是否仍存在：只请求 1 字节并立即取消响应体，避免拉取整文件造成的句柄泄漏
+      const ok = await fetch(audio.src, { headers: { range: "bytes=0-0" } })
+        .then((res) => {
+          res.body?.cancel().catch(() => {});
+          return res.ok;
+        })
         .catch(() => false);
 
       if (!ok) {

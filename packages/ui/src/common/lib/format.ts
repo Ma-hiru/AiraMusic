@@ -153,4 +153,27 @@ export class RendererFormat {
     const key = RendererShortcutConstants.keyLabels[binding.key] ?? binding.key.toUpperCase();
     return [...parts, key].join(" + ");
   }
+
+  /** 返回ms */
+  static timeLimit(time: number, unit: "d" | "m" | "h") {
+    if (!Number.isFinite(time)) {
+      time = 7;
+      unit = "d";
+    }
+    let res = 10 ** 3; // 1s
+
+    switch (unit) {
+      case "m":
+        res *= 60;
+        break;
+      case "h":
+        res *= 60 ** 2;
+        break;
+      case "d":
+        res *= 60 ** 2 * 24;
+        break;
+    }
+
+    return res * time;
+  }
 }

@@ -2,8 +2,9 @@ package args
 
 import (
 	"flag"
-	"store/utils"
 	"time"
+
+	"store/utils"
 )
 
 var (

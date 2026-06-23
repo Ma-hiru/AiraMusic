@@ -44,12 +44,12 @@ export class NeteaseTrack implements NeteaseTrackModel {
   readonly m: Nullable<NeteaseAPI.M>;
   readonly sq: Nullable<NeteaseAPI.Sq>;
   readonly privilege: Nullable<NeteaseAPI.NeteaseTrackPrivilege>;
-  readonly tns?: string[];
+  readonly tns: string[];
 
   constructor(props: NeteaseTrackModel) {
     this.id = props.id;
     this.al = props.al;
-    this.alia = props.alia;
+    this.alia = props.alia || [];
     this.ar = props.ar;
     this.dt = props.dt;
     this.fee = props.fee;
@@ -65,30 +65,29 @@ export class NeteaseTrack implements NeteaseTrackModel {
     this.l = props.l;
     this.m = props.m;
     this.sq = props.sq;
-    this.tns = props.tns;
+    this.tns = props.tns || [];
     this.privilege = props.privilege;
     // 移除重复的翻译和别名
     const coverage = new Set();
-    for (const ts of this.tns ?? []) {
-      for (const a of this.alia ?? []) {
+    for (const ts of this.tns) {
+      for (const a of this.alia) {
         ts === a && coverage.add(ts);
       }
     }
     this.alia = this.alia.filter((a) => !coverage.has(a));
     this.tns = this.tns
-      ?.map((ts) => {
+      .map((ts) => {
         for (const a of this.alia) {
           ts = ts
-            .replace(a, "")
-            .replace("(", "")
-            .replace(")", "")
-            .replace("（", "")
-            .replace("）", "");
+            .replace(`(${a})`, "")
+            .replace(`( ${a} )`, "")
+            .replace(`(${a})`, "")
+            .replace(`（ ${a} ）`, "");
         }
         return ts;
       })
       .filter(Boolean);
-    this.alia = (this.alia ?? []).filter((a) => !this.tns?.includes(a));
+    this.alia = this.alia.filter((a) => !this.tns.includes(a));
   }
   //endregion
 

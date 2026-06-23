@@ -1,6 +1,7 @@
 import { NeteaseHistoryRecord, NeteaseTrack } from "@/common/netease/models";
 import { Listenable } from "@/common/utils/listenable";
 import { NeteaseAPITrack } from "@/common/netease/api";
+import { Log } from "@/common/lib/log";
 
 export default class RendererPlayerHistory extends Listenable {
   readonly list;
@@ -29,14 +30,19 @@ export default class RendererPlayerHistory extends Listenable {
     const exitsPos = this.locate(record);
     if (exitsPos !== -1) this.list.splice(exitsPos, 1);
     this.list.unshift(record);
-    NeteaseAPITrack.scrobble({
+    NeteaseAPITrack.scrobbleV2({
       id: record.id,
       sourceid:
         record.sourceName === "playlist" || record.sourceName === "album"
           ? record.sourceID
           : record.id,
-      time: Math.floor(record.playDuration)
-    }).finally(() => this.executeListeners());
+      time: record.playDuration,
+      name: record.detail.name
+    })
+      .then(() => {
+        Log.info("history", record.name, record.playDuration + "s");
+      })
+      .finally(() => this.executeListeners());
   }
 
   remove(record: NeteaseHistoryRecord | number) {

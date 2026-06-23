@@ -11,6 +11,8 @@ import {
   spectrumReadyAtom
 } from "@/wins/main/atoms/spectrum";
 import { playModalAtom, typingAtom } from "@/wins/main/atoms/layout";
+import { RendererWindow } from "@/common/lib/window";
+import { useRoamMode } from "@/wins/main/hooks/use-roam-mode";
 import RendererPlayerHandle from "@/wins/main/lib/handle";
 
 const MusicSource: FC<object> = () => {
@@ -18,13 +20,18 @@ const MusicSource: FC<object> = () => {
   const title = player.current.track?.name;
   const artist = player.current.track?.detail.artist?.join("&");
 
+  // 处理漫游模式
+  useRoamMode();
   // 注册窗口标题
   useEffect(() => {
+    let title;
     if (title && artist) {
-      document.title = `${title} - ${artist}`;
+      title = `${title} - ${artist}`;
     } else {
-      document.title = import.meta.env.APP_NAME;
+      title = import.meta.env.APP_NAME;
     }
+    window.document.title = title;
+    RendererWindow.current.title(title);
   }, [artist, title]);
   // 注册局部键盘快捷键（绑定可在设置中自定义）
   const setPlayModal = useSetAtom(playModalAtom);

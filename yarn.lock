@@ -1736,6 +1736,7 @@ __metadata:
     react-router-dom: "npm:^7.9.5"
     rolldown: "npm:^1.0.2"
     sass-embedded: "npm:^1.93.3"
+    simple-icons: "npm:^16.24.0"
     tailwindcss: "npm:^4.1.17"
     use-immer: "npm:^0.11.0"
     vite: "npm:8.0.5"
@@ -1784,12 +1785,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@neteasecloudmusicapienhanced/api@npm:4.35.1":
-  version: 4.35.1
-  resolution: "@neteasecloudmusicapienhanced/api@npm:4.35.1"
+"@neteasecloudmusicapienhanced/api@npm:4.36.1":
+  version: 4.36.1
+  resolution: "@neteasecloudmusicapienhanced/api@npm:4.36.1"
   dependencies:
-    "@neteasecloudmusicapienhanced/unblockmusic-utils": "npm:^0.3.2"
-    axios: "npm:^1.17.0"
+    "@neteasecloudmusicapienhanced/unblockmusic-utils": "npm:^0.3.3"
+    axios: "npm:^1.18.0"
     crypto-js: "npm:^4.2.0"
     dotenv: "npm:^17.4.2"
     express: "npm:^5.2.1"
@@ -1805,11 +1806,11 @@ __metadata:
     yargs: "npm:^18.0.0"
   bin:
     api: app.js
-  checksum: 10c0/32c7539ba0fa8e41f4c80736cb4e68dcad534b9cc323a6f63fb1d75eac00318f3739c2a49e80a1baafdc2ae687029510502443c6efa56fa08005bf8cc25ec609
+  checksum: 10c0/7dd0bbbe5f061e74dbb2637bca4e7050ce109569575d7f8e3b6644980eed19d5d524d3252752c9a88a0975ac7cae079154dd658ffa46ebfb23c4e911174d0a1f
   languageName: node
   linkType: hard
 
-"@neteasecloudmusicapienhanced/unblockmusic-utils@npm:^0.3.2":
+"@neteasecloudmusicapienhanced/unblockmusic-utils@npm:^0.3.3":
   version: 0.3.3
   resolution: "@neteasecloudmusicapienhanced/unblockmusic-utils@npm:0.3.3"
   dependencies:
@@ -3626,7 +3627,7 @@ __metadata:
     "@mahiru/log": "workspace:*"
     "@mahiru/native": "workspace:*"
     "@mahiru/store": "workspace:*"
-    "@neteasecloudmusicapienhanced/api": "npm:4.35.1"
+    "@neteasecloudmusicapienhanced/api": "npm:4.36.1"
     "@types/express": "npm:^5.0.0"
     "@types/express-http-proxy": "npm:^1.6.7"
     electron: "npm:42.3.3"
@@ -3986,7 +3987,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"axios@npm:^1.16.1, axios@npm:^1.17.0":
+"axios@npm:^1.16.1":
   version: 1.18.0
   resolution: "axios@npm:1.18.0"
   dependencies:
@@ -3995,6 +3996,18 @@ __metadata:
     https-proxy-agent: "npm:^5.0.1"
     proxy-from-env: "npm:^2.1.0"
   checksum: 10c0/f88aae13fd9dd395dea3053c7299178fee62f436f20424a1d6d79ec11ffb7656ba664b4630defbadab2c387b6ea07e29afb9f28b26d8e0e49d45be766983290d
+  languageName: node
+  linkType: hard
+
+"axios@npm:^1.18.0":
+  version: 1.18.1
+  resolution: "axios@npm:1.18.1"
+  dependencies:
+    follow-redirects: "npm:^1.16.0"
+    form-data: "npm:^4.0.5"
+    https-proxy-agent: "npm:^5.0.1"
+    proxy-from-env: "npm:^2.1.0"
+  checksum: 10c0/9d9378a3af0d0ad730a52ad9d15ec7201f3926ad6e7e8bbffc5ae21ca2835ad11d1d9598698f5dd9718917486039f55ea1d7dc23d8e44fa827a55cc3262c02fc
   languageName: node
   linkType: hard
 
@@ -11050,6 +11063,13 @@ __metadata:
   version: 4.1.0
   resolution: "signal-exit@npm:4.1.0"
   checksum: 10c0/41602dce540e46d599edba9d9860193398d135f7ff72cab629db5171516cfae628d21e7bfccde1bbfdf11c48726bc2a6d1a8fb8701125852fbfda7cf19c6aa83
+  languageName: node
+  linkType: hard
+
+"simple-icons@npm:^16.24.0":
+  version: 16.24.0
+  resolution: "simple-icons@npm:16.24.0"
+  checksum: 10c0/00c26c6fda47c6b5770a86b69e99aa1eefca5325ff3fe2255d434b2c74ebd2f911b872edcccb8525f0fae58c3c37bc85ab4bff751f5c15f206500ae4a8216373
   languageName: node
   linkType: hard
 

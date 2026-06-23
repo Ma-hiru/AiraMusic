@@ -3,6 +3,8 @@ import { Log } from "@/common/lib/log";
 import { EqError } from "@mahiru/log";
 import { NeteaseServicesAuth } from "@/common/netease/services";
 import { NeteaseCookie } from "@/common/netease/models";
+import { RendererRuntime } from "@/common/lib/runtime";
+import { RendererIPC } from "@mahiru/ipc/renderer";
 import RendererHTTPConstants from "@/common/constants/http";
 import AppToast from "@/common/components/display/toast";
 
@@ -41,11 +43,15 @@ apiRequest.interceptors.response.use(
       return Promise.reject(error);
     } else if (data.code === 301 && message.includes("登录") && NeteaseCookie.isLoggedIn()) {
       Log.warn("apiRequest.ts", "token has expired");
-      AppToast.show({
-        type: "info",
-        text: "登录状态已过期，请重新登录"
-      });
-      NeteaseServicesAuth.logout().then(NeteaseServicesAuth.createLoginWindow);
+      if (RendererRuntime.currentWindowType === "main") {
+        AppToast.show({
+          type: "info",
+          text: "登录状态已过期，请重新登录"
+        });
+        NeteaseServicesAuth.logout().then(NeteaseServicesAuth.createLoginWindow);
+      } else {
+        RendererIPC.MessageChannel.send("message_dispatch_need_login", "main", true);
+      }
     } else if (
       data.code === RendererHTTPConstants.RetryCode &&
       // 只有在请求过于频繁且请求幂等的情况下才自动重试，否则直接报错

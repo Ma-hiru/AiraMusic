@@ -64,7 +64,7 @@ const SettingsContent: FC<SettingsContentProps> = ({
   );
 
   return (
-    <main className={cx("w-full space-y-4 scrollbar contain-layout", className)}>
+    <main className={cx("w-full space-y-4 scrollbar scrollbar-show contain-layout", className)}>
       <Quality
         vip={user?.isVIP() ?? false}
         data={settings.trackQuality}

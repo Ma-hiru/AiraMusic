@@ -26,6 +26,7 @@ export default class RendererPlayerAudio {
 
   constructor() {
     this.removeEvents = this.bindProgressEvents();
+    this.audio.crossOrigin = "anonymous";
   }
 
   mute() {
@@ -113,8 +114,8 @@ export default class RendererPlayerAudio {
 
   load(source: NeteaseNetworkAudio | NeteaseLocalAudio, play: boolean) {
     this.pause();
-    this.audio.crossOrigin = "anonymous";
     this.audio.src = source.src;
+    this.audio.currentTime = 0;
     this.audio.load();
     play && this.play();
   }

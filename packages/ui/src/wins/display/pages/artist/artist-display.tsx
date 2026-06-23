@@ -7,7 +7,7 @@ import { useArtistOrAlbumDisplayJump } from "@/wins/display/hooks/use-artist-or-
 import { useDisplayPageAction } from "@/wins/display/hooks/use-display-page-action";
 import { usePlayerChangeActionFromDisplay } from "@/wins/display/hooks/use-player-change-action-from-display";
 import { RendererIPCMessageBus } from "@/common/lib/bus";
-import { useDisplayTitle } from "@/wins/display/hooks/use-display-title";
+import { useDisplayTitleRegister } from "@/wins/display/hooks/use-display-title";
 import { useTrackAddToPlaylist } from "@/common/hooks/use-track-add-to-playlist";
 
 import Artist, { type ArtistRef } from "@/common/components/page/artist";
@@ -31,7 +31,7 @@ const ArtistDisplay: FC<object> = () => {
     type: "artist",
     id: id!
   });
-  const { updateTitle } = useDisplayTitle("artist");
+  const { setTitle } = useDisplayTitleRegister("artist", "创作者");
   const { addTrackToPlaylist } = useTrackAddToPlaylist();
 
   return (
@@ -51,7 +51,10 @@ const ArtistDisplay: FC<object> = () => {
       addToPlaylistLast={addTrackToPlaylistLast}
       addTrackToPlaylist={addTrackToPlaylist}
       openComment={openTrackComment}
-      onDataLoaded={(a) => a.name && updateTitle(a.name)}
+      onDataLoaded={(artist) => {
+        if (!artist) return;
+        setTitle(artist.name);
+      }}
     />
   );
 };

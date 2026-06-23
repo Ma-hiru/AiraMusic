@@ -120,7 +120,7 @@ const CoverModal: FC<CoverModalProps> = ({
   stats
 }) => {
   return (
-    <div className="w-full h-full overflow-y-auto scrollbar scrollbar-show grid gap-7 md:grid-cols-[18rem_minmax(0,1fr)]">
+    <div className="w-full h-full contain-layout overflow-y-auto scrollbar scrollbar-show grid gap-7 grid-cols-[18rem_minmax(0,1fr)] grid-rows-1">
       {/** 封面 */}
       <section className="space-y-4">
         <button
@@ -168,20 +168,20 @@ const CoverModal: FC<CoverModalProps> = ({
         </div>
       </section>
       {/** 简介*/}
-      <section className="flex min-w-0 flex-col justify-between gap-3">
-        <section className="flex flex-col gap-6">
+      <section className="h-full w-full overflow-hidden flex flex-col justify-between gap-3 contain-layout">
+        <section className="flex flex-1 flex-col overflow-hidden gap-6">
           <h3 className="line-clamp-2 text-[32px] font-black leading-tight tracking-normal">
             {name}
           </h3>
           <p
             className={`
-            max-h-56 overflow-y-auto whitespace-pre-wrap text-[13px]
-            font-semibold leading-6 opacity-80 scrollbar
+            flex-1 overflow-y-auto whitespace-pre-wrap text-[13px] px-1
+            font-semibold leading-6 opacity-80 scrollbar scrollbar-show
           `}>
             {desc || "暂无简介"}
           </p>
         </section>
-        <section className="flex justify-between items-center">
+        <section className="flex shrink-0 justify-between items-center">
           <div className="flex flex-wrap gap-2 shrink-0">
             {tags.filter(Boolean).map((tag, index) => (
               <span

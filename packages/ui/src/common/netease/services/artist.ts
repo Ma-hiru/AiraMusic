@@ -2,6 +2,7 @@ import _NeteaseTrackSource from "./track";
 import { NeteaseAPIArtist } from "@/common/netease/api";
 import { NeteaseArtist, NeteaseTrackRecord } from "@/common/netease/models";
 import { RendererCache } from "@/common/lib/cache";
+import { RendererFormat } from "@/common/lib/format";
 
 export default class _NeteaseArtistSource {
   //region cache
@@ -18,7 +19,8 @@ export default class _NeteaseArtistSource {
     );
     if (cache) return cache;
     return RendererCache.local.object.fetch<NeteaseArtist>(
-      _NeteaseArtistSource.cacheKey + "_" + id
+      _NeteaseArtistSource.cacheKey + "_" + id,
+      RendererFormat.timeLimit(1, "d")
     );
   }
 

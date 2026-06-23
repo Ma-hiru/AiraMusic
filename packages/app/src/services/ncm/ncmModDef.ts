@@ -311,9 +311,9 @@ const moduleDefs: ModuleDefinition[] = [
     module: require("@neteasecloudmusicapienhanced/api/module/relay_play_state_submit")
   },
   {
-    identifier: "scrobble",
-    route: "/scrobble",
-    module: require("@neteasecloudmusicapienhanced/api/module/scrobble")
+    identifier: "scrobble_v1",
+    route: "/scrobble/v1",
+    module: require("@neteasecloudmusicapienhanced/api/module/scrobble_v1")
   },
   {
     identifier: "search",

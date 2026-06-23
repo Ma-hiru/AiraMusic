@@ -5,15 +5,16 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"syscall"
+
 	"store/args"
 	"store/cmd"
 	"store/core"
 	"store/routes"
-	"syscall"
 )
 
 func main() {
-	var flags = args.LoadArgs()
+	flags := args.LoadArgs()
 
 	go cmd.InitStore(flags.Path, core.StoreOption{
 		FileScheme:     flags.Scheme,
@@ -24,7 +25,7 @@ func main() {
 
 	go cmd.InitHTTP("127.0.0.1:"+fmt.Sprint(flags.Port), flags.Key, routes.RegisterRoutes)
 
-	var ctx, stop = signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
 	<-ctx.Done()

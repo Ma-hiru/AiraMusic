@@ -6,7 +6,7 @@ import { useLatestRef } from "@/common/hooks/use-latest-ref";
 import { usePlayerChangeActionFromDisplay } from "@/wins/display/hooks/use-player-change-action-from-display";
 import { useArtistOrAlbumDisplayJump } from "@/wins/display/hooks/use-artist-or-album-display-jump";
 import { useDisplayPageAction } from "@/wins/display/hooks/use-display-page-action";
-import { useDisplayTitle } from "@/wins/display/hooks/use-display-title";
+import { useDisplayTitleRegister } from "@/wins/display/hooks/use-display-title";
 import { useRouterActive } from "@/common/hooks/use-router-active";
 import { useScrollActionsRegister } from "@/common/hooks/use-scroll-actions-register";
 import { scrollActionsAtom } from "@/wins/display/atoms/layout";
@@ -62,7 +62,7 @@ const HistoryDisplay: FC<object> = () => {
 
   const { jumpArtistDisplay, jumpAlbumDisplay } = useArtistOrAlbumDisplayJump();
   const { onPageAction } = useDisplayPageAction({ type: "history" });
-  const { updateTitle } = useDisplayTitle("history");
+  const { setTitle } = useDisplayTitleRegister("history", "历史记录");
   const { addTrackToPlaylist } = useTrackAddToPlaylist();
 
   // 注册滚动和定位回调（display 窗口）
@@ -74,10 +74,7 @@ const HistoryDisplay: FC<object> = () => {
     getFastLocateFunc: () => historyRef.current?.fastLocator
   });
 
-  useEffect(
-    () => updateTitle(`历史记录 ${historyList.length}条`),
-    [historyList.length, updateTitle]
-  );
+  useEffect(() => setTitle(`历史记录 ${historyList.length}条`), [historyList.length, setTitle]);
 
   return (
     <History

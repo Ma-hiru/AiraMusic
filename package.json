@@ -33,7 +33,7 @@
     "build:electron": "yarn run-script-os",
     "build:electron:linux": "yarn electron-builder build --linux",
     "build:electron:win32": "yarn electron-builder build --win",
-    "dev": "yarn npm-run-all --parallel --race devtools dev:ui dev:app dev:electron",
+    "dev": "yarn npm-run-all --parallel --race dev:ui dev:app dev:electron",
     "dev:ui": "yarn workspace @mahiru/ui dev",
     "dev:app": "yarn workspace aira-music dev",
     "dev:electron": "yarn wait-on http://localhost:8827 && yarn wait-on packages/app/dist/app/main.mjs && yarn electronmon ./packages/app --inspect=9229",

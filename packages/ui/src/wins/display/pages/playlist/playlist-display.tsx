@@ -8,7 +8,7 @@ import { useArtistOrAlbumDisplayJump } from "@/wins/display/hooks/use-artist-or-
 import { usePlayerChangeActionFromDisplay } from "@/wins/display/hooks/use-player-change-action-from-display";
 import { useDisplayPageAction } from "@/wins/display/hooks/use-display-page-action";
 import { RendererIPCMessageBus } from "@/common/lib/bus";
-import { useDisplayTitle } from "@/wins/display/hooks/use-display-title";
+import { useDisplayTitleRegister } from "@/wins/display/hooks/use-display-title";
 import { useRouterActive } from "@/common/hooks/use-router-active";
 import { useScrollActionsRegister } from "@/common/hooks/use-scroll-actions-register";
 import { scrollActionsAtom } from "@/wins/display/atoms/layout";
@@ -45,7 +45,7 @@ const PlaylistDisplay: FC<object> = () => {
       source
     };
   });
-  const { updateTitle } = useDisplayTitle("playlist");
+  const { setTitle } = useDisplayTitleRegister("playlist", "歌单");
   // 当前歌单不应出现
   const { addTrackToPlaylist, addTracksToPlaylist } = useTrackAddToPlaylist(
     source === "normal" && id ? Number(id) : undefined
@@ -114,7 +114,7 @@ const PlaylistDisplay: FC<object> = () => {
       canScrollTop={canScrollTop}
       pageActionType="enter"
       onPageAction={onPageAction}
-      onDataLoaded={(p) => p.name && updateTitle(p.name)}
+      onDataLoaded={(p) => p.name && setTitle(p.name)}
     />
   );
 };
