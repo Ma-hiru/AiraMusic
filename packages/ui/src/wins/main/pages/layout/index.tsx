@@ -1,10 +1,7 @@
-import { type FC, memo, useEffect } from "react";
+import { type FC, memo } from "react";
 import { useStage } from "@/common/hooks/use-stage";
 import { useAppLoaded } from "@/common/hooks/use-app-loaded";
-import { useRoamMode } from "@/wins/main/hooks/use-roam-mode";
 import { Stage } from "@/common/enum";
-import { useUser } from "@/common/store/user";
-import { NeteaseServicesAuth } from "@/common/netease/services";
 import AppModal from "@/common/components/display/modal";
 import AppToast from "@/common/components/display/toast";
 import AppContextMenu from "@/common/components/display/menu";
@@ -24,12 +21,7 @@ import User from "./user";
 
 const Layout: FC<object> = () => {
   const { stage } = useStage();
-  const user = useUser();
   useAppLoaded();
-  useRoamMode();
-  useEffect(() => {
-    !user?.isLoggedIn && NeteaseServicesAuth.createLoginWindow();
-  }, [user?.isLoggedIn]);
 
   return (
     <div

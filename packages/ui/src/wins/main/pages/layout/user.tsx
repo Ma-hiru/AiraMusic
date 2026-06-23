@@ -1,27 +1,49 @@
-import { type FC, useEffect } from "react";
+import { useEffect } from "react";
 import { NeteaseServicesAuth } from "@/common/netease/services";
 import { useRequestAutoRetry, useRequestStatusWrap } from "@/common/hooks/use-request-wrap";
-import AppToast from "@/common/components/display/toast";
 import { Log } from "@/common/lib/log";
+import { SetupStatus } from "@/common/netease/services/auth";
+import { userStoreSnapshot } from "@/common/store/user";
+import AppToast from "@/common/components/display/toast";
 
-export const User: FC = () => {
-  const { status, data, fetchData } = useRequestStatusWrap(
+export const User = () => {
+  const { data, fetchData } = useRequestStatusWrap(
     NeteaseServicesAuth.setup.bind(NeteaseServicesAuth)
   );
-  useRequestAutoRetry(fetchData, [], () => data === true);
+  useRequestAutoRetry(
+    fetchData,
+    [],
+    () => data !== SetupStatus.NetErr && data !== SetupStatus.Unknown
+  );
+
   useEffect(() => {
-    data === false && NeteaseServicesAuth.createLoginWindow();
-  }, [data]);
-  useEffect(() => {
-    if (status === "error") {
+    if (data === SetupStatus.Expired) {
       AppToast.show({
         type: "error",
-        text: "获取用户信息失败，请检查稍后再试或重新登录"
+        text: "登录过期"
       });
-    } else if (status === "success") {
+      void NeteaseServicesAuth.createLoginWindow();
+    } else if (data === SetupStatus.Unknown) {
+      AppToast.show({
+        type: "error",
+        text: "未知错误"
+      });
+    } else if (data === SetupStatus.NetErr) {
+      AppToast.show({
+        type: "error",
+        text: "网络错误，请检查网络"
+      });
+    } else if (data === SetupStatus.NotLogin) {
+      void NeteaseServicesAuth.createLoginWindow();
+    } else if (data === SetupStatus.Ok) {
+      const nickname = userStoreSnapshot()._user?.profile.nickname;
+      AppToast.show({
+        type: "success",
+        text: `欢迎回来，${nickname}`
+      });
       Log.info("User", "user info get success");
     }
-  }, [status]);
+  }, [data]);
 
   return null;
 };

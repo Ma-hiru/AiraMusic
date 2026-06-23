@@ -9,18 +9,14 @@ import { RoutePathDisplay } from "@/common/routes";
 
 const BlankDisplay: FC<object> = () => {
   const { back } = useBack();
-  const { registerTitle } = useDisplayTitleRegister();
   const active = useRouterActive(RoutePathDisplay, "base");
+  useDisplayTitleRegister("blank", import.meta.env.APP_NAME);
 
   // 退回到最初的路由时，关闭窗口
   useEffect(() => {
     if (!back || !active) return;
     RendererWindow.current.close();
   }, [active, back]);
-
-  useEffect(() => {
-    registerTitle(import.meta.env.APP_NAME);
-  }, [registerTitle]);
 
   return <AppMask />;
 };

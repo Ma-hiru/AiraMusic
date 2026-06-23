@@ -26,6 +26,7 @@ import AppToast from "@/common/components/display/toast";
 import RendererPlayerAudio from "./audio";
 import RendererPlayerPlaylist from "./playlist";
 import RendererPlayerHistory from "./history";
+import { Status } from "@/common/netease/services/auth";
 
 export const enum RendererPlayerStatus {
   idle = 1,
@@ -137,7 +138,7 @@ export default class RendererPlayer extends Listenable {
       NeteaseUser.isLoggedIn
     ) {
       NeteaseServicesAuth.checkLoggedIn().then((check) => {
-        if (!check) {
+        if (check === Status.Expired) {
           AppToast.show({ type: "info", text: "登录过期" });
           void NeteaseServicesAuth.logout();
         }
@@ -169,6 +170,7 @@ export default class RendererPlayer extends Listenable {
       const current = this.playlist.current();
       if (!current) {
         this.status = RendererPlayerStatus.idle;
+        this.audio.currentTime = 0;
       } else if (this.current.track?.detail.id !== current.detail.id) {
         this.current.track &&
           this.history.add(

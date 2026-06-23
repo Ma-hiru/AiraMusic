@@ -12,6 +12,11 @@ export const eventHandlers: EventHandlers = {
     if (!sender) return;
     return MainWindowCreator.create(MainWindowPreset.get(type));
   },
+  event_window_title: (e, { type, title }) => {
+    const sender = BrowserWindow.fromWebContents(e.sender);
+    if (!sender) return;
+    MainWindowManager.get(type)?.setTitle(title || process.env.APP_NAME);
+  },
   event_window_focus: (e, type) => {
     const win = type ? MainWindowManager.get(type) : BrowserWindow.fromWebContents(e.sender);
     Log.debug("event_window_focus", type, "win found:", !!win);

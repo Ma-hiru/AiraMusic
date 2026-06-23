@@ -418,6 +418,13 @@ export class RendererWindow extends Listenable<RendererWindowEvent | "react-read
     });
   }
 
+  title(title: Optional<string>, defaultTitle = import.meta.env.APP_NAME) {
+    RendererIPC.NormalChannel.send("event_window_title", {
+      type: this.type,
+      title: title || defaultTitle
+    });
+  }
+
   get isMainWindow() {
     return this.type === "main";
   }
@@ -439,6 +446,10 @@ export class RendererWindow extends Listenable<RendererWindowEvent | "react-read
     const instance = new RendererWindow(type);
     this.winCache.set(type, instance);
     return instance;
+  }
+
+  static get isMain() {
+    return RendererRuntime.currentWindowType === "main";
   }
 
   static get comment() {

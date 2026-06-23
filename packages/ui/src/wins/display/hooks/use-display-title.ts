@@ -1,44 +1,54 @@
-import { useCallback, useEffect, useRef } from "react";
-import { type Location, useLocation } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { RoutePathDisplay } from "@/common/routes";
+import { useLocation } from "react-router-dom";
+import { RendererWindow } from "@/common/lib/window";
+import { Listenable } from "@/common/utils/listenable";
+import { useListenable } from "@/common/hooks/use-listenable";
 
-const titles = new Map<string, string>();
-const buildKey = (location: Location) => location.pathname + location.search;
+class Titles extends Listenable {
+  private readonly sets = new Map<keyof typeof RoutePathDisplay, string>();
 
-export function useDisplayTitleRegister() {
-  const location = useLocation();
-  const remove = useRef<Nullable<NormalFunc>>(null);
+  get data() {
+    return this.sets.entries();
+  }
 
-  const registerTitle = useCallback(
-    (title: string) => {
-      remove.current?.();
-      const key = buildKey(location);
-      titles.set(key, title);
+  update(page: keyof typeof RoutePathDisplay, title: string) {
+    this.sets.set(page, title);
+    this.executeListeners();
+  }
+}
 
-      window.document.title = title;
+const titles = new Titles();
 
-      remove.current = () => {
-        titles.delete(key);
-        remove.current = null;
-      };
-      return remove.current;
-    },
-    [location]
-  );
+export function useDisplayTitleRegister(page: keyof typeof RoutePathDisplay, defaultTitle: string) {
+  const [title, setTitle] = useState(defaultTitle);
 
   useEffect(() => {
-    return () => {
-      remove.current?.();
-    };
-  }, []);
+    titles.update(page, title || defaultTitle);
+  }, [defaultTitle, page, title]);
 
   return {
-    registerTitle
+    setTitle
   };
 }
 
 export function useDisplayTitle() {
-  const current = buildKey(useLocation());
+  const sets = useListenable(titles).data;
+  const location = useLocation();
+
   useEffect(() => {
-    window.document.title = titles.get(current) ?? import.meta.env.APP_NAME;
-  }, [current]);
+    const timer = setTimeout(() => {
+      for (const [page, title] of sets) {
+        const active = RoutePathDisplay.matchPathname(location, RoutePathDisplay[page] as string);
+        if (active) {
+          window.document.title = title;
+          RendererWindow.current.title(title);
+          break;
+        }
+      }
+    }, 100);
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [location, sets]);
 }

@@ -38,7 +38,7 @@ const AlbumDisplay: FC<object> = () => {
     type: "album",
     id: id!
   });
-  const { registerTitle } = useDisplayTitleRegister();
+  const { setTitle } = useDisplayTitleRegister("album", "专辑");
   const { addTrackToPlaylist } = useTrackAddToPlaylist();
 
   return (
@@ -64,7 +64,7 @@ const AlbumDisplay: FC<object> = () => {
         if (!album) return;
         const name = album.content.name;
         const artist = album.content.artists.map((a) => a.name).join("&");
-        return registerTitle(`${name} - ${artist}`);
+        return setTitle(`${name} - ${artist}`);
       }}
     />
   );

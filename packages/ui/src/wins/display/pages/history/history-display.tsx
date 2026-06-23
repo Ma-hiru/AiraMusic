@@ -62,7 +62,7 @@ const HistoryDisplay: FC<object> = () => {
 
   const { jumpArtistDisplay, jumpAlbumDisplay } = useArtistOrAlbumDisplayJump();
   const { onPageAction } = useDisplayPageAction({ type: "history" });
-  const { registerTitle } = useDisplayTitleRegister();
+  const { setTitle } = useDisplayTitleRegister("history", "历史记录");
   const { addTrackToPlaylist } = useTrackAddToPlaylist();
 
   // 注册滚动和定位回调（display 窗口）
@@ -74,10 +74,7 @@ const HistoryDisplay: FC<object> = () => {
     getFastLocateFunc: () => historyRef.current?.fastLocator
   });
 
-  useEffect(
-    () => registerTitle(`历史记录 ${historyList.length}条`),
-    [historyList.length, registerTitle]
-  );
+  useEffect(() => setTitle(`历史记录 ${historyList.length}条`), [historyList.length, setTitle]);
 
   return (
     <History

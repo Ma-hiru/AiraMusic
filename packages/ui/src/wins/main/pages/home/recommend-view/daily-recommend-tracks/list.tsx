@@ -1,9 +1,9 @@
 import { type FC, memo, type RefObject } from "react";
-import { NeteaseImageSize } from "@/common/enum";
 import { NeteaseTrack, NeteaseTrackRecord } from "@/common/netease/models";
+import RendererPlayerHandle from "@/wins/main/lib/handle";
+import RendererImageConstants from "@/common/constants/image";
 
 import HomeMediaCard from "@/common/components/layout/media-grid/card";
-import RendererPlayerHandle from "@/wins/main/lib/handle";
 
 interface RecommendTrackListProps {
   recommend: NeteaseAPI.DailyRecommendTracksDailySong[];
@@ -44,7 +44,7 @@ const RecommendTrackList: FC<RecommendTrackListProps> = ({ recommend, containerR
               RendererPlayerHandle.player.playlist.add(track, "next");
               RendererPlayerHandle.player.playlist.jump(track);
             }}
-            coverSize={NeteaseImageSize.sm}
+            coverSize={RendererImageConstants.HomePageTrackCoverSize}
           />
         </div>
       ))}

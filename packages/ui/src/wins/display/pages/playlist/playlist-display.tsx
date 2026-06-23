@@ -45,7 +45,7 @@ const PlaylistDisplay: FC<object> = () => {
       source
     };
   });
-  const { registerTitle } = useDisplayTitleRegister();
+  const { setTitle } = useDisplayTitleRegister("playlist", "歌单");
   // 当前歌单不应出现
   const { addTrackToPlaylist, addTracksToPlaylist } = useTrackAddToPlaylist(
     source === "normal" && id ? Number(id) : undefined
@@ -114,7 +114,7 @@ const PlaylistDisplay: FC<object> = () => {
       canScrollTop={canScrollTop}
       pageActionType="enter"
       onPageAction={onPageAction}
-      onDataLoaded={(p) => p.name && registerTitle(p.name)}
+      onDataLoaded={(p) => p.name && setTitle(p.name)}
     />
   );
 };

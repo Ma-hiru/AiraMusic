@@ -31,7 +31,7 @@ const ArtistDisplay: FC<object> = () => {
     type: "artist",
     id: id!
   });
-  const { registerTitle } = useDisplayTitleRegister();
+  const { setTitle } = useDisplayTitleRegister("artist", "创作者");
   const { addTrackToPlaylist } = useTrackAddToPlaylist();
 
   return (
@@ -53,7 +53,7 @@ const ArtistDisplay: FC<object> = () => {
       openComment={openTrackComment}
       onDataLoaded={(artist) => {
         if (!artist) return;
-        registerTitle(artist.name);
+        setTitle(artist.name);
       }}
     />
   );

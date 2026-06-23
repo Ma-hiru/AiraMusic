@@ -1,4 +1,4 @@
-import { type FC, memo, useCallback, useEffect, useMemo } from "react";
+import { type FC, memo, useCallback, useMemo } from "react";
 import { useUser } from "@/common/store/user";
 import { NeteaseServicesAuth } from "@/common/netease/services";
 import { settingsStoreSnapshot, useSettings } from "@/common/store/settings";
@@ -11,6 +11,7 @@ import { useDisplayTitleRegister } from "@/wins/display/hooks/use-display-title"
 import Settings from "@/common/components/page/settings";
 
 const SettingsDisplay: FC<object> = () => {
+  useDisplayTitleRegister("settings", "设置");
   const outputBus = useListenable(RendererIPCMessageBus.output);
 
   const output = useMemo(() => {
@@ -24,11 +25,10 @@ const SettingsDisplay: FC<object> = () => {
   const updateOutput = useCallback((deviceId: string) => {
     RendererWindow.main.send("message_dispatch_device_output_set", deviceId);
   }, []);
-  const { registerTitle } = useDisplayTitleRegister();
 
-  useEffect(() => {
-    return registerTitle("设置");
-  }, [registerTitle]);
+  const login = useCallback(() => {
+    RendererWindow.main.send("message_dispatch_need_login", true);
+  }, []);
 
   return (
     <Settings
@@ -38,7 +38,7 @@ const SettingsDisplay: FC<object> = () => {
       settings={useSettings()}
       updateOutput={updateOutput}
       updateSettings={settingsStoreSnapshot().updateSettings}
-      login={NeteaseServicesAuth.createLoginWindow}
+      login={login}
       logout={NeteaseServicesAuth.logout}
     />
   );

@@ -7,7 +7,6 @@ import { RendererIPCMessageBus } from "@/common/lib/bus";
 import { useLatestRef } from "@/common/hooks/use-latest-ref";
 import { useSettings } from "@/common/store/settings";
 import { useThemeInjectFromBus } from "@/common/hooks/use-theme-inject-from-bus";
-import { useDisplayTitle } from "@/wins/display/hooks/use-display-title";
 import { BackCtx } from "@/wins/display/ctx/back";
 import { RendererModified } from "@/common/lib/modified";
 
@@ -21,6 +20,7 @@ import Control from "@/common/components/layout/top/control";
 import Drag from "@/common/components/layout/drag/drag";
 import TopBack from "@/common/components/layout/top/back";
 import DisplayFloat from "./float";
+import Title from "./title";
 
 const LayoutDisplay: FC<object> = () => {
   const themeBus = useThemeInjectFromBus();
@@ -115,10 +115,9 @@ const LayoutDisplay: FC<object> = () => {
     [back]
   );
 
-  useDisplayTitle();
-
   return (
     <div className="w-screen h-screen relative overflow-hidden">
+      <Title />
       <Drag className="absolute w-screen top-0 right-0 h-10  flex flex-row justify-between items-center px-4 z-50">
         <TopBack exclude={["blank"]} routePath={RoutePathDisplay} onClick={() => setBack(true)} />
         <Control pin mini />
