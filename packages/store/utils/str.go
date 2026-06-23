@@ -10,7 +10,7 @@ const alphaNumeric = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345
 
 // RandString 生成一个长度为 n 的随机字母数字字符串。
 func RandString(n int) string {
-	var randomBytes = make([]byte, n)
+	randomBytes := make([]byte, n)
 	_, _ = rand.Read(randomBytes)
 
 	var index int

@@ -41,8 +41,8 @@ func FilePathToSchemeURL(path, scheme, schemeHostname string) string {
 		return path
 	}
 
-	var normalized = strings.ReplaceAll(strings.TrimSpace(path), "\\", "/")
-	var encoded = url.PathEscape(normalized)
+	normalized := strings.ReplaceAll(strings.TrimSpace(path), "\\", "/")
+	encoded := url.PathEscape(normalized)
 
 	if encoded != "" {
 		return fmt.Sprintf("%s://%s/%s", scheme, schemeHostname, encoded)
@@ -52,7 +52,7 @@ func FilePathToSchemeURL(path, scheme, schemeHostname string) string {
 
 // GetDefaultStorePath 获取默认的存储路径，通常位于用户的缓存目录下。
 func GetDefaultStorePath() string {
-	var userCachePath, err = os.UserCacheDir()
+	userCachePath, err := os.UserCacheDir()
 	if err != nil {
 		userCachePath = os.TempDir()
 	}
@@ -60,9 +60,9 @@ func GetDefaultStorePath() string {
 }
 
 func GetTempDir() string {
-	var tempDir = os.TempDir()
-	var dir = filepath.Join(tempDir, "mahiru_music_temp")
-	if err := EnsureDir(dir, 0775); err != nil {
+	tempDir := os.TempDir()
+	dir := filepath.Join(tempDir, "mahiru_music_temp")
+	if err := EnsureDir(dir, 0o775); err != nil {
 		return tempDir
 	}
 	return dir

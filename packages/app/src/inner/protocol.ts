@@ -117,12 +117,11 @@ export class MainProtocol {
     } else {
       const onAbort = () => nodeStream.destroy();
       signal.addEventListener("abort", onAbort, { once: true });
-      // 中止/客户端断开时 destroy() 会触发 close
       nodeStream.once("close", () => signal.removeEventListener("abort", onAbort));
     }
     // 读取错误
     nodeStream.once("error", (err) => {
-      Log.warn("protocol", "read stream error", err);
+      !err.message.includes("aborted") && Log.error("protocol", "read stream error", err);
     });
 
     return new Response(Readable.toWeb(nodeStream) as ReadableStream, { status, headers });

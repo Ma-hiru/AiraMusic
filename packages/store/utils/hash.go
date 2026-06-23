@@ -14,7 +14,7 @@ const BufferSize = 1024 * 100
 // 新的 reader 会先返回已读取的数据，随后继续返回原 reader 中剩余的数据。
 // Deprecated
 func PeekForHash(reader io.Reader) (string, io.Reader, error) {
-	var peek, newReader, err = Peek(reader, BufferSize)
+	peek, newReader, err := Peek(reader, BufferSize)
 	if err != nil {
 		return "", newReader, err
 	}
@@ -30,8 +30,8 @@ func Hash(buffer []byte, len int) string {
 // Peek 从 reader 中读取 size 字节的数据，并返回读取的数据和一个新的 reader。
 // 新的 reader 会先返回已读取的数据，随后继续返回原 reader 中剩余的数据。
 func Peek(reader io.Reader, size int) ([]byte, io.Reader, error) {
-	var buffer = make([]byte, size)
-	var n, err = reader.Read(buffer)
+	buffer := make([]byte, size)
+	n, err := reader.Read(buffer)
 
 	if err == io.EOF {
 		err = nil

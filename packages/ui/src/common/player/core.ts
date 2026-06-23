@@ -187,11 +187,11 @@ export default class RendererPlayer extends Listenable {
         this.status = RendererPlayerStatus.idle;
         this.audio.currentTime = 0;
       } else if (this.current.track?.detail.id !== current.detail.id) {
-        if (this.current.track && this.playDurationMS >= 0) {
+        if (this.current.track && this.playDurationMS > 2_000) {
           this.history.add(
             NeteaseHistoryRecord.fromTrack(
               this.current.track,
-              Math.floor(this.playDurationMS / 1000)
+              Math.floor(this.playDurationMS / 1_000)
             )
           );
         }

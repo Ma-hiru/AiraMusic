@@ -2,9 +2,10 @@ package routes
 
 import (
 	"net/http"
-	"store/handlers"
 
 	"github.com/gin-gonic/gin"
+
+	"store/handlers"
 )
 
 func otherRoutes(app *gin.Engine) {

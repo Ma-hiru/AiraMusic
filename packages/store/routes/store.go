@@ -1,9 +1,9 @@
 package routes
 
 import (
-	"store/handlers"
-
 	"github.com/gin-gonic/gin"
+
+	"store/handlers"
 )
 
 func storeRoutes(app *gin.Engine) {
