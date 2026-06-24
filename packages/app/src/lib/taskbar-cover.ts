@@ -1,25 +1,21 @@
-import { nativeImage, type ThumbarButton } from "electron";
+import { Log } from "@/lib/log";
 import { MainIPC } from "@mahiru/ipc/main";
 import { MainWindowManager } from "@/lib/window-manager";
-import { NativeTaskbarCover } from "@/lib/native-taskbar";
-import { Log } from "@/lib/log";
-
-type TaskbarButtonIcon = "next" | "pause" | "play" | "previous";
+import { MainNativeAddon } from "@/lib/native-addon";
+import { clearInterval } from "node:timers";
+import { getThumbarIcons, type TaskbarButtonIcon } from "@/utils/thumbar-button";
+import type { BrowserWindow, ThumbarButton, NativeImage } from "electron";
 
 export class MainTaskBarCoverPreview {
+  private static ready = false;
+  private static enable = process.platform === "win32";
   private static playing = false;
   private static hasTrack = false;
   private static cover?: string;
   private static syncedCover?: string;
   private static syncedCoverBytes?: Uint8Array;
   private static coverBuildID = 0;
-  private static icons: Nullable<Record<TaskbarButtonIcon, Electron.NativeImage>> = null;
-  /**
-   * 主窗口是否已显示过。
-   * Windows 的 ThumbBarAddButtons 必须在窗口拿到任务栏按钮（TaskbarButtonCreated 消息，
-   * 即窗口首次 show）之后调用，否则虽然返回 true 但工具条永远不显示。
-   */
-  private static ready = false;
+  private static icons: Nullable<Record<TaskbarButtonIcon, NativeImage>> = null;
 
   private static sendAction(action: "next" | "pause" | "play" | "previous") {
     MainIPC.MessageChannel.commit({
@@ -30,149 +26,36 @@ export class MainTaskBarCoverPreview {
     });
   }
 
-  private static getIcons() {
-    this.icons ||= {
-      previous: this.createControlIcon("previous"),
-      play: this.createControlIcon("play"),
-      pause: this.createControlIcon("pause"),
-      next: this.createControlIcon("next")
-    };
-    return this.icons;
-  }
-
   private static createButtons(): ThumbarButton[] {
-    const icons = this.getIcons();
+    this.icons ??= getThumbarIcons();
     const playAction = this.playing ? "pause" : "play";
-    // 始终注册固定 3 个按钮
-    const flags: ThumbarButton["flags"] = this.hasTrack ? undefined : ["hidden"];
-
     return [
       {
         tooltip: "上一首",
-        icon: icons.previous,
-        flags,
+        icon: this.icons.previous,
         click: () => this.sendAction("previous")
       },
       {
         tooltip: this.playing ? "暂停" : "播放",
-        icon: icons[playAction],
-        flags,
+        icon: this.icons[playAction],
         click: () => this.sendAction(playAction)
       },
       {
         tooltip: "下一首",
-        icon: icons.next,
-        flags,
+        icon: this.icons.next,
         click: () => this.sendAction("next")
       }
     ];
   }
 
-  private static createControlIcon(icon: TaskbarButtonIcon) {
-    const size = 32;
-    const color = [248, 250, 252, 255] as const;
-    const bitmap = Buffer.alloc(size * size * 4);
-
-    const setPixel = (x: number, y: number) => {
-      if (x < 0 || y < 0 || x >= size || y >= size) return;
-      const offset = (y * size + x) * 4;
-      bitmap[offset] = color[2];
-      bitmap[offset + 1] = color[1];
-      bitmap[offset + 2] = color[0];
-      bitmap[offset + 3] = color[3];
-    };
-
-    const fillRect = (left: number, top: number, width: number, height: number) => {
-      for (let y = top; y < top + height; y++) {
-        for (let x = left; x < left + width; x++) {
-          setPixel(x, y);
-        }
-      }
-    };
-
-    const fillPolygon = (points: [number, number][]) => {
-      const xs = points.map(([x]) => x);
-      const ys = points.map(([, y]) => y);
-      const minX = Math.floor(Math.min(...xs));
-      const maxX = Math.ceil(Math.max(...xs));
-      const minY = Math.floor(Math.min(...ys));
-      const maxY = Math.ceil(Math.max(...ys));
-
-      for (let y = minY; y <= maxY; y++) {
-        for (let x = minX; x <= maxX; x++) {
-          let inside = false;
-          for (let i = 0, j = points.length - 1; i < points.length; j = i++) {
-            const [xi, yi] = points[i]!;
-            const [xj, yj] = points[j]!;
-            const crosses = yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi;
-            if (crosses) inside = !inside;
-          }
-          if (inside) setPixel(x, y);
-        }
-      }
-    };
-
-    switch (icon) {
-      case "previous":
-        fillRect(8, 8, 3, 17);
-        fillPolygon([
-          [23, 7],
-          [11, 16],
-          [23, 25]
-        ]);
-        break;
-      case "play":
-        fillPolygon([
-          [11, 7],
-          [24, 16],
-          [11, 25]
-        ]);
-        break;
-      case "pause":
-        fillRect(10, 8, 5, 17);
-        fillRect(18, 8, 5, 17);
-        break;
-      case "next":
-        fillRect(22, 8, 3, 17);
-        fillPolygon([
-          [9, 7],
-          [22, 16],
-          [9, 25]
-        ]);
-        break;
-    }
-
-    return nativeImage.createFromBitmap(bitmap, { width: size, height: size, scaleFactor: 1 });
-  }
-
-  private static updateButtons() {
-    // 窗口显示前不注册：此时还没有任务栏按钮，注册会"成功但不显示"
-    if (!this.ready) return;
-    const mainWin = MainWindowManager.get("main");
+  private static updateButtons(win: Optional<BrowserWindow>) {
     const buttons = this.createButtons();
-    const ok = mainWin?.setThumbarButtons(buttons);
-    Log.info(
-      "taskbar",
-      `thumbar set: win=${!!mainWin} hasTrack=${this.hasTrack} count=${buttons.length} ok=${ok}`
-    );
-  }
-
-  /**
-   * 绑定主窗口：等窗口首次显示后再做首次注册。
-   * 必须在窗口 show 之后调用 setThumbarButtons（见 electron#9049）。
-   */
-  static attach() {
-    if (process.platform !== "win32") return;
-    const win = MainWindowManager.get("main");
-    if (!win) return;
-
-    const onShown = () => {
-      this.ready = true;
-      void this.build();
-    };
-
-    if (win.isVisible()) onShown();
-    else win.once("show", onShown);
+    const ok = win?.setThumbarButtons(buttons);
+    !ok &&
+      Log.error(
+        "taskbar",
+        `thumbar set err: win=${!!win} hasTrack=${this.hasTrack} count=${buttons.length}`
+      );
   }
 
   private static async fetchCover(cover: string): Promise<Nullable<Uint8Array>> {
@@ -190,6 +73,7 @@ export class MainTaskBarCoverPreview {
   }
 
   private static coverHandle(): Nullable<Buffer> {
+    if (!MainNativeAddon.isSupported) return null;
     return MainWindowManager.get("main")?.getNativeWindowHandle() ?? null;
   }
 
@@ -206,53 +90,86 @@ export class MainTaskBarCoverPreview {
       });
   }
 
-  private static async updateCover() {
-    // 原生模块未就绪时直接跳过
-    if (!NativeTaskbarCover.isSupported()) return;
-    const handle = this.coverHandle();
-    if (!handle) return;
+  private static async updatePreview(handle: Buffer<ArrayBufferLike>) {
+    const preview = await this.capturePreview();
+    if (!preview) return;
+    MainNativeAddon.native.setCover(handle, this.syncedCoverBytes ?? null, preview);
+  }
+
+  private static async updateCover(handle: Buffer<ArrayBufferLike>) {
+    if (this.cover === this.syncedCover && this.syncedCoverBytes) return;
 
     const currentCover = this.cover;
     const buildID = ++this.coverBuildID;
+    const check = () => buildID === this.coverBuildID && currentCover === this.cover;
+
+    const preview = await this.capturePreview();
+    if (!check()) return;
+
     if (!currentCover) {
       this.syncedCover = undefined;
       this.syncedCoverBytes = undefined;
-      NativeTaskbarCover.setCover(handle, null);
-      return;
-    }
-    if (currentCover === this.syncedCover && this.syncedCoverBytes) {
-      const preview = await this.capturePreview();
-      if (buildID !== this.coverBuildID || currentCover !== this.cover) return;
-      preview && NativeTaskbarCover.setCover(handle, this.syncedCoverBytes, preview);
+      MainNativeAddon.native.setCover(handle, null, preview);
       return;
     }
 
-    const [cover, preview] = await Promise.all([
-      this.fetchCover(currentCover),
-      this.capturePreview()
-    ]);
-    if (buildID !== this.coverBuildID || currentCover !== this.cover) return;
+    const cover = await this.fetchCover(currentCover);
+    if (!check()) return;
 
-    if (cover) {
-      this.syncedCover = currentCover;
-      this.syncedCoverBytes = cover;
-      NativeTaskbarCover.setCover(handle, cover, preview);
-    }
+    this.syncedCover = currentCover;
+    this.syncedCoverBytes = cover ?? undefined;
+    MainNativeAddon.native.setCover(handle, cover, preview);
   }
 
-  static async build() {
-    if (process.platform !== "win32") return;
+  private static previewTimer: Nullable<NodeJS.Timeout> = null;
+  private static async build() {
+    const win = MainWindowManager.get("main");
+    this.updateButtons(win);
 
-    this.updateButtons();
-    await this.updateCover();
+    const handle = this.coverHandle();
+    if (!handle) return;
+
+    await this.updateCover(handle);
+    this.previewTimer && clearInterval(this.previewTimer);
+    this.previewTimer = setInterval(() => {
+      const handle = this.coverHandle();
+      handle && this.updatePreview(handle);
+    }, 2000);
   }
 
   static {
-    MainIPC.MessageChannel.listen("bus_deliver_track_meta", ({ track, status }) => {
-      this.hasTrack = !!track;
-      this.cover = track?.detail?.al?.picUrl;
-      this.playing = status === "playing";
+    if (this.enable) {
+      MainIPC.MessageChannel.listen("bus_deliver_track_meta", ({ track, status }) => {
+        if (!this.ready) return;
+        this.hasTrack = !!track;
+        this.cover = track?.detail?.al?.picUrl;
+        this.playing = status === "playing";
+        void this.build();
+      });
+    }
+  }
+
+  /**
+   * 绑定主窗口：等窗口首次显示后再做首次注册。
+   * 必须在窗口 show 之后调用 setThumbarButtons（electron#9049）
+   */
+  static attach() {
+    if (!this.enable) return;
+
+    const win = MainWindowManager.get("main");
+    if (!win) {
+      Log.error("taskbar", "attach must be after main window creating");
+      return;
+    }
+
+    if (win.isVisible()) {
+      this.ready = true;
       void this.build();
-    });
+    } else {
+      win.once("show", () => {
+        this.ready = true;
+        void this.build();
+      });
+    }
   }
 }

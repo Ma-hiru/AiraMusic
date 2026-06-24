@@ -10,6 +10,6 @@
     "types": ["node"],
     "outDir": "dist-types"
   },
-  "files": ["index.ts", "scripts"],
+  "files": ["index.ts", "api.d.ts", "scripts"],
   "include": ["../../types/**/*"]
 }
