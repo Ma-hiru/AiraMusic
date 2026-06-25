@@ -39,9 +39,11 @@ const CategoryPanel: FC<CategoryPanelProps> = ({
               h-8 cursor-pointer rounded-lg border
               border-white/20 px-3 text-sm font-bold
               transition-all duration-300
-              hover:bg-primary hover:text-primary-text active:scale-[0.98]
+              active:scale-[0.98]
             `,
-              activeCategory === category ? "bg-primary text-(--text-color-on-main)" : "bg-white/5"
+              activeCategory === category
+                ? "bg-primary text-primary-text hover:bg-primary-active"
+                : "bg-white/5 hover:bg-white/20"
             )}>
             {category}
           </button>
@@ -54,10 +56,11 @@ const CategoryPanel: FC<CategoryPanelProps> = ({
             flex h-9 cursor-pointer items-center gap-2
             rounded-lg border border-white/20 px-3
             text-sm font-bold transition-all duration-300
-            hover:bg-primary hover:text-(--text-color-on-main)
             active:scale-[0.98]
           `,
-            showCategoryPanel ? "bg-primary text-(--text-color-on-main)" : "bg-white/5"
+            showCategoryPanel
+              ? "bg-primary text-primary-text hover:bg-primary-active"
+              : "bg-white/5 hover:bg-white/20"
           )}>
           <SlidersHorizontal className="size-4" />
           分类
@@ -100,11 +103,11 @@ const CategoryPanel: FC<CategoryPanelProps> = ({
                     className={cx(
                       `
                       h-8 cursor-pointer rounded-lg px-3 text-xs font-bold transition-all
-                      duration-300 hover:bg-primary hover:text-primary-text  active:scale-[0.98]
+                      duration-300 active:scale-[0.98]
                     `,
                       activeCategory === category
-                        ? "bg-primary text-(--text-color-on-main)"
-                        : "bg-white/5"
+                        ? "bg-primary text-primary-text hover:bg-primary-active"
+                        : "bg-white/5 hover:bg-white/20"
                     )}>
                     {category}
                   </button>

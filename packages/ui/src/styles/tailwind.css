@@ -8,7 +8,7 @@
   --breakpoint-2xl: 96rem;
 }
 
-@theme {
+@theme inline {
   --color-normal-text: var(--text-color);
   --color-primary: var(--theme-color-main);
   --color-primary-text: var(--text-color-on-main);

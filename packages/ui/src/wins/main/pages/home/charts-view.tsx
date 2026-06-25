@@ -74,7 +74,7 @@ const HomeChartsView: FC<{ className?: string }> = ({ className }) => {
                         flex min-h-14 cursor-pointer
                         items-center gap-3 rounded-lg px-2 text-left
                         transition-all duration-300
-                        hover:bg-primary hover:text-(--text-color-on-main)
+                        hover:bg-white/20
                         active:scale-[0.98]
                       ">
                       <span className="w-8 shrink-0 text-center text-lg font-black opacity-70">

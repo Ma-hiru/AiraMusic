@@ -20,9 +20,9 @@ const SearchSuggestions: FC<SearchSuggestionsProps> = ({ suggestions, onClick, r
       ref={ref}
       className={cx(
         `
-        absolute top-12 z-60 w-full space-y-1.5 rounded-lg border border-white/30
-        bg-white/50 backdrop-blur-lg p-1 text-(--theme-color-on-main) shadow-md
+        absolute top-12 z-60 w-full space-y-1.5 rounded-lg
         transition-all ease-in-out duration-300
+        backdrop-blur-lg p-1 surface-1
       `
       )}>
       {suggestions.map((suggestion) => {
@@ -32,8 +32,8 @@ const SearchSuggestions: FC<SearchSuggestionsProps> = ({ suggestions, onClick, r
             key={suggestion.id}
             className={`
               text-sm flex justify-start items-center gap-1
-              px-2 py-1 rounded-md h-8 text-zinc-700
-              hover:bg-primary hover:text-(--text-color-on-main)
+              px-2 py-1 rounded-md h-8
+              hover:bg-primary hover:text-primary-text
               transition-all ease-in-out duration-300 cursor-pointer
             `}
             onClick={() => onClick?.(suggestion)}>

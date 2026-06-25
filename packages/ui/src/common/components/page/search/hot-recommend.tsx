@@ -47,8 +47,7 @@ const HotRecommend: FC<HotRecommendProps> = ({ className, onSearch }) => {
                         `
                           rounded-md p-3 space-y-1 border border-white/20 bg-white/20
                           transition-all duration-300 cursor-pointer
-                          hover:bg-primary active:scale-[0.98]
-                          hover:text-(--text-color-on-main)
+                          hover:bg-white/20 active:scale-[0.98]
                         `
                       )}>
                       <div className="flex items-center justify-between gap-2">
@@ -82,8 +81,7 @@ const HotRecommend: FC<HotRecommendProps> = ({ className, onSearch }) => {
                           flex h-10 items-center gap-2 rounded-md px-2 text-left
                           border border-white/20 bg-white/15
                           transition-all duration-300 cursor-pointer
-                          hover:bg-primary
-                          hover:text-(--text-color-on-main)
+                          hover:bg-white/20
                           active:scale-[0.98]
                         `
                       )}

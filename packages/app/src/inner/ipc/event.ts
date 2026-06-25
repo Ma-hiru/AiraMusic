@@ -23,7 +23,10 @@ export const eventHandlers: EventHandlers = {
     win?.focus();
   },
   event_window_external: (e, { title, url }) => {
-    if (!MainHandle.isTrustedOrigin(url)) return;
+    if (!MainHandle.isTrustedOrigin(url)) {
+      Log.warn("event_window_external", `origin "${url}" is not trusted`);
+      return;
+    }
     const sender = BrowserWindow.fromWebContents(e.sender);
     if (!sender) return;
     const id = MainWindowManager.getId(sender);
@@ -32,7 +35,10 @@ export const eventHandlers: EventHandlers = {
     }
   },
   event_window_browser: (e, { url }) => {
-    if (!MainHandle.isTrustedOrigin(url)) return;
+    if (!MainHandle.isTrustedOrigin(url)) {
+      Log.warn("event_window_browser", `origin "${url}" is not trusted`);
+      return;
+    }
     const sender = BrowserWindow.fromWebContents(e.sender);
     if (!sender) return;
     const id = MainWindowManager.getId(sender);

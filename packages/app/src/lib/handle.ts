@@ -11,6 +11,7 @@ export class MainHandle {
     "http://localhost:",
     "http://127.0.0.1:",
     `${process.env.APP_SCHEME}://`,
+    "https://y.music.163.com",
     `https://github.com/Ma-hiru`
   ];
 

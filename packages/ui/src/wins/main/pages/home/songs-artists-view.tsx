@@ -105,12 +105,11 @@ const HomeSongsArtistsView: FC<{ className?: string }> = ({ className }) => {
                   h-8 cursor-pointer rounded-lg
                   border border-white/20 px-3 text-sm font-bold
                   transition-all duration-300
-                  hover:bg-primary hover:text-(--text-color-on-main)
                   active:scale-[0.98]
                 `,
                 area.type === songArea.type
-                  ? "bg-primary text-(--text-color-on-main)"
-                  : "bg-white/5"
+                  ? "bg-primary text-primary-text hover:bg-primary-active"
+                  : "bg-white/5 hover:bg-white/20"
               )}>
               {area.label}
             </button>
@@ -138,12 +137,11 @@ const HomeSongsArtistsView: FC<{ className?: string }> = ({ className }) => {
                   h-8 cursor-pointer rounded-lg
                   border border-white/20 px-3 text-sm font-bold
                   transition-all duration-300
-                  hover:bg-primary hover:text-(--text-color-on-main)
                   active:scale-[0.98]
                 `,
                 area.type === artistArea.type
-                  ? "bg-primary text-(--text-color-on-main)"
-                  : "bg-white/5"
+                  ? "bg-primary text-primary-text hover:bg-primary-active"
+                  : "bg-white/5 hover:bg-white/20"
               )}>
               {area.label}
             </button>
