@@ -112,8 +112,5 @@
   "rpm": {
     "packageCategory": "Applications/Multimedia",
     "compression": "xz"
-  },
-  "appImage": {
-    "systemIntegration": "ask"
   }
 }

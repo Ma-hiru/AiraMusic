@@ -25,8 +25,27 @@ class NeteaseMusicApiChildService extends MainChild<NCMParentMessage, NCMChildMe
     } catch {
       await writeFile(tokenPath, "");
     }
-    if (!process.env["NCM_API_ANON_TOKEN"]) {
-      process.env["NCM_API_ANON_TOKEN"] = tokenPath;
+  }
+
+  /**
+   * 在 generateConfig 之前把公钥拉好写入临时目录。
+   */
+  private async ensureXeapiKey() {
+    const keyPath = join(os.tmpdir(), "xeapi_public_key");
+    try {
+      let current: Record<string, unknown> = {};
+      try {
+        current = JSON.parse(await readFile(keyPath, "utf-8"));
+      } catch {
+        /* 公钥文件不存在或损坏 ignore */
+      }
+      const { default: xeapiKey } =
+        await import("@neteasecloudmusicapienhanced/api/util/xeapiKey.js");
+      const g = globalThis as { deviceId?: string };
+      const publicKey = await xeapiKey.getXeapiPublicKey(current, g.deviceId ?? "");
+      await writeFile(keyPath, JSON.stringify(publicKey), "utf-8");
+    } catch (err) {
+      this.sendError(err);
     }
   }
 
@@ -60,6 +79,8 @@ class NeteaseMusicApiChildService extends MainChild<NCMParentMessage, NCMChildMe
     const g = globalThis as { deviceId?: string };
     const savedDeviceId = await this.readDeviceId(deviceIdPath);
     if (savedDeviceId) g.deviceId = savedDeviceId;
+
+    await this.ensureXeapiKey();
 
     try {
       const { default: generateConfig } =

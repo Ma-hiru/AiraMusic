@@ -50,14 +50,16 @@ const Cache: FC<CacheProps> = ({
 
   const selectDirPath = useCallback(async () => {
     const res = await RendererIPC.NormalChannel.send("invoke_fs_select", "dir").then((res) => res);
-    if (res.ok) {
+    if (res.canceled) {
+      AppToast.show({ type: "info", text: "取消选择" });
+    } else if (res.ok) {
       setPathInputValue(res.path);
     } else {
-      res.error &&
-        AppToast.show({
-          type: "warn",
-          text: res.error
-        });
+      res.error && Log.error(res.error);
+      AppToast.show({
+        type: "warn",
+        text: "选择失败"
+      });
     }
   }, []);
 

@@ -19,7 +19,7 @@ export const invokeHandlers: InvokeHandlers = {
       title: type === "dir" ? "选择目录" : "选择文件",
       properties: [type === "dir" ? "openDirectory" : "openFile"]
     });
-    if (canceled) return { ok: false, path: "" };
+    if (canceled) return { ok: false, path: "", canceled: true };
     const filePath = filePaths[0];
     if (!filePath) return { ok: false, path: "", error: "无效路径" };
     try {
@@ -55,7 +55,7 @@ export const invokeHandlers: InvokeHandlers = {
       title: "保存文件",
       defaultPath: name
     });
-    if (canceled) return { ok: false, error: "取消保存" };
+    if (canceled) return { ok: false, canceled: true };
     if (!filePath) return { ok: false, error: "无效路径" };
     try {
       await Fs.writeFile(filePath, Buffer.from(buffer));
