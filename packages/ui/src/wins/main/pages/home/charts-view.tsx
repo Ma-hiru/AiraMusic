@@ -63,10 +63,7 @@ const HomeChartsView: FC<{ className?: string }> = ({ className }) => {
         <AppError reset={reload} when={status === "error"} message="加载排行榜失败">
           <AppLoading loading={status === "loading"} className="min-h-60">
             <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
-              <Section
-                title="官方主榜"
-                subTitle="Featured"
-                className="rounded-lg border border-white/20 bg-white/5 p-3 shadow-md backdrop-blur-2xl">
+              <Section title="官方主榜" subTitle="Featured" className="rounded-lg surface-1 p-3">
                 <div className="grid gap-2">
                   {featured.map((item, index) => (
                     <button

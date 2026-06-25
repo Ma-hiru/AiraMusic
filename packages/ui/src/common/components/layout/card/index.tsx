@@ -18,8 +18,7 @@ const Card: FC<CardProps> = ({ title, subTitle, Icon, children, className, onCli
       onClick={onClick}
       className={cx(
         `
-        rounded-lg border border-white/20 p-3 bg-white/5
-        shadow-md backdrop-saturate-150 backdrop-blur-lg
+        rounded-lg surface-1 p-3
       `,
         className
       )}

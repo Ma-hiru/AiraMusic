@@ -41,7 +41,11 @@ const MediaCard: FC<MediaCardProps> = ({ item, coverSize, onClick, className }) 
         className
       )}>
       <div className={cx("relative aspect-square w-full bg-white/10 shadow-md", roundedClass)}>
-        <NeteaseImage cache image={image} className={cx("size-full object-cover", roundedClass)} />
+        <NeteaseImage
+          cache
+          image={image}
+          className={cx("size-full object-cover surface-1", roundedClass)}
+        />
         <div
           className={cx(
             "absolute inset-0 bg-black/0 transition-colors duration-300 group-hover:bg-black/25 overflow-hidden",

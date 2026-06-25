@@ -23,8 +23,8 @@ const CategoryPanel: FC<CategoryPanelProps> = ({
   return (
     <section
       className={`
-        sticky top-2 z-30 rounded-lg border border-white/20
-        bg-white/5 px-3 py-2 shadow-md backdrop-saturate-150 backdrop-blur-lg flex flex-col gap-3
+        sticky top-2 z-30 rounded-lg surface-1
+        px-3 py-2 flex flex-col gap-3
     `}>
       <header className="flex flex-wrap items-center gap-2">
         {RendererHomeConstants.HOME_PRIMARY_PLAYLIST_CATEGORIES.map((category) => (
@@ -67,7 +67,7 @@ const CategoryPanel: FC<CategoryPanelProps> = ({
             className={cx("size-4 transition-transform", showCategoryPanel && "rotate-180")}
           />
         </button>
-        <div className="ml-auto flex rounded-lg border border-white/20 bg-white/5 p-1">
+        <div className="ml-auto flex rounded-lg surface-2 p-1">
           {RendererHomeConstants.HOME_PLAYLIST_ORDER.map((value) => (
             <button
               key={value}

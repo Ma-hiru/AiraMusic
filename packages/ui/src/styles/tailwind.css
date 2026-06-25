@@ -7,3 +7,16 @@
   --breakpoint-xl: 80rem;
   --breakpoint-2xl: 96rem;
 }
+
+/* 浅磨砂表面层级 */
+@utility surface-1 {
+  @apply border border-white/15 bg-white/10 shadow-lg backdrop-blur-xl backdrop-saturate-150;
+}
+
+@utility surface-2 {
+  @apply border border-white/12 bg-white/15;
+}
+
+@utility surface-3 {
+  @apply border border-white/30 bg-white/22 shadow-lg;
+}
