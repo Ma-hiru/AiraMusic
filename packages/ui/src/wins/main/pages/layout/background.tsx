@@ -96,8 +96,10 @@ const Background: FC<{ className?: string }> = ({ className }) => {
         fluidPaused={paused}
         fluidSpeed={settings.performance.homeFluidSpeed}
         src={backgroundCover ?? undefined}
+        themeColors={themeColors}
         opacity={0.6}
         brightness={0.3}
+        saturate={3}
         blur={60}
       />
     </div>

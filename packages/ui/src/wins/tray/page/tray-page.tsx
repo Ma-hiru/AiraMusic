@@ -210,11 +210,13 @@ const TrayPage: FC = () => {
         ">
         <div className="fixed inset-0 z-[-1]">
           <AcrylicBackground
-            brightness={0.6}
+            opacity={0.8}
+            brightness={0.3}
+            saturate={3}
             blur={20}
-            opacity={1}
             className="rounded-xl overflow-hidden"
             src={themeBus.data?.backgroundCover}
+            themeColors={themeBus.data?.theme.themeColors}
           />
         </div>
         <TrayPlayer

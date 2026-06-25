@@ -77,13 +77,37 @@ export default class RendererTheme {
     };
   }
 
+  /** WCAG 相对对比度 (L1+0.05)/(L2+0.05)，luminosity() 由 color 库提供 */
+  static contrastRatio(a: ColorInstance, b: ColorInstance) {
+    // 计算WCAG相对亮度（sRGB 线性化后的值） L = 0.2126 * R + 0.7152 * G + 0.0722 * B
+    const la = a.luminosity();
+    const lb = b.luminosity();
+    const hi = Math.max(la, lb);
+    const lo = Math.min(la, lb);
+    return (hi + 0.05) / (lo + 0.05);
+  }
+
   static calcTextColor(bgColor: string | ColorInstance) {
     const bg = Color(bgColor);
-    if (bg.isDark()) {
-      return this.WHITE_COLOR;
-    } else {
-      return this.BLACK_COLOR;
+    const whiteContrast = this.contrastRatio(bg, this.WHITE_COLOR);
+    // WCAG 推荐对比度 4.5:1
+    if (whiteContrast >= 4) return this.WHITE_COLOR;
+    const blackContrast = this.contrastRatio(bg, this.BLACK_COLOR);
+    return blackContrast > whiteContrast ? this.BLACK_COLOR : this.WHITE_COLOR;
+  }
+
+  /** 一组颜色的平均 WCAG 相对亮度 (0..1)，用作背景明暗估计。空数组返回 0 */
+  static avgLuminance(colors: readonly string[]) {
+    if (!colors.length) return 0;
+    let sum = 0;
+    for (const c of colors) {
+      try {
+        sum += Color(c).luminosity();
+      } catch {
+        /* 跳过非法色值 */
+      }
     }
+    return sum / colors.length;
   }
 
   static smoothScrollTo(

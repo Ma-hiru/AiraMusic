@@ -90,8 +90,6 @@ export class CacheStoreForCheck {
         resolve
       });
     });
-    // id = this.encode(id);
-    // return cacheRequest("/api/check", { method: "GET", params: { id, timeLimit } });
   }
 
   multi(

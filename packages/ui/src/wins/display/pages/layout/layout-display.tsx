@@ -5,8 +5,6 @@ import { RoutePath, RoutePathDisplay } from "@/common/routes";
 import { RendererWindow } from "@/common/lib/window";
 import { RendererIPCMessageBus } from "@/common/lib/bus";
 import { useLatestRef } from "@/common/hooks/use-latest-ref";
-import { useSettings } from "@/common/store/settings";
-import { useThemeInjectFromBus } from "@/common/hooks/use-theme-inject-from-bus";
 import { BackCtx } from "@/wins/display/ctx/back";
 import { RendererModified } from "@/common/lib/modified";
 
@@ -15,18 +13,16 @@ import AppErrorBoundary from "@/common/components/fallback/app-error-boundary";
 import AppToast from "@/common/components/display/toast";
 import AppContextMenu from "@/common/components/display/menu";
 import AppModal from "@/common/components/display/modal";
-import AcrylicBackground from "@/common/components/display/acrylic-background";
 import Control from "@/common/components/layout/top/control";
 import Drag from "@/common/components/layout/drag/drag";
 import TopBack from "@/common/components/layout/top/back";
 import DisplayFloat from "./float";
 import Title from "./title";
+import Background from "./background";
 
 const LayoutDisplay: FC<object> = () => {
-  const themeBus = useThemeInjectFromBus();
   const navigate = useNavigate();
   const location = useLocation();
-  const settings = useSettings();
   const pathRef = useLatestRef(location.pathname + location.search);
   const locationRef = useLatestRef(location);
   const displayBus = useListenable(RendererIPCMessageBus.display);
@@ -123,17 +119,7 @@ const LayoutDisplay: FC<object> = () => {
         <Control pin mini />
       </Drag>
       <AppErrorBoundary name="LayoutDisplayContent" showError canReset>
-        <div className="fixed inset-0 z-[-1]">
-          <AcrylicBackground
-            fluidPaused
-            src={themeBus.data?.backgroundCover}
-            fluid={settings.performance.useHomeFluid}
-            fluidSpeed={settings.performance.homeFluidSpeed}
-            opacity={0.6}
-            brightness={0.3}
-            blur={60}
-          />
-        </div>
+        <Background />
         <BackCtx value={backCtxValue}>
           <KeepAliveOutlet maxCache={3} />
         </BackCtx>

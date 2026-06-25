@@ -25,7 +25,7 @@ import AcrylicBackground from "@/common/components/display/acrylic-background";
 import Marquee from "@/common/components/display/marquee";
 
 const MiniPlayerPage: FC = () => {
-  useThemeInjectFromBus();
+  const themeBus = useThemeInjectFromBus();
   const mainWindow = useListenable(RendererWindow.main);
   const trackMetaBus = useListenable(RendererIPCMessageBus.trackMeta);
   const progressBus = useListenable(RendererIPCMessageBus.progress);
@@ -74,10 +74,12 @@ const MiniPlayerPage: FC = () => {
       <section className="fixed inset-0 z-[-1]">
         <AcrylicBackground
           className="absolute inset-0"
-          blur={15}
+          blur={10}
           brightness={0.6}
           opacity={1}
           src={bg}
+          saturate={2}
+          themeColors={themeBus.data?.theme.themeColors}
         />
       </section>
       <section className="h-screen w-screen grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 px-2 py-1 z-10">

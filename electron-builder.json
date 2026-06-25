@@ -40,7 +40,9 @@
       }
     ],
     "icon": "packages/app/assets/logo.png",
-    "category": "Utility",
+    "category": "Audio",
+    "description": "A third party music player for Netease Music",
+    "artifactName": "${name}_${version}_linux_${arch}.${ext}",
     "extraResources": [
       {
         "from": "packages/store/dist/aira-music-cache",
@@ -60,6 +62,7 @@
       }
     ],
     "icon": "packages/app/assets/logo.png",
+    "artifactName": "${name}_${version}_win_${arch}.${ext}",
     "extraResources": [
       {
         "from": "packages/store/dist/aira-music-cache.exe",
@@ -70,5 +73,30 @@
         "to": "native/index.node"
       }
     ]
-  }
+  },
+  "nsis": {
+    "oneClick": false,
+    "perMachine": false,
+    "allowToChangeInstallationDirectory": true,
+    "createDesktopShortcut": "always",
+    "createStartMenuShortcut": true,
+    "runAfterFinish": false
+  },
+  "msi": {
+    "oneClick": false,
+    "perMachine": false,
+    "createDesktopShortcut": "always",
+    "createStartMenuShortcut": true,
+    "runAfterFinish": false
+  },
+  "deb": {
+    "packageCategory": "sound",
+    "priority": "optional",
+    "compression": "xz"
+  },
+  "rpm": {
+    "packageCategory": "Applications/Audio",
+    "compression": "xz"
+  },
+  "appImage": {}
 }

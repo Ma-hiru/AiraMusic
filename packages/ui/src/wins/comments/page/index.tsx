@@ -71,10 +71,14 @@ const CommentsPage: FC<object> = () => {
       <Control className="h-10 absolute top-0 left-0 right-0 z-10" />
       <div className="fixed inset-0 z-[-1]">
         <AcrylicBackground
+          fluid
+          fluidPaused
           src={themeBus.data?.backgroundCover}
-          brightness={0.45}
-          opacity={0.7}
-          blur={40}
+          themeColors={themeBus.data?.theme.themeColors}
+          opacity={1}
+          brightness={0.4}
+          saturate={2.5}
+          blur={60}
         />
       </div>
       <AppError reset={loadMore} when={status === "error"} message="加载评论失败">

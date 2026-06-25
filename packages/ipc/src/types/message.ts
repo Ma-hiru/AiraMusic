@@ -11,6 +11,7 @@ type MessageBus = {
       textColorOnMain: string;
       textColorOnSecondary: string;
       textNormalColor: string;
+      themeColors: string[];
     };
   };
   bus_deliver_track_meta: {

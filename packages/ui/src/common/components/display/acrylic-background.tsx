@@ -1,5 +1,6 @@
-import { type FC, memo, useCallback, useEffect, useRef, useState } from "react";
+import { type FC, memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { css, cx, keyframes } from "@emotion/css";
+import RendererTheme from "@/common/player/ui";
 
 interface AcrylicBackgroundProps {
   src?: string;
@@ -8,6 +9,7 @@ interface AcrylicBackgroundProps {
   opacity?: number;
   className?: string;
   brightness?: number;
+  saturate?: number;
   duration?: number;
   /** 流体背景：封面色彩缓慢旋转漂移。仅 transform/opacity 合成动画，模糊只栅格化一次。默认关闭 */
   fluid?: boolean;
@@ -15,6 +17,14 @@ interface AcrylicBackgroundProps {
   fluidSpeed?: number;
   /** 暂停流体动画。冻结当前相位，恢复时从原位继续（无闪烁），暂停期间合成器不重绘，可与播放状态联动省电 */
   fluidPaused?: boolean;
+  /** 自适应蒙版所需要的颜色集合：封面越亮，蒙版越浓，保证白字在亮封面下的可读性*/
+  themeColors?: readonly string[];
+  /**
+   * 蒙版颜色取封面深色调（非纯黑），压暗的同时保留专辑色倾向，避免发灰
+   * 调低 FACTOR / MAX 可让背景更通透（亮封面下文字对比度也随之下降）
+   * */
+  scrim_factor?: number;
+  scrim_max?: number;
 }
 
 // 公转（translate 跟随 rotate 形成轨道）+ 自转 + 呼吸缩放，比纯旋转的动感明显得多
@@ -104,10 +114,14 @@ const AcrylicBackground: FC<AcrylicBackgroundProps> = ({
   alt,
   className,
   brightness = 0.5,
+  saturate = 1.8,
   duration = 800,
   fluid = false,
   fluidSpeed = 1,
-  fluidPaused = false
+  fluidPaused = false,
+  themeColors,
+  scrim_factor = 0.3,
+  scrim_max = 0.28
 }) => {
   const [current, setCurrent] = useState(src);
   const [next, setNext] = useState<string>();
@@ -155,9 +169,16 @@ const AcrylicBackground: FC<AcrylicBackgroundProps> = ({
   }, []);
 
   // saturate 原由毛玻璃层的 backdrop-filter 提供，并入图片 filter 后效果一致且免去每帧重采样
-  const imgFilter = `blur(${blur}px) brightness(${brightness}) saturate(1.8)`;
+  const imgFilter = `blur(${blur}px) brightness(${brightness}) saturate(${saturate})`;
   const fluidOpacity = Math.min(1, opacity * 1.4);
   const speed = Math.max(0.1, fluidSpeed);
+
+  // 蒙版浓度随封面平均亮度
+  const scrim = useMemo(() => {
+    const alpha = Math.min(scrim_max, RendererTheme.avgLuminance(themeColors ?? []) * scrim_factor);
+    const mainColor = (themeColors ?? []).at(0) || RendererTheme.themeDefault.main;
+    return RendererTheme.generatePalette(mainColor)[900].alpha(alpha).string();
+  }, [scrim_factor, scrim_max, themeColors]);
 
   return (
     <div className={cx("relative w-full h-full overflow-hidden", fluid && "isolate", className)}>
@@ -220,6 +241,9 @@ const AcrylicBackground: FC<AcrylicBackgroundProps> = ({
         className="absolute inset-0 pointer-events-none"
         style={{ background: "rgba(255, 255, 255, 0.05)" }}
       />
+      {scrim && (
+        <div className="pointer-events-none absolute inset-0" style={{ background: scrim }} />
+      )}
     </div>
   );
 };
