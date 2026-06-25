@@ -3,6 +3,7 @@ import { useAtomValue } from "jotai";
 import { playerBackgroundCoverAtom } from "@/wins/main/atoms/theme";
 import { playModalAtom } from "@/wins/main/atoms/layout";
 import { useSettings } from "@/common/store/settings";
+import { useMMCQ } from "@/wins/main/hooks/use-mmcq";
 
 import AcrylicBackground from "@/common/components/display/acrylic-background";
 import RendererPlayerHandle from "@/wins/main/lib/handle";
@@ -12,6 +13,7 @@ const Background: FC<object> = () => {
   const playModal = useAtomValue(playModalAtom);
   const player = RendererPlayerHandle.usePlayer();
   const settings = useSettings();
+  const themeColors = useMMCQ(backgroundCover);
 
   const paused = useMemo(() => {
     // player 不可见时 暂停
@@ -32,6 +34,8 @@ const Background: FC<object> = () => {
       brightness={0.4}
       opacity={0.4}
       blur={60}
+      saturate={3}
+      themeColors={themeColors}
     />
   );
 };

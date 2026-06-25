@@ -110,6 +110,64 @@ export default class RendererTheme {
     return sum / colors.length;
   }
 
+  /**
+   * 为背景双色渐变挑两端颜色
+   * 1) 一端固定取主色（colors[0]）；
+   * 2) 另一端取调色板里有彩度且色相离主色最远的颜色；
+   * 3) 若最远的也不够远（封面本就单色），在 OKLCH 里把主色旋转 manufacturedSpread 度，人造一个相邻色相，保证渐变肉眼可见
+   */
+  static pickGradientColors(
+    colors: readonly string[],
+    minSpread = 30, // 次色和主色的色相至少要差的度
+    manufacturedSpread = 35 // 单色封面时人造第二色的旋转角（度）
+  ): [string, string] {
+    // oklch
+    // h => hue       色相
+    // c => chroma    彩度
+    // l => lightness 感知亮度
+    const oklch = converter("oklch");
+
+    const a = oklch(colors[0] ?? this.themeDefault.main) ?? oklch(this.themeDefault.main)!;
+    const aH = a.h ?? 0; // 灰色没有明确 hue, 这里偏向红色系
+
+    const circDist = (h1: number, h2: number) => {
+      const d = Math.abs(h1 - h2) % 360;
+      return d > 180 ? 360 - d : d;
+    };
+
+    let bestHex: Undefinable<string>;
+    let bestD = -1;
+    for (let i = 1; i < colors.length; i++) {
+      const cs = colors[i];
+      if (!cs) continue;
+
+      const c = oklch(cs);
+      if (!c || (c.c ?? 0) < 0.03 || c.h == null) continue; // 跳过近灰
+
+      const d = circDist(aH, c.h);
+      if (d > bestD) {
+        bestD = d;
+        bestHex = cs;
+      }
+    }
+
+    const aHex = formatHex(a);
+    if (bestHex && bestD >= minSpread) return [aHex, bestHex];
+
+    // 单色封面：旋转主色相人造第二端，亮度/彩度也错开一点更像渐变
+    const manufactured = formatHex({
+      mode: "oklch",
+      // 主色偏亮/暗，就让第二色稍微暗/亮一点
+      l: clamp(a.l + (a.l > 0.5 ? -0.08 : 0.08), 0, 1),
+      // 第二色的彩度至少为 0.1
+      c: Math.max(a.c ?? 0, 0.1),
+      // 所以第二色的 hue 是主色偏移 (aH + manufacturedSpread) % 360
+      h: (aH + manufacturedSpread) % 360
+    });
+
+    return [aHex, manufactured];
+  }
+
   static smoothScrollTo(
     element: Optional<HTMLElement>,
     scrollTop: number,

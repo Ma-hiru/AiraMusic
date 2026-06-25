@@ -1,6 +1,7 @@
 import { type FC, memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { css, cx, keyframes } from "@emotion/css";
 import RendererTheme from "@/common/player/ui";
+import Color from "color";
 
 interface AcrylicBackgroundProps {
   src?: string;
@@ -25,6 +26,11 @@ interface AcrylicBackgroundProps {
    * */
   scrim_factor?: number;
   scrim_max?: number;
+  /**
+   *  背景双色渐变透明度
+   *  调高更明显但更亮（亮封面下可读性下降）
+   * */
+  gradient_alpha?: number;
 }
 
 // 公转（translate 跟随 rotate 形成轨道）+ 自转 + 呼吸缩放，比纯旋转的动感明显得多
@@ -121,7 +127,8 @@ const AcrylicBackground: FC<AcrylicBackgroundProps> = ({
   fluidPaused = false,
   themeColors,
   scrim_factor = 0.3,
-  scrim_max = 0.28
+  scrim_max = 0.28,
+  gradient_alpha = 0.5
 }) => {
   const [current, setCurrent] = useState(src);
   const [next, setNext] = useState<string>();
@@ -175,10 +182,21 @@ const AcrylicBackground: FC<AcrylicBackgroundProps> = ({
 
   // 蒙版浓度随封面平均亮度
   const scrim = useMemo(() => {
-    const alpha = Math.min(scrim_max, RendererTheme.avgLuminance(themeColors ?? []) * scrim_factor);
-    const mainColor = (themeColors ?? []).at(0) || RendererTheme.themeDefault.main;
+    if (!themeColors) return undefined;
+    const alpha = Math.min(scrim_max, RendererTheme.avgLuminance(themeColors) * scrim_factor);
+    const mainColor = themeColors.at(0) || RendererTheme.themeDefault.main;
     return RendererTheme.generatePalette(mainColor)[900].alpha(alpha).string();
   }, [scrim_factor, scrim_max, themeColors]);
+
+  // 背景双色渐变 main→secondary
+  const heroGradient = useMemo(() => {
+    if (!themeColors?.at(0)) return undefined;
+    // 取色相离主色最远的一对
+    const [c1, c2] = RendererTheme.pickGradientColors(themeColors);
+    const a = Color(c1).alpha(gradient_alpha).string();
+    const b = Color(c2).alpha(gradient_alpha).string();
+    return `linear-gradient(-135deg, ${a} 0%, ${b} 100%)`;
+  }, [gradient_alpha, themeColors]);
 
   return (
     <div className={cx("relative w-full h-full overflow-hidden", fluid && "isolate", className)}>
@@ -243,6 +261,12 @@ const AcrylicBackground: FC<AcrylicBackgroundProps> = ({
       />
       {scrim && (
         <div className="pointer-events-none absolute inset-0" style={{ background: scrim }} />
+      )}
+      {heroGradient && (
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{ background: heroGradient }}
+        />
       )}
     </div>
   );

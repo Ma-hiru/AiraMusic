@@ -9,7 +9,7 @@ export function useMMCQ(
   imageURL: Optional<string>,
   dst_width: number = 128,
   dst_height: number = 128,
-  count: number = 5,
+  count: number = 16,
   options: Optional<FilterOptions> = null
 ) {
   const [result, setResult] = useState<string[]>([]);
