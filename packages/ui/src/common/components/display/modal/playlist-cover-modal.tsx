@@ -188,7 +188,7 @@ const CoverModal: FC<CoverModalProps> = ({
                 key={tag + index}
                 className="
                   rounded-md px-2 py-1 text-[10px] font-black
-                  text-(--text-color-on-main) bg-(--theme-color-main)
+                  text-primary-text bg-primary
                 ">
                 {tag}
               </span>

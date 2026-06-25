@@ -232,7 +232,7 @@ const Cache: FC<CacheProps> = ({
             <span
               className={cx(
                 `
-                h-1.5 block bg-(--theme-color-main) rounded-md
+                h-1.5 block bg-primary rounded-md
                 ease-in-out transition-all duration-300
               `,
                 css`
@@ -279,12 +279,12 @@ const Button = ({
         `
           shrink-0 h-8 rounded-md border border-white/30 px-3
           text-[12px] font-black transition-all duration-300
-          hover:bg-(--theme-color-main) hover:text-(--text-color-on-main)
+          hover:bg-primary hover:text-(--text-color-on-main)
           active:scale-[0.98]
         `,
         disable
           ? "opacity-50 cursor-not-allowed"
-          : "hover:bg-(--theme-color-main) hover:text-(--text-color-on-main)  active:scale-[0.98]"
+          : "hover:bg-primary hover:text-primary-text  active:scale-[0.98]"
       )}>
       {title}
     </button>

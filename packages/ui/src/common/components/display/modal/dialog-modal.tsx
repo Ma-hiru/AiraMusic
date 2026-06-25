@@ -64,7 +64,7 @@ const Dialog = ({
           `,
             important
               ? "bg-red-500/80 text-white hover:opacity-50"
-              : "hover:bg-(--theme-color-main) hover:text-(--text-color-on-main)"
+              : "hover:bg-primary hover:text-(--text-color-on-main)"
           )}
           onClick={() => {
             onConfirm?.();

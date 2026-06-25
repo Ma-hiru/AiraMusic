@@ -78,7 +78,7 @@ const NavMenu: FC<NavMenuProps> = ({ barOpened, className }) => {
               ease-in-out duration-300 transition-all
             `,
               active
-                ? barOpened && "bg-(--theme-color-main) text-(--text-color-on-main)"
+                ? barOpened && "bg-primary text-(--text-color-on-main)"
                 : barOpened && "hover:bg-black/5"
             )}
             onClick={() => jump(path, active)}>
@@ -89,7 +89,7 @@ const NavMenu: FC<NavMenuProps> = ({ barOpened, className }) => {
                     flex items-center justify-center font-bold rounded-md
                     ease-in-out duration-300 transition-all
                 `,
-                active ? "bg-(--theme-color-main)" : !barOpened && "hover:bg-black/5"
+                active ? "bg-primary" : !barOpened && "hover:bg-black/5"
               )}>
               {icon}
             </span>

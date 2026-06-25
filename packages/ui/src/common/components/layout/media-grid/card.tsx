@@ -2,8 +2,8 @@ import { cx } from "@emotion/css";
 import { type FC, memo, useMemo } from "react";
 import { NeteaseNetworkImage } from "@/common/netease/models";
 import { Headphones } from "lucide-react";
-import NeteaseImage from "@/common/components/display/image/netease-image";
 import { RendererFormat } from "@/common/lib/format";
+import NeteaseImage from "@/common/components/display/image/netease-image";
 
 export type MediaItem = {
   id: number;
@@ -44,7 +44,7 @@ const MediaCard: FC<MediaCardProps> = ({ item, coverSize, onClick, className }) 
         <NeteaseImage
           cache
           image={image}
-          className={cx("size-full object-cover surface-1", roundedClass)}
+          className={cx("size-full object-cover surface-border", roundedClass)}
         />
         <div
           className={cx(

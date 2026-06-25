@@ -142,7 +142,7 @@ const MenuProvider: FC<{ className?: string }> = ({ className }) => {
               className={`
                   flex items-center gap-1.5
                   px-2 py-1 rounded-md
-                  hover:bg-(--theme-color-main)/60
+                  hover:bg-primary/60
                   hover:text-(--text-color-on-main)
                   cursor-pointer
               `}

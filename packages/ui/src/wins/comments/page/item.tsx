@@ -80,7 +80,7 @@ const Item: FC<ItemProps> = ({ data, sourceID, type }) => {
             style={{ color: data.liked ? mainColor.string() : undefined }}
             className="text-xs opacity-80 font-medium flex flex-row items-center justify-end gap-1 px-1 py-0.5 rounded-md cursor-pointer">
             <ThumbsUp
-              className={cx("size-3 inline-block", liked && "text-(--theme-color-main)")}
+              className={cx("size-3 inline-block", liked && "text-primary")}
               fill={liked ? "currentColor" : "transparent"}
               onClick={() =>
                 like({
@@ -90,7 +90,7 @@ const Item: FC<ItemProps> = ({ data, sourceID, type }) => {
               }
             />
             <span
-              className={cx("leading-3", liked && "text-(--theme-color-main)")}
+              className={cx("leading-3", liked && "text-primary")}
               onClick={() =>
                 like({
                   commentID: data.commentId,

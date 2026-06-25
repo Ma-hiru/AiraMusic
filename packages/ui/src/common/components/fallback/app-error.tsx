@@ -50,7 +50,7 @@ const AppError: FC<AppErrorProps> = ({
           onClick={reset}
           className={`
             px-2 py-1 inline active:scale-95 cursor-pointer rounded-md
-            hover:text-(--text-color-on-main) hover:bg-(--theme-color-main)
+            hover:text-primary-text hover:bg-primary
             duration-200 ease-in-out transition-all text-center
           `}>
           <CircleX className="mr-2 inline" />

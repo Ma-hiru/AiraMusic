@@ -83,7 +83,7 @@ const ForYouPanel: FC<object> = () => {
     <aside
       className="
         relative h-full w-full min-w-100 overflow-hidden rounded-xl border border-white/15
-        bg-linear-to-br from-white/12 via-white/5 to-(--theme-color-main)/50 p-3
+        bg-linear-to-br from-white/12 via-white/5 to-primary/50 p-3
         shadow-md backdrop-saturate-150 backdrop-blur-lg
         group
       ">
@@ -107,7 +107,7 @@ const ForYouPanel: FC<object> = () => {
                   </span>
                 </p>
               </div>
-              <div className="min-w-0 border-l-2 border-(--theme-color-main)/55 pl-3">
+              <div className="min-w-0 border-l-2 border-primary/55 pl-3">
                 <div className="flex items-end gap-2">
                   <span className="text-6xl font-black leading-none tabular-nums">
                     {dateDisplay.date().toString().padStart(2, "0")}

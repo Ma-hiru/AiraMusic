@@ -87,7 +87,7 @@ const Info: FC<InfoProps> = ({ className, artist, children }) => {
           onClick={follow}
           className={cx(`
             text-sm font-light cursor-pointer px-2 py-1 rounded-md
-            hover:bg-(--theme-color-main) hover:text-(--text-color-on-main)
+            hover:bg-primary hover:text-(--text-color-on-main)
             active:scale-98 select-none
             transition-all duration-300 ease-in-out
         `)}>

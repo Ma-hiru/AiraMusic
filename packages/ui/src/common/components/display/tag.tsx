@@ -15,7 +15,7 @@ const Tag: FC<TagProps> = ({ text, className }) => {
           text-center align-middle
           font-semibold opacity-80
           select-none
-          bg-(--text-color-on-main) text-(--theme-color-main)
+          bg-primary-text text-primary
         `,
         !text && "invisible",
         className

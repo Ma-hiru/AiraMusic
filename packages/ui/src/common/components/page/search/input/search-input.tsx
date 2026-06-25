@@ -123,7 +123,7 @@ const SearchInput: FC<SearchInputProps> = ({ className, onSearch, ref, setTabs }
             h-full w-full rounded-full border border-white/30
             px-4 pr-9 text-sm font-semibold outline-none shadow-md
             transition-all duration-300 ease-in-out
-            focus:border-(--theme-color-main)  
+            focus:border-primary
         `}
           value={keyword}
           placeholder={recommendKeyword ?? "请输入搜索关键词"}
@@ -148,8 +148,8 @@ const SearchInput: FC<SearchInputProps> = ({ className, onSearch, ref, setTabs }
           }}
           className={cx(
             `
-              absolute right-3 top-1/2 size-4 -translate-y-1/2 text-(--theme-color-main)
-              rounded-full hover:bg-(--theme-color-main)/10
+              absolute right-3 top-1/2 size-4 -translate-y-1/2 text-primary
+              rounded-full hover:bg-primary/10
               transition-all duration-300 ease-in-out cursor-pointer
             `,
             focus ? "opacity-100" : "opacity-0"
@@ -172,8 +172,8 @@ const SearchInput: FC<SearchInputProps> = ({ className, onSearch, ref, setTabs }
         className={cx(
           `
           flex size-10 shrink-0 items-center justify-center rounded-full border border-white/30 shadow-md
-          transition-all duration-300 ease-in-out hover:bg-(--theme-color-main)
-          hover:text-(--text-color-on-main) active:scale-95
+          transition-all duration-300 ease-in-out hover:bg-primary
+          hover:text-primary-text active:scale-95
         `
         )}
         onClick={() => {

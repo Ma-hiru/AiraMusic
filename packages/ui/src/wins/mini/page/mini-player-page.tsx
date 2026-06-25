@@ -83,7 +83,7 @@ const MiniPlayerPage: FC = () => {
         />
       </section>
       <section className="h-screen w-screen grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 px-2 py-1 z-10">
-        <NoDrag className="relative size-11 rounded-md border overflow-hidden border-white/30 bg-(--theme-color-main)/30">
+        <NoDrag className="relative size-11 rounded-md border overflow-hidden border-white/30 bg-primary/30">
           {cover ? (
             <NeteaseImage
               cache
@@ -110,7 +110,7 @@ const MiniPlayerPage: FC = () => {
               <Music2 className="size-5" />
             </div>
           )}
-          <span className="absolute right-0.5 top-0.5 flex size-2.5 items-center justify-center rounded-full bg-(--theme-color-main)">
+          <span className="absolute right-0.5 top-0.5 flex size-2.5 items-center justify-center rounded-full bg-primary">
             <Disc3
               className={cx(
                 "size-2 text-(--text-color-on-main)",
@@ -201,8 +201,8 @@ const MiniPlayerPage: FC = () => {
               className="
                 flex size-5 items-center justify-center rounded-full outline-none
                 transition-all duration-200 ease-in-out
-                hover:bg-(--text-color-on-main)/50 hover:text-(--theme-color-main)
-                active:scale-90 focus-visible:ring-2 focus-visible:ring-(--theme-color-main)/35
+                hover:bg-(--text-color-on-main)/50 hover:text-primary
+                active:scale-90 focus-visible:ring-2 focus-visible:ring-primary/35
               ">
               <X className="size-3.5" />
             </button>
@@ -238,8 +238,8 @@ const ControlButton = ({
       className="
         flex size-5 items-center justify-center rounded-full outline-none
         transition-all duration-300 ease-in-out active:scale-90
-        hover:bg-(--text-color-on-main)/50 hover:text-(--theme-color-main)
-        focus-visible:ring-2 focus-visible:ring-(--theme-color-main)/35
+        hover:bg-(--text-color-on-main)/50 hover:text-primary
+        focus-visible:ring-2 focus-visible:ring-primary/35
       ">
       <Icon className="size-3.5" fill={filled ? "currentColor" : "none"} />
     </button>

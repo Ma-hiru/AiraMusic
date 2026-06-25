@@ -33,7 +33,7 @@ const SearchSuggestions: FC<SearchSuggestionsProps> = ({ suggestions, onClick, r
             className={`
               text-sm flex justify-start items-center gap-1
               px-2 py-1 rounded-md h-8 text-zinc-700
-              hover:bg-(--theme-color-main) hover:text-(--text-color-on-main)
+              hover:bg-primary hover:text-(--text-color-on-main)
               transition-all ease-in-out duration-300 cursor-pointer
             `}
             onClick={() => onClick?.(suggestion)}>

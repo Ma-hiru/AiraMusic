@@ -76,7 +76,7 @@ const Device: FC<DeviceProps> = ({ output, updateOutput }) => {
               hover:opacity-50 cursor-pointer active:scale-[0.99]
               disabled:cursor-not-allowed disabled:opacity-60
             `,
-            opened && "border-(--text-color)! bg-(--theme-color-main)! text-(--text-color-on-main)!"
+            opened && "border-(--text-color)! bg-primary! text-(--text-color-on-main)!"
           )}>
           <span className="flex size-10 shrink-0 items-center justify-center rounded-md">
             <Monitor className="size-4" />
@@ -120,9 +120,7 @@ const Device: FC<DeviceProps> = ({ output, updateOutput }) => {
                       transition-all duration-300 ease-in-out
                        active:scale-[0.98]
                     `,
-                  active
-                    ? "bg-(--theme-color-main) text-(--text-color-on-main) hover:opacity-50"
-                    : "hover:bg-white/10"
+                  active ? "bg-primary text-primary-text hover:opacity-50" : "hover:bg-white/10"
                 )}>
                 <span className="min-w-0 flex-1 truncate">{device.displayName}</span>
                 <Check className={cx("size-3.5 shrink-0", !active && "opacity-0")} />
@@ -133,7 +131,7 @@ const Device: FC<DeviceProps> = ({ output, updateOutput }) => {
         <div className="flex items-center justify-between gap-3 text-[10px] font-bold opacity-60">
           <span className="min-w-0 truncate">{deviceCountText}</span>
           {selectedDevice && (
-            <span className="shrink-0 rounded-md border border-white/15 px-2 py-1 bg-(--theme-color-main) text-(--text-color-on-main)">
+            <span className="shrink-0 rounded-md border border-white/15 px-2 py-1 bg-primary text-(--text-color-on-main)">
               正在使用 {selectedDevice.displayName}
             </span>
           )}

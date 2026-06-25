@@ -111,7 +111,7 @@ const Shortcut: FC<ShortcutSettings> = ({ data, patchSettings }) => {
                   transition-all duration-300 ease-in-out
                   cursor-pointer hover:opacity-50 active:scale-95
                 `,
-                  isRecording ? "border-(--theme-color-main) animate-pulse" : "border-white/50"
+                  isRecording ? "border-primary animate-pulse" : "border-white/50"
                 )}>
                 {isRecording ? "按下新的快捷键…" : RendererFormat.shortcut(data[action])}
               </button>

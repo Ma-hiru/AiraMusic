@@ -17,7 +17,7 @@ const Switch: FC<SwitchProps> = ({ checked, onClick, className, label }) => {
         font-bold text-[10px] text-center
         p-0.5 cursor-pointer
         transition-all duration-300 ease-in-out
-        group hover:text-(--theme-color-main)
+        group hover:text-primary
         `,
         className
       )}
@@ -25,7 +25,7 @@ const Switch: FC<SwitchProps> = ({ checked, onClick, className, label }) => {
       {label}
       <span
         className={cx(
-          "absolute w-full h-0.5 bottom-0 bg-(--theme-color-main) hidden",
+          "absolute w-full h-0.5 bottom-0 bg-primary hidden",
           checked && "inline-block"
         )}
       />

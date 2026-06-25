@@ -33,9 +33,7 @@ const TrackItemIndex: FC<ListItemIndexProps> = ({
         <span
           className={cx(
             "flex size-4 items-center justify-center rounded border transition-colors duration-200",
-            selected
-              ? "border-(--theme-color-main) bg-(--theme-color-main) text-(--text-color-on-main)"
-              : "border-current/40"
+            selected ? "border-primary bg-primary text-(--text-color-on-main)" : "border-current/40"
           )}>
           {selected && <Check className="size-3" />}
         </span>

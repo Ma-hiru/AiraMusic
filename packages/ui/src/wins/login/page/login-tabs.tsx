@@ -26,7 +26,7 @@ const LoginTabs: FC<LoginTabsProps> = ({ tabs, activeIndex, onChange }) => {
               className={cx(
                 `
                   absolute bottom-0 left-1/2 h-0.5 -translate-x-1/2 rounded-full
-                  bg-(--theme-color-main) ease-in-out transition-all duration-300
+                  bg-primary ease-in-out transition-all duration-300
                 `,
                 active ? "w-5 opacity-100" : "w-0 opacity-0"
               )}

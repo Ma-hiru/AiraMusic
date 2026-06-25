@@ -33,10 +33,10 @@ const HomeChannelTabs: FC<HomeChannelTabsProps> = ({
                 flex min-w-36 py-1 shrink-0 cursor-pointer items-center gap-3 rounded-lg
                 border border-white/20 px-3 text-left backdrop-saturate-150 backdrop-blur-lg
                 shadow-md transition-all duration-300 ease-in-out
-                hover:bg-(--theme-color-main) hover:text-(--text-color-on-main)
+                hover:bg-primary hover:text-(--text-color-on-main)
                 active:scale-[0.98]
               `,
-              selected ? "bg-(--theme-color-main) text-(--text-color-on-main)" : "bg-white/5"
+              selected ? "bg-primary text-primary-text" : "bg-white/5"
             )}>
             <Icon className="size-4 shrink-0" />
             <span className="min-w-0">

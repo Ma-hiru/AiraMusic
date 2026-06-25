@@ -155,9 +155,9 @@ const Search: FC<SearchProps> = ({
                         `
                         flex h-12 items-center gap-2  px-3 text-left
                         transition-all duration-300 active:scale-[0.98] cursor-pointer
-                        hover:bg-(--theme-color-main) hover:text-(--text-color-on-main)
+                        hover:bg-primary hover:text-(--text-color-on-main)
                       `,
-                        active && "bg-(--theme-color-main) text-(--text-color-on-main)"
+                        active && "bg-primary text-(--text-color-on-main)"
                       )}>
                       <Icon className="size-4 shrink-0" />
                       <span className="min-w-0">

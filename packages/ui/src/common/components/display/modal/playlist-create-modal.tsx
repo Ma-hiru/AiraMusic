@@ -80,7 +80,7 @@ const PlaylistCreateForm: FC<{
         onKeyDown={(e) => e.key === "Enter" && void onCreate()}
         className="
           w-full mt-1 rounded-md border border-white/15 bg-white/10 px-3 py-2 font-bold
-          outline-none transition-colors focus:border-(--theme-color-main)
+          outline-none transition-colors focus:border-primary
         "
       />
       {/* 隐私开关 */}
@@ -98,7 +98,7 @@ const PlaylistCreateForm: FC<{
         <span
           className={cx(
             "relative h-5 w-9 shrink-0 rounded-full transition-colors duration-300",
-            privacy ? "bg-(--theme-color-main)" : "bg-white/20"
+            privacy ? "bg-primary" : "bg-white/20"
           )}>
           <span
             className={cx(
@@ -115,7 +115,7 @@ const PlaylistCreateForm: FC<{
           disabled={creating}
           onClick={onCreate}
           className="
-            rounded-md px-4 py-1.5 font-bold hover:text-(--text-color-on-main) hover:bg-(--theme-color-main)
+            rounded-md px-4 py-1.5 font-bold hover:text-primary-text hover:bg-primary
             transition-all active:scale-96 disabled:opacity-50
           ">
           {creating ? "创建中..." : "创建"}

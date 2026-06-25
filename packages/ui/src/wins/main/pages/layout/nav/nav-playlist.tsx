@@ -129,7 +129,7 @@ const RowComponent: VirtualListRow<
             ease-in-out transition-all duration-300 group
           `,
           active
-            ? extra.opened && "bg-(--theme-color-main) text-(--text-color-on-main)"
+            ? extra.opened && "bg-primary text-(--text-color-on-main)"
             : extra.opened && "hover:bg-black/5"
         )}>
         <div
@@ -139,9 +139,7 @@ const RowComponent: VirtualListRow<
               flex justify-center items-center py-1 rounded-md
               ease-in-out transition-all duration-300
             `,
-            active
-              ? "bg-(--theme-color-main) text-(--text-color-on-main)"
-              : !extra.opened && "hover:bg-black/5"
+            active ? "bg-primary text-(--text-color-on-main)" : !extra.opened && "hover:bg-black/5"
           )}>
           <NeteaseImage
             cache

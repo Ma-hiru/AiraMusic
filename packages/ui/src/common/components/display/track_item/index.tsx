@@ -82,9 +82,9 @@ const TrackItem = <T extends NeteaseTrackRecord | NeteaseHistoryRecord>({
             ease-in-out transition-colors
         `,
         active
-          ? "bg-(--theme-color-main) text-(--text-color-on-main) shadow-xs"
+          ? "bg-primary text-primary-text shadow-xs"
           : selected
-            ? "bg-(--theme-color-main)/15"
+            ? "bg-secondary/15"
             : "hover:bg-black/10 active:bg-black/20",
         !playable && !selectionMode && "cursor-not-allowed! opacity-50"
       )}>

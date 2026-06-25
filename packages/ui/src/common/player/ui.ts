@@ -11,6 +11,9 @@ export default class RendererTheme {
   static readonly themeCSSNameTextOnMain = "--text-color-on-main";
   static readonly themeCSSNameTextOnSecondary = "--text-color-on-secondary";
   static readonly themeCSSNameText = "--text-color";
+  static readonly themeCSSNamePrimaryHover = "--primary-hover";
+  static readonly themeCSSNamePrimaryActive = "--primary-active";
+  static readonly themeCSSNamePrimarySoft = "--primary-soft";
   private static readonly listener = new Listener();
 
   static addListener(cb: NormalFunc) {
@@ -54,6 +57,20 @@ export default class RendererTheme {
       textOnSecondaryColor
     );
     document.documentElement.style.setProperty(this.themeCSSNameText, textColor);
+  }
+
+  /**
+   * 用 generatePalette 把主色铺成受控的「主色阶梯」，写入 CSS 变量供 @theme 语义 token 使用：
+   * --primary-hover（palette 400，hover）、--primary-active（600，按下）、
+   * --primary-soft（400 低透明，中性表面上的淡底；注意彩色背景上几乎不可见）。
+   * 主色本身已是 --theme-color-main，这里只补受控的 hover/active/soft 三档。
+   */
+  static setPrimaryScale(main: string) {
+    const p = this.generatePalette(main);
+    const root = document.documentElement.style;
+    root.setProperty(this.themeCSSNamePrimaryHover, p[400].hex());
+    root.setProperty(this.themeCSSNamePrimaryActive, p[600].hex());
+    root.setProperty(this.themeCSSNamePrimarySoft, p[400].alpha(0.18).string());
   }
 
   static get themeDefault() {

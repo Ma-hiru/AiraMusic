@@ -36,7 +36,7 @@ const TopInfo: FC<TopInfoProps> = ({ summary, onPlayAll, onAddList }) => {
           <span
             className={`
               mr-2 inline-flex items-center gap-1 align-middle
-              bg-(--theme-color-secondary) text-(--text-color-on-secondary)
+              bg-secondary text-secondary-text
               rounded-full px-1 py-0.5 text-[10px]
             `}>
             <NeteaseImage cache image={avatar} className="size-4 shrink-0 rounded-full" />

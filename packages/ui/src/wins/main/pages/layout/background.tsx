@@ -54,6 +54,7 @@ const Background: FC<{ className?: string }> = ({ className }) => {
         textOnSecondaryColor: textColorOnSecondary,
         textColor
       };
+      RendererTheme.setPrimaryScale(mainColor);
       setThemeColor(themeColors);
       setMainColor(mainColor);
       setSecondaryColor(secondaryColor);

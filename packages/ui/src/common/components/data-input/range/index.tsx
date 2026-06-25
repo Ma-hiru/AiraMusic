@@ -74,7 +74,7 @@ const RangeSlider: FC<RangeSliderProps> = ({
       className={cx(
         "relative cursor-pointer rounded-full",
         orientation === "vertical" ? "h-full w-1.5" : "h-1.5 w-full",
-        colorReverse ? "bg-(--text-color-on-main)/15" : "bg-(--theme-color-main)/15",
+        colorReverse ? "bg-(--text-color-on-main)/15" : "bg-primary/15",
         className
       )}
       onMouseDown={handleMouseDown}>
@@ -82,7 +82,7 @@ const RangeSlider: FC<RangeSliderProps> = ({
         className={cx(
           "absolute rounded-full",
           orientation === "vertical" ? "bottom-0 left-0 w-full" : "left-0 top-0 h-full",
-          colorReverse ? "bg-(--text-color-on-main)" : "bg-(--theme-color-main)"
+          colorReverse ? "bg-(--text-color-on-main)" : "bg-primary"
         )}
         style={
           orientation === "vertical" ? { height: `${percentage}%` } : { width: `${percentage}%` }
@@ -95,7 +95,7 @@ const RangeSlider: FC<RangeSliderProps> = ({
           cursor-pointer rounded-full shadow-md hover:scale-110
           transition-transform ease-in-out duration-300
         `,
-          colorReverse ? "bg-(--text-color-on-main)" : "bg-(--theme-color-main)"
+          colorReverse ? "bg-(--text-color-on-main)" : "bg-primary"
         )}
         title={String(value)}
         style={

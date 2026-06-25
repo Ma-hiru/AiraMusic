@@ -42,7 +42,7 @@ const ToggleRow: FC<ToggleRowProps> = ({
               cursor-pointer hover:opacity-50 active:scale-95
               flex justify-start items-center p-0
             `,
-              checked ? "border-(--theme-color-main) pl-6" : "border-white/50 pl-1"
+              checked ? "border-primary pl-6" : "border-white/50 pl-1"
             )}>
             <span
               className={cx(
@@ -50,7 +50,7 @@ const ToggleRow: FC<ToggleRowProps> = ({
                   inline-block size-5 rounded-full shadow-sm
                   transition-all duration-300 ease-in-out
                 `,
-                checked ? "bg-(--theme-color-main)" : "bg-(--text-color)"
+                checked ? "bg-primary" : "bg-(--text-color)"
               )}
             />
           </button>

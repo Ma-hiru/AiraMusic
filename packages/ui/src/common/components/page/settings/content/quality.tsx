@@ -24,7 +24,7 @@ const Quality: FC<QualityProps> = ({ data, updateQuality, vip }) => {
               key={option.value}
               className={cx(
                 "hover:opacity-50 ease-in-out duration-300 transition-opacity cursor-pointer",
-                active && "bg-(--theme-color-main)! text-(--text-color-on-main)"
+                active && "bg-primary! text-(--text-color-on-main)"
               )}
               onClick={() => {
                 if (option.vip && !vip) {
@@ -50,7 +50,7 @@ const Quality: FC<QualityProps> = ({ data, updateQuality, vip }) => {
                         `
                           text-[8px] font-black rounded-sm px-1.5 border border-white/30
                         `,
-                        active && "text-(--theme-color-main) bg-(--text-color-on-main)"
+                        active && "text-primary bg-(--text-color-on-main)"
                       )}>
                       VIP
                     </span>
