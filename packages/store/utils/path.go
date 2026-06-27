@@ -30,9 +30,13 @@ func EnsureDir(dir string, perm os.FileMode) error {
 	return nil
 }
 
-// RandomFilename 生成一个随机文件名，格式为 "[GetTime]_[RandString]"
-func RandomFilename() string {
-	return strconv.FormatInt(GetTime(), 10) + "_" + RandString(12)
+// RandomFilename 生成一个随机文件名，格式为 "[RandString] + [GetTimeMilli] + [append]"
+func RandomFilename(append ...string) string {
+	var name = RandString(12) + strconv.FormatInt(GetTimeMilli(), 10)
+	if len(append) > 0 {
+		name += strings.Join(append, "")
+	}
+	return name
 }
 
 // FilePathToSchemeURL 将给定的文件路径转换为带有自定义方案的 URL。

@@ -14,14 +14,14 @@ export default class _NeteasePlaylistSource {
   private static readonly cacheKey = "netease_playlist_detail_v1";
 
   private static storeCache(response: NullablePrivilegesPlaylistDetailResponse) {
-    return RendererCache.local.object.store(
-      _NeteasePlaylistSource.cacheKey + "_" + response.playlist.id,
-      response
-    );
+    return RendererCache.service.object.setOne({
+      id: _NeteasePlaylistSource.cacheKey + "_" + response.playlist.id,
+      data: response
+    });
   }
 
   private static getCache(id: number) {
-    return RendererCache.local.object.fetch<NullablePrivilegesPlaylistDetailResponse>(
+    return RendererCache.service.object.getOne<NullablePrivilegesPlaylistDetailResponse>(
       _NeteasePlaylistSource.cacheKey + "_" + id
     );
   }

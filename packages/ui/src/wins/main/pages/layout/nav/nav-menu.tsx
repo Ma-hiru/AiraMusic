@@ -67,7 +67,7 @@ const NavMenu: FC<NavMenuProps> = ({ barOpened, className }) => {
         className
       )}>
       {NavConstants.LAYOUT_NAV.map(({ icon, label, path }) => {
-        const active = RoutePathMain.matchPathname(location, path);
+        const active = RoutePathMain.matchPathname(location, path, true);
         return (
           <div
             key={path}
@@ -77,9 +77,7 @@ const NavMenu: FC<NavMenuProps> = ({ barOpened, className }) => {
               flex flex-row h-12 items-center mx-3 rounded-md
               ease-in-out duration-300 transition-all
             `,
-              active
-                ? barOpened && "bg-primary text-(--text-color-on-main)"
-                : barOpened && "hover:bg-black/5"
+              active ? barOpened && "bg-primary text-primary-text" : barOpened && "hover:bg-black/5"
             )}
             onClick={() => jump(path, active)}>
             <span

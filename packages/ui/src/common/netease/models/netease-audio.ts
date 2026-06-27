@@ -27,11 +27,11 @@ export class NeteaseNetworkAudio {
     return new NeteaseNetworkAudio(this);
   }
 
-  isNetwork() {
+  isNetwork(): this is NeteaseNetworkAudio {
     return NeteaseCommonAudio.isNetwork(this);
   }
 
-  isLocal() {
+  isLocal(): this is NeteaseLocalAudio {
     return NeteaseCommonAudio.isLocal(this);
   }
 }

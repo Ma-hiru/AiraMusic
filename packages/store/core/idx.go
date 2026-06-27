@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -16,16 +17,8 @@ import (
 
 type IndexOption func(*Index)
 
-func NewIndex(id, path string, options ...IndexOption) Index {
+func NewIndex(options ...IndexOption) Index {
 	var idx = &Index{
-		ID:   id,
-		Path: path,
-		Type: "application/octet-stream",
-		File: utils.FilePathToSchemeURL(
-			path,
-			store.option.FileScheme,
-			store.option.FileSchemeHost,
-		),
 		CreateTime: utils.GetTime(),
 	}
 
@@ -36,27 +29,40 @@ func NewIndex(id, path string, options ...IndexOption) Index {
 	return *idx
 }
 
-func WithFileInfo(
-	url,
-	name,
-	mimeType,
-	size string,
+func IndexRequiredInfo(
+	id,
+	mime string,
+	size int64,
 ) IndexOption {
 	return func(i *Index) {
-		i.Url = url
-		i.Name = name
-		i.Type = mimeType
+		i.ID = id
+		i.Mime = mime
 		i.Size = size
+		i.Category = MimeMatchCategory(mime)
 	}
 }
 
-func WithETag(etag string) IndexOption {
+func IndexRequiredSlices(key string, slice []string) IndexOption {
+	return func(i *Index) {
+		i.Key = key
+		i.Chunks = slice
+	}
+}
+
+func IndexOptionalURL(url, name string) IndexOption {
+	return func(i *Index) {
+		i.Url = url
+		i.Name = name
+	}
+}
+
+func IndexOptionalETag(etag string) IndexOption {
 	return func(i *Index) {
 		i.ETag = etag
 	}
 }
 
-func WithLastModified(lm string) IndexOption {
+func IndexOptionalLastModified(lm string) IndexOption {
 	return func(i *Index) {
 		i.LastModified = lm
 	}
@@ -76,16 +82,16 @@ func (Self Index) IsExpiredNano(timeLimitNano int64) bool {
 	return nowNano-createNano > timeLimitNano
 }
 
-func (Self Index) FillHeader(ctx *gin.Context) {
+func (Self Index) FillHeader(ctx *gin.Context, partial bool) {
 	if Self.ETag != "" {
 		ctx.Header("Cache-Control", "no-cache")
 		ctx.Header("ETag", Self.ETag)
 	}
-	if Self.Type != "" {
-		ctx.Header("Content-Type", Self.Type)
+	if Self.Mime != "" {
+		ctx.Header("Content-Type", Self.Mime)
 	}
-	if Self.Size != "" {
-		ctx.Header("Content-Length", Self.Size)
+	if Self.Size >= 0 {
+		ctx.Header("Content-Length", strconv.FormatInt(Self.Size, 10))
 	}
 	if Self.LastModified != "" {
 		ctx.Header("Last-Modified", Self.LastModified)
@@ -93,6 +99,28 @@ func (Self Index) FillHeader(ctx *gin.Context) {
 	if Self.Name != "" {
 		ctx.Header("Content-Disposition", "attachment; filename=\""+Self.Name+"\"")
 	}
+	if partial {
+		ctx.Header("Accept-Ranges", "bytes")
+	}
+}
+
+func (Self Index) MergeChunk(ctx *gin.Context, dir string) error {
+	if ctx.Request.Header.Get("Range") != "" && Self.Size > 0 {
+		Self.FillHeader(ctx, true)
+		ctx.Header("Content-Range", fmt.Sprintf("bytes 0-%d/%d", Self.Size-1, Self.Size))
+		ctx.Header("Content-Length", strconv.FormatInt(Self.Size, 10))
+		ctx.Status(http.StatusPartialContent)
+	} else {
+		Self.FillHeader(ctx, false)
+		ctx.Status(http.StatusOK)
+	}
+	return utils.MergeChunk(
+		ctx.Request.Context(),
+		ctx.Writer,
+		Self.Key,
+		dir,
+		Self.Chunks,
+	)
 }
 
 // 创建index文件

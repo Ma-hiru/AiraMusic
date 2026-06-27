@@ -114,6 +114,7 @@ const NeteaseImage: FC<ImageProps> = ({
   const handleLoadError = useCallback(
     (e: SyntheticEvent<HTMLImageElement>) => {
       if (source?.isLocal && image) {
+        void NeteaseServicesImage.remove(image);
         return setSource(image.toNetworkImage());
       } else if (source?.isNetwork && retryOnError) {
         return retry(e.currentTarget);

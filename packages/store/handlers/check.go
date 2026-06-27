@@ -6,72 +6,68 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func Check(ctx *gin.Context) {
-	var id, _ = getRequireQuery(ctx)
-	var _, timeLimit = getOptionQuery(ctx)
-	var store = core.GetStore()
-	var index, ok = store.CheckByID(id)
-	if !ok || timeLimit > 0 && index.IsExpiredMill(timeLimit) {
-		ctx.JSON(200, gin.H{
-			"ok":    false,
-			"index": core.Index{},
-		})
-		return
-	}
-	ctx.JSON(200, gin.H{
-		"ok":    ok,
-		"index": index,
-	})
-}
-
 type CheckItem struct {
-	Id        string `json:"id" binding:"required"`
-	TimeLimit int64  `json:"timeLimit"`
+	Id        string `form:"id" json:"id" binding:"required"`
+	TimeLimit int64  `form:"timeLimit" json:"timeLimit,omitempty"`
 }
 
-type CheckMultiShouldBind struct {
-	Items     []CheckItem `json:"items" binding:"required"`
-	TimeLimit int64       `json:"timeLimit"`
+type CheckIdxParams struct {
+	Items []CheckItem `form:"items" json:"items" binding:"required"`
 }
 
-func CheckMulti(ctx *gin.Context) {
-	var requestParam = CheckMultiShouldBind{}
-	if err := ctx.ShouldBindJSON(&requestParam); err != nil {
-		ctx.JSON(200, gin.H{
-			"ok":      false,
-			"results": []gin.H{},
-			"error":   "invalid parameters",
-		})
-		return
+type CheckRes struct {
+	Ok  bool       `json:"ok"`
+	Idx core.Index `json:"idx"`
+}
+
+// CheckIdx 检查文件是否存在
+func CheckIdx(ctx *gin.Context) {
+	if requestParam, store, ok := bindingCheck(ctx, &CheckIdxParams{}); ok {
+		sendOkResponse(ctx, checkIdx(requestParam, store))
 	}
+}
 
-	var store = core.GetStore()
-	var result = make([]gin.H, 0, len(requestParam.Items))
-	var timeLimit = requestParam.TimeLimit
+// CheckIdxOrStore 检查文件是否存在，不存在则存储
+func CheckIdxOrStore(ctx *gin.Context) {
+	if requestParam, store, ok := bindingCheck(ctx, &SaveURLParams{}); ok {
+		var Items = make([]CheckItem, 0, len(requestParam.Items))
+		for _, i := range requestParam.Items {
+			Items = append(Items, CheckItem{
+				Id:        i.Id,
+				TimeLimit: i.TimeLimit,
+			})
+		}
+
+		var res = checkIdx(&CheckIdxParams{Items}, store)
+		var needSave = make([]SaveURLItem, 0, len(requestParam.Items))
+		for i, r := range res {
+			if !r.Ok {
+				needSave = append(needSave, requestParam.Items[i])
+			}
+		}
+
+		saveFromURL(&SaveURLParams{Items: needSave, Method: requestParam.Method}, store, ctx.Request.Header.Clone())
+		sendOkResponse(ctx, res)
+	}
+}
+
+func checkIdx(requestParam *CheckIdxParams, store *core.Store) []CheckRes {
+	var res = make([]CheckRes, 0, len(requestParam.Items))
+
 	for _, item := range requestParam.Items {
-		var index, ok = store.CheckByID(item.Id)
-		if !ok {
-			result = append(result, gin.H{
-				"ok":    false,
-				"index": core.Index{},
+		var idx, ok = store.CheckByID(item.Id)
+		if !ok || (item.TimeLimit > 0 && idx.IsExpiredMill(item.TimeLimit)) {
+			res = append(res, CheckRes{
+				Ok:  false,
+				Idx: core.Index{},
 			})
 			continue
 		}
-		var needUpdate = item.TimeLimit > 0 && index.IsExpiredMill(item.TimeLimit) || timeLimit > 0 && index.IsExpiredMill(timeLimit)
-		if needUpdate {
-			result = append(result, gin.H{
-				"ok":    false,
-				"index": core.Index{},
-			})
-			continue
-		}
-		result = append(result, gin.H{
-			"ok":    true,
-			"index": index,
+		res = append(res, CheckRes{
+			Ok:  true,
+			Idx: idx,
 		})
 	}
-	ctx.JSON(200, gin.H{
-		"ok":      true,
-		"results": result,
-	})
+
+	return res
 }

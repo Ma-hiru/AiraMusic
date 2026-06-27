@@ -1,10 +1,11 @@
 import { type FC, memo, useMemo } from "react";
 import { cx } from "@emotion/css";
 import { RendererFormat } from "@/common/lib/format";
+import type { CacheStoreCategories } from "@/types/cache";
 
 interface DonutChartProps {
   className?: string;
-  cacheStoreSizes: Nullable<CacheStoreSizeCategories>;
+  cacheStoreSizes: Nullable<CacheStoreCategories>;
 }
 
 const DonutChart: FC<DonutChartProps> = ({ className, cacheStoreSizes }) => {

@@ -1,7 +1,9 @@
 package core
 
 import (
+	"mime"
 	"os"
+	"strings"
 	"sync"
 	"time"
 )
@@ -38,27 +40,39 @@ type StoreOption struct {
 	Capacity       uint64
 }
 
+type StoreCategory = uint8
+
+const (
+	StoreCategoryImage StoreCategory = iota + 1
+	StoreCategoryVideo
+	StoreCategoryAudio
+	StoreCategoryJSON
+	StoreCategoryOther
+)
+
 type Index struct {
-	ID           string `json:"id"`                     // 存储ID，具备唯一性
-	Url          string `json:"url"`                    // 下载文件的URL
-	Path         string `json:"path"`                   // 文件在本地存储的路径
-	File         string `json:"file"`                   // 由文件路径转换成的自定义协议地址
-	Name         string `json:"name"`                   // 原始（下载）文件名
-	Type         string `json:"type"`                   // MIME类型
-	Size         string `json:"size"`                   // 文件大小
-	CreateTime   int64  `json:"createTime"`             // 创建时间
-	ETag         string `json:"eTag"`                   // 下载时保存的ETag或计算得到的HASH
-	LastModified string `json:"lastModified,omitempty"` // 下载时保存的修改时间
+	ID           string        `json:"id"`                     // 存储ID，具备唯一性
+	Url          string        `json:"url,omitempty"`          // 下载文件的URL
+	Name         string        `json:"name,omitempty"`         // 原始（下载）文件名
+	Mime         string        `json:"mime"`                   // MIME类型
+	Size         int64         `json:"size"`                   // 文件大小
+	CreateTime   int64         `json:"createTime"`             // 创建时间
+	ETag         string        `json:"eTag,omitempty"`         // 下载时保存的ETag或计算得到的HASH
+	LastModified string        `json:"lastModified,omitempty"` // 下载时保存的修改时间
+	Category     StoreCategory `json:"category"`               // 分类
+	Key          string        `json:"key"`                    // chunk的加密key
+	Chunks       []string      `json:"chunks"`                 // 存储的chunk名
 }
 
 type WritingFile struct {
 	tmpPath      string // 临时文件地址
 	name         string
-	fileType     string
+	mime         string
 	size         string // size 为文件预期大小，不符时会删除缓存文件，为空时，会被赋值为实际大小
 	etag         string
 	lastModified string
 	file         *os.File
+	url          string
 }
 
 type MoveProgressChan struct {
@@ -71,4 +85,26 @@ type MoveProgressChan struct {
 type IndexHandle struct {
 	file  *os.File
 	mutex sync.Mutex
+}
+
+func MimeMatchCategory(contentType string) StoreCategory {
+	mt, _, err := mime.ParseMediaType(contentType)
+	if err != nil {
+		mt = contentType
+	}
+
+	mt = strings.ToLower(strings.TrimSpace(mt))
+
+	switch {
+	case strings.HasPrefix(mt, "image/"):
+		return StoreCategoryImage
+	case strings.HasPrefix(mt, "video/"):
+		return StoreCategoryVideo
+	case strings.HasPrefix(mt, "audio/"):
+		return StoreCategoryAudio
+	case mt == "application/json" || strings.HasSuffix(mt, "+json"):
+		return StoreCategoryJSON
+	default:
+		return StoreCategoryOther
+	}
 }

@@ -8,19 +8,27 @@ export default class _NeteaseAlbumSource {
   private static readonly cacheKey = "netease_album_detail_v4";
 
   private static storeCache(album: NeteaseAlbum) {
-    RendererCache.memory.setOne(_NeteaseAlbumSource.cacheKey + "_" + album.content.id, album);
-    return RendererCache.local.object.store(
+    RendererCache.memory.setOne<NeteaseAlbum>(
       _NeteaseAlbumSource.cacheKey + "_" + album.content.id,
       album
     );
+    return RendererCache.service.object.setOne<NeteaseAlbum>({
+      id: _NeteaseAlbumSource.cacheKey + "_" + album.content.id,
+      data: album
+    });
   }
 
   private static getCache(id: number) {
     const cache = RendererCache.memory.getOne<NeteaseAlbum>(
       _NeteaseAlbumSource.cacheKey + "_" + id
     );
-    if (cache) return cache;
-    return RendererCache.local.object.fetch<NeteaseAlbum>(_NeteaseAlbumSource.cacheKey + "_" + id);
+    if (cache) return Promise.resolve(cache);
+    return RendererCache.service.object
+      .getOne<NeteaseAlbum>(_NeteaseAlbumSource.cacheKey + "_" + id)
+      .then((res) => {
+        if (res) return NeteaseAlbum.fromObject(res);
+        return res;
+      });
   }
 
   //endregion
@@ -40,7 +48,7 @@ export default class _NeteaseAlbumSource {
 
   static async id(id: number): Promise<NeteaseAlbum> {
     const cache = await _NeteaseAlbumSource.getCache(id);
-    if (cache && cache.tracks.length) return NeteaseAlbum.fromObject(cache);
+    if (cache && cache.tracks.length) return cache;
 
     const content = await NeteaseAPIAlbum.content(id);
     const tracks = await _NeteaseAlbumSource.requestFullTracks(

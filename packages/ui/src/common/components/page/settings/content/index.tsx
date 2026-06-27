@@ -2,6 +2,7 @@ import { type FC, memo, useCallback } from "react";
 import { type NeteaseSettingsModel, NeteaseUser } from "@/common/netease/models";
 import { TrackQuality } from "@/common/enum";
 import type { InvokeEventPayload } from "@mahiru/ipc/types";
+import type { CacheStoreCategories } from "@/types/cache";
 
 import Cache from "./cache";
 import Quality from "./quality";
@@ -17,7 +18,7 @@ interface SettingsContentProps {
   updateSettings: NormalFunc<[settings: NeteaseSettingsModel]>;
   output: { selected: string; views: { displayName: string; deviceId: string }[] };
   updateOutput: NormalFunc<[deviceId: string]>;
-  cacheStoreSizes: Nullable<CacheStoreSizeCategories>;
+  cacheStoreSizes: Nullable<CacheStoreCategories>;
   cacheStoreConfig: Nullable<InvokeEventPayload<"invoke_cache_config_get">>;
   updateCacheStoreConfig: PromiseFunc<
     [config: Partial<InvokeEventPayload<"invoke_cache_config_get">>]

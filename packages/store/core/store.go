@@ -1,6 +1,8 @@
 package core
 
 import (
+	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"log"
@@ -14,9 +16,9 @@ import (
 	"store/utils"
 )
 
-const indexFlushDelay = 2 * time.Second
+const indexFlushDelay = 10 * time.Second
 
-// #region CURD 操作
+//#region CURD 操作
 
 // CheckByID 检查指定 id 的文件是否已存在于存储中，存在则返回对应的索引和 true，否则返回 false
 func (Self *Store) CheckByID(id string) (index Index, exist bool) {
@@ -32,66 +34,52 @@ func (Self *Store) CheckByIdx(idx Index) (index Index, exist bool) {
 }
 
 // StoreBytes 直接将数据存储到存储中，返回对应的索引信息或者错误
-func (Self *Store) StoreBytes(id string, mimeType string, data []byte) (Index, error) {
-	var fileName = utils.RandomFilename()
-	var filePath = filepath.Join(Self.meta.storeDir, fileName)
-
-	// 创建文件并写入数据
-	var file, err = os.Create(filePath)
-	if err != nil {
-		return Index{}, err
-	}
-
-	// 写入数据
-	_, err = file.Write(data)
-	if err != nil {
-		_ = file.Close()
-		_ = os.Remove(filePath)
-		return Index{}, err
-	}
-
-	// 同步数据
-	if err = file.Sync(); err != nil {
-		_ = file.Close()
-		_ = os.Remove(filePath)
-		return Index{}, err
-	}
-
-	// 关闭文件
-	if err = file.Close(); err != nil {
-		_ = os.Remove(filePath)
-		return Index{}, err
-	}
-
+func (Self *Store) StoreBytes(info IndexOption, chunkCount int, data []byte) (Index, error) {
 	// 创建索引并添加到存储中
-	var index = NewIndex(
-		id,
-		filePath,
-		WithFileInfo("", fileName, mimeType, strconv.Itoa(len(data))),
+	var (
+		reader           = bytes.NewReader(data)
+		size             = int64(len(data))
+		key, slices, err = utils.SplitChunk(reader, size, chunkCount, Self.Dir())
 	)
+	if err != nil {
+		return Index{}, err
+	}
+
+	var index = NewIndex(
+		info,
+		IndexRequiredSlices(key, slices),
+		IndexOptionalETag(strconv.FormatInt(utils.GetTimeNano(), 10)),
+	)
+
 	if err = Self.appendIndex(index); err != nil {
-		_ = os.Remove(filePath)
+		_ = Self.removeChunks(index)
 		return Index{}, err
 	}
 
 	return index, nil
 }
 
-// FetchByReader 根据索引信息获取对应的文件读取句柄
-func (Self *Store) FetchByReader(idx Index) (io.ReadCloser, error) {
-	return os.Open(idx.Path)
+// FetchByWriter 根据索引信息获取对应的文件句柄
+func (Self *Store) FetchByWriter(idx Index, ctx context.Context, out io.Writer) error {
+	return utils.MergeChunk(
+		ctx,
+		out,
+		idx.Key,
+		Self.Dir(),
+		idx.Chunks,
+	)
 }
 
-// RemoveByID 根据 id 删除对应的文件，成功删除返回 true，否则返回 false
-func (Self *Store) RemoveByID(id string) (bool, error) {
+// RemoveByID 根据 id 删除对应的文件
+func (Self *Store) RemoveByID(id string) error {
 	var index, exits = Self.CheckByID(id)
 	if !exits {
-		return true, nil
+		return nil
 	}
 
-	var err = os.Remove(index.Path)
+	var err = Self.removeChunks(index)
 	if err != nil {
-		return false, err
+		return err
 	}
 
 	Self.indexMappedLock.Lock()
@@ -99,20 +87,24 @@ func (Self *Store) RemoveByID(id string) (bool, error) {
 	Self.indexMappedLock.Unlock()
 	Self.markIndexDirty()
 
-	return true, nil
+	return nil
 }
 
-// RemoveByIdx 根据 idx 删除对应的文件，成功删除返回 true，否则返回 false
-func (Self *Store) RemoveByIdx(idx Index) (bool, error) {
+// RemoveByIdx 根据 idx 删除对应的文件
+func (Self *Store) RemoveByIdx(idx Index) error {
 	return Self.RemoveByID(idx.ID)
 }
 
 // Clear 清空存储中的所有文件，返回被删除的文件数量
 func (Self *Store) Clear() (int, error) {
 	Self.indexMappedLock.Lock()
-	var count = len(Self.indexMapped)
+	var count = 0
 	for _, index := range Self.indexMapped {
-		_ = os.Remove(index.Path)
+		err := Self.removeChunks(index)
+		if err != nil {
+			return count, err
+		}
+		count++
 	}
 	Self.indexMapped = make(map[string]Index)
 	Self.indexMappedLock.Unlock()
@@ -123,7 +115,7 @@ func (Self *Store) Clear() (int, error) {
 
 // BeginWrite 开始写入文件，返回写入句柄，如果已经有相同 URL 的写入在进行中，返回一个空的写入句柄
 // 不用担心并发写入同一个 URL，因为调用此函数前会先检查索引是否存在，只有不存在时才会调用此函数
-func (Self *Store) BeginWrite(url, name, fileType, size, etag, lastModified string) io.WriteCloser {
+func (Self *Store) BeginWrite(url, name, mime, size, etag, lastModified string) io.WriteCloser {
 	Self.currentWriteMappedLock.RLock()
 	if _, ok := Self.currentWriteMapped[url]; ok {
 		Self.currentWriteMappedLock.RUnlock()
@@ -143,11 +135,12 @@ func (Self *Store) BeginWrite(url, name, fileType, size, etag, lastModified stri
 	Self.currentWriteMapped[url] = &WritingFile{
 		tmpPath,
 		name,
-		fileType,
+		mime,
 		size,
 		etag,
 		lastModified,
 		file,
+		url,
 	}
 	Self.currentWriteMappedLock.Unlock()
 
@@ -194,31 +187,23 @@ func (Self *Store) EndWrite(id, url string, success bool) Index {
 		return Index{}
 	}
 
-	var finalName = utils.RandomFilename()
-	var finalPath = filepath.Join(Self.meta.storeDir, finalName)
-
-	// 如果 newpath 已存在且不是目录，Rename 会替换它。
-	// 如果 newpath 已存在且是目录，Rename 返回错误。
-	// 当 oldpath 和 newpath 位于不同目录时，可能会受到特定于操作系统的限制。
-	// 即便在同一个目录内，在非 Unix 平台上 Rename 也不是原子操作。
-	if err := os.Rename(wFile.tmpPath, finalPath); err != nil {
-		if info, statErr := os.Stat(finalPath); statErr == nil && info.IsDir() {
-			// 1. 可能目标路径是目录
-			// 生成新的目标路径
-			finalName = utils.RandomFilename()
-			finalPath = filepath.Join(Self.meta.storeDir, finalName)
-			if err := os.Rename(wFile.tmpPath, finalPath); err != nil {
-				log.Println("Failed to rename written file after retrying with new name:", err)
-				_ = os.Remove(wFile.tmpPath) //nolint:errcheck
-				return Index{}
-			}
-			// 2. 可能是跨设备移动导致的错误，尝试使用复制的方式移动文件
-		} else if !utils.MoveFileByCopy(wFile.tmpPath, finalPath) {
-			// 全部fallback失败
-			log.Println("Failed to move written file by fallback method:", err)
-			_ = os.Remove(wFile.tmpPath) //nolint:errcheck
-			return Index{}
-		}
+	tmpFile, err := os.Open(wFile.tmpPath)
+	if err != nil {
+		log.Println("Failed opening written file:", err)
+		_ = os.Remove(wFile.tmpPath)
+		return Index{}
+	}
+	defer os.Remove(wFile.tmpPath) //nolint:errcheck
+	defer tmpFile.Close()          //nolint:errcheck
+	size, err := strconv.ParseInt(wFile.size, 10, 64)
+	if err != nil {
+		log.Println("Failed parsing size:", err)
+		return Index{}
+	}
+	key, chunks, err := utils.SplitChunk(tmpFile, size, 5, Self.Dir())
+	if err != nil {
+		log.Println("Failed splitting chunk:", err)
+		return Index{}
 	}
 
 	// 如果 id 为空，则使用 url 作为 id
@@ -227,17 +212,21 @@ func (Self *Store) EndWrite(id, url string, success bool) Index {
 	}
 
 	var index = NewIndex(
-		id,
-		finalPath,
-		WithFileInfo(url, wFile.name, wFile.fileType, wFile.size),
-		WithETag(wFile.etag),
-		WithLastModified(wFile.lastModified),
+		IndexRequiredInfo(
+			id,
+			wFile.mime,
+			size,
+		),
+		IndexRequiredSlices(key, chunks),
+		IndexOptionalURL(wFile.url, wFile.name),
+		IndexOptionalETag(wFile.etag),
+		IndexOptionalLastModified(wFile.lastModified),
 	)
 
 	if err := Self.appendIndex(index); err != nil {
 		// 文件移动成功，但是索引写入失败，删除文件
 		log.Println("Failed to append index for written file:", err)
-		_ = os.Remove(finalPath) //nolint:errcheck
+		_ = Self.removeChunks(index)
 		return Index{}
 	}
 
@@ -369,17 +358,6 @@ func (Self *Store) Move(path string, progress chan<- MoveProgressChan) error {
 
 	// 更新存储目录
 	Self.meta.storeDir = filepath.Clean(path)
-	// 更新索引中的路径信息
-	for id, index := range Self.indexMapped {
-		var fileName = filepath.Base(index.Path)
-		index.Path = filepath.Join(Self.meta.storeDir, fileName)
-		index.File = utils.FilePathToSchemeURL(
-			index.Path,
-			store.option.FileScheme,
-			store.option.FileSchemeHost,
-		)
-		Self.indexMapped[id] = index
-	}
 
 	Self.indexMappedLock.Unlock()
 	Self.currentWriteMappedLock.Unlock()
@@ -392,7 +370,7 @@ func (Self *Store) Move(path string, progress chan<- MoveProgressChan) error {
 
 //#endregion
 
-// #region 统计操作
+//#region 统计操作
 
 // ItemCount 返回当前存储的文件数量
 func (Self *Store) ItemCount() int {
@@ -421,32 +399,38 @@ func (Self *Store) TotalBytes() uint64 {
 }
 
 // TotalBytesByCategory 计算不同类型文件的总大小，按照 MIME 类型的前缀进行分类，返回图片、音频、视频和其他类型的大小总和
-func (Self *Store) TotalBytesByCategory() (image uint64, audio uint64, video uint64, other uint64) {
+func (Self *Store) TotalBytesByCategory() map[string]int64 {
 	Self.indexMappedLock.RLock()
 	defer Self.indexMappedLock.RUnlock()
 
+	var image, json, video, audio, other int64 = 0, 0, 0, 0, 0
 	for _, index := range Self.indexMapped {
-		size, err := strconv.ParseInt(index.Size, 10, 64)
-		if err != nil {
-			continue
-		}
-		if strings.HasPrefix(index.Type, "image/") {
-			image += uint64(size)
-		} else if strings.HasPrefix(index.Type, "audio/") {
-			audio += uint64(size)
-		} else if strings.HasPrefix(index.Type, "video/") {
-			video += uint64(size)
-		} else {
-			other += uint64(size)
+		switch index.Category {
+		case StoreCategoryJSON:
+			json += index.Size
+		case StoreCategoryImage:
+			image += index.Size
+		case StoreCategoryVideo:
+			video += index.Size
+		case StoreCategoryAudio:
+			audio += index.Size
+		default:
+			other += index.Size
 		}
 	}
 
-	return
+	return map[string]int64{
+		"image": image,
+		"audio": audio,
+		"video": video,
+		"json":  json,
+		"other": other,
+	}
 }
 
-// #endregion
+//#endregion
 
-// #region 生命周期操作
+//#region 生命周期操作
 
 // Destroy 销毁文件句柄，保存索引到文件
 func (Self *Store) Destroy() error {
@@ -460,7 +444,7 @@ func (Self *Store) Destroy() error {
 // ClearInvalidFile 清理无效文件：包括空文件、未被使用的临时文件、没有索引的文件、过期文件
 func (Self *Store) ClearInvalidFile() error {
 	var start = time.Now()
-	var entries, err = os.ReadDir(Self.meta.storeDir)
+	var entries, err = os.ReadDir(Self.Dir())
 	if err != nil {
 		return err
 	}
@@ -468,78 +452,85 @@ func (Self *Store) ClearInvalidFile() error {
 	var blanks = make(map[string]struct{})
 	// 临时文件
 	var temps = make([]string, 0)
-	// 不存在索引的文件，初始化为所有文件，后续会移除被索引管理的文件
+	// 不存在索引的文件，初始化时是所有文件记录，后续会移除被索引管理的文件
 	var actualExist = make(map[string]struct{})
+
 	// 收集所有临时文件、空文件、存储所有文件名到 actualExist 初始化
 	for _, entry := range entries {
 		// 跳过目录和索引文件
 		if entry.IsDir() || entry.Name() == Self.meta.indexName {
 			continue
 		}
+
 		// 获取文件信息
-		var info, err = entry.Info()
+		info, err := entry.Info()
 		if err != nil || info.IsDir() {
 			continue
 		}
-		if info.Name() != Self.meta.indexName {
-			// 筛选无效文件：临时文件或大小为0的文件
+
+		name := filepath.Base(info.Name())
+		if name != Self.meta.indexName {
+			// 筛选无效文件
 			if info.Size() == 0 {
-				blanks[info.Name()] = struct{}{}
-				// 文件写入完毕，存储索引时，不会存储临时文件名，可能是异常中断导致的残留文件或者正在写入的文件
-			} else if strings.HasSuffix(info.Name(), ".tmp") {
-				temps = append(temps, info.Name())
+				blanks[name] = struct{}{}
+			} else if strings.HasSuffix(name, ".tmp") {
+				temps = append(temps, name)
 			}
 			// 添加所有存在的文件来初始化
-			actualExist[info.Name()] = struct{}{}
+			actualExist[name] = struct{}{}
 		}
 	}
-	// temp 文件直接删除
+
+	// temp 文件直接删除（前提：temp不会进入索引）
 	for _, temp := range temps {
-		var fpath = filepath.Join(Self.meta.storeDir, temp)
-		_ = os.Remove(fpath) //nolint:errcheck
+		_ = os.Remove(filepath.Join(Self.Dir(), temp)) //nolint:errcheck
+		delete(actualExist, temp)
 	}
+
 	// 对于空文件，应该全部删除，删除前，查看是否有对应索引存在，有索引删除索引，同时检查actualExist的文件是否被管理
 	var shouldDeleteIndexes = make([]string, 0)
 	Self.indexMappedLock.RLock()
 	for _, index := range Self.indexMapped {
-		var fileName = filepath.Base(index.Path)
-		if _, exist := blanks[fileName]; exist {
-			// 先删除索引
-			shouldDeleteIndexes = append(shouldDeleteIndexes, index.ID)
-			// actualExist > blanks ，满足blanks的文件一定在actualExist中
-			// 这条分支说明文件本地存在且有索引管理，但是由于是空文件，所以索引和文件都会被删除，移除actualExist中的记录
-			delete(actualExist, fileName)
-		} else if _, exist := actualExist[fileName]; !exist {
-			// 这条分支说明索引存在、本地文件不存在，删除索引
-			shouldDeleteIndexes = append(shouldDeleteIndexes, index.ID)
-		} else {
-			// 这条分支说明文件本地存在且有索引管理，正常文件，移除actualExist中的记录
-			delete(actualExist, fileName)
+		for _, chunk := range index.Chunks {
+			if _, exist := blanks[chunk]; exist {
+				// 先删除索引
+				shouldDeleteIndexes = append(shouldDeleteIndexes, index.ID)
+				// actualExist > blanks ，满足blanks的文件一定在actualExist中
+				// 这条分支说明文件本地存在且有索引管理，但是由于是空文件，所以索引和文件都会被删除，移除actualExist中的记录
+				delete(actualExist, chunk)
+			} else if _, exist := actualExist[chunk]; !exist {
+				// 这条分支说明索引存在、本地文件不存在，删除索引
+				shouldDeleteIndexes = append(shouldDeleteIndexes, index.ID)
+			} else {
+				// 这条分支说明文件本地存在且有索引管理，正常文件，移除actualExist中的记录
+				delete(actualExist, chunk)
+			}
 		}
 	}
 	Self.indexMappedLock.RUnlock()
+
 	// 先删除所有需要删除的索引
 	Self.indexMappedLock.Lock()
 	for _, id := range shouldDeleteIndexes {
 		delete(Self.indexMapped, id)
 	}
 	Self.indexMappedLock.Unlock()
+
 	// 后删除所有的空文件
 	for blank := range blanks {
-		var fpath = filepath.Join(Self.meta.storeDir, blank)
-		_ = os.Remove(fpath)
+		_ = os.Remove(filepath.Join(Self.Dir(), blank))
 	}
+
 	// 最后删除所有没有索引管理的文件,有管理的文件已经从 actualExist 中移除，剩下的就是没有索引管理的文件
 	for fileName := range actualExist {
-		var fpath = filepath.Join(Self.meta.storeDir, fileName)
-		_ = os.Remove(fpath)
+		_ = os.Remove(filepath.Join(Self.Dir(), fileName))
 	}
+
 	// 清理过期文件
-	var now = utils.GetTime()
 	Self.indexMappedLock.Lock()
 	for id, index := range Self.indexMapped {
-		if now-index.CreateTime > Self.option.TimeLimit.Nanoseconds() {
-			_ = os.Remove(index.Path)
+		if index.IsExpiredNano(Self.option.TimeLimit.Nanoseconds()) {
+			_ = Self.removeChunks(index)
 			delete(Self.indexMapped, id)
 		}
 	}
@@ -588,18 +579,13 @@ func (Self *Store) LimitCapacity() error {
 		}
 
 		// 删除文件和索引，如果删除失败，继续尝试删除下一个文件
-		var err error
-		deleted, err := Self.RemoveByIdx(index)
-		if err != nil || !deleted {
+		err := Self.RemoveByIdx(index)
+		if err != nil {
 			continue
 		}
 
 		// 累加已删除的文件大小和数量
-		size, err := strconv.ParseInt(index.Size, 10, 64)
-		if err != nil {
-			continue
-		}
-		deletedSize += uint64(size)
+		deletedSize += uint64(index.Size)
 		deletedCount += 1
 	}
 
@@ -613,18 +599,32 @@ func (Self *Store) LimitCapacity() error {
 	return nil
 }
 
-// #endregion
+//#endregion
 
-// #region 其他操作
+//#region 其他操作
 
-// Path 返回存储目录路径
-func (Self *Store) Path() string {
+// Dir 返回存储目录路径
+func (Self *Store) Dir() string {
 	return Self.meta.storeDir
 }
 
-// #endregion
+//#endregion
 
-// #region inner 操作
+//#region inner 操作
+
+func (Self *Store) removeChunks(idx Index) error {
+	var dir = Self.Dir()
+
+	for _, chunk := range idx.Chunks {
+		err := os.Remove(filepath.Join(dir, chunk))
+		if err != nil && !os.IsNotExist(err) {
+			return err
+		}
+	}
+
+	return nil
+}
+
 // 从索引文件加载索引到内存
 func (Self *Store) loadIndex() {
 	for _, idx := range Self.indexHandle.ReadIdxs() {
@@ -638,7 +638,7 @@ func (Self *Store) appendIndex(idx Index) error {
 	var oldIndex, exist = Self.indexMapped[idx.ID]
 	Self.indexMappedLock.RUnlock()
 	if exist {
-		_, _ = Self.RemoveByIdx(oldIndex)
+		_ = Self.RemoveByIdx(oldIndex)
 	}
 
 	Self.indexMappedLock.Lock()
@@ -727,4 +727,4 @@ func (Self *Store) updateIdxHandle() {
 	}
 }
 
-// #endregion
+//#endregion

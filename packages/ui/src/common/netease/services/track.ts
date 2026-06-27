@@ -18,7 +18,7 @@ export default class _NeteaseTrackSource {
   }
 
   private static getCache(ids: number[]) {
-    return RendererCache.local.object.fetchMulti<CacheEntry>(
+    return RendererCache.service.object.getMulti<CacheEntry>(
       ids.map((id) => _NeteaseTrackSource.getCacheKey(id))
     );
   }
@@ -27,7 +27,7 @@ export default class _NeteaseTrackSource {
     tracks: NeteaseAPI.NeteaseTrack[],
     privileges: (NeteaseAPI.NeteaseTrackPrivilege | null)[]
   ) {
-    return RendererCache.local.object.storeMulti<CacheEntry>(
+    return RendererCache.service.object.setMulti<CacheEntry>(
       tracks.map((track, index) => {
         return {
           id: _NeteaseTrackSource.getCacheKey(track.id),

@@ -8,14 +8,14 @@ export default class _NeteaseLyricSource {
   private static readonly cacheKey = "netease_lyric_v20";
 
   private static storeCache(id: number, lyric: NeteaseLyricModel) {
-    return RendererCache.local.object.store<NeteaseLyricModel>(
-      _NeteaseLyricSource.cacheKey + "_" + id,
-      lyric
-    );
+    return RendererCache.service.object.setOne<NeteaseLyricModel>({
+      id: _NeteaseLyricSource.cacheKey + "_" + id,
+      data: lyric
+    });
   }
 
   private static getCache(id: number) {
-    return RendererCache.local.object.fetch<NeteaseLyricModel>(
+    return RendererCache.service.object.getOne<NeteaseLyricModel>(
       _NeteaseLyricSource.cacheKey + "_" + id
     );
   }

@@ -50,7 +50,7 @@ export class NeteaseArtist {
     });
   }
 
-  static fromObject(obj: NeteaseArtist) {
+  static fromObject(obj: Jsonify<NeteaseArtist>) {
     return new NeteaseArtist({
       id: obj.id,
       name: obj.name,

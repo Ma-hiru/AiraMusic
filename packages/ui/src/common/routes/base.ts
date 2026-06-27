@@ -35,9 +35,9 @@ export class RoutePath<const T extends Props> {
     }
   }
 
-  public matchPathname(location: Location, pathname: string | PlaylistPathUtils) {
+  public matchPathname(location: Location, pathname: string | PlaylistPathUtils, full = false) {
     pathname = pathname instanceof PlaylistPathUtils ? pathname.base : pathname;
-    return RoutePath.match(location, this.base, pathname, false);
+    return RoutePath.match(location, this.base, pathname, full);
   }
 
   static match(location: Location, base: string, pathname: string, full: boolean) {

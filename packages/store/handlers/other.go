@@ -11,166 +11,44 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func Remove(ctx *gin.Context) {
-	var id, _ = getRequireQuery(ctx)
-	var store = core.GetStore()
-	var index, ok = store.CheckByID(id)
-	if !ok {
-		ctx.JSON(200, gin.H{
-			"ok":    false,
-			"index": core.Index{},
-		})
-		return
-	}
-	success, err := store.RemoveByIdx(index)
-	if err != nil {
-		ctx.JSON(200, gin.H{
-			"ok":    false,
-			"index": core.Index{},
-		})
-		log.Println(err)
-		return
-	}
-	ctx.JSON(200, gin.H{
-		"ok":    success,
-		"index": index,
-	})
-}
-
-func RemoveAsync(ctx *gin.Context) {
-	var id, _ = getRequireQuery(ctx)
-	var store = core.GetStore()
-	var index, ok = store.CheckByID(id)
-	if !ok {
-		ctx.JSON(200, gin.H{
-			"ok": false,
-		})
-		return
-	}
-	go func() {
-		_, err := store.RemoveByIdx(index)
-		if err != nil {
-			log.Println(err)
-		}
-	}()
-	ctx.JSON(200, gin.H{
-		"ok": true,
-	})
-}
-
-type RemoveMultiShouldBind struct {
-	Ids []string `json:"ids" binding:"required"`
-}
-
-func RemoveMulti(ctx *gin.Context) {
-	var requestParam = RemoveMultiShouldBind{}
-	if err := ctx.ShouldBindJSON(&requestParam); err != nil {
-		ctx.JSON(200, gin.H{
-			"ok":    false,
-			"error": "invalid parameters",
-		})
-		return
-	}
-	var store = core.GetStore()
-	var results = make([]gin.H, 0, len(requestParam.Ids))
-	for _, id := range requestParam.Ids {
-		var index, ok = store.CheckByID(id)
-		if !ok {
-			results = append(results, gin.H{
-				"ok":    false,
-				"index": core.Index{},
-			})
-			continue
-		}
-		success, err := store.RemoveByIdx(index)
-		if err != nil {
-			results = append(results, gin.H{
-				"ok":    false,
-				"index": core.Index{},
-			})
-			log.Println(err)
-			continue
-		}
-		results = append(results, gin.H{
-			"ok":    success,
-			"index": index,
-		})
-	}
-	ctx.JSON(200, gin.H{
-		"ok":      true,
-		"results": results,
-	})
-
-}
-
 func Clear(ctx *gin.Context) {
-	var store = core.GetStore()
-	count, err := store.Clear()
-	if err != nil {
-		ctx.Status(500)
-		log.Println(err)
-		return
+	if store, ok := storeCheck(ctx); ok {
+		if count, err := store.Clear(); err != nil {
+			log.Println(err)
+			sendErrResponse(ctx, http.StatusInternalServerError, err.Error())
+			return
+		} else {
+			sendOkResponse(ctx, count)
+		}
 	}
-	ctx.JSON(200, gin.H{
-		"ok":    true,
-		"count": count,
-	})
-}
-
-func Count(ctx *gin.Context) {
-	var store = core.GetStore()
-	var count = store.ItemCount()
-	ctx.JSON(200, gin.H{
-		"ok":    true,
-		"count": count,
-	})
 }
 
 func Info(ctx *gin.Context) {
-	var store = core.GetStore()
-	var size = store.TotalBytes()
-	var count = store.ItemCount()
-	var path = store.Path()
-	ctx.JSON(200, gin.H{
-		"ok":    true,
-		"size":  size,
-		"count": count,
-		"path":  path,
-	})
-}
-
-func RemoveInvalid(ctx *gin.Context) {
-	var store = core.GetStore()
-	var err = store.ClearInvalidFile()
-	if err != nil {
-		ctx.Status(500)
-		log.Println(err)
-		return
+	if store, ok := storeCheck(ctx); ok {
+		sendOkResponse(ctx, gin.H{
+			"size":  store.TotalBytes(),
+			"count": store.ItemCount(),
+			"path":  store.Dir(),
+		})
 	}
-	ctx.JSON(200, gin.H{
-		"ok": true,
-	})
 }
 
-func Size(ctx *gin.Context) {
-	var store = core.GetStore()
-	var size = store.TotalBytes()
-	ctx.JSON(200, gin.H{
-		"ok":   true,
-		"size": size,
-	})
+func ClearInvalid(ctx *gin.Context) {
+	if store, ok := storeCheck(ctx); ok {
+		if err := store.ClearInvalidFile(); err != nil {
+			log.Println(err)
+			sendErrResponse(ctx, http.StatusInternalServerError, err.Error())
+			return
+		}
+		sendOkResponse(ctx, nil)
+	}
 }
 
-func SizeCategories(ctx *gin.Context) {
-	var store = core.GetStore()
-	var image, audio, video, other = store.TotalBytesByCategory()
-	ctx.JSON(200, gin.H{
-		"ok":    true,
-		"image": image,
-		"audio": audio,
-		"video": video,
-		"other": other,
-	})
+func Categories(ctx *gin.Context) {
+	if store, ok := storeCheck(ctx); ok {
+		var categories = store.TotalBytesByCategory()
+		sendOkResponse(ctx, categories)
+	}
 }
 
 func Move(ctx *gin.Context) {
@@ -179,9 +57,16 @@ func Move(ctx *gin.Context) {
 		ctx.SSEvent("done", "missing path parameter")
 		return
 	}
+
 	var store = core.GetStore()
+	if store == nil {
+		ctx.SSEvent("done", "store not initialized")
+		return
+	}
+
 	var progress = make(chan core.MoveProgressChan, 100)
 	var moveErr = make(chan error, 1)
+
 	go func() {
 		var err = store.Move(newPath, progress)
 		if err != nil {
@@ -190,6 +75,7 @@ func Move(ctx *gin.Context) {
 		moveErr <- err
 		close(progress)
 	}()
+
 	for p := range progress {
 		var data, _ = json.Marshal(p)
 		ctx.SSEvent("message", string(data))
@@ -198,14 +84,12 @@ func Move(ctx *gin.Context) {
 		ctx.SSEvent("done", err.Error())
 		return
 	}
+
 	ctx.SSEvent("done", "")
 }
 
 func Exit(ctx *gin.Context) {
-	ctx.JSON(200, gin.H{
-		"ok":      true,
-		"message": "shutdown requested",
-	})
+	sendOkResponse(ctx, "shutdown requested")
 	go cmd.Shutdown()
 }
 

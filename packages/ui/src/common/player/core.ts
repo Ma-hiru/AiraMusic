@@ -323,7 +323,8 @@ export default class RendererPlayer extends Listenable {
 
   /** 恢复持久化 */
   static fromSave(save: ReturnType<typeof this.save>) {
-    const savedAudio = RendererPlayerAudio.fromSave(save.audio);
+    const source = NeteaseLocalAudio.fromObject(save.current.audio);
+    const savedAudio = RendererPlayerAudio.fromSave(save.audio, source);
     const instance = new RendererPlayer({
       audio: savedAudio,
       playlist: RendererPlayerPlaylist.fromSave(save.playlist),
@@ -332,7 +333,7 @@ export default class RendererPlayer extends Listenable {
         ...save.current,
         track: NeteaseTrackRecord.fromRecordObject(save.current.track),
         cover: NeteaseLocalImage.fromObject(save.current.cover),
-        audio: NeteaseLocalAudio.fromObject(save.current.audio),
+        audio: source,
         lyric: NeteaseLyric.fromObject(save.current.lyric)
       }
     });

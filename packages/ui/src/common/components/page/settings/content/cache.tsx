@@ -1,11 +1,13 @@
 import { css, cx } from "@emotion/css";
 import { type FC, memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Boxes, Clock8, Folder, HardDrive } from "lucide-react";
-import type { InvokeEventPayload } from "@mahiru/ipc/dist-types/src/types/invoke";
 import { RendererFormat } from "@/common/lib/format";
 import { RendererIPC } from "@mahiru/ipc/renderer";
 import { RendererCache } from "@/common/lib/cache";
 import { Log } from "@/common/lib/log";
+import { RendererWindow } from "@/common/lib/window";
+import type { CacheStoreCategories } from "@/types/cache";
+import type { InvokeEventPayload } from "@mahiru/ipc/types";
 import AppToast from "@/common/components/display/toast";
 import AppModal from "@/common/components/display/modal";
 
@@ -13,10 +15,9 @@ import RangeRow from "./range-row";
 import BaseItem from "./base-item";
 import DonutChart from "./donut-chart";
 import Card from "@/common/components/layout/card";
-import { RendererWindow } from "@/common/lib/window";
 
 interface CacheProps {
-  cacheStoreSizes: Nullable<CacheStoreSizeCategories>;
+  cacheStoreSizes: Nullable<CacheStoreCategories>;
   cacheStoreConfig: Nullable<InvokeEventPayload<"invoke_cache_config_get">>;
   updateCacheStoreConfig: PromiseFunc<
     [config: Partial<InvokeEventPayload<"invoke_cache_config_get">>]
@@ -80,7 +81,7 @@ const Cache: FC<CacheProps> = ({
     });
 
     return new Promise<boolean>((resolve) => {
-      RendererCache.local.other.move(
+      RendererCache.service.other.move(
         path,
         (data) => data && setMovingPercent(data.percent),
         (err) => {
@@ -117,13 +118,13 @@ const Cache: FC<CacheProps> = ({
           text: "清理缓存中"
         });
         RendererWindow.main.send("message_dispatch_cache_has_clear", true);
-        RendererCache.local.other
+        RendererCache.service.other
           .clear()
           .then((res) => {
-            if (res.ok) {
+            if (res.code === 200) {
               AppToast.show({
                 type: "success",
-                text: `成功清理 ${res.count} 项缓存`
+                text: `成功清理 ${res.data} 项缓存`
               });
             } else {
               AppToast.show({
@@ -281,7 +282,7 @@ const Button = ({
         `
           shrink-0 h-8 rounded-md border border-white/30 px-3
           text-[12px] font-black transition-all duration-300
-          hover:bg-primary hover:text-(--text-color-on-main)
+          hover:bg-primary hover:text-primary-text
           active:scale-[0.98]
         `,
         disable
