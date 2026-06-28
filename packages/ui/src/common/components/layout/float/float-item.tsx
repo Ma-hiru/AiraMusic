@@ -22,7 +22,7 @@ const FloatItem: FC<FloatItemProps> = ({ children, onClick, className, motionKey
       className={cx(
         `
         cursor-pointer backdrop-blur-sm rounded-full p-1
-        flex items-center justify-center text-(--theme-color-main)
+        flex items-center justify-center text-primary
         bg-(--text-color-on-main)/60 contain-layout
         `,
         className

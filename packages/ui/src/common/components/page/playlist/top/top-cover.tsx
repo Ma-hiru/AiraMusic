@@ -13,8 +13,6 @@ interface TopCoverProps {
 
 const TopCover: FC<TopCoverProps> = ({ summary, coverCacheKey, onCoverLoaded }) => {
   const { create, createPlaylistCoverModal } = AppModal.useModal();
-  const cacheKey =
-    (coverCacheKey ?? "") + (summary?.updateTime ?? "") + (summary?.trackIds[0] ?? "");
 
   const onLoad = useCallback<ReactEventHandler<HTMLImageElement>>(
     (e) => {
@@ -25,16 +23,16 @@ const TopCover: FC<TopCoverProps> = ({ summary, coverCacheKey, onCoverLoaded }) 
   const image = useMemo(() => {
     return NeteaseNetworkImage.fromPlaylistCover(summary)
       ?.setSize(RendererImageConstants.PlaylistPageCoverSize)
-      .setCacheKey(cacheKey);
-  }, [summary, cacheKey]);
+      .setCacheKey(coverCacheKey);
+  }, [coverCacheKey, summary]);
 
   const openCoverModal = useCallback(() => {
     if (!summary) return;
     create(createPlaylistCoverModal, {
       playlist: summary,
-      coverCacheKey: cacheKey
+      coverCacheKey
     });
-  }, [cacheKey, create, createPlaylistCoverModal, summary]);
+  }, [coverCacheKey, create, createPlaylistCoverModal, summary]);
 
   return (
     <button

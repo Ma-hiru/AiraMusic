@@ -37,7 +37,7 @@ const Github: FC<object> = () => {
           </span>
         )}
         <div className="min-w-0">
-          <h1 className="truncate text-lg font-black">{author}</h1>
+          <h1 className="truncate text-lg font-bold">{author}</h1>
           <p className="mt-0.5 truncate text-[12px] opacity-50">项目作者 · Developer</p>
         </div>
       </section>
@@ -48,8 +48,8 @@ const Github: FC<object> = () => {
         className={`
           mt-4 flex h-9 w-full items-center justify-center gap-2 rounded-md
           border border-white/30 text-[12px] font-bold
-          transition-all duration-300 hover:border-(--theme-color-main)/40
-          hover:bg-(--theme-color-main) hover:text-(--text-color-on-main)
+          transition-all duration-300 hover:border-primary/40
+          hover:bg-primary hover:text-primary-text
           active:scale-[0.98] cursor-pointer
         `}>
         <SimpleIcon icon={siGithub} className="size-3.5" />

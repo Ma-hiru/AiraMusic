@@ -37,9 +37,9 @@ const Nav: FC<object> = () => {
         `
           flex flex-col relative
           pb-(--playbar-height) pt-[calc(var(--top-control-height)+10px)]  overflow-hidden
-          backdrop-saturate-150 backdrop-blur-lg contain-strict
+          backdrop-saturate-120 backdrop-blur-lg contain-strict
           ease-in-out duration-300 transition-all
-          border-r border-r-gray-500/10 bg-[#f0f3f6]/20
+          bg-[#f0f3f6]/20
         `,
         sidebar ? "w-(--side-bar-expand-width)" : "w-(--side-bar-collapse-width)"
       )}>

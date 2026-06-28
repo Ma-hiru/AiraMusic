@@ -77,14 +77,17 @@ const TrackItem = <T extends NeteaseTrackRecord | NeteaseHistoryRecord>({
       onClick={playable || selectionMode ? undefined : showDisableReason}
       className={cx(
         `
-            relative items-center grid grid-row-1 grid-cols-[auto_auto_1fr_auto_auto] gap-4
-            rounded-md py-0.5 pl-2 mb-2
+            relative items-center grid grid-row-1 gap-3
+            rounded-md mb-1.5 py-1 pl-2 pr-2
             ease-in-out transition-colors
         `,
+        type === "album"
+          ? "grid-cols-[auto_minmax(0,1fr)_auto]"
+          : "grid-cols-[auto_auto_minmax(0,1fr)_auto]",
         active
-          ? "bg-(--theme-color-main) text-(--text-color-on-main) shadow-xs"
+          ? "bg-primary text-primary-text shadow-xs"
           : selected
-            ? "bg-(--theme-color-main)/15"
+            ? "bg-secondary/15"
             : "hover:bg-black/10 active:bg-black/20",
         !playable && !selectionMode && "cursor-not-allowed! opacity-50"
       )}>
@@ -92,6 +95,7 @@ const TrackItem = <T extends NeteaseTrackRecord | NeteaseHistoryRecord>({
       {selectionMode && (
         <button
           type="button"
+          title={track.name}
           aria-label="选择歌曲"
           onClick={() => onToggleSelect?.()}
           className="absolute inset-0 z-10 cursor-pointer"

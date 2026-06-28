@@ -45,6 +45,14 @@ const SearchInput: FC<SearchInputProps> = ({ className, onSearch, ref, setTabs }
   const focusRef = useLatestRef(focus);
   const recommendKeyword = useSearchRecommend();
 
+  const closeSuggestionsWhenFocusLeaves = useCallback((relatedTarget: EventTarget | null) => {
+    const nextTarget = relatedTarget instanceof Node ? relatedTarget : null;
+    if (nextTarget && (inputRef.current === nextTarget || ulRef.current?.contains(nextTarget))) {
+      return;
+    }
+    setFocus(false);
+  }, []);
+
   const getSuggestions = useCallback(async () => {
     if (!keywordRef.current) return setSuggestions(null);
     if (loading.current) return;
@@ -123,12 +131,12 @@ const SearchInput: FC<SearchInputProps> = ({ className, onSearch, ref, setTabs }
             h-full w-full rounded-full border border-white/30
             px-4 pr-9 text-sm font-semibold outline-none shadow-md
             transition-all duration-300 ease-in-out
-            focus:border-(--theme-color-main)  
+            focus:border-primary
         `}
           value={keyword}
           placeholder={recommendKeyword ?? "请输入搜索关键词"}
           onFocus={() => setFocus(true)}
-          onBlur={() => setFocus(false)}
+          onBlur={(e) => closeSuggestionsWhenFocusLeaves(e.relatedTarget)}
           onChange={(e) => {
             setKeyword(e.target.value);
             debouncedGetSuggestions();
@@ -148,8 +156,8 @@ const SearchInput: FC<SearchInputProps> = ({ className, onSearch, ref, setTabs }
           }}
           className={cx(
             `
-              absolute right-3 top-1/2 size-4 -translate-y-1/2 text-(--theme-color-main)
-              rounded-full hover:bg-(--theme-color-main)/10
+              absolute right-3 top-1/2 size-4 -translate-y-1/2 text-primary
+              rounded-full hover:bg-primary/10
               transition-all duration-300 ease-in-out cursor-pointer
             `,
             focus ? "opacity-100" : "opacity-0"
@@ -158,6 +166,8 @@ const SearchInput: FC<SearchInputProps> = ({ className, onSearch, ref, setTabs }
         <SearchSuggestions
           ref={ulRef}
           suggestions={renderSuggestions}
+          onFocus={() => setFocus(true)}
+          onBlur={(e) => closeSuggestionsWhenFocusLeaves(e.relatedTarget)}
           onClick={(suggestion) => {
             setKeyword(suggestion.name);
             setSuggestions(null);
@@ -172,8 +182,8 @@ const SearchInput: FC<SearchInputProps> = ({ className, onSearch, ref, setTabs }
         className={cx(
           `
           flex size-10 shrink-0 items-center justify-center rounded-full border border-white/30 shadow-md
-          transition-all duration-300 ease-in-out hover:bg-(--theme-color-main)
-          hover:text-(--text-color-on-main) active:scale-95
+          transition-all duration-300 ease-in-out hover:bg-primary
+          hover:text-primary-text active:scale-95
         `
         )}
         onClick={() => {

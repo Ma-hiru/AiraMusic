@@ -16,13 +16,7 @@ const Card: FC<CardProps> = ({ title, subTitle, Icon, children, className, onCli
   return (
     <Section
       onClick={onClick}
-      className={cx(
-        `
-        rounded-lg border border-white/20 p-3 bg-white/5
-        shadow-md backdrop-saturate-150 backdrop-blur-lg
-      `,
-        className
-      )}
+      className={cx("surface-1 rounded-lg p-3", className)}
       title={title}
       subTitle={subTitle}
       Icon={Icon}

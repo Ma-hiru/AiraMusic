@@ -29,14 +29,6 @@ interface HasID {
   id: string | number;
 }
 
-type ExcludeFunction<V> = V extends (...args: any[]) => any ? never : V;
-
-type RawObject<T> = T extends object
-  ? {
-      [K in keyof T]: ExcludeFunction<T[K]>;
-    }
-  : T;
-
 type NetworkStatus =
   | "offline" // 系统无网络
   | "dns_error" // DNS 无法解析
@@ -50,5 +42,25 @@ interface CanInit {
 }
 
 type JsonValue = null | boolean | number | string | JsonValue[] | { [key: string]: JsonValue };
+
+type JsonPrimitive = null | boolean | number | string;
+
+type Jsonify<T> =
+  // 1. 函数直接去掉
+  T extends (...args: any[]) => any
+    ? never
+    : // 2. JSON 原始值保留
+      T extends JsonPrimitive
+      ? T
+      : // 3. 数组递归处理元素
+        T extends readonly (infer U)[]
+        ? Jsonify<U>[]
+        : // 4. 对象递归处理字段，并删除结果为 never 的字段
+          T extends object
+          ? {
+              [K in keyof T as Jsonify<T[K]> extends never ? never : K]: Jsonify<T[K]>;
+            }
+          : // 5. 其他类型不属于 JSON，去掉
+            never;
 
 type AnyClass = abstract new (...args: any[]) => any;

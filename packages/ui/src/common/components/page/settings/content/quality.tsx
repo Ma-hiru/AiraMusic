@@ -24,7 +24,7 @@ const Quality: FC<QualityProps> = ({ data, updateQuality, vip }) => {
               key={option.value}
               className={cx(
                 "hover:opacity-50 ease-in-out duration-300 transition-opacity cursor-pointer",
-                active && "bg-(--theme-color-main)! text-(--text-color-on-main)"
+                active && "bg-primary! text-(--text-color-on-main)"
               )}
               onClick={() => {
                 if (option.vip && !vip) {
@@ -37,7 +37,7 @@ const Quality: FC<QualityProps> = ({ data, updateQuality, vip }) => {
               }}>
               <div title={option.description} className="flex justify-between gap-1 h-full">
                 <section className="flex flex-col justify-between items-start h-full">
-                  <div className="text-md font-black tracking-normal flex justify-center items-center gap-1">
+                  <div className="text-md font-bold tracking-normal flex justify-center items-center gap-1">
                     {option.value}
                   </div>
                   <p className="mt-1 text-[11px] font-bold shrink-0">{option.description}</p>
@@ -48,9 +48,9 @@ const Quality: FC<QualityProps> = ({ data, updateQuality, vip }) => {
                     <span
                       className={cx(
                         `
-                          text-[8px] font-black rounded-sm px-1.5 border border-white/30
+                          text-[8px] font-semibold rounded-sm px-1.5 border border-white/30
                         `,
-                        active && "text-(--theme-color-main) bg-(--text-color-on-main)"
+                        active && "text-primary bg-(--text-color-on-main)"
                       )}>
                       VIP
                     </span>

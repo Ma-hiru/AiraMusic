@@ -2,7 +2,7 @@ import { app, BrowserWindow, dialog } from "electron";
 import { MainWindowManager } from "@/lib/window-manager";
 import { MainRuntime } from "@/lib/runtime";
 import { MainScreenResolver } from "@/lib/screen-resolver";
-import { MainStoreConfig, MainStoreForRenderer } from "@/lib/key-value-store";
+import { MainStoreForConfig, MainStoreForRenderer } from "@/lib/key-value-store";
 import { Log } from "@/lib/log";
 import { MainCacheStoreConstants } from "@/constants/store";
 import { mergeCacheStoreConfig } from "@/utils/merge";
@@ -19,7 +19,7 @@ export const invokeHandlers: InvokeHandlers = {
       title: type === "dir" ? "选择目录" : "选择文件",
       properties: [type === "dir" ? "openDirectory" : "openFile"]
     });
-    if (canceled) return { ok: false, path: "" };
+    if (canceled) return { ok: false, path: "", canceled: true };
     const filePath = filePaths[0];
     if (!filePath) return { ok: false, path: "", error: "无效路径" };
     try {
@@ -55,7 +55,7 @@ export const invokeHandlers: InvokeHandlers = {
       title: "保存文件",
       defaultPath: name
     });
-    if (canceled) return { ok: false, error: "取消保存" };
+    if (canceled) return { ok: false, canceled: true };
     if (!filePath) return { ok: false, error: "无效路径" };
     try {
       await Fs.writeFile(filePath, Buffer.from(buffer));
@@ -158,7 +158,7 @@ export const invokeHandlers: InvokeHandlers = {
     try {
       const res = mergeCacheStoreConfig(config);
       if (res.ok) {
-        MainStoreConfig.set("cache", res.config);
+        MainStoreForConfig.set("cache", res.config);
         MainHandle.allowedPath = res.config.path;
       }
       return res;
@@ -168,7 +168,7 @@ export const invokeHandlers: InvokeHandlers = {
     }
   },
   invoke_cache_config_get: () => {
-    return MainStoreConfig.get("cache", MainCacheStoreConstants.DEFAULT_CONFIG);
+    return MainStoreForConfig.get("cache", MainCacheStoreConstants.DEFAULT_CONFIG);
   },
   invoke_store_set: (_, { key, value }) => {
     try {

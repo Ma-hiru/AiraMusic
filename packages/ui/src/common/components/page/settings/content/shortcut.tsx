@@ -96,7 +96,7 @@ const Shortcut: FC<ShortcutSettings> = ({ data, patchSettings }) => {
           <BaseItem key={action} icon={actionIcons[action]}>
             <section className="flex items-center gap-3">
               <div className="min-w-0 flex-1">
-                <h3 className="truncate text-sm font-black tracking-normal">
+                <h3 className="truncate text-sm font-semibold tracking-normal">
                   {RendererShortcutConstants.actionLabels[action]}
                 </h3>
               </div>
@@ -111,7 +111,7 @@ const Shortcut: FC<ShortcutSettings> = ({ data, patchSettings }) => {
                   transition-all duration-300 ease-in-out
                   cursor-pointer hover:opacity-50 active:scale-95
                 `,
-                  isRecording ? "border-(--theme-color-main) animate-pulse" : "border-white/50"
+                  isRecording ? "border-primary animate-pulse" : "border-white/50"
                 )}>
                 {isRecording ? "按下新的快捷键…" : RendererFormat.shortcut(data[action])}
               </button>
@@ -122,7 +122,7 @@ const Shortcut: FC<ShortcutSettings> = ({ data, patchSettings }) => {
       <BaseItem icon={RotateCcw}>
         <section className="flex items-center gap-3">
           <div className="min-w-0 flex-1">
-            <h3 className="truncate text-sm font-black tracking-normal">恢复默认</h3>
+            <h3 className="truncate text-sm font-semibold tracking-normal">恢复默认</h3>
             <p className="mt-0.5 line-clamp-2 text-[11px] leading-4">
               将以上所有快捷键恢复为默认绑定。
             </p>

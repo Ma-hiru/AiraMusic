@@ -1,3 +1,4 @@
+import { cx } from "@emotion/css";
 import {
   type FC,
   memo,
@@ -357,9 +358,9 @@ const Playlist: FC<PlaylistProps> = ({
   }, [onDataLoaded, playlist]);
 
   return (
-    <div className={className}>
+    <div className={cx("flex h-full min-h-0 flex-col overflow-hidden", className)}>
       <AppError reset={reload} message="歌曲加载失败" when={status === "error"}>
-        <AppLoading loading={status === "loading"} className="w-full h-full">
+        <AppLoading loading={status === "loading"} className="h-full w-full">
           <Top
             editable={editable}
             loading={false}
@@ -381,10 +382,11 @@ const Playlist: FC<PlaylistProps> = ({
             onToggleSelectionMode={toggleSelectionMode}
           />
           {playlist !== null && <Divider className="my-3" />}
-          <div className="w-full h-[calc(100%-210px)] relative">
+          <div className="relative min-h-0 w-full flex-1">
             <TrackList
               ref={trackListRef}
               tracks={tracks}
+              paddingBottom={selectionMode ? 70 : 5}
               id={playlist?.id}
               type={source ?? "normal"}
               activeID={activeTrackID}

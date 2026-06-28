@@ -1,14 +1,15 @@
 import {
   createLog,
+  type Log as LogInstance,
   type LoggerWriter,
   LogLevel,
-  ParseLogLevel,
-  type Log as LogInstance
+  ParseLogLevel
 } from "@mahiru/log";
 import { createWriteStream, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { MainRuntime } from "@/lib/runtime";
 import { MainPathResolver } from "@/lib/path-resolver";
+import { getArgValue } from "@/utils/args";
 
 class LoggerFileWriter implements LoggerWriter {
   now;
@@ -68,10 +69,10 @@ type ExtendLog = LogInstance & {
   EnvLevel: LogLevel;
 };
 
-const Log = <ExtendLog>(
-  createLog(process.env.APP_LOG_LEVEL, MainRuntime.isDev ? console : new LoggerFileWriter(), true)
-);
+const level = ParseLogLevel(getArgValue("log-level") || process.env.APP_LOG_LEVEL);
 
-Log.EnvLevel = ParseLogLevel(process.env.APP_LOG_LEVEL);
+const Log = <ExtendLog>createLog(level, MainRuntime.isDev ? console : new LoggerFileWriter(), true);
+
+Log.EnvLevel = level;
 
 export { Log, type ExtendLog };

@@ -108,12 +108,12 @@ const InfiniteContainer: FC<InfiniteContainerProps> = ({
       {children}
       {isEmpty && !isLoading && EmptyFallback}
       {hasMore ? (
-        <div className="flex items-center justify-center gap-2 text-xs font-black opacity-55 text-center mt-3">
+        <div className="flex items-center justify-center gap-2 text-xs font-semibold opacity-55 text-center mt-3">
           {isLoading && <LoaderCircle className="size-4 animate-spin" />}
           {isLoading ? "正在加载更多" : "继续下滑加载更多"}
         </div>
       ) : (
-        <div className="text-xs font-black opacity-40 text-center block mt-3">已经到底了</div>
+        <div className="text-xs font-semibold opacity-40 text-center block mt-3">已经到底了</div>
       )}
       <span aria-hidden ref={sentinelRef} className="h-px" />
     </div>

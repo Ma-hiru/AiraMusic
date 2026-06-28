@@ -19,7 +19,7 @@ const Indicator: FC<IndicatorProps> = ({
 }) => {
   return (
     <section className="absolute inset-x-0 bottom-0 z-20 flex items-end justify-between gap-3 bg-linear-to-t from-black/60 via-black/20 to-transparent px-4 pb-3 pt-14 pointer-events-none">
-      <p className="truncate text-sm font-black">{title}</p>
+      <p className="truncate text-sm font-semibold">{title}</p>
       {showDot && (
         <div className="flex shrink-0 gap-1 pointer-events-auto">
           {iter(length).map((_, i) => {

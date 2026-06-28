@@ -71,8 +71,8 @@ export default class Store {
       .then(
         () =>
           new Promise<boolean>((resolve) => {
-            // 等待 2.5 秒后再检查进程是否退出
-            setTimeout(() => resolve(!this._running), 2500);
+            // 等待 1.2 秒后再检查进程是否退出
+            setTimeout(() => resolve(!this._running), 1200);
           })
       )
       .catch(() => false);
@@ -190,9 +190,8 @@ export default class Store {
     args?: Record<string, string | number | null>;
     port: number;
     token: string;
-    scheme: string;
     storePath: Nullable<string>;
-    assetsHostname: string;
+    indexKey: string;
     /** eg: "24h" */
     ttl: Nullable<string>;
     capacity: Nullable<number>;
@@ -208,10 +207,9 @@ export default class Store {
       port: props.port,
       key: props.token,
       ttl: props.ttl,
-      scheme: props.scheme,
-      "assets-hostname": props.assetsHostname,
       path: props.storePath,
-      capacity: props.capacity
+      capacity: props.capacity,
+      "index-key": props.indexKey
     };
     props.path ||= defaultServerPath;
     props.logger ||= (b: Buffer) => console.log("[store service stdout]", b.toString());

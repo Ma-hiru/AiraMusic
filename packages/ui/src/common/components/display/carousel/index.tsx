@@ -74,8 +74,7 @@ const Carousel: FC<CarouselProps> = ({
       <div
         className={cx(
           `
-            aspect-[2.55/1] min-h-40 w-full animate-pulse rounded-xl border border-white/15
-            bg-white/5 shadow-md
+            aspect-[2.55/1] min-h-40 w-full animate-pulse rounded-xl surface-1
           `,
           className
         )}
@@ -88,8 +87,7 @@ const Carousel: FC<CarouselProps> = ({
     <section
       className={cx(
         `
-          relative aspect-[2.55/1] min-h-40 w-full overflow-hidden rounded-xl border
-          border-white/15 bg-white/5 shadow-md
+          relative aspect-[2.55/1] min-h-40 w-full overflow-hidden rounded-xl surface-1
         `,
         className
       )}

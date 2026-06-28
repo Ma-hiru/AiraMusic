@@ -21,6 +21,7 @@ func main() {
 		FileSchemeHost: flags.AssetsHostname,
 		TimeLimit:      flags.Ttl,
 		Capacity:       flags.Capacity,
+		IndexKey:       flags.IndexKey,
 	})
 
 	go cmd.InitHTTP("127.0.0.1:"+fmt.Sprint(flags.Port), flags.Key, routes.RegisterRoutes)

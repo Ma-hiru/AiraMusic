@@ -25,36 +25,36 @@ const TopInfo: FC<TopInfoProps> = ({ summary, onPlayAll, onAddList }) => {
     <div className="grid h-full w-full min-h-0 min-w-0 grid-cols-1 grid-rows-[auto_minmax(0,1fr)_auto] gap-1 overflow-hidden">
       {/* title */}
       <div className="min-w-0 overflow-hidden">
-        <p className="line-clamp-2 text-[24px] font-bold leading-tight wrap-break-word">
+        <p className="line-clamp-2 select-text text-[24px] font-bold leading-tight wrap-break-word">
           {summary?.name ?? "未知歌单"}
         </p>
       </div>
 
       {/* description */}
       <div className="min-h-0 min-w-0 overflow-hidden py-1">
-        <p className="line-clamp-3 text-[13px] font-semibold leading-normal opacity-80 wrap-break-word">
+        <p className="line-clamp-4 select-text text-[13px] font-medium leading-tight opacity-80 wrap-break-word">
           <span
             className={`
               mr-2 inline-flex items-center gap-1 align-middle
-              bg-(--theme-color-secondary) text-(--text-color-on-secondary)
-              rounded-full px-1 py-0.5 text-[10px]
+              bg-secondary text-secondary-text
+              rounded-full px-1 py-px text-[10px] font-semibold
             `}>
             <NeteaseImage cache image={avatar} className="size-4 shrink-0 rounded-full" />
             <span className="select-text">{summary?.creator.nickname}</span>
           </span>
-          <span>{summary?.description ?? "暂无描述"}</span>
+          <span className="align-middle">{summary?.description ?? "暂无描述"}</span>
         </p>
       </div>
 
       {/* status */}
-      <div className="flex w-fit max-w-full shrink-0 flex-row flex-wrap gap-3 overflow-hidden text-[11px] font-semibold">
+      <div className="flex w-fit max-w-full shrink-0 flex-row flex-wrap gap-3 overflow-hidden text-[12px]">
         {status.map(({ icon: Icon, label, value, isComment, isPlayCount, isTrackCount }) => (
           <div
             key={label}
             title={label}
             className={cx(
-              "min-w-0 flex justify-start items-center gap-1 ease-in-out duration-300 transition-all",
-              (isComment || isPlayCount || isTrackCount) && "hover:opacity-50 cursor-pointer"
+              "min-w-0 flex items-center justify-start gap-1.5 rounded-sm transition-opacity duration-200 ease-in-out",
+              (isComment || isPlayCount || isTrackCount) && "hover:opacity-70 cursor-pointer"
             )}
             onClick={async () => {
               if (isComment) {
@@ -78,10 +78,8 @@ const TopInfo: FC<TopInfoProps> = ({ summary, onPlayAll, onAddList }) => {
                 onPlayAll();
               }
             }}>
-            <div className="flex items-center gap-1.5">
-              <Icon className="size-3.5 shrink-0 opacity-50" />
-            </div>
-            <p className="mt-0.5 truncate text-[12px] font-black opacity-85">{value}</p>
+            <Icon className="size-3.5 shrink-0 opacity-70" />
+            <p className="truncate font-semibold tabular-nums opacity-80">{value}</p>
           </div>
         ))}
       </div>

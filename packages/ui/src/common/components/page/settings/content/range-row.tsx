@@ -33,6 +33,7 @@ const RangeRow: FC<RangeRowProps> = ({
     if (debounced) return debounce(onChange, 300);
     return onChange;
   }, [debounced, onChange]);
+  const rangeValueText = `${rangeValue}${unit ? ` ${unit}` : ""}`;
 
   useEffect(() => setRangeValue(value), [value]);
 
@@ -42,8 +43,8 @@ const RangeRow: FC<RangeRowProps> = ({
       children={
         <>
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-black tracking-normal">{title}</h3>
-            <span className="rounded-md px-2 py-1 text-[11px] font-black">
+            <h3 className="text-sm font-semibold tracking-normal">{title}</h3>
+            <span className="rounded-md px-2 py-1 text-[11px] font-semibold">
               {rangeValue} {unit}
             </span>
           </div>
@@ -52,6 +53,8 @@ const RangeRow: FC<RangeRowProps> = ({
             max={max}
             step={step}
             value={rangeValue}
+            label={title}
+            valueText={rangeValueText}
             className="w-[98%]!"
             onChange={(v) => {
               setRangeValue(v);

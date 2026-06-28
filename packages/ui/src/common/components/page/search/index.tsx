@@ -155,13 +155,14 @@ const Search: FC<SearchProps> = ({
                         `
                         flex h-12 items-center gap-2  px-3 text-left
                         transition-all duration-300 active:scale-[0.98] cursor-pointer
-                        hover:bg-(--theme-color-main) hover:text-(--text-color-on-main)
                       `,
-                        active && "bg-(--theme-color-main) text-(--text-color-on-main)"
+                        active
+                          ? "bg-primary text-primary-text hover:bg-primary-active"
+                          : "hover:bg-white/20"
                       )}>
                       <Icon className="size-4 shrink-0" />
                       <span className="min-w-0">
-                        <span className="block truncate text-sm font-black">{option.label}</span>
+                        <span className="block truncate text-sm font-semibold">{option.label}</span>
                         <span className="block truncate text-[10px] font-bold">
                           {option.caption}
                         </span>

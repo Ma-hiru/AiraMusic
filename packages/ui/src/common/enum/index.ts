@@ -1,3 +1,4 @@
+export * from "./cache";
 export * from "./comments";
 export * from "./home";
 export * from "./image";

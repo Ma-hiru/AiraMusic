@@ -10,14 +10,19 @@ interface SwitchProps {
 
 const Switch: FC<SwitchProps> = ({ checked, onClick, className, label }) => {
   return (
-    <div
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      aria-label={typeof label === "string" ? label : undefined}
       className={cx(
         `
         flex justify-center items-center relative
         font-bold text-[10px] text-center
-        p-0.5 cursor-pointer
+        border-0 bg-transparent p-0.5 cursor-pointer
+        outline-none focus-visible:ring-2 focus-visible:ring-primary/40
         transition-all duration-300 ease-in-out
-        group hover:text-(--theme-color-main)
+        group hover:text-primary
         `,
         className
       )}
@@ -25,11 +30,12 @@ const Switch: FC<SwitchProps> = ({ checked, onClick, className, label }) => {
       {label}
       <span
         className={cx(
-          "absolute w-full h-0.5 bottom-0 bg-(--theme-color-main) hidden",
+          "absolute w-full h-0.5 bottom-0 bg-primary hidden",
           checked && "inline-block"
         )}
       />
-    </div>
+    </button>
   );
 };
+
 export default memo(Switch);

@@ -3,6 +3,7 @@ import type { WindowSizePreset } from "@/types/window";
 export class MainWindowConstants {
   static readonly MAX_WINDOW_COVER_RATIO = 0.95;
   static readonly MAIN_WINDOW_TITLE = `${process.env.APP_NAME} - ${process.env.APP_DESC}`;
+  static readonly TRAY_HIDDEN_POINT = { x: -32000, y: -32000 } as const;
   /**
    * 所有尺寸均为 DIP（逻辑像素），不涉及 scaleFactor / DPR。
    * 统一策略 idealFit（参考 VS Code）：base 是理想尺寸，大屏不放大、小屏才等比收缩；

@@ -18,7 +18,7 @@ const inputClass = `
   block h-9 w-full rounded-full pl-9 pr-3 text-[13px]
   border border-(--text-color)/25 bg-(--text-color)/5 text-(--text-color)
   outline-none placeholder:text-(--text-color)/45
-  focus:border-(--theme-color-main)
+  focus:border-primary
   ease-in-out transition-colors duration-300
 `;
 
@@ -77,8 +77,8 @@ const PhoneCaptcha: FC<PhoneCaptchaProps> = ({
             `,
             captchaDisabled
               ? "text-(--text-color)/40 cursor-not-allowed"
-              : `text-(--theme-color-main) cursor-pointer
-                 hover:bg-(--theme-color-main)/10 active:scale-95`
+              : `text-primary cursor-pointer
+                 hover:bg-primary/10 active:scale-95`
           )}>
           {countdown > 0 ? `${countdown}s` : sending ? "发送中" : "获取验证码"}
         </button>
@@ -92,7 +92,7 @@ const PhoneCaptcha: FC<PhoneCaptchaProps> = ({
         className={cx(
           `
             mt-1 block h-9 w-full rounded-full text-[13px] font-semibold
-            bg-(--theme-color-main) text-(--text-color-on-main)
+            bg-primary text-(--text-color-on-main)
             ease-in-out transition-all duration-300 hover:opacity-70 active:scale-[0.98]
             cursor-pointer
           `,

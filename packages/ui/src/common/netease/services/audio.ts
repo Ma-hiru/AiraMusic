@@ -1,5 +1,5 @@
 import { RendererCache } from "@/common/lib/cache";
-import { TrackQuality } from "@/common/enum";
+import { StoreCategory, TrackQuality } from "@/common/enum";
 import {
   NeteaseLocalAudio,
   NeteaseNetworkAudio,
@@ -23,22 +23,26 @@ export default class _NeteaseAudioSource {
   }
 
   private static storeAudioCache(audio: NeteaseNetworkAudio) {
-    return RendererCache.local.store.one(
-      audio.url,
-      `${_NeteaseAudioSource.cacheKey}_${audio.id}_${audio.quality}`
-    );
+    return RendererCache.service.save.url([
+      {
+        url: audio.url,
+        id: `${_NeteaseAudioSource.cacheKey}_${audio.id}_${audio.quality}`,
+        category: StoreCategory.Audio
+      }
+    ]);
   }
 
   private static getAudioCache(audio: NeteaseNetworkAudio, download?: boolean) {
     if (download) {
-      return RendererCache.local.check.orStoreOne(
-        audio.url,
-        `${_NeteaseAudioSource.cacheKey}_${audio.id}_${audio.quality}`
-      );
+      return RendererCache.service.check.readOrStoreOne({
+        url: audio.url,
+        id: `${_NeteaseAudioSource.cacheKey}_${audio.id}_${audio.quality}`,
+        category: StoreCategory.Audio
+      });
     }
-    return RendererCache.local.check.one(
-      `${_NeteaseAudioSource.cacheKey}_${audio.id}_${audio.quality}`
-    );
+    return RendererCache.service.check.readOne({
+      id: `${_NeteaseAudioSource.cacheKey}_${audio.id}_${audio.quality}`
+    });
   }
   //endregion
 
@@ -71,7 +75,12 @@ export default class _NeteaseAudioSource {
     if (!meta) return null;
 
     const check = await this.getAudioCache(meta, download);
-    if (check.ok) return NeteaseLocalAudio.fromNetwork(meta, check.index.file);
+    if (check.code === 200 && check.data.ok) {
+      return NeteaseLocalAudio.fromNetwork(
+        meta,
+        RendererCache.service.read.build(check.data.idx.id)
+      );
+    }
 
     return meta;
   }

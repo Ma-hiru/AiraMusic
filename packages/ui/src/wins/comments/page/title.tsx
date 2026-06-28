@@ -144,7 +144,7 @@ const Title: FC<TitleProps> = ({ className, commentBus }) => {
             {tags.map((tag) => {
               return (
                 <span
-                  className="inline-block rounded-full px-1.5 py-0.5 text-[10px] bg-(--theme-color-main) text-(--text-color-on-main)"
+                  className="inline-block rounded-full px-1.5 py-0.5 text-[10px] bg-primary text-(--text-color-on-main)"
                   key={tag}>
                   {tag}
                 </span>

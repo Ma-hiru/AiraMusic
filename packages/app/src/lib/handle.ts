@@ -1,16 +1,17 @@
 import { MainApp } from "@/entry";
-import { MainStoreConfig } from "@/lib/key-value-store";
+import { MainStoreForConfig } from "@/lib/key-value-store";
 import { MainCacheStoreConstants } from "@/constants/store";
 
 export class MainHandle {
   private static app: Nullable<Readonly<MainApp>> = null;
   // ipc更新config时会重新赋值
-  static allowedPath = MainStoreConfig.get("cache", MainCacheStoreConstants.DEFAULT_CONFIG).path;
+  static allowedPath = MainStoreForConfig.get("cache", MainCacheStoreConstants.DEFAULT_CONFIG).path;
   static allowedOrigin = [
     "file://",
     "http://localhost:",
     "http://127.0.0.1:",
     `${process.env.APP_SCHEME}://`,
+    "https://y.music.163.com",
     `https://github.com/Ma-hiru`
   ];
 

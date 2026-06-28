@@ -18,7 +18,7 @@ const AlbumItem: FC<AlbumItemProps> = ({ data, onClick }) => {
   }, [data.name, data.picUrl]);
   return (
     <div
-      className="w-full h-full text-(--text-color-on-main) flex flex-col justify-center items-center gap-1"
+      className="w-full h-full text-primary-text flex flex-col justify-center items-center gap-1"
       onClick={onClick?.bind(null, data.id)}>
       <NeteaseImage
         cache

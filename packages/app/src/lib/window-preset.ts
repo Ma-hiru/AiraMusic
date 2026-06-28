@@ -5,6 +5,7 @@ import { MainWindowManager } from "@/lib/window-manager";
 import { MainPathResolver } from "@/lib/path-resolver";
 import { MainRuntime } from "@/lib/runtime";
 import { Log } from "@/lib/log";
+import { getArgFlag } from "@/utils/args";
 import type { AppWindowCreatorProps } from "@/types/window";
 
 export class MainWindowPreset {
@@ -194,7 +195,7 @@ export class MainWindowPreset {
       loadURL: (port: number) => `http://localhost:${port}`,
       onCreate: (win: BrowserWindow) => {
         win.setMenuBarVisibility(false);
-        MainRuntime.isDev && win.webContents.openDevTools();
+        (MainRuntime.isDev || getArgFlag("devtools")) && win.webContents.openDevTools();
       }
     };
   }
@@ -259,7 +260,7 @@ export class MainWindowPreset {
       handleExits: "IGNORE",
       loadURL: (port: number) => `http://localhost:${port}/display.html`,
       onCreate: (win: BrowserWindow) => {
-        MainRuntime.isDev && win.webContents.openDevTools();
+        (MainRuntime.isDev || getArgFlag("devtools")) && win.webContents.openDevTools();
       }
     };
   }
@@ -293,7 +294,7 @@ export class MainWindowPreset {
       handleExits: "IGNORE",
       loadURL: (port: number) => `http://localhost:${port}/comments.html`,
       onCreate: (win: BrowserWindow) => {
-        MainRuntime.isDev && win.webContents.openDevTools();
+        (MainRuntime.isDev || getArgFlag("devtools")) && win.webContents.openDevTools();
       }
     };
   }

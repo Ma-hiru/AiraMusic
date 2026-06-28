@@ -5,6 +5,7 @@ import { type NeteaseUserModel } from "./netease-user";
 import { NeteaseTrackRecord } from "./netease-track-record";
 import { NeteaseImageSize } from "@/common/enum";
 import { NeteasePlaylistSummary } from "./netease-playlist-summary";
+import { Log } from "@/common/lib/log";
 
 export class NeteaseNetworkImage {
   url;
@@ -42,9 +43,12 @@ export class NeteaseNetworkImage {
     return this;
   }
 
+  private __appendKey = false;
   setCacheKey(cacheKey: Optional<string>) {
     if (!cacheKey) return this;
-    this.cacheKey = cacheKey;
+    if (this.__appendKey) {
+      this.cacheKey += cacheKey;
+    }
     return this;
   }
 
@@ -54,11 +58,11 @@ export class NeteaseNetworkImage {
     return this;
   }
 
-  get isNetwork() {
+  isNetwork(): this is NeteaseNetworkImage {
     return NeteaseCommonImage.isNetwork(this);
   }
 
-  get isLocal() {
+  isLocal(): this is NeteaseLocalImage {
     return NeteaseCommonImage.isLocal(this);
   }
 
@@ -95,12 +99,15 @@ export class NeteaseNetworkImage {
     >
   >(playlist: T): T extends Falsy ? null : NeteaseNetworkImage {
     if (!playlist) return null as T extends Falsy ? null : NeteaseNetworkImage;
-    return new NeteaseNetworkImage({
+    const instance = new NeteaseNetworkImage({
       url: playlist.coverImgUrl,
       sourceID: playlist.id,
       sourceName: "playlist",
-      alt: playlist.name || playlist.coverImgUrl
+      alt: playlist.name || playlist.coverImgUrl,
+      cacheKey: `${playlist.updateTime}-${playlist.trackCount}-${playlist.trackUpdateTime}-${playlist.trackNumberUpdateTime}`
     }) as T extends Falsy ? null : NeteaseNetworkImage;
+    instance!.__appendKey = true;
+    return instance;
   }
 
   static fromAlbumCover<T extends Optional<NeteaseAlbum>>(
@@ -117,6 +124,14 @@ export class NeteaseNetworkImage {
 
   static fromURL<T extends Optional<string>>(url: T): T extends Falsy ? null : NeteaseNetworkImage {
     if (!url) return null as T extends Falsy ? null : NeteaseNetworkImage;
+    if (!url.startsWith("http")) {
+      Log.warn("NeteaseNetworkImage.fromURL", "not network url:", url);
+      return new NeteaseNetworkImage({
+        url: "",
+        sourceID: url,
+        sourceName: "other"
+      }) as T extends Falsy ? null : NeteaseNetworkImage;
+    }
     return new NeteaseNetworkImage({
       url,
       sourceID: url,

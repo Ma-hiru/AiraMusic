@@ -74,7 +74,7 @@ const TopRight: FC<TopRightProps> = ({
           onClick={onToggleSelectionMode}
           className={cx(
             "size-5 cursor-pointer select-none ease-in-out transition-all duration-300",
-            selectionMode ? "text-(--theme-color-main)" : "hover:opacity-50"
+            selectionMode ? "text-primary-text" : "hover:opacity-50"
           )}
         />
         {editable && (

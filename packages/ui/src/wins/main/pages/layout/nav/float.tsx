@@ -84,7 +84,7 @@ const NavFloat: FC<NavFloatProps> = ({
             className={cx(
               `
                 cursor-pointer backdrop-blur-sm rounded-full p-1
-                flex items-center justify-center text-(--theme-color-main)
+                flex items-center justify-center text-primary
                 bg-(--text-color-on-main)/60
             `
             )}>

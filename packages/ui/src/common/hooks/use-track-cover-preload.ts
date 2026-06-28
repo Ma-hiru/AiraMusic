@@ -28,10 +28,8 @@ export function useTrackCoverPreload(props: {
           .setSize(coverSize)
           .setAlt(track.detail.name);
       });
-      for (const image of images) {
-        if (signal?.aborted) return;
-        void NeteaseServicesImage.download(image);
-      }
+      if (signal?.aborted) return;
+      NeteaseServicesImage.preload(images);
     },
     [coverSize, totalTracks]
   );

@@ -7,3 +7,35 @@
   --breakpoint-xl: 80rem;
   --breakpoint-2xl: 96rem;
 }
+
+@theme inline {
+  --color-normal-text: var(--text-color);
+  --color-primary: var(--theme-color-main);
+  --color-primary-text: var(--text-color-on-main);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-active: var(--primary-active);
+  --color-primary-soft: var(--primary-soft);
+  --color-secondary: var(--theme-color-secondary);
+  --color-secondary-text: var(--text-color-on-secondary);
+}
+
+/* 浅磨砂表面层级 */
+@utility surface-1 {
+  @apply border border-white/15 bg-white/10 shadow-lg backdrop-blur-xl backdrop-saturate-150;
+}
+
+@utility surface-2 {
+  @apply border border-white/12 bg-white/15;
+}
+
+@utility surface-3 {
+  @apply border border-white/30 bg-white/22 shadow-lg;
+}
+
+@utility surface-popover {
+  @apply border border-white/25 bg-black/20 shadow-2xl backdrop-blur-2xl backdrop-saturate-150;
+}
+
+@utility surface-border {
+  @apply border border-white/15 bg-white/10 shadow-lg;
+}

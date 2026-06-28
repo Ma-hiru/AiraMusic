@@ -1,29 +1,40 @@
 import ElectronStore from "electron-store";
-import { MainRuntime } from "@/lib/runtime";
 import { Log } from "@/lib/log";
-import type { CacheStoreConfig } from "@/types/store";
+import { MainRuntime } from "@/lib/runtime";
 import { MainPathResolver } from "@/lib/path-resolver";
-import { MainCacheStoreConstants } from "@/constants/store";
+import type { CacheStoreConfig } from "@/types/store";
 
-export type StoreType = {
-  [k in WindowType | "cache"]: k extends "cache"
-    ? CacheStoreConfig
-    : {
-        width: number;
-        height: number;
-        x: number;
-        y: number;
-      };
+export type StoreTypeForWindow = {
+  [k in WindowType]: {
+    width: number;
+    height: number;
+    x: number;
+    y: number;
+  };
 };
 
-export const MainStoreConfig = new ElectronStore<StoreType>({
-  name: "config",
+export type StoreTypeForConfig = {
+  cache: CacheStoreConfig;
+  cacheIndexKey: string;
+};
+
+export type StoreTypeForRenderer = Record<string, JsonValue>;
+
+export const MainStoreForWindow = new ElectronStore<StoreTypeForWindow>({
+  name: "window",
   encryptionKey: process.env.APP_NAME, // 仅仅是混淆而已，非安全用途
   encryptionAlgorithm: "aes-256-cbc",
   cwd: MainPathResolver.appUserDataJoin("key-value")
 });
 
-export const MainStoreForRenderer = new ElectronStore<Record<string, JsonValue>>({
+export const MainStoreForConfig = new ElectronStore<StoreTypeForConfig>({
+  name: "config",
+  encryptionKey: process.env.APP_NAME,
+  encryptionAlgorithm: "aes-256-cbc",
+  cwd: MainPathResolver.appUserDataJoin("key-value")
+});
+
+export const MainStoreForRenderer = new ElectronStore<StoreTypeForRenderer>({
   name: "renderer",
   encryptionKey: process.env.APP_NAME,
   encryptionAlgorithm: "aes-256-cbc",
@@ -31,8 +42,6 @@ export const MainStoreForRenderer = new ElectronStore<Record<string, JsonValue>>
 });
 
 if (MainRuntime.isDev) {
-  Log.info("Clearing store in development mode");
-  const cacheConfig = MainStoreConfig.get("cache", MainCacheStoreConstants.DEFAULT_CONFIG);
-  MainStoreConfig.clear();
-  MainStoreConfig.set("cache", cacheConfig);
+  Log.info("Clearing window store in development mode");
+  MainStoreForWindow.clear();
 }

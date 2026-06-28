@@ -27,8 +27,8 @@ const SectionTab: FC<TabProps> = ({
            inline-flex items-center justify-center gap-1
         `,
         mode === "more-theme" &&
-          `border-(--theme-color-main) bg-(--theme-color-main)/10
-          text-(--theme-color-main)`,
+          `border-primary bg-primary/10
+          text-primary`,
         className
       )}>
       {data.map((item, index) => {
@@ -37,11 +37,11 @@ const SectionTab: FC<TabProps> = ({
           <span
             key={index}
             className={cx(
-              "cursor-pointer hover:bg-(--theme-color-main) hover:text-(--text-color-on-main) hover:rounded-full px-1.5 py-px transition-all duration-300 ease-in-out",
+              "cursor-pointer hover:bg-primary hover:text-primary-text hover:rounded-full px-1.5 py-px transition-all duration-300 ease-in-out",
               active
                 ? mode === "less-theme"
-                  ? "bg-(--text-color-on-main) text-(--theme-color-main) rounded-full"
-                  : "bg-(--theme-color-main) text-(--text-color-on-main) rounded-full"
+                  ? "bg-primary-text text-primary rounded-full"
+                  : "bg-primary text-primary-text rounded-full"
                 : "bg-transparent",
               typeof itemClassName === "function" ? itemClassName(active) : itemClassName
             )}

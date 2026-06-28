@@ -282,8 +282,10 @@ const ImageViewer: FC<ImageViewerProps> = ({ images, index, onIndexChange, onToo
       const buffer = await response.arrayBuffer();
       const name = createDownloadName(current, contentType);
       const result = await RendererIPC.NormalChannel.send("invoke_fs_save", { buffer, name });
-
-      if (!result.ok) {
+      if (result.canceled) {
+        AppToast.show({ type: "info", text: "已取消" });
+        return;
+      } else if (!result.ok) {
         result.error && Log.error(result.error);
         AppToast.show({ type: "error", text: "图片保存失败" });
         return;

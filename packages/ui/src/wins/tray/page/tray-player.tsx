@@ -59,14 +59,16 @@ const TrayPlayer: FC<TrayPlayerProps> = ({ track, status, currentTime, duration 
           </div>
         )}
         {status === "playing" && (
-          <span className="absolute right-1 top-1 flex size-3 items-center justify-center rounded-full bg-(--theme-color-main)">
+          <span className="absolute right-1 top-1 flex size-3 items-center justify-center rounded-full bg-primary">
             <Disc3 className="size-2 animate-spin text-(--text-color-on-main)" />
           </span>
         )}
       </div>
       <div className="min-w-0 space-y-1.5">
         <div className="min-w-0">
-          <p className="truncate text-[12px] font-black leading-4">{track?.name || "暂无播放"}</p>
+          <p className="truncate text-[12px] font-semibold leading-4">
+            {track?.name || "暂无播放"}
+          </p>
           <p className="truncate text-[10px] font-semibold leading-3 opacity-45">
             {artist || track?.al.name || "AiraMusic"}
           </p>
@@ -74,7 +76,7 @@ const TrayPlayer: FC<TrayPlayerProps> = ({ track, status, currentTime, duration 
         <div className="grid grid-cols-[1fr_auto] items-center gap-2">
           <div className="h-1 overflow-hidden rounded-full bg-white/50">
             <span
-              className="block h-full rounded-full bg-(--theme-color-main) transition-[width] duration-300 ease-in-out"
+              className="block h-full rounded-full bg-primary transition-[width] duration-300 ease-in-out"
               style={{ width: `${percent}%` }}
             />
           </div>

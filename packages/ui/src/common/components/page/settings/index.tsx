@@ -4,6 +4,7 @@ import { NeteaseSettings, type NeteaseSettingsModel, NeteaseUser } from "@/commo
 import { RendererIPC } from "@mahiru/ipc/renderer";
 import { RendererCache } from "@/common/lib/cache";
 import type { InvokeEventPayload } from "@mahiru/ipc/types";
+import type { CacheStoreCategories } from "@/types/cache";
 
 import SettingsAside from "./aside";
 import SettingsContent from "./content";
@@ -30,7 +31,7 @@ const Settings: FC<SettingsProps> = ({
   updateOutput,
   output
 }) => {
-  const [cacheStoreSizes, setCacheStoreSizes] = useState<Nullable<CacheStoreSizeCategories>>(null);
+  const [cacheStoreSizes, setCacheStoreSizes] = useState<Nullable<CacheStoreCategories>>(null);
   const [cacheStoreConfig, setCacheStoreConfig] =
     useState<Nullable<InvokeEventPayload<"invoke_cache_config_get">>>(null);
 
@@ -64,9 +65,9 @@ const Settings: FC<SettingsProps> = ({
   );
 
   const getCacheStoreStatus = useCallback(async () => {
-    const status = await RendererCache.local.other.sizeCategories();
-    if (status.ok) {
-      setCacheStoreSizes(status);
+    const status = await RendererCache.service.other.categories();
+    if (status.code === 200) {
+      setCacheStoreSizes(status.data);
     } else {
       AppToast.show({
         type: "error",

@@ -1,10 +1,11 @@
 import { type FC, memo, useMemo } from "react";
 import { cx } from "@emotion/css";
 import { RendererFormat } from "@/common/lib/format";
+import type { CacheStoreCategories } from "@/types/cache";
 
 interface DonutChartProps {
   className?: string;
-  cacheStoreSizes: Nullable<CacheStoreSizeCategories>;
+  cacheStoreSizes: Nullable<CacheStoreCategories>;
 }
 
 const DonutChart: FC<DonutChartProps> = ({ className, cacheStoreSizes }) => {
@@ -84,7 +85,7 @@ const DonutChart: FC<DonutChartProps> = ({ className, cacheStoreSizes }) => {
           <div className="absolute inset-5.5 rounded-full border border-white/10 bg-white/5" />
           <div className="relative flex flex-col items-center">
             <span className="text-[10px] font-bold opacity-60">合计</span>
-            <span className="text-sm font-black">{RendererFormat.size(cacheSizeStats.total)}</span>
+            <span className="text-sm font-bold">{RendererFormat.size(cacheSizeStats.total)}</span>
           </div>
         </div>
         <div className="grid flex-1 grid-cols-2 gap-2">
@@ -93,7 +94,7 @@ const DonutChart: FC<DonutChartProps> = ({ className, cacheStoreSizes }) => {
               <div className="flex items-center justify-between gap-2">
                 <div className="flex min-w-0 items-center gap-2">
                   <span className={cx("size-2.5 shrink-0 rounded-full", item.swatchClassName)} />
-                  <span className="truncate text-[12px] font-black">{item.label}</span>
+                  <span className="truncate text-[12px] font-semibold">{item.label}</span>
                 </div>
                 <span className="shrink-0 text-[10px] font-bold opacity-60">
                   {item.percent.toFixed(item.percent > 0 && item.percent < 1 ? 1 : 0)}%

@@ -63,10 +63,7 @@ const HomeChartsView: FC<{ className?: string }> = ({ className }) => {
         <AppError reset={reload} when={status === "error"} message="加载排行榜失败">
           <AppLoading loading={status === "loading"} className="min-h-60">
             <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
-              <Section
-                title="官方主榜"
-                subTitle="Featured"
-                className="rounded-lg border border-white/20 bg-white/5 p-3 shadow-md backdrop-blur-2xl">
+              <Section title="官方主榜" subTitle="Featured" className="rounded-lg surface-1 p-3">
                 <div className="grid gap-2">
                   {featured.map((item, index) => (
                     <button
@@ -77,14 +74,14 @@ const HomeChartsView: FC<{ className?: string }> = ({ className }) => {
                         flex min-h-14 cursor-pointer
                         items-center gap-3 rounded-lg px-2 text-left
                         transition-all duration-300
-                        hover:bg-(--theme-color-main) hover:text-(--text-color-on-main)
+                        hover:bg-white/20
                         active:scale-[0.98]
                       ">
-                      <span className="w-8 shrink-0 text-center text-lg font-black opacity-70">
+                      <span className="w-8 shrink-0 text-center text-lg font-bold opacity-70">
                         {index + 1}
                       </span>
                       <span className="min-w-0 flex-1">
-                        <span className="block truncate text-sm font-black">{item.name}</span>
+                        <span className="block truncate text-sm font-semibold">{item.name}</span>
                         <span className="mt-1 block truncate text-[11px] font-semibold opacity-60">
                           {item.updateFrequency}
                         </span>

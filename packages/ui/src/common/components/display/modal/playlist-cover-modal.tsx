@@ -161,7 +161,7 @@ const CoverModal: FC<CoverModalProps> = ({
                   <Icon className="size-3.5 shrink-0" />
                   <span>{label}</span>
                 </div>
-                <p className="mt-0.5 truncate text-[12px] font-black opacity-85">{value}</p>
+                <p className="mt-0.5 truncate text-[12px] font-semibold opacity-85">{value}</p>
               </div>
             ))}
           </div>
@@ -170,7 +170,7 @@ const CoverModal: FC<CoverModalProps> = ({
       {/** 简介*/}
       <section className="h-full w-full overflow-hidden flex flex-col justify-between gap-3 contain-layout">
         <section className="flex flex-1 flex-col overflow-hidden gap-6">
-          <h3 className="line-clamp-2 text-[32px] font-black leading-tight tracking-normal">
+          <h3 className="line-clamp-2 text-[32px] font-bold leading-tight tracking-normal">
             {name}
           </h3>
           <p
@@ -187,8 +187,8 @@ const CoverModal: FC<CoverModalProps> = ({
               <span
                 key={tag + index}
                 className="
-                  rounded-md px-2 py-1 text-[10px] font-black
-                  text-(--text-color-on-main) bg-(--theme-color-main)
+                  rounded-md px-2 py-1 text-[10px] font-semibold
+                  text-primary-text bg-primary
                 ">
                 {tag}
               </span>
@@ -209,7 +209,7 @@ const CoverModal: FC<CoverModalProps> = ({
                         shadowColor="light"
                       />
                     )}
-                    <p className="truncate text-[12px] font-black tracking-normal">{nickname}</p>
+                    <p className="truncate text-[12px] font-semibold tracking-normal">{nickname}</p>
                   </div>
                   {divider && <span className="font-medium opacity-50">/</span>}
                 </Fragment>

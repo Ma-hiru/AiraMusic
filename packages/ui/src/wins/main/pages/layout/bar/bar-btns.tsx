@@ -118,15 +118,17 @@ const BarBtns: FC<object> = () => {
             className="
               border border-white/30
               flex h-36 w-8 flex-col items-center gap-3 rounded-md
-              bg-(--text-color)/80 px-0 py-3 text-(--theme-color-main)
+              bg-(--text-color)/80 px-0 py-3 text-primary
               backdrop-saturate-150 backdrop-blur-lg
             ">
-            <p className="text-[10px] font-black text-(--theme-color-main)">{volumePercent}%</p>
+            <p className="text-[10px] font-semibold text-primary">{volumePercent}%</p>
             <RangeSlider
               min={0}
               max={100}
               step={1}
               value={volumePercent}
+              label="音量"
+              valueText={`${volumePercent}%`}
               onChange={onVolumeChange}
               orientation="vertical"
               className="h-24"
@@ -164,7 +166,7 @@ const BarBtns: FC<object> = () => {
           ease-in-out duration-300 transition-all
           active:scale-90
           `,
-          lyricWindow.opened && "text-(--theme-color-main)"
+          lyricWindow.opened && "text-primary"
         )}
         onClick={openLyricWindow}>
         词

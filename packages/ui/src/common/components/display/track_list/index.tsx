@@ -171,7 +171,7 @@ const TrackList = <T extends NeteaseTrackRecord[] | NeteaseHistoryRecord[]>({
           <VirtualList
             items={tracks}
             extraData={extra}
-            itemHeight={50}
+            itemHeight={51}
             RowComponent={RowComponent}
             paddingBottom={paddingBottom}
             containerRef={containerRef}

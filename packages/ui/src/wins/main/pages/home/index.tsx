@@ -81,11 +81,11 @@ const HomePage: FC<object> = () => {
         {!!(mounted & 0b1) && (
           <section
             className={cx(
-              "grid grid-cols-[1fr_auto] gap-3 items-center",
+              "grid grid-cols-1 items-stretch gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(320px,24rem)]",
               activeChannel !== "recommend" && "hidden"
             )}>
-            <Banner />
-            <ForYouPanel />
+            <Banner className="min-w-0 contain-layout" />
+            <ForYouPanel className="min-w-0 hidden lg:block contain-layout" />
           </section>
         )}
         {!!(mounted & 0b1) && (

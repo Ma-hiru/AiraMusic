@@ -17,6 +17,12 @@ pub fn set_cover(
     )
 }
 
+#[cfg(windows)]
+#[napi(js_name = "setLivePreview")]
+pub fn set_live_preview(handle: Buffer, preview: Uint8Array) -> Result<()> {
+    windows_taskbar::set_live_preview(handle.as_ref(), preview.as_ref())
+}
+
 #[cfg(not(windows))]
 #[napi(js_name = "setCover")]
 pub fn set_cover(
@@ -26,6 +32,14 @@ pub fn set_cover(
 ) -> Result<()> {
     let _ = handle;
     let _ = image;
+    let _ = preview;
+    Ok(())
+}
+
+#[cfg(not(windows))]
+#[napi(js_name = "setLivePreview")]
+pub fn set_live_preview(handle: Buffer, preview: Uint8Array) -> Result<()> {
+    let _ = handle;
     let _ = preview;
     Ok(())
 }
@@ -151,6 +165,17 @@ mod windows_taskbar {
         Ok(())
     }
 
+    pub fn set_live_preview(handle: &[u8], preview: &[u8]) -> Result<()> {
+        let hwnd = hwnd_from_buffer(handle)?;
+        let preview = Arc::new(CoverImage::from_bytes(preview)?);
+
+        ensure_subclassed(hwnd)?;
+        update_preview(hwnd, preview);
+        let _ = send_live_preview(hwnd);
+
+        Ok(())
+    }
+
     fn hwnd_from_buffer(handle: &[u8]) -> Result<HWND> {
         let pointer_size = size_of::<isize>();
         if handle.len() < pointer_size {
@@ -214,9 +239,14 @@ mod windows_taskbar {
         let mut windows = WINDOWS.lock().expect("taskbar window registry poisoned");
         if let Some(state) = windows.get_mut(&hwnd_key(hwnd)) {
             state.cover = Some(cover);
-            if let Some(preview) = preview {
-                state.preview = Some(preview);
-            }
+            state.preview = preview;
+        }
+    }
+
+    fn update_preview(hwnd: HWND, preview: Arc<CoverImage>) {
+        let mut windows = WINDOWS.lock().expect("taskbar window registry poisoned");
+        if let Some(state) = windows.get_mut(&hwnd_key(hwnd)) {
+            state.preview = Some(preview);
         }
     }
 
@@ -283,9 +313,12 @@ mod windows_taskbar {
                 }
             }
             WM_DWMSENDICONICLIVEPREVIEWBITMAP => {
+                let original_proc = current_original_proc(hwnd);
+                let result = call_original_or_default(original_proc, hwnd, msg, wparam, lparam);
                 if send_live_preview(hwnd) {
                     return 0;
                 }
+                return result;
             }
             WM_NCDESTROY => {
                 let original_proc = {
@@ -299,14 +332,16 @@ mod windows_taskbar {
             _ => {}
         }
 
-        let original_proc = {
-            let windows = WINDOWS.lock().expect("taskbar window registry poisoned");
-            windows
-                .get(&hwnd_key(hwnd))
-                .map(|state| state.original_proc)
-        };
+        let original_proc = current_original_proc(hwnd);
 
         call_original_or_default(original_proc, hwnd, msg, wparam, lparam)
+    }
+
+    fn current_original_proc(hwnd: HWND) -> Option<isize> {
+        let windows = WINDOWS.lock().expect("taskbar window registry poisoned");
+        windows
+            .get(&hwnd_key(hwnd))
+            .map(|state| state.original_proc)
     }
 
     fn send_thumbnail(hwnd: HWND, width: u32, height: u32) -> bool {

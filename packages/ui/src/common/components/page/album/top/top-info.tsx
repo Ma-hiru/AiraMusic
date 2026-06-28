@@ -25,20 +25,20 @@ const TopInfo: FC<TopInfoProps> = ({ album, dynamic, onAddList }) => {
 
       {/* description */}
       <div className="min-h-0 min-w-0 overflow-hidden py-1">
-        <p className="line-clamp-3 text-[12px] font-semibold leading-[1.4] opacity-80 wrap-break-word">
+        <p className="line-clamp-3 text-[13px] font-medium leading-tight opacity-80 wrap-break-word">
           {album?.content.description || "暂无描述"}
         </p>
       </div>
 
       {/* status */}
-      <div className="flex w-fit max-w-full shrink-0 flex-row flex-wrap gap-3 overflow-hidden text-[11px] font-semibold">
+      <div className="flex w-fit max-w-full shrink-0 flex-row flex-wrap gap-3 overflow-hidden text-[12px]">
         {status.map(({ icon: Icon, label, value, isComment, isTrackCount }) => (
           <div
             key={label}
             title={label}
             className={cx(
-              "min-w-0 flex justify-start items-center gap-1 ease-in-out duration-300 transition-all",
-              (isComment || isTrackCount) && "hover:opacity-50 cursor-pointer"
+              "min-w-0 flex items-center justify-start gap-1.5 rounded-sm transition-opacity duration-200 ease-in-out",
+              (isComment || isTrackCount) && "hover:opacity-70 cursor-pointer"
             )}
             onClick={async () => {
               if (isComment) {
@@ -56,10 +56,8 @@ const TopInfo: FC<TopInfoProps> = ({ album, dynamic, onAddList }) => {
                 onAddList();
               }
             }}>
-            <div className="flex items-center gap-1.5">
-              <Icon className="size-3.5 shrink-0 opacity-50" />
-            </div>
-            <p className="mt-0.5 truncate text-[12px] font-black opacity-85">{value}</p>
+            <Icon className="size-3.5 shrink-0 opacity-70" />
+            <p className="truncate font-semibold tabular-nums opacity-80">{value}</p>
           </div>
         ))}
       </div>

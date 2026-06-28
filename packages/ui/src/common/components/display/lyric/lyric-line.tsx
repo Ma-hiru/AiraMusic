@@ -91,7 +91,7 @@ const LyricLine: FC<LyricLineProps> = ({
           w-full px-4 py-1 rounded-md hover:blur-none hover:bg-(--text-color)/20
           duration-500 ease-in-out transition-all
           contain-layout leading-normal text-3xl
-    `,
+      `,
         !active && "blur-[2px] opacity-50"
       )}>
       <div

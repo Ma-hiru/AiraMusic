@@ -16,6 +16,7 @@ import { RendererWindow } from "@/common/lib/window";
 import { NeteaseURL } from "@/common/netease/models";
 import { NeteaseImageSize } from "@/common/enum";
 import { playModalAtom } from "@/wins/main/atoms/layout";
+import { RendererCache } from "@/common/lib/cache";
 import RendererTheme from "@/common/player/ui";
 
 import AcrylicBackground from "@/common/components/display/acrylic-background";
@@ -30,9 +31,17 @@ const Background: FC<{ className?: string }> = ({ className }) => {
   const setTextColor = useSetAtom(textColorAtom);
   const playModal = useAtomValue(playModalAtom);
   const [backgroundCover, setBackground] = useAtom(backgroundCoverAtom);
-  const themeColors = useMMCQ(backgroundCover);
+  const resolvedBackgroundCover = useMemo(
+    () => RendererCache.service.read.updateKey(backgroundCover),
+    [backgroundCover]
+  );
+  const themeColors = useMMCQ(resolvedBackgroundCover);
   const player = RendererPlayerHandle.usePlayer();
   const settings = useSettings();
+
+  useLayoutEffect(() => {
+    setBackground((cover) => RendererCache.service.read.updateKey(cover));
+  }, [setBackground]);
 
   useLayoutEffect(() => {
     const mainColor = themeColors.at(0) || RendererTheme.themeDefault.main;
@@ -54,6 +63,7 @@ const Background: FC<{ className?: string }> = ({ className }) => {
         textOnSecondaryColor: textColorOnSecondary,
         textColor
       };
+      RendererTheme.setPrimaryScale(mainColor);
       setThemeColor(themeColors);
       setMainColor(mainColor);
       setSecondaryColor(secondaryColor);
@@ -95,9 +105,11 @@ const Background: FC<{ className?: string }> = ({ className }) => {
         fluid={settings.performance.useHomeFluid}
         fluidPaused={paused}
         fluidSpeed={settings.performance.homeFluidSpeed}
-        src={backgroundCover ?? undefined}
+        src={resolvedBackgroundCover ?? undefined}
+        themeColors={themeColors}
         opacity={0.6}
         brightness={0.3}
+        saturate={3}
         blur={60}
       />
     </div>

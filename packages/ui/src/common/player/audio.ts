@@ -112,10 +112,17 @@ export default class RendererPlayerAudio {
     };
   }
 
-  load(source: NeteaseNetworkAudio | NeteaseLocalAudio, play: boolean) {
+  async load(source: NeteaseNetworkAudio | NeteaseLocalAudio, play: boolean, jump = 0) {
     this.pause();
-    this.audio.src = source.src;
-    this.audio.currentTime = 0;
+    let src = source.url;
+    if (source.isLocal() && source.localURL) {
+      const blob = await fetch(source.localURL)
+        .then((res) => (res.ok ? res.blob() : null))
+        .catch(() => null);
+      if (blob) src = URL.createObjectURL(blob);
+    }
+    this.audio.src = src;
+    this.audio.currentTime = jump;
     this.audio.load();
     play && this.play();
   }
@@ -154,24 +161,14 @@ export default class RendererPlayerAudio {
     };
   }
 
-  static fromSave(save: ReturnType<typeof this.save>) {
+  static fromSave(
+    save: ReturnType<typeof this.save>,
+    audio: Optional<NeteaseNetworkAudio | NeteaseLocalAudio>
+  ) {
     const instance = new RendererPlayerAudio();
     instance.pause();
     instance.volume = save.volume;
-    instance.audio.src = save.src;
-
-    try {
-      instance.audio.load();
-      if (typeof instance.audio.fastSeek === "function") {
-        instance.audio.fastSeek(save.currentTime);
-      } else {
-        instance.audio.currentTime = save.currentTime;
-      }
-    } catch (err) {
-      Log.error("RendererPlayerAudio", "缓存失效", err);
-      instance.audio.currentTime = save.currentTime;
-    }
-
+    audio && instance.load(audio, false, save.currentTime);
     return instance;
   }
 

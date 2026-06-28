@@ -1,6 +1,6 @@
 import { NeteaseLocalImage, NeteaseNetworkImage, NeteaseTrack } from "@/common/netease/models";
 import { RendererCache } from "@/common/lib/cache";
-import { NeteaseImageSize } from "@/common/enum";
+import { NeteaseImageSize, StoreCategory } from "@/common/enum";
 import { LRUCacheWithTime } from "@/common/utils/lru";
 import { Log } from "@/common/lib/log";
 
@@ -30,7 +30,13 @@ export default class _NeteaseImageSource {
   }
 
   private static downloadCache(image: NeteaseNetworkImage) {
-    return RendererCache.local.store.one(image.url, _NeteaseImageSource.getCacheKey(image));
+    return RendererCache.service.save.url([
+      {
+        url: image.url,
+        id: _NeteaseImageSource.getCacheKey(image),
+        category: StoreCategory.Image
+      }
+    ]);
   }
 
   private static setMemoryCache(image: NeteaseLocalImage) {
@@ -42,20 +48,21 @@ export default class _NeteaseImageSource {
     const cache = _NeteaseImageSource.memoryCache.get(_NeteaseImageSource.getCacheKey(image));
     if (cache) {
       Log.debug("image cache hit");
-      return Promise.resolve({ ok: true, image: cache });
+      return Promise.resolve({ code: 201, data: cache } as const);
     }
     if (download) {
-      return RendererCache.local.check.orStoreOne(
-        image.url,
-        _NeteaseImageSource.getCacheKey(image)
-      );
+      return RendererCache.service.check.readOrStoreOne({
+        url: image.url,
+        id: _NeteaseImageSource.getCacheKey(image),
+        category: StoreCategory.Image
+      });
     }
-    return RendererCache.local.check.one(_NeteaseImageSource.getCacheKey(image));
+    return RendererCache.service.check.readOne({ id: _NeteaseImageSource.getCacheKey(image) });
   }
 
   private static removeCache(image: NeteaseNetworkImage) {
     _NeteaseImageSource.memoryCache.delete(_NeteaseImageSource.getCacheKey(image));
-    return RendererCache.local.remove.one(_NeteaseImageSource.getCacheKey(image));
+    return RendererCache.service.read.remove([_NeteaseImageSource.getCacheKey(image)]);
   }
   //endregion
 
@@ -65,10 +72,15 @@ export default class _NeteaseImageSource {
   ) {
     if ("localURL" in image) return image;
     const check = await _NeteaseImageSource.getCache(image, download);
-    if (check.ok) {
-      if ("image" in check) return check.image;
+    if (check.code === 201) {
+      return check.data;
+    }
+    if (check.code === 200 && check.data.ok) {
       return _NeteaseImageSource.setMemoryCache(
-        NeteaseLocalImage.fromNetworkImage(image, check.index.file)
+        NeteaseLocalImage.fromNetworkImage(
+          image,
+          RendererCache.service.read.build(check.data.idx.id)
+        )
       );
     }
     return null;
@@ -96,6 +108,18 @@ export default class _NeteaseImageSource {
 
   static remove(image: NeteaseNetworkImage | NeteaseLocalImage) {
     return this.removeCache(image);
+  }
+
+  static preload(images: NeteaseNetworkImage[]) {
+    void RendererCache.service.check.readOrStore(
+      images.map((image) => {
+        return {
+          url: image.url,
+          id: _NeteaseImageSource.getCacheKey(image),
+          category: StoreCategory.Image
+        };
+      })
+    );
   }
 
   static async download(image: NeteaseNetworkImage) {

@@ -27,11 +27,11 @@ const Version: FC<object> = () => {
           className="size-12 shrink-0 drop-shadow-[0_4px_12px_rgba(0,0,0,0.18)]"
         />
         <div className="min-w-0">
-          <h1 className="truncate text-lg font-black">{appName}</h1>
+          <h1 className="truncate text-lg font-bold">{appName}</h1>
           <span
             className="
               mt-1 inline-block rounded-sm border border-white/30 px-1.5
-              text-[11px] font-black tracking-wide
+              text-[11px] font-semibold tracking-wide
             ">
             {appVersion}
           </span>
@@ -45,8 +45,8 @@ const Version: FC<object> = () => {
         className={`
           mt-4 flex h-9 w-full items-center justify-center gap-2 rounded-md
           border border-white/30 text-[12px] font-bold
-          transition-all duration-300 hover:border-(--theme-color-main)/40
-          hover:bg-(--theme-color-main) hover:text-(--text-color-on-main)
+          transition-all duration-300 hover:border-primary/40
+          hover:bg-primary hover:text-(--text-color-on-main)
           active:scale-[0.98] cursor-pointer
         `}>
         <SimpleIcon icon={siGithub} className="size-3.5" />

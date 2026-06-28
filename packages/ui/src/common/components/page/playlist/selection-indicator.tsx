@@ -26,7 +26,7 @@ const SelectionIndicator: FC<SelectionIndicatorProps> = ({
     <div
       className="
         absolute bottom-3 left-1/2 z-20 flex -translate-x-1/2 items-center gap-3
-        rounded-full border border-white/15 bg-black/40 px-4 py-2 text-[12px] font-bold
+        rounded-full border border-white/15 bg-black/15 px-4 py-2 text-[12px] font-bold
         shadow-lg backdrop-blur-lg backdrop-saturate-150
       ">
       <TextButton
@@ -36,7 +36,7 @@ const SelectionIndicator: FC<SelectionIndicatorProps> = ({
       <TextButton disabled text={`已选 ${selectedIds.size}`} />
       <ActionButton
         onClick={onBatchAdd}
-        className="bg-(--theme-color-main) text-(--text-color-on-main)"
+        className="bg-primary text-primary-text"
         disabled={selectedIds.size === 0}>
         <ListPlus className="size-3.5" /> 添加
       </ActionButton>

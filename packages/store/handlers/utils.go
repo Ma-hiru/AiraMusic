@@ -7,7 +7,6 @@ import (
 	"log"
 	"net"
 	"net/http"
-	neturl "net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -39,40 +38,11 @@ var httpClient = &http.Client{
 }
 
 func getNameFromURL(url string) string {
-	var token = strings.Split(url, "/")
+	token := strings.Split(url, "/")
 	return token[len(token)-1]
 }
 
-func getRequireQuery(ctx *gin.Context) (id string, url string) {
-	id = ctx.Query("id")
-	url = ctx.Query("url")
-	return handleURLAndID(id, url)
-}
-
-func handleURLAndID(id, url string) (string, string) {
-	//  URL 解码
-	if decoded, err := neturl.QueryUnescape(url); err == nil {
-		url = decoded
-	}
-	if id == "" {
-		id = url
-	}
-	return id, url
-}
-
-func getOptionQuery(ctx *gin.Context) (update bool, timeLimit int64) {
-	update = ctx.Query("update") == "true"
-	var tl = ctx.Query("timeLimit")
-	if tl != "" {
-		var _, err = fmt.Sscanf(tl, "%d", &timeLimit)
-		if err != nil {
-			timeLimit = 0
-		}
-	}
-	return
-}
-
-func queueDownload(id, url, method string, body io.Reader, header http.Header) {
+func queueDownload(id, url, method string, body io.Reader, header http.Header, category core.StoreCategory) {
 	if url == "" {
 		return
 	}
@@ -97,11 +67,11 @@ func queueDownload(id, url, method string, body io.Reader, header http.Header) {
 		if bodyData != nil {
 			requestBody = bytes.NewReader(bodyData)
 		}
-		download(id, url, method, requestBody, requestHeader)
+		download(id, url, method, requestBody, requestHeader, category)
 	}()
 }
 
-func download(id, url, method string, body io.Reader, header http.Header) core.Index {
+func download(id, url, method string, body io.Reader, header http.Header, category core.StoreCategory) core.Index {
 	if url == "" {
 		return core.Index{}
 	}
@@ -124,7 +94,7 @@ func download(id, url, method string, body io.Reader, header http.Header) core.I
 	}
 	defer resp.Body.Close() //nolint:errcheck
 	// 读取元数据
-	var fileType = resp.Header.Get("Content-Type")
+	var fileMime = resp.Header.Get("Content-Type")
 	var fileSize = resp.Header.Get("Content-Length")
 	var fileMD5 = resp.Header.Get("Content-MD5")
 	var fileEtag = resp.Header.Get("ETag")
@@ -145,17 +115,18 @@ func download(id, url, method string, body io.Reader, header http.Header) core.I
 	} else if fileEtag != "" {
 		etag = fileEtag
 	} else {
-		//预读取以计算ETag
-		etag, reader, err = utils.PeekForHash(resp.Body)
-		if err != nil {
-			log.Println(err)
-			return core.Index{}
-		}
+		etag = strconv.FormatInt(utils.GetTime(), 10)
 	}
 	// 开始缓存
 	var store = core.GetStore()
+	if store == nil {
+		log.Println("store is nil")
+		return core.Index{}
+	}
+
+	var chunkCount = matchCategoryChunkCount(category)
 	var buffer = make([]byte, 32*1024)
-	var writer = store.BeginWrite(url, fileName, fileType, fileSize, etag, lastModified)
+	var writer = store.BeginWrite(url, fileName, fileMime, fileSize, etag, lastModified)
 	if writer == utils.BlankWriter {
 		log.Println("already exits writing for:", url)
 		return core.Index{}
@@ -163,7 +134,7 @@ func download(id, url, method string, body io.Reader, header http.Header) core.I
 
 	written, err := io.CopyBuffer(writer, reader, buffer)
 	if err != nil {
-		store.EndWrite(id, url, false)
+		store.EndWrite(id, url, false, chunkCount)
 		log.Println("error storing file:", err)
 		return core.Index{}
 	}
@@ -188,7 +159,7 @@ func download(id, url, method string, body io.Reader, header http.Header) core.I
 			rangeReq.Header.Set("Range", fmt.Sprintf("bytes=%d-", written))
 			var rangeResp, err = httpClient.Do(rangeReq)
 			if err != nil {
-				store.EndWrite(id, url, false)
+				store.EndWrite(id, url, false, chunkCount)
 				log.Println("range request error:", err)
 				return core.Index{}
 			}
@@ -197,7 +168,7 @@ func download(id, url, method string, body io.Reader, header http.Header) core.I
 			rangeResp.Body.Close() //nolint:errcheck
 
 			if err != nil {
-				store.EndWrite(id, url, false)
+				store.EndWrite(id, url, false, chunkCount)
 				log.Println("range write error:", err)
 				return core.Index{}
 			}
@@ -208,32 +179,78 @@ func download(id, url, method string, body io.Reader, header http.Header) core.I
 	}
 
 	store.UpdateWriteSize(url, strconv.FormatInt(written, 10))
-	var idx = store.EndWrite(id, url, true)
+	var idx = store.EndWrite(id, url, true, chunkCount)
 	return idx
 }
 
-func fetch(ctx *gin.Context) {
-	var id, _ = getRequireQuery(ctx)
+func matchCategoryChunkCount(category core.StoreCategory) int {
+	switch category {
+	case core.StoreCategoryAudio:
+		return 5
+	case core.StoreCategoryImage:
+		return 1
+	case core.StoreCategoryVideo:
+		return 5
+	case core.StoreCategoryJSON:
+		return 1
+	case core.StoreCategoryOther:
+		return 1
+	default:
+		return 1
+	}
+}
+
+func sendOkResponse(ctx *gin.Context, data any) {
+	ctx.JSON(http.StatusOK, gin.H{
+		"code": http.StatusOK,
+		"data": data,
+	})
+}
+
+func sendErrResponse(ctx *gin.Context, code int, err string) {
+	ctx.JSON(http.StatusOK, gin.H{
+		"code":  code,
+		"error": err,
+	})
+}
+
+func bindingCheck[T any](ctx *gin.Context, requestParam T) (T, *core.Store, bool) {
+	if err := ctx.ShouldBindJSON(requestParam); err != nil {
+		sendErrResponse(ctx, http.StatusBadRequest, "invalid parameters")
+		return requestParam, nil, false
+	}
+
 	var store = core.GetStore()
-	var index, ok = store.CheckByID(id)
-	if !ok {
-		ctx.Status(404)
-		return
+	if store == nil {
+		sendErrResponse(ctx, http.StatusInternalServerError, "store not initialized")
+		return requestParam, nil, false
 	}
-	// 如果文件已缓存，检查ETag以处理缓存验证
-	if match := ctx.Request.Header.Get("If-None-Match"); match == index.ETag {
-		ctx.Status(http.StatusNotModified)
-		return
+
+	return requestParam, store, true
+}
+
+func storeCheck(ctx *gin.Context) (*core.Store, bool) {
+	if store := core.GetStore(); store == nil {
+		sendErrResponse(ctx, http.StatusInternalServerError, "store not initialized")
+		return nil, false
+	} else {
+		return store, true
 	}
-	var storeFile, err = store.FetchByReader(index)
-	if err != nil {
-		ctx.Status(500)
-		log.Println(err)
-		return
+}
+
+func checkNotModified(ctx *gin.Context, etag string, lastModified string) bool {
+	if etag != "" && ctx.GetHeader("If-None-Match") == etag {
+		return true
 	}
-	defer storeFile.Close() //nolint:errcheck
-	ctx.Status(200)
-	index.FillHeader(ctx)
-	var buffer = make([]byte, 24*1024)
-	_, _ = io.CopyBuffer(ctx.Writer, storeFile, buffer)
+	if lastModified != "" {
+		ifModifiedSince := ctx.GetHeader("If-Modified-Since")
+		if ifModifiedSince != "" {
+			reqTime, reqErr := http.ParseTime(ifModifiedSince)
+			fileTime, fileErr := http.ParseTime(lastModified)
+			if reqErr == nil && fileErr == nil && !fileTime.After(reqTime) {
+				return true
+			}
+		}
+	}
+	return false
 }

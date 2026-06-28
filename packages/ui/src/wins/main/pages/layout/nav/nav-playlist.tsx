@@ -117,11 +117,9 @@ const RowComponent: VirtualListRow<
   const data = items[index]!;
   const isPrivate = extra.category === "user" && NeteasePlaylistSummary.isPrivacy(data);
   const active = extra.activeID === data.id;
-  const cover = NeteaseNetworkImage.fromPlaylistCover(data)
-    .setSize(RendererImageConstants.NavPlaylistCoverSize)
-    .setCacheKey(
-      `${data.updateTime}-${data.trackCount}-${data.trackUpdateTime}-${data.trackNumberUpdateTime}`
-    );
+  const cover = NeteaseNetworkImage.fromPlaylistCover(data).setSize(
+    RendererImageConstants.NavPlaylistCoverSize
+  );
   return (
     <div className="w-(--side-bar-expand-width) px-3">
       <div
@@ -131,7 +129,7 @@ const RowComponent: VirtualListRow<
             ease-in-out transition-all duration-300 group
           `,
           active
-            ? extra.opened && "bg-(--theme-color-main) text-(--text-color-on-main)"
+            ? extra.opened && "bg-primary text-(--text-color-on-main)"
             : extra.opened && "hover:bg-black/5"
         )}>
         <div
@@ -141,9 +139,7 @@ const RowComponent: VirtualListRow<
               flex justify-center items-center py-1 rounded-md
               ease-in-out transition-all duration-300
             `,
-            active
-              ? "bg-(--theme-color-main) text-(--text-color-on-main)"
-              : !extra.opened && "hover:bg-black/5"
+            active ? "bg-primary text-(--text-color-on-main)" : !extra.opened && "hover:bg-black/5"
           )}>
           <NeteaseImage
             cache

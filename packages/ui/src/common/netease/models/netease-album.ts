@@ -12,7 +12,7 @@ export class NeteaseAlbum {
     this.tracks = props.tracks;
   }
 
-  static fromObject<T extends Optional<NeteaseAlbum>>(
+  static fromObject<T extends Optional<Jsonify<NeteaseAlbum>>>(
     obj: T
   ): T extends Falsy ? null : NeteaseAlbum {
     if (!obj) return null as T extends Falsy ? null : NeteaseAlbum;

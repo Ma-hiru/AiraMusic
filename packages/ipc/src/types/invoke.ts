@@ -21,8 +21,14 @@ export type InvokeEventMaps = {
   ];
   invoke_runtime_token: [undefined, string];
   invoke_runtime_id: [undefined, string];
-  invoke_fs_select: [type: "dir" | "file", Promise<{ ok: boolean; path: string; error?: string }>];
-  invoke_fs_save: [{ buffer: ArrayBuffer; name: string }, Promise<{ ok: boolean; error?: string }>];
+  invoke_fs_select: [
+    type: "dir" | "file",
+    Promise<{ ok: boolean; path: string; error?: string; canceled?: boolean }>
+  ];
+  invoke_fs_save: [
+    { buffer: ArrayBuffer; name: string },
+    Promise<{ ok: boolean; error?: string; canceled?: boolean }>
+  ];
   invoke_store_get: [string, { ok: true; value: JsonValue } | { ok: false; reason?: string }];
   invoke_store_set: [
     { key: string; value: JsonValue },

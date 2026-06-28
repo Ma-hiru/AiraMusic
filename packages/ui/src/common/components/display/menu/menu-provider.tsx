@@ -119,12 +119,12 @@ const MenuProvider: FC<{ className?: string }> = ({ className }) => {
   return (
     <motion.div
       ref={scope}
+      aria-hidden={!visible}
       className={cx(
         `
           fixed z-15 w-40 overflow-hidden rounded-md
-          bg-white/20 backdrop-saturate-150 backdrop-blur-lg p-1
-          border border-neutral-700/10 shadow-lg
-          pointer-events-none opacity-0
+          surface-popover p-1 contain-layout
+          pointer-events-none opacity-0 shadow-none!
       `,
         className
       )}>
@@ -134,19 +134,26 @@ const MenuProvider: FC<{ className?: string }> = ({ className }) => {
           <div className="mx-2 my-1 h-px bg-neutral-700/10" />
         </>
       )}
-      <div className="flex flex-col space-y-1">
+      <div className="flex flex-col space-y-1" role="menu" aria-label="上下文菜单">
         {render?.items.map(({ prefix, label, suffix, id, onClick }, index) => {
           return (
-            <div
+            <button
               key={id || index}
+              type="button"
+              role="menuitem"
+              tabIndex={visible ? 0 : -1}
               className={`
-                  flex items-center gap-1.5
-                  px-2 py-1 rounded-md
-                  hover:bg-(--theme-color-main)/60
-                  hover:text-(--text-color-on-main)
+                  flex w-full items-center gap-1.5
+                  rounded-md border-0 bg-transparent px-2 py-1 text-left
+                  outline-none transition-colors duration-300 ease-in-out
+                  hover:bg-primary
+                  hover:text-primary-text
+                  focus-visible:bg-primary
+                  focus-visible:text-primary-text
+                  focus-visible:ring-2 focus-visible:ring-primary/60
                   cursor-pointer
               `}
-              onMouseDown={(e) => {
+              onClick={(e) => {
                 e.stopPropagation();
                 onClick?.();
                 setContextMenuVisible(false);
@@ -154,7 +161,7 @@ const MenuProvider: FC<{ className?: string }> = ({ className }) => {
               {!!prefix && prefix}
               {label}
               {!!suffix && suffix}
-            </div>
+            </button>
           );
         })}
       </div>

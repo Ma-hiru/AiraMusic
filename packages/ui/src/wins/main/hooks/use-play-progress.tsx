@@ -8,6 +8,7 @@ import {
 } from "react";
 import { clamp, throttle } from "lodash-es";
 import { NeteaseAPITrack } from "@/common/netease/api";
+import { useCacheRequest } from "@/common/utils/cache";
 import RendererPlayerHandle from "@/wins/main/lib/handle";
 
 export function usePlayProgress() {
@@ -119,11 +120,13 @@ export function usePlayProgress() {
   );
 
   // 获取歌曲副歌时间
+  const buildCacheKey = useRef((id: number) => id).current;
+  const chorusRequestCache = useCacheRequest(NeteaseAPITrack.chorus, buildCacheKey, "memory");
   useEffect(() => {
     const fetchChorus = async () => {
       if (!player.current.track) return;
       try {
-        const response = await NeteaseAPITrack.chorus(player.current.track.id);
+        const response = await chorusRequestCache(player.current.track.id);
         const duration = player.audio.instance.duration;
         setChorus(response.chorus);
         setChorusPercent(
@@ -136,7 +139,7 @@ export function usePlayProgress() {
     };
     player.audio.addEventListener("loadedmetadata", fetchChorus);
     return () => player.audio.removeEventListener("loadedmetadata", fetchChorus);
-  }, [player]);
+  }, [chorusRequestCache, player]);
 
   return {
     barRef,

@@ -181,7 +181,7 @@ const PlaylistEditForm: FC<{
             onChange={(e) => setName(e.target.value)}
             className="
               w-full rounded-md border border-white/15 bg-white/10 px-3 py-2 font-bold
-              outline-none transition-colors focus:border-(--theme-color-main)
+              outline-none transition-colors focus:border-primary
             "
           />
           <textarea
@@ -193,7 +193,7 @@ const PlaylistEditForm: FC<{
             onChange={(e) => setDesc(e.target.value)}
             className="
               h-20 w-full resize-none rounded-md border border-white/15 bg-white/10 px-3 py-2
-              outline-none transition-colors scrollbar scrollbar-show focus:border-(--theme-color-main)
+              outline-none transition-colors scrollbar scrollbar-show focus:border-primary
             "
           />
         </div>
@@ -220,7 +220,7 @@ const PlaylistEditForm: FC<{
                   className={cx(
                     "rounded-md px-2 py-1 text-[11px] font-bold transition-all duration-300",
                     active
-                      ? "bg-(--theme-color-main) text-(--text-color-on-main)"
+                      ? "bg-primary text-(--text-color-on-main)"
                       : "bg-white/10 hover:bg-white/20"
                   )}>
                   {tag}
@@ -253,7 +253,7 @@ const PlaylistEditForm: FC<{
                 disabled={settingPublic}
                 onClick={onSetPublic}
                 className="
-                  rounded-md bg-(--theme-color-main) px-3 py-1 font-bold text-(--text-color-on-main)
+                  rounded-md bg-primary px-3 py-1 font-bold text-(--text-color-on-main)
                   transition-all active:scale-96 disabled:opacity-50
                 ">
                 {settingPublic ? "处理中..." : "确认公开（不可撤销）"}
@@ -271,7 +271,7 @@ const PlaylistEditForm: FC<{
               type="button"
               onClick={() => setConfirmingPublic(true)}
               className="
-                rounded-md px-3 py-1 font-bold hover:text-(--text-color-on-main) hover:bg-(--theme-color-main)
+                rounded-md px-3 py-1 font-bold hover:text-primary-text hover:bg-primary
                 transition-all active:scale-96
               ">
               设为公开
@@ -285,7 +285,7 @@ const PlaylistEditForm: FC<{
           disabled={saving}
           onClick={onSave}
           className="
-            rounded-md px-4 py-1.5 font-bold hover:text-(--text-color-on-main) hover:bg-(--theme-color-main)
+            rounded-md px-4 py-1.5 font-bold hover:text-primary-text hover:bg-primary
             transition-all active:scale-96 disabled:opacity-50
           ">
           {saving ? "保存中..." : "保存"}
