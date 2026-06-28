@@ -121,12 +121,14 @@ const BarBtns: FC<object> = () => {
               bg-(--text-color)/80 px-0 py-3 text-primary
               backdrop-saturate-150 backdrop-blur-lg
             ">
-            <p className="text-[10px] font-black text-primary">{volumePercent}%</p>
+            <p className="text-[10px] font-semibold text-primary">{volumePercent}%</p>
             <RangeSlider
               min={0}
               max={100}
               step={1}
               value={volumePercent}
+              label="音量"
+              valueText={`${volumePercent}%`}
               onChange={onVolumeChange}
               orientation="vertical"
               className="h-24"

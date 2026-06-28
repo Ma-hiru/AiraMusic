@@ -11,7 +11,7 @@ const RecommendTrackTitle: FC<RecommendTrackTitleProps> = ({ lastPage, nextPage 
     <div className="mb-3 flex items-end justify-between gap-3 px-2">
       <div className="min-w-0">
         <p className="text-[10px] font-bold uppercase tracking-widest opacity-50">Daily Songs</p>
-        <h2 className="truncate text-xl font-black">每日精选歌曲</h2>
+        <h2 className="truncate text-xl font-bold">每日精选歌曲</h2>
       </div>
       <div className="flex items-center justify-center gap-2">
         <button

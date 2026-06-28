@@ -123,7 +123,7 @@ const MiniPlayerPage: FC = () => {
           <div className="min-w-0 self-end">
             <Marquee
               text={trackMetaBus.data?.track?.name || "暂无播放"}
-              className="text-[12px] font-black leading-4"
+              className="text-[12px] font-semibold leading-4"
               options={marqueeOpts}
             />
             <Marquee

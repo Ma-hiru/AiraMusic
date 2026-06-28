@@ -96,7 +96,7 @@ const PlayerPlaylistModalContent = (props: { onJumpPage?: NormalFunc }) => {
             <ListMusic className="size-4" />
           </span>
           <div className="min-w-0">
-            <p className="truncate text-[13px] font-black">当前队列</p>
+            <p className="truncate text-[13px] font-semibold">当前队列</p>
             <p className="truncate text-[11px] font-semibold opacity-60">
               {tracks.length} 首{activeTrack ? ` / 正在播放 ${activeTrack.detail.name}` : ""}
             </p>

@@ -18,27 +18,31 @@ interface ListItemAlbumProps {
 
 const TrackItemInfo: FC<ListItemAlbumProps> = ({ track, disabled, liked, onLikeChange, type }) => {
   const hasExplicit = track.detail.checkBitmark(TrackBitmark.Explicit);
+  const badgeClassName = "text-[8px] font-bold opacity-90";
+
   return (
-    <div className="flex gap-4 justify-end items-center">
-      {hasExplicit && <Tag text="E" />}
+    <div className="flex min-w-max items-center justify-end gap-3 text-[12px] leading-none">
+      {hasExplicit && <Tag text="E" className={badgeClassName} />}
       <ListItemQuality track={track} />
       <Heart
         fill={liked ? "currentColor" : "transparent"}
-        className="size-4 relative -top-px cursor-pointer hover:opacity-50 ease-in-out duration-300 transition-all active:scale-90"
+        className="relative -top-px size-4 shrink-0 cursor-pointer transition-opacity duration-300 ease-in-out hover:opacity-60 active:scale-90"
         onClick={() => !disabled && onLikeChange?.()}
       />
       {type === "history" ? (
         <>
-          <div className="text-[12px] font-medium">
+          <div className="w-16 text-right font-semibold tabular-nums opacity-75">
             {RendererFormat.time((track as NeteaseHistoryRecord).time)}
           </div>
-          <div className="text-[12px] font-medium">
+          <div className="w-24 text-right font-semibold tabular-nums opacity-75">
             {RendererFormat.duration((track as NeteaseHistoryRecord).playDuration, "s")} /{" "}
             {track.detail.formatDuration()}
           </div>
         </>
       ) : (
-        <div className="text-[12px] font-medium">{track.detail.formatDuration()}</div>
+        <div className="min-w-10 text-right font-semibold tabular-nums opacity-75">
+          {track.detail.formatDuration()}
+        </div>
       )}
     </div>
   );

@@ -45,6 +45,14 @@ const SearchInput: FC<SearchInputProps> = ({ className, onSearch, ref, setTabs }
   const focusRef = useLatestRef(focus);
   const recommendKeyword = useSearchRecommend();
 
+  const closeSuggestionsWhenFocusLeaves = useCallback((relatedTarget: EventTarget | null) => {
+    const nextTarget = relatedTarget instanceof Node ? relatedTarget : null;
+    if (nextTarget && (inputRef.current === nextTarget || ulRef.current?.contains(nextTarget))) {
+      return;
+    }
+    setFocus(false);
+  }, []);
+
   const getSuggestions = useCallback(async () => {
     if (!keywordRef.current) return setSuggestions(null);
     if (loading.current) return;
@@ -128,7 +136,7 @@ const SearchInput: FC<SearchInputProps> = ({ className, onSearch, ref, setTabs }
           value={keyword}
           placeholder={recommendKeyword ?? "请输入搜索关键词"}
           onFocus={() => setFocus(true)}
-          onBlur={() => setFocus(false)}
+          onBlur={(e) => closeSuggestionsWhenFocusLeaves(e.relatedTarget)}
           onChange={(e) => {
             setKeyword(e.target.value);
             debouncedGetSuggestions();
@@ -158,6 +166,8 @@ const SearchInput: FC<SearchInputProps> = ({ className, onSearch, ref, setTabs }
         <SearchSuggestions
           ref={ulRef}
           suggestions={renderSuggestions}
+          onFocus={() => setFocus(true)}
+          onBlur={(e) => closeSuggestionsWhenFocusLeaves(e.relatedTarget)}
           onClick={(suggestion) => {
             setKeyword(suggestion.name);
             setSuggestions(null);

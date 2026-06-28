@@ -32,6 +32,10 @@
   @apply border border-white/30 bg-white/22 shadow-lg;
 }
 
+@utility surface-popover {
+  @apply border border-white/25 bg-black/20 shadow-2xl backdrop-blur-2xl backdrop-saturate-150;
+}
+
 @utility surface-border {
   @apply border border-white/15 bg-white/10 shadow-lg;
 }

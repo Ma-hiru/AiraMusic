@@ -21,12 +21,12 @@ const TrackItemName: FC<ListItemNameProps> = ({
 }) => {
   const translateAndAliaName = track.detail.translateAndAliaName();
   return (
-    <div className="flex flex-col text-[14px] overflow-hidden">
+    <div className="flex min-w-0 flex-col gap-0.5 overflow-hidden">
       {/*歌曲标题*/}
-      <div className="overflow-hidden flex-row truncate">
+      <div className="min-w-0 overflow-hidden truncate text-[15px] leading-5">
         <span
           className={cx(
-            "cursor-pointer font-bold hover:opacity-50 ease-in-out duration-300 transition-all truncate select-none active:scale-95",
+            "cursor-pointer truncate select-none font-semibold transition-opacity duration-200 ease-in-out hover:opacity-60 active:scale-95",
             disabled && "cursor-not-allowed! opacity-50"
           )}
           onClick={() => !disabled && onClick?.()}>
@@ -34,9 +34,7 @@ const TrackItemName: FC<ListItemNameProps> = ({
         </span>
         {translateAndAliaName && (
           <span
-            className={cx(
-              "w-2 overflow-hidden ml-2 ease-in-out duration-300 transition-all truncate select-none opacity-50"
-            )}>
+            className={cx("ml-2 w-2 overflow-hidden truncate text-[13px] font-medium opacity-70")}>
             ({translateAndAliaName})
           </span>
         )}
@@ -44,15 +42,15 @@ const TrackItemName: FC<ListItemNameProps> = ({
       {/*歌手、专辑*/}
       <div
         className={cx(
-          "text-[12px] flex overflow-hidden gap-2 truncate select-none opacity-60",
-          disabled && "cursor-not-allowed! opacity-30"
+          "flex min-w-0 overflow-hidden truncate text-[13px] leading-4 font-medium opacity-70 select-none",
+          disabled && "cursor-not-allowed! opacity-40"
         )}>
-        <span className="truncate space-x-0.5">
+        <span className="min-w-0 truncate space-x-0.5">
           {track.detail.ar.map((ar, index) => {
             return (
               <Fragment key={ar.name + ar.id}>
                 <span
-                  className="inline-block cursor-pointer hover:opacity-50 ease-in-out duration-300 transition-all active:scale-95"
+                  className="inline-block cursor-pointer transition-all duration-200 ease-in-out hover:opacity-60 active:scale-98"
                   onClick={() => onClickArtist?.(ar.id)}>
                   {ar.name}
                 </span>
@@ -63,9 +61,9 @@ const TrackItemName: FC<ListItemNameProps> = ({
         </span>
         {type !== "album" && (
           <>
-            <span>-</span>
+            <span className="mx-2 shrink-0 opacity-60">-</span>
             <span
-              className="truncate cursor-pointer hover:opacity-50 ease-in-out duration-300 transition-all active:scale-95"
+              className="min-w-0 truncate cursor-pointer transition-all duration-200 ease-in-out hover:opacity-60 active:scale-98"
               onClick={() => onClickAlbum?.(track.detail.al.id)}>
               {track.detail.al.name}
             </span>

@@ -33,7 +33,7 @@ const TrackItemIndex: FC<ListItemIndexProps> = ({
         <span
           className={cx(
             "flex size-4 items-center justify-center rounded border transition-colors duration-200",
-            selected ? "border-primary bg-primary text-(--text-color-on-main)" : "border-current/40"
+            selected ? "border-primary bg-primary text-primary-text" : "border-current/40"
           )}>
           {selected && <Check className="size-3" />}
         </span>
@@ -43,7 +43,10 @@ const TrackItemIndex: FC<ListItemIndexProps> = ({
 
   return (
     <span
-      className={cx("mr-px max-w-max text-left text-[12px] font-semibold select-none", widthClass)}
+      className={cx(
+        "mr-px flex max-w-max items-center text-left text-[12px] font-semibold tabular-nums opacity-75 select-none",
+        widthClass
+      )}
       onClick={() => !disabled && onClick?.()}>
       {active ? <AudioLines className="size-3.5" /> : (index + 1).toString().padStart(2, "0")}
     </span>

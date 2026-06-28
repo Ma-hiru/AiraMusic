@@ -66,7 +66,9 @@ const TrayPlayer: FC<TrayPlayerProps> = ({ track, status, currentTime, duration 
       </div>
       <div className="min-w-0 space-y-1.5">
         <div className="min-w-0">
-          <p className="truncate text-[12px] font-black leading-4">{track?.name || "暂无播放"}</p>
+          <p className="truncate text-[12px] font-semibold leading-4">
+            {track?.name || "暂无播放"}
+          </p>
           <p className="truncate text-[10px] font-semibold leading-3 opacity-45">
             {artist || track?.al.name || "AiraMusic"}
           </p>

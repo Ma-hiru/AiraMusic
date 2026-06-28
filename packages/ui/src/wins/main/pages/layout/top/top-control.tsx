@@ -36,6 +36,7 @@ const TopControl: FC = () => {
       onClose={close}
       appends={{
         icon: PictureInPicture,
+        label: "打开迷你播放器",
         onClick: mini
       }}
     />

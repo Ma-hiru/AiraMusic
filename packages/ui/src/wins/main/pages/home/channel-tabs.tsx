@@ -41,7 +41,7 @@ const HomeChannelTabs: FC<HomeChannelTabsProps> = ({
             )}>
             <Icon className="size-4 shrink-0" />
             <span className="min-w-0">
-              <span className="block truncate text-sm font-black">{label}</span>
+              <span className="block truncate text-sm font-bold">{label}</span>
               <span className="block truncate text-[10px] font-bold uppercase opacity-50">
                 {caption}
               </span>

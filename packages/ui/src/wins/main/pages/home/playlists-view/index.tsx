@@ -120,14 +120,14 @@ const HomePlaylistsView: FC<{ className?: string }> = ({ className }) => {
               aria-hidden={!hasMore}
               className="mt-5 flex min-h-14 items-center justify-center pb-18">
               {hasMore ? (
-                <span className="flex items-center gap-2 text-xs font-black opacity-55">
+                <span className="flex items-center gap-2 text-xs font-semibold opacity-55">
                   {isLoading && <LoaderCircle className="size-4 animate-spin" />}
                   {isLoading ? "正在加载更多" : "继续下滑加载更多"}
                 </span>
               ) : (
                 status === "success" &&
                 items.length > 0 && (
-                  <span className="text-xs font-black opacity-40">已经到底了</span>
+                  <span className="text-xs font-semibold opacity-40">已经到底了</span>
                 )
               )}
             </div>

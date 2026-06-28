@@ -16,12 +16,7 @@ const Card: FC<CardProps> = ({ title, subTitle, Icon, children, className, onCli
   return (
     <Section
       onClick={onClick}
-      className={cx(
-        `
-        rounded-lg surface-1 p-3
-      `,
-        className
-      )}
+      className={cx("surface-1 rounded-lg p-3", className)}
       title={title}
       subTitle={subTitle}
       Icon={Icon}

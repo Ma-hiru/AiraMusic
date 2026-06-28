@@ -281,7 +281,7 @@ const Button = ({
       className={cx(
         `
           shrink-0 h-8 rounded-md border border-white/30 px-3
-          text-[12px] font-black transition-all duration-300
+          text-[12px] font-semibold transition-all duration-300
           hover:bg-primary hover:text-primary-text
           active:scale-[0.98]
         `,

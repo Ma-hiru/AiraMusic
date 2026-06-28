@@ -162,7 +162,7 @@ const Search: FC<SearchProps> = ({
                       )}>
                       <Icon className="size-4 shrink-0" />
                       <span className="min-w-0">
-                        <span className="block truncate text-sm font-black">{option.label}</span>
+                        <span className="block truncate text-sm font-semibold">{option.label}</span>
                         <span className="block truncate text-[10px] font-bold">
                           {option.caption}
                         </span>

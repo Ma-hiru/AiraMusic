@@ -74,20 +74,21 @@ const Info: FC<InfoProps> = ({ className, artist, children }) => {
         {alias && (
           <h2
             title={alias}
-            className="absolute left-0 top-0 w-full truncate text-center text-sm font-semibold opacity-70 select-all">
+            className="absolute left-0 top-0 w-full truncate text-center text-[13px] font-medium opacity-75 select-all">
             {alias}
           </h2>
         )}
         <h1 className="whitespace-nowrap select-all">{artistName}</h1>
       </div>
-      <div className="text-sm inline-block font-light mt-auto select-none">
-        <span> 粉丝: {RendererFormat.count(fansCount)}</span>
-        <span className="ml-2 mr-1">/</span>
+      <div className="mt-auto inline-flex items-center gap-2 text-[13px] font-medium opacity-80 select-none">
+        <span>粉丝: {RendererFormat.count(fansCount)}</span>
+        <span className="opacity-55">/</span>
         <button
+          type="button"
           onClick={follow}
           className={cx(`
-            text-sm font-light cursor-pointer px-2 py-1 rounded-md
-            hover:bg-primary hover:text-(--text-color-on-main)
+            cursor-pointer rounded-md px-2 py-1 font-semibold opacity-95
+            hover:bg-primary hover:text-primary-text
             active:scale-98 select-none
             transition-all duration-300 ease-in-out
         `)}>
@@ -95,7 +96,7 @@ const Info: FC<InfoProps> = ({ className, artist, children }) => {
         </button>
       </div>
 
-      <p className="self-start line-clamp-3 text-[12px] font-light text-left select-all max-w-1/2">
+      <p className="max-w-[70%] self-start line-clamp-3 text-left text-[13px] font-medium leading-tight opacity-75 select-all mt-0.5">
         {artist?.detail.artist.briefDesc}
       </p>
       <div className="self-end">{children}</div>

@@ -69,7 +69,7 @@ const Banner: FC<BannerProps> = ({ className }) => {
 
   return (
     <AppError asChild={false} className={className} reset={reload} when={status === "error"}>
-      <Carousel items={bannerItems} onClick={resolveBanner} />
+      <Carousel className={className} items={bannerItems} onClick={resolveBanner} />
     </AppError>
   );
 };

@@ -37,7 +37,7 @@ const Github: FC<object> = () => {
           </span>
         )}
         <div className="min-w-0">
-          <h1 className="truncate text-lg font-black">{author}</h1>
+          <h1 className="truncate text-lg font-bold">{author}</h1>
           <p className="mt-0.5 truncate text-[12px] opacity-50">项目作者 · Developer</p>
         </div>
       </section>

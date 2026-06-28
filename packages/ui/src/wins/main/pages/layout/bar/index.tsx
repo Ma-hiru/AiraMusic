@@ -17,12 +17,13 @@ const Bar: FC<{ className?: string }> = ({ className }) => {
   return (
     <div
       style={{
-        background: RendererTheme.WHITE_COLOR.mix(textColorOnMain, 0.5).alpha(0.1).string()
+        background: RendererTheme.WHITE_COLOR.mix(textColorOnMain, 0.45).alpha(0.18).string()
       }}
       className={cx(
         `
-        absolute bottom-0 left-0 right-0 bg-white/30
-        backdrop-saturate-150 backdrop-blur-lg backdrop-saturate shadow-[0_10px_25px_-5px_rgba(0,0,0,0.25)]
+        absolute bottom-0 left-0 right-0
+        border-t border-white/20 backdrop-saturate-150 backdrop-blur-2xl
+        shadow-[0_-15px_26px_-26px_rgba(0,0,0,0.85)]
       `,
         className
       )}>

@@ -27,11 +27,11 @@ const Version: FC<object> = () => {
           className="size-12 shrink-0 drop-shadow-[0_4px_12px_rgba(0,0,0,0.18)]"
         />
         <div className="min-w-0">
-          <h1 className="truncate text-lg font-black">{appName}</h1>
+          <h1 className="truncate text-lg font-bold">{appName}</h1>
           <span
             className="
               mt-1 inline-block rounded-sm border border-white/30 px-1.5
-              text-[11px] font-black tracking-wide
+              text-[11px] font-semibold tracking-wide
             ">
             {appVersion}
           </span>

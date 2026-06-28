@@ -104,8 +104,7 @@ const ModalProvider: FC<{ className?: string }> = ({ className }) => {
                 `
                 relative z-10 grid max-h-[min(86vh,720px)] w-full max-w-[calc(100vw-2rem)]
                 grid-rows-[auto_1fr_auto] overflow-hidden rounded-lg pointer-events-auto
-                border border-white/20 bg-white/15 shadow-2xl
-                backdrop-saturate-120 backdrop-blur-lg
+                surface-popover
               `,
                 render.className
               )}
@@ -135,7 +134,7 @@ const ModalProvider: FC<{ className?: string }> = ({ className }) => {
                       </p>
                     )}
                     {render.title && (
-                      <h2 className="mt-0.5 truncate text-lg font-black tracking-normal">
+                      <h2 className="mt-0.5 truncate text-lg font-bold tracking-normal">
                         {render.title}
                       </h2>
                     )}

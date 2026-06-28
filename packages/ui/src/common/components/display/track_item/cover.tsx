@@ -36,7 +36,7 @@ const TrackItemCover: FC<ListItemCoverProps> = ({
       className={cx(
         `
         size-8 rounded-md cursor-pointer select-none
-        hover:scale-105 active:scale-95
+        hover:scale-105 active:scale-98
         ease-in-out duration-300 transition-all
       `,
         disabled && "cursor-not-allowed"

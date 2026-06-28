@@ -50,10 +50,10 @@ const UserDetail: FC<UserDetailProps> = ({ user, logout, login }) => {
         )}
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5">
-            <h1 className="truncate text-xl font-black tracking-normal">{profileName}</h1>
+            <h1 className="truncate text-xl font-bold tracking-normal">{profileName}</h1>
             <span
               className={cx(
-                `text-[10px] font-black  rounded-sm px-1.5 border border-white/30`,
+                `text-[10px] font-semibold  rounded-sm px-1.5 border border-white/30`,
                 user?.isVIP() && "bg-primary text-(--text-color-on-main)"
               )}>
               VIP

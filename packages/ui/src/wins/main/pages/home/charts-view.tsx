@@ -77,11 +77,11 @@ const HomeChartsView: FC<{ className?: string }> = ({ className }) => {
                         hover:bg-white/20
                         active:scale-[0.98]
                       ">
-                      <span className="w-8 shrink-0 text-center text-lg font-black opacity-70">
+                      <span className="w-8 shrink-0 text-center text-lg font-bold opacity-70">
                         {index + 1}
                       </span>
                       <span className="min-w-0 flex-1">
-                        <span className="block truncate text-sm font-black">{item.name}</span>
+                        <span className="block truncate text-sm font-semibold">{item.name}</span>
                         <span className="mt-1 block truncate text-[11px] font-semibold opacity-60">
                           {item.updateFrequency}
                         </span>

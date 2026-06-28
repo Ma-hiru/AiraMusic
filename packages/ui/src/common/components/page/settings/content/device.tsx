@@ -85,7 +85,7 @@ const Device: FC<DeviceProps> = ({ output, updateOutput }) => {
             <span className="block text-[10px] font-semibold tracking-widest opacity-50">
               当前输出
             </span>
-            <span className="mt-0.5 block truncate text-sm font-black tracking-normal">
+            <span className="mt-0.5 block truncate text-sm font-semibold tracking-normal">
               {selectedDeviceName}
             </span>
           </span>

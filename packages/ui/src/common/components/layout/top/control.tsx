@@ -1,20 +1,12 @@
 import { cx } from "@emotion/css";
 import { type FC, memo, useCallback } from "react";
-import {
-  AppWindow,
-  type LucideIcon,
-  Minus,
-  Pin,
-  PinOff,
-  Square,
-  SquareMinus,
-  X
-} from "lucide-react";
+import { AppWindow, Minus, Pin, PinOff, Square, SquareMinus, X } from "lucide-react";
 import { useListenable } from "@/common/hooks/use-listenable";
 import { RendererWindow } from "@/common/lib/window";
 import { RendererDevice } from "@/common/lib/device";
 import NoDrag from "../drag/no-drag";
 import AppToast from "@/common/components/display/toast";
+import IconButton, { type IconButtonProps } from "@/common/components/data-input/icon-button";
 
 interface TopControlProps {
   max?: boolean;
@@ -74,12 +66,14 @@ const Control: FC<TopControlProps> = ({
         color={color}
         show={dev}
         icon={AppWindow}
+        label="打开开发者工具"
         className={itemClassName}
         onClick={() => currentWindow.devTools()}
       />
       <ControlButton
         show={mini}
         icon={Minus}
+        label="最小化窗口"
         className={itemClassName}
         onClick={() => currentWindow.minimize()}
       />
@@ -91,13 +85,17 @@ const Control: FC<TopControlProps> = ({
         color={color}
         onClick={handlePin}
         icon={currentWindow.isPin ? PinOff : Pin}
-        className={cx("scale-90!", itemClassName)}
+        label={currentWindow.isPin ? "取消窗口置顶" : "窗口置顶"}
+        className={itemClassName}
+        iconClassName="scale-90"
       />
       <ControlButton
         show={max}
         color={color}
         icon={currentWindow.isMax ? SquareMinus : Square}
-        className={cx("scale-90!", itemClassName)}
+        label={currentWindow.isMax ? "还原窗口" : "最大化窗口"}
+        className={itemClassName}
+        iconClassName="scale-90"
         onClick={() =>
           currentWindow.isMax ? currentWindow.unmaximize() : currentWindow.maximize()
         }
@@ -106,7 +104,9 @@ const Control: FC<TopControlProps> = ({
         icon={X}
         show={exit}
         color={color}
-        className={cx("scale-105!", itemClassName)}
+        label="关闭窗口"
+        className={itemClassName}
+        iconClassName="scale-105"
         onClick={onClose ?? (() => currentWindow.close())}
       />
     </NoDrag>
@@ -115,30 +115,11 @@ const Control: FC<TopControlProps> = ({
 
 export default memo(Control);
 
-export type ControlButtonProps = {
-  icon: LucideIcon;
-  className?: string;
-  color?: string;
-  onClick?: NormalFunc;
+export type ControlButtonProps = Omit<IconButtonProps, "size" | "variant"> & {
   show?: boolean;
 };
 
-const ControlButton = ({
-  icon: Icon,
-  className,
-  color,
-  onClick,
-  show = true
-}: ControlButtonProps) => {
+const ControlButton = ({ show = true, ...props }: ControlButtonProps) => {
   if (!show) return null;
-  return (
-    <Icon
-      color={color}
-      className={cx(
-        "size-5 cursor-pointer hover:opacity-50 ease-in-out transition-all duration-300",
-        className
-      )}
-      onClick={onClick}
-    />
-  );
+  return <IconButton size="compact" variant="plain" {...props} />;
 };
