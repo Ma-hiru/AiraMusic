@@ -32,13 +32,18 @@ func Read(ctx *gin.Context) {
 		return
 	}
 
+	if checkNotModified(ctx, idx.ETag, idx.LastModified) {
+		ctx.Status(http.StatusNotModified)
+		return
+	}
+
 	if err := idx.MergeChunk(ctx, store.Dir()); err != nil {
 		if errors.Is(err, utils.ErrMergeChunkClientClosed) {
 			return
 		}
 		if !ctx.Writer.Written() {
 			log.Println(err)
-			sendErrResponse(ctx, http.StatusInternalServerError, err.Error())
+			ctx.Status(http.StatusInternalServerError)
 			return
 		}
 		return

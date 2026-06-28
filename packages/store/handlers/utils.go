@@ -42,7 +42,7 @@ func getNameFromURL(url string) string {
 	return token[len(token)-1]
 }
 
-func queueDownload(id, url, method string, body io.Reader, header http.Header) {
+func queueDownload(id, url, method string, body io.Reader, header http.Header, category core.StoreCategory) {
 	if url == "" {
 		return
 	}
@@ -67,11 +67,11 @@ func queueDownload(id, url, method string, body io.Reader, header http.Header) {
 		if bodyData != nil {
 			requestBody = bytes.NewReader(bodyData)
 		}
-		download(id, url, method, requestBody, requestHeader)
+		download(id, url, method, requestBody, requestHeader, category)
 	}()
 }
 
-func download(id, url, method string, body io.Reader, header http.Header) core.Index {
+func download(id, url, method string, body io.Reader, header http.Header, category core.StoreCategory) core.Index {
 	if url == "" {
 		return core.Index{}
 	}
@@ -115,15 +115,16 @@ func download(id, url, method string, body io.Reader, header http.Header) core.I
 	} else if fileEtag != "" {
 		etag = fileEtag
 	} else {
-		//预读取以计算ETag
-		etag, reader, err = utils.PeekForHash(resp.Body)
-		if err != nil {
-			log.Println(err)
-			return core.Index{}
-		}
+		etag = strconv.FormatInt(utils.GetTime(), 10)
 	}
 	// 开始缓存
 	var store = core.GetStore()
+	if store == nil {
+		log.Println("store is nil")
+		return core.Index{}
+	}
+
+	var chunkCount = matchCategoryChunkCount(category)
 	var buffer = make([]byte, 32*1024)
 	var writer = store.BeginWrite(url, fileName, fileMime, fileSize, etag, lastModified)
 	if writer == utils.BlankWriter {
@@ -133,7 +134,7 @@ func download(id, url, method string, body io.Reader, header http.Header) core.I
 
 	written, err := io.CopyBuffer(writer, reader, buffer)
 	if err != nil {
-		store.EndWrite(id, url, false)
+		store.EndWrite(id, url, false, chunkCount)
 		log.Println("error storing file:", err)
 		return core.Index{}
 	}
@@ -158,7 +159,7 @@ func download(id, url, method string, body io.Reader, header http.Header) core.I
 			rangeReq.Header.Set("Range", fmt.Sprintf("bytes=%d-", written))
 			var rangeResp, err = httpClient.Do(rangeReq)
 			if err != nil {
-				store.EndWrite(id, url, false)
+				store.EndWrite(id, url, false, chunkCount)
 				log.Println("range request error:", err)
 				return core.Index{}
 			}
@@ -167,7 +168,7 @@ func download(id, url, method string, body io.Reader, header http.Header) core.I
 			rangeResp.Body.Close() //nolint:errcheck
 
 			if err != nil {
-				store.EndWrite(id, url, false)
+				store.EndWrite(id, url, false, chunkCount)
 				log.Println("range write error:", err)
 				return core.Index{}
 			}
@@ -178,8 +179,25 @@ func download(id, url, method string, body io.Reader, header http.Header) core.I
 	}
 
 	store.UpdateWriteSize(url, strconv.FormatInt(written, 10))
-	var idx = store.EndWrite(id, url, true)
+	var idx = store.EndWrite(id, url, true, chunkCount)
 	return idx
+}
+
+func matchCategoryChunkCount(category core.StoreCategory) int {
+	switch category {
+	case core.StoreCategoryAudio:
+		return 5
+	case core.StoreCategoryImage:
+		return 1
+	case core.StoreCategoryVideo:
+		return 5
+	case core.StoreCategoryJSON:
+		return 1
+	case core.StoreCategoryOther:
+		return 1
+	default:
+		return 1
+	}
 }
 
 func sendOkResponse(ctx *gin.Context, data any) {
@@ -218,4 +236,21 @@ func storeCheck(ctx *gin.Context) (*core.Store, bool) {
 	} else {
 		return store, true
 	}
+}
+
+func checkNotModified(ctx *gin.Context, etag string, lastModified string) bool {
+	if etag != "" && ctx.GetHeader("If-None-Match") == etag {
+		return true
+	}
+	if lastModified != "" {
+		ifModifiedSince := ctx.GetHeader("If-Modified-Since")
+		if ifModifiedSince != "" {
+			reqTime, reqErr := http.ParseTime(ifModifiedSince)
+			fileTime, fileErr := http.ParseTime(lastModified)
+			if reqErr == nil && fileErr == nil && !fileTime.After(reqTime) {
+				return true
+			}
+		}
+	}
+	return false
 }

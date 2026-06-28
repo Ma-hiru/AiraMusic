@@ -157,7 +157,7 @@ func (Self *Store) UpdateWriteSize(url, size string) {
 }
 
 // EndWrite 结束写入文件，如果成功则将临时文件重命名为最终文件并创建索引，返回索引信息，否则删除临时文件并返回空索引，移动失败或者索引写入失败都会删除文件并返回空索引
-func (Self *Store) EndWrite(id, url string, success bool) Index {
+func (Self *Store) EndWrite(id, url string, success bool, chunkCount int) Index {
 	Self.currentWriteMappedLock.Lock()
 	var wFile, ok = Self.currentWriteMapped[url]
 	if !ok {
@@ -200,7 +200,7 @@ func (Self *Store) EndWrite(id, url string, success bool) Index {
 		log.Println("Failed parsing size:", err)
 		return Index{}
 	}
-	key, chunks, err := utils.SplitChunk(tmpFile, size, 5, Self.Dir())
+	key, chunks, err := utils.SplitChunk(tmpFile, size, chunkCount, Self.Dir())
 	if err != nil {
 		log.Println("Failed splitting chunk:", err)
 		return Index{}

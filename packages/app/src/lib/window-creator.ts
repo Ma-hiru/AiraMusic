@@ -1,6 +1,6 @@
 import { Log } from "@/lib/log";
-import { debounce, clamp } from "lodash-es";
-import { MainStoreConfig } from "@/lib/key-value-store";
+import { clamp, debounce } from "lodash-es";
+import { MainStoreForWindow } from "@/lib/key-value-store";
 import { BrowserWindow } from "electron";
 import { MainWindowManager } from "@/lib/window-manager";
 import { MainScreenResolver } from "@/lib/screen-resolver";
@@ -45,7 +45,7 @@ export class MainWindowCreator {
     win.unmaximize();
 
     if (memoPos) {
-      const saver = debounce(() => MainStoreConfig.set(id, win.getBounds()), 500);
+      const saver = debounce(() => MainStoreForWindow.set(id, win.getBounds()), 500);
       if (process.platform === "linux") {
         win.addListener("move", saver);
         win.addListener("resize", saver);
@@ -61,7 +61,7 @@ export class MainWindowCreator {
   }
 
   private static getMemoPos(id: WindowType) {
-    return MainStoreConfig.get(id, { x: 0, y: 0, width: 0, height: 0 });
+    return MainStoreForWindow.get(id, { x: 0, y: 0, width: 0, height: 0 });
   }
 
   private static loadURL(win: BrowserWindow, resolver: NormalFunc<[port: number], string>) {

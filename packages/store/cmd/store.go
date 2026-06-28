@@ -14,14 +14,14 @@ func InitStore(storePath string, storeOption core.StoreOption) {
 	var store *core.Store
 	var err error
 
-	if meta, err = core.CreateLocalStore(storePath); !errors.Is(err, core.ErrStoreExist) && err != nil {
+	if meta, err = core.CreateLocalStore(storePath, storeOption.IndexKey); !errors.Is(err, core.ErrStoreExist) && err != nil {
 		fmt.Println("Failed to create local store:", err)
-		os.Exit(114514)
+		os.Exit(ExitCodeFailedCreatedStore)
 	}
 
 	if store, err = core.LoadLocalStore(meta, storeOption); err != nil {
 		fmt.Println("Failed to load local store:", err)
-		os.Exit(114514)
+		os.Exit(ExitCodeFailedLoadedStore)
 	}
 
 	fmt.Println("Clearing invalid files from store...")

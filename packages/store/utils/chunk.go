@@ -2,10 +2,6 @@ package utils
 
 import (
 	"context"
-	"crypto/aes"
-	"crypto/cipher"
-	"crypto/sha256"
-	"encoding/binary"
 	"errors"
 	"fmt"
 	"io"
@@ -57,7 +53,7 @@ func SplitChunk(data io.Reader, size int64, chunkCount int, outDir string) (stri
 			return "", nil, fmt.Errorf("[split chunk] read chunk %d failed: %w", idx, err)
 		}
 		// 加密
-		encryption, err := cryptChunk(key, buf, idx)
+		encryption, err := Crypt(key, buf, idx)
 		if err != nil {
 			clearChunks()
 			return "", nil, fmt.Errorf("[split chunk] encrypt chunk %d failed: %w", idx, err)
@@ -94,6 +90,9 @@ func MergeChunk(
 	if key == "" {
 		return errors.New("[merge chunk] key is empty")
 	}
+	if out == nil {
+		return errors.New("[merge chunk] writer is nil")
+	}
 	if len(chunksName) == 0 {
 		return nil
 	}
@@ -110,70 +109,25 @@ func MergeChunk(
 			return fmt.Errorf("[merge chunk] invalid chunk name: %s", chunkName)
 		}
 
-		chunkPath := filepath.Join(chunksDir, chunkName)
-		encrypted, err := os.ReadFile(chunkPath)
+		file, err := os.Open(filepath.Join(chunksDir, chunkName))
 		if err != nil {
-			return fmt.Errorf("[merge chunk] read chunk %d failed: %w", idx, err)
+			return fmt.Errorf("[merge chunk] open chunk %d failed: %w", idx, err)
 		}
 
-		plain, err := cryptChunk(key, encrypted, idx)
+		_, err = CryptStream(key, idx, file, out, ctx)
 		if err != nil {
+			_ = file.Close()
+			if ctx.Err() != nil {
+				return ErrMergeChunkClientClosed
+			}
 			return fmt.Errorf("[merge chunk] decrypt chunk %d failed: %w", idx, err)
 		}
 
-		n, err := out.Write(plain)
+		err = file.Close()
 		if err != nil {
-			if ctx.Err() != nil {
-				return ErrMergeChunkClientClosed
-			}
-			return fmt.Errorf("[merge chunk] write chunk %d failed: %w", idx, err)
-		}
-
-		if n != len(plain) {
-			if ctx.Err() != nil {
-				return ErrMergeChunkClientClosed
-			}
-			return fmt.Errorf("[merge chunk] write chunk %d failed: %w", idx, io.ErrShortWrite)
+			return fmt.Errorf("[merge chunk] close chunk %d failed: %w", idx, err)
 		}
 	}
 
 	return nil
-}
-
-func cryptChunk(key string, data []byte, idx int) ([]byte, error) {
-	if len(data) == 0 {
-		return []byte{}, nil
-	}
-
-	var block, err = aes.NewCipher(deriveAESKey(key))
-	if err != nil {
-		return nil, err
-	}
-
-	var out = make([]byte, len(data))
-	var stream = cipher.NewCTR(block, deriveChunkIV(key, idx))
-	stream.XORKeyStream(out, data)
-
-	return out, nil
-}
-
-func deriveAESKey(key string) []byte {
-	sum := sha256.Sum256([]byte("ase-key-v1" + key))
-	return sum[:]
-}
-
-func deriveChunkIV(key string, idx int) []byte {
-	var idxBuf [8]byte
-	binary.BigEndian.PutUint64(idxBuf[:], uint64(idx)) // 大端序
-
-	h := sha256.New()
-	h.Write([]byte("chunk-iv-v1"))
-	h.Write([]byte(key))
-	h.Write(idxBuf[:])
-	sum := h.Sum(nil)
-
-	iv := make([]byte, aes.BlockSize)
-	copy(iv, sum[:aes.BlockSize])
-
-	return iv
 }

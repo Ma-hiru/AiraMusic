@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"os"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -36,7 +37,7 @@ func InitHTTP(port string, key string, registerRoutes func(*gin.Engine)) {
 		if errors.Is(err, http.ErrServerClosed) {
 			fmt.Println("HTTP server stopped.")
 		} else {
-			panic(err)
+			os.Exit(ExitCodeFailedStartServer)
 		}
 	}
 }

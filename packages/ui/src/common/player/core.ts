@@ -26,6 +26,7 @@ import AppToast from "@/common/components/display/toast";
 import RendererPlayerAudio from "./audio";
 import RendererPlayerPlaylist from "./playlist";
 import RendererPlayerHistory from "./history";
+import { RendererCache } from "@/common/lib/cache";
 
 export const enum RendererPlayerStatus {
   idle = 1,
@@ -187,16 +188,14 @@ export default class RendererPlayer extends Listenable {
         this.status = RendererPlayerStatus.idle;
         this.audio.currentTime = 0;
       } else if (this.current.track?.detail.id !== current.detail.id) {
-        if (this.current.track && this.playDurationMS > 2_000) {
-          this.history.add(
-            NeteaseHistoryRecord.fromTrack(
-              this.current.track,
-              Math.floor(this.playDurationMS / 1_000)
-            )
-          );
-        }
+        const track = this.current.track;
+        const duration = Math.floor(this.playDurationMS / 1_000);
         this.playDurationMS = 0;
-        void this.load(current, true);
+        this.load(current, true).finally(() => {
+          if (track && duration > 5) {
+            this.history.add(NeteaseHistoryRecord.fromTrack(track, duration));
+          }
+        });
       }
       this.executeListeners();
     });
@@ -323,18 +322,33 @@ export default class RendererPlayer extends Listenable {
 
   /** 恢复持久化 */
   static fromSave(save: ReturnType<typeof this.save>) {
-    const source = NeteaseLocalAudio.fromObject(save.current.audio);
-    const savedAudio = RendererPlayerAudio.fromSave(save.audio, source);
+    let audio = NeteaseLocalAudio.fromObject(save.current.audio);
+    if (audio?.isLocal() && audio.localURL) {
+      audio = NeteaseLocalAudio.fromNetwork(
+        audio,
+        RendererCache.service.read.updateKey(audio.localURL)
+      );
+    }
+
+    let cover = NeteaseLocalImage.fromObject(save.current.cover);
+    if (cover?.isLocal() && cover.localURL) {
+      cover = NeteaseLocalImage.fromNetworkImage(
+        cover,
+        RendererCache.service.read.updateKey(cover.localURL)
+      );
+    }
+
+    const playerAudio = RendererPlayerAudio.fromSave(save.audio, audio);
     const instance = new RendererPlayer({
-      audio: savedAudio,
+      audio: playerAudio,
       playlist: RendererPlayerPlaylist.fromSave(save.playlist),
       history: RendererPlayerHistory.fromSave(save.history),
       current: {
         ...save.current,
         track: NeteaseTrackRecord.fromRecordObject(save.current.track),
-        cover: NeteaseLocalImage.fromObject(save.current.cover),
-        audio: source,
-        lyric: NeteaseLyric.fromObject(save.current.lyric)
+        lyric: NeteaseLyric.fromObject(save.current.lyric),
+        audio,
+        cover
       }
     });
     queueMicrotask(async () => {
@@ -357,7 +371,7 @@ export default class RendererPlayer extends Listenable {
         if (!audio) return;
 
         instance.audio.load(audio, false);
-        instance.audio.currentTime = savedAudio.currentTime;
+        instance.audio.currentTime = playerAudio.currentTime;
       }
     });
     return instance;

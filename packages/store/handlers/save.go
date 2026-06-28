@@ -66,7 +66,7 @@ func saveFromURL(requestParam *SaveURLParams, store *core.Store, header http.Hea
 			}
 		}
 
-		queueDownload(item.Id, item.Url, requestParam.Method, nil, header)
+		queueDownload(item.Id, item.Url, requestParam.Method, nil, header, item.Category)
 	}
 }
 

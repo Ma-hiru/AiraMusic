@@ -21,7 +21,7 @@ func GetStore() *Store {
 	return store
 }
 
-func CreateLocalStore(dir string) (*StoreMeta, error) {
+func CreateLocalStore(dir string, indexKey string) (*StoreMeta, error) {
 	dir = filepath.Clean(dir)
 	if err := utils.EnsureDir(dir, 0775); err != nil {
 		return nil, err
@@ -29,29 +29,30 @@ func CreateLocalStore(dir string) (*StoreMeta, error) {
 
 	var indexPath = filepath.Join(dir, StoreIndexName)
 	var fileInfo, err = os.Stat(indexPath)
-	var meta = StoreMeta{
+	var meta = &StoreMeta{
 		storeDir:   dir,
 		indexName:  StoreIndexName,
 		version:    CurrentStoreVersion,
 		createTime: utils.GetTime(),
+		indexKey:   indexKey,
 	}
 
 	// 发生错误
 	if err != nil {
 		if os.IsNotExist(err) {
 			// 创建索引文件
-			if err = createIndexFile(&meta); err != nil {
+			if err = createIndexFile(meta); err != nil {
 				return nil, fmt.Errorf("failed to initialize index file: %v", err)
 			}
-			return &meta, nil
+			return meta, nil
 		}
 		return nil, fmt.Errorf("failed to stat index file: %v", err)
 	}
-
 	if fileInfo.IsDir() {
-		StoreIndexName = StoreIndexName + "_" + utils.RandString(8)
+		return nil, fmt.Errorf("index file is a directory")
 	}
-	return &meta, ErrStoreExist
+
+	return meta, ErrStoreExist
 }
 
 func LoadLocalStore(meta *StoreMeta, opt StoreOption) (*Store, error) {
@@ -71,7 +72,7 @@ func LoadLocalStore(meta *StoreMeta, opt StoreOption) (*Store, error) {
 		meta:   *meta,
 		option: opt,
 
-		indexHandle:     &IndexHandle{file: indexFile, mutex: sync.Mutex{}},
+		indexHandle:     &IndexHandle{file: indexFile, indexKey: meta.indexKey, mutex: sync.Mutex{}},
 		indexMapped:     make(map[string]Index),
 		indexMappedLock: sync.RWMutex{},
 

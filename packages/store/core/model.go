@@ -31,6 +31,7 @@ type StoreMeta struct {
 	indexName  string
 	version    int
 	createTime int64
+	indexKey   string
 }
 
 type StoreOption struct {
@@ -38,6 +39,7 @@ type StoreOption struct {
 	FileSchemeHost string
 	TimeLimit      time.Duration
 	Capacity       uint64
+	IndexKey       string
 }
 
 type StoreCategory = uint8
@@ -83,8 +85,9 @@ type MoveProgressChan struct {
 }
 
 type IndexHandle struct {
-	file  *os.File
-	mutex sync.Mutex
+	file     *os.File
+	indexKey string
+	mutex    sync.Mutex
 }
 
 func MimeMatchCategory(contentType string) StoreCategory {

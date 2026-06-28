@@ -4,7 +4,7 @@ import { MainRuntime } from "@/lib/runtime";
 import { MainPathResolver } from "@/lib/path-resolver";
 import { MainPortResolver } from "@/lib/port";
 import { MainServicesBase, type MainServicesCreator } from "@/lib/service";
-import { MainStoreConfig } from "@/lib/key-value-store";
+import { MainStoreForConfig } from "@/lib/key-value-store";
 import { MainCacheStoreConstants } from "@/constants/store";
 import type { MainServicesType } from "@/types/service";
 import NeteaseMusicApiService from "./ncm";
@@ -67,16 +67,25 @@ export class MainServices extends MainServicesBase {
       });
     },
     store: (ports) => {
-      const { capacity, path, ttl } = MainStoreConfig.get(
+      const { capacity, path, ttl } = MainStoreForConfig.get(
         "cache",
         MainCacheStoreConstants.DEFAULT_CONFIG
       );
+
+      let indexKey = MainStoreForConfig.get("cacheIndexKey");
+      if (!indexKey) {
+        indexKey = crypto.randomUUID();
+        MainStoreForConfig.set("cacheIndexKey", indexKey);
+      }
+      if (MainRuntime.isDev) {
+        Log.info("cacheIndexKey", indexKey);
+      }
+
       return new StoreService({
         ttl,
         capacity,
+        indexKey,
         serviceName: "store",
-        scheme: process.env.APP_SCHEME,
-        assetsHostname: process.env.APP_SCHEME_FILE_HOSTNAME,
         storePath: path,
         port: ports.store,
         path: MainPathResolver.storeServerBinaryPath,

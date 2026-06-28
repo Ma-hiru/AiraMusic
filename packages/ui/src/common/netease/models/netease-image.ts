@@ -5,6 +5,7 @@ import { type NeteaseUserModel } from "./netease-user";
 import { NeteaseTrackRecord } from "./netease-track-record";
 import { NeteaseImageSize } from "@/common/enum";
 import { NeteasePlaylistSummary } from "./netease-playlist-summary";
+import { Log } from "@/common/lib/log";
 
 export class NeteaseNetworkImage {
   url;
@@ -57,11 +58,11 @@ export class NeteaseNetworkImage {
     return this;
   }
 
-  get isNetwork() {
+  isNetwork(): this is NeteaseNetworkImage {
     return NeteaseCommonImage.isNetwork(this);
   }
 
-  get isLocal() {
+  isLocal(): this is NeteaseLocalImage {
     return NeteaseCommonImage.isLocal(this);
   }
 
@@ -123,6 +124,14 @@ export class NeteaseNetworkImage {
 
   static fromURL<T extends Optional<string>>(url: T): T extends Falsy ? null : NeteaseNetworkImage {
     if (!url) return null as T extends Falsy ? null : NeteaseNetworkImage;
+    if (!url.startsWith("http")) {
+      Log.warn("NeteaseNetworkImage.fromURL", "not network url:", url);
+      return new NeteaseNetworkImage({
+        url: "",
+        sourceID: url,
+        sourceName: "other"
+      }) as T extends Falsy ? null : NeteaseNetworkImage;
+    }
     return new NeteaseNetworkImage({
       url,
       sourceID: url,

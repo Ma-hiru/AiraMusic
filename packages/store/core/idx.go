@@ -2,8 +2,12 @@ package core
 
 import (
 	"bufio"
+	"crypto/rand"
+	"encoding/base64"
+	"encoding/binary"
 	"encoding/json"
 	"fmt"
+	"math"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -14,6 +18,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 )
+
+const encryptedIndexPrefix = "idx: "
 
 type IndexOption func(*Index)
 
@@ -136,7 +142,7 @@ func createIndexFile(meta *StoreMeta) (err error) {
 			_ = os.Remove(indexPath)
 		}
 	}()
-	var handle = &IndexHandle{file: indexFile}
+	var handle = &IndexHandle{file: indexFile, indexKey: meta.indexKey}
 	handle.mutex.Lock()
 	defer handle.mutex.Unlock()
 	return handle.WriteMeta(meta)
@@ -203,12 +209,12 @@ func writeMeta(file *os.File, meta *StoreMeta) error {
 
 // WriteIdxs 写入index文件索引信息，无锁
 func (Self *IndexHandle) WriteIdxs(idxs []Index) error {
-	return writeIdxs(Self.file, idxs)
+	return writeIdxs(Self.file, Self.indexKey, idxs)
 }
 
-func writeIdxs(file *os.File, idxs []Index) error {
+func writeIdxs(file *os.File, indexKey string, idxs []Index) error {
 	for _, index := range idxs {
-		var line, err = json.Marshal(index)
+		var line, err = marshalIndexLine(indexKey, index)
 		if err != nil {
 			return err
 		}
@@ -220,7 +226,7 @@ func writeIdxs(file *os.File, idxs []Index) error {
 	return file.Sync()
 }
 
-// ReadIdxs 读取index文件索引信息
+// ReadIdxs 读取index文件索引信息，带锁
 func (Self *IndexHandle) ReadIdxs() []Index {
 	Self.mutex.Lock()
 	defer Self.mutex.Unlock()
@@ -233,8 +239,8 @@ func (Self *IndexHandle) ReadIdxs() []Index {
 			continue
 		}
 
-		var idx Index
-		if err := json.Unmarshal([]byte(line), &idx); err != nil {
+		var idx, ok = parseIndexLine(Self.indexKey, line)
+		if !ok {
 			continue
 		}
 
@@ -247,11 +253,11 @@ func (Self *IndexHandle) ReadIdxs() []Index {
 	return indices
 }
 
-// AppendIdx 追加索引到index文件末尾
+// AppendIdx 追加索引到index文件末尾，带锁
 func (Self *IndexHandle) AppendIdx(idx Index) error {
 	Self.mutex.Lock()
 	defer Self.mutex.Unlock()
-	var line, err = json.Marshal(idx)
+	var line, err = marshalIndexLine(Self.indexKey, idx)
 	if err != nil {
 		return err
 	}
@@ -310,7 +316,7 @@ func (Self *IndexHandle) rewriteLocked(meta *StoreMeta, idxs []Index) error {
 		_ = os.Remove(tempPath)
 		return fmt.Errorf("failed to write index metadata: %w", err)
 	}
-	if err = writeIdxs(file, idxs); err != nil {
+	if err = writeIdxs(file, meta.indexKey, idxs); err != nil {
 		_ = file.Close()
 		_ = os.Remove(tempPath)
 		return fmt.Errorf("failed to write index data: %w", err)
@@ -324,6 +330,74 @@ func (Self *IndexHandle) rewriteLocked(meta *StoreMeta, idxs []Index) error {
 		return err
 	}
 	return nil
+}
+
+func marshalIndexLine(indexKey string, idx Index) ([]byte, error) {
+	plain, err := json.Marshal(idx)
+	if err != nil {
+		return nil, err
+	}
+	if indexKey == "" {
+		return plain, nil
+	}
+
+	nonce := nextIndexCryptNonce()
+	encrypted, err := utils.Crypt(indexKey, plain, nonce)
+	if err != nil {
+		return nil, err
+	}
+
+	line := encryptedIndexPrefix + strconv.Itoa(nonce) + ":" + base64.StdEncoding.EncodeToString(encrypted)
+	return []byte(line), nil
+}
+
+func parseIndexLine(indexKey string, line string) (Index, bool) {
+	var raw []byte
+	if strings.HasPrefix(line, encryptedIndexPrefix) {
+		if indexKey == "" {
+			return Index{}, false
+		}
+
+		payload := strings.TrimPrefix(line, encryptedIndexPrefix)
+		nonceRaw, encryptedRaw, ok := strings.Cut(payload, ":")
+		if !ok {
+			return Index{}, false
+		}
+
+		nonce, err := strconv.Atoi(nonceRaw)
+		if err != nil {
+			return Index{}, false
+		}
+
+		encrypted, err := base64.StdEncoding.DecodeString(encryptedRaw)
+		if err != nil {
+			return Index{}, false
+		}
+
+		raw, err = utils.Crypt(indexKey, encrypted, nonce)
+		if err != nil {
+			return Index{}, false
+		}
+	} else {
+		raw = []byte(line)
+	}
+
+	var idx Index
+	if err := json.Unmarshal(raw, &idx); err != nil {
+		return Index{}, false
+	}
+	return idx, true
+}
+
+func nextIndexCryptNonce() int {
+	var buf [8]byte
+	var maxInt = uint64(math.MaxInt)
+
+	if _, err := rand.Read(buf[:]); err == nil {
+		return int(binary.BigEndian.Uint64(buf[:]) & maxInt)
+	}
+
+	return int(uint64(utils.GetTimeNano()) & maxInt)
 }
 
 func replaceIndexFile(path, tempPath, backupPath string) error {
