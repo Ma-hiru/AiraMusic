@@ -2,9 +2,10 @@ import { Log } from "@/lib/log";
 import { MainIPC } from "@mahiru/ipc/main";
 import { MainWindowManager } from "@/lib/window-manager";
 import { MainNativeAddon } from "@/lib/native-addon";
-import { clearInterval } from "node:timers";
 import { getThumbarIcons, type TaskbarButtonIcon } from "@/utils/thumbar-button";
 import type { BrowserWindow, ThumbarButton, NativeImage } from "electron";
+
+const WM_DWMSENDICONICLIVEPREVIEWBITMAP = 0x0326;
 
 export class MainTaskBarCoverPreview {
   private static ready = false;
@@ -16,6 +17,8 @@ export class MainTaskBarCoverPreview {
   private static syncedCoverBytes?: Uint8Array;
   private static coverBuildID = 0;
   private static icons: Nullable<Record<TaskbarButtonIcon, NativeImage>> = null;
+  private static livePreviewHooked = false;
+  private static previewCapture: Nullable<Promise<void>> = null;
 
   private static sendAction(action: "next" | "pause" | "play" | "previous") {
     MainIPC.MessageChannel.commit({
@@ -90,10 +93,38 @@ export class MainTaskBarCoverPreview {
       });
   }
 
-  private static async updatePreview(handle: Buffer<ArrayBufferLike>) {
+  private static async updatePreview() {
+    const handle = this.coverHandle();
+    if (!handle) return;
+
     const preview = await this.capturePreview();
     if (!preview) return;
-    MainNativeAddon.native.setCover(handle, this.syncedCoverBytes ?? null, preview);
+
+    try {
+      MainNativeAddon.native.setLivePreview(handle, preview);
+    } catch (err) {
+      Log.warn("taskbar", "failed to update taskbar live preview", err);
+    }
+  }
+
+  private static requestLivePreview() {
+    if (this.previewCapture) return;
+    this.previewCapture = this.updatePreview().finally(() => {
+      this.previewCapture = null;
+    });
+  }
+
+  private static attachLivePreviewHook(win: BrowserWindow) {
+    if (this.livePreviewHooked || !MainNativeAddon.isSupported) return;
+
+    win.hookWindowMessage(WM_DWMSENDICONICLIVEPREVIEWBITMAP, () => {
+      this.requestLivePreview();
+    });
+    win.once("closed", () => {
+      this.livePreviewHooked = false;
+      this.previewCapture = null;
+    });
+    this.livePreviewHooked = true;
   }
 
   private static async updateCover(handle: Buffer<ArrayBufferLike>) {
@@ -103,13 +134,10 @@ export class MainTaskBarCoverPreview {
     const buildID = ++this.coverBuildID;
     const check = () => buildID === this.coverBuildID && currentCover === this.cover;
 
-    const preview = await this.capturePreview();
-    if (!check()) return;
-
     if (!currentCover) {
       this.syncedCover = undefined;
       this.syncedCoverBytes = undefined;
-      MainNativeAddon.native.setCover(handle, null, preview);
+      MainNativeAddon.native.setCover(handle, null);
       return;
     }
 
@@ -118,10 +146,9 @@ export class MainTaskBarCoverPreview {
 
     this.syncedCover = currentCover;
     this.syncedCoverBytes = cover ?? undefined;
-    MainNativeAddon.native.setCover(handle, cover, preview);
+    MainNativeAddon.native.setCover(handle, cover);
   }
 
-  private static previewTimer: Nullable<NodeJS.Timeout> = null;
   private static async build() {
     const win = MainWindowManager.get("main");
     this.updateButtons(win);
@@ -130,11 +157,6 @@ export class MainTaskBarCoverPreview {
     if (!handle) return;
 
     await this.updateCover(handle);
-    this.previewTimer && clearInterval(this.previewTimer);
-    this.previewTimer = setInterval(() => {
-      const handle = this.coverHandle();
-      handle && this.updatePreview(handle);
-    }, 2000);
   }
 
   static {
@@ -164,10 +186,12 @@ export class MainTaskBarCoverPreview {
 
     if (win.isVisible()) {
       this.ready = true;
+      this.attachLivePreviewHook(win);
       void this.build();
     } else {
       win.once("show", () => {
         this.ready = true;
+        this.attachLivePreviewHook(win);
         void this.build();
       });
     }
