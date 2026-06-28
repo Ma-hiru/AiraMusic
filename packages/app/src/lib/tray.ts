@@ -17,6 +17,7 @@ import { MainWindowPreset } from "@/lib/window-preset";
 import { MainHandle } from "@/lib/handle";
 import { MainExitCodeConstants } from "@/constants/exit-code";
 import { debounce } from "lodash-es";
+import { MainWindowConstants } from "@/constants/window";
 import type { MessageData } from "@mahiru/ipc/types";
 
 export class MainTray {
@@ -28,9 +29,24 @@ export class MainTray {
   }
 
   private static playerBus: Nullable<MessageData<"bus_deliver_track_meta">> = null;
+  private static customMenuVisible = false;
 
   private static createIcon() {
     return nativeImage.createFromPath(MainPathResolver.appLogoPath);
+  }
+
+  private static hideCustomMenu(trayWin: BrowserWindow) {
+    if (!this.customMenuVisible) return;
+
+    this.customMenuVisible = false;
+    trayWin.setIgnoreMouseEvents(true);
+    trayWin.setOpacity(0);
+    trayWin.setPosition(
+      MainWindowConstants.TRAY_HIDDEN_POINT.x,
+      MainWindowConstants.TRAY_HIDDEN_POINT.y,
+      false
+    );
+    trayWin.isFocused() && trayWin.blur();
   }
 
   private static createMenu(tray: Tray) {
@@ -43,27 +59,30 @@ export class MainTray {
     } else {
       const trayWin =
         MainWindowManager.get("tray") || MainWindowCreator.create(MainWindowPreset.trayOnWindows)!;
-      const showMenu = debounce(() => this.showCustomMenu(tray, trayWin), 300);
+      const showMenu = () => this.showCustomMenu(tray, trayWin);
+      const showMenuDebounced = debounce(showMenu, 300);
       tray.addListener("click", () => {
         Log.debug("tray", "click");
-        showMenu();
+        showMenuDebounced();
       });
       tray.addListener("double-click", () => {
         Log.debug("tray", "double-click");
+        showMenuDebounced.cancel();
         MainWindowManager.checkAndShow("main");
         MainWindowManager.get("miniplayer")?.hide();
       });
       tray.addListener("right-click", () => {
         Log.debug("tray", "right-click");
+        showMenuDebounced.cancel();
         showMenu();
       });
       trayWin.addListener("blur", () => {
         if (!trayWin.webContents.isDevToolsOpened()) {
-          trayWin.isVisible() && trayWin.hide();
+          this.hideCustomMenu(trayWin);
         }
       });
       trayWin.webContents.addListener("before-input-event", (_, input) => {
-        if (input.key === "Escape") trayWin.hide();
+        if (input.key === "Escape") this.hideCustomMenu(trayWin);
       });
     }
 
@@ -279,8 +298,12 @@ export class MainTray {
       y = trayBounds.y + trayBounds.height + 4;
     }
 
-    trayWin.setPosition(x, y);
-    setTimeout(() => !trayWin.isVisible() && trayWin.showInactive(), 50);
-    setTimeout(() => trayWin.focus(), 100);
+    if (!this.customMenuVisible) trayWin.setOpacity(0);
+    trayWin.setIgnoreMouseEvents(false);
+    trayWin.setPosition(x, y, false);
+    if (!trayWin.isVisible()) trayWin.show();
+    trayWin.focus();
+    trayWin.setOpacity(1);
+    this.customMenuVisible = true;
   }
 }

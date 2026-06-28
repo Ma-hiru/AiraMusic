@@ -34,6 +34,7 @@ type TrayAction = {
 
 const TrayPage: FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const contentSizeRef = useRef<Nullable<{ height: number; width: number }>>(null);
   const trackMetaBus = useListenable(RendererIPCMessageBus.trackMeta);
   const progressBus = useListenable(RendererIPCMessageBus.progress);
   const currentWindow = useListenable(RendererWindow.current);
@@ -55,6 +56,10 @@ const TrayPage: FC = () => {
       frame = window.requestAnimationFrame(() => {
         const width = Math.ceil(container.offsetWidth || window.innerWidth);
         const height = Math.ceil(container.offsetHeight || window.innerHeight);
+        const currentSize = contentSizeRef.current;
+        if (currentSize?.width === width && currentSize.height === height) return;
+
+        contentSizeRef.current = { height, width };
         const deltaX = window.innerWidth - width;
         const deltaY = window.innerHeight - height;
 

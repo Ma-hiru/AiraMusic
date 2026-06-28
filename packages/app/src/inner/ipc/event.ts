@@ -4,7 +4,19 @@ import { MainWindowPreset } from "@/lib/window-preset";
 import { MainWindowManager } from "@/lib/window-manager";
 import { Log } from "@/lib/log";
 import { MainHandle } from "@/lib/handle";
+import { MainWindowConstants } from "@/constants/window";
 import type { EventHandlers } from "@mahiru/ipc/types";
+
+function concealTrayWindow(win: BrowserWindow) {
+  win.setIgnoreMouseEvents(true);
+  win.setOpacity(0);
+  win.setPosition(
+    MainWindowConstants.TRAY_HIDDEN_POINT.x,
+    MainWindowConstants.TRAY_HIDDEN_POINT.y,
+    false
+  );
+  win.isFocused() && win.blur();
+}
 
 export const eventHandlers: EventHandlers = {
   event_window_open: (e, type) => {
@@ -78,6 +90,10 @@ export const eventHandlers: EventHandlers = {
   event_window_hidden: (e, type) => {
     const win = type ? MainWindowManager.get(type) : BrowserWindow.fromWebContents(e.sender);
     Log.debug("event_window_hidden", type, "win found:", !!win);
+    if (type === "tray" && win?.isVisible()) {
+      concealTrayWindow(win);
+      return;
+    }
     win?.isVisible() && win.hide();
   },
   event_window_minimize: (e, type) => {
@@ -112,10 +128,19 @@ export const eventHandlers: EventHandlers = {
       width: Math.floor(props.width ?? current.width),
       height: Math.floor(props.height ?? current.height)
     };
+    if (
+      next.x === current.x &&
+      next.y === current.y &&
+      next.width === current.width &&
+      next.height === current.height
+    ) {
+      return;
+    }
     const resizable = win.resizable;
     win.setResizable(true);
     win.setBounds(next);
     win.setResizable(resizable);
+    Log.debug("event_window_resize", "next:", next, "current:", current);
   },
   event_window_pin: (e, { type, pin, level }) => {
     const win = type ? MainWindowManager.get(type) : BrowserWindow.fromWebContents(e.sender);
@@ -132,21 +157,28 @@ export const eventHandlers: EventHandlers = {
     if (!win) return;
 
     const { x, y, deltaX, deltaY } = props;
-    if (x && y) {
-      win.setBounds({
+    if (x !== undefined && y !== undefined) {
+      const next = {
         x: Math.floor(x),
         y: Math.floor(y),
         width: win.getBounds().width,
         height: win.getBounds().height
-      });
-    } else if (deltaX && deltaY) {
+      };
       const current = win.getBounds();
-      win.setBounds({
+      if (next.x === current.x && next.y === current.y) return;
+      win.setBounds(next);
+      Log.debug("event_window_move", "next:", next, "current:", current);
+    } else if (deltaX !== undefined && deltaY !== undefined) {
+      const current = win.getBounds();
+      const next = {
         x: Math.floor(current.x + deltaX),
         y: Math.floor(current.y + deltaY),
         width: current.width,
         height: current.height
-      });
+      };
+      if (next.x === current.x && next.y === current.y) return;
+      win.setBounds(next);
+      Log.debug("event_window_move", "next:", next, "current:", current);
     }
   },
   event_window_penetrate: (e, props) => {
