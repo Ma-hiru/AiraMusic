@@ -18,7 +18,7 @@
     "@neteasecloudmusicapienhanced/api": "4.36.1",
     "electron-store": "^11.0.2",
     "express": "^5.1.0",
-    "express-http-proxy": "^2.1.2",
+    "http-proxy-3": "^1.23.3",
     "lodash-es": "4.17.23",
     "mime": "^4.1.0",
     "zod": "^4.4.3"
