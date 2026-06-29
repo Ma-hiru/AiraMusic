@@ -52,7 +52,6 @@
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.2",
     "@vitejs/plugin-react": "^6.0.1",
-    "babel-plugin-react-compiler": "^1.0.0",
     "baseline-browser-mapping": "^2.9.18",
     "immer": "^11.1.4",
     "sass-embedded": "^1.93.3",

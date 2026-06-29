@@ -54,7 +54,7 @@ const UserDetail: FC<UserDetailProps> = ({ user, logout, login }) => {
             <span
               className={cx(
                 `text-[10px] font-semibold  rounded-sm px-1.5 border border-white/30`,
-                user?.isVIP() && "bg-primary text-(--text-color-on-main)"
+                user?.isVIP() && "bg-primary text-primary-text"
               )}>
               VIP
             </span>
@@ -76,7 +76,7 @@ const UserDetail: FC<UserDetailProps> = ({ user, logout, login }) => {
           mt-4 flex h-9 w-full items-center justify-center gap-2 rounded-md
           border border-white/30 text-[12px] font-bold
           transition-all duration-300 hover:border-primary/40
-          hover:bg-primary hover:text-(--text-color-on-main)
+          hover:bg-primary hover:text-primary-text
           active:scale-[0.98] cursor-pointer
           `
         )}>

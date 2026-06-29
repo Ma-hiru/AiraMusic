@@ -12,11 +12,11 @@ import {
 import { cx } from "@emotion/css";
 import { TimeManager } from "./time-manager";
 import { debounce } from "lodash-es";
+import { useLatestRef } from "@/common/hooks/use-latest-ref";
 
 import LyricLine from "./lyric-line";
 import RendererTheme from "@/common/player/ui";
 import LyricTips from "./lyric-tips";
-import { useLatestRef } from "@/common/hooks/use-latest-ref";
 
 const edgeFadeMask =
   "linear-gradient(to bottom, transparent 0, #000 min(12%, 56px), #000 calc(100% - min(12%, 56px)), transparent 100%)";
@@ -139,7 +139,7 @@ const LyricContainer: FC<LyricContainerProps> = ({
 
   // 窗口大小变化时，计算布局
   useEffect(() => {
-    const cb = debounce(calcLayout, 500);
+    const cb = debounce(calcLayout, 1000);
     window.addEventListener("resize", cb, { passive: true });
     return () => {
       window.removeEventListener("resize", cb);

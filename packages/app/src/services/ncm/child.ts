@@ -32,20 +32,25 @@ class NeteaseMusicApiChildService extends MainChild<NCMParentMessage, NCMChildMe
    */
   private async ensureXeapiKey() {
     const keyPath = join(os.tmpdir(), "xeapi_public_key");
+    let current: Record<string, unknown> = {};
     try {
-      let current: Record<string, unknown> = {};
-      try {
-        current = JSON.parse(await readFile(keyPath, "utf-8"));
-      } catch {
-        /* 公钥文件不存在或损坏 ignore */
-      }
+      current = JSON.parse(await readFile(keyPath, "utf-8"));
+    } catch {
+      /* 公钥文件不存在或损坏 ignore */
+    }
+
+    try {
       const { default: xeapiKey } =
         await import("@neteasecloudmusicapienhanced/api/util/xeapiKey.js");
       const g = globalThis as { deviceId?: string };
       const publicKey = await xeapiKey.getXeapiPublicKey(current, g.deviceId ?? "");
       await writeFile(keyPath, JSON.stringify(publicKey), "utf-8");
     } catch (err) {
-      this.sendError(err);
+      console.log(
+        "xeapi public key refresh failed, continue with",
+        current["sk"] ? "cached key" : "no key",
+        err
+      );
     }
   }
 

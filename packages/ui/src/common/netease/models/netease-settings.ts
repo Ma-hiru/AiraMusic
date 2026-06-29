@@ -35,10 +35,10 @@ export const defaultSettings: NeteaseSettingsModel = {
     spectrumFps: 30,
     windowPreload: true,
     useHomeFluid: true,
-    homeFluidSpeed: 5,
+    homeFluidSpeed: 7,
     homeFluidWithPlaying: false,
     usePlayerFluid: true,
-    playerFluidSpeed: 3,
+    playerFluidSpeed: 5,
     playerFluidWithPlaying: true
   },
   preference: {

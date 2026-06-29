@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import RendererPlayerHandle from "@/wins/main/lib/handle";
 
 export function useProgress() {
-  "use no memo";
   const player = RendererPlayerHandle.usePlayer();
   const [progress, setProgress] = useState(player.audio.progress);
 

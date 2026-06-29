@@ -1,7 +1,7 @@
 import wasm from "vite-plugin-wasm";
 import tailwindcss from "@tailwindcss/vite";
 import babel from "@rolldown/plugin-babel";
-import react, { reactCompilerPreset } from "@vitejs/plugin-react";
+import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import { fileURLToPath } from "node:url";
 import { join } from "node:path";
@@ -25,7 +25,7 @@ export default defineConfig(({ mode }) => {
       react(),
       tailwindcss(),
       babel({
-        presets: [reactCompilerPreset()],
+        // presets: [reactCompilerPreset()],
         plugins: [["@babel/plugin-proposal-decorators", { version: "2023-11" }]]
       })
     ],

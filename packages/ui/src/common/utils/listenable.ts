@@ -51,22 +51,38 @@ export abstract class Listenable<const EventName = string> {
     this._innerCount++;
   }
 
+  private queue = new Set<EventName>();
   protected executeListeners(event?: EventName, mode = this.updateMode) {
     switch (mode) {
       case "sync":
         return this.flushListeners(event);
-      case "microtask":
+      case "microtask": {
+        event && this.queue.add(event);
         if (this.listenerMicrotaskPending) return;
         this.listenerMicrotaskPending = true;
         return queueMicrotask(() => {
+          let refresh = true;
+          for (const event of this.queue.values()) {
+            this.queue.delete(event);
+            this.flushListeners(event);
+            refresh = false;
+          }
+          refresh && this.flushListeners();
           this.listenerMicrotaskPending = false;
-          this.flushListeners(event);
         });
+      }
       case "debounce":
+        event && this.queue.add(event);
         this.listenerTimer && window.clearTimeout(this.listenerTimer);
         this.listenerTimer = window.setTimeout(() => {
           this.listenerTimer = null;
-          this.flushListeners(event);
+          let refresh = true;
+          for (const event of this.queue.values()) {
+            this.queue.delete(event);
+            this.flushListeners(event);
+            refresh = false;
+          }
+          refresh && this.flushListeners();
         }, this.updateGap);
         return;
     }

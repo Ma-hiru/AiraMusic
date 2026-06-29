@@ -7,20 +7,6 @@ import RendererPlayer from "@/common/player/core";
 export default class RendererPlayerHandle {
   //region inner
   private static _player: Nullable<RendererPlayer>;
-  private static _usePlayer: Nullable<() => RendererPlayer>;
-
-  private static createAppPlayerHook(instance: Optional<RendererPlayer>) {
-    const player = instance ?? new RendererPlayer();
-
-    function useAppPlayer() {
-      return useListenable(player);
-    }
-
-    return {
-      player,
-      useAppPlayer
-    };
-  }
 
   private static savePlayer() {
     if (!this._player) return;
@@ -36,9 +22,7 @@ export default class RendererPlayerHandle {
   }
 
   private static setupPlayer() {
-    const { player, useAppPlayer } = this.createAppPlayerHook(this.loadPlayer());
-    this._player = player;
-    this._usePlayer = useAppPlayer;
+    this._player = this.loadPlayer() ?? new RendererPlayer();
     return this;
   }
 
@@ -56,8 +40,8 @@ export default class RendererPlayerHandle {
   }
 
   static get usePlayer() {
-    if (!this._usePlayer) this.setupPlayer();
-    return this._usePlayer!;
+    if (!this._player) this.setupPlayer();
+    return usePlayer;
   }
 
   static [Symbol.dispose]() {
@@ -67,4 +51,8 @@ export default class RendererPlayerHandle {
   static {
     this.setupPlayer().setupMini();
   }
+}
+
+function usePlayer() {
+  return useListenable(RendererPlayerHandle.player);
 }

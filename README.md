@@ -146,7 +146,7 @@ packages/native ── 主进程使用的 Rust + napi-rs 原生插件（Windows 
 ### 开发模式
 
 ```bash
-  yarn build:bin  # 首次运行
+  yarn build:bin  # 首次运行或修改rust、go项目后
   yarn dev
 ```
 
