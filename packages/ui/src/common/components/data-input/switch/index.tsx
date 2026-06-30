@@ -4,11 +4,20 @@ import { cx } from "@emotion/css";
 interface SwitchProps {
   className?: string;
   label?: ReactNode;
-  checked: boolean;
-  onClick: NormalFunc;
+  checked?: boolean;
+  onClick?: NormalFunc;
+  onChange?: NormalFunc<[checked: boolean]>;
+  underlineClassName?: string;
 }
 
-const Switch: FC<SwitchProps> = ({ checked, onClick, className, label }) => {
+const Switch: FC<SwitchProps> = ({
+  checked,
+  onClick,
+  className,
+  label,
+  underlineClassName,
+  onChange
+}) => {
   return (
     <button
       type="button"
@@ -26,12 +35,16 @@ const Switch: FC<SwitchProps> = ({ checked, onClick, className, label }) => {
         `,
         className
       )}
-      onClick={onClick}>
+      onClick={() => {
+        onClick?.();
+        onChange?.(!checked);
+      }}>
       {label}
       <span
         className={cx(
           "absolute w-full h-0.5 bottom-0 bg-primary hidden",
-          checked && "inline-block"
+          checked && "inline-block",
+          underlineClassName
         )}
       />
     </button>

@@ -29,11 +29,7 @@ const Tabs: FC<TabsProps> = ({
         <span className="ml-1">条评论</span>
       </h1>
       <div className="flex items-center justify-end gap-1">
-        <Switch
-          label="跟随"
-          checked={dynamicContent}
-          onClick={() => setDynamicContent(!dynamicContent)}
-        />
+        <Switch label="跟随" checked={dynamicContent} onChange={setDynamicContent} />
         <SectionTab
           mode="less-theme"
           className="text-[10px]"

@@ -61,8 +61,12 @@ const Item: FC<ItemProps> = ({ data, sourceID, type }) => {
         className="text-sm font-medium flex flex-row items-start justify-start gap-2">
         <NeteaseImage
           cache
+          preview
           cacheLazy
-          className="size-8 rounded-full shrink-0 border"
+          className="
+            size-8 rounded-full shrink-0 border cursor-pointer
+            ease-in-out duration-300 transition-opacity hover:opacity-50
+          "
           shadow="base"
           image={NeteaseNetworkImage.fromURL(data.user.avatarUrl)
             ?.setSize(NeteaseImageSize.sm)

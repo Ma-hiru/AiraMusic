@@ -501,7 +501,7 @@ export class RendererWindow extends Listenable<RendererWindowEvent | "react-read
           sendStatus();
         }
       });
-      setTimeout(sendStatus, 200);
+      setTimeout(sendStatus, 500);
     });
   }
 }

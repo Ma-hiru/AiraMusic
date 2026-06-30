@@ -20,7 +20,7 @@ export default class AppModal {
   static __renderGetter: NormalFunc<[], Nullable<ModalRender>> = defaultHandler;
   static __visibleGetter: NormalFunc<[], boolean> = () => defaultHandler() || false;
 
-  static _create<U extends unknown[]>(creator: NormalFunc<U, ModalRender>, ...props: U) {
+  static _create<const U extends unknown[]>(creator: NormalFunc<U, ModalRender>, ...props: U) {
     AppModal.__setModalData?.(creator(...props));
     AppModal.__setModalVisible?.(true);
     return AppModal.__visibleGetter;

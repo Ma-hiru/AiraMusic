@@ -33,9 +33,14 @@ const UserDetail: FC<UserDetailProps> = ({ user, logout, login }) => {
         {avatar ? (
           <NeteaseImage
             cache
+            preview
             cacheLazy={false}
             image={avatar}
-            className="size-16 rounded-md border border-white/30"
+            className="
+              size-16 rounded-md border border-white/30
+              cursor-pointer hover:opacity-50
+              ease-in-out duration-300 transition-opacity
+            "
             shadow="float"
           />
         ) : (
