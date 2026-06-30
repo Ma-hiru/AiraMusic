@@ -65,14 +65,14 @@ interface PlaylistProps {
   playableManager: Optional<TrackListPlayableManager>;
   addToPlaylistNext: NormalFunc<[track: NeteaseTrackRecord]>;
   addToPlaylistLast: NormalFunc<[track: NeteaseTrackRecord]>;
-  addTrackToPlaylist: NormalFunc<[track: NeteaseTrackRecord]>;
-  addTracksToPlaylist?: NormalFunc<[tracks: NeteaseTrackRecord[]]>;
+  addTrackToPlaylist: PromiseFunc<[track: NeteaseTrackRecord], boolean>;
+  addTracksToPlaylist: PromiseFunc<[tracks: NeteaseTrackRecord[]], boolean>;
   openComment: NormalFunc<[track: NeteaseTrackRecord]>;
   onReplace: NormalFunc;
   onAddList: NormalFunc;
   onClickAlbum: NormalFunc<[id: number]>;
   onClickArtist: NormalFunc<[id: number]>;
-  onEdited: Optional<NormalFunc>;
+  onEdited: Optional<NormalFunc<[modifiedCover: boolean]>>;
   onDeleted?: NormalFunc;
   canScrollTop: Optional<NormalFunc<[enable: boolean]>>;
   canFastLocate: Optional<NormalFunc<[enable: boolean]>>;
@@ -167,18 +167,22 @@ const Playlist: FC<PlaylistProps> = ({
   }, [canFastLocate, activeTrackID, tracks]);
   // 切换歌单时重置状态 / 刷新
   const update = useUpdate();
-  const reload = useCallback(() => {
-    startTransition(() => {
-      setStatus("loading");
-      update();
-    });
-  }, [update]);
+  const forceUpdateRef = useRef(false);
+  const reload = useCallback(
+    (forceUpdate = false) => {
+      startTransition(() => {
+        forceUpdate && (forceUpdateRef.current = true);
+        setStatus("loading");
+        update();
+      });
+    },
+    [update]
+  );
 
   // 批量选择 + 删除
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(() => new Set());
-  const editable =
-    !!playlist && playlist.creator?.userId === user?.profile.userId && source !== "like";
+  const editable = !!playlist && playlist.creator?.userId === user?.profile.userId;
   // 选择切换
   const onToggleSelect = useCallback((id: number) => {
     setSelectedIds((prev) => {
@@ -258,11 +262,11 @@ const Playlist: FC<PlaylistProps> = ({
     ok && exitSelection();
   }, [selectedIds, removeTracks, exitSelection]);
 
-  const onBatchAdd = useCallback(() => {
+  const onBatchAdd = useCallback(async () => {
     const selected = totalTracks.current.filter((t) => selectedIds.has(t.id));
     if (selected.length === 0) return;
-    addTracksToPlaylist?.(selected);
-    exitSelection();
+    const ok = await addTracksToPlaylist?.(selected);
+    ok && exitSelection();
   }, [addTracksToPlaylist, exitSelection, selectedIds]);
 
   const removeSingle = useCallback(
@@ -293,14 +297,16 @@ const Playlist: FC<PlaylistProps> = ({
   }, [id, source, searcher]);
   // 数据加载
   useEffect(() => {
-    let cancel = false;
+    const controller = new AbortController();
     if (source === "normal" || source === "like") {
       const playlistID = source === "like" ? user?.likedPlaylist.id : Number(id);
       if (playlistID) {
-        NeteaseServicesPlaylist.id(playlistID)
+        const forceUpdate = forceUpdateRef.current;
+        forceUpdateRef.current = false;
+        NeteaseServicesPlaylist.id(playlistID, controller.signal, !forceUpdate)
           .then((list) => {
             startTransition(() => {
-              if (cancel) return;
+              if (controller.signal.aborted) return;
               const tracks = NeteaseTrackRecord.fromPlaylist(list);
               searcher.update(NeteaseTrack.toSearchStructString(list.tracks));
               totalTracks.current = tracks;
@@ -310,7 +316,7 @@ const Playlist: FC<PlaylistProps> = ({
             });
           })
           .catch((err) => {
-            if (cancel) return;
+            if (controller.signal.aborted) return;
             startTransition(() => setStatus("error"));
             Log.error(err);
             AppToast.show({
@@ -322,7 +328,7 @@ const Playlist: FC<PlaylistProps> = ({
     }
 
     return () => {
-      cancel = true;
+      controller.abort();
     };
   }, [
     id,
@@ -364,6 +370,7 @@ const Playlist: FC<PlaylistProps> = ({
           <Top
             editable={editable}
             loading={false}
+            source={source}
             summary={playlist}
             onPlayAll={onReplace}
             onAddList={onAddList}
@@ -373,11 +380,9 @@ const Playlist: FC<PlaylistProps> = ({
             onPageAction={onPageAction}
             pageActionType={pageActionType}
             coverCacheKey={source === "like" ? String(user?.likedTrackIDs.checkPoint) : undefined}
-            onEdited={() => {
-              reload();
-              onEdited?.();
-            }}
+            onEdited={onEdited}
             onDeleted={onDeleted}
+            reload={reload}
             selectionMode={selectionMode}
             onToggleSelectionMode={toggleSelectionMode}
           />

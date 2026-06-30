@@ -81,7 +81,7 @@ const HomePage: FC<object> = () => {
         {!!(mounted & 0b1) && (
           <section
             className={cx(
-              "grid grid-cols-1 items-stretch gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(320px,24rem)]",
+              "grid grid-cols-1 items-center gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(320px,24rem)]",
               activeChannel !== "recommend" && "hidden"
             )}>
             <Banner className="min-w-0 contain-layout" />

@@ -1,4 +1,4 @@
-import { type FC, memo, useCallback, useEffect, useRef } from "react";
+import { type FC, memo, useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import { useUser } from "@/common/store/user";
 import { RoutePathMain } from "@/common/routes";
@@ -13,7 +13,7 @@ import { useRouterActive } from "@/common/hooks/use-router-active";
 import { scrollActionsAtom, typingAtom } from "@/wins/main/atoms/layout";
 import { useTrackAddToPlaylist } from "@/common/hooks/use-track-add-to-playlist";
 import { RendererModified } from "@/common/lib/modified";
-import { RendererIPCMessageBus } from "@/common/lib/bus";
+import { usePlaylistModifySync } from "@/common/hooks/use-playlist-modify-sync";
 
 import Playlist, { type PlaylistRef } from "@/common/components/page/playlist";
 
@@ -56,19 +56,10 @@ const PlaylistPage: FC<object> = () => {
   const { addTrackToPlaylist, addTracksToPlaylist } = useTrackAddToPlaylist(
     source === "normal" && id ? Number(id) : undefined
   );
+  // 通过 ipc 同步歌单修改时的重载
+  const { onEdited, onDeleted } = usePlaylistModifySync(id, source);
 
   const setIsTyping = useSetAtom(typingAtom);
-
-  const onEdited = useCallback(() => {
-    RendererIPCMessageBus.modified.twoWay({
-      type: "user-playlist"
-    });
-  }, []);
-
-  const onDeleted = useCallback(() => {
-    RendererIPCMessageBus.modified.twoWay({ type: "user-playlist" });
-    RendererIPCMessageBus.modified.twoWay({ type: "remove-playlist", id });
-  }, [id]);
 
   useEffect(() => {
     if (!id && !source) return;

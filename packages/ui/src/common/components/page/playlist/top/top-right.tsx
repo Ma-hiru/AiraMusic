@@ -1,6 +1,6 @@
 import { type FC, memo, useCallback } from "react";
 import { cx } from "@emotion/css";
-import { ListChecks, SquarePen, Trash2 } from "lucide-react";
+import { Ellipsis, ListChecks, RotateCwSquare, SquarePen, Trash2 } from "lucide-react";
 import { NeteasePlaylist } from "@/common/netease/models";
 import { NeteaseAPIPlaylist } from "@/common/netease/api";
 import { Log } from "@/common/lib/log";
@@ -9,24 +9,29 @@ import AppToast from "@/common/components/display/toast";
 
 import Search from "@/common/components/data-input/search";
 import PageAction from "@/common/components/display/page-action";
+import IconButton from "@/common/components/data-input/icon-button";
 
 interface TopRightProps {
-  summary: Nullable<NeteasePlaylist>;
   editable: boolean;
+  summary: Nullable<NeteasePlaylist>;
+  source: Nullable<"like" | "normal">;
   searchTracks: NormalFunc<[k: string]>;
   setTying: NormalFunc<[typing: boolean]>;
   pageActionType?: "enter" | "out" | "none";
   onPageAction?: NormalFunc;
   /** 编辑保存成功后刷新歌单页 */
-  onEdited?: NormalFunc;
+  onEdited?: Optional<NormalFunc<[modifiedCover: boolean]>>;
   /** 删除歌单成功后离开当前页 */
   onDeleted?: NormalFunc;
+  reload?: NormalFunc;
   selectionMode?: boolean;
   onToggleSelectionMode?: NormalFunc;
 }
 
 const TopRight: FC<TopRightProps> = ({
   summary,
+  source,
+  reload,
   searchTracks,
   editable,
   setTying,
@@ -69,34 +74,63 @@ const TopRight: FC<TopRightProps> = ({
 
   return (
     <div className="flex h-full flex-col justify-between items-end text-[12px]">
-      <div className="flex items-center gap-2">
-        <ListChecks
-          onClick={onToggleSelectionMode}
-          className={cx(
-            "size-5 cursor-pointer select-none ease-in-out transition-all duration-300",
-            selectionMode ? "text-primary-text" : "hover:opacity-50"
-          )}
+      <div className="flex items-center gap-2 group relative">
+        <IconButton
+          icon={Ellipsis}
+          label="更多"
+          size="compact"
+          variant="ghost"
+          show={editable && source !== "like"}
+          className="group-hover:opacity-0 absolute right-21 duration-500! group-hover:duration-0!"
         />
-        {editable && (
-          <SquarePen
-            onClick={() =>
-              summary &&
-              create(createPlaylistEditModal, {
-                playlist: summary,
-                onSaved: onEdited,
-                onTyping: setTying
-              })
-            }
-            className="size-5 cursor-pointer select-none hover:opacity-50 ease-in-out transition-all duration-300"
-          />
-        )}
-        {editable && (
-          <Trash2
-            onClick={onDelete}
-            className="size-5 cursor-pointer select-none ease-in-out transition-all duration-300 hover:text-red-500"
-          />
-        )}
-        <PageAction type={pageActionType} onClick={onPageAction} />
+        <IconButton
+          icon={SquarePen}
+          label="编辑"
+          size="compact"
+          variant="ghost"
+          show={editable && source !== "like"}
+          className="scale-94! opacity-0 pointer-events-none group-hover:pointer-events-auto group-hover:opacity-100 duration-300!"
+          onClick={() =>
+            summary &&
+            create(createPlaylistEditModal, {
+              playlist: summary,
+              onSaved: onEdited ?? undefined,
+              onTyping: setTying
+            })
+          }
+        />
+        <IconButton
+          icon={Trash2}
+          label="删除"
+          size="compact"
+          variant="ghost"
+          onClick={onDelete}
+          show={editable && source !== "like"}
+          className="scale-96! opacity-0 pointer-events-none group-hover:pointer-events-auto group-hover:opacity-100 duration-300!"
+        />
+        <IconButton
+          icon={ListChecks}
+          label="选择"
+          size="compact"
+          variant="ghost"
+          onClick={onToggleSelectionMode}
+          className={cx("scale-102!", selectionMode && "text-secondary")}
+        />
+        <IconButton
+          icon={RotateCwSquare}
+          label="刷新"
+          size="compact"
+          variant="ghost"
+          onClick={reload}
+          className="scale-110!"
+        />
+        <PageAction
+          type={pageActionType}
+          size="compact"
+          variant="ghost"
+          onClick={onPageAction}
+          className="scale-98!"
+        />
       </div>
       <div className="flex flex-col items-end justify-end">
         <Search onSearch={searchTracks} setIsTyping={setTying} />

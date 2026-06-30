@@ -31,6 +31,7 @@ interface AcrylicBackgroundProps {
    *  调高更明显但更亮（亮封面下可读性下降）
    * */
   gradient_alpha?: number;
+  onLoaded?: NormalFunc;
 }
 
 // 公转（translate 跟随 rotate 形成轨道）+ 自转 + 呼吸缩放，比纯旋转的动感明显得多
@@ -128,7 +129,8 @@ const AcrylicBackground: FC<AcrylicBackgroundProps> = ({
   themeColors,
   scrim_factor = 0.3,
   scrim_max = 0.28,
-  gradient_alpha = 0.5
+  gradient_alpha = 0.5,
+  onLoaded
 }) => {
   const [current, setCurrent] = useState(src);
   const [next, setNext] = useState<string>();
@@ -208,6 +210,7 @@ const AcrylicBackground: FC<AcrylicBackgroundProps> = ({
           draggable={false}
           alt={alt ?? ""}
           className={imgClasses}
+          onLoad={onLoaded}
           style={{
             transition: stage === "fade" ? `opacity ${duration}ms ease` : "none",
             opacity: stage === "fade" ? 0 : opacity,

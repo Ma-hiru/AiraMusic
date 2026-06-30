@@ -127,13 +127,13 @@ export default function LyricPage() {
     }, 2500);
   }, []);
   // control组件始终在屏幕边缘一侧，歌词组件在屏幕内部一侧
-  const [reverseControl, setReverseControl] = useState(true);
+  const [reverseControl, setReverseControl] = useState(false);
   useLayoutEffect(() => {
     const update = () => {
       RendererWindow.current.bounds.then(({ x, y, height, workAreaHeight }) => {
         const screenHeight = window.screen.height;
-        if (y < screenHeight / 10) setReverseControl(true);
-        else if (y + height > (screenHeight * 9) / 10) setReverseControl(false);
+        if (y < screenHeight / 10) setReverseControl(false);
+        else if (y + height > (screenHeight * 9) / 10) setReverseControl(true);
         if (y + height > workAreaHeight) {
           RendererWindow.current.move({
             x,
@@ -146,16 +146,20 @@ export default function LyricPage() {
     return RendererWindow.current.addEventListener("moved", update);
   }, []);
 
+  useEffect(() => {
+    RendererIPCMessageBus.updater.deliver("track-meta");
+  }, []);
+
   return (
     <div
       className={cx(
         `w-screen h-screen overflow-hidden relative flex rounded-md`,
-        reverseControl ? "flex-col-reverse" : "flex-col"
+        !reverseControl ? "flex-col-reverse" : "flex-col"
       )}>
       <div
         className={cx(
           "w-screen flex-1 relative overflow-hidden flex flex-col justify-center items-center ease-in-out transition-all duration-300",
-          showBg && "bg-black/10 rounded-lg",
+          showBg && "bg-primary-text/10 rounded-lg",
           lock && "bg-transparent"
         )}
         onClick={handleClick}
@@ -188,6 +192,7 @@ export default function LyricPage() {
         fontSize={fontSize}
         setColor={setColor}
         setFontSize={setFontSize}
+        controlReverse={reverseControl}
         rmActive={trackMetaBus.data?.rmActive}
         tlActive={trackMetaBus.data?.tlActive}
         themeColor={themeBus.data?.theme.mainColor}

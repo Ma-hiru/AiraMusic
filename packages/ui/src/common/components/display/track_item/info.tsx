@@ -27,7 +27,10 @@ const TrackItemInfo: FC<ListItemAlbumProps> = ({ track, disabled, liked, onLikeC
       <Heart
         fill={liked ? "currentColor" : "transparent"}
         className="relative -top-px size-4 shrink-0 cursor-pointer transition-opacity duration-300 ease-in-out hover:opacity-60 active:scale-90"
-        onClick={() => !disabled && onLikeChange?.()}
+        onClick={(e) => {
+          e.stopPropagation();
+          (!disabled || liked) && onLikeChange?.();
+        }}
       />
       {type === "history" ? (
         <>

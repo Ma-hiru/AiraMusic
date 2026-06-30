@@ -93,11 +93,11 @@ export abstract class Listenable<const EventName = string> {
     this.eventListeners.clear();
   }
 
-  public setUpdateGap(ms: number) {
+  protected setUpdateGap(ms: number) {
     this.updateGap = Number.isFinite(ms) ? Math.max(Math.floor(ms), 0) : 100;
   }
 
-  public setUpdateMode(mode: typeof this.updateMode) {
+  protected setUpdateMode(mode: typeof this.updateMode) {
     this.updateMode = mode;
   }
 

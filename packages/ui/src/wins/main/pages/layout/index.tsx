@@ -1,6 +1,7 @@
-import { type FC, memo } from "react";
+import { type FC, memo, useEffect, useState } from "react";
 import { useStage } from "@/common/hooks/use-stage";
 import { useAppLoaded } from "@/common/hooks/use-app-loaded";
+import { usePromiseResolvers } from "@/common/hooks/use-promise-resolvers";
 import { Stage } from "@/common/enum";
 import AppModal from "@/common/components/display/modal";
 import AppToast from "@/common/components/display/toast";
@@ -21,8 +22,15 @@ import User from "./user";
 
 const Layout: FC<object> = () => {
   const { stage } = useStage();
-  useAppLoaded();
+  const { promise, resolve, resolved } = usePromiseResolvers();
+  const [loaded, setLoaded] = useState(false);
 
+  useEffect(() => {
+    if (resolved || !loaded) return;
+    resolve();
+  }, [loaded, resolve, resolved]);
+
+  useAppLoaded(promise);
   return (
     <div
       className={`
@@ -36,7 +44,9 @@ const Layout: FC<object> = () => {
       {stage >= Stage.Finally && <PlayerBar className="h-(--playbar-height) z-10 contain-layout" />}
       {stage >= Stage.Finally && <PlayerModal className="contain-strict z-20" />}
       <AppErrorBoundary name="Widget" showError={false} autoReset panicAfterReset>
-        {stage >= Stage.Immediately && <Background className="-z-10" />}
+        {stage >= Stage.Immediately && (
+          <Background onLoaded={() => setLoaded(true)} className="-z-10" />
+        )}
         {stage >= Stage.Second && <AppToast.Provider className="z-40" />}
         {stage >= Stage.Finally && <AppContextMenu.Provider className="z-40" />}
         {stage >= Stage.Finally && <AppModal.Provider className="z-35" />}

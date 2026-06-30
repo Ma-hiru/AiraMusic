@@ -1,7 +1,8 @@
 import { cx } from "@emotion/css";
-import { type FC, memo, type ReactNode } from "react";
+import { type FC, memo, type ReactNode, useCallback } from "react";
 import { ListPlus, Trash2 } from "lucide-react";
 import { NeteaseTrackRecord } from "@/common/netease/models";
+import AppModal from "@/common/components/display/modal";
 
 interface SelectionIndicatorProps {
   selectAll: NormalFunc;
@@ -22,6 +23,19 @@ const SelectionIndicator: FC<SelectionIndicatorProps> = ({
   selectedIds,
   editable
 }) => {
+  const { create, createDialogModal } = AppModal.useModal();
+  const batchDelete = useCallback(
+    () =>
+      create(createDialogModal, {
+        title: "删除",
+        body: "确定要删除选中的歌曲吗？",
+        onConfirm: onBatchDelete,
+        footer: null,
+        important: true
+      }),
+    [create, createDialogModal, onBatchDelete]
+  );
+
   return (
     <div
       className="
@@ -42,7 +56,7 @@ const SelectionIndicator: FC<SelectionIndicatorProps> = ({
       </ActionButton>
       {editable && (
         <ActionButton
-          onClick={onBatchDelete}
+          onClick={batchDelete}
           className="bg-red-500/80 text-white"
           disabled={selectedIds.size === 0}>
           <Trash2 className="size-3.5" /> 删除

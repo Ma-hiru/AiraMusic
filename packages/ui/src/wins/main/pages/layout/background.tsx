@@ -22,7 +22,7 @@ import RendererTheme from "@/common/player/ui";
 import AcrylicBackground from "@/common/components/display/acrylic-background";
 import RendererPlayerHandle from "@/wins/main/lib/handle";
 
-const Background: FC<{ className?: string }> = ({ className }) => {
+const Background: FC<{ className?: string; onLoaded?: NormalFunc }> = ({ className, onLoaded }) => {
   const setThemeColor = useSetAtom(themeColorsAtom);
   const setMainColor = useSetAtom(mainColorAtom);
   const setSecondaryColor = useSetAtom(secondaryColorAtom);
@@ -95,6 +95,14 @@ const Background: FC<{ className?: string }> = ({ className }) => {
     return false;
   }, [playModal, player.playing, settings.performance.homeFluidWithPlaying]);
 
+  useEffect(() => {
+    // 5s 超时
+    const timer = window.setTimeout(() => onLoaded?.(), 5000);
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [onLoaded]);
+
   return (
     <div
       className={cx(
@@ -111,6 +119,7 @@ const Background: FC<{ className?: string }> = ({ className }) => {
         brightness={0.3}
         saturate={3}
         blur={60}
+        onLoaded={onLoaded}
       />
     </div>
   );

@@ -8,7 +8,7 @@ import React, {
   useState
 } from "react";
 import { css, cx } from "@emotion/css";
-import { AArrowDown, AArrowUp, LockKeyholeOpen, LucideLock } from "lucide-react";
+import { AArrowDown, AArrowUp, LockKeyholeOpen, LucideLock, X } from "lucide-react";
 import { NeteaseImageSize } from "@/common/enum";
 import { NeteaseLyric, NeteaseNetworkImage } from "@/common/netease/models";
 import { useListenable } from "@/common/hooks/use-listenable";
@@ -33,6 +33,7 @@ type ControlProps = Omit<HTMLAttributes<HTMLDivElement>, "color"> & {
   setColor: NormalFunc<[color?: string]>;
   setLock: NormalFunc<[lock: boolean]>;
   setFontSize: NormalFunc<[size: number]>;
+  controlReverse?: boolean;
 };
 
 const Control: FC<ControlProps> = ({
@@ -47,6 +48,7 @@ const Control: FC<ControlProps> = ({
   rmActive,
   tlActive,
   themeColor,
+  controlReverse,
   ...rest
 }) => {
   const trackMetaBus = useListenable(RendererIPCMessageBus.trackMeta);
@@ -106,8 +108,8 @@ const Control: FC<ControlProps> = ({
   return (
     <Drag
       className={cx(
-        "w-screen px-2 py-1",
-        showBg && "bg-black/40",
+        "w-screen px-2 py-1 rounded-md",
+        showBg && "bg-primary-text/40",
         css`
           color: ${color || themeColor || "#ffffff"};
         `
@@ -125,7 +127,14 @@ const Control: FC<ControlProps> = ({
             className="relative size-4 rounded-sm cursor-pointer mr-1"
             style={{ backgroundColor: color || themeColor || "#ffffff" }}>
             <NoDrag
-              className="absolute top-full mt-2 flex justify-start items-center gap-1 ease-in-out duration-300 transition-opacity"
+              className={cx(
+                `
+                absolute top-full mt-2 flex
+                justify-start items-center gap-1
+                ease-in-out duration-300 transition-opacity
+              `,
+                controlReverse && "-mt-10!"
+              )}
               style={{
                 opacity: openColorSelect ? 1 : 0,
                 pointerEvents: openColorSelect ? "auto" : "none"
@@ -187,31 +196,21 @@ const Control: FC<ControlProps> = ({
           </Marquee>
         </div>
         <div className="w-full flex items-center justify-end">
-          <NoDrag>
-            {lock ? (
-              <LucideLock
-                className="size-4 cursor-pointer hover:opacity-50 duration-300 ease-in-out transition-all active:scale-90"
-                onClick={() => setLock(false)}
-                onMouseOver={() => RendererWindow.current.penetrate(false)}
-                onMouseLeave={() => RendererWindow.current.penetrate(true)}
-              />
-            ) : (
-              <LockKeyholeOpen
-                className="size-4 cursor-pointer hover:opacity-50 duration-300 ease-in-out transition-all active:scale-90"
-                onClick={() => setLock(true)}
-              />
-            )}
-          </NoDrag>
-          <div
-            className="flex gap-2 mx-2 ease-in-out duration-300 transition-all"
+          <span className="text-[12px] font-semibold">
+            {RendererFormat.duration(progressBus.data?.currentTime, "s")}
+            {" / "}
+            {RendererFormat.duration(progressBus.data?.duration, "s")}
+          </span>
+          <NoDrag
+            className="flex gap-2 ml-2 ease-in-out duration-300 transition-all"
             style={{ width: lock ? 0 : "auto" }}>
             {lyricVersionIcon.map(({ label, active, existed, version }) => (
-              <NoDrag
+              <span
                 key={label}
                 onClick={() => setLyricVersion(version)}
                 className={cx(
                   `
-                  size-4 text-[11px] font-semibold
+                  size-3.5 text-[11px] font-semibold
                   flex justify-center items-center overflow-hidden
                   rounded-xs backdrop-blur-lg cursor-pointer
                 `,
@@ -220,14 +219,30 @@ const Control: FC<ControlProps> = ({
                   color === "#FFFFFF" && "text-black"
                 )}>
                 {label}
-              </NoDrag>
+              </span>
             ))}
-          </div>
-          <span className="text-[12px] font-semibold">
-            {RendererFormat.duration(progressBus.data?.currentTime, "s")}
-            {" / "}
-            {RendererFormat.duration(progressBus.data?.duration, "s")}
-          </span>
+          </NoDrag>
+          <NoDrag className="flex ml-2 gap-1 items-center">
+            {lock ? (
+              <LucideLock
+                className="size-4 cursor-pointer hover:opacity-50 duration-300 ease-in-out transition-all active:scale-90"
+                onClick={() => setLock(false)}
+                onMouseOver={() => RendererWindow.current.penetrate(false)}
+                onMouseLeave={() => RendererWindow.current.penetrate(true)}
+              />
+            ) : (
+              <>
+                <LockKeyholeOpen
+                  className="size-3.5 cursor-pointer hover:opacity-50 duration-300 ease-in-out transition-all active:scale-90"
+                  onClick={() => setLock(true)}
+                />
+                <X
+                  className="size-4 cursor-pointer hover:opacity-50 duration-300 ease-in-out transition-all active:scale-90"
+                  onClick={() => RendererWindow.current.close()}
+                />
+              </>
+            )}
+          </NoDrag>
         </div>
       </div>
     </Drag>

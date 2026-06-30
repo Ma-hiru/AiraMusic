@@ -95,7 +95,7 @@ export default class _NeteasePlaylistSource {
   }
 
   static lastLikedCachedID = "";
-  static id(id: number, signal?: AbortSignal) {
+  static id(id: number, signal?: AbortSignal, useMemoryCache = true) {
     let cachedID: string | number = id;
     // 喜欢的歌曲歌单需要区分喜欢状态的变化，否则喜欢状态无法及时更新
     if (id === _NeteasePlaylistSource.likedPlaylistID) {
@@ -108,7 +108,7 @@ export default class _NeteasePlaylistSource {
       _NeteasePlaylistSource.lastLikedCachedID = cachedID;
     }
     const cache = this.memoryCache.get(cachedID);
-    if (cache) return Promise.resolve(cache);
+    if (cache && useMemoryCache) return Promise.resolve(cache);
 
     return NeteaseAPIPlaylist.detail(id, signal)
       .then((response) => _NeteasePlaylistSource.response(response))

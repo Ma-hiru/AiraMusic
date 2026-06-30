@@ -8,6 +8,7 @@ import TopInfo from "./top-info";
 interface TopProps {
   editable: boolean;
   loading: boolean;
+  source: Nullable<"like" | "normal">;
   summary: Nullable<NeteasePlaylist>;
   searchTracks: NormalFunc<[k: string]>;
   onPlayAll: NormalFunc;
@@ -17,8 +18,9 @@ interface TopProps {
   setIsTyping?: NormalFunc<[tying: boolean]>;
   pageActionType?: "enter" | "out" | "none";
   onPageAction?: NormalFunc;
-  onEdited?: NormalFunc;
+  onEdited?: Optional<NormalFunc<[modifiedCover: boolean]>>;
   onDeleted?: NormalFunc;
+  reload?: NormalFunc;
   selectionMode?: boolean;
   onToggleSelectionMode?: NormalFunc;
 }
@@ -26,6 +28,8 @@ interface TopProps {
 const Top: FC<TopProps> = ({
   summary,
   searchTracks,
+  source,
+  reload,
   onPlayAll,
   onAddList,
   editable,
@@ -49,6 +53,7 @@ const Top: FC<TopProps> = ({
       </div>
       <TopRight
         summary={summary}
+        source={source}
         editable={editable}
         searchTracks={searchTracks}
         setTying={setIsTyping}
@@ -56,6 +61,7 @@ const Top: FC<TopProps> = ({
         onPageAction={onPageAction}
         onEdited={onEdited}
         onDeleted={onDeleted}
+        reload={reload}
         selectionMode={selectionMode}
         onToggleSelectionMode={onToggleSelectionMode}
       />

@@ -1,4 +1,4 @@
-import { type ChangeEvent, type FC, useEffect, useRef, useState } from "react";
+import { type ChangeEvent, type FC, useCallback, useEffect, useRef, useState } from "react";
 import { cx } from "@emotion/css";
 import { Globe, ImagePlus, Lock } from "lucide-react";
 import { NeteaseAPIPlaylist } from "@/common/netease/api";
@@ -18,7 +18,7 @@ export function createPlaylistEditModal({
   onTyping
 }: {
   playlist: NeteasePlaylist;
-  onSaved?: NormalFunc;
+  onSaved?: NormalFunc<[modifiedCover: boolean]>;
   onTyping: NormalFunc<[typing: boolean]>;
 }): ModalRender {
   return {
@@ -32,7 +32,7 @@ export function createPlaylistEditModal({
 // eslint-disable-next-line react-refresh/only-export-components
 const PlaylistEditForm: FC<{
   playlist: NeteasePlaylist;
-  onSaved?: NormalFunc;
+  onSaved?: NormalFunc<[modifiedCover: boolean]>;
   onTyping: NormalFunc<[typing: boolean]>;
 }> = ({ playlist, onSaved, onTyping }) => {
   const [name, setName] = useState(playlist.name);
@@ -42,11 +42,10 @@ const PlaylistEditForm: FC<{
   const [coverFile, setCoverFile] = useState<Nullable<File>>(null);
   const [preview, setPreview] = useState(playlist.coverImgUrl);
   const [saving, setSaving] = useState(false);
-  const fileRef = useRef<HTMLInputElement>(null);
-
   const [isPrivate, setIsPrivate] = useState(() => NeteasePlaylistSummary.isPrivacy(playlist));
   const [confirmingPublic, setConfirmingPublic] = useState(false);
   const [settingPublic, setSettingPublic] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   // 拉取官方标签
   useEffect(() => {
@@ -62,7 +61,7 @@ const PlaylistEditForm: FC<{
     };
   }, [preview]);
 
-  const onPickFile = (e: ChangeEvent<HTMLInputElement>) => {
+  const onPickFile = useCallback((e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     e.target.value = "";
     if (!file) return;
@@ -78,9 +77,9 @@ const PlaylistEditForm: FC<{
       if (prev.startsWith("blob:")) URL.revokeObjectURL(prev);
       return URL.createObjectURL(file);
     });
-  };
+  }, []);
 
-  const toggleTag = (tag: string) => {
+  const toggleTag = useCallback((tag: string) => {
     setTags((prev) => {
       if (prev.includes(tag)) return prev.filter((t) => t !== tag);
       if (prev.length >= MAX_TAGS) {
@@ -92,9 +91,9 @@ const PlaylistEditForm: FC<{
       }
       return [...prev, tag];
     });
-  };
+  }, []);
 
-  const onSave = async () => {
+  const onSave = useCallback(async () => {
     if (saving) return;
     if (!name.trim()) {
       AppToast.show({
@@ -112,7 +111,7 @@ const PlaylistEditForm: FC<{
         tags
       });
       if (coverFile) await NeteaseAPIPlaylist.updateCover(playlist.id, coverFile);
-      onSaved?.();
+      onSaved?.(!!coverFile);
       AppToast.show({
         type: "success",
         text: "已保存"
@@ -127,9 +126,9 @@ const PlaylistEditForm: FC<{
     } finally {
       setSaving(false);
     }
-  };
+  }, [coverFile, desc, name, onSaved, playlist.id, saving, tags]);
 
-  const onSetPublic = async () => {
+  const onSetPublic = useCallback(async () => {
     if (settingPublic) return;
     setSettingPublic(true);
     try {
@@ -140,7 +139,7 @@ const PlaylistEditForm: FC<{
       }
       setIsPrivate(false);
       setConfirmingPublic(false);
-      onSaved?.();
+      onSaved?.(false);
       AppToast.show({ type: "success", text: "已设为公开" });
     } catch (err) {
       Log.error(err);
@@ -148,7 +147,7 @@ const PlaylistEditForm: FC<{
     } finally {
       setSettingPublic(false);
     }
-  };
+  }, [onSaved, playlist.id, settingPublic]);
 
   return (
     <div className="flex flex-col gap-4 text-[13px]">
@@ -219,9 +218,7 @@ const PlaylistEditForm: FC<{
                   onClick={() => toggleTag(tag)}
                   className={cx(
                     "rounded-md px-2 py-1 text-[11px] font-bold transition-all duration-300",
-                    active
-                      ? "bg-primary text-(--text-color-on-main)"
-                      : "bg-white/10 hover:bg-white/20"
+                    active ? "bg-primary text-primary-text" : "bg-white/10 hover:bg-white/20"
                   )}>
                   {tag}
                 </button>
@@ -253,7 +250,7 @@ const PlaylistEditForm: FC<{
                 disabled={settingPublic}
                 onClick={onSetPublic}
                 className="
-                  rounded-md bg-primary px-3 py-1 font-bold text-(--text-color-on-main)
+                  rounded-md bg-primary px-3 py-1 font-bold text-primary-text
                   transition-all active:scale-96 disabled:opacity-50
                 ">
                 {settingPublic ? "处理中..." : "确认公开（不可撤销）"}

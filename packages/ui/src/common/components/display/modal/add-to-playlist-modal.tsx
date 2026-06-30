@@ -14,17 +14,20 @@ import type { ModalRender } from "./modal-provider";
 export function createAddToPlaylistModal({
   tracks,
   onCreated,
-  excludeId
+  excludeId,
+  onClose
 }: {
   tracks: NeteaseTrackRecord[];
   onCreated: Optional<NormalFunc<[pid: number]>>;
   /** 排除的歌单 id（通常是当前所在歌单，避免把歌曲加回自己） */
   excludeId?: number;
+  onClose?: NormalFunc;
 }): ModalRender {
   return {
+    onClose,
     title: "收藏到歌单",
-    subTitle: tracks.length === 1 ? tracks[0]?.name : `共 ${tracks.length} 首`,
     width: 500,
+    subTitle: tracks.length === 1 ? tracks[0]?.name : `共 ${tracks.length} 首`,
     content: <AddToPlaylistList tracks={tracks} onCreated={onCreated} excludeId={excludeId} />
   };
 }
@@ -50,7 +53,7 @@ const AddToPlaylistList: FC<{
         pid,
         tracks: tracks.map((t) => t.id)
       });
-      if (res.status === 200) {
+      if (res.body.code === 200) {
         NeteaseServicesPlaylist.invalidate(pid);
         onCreated?.(pid);
         AppToast.show({
@@ -61,7 +64,7 @@ const AddToPlaylistList: FC<{
       } else {
         AppToast.show({
           type: "info",
-          text: "添加失败"
+          text: res.body.message ?? "添加失败"
         });
       }
     } catch (err) {

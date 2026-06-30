@@ -10,6 +10,7 @@ namespace NeteaseAPI {
     cookie: string[];
     body: {
       code: number;
+      message: string;
     };
   }
 }

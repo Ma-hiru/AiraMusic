@@ -10,17 +10,20 @@ export function useTrackAddToPlaylist(excludeId?: number) {
   const user = useUser();
   const { create, createAddToPlaylistModal } = AppModal.useModal();
   const open = useCallback(
-    (tracks: NeteaseTrackRecord[]) => {
+    async (tracks: NeteaseTrackRecord[]) => {
       if (!user?.isLoggedIn) {
-        return AppToast.show({
+        AppToast.show({
           type: "info",
           text: "请先登录"
         });
+        return Promise.resolve(false);
       }
-      if (tracks.length === 0) return;
+      if (tracks.length === 0) return Promise.resolve(false);
+      const { promise, resolve } = Promise.withResolvers<boolean>();
       create(createAddToPlaylistModal, {
         tracks,
         excludeId,
+        onClose: () => resolve(false),
         onCreated: async (pid) => {
           RendererIPCMessageBus.modified.twoWay({
             type: "playlist-update",
@@ -30,8 +33,10 @@ export function useTrackAddToPlaylist(excludeId?: number) {
           RendererIPCMessageBus.modified.twoWay({
             type: "user-playlist"
           });
+          resolve(true);
         }
       });
+      return promise;
     },
     [create, createAddToPlaylistModal, user, excludeId]
   );

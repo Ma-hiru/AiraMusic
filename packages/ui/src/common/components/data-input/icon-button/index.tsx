@@ -5,6 +5,7 @@ import { type LucideIcon } from "lucide-react";
 export interface IconButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, "children"> {
   icon: LucideIcon;
   label: string;
+  show?: boolean;
   color?: string;
   iconClassName?: string;
   iconProps?: Omit<ComponentProps<LucideIcon>, "className">;
@@ -30,6 +31,7 @@ const variantClass = {
 const IconButton: FC<IconButtonProps> = ({
   icon: Icon,
   label,
+  show = true,
   color,
   className,
   iconClassName,
@@ -41,6 +43,7 @@ const IconButton: FC<IconButtonProps> = ({
   style,
   ...props
 }) => {
+  if (!show) return null;
   return (
     <button
       type={type}

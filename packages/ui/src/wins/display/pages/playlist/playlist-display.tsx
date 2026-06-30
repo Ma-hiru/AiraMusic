@@ -1,4 +1,4 @@
-import { type FC, memo, useCallback, useEffect, useRef } from "react";
+import { type FC, memo, useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import { useUser } from "@/common/store/user";
 import { RoutePathDisplay } from "@/common/routes";
@@ -14,6 +14,7 @@ import { useScrollActionsRegister } from "@/common/hooks/use-scroll-actions-regi
 import { scrollActionsAtom } from "@/wins/display/atoms/layout";
 import { useTrackAddToPlaylist } from "@/common/hooks/use-track-add-to-playlist";
 import { RendererModified } from "@/common/lib/modified";
+import { usePlaylistModifySync } from "@/common/hooks/use-playlist-modify-sync";
 
 import Playlist, { type PlaylistRef } from "@/common/components/page/playlist";
 
@@ -59,22 +60,7 @@ const PlaylistDisplay: FC<object> = () => {
     getScrollTopFunc: () => playlistRef.current?.scrollTop,
     getFastLocateFunc: () => playlistRef.current?.fastLocator
   });
-
-  const onEdited = useCallback(() => {
-    RendererIPCMessageBus.modified.twoWay({
-      type: "playlist-update",
-      id,
-      source
-    });
-    RendererIPCMessageBus.modified.twoWay({
-      type: "user-playlist"
-    });
-  }, [id, source]);
-
-  const onDeleted = useCallback(() => {
-    RendererIPCMessageBus.modified.twoWay({ type: "user-playlist" });
-    RendererIPCMessageBus.modified.twoWay({ type: "remove-playlist", id });
-  }, [id]);
+  const { onEdited, onDeleted } = usePlaylistModifySync(id, source);
 
   useEffect(() => {
     if (!id && !source) return;
