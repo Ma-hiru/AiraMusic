@@ -96,8 +96,8 @@ const Background: FC<{ className?: string; onLoaded?: NormalFunc }> = ({ classNa
   }, [playModal, player.playing, settings.performance.homeFluidWithPlaying]);
 
   useEffect(() => {
-    // 5s 超时
-    const timer = window.setTimeout(() => onLoaded?.(), 5000);
+    // 10s 超时
+    const timer = window.setTimeout(() => onLoaded?.(), 10000);
     return () => {
       clearTimeout(timer);
     };

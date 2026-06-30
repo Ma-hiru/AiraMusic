@@ -3,7 +3,6 @@ import { NeteaseServicesAuth } from "@/common/netease/services";
 import { useRequestAutoRetry, useRequestStatusWrap } from "@/common/hooks/use-request-wrap";
 import { Log } from "@/common/lib/log";
 import { SetupStatus } from "@/common/netease/services/auth";
-import { userStoreSnapshot } from "@/common/store/user";
 import { RendererWindow } from "@/common/lib/window";
 import AppToast from "@/common/components/display/toast";
 
@@ -37,11 +36,6 @@ export const User = () => {
     } else if (data === SetupStatus.NotLogin) {
       void NeteaseServicesAuth.createLoginWindow();
     } else if (data === SetupStatus.Ok) {
-      const nickname = userStoreSnapshot()._user?.profile.nickname;
-      AppToast.show({
-        type: "success",
-        text: `欢迎回来，${nickname}`
-      });
       Log.info("User", "user info get success");
     }
   }, [data]);

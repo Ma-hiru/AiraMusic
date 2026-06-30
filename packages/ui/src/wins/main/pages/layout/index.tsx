@@ -1,7 +1,6 @@
 import { type FC, memo, useEffect, useState } from "react";
 import { useStage } from "@/common/hooks/use-stage";
 import { useAppLoaded } from "@/common/hooks/use-app-loaded";
-import { usePromiseResolvers } from "@/common/hooks/use-promise-resolvers";
 import { Stage } from "@/common/enum";
 import AppModal from "@/common/components/display/modal";
 import AppToast from "@/common/components/display/toast";
@@ -22,22 +21,27 @@ import User from "./user";
 
 const Layout: FC<object> = () => {
   const { stage } = useStage();
-  const { promise, resolve, resolved } = usePromiseResolvers();
   const [loaded, setLoaded] = useState(false);
+  const [wait, setWait] = useState(true);
+
+  useAppLoaded();
 
   useEffect(() => {
-    if (resolved || !loaded) return;
-    resolve();
-  }, [loaded, resolve, resolved]);
+    if (stage >= Stage.Finally) {
+      const timer = setTimeout(() => setWait(false), 3000);
+      return () => {
+        clearTimeout(timer);
+      };
+    }
+  }, [stage]);
 
-  useAppLoaded(promise);
   return (
     <div
       className={`
         relative w-screen h-screen overflow-hidden scrollbar-hide
         flex flex-row flex-nowrap
     `}>
-      {stage < Stage.Finally && <AppMask className="z-40 bg-white" />}
+      <AppMask className="z-40 bg-white text-black" show={!loaded || wait} />
       <TopBar className="h-(--top-control-height) z-30 contain-strict" />
       <NavSide />
       <Content />

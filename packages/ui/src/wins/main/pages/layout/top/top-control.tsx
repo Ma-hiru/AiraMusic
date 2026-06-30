@@ -13,7 +13,7 @@ const TopControl: FC = () => {
   const { create, createDialogModal } = AppModal.useModal();
   const currentWindow = useListenable(RendererWindow.current);
   const miniWindow = useListenable(RendererWindow.get("miniplayer"));
-  const memoRef = useRef(true);
+  const memoRef = useRef(false);
 
   const close = useCallback(async () => {
     type Behavior = "exit" | "tray";
