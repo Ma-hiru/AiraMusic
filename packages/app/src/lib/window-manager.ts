@@ -1,14 +1,14 @@
+import { debounce } from "lodash-es";
 import {
+  Tray,
   BrowserWindow,
-  type BrowserWindowConstructorOptions,
   type NativeImage,
-  Tray
+  type BrowserWindowConstructorOptions
 } from "electron";
 import { Log } from "@/lib/log";
-import { debounce } from "lodash-es";
 import { MainIPC } from "@mahiru/ipc/main";
-import type { MessageData } from "@mahiru/ipc/types";
 import type { WindowExits } from "@/types/window";
+import type { MessageData } from "@mahiru/ipc/types";
 
 export class MainWindowManager {
   private static readonly BrowserWindowList = new Map<WindowType, BrowserWindow>();
@@ -99,7 +99,7 @@ export class MainWindowManager {
     return this.tray;
   }
 
-  static initTray(image: NativeImage | string) {
+  static initTray(image: string | NativeImage) {
     this.tray ||= new Tray(image);
     return this.tray;
   }

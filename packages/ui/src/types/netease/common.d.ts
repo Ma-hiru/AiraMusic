@@ -1,8 +1,8 @@
 namespace NeteaseAPI {
   interface NeteaseAPIResponse {
     code: number;
-    message?: string;
     msg?: string;
+    message?: string;
   }
 
   interface NeteaseAPIResponseNew {

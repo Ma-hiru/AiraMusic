@@ -1,13 +1,12 @@
-import { type FC, memo } from "react";
-import { useThemeColor } from "@/common/hooks/use-theme-color";
-import { useListenable } from "@/common/hooks/use-listenable";
 import { useAtomValue } from "jotai";
-import { playModalAtom } from "@/wins/main/atoms/layout";
+import { memo, type FC } from "react";
 import { RendererWindow } from "@/common/lib/window";
 import { useSettings } from "@/common/store/settings";
-
-import AudioSpectrum from "@/wins/main/componets/spectrum/audio-spectrum";
+import { playModalAtom } from "@/wins/main/atoms/layout";
+import { useListenable } from "@/common/hooks/use-listenable";
+import { useThemeColor } from "@/common/hooks/use-theme-color";
 import RendererPlayerHandle from "@/wins/main/lib/handle";
+import AudioSpectrum from "@/wins/main/componets/spectrum/audio-spectrum";
 
 const BarSpectrum: FC<object> = () => {
   const { mainColor, secondaryColor } = useThemeColor();
@@ -19,13 +18,13 @@ const BarSpectrum: FC<object> = () => {
   if (!settings.performance.barSpectrum) return null;
   return (
     <AudioSpectrum
-      isPlaying={!playModal && player.playing && currentWindow.isShow && !currentWindow.isMin}
+      className="w-full h-full"
       gap={1}
-      renderer="webgl-rust"
       heightScale={0.9}
+      renderer="webgl-rust"
       color={mainColor.string()}
       secondaryColor={secondaryColor.string()}
-      className="w-full h-full"
+      isPlaying={!playModal && player.playing && currentWindow.isShow && !currentWindow.isMin}
       spectrumOptions={{
         numBands: 300,
         withPeaks: false,

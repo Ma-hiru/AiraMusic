@@ -1,24 +1,23 @@
 import { cx } from "@emotion/css";
-import { type FC, memo, useMemo } from "react";
-import { NeteaseNetworkImage, NeteaseTrackRecord } from "@/common/netease/models";
+import { memo, type FC, useMemo } from "react";
 import { NeteaseImageSize } from "@/common/enum";
-
+import { NeteaseTrackRecord, NeteaseNetworkImage } from "@/common/netease/models";
 import NeteaseImage from "@/common/components/display/image/netease-image";
 
 interface ListItemCoverProps {
+  disabled: boolean;
+  fastLocation?: boolean;
   track: NeteaseTrackRecord;
   trackCoverSize: NeteaseImageSize;
-  disabled: boolean;
   onClick?: NormalFunc;
-  fastLocation?: boolean;
 }
 
 const TrackItemCover: FC<ListItemCoverProps> = ({
-  track,
   onClick,
+  track,
   disabled,
-  fastLocation = false,
-  trackCoverSize
+  trackCoverSize,
+  fastLocation = false
 }) => {
   const image = useMemo(
     () =>
@@ -29,10 +28,6 @@ const TrackItemCover: FC<ListItemCoverProps> = ({
   );
   return (
     <NeteaseImage
-      cache
-      cacheLazy={false}
-      image={image}
-      pause={fastLocation}
       className={cx(
         `
         size-8 rounded-md cursor-pointer select-none
@@ -41,9 +36,13 @@ const TrackItemCover: FC<ListItemCoverProps> = ({
       `,
         disabled && "cursor-not-allowed"
       )}
-      onClick={() => !disabled && onClick?.()}
-      imageClassName={(disabled && "cursor-not-allowed") || undefined}
+      image={image}
+      cacheLazy={false}
       shadowColor="light"
+      pause={fastLocation}
+      imageClassName={(disabled && "cursor-not-allowed") || undefined}
+      onClick={() => !disabled && onClick?.()}
+      cache
     />
   );
 };

@@ -1,7 +1,8 @@
-import AppEnv from "../../scripts/env";
-import { defineConfig } from "vitest/config";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { defineConfig } from "vitest/config";
+
+import AppEnv from "../../scripts/env";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 

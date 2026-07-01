@@ -8,5 +8,5 @@ export class RendererImagePreviewConstants {
   static readonly DOUBLE_TAP_DISTANCE = 30;
   static readonly MOVE_THRESHOLD = 10;
   static readonly TOOLBAR_HIDE_DELAY = 3000;
-  static readonly EMPTY_IMAGE: { url?: string; alt?: string } = {};
+  static readonly EMPTY_IMAGE: { alt?: string; url?: string } = {};
 }

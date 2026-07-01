@@ -1,16 +1,16 @@
 import { useCallback } from "react";
-import { RoutePath, RoutePathMain } from "@/common/routes";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useLatestRef } from "@/common/hooks/use-latest-ref";
-import { useSettings } from "@/common/store/settings";
 import { RendererWindow } from "@/common/lib/window";
+import { useSettings } from "@/common/store/settings";
 import { RendererIPCMessageBus } from "@/common/lib/bus";
+import { RoutePath, RoutePathMain } from "@/common/routes";
+import { useLatestRef } from "@/common/hooks/use-latest-ref";
 
 /** 跳转歌手和专辑页 */
 export function usePageJump(
   props: {
-    currentArtistID?: number;
     currentAlbumID?: number;
+    currentArtistID?: number;
   } = {}
 ) {
   const navigate = useNavigate();
@@ -55,7 +55,7 @@ export function usePageJump(
 
   const isPlaylistPage = location.pathname.includes(RoutePathMain.playlist.base);
   const jumpPlaylistPage = useCallback(
-    async (id: number, source: "normal" | "like") => {
+    async (id: number, source: "like" | "normal") => {
       if (source !== "like" && id === Number(playlistRef.current.id) && isPlaylistPage) return;
       if (playlistRef.current.source === "like" && !id && isPlaylistPage) return;
 

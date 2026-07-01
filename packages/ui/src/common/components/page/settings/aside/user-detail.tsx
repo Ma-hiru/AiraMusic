@@ -1,21 +1,21 @@
-import { type FC, memo, useEffect, useMemo, useState } from "react";
-import { LogIn, LogOut, UserRound } from "lucide-react";
-import { NeteaseNetworkImage, NeteaseUser } from "@/common/netease/models";
 import { cx } from "@emotion/css";
-import { getCityNameByCode } from "@/common/utils/city-code";
+import { LogIn, LogOut, UserRound } from "lucide-react";
+import { memo, type FC, useMemo, useState, useEffect } from "react";
 import { RendererFormat } from "@/common/lib/format";
-
-import MiniStat from "./mini-stat";
+import { getCityNameByCode } from "@/common/utils/city-code";
+import { NeteaseUser, NeteaseNetworkImage } from "@/common/netease/models";
 import Card from "@/common/components/layout/card";
 import NeteaseImage from "@/common/components/display/image/netease-image";
 
+import MiniStat from "./mini-stat";
+
 interface UserDetailProps {
-  user: Nullable<NeteaseUser>;
-  logout: NormalFunc;
   login: NormalFunc;
+  logout: NormalFunc;
+  user: Nullable<NeteaseUser>;
 }
 
-const UserDetail: FC<UserDetailProps> = ({ user, logout, login }) => {
+const UserDetail: FC<UserDetailProps> = ({ user, login, logout }) => {
   const [city, setCity] = useState<Nullable<string>>(null);
   const profileSignature = user?.profile.signature || "暂无签名";
   const profileName = user?.profile.nickname ?? user?.profile.userId ?? "未登录";
@@ -32,16 +32,16 @@ const UserDetail: FC<UserDetailProps> = ({ user, logout, login }) => {
       <div className="flex items-center gap-3">
         {avatar ? (
           <NeteaseImage
-            cache
-            preview
-            cacheLazy={false}
-            image={avatar}
             className="
               size-16 rounded-md border border-white/30
               cursor-pointer hover:opacity-50
               ease-in-out duration-300 transition-opacity
             "
+            image={avatar}
             shadow="float"
+            cacheLazy={false}
+            cache
+            preview
           />
         ) : (
           <div
@@ -73,9 +73,6 @@ const UserDetail: FC<UserDetailProps> = ({ user, logout, login }) => {
         <MiniStat label="村龄" value={joinTime} />
       </div>
       <button
-        type="button"
-        title={user?.isLoggedIn ? "退出登录" : "登录"}
-        onClick={user?.isLoggedIn ? logout : login}
         className={cx(
           `
           mt-4 flex h-9 w-full items-center justify-center gap-2 rounded-md
@@ -84,7 +81,10 @@ const UserDetail: FC<UserDetailProps> = ({ user, logout, login }) => {
           hover:bg-primary hover:text-primary-text
           active:scale-[0.98] cursor-pointer
           `
-        )}>
+        )}
+        type="button"
+        title={user?.isLoggedIn ? "退出登录" : "登录"}
+        onClick={user?.isLoggedIn ? logout : login}>
         {user?.isLoggedIn ? (
           <>
             <LogOut className="size-3.5" />

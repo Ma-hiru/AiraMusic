@@ -12,9 +12,9 @@ export type MainChildParentPort<
 
 export type MainChildStartMessage = { type: "start" };
 
-export type MainChildControlMessage = MainChildStartMessage | { type: "stop" };
+export type MainChildControlMessage = { type: "stop" } | MainChildStartMessage;
 
 export type MainChildSerializedError = {
-  message: string;
   stack?: string;
+  message: string;
 };

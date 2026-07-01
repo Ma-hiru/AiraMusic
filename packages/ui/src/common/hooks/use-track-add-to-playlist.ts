@@ -1,7 +1,7 @@
-import { useUser } from "@/common/store/user";
 import { useCallback } from "react";
+import { useUser } from "@/common/store/user";
 import { RendererIPCMessageBus } from "@/common/lib/bus";
-import { type NeteaseTrackRecord, NeteaseUser } from "@/common/netease/models";
+import { NeteaseUser, type NeteaseTrackRecord } from "@/common/netease/models";
 import { createAddToPlaylistModal } from "@/common/components/display/modal/add-to-playlist-modal";
 import AppModal from "@/common/components/display/modal";
 import AppToast from "@/common/components/display/toast";
@@ -55,7 +55,7 @@ export function useTrackAddToPlaylist(excludeId?: number) {
  * 在嵌套 modal 中使用，比如播放列表
  * */
 export function openTrackAddToPlaylist(
-  tracks: NeteaseTrackRecord[] | NeteaseTrackRecord,
+  tracks: NeteaseTrackRecord | NeteaseTrackRecord[],
   excludeId?: number
 ) {
   if (!NeteaseUser.isLoggedIn) {

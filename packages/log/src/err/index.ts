@@ -1,6 +1,6 @@
 import { AnyToString } from "../string";
 
-export type EqErrorProps = { id?: PropertyKey; raw?: any; label?: string; message: string };
+export type EqErrorProps = { raw?: any; label?: string; message: string; id?: PropertyKey };
 
 export class EqError {
   readonly id;
@@ -9,7 +9,7 @@ export class EqError {
   readonly message;
   readonly [Symbol.toStringTag] = "EqError";
 
-  constructor(props: EqErrorProps | string) {
+  constructor(props: string | EqErrorProps) {
     if (typeof props === "object") {
       this.id = props.id ?? globalThis.crypto.randomUUID();
       this.label = props.label;

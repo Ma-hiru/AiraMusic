@@ -1,18 +1,18 @@
 import { cx } from "@emotion/css";
-import { type FC, memo } from "react";
-import { type HomeChannelKey, NavConstants } from "@/wins/main/constants";
+import { memo, type FC } from "react";
+import { NavConstants, type HomeChannelKey } from "@/wins/main/constants";
 
 interface HomeChannelTabsProps {
+  sticky?: boolean;
+  className?: string;
   active: HomeChannelKey;
   onChange: NormalFunc<[key: HomeChannelKey]>;
-  className?: string;
-  sticky?: boolean;
 }
 
 const HomeChannelTabs: FC<HomeChannelTabsProps> = ({
-  active,
-  onChange,
   className,
+  onChange,
+  active,
   sticky = true
 }) => {
   return (
@@ -22,12 +22,11 @@ const HomeChannelTabs: FC<HomeChannelTabsProps> = ({
         sticky && "sticky top-2",
         className
       )}>
-      {NavConstants.HOME_CHANNELS.map(({ key, label, caption, Icon }) => {
+      {NavConstants.HOME_CHANNELS.map(({ key, Icon, label, caption }) => {
         const selected = key === active;
         return (
           <button
             key={key}
-            onClick={() => onChange(key)}
             className={cx(
               `
                 flex min-w-36 py-1 shrink-0 cursor-pointer items-center gap-3 rounded-lg
@@ -38,7 +37,8 @@ const HomeChannelTabs: FC<HomeChannelTabsProps> = ({
               selected
                 ? "bg-primary text-primary-text hover:bg-primary-active"
                 : "bg-white/5 hover:bg-white/20"
-            )}>
+            )}
+            onClick={() => onChange(key)}>
             <Icon className="size-4 shrink-0" />
             <span className="min-w-0">
               <span className="block truncate text-sm font-bold">{label}</span>

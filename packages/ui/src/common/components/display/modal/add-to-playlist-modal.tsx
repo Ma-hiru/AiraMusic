@@ -1,21 +1,22 @@
-import { type FC, useState } from "react";
 import { cx } from "@emotion/css";
-import { NeteaseNetworkImage, type NeteaseTrackRecord } from "@/common/netease/models";
+import { type FC, useState } from "react";
+import { Log } from "@/common/lib/log";
+import { useUser } from "@/common/store/user";
+import { NeteaseImageSize } from "@/common/enum";
 import { NeteaseAPIPlaylist } from "@/common/netease/api";
 import { NeteaseServicesPlaylist } from "@/common/netease/services";
-import { NeteaseImageSize } from "@/common/enum";
-import { useUser } from "@/common/store/user";
-import { Log } from "@/common/lib/log";
-import NeteaseImage from "@/common/components/display/image/netease-image";
+import { NeteaseNetworkImage, type NeteaseTrackRecord } from "@/common/netease/models";
 import AppToast from "@/common/components/display/toast";
+import NeteaseImage from "@/common/components/display/image/netease-image";
+
 import AppModal from "./use";
 import type { ModalRender } from "./modal-provider";
 
 export function createAddToPlaylistModal({
-  tracks,
+  onClose,
   onCreated,
-  excludeId,
-  onClose
+  tracks,
+  excludeId
 }: {
   tracks: NeteaseTrackRecord[];
   onCreated: Optional<NormalFunc<[pid: number]>>;
@@ -28,16 +29,16 @@ export function createAddToPlaylistModal({
     title: "收藏到歌单",
     width: 500,
     subTitle: tracks.length === 1 ? tracks[0]?.name : `共 ${tracks.length} 首`,
-    content: <AddToPlaylistList tracks={tracks} onCreated={onCreated} excludeId={excludeId} />
+    content: <AddToPlaylistList tracks={tracks} excludeId={excludeId} onCreated={onCreated} />
   };
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
 const AddToPlaylistList: FC<{
+  excludeId?: number;
   tracks: NeteaseTrackRecord[];
   onCreated: Optional<NormalFunc<[pid: number]>>;
-  excludeId?: number;
-}> = ({ tracks, onCreated, excludeId }) => {
+}> = ({ onCreated, tracks, excludeId }) => {
   const user = useUser();
   // 正在添加的歌单 id，避免重复点击
   const [adding, setAdding] = useState<Nullable<number>>(null);
@@ -89,18 +90,18 @@ const AddToPlaylistList: FC<{
         return (
           <button
             key={p.id}
-            type="button"
-            disabled={adding != null}
-            onClick={() => addTo(p.id)}
             className={cx(
               "flex w-full items-center gap-3 rounded-md p-2 text-left transition-all",
               "hover:bg-white/10 active:scale-98 disabled:opacity-50"
-            )}>
+            )}
+            type="button"
+            disabled={adding != null}
+            onClick={() => addTo(p.id)}>
             <NeteaseImage
-              cache
-              image={cover}
               className="size-10 shrink-0 rounded-md"
+              image={cover}
               shadowColor="light"
+              cache
             />
             <div className="min-w-0 flex-1">
               <p className="truncate text-[13px] font-bold">{p.name}</p>

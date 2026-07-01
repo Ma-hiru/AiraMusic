@@ -1,43 +1,43 @@
-import { type FC, memo, useCallback } from "react";
-import { type NeteaseSettingsModel, NeteaseUser } from "@/common/netease/models";
+import { cx } from "@emotion/css";
+import { memo, type FC, useCallback } from "react";
 import { TrackQuality } from "@/common/enum";
-import type { InvokeEventPayload } from "@mahiru/ipc/types";
+import { NeteaseUser, type NeteaseSettingsModel } from "@/common/netease/models";
 import type { CacheStoreCategories } from "@/types/cache";
+import type { InvokeEventPayload } from "@mahiru/ipc/types";
 
 import Cache from "./cache";
-import Quality from "./quality";
-import Performance from "./performance";
-import Preference from "./preference";
-import Shortcut from "./shortcut";
 import Device from "./device";
-import { cx } from "@emotion/css";
+import Quality from "./quality";
+import Shortcut from "./shortcut";
+import Preference from "./preference";
+import Performance from "./performance";
 
 interface SettingsContentProps {
+  className?: string;
+  refreshSize: NormalFunc;
   user: Nullable<NeteaseUser>;
   settings: NeteaseSettingsModel;
-  updateSettings: NormalFunc<[settings: NeteaseSettingsModel]>;
-  output: { selected: string; views: { displayName: string; deviceId: string }[] };
   updateOutput: NormalFunc<[deviceId: string]>;
   cacheStoreSizes: Nullable<CacheStoreCategories>;
+  updateSettings: NormalFunc<[settings: NeteaseSettingsModel]>;
   cacheStoreConfig: Nullable<InvokeEventPayload<"invoke_cache_config_get">>;
+  output: { selected: string; views: { deviceId: string; displayName: string }[] };
   updateCacheStoreConfig: PromiseFunc<
     [config: Partial<InvokeEventPayload<"invoke_cache_config_get">>]
   >;
-  refreshSize: NormalFunc;
-  className?: string;
 }
 
 const SettingsContent: FC<SettingsContentProps> = ({
   user,
-  settings,
-  updateSettings,
-  cacheStoreConfig,
-  cacheStoreSizes,
-  updateCacheStoreConfig,
+  className,
   output,
-  updateOutput,
+  settings,
   refreshSize,
-  className
+  updateOutput,
+  updateSettings,
+  cacheStoreSizes,
+  cacheStoreConfig,
+  updateCacheStoreConfig
 }) => {
   const patchSettings = useCallback(
     (patch: Partial<NeteaseSettingsModel>) => {
@@ -67,8 +67,8 @@ const SettingsContent: FC<SettingsContentProps> = ({
   return (
     <main className={cx("w-full space-y-4 scrollbar scrollbar-show contain-layout", className)}>
       <Quality
-        vip={user?.isVIP() ?? false}
         data={settings.trackQuality}
+        vip={user?.isVIP() ?? false}
         updateQuality={updateQuality}
       />
       <Device output={output} updateOutput={updateOutput} />
@@ -76,10 +76,10 @@ const SettingsContent: FC<SettingsContentProps> = ({
       <Preference data={settings.preference} patchSettings={patchSettings} />
       <Shortcut data={settings.shortcuts} patchSettings={patchSettings} />
       <Cache
-        updateCacheStoreConfig={updateCacheStoreConfig}
-        cacheStoreConfig={cacheStoreConfig}
-        cacheStoreSizes={cacheStoreSizes}
         refreshSize={refreshSize}
+        cacheStoreSizes={cacheStoreSizes}
+        cacheStoreConfig={cacheStoreConfig}
+        updateCacheStoreConfig={updateCacheStoreConfig}
       />
     </main>
   );

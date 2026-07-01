@@ -1,12 +1,12 @@
-import mime from "mime";
-import { app, protocol } from "electron";
-import { Readable } from "node:stream";
 import { normalize } from "node:path";
+import { Readable } from "node:stream";
 import { stat } from "node:fs/promises";
+import { app, protocol } from "electron";
 import { createReadStream } from "node:fs";
 import { Log } from "@/lib/log";
 import { MainHandle } from "@/lib/handle";
 import { isSubPath } from "@/utils/sub-path";
+import mime from "mime";
 
 export class MainProtocol {
   private static init = false;
@@ -71,7 +71,7 @@ export class MainProtocol {
       } as Record<string, string>;
 
       if (rangeHeader && rangeHeader.startsWith("bytes=")) {
-        const { start, end } = this.parseRange(rangeHeader, total);
+        const { end, start } = this.parseRange(rangeHeader, total);
         if (start >= total || end >= total) {
           return new Response("Range Not Satisfiable", {
             status: 416,
@@ -105,7 +105,7 @@ export class MainProtocol {
 
   private static streamResponse(
     filePath: string,
-    options: { start: number; end: number } | undefined,
+    options: undefined | { end: number; start: number },
     signal: AbortSignal,
     status: number,
     headers: Record<string, string>

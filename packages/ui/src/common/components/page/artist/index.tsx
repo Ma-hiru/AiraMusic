@@ -1,31 +1,31 @@
 import { cx } from "@emotion/css";
-import { type HeartManager } from "@/common/hooks/use-heart";
 import {
-  type FC,
   memo,
-  type Ref,
-  useCallback,
-  useEffect,
-  useImperativeHandle,
-  useMemo,
   useRef,
-  useState
+  type FC,
+  useMemo,
+  type Ref,
+  useState,
+  useEffect,
+  useCallback,
+  useImperativeHandle
 } from "react";
-import { useRequestAutoRun, useRequestStatusWrap } from "@/common/hooks/use-request-wrap";
-import { NeteaseArtist, NeteaseTrackRecord } from "@/common/netease/models";
+import { type HeartManager } from "@/common/hooks/use-heart";
 import { NeteaseServicesArtist } from "@/common/netease/services";
 import { useTrackContextMenu } from "@/common/hooks/use-track-context-menu";
+import { NeteaseArtist, NeteaseTrackRecord } from "@/common/netease/models";
+import { useRequestAutoRun, useRequestStatusWrap } from "@/common/hooks/use-request-wrap";
+import AppError from "@/common/components/fallback/app-error";
 import RendererImageConstants from "@/common/constants/image";
+import AppLoading from "@/common/components/fallback/app-loading";
+import TrackList, {
+  type TrackListRef,
+  type TrackListClickFunc,
+  type TrackListPlayableManager
+} from "@/common/components/display/track_list";
 
 import Header from "./header";
 import AlbumList from "./album";
-import AppLoading from "@/common/components/fallback/app-loading";
-import TrackList, {
-  type TrackListClickFunc,
-  type TrackListPlayableManager,
-  type TrackListRef
-} from "@/common/components/display/track_list";
-import AppError from "@/common/components/fallback/app-error";
 
 export type ArtistRef = {
   reload: NormalFunc;
@@ -34,51 +34,51 @@ export type ArtistRef = {
 };
 
 interface ArtistProps {
-  id: number;
   ref?: Ref<ArtistRef>;
+  id: number;
   className?: string;
-  onLoadedData?: NormalFunc<[artist: NeteaseArtist]>;
-  onAvatarLoaded?: NormalFunc<[avatar: string]>;
   activeTrackID?: number;
+  pageActionType: "out" | "none" | "enter";
   heartManager: Optional<HeartManager>;
   playableManager: Optional<TrackListPlayableManager>;
-  onClick: TrackListClickFunc<NeteaseTrackRecord>;
-  onClickArtist: NormalFunc<[id: number]>;
-  onClickAlbum: NormalFunc<[id: number]>;
-  addToPlaylistNext: NormalFunc<[track: NeteaseTrackRecord]>;
   addToPlaylistLast: NormalFunc<[track: NeteaseTrackRecord]>;
+  addToPlaylistNext: NormalFunc<[track: NeteaseTrackRecord]>;
   addTrackToPlaylist: NormalFunc<[track: NeteaseTrackRecord]>;
   openComment: NormalFunc<[track: NeteaseTrackRecord]>;
-  pageActionType: "enter" | "out" | "none";
   onPageAction: NormalFunc;
+  onClickAlbum: NormalFunc<[id: number]>;
+  onClickArtist: NormalFunc<[id: number]>;
+  onAvatarLoaded?: NormalFunc<[avatar: string]>;
+  onClick: TrackListClickFunc<NeteaseTrackRecord>;
   onDataLoaded?: NormalFunc<[artist: NeteaseArtist]>;
+  onLoadedData?: NormalFunc<[artist: NeteaseArtist]>;
 }
 
 const Artist: FC<ArtistProps> = ({
-  id,
   ref,
+  id,
   className,
-  onLoadedData,
-  onAvatarLoaded,
   activeTrackID,
+  pageActionType,
   heartManager,
   playableManager,
-  onClick,
-  onClickArtist,
-  onClickAlbum,
-  pageActionType,
-  onPageAction,
-  addToPlaylistNext,
   addToPlaylistLast,
+  addToPlaylistNext,
+  addTrackToPlaylist,
   openComment,
+  onClick,
+  onClickAlbum,
   onDataLoaded,
-  addTrackToPlaylist
+  onLoadedData,
+  onPageAction,
+  onClickArtist,
+  onAvatarLoaded
 }) => {
   const requestData = useCallback((id: number) => {
     if (id <= 0 || !id) return Promise.resolve(null);
     return NeteaseServicesArtist.id(id);
   }, []);
-  const { status, data: artist = null, fetchData } = useRequestStatusWrap(requestData);
+  const { status, fetchData, data: artist = null } = useRequestStatusWrap(requestData);
   const { reload } = useRequestAutoRun(fetchData, [id]);
 
   useEffect(() => {
@@ -132,34 +132,34 @@ const Artist: FC<ArtistProps> = ({
           <Header
             className="shrink-0"
             artist={artist}
-            onAvatarLoaded={onAvatarLoaded}
             tabsItem={tabsItems}
             activeIndex={activeTab}
-            onChange={setActiveTab}
             pageActionType={pageActionType}
+            onChange={setActiveTab}
             onPageAction={onPageAction}
+            onAvatarLoaded={onAvatarLoaded}
           />
           {trackListMounted && (
             <TrackList
               ref={trackListRef}
               id={id}
               className={cx("flex-1", activeTab !== 0 && "hidden")}
-              activeID={activeTrackID}
-              tracks={artist?.hotTracks ?? []}
               type="normal"
+              activeID={activeTrackID}
               heartManager={heartManager}
+              tracks={artist?.hotTracks ?? []}
               playableManager={playableManager}
-              onClickAlbum={onClickAlbum}
-              onClickArtist={onClickArtist}
+              trackCoverSize={RendererImageConstants.PlaylistPageTrackCoverSize}
               onClick={onClick}
               onContext={onContextMenu}
-              trackCoverSize={RendererImageConstants.PlaylistPageTrackCoverSize}
+              onClickAlbum={onClickAlbum}
+              onClickArtist={onClickArtist}
             />
           )}
           {albumListMounted && (
             <AlbumList
-              className={cx("flex-1 pb-4 pt-2", activeTab !== 1 && "hidden")}
               id={id}
+              className={cx("flex-1 pb-4 pt-2", activeTab !== 1 && "hidden")}
               onClick={onClickAlbum}
             />
           )}

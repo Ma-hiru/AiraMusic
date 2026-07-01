@@ -1,16 +1,15 @@
-import { type FC, memo, useEffect, useRef, useState } from "react";
-import { NeteaseHistoryRecord } from "@/common/netease/models";
-import { useUserTrackManager } from "@/common/hooks/use-user-track-manager";
-import { usePageJump } from "@/wins/main/hooks/use-page-jump";
-import { useDisplayAction } from "@/wins/main/hooks/use-display-action";
-import { usePlayerActionInList } from "@/wins/main/hooks/use-player-action-in-list";
 import { useSetAtom } from "jotai";
-import { scrollActionsAtom, typingAtom } from "@/wins/main/atoms/layout";
-import { useRouterActive } from "@/common/hooks/use-router-active";
-import { useScrollActionsRegister } from "@/common/hooks/use-scroll-actions-register";
+import { memo, useRef, type FC, useState, useEffect } from "react";
 import { RoutePathMain } from "@/common/routes";
+import { usePageJump } from "@/wins/main/hooks/use-page-jump";
+import { NeteaseHistoryRecord } from "@/common/netease/models";
+import { useRouterActive } from "@/common/hooks/use-router-active";
+import { useDisplayAction } from "@/wins/main/hooks/use-display-action";
+import { typingAtom, scrollActionsAtom } from "@/wins/main/atoms/layout";
+import { useUserTrackManager } from "@/common/hooks/use-user-track-manager";
 import { useTrackAddToPlaylist } from "@/common/hooks/use-track-add-to-playlist";
-
+import { usePlayerActionInList } from "@/wins/main/hooks/use-player-action-in-list";
+import { useScrollActionsRegister } from "@/common/hooks/use-scroll-actions-register";
 import History, { type HistoryRef } from "@/common/components/page/history";
 
 const HistoryPage: FC<object> = () => {
@@ -18,7 +17,7 @@ const HistoryPage: FC<object> = () => {
   const { heartManager, playableManager } = useUserTrackManager();
 
   // 播放曲目
-  const { addTrackToPlaylistLast, addTrackToPlaylistNext, onTrackPlay, openTrackComment, player } =
+  const { addTrackToPlaylistLast, addTrackToPlaylistNext, openTrackComment, onTrackPlay, player } =
     usePlayerActionInList(() => historyRef.current?.totalTracks.current ?? []);
   // 监听播放历史变化，历史为原地修改的数组，浅拷贝更新引用
   const [historyList, setHistoryList] = useState<NeteaseHistoryRecord[]>(() => [
@@ -30,7 +29,7 @@ const HistoryPage: FC<object> = () => {
     return player.history.addListener(sync);
   }, [player.history]);
   // 注册滚动和定位回调
-  const { canFastLocate, canScrollTop } = useScrollActionsRegister({
+  const { canScrollTop, canFastLocate } = useScrollActionsRegister({
     atom: scrollActionsAtom,
     active: useRouterActive(RoutePathMain, "history"),
     getScrollTopFunc: () => historyRef.current?.scrollTop,
@@ -48,22 +47,22 @@ const HistoryPage: FC<object> = () => {
     <History
       ref={historyRef}
       className="router-container"
+      pageActionType="out"
       historyList={historyList}
-      onClickAlbum={jumpAlbumPage}
-      onClickArtist={jumpArtistPage}
-      onPlay={onTrackPlay}
+      setIsTyping={setIsTyping}
+      canScrollTop={canScrollTop}
+      heartManager={heartManager}
+      canFastLocate={canFastLocate}
       openComment={openTrackComment}
+      playableManager={playableManager}
+      addTrackToPlaylist={addTrackToPlaylist}
+      activeTrackID={player.current.track?.id}
       addToPlaylistLast={addTrackToPlaylistLast}
       addToPlaylistNext={addTrackToPlaylistNext}
-      addTrackToPlaylist={addTrackToPlaylist}
-      heartManager={heartManager}
-      playableManager={playableManager}
-      activeTrackID={player.current.track?.id}
-      canFastLocate={canFastLocate}
-      canScrollTop={canScrollTop}
-      pageActionType="out"
+      onPlay={onTrackPlay}
       onPageAction={onPageAction}
-      setIsTyping={setIsTyping}
+      onClickAlbum={jumpAlbumPage}
+      onClickArtist={jumpArtistPage}
     />
   );
 };

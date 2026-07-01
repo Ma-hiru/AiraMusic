@@ -1,8 +1,8 @@
-import { useRouterActive } from "@/common/hooks/use-router-active";
-import { useCallback, useEffect, useRef } from "react";
 import { useSetAtom } from "jotai";
-import { backgroundCoverAtom } from "@/wins/main/atoms/theme";
+import { useRef, useEffect, useCallback } from "react";
 import { RoutePathMain } from "@/common/routes";
+import { backgroundCoverAtom } from "@/wins/main/atoms/theme";
+import { useRouterActive } from "@/common/hooks/use-router-active";
 
 export function useSetBackground(page: keyof typeof RoutePathMain) {
   const active = useRouterActive(RoutePathMain, page);

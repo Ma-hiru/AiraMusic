@@ -1,8 +1,8 @@
-import { app, type Display, screen } from "electron";
-import { MainRuntime } from "@/lib/runtime";
+import { app, screen, type Display } from "electron";
 import { Log } from "@/lib/log";
+import { MainRuntime } from "@/lib/runtime";
 import { MainWindowConstants } from "@/constants/window";
-import type { ResolvedWindowSize, WindowSize, WindowSizePreset } from "@/types/window";
+import type { WindowSize, WindowSizePreset, ResolvedWindowSize } from "@/types/window";
 
 export class MainScreenResolver {
   private readonly display: Display;

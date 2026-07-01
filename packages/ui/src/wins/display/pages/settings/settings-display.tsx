@@ -1,13 +1,12 @@
-import { type FC, memo, useCallback, useMemo } from "react";
+import { memo, type FC, useMemo, useCallback } from "react";
 import { useUser } from "@/common/store/user";
-import { NeteaseServicesAuth } from "@/common/netease/services";
-import { settingsStoreSnapshot, useSettings } from "@/common/store/settings";
-import { useListenable } from "@/common/hooks/use-listenable";
-import { RendererIPCMessageBus } from "@/common/lib/bus";
 import { RendererOutput } from "@/common/lib/output";
 import { RendererWindow } from "@/common/lib/window";
+import { RendererIPCMessageBus } from "@/common/lib/bus";
+import { useListenable } from "@/common/hooks/use-listenable";
+import { NeteaseServicesAuth } from "@/common/netease/services";
+import { useSettings, settingsStoreSnapshot } from "@/common/store/settings";
 import { useDisplayTitleRegister } from "@/wins/display/hooks/use-display-title";
-
 import Settings from "@/common/components/page/settings";
 
 const SettingsDisplay: FC<object> = () => {
@@ -33,13 +32,13 @@ const SettingsDisplay: FC<object> = () => {
   return (
     <Settings
       className="display-container"
+      login={login}
       output={output}
       user={useUser()}
       settings={useSettings()}
       updateOutput={updateOutput}
-      updateSettings={settingsStoreSnapshot().updateSettings}
-      login={login}
       logout={NeteaseServicesAuth.logout}
+      updateSettings={settingsStoreSnapshot().updateSettings}
     />
   );
 };

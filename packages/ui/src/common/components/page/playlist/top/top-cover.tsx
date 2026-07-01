@@ -1,17 +1,16 @@
-import { type FC, memo, type ReactEventHandler, useCallback, useMemo } from "react";
-import { NeteaseNetworkImage, NeteasePlaylist } from "@/common/netease/models";
-import RendererImageConstants from "@/common/constants/image";
-
-import NeteaseImage from "@/common/components/display/image/netease-image";
+import { memo, type FC, useMemo, useCallback, type ReactEventHandler } from "react";
+import { NeteasePlaylist, NeteaseNetworkImage } from "@/common/netease/models";
 import AppModal from "@/common/components/display/modal";
+import RendererImageConstants from "@/common/constants/image";
+import NeteaseImage from "@/common/components/display/image/netease-image";
 
 interface TopCoverProps {
-  summary: Nullable<NeteasePlaylist>;
   coverCacheKey?: string;
+  summary: Nullable<NeteasePlaylist>;
   onCoverLoaded?: NormalFunc<[src: string]>;
 }
 
-const TopCover: FC<TopCoverProps> = ({ summary, coverCacheKey, onCoverLoaded }) => {
+const TopCover: FC<TopCoverProps> = ({ onCoverLoaded, summary, coverCacheKey }) => {
   const { create, createPlaylistCoverModal } = AppModal.useModal();
 
   const onLoad = useCallback<ReactEventHandler<HTMLImageElement>>(
@@ -36,12 +35,12 @@ const TopCover: FC<TopCoverProps> = ({ summary, coverCacheKey, onCoverLoaded }) 
 
   return (
     <button
+      className="size-44 relative group rounded-md"
       type="button"
       disabled={!summary}
-      onClick={openCoverModal}
-      className="size-44 relative group rounded-md">
+      onClick={openCoverModal}>
       <div className="absolute inset-0 bg-black/0 transition-colors duration-300 group-hover:bg-black/25 overflow-hidden rounded-md cursor-pointer" />
-      <NeteaseImage cache image={image} className="size-44 rounded-md" onLoad={onLoad} />
+      <NeteaseImage className="size-44 rounded-md" image={image} onLoad={onLoad} cache />
     </button>
   );
 };

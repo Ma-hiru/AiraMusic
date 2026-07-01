@@ -1,23 +1,24 @@
-import Loading from "./loading";
-import { type FC, memo, type ReactNode, type RefObject } from "react";
 import { cx } from "@emotion/css";
+import { memo, type FC, type ReactNode, type RefObject } from "react";
+
+import Loading from "./loading";
 
 interface ListLoadingProps {
   ref?: RefObject<Nullable<HTMLDivElement>>;
-  loading: boolean;
-  children?: ReactNode;
-  className?: string;
   tips?: string;
   wrap?: boolean;
+  loading: boolean;
+  className?: string;
+  children?: ReactNode;
 }
 
 const AppLoading: FC<ListLoadingProps> = ({
+  ref,
+  className,
+  wrap,
   loading,
   children,
-  className,
-  tips = "数据努力加载中",
-  ref,
-  wrap
+  tips = "数据努力加载中"
 }) => {
   if (!loading) {
     if (wrap) return <div ref={ref}>{children}</div>;

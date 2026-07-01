@@ -1,7 +1,8 @@
-import { existsSync } from "node:fs";
-import { createRequire } from "node:module";
 import { join } from "node:path";
+import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+import { createRequire } from "node:module";
+
 import type { NativeAddon } from "./api";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));

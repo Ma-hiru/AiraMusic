@@ -1,15 +1,14 @@
 import { cx } from "@emotion/css";
-import { type FC, memo, useCallback, useMemo } from "react";
 import { Trophy } from "lucide-react";
+import { memo, type FC, useMemo, useCallback } from "react";
 import { NeteaseAPIHome } from "@/common/netease/api";
-import { useRequestAutoRetry, useRequestStatusWrap } from "@/common/hooks/use-request-wrap";
-import { usePageJump } from "@/wins/main/hooks/use-page-jump";
 import { RendererHomeConstants } from "@/wins/main/constants";
-
-import AppError from "@/common/components/fallback/app-error";
-import AppLoading from "@/common/components/fallback/app-loading";
-import MediaGrid from "@/common/components/layout/media-grid";
+import { usePageJump } from "@/wins/main/hooks/use-page-jump";
+import { useRequestAutoRetry, useRequestStatusWrap } from "@/common/hooks/use-request-wrap";
 import Section from "@/common/components/layout/section";
+import AppError from "@/common/components/fallback/app-error";
+import MediaGrid from "@/common/components/layout/media-grid";
+import AppLoading from "@/common/components/fallback/app-loading";
 
 const mapToplist = (item: NeteaseAPI.NeteaseToplist) => ({
   id: item.id,
@@ -24,15 +23,15 @@ const HomeChartsView: FC<{ className?: string }> = ({ className }) => {
   const { jumpPlaylistPage } = usePageJump();
   const {
     status,
-    data: toplists = [],
-    fetchData
+    fetchData,
+    data: toplists = []
   } = useRequestStatusWrap(
     useCallback(() => NeteaseAPIHome.toplists().then((response) => response.list), [])
   );
   const { reload } = useRequestAutoRetry(fetchData, [], () => toplists.length !== 0);
 
   // 区分精选榜单，优先显示
-  const { featured, more } = useMemo(() => {
+  const { more, featured } = useMemo(() => {
     const featuredList = [];
     const moreList = [];
 
@@ -59,24 +58,24 @@ const HomeChartsView: FC<{ className?: string }> = ({ className }) => {
   );
   return (
     <div className={cx("flex flex-col gap-8", className)}>
-      <Section title="排行榜" subTitle="Charts" Icon={Trophy}>
-        <AppError reset={reload} when={status === "error"} message="加载排行榜失败">
-          <AppLoading loading={status === "loading"} className="min-h-60">
+      <Section title="排行榜" Icon={Trophy} subTitle="Charts">
+        <AppError reset={reload} message="加载排行榜失败" when={status === "error"}>
+          <AppLoading className="min-h-60" loading={status === "loading"}>
             <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
-              <Section title="官方主榜" subTitle="Featured" className="rounded-lg surface-1 p-3">
+              <Section className="rounded-lg surface-1 p-3" title="官方主榜" subTitle="Featured">
                 <div className="grid gap-2">
                   {featured.map((item, index) => (
                     <button
                       key={item.id}
-                      type="button"
-                      onClick={() => jumpPlaylistPage(item.id, "normal")}
                       className="
                         flex min-h-14 cursor-pointer
                         items-center gap-3 rounded-lg px-2 text-left
                         transition-all duration-300
                         hover:bg-white/20
                         active:scale-[0.98]
-                      ">
+                      "
+                      type="button"
+                      onClick={() => jumpPlaylistPage(item.id, "normal")}>
                       <span className="w-8 shrink-0 text-center text-lg font-bold opacity-70">
                         {index + 1}
                       </span>

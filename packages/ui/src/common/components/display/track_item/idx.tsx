@@ -1,25 +1,25 @@
 import { cx } from "@emotion/css";
-import { type FC, memo } from "react";
-import { AudioLines, Check } from "lucide-react";
+import { memo, type FC } from "react";
+import { Check, AudioLines } from "lucide-react";
 
 interface ListItemIndexProps {
   index: number;
   total: number;
   active: boolean;
   disabled: boolean;
-  onClick?: NormalFunc;
-  selectionMode?: boolean;
   selected?: boolean;
+  selectionMode?: boolean;
+  onClick?: NormalFunc;
 }
 
 const TrackItemIndex: FC<ListItemIndexProps> = ({
+  onClick,
   index,
   total,
   active,
-  onClick,
   disabled,
-  selectionMode,
-  selected
+  selected,
+  selectionMode
 }) => {
   const widthClass = cx(
     total < 100 && "min-w-4",

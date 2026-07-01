@@ -1,8 +1,9 @@
-import AppEnv from "../../scripts/env";
-import path from "node:path";
-import { defineConfig, type Options } from "tsup";
-import { generateLogo } from "../../scripts/logo";
 import { fileURLToPath } from "node:url";
+import { defineConfig, type Options } from "tsup";
+import path from "node:path";
+
+import AppEnv from "../../scripts/env";
+import { generateLogo } from "../../scripts/logo";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 

@@ -1,20 +1,20 @@
-import { type RefObject, useCallback, useRef } from "react";
-import {
-  NeteaseHistoryRecord,
-  NeteaseNetworkImage,
-  NeteaseTrackRecord
-} from "@/common/netease/models";
+import { useRef, useCallback, type RefObject } from "react";
 import { NeteaseServicesImage } from "@/common/netease/services";
+import {
+  NeteaseTrackRecord,
+  NeteaseNetworkImage,
+  NeteaseHistoryRecord
+} from "@/common/netease/models";
 
 /** 虚拟列表滚动时预缓存后续曲目封面，并维护当前可见项与回到顶部状态 */
 export function useTrackCoverPreload(props: {
   totalTracks: RefObject<NeteaseTrackRecord[] | NeteaseHistoryRecord[]>;
   /** 当前展示的曲目数量，搜索过滤时与总数不一致，跳过预缓存 */
+  coverSize: number;
   visibleCount: number;
   canScrollTop: Optional<NormalFunc<[enable: boolean]>>;
-  coverSize: number;
 }) {
-  const { totalTracks, visibleCount, canScrollTop, coverSize } = props;
+  const { canScrollTop, coverSize, totalTracks, visibleCount } = props;
   const currentVisibleItemIndex = useRef(0);
   // 历史最大滚动范围
   const maxRange = useRef<IndexRange>([0, 0]);

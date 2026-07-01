@@ -1,12 +1,12 @@
 import { Log } from "@/common/lib/log";
-import {
-  NeteaseCookie,
-  NeteasePlaylistSummary,
-  NeteaseUser,
-  type NeteaseUserModel
-} from "@/common/netease/models";
-import { NeteaseAPIAuth, NeteaseAPIUser } from "@/common/netease/api";
 import { userStoreSnapshot } from "@/common/store/user";
+import { NeteaseAPIAuth, NeteaseAPIUser } from "@/common/netease/api";
+import {
+  NeteaseUser,
+  NeteaseCookie,
+  type NeteaseUserModel,
+  NeteasePlaylistSummary
+} from "@/common/netease/models";
 
 export default class _NeteaseUserSource {
   private static async getUserPlaylist(uid: number) {

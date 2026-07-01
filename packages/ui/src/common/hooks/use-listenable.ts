@@ -1,6 +1,7 @@
-import { Listenable } from "@/common/utils/listenable";
-import { useUpdate } from "./use-update";
 import { useEffect } from "react";
+import { Listenable } from "@/common/utils/listenable";
+
+import { useUpdate } from "./use-update";
 
 export function useListenable<T extends Listenable<any>>(listenable: T, disable = false) {
   const update = useUpdate();

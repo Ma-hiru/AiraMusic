@@ -1,64 +1,64 @@
 import { cx } from "@emotion/css";
 import { clamp } from "lodash-es";
 import {
-  ArrowLeftToLine,
-  ArrowRightToLine,
-  Download,
-  Image as ImageIcon,
-  ImageOff,
-  type LucideIcon,
-  RotateCcw,
-  RotateCw,
   ZoomIn,
-  ZoomOut
+  ZoomOut,
+  Download,
+  ImageOff,
+  RotateCw,
+  RotateCcw,
+  ArrowLeftToLine,
+  type LucideIcon,
+  ArrowRightToLine,
+  Image as ImageIcon
 } from "lucide-react";
 import {
-  type CSSProperties,
-  type FC,
   memo,
-  type PointerEvent as ReactPointerEvent,
-  useCallback,
-  useEffect,
-  useMemo,
   useRef,
+  type FC,
+  useMemo,
   useState,
-  type WheelEvent as ReactWheelEvent
+  useEffect,
+  useCallback,
+  type CSSProperties,
+  type WheelEvent as ReactWheelEvent,
+  type PointerEvent as ReactPointerEvent
 } from "react";
-import {
-  getExtension,
-  getImageExtension,
-  getURLFileName,
-  resolveFilename
-} from "@/common/utils/file";
-import { RendererIPC } from "@mahiru/ipc/renderer";
 import { Log } from "@/common/lib/log";
+import { RendererIPC } from "@mahiru/ipc/renderer";
 import { RendererWindow } from "@/common/lib/window";
 import { RendererImagePreviewConstants } from "@/common/constants/image-preview";
+import {
+  getExtension,
+  getURLFileName,
+  resolveFilename,
+  getImageExtension
+} from "@/common/utils/file";
 import AppToast from "@/common/components/display/toast";
-import AppLoading from "@/common/components/fallback/app-loading";
 import Marquee from "@/common/components/display/marquee";
+import AppLoading from "@/common/components/fallback/app-loading";
 
 const {
-  MIN_SCALE,
   MAX_SCALE,
+  MIN_SCALE,
   WHEEL_STEP,
-  BUTTON_ZOOM_STEP,
+  EMPTY_IMAGE,
   ROTATE_STEP,
-  DOUBLE_TAP_DELAY,
-  DOUBLE_TAP_DISTANCE,
   MOVE_THRESHOLD,
+  BUTTON_ZOOM_STEP,
+  DOUBLE_TAP_DELAY,
   TOOLBAR_HIDE_DELAY,
-  EMPTY_IMAGE
+  DOUBLE_TAP_DISTANCE
 } = RendererImagePreviewConstants;
 
 interface ImageViewerProps {
-  images: { url?: string; alt?: string }[];
   index: number;
+  images: { alt?: string; url?: string }[];
   onIndexChange: NormalFunc<[index: number]>;
   onToolBarChange?: NormalFunc<[visible: boolean]>;
 }
 
-const ImageViewer: FC<ImageViewerProps> = ({ images, index, onIndexChange, onToolBarChange }) => {
+const ImageViewer: FC<ImageViewerProps> = ({ onIndexChange, onToolBarChange, index, images }) => {
   const viewerRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
   const toolbarTimer = useRef<Nullable<number>>(null);
@@ -69,7 +69,7 @@ const ImageViewer: FC<ImageViewerProps> = ({ images, index, onIndexChange, onToo
   const startPointerPos = useRef({ x: 0, y: 0 });
   const moved = useRef(false);
 
-  const [status, setStatus] = useState<"idle" | "loading" | "error" | "loaded">("idle");
+  const [status, setStatus] = useState<"idle" | "error" | "loaded" | "loading">("idle");
   const [scale, setScale] = useState(1);
   const [translate, setTranslate] = useState({ x: 0, y: 0 });
   const [rotation, setRotation] = useState(0);
@@ -451,7 +451,6 @@ const ImageViewer: FC<ImageViewerProps> = ({ images, index, onIndexChange, onToo
       {/*背景*/}
       {current.url && (
         <img
-          src={imageSrc}
           className={cx(
             `
               pointer-events-none absolute -inset-12 h-[calc(100%+96px)] w-[calc(100%+96px)]
@@ -459,6 +458,7 @@ const ImageViewer: FC<ImageViewerProps> = ({ images, index, onIndexChange, onToo
             `,
             status === "loaded" && toolBarVisible ? "opacity-50" : "opacity-35"
           )}
+          src={imageSrc}
           alt={current.alt}
         />
       )}
@@ -499,17 +499,13 @@ const ImageViewer: FC<ImageViewerProps> = ({ images, index, onIndexChange, onToo
         ref={viewerRef}
         className="relative z-10 flex h-full w-full items-center justify-center overflow-hidden"
         onWheel={handleWheel}
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
-        onPointerLeave={handlePointerUp}>
+        onPointerLeave={handlePointerUp}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}>
         {imageSrc && (
           <img
             ref={imageRef}
-            src={imageSrc}
-            alt={current.alt}
-            draggable={false}
-            style={imageStyle}
             className={cx(
               `
                 h-full w-full select-none object-contain opacity-0
@@ -518,8 +514,12 @@ const ImageViewer: FC<ImageViewerProps> = ({ images, index, onIndexChange, onToo
               `,
               status === "loaded" && "opacity-100"
             )}
-            onLoad={() => setStatus("loaded")}
+            style={imageStyle}
+            src={imageSrc}
+            alt={current.alt}
+            draggable={false}
             onError={() => setStatus("error")}
+            onLoad={() => setStatus("loaded")}
           />
         )}
 
@@ -532,9 +532,9 @@ const ImageViewer: FC<ImageViewerProps> = ({ images, index, onIndexChange, onToo
 
         {status === "loading" && (
           <AppLoading
-            loading
-            tips="图片加载中"
             className="absolute inset-0 z-10 bg-black/20 text-white"
+            tips="图片加载中"
+            loading
           />
         )}
 
@@ -543,13 +543,13 @@ const ImageViewer: FC<ImageViewerProps> = ({ images, index, onIndexChange, onToo
             <ImageOff className="size-12 opacity-80" />
             <p className="text-[13px] font-semibold">图片加载失败</p>
             <button
-              type="button"
-              onClick={retryLoad}
               className="
                 rounded-md border border-white/15 bg-white/10 px-3 py-1.5 text-[12px]
                 font-semibold text-white/90 backdrop-blur-md transition-all duration-200
                 ease-in-out hover:bg-white/15 active:scale-95
-              ">
+              "
+              type="button"
+              onClick={retryLoad}>
               重新加载
             </button>
           </div>
@@ -571,26 +571,18 @@ const ImageViewer: FC<ImageViewerProps> = ({ images, index, onIndexChange, onToo
             : "pointer-events-none translate-y-6 opacity-0"
         )}>
         <ToolbarButton
-          icon={ArrowLeftToLine}
           label="上一张"
+          icon={ArrowLeftToLine}
           disabled={images.length <= 1}
           onClick={lastImage}
         />
         <ToolbarButton
-          icon={ZoomOut}
           label="缩小"
+          icon={ZoomOut}
           disabled={status !== "loaded" || scale <= MIN_SCALE}
           onClick={() => zoomFromCenter(-BUTTON_ZOOM_STEP)}
         />
         <button
-          type="button"
-          aria-label="重置视图"
-          title="重置视图"
-          disabled={status !== "loaded"}
-          onClick={() => {
-            resetTransform();
-            showToolbar(true);
-          }}
           className={cx(
             `
               flex h-9 min-w-18 items-center justify-center gap-2 rounded-md px-2
@@ -599,31 +591,39 @@ const ImageViewer: FC<ImageViewerProps> = ({ images, index, onIndexChange, onToo
               focus-visible:ring-2 focus-visible:ring-white/45
             `,
             status !== "loaded" && "pointer-events-none opacity-35"
-          )}>
+          )}
+          title="重置视图"
+          type="button"
+          aria-label="重置视图"
+          disabled={status !== "loaded"}
+          onClick={() => {
+            resetTransform();
+            showToolbar(true);
+          }}>
           <RotateCcw className="size-4" />
           <span>{Math.round(scale * 100)}%</span>
         </button>
         <ToolbarButton
-          icon={ZoomIn}
           label="放大"
+          icon={ZoomIn}
           disabled={status !== "loaded" || scale >= MAX_SCALE}
           onClick={() => zoomFromCenter(BUTTON_ZOOM_STEP)}
         />
         <ToolbarButton
-          icon={RotateCw}
           label="向右旋转"
+          icon={RotateCw}
           disabled={status !== "loaded"}
           onClick={() => rotate(ROTATE_STEP)}
         />
         <ToolbarButton
-          icon={Download}
           label="保存图片"
+          icon={Download}
           disabled={status !== "loaded" || !hasImages}
           onClick={() => void saveImage()}
         />
         <ToolbarButton
-          icon={ArrowRightToLine}
           label="下一张"
+          icon={ArrowRightToLine}
           disabled={images.length <= 1}
           onClick={nextImage}
         />
@@ -633,23 +633,18 @@ const ImageViewer: FC<ImageViewerProps> = ({ images, index, onIndexChange, onToo
 };
 
 const ToolbarButton = ({
-  icon: Icon,
+  onClick,
   label,
   disabled,
-  onClick
+  icon: Icon
 }: {
-  icon: LucideIcon;
   label: string;
+  icon: LucideIcon;
   disabled?: boolean;
   onClick?: NormalFunc;
 }) => {
   return (
     <button
-      type="button"
-      aria-label={label}
-      title={label}
-      disabled={disabled}
-      onClick={onClick}
       className={cx(
         `
           flex size-9 items-center justify-center rounded-md
@@ -658,14 +653,19 @@ const ToolbarButton = ({
           focus-visible:ring-2 focus-visible:ring-white/45
         `,
         disabled && "pointer-events-none opacity-35"
-      )}>
+      )}
+      title={label}
+      type="button"
+      aria-label={label}
+      disabled={disabled}
+      onClick={onClick}>
       <Icon className="size-4.5" />
     </button>
   );
 };
 
 const createDownloadName = (
-  image: { url?: string; alt?: string },
+  image: { alt?: string; url?: string },
   contentType: Nullable<string>
 ) => {
   const urlFileName = getURLFileName(image.url);

@@ -1,5 +1,5 @@
 import { cx } from "@emotion/css";
-import { type FC, memo } from "react";
+import { memo, type FC } from "react";
 import RendererPlayerHandle from "@/wins/main/lib/handle";
 
 const LyricChange: FC<object> = () => {
@@ -36,9 +36,6 @@ const LyricChange: FC<object> = () => {
       {items.map(({ key, label, title, active, existed }) => (
         <button
           key={key}
-          title={title}
-          disabled={!existed}
-          onClick={() => player.toggleLyric(key)}
           className={cx(
             `
               flex size-5 items-center justify-center overflow-hidden rounded-sm
@@ -48,7 +45,10 @@ const LyricChange: FC<object> = () => {
             `,
             active && existed && "bg-white text-black",
             !existed && "cursor-not-allowed! opacity-60"
-          )}>
+          )}
+          title={title}
+          disabled={!existed}
+          onClick={() => player.toggleLyric(key)}>
           {label}
         </button>
       ))}

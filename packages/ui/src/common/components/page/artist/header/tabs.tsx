@@ -1,4 +1,4 @@
-import { type FC, memo } from "react";
+import { memo, type FC } from "react";
 import SectionTab from "@/common/components/data-input/tab";
 
 interface TabsProps {
@@ -8,14 +8,14 @@ interface TabsProps {
   onChange?: NormalFunc<[index: number]>;
 }
 
-const Tabs: FC<TabsProps> = ({ className, tabsItem, activeIndex, onChange }) => {
+const Tabs: FC<TabsProps> = ({ className, onChange, tabsItem, activeIndex }) => {
   return (
     <SectionTab
       className={className}
       data={tabsItem}
+      mode="less-theme"
       activeIndex={activeIndex}
       onChange={onChange}
-      mode="less-theme"
     />
   );
 };

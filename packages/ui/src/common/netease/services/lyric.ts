@@ -1,7 +1,7 @@
-import { NeteaseAPILyric } from "@/common/netease/api";
 import { Log } from "@/common/lib/log";
-import { NeteaseLyric, NeteaseTrack } from "@/common/netease/models";
 import { RendererCache } from "@/common/lib/cache";
+import { NeteaseAPILyric } from "@/common/netease/api";
+import { NeteaseLyric, NeteaseTrack } from "@/common/netease/models";
 
 export default class _NeteaseLyricSource {
   //region cache

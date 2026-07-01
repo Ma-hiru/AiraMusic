@@ -1,5 +1,5 @@
-import { NeteasePlaylistSummary } from "./netease-playlist-summary";
 import { NeteaseCookie } from "./netease-cookie";
+import { NeteasePlaylistSummary } from "./netease-playlist-summary";
 
 export class NeteaseUser implements NeteaseUserModel {
   //region fields
@@ -49,14 +49,14 @@ export class NeteaseUser implements NeteaseUserModel {
 
   static fromNeteaseAPI(props: {
     refreshCookiesDate?: number;
-    profile: NeteaseAPI.NeteaseUserDetailResponse["profile"];
-    likedTrackIDs: {
-      ids: Record<number, boolean>;
-      checkPoint: number;
-    };
     likedPlaylist: NeteaseAPI.NeteasePlaylistSummary;
     starPlaylists: NeteaseAPI.NeteasePlaylistSummary[];
     userPlaylists: NeteaseAPI.NeteasePlaylistSummary[];
+    profile: NeteaseAPI.NeteaseUserDetailResponse["profile"];
+    likedTrackIDs: {
+      checkPoint: number;
+      ids: Record<number, boolean>;
+    };
   }) {
     props.refreshCookiesDate ??= new Date().getDate();
     return new NeteaseUser({
@@ -86,13 +86,13 @@ export class NeteaseUser implements NeteaseUserModel {
 
 export interface NeteaseUserModel {
   userId: number;
-  profile: NeteaseAPI.NeteaseUserDetailResponse["profile"];
-  likedTrackIDs: {
-    ids: Record<number, boolean>;
-    checkPoint: number;
-  };
   refreshCookiesDate: number;
   likedPlaylist: NeteasePlaylistSummary;
   starPlaylists: NeteasePlaylistSummary[];
   userPlaylists: NeteasePlaylistSummary[];
+  profile: NeteaseAPI.NeteaseUserDetailResponse["profile"];
+  likedTrackIDs: {
+    checkPoint: number;
+    ids: Record<number, boolean>;
+  };
 }

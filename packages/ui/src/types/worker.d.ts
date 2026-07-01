@@ -1,18 +1,18 @@
 type SpectrumWorkerArgs =
+  | { type: "reset" }
+  | { type: "analyze"; data: Float32Array }
+  | { factor: number; type: "setSmoothing" }
+  | { data: Float32Array; type: "analyzeWithPeaks" }
   | {
       type: "init";
       fftSize: number;
       numBands: number;
-      withPeaks: boolean;
       sampleRate: number;
-    }
-  | { type: "analyze"; data: Float32Array }
-  | { type: "analyzeWithPeaks"; data: Float32Array }
-  | { type: "setSmoothing"; factor: number }
-  | { type: "reset" };
+      withPeaks: boolean;
+    };
 
 type SpectrumWorkerResult =
   | { type: "ready" }
+  | { error: string; type: "error" }
   | { type: "spectrum"; bands: Float32Array }
-  | { type: "spectrumWithPeaks"; data: Float32Array }
-  | { type: "error"; error: string };
+  | { data: Float32Array; type: "spectrumWithPeaks" };

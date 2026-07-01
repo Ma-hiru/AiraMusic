@@ -1,11 +1,11 @@
-import QRCode from "qrcode";
-import { NeteaseAPIAuth } from "@/common/netease/api";
-import { useCallback, useEffect, useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Log } from "@/common/lib/log";
+import { NeteaseAPIAuth } from "@/common/netease/api";
+import QRCode from "qrcode";
 
 interface LoginQRCodeProps {
-  qrOptions?: QRCode.QRCodeToDataURLOptions;
   checkInterval?: number;
+  qrOptions?: QRCode.QRCodeToDataURLOptions;
 }
 
 export function useLoginQRCode(props?: LoginQRCodeProps) {

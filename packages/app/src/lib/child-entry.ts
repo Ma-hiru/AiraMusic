@@ -1,20 +1,20 @@
-import { app, utilityProcess, type UtilityProcess } from "electron";
 import { fileURLToPath } from "node:url";
+import { app, utilityProcess, type UtilityProcess } from "electron";
 import { Log } from "@/lib/log";
 import { MainServicesInstance, type MainServicesType } from "@/types/service";
 
 export type MainChildEntryOptions = {
-  serviceName: MainServicesType;
-  childPath: string;
   metaUrl: string;
-  env?: NodeJS.ProcessEnv;
+  childPath: string;
   autoStart?: boolean;
   stopTimeout?: number;
+  env?: NodeJS.ProcessEnv;
+  serviceName: MainServicesType;
   onError: NormalFunc<[err: Error]>;
 };
 
 export abstract class MainChildEntry<
-  ParentMessage extends { type: "start" | "stop" },
+  ParentMessage extends { type: "stop" | "start" },
   ChildMessage extends { type: string }
 > extends MainServicesInstance {
   readonly childPath: string;

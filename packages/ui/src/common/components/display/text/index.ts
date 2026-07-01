@@ -1,6 +1,6 @@
 import { cx } from "@emotion/css";
 
-export type TextVariant = "sectionTitle" | "sectionCaption" | "body" | "meta" | "badge";
+export type TextVariant = "body" | "meta" | "badge" | "sectionTitle" | "sectionCaption";
 
 export const textClassNames: Record<TextVariant, string> = {
   sectionTitle: "text-xl font-bold",

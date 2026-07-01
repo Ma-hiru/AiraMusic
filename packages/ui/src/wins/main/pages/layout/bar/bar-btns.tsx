@@ -1,20 +1,19 @@
 import { cx } from "@emotion/css";
-import { type FC, memo, useCallback, useEffect, type WheelEvent } from "react";
-import { ListMusic, Trash2, Volume, Volume1, Volume2, VolumeX } from "lucide-react";
-import { useUpdate } from "@/common/hooks/use-update";
-import { useListenable } from "@/common/hooks/use-listenable";
-import { RendererWindow } from "@/common/lib/window";
 import { useAtomValue } from "jotai";
+import { memo, type FC, useEffect, useCallback, type WheelEvent } from "react";
+import { Trash2, Volume, Volume1, Volume2, VolumeX, ListMusic } from "lucide-react";
+import { RendererWindow } from "@/common/lib/window";
 import { fmModeAtom } from "@/wins/main/atoms/track";
+import { useUpdate } from "@/common/hooks/use-update";
 import { NeteaseAPITrack } from "@/common/netease/api";
-import { usePageJump } from "@/wins/main/hooks/use-page-jump";
 import { useLatestRef } from "@/common/hooks/use-latest-ref";
+import { useListenable } from "@/common/hooks/use-listenable";
+import { usePageJump } from "@/wins/main/hooks/use-page-jump";
 import { usePlayerActionInList } from "@/wins/main/hooks/use-player-action-in-list";
-import RendererPlayerHandle from "@/wins/main/lib/handle";
 import AppModal from "@/common/components/display/modal";
 import AppToast from "@/common/components/display/toast";
-
 import Tooltip from "@/common/components/display/tooltip";
+import RendererPlayerHandle from "@/wins/main/lib/handle";
 import RangeSlider from "@/common/components/data-input/range";
 
 const WHEEL_VOLUME_STEP = 0.1;
@@ -100,24 +99,23 @@ const BarBtns: FC<object> = () => {
     <div className="flex gap-4 justify-end items-center h-full ">
       {fmMode && (
         <button
-          title="不再推荐"
-          type="button"
-          onClick={dislike}
           className="
             size-5 flex items-center justify-center select-none cursor-pointer
             hover:opacity-50 ease-in-out duration-300 transition-all active:scale-90
-          ">
+          "
+          title="不再推荐"
+          type="button"
+          onClick={dislike}>
           <Trash2 className="size-5" />
         </button>
       )}
 
       <Tooltip
-        interactive
-        tooltipRole="group"
-        tooltipLabel="音量调整"
-        placement="top"
-        onWheel={onWheel}
         className="size-5 items-center justify-center"
+        placement="top"
+        tooltipLabel="音量调整"
+        tooltipRole="group"
+        onWheel={onWheel}
         content={
           <div
             className="
@@ -128,42 +126,41 @@ const BarBtns: FC<object> = () => {
             ">
             <p className="text-[10px] font-semibold text-primary">{volumePercent}%</p>
             <RangeSlider
+              className="h-24"
               min={0}
-              max={100}
               step={1}
-              value={volumePercent}
+              max={100}
               label="音量"
+              value={volumePercent}
+              orientation="vertical"
               valueText={`${volumePercent}%`}
               onChange={onVolumeChange}
-              orientation="vertical"
-              className="h-24"
             />
           </div>
-        }>
+        }
+        interactive>
         <button
-          type="button"
-          aria-label={volumePercent <= 0 ? "已静音" : `音量 ${volumePercent}%`}
-          onClick={toggleMute}
           className="
             size-5 flex items-center justify-center select-none cursor-pointer
             hover:opacity-50 ease-in-out duration-300 transition-all active:scale-90
-          ">
-          <VolumeTag aria-hidden="true" fill="currentColor" className="size-5" />
+          "
+          type="button"
+          aria-label={volumePercent <= 0 ? "已静音" : `音量 ${volumePercent}%`}
+          onClick={toggleMute}>
+          <VolumeTag className="size-5" aria-hidden="true" fill="currentColor" />
         </button>
       </Tooltip>
       <button
-        title="播放列表"
-        type="button"
-        onClick={openPlaylistModal}
         className="
           size-5 flex items-center justify-center select-none cursor-pointer
           hover:opacity-50 ease-in-out duration-300 transition-all active:scale-90
-        ">
+        "
+        title="播放列表"
+        type="button"
+        onClick={openPlaylistModal}>
         <ListMusic className="size-5" />
       </button>
       <button
-        title="桌面歌词"
-        type="button"
         className={cx(
           `
           size-5 flex justify-center items-center font-semibold
@@ -173,6 +170,8 @@ const BarBtns: FC<object> = () => {
           `,
           lyricWindow.opened && "text-primary"
         )}
+        title="桌面歌词"
+        type="button"
         onClick={openLyricWindow}>
         词
       </button>

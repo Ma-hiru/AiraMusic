@@ -1,19 +1,19 @@
-import {
-  type CSSProperties,
-  type Key,
-  memo,
-  type ReactNode,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef
-} from "react";
-import { useLatestRef } from "@/common/hooks/use-latest-ref";
-import { Log } from "@/common/lib/log";
-import AppLoading from "@/common/components/fallback/app-loading";
-import AppEmpty from "@/common/components/fallback/app-empty";
 import { cx } from "@emotion/css";
+import {
+  memo,
+  useRef,
+  useMemo,
+  type Key,
+  useEffect,
+  useCallback,
+  type ReactNode,
+  type CSSProperties
+} from "react";
+import { Log } from "@/common/lib/log";
+import { useLatestRef } from "@/common/hooks/use-latest-ref";
 import { useScrollAutoHide } from "@/common/hooks/use-scroll-auto-hide";
+import AppEmpty from "@/common/components/fallback/app-empty";
+import AppLoading from "@/common/components/fallback/app-loading";
 
 export type InfiniteList<T> = {
   /**
@@ -51,29 +51,29 @@ export type InfiniteList<T> = {
   /**
    * 禁用自动加载
    */
-  disabled?: boolean;
   className?: string;
-  itemClassName?: string;
+  disabled?: boolean;
   style?: CSSProperties;
-  LoadingFallback?: ReactNode;
+  itemClassName?: string;
   EmptyFallback?: ReactNode;
+  LoadingFallback?: ReactNode;
 };
 
 const InfiniteList = <T,>({
-  items,
-  render,
-  buildKey = (_, index) => index,
-  hasMore,
-  isLoading = false,
+  className,
   onLoadMore,
-  rootMargin = "200px 0px",
+  items,
+  style,
+  render,
+  hasMore,
+  itemClassName,
   threshold = 0,
   disabled = false,
-  className,
-  itemClassName,
-  style,
-  LoadingFallback = <AppLoading loading />,
-  EmptyFallback = <AppEmpty />
+  isLoading = false,
+  rootMargin = "200px 0px",
+  EmptyFallback = <AppEmpty />,
+  buildKey = (_, index) => index,
+  LoadingFallback = <AppLoading loading />
 }: InfiniteList<T>) => {
   const isEmpty = items.length === 0;
   const containerRef = useRef<HTMLDivElement>(null);
@@ -126,9 +126,9 @@ const InfiniteList = <T,>({
   const children = useMemo(() => {
     return items.map((item, index) => (
       <div
-        role="listitem"
         key={buildKey(item, index)}
         className={itemClassName}
+        role="listitem"
         children={render(item, index)}
       />
     ));
@@ -138,14 +138,14 @@ const InfiniteList = <T,>({
 
   return (
     <div
-      role="list"
       ref={containerRef}
       className={cx("w-full overflow-y-auto overflow-x-hidden scrollbar scrollbar-show", className)}
-      style={style}>
+      style={style}
+      role="list">
       {children}
       {isEmpty && !isLoading && EmptyFallback}
       {isLoading && LoadingFallback}
-      <span aria-hidden ref={sentinelRef} className="h-px" />
+      <span ref={sentinelRef} className="h-px" aria-hidden />
     </div>
   );
 };

@@ -5,9 +5,9 @@ export class RequestCollector {
   private static readonly requestCollectionsProps = new Map<
     string,
     {
-      timer: number;
       size: number;
       delay: number;
+      timer: number;
       flushing: boolean;
       flush: NormalFunc<[collections: any[]]>;
     }

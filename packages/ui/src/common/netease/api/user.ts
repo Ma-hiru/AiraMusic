@@ -55,7 +55,7 @@ export default class _NeteaseUserAPI {
     /** 用户 id */
     uid: number;
     /** type=1 时只返回 weekData, type=0 时返回 allData */
-    type: 1 | 0;
+    type: 0 | 1;
   }) {
     return apiRequest<any, NeteaseAPI.NeteaseAPIResponse>({
       url: "/user/record",

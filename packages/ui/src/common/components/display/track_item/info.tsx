@@ -1,32 +1,32 @@
-import { type FC, memo } from "react";
 import { Heart } from "lucide-react";
+import { memo, type FC } from "react";
 import { TrackBitmark } from "@/common/enum";
-import { NeteaseHistoryRecord, NeteaseTrackRecord } from "@/common/netease/models";
 import { RendererFormat } from "@/common/lib/format";
-
-import ListItemQuality from "./quality";
+import { NeteaseTrackRecord, NeteaseHistoryRecord } from "@/common/netease/models";
 import Tag from "@/common/components/display/tag";
 
+import ListItemQuality from "./quality";
+
 interface ListItemAlbumProps {
-  track: NeteaseTrackRecord | NeteaseHistoryRecord;
+  liked: boolean;
   active: boolean;
   disabled: boolean;
-  liked: boolean;
+  type: "like" | "album" | "normal" | "history";
+  track: NeteaseTrackRecord | NeteaseHistoryRecord;
   onLikeChange?: NormalFunc;
-  type: "album" | "history" | "like" | "normal";
 }
 
-const TrackItemInfo: FC<ListItemAlbumProps> = ({ track, disabled, liked, onLikeChange, type }) => {
+const TrackItemInfo: FC<ListItemAlbumProps> = ({ onLikeChange, type, liked, track, disabled }) => {
   const hasExplicit = track.detail.checkBitmark(TrackBitmark.Explicit);
   const badgeClassName = "text-[8px] font-bold opacity-90";
 
   return (
     <div className="flex min-w-max items-center justify-end gap-3 text-[12px] leading-none">
-      {hasExplicit && <Tag text="E" className={badgeClassName} />}
+      {hasExplicit && <Tag className={badgeClassName} text="E" />}
       <ListItemQuality track={track} />
       <Heart
-        fill={liked ? "currentColor" : "transparent"}
         className="relative -top-px size-4 shrink-0 cursor-pointer transition-opacity duration-300 ease-in-out hover:opacity-60 active:scale-90"
+        fill={liked ? "currentColor" : "transparent"}
         onClick={(e) => {
           e.stopPropagation();
           (!disabled || liked) && onLikeChange?.();

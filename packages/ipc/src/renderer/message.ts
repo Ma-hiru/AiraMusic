@@ -1,7 +1,7 @@
 import { Log } from "../inject/log";
-import { ApiKey } from "../constants/preload";
-import type { Message, MessageData, MessageDirection, MessageEvent } from "../types/message";
 import type { Api } from "../types/preload";
+import { ApiKey } from "../constants/preload";
+import type { Message, MessageData, MessageEvent, MessageDirection } from "../types/message";
 
 // @ts-expect-error ApiKey是preload注入的，不存在于标准的globalThis
 const electronAPI = globalThis[ApiKey] as Api;
@@ -14,7 +14,7 @@ export class MessageChannel {
   private static handle(message: Message<any, MessageDirection["receive"]>) {
     const eventHandlers = this.handlers.get(message.type);
     if (eventHandlers) {
-      for (const [id, { once, from, callback }] of eventHandlers.entries()) {
+      for (const [id, { from, once, callback }] of eventHandlers.entries()) {
         try {
           if (from === message.from) {
             // 指明 from cb 只接受 data
@@ -138,6 +138,6 @@ type Handler = {
   once: boolean;
   from: WindowType;
   callback:
-    | NormalFunc<[message: Message<any, MessageDirection["receive"]>]>
-    | NormalFunc<[data: MessageData<any>]>;
+    | NormalFunc<[data: MessageData<any>]>
+    | NormalFunc<[message: Message<any, MessageDirection["receive"]>]>;
 };

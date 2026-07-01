@@ -1,8 +1,8 @@
-import express from "express";
-import { createProxyServer } from "http-proxy-3";
-import { Agent } from "node:http";
 import { join } from "node:path";
+import { Agent } from "node:http";
+import { createProxyServer } from "http-proxy-3";
 import { MainChild } from "@/lib/child";
+import express from "express";
 import type { ProxyChildMessage, ProxyParentMessage } from "@/types/proxy.child";
 import type { MainChildControlMessage, MainChildSerializedError } from "@/types/child";
 
@@ -21,10 +21,10 @@ function createCacheAgent() {
 }
 
 function createProxyMiddleware(options: {
-  target: string;
   agent: Agent;
-  proxyTimeout: number;
+  target: string;
   timeout: number;
+  proxyTimeout: number;
   onError: (error: Error) => void;
 }) {
   const proxy = createProxyServer({
@@ -180,7 +180,7 @@ class ProxyChildService extends MainChild<ProxyParentMessage, ProxyChildMessage>
 
   protected override handleCustomMessage(
     message: Exclude<ProxyParentMessage, MainChildControlMessage>
-  ): Promise<void> | void {
+  ): void | Promise<void> {
     void message;
   }
 }

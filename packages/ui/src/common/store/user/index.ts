@@ -1,7 +1,8 @@
 import { useMemo } from "react";
-import { UserStoreInitializer, type UserStoreType } from "./config";
-import { RendererZustandStoreCreator } from "@/common/lib/store";
 import { NeteaseUser } from "@/common/netease/models";
+import { RendererZustandStoreCreator } from "@/common/lib/store";
+
+import { type UserStoreType, UserStoreInitializer } from "./config";
 
 export const useUserStore = RendererZustandStoreCreator.createZustandStore<UserStoreType>(
   UserStoreInitializer,

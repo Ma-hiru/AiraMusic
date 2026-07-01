@@ -1,24 +1,24 @@
 type RendererAudioOutputDevice = {
-  deviceId: string;
-  groupId: string;
   label: string;
+  groupId: string;
+  deviceId: string;
   isDefault: boolean;
 };
 
 type RendererAudioOutputCategory =
-  | "system-default"
-  | "speaker-or-headphone"
-  | "bluetooth"
   | "usb"
-  | "hdmi-displayport"
+  | "unknown"
   | "virtual"
-  | "unknown";
+  | "bluetooth"
+  | "system-default"
+  | "hdmi-displayport"
+  | "speaker-or-headphone";
 
 type RendererAudioOutputDeviceView = RendererAudioOutputDevice & {
-  category: RendererAudioOutputCategory;
+  priority: number;
   displayName: string;
   hiddenByDefault: boolean;
-  priority: number;
+  category: RendererAudioOutputCategory;
 };
 
 type RendererSinkableAudioElement = HTMLMediaElement & {
@@ -34,7 +34,7 @@ type RendererSinkableAudioContext = AudioContext & {
 };
 
 type RendererAudioOutputTarget = {
+  sinkId?: string;
   audio: RendererSinkableAudioElement;
   context: Nullable<RendererSinkableAudioContext>;
-  sinkId?: string;
 };

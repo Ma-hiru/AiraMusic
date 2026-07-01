@@ -1,9 +1,9 @@
-import { type FC, memo, useCallback } from "react";
 import { Search } from "lucide-react";
-import NoDrag from "@/common/components/layout/drag/no-drag";
+import { memo, type FC, useCallback } from "react";
 import { RendererWindow } from "@/common/lib/window";
 import { RendererIPCMessageBus } from "@/common/lib/bus";
 import { useSearchRecommend } from "@/common/hooks/use-search-recommend";
+import NoDrag from "@/common/components/layout/drag/no-drag";
 
 const TopSearch: FC<object> = () => {
   const defaultKeywords = useSearchRecommend();

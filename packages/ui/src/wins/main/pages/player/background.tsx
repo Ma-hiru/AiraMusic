@@ -1,15 +1,14 @@
-import { type FC, memo, useEffect, useMemo } from "react";
 import { useAtom, useAtomValue } from "jotai";
-import { playerBackgroundCoverAtom } from "@/wins/main/atoms/theme";
-import { playModalAtom } from "@/wins/main/atoms/layout";
-import { useSettings } from "@/common/store/settings";
-import { useMMCQ } from "@/wins/main/hooks/use-mmcq";
-import { NeteaseServicesImage } from "@/common/netease/services";
-import { NeteaseNetworkImage } from "@/common/netease/models";
+import { memo, type FC, useMemo, useEffect } from "react";
 import { RendererCache } from "@/common/lib/cache";
-
-import AcrylicBackground from "@/common/components/display/acrylic-background";
+import { useMMCQ } from "@/wins/main/hooks/use-mmcq";
+import { useSettings } from "@/common/store/settings";
+import { playModalAtom } from "@/wins/main/atoms/layout";
+import { NeteaseNetworkImage } from "@/common/netease/models";
+import { NeteaseServicesImage } from "@/common/netease/services";
+import { playerBackgroundCoverAtom } from "@/wins/main/atoms/theme";
 import RendererPlayerHandle from "@/wins/main/lib/handle";
+import AcrylicBackground from "@/common/components/display/acrylic-background";
 
 const Background: FC<object> = () => {
   const [backgroundCover, setBackgroundCover] = useAtom(playerBackgroundCoverAtom);
@@ -46,16 +45,16 @@ const Background: FC<object> = () => {
 
   return (
     <AcrylicBackground
-      fluid={settings.performance.usePlayerFluid}
-      fluidPaused={paused}
-      fluidSpeed={settings.performance.playerFluidSpeed}
       className="absolute inset-0"
-      src={resolvedBackgroundCover ?? undefined}
-      brightness={0.4}
-      opacity={0.4}
       blur={60}
       saturate={3}
+      opacity={0.4}
+      brightness={0.4}
+      fluidPaused={paused}
       themeColors={themeColors}
+      src={resolvedBackgroundCover ?? undefined}
+      fluid={settings.performance.usePlayerFluid}
+      fluidSpeed={settings.performance.playerFluidSpeed}
     />
   );
 };

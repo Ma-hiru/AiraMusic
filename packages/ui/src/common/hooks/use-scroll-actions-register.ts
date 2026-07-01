@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useRef } from "react";
-import { type PrimitiveAtom, useSetAtom } from "jotai";
+import { useSetAtom, type PrimitiveAtom } from "jotai";
+import { useRef, useEffect, useCallback } from "react";
 import { useLatestRef } from "@/common/hooks/use-latest-ref";
 
 export interface ScrollActions {

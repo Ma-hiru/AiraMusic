@@ -1,13 +1,12 @@
-import { type FC, memo, useCallback, useMemo } from "react";
 import { DiscAlbum } from "lucide-react";
+import { memo, type FC, useMemo, useCallback } from "react";
 import { NeteaseAPIAlbum } from "@/common/netease/api";
 import { useRequestAutoRetry, useRequestStatusWrap } from "@/common/hooks/use-request-wrap";
-import RendererImageConstants from "@/common/constants/image";
-
-import AppError from "@/common/components/fallback/app-error";
-import AppLoading from "@/common/components/fallback/app-loading";
-import MediaGrid from "@/common/components/layout/media-grid";
 import Section from "@/common/components/layout/section";
+import AppError from "@/common/components/fallback/app-error";
+import MediaGrid from "@/common/components/layout/media-grid";
+import RendererImageConstants from "@/common/constants/image";
+import AppLoading from "@/common/components/fallback/app-loading";
 
 interface NewAlbumsProps {
   onClickItem?: NormalFunc<[id: number]>;
@@ -20,8 +19,8 @@ const getAlbumArtists = (album: NeteaseAPI.ArtistAlbum) => {
 const NewAlbums: FC<NewAlbumsProps> = ({ onClickItem }) => {
   const {
     status,
-    data: albums = [],
-    fetchData
+    fetchData,
+    data: albums = []
   } = useRequestStatusWrap(
     useCallback(
       () => NeteaseAPIAlbum.allNews({ area: "ALL", limit: 10 }).then((response) => response.albums),
@@ -42,9 +41,9 @@ const NewAlbums: FC<NewAlbumsProps> = ({ onClickItem }) => {
   );
 
   return (
-    <Section title="新碟上架" subTitle="New Albums" Icon={DiscAlbum}>
-      <AppError reset={reload} when={status === "error"} message="加载新碟失败">
-        <AppLoading loading={status === "loading"} className="h-40">
+    <Section title="新碟上架" Icon={DiscAlbum} subTitle="New Albums">
+      <AppError reset={reload} message="加载新碟失败" when={status === "error"}>
+        <AppLoading className="h-40" loading={status === "loading"}>
           <MediaGrid
             items={items}
             coverSize={RendererImageConstants.AlbumListCoverSize}

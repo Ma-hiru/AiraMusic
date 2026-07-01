@@ -1,14 +1,13 @@
 import { cx } from "@emotion/css";
-import { Check, ChevronDown, Monitor } from "lucide-react";
-import { type FC, memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
-
-import Card from "@/common/components/layout/card";
-import { useScrollAutoHide } from "@/common/hooks/use-scroll-auto-hide";
+import { Check, Monitor, ChevronDown } from "lucide-react";
+import { memo, useRef, type FC, useMemo, useState, useEffect, useCallback } from "react";
 import { RendererIPCMessageBus } from "@/common/lib/bus";
+import { useScrollAutoHide } from "@/common/hooks/use-scroll-auto-hide";
+import Card from "@/common/components/layout/card";
 
 interface DeviceProps {
-  output: { selected: string; views: { displayName: string; deviceId: string }[] };
   updateOutput: NormalFunc<[deviceId: string]>;
+  output: { selected: string; views: { deviceId: string; displayName: string }[] };
 }
 
 const Device: FC<DeviceProps> = ({ output, updateOutput }) => {
@@ -58,16 +57,12 @@ const Device: FC<DeviceProps> = ({ output, updateOutput }) => {
   }, []);
 
   return (
-    <Card title="播放设备" subTitle="Devices" Icon={Monitor}>
+    <Card title="播放设备" Icon={Monitor} subTitle="Devices">
       <div
         ref={rootRef}
         className="w-full space-y-3"
         onKeyDown={(event) => event.key === "Escape" && setOpened(false)}>
         <button
-          type="button"
-          title="选择播放设备"
-          disabled={output.views.length === 0}
-          onClick={toggleOpened}
           className={cx(
             `
               flex h-16 w-full items-center gap-3 rounded-lg border border-white/15
@@ -77,7 +72,11 @@ const Device: FC<DeviceProps> = ({ output, updateOutput }) => {
               disabled:cursor-not-allowed disabled:opacity-60
             `,
             opened && "border-(--text-color)! bg-primary! text-(--text-color-on-main)!"
-          )}>
+          )}
+          type="button"
+          title="选择播放设备"
+          disabled={output.views.length === 0}
+          onClick={toggleOpened}>
           <span className="flex size-10 shrink-0 items-center justify-center rounded-md">
             <Monitor className="size-4" />
           </span>
@@ -98,7 +97,6 @@ const Device: FC<DeviceProps> = ({ output, updateOutput }) => {
         </button>
         <ul
           ref={listRef}
-          title="播放设备"
           className={cx(
             `
             max-h-48 overflow-y-auto rounded-lg border border-white/15
@@ -106,13 +104,13 @@ const Device: FC<DeviceProps> = ({ output, updateOutput }) => {
             transition-all duration-300 ease-in-out space-y-1
           `,
             !opened && "hidden"
-          )}>
+          )}
+          title="播放设备">
           {output.views.map((device) => {
             const active = output.selected === device.deviceId;
             return (
               <li
                 key={device.deviceId}
-                onClick={() => selectDevice(device.deviceId)}
                 className={cx(
                   `
                       flex h-10 w-full items-center gap-2 rounded-md px-2.5 text-left
@@ -121,7 +119,8 @@ const Device: FC<DeviceProps> = ({ output, updateOutput }) => {
                        active:scale-[0.98]
                     `,
                   active ? "bg-primary text-primary-text hover:opacity-50" : "hover:bg-white/10"
-                )}>
+                )}
+                onClick={() => selectDevice(device.deviceId)}>
                 <span className="min-w-0 flex-1 truncate">{device.displayName}</span>
                 <Check className={cx("size-3.5 shrink-0", !active && "opacity-0")} />
               </li>

@@ -1,6 +1,6 @@
-import { extractPalette } from "@mahiru/wasm";
-import { readFile } from "node:fs/promises";
 import { join } from "node:path";
+import { readFile } from "node:fs/promises";
+import { extractPalette } from "@mahiru/wasm";
 
 const imagePath = join(process.cwd(), "../app/assets/logo.png");
 

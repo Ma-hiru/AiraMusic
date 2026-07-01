@@ -28,8 +28,8 @@ export default class _NeteaseArtistAPI {
   /**
    * 调用此接口,可获得歌手专辑内容
    * */
-  static albums(props: { id: number; pageSize?: number; pageNo?: number }) {
-    const { id, pageSize = 30, pageNo = 1 } = props;
+  static albums(props: { id: number; pageNo?: number; pageSize?: number }) {
+    const { id, pageNo = 1, pageSize = 30 } = props;
     const offset = (pageNo - 1) * pageSize;
     const limit = pageSize;
     return apiRequest<unknown, NeteaseAPI.NeteaseArtistAlbumResponse>({
@@ -44,8 +44,8 @@ export default class _NeteaseArtistAPI {
    * @param id 歌手 id
    * @param t 1: 关注, 0: 取消关注, 默认为 1
    * */
-  static subscribe(id: number, t: 1 | 0 | boolean = 1) {
-    t = Number(t) as 1 | 0;
+  static subscribe(id: number, t: 0 | 1 | boolean = 1) {
+    t = Number(t) as 0 | 1;
     return apiRequest<unknown, NeteaseAPI.NeteaseAPIResponse>({
       url: "/artist/sub",
       method: "POST",

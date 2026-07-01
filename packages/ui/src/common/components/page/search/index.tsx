@@ -1,27 +1,27 @@
 import { cx } from "@emotion/css";
+import { Music2, DiscAlbum, ListMusic, UserRound } from "lucide-react";
 import {
-  type FC,
   memo,
-  type Ref,
-  useCallback,
-  useEffect,
-  useImperativeHandle,
   useRef,
-  useState
+  type FC,
+  type Ref,
+  useState,
+  useEffect,
+  useCallback,
+  useImperativeHandle
 } from "react";
-import type { LucideIcon } from "lucide-react";
-import { DiscAlbum, ListMusic, Music2, UserRound } from "lucide-react";
-import { AlbumResult, ArtistResult, PlaylistResult, TrackResult } from "./content";
-import { NeteaseHistoryRecord, NeteaseTrackRecord } from "@/common/netease/models";
 import { NeteaseImageSize } from "@/common/enum";
-import type { SearchInputRef } from "./input/search-input";
+import { NeteaseTrackRecord, NeteaseHistoryRecord } from "@/common/netease/models";
+import Card from "@/common/components/layout/card";
+import type { LucideIcon } from "lucide-react";
 import type { HeartManager } from "@/common/hooks/use-heart";
 import type { TrackListPlayableManager } from "@/common/components/display/track_list";
-import type { TrackResultRef } from "./content/track-result";
 
 import SearchInput from "./input";
 import HotRecommend from "./hot-recommend";
-import Card from "@/common/components/layout/card";
+import type { SearchInputRef } from "./input/search-input";
+import type { TrackResultRef } from "./content/track-result";
+import { AlbumResult, TrackResult, ArtistResult, PlaylistResult } from "./content";
 
 export type SearchRef = {
   tracks: NeteaseTrackRecord[];
@@ -30,27 +30,27 @@ export type SearchRef = {
 interface SearchProps {
   ref?: Ref<SearchRef>;
   className?: string;
-  defaultKeyword: Optional<string>;
-  onClickPlaylist: Optional<NormalFunc<[id: number]>>;
-  activeTrackID: Undefinable<number>;
-  onClickTrack: NormalFunc<[track: NeteaseTrackRecord | NeteaseHistoryRecord, index: number]>;
-  onClickArtist: NormalFunc<[id: number]>;
-  onClickAlbum: NormalFunc<[id: number]>;
-  addToPlaylistNext: NormalFunc<[track: NeteaseTrackRecord]>;
-  addToPlaylistLast: NormalFunc<[track: NeteaseTrackRecord]>;
-  addTrackToPlaylist: NormalFunc<[track: NeteaseTrackRecord]>;
-  openComment: NormalFunc<[track: NeteaseTrackRecord]>;
   coverSize: NeteaseImageSize;
+  defaultKeyword: Optional<string>;
+  activeTrackID: Undefinable<number>;
   heartManager: HeartManager;
   playableManager: TrackListPlayableManager;
+  addToPlaylistLast: NormalFunc<[track: NeteaseTrackRecord]>;
+  addToPlaylistNext: NormalFunc<[track: NeteaseTrackRecord]>;
+  addTrackToPlaylist: NormalFunc<[track: NeteaseTrackRecord]>;
+  openComment: NormalFunc<[track: NeteaseTrackRecord]>;
+  onClickAlbum: NormalFunc<[id: number]>;
+  onClickArtist: NormalFunc<[id: number]>;
+  onClickPlaylist: Optional<NormalFunc<[id: number]>>;
+  onClickTrack: NormalFunc<[track: NeteaseTrackRecord | NeteaseHistoryRecord, index: number]>;
 }
 
 type Tab = {
   index: number;
-  key: "tracks" | "albums" | "playlists" | "artists";
   label: string;
   caption: string;
   icon: LucideIcon;
+  key: "albums" | "tracks" | "artists" | "playlists";
 };
 
 const tabOptions: Tab[] = [
@@ -63,19 +63,19 @@ const tabOptions: Tab[] = [
 const Search: FC<SearchProps> = ({
   ref,
   className,
-  defaultKeyword,
-  onClickPlaylist,
   activeTrackID,
-  onClickTrack,
-  onClickArtist,
-  onClickAlbum,
-  addToPlaylistNext,
+  heartManager,
+  playableManager,
   addToPlaylistLast,
+  addToPlaylistNext,
   addTrackToPlaylist,
   openComment,
+  onClickAlbum,
+  onClickTrack,
+  onClickArtist,
+  onClickPlaylist,
   coverSize,
-  heartManager,
-  playableManager
+  defaultKeyword
 }) => {
   const [keyword, setKeyword] = useState("");
   const [currentTab, setCurrentTab] = useState<Tab>(tabOptions[0]!);
@@ -117,8 +117,8 @@ const Search: FC<SearchProps> = ({
         title="搜索"
         subTitle="Search">
         <SearchInput
-          className="w-full flex flex-row justify-end"
           ref={inputRef}
+          className="w-full flex flex-row justify-end"
           onSearch={applySearch}
           setTabs={(tab) => {
             setCurrentTab(tabOptions.find((option) => option.key === tab) ?? tabOptions[0]!);
@@ -139,7 +139,7 @@ const Search: FC<SearchProps> = ({
           "grid flex-1 grid-cols-1 gap-3 md:grid-cols-[220px_minmax(0,1fr)] grid-rows-[auto_1fr] md:grid-rows-1",
           !keyword && "hidden"
         )}>
-        <Card title={count + "条"} subTitle="Matches" Icon={currentTab.icon}>
+        <Card subTitle="Matches" title={count + "条"} Icon={currentTab.icon}>
           <div className="grid grid-cols-2 gap-2 md:grid-cols-1">
             {tabOptions.map((option) => {
               const Icon = option.icon;
@@ -147,8 +147,8 @@ const Search: FC<SearchProps> = ({
               return (
                 <Card
                   key={option.key}
-                  onClick={() => setCurrentTab(option)}
                   className="p-0! rounded-md overflow-hidden"
+                  onClick={() => setCurrentTab(option)}
                   children={
                     <div
                       className={cx(
@@ -180,46 +180,46 @@ const Search: FC<SearchProps> = ({
               ref={trackResultRef}
               className={cx((currentTab.key !== "tracks" || !keyword) && "hidden")}
               keywords={keyword}
-              activeTrackID={activeTrackID}
-              onClick={onClickTrack}
-              onClickArtist={onClickArtist}
-              onClickAlbum={onClickAlbum}
-              addToPlaylistNext={addToPlaylistNext}
-              addToPlaylistLast={addToPlaylistLast}
-              addTrackToPlaylist={addTrackToPlaylist}
-              openComment={openComment}
+              setCount={setCount}
               coverSize={coverSize}
+              openComment={openComment}
               heartManager={heartManager}
+              activeTrackID={activeTrackID}
               playableManager={playableManager}
               active={currentTab.key === "tracks"}
-              setCount={setCount}
+              addToPlaylistLast={addToPlaylistLast}
+              addToPlaylistNext={addToPlaylistNext}
+              addTrackToPlaylist={addTrackToPlaylist}
+              onClick={onClickTrack}
+              onClickAlbum={onClickAlbum}
+              onClickArtist={onClickArtist}
             />
           )}
           {!!(mounted & 0b10) && (
             <AlbumResult
               className={cx((currentTab.key !== "albums" || !keyword) && "hidden")}
               keywords={keyword}
-              onJumpAlbum={onClickAlbum}
-              active={currentTab.key === "albums"}
               setCount={setCount}
+              active={currentTab.key === "albums"}
+              onJumpAlbum={onClickAlbum}
             />
           )}
           {!!(mounted & 0b100) && (
             <PlaylistResult
               className={cx((currentTab.key !== "playlists" || !keyword) && "hidden")}
               keywords={keyword}
-              onJumpPlaylist={onClickPlaylist}
-              active={currentTab.key === "playlists"}
               setCount={setCount}
+              active={currentTab.key === "playlists"}
+              onJumpPlaylist={onClickPlaylist}
             />
           )}
           {!!(mounted & 0b1000) && (
             <ArtistResult
               className={cx((currentTab.key !== "artists" || !keyword) && "hidden")}
               keywords={keyword}
-              onJumpArtist={onClickArtist}
-              active={currentTab.key === "artists"}
               setCount={setCount}
+              active={currentTab.key === "artists"}
+              onJumpArtist={onClickArtist}
             />
           )}
         </Card>

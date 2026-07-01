@@ -1,12 +1,12 @@
-import { BannerType, NeteaseImageSize } from "@/common/enum";
 import { Log } from "@/common/lib/log";
+import { BannerType, NeteaseImageSize } from "@/common/enum";
 
 export class NeteaseURL {
   private static isNeteaseImageURL(url: URL) {
     return url.hostname === "music.126.net" || url.hostname.endsWith(".music.126.net");
   }
 
-  static parseBannerURL(url: string): { type: BannerType; id: number } {
+  static parseBannerURL(url: string): { id: number; type: BannerType } {
     // examples:
     // 独家策划 https://y.music.163.com/g/yida/act/qianxi?page=50ccea950b38445f98458d3fc61ad72b
     // 新歌首发 orpheus://song/3322319846
@@ -54,7 +54,7 @@ export class NeteaseURL {
   /** 设置图片的size，如果url为假值或者为本地路径，原地返回 */
   static setImageSize<T extends Optional<string>>(
     url: T,
-    size: NeteaseImageSize | number
+    size: number | NeteaseImageSize
   ): T extends Falsy ? undefined : string {
     if (!url || !url.startsWith("http")) {
       return <T extends Falsy ? undefined : string>(url || undefined);

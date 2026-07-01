@@ -1,27 +1,27 @@
-import { type FC, memo, useCallback, useEffect, useRef, useState } from "react";
 import { cx } from "@emotion/css";
 import { clamp } from "lodash-es";
-
-import Indicator from "./indicator";
-import FloatButton from "./float-button";
-import Cover from "./cover";
+import { memo, useRef, type FC, useState, useEffect, useCallback } from "react";
 import AppEmpty from "@/common/components/fallback/app-empty";
 import AppLoading from "@/common/components/fallback/app-loading";
 
+import Cover from "./cover";
+import Indicator from "./indicator";
+import FloatButton from "./float-button";
+
 interface CarouselProps {
-  items: { url: string; title?: string }[];
+  empty?: boolean;
   interval?: number;
   className?: string;
   onClick?: (i: number) => void;
-  empty?: boolean;
+  items: { url: string; title?: string }[];
 }
 
 const Carousel: FC<CarouselProps> = ({
-  items,
-  interval = 3000,
   className,
   onClick,
-  empty = false
+  items,
+  empty = false,
+  interval = 3000
 }) => {
   const [index, setIndex] = useState(0);
   const timerRef = useRef<Nullable<number>>(null);
@@ -93,13 +93,13 @@ const Carousel: FC<CarouselProps> = ({
       )}
       onMouseEnter={stopAutoPlay}
       onMouseLeave={startAutoPlay}>
-      <Cover items={items} onClick={onClick} activeIndex={activeIndex} />
+      <Cover items={items} activeIndex={activeIndex} onClick={onClick} />
       {hasMultipleItems && <FloatButton next={next} prev={prev} />}
       <Indicator
+        length={items.length}
+        activeIdx={activeIndex}
         title={activeItem?.title}
         showDot={hasMultipleItems}
-        activeIdx={activeIndex}
-        length={items.length}
         onDotClick={goTo}
       />
     </section>

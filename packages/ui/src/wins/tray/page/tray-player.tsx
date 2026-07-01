@@ -1,21 +1,21 @@
 import { clamp } from "lodash-es";
-import { type FC, memo, useMemo } from "react";
 import { Disc3, Music2 } from "lucide-react";
+import { memo, type FC, useMemo } from "react";
 import { NeteaseImageSize } from "@/common/enum";
 import { RendererFormat } from "@/common/lib/format";
-import { NeteaseNetworkImage } from "@/common/netease/models";
-import NeteaseImage from "@/common/components/display/image/netease-image";
 import { RendererWindow } from "@/common/lib/window";
 import { RendererIPCMessageBus } from "@/common/lib/bus";
+import { NeteaseNetworkImage } from "@/common/netease/models";
+import NeteaseImage from "@/common/components/display/image/netease-image";
 
 interface TrayPlayerProps {
-  track: Optional<NeteaseTrackModel>;
-  status: Optional<"playing" | "paused" | "error" | "idle" | "loading">;
-  currentTime: Optional<number>;
   duration: Optional<number>;
+  currentTime: Optional<number>;
+  track: Optional<NeteaseTrackModel>;
+  status: Optional<"idle" | "error" | "paused" | "loading" | "playing">;
 }
 
-const TrayPlayer: FC<TrayPlayerProps> = ({ track, status, currentTime, duration }) => {
+const TrayPlayer: FC<TrayPlayerProps> = ({ track, status, duration, currentTime }) => {
   const artist = track?.ar.map((item) => item.name).join(" / ");
   const percent = useMemo(() => {
     const safeDuration = duration || (track?.dt ?? 0) / 1000 || 1;
@@ -39,11 +39,10 @@ const TrayPlayer: FC<TrayPlayerProps> = ({ track, status, currentTime, duration 
       <div className="relative size-11 overflow-hidden rounded-md bg-black/5">
         {cover ? (
           <NeteaseImage
-            cache
-            cacheLazy={false}
+            className="size-full cursor-pointer hover:opacity-50 ease-in-out duration-300 transition-opacity"
             image={cover}
             shadow="none"
-            className="size-full cursor-pointer hover:opacity-50 ease-in-out duration-300 transition-opacity"
+            cacheLazy={false}
             onClick={async () => {
               if (!cover) return;
               await RendererWindow.image.reactReadyAwait();
@@ -52,6 +51,7 @@ const TrayPlayer: FC<TrayPlayerProps> = ({ track, status, currentTime, duration 
                 alt: cover.alt
               });
             }}
+            cache
           />
         ) : (
           <div className="flex size-full items-center justify-center opacity-35">

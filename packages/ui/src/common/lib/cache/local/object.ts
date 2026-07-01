@@ -1,14 +1,14 @@
-import { CacheStoreForSave } from "@/common/lib/cache/local/save";
-import { CacheStoreForRead } from "@/common/lib/cache/local/read";
 import { Log } from "@/common/lib/log";
+import { CacheStoreForRead } from "@/common/lib/cache/local/read";
+import { CacheStoreForSave } from "@/common/lib/cache/local/save";
 import type { CacheStoreSaveJSONItem } from "@/types/cache";
 
 export class CacheStoreForObject {
-  static setOne<T>(obj: Omit<CacheStoreSaveJSONItem, "data"> & { data: T }) {
+  static setOne<T>(obj: { data: T } & Omit<CacheStoreSaveJSONItem, "data">) {
     return this.setMulti([obj]);
   }
 
-  static setMulti<T>(list: (Omit<CacheStoreSaveJSONItem, "data"> & { data: T })[]) {
+  static setMulti<T>(list: ({ data: T } & Omit<CacheStoreSaveJSONItem, "data">)[]) {
     return CacheStoreForSave.json(
       list.map((i) => {
         return {

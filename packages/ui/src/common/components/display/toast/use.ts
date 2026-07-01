@@ -1,7 +1,8 @@
-import { type ToastItemData } from "./toast-item";
 import { Log } from "@/common/lib/log";
 import { Inject } from "@/common/utils/inject";
+
 import Provider from "./toast-provider";
+import { type ToastItemData } from "./toast-item";
 
 const defaultHandler = () => {
   Log.warn("AppToast", "Toast is not provided in this app, or running under React StrictMode");

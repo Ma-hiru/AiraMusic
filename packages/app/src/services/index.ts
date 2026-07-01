@@ -1,15 +1,16 @@
-import { LogLevel } from "@mahiru/log";
 import { Log } from "@/lib/log";
+import { LogLevel } from "@mahiru/log";
 import { MainRuntime } from "@/lib/runtime";
-import { MainPathResolver } from "@/lib/path-resolver";
 import { MainPortResolver } from "@/lib/port";
-import { MainServicesBase, type MainServicesCreator } from "@/lib/service";
+import { MainPathResolver } from "@/lib/path-resolver";
 import { MainStoreForConfig } from "@/lib/key-value-store";
 import { MainCacheStoreConstants } from "@/constants/store";
+import { MainServicesBase, type MainServicesCreator } from "@/lib/service";
 import type { MainServicesType } from "@/types/service";
-import NeteaseMusicApiService from "./ncm";
+
 import ProxyService from "./proxy";
 import StoreService from "./store";
+import NeteaseMusicApiService from "./ncm";
 
 export class MainServices extends MainServicesBase {
   constructor(props: {
@@ -52,7 +53,7 @@ export class MainServices extends MainServicesBase {
   }
 
   protected override readonly creators: Record<MainServicesType, MainServicesCreator> = {
-    proxy: ({ ncm, store, proxy }) => {
+    proxy: ({ ncm, proxy, store }) => {
       return new ProxyService({
         onError: (err: Error) => this.onError("proxy", "internal error", err),
         port: proxy,
@@ -67,7 +68,7 @@ export class MainServices extends MainServicesBase {
       });
     },
     store: (ports) => {
-      const { capacity, path, ttl } = MainStoreForConfig.get(
+      const { ttl, path, capacity } = MainStoreForConfig.get(
         "cache",
         MainCacheStoreConstants.DEFAULT_CONFIG
       );

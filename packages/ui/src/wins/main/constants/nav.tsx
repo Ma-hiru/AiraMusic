@@ -1,24 +1,24 @@
+import { type ReactNode } from "react";
 import {
   Clock,
   Heart,
   House,
-  ListMusic,
-  type LucideIcon,
-  Music2,
   Radio,
+  Music2,
+  Trophy,
   Sparkles,
-  Trophy
+  ListMusic,
+  type LucideIcon
 } from "lucide-react";
-import { type ReactNode } from "react";
 import { RoutePathMain } from "@/common/routes";
 
 export type NavData = {
-  icon: ReactNode;
-  label: string;
   path: string;
+  label: string;
+  icon: ReactNode;
 };
 
-export type HomeChannelKey = "recommend" | "charts" | "playlists" | "songs-artists";
+export type HomeChannelKey = "charts" | "playlists" | "recommend" | "songs-artists";
 
 export interface HomeChannel {
   key: HomeChannelKey;

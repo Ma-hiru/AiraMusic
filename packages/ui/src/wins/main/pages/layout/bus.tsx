@@ -1,30 +1,30 @@
-import { useListenable } from "@/common/hooks/use-listenable";
-import { type FC, memo, useCallback, useEffect, useRef } from "react";
+import { useAtomValue } from "jotai";
+import { useLocation, useNavigate } from "react-router-dom";
+import { memo, useRef, type FC, useEffect, useCallback } from "react";
+import { Log } from "@/common/lib/log";
+import { useUser } from "@/common/store/user";
+import { themeAtom } from "@/wins/main/atoms/theme";
+import { RendererDevice } from "@/common/lib/device";
 import { RendererWindow } from "@/common/lib/window";
 import { RendererIPCMessageBus } from "@/common/lib/bus";
+import { RendererModified } from "@/common/lib/modified";
+import { RoutePath, RoutePathMain } from "@/common/routes";
+import { useLatestRef } from "@/common/hooks/use-latest-ref";
+import { NeteaseTrackRecord } from "@/common/netease/models";
+import { useListenable } from "@/common/hooks/use-listenable";
+import { useAudioOutput } from "@/common/hooks/use-audio-output";
 import {
   NeteaseServicesAlbum,
-  NeteaseServicesPlaylist,
-  NeteaseServicesTrack
+  NeteaseServicesTrack,
+  NeteaseServicesPlaylist
 } from "@/common/netease/services";
-import { NeteaseTrackRecord } from "@/common/netease/models";
-import { Log } from "@/common/lib/log";
-import { useLocation, useNavigate } from "react-router-dom";
-import { RoutePath, RoutePathMain } from "@/common/routes";
-import { useAtomValue } from "jotai";
-import { themeAtom } from "@/wins/main/atoms/theme";
-import { useAudioOutput } from "@/common/hooks/use-audio-output";
-import { useLatestRef } from "@/common/hooks/use-latest-ref";
-import { RendererDevice } from "@/common/lib/device";
-import { RendererModified } from "@/common/lib/modified";
-import { useUser } from "@/common/store/user";
-import type { MessageData } from "@mahiru/ipc/types";
 import RendererPlayerHandle from "@/wins/main/lib/handle";
+import type { MessageData } from "@mahiru/ipc/types";
 
 const Bus: FC<object> = () => {
   const theme = useAtomValue(themeAtom);
   const player = RendererPlayerHandle.usePlayer();
-  const { selected, views, setDevice } = useAudioOutput(player.audio.outputTarget);
+  const { setDevice, views, selected } = useAudioOutput(player.audio.outputTarget);
 
   //#region -------- 需要推送给别人的BUS --------
   // 1. progress、info、player 歌曲、歌词、主题、进度信息
@@ -253,7 +253,7 @@ const Bus: FC<object> = () => {
     while ((change = appliedChangesQueue.current.shift())) {
       try {
         if (change.type === "replacePlaylistAndPlay") {
-          const { trackID, trackIdx, sourceType, sourceID, allIDs } = change;
+          const { allIDs, trackID, sourceID, trackIdx, sourceType } = change;
           if (player.current.track?.id === trackID) continue;
 
           const records = await fetchTrackList(sourceType, sourceID, allIDs);
@@ -266,13 +266,13 @@ const Bus: FC<object> = () => {
             player.playlist.replace(records, track);
           }
         } else if (change.type === "addListToPlaylistEnd") {
-          const { sourceType, sourceID, allIDs } = change;
+          const { allIDs, sourceID, sourceType } = change;
 
           const records = await fetchTrackList(sourceType, sourceID, allIDs);
 
           player.playlist.addList(records);
         } else if (change.type === "addToPlaylistNext" || change.type === "addToPlaylistLast") {
-          const { sourceID, sourceType, trackID, type } = change;
+          const { type, trackID, sourceID, sourceType } = change;
           if (player.current.track?.id === trackID) continue;
 
           const track = new NeteaseTrackRecord({

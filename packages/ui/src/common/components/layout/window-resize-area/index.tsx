@@ -1,22 +1,22 @@
 import { cx } from "@emotion/css";
-import { type FC, memo, type MouseEvent as ReactMouseEvent, useCallback, useRef } from "react";
-import { useListenable } from "@/common/hooks/use-listenable";
+import { memo, useRef, type FC, useCallback, type MouseEvent as ReactMouseEvent } from "react";
 import { RendererWindow } from "@/common/lib/window";
+import { useListenable } from "@/common/hooks/use-listenable";
 
 interface WindowResizeAreaProps {
   disable: boolean;
-  showArea: boolean;
-  onResizeStart?: () => void;
-  onResizeEnd?: () => void;
   minWidth?: number;
+  showArea: boolean;
   minHeight?: number;
+  onResizeEnd?: () => void;
+  onResizeStart?: () => void;
 }
 
 const WindowResizeArea: FC<WindowResizeAreaProps> = ({
-  disable,
-  showArea,
   onResizeEnd,
   onResizeStart,
+  disable,
+  showArea,
   minWidth = 260,
   minHeight = 120
 }) => {
@@ -54,7 +54,7 @@ const WindowResizeArea: FC<WindowResizeAreaProps> = ({
       const mouseDeltaX = event.screenX - session.mouseStartScreenX;
       // 正值向下移动，负值向上
       const mouseDeltaY = event.screenY - session.mouseStartScreenY;
-      const includes = (flag: "left" | "right" | "top" | "bottom") =>
+      const includes = (flag: "top" | "left" | "right" | "bottom") =>
         session.clickDirection.includes(flag);
 
       let nextWidth = session.windowStartWidth;
@@ -137,7 +137,7 @@ const WindowResizeArea: FC<WindowResizeAreaProps> = ({
   return (
     !disable && (
       <div className="pointer-events-none absolute inset-0 z-50">
-        {ResizeAreas.map(({ direction, style }) => (
+        {ResizeAreas.map(({ style, direction }) => (
           <div
             key={direction}
             className={cx(
@@ -159,9 +159,9 @@ type WindowBoundsPatch = Partial<{ x: number; y: number; width: number; height: 
 
 type ResizeDirection =
   | "top"
-  | "bottom"
   | "left"
   | "right"
+  | "bottom"
   | "top-left"
   | "top-right"
   | "bottom-left"

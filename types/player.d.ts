@@ -1,31 +1,31 @@
 interface Quality {
   br: number;
-  fid: number;
-  size: number;
-  sr?: number;
   vd: number;
+  fid: number;
+  sr?: number;
+  size: number;
 }
 
 interface NeteaseTrackModel {
   id: number;
   /** 歌曲标题 */
-  name: string;
   dt: number;
+  name: string;
   /** 别名列表，第一个别名会被显示作副标题 */
   alia: string[];
   tns?: string[];
   ar: {
-    alias: string[];
     id: number;
     name: string;
     tns: string[];
+    alias: string[];
   }[];
   al: {
     id: number;
-    name: string;
     pic: number;
-    picUrl: string;
+    name: string;
     tns: string[];
+    picUrl: string;
   };
   /**
    * 一些歌曲属性，用按位与操作获取对应位置的值
@@ -38,19 +38,19 @@ interface NeteaseTrackModel {
    *   专辑信息的mark字段也同理
    *   例子:id 1859245776 和 1859306637 为同一首歌，前者 mark & 1048576 == 1048576,后者 mark &   1048576 == 0，因此前者是脏版。
    * */
+  mv: number;
+  no: number;
+  pop: number;
   mark: number;
-  sq: null | Quality;
   h: null | Quality;
-  hr: null | Quality;
   l: null | Quality;
   m: null | Quality;
   fee: 0 | 1 | 4 | 8;
-  mv: number;
-  no: number;
-  originCoverType: 0 | 1 | 2;
-  pop: number;
+  hr: null | Quality;
+  sq: null | Quality;
   publishTime: number;
   noCopyrightRcmd: any;
+  originCoverType: 0 | 1 | 2;
   privilege: null | {
     /** 曲目 id。 */
     id: number;
@@ -76,68 +76,68 @@ interface NeteaseTrackModel {
     flag?: number;
     /** 其余仍会影响可播状态但暂未明确定义的字段。 */
     bd: null;
-    chargeInfoList: { chargeMessage: null; chargeType: number; chargeUrl: null; rate: number }[];
-    code: number;
     cp: number;
+    code: number;
+    chargeInfoList: { rate: number; chargeUrl: null; chargeType: number; chargeMessage: null }[];
     /** 当前用户的该歌曲最高下载音质 */
-    dlLevel: string;
     dlLevels: null;
+    dlLevel: string;
     downloadMaxbr: number;
     downloadMaxBrLevel: string;
     /** 免费用户的该歌曲播放音质 */
     flLevel: string;
+    ignoreCache: null;
     freeTrialPrivilege: {
-      cannotListenReason: null;
       listenType: null;
       playReason: null;
       resConsumable: boolean;
       userConsumable: boolean;
+      cannotListenReason: null;
     };
-    ignoreCache: null;
     /** 歌曲最高音质 */
-    maxBrLevel: string;
-    message: null;
-    paidBigBang: boolean;
     pc: null;
+    message: null;
     playMaxbr: number;
+    maxBrLevel: string;
+    paidBigBang: boolean;
     playMaxBrLevel: string;
     /** 当前用户的该歌曲最高试听音质 */
-    plLevel: string;
-    plLevels: null;
-    preSell: boolean;
-    realPayed: number;
-    rightSource: number;
     rscl: null;
     sp: number;
     subp: number;
+    plLevels: null;
+    plLevel: string;
+    preSell: boolean;
+    realPayed: number;
+    rightSource: number;
   };
 }
 
 interface NeteasePlaylistCreatorModel {
   userId: number;
-  avatarUrl: string;
   nickname: string;
+  avatarUrl: string;
   signature: string;
 }
 
 interface NeteasePlaylistSummaryModel {
-  coverImgUrl: string;
-  createTime: number;
-  description: Nullable<string>;
-  creator: NeteasePlaylistCreatorModel;
-  highQuality: boolean;
   id: number;
   name: string;
-  playCount: number;
-  privacy: number;
-  subscribed: boolean;
-  subscribedCount: number;
   tags: string[];
-  trackCount: number;
-  trackNumberUpdateTime: number;
-  trackUpdateTime: number;
-  updateTime: number;
   userId: number;
+  privacy: number;
+  playCount: number;
+  createTime: number;
+  trackCount: number;
+  updateTime: number;
+  coverImgUrl: string;
+  subscribed: boolean;
+  highQuality: boolean;
+  subscribedCount: number;
+  trackUpdateTime: number;
+  description: Nullable<string>;
+  trackNumberUpdateTime: number;
+  creator: NeteasePlaylistCreatorModel;
 }
 
 /** 一个歌词单词 */
@@ -174,12 +174,12 @@ interface LyricLine {
 }
 
 type NeteaseLyricModel = {
-  data: LyricLine[];
-  tips?: string;
   id?: number;
+  tips?: string;
+  data: LyricLine[];
   rmExisted: boolean;
   tlExisted: boolean;
   noteExisted: boolean;
 };
 
-type NeteaseTrackRecordSourceType = "playlist" | "album" | "other" | "fm";
+type NeteaseTrackRecordSourceType = "fm" | "album" | "other" | "playlist";

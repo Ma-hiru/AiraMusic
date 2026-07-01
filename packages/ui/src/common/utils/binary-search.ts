@@ -1,5 +1,5 @@
 export class BinarySearch {
-  static search<T>(arr: T[], target: T, order?: NormalFunc<[a: T, b: T], "gt" | "lt" | "eq">) {
+  static search<T>(arr: T[], target: T, order?: NormalFunc<[a: T, b: T], "eq" | "gt" | "lt">) {
     order ??= (a, b) => {
       if (a < b) return "lt";
       if (a > b) return "gt";

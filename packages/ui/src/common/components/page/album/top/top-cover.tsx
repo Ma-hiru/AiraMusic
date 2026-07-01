@@ -1,18 +1,18 @@
-import { type FC, memo, type ReactEventHandler, useCallback, useMemo } from "react";
-import { NeteaseAlbum, NeteaseNetworkImage } from "@/common/netease/models";
+import { memo, type FC, useMemo, useCallback, type ReactEventHandler } from "react";
 import { NeteaseImageSize } from "@/common/enum";
-import NeteaseImage from "@/common/components/display/image/netease-image";
+import { NeteaseAlbum, NeteaseNetworkImage } from "@/common/netease/models";
 import AppModal from "@/common/components/display/modal";
+import NeteaseImage from "@/common/components/display/image/netease-image";
 
 interface TopCoverProps {
-  album: Nullable<NeteaseAlbum>;
-  dynamic: Nullable<NeteaseAPI.NeteaseAlbumDynamicDetailResponse>;
   coverCacheKey?: string;
   size: NeteaseImageSize;
+  album: Nullable<NeteaseAlbum>;
+  dynamic: Nullable<NeteaseAPI.NeteaseAlbumDynamicDetailResponse>;
   onCoverLoaded?: NormalFunc<[cover: string]>;
 }
 
-const TopCover: FC<TopCoverProps> = ({ album, dynamic, coverCacheKey, size, onCoverLoaded }) => {
+const TopCover: FC<TopCoverProps> = ({ onCoverLoaded, size, album, dynamic, coverCacheKey }) => {
   const { create, createAlbumCoverModal } = AppModal.useModal();
   const cacheKey =
     (coverCacheKey ?? "") + (album?.content.publishTime ?? "") + (album?.tracks[0]?.id ?? "");
@@ -40,12 +40,12 @@ const TopCover: FC<TopCoverProps> = ({ album, dynamic, coverCacheKey, size, onCo
 
   return (
     <button
+      className="size-44 relative group"
       type="button"
       disabled={!album}
-      onClick={openCoverModal}
-      className="size-44 relative group">
+      onClick={openCoverModal}>
       <div className="absolute inset-0 bg-black/0 transition-colors duration-300 group-hover:bg-black/25 overflow-hidden rounded-md cursor-pointer" />
-      <NeteaseImage cache image={cover} className="size-44 rounded-md" onLoad={onLoaded} />
+      <NeteaseImage className="size-44 rounded-md" image={cover} onLoad={onLoaded} cache />
     </button>
   );
 };

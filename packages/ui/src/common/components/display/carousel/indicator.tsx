@@ -1,21 +1,21 @@
-import { type FC, memo } from "react";
 import { cx } from "@emotion/css";
+import { memo, type FC } from "react";
 import { iter } from "@/common/utils/iter";
 
 interface IndicatorProps {
-  title?: string;
-  showDot?: boolean;
   length: number;
+  title?: string;
   activeIdx: number;
+  showDot?: boolean;
   onDotClick?: NormalFunc<[idx: number]>;
 }
 
 const Indicator: FC<IndicatorProps> = ({
-  title,
   onDotClick,
+  title,
+  length,
   activeIdx,
-  showDot = true,
-  length
+  showDot = true
 }) => {
   return (
     <section className="absolute inset-x-0 bottom-0 z-20 flex items-end justify-between gap-3 bg-linear-to-t from-black/60 via-black/20 to-transparent px-4 pb-3 pt-14 pointer-events-none">
@@ -26,8 +26,6 @@ const Indicator: FC<IndicatorProps> = ({
             return (
               <button
                 key={i}
-                title={`切换到第 ${i + 1} 张`}
-                onClick={() => onDotClick?.(i)}
                 className={cx(
                   `
                   h-2.5 cursor-pointer rounded-full transition-all duration-300 ease-in-out
@@ -35,6 +33,8 @@ const Indicator: FC<IndicatorProps> = ({
                 `,
                   i === activeIdx ? "w-6 bg-white" : "w-2.5 bg-white/35 hover:bg-white/70"
                 )}
+                title={`切换到第 ${i + 1} 张`}
+                onClick={() => onDotClick?.(i)}
               />
             );
           })}

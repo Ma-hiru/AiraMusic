@@ -1,9 +1,10 @@
-import AppToast from "../components/display/toast";
+import { useRef, useState, useEffect } from "react";
 import { Log } from "@/common/lib/log";
-import { useListenable } from "@/common/hooks/use-listenable";
 import { RendererOutput } from "@/common/lib/output";
-import { useEffect, useRef, useState } from "react";
 import { useLatestRef } from "@/common/hooks/use-latest-ref";
+import { useListenable } from "@/common/hooks/use-listenable";
+
+import AppToast from "../components/display/toast";
 
 export function useAudioOutput(target: RendererAudioOutputTarget) {
   const output = useListenable(RendererOutput);
@@ -11,7 +12,7 @@ export function useAudioOutput(target: RendererAudioOutputTarget) {
   const [selected, setSelected] = useState(output.DEFAULT_DEVICE_ID);
   const selectedRef = useLatestRef(selected);
 
-  const setDevice = useRef((view: RendererAudioOutputDeviceView | string) => {
+  const setDevice = useRef((view: string | RendererAudioOutputDeviceView) => {
     if (typeof view === "string") setSelected(view);
     else setSelected(view.deviceId);
   }).current;

@@ -1,24 +1,24 @@
-import { type FC, memo, useDeferredValue, useEffect, useMemo, useState } from "react";
-import { Search as SearchIcon } from "lucide-react";
-import { debounce } from "lodash-es";
 import { cx } from "@emotion/css";
+import { debounce } from "lodash-es";
+import { Search as SearchIcon } from "lucide-react";
+import { memo, type FC, useMemo, useState, useEffect, useDeferredValue } from "react";
 
 interface SearchProps {
-  onSearch: NormalFunc<[k: string]>;
-  setIsTyping: NormalFunc<[isTyping: boolean]>;
-  containerClass?: string;
+  iconClass?: string;
   inputClass?: string;
   placeholder?: string;
-  iconClass?: string;
+  containerClass?: string;
+  setIsTyping: NormalFunc<[isTyping: boolean]>;
+  onSearch: NormalFunc<[k: string]>;
 }
 
 const Search: FC<SearchProps> = ({
-  onSearch,
   setIsTyping,
-  containerClass,
+  onSearch,
+  iconClass,
   inputClass,
   placeholder,
-  iconClass
+  containerClass
 }) => {
   const [value, setValue] = useState("");
   const debouncedSearch = useMemo(() => debounce(onSearch, 300), [onSearch]);
@@ -31,12 +31,6 @@ const Search: FC<SearchProps> = ({
   return (
     <div className={cx("font-semibold relative inline-block text-(--text-color)", containerClass)}>
       <input
-        type="text"
-        value={value}
-        placeholder={placeholder ?? "搜索"}
-        onFocus={() => setIsTyping(true)}
-        onBlur={() => setIsTyping(false)}
-        onChange={(e) => setValue(e.target.value)}
         className={cx(
           `
           outline-(--text-color)
@@ -48,6 +42,12 @@ const Search: FC<SearchProps> = ({
         `,
           inputClass
         )}
+        type="text"
+        value={value}
+        placeholder={placeholder ?? "搜索"}
+        onBlur={() => setIsTyping(false)}
+        onFocus={() => setIsTyping(true)}
+        onChange={(e) => setValue(e.target.value)}
       />
       <SearchIcon
         className={cx(

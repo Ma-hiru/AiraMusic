@@ -1,27 +1,27 @@
 import { TrackQuality } from "@/common/enum";
-import { RendererShortcutConstants, type ShortcutBindingMap } from "@/common/constants/shortcut";
+import { type ShortcutBindingMap, RendererShortcutConstants } from "@/common/constants/shortcut";
 
 export interface NeteaseSettingsModel {
+  shortcuts: ShortcutBindingMap;
+  preference: {
+    defaultUseDisplayWindow: boolean;
+  };
   trackQuality: {
     uid: number;
     quality: TrackQuality;
   };
   performance: {
-    barSpectrum: boolean;
-    playerSpectrum: boolean;
     spectrumFps: number;
-    windowPreload: boolean;
-    usePlayerFluid: boolean;
-    playerFluidSpeed: number;
-    playerFluidWithPlaying: boolean;
+    barSpectrum: boolean;
     useHomeFluid: boolean;
     homeFluidSpeed: number;
+    windowPreload: boolean;
+    playerSpectrum: boolean;
+    usePlayerFluid: boolean;
+    playerFluidSpeed: number;
     homeFluidWithPlaying: boolean;
+    playerFluidWithPlaying: boolean;
   };
-  preference: {
-    defaultUseDisplayWindow: boolean;
-  };
-  shortcuts: ShortcutBindingMap;
 }
 
 export const defaultSettings: NeteaseSettingsModel = {

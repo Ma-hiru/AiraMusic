@@ -1,19 +1,19 @@
 import {
-  type LyricLine as AMLyricLine,
   parseLrc,
   parseQrc,
+  parseYrc,
   parseTTML,
-  parseYrc
+  type LyricLine as AMLyricLine
 } from "@applemusic-like-lyrics/lyric";
+import { Log } from "@/common/lib/log";
+import { RendererLyricConstants } from "@/common/constants/lyric";
 import {
   LyricLineInfo,
-  normalizeLyricLines,
   parseExternalLrc,
   parseNeteaseLyric,
-  parseTranslatedLRC
+  parseTranslatedLRC,
+  normalizeLyricLines
 } from "@mahiru/wasm";
-import { RendererLyricConstants } from "@/common/constants/lyric";
-import { Log } from "@/common/lib/log";
 
 export class NeteaseLyric implements NeteaseLyricModel {
   //region fields
@@ -91,7 +91,7 @@ class Parser {
     // TTML 文件先修复
     const lines = normalizeLyricLines(ttml.lines) as AMLyricLine[];
     const data = Parser.handleAMLyricLine(lines);
-    const { tlCount, rmCount, noteCount } = data.reduce(
+    const { rmCount, tlCount, noteCount } = data.reduce(
       (count, line) => {
         line.translatedLyric && count.tlCount++;
         line.romanLyric && count.rmCount++;
@@ -126,7 +126,7 @@ class Parser {
     });
     const backChorus = LyricLineInfo.isBackChorusWithMultiLine(rawLyrics);
 
-    for (const { start, end } of backChorus) {
+    for (const { end, start } of backChorus) {
       for (let i = start; i <= end && i < res.length; i++) {
         res[i]!.isBackChorus = true;
       }
@@ -138,7 +138,7 @@ class Parser {
     if (Parser.shouldUseInlineNotes(rawLyrics, inlineNotes)) {
       for (const [lineIndex, line] of res.entries()) {
         const notes = inlineNotes[lineIndex] ?? [];
-        for (const { start, end } of notes) {
+        for (const { end, start } of notes) {
           for (let i = start; i <= end && i < line.words.length; i++) {
             line.words[i]!.inlineNote = true;
           }
@@ -151,7 +151,7 @@ class Parser {
 
   static shouldUseInlineNotes(
     rawLyrics: string[],
-    inlineNotes: { start: number; end: number }[][]
+    inlineNotes: { end: number; start: number }[][]
   ) {
     const lineCount = rawLyrics.filter((line) => !LyricLineInfo.isBlank(line)).length;
     const candidateLineCount = inlineNotes.filter((notes) => notes.length > 0).length;

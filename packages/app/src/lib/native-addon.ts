@@ -1,6 +1,6 @@
 import { Log } from "@/lib/log";
-import { loadNativeAddon, type NativeAddon } from "@mahiru/native";
 import { MainPathResolver } from "@/lib/path-resolver";
+import { loadNativeAddon, type NativeAddon } from "@mahiru/native";
 
 /**
  * 任务栏自定义封面原生接口。

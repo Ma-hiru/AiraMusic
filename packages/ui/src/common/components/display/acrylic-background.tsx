@@ -1,17 +1,17 @@
-import { type FC, memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { css, cx, keyframes } from "@emotion/css";
-import RendererTheme from "@/common/player/ui";
+import { cx, css, keyframes } from "@emotion/css";
+import { memo, useRef, type FC, useMemo, useState, useEffect, useCallback } from "react";
 import Color from "color";
+import RendererTheme from "@/common/player/ui";
 
 interface AcrylicBackgroundProps {
-  src?: string;
   alt?: string;
+  src?: string;
   blur?: number;
   opacity?: number;
+  duration?: number;
+  saturate?: number;
   className?: string;
   brightness?: number;
-  saturate?: number;
-  duration?: number;
   /** 流体背景：封面色彩缓慢旋转漂移。仅 transform/opacity 合成动画，模糊只栅格化一次。默认关闭 */
   fluid?: boolean;
   /** 流体速度倍率，1 为默认，越大越快。运行时修改会导致相位跳变 */
@@ -24,8 +24,8 @@ interface AcrylicBackgroundProps {
    * 蒙版颜色取封面深色调（非纯黑），压暗的同时保留专辑色倾向，避免发灰
    * 调低 FACTOR / MAX 可让背景更通透（亮封面下文字对比度也随之下降）
    * */
-  scrim_factor?: number;
   scrim_max?: number;
+  scrim_factor?: number;
   /**
    *  背景双色渐变透明度
    *  调高更明显但更亮（亮封面下可读性下降）
@@ -77,9 +77,9 @@ interface FluidBlob {
   /** 负延迟错开各层初始相位 */
   delay: number;
   blurScale: number;
-  brightnessScale: number;
   opacityScale: number;
-  pos: { width: string } & Partial<Record<"left" | "right" | "top" | "bottom", string>>;
+  brightnessScale: number;
+  pos: { width: string } & Partial<Record<"top" | "left" | "right" | "bottom", string>>;
 }
 
 const FLUID_BLOBS: FluidBlob[] = [
@@ -115,26 +115,26 @@ const FLUID_BLOBS: FluidBlob[] = [
 const imgClasses = "absolute inset-0 w-full h-full object-cover scale-110";
 
 const AcrylicBackground: FC<AcrylicBackgroundProps> = ({
+  className,
+  onLoaded,
+  alt,
   src,
   blur = 40,
-  opacity = 0.35,
-  alt,
-  className,
-  brightness = 0.5,
-  saturate = 1.8,
-  duration = 800,
-  fluid = false,
-  fluidSpeed = 1,
-  fluidPaused = false,
   themeColors,
-  scrim_factor = 0.3,
+  fluid = false,
+  duration = 800,
+  fluidSpeed = 1,
+  opacity = 0.35,
+  saturate = 1.8,
+  brightness = 0.5,
   scrim_max = 0.28,
-  gradient_alpha = 0.5,
-  onLoaded
+  scrim_factor = 0.3,
+  fluidPaused = false,
+  gradient_alpha = 0.5
 }) => {
   const [current, setCurrent] = useState(src);
   const [next, setNext] = useState<string>();
-  const [stage, setStage] = useState<"idle" | "fade">("idle");
+  const [stage, setStage] = useState<"fade" | "idle">("idle");
   const timerRef = useRef<ReturnType<typeof setTimeout>>(null);
 
   useEffect(() => {
@@ -205,35 +205,35 @@ const AcrylicBackground: FC<AcrylicBackgroundProps> = ({
       {/* 当前背景：仅在交叉淡化阶段开启 transition，提交新图时直接跳变（与淡入层像素一致，无闪烁） */}
       {current && (
         <img
-          src={current}
-          decoding="async"
-          draggable={false}
-          alt={alt ?? ""}
           className={imgClasses}
-          onLoad={onLoaded}
           style={{
             transition: stage === "fade" ? `opacity ${duration}ms ease` : "none",
             opacity: stage === "fade" ? 0 : opacity,
             filter: imgFilter
           }}
+          src={current}
+          alt={alt ?? ""}
+          decoding="async"
+          draggable={false}
+          onLoad={onLoaded}
         />
       )}
       {/* 下一张：加载完成后才开始交叉淡化，加载期间旧图保持可见 */}
       {next && (
         <img
-          src={next}
           key={next}
-          decoding="async"
-          draggable={false}
-          alt=""
-          onLoad={handleLoad}
-          onError={handleError}
           className={imgClasses}
           style={{
             transition: `opacity ${duration}ms ease`,
             opacity: stage === "fade" ? opacity : 0,
             filter: imgFilter
           }}
+          alt=""
+          src={next}
+          decoding="async"
+          draggable={false}
+          onLoad={handleLoad}
+          onError={handleError}
         />
       )}
       {/* 流体层：三个轨道运动的封面色斑。play-state 只作用于漂移动画，换图淡入不受暂停影响 */}
@@ -242,11 +242,6 @@ const AcrylicBackground: FC<AcrylicBackgroundProps> = ({
         FLUID_BLOBS.map((blob, i) => (
           <img
             key={`fluid-${i}-${current}`}
-            src={current}
-            aria-hidden
-            alt=""
-            decoding="async"
-            draggable={false}
             className={fluidLayerCls}
             style={{
               ...blob.pos,
@@ -255,6 +250,11 @@ const AcrylicBackground: FC<AcrylicBackgroundProps> = ({
               animation: `${fadeIn} ${duration}ms ease both, ${blob.animation} ${blob.cycle / speed}s linear ${blob.delay / speed}s infinite`,
               animationPlayState: `running, ${fluidPaused ? "paused" : "running"}`
             }}
+            alt=""
+            src={current}
+            decoding="async"
+            draggable={false}
+            aria-hidden
           />
         ))}
       {/* 轻微提亮，替代原 backdrop-filter 毛玻璃层 */}

@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
-import { RoutePathDisplay } from "@/common/routes";
+import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
+import { RoutePathDisplay } from "@/common/routes";
 import { RendererWindow } from "@/common/lib/window";
 import { Listenable } from "@/common/utils/listenable";
 import { useListenable } from "@/common/hooks/use-listenable";

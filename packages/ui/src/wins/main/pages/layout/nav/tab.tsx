@@ -1,16 +1,16 @@
-import { type FC, memo, useEffect, useState } from "react";
-import SectionTab from "@/common/components/data-input/tab";
 import { cx } from "@emotion/css";
+import { memo, type FC, useState, useEffect } from "react";
+import SectionTab from "@/common/components/data-input/tab";
 
 const tab = ["创建", "搜藏"];
 
 interface NavTabProps {
-  sidebar: boolean;
   category: number;
+  sidebar: boolean;
   setCategory: NormalFunc<[newCategory: number]>;
 }
 
-const NavTab: FC<NavTabProps> = ({ sidebar, category, setCategory }) => {
+const NavTab: FC<NavTabProps> = ({ setCategory, sidebar, category }) => {
   const [showTab, setShowTab] = useState(false);
   const [hoverTab, setHoverTab] = useState(false);
 
@@ -33,14 +33,14 @@ const NavTab: FC<NavTabProps> = ({ sidebar, category, setCategory }) => {
       onMouseOver={() => setHoverTab(true)}
       onMouseLeave={() => setHoverTab(false)}>
       <SectionTab
-        data={tab}
-        activeIndex={category}
-        onChange={setCategory}
-        mode="less-theme"
         className={cx(
           "text-[10px] ease-in-out duration-300 transition-all my-3 text-(--text-color)/20",
           (!sidebar || !showTab) && "opacity-0 scale-0 my-0!"
         )}
+        data={tab}
+        mode="less-theme"
+        activeIndex={category}
+        onChange={setCategory}
       />
     </div>
   );

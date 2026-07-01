@@ -41,7 +41,7 @@ export class Lock {
    * @param label 任务标签，用于错误提示
    * @returns 任务的返回值或默认值
    * */
-  async tryRun<T>(task: Task<T>, defaultValue?: NormalFunc<[], T> | T, label?: string) {
+  async tryRun<T>(task: Task<T>, defaultValue?: T | NormalFunc<[], T>, label?: string) {
     return new Promise<T>((resolve, reject) => {
       function onError(err: unknown) {
         try {

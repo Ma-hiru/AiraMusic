@@ -1,10 +1,10 @@
-import { fileURLToPath } from "node:url";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { readFileSync, writeFileSync } from "node:fs";
 
 type EnvName = string;
 
-type EnvValue = string | number | boolean;
+type EnvValue = number | string | boolean;
 
 export type Env = Record<EnvName, EnvValue>;
 

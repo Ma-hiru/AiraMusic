@@ -1,20 +1,20 @@
-import { useEffect, useRef } from "react";
+import { useRef, useEffect } from "react";
 
-type ModifierKey = "ctrl" | "shift" | "alt" | "meta";
+type ModifierKey = "alt" | "ctrl" | "meta" | "shift";
 type Key = string;
 
 export interface ShortcutConfig {
   key: Key;
-  modifiers?: ModifierKey[];
-  callback: (event: KeyboardEvent) => void;
-  preventDefault?: boolean;
-  stopPropagation?: boolean;
   description?: string;
+  preventDefault?: boolean;
+  modifiers?: ModifierKey[];
+  stopPropagation?: boolean;
+  callback: (event: KeyboardEvent) => void;
 }
 
 export interface UseKeyboardShortcutOptions {
   enabled?: boolean;
-  target?: HTMLElement | Window | null;
+  target?: null | Window | HTMLElement;
 }
 
 /**
@@ -85,9 +85,9 @@ function matchShortcut(event: KeyboardEvent, shortcut: ShortcutConfig): boolean 
 export function useSingleShortcut(
   key: Key,
   callback: (event: KeyboardEvent) => void,
-  config: Omit<ShortcutConfig, "key" | "callback"> & UseKeyboardShortcutOptions = {}
+  config: UseKeyboardShortcutOptions & Omit<ShortcutConfig, "key" | "callback"> = {}
 ) {
-  const { modifiers, preventDefault, stopPropagation, description, enabled, target } = config;
+  const { target, enabled, modifiers, description, preventDefault, stopPropagation } = config;
 
   const shortcuts: ShortcutConfig[] = [
     {

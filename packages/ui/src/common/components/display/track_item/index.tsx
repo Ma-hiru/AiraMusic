@@ -1,17 +1,17 @@
 import { cx } from "@emotion/css";
 import { memo, useCallback } from "react";
-import { NeteaseHistoryRecord, NeteaseTrackRecord } from "@/common/netease/models";
 import { NeteaseImageSize } from "@/common/enum";
+import { NeteaseTrackRecord, NeteaseHistoryRecord } from "@/common/netease/models";
+import AppToast from "@/common/components/display/toast";
 import type {
   TrackListClickFunc,
   TrackListContextMenuFunc
 } from "@/common/components/display/track_list";
-import AppToast from "@/common/components/display/toast";
 
 import ListItemIndex from "./idx";
-import ListItemCover from "./cover";
-import ListItemName from "./name";
 import ListItemInfo from "./info";
+import ListItemName from "./name";
+import ListItemCover from "./cover";
 
 export interface TrackItemLikeChangeFunc<
   T extends NeteaseTrackRecord | NeteaseHistoryRecord = NeteaseTrackRecord | NeteaseHistoryRecord
@@ -23,45 +23,45 @@ export interface TrackItemProps<
   T extends NeteaseTrackRecord | NeteaseHistoryRecord = NeteaseTrackRecord | NeteaseHistoryRecord
 > {
   track: T;
-  total: number;
   index: number;
-  playable: boolean;
-  reason: string;
-  fastLocation: boolean;
-  active: boolean;
+  total: number;
   liked: boolean;
+  reason: string;
+  active: boolean;
+  playable: boolean;
+  fastLocation: boolean;
+  trackCoverSize: NeteaseImageSize;
+  type: "like" | "album" | "normal" | "history";
   onClick: Optional<TrackListClickFunc<T>>;
+  onClickAlbum: Optional<NormalFunc<[id: number]>>;
   onContext: Optional<TrackListContextMenuFunc<T>>;
   onClickArtist: Optional<NormalFunc<[id: number]>>;
-  onClickAlbum: Optional<NormalFunc<[id: number]>>;
   onLikeChange: Optional<TrackItemLikeChangeFunc<T>>;
-  type: "album" | "history" | "like" | "normal";
-  trackCoverSize: NeteaseImageSize;
   /** 批量选择模式：整行点击切换勾选，禁用播放/跳转 */
-  selectionMode?: boolean;
   selected?: boolean;
+  selectionMode?: boolean;
   onToggleSelect?: NormalFunc;
 }
 
 const TrackItem = <T extends NeteaseTrackRecord | NeteaseHistoryRecord>({
-  track,
-  total,
-  index,
-  fastLocation,
-  active,
-  liked,
   onClick,
   onContext,
+  onClickAlbum,
   onLikeChange,
   onClickArtist,
-  onClickAlbum,
+  onToggleSelect,
   type,
-  playable,
+  index,
+  liked,
+  total,
+  track,
+  active,
   reason,
-  trackCoverSize,
-  selectionMode,
+  playable,
   selected,
-  onToggleSelect
+  fastLocation,
+  selectionMode,
+  trackCoverSize
 }: TrackItemProps<T>) => {
   const showDisableReason = useCallback(() => {
     if (playable) return;
@@ -73,8 +73,6 @@ const TrackItem = <T extends NeteaseTrackRecord | NeteaseHistoryRecord>({
 
   return (
     <div
-      onContextMenu={(e) => !selectionMode && playable && onContext?.(e, track, index)}
-      onClick={playable || selectionMode ? undefined : showDisableReason}
       className={cx(
         `
             relative items-center grid grid-row-1 gap-3
@@ -90,54 +88,56 @@ const TrackItem = <T extends NeteaseTrackRecord | NeteaseHistoryRecord>({
             ? "bg-secondary/15"
             : "hover:bg-black/10 active:bg-black/20",
         !playable && !selectionMode && "cursor-not-allowed! opacity-50"
-      )}>
+      )}
+      onClick={playable || selectionMode ? undefined : showDisableReason}
+      onContextMenu={(e) => !selectionMode && playable && onContext?.(e, track, index)}>
       {/* 选择模式下的整行点击层 */}
       {selectionMode && (
         <button
-          type="button"
-          title={track.name}
-          aria-label="选择歌曲"
-          onClick={() => onToggleSelect?.()}
           className="absolute inset-0 z-10 cursor-pointer"
+          type="button"
+          aria-label="选择歌曲"
+          title={track.name}
+          onClick={() => onToggleSelect?.()}
         />
       )}
       {/*序号*/}
       <ListItemIndex
+        index={index}
         total={total}
         active={active}
-        disabled={!playable}
-        index={index}
-        onClick={() => onClick?.(track, index)}
-        selectionMode={selectionMode}
         selected={selected}
+        disabled={!playable}
+        selectionMode={selectionMode}
+        onClick={() => onClick?.(track, index)}
       />
       {/*封面*/}
       {type !== "album" && (
         <ListItemCover
           track={track}
-          onClick={() => onClick?.(track, index)}
           disabled={!playable}
           fastLocation={fastLocation}
           trackCoverSize={trackCoverSize}
+          onClick={() => onClick?.(track, index)}
         />
       )}
       {/*名称*/}
       <ListItemName
-        track={track}
         type={type}
+        track={track}
         disabled={!playable}
-        onClick={() => onClick?.(track, index)}
         onClickAlbum={onClickAlbum}
         onClickArtist={onClickArtist}
+        onClick={() => onClick?.(track, index)}
       />
       {/*信息*/}
       <ListItemInfo
+        type={type}
+        liked={liked}
+        track={track}
         active={active}
         disabled={!playable}
-        track={track}
-        liked={liked}
         onLikeChange={() => onLikeChange?.(track, index)}
-        type={type}
       />
     </div>
   );

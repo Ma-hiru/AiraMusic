@@ -7,9 +7,9 @@ export class NeteaseNetworkAudio {
   readonly meta;
 
   constructor(props: {
+    id: number;
     url: string;
     quality: TrackQuality;
-    id: number;
     meta: NeteaseAPI.NeteaseSongUrlNewItem;
   }) {
     this.quality = props.quality;
@@ -40,10 +40,10 @@ export class NeteaseLocalAudio extends NeteaseNetworkAudio {
   readonly localURL: string;
 
   constructor(props: {
-    url: string;
-    quality: TrackQuality;
     id: number;
+    url: string;
     localURL: string;
+    quality: TrackQuality;
     meta: NeteaseAPI.NeteaseSongUrlNewItem;
   }) {
     super(props);
@@ -65,8 +65,8 @@ export class NeteaseLocalAudio extends NeteaseNetworkAudio {
   }
 
   static fromObject(
-    audio: Optional<NeteaseNetworkAudio | NeteaseLocalAudio>
-  ): Nullable<NeteaseNetworkAudio | NeteaseLocalAudio> {
+    audio: Optional<NeteaseLocalAudio | NeteaseNetworkAudio>
+  ): Nullable<NeteaseLocalAudio | NeteaseNetworkAudio> {
     if (!audio) return null;
     if ("localURL" in audio) return new NeteaseLocalAudio(audio);
     return new NeteaseNetworkAudio(audio);
@@ -75,13 +75,13 @@ export class NeteaseLocalAudio extends NeteaseNetworkAudio {
 
 export class NeteaseCommonAudio {
   static isLocal(
-    audio: Optional<NeteaseNetworkAudio | NeteaseLocalAudio>
+    audio: Optional<NeteaseLocalAudio | NeteaseNetworkAudio>
   ): audio is NeteaseLocalAudio {
     return audio?.constructor === NeteaseLocalAudio;
   }
 
   static isNetwork(
-    audio: Optional<NeteaseNetworkAudio | NeteaseLocalAudio>
+    audio: Optional<NeteaseLocalAudio | NeteaseNetworkAudio>
   ): audio is NeteaseNetworkAudio {
     return audio?.constructor === NeteaseNetworkAudio;
   }

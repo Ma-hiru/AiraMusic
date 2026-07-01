@@ -8,8 +8,8 @@ export type RouteItem = {
 export type RouteList = readonly RouteItem[];
 
 export interface NormalProps<R extends RouteList = RouteList> {
-  base: string;
   routes?: R;
+  base: string;
 }
 
 export interface PlaylistProps<R extends RouteList = RouteList> extends NormalProps<R> {

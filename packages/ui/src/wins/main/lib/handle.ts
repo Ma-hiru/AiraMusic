@@ -1,7 +1,7 @@
-import { useListenable } from "@/common/hooks/use-listenable";
-import { RendererWindow } from "@/common/lib/window";
 import { RendererOnce } from "@/common/lib/once";
 import { RendererCache } from "@/common/lib/cache";
+import { RendererWindow } from "@/common/lib/window";
+import { useListenable } from "@/common/hooks/use-listenable";
 import RendererPlayer from "@/common/player/core";
 
 export default class RendererPlayerHandle {

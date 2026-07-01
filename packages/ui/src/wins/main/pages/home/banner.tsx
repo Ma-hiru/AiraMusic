@@ -1,14 +1,13 @@
-import { type FC, memo, useCallback, useMemo } from "react";
-import { BannerType } from "@/common/enum";
-import { NeteaseTrackRecord, NeteaseURL } from "@/common/netease/models";
 import { useNavigate } from "react-router-dom";
-import { NeteaseAPIHome } from "@/common/netease/api";
-import { NeteaseServicesTrack } from "@/common/netease/services";
-import { RoutePath, RoutePathMain } from "@/common/routes";
-import { useRequestAutoRetry, useRequestStatusWrap } from "@/common/hooks/use-request-wrap";
+import { memo, type FC, useMemo, useCallback } from "react";
+import { BannerType } from "@/common/enum";
 import { RendererIPC } from "@mahiru/ipc/renderer";
+import { NeteaseAPIHome } from "@/common/netease/api";
+import { RoutePath, RoutePathMain } from "@/common/routes";
+import { NeteaseServicesTrack } from "@/common/netease/services";
+import { NeteaseURL, NeteaseTrackRecord } from "@/common/netease/models";
+import { useRequestAutoRetry, useRequestStatusWrap } from "@/common/hooks/use-request-wrap";
 import RendererPlayerHandle from "@/wins/main/lib/handle";
-
 import Carousel from "@/common/components/display/carousel";
 import AppError from "@/common/components/fallback/app-error";
 
@@ -20,7 +19,7 @@ const Banner: FC<BannerProps> = ({ className }) => {
   const navigate = useNavigate();
   const player = RendererPlayerHandle.usePlayer();
   const getBanner = useCallback(() => NeteaseAPIHome.banner().then((res) => res.banners), []);
-  const { status, data: banners = [], fetchData } = useRequestStatusWrap(getBanner);
+  const { status, fetchData, data: banners = [] } = useRequestStatusWrap(getBanner);
   const { reload } = useRequestAutoRetry(fetchData, [], () => banners.length !== 0);
 
   const bannerItems = useMemo(() => {
@@ -34,7 +33,7 @@ const Banner: FC<BannerProps> = ({ className }) => {
     async (i: number) => {
       const item = banners[i];
       if (!item) return;
-      const { type, id } = NeteaseURL.parseBannerURL(item.url);
+      const { id, type } = NeteaseURL.parseBannerURL(item.url);
 
       switch (type) {
         case BannerType.song: {
@@ -68,7 +67,7 @@ const Banner: FC<BannerProps> = ({ className }) => {
   );
 
   return (
-    <AppError asChild={false} className={className} reset={reload} when={status === "error"}>
+    <AppError className={className} reset={reload} asChild={false} when={status === "error"}>
       <Carousel className={className} items={bannerItems} onClick={resolveBanner} />
     </AppError>
   );

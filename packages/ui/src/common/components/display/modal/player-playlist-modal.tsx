@@ -1,19 +1,18 @@
-import { useCallback, useEffect, useRef } from "react";
 import { ListMusic } from "lucide-react";
-import { useUserTrackManager } from "@/common/hooks/use-user-track-manager";
-import { useTrackContextMenu } from "@/common/hooks/use-track-context-menu";
-import { openTrackAddToPlaylist } from "@/common/hooks/use-track-add-to-playlist";
+import { useRef, useEffect, useCallback } from "react";
+import { NeteaseTrackRecord } from "@/common/netease/models";
 import { useListenable } from "@/common/hooks/use-listenable";
-import type { ModalRender } from "@/common/components/display/modal/modal-provider";
-import type RendererPlayer from "@/common/player/core";
+import { useTrackContextMenu } from "@/common/hooks/use-track-context-menu";
+import { useUserTrackManager } from "@/common/hooks/use-user-track-manager";
+import { openTrackAddToPlaylist } from "@/common/hooks/use-track-add-to-playlist";
 import AppModal from "@/common/components/display/modal";
 import RendererImageConstants from "@/common/constants/image";
-
 import TrackList, {
-  type TrackListClickFunc,
-  type TrackListRef
+  type TrackListRef,
+  type TrackListClickFunc
 } from "@/common/components/display/track_list";
-import { NeteaseTrackRecord } from "@/common/netease/models";
+import type RendererPlayer from "@/common/player/core";
+import type { ModalRender } from "@/common/components/display/modal/modal-provider";
 
 type PlaylistModalProps = {
   onJumpPage?: NormalFunc;
@@ -40,13 +39,13 @@ export function createPlayerPlaylistModal({
 
 // eslint-disable-next-line react-refresh/only-export-components
 const PlayerPlaylistModalContent = ({
-  onJumpPage,
-  rendererPlayer,
-  jumpArtistPage,
-  jumpAlbumPage,
-  openTrackComment,
   addTrackToPlaylistLast,
-  addTrackToPlaylistNext
+  addTrackToPlaylistNext,
+  openTrackComment,
+  onJumpPage,
+  jumpAlbumPage,
+  jumpArtistPage,
+  rendererPlayer
 }: PlaylistModalProps & { rendererPlayer: RendererPlayer }) => {
   const { heartManager, playableManager } = useUserTrackManager();
   const player = useListenable(rendererPlayer);
@@ -119,24 +118,24 @@ const PlayerPlaylistModalContent = ({
         </div>
       </header>
       <TrackList
+        ref={trackListRef}
+        id={0}
         className="
           min-h-0 flex-1 overflow-hidden rounded-lg border border-white/10
           bg-black/5 p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]
         "
-        ref={trackListRef}
-        id={0}
-        tracks={tracks}
         type="normal"
+        tracks={tracks}
+        paddingBottom={8}
+        emptyTips="播放列表为空"
         activeID={activeTrack?.id}
+        heartManager={heartManager}
+        playableManager={playableManager}
+        trackCoverSize={RendererImageConstants.PlaylistPageTrackCoverSize}
         onClick={onTrackPlay}
         onContext={onContextMenu}
         onClickAlbum={onClickAlbum}
         onClickArtist={onClickArtist}
-        heartManager={heartManager}
-        playableManager={playableManager}
-        trackCoverSize={RendererImageConstants.PlaylistPageTrackCoverSize}
-        paddingBottom={8}
-        emptyTips="播放列表为空"
       />
     </div>
   );

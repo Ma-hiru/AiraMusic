@@ -1,6 +1,6 @@
 import { nativeImage } from "electron";
 
-export type TaskbarButtonIcon = "next" | "pause" | "play" | "previous";
+export type TaskbarButtonIcon = "next" | "play" | "pause" | "previous";
 
 function createControlIcon(icon: TaskbarButtonIcon) {
   const size = 32;

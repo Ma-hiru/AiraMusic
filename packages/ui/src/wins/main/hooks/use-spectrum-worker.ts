@@ -1,8 +1,8 @@
-import type RendererPlayerAudio from "@/common/player/audio";
-import SpectrumWorker from "@/worker/spectrum.ts?worker";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useRef, useState, useEffect, useCallback } from "react";
 import { Log } from "@/common/lib/log";
 import { useLatestRef } from "@/common/hooks/use-latest-ref";
+import SpectrumWorker from "@/worker/spectrum.ts?worker";
+import type RendererPlayerAudio from "@/common/player/audio";
 
 export interface SpectrumData {
   bands: Float32Array;
@@ -22,7 +22,7 @@ export function useSpectrumWorker(
   isPlaying: boolean,
   options: SpectrumOptions = {}
 ) {
-  const { fftSize = 2048, numBands = 64, withPeaks = false, fpsLimit } = options;
+  const { fpsLimit, numBands = 64, fftSize = 2048, withPeaks = false } = options;
   const workerRef = useRef<Nullable<Worker>>(null);
   const animationFrameRef = useRef<number>(0);
   const lastPostAtRef = useRef(Number.NEGATIVE_INFINITY);
@@ -59,7 +59,7 @@ export function useSpectrumWorker(
   });
 
   const updateSpectrum = useCallback(() => {
-    const { audio, fpsLimit, isReady, isPlaying, withPeaks } = propsRef.current;
+    const { audio, isReady, fpsLimit, isPlaying, withPeaks } = propsRef.current;
     const analyser = audio.context.analyser;
     const worker = workerRef.current;
     const samples = samplesRef.current;

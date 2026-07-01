@@ -1,63 +1,63 @@
-import {
-  type FC,
-  memo,
-  type Ref,
-  useCallback,
-  useEffect,
-  useImperativeHandle,
-  useLayoutEffect,
-  useRef,
-  useState
-} from "react";
 import { cx } from "@emotion/css";
-import { TimeManager } from "./time-manager";
 import { debounce } from "lodash-es";
+import {
+  memo,
+  useRef,
+  type FC,
+  type Ref,
+  useState,
+  useEffect,
+  useCallback,
+  useLayoutEffect,
+  useImperativeHandle
+} from "react";
 import { useLatestRef } from "@/common/hooks/use-latest-ref";
+import RendererTheme from "@/common/player/ui";
 
 import LyricLine from "./lyric-line";
-import RendererTheme from "@/common/player/ui";
 import LyricTips from "./lyric-tips";
+import { TimeManager } from "./time-manager";
 
 const edgeFadeMask =
   "linear-gradient(to bottom, transparent 0, #000 min(12%, 56px), #000 calc(100% - min(12%, 56px)), transparent 100%)";
 
 export interface LyricRef {
+  calcLayout: NormalFunc<[]>;
   update: NormalFunc<[delta: number]>;
   setCurrentTime: NormalFunc<[time: number]>;
-  calcLayout: NormalFunc<[]>;
 }
 
 interface LyricContainerProps {
   ref: Ref<LyricRef>;
-  lyric: Optional<NeteaseLyricModel>;
+  spring?: boolean;
+  fontSize?: number;
+  className?: string;
+  activeColor?: string;
+  inactiveColor?: string;
+  playing?: Optional<boolean>;
   rmActive: Optional<boolean>;
   tlActive: Optional<boolean>;
   noteActive: Optional<boolean>;
-  playing?: Optional<boolean>;
-  className?: string;
+  lyric: Optional<NeteaseLyricModel>;
+  mainAlign?: "top" | "bottom" | "center";
+  crossAlign?: "left" | "right" | "center";
   onWordClick?: NormalFunc<[startTime: number]>;
-  activeColor?: string;
-  inactiveColor?: string;
-  fontSize?: number;
-  crossAlign?: "left" | "center" | "right";
-  mainAlign?: "top" | "center" | "bottom";
-  spring?: boolean;
 }
 
 const LyricContainer: FC<LyricContainerProps> = ({
   ref,
-  lyric,
-  rmActive,
-  tlActive,
-  noteActive,
   className,
   onWordClick,
-  activeColor,
-  inactiveColor,
+  lyric,
+  spring,
   fontSize,
-  crossAlign,
+  rmActive,
+  tlActive,
   mainAlign,
-  spring
+  crossAlign,
+  noteActive,
+  activeColor,
+  inactiveColor
 }) => {
   const [currentLine, setCurrentLine] = useState(-1);
   const [scrolling, setScrolling] = useState(false);
@@ -186,24 +186,24 @@ const LyricContainer: FC<LyricContainerProps> = ({
         <LyricLine
           key={index}
           line={line}
+          index={index}
+          spring={spring}
+          fontSize={fontSize}
           rmActive={rmActive}
           tlActive={tlActive}
+          crossAlign={crossAlign}
           noteActive={noteActive}
           hasRm={lyric?.rmExisted}
           hasTl={lyric?.tlExisted}
           activeColor={activeColor}
           inactiveColor={inactiveColor}
-          fontSize={fontSize}
-          index={index}
-          onClick={onWordClick}
-          timeManager={timeManagerRef.current!}
           active={currentLine === index}
-          crossAlign={crossAlign}
-          spring={spring}
+          timeManager={timeManagerRef.current!}
+          onClick={onWordClick}
         />
       ))}
       <div className={cx("h-[55%]", lyricLines.length === 0 && "h-0 pt-0")}>
-        <LyricTips crossAlign={crossAlign} tips={lyric?.tips} />
+        <LyricTips tips={lyric?.tips} crossAlign={crossAlign} />
       </div>
     </div>
   );

@@ -1,13 +1,13 @@
 import { useCallback } from "react";
-import { RoutePath, RoutePathDisplay } from "@/common/routes";
 import { useNavigate } from "react-router-dom";
 import { useLatestRef } from "@/common/hooks/use-latest-ref";
+import { RoutePath, RoutePathDisplay } from "@/common/routes";
 
 /** 跳转歌手和专辑页 */
 export function useArtistOrAlbumDisplayJump(
   props: {
-    currentArtistID?: number;
     currentAlbumID?: number;
+    currentArtistID?: number;
   } = {}
 ) {
   const navigate = useNavigate();

@@ -1,5 +1,5 @@
-import { Log } from "@/common/lib/log";
 import { clamp } from "lodash-es";
+import { Log } from "@/common/lib/log";
 import { NeteaseLocalAudio, NeteaseNetworkAudio } from "@/common/netease/models";
 
 export default class RendererPlayerAudio {
@@ -51,7 +51,7 @@ export default class RendererPlayerAudio {
     return this.audio.currentTime;
   }
 
-  set currentTime(timeOrPercent: `${number}%` | number) {
+  set currentTime(timeOrPercent: number | `${number}%`) {
     if (typeof timeOrPercent === "number") {
       if (!Number.isFinite(timeOrPercent)) return;
       timeOrPercent = Math.floor(timeOrPercent);
@@ -112,7 +112,7 @@ export default class RendererPlayerAudio {
     };
   }
 
-  async load(source: NeteaseNetworkAudio | NeteaseLocalAudio, play: boolean, jump = 0) {
+  async load(source: NeteaseLocalAudio | NeteaseNetworkAudio, play: boolean, jump = 0) {
     this.pause();
     let src = source.url;
     if (source.isLocal() && source.localURL) {
@@ -163,7 +163,7 @@ export default class RendererPlayerAudio {
 
   static fromSave(
     save: ReturnType<typeof this.save>,
-    audio: Optional<NeteaseNetworkAudio | NeteaseLocalAudio>
+    audio: Optional<NeteaseLocalAudio | NeteaseNetworkAudio>
   ) {
     const instance = new RendererPlayerAudio();
     instance.pause();

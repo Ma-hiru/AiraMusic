@@ -1,18 +1,18 @@
 import { cx } from "@emotion/css";
-import { getTextClassName } from "@/common/components/display/text";
-import { type FC, memo, type ReactNode, useMemo } from "react";
 import { type LucideIcon } from "lucide-react";
+import { memo, type FC, useMemo, type ReactNode } from "react";
+import { getTextClassName } from "@/common/components/display/text";
 
 interface HomeSectionProps {
   title?: string;
-  subTitle?: string;
   Icon?: LucideIcon;
+  subTitle?: string;
   className?: string;
-  onClick?: NormalFunc;
   children?: ReactNode;
+  onClick?: NormalFunc;
 }
 
-const Section: FC<HomeSectionProps> = ({ title, subTitle, Icon, className, children, onClick }) => {
+const Section: FC<HomeSectionProps> = ({ className, onClick, Icon, title, children, subTitle }) => {
   const header = useMemo(() => {
     if (!subTitle && !title && !Icon) return null;
     return (
@@ -30,7 +30,7 @@ const Section: FC<HomeSectionProps> = ({ title, subTitle, Icon, className, child
     );
   }, [Icon, subTitle, title]);
   return (
-    <section onClick={onClick} className={cx("w-full contain-layout", className)}>
+    <section className={cx("w-full contain-layout", className)} onClick={onClick}>
       {header}
       {children}
     </section>

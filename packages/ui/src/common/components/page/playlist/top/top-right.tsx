@@ -1,12 +1,11 @@
-import { type FC, memo, useCallback } from "react";
 import { cx } from "@emotion/css";
-import { Ellipsis, ListChecks, RotateCwSquare, SquarePen, Trash2 } from "lucide-react";
-import { NeteasePlaylist } from "@/common/netease/models";
-import { NeteaseAPIPlaylist } from "@/common/netease/api";
+import { memo, type FC, useCallback } from "react";
+import { Trash2, Ellipsis, SquarePen, ListChecks, RotateCwSquare } from "lucide-react";
 import { Log } from "@/common/lib/log";
+import { NeteaseAPIPlaylist } from "@/common/netease/api";
+import { NeteasePlaylist } from "@/common/netease/models";
 import AppModal from "@/common/components/display/modal";
 import AppToast from "@/common/components/display/toast";
-
 import Search from "@/common/components/data-input/search";
 import PageAction from "@/common/components/display/page-action";
 import IconButton from "@/common/components/data-input/icon-button";
@@ -16,33 +15,33 @@ interface TopRightProps {
   summary: Nullable<NeteasePlaylist>;
   source: Nullable<"like" | "normal">;
   searchTracks: NormalFunc<[k: string]>;
+  pageActionType?: "out" | "none" | "enter";
   setTying: NormalFunc<[typing: boolean]>;
-  pageActionType?: "enter" | "out" | "none";
   onPageAction?: NormalFunc;
   /** 编辑保存成功后刷新歌单页 */
   onEdited?: Optional<NormalFunc<[modifiedCover: boolean]>>;
   /** 删除歌单成功后离开当前页 */
-  onDeleted?: NormalFunc;
   reload?: NormalFunc;
   selectionMode?: boolean;
+  onDeleted?: NormalFunc;
   onToggleSelectionMode?: NormalFunc;
 }
 
 const TopRight: FC<TopRightProps> = ({
-  summary,
   source,
-  reload,
-  searchTracks,
-  editable,
-  setTying,
   pageActionType,
-  onPageAction,
+  setTying,
   onEdited,
   onDeleted,
-  selectionMode,
-  onToggleSelectionMode
+  onPageAction,
+  onToggleSelectionMode,
+  reload,
+  summary,
+  editable,
+  searchTracks,
+  selectionMode
 }) => {
-  const { create, createPlaylistEditModal, createDialogModal } = AppModal.useModal();
+  const { create, createDialogModal, createPlaylistEditModal } = AppModal.useModal();
 
   const confirmDelete = useCallback(async () => {
     if (!summary) return;
@@ -76,20 +75,20 @@ const TopRight: FC<TopRightProps> = ({
     <div className="flex h-full flex-col justify-between items-end text-[12px]">
       <div className="flex items-center gap-2 group relative">
         <IconButton
-          icon={Ellipsis}
+          className="group-hover:opacity-0 absolute right-21 duration-500! group-hover:duration-0!"
           label="更多"
           size="compact"
+          icon={Ellipsis}
           variant="ghost"
           show={editable && source !== "like"}
-          className="group-hover:opacity-0 absolute right-21 duration-500! group-hover:duration-0!"
         />
         <IconButton
-          icon={SquarePen}
+          className="scale-94! opacity-0 pointer-events-none group-hover:pointer-events-auto group-hover:opacity-100 duration-300!"
           label="编辑"
           size="compact"
           variant="ghost"
+          icon={SquarePen}
           show={editable && source !== "like"}
-          className="scale-94! opacity-0 pointer-events-none group-hover:pointer-events-auto group-hover:opacity-100 duration-300!"
           onClick={() =>
             summary &&
             create(createPlaylistEditModal, {
@@ -100,40 +99,40 @@ const TopRight: FC<TopRightProps> = ({
           }
         />
         <IconButton
-          icon={Trash2}
+          className="scale-96! opacity-0 pointer-events-none group-hover:pointer-events-auto group-hover:opacity-100 duration-300!"
           label="删除"
+          icon={Trash2}
           size="compact"
           variant="ghost"
-          onClick={onDelete}
           show={editable && source !== "like"}
-          className="scale-96! opacity-0 pointer-events-none group-hover:pointer-events-auto group-hover:opacity-100 duration-300!"
+          onClick={onDelete}
         />
         <IconButton
-          icon={ListChecks}
+          className={cx("scale-102!", selectionMode && "text-secondary")}
           label="选择"
           size="compact"
           variant="ghost"
+          icon={ListChecks}
           onClick={onToggleSelectionMode}
-          className={cx("scale-102!", selectionMode && "text-secondary")}
         />
         <IconButton
-          icon={RotateCwSquare}
+          className="scale-110!"
           label="刷新"
           size="compact"
           variant="ghost"
+          icon={RotateCwSquare}
           onClick={reload}
-          className="scale-110!"
         />
         <PageAction
-          type={pageActionType}
+          className="scale-98!"
           size="compact"
           variant="ghost"
+          type={pageActionType}
           onClick={onPageAction}
-          className="scale-98!"
         />
       </div>
       <div className="flex flex-col items-end justify-end">
-        <Search onSearch={searchTracks} setIsTyping={setTying} />
+        <Search setIsTyping={setTying} onSearch={searchTracks} />
       </div>
     </div>
   );

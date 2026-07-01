@@ -1,6 +1,7 @@
-import { NeteaseUser, type NeteaseUserModel } from "./netease-user";
-import { TrackBitmark, TrackQuality } from "@/common/enum";
 import { RendererFormat } from "@/common/lib/format";
+import { TrackBitmark, TrackQuality } from "@/common/enum";
+
+import { NeteaseUser, type NeteaseUserModel } from "./netease-user";
 
 export class NeteaseTrack implements NeteaseTrackModel {
   //region NeteaseTrackModel fields
@@ -230,7 +231,7 @@ export class NeteaseTrack implements NeteaseTrackModel {
     return new NeteaseTrack({ ...apiTrack, privilege });
   }
 
-  static fromObject(object: NeteaseTrackModel | NeteaseTrack) {
+  static fromObject(object: NeteaseTrack | NeteaseTrackModel) {
     return new NeteaseTrack(object);
   }
   //endregion

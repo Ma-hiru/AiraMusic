@@ -1,15 +1,16 @@
-import os from "node:os";
-import moduleDefs from "./ncmModDef";
-import { dirname, join } from "node:path";
-import { access, mkdir, readFile, writeFile } from "node:fs/promises";
+import { join, dirname } from "node:path";
+import { mkdir, access, readFile, writeFile } from "node:fs/promises";
 import { MainChild } from "@/lib/child";
+import os from "node:os";
+import type { MainChildControlMessage, MainChildSerializedError } from "@/types/child";
 import type {
-  NcmApiInstance,
   NcmApiServer,
+  NcmApiInstance,
   NCMChildMessage,
   NCMParentMessage
 } from "@/types/ncm.child";
-import type { MainChildControlMessage, MainChildSerializedError } from "@/types/child";
+
+import moduleDefs from "./ncmModDef";
 
 class NeteaseMusicApiChildService extends MainChild<NCMParentMessage, NCMChildMessage> {
   private instance?: NcmApiInstance;
@@ -156,7 +157,7 @@ class NeteaseMusicApiChildService extends MainChild<NCMParentMessage, NCMChildMe
 
   protected override handleCustomMessage(
     _message: Exclude<NCMParentMessage, MainChildControlMessage>
-  ): Promise<void> | void {
+  ): void | Promise<void> {
     void _message;
   }
 }

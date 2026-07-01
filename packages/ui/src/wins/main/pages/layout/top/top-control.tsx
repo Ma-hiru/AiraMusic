@@ -1,13 +1,12 @@
-import { type FC, memo, useCallback, useEffect, useRef, useState } from "react";
 import { PictureInPicture } from "lucide-react";
-import { useListenable } from "@/common/hooks/use-listenable";
-import { RendererWindow } from "@/common/lib/window";
+import { memo, useRef, type FC, useState, useEffect, useCallback } from "react";
 import { RendererCache } from "@/common/lib/cache";
-import RendererPlayerHandle from "@/wins/main/lib/handle";
+import { RendererWindow } from "@/common/lib/window";
+import { useListenable } from "@/common/hooks/use-listenable";
 import AppModal from "@/common/components/display/modal";
-
-import Control from "@/common/components/layout/top/control";
+import RendererPlayerHandle from "@/wins/main/lib/handle";
 import Switch from "@/common/components/data-input/switch";
+import Control from "@/common/components/layout/top/control";
 
 const TopControl: FC = () => {
   const { create, createDialogModal } = AppModal.useModal();
@@ -87,15 +86,15 @@ const TopControl: FC = () => {
 
 export default memo(TopControl);
 
-const AskMemo = ({ memo, setMemo }: { memo: boolean; setMemo: NormalFunc<[memo: boolean]> }) => {
+const AskMemo = ({ setMemo, memo }: { memo: boolean; setMemo: NormalFunc<[memo: boolean]> }) => {
   const [check, setCheck] = useState(memo);
   useEffect(() => setMemo(check), [check, setMemo]);
   return (
     <Switch
-      label="记住选择"
-      underlineClassName="bg-white!"
       className="hover:text-normal-text/50! focus-visible:ring-normal-text/40!"
+      label="记住选择"
       checked={check}
+      underlineClassName="bg-white!"
       onChange={setCheck}
     />
   );

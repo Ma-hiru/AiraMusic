@@ -1,9 +1,8 @@
 import { cx } from "@emotion/css";
-import { type FC, memo } from "react";
+import { memo, type FC } from "react";
 import { Check, SlidersHorizontal } from "lucide-react";
-import { NeteaseSettings } from "@/common/netease/models";
 import { TrackQuality } from "@/common/enum";
-
+import { NeteaseSettings } from "@/common/netease/models";
 import Card from "@/common/components/layout/card";
 import AppToast from "@/common/components/display/toast";
 
@@ -13,7 +12,7 @@ interface QualityProps {
   updateQuality: NormalFunc<[quality: TrackQuality]>;
 }
 
-const Quality: FC<QualityProps> = ({ data, updateQuality, vip }) => {
+const Quality: FC<QualityProps> = ({ vip, data, updateQuality }) => {
   return (
     <Card title="音质" subTitle="Qulity" Icon={SlidersHorizontal}>
       <div className="mt-5 grid grid-cols-[repeat(auto-fill,minmax(8rem,1fr))] gap-3">
@@ -35,7 +34,7 @@ const Quality: FC<QualityProps> = ({ data, updateQuality, vip }) => {
                 }
                 updateQuality(option.value);
               }}>
-              <div title={option.description} className="flex justify-between gap-1 h-full">
+              <div className="flex justify-between gap-1 h-full" title={option.description}>
                 <section className="flex flex-col justify-between items-start h-full">
                   <div className="text-md font-bold tracking-normal flex justify-center items-center gap-1">
                     {option.value}

@@ -1,7 +1,6 @@
-import { type FC, memo } from "react";
 import { useAtomValue } from "jotai";
+import { memo, type FC } from "react";
 import { scrollActionsAtom } from "@/wins/display/atoms/layout";
-
 import Float from "@/common/components/layout/float";
 
 const DisplayFloat: FC<{ className?: string }> = ({ className }) => {

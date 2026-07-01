@@ -1,11 +1,12 @@
-import { startTransition, useCallback, useEffect, useState } from "react";
+import { useState, useEffect, useCallback, startTransition } from "react";
 import { Log } from "@/common/lib/log";
-import { useStableArray } from "./use-stable-array";
-import { useUpdate } from "./use-update";
-import { useLatestRef } from "./use-latest-ref";
 import { RendererNet } from "@/common/lib/net";
 
-export type RequestStatus = "loading" | "error" | "success";
+import { useUpdate } from "./use-update";
+import { useLatestRef } from "./use-latest-ref";
+import { useStableArray } from "./use-stable-array";
+
+export type RequestStatus = "error" | "loading" | "success";
 
 export function useRequestStatusWrap<R, Args extends unknown[]>(request: PromiseFunc<Args, R>) {
   const [status, setStatus] = useState<RequestStatus>("loading");

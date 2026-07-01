@@ -1,4 +1,4 @@
-import { isAbsolute, relative, resolve } from "node:path";
+import { resolve, relative, isAbsolute } from "node:path";
 
 export function isSubPath(parent: string, child: string) {
   const parentPath = resolve(parent);

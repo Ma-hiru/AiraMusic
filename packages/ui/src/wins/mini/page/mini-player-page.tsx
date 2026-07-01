@@ -1,28 +1,27 @@
 import { cx } from "@emotion/css";
+import { memo, type FC, useMemo, Fragment, useEffect, useCallback } from "react";
 import {
-  Disc3,
-  type LucideIcon,
-  Music2,
-  Pause,
+  X,
   Play,
+  Disc3,
+  Pause,
+  Music2,
   SkipBack,
   SkipForward,
-  X
+  type LucideIcon
 } from "lucide-react";
-import { type FC, Fragment, memo, useCallback, useEffect, useMemo } from "react";
 import { NeteaseImageSize } from "@/common/enum";
-import { useListenable } from "@/common/hooks/use-listenable";
-import { RendererIPCMessageBus } from "@/common/lib/bus";
-import { RendererWindow } from "@/common/lib/window";
-import { NeteaseNetworkImage, NeteaseURL } from "@/common/netease/models";
-import { useThemeInjectFromBus } from "@/common/hooks/use-theme-inject-from-bus";
 import { RendererFormat } from "@/common/lib/format";
-
+import { RendererWindow } from "@/common/lib/window";
+import { RendererIPCMessageBus } from "@/common/lib/bus";
+import { useListenable } from "@/common/hooks/use-listenable";
+import { NeteaseURL, NeteaseNetworkImage } from "@/common/netease/models";
+import { useThemeInjectFromBus } from "@/common/hooks/use-theme-inject-from-bus";
 import Drag from "@/common/components/layout/drag/drag";
+import Marquee from "@/common/components/display/marquee";
 import NoDrag from "@/common/components/layout/drag/no-drag";
 import NeteaseImage from "@/common/components/display/image/netease-image";
 import AcrylicBackground from "@/common/components/display/acrylic-background";
-import Marquee from "@/common/components/display/marquee";
 
 const MiniPlayerPage: FC = () => {
   const themeBus = useThemeInjectFromBus();
@@ -74,11 +73,11 @@ const MiniPlayerPage: FC = () => {
       <section className="fixed inset-0 z-[-1]">
         <AcrylicBackground
           className="absolute inset-0"
-          blur={10}
-          brightness={0.6}
-          opacity={1}
           src={bg}
+          blur={10}
+          opacity={1}
           saturate={2}
+          brightness={0.6}
           themeColors={themeBus.data?.theme.themeColors}
         />
       </section>
@@ -86,14 +85,14 @@ const MiniPlayerPage: FC = () => {
         <NoDrag className="relative size-11 rounded-md border overflow-hidden border-white/30 bg-primary/30">
           {cover ? (
             <NeteaseImage
-              cache
-              cacheLazy={false}
-              image={cover}
-              shadow="none"
               className="
                 size-full hover:opacity-50 cursor-pointer
                 ease-in-out duration-300 transition-opacity
               "
+              image={cover}
+              shadow="none"
+              cacheLazy={false}
+              imageClassName="object-cover"
               onClick={async () => {
                 if (!cover) return;
                 const image = cover.toNetworkImage().setSize(NeteaseImageSize.raw);
@@ -103,7 +102,7 @@ const MiniPlayerPage: FC = () => {
                   alt: image.alt
                 });
               }}
-              imageClassName="object-cover"
+              cache
             />
           ) : (
             <div className="flex size-full items-center justify-center">
@@ -122,9 +121,9 @@ const MiniPlayerPage: FC = () => {
         <div className="grid min-w-0 grid-rows-[1fr_auto] gap-0.5">
           <div className="min-w-0 self-end">
             <Marquee
-              text={trackMetaBus.data?.track?.name || "暂无播放"}
               className="text-[12px] font-semibold leading-4"
               options={marqueeOpts}
+              text={trackMetaBus.data?.track?.name || "暂无播放"}
             />
             <Marquee
               className="text-[9px] font-semibold leading-3 opacity-80"
@@ -134,18 +133,18 @@ const MiniPlayerPage: FC = () => {
                   return (
                     <Fragment key={a.id}>
                       <NoDrag
+                        className="
+                            inline cursor-pointer hover:opacity-50
+                            ease-in-out duration-300 transition-all
+                          "
+                        title={a.name}
                         onClick={async () => {
                           await RendererWindow.display.reactReadyAwait();
                           RendererIPCMessageBus.display.deliver({
                             type: "artist",
                             id: a.id
                           });
-                        }}
-                        title={a.name}
-                        className="
-                            inline cursor-pointer hover:opacity-50
-                            ease-in-out duration-300 transition-all
-                          ">
+                        }}>
                         {a.name}
                       </NoDrag>
                       {index !== (trackMetaBus.data?.track?.detail.ar.length ?? 0) - 1 && (
@@ -158,15 +157,15 @@ const MiniPlayerPage: FC = () => {
               {album && <span> - </span>}
               {album && (
                 <NoDrag
+                  className="inline cursor-pointer hover:opacity-50 ease-in-out duration-300 transition-all"
+                  title={album.name}
                   onClick={async () => {
                     await RendererWindow.display.reactReadyAwait();
                     RendererIPCMessageBus.display.deliver({
                       type: "album",
                       id: album.id
                     });
-                  }}
-                  title={album.name}
-                  className="inline cursor-pointer hover:opacity-50 ease-in-out duration-300 transition-all">
+                  }}>
                   {album.name}
                 </NoDrag>
               )}
@@ -174,36 +173,36 @@ const MiniPlayerPage: FC = () => {
           </div>
           <NoDrag className="flex items-center justify-start gap-1">
             <ControlButton
-              filled
-              icon={SkipBack}
               label="上一首"
+              icon={SkipBack}
               onClick={() => RendererIPCMessageBus.playerAction.deliver("previous")}
+              filled
             />
             <ControlButton
-              filled
               icon={isPlaying ? Pause : Play}
               label={isPlaying ? "暂停" : "播放"}
               onClick={togglePlay}
+              filled
             />
             <ControlButton
-              filled
-              icon={SkipForward}
               label="下一首"
+              icon={SkipForward}
               onClick={() => RendererIPCMessageBus.playerAction.deliver("next")}
+              filled
             />
           </NoDrag>
         </div>
         <div className="h-full flex flex-col justify-between items-end">
           <NoDrag>
             <button
-              title="隐藏"
-              onClick={close}
               className="
                 flex size-5 items-center justify-center rounded-full outline-none
                 transition-all duration-200 ease-in-out
                 hover:bg-(--text-color-on-main)/50 hover:text-primary
                 active:scale-90 focus-visible:ring-2 focus-visible:ring-primary/35
-              ">
+              "
+              title="隐藏"
+              onClick={close}>
               <X className="size-3.5" />
             </button>
           </NoDrag>
@@ -221,26 +220,26 @@ const MiniPlayerPage: FC = () => {
 export default memo(MiniPlayerPage);
 
 const ControlButton = ({
-  icon: Icon,
+  onClick,
   label,
   filled,
-  onClick
+  icon: Icon
 }: {
-  icon: LucideIcon;
   label: string;
   filled?: boolean;
+  icon: LucideIcon;
   onClick: NormalFunc;
 }) => {
   return (
     <button
-      title={label}
-      onClick={onClick}
       className="
         flex size-5 items-center justify-center rounded-full outline-none
         transition-all duration-300 ease-in-out active:scale-90
         hover:bg-(--text-color-on-main)/50 hover:text-primary
         focus-visible:ring-2 focus-visible:ring-primary/35
-      ">
+      "
+      title={label}
+      onClick={onClick}>
       <Icon className="size-3.5" fill={filled ? "currentColor" : "none"} />
     </button>
   );

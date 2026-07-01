@@ -1,7 +1,7 @@
 import { type IRenderer, type RendererOptions } from "./i-renderer";
 
 export class Canvas2DRenderer implements IRenderer {
-  private ctx: CanvasRenderingContext2D | null = null;
+  private ctx: null | CanvasRenderingContext2D = null;
   options?: RendererOptions;
 
   init(canvas: HTMLCanvasElement, options: RendererOptions) {
@@ -19,14 +19,14 @@ export class Canvas2DRenderer implements IRenderer {
     const opt = this.options;
     if (!ctx || !opt) return;
     const {
+      gap,
+      color,
       width,
       height,
-      color,
-      gap,
       barWidth,
       secondaryColor,
-      roundedCorners = "top",
-      heightScale = 1
+      heightScale = 1,
+      roundedCorners = "top"
     } = opt;
     ctx.clearRect(0, 0, width, height);
     const count = bands.length;

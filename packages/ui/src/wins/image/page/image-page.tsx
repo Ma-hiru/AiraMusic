@@ -1,22 +1,21 @@
 import { cx } from "@emotion/css";
-import { type FC, memo, useCallback, useEffect, useState } from "react";
+import { memo, type FC, useState, useEffect, useCallback } from "react";
+import { RendererIPCMessageBus } from "@/common/lib/bus";
 import { useAppLoaded } from "@/common/hooks/use-app-loaded";
 import { useListenable } from "@/common/hooks/use-listenable";
-import { RendererIPCMessageBus } from "@/common/lib/bus";
 import { useThemeInjectFromBus } from "@/common/hooks/use-theme-inject-from-bus";
-import AppToast from "@/common/components/display/toast";
-
 import Drag from "@/common/components/layout/drag/drag";
-import ImageViewer from "@/common/components/display/image/image-viewer";
+import AppToast from "@/common/components/display/toast";
 import Control from "@/common/components/layout/top/control";
+import ImageViewer from "@/common/components/display/image/image-viewer";
 
 type ImageGalleryState = {
-  images: { url?: string; alt?: string }[];
   index: number;
+  images: { alt?: string; url?: string }[];
 };
 
 const ImagePage: FC = () => {
-  const [{ images, index }, setGallery] = useState<ImageGalleryState>({
+  const [{ index, images }, setGallery] = useState<ImageGalleryState>({
     images: [],
     index: 0
   });
@@ -25,7 +24,7 @@ const ImagePage: FC = () => {
 
   useEffect(() => {
     const previews = previewBus.data;
-    for (const { url, alt } of previews) {
+    for (const { alt, url } of previews) {
       if (!url) return;
       setGallery((prev) => {
         const existed = prev.images.findIndex((image) => image.url === url);
@@ -60,10 +59,10 @@ const ImagePage: FC = () => {
   return (
     <div className="relative h-screen w-screen overflow-hidden bg-black">
       <ImageViewer
-        images={images}
         index={index}
-        onIndexChange={handleIndexChange}
+        images={images}
         onToolBarChange={setShowToolBar}
+        onIndexChange={handleIndexChange}
       />
       <Drag
         className={cx(
@@ -74,14 +73,14 @@ const ImagePage: FC = () => {
           showToolBar ? "translate-y-0 opacity-100" : "-translate-y-4 opacity-0"
         )}>
         <Control
-          color="#ffffff"
           className="
             rounded-md border border-white/10 bg-black/35 px-3 py-1.5
             shadow-[0_8px_32px_rgba(0,0,0,0.25)]
             backdrop-saturate-120 backdrop-blur-md
           "
-          mini
+          color="#ffffff"
           pin
+          mini
         />
       </Drag>
       <AppToast.Provider className="top-12 z-70" itemContainerClassName="bg-black/35!" />

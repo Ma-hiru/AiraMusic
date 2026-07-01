@@ -1,4 +1,4 @@
-export type MainServicesType = "store" | "ncm" | "proxy";
+export type MainServicesType = "ncm" | "proxy" | "store";
 
 export abstract class MainServicesInstance {
   abstract stop(): Promise<void>;

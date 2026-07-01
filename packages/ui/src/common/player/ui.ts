@@ -1,7 +1,7 @@
-import Color, { type ColorInstance } from "color";
-import { converter, formatHex } from "culori";
 import { clamp } from "lodash-es";
+import { converter, formatHex } from "culori";
 import { Listener } from "@/common/utils/listenable";
+import Color, { type ColorInstance } from "color";
 
 export default class RendererTheme {
   static readonly BLACK_COLOR = Color("#000000");
@@ -48,7 +48,7 @@ export default class RendererTheme {
   }
 
   static set theme(colors) {
-    const { main, secondary, textOnMainColor, textColor, textOnSecondaryColor } = colors;
+    const { main, secondary, textColor, textOnMainColor, textOnSecondaryColor } = colors;
     document.documentElement.style.setProperty(this.themeCSSNameMain, main);
     document.documentElement.style.setProperty(this.themeCSSNameSecondary, secondary);
     document.documentElement.style.setProperty(this.themeCSSNameTextOnMain, textOnMainColor);
@@ -84,7 +84,7 @@ export default class RendererTheme {
   }
 
   static get themeInstance() {
-    const { main, secondary, textOnMainColor, textColor, textOnSecondaryColor } = this.theme;
+    const { main, secondary, textColor, textOnMainColor, textOnSecondaryColor } = this.theme;
     return {
       main: Color(main),
       secondary: Color(secondary),

@@ -1,14 +1,14 @@
 import { app } from "electron";
-import { MainProtocol } from "@/inner/protocol";
-import { MainExitCodeConstants } from "@/constants/exit-code";
 import { Log } from "@/lib/log";
-import { MainWindowCreator } from "@/lib/window-creator";
-import { MainWindowPreset } from "@/lib/window-preset";
-import { MainWindowManager } from "@/lib/window-manager";
-import { MainTray } from "@/lib/tray";
-import { MainScreenResolver } from "@/lib/screen-resolver";
-import { MainServices } from "@/services";
 import { ipcInit } from "@/inner/ipc";
+import { MainTray } from "@/lib/tray";
+import { MainServices } from "@/services";
+import { MainProtocol } from "@/inner/protocol";
+import { MainWindowPreset } from "@/lib/window-preset";
+import { MainWindowCreator } from "@/lib/window-creator";
+import { MainWindowManager } from "@/lib/window-manager";
+import { MainScreenResolver } from "@/lib/screen-resolver";
+import { MainExitCodeConstants } from "@/constants/exit-code";
 import { MainTaskBarCoverPreview } from "@/lib/taskbar-cover";
 
 /**
@@ -17,7 +17,7 @@ import { MainTaskBarCoverPreview } from "@/lib/taskbar-cover";
  * */
 export class MainApp {
   private _services?: MainServices;
-  private _status: "initializing" | "running" | "exiting" = "initializing";
+  private _status: "exiting" | "running" | "initializing" = "initializing";
 
   /** @desc 是否进入退出流程 */
   private get isExiting() {

@@ -1,5 +1,5 @@
-import { apiRequest } from "@/common/netease/api/request";
 import { CommentSort, CommentType } from "@/common/enum";
+import { apiRequest } from "@/common/netease/api/request";
 
 export default class _NeteaseCommentAPI {
   static get(params: {
@@ -33,7 +33,7 @@ export default class _NeteaseCommentAPI {
     /** 评论 id */
     cid?: number;
     /** 是否点赞 , 1 为点赞 ,0 为取消点赞 */
-    t: 1 | 0;
+    t: 0 | 1;
     type: CommentType;
     /** 资源 id, 如歌曲 id,mv id */
     id: number;
@@ -72,6 +72,17 @@ export default class _NeteaseCommentAPI {
   static send(
     params:
       | {
+          /** :0 删除 */
+          t: 0;
+          type: CommentType;
+          /** 对应资源 id */
+          id: number;
+          /** 评论id */
+          commentId?: number;
+          /** 给动态删除评论，则不需要传 id，需要传动态的 threadId */
+          threadId?: string;
+        }
+      | {
           type: CommentType;
           /** 1 发送, 2 回复 */
           t: 1 | 2;
@@ -82,17 +93,6 @@ export default class _NeteaseCommentAPI {
           /** 回复的评论 id (回复评论时必填) */
           commentId?: number;
           /** 给动态发送评论，则不需要传 id，需要传动态的 threadId */
-          threadId?: string;
-        }
-      | {
-          /** :0 删除 */
-          t: 0;
-          type: CommentType;
-          /** 对应资源 id */
-          id: number;
-          /** 评论id */
-          commentId?: number;
-          /** 给动态删除评论，则不需要传 id，需要传动态的 threadId */
           threadId?: string;
         }
   ) {

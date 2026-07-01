@@ -1,12 +1,12 @@
-import axios, { type AxiosRequestConfig, type AxiosResponse } from "axios";
-import { Log } from "@/common/lib/log";
 import { EqError } from "@mahiru/log";
-import { NeteaseServicesAuth } from "@/common/netease/services";
-import { NeteaseCookie } from "@/common/netease/models";
-import { RendererRuntime } from "@/common/lib/runtime";
+import { Log } from "@/common/lib/log";
 import { RendererIPC } from "@mahiru/ipc/renderer";
-import RendererHTTPConstants from "@/common/constants/http";
+import { RendererRuntime } from "@/common/lib/runtime";
+import { NeteaseCookie } from "@/common/netease/models";
+import { NeteaseServicesAuth } from "@/common/netease/services";
+import axios, { type AxiosResponse, type AxiosRequestConfig } from "axios";
 import AppToast from "@/common/components/display/toast";
+import RendererHTTPConstants from "@/common/constants/http";
 
 export const apiRequest = axios.create({
   baseURL: RendererHTTPConstants.NCMBaseURL,

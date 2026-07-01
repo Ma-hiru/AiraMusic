@@ -1,8 +1,7 @@
-import { type FC, memo } from "react";
+import { memo, type FC } from "react";
 import { siGithub } from "simple-icons";
-import { ExternalLink, Info } from "lucide-react";
+import { Info, ExternalLink } from "lucide-react";
 import { RendererIPC } from "@mahiru/ipc/renderer";
-
 import Card from "@/common/components/layout/card";
 import SimpleIcon from "@/common/components/display/simple-icon";
 
@@ -19,12 +18,12 @@ const Version: FC<object> = () => {
     });
   };
   return (
-    <Card title="版本" subTitle="version" Icon={Info}>
+    <Card title="版本" Icon={Info} subTitle="version">
       <section className="flex items-center justify-center gap-3">
         <img
-          src="/images/logo.svg"
-          alt={appName}
           className="size-12 shrink-0 drop-shadow-[0_4px_12px_rgba(0,0,0,0.18)]"
+          alt={appName}
+          src="/images/logo.svg"
         />
         <div className="min-w-0">
           <h1 className="truncate text-lg font-bold">{appName}</h1>
@@ -39,17 +38,17 @@ const Version: FC<object> = () => {
       </section>
       <p className="mt-4 line-clamp-2 text-[12px] leading-5 opacity-50 text-center">{appDesc}</p>
       <button
-        type="button"
-        title="在浏览器中打开开源仓库"
-        onClick={openRepo}
         className={`
           mt-4 flex h-9 w-full items-center justify-center gap-2 rounded-md
           border border-white/30 text-[12px] font-bold
           transition-all duration-300 hover:border-primary/40
           hover:bg-primary hover:text-(--text-color-on-main)
           active:scale-[0.98] cursor-pointer
-        `}>
-        <SimpleIcon icon={siGithub} className="size-3.5" />
+        `}
+        type="button"
+        title="在浏览器中打开开源仓库"
+        onClick={openRepo}>
+        <SimpleIcon className="size-3.5" icon={siGithub} />
         <span>开源仓库</span>
         <ExternalLink className="size-3.5 opacity-60" />
       </button>

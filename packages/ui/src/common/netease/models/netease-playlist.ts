@@ -9,12 +9,13 @@ import { NeteasePlaylistSummary } from "./netease-playlist-summary";
  * 如果不请求额外的 privileges ，歌曲privileges是一定附加在privileges字段且存在的 \
  * 这是符合预期的, NeteaseAPI.NeteasePlaylistDetailResponse <: NullablePrivilegesPlaylistDetailResponse
  * */
-export type NullablePrivilegesPlaylistDetailResponse = Omit<
+// prettier-ignore
+export type NullablePrivilegesPlaylistDetailResponse = {
+  privileges: (null | NeteaseAPI.NeteaseTrackPrivilege)[];
+} & Omit<
   NeteaseAPI.NeteasePlaylistDetailResponse,
   "privileges"
-> & {
-  privileges: (NeteaseAPI.NeteaseTrackPrivilege | null)[];
-};
+>;
 
 export class NeteasePlaylist extends NeteasePlaylistSummary implements NeteasePlaylistModel {
   //region fields
@@ -61,10 +62,10 @@ export class NeteasePlaylist extends NeteasePlaylistSummary implements NeteasePl
 
 //region Type Definitions
 interface NeteasePlaylistModel extends NeteasePlaylistSummaryModel {
-  commentCount: number;
-  playlistType: string;
   shareCount: number;
   trackIds: number[];
+  commentCount: number;
+  playlistType: string;
   tracks: NeteaseTrack[];
 }
 //endregion

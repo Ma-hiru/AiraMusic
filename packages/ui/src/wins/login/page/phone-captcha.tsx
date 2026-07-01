@@ -1,17 +1,17 @@
 import { cx } from "@emotion/css";
-import { ShieldCheck, Smartphone } from "lucide-react";
-import { type FC, type KeyboardEvent, memo } from "react";
+import { Smartphone, ShieldCheck } from "lucide-react";
+import { memo, type FC, type KeyboardEvent } from "react";
 
 interface PhoneCaptchaProps {
   phone: string;
   captcha: string;
-  countdown: number;
-  sending: boolean;
   logging: boolean;
+  sending: boolean;
+  countdown: number;
+  onLogin: NormalFunc;
+  onSendCaptcha: NormalFunc;
   onPhoneChange: NormalFunc<[value: string]>;
   onCaptchaChange: NormalFunc<[value: string]>;
-  onSendCaptcha: NormalFunc;
-  onLogin: NormalFunc;
 }
 
 const inputClass = `
@@ -23,15 +23,15 @@ const inputClass = `
 `;
 
 const PhoneCaptcha: FC<PhoneCaptchaProps> = ({
+  onLogin,
+  onPhoneChange,
+  onSendCaptcha,
+  onCaptchaChange,
   phone,
   captcha,
-  countdown,
-  sending,
   logging,
-  onPhoneChange,
-  onCaptchaChange,
-  onSendCaptcha,
-  onLogin
+  sending,
+  countdown
 }) => {
   const captchaDisabled = sending || countdown > 0;
   const onEnter = (e: KeyboardEvent<HTMLInputElement>) => e.key === "Enter" && onLogin();
@@ -42,14 +42,14 @@ const PhoneCaptcha: FC<PhoneCaptchaProps> = ({
       <div className="relative w-full">
         <Smartphone className="absolute left-3 top-1/2 -translate-y-1/2 size-4 opacity-50 pointer-events-none" />
         <input
+          className={cx(inputClass)}
           type="tel"
-          inputMode="numeric"
-          maxLength={11}
           value={phone}
+          maxLength={11}
+          inputMode="numeric"
           placeholder="请输入手机号"
           onKeyDown={onEnter}
           onChange={(e) => onPhoneChange(e.target.value.replace(/\D/g, ""))}
-          className={cx(inputClass)}
         />
       </div>
 
@@ -57,19 +57,16 @@ const PhoneCaptcha: FC<PhoneCaptchaProps> = ({
       <div className="relative w-full">
         <ShieldCheck className="absolute left-3 top-1/2 -translate-y-1/2 size-4 opacity-50 pointer-events-none" />
         <input
+          className={cx(inputClass, "pr-26")}
           type="text"
-          inputMode="numeric"
           maxLength={6}
           value={captcha}
+          inputMode="numeric"
           placeholder="请输入验证码"
           onKeyDown={onEnter}
           onChange={(e) => onCaptchaChange(e.target.value.replace(/\D/g, ""))}
-          className={cx(inputClass, "pr-26")}
         />
         <button
-          type="button"
-          disabled={captchaDisabled}
-          onClick={onSendCaptcha}
           className={cx(
             `
               absolute right-1.5 top-1/2 -translate-y-1/2 h-6 rounded-full px-2.5
@@ -79,16 +76,16 @@ const PhoneCaptcha: FC<PhoneCaptchaProps> = ({
               ? "text-(--text-color)/40 cursor-not-allowed"
               : `text-primary cursor-pointer
                  hover:bg-primary/10 active:scale-95`
-          )}>
+          )}
+          type="button"
+          disabled={captchaDisabled}
+          onClick={onSendCaptcha}>
           {countdown > 0 ? `${countdown}s` : sending ? "发送中" : "获取验证码"}
         </button>
       </div>
 
       {/*登录*/}
       <button
-        type="button"
-        disabled={logging}
-        onClick={onLogin}
         className={cx(
           `
             mt-1 block h-9 w-full rounded-full text-[13px] font-semibold
@@ -97,7 +94,10 @@ const PhoneCaptcha: FC<PhoneCaptchaProps> = ({
             cursor-pointer
           `,
           logging && "opacity-60 cursor-not-allowed active:scale-100"
-        )}>
+        )}
+        type="button"
+        disabled={logging}
+        onClick={onLogin}>
         {logging ? "登录中..." : "登录"}
       </button>
     </div>

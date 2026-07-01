@@ -1,7 +1,8 @@
-import { apiRequest } from "@/common/netease/api/request";
 import { Log } from "@/common/lib/log";
+import { apiRequest } from "@/common/netease/api/request";
 
 type TTMLyricMeta = {
+  rawLyricFile: string;
   metadata: [
     ["album", string[]],
     ["artists", string[]],
@@ -10,7 +11,6 @@ type TTMLyricMeta = {
     ["ttmlAuthorGithub", string[]],
     ["ttmlAuthorGithubLogin", string[]]
   ];
-  rawLyricFile: string;
 };
 
 export default class _NeteaseLyricAPI {

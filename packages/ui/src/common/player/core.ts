@@ -1,32 +1,33 @@
-import {
-  NeteaseHistoryRecord,
-  NeteaseLocalAudio,
-  NeteaseLocalImage,
-  NeteaseLyric,
-  NeteaseNetworkAudio,
-  NeteaseNetworkImage,
-  NeteaseTrack,
-  NeteaseTrackRecord,
-  NeteaseUser
-} from "@/common/netease/models";
-import { Listenable } from "@/common/utils/listenable";
+import { throttle } from "lodash-es";
+import { Log } from "@/common/lib/log";
 import { NeteaseImageSize } from "@/common/enum";
+import { RendererCache } from "@/common/lib/cache";
+import { Listenable } from "@/common/utils/listenable";
+import { Status } from "@/common/netease/services/auth";
+import { userStoreSnapshot } from "@/common/store/user";
+import { settingsStoreSnapshot } from "@/common/store/settings";
 import {
-  NeteaseServicesAudio,
   NeteaseServicesAuth,
+  NeteaseServicesAudio,
   NeteaseServicesImage,
   NeteaseServicesLyric
 } from "@/common/netease/services";
-import { settingsStoreSnapshot } from "@/common/store/settings";
-import { userStoreSnapshot } from "@/common/store/user";
-import { Log } from "@/common/lib/log";
-import { throttle } from "lodash-es";
-import { Status } from "@/common/netease/services/auth";
+import {
+  NeteaseUser,
+  NeteaseLyric,
+  NeteaseTrack,
+  NeteaseLocalAudio,
+  NeteaseLocalImage,
+  NeteaseTrackRecord,
+  NeteaseNetworkAudio,
+  NeteaseNetworkImage,
+  NeteaseHistoryRecord
+} from "@/common/netease/models";
 import AppToast from "@/common/components/display/toast";
+
 import RendererPlayerAudio from "./audio";
-import RendererPlayerPlaylist from "./playlist";
 import RendererPlayerHistory from "./history";
-import { RendererCache } from "@/common/lib/cache";
+import RendererPlayerPlaylist from "./playlist";
 
 export const enum RendererPlayerStatus {
   idle = 1,
@@ -96,17 +97,17 @@ export default class RendererPlayer extends Listenable {
 
   constructor(props?: {
     audio?: RendererPlayerAudio;
-    playlist?: RendererPlayerPlaylist;
-    history?: RendererPlayerHistory;
     status?: RendererPlayerStatus;
+    history?: RendererPlayerHistory;
+    playlist?: RendererPlayerPlaylist;
     current?: {
-      track: Nullable<NeteaseTrackRecord>;
-      lyric: Nullable<NeteaseLyric>;
-      audio: Nullable<NeteaseNetworkAudio | NeteaseLocalAudio>;
-      cover: Nullable<NeteaseNetworkImage | NeteaseLocalImage>;
       rmActive?: boolean;
       tlActive?: boolean;
       noteActive?: boolean;
+      lyric: Nullable<NeteaseLyric>;
+      track: Nullable<NeteaseTrackRecord>;
+      audio: Nullable<NeteaseLocalAudio | NeteaseNetworkAudio>;
+      cover: Nullable<NeteaseLocalImage | NeteaseNetworkImage>;
     };
   }) {
     super();
@@ -291,7 +292,7 @@ export default class RendererPlayer extends Listenable {
   private async loadCover(
     track: NeteaseTrack,
     controller: AbortController
-  ): Promise<NeteaseNetworkImage | NeteaseLocalImage> {
+  ): Promise<NeteaseLocalImage | NeteaseNetworkImage> {
     const local = await NeteaseServicesImage.local(track, false, NeteaseImageSize.lg);
     if (local) return local;
 

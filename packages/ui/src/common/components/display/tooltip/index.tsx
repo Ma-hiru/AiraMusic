@@ -1,14 +1,14 @@
 import { cx } from "@emotion/css";
 import {
-  type AriaRole,
-  type FC,
-  type HTMLAttributes,
   memo,
-  type MouseEvent as ReactMouseEvent,
-  type ReactNode,
-  useCallback,
+  type FC,
+  useState,
   useEffect,
-  useState
+  useCallback,
+  type AriaRole,
+  type ReactNode,
+  type HTMLAttributes,
+  type MouseEvent as ReactMouseEvent
 } from "react";
 
 const TOOLTIP_PLACEMENT_CLASS = {
@@ -42,26 +42,26 @@ type TooltipPlacement = keyof typeof TOOLTIP_PLACEMENT_CLASS;
 
 interface TooltipProps extends Omit<HTMLAttributes<HTMLElement>, "content"> {
   content: ReactNode;
-  children: ReactNode;
-  placement?: TooltipPlacement;
-  popupClassName?: string;
   disabled?: boolean;
+  children: ReactNode;
   interactive?: boolean;
-  tooltipRole?: AriaRole;
   tooltipLabel?: string;
+  tooltipRole?: AriaRole;
+  popupClassName?: string;
+  placement?: TooltipPlacement;
 }
 
 const Tooltip: FC<TooltipProps> = ({
+  className,
+  onMouseDownCapture,
   content,
   children,
-  placement = "top",
+  tooltipLabel,
   popupClassName,
-  className,
   disabled = false,
+  placement = "top",
   interactive = false,
   tooltipRole = "tooltip",
-  tooltipLabel,
-  onMouseDownCapture,
   ...props
 }) => {
   const [holding, setHolding] = useState(false);
@@ -98,8 +98,6 @@ const Tooltip: FC<TooltipProps> = ({
       {children}
       {hasContent && (
         <div
-          role={tooltipRole}
-          aria-label={tooltipLabel}
           className={cx(
             `
               pointer-events-none absolute z-50 opacity-0
@@ -115,7 +113,9 @@ const Tooltip: FC<TooltipProps> = ({
             holding && "pointer-events-auto opacity-100",
             holding && placementClass.open,
             popupClassName
-          )}>
+          )}
+          role={tooltipRole}
+          aria-label={tooltipLabel}>
           {content}
         </div>
       )}

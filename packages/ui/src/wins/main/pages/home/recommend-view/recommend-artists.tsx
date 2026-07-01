@@ -1,13 +1,12 @@
-import { type FC, memo, useCallback, useMemo } from "react";
 import { UserRound } from "lucide-react";
+import { memo, type FC, useMemo, useCallback } from "react";
 import { NeteaseAPIArtist } from "@/common/netease/api";
 import { useRequestAutoRetry, useRequestStatusWrap } from "@/common/hooks/use-request-wrap";
-import RendererImageConstants from "@/common/constants/image";
-
-import AppError from "@/common/components/fallback/app-error";
-import AppLoading from "@/common/components/fallback/app-loading";
-import MediaGrid from "@/common/components/layout/media-grid";
 import Section from "@/common/components/layout/section";
+import AppError from "@/common/components/fallback/app-error";
+import MediaGrid from "@/common/components/layout/media-grid";
+import RendererImageConstants from "@/common/constants/image";
+import AppLoading from "@/common/components/fallback/app-loading";
 
 interface RecommendArtistsProps {
   onClickItem?: NormalFunc<[id: number]>;
@@ -16,8 +15,8 @@ interface RecommendArtistsProps {
 const RecommendArtists: FC<RecommendArtistsProps> = ({ onClickItem }) => {
   const {
     status,
-    data: artists = [],
-    fetchData
+    fetchData,
+    data: artists = []
   } = useRequestStatusWrap(
     useCallback(() => NeteaseAPIArtist.toplist().then((response) => response.list.artists), [])
   );
@@ -36,9 +35,9 @@ const RecommendArtists: FC<RecommendArtistsProps> = ({ onClickItem }) => {
   );
 
   return (
-    <Section title="推荐歌手" subTitle="Artist Chart" Icon={UserRound}>
-      <AppError reset={reload} when={status === "error"} message="加载歌手榜失败">
-        <AppLoading loading={status === "loading"} className="h-40">
+    <Section title="推荐歌手" Icon={UserRound} subTitle="Artist Chart">
+      <AppError reset={reload} message="加载歌手榜失败" when={status === "error"}>
+        <AppLoading className="h-40" loading={status === "loading"}>
           <MediaGrid
             items={items}
             coverSize={RendererImageConstants.AlbumListCoverSize}

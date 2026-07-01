@@ -1,17 +1,17 @@
 namespace NeteaseAPI {
   interface NeteaseBannerResponse extends NeteaseAPIResponse {
-    banners: NeteaseBanner[];
     trp: NeteaseTrp;
+    banners: NeteaseBanner[];
   }
 
   interface NeteaseBanner {
-    bigImageUrl: string;
-    imageUrl: string;
+    url: string;
     s_ctrp: string;
+    imageUrl: string;
     targetId: number;
     targetType: number;
-    typeTitle: string | "独家策划" | "新歌首发" | "数字专辑" | "新碟首发" | "热歌推荐";
-    url: string;
+    bigImageUrl: string;
+    typeTitle: "数字专辑" | "新歌首发" | "新碟首发" | "热歌推荐" | "独家策划" | string;
   }
 
   interface NeteaseTrp {

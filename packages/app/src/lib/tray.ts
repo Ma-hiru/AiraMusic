@@ -1,23 +1,23 @@
-import { MainIPC } from "@mahiru/ipc/main";
-import {
-  BrowserWindow,
-  clipboard,
-  Menu,
-  MenuItem,
-  type MenuItemConstructorOptions,
-  nativeImage,
-  screen,
-  Tray
-} from "electron";
-import { MainWindowManager } from "@/lib/window-manager";
-import { MainPathResolver } from "@/lib/path-resolver";
-import { MainWindowCreator } from "@/lib/window-creator";
-import { Log } from "@/lib/log";
-import { MainWindowPreset } from "@/lib/window-preset";
-import { MainHandle } from "@/lib/handle";
-import { MainExitCodeConstants } from "@/constants/exit-code";
 import { debounce } from "lodash-es";
+import {
+  Menu,
+  Tray,
+  screen,
+  MenuItem,
+  clipboard,
+  nativeImage,
+  BrowserWindow,
+  type MenuItemConstructorOptions
+} from "electron";
+import { Log } from "@/lib/log";
+import { MainHandle } from "@/lib/handle";
+import { MainIPC } from "@mahiru/ipc/main";
+import { MainPathResolver } from "@/lib/path-resolver";
+import { MainWindowPreset } from "@/lib/window-preset";
 import { MainWindowConstants } from "@/constants/window";
+import { MainWindowCreator } from "@/lib/window-creator";
+import { MainWindowManager } from "@/lib/window-manager";
+import { MainExitCodeConstants } from "@/constants/exit-code";
 import type { MessageData } from "@mahiru/ipc/types";
 
 export class MainTray {

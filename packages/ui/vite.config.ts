@@ -1,10 +1,11 @@
-import wasm from "vite-plugin-wasm";
-import tailwindcss from "@tailwindcss/vite";
-import babel from "@rolldown/plugin-babel";
-import react from "@vitejs/plugin-react";
+import { join } from "node:path";
 import { defineConfig } from "vite";
 import { fileURLToPath } from "node:url";
-import { join } from "node:path";
+import wasm from "vite-plugin-wasm";
+import react from "@vitejs/plugin-react";
+import babel from "@rolldown/plugin-babel";
+import tailwindcss from "@tailwindcss/vite";
+
 import AppEnv from "../../scripts/env";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));

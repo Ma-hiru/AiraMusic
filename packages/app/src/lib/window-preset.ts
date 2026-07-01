@@ -1,11 +1,11 @@
-import { BrowserWindow, dialog } from "electron";
-import { MainWindowConstants } from "@/constants/window";
-import { MainScreenResolver } from "@/lib/screen-resolver";
-import { MainWindowManager } from "@/lib/window-manager";
-import { MainPathResolver } from "@/lib/path-resolver";
-import { MainRuntime } from "@/lib/runtime";
+import { dialog, BrowserWindow } from "electron";
 import { Log } from "@/lib/log";
 import { getArgFlag } from "@/utils/args";
+import { MainRuntime } from "@/lib/runtime";
+import { MainPathResolver } from "@/lib/path-resolver";
+import { MainWindowConstants } from "@/constants/window";
+import { MainWindowManager } from "@/lib/window-manager";
+import { MainScreenResolver } from "@/lib/screen-resolver";
 import type { AppWindowCreatorProps } from "@/types/window";
 
 export class MainWindowPreset {
@@ -48,7 +48,7 @@ export class MainWindowPreset {
   }
 
   static get image(): AppWindowCreatorProps {
-    const { base, min } = MainScreenResolver.primary.adaptiveWindowSizePreset(
+    const { min, base } = MainScreenResolver.primary.adaptiveWindowSizePreset(
       MainWindowConstants.WINDOW_BASE_SIZE.image
     );
 
@@ -78,7 +78,7 @@ export class MainWindowPreset {
   }
 
   static get lyric(): AppWindowCreatorProps {
-    const { base, min, max } = MainScreenResolver.primary.adaptiveWindowSizePreset(
+    const { max, min, base } = MainScreenResolver.primary.adaptiveWindowSizePreset(
       MainWindowConstants.WINDOW_BASE_SIZE.lyric
     );
 
@@ -124,7 +124,7 @@ export class MainWindowPreset {
   }
 
   static get miniplayer(): AppWindowCreatorProps {
-    const { min, max, base } = MainScreenResolver.primary.adaptiveWindowSizePreset(
+    const { max, min, base } = MainScreenResolver.primary.adaptiveWindowSizePreset(
       MainWindowConstants.WINDOW_BASE_SIZE.miniplayer
     );
     return {
@@ -266,7 +266,7 @@ export class MainWindowPreset {
   }
 
   static get comments(): AppWindowCreatorProps {
-    const { base, max, min } = MainScreenResolver.primary.adaptiveWindowSizePreset(
+    const { max, min, base } = MainScreenResolver.primary.adaptiveWindowSizePreset(
       MainWindowConstants.WINDOW_BASE_SIZE.comments
     );
     return {
@@ -300,7 +300,7 @@ export class MainWindowPreset {
   }
 
   static external(title: string, url: string): AppWindowCreatorProps {
-    const { base, min } = MainScreenResolver.primary.adaptiveWindowSizePreset(
+    const { min, base } = MainScreenResolver.primary.adaptiveWindowSizePreset(
       MainWindowConstants.WINDOW_BASE_SIZE.external
     );
 

@@ -1,7 +1,7 @@
-import { NeteaseHistoryRecord, NeteaseTrack } from "@/common/netease/models";
-import { Listenable } from "@/common/utils/listenable";
-import { NeteaseAPITrack } from "@/common/netease/api";
 import { Log } from "@/common/lib/log";
+import { NeteaseAPITrack } from "@/common/netease/api";
+import { Listenable } from "@/common/utils/listenable";
+import { NeteaseTrack, NeteaseHistoryRecord } from "@/common/netease/models";
 
 export default class RendererPlayerHistory extends Listenable {
   readonly list;
@@ -11,7 +11,7 @@ export default class RendererPlayerHistory extends Listenable {
     return this.list.length;
   }
 
-  constructor(props?: { list?: NeteaseHistoryRecord[]; maxLength?: number }) {
+  constructor(props?: { maxLength?: number; list?: NeteaseHistoryRecord[] }) {
     super();
     this.list = props?.list ?? [];
     this.maxLength = props?.maxLength ?? 500;
@@ -21,7 +21,7 @@ export default class RendererPlayerHistory extends Listenable {
     super[Symbol.dispose]();
   }
 
-  locate(record: NeteaseHistoryRecord | number) {
+  locate(record: number | NeteaseHistoryRecord) {
     if (typeof record === "number") return this.list.findIndex((h) => h.detail.id === record);
     return this.list.findIndex((h) => h.detail.id === record.detail.id);
   }
@@ -45,7 +45,7 @@ export default class RendererPlayerHistory extends Listenable {
       .finally(() => this.executeListeners());
   }
 
-  remove(record: NeteaseHistoryRecord | number) {
+  remove(record: number | NeteaseHistoryRecord) {
     const exitsPos = this.locate(record);
     if (exitsPos !== -1) this.list.splice(exitsPos, 1);
     this.executeListeners();

@@ -1,5 +1,6 @@
-import { Log } from "./log";
 import { BrowserWindow } from "electron";
+
+import { Log } from "./log";
 
 const BlankWindowManager: WindowManagerInstance = {
   get() {
@@ -17,11 +18,9 @@ const BlankWindowManager: WindowManagerInstance = {
 };
 
 export interface WindowManagerInstance {
-  get(id: WindowType): Nullable<BrowserWindow>;
-
-  getId(window: Optional<BrowserWindow>): Nullable<WindowType>;
-
   getAll(): [WindowType, BrowserWindow][];
+  get(id: WindowType): Nullable<BrowserWindow>;
+  getId(window: Optional<BrowserWindow>): Nullable<WindowType>;
 }
 
 export let WindowManager = BlankWindowManager;

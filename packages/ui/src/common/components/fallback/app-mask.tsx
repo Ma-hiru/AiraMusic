@@ -1,9 +1,9 @@
 import { cx } from "@emotion/css";
-import { type FC, memo, useCallback, useEffect, useRef, useState } from "react";
+import { memo, useRef, type FC, useState, useEffect, useCallback } from "react";
 
 interface MaskProps {
-  className?: string;
   show?: boolean;
+  className?: string;
 }
 
 const AppMask: FC<MaskProps> = ({ className, show = true }) => {
@@ -37,7 +37,7 @@ const AppMask: FC<MaskProps> = ({ className, show = true }) => {
         `,
         className
       )}>
-      <img src="/images/logo.svg" alt="logo" className="size-16" />
+      <img className="size-16" alt="logo" src="/images/logo.svg" />
       <p className="text-lg font-bold">{import.meta.env.APP_NAME}</p>
     </div>
   );

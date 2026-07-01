@@ -1,29 +1,29 @@
 import {
   memo,
-  type PointerEvent as ReactPointerEvent,
-  type RefObject,
-  useEffect,
-  useMemo,
   useRef,
-  useState
+  useMemo,
+  useState,
+  useEffect,
+  type RefObject,
+  type PointerEvent as ReactPointerEvent
 } from "react";
 
 export interface VirtualScrollbarProps {
-  containerRef: RefObject<Nullable<HTMLDivElement>>;
+  offsetY?: number;
+  offsetRight?: number;
   contentHeight: number;
   minThumbHeight?: number;
-  offsetRight?: number;
-  offsetY?: number;
+  containerRef: RefObject<Nullable<HTMLDivElement>>;
 }
 
 const clamp = (v: number, min: number, max: number) => Math.min(Math.max(v, min), max);
 
 const VirtualScrollbar = ({
+  offsetY = 4,
   containerRef,
   contentHeight,
-  minThumbHeight = 24,
   offsetRight = 2,
-  offsetY = 4
+  minThumbHeight = 24
 }: VirtualScrollbarProps) => {
   const [thumbState, setThumbState] = useState({ height: 0, offset: 0 });
   const [visible, setVisible] = useState(false);

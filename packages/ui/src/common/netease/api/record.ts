@@ -17,8 +17,8 @@ export default class _NeteaseRecordAPI {
       unknown,
       NeteaseAPI.NeteaseAPIResponse & {
         data: {
-          totalDuration: number;
           message: string;
+          totalDuration: number;
         };
       }
     >(`/listen/data/total?timestamp=${Date.now()}`);
@@ -43,7 +43,7 @@ export default class _NeteaseRecordAPI {
    * @param endTime 周: 每周周六 0 点的时间戳 月: 每月最后一天 0 点的时间戳 年: 每年最后一天 0 点的时间戳 不填就是本周/月的, 今年没结束，则没有今年的数据
    * @param type type: 维度类型 周 week 月 month 年 year
    * */
-  static report(type: "week" | "month" | "year", endTime?: number) {
+  static report(type: "week" | "year" | "month", endTime?: number) {
     return apiRequest<unknown, NeteaseAPI.NeteaseAPIResponse>(
       `/listen/data/report?timestamp=${Date.now()}`,
       {

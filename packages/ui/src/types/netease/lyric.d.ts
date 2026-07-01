@@ -24,12 +24,12 @@ namespace NeteaseAPI {
   }
 
   interface NeteaseTransUser {
-    demand: number;
     id: number;
-    nickname: string;
+    demand: number;
     status: number;
     uptime: number;
     userid: number;
+    nickname: string;
   }
 
   interface NeteaseLyricResponseNew extends NeteaseLyricResponse {

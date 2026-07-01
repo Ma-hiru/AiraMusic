@@ -1,10 +1,10 @@
-import { type FC, memo } from "react";
 import { cx } from "@emotion/css";
 import { useAtomValue } from "jotai";
+import { memo, type FC } from "react";
 import { playModalAtom } from "@/wins/main/atoms/layout";
+import AppErrorBoundary from "@/common/components/fallback/app-error-boundary";
 
 import PlayerPage from "../player";
-import AppErrorBoundary from "@/common/components/fallback/app-error-boundary";
 
 const Modal: FC<{ className?: string }> = ({ className }) => {
   const playModal = useAtomValue(playModalAtom);
@@ -19,7 +19,7 @@ const Modal: FC<{ className?: string }> = ({ className }) => {
         playModal ? "translate-y-0" : "translate-y-full",
         className
       )}>
-      <AppErrorBoundary name="PlayerModal" showError canReset className="h-full w-full">
+      <AppErrorBoundary className="h-full w-full" name="PlayerModal" canReset showError>
         <PlayerPage />
       </AppErrorBoundary>
     </div>

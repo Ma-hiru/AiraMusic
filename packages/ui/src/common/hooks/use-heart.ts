@@ -1,10 +1,10 @@
-import { useCallback, useRef } from "react";
-import { NeteaseTrack, NeteaseTrackRecord } from "@/common/netease/models";
+import { useRef, useCallback } from "react";
 import { NeteaseAPITrack } from "@/common/netease/api";
+import { NeteaseTrack, NeteaseTrackRecord } from "@/common/netease/models";
 
 type TrackLikeSource = {
-  ids: Record<number, boolean>;
   checkPoint: number;
+  ids: Record<number, boolean>;
 };
 
 export interface HeartManager {

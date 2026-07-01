@@ -1,27 +1,26 @@
-import { type FC, memo, useCallback, useState } from "react";
-import { NeteaseNetworkImage } from "@/common/netease/models";
-import { CommentType, NeteaseImageSize } from "@/common/enum";
-import { useThemeColor } from "@/common/hooks/use-theme-color";
-import { ThumbsUp } from "lucide-react";
-import { NeteaseAPIComment } from "@/common/netease/api";
-import { RendererFormat } from "@/common/lib/format";
 import { cx } from "@emotion/css";
+import { ThumbsUp } from "lucide-react";
+import { memo, type FC, useState, useCallback } from "react";
 import { Log } from "@/common/lib/log";
+import { RendererFormat } from "@/common/lib/format";
+import { NeteaseAPIComment } from "@/common/netease/api";
+import { CommentType, NeteaseImageSize } from "@/common/enum";
+import { NeteaseNetworkImage } from "@/common/netease/models";
+import { useThemeColor } from "@/common/hooks/use-theme-color";
 import AppToast from "@/common/components/display/toast";
-
 import NeteaseImage from "@/common/components/display/image/netease-image";
 
 interface ItemProps {
-  data: NeteaseAPI.NeteaseComment;
   sourceID?: number;
-  type?: "album" | "playlist" | "track";
+  data: NeteaseAPI.NeteaseComment;
+  type?: "album" | "track" | "playlist";
 }
 
-const Item: FC<ItemProps> = ({ data, sourceID, type }) => {
+const Item: FC<ItemProps> = ({ data, type, sourceID }) => {
   const { mainColor } = useThemeColor();
   const [liked, setLiked] = useState(data.liked);
   const like = useCallback(
-    async (props: { commentID: number; like: boolean }) => {
+    async (props: { like: boolean; commentID: number }) => {
       if (!sourceID || !type) return;
       let commentType;
       switch (type) {
@@ -60,9 +59,6 @@ const Item: FC<ItemProps> = ({ data, sourceID, type }) => {
         key={data.commentId}
         className="text-sm font-medium flex flex-row items-start justify-start gap-2">
         <NeteaseImage
-          cache
-          preview
-          cacheLazy
           className="
             size-8 rounded-full shrink-0 border cursor-pointer
             ease-in-out duration-300 transition-opacity hover:opacity-50
@@ -71,6 +67,9 @@ const Item: FC<ItemProps> = ({ data, sourceID, type }) => {
           image={NeteaseNetworkImage.fromURL(data.user.avatarUrl)
             ?.setSize(NeteaseImageSize.sm)
             .setAlt(data.user.nickname)}
+          cache
+          preview
+          cacheLazy
         />
         <div className="space-y-1 w-full">
           <h1 className="font-semibold text-xs flex flex-col items-start justify-start">
@@ -81,8 +80,8 @@ const Item: FC<ItemProps> = ({ data, sourceID, type }) => {
           </h1>
           <p className="text-xs p-1 rounded-lg rounded-tl-none">{data.content}</p>
           <div
-            style={{ color: data.liked ? mainColor.string() : undefined }}
-            className="text-xs opacity-80 font-medium flex flex-row items-center justify-end gap-1 px-1 py-0.5 rounded-md cursor-pointer">
+            className="text-xs opacity-80 font-medium flex flex-row items-center justify-end gap-1 px-1 py-0.5 rounded-md cursor-pointer"
+            style={{ color: data.liked ? mainColor.string() : undefined }}>
             <ThumbsUp
               className={cx("size-3 inline-block", liked && "text-primary")}
               fill={liked ? "currentColor" : "transparent"}

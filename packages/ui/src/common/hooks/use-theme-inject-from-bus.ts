@@ -1,8 +1,9 @@
-import { useEffect, useInsertionEffect, useRef } from "react";
-import { useListenable } from "./use-listenable";
+import { useRef, useEffect, useInsertionEffect } from "react";
 import { RendererWindow } from "@/common/lib/window";
 import { RendererIPCMessageBus } from "@/common/lib/bus";
 import RendererTheme from "@/common/player/ui";
+
+import { useListenable } from "./use-listenable";
 
 const needInject = !RendererWindow.current.isMainWindow;
 let isInjectedID = "";

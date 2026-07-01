@@ -1,33 +1,33 @@
 import { cx } from "@emotion/css";
-import { type FC, useCallback, useEffect, useRef } from "react";
-import { useRequestAutoRun, useRequestStatusWrap } from "@/common/hooks/use-request-wrap";
-import { NeteaseAPISearch } from "@/common/netease/api";
+import { useRef, type FC, useEffect, useCallback } from "react";
 import { SearchType } from "@/common/enum";
+import { NeteaseAPISearch } from "@/common/netease/api";
 import { useScrollAutoHide } from "@/common/hooks/use-scroll-auto-hide";
-import AppLoading from "@/common/components/fallback/app-loading";
+import { useRequestAutoRun, useRequestStatusWrap } from "@/common/hooks/use-request-wrap";
 import AppEmpty from "@/common/components/fallback/app-empty";
 import AppError from "@/common/components/fallback/app-error";
+import AppLoading from "@/common/components/fallback/app-loading";
 import HomeMediaGrid from "@/common/components/layout/media-grid";
 
 interface PlaylistResultProps {
-  className?: string;
-  keywords?: string;
-  onJumpPlaylist: Optional<NormalFunc<[id: number]>>;
   active: boolean;
+  keywords?: string;
+  className?: string;
   setCount: NormalFunc<[count: number]>;
+  onJumpPlaylist: Optional<NormalFunc<[id: number]>>;
 }
 
 const PlaylistResult: FC<PlaylistResultProps> = ({
   className,
-  keywords,
+  setCount,
   onJumpPlaylist,
   active,
-  setCount
+  keywords
 }) => {
   const {
     status,
-    data: list = [],
-    fetchData
+    fetchData,
+    data: list = []
   } = useRequestStatusWrap(
     useCallback(async (keywords?: string) => {
       if (!keywords) return [];
@@ -52,7 +52,7 @@ const PlaylistResult: FC<PlaylistResultProps> = ({
   useScrollAutoHide(containerRef, 3000);
 
   return (
-    <AppError reset={reload} when={status === "error" && active} message="加载歌单失败">
+    <AppError reset={reload} message="加载歌单失败" when={status === "error" && active}>
       <AppLoading loading={status === "loading" && active}>
         {list.length === 0 && <AppEmpty className={className} tips="没有结果" />}
         {list.length > 0 && (

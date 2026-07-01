@@ -1,31 +1,31 @@
-import { type FC, memo, useEffect, useMemo, useState } from "react";
 import { debounce } from "lodash-es";
+import { memo, type FC, useMemo, useState, useEffect } from "react";
+import RangeSlider from "@/common/components/data-input/range";
 import type { LucideIcon } from "lucide-react";
 
 import BaseItem from "./base-item";
-import RangeSlider from "@/common/components/data-input/range";
 
 interface RangeRowProps {
-  title: string;
-  value: number;
-  min: number;
   max: number;
-  unit?: string;
+  min: number;
   step: number;
+  title: string;
+  unit?: string;
+  value: number;
+  icon?: LucideIcon;
   debounced?: boolean;
   onChange: NormalFunc<[value: number]>;
-  icon?: LucideIcon;
 }
 
 const RangeRow: FC<RangeRowProps> = ({
+  onChange,
+  max,
+  min,
+  icon,
+  step,
+  unit,
   title,
   value,
-  min,
-  max,
-  step,
-  onChange,
-  icon,
-  unit,
   debounced = true
 }) => {
   const [rangeValue, setRangeValue] = useState(value);
@@ -49,13 +49,13 @@ const RangeRow: FC<RangeRowProps> = ({
             </span>
           </div>
           <RangeSlider
-            min={min}
-            max={max}
-            step={step}
-            value={rangeValue}
-            label={title}
-            valueText={rangeValueText}
             className="w-[98%]!"
+            max={max}
+            min={min}
+            step={step}
+            label={title}
+            value={rangeValue}
+            valueText={rangeValueText}
             onChange={(v) => {
               setRangeValue(v);
               debouncedHandler(v);

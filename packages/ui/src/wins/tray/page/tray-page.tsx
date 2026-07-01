@@ -1,40 +1,40 @@
-import { type FC, memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef } from "react";
+import { memo, useRef, type FC, useMemo, useEffect, useCallback, useLayoutEffect } from "react";
 import {
   Copy,
-  DiscAlbum,
-  ExternalLink,
-  LogOut,
-  type LucideIcon,
-  MessageSquare,
-  MicVocal,
-  Pause,
   Play,
+  Pause,
+  LogOut,
+  MicVocal,
   SkipBack,
-  SkipForward
+  DiscAlbum,
+  SkipForward,
+  ExternalLink,
+  MessageSquare,
+  type LucideIcon
 } from "lucide-react";
+import { RendererWindow } from "@/common/lib/window";
+import { RendererIPCMessageBus } from "@/common/lib/bus";
 import { useListenable } from "@/common/hooks/use-listenable";
 import { useThemeInjectFromBus } from "@/common/hooks/use-theme-inject-from-bus";
-import { RendererIPCMessageBus } from "@/common/lib/bus";
-import { RendererWindow } from "@/common/lib/window";
 import AppToast from "@/common/components/display/toast";
-
-import TrayDivider from "./tray-divider";
-import TrayItem from "./tray-item";
-import TrayPlayer from "./tray-player";
 import AcrylicBackground from "@/common/components/display/acrylic-background";
 
+import TrayItem from "./tray-item";
+import TrayPlayer from "./tray-player";
+import TrayDivider from "./tray-divider";
+
 type TrayAction = {
-  icon: LucideIcon;
   text: string;
   active?: boolean;
   danger?: boolean;
+  icon: LucideIcon;
   disabled?: boolean;
   onClick: NormalFunc;
 };
 
 const TrayPage: FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const contentSizeRef = useRef<Nullable<{ height: number; width: number }>>(null);
+  const contentSizeRef = useRef<Nullable<{ width: number; height: number }>>(null);
   const trackMetaBus = useListenable(RendererIPCMessageBus.trackMeta);
   const progressBus = useListenable(RendererIPCMessageBus.progress);
   const currentWindow = useListenable(RendererWindow.current);
@@ -95,7 +95,7 @@ const TrayPage: FC = () => {
     }
   }, []);
 
-  const openDisplay = useCallback(async (data: { type: "album" | "artist"; id: number }) => {
+  const openDisplay = useCallback(async (data: { id: number; type: "album" | "artist" }) => {
     await RendererWindow.display.reactReadyAwait();
     RendererIPCMessageBus.display.deliver(data);
     RendererWindow.current.hide();
@@ -215,11 +215,11 @@ const TrayPage: FC = () => {
         ">
         <div className="fixed inset-0 z-[-1]">
           <AcrylicBackground
+            className="rounded-xl overflow-hidden"
+            blur={20}
+            saturate={3}
             opacity={0.8}
             brightness={0.3}
-            saturate={3}
-            blur={20}
-            className="rounded-xl overflow-hidden"
             src={themeBus.data?.backgroundCover}
             themeColors={themeBus.data?.theme.themeColors}
           />
@@ -227,8 +227,8 @@ const TrayPage: FC = () => {
         <TrayPlayer
           track={track}
           status={trackMetaBus.data?.status}
-          currentTime={progressBus.data?.currentTime}
           duration={progressBus.data?.duration}
+          currentTime={progressBus.data?.currentTime}
         />
         <TrayDivider />
         <TrayGroup actions={playbackActions} />

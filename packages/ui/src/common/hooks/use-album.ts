@@ -1,12 +1,13 @@
-import { useCallback, useEffect, useState } from "react";
-import { type RequestStatus } from "./use-request-wrap";
 import { useImmer } from "use-immer";
-import { useLatestRef } from "./use-latest-ref";
+import { useState, useEffect, useCallback } from "react";
 import { Log } from "@/common/lib/log";
 import { NeteaseAPIArtist } from "@/common/netease/api";
 
+import { useLatestRef } from "./use-latest-ref";
+import { type RequestStatus } from "./use-request-wrap";
+
 export function useAlbum(props: { id: number; pageSize?: number }) {
-  const [status, setStatus] = useState<RequestStatus | "idle">("idle");
+  const [status, setStatus] = useState<"idle" | RequestStatus>("idle");
   const [album, setAlbum] = useImmer<AlbumState>(() => ({
     data: [],
     totalAlbum: 0,
@@ -20,7 +21,7 @@ export function useAlbum(props: { id: number; pageSize?: number }) {
   const albumRef = useLatestRef(album);
   const loadMore = useCallback(() => {
     const { id, pageSize } = propsRef.current;
-    const { currentPageNo, hasMore } = albumRef.current;
+    const { hasMore, currentPageNo } = albumRef.current;
     const isLoading = statusRef.current === "loading";
     if (isLoading || !hasMore) return;
 
@@ -77,11 +78,11 @@ export function useAlbum(props: { id: number; pageSize?: number }) {
 }
 
 export type AlbumState = {
-  data: NeteaseAPI.ArtistAlbum[];
+  hasMore: boolean;
   totalAlbum: number;
   totalPageNo: number;
   currentPageNo: number;
-  hasMore: boolean;
+  data: NeteaseAPI.ArtistAlbum[];
 };
 
 function mergeUniqueAlbum(oldList: NeteaseAPI.ArtistAlbum[], newList: NeteaseAPI.ArtistAlbum[]) {

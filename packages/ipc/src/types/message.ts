@@ -3,116 +3,83 @@
  * - dispatch 表示主要是 other to main
  * */
 type MessageBus = {
-  bus_deliver_theme: {
-    backgroundCover: Undefinable<string>;
-    theme: {
-      mainColor: string;
-      secondaryColor: string;
-      textColorOnMain: string;
-      textColorOnSecondary: string;
-      textNormalColor: string;
-      themeColors: string[];
-    };
-  };
-  bus_deliver_track_meta: {
-    track: Optional<{
-      id: number;
-      name: string;
-      sourceID: number;
-      sourceName: NeteaseTrackRecordSourceType;
-      detail: NeteaseTrackModel;
-    }>;
-    lyric: Optional<NeteaseLyricModel>;
-    repeat: "off" | "one" | "all";
-    shuffle: boolean;
-    status: "playing" | "paused" | "error" | "idle" | "loading";
-    rmActive: boolean;
-    tlActive: boolean;
-    noteActive: boolean;
-  };
-  bus_deliver_track_progress: {
-    currentTime: number;
-    duration: number;
-    volume: number;
-    buffered: number;
-  };
-  bus_deliver_window_event: {
-    type: WindowType;
-    action:
-      | "ready"
-      | "close"
-      | "focus"
-      | "hide"
-      | "show"
-      | "maximize"
-      | "unmaximize"
-      | "minimize"
-      | "unminimize"
-      | "moved"
-      | "resized"
-      | "enter-fullscreen"
-      | "leave-fullscreen"
-      | "blur"
-      | "always-on-top-changed";
-  };
-  bus_deliver_history: {
-    list: {
-      id: number;
-      name: string;
-      sourceID: number;
-      sourceName: NeteaseTrackRecordSourceType;
-      detail: NeteaseTrackModel;
-      playDuration: number;
-      time: number;
-    }[];
-  };
-  bus_deliver_device_output_views: {
-    selected: string;
-    views: { displayName: string; deviceId: string }[];
-  };
-  bus_deliver_react_ready:
-    | { type: "ready"; sender: WindowType }
-    | { type: "isReady"; target: WindowType };
-  bus_dispatch_update: "theme" | "track-meta" | "track-progress" | "output" | "history";
   bus_deliver_preview: {
     url: string;
     alt?: string;
   };
   bus_deliver_comment: {
     id: number;
-    type: "track" | "album" | "playlist";
+    type: "album" | "track" | "playlist";
   };
-  bus_dispatch_playlist_action:
-    | {
-        type: "addToPlaylistNext" | "addToPlaylistLast";
-        trackID: number;
-        sourceID: number;
-        sourceType: NeteaseTrackRecordSourceType;
-      }
-    | {
-        type: "replacePlaylistAndPlay";
-        trackID: number;
-        trackIdx: number;
-        sourceID: number;
-        sourceType: NeteaseTrackRecordSourceType;
-        allIDs: number[];
-      }
-    | {
-        type: "addListToPlaylistEnd";
-        sourceID: number;
-        sourceType: NeteaseTrackRecordSourceType;
-        allIDs: number[];
-      };
+  bus_dispatch_update: "theme" | "output" | "history" | "track-meta" | "track-progress";
+  bus_deliver_react_ready:
+    | { type: "ready"; sender: WindowType }
+    | { type: "isReady"; target: WindowType };
+  bus_deliver_device_output_views: {
+    selected: string;
+    views: { deviceId: string; displayName: string }[];
+  };
+  bus_deliver_track_progress: {
+    volume: number;
+    buffered: number;
+    duration: number;
+    currentTime: number;
+  };
   bus_dispatch_player_action:
+    | "exit"
     | "next"
-    | "previous"
     | "play"
     | "pause"
-    | "exit"
     | "update"
+    | "previous"
     | "toggle-lyric-version-rm"
     | "toggle-lyric-version-tl";
+  bus_deliver_history: {
+    list: {
+      id: number;
+      name: string;
+      time: number;
+      sourceID: number;
+      playDuration: number;
+      detail: NeteaseTrackModel;
+      sourceName: NeteaseTrackRecordSourceType;
+    }[];
+  };
+  bus_deliver_theme: {
+    backgroundCover: Undefinable<string>;
+    theme: {
+      mainColor: string;
+      themeColors: string[];
+      secondaryColor: string;
+      textColorOnMain: string;
+      textNormalColor: string;
+      textColorOnSecondary: string;
+    };
+  };
+  bus_modify_source:
+    | {
+        type: "user-playlist";
+      }
+    | {
+        type: "remove-playlist";
+        id: Nullable<number | string>;
+      }
+    | {
+        type: "playlist-update";
+        id: Nullable<number | string>;
+        source: Nullable<"like" | "normal">;
+      };
   bus_display:
+    | {
+        type: "history";
+      }
+    | {
+        type: "settings";
+      }
+    | {
+        type: "search";
+        keyword?: string;
+      }
     | {
         id: number;
         type: "album" | "artist";
@@ -120,30 +87,63 @@ type MessageBus = {
     | {
         id: number;
         type: "playlist";
-        source: "normal" | "like";
-      }
-    | {
-        type: "search";
-        keyword?: string;
-      }
-    | {
-        type: "settings";
-      }
-    | {
-        type: "history";
+        source: "like" | "normal";
       };
-  bus_modify_source:
+  bus_deliver_window_event: {
+    type: WindowType;
+    action:
+      | "blur"
+      | "hide"
+      | "show"
+      | "close"
+      | "focus"
+      | "moved"
+      | "ready"
+      | "resized"
+      | "maximize"
+      | "minimize"
+      | "unmaximize"
+      | "unminimize"
+      | "enter-fullscreen"
+      | "leave-fullscreen"
+      | "always-on-top-changed";
+  };
+  bus_deliver_track_meta: {
+    shuffle: boolean;
+    rmActive: boolean;
+    tlActive: boolean;
+    noteActive: boolean;
+    repeat: "all" | "off" | "one";
+    lyric: Optional<NeteaseLyricModel>;
+    status: "idle" | "error" | "paused" | "loading" | "playing";
+    track: Optional<{
+      id: number;
+      name: string;
+      sourceID: number;
+      detail: NeteaseTrackModel;
+      sourceName: NeteaseTrackRecordSourceType;
+    }>;
+  };
+  bus_dispatch_playlist_action:
     | {
-        type: "playlist-update";
-        id: Nullable<number | string>;
-        source: Nullable<"like" | "normal">;
+        allIDs: number[];
+        sourceID: number;
+        type: "addListToPlaylistEnd";
+        sourceType: NeteaseTrackRecordSourceType;
       }
     | {
-        type: "user-playlist";
+        trackID: number;
+        sourceID: number;
+        sourceType: NeteaseTrackRecordSourceType;
+        type: "addToPlaylistLast" | "addToPlaylistNext";
       }
     | {
-        type: "remove-playlist";
-        id: Nullable<number | string>;
+        trackID: number;
+        allIDs: number[];
+        sourceID: number;
+        trackIdx: number;
+        type: "replacePlaylistAndPlay";
+        sourceType: NeteaseTrackRecordSourceType;
       };
 };
 
@@ -153,9 +153,9 @@ type MessageBus = {
  * */
 type MessageSingle = {
   message_dispatch_login: string;
-  message_dispatch_device_output_set: string;
-  message_dispatch_cache_has_clear: boolean;
   message_dispatch_need_login: boolean;
+  message_dispatch_cache_has_clear: boolean;
+  message_dispatch_device_output_set: string;
 };
 
 type MessageEventValue = MessageBus & MessageSingle;
@@ -169,21 +169,21 @@ export type MessageSingleEvent = keyof MessageSingle;
 export type MessageData<T extends MessageEvent> = MessageEventValue[T];
 
 export type MessageDirection = {
-  receive: "_receive";
   send: "_send";
+  receive: "_receive";
 };
 
 export type Message<
   T extends MessageEvent,
-  D extends MessageDirection["receive"] | MessageDirection["send"]
+  D extends MessageDirection["send"] | MessageDirection["receive"]
 > = D extends MessageDirection["send"]
   ? {
+      type: T;
       to: WindowType;
       data: MessageData<T>;
-      type: T;
     }
   : {
+      type: T;
       from: WindowType;
       data: MessageData<T>;
-      type: T;
     };

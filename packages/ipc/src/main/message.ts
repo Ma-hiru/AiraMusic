@@ -1,8 +1,9 @@
-import { BrowserWindow, ipcMain, type IpcMainEvent } from "electron";
+import { ipcMain, BrowserWindow, type IpcMainEvent } from "electron";
+
 import { Log } from "../inject/log";
-import { MainSelfName, RegisteredForwardEventName } from "../constants/message";
 import { WindowManager } from "../inject/window";
-import type { Message, MessageData, MessageDirection, MessageEvent } from "../types/message";
+import { MainSelfName, RegisteredForwardEventName } from "../constants/message";
+import type { Message, MessageData, MessageEvent, MessageDirection } from "../types/message";
 
 export class MessageChannel {
   static readonly forwardEventName = RegisteredForwardEventName;
@@ -78,10 +79,10 @@ export class MessageChannel {
   }
 
   static commit<T extends MessageEvent>(props: {
-    sender: Optional<WindowType | BrowserWindow>;
-    receiver: Optional<WindowType | BrowserWindow>;
     type: T;
     data: MessageData<T>;
+    sender: Optional<WindowType | BrowserWindow>;
+    receiver: Optional<WindowType | BrowserWindow>;
   }) {
     // from process to process 直接返回
     if (props.receiver === props.sender && props.sender === MainSelfName) return;
@@ -93,7 +94,7 @@ export class MessageChannel {
       });
     }
 
-    const { sender, receiver, type, data } = props;
+    const { data, type, sender, receiver } = props;
     if (!sender || !receiver) return;
 
     let senderID: WindowType;
@@ -135,9 +136,9 @@ export class MessageChannel {
   }
 
   static commitAll<T extends MessageEvent>(props: {
-    sender: Optional<WindowType | BrowserWindow>;
     type: T;
     data: MessageData<T>;
+    sender: Optional<WindowType | BrowserWindow>;
   }) {
     queueMicrotask(() => {
       WindowManager.getAll().forEach(([, receiver]) => {

@@ -1,7 +1,7 @@
-import { create, type Mutate, type StateCreator, type StoreApi, type UseBoundStore } from "zustand";
-import { createJSONStorage, persist, type PersistOptions } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 import { useShallow } from "zustand/react/shallow";
+import { persist, createJSONStorage, type PersistOptions } from "zustand/middleware";
+import { create, type Mutate, type StoreApi, type StateCreator, type UseBoundStore } from "zustand";
 import { Log } from "@/common/lib/log";
 
 type PersistedUseStore<T extends object, PersistedState = T> = UseBoundStore<
@@ -10,8 +10,8 @@ type PersistedUseStore<T extends object, PersistedState = T> = UseBoundStore<
 
 type CreateStoreOptions<T> = {
   name?: string;
-  persist?: boolean;
   version?: number;
+  persist?: boolean;
   migrate?: PersistOptions<T>["migrate"];
 };
 
@@ -46,7 +46,7 @@ export class RendererZustandStoreCreator {
     initializer: StateCreator<T, [["zustand/immer", never]]>,
     options: CreateStoreOptions<T> = {}
   ) {
-    const { name, persist: shouldPersist = false, version = 1, migrate } = options;
+    const { name, migrate, version = 1, persist: shouldPersist = false } = options;
 
     const immerInitializer = immer(initializer);
     if (!shouldPersist) return create<T>()(immerInitializer);

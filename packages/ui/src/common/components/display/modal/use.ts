@@ -1,13 +1,14 @@
 import { useEffect } from "react";
 import { Log } from "@/common/lib/log";
-import { createAddToPlaylistModal } from "./add-to-playlist-modal";
-import { createDialogModal } from "./dialog-modal";
-import { createAlbumCoverModal, createPlaylistCoverModal } from "./playlist-cover-modal";
-import { createPlaylistCreateModal } from "./playlist-create-modal";
-import { createPlaylistEditModal } from "./playlist-edit-modal";
-import { createPlayerPlaylistModal } from "./player-playlist-modal";
 import { Inject } from "@/common/utils/inject";
+
+import { createDialogModal } from "./dialog-modal";
 import Provider, { type ModalRender } from "./modal-provider";
+import { createPlaylistEditModal } from "./playlist-edit-modal";
+import { createAddToPlaylistModal } from "./add-to-playlist-modal";
+import { createPlayerPlaylistModal } from "./player-playlist-modal";
+import { createPlaylistCreateModal } from "./playlist-create-modal";
+import { createAlbumCoverModal, createPlaylistCoverModal } from "./playlist-cover-modal";
 
 const defaultHandler = () => {
   Log.warn("AppModal", "Modal is not provided in this app, or running under React StrictMode");

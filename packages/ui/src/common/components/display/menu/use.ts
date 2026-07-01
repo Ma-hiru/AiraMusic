@@ -1,7 +1,8 @@
 import { useEffect } from "react";
 import { Log } from "@/common/lib/log";
-import { createTrackContextMenu } from "./track-menu";
 import { Inject } from "@/common/utils/inject";
+
+import { createTrackContextMenu } from "./track-menu";
 import MenuProvider, { type ContextMenuRender } from "./menu-provider";
 
 const defaultHandler = () => {

@@ -31,10 +31,10 @@ export default class _NeteasePlaylistAPI {
    * */
   static updateInfo(params: {
     id: number;
-    name?: string;
     desc?: string;
+    name?: string;
     /** 多个用 `;` 隔开,只能用官方规定标签 */
-    tags?: string[] | string;
+    tags?: string | string[];
   }) {
     if (Array.isArray(params.tags)) params.tags = params.tags.join(";");
     return apiRequest<any, NeteaseAPI.NeteaseAPIResponse>({
@@ -122,7 +122,7 @@ export default class _NeteasePlaylistAPI {
    * @desc 调用此接口 , 传入歌单id可删除歌单
    * @param id 歌单id,可多个,用逗号隔开
    */
-  static delete(id: number | number[] | string) {
+  static delete(id: number | string | number[]) {
     if (Array.isArray(id)) id = id.join(",");
     return apiRequest<any, NeteaseAPI.NeteaseAPIResponse>({
       url: "/playlist/delete",
@@ -140,7 +140,7 @@ export default class _NeteasePlaylistAPI {
     /** 是否设置为隐私歌单，默认否，传`10`则设置成隐私歌单 */
     privacy?: 10;
     /** 歌单类型,默认`NORMAL`,传 `VIDEO`则为视频歌单 */
-    type?: "NORMAL" | "VIDEO";
+    type?: "VIDEO" | "NORMAL";
   }) {
     params.type ||= "NORMAL";
     return apiRequest<
@@ -174,7 +174,7 @@ export default class _NeteasePlaylistAPI {
     /** 歌单 id */
     pid: number;
     /** 歌曲 id,可多个,用逗号隔开 */
-    tracks: number | number[] | string;
+    tracks: number | string | number[];
   }) {
     if (Array.isArray(data.tracks)) data.tracks = data.tracks.join(",");
     return apiRequest<
@@ -278,7 +278,7 @@ export default class _NeteasePlaylistAPI {
    */
   static recommendTop(params: {
     /** 可选值为 'new' 和 'hot', 分别对应最新和最热 , 默认为 'hot' */
-    order: "new" | "hot";
+    order: "hot" | "new";
     /** tag, 比如 " 华语 "、" 古风 " 、" 欧美 "、" 流行 ", 默认为 "全部",可从歌单分类接口获取(/playlist/catlist) */
     cat: string;
     /** 取出歌单数量 , 默认为 50 */

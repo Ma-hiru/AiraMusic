@@ -1,11 +1,12 @@
-import { cacheRequest } from "../request";
 import type {
   CacheStoreResponse,
-  CacheStoreSaveJSONItem,
-  CacheStoreSaveJSONParams,
   CacheStoreSaveURLItem,
-  CacheStoreSaveURLParams
+  CacheStoreSaveJSONItem,
+  CacheStoreSaveURLParams,
+  CacheStoreSaveJSONParams
 } from "@/types/cache";
+
+import { cacheRequest } from "../request";
 
 export class CacheStoreForSave {
   static url(items: CacheStoreSaveURLItem[], method = "GET"): Promise<CacheStoreResponse<null>> {

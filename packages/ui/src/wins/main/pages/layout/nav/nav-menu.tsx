@@ -1,13 +1,13 @@
-import { type FC, memo, useCallback } from "react";
-import { NavConstants } from "@/wins/main/constants";
-import { useLocation, useNavigate } from "react-router-dom";
 import { cx } from "@emotion/css";
-import { NeteaseUser } from "@/common/netease/models";
-import { RoutePathMain } from "@/common/routes";
-import { usePageJump } from "@/wins/main/hooks/use-page-jump";
 import { useSetAtom } from "jotai";
-import { fmModeAtom, fmSessionAtom } from "@/wins/main/atoms/track";
+import { memo, type FC, useCallback } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { RoutePathMain } from "@/common/routes";
+import { NavConstants } from "@/wins/main/constants";
+import { NeteaseUser } from "@/common/netease/models";
 import { playModalAtom } from "@/wins/main/atoms/layout";
+import { usePageJump } from "@/wins/main/hooks/use-page-jump";
+import { fmModeAtom, fmSessionAtom } from "@/wins/main/atoms/track";
 import AppToast from "@/common/components/display/toast";
 
 interface NavMenuProps {
@@ -15,8 +15,8 @@ interface NavMenuProps {
   className?: string;
 }
 
-const NavMenu: FC<NavMenuProps> = ({ barOpened, className }) => {
-  const { jumpPlaylistPage, jumpHistoryPage } = usePageJump();
+const NavMenu: FC<NavMenuProps> = ({ className, barOpened }) => {
+  const { jumpHistoryPage, jumpPlaylistPage } = usePageJump();
   const setPlayModal = useSetAtom(playModalAtom);
   const setFMMode = useSetAtom(fmModeAtom);
   const setFMSession = useSetAtom(fmSessionAtom);
@@ -66,12 +66,11 @@ const NavMenu: FC<NavMenuProps> = ({ barOpened, className }) => {
         "flex flex-col gap-2 w-(--side-bar-expand-width) overflow-hidden contain-layout",
         className
       )}>
-      {NavConstants.LAYOUT_NAV.map(({ icon, label, path }) => {
+      {NavConstants.LAYOUT_NAV.map(({ icon, path, label }) => {
         const active = RoutePathMain.matchPathname(location, path, true);
         return (
           <div
             key={path}
-            title={label}
             className={cx(
               `
               flex flex-row h-12 items-center mx-3 rounded-md
@@ -79,6 +78,7 @@ const NavMenu: FC<NavMenuProps> = ({ barOpened, className }) => {
             `,
               active ? barOpened && "bg-primary text-primary-text" : barOpened && "hover:bg-black/5"
             )}
+            title={label}
             onClick={() => jump(path, active)}>
             <span
               className={cx(

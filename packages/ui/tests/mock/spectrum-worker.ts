@@ -1,13 +1,13 @@
 export type SpectrumWorkerResult =
   | { type: "ready" }
+  | { error: string; type: "error" }
   | { type: "spectrum"; bands: Float32Array }
-  | { type: "spectrumWithPeaks"; data: Float32Array }
-  | { type: "error"; error: string };
+  | { data: Float32Array; type: "spectrumWithPeaks" };
 
 export type MockSpectrumWorkerInstance = {
-  messages: Array<{ message: any; transfer?: Transferable[] }>;
   terminated: boolean;
   emit(data: SpectrumWorkerResult): void;
+  messages: Array<{ message: any; transfer?: Transferable[] }>;
 };
 
 export const spectrumWorkerMock = {

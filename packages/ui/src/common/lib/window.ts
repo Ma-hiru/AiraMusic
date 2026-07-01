@@ -1,6 +1,6 @@
-import { Listenable } from "@/common/utils/listenable";
-import { RendererRuntime } from "@/common/lib/runtime";
 import { RendererIPC } from "@mahiru/ipc/renderer";
+import { RendererRuntime } from "@/common/lib/runtime";
+import { Listenable } from "@/common/utils/listenable";
 import {
   type Message,
   type MessageData,
@@ -10,7 +10,7 @@ import {
 
 export type RendererWindowEvent = MessageData<"bus_deliver_window_event">["action"];
 
-export class RendererWindow extends Listenable<RendererWindowEvent | "react-ready"> {
+export class RendererWindow extends Listenable<"react-ready" | RendererWindowEvent> {
   readonly type: WindowType;
   private readonly id: string;
   private _opened: boolean;
@@ -91,8 +91,8 @@ export class RendererWindow extends Listenable<RendererWindowEvent | "react-read
       y: number;
       width: number;
       height: number;
-      workAreaHeight: number;
       workAreaWidth: number;
+      workAreaHeight: number;
     }>();
     RendererIPC.NormalChannel.send("invoke_window_bounds", undefined)
       .then(resolve)
@@ -389,7 +389,7 @@ export class RendererWindow extends Listenable<RendererWindowEvent | "react-read
   }
 
   resize(
-    props: Partial<{ type: WindowType; x: number; y: number; width: number; height: number }>
+    props: Partial<{ x: number; y: number; width: number; height: number; type: WindowType }>
   ) {
     RendererIPC.NormalChannel.send("event_window_resize", {
       ...props,
@@ -397,7 +397,7 @@ export class RendererWindow extends Listenable<RendererWindowEvent | "react-read
     });
   }
 
-  move(props: Partial<{ type: WindowType; x: number; y: number; deltaX: number; deltaY: number }>) {
+  move(props: Partial<{ x: number; y: number; deltaX: number; deltaY: number; type: WindowType }>) {
     RendererIPC.NormalChannel.send("event_window_move", {
       type: this.type,
       ...props

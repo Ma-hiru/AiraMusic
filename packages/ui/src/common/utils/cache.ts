@@ -1,12 +1,12 @@
-import type { CacheObjectAsyncInterface, CacheObjectInterface } from "@/common/lib/cache/utils";
-import { RendererCache } from "@/common/lib/cache";
 import { useMemo } from "react";
+import { RendererCache } from "@/common/lib/cache";
+import type { CacheObjectInterface, CacheObjectAsyncInterface } from "@/common/lib/cache/utils";
 
 export function useCacheRequest<
   A extends readonly unknown[],
   R,
-  T extends "memory" | "browser" | "local"
->(request: PromiseFunc<A, R>, buildKey: NormalFunc<A, string | number>, type: T) {
+  T extends "local" | "memory" | "browser"
+>(request: PromiseFunc<A, R>, buildKey: NormalFunc<A, number | string>, type: T) {
   return useMemo(() => {
     return createCacheRequest<A, R, T>(request, buildKey, type);
   }, [buildKey, request, type]);
@@ -15,10 +15,10 @@ export function useCacheRequest<
 export function createCacheRequest<
   A extends readonly unknown[],
   R,
-  T extends "memory" | "browser" | "local"
+  T extends "local" | "memory" | "browser"
 >(
   request: PromiseFunc<A, R>,
-  buildKey: NormalFunc<A, string | number>,
+  buildKey: NormalFunc<A, number | string>,
   type: T
 ): T extends "memory" | "browser" ? PromiseFunc<A, R> : PromiseFunc<A, Jsonify<R>> {
   const cache = getCacheManager(type);
@@ -35,7 +35,7 @@ export function createCacheRequest<
 }
 
 function getCacheManager(
-  type: "memory" | "browser" | "local"
+  type: "local" | "memory" | "browser"
 ): CacheObjectInterface | CacheObjectAsyncInterface {
   switch (type) {
     case "memory":

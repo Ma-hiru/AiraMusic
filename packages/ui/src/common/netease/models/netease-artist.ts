@@ -12,10 +12,12 @@ export class NeteaseArtist {
     id: number;
     name: string;
     detail: NeteaseAPI.ArtistDetail;
+    hotTracks: NeteaseTrackRecord[];
+    followInfos: NeteaseAPI.NeteaseArtistFollowCountResponse["data"];
     desc: {
       /** 简要介绍 */
-      briefDesc: string;
       count: number;
+      briefDesc: string;
       introduction: {
         /** 介绍文本的标题 */
         ti: string;
@@ -23,8 +25,6 @@ export class NeteaseArtist {
         txt: string;
       }[];
     };
-    hotTracks: NeteaseTrackRecord[];
-    followInfos: NeteaseAPI.NeteaseArtistFollowCountResponse["data"];
   }) {
     this.id = props.id;
     this.name = props.name;
@@ -35,10 +35,10 @@ export class NeteaseArtist {
   }
 
   static fromNeteaseAPIs(props: {
-    detail: NeteaseAPI.NeteaseArtistDetailResponse;
-    desc: NeteaseAPI.NeteaseArtistDescResponse;
-    followInfos: NeteaseAPI.NeteaseArtistFollowCountResponse;
     hotTracks: NeteaseTrackRecord[];
+    desc: NeteaseAPI.NeteaseArtistDescResponse;
+    detail: NeteaseAPI.NeteaseArtistDetailResponse;
+    followInfos: NeteaseAPI.NeteaseArtistFollowCountResponse;
   }) {
     return new NeteaseArtist({
       id: props.detail.data.artist.id,

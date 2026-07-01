@@ -1,7 +1,7 @@
-import { NeteaseServicesPlaylist, NeteaseServicesUser } from "@/common/netease/services";
 import { userStoreSnapshot } from "@/common/store/user";
-import type { NeteaseUserModel } from "@/common/netease/models";
+import { NeteaseServicesUser, NeteaseServicesPlaylist } from "@/common/netease/services";
 import type { NavigateFunction } from "react-router-dom";
+import type { NeteaseUserModel } from "@/common/netease/models";
 
 /** 用来集中处理资源修改时需要的重载 */
 export class RendererModified {
@@ -50,17 +50,17 @@ export class RendererModified {
 
 export type ModifiedType =
   | {
-      type: "playlist";
-      id: Nullable<string | number>;
-      source: Nullable<"like" | "normal">;
-    }
-  | {
       type: "userPlaylist";
       user: NeteaseUserModel;
     }
   | {
-      type: "removePlaylist";
-      id: Nullable<string | number>;
-      navigate: NavigateFunction;
+      type: "playlist";
+      id: Nullable<number | string>;
+      source: Nullable<"like" | "normal">;
+    }
+  | {
       homePath: string;
+      type: "removePlaylist";
+      navigate: NavigateFunction;
+      id: Nullable<number | string>;
     };

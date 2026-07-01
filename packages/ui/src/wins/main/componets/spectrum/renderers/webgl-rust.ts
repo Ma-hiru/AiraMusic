@@ -1,8 +1,9 @@
-import { type IRenderer, type RendererOptions } from "./i-renderer";
 import { WebGLRenderer as WasmWebGLRenderer } from "@mahiru/wasm";
 
+import { type IRenderer, type RendererOptions } from "./i-renderer";
+
 export class WebGLRendererRust implements IRenderer {
-  private renderer: WasmWebGLRenderer | null = null;
+  private renderer: null | WasmWebGLRenderer = null;
   options?: RendererOptions;
 
   init(canvas: HTMLCanvasElement, options: RendererOptions) {

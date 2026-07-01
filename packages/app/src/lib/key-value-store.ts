@@ -1,21 +1,21 @@
-import ElectronStore from "electron-store";
 import { Log } from "@/lib/log";
 import { MainRuntime } from "@/lib/runtime";
 import { MainPathResolver } from "@/lib/path-resolver";
+import ElectronStore from "electron-store";
 import type { CacheStoreConfig } from "@/types/store";
 
 export type StoreTypeForWindow = {
   [k in WindowType]: {
-    width: number;
-    height: number;
     x: number;
     y: number;
+    width: number;
+    height: number;
   };
 };
 
 export type StoreTypeForConfig = {
-  cache: CacheStoreConfig;
   cacheIndexKey: string;
+  cache: CacheStoreConfig;
 };
 
 export type StoreTypeForRenderer = Record<string, JsonValue>;

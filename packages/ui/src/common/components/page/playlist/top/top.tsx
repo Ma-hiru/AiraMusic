@@ -1,48 +1,48 @@
-import { type FC, memo } from "react";
+import { memo, type FC } from "react";
 import { NeteasePlaylist } from "@/common/netease/models";
 
+import TopInfo from "./top-info";
 import TopCover from "./top-cover";
 import TopRight from "./top-right";
-import TopInfo from "./top-info";
 
 interface TopProps {
-  editable: boolean;
   loading: boolean;
-  source: Nullable<"like" | "normal">;
-  summary: Nullable<NeteasePlaylist>;
-  searchTracks: NormalFunc<[k: string]>;
-  onPlayAll: NormalFunc;
-  onAddList: NormalFunc;
-  coverCacheKey?: string;
-  onCoverLoaded?: NormalFunc<[src: string]>;
-  setIsTyping?: NormalFunc<[tying: boolean]>;
-  pageActionType?: "enter" | "out" | "none";
-  onPageAction?: NormalFunc;
-  onEdited?: Optional<NormalFunc<[modifiedCover: boolean]>>;
-  onDeleted?: NormalFunc;
+  editable: boolean;
   reload?: NormalFunc;
+  coverCacheKey?: string;
   selectionMode?: boolean;
+  summary: Nullable<NeteasePlaylist>;
+  source: Nullable<"like" | "normal">;
+  searchTracks: NormalFunc<[k: string]>;
+  pageActionType?: "out" | "none" | "enter";
+  setIsTyping?: NormalFunc<[tying: boolean]>;
+  onAddList: NormalFunc;
+  onPlayAll: NormalFunc;
+  onDeleted?: NormalFunc;
+  onPageAction?: NormalFunc;
   onToggleSelectionMode?: NormalFunc;
+  onCoverLoaded?: NormalFunc<[src: string]>;
+  onEdited?: Optional<NormalFunc<[modifiedCover: boolean]>>;
 }
 
 const Top: FC<TopProps> = ({
-  summary,
-  searchTracks,
   source,
-  reload,
-  onPlayAll,
-  onAddList,
-  editable,
-  loading,
-  coverCacheKey,
-  onCoverLoaded,
-  setIsTyping = () => {},
-  onPageAction,
   pageActionType,
+  setIsTyping = () => {},
   onEdited,
+  onAddList,
   onDeleted,
-  selectionMode,
-  onToggleSelectionMode
+  onPlayAll,
+  onPageAction,
+  onCoverLoaded,
+  onToggleSelectionMode,
+  reload,
+  loading,
+  summary,
+  editable,
+  searchTracks,
+  coverCacheKey,
+  selectionMode
 }) => {
   if (loading) return null;
   return (
@@ -52,17 +52,17 @@ const Top: FC<TopProps> = ({
         <TopInfo summary={summary} onAddList={onAddList} onPlayAll={onPlayAll} />
       </div>
       <TopRight
-        summary={summary}
+        reload={reload}
         source={source}
+        summary={summary}
         editable={editable}
-        searchTracks={searchTracks}
         setTying={setIsTyping}
+        searchTracks={searchTracks}
+        selectionMode={selectionMode}
         pageActionType={pageActionType}
-        onPageAction={onPageAction}
         onEdited={onEdited}
         onDeleted={onDeleted}
-        reload={reload}
-        selectionMode={selectionMode}
+        onPageAction={onPageAction}
         onToggleSelectionMode={onToggleSelectionMode}
       />
     </div>

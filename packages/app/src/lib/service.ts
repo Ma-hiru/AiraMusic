@@ -1,5 +1,5 @@
-import type { MainServicesType, MainServicesInstance } from "@/types/service";
 import { Log } from "@/lib/log";
+import type { MainServicesType, MainServicesInstance } from "@/types/service";
 
 export type MainServicesCreator = NormalFunc<
   [ports: Record<MainServicesType, number>],

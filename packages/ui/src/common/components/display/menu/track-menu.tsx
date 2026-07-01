@@ -1,24 +1,25 @@
-import { NeteaseNetworkImage, NeteaseTrackRecord, NeteaseUser } from "@/common/netease/models";
 import {
   Copy,
-  DiscAlbum,
-  FolderPlus,
-  ListMusic,
-  ListPlus,
-  MessageSquare,
   Play,
-  Trash2
+  Trash2,
+  ListPlus,
+  DiscAlbum,
+  ListMusic,
+  FolderPlus,
+  MessageSquare
 } from "lucide-react";
 import { NeteaseImageSize } from "@/common/enum";
-import type { ContextMenuItem, ContextMenuRender } from "./menu-provider";
 import { userStoreSnapshot } from "@/common/store/user";
-import NeteaseImage from "@/common/components/display/image/netease-image";
+import { NeteaseUser, NeteaseTrackRecord, NeteaseNetworkImage } from "@/common/netease/models";
 import AppToast from "@/common/components/display/toast";
+import NeteaseImage from "@/common/components/display/image/netease-image";
+
+import type { ContextMenuItem, ContextMenuRender } from "./menu-provider";
 
 export type TrackContextMenuAction =
-  | "comment"
-  | "album"
   | "play"
+  | "album"
+  | "comment"
   | "nextPlay"
   | "addPlayList"
   | "favPlaylist"
@@ -36,7 +37,7 @@ export function createTrackContextMenu(props: {
   /** 是否显示「从歌单删除」（仅自建歌单页可用） */
   canRemove?: boolean;
 }): ContextMenuRender {
-  const { clientX, clientY, track, onClick, canRemove } = props;
+  const { canRemove, onClick, track, clientX, clientY } = props;
   return {
     header: createHeader(track),
     items: createMenuItems(track, onClick, canRemove),
@@ -50,13 +51,13 @@ function createHeader(track: NeteaseTrackRecord) {
   return (
     <div className="w-full h-full grid items-center grid-rows-1 grid-cols-[auto_1fr]">
       <NeteaseImage
-        cache
         className={`
             size-8 rounded-md select-none
             ease-in-out duration-300 transition-all
           `}
         image={image}
         shadowColor="light"
+        cache
       />
       <div className="w-full overflow-hidden flex flex-col items-start justify-center px-2 select-none truncate">
         <p className="w-full font-semibold text-left text-[12px] truncate">{track.name}</p>

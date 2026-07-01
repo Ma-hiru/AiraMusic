@@ -1,49 +1,49 @@
 /** Normal 事件类型以及参数 */
 export type NormalEventMaps = {
-  event_window_resize: {
-    type: Optional<WindowType>;
-    x?: number;
-    y?: number;
-    width?: number;
-    height?: number;
-  };
+  event_window_open: WindowType;
+  event_window_browser: { url: string };
+  event_window_show: Optional<WindowType>;
+  event_window_close: Optional<WindowType>;
+  event_window_debug: Optional<WindowType>;
+  event_window_focus: Optional<WindowType>;
+  event_window_hidden: Optional<WindowType>;
+  event_window_maximize: Optional<WindowType>;
+  event_window_minimize: Optional<WindowType>;
+  event_window_unmaximize: Optional<WindowType>;
+  event_window_unminimize: Optional<WindowType>;
+  event_window_external: { url: string; title: string };
+  event_debug_fatal: { error?: string; message: string };
+  event_window_title: { title: string; type: WindowType };
+  event_window_penetrate: { penetrate: boolean; type: Optional<WindowType> };
+  event_debug_log: { message: string; level: "info" | "warn" | "debug" | "error" | "trace" };
   event_window_move: {
-    type: Optional<WindowType>;
     x?: number;
     y?: number;
     deltaX?: number;
     deltaY?: number;
-  };
-  event_window_external: { url: string; title: string };
-  event_window_browser: { url: string };
-  event_window_title: { type: WindowType; title: string };
-  event_window_open: WindowType;
-  event_window_debug: Optional<WindowType>;
-  event_window_close: Optional<WindowType>;
-  event_window_focus: Optional<WindowType>;
-  event_window_hidden: Optional<WindowType>;
-  event_window_show: Optional<WindowType>;
-  event_window_minimize: Optional<WindowType>;
-  event_window_unminimize: Optional<WindowType>;
-  event_window_maximize: Optional<WindowType>;
-  event_window_unmaximize: Optional<WindowType>;
-  event_window_pin: {
     type: Optional<WindowType>;
+  };
+  event_window_resize: {
+    x?: number;
+    y?: number;
+    width?: number;
+    height?: number;
+    type: Optional<WindowType>;
+  };
+  event_window_pin: {
     pin: boolean;
+    type: Optional<WindowType>;
     level?:
+      | "dock"
       | "normal"
-      | "floating"
-      | "torn-off-menu"
-      | "modal-panel"
-      | "main-menu"
       | "status"
+      | "floating"
+      | "main-menu"
+      | "modal-panel"
       | "pop-up-menu"
       | "screen-saver"
-      | "dock";
+      | "torn-off-menu";
   };
-  event_window_penetrate: { type: Optional<WindowType>; penetrate: boolean };
-  event_debug_fatal: { message: string; error?: string };
-  event_debug_log: { level: "trace" | "debug" | "info" | "warn" | "error"; message: string };
 };
 
 /** Normal 事件类型 */

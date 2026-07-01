@@ -1,11 +1,11 @@
 type MediaDevicesMock = Pick<
   MediaDevices,
-  "enumerateDevices" | "addEventListener" | "removeEventListener"
+  "addEventListener" | "enumerateDevices" | "removeEventListener"
 >;
 type AudioSinkIdMock = string | { type: "none" };
 type AudioElementMock = {
-  readyState: number;
   sinkId: string;
+  readyState: number;
   setSinkId: ReturnType<typeof vi.fn<(sinkId: string) => Promise<void>>>;
 };
 type AudioContextMock = {
@@ -13,9 +13,9 @@ type AudioContextMock = {
   setSinkId?: ReturnType<typeof vi.fn<(sinkId: AudioSinkIdMock) => Promise<void>>>;
 };
 type AudioTargetMock = {
-  audio: AudioElementMock;
-  context: AudioContextMock | null;
   sinkId?: string;
+  audio: AudioElementMock;
+  context: null | AudioContextMock;
 };
 
 describe("RendererOutput", () => {

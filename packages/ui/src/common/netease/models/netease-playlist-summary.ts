@@ -5,8 +5,8 @@ export class NeteasePlaylistSummary implements NeteasePlaylistSummaryModel {
   readonly createTime: number;
   readonly creator: {
     readonly userId: number;
-    readonly avatarUrl: string;
     readonly nickname: string;
+    readonly avatarUrl: string;
     readonly signature: string;
   };
   readonly highQuality: boolean;
@@ -60,7 +60,7 @@ export class NeteasePlaylistSummary implements NeteasePlaylistSummaryModel {
     return new NeteasePlaylistSummary(playlist);
   }
 
-  static isPrivacy(playlist: NeteaseAPI.NeteasePlaylistSummary | NeteasePlaylistSummaryModel) {
+  static isPrivacy(playlist: NeteasePlaylistSummaryModel | NeteaseAPI.NeteasePlaylistSummary) {
     return playlist?.privacy === 10;
   }
   //endregion

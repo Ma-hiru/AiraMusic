@@ -5,8 +5,8 @@ export class NeteaseAlbum {
   content: NeteaseAPI.NeteaseAlbumContentResponse["album"];
 
   constructor(props: {
-    content: NeteaseAPI.NeteaseAlbumContentResponse["album"];
     tracks: NeteaseTrackRecord[];
+    content: NeteaseAPI.NeteaseAlbumContentResponse["album"];
   }) {
     this.content = props.content;
     this.tracks = props.tracks;

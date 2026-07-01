@@ -1,4 +1,4 @@
-import init, { SpectrumAnalyzer, WindowFunction } from "@mahiru/wasm";
+import init, { WindowFunction, SpectrumAnalyzer } from "@mahiru/wasm";
 
 let analyser: Nullable<SpectrumAnalyzer> = null;
 let fftSize = 0;

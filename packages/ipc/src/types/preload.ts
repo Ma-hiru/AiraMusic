@@ -1,6 +1,6 @@
+import type { Message, MessageDirection } from "./message";
 import type { NormalEvent, NormalEventArgs } from "./event";
 import type { InvokeEvent, InvokeEventArgs, InvokeEventPayload } from "./invoke";
-import type { Message, MessageDirection } from "./message";
 
 export type RendererEventSender = <E extends NormalEvent>(
   event: E,

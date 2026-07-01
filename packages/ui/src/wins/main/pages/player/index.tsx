@@ -1,13 +1,13 @@
-import { type FC, memo } from "react";
+import { memo, type FC } from "react";
 
-import Cover from "./cover";
-import Control from "./control";
-import Background from "./background";
-import Lyric from "./lyric";
-import LyricChange from "./lyric-change";
-import Title from "./title";
 import Meta from "./meta";
+import Cover from "./cover";
+import Lyric from "./lyric";
+import Title from "./title";
+import Control from "./control";
 import Spectrum from "./spectrum";
+import Background from "./background";
+import LyricChange from "./lyric-change";
 
 export const PlayerPage: FC = () => {
   return (

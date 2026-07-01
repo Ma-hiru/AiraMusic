@@ -1,20 +1,19 @@
 import { cx } from "@emotion/css";
-import { type FC, memo, useCallback, useMemo, useState } from "react";
 import { Music2, UserRound } from "lucide-react";
-import { NeteaseAPIArtist, NeteaseAPITrack } from "@/common/netease/api";
-import { NeteaseServicesTrack } from "@/common/netease/services";
-import { useRequestAutoRun, useRequestStatusWrap } from "@/common/hooks/use-request-wrap";
-import { usePageJump } from "@/wins/main/hooks/use-page-jump";
-import { type ArtistArea, RendererHomeConstants, type SongArea } from "@/wins/main/constants";
+import { memo, type FC, useMemo, useState, useCallback } from "react";
 import { NeteaseTrackRecord } from "@/common/netease/models";
-import RendererPlayerHandle from "@/wins/main/lib/handle";
+import { usePageJump } from "@/wins/main/hooks/use-page-jump";
+import { NeteaseServicesTrack } from "@/common/netease/services";
+import { NeteaseAPITrack, NeteaseAPIArtist } from "@/common/netease/api";
+import { useRequestAutoRun, useRequestStatusWrap } from "@/common/hooks/use-request-wrap";
+import { type SongArea, type ArtistArea, RendererHomeConstants } from "@/wins/main/constants";
 import AppToast from "@/common/components/display/toast";
-import RendererImageConstants from "@/common/constants/image";
-
-import AppError from "@/common/components/fallback/app-error";
-import AppLoading from "@/common/components/fallback/app-loading";
-import MediaGrid from "@/common/components/layout/media-grid";
 import Section from "@/common/components/layout/section";
+import RendererPlayerHandle from "@/wins/main/lib/handle";
+import AppError from "@/common/components/fallback/app-error";
+import MediaGrid from "@/common/components/layout/media-grid";
+import RendererImageConstants from "@/common/constants/image";
+import AppLoading from "@/common/components/fallback/app-loading";
 
 const HomeSongsArtistsView: FC<{ className?: string }> = ({ className }) => {
   const player = RendererPlayerHandle.usePlayer();
@@ -26,8 +25,8 @@ const HomeSongsArtistsView: FC<{ className?: string }> = ({ className }) => {
 
   // 获取歌曲
   const {
-    status: songStatus,
     data: songs = [],
+    status: songStatus,
     fetchData: fetchSongs
   } = useRequestStatusWrap(
     useCallback((type: SongArea["type"]) => {
@@ -50,8 +49,8 @@ const HomeSongsArtistsView: FC<{ className?: string }> = ({ className }) => {
 
   // 获取歌手
   const {
-    status: artistStatus,
     data: artists = [],
+    status: artistStatus,
     fetchData: fetchArtists
   } = useRequestStatusWrap(
     useCallback((type: ArtistArea["type"]) => {
@@ -94,12 +93,11 @@ const HomeSongsArtistsView: FC<{ className?: string }> = ({ className }) => {
 
   return (
     <div className={cx("flex flex-col gap-3", className)}>
-      <Section title="新歌速递" subTitle="New Songs" Icon={Music2}>
+      <Section title="新歌速递" Icon={Music2} subTitle="New Songs">
         <div className="mb-3 flex flex-wrap gap-2 px-2">
           {RendererHomeConstants.HOME_SONG_AREAS.map((area) => (
             <button
               key={area.type}
-              onClick={() => setSongArea(area)}
               className={cx(
                 `
                   h-8 cursor-pointer rounded-lg
@@ -110,13 +108,14 @@ const HomeSongsArtistsView: FC<{ className?: string }> = ({ className }) => {
                 area.type === songArea.type
                   ? "bg-primary text-primary-text hover:bg-primary-active"
                   : "bg-white/5 hover:bg-white/20"
-              )}>
+              )}
+              onClick={() => setSongArea(area)}>
               {area.label}
             </button>
           ))}
         </div>
-        <AppError reset={reloadSongs} when={songStatus === "error"} message="加载新歌失败">
-          <AppLoading loading={songStatus === "loading"} className="min-h-60">
+        <AppError message="加载新歌失败" reset={reloadSongs} when={songStatus === "error"}>
+          <AppLoading className="min-h-60" loading={songStatus === "loading"}>
             <MediaGrid
               items={songItems}
               coverSize={RendererImageConstants.AlbumListCoverSize}
@@ -125,13 +124,11 @@ const HomeSongsArtistsView: FC<{ className?: string }> = ({ className }) => {
           </AppLoading>
         </AppError>
       </Section>
-      <Section title="歌手推荐" subTitle="Artist Chart" Icon={UserRound}>
+      <Section title="歌手推荐" Icon={UserRound} subTitle="Artist Chart">
         <div className="mb-3 flex flex-wrap gap-2 px-2">
           {RendererHomeConstants.HOME_ARTIST_AREAS.map((area) => (
             <button
               key={area.label}
-              type="button"
-              onClick={() => setArtistArea(area)}
               className={cx(
                 `
                   h-8 cursor-pointer rounded-lg
@@ -142,13 +139,15 @@ const HomeSongsArtistsView: FC<{ className?: string }> = ({ className }) => {
                 area.type === artistArea.type
                   ? "bg-primary text-primary-text hover:bg-primary-active"
                   : "bg-white/5 hover:bg-white/20"
-              )}>
+              )}
+              type="button"
+              onClick={() => setArtistArea(area)}>
               {area.label}
             </button>
           ))}
         </div>
-        <AppError reset={reloadArtists} when={artistStatus === "error"} message="加载歌手榜失败">
-          <AppLoading loading={artistStatus === "loading"} className="min-h-60">
+        <AppError message="加载歌手榜失败" reset={reloadArtists} when={artistStatus === "error"}>
+          <AppLoading className="min-h-60" loading={artistStatus === "loading"}>
             <MediaGrid
               items={artistItems}
               coverSize={RendererImageConstants.AlbumListCoverSize}

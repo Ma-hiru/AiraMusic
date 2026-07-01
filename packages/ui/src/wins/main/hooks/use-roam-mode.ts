@@ -1,12 +1,12 @@
-import { useEffect, useRef } from "react";
+import { useRef, useEffect } from "react";
 import { useAtom, useAtomValue } from "jotai";
-import { fmModeAtom, fmSessionAtom } from "@/wins/main/atoms/track";
-import RendererPlayerHandle from "@/wins/main/lib/handle";
-import { NeteaseServicesTrack } from "@/common/netease/services";
-import { useLatestRef } from "@/common/hooks/use-latest-ref";
 import { Log } from "@/common/lib/log";
-import AppToast from "@/common/components/display/toast";
 import { useUser } from "@/common/store/user";
+import { useLatestRef } from "@/common/hooks/use-latest-ref";
+import { NeteaseServicesTrack } from "@/common/netease/services";
+import { fmModeAtom, fmSessionAtom } from "@/wins/main/atoms/track";
+import AppToast from "@/common/components/display/toast";
+import RendererPlayerHandle from "@/wins/main/lib/handle";
 
 /** 刷新阈值 */
 const REFILL_THRESHOLD = 3;

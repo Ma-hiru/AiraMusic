@@ -1,9 +1,10 @@
-import { useUser, useUserStore } from "@/common/store/user";
-import { useCallback, useMemo } from "react";
-import { type HeartManager } from "./use-heart";
-import { type TrackListPlayableManager } from "../components/display/track_list";
+import { useMemo, useCallback } from "react";
 import { NeteaseTrack } from "@/common/netease/models";
 import { RendererIPCMessageBus } from "@/common/lib/bus";
+import { useUser, useUserStore } from "@/common/store/user";
+
+import { type HeartManager } from "./use-heart";
+import { type TrackListPlayableManager } from "../components/display/track_list";
 
 /** 基于userStore管理喜欢状态和播放状态 */
 export function useUserTrackManager() {

@@ -1,29 +1,29 @@
 import { useCallback } from "react";
 import { NeteaseTrackRecord } from "@/common/netease/models";
+import AppContextMenu from "@/common/components/display/menu";
 import type {
   TrackListClickFunc,
   TrackListContextMenuFunc
 } from "@/common/components/display/track_list";
-import AppContextMenu from "@/common/components/display/menu";
 
 /** 歌曲右键菜单 */
 export function useTrackContextMenu(props: {
   onPlay: TrackListClickFunc;
   onClickAlbum: NormalFunc<[id: number]>;
-  addToPlaylistNext: NormalFunc<[track: NeteaseTrackRecord]>;
-  addToPlaylistLast: NormalFunc<[track: NeteaseTrackRecord]>;
   openComment: NormalFunc<[track: NeteaseTrackRecord]>;
+  addToPlaylistLast: NormalFunc<[track: NeteaseTrackRecord]>;
+  addToPlaylistNext: NormalFunc<[track: NeteaseTrackRecord]>;
   addTrackToPlaylist: NormalFunc<[track: NeteaseTrackRecord]>;
   removeFromPlaylist?: NormalFunc<[track: NeteaseTrackRecord]>;
 }) {
   const {
+    addToPlaylistLast,
+    addToPlaylistNext,
+    addTrackToPlaylist,
+    openComment,
     onPlay,
     onClickAlbum,
-    addToPlaylistNext,
-    addToPlaylistLast,
-    openComment,
-    removeFromPlaylist,
-    addTrackToPlaylist
+    removeFromPlaylist
   } = props;
   const { create, createTrackContextMenu } = AppContextMenu.useMenu();
 

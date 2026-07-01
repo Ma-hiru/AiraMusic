@@ -1,8 +1,8 @@
 import { cx } from "@emotion/css";
-import { type FC, memo, type ReactEventHandler, useCallback, useMemo } from "react";
+import { memo, type FC, useMemo, useCallback, type ReactEventHandler } from "react";
+import { NeteaseImageSize } from "@/common/enum";
 import { NeteaseArtist, NeteaseNetworkImage } from "@/common/netease/models";
 import NeteaseImage from "@/common/components/display/image/netease-image";
-import { NeteaseImageSize } from "@/common/enum";
 
 interface AvatarProps {
   className?: string;
@@ -10,7 +10,7 @@ interface AvatarProps {
   onAvatarLoaded?: NormalFunc<[avatar: string]>;
 }
 
-const Avatar: FC<AvatarProps> = ({ className, artist, onAvatarLoaded }) => {
+const Avatar: FC<AvatarProps> = ({ className, onAvatarLoaded, artist }) => {
   const avatar = useMemo(() => {
     if (!artist) return null;
     return NeteaseNetworkImage.fromURL(artist.detail.artist.avatar)
@@ -26,15 +26,15 @@ const Avatar: FC<AvatarProps> = ({ className, artist, onAvatarLoaded }) => {
   );
 
   return (
-    <div title={artist?.name} className={cx("relative", className)}>
+    <div className={cx("relative", className)} title={artist?.name}>
       <NeteaseImage
-        cache
-        preview
         className="h-full rounded-full aspect-square hover:scale-105 ease-in-out transition-all duration-300"
         image={avatar}
-        cacheLazy={false}
         shadow="float"
+        cacheLazy={false}
         onLoad={onLoad}
+        cache
+        preview
       />
     </div>
   );

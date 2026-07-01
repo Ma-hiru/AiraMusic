@@ -1,6 +1,6 @@
 import { useRef } from "react";
 
-export function useStableObject<T extends Record<PropertyKey, unknown> | null>(obj: T): T {
+export function useStableObject<T extends null | Record<PropertyKey, unknown>>(obj: T): T {
   const ref = useRef<T>(obj);
 
   if (obj === null || ref.current === null || !shallowEqualObject(ref.current, obj)) {

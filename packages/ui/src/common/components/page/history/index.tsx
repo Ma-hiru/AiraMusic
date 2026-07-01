@@ -1,82 +1,82 @@
 import {
-  type FC,
   memo,
+  useRef,
+  type FC,
+  useMemo,
   type Ref,
+  useState,
+  useEffect,
+  useCallback,
   type RefObject,
   startTransition,
-  useCallback,
-  useEffect,
-  useImperativeHandle,
-  useMemo,
-  useRef,
-  useState
+  useImperativeHandle
 } from "react";
-import { NeteaseHistoryRecord, NeteaseTrackRecord } from "@/common/netease/models";
-import type {
-  TrackListClickFunc,
-  TrackListPlayableManager,
-  TrackListRef
-} from "@/common/components/display/track_list";
-import TrackList from "@/common/components/display/track_list";
 import { SearchTrack } from "@mahiru/wasm";
 import { type HeartManager } from "@/common/hooks/use-heart";
-import { useTrackCoverPreload } from "@/common/hooks/use-track-cover-preload";
 import { useLatestRef } from "@/common/hooks/use-latest-ref";
 import { useTrackContextMenu } from "@/common/hooks/use-track-context-menu";
-import RendererImageConstants from "@/common/constants/image";
+import { useTrackCoverPreload } from "@/common/hooks/use-track-cover-preload";
+import { NeteaseTrackRecord, NeteaseHistoryRecord } from "@/common/netease/models";
 import RendererPlayerHistory from "@/common/player/history";
+import RendererImageConstants from "@/common/constants/image";
+import TrackList from "@/common/components/display/track_list";
+import type {
+  TrackListRef,
+  TrackListClickFunc,
+  TrackListPlayableManager
+} from "@/common/components/display/track_list";
 
 import Header from "./header";
 
 export type HistoryRef = {
-  tracks: NeteaseHistoryRecord[];
-  totalTracks: RefObject<NeteaseHistoryRecord[]>;
-  trackListRef: RefObject<Nullable<TrackListRef>>;
-  currentVisibleItemIndex: RefObject<number>;
   scrollTop: NormalFunc;
   fastLocator: NormalFunc;
+  tracks: NeteaseHistoryRecord[];
+  currentVisibleItemIndex: RefObject<number>;
+  totalTracks: RefObject<NeteaseHistoryRecord[]>;
+  trackListRef: RefObject<Nullable<TrackListRef>>;
 };
 
 interface HistoryProps {
   ref?: Ref<HistoryRef>;
   className?: string;
+  activeTrackID?: number;
   historyList: NeteaseHistoryRecord[];
-  onPlay: TrackListClickFunc;
+  pageActionType?: "out" | "none" | "enter";
   heartManager: Optional<HeartManager>;
   playableManager: Optional<TrackListPlayableManager>;
-  addToPlaylistNext: NormalFunc<[track: NeteaseTrackRecord]>;
-  addToPlaylistLast: NormalFunc<[track: NeteaseTrackRecord]>;
-  addTrackToPlaylist: NormalFunc<[track: NeteaseTrackRecord]>;
-  openComment: NormalFunc<[track: NeteaseTrackRecord]>;
-  onClickAlbum: NormalFunc<[id: number]>;
-  onClickArtist: NormalFunc<[id: number]>;
   canScrollTop: Optional<NormalFunc<[enable: boolean]>>;
   canFastLocate: Optional<NormalFunc<[enable: boolean]>>;
-  activeTrackID?: number;
-  pageActionType?: "enter" | "out" | "none";
-  onPageAction?: NormalFunc;
+  addToPlaylistLast: NormalFunc<[track: NeteaseTrackRecord]>;
+  addToPlaylistNext: NormalFunc<[track: NeteaseTrackRecord]>;
+  addTrackToPlaylist: NormalFunc<[track: NeteaseTrackRecord]>;
+  openComment: NormalFunc<[track: NeteaseTrackRecord]>;
   setIsTyping?: NormalFunc<[tying: boolean]>;
+  onPageAction?: NormalFunc;
+  onPlay: TrackListClickFunc;
+  onClickAlbum: NormalFunc<[id: number]>;
+  onClickArtist: NormalFunc<[id: number]>;
 }
 
 const History: FC<HistoryProps> = ({
   ref,
   className,
-  historyList,
-  onPlay,
-  heartManager,
-  playableManager,
-  addToPlaylistNext,
-  addToPlaylistLast,
-  addTrackToPlaylist,
-  openComment,
-  onClickAlbum,
-  onClickArtist,
-  canScrollTop,
-  canFastLocate,
   activeTrackID,
   pageActionType,
+  heartManager,
+  playableManager,
+  canScrollTop,
+  canFastLocate,
+  addToPlaylistLast,
+  addToPlaylistNext,
+  addTrackToPlaylist,
+  openComment,
+  setIsTyping,
+  onPlay,
+  onClickAlbum,
   onPageAction,
-  setIsTyping
+  onClickArtist,
+  historyList
 }) => {
   const [tracks, setTracks] = useState<NeteaseHistoryRecord[]>([]);
   const totalTracks = useRef<NeteaseHistoryRecord[]>([]);
@@ -114,7 +114,7 @@ const History: FC<HistoryProps> = ({
   const scrollTop = useRef(() => trackListRef.current?.scrollToItem(0)).current;
   // 封面预缓存
   const coverSize = RendererImageConstants.PlaylistPageTrackCoverSize;
-  const { currentVisibleItemIndex, onRangeUpdate } = useTrackCoverPreload({
+  const { onRangeUpdate, currentVisibleItemIndex } = useTrackCoverPreload({
     totalTracks,
     visibleCount: tracks.length,
     canScrollTop,
@@ -162,28 +162,28 @@ const History: FC<HistoryProps> = ({
   return (
     <div className={className}>
       <Header
+        setIsTyping={setIsTyping}
         count={historyList.length}
         searchTracks={searchTracks}
-        setIsTyping={setIsTyping}
         pageActionType={pageActionType}
         onPageAction={onPageAction}
       />
       <div className="w-full h-full pb-18 relative">
         <TrackList
           ref={trackListRef}
-          tracks={tracks}
           id={null}
           type="history"
+          tracks={tracks}
+          emptyTips="暂无播放记录"
           activeID={activeTrackID}
-          onClick={onPlay}
-          onContext={onContextMenu}
-          onRangeUpdate={onRangeUpdate}
-          onClickAlbum={onClickAlbum}
-          onClickArtist={onClickArtist}
+          trackCoverSize={coverSize}
           heartManager={heartManager}
           playableManager={playableManager}
-          trackCoverSize={coverSize}
-          emptyTips="暂无播放记录"
+          onClick={onPlay}
+          onContext={onContextMenu}
+          onClickAlbum={onClickAlbum}
+          onClickArtist={onClickArtist}
+          onRangeUpdate={onRangeUpdate}
         />
       </div>
     </div>

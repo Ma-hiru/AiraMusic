@@ -1,9 +1,9 @@
-import type { FC } from "react";
 import { cx } from "@emotion/css";
+import type { FC } from "react";
 
 interface DividerProps {
-  className?: string;
   reverse?: boolean;
+  className?: string;
 }
 
 const Divider: FC<DividerProps> = ({ className, reverse }) => {

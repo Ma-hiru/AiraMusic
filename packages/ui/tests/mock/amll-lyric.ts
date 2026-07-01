@@ -1,16 +1,16 @@
 type AMLLyricLine = {
-  words: {
-    word: string;
-    romanWord: string;
-    startTime: number;
-    endTime: number;
-  }[];
-  translatedLyric: string;
-  romanLyric: string;
   isBG: boolean;
+  endTime: number;
   isDuet: boolean;
   startTime: number;
-  endTime: number;
+  romanLyric: string;
+  translatedLyric: string;
+  words: {
+    word: string;
+    endTime: number;
+    romanWord: string;
+    startTime: number;
+  }[];
 };
 
 type TTMLMock = {

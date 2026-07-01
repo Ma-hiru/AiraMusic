@@ -1,25 +1,26 @@
-import { type ChangeEvent, type FC, useCallback, useEffect, useRef, useState } from "react";
 import { cx } from "@emotion/css";
-import { Globe, ImagePlus, Lock } from "lucide-react";
+import { Lock, Globe, ImagePlus } from "lucide-react";
+import { useRef, type FC, useState, useEffect, useCallback, type ChangeEvent } from "react";
+import { Log } from "@/common/lib/log";
 import { NeteaseAPIPlaylist } from "@/common/netease/api";
 import { NeteaseServicesPlaylist } from "@/common/netease/services";
 import { type NeteasePlaylist, NeteasePlaylistSummary } from "@/common/netease/models";
-import { Log } from "@/common/lib/log";
-import type { ModalRender } from "./modal-provider";
 import AppToast from "@/common/components/display/toast";
+
 import AppModal from "./use";
+import type { ModalRender } from "./modal-provider";
 
 /** 标签上限 */
 const MAX_TAGS = 3;
 
 export function createPlaylistEditModal({
-  playlist,
   onSaved,
-  onTyping
+  onTyping,
+  playlist
 }: {
   playlist: NeteasePlaylist;
-  onSaved?: NormalFunc<[modifiedCover: boolean]>;
   onTyping: NormalFunc<[typing: boolean]>;
+  onSaved?: NormalFunc<[modifiedCover: boolean]>;
 }): ModalRender {
   return {
     title: "编辑歌单",
@@ -32,9 +33,9 @@ export function createPlaylistEditModal({
 // eslint-disable-next-line react-refresh/only-export-components
 const PlaylistEditForm: FC<{
   playlist: NeteasePlaylist;
-  onSaved?: NormalFunc<[modifiedCover: boolean]>;
   onTyping: NormalFunc<[typing: boolean]>;
-}> = ({ playlist, onSaved, onTyping }) => {
+  onSaved?: NormalFunc<[modifiedCover: boolean]>;
+}> = ({ onSaved, onTyping, playlist }) => {
   const [name, setName] = useState(playlist.name);
   const [desc, setDesc] = useState(playlist.description ?? "");
   const [tags, setTags] = useState<string[]>(() => [...(playlist.tags ?? [])]);
@@ -151,15 +152,15 @@ const PlaylistEditForm: FC<{
 
   return (
     <div className="flex flex-col gap-4 text-[13px]">
-      <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={onPickFile} />
+      <input ref={fileRef} className="hidden" type="file" accept="image/*" onChange={onPickFile} />
       <div className="flex gap-4 items-center">
         {/* 封面 */}
         <button
-          type="button"
+          className="group relative aspect-square size-33 shrink-0 overflow-hidden rounded-lg bg-white/10 outline-none"
           title="更换封面"
-          onClick={() => fileRef.current?.click()}
-          className="group relative aspect-square size-33 shrink-0 overflow-hidden rounded-lg bg-white/10 outline-none">
-          <img src={preview} alt={name} className="size-full object-cover" />
+          type="button"
+          onClick={() => fileRef.current?.click()}>
+          <img className="size-full object-cover" alt={name} src={preview} />
           <span
             className="
               absolute inset-0 flex flex-col items-center justify-center gap-1
@@ -172,28 +173,28 @@ const PlaylistEditForm: FC<{
         {/* 名称 + 简介 */}
         <div className="flex min-w-0 flex-1 flex-col gap-3">
           <input
-            value={name}
-            maxLength={40}
-            placeholder="歌单名称"
-            onFocus={() => onTyping(true)}
-            onBlur={() => onTyping(false)}
-            onChange={(e) => setName(e.target.value)}
             className="
               w-full rounded-md border border-white/15 bg-white/10 px-3 py-2 font-bold
               outline-none transition-colors focus:border-primary
             "
+            value={name}
+            maxLength={40}
+            placeholder="歌单名称"
+            onBlur={() => onTyping(false)}
+            onFocus={() => onTyping(true)}
+            onChange={(e) => setName(e.target.value)}
           />
           <textarea
-            value={desc}
-            maxLength={1000}
-            onFocus={() => onTyping(true)}
-            onBlur={() => onTyping(false)}
-            placeholder="歌单简介"
-            onChange={(e) => setDesc(e.target.value)}
             className="
               h-20 w-full resize-none rounded-md border border-white/15 bg-white/10 px-3 py-2
               outline-none transition-colors scrollbar scrollbar-show focus:border-primary
             "
+            value={desc}
+            maxLength={1000}
+            placeholder="歌单简介"
+            onBlur={() => onTyping(false)}
+            onFocus={() => onTyping(true)}
+            onChange={(e) => setDesc(e.target.value)}
           />
         </div>
       </div>
@@ -214,12 +215,12 @@ const PlaylistEditForm: FC<{
               return (
                 <button
                   key={tag}
-                  type="button"
-                  onClick={() => toggleTag(tag)}
                   className={cx(
                     "rounded-md px-2 py-1 text-[11px] font-bold transition-all duration-300",
                     active ? "bg-primary text-primary-text" : "bg-white/10 hover:bg-white/20"
-                  )}>
+                  )}
+                  type="button"
+                  onClick={() => toggleTag(tag)}>
                   {tag}
                 </button>
               );
@@ -246,31 +247,31 @@ const PlaylistEditForm: FC<{
           (confirmingPublic ? (
             <span className="flex items-center gap-2">
               <button
-                type="button"
-                disabled={settingPublic}
-                onClick={onSetPublic}
                 className="
                   rounded-md bg-primary px-3 py-1 font-bold text-primary-text
                   transition-all active:scale-96 disabled:opacity-50
-                ">
+                "
+                type="button"
+                disabled={settingPublic}
+                onClick={onSetPublic}>
                 {settingPublic ? "处理中..." : "确认公开（不可撤销）"}
               </button>
               <button
+                className="rounded-md px-3 py-1 font-bold hover:bg-white/10 transition-all active:scale-96 disabled:opacity-50"
                 type="button"
                 disabled={settingPublic}
-                onClick={() => setConfirmingPublic(false)}
-                className="rounded-md px-3 py-1 font-bold hover:bg-white/10 transition-all active:scale-96 disabled:opacity-50">
+                onClick={() => setConfirmingPublic(false)}>
                 取消
               </button>
             </span>
           ) : (
             <button
-              type="button"
-              onClick={() => setConfirmingPublic(true)}
               className="
                 rounded-md px-3 py-1 font-bold hover:text-primary-text hover:bg-primary
                 transition-all active:scale-96
-              ">
+              "
+              type="button"
+              onClick={() => setConfirmingPublic(true)}>
               设为公开
             </button>
           ))}
@@ -278,13 +279,13 @@ const PlaylistEditForm: FC<{
       {/* 操作 */}
       <div className="flex justify-end gap-2">
         <button
-          type="button"
-          disabled={saving}
-          onClick={onSave}
           className="
             rounded-md px-4 py-1.5 font-bold hover:text-primary-text hover:bg-primary
             transition-all active:scale-96 disabled:opacity-50
-          ">
+          "
+          type="button"
+          disabled={saving}
+          onClick={onSave}>
           {saving ? "保存中..." : "保存"}
         </button>
       </div>

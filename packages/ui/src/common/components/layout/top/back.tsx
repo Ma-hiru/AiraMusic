@@ -1,23 +1,23 @@
-import { memo, useCallback, useEffect, useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { memo, useState, useEffect, useCallback } from "react";
 import { RoutePath } from "@/common/routes";
 import { useStableArray } from "@/common/hooks/use-stable-array";
 
 import NoDrag from "../drag/no-drag";
 
 interface TopBackProps<R extends RoutePath<any>> {
-  className?: string;
-  onClick?: NormalFunc;
-  exclude?: (keyof R)[];
   routePath?: R;
+  className?: string;
+  exclude?: (keyof R)[];
+  onClick?: NormalFunc;
 }
 
 const TopBack = <R extends RoutePath<any>>({
   className,
   onClick,
-  exclude = [],
-  routePath
+  routePath,
+  exclude = []
 }: TopBackProps<R>) => {
   const [show, setShow] = useState(true);
   const stableExclude = useStableArray(exclude);

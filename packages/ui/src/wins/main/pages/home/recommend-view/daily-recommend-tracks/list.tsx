@@ -1,13 +1,12 @@
-import { type FC, memo, type RefObject } from "react";
+import { memo, type FC, type RefObject } from "react";
 import { NeteaseTrack, NeteaseTrackRecord } from "@/common/netease/models";
 import RendererPlayerHandle from "@/wins/main/lib/handle";
 import RendererImageConstants from "@/common/constants/image";
-
 import HomeMediaCard from "@/common/components/layout/media-grid/card";
 
 interface RecommendTrackListProps {
-  recommend: NeteaseAPI.DailyRecommendTracksDailySong[];
   containerRef: RefObject<Nullable<HTMLDivElement>>;
+  recommend: NeteaseAPI.DailyRecommendTracksDailySong[];
 }
 
 const RecommendTrackList: FC<RecommendTrackListProps> = ({ recommend, containerRef }) => {
@@ -25,15 +24,7 @@ const RecommendTrackList: FC<RecommendTrackListProps> = ({ recommend, containerR
         <div key={song.id} className="snap-start">
           <HomeMediaCard
             className="size-full object-center aspect-square"
-            item={{
-              id: song.id,
-              shape: "square",
-              name: song.name,
-              nameClampLine: 1,
-              coverUrl: song.al.picUrl,
-              meta: song.ar.map((a) => a.name).join("/") ?? undefined,
-              badge: song.reason ?? undefined
-            }}
+            coverSize={RendererImageConstants.HomePageTrackCoverSize}
             onClick={() => {
               if (RendererPlayerHandle.player.current.track?.id === song.id) return;
               const track = new NeteaseTrackRecord({
@@ -44,7 +35,15 @@ const RecommendTrackList: FC<RecommendTrackListProps> = ({ recommend, containerR
               RendererPlayerHandle.player.playlist.add(track, "next");
               RendererPlayerHandle.player.playlist.jump(track);
             }}
-            coverSize={RendererImageConstants.HomePageTrackCoverSize}
+            item={{
+              id: song.id,
+              shape: "square",
+              name: song.name,
+              nameClampLine: 1,
+              coverUrl: song.al.picUrl,
+              meta: song.ar.map((a) => a.name).join("/") ?? undefined,
+              badge: song.reason ?? undefined
+            }}
           />
         </div>
       ))}

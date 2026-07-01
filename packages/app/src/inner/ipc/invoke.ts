@@ -1,17 +1,17 @@
-import { app, BrowserWindow, dialog } from "electron";
-import { MainWindowManager } from "@/lib/window-manager";
-import { MainRuntime } from "@/lib/runtime";
-import { MainScreenResolver } from "@/lib/screen-resolver";
-import { MainStoreForConfig, MainStoreForRenderer } from "@/lib/key-value-store";
+import { app, dialog, BrowserWindow } from "electron";
 import { Log } from "@/lib/log";
-import { MainCacheStoreConstants } from "@/constants/store";
-import { mergeCacheStoreConfig } from "@/utils/merge";
 import { MainHandle } from "@/lib/handle";
-import type { InvokeHandlers } from "@mahiru/ipc/types";
-import Dns from "node:dns/promises";
+import { MainRuntime } from "@/lib/runtime";
+import { mergeCacheStoreConfig } from "@/utils/merge";
+import { MainWindowManager } from "@/lib/window-manager";
+import { MainScreenResolver } from "@/lib/screen-resolver";
+import { MainCacheStoreConstants } from "@/constants/store";
+import { MainStoreForConfig, MainStoreForRenderer } from "@/lib/key-value-store";
 import Net from "node:net";
 import Https from "node:https";
 import Fs from "node:fs/promises";
+import Dns from "node:dns/promises";
+import type { InvokeHandlers } from "@mahiru/ipc/types";
 
 export const invokeHandlers: InvokeHandlers = {
   invoke_fs_select: async (_, type) => {
@@ -50,7 +50,7 @@ export const invokeHandlers: InvokeHandlers = {
       };
     }
   },
-  invoke_fs_save: async (_, { buffer, name }) => {
+  invoke_fs_save: async (_, { name, buffer }) => {
     const { canceled, filePath } = await dialog.showSaveDialog({
       title: "保存文件",
       defaultPath: name

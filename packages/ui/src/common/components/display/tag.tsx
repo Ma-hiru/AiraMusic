@@ -1,12 +1,12 @@
-import { type FC, memo, type ReactNode } from "react";
 import { cx } from "@emotion/css";
+import { memo, type FC, type ReactNode } from "react";
 
 interface TagProps {
   text: ReactNode;
   className?: string;
 }
 
-const Tag: FC<TagProps> = ({ text, className }) => {
+const Tag: FC<TagProps> = ({ className, text }) => {
   return (
     <div
       className={cx(

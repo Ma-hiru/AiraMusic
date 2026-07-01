@@ -1,4 +1,4 @@
-import { type RefObject, useEffect } from "react";
+import { useEffect, type RefObject } from "react";
 import { useUpdate } from "@/common/hooks/use-update";
 
 export type MarqueeOpts = {
@@ -20,7 +20,7 @@ export type MarqueeOpts = {
  * 尺寸或内容变化由 ResizeObserver 触发重建（observe 时会立即回调一次，无需手动初始化）。
  */
 export function useMarquee(containerRef: RefObject<Nullable<HTMLElement>>, opts: MarqueeOpts = {}) {
-  const { speed = 30, pingPong = true, pauseOnHover = true, gapDuration = 1000 } = opts;
+  const { speed = 30, pingPong = true, gapDuration = 1000, pauseOnHover = true } = opts;
   const update = useUpdate();
 
   useEffect(() => {

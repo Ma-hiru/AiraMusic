@@ -1,34 +1,35 @@
 import { cx } from "@emotion/css";
-import { type ReactNode, useMemo } from "react";
+import { useMemo, type ReactNode } from "react";
 import type { ModalRender } from "@/common/components/display/modal/modal-provider";
+
 import AppModal from "./use";
 
 export function createDialogModal({
-  title,
-  body,
-  footer,
   onCancel,
   onConfirm,
+  onConfirmCancel,
+  body,
+  title,
   width,
+  footer,
   height,
   important,
-  onConfirmCancel,
   cancelText,
   confirmText,
   footerExtraElement
 }: {
   title: string;
-  body: ReactNode;
-  footerExtraElement?: ReactNode;
-  footer?: ReactNode;
-  onConfirm?: NormalFunc;
-  confirmText?: string;
-  cancelText?: string;
-  onConfirmCancel?: NormalFunc;
-  onCancel?: NormalFunc;
   width?: number;
+  body: ReactNode;
   height?: number;
+  footer?: ReactNode;
+  cancelText?: string;
   important?: boolean;
+  confirmText?: string;
+  onCancel?: NormalFunc;
+  onConfirm?: NormalFunc;
+  onConfirmCancel?: NormalFunc;
+  footerExtraElement?: ReactNode;
 }): ModalRender {
   return {
     title,
@@ -36,12 +37,12 @@ export function createDialogModal({
       <Dialog
         body={body}
         footer={footer}
-        onConfirm={onConfirm}
+        important={important}
         cancelText={cancelText}
         confirmText={confirmText}
-        onConfirmCancel={onConfirmCancel}
-        important={important}
         footerExtraElement={footerExtraElement}
+        onConfirm={onConfirm}
+        onConfirmCancel={onConfirmCancel}
       />
     ),
     onClose: onCancel,
@@ -53,22 +54,22 @@ export function createDialogModal({
 // eslint-disable-next-line react-refresh/only-export-components
 const Dialog = ({
   onConfirm,
+  onConfirmCancel,
   body,
   footer,
   important,
-  onConfirmCancel,
-  footerExtraElement,
   cancelText,
-  confirmText
+  confirmText,
+  footerExtraElement
 }: {
-  onConfirm?: NormalFunc;
   body?: ReactNode;
   footer?: ReactNode;
+  cancelText?: string;
   important?: boolean;
+  confirmText?: string;
+  onConfirm?: NormalFunc;
   onConfirmCancel?: NormalFunc;
   footerExtraElement?: ReactNode;
-  confirmText?: string;
-  cancelText?: string;
 }) => {
   const renderBody = useMemo(() => {
     if (typeof body !== "string") return body;
@@ -84,15 +85,15 @@ const Dialog = ({
       <footer className="w-full flex flex-row justify-end items-center gap-2 mt-3">
         {footerExtraElement}
         <button
-          onClick={() => {
-            onConfirmCancel?.();
-            AppModal.close();
-          }}
           className="
             px-2.5 py-1 rounded-md cursor-pointer text-sm
             transition-all ease-in-out duration-300
             active:scale-96 hover:opacity-50
-          ">
+          "
+          onClick={() => {
+            onConfirmCancel?.();
+            AppModal.close();
+          }}>
           {cancelText ?? "取消"}
         </button>
         <button

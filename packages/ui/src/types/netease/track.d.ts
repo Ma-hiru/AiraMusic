@@ -11,19 +11,19 @@ namespace NeteaseAPI {
     additionalTitle: null;
     /** 专辑，如果是DJ节目(dj_type != 0)或者无专辑信息(single == 1)，则专辑id为0 */
     al: Al;
-    alg: null;
     ar: Ar[];
+    alg: null;
     awardTags: null;
     /** None或如"04", "1/2", "3", "null"的字符串，表示歌曲属于专辑中第几张CD，对应音频文件的Tag */
-    cd: string | null | "null";
     cf: string;
-    copyright: number;
     cp: number;
     crbt: null;
-    displayReason: null;
-    displayTags: null;
     djId: number;
+    copyright: number;
+    displayTags: null;
+    displayReason: null;
     entertainmentTags: null;
+    cd: null | "null" | string;
     /**
      * @enum
      *   0: 免费或无版权
@@ -32,10 +32,10 @@ namespace NeteaseAPI {
      *   8: 非会员可免费播放低音质，会员可播放高音质及下载
      * @note fee 为 1 或 8 的歌曲均可单独购买 2 元单曲
      * */
-    fee: 0 | 1 | 4 | 8;
+    mst: number;
     ftype: number;
     mainTitle: null;
-    mst: number;
+    fee: 0 | 1 | 4 | 8;
     /** 非零表示有MV ID */
     mv: number;
     /** 表示歌曲属于CD中第几曲，0表示没有这个字段，对应音频文件的Tag */
@@ -54,17 +54,17 @@ namespace NeteaseAPI {
     pst: number;
     pubDJProgramData: null;
     /** 毫秒为单位的Unix时间戳 */
+    rurl: null;
+    st: number;
+    rtUrl: null;
+    s_id: number;
+    rtype: number;
+    single: number;
+    rtUrls: string[];
+    rt: null | string;
+    songJumpInfo: null;
     publishTime: number;
     resourceState: boolean;
-    rt: null | string;
-    rtUrl: null;
-    rtUrls: string[];
-    rtype: number;
-    rurl: null;
-    s_id: number;
-    single: number;
-    songJumpInfo: null;
-    st: number;
 
     /**
      * @author tuxzz[https://github.com/Binaryify/NeteaseCloudMusicApi/issues/1121#issuecomment-774438040]:
@@ -96,8 +96,8 @@ namespace NeteaseAPI {
   interface NeteaseTrackBase {
     id: number;
     /** 歌曲标题 */
-    name: string;
     dt: number;
+    name: string;
     /** 别名列表，第一个别名会被显示作副标题 */
     alia: string[];
     tns?: string[];
@@ -106,8 +106,8 @@ namespace NeteaseAPI {
       name: string;
     }[];
     al: {
-      picUrl: string;
       name: string;
+      picUrl: string;
     };
     /**
      * 一些歌曲属性，用按位与操作获取对应位置的值
@@ -120,12 +120,12 @@ namespace NeteaseAPI {
      *   专辑信息的mark字段也同理
      *   例子:id 1859245776 和 1859306637 为同一首歌，前者 mark & 1048576 == 1048576,后者 mark &   1048576 == 0，因此前者是脏版。
      * */
+    h: H | null;
+    l: L | null;
+    m: M | null;
     mark: number;
-    sq: null | Sq;
-    h: null | H;
-    hr: null | Hr;
-    l: null | L;
-    m: null | M;
+    hr: Hr | null;
+    sq: Sq | null;
   }
 
   interface NeteaseTrackPrivilege extends NeteaseSongPrivilege {
@@ -153,49 +153,49 @@ namespace NeteaseAPI {
     flag?: number;
     /** 其余仍会影响可播状态但暂未明确定义的字段。 */
     bd: null;
-    chargeInfoList: ChargeInfoList[];
-    code: number;
     cp: number;
+    code: number;
+    chargeInfoList: ChargeInfoList[];
     /** 当前用户的该歌曲最高下载音质 */
-    dlLevel: string;
     dlLevels: null;
+    dlLevel: string;
     downloadMaxbr: number;
     downloadMaxBrLevel: string;
     /** 免费用户的该歌曲播放音质 */
     flLevel: string;
-    freeTrialPrivilege: FreeTrialPrivilege;
     ignoreCache: null;
+    freeTrialPrivilege: FreeTrialPrivilege;
     /** 歌曲最高音质 */
-    maxBrLevel: string;
-    message: null;
-    paidBigBang: boolean;
     pc: null;
+    message: null;
     playMaxbr: number;
+    maxBrLevel: string;
+    paidBigBang: boolean;
     playMaxBrLevel: string;
     /** 当前用户的该歌曲最高试听音质 */
-    plLevel: string;
-    plLevels: null;
-    preSell: boolean;
-    realPayed: number;
-    rightSource: number;
     rscl: null;
     sp: number;
     subp: number;
+    plLevels: null;
+    plLevel: string;
+    preSell: boolean;
+    realPayed: number;
+    rightSource: number;
   }
 
   interface ChargeInfoList {
-    chargeMessage: null;
-    chargeType: number;
-    chargeUrl: null;
     rate: number;
+    chargeUrl: null;
+    chargeType: number;
+    chargeMessage: null;
   }
 
   interface FreeTrialPrivilege {
-    cannotListenReason: null;
     listenType: null;
     playReason: null;
     resConsumable: boolean;
     userConsumable: boolean;
+    cannotListenReason: null;
   }
 
   interface NeteaseQualityLevels {
@@ -205,46 +205,46 @@ namespace NeteaseAPI {
   /** 高质量文件信息 */
   interface H extends NeteaseQualityLevels {
     br: number;
-    fid: number;
-    size: number;
-    sr?: number;
     vd: number;
+    fid: number;
+    sr?: number;
+    size: number;
   }
 
   /** 低质量文件信息 */
   interface L extends NeteaseQualityLevels {
     br: number;
-    fid: number;
-    size: number;
-    sr?: number;
     vd: number;
+    fid: number;
+    sr?: number;
+    size: number;
   }
 
   /** 中质量文件信息 */
   interface M extends NeteaseQualityLevels {
     br: number;
-    fid: number;
-    size: number;
-    sr?: number;
     vd: number;
+    fid: number;
+    sr?: number;
+    size: number;
   }
 
   /** 无损质量文件信息 */
   interface Sq extends NeteaseQualityLevels {
     br: number;
-    fid: number;
-    size: number;
-    sr?: number;
     vd: number;
+    fid: number;
+    sr?: number;
+    size: number;
   }
 
   /** Hi-Res质量文件信息 */
   interface Hr extends NeteaseQualityLevels {
     br: number;
-    fid: number;
-    size: number;
-    sr?: number;
     vd: number;
+    fid: number;
+    sr?: number;
+    size: number;
   }
 
   interface NeteaseDailyRecommendTracksResponse extends NeteaseAPIResponse {
@@ -252,222 +252,222 @@ namespace NeteaseAPI {
   }
 
   interface DailyRecommendTracksData {
+    demote: boolean;
+    fromCache: boolean;
+    orderSongs: string[];
+    mvResourceInfos: null;
     algReturnDemote: boolean;
     dailyRecommendInfo: null;
     dailySongs: DailyRecommendTracksDailySong[];
-    demote: boolean;
-    fromCache: boolean;
-    mvResourceInfos: null;
-    orderSongs: string[];
     recommendReasons: DailyRecommendTracksRecommendReason[];
   }
 
   interface DailyRecommendTracksDailySong {
-    a: null;
-    additionalTitle: null | string;
-    al: Al;
-    alg: string;
-    alia: string[];
-    ar: Ar[];
-    awardTags: null;
-    cd: string;
-    cf: string;
-    copyright: number;
-    cp: number;
-    crbt: null;
-    displayTags: null;
-    djId: number;
-    dt: number;
-    entertainmentTags: null;
-    fee: 0 | 1 | 4 | 8;
-    ftype: number;
     h: H;
-    hr: null | Hr;
-    id: number;
     l: L;
     m: M;
-    mainTitle: null | string;
-    mark: number;
-    mst: number;
+    al: Al;
+    sq: Sq;
+    a: null;
+    ar: Ar[];
+    t: number;
+    v: number;
+    cd: string;
+    cf: string;
+    cp: number;
+    crbt: null;
+    dt: number;
+    id: number;
     mv: number;
-    name: string;
     no: number;
+    rurl: null;
+    st: number;
+    alg: string;
+    mst: number;
+    pop: number;
+    pst: number;
+    rtUrl: null;
+    djId: number;
+    mark: number;
+    name: string;
+    s_id: number;
+    ftype: number;
+    hr: Hr | null;
+    rtype: number;
+    tns: string[];
+    alia: string[];
+    single: number;
+    awardTags: null;
+    version: number;
+    rtUrls: string[];
+    tagPicList: null;
+    copyright: number;
+    displayTags: null;
+    rt: null | string;
+    fee: 0 | 1 | 4 | 8;
+    songJumpInfo: null;
+    publishTime: number;
     noCopyrightRcmd: null;
+    reason: null | string;
+    resourceState: boolean;
+    entertainmentTags: null;
+    mainTitle: null | string;
     originCoverType: 0 | 1 | 2;
     originSongSimpleData: null;
-    pop: number;
-    privilege: NeteaseTrackPrivilege;
-    pst: number;
-    publishTime: number;
-    reason: null | string;
+    additionalTitle: null | string;
     recommendReason: null | string;
-    resourceState: boolean;
-    rt: null | string;
-    rtUrl: null;
-    rtUrls: string[];
-    rtype: number;
-    rurl: null;
-    s_id: number;
-    single: number;
-    songJumpInfo: null;
-    sq: Sq;
-    st: number;
-    t: number;
-    tagPicList: null;
-    tns: string[];
-    v: number;
-    version: number;
+    privilege: NeteaseTrackPrivilege;
   }
 
   interface ChargeInfoList {
-    chargeMessage: null;
-    chargeType: number;
-    chargeUrl: null;
     rate: number;
+    chargeUrl: null;
+    chargeType: number;
+    chargeMessage: null;
   }
 
   interface DailyRecommendTracksRecommendReason {
     reason: string;
-    reasonId: string;
     songId: number;
     targetUrl: null;
+    reasonId: string;
   }
 
   interface NeteaseTrackChorusResponse extends NeteaseAPIResponse {
-    chorus: NeteaseChorusData[];
     data: NeteaseChorusData[];
+    chorus: NeteaseChorusData[];
   }
 
   interface NeteaseChorusData {
-    endTime: number;
     id: number;
+    endTime: number;
     startTime: number;
     ugcLocked: number;
   }
 
   interface NeteasePersonalFMResponse extends NeteaseAPIResponse {
-    data: PersonalFMTrack[];
     popAdjust: boolean;
+    data: PersonalFMTrack[];
   }
 
   interface PersonalFMTrack {
-    album: {
-      alias: string[];
-      artist: PurpleArtist;
-      artists: FluffyArtist[];
-      blurPicUrl: string;
-      briefDesc: string;
-      commentThreadId: string;
-      company: string;
-      companyId: number;
-      copyrightId: number;
-      description: string;
-      id: number;
-      name: string;
-      pic: number;
-      picId: number;
-      picId_str: string;
-      picUrl: string;
-      publishTime: number;
-      size: number;
-      songs: string[];
-      status: number;
-      subType: string;
-      tags: string;
-      transName: null;
-      type: string;
-    };
-    alg: string;
-    alias: string[];
-    artists: DatumArtist[];
-    audition: null;
-    bMusic: BMusic;
-    commentThreadId: string;
-    copyFrom: string;
-    copyright: number;
-    copyrightId: number;
     crbt: null;
-    dayPlays: number;
-    disc: string;
-    duration: number;
-    fee: number;
-    ftype: number;
-    hearTime: number;
-    hMusic: HMusic;
     id: number;
-    lMusic: LMusic;
-    mMusic: MMusic;
+    no: number;
+    rurl: null;
+    sign: null;
+    alg: string;
+    fee: number;
+    rtUrl: null;
+    disc: string;
     mp3Url: null;
     mvid: number;
     name: string;
-    no: number;
-    playedNum: number;
-    popularity: number;
+    ftype: number;
+    rtype: number;
+    score: number;
+    audition: null;
+    bMusic: BMusic;
+    hMusic: HMusic;
+    lMusic: LMusic;
+    mMusic: MMusic;
+    status: number;
+    alias: string[];
+    reason?: string;
+    copyFrom: string;
+    dayPlays: number;
+    duration: number;
+    hearTime: number;
     position: number;
+    rtUrls: string[];
+    starred: boolean;
+    copyright: number;
+    playedNum: number;
+    reasonId?: string;
+    popularity: number;
+    starredNum: number;
+    copyrightId: number;
+    publishTime: number;
+    transNames?: string[];
+    artists: DatumArtist[];
+    commentThreadId: string;
+    ringtone: null | string;
+    transName: null | string;
+    album: {
+      id: number;
+      pic: number;
+      name: string;
+      size: number;
+      tags: string;
+      type: string;
+      picId: number;
+      picUrl: string;
+      status: number;
+      alias: string[];
+      company: string;
+      songs: string[];
+      subType: string;
+      transName: null;
+      briefDesc: string;
+      companyId: number;
+      picId_str: string;
+      blurPicUrl: string;
+      copyrightId: number;
+      description: string;
+      publishTime: number;
+      artist: PurpleArtist;
+      artists: FluffyArtist[];
+      commentThreadId: string;
+    };
     privilege: {
       bd: null;
-      chargeInfoList: {
-        chargeMessage: null;
-        chargeType: number;
-        chargeUrl: null;
-        rate: number;
-      }[];
-      code: number;
-      cp: number;
-      cs: boolean;
-      dl: number;
-      dlLevel: string;
-      dlLevels: null;
-      downloadMaxbr: number;
-      downloadMaxBrLevel: string;
-      fee: number;
-      fl: number;
-      flag: number;
-      flLevel: string;
-      freeTrialPrivilege: {
-        cannotListenReason: null;
-        freeLimitTagType: null;
-        listenType: null;
-        playReason: null;
-        resConsumable: boolean;
-        userConsumable: boolean;
-      };
-      id: number;
-      ignoreCache: null;
-      maxbr: number;
-      maxBrLevel: string;
-      message: null;
-      paidBigBang: boolean;
-      payed: number;
       pc: null;
+      cp: number;
+      dl: number;
+      fl: number;
+      id: number;
       pl: number;
-      playMaxbr: number;
-      playMaxBrLevel: string;
-      plLevel: string;
-      plLevels: null;
-      preSell: boolean;
-      realPayed: number;
-      rightSource: number;
       rscl: null;
       sp: number;
       st: number;
+      cs: boolean;
+      fee: number;
+      code: number;
+      flag: number;
       subp: number;
+      maxbr: number;
+      message: null;
+      payed: number;
+      dlLevels: null;
+      plLevels: null;
       toast: boolean;
+      dlLevel: string;
+      flLevel: string;
+      plLevel: string;
+      preSell: boolean;
+      ignoreCache: null;
+      playMaxbr: number;
+      realPayed: number;
+      maxBrLevel: string;
+      rightSource: number;
+      paidBigBang: boolean;
+      downloadMaxbr: number;
+      playMaxBrLevel: string;
+      downloadMaxBrLevel: string;
+      chargeInfoList: {
+        rate: number;
+        chargeUrl: null;
+        chargeType: number;
+        chargeMessage: null;
+      }[];
+      freeTrialPrivilege: {
+        listenType: null;
+        playReason: null;
+        freeLimitTagType: null;
+        resConsumable: boolean;
+        userConsumable: boolean;
+        cannotListenReason: null;
+      };
     };
-    publishTime: number;
-    reason?: string;
-    reasonId?: string;
-    ringtone: null | string;
-    rtUrl: null;
-    rtUrls: string[];
-    rtype: number;
-    rurl: null;
-    score: number;
-    sign: null;
-    starred: boolean;
-    starredNum: number;
-    status: number;
-    transName: null | string;
-    transNames?: string[];
   }
 }

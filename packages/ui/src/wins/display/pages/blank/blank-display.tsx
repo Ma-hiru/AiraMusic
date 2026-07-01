@@ -1,11 +1,10 @@
-import { type FC, memo, useEffect } from "react";
+import { memo, type FC, useEffect } from "react";
 import { useBack } from "@/wins/display/ctx/back";
-import { RendererWindow } from "@/common/lib/window";
-import { useDisplayTitleRegister } from "@/wins/display/hooks/use-display-title";
-
-import AppMask from "@/common/components/fallback/app-mask";
-import { useRouterActive } from "@/common/hooks/use-router-active";
 import { RoutePathDisplay } from "@/common/routes";
+import { RendererWindow } from "@/common/lib/window";
+import { useRouterActive } from "@/common/hooks/use-router-active";
+import { useDisplayTitleRegister } from "@/wins/display/hooks/use-display-title";
+import AppMask from "@/common/components/fallback/app-mask";
 
 const BlankDisplay: FC<object> = () => {
   const { back } = useBack();

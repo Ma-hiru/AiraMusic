@@ -1,5 +1,5 @@
-import { join } from "node:path";
 import { app } from "electron";
+import { join } from "node:path";
 import { MainRuntime } from "@/lib/runtime";
 
 const isDev = MainRuntime.isDev;

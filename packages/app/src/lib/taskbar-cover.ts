@@ -1,9 +1,9 @@
 import { Log } from "@/lib/log";
 import { MainIPC } from "@mahiru/ipc/main";
-import { MainWindowManager } from "@/lib/window-manager";
 import { MainNativeAddon } from "@/lib/native-addon";
+import { MainWindowManager } from "@/lib/window-manager";
 import { getThumbarIcons, type TaskbarButtonIcon } from "@/utils/thumbar-button";
-import type { BrowserWindow, ThumbarButton, NativeImage } from "electron";
+import type { NativeImage, BrowserWindow, ThumbarButton } from "electron";
 
 const WM_DWMSENDICONICLIVEPREVIEWBITMAP = 0x0326;
 
@@ -20,7 +20,7 @@ export class MainTaskBarCoverPreview {
   private static livePreviewHooked = false;
   private static previewCapture: Nullable<Promise<void>> = null;
 
-  private static sendAction(action: "next" | "pause" | "play" | "previous") {
+  private static sendAction(action: "next" | "play" | "pause" | "previous") {
     MainIPC.MessageChannel.commit({
       type: "bus_dispatch_player_action",
       sender: "process",

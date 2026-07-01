@@ -1,26 +1,25 @@
 import { cx } from "@emotion/css";
-import { useMMCQ } from "@/wins/main/hooks/use-mmcq";
-import { type FC, memo, useEffect, useLayoutEffect, useMemo } from "react";
-import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import {
-  backgroundCoverAtom,
-  mainColorAtom,
-  secondaryColorAtom,
-  textColorAtom,
-  textColorOnMainAtom,
-  textColorOnSecondaryAtom,
-  themeColorsAtom
-} from "@/wins/main/atoms/theme";
-import { useSettings } from "@/common/store/settings";
+import { useAtom, useSetAtom, useAtomValue } from "jotai";
+import { memo, type FC, useMemo, useEffect, useLayoutEffect } from "react";
+import { NeteaseImageSize } from "@/common/enum";
+import { RendererCache } from "@/common/lib/cache";
 import { RendererWindow } from "@/common/lib/window";
 import { NeteaseURL } from "@/common/netease/models";
-import { NeteaseImageSize } from "@/common/enum";
+import { useMMCQ } from "@/wins/main/hooks/use-mmcq";
+import { useSettings } from "@/common/store/settings";
 import { playModalAtom } from "@/wins/main/atoms/layout";
-import { RendererCache } from "@/common/lib/cache";
+import {
+  mainColorAtom,
+  textColorAtom,
+  themeColorsAtom,
+  secondaryColorAtom,
+  backgroundCoverAtom,
+  textColorOnMainAtom,
+  textColorOnSecondaryAtom
+} from "@/wins/main/atoms/theme";
 import RendererTheme from "@/common/player/ui";
-
-import AcrylicBackground from "@/common/components/display/acrylic-background";
 import RendererPlayerHandle from "@/wins/main/lib/handle";
+import AcrylicBackground from "@/common/components/display/acrylic-background";
 
 const Background: FC<{ className?: string; onLoaded?: NormalFunc }> = ({ className, onLoaded }) => {
   const setThemeColor = useSetAtom(themeColorsAtom);
@@ -110,15 +109,15 @@ const Background: FC<{ className?: string; onLoaded?: NormalFunc }> = ({ classNa
         className
       )}>
       <AcrylicBackground
-        fluid={settings.performance.useHomeFluid}
-        fluidPaused={paused}
-        fluidSpeed={settings.performance.homeFluidSpeed}
-        src={resolvedBackgroundCover ?? undefined}
-        themeColors={themeColors}
+        blur={60}
+        saturate={3}
         opacity={0.6}
         brightness={0.3}
-        saturate={3}
-        blur={60}
+        fluidPaused={paused}
+        themeColors={themeColors}
+        fluid={settings.performance.useHomeFluid}
+        src={resolvedBackgroundCover ?? undefined}
+        fluidSpeed={settings.performance.homeFluidSpeed}
         onLoaded={onLoaded}
       />
     </div>

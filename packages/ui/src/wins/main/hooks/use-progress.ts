@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import RendererPlayerHandle from "@/wins/main/lib/handle";
 
 export function useProgress() {

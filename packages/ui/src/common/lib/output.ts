@@ -1,5 +1,5 @@
-import { Listenable } from "@/common/utils/listenable";
 import { Log } from "@/common/lib/log";
+import { Listenable } from "@/common/utils/listenable";
 
 class _RendererOutput extends Listenable {
   readonly DEFAULT_DEVICE_ID = "default";
@@ -61,7 +61,7 @@ class _RendererOutput extends Listenable {
   }
 
   public currentID(target: RendererAudioOutputTarget) {
-    const { audio, context, sinkId } = target;
+    const { audio, sinkId, context } = target;
     return this.readSinkId(context?.sinkId) || sinkId || audio.sinkId || this.DEFAULT_DEVICE_ID;
   }
 

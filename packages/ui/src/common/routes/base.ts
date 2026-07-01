@@ -1,6 +1,7 @@
-import { PlaylistPathUtils } from "./utils";
 import type { Location } from "react-router-dom";
-import type { PlaylistPathUtilsType, PlaylistProps, Props, RouteFields, RouteList } from "./type";
+
+import { PlaylistPathUtils } from "./utils";
+import type { Props, RouteList, RouteFields, PlaylistProps, PlaylistPathUtilsType } from "./type";
 
 type RoutePathInstance<T extends Props> = RoutePath<T> &
   RouteFields<T> & {

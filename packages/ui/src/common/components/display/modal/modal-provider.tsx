@@ -1,32 +1,33 @@
-import {
-  type CSSProperties,
-  type FC,
-  memo,
-  type ReactNode,
-  useCallback,
-  useEffect,
-  useRef,
-  useState
-} from "react";
-import { AnimatePresence, motion } from "motion/react";
 import { X } from "lucide-react";
 import { cx } from "@emotion/css";
+import { motion, AnimatePresence } from "motion/react";
+import {
+  memo,
+  useRef,
+  type FC,
+  useState,
+  useEffect,
+  useCallback,
+  type ReactNode,
+  type CSSProperties
+} from "react";
 import { useLatestRef } from "@/common/hooks/use-latest-ref";
-import { ensureInjectObject, useInject } from "@/common/utils/inject";
+import { useInject, ensureInjectObject } from "@/common/utils/inject";
+
 import AppModal from "./use";
 
 export type ModalRender = {
   title?: ReactNode;
-  subTitle?: ReactNode;
+  className?: string;
   content: ReactNode;
   footer?: ReactNode;
+  subTitle?: ReactNode;
+  closeOnMask?: boolean;
+  hiddenMaskBlur?: boolean;
+  contentClassName?: string;
   width?: CSSProperties["width"];
   height?: CSSProperties["height"];
-  closeOnMask?: boolean;
-  className?: string;
-  contentClassName?: string;
   onClose?: NormalFunc<[], void | boolean>;
-  hiddenMaskBlur?: boolean;
 };
 
 const ModalProvider: FC<{ className?: string }> = ({ className }) => {
@@ -94,12 +95,9 @@ const ModalProvider: FC<{ className?: string }> = ({ className }) => {
               className
             )}
             initial={{ opacity: 0 }}
-            animate={{ opacity: 1, transition: { duration: 0.3, ease: "easeOut" } }}
-            exit={{ opacity: 0, transition: { duration: 0.3, ease: "easeInOut" } }}>
+            exit={{ opacity: 0, transition: { duration: 0.3, ease: "easeInOut" } }}
+            animate={{ opacity: 1, transition: { duration: 0.3, ease: "easeOut" } }}>
             <motion.section
-              role="dialog"
-              aria-modal="true"
-              aria-label={typeof render.title === "string" ? render.title : "弹窗"}
               className={cx(
                 `
                 relative z-10 grid max-h-[min(86vh,720px)] w-full max-w-[calc(100vw-2rem)]
@@ -112,18 +110,21 @@ const ModalProvider: FC<{ className?: string }> = ({ className }) => {
                 width: render.width ?? 720,
                 height: render.height
               }}
+              role="dialog"
+              aria-modal="true"
               initial={{ opacity: 0, scale: 0.97, y: 24 }}
-              animate={{
-                opacity: 1,
-                scale: 1,
-                y: 0,
-                transition: { duration: 0.28, ease: [0.16, 1, 0.3, 1] }
-              }}
+              aria-label={typeof render.title === "string" ? render.title : "弹窗"}
               exit={{
                 opacity: 0,
                 scale: 0.95,
                 y: 18,
                 transition: { duration: 0.2, ease: "easeInOut" }
+              }}
+              animate={{
+                opacity: 1,
+                scale: 1,
+                y: 0,
+                transition: { duration: 0.28, ease: [0.16, 1, 0.3, 1] }
               }}>
               {!!(render.title || render.subTitle) && (
                 <header className="flex min-h-14 items-start justify-between gap-3 px-4 py-3">
@@ -140,14 +141,14 @@ const ModalProvider: FC<{ className?: string }> = ({ className }) => {
                     )}
                   </div>
                   <button
-                    type="button"
-                    aria-label="关闭弹窗"
-                    onClick={close}
                     className={`
                       flex size-8 shrink-0 items-center justify-center
                       transition-all duration-300 ease-in-out
                       hover:opacity-50 active:scale-95 cursor-pointer
-                    `}>
+                    `}
+                    type="button"
+                    aria-label="关闭弹窗"
+                    onClick={close}>
                     <X className="size-4" />
                   </button>
                 </header>

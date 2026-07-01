@@ -1,50 +1,49 @@
-import React, {
-  type FC,
-  type HTMLAttributes,
-  memo,
-  useCallback,
-  useEffect,
-  useMemo,
-  useState
-} from "react";
-import { css, cx } from "@emotion/css";
-import { AArrowDown, AArrowUp, LockKeyholeOpen, LucideLock, X } from "lucide-react";
+import { cx, css } from "@emotion/css";
+import { X, AArrowUp, AArrowDown, LucideLock, LockKeyholeOpen } from "lucide-react";
 import { NeteaseImageSize } from "@/common/enum";
-import { NeteaseLyric, NeteaseNetworkImage } from "@/common/netease/models";
-import { useListenable } from "@/common/hooks/use-listenable";
 import { RendererFormat } from "@/common/lib/format";
 import { RendererWindow } from "@/common/lib/window";
 import { RendererIPCMessageBus } from "@/common/lib/bus";
-
+import { useListenable } from "@/common/hooks/use-listenable";
+import { NeteaseLyric, NeteaseNetworkImage } from "@/common/netease/models";
+import React, {
+  memo,
+  type FC,
+  useMemo,
+  useState,
+  useEffect,
+  useCallback,
+  type HTMLAttributes
+} from "react";
 import Drag from "@/common/components/layout/drag/drag";
-import NeteaseImage from "@/common/components/display/image/netease-image";
-import NoDrag from "@/common/components/layout/drag/no-drag";
 import Marquee from "@/common/components/display/marquee";
+import NoDrag from "@/common/components/layout/drag/no-drag";
+import NeteaseImage from "@/common/components/display/image/netease-image";
 
 type ControlProps = Omit<HTMLAttributes<HTMLDivElement>, "color"> & {
-  showBg: boolean;
-  color?: string;
-  fontSize: number;
   lock: boolean;
+  color?: string;
+  showBg: boolean;
+  fontSize: number;
+  themeColor?: string;
+  controlReverse?: boolean;
   rmActive: Optional<boolean>;
   tlActive: Optional<boolean>;
   lyric: Nullable<NeteaseLyric>;
-  themeColor?: string;
-  setColor: NormalFunc<[color?: string]>;
   setLock: NormalFunc<[lock: boolean]>;
+  setColor: NormalFunc<[color?: string]>;
   setFontSize: NormalFunc<[size: number]>;
-  controlReverse?: boolean;
 };
 
 const Control: FC<ControlProps> = ({
-  showBg,
-  color,
-  lock,
   setLock,
   setColor,
-  fontSize,
   setFontSize,
+  lock,
+  color,
   lyric,
+  showBg,
+  fontSize,
   rmActive,
   tlActive,
   themeColor,
@@ -123,9 +122,9 @@ const Control: FC<ControlProps> = ({
             showBg ? "opacity-100" : "opacity-0"
           )}>
           <NoDrag
-            onClick={() => setOpenColorSelect(!openColorSelect)}
             className="relative size-4 rounded-sm cursor-pointer mr-1"
-            style={{ backgroundColor: color || themeColor || "#ffffff" }}>
+            style={{ backgroundColor: color || themeColor || "#ffffff" }}
+            onClick={() => setOpenColorSelect(!openColorSelect)}>
             <NoDrag
               className={cx(
                 `
@@ -155,8 +154,8 @@ const Control: FC<ControlProps> = ({
                 if (presetColor === color) return null;
                 return (
                   <NoDrag
-                    className="size-4 rounded-sm cursor-pointer"
                     key={presetColor}
+                    className="size-4 rounded-sm cursor-pointer"
                     style={{ backgroundColor: presetColor }}
                     onClick={() => {
                       setColor(presetColor);
@@ -169,19 +168,19 @@ const Control: FC<ControlProps> = ({
           </NoDrag>
           <NoDrag>
             <AArrowUp
-              onClick={upFontSize}
               className="size-5 cursor-pointer hover:opacity-50 duration-300 ease-in-out transition-all active:scale-90"
+              onClick={upFontSize}
             />
           </NoDrag>
           <NoDrag>
             <AArrowDown
-              onClick={downFontSize}
               className="size-5 cursor-pointer hover:opacity-50 duration-300 ease-in-out transition-all active:scale-90"
+              onClick={downFontSize}
             />
           </NoDrag>
         </div>
         <div className="flex items-center gap-2">
-          <NeteaseImage cache image={image} className="rounded-full size-5 shrink-0" />
+          <NeteaseImage className="rounded-full size-5 shrink-0" image={image} cache />
           <Marquee
             className="text-[14px] font-semibold whitespace-nowrap max-w-[35vw]!"
             options={{
@@ -207,7 +206,6 @@ const Control: FC<ControlProps> = ({
             {lyricVersionIcon.map(({ label, active, existed, version }) => (
               <span
                 key={label}
-                onClick={() => setLyricVersion(version)}
                 className={cx(
                   `
                   size-3.5 text-[11px] font-semibold
@@ -217,7 +215,8 @@ const Control: FC<ControlProps> = ({
                   existed ? "cursor-pointer" : "cursor-not-allowed",
                   active && existed ? "bg-white" : "bg-white/20",
                   color === "#FFFFFF" && "text-black"
-                )}>
+                )}
+                onClick={() => setLyricVersion(version)}>
                 {label}
               </span>
             ))}
@@ -227,8 +226,8 @@ const Control: FC<ControlProps> = ({
               <LucideLock
                 className="size-4 cursor-pointer hover:opacity-50 duration-300 ease-in-out transition-all active:scale-90"
                 onClick={() => setLock(false)}
-                onMouseOver={() => RendererWindow.current.penetrate(false)}
                 onMouseLeave={() => RendererWindow.current.penetrate(true)}
+                onMouseOver={() => RendererWindow.current.penetrate(false)}
               />
             ) : (
               <>

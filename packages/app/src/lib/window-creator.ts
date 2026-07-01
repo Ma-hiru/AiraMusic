@@ -1,15 +1,15 @@
-import { Log } from "@/lib/log";
-import { clamp, debounce } from "lodash-es";
-import { MainStoreForWindow } from "@/lib/key-value-store";
 import { BrowserWindow } from "electron";
-import { MainWindowManager } from "@/lib/window-manager";
-import { MainScreenResolver } from "@/lib/screen-resolver";
-import { MainRuntime } from "@/lib/runtime";
+import { clamp, debounce } from "lodash-es";
+import { Log } from "@/lib/log";
 import { MainHandle } from "@/lib/handle";
+import { MainRuntime } from "@/lib/runtime";
+import { MainWindowManager } from "@/lib/window-manager";
+import { MainStoreForWindow } from "@/lib/key-value-store";
+import { MainScreenResolver } from "@/lib/screen-resolver";
 import type { AppWindowCreatorProps } from "@/types/window";
 
 export class MainWindowCreator {
-  static create<T extends AppWindowCreatorProps | null>(
+  static create<T extends null | AppWindowCreatorProps>(
     props: T
   ): T extends null ? null : BrowserWindow {
     if (!props) return null as T extends null ? null : BrowserWindow;
@@ -19,7 +19,7 @@ export class MainWindowCreator {
 
     props.options ||= {};
     props.handleExits ||= "IGNORE";
-    const { options, id, handleExits, memoPos, loadURL, onCreate } = props;
+    const { id, onCreate, loadURL, memoPos, options, handleExits } = props;
 
     if (memoPos) {
       const { x, y, width, height } = this.getMemoPos(id);

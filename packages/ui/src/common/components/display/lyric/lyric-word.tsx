@@ -1,39 +1,40 @@
 import { cx } from "@emotion/css";
 import {
-  type CSSProperties,
-  type FC,
   memo,
+  useRef,
+  type FC,
+  useMemo,
   useCallback,
   useLayoutEffect,
-  useMemo,
-  useRef
+  type CSSProperties
 } from "react";
+
 import type { TimeManager } from "./time-manager";
 
 interface LyricWordProps {
   word: LyricWord;
   wordIndex: number;
-  currentWordIndex: number;
-  notesContent?: string;
   activeColor?: string;
-  inactiveColor?: string;
   lineActive?: boolean;
   singleWord?: boolean;
-  onClick?: NormalFunc<[startTime: number]>;
+  notesContent?: string;
+  inactiveColor?: string;
+  currentWordIndex: number;
   timeManager: TimeManager;
+  onClick?: NormalFunc<[startTime: number]>;
 }
 
 const LyricWord: FC<LyricWordProps> = ({
+  timeManager,
+  onClick,
   word,
   wordIndex,
+  activeColor,
   notesContent,
+  inactiveColor,
   currentWordIndex,
   lineActive = false,
-  singleWord = false,
-  activeColor,
-  inactiveColor,
-  onClick,
-  timeManager
+  singleWord = false
 }) => {
   const spanRef = useRef<HTMLSpanElement>(null);
 
@@ -58,7 +59,7 @@ const LyricWord: FC<LyricWordProps> = ({
     let rafId: number;
 
     const updateProgress = () => {
-      const { current, start, end } = getTime();
+      const { end, start, current } = getTime();
       const duration = end - start;
       let p: number;
       if (duration > 0) {
@@ -117,8 +118,6 @@ const LyricWord: FC<LyricWordProps> = ({
     <span className="inline-block relative contain-layout" style={wrapperStyle}>
       <span
         ref={spanRef}
-        style={style}
-        onClick={handleClick}
         className={cx(
           `
           lyric-word font-semibold whitespace-pre-wrap
@@ -128,7 +127,9 @@ const LyricWord: FC<LyricWordProps> = ({
           !singleWord && wordIndex === currentWordIndex && active
             ? "lyric-word-active"
             : "lyric-word-inactive"
-        )}>
+        )}
+        style={style}
+        onClick={handleClick}>
         {word.word}
       </span>
       {notesContent && (

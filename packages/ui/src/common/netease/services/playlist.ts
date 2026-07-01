@@ -1,13 +1,13 @@
-import NeteaseTrackSource from "@/common/netease/services/track";
+import { RendererCache } from "@/common/lib/cache";
+import { LRUCacheWithTime } from "@/common/utils/lru";
+import { userStoreSnapshot } from "@/common/store/user";
 import { NeteaseAPIPlaylist } from "@/common/netease/api";
 import {
   NeteasePlaylist,
   NeteasePlaylistSummary,
   type NullablePrivilegesPlaylistDetailResponse
 } from "@/common/netease/models";
-import { RendererCache } from "@/common/lib/cache";
-import { LRUCacheWithTime } from "@/common/utils/lru";
-import { userStoreSnapshot } from "@/common/store/user";
+import NeteaseTrackSource from "@/common/netease/services/track";
 
 export default class _NeteasePlaylistSource {
   //region cache
@@ -96,7 +96,7 @@ export default class _NeteasePlaylistSource {
 
   static lastLikedCachedID = "";
   static id(id: number, signal?: AbortSignal, useMemoryCache = true) {
-    let cachedID: string | number = id;
+    let cachedID: number | string = id;
     // 喜欢的歌曲歌单需要区分喜欢状态的变化，否则喜欢状态无法及时更新
     if (id === _NeteasePlaylistSource.likedPlaylistID) {
       // 使用 likedTrackIDs 的 checkPoint 作为缓存区分，likedTrackIDs 变化时 checkPoint 也会变化，从而使缓存失效，重新获取数据

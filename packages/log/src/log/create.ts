@@ -1,15 +1,15 @@
-import { EqError, type EqErrorProps } from "../err";
-import { LogLevel, LogLevelToString, ParseLogLevel } from "./logLevel";
-import { AnyToString, type CanString } from "../string";
 import type { LoggerWriter } from "./writer";
+import { EqError, type EqErrorProps } from "../err";
+import { AnyToString, type CanString } from "../string";
+import { LogLevel, ParseLogLevel, LogLevelToString } from "./logLevel";
 
 export interface Log {
-  currentLevel: LogLevel;
-  format: LogHandler;
-  trace: LogHandler;
-  debug: LogHandler;
   info: LogHandler;
   warn: LogHandler;
+  debug: LogHandler;
+  trace: LogHandler;
+  format: LogHandler;
+  currentLevel: LogLevel;
   error: ErrorLogHandler;
   throw: ErrorLogHandler;
 }
@@ -26,7 +26,7 @@ export interface ErrorLogHandler {
 }
 
 export function createLog(
-  level: LogLevel | string,
+  level: string | LogLevel,
   witter: LoggerWriter = console,
   showTimestamp = false
 ): Log {

@@ -1,23 +1,23 @@
-import { type FC, Fragment, memo } from "react";
 import { cx } from "@emotion/css";
+import { memo, type FC, Fragment } from "react";
 import { NeteaseTrackRecord } from "@/common/netease/models";
 
 interface ListItemNameProps {
-  track: NeteaseTrackRecord;
   disabled: boolean;
+  track: NeteaseTrackRecord;
+  type: "like" | "album" | "normal" | "history";
   onClick?: NormalFunc;
-  onClickArtist: Optional<NormalFunc<[id: number]>>;
   onClickAlbum: Optional<NormalFunc<[id: number]>>;
-  type: "album" | "history" | "like" | "normal";
+  onClickArtist: Optional<NormalFunc<[id: number]>>;
 }
 
 const TrackItemName: FC<ListItemNameProps> = ({
-  track,
-  disabled,
   onClick,
-  onClickArtist,
   onClickAlbum,
-  type
+  onClickArtist,
+  type,
+  track,
+  disabled
 }) => {
   const translateAndAliaName = track.detail.translateAndAliaName();
   return (

@@ -1,5 +1,5 @@
+import { useRef, useState, useLayoutEffect } from "react";
 import RendererTheme from "@/common/player/ui";
-import { useLayoutEffect, useRef, useState } from "react";
 
 function getColor() {
   const { main, secondary, textOnMainColor } = RendererTheme.themeInstance;

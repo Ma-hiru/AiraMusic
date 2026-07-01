@@ -1,5 +1,5 @@
-import { Log } from "@/common/lib/log";
 import { useEffect } from "react";
+import { Log } from "@/common/lib/log";
 import { useStableObject } from "@/common/hooks/use-stable-object";
 
 const INJECT_MARK = Symbol("INJECT_MARK");
@@ -66,5 +66,5 @@ function useInject<T extends object>(
   }, [object, stableProps]);
 }
 
-export { Inject, useInject, ensureInjectObject, INJECT_MARK };
-export type { CanInject, InjectObject, InjectProps };
+export { Inject, useInject, INJECT_MARK, ensureInjectObject };
+export type { CanInject, InjectProps, InjectObject };

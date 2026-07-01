@@ -1,10 +1,11 @@
-import { setLogger } from "./src/inject/log";
-import { injectWindowManager, type WindowManagerInstance } from "./src/inject/window";
-import { NormalChannel } from "./src/main/normal";
-import { MessageChannel } from "./src/main/message";
 import type { Log } from "@mahiru/log";
 
-export function init(props: { windowManager: WindowManagerInstance; logger: Log }) {
+import { setLogger } from "./src/inject/log";
+import { NormalChannel } from "./src/main/normal";
+import { MessageChannel } from "./src/main/message";
+import { injectWindowManager, type WindowManagerInstance } from "./src/inject/window";
+
+export function init(props: { logger: Log; windowManager: WindowManagerInstance }) {
   injectWindowManager(props.windowManager);
   setLogger(props.logger);
 }

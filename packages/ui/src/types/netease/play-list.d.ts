@@ -1,33 +1,33 @@
 namespace NeteaseAPI {
   interface NeteasePlaylistDetailResponse extends NeteaseAPIResponse {
-    fromUserCount?: number;
+    urls?: null;
     fromUsers?: null;
+    resEntrance?: null;
+    relatedVideos?: null;
+    songFromUsers?: null;
+    fromUserCount?: number;
+    sharedPrivilege?: null;
     playlist: NeteasePlaylistDetail;
     privileges: NeteaseTrackPrivilege[];
-    relatedVideos?: null;
-    resEntrance?: null;
-    sharedPrivilege?: null;
-    songFromUsers?: null;
-    urls?: null;
   }
 
   interface NeteaseUserPlaylistResponse extends NeteaseAPIResponse {
-    playlist: NeteasePlaylistSummary[];
     more: boolean;
+    playlist: NeteasePlaylistSummary[];
   }
 
   interface NeteasePlaylistCatlistResponse extends NeteaseAPIResponse {
     all: All;
-    categories: Categories;
-    code: number;
     sub: Sub[];
+    code: number;
+    categories: Categories;
   }
 
   interface NeteaseTopPlaylistResponse extends NeteaseAPIResponse {
     cat: string;
     more: boolean;
-    playlists: NeteaseTopPlaylist[];
     total: number;
+    playlists: NeteaseTopPlaylist[];
   }
 
   interface NeteaseRecommendPlaylistResponse extends NeteaseAPIResponse {
@@ -43,241 +43,241 @@ namespace NeteaseAPI {
   }
 
   interface NeteaseHighQualityPlaylistsResponse extends NeteaseAPIResponse {
-    lasttime: number;
     more: boolean;
-    playlists: (NeteaseTopPlaylist & { copywriter: string; tag: string })[];
     total: number;
+    lasttime: number;
+    playlists: (NeteaseTopPlaylist & { tag: string; copywriter: string })[];
   }
 
   interface NeteaseToplistResponse extends NeteaseAPIResponse {
+    list: NeteaseToplist[];
     artistToplist?: {
-      coverUrl: string;
       name: string;
+      coverUrl: string;
       position: number;
       upateFrequency: string;
       updateFrequency: string;
     };
-    list: NeteaseToplist[];
   }
 
   interface NeteaseToplist {
-    adType: number;
-    algType: null | string;
-    anonimous: boolean;
-    artists: null;
-    backgroundCoverId: number;
-    backgroundCoverUrl: null | string;
-    cloudTrackCount: number;
-    commentThreadId: string;
-    coverImgId: number;
-    coverImgId_str?: string;
-    coverImgUrl: string;
-    coverImageUrl: null | string;
-    coverText: null | string;
-    createTime: number;
-    creator: null;
-    description: null | string;
-    englishTitle: null | string;
-    highQuality: boolean;
-    iconImageUrl: null | string;
     id: number;
     mix: boolean;
     name: string;
+    artists: null;
+    creator: null;
+    adType: number;
+    status: number;
+    tags: string[];
+    privacy: number;
+    ordered: boolean;
+    playCount: number;
+    topTrackIds: null;
+    anonimous: boolean;
+    coverImgId: number;
+    createTime: number;
+    titleImage: number;
+    trackCount: number;
+    coverImgUrl: string;
+    specialType: number;
+    highQuality: boolean;
     newImported: boolean;
     opRecommend: boolean;
-    ordered: boolean;
-    originalCoverId: number;
-    playCount: number;
     playlistType: string;
-    privacy: number;
     promptedMgcInfo: null;
-    recommendInfo: null | RecommendInfo;
-    socialPlaylistCover: null | string;
-    specialType: number;
-    status: number;
-    subscribed: null | boolean;
-    subscribedCount: number;
-    subscribers: unknown[];
-    tags: string[];
-    titleImage: number;
-    titleImageUrl: null | string;
-    topTrackIds: null;
     totalDuration: number;
-    trackCount: number;
+    algType: null | string;
+    subscribers: unknown[];
+    cloudTrackCount: number;
+    commentThreadId: string;
+    coverImgId_str?: string;
+    originalCoverId: number;
+    subscribedCount: number;
+    coverText: null | string;
+    backgroundCoverId: number;
+    description: null | string;
+    subscribed: null | boolean;
+    englishTitle: null | string;
+    iconImageUrl: null | string;
+    coverImageUrl: null | string;
+    titleImageUrl: null | string;
     trackNumberUpdateTime: number;
+    backgroundCoverUrl: null | string;
+    socialPlaylistCover: null | string;
+    recommendInfo: null | RecommendInfo;
     /** Current /toplist samples return null; older NCM variants may return preview track pairs. */
-    tracks: null | { first: string; second: string }[];
-    trackUpdateTime: number;
-    tsSongCount: number;
-    uiPlaylistType: string;
-    updateFrequency: string;
-    updateTime: number;
     userId: number;
+    updateTime: number;
+    tsSongCount: number;
     ToplistType?: string;
+    uiPlaylistType: string;
+    trackUpdateTime: number;
+    updateFrequency: string;
+    tracks: null | { first: string; second: string }[];
   }
 
   interface NeteasePlaylistDetail {
-    adType: number;
+    id: number;
+    score: null;
+    name: string;
     algTags: null;
-    backgroundCoverId: number;
-    backgroundCoverUrl: null;
-    bannedTrackIds: null;
-    bizExtInfo: { [key: string]: any };
-    cloudTrackCount: number;
-    commentCount: number;
-    commentThreadId: string;
+    adType: number;
+    status: number;
+    tags: string[];
     copied: boolean;
+    privacy: number;
+    creator: Creator;
+    ordered: boolean;
+    remixVideo: null;
+    description: null;
+    displayTags: null;
+    playCount: number;
+    sharedUsers: null;
     coverImgId: number;
-    coverImgId_str: null;
+    createTime: number;
+    englishTitle: null;
+    shareCount: number;
+    titleImage: number;
+    trackCount: number;
     coverImgUrl: string;
     coverStatus: number;
-    createTime: number;
-    creator: Creator;
-    description: null;
-    detailPageTitle: null;
-    displayTags: null;
-    displayUserInfoAsTagOnly: boolean;
-    distributeTags: string[];
-    englishTitle: null;
     gradeStatus: string;
-    highQuality: boolean;
-    historySharedUsers: null;
-    id: number;
-    mixPodcastPlaylist: boolean;
-    mvResourceInfos: null;
-    name: string;
-    newDetailPageRemixVideo: null;
-    newImported: boolean;
-    officialPlaylistType: null;
-    opRecommend: boolean;
-    ordered: boolean;
-    playCount: number;
-    playlistType: string;
-    podcastTrackCount: number;
-    privacy: number;
     relateResType: null;
-    remixVideo: null;
-    score: null;
-    shareCount: number;
-    sharedUsers: null;
     specialType: number;
-    status: number;
     subscribed: boolean;
-    subscribedCount: number;
-    subscribers: string[];
-    tags: string[];
-    titleImage: number;
     titleImageUrl: null;
-    trackCount: number;
+    bannedTrackIds: null;
+    commentCount: number;
+    coverImgId_str: null;
+    highQuality: boolean;
+    newImported: boolean;
+    opRecommend: boolean;
+    playlistType: string;
+    detailPageTitle: null;
+    mvResourceInfos: null;
+    subscribers: string[];
+    cloudTrackCount: number;
+    commentThreadId: string;
+    subscribedCount: number;
+    backgroundCoverUrl: null;
+    distributeTags: string[];
+    historySharedUsers: null;
+    backgroundCoverId: number;
+    podcastTrackCount: number;
+    officialPlaylistType: null;
+    mixPodcastPlaylist: boolean;
+    newDetailPageRemixVideo: null;
+    displayUserInfoAsTagOnly: boolean;
+    bizExtInfo: { [key: string]: any };
     /**
      * 歌曲ID列表并不一定实际对应tracks数据，存在歌单包含下架歌曲的可能
      * */
-    trackIds: TrackId[];
-    trackNumberUpdateTime: number;
-    tracks: NeteaseTrack[];
-    trackUpdateTime: number;
-    trialMode: number;
-    updateFrequency: null;
-    updateTime: number;
+    videos: null;
     userId: number;
     videoIds: null;
-    videos: null;
+    trialMode: number;
+    updateTime: number;
+    trackIds: TrackId[];
+    updateFrequency: null;
+    tracks: NeteaseTrack[];
+    trackUpdateTime: number;
+    trackNumberUpdateTime: number;
   }
 
   interface NeteasePlaylistSummary {
-    adType: number;
-    anonimous: boolean;
+    id: number;
+    name: string;
+    top: boolean;
+    tracks: null;
     artists: null;
-    backgroundCoverId: number;
-    backgroundCoverUrl: null | string;
+    adType: number;
+    status: number;
+    tags: string[];
+    userId: number;
+    copied: boolean;
+    privacy: number;
+    creator: Creator;
+    ordered: boolean;
+    playCount: number;
+    sharedUsers: null;
+    shareStatus: null;
+    anonimous: boolean;
+    coverImgId: number;
+    createTime: number;
+    titleImage: number;
+    trackCount: number;
+    updateTime: number;
+    coverImgUrl: string;
+    specialType: number;
+    subscribed: boolean;
+    highQuality: boolean;
+    newImported: boolean;
+    opRecommend: boolean;
+    subscribers: string[];
+    totalDuration: number;
     cloudTrackCount: number;
     commentThreadId: string;
     containsTracks: boolean;
-    copied: boolean;
-    coverImgId: number;
-    coverImgId_str: null | string;
-    coverImgUrl: string;
-    createTime: number;
-    creator: Creator;
+    subscribedCount: number;
+    trackUpdateTime: number;
+    backgroundCoverId: number;
     description: null | string;
     englishTitle: null | string;
-    highQuality: boolean;
-    id: number;
-    name: string;
-    newImported: boolean;
-    opRecommend: boolean;
-    ordered: boolean;
-    playCount: number;
-    privacy: number;
-    recommendInfo: null | RecommendInfo;
-    sharedUsers: null;
-    shareStatus: null;
-    specialType: number;
-    status: number;
-    subscribed: boolean;
-    subscribedCount: number;
-    subscribers: string[];
-    tags: string[];
-    titleImage: number;
     titleImageUrl: null | string;
-    top: boolean;
-    totalDuration: number;
-    trackCount: number;
+    coverImgId_str: null | string;
     trackNumberUpdateTime: number;
-    tracks: null;
-    trackUpdateTime: number;
     updateFrequency: null | string;
-    updateTime: number;
-    userId: number;
+    backgroundCoverUrl: null | string;
+    recommendInfo: null | RecommendInfo;
   }
 
   interface RecommendInfo {
     alg: string;
-    firstSongId: null;
-    logInfo: string;
     reason: null;
+    logInfo: string;
+    firstSongId: null;
     relatedId: string;
     relatedType: string;
   }
 
   interface Creator {
-    accountStatus: number;
-    anchor: boolean;
-    authenticationTypes: number;
-    authority: number;
-    authStatus: number;
-    avatarDetail: AvatarDetail | null;
-    avatarImgId: number;
-    avatarImgId_str: string;
-    avatarImgIdStr: string;
-    avatarUrl: string;
-    backgroundImgId: number;
-    backgroundImgIdStr: string;
-    backgroundUrl: string;
-    birthday: number;
     city: number;
-    defaultAvatar: boolean;
-    description: string;
-    detailDescription: string;
-    djStatus: number;
-    experts: null | Experts;
-    expertTags: null;
-    followed: boolean;
     gender: number;
+    userId: number;
+    anchor: boolean;
     mutual: boolean;
+    vipType: number;
+    birthday: number;
+    djStatus: number;
+    expertTags: null;
     nickname: string;
     province: number;
     remarkName: null;
-    signature: string;
-    userId: number;
     userType: number;
-    vipType: number;
+    authority: number;
+    avatarUrl: string;
+    followed: boolean;
+    signature: string;
+    authStatus: number;
+    avatarImgId: number;
+    description: string;
+    accountStatus: number;
+    backgroundUrl: string;
+    avatarImgIdStr: string;
+    defaultAvatar: boolean;
+    avatarImgId_str: string;
+    backgroundImgId: number;
+    experts: null | Experts;
+    detailDescription: string;
+    backgroundImgIdStr: string;
+    authenticationTypes: number;
+    avatarDetail: null | AvatarDetail;
   }
 
   interface AvatarDetail {
-    identityIconUrl: string;
-    identityLevel: number;
     userType: number;
+    identityLevel: number;
+    identityIconUrl: string;
   }
 
   interface Experts {
@@ -286,31 +286,31 @@ namespace NeteaseAPI {
   }
 
   interface TrackId {
-    alg: null;
-    at: number;
-    dpr: null;
     f: null;
-    id: number;
-    rcmdReason: string;
-    rcmdReasonTitle: string;
     sc: null;
     sr: null;
+    alg: null;
+    dpr: null;
     t: number;
+    v: number;
+    at: number;
+    id: number;
     tr: number;
     uid: number;
-    v: number;
+    rcmdReason: string;
+    rcmdReasonTitle: string;
   }
 
   interface All {
-    activity: boolean;
-    category: number;
     hot: boolean;
-    imgId: number;
     imgUrl: null;
     name: string;
-    resourceCount: number;
-    resourceType: number;
     type: number;
+    imgId: number;
+    category: number;
+    activity: boolean;
+    resourceType: number;
+    resourceCount: number;
   }
 
   interface Categories {
@@ -322,130 +322,130 @@ namespace NeteaseAPI {
   }
 
   interface Sub {
-    activity: boolean;
-    category: number;
     hot: boolean;
-    imgId: number;
     imgUrl: null;
     name: string;
-    resourceCount: number;
-    resourceType: number;
     type: number;
+    imgId: number;
+    category: number;
+    activity: boolean;
+    resourceType: number;
+    resourceCount: number;
   }
 
   interface NeteaseTopPlaylist {
-    adType: number;
-    alg: string;
-    algType: null;
-    anonimous: boolean;
-    backgroundImageId: number;
-    backgroundImageUrl: null;
-    backgroundText: null;
-    cloudTrackCount: number;
-    commentCount: number;
-    commentThreadId: string;
-    coverImgId: number;
-    coverImgId_str: string;
-    coverImgUrl: string;
-    coverStatus: number;
-    coverText: null;
-    createTime: number;
-    creator: Creator;
-    description: string;
-    highQuality: boolean;
-    iconImgUrl: null;
     id: number;
+    alg: string;
+    title: null;
     name: string;
-    newImported: boolean;
-    ordered: boolean;
-    originalCoverId: number;
-    playCount: number;
-    playlistType: string;
-    privacy: number;
-    recommendInfo: null;
-    recommendText: null;
-    relateResId: null;
-    relateResType: null;
-    shareCount: number;
-    socialPlaylistCover: null;
-    specialType: number;
+    tracks: null;
+    algType: null;
+    adType: number;
     status: number;
-    subscribed: boolean;
-    subscribedCount: number;
-    subscribers: Subscriber[];
     subTitle: null;
     tags: string[];
-    title: null;
-    topTrackIds: null;
-    totalDuration: number;
-    trackCount: number;
-    trackNumberUpdateTime: number;
-    tracks: null;
-    trackUpdateTime: number;
-    tsSongCount: number;
-    uiPlaylistType: string;
-    updateTime: number;
     userId: number;
+    coverText: null;
+    privacy: number;
+    creator: Creator;
+    iconImgUrl: null;
+    ordered: boolean;
+    playCount: number;
+    relateResId: null;
+    topTrackIds: null;
+    anonimous: boolean;
+    coverImgId: number;
+    createTime: number;
+    shareCount: number;
+    trackCount: number;
+    updateTime: number;
+    coverImgUrl: string;
+    coverStatus: number;
+    description: string;
+    recommendInfo: null;
+    recommendText: null;
+    relateResType: null;
+    specialType: number;
+    subscribed: boolean;
+    tsSongCount: number;
+    backgroundText: null;
+    commentCount: number;
+    highQuality: boolean;
+    newImported: boolean;
+    playlistType: string;
+    totalDuration: number;
+    coverImgId_str: string;
+    uiPlaylistType: string;
+    cloudTrackCount: number;
+    commentThreadId: string;
+    originalCoverId: number;
+    subscribedCount: number;
+    trackUpdateTime: number;
+    backgroundImageUrl: null;
+    backgroundImageId: number;
+    socialPlaylistCover: null;
+    subscribers: Subscriber[];
+    trackNumberUpdateTime: number;
   }
 
   interface Subscriber {
-    accountStatus: number;
-    anchor: boolean;
-    authenticationTypes: number;
-    authority: number;
-    authStatus: number;
-    avatarDetail: null;
-    avatarImgId: number;
-    avatarImgIdStr: string;
-    avatarUrl: string;
-    backgroundImgId: number;
-    backgroundImgIdStr: string;
-    backgroundUrl: string;
-    birthday: number;
     city: number;
-    defaultAvatar: boolean;
-    description: string;
-    detailDescription: string;
-    djStatus: number;
     experts: null;
-    expertTags: null;
-    followed: boolean;
     gender: number;
+    userId: number;
+    anchor: boolean;
     mutual: boolean;
+    vipType: number;
+    birthday: number;
+    djStatus: number;
+    expertTags: null;
     nickname: string;
     province: number;
     remarkName: null;
-    signature: string;
-    userId: number;
     userType: number;
-    vipType: number;
+    authority: number;
+    avatarUrl: string;
+    followed: boolean;
+    signature: string;
+    authStatus: number;
+    avatarDetail: null;
+    avatarImgId: number;
+    description: string;
+    accountStatus: number;
+    backgroundUrl: string;
+    avatarImgIdStr: string;
+    defaultAvatar: boolean;
+    backgroundImgId: number;
+    detailDescription: string;
+    backgroundImgIdStr: string;
+    authenticationTypes: number;
   }
 
   interface RecommendPlaylistResult {
-    alg: string;
-    canDislike: boolean;
-    copywriter: string;
-    highQuality: boolean;
     id: number;
+    alg: string;
     name: string;
+    type: number;
     picUrl: string;
     playCount: number;
+    copywriter: string;
     trackCount: number;
+    highQuality: boolean;
     trackNumberUpdateTime: number;
-    type: number;
+    canDislike: boolean;
   }
 
   interface DailyRecommendPlaylistResult {
+    id: number;
     alg: string;
+    name: string;
+    type: number;
+    picUrl: string;
+    userId: number;
+    creator: Creator;
+    playcount: number;
     copywriter: string;
     createTime: number;
-    creator: Creator;
-    id: number;
-    name: string;
-    picUrl: string;
-    playcount: number;
     trackCount: number;
-    type: number;
-    userId: number;
   }
 }

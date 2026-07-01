@@ -1,19 +1,19 @@
-import { NeteaseLocalImage, NeteaseNetworkImage, NeteaseTrack } from "@/common/netease/models";
-import { RendererCache } from "@/common/lib/cache";
-import { NeteaseImageSize, StoreCategory } from "@/common/enum";
-import { LRUCacheWithTime } from "@/common/utils/lru";
 import { Log } from "@/common/lib/log";
+import { RendererCache } from "@/common/lib/cache";
+import { LRUCacheWithTime } from "@/common/utils/lru";
+import { StoreCategory, NeteaseImageSize } from "@/common/enum";
+import { NeteaseTrack, NeteaseLocalImage, NeteaseNetworkImage } from "@/common/netease/models";
 
 interface LocalFn {
   (
-    image: NeteaseNetworkImage | NeteaseLocalImage,
+    image: NeteaseLocalImage | NeteaseNetworkImage,
     download: boolean
-  ): Promise<NeteaseLocalImage | null>;
+  ): Promise<null | NeteaseLocalImage>;
   (
     track: NeteaseTrack,
     download: boolean,
     size: NeteaseImageSize
-  ): Promise<NeteaseLocalImage | null>;
+  ): Promise<null | NeteaseLocalImage>;
 }
 
 export default class _NeteaseImageSource {
@@ -67,7 +67,7 @@ export default class _NeteaseImageSource {
   //endregion
 
   private static async localImage(
-    image: NeteaseNetworkImage | NeteaseLocalImage,
+    image: NeteaseLocalImage | NeteaseNetworkImage,
     download: boolean
   ) {
     if ("localURL" in image) return image;
@@ -98,7 +98,7 @@ export default class _NeteaseImageSource {
       return _NeteaseImageSource.localTrack(...(args as [NeteaseTrack, boolean, NeteaseImageSize]));
     }
     return _NeteaseImageSource.localImage(
-      ...(args as unknown as [NeteaseNetworkImage | NeteaseLocalImage, boolean])
+      ...(args as unknown as [NeteaseLocalImage | NeteaseNetworkImage, boolean])
     );
   }) as LocalFn;
 
@@ -106,7 +106,7 @@ export default class _NeteaseImageSource {
     return NeteaseNetworkImage.fromTrackCover(track).setSize(size);
   }
 
-  static remove(image: NeteaseNetworkImage | NeteaseLocalImage) {
+  static remove(image: NeteaseLocalImage | NeteaseNetworkImage) {
     return this.removeCache(image);
   }
 

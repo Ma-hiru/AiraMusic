@@ -1,6 +1,6 @@
-import { copyFileSync, existsSync } from "node:fs";
-import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { existsSync, copyFileSync } from "node:fs";
+import path from "node:path";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 

@@ -1,27 +1,27 @@
 import { cx } from "@emotion/css";
-import { type FC, memo, type ReactNode, useCallback } from "react";
-import { ListPlus, Trash2 } from "lucide-react";
+import { Trash2, ListPlus } from "lucide-react";
+import { memo, type FC, useCallback, type ReactNode } from "react";
 import { NeteaseTrackRecord } from "@/common/netease/models";
 import AppModal from "@/common/components/display/modal";
 
 interface SelectionIndicatorProps {
+  editable: boolean;
   selectAll: NormalFunc;
-  onBatchAdd: NormalFunc;
-  onBatchDelete: NormalFunc;
+  selectedIds: Set<number>;
   exitSelection: NormalFunc;
   tracks: readonly NeteaseTrackRecord[];
-  selectedIds: Set<number>;
-  editable: boolean;
+  onBatchAdd: NormalFunc;
+  onBatchDelete: NormalFunc;
 }
 
 const SelectionIndicator: FC<SelectionIndicatorProps> = ({
-  selectAll,
   onBatchAdd,
   onBatchDelete,
-  exitSelection,
   tracks,
+  editable,
+  selectAll,
   selectedIds,
-  editable
+  exitSelection
 }) => {
   const { create, createDialogModal } = AppModal.useModal();
   const batchDelete = useCallback(
@@ -47,18 +47,18 @@ const SelectionIndicator: FC<SelectionIndicatorProps> = ({
         text={tracks.length > 0 && selectedIds.size === tracks.length ? "取消全选" : "全选"}
         onClick={selectAll}
       />
-      <TextButton disabled text={`已选 ${selectedIds.size}`} />
+      <TextButton text={`已选 ${selectedIds.size}`} disabled />
       <ActionButton
-        onClick={onBatchAdd}
         className="bg-primary text-primary-text"
-        disabled={selectedIds.size === 0}>
+        disabled={selectedIds.size === 0}
+        onClick={onBatchAdd}>
         <ListPlus className="size-3.5" /> 添加
       </ActionButton>
       {editable && (
         <ActionButton
-          onClick={batchDelete}
           className="bg-red-500/80 text-white"
-          disabled={selectedIds.size === 0}>
+          disabled={selectedIds.size === 0}
+          onClick={batchDelete}>
           <Trash2 className="size-3.5" /> 删除
         </ActionButton>
       )}
@@ -70,21 +70,18 @@ const SelectionIndicator: FC<SelectionIndicatorProps> = ({
 export default memo(SelectionIndicator);
 
 const ActionButton = ({
-  onClick,
-  disabled,
   className,
-  children
+  onClick,
+  children,
+  disabled
 }: {
-  onClick?: NormalFunc;
   className?: string;
   disabled?: boolean;
   children?: ReactNode;
+  onClick?: NormalFunc;
 }) => {
   return (
     <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
       className={cx(
         `
         flex items-center gap-1 rounded-full px-3 py-1
@@ -93,28 +90,28 @@ const ActionButton = ({
         cursor-pointer disabled:cursor-auto disabled:active:scale-100
       `,
         className
-      )}>
+      )}
+      type="button"
+      disabled={disabled}
+      onClick={onClick}>
       {children}
     </button>
   );
 };
 
 const TextButton = ({
+  className,
   onClick,
   text,
-  className,
   disabled
 }: {
   text: string;
-  onClick?: NormalFunc;
   className?: string;
   disabled?: boolean;
+  onClick?: NormalFunc;
 }) => {
   return (
     <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
       className={cx(
         `
           ease-in-out duration-300 transition-all
@@ -124,7 +121,10 @@ const TextButton = ({
         `,
         className
       )}
+      type="button"
       children={text}
+      disabled={disabled}
+      onClick={onClick}
     />
   );
 };

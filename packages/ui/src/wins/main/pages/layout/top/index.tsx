@@ -1,17 +1,17 @@
-import { type FC, memo } from "react";
 import { cx } from "@emotion/css";
-import { useUser } from "@/common/store/user";
-import { useListenable } from "@/common/hooks/use-listenable";
-import { RendererWindow } from "@/common/lib/window";
 import { useAtomValue } from "jotai";
-import { playModalAtom, sidebarAtom } from "@/wins/main/atoms/layout";
-
-import TopControl from "./top-control";
-import TopAvatar from "./top-avatar";
-import TopSearch from "./top-search";
-import TopLeft from "./top-left";
+import { memo, type FC } from "react";
+import { useUser } from "@/common/store/user";
+import { RendererWindow } from "@/common/lib/window";
+import { useListenable } from "@/common/hooks/use-listenable";
+import { sidebarAtom, playModalAtom } from "@/wins/main/atoms/layout";
 import Drag from "@/common/components/layout/drag/drag";
 import Divider from "@/common/components/layout/divider";
+
+import TopLeft from "./top-left";
+import TopAvatar from "./top-avatar";
+import TopSearch from "./top-search";
+import TopControl from "./top-control";
 
 const Top: FC<{ className?: string }> = ({ className }) => {
   const playModal = useAtomValue(playModalAtom);

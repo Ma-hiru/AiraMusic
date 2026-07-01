@@ -1,12 +1,13 @@
-import { cacheRequest } from "../request";
 import type {
-  CacheStoreCheckIdxParams,
-  CacheStoreCheckItem,
   CacheStoreCheckRes,
   CacheStoreResponse,
+  CacheStoreCheckItem,
   CacheStoreSaveURLItem,
-  CacheStoreSaveURLParams
+  CacheStoreSaveURLParams,
+  CacheStoreCheckIdxParams
 } from "@/types/cache";
+
+import { cacheRequest } from "../request";
 
 export class CacheStoreForCheck {
   private static collections: Task[] = [];
@@ -56,7 +57,7 @@ export class CacheStoreForCheck {
   ) {
     if (task.length === 0) return;
 
-    let finalItems: CacheStoreCheckIdxParams["items"] | CacheStoreSaveURLParams["items"] = [];
+    let finalItems: CacheStoreSaveURLParams["items"] | CacheStoreCheckIdxParams["items"] = [];
     const chunks: number[] = [];
     for (const t of task) {
       finalItems = finalItems.concat(t.items as CacheStoreSaveURLParams["items"]);
@@ -98,7 +99,7 @@ export class CacheStoreForCheck {
   }
 
   static read(items: CacheStoreCheckItem[]): Promise<CacheStoreResponse<CacheStoreCheckRes[]>> {
-    const { promise, resolve, reject } =
+    const { reject, promise, resolve } =
       Promise.withResolvers<CacheStoreResponse<CacheStoreCheckRes[]>>();
     this.add({ type: "read", items, resolve, reject });
     return promise;
@@ -116,7 +117,7 @@ export class CacheStoreForCheck {
   static readOrStore(
     items: CacheStoreSaveURLItem[]
   ): Promise<CacheStoreResponse<CacheStoreCheckRes[]>> {
-    const { promise, resolve, reject } =
+    const { reject, promise, resolve } =
       Promise.withResolvers<CacheStoreResponse<CacheStoreCheckRes[]>>();
     this.add({ type: "readOrStore", items, resolve, reject });
     return promise;
@@ -126,15 +127,15 @@ export class CacheStoreForCheck {
 type ReadTask = {
   type: "read";
   items: CacheStoreCheckItem[];
-  resolve: NormalFunc<[res: CacheStoreResponse<CacheStoreCheckRes[]>]>;
   reject: NormalFunc<[res: any]>;
+  resolve: NormalFunc<[res: CacheStoreResponse<CacheStoreCheckRes[]>]>;
 };
 
 type ReadOrStoreTask = {
   type: "readOrStore";
   items: CacheStoreSaveURLItem[];
-  resolve: NormalFunc<[res: CacheStoreResponse<CacheStoreCheckRes[]>]>;
   reject: NormalFunc<[res: any]>;
+  resolve: NormalFunc<[res: CacheStoreResponse<CacheStoreCheckRes[]>]>;
 };
 
 type Task = ReadTask | ReadOrStoreTask;

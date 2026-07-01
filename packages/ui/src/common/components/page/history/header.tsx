@@ -1,22 +1,21 @@
-import { type FC, memo } from "react";
-
+import { memo, type FC } from "react";
 import Search from "@/common/components/data-input/search";
 import PageAction from "@/common/components/display/page-action";
 
 interface HeaderProps {
   count: number;
   searchTracks: NormalFunc<[k: string]>;
+  pageActionType?: "out" | "none" | "enter";
   setIsTyping?: NormalFunc<[tying: boolean]>;
-  pageActionType?: "enter" | "out" | "none";
   onPageAction?: NormalFunc;
 }
 
 const Header: FC<HeaderProps> = ({
-  count,
-  searchTracks,
-  setIsTyping = () => {},
   pageActionType,
-  onPageAction
+  setIsTyping = () => {},
+  onPageAction,
+  count,
+  searchTracks
 }) => {
   return (
     <div className="w-full mb-4 flex justify-between items-center select-none">
@@ -25,7 +24,7 @@ const Header: FC<HeaderProps> = ({
         <span className="text-[12px] font-semibold opacity-40">{count} 条记录</span>
       </div>
       <div className="flex items-center gap-3">
-        <Search onSearch={searchTracks} setIsTyping={setIsTyping} />
+        <Search setIsTyping={setIsTyping} onSearch={searchTracks} />
         <PageAction type={pageActionType} onClick={onPageAction} />
       </div>
     </div>

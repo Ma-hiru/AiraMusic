@@ -1,7 +1,8 @@
-import { setLogger } from "./src/inject/log";
-import { MessageChannel } from "./src/renderer/message";
-import { NormalChannel } from "./src/renderer/normal";
 import type { Log as Logger } from "@mahiru/log";
+
+import { setLogger } from "./src/inject/log";
+import { NormalChannel } from "./src/renderer/normal";
+import { MessageChannel } from "./src/renderer/message";
 
 export function init(log: Logger) {
   setLogger(log);

@@ -1,20 +1,20 @@
 import { cx } from "@emotion/css";
-import { type FC, memo, type ReactNode } from "react";
+import { memo, type FC, type ReactNode } from "react";
 
 interface TabProps {
-  data: (string | ReactNode)[];
-  activeIndex: number;
-  onChange?: NormalFunc<[index: number]>;
   className?: string;
-  mode?: "more-theme" | "less-theme";
+  activeIndex: number;
+  data: (string | ReactNode)[];
+  mode?: "less-theme" | "more-theme";
   itemClassName?: string | NormalFunc<[active: boolean], Undefinable<string | boolean>>;
+  onChange?: NormalFunc<[index: number]>;
 }
 
 const SectionTab: FC<TabProps> = ({
+  className,
+  onChange,
   data,
   activeIndex,
-  onChange,
-  className,
   itemClassName,
   mode = "more-theme"
 }) => {

@@ -1,14 +1,14 @@
 import { useCallback } from "react";
-import { NeteaseTrackRecord } from "@/common/netease/models";
 import { RendererWindow } from "@/common/lib/window";
 import { RendererIPCMessageBus } from "@/common/lib/bus";
 import { useLatestRef } from "@/common/hooks/use-latest-ref";
+import { NeteaseTrackRecord } from "@/common/netease/models";
 
 /** 从多窗口页面触发播放器变更 */
 export function usePlayerChangeActionFromDisplay(props: {
-  getTracks: NormalFunc<[], NeteaseTrackRecord[]>;
   sourceID: number;
   sourceType: NeteaseTrackRecordSourceType;
+  getTracks: NormalFunc<[], NeteaseTrackRecord[]>;
 }) {
   const propsRef = useLatestRef(props);
 

@@ -9,9 +9,9 @@ export abstract class Listenable<const EventName = string> {
   >();
   private listenerTimer: Nullable<number> = null;
   private listenerMicrotaskPending = false;
-  private updateMode: "microtask" | "sync" | "debounce" = "debounce";
+  private updateMode: "sync" | "debounce" | "microtask" = "debounce";
   private updateGap = 100; // ms
-  protected beforeFlushListeners?: NormalFunc<[event?: EventName], boolean | void>;
+  protected beforeFlushListeners?: NormalFunc<[event?: EventName], void | boolean>;
   public _innerCount = 0;
 
   constructor(name?: string) {
@@ -101,7 +101,7 @@ export abstract class Listenable<const EventName = string> {
     this.updateMode = mode;
   }
 
-  public addListener(callback: NormalFunc, props: { once?: boolean; id?: string } = {}) {
+  public addListener(callback: NormalFunc, props: { id?: string; once?: boolean } = {}) {
     props.once ??= false;
     props.id ??= window.crypto.randomUUID();
     this.listeners.set(callback, { id: props.id, once: props.once });
@@ -117,7 +117,7 @@ export abstract class Listenable<const EventName = string> {
   public addEventListener(
     event: EventName,
     callback: NormalFunc,
-    props: { once?: boolean; id?: string } = {}
+    props: { id?: string; once?: boolean } = {}
   ) {
     props.once ??= false;
     props.id ??= window.crypto.randomUUID();
@@ -133,7 +133,7 @@ export abstract class Listenable<const EventName = string> {
     return unsubscriber;
   }
 
-  public removeListener(callback: NormalFunc | string) {
+  public removeListener(callback: string | NormalFunc) {
     if (typeof callback === "string") {
       for (const [listener, { id }] of this.listeners) {
         if (id === callback) {
@@ -146,7 +146,7 @@ export abstract class Listenable<const EventName = string> {
     this.listeners.delete(callback);
   }
 
-  public removeEventListener(event: EventName, callback: NormalFunc | string) {
+  public removeEventListener(event: EventName, callback: string | NormalFunc) {
     if (typeof callback === "string") {
       for (const [listener, { id }] of this.eventListeners.get(event) ?? []) {
         if (id === callback) {
@@ -197,11 +197,11 @@ export class Listener extends Listenable {
     super.clearAllListeners();
   }
 
-  add(callback: NormalFunc, props?: { once?: boolean; id?: string }) {
+  add(callback: NormalFunc, props?: { id?: string; once?: boolean }) {
     return super.addListener(callback, props);
   }
 
-  remove(callback: NormalFunc | string) {
+  remove(callback: string | NormalFunc) {
     super.removeListener(callback);
   }
 }

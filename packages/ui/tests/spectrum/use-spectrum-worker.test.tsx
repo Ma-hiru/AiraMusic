@@ -1,9 +1,10 @@
 import { act, cleanup, renderHook } from "@testing-library/react";
 import {
-  type SpectrumOptions,
-  useSpectrumWorker
+  useSpectrumWorker,
+  type SpectrumOptions
 } from "@mahiru/ui/wins/main/hooks/use-spectrum-worker";
-import { type MockSpectrumWorkerInstance, spectrumWorkerMock } from "../mock/spectrum-worker";
+
+import { spectrumWorkerMock, type MockSpectrumWorkerInstance } from "../mock/spectrum-worker";
 
 type RenderHookProps = {
   isPlaying: boolean;
@@ -180,7 +181,7 @@ describe("useSpectrumWorker", () => {
 
   function renderSpectrumHook(audio: ReturnType<typeof createAudioMock>, props: RenderHookProps) {
     return renderHook(
-      ({ isPlaying, options }: RenderHookProps) => {
+      ({ options, isPlaying }: RenderHookProps) => {
         return useSpectrumWorker(audio as any, isPlaying, options);
       },
       { initialProps: props }

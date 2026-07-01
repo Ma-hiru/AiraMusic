@@ -8,8 +8,8 @@ namespace NeteaseAPI {
 
   interface NeteaseLoginQrKeyResponse extends NeteaseAPIResponse {
     data: {
-      unikey: string;
       qrurl?: string;
+      unikey: string;
     };
   }
 
@@ -21,8 +21,8 @@ namespace NeteaseAPI {
   }
 
   interface NeteaseLoginQrCheckResponse extends NeteaseAPIResponse {
-    message?: string;
     cookie: string;
+    message?: string;
     nickname?: string;
     avatarUrl?: string;
   }
