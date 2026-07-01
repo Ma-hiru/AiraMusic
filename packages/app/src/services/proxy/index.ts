@@ -1,7 +1,6 @@
+import { MainChildEntry } from "@/lib/child-entry";
 import { MainPathResolver } from "@/lib/path-resolver";
 import type { ProxyChildMessage, ProxyParentMessage } from "@/types/proxy.child";
-
-import { MainChildEntry } from "../../lib/child-entry";
 
 export default class ProxyService extends MainChildEntry<ProxyParentMessage, ProxyChildMessage> {
   readonly port: number;
