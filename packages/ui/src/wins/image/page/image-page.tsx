@@ -4,13 +4,14 @@ import { useAppLoaded } from "@/common/hooks/use-app-loaded";
 import { useListenable } from "@/common/hooks/use-listenable";
 import { RendererIPCMessageBus } from "@/common/lib/bus";
 import { useThemeInjectFromBus } from "@/common/hooks/use-theme-inject-from-bus";
-import Drag from "@/common/components/layout/drag/drag";
-import ImageViewer, { type ImageViewerEntry } from "@/common/components/display/image/image-viewer";
-import Control from "@/common/components/layout/top/control";
 import AppToast from "@/common/components/display/toast";
 
+import Drag from "@/common/components/layout/drag/drag";
+import ImageViewer from "@/common/components/display/image/image-viewer";
+import Control from "@/common/components/layout/top/control";
+
 type ImageGalleryState = {
-  images: ImageViewerEntry[];
+  images: { url?: string; alt?: string }[];
   index: number;
 };
 

@@ -5,6 +5,7 @@ import { createDialogModal } from "./dialog-modal";
 import { createAlbumCoverModal, createPlaylistCoverModal } from "./playlist-cover-modal";
 import { createPlaylistCreateModal } from "./playlist-create-modal";
 import { createPlaylistEditModal } from "./playlist-edit-modal";
+import { createPlayerPlaylistModal } from "./player-playlist-modal";
 import { Inject } from "@/common/utils/inject";
 import Provider, { type ModalRender } from "./modal-provider";
 
@@ -54,6 +55,7 @@ function useModal() {
     createDialogModal,
     createAddToPlaylistModal,
     createPlaylistCreateModal,
-    createPlaylistEditModal
+    createPlaylistEditModal,
+    createPlayerPlaylistModal
   };
 }

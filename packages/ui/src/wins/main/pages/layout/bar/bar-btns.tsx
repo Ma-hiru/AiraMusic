@@ -4,10 +4,12 @@ import { ListMusic, Trash2, Volume, Volume1, Volume2, VolumeX } from "lucide-rea
 import { useUpdate } from "@/common/hooks/use-update";
 import { useListenable } from "@/common/hooks/use-listenable";
 import { RendererWindow } from "@/common/lib/window";
-import { createPlayerPlaylistModal } from "@/wins/main/componets/player-playlist-modal";
 import { useAtomValue } from "jotai";
 import { fmModeAtom } from "@/wins/main/atoms/track";
 import { NeteaseAPITrack } from "@/common/netease/api";
+import { usePageJump } from "@/wins/main/hooks/use-page-jump";
+import { useLatestRef } from "@/common/hooks/use-latest-ref";
+import { usePlayerActionInList } from "@/wins/main/hooks/use-player-action-in-list";
 import RendererPlayerHandle from "@/wins/main/lib/handle";
 import AppModal from "@/common/components/display/modal";
 import AppToast from "@/common/components/display/toast";
@@ -50,7 +52,7 @@ const onWheel = (e: WheelEvent<HTMLElement>) => {
 };
 
 const BarBtns: FC<object> = () => {
-  const { create } = AppModal.useModal();
+  const { create, createPlayerPlaylistModal } = AppModal.useModal();
   const lyricWindow = useListenable(RendererWindow.get("lyric"));
   const player = RendererPlayerHandle.usePlayer();
   const muted = player.audio.instance.muted;
@@ -60,10 +62,13 @@ const BarBtns: FC<object> = () => {
   const fmMode = useAtomValue(fmModeAtom);
 
   const update = useUpdate();
-
+  const actionRef = useLatestRef({
+    ...usePageJump(),
+    ...usePlayerActionInList(() => player.playlist.list())
+  });
   const openPlaylistModal = useCallback(() => {
-    create(createPlayerPlaylistModal);
-  }, [create]);
+    create(createPlayerPlaylistModal, actionRef.current);
+  }, [actionRef, create, createPlayerPlaylistModal]);
 
   const openLyricWindow = useCallback(async () => {
     if (lyricWindow.opened) {

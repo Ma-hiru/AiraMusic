@@ -24,72 +24,41 @@ import {
   useState,
   type WheelEvent as ReactWheelEvent
 } from "react";
-import { useThemeInjectFromBus } from "@/common/hooks/use-theme-inject-from-bus";
+import {
+  getExtension,
+  getImageExtension,
+  getURLFileName,
+  resolveFilename
+} from "@/common/utils/file";
 import { RendererIPC } from "@mahiru/ipc/renderer";
 import { Log } from "@/common/lib/log";
 import { RendererWindow } from "@/common/lib/window";
+import { RendererImagePreviewConstants } from "@/common/constants/image-preview";
 import AppToast from "@/common/components/display/toast";
 import AppLoading from "@/common/components/fallback/app-loading";
 import Marquee from "@/common/components/display/marquee";
 
-export type ImageViewerEntry = {
-  url?: string;
-  alt?: string;
-};
+const {
+  MIN_SCALE,
+  MAX_SCALE,
+  WHEEL_STEP,
+  BUTTON_ZOOM_STEP,
+  ROTATE_STEP,
+  DOUBLE_TAP_DELAY,
+  DOUBLE_TAP_DISTANCE,
+  MOVE_THRESHOLD,
+  TOOLBAR_HIDE_DELAY,
+  EMPTY_IMAGE
+} = RendererImagePreviewConstants;
 
 interface ImageViewerProps {
-  images: ImageViewerEntry[];
+  images: { url?: string; alt?: string }[];
   index: number;
   onIndexChange: NormalFunc<[index: number]>;
   onToolBarChange?: NormalFunc<[visible: boolean]>;
 }
 
-interface ToolbarButtonProps {
-  icon: LucideIcon;
-  label: string;
-  disabled?: boolean;
-  onClick?: NormalFunc;
-}
-
-const MIN_SCALE = 0.25;
-const MAX_SCALE = 5;
-const WHEEL_STEP = 0.12;
-const BUTTON_ZOOM_STEP = 0.35;
-const ROTATE_STEP = 90;
-const DOUBLE_TAP_DELAY = 300;
-const DOUBLE_TAP_DISTANCE = 30;
-const MOVE_THRESHOLD = 10;
-const TOOLBAR_HIDE_DELAY = 3000;
-const EMPTY_IMAGE: ImageViewerEntry = {};
-const UNSAFE_FILE_NAME = /[<>:"/\\|?*]/g;
-
-const ToolbarButton: FC<ToolbarButtonProps> = ({ icon: Icon, label, disabled, onClick }) => {
-  return (
-    <button
-      type="button"
-      aria-label={label}
-      title={label}
-      disabled={disabled}
-      onClick={onClick}
-      className={cx(
-        `
-          flex size-9 items-center justify-center rounded-md
-          text-white/85 outline-none transition-all duration-200 ease-in-out
-          hover:bg-white/15 hover:text-white active:scale-[0.92]
-          focus-visible:ring-2 focus-visible:ring-white/45
-        `,
-        disabled && "pointer-events-none opacity-35"
-      )}>
-      <Icon className="size-4.5" />
-    </button>
-  );
-};
-
-const MemoToolbarButton = memo(ToolbarButton);
-
 const ImageViewer: FC<ImageViewerProps> = ({ images, index, onIndexChange, onToolBarChange }) => {
-  useThemeInjectFromBus();
-
   const viewerRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
   const toolbarTimer = useRef<Nullable<number>>(null);
@@ -601,13 +570,13 @@ const ImageViewer: FC<ImageViewerProps> = ({ images, index, onIndexChange, onToo
             ? "translate-y-0 opacity-100"
             : "pointer-events-none translate-y-6 opacity-0"
         )}>
-        <MemoToolbarButton
+        <ToolbarButton
           icon={ArrowLeftToLine}
           label="上一张"
           disabled={images.length <= 1}
           onClick={lastImage}
         />
-        <MemoToolbarButton
+        <ToolbarButton
           icon={ZoomOut}
           label="缩小"
           disabled={status !== "loaded" || scale <= MIN_SCALE}
@@ -634,25 +603,25 @@ const ImageViewer: FC<ImageViewerProps> = ({ images, index, onIndexChange, onToo
           <RotateCcw className="size-4" />
           <span>{Math.round(scale * 100)}%</span>
         </button>
-        <MemoToolbarButton
+        <ToolbarButton
           icon={ZoomIn}
           label="放大"
           disabled={status !== "loaded" || scale >= MAX_SCALE}
           onClick={() => zoomFromCenter(BUTTON_ZOOM_STEP)}
         />
-        <MemoToolbarButton
+        <ToolbarButton
           icon={RotateCw}
           label="向右旋转"
           disabled={status !== "loaded"}
           onClick={() => rotate(ROTATE_STEP)}
         />
-        <MemoToolbarButton
+        <ToolbarButton
           icon={Download}
           label="保存图片"
           disabled={status !== "loaded" || !hasImages}
           onClick={() => void saveImage()}
         />
-        <MemoToolbarButton
+        <ToolbarButton
           icon={ArrowRightToLine}
           label="下一张"
           disabled={images.length <= 1}
@@ -663,50 +632,45 @@ const ImageViewer: FC<ImageViewerProps> = ({ images, index, onIndexChange, onToo
   );
 };
 
-function createDownloadName(image: ImageViewerEntry, contentType: Nullable<string>) {
-  const fallbackName = getURLFileName(image.url) || "image";
-  const baseName =
-    stripControlChars(image.alt || fallbackName)
-      .replace(UNSAFE_FILE_NAME, "_")
-      .trim() || "image";
-  const ext = getImageExtension(contentType) || getExtension(fallbackName) || "jpg";
-  return ensureExtension(baseName.slice(0, 120), ext);
-}
+const ToolbarButton = ({
+  icon: Icon,
+  label,
+  disabled,
+  onClick
+}: {
+  icon: LucideIcon;
+  label: string;
+  disabled?: boolean;
+  onClick?: NormalFunc;
+}) => {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      title={label}
+      disabled={disabled}
+      onClick={onClick}
+      className={cx(
+        `
+          flex size-9 items-center justify-center rounded-md
+          text-white/85 outline-none transition-all duration-200 ease-in-out
+          hover:bg-white/15 hover:text-white active:scale-[0.92]
+          focus-visible:ring-2 focus-visible:ring-white/45
+        `,
+        disabled && "pointer-events-none opacity-35"
+      )}>
+      <Icon className="size-4.5" />
+    </button>
+  );
+};
 
-function getImageExtension(contentType: Nullable<string>) {
-  const value = contentType?.split(";")[0]?.trim().toLowerCase();
-  if (!value?.startsWith("image/")) return "";
-  const ext = value.slice("image/".length);
-  if (ext === "jpeg") return "jpg";
-  if (ext === "svg+xml") return "svg";
-  return ext || "";
-}
-
-function getURLFileName(url: Optional<string>) {
-  if (!url) return "";
-  try {
-    const path = new URL(url, window.location.href).pathname;
-    return decodeURIComponent(path.split("/").filter(Boolean).at(-1) || "");
-  } catch {
-    return url.split("/").filter(Boolean).at(-1) || "";
-  }
-}
-
-function getExtension(fileName: string) {
-  const ext = fileName.split(".").at(-1);
-  if (!ext || ext === fileName) return "";
-  return ext.replace(UNSAFE_FILE_NAME, "").toLowerCase();
-}
-
-function stripControlChars(value: string) {
-  return [...value].filter((char) => char.charCodeAt(0) >= 32).join("");
-}
-
-function ensureExtension(fileName: string, ext: string) {
-  const normalizedExt = ext.replace(/^\./, "");
-  if (!normalizedExt) return fileName;
-  if (fileName.toLowerCase().endsWith(`.${normalizedExt.toLowerCase()}`)) return fileName;
-  return `${fileName}.${normalizedExt}`;
-}
+const createDownloadName = (
+  image: { url?: string; alt?: string },
+  contentType: Nullable<string>
+) => {
+  const urlFileName = getURLFileName(image.url);
+  const ext = getImageExtension(contentType) || getExtension(urlFileName);
+  return resolveFilename(image.alt || urlFileName || "image", ext || "jpg");
+};
 
 export default memo(ImageViewer);

@@ -1,38 +1,56 @@
 import { useCallback, useEffect, useRef } from "react";
 import { ListMusic } from "lucide-react";
 import { useUserTrackManager } from "@/common/hooks/use-user-track-manager";
+import { useTrackContextMenu } from "@/common/hooks/use-track-context-menu";
+import { openTrackAddToPlaylist } from "@/common/hooks/use-track-add-to-playlist";
+import { useListenable } from "@/common/hooks/use-listenable";
+import type { ModalRender } from "@/common/components/display/modal/modal-provider";
+import type RendererPlayer from "@/common/player/core";
 import AppModal from "@/common/components/display/modal";
+import RendererImageConstants from "@/common/constants/image";
+
 import TrackList, {
   type TrackListClickFunc,
   type TrackListRef
 } from "@/common/components/display/track_list";
-import { usePageJump } from "@/wins/main/hooks/use-page-jump";
-import { usePlayerActionInList } from "@/wins/main/hooks/use-player-action-in-list";
-import { useTrackContextMenu } from "@/common/hooks/use-track-context-menu";
-import { openTrackAddToPlaylist } from "@/common/hooks/use-track-add-to-playlist";
-import type { ModalRender } from "@/common/components/display/modal/modal-provider";
-import RendererImageConstants from "@/common/constants/image";
-import RendererPlayerHandle from "@/wins/main/lib/handle";
+import { NeteaseTrackRecord } from "@/common/netease/models";
 
-export function createPlayerPlaylistModal(onJumpPage?: NormalFunc): ModalRender {
+type PlaylistModalProps = {
+  onJumpPage?: NormalFunc;
+  jumpAlbumPage: NormalFunc<[id: number]>;
+  jumpArtistPage: NormalFunc<[id: number]>;
+  openTrackComment: NormalFunc<[track: NeteaseTrackRecord]>;
+  addTrackToPlaylistLast: NormalFunc<[track: NeteaseTrackRecord]>;
+  addTrackToPlaylistNext: NormalFunc<[track: NeteaseTrackRecord]>;
+};
+
+export function createPlayerPlaylistModal({
+  player,
+  ...rest
+}: PlaylistModalProps & { player: RendererPlayer }): ModalRender {
   return {
     title: "播放列表",
     subTitle: "Queue",
     width: 900,
     height: 640,
     contentClassName: "overflow-hidden! px-4 pb-4",
-    content: <PlayerPlaylistModalContent onJumpPage={onJumpPage} />
+    content: <PlayerPlaylistModalContent {...rest} rendererPlayer={player} />
   };
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
-const PlayerPlaylistModalContent = (props: { onJumpPage?: NormalFunc }) => {
-  const player = RendererPlayerHandle.usePlayer();
-  const trackListRef = useRef<Nullable<TrackListRef>>(null);
-  const { onJumpPage } = props;
+const PlayerPlaylistModalContent = ({
+  onJumpPage,
+  rendererPlayer,
+  jumpArtistPage,
+  jumpAlbumPage,
+  openTrackComment,
+  addTrackToPlaylistLast,
+  addTrackToPlaylistNext
+}: PlaylistModalProps & { rendererPlayer: RendererPlayer }) => {
   const { heartManager, playableManager } = useUserTrackManager();
-  const { jumpAlbumPage, jumpArtistPage } = usePageJump();
-
+  const player = useListenable(rendererPlayer);
+  const trackListRef = useRef<Nullable<TrackListRef>>(null);
   const tracks = player.playlist.list();
   const activeIndex = player.playlist.pos();
   const activeTrack = player.current.track;
@@ -41,7 +59,7 @@ const PlayerPlaylistModalContent = (props: { onJumpPage?: NormalFunc }) => {
     if (activeIndex < 0) return;
     const timer = window.setTimeout(() => {
       void trackListRef.current?.scrollToItem(activeIndex);
-    }, 200);
+    }, 500);
     return () => window.clearTimeout(timer);
   }, [activeIndex, tracks.length]);
 
@@ -69,9 +87,6 @@ const PlayerPlaylistModalContent = (props: { onJumpPage?: NormalFunc }) => {
     },
     [jumpArtistPage, onJumpPage]
   );
-
-  const { openTrackComment, addTrackToPlaylistLast, addTrackToPlaylistNext } =
-    usePlayerActionInList(() => player.playlist.list());
 
   // 右键菜单
   const { onContextMenu } = useTrackContextMenu({

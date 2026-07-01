@@ -1,6 +1,5 @@
 import { cx } from "@emotion/css";
 import { type FC, memo, useCallback, useMemo } from "react";
-import { createPlayerPlaylistModal } from "@/wins/main/componets/player-playlist-modal";
 import {
   ArrowRightLeft,
   ListMusic,
@@ -18,6 +17,9 @@ import { NeteaseAPITrack } from "@/common/netease/api";
 import { useAtomValue, useSetAtom } from "jotai";
 import { fmModeAtom } from "@/wins/main/atoms/track";
 import { playModalAtom } from "@/wins/main/atoms/layout";
+import { useLatestRef } from "@/common/hooks/use-latest-ref";
+import { usePageJump } from "@/wins/main/hooks/use-page-jump";
+import { usePlayerActionInList } from "@/wins/main/hooks/use-player-action-in-list";
 import RendererPlayerHandle from "@/wins/main/lib/handle";
 import AppModal from "@/common/components/display/modal";
 import AppToast from "@/common/components/display/toast";
@@ -32,15 +34,21 @@ interface ControlProps {
 }
 
 const Control: FC<ControlProps> = ({ className, containerClassName, itemClassName }) => {
-  const { create } = AppModal.useModal();
+  const { create, createPlayerPlaylistModal } = AppModal.useModal();
   const player = RendererPlayerHandle.usePlayer();
   const setPlayModalAtom = useSetAtom(playModalAtom);
   const fmMode = useAtomValue(fmModeAtom);
+
+  const actionRef = useLatestRef({
+    ...usePageJump(),
+    ...usePlayerActionInList(() => player.playlist.list())
+  });
   const openPlaylistModal = useCallback(() => {
-    create(createPlayerPlaylistModal, () => {
-      setPlayModalAtom(false);
+    create(createPlayerPlaylistModal, {
+      ...actionRef.current,
+      onJumpPage: () => setPlayModalAtom(false)
     });
-  }, [create, setPlayModalAtom]);
+  }, [actionRef, create, createPlayerPlaylistModal, setPlayModalAtom]);
 
   const dislike = useCallback(() => {
     const current = player.current.track;
