@@ -1,0 +1,15 @@
+{
+  "name": "@mahiru/ai",
+  "type": "module",
+  "types": "dist-types/src/index.d.ts",
+  "version": "1.0.0",
+  "main": "src/index.ts",
+  "scripts": {
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "openai": "^6.45.0",
+    "zod": "^4.4.3",
+    "zod-to-json-schema": "^3.25.2"
+  }
+}

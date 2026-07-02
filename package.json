@@ -57,7 +57,7 @@
     "lint:check:native": "yarn workspace @mahiru/native lint:check",
     "lint:check:store": "yarn workspace @mahiru/store lint:check",
     "test": "yarn npm-run-all --parallel test:ts test:wasm test:store",
-    "test:ts": "yarn workspace @mahiru/ui test && yarn workspace aira-music test",
+    "test:ts": "yarn workspace @mahiru/ui test && yarn workspace aira-music test && yarn workspace @mahiru/ai test",
     "test:wasm": "yarn workspace @mahiru/wasm test",
     "test:store": "yarn workspace @mahiru/store test",
     "push-check": "yarn npm-run-all --parallel check lint test",
