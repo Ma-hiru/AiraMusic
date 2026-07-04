@@ -1,11 +1,13 @@
 import { app, dialog, BrowserWindow } from "electron";
 import { Log } from "@/lib/log";
+import { MainAgent } from "@/lib/agent";
 import { MainHandle } from "@/lib/handle";
 import { MainRuntime } from "@/lib/runtime";
 import { mergeCacheStoreConfig } from "@/utils/merge";
 import { MainWindowManager } from "@/lib/window-manager";
 import { MainScreenResolver } from "@/lib/screen-resolver";
 import { MainCacheStoreConstants } from "@/constants/store";
+import { type AIResult, type AIErrorCode } from "@mahiru/ai";
 import { MainStoreForConfig, MainStoreForRenderer } from "@/lib/key-value-store";
 import Net from "node:net";
 import Https from "node:https";
@@ -14,6 +16,33 @@ import Dns from "node:dns/promises";
 import type { InvokeHandlers } from "@mahiru/ipc/types";
 
 export const invokeHandlers: InvokeHandlers = {
+  invoke_agent_list_providers: () => {
+    return agentData(() => MainAgent.listProviders());
+  },
+  invoke_agent_list_configs: () => {
+    return agentResult(() => MainAgent.listConfigs());
+  },
+  invoke_agent_create_config: (_, options) => {
+    return agentResult(() => MainAgent.createConfig(options));
+  },
+  invoke_agent_create_conversation: (_, options) => {
+    return agentResult(() => MainAgent.createConversation(options));
+  },
+  invoke_agent_list_conversations: () => {
+    return agentResult(() => MainAgent.listConversations());
+  },
+  invoke_agent_get_conversation: (_, id) => {
+    return agentResult(() => MainAgent.getConversationSnapshot(id));
+  },
+  invoke_agent_remove_conversation: (_, id) => {
+    return agentResult(() => MainAgent.removeConversation(id));
+  },
+  invoke_agent_chat: (_, options) => {
+    return agentResult(() => MainAgent.chat(options));
+  },
+  invoke_agent_abort: (_, runID) => {
+    return agentResult(() => MainAgent.abort(runID));
+  },
   invoke_fs_select: async (_, type) => {
     const { canceled, filePaths } = await dialog.showOpenDialog({
       title: type === "dir" ? "选择目录" : "选择文件",
@@ -199,5 +228,50 @@ export const invokeHandlers: InvokeHandlers = {
       Log.error(err);
       return { ok: false, reason: "本地数据错误" };
     }
+  }
+};
+
+const toAgentInvokeError = (error: unknown) => {
+  return {
+    ok: false,
+    reason: {
+      type: "unknown" as AIErrorCode,
+      message: error instanceof Error ? error.message : String(error)
+    }
+  } as const;
+};
+
+const agentResult = async <T>(action: () => AIResult<T> | Promise<AIResult<T>>) => {
+  try {
+    const result = await action();
+    if (result.isErr()) {
+      return {
+        ok: false,
+        reason: {
+          type: result.reason.type,
+          message: result.reason.message
+        }
+      } as const;
+    }
+
+    return {
+      ok: true,
+      data: structuredClone(result.unwrap())
+    } as const;
+  } catch (error) {
+    Log.error("invoke(agent)", error);
+    return toAgentInvokeError(error);
+  }
+};
+
+const agentData = <T>(action: () => T) => {
+  try {
+    return {
+      ok: true,
+      data: structuredClone(action())
+    } as const;
+  } catch (error) {
+    Log.error("invoke(agent)", error);
+    return toAgentInvokeError(error);
   }
 };

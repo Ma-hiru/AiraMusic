@@ -7,9 +7,9 @@ interface Quality {
 }
 
 interface NeteaseTrackModel {
+  dt: number;
   id: number;
   /** 歌曲标题 */
-  dt: number;
   name: string;
   /** 别名列表，第一个别名会被显示作副标题 */
   alia: string[];

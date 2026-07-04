@@ -12,14 +12,6 @@ export interface LLMConversationSnapshot {
 export interface LLMConversationCreateOptions {
   id: string;
   name?: string;
-  createdAt?: number;
-  updatedAt?: number;
-  messages?: LLMMessage[];
-  metadata?: Record<string, unknown>;
-}
-
-export interface LLMConversationRepositoryCreateOptions {
-  id?: string;
   messages?: LLMMessage[];
   metadata?: Record<string, unknown>;
 }

@@ -248,7 +248,7 @@ export class MainWindowPreset {
         webPreferences: {
           preload: MainPathResolver.preloadPath
         },
-        title: "info",
+        title: "display",
         resizable: true,
         titleBarStyle: "hidden",
         frame: false,
@@ -293,6 +293,36 @@ export class MainWindowPreset {
       id: "comments",
       handleExits: "IGNORE",
       loadURL: (port: number) => `http://localhost:${port}/comments.html`,
+      onCreate: (win: BrowserWindow) => {
+        (MainRuntime.isDev || getArgFlag("devtools")) && win.webContents.openDevTools();
+      }
+    };
+  }
+
+  static get agent(): AppWindowCreatorProps {
+    const { min, base } = MainScreenResolver.primary.adaptiveWindowSizePreset(
+      MainWindowConstants.WINDOW_BASE_SIZE.agent
+    );
+    return {
+      options: {
+        width: base.width,
+        height: base.height,
+        minHeight: min.height,
+        minWidth: min.width,
+        webPreferences: {
+          preload: MainPathResolver.preloadPath
+        },
+        title: "agent",
+        resizable: true,
+        titleBarStyle: "hidden",
+        frame: false,
+        skipTaskbar: false,
+        icon: MainPathResolver.appLogoPath
+      },
+      memoPos: true,
+      id: "agent",
+      handleExits: "IGNORE",
+      loadURL: (port: number) => `http://localhost:${port}/agent.html`,
       onCreate: (win: BrowserWindow) => {
         (MainRuntime.isDev || getArgFlag("devtools")) && win.webContents.openDevTools();
       }

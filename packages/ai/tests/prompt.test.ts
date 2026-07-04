@@ -1,16 +1,28 @@
 import { z } from "zod";
 import { AIResult } from "@/result";
+import { createLog } from "@mahiru/log";
 import { LLMPromptBuilder } from "@/prompt";
-import { LLMConversation } from "@/conversation";
+import { LLMConversation } from "@/conversations";
 import { LLMTool, LLMToolRegistry, type LLMToolContext } from "@/tools";
 import { LLMContextComposer, type LLMContextBlock, type LLMContextSource } from "@/context";
 import type { AIInject } from "@/inject";
 
 const baseInject = {
-  Log: () => undefined,
+  Log: createLog("TRACE"),
   CreateID: () => "id",
   ConversationStore: {
     list: async () => AIResult.ok([]),
+    remove: async () => AIResult.ok(undefined),
+    write: async () => AIResult.ok(undefined),
+    read: async () => AIResult.ok(undefined)
+  },
+  ProviderConfigStore: {
+    list: async () => AIResult.ok([]),
+    remove: async () => AIResult.ok(undefined),
+    write: async () => AIResult.ok(undefined),
+    read: async () => AIResult.ok(undefined)
+  },
+  ProviderAPIKeyStore: {
     remove: async () => AIResult.ok(undefined),
     write: async () => AIResult.ok(undefined),
     read: async () => AIResult.ok(undefined)
@@ -46,6 +58,7 @@ describe("LLMPromptBuilder", () => {
     expect(built.request.signal).toBe(signal);
     expect(built.request.temperature).toBe(0.2);
     expect(built.request.maxOutputTokens).toBe(256);
+    expect(built.userMessage).toEqual({ role: "user", content: "继续推荐" });
     expect(built.request.messages).toEqual([
       { role: "system", content: "你是 AiraMusic 的音乐助手" },
       { role: "system", content: "[track]\n当前歌曲：Aira" },
@@ -87,8 +100,9 @@ describe("LLMPromptBuilder", () => {
 
   it("uses explicit tool config", async () => {
     const signal = new AbortController().signal;
-    const registry = LLMToolRegistry.create([new SearchMusicTool()]).unwrap();
     const conversation = LLMConversation.create({ id: "conversation-tools" }).unwrap();
+    const registry = new LLMToolRegistry();
+    registry.register(new SearchMusicTool());
 
     const result = await new LLMPromptBuilder().build({
       signal,
@@ -121,7 +135,11 @@ describe("LLMPromptBuilder", () => {
         .isOk()
     ).toBe(true);
 
-    const result = await new LLMPromptBuilder().build({ signal, conversation, input: "继续" });
+    const result = await new LLMPromptBuilder().build({
+      signal,
+      conversation,
+      input: "继续"
+    });
 
     expect(result.isErr()).toBe(true);
     if (result.isErr()) expect(result.reason.type).toBe("invalid_conversation");
@@ -141,12 +159,17 @@ function source(name: string, priority: number, blocks: LLMContextBlock[]): LLMC
 const searchSchema = z.object({ keyword: z.string() });
 
 class SearchMusicTool extends LLMTool<typeof searchSchema, string[]> {
-  readonly name = "search_music";
-  readonly description = "搜索音乐";
   readonly inputSchema = searchSchema;
 
+  constructor() {
+    super({
+      name: "search_music",
+      description: "搜索音乐"
+    });
+  }
+
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async execute(_input: z.infer<typeof searchSchema>, _context: LLMToolContext) {
+  override async execute(_input: z.infer<typeof searchSchema>, _context: LLMToolContext) {
     return AIResult.ok(["Aira"]);
   }
 }

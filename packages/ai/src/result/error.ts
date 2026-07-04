@@ -1,4 +1,5 @@
 export type AIErrorCode =
+  | "raw"
   | "auth" // 401/403
   | "inner" // 内部错误
   | "aborted" // 用户主动中止（注意：不是真正的"错误"）
@@ -11,6 +12,8 @@ export type AIErrorCode =
   | "bad_response" // SSE/JSON 形状异常
   | "context_load" // context source 加载失败
   | "unknown_tool" // 工具调用校验失败（一般不阻断消息）
+  | "run_not_found" // agent run 不存在
+  | "config_storage" // provider config / apiKey 存储读写失败
   | "invalid_config" // 配置不完整/解密失败
   | "invalid_actions" // 动作块校验失败（一般不阻断消息）
   | "model_not_found" // 404

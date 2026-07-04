@@ -48,6 +48,17 @@ export class NeteaseLyric implements NeteaseLyricModel {
     };
   }
 
+  toToolJSONValue(): JsonValue {
+    return {
+      data: this.data as unknown as JsonValue[],
+      tips: this.tips,
+      rmExisted: this.rmExisted,
+      tlExisted: this.tlExisted,
+      noteExisted: this.noteExisted,
+      id: this.id ?? null
+    };
+  }
+
   static fromNeteaseAPIResponse(response: NeteaseAPI.NeteaseLyricResponse) {
     return new NeteaseLyric(Parser.parseNeteaseLyricResponse(response));
   }

@@ -3,7 +3,7 @@ import {
   LLMConversation,
   LLMConversationRepository,
   type LLMConversationSnapshot
-} from "@/conversation";
+} from "@/conversations";
 import type { AIConversationStore } from "@/inject";
 
 const toolCall = {

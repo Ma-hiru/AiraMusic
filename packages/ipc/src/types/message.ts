@@ -1,8 +1,30 @@
+import type { AIAgentEvent } from "@mahiru/ai";
+
+import type {
+  AgentToolRequest,
+  AgentFocusContext,
+  AgentToolResponse,
+  AgentSettingsContext
+} from "./agent";
+
+export type PlayerAction =
+  | "exit"
+  | "next"
+  | "play"
+  | "pause"
+  | "update"
+  | "previous"
+  | "toggle-lyric-version-rm"
+  | "toggle-lyric-version-tl";
+
 /**
  * - deliver 表示主要是 main to other
  * - dispatch 表示主要是 other to main
  * */
 type MessageBus = {
+  bus_dispatch_player_action: PlayerAction;
+  bus_deliver_focus_context: AgentFocusContext;
+  bus_deliver_agent_settings_context: AgentSettingsContext;
   bus_deliver_preview: {
     url: string;
     alt?: string;
@@ -25,15 +47,6 @@ type MessageBus = {
     duration: number;
     currentTime: number;
   };
-  bus_dispatch_player_action:
-    | "exit"
-    | "next"
-    | "play"
-    | "pause"
-    | "update"
-    | "previous"
-    | "toggle-lyric-version-rm"
-    | "toggle-lyric-version-tl";
   bus_deliver_history: {
     list: {
       id: number;
@@ -156,6 +169,9 @@ type MessageSingle = {
   message_dispatch_need_login: boolean;
   message_dispatch_cache_has_clear: boolean;
   message_dispatch_device_output_set: string;
+  message_deliver_agent_chat_event: AIAgentEvent;
+  message_dispatch_agent_tool_request: AgentToolRequest;
+  message_deliver_agent_tool_response: AgentToolResponse;
 };
 
 type MessageEventValue = MessageBus & MessageSingle;

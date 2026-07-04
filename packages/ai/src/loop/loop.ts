@@ -1,96 +1,103 @@
-import { AIResult } from "@/result";
+import { AIError, AIResult } from "@/result";
+import { LLMProvider, type LLMProviderConfig } from "@/provider/interface";
 import type { LLMToolCall, LLMToolResult } from "@/tools";
-import type { LLMMessageText, LLMGenerateRequest } from "@/provider";
+import type {
+  LLMMessage,
+  LLMGenerateRequest,
+  LLMMessageToolCall,
+  LLMGenerateResponse
+} from "@/provider";
 
-import type { LLMLoopStep, LLMLoopOptions, LLMLoopRunResult, LLMLoopRunOptions } from "./interface";
+import type {
+  LLMLoopStep,
+  LLMLoopEvent,
+  LLMLoopRunStream,
+  LLMLoopRunOptions,
+  LLMLoopEventResponse
+} from "./interface";
 
-export class LLMLoop<TConfig> {
-  private readonly config: TConfig;
-  private readonly maxSteps: number;
-  private readonly prompt: LLMLoopOptions<TConfig>["prompt"];
-  private readonly provider: LLMLoopOptions<TConfig>["provider"];
-
-  constructor(options: LLMLoopOptions<TConfig>) {
-    this.config = options.config;
-    this.prompt = options.prompt;
-    this.provider = options.provider;
-    this.maxSteps = options.maxSteps;
-  }
-
-  async run(options: LLMLoopRunOptions): Promise<AIResult<LLMLoopRunResult>> {
-    if (!Number.isInteger(this.maxSteps) || this.maxSteps < 1) {
-      return AIResult.err({
-        type: "invalid_config",
-        message: "loop maxSteps 必须是大于 0 的整数"
-      });
+export class LLMLoop {
+  static async *run<TConfig extends LLMProviderConfig>(
+    options: LLMLoopRunOptions<TConfig>
+  ): LLMLoopRunStream {
+    const promptResult = await options.promptBuilder.build(options);
+    if (promptResult.isErr()) {
+      yield promptResult;
+      return promptResult;
     }
 
-    const promptResult = await this.prompt.build(options);
-    if (promptResult.isErr()) return promptResult;
-
-    const built = promptResult.unwrap();
-    const initialHistoryLength = options.conversation.toMessages().length;
-    const prefixLength = built.request.messages.length - initialHistoryLength - 1;
-    if (prefixLength < 0) {
-      return AIResult.err({
-        type: "invalid_prompt_config",
-        message: "prompt messages 与 conversation/input 不匹配"
-      });
-    }
-
-    const prefix = built.request.messages.slice(0, prefixLength);
-    const userMessage = built.request.messages.at(-1);
-    if (!userMessage || userMessage.role !== "user" || !("content" in userMessage)) {
-      return AIResult.err({
-        type: "invalid_prompt_config",
-        message: "prompt 缺少当前 user message"
-      });
-    }
-
-    const appendedUser = options.conversation.appendMessage(userMessage as LLMMessageText);
-    if (appendedUser.isErr()) return appendedUser;
-
+    const prompt = promptResult.unwrap();
     const steps: LLMLoopStep[] = [];
-    let request: LLMGenerateRequest = built.request;
+    const turnMessages: LLMMessage[] = [prompt.userMessage];
+    let request: LLMGenerateRequest = prompt.request;
 
-    for (let index = 0; index < this.maxSteps; index++) {
+    for (let index = 0; index < options.maxSteps; index++) {
       if (options.signal.aborted) {
-        return AIResult.err({
+        const aborted = AIResult.err({
           type: "aborted",
           message: "loop aborted"
         });
+        yield aborted;
+        return aborted;
       }
 
-      const responseResult = await this.provider.generate(this.config, request);
-      if (responseResult.isErr()) return responseResult;
+      const responseResult = yield* this.runStream(
+        options.provider,
+        options.config,
+        request,
+        index
+      );
+      if (responseResult.isErr()) {
+        yield responseResult;
+        return responseResult;
+      }
 
       const response = responseResult.unwrap();
+      // 没有 tool call 说明已经生成最终回复
       if (!response.toolCalls.length) {
-        const appendedAssistant = options.conversation.appendMessage({
-          role: "assistant",
-          content: response.text
-        });
-        if (appendedAssistant.isErr()) return appendedAssistant;
-
+        const finalMessages: LLMMessage[] = [
+          ...turnMessages,
+          { role: "assistant", content: response.text }
+        ];
         steps.push({ response, toolResults: [] });
-        return AIResult.ok({ response, steps, context: built.context });
-      }
 
+        yield AIResult.ok({
+          step: index,
+          type: "done",
+          response: this.toEventResponse(response),
+          messages: structuredClone(finalMessages),
+          ...(prompt.context ? { context: prompt.context } : {})
+        });
+        return AIResult.ok({
+          response,
+          steps,
+          context: prompt.context,
+          messages: finalMessages
+        });
+      }
       if (!options.tools) {
-        return AIResult.err({
+        const noTools = AIResult.err({
           type: "invalid_tool_call",
           message: "模型返回了 tool call，但 loop 没有配置 tools"
         });
+        yield noTools;
+        return noTools;
       }
 
-      const appendedToolCall = options.conversation.appendMessage({
-        role: "assistant",
-        content: response.text || undefined,
-        toolCalls: response.toolCalls
+      const toolCallMessage: LLMMessageToolCall = response.text
+        ? { role: "assistant", content: response.text, toolCalls: response.toolCalls }
+        : { role: "assistant", toolCalls: response.toolCalls };
+      yield AIResult.ok({
+        step: index,
+        type: "tool_call",
+        message: structuredClone(toolCallMessage),
+        toolCalls: structuredClone(response.toolCalls),
+        ...(response.text ? { text: response.text } : {})
       });
-      if (appendedToolCall.isErr()) return appendedToolCall;
 
       const toolResults: LLMToolResult[] = [];
+      const toolMessages: LLMMessage[] = [];
+
       for (const call of response.toolCalls) {
         const toolResult = await options.tools.registry.execute(call, {
           signal: options.signal,
@@ -103,33 +110,45 @@ export class LLMLoop<TConfig> {
         } else {
           result = toolResult.unwrap();
         }
-        const appendedToolResult = options.conversation.appendMessage({
+
+        toolResults.push(result);
+        toolMessages.push({
           role: "tool",
           name: result.name,
           callID: result.callID,
           content: result.output
         });
-        if (appendedToolResult.isErr()) return appendedToolResult;
-        toolResults.push(result);
       }
 
+      turnMessages.push(toolCallMessage, ...toolMessages);
       steps.push({ response, toolResults });
+      yield AIResult.ok({
+        step: index,
+        type: "tool_result",
+        toolResults,
+        messages: structuredClone(turnMessages)
+      });
+
+      // 更新 request 准备下一次循环
       request = {
-        ...built.request,
-        messages: [...prefix, ...options.conversation.toMessages()]
+        ...prompt.request,
+        messages: [
+          ...prompt.request.messages,
+          // 去掉 user message 因为 request.messages 已经包含了
+          ...turnMessages.slice(1)
+        ]
       };
     }
 
-    return AIResult.err({
+    const maxStepError = AIResult.err({
       type: "bad_response",
-      message: `loop 达到最大步数仍未生成最终回复：${this.maxSteps}`
+      message: `loop 达到最大步数仍未生成最终回复：${options.maxSteps}`
     });
+    yield maxStepError;
+    return maxStepError;
   }
 
-  private buildToolError(
-    call: LLMToolCall,
-    error: { type: string; message: string }
-  ): LLMToolResult {
+  private static buildToolError(call: LLMToolCall, error: AIError): LLMToolResult {
     const raw = {
       error: {
         type: error.type,
@@ -137,12 +156,44 @@ export class LLMLoop<TConfig> {
       },
       call
     };
-
     return {
       raw,
       name: call.name,
       callID: call.callID,
       output: JSON.stringify(raw)
+    };
+  }
+
+  private static async *runStream<TConfig extends LLMProviderConfig>(
+    provider: LLMProvider<TConfig>,
+    config: TConfig,
+    request: LLMGenerateRequest,
+    step: number
+  ): AsyncGenerator<AIResult<LLMLoopEvent>, AIResult<LLMGenerateResponse>> {
+    for await (const eventResult of provider.stream(config, request)) {
+      if (eventResult.isErr()) return eventResult;
+
+      const event = eventResult.unwrap();
+      if (event.type === "text_delta") {
+        yield AIResult.ok({ step, type: "text_delta", text: event.text });
+        continue;
+      }
+
+      return AIResult.ok(event);
+    }
+
+    return AIResult.err({
+      type: "bad_response",
+      message: "provider stream 缺少 done 事件"
+    });
+  }
+
+  private static toEventResponse(response: LLMGenerateResponse): LLMLoopEventResponse {
+    return {
+      text: response.text,
+      usage: response.usage,
+      toolCalls: structuredClone(response.toolCalls),
+      finishReason: response.finishReason
     };
   }
 }

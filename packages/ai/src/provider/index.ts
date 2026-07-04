@@ -9,7 +9,6 @@ export {
   LLMProvider,
   type LLMUsage,
   type LLMMessage,
-  type LLMToolChoice,
   type LLMMessageText,
   type LLMFinishReason,
   type LLMCheckResponse,

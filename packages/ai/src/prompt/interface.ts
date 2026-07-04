@@ -1,6 +1,6 @@
-import type { LLMToolRegistry } from "@/tools";
-import type { LLMConversation } from "@/conversation";
-import type { LLMToolChoice, LLMGenerateRequest } from "@/provider";
+import type { LLMConversation } from "@/conversations";
+import type { LLMToolChoice, LLMToolRegistry } from "@/tools";
+import type { LLMMessageText, LLMGenerateRequest } from "@/provider";
 import type {
   LLMContextComposer,
   LLMContextComposeResult,
@@ -29,5 +29,6 @@ export interface LLMPromptBuildOptions {
 
 export interface LLMPromptBuildResult {
   request: LLMGenerateRequest;
+  userMessage: LLMMessageText;
   context?: LLMContextComposeResult;
 }

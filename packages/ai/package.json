@@ -3,13 +3,15 @@
   "type": "module",
   "types": "dist-types/src/index.d.ts",
   "version": "1.0.0",
-  "main": "src/index.ts",
+  "main": "dist/index.js",
   "scripts": {
-    "test": "vitest run"
+    "test": "vitest run",
+    "build": "tsup"
   },
   "dependencies": {
-    "openai": "^6.45.0",
-    "zod": "^4.4.3",
-    "zod-to-json-schema": "^3.25.2"
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "openai": "^6.45.0"
   }
 }

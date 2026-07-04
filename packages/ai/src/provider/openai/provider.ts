@@ -30,7 +30,11 @@ import type {
   LLMProviderOpenAIGenerateResponse
 } from "./types";
 
-export class LLMProviderOpenAI extends LLMProvider<LLMProviderOpenAIConfig> {
+export class LLMProviderOpenAI extends LLMProvider<
+  LLMProviderOpenAIConfig,
+  LLMProviderOpenAIGenerateResponse<LLMProviderOpenAIConfig["apiMode"]>,
+  LLMProviderOpenAIStreamResponse<LLMProviderOpenAIConfig["apiMode"]>
+> {
   constructor() {
     super("openai");
   }

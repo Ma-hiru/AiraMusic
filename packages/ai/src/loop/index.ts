@@ -1,2 +1,9 @@
 export { LLMLoop } from "./loop";
-export type { LLMLoopStep, LLMLoopOptions, LLMLoopRunResult, LLMLoopRunOptions } from "./interface";
+export type {
+  LLMLoopStep,
+  LLMLoopEvent,
+  LLMLoopRunResult,
+  LLMLoopRunStream,
+  LLMLoopRunOptions,
+  LLMLoopEventResponse
+} from "./interface";

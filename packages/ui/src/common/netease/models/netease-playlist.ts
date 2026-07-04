@@ -33,6 +33,16 @@ export class NeteasePlaylist extends NeteasePlaylistSummary implements NeteasePl
     this.trackIds = props.trackIds;
     this.tracks = props.tracks;
   }
+
+  override toToolJSONValue(): JsonValue {
+    return {
+      ...(super.toToolJSONValue() as object),
+      commentCount: this.commentCount,
+      playlistType: this.playlistType,
+      shareCount: this.shareCount,
+      tracks: this.tracks.map((track) => ({ id: track.id, name: track.name }))
+    } as unknown as JsonValue;
+  }
   //endregion
 
   //region static methods

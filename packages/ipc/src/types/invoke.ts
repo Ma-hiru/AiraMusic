@@ -1,3 +1,16 @@
+import type {
+  AIAgentChatOptions,
+  AIAgentChatAccepted,
+  LLMConversationSnapshot,
+  LLMProviderOpenAIConfig,
+  AIProviderConfigSnapshot,
+  AIAgentCreateConfigOptions,
+  LLMConversationCreateOptions,
+  AIAgentCreateConversationResult
+} from "@mahiru/ai";
+
+import type { AgentInvokeResult, AgentConversationSummary } from "./agent";
+
 /** Invoke 事件类型以及参数 */
 export type InvokeEventMaps = {
   invoke_runtime_id: [undefined, string];
@@ -10,7 +23,6 @@ export type InvokeEventMaps = {
   invoke_device_gpu: [undefined, Promise<unknown>];
   invoke_device_platform: [undefined, NodeJS.Platform];
   invoke_device_net: [undefined, Promise<NetworkStatus>];
-  invoke_store_delete: [string, { ok: true } | { ok: false; reason?: string }];
   invoke_cache_config_get: [undefined, { ttl: string; path: string; capacity: number }];
   invoke_store_get: [string, { ok: false; reason?: string } | { ok: true; value: JsonValue }];
   invoke_store_set: [
@@ -42,6 +54,29 @@ export type InvokeEventMaps = {
       | { ok: false; reason: string }
       | { ok: true; config: { ttl: string; path: string; capacity: number } }
     )
+  ];
+  // agent
+  invoke_agent_abort: [string, Promise<AgentInvokeResult<void>>];
+  invoke_agent_list_providers: [undefined, AgentInvokeResult<string[]>];
+  invoke_agent_remove_conversation: [string, Promise<AgentInvokeResult<void>>];
+  invoke_store_delete: [string, { ok: true } | { ok: false; reason?: string }];
+  invoke_agent_chat: [AIAgentChatOptions, Promise<AgentInvokeResult<AIAgentChatAccepted>>];
+  invoke_agent_list_configs: [undefined, Promise<AgentInvokeResult<AIProviderConfigSnapshot[]>>];
+  invoke_agent_list_conversations: [
+    undefined,
+    Promise<AgentInvokeResult<AgentConversationSummary[]>>
+  ];
+  invoke_agent_get_conversation: [
+    string,
+    Promise<AgentInvokeResult<Optional<LLMConversationSnapshot>>>
+  ];
+  invoke_agent_create_config: [
+    AIAgentCreateConfigOptions<LLMProviderOpenAIConfig>,
+    Promise<AgentInvokeResult<AIProviderConfigSnapshot>>
+  ];
+  invoke_agent_create_conversation: [
+    undefined | Partial<LLMConversationCreateOptions>,
+    Promise<AgentInvokeResult<AIAgentCreateConversationResult>>
   ];
 };
 

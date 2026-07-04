@@ -2,11 +2,13 @@ import { app } from "electron";
 import { Log } from "@/lib/log";
 import { ipcInit } from "@/inner/ipc";
 import { MainTray } from "@/lib/tray";
+import { MainAgent } from "@/lib/agent";
 import { MainServices } from "@/services";
 import { MainProtocol } from "@/inner/protocol";
 import { MainWindowPreset } from "@/lib/window-preset";
 import { MainWindowCreator } from "@/lib/window-creator";
 import { MainWindowManager } from "@/lib/window-manager";
+import { MainStoreForConfig } from "@/lib/key-value-store";
 import { MainScreenResolver } from "@/lib/screen-resolver";
 import { MainExitCodeConstants } from "@/constants/exit-code";
 import { MainTaskBarCoverPreview } from "@/lib/taskbar-cover";
@@ -134,6 +136,15 @@ export class MainApp {
     }
   }
 
+  private enableAgent() {
+    try {
+      return MainStoreForConfig.get("enableAgent", true) && !!MainAgent.init();
+    } catch (err) {
+      Log.warn("agent", "failed to enable agent", err);
+      return false;
+    }
+  }
+
   /**
    * @desc 停止所有服务
    * */
@@ -198,6 +209,10 @@ export class MainApp {
         this.registerTaskBar(); // 注册任务栏
         if (this.isExiting) return;
         Log.info("App taskbar registered");
+
+        const enable = this.enableAgent(); // 启用 Agent
+        if (this.isExiting) return;
+        enable && Log.info("App agent initialized");
 
         this._status = "running"; // 修改状态，完成初始化
         Log.info("App running");

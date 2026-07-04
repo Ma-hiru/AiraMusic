@@ -20,6 +20,16 @@ export class NeteaseTrackRecord {
     this.name = this.detail.name;
   }
 
+  static toToolJSONValue(record: NeteaseTrackRecord): JsonValue {
+    return {
+      id: record.id,
+      name: record.name,
+      sourceID: record.sourceID,
+      sourceName: record.sourceName,
+      detail: record.detail.toToolJSONValue()
+    };
+  }
+
   static fromRecordObject<T extends Optional<NeteaseTrackRecordWithModel>>(
     record: T
   ): T extends Falsy ? null : NeteaseTrackRecord {
@@ -42,6 +52,6 @@ export class NeteaseTrackRecord {
   }
 }
 
-type NeteaseTrackRecordWithModel = Omit<NeteaseTrackRecord, "detail"> & {
+type NeteaseTrackRecordWithModel = Omit<Jsonify<NeteaseTrackRecord>, "detail"> & {
   detail: NeteaseTrack | NeteaseTrackModel;
 };

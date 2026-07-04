@@ -1,9 +1,23 @@
 import { AIResult } from "@/result";
 import type { LLMToolChoice } from "@/tools/interface";
-export type { LLMToolChoice } from "@/tools/interface";
 import type { LLMToolCall, LLMToolDefinition } from "@/tools";
 
-export abstract class LLMProvider<TConfig = unknown> {
+export interface LLMProviderConfig {
+  model: string;
+  apiKey: string;
+  baseURL?: string;
+  timeoutMs?: number;
+}
+
+export interface LLMProviderConfigPublic extends LLMProviderConfig {
+  apiKey: `${string}****${string}`;
+}
+
+export abstract class LLMProvider<
+  TConfig extends LLMProviderConfig = LLMProviderConfig,
+  TGenerateResponse = unknown,
+  TStreamResponse = unknown
+> {
   readonly name: string;
 
   protected constructor(name: string) {
@@ -12,15 +26,15 @@ export abstract class LLMProvider<TConfig = unknown> {
 
   abstract check(config: TConfig): Promise<AIResult<LLMCheckResponse>>;
 
-  abstract generate(
-    config: TConfig,
+  abstract generate<T extends TConfig>(
+    config: T,
     request: LLMGenerateRequest
-  ): Promise<AIResult<LLMGenerateResponse>>;
+  ): Promise<AIResult<LLMGenerateResponse<TGenerateResponse>>>;
 
-  abstract stream(
-    config: TConfig,
+  abstract stream<T extends TConfig>(
+    config: T,
     request: LLMGenerateRequest
-  ): AsyncGenerator<AIResult<LLMGenerateStreamResponse>>;
+  ): AsyncGenerator<AIResult<LLMGenerateStreamResponse<TStreamResponse>>>;
 }
 
 export interface LLMGenerateRequest {

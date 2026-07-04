@@ -13,9 +13,13 @@ import { useLatestRef } from "@/common/hooks/use-latest-ref";
 import { NeteaseTrackRecord } from "@/common/netease/models";
 import { useListenable } from "@/common/hooks/use-listenable";
 import { useAudioOutput } from "@/common/hooks/use-audio-output";
+import { SearchType, CommentSort, CommentType } from "@/common/enum";
+import { NeteaseAPITrack, NeteaseAPISearch, NeteaseAPIComment } from "@/common/netease/api";
 import {
   NeteaseServicesAlbum,
+  NeteaseServicesLyric,
   NeteaseServicesTrack,
+  NeteaseServicesArtist,
   NeteaseServicesPlaylist
 } from "@/common/netease/services";
 import RendererPlayerHandle from "@/wins/main/lib/handle";
@@ -386,6 +390,144 @@ const Bus: FC<object> = () => {
       }
     }
   }, [modifiedBus.data, modifiedBus.type, navigate, userRef, locationRef]);
+  // 7. 处理Agent工具请求
+  useEffect(() => {
+    const sendOK = (callID: string, data: JsonValue) => {
+      RendererWindow.process.send("message_deliver_agent_tool_response", {
+        id: callID,
+        ok: true,
+        data: JSON.stringify(data)
+      });
+    };
+    const sendErr = (callID: string, reason: string) => {
+      RendererWindow.process.send("message_deliver_agent_tool_response", {
+        id: callID,
+        ok: false,
+        reason
+      });
+    };
+    return RendererWindow.process.listenMessage(
+      "message_dispatch_agent_tool_request",
+      (request) => {
+        const id = request.id;
+        switch (request.tool) {
+          case "agent-tool-player-action":
+            playerActionBus.dispatch(request.input.action);
+            sendOK(id, { ok: true });
+            break;
+          case "agent-tool-track-lyrics":
+            NeteaseServicesLyric.id(request.input.id)
+              .then((lyric) => sendOK(id, lyric.toToolJSONValue()))
+              .catch((err) => sendErr(id, String(err)));
+            break;
+          case "agent-tool-album-detail":
+            NeteaseServicesAlbum.id(request.input.id)
+              .then((album) => sendOK(id, album.toToolJSONValue()))
+              .catch((err) => sendErr(id, String(err)));
+            break;
+          case "agent-tool-track-detail":
+            NeteaseServicesTrack.id(request.input.id)
+              .then((track) => {
+                if (track) sendOK(id, track.toToolJSONValue());
+                else sendErr(id, "track not found or network error");
+              })
+              .catch((err) => sendErr(id, String(err)));
+            break;
+          case "agent-tool-artist-detail":
+            NeteaseServicesArtist.id(request.input.id)
+              .then((artist) => {
+                if (artist) sendOK(id, artist.toToolJSONValue());
+                else sendErr(id, "artist not found or network error");
+              })
+              .catch((err) => sendErr(id, String(err)));
+            break;
+          case "agent-tool-playlist-detail":
+            NeteaseServicesPlaylist.id(request.input.id)
+              .then((playlist) => {
+                if (playlist) sendOK(id, playlist.toToolJSONValue());
+                else sendErr(id, "playlist not found or network error");
+              })
+              .catch((err) => sendErr(id, String(err)));
+            break;
+          case "agent-tool-track-playable":
+            NeteaseServicesTrack.id(request.input.id)
+              .then((track) => {
+                if (track) sendOK(id, track.playable(userRef.current));
+                else sendErr(id, "track not found or network error");
+              })
+              .catch((err) => sendErr(id, String(err)));
+            break;
+          case "agent-tool-track-comment": {
+            let type;
+            let sortType;
+            switch (request.input.type) {
+              case "playlist":
+                type = CommentType.Playlist;
+                break;
+              case "album":
+                type = CommentType.Album;
+                break;
+              case "track":
+                type = CommentType.Song;
+                break;
+            }
+            switch (request.input.sort) {
+              case "hot":
+                sortType = CommentSort.Hot;
+                break;
+              case "new":
+                sortType = CommentSort.Time;
+                break;
+              case "recommend":
+                sortType = CommentSort.Recommend;
+                break;
+            }
+            NeteaseAPIComment.get({
+              id: request.input.id,
+              type,
+              sortType,
+              pageNo: request.input.page,
+              pageSize: request.input.pageSize
+            })
+              .then((comments) => sendOK(id, comments as unknown as JsonValue))
+              .catch((err) => sendErr(id, String(err)));
+            break;
+          }
+          case "agent-search": {
+            let type;
+            switch (request.input.type) {
+              case "playlist":
+                type = SearchType.PLAYLIST;
+                break;
+              case "album":
+                type = SearchType.ALBUM;
+                break;
+              case "artist":
+                type = SearchType.ARTIST;
+                break;
+              case "track":
+                type = SearchType.SONG;
+                break;
+            }
+            NeteaseAPISearch.search({
+              type,
+              keywords: request.input.keyword,
+              offset: (request.input.page - 1) * request.input.pageSize,
+              limit: request.input.pageSize
+            });
+            break;
+          }
+          case "agent-tool-track-similar":
+            NeteaseAPITrack.similar(request.input.id)
+              .then((tracks) => sendOK(id, tracks as unknown as JsonValue))
+              .catch((err) => sendErr(id, String(err)));
+            break;
+          default:
+            sendErr(id, "tool not implemented");
+        }
+      }
+    );
+  }, [playerActionBus, userRef]);
   //#endregion
 
   return null;

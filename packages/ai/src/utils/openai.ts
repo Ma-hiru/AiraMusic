@@ -236,9 +236,9 @@ export function toResponseTools(tools?: LLMToolDefinition[]): Undefinable<OpenAI
   return tools.map((tool) => ({
     type: "function",
     name: tool.name,
+    strict: tool.strict,
     description: tool.description,
-    parameters: tool.inputSchema,
-    strict: tool.strict ?? true
+    parameters: tool.inputSchema
   }));
 }
 

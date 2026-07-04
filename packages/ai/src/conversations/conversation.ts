@@ -8,11 +8,11 @@ import {
 import type { LLMToolCall } from "@/tools";
 import type { LLMMessage } from "@/provider";
 
-import type { LLMConversationSnapshot, LLMConversationCreateOptions } from "./types";
+import type { LLMConversationSnapshot, LLMConversationCreateOptions } from "./interface";
 
 export class LLMConversation {
   readonly id: string;
-  readonly name: string;
+  name: string;
   readonly createdAt: number;
   readonly updatedAt: number;
   private readonly metadata: Record<string, unknown>;
@@ -65,6 +65,19 @@ export class LLMConversation {
     return AIResult.ok(undefined);
   }
 
+  rename(name: string): AIResult<void> {
+    const normalized = name.trim();
+    if (!normalized) {
+      return AIResult.err({
+        type: "invalid_conversation",
+        message: "conversation name 不能为空"
+      });
+    }
+
+    this.name = normalized;
+    return AIResult.ok(undefined);
+  }
+
   snapshot(): LLMConversationSnapshot {
     return {
       id: this.id,
@@ -107,8 +120,8 @@ export class LLMConversation {
     const snapshot: LLMConversationSnapshot = {
       id: options.id,
       name: options.name ?? "",
-      createdAt: options.createdAt ?? Date.now(),
-      updatedAt: options.updatedAt ?? Date.now(),
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
       metadata: { ...(options.metadata ?? {}) },
       messages: options.messages ?? []
     };

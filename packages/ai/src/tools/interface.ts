@@ -1,10 +1,15 @@
 import { z } from "zod";
 import { AIResult } from "@/result";
 
-export abstract class LLMTool<TSchema extends z.ZodType, TOutput> {
-  abstract readonly name: string;
-  abstract readonly description: string;
+export abstract class LLMTool<TSchema extends z.ZodType = z.ZodType, TOutput = unknown> {
+  readonly name: string;
+  readonly description: string;
   abstract readonly inputSchema: TSchema;
+
+  constructor(props: { name: string; description: string }) {
+    this.name = props.name;
+    this.description = props.description;
+  }
 
   abstract execute(input: z.infer<TSchema>, context: LLMToolContext): Promise<AIResult<TOutput>>;
 }
@@ -16,7 +21,7 @@ export interface LLMToolContext {
 
 export interface LLMToolDefinition {
   name: string;
-  strict?: boolean;
+  strict: boolean;
   description: string;
   inputSchema: Record<string, unknown>;
 }

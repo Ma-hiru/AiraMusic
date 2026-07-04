@@ -44,6 +44,12 @@ export class NeteasePlaylistSummary implements NeteasePlaylistSummaryModel {
   }
   //endregion
 
+  toToolJSONValue(): JsonValue {
+    return {
+      ...this
+    } as unknown as JsonValue;
+  }
+
   playCountFormat() {
     if (!this.playCount) return "0";
     if (this.playCount >= 100000000) {

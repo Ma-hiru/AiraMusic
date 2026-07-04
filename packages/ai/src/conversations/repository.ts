@@ -1,8 +1,8 @@
 import { AIResult } from "@/result";
 import type { AIInject } from "@/inject";
-import type { LLMConversationRepositoryCreateOptions } from "@/conversation/types";
 
 import { LLMConversation } from "./conversation";
+import type { LLMConversationCreateOptions } from "./interface";
 
 export class LLMConversationRepository {
   private readonly inject: Pick<AIInject, "CreateID" | "ConversationStore">;
@@ -24,21 +24,10 @@ export class LLMConversationRepository {
   }
 
   async create(
-    options: LLMConversationRepositoryCreateOptions = {}
+    options: Partial<LLMConversationCreateOptions> = {}
   ): Promise<AIResult<LLMConversation>> {
     const id = options.id ?? this.inject.CreateID();
-    if (!id) {
-      return AIResult.err({
-        type: "invalid_config",
-        message: "创建 conversation 需要传入 id 或注入 CreateID"
-      });
-    }
-
-    const conversation = LLMConversation.create({
-      id,
-      metadata: options.metadata,
-      messages: options.messages
-    });
+    const conversation = LLMConversation.create({ id, ...options });
     if (conversation.isErr()) return conversation;
 
     const saved = await this.save(conversation.unwrap());

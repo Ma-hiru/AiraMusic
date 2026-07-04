@@ -12,11 +12,22 @@ export interface LLMContextRuntime {
   metadata: Record<string, unknown>;
 }
 
-export interface LLMContextSource {
-  name: string;
-  priority?: number;
-  required?: boolean;
-  load(runtime: LLMContextRuntime): Promise<AIResult<LLMContextBlock[]>>;
+export abstract class LLMContextSource {
+  readonly name: string;
+  readonly priority?: number;
+  readonly required?: boolean;
+
+  protected constructor(props: {
+    readonly name: string;
+    readonly priority?: number;
+    readonly required?: boolean;
+  }) {
+    this.name = props.name;
+    this.priority = props.priority;
+    this.required = props.required;
+  }
+
+  abstract load(runtime: LLMContextRuntime): Promise<AIResult<LLMContextBlock[]>>;
 }
 
 export interface LLMContextBlock {

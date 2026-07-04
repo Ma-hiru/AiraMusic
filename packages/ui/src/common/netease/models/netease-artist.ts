@@ -34,6 +34,17 @@ export class NeteaseArtist {
     this.followInfos = props.followInfos;
   }
 
+  toToolJSONValue(): JsonValue {
+    return {
+      id: this.id,
+      name: this.name,
+      detail: this.detail,
+      desc: this.desc,
+      hotTracks: this.hotTracks.map(NeteaseTrackRecord.toToolJSONValue),
+      followInfos: this.followInfos
+    } as unknown as JsonValue;
+  }
+
   static fromNeteaseAPIs(props: {
     hotTracks: NeteaseTrackRecord[];
     desc: NeteaseAPI.NeteaseArtistDescResponse;

@@ -1,12 +1,24 @@
 import { AIResult } from "@/result";
+import { createLog } from "@mahiru/log";
 import { LLMContextComposer, type LLMContextBlock, type LLMContextSource } from "@/context";
 import type { AIInject } from "@/inject";
 
 const baseInject = {
-  Log: () => undefined,
+  Log: createLog("TRACE"),
   CreateID: () => "id",
   ConversationStore: {
     list: async () => AIResult.ok([]),
+    remove: async () => AIResult.ok(undefined),
+    write: async () => AIResult.ok(undefined),
+    read: async () => AIResult.ok(undefined)
+  },
+  ProviderConfigStore: {
+    list: async () => AIResult.ok([]),
+    remove: async () => AIResult.ok(undefined),
+    write: async () => AIResult.ok(undefined),
+    read: async () => AIResult.ok(undefined)
+  },
+  ProviderAPIKeyStore: {
     remove: async () => AIResult.ok(undefined),
     write: async () => AIResult.ok(undefined),
     read: async () => AIResult.ok(undefined)

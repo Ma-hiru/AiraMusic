@@ -9,50 +9,36 @@ import type {
   LLMToolDefinition
 } from "./interface";
 
-type AnyLLMTool = LLMTool<z.ZodType, unknown>;
-
 export interface LLMToolRegistryOptions {
   serializeOutput?: NormalFunc<[output: unknown], string>;
 }
 
 export class LLMToolRegistry {
-  private readonly tools = new Map<string, AnyLLMTool>();
+  private readonly tools = new Map<string, LLMTool>();
   private readonly serializeOutput: NormalFunc<[output: unknown], string>;
 
   constructor(options: LLMToolRegistryOptions = {}) {
     this.serializeOutput = options.serializeOutput ?? this.defaultSerializeOutput.bind(this);
   }
 
-  static create(
-    tools: Iterable<AnyLLMTool>,
-    options?: LLMToolRegistryOptions
-  ): AIResult<LLMToolRegistry> {
-    const registry = new LLMToolRegistry(options);
+  register(tool: LLMTool | LLMTool[]): AIResult<void> {
+    for (const item of Array.isArray(tool) ? tool : [tool]) {
+      if (!item.name) {
+        return AIResult.err({
+          type: "invalid_tool_config",
+          message: "工具缺少 name"
+        });
+      }
 
-    for (const tool of tools) {
-      const registered = registry.register(tool);
-      if (registered.isErr()) return registered;
+      if (this.tools.has(item.name)) {
+        return AIResult.err({
+          type: "invalid_tool_config",
+          message: `工具重复注册：${item.name}`
+        });
+      }
+
+      this.tools.set(item.name, item);
     }
-
-    return AIResult.ok(registry);
-  }
-
-  register(tool: AnyLLMTool): AIResult<void> {
-    if (!tool.name) {
-      return AIResult.err({
-        type: "invalid_tool_config",
-        message: "工具缺少 name"
-      });
-    }
-
-    if (this.tools.has(tool.name)) {
-      return AIResult.err({
-        type: "invalid_tool_config",
-        message: `工具重复注册：${tool.name}`
-      });
-    }
-
-    this.tools.set(tool.name, tool);
     return AIResult.ok(undefined);
   }
 
@@ -65,7 +51,7 @@ export class LLMToolRegistry {
     }));
   }
 
-  get(name: string): AIResult<AnyLLMTool> {
+  get(name: string): AIResult<LLMTool> {
     const tool = this.tools.get(name);
 
     if (!tool) {
@@ -122,7 +108,7 @@ export class LLMToolRegistry {
     }
   }
 
-  private toJsonSchema(tool: AnyLLMTool): Record<string, unknown> {
+  private toJsonSchema(tool: LLMTool): Record<string, unknown> {
     const jsonSchema = z.toJSONSchema(tool.inputSchema);
     if (!jsonSchema || typeof jsonSchema !== "object" || Array.isArray(jsonSchema)) return {};
     return jsonSchema;

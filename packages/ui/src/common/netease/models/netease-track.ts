@@ -219,6 +219,30 @@ export class NeteaseTrack implements NeteaseTrackModel {
     };
   }
 
+  toToolJSONValue(): JsonValue {
+    return {
+      id: this.id,
+      name: this.name,
+      artist: this.ar,
+      album: this.al,
+      translate: this.tns,
+      aliaName: this.alia,
+      formatDate: this.formatDate(),
+      formatDuration: this.formatDuration(),
+      formatPublishTime: RendererFormat.time(this.publishTime, "ms"),
+      publishTime: this.publishTime,
+      no: this.no,
+      pop: this.pop,
+      mv: this.mv,
+      fee: this.fee,
+      h: this.h,
+      hr: this.hr,
+      l: this.l,
+      m: this.m,
+      sq: this.sq
+    } as unknown as JsonValue;
+  }
+
   static toSearchStructString(tracks: NeteaseTrack[]) {
     return JSON.stringify(tracks.map((track) => track.toSearchStruct()));
   }

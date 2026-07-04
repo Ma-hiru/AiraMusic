@@ -1,4 +1,4 @@
-import { PictureInPicture } from "lucide-react";
+import { Bot, PictureInPicture } from "lucide-react";
 import { memo, useRef, type FC, useState, useEffect, useCallback } from "react";
 import { RendererCache } from "@/common/lib/cache";
 import { RendererWindow } from "@/common/lib/window";
@@ -75,11 +75,20 @@ const TopControl: FC = () => {
   return (
     <Control
       onClose={close}
-      appends={{
-        icon: PictureInPicture,
-        label: "打开迷你播放器",
-        onClick: mini
-      }}
+      appends={[
+        {
+          icon: PictureInPicture,
+          label: "打开迷你播放器",
+          onClick: mini
+        },
+        {
+          icon: Bot,
+          label: "Agent",
+          onClick: async () => {
+            await RendererWindow.agent.reactReadyAwait();
+          }
+        }
+      ]}
     />
   );
 };

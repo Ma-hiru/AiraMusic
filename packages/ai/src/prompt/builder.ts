@@ -4,6 +4,11 @@ import type { LLMMessage, LLMMessageText, LLMGenerateRequest } from "@/provider"
 
 import type { LLMPromptBuildResult, LLMPromptBuildOptions } from "./interface";
 
+interface LLMPromptRequestResult {
+  request: LLMGenerateRequest;
+  userMessage: LLMMessageText;
+}
+
 export class LLMPromptBuilder {
   private readonly system?: string | string[];
 
@@ -71,20 +76,24 @@ export class LLMPromptBuilder {
   private buildRequest(
     options: LLMPromptBuildOptions,
     messages: LLMMessage[]
-  ): AIResult<LLMGenerateRequest> {
+  ): AIResult<LLMPromptRequestResult> {
     const history = validateMessages(options.conversation.toMessages());
     if (history.isErr()) return history;
     messages.push(...history.unwrap());
 
     const input = this.buildText(options.input, "user", "user input");
     if (input.isErr()) return input;
-    messages.push(input.unwrap());
+    const userMessage = input.unwrap();
+    messages.push(userMessage);
 
     return AIResult.ok({
-      messages,
-      signal: options.signal,
-      temperature: options.temperature,
-      maxOutputTokens: options.maxOutputTokens
+      userMessage,
+      request: {
+        messages,
+        signal: options.signal,
+        temperature: options.temperature,
+        maxOutputTokens: options.maxOutputTokens
+      }
     });
   }
 
@@ -103,7 +112,7 @@ export class LLMPromptBuilder {
     // 构建请求
     const requestResult = this.buildRequest(options, messages);
     if (requestResult.isErr()) return requestResult;
-    const request = requestResult.unwrap();
+    const { request, userMessage } = requestResult.unwrap();
 
     // 构建tools
     this.buildTools(options, request);
@@ -112,6 +121,6 @@ export class LLMPromptBuilder {
     const validation = validateMessages(messages);
     if (validation.isErr()) return validation;
 
-    return AIResult.ok({ request, context });
+    return AIResult.ok({ request, context, userMessage });
   }
 }

@@ -12,6 +12,13 @@ export class NeteaseAlbum {
     this.tracks = props.tracks;
   }
 
+  toToolJSONValue(): JsonValue {
+    return {
+      content: this.content,
+      tracks: this.tracks.map(NeteaseTrackRecord.toToolJSONValue)
+    } as unknown as JsonValue;
+  }
+
   static fromObject<T extends Optional<Jsonify<NeteaseAlbum>>>(
     obj: T
   ): T extends Falsy ? null : NeteaseAlbum {
