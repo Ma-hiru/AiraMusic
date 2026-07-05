@@ -33,6 +33,12 @@ type AgentToolChangeSettingsInput = {
 export type AgentToolRequest =
   | {
       id: string;
+      input: object;
+      conversationID: string;
+      tool: "agent-lyric-schema";
+    }
+  | {
+      id: string;
       tool: "agent-search";
       conversationID: string;
       input: AgentToolSearchInput;
@@ -41,13 +47,13 @@ export type AgentToolRequest =
       id: string;
       conversationID: string;
       input: AgentToolIDInput;
-      tool: "agent-tool-album-detail";
+      tool: "agent-tool-track-play";
     }
   | {
       id: string;
       conversationID: string;
       input: AgentToolIDInput;
-      tool: "agent-tool-track-detail";
+      tool: "agent-tool-album-detail";
     }
   | {
       id: string;
@@ -76,8 +82,20 @@ export type AgentToolRequest =
   | {
       id: string;
       conversationID: string;
+      input: { keyword: string };
+      tool: "agent-tool-search-open";
+    }
+  | {
+      id: string;
+      conversationID: string;
       input: AgentToolIDInput;
       tool: "agent-tool-playlist-detail";
+    }
+  | {
+      id: string;
+      conversationID: string;
+      input: { content: string };
+      tool: "agent-tool-replace-lyrics";
     }
   | {
       id: string;
@@ -96,6 +114,24 @@ export type AgentToolRequest =
       conversationID: string;
       tool: "agent-tool-change-settings";
       input: AgentToolChangeSettingsInput;
+    }
+  | {
+      id: string;
+      conversationID: string;
+      tool: "agent-tool-track-detail";
+      input: { ids: number[]; mode: "detail" | "simple" };
+    }
+  | {
+      id: string;
+      conversationID: string;
+      tool: "agent-tool-comment-open";
+      input: { id: number; type: "album" | "track" | "playlist" };
+    }
+  | {
+      id: string;
+      conversationID: string;
+      tool: "agent-tool-source-open";
+      input: { id: number; type: "album" | "artist" | "playlist" };
     };
 
 export type AgentToolResponse =
@@ -119,12 +155,18 @@ export type AgentFocusContext =
       keyword: string;
     }
   | {
-      page: "history";
-      recent: number[];
+      id: number;
+      name: string;
+      page: "album" | "artist";
     }
   | {
-      id: number;
-      page: "album" | "track" | "artist" | "playlist";
+      page: "playlist";
+      id: Nullable<number>;
+      source: "normal" | "user-liked-track";
+    }
+  | {
+      page: "history";
+      recent: { id: number; name: string; time: string; playDuration: string }[];
     };
 
 export type AgentSettingsContext = {

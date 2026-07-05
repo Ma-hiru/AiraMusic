@@ -20,9 +20,9 @@ import { playModalAtom } from "@/wins/main/atoms/layout";
 import { useLatestRef } from "@/common/hooks/use-latest-ref";
 import { usePageJump } from "@/wins/main/hooks/use-page-jump";
 import { usePlayerActionInList } from "@/wins/main/hooks/use-player-action-in-list";
-import AppModal from "@/common/components/display/modal";
 import AppToast from "@/common/components/display/toast";
 import RendererPlayerHandle from "@/wins/main/lib/handle";
+import AppModal, { createPlayerPlaylistModal } from "@/common/components/display/modal";
 import IconButton, { type IconButtonProps } from "@/common/components/data-input/icon-button";
 
 import Progress from "./progress";
@@ -34,7 +34,7 @@ interface ControlProps {
 }
 
 const Control: FC<ControlProps> = ({ className, itemClassName, containerClassName }) => {
-  const { create, createPlayerPlaylistModal } = AppModal.useModal();
+  const { create } = AppModal.useModal();
   const player = RendererPlayerHandle.usePlayer();
   const setPlayModalAtom = useSetAtom(playModalAtom);
   const fmMode = useAtomValue(fmModeAtom);
@@ -48,7 +48,7 @@ const Control: FC<ControlProps> = ({ className, itemClassName, containerClassNam
       ...actionRef.current,
       onJumpPage: () => setPlayModalAtom(false)
     });
-  }, [actionRef, create, createPlayerPlaylistModal, setPlayModalAtom]);
+  }, [actionRef, create, setPlayModalAtom]);
 
   const dislike = useCallback(() => {
     const current = player.current.track;

@@ -2,7 +2,7 @@ import { cx } from "@emotion/css";
 import { Trash2, ListPlus } from "lucide-react";
 import { memo, type FC, useCallback, type ReactNode } from "react";
 import { NeteaseTrackRecord } from "@/common/netease/models";
-import AppModal from "@/common/components/display/modal";
+import AppModal, { createDialogModal } from "@/common/components/display/modal";
 
 interface SelectionIndicatorProps {
   editable: boolean;
@@ -23,7 +23,7 @@ const SelectionIndicator: FC<SelectionIndicatorProps> = ({
   selectedIds,
   exitSelection
 }) => {
-  const { create, createDialogModal } = AppModal.useModal();
+  const { create } = AppModal.useModal();
   const batchDelete = useCallback(
     () =>
       create(createDialogModal, {
@@ -33,7 +33,7 @@ const SelectionIndicator: FC<SelectionIndicatorProps> = ({
         footer: null,
         important: true
       }),
-    [create, createDialogModal, onBatchDelete]
+    [create, onBatchDelete]
   );
 
   return (

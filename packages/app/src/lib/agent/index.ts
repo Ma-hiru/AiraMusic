@@ -10,12 +10,18 @@ import {
 import {
   AgentToolSearch,
   AgentToolComment,
+  AgentToolTrackPlay,
+  AgentToolSearchOpen,
+  AgentToolSourceOpen,
   AgentToolAlbumDetail,
+  AgentToolCommentOpen,
+  AgentToolLyricSchema,
   AgentToolTrackDetail,
   AgentToolTrackLyrics,
   AgentToolArtistDetail,
   AgentToolPlayerAction,
   AgentToolTrackSimilar,
+  AgentToolReplaceLyrics,
   AgentToolTrackPlayable,
   AgentToolChangeSettings,
   AgentToolPlaylistDetail
@@ -54,7 +60,13 @@ export class MainAgent {
           new AgentToolTrackSimilar(),
           new AgentToolTrackPlayable(),
           new AgentToolChangeSettings(),
-          new AgentToolPlaylistDetail()
+          new AgentToolPlaylistDetail(),
+          new AgentToolTrackPlay(),
+          new AgentToolReplaceLyrics(),
+          new AgentToolLyricSchema(),
+          new AgentToolSourceOpen(),
+          new AgentToolSearchOpen(),
+          new AgentToolCommentOpen()
         ]
       },
       providers: [new LLMProviderOpenAI()],

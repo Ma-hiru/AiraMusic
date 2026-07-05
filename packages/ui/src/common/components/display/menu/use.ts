@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { Log } from "@/common/lib/log";
-import { Inject } from "@/common/utils/inject";
+import { InjectWithCallback } from "@/common/utils/inject";
 
 import { createTrackContextMenu } from "./track-menu";
 import MenuProvider, { type ContextMenuRender } from "./menu-provider";
@@ -13,7 +13,22 @@ const defaultHandler = () => {
   return false;
 };
 
-@Inject
+let registered = false;
+
+@InjectWithCallback(() => {
+  if (registered) return;
+  Log.info("AppContextMenu", "Registering context menu event listeners");
+  registered = true;
+  window.addEventListener("resize", AppContextMenu.close, {
+    passive: true
+  });
+  window.addEventListener("click", AppContextMenu.close, {
+    passive: true
+  });
+  window.addEventListener("scroll", AppContextMenu.close, {
+    passive: true
+  });
+})
 export default class AppContextMenu {
   static __setContextMenuData: NormalFunc<[data: Nullable<ContextMenuRender>]> = defaultHandler;
   static __setContextMenuVisible: NormalFunc<[show?: boolean]> = defaultHandler;
@@ -36,16 +51,6 @@ export default class AppContextMenu {
 
   static readonly Provider = MenuProvider;
 }
-
-window.addEventListener("resize", AppContextMenu.close, {
-  passive: true
-});
-window.addEventListener("click", AppContextMenu.close, {
-  passive: true
-});
-window.addEventListener("scroll", AppContextMenu.close, {
-  passive: true
-});
 
 function useContextMenu() {
   useEffect(() => {

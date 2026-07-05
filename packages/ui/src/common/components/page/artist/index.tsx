@@ -12,6 +12,7 @@ import {
 } from "react";
 import { type HeartManager } from "@/common/hooks/use-heart";
 import { NeteaseServicesArtist } from "@/common/netease/services";
+import { useAgentFocusCtx } from "@/common/hooks/use-agent-focus-ctx";
 import { useTrackContextMenu } from "@/common/hooks/use-track-context-menu";
 import { NeteaseArtist, NeteaseTrackRecord } from "@/common/netease/models";
 import { useRequestAutoRun, useRequestStatusWrap } from "@/common/hooks/use-request-wrap";
@@ -37,6 +38,7 @@ interface ArtistProps {
   ref?: Ref<ArtistRef>;
   id: number;
   className?: string;
+  routerActive: boolean;
   activeTrackID?: number;
   pageActionType: "out" | "none" | "enter";
   heartManager: Optional<HeartManager>;
@@ -72,7 +74,8 @@ const Artist: FC<ArtistProps> = ({
   onLoadedData,
   onPageAction,
   onClickArtist,
-  onAvatarLoaded
+  onAvatarLoaded,
+  routerActive
 }) => {
   const requestData = useCallback((id: number) => {
     if (id <= 0 || !id) return Promise.resolve(null);
@@ -124,6 +127,8 @@ const Artist: FC<ArtistProps> = ({
   useEffect(() => {
     artist && onDataLoaded?.(artist);
   }, [artist, onDataLoaded]);
+
+  useAgentFocusCtx({ page: "artist", id, name: artist?.detail.artist.name ?? "" }, routerActive);
 
   return (
     <div className={cx("flex flex-col", className)}>

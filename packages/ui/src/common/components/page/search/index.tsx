@@ -11,6 +11,7 @@ import {
   useImperativeHandle
 } from "react";
 import { NeteaseImageSize } from "@/common/enum";
+import { useAgentFocusCtx } from "@/common/hooks/use-agent-focus-ctx";
 import { NeteaseTrackRecord, NeteaseHistoryRecord } from "@/common/netease/models";
 import Card from "@/common/components/layout/card";
 import type { LucideIcon } from "lucide-react";
@@ -30,6 +31,7 @@ export type SearchRef = {
 interface SearchProps {
   ref?: Ref<SearchRef>;
   className?: string;
+  routerActive: boolean;
   coverSize: NeteaseImageSize;
   defaultKeyword: Optional<string>;
   activeTrackID: Undefinable<number>;
@@ -75,6 +77,7 @@ const Search: FC<SearchProps> = ({
   onClickArtist,
   onClickPlaylist,
   coverSize,
+  routerActive,
   defaultKeyword
 }) => {
   const [keyword, setKeyword] = useState("");
@@ -108,6 +111,8 @@ const Search: FC<SearchProps> = ({
     }),
     []
   );
+
+  useAgentFocusCtx({ page: "search", keyword }, routerActive);
 
   return (
     <div className={cx("flex flex-col gap-3 w-full h-full overflow-hidden", className)}>

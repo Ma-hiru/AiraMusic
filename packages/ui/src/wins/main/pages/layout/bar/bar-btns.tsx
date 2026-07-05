@@ -10,11 +10,11 @@ import { useLatestRef } from "@/common/hooks/use-latest-ref";
 import { useListenable } from "@/common/hooks/use-listenable";
 import { usePageJump } from "@/wins/main/hooks/use-page-jump";
 import { usePlayerActionInList } from "@/wins/main/hooks/use-player-action-in-list";
-import AppModal from "@/common/components/display/modal";
 import AppToast from "@/common/components/display/toast";
 import Tooltip from "@/common/components/display/tooltip";
 import RendererPlayerHandle from "@/wins/main/lib/handle";
 import RangeSlider from "@/common/components/data-input/range";
+import AppModal, { createPlayerPlaylistModal } from "@/common/components/display/modal";
 
 const WHEEL_VOLUME_STEP = 0.1;
 const RESTORE_VOLUME = 0.5;
@@ -51,7 +51,7 @@ const onWheel = (e: WheelEvent<HTMLElement>) => {
 };
 
 const BarBtns: FC<object> = () => {
-  const { create, createPlayerPlaylistModal } = AppModal.useModal();
+  const { create } = AppModal.useModal();
   const lyricWindow = useListenable(RendererWindow.get("lyric"));
   const player = RendererPlayerHandle.usePlayer();
   const muted = player.audio.instance.muted;
@@ -67,7 +67,7 @@ const BarBtns: FC<object> = () => {
   });
   const openPlaylistModal = useCallback(() => {
     create(createPlayerPlaylistModal, actionRef.current);
-  }, [actionRef, create, createPlayerPlaylistModal]);
+  }, [actionRef, create]);
 
   const openLyricWindow = useCallback(async () => {
     if (lyricWindow.opened) {

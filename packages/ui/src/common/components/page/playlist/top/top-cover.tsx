@@ -1,8 +1,8 @@
 import { memo, type FC, useMemo, useCallback, type ReactEventHandler } from "react";
 import { NeteasePlaylist, NeteaseNetworkImage } from "@/common/netease/models";
-import AppModal from "@/common/components/display/modal";
 import RendererImageConstants from "@/common/constants/image";
 import NeteaseImage from "@/common/components/display/image/netease-image";
+import AppModal, { createPlaylistCoverModal } from "@/common/components/display/modal";
 
 interface TopCoverProps {
   coverCacheKey?: string;
@@ -11,7 +11,7 @@ interface TopCoverProps {
 }
 
 const TopCover: FC<TopCoverProps> = ({ onCoverLoaded, summary, coverCacheKey }) => {
-  const { create, createPlaylistCoverModal } = AppModal.useModal();
+  const { create } = AppModal.useModal();
 
   const onLoad = useCallback<ReactEventHandler<HTMLImageElement>>(
     (e) => {
@@ -31,7 +31,7 @@ const TopCover: FC<TopCoverProps> = ({ onCoverLoaded, summary, coverCacheKey }) 
       playlist: summary,
       coverCacheKey
     });
-  }, [coverCacheKey, create, createPlaylistCoverModal, summary]);
+  }, [coverCacheKey, create, summary]);
 
   return (
     <button

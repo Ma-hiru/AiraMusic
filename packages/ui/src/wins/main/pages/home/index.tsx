@@ -4,6 +4,7 @@ import { memo, useRef, type FC, useState, useEffect, useCallback } from "react";
 import { RoutePath, RoutePathMain } from "@/common/routes";
 import { scrollActionsAtom } from "@/wins/main/atoms/layout";
 import { useRouterActive } from "@/common/hooks/use-router-active";
+import { useAgentFocusCtx } from "@/common/hooks/use-agent-focus-ctx";
 import { useScrollAutoHide } from "@/common/hooks/use-scroll-auto-hide";
 import { useScrollActionsRegister } from "@/common/hooks/use-scroll-actions-register";
 import type { HomeChannelKey } from "@/wins/main/constants";
@@ -59,6 +60,8 @@ const HomePage: FC<object> = () => {
     };
     setMounted((bit) => bit | (1 << activeChannelToIdx(activeChannel)));
   }, [activeChannel]);
+
+  useAgentFocusCtx({ page: "home" }, useRouterActive(RoutePathMain, "home"));
 
   return (
     <div className="router-container pt-0! px-2!">

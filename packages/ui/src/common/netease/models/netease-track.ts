@@ -219,7 +219,17 @@ export class NeteaseTrack implements NeteaseTrackModel {
     };
   }
 
-  toToolJSONValue(): JsonValue {
+  toToolJSONValue(mode: "detail" | "simple" = "simple"): JsonValue {
+    if (mode === "simple") {
+      return {
+        id: this.id,
+        name: this.name,
+        artist: this.ar,
+        album: this.al,
+        translate: this.tns,
+        aliaName: this.alia
+      } as unknown as JsonValue;
+    }
     return {
       id: this.id,
       name: this.name,

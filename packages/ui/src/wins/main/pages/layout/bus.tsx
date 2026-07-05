@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { useAtomValue } from "jotai";
 import { useLocation, useNavigate } from "react-router-dom";
 import { memo, useRef, type FC, useEffect, useCallback } from "react";
@@ -10,10 +11,10 @@ import { RendererIPCMessageBus } from "@/common/lib/bus";
 import { RendererModified } from "@/common/lib/modified";
 import { RoutePath, RoutePathMain } from "@/common/routes";
 import { useLatestRef } from "@/common/hooks/use-latest-ref";
-import { NeteaseTrackRecord } from "@/common/netease/models";
 import { useListenable } from "@/common/hooks/use-listenable";
 import { useAudioOutput } from "@/common/hooks/use-audio-output";
 import { SearchType, CommentSort, CommentType } from "@/common/enum";
+import { NeteaseLyricSchema, NeteaseTrackRecord } from "@/common/netease/models";
 import { NeteaseAPITrack, NeteaseAPISearch, NeteaseAPIComment } from "@/common/netease/api";
 import {
   NeteaseServicesAlbum,
@@ -413,7 +414,7 @@ const Bus: FC<object> = () => {
         switch (request.tool) {
           case "agent-tool-player-action":
             playerActionBus.dispatch(request.input.action);
-            sendOK(id, { ok: true });
+            sendOK(id, { ok: true, message: "已将请求发送到播放器" });
             break;
           case "agent-tool-track-lyrics":
             NeteaseServicesLyric.id(request.input.id)
@@ -426,9 +427,13 @@ const Bus: FC<object> = () => {
               .catch((err) => sendErr(id, String(err)));
             break;
           case "agent-tool-track-detail":
-            NeteaseServicesTrack.id(request.input.id)
-              .then((track) => {
-                if (track) sendOK(id, track.toToolJSONValue());
+            NeteaseServicesTrack.ids(request.input.ids)
+              .then((tracks) => {
+                if (tracks)
+                  sendOK(
+                    id,
+                    tracks.map((track) => track.toToolJSONValue(request.input.mode))
+                  );
                 else sendErr(id, "track not found or network error");
               })
               .catch((err) => sendErr(id, String(err)));
@@ -514,7 +519,9 @@ const Bus: FC<object> = () => {
               keywords: request.input.keyword,
               offset: (request.input.page - 1) * request.input.pageSize,
               limit: request.input.pageSize
-            });
+            })
+              .then((res) => sendOK(id, res.result as unknown as JsonValue))
+              .catch((err) => sendErr(id, String(err)));
             break;
           }
           case "agent-tool-track-similar":
@@ -522,12 +529,82 @@ const Bus: FC<object> = () => {
               .then((tracks) => sendOK(id, tracks as unknown as JsonValue))
               .catch((err) => sendErr(id, String(err)));
             break;
+          case "agent-tool-track-play": {
+            const idx = player.playlist.locate(request.input.id);
+            if (idx !== -1) {
+              player.playlist.jump(idx);
+              return sendOK(id, { ok: true, message: "已在播放列表中，已跳转" });
+            }
+            NeteaseServicesTrack.id(request.input.id)
+              .then((track) => {
+                if (!track) return sendErr(id, "track not found or network error");
+                const record = new NeteaseTrackRecord({
+                  detail: track,
+                  sourceName: "other",
+                  sourceID: 0
+                });
+                player.playlist.add(record, "next");
+                player.playlist.jump(record);
+                return sendOK(id, { ok: true, message: "已添加到播放列表，并已跳转" });
+              })
+              .catch((err) => sendErr(id, String(err)));
+            break;
+          }
+          case "agent-tool-replace-lyrics": {
+            const res = player.replaceLyricByAgent(request.input.content);
+            if (res.ok) sendOK(id, "已替换");
+            else sendErr(id, res.reason);
+            break;
+          }
+          case "agent-lyric-schema":
+            sendOK(id, z.toJSONSchema(NeteaseLyricSchema) as JsonValue);
+            break;
+          case "agent-tool-source-open": {
+            RendererWindow.display.reactReadyAwait().then(() => {
+              switch (request.input.type) {
+                case "playlist":
+                  RendererIPCMessageBus.display.deliver({
+                    id: request.input.id,
+                    source: "normal",
+                    type: "playlist"
+                  });
+                  break;
+                case "album":
+                case "artist":
+                  RendererIPCMessageBus.display.deliver({
+                    type: request.input.type,
+                    id: request.input.id
+                  });
+                  break;
+              }
+              sendOK(id, { ok: true, message: "已打开界面" });
+            });
+            break;
+          }
+          case "agent-tool-search-open":
+            RendererWindow.display.reactReadyAwait().then(() => {
+              RendererIPCMessageBus.display.deliver({
+                type: "search",
+                keyword: request.input.keyword
+              });
+              sendOK(id, { ok: true, message: "已打开搜索界面" });
+            });
+            break;
+          case "agent-tool-comment-open":
+            RendererWindow.comment.reactReadyAwait().then(() => {
+              RendererIPCMessageBus.comment.deliver({
+                type: request.input.type,
+                id: request.input.id
+              });
+              sendOK(id, { ok: true, message: "已打开评论界面" });
+            });
+            break;
           default:
             sendErr(id, "tool not implemented");
         }
       }
     );
-  }, [playerActionBus, userRef]);
+  }, [player, player.playlist, playerActionBus, userRef]);
   //#endregion
 
   return null;

@@ -89,10 +89,15 @@ const requestAgentTool = <TTool extends AgentToolName>(
 
 export class AgentToolTrackDetail {
   readonly name = "agent-tool-track-detail";
-  readonly description = "获取指定 ID 的歌曲详情";
+  readonly description =
+    "获取指定 ID 的歌曲详情，尽可能一次性放入所有id，单独请求效率比一次性请求低，频繁请求可能网络错误";
 
   inputSchema = z.object({
-    id: z.number().describe("歌曲 ID")
+    ids: z.array(z.number()).describe("歌曲 ID 列表"),
+    mode: z
+      .enum(["simple", "detail"])
+      .default("simple")
+      .describe("请求模式, simple 只返回基本信息，detail 返回详细信息")
   });
 
   execute(
@@ -148,6 +153,22 @@ export class AgentToolTrackSimilar {
     context: LLMToolContext
   ): Promise<AIResult<JsonValue>> {
     return requestAgentTool(context, "agent-tool-track-similar", input);
+  }
+}
+
+export class AgentToolTrackPlay {
+  readonly name = "agent-tool-track-play";
+  readonly description = "播放指定 ID 的歌曲";
+
+  inputSchema = z.object({
+    id: z.number().describe("歌曲 ID")
+  });
+
+  execute(
+    input: z.infer<typeof this.inputSchema>,
+    context: LLMToolContext
+  ): Promise<AIResult<JsonValue>> {
+    return requestAgentTool(context, "agent-tool-track-play", input);
   }
 }
 
@@ -283,5 +304,89 @@ export class AgentToolSearch {
     context: LLMToolContext
   ): Promise<AIResult<JsonValue>> {
     return requestAgentTool(context, "agent-search", input);
+  }
+}
+
+export class AgentToolLyricSchema {
+  readonly name = "agent-lyric-schema";
+  readonly description = "获取当前播放的歌词的 JSON 数据结构";
+
+  inputSchema = z.object();
+
+  execute(
+    input: z.infer<typeof this.inputSchema>,
+    context: LLMToolContext
+  ): Promise<AIResult<JsonValue>> {
+    return requestAgentTool(context, "agent-lyric-schema", input);
+  }
+}
+
+export class AgentToolReplaceLyrics {
+  readonly name = "agent-tool-replace-lyrics";
+  readonly description = "替换当前播放的歌词的翻译或罗马音";
+
+  inputSchema = z.object({
+    content: z
+      .string()
+      .describe(
+        "新歌词 JSON 数据字符串，解析时直接使用该字符串，不做额外包装，格式 schema 应从 agent-lyric-schema 获取"
+      )
+  });
+
+  execute(
+    input: z.infer<typeof this.inputSchema>,
+    context: LLMToolContext
+  ): Promise<AIResult<JsonValue>> {
+    return requestAgentTool(context, "agent-tool-replace-lyrics", input);
+  }
+}
+
+export class AgentToolSourceOpen {
+  readonly name = "agent-tool-source-open";
+  readonly description = "打开程序内部指定的资源界面";
+
+  inputSchema = z.object({
+    type: z.enum(["playlist", "album", "artist"]).describe("界面类型"),
+    id: z.number().describe("资源 ID")
+  });
+
+  execute(
+    input: z.infer<typeof this.inputSchema>,
+    context: LLMToolContext
+  ): Promise<AIResult<JsonValue>> {
+    return requestAgentTool(context, "agent-tool-source-open", input);
+  }
+}
+
+export class AgentToolCommentOpen {
+  readonly name = "agent-tool-comment-open";
+  readonly description = "打开程序内部指定的评论界面";
+
+  inputSchema = z.object({
+    type: z.enum(["playlist", "album", "track"]).describe("资源类型"),
+    id: z.number().describe("资源 ID")
+  });
+
+  execute(
+    input: z.infer<typeof this.inputSchema>,
+    context: LLMToolContext
+  ): Promise<AIResult<JsonValue>> {
+    return requestAgentTool(context, "agent-tool-comment-open", input);
+  }
+}
+
+export class AgentToolSearchOpen {
+  readonly name = "agent-tool-search-open";
+  readonly description = "打开程序内部指定的搜索界面";
+
+  inputSchema = z.object({
+    keyword: z.string().describe("搜索关键字")
+  });
+
+  execute(
+    input: z.infer<typeof this.inputSchema>,
+    context: LLMToolContext
+  ): Promise<AIResult<JsonValue>> {
+    return requestAgentTool(context, "agent-tool-search-open", input);
   }
 }

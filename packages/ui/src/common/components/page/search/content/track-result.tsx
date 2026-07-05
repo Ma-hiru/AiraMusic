@@ -66,14 +66,16 @@ const TrackResult: FC<TrackResultProps> = ({
         limit: 100,
         offset: 0
       });
-      const tracks = await NeteaseServicesTrack.ids(res.result.songs.map((s) => s.id));
-      return tracks.map(
-        (track) =>
-          new NeteaseTrackRecord({
-            detail: track,
-            sourceName: "other",
-            sourceID: 0
-          })
+      const tracks = await NeteaseServicesTrack.ids(res.result.songs?.map((s) => s.id) ?? []);
+      return (
+        tracks?.map(
+          (track) =>
+            new NeteaseTrackRecord({
+              detail: track,
+              sourceName: "other",
+              sourceID: 0
+            })
+        ) ?? []
       );
     }, [])
   );

@@ -80,6 +80,7 @@ const PlaylistDisplay: FC<object> = () => {
       className="display-container pb-0!"
       user={user}
       source={source}
+      routerActive={active}
       pageActionType="enter"
       canScrollTop={canScrollTop}
       heartManager={heartManager}

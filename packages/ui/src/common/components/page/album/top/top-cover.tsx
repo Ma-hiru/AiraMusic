@@ -1,8 +1,8 @@
 import { memo, type FC, useMemo, useCallback, type ReactEventHandler } from "react";
 import { NeteaseImageSize } from "@/common/enum";
 import { NeteaseAlbum, NeteaseNetworkImage } from "@/common/netease/models";
-import AppModal from "@/common/components/display/modal";
 import NeteaseImage from "@/common/components/display/image/netease-image";
+import AppModal, { createAlbumCoverModal } from "@/common/components/display/modal";
 
 interface TopCoverProps {
   coverCacheKey?: string;
@@ -13,7 +13,7 @@ interface TopCoverProps {
 }
 
 const TopCover: FC<TopCoverProps> = ({ onCoverLoaded, size, album, dynamic, coverCacheKey }) => {
-  const { create, createAlbumCoverModal } = AppModal.useModal();
+  const { create } = AppModal.useModal();
   const cacheKey =
     (coverCacheKey ?? "") + (album?.content.publishTime ?? "") + (album?.tracks[0]?.id ?? "");
 
@@ -36,7 +36,7 @@ const TopCover: FC<TopCoverProps> = ({ onCoverLoaded, size, album, dynamic, cove
       dynamic,
       coverCacheKey: cacheKey
     });
-  }, [album, cacheKey, create, createAlbumCoverModal, dynamic]);
+  }, [album, cacheKey, create, dynamic]);
 
   return (
     <button

@@ -7,8 +7,8 @@ import { RendererIPC } from "@mahiru/ipc/renderer";
 import { RendererFormat } from "@/common/lib/format";
 import { RendererWindow } from "@/common/lib/window";
 import Card from "@/common/components/layout/card";
-import AppModal from "@/common/components/display/modal";
 import AppToast from "@/common/components/display/toast";
+import AppModal, { createDialogModal } from "@/common/components/display/modal";
 import type { CacheStoreCategories } from "@/types/cache";
 import type { InvokeEventPayload } from "@mahiru/ipc/types";
 
@@ -38,7 +38,7 @@ const Cache: FC<CacheProps> = ({
     return Number(cacheStoreConfig?.ttl.replace("h", "") ?? 0) / 24;
   }, [cacheStoreConfig?.ttl]);
   const path = cacheStoreConfig?.path ?? "";
-  const { create, createDialogModal } = AppModal.useModal();
+  const { create } = AppModal.useModal();
 
   const [capacityRangeValue, setCapacityRangeValue] = useState(capacityGB);
   const [ttlRangeValue, setTtlRangeValue] = useState(ttlDays);
@@ -143,7 +143,7 @@ const Cache: FC<CacheProps> = ({
           .finally(refreshSize);
       }
     });
-  }, [create, createDialogModal, refreshSize]);
+  }, [create, refreshSize]);
 
   const saveChanges = async () => {
     if (!hasChanged) return;

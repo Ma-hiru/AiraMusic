@@ -14,6 +14,7 @@ import History, { type HistoryRef } from "@/common/components/page/history";
 
 const HistoryPage: FC<object> = () => {
   const historyRef = useRef<Nullable<HistoryRef>>(null);
+  const routerActive = useRouterActive(RoutePathMain, "history");
   const { heartManager, playableManager } = useUserTrackManager();
 
   // 播放曲目
@@ -52,6 +53,7 @@ const HistoryPage: FC<object> = () => {
       setIsTyping={setIsTyping}
       canScrollTop={canScrollTop}
       heartManager={heartManager}
+      routerActive={routerActive}
       canFastLocate={canFastLocate}
       openComment={openTrackComment}
       playableManager={playableManager}

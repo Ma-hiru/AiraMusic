@@ -22,6 +22,7 @@ import { type HeartManager } from "@/common/hooks/use-heart";
 import { useLatestRef } from "@/common/hooks/use-latest-ref";
 import { NeteaseServicesPlaylist } from "@/common/netease/services";
 import { type RequestStatus } from "@/common/hooks/use-request-wrap";
+import { useAgentFocusCtx } from "@/common/hooks/use-agent-focus-ctx";
 import { useTrackContextMenu } from "@/common/hooks/use-track-context-menu";
 import { useTrackCoverPreload } from "@/common/hooks/use-track-cover-preload";
 import {
@@ -59,6 +60,7 @@ interface PlaylistProps {
   ref?: Ref<PlaylistRef>;
   className?: string;
   id: Nullable<string>;
+  routerActive: boolean;
   activeTrackID?: number;
   user: Nullable<NeteaseUser>;
   source: Nullable<"like" | "normal">;
@@ -112,7 +114,8 @@ const Playlist: FC<PlaylistProps> = ({
   onDataLoaded,
   onPageAction,
   onClickArtist,
-  onCoverLoaded
+  onCoverLoaded,
+  routerActive
 }) => {
   const [status, setStatus] = useState<RequestStatus>("loading");
   const [playlist, setPlaylist] = useState<Nullable<NeteasePlaylist>>(null);
@@ -362,6 +365,15 @@ const Playlist: FC<PlaylistProps> = ({
   useEffect(() => {
     playlist && onDataLoaded?.(playlist);
   }, [onDataLoaded, playlist]);
+
+  useAgentFocusCtx(
+    {
+      page: "playlist",
+      id: typeof id === "string" ? Number(id) : id,
+      source: source === "normal" ? "normal" : "user-liked-track"
+    },
+    routerActive
+  );
 
   return (
     <div className={cx("flex h-full min-h-0 flex-col overflow-hidden", className)}>

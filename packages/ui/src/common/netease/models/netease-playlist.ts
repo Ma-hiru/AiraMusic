@@ -40,6 +40,7 @@ export class NeteasePlaylist extends NeteasePlaylistSummary implements NeteasePl
       commentCount: this.commentCount,
       playlistType: this.playlistType,
       shareCount: this.shareCount,
+      trackIds: undefined,
       tracks: this.tracks.map((track) => ({ id: track.id, name: track.name }))
     } as unknown as JsonValue;
   }

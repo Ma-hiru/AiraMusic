@@ -1,11 +1,11 @@
 export { NeteaseURL } from "./netease-url";
 export { NeteaseAlbum } from "./netease-album";
-export { NeteaseLyric } from "./netease-lyric";
 export { NeteaseTrack } from "./netease-track";
 export { NeteaseArtist } from "./netease-artist";
 export { NeteaseCookie } from "./netease-cookie";
 export { NeteaseTrackRecord } from "./netease-track-record";
 export { NeteaseHistoryRecord } from "./netease-history-record";
+export { NeteaseLyric, NeteaseLyricSchema } from "./netease-lyric";
 export { NeteasePlaylistSummary } from "./netease-playlist-summary";
 export { NeteaseUser, type NeteaseUserModel } from "./netease-user";
 export { NeteaseSettings, type NeteaseSettingsModel } from "./netease-settings";

@@ -20,6 +20,7 @@ const PlaylistPage: FC<object> = () => {
   const user = useUser();
   const location = useLocation();
   const playlistRef = useRef<Nullable<PlaylistRef>>(null);
+  const routerActive = useRouterActive(RoutePathMain, "playlist");
   const { heartManager, playableManager } = useUserTrackManager();
   const { id, source } = RoutePathMain.playlist.parseQuery(location);
 
@@ -83,6 +84,7 @@ const PlaylistPage: FC<object> = () => {
       setIsTyping={setIsTyping}
       canScrollTop={canScrollTop}
       heartManager={heartManager}
+      routerActive={routerActive}
       canFastLocate={canFastLocate}
       openComment={openTrackComment}
       playableManager={playableManager}

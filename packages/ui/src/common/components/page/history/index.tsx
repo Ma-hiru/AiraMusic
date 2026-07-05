@@ -12,8 +12,10 @@ import {
   useImperativeHandle
 } from "react";
 import { SearchTrack } from "@mahiru/wasm";
+import { RendererFormat } from "@/common/lib/format";
 import { type HeartManager } from "@/common/hooks/use-heart";
 import { useLatestRef } from "@/common/hooks/use-latest-ref";
+import { useAgentFocusCtx } from "@/common/hooks/use-agent-focus-ctx";
 import { useTrackContextMenu } from "@/common/hooks/use-track-context-menu";
 import { useTrackCoverPreload } from "@/common/hooks/use-track-cover-preload";
 import { NeteaseTrackRecord, NeteaseHistoryRecord } from "@/common/netease/models";
@@ -40,6 +42,7 @@ export type HistoryRef = {
 interface HistoryProps {
   ref?: Ref<HistoryRef>;
   className?: string;
+  routerActive: boolean;
   activeTrackID?: number;
   historyList: NeteaseHistoryRecord[];
   pageActionType?: "out" | "none" | "enter";
@@ -76,7 +79,8 @@ const History: FC<HistoryProps> = ({
   onClickAlbum,
   onPageAction,
   onClickArtist,
-  historyList
+  historyList,
+  routerActive
 }) => {
   const [tracks, setTracks] = useState<NeteaseHistoryRecord[]>([]);
   const totalTracks = useRef<NeteaseHistoryRecord[]>([]);
@@ -157,6 +161,22 @@ const History: FC<HistoryProps> = ({
       fastLocator
     }),
     [currentVisibleItemIndex, fastLocator, scrollTop, tracks]
+  );
+
+  useAgentFocusCtx(
+    useMemo(
+      () => ({
+        page: "history",
+        recent: tracks.slice(0, 100).map((t) => ({
+          name: t.name,
+          id: t.id,
+          playDuration: RendererFormat.duration(t.playDuration),
+          time: RendererFormat.time(t.time)
+        }))
+      }),
+      [tracks]
+    ),
+    routerActive
   );
 
   return (

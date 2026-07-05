@@ -24,11 +24,11 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@mahiru/ai": "workspace:*",
     "@mahiru/ipc": "workspace:*",
     "@mahiru/log": "workspace:*",
     "@mahiru/native": "workspace:*",
     "@mahiru/store": "workspace:*",
-    "@mahiru/ai": "workspace:*",
     "@types/express": "^5.0.0",
     "@types/express-http-proxy": "^1.6.7",
     "electron": "42.3.3",

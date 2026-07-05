@@ -11,6 +11,7 @@ import {
 import { NeteaseImageSize } from "@/common/enum";
 import { type HeartManager } from "@/common/hooks/use-heart";
 import { NeteaseServicesAlbum } from "@/common/netease/services";
+import { useAgentFocusCtx } from "@/common/hooks/use-agent-focus-ctx";
 import { useTrackContextMenu } from "@/common/hooks/use-track-context-menu";
 import { useRequestAutoRun, useRequestStatusWrap } from "@/common/hooks/use-request-wrap";
 import { NeteaseAlbum, NeteaseTrackRecord, NeteaseHistoryRecord } from "@/common/netease/models";
@@ -37,6 +38,7 @@ interface AlbumPageProps {
   ref?: Ref<AlbumPageRef>;
   id: number;
   className?: string;
+  routerActive: boolean;
   coverSize: NeteaseImageSize;
   activeTrackID: Undefinable<number>;
   pageActionType: "out" | "none" | "enter";
@@ -76,7 +78,8 @@ const Album: FC<AlbumPageProps> = ({
   onClickArtist,
   onCoverLoaded,
   onRangeUpdate,
-  coverSize
+  coverSize,
+  routerActive
 }) => {
   const requestData = useCallback(async (id: number) => {
     if (!id) return Promise.resolve([null, null]);
@@ -129,6 +132,8 @@ const Album: FC<AlbumPageProps> = ({
   useEffect(() => {
     album && onDataLoaded?.(album);
   }, [album, onDataLoaded]);
+
+  useAgentFocusCtx({ page: "album", name: album?.content.name ?? "", id }, routerActive);
 
   return (
     <div className={cx("w-full h-full flex flex-col", className)}>

@@ -21,6 +21,7 @@ const HistoryDisplay: FC<object> = () => {
   const historyRef = useRef<Nullable<HistoryRef>>(null);
   const trackMetaBus = useListenable(RendererIPCMessageBus.trackMeta);
   const historyBus = useListenable(RendererIPCMessageBus.history);
+  const routerActive = useRouterActive(RoutePathDisplay, "history");
   const { heartManager, playableManager } = useUserTrackManager();
 
   // 进入页面或聚焦时请求 main 窗口推送最新历史
@@ -83,6 +84,7 @@ const HistoryDisplay: FC<object> = () => {
       historyList={historyList}
       canScrollTop={canScrollTop}
       heartManager={heartManager}
+      routerActive={routerActive}
       canFastLocate={canFastLocate}
       openComment={openTrackComment}
       playableManager={playableManager}

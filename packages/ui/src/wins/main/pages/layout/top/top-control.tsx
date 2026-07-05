@@ -3,13 +3,13 @@ import { memo, useRef, type FC, useState, useEffect, useCallback } from "react";
 import { RendererCache } from "@/common/lib/cache";
 import { RendererWindow } from "@/common/lib/window";
 import { useListenable } from "@/common/hooks/use-listenable";
-import AppModal from "@/common/components/display/modal";
 import RendererPlayerHandle from "@/wins/main/lib/handle";
 import Switch from "@/common/components/data-input/switch";
 import Control from "@/common/components/layout/top/control";
+import AppModal, { createDialogModal } from "@/common/components/display/modal";
 
 const TopControl: FC = () => {
-  const { create, createDialogModal } = AppModal.useModal();
+  const { create } = AppModal.useModal();
   const currentWindow = useListenable(RendererWindow.current);
   const miniWindow = useListenable(RendererWindow.get("miniplayer"));
   const memoRef = useRef(false);
@@ -55,7 +55,7 @@ const TopControl: FC = () => {
         }
       });
     }
-  }, [create, createDialogModal]);
+  }, [create]);
 
   const mini = useCallback(() => {
     RendererWindow.mini.show();

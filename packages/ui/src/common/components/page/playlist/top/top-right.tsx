@@ -4,11 +4,14 @@ import { Trash2, Ellipsis, SquarePen, ListChecks, RotateCwSquare } from "lucide-
 import { Log } from "@/common/lib/log";
 import { NeteaseAPIPlaylist } from "@/common/netease/api";
 import { NeteasePlaylist } from "@/common/netease/models";
-import AppModal from "@/common/components/display/modal";
 import AppToast from "@/common/components/display/toast";
 import Search from "@/common/components/data-input/search";
 import PageAction from "@/common/components/display/page-action";
 import IconButton from "@/common/components/data-input/icon-button";
+import AppModal, {
+  createDialogModal,
+  createPlaylistEditModal
+} from "@/common/components/display/modal";
 
 interface TopRightProps {
   editable: boolean;
@@ -41,7 +44,7 @@ const TopRight: FC<TopRightProps> = ({
   searchTracks,
   selectionMode
 }) => {
-  const { create, createDialogModal, createPlaylistEditModal } = AppModal.useModal();
+  const { create } = AppModal.useModal();
 
   const confirmDelete = useCallback(async () => {
     if (!summary) return;
@@ -69,7 +72,7 @@ const TopRight: FC<TopRightProps> = ({
       footer: null,
       important: true
     });
-  }, [summary, create, createDialogModal, confirmDelete]);
+  }, [summary, create, confirmDelete]);
 
   return (
     <div className="flex h-full flex-col justify-between items-end text-[12px]">

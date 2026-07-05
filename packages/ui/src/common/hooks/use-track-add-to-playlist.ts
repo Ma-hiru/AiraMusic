@@ -8,7 +8,7 @@ import AppToast from "@/common/components/display/toast";
 
 export function useTrackAddToPlaylist(excludeId?: number) {
   const user = useUser();
-  const { create, createAddToPlaylistModal } = AppModal.useModal();
+  const { create } = AppModal.useModal();
   const open = useCallback(
     async (tracks: NeteaseTrackRecord[]) => {
       if (!user?.isLoggedIn) {
@@ -38,7 +38,7 @@ export function useTrackAddToPlaylist(excludeId?: number) {
       });
       return promise;
     },
-    [create, createAddToPlaylistModal, user, excludeId]
+    [create, user, excludeId]
   );
 
   const addTrackToPlaylist = useCallback((track: NeteaseTrackRecord) => open([track]), [open]);

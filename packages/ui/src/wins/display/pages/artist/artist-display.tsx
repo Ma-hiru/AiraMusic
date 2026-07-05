@@ -3,6 +3,7 @@ import { useLocation } from "react-router-dom";
 import { RendererIPCMessageBus } from "@/common/lib/bus";
 import { useListenable } from "@/common/hooks/use-listenable";
 import { RoutePath, RoutePathDisplay } from "@/common/routes";
+import { useRouterActive } from "@/common/hooks/use-router-active";
 import { useUserTrackManager } from "@/common/hooks/use-user-track-manager";
 import { useTrackAddToPlaylist } from "@/common/hooks/use-track-add-to-playlist";
 import { useDisplayTitleRegister } from "@/wins/display/hooks/use-display-title";
@@ -15,6 +16,7 @@ const ArtistDisplay: FC<object> = () => {
   const location = useLocation();
   const artistRef = useRef<ArtistRef>(null);
   const trackMetaBus = useListenable(RendererIPCMessageBus.trackMeta);
+  const routerActive = useRouterActive(RoutePathDisplay, "artist");
   const { heartManager, playableManager } = useUserTrackManager();
   const { id } = RoutePath.parseQuery<{ id: number }>(location, RoutePathDisplay.artist);
   const { addTrackToPlaylistLast, addTrackToPlaylistNext, openTrackComment, onTrackPlay } =
@@ -40,6 +42,7 @@ const ArtistDisplay: FC<object> = () => {
       className="display-container pb-0!"
       pageActionType="enter"
       heartManager={heartManager}
+      routerActive={routerActive}
       openComment={openTrackComment}
       playableManager={playableManager}
       addTrackToPlaylist={addTrackToPlaylist}

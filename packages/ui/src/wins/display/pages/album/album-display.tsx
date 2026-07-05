@@ -1,9 +1,10 @@
 import { memo, useRef, type FC } from "react";
 import { useLocation } from "react-router-dom";
 import { RendererIPCMessageBus } from "@/common/lib/bus";
-import { RoutePath, RoutePathMain } from "@/common/routes";
 import { useListenable } from "@/common/hooks/use-listenable";
+import { useRouterActive } from "@/common/hooks/use-router-active";
 import { useUserTrackManager } from "@/common/hooks/use-user-track-manager";
+import { RoutePath, RoutePathMain, RoutePathDisplay } from "@/common/routes";
 import { useTrackAddToPlaylist } from "@/common/hooks/use-track-add-to-playlist";
 import { useDisplayTitleRegister } from "@/wins/display/hooks/use-display-title";
 import { useDisplayPageAction } from "@/wins/display/hooks/use-display-page-action";
@@ -16,6 +17,7 @@ const AlbumDisplay: FC<object> = () => {
   const location = useLocation();
   const albumRef = useRef<Nullable<AlbumPageRef>>(null);
   const trackMetaBus = useListenable(RendererIPCMessageBus.trackMeta);
+  const routerActive = useRouterActive(RoutePathDisplay, "album");
   const { id } = RoutePath.parseQuery<{ id: number }>(location, RoutePathMain.album);
   const { heartManager, playableManager } = useUserTrackManager();
 
@@ -47,6 +49,7 @@ const AlbumDisplay: FC<object> = () => {
       className="display-container pb-0!"
       pageActionType="out"
       heartManager={heartManager}
+      routerActive={routerActive}
       openComment={openTrackComment}
       playableManager={playableManager}
       addTrackToPlaylist={addTrackToPlaylist}

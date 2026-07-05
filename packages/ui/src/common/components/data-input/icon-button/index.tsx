@@ -15,12 +15,12 @@ export interface IconButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonEle
 
 const buttonSizeClass = {
   compact: "size-5",
-  normal: "size-7"
+  normal: "size-6"
 } satisfies Record<NonNullable<IconButtonProps["size"]>, string>;
 
 const iconSizeClass = {
   compact: "size-5",
-  normal: "size-4.5"
+  normal: "size-5.5"
 } satisfies Record<NonNullable<IconButtonProps["size"]>, string>;
 
 const variantClass = {

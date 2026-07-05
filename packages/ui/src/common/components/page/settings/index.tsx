@@ -2,6 +2,7 @@ import { cx } from "@emotion/css";
 import { memo, type FC, useState, useEffect, useCallback } from "react";
 import { RendererCache } from "@/common/lib/cache";
 import { RendererIPC } from "@mahiru/ipc/renderer";
+import { useAgentFocusCtx } from "@/common/hooks/use-agent-focus-ctx";
 import { NeteaseUser, NeteaseSettings, type NeteaseSettingsModel } from "@/common/netease/models";
 import AppToast from "@/common/components/display/toast";
 import type { CacheStoreCategories } from "@/types/cache";
@@ -14,6 +15,7 @@ interface SettingsProps {
   login: NormalFunc;
   className?: string;
   logout: NormalFunc;
+  routerActive: boolean;
   settings: NeteaseSettings;
   user: Nullable<NeteaseUser>;
   updateOutput: NormalFunc<[deviceId: string]>;
@@ -28,6 +30,7 @@ const Settings: FC<SettingsProps> = ({
   logout,
   output,
   settings,
+  routerActive,
   updateOutput,
   updateSettings
 }) => {
@@ -81,6 +84,8 @@ const Settings: FC<SettingsProps> = ({
     void getCacheStoreConfig();
     void getCacheStoreStatus();
   }, [getCacheStoreConfig, getCacheStoreStatus]);
+
+  useAgentFocusCtx({ page: "settings" }, routerActive);
 
   return (
     <section

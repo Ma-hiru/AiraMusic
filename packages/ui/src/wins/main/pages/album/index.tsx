@@ -2,6 +2,7 @@ import { memo, useRef, type FC } from "react";
 import { useLocation } from "react-router-dom";
 import { RoutePath, RoutePathMain } from "@/common/routes";
 import { usePageJump } from "@/wins/main/hooks/use-page-jump";
+import { useRouterActive } from "@/common/hooks/use-router-active";
 import { useDisplayAction } from "@/wins/main/hooks/use-display-action";
 import { useSetBackground } from "@/wins/main/hooks/use-set-background";
 import { useUserTrackManager } from "@/common/hooks/use-user-track-manager";
@@ -13,6 +14,7 @@ import Album, { type AlbumPageRef } from "@/common/components/page/album";
 const AlbumPage: FC<object> = () => {
   const location = useLocation();
   const albumRef = useRef<Nullable<AlbumPageRef>>(null);
+  const routerActive = useRouterActive(RoutePathMain, "album");
   const { id } = RoutePath.parseQuery<{ id: number }>(location, RoutePathMain.album);
   const { heartManager, playableManager } = useUserTrackManager();
 
@@ -41,6 +43,7 @@ const AlbumPage: FC<object> = () => {
       className="router-container"
       pageActionType="out"
       heartManager={heartManager}
+      routerActive={routerActive}
       openComment={openTrackComment}
       playableManager={playableManager}
       addTrackToPlaylist={addTrackToPlaylist}

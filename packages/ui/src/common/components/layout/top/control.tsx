@@ -62,7 +62,7 @@ const Control: FC<TopControlProps> = ({
   const apd = Array.isArray(appends) ? appends : [appends];
 
   return (
-    <NoDrag className={cx(`flex flex-row gap-4 select-none relative`, className)}>
+    <NoDrag className={cx(`flex flex-row items-center gap-4 select-none relative`, className)}>
       <ControlButton
         className={itemClassName}
         show={dev}

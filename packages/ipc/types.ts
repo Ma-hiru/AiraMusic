@@ -21,3 +21,13 @@ export type {
   MessageDirection,
   MessageSingleEvent
 } from "./src/types/message";
+
+export type {
+  AgentInvokeError,
+  AgentToolRequest,
+  AgentFocusContext,
+  AgentInvokeResult,
+  AgentToolResponse,
+  AgentSettingsContext,
+  AgentConversationSummary
+} from "./src/types/agent";

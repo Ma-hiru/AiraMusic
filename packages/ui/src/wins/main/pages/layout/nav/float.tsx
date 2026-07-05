@@ -6,8 +6,8 @@ import { Plus, ArrowUp, SearchIcon } from "lucide-react";
 import { memo, useRef, type FC, useMemo, useState, useEffect } from "react";
 import { useUser } from "@/common/store/user";
 import { typingAtom } from "@/wins/main/atoms/layout";
-import AppModal from "@/common/components/display/modal";
 import FloatItem from "@/common/components/layout/float/float-item";
+import AppModal, { createPlaylistCreateModal } from "@/common/components/display/modal";
 
 interface NavFloatProps {
   sideBar: boolean;
@@ -27,7 +27,7 @@ const NavFloat: FC<NavFloatProps> = ({
   const user = useUser();
   const setTyping = useSetAtom(typingAtom);
   const inputRef = useRef<HTMLInputElement>(null);
-  const { create, createPlaylistCreateModal } = AppModal.useModal();
+  const { create } = AppModal.useModal();
   const [value, setValue] = useState("");
   const [showInput, setShowInput] = useState(false);
   const debouncedSearch = useMemo(() => debounce(setKeyword, 300), [setKeyword]);

@@ -18,6 +18,7 @@ import {
   NeteaseTrack,
   NeteaseLocalAudio,
   NeteaseLocalImage,
+  NeteaseLyricSchema,
   NeteaseTrackRecord,
   NeteaseNetworkAudio,
   NeteaseNetworkImage,
@@ -388,6 +389,24 @@ export default class RendererPlayer extends Listenable {
       this.current.noteActive = !this.current.noteActive;
     }
     this.executeListeners();
+  }
+
+  public replaceLyricByAgent(content: string) {
+    if (!content) return { ok: false, reason: "空数据" };
+    try {
+      const res = NeteaseLyricSchema.safeParse(JSON.parse(content));
+      if (!res.success) return { ok: false, reason: res.error.message };
+
+      const lyric = NeteaseLyric.fromObject(res.data);
+      if (!lyric) return { ok: false, reason: "解析失败" };
+
+      this.current.lyric = lyric;
+      this.executeListeners();
+
+      return { ok: true, reason: "成功" };
+    } catch (err) {
+      return { ok: false, reason: String(err) };
+    }
   }
 
   override [Symbol.dispose]() {
