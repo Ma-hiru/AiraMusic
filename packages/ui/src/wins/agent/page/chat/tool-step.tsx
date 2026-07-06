@@ -19,11 +19,11 @@ const ToolStep: FC<ToolStepProps> = ({ item }) => {
   const total = Math.max(item.toolCalls.length, item.toolResults.length);
 
   return (
-    <section className="ml-0 max-w-3xl rounded-lg border border-white/10 bg-black/12 text-[12px] text-white/68">
+    <section className="min-w-0 max-w-[min(100%,48rem)] overflow-hidden rounded-2xl border border-white/9 bg-black/16 text-[12px] text-white/68 shadow-sm shadow-black/10">
       <button
         className="
-          flex min-h-10 w-full cursor-pointer items-center gap-2 px-3 py-2
-          text-left outline-none transition-colors hover:bg-white/7
+          flex min-h-10 w-full cursor-pointer items-center gap-2 px-3.5 py-2.5
+          text-left outline-none transition-colors duration-200 hover:bg-white/7
           focus-visible:ring-2 focus-visible:ring-white/50
         "
         type="button"
@@ -50,7 +50,7 @@ const ToolStep: FC<ToolStepProps> = ({ item }) => {
       </button>
 
       {open && (
-        <div className="grid min-w-0 gap-2 border-t border-white/10 p-2">
+        <div className="grid min-w-0 gap-2 border-t border-white/9 bg-black/8 p-2.5">
           {item.toolCalls.length
             ? item.toolCalls.map((call) => (
                 <ToolCallDetail
@@ -82,10 +82,10 @@ const ToolCallDetail: FC<{
   output?: string;
 }> = memo(({ name, input, callID, output }) => {
   return (
-    <article className="min-w-0 overflow-hidden rounded-md border border-white/10 bg-white/7">
+    <article className="min-w-0 overflow-hidden rounded-xl border border-white/10 bg-white/7">
       <header className="flex min-w-0 items-center justify-between gap-2 border-b border-white/8 px-2.5 py-1.5">
         <span className="min-w-0 truncate font-semibold text-white/75">{name}</span>
-        <span className="shrink-0 truncate text-[10px] opacity-35">{callID}</span>
+        <span className="max-w-40 shrink-0 truncate text-[10px] opacity-35">{callID}</span>
       </header>
       <div className="grid min-w-0 gap-2 p-2">
         {input && <CodeBlock label="输入" value={input} />}
@@ -106,8 +106,8 @@ const CodeBlock: FC<{ label: string; value: string }> = memo(({ label, value }) 
     <div className="mb-1 text-[10px] font-semibold uppercase opacity-45">{label}</div>
     <pre
       className="
-        max-h-44 min-w-0 overflow-auto whitespace-pre-wrap break-all rounded-md
-        bg-black/25 p-2 text-[11px] leading-4 text-white/62 scrollbar scrollbar-show
+        max-h-52 min-w-0 overflow-auto whitespace-pre-wrap break-words rounded-lg
+        bg-black/28 p-2.5 text-[11px] leading-4 text-white/64 scrollbar scrollbar-show
       ">
       {value}
     </pre>

@@ -84,8 +84,13 @@ const TopControl: FC = () => {
         {
           icon: Bot,
           label: "Agent",
-          onClick: async () => {
-            await RendererWindow.agent.reactReadyAwait();
+          onClick: () => {
+            if (RendererWindow.agent.opened) {
+              RendererWindow.agent.show();
+              RendererWindow.agent.focus();
+            } else {
+              void RendererWindow.agent.reactReadyAwait();
+            }
           }
         }
       ]}

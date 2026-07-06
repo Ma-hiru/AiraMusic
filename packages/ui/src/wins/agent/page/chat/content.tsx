@@ -1,4 +1,4 @@
-import { Bot, MessageSquarePlus } from "lucide-react";
+import { Bot, Sparkles, MessageSquarePlus } from "lucide-react";
 import { memo, useRef, type FC, useMemo, useEffect } from "react";
 import { useUser } from "@/common/store/user";
 import { NeteaseNetworkImage } from "@/common/netease/models";
@@ -20,6 +20,7 @@ type ChatTimelineItem =
 interface ChatContentProps {
   running: boolean;
   streamText: string;
+  recovering: boolean;
   messages: LLMMessage[];
   pendingUserMessage: string;
   liveTimeline: AgentLiveTimelineItem[];
@@ -30,6 +31,7 @@ const ChatContent: FC<ChatContentProps> = ({
   onCreateConversation,
   running,
   messages,
+  recovering,
   streamText,
   liveTimeline,
   pendingUserMessage
@@ -49,31 +51,47 @@ const ChatContent: FC<ChatContentProps> = ({
   );
   const lastLiveItem = liveTimeline.at(-1);
   const waitingForModel =
-    running && !(lastLiveItem?.type === "tool" && lastLiveItem.status === "running");
+    running && !recovering && !(lastLiveItem?.type === "tool" && lastLiveItem.status === "running");
   const empty =
-    !timeline.length && !pendingUserMessage && !liveTimeline.length && !streamText && !running;
+    !timeline.length &&
+    !recovering &&
+    !pendingUserMessage &&
+    !liveTimeline.length &&
+    !streamText &&
+    !running;
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ block: "end" });
   }, [timeline.length, pendingUserMessage, liveTimeline.length, streamText, running]);
 
   return (
-    <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 scrollbar scrollbar-show">
+    <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-5 pb-8 scroll-pb-28 scrollbar scrollbar-show">
       {empty ? (
         <div className="grid h-full place-items-center">
-          <div className="grid max-w-md gap-3 text-center">
-            <Bot className="mx-auto size-10 text-white/50" />
-            <div className="grid gap-1">
-              <p className="text-[14px] font-bold text-white/70">开始一段 Agent 对话</p>
-              <p className="text-[12px] leading-5 text-white/45">
-                选择模型配置后，新建对话即可让 Agent 读取当前音乐上下文并调用工具。
-              </p>
+          <div className="grid max-w-md gap-4 rounded-2xl border border-white/10 bg-white/7 px-8 py-7 text-center shadow-xl shadow-black/10">
+            <div className="mx-auto flex size-12 items-center justify-center rounded-2xl border border-white/12 bg-black/18">
+              <Bot className="size-7 text-white/62" />
+            </div>
+            <div className="grid gap-2">
+              <p className="text-[15px] font-bold text-white/78">开始一段 Agent 对话</p>
+              <p className="text-[12px] leading-5 text-white/48">当前想从音乐里知道什么？</p>
+            </div>
+            <div className="grid gap-1.5 text-left text-[12px] text-white/50">
+              <div className="flex items-center gap-2 rounded-lg bg-black/14 px-3 py-2">
+                <Sparkles className="size-3.5 shrink-0 text-primary" />
+                这首歌适合加入什么歌单？
+              </div>
+              <div className="flex items-center gap-2 rounded-lg bg-black/14 px-3 py-2">
+                <Sparkles className="size-3.5 shrink-0 text-primary" />
+                这段歌词的情绪是什么？
+              </div>
             </div>
             <button
               className="
-                mx-auto inline-flex h-9 cursor-pointer items-center gap-2 rounded-md
-                border border-white/15 bg-white/10 px-3 text-[13px] font-semibold
-                transition-all hover:bg-white/15 active:scale-96
+                mx-auto inline-flex h-9 cursor-pointer items-center gap-2 rounded-lg
+                border border-white/16 bg-white/12 px-3 text-[13px] font-semibold
+                transition-colors duration-200 hover:bg-white/18
+                focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/45
               "
               type="button"
               onClick={onCreateConversation}>
@@ -83,7 +101,7 @@ const ChatContent: FC<ChatContentProps> = ({
           </div>
         </div>
       ) : (
-        <div className="mx-auto flex w-full max-w-3xl flex-col gap-3">
+        <div className="mx-auto flex w-full max-w-[52rem] flex-col gap-4">
           {timeline.map((item) =>
             item.type === "message" ? (
               <ContentItem
@@ -120,6 +138,16 @@ const ChatContent: FC<ChatContentProps> = ({
                 }}
               />
             )
+          )}
+          {recovering && !streamText && (
+            <ContentItem
+              userName={userName}
+              userAvatar={userAvatar}
+              message={{
+                role: "assistant",
+                content: "正在恢复流式生成，等待会话完成后会刷新完整对话。"
+              }}
+            />
           )}
           {(streamText || waitingForModel) && (
             <ContentItem

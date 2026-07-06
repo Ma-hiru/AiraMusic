@@ -1,9 +1,9 @@
 import type {
   AIAgentChatOptions,
-  AIAgentChatAccepted,
   LLMConversationSnapshot,
   LLMProviderOpenAIConfig,
   AIProviderConfigSnapshot,
+  AIAgentRunningRunSnapshot,
   AIAgentCreateConfigOptions,
   LLMConversationCreateOptions,
   AIAgentCreateConversationResult
@@ -60,7 +60,8 @@ export type InvokeEventMaps = {
   invoke_agent_list_providers: [undefined, AgentInvokeResult<string[]>];
   invoke_agent_remove_conversation: [string, Promise<AgentInvokeResult<void>>];
   invoke_store_delete: [string, { ok: true } | { ok: false; reason?: string }];
-  invoke_agent_chat: [AIAgentChatOptions, Promise<AgentInvokeResult<AIAgentChatAccepted>>];
+  invoke_agent_list_runs: [undefined, AgentInvokeResult<AIAgentRunningRunSnapshot[]>];
+  invoke_agent_chat: [AIAgentChatOptions, Promise<AgentInvokeResult<AIAgentRunningRunSnapshot>>];
   invoke_agent_list_configs: [undefined, Promise<AgentInvokeResult<AIProviderConfigSnapshot[]>>];
   invoke_agent_list_conversations: [
     undefined,

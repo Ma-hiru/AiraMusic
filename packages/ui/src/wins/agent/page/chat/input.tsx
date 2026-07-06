@@ -59,20 +59,20 @@ const ChatInput: FC<ChatInputProps> = ({
   };
 
   return (
-    <footer className="shrink-0 border-t border-white/10 p-3">
-      <div className="mx-auto grid max-w-3xl gap-2">
+    <footer className="shrink-0 border-t border-white/8 bg-black/12 px-5 py-3 backdrop-blur-xl">
+      <div className="mx-auto grid max-w-[52rem] gap-2.5">
         <div className="flex min-h-8 flex-wrap items-center justify-between gap-2">
           <label className="flex min-w-0 flex-1 items-center gap-2" htmlFor={selectID}>
-            <span className="flex shrink-0 items-center gap-1.5 text-[12px] font-semibold text-white/50">
+            <span className="flex shrink-0 items-center gap-1.5 text-[12px] font-semibold text-white/56">
               <Cpu className="size-3.5" />
               模型
             </span>
             <select
               id={selectID}
               className="
-                h-8 min-w-0 flex-1 rounded-md border border-white/15 bg-white/10
-                px-2 text-[12px] font-semibold outline-none transition-colors
-                focus:border-primary/70 focus:bg-white/15
+                h-8 min-w-0 flex-1 rounded-lg border border-white/14 bg-white/9
+                px-2.5 text-[12px] font-semibold outline-none transition-colors
+                duration-200 focus:border-primary/70 focus:bg-white/14
                 disabled:pointer-events-none disabled:opacity-45
               "
               value={selectedConfigID}
@@ -88,7 +88,7 @@ const ChatInput: FC<ChatInputProps> = ({
           </label>
           <div className="flex min-w-0 items-center gap-1">
             {activeConfig && (
-              <span className="max-w-44 truncate rounded-md border border-white/10 bg-black/10 px-2 py-1 text-[11px] text-white/45">
+              <span className="max-w-44 truncate rounded-lg border border-white/10 bg-black/16 px-2 py-1 text-[11px] text-white/48">
                 {activeConfig.provider}
               </span>
             )}
@@ -105,10 +105,10 @@ const ChatInput: FC<ChatInputProps> = ({
         <form ref={formRef} className="grid grid-cols-[minmax(0,1fr)_auto] gap-2" onSubmit={submit}>
           <textarea
             className="
-              max-h-28 min-h-12 resize-y rounded-md border border-white/12
-              bg-black/20 px-3 py-2 text-[13px] leading-5 outline-none
-              transition-colors placeholder:text-white/35
-              focus:border-primary/70 focus:bg-black/25
+              max-h-36 min-h-14 resize-none rounded-xl border border-white/12
+              bg-black/24 px-3.5 py-2.5 text-[13px] leading-5 outline-none
+              transition-colors duration-200 placeholder:text-white/35
+              focus:border-primary/70 focus:bg-black/30
             "
             value={input}
             placeholder={placeholder}
@@ -125,9 +125,9 @@ const ChatInput: FC<ChatInputProps> = ({
             />
             <button
               className="
-                inline-flex h-12 w-12 items-center justify-center rounded-md
-                bg-primary text-primary-text transition-all hover:opacity-85
-                active:scale-96 disabled:pointer-events-none disabled:opacity-35
+                inline-flex h-14 w-14 cursor-pointer items-center justify-center rounded-xl
+                bg-primary text-primary-text transition-colors duration-200 hover:opacity-85
+                disabled:pointer-events-none disabled:opacity-35
               "
               title="发送消息"
               type="submit"

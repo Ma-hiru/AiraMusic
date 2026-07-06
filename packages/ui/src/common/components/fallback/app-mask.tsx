@@ -34,10 +34,11 @@ const AppMask: FC<MaskProps> = ({ className, show = true }) => {
           w-screen h-screen fixed flex justify-center
           items-center flex-col gap-4 top-0 text-center
           ease-in-out duration-500 transition-opacity
+          select-none
         `,
         className
       )}>
-      <img className="size-16" alt="logo" src="/images/logo.svg" />
+      <img className="size-16 select-none pointer-events-none" alt="logo" src="/images/logo.svg" />
       <p className="text-lg font-bold">{import.meta.env.APP_NAME}</p>
     </div>
   );

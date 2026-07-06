@@ -7,7 +7,7 @@ export type {
   AIAgentResponse,
   AIAgentToolResult,
   AIAgentChatOptions,
-  AIAgentChatAccepted,
+  AIAgentRunningRunSnapshot,
   AIAgentCreateConfigOptions,
   AIAgentCreateConversationResult
 } from "./interface";

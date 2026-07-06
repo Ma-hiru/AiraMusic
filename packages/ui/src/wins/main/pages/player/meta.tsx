@@ -86,7 +86,7 @@ const Meta: FC<ArtistProps> = ({ className }) => {
       <div className="flex-1 flex justify-start gap-1">
         {quality && (
           <Tag
-            className="w-fit! text-(--text-color)! bg-(--text-color)/30! text-[70%]"
+            className="w-fit! text-normal-text! bg-(--text-color)/30! text-[70%]"
             text={quality}
           />
         )}

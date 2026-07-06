@@ -17,8 +17,8 @@ const Marquee: FC<MarqueeProps> = ({ className, text, options, children, itemCla
     options ?? {
       pingPong: true,
       pauseOnHover: true,
-      gapDuration: 2000,
-      speed: 15
+      gapDuration: 3000,
+      speed: 10
     }
   );
   if (!text && !children) return;

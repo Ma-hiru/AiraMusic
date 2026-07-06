@@ -23,7 +23,7 @@ import type {
   AIAgentRunState,
   AIAgentRunContext,
   AIAgentChatOptions,
-  AIAgentChatAccepted,
+  AIAgentRunningRunSnapshot,
   AIAgentCreateConfigOptions,
   AIAgentCreateConversationResult
 } from "./interface";
@@ -253,6 +253,14 @@ export class AIAgent {
   //#endregion
 
   //#region run
+  public listRuns(): AIAgentRunningRunSnapshot[] {
+    return [...this.runs.values()].map(({ runID, configID, conversationID }) => ({
+      runID,
+      configID,
+      conversationID
+    }));
+  }
+
   private async loadRuntimeConfig(
     configID: string
   ): Promise<AIResult<{ provider: LLMProvider; config: LLMProviderConfig }>> {
@@ -460,7 +468,7 @@ export class AIAgent {
     }
   }
 
-  public async chat(options: AIAgentChatOptions): Promise<AIResult<AIAgentChatAccepted>> {
+  public async chat(options: AIAgentChatOptions): Promise<AIResult<AIAgentRunningRunSnapshot>> {
     if (this.busyConversations.has(options.conversationID)) {
       return AIResult.err({
         type: "conversation_busy",

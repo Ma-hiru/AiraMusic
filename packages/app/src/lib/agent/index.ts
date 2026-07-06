@@ -116,6 +116,10 @@ export class MainAgent {
     return this.current().listConversations();
   }
 
+  static listRuns() {
+    return this.current().listRuns();
+  }
+
   static getConversationSnapshot(id: string) {
     return this.current().getConversationSnapshot(id);
   }

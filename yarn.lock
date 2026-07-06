@@ -1708,6 +1708,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@mahiru/ai@workspace:packages/ai"
   dependencies:
+    "@mahiru/log": "workspace:*"
     openai: "npm:^6.45.0"
     zod: "npm:^4.4.3"
   languageName: unknown

@@ -1,71 +1,96 @@
 import { cx } from "@emotion/css";
-import { Bot } from "lucide-react";
 import { memo, type FC } from "react";
-import type { LLMConversationSnapshot, AIProviderConfigSnapshot } from "@mahiru/ai";
+import { Bot, Circle } from "lucide-react";
+import { useConversation } from "@/wins/agent/hooks/use-conversation";
+import type { AIProviderConfigSnapshot } from "@mahiru/ai";
 
 import ChatInput from "./input";
 import ChatContent from "./content";
-import type { AgentLiveTimelineItem } from "../types";
 
 interface ChatProps {
-  sending?: boolean;
   className?: string;
-  streamText: string;
-  runningRunID: string;
+  conversationID: string;
   loadingConfigs?: boolean;
   selectedConfigID: string;
-  pendingUserMessage: string;
   configs: AIProviderConfigSnapshot[];
-  liveTimeline: AgentLiveTimelineItem[];
-  conversation: Nullable<LLMConversationSnapshot>;
   activeConfig: Undefinable<AIProviderConfigSnapshot>;
-  onAbort: NormalFunc;
   onCreateConfig: NormalFunc;
   onRefreshConfigs: NormalFunc;
   onCreateConversation: NormalFunc;
   onSelectConfig: NormalFunc<[id: string]>;
-  onSubmit: NormalFunc<[text: string], Promise<boolean>>;
 }
 
 const Chat: FC<ChatProps> = ({
   className,
-  onAbort,
-  onSubmit,
   onCreateConfig,
   onSelectConfig,
   onRefreshConfigs,
   onCreateConversation,
   configs,
-  sending,
-  streamText,
   activeConfig,
-  conversation,
-  liveTimeline,
-  runningRunID,
+  conversationID,
   loadingConfigs,
-  selectedConfigID,
-  pendingUserMessage
+  selectedConfigID
 }) => {
+  const {
+    abort,
+    submit,
+    sending,
+    recovering,
+    streamText,
+    conversation,
+    liveTimeline,
+    runningRunID,
+    pendingUserMessage
+  } = useConversation(conversationID);
   const messages = conversation?.messages ?? [];
 
+  const statusText = recovering
+    ? "恢复中"
+    : runningRunID
+      ? "运行中"
+      : activeConfig
+        ? "就绪"
+        : "待配置";
+
   return (
-    <section className={cx("surface-1 flex min-h-0 flex-col rounded-lg", className)}>
-      <header className="flex h-14 shrink-0 items-center justify-between gap-3 border-b border-white/10 px-4">
+    <section
+      className={cx(
+        `
+          flex min-h-0 min-w-0 flex-col overflow-hidden rounded-xl border border-white/12
+          bg-black/18 shadow-2xl shadow-black/18 backdrop-blur-2xl backdrop-saturate-150
+        `,
+        className
+      )}>
+      <header className="flex h-13 shrink-0 items-center justify-between gap-3 border-b border-white/8 bg-white/6 px-4">
         <div className="min-w-0">
-          <h2 className="truncate text-[14px] font-bold">{conversation?.name || "新对话"}</h2>
-          <p className="truncate text-[11px] text-white/45">
+          <h2 className="truncate text-[14px] font-bold leading-5">
+            {conversation?.name || "新对话"}
+          </h2>
+          <p className="truncate text-[11px] leading-4 text-white/46">
             {activeConfig
               ? `${activeConfig.name} · ${activeConfig.config.model}`
               : "未选择模型配置"}
           </p>
         </div>
-        <div className="flex shrink-0 items-center gap-2 rounded-md border border-white/10 bg-white/8 px-2.5 py-1.5 text-[12px] text-white/60">
-          <Bot className="size-4" />
-          <span>{runningRunID ? "运行中" : activeConfig ? "就绪" : "待配置"}</span>
+        <div className="flex shrink-0 items-center gap-2 text-[12px] font-semibold text-white/58">
+          <Bot className="size-4 opacity-70" />
+          <Circle
+            className={cx(
+              "size-2 fill-current",
+              runningRunID || recovering
+                ? "text-primary"
+                : activeConfig
+                  ? "text-emerald-200/75"
+                  : "text-white/32"
+            )}
+          />
+          <span>{statusText}</span>
         </div>
       </header>
       <ChatContent
         messages={messages}
+        recovering={recovering}
         streamText={streamText}
         running={!!runningRunID}
         liveTimeline={liveTimeline}
@@ -79,9 +104,9 @@ const Chat: FC<ChatProps> = ({
         runningRunID={runningRunID}
         loadingConfigs={loadingConfigs}
         selectedConfigID={selectedConfigID}
-        selectedConversationID={conversation?.id ?? ""}
-        onAbort={onAbort}
-        onSubmit={onSubmit}
+        selectedConversationID={conversationID}
+        onAbort={abort}
+        onSubmit={submit}
         onCreateConfig={onCreateConfig}
         onSelectConfig={onSelectConfig}
         onRefreshConfigs={onRefreshConfigs}

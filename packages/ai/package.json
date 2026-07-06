@@ -12,6 +12,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@mahiru/log": "workspace:*",
     "openai": "^6.45.0"
   }
 }

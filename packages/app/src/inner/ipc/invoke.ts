@@ -31,6 +31,9 @@ export const invokeHandlers: InvokeHandlers = {
   invoke_agent_list_conversations: () => {
     return agentResult(() => MainAgent.listConversations());
   },
+  invoke_agent_list_runs: () => {
+    return agentData(() => MainAgent.listRuns());
+  },
   invoke_agent_get_conversation: (_, id) => {
     return agentResult(() => MainAgent.getConversationSnapshot(id));
   },

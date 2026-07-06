@@ -61,7 +61,7 @@ export interface AIAgentRunContext extends AIAgentRunState {
   conversation: LLMConversation;
 }
 
-export type AIAgentChatAccepted = Omit<AIAgentRunState, "controller">;
+export type AIAgentRunningRunSnapshot = Omit<AIAgentRunState, "controller">;
 
 export type AIAgentEvent =
   | {

@@ -64,7 +64,7 @@ const Progress: FC<object> = () => {
           })}
         </div>
       </div>
-      <div className="w-full flex justify-between items-center backdrop-blur-lg text-[12px] mt-1">
+      <div className="w-full flex justify-between items-center backdrop-blur-lg text-[12px] mt-1 gap-2">
         <Marquee
           className="flex-1 flex gap-1 items-center"
           options={{

@@ -1,5 +1,5 @@
 import { cx } from "@emotion/css";
-import { memo, type FC } from "react";
+import { memo, type FC, useMemo } from "react";
 import { RefreshCw, MessageSquarePlus } from "lucide-react";
 import IconButton from "@/common/components/data-input/icon-button";
 import type { AgentConversationSummary } from "@mahiru/ipc/types";
@@ -10,8 +10,8 @@ interface ConversationListProps {
   open: boolean;
   loading?: boolean;
   className?: string;
-  runningRunID: string;
   selectedConversationID: string;
+  runningConversationIDs: string[];
   conversations: AgentConversationSummary[];
   onRefresh: NormalFunc;
   onCreateConversation: NormalFunc;
@@ -27,10 +27,15 @@ const ConversationList: FC<ConversationListProps> = ({
   onRemoveConversation,
   open,
   loading,
-  runningRunID,
   conversations,
+  runningConversationIDs,
   selectedConversationID
 }) => {
+  const runningConversationIDSet = useMemo(
+    () => new Set(runningConversationIDs),
+    [runningConversationIDs]
+  );
+
   return (
     <div
       className={cx(
@@ -45,11 +50,11 @@ const ConversationList: FC<ConversationListProps> = ({
         className={cx(
           `
             flex h-full w-(--side-bar-expand-width) flex-col gap-3
-            py-3 pl-3 pr-0 transition-all duration-500 ease-in-out
+            py-3 transition-all duration-500 ease-in-out
           `,
           !open && "opacity-0"
         )}>
-        <section className="surface-1 flex min-h-0 flex-1 flex-col rounded-lg p-3">
+        <section className="flex min-h-0 flex-1 flex-col rounded-xl border border-white/12 bg-black/16 p-3 shadow-2xl shadow-black/14 backdrop-blur-2xl backdrop-saturate-150">
           <div className="mb-3 flex items-center justify-between gap-2">
             <div className="min-w-0">
               <h2 className="truncate text-[13px] font-bold">对话</h2>
@@ -74,19 +79,19 @@ const ConversationList: FC<ConversationListProps> = ({
             </div>
           </div>
 
-          <div className="min-h-0 flex-1 space-y-1 overflow-y-auto pr-1 scrollbar scrollbar-show">
+          <div className="min-h-0 flex-1 space-y-1.5 overflow-y-auto pr-1 scrollbar scrollbar-show">
             {conversations.map((conversation) => (
               <ConversationItem
                 key={conversation.id}
                 conversation={conversation}
                 active={conversation.id === selectedConversationID}
-                disabled={!!runningRunID && conversation.id === selectedConversationID}
+                disabled={runningConversationIDSet.has(conversation.id)}
                 onOpen={onOpenConversation}
                 onRemove={onRemoveConversation}
               />
             ))}
             {conversations.length === 0 && (
-              <div className="grid min-h-32 place-items-center rounded-md border border-white/10 px-3 text-center text-[12px] text-white/45">
+              <div className="grid min-h-32 place-items-center rounded-xl border border-white/10 bg-white/6 px-3 text-center text-[12px] text-white/45">
                 暂无对话
               </div>
             )}

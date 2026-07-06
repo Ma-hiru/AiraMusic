@@ -22,6 +22,10 @@ export class RendererAgent {
     return RendererIPC.NormalChannel.send("invoke_agent_list_conversations", undefined);
   }
 
+  static listRuns() {
+    return RendererIPC.NormalChannel.send("invoke_agent_list_runs", undefined);
+  }
+
   static getConversation(conversationID: string) {
     return RendererIPC.NormalChannel.send("invoke_agent_get_conversation", conversationID);
   }
