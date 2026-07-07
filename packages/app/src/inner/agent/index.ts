@@ -10,23 +10,17 @@ import {
   AgentContextCurrentFocusContext
 } from "./source";
 import {
-  // 新增工具：听歌统计
   AgentToolRecord,
   AgentToolSearch,
   AgentToolComment,
   AgentToolFMTrash,
   AgentToolTrackFM,
-  // 新增工具：专辑
   AgentToolAlbumNew,
-  // 新增工具：用户
   AgentToolUserInfo,
   AgentToolAlbumStar,
-  // 新增工具：搜索增强
   AgentToolSearchHot,
-  // 新增工具：歌曲操作
   AgentToolTrackLike,
   AgentToolTrackPlay,
-  AgentToolWebSearch,
   AgentToolArtistDesc,
   AgentToolPlayerSeek,
   AgentToolSearchOpen,
@@ -34,18 +28,15 @@ import {
   AgentToolAlbumDetail,
   AgentToolCommentLike,
   AgentToolCommentOpen,
-  // 新增工具：评论互动
   AgentToolCommentSend,
   AgentToolLyricSchema,
   AgentToolPlayerQueue,
   AgentToolPlaylistTop,
-  // 新增工具：设置
   AgentToolSettingsGet,
   AgentToolTrackDetail,
   AgentToolTrackLyrics,
   AgentToolArtistAlbums,
   AgentToolArtistDetail,
-  // 新增工具：首页与榜单
   AgentToolHomeToplists,
   AgentToolPlayerAction,
   AgentToolPlayerVolume,
@@ -53,7 +44,6 @@ import {
   AgentToolTrackSimilar,
   AgentToolArtistSimilar,
   AgentToolArtistToplist,
-  // 新增工具：播放器
   AgentToolPlayerCurrent,
   AgentToolReplaceLyrics,
   AgentToolSearchSuggest,
@@ -64,11 +54,9 @@ import {
   AgentToolPlaylistDelete,
   AgentToolPlaylistDetail,
   AgentToolPlaylistModify,
-  // 新增工具：艺人
   AgentToolArtistHotTracks,
   AgentToolPlaylistSimilar,
   AgentToolUserPlayHistory,
-  // 新增工具：歌单管理
   AgentToolPlaylistRecommend,
   AgentToolTrackRecommendNew,
   AgentToolTrackRecommendDaily
@@ -255,10 +243,8 @@ export class MainAgent {
           const enableDestructive = MainStoreForConfig.get("enableDestructiveTools", false);
 
           const safe = [
-            // 已有工具
             new AgentToolSearch(),
             new AgentToolComment(),
-            new AgentToolWebSearch(),
             new AgentToolTrackDetail(),
             new AgentToolAlbumDetail(),
             new AgentToolArtistDetail(),
@@ -273,56 +259,41 @@ export class MainAgent {
             new AgentToolSourceOpen(),
             new AgentToolSearchOpen(),
             new AgentToolCommentOpen(),
-            // 新增工具：播放器
             new AgentToolPlayerCurrent(),
             new AgentToolPlayerVolume(),
             new AgentToolPlayerSeek(),
             new AgentToolPlayerQueue(),
-            // 新增工具：用户
             new AgentToolUserInfo(),
             new AgentToolUserPlaylists(),
             new AgentToolUserPlayHistory(),
-            // 新增工具：歌曲发现
             new AgentToolTrackRecommendDaily(),
             new AgentToolTrackRecommendNew(),
             new AgentToolTrackFM(),
-            // 新增工具：艺人
             new AgentToolArtistHotTracks(),
             new AgentToolArtistAlbums(),
             new AgentToolArtistSimilar(),
             new AgentToolArtistToplist(),
             new AgentToolArtistDesc(),
-            // 新增工具：歌单发现
             new AgentToolPlaylistRecommend(),
             new AgentToolPlaylistSimilar(),
             new AgentToolPlaylistTop(),
-            // 新增工具：专辑发现
             new AgentToolAlbumNew(),
-            // 新增工具：搜索增强
             new AgentToolSearchHot(),
             new AgentToolSearchSuggest(),
-            // 新增工具：首页与榜单
             new AgentToolHomeToplists(),
-            // 新增工具：设置（只读）
             new AgentToolSettingsGet(),
-            // 新增工具：听歌统计
             new AgentToolRecord()
           ];
 
           const destructive = [
-            // 已有：设置修改
             new AgentToolChangeSettings(),
-            // 新增：歌曲操作
             new AgentToolTrackLike(),
             new AgentToolFMTrash(),
-            // 新增：歌单写操作
             new AgentToolPlaylistCreate(),
             new AgentToolPlaylistDelete(),
             new AgentToolPlaylistModify(),
             new AgentToolPlaylistStar(),
-            // 新增：专辑收藏
             new AgentToolAlbumStar(),
-            // 新增：评论互动
             new AgentToolCommentSend(),
             new AgentToolCommentLike()
           ];

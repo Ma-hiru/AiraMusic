@@ -3,8 +3,6 @@ import { MainIPC } from "@mahiru/ipc/main";
 import { AIResult, type LLMToolContext } from "@mahiru/ai";
 import type { MessageData } from "@mahiru/ipc/types";
 
-import { searchWeb } from "./web-search";
-
 type AgentToolRequestData = MessageData<"message_dispatch_agent_tool_request">;
 type AgentToolResponseData = MessageData<"message_deliver_agent_tool_response">;
 type AgentToolName = AgentToolRequestData["tool"];
@@ -88,8 +86,6 @@ const requestAgentTool = <TTool extends AgentToolName>(
     });
   });
 };
-
-// ========== 已有工具 ==========
 
 export class AgentToolTrackDetail {
   readonly name = "agent-tool-track-detail";
@@ -311,52 +307,6 @@ export class AgentToolSearch {
   }
 }
 
-export class AgentToolWebSearch {
-  readonly name = "agent-web-search";
-  readonly description =
-    "搜索公开网页，适合查询近期新闻、官网资料、外部文档、互联网事实或非 AiraMusic 内部资源。回答网页事实时应引用返回结果的 URL";
-
-  inputSchema = z.object({
-    query: z.string().min(1).max(200).describe("网页搜索关键词"),
-    maxResults: z.number().int().min(1).max(8).default(5).describe("最多返回结果数"),
-    site: z
-      .string()
-      .min(1)
-      .max(120)
-      .optional()
-      .describe("可选站点限制，例如 github.com、wikipedia.org")
-  });
-
-  async execute(
-    input: z.infer<typeof this.inputSchema>,
-    context: LLMToolContext
-  ): Promise<AIResult<JsonValue>> {
-    try {
-      return AIResult.ok((await searchWeb(input, context.signal)) as unknown as JsonValue);
-    } catch (error) {
-      if (context.signal?.aborted) {
-        return AIResult.err({
-          type: "aborted",
-          message: "网页搜索已取消",
-          raw: error
-        });
-      }
-      if (error instanceof Error && error.name === "AbortError") {
-        return AIResult.err({
-          type: "timeout",
-          message: "网页搜索超时",
-          raw: error
-        });
-      }
-      return AIResult.err({
-        type: "network",
-        message: `网页搜索失败：${String(error)}`,
-        raw: error
-      });
-    }
-  }
-}
-
 export class AgentToolLyricSchema {
   readonly name = "agent-lyric-schema";
   readonly description = "获取当前播放的歌词的 JSON 数据结构";
@@ -441,7 +391,7 @@ export class AgentToolSearchOpen {
   }
 }
 
-// ========== 新增工具：播放器信息与控制 ==========
+// todo: 以下tool还未逐一测试
 
 export class AgentToolPlayerCurrent {
   readonly name = "agent-tool-player-current";
@@ -504,8 +454,6 @@ export class AgentToolPlayerQueue {
   }
 }
 
-// ========== 新增工具：用户 ==========
-
 export class AgentToolUserInfo {
   readonly name = "agent-tool-user-info";
   readonly description = "获取当前登录用户的信息，包括昵称、头像、VIP 状态等";
@@ -558,8 +506,6 @@ export class AgentToolUserPlayHistory {
     });
   }
 }
-
-// ========== 新增工具：歌曲操作 ==========
 
 export class AgentToolTrackLike {
   readonly name = "agent-tool-track-like";
@@ -641,8 +587,6 @@ export class AgentToolFMTrash {
     return requestAgentTool(context, "agent-tool-fm-trash", input);
   }
 }
-
-// ========== 新增工具：艺人 ==========
 
 export class AgentToolArtistHotTracks {
   readonly name = "agent-tool-artist-hot-tracks";
@@ -728,8 +672,6 @@ export class AgentToolArtistDesc {
     return requestAgentTool(context, "agent-tool-artist-desc", input);
   }
 }
-
-// ========== 新增工具：歌单管理 ==========
 
 export class AgentToolPlaylistRecommend {
   readonly name = "agent-tool-playlist-recommend";
@@ -854,8 +796,6 @@ export class AgentToolPlaylistTop {
   }
 }
 
-// ========== 新增工具：专辑 ==========
-
 export class AgentToolAlbumNew {
   readonly name = "agent-tool-album-new";
   readonly description = "获取最新上架的专辑";
@@ -895,8 +835,6 @@ export class AgentToolAlbumStar {
   }
 }
 
-// ========== 新增工具：评论互动 ==========
-
 export class AgentToolCommentSend {
   readonly name = "agent-tool-comment-send";
   readonly description = "发送评论到指定资源（歌曲/专辑/歌单），需要登录";
@@ -935,8 +873,6 @@ export class AgentToolCommentLike {
   }
 }
 
-// ========== 新增工具：搜索增强 ==========
-
 export class AgentToolSearchHot {
   readonly name = "agent-tool-search-hot";
   readonly description = "获取当前热搜关键词列表";
@@ -967,8 +903,6 @@ export class AgentToolSearchSuggest {
   }
 }
 
-// ========== 新增工具：首页与榜单 ==========
-
 export class AgentToolHomeToplists {
   readonly name = "agent-tool-home-toplists";
   readonly description = "获取所有官方音乐排行榜和榜单";
@@ -983,8 +917,6 @@ export class AgentToolHomeToplists {
   }
 }
 
-// ========== 新增工具：设置 ==========
-
 export class AgentToolSettingsGet {
   readonly name = "agent-tool-settings-get";
   readonly description = "获取当前应用的设置信息";
@@ -998,8 +930,6 @@ export class AgentToolSettingsGet {
     return requestAgentTool(context, "agent-tool-settings-get", input);
   }
 }
-
-// ========== 新增工具：听歌统计 ==========
 
 export class AgentToolRecord {
   readonly name = "agent-tool-record";

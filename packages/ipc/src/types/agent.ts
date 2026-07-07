@@ -243,14 +243,14 @@ export type AgentToolRequest =
   | {
       id: string;
       conversationID: string;
-      tool: "agent-tool-playlist-create";
-      input: { name: string; privacy?: 10 };
+      input: { type: 0 | 1; uid: number };
+      tool: "agent-tool-user-play-history";
     }
   | {
       id: string;
       conversationID: string;
-      input: { type: 0 | 1; uid: number };
-      tool: "agent-tool-user-play-history";
+      tool: "agent-tool-playlist-create";
+      input: { name: string; privacy?: 10 };
     }
   | {
       id: string;
@@ -261,14 +261,14 @@ export type AgentToolRequest =
   | {
       id: string;
       conversationID: string;
-      input: { type?: 0 | 7 | 8 | 16 | 96 };
-      tool: "agent-tool-track-recommend-new";
+      tool: "agent-tool-player-volume";
+      input: { mute?: boolean; volume?: number };
     }
   | {
       id: string;
       conversationID: string;
-      tool: "agent-tool-player-volume";
-      input: { mute?: boolean; volume?: number };
+      input: { type?: 0 | 7 | 8 | 16 | 96 };
+      tool: "agent-tool-track-recommend-new";
     }
   | {
       id: string;
