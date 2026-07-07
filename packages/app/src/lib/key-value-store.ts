@@ -18,6 +18,7 @@ export type StoreTypeForConfig = {
   enableAgent: boolean;
   cacheIndexKey: string;
   cache: CacheStoreConfig;
+  enableDestructiveTools: boolean;
 };
 
 export type StoreTypeForRenderer = Record<string, JsonValue>;
