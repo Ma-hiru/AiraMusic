@@ -1,6 +1,7 @@
 import { cx } from "@emotion/css";
 import { memo, type FC, useMemo, useState } from "react";
 import { AlertCircle, ChevronDown, CheckCircle2, ChevronRight, LoaderCircle } from "lucide-react";
+import Card from "@/common/components/layout/card";
 
 import type { AgentToolTimelineItem } from "../types";
 
@@ -19,7 +20,7 @@ const ToolStep: FC<ToolStepProps> = ({ item }) => {
   const total = Math.max(item.toolCalls.length, item.toolResults.length);
 
   return (
-    <section className="min-w-0 max-w-[min(100%,48rem)] overflow-hidden rounded-2xl border border-white/9 bg-black/16 text-[12px] text-white/68 shadow-sm shadow-black/10">
+    <Card className="min-w-0 max-w-[min(100%,48rem)] overflow-hidden p-0! text-[12px] text-white/68 shadow-sm shadow-black/10">
       <button
         className="
           flex min-h-10 w-full cursor-pointer items-center gap-2 px-3.5 py-2.5
@@ -71,7 +72,7 @@ const ToolStep: FC<ToolStepProps> = ({ item }) => {
               ))}
         </div>
       )}
-    </section>
+    </Card>
   );
 };
 

@@ -4,6 +4,7 @@ import { type FC, useState, type FormEvent } from "react";
 import { RendererAgent } from "@/wins/agent/lib/agent";
 import AppModal from "@/common/components/display/modal";
 import AppToast from "@/common/components/display/toast";
+import FormSelect, { type FormSelectOption } from "@/common/components/data-input/form-select";
 import type { ModalRender } from "@/common/components/display/modal/modal-provider";
 import type {
   LLMProviderOpenAIConfig,
@@ -33,6 +34,17 @@ const inputClassName = `
   focus:border-primary focus:bg-white/15
 `;
 
+const apiModeOptions = [
+  {
+    value: "chat_completions",
+    label: "Chat Completions"
+  },
+  {
+    value: "responses",
+    label: "Responses"
+  }
+] satisfies FormSelectOption[];
+
 const createDefaultForm = (provider = ""): AgentConfigForm => ({
   id: "",
   provider,
@@ -60,6 +72,10 @@ const AgentConfigFormContent: FC<AgentConfigModalProps> = ({
 }) => {
   const [creating, setCreating] = useState(false);
   const [form, setForm] = useState(() => createDefaultForm(defaultProvider ?? providers[0]));
+  const providerOptions = providers.map((provider) => ({
+    value: provider,
+    label: provider
+  }));
 
   const disabled =
     creating || !form.provider || !form.name.trim() || !form.model.trim() || !form.apiKey.trim();
@@ -101,38 +117,29 @@ const AgentConfigFormContent: FC<AgentConfigModalProps> = ({
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <label className="grid gap-1 font-medium text-white/70">
           Provider
-          <select
-            className={inputClassName}
+          <FormSelect
+            label="Provider"
             value={form.provider}
+            options={providerOptions}
             disabled={!providers.length}
-            onChange={(event) =>
-              setForm((current) => ({ ...current, provider: event.target.value }))
-            }>
-            {providers.length ? (
-              providers.map((provider) => (
-                <option key={provider} value={provider}>
-                  {provider}
-                </option>
-              ))
-            ) : (
-              <option value="">暂无 Provider</option>
-            )}
-          </select>
+            placeholder={providers.length ? "选择 Provider" : "暂无 Provider"}
+            onChange={(provider) => setForm((current) => ({ ...current, provider }))}
+          />
         </label>
         <label className="grid gap-1 font-medium text-white/70">
           API Mode
-          <select
-            className={inputClassName}
+          <FormSelect
+            label="API Mode"
             value={form.apiMode}
-            onChange={(event) =>
+            options={apiModeOptions}
+            placeholder="选择 API Mode"
+            onChange={(apiMode) =>
               setForm((current) => ({
                 ...current,
-                apiMode: event.target.value as LLMProviderOpenAIAPIMode
+                apiMode: apiMode as LLMProviderOpenAIAPIMode
               }))
-            }>
-            <option value="chat_completions">Chat Completions</option>
-            <option value="responses">Responses</option>
-          </select>
+            }
+          />
         </label>
       </div>
 

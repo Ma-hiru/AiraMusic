@@ -29,7 +29,8 @@ const MarkdownContent: FC<MarkdownContentProps> = ({ className, content, streami
 
   return (
     <Streamdown
-      className={cx("agent-markdown text-[13px] leading-5 text-white/85", className)}
+      className={cx("agent-markdown text-[14px] leading-6 text-white/88", className)}
+      controls={false}
       lineNumbers={false}
       isAnimating={!!streaming}
       mode={streaming ? "streaming" : "static"}

@@ -160,7 +160,62 @@ export function useAgent() {
     },
     [setSelectedConversationID, updateConversationState]
   );
+
+  const openReusableBlankConversation = useCallback(async () => {
+    if (
+      conversation &&
+      !conversation.name.trim() &&
+      !conversation.messages.length &&
+      !runningRunID
+    ) {
+      return true;
+    }
+
+    const blankConversations = conversations.filter((item) => {
+      if (item.name.trim()) return false;
+      return !runningConversationIDsRef.current.includes(item.id);
+    });
+
+    for (const item of blankConversations) {
+      const result = await RendererAgent.getConversation(item.id);
+      if (!result.ok) {
+        showAgentError(result.reason);
+        return false;
+      }
+
+      const snapshot = result.data;
+      if (!snapshot || snapshot.messages.length) continue;
+
+      setSelectedConversationID(item.id);
+      updateConversationState({
+        conversationID: item.id,
+        update: (state) => ({
+          ...state,
+          conversation: snapshot,
+          sending: false,
+          streamText: "",
+          recovering: false,
+          runningRunID: "",
+          liveTimeline: EMPTY_LIVE_TIMELINE,
+          pendingUserMessage: ""
+        })
+      });
+      return true;
+    }
+
+    return false;
+  }, [
+    conversation,
+    conversations,
+    runningRunID,
+    runningConversationIDsRef,
+    setSelectedConversationID,
+    updateConversationState
+  ]);
+
   const createConversation = useCallback(async () => {
+    if (await openReusableBlankConversation()) return;
+
     const result = await RendererAgent.createConversation(undefined);
     if (!result.ok) {
       showAgentError(result.reason);
@@ -168,7 +223,7 @@ export function useAgent() {
     }
     await loadConversations();
     await openConversation(result.data.id);
-  }, [loadConversations, openConversation]);
+  }, [loadConversations, openConversation, openReusableBlankConversation]);
   const removeConversation = useCallback(
     async (id: string) => {
       if (!id || runningConversationIDsRef.current.includes(id)) return;

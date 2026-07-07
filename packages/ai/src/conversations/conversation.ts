@@ -117,11 +117,12 @@ export class LLMConversation {
       });
     }
 
+    const now = Date.now();
     const snapshot: LLMConversationSnapshot = {
       id: options.id,
       name: options.name ?? "",
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
+      createdAt: now,
+      updatedAt: now,
       metadata: { ...(options.metadata ?? {}) },
       messages: options.messages ?? []
     };
@@ -132,6 +133,16 @@ export class LLMConversation {
   }
 
   static fromSnapshot(snapshot: LLMConversationSnapshot): AIResult<LLMConversation> {
-    return LLMConversation.create(snapshot);
+    if (!snapshot.id.trim()) {
+      return AIResult.err({
+        type: "invalid_conversation",
+        message: "conversation 缺少 id"
+      });
+    }
+
+    const validation = validateMessages(snapshot.messages);
+    if (validation.isErr()) return validation;
+
+    return AIResult.ok(new LLMConversation(snapshot));
   }
 }

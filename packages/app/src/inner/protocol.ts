@@ -8,6 +8,7 @@ import { MainHandle } from "@/lib/handle";
 import { isSubPath } from "@/utils/sub-path";
 import mime from "mime";
 
+/** @deprecated */
 export class MainProtocol {
   private static init = false;
 
@@ -22,7 +23,7 @@ export class MainProtocol {
           standard: true,
           supportFetchAPI: true,
           bypassCSP: true,
-          stream: false,
+          stream: true,
           corsEnabled: true
         }
       }

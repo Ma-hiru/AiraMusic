@@ -2,6 +2,7 @@ import { Bot, Sparkles, MessageSquarePlus } from "lucide-react";
 import { memo, useRef, type FC, useMemo, useEffect } from "react";
 import { useUser } from "@/common/store/user";
 import { NeteaseNetworkImage } from "@/common/netease/models";
+import Card from "@/common/components/layout/card";
 import RendererImageConstants from "@/common/constants/image";
 import type { LLMMessage, LLMMessageText } from "@mahiru/ai";
 
@@ -68,7 +69,7 @@ const ChatContent: FC<ChatContentProps> = ({
     <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-5 pb-8 scroll-pb-28 scrollbar scrollbar-show">
       {empty ? (
         <div className="grid h-full place-items-center">
-          <div className="grid max-w-md gap-4 rounded-2xl border border-white/10 bg-white/7 px-8 py-7 text-center shadow-xl shadow-black/10">
+          <Card className="grid max-w-md gap-4 px-8! py-7! text-center bg-transparent!">
             <div className="mx-auto flex size-12 items-center justify-center rounded-2xl border border-white/12 bg-black/18">
               <Bot className="size-7 text-white/62" />
             </div>
@@ -98,10 +99,10 @@ const ChatContent: FC<ChatContentProps> = ({
               <MessageSquarePlus className="size-4" />
               新建对话
             </button>
-          </div>
+          </Card>
         </div>
       ) : (
-        <div className="mx-auto flex w-full max-w-[52rem] flex-col gap-4">
+        <div className="mx-auto flex w-full max-w-[min(100%,48rem)] flex-col gap-4">
           {timeline.map((item) =>
             item.type === "message" ? (
               <ContentItem

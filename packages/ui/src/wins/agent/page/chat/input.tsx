@@ -1,6 +1,15 @@
-import { Cpu, Plus, Square, RefreshCw, SendHorizontal } from "lucide-react";
-import { memo, useId, useRef, type FC, useState, type FormEvent, type KeyboardEvent } from "react";
+import { Cpu, Plus, Square, SendHorizontal } from "lucide-react";
+import {
+  memo,
+  useRef,
+  type FC,
+  useMemo,
+  useState,
+  type FormEvent,
+  type KeyboardEvent
+} from "react";
 import IconButton from "@/common/components/data-input/icon-button";
+import CompactSelect from "@/common/components/data-input/compact-select";
 import type { AIProviderConfigSnapshot } from "@mahiru/ai";
 
 interface ChatInputProps {
@@ -32,9 +41,18 @@ const ChatInput: FC<ChatInputProps> = ({
   selectedConfigID,
   selectedConversationID
 }) => {
-  const selectID = useId();
   const formRef = useRef<HTMLFormElement>(null);
   const [input, setInput] = useState("");
+  const configOptions = useMemo(
+    () =>
+      configs.map((config) => ({
+        value: config.id,
+        label: `${config.name} · ${config.config.model}`,
+        title: `${config.name} · ${config.config.model}`,
+        description: config.provider
+      })),
+    [configs]
+  );
   const disabled =
     sending || !input.trim() || !activeConfig || !selectedConversationID || !!runningRunID;
   const placeholder = !activeConfig
@@ -60,72 +78,70 @@ const ChatInput: FC<ChatInputProps> = ({
 
   return (
     <footer className="shrink-0 border-t border-white/8 bg-black/12 px-5 py-3 backdrop-blur-xl">
-      <div className="mx-auto grid max-w-[52rem] gap-2.5">
-        <div className="flex min-h-8 flex-wrap items-center justify-between gap-2">
-          <label className="flex min-w-0 flex-1 items-center gap-2" htmlFor={selectID}>
-            <span className="flex shrink-0 items-center gap-1.5 text-[12px] font-semibold text-white/56">
-              <Cpu className="size-3.5" />
-              模型
-            </span>
-            <select
-              id={selectID}
-              className="
-                h-8 min-w-0 flex-1 rounded-lg border border-white/14 bg-white/9
-                px-2.5 text-[12px] font-semibold outline-none transition-colors
-                duration-200 focus:border-primary/70 focus:bg-white/14
-                disabled:pointer-events-none disabled:opacity-45
-              "
+      <form
+        ref={formRef}
+        className="
+          mx-auto grid max-w-208 gap-2 rounded-2xl border border-white/12
+          bg-black/22 p-2.5 shadow-xl shadow-black/12
+        "
+        onSubmit={submit}>
+        <textarea
+          className="
+            max-h-36 min-h-15 resize-none rounded-xl border border-transparent
+            bg-transparent px-2.5 py-2 text-[13px] leading-5 outline-none
+            transition-colors duration-200 placeholder:text-white/35
+            focus:border-white/10 focus:bg-white/4 scrollbar scrollbar-show
+          "
+          value={input}
+          placeholder={placeholder}
+          onKeyDown={onKeyDown}
+          onChange={(event) => setInput(event.target.value)}
+        />
+        <div className="flex min-h-8 min-w-0 items-center justify-between gap-2">
+          <div className="flex min-w-0 items-center gap-1.5">
+            <CompactSelect
+              className="max-w-84"
+              icon={Cpu}
+              label="选择模型配置"
+              placement="top"
+              placeholder="选择模型"
+              options={configOptions}
               value={selectedConfigID}
               disabled={!!runningRunID}
-              onChange={(event) => onSelectConfig(event.target.value)}>
-              <option value="">选择模型配置</option>
-              {configs.map((config) => (
-                <option key={config.id} value={config.id}>
-                  {config.name} · {config.config.model}
-                </option>
-              ))}
-            </select>
-          </label>
-          <div className="flex min-w-0 items-center gap-1">
-            {activeConfig && (
-              <span className="max-w-44 truncate rounded-lg border border-white/10 bg-black/16 px-2 py-1 text-[11px] text-white/48">
-                {activeConfig.provider}
-              </span>
-            )}
-            <IconButton
-              label="刷新模型配置"
-              size="compact"
-              icon={RefreshCw}
-              disabled={loadingConfigs}
-              onClick={onRefreshConfigs}
+              onChange={onSelectConfig}
+              onOpen={() => {
+                if (!loadingConfigs) onRefreshConfigs();
+              }}
+              renderFooter={(close) => (
+                <button
+                  className="
+                    flex w-full cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2
+                    text-left text-[12px] font-semibold text-white/72 outline-none
+                    transition-colors duration-200 hover:bg-white/10 focus-visible:ring-2
+                    focus-visible:ring-white/45
+                  "
+                  type="button"
+                  onClick={() => {
+                    close();
+                    onCreateConfig();
+                  }}>
+                  <Plus className="size-3.5 shrink-0 text-white/48" />
+                  <span className="min-w-0 truncate">新增模型配置</span>
+                </button>
+              )}
             />
-            <IconButton icon={Plus} label="创建模型配置" size="compact" onClick={onCreateConfig} />
           </div>
-        </div>
-        <form ref={formRef} className="grid grid-cols-[minmax(0,1fr)_auto] gap-2" onSubmit={submit}>
-          <textarea
-            className="
-              max-h-36 min-h-14 resize-none rounded-xl border border-white/12
-              bg-black/24 px-3.5 py-2.5 text-[13px] leading-5 outline-none
-              transition-colors duration-200 placeholder:text-white/35
-              focus:border-primary/70 focus:bg-black/30
-            "
-            value={input}
-            placeholder={placeholder}
-            onKeyDown={onKeyDown}
-            onChange={(event) => setInput(event.target.value)}
-          />
-          <div className="flex items-end gap-1">
+          <div className="flex shrink-0 items-center gap-1">
             <IconButton
               label="停止生成"
               icon={Square}
-              size="normal"
+              size="compact"
               show={!!runningRunID}
               onClick={onAbort}
             />
             <button
               className="
-                inline-flex h-14 w-14 cursor-pointer items-center justify-center rounded-xl
+                inline-flex size-9 cursor-pointer items-center justify-center rounded-xl
                 bg-primary text-primary-text transition-colors duration-200 hover:opacity-85
                 disabled:pointer-events-none disabled:opacity-35
               "
@@ -133,11 +149,11 @@ const ChatInput: FC<ChatInputProps> = ({
               type="submit"
               aria-label="发送消息"
               disabled={disabled}>
-              <SendHorizontal className="size-5" />
+              <SendHorizontal className="size-4.5" />
             </button>
           </div>
-        </form>
-      </div>
+        </div>
+      </form>
     </footer>
   );
 };

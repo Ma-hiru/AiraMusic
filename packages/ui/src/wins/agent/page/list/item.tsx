@@ -40,9 +40,6 @@ const ConversationItem: FC<ConversationItemProps> = ({
             {conversation.name || "未命名会话"}
           </span>
         </span>
-        <span className="block truncate text-[10px] opacity-42">
-          {disabled ? "运行中" : conversation.id}
-        </span>
       </button>
       <IconButton
         className={cx(

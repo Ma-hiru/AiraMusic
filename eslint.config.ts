@@ -76,7 +76,14 @@ const customJSXPropsGroups = [
 ];
 
 export default defineConfig([
-  globalIgnores(["**/dist/**", "**/dist-types/**", "**/node_modules/**", "./types/env.d.ts"]),
+  globalIgnores([
+    "**/dist/**",
+    "**/dist-types/**",
+    "**/node_modules/**",
+    "**/pkg/**",
+    "**/target/**",
+    "./types/env.d.ts"
+  ]),
   {
     files: ["**/*.{ts,tsx}"],
     plugins: { perfectionist },

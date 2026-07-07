@@ -1,4 +1,3 @@
-import { Bot } from "lucide-react";
 import { memo, type FC, useMemo, useState, useEffect, useCallback } from "react";
 import { RendererWindow } from "@/common/lib/window";
 import { useAgent } from "@/wins/agent/hooks/useAgent";
@@ -70,21 +69,17 @@ const AgentPage: FC<object> = () => {
     <div className="relative h-screen w-screen overflow-hidden text-white">
       <AppMask className="z-60 bg-white text-black" show={!loaded} />
       <Drag className="absolute top-0 right-0 z-50 grid h-11 w-screen grid-cols-[1fr_2fr_1fr] items-center px-4">
-        <SideBtn openList={openList} setOpenList={setOpenList} />
+        <SideBtn openList={openList} statusText={statusText} setOpenList={setOpenList} />
         <Marquee
           className="flex flex-1 items-center justify-center text-center text-[13px] font-semibold"
           text={currentTitle}
         />
         <div className="flex shrink-0 items-center justify-end gap-3">
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/8 px-2 py-1 text-[11px] font-semibold text-white/60">
-            <Bot className="size-3.5" />
-            {statusText}
-          </span>
           <Control className="justify-end" onClose={requestClose} pin mini />
         </div>
       </Drag>
       <Background />
-      <main className="relative top-11 flex h-[calc(100%-44px)] min-h-0 w-screen flex-row gap-3 px-3 pb-3">
+      <main className="relative top-11 flex h-[calc(100%-44px)] min-h-0 w-screen flex-row px-3 pb-3">
         <ConversationList
           open={openList}
           loading={loading}
@@ -97,7 +92,7 @@ const AgentPage: FC<object> = () => {
           onRemoveConversation={removeConversation}
         />
         <Chat
-          className="mt-3 min-w-0 flex-1"
+          className="min-w-0 flex-1"
           configs={configs}
           loadingConfigs={loading}
           activeConfig={activeConfig}

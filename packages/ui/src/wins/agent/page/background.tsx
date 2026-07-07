@@ -11,16 +11,15 @@ const Background = () => {
     <div className="fixed inset-0 z-[-1]">
       <AcrylicBackground
         blur={60}
-        opacity={0.5}
-        saturate={2.4}
-        brightness={0.24}
+        saturate={3}
+        opacity={0.6}
+        brightness={0.3}
         src={themeBus.data?.backgroundCover}
         fluid={settings.performance.useHomeFluid}
         themeColors={themeBus.data?.theme.themeColors}
         fluidSpeed={settings.performance.homeFluidSpeed}
         fluidPaused
       />
-      <div className="absolute inset-0 bg-black/28" />
     </div>
   );
 };

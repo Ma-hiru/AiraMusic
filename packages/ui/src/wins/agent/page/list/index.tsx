@@ -1,6 +1,8 @@
 import { cx } from "@emotion/css";
 import { memo, type FC, useMemo } from "react";
 import { RefreshCw, MessageSquarePlus } from "lucide-react";
+import Card from "@/common/components/layout/card";
+import AppEmpty from "@/common/components/fallback/app-empty";
 import IconButton from "@/common/components/data-input/icon-button";
 import type { AgentConversationSummary } from "@mahiru/ipc/types";
 
@@ -44,41 +46,39 @@ const ConversationList: FC<ConversationListProps> = ({
           transition-all duration-500 ease-in-out
         `,
         className,
-        !open && "w-0!"
+        !open ? "w-0!" : "mr-3"
       )}>
       <div
         className={cx(
           `
-            flex h-full w-(--side-bar-expand-width) flex-col gap-3
-            py-3 transition-all duration-500 ease-in-out
+            flex h-full w-(--side-bar-expand-width) flex-col
+            transition-all duration-500 ease-in-out
           `,
           !open && "opacity-0"
         )}>
-        <section className="flex min-h-0 flex-1 flex-col rounded-xl border border-white/12 bg-black/16 p-3 shadow-2xl shadow-black/14 backdrop-blur-2xl backdrop-saturate-150">
-          <div className="mb-3 flex items-center justify-between gap-2">
-            <div className="min-w-0">
-              <h2 className="truncate text-[13px] font-bold">对话</h2>
-              <p className="truncate text-[10px] font-semibold uppercase opacity-45">
-                Conversations
-              </p>
-            </div>
-            <div className="flex items-center gap-1">
+        <Card
+          className="flex min-h-0 flex-1 flex-col overflow-hidden"
+          title="对话"
+          subTitle="Conversations"
+          action={
+            <>
               <IconButton
                 label="刷新对话"
                 size="compact"
                 icon={RefreshCw}
                 disabled={loading}
+                iconClassName="size-4.5! opacity-65"
                 onClick={onRefresh}
               />
               <IconButton
                 label="新建对话"
                 size="compact"
                 icon={MessageSquarePlus}
+                iconClassName="size-4.5! opacity-65"
                 onClick={onCreateConversation}
               />
-            </div>
-          </div>
-
+            </>
+          }>
           <div className="min-h-0 flex-1 space-y-1.5 overflow-y-auto pr-1 scrollbar scrollbar-show">
             {conversations.map((conversation) => (
               <ConversationItem
@@ -91,12 +91,13 @@ const ConversationList: FC<ConversationListProps> = ({
               />
             ))}
             {conversations.length === 0 && (
-              <div className="grid min-h-32 place-items-center rounded-xl border border-white/10 bg-white/6 px-3 text-center text-[12px] text-white/45">
-                暂无对话
-              </div>
+              <AppEmpty
+                className="min-h-32 rounded-lg border border-white/10 bg-white/6 text-[12px] opacity-45"
+                tips="暂无对话"
+              />
             )}
           </div>
-        </section>
+        </Card>
       </div>
     </div>
   );

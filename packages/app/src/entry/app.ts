@@ -2,9 +2,8 @@ import { app } from "electron";
 import { Log } from "@/lib/log";
 import { ipcInit } from "@/inner/ipc";
 import { MainTray } from "@/lib/tray";
-import { MainAgent } from "@/lib/agent";
+import { MainAgent } from "@/inner/agent";
 import { MainServices } from "@/services";
-import { MainProtocol } from "@/inner/protocol";
 import { MainWindowPreset } from "@/lib/window-preset";
 import { MainWindowCreator } from "@/lib/window-creator";
 import { MainWindowManager } from "@/lib/window-manager";
@@ -56,7 +55,7 @@ export class MainApp {
    * */
   private registerAppProtocol() {
     try {
-      MainProtocol.register();
+      // MainProtocol.register();
     } catch (err) {
       Log.error("protocol", "failed to register app protocol", err);
       this.exit(MainExitCodeConstants.REGISTER_PROTOCOL_FAILED, "failed to register app protocol");
@@ -175,9 +174,9 @@ export class MainApp {
     this._status = "initializing"; // 初始化状态
     Log.info("App initializing...");
 
-    this.registerAppProtocol(); // 注册自定义应用协议
-    if (this.isExiting) return;
-    Log.info("App protocol registered");
+    // this.registerAppProtocol(); // 注册自定义应用协议
+    // if (this.isExiting) return;
+    // Log.info("App protocol registered");
 
     app
       .whenReady()

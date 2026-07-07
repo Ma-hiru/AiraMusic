@@ -1,6 +1,6 @@
 import { app, dialog, BrowserWindow } from "electron";
 import { Log } from "@/lib/log";
-import { MainAgent } from "@/lib/agent";
+import { MainAgent } from "@/inner/agent";
 import { MainHandle } from "@/lib/handle";
 import { MainRuntime } from "@/lib/runtime";
 import { mergeCacheStoreConfig } from "@/utils/merge";

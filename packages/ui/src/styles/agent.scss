@@ -25,8 +25,12 @@
     max-width: 100%;
   }
 
+  button {
+    display: none !important;
+  }
+
   [data-streamdown="paragraph"] {
-    margin-block: 0.2rem 0.55rem;
+    margin-block: 0 0.7rem;
   }
 
   [data-streamdown="heading-1"],
@@ -35,18 +39,19 @@
   [data-streamdown="heading-4"],
   [data-streamdown="heading-5"],
   [data-streamdown="heading-6"] {
-    margin-block: 0.85rem 0.45rem;
+    margin-block: 1.15rem 0.55rem;
     font-weight: 700;
-    line-height: 1.28;
+    line-height: 1.32;
     letter-spacing: 0;
+    color: rgba(255, 255, 255, 0.94);
   }
 
   [data-streamdown="heading-1"] {
-    font-size: 1.45rem;
+    font-size: 1.35rem;
   }
 
   [data-streamdown="heading-2"] {
-    font-size: 1.18rem;
+    font-size: 1.15rem;
   }
 
   [data-streamdown="heading-3"],
@@ -58,56 +63,77 @@
 
   [data-streamdown="unordered-list"],
   [data-streamdown="ordered-list"] {
-    margin-block: 0.35rem 0.65rem;
-    padding-left: 1.25rem;
+    margin-block: 0.3rem 0.8rem;
+    padding-left: 1.35rem;
   }
 
   [data-streamdown="list-item"] {
-    margin-block: 0.2rem;
+    margin-block: 0.22rem;
+    padding-left: 0.1rem;
   }
 
   [data-streamdown="blockquote"] {
-    margin-block: 0.55rem;
-    border-left: 2px solid rgba(255, 255, 255, 0.26);
-    padding-left: 0.75rem;
-    color: rgba(255, 255, 255, 0.68);
+    margin-block: 0.7rem;
+    border-left: 3px solid color-mix(in srgb, var(--theme-color-main) 64%, transparent);
+    padding-block: 0.1rem;
+    padding-left: 0.9rem;
+    color: rgba(255, 255, 255, 0.72);
   }
 
   [data-streamdown="inline-code"] {
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 0.25rem;
-    background: rgba(0, 0, 0, 0.22);
-    padding: 0.05rem 0.3rem;
-    color: rgba(255, 255, 255, 0.9);
-    font-size: 0.92em;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0.35rem;
+    background: rgba(255, 255, 255, 0.12);
+    padding: 0.08rem 0.32rem;
+    color: rgba(255, 255, 255, 0.94);
+    font-size: 0.88em;
   }
 
   [data-streamdown="code-block"] {
     max-width: 100%;
-    margin-block: 0.5rem;
-    overflow: auto;
-    border-color: rgba(255, 255, 255, 0.12);
-    background: rgba(0, 0, 0, 0.24);
-    font-size: 0.78rem;
-    line-height: 1.55;
+    margin-block: 0.75rem 0.95rem;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0.9rem;
+    background: rgba(0, 0, 0, 0.34);
+    font-size: 0.82rem;
+    line-height: 1.65;
+  }
+
+  [data-streamdown="code-block-body"] {
+    overflow-x: auto;
+    border: 0;
+    border-radius: 0.7rem;
+    background: transparent;
+    padding: 0.85rem;
   }
 
   [data-streamdown="table-wrapper"] {
     max-width: 100%;
-    margin-block: 0.5rem;
+    margin-block: 0.75rem 0.95rem;
     overflow-x: auto;
+    overflow-y: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0.9rem;
+    background: rgba(0, 0, 0, 0.12);
   }
 
   [data-streamdown="table"] {
     width: max-content;
     min-width: 100%;
-    border-color: rgba(255, 255, 255, 0.12);
-    font-size: 0.78rem;
+    border-color: transparent;
+    font-size: 0.82rem;
+  }
+
+  [data-streamdown="table"] th,
+  [data-streamdown="table"] td {
+    border-color: rgba(255, 255, 255, 0.08);
+    padding: 0.55rem 0.7rem;
   }
 
   [data-streamdown="thematic-break"] {
-    margin-block: 0.8rem;
-    border-color: rgba(255, 255, 255, 0.22);
+    margin-block: 1.05rem;
+    border-color: rgba(255, 255, 255, 0.14);
   }
 
   [data-streamdown="link"] {
@@ -118,5 +144,36 @@
 
   [data-streamdown="link"]:hover {
     opacity: 0.82;
+  }
+
+  [data-streamdown="code-block-body"],
+  [data-streamdown="table-wrapper"] {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.24) transparent;
+
+    &::-webkit-scrollbar {
+      width: 0.38rem;
+      height: 0.38rem;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    &::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.32);
+    }
+  }
+
+  [data-streamdown="code-block-actions"],
+  [data-streamdown="table-actions"],
+  [data-streamdown="table-controls"],
+  [data-streamdown="mermaid-block-actions"] {
+    display: none !important;
   }
 }

@@ -1,4 +1,5 @@
 {
+  "$schema": "docs/schema/electron-builder.schema.json",
   "appId": "com.mahiru.airamusic",
   "productName": "AiraMusic",
   "directories": {
@@ -59,12 +60,6 @@
       }
     ]
   },
-  "protocols": [
-    {
-      "name": "AiraMusic Protocol",
-      "schemes": ["mahiru"]
-    }
-  ],
   "win": {
     "target": [
       {

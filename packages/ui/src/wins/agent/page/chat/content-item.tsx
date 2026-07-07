@@ -1,6 +1,7 @@
 import { cx } from "@emotion/css";
-import { memo, type FC } from "react";
-import { UserRound } from "lucide-react";
+import { Copy, Check, UserRound } from "lucide-react";
+import { memo, useRef, type FC, useState, useEffect, useCallback } from "react";
+import AppToast from "@/common/components/display/toast";
 import NeteaseImage from "@/common/components/display/image/netease-image";
 import type { LLMMessage } from "@mahiru/ai";
 import type { NeteaseNetworkImage } from "@/common/netease/models";
@@ -16,40 +17,60 @@ interface ContentItemProps {
 
 const ContentItem: FC<ContentItemProps> = ({ message, userName, streaming, userAvatar }) => {
   const isUser = message.role === "user";
+  const copiedTimerRef = useRef(0);
+  const [copied, setCopied] = useState(false);
+  const content = message.content ?? "";
+  const copyContent = useCallback(async () => {
+    if (!content) return;
+    try {
+      await window.navigator.clipboard.writeText(content);
+      setCopied(true);
+      window.clearTimeout(copiedTimerRef.current);
+      copiedTimerRef.current = window.setTimeout(() => setCopied(false), 1200);
+      AppToast.show({ type: "success", text: "回复已复制" });
+    } catch {
+      AppToast.show({ type: "error", text: "复制失败" });
+    }
+  }, [content]);
+
+  useEffect(() => {
+    return () => window.clearTimeout(copiedTimerRef.current);
+  }, []);
+
   if (message.role === "tool") return null;
 
   if (isUser) {
     const displayName = userName || "你";
 
     return (
-      <div className="flex min-w-0 justify-end gap-2">
-        <div className="grid max-w-[min(78%,36rem)] min-w-0 justify-items-end gap-1">
-          <div className="max-w-full truncate pr-1 text-[11px] font-semibold text-white/48">
-            {displayName}
+      <div className="flex min-w-0 justify-end">
+        <article className="grid min-w-0 max-w-[min(100%,48rem)] justify-items-end gap-1.5 px-1 py-1">
+          <div className="flex min-w-0 flex-row-reverse items-center gap-2 text-[11px] font-semibold text-white/48">
+            <span className="flex size-6 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-white/12 bg-white/10 text-white/64">
+              {userAvatar ? (
+                <NeteaseImage
+                  className="size-full rounded-lg"
+                  cache={true}
+                  shadow="none"
+                  preview={false}
+                  cacheLazy={false}
+                  image={userAvatar}
+                  title={displayName}
+                />
+              ) : (
+                <UserRound className="size-3.5" />
+              )}
+            </span>
+            <span className="min-w-0 truncate">{displayName}</span>
           </div>
-          <article
+          <div
             className="
-              min-w-0 rounded-2xl border border-primary/38 bg-primary/86 px-3.5 py-2.5
-              text-[13px] leading-5 text-primary-text shadow-lg shadow-black/10
+              max-w-full whitespace-pre-wrap break-words rounded-2xl bg-white/10
+              px-3.5 py-2.5 text-left text-[14px] leading-6 text-white/88
             ">
-            <div className="whitespace-pre-wrap break-words">{message.content}</div>
-          </article>
-        </div>
-        <div className="mt-5 flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-white/15 bg-white/12 text-white/70 shadow-sm">
-          {userAvatar ? (
-            <NeteaseImage
-              className="size-full rounded-xl"
-              cache={true}
-              shadow="none"
-              preview={false}
-              cacheLazy={false}
-              image={userAvatar}
-              title={displayName}
-            />
-          ) : (
-            <UserRound className="size-4" />
-          )}
-        </div>
+            {message.content}
+          </div>
+        </article>
       </div>
     );
   }
@@ -59,12 +80,28 @@ const ContentItem: FC<ContentItemProps> = ({ message, userName, streaming, userA
       <article
         className={cx(
           `
-            min-w-0 max-w-[min(100%,48rem)] rounded-2xl border border-white/10
-            bg-white/[0.075] px-4 py-3 shadow-lg shadow-black/10
+            group relative min-w-0 max-w-[min(100%,48rem)] rounded-2xl
+            px-2 py-1.5 pr-9 transition-colors duration-200 hover:bg-white/[0.035]
           `,
-          streaming && "border-white/16 bg-white/[0.095]"
+          streaming && "bg-white/4.5"
         )}>
-        <MarkdownContent streaming={streaming} content={message.content ?? ""} />
+        <MarkdownContent content={content} streaming={streaming} />
+        <button
+          className="
+            absolute top-1 right-1 inline-flex size-7 cursor-pointer items-center
+            justify-center rounded-lg border border-white/10 bg-black/18 text-white/50
+            opacity-0 outline-none transition-all duration-200 hover:bg-white/10
+            hover:text-white focus-visible:opacity-100 focus-visible:ring-2
+            focus-visible:ring-white/45 group-hover:opacity-100
+            disabled:pointer-events-none disabled:opacity-0
+          "
+          title="复制回复"
+          type="button"
+          aria-label="复制回复"
+          disabled={!content}
+          onClick={copyContent}>
+          {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
+        </button>
       </article>
     </div>
   );
