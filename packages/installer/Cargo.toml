@@ -1,0 +1,38 @@
+[package]
+name = "aira-deployer"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+windows-reactor = { git = "https://github.com/microsoft/windows-rs.git", branch = "master", version = "0.0.0" }
+anyhow = "1.0.102"
+tokio = { version = "1.52.3", features = ["full"] }
+dotenvy = "0.15.7"
+tracing = "0.1.44"
+tracing-subscriber = "0.3.23"
+url = "2.5.8"
+
+[build-dependencies]
+windows-reactor-setup = { git = "https://github.com/microsoft/windows-rs.git", branch = "master" }
+winresource = "0.1.31"
+
+[profile.dev]
+opt-level = 0
+debug = 0
+strip = "debuginfo"
+debug-assertions = true
+overflow-checks = true
+lto = false
+panic = "unwind"
+incremental = true
+codegen-units = 256
+
+
+[profile.release]
+opt-level = 3
+lto = "fat"
+codegen-units = 1
+panic = "abort"
+strip = true
+debug = false
+incremental = false
