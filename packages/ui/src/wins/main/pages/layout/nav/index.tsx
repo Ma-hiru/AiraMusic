@@ -4,6 +4,7 @@ import { memo, useRef, type FC, useState, useCallback } from "react";
 import { Stage } from "@/common/enum";
 import { useUser } from "@/common/store/user";
 import { useStage } from "@/common/hooks/use-stage";
+import { RendererDevice } from "@/common/lib/device";
 import { sidebarAtom } from "@/wins/main/atoms/layout";
 import { RendererIPCMessageBus } from "@/common/lib/bus";
 import Divider from "@/common/components/layout/divider";
@@ -12,6 +13,8 @@ import NavTab from "./tab";
 import NavFloat from "./float";
 import NavMenu from "./nav-menu";
 import NavPlayList, { type NavPlaylistRef } from "./nav-playlist";
+
+const isDarwin = (await RendererDevice.platform) === "darwin";
 
 const Nav: FC<object> = () => {
   const { stage } = useStage();
@@ -41,7 +44,8 @@ const Nav: FC<object> = () => {
           ease-in-out duration-300 transition-all
           bg-[#f0f3f6]/20
         `,
-        sidebar ? "w-(--side-bar-expand-width)" : "w-(--side-bar-collapse-width)"
+        sidebar ? "w-(--side-bar-expand-width)" : "w-(--side-bar-collapse-width)",
+        isDarwin && "pt-7!"
       )}>
       {stage >= Stage.Immediately && <NavMenu className="shrink-0" barOpened={sidebar} />}
       {stage >= Stage.Second && displayPlaylist && <Divider className="mt-4 mx-3 shrink-0" />}

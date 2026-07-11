@@ -4,6 +4,8 @@ import { ipcInit } from "@/inner/ipc";
 import { MainTray } from "@/lib/tray";
 import { MainAgent } from "@/inner/agent";
 import { MainServices } from "@/services";
+import { MainIPC } from "@mahiru/ipc/main";
+import { MainProtocol } from "@/inner/protocol";
 import { MainWindowPreset } from "@/lib/window-preset";
 import { MainWindowCreator } from "@/lib/window-creator";
 import { MainWindowManager } from "@/lib/window-manager";
@@ -88,12 +90,26 @@ export class MainApp {
     try {
       const mainWindow = MainWindowCreator.create(MainWindowPreset.main);
       if (process.platform === "darwin") {
-        mainWindow.addListener("close", (e) => {
-          e.preventDefault();
-          mainWindow.hide();
-        });
-        app.addListener("activate", () => {
-          MainWindowManager.checkAndShow("main");
+        let isQuitting = false;
+        let isClosing = false;
+        app.on("before-quit", () => (isQuitting = true));
+        app.on("activate", () => MainWindowManager.checkAndShow("main"));
+        mainWindow.on("close", (event) => {
+          if (isQuitting) {
+            if (isClosing) return;
+            event.preventDefault();
+            isClosing = true;
+            MainIPC.MessageChannel.commit({
+              sender: "process",
+              receiver: "main",
+              type: "message_dispatch_darwin_close",
+              data: true
+            });
+            setTimeout(() => mainWindow.close(), 2000);
+          } else {
+            event.preventDefault();
+            mainWindow.hide();
+          }
         });
       } else {
         mainWindow.addListener("closed", () => {

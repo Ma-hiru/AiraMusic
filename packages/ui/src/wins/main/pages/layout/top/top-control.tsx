@@ -1,6 +1,7 @@
 import { Bot, PictureInPicture } from "lucide-react";
 import { memo, useRef, type FC, useState, useEffect, useCallback } from "react";
 import { RendererCache } from "@/common/lib/cache";
+import { RendererDevice } from "@/common/lib/device";
 import { RendererWindow } from "@/common/lib/window";
 import { useListenable } from "@/common/hooks/use-listenable";
 import RendererPlayerHandle from "@/wins/main/lib/handle";
@@ -16,15 +17,17 @@ const TopControl: FC = () => {
 
   const close = useCallback(async () => {
     type Behavior = "exit" | "tray";
-
-    const behavior = RendererCache.browser.getOne<Behavior>("main-exit-behavior");
+    const hidden = () => RendererWindow.current.hide();
     const exit = () => {
       RendererWindow.current.hide();
       RendererWindow.all.hide();
       RendererPlayerHandle[Symbol.dispose]();
       RendererWindow.current.close();
     };
-    const hidden = () => RendererWindow.current.hide();
+
+    if ((await RendererDevice.platform) === "darwin") exit();
+
+    const behavior = RendererCache.browser.getOne<Behavior>("main-exit-behavior");
 
     if (behavior === "exit") {
       exit();
@@ -94,6 +97,9 @@ const TopControl: FC = () => {
           }
         }
       ]}
+      max
+      pin
+      mini
     />
   );
 };

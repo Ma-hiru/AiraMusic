@@ -460,6 +460,10 @@ export class RendererWindow extends Listenable<"react-ready" | RendererWindowEve
     return RendererRuntime.currentWindowType === "main";
   }
 
+  static get process() {
+    return this.get("process");
+  }
+
   static get comment() {
     return this.get("comments");
   }

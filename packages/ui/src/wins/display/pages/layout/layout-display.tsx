@@ -1,6 +1,8 @@
+import { cx } from "@emotion/css";
 import { useLocation, useNavigate } from "react-router-dom";
 import { memo, type FC, useMemo, useState, useEffect } from "react";
 import { BackCtx } from "@/wins/display/ctx/back";
+import { RendererDevice } from "@/common/lib/device";
 import { RendererWindow } from "@/common/lib/window";
 import { RendererIPCMessageBus } from "@/common/lib/bus";
 import { RendererModified } from "@/common/lib/modified";
@@ -19,6 +21,8 @@ import AppErrorBoundary from "@/common/components/fallback/app-error-boundary";
 import Title from "./title";
 import DisplayFloat from "./float";
 import Background from "./background";
+
+const isDarwin = (await RendererDevice.platform) === "darwin";
 
 const LayoutDisplay: FC<object> = () => {
   const navigate = useNavigate();
@@ -115,8 +119,13 @@ const LayoutDisplay: FC<object> = () => {
     <div className="w-screen h-screen relative overflow-hidden">
       <Title />
       <Drag className="absolute w-screen top-0 right-0 h-10  flex flex-row justify-between items-center px-4 z-50">
-        <TopBack exclude={["blank"]} routePath={RoutePathDisplay} onClick={() => setBack(true)} />
-        <Control pin mini />
+        <TopBack
+          className={cx(isDarwin && "relative left-15 -top-1")}
+          exclude={["blank"]}
+          routePath={RoutePathDisplay}
+          onClick={() => setBack(true)}
+        />
+        <Control max pin mini />
       </Drag>
       <AppErrorBoundary name="LayoutDisplayContent" canReset showError>
         <Background />
