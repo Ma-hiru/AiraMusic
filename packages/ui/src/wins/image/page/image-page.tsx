@@ -79,6 +79,7 @@ const ImagePage: FC = () => {
             backdrop-saturate-120 backdrop-blur-md
           "
           color="#ffffff"
+          max
           pin
           mini
         />

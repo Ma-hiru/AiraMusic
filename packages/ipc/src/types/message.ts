@@ -154,6 +154,7 @@ type MessageBus = {
 type MessageSingle = {
   message_dispatch_login: string;
   message_dispatch_need_login: boolean;
+  message_dispatch_darwin_close: boolean;
   message_dispatch_cache_has_clear: boolean;
   message_dispatch_device_output_set: string;
 };
