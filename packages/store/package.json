@@ -14,6 +14,7 @@
     "build": "run-script-os",
     "build:win32": "set \"CGO_ENABLED=0\" && go build -trimpath -ldflags \"-s -w -buildid=\" -o ./dist/aira-music-cache.exe -v main.go",
     "build:linux": "CGO_ENABLED=0 && go build -trimpath -ldflags \"-s -w -buildid=\" -o ./dist/aira-music-cache -v main.go",
+    "build:darwin": "CGO_ENABLED=0 go build -trimpath -ldflags \"-s -w -buildid=\" -o ./dist/aira-music-cache -v main.go",
     "lint": "run-script-os",
     "lint:linux": "go fmt ./... && go vet ./... && (command -v golangci-lint >/dev/null && golangci-lint run --fix || echo 'skip golangci-lint')",
     "lint:win32": "go fmt ./... && go vet ./... && (where golangci-lint && golangci-lint run --fix || echo 'skip golangci-lint')",

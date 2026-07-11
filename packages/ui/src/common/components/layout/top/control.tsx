@@ -1,5 +1,5 @@
 import { cx } from "@emotion/css";
-import { memo, type FC, useCallback } from "react";
+import { memo, type FC, useEffect, useCallback } from "react";
 import { X, Pin, Minus, PinOff, Square, AppWindow, SquareMinus } from "lucide-react";
 import { RendererDevice } from "@/common/lib/device";
 import { RendererWindow } from "@/common/lib/window";
@@ -8,6 +8,8 @@ import AppToast from "@/common/components/display/toast";
 import IconButton, { type IconButtonProps } from "@/common/components/data-input/icon-button";
 
 import NoDrag from "../drag/no-drag";
+
+const isDarwin = (await RendererDevice.platform) === "darwin";
 
 interface TopControlProps {
   dev?: boolean;
@@ -25,12 +27,12 @@ interface TopControlProps {
 const Control: FC<TopControlProps> = ({
   className,
   onClose,
-  max,
-  pin,
   color,
   appends,
   exit = true,
-  mini = true,
+  max = false,
+  pin = false,
+  mini = false,
   itemClassName,
   dev = import.meta.env.DEV
 }) => {
@@ -61,6 +63,15 @@ const Control: FC<TopControlProps> = ({
   appends ??= [];
   const apd = Array.isArray(appends) ? appends : [appends];
 
+  useEffect(() => {
+    if (isDarwin && RendererWindow.isMain) {
+      return RendererWindow.process.listenMessage(
+        "message_dispatch_darwin_close",
+        (close) => close && onClose?.()
+      );
+    }
+  }, [onClose]);
+
   return (
     <NoDrag className={cx(`flex flex-row items-center gap-4 select-none relative`, className)}>
       <ControlButton
@@ -73,9 +84,9 @@ const Control: FC<TopControlProps> = ({
       />
       <ControlButton
         className={itemClassName}
-        show={mini}
         icon={Minus}
         label="最小化窗口"
+        show={mini && !isDarwin}
         onClick={() => currentWindow.minimize()}
       />
       {apd.map(({ className, ...props }, index) => (
@@ -92,8 +103,8 @@ const Control: FC<TopControlProps> = ({
       />
       <ControlButton
         className={itemClassName}
-        show={max}
         color={color}
+        show={max && !isDarwin}
         iconClassName="scale-90"
         label={currentWindow.isMax ? "还原窗口" : "最大化窗口"}
         icon={currentWindow.isMax ? SquareMinus : Square}
@@ -104,9 +115,9 @@ const Control: FC<TopControlProps> = ({
       <ControlButton
         className={itemClassName}
         icon={X}
-        show={exit}
         label="关闭窗口"
         color={color}
+        show={exit && !isDarwin}
         iconClassName="scale-105"
         onClick={onClose ?? (() => currentWindow.close())}
       />

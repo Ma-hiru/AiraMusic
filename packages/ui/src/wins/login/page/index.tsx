@@ -59,7 +59,7 @@ export default function LoginPage() {
         />
       </div>
       <Drag className="w-screen h-6 flex items-center justify-end absolute top-0 left-0 right-0 p-6 px-5">
-        <Control max={false} />
+        <Control mini />
       </Drag>
       <div className="w-full h-full flex flex-col items-center justify-center gap-2 py-10">
         <NoDrag className="shrink-0">

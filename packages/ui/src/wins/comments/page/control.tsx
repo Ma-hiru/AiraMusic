@@ -14,4 +14,5 @@ const Control: FC<ControlProps> = ({ className }) => {
     </Drag>
   );
 };
+
 export default memo(Control);

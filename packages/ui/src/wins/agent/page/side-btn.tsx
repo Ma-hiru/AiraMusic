@@ -1,7 +1,11 @@
+import { cx } from "@emotion/css";
 import { Bot, PanelLeftOpen, PanelRightClose } from "lucide-react";
 import { memo, type FC, type Dispatch, type SetStateAction } from "react";
+import { RendererDevice } from "@/common/lib/device";
 import NoDrag from "@/common/components/layout/drag/no-drag";
 import IconButton from "@/common/components/data-input/icon-button";
+
+const isDarwin = (await RendererDevice.platform) === "darwin";
 
 interface SideBtnProps {
   statusText: string;
@@ -11,7 +15,11 @@ interface SideBtnProps {
 
 const SideBtn: FC<SideBtnProps> = ({ openList, setOpenList, statusText }) => {
   return (
-    <NoDrag className="flex shrink-0 items-center justify-start gap-2 text-sm">
+    <NoDrag
+      className={cx(
+        "flex shrink-0 items-center justify-start gap-2 text-sm",
+        isDarwin && "left-15 -top-1 relative"
+      )}>
       <IconButton
         size="compact"
         variant="ghost"
