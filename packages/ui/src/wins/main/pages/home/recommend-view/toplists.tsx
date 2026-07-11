@@ -1,13 +1,12 @@
-import { type FC, memo, useCallback, useMemo } from "react";
 import { Trophy } from "lucide-react";
+import { memo, type FC, useMemo, useCallback } from "react";
 import { NeteaseAPIHome } from "@/common/netease/api";
-import { useRequestAutoRetry, useRequestStatusWrap } from "@/common/hooks/use-request-wrap";
 import { RendererHomeConstants } from "@/wins/main/constants";
-
-import AppError from "@/common/components/fallback/app-error";
-import AppLoading from "@/common/components/fallback/app-loading";
-import MediaGrid from "@/common/components/layout/media-grid";
+import { useRequestAutoRetry, useRequestStatusWrap } from "@/common/hooks/use-request-wrap";
 import Section from "@/common/components/layout/section";
+import AppError from "@/common/components/fallback/app-error";
+import MediaGrid from "@/common/components/layout/media-grid";
+import AppLoading from "@/common/components/fallback/app-loading";
 
 interface ToplistsProps {
   onClickItem?: NormalFunc<[id: number]>;
@@ -16,8 +15,8 @@ interface ToplistsProps {
 const Toplists: FC<ToplistsProps> = ({ onClickItem }) => {
   const {
     status,
-    data: toplists = [],
-    fetchData
+    fetchData,
+    data: toplists = []
   } = useRequestStatusWrap(
     useCallback(() => NeteaseAPIHome.toplists().then((res) => res.list), [])
   );
@@ -40,9 +39,9 @@ const Toplists: FC<ToplistsProps> = ({ onClickItem }) => {
     }));
   }, [toplists]);
   return (
-    <Section title="排行榜" subTitle="Charts" Icon={Trophy}>
-      <AppError reset={reload} when={status === "error"} message="加载排行榜失败">
-        <AppLoading loading={status === "loading"} className="h-40">
+    <Section title="排行榜" Icon={Trophy} subTitle="Charts">
+      <AppError reset={reload} message="加载排行榜失败" when={status === "error"}>
+        <AppLoading className="h-40" loading={status === "loading"}>
           <MediaGrid items={gridItems} onClickItem={onClickItem} />
         </AppLoading>
       </AppError>

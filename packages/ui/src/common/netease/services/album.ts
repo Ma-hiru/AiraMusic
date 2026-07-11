@@ -1,7 +1,8 @@
-import _NeteaseTrackSource from "./track";
+import { RendererCache } from "@/common/lib/cache";
 import { NeteaseAPIAlbum } from "@/common/netease/api";
 import { NeteaseAlbum, NeteaseTrackRecord } from "@/common/netease/models";
-import { RendererCache } from "@/common/lib/cache";
+
+import _NeteaseTrackSource from "./track";
 
 export default class _NeteaseAlbumSource {
   //region cache

@@ -1,6 +1,6 @@
 import { useMediaQuery } from "@/common/hooks/use-media-query";
 
-type TailwindBreakpoint = "sm" | "md" | "lg" | "xl" | "2xl";
+type TailwindBreakpoint = "lg" | "md" | "sm" | "xl" | "2xl";
 
 /** 获取断点值 */
 const getTailwindBreakpointValue = (name: TailwindBreakpoint): string => {
@@ -69,9 +69,9 @@ function useTailwindMaxMediaQuery() {
 }
 
 export {
-  getTailwindBreakpointValue,
   getTailwindMediaQuery,
-  getTailwindMaxMediaQuery,
   useTailwindMediaQuery,
-  useTailwindMaxMediaQuery
+  getTailwindMaxMediaQuery,
+  useTailwindMaxMediaQuery,
+  getTailwindBreakpointValue
 };

@@ -16,7 +16,7 @@ export default abstract class Eq<T extends object> {
 
   private isBaseType(
     value: any
-  ): value is number | string | null | undefined | bigint | boolean | symbol {
+  ): value is null | bigint | number | string | symbol | boolean | undefined {
     return (
       typeof value === "number" ||
       typeof value === "string" ||

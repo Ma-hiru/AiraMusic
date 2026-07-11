@@ -1,11 +1,11 @@
-import { type FC, type HTMLAttributes, memo } from "react";
-import { css, cx } from "@emotion/css";
+import { cx, css } from "@emotion/css";
+import { memo, type FC, type HTMLAttributes } from "react";
 
 interface DragProps extends HTMLAttributes<HTMLDivElement> {
   drag?: boolean;
 }
 
-const Drag: FC<DragProps> = ({ drag = true, className, ...props }) => {
+const Drag: FC<DragProps> = ({ className, drag = true, ...props }) => {
   return (
     <div
       className={cx(

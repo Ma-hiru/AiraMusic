@@ -1,9 +1,9 @@
-import { type FC, memo, type ReactNode, useLayoutEffect, useRef, useState } from "react";
 import { cx } from "@emotion/css";
+import { memo, useRef, type FC, useState, type ReactNode, useLayoutEffect } from "react";
 
 interface BaseGroupProps {
-  items: ReactNode[];
   expand: boolean;
+  items: ReactNode[];
 }
 
 const BaseGroup: FC<BaseGroupProps> = ({ items, expand }) => {
@@ -27,12 +27,12 @@ const BaseGroup: FC<BaseGroupProps> = ({ items, expand }) => {
       }}>
       {items.map((item, index) => (
         <div
+          key={index}
           ref={index === 0 ? firstChildRef : undefined}
           className={cx(
             "ease-in-out duration-500 transition-all",
             !expand && index !== 0 && "opacity-0"
-          )}
-          key={index}>
+          )}>
           {item}
         </div>
       ))}

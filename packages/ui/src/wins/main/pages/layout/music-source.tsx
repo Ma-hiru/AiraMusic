@@ -1,18 +1,18 @@
-import { type FC, memo, useEffect, useMemo } from "react";
-import { type ShortcutConfig, useKeyboardShortcut } from "@/common/hooks/use-keyboard-shortcut";
-import { RendererShortcutConstants, type ShortcutAction } from "@/common/constants/shortcut";
+import { useSetAtom, useAtomValue } from "jotai";
+import { memo, type FC, useMemo, useEffect } from "react";
+import { RendererWindow } from "@/common/lib/window";
 import { useSettings } from "@/common/store/settings";
+import { useRoamMode } from "@/wins/main/hooks/use-roam-mode";
+import { typingAtom, playModalAtom } from "@/wins/main/atoms/layout";
 import { useMediaSession } from "@/wins/main/hooks/use-media-session";
 import { useSpectrumWorker } from "@/wins/main/hooks/use-spectrum-worker";
-import { useAtomValue, useSetAtom } from "jotai";
+import { type ShortcutAction, RendererShortcutConstants } from "@/common/constants/shortcut";
+import { type ShortcutConfig, useKeyboardShortcut } from "@/common/hooks/use-keyboard-shortcut";
 import {
   spectrumDataAtom,
-  spectrumOptionsAtom,
-  spectrumReadyAtom
+  spectrumReadyAtom,
+  spectrumOptionsAtom
 } from "@/wins/main/atoms/spectrum";
-import { playModalAtom, typingAtom } from "@/wins/main/atoms/layout";
-import { RendererWindow } from "@/common/lib/window";
-import { useRoamMode } from "@/wins/main/hooks/use-roam-mode";
 import RendererPlayerHandle from "@/wins/main/lib/handle";
 
 const MusicSource: FC<object> = () => {
@@ -80,7 +80,7 @@ const MusicSource: FC<object> = () => {
   const setSpectrumData = useSetAtom(spectrumDataAtom);
   const setSpectrumReady = useSetAtom(spectrumReadyAtom);
   const spectrumOptions = useAtomValue(spectrumOptionsAtom);
-  const { spectrumData, isReady } = useSpectrumWorker(player.audio, player.playing, {
+  const { isReady, spectrumData } = useSpectrumWorker(player.audio, player.playing, {
     fftSize: 2048,
     numBands: 32,
     withPeaks: false,

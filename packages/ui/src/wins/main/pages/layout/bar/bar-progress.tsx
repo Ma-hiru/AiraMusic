@@ -1,10 +1,10 @@
-import { type FC, memo } from "react";
 import { motion } from "motion/react";
-import { css, cx } from "@emotion/css";
+import { memo, type FC } from "react";
+import { cx, css } from "@emotion/css";
 import { usePlayProgress } from "@/wins/main/hooks/use-play-progress";
 
 const BarProgress: FC<object> = () => {
-  const { barRef, handleBarClick, handleBarMouseDown, bufferScope, percentScope, chorusPercent } =
+  const { barRef, bufferScope, percentScope, chorusPercent, handleBarClick, handleBarMouseDown } =
     usePlayProgress();
 
   return (
@@ -23,14 +23,14 @@ const BarProgress: FC<object> = () => {
       {/*播放进度*/}
       <motion.span
         ref={percentScope}
-        initial={{ width: 0 }}
         className="absolute left-0 top-0 block h-full bg-primary rounded-r-full"
+        initial={{ width: 0 }}
       />
       {/*缓冲区*/}
       <motion.span
         ref={bufferScope}
-        initial={{ width: 0 }}
         className="block h-full bg-(--text-color-on-main)/35 rounded-r-full"
+        initial={{ width: 0 }}
       />
       {chorusPercent.map((percent, index) => {
         return (

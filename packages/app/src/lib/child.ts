@@ -1,10 +1,10 @@
-import type {
-  MainChildControlMessage,
-  MainChildParentPort,
-  MainChildSerializedError,
-  MainChildStartMessage
-} from "@/types/child";
 import { type MainServicesType } from "@/types/service";
+import type {
+  MainChildParentPort,
+  MainChildStartMessage,
+  MainChildControlMessage,
+  MainChildSerializedError
+} from "@/types/child";
 
 export abstract class MainChild<
   ParentMessage extends { type: string },
@@ -103,11 +103,11 @@ export abstract class MainChild<
 
   protected abstract handleCustomMessage(
     message: Exclude<ParentMessage, MainChildControlMessage>
-  ): Promise<void> | void;
+  ): void | Promise<void>;
   protected abstract start(
     message: Extract<ParentMessage, MainChildStartMessage>
-  ): Promise<void> | void;
-  protected abstract close(): Promise<void> | void;
+  ): void | Promise<void>;
+  protected abstract close(): void | Promise<void>;
   protected abstract createStoppedMessage(): ChildMessage;
   protected abstract createErrorMessage(error: MainChildSerializedError): ChildMessage;
 }

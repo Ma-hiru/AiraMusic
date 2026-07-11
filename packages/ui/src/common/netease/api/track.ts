@@ -1,5 +1,5 @@
-import { apiRequest } from "@/common/netease/api/request";
 import { NeteaseMusicLevel } from "@/common/enum";
+import { apiRequest } from "@/common/netease/api/request";
 
 export default class _NeteaseTrackAPI {
   /**
@@ -10,7 +10,7 @@ export default class _NeteaseTrackAPI {
    * @param quality - 码率质量等级
    * @note 默认当返回的 `quality >= 400000` 时，就会优先返回 hi-res
    */
-  static url(id: string | number, quality?: NeteaseAPI.NeteaseQualityLevels) {
+  static url(id: number | string, quality?: NeteaseAPI.NeteaseQualityLevels) {
     return apiRequest<any, NeteaseAPI.NeteaseSongUrlResponse>({
       url: "/song/url",
       params: {
@@ -28,7 +28,7 @@ export default class _NeteaseTrackAPI {
    * @param level 播放音质等级
    * @param unblock 是否使用UnblockNeteaseMusic
    * */
-  static urlNew(id: string | number, level: NeteaseMusicLevel, unblock = false) {
+  static urlNew(id: number | string, level: NeteaseMusicLevel, unblock = false) {
     return apiRequest<any, NeteaseAPI.NeteaseSongUrlNewResponse>({
       url: "/song/url/v1",
       params: {
@@ -45,7 +45,7 @@ export default class _NeteaseTrackAPI {
    * @param ids - 音乐 id, 例如 ids=405998841,33894312
    * @example /song/detail?ids=347230`,`/song/detail?ids=347230,347231
    */
-  static detail(ids: string | number | number[]) {
+  static detail(ids: number | string | number[]) {
     if (Array.isArray(ids)) ids = ids.join(",");
     return apiRequest<any, NeteaseAPI.NeteaseTrackDetailResponse>({
       method: "POST",
@@ -180,7 +180,7 @@ export default class _NeteaseTrackAPI {
    * @desc 调用此接口 , 可获取新歌速递
    * @param type - 地区类型 id, 对应以下: 全部:0 华语:7 欧美:96 日本:8 韩国:16
    */
-  static recommendNew(type: 0 | 7 | 96 | 8 | 16) {
+  static recommendNew(type: 0 | 7 | 8 | 16 | 96) {
     return apiRequest<any, NeteaseAPI.NeteaseTopSongResponse>({
       url: "/top/song",
       params: {

@@ -1,11 +1,11 @@
-import { type FC, memo } from "react";
-import { AudioLines, AudioWaveform, Dock, Gauge, Sparkles } from "lucide-react";
+import { memo, type FC } from "react";
+import { Dock, Gauge, Sparkles, AudioLines, AudioWaveform } from "lucide-react";
 import { NeteaseSettings, type NeteaseSettingsModel } from "@/common/netease/models";
-
-import ToggleRow from "./toggle-row";
 import Card from "@/common/components/layout/card";
 import RangeRow from "@/common/components/page/settings/content/range-row";
 import BaseGroup from "@/common/components/page/settings/content/base-group";
+
+import ToggleRow from "./toggle-row";
 
 export interface PerformanceSettings {
   data: NeteaseSettings["performance"];
@@ -14,12 +14,12 @@ export interface PerformanceSettings {
 
 const Performance: FC<PerformanceSettings> = ({ data, patchSettings }) => {
   return (
-    <Card Icon={Gauge} title="性能" subTitle="Performance">
+    <Card title="性能" Icon={Gauge} subTitle="Performance">
       <ToggleRow
         icon={Dock}
         title="播放栏频谱"
-        description="是否展示播放栏的频谱，关闭可以节省性能"
         checked={data.barSpectrum}
+        description="是否展示播放栏的频谱，关闭可以节省性能"
         onClick={() =>
           patchSettings({
             performance: {
@@ -30,12 +30,13 @@ const Performance: FC<PerformanceSettings> = ({ data, patchSettings }) => {
         }
       />
       <BaseGroup
+        expand={data.usePlayerFluid}
         items={[
           <ToggleRow
             icon={Sparkles}
             title="播放页流体背景"
-            description="启用播放页的简单流体背景效果，关闭可以节省性能"
             checked={data.usePlayerFluid}
+            description="启用播放页的简单流体背景效果，关闭可以节省性能"
             onClick={() =>
               patchSettings({
                 performance: {
@@ -60,10 +61,10 @@ const Performance: FC<PerformanceSettings> = ({ data, patchSettings }) => {
             }
           />,
           <RangeRow
-            title="播放页流体背景速度"
-            step={1}
             min={1}
             max={10}
+            step={1}
+            title="播放页流体背景速度"
             value={data.playerFluidSpeed}
             onChange={(value) =>
               patchSettings({
@@ -75,15 +76,15 @@ const Performance: FC<PerformanceSettings> = ({ data, patchSettings }) => {
             }
           />
         ]}
-        expand={data.usePlayerFluid}
       />
       <BaseGroup
+        expand={data.useHomeFluid}
         items={[
           <ToggleRow
             icon={Sparkles}
             title="主窗口流体背景"
-            description="启用主窗口的简单流体背景效果，关闭可以节省性能"
             checked={data.useHomeFluid}
+            description="启用主窗口的简单流体背景效果，关闭可以节省性能"
             onClick={() =>
               patchSettings({
                 performance: {
@@ -107,10 +108,10 @@ const Performance: FC<PerformanceSettings> = ({ data, patchSettings }) => {
             }
           />,
           <RangeRow
-            title="主窗口流体背景速度"
-            step={1}
             min={1}
             max={10}
+            step={1}
+            title="主窗口流体背景速度"
             value={data.homeFluidSpeed}
             onChange={(value) =>
               patchSettings({
@@ -122,13 +123,12 @@ const Performance: FC<PerformanceSettings> = ({ data, patchSettings }) => {
             }
           />
         ]}
-        expand={data.useHomeFluid}
       />
       <ToggleRow
-        icon={AudioLines}
         title="播放页频谱"
-        description="是否展示播放页的频谱，关闭可以节省性能"
+        icon={AudioLines}
         checked={data.playerSpectrum}
+        description="是否展示播放页的频谱，关闭可以节省性能"
         onClick={() =>
           patchSettings({
             performance: {
@@ -139,12 +139,12 @@ const Performance: FC<PerformanceSettings> = ({ data, patchSettings }) => {
         }
       />
       <RangeRow
-        icon={AudioWaveform}
-        title="频谱帧率"
-        min={15}
         max={60}
-        unit="FPS"
+        min={15}
         step={5}
+        unit="FPS"
+        title="频谱帧率"
+        icon={AudioWaveform}
         value={data.spectrumFps}
         onChange={(value) =>
           patchSettings({

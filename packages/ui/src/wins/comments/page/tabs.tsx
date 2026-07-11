@@ -1,26 +1,26 @@
-import { type FC, memo } from "react";
-import { CommentSort, CommentSortText } from "@/common/enum";
 import { cx } from "@emotion/css";
-import SectionTab from "@/common/components/data-input/tab";
-import Switch from "@/common/components/data-input/switch";
+import { memo, type FC } from "react";
 import { RendererFormat } from "@/common/lib/format";
+import { CommentSort, CommentSortText } from "@/common/enum";
+import Switch from "@/common/components/data-input/switch";
+import SectionTab from "@/common/components/data-input/tab";
 
 interface TabsProps {
-  sortType: CommentSort;
-  setSortType: NormalFunc<[sortType: CommentSort]>;
-  dynamicContent: boolean;
-  setDynamicContent: NormalFunc<[dynamicContent: boolean]>;
-  totalComment: number;
   className?: string;
+  totalComment: number;
+  sortType: CommentSort;
+  dynamicContent: boolean;
+  setSortType: NormalFunc<[sortType: CommentSort]>;
+  setDynamicContent: NormalFunc<[dynamicContent: boolean]>;
 }
 
 const Tabs: FC<TabsProps> = ({
   className,
-  sortType,
   setSortType,
+  setDynamicContent,
+  sortType,
   totalComment,
-  dynamicContent,
-  setDynamicContent
+  dynamicContent
 }) => {
   return (
     <div className={cx("w-full flex items-center justify-between px-3", className)}>
@@ -29,16 +29,12 @@ const Tabs: FC<TabsProps> = ({
         <span className="ml-1">条评论</span>
       </h1>
       <div className="flex items-center justify-end gap-1">
-        <Switch
-          label="跟随"
-          checked={dynamicContent}
-          onClick={() => setDynamicContent(!dynamicContent)}
-        />
+        <Switch label="跟随" checked={dynamicContent} onChange={setDynamicContent} />
         <SectionTab
-          mode="less-theme"
           className="text-[10px]"
-          data={Object.values(CommentSortText)}
+          mode="less-theme"
           activeIndex={sortType - 1}
+          data={Object.values(CommentSortText)}
           onChange={(index) => setSortType(index + 1)}
         />
       </div>

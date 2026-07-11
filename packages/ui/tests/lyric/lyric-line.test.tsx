@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { TimeManager } from "@mahiru/ui/common/components/display/lyric/time-manager";
 import LyricLineComponent from "@mahiru/ui/common/components/display/lyric/lyric-line";
 
@@ -113,13 +113,13 @@ describe("LyricLine", () => {
       <LyricLineComponent
         index={0}
         line={line}
-        active
-        noteActive={false}
-        rmActive={false}
-        tlActive={false}
         hasRm={false}
         hasTl={false}
+        rmActive={false}
+        tlActive={false}
+        noteActive={false}
         timeManager={new TimeManager([line])}
+        active
         {...props}
       />
     );

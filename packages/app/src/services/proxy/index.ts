@@ -1,6 +1,6 @@
-import type { ProxyChildMessage, ProxyParentMessage } from "@/types/proxy.child";
-import { MainChildEntry } from "../../lib/child-entry";
+import { MainChildEntry } from "@/lib/child-entry";
 import { MainPathResolver } from "@/lib/path-resolver";
+import type { ProxyChildMessage, ProxyParentMessage } from "@/types/proxy.child";
 
 export default class ProxyService extends MainChildEntry<ProxyParentMessage, ProxyChildMessage> {
   readonly port: number;
@@ -9,10 +9,10 @@ export default class ProxyService extends MainChildEntry<ProxyParentMessage, Pro
   readonly staticUIDir: string;
 
   constructor(props: {
-    onError?: NormalFunc<[err: Error]>;
     port: number;
     ncmPort: number;
     storePort: number;
+    onError?: NormalFunc<[err: Error]>;
   }) {
     super({
       serviceName: "proxy",

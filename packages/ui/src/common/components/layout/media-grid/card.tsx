@@ -1,29 +1,29 @@
 import { cx } from "@emotion/css";
-import { type FC, memo, useMemo } from "react";
-import { NeteaseNetworkImage } from "@/common/netease/models";
 import { Headphones } from "lucide-react";
+import { memo, type FC, useMemo } from "react";
 import { RendererFormat } from "@/common/lib/format";
+import { NeteaseNetworkImage } from "@/common/netease/models";
 import NeteaseImage from "@/common/components/display/image/netease-image";
 
 export type MediaItem = {
   id: number;
   name: string;
-  nameClampLine?: 1 | 2;
-  coverUrl?: string;
   meta?: string;
   badge?: string;
+  coverUrl?: string;
   playCount?: number;
-  shape?: "square" | "circle";
+  nameClampLine?: 1 | 2;
+  shape?: "circle" | "square";
 };
 
 interface MediaCardProps {
   item: MediaItem;
   coverSize: number;
-  onClick?: NormalFunc<[id: number]>;
   className?: string;
+  onClick?: NormalFunc<[id: number]>;
 }
 
-const MediaCard: FC<MediaCardProps> = ({ item, coverSize, onClick, className }) => {
+const MediaCard: FC<MediaCardProps> = ({ className, onClick, item, coverSize }) => {
   const image = useMemo(
     () => NeteaseNetworkImage.fromURL(item.coverUrl)?.setSize(coverSize).setAlt(item.name),
     [coverSize, item.coverUrl, item.name]
@@ -32,19 +32,19 @@ const MediaCard: FC<MediaCardProps> = ({ item, coverSize, onClick, className }) 
 
   return (
     <button
-      onClick={() => onClick?.(item.id)}
       className={cx(
         `
           group min-w-0 cursor-pointer p-2 text-left
           transition-all duration-300 ease-in-out active:scale-[0.98]
         `,
         className
-      )}>
+      )}
+      onClick={() => onClick?.(item.id)}>
       <div className={cx("relative aspect-square w-full bg-white/10 shadow-md", roundedClass)}>
         <NeteaseImage
-          cache
-          image={image}
           className={cx("size-full object-cover surface-border", roundedClass)}
+          image={image}
+          cache
         />
         <div
           className={cx(
@@ -65,18 +65,18 @@ const MediaCard: FC<MediaCardProps> = ({ item, coverSize, onClick, className }) 
         )}
       </div>
       <p
-        title={item.name}
         className={cx(
           `
             mt-2 text-[12px] font-bold leading-4 group-hover:opacity-70
             duration-300 ease-in-out transition-all
           `,
           item.nameClampLine === 1 ? "line-clamp-1" : "line-clamp-2"
-        )}>
+        )}
+        title={item.name}>
         {item.name}
       </p>
       {item.meta && (
-        <p title={item.meta} className="mt-1 truncate text-[10px] font-semibold opacity-55">
+        <p className="mt-1 truncate text-[10px] font-semibold opacity-55" title={item.meta}>
           {item.meta}
         </p>
       )}

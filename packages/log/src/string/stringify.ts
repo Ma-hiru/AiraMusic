@@ -1,15 +1,15 @@
 export type CanString =
-  | { toString: () => any }
-  | { [Symbol.toPrimitive]: (hint: string) => any }
-  | undefined
+  | bigint
+  | number
   | object
   | string
-  | number
-  | boolean
   | symbol
-  | bigint
+  | boolean
+  | unknown
   | Function
-  | unknown;
+  | undefined
+  | { toString: () => any }
+  | { [Symbol.toPrimitive]: (hint: string) => any };
 
 export function AnyToString(input: CanString): string {
   if (typeof input === "function") return `[Function: ${input.name}]`;

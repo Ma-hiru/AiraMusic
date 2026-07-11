@@ -9,6 +9,7 @@
     "types.ts"
   ],
   "dependencies": {
+    "@mahiru/ai": "workspace:*",
     "@mahiru/log": "workspace:*"
   }
 }

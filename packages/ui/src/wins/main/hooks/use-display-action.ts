@@ -1,8 +1,8 @@
 import { useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { RendererWindow } from "@/common/lib/window";
 import { RendererIPCMessageBus } from "@/common/lib/bus";
 import { useLatestRef } from "@/common/hooks/use-latest-ref";
-import { useNavigate } from "react-router-dom";
 import type { MessageData } from "@mahiru/ipc/types";
 
 /** 多窗口页面跳转动作 */

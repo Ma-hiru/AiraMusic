@@ -1,17 +1,18 @@
 import { cx } from "@emotion/css";
-import { type FC, memo, useCallback, useEffect, useRef, useState } from "react";
-import { useScrollAutoHide } from "@/common/hooks/use-scroll-auto-hide";
 import { useLocation, useNavigate } from "react-router-dom";
+import { memo, useRef, type FC, useState, useEffect, useCallback } from "react";
 import { RoutePath, RoutePathMain } from "@/common/routes";
-import { useRouterActive } from "@/common/hooks/use-router-active";
 import { scrollActionsAtom } from "@/wins/main/atoms/layout";
+import { useRouterActive } from "@/common/hooks/use-router-active";
+import { useAgentFocusCtx } from "@/common/hooks/use-agent-focus-ctx";
+import { useScrollAutoHide } from "@/common/hooks/use-scroll-auto-hide";
 import { useScrollActionsRegister } from "@/common/hooks/use-scroll-actions-register";
 import type { HomeChannelKey } from "@/wins/main/constants";
 
 import Banner from "./banner";
 import ForYouPanel from "./for-you-panel";
-import HomeChannelTabs from "./channel-tabs";
 import HomeChartsView from "./charts-view";
+import HomeChannelTabs from "./channel-tabs";
 import HomePlaylistsView from "./playlists-view";
 import HomeRecommendView from "./recommend-view";
 import HomeSongsArtistsView from "./songs-artists-view";
@@ -60,11 +61,12 @@ const HomePage: FC<object> = () => {
     setMounted((bit) => bit | (1 << activeChannelToIdx(activeChannel)));
   }, [activeChannel]);
 
+  useAgentFocusCtx({ page: "home" }, useRouterActive(RoutePathMain, "home"));
+
   return (
     <div className="router-container pt-0! px-2!">
       <div
         ref={containerRef}
-        onScroll={(e) => canScrollTop(e.currentTarget.scrollTop > 500)}
         className={`
           w-full h-full
           overflow-y-scroll overflow-x-hidden
@@ -72,16 +74,17 @@ const HomePage: FC<object> = () => {
           scrollbar scrollbar-show
           px-5 will-change-scroll contain-strict
           relative
-        `}>
+        `}
+        onScroll={(e) => canScrollTop(e.currentTarget.scrollTop > 500)}>
         <HomeChannelTabs
-          sticky={activeChannel !== "playlists"}
           active={activeChannel}
+          sticky={activeChannel !== "playlists"}
           onChange={changeChannel}
         />
         {!!(mounted & 0b1) && (
           <section
             className={cx(
-              "grid grid-cols-1 items-stretch gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(320px,24rem)]",
+              "grid grid-cols-1 items-center gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(320px,24rem)]",
               activeChannel !== "recommend" && "hidden"
             )}>
             <Banner className="min-w-0 contain-layout" />

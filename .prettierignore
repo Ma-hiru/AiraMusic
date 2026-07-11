@@ -1,6 +1,5 @@
 **/*.svg
 **/*.ttf
-**/*.woff
 **/target
 **/node_modules
 **/.idea
@@ -8,4 +7,5 @@
 **/dist-types
 **/pkg
 **/*.md
+**/*.schema.json
 yarn.lock

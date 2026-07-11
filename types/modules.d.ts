@@ -2,21 +2,21 @@ declare module "@neteasecloudmusicapienhanced/api/server.js" {
   import type { Express } from "express";
 
   export interface ModuleDefinition {
-    identifier?: string;
     route: string;
+    identifier?: string;
     module: (
       query: any,
       request: (...args: any[]) => Promise<any>
     ) => Promise<{
-      status: number;
       body: any;
+      status: number;
       cookie?: string[];
     }>;
   }
 
   export interface ServeOptions {
-    port?: number;
     host?: string;
+    port?: number;
     checkVersion?: boolean;
     moduleDefs?: ModuleDefinition[];
   }
@@ -44,8 +44,8 @@ declare module "@neteasecloudmusicapienhanced/api/module/*.js" {
     query: any,
     request: (...args: any[]) => Promise<any>
   ): Promise<{
-    status: number;
     body: any;
+    status: number;
     cookie?: string[];
   }>;
 }

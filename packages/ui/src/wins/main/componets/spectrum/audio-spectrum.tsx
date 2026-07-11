@@ -1,44 +1,44 @@
-import { type FC, type HTMLAttributes, memo, useEffect, useMemo, useRef } from "react";
-import type { SpectrumOptions } from "@/wins/main/hooks/use-spectrum-worker";
+import { useAtom, useAtomValue } from "jotai";
+import { memo, useRef, type FC, useMemo, useEffect, type HTMLAttributes } from "react";
+import { useLatestRef } from "@/common/hooks/use-latest-ref";
+import { useListenResize } from "@/common/hooks/use-listen-resize";
+import { Canvas2DRenderer } from "@/wins/main/componets/spectrum/renderers/canvas2d";
+import { WebGLRendererRust } from "@/wins/main/componets/spectrum/renderers/webgl-rust";
+import {
+  spectrumDataAtom,
+  spectrumReadyAtom,
+  spectrumOptionsAtom
+} from "@/wins/main/atoms/spectrum";
 import {
   type IRenderer,
   type RendererOptions
 } from "@/wins/main/componets/spectrum/renderers/i-renderer";
-import { WebGLRendererRust } from "@/wins/main/componets/spectrum/renderers/webgl-rust";
-import { Canvas2DRenderer } from "@/wins/main/componets/spectrum/renderers/canvas2d";
-import { useListenResize } from "@/common/hooks/use-listen-resize";
-import { useAtom, useAtomValue } from "jotai";
-import {
-  spectrumDataAtom,
-  spectrumOptionsAtom,
-  spectrumReadyAtom
-} from "@/wins/main/atoms/spectrum";
-import { useLatestRef } from "@/common/hooks/use-latest-ref";
+import type { SpectrumOptions } from "@/wins/main/hooks/use-spectrum-worker";
 
 type AudioSpectrumProps = HTMLAttributes<HTMLCanvasElement> & {
-  isPlaying: boolean;
-  color?: string;
-  secondaryColor?: string;
   gap?: number;
+  color?: string;
   barWidth?: number;
-  hideRightBands?: number;
-  roundedCorners?: "top" | "bottom" | "both" | "none";
-  renderer?: "canvas" | "webgl-rust";
-  spectrumOptions?: SpectrumOptions;
+  isPlaying: boolean;
   heightScale?: number;
+  hideRightBands?: number;
+  secondaryColor?: string;
+  spectrumOptions?: SpectrumOptions;
+  renderer?: "canvas" | "webgl-rust";
+  roundedCorners?: "top" | "both" | "none" | "bottom";
 };
 
 const AudioSpectrum: FC<AudioSpectrumProps> = ({
-  color = "#ffffff",
   gap = 2,
-  isPlaying,
-  spectrumOptions: options = null,
-  secondaryColor = "#ffffff",
   barWidth,
-  hideRightBands = 0,
-  roundedCorners = "top",
-  renderer = "canvas",
+  isPlaying,
   heightScale = 1,
+  color = "#ffffff",
+  hideRightBands = 0,
+  renderer = "canvas",
+  roundedCorners = "top",
+  secondaryColor = "#ffffff",
+  spectrumOptions: options = null,
   ...rest
 }) => {
   const [spectrumOptions, setSpectrumOptions] = useAtom(spectrumOptionsAtom);

@@ -1,33 +1,33 @@
-import { type FC, useCallback, useEffect, useRef } from "react";
-import { useRequestAutoRun, useRequestStatusWrap } from "@/common/hooks/use-request-wrap";
-import { NeteaseAPISearch } from "@/common/netease/api";
-import { SearchType } from "@/common/enum";
-import { useScrollAutoHide } from "@/common/hooks/use-scroll-auto-hide";
-import AppLoading from "@/common/components/fallback/app-loading";
-import AppEmpty from "@/common/components/fallback/app-empty";
 import { cx } from "@emotion/css";
+import { useRef, type FC, useEffect, useCallback } from "react";
+import { SearchType } from "@/common/enum";
+import { NeteaseAPISearch } from "@/common/netease/api";
+import { useScrollAutoHide } from "@/common/hooks/use-scroll-auto-hide";
+import { useRequestAutoRun, useRequestStatusWrap } from "@/common/hooks/use-request-wrap";
+import AppEmpty from "@/common/components/fallback/app-empty";
 import AppError from "@/common/components/fallback/app-error";
+import AppLoading from "@/common/components/fallback/app-loading";
 import HomeMediaGrid from "@/common/components/layout/media-grid";
 
 interface ArtistResultProps {
-  className?: string;
-  keywords?: string;
-  onJumpArtist: Optional<NormalFunc<[id: number]>>;
   active: boolean;
+  keywords?: string;
+  className?: string;
   setCount: NormalFunc<[count: number]>;
+  onJumpArtist: Optional<NormalFunc<[id: number]>>;
 }
 
 const ArtistResult: FC<ArtistResultProps> = ({
   className,
-  keywords,
+  setCount,
   onJumpArtist,
   active,
-  setCount
+  keywords
 }) => {
   const {
     status,
-    data: list = [],
-    fetchData
+    fetchData,
+    data: list = []
   } = useRequestStatusWrap(
     useCallback(async (keywords?: string) => {
       if (!keywords?.trim()) return [];
@@ -52,7 +52,7 @@ const ArtistResult: FC<ArtistResultProps> = ({
   useScrollAutoHide(containerRef, 3000);
 
   return (
-    <AppError reset={reload} when={status === "error" && active} message="歌手加载失败">
+    <AppError reset={reload} message="歌手加载失败" when={status === "error" && active}>
       <AppLoading loading={status === "loading" && active}>
         {list.length === 0 && <AppEmpty className={className} tips="没有结果" />}
         {list.length > 0 && (

@@ -1,6 +1,6 @@
+import { Log } from "@/lib/log";
 import net from "node:net";
 import type { MainServicesType } from "@/types/service";
-import { Log } from "@/lib/log";
 
 export class MainPortResolver {
   private static readonly stored = new Map<MainServicesType, number>();
@@ -9,7 +9,7 @@ export class MainPortResolver {
     return Number.isInteger(port) && port > 0 && port <= 65535;
   }
 
-  static parse(value: Optional<string | number>) {
+  static parse(value: Optional<number | string>) {
     const port = Number(value);
     if (!this.valid(port)) throw new Error(`parse port error, port=${value}`);
     return port;
@@ -59,12 +59,12 @@ export class MainPortResolver {
   }
 
   static candidates(props: {
-    preferred: number;
-    host?: string;
     gap: number;
     count: number;
+    host?: string;
+    preferred: number;
   }): Iterable<number> & { host?: string } {
-    const { preferred, gap, count, host } = props;
+    const { gap, host, count, preferred } = props;
     return {
       host,
       [Symbol.iterator]() {

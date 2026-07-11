@@ -1,11 +1,12 @@
-import { accessToken, cacheRequest } from "../request";
 import RendererHTTPConstants from "@/common/constants/http";
 import type {
-  CacheStoreCategories,
   CacheStoreInfo,
-  CacheStoreMoveProgress,
-  CacheStoreResponse
+  CacheStoreResponse,
+  CacheStoreCategories,
+  CacheStoreMoveProgress
 } from "@/types/cache";
+
+import { accessToken, cacheRequest } from "../request";
 
 export class CacheStoreForOther {
   static move(

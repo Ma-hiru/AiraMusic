@@ -3,10 +3,10 @@ namespace NeteaseAPI {
    * 嵌入在歌曲数据中的歌手简介。
    */
   interface Ar {
-    alias: string[];
     id: number;
     name: string;
     tns: string[];
+    alias: string[];
   }
 
   interface NeteaseArtistHotTracksResponse extends NeteaseAPIResponse {
@@ -15,108 +15,108 @@ namespace NeteaseAPI {
   }
 
   interface ArtistHotSong {
-    a: null;
-    additionalTitle: null | string;
-    al: Al;
-    alia: string[];
-    ar: Ar[];
-    artistClassics: boolean;
-    awardName: string;
-    awardTags: null;
-    cd: string;
-    cf: string;
-    copyright: number;
-    cp: number;
-    crbt: null;
-    displayTags: null;
-    djId: number;
-    dt: number;
-    entertainmentTags: null;
-    fee: number;
-    ftype: number;
     h: H;
-    hr: null;
-    id: number;
     l: L;
     m: M;
-    mainTitle: null | string;
-    mark: number;
-    markTags: string[];
-    mst: number;
+    al: Al;
+    sq: Sq;
+    a: null;
+    ar: Ar[];
+    hr: null;
+    t: number;
+    v: number;
+    cd: string;
+    cf: string;
+    cp: number;
+    crbt: null;
+    dt: number;
+    id: number;
     mv: number;
-    name: string;
     no: number;
-    noCopyrightRcmd: null;
-    originCoverType: number;
-    originSongSimpleData: null | OriginSongSimpleData;
+    rurl: null;
+    st: number;
+    fee: number;
+    mst: number;
     pop: number;
+    pst: number;
+    rtUrl: null;
+    djId: number;
+    mark: number;
+    name: string;
+    s_id: number;
+    ftype: number;
+    rtype: number;
+    alia: string[];
+    single: number;
+    awardTags: null;
+    version: number;
+    rtUrls: string[];
+    tagPicList: null;
+    awardName: string;
+    copyright: number;
+    displayTags: null;
+    rt: null | string;
+    songFeature: null;
+    markTags: string[];
+    songJumpInfo: null;
+    publishTime: number;
+    noCopyrightRcmd: null;
+    resourceState: boolean;
+    artistClassics: boolean;
+    entertainmentTags: null;
+    originCoverType: number;
+    mainTitle: null | string;
+    additionalTitle: null | string;
+    originSongSimpleData: null | OriginSongSimpleData;
     privilege: {
       bd: null;
-      chargeInfoList: ChargeInfoList[];
-      code: number;
       cp: number;
-      cs: boolean;
       dl: number;
-      dlLevel: string;
-      dlLevels: null;
-      downloadMaxbr: number;
-      downloadMaxBrLevel: string;
-      fee: number;
       fl: number;
-      flag: number;
-      flLevel: string;
-      freeTrialPrivilege: {
-        cannotListenReason: number | null;
-        freeLimitTagType: null;
-        listenType: null;
-        playReason: null;
-        resConsumable: boolean;
-        userConsumable: boolean;
-      };
       id: number;
-      ignoreCache: null;
-      maxbr: number;
-      maxBrLevel: string;
-      message: null;
-      payed: number;
       pl: number;
-      playMaxbr: number;
-      playMaxBrLevel: string;
-      plLevel: string;
-      plLevels: null;
-      preSell: boolean;
-      rightSource: number;
       rscl: null;
       sp: number;
       st: number;
+      cs: boolean;
+      fee: number;
+      code: number;
+      flag: number;
       subp: number;
+      maxbr: number;
+      message: null;
+      payed: number;
+      dlLevels: null;
+      plLevels: null;
       toast: boolean;
+      dlLevel: string;
+      flLevel: string;
+      plLevel: string;
+      preSell: boolean;
+      ignoreCache: null;
+      playMaxbr: number;
+      maxBrLevel: string;
+      rightSource: number;
+      downloadMaxbr: number;
+      playMaxBrLevel: string;
+      downloadMaxBrLevel: string;
+      chargeInfoList: ChargeInfoList[];
+      freeTrialPrivilege: {
+        listenType: null;
+        playReason: null;
+        freeLimitTagType: null;
+        resConsumable: boolean;
+        userConsumable: boolean;
+        cannotListenReason: null | number;
+      };
     };
-    pst: number;
-    publishTime: number;
-    resourceState: boolean;
-    rt: null | string;
-    rtUrl: null;
-    rtUrls: string[];
-    rtype: number;
-    rurl: null;
-    s_id: number;
-    single: number;
-    songFeature: null;
-    songJumpInfo: null;
-    sq: Sq;
-    st: number;
-    t: number;
-    tagPicList: null;
-    v: number;
-    version: number;
   }
 
   interface OriginSongSimpleData {
-    albumMeta: { id: number; name: string };
-    artists: { id: number; name: string }[];
     name: string;
     songId: number;
+    albumMeta: { id: number; name: string };
+    artists: { id: number; name: string }[];
   }
 
   interface NeteaseArtistDetailResponse extends NeteaseAPIResponse {
@@ -124,283 +124,283 @@ namespace NeteaseAPI {
   }
 
   interface ArtistDetail {
+    blacklist: boolean;
+    preferShow: number;
+    videoCount: number;
+    showPriMsg: boolean;
+    identify: {
+      imageUrl: null;
+      actionUrl: string;
+      imageDesc: string;
+    };
+    secondaryExpertIdentiy: {
+      expertIdentiyId: number;
+      expertIdentiyName: string;
+      expertIdentiyCount: number;
+    }[];
     artist: {
-      albumSize: number;
-      alias: string[];
-      avatar: string;
-      briefDesc: string;
-      cover: string;
       id: number;
-      identifyTag: null;
-      identities: string[];
-      musicSize: number;
-      mvSize: number;
       name: string;
+      cover: string;
+      avatar: string;
+      mvSize: number;
+      alias: string[];
+      albumSize: number;
+      briefDesc: string;
+      identifyTag: null;
+      musicSize: number;
+      identities: string[];
+      transNames: string[];
       rank: {
         rank: number;
         type: number;
       };
-      transNames: string[];
     };
-    blacklist: boolean;
-    identify: {
-      actionUrl: string;
-      imageDesc: string;
-      imageUrl: null;
-    };
-    preferShow: number;
-    secondaryExpertIdentiy: {
-      expertIdentiyCount: number;
-      expertIdentiyId: number;
-      expertIdentiyName: string;
-    }[];
-    showPriMsg: boolean;
-    videoCount: number;
   }
 
   interface NeteaseArtistDescResponse extends NeteaseAPIResponse {
     /** 简要介绍 */
-    briefDesc: string;
     count: number;
+    briefDesc: string;
+    topicData: TopicDatum[];
     introduction: {
       /** 介绍文本的标题 */
       ti: string;
       /** 介绍文本的内容 */
       txt: string;
     }[];
-    topicData: TopicDatum[];
   }
 
   interface TopicDatum {
-    addTime: number;
-    categoryId: number;
-    categoryName: string;
-    commentCount: number;
-    commentThreadId: string;
-    coverUrl: string;
-    creator: {
-      accountStatus: number;
-      accountType: number;
-      anchor: boolean;
-      authenticated: boolean;
-      authenticationTypes: number;
-      authority: number;
-      authStatus: number;
-      avatarDetail: null;
-      avatarImgId: number;
-      avatarUrl: string;
-      backgroundImgId: number;
-      backgroundUrl: string;
-      birthday: number;
-      city: number;
-      createTime: number;
-      defaultAvatar: boolean;
-      description: null | string;
-      detailDescription: null | string;
-      djStatus: number;
-      experts: null | { "1": string };
-      expertTags: string[] | null;
-      followed: boolean;
-      gender: number;
-      lastLoginIP: string;
-      lastLoginTime: number;
-      locationStatus: number;
-      mutual: boolean;
-      nickname: string;
-      province: number;
-      remarkName: null;
-      shortUserName: string;
-      signature: string;
-      userId: number;
-      userName: string;
-      userType: number;
-      vipType: number;
-      viptypeVersion: number;
-    };
     id: number;
-    liked: boolean;
-    likedCount: number;
-    mainTitle: string;
     memo: null;
+    url: string;
+    title: string;
+    liked: boolean;
     number: number;
-    readCount: number;
-    recmdContent: string;
-    recmdTitle: string;
-    rectanglePicUrl: string;
-    relatedResource: null;
+    tags: string[];
     reward: boolean;
+    summary: string;
+    wxTitle: string;
+    coverUrl: string;
+    seriesId: number;
+    mainTitle: string;
+    readCount: number;
+    categoryId: number;
+    likedCount: number;
+    recmdTitle: string;
+    shareCount: number;
     rewardCount: number;
     rewardMoney: number;
-    seriesId: number;
+    categoryName: string;
+    commentCount: number;
+    recmdContent: string;
     shareContent: string;
-    shareCount: number;
     showComment: boolean;
     showRelated: boolean;
-    summary: string;
-    tags: string[];
-    title: string;
+    relatedResource: null;
+    commentThreadId: string;
+    rectanglePicUrl: string;
     topic: {
-      addTime: number;
-      adInfo: string;
-      auditor: string;
-      auditStatus: number;
-      auditTime: number;
-      categoryId: number;
-      content: { content: null | string; id: number; type: number }[];
-      cover: number;
-      delReason: string;
-      fromBackend: boolean;
-      headPic: number;
-      hotScore: number;
       id: number;
-      mainTitle: string;
       memo: null;
+      cover: number;
+      title: string;
+      adInfo: string;
       number: number;
-      pubImmidiatly: boolean;
+      status: number;
+      tags: string[];
+      userId: number;
+      addTime: number;
+      auditor: string;
+      headPic: number;
       pubTime: number;
-      readCount: number;
-      recomdContent: string;
-      recomdTitle: string;
-      rectanglePic: number;
       reward: boolean;
+      summary: string;
+      wxTitle: string;
+      hotScore: number;
       seriesId: number;
+      auditTime: number;
+      delReason: string;
+      mainTitle: string;
+      readCount: number;
+      startText: string;
+      categoryId: number;
+      updateTime: number;
+      auditStatus: number;
+      recomdTitle: string;
+      fromBackend: boolean;
+      rectanglePic: number;
       shareContent: string;
       showComment: boolean;
       showRelated: boolean;
-      startText: string;
-      status: number;
-      summary: string;
-      tags: string[];
-      title: string;
-      updateTime: number;
-      userId: number;
-      wxTitle: string;
+      recomdContent: string;
+      pubImmidiatly: boolean;
+      content: { id: number; type: number; content: null | string }[];
     };
-    url: string;
-    wxTitle: string;
+    creator: {
+      city: number;
+      gender: number;
+      userId: number;
+      anchor: boolean;
+      mutual: boolean;
+      vipType: number;
+      birthday: number;
+      djStatus: number;
+      nickname: string;
+      province: number;
+      remarkName: null;
+      userName: string;
+      userType: number;
+      authority: number;
+      avatarUrl: string;
+      followed: boolean;
+      signature: string;
+      authStatus: number;
+      avatarDetail: null;
+      createTime: number;
+      accountType: number;
+      avatarImgId: number;
+      lastLoginIP: string;
+      accountStatus: number;
+      backgroundUrl: string;
+      lastLoginTime: number;
+      shortUserName: string;
+      authenticated: boolean;
+      defaultAvatar: boolean;
+      locationStatus: number;
+      viptypeVersion: number;
+      backgroundImgId: number;
+      description: null | string;
+      authenticationTypes: number;
+      expertTags: null | string[];
+      experts: null | { "1": string };
+      detailDescription: null | string;
+    };
+    addTime: number;
   }
 
   interface NeteaseArtistFollowCountResponse extends NeteaseAPIResponse {
     data: {
-      isFollow: boolean;
       fansCnt: number;
+      follow: boolean;
       followCnt: number;
       followDay: string;
+      isFollow: boolean;
       followDayCnt: number;
-      follow: boolean;
     };
   }
 
   interface NeteaseArtistToplistResponse extends NeteaseAPIResponse {
     list: {
-      artists: ToplistArtist[];
       type: number;
       updateTime: number;
+      artists: ToplistArtist[];
     };
   }
 
   interface ToplistArtist {
-    albumSize: number;
-    alias: string[];
-    briefDesc: string;
     id: number;
-    img1v1Id: number;
-    img1v1Id_str?: string;
-    img1v1Url: string;
-    lastRank: number;
-    musicSize: number;
     name: string;
     picId: number;
-    picId_str?: string;
-    picUrl: string;
     score: number;
-    topicPerson: number;
     trans: string;
+    picUrl: string;
+    alias: string[];
+    img1v1Id: number;
+    lastRank: number;
+    albumSize: number;
+    briefDesc: string;
+    img1v1Url: string;
+    musicSize: number;
+    picId_str?: string;
+    topicPerson: number;
+    img1v1Id_str?: string;
     transNames?: string[];
   }
 
   interface NeteaseArtistAlbumResponse extends NeteaseAPIResponse {
+    more: boolean;
+    kindTabs: null;
+    hotAlbums: ArtistAlbum[];
     artist: {
-      albumSize: number;
-      alias: string[];
-      briefDesc: string;
-      followed: boolean;
       id: number;
-      img1v1Id: number;
-      img1v1Id_str: string;
-      img1v1Url: string;
-      musicSize: number;
       name: string;
       picId: number;
-      picId_str: string;
-      picUrl: string;
-      topicPerson: number;
       trans: string;
+      picUrl: string;
+      alias: string[];
+      img1v1Id: number;
+      albumSize: number;
+      briefDesc: string;
+      followed: boolean;
+      img1v1Url: string;
+      musicSize: number;
+      picId_str: string;
+      topicPerson: number;
+      img1v1Id_str: string;
     };
-    hotAlbums: ArtistAlbum[];
-    kindTabs: null;
-    more: boolean;
   }
 
   interface ArtistAlbum {
-    alias: string[];
-    artist: {
-      albumSize: number;
-      alias: string[];
-      briefDesc: string;
-      followed: boolean;
-      id: number;
-      img1v1Id: number;
-      img1v1Id_str: string;
-      img1v1Url: string;
-      musicSize: number;
-      name: string;
-      picId: number;
-      picId_str: string;
-      picUrl: string;
-      topicPerson: number;
-      trans: string;
-    };
-    artists: {
-      albumSize: number;
-      alias: string[];
-      briefDesc: string;
-      followed: boolean;
-      id: number;
-      img1v1Id: number;
-      img1v1Id_str: string;
-      img1v1Url: string;
-      musicSize: number;
-      name: string;
-      picId: number;
-      picUrl: string;
-      topicPerson: number;
-      trans: string;
-    }[];
-    awardTags: null;
-    blurPicUrl: string;
-    briefDesc: string;
-    commentThreadId: string;
-    company: string;
-    companyId: number;
-    copyrightId: number;
-    description: string;
-    displayTags: null;
     id: number;
+    pic: number;
     mark: number;
     name: string;
-    onSale: boolean;
-    paid: boolean;
-    pic: number;
-    picId: number;
-    picId_str: string;
-    picUrl: string;
-    publishTime: number;
     size: number;
-    songs: unknown[];
-    status: number;
-    subType: string;
     tags: string;
     type: string;
+    paid: boolean;
+    picId: number;
+    picUrl: string;
+    status: number;
+    alias: string[];
+    awardTags: null;
+    company: string;
+    subType: string;
+    songs: unknown[];
+    briefDesc: string;
+    companyId: number;
+    displayTags: null;
+    picId_str: string;
+    blurPicUrl: string;
+    copyrightId: number;
+    description: string;
+    publishTime: number;
+    commentThreadId: string;
+    artists: {
+      id: number;
+      name: string;
+      picId: number;
+      trans: string;
+      picUrl: string;
+      alias: string[];
+      img1v1Id: number;
+      albumSize: number;
+      briefDesc: string;
+      followed: boolean;
+      img1v1Url: string;
+      musicSize: number;
+      topicPerson: number;
+      img1v1Id_str: string;
+    }[];
+    artist: {
+      id: number;
+      name: string;
+      picId: number;
+      trans: string;
+      picUrl: string;
+      alias: string[];
+      img1v1Id: number;
+      albumSize: number;
+      briefDesc: string;
+      followed: boolean;
+      img1v1Url: string;
+      musicSize: number;
+      picId_str: string;
+      topicPerson: number;
+      img1v1Id_str: string;
+    };
+    onSale: boolean;
   }
 }

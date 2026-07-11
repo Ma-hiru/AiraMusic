@@ -1,11 +1,7 @@
 import { useEffect } from "react";
 import { Log } from "@/common/lib/log";
-import { createAddToPlaylistModal } from "./add-to-playlist-modal";
-import { createDialogModal } from "./dialog-modal";
-import { createAlbumCoverModal, createPlaylistCoverModal } from "./playlist-cover-modal";
-import { createPlaylistCreateModal } from "./playlist-create-modal";
-import { createPlaylistEditModal } from "./playlist-edit-modal";
 import { Inject } from "@/common/utils/inject";
+
 import Provider, { type ModalRender } from "./modal-provider";
 
 const defaultHandler = () => {
@@ -20,7 +16,7 @@ export default class AppModal {
   static __renderGetter: NormalFunc<[], Nullable<ModalRender>> = defaultHandler;
   static __visibleGetter: NormalFunc<[], boolean> = () => defaultHandler() || false;
 
-  static _create<U extends unknown[]>(creator: NormalFunc<U, ModalRender>, ...props: U) {
+  static _create<const U extends unknown[]>(creator: NormalFunc<U, ModalRender>, ...props: U) {
     AppModal.__setModalData?.(creator(...props));
     AppModal.__setModalVisible?.(true);
     return AppModal.__visibleGetter;
@@ -48,12 +44,6 @@ function useModal() {
 
   return {
     create: AppModal._create,
-    close: AppModal.close,
-    createPlaylistCoverModal,
-    createAlbumCoverModal,
-    createDialogModal,
-    createAddToPlaylistModal,
-    createPlaylistCreateModal,
-    createPlaylistEditModal
+    close: AppModal.close
   };
 }

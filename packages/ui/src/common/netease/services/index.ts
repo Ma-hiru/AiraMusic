@@ -1,9 +1,9 @@
+export { default as NeteaseServicesAuth } from "./auth";
+export { default as NeteaseServicesUser } from "./user";
+export { default as NeteaseServicesAlbum } from "./album";
+export { default as NeteaseServicesAudio } from "./audio";
 export { default as NeteaseServicesImage } from "./image";
 export { default as NeteaseServicesLyric } from "./lyric";
 export { default as NeteaseServicesTrack } from "./track";
-export { default as NeteaseServicesPlaylist } from "./playlist";
-export { default as NeteaseServicesAudio } from "./audio";
-export { default as NeteaseServicesUser } from "./user";
-export { default as NeteaseServicesAuth } from "./auth";
-export { default as NeteaseServicesAlbum } from "./album";
 export { default as NeteaseServicesArtist } from "./artist";
+export { default as NeteaseServicesPlaylist } from "./playlist";

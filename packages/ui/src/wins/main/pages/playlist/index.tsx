@@ -1,26 +1,26 @@
-import { type FC, memo, useCallback, useEffect, useRef } from "react";
+import { useSetAtom } from "jotai";
 import { useLocation } from "react-router-dom";
+import { memo, useRef, type FC, useEffect } from "react";
 import { useUser } from "@/common/store/user";
 import { RoutePathMain } from "@/common/routes";
-import { useUserTrackManager } from "@/common/hooks/use-user-track-manager";
-import { usePageJump } from "@/wins/main/hooks/use-page-jump";
-import { useDisplayAction } from "@/wins/main/hooks/use-display-action";
-import { usePlayerActionInList } from "@/wins/main/hooks/use-player-action-in-list";
-import { useSetBackground } from "@/wins/main/hooks/use-set-background";
-import { useSetAtom } from "jotai";
-import { useScrollActionsRegister } from "@/common/hooks/use-scroll-actions-register";
-import { useRouterActive } from "@/common/hooks/use-router-active";
-import { scrollActionsAtom, typingAtom } from "@/wins/main/atoms/layout";
-import { useTrackAddToPlaylist } from "@/common/hooks/use-track-add-to-playlist";
 import { RendererModified } from "@/common/lib/modified";
-import { RendererIPCMessageBus } from "@/common/lib/bus";
-
+import { usePageJump } from "@/wins/main/hooks/use-page-jump";
+import { useRouterActive } from "@/common/hooks/use-router-active";
+import { useDisplayAction } from "@/wins/main/hooks/use-display-action";
+import { useSetBackground } from "@/wins/main/hooks/use-set-background";
+import { typingAtom, scrollActionsAtom } from "@/wins/main/atoms/layout";
+import { useUserTrackManager } from "@/common/hooks/use-user-track-manager";
+import { usePlaylistModifySync } from "@/common/hooks/use-playlist-modify-sync";
+import { useTrackAddToPlaylist } from "@/common/hooks/use-track-add-to-playlist";
+import { usePlayerActionInList } from "@/wins/main/hooks/use-player-action-in-list";
+import { useScrollActionsRegister } from "@/common/hooks/use-scroll-actions-register";
 import Playlist, { type PlaylistRef } from "@/common/components/page/playlist";
 
 const PlaylistPage: FC<object> = () => {
   const user = useUser();
   const location = useLocation();
   const playlistRef = useRef<Nullable<PlaylistRef>>(null);
+  const routerActive = useRouterActive(RoutePathMain, "playlist");
   const { heartManager, playableManager } = useUserTrackManager();
   const { id, source } = RoutePathMain.playlist.parseQuery(location);
 
@@ -28,14 +28,14 @@ const PlaylistPage: FC<object> = () => {
   const {
     addTrackToPlaylistLast,
     addTrackToPlaylistNext,
+    openTrackComment,
     onAddList,
     onReplace,
     onTrackPlay,
-    openTrackComment,
     player
   } = usePlayerActionInList(() => playlistRef.current?.totalTracks.current ?? []);
   // 注册滚动和定位回调
-  const { canFastLocate, canScrollTop } = useScrollActionsRegister({
+  const { canScrollTop, canFastLocate } = useScrollActionsRegister({
     atom: scrollActionsAtom,
     active: useRouterActive(RoutePathMain, "playlist"),
     getScrollTopFunc: () => playlistRef.current?.scrollTop,
@@ -56,19 +56,10 @@ const PlaylistPage: FC<object> = () => {
   const { addTrackToPlaylist, addTracksToPlaylist } = useTrackAddToPlaylist(
     source === "normal" && id ? Number(id) : undefined
   );
+  // 通过 ipc 同步歌单修改时的重载
+  const { onEdited, onDeleted } = usePlaylistModifySync(id, source);
 
   const setIsTyping = useSetAtom(typingAtom);
-
-  const onEdited = useCallback(() => {
-    RendererIPCMessageBus.modified.twoWay({
-      type: "user-playlist"
-    });
-  }, []);
-
-  const onDeleted = useCallback(() => {
-    RendererIPCMessageBus.modified.twoWay({ type: "user-playlist" });
-    RendererIPCMessageBus.modified.twoWay({ type: "remove-playlist", id });
-  }, [id]);
 
   useEffect(() => {
     if (!id && !source) return;
@@ -86,30 +77,31 @@ const PlaylistPage: FC<object> = () => {
     <Playlist
       ref={playlistRef}
       id={id}
-      source={source}
-      user={user}
       className="router-container"
-      onClickAlbum={jumpAlbumPage}
-      onClickArtist={jumpArtistPage}
-      onAddList={onAddList}
-      onPlay={onTrackPlay}
-      onReplace={onReplace}
-      onEdited={onEdited}
-      onDeleted={onDeleted}
+      user={user}
+      source={source}
+      pageActionType="out"
+      setIsTyping={setIsTyping}
+      canScrollTop={canScrollTop}
+      heartManager={heartManager}
+      routerActive={routerActive}
+      canFastLocate={canFastLocate}
       openComment={openTrackComment}
+      playableManager={playableManager}
+      addTrackToPlaylist={addTrackToPlaylist}
+      activeTrackID={player.current.track?.id}
+      addTracksToPlaylist={addTracksToPlaylist}
       addToPlaylistLast={addTrackToPlaylistLast}
       addToPlaylistNext={addTrackToPlaylistNext}
-      addTrackToPlaylist={addTrackToPlaylist}
-      addTracksToPlaylist={addTracksToPlaylist}
-      heartManager={heartManager}
-      playableManager={playableManager}
-      activeTrackID={player.current.track?.id}
-      canFastLocate={canFastLocate}
-      canScrollTop={canScrollTop}
-      pageActionType="out"
+      onEdited={onEdited}
+      onPlay={onTrackPlay}
+      onAddList={onAddList}
+      onDeleted={onDeleted}
+      onReplace={onReplace}
       onPageAction={onPageAction}
-      setIsTyping={setIsTyping}
+      onClickAlbum={jumpAlbumPage}
       onCoverLoaded={setBackground}
+      onClickArtist={jumpArtistPage}
     />
   );
 };

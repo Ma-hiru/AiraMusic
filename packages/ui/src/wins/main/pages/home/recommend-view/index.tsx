@@ -1,26 +1,26 @@
 import { cx } from "@emotion/css";
-import { type FC, memo, useEffect, useState } from "react";
+import { useAtomValue } from "jotai";
+import { memo, type FC, useState, useEffect } from "react";
 import { useUser } from "@/common/store/user";
+import { NeteaseImageSize } from "@/common/enum";
+import { NeteaseURL } from "@/common/netease/models";
+import { backgroundCoverAtom } from "@/wins/main/atoms/theme";
 import { usePageJump } from "@/wins/main/hooks/use-page-jump";
 import { useSetBackground } from "@/wins/main/hooks/use-set-background";
-import { useAtomValue } from "jotai";
-import { backgroundCoverAtom } from "@/wins/main/atoms/theme";
-import { NeteaseURL } from "@/common/netease/models";
-import { NeteaseImageSize } from "@/common/enum";
 
-import DailyRecommendTracks from "./daily-recommend-tracks";
-import DailyRecommendPlaylist from "./daily-recommend-playlist";
+import Toplists from "./toplists";
 import NewAlbums from "./new-albums";
 import RecommendArtists from "./recommend-artists";
 import RecommendPlaylist from "./recommend-playlist";
-import Toplists from "./toplists";
+import DailyRecommendTracks from "./daily-recommend-tracks";
+import DailyRecommendPlaylist from "./daily-recommend-playlist";
 
 const HomeRecommendView: FC<{ className?: string }> = ({ className }) => {
   const user = useUser();
   const background = useAtomValue(backgroundCoverAtom);
   const [selectedCover, setSelectedCover] = useState("");
   const { setBackground } = useSetBackground("home");
-  const { jumpPlaylistPage, jumpArtistPage, jumpAlbumPage } = usePageJump();
+  const { jumpAlbumPage, jumpArtistPage, jumpPlaylistPage } = usePageJump();
 
   useEffect(() => {
     if (background) return;
@@ -31,21 +31,21 @@ const HomeRecommendView: FC<{ className?: string }> = ({ className }) => {
     <div className={cx("flex flex-col gap-3", className)}>
       {user?.isLoggedIn && (
         <DailyRecommendPlaylist
+          key={user.profile.userId + "-daily-playlist"}
+          onClickItem={(id) => jumpPlaylistPage(id, "normal")}
           onDataLoaded={(data) => {
             setSelectedCover(data[0]?.picUrl ?? "");
           }}
-          onClickItem={(id) => jumpPlaylistPage(id, "normal")}
-          key={user.profile.userId + "-daily-playlist"}
         />
       )}
       {user?.isLoggedIn && <DailyRecommendTracks key={user.profile.userId + "-daily-tracks"} />}
       <RecommendPlaylist
+        key={user?.isLoggedIn ? user.profile.userId + "-playlist" : "guest-playlist"}
+        onClickItem={(id) => jumpPlaylistPage(id, "normal")}
         onDataLoaded={(data) => {
           if (user?.isLoggedIn) return;
           setSelectedCover(data[1]?.picUrl ?? "");
         }}
-        onClickItem={(id) => jumpPlaylistPage(id, "normal")}
-        key={user?.isLoggedIn ? user.profile.userId + "-playlist" : "guest-playlist"}
       />
       <RecommendArtists onClickItem={jumpArtistPage} />
       <NewAlbums onClickItem={jumpAlbumPage} />

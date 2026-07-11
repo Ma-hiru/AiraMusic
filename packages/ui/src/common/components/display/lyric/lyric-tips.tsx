@@ -1,9 +1,9 @@
-import { type FC, memo } from "react";
 import { cx } from "@emotion/css";
+import { memo, type FC } from "react";
 
 type LyricTipsProps = {
   tips: Optional<string>;
-  crossAlign?: "left" | "center" | "right";
+  crossAlign?: "left" | "right" | "center";
 };
 
 const LyricTips: FC<LyricTipsProps> = ({ tips, crossAlign }) => {

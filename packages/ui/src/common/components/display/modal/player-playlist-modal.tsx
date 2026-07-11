@@ -1,38 +1,55 @@
-import { useCallback, useEffect, useRef } from "react";
 import { ListMusic } from "lucide-react";
-import { useUserTrackManager } from "@/common/hooks/use-user-track-manager";
-import AppModal from "@/common/components/display/modal";
-import TrackList, {
-  type TrackListClickFunc,
-  type TrackListRef
-} from "@/common/components/display/track_list";
-import { usePageJump } from "@/wins/main/hooks/use-page-jump";
-import { usePlayerActionInList } from "@/wins/main/hooks/use-player-action-in-list";
+import { useRef, useEffect, useCallback } from "react";
+import { NeteaseTrackRecord } from "@/common/netease/models";
+import { useListenable } from "@/common/hooks/use-listenable";
 import { useTrackContextMenu } from "@/common/hooks/use-track-context-menu";
+import { useUserTrackManager } from "@/common/hooks/use-user-track-manager";
 import { openTrackAddToPlaylist } from "@/common/hooks/use-track-add-to-playlist";
-import type { ModalRender } from "@/common/components/display/modal/modal-provider";
+import AppModal from "@/common/components/display/modal";
 import RendererImageConstants from "@/common/constants/image";
-import RendererPlayerHandle from "@/wins/main/lib/handle";
+import TrackList, {
+  type TrackListRef,
+  type TrackListClickFunc
+} from "@/common/components/display/track_list";
+import type RendererPlayer from "@/common/player/core";
+import type { ModalRender } from "@/common/components/display/modal/modal-provider";
 
-export function createPlayerPlaylistModal(onJumpPage?: NormalFunc): ModalRender {
+type PlaylistModalProps = {
+  onJumpPage?: NormalFunc;
+  jumpAlbumPage: NormalFunc<[id: number]>;
+  jumpArtistPage: NormalFunc<[id: number]>;
+  openTrackComment: NormalFunc<[track: NeteaseTrackRecord]>;
+  addTrackToPlaylistLast: NormalFunc<[track: NeteaseTrackRecord]>;
+  addTrackToPlaylistNext: NormalFunc<[track: NeteaseTrackRecord]>;
+};
+
+export function createPlayerPlaylistModal({
+  player,
+  ...rest
+}: PlaylistModalProps & { player: RendererPlayer }): ModalRender {
   return {
     title: "播放列表",
     subTitle: "Queue",
     width: 900,
     height: 640,
     contentClassName: "overflow-hidden! px-4 pb-4",
-    content: <PlayerPlaylistModalContent onJumpPage={onJumpPage} />
+    content: <PlayerPlaylistModalContent {...rest} rendererPlayer={player} />
   };
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
-const PlayerPlaylistModalContent = (props: { onJumpPage?: NormalFunc }) => {
-  const player = RendererPlayerHandle.usePlayer();
-  const trackListRef = useRef<Nullable<TrackListRef>>(null);
-  const { onJumpPage } = props;
+const PlayerPlaylistModalContent = ({
+  addTrackToPlaylistLast,
+  addTrackToPlaylistNext,
+  openTrackComment,
+  onJumpPage,
+  jumpAlbumPage,
+  jumpArtistPage,
+  rendererPlayer
+}: PlaylistModalProps & { rendererPlayer: RendererPlayer }) => {
   const { heartManager, playableManager } = useUserTrackManager();
-  const { jumpAlbumPage, jumpArtistPage } = usePageJump();
-
+  const player = useListenable(rendererPlayer);
+  const trackListRef = useRef<Nullable<TrackListRef>>(null);
   const tracks = player.playlist.list();
   const activeIndex = player.playlist.pos();
   const activeTrack = player.current.track;
@@ -41,7 +58,7 @@ const PlayerPlaylistModalContent = (props: { onJumpPage?: NormalFunc }) => {
     if (activeIndex < 0) return;
     const timer = window.setTimeout(() => {
       void trackListRef.current?.scrollToItem(activeIndex);
-    }, 200);
+    }, 500);
     return () => window.clearTimeout(timer);
   }, [activeIndex, tracks.length]);
 
@@ -69,9 +86,6 @@ const PlayerPlaylistModalContent = (props: { onJumpPage?: NormalFunc }) => {
     },
     [jumpArtistPage, onJumpPage]
   );
-
-  const { openTrackComment, addTrackToPlaylistLast, addTrackToPlaylistNext } =
-    usePlayerActionInList(() => player.playlist.list());
 
   // 右键菜单
   const { onContextMenu } = useTrackContextMenu({
@@ -104,24 +118,24 @@ const PlayerPlaylistModalContent = (props: { onJumpPage?: NormalFunc }) => {
         </div>
       </header>
       <TrackList
+        ref={trackListRef}
+        id={0}
         className="
           min-h-0 flex-1 overflow-hidden rounded-lg border border-white/10
           bg-black/5 p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]
         "
-        ref={trackListRef}
-        id={0}
-        tracks={tracks}
         type="normal"
+        tracks={tracks}
+        paddingBottom={8}
+        emptyTips="播放列表为空"
         activeID={activeTrack?.id}
+        heartManager={heartManager}
+        playableManager={playableManager}
+        trackCoverSize={RendererImageConstants.PlaylistPageTrackCoverSize}
         onClick={onTrackPlay}
         onContext={onContextMenu}
         onClickAlbum={onClickAlbum}
         onClickArtist={onClickArtist}
-        heartManager={heartManager}
-        playableManager={playableManager}
-        trackCoverSize={RendererImageConstants.PlaylistPageTrackCoverSize}
-        paddingBottom={8}
-        emptyTips="播放列表为空"
       />
     </div>
   );

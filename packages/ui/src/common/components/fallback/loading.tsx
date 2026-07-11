@@ -1,5 +1,5 @@
-import { type FC, type HtmlHTMLAttributes, memo } from "react";
 import { Loader } from "lucide-react";
+import { memo, type FC, type HtmlHTMLAttributes } from "react";
 
 export type LoadingProps = HtmlHTMLAttributes<HTMLDivElement>;
 

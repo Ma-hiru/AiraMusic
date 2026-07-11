@@ -1,6 +1,6 @@
-import dayjs, { type OpUnitType, type QUnitType } from "dayjs";
-import { NeteaseMusicLevel, TrackQuality } from "@/common/enum";
-import { RendererShortcutConstants, type ShortcutBinding } from "@/common/constants/shortcut";
+import { TrackQuality, NeteaseMusicLevel } from "@/common/enum";
+import { type ShortcutBinding, RendererShortcutConstants } from "@/common/constants/shortcut";
+import dayjs, { type QUnitType, type OpUnitType } from "dayjs";
 
 export class RendererFormat {
   static count(count: Optional<number>) {
@@ -37,7 +37,7 @@ export class RendererFormat {
     return dayjs(millTimestamp).format(`YYYY${split ?? "-"}MM${split ?? "-"}DD`);
   }
 
-  static duration(time: Optional<number>, unit: "ms" | "s" = "ms", split?: string) {
+  static duration(time: Optional<number>, unit: "s" | "ms" = "ms", split?: string) {
     if (!time) return "0:00";
     split ||= ":";
     let base;
@@ -70,7 +70,7 @@ export class RendererFormat {
     return `${years}年${days}天`;
   }
 
-  static convertBytes(bytes: Optional<number>, unit: "GB" | "MB" | "KB" | "B" | "b") {
+  static convertBytes(bytes: Optional<number>, unit: "B" | "b" | "GB" | "KB" | "MB") {
     if (bytes == null || !Number.isFinite(bytes) || bytes <= 0) {
       return 0;
     }
@@ -155,7 +155,7 @@ export class RendererFormat {
   }
 
   /** 返回ms */
-  static timeLimit(time: number, unit: "d" | "m" | "h") {
+  static timeLimit(time: number, unit: "d" | "h" | "m") {
     if (!Number.isFinite(time)) {
       time = 7;
       unit = "d";

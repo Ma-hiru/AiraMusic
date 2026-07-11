@@ -1,7 +1,7 @@
-import { NeteaseAPIAuth } from "@/common/netease/api";
-import { useCallback, useEffect, useState } from "react";
-import { Log } from "@/common/lib/log";
+import { useState, useEffect, useCallback } from "react";
 import { EqError } from "@mahiru/log";
+import { Log } from "@/common/lib/log";
+import { NeteaseAPIAuth } from "@/common/netease/api";
 import AppToast from "@/common/components/display/toast";
 
 interface LoginCaptchaProps {

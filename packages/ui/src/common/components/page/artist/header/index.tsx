@@ -1,32 +1,32 @@
-import { type FC, memo } from "react";
+import { cx } from "@emotion/css";
+import { memo, type FC } from "react";
 import { NeteaseArtist } from "@/common/netease/models";
+import PageAction from "@/common/components/display/page-action";
 
-import Avatar from "./avatar";
 import Info from "./info";
 import Tabs from "./tabs";
-import { cx } from "@emotion/css";
-import PageAction from "@/common/components/display/page-action";
+import Avatar from "./avatar";
 
 interface HeaderProps {
   className?: string;
-  artist: Nullable<NeteaseArtist>;
-  onAvatarLoaded?: NormalFunc<[avatar: string]>;
   tabsItem: string[];
   activeIndex: number;
-  onChange?: NormalFunc<[index: number]>;
-  pageActionType?: "enter" | "out" | "none";
+  artist: Nullable<NeteaseArtist>;
+  pageActionType?: "out" | "none" | "enter";
   onPageAction?: NormalFunc;
+  onChange?: NormalFunc<[index: number]>;
+  onAvatarLoaded?: NormalFunc<[avatar: string]>;
 }
 
 const Header: FC<HeaderProps> = ({
-  artist,
   className,
-  onAvatarLoaded,
-  tabsItem,
-  activeIndex,
-  onChange,
   pageActionType = "none",
-  onPageAction
+  onChange,
+  onPageAction,
+  onAvatarLoaded,
+  artist,
+  tabsItem,
+  activeIndex
 }) => {
   return (
     <div className={cx("w-full", className)}>

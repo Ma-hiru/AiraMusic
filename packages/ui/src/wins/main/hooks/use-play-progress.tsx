@@ -1,12 +1,12 @@
 import { useAnimate } from "motion/react";
-import {
-  type MouseEvent as ReactMouseEvent,
-  useCallback,
-  useEffect,
-  useRef,
-  useState
-} from "react";
 import { clamp, throttle } from "lodash-es";
+import {
+  useRef,
+  useState,
+  useEffect,
+  useCallback,
+  type MouseEvent as ReactMouseEvent
+} from "react";
 import { NeteaseAPITrack } from "@/common/netease/api";
 import { useCacheRequest } from "@/common/utils/cache";
 import RendererPlayerHandle from "@/wins/main/lib/handle";
@@ -43,7 +43,7 @@ export function usePlayProgress() {
   const tick = useCallback(
     (force: boolean = false) => {
       if (!force && isDragging.current) return;
-      const { buffered, currentTime, duration } = player.audio.progress;
+      const { buffered, duration, currentTime } = player.audio.progress;
       const percent = !duration ? 0 : (currentTime / duration) * 100;
       const buffer = !duration ? 0 : (buffered / duration) * 100;
       updatePercent(percent);

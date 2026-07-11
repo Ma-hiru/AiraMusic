@@ -1,30 +1,30 @@
-import { type FC, memo, useEffect, useState } from "react";
 import { cx } from "@emotion/css";
+import { memo, type FC, useState, useEffect } from "react";
 import {
-  Disc3,
-  Keyboard,
-  type LucideIcon,
   Play,
-  RotateCcw,
-  SkipBack,
-  SkipForward,
+  Disc3,
   Volume1,
   Volume2,
-  VolumeX
+  VolumeX,
+  Keyboard,
+  SkipBack,
+  RotateCcw,
+  SkipForward,
+  type LucideIcon
 } from "lucide-react";
+import { RendererFormat } from "@/common/lib/format";
 import {
-  RendererShortcutConstants,
   type ShortcutAction,
   type ShortcutBinding,
+  type ShortcutModifier,
   type ShortcutBindingMap,
-  type ShortcutModifier
+  RendererShortcutConstants
 } from "@/common/constants/shortcut";
-import { RendererFormat } from "@/common/lib/format";
+import Card from "@/common/components/layout/card";
+import AppToast from "@/common/components/display/toast";
 import type { NeteaseSettingsModel } from "@/common/netease/models";
 
 import BaseItem from "./base-item";
-import Card from "@/common/components/layout/card";
-import AppToast from "@/common/components/display/toast";
 
 interface ShortcutSettings {
   data: ShortcutBindingMap;
@@ -89,7 +89,7 @@ const Shortcut: FC<ShortcutSettings> = ({ data, patchSettings }) => {
   }, [recording, data, patchSettings]);
 
   return (
-    <Card Icon={Keyboard} title="快捷键" subTitle="Shortcuts">
+    <Card title="快捷键" Icon={Keyboard} subTitle="Shortcuts">
       {actions.map((action) => {
         const isRecording = recording === action;
         return (
@@ -101,9 +101,6 @@ const Shortcut: FC<ShortcutSettings> = ({ data, patchSettings }) => {
                 </h3>
               </div>
               <button
-                type="button"
-                title={isRecording ? "按 Esc 取消" : "点击修改快捷键"}
-                onClick={() => setRecording(isRecording ? null : action)}
                 className={cx(
                   `
                   h-7 min-w-24 shrink-0 rounded-md border px-3
@@ -112,7 +109,10 @@ const Shortcut: FC<ShortcutSettings> = ({ data, patchSettings }) => {
                   cursor-pointer hover:opacity-50 active:scale-95
                 `,
                   isRecording ? "border-primary animate-pulse" : "border-white/50"
-                )}>
+                )}
+                type="button"
+                title={isRecording ? "按 Esc 取消" : "点击修改快捷键"}
+                onClick={() => setRecording(isRecording ? null : action)}>
                 {isRecording ? "按下新的快捷键…" : RendererFormat.shortcut(data[action])}
               </button>
             </section>
@@ -128,17 +128,17 @@ const Shortcut: FC<ShortcutSettings> = ({ data, patchSettings }) => {
             </p>
           </div>
           <button
-            type="button"
-            onClick={() => {
-              setRecording(null);
-              patchSettings({ shortcuts: RendererShortcutConstants.defaultBindings });
-            }}
             className={`
               h-7 shrink-0 rounded-md border border-white/50 px-3
               text-xs font-semibold
               transition-all duration-300 ease-in-out
               cursor-pointer hover:opacity-50 active:scale-95
-            `}>
+            `}
+            type="button"
+            onClick={() => {
+              setRecording(null);
+              patchSettings({ shortcuts: RendererShortcutConstants.defaultBindings });
+            }}>
             恢复
           </button>
         </section>

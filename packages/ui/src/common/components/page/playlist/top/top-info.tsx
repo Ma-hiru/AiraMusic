@@ -1,20 +1,20 @@
 import { cx } from "@emotion/css";
-import { type FC, memo, useMemo } from "react";
-import { NeteaseNetworkImage, NeteasePlaylist } from "@/common/netease/models";
+import { memo, type FC, useMemo } from "react";
 import { RendererWindow } from "@/common/lib/window";
 import { RendererIPCMessageBus } from "@/common/lib/bus";
 import { createPlaylistStats } from "@/common/utils/playlist";
+import { NeteasePlaylist, NeteaseNetworkImage } from "@/common/netease/models";
 import AppToast from "@/common/components/display/toast";
 import RendererImageConstants from "@/common/constants/image";
 import NeteaseImage from "@/common/components/display/image/netease-image";
 
 interface TopInfoProps {
   summary: Nullable<NeteasePlaylist>;
-  onPlayAll: NormalFunc;
   onAddList: NormalFunc;
+  onPlayAll: NormalFunc;
 }
 
-const TopInfo: FC<TopInfoProps> = ({ summary, onPlayAll, onAddList }) => {
+const TopInfo: FC<TopInfoProps> = ({ onAddList, onPlayAll, summary }) => {
   const status = createPlaylistStats(summary);
   const avatar = useMemo(() => {
     return NeteaseNetworkImage.fromUserAvatar(summary?.creator)?.setSize(
@@ -39,7 +39,7 @@ const TopInfo: FC<TopInfoProps> = ({ summary, onPlayAll, onAddList }) => {
               bg-secondary text-secondary-text
               rounded-full px-1 py-px text-[10px] font-semibold
             `}>
-            <NeteaseImage cache image={avatar} className="size-4 shrink-0 rounded-full" />
+            <NeteaseImage className="size-4 shrink-0 rounded-full" image={avatar} cache />
             <span className="select-text">{summary?.creator.nickname}</span>
           </span>
           <span className="align-middle">{summary?.description ?? "暂无描述"}</span>
@@ -48,14 +48,14 @@ const TopInfo: FC<TopInfoProps> = ({ summary, onPlayAll, onAddList }) => {
 
       {/* status */}
       <div className="flex w-fit max-w-full shrink-0 flex-row flex-wrap gap-3 overflow-hidden text-[12px]">
-        {status.map(({ icon: Icon, label, value, isComment, isPlayCount, isTrackCount }) => (
+        {status.map(({ label, value, isComment, icon: Icon, isPlayCount, isTrackCount }) => (
           <div
             key={label}
-            title={label}
             className={cx(
               "min-w-0 flex items-center justify-start gap-1.5 rounded-sm transition-opacity duration-200 ease-in-out",
               (isComment || isPlayCount || isTrackCount) && "hover:opacity-70 cursor-pointer"
             )}
+            title={label}
             onClick={async () => {
               if (isComment) {
                 if (!summary?.id) return;

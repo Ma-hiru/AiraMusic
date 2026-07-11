@@ -1,21 +1,20 @@
 import { cx } from "@emotion/css";
-import { type FC, memo } from "react";
-
+import { memo, type FC } from "react";
 import RendererImageConstants from "@/common/constants/image";
 import HomeMediaCard, { type MediaItem } from "@/common/components/layout/media-grid/card";
 
 interface MediaGridProps {
-  items: MediaItem[];
-  coverSize?: number;
   className?: string;
+  coverSize?: number;
+  items: MediaItem[];
   onClickItem?: NormalFunc<[id: number]>;
 }
 
 const MediaGrid: FC<MediaGridProps> = ({
-  items,
-  coverSize = RendererImageConstants.HomePagePlaylistCoverSize,
   className,
-  onClickItem
+  onClickItem,
+  items,
+  coverSize = RendererImageConstants.HomePagePlaylistCoverSize
 }) => {
   return (
     <div

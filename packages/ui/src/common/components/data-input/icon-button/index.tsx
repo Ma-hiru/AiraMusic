@@ -1,25 +1,26 @@
 import { cx } from "@emotion/css";
-import { type ButtonHTMLAttributes, type ComponentProps, type FC, memo } from "react";
 import { type LucideIcon } from "lucide-react";
+import { memo, type FC, type ComponentProps, type ButtonHTMLAttributes } from "react";
 
 export interface IconButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, "children"> {
-  icon: LucideIcon;
   label: string;
   color?: string;
+  show?: boolean;
+  icon: LucideIcon;
   iconClassName?: string;
-  iconProps?: Omit<ComponentProps<LucideIcon>, "className">;
-  size?: "compact" | "normal";
+  size?: "normal" | "compact";
   variant?: "ghost" | "plain";
+  iconProps?: Omit<ComponentProps<LucideIcon>, "className">;
 }
 
 const buttonSizeClass = {
   compact: "size-5",
-  normal: "size-7"
+  normal: "size-6"
 } satisfies Record<NonNullable<IconButtonProps["size"]>, string>;
 
 const iconSizeClass = {
   compact: "size-5",
-  normal: "size-4.5"
+  normal: "size-5.5"
 } satisfies Record<NonNullable<IconButtonProps["size"]>, string>;
 
 const variantClass = {
@@ -28,25 +29,23 @@ const variantClass = {
 } satisfies Record<NonNullable<IconButtonProps["variant"]>, string>;
 
 const IconButton: FC<IconButtonProps> = ({
-  icon: Icon,
-  label,
-  color,
   className,
-  iconClassName,
-  iconProps,
-  size = "normal",
-  variant = "ghost",
-  title,
-  type = "button",
+  color,
+  label,
   style,
+  title,
+  iconProps,
+  icon: Icon,
+  show = true,
+  iconClassName,
+  size = "normal",
+  type = "button",
+  variant = "ghost",
   ...props
 }) => {
+  if (!show) return null;
   return (
     <button
-      type={type}
-      aria-label={label}
-      title={title ?? label}
-      style={color ? { ...style, color } : style}
       className={cx(
         `
           inline-flex shrink-0 cursor-pointer items-center justify-center
@@ -58,6 +57,10 @@ const IconButton: FC<IconButtonProps> = ({
         variantClass[variant],
         className
       )}
+      style={color ? { ...style, color } : style}
+      type={type}
+      aria-label={label}
+      title={title ?? label}
       {...props}>
       <Icon {...iconProps} className={cx(iconSizeClass[size], iconClassName)} />
     </button>

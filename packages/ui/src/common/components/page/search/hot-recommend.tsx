@@ -1,12 +1,12 @@
-import { type FC, memo, useCallback, useEffect, useState } from "react";
 import { cx } from "@emotion/css";
 import { Search, TrendingUp } from "lucide-react";
-import { useRequestAutoRetry, useRequestStatusWrap } from "@/common/hooks/use-request-wrap";
-import { NeteaseAPISearch } from "@/common/netease/api";
+import { memo, type FC, useState, useEffect, useCallback } from "react";
 import { RendererFormat } from "@/common/lib/format";
-import AppLoading from "@/common/components/fallback/app-loading";
+import { NeteaseAPISearch } from "@/common/netease/api";
+import { useRequestAutoRetry, useRequestStatusWrap } from "@/common/hooks/use-request-wrap";
 import Card from "@/common/components/layout/card";
 import AppError from "@/common/components/fallback/app-error";
+import AppLoading from "@/common/components/fallback/app-loading";
 
 interface HotRecommendProps {
   className?: string;
@@ -18,8 +18,8 @@ type HotSearchItem = NeteaseAPI.NeteaseSearchHotListDetail;
 const HotRecommend: FC<HotRecommendProps> = ({ className, onSearch }) => {
   const {
     status,
-    data: list = [],
-    fetchData
+    fetchData,
+    data: list = []
   } = useRequestStatusWrap(
     useCallback(async () => NeteaseAPISearch.hotListDetail().then((res) => res.data), [])
   );
@@ -28,18 +28,18 @@ const HotRecommend: FC<HotRecommendProps> = ({ className, onSearch }) => {
   const others = list.slice(3, 30);
 
   return (
-    <AppError reset={reload} when={status === "error"} message="获取热门搜索失败">
-      <AppLoading loading={status === "loading"} className="h-full">
+    <AppError reset={reload} message="获取热门搜索失败" when={status === "error"}>
+      <AppLoading className="h-full" loading={status === "loading"}>
         <Card
           className={cx(className, "flex min-h-0 flex-col overflow-hidden")}
           title="实时趋势"
-          subTitle="Trending"
           Icon={TrendingUp}
+          subTitle="Trending"
           children={
             <div className="min-h-0 flex-1 overflow-y-auto py-1 px-2 pr-1 scrollbar scrollbar-show">
               <div className="flex flex-col gap-3">
                 {hero && (
-                  <FeaturedHotItem item={hero} rank={1} variant="hero" onSearch={onSearch} />
+                  <FeaturedHotItem rank={1} item={hero} variant="hero" onSearch={onSearch} />
                 )}
                 {featured.length > 0 && (
                   <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
@@ -81,17 +81,14 @@ const HotRecommend: FC<HotRecommendProps> = ({ className, onSearch }) => {
 };
 
 const FeaturedHotItem: FC<{
-  item: HotSearchItem;
   rank: number;
+  item: HotSearchItem;
   variant: "hero" | "secondary";
   onSearch: NormalFunc<[keyword: string]>;
-}> = ({ item, rank, variant, onSearch }) => {
+}> = ({ onSearch, item, rank, variant }) => {
   const isHero = variant === "hero";
   return (
     <button
-      type="button"
-      title={`搜索${item.searchWord}`}
-      onClick={() => onSearch(item.searchWord)}
       className={cx(
         `
           group cursor-pointer rounded-md border surface-2 text-left
@@ -100,7 +97,10 @@ const FeaturedHotItem: FC<{
           active:scale-[0.99]
         `,
         isHero ? "p-4" : "p-3"
-      )}>
+      )}
+      type="button"
+      title={`搜索${item.searchWord}`}
+      onClick={() => onSearch(item.searchWord)}>
       <div className={cx("flex min-w-0 gap-3", isHero ? "items-start" : "items-center")}>
         <div className="min-w-0 flex-1 space-y-2">
           <div className="flex items-center gap-2 text-[12px] font-semibold leading-none opacity-70">
@@ -117,9 +117,9 @@ const FeaturedHotItem: FC<{
             </h3>
             {!isHero && (
               <SearchIcon
+                className="size-4 opacity-70"
                 url={item.iconUrl}
                 alt={item.iconType.toString()}
-                className="size-4 opacity-70"
               />
             )}
           </div>
@@ -131,9 +131,9 @@ const FeaturedHotItem: FC<{
         </div>
         {isHero && (
           <SearchIcon
+            className="mt-1 size-5 opacity-75"
             url={item.iconUrl}
             alt={item.iconType.toString()}
-            className="mt-1 size-5 opacity-75"
           />
         )}
       </div>
@@ -142,13 +142,11 @@ const FeaturedHotItem: FC<{
 };
 
 const CompactHotItem: FC<{
-  item: HotSearchItem;
   rank: number;
+  item: HotSearchItem;
   onSearch: NormalFunc<[keyword: string]>;
-}> = ({ item, rank, onSearch }) => (
+}> = ({ onSearch, item, rank }) => (
   <button
-    type="button"
-    title={`搜索${item.searchWord}`}
     className={cx(
       `
         flex h-10 w-full cursor-pointer items-center gap-2 border-b border-white/10 px-3 text-left
@@ -157,6 +155,8 @@ const CompactHotItem: FC<{
         active:bg-white/15
       `
     )}
+    type="button"
+    title={`搜索${item.searchWord}`}
     onClick={() => onSearch(item.searchWord)}>
     <span className="w-7 shrink-0 font-mono text-[12px] font-semibold tabular-nums opacity-55">
       {rank.toString().padStart(2, "0")}
@@ -167,14 +167,14 @@ const CompactHotItem: FC<{
     <span className="shrink-0 text-[11px] font-medium tabular-nums opacity-60">
       {RendererFormat.count(item.score)}
     </span>
-    <SearchIcon url={item.iconUrl} alt={item.iconType.toString()} className="size-3 opacity-55" />
+    <SearchIcon className="size-3 opacity-55" url={item.iconUrl} alt={item.iconType.toString()} />
   </button>
 );
 
-const SearchIcon: FC<{ url: Optional<string>; alt: string; className?: string }> = ({
-  url,
+const SearchIcon: FC<{ alt: string; className?: string; url: Optional<string> }> = ({
+  className,
   alt,
-  className
+  url
 }) => {
   const [found, setFound] = useState(false);
   useEffect(() => {
@@ -191,7 +191,7 @@ const SearchIcon: FC<{ url: Optional<string>; alt: string; className?: string }>
     };
   }, [url]);
   if (!url || !found) return <Search className={cx("size-3 shrink-0 opacity-50", className)} />;
-  return <img className={cx("size-3 shrink-0 object-contain", className)} src={url} alt={alt} />;
+  return <img className={cx("size-3 shrink-0 object-contain", className)} alt={alt} src={url} />;
 };
 
 export default memo(HotRecommend);

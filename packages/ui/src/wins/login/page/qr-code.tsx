@@ -1,12 +1,12 @@
 import { cx } from "@emotion/css";
 import { RotateCcw } from "lucide-react";
-import { type FC, memo, useEffect, useState } from "react";
+import { memo, type FC, useState, useEffect } from "react";
 import { QRCodeStatus } from "@/wins/login/hooks/use-login-qr-code";
 
 interface QRCodeProps {
-  url: Nullable<string>;
-  status: QRCodeStatus;
   update: () => void;
+  status: QRCodeStatus;
+  url: Nullable<string>;
 }
 
 const QRCode: FC<QRCodeProps> = ({ url, status, update }) => {
@@ -24,15 +24,15 @@ const QRCode: FC<QRCodeProps> = ({ url, status, update }) => {
         className="relative overflow-hidden rounded-md bg-black/60"
         onMouseEnter={() => setShowUpdateMask(true)}>
         <div className="size-40">
-          {url && <img src={url} alt="QRCode" className="w-full h-full" />}
+          {url && <img className="w-full h-full" src={url} alt="QRCode" />}
         </div>
         <div
-          onMouseLeave={() => status !== QRCodeStatus.EXPIRED && setShowUpdateMask(false)}
           className={cx(
             "absolute inset-0 bg-black/60 flex justify-center items-center",
             "ease-in-out transition-opacity duration-300",
             showUpdateMask ? "opacity-100" : "opacity-0"
-          )}>
+          )}
+          onMouseLeave={() => status !== QRCodeStatus.EXPIRED && setShowUpdateMask(false)}>
           <button
             className="flex gap-1 text-sm justify-center items-center text-white cursor-pointer hover:text-white/80 active:scale-95 p-1"
             onClick={update}>

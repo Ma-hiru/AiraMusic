@@ -1,24 +1,24 @@
 import { cx } from "@emotion/css";
-import { type Dispatch, type FC, memo, type SetStateAction } from "react";
-import { type PlaylistCategory, RendererHomeConstants } from "@/wins/main/constants";
 import { ChevronDown, SlidersHorizontal } from "lucide-react";
+import { memo, type FC, type Dispatch, type SetStateAction } from "react";
+import { type PlaylistCategory, RendererHomeConstants } from "@/wins/main/constants";
 
 interface CategoryPanelProps {
-  setActiveCategory: Dispatch<SetStateAction<PlaylistCategory>>;
-  setShowCategoryPanel: Dispatch<SetStateAction<boolean>>;
-  activeCategory: PlaylistCategory;
+  order: "hot" | "new";
   showCategoryPanel: boolean;
-  order: "new" | "hot";
-  setOrder: Dispatch<SetStateAction<"new" | "hot">>;
+  activeCategory: PlaylistCategory;
+  setOrder: Dispatch<SetStateAction<"hot" | "new">>;
+  setShowCategoryPanel: Dispatch<SetStateAction<boolean>>;
+  setActiveCategory: Dispatch<SetStateAction<PlaylistCategory>>;
 }
 
 const CategoryPanel: FC<CategoryPanelProps> = ({
+  setOrder,
   setActiveCategory,
   setShowCategoryPanel,
+  order,
   activeCategory,
-  showCategoryPanel,
-  setOrder,
-  order
+  showCategoryPanel
 }) => {
   const orderDisabled = activeCategory === "推荐歌单" || activeCategory === "精品歌单";
   const selectCategory = (category: PlaylistCategory) => {
@@ -37,9 +37,6 @@ const CategoryPanel: FC<CategoryPanelProps> = ({
           {RendererHomeConstants.HOME_PRIMARY_PLAYLIST_CATEGORIES.map((category) => (
             <button
               key={category}
-              type="button"
-              aria-pressed={activeCategory === category}
-              onClick={() => selectCategory(category)}
               className={cx(
                 `
                 h-8 cursor-pointer rounded-md border px-3 text-[13px] font-semibold
@@ -50,14 +47,14 @@ const CategoryPanel: FC<CategoryPanelProps> = ({
                 activeCategory === category
                   ? "border-primary bg-primary text-primary-text hover:bg-primary-active"
                   : "border-white/15 bg-white/5 opacity-75 hover:border-white/25 hover:bg-white/15 hover:opacity-100"
-              )}>
+              )}
+              type="button"
+              aria-pressed={activeCategory === category}
+              onClick={() => selectCategory(category)}>
               {category}
             </button>
           ))}
           <button
-            type="button"
-            aria-expanded={showCategoryPanel}
-            onClick={() => setShowCategoryPanel((value) => !value)}
             className={cx(
               `
               flex h-8 cursor-pointer items-center gap-2 rounded-md border px-3
@@ -68,7 +65,10 @@ const CategoryPanel: FC<CategoryPanelProps> = ({
               showCategoryPanel
                 ? "border-primary bg-primary text-primary-text hover:bg-primary-active"
                 : "border-white/15 bg-white/5 opacity-75 hover:border-white/25 hover:bg-white/15 hover:opacity-100"
-            )}>
+            )}
+            type="button"
+            aria-expanded={showCategoryPanel}
+            onClick={() => setShowCategoryPanel((value) => !value)}>
             <SlidersHorizontal className="size-4" />
             分类
             <ChevronDown
@@ -80,10 +80,6 @@ const CategoryPanel: FC<CategoryPanelProps> = ({
           {RendererHomeConstants.HOME_PLAYLIST_ORDER.map((value) => (
             <button
               key={value}
-              type="button"
-              aria-pressed={order === value && !orderDisabled}
-              onClick={() => setOrder(value)}
-              disabled={orderDisabled}
               className={cx(
                 `
                 h-7 cursor-pointer rounded-md px-3 text-xs font-semibold
@@ -94,7 +90,11 @@ const CategoryPanel: FC<CategoryPanelProps> = ({
                 !orderDisabled && order === value
                   ? "bg-primary text-primary-text"
                   : "hover:bg-white/10"
-              )}>
+              )}
+              type="button"
+              disabled={orderDisabled}
+              aria-pressed={order === value && !orderDisabled}
+              onClick={() => setOrder(value)}>
               {value === "hot" ? "热门" : "最新"}
             </button>
           ))}
@@ -124,9 +124,6 @@ const CategoryPanel: FC<CategoryPanelProps> = ({
                     return (
                       <button
                         key={`${group.name}-${category}`}
-                        type="button"
-                        aria-pressed={active}
-                        onClick={() => selectCategory(category)}
                         className={cx(
                           `
                           h-7 cursor-pointer rounded-md border px-2.5 text-[12px] font-medium
@@ -137,7 +134,10 @@ const CategoryPanel: FC<CategoryPanelProps> = ({
                           active
                             ? "border-primary bg-primary text-primary-text hover:bg-primary-active"
                             : "border-transparent bg-white/5 opacity-70 hover:border-white/15 hover:bg-white/10 hover:opacity-100"
-                        )}>
+                        )}
+                        type="button"
+                        aria-pressed={active}
+                        onClick={() => selectCategory(category)}>
                         {category}
                       </button>
                     );

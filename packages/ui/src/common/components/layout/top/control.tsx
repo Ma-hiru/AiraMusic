@@ -1,37 +1,40 @@
 import { cx } from "@emotion/css";
-import { type FC, memo, useCallback } from "react";
-import { AppWindow, Minus, Pin, PinOff, Square, SquareMinus, X } from "lucide-react";
-import { useListenable } from "@/common/hooks/use-listenable";
-import { RendererWindow } from "@/common/lib/window";
+import { memo, type FC, useEffect, useCallback } from "react";
+import { X, Pin, Minus, PinOff, Square, AppWindow, SquareMinus } from "lucide-react";
 import { RendererDevice } from "@/common/lib/device";
-import NoDrag from "../drag/no-drag";
+import { RendererWindow } from "@/common/lib/window";
+import { useListenable } from "@/common/hooks/use-listenable";
 import AppToast from "@/common/components/display/toast";
 import IconButton, { type IconButtonProps } from "@/common/components/data-input/icon-button";
 
+import NoDrag from "../drag/no-drag";
+
+const isDarwin = (await RendererDevice.platform) === "darwin";
+
 interface TopControlProps {
-  max?: boolean;
-  mini?: boolean;
-  pin?: boolean;
-  exit?: boolean;
   dev?: boolean;
+  max?: boolean;
+  pin?: boolean;
   color?: string;
-  appends?: ControlButtonProps[] | ControlButtonProps;
+  exit?: boolean;
+  mini?: boolean;
   className?: string;
   itemClassName?: string;
+  appends?: ControlButtonProps | ControlButtonProps[];
   onClose?: NormalFunc;
 }
 
 const Control: FC<TopControlProps> = ({
-  max,
-  pin,
-  appends,
-  color,
-  dev = import.meta.env.DEV,
-  mini = true,
-  exit = true,
   className,
+  onClose,
+  color,
+  appends,
+  exit = true,
+  max = false,
+  pin = false,
+  mini = false,
   itemClassName,
-  onClose
+  dev = import.meta.env.DEV
 }) => {
   const currentWindow = useListenable(RendererWindow.current);
   const handlePin = useCallback(async () => {
@@ -60,52 +63,61 @@ const Control: FC<TopControlProps> = ({
   appends ??= [];
   const apd = Array.isArray(appends) ? appends : [appends];
 
+  useEffect(() => {
+    if (isDarwin && RendererWindow.isMain) {
+      return RendererWindow.process.listenMessage(
+        "message_dispatch_darwin_close",
+        (close) => close && onClose?.()
+      );
+    }
+  }, [onClose]);
+
   return (
-    <NoDrag className={cx(`flex flex-row gap-4 select-none relative`, className)}>
+    <NoDrag className={cx(`flex flex-row items-center gap-4 select-none relative`, className)}>
       <ControlButton
-        color={color}
-        show={dev}
-        icon={AppWindow}
-        label="打开开发者工具"
         className={itemClassName}
+        show={dev}
+        color={color}
+        label="打开开发者工具"
+        icon={AppWindow}
         onClick={() => currentWindow.devTools()}
       />
       <ControlButton
-        show={mini}
+        className={itemClassName}
         icon={Minus}
         label="最小化窗口"
-        className={itemClassName}
+        show={mini && !isDarwin}
         onClick={() => currentWindow.minimize()}
       />
       {apd.map(({ className, ...props }, index) => (
         <ControlButton key={index} {...props} className={cx(className, itemClassName)} />
       ))}
       <ControlButton
+        className={itemClassName}
         show={pin}
         color={color}
-        onClick={handlePin}
+        iconClassName="scale-90"
         icon={currentWindow.isPin ? PinOff : Pin}
         label={currentWindow.isPin ? "取消窗口置顶" : "窗口置顶"}
-        className={itemClassName}
-        iconClassName="scale-90"
+        onClick={handlePin}
       />
       <ControlButton
-        show={max}
-        color={color}
-        icon={currentWindow.isMax ? SquareMinus : Square}
-        label={currentWindow.isMax ? "还原窗口" : "最大化窗口"}
         className={itemClassName}
+        color={color}
+        show={max && !isDarwin}
         iconClassName="scale-90"
+        label={currentWindow.isMax ? "还原窗口" : "最大化窗口"}
+        icon={currentWindow.isMax ? SquareMinus : Square}
         onClick={() =>
           currentWindow.isMax ? currentWindow.unmaximize() : currentWindow.maximize()
         }
       />
       <ControlButton
-        icon={X}
-        show={exit}
-        color={color}
-        label="关闭窗口"
         className={itemClassName}
+        icon={X}
+        label="关闭窗口"
+        color={color}
+        show={exit && !isDarwin}
         iconClassName="scale-105"
         onClick={onClose ?? (() => currentWindow.close())}
       />
@@ -115,9 +127,9 @@ const Control: FC<TopControlProps> = ({
 
 export default memo(Control);
 
-export type ControlButtonProps = Omit<IconButtonProps, "size" | "variant"> & {
+export type ControlButtonProps = {
   show?: boolean;
-};
+} & Omit<IconButtonProps, "size" | "variant">;
 
 const ControlButton = ({ show = true, ...props }: ControlButtonProps) => {
   if (!show) return null;

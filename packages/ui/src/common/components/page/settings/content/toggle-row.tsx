@@ -1,30 +1,30 @@
-import { type FC, memo } from "react";
 import { cx } from "@emotion/css";
+import { memo, type FC } from "react";
 import type { LucideIcon } from "lucide-react";
 
 import BaseItem from "./base-item";
 
 interface ToggleRowProps {
-  icon?: LucideIcon;
   title: string;
-  description: string;
   checked: boolean;
-  onClick: NormalFunc;
+  icon?: LucideIcon;
+  description: string;
   emptyIcon?: boolean;
+  onClick: NormalFunc;
 }
 
 const ToggleRow: FC<ToggleRowProps> = ({
+  onClick,
   icon,
   title,
-  description,
   checked,
-  onClick,
+  description,
   emptyIcon = false
 }) => {
   return (
     <BaseItem
-      emptyIcon={emptyIcon}
       icon={icon}
+      emptyIcon={emptyIcon}
       children={
         <section className="flex items-center gap-3">
           <div className="min-w-0 flex-1">
@@ -32,9 +32,6 @@ const ToggleRow: FC<ToggleRowProps> = ({
             <p className="mt-0.5 line-clamp-2 text-[11px] leading-4 ">{description}</p>
           </div>
           <button
-            type="button"
-            title={checked ? "关闭" : "开启"}
-            onClick={onClick}
             className={cx(
               `
               h-7 w-12 shrink-0 rounded-full border
@@ -43,7 +40,10 @@ const ToggleRow: FC<ToggleRowProps> = ({
               flex justify-start items-center p-0
             `,
               checked ? "border-primary pl-6" : "border-white/50 pl-1"
-            )}>
+            )}
+            type="button"
+            title={checked ? "关闭" : "开启"}
+            onClick={onClick}>
             <span
               className={cx(
                 `

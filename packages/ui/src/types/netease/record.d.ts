@@ -4,33 +4,33 @@ namespace NeteaseAPI {
   }
 
   interface NeteaseWeekDuration {
-    endTime: number;
-    listenTimeDistributionBlock: ListenTimeDistributionBlock;
-    startTime: number;
     type: string;
+    endTime: number;
+    startTime: number;
     userNickName: null;
-    weekFriendsListenBlock: WeekFriendsListenBlock;
     weekTodayListenBlock: WeekTodayListenBlock;
+    weekFriendsListenBlock: WeekFriendsListenBlock;
+    listenTimeDistributionBlock: ListenTimeDistributionBlock;
   }
 
   interface ListenTimeDistributionBlock {
-    achievementTitle: null;
-    achievementTitleGeneratorClient: null;
-    blockType: string;
-    durationDetails: DurationDetail[];
-    listenDataHelper: null;
-    listenDays: number;
-    playDuration: number;
     sections: null;
+    blockType: string;
+    listenDays: number;
     sleepTdBlock: null;
+    playDuration: number;
+    achievementTitle: null;
+    listenDataHelper: null;
+    durationDetails: DurationDetail[];
+    achievementTitleGeneratorClient: null;
   }
 
   interface DurationDetail {
-    audiobookDuration: number;
-    duration: number;
     period: string;
-    podcastDuration: number;
+    duration: number;
     reachLimit: boolean;
+    podcastDuration: number;
+    audiobookDuration: number;
   }
 
   interface WeekFriendsListenBlock {
@@ -38,74 +38,74 @@ namespace NeteaseAPI {
   }
 
   interface FriendListenRecord {
-    artistId: number;
-    artistName: string;
-    artistPicUrl: string;
-    collect: boolean;
-    latestListenTime: number;
     songId: number;
+    userId: number;
+    artistId: number;
+    collect: boolean;
     songName: string;
+    username: string;
+    artistName: string;
     songPicUrl: string;
     userAvatar: string;
-    userId: number;
-    username: string;
+    artistPicUrl: string;
+    latestListenTime: number;
   }
 
   interface WeekTodayListenBlock {
-    coverUrls: string[];
     redCount: number;
     songCount: number;
+    coverUrls: string[];
   }
 
   interface NeteaseMonthDurationResponse extends NeteaseAPIResponse {
     code: number;
-    data: NeteaseMonthDuration;
     message: string;
+    data: NeteaseMonthDuration;
   }
 
   interface NeteaseMonthDuration {
-    endTime: number;
-    listenTimeDistributionBlock: ListenTimeDistributionBlock;
-    startTime: number;
     type: string;
+    endTime: number;
+    startTime: number;
     userNickName: null;
+    listenTimeDistributionBlock: ListenTimeDistributionBlock;
   }
 
   interface ListenTimeDistributionBlock {
-    achievementTitle: null;
-    achievementTitleGeneratorClient: null;
+    sections: null;
     blockType: string;
-    durationDetails: DurationDetail[];
-    listenDataHelper: null;
     listenDays: number;
     playDuration: number;
-    sections: null;
+    achievementTitle: null;
+    listenDataHelper: null;
     sleepTdBlock: SleepTdBlock;
+    durationDetails: DurationDetail[];
+    achievementTitleGeneratorClient: null;
   }
 
   interface DurationDetail {
-    audiobookDuration?: number;
-    duration?: number;
     period?: string;
-    podcastDuration?: number;
+    duration?: number;
     reachLimit?: boolean;
+    podcastDuration?: number;
+    audiobookDuration?: number;
   }
 
   interface SleepTdBlock {
-    avgDayPlayDuration: number;
+    sleepScene: null;
+    sleepListenDays: number;
     maxDayPlayDuration: null;
+    sleepPlayDuration: number;
+    avgDayPlayDuration: number;
     maxDayPlayDurationPeriod: null;
     sleepDurationDetails: SleepDurationDetail[];
-    sleepListenDays: number;
-    sleepPlayDuration: number;
-    sleepScene: null;
   }
 
   interface SleepDurationDetail {
-    audiobookDuration?: number;
-    duration?: number;
     period?: string;
-    podcastDuration?: number;
+    duration?: number;
     reachLimit?: boolean;
+    podcastDuration?: number;
+    audiobookDuration?: number;
   }
 }

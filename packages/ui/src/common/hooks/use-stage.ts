@@ -1,4 +1,4 @@
-import { startTransition, useEffect, useRef, useState } from "react";
+import { useRef, useState, useEffect, startTransition } from "react";
 import { Stage } from "@/common/enum";
 
 export function useStage() {
@@ -14,7 +14,7 @@ export function useStage() {
 
   useEffect(() => {
     const v = versionRef.current;
-    const next = (stage: Stage, type: "frame" | "idle") => {
+    const next = (stage: Stage, type: "idle" | "frame") => {
       if (type === "frame") {
         const id = requestAnimationFrame(() => {
           if (versionRef.current !== v) return;

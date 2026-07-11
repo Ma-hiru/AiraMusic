@@ -6,27 +6,27 @@ export type NcmApiInstance = Awaited<ReturnType<NcmApiServer["serveNcmApi"]>>;
 
 export type NCMParentMessage =
   | {
-      type: "start";
-      port: number;
-      tokenPath?: string;
-      deviceIdPath?: string;
+      type: "stop";
     }
   | {
-      type: "stop";
+      port: number;
+      type: "start";
+      tokenPath?: string;
+      deviceIdPath?: string;
     };
 
 export type NCMChildMessage =
   | {
-      type: "ready";
-      port: number;
+      type: "stopped";
     }
   | {
-      type: "stopped";
+      port: number;
+      type: "ready";
     }
   | {
       type: "error";
       error: {
-        message: string;
         stack?: string;
+        message: string;
       };
     };

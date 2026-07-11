@@ -1,21 +1,21 @@
-import { type FC, memo, useEffect, useRef } from "react";
 import { motion } from "motion/react";
-import { Ban, CircleAlert, CircleCheck, Info } from "lucide-react";
+import { memo, useRef, type FC, useEffect } from "react";
+import { Ban, Info, CircleAlert, CircleCheck } from "lucide-react";
 
 export type ToastItemData = {
   id?: string;
-  type: "info" | "error" | "warn" | "success";
   text: string;
+  type: "info" | "warn" | "error" | "success";
 };
 
 interface ToastItemProps {
-  data: ToastItemData;
   id: string;
   duration?: number;
+  data: ToastItemData;
   onDispose?: NormalFunc<[id: string]>;
 }
 
-const ToastItem: FC<ToastItemProps> = ({ data, duration = 5000, onDispose, id }) => {
+const ToastItem: FC<ToastItemProps> = ({ id, onDispose, data, duration = 5000 }) => {
   const timerRef = useRef(0);
 
   useEffect(() => {

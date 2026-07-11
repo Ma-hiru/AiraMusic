@@ -1,5 +1,5 @@
-import type { CacheStoreConfig } from "@/types/store";
 import { MainPathResolver } from "@/lib/path-resolver";
+import type { CacheStoreConfig } from "@/types/store";
 
 export class MainCacheStoreConstants {
   static readonly DEFAULT_CONFIG: CacheStoreConfig = {

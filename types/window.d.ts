@@ -1,15 +1,16 @@
 type WindowType =
   | "main"
+  | "tray"
+  | "agent"
+  | "image"
   | "login"
   | "lyric"
-  | "miniplayer"
-  | "external"
   | "display"
-  | "tray"
-  | "image"
   | "comments"
-  | WindowTypeProcess
-  | WindowTypeAll;
+  | "external"
+  | "miniplayer"
+  | WindowTypeAll
+  | WindowTypeProcess;
 
 type WindowTypeAll = "all";
 

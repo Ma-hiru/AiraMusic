@@ -1,10 +1,10 @@
-import { BrowserWindow, shell } from "electron";
-import { MainWindowCreator } from "@/lib/window-creator";
-import { MainWindowPreset } from "@/lib/window-preset";
-import { MainWindowManager } from "@/lib/window-manager";
+import { shell, BrowserWindow } from "electron";
 import { Log } from "@/lib/log";
 import { MainHandle } from "@/lib/handle";
+import { MainWindowPreset } from "@/lib/window-preset";
 import { MainWindowConstants } from "@/constants/window";
+import { MainWindowCreator } from "@/lib/window-creator";
+import { MainWindowManager } from "@/lib/window-manager";
 import type { EventHandlers } from "@mahiru/ipc/types";
 
 function concealTrayWindow(win: BrowserWindow) {
@@ -34,7 +34,7 @@ export const eventHandlers: EventHandlers = {
     Log.debug("event_window_focus", type, "win found:", !!win);
     win?.focus();
   },
-  event_window_external: (e, { title, url }) => {
+  event_window_external: (e, { url, title }) => {
     if (!MainHandle.isTrustedOrigin(url)) {
       Log.warn("event_window_external", `origin "${url}" is not trusted`);
       return;
@@ -142,7 +142,7 @@ export const eventHandlers: EventHandlers = {
     win.setResizable(resizable);
     Log.debug("event_window_resize", "next:", next, "current:", current);
   },
-  event_window_pin: (e, { type, pin, level }) => {
+  event_window_pin: (e, { pin, type, level }) => {
     const win = type ? MainWindowManager.get(type) : BrowserWindow.fromWebContents(e.sender);
     if (process.platform === "linux") {
       win?.setAlwaysOnTop(pin);
@@ -187,7 +187,7 @@ export const eventHandlers: EventHandlers = {
       : BrowserWindow.fromWebContents(e.sender);
     win?.setIgnoreMouseEvents(props.penetrate, { forward: true });
   },
-  event_debug_fatal: (e, { message, error }) => {
+  event_debug_fatal: (e, { error, message }) => {
     const sender = BrowserWindow.fromWebContents(e.sender);
     if (!sender) return;
     Log.error("Fatal Error", "sender:", MainWindowManager.getId(sender), message, error);

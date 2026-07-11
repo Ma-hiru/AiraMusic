@@ -1,11 +1,11 @@
-import { type FC, memo, useMemo } from "react";
-import { NeteaseSettings } from "@/common/netease/models";
 import { Radio } from "lucide-react";
+import { memo, type FC, useMemo } from "react";
 import { RendererFormat } from "@/common/lib/format";
+import { NeteaseSettings } from "@/common/netease/models";
+import Card from "@/common/components/layout/card";
 import type { InvokeEventPayload } from "@mahiru/ipc/dist-types/src/types/invoke";
 
 import MiniStat from "./mini-stat";
-import Card from "@/common/components/layout/card";
 
 interface SummaryProps {
   settings: NeteaseSettings;
@@ -21,7 +21,7 @@ const SettingsSummary: FC<SummaryProps> = ({ settings, cacheStoreConfig }) => {
   }, [cacheStoreConfig?.ttl]);
 
   return (
-    <Card title="设置概览" subTitle="Summary" Icon={Radio}>
+    <Card Icon={Radio} title="设置概览" subTitle="Summary">
       <div className="grid grid-cols-[repeat(auto-fill,minmax(70px,1fr))] gap-2">
         <MiniStat label="默认音质" value={settings.trackQuality.quality} />
         <MiniStat label="缓存容量" value={`${capacityGB}GB`} />

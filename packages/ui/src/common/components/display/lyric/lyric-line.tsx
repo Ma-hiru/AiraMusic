@@ -1,43 +1,43 @@
 import { cx } from "@emotion/css";
-import { type FC, memo, useCallback, useLayoutEffect, useMemo, useState } from "react";
-import type { TimeManager } from "./time-manager";
+import { memo, type FC, useMemo, useState, useCallback, useLayoutEffect } from "react";
 
 import LyricWord from "./lyric-word";
+import type { TimeManager } from "./time-manager";
 
 interface LyricLineProps {
   index: number;
+  active: boolean;
   line: LyricLine;
+  spring?: boolean;
+  fontSize?: number;
+  activeColor?: string;
+  inactiveColor?: string;
+  hasRm: Optional<boolean>;
+  hasTl: Optional<boolean>;
   rmActive: Optional<boolean>;
   tlActive: Optional<boolean>;
   noteActive: Optional<boolean>;
-  hasRm: Optional<boolean>;
-  hasTl: Optional<boolean>;
+  crossAlign?: "left" | "right" | "center";
   timeManager: TimeManager;
-  active: boolean;
-  crossAlign?: "left" | "center" | "right";
-  activeColor?: string;
-  inactiveColor?: string;
-  fontSize?: number;
   onClick?: NormalFunc<[startTime: number]>;
-  spring?: boolean;
 }
 
 const LyricLine: FC<LyricLineProps> = ({
+  timeManager,
+  onClick,
   line,
+  hasRm,
+  hasTl,
+  index,
+  active,
+  fontSize,
   rmActive,
   tlActive,
   noteActive,
-  hasRm,
-  hasTl,
-  timeManager,
-  index,
-  active,
-  onClick,
   activeColor,
   inactiveColor,
-  fontSize,
-  crossAlign = "left",
-  spring = true
+  spring = true,
+  crossAlign = "left"
 }) => {
   if (line.isBlank || line.isBackChorus) {
     if (crossAlign === "left" || crossAlign === "center") crossAlign = "right";
@@ -85,7 +85,6 @@ const LyricLine: FC<LyricLineProps> = ({
 
   return (
     <section
-      style={style}
       className={cx(
         `
           w-full px-4 py-1 rounded-md hover:blur-none hover:bg-(--text-color)/20
@@ -93,7 +92,8 @@ const LyricLine: FC<LyricLineProps> = ({
           contain-layout leading-normal text-3xl
       `,
         !active && "blur-[2px] opacity-50"
-      )}>
+      )}
+      style={style}>
       <div
         className={cx(
           `
@@ -126,29 +126,29 @@ const LyricLine: FC<LyricLineProps> = ({
                 <LyricWord
                   key={index}
                   word={word}
-                  notesContent={inlineNoteContent || undefined}
-                  activeColor={activeColor}
-                  inactiveColor={inactiveColor}
                   wordIndex={index}
-                  currentWordIndex={wordIndex}
-                  onClick={onClick}
                   lineActive={active}
-                  singleWord={line.words.length === 1}
+                  activeColor={activeColor}
                   timeManager={timeManager}
+                  currentWordIndex={wordIndex}
+                  inactiveColor={inactiveColor}
+                  singleWord={line.words.length === 1}
+                  notesContent={inlineNoteContent || undefined}
+                  onClick={onClick}
                 />
               )
             );
           })
         ) : (
           <LyricWord
-            singleWord
             wordIndex={0}
-            currentWordIndex={0}
             word={allWord}
-            onClick={onClick}
+            currentWordIndex={0}
             activeColor={activeColor}
-            inactiveColor={inactiveColor}
             timeManager={timeManager}
+            inactiveColor={inactiveColor}
+            onClick={onClick}
+            singleWord
           />
         )}
       </div>

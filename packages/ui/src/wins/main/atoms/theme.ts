@@ -1,6 +1,6 @@
+import { atom } from "jotai";
 import { atomWithStorage } from "jotai/utils";
 import RendererTheme from "@/common/player/ui";
-import { atom } from "jotai";
 
 export const backgroundCoverAtom = atomWithStorage(
   "theme.backgroundCover",

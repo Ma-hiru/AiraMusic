@@ -1,82 +1,85 @@
-import {
-  type FC,
-  memo,
-  type Ref,
-  useCallback,
-  useEffect,
-  useImperativeHandle,
-  useRef
-} from "react";
-import { NeteaseAlbum, NeteaseHistoryRecord, NeteaseTrackRecord } from "@/common/netease/models";
 import { cx } from "@emotion/css";
+import {
+  memo,
+  useRef,
+  type FC,
+  type Ref,
+  useEffect,
+  useCallback,
+  useImperativeHandle
+} from "react";
 import { NeteaseImageSize } from "@/common/enum";
 import { type HeartManager } from "@/common/hooks/use-heart";
 import { NeteaseServicesAlbum } from "@/common/netease/services";
+import { useAgentFocusCtx } from "@/common/hooks/use-agent-focus-ctx";
+import { useTrackContextMenu } from "@/common/hooks/use-track-context-menu";
 import { useRequestAutoRun, useRequestStatusWrap } from "@/common/hooks/use-request-wrap";
+import { NeteaseAlbum, NeteaseTrackRecord, NeteaseHistoryRecord } from "@/common/netease/models";
+import AppToast from "@/common/components/display/toast";
+import Divider from "@/common/components/layout/divider";
+import AppError from "@/common/components/fallback/app-error";
 import RendererImageConstants from "@/common/constants/image";
-
-import Top from "./top";
 import AppLoading from "@/common/components/fallback/app-loading";
 import TrackList, {
-  type TrackListPlayableManager,
-  type TrackListRef
+  type TrackListRef,
+  type TrackListPlayableManager
 } from "@/common/components/display/track_list";
-import AppError from "@/common/components/fallback/app-error";
-import Divider from "@/common/components/layout/divider";
-import AppToast from "@/common/components/display/toast";
-import { useTrackContextMenu } from "@/common/hooks/use-track-context-menu";
+
+import Top from "./top";
 
 export type AlbumPageRef = {
-  trackListRef: Nullable<TrackListRef>;
-  album: Nullable<NeteaseAlbum>;
-  dynamic: Nullable<NeteaseAPI.NeteaseAlbumDynamicDetailResponse>;
   reload: NormalFunc;
+  album: Nullable<NeteaseAlbum>;
+  trackListRef: Nullable<TrackListRef>;
+  dynamic: Nullable<NeteaseAPI.NeteaseAlbumDynamicDetailResponse>;
 };
 
 interface AlbumPageProps {
   ref?: Ref<AlbumPageRef>;
   id: number;
-  activeTrackID: Undefinable<number>;
-  onClick: NormalFunc<[track: NeteaseTrackRecord | NeteaseHistoryRecord, index: number]>;
-  onClickArtist: NormalFunc<[id: number]>;
-  onClickAlbum: NormalFunc<[id: number]>;
-  onRangeUpdate?: NormalFunc<[range: IndexRange]>;
-  onCoverLoaded?: NormalFunc<[cover: string]>;
-  addToPlaylistNext: NormalFunc<[track: NeteaseTrackRecord]>;
-  addToPlaylistLast: NormalFunc<[track: NeteaseTrackRecord]>;
-  addTrackToPlaylist: NormalFunc<[track: NeteaseTrackRecord]>;
-  openComment: NormalFunc<[track: NeteaseTrackRecord]>;
   className?: string;
+  routerActive: boolean;
   coverSize: NeteaseImageSize;
-  onAddList: NormalFunc;
+  activeTrackID: Undefinable<number>;
+  pageActionType: "out" | "none" | "enter";
   heartManager: HeartManager;
   playableManager: TrackListPlayableManager;
-  pageActionType: "enter" | "out" | "none";
+  addToPlaylistLast: NormalFunc<[track: NeteaseTrackRecord]>;
+  addToPlaylistNext: NormalFunc<[track: NeteaseTrackRecord]>;
+  addTrackToPlaylist: NormalFunc<[track: NeteaseTrackRecord]>;
+  openComment: NormalFunc<[track: NeteaseTrackRecord]>;
+  onAddList: NormalFunc;
   onPageAction: NormalFunc;
+  onClickAlbum: NormalFunc<[id: number]>;
+  onClickArtist: NormalFunc<[id: number]>;
+  onCoverLoaded?: NormalFunc<[cover: string]>;
+  onRangeUpdate?: NormalFunc<[range: IndexRange]>;
   onDataLoaded?: NormalFunc<[album: NeteaseAlbum]>;
+  onClick: NormalFunc<[track: NeteaseTrackRecord | NeteaseHistoryRecord, index: number]>;
 }
 
 const Album: FC<AlbumPageProps> = ({
   ref,
   id,
-  activeTrackID,
-  onClick,
-  onClickArtist,
-  onClickAlbum,
-  onRangeUpdate,
-  onCoverLoaded,
   className,
-  coverSize,
-  onAddList,
+  activeTrackID,
+  pageActionType,
   heartManager,
   playableManager,
-  pageActionType,
-  onPageAction,
-  addToPlaylistNext,
   addToPlaylistLast,
+  addToPlaylistNext,
+  addTrackToPlaylist,
   openComment,
+  onClick,
+  onAddList,
+  onClickAlbum,
   onDataLoaded,
-  addTrackToPlaylist
+  onPageAction,
+  onClickArtist,
+  onCoverLoaded,
+  onRangeUpdate,
+  coverSize,
+  routerActive
 }) => {
   const requestData = useCallback(async (id: number) => {
     if (!id) return Promise.resolve([null, null]);
@@ -99,8 +102,8 @@ const Album: FC<AlbumPageProps> = ({
   }, []);
   const {
     status,
-    data: [album, dynamic] = [null, null],
-    fetchData
+    fetchData,
+    data: [album, dynamic] = [null, null]
   } = useRequestStatusWrap(requestData);
   const { reload } = useRequestAutoRun(fetchData, [id]);
 
@@ -130,36 +133,38 @@ const Album: FC<AlbumPageProps> = ({
     album && onDataLoaded?.(album);
   }, [album, onDataLoaded]);
 
+  useAgentFocusCtx({ page: "album", name: album?.content.name ?? "", id }, routerActive);
+
   return (
     <div className={cx("w-full h-full flex flex-col", className)}>
       <AppError reset={reload} message="加载专辑失败" when={status === "error"}>
         <AppLoading loading={status === "loading"}>
           <Top
-            coverSize={coverSize}
             album={album}
             dynamic={dynamic}
-            onAddList={onAddList}
-            onCoverLoaded={onCoverLoaded}
+            coverSize={coverSize}
             pageActionType={pageActionType}
+            onAddList={onAddList}
             onPageAction={onPageAction}
+            onCoverLoaded={onCoverLoaded}
           />
           <Divider className="my-3" />
           {album && (
             <TrackList
+              ref={trackListRef}
+              id={album.content.id}
               className="flex-1"
+              type="album"
+              tracks={album.tracks}
+              activeID={activeTrackID}
               heartManager={heartManager}
               playableManager={playableManager}
-              ref={trackListRef}
-              tracks={album.tracks}
-              id={album.content.id}
-              type="album"
-              activeID={activeTrackID}
+              trackCoverSize={RendererImageConstants.PlaylistPageTrackCoverSize}
               onClick={onClick}
               onContext={onContextMenu}
-              onRangeUpdate={onRangeUpdate}
               onClickAlbum={onClickAlbum}
               onClickArtist={onClickArtist}
-              trackCoverSize={RendererImageConstants.PlaylistPageTrackCoverSize}
+              onRangeUpdate={onRangeUpdate}
             />
           )}
         </AppLoading>

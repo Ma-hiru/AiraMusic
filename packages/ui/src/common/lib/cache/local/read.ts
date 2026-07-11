@@ -1,10 +1,10 @@
 import { Log } from "@/common/lib/log";
 import { accessToken, cacheRequest } from "@/common/lib/cache/request";
-import type { CacheStoreDeleteParams, CacheStoreResponse } from "@/types/cache";
 import RendererHTTPConstants from "@/common/constants/http";
+import type { CacheStoreResponse, CacheStoreDeleteParams } from "@/types/cache";
 
 export class CacheStoreForRead {
-  static build(id: string | number) {
+  static build(id: number | string) {
     const params = new URLSearchParams({
       id: String(id),
       key: accessToken

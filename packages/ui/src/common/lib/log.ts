@@ -1,13 +1,13 @@
-import { createLog, type LoggerWriter } from "@mahiru/log";
 import { RendererIPC } from "@mahiru/ipc/renderer";
+import { createLog, type LoggerWriter } from "@mahiru/log";
 
 export class ProcessLogger implements LoggerWriter {
   static write: Nullable<
     NormalFunc<
       [
         props: {
-          level: "info" | "warn" | "error" | "trace" | "debug";
           message: string;
+          level: "info" | "warn" | "debug" | "error" | "trace";
         }
       ]
     >

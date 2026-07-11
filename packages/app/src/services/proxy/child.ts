@@ -1,8 +1,7 @@
-import express from "express";
-import { createProxyServer } from "http-proxy-3";
 import { Agent } from "node:http";
-import { join } from "node:path";
+import { createProxyServer } from "http-proxy-3";
 import { MainChild } from "@/lib/child";
+import express from "express";
 import type { ProxyChildMessage, ProxyParentMessage } from "@/types/proxy.child";
 import type { MainChildControlMessage, MainChildSerializedError } from "@/types/child";
 
@@ -21,10 +20,10 @@ function createCacheAgent() {
 }
 
 function createProxyMiddleware(options: {
-  target: string;
   agent: Agent;
-  proxyTimeout: number;
+  target: string;
   timeout: number;
+  proxyTimeout: number;
   onError: (error: Error) => void;
 }) {
   const proxy = createProxyServer({
@@ -81,12 +80,6 @@ class ProxyChildService extends MainChild<ProxyParentMessage, ProxyChildMessage>
     this.apiAgent = apiAgent;
     this.cacheAgent = cacheAgent;
 
-    const serveHtml = (file: string): express.RequestHandler => {
-      return (_req, res) => {
-        res.sendFile(join(message.staticUIDir, file));
-      };
-    };
-
     const apiProxy = createProxyMiddleware({
       target: `http://127.0.0.1:${message.ncmPort}`,
       agent: apiAgent,
@@ -112,8 +105,6 @@ class ProxyChildService extends MainChild<ProxyParentMessage, ProxyChildMessage>
 
     app.use("/api", apiProxy.middleware);
     app.use("/cache", cacheProxy.middleware);
-    app.get("/tray", serveHtml("tray.html"));
-    app.get("/mini", serveHtml("mini.html"));
     app.use("/", express.static(message.staticUIDir));
 
     this.instance = await new Promise<ReturnType<express.Express["listen"]>>((resolve, reject) => {
@@ -180,7 +171,7 @@ class ProxyChildService extends MainChild<ProxyParentMessage, ProxyChildMessage>
 
   protected override handleCustomMessage(
     message: Exclude<ProxyParentMessage, MainChildControlMessage>
-  ): Promise<void> | void {
+  ): void | Promise<void> {
     void message;
   }
 }

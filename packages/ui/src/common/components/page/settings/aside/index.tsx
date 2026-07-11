@@ -1,29 +1,29 @@
 import { cx } from "@emotion/css";
-import { type FC, memo } from "react";
-import { NeteaseSettings, NeteaseUser } from "@/common/netease/models";
+import { memo, type FC } from "react";
+import { NeteaseUser, NeteaseSettings } from "@/common/netease/models";
 import type { InvokeEventPayload } from "@mahiru/ipc/dist-types/src/types/invoke";
 
+import Github from "./github";
+import Version from "./version";
 import UserDetail from "./user-detail";
 import SettingsSummary from "./settings-summary";
-import Version from "./version";
-import Github from "./github";
 
 interface SettingsAsideProps {
-  user: Nullable<NeteaseUser>;
-  settings: NeteaseSettings;
   login: NormalFunc;
-  logout: NormalFunc;
-  cacheStoreConfig: Nullable<InvokeEventPayload<"invoke_cache_config_get">>;
   className?: string;
+  logout: NormalFunc;
+  settings: NeteaseSettings;
+  user: Nullable<NeteaseUser>;
+  cacheStoreConfig: Nullable<InvokeEventPayload<"invoke_cache_config_get">>;
 }
 
 const SettingsAside: FC<SettingsAsideProps> = ({
-  settings,
   user,
-  logout,
+  className,
   login,
-  cacheStoreConfig,
-  className
+  logout,
+  settings,
+  cacheStoreConfig
 }) => {
   return (
     <aside className={cx("w-full flex scrollbar flex-col gap-4", className)}>

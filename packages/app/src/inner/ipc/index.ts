@@ -1,8 +1,9 @@
-import { init, MainIPC } from "@mahiru/ipc/main";
 import { Log as logger } from "@/lib/log";
+import { init, MainIPC } from "@mahiru/ipc/main";
 import { MainWindowManager as windowManager } from "@/lib/window-manager";
-import { invokeHandlers } from "./invoke";
+
 import { eventHandlers } from "./event";
+import { invokeHandlers } from "./invoke";
 
 export function ipcInit() {
   init({

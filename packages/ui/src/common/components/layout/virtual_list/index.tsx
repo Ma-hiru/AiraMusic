@@ -1,48 +1,48 @@
-import RendererTheme from "@/common/player/ui";
 import {
-  type FC,
   memo,
-  type RefObject,
-  useCallback,
-  useEffect,
-  useMemo,
   useRef,
-  useState
+  type FC,
+  useMemo,
+  useState,
+  useEffect,
+  useCallback,
+  type RefObject
 } from "react";
 import { Log } from "@/common/lib/log";
+import RendererTheme from "@/common/player/ui";
 
 export type VirtualListRow<T extends HasID, U> = FC<{
+  extra: U;
   items: T[];
   index: number;
-  extra: U;
 }>;
 
 export interface VirtualListProps<T extends HasID, U> {
   items: T[];
   extraData: U;
+  overscan?: number;
   itemHeight?: number;
   paddingBottom?: number | string;
   RowComponent: VirtualListRow<T, U>;
   containerRef: RefObject<Nullable<HTMLDivElement>>;
-  onRangeUpdate?: NormalFunc<[range: IndexRange]>;
-  overscan?: number;
-  onItemClick?: NormalFunc<[item: T, index: number]>;
   setScrollToItem?: NormalFunc<[scrollToItem: (index: number) => Promise<void>]>;
+  onRangeUpdate?: NormalFunc<[range: IndexRange]>;
+  onItemClick?: NormalFunc<[item: T, index: number]>;
 }
 
 const VirtualList = <T extends HasID, U>({
+  setScrollToItem,
+  onItemClick,
+  onRangeUpdate,
+  items,
+  extraData,
+  containerRef,
+  overscan = 5,
   RowComponent,
   paddingBottom,
-  itemHeight = 64,
-  extraData,
-  items,
-  containerRef,
-  onRangeUpdate,
-  overscan = 5,
-  onItemClick,
-  setScrollToItem
+  itemHeight = 64
 }: VirtualListProps<T, U>) => {
-  const { start, end, scrollToItem } = useVirtualList({
+  const { end, start, scrollToItem } = useVirtualList({
     total: items.length,
     containerRef,
     itemHeight,
@@ -79,7 +79,7 @@ const VirtualList = <T extends HasID, U>({
               transform: `translate3d(0, ${realIndex * itemHeight}px, 0)`
             }}
             onClick={() => onItemClick?.(item, realIndex)}>
-            <RowComponent items={items} index={realIndex} extra={extraData} />
+            <RowComponent items={items} extra={extraData} index={realIndex} />
           </div>
         );
       })}
@@ -91,12 +91,12 @@ export default memo(VirtualList) as typeof VirtualList;
 
 function useVirtualList(props: {
   total: number;
-  containerRef: RefObject<Nullable<HTMLDivElement>>;
   overscan: number;
   itemHeight: number;
   onRangeUpdate?: NormalFunc<[range: IndexRange]>;
+  containerRef: RefObject<Nullable<HTMLDivElement>>;
 }) {
-  const { total, containerRef, overscan, itemHeight, onRangeUpdate } = props;
+  const { onRangeUpdate, total, overscan, itemHeight, containerRef } = props;
   const ticking = useRef(false);
   const visibleStartRef = useRef(0);
   const [visibleStart, setVisibleStart] = useState(0);

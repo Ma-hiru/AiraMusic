@@ -1,16 +1,15 @@
 import { cx } from "@emotion/css";
-import { type FC, memo, useCallback, useEffect, useState } from "react";
 import { Heart, MessageSquare } from "lucide-react";
+import { memo, type FC, useState, useEffect, useCallback } from "react";
 import { useHeart } from "@/common/hooks/use-heart";
-import { useUserTrackManager } from "@/common/hooks/use-user-track-manager";
-import { RendererWindow } from "@/common/lib/window";
-import { RendererIPCMessageBus } from "@/common/lib/bus";
-
-import { NeteaseAPIComment, NeteaseAPITrack } from "@/common/netease/api";
 import { RendererFormat } from "@/common/lib/format";
+import { RendererWindow } from "@/common/lib/window";
 import { CommentSort, CommentType } from "@/common/enum";
-import RendererPlayerHandle from "@/wins/main/lib/handle";
+import { RendererIPCMessageBus } from "@/common/lib/bus";
+import { NeteaseAPITrack, NeteaseAPIComment } from "@/common/netease/api";
+import { useUserTrackManager } from "@/common/hooks/use-user-track-manager";
 import Tag from "@/common/components/display/tag";
+import RendererPlayerHandle from "@/wins/main/lib/handle";
 
 interface ArtistProps {
   className?: string;
@@ -23,7 +22,7 @@ const Meta: FC<ArtistProps> = ({ className }) => {
   const [redCount, setRedCount] = useState<Nullable<number>>(null);
   const [commentCount, setCommentCount] = useState<Nullable<number>>(null);
   const { heartManager } = useUserTrackManager();
-  const { likedChange, checkLiked } = useHeart(heartManager);
+  const { checkLiked, likedChange } = useHeart(heartManager);
 
   const starTrack = useCallback(() => {
     const liked = likedChange(track);
@@ -87,8 +86,8 @@ const Meta: FC<ArtistProps> = ({ className }) => {
       <div className="flex-1 flex justify-start gap-1">
         {quality && (
           <Tag
+            className="w-fit! text-normal-text! bg-(--text-color)/30! text-[70%]"
             text={quality}
-            className="w-fit! text-(--text-color)! bg-(--text-color)/30! text-[70%]"
           />
         )}
       </div>
@@ -103,9 +102,9 @@ const Meta: FC<ArtistProps> = ({ className }) => {
             <span className="text-[70%] leading-normal">{RendererFormat.count(redCount)}</span>
           )}
           <Heart
+            className="size-3.5 xl:size-4"
             color={checkLiked(track) ? "currentColor" : undefined}
             fill={checkLiked(track) ? "currentColor" : "transparent"}
-            className="size-3.5 xl:size-4"
           />
         </section>
         <section
@@ -118,9 +117,9 @@ const Meta: FC<ArtistProps> = ({ className }) => {
             <span className="text-[70%] leading-normal">{RendererFormat.count(commentCount)}</span>
           )}
           <MessageSquare
-            color="currentColor"
-            fill="currentColor"
             className="size-3.5 scale-90 xl:size-4"
+            fill="currentColor"
+            color="currentColor"
           />
         </section>
       </div>

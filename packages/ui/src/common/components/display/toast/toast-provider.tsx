@@ -1,9 +1,9 @@
 import { cx } from "@emotion/css";
-import { memo, startTransition, useCallback, useState } from "react";
-import { AnimatePresence, type HTMLMotionProps, motion } from "motion/react";
-import { ensureInjectObject, useInject } from "@/common/utils/inject";
-import AppToast from "./use";
+import { memo, useState, useCallback, startTransition } from "react";
+import { motion, AnimatePresence, type HTMLMotionProps } from "motion/react";
+import { useInject, ensureInjectObject } from "@/common/utils/inject";
 
+import AppToast from "./use";
 import ToastItem, { type ToastItemData } from "./toast-item";
 
 const ToastProvider = ({
@@ -40,6 +40,7 @@ const ToastProvider = ({
     (items: ToastItemData[]) => {
       return items.map((item) => (
         <motion.div
+          key={item.id}
           className={cx(
             `
             px-2 py-1
@@ -50,10 +51,9 @@ const ToastProvider = ({
            `,
             itemContainerClassName
           )}
-          key={item.id}
           onDragEnd={(_, info) => Math.abs(info.offset.x) > 100 && dispose(item.id!)}
           {...ContainerProps}>
-          <ToastItem data={item} id={item.id!} onDispose={dispose} />
+          <ToastItem id={item.id!} data={item} onDispose={dispose} />
         </motion.div>
       ));
     },

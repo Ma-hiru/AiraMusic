@@ -1,8 +1,7 @@
-import { type FC, memo, type ReactEventHandler, useCallback } from "react";
 import { useSetAtom } from "jotai";
+import { memo, type FC, useCallback, type ReactEventHandler } from "react";
 import { backgroundCoverAtom, playerBackgroundCoverAtom } from "@/wins/main/atoms/theme";
 import RendererPlayerHandle from "@/wins/main/lib/handle";
-
 import NeteaseImage from "@/common/components/display/image/netease-image";
 
 interface CoverProps {
@@ -26,17 +25,17 @@ const Cover: FC<CoverProps> = ({ className }) => {
   return (
     <section className={className}>
       <NeteaseImage
-        cache
-        preview
-        cacheLazy={false}
-        image={image}
-        title={player.current.track?.detail.al.name ?? player.current.track?.detail.name}
         className="
           size-full rounded-lg hover:scale-101 cursor-pointer
           ease-in-out duration-300 transition-all
         "
-        onLoad={onLoad}
+        image={image}
+        cacheLazy={false}
         shadowColor="light"
+        title={player.current.track?.detail.al.name ?? player.current.track?.detail.name}
+        onLoad={onLoad}
+        cache
+        preview
       />
     </section>
   );

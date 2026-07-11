@@ -1,7 +1,7 @@
 import { cx } from "@emotion/css";
-import { type FC, memo } from "react";
-import TopControl from "@/common/components/layout/top/control";
+import { memo, type FC } from "react";
 import Drag from "@/common/components/layout/drag/drag";
+import TopControl from "@/common/components/layout/top/control";
 
 interface ControlProps {
   className?: string;
@@ -10,8 +10,9 @@ interface ControlProps {
 const Control: FC<ControlProps> = ({ className }) => {
   return (
     <Drag className={cx("w-screen flex flex-row justify-end items-center px-4", className)}>
-      <TopControl mini pin className="gap-2!" />
+      <TopControl className="gap-2!" pin mini />
     </Drag>
   );
 };
+
 export default memo(Control);

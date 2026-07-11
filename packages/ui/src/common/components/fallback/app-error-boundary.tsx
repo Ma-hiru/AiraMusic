@@ -1,7 +1,7 @@
-import { type FC, memo, type ReactNode, type RefObject, useCallback, useRef } from "react";
 import { ErrorBoundary, type FallbackProps } from "react-error-boundary";
-import { Log } from "@/common/lib/log";
+import { memo, useRef, type FC, useCallback, type ReactNode, type RefObject } from "react";
 import { EqError } from "@mahiru/log";
+import { Log } from "@/common/lib/log";
 import { RendererWindow } from "@/common/lib/window";
 import AppToast from "@/common/components/display/toast";
 import AppError from "@/common/components/fallback/app-error";
@@ -9,35 +9,35 @@ import AppError from "@/common/components/fallback/app-error";
 export type AppErrorBoundaryRef = { resetComponent?: NormalFunc };
 
 interface AppErrorBoundaryProps {
-  name: string;
-  children: ReactNode;
   ref?: RefObject<{ resetComponent?: NormalFunc }>;
+  name: string;
+  panic?: boolean;
   toast?: boolean;
   className?: string;
   autoReset?: boolean;
-  autoResetMaxCount?: number;
-  panicAfterReset?: boolean;
+  children: ReactNode;
   showError?: boolean;
-  canReset?: boolean;
-  panic?: boolean;
   panicMessage?: string;
+  panicAfterReset?: boolean;
+  autoResetMaxCount?: number;
+  canReset?: boolean;
   onReset?: NormalFunc;
 }
 
 const AppErrorBoundary: FC<AppErrorBoundaryProps> = ({
+  ref,
+  className,
+  canReset = true,
+  onReset,
   name,
   children,
-  className,
-  ref,
-  toast = true,
-  autoResetMaxCount = 3,
-  autoReset = false,
-  panicAfterReset = false,
-  canReset = true,
-  showError = true,
-  panic = false,
   panicMessage,
-  onReset
+  toast = true,
+  panic = false,
+  showError = true,
+  autoReset = false,
+  autoResetMaxCount = 3,
+  panicAfterReset = false
 }) => {
   if (ref) ref.current ??= { resetComponent: undefined };
 
@@ -107,7 +107,7 @@ const AppErrorBoundary: FC<AppErrorBoundaryProps> = ({
     ]
   );
 
-  return <ErrorBoundary fallbackRender={fallbackRender} children={children} />;
+  return <ErrorBoundary children={children} fallbackRender={fallbackRender} />;
 };
 
 export default memo(AppErrorBoundary);

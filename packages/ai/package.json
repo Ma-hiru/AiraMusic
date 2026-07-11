@@ -1,0 +1,18 @@
+{
+  "name": "@mahiru/ai",
+  "type": "module",
+  "types": "dist-types/src/index.d.ts",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "scripts": {
+    "test": "vitest run",
+    "build": "tsup"
+  },
+  "dependencies": {
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@mahiru/log": "workspace:*",
+    "openai": "^6.45.0"
+  }
+}

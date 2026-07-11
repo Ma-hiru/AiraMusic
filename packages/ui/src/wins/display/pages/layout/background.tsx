@@ -10,15 +10,15 @@ const Background = () => {
   return (
     <div className="fixed inset-0 z-[-1]">
       <AcrylicBackground
-        fluidPaused
-        src={themeBus.data?.backgroundCover}
-        fluid={settings.performance.useHomeFluid}
-        fluidSpeed={settings.performance.homeFluidSpeed}
-        themeColors={themeBus.data?.theme.themeColors}
+        blur={60}
+        saturate={3}
         opacity={0.6}
         brightness={0.3}
-        saturate={3}
-        blur={60}
+        src={themeBus.data?.backgroundCover}
+        fluid={settings.performance.useHomeFluid}
+        themeColors={themeBus.data?.theme.themeColors}
+        fluidSpeed={settings.performance.homeFluidSpeed}
+        fluidPaused
       />
     </div>
   );

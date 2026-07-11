@@ -1,1 +1,1 @@
-export { type CanString, AnyToString } from "./stringify";
+export { AnyToString, type CanString } from "./stringify";

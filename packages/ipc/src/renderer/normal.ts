@@ -1,18 +1,18 @@
-import { ApiKey } from "../constants/preload";
 import type { Api } from "../types/preload";
+import { ApiKey } from "../constants/preload";
 import type { NormalEvent, NormalEventArgs } from "../types/event";
 import type { InvokeEvent, InvokeEventArgs, InvokeEventPayload } from "../types/invoke";
 
 // @ts-expect-error
 const API = globalThis[ApiKey] as Api;
 
-type SendData<T extends NormalEvent | InvokeEvent> = T extends NormalEvent
+type SendData<T extends InvokeEvent | NormalEvent> = T extends NormalEvent
   ? NormalEventArgs<T>
   : T extends InvokeEvent
     ? InvokeEventArgs<T>
     : never;
 
-type SendReturn<T extends NormalEvent | InvokeEvent> = T extends InvokeEvent
+type SendReturn<T extends InvokeEvent | NormalEvent> = T extends InvokeEvent
   ? Promise<InvokeEventPayload<T>>
   : void;
 
@@ -25,7 +25,7 @@ export class NormalChannel {
     return channel.startsWith("invoke_");
   }
 
-  static send<const T extends NormalEvent | InvokeEvent>(
+  static send<const T extends InvokeEvent | NormalEvent>(
     name: T,
     data: SendData<T>
   ): SendReturn<T> {

@@ -1,5 +1,5 @@
-import { BrowserCache } from "./browser";
 import { MemoryCache } from "./memory";
+import { BrowserCache } from "./browser";
 import { Local, LocalSatisfiesInterface } from "./local";
 
 const browser = new BrowserCache();

@@ -111,7 +111,7 @@ export abstract class LRUCache<K, V> {
   }
 }
 
-export class LRUCacheWithTime<K, V> extends LRUCache<K, { time: number; value: V }> {
+export class LRUCacheWithTime<K, V> extends LRUCache<K, { value: V; time: number }> {
   readonly timelimit;
 
   constructor(capacity: number, timelimit: number) {

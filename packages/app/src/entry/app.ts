@@ -1,14 +1,16 @@
 import { app } from "electron";
-import { MainProtocol } from "@/inner/protocol";
-import { MainExitCodeConstants } from "@/constants/exit-code";
 import { Log } from "@/lib/log";
-import { MainWindowCreator } from "@/lib/window-creator";
-import { MainWindowPreset } from "@/lib/window-preset";
-import { MainWindowManager } from "@/lib/window-manager";
-import { MainTray } from "@/lib/tray";
-import { MainScreenResolver } from "@/lib/screen-resolver";
-import { MainServices } from "@/services";
 import { ipcInit } from "@/inner/ipc";
+import { MainTray } from "@/lib/tray";
+import { MainAgent } from "@/inner/agent";
+import { MainServices } from "@/services";
+import { MainIPC } from "@mahiru/ipc/main";
+import { MainWindowPreset } from "@/lib/window-preset";
+import { MainWindowCreator } from "@/lib/window-creator";
+import { MainWindowManager } from "@/lib/window-manager";
+import { MainStoreForConfig } from "@/lib/key-value-store";
+import { MainScreenResolver } from "@/lib/screen-resolver";
+import { MainExitCodeConstants } from "@/constants/exit-code";
 import { MainTaskBarCoverPreview } from "@/lib/taskbar-cover";
 
 /**
@@ -17,7 +19,7 @@ import { MainTaskBarCoverPreview } from "@/lib/taskbar-cover";
  * */
 export class MainApp {
   private _services?: MainServices;
-  private _status: "initializing" | "running" | "exiting" = "initializing";
+  private _status: "exiting" | "running" | "initializing" = "initializing";
 
   /** @desc 是否进入退出流程 */
   private get isExiting() {
@@ -54,7 +56,7 @@ export class MainApp {
    * */
   private registerAppProtocol() {
     try {
-      MainProtocol.register();
+      // MainProtocol.register();
     } catch (err) {
       Log.error("protocol", "failed to register app protocol", err);
       this.exit(MainExitCodeConstants.REGISTER_PROTOCOL_FAILED, "failed to register app protocol");
@@ -87,12 +89,26 @@ export class MainApp {
     try {
       const mainWindow = MainWindowCreator.create(MainWindowPreset.main);
       if (process.platform === "darwin") {
-        mainWindow.addListener("close", (e) => {
-          e.preventDefault();
-          mainWindow.hide();
-        });
-        app.addListener("activate", () => {
-          MainWindowManager.checkAndShow("main");
+        let isQuitting = false;
+        let isClosing = false;
+        app.on("before-quit", () => (isQuitting = true));
+        app.on("activate", () => MainWindowManager.checkAndShow("main"));
+        mainWindow.on("close", (event) => {
+          if (isQuitting) {
+            if (isClosing) return;
+            event.preventDefault();
+            isClosing = true;
+            MainIPC.MessageChannel.commit({
+              sender: "process",
+              receiver: "main",
+              type: "message_dispatch_darwin_close",
+              data: true
+            });
+            setTimeout(() => mainWindow.close(), 2000);
+          } else {
+            event.preventDefault();
+            mainWindow.hide();
+          }
         });
       } else {
         mainWindow.addListener("closed", () => {
@@ -134,6 +150,15 @@ export class MainApp {
     }
   }
 
+  private enableAgent() {
+    try {
+      return MainStoreForConfig.get("enableAgent", true) && !!MainAgent.init();
+    } catch (err) {
+      Log.warn("agent", "failed to enable agent", err);
+      return false;
+    }
+  }
+
   /**
    * @desc 停止所有服务
    * */
@@ -164,9 +189,9 @@ export class MainApp {
     this._status = "initializing"; // 初始化状态
     Log.info("App initializing...");
 
-    this.registerAppProtocol(); // 注册自定义应用协议
-    if (this.isExiting) return;
-    Log.info("App protocol registered");
+    // this.registerAppProtocol(); // 注册自定义应用协议
+    // if (this.isExiting) return;
+    // Log.info("App protocol registered");
 
     app
       .whenReady()
@@ -198,6 +223,10 @@ export class MainApp {
         this.registerTaskBar(); // 注册任务栏
         if (this.isExiting) return;
         Log.info("App taskbar registered");
+
+        const enable = this.enableAgent(); // 启用 Agent
+        if (this.isExiting) return;
+        enable && Log.info("App agent initialized");
 
         this._status = "running"; // 修改状态，完成初始化
         Log.info("App running");

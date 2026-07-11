@@ -1,7 +1,7 @@
-import axios from "axios";
-import RendererHTTPConstants from "@/common/constants/http";
 import { EqError } from "@mahiru/log";
 import { RendererRuntime } from "@/common/lib/runtime";
+import axios from "axios";
+import RendererHTTPConstants from "@/common/constants/http";
 
 export const cacheRequest = axios.create({
   baseURL: RendererHTTPConstants.CacheBaseURL,

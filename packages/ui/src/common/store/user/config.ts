@@ -17,7 +17,7 @@ export const UserStoreInitializer =
   });
 
 export type UserStoreType = {
-  _user: Nullable<NeteaseUserModel>;
   isLoggedIn: () => boolean;
+  _user: Nullable<NeteaseUserModel>;
   updateUser(user: Optional<NeteaseUserModel>): void;
 };

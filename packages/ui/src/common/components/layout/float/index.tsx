@@ -1,13 +1,13 @@
 import { cx } from "@emotion/css";
-import { type FC, memo } from "react";
-import { ChevronLeft, ChevronUp, LocateFixed, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { memo, type FC } from "react";
 import { AnimatePresence } from "motion/react";
+import { ChevronUp, ChevronLeft, LocateFixed, PanelLeftOpen, PanelLeftClose } from "lucide-react";
 
 import FloatItem from "./float-item";
 
 interface FloatProps {
-  className?: string;
   hidden?: boolean;
+  className?: string;
   /** 回到顶部 */
   scrollTop?: Optional<NormalFunc>;
   /** 定位到当前播放曲目 */
@@ -18,7 +18,7 @@ interface FloatProps {
   sidebar?: Optional<{ open: boolean; toggle: NormalFunc }>;
 }
 
-const Float: FC<FloatProps> = ({ className, hidden, scrollTop, fastLocate, onBack, sidebar }) => {
+const Float: FC<FloatProps> = ({ className, onBack, hidden, sidebar, scrollTop, fastLocate }) => {
   return (
     <div
       className={cx(

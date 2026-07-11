@@ -15,7 +15,7 @@ type Undefinable<T> = T | undefined;
 
 type Optional<T> = T | null | undefined;
 
-type Falsy = false | 0 | "" | null | undefined;
+type Falsy = 0 | "" | null | false | undefined;
 
 type NullishValue = null | undefined;
 
@@ -26,24 +26,24 @@ type PromiseFunc<P extends readonly any[] = never[], R = void> = (...args: P) =>
 type IndexRange = [start: number, end: number];
 
 interface HasID {
-  id: string | number;
+  id: number | string;
 }
 
 type NetworkStatus =
+  | "ok" // 网络正常
   | "offline" // 系统无网络
   | "dns_error" // DNS 无法解析
   | "tcp_error" // 无法建立连接
   | "tls_error" // TLS / 证书异常（常见于劫持）
-  | "http_blocked" // HTTP 被阻断 / 重定向
-  | "ok"; // 网络正常
+  | "http_blocked"; // HTTP 被阻断 / 重定向
 
 interface CanInit {
   _init: NormalFunc;
 }
 
-type JsonValue = null | boolean | number | string | JsonValue[] | { [key: string]: JsonValue };
+type JsonValue = null | number | string | boolean | JsonValue[] | { [key: string]: JsonValue };
 
-type JsonPrimitive = null | boolean | number | string;
+type JsonPrimitive = null | number | string | boolean;
 
 type Jsonify<T> =
   // 1. 函数直接去掉

@@ -1,20 +1,20 @@
 import { type FC, Fragment } from "react";
-import { type LucideIcon, Maximize2 } from "lucide-react";
+import { Maximize2, type LucideIcon } from "lucide-react";
 import { NeteaseImageSize } from "@/common/enum";
-import { NeteaseAlbum, NeteaseNetworkImage, type NeteasePlaylist } from "@/common/netease/models";
 import { RendererWindow } from "@/common/lib/window";
-import { createAlbumStats, createPlaylistStats } from "@/common/utils/playlist";
-import type { ModalRender } from "./modal-provider";
-
-import NeteaseImage from "@/common/components/display/image/netease-image";
 import { RendererIPCMessageBus } from "@/common/lib/bus";
+import { createAlbumStats, createPlaylistStats } from "@/common/utils/playlist";
+import { NeteaseAlbum, NeteaseNetworkImage, type NeteasePlaylist } from "@/common/netease/models";
+import NeteaseImage from "@/common/components/display/image/netease-image";
+
+import type { ModalRender } from "./modal-provider";
 
 export function createPlaylistCoverModal({
   playlist,
   coverCacheKey
 }: {
-  playlist: NeteasePlaylist;
   coverCacheKey?: string;
+  playlist: NeteasePlaylist;
 }): ModalRender {
   const cover = NeteaseNetworkImage.fromPlaylistCover(playlist)
     .setSize(NeteaseImageSize.lg)
@@ -35,13 +35,13 @@ export function createPlaylistCoverModal({
     width: 900,
     content: (
       <CoverModal
-        name={playlist.name}
-        desc={playlist.description}
-        tags={playlist.tags}
-        persons={[{ avatar, nickname: playlist.creator.nickname }]}
         cover={cover}
-        onCoverOpen={openCover}
         stats={stats}
+        name={playlist.name}
+        tags={playlist.tags}
+        desc={playlist.description}
+        persons={[{ avatar, nickname: playlist.creator.nickname }]}
+        onCoverOpen={openCover}
       />
     )
   };
@@ -53,8 +53,8 @@ export function createAlbumCoverModal({
   coverCacheKey
 }: {
   album: NeteaseAlbum;
-  dynamic: NeteaseAPI.NeteaseAlbumDynamicDetailResponse;
   coverCacheKey?: string;
+  dynamic: NeteaseAPI.NeteaseAlbumDynamicDetailResponse;
 }) {
   const cover = NeteaseNetworkImage.fromAlbumCover(album)
     .setSize(NeteaseImageSize.lg)
@@ -74,7 +74,7 @@ export function createAlbumCoverModal({
     .filter((a) => a.name !== album.content.artist.name)
     .concat([album.content.artist])
     .filter(Boolean)
-    .map(({ picUrl, name }) => {
+    .map(({ name, picUrl }) => {
       return {
         avatar: NeteaseNetworkImage.fromURL(picUrl)?.setSize(NeteaseImageSize.sm),
         nickname: name
@@ -87,58 +87,58 @@ export function createAlbumCoverModal({
     width: 900,
     content: (
       <CoverModal
+        cover={cover}
+        stats={stats}
+        persons={artist}
         name={album.content.name}
         desc={album.content.description}
         tags={[album.content.subType, album.content.tags]}
-        persons={artist}
-        cover={cover}
         onCoverOpen={openCover}
-        stats={stats}
       />
     )
   };
 }
 
 interface CoverModalProps {
-  name: string;
   desc: string;
+  name: string;
   tags: string[];
-  persons: { avatar?: NeteaseNetworkImage; nickname: string }[];
   cover: NeteaseNetworkImage;
+  persons: { nickname: string; avatar?: NeteaseNetworkImage }[];
+  stats: { label: string; icon: LucideIcon; value: number | string }[];
   onCoverOpen: NormalFunc;
-  stats: { icon: LucideIcon; label: string; value: string | number }[];
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
 const CoverModal: FC<CoverModalProps> = ({
-  name,
-  desc,
-  tags,
-  persons,
-  cover,
   onCoverOpen,
-  stats
+  desc,
+  name,
+  tags,
+  cover,
+  stats,
+  persons
 }) => {
   return (
     <div className="w-full h-full contain-layout overflow-y-auto scrollbar scrollbar-show grid gap-7 grid-cols-[18rem_minmax(0,1fr)] grid-rows-1">
       {/** 封面 */}
       <section className="space-y-4">
         <button
-          type="button"
-          title="查看封面"
-          onClick={onCoverOpen}
           className="
             group relative aspect-square w-full overflow-hidden rounded-lg
             bg-white/10  outline-none mx-auto
             transition-all duration-300 ease-in-out
-          ">
+          "
+          title="查看封面"
+          type="button"
+          onClick={onCoverOpen}>
           <NeteaseImage
-            cache
-            cacheLazy={false}
+            className="size-full"
             image={cover}
             shadow="none"
-            className="size-full"
+            cacheLazy={false}
             imageClassName="transition-transform duration-300 ease-in-out group-hover:scale-105 cursor-pointer"
+            cache
           />
           <span
             className="
@@ -155,7 +155,7 @@ const CoverModal: FC<CoverModalProps> = ({
             shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]
           ">
           <div className="grid grid-cols-3 gap-3 text-[11px] font-semibold">
-            {stats.map(({ icon: Icon, label, value }) => (
+            {stats.map(({ label, value, icon: Icon }) => (
               <div key={label} className="min-w-0">
                 <div className="flex items-center gap-1.5 opacity-55">
                   <Icon className="size-3.5 shrink-0" />
@@ -202,11 +202,11 @@ const CoverModal: FC<CoverModalProps> = ({
                   <div className="flex min-w-0 items-center gap-1">
                     {avatar && (
                       <NeteaseImage
-                        cache
-                        cacheLazy={false}
-                        image={avatar}
                         className="size-5 shrink-0 rounded-full"
+                        image={avatar}
+                        cacheLazy={false}
                         shadowColor="light"
+                        cache
                       />
                     )}
                     <p className="truncate text-[12px] font-semibold tracking-normal">{nickname}</p>

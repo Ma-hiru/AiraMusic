@@ -25,7 +25,7 @@ export default class _NeteaseAlbumAPI {
     /** 偏移数量，用于分页 , 如 :( 页数 -1)*30, 其中 30 为 limit 的值 , 默认为 0 */
     offset?: number;
     /** ALL:全部,ZH:华语,EA:欧美,KR:韩国,JP:日本 */
-    area?: "ALL" | "ZH" | "EA" | "KR" | "JP";
+    area?: "EA" | "JP" | "KR" | "ZH" | "ALL";
   }) {
     return apiRequest<typeof params, NeteaseAPI.NeteaseNewAlbumsResponse>({
       url: "/album/new",
@@ -58,7 +58,7 @@ export default class _NeteaseAlbumAPI {
     /** 返专辑 id */
     id: number;
     /** 1 为收藏,其他为取消收藏 */
-    t: 1 | 0;
+    t: 0 | 1;
   }) {
     return apiRequest<typeof params, NeteaseAPI.NeteaseAPIResponse>({
       url: "/album/sub",

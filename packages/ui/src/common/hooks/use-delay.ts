@@ -1,4 +1,5 @@
-import { startTransition, useCallback, useLayoutEffect, useRef, useState } from "react";
+import { useRef, useState, useCallback, startTransition, useLayoutEffect } from "react";
+
 import { useStableArray } from "./use-stable-array";
 
 export function useDelay<const T extends readonly number[]>(timeNodes: T) {

@@ -1,19 +1,51 @@
+import { z } from "zod";
 import {
-  type LyricLine as AMLyricLine,
   parseLrc,
   parseQrc,
+  parseYrc,
   parseTTML,
-  parseYrc
+  type LyricLine as AMLyricLine
 } from "@applemusic-like-lyrics/lyric";
+import { Log } from "@/common/lib/log";
+import { RendererLyricConstants } from "@/common/constants/lyric";
 import {
   LyricLineInfo,
-  normalizeLyricLines,
   parseExternalLrc,
   parseNeteaseLyric,
-  parseTranslatedLRC
+  parseTranslatedLRC,
+  normalizeLyricLines
 } from "@mahiru/wasm";
-import { RendererLyricConstants } from "@/common/constants/lyric";
-import { Log } from "@/common/lib/log";
+
+export const NeteaseLyricSchema = z.object({
+  id: z.number().optional(),
+  tips: z.string().optional(),
+  data: z.array(
+    z.object({
+      words: z
+        .array(
+          z.object({
+            startTime: z.number().describe("单词的起始时间，单位为毫秒"),
+            endTime: z.number().describe("单词的结束时间，单位为毫秒"),
+            word: z.string().describe("单词内容"),
+            inlineNote: z
+              .boolean()
+              .optional()
+              .describe("是否为内嵌注释，比如日文汉字的平假名和片假名")
+          })
+        )
+        .describe("该行的所有单词"),
+      translatedLyric: z.string().describe("该行的翻译歌词，将会显示在主歌词行的下方"),
+      romanLyric: z.string().describe("该行的音译歌词，将会显示在翻译歌词行的下方"),
+      startTime: z.number().describe("该行的起始时间，单位为毫秒"),
+      endTime: z.number().describe("该行的结束时间，单位为毫秒"),
+      isBlank: z.boolean().optional().describe("是否为空白行"),
+      isBackChorus: z.boolean().optional().describe("是否为和声行")
+    })
+  ),
+  rmExisted: z.boolean(),
+  tlExisted: z.boolean(),
+  noteExisted: z.boolean()
+});
 
 export class NeteaseLyric implements NeteaseLyricModel {
   //region fields
@@ -48,6 +80,17 @@ export class NeteaseLyric implements NeteaseLyricModel {
     };
   }
 
+  toToolJSONValue(): JsonValue {
+    return {
+      data: this.data as unknown as JsonValue[],
+      tips: this.tips,
+      rmExisted: this.rmExisted,
+      tlExisted: this.tlExisted,
+      noteExisted: this.noteExisted,
+      id: this.id ?? null
+    };
+  }
+
   static fromNeteaseAPIResponse(response: NeteaseAPI.NeteaseLyricResponse) {
     return new NeteaseLyric(Parser.parseNeteaseLyricResponse(response));
   }
@@ -56,7 +99,7 @@ export class NeteaseLyric implements NeteaseLyricModel {
     return new NeteaseLyric(Parser.parseTTMLyric(lyric).lyric);
   }
 
-  static fromObject(lyric: Optional<NeteaseLyric>) {
+  static fromObject(lyric: Optional<NeteaseLyricModel>) {
     if (!lyric) return null;
     return new NeteaseLyric(lyric);
   }
@@ -91,7 +134,7 @@ class Parser {
     // TTML 文件先修复
     const lines = normalizeLyricLines(ttml.lines) as AMLyricLine[];
     const data = Parser.handleAMLyricLine(lines);
-    const { tlCount, rmCount, noteCount } = data.reduce(
+    const { rmCount, tlCount, noteCount } = data.reduce(
       (count, line) => {
         line.translatedLyric && count.tlCount++;
         line.romanLyric && count.rmCount++;
@@ -126,7 +169,7 @@ class Parser {
     });
     const backChorus = LyricLineInfo.isBackChorusWithMultiLine(rawLyrics);
 
-    for (const { start, end } of backChorus) {
+    for (const { end, start } of backChorus) {
       for (let i = start; i <= end && i < res.length; i++) {
         res[i]!.isBackChorus = true;
       }
@@ -138,7 +181,7 @@ class Parser {
     if (Parser.shouldUseInlineNotes(rawLyrics, inlineNotes)) {
       for (const [lineIndex, line] of res.entries()) {
         const notes = inlineNotes[lineIndex] ?? [];
-        for (const { start, end } of notes) {
+        for (const { end, start } of notes) {
           for (let i = start; i <= end && i < line.words.length; i++) {
             line.words[i]!.inlineNote = true;
           }
@@ -151,7 +194,7 @@ class Parser {
 
   static shouldUseInlineNotes(
     rawLyrics: string[],
-    inlineNotes: { start: number; end: number }[][]
+    inlineNotes: { end: number; start: number }[][]
   ) {
     const lineCount = rawLyrics.filter((line) => !LyricLineInfo.isBlank(line)).length;
     const candidateLineCount = inlineNotes.filter((notes) => notes.length > 0).length;

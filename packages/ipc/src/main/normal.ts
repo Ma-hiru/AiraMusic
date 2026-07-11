@@ -1,4 +1,5 @@
 import { ipcMain, type IpcMainEvent, type IpcMainInvokeEvent } from "electron";
+
 import type { NormalEvent, NormalEventArgs } from "../types/event";
 import type { InvokeEvent, InvokeEventArgs, InvokeEventPayload } from "../types/invoke";
 

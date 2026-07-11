@@ -1,6 +1,6 @@
-import { Listenable } from "@/common/utils/listenable";
 import { RendererIPC } from "@mahiru/ipc/renderer";
-import type { MessageBusEvent, MessageData } from "@mahiru/ipc/types";
+import { Listenable } from "@/common/utils/listenable";
+import type { MessageData, MessageBusEvent } from "@mahiru/ipc/types";
 
 export abstract class MessageBus<
   T extends MessageBusEvent,

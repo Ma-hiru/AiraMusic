@@ -1,8 +1,9 @@
-import pLimit from "p-limit";
-import { NeteaseAPITrack } from "@/common/netease/api";
-import { RendererCache } from "@/common/lib/cache";
-import { NeteaseTrack, NeteaseTrackRecord } from "@/common/netease/models";
 import { Log } from "@/common/lib/log";
+import { RendererCache } from "@/common/lib/cache";
+import { NeteaseAPITrack } from "@/common/netease/api";
+import { NeteaseTrack, NeteaseTrackRecord } from "@/common/netease/models";
+import pLimit from "p-limit";
+
 import _NeteasePlaylistSource from "./playlist";
 
 type CacheEntry = {
@@ -25,7 +26,7 @@ export default class _NeteaseTrackSource {
 
   private static storeCache(
     tracks: NeteaseAPI.NeteaseTrack[],
-    privileges: (NeteaseAPI.NeteaseTrackPrivilege | null)[]
+    privileges: (null | NeteaseAPI.NeteaseTrackPrivilege)[]
   ) {
     return RendererCache.service.object.setMulti<CacheEntry>(
       tracks.map((track, index) => {
@@ -45,7 +46,7 @@ export default class _NeteaseTrackSource {
    *  返回原始json解析对象
    *  */
   static async _raw(
-    ids: NeteaseAPI.TrackId[] | number[],
+    ids: number[] | NeteaseAPI.TrackId[],
     maxPerRequest: number = 500,
     concurrency: number = 3
   ) {
@@ -83,7 +84,7 @@ export default class _NeteaseTrackSource {
     const trackMap = new Map<number, NeteaseAPI.NeteaseTrack>();
     const privilegeMap = new Map<number, NeteaseAPI.NeteaseTrackPrivilege>();
     const requestTracks: NeteaseAPI.NeteaseTrack[] = [];
-    const requestPrivileges: (NeteaseAPI.NeteaseTrackPrivilege | null)[] = [];
+    const requestPrivileges: (null | NeteaseAPI.NeteaseTrackPrivilege)[] = [];
     for (const { songs, privileges } of requestResults) {
       for (const song of songs) trackMap.set(song.id, song);
       for (const privilege of privileges) privilegeMap.set(privilege.id, privilege);
@@ -124,7 +125,7 @@ export default class _NeteaseTrackSource {
    * 只会返回找到的歌曲，所以 ids.length !== tracks.length
    * */
   static async ids(
-    ids: NeteaseAPI.TrackId[] | number[],
+    ids: number[] | NeteaseAPI.TrackId[],
     maxPerRequest: number = 100,
     concurrency: number = 5
   ) {

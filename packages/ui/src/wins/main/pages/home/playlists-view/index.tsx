@@ -1,18 +1,18 @@
 import { cx } from "@emotion/css";
-import { type FC, memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ListMusic, LoaderCircle } from "lucide-react";
+import { memo, useRef, type FC, useMemo, useState, useEffect, useCallback } from "react";
 import { useUser } from "@/common/store/user";
 import { usePageJump } from "@/wins/main/hooks/use-page-jump";
-import { loadPlaylistCategory, uniqueItems } from "@/wins/main/pages/home/playlists-view/load";
 import { type RequestStatus } from "@/common/hooks/use-request-wrap";
+import { uniqueItems, loadPlaylistCategory } from "@/wins/main/pages/home/playlists-view/load";
+import Section from "@/common/components/layout/section";
+import AppError from "@/common/components/fallback/app-error";
+import MediaGrid from "@/common/components/layout/media-grid";
+import AppLoading from "@/common/components/fallback/app-loading";
 import type { MediaItem } from "@/common/components/layout/media-grid/card";
-import type { PlaylistCategory, PlaylistOrder } from "@/wins/main/constants";
+import type { PlaylistOrder, PlaylistCategory } from "@/wins/main/constants";
 
 import CategoryPanel from "./category-panel";
-import AppError from "@/common/components/fallback/app-error";
-import AppLoading from "@/common/components/fallback/app-loading";
-import MediaGrid from "@/common/components/layout/media-grid";
-import Section from "@/common/components/layout/section";
 
 const HomePlaylistsView: FC<{ className?: string }> = ({ className }) => {
   const user = useUser();
@@ -111,14 +111,14 @@ const HomePlaylistsView: FC<{ className?: string }> = ({ className }) => {
         showCategoryPanel={showCategoryPanel}
         setShowCategoryPanel={setShowCategoryPanel}
       />
-      <Section title={resolvedTitle} subTitle="Playlist Explore" Icon={ListMusic}>
-        <AppError reset={reload} when={status === "error"} message="加载歌单失败">
-          <AppLoading loading={status === "loading"} className="min-h-80">
+      <Section Icon={ListMusic} title={resolvedTitle} subTitle="Playlist Explore">
+        <AppError reset={reload} message="加载歌单失败" when={status === "error"}>
+          <AppLoading className="min-h-80" loading={status === "loading"}>
             <MediaGrid items={items} onClickItem={(id) => jumpPlaylistPage(id, "normal")} />
             <div
               ref={loadMoreSentinelRef}
-              aria-hidden={!hasMore}
-              className="mt-5 flex min-h-14 items-center justify-center pb-18">
+              className="mt-5 flex min-h-14 items-center justify-center pb-18"
+              aria-hidden={!hasMore}>
               {hasMore ? (
                 <span className="flex items-center gap-2 text-xs font-semibold opacity-55">
                   {isLoading && <LoaderCircle className="size-4 animate-spin" />}

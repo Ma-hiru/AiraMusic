@@ -1,11 +1,11 @@
-import { type CacheStoreConfig, CacheStoreConfigSchema } from "@/types/store";
+import { constants, accessSync } from "node:fs";
 import { MainStoreForConfig } from "@/lib/key-value-store";
 import { MainCacheStoreConstants } from "@/constants/store";
-import { accessSync, constants } from "node:fs";
+import { type CacheStoreConfig, CacheStoreConfigSchema } from "@/types/store";
 
 export function mergeCacheStoreConfig(
   config: Optional<Partial<CacheStoreConfig>>
-): { ok: true; config: CacheStoreConfig } | { ok: false; reason: string } {
+): { ok: false; reason: string } | { ok: true; config: CacheStoreConfig } {
   if (!config) return { ok: false, reason: "参数错误" };
   const old = MainStoreForConfig.get("cache", MainCacheStoreConstants.DEFAULT_CONFIG);
   const merged = { ...old, ...config };

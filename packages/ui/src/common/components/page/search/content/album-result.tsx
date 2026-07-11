@@ -1,34 +1,34 @@
-import { type FC, useCallback, useEffect, useRef } from "react";
-import { useRequestAutoRun, useRequestStatusWrap } from "@/common/hooks/use-request-wrap";
-import { NeteaseAPISearch } from "@/common/netease/api";
-import { SearchType } from "@/common/enum";
 import { cx } from "@emotion/css";
+import { useRef, type FC, useEffect, useCallback } from "react";
+import { SearchType } from "@/common/enum";
+import { RendererFormat } from "@/common/lib/format";
+import { NeteaseAPISearch } from "@/common/netease/api";
 import { useScrollAutoHide } from "@/common/hooks/use-scroll-auto-hide";
-import AppLoading from "@/common/components/fallback/app-loading";
+import { useRequestAutoRun, useRequestStatusWrap } from "@/common/hooks/use-request-wrap";
 import AppEmpty from "@/common/components/fallback/app-empty";
 import AppError from "@/common/components/fallback/app-error";
+import AppLoading from "@/common/components/fallback/app-loading";
 import HomeMediaGrid from "@/common/components/layout/media-grid";
-import { RendererFormat } from "@/common/lib/format";
 
 interface AlbumResultProps {
-  className?: string;
-  keywords?: string;
-  onJumpAlbum: Optional<NormalFunc<[id: number]>>;
   active: boolean;
+  keywords?: string;
+  className?: string;
   setCount: NormalFunc<[count: number]>;
+  onJumpAlbum: Optional<NormalFunc<[id: number]>>;
 }
 
 const AlbumResult: FC<AlbumResultProps> = ({
   className,
-  keywords,
-  onJumpAlbum,
   setCount,
-  active
+  onJumpAlbum,
+  active,
+  keywords
 }) => {
   const {
     status,
-    data: list = [],
-    fetchData
+    fetchData,
+    data: list = []
   } = useRequestStatusWrap(
     useCallback(async (keywords?: string) => {
       if (!keywords) return [];

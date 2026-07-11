@@ -1,6 +1,6 @@
-import { type FC, memo, type ReactNode } from "react";
-import type { LucideIcon } from "lucide-react";
 import { cx } from "@emotion/css";
+import { memo, type FC, type ReactNode } from "react";
+import type { LucideIcon } from "lucide-react";
 
 interface BaseItemProps {
   icon?: LucideIcon;
@@ -9,7 +9,7 @@ interface BaseItemProps {
   emptyIcon?: boolean;
 }
 
-const BaseItem: FC<BaseItemProps> = ({ icon: Icon, children, className, emptyIcon = false }) => {
+const BaseItem: FC<BaseItemProps> = ({ className, children, icon: Icon, emptyIcon = false }) => {
   return (
     <div className={cx("flex items-center gap-3 py-3", className)}>
       {!emptyIcon && (

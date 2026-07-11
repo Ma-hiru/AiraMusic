@@ -1,8 +1,8 @@
 import { join } from "node:path";
-import { fileURLToPath } from "node:url";
 import { existsSync } from "node:fs";
-import { type ChildProcessByStdio, spawn } from "node:child_process";
 import { Readable } from "node:stream";
+import { fileURLToPath } from "node:url";
+import { spawn, type ChildProcessByStdio } from "node:child_process";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 const exeName = process.platform === "win32" ? "aira-music-cache.exe" : "aira-music-cache";
@@ -24,7 +24,7 @@ export default class Store {
   async stop(timeoutMs = 5000): Promise<boolean> {
     if (!this._running) return true;
     return new Promise<boolean>((resolve) => {
-      let timer: NodeJS.Timeout | null = null;
+      let timer: null | NodeJS.Timeout = null;
       const onExit = () => finish(true);
       const finish = (ok: boolean) => {
         timer && clearTimeout(timer);
@@ -116,13 +116,13 @@ export default class Store {
 
   private constructor(
     process:
-      | ChildProcessByStdio<null, Readable, Readable> // ["ignore","pipe","pipe"]
-      | ChildProcessByStdio<null, null, null>, // ["ignore","ignore","ignore"]
+      | ChildProcessByStdio<null, null, null> // ["ignore","ignore","ignore"]
+      | ChildProcessByStdio<null, Readable, Readable>, // ["ignore","pipe","pipe"]
     props: {
-      enableConsole: boolean;
-      logger: NormalFunc<[msg: Buffer]>;
       port: number;
       token: string;
+      enableConsole: boolean;
+      logger: NormalFunc<[msg: Buffer]>;
     }
   ) {
     this.serverProc = process;
@@ -179,7 +179,7 @@ export default class Store {
     }
   }
 
-  static handleArgs(args: Record<string, number | string | null>): string[] {
+  static handleArgs(args: Record<string, null | number | string>): string[] {
     return Object.entries(args)
       .filter((a): a is [string, number | string] => a[1] !== null)
       .map(([flag, value]) => [flag.startsWith("--") ? flag : `--${flag}`, String(value)])
@@ -187,17 +187,17 @@ export default class Store {
   }
 
   static run(props: {
-    args?: Record<string, string | number | null>;
     port: number;
     token: string;
-    storePath: Nullable<string>;
     indexKey: string;
+    storePath: Nullable<string>;
+    args?: Record<string, null | number | string>;
     /** eg: "24h" */
+    path?: string;
     ttl: Nullable<string>;
+    enableConsole?: boolean;
     capacity: Nullable<number>;
     logger?: NormalFunc<[msg: Buffer]>;
-    enableConsole?: boolean;
-    path?: string;
     onExit?: NormalFunc<[code?: number]>;
   }) {
     if (this.instance) return this.instance;

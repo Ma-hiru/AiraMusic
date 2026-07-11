@@ -1,7 +1,7 @@
-import { Log } from "@/common/lib/log";
-import { Listener } from "@/common/utils/listenable";
 import { EqError } from "@mahiru/log";
+import { Log } from "@/common/lib/log";
 import { RendererIPC } from "@mahiru/ipc/renderer";
+import { Listener } from "@/common/utils/listenable";
 
 export class RendererNet {
   static completed: number[] = [];

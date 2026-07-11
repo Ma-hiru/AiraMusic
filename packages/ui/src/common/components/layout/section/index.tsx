@@ -1,36 +1,50 @@
 import { cx } from "@emotion/css";
-import { getTextClassName } from "@/common/components/display/text";
-import { type FC, memo, type ReactNode, useMemo } from "react";
 import { type LucideIcon } from "lucide-react";
+import { memo, type FC, useMemo, type ReactNode } from "react";
+import { getTextClassName } from "@/common/components/display/text";
 
 interface HomeSectionProps {
   title?: string;
-  subTitle?: string;
   Icon?: LucideIcon;
+  subTitle?: string;
+  action?: ReactNode;
   className?: string;
-  onClick?: NormalFunc;
   children?: ReactNode;
+  onClick?: NormalFunc;
 }
 
-const Section: FC<HomeSectionProps> = ({ title, subTitle, Icon, className, children, onClick }) => {
+const Section: FC<HomeSectionProps> = ({
+  className,
+  onClick,
+  Icon,
+  title,
+  action,
+  children,
+  subTitle
+}) => {
   const header = useMemo(() => {
-    if (!subTitle && !title && !Icon) return null;
+    if (!subTitle && !title && !Icon && !action) return null;
     return (
       <header className="mb-3 flex items-end justify-between gap-3 px-2">
         <div className="min-w-0">
           {subTitle && <p className={getTextClassName("sectionCaption")}>{subTitle}</p>}
           {title && <h1 className={getTextClassName("sectionTitle", "truncate")}>{title}</h1>}
         </div>
-        {Icon && (
-          <div className="flex size-8 shrink-0 items-center justify-center rounded-lg">
-            <Icon className="size-4" />
+        {(action || Icon) && (
+          <div className="flex shrink-0 items-center gap-1.5">
+            {action}
+            {Icon && (
+              <div className="flex size-8 shrink-0 items-center justify-center rounded-lg">
+                <Icon className="size-4" />
+              </div>
+            )}
           </div>
         )}
       </header>
     );
-  }, [Icon, subTitle, title]);
+  }, [Icon, action, subTitle, title]);
   return (
-    <section onClick={onClick} className={cx("w-full contain-layout", className)}>
+    <section className={cx("w-full contain-layout", className)} onClick={onClick}>
       {header}
       {children}
     </section>

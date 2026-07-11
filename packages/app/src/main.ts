@@ -1,5 +1,5 @@
-import { MainEntry, MainApp } from "@/entry";
 import { MainHandle } from "@/lib/handle";
+import { MainApp, MainEntry } from "@/entry";
 
 // 创建程序实例
 const app = new MainApp();

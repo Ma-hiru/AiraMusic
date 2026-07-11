@@ -1,10 +1,10 @@
-import RendererPlayerHandle from "@/wins/main/lib/handle";
 import { useCallback } from "react";
-import { type TrackListClickFunc } from "@/common/components/display/track_list";
-import { NeteaseTrackRecord } from "@/common/netease/models";
 import { RendererWindow } from "@/common/lib/window";
 import { RendererIPCMessageBus } from "@/common/lib/bus";
 import { useLatestRef } from "@/common/hooks/use-latest-ref";
+import { NeteaseTrackRecord } from "@/common/netease/models";
+import { type TrackListClickFunc } from "@/common/components/display/track_list";
+import RendererPlayerHandle from "@/wins/main/lib/handle";
 
 export function usePlayerActionInList(getTracks: NormalFunc<[], NeteaseTrackRecord[]>) {
   const player = RendererPlayerHandle.usePlayer();

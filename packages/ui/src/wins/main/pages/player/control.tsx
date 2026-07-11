@@ -1,46 +1,54 @@
 import { cx } from "@emotion/css";
-import { type FC, memo, useCallback, useMemo } from "react";
-import { createPlayerPlaylistModal } from "@/wins/main/componets/player-playlist-modal";
+import { useSetAtom, useAtomValue } from "jotai";
+import { memo, type FC, useMemo, useCallback } from "react";
 import {
-  ArrowRightLeft,
-  ListMusic,
-  LoaderCircle,
-  Pause,
   Play,
+  Pause,
+  Trash2,
   Repeat1,
   Repeat2,
   Shuffle,
   SkipBack,
+  ListMusic,
   SkipForward,
-  Trash2
+  LoaderCircle,
+  ArrowRightLeft
 } from "lucide-react";
-import { NeteaseAPITrack } from "@/common/netease/api";
-import { useAtomValue, useSetAtom } from "jotai";
 import { fmModeAtom } from "@/wins/main/atoms/track";
+import { NeteaseAPITrack } from "@/common/netease/api";
 import { playModalAtom } from "@/wins/main/atoms/layout";
-import RendererPlayerHandle from "@/wins/main/lib/handle";
-import AppModal from "@/common/components/display/modal";
+import { useLatestRef } from "@/common/hooks/use-latest-ref";
+import { usePageJump } from "@/wins/main/hooks/use-page-jump";
+import { usePlayerActionInList } from "@/wins/main/hooks/use-player-action-in-list";
 import AppToast from "@/common/components/display/toast";
-
+import RendererPlayerHandle from "@/wins/main/lib/handle";
+import AppModal, { createPlayerPlaylistModal } from "@/common/components/display/modal";
 import IconButton, { type IconButtonProps } from "@/common/components/data-input/icon-button";
+
 import Progress from "./progress";
 
 interface ControlProps {
   className?: string;
-  containerClassName?: string;
   itemClassName?: string;
+  containerClassName?: string;
 }
 
-const Control: FC<ControlProps> = ({ className, containerClassName, itemClassName }) => {
+const Control: FC<ControlProps> = ({ className, itemClassName, containerClassName }) => {
   const { create } = AppModal.useModal();
   const player = RendererPlayerHandle.usePlayer();
   const setPlayModalAtom = useSetAtom(playModalAtom);
   const fmMode = useAtomValue(fmModeAtom);
+
+  const actionRef = useLatestRef({
+    ...usePageJump(),
+    ...usePlayerActionInList(() => player.playlist.list())
+  });
   const openPlaylistModal = useCallback(() => {
-    create(createPlayerPlaylistModal, () => {
-      setPlayModalAtom(false);
+    create(createPlayerPlaylistModal, {
+      ...actionRef.current,
+      onJumpPage: () => setPlayModalAtom(false)
     });
-  }, [create, setPlayModalAtom]);
+  }, [actionRef, create, setPlayModalAtom]);
 
   const dislike = useCallback(() => {
     const current = player.current.track;
@@ -57,34 +65,34 @@ const Control: FC<ControlProps> = ({ className, containerClassName, itemClassNam
     if (player.playing) {
       return (
         <ControlBtn
-          icon={Pause}
           label="暂停"
-          iconProps={{ fill: "currentColor" }}
+          icon={Pause}
           iconClassName="scale-85"
           itemClassName={itemClassName}
+          iconProps={{ fill: "currentColor" }}
           onClick={() => player.audio.pause()}
         />
       );
     } else if (player.loading) {
       return (
         <ControlBtn
-          icon={LoaderCircle}
-          label="正在加载"
-          disabled
           className="disabled:opacity-80"
-          iconClassName="animate-spin scale-85"
-          itemClassName={itemClassName}
+          label="正在加载"
+          icon={LoaderCircle}
           color="currentColor"
+          itemClassName={itemClassName}
+          iconClassName="animate-spin scale-85"
+          disabled
         />
       );
     }
     return (
       <ControlBtn
-        icon={Play}
         label="播放"
-        iconProps={{ fill: "currentColor" }}
+        icon={Play}
         iconClassName="scale-85"
         itemClassName={itemClassName}
+        iconProps={{ fill: "currentColor" }}
         onClick={() => player.audio.play()}
       />
     );
@@ -96,17 +104,17 @@ const Control: FC<ControlProps> = ({ className, containerClassName, itemClassNam
       <div className={cx("flex justify-between items-center font-bold mt-2", className)}>
         <ControlBtn
           icon={SkipBack}
-          label={fmMode ? "私人 FM 不支持上一首" : "上一首"}
           disabled={fmMode}
           iconClassName="scale-85"
           itemClassName={itemClassName}
           iconProps={{ fill: "currentColor" }}
+          label={fmMode ? "私人 FM 不支持上一首" : "上一首"}
           onClick={() => player.playlist.last(true)}
         />
         {centerIcon}
         <ControlBtn
-          icon={SkipForward}
           label="下一首"
+          icon={SkipForward}
           iconClassName="scale-85"
           itemClassName={itemClassName}
           iconProps={{ fill: "currentColor" }}
@@ -126,19 +134,19 @@ const Control: FC<ControlProps> = ({ className, containerClassName, itemClassNam
             <ControlBtn
               icon={Shuffle}
               label="关闭随机播放"
-              aria-pressed
               iconClassName="scale-85"
               itemClassName={itemClassName}
               iconProps={{ fill: "currentColor" }}
               onClick={() => (player.playlist.shuffle = false)}
+              aria-pressed
             />
           ) : (
             <ControlBtn
-              icon={ArrowRightLeft}
               label="开启随机播放"
               aria-pressed={false}
-              iconProps={{ fill: "currentColor" }}
+              icon={ArrowRightLeft}
               itemClassName={itemClassName}
+              iconProps={{ fill: "currentColor" }}
               onClick={() => (player.playlist.shuffle = true)}
             />
           ))}
@@ -146,9 +154,9 @@ const Control: FC<ControlProps> = ({ className, containerClassName, itemClassNam
           <ControlBtn
             icon={Repeat1}
             label="关闭单曲循环"
-            aria-pressed
             itemClassName={itemClassName}
             onClick={() => (player.playlist.repeat = "off")}
+            aria-pressed
           />
         ) : (
           <ControlBtn
@@ -160,10 +168,10 @@ const Control: FC<ControlProps> = ({ className, containerClassName, itemClassNam
           />
         )}
         <ControlBtn
-          icon={ListMusic}
           label="打开播放队列"
-          itemClassName={itemClassName}
+          icon={ListMusic}
           iconClassName="scale-85"
+          itemClassName={itemClassName}
           onClick={openPlaylistModal}
         />
       </div>
@@ -183,8 +191,6 @@ const ControlBtn = ({
 }) => {
   return (
     <IconButton
-      size="normal"
-      variant="plain"
       className={cx(
         `
           text-current
@@ -192,6 +198,8 @@ const ControlBtn = ({
         `,
         className
       )}
+      size="normal"
+      variant="plain"
       iconClassName={cx("size-6", iconClassName, itemClassName)}
       {...rest}
     />

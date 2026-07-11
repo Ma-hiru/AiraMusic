@@ -1,35 +1,38 @@
 import { cx } from "@emotion/css";
-import { type FC, memo, useCallback, useEffect, useState } from "react";
-import { NeteaseSettings, type NeteaseSettingsModel, NeteaseUser } from "@/common/netease/models";
-import { RendererIPC } from "@mahiru/ipc/renderer";
+import { memo, type FC, useState, useEffect, useCallback } from "react";
 import { RendererCache } from "@/common/lib/cache";
-import type { InvokeEventPayload } from "@mahiru/ipc/types";
+import { RendererIPC } from "@mahiru/ipc/renderer";
+import { useAgentFocusCtx } from "@/common/hooks/use-agent-focus-ctx";
+import { NeteaseUser, NeteaseSettings, type NeteaseSettingsModel } from "@/common/netease/models";
+import AppToast from "@/common/components/display/toast";
 import type { CacheStoreCategories } from "@/types/cache";
+import type { InvokeEventPayload } from "@mahiru/ipc/types";
 
 import SettingsAside from "./aside";
 import SettingsContent from "./content";
-import AppToast from "@/common/components/display/toast";
 
 interface SettingsProps {
-  user: Nullable<NeteaseUser>;
-  settings: NeteaseSettings;
-  updateSettings: NormalFunc<[settings: NeteaseSettingsModel]>;
-  output: { selected: string; views: { displayName: string; deviceId: string }[] };
-  updateOutput: NormalFunc<[deviceId: string]>;
-  logout: NormalFunc;
   login: NormalFunc;
   className?: string;
+  logout: NormalFunc;
+  routerActive: boolean;
+  settings: NeteaseSettings;
+  user: Nullable<NeteaseUser>;
+  updateOutput: NormalFunc<[deviceId: string]>;
+  updateSettings: NormalFunc<[settings: NeteaseSettingsModel]>;
+  output: { selected: string; views: { deviceId: string; displayName: string }[] };
 }
 
 const Settings: FC<SettingsProps> = ({
   user,
-  settings,
-  updateSettings,
   className,
-  logout,
   login,
+  logout,
+  output,
+  settings,
+  routerActive,
   updateOutput,
-  output
+  updateSettings
 }) => {
   const [cacheStoreSizes, setCacheStoreSizes] = useState<Nullable<CacheStoreCategories>>(null);
   const [cacheStoreConfig, setCacheStoreConfig] =
@@ -82,6 +85,8 @@ const Settings: FC<SettingsProps> = ({
     void getCacheStoreStatus();
   }, [getCacheStoreConfig, getCacheStoreStatus]);
 
+  useAgentFocusCtx({ page: "settings" }, routerActive);
+
   return (
     <section
       className={cx(
@@ -95,24 +100,24 @@ const Settings: FC<SettingsProps> = ({
         className
       )}>
       <SettingsAside
+        className="md:h-full md:contain-strict md:overflow-y-auto md:scrollbar-show md:pr-1"
         user={user}
+        login={login}
+        logout={logout}
         settings={settings}
         cacheStoreConfig={cacheStoreConfig}
-        logout={logout}
-        login={login}
-        className="md:h-full md:contain-strict md:overflow-y-auto md:scrollbar-show md:pr-1"
       />
       <SettingsContent
+        className="md:h-full md:contain-strict md:overflow-y-auto md:scrollbar-show md:pr-1"
         user={user}
-        settings={settings}
         output={output}
+        settings={settings}
         updateOutput={updateOutput}
         updateSettings={updateSettings}
-        cacheStoreConfig={cacheStoreConfig}
         cacheStoreSizes={cacheStoreSizes}
-        updateCacheStoreConfig={updateCacheStoreConfig}
         refreshSize={getCacheStoreStatus}
-        className="md:h-full md:contain-strict md:overflow-y-auto md:scrollbar-show md:pr-1"
+        cacheStoreConfig={cacheStoreConfig}
+        updateCacheStoreConfig={updateCacheStoreConfig}
       />
     </section>
   );

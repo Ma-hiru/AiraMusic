@@ -1,96 +1,96 @@
 namespace NeteaseAPI {
   interface NeteaseCommentsNewResponse extends NeteaseAPIResponse {
-    data: NeteaseCommentsPage;
     message: string;
+    data: NeteaseCommentsPage;
   }
 
   interface NeteaseCommentsPage {
-    bottomAction: null;
-    comments: NeteaseComment[];
-    commentsTitle: string;
-    currentComment: null;
-    currentCommentTitle: string;
+    style: string;
     cursor: string;
-    expandCount: number;
     hasMore: boolean;
+    sortType: number;
+    bottomAction: null;
+    totalCount: number;
+    expandCount: number;
+    currentComment: null;
+    commentsTitle: string;
+    comments: NeteaseComment[];
+    currentCommentTitle: string;
     likeAnimation: LikeAnimation;
     newReplyExpGroupName: string;
-    sortType: number;
     sortTypeList: SortTypeList[];
-    style: string;
-    totalCount: number;
   }
 
   interface NeteaseComment {
-    airborneAction: null;
-    args: string;
-    beReplied: null;
-    bottomTags: string[];
-    commentId: number;
-    commentLocationType: number;
-    commentVideoVO: CommentVideoVO;
-    content: string;
-    contentPicExt: null;
-    contentPicNosKey: null;
-    contentPicUrl: null;
-    contentResource: null;
-    decoration: { [key: string]: any };
-    expressionUrl: null;
-    extInfo: CommentextInfo;
-    grade: null;
-    hideSerialComments: null;
-    hideSerialTips: null;
-    highlight: boolean;
-    ipLocation: IpLocation | null;
-    likeAnimationMap: { [key: string]: any };
-    liked: boolean;
-    likedCount: number;
-    medal: null;
-    musicianSayAirborne: null;
-    needDisplayTime: boolean;
-    outShowComments: string[];
-    owner: boolean;
-    parentCommentId: number;
-    pendantData: null | PendantData;
-    pickInfo: null;
-    privacy: number;
-    repliedMark: boolean;
-    replyCount: number;
-    resourceSpecialType: null;
-    reward: null;
-    richContent: null | string;
-    showFloorComment: ShowFloorComment;
-    source: null;
-    status: number;
     tag: Tag;
     tail: null;
-    threadId: string;
+    user: User;
+    grade: null;
+    medal: null;
+    args: string;
+    reward: null;
+    source: null;
     time: number;
+    track: string;
+    liked: boolean;
+    owner: boolean;
+    pickInfo: null;
+    status: number;
+    beReplied: null;
+    content: string;
+    privacy: number;
     timeStr: string;
     topicList: null;
-    track: string;
-    user: User;
-    userBizLevels: null;
-    userNameplates: null;
+    threadId: string;
     userTop: boolean;
-    voiceDurationMillSecond: number;
+    commentId: number;
     voiceNosKey: null;
+    highlight: boolean;
+    likedCount: number;
+    replyCount: number;
     voiceWhaleId: null;
+    contentPicExt: null;
+    contentPicUrl: null;
+    expressionUrl: null;
+    userBizLevels: null;
     wordMatchList: null;
+    airborneAction: null;
+    bottomTags: string[];
+    hideSerialTips: null;
+    repliedMark: boolean;
+    userNameplates: null;
+    contentResource: null;
+    contentPicNosKey: null;
+    extInfo: CommentextInfo;
+    parentCommentId: number;
+    hideSerialComments: null;
+    needDisplayTime: boolean;
+    musicianSayAirborne: null;
+    outShowComments: string[];
+    resourceSpecialType: null;
+    richContent: null | string;
+    commentLocationType: number;
+    ipLocation: null | IpLocation;
+    commentVideoVO: CommentVideoVO;
+    pendantData: null | PendantData;
+    voiceDurationMillSecond: number;
+    decoration: { [key: string]: any };
+    showFloorComment: ShowFloorComment;
+    likeAnimationMap: { [key: string]: any };
   }
 
   interface CommentVideoVO {
+    videoCount: number;
+    playOrpheusUrl: null;
     allowCreation: boolean;
     creationOrpheusUrl: null;
     forbidCreationText: string;
-    playOrpheusUrl: null;
     showCreationEntrance: boolean;
-    videoCount: number;
   }
 
   interface CommentextInfo {
-    asyncEvent?: AsyncEvent;
     forwardEvent: number;
+    asyncEvent?: AsyncEvent;
   }
 
   interface AsyncEvent {
@@ -101,7 +101,7 @@ namespace NeteaseAPI {
   interface IpLocation {
     ip: null;
     location: string;
-    userId: number | null;
+    userId: null | number;
   }
 
   interface PendantData {
@@ -110,54 +110,54 @@ namespace NeteaseAPI {
   }
 
   interface ShowFloorComment {
+    target: null;
     comments: null;
     replyCount: number;
-    showReplyCount: boolean;
-    target: null;
     topCommentIds: null;
+    showReplyCount: boolean;
   }
 
   interface Tag {
-    contentDatas: string[];
-    contentPicDatas: string[];
     datas: string[];
     extDatas: string[];
+    contentDatas: string[];
     relatedCommentIds: null;
+    contentPicDatas: string[];
   }
 
   interface User {
-    anonym: number;
-    authStatus: number;
-    avatarDetail: null;
-    avatarUrl: string;
-    commonIdentity: null;
-    encryptUserId: string;
+    target: null;
     experts: null;
-    expertTags: null;
-    followed: boolean;
+    anonym: number;
     isHug: boolean;
     liveInfo: null;
-    locationInfo: null;
-    nickname: string;
-    relationTag: null;
-    remarkName: null;
-    socialUserId: null;
-    target: null;
     userId: number;
-    userType: number;
-    vipRights: VipRights;
     vipType: number;
+    expertTags: null;
+    nickname: string;
+    remarkName: null;
+    userType: number;
+    avatarUrl: string;
+    followed: boolean;
+    relationTag: null;
+    authStatus: number;
+    avatarDetail: null;
+    locationInfo: null;
+    socialUserId: null;
+    commonIdentity: null;
+    vipRights: VipRights;
+    encryptUserId: string;
   }
 
   interface VipRights {
-    associator: Associator;
-    extInfo: VipRightsextInfo;
     memberLogo: null;
-    musicPackage: MusicPackage;
-    redplus: null | Redplus;
-    redVipAnnualCount: number;
     redVipLevel: number;
     relationType: number;
+    associator: Associator;
+    redplus: null | Redplus;
+    extInfo: VipRightsextInfo;
+    redVipAnnualCount: number;
+    musicPackage: MusicPackage;
   }
 
   interface Associator {
@@ -171,17 +171,17 @@ namespace NeteaseAPI {
   }
 
   interface Logo {
-    logoDto: LogoDto;
     vipType: number;
+    logoDto: LogoDto;
   }
 
   interface LogoDto {
-    actionUrl: string;
-    height: number;
-    interestId: number;
-    logoType: number;
     url: string;
     width: number;
+    height: number;
+    logoType: number;
+    actionUrl: string;
+    interestId: number;
   }
 
   interface MusicPackage {
@@ -197,20 +197,20 @@ namespace NeteaseAPI {
   }
 
   interface LikeAnimation {
-    animationConfigMap: AnimationConfigMap;
     version: number;
+    animationConfigMap: AnimationConfigMap;
   }
 
   interface AnimationConfigMap {
-    COMMENT_AREA: string[];
-    EVENT_FEED: string[];
     INPUT: string[];
     MOMENT: string[];
+    EVENT_FEED: string[];
+    COMMENT_AREA: string[];
   }
 
   interface SortTypeList {
+    target: string;
     sortType: number;
     sortTypeName: string;
-    target: string;
   }
 }

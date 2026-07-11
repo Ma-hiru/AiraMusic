@@ -9,9 +9,9 @@ export abstract class Listenable<const EventName = string> {
   >();
   private listenerTimer: Nullable<number> = null;
   private listenerMicrotaskPending = false;
-  private updateMode: "microtask" | "sync" | "debounce" = "debounce";
+  private updateMode: "sync" | "debounce" | "microtask" = "debounce";
   private updateGap = 100; // ms
-  protected beforeFlushListeners?: NormalFunc<[event?: EventName], boolean | void>;
+  protected beforeFlushListeners?: NormalFunc<[event?: EventName], void | boolean>;
   public _innerCount = 0;
 
   constructor(name?: string) {
@@ -51,22 +51,38 @@ export abstract class Listenable<const EventName = string> {
     this._innerCount++;
   }
 
+  private queue = new Set<EventName>();
   protected executeListeners(event?: EventName, mode = this.updateMode) {
     switch (mode) {
       case "sync":
         return this.flushListeners(event);
-      case "microtask":
+      case "microtask": {
+        event && this.queue.add(event);
         if (this.listenerMicrotaskPending) return;
         this.listenerMicrotaskPending = true;
         return queueMicrotask(() => {
+          let refresh = true;
+          for (const event of this.queue.values()) {
+            this.queue.delete(event);
+            this.flushListeners(event);
+            refresh = false;
+          }
+          refresh && this.flushListeners();
           this.listenerMicrotaskPending = false;
-          this.flushListeners(event);
         });
+      }
       case "debounce":
+        event && this.queue.add(event);
         this.listenerTimer && window.clearTimeout(this.listenerTimer);
         this.listenerTimer = window.setTimeout(() => {
           this.listenerTimer = null;
-          this.flushListeners(event);
+          let refresh = true;
+          for (const event of this.queue.values()) {
+            this.queue.delete(event);
+            this.flushListeners(event);
+            refresh = false;
+          }
+          refresh && this.flushListeners();
         }, this.updateGap);
         return;
     }
@@ -77,15 +93,15 @@ export abstract class Listenable<const EventName = string> {
     this.eventListeners.clear();
   }
 
-  public setUpdateGap(ms: number) {
+  protected setUpdateGap(ms: number) {
     this.updateGap = Number.isFinite(ms) ? Math.max(Math.floor(ms), 0) : 100;
   }
 
-  public setUpdateMode(mode: typeof this.updateMode) {
+  protected setUpdateMode(mode: typeof this.updateMode) {
     this.updateMode = mode;
   }
 
-  public addListener(callback: NormalFunc, props: { once?: boolean; id?: string } = {}) {
+  public addListener(callback: NormalFunc, props: { id?: string; once?: boolean } = {}) {
     props.once ??= false;
     props.id ??= window.crypto.randomUUID();
     this.listeners.set(callback, { id: props.id, once: props.once });
@@ -101,7 +117,7 @@ export abstract class Listenable<const EventName = string> {
   public addEventListener(
     event: EventName,
     callback: NormalFunc,
-    props: { once?: boolean; id?: string } = {}
+    props: { id?: string; once?: boolean } = {}
   ) {
     props.once ??= false;
     props.id ??= window.crypto.randomUUID();
@@ -117,7 +133,7 @@ export abstract class Listenable<const EventName = string> {
     return unsubscriber;
   }
 
-  public removeListener(callback: NormalFunc | string) {
+  public removeListener(callback: string | NormalFunc) {
     if (typeof callback === "string") {
       for (const [listener, { id }] of this.listeners) {
         if (id === callback) {
@@ -130,7 +146,7 @@ export abstract class Listenable<const EventName = string> {
     this.listeners.delete(callback);
   }
 
-  public removeEventListener(event: EventName, callback: NormalFunc | string) {
+  public removeEventListener(event: EventName, callback: string | NormalFunc) {
     if (typeof callback === "string") {
       for (const [listener, { id }] of this.eventListeners.get(event) ?? []) {
         if (id === callback) {
@@ -181,11 +197,11 @@ export class Listener extends Listenable {
     super.clearAllListeners();
   }
 
-  add(callback: NormalFunc, props?: { once?: boolean; id?: string }) {
+  add(callback: NormalFunc, props?: { id?: string; once?: boolean }) {
     return super.addListener(callback, props);
   }
 
-  remove(callback: NormalFunc | string) {
+  remove(callback: string | NormalFunc) {
     super.removeListener(callback);
   }
 }

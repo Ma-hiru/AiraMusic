@@ -1,4 +1,4 @@
-export type ShortcutModifier = "ctrl" | "shift" | "alt" | "meta";
+export type ShortcutModifier = "alt" | "ctrl" | "meta" | "shift";
 
 export interface ShortcutBinding {
   key: string;
@@ -7,12 +7,12 @@ export interface ShortcutBinding {
 
 /** 可配置快捷键的动作 */
 export type ShortcutAction =
-  | "playToggle"
-  | "prevTrack"
-  | "nextTrack"
   | "volumeUp"
-  | "volumeDown"
+  | "nextTrack"
+  | "prevTrack"
   | "muteToggle"
+  | "playToggle"
+  | "volumeDown"
   | "playModalToggle";
 
 export type ShortcutBindingMap = Record<ShortcutAction, ShortcutBinding>;

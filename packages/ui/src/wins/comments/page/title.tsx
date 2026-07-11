@@ -1,29 +1,29 @@
 import { cx } from "@emotion/css";
-import { type FC, memo, startTransition, useEffect, useMemo, useRef, useState } from "react";
-import {
-  NeteaseAlbum,
-  NeteaseNetworkImage,
-  NeteasePlaylist,
-  NeteaseTrack
-} from "@/common/netease/models";
-import { useCacheRequest } from "@/common/utils/cache";
+import { memo, useRef, type FC, useMemo, useState, useEffect, startTransition } from "react";
 import { Log } from "@/common/lib/log";
 import { NeteaseImageSize } from "@/common/enum";
 import { RendererFormat } from "@/common/lib/format";
+import { RendererWindow } from "@/common/lib/window";
 import { NeteaseAPIWiki } from "@/common/netease/api";
+import { useCacheRequest } from "@/common/utils/cache";
+import { RendererIPCMessageBus } from "@/common/lib/bus";
+import {
+  NeteaseAlbum,
+  NeteaseTrack,
+  NeteasePlaylist,
+  NeteaseNetworkImage
+} from "@/common/netease/models";
 import {
   NeteaseServicesAlbum,
-  NeteaseServicesPlaylist,
-  NeteaseServicesTrack
+  NeteaseServicesTrack,
+  NeteaseServicesPlaylist
 } from "@/common/netease/services";
-import { RendererIPCMessageBus } from "@/common/lib/bus";
-import { RendererWindow } from "@/common/lib/window";
-import NeteaseImage from "@/common/components/display/image/netease-image";
 import Marquee from "@/common/components/display/marquee";
+import NeteaseImage from "@/common/components/display/image/netease-image";
 
 interface TitleProps {
-  commentBus: typeof RendererIPCMessageBus.comment;
   className?: string;
+  commentBus: typeof RendererIPCMessageBus.comment;
 }
 
 const Title: FC<TitleProps> = ({ className, commentBus }) => {
@@ -122,30 +122,30 @@ const Title: FC<TitleProps> = ({ className, commentBus }) => {
         className
       )}>
       <NeteaseImage
-        cache
-        shadow="float"
         className="size-10 rounded-full shrink-0 border"
         image={cover}
+        shadow="float"
         cacheLazy={false}
+        cache
       />
       {commentBus.data?.type === "track" && (
         <>
           <Marquee
-            text={track?.name}
             className="font-semibold text-sm text-center"
+            text={track?.name}
             options={marqueeOpts}
           />
           <Marquee
             className="font-medium text-xs opacity-60 text-center"
-            text={track?.artist.join(" / ")}
             options={marqueeOpts}
+            text={track?.artist.join(" / ")}
           />
           <div className="flex flex-row items-center justify-start gap-1 flex-wrap text-center">
             {tags.map((tag) => {
               return (
                 <span
-                  className="inline-block rounded-full px-1.5 py-0.5 text-[10px] bg-primary text-(--text-color-on-main)"
-                  key={tag}>
+                  key={tag}
+                  className="inline-block rounded-full px-1.5 py-0.5 text-[10px] bg-primary text-(--text-color-on-main)">
                   {tag}
                 </span>
               );
@@ -156,27 +156,27 @@ const Title: FC<TitleProps> = ({ className, commentBus }) => {
       {commentBus.data?.type === "playlist" && (
         <>
           <Marquee
-            text={playlist?.name}
             className="font-semibold text-sm text-center"
             options={marqueeOpts}
+            text={playlist?.name}
           />
           <Marquee
-            text={playlist?.creator?.nickname}
             className="font-medium text-xs opacity-60 text-center"
+            text={playlist?.creator?.nickname}
           />
         </>
       )}
       {commentBus.data?.type === "album" && (
         <>
           <Marquee
-            text={album?.content.name}
             className="font-semibold text-sm text-center"
             options={marqueeOpts}
+            text={album?.content.name}
           />
           <Marquee
             className="font-medium text-xs opacity-60 text-center"
-            text={album?.content.artist.name}
             options={marqueeOpts}
+            text={album?.content.artist.name}
           />
         </>
       )}

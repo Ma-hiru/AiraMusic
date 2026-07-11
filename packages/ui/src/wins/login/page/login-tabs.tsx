@@ -1,5 +1,5 @@
 import { cx } from "@emotion/css";
-import { type FC, memo } from "react";
+import { memo, type FC } from "react";
 
 interface LoginTabsProps {
   tabs: string[];
@@ -7,7 +7,7 @@ interface LoginTabsProps {
   onChange: NormalFunc<[index: number]>;
 }
 
-const LoginTabs: FC<LoginTabsProps> = ({ tabs, activeIndex, onChange }) => {
+const LoginTabs: FC<LoginTabsProps> = ({ onChange, tabs, activeIndex }) => {
   return (
     <div className="flex items-center gap-7 text-[13px] font-semibold">
       {tabs.map((label, index) => {
@@ -15,12 +15,12 @@ const LoginTabs: FC<LoginTabsProps> = ({ tabs, activeIndex, onChange }) => {
         return (
           <button
             key={label}
-            type="button"
-            onClick={() => onChange(index)}
             className={cx(
               "relative cursor-pointer pb-1 ease-in-out transition-colors duration-300",
               active ? "text-(--text-color)" : "text-(--text-color)/45 hover:text-(--text-color)/70"
-            )}>
+            )}
+            type="button"
+            onClick={() => onChange(index)}>
             {label}
             <span
               className={cx(

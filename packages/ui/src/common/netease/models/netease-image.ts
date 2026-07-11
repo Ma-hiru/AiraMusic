@@ -1,11 +1,12 @@
+import { Log } from "@/common/lib/log";
+import { NeteaseImageSize } from "@/common/enum";
+
 import { NeteaseURL } from "./netease-url";
 import { NeteaseAlbum } from "./netease-album";
 import { NeteaseTrack } from "./netease-track";
 import { type NeteaseUserModel } from "./netease-user";
 import { NeteaseTrackRecord } from "./netease-track-record";
-import { NeteaseImageSize } from "@/common/enum";
 import { NeteasePlaylistSummary } from "./netease-playlist-summary";
-import { Log } from "@/common/lib/log";
 
 export class NeteaseNetworkImage {
   url;
@@ -21,11 +22,11 @@ export class NeteaseNetworkImage {
 
   constructor(props: {
     url: string;
-    sourceID: number | string;
-    sourceName: "track" | "playlist" | "avatar" | "other" | "album";
-    size?: NeteaseImageSize | number;
     alt?: string;
     cacheKey?: string;
+    sourceID: number | string;
+    size?: number | NeteaseImageSize;
+    sourceName: "album" | "other" | "track" | "avatar" | "playlist";
   }) {
     this.url = props.url;
     this.sourceID = props.sourceID;
@@ -36,7 +37,7 @@ export class NeteaseNetworkImage {
     this.setSize(this.size);
   }
 
-  setSize(size: Optional<NeteaseImageSize | number>) {
+  setSize(size: Optional<number | NeteaseImageSize>) {
     if (!size) return this;
     this.url = NeteaseURL.setImageSize(this.url, size);
     this.size = size;
@@ -95,7 +96,7 @@ export class NeteaseNetworkImage {
 
   static fromPlaylistCover<
     T extends Optional<
-      NeteaseAPI.NeteasePlaylistDetail | NeteaseAPI.NeteasePlaylistSummary | NeteasePlaylistSummary
+      NeteasePlaylistSummary | NeteaseAPI.NeteasePlaylistDetail | NeteaseAPI.NeteasePlaylistSummary
     >
   >(playlist: T): T extends Falsy ? null : NeteaseNetworkImage {
     if (!playlist) return null as T extends Falsy ? null : NeteaseNetworkImage;
@@ -169,11 +170,11 @@ export class NeteaseLocalImage extends NeteaseNetworkImage {
 
   constructor(props: {
     url: string;
-    sourceID: number | string;
-    sourceName: "track" | "playlist" | "avatar" | "other" | "album";
-    size?: NeteaseImageSize | number;
     localURL: string;
-    localSize?: NeteaseImageSize | number;
+    sourceID: number | string;
+    size?: number | NeteaseImageSize;
+    localSize?: number | NeteaseImageSize;
+    sourceName: "album" | "other" | "track" | "avatar" | "playlist";
   }) {
     super(props);
     this.localURL = props.localURL;
@@ -195,8 +196,8 @@ export class NeteaseLocalImage extends NeteaseNetworkImage {
   }
 
   static fromObject(
-    image: Optional<NeteaseNetworkImage | NeteaseLocalImage>
-  ): Nullable<NeteaseNetworkImage | NeteaseLocalImage> {
+    image: Optional<NeteaseLocalImage | NeteaseNetworkImage>
+  ): Nullable<NeteaseLocalImage | NeteaseNetworkImage> {
     if (!image) return null;
     if ("localURL" in image) return new NeteaseLocalImage(image);
     return new NeteaseNetworkImage(image);
@@ -205,13 +206,13 @@ export class NeteaseLocalImage extends NeteaseNetworkImage {
 
 export class NeteaseCommonImage {
   static isLocal(
-    image: Optional<NeteaseNetworkImage | NeteaseLocalImage>
+    image: Optional<NeteaseLocalImage | NeteaseNetworkImage>
   ): image is NeteaseLocalImage {
     return image?.constructor === NeteaseLocalImage;
   }
 
   static isNetwork(
-    image: Optional<NeteaseNetworkImage | NeteaseLocalImage>
+    image: Optional<NeteaseLocalImage | NeteaseNetworkImage>
   ): image is NeteaseNetworkImage {
     return image?.constructor === NeteaseNetworkImage;
   }

@@ -2,12 +2,12 @@ import type { StoreCategory } from "@/common/enum";
 
 type CacheStoreResponse<T> =
   | {
-      code: 200;
       data: T;
+      code: 200;
     }
   | {
-      code: 500 | 400;
       error: string;
+      code: 400 | 500;
     };
 
 type CacheStoreIndex = {
@@ -16,21 +16,21 @@ type CacheStoreIndex = {
   /** 下载文件的URL */
   url: string;
   /** 原始（下载）文件名 */
-  name: string;
-  mime: string;
-  size: number;
-  createTime: number;
   eTag: string;
-  lastModified: string;
+  mime: string;
+  name: string;
+  size: number;
   category: number;
+  createTime: number;
+  lastModified: string;
 };
 
 type CacheStoreSaveURLItem = {
   id: string;
   url: string;
-  category: StoreCategory;
   update?: boolean;
   timeLimit?: number;
+  category: StoreCategory;
 };
 
 type CacheStoreSaveJSONItem = {
@@ -41,8 +41,8 @@ type CacheStoreSaveJSONItem = {
 };
 
 type CacheStoreSaveURLParams = {
-  items: CacheStoreSaveURLItem[];
   method: string;
+  items: CacheStoreSaveURLItem[];
 };
 
 type CacheStoreSaveJSONParams = {
@@ -69,21 +69,21 @@ type CacheStoreCheckRes = {
 
 type CacheStoreMoveProgress = {
   total: number;
+  failed: number;
   current: number;
   percent: number;
-  failed: number;
 };
 
 type CacheStoreInfo = {
+  path: string;
   size: number;
   count: number;
-  path: string;
 };
 
 type CacheStoreCategories = {
-  image: number;
-  audio: number;
-  video: number;
   json: number;
+  audio: number;
+  image: number;
   other: number;
+  video: number;
 };

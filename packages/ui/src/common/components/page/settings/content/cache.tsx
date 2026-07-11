@@ -1,35 +1,35 @@
-import { css, cx } from "@emotion/css";
-import { type FC, memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { cx, css } from "@emotion/css";
 import { Boxes, Clock8, Folder, HardDrive } from "lucide-react";
-import { RendererFormat } from "@/common/lib/format";
-import { RendererIPC } from "@mahiru/ipc/renderer";
-import { RendererCache } from "@/common/lib/cache";
+import { memo, useRef, type FC, useMemo, useState, useEffect, useCallback } from "react";
 import { Log } from "@/common/lib/log";
+import { RendererCache } from "@/common/lib/cache";
+import { RendererIPC } from "@mahiru/ipc/renderer";
+import { RendererFormat } from "@/common/lib/format";
 import { RendererWindow } from "@/common/lib/window";
+import Card from "@/common/components/layout/card";
+import AppToast from "@/common/components/display/toast";
+import AppModal, { createDialogModal } from "@/common/components/display/modal";
 import type { CacheStoreCategories } from "@/types/cache";
 import type { InvokeEventPayload } from "@mahiru/ipc/types";
-import AppToast from "@/common/components/display/toast";
-import AppModal from "@/common/components/display/modal";
 
-import RangeRow from "./range-row";
 import BaseItem from "./base-item";
+import RangeRow from "./range-row";
 import DonutChart from "./donut-chart";
-import Card from "@/common/components/layout/card";
 
 interface CacheProps {
+  refreshSize: NormalFunc;
   cacheStoreSizes: Nullable<CacheStoreCategories>;
   cacheStoreConfig: Nullable<InvokeEventPayload<"invoke_cache_config_get">>;
   updateCacheStoreConfig: PromiseFunc<
     [config: Partial<InvokeEventPayload<"invoke_cache_config_get">>]
   >;
-  refreshSize: NormalFunc;
 }
 
 const Cache: FC<CacheProps> = ({
-  cacheStoreConfig,
+  refreshSize,
   cacheStoreSizes,
-  updateCacheStoreConfig,
-  refreshSize
+  cacheStoreConfig,
+  updateCacheStoreConfig
 }) => {
   const capacityGB = useMemo(() => {
     return RendererFormat.convertBytes(cacheStoreConfig?.capacity, "GB");
@@ -38,7 +38,7 @@ const Cache: FC<CacheProps> = ({
     return Number(cacheStoreConfig?.ttl.replace("h", "") ?? 0) / 24;
   }, [cacheStoreConfig?.ttl]);
   const path = cacheStoreConfig?.path ?? "";
-  const { create, createDialogModal } = AppModal.useModal();
+  const { create } = AppModal.useModal();
 
   const [capacityRangeValue, setCapacityRangeValue] = useState(capacityGB);
   const [ttlRangeValue, setTtlRangeValue] = useState(ttlDays);
@@ -143,7 +143,7 @@ const Cache: FC<CacheProps> = ({
           .finally(refreshSize);
       }
     });
-  }, [create, createDialogModal, refreshSize]);
+  }, [create, refreshSize]);
 
   const saveChanges = async () => {
     if (!hasChanged) return;
@@ -185,26 +185,26 @@ const Cache: FC<CacheProps> = ({
   useEffect(reset, [reset]);
 
   return (
-    <Card Icon={HardDrive} title="缓存" subTitle="Cache">
+    <Card title="缓存" Icon={HardDrive} subTitle="Cache">
       <DonutChart cacheStoreSizes={cacheStoreSizes} />
       <RangeRow
-        icon={Boxes}
-        title="缓存容量"
-        unit="GB"
         min={1}
         max={20}
         step={1}
+        unit="GB"
+        icon={Boxes}
+        title="缓存容量"
         debounced={false}
         value={capacityRangeValue}
         onChange={setCapacityRangeValue}
       />
       <RangeRow
-        icon={Clock8}
-        title="保留时间"
-        unit="天"
         min={1}
         max={30}
         step={1}
+        unit="天"
+        title="保留时间"
+        icon={Clock8}
         debounced={false}
         value={ttlRangeValue}
         onChange={setTtlRangeValue}
@@ -213,7 +213,6 @@ const Cache: FC<CacheProps> = ({
         icon={Folder}
         children={
           <p
-            onClick={selectDirPath}
             className={cx(
               `
                h-11 flex-1 select-text rounded-md border border-white/30
@@ -223,7 +222,8 @@ const Cache: FC<CacheProps> = ({
                line-clamp-1 shrink-0 cursor-pointer
                hover:opacity-50
               `
-            )}>
+            )}
+            onClick={selectDirPath}>
             {pathInputValue}
           </p>
         }
@@ -252,10 +252,10 @@ const Cache: FC<CacheProps> = ({
       </BaseItem>
       <BaseItem>
         <div className="w-full flex justify-end gap-3">
-          <Button disable={!hasChanged} title="保存" onClick={saveChanges} />
-          <Button disable={!hasChanged} title="重置" onClick={reset} />
-          <Button disable={false} title="刷新" onClick={refresh} />
-          <Button disable={!hasData} title="清空" onClick={clear} />
+          <Button title="保存" disable={!hasChanged} onClick={saveChanges} />
+          <Button title="重置" disable={!hasChanged} onClick={reset} />
+          <Button title="刷新" disable={false} onClick={refresh} />
+          <Button title="清空" disable={!hasData} onClick={clear} />
         </div>
       </BaseItem>
     </Card>
@@ -265,19 +265,16 @@ const Cache: FC<CacheProps> = ({
 export default memo(Cache);
 
 const Button = ({
-  disable,
+  onClick,
   title,
-  onClick
+  disable
 }: {
-  disable: boolean;
   title: string;
+  disable: boolean;
   onClick: NormalFunc;
 }) => {
   return (
     <button
-      type="button"
-      title={title}
-      onClick={onClick}
       className={cx(
         `
           shrink-0 h-8 rounded-md border border-white/30 px-3
@@ -288,7 +285,10 @@ const Button = ({
         disable
           ? "opacity-50 cursor-not-allowed"
           : "hover:bg-primary hover:text-primary-text  active:scale-[0.98]"
-      )}>
+      )}
+      title={title}
+      type="button"
+      onClick={onClick}>
       {title}
     </button>
   );

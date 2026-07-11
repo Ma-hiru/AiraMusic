@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef } from "react";
+import { useRef, useEffect, useLayoutEffect } from "react";
 import { NeteaseImageSize } from "@/common/enum";
 import { NeteaseURL } from "@/common/netease/models";
 import RendererPlayerHandle from "@/wins/main/lib/handle";
@@ -9,8 +9,8 @@ export function useMediaSession(props: {
   lastTrack: NormalFunc<any>;
   nextTrack: NormalFunc<any>;
   seekForward: NormalFunc<[gap: number]>;
-  seekBackward: NormalFunc<[gap: number]>;
   seekTo: NormalFunc<[position: number]>;
+  seekBackward: NormalFunc<[gap: number]>;
   changeTime: NormalFunc<[position: number]>;
 }) {
   const getProps = useRef(props);
@@ -24,7 +24,7 @@ export function useMediaSession(props: {
     const { mediaSession } = navigator;
 
     // 统一通过 getProps.current 取最新回调，避免 handler 永远闭包住首次渲染的 props。
-    const handlers: Record<MediaSessionAction, MediaSessionActionHandler | null> = {
+    const handlers: Record<MediaSessionAction, null | MediaSessionActionHandler> = {
       play: () => getProps.current.play(),
       pause: () => getProps.current.pause(),
       previoustrack: () => getProps.current.lastTrack(),

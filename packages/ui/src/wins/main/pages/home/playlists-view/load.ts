@@ -2,14 +2,14 @@ import { NeteaseAPIHome, NeteaseAPIPlaylist } from "@/common/netease/api";
 import type { MediaItem } from "@/common/components/layout/media-grid/card";
 
 type PlaylistFetchResult = {
-  items: MediaItem[];
-  hasMore: boolean;
   cursor?: number;
+  hasMore: boolean;
+  items: MediaItem[];
 };
 
 type HomePlaylistSource = NeteaseAPI.NeteaseTopPlaylist & {
-  copywriter?: string;
   tag?: string;
+  copywriter?: string;
   updateFrequency?: string;
 };
 
@@ -33,7 +33,7 @@ export function uniqueItems(items: MediaItem[]) {
 
 export async function loadPlaylistCategory(
   category: string,
-  order: "new" | "hot",
+  order: "hot" | "new",
   loggedIn: boolean,
   offset: number,
   cursor?: number

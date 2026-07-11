@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { NeteaseAPISearch } from "@/common/netease/api";
 
 export function useSearchRecommend() {

@@ -1,5 +1,6 @@
-import { NeteaseTrack } from "./netease-track";
 import { NeteaseTrackRecord } from "@/common/netease/models/netease-track-record";
+
+import { NeteaseTrack } from "./netease-track";
 
 export class NeteaseHistoryRecord extends NeteaseTrackRecord {
   /** s 秒 */
@@ -7,11 +8,11 @@ export class NeteaseHistoryRecord extends NeteaseTrackRecord {
   time: number;
 
   constructor(props: {
+    time: number;
     sourceID: number;
     detail: NeteaseTrack;
-    sourceName: NeteaseTrackRecordSourceType;
     playDuration: number;
-    time: number;
+    sourceName: NeteaseTrackRecordSourceType;
   }) {
     super(props);
     this.playDuration = props.playDuration;

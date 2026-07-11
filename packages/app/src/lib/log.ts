@@ -1,15 +1,15 @@
-import {
-  createLog,
-  type Log as LogInstance,
-  type LoggerWriter,
-  LogLevel,
-  ParseLogLevel
-} from "@mahiru/log";
-import { createWriteStream, mkdirSync } from "node:fs";
 import { join } from "node:path";
+import { mkdirSync, createWriteStream } from "node:fs";
+import { getArgValue } from "@/utils/args";
 import { MainRuntime } from "@/lib/runtime";
 import { MainPathResolver } from "@/lib/path-resolver";
-import { getArgValue } from "@/utils/args";
+import {
+  LogLevel,
+  createLog,
+  ParseLogLevel,
+  type LoggerWriter,
+  type Log as LogInstance
+} from "@mahiru/log";
 
 class LoggerFileWriter implements LoggerWriter {
   now;

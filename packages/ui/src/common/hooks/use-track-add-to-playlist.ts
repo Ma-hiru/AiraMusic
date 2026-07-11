@@ -1,26 +1,29 @@
-import { useUser } from "@/common/store/user";
 import { useCallback } from "react";
+import { useUser } from "@/common/store/user";
 import { RendererIPCMessageBus } from "@/common/lib/bus";
-import { type NeteaseTrackRecord, NeteaseUser } from "@/common/netease/models";
+import { NeteaseUser, type NeteaseTrackRecord } from "@/common/netease/models";
 import { createAddToPlaylistModal } from "@/common/components/display/modal/add-to-playlist-modal";
 import AppModal from "@/common/components/display/modal";
 import AppToast from "@/common/components/display/toast";
 
 export function useTrackAddToPlaylist(excludeId?: number) {
   const user = useUser();
-  const { create, createAddToPlaylistModal } = AppModal.useModal();
+  const { create } = AppModal.useModal();
   const open = useCallback(
-    (tracks: NeteaseTrackRecord[]) => {
+    async (tracks: NeteaseTrackRecord[]) => {
       if (!user?.isLoggedIn) {
-        return AppToast.show({
+        AppToast.show({
           type: "info",
           text: "请先登录"
         });
+        return Promise.resolve(false);
       }
-      if (tracks.length === 0) return;
+      if (tracks.length === 0) return Promise.resolve(false);
+      const { promise, resolve } = Promise.withResolvers<boolean>();
       create(createAddToPlaylistModal, {
         tracks,
         excludeId,
+        onClose: () => resolve(false),
         onCreated: async (pid) => {
           RendererIPCMessageBus.modified.twoWay({
             type: "playlist-update",
@@ -30,10 +33,12 @@ export function useTrackAddToPlaylist(excludeId?: number) {
           RendererIPCMessageBus.modified.twoWay({
             type: "user-playlist"
           });
+          resolve(true);
         }
       });
+      return promise;
     },
-    [create, createAddToPlaylistModal, user, excludeId]
+    [create, user, excludeId]
   );
 
   const addTrackToPlaylist = useCallback((track: NeteaseTrackRecord) => open([track]), [open]);
@@ -50,7 +55,7 @@ export function useTrackAddToPlaylist(excludeId?: number) {
  * 在嵌套 modal 中使用，比如播放列表
  * */
 export function openTrackAddToPlaylist(
-  tracks: NeteaseTrackRecord[] | NeteaseTrackRecord,
+  tracks: NeteaseTrackRecord | NeteaseTrackRecord[],
   excludeId?: number
 ) {
   if (!NeteaseUser.isLoggedIn) {

@@ -1,11 +1,10 @@
 import { cx } from "@emotion/css";
-import { type FC, memo } from "react";
+import { memo, type FC } from "react";
+import { useAtom, useAtomValue } from "jotai";
 import { useNavigate } from "react-router-dom";
 import { RoutePathMain } from "@/common/routes";
-import { useAtom, useAtomValue } from "jotai";
-import { playModalAtom, scrollActionsAtom, sidebarAtom } from "@/wins/main/atoms/layout";
 import { useRouterActive } from "@/common/hooks/use-router-active";
-
+import { sidebarAtom, playModalAtom, scrollActionsAtom } from "@/wins/main/atoms/layout";
 import Float from "@/common/components/layout/float";
 
 const MainFloat: FC<{ className?: string }> = ({ className }) => {
@@ -23,8 +22,8 @@ const MainFloat: FC<{ className?: string }> = ({ className }) => {
       hidden={playModal}
       scrollTop={scrollActions.scrollTop}
       fastLocate={scrollActions.fastLocate}
-      onBack={isHome ? null : () => navigate(-1)}
       sidebar={{ open: sidebar, toggle: () => setSidebar(!sidebar) }}
+      onBack={isHome ? null : () => navigate(-1)}
     />
   );
 };

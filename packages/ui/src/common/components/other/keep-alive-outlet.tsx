@@ -1,14 +1,14 @@
+import { useOutlet, useLocation } from "react-router-dom";
 import {
   type FC,
-  type ReactNode,
-  type Ref,
-  useCallback,
-  useEffect,
-  useImperativeHandle,
   useMemo,
-  useState
+  type Ref,
+  useState,
+  useEffect,
+  useCallback,
+  type ReactNode,
+  useImperativeHandle
 } from "react";
-import { useLocation, useOutlet } from "react-router-dom";
 import { useUpdate } from "@/common/hooks/use-update";
 
 export type KeepAliveOutletRef = {

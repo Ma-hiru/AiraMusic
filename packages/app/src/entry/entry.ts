@@ -1,8 +1,9 @@
 import { app, session } from "electron";
-import { MainApp } from "./app";
-import { MainExitCodeConstants } from "@/constants/exit-code";
-import { MainHandle } from "@/lib/handle";
 import { Log } from "@/lib/log";
+import { MainHandle } from "@/lib/handle";
+import { MainExitCodeConstants } from "@/constants/exit-code";
+
+import { MainApp } from "./app";
 
 /**
  * @desc 程序的入口 \

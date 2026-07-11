@@ -1,20 +1,25 @@
-import { type FC, memo, type ReactNode } from "react";
 import { cx } from "@emotion/css";
+import { memo, type FC, type ReactNode } from "react";
 
 interface SwitchProps {
-  className?: string;
+  checked?: boolean;
   label?: ReactNode;
-  checked: boolean;
-  onClick: NormalFunc;
+  className?: string;
+  underlineClassName?: string;
+  onClick?: NormalFunc;
+  onChange?: NormalFunc<[checked: boolean]>;
 }
 
-const Switch: FC<SwitchProps> = ({ checked, onClick, className, label }) => {
+const Switch: FC<SwitchProps> = ({
+  className,
+  onClick,
+  onChange,
+  label,
+  checked,
+  underlineClassName
+}) => {
   return (
     <button
-      type="button"
-      role="switch"
-      aria-checked={checked}
-      aria-label={typeof label === "string" ? label : undefined}
       className={cx(
         `
         flex justify-center items-center relative
@@ -26,12 +31,20 @@ const Switch: FC<SwitchProps> = ({ checked, onClick, className, label }) => {
         `,
         className
       )}
-      onClick={onClick}>
+      role="switch"
+      type="button"
+      aria-checked={checked}
+      aria-label={typeof label === "string" ? label : undefined}
+      onClick={() => {
+        onClick?.();
+        onChange?.(!checked);
+      }}>
       {label}
       <span
         className={cx(
           "absolute w-full h-0.5 bottom-0 bg-primary hidden",
-          checked && "inline-block"
+          checked && "inline-block",
+          underlineClassName
         )}
       />
     </button>

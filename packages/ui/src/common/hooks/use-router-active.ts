@@ -1,6 +1,6 @@
-import { RoutePath } from "@/common/routes";
+import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { RoutePath } from "@/common/routes";
 
 /** 匹配页面路由，不包含 query */
 export function useRouterActive<T extends RoutePath<any>>(route: T, page: keyof T) {

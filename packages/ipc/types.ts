@@ -2,18 +2,9 @@ export type { ForwardChecker } from "./src/main/message";
 
 export type { WindowManagerInstance } from "./src/inject/window";
 
-export type {
-  Message,
-  MessageEvent,
-  MessageBusEvent,
-  MessageSingleEvent,
-  MessageData,
-  MessageDirection
-} from "./src/types/message";
-
 export type { EventHandlers, InvokeHandlers } from "./src/main/normal";
 
-export type { NormalEvent, NormalEventMaps, NormalEventArgs } from "./src/types/event";
+export type { NormalEvent, NormalEventArgs, NormalEventMaps } from "./src/types/event";
 
 export type {
   InvokeEvent,
@@ -21,3 +12,22 @@ export type {
   InvokeEventMaps,
   InvokeEventPayload
 } from "./src/types/invoke";
+
+export type {
+  Message,
+  MessageData,
+  MessageEvent,
+  MessageBusEvent,
+  MessageDirection,
+  MessageSingleEvent
+} from "./src/types/message";
+
+export type {
+  AgentInvokeError,
+  AgentToolRequest,
+  AgentFocusContext,
+  AgentInvokeResult,
+  AgentToolResponse,
+  AgentSettingsContext,
+  AgentConversationSummary
+} from "./src/types/agent";

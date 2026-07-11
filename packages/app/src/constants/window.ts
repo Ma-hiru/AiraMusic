@@ -46,6 +46,11 @@ export class MainWindowConstants {
       base: { width: 1024, height: 600 },
       min: { width: 720, height: 422 }
     },
+    // agent
+    agent: {
+      base: { width: 1024, height: 600 },
+      min: { width: 720, height: 422 }
+    },
     // 评论：细长竖条
     comments: {
       base: { width: 300, height: 800 },

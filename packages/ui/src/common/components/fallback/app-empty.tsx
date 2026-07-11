@@ -1,11 +1,11 @@
 import { cx } from "@emotion/css";
-import { type FC, memo, type Ref } from "react";
+import { memo, type FC, type Ref } from "react";
 import { ArchiveBoxXMarkIcon } from "@heroicons/react/24/outline";
 
 interface AppEmptyProps {
   ref?: Ref<HTMLDivElement>;
-  className?: string;
   tips?: string;
+  className?: string;
 }
 
 const AppEmpty: FC<AppEmptyProps> = ({ ref, className, tips = "暂无数据" }) => {

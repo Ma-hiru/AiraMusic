@@ -1,7 +1,7 @@
 import { cx } from "@emotion/css";
-import { type FC, memo, useMemo } from "react";
-import { LoaderCircle, Pause, Play, SkipBack, SkipForward } from "lucide-react";
 import { useAtomValue } from "jotai";
+import { memo, type FC, useMemo } from "react";
+import { Play, Pause, SkipBack, SkipForward, LoaderCircle } from "lucide-react";
 import { fmModeAtom } from "@/wins/main/atoms/track";
 import RendererPlayerHandle from "@/wins/main/lib/handle";
 

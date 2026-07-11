@@ -20,8 +20,8 @@ export class RendererDevice {
 
   static get gpu() {
     const { promise, resolve } = Promise.withResolvers<{
-      devices: GPUDevice[];
       dedicated: boolean;
+      devices: GPUDevice[];
     }>();
 
     const searchBrand = ["nvidia", "amd"];
@@ -40,7 +40,7 @@ export class RendererDevice {
     return promise;
   }
 
-  static get platform(): Promise<NodeJS.Platform | "unknown"> {
+  static get platform(): Promise<"unknown" | NodeJS.Platform> {
     return RendererIPC.NormalChannel.send("invoke_device_platform", undefined).catch((err) => {
       Log.error(err);
       return "unknown";
@@ -76,11 +76,11 @@ export class RendererDevice {
 export interface GPUDevice {
   active: boolean;
   deviceId: number;
+  revision: number;
+  subSysId: number;
+  vendorId: number;
   deviceString?: string;
   driverVendor?: string;
   driverVersion: string;
   gpuPreference: number;
-  revision: number;
-  subSysId: number;
-  vendorId: number;
 }

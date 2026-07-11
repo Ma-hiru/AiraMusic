@@ -1,118 +1,121 @@
 import { cx } from "@emotion/css";
 import {
-  type FC,
   memo,
+  useRef,
+  type FC,
+  useMemo,
   type Ref,
+  useState,
+  useEffect,
+  useCallback,
   type RefObject,
   startTransition,
-  useCallback,
-  useEffect,
-  useImperativeHandle,
-  useMemo,
-  useRef,
-  useState
+  useImperativeHandle
 } from "react";
-import {
-  NeteasePlaylist,
-  NeteaseTrack,
-  NeteaseTrackRecord,
-  NeteaseUser
-} from "@/common/netease/models";
-import type {
-  TrackListClickFunc,
-  TrackListPlayableManager,
-  TrackListRef
-} from "@/common/components/display/track_list";
-import TrackList from "@/common/components/display/track_list";
-import { SearchTrack } from "@mahiru/wasm";
-import { NeteaseAPIPlaylist } from "@/common/netease/api";
-import { NeteaseServicesPlaylist } from "@/common/netease/services";
-import { useUpdate } from "@/common/hooks/use-update";
-import { useLatestRef } from "@/common/hooks/use-latest-ref";
-import { useTrackCoverPreload } from "@/common/hooks/use-track-cover-preload";
-import { useTrackContextMenu } from "@/common/hooks/use-track-context-menu";
 import { Log } from "@/common/lib/log";
-import { type RequestStatus } from "@/common/hooks/use-request-wrap";
-import { type HeartManager } from "@/common/hooks/use-heart";
+import { SearchTrack } from "@mahiru/wasm";
 import { RendererNet } from "@/common/lib/net";
+import { useUpdate } from "@/common/hooks/use-update";
 import { RendererIPCMessageBus } from "@/common/lib/bus";
+import { NeteaseAPIPlaylist } from "@/common/netease/api";
+import { type HeartManager } from "@/common/hooks/use-heart";
+import { useLatestRef } from "@/common/hooks/use-latest-ref";
+import { NeteaseServicesPlaylist } from "@/common/netease/services";
+import { type RequestStatus } from "@/common/hooks/use-request-wrap";
+import { useAgentFocusCtx } from "@/common/hooks/use-agent-focus-ctx";
+import { useTrackContextMenu } from "@/common/hooks/use-track-context-menu";
+import { useTrackCoverPreload } from "@/common/hooks/use-track-cover-preload";
+import {
+  NeteaseUser,
+  NeteaseTrack,
+  NeteasePlaylist,
+  NeteaseTrackRecord
+} from "@/common/netease/models";
 import AppToast from "@/common/components/display/toast";
+import Divider from "@/common/components/layout/divider";
+import AppError from "@/common/components/fallback/app-error";
 import RendererImageConstants from "@/common/constants/image";
+import TrackList from "@/common/components/display/track_list";
+import AppLoading from "@/common/components/fallback/app-loading";
+import type {
+  TrackListRef,
+  TrackListClickFunc,
+  TrackListPlayableManager
+} from "@/common/components/display/track_list";
 
 import Top from "./top";
 import SelectionIndicator from "./selection-indicator";
-import AppLoading from "@/common/components/fallback/app-loading";
-import AppError from "@/common/components/fallback/app-error";
-import Divider from "@/common/components/layout/divider";
 
 export type PlaylistRef = {
-  tracks: NeteaseTrackRecord[];
-  totalTracks: RefObject<NeteaseTrackRecord[]>;
-  trackListRef: RefObject<Nullable<TrackListRef>>;
-  currentVisibleItemIndex: RefObject<number>;
+  reload: NormalFunc;
   scrollTop: NormalFunc;
   fastLocator: NormalFunc;
-  reload: NormalFunc;
+  tracks: NeteaseTrackRecord[];
+  currentVisibleItemIndex: RefObject<number>;
+  totalTracks: RefObject<NeteaseTrackRecord[]>;
+  trackListRef: RefObject<Nullable<TrackListRef>>;
 };
 
 interface PlaylistProps {
   ref?: Ref<PlaylistRef>;
-  id: Nullable<string>;
-  source: Nullable<"like" | "normal">;
   className?: string;
-  onPlay: TrackListClickFunc;
-  heartManager: Optional<HeartManager>;
-  playableManager: Optional<TrackListPlayableManager>;
-  addToPlaylistNext: NormalFunc<[track: NeteaseTrackRecord]>;
-  addToPlaylistLast: NormalFunc<[track: NeteaseTrackRecord]>;
-  addTrackToPlaylist: NormalFunc<[track: NeteaseTrackRecord]>;
-  addTracksToPlaylist?: NormalFunc<[tracks: NeteaseTrackRecord[]]>;
-  openComment: NormalFunc<[track: NeteaseTrackRecord]>;
-  onReplace: NormalFunc;
-  onAddList: NormalFunc;
-  onClickAlbum: NormalFunc<[id: number]>;
-  onClickArtist: NormalFunc<[id: number]>;
-  onEdited: Optional<NormalFunc>;
-  onDeleted?: NormalFunc;
-  canScrollTop: Optional<NormalFunc<[enable: boolean]>>;
-  canFastLocate: Optional<NormalFunc<[enable: boolean]>>;
+  id: Nullable<string>;
+  routerActive: boolean;
   activeTrackID?: number;
   user: Nullable<NeteaseUser>;
-  pageActionType?: "enter" | "out" | "none";
-  onPageAction?: NormalFunc;
-  onCoverLoaded?: NormalFunc<[src: string]>;
+  source: Nullable<"like" | "normal">;
+  pageActionType?: "out" | "none" | "enter";
+  heartManager: Optional<HeartManager>;
+  playableManager: Optional<TrackListPlayableManager>;
+  canScrollTop: Optional<NormalFunc<[enable: boolean]>>;
+  canFastLocate: Optional<NormalFunc<[enable: boolean]>>;
+  addToPlaylistLast: NormalFunc<[track: NeteaseTrackRecord]>;
+  addToPlaylistNext: NormalFunc<[track: NeteaseTrackRecord]>;
+  addTrackToPlaylist: PromiseFunc<[track: NeteaseTrackRecord], boolean>;
+  addTracksToPlaylist: PromiseFunc<[tracks: NeteaseTrackRecord[]], boolean>;
+  openComment: NormalFunc<[track: NeteaseTrackRecord]>;
   setIsTyping?: NormalFunc<[tying: boolean]>;
+  onAddList: NormalFunc;
+  onReplace: NormalFunc;
+  onDeleted?: NormalFunc;
+  onPageAction?: NormalFunc;
+  onPlay: TrackListClickFunc;
+  onClickAlbum: NormalFunc<[id: number]>;
+  onClickArtist: NormalFunc<[id: number]>;
+  onCoverLoaded?: NormalFunc<[src: string]>;
   onDataLoaded?: NormalFunc<[playlist: NeteasePlaylist]>;
+  onEdited: Optional<NormalFunc<[modifiedCover: boolean]>>;
 }
 
 const Playlist: FC<PlaylistProps> = ({
   ref,
-  className,
   id,
-  source,
-  heartManager,
-  playableManager,
   user,
-  onPlay,
-  addToPlaylistNext,
-  addToPlaylistLast,
-  addTrackToPlaylist,
-  addTracksToPlaylist,
-  onEdited,
-  onDeleted,
-  openComment,
-  onReplace,
-  onAddList,
-  canScrollTop,
-  canFastLocate,
-  onClickAlbum,
-  onClickArtist,
+  source,
+  className,
   activeTrackID,
   pageActionType,
-  onPageAction,
-  onCoverLoaded,
+  heartManager,
+  playableManager,
+  canScrollTop,
+  canFastLocate,
+  addToPlaylistLast,
+  addToPlaylistNext,
+  addTrackToPlaylist,
+  addTracksToPlaylist,
+  openComment,
   setIsTyping,
-  onDataLoaded
+  onPlay,
+  onEdited,
+  onAddList,
+  onDeleted,
+  onReplace,
+  onClickAlbum,
+  onDataLoaded,
+  onPageAction,
+  onClickArtist,
+  onCoverLoaded,
+  routerActive
 }) => {
   const [status, setStatus] = useState<RequestStatus>("loading");
   const [playlist, setPlaylist] = useState<Nullable<NeteasePlaylist>>(null);
@@ -144,7 +147,7 @@ const Playlist: FC<PlaylistProps> = ({
   const scrollTop = useRef(() => trackListRef.current?.scrollToItem(0)).current;
   // 封面预缓存
   const coverSize = RendererImageConstants.PlaylistPageTrackCoverSize;
-  const { currentVisibleItemIndex, onRangeUpdate } = useTrackCoverPreload({
+  const { onRangeUpdate, currentVisibleItemIndex } = useTrackCoverPreload({
     totalTracks,
     visibleCount: tracks.length,
     canScrollTop,
@@ -167,18 +170,22 @@ const Playlist: FC<PlaylistProps> = ({
   }, [canFastLocate, activeTrackID, tracks]);
   // 切换歌单时重置状态 / 刷新
   const update = useUpdate();
-  const reload = useCallback(() => {
-    startTransition(() => {
-      setStatus("loading");
-      update();
-    });
-  }, [update]);
+  const forceUpdateRef = useRef(false);
+  const reload = useCallback(
+    (forceUpdate = false) => {
+      startTransition(() => {
+        forceUpdate && (forceUpdateRef.current = true);
+        setStatus("loading");
+        update();
+      });
+    },
+    [update]
+  );
 
   // 批量选择 + 删除
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(() => new Set());
-  const editable =
-    !!playlist && playlist.creator?.userId === user?.profile.userId && source !== "like";
+  const editable = !!playlist && playlist.creator?.userId === user?.profile.userId;
   // 选择切换
   const onToggleSelect = useCallback((id: number) => {
     setSelectedIds((prev) => {
@@ -258,11 +265,11 @@ const Playlist: FC<PlaylistProps> = ({
     ok && exitSelection();
   }, [selectedIds, removeTracks, exitSelection]);
 
-  const onBatchAdd = useCallback(() => {
+  const onBatchAdd = useCallback(async () => {
     const selected = totalTracks.current.filter((t) => selectedIds.has(t.id));
     if (selected.length === 0) return;
-    addTracksToPlaylist?.(selected);
-    exitSelection();
+    const ok = await addTracksToPlaylist?.(selected);
+    ok && exitSelection();
   }, [addTracksToPlaylist, exitSelection, selectedIds]);
 
   const removeSingle = useCallback(
@@ -293,14 +300,16 @@ const Playlist: FC<PlaylistProps> = ({
   }, [id, source, searcher]);
   // 数据加载
   useEffect(() => {
-    let cancel = false;
+    const controller = new AbortController();
     if (source === "normal" || source === "like") {
       const playlistID = source === "like" ? user?.likedPlaylist.id : Number(id);
       if (playlistID) {
-        NeteaseServicesPlaylist.id(playlistID)
+        const forceUpdate = forceUpdateRef.current;
+        forceUpdateRef.current = false;
+        NeteaseServicesPlaylist.id(playlistID, controller.signal, !forceUpdate)
           .then((list) => {
             startTransition(() => {
-              if (cancel) return;
+              if (controller.signal.aborted) return;
               const tracks = NeteaseTrackRecord.fromPlaylist(list);
               searcher.update(NeteaseTrack.toSearchStructString(list.tracks));
               totalTracks.current = tracks;
@@ -310,7 +319,7 @@ const Playlist: FC<PlaylistProps> = ({
             });
           })
           .catch((err) => {
-            if (cancel) return;
+            if (controller.signal.aborted) return;
             startTransition(() => setStatus("error"));
             Log.error(err);
             AppToast.show({
@@ -322,7 +331,7 @@ const Playlist: FC<PlaylistProps> = ({
     }
 
     return () => {
-      cancel = true;
+      controller.abort();
     };
   }, [
     id,
@@ -357,58 +366,66 @@ const Playlist: FC<PlaylistProps> = ({
     playlist && onDataLoaded?.(playlist);
   }, [onDataLoaded, playlist]);
 
+  useAgentFocusCtx(
+    {
+      page: "playlist",
+      id: typeof id === "string" ? Number(id) : id,
+      source: source === "normal" ? "normal" : "user-liked-track"
+    },
+    routerActive
+  );
+
   return (
     <div className={cx("flex h-full min-h-0 flex-col overflow-hidden", className)}>
       <AppError reset={reload} message="歌曲加载失败" when={status === "error"}>
-        <AppLoading loading={status === "loading"} className="h-full w-full">
+        <AppLoading className="h-full w-full" loading={status === "loading"}>
           <Top
-            editable={editable}
             loading={false}
+            reload={reload}
+            source={source}
             summary={playlist}
-            onPlayAll={onReplace}
-            onAddList={onAddList}
-            searchTracks={searchTracks}
+            editable={editable}
             setIsTyping={setIsTyping}
-            onCoverLoaded={onCoverLoaded}
-            onPageAction={onPageAction}
+            searchTracks={searchTracks}
+            selectionMode={selectionMode}
             pageActionType={pageActionType}
             coverCacheKey={source === "like" ? String(user?.likedTrackIDs.checkPoint) : undefined}
-            onEdited={() => {
-              reload();
-              onEdited?.();
-            }}
+            onEdited={onEdited}
+            onAddList={onAddList}
             onDeleted={onDeleted}
-            selectionMode={selectionMode}
+            onPlayAll={onReplace}
+            onPageAction={onPageAction}
+            onCoverLoaded={onCoverLoaded}
             onToggleSelectionMode={toggleSelectionMode}
           />
           {playlist !== null && <Divider className="my-3" />}
           <div className="relative min-h-0 w-full flex-1">
             <TrackList
               ref={trackListRef}
-              tracks={tracks}
-              paddingBottom={selectionMode ? 70 : 5}
               id={playlist?.id}
-              type={source ?? "normal"}
+              tracks={tracks}
               activeID={activeTrackID}
+              selectedIds={selectedIds}
+              type={source ?? "normal"}
+              trackCoverSize={coverSize}
+              heartManager={heartManager}
+              selectionMode={selectionMode}
+              playableManager={playableManager}
+              paddingBottom={selectionMode ? 70 : 5}
               onClick={onPlay}
               onContext={onContextMenu}
-              onRangeUpdate={onRangeUpdate}
               onClickAlbum={onClickAlbum}
               onClickArtist={onClickArtist}
-              heartManager={heartManager}
-              playableManager={playableManager}
-              trackCoverSize={coverSize}
-              selectionMode={selectionMode}
-              selectedIds={selectedIds}
+              onRangeUpdate={onRangeUpdate}
               onToggleSelect={onToggleSelect}
             />
             {selectionMode && (
               <SelectionIndicator
+                tracks={tracks}
                 editable={editable}
+                selectAll={selectAll}
                 selectedIds={selectedIds}
                 exitSelection={exitSelection}
-                tracks={tracks}
-                selectAll={selectAll}
                 onBatchAdd={onBatchAdd}
                 onBatchDelete={onBatchDelete}
               />

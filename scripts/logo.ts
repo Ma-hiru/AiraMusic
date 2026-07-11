@@ -1,7 +1,7 @@
-import sharp from "sharp";
-import fs from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
+import fs from "node:fs";
+import sharp from "sharp";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 

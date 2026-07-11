@@ -1,27 +1,28 @@
-import { CommentSort, CommentType } from "@/common/enum";
 import { useImmer } from "use-immer";
-import { useCallback, useEffect, useState } from "react";
-import { type RequestStatus } from "./use-request-wrap";
-import { useLatestRef } from "./use-latest-ref";
+import { useState, useEffect, useCallback } from "react";
 import { Log } from "@/common/lib/log";
+import { CommentSort, CommentType } from "@/common/enum";
 import { NeteaseAPIComment } from "@/common/netease/api";
 
+import { useLatestRef } from "./use-latest-ref";
+import { type RequestStatus } from "./use-request-wrap";
+
 export type CommentState = {
-  data: NeteaseAPI.NeteaseComment[];
-  totalComment: number;
-  totalPageNo: number;
-  currentPageNo: number;
-  hasMore: boolean;
   cursor?: number;
+  hasMore: boolean;
+  totalPageNo: number;
+  totalComment: number;
+  currentPageNo: number;
+  data: NeteaseAPI.NeteaseComment[];
 };
 
 export function useComments(props: {
   id: number;
+  pageSize?: number;
   type: CommentType;
   sortType: CommentSort;
-  pageSize?: number;
 }) {
-  const [status, setStatus] = useState<RequestStatus | "idle">("idle");
+  const [status, setStatus] = useState<"idle" | RequestStatus>("idle");
   const [comments, setComments] = useImmer<CommentState>(() => ({
     data: [],
     totalComment: 0,
@@ -35,8 +36,8 @@ export function useComments(props: {
   const commentsRef = useLatestRef(comments);
   const statusRef = useLatestRef(status);
   const loadMore = useCallback(() => {
-    const { id, sortType, type, pageSize } = propsRef.current;
-    const { currentPageNo, cursor, hasMore } = commentsRef.current;
+    const { id, type, pageSize, sortType } = propsRef.current;
+    const { cursor, hasMore, currentPageNo } = commentsRef.current;
     const isLoading = statusRef.current === "loading";
     if (!hasMore || isLoading) return;
 

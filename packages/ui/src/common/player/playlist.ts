@@ -2,7 +2,7 @@ import { shuffle } from "lodash-es";
 import { Listenable } from "@/common/utils/listenable";
 import { NeteaseTrackRecord } from "@/common/netease/models";
 
-type PlayableResult = { playable: boolean; reason: string };
+type PlayableResult = { reason: string; playable: boolean };
 
 export default class RendererPlayerPlaylist extends Listenable {
   //#region fields
@@ -12,7 +12,7 @@ export default class RendererPlayerPlaylist extends Listenable {
   private order: number[];
   /** 当前位置：order 的下标（-1 表示空闲）current = tracks[order[cursor]] */
   private cursor: number;
-  private _repeat: "off" | "one" | "all";
+  private _repeat: "all" | "off" | "one";
   private _shuffle: boolean;
   private _loop: boolean;
   // 可播判定与不可播提示由外部（播放器）注入，使本类不依赖 UI/用户态、可独立测试
@@ -78,11 +78,11 @@ export default class RendererPlayerPlaylist extends Listenable {
   }
 
   constructor(props?: {
-    position?: number | -1;
-    playlist?: NeteaseTrackRecord[];
-    repeat?: "off" | "one" | "all";
-    shuffle?: boolean;
     loop?: boolean;
+    shuffle?: boolean;
+    position?: -1 | number;
+    repeat?: "all" | "off" | "one";
+    playlist?: NeteaseTrackRecord[];
   }) {
     super();
     this.tracks = props?.playlist ? [...props.playlist] : [];
@@ -219,7 +219,7 @@ export default class RendererPlayerPlaylist extends Listenable {
     return this;
   }
 
-  public add(record: NeteaseTrackRecord, position: "next" | "end") {
+  public add(record: NeteaseTrackRecord, position: "end" | "next") {
     const existD = this.locate(record);
     const isCurrent = existD !== -1 && existD === this.cursor;
 
@@ -345,7 +345,7 @@ export default class RendererPlayerPlaylist extends Listenable {
       if (pos === -1) break;
       const record = this.recordAt(pos);
       if (record) {
-        const { playable, reason } = this.playableOf(record);
+        const { reason, playable } = this.playableOf(record);
         if (playable) {
           this.cursor = pos;
           skippedReason && this.onUnplayable?.(skippedReason);

@@ -5,8 +5,8 @@ export class NeteasePlaylistSummary implements NeteasePlaylistSummaryModel {
   readonly createTime: number;
   readonly creator: {
     readonly userId: number;
-    readonly avatarUrl: string;
     readonly nickname: string;
+    readonly avatarUrl: string;
     readonly signature: string;
   };
   readonly highQuality: boolean;
@@ -44,6 +44,12 @@ export class NeteasePlaylistSummary implements NeteasePlaylistSummaryModel {
   }
   //endregion
 
+  toToolJSONValue(): JsonValue {
+    return {
+      ...this
+    } as unknown as JsonValue;
+  }
+
   playCountFormat() {
     if (!this.playCount) return "0";
     if (this.playCount >= 100000000) {
@@ -60,7 +66,7 @@ export class NeteasePlaylistSummary implements NeteasePlaylistSummaryModel {
     return new NeteasePlaylistSummary(playlist);
   }
 
-  static isPrivacy(playlist: NeteaseAPI.NeteasePlaylistSummary | NeteasePlaylistSummaryModel) {
+  static isPrivacy(playlist: NeteasePlaylistSummaryModel | NeteaseAPI.NeteasePlaylistSummary) {
     return playlist?.privacy === 10;
   }
   //endregion

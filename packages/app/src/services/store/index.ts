@@ -1,5 +1,5 @@
-import Store from "@mahiru/store";
 import { MainServicesInstance, type MainServicesType } from "@/types/service";
+import Store from "@mahiru/store";
 
 export default class StoreService extends MainServicesInstance {
   instance;

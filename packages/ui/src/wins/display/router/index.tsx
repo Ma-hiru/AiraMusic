@@ -1,13 +1,14 @@
-import { createBrowserRouter, Navigate } from "react-router-dom";
+import { Navigate, createBrowserRouter } from "react-router-dom";
 import { RoutePathDisplay } from "@/common/routes";
-import LayoutDisplay from "../pages/layout/layout-display";
-import BlankDisplay from "../pages/blank/blank-display";
+
 import AlbumDisplay from "../pages/album/album-display";
+import BlankDisplay from "../pages/blank/blank-display";
 import ArtistDisplay from "../pages/artist/artist-display";
-import PlaylistDisplay from "../pages/playlist/playlist-display";
+import LayoutDisplay from "../pages/layout/layout-display";
 import SearchDisplay from "../pages/search/search-display";
-import SettingsDisplay from "../pages/settings/settings-display";
 import HistoryDisplay from "../pages/history/history-display";
+import PlaylistDisplay from "../pages/playlist/playlist-display";
+import SettingsDisplay from "../pages/settings/settings-display";
 
 export const DisplayRouter = createBrowserRouter(
   [

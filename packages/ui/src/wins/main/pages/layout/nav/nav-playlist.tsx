@@ -1,26 +1,25 @@
-import {
-  type FC,
-  memo,
-  type Ref,
-  useCallback,
-  useImperativeHandle,
-  useMemo,
-  useRef,
-  useState
-} from "react";
-import { useScrollAutoHide } from "@/common/hooks/use-scroll-auto-hide";
-import { NeteaseNetworkImage, NeteasePlaylistSummary, NeteaseUser } from "@/common/netease/models";
 import { cx } from "@emotion/css";
-import { usePageJump } from "@/wins/main/hooks/use-page-jump";
-import { useLocation } from "react-router-dom";
-import { RoutePathMain } from "@/common/routes";
 import { Lock } from "lucide-react";
+import { useLocation } from "react-router-dom";
+import {
+  memo,
+  useRef,
+  type FC,
+  useMemo,
+  type Ref,
+  useState,
+  useCallback,
+  useImperativeHandle
+} from "react";
+import { RoutePathMain } from "@/common/routes";
+import { usePageJump } from "@/wins/main/hooks/use-page-jump";
+import { useScrollAutoHide } from "@/common/hooks/use-scroll-auto-hide";
+import { NeteaseUser, NeteaseNetworkImage, NeteasePlaylistSummary } from "@/common/netease/models";
 import RendererTheme from "@/common/player/ui";
+import AppEmpty from "@/common/components/fallback/app-empty";
 import RendererImageConstants from "@/common/constants/image";
-
 import NeteaseImage from "@/common/components/display/image/netease-image";
 import VirtualList, { type VirtualListRow } from "@/common/components/layout/virtual_list";
-import AppEmpty from "@/common/components/fallback/app-empty";
 
 export type NavPlaylistRef = {
   scrollTop: NormalFunc;
@@ -29,10 +28,10 @@ export type NavPlaylistRef = {
 interface NavPlaylistProps {
   ref?: Ref<NavPlaylistRef>;
   keyword?: string;
-  className?: string;
   user: NeteaseUser;
+  className?: string;
   sidebarOpen: boolean;
-  category: "user" | "star";
+  category: "star" | "user";
   setCanScrollTop: NormalFunc<[enable: boolean]>;
 }
 
@@ -40,10 +39,10 @@ const NavPlaylist: FC<NavPlaylistProps> = ({
   ref,
   user,
   className,
-  sidebarOpen,
-  category,
   setCanScrollTop,
-  keyword
+  keyword,
+  category,
+  sidebarOpen
 }) => {
   const { id } = RoutePathMain.playlist.parseQuery(useLocation(), false);
   const { jumpPlaylistPage } = usePageJump();
@@ -84,24 +83,24 @@ const NavPlaylist: FC<NavPlaylistProps> = ({
   useImperativeHandle(ref, () => ({ scrollTop }), [scrollTop]);
   return (
     <div
+      ref={containerRef}
       className={cx(
         `
           w-full h-full relative overflow-y-auto overflow-x-hidden
           contain-layout will-change-scroll scrollbar
         `,
         className
-      )}
-      ref={containerRef}>
+      )}>
       {playlistItems.length === 0 && <AppEmpty tips="无搜索结果" />}
       <VirtualList
-        RowComponent={RowComponent}
-        items={playlistItems}
-        itemHeight={57}
-        containerRef={containerRef}
         overscan={10}
-        onRangeUpdate={(range) => setCanScrollTop(range[0] > 5)}
+        itemHeight={57}
+        items={playlistItems}
+        containerRef={containerRef}
+        RowComponent={RowComponent}
         extraData={{ fastLocation, opened: sidebarOpen, activeID: Number(id), category }}
         onItemClick={onItemClick}
+        onRangeUpdate={(range) => setCanScrollTop(range[0] > 5)}
       />
     </div>
   );
@@ -111,9 +110,9 @@ export default memo(NavPlaylist);
 
 const RowComponent: VirtualListRow<
   NeteasePlaylistSummary,
-  { fastLocation: boolean; opened: boolean; activeID: number; category: "user" | "star" }
+  { opened: boolean; activeID: number; fastLocation: boolean; category: "star" | "user" }
 > = (props) => {
-  const { index, items, extra } = props;
+  const { extra, index, items } = props;
   const data = items[index]!;
   const isPrivate = extra.category === "user" && NeteasePlaylistSummary.isPrivacy(data);
   const active = extra.activeID === data.id;
@@ -129,7 +128,7 @@ const RowComponent: VirtualListRow<
             ease-in-out transition-all duration-300 group
           `,
           active
-            ? extra.opened && "bg-primary text-(--text-color-on-main)"
+            ? extra.opened && "bg-primary text-primary-text"
             : extra.opened && "hover:bg-black/5"
         )}>
         <div
@@ -139,13 +138,13 @@ const RowComponent: VirtualListRow<
               flex justify-center items-center py-1 rounded-md
               ease-in-out transition-all duration-300
             `,
-            active ? "bg-primary text-(--text-color-on-main)" : !extra.opened && "hover:bg-black/5"
+            active ? "bg-primary text-primary-text" : !extra.opened && "hover:bg-black/5"
           )}>
           <NeteaseImage
-            cache
-            pause={extra.fastLocation}
-            image={cover}
             className="w-[60%] rounded-md"
+            image={cover}
+            pause={extra.fastLocation}
+            cache
           />
           {isPrivate && (
             <div className="absolute w-[60%] aspect-square left-[20%] justify-center items-center bg-black/30 rounded-md hidden group-hover:flex">

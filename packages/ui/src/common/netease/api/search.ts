@@ -1,5 +1,5 @@
-import { apiRequest } from "@/common/netease/api/request";
 import { SearchType } from "@/common/enum/search";
+import { apiRequest } from "@/common/netease/api/request";
 
 export default class _NeteaseSearchAPI {
   /**
@@ -12,13 +12,13 @@ export default class _NeteaseSearchAPI {
     keywords: string;
     /** 搜索类型 */
     type: SearchType;
-    searchType?: "NORMAL" | "MORE";
+    searchType?: "MORE" | "NORMAL";
     /** 返回数量 , 默认为 30 */
     limit?: number;
     /** 偏移数量，用于分页 , 如 : 如 :( 页数 -1)*30, 其中 30 为 limit 的值 , 默认为 0 */
     offset?: number;
   }) {
-    const { keywords, type = SearchType.SOUND, searchType = "NORMAL", limit, offset } = props;
+    const { limit, offset, keywords, searchType = "NORMAL", type = SearchType.SOUND } = props;
     const searchURL = searchType === "NORMAL" ? "/search" : "/cloudsearch";
     return apiRequest<any, NeteaseAPI.NeteaseSearchResultResponse<T>>({
       url: searchURL,

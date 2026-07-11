@@ -1,7 +1,7 @@
-import { type FC, memo, useEffect, useMemo } from "react";
-import RendererPlayerHandle from "@/wins/main/lib/handle";
 import { cx } from "@emotion/css";
+import { memo, type FC, useMemo, useEffect } from "react";
 import Marquee from "@/common/components/display/marquee";
+import RendererPlayerHandle from "@/wins/main/lib/handle";
 
 interface TitleProps {
   className?: string;

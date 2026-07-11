@@ -34,14 +34,12 @@ export class Lock {
 
   /**
    * @desc 尝试运行一个任务，task执行失败或者锁定时抛出错误（除非有默认值）
-   * @throws {Lock.AcquireLockError} 如果锁定则抛出此错误
-   * @throws {Lock.TaskRuntimeError} 如果任务执行失败且无默认值则抛出此错误
    * @param task 要执行的任务
    * @param defaultValue 任务执行失败时的默认值
    * @param label 任务标签，用于错误提示
    * @returns 任务的返回值或默认值
    * */
-  async tryRun<T>(task: Task<T>, defaultValue?: NormalFunc<[], T> | T, label?: string) {
+  async tryRun<T>(task: Task<T>, defaultValue?: T | NormalFunc<[], T>, label?: string) {
     return new Promise<T>((resolve, reject) => {
       function onError(err: unknown) {
         try {

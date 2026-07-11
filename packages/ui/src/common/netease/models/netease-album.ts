@@ -5,11 +5,18 @@ export class NeteaseAlbum {
   content: NeteaseAPI.NeteaseAlbumContentResponse["album"];
 
   constructor(props: {
-    content: NeteaseAPI.NeteaseAlbumContentResponse["album"];
     tracks: NeteaseTrackRecord[];
+    content: NeteaseAPI.NeteaseAlbumContentResponse["album"];
   }) {
     this.content = props.content;
     this.tracks = props.tracks;
+  }
+
+  toToolJSONValue(): JsonValue {
+    return {
+      content: this.content,
+      tracks: this.tracks.map(NeteaseTrackRecord.toToolJSONValue)
+    } as unknown as JsonValue;
   }
 
   static fromObject<T extends Optional<Jsonify<NeteaseAlbum>>>(

@@ -22,18 +22,18 @@ export interface WindowSizePreset {
 
 /** 解析后的窗口尺寸：base 为最终初始尺寸，min/max 为 resize 边界，均为 DIP。 */
 export interface ResolvedWindowSize {
-  base: WindowSize;
-  min: WindowSize;
   max: WindowSize;
+  min: WindowSize;
+  base: WindowSize;
 }
 
-export type WindowExits = "IGNORE" | "CLOSE" | "DESTROY";
+export type WindowExits = "CLOSE" | "IGNORE" | "DESTROY";
 
 export type AppWindowCreatorProps = {
-  options: Optional<BrowserWindowConstructorOptions>;
   id: WindowType;
-  handleExits?: WindowExits;
   memoPos: boolean;
+  handleExits?: WindowExits;
   loadURL: NormalFunc<[port: number], string>;
   onCreate?: NormalFunc<[win: BrowserWindow]>;
+  options: Optional<BrowserWindowConstructorOptions>;
 };

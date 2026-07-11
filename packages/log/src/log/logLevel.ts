@@ -25,7 +25,7 @@ export function LogLevelToString(level: LogLevel) {
 }
 
 export function ParseLogLevel(
-  env: Optional<LogLevel | "DEBUG" | "ERROR" | "INFO" | "NONE" | "TRACE" | "WARN" | string>
+  env: Optional<"INFO" | "NONE" | "WARN" | string | "DEBUG" | "ERROR" | "TRACE" | LogLevel>
 ): LogLevel {
   if (!env) return LogLevel.TRACE;
   if (typeof env === "number") return env;

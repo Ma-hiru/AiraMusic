@@ -1,10 +1,10 @@
-import { type FC, memo, type ReactNode, useCallback, useEffect, useRef } from "react";
-import { useLatestRef } from "@/common/hooks/use-latest-ref";
-import { Log } from "@/common/lib/log";
 import { cx } from "@emotion/css";
+import { LoaderCircle } from "lucide-react";
+import { memo, useRef, type FC, useEffect, useCallback, type ReactNode } from "react";
+import { Log } from "@/common/lib/log";
+import { useLatestRef } from "@/common/hooks/use-latest-ref";
 import { useScrollAutoHide } from "@/common/hooks/use-scroll-auto-hide";
 import AppEmpty from "@/common/components/fallback/app-empty";
-import { LoaderCircle } from "lucide-react";
 
 export type InfiniteContainerProps = {
   /**
@@ -30,22 +30,22 @@ export type InfiniteContainerProps = {
   /**
    * 禁用自动加载
    */
-  disabled?: boolean;
   className?: string;
+  disabled?: boolean;
   EmptyFallback?: ReactNode;
   children: Nullable<ReactNode>;
 };
 
 const InfiniteContainer: FC<InfiniteContainerProps> = ({
-  hasMore,
-  isLoading = false,
+  className,
   onLoadMore,
-  rootMargin = "200px 0px",
+  hasMore,
+  children,
   threshold = 0,
   disabled = false,
-  className,
-  EmptyFallback = <AppEmpty />,
-  children
+  isLoading = false,
+  rootMargin = "200px 0px",
+  EmptyFallback = <AppEmpty />
 }) => {
   const isEmpty = children === null;
   const containerRef = useRef<HTMLDivElement>(null);
@@ -99,12 +99,9 @@ const InfiniteContainer: FC<InfiniteContainerProps> = ({
 
   return (
     <div
-      role="list"
       ref={containerRef}
-      className={cx(
-        "w-full overflow-y-auto overflow-x-hidden scrollbar scrollbar-show",
-        className
-      )}>
+      className={cx("w-full overflow-y-auto overflow-x-hidden scrollbar scrollbar-show", className)}
+      role="list">
       {children}
       {isEmpty && !isLoading && EmptyFallback}
       {hasMore ? (
@@ -115,7 +112,7 @@ const InfiniteContainer: FC<InfiniteContainerProps> = ({
       ) : (
         <div className="text-xs font-semibold opacity-40 text-center block mt-3">已经到底了</div>
       )}
-      <span aria-hidden ref={sentinelRef} className="h-px" />
+      <span ref={sentinelRef} className="h-px" aria-hidden />
     </div>
   );
 };

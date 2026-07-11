@@ -1,23 +1,23 @@
 import { cx } from "@emotion/css";
 import {
-  type FC,
   memo,
-  type ReactNode,
-  useCallback,
-  useEffect,
-  useMemo,
   useRef,
-  useState
+  type FC,
+  useMemo,
+  useState,
+  useEffect,
+  useCallback,
+  type ReactNode
 } from "react";
-import { NeteaseArtist } from "@/common/netease/models";
 import { RendererFormat } from "@/common/lib/format";
 import { NeteaseAPIArtist } from "@/common/netease/api";
+import { NeteaseArtist } from "@/common/netease/models";
 import AppToast from "@/common/components/display/toast";
 
 interface InfoProps {
   className?: string;
-  artist: Nullable<NeteaseArtist>;
   children?: ReactNode;
+  artist: Nullable<NeteaseArtist>;
 }
 
 const Info: FC<InfoProps> = ({ className, artist, children }) => {
@@ -73,8 +73,8 @@ const Info: FC<InfoProps> = ({ className, artist, children }) => {
         )}>
         {alias && (
           <h2
-            title={alias}
-            className="absolute left-0 top-0 w-full truncate text-center text-[13px] font-medium opacity-75 select-all">
+            className="absolute left-0 top-0 w-full truncate text-center text-[13px] font-medium opacity-75 select-all"
+            title={alias}>
             {alias}
           </h2>
         )}
@@ -84,14 +84,14 @@ const Info: FC<InfoProps> = ({ className, artist, children }) => {
         <span>粉丝: {RendererFormat.count(fansCount)}</span>
         <span className="opacity-55">/</span>
         <button
-          type="button"
-          onClick={follow}
           className={cx(`
             cursor-pointer rounded-md px-2 py-1 font-semibold opacity-95
             hover:bg-primary hover:text-primary-text
             active:scale-98 select-none
             transition-all duration-300 ease-in-out
-        `)}>
+        `)}
+          type="button"
+          onClick={follow}>
           {followText}
         </button>
       </div>

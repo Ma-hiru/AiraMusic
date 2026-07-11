@@ -1,17 +1,20 @@
-import { type FC, memo, useCallback, useRef, useState } from "react";
 import { cx } from "@emotion/css";
+import { useAtomValue } from "jotai";
+import { memo, useRef, type FC, useState, useCallback } from "react";
+import { Stage } from "@/common/enum";
 import { useUser } from "@/common/store/user";
 import { useStage } from "@/common/hooks/use-stage";
-import { Stage } from "@/common/enum";
-import { useAtomValue } from "jotai";
+import { RendererDevice } from "@/common/lib/device";
 import { sidebarAtom } from "@/wins/main/atoms/layout";
 import { RendererIPCMessageBus } from "@/common/lib/bus";
-
-import NavMenu from "./nav-menu";
-import NavFloat from "./float";
-import NavTab from "./tab";
-import NavPlayList, { type NavPlaylistRef } from "./nav-playlist";
 import Divider from "@/common/components/layout/divider";
+
+import NavTab from "./tab";
+import NavFloat from "./float";
+import NavMenu from "./nav-menu";
+import NavPlayList, { type NavPlaylistRef } from "./nav-playlist";
+
+const isDarwin = (await RendererDevice.platform) === "darwin";
 
 const Nav: FC<object> = () => {
   const { stage } = useStage();
@@ -41,30 +44,31 @@ const Nav: FC<object> = () => {
           ease-in-out duration-300 transition-all
           bg-[#f0f3f6]/20
         `,
-        sidebar ? "w-(--side-bar-expand-width)" : "w-(--side-bar-collapse-width)"
+        sidebar ? "w-(--side-bar-expand-width)" : "w-(--side-bar-collapse-width)",
+        isDarwin && "pt-7!"
       )}>
       {stage >= Stage.Immediately && <NavMenu className="shrink-0" barOpened={sidebar} />}
       {stage >= Stage.Second && displayPlaylist && <Divider className="mt-4 mx-3 shrink-0" />}
       {stage >= Stage.Second && displayPlaylist && (
-        <NavTab category={category} setCategory={setCategory} sidebar={sidebar} />
+        <NavTab sidebar={sidebar} category={category} setCategory={setCategory} />
       )}
       {stage >= Stage.Finally && displayPlaylist && (
         <NavPlayList
-          className="flex-1"
           ref={playlistRef}
+          className="flex-1"
           user={user!}
-          category={category === 0 ? "user" : "star"}
+          keyword={keyword}
           sidebarOpen={sidebar}
           setCanScrollTop={setCanScrollTop}
-          keyword={keyword}
+          category={category === 0 ? "user" : "star"}
         />
       )}
       <NavFloat
+        sideBar={sidebar}
         setKeyword={setKeyword}
         canScroll={canScrollTop}
-        sideBar={sidebar}
-        onScrollTop={onScrollTop}
         onCreated={onCreated}
+        onScrollTop={onScrollTop}
       />
     </section>
   );

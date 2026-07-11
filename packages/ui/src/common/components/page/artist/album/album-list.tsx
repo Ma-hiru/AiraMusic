@@ -1,9 +1,9 @@
-import { type FC, memo } from "react";
+import { memo, type FC } from "react";
 import { useAlbum } from "@/common/hooks/use-album";
-import InfiniteContainer from "@/common/components/layout/infinite/infinite-container";
+import { RendererFormat } from "@/common/lib/format";
 import AppError from "@/common/components/fallback/app-error";
 import HomeMediaGrid from "@/common/components/layout/media-grid";
-import { RendererFormat } from "@/common/lib/format";
+import InfiniteContainer from "@/common/components/layout/infinite/infinite-container";
 
 interface AlbumListProps {
   id: number;
@@ -12,10 +12,10 @@ interface AlbumListProps {
 }
 
 const AlbumList: FC<AlbumListProps> = ({ id, className, onClick }) => {
-  const { album, status, loadMore, reset } = useAlbum({ id });
+  const { album, reset, status, loadMore } = useAlbum({ id });
 
   return (
-    <AppError reset={reset} when={status === "error"} message="专辑加载失败">
+    <AppError reset={reset} message="专辑加载失败" when={status === "error"}>
       <InfiniteContainer
         className={className}
         hasMore={album.hasMore}

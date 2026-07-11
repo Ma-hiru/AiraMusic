@@ -1,27 +1,27 @@
-import {
-  type CSSProperties,
-  type FC,
-  type KeyboardEvent as ReactKeyboardEvent,
-  memo,
-  type MouseEvent as ReactMouseEvent,
-  useCallback,
-  useRef
-} from "react";
-import { clamp } from "lodash-es";
 import { cx } from "@emotion/css";
+import { clamp } from "lodash-es";
+import {
+  memo,
+  useRef,
+  type FC,
+  useCallback,
+  type CSSProperties,
+  type MouseEvent as ReactMouseEvent,
+  type KeyboardEvent as ReactKeyboardEvent
+} from "react";
 
 interface RangeSliderProps {
-  min: number;
   max: number;
+  min: number;
   step: number;
   value: number;
-  onChange: NormalFunc<[value: number]>;
-  style?: CSSProperties;
-  className?: string;
-  orientation?: "horizontal" | "vertical";
-  colorReverse?: boolean;
   label?: string;
+  className?: string;
   valueText?: string;
+  style?: CSSProperties;
+  colorReverse?: boolean;
+  orientation?: "vertical" | "horizontal";
+  onChange: NormalFunc<[value: number]>;
 }
 
 function stepPrecision(step: number) {
@@ -30,17 +30,17 @@ function stepPrecision(step: number) {
 }
 
 const RangeSlider: FC<RangeSliderProps> = ({
-  min,
-  max,
-  step,
-  value,
-  onChange,
-  style,
   className,
-  orientation = "horizontal",
-  colorReverse = false,
+  onChange,
+  max,
+  min,
+  step,
+  style,
+  value,
+  valueText,
   label = "范围滑块",
-  valueText
+  colorReverse = false,
+  orientation = "horizontal"
 }) => {
   const trackRef = useRef<HTMLDivElement>(null);
   const normalizeValue = useCallback(
@@ -58,7 +58,7 @@ const RangeSlider: FC<RangeSliderProps> = ({
     (clientX: number, clientY: number) => {
       const track = trackRef.current;
       if (!track) return currentValue;
-      const { bottom, height, left, width } = track.getBoundingClientRect();
+      const { left, width, bottom, height } = track.getBoundingClientRect();
       const ratio =
         orientation === "vertical"
           ? clamp((bottom - clientY) / height, 0, 1)
@@ -124,23 +124,23 @@ const RangeSlider: FC<RangeSliderProps> = ({
   return (
     <div
       ref={trackRef}
-      role="slider"
-      tabIndex={0}
-      aria-label={label}
-      aria-orientation={orientation}
-      aria-valuemin={min}
-      aria-valuemax={max}
-      aria-valuenow={currentValue}
-      aria-valuetext={valueText}
-      style={style}
       className={cx(
         "relative cursor-pointer rounded-full outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
         orientation === "vertical" ? "h-full w-1.5" : "h-1.5 w-full",
         colorReverse ? "bg-(--text-color-on-main)/15" : "bg-primary/15",
         className
       )}
-      onMouseDown={handleMouseDown}
-      onKeyDown={handleKeyDown}>
+      style={style}
+      tabIndex={0}
+      role="slider"
+      aria-label={label}
+      aria-valuemax={max}
+      aria-valuemin={min}
+      aria-valuetext={valueText}
+      aria-valuenow={currentValue}
+      aria-orientation={orientation}
+      onKeyDown={handleKeyDown}
+      onMouseDown={handleMouseDown}>
       <div
         className={cx(
           "absolute rounded-full",
@@ -160,12 +160,12 @@ const RangeSlider: FC<RangeSliderProps> = ({
         `,
           colorReverse ? "bg-primary-text" : "bg-primary"
         )}
-        title={valueText ?? String(currentValue)}
         style={
           orientation === "vertical"
             ? { left: "50%", top: `${100 - percentage}%` }
             : { left: `${percentage}%`, top: "50%" }
         }
+        title={valueText ?? String(currentValue)}
       />
     </div>
   );

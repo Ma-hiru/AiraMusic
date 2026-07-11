@@ -1,23 +1,22 @@
+import { cx } from "@emotion/css";
 import {
   memo,
-  type MouseEvent as ReactMouseEvent,
-  type Ref,
-  type RefObject,
-  useEffect,
-  useImperativeHandle,
-  useMemo,
   useRef,
-  useState
+  useMemo,
+  type Ref,
+  useState,
+  useEffect,
+  type RefObject,
+  useImperativeHandle,
+  type MouseEvent as ReactMouseEvent
 } from "react";
-import { cx } from "@emotion/css";
-import { useScrollAutoHide } from "@/common/hooks/use-scroll-auto-hide";
 import { NeteaseImageSize } from "@/common/enum";
-import { NeteaseHistoryRecord, NeteaseTrack, NeteaseTrackRecord } from "@/common/netease/models";
-import { type HeartManager, useHeart } from "@/common/hooks/use-heart";
-
+import { useHeart, type HeartManager } from "@/common/hooks/use-heart";
+import { useScrollAutoHide } from "@/common/hooks/use-scroll-auto-hide";
+import { NeteaseTrack, NeteaseTrackRecord, NeteaseHistoryRecord } from "@/common/netease/models";
+import AppEmpty from "@/common/components/fallback/app-empty";
 import TrackItem, { type TrackItemProps } from "@/common/components/display/track_item";
 import VirtualList, { type VirtualListRow } from "@/common/components/layout/virtual_list";
-import AppEmpty from "@/common/components/fallback/app-empty";
 
 export interface TrackListRef {
   containerRef: RefObject<Nullable<HTMLDivElement>>;
@@ -37,27 +36,27 @@ export interface TrackListClickFunc<
 }
 
 export interface TrackListPlayableManager {
-  (track: NeteaseTrack): { playable: boolean; reason: string };
+  (track: NeteaseTrack): { reason: string; playable: boolean };
 }
 
 export interface TrackListProps<T extends NeteaseTrackRecord[] | NeteaseHistoryRecord[]> {
   ref?: Ref<TrackListRef>;
-  paddingBottom?: number | string;
-  activeID?: number;
-  onListScroll?: NormalFunc;
-  className?: string;
-  onRangeUpdate?: NormalFunc<[range: IndexRange]>;
-  id: Optional<number>;
   tracks: T;
-  type: "like" | "normal" | "history" | "album";
+  activeID?: number;
+  className?: string;
+  emptyTips?: string;
+  id: Optional<number>;
+  paddingBottom?: number | string;
   trackCoverSize: NeteaseImageSize;
-  onClick: Optional<TrackListClickFunc<T[number]>>;
-  onContext: Optional<TrackListContextMenuFunc<T[number]>>;
-  onClickArtist: Optional<NormalFunc<[id: number]>>;
-  onClickAlbum: Optional<NormalFunc<[id: number]>>;
+  type: "like" | "album" | "normal" | "history";
   heartManager: Optional<HeartManager>;
   playableManager: Optional<TrackListPlayableManager>;
-  emptyTips?: string;
+  onListScroll?: NormalFunc;
+  onRangeUpdate?: NormalFunc<[range: IndexRange]>;
+  onClick: Optional<TrackListClickFunc<T[number]>>;
+  onClickAlbum: Optional<NormalFunc<[id: number]>>;
+  onClickArtist: Optional<NormalFunc<[id: number]>>;
+  onContext: Optional<TrackListContextMenuFunc<T[number]>>;
   /** 批量选择模式 */
   selectionMode?: boolean;
   selectedIds?: ReadonlySet<number>;
@@ -67,31 +66,31 @@ export interface TrackListProps<T extends NeteaseTrackRecord[] | NeteaseHistoryR
 const TrackList = <T extends NeteaseTrackRecord[] | NeteaseHistoryRecord[]>({
   ref,
   id,
-  tracks,
-  type,
-  paddingBottom,
-  activeID,
-  onListScroll,
   className,
-  onContext,
-  onClick,
-  onRangeUpdate,
-  onClickArtist,
-  onClickAlbum,
-  trackCoverSize,
   heartManager,
   playableManager,
-  emptyTips = "暂无歌曲",
-  selectionMode,
+  onClick,
+  onContext,
+  onClickAlbum,
+  onListScroll,
+  onClickArtist,
+  onRangeUpdate,
+  onToggleSelect,
+  type,
+  tracks,
+  activeID,
   selectedIds,
-  onToggleSelect
+  paddingBottom,
+  selectionMode,
+  trackCoverSize,
+  emptyTips = "暂无歌曲"
 }: TrackListProps<T>) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [scrollToItem, setScrollToItem] = useState<(index: number) => Promise<void>>(
     () => async () => {}
   );
   const [fastLocation, setFastLocation] = useState(false);
-  const { likedChange, checkLiked } = useHeart(heartManager);
+  const { checkLiked, likedChange } = useHeart(heartManager);
 
   useScrollAutoHide(containerRef);
 
@@ -158,7 +157,6 @@ const TrackList = <T extends NeteaseTrackRecord[] | NeteaseHistoryRecord[]>({
   return (
     <div
       ref={containerRef}
-      onScroll={onListScroll}
       className={cx(
         `
           w-full h-full overflow-y-auto scrollbar
@@ -166,15 +164,16 @@ const TrackList = <T extends NeteaseTrackRecord[] | NeteaseHistoryRecord[]>({
         `,
         className
       )}
+      onScroll={onListScroll}
       children={
         tracks.length > 0 ? (
           <VirtualList
             items={tracks}
-            extraData={extra}
             itemHeight={51}
+            extraData={extra}
+            containerRef={containerRef}
             RowComponent={RowComponent}
             paddingBottom={paddingBottom}
-            containerRef={containerRef}
             setScrollToItem={(nextScrollToItem) => setScrollToItem(() => nextScrollToItem)}
             onRangeUpdate={onRangeUpdate}
           />
@@ -189,45 +188,45 @@ const TrackList = <T extends NeteaseTrackRecord[] | NeteaseHistoryRecord[]>({
 type ExtraData = Omit<
   TrackItemProps,
   | "index"
-  | "track"
-  | "total"
-  | "active"
   | "liked"
-  | "playable"
+  | "total"
+  | "track"
+  | "active"
   | "reason"
+  | "playable"
   | "selected"
   | "onToggleSelect"
 > & {
   activeID?: number;
-  onCheckLiked: Optional<NormalFunc<[track?: NeteaseTrack], boolean>>;
   trackCoverSize: NeteaseImageSize;
-  playableManager: Optional<TrackListPlayableManager>;
   selectedIds?: ReadonlySet<number>;
   onSelectId?: NormalFunc<[id: number]>;
+  playableManager: Optional<TrackListPlayableManager>;
+  onCheckLiked: Optional<NormalFunc<[track?: NeteaseTrack], boolean>>;
 };
 
-const RowComponent: VirtualListRow<NeteaseTrackRecord, ExtraData> = ({ index, items, extra }) => {
-  const { playable = true, reason = "" } = extra.playableManager?.(items[index]!.detail) || {};
+const RowComponent: VirtualListRow<NeteaseTrackRecord, ExtraData> = ({ extra, index, items }) => {
+  const { reason = "", playable = true } = extra.playableManager?.(items[index]!.detail) || {};
   const id = items[index]!.id;
   return (
     <TrackItem
       index={index}
-      track={items[index]!}
-      total={items.length}
-      active={id === extra.activeID}
-      fastLocation={extra.fastLocation}
-      onClick={extra.onClick}
-      onContext={extra.onContext}
-      onLikeChange={extra.onLikeChange}
-      onClickArtist={extra.onClickArtist}
-      onClickAlbum={extra.onClickAlbum}
-      liked={extra.onCheckLiked?.(items[index]?.detail) ?? false}
+      reason={reason}
       type={extra.type}
       playable={playable}
-      reason={reason}
-      trackCoverSize={extra.trackCoverSize}
+      total={items.length}
+      track={items[index]!}
+      active={id === extra.activeID}
+      fastLocation={extra.fastLocation}
       selectionMode={extra.selectionMode}
+      trackCoverSize={extra.trackCoverSize}
       selected={extra.selectedIds?.has(id) ?? false}
+      liked={extra.onCheckLiked?.(items[index]?.detail) ?? false}
+      onClick={extra.onClick}
+      onContext={extra.onContext}
+      onClickAlbum={extra.onClickAlbum}
+      onLikeChange={extra.onLikeChange}
+      onClickArtist={extra.onClickArtist}
       onToggleSelect={() => extra.onSelectId?.(id)}
     />
   );

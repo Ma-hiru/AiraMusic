@@ -1,8 +1,7 @@
-import { type FC, memo, useMemo } from "react";
-import { NeteaseNetworkImage } from "@/common/netease/models";
+import { memo, type FC, useMemo } from "react";
 import { RendererFormat } from "@/common/lib/format";
+import { NeteaseNetworkImage } from "@/common/netease/models";
 import RendererImageConstants from "@/common/constants/image";
-
 import NeteaseImage from "@/common/components/display/image/netease-image";
 
 interface AlbumItemProps {
@@ -10,7 +9,7 @@ interface AlbumItemProps {
   onClick: Optional<NormalFunc<[id: number]>>;
 }
 
-const AlbumItem: FC<AlbumItemProps> = ({ data, onClick }) => {
+const AlbumItem: FC<AlbumItemProps> = ({ onClick, data }) => {
   const cover = useMemo(() => {
     return NeteaseNetworkImage.fromURL(data.picUrl)
       .setAlt(data.name)
@@ -21,8 +20,6 @@ const AlbumItem: FC<AlbumItemProps> = ({ data, onClick }) => {
       className="w-full h-full text-primary-text flex flex-col justify-center items-center gap-1"
       onClick={onClick?.bind(null, data.id)}>
       <NeteaseImage
-        cache
-        cacheLazy
         className={`
         w-full aspect-square rounded-md cursor-pointer
         hover:scale-105 transition-transform duration-300 ease-in-out
@@ -32,6 +29,8 @@ const AlbumItem: FC<AlbumItemProps> = ({ data, onClick }) => {
         image={cover}
         shadow="float"
         shadowColor="light"
+        cache
+        cacheLazy
       />
       <h2 className="text-[12px] opacity-50 text-center ">
         {RendererFormat.time(data.publishTime)}

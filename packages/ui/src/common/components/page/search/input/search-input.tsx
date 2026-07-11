@@ -1,39 +1,40 @@
-import {
-  type FC,
-  memo,
-  type Ref,
-  useCallback,
-  useImperativeHandle,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState
-} from "react";
-import { Search, X } from "lucide-react";
 import { cx } from "@emotion/css";
+import { debounce } from "lodash-es";
+import { X, Search } from "lucide-react";
+import {
+  memo,
+  useRef,
+  type FC,
+  useMemo,
+  type Ref,
+  useState,
+  useCallback,
+  useLayoutEffect,
+  useImperativeHandle
+} from "react";
+import { Log } from "@/common/lib/log";
 import { NeteaseAPISearch } from "@/common/netease/api";
 import { useLatestRef } from "@/common/hooks/use-latest-ref";
-import { Log } from "@/common/lib/log";
-import { debounce } from "lodash-es";
 import { useSearchRecommend } from "@/common/hooks/use-search-recommend";
+
 import SearchSuggestions, { type Suggestion } from "./search-suggestions";
 
 export type SearchInputRef = {
+  keyword: string;
+  blur: NormalFunc;
   isFocus: boolean;
   focus: NormalFunc;
-  blur: NormalFunc;
-  keyword: string;
   setKeyword: NormalFunc<[keyword: string]>;
 };
 
 interface SearchInputProps {
-  className?: string;
-  onSearch: NormalFunc<[keyword: string]>;
-  setTabs: NormalFunc<[tab: "tracks" | "albums" | "playlists" | "artists"]>;
   ref?: Ref<SearchInputRef>;
+  className?: string;
+  setTabs: NormalFunc<[tab: "albums" | "tracks" | "artists" | "playlists"]>;
+  onSearch: NormalFunc<[keyword: string]>;
 }
 
-const SearchInput: FC<SearchInputProps> = ({ className, onSearch, ref, setTabs }) => {
+const SearchInput: FC<SearchInputProps> = ({ ref, className, setTabs, onSearch }) => {
   const [focus, setFocus] = useState(false);
   const [keyword, setKeyword] = useState("");
   const [suggestions, setSuggestions] =
@@ -45,7 +46,7 @@ const SearchInput: FC<SearchInputProps> = ({ className, onSearch, ref, setTabs }
   const focusRef = useLatestRef(focus);
   const recommendKeyword = useSearchRecommend();
 
-  const closeSuggestionsWhenFocusLeaves = useCallback((relatedTarget: EventTarget | null) => {
+  const closeSuggestionsWhenFocusLeaves = useCallback((relatedTarget: null | EventTarget) => {
     const nextTarget = relatedTarget instanceof Node ? relatedTarget : null;
     if (nextTarget && (inputRef.current === nextTarget || ulRef.current?.contains(nextTarget))) {
       return;
@@ -70,7 +71,7 @@ const SearchInput: FC<SearchInputProps> = ({ className, onSearch, ref, setTabs }
 
   const renderSuggestions = useMemo<Suggestion[]>(() => {
     if (!suggestions) return [];
-    const { albums = [], artists = [], playlists = [], songs = [] } = suggestions;
+    const { songs = [], albums = [], artists = [], playlists = [] } = suggestions;
     return [
       songs.slice(0, 3).map((song) => ({ name: song.name, type: "tracks" as const, id: song.id })),
       albums
@@ -81,7 +82,7 @@ const SearchInput: FC<SearchInputProps> = ({ className, onSearch, ref, setTabs }
         .map((playlist) => ({ name: playlist.name, type: "playlists" as const, id: playlist.id })),
       artists
         .slice(0, 3)
-        .filter((artist): artist is { name: string; id: number } => !!(artist.name && artist.id))
+        .filter((artist): artist is { id: number; name: string } => !!(artist.name && artist.id))
         .map((artist) => ({ name: artist.name, type: "artists" as const, id: artist.id }))
     ].flat();
   }, [suggestions]);
@@ -126,13 +127,13 @@ const SearchInput: FC<SearchInputProps> = ({ className, onSearch, ref, setTabs }
       <section className="relative h-10 w-4/5 max-w-100">
         <input
           ref={inputRef}
-          type="text"
           className={`
             h-full w-full rounded-full border border-white/30
             px-4 pr-9 text-sm font-semibold outline-none shadow-md
             transition-all duration-300 ease-in-out
             focus:border-primary
         `}
+          type="text"
           value={keyword}
           placeholder={recommendKeyword ?? "请输入搜索关键词"}
           onFocus={() => setFocus(true)}
@@ -149,11 +150,6 @@ const SearchInput: FC<SearchInputProps> = ({ className, onSearch, ref, setTabs }
           }}
         />
         <X
-          onClick={() => {
-            setKeyword("");
-            setSuggestions(null);
-            onSearch("");
-          }}
           className={cx(
             `
               absolute right-3 top-1/2 size-4 -translate-y-1/2 text-primary
@@ -162,6 +158,11 @@ const SearchInput: FC<SearchInputProps> = ({ className, onSearch, ref, setTabs }
             `,
             focus ? "opacity-100" : "opacity-0"
           )}
+          onClick={() => {
+            setKeyword("");
+            setSuggestions(null);
+            onSearch("");
+          }}
         />
         <SearchSuggestions
           ref={ulRef}
@@ -177,8 +178,6 @@ const SearchInput: FC<SearchInputProps> = ({ className, onSearch, ref, setTabs }
         />
       </section>
       <button
-        type="button"
-        title="搜索"
         className={cx(
           `
           flex size-10 shrink-0 items-center justify-center rounded-full border border-white/30 shadow-md
@@ -186,6 +185,8 @@ const SearchInput: FC<SearchInputProps> = ({ className, onSearch, ref, setTabs }
           hover:text-primary-text active:scale-95
         `
         )}
+        title="搜索"
+        type="button"
         onClick={() => {
           setKeyword(keyword || recommendKeyword || "");
           onSearch(keyword || recommendKeyword || "");

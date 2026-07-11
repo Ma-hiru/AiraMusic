@@ -1,12 +1,13 @@
-import { type FC, useState } from "react";
 import { cx } from "@emotion/css";
 import { Lock } from "lucide-react";
-import { NeteaseAPIPlaylist } from "@/common/netease/api";
+import { type FC, useState } from "react";
 import { Log } from "@/common/lib/log";
-import type { ModalRender } from "./modal-provider";
-import AppToast from "@/common/components/display/toast";
-import AppModal from "./use";
 import { NeteaseUser } from "@/common/netease/models";
+import { NeteaseAPIPlaylist } from "@/common/netease/api";
+import AppToast from "@/common/components/display/toast";
+
+import AppModal from "./use";
+import type { ModalRender } from "./modal-provider";
 
 export function createPlaylistCreateModal({
   onTyping,
@@ -70,24 +71,24 @@ const PlaylistCreateForm: FC<{
   return (
     <div className="flex flex-col gap-4 text-[13px]">
       <input
-        autoFocus
-        value={name}
-        maxLength={40}
-        placeholder="歌单名称"
-        onFocus={() => onTyping?.(true)}
-        onBlur={() => onTyping?.(false)}
-        onChange={(e) => setName(e.target.value)}
-        onKeyDown={(e) => e.key === "Enter" && void onCreate()}
         className="
           w-full mt-1 rounded-md border border-white/15 bg-white/10 px-3 py-2 font-bold
           outline-none transition-colors focus:border-primary
         "
+        value={name}
+        maxLength={40}
+        placeholder="歌单名称"
+        onBlur={() => onTyping?.(false)}
+        onFocus={() => onTyping?.(true)}
+        onChange={(e) => setName(e.target.value)}
+        onKeyDown={(e) => e.key === "Enter" && void onCreate()}
+        autoFocus
       />
       {/* 隐私开关 */}
       <button
+        className="flex items-center justify-between rounded-md bg-white/5 px-3 py-2 text-left transition-colors hover:bg-white/10"
         type="button"
-        onClick={() => setPrivacy((v) => !v)}
-        className="flex items-center justify-between rounded-md bg-white/5 px-3 py-2 text-left transition-colors hover:bg-white/10">
+        onClick={() => setPrivacy((v) => !v)}>
         <span className="flex items-center gap-2">
           <Lock className="size-4 opacity-70" />
           <span className="flex flex-col">
@@ -111,13 +112,13 @@ const PlaylistCreateForm: FC<{
       {/* 操作 */}
       <div className="flex justify-end gap-2">
         <button
-          type="button"
-          disabled={creating}
-          onClick={onCreate}
           className="
             rounded-md px-4 py-1.5 font-bold hover:text-primary-text hover:bg-primary
             transition-all active:scale-96 disabled:opacity-50
-          ">
+          "
+          type="button"
+          disabled={creating}
+          onClick={onCreate}>
           {creating ? "创建中..." : "创建"}
         </button>
       </div>

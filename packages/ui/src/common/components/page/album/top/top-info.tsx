@@ -1,8 +1,8 @@
-import { type FC, memo } from "react";
-import { NeteaseAlbum } from "@/common/netease/models";
 import { cx } from "@emotion/css";
-import { RendererIPCMessageBus } from "@/common/lib/bus";
+import { memo, type FC } from "react";
 import { RendererWindow } from "@/common/lib/window";
+import { NeteaseAlbum } from "@/common/netease/models";
+import { RendererIPCMessageBus } from "@/common/lib/bus";
 import { createAlbumStats } from "@/common/utils/playlist";
 import AppToast from "@/common/components/display/toast";
 
@@ -12,7 +12,7 @@ interface TopInfoProps {
   onAddList: NormalFunc;
 }
 
-const TopInfo: FC<TopInfoProps> = ({ album, dynamic, onAddList }) => {
+const TopInfo: FC<TopInfoProps> = ({ onAddList, album, dynamic }) => {
   const status = createAlbumStats(album, dynamic);
   return (
     <div className="grid h-full w-full max-w-full min-h-0 min-w-0 grid-cols-1 grid-rows-[auto_minmax(0,1fr)_auto] gap-1 overflow-hidden">
@@ -32,14 +32,14 @@ const TopInfo: FC<TopInfoProps> = ({ album, dynamic, onAddList }) => {
 
       {/* status */}
       <div className="flex w-fit max-w-full shrink-0 flex-row flex-wrap gap-3 overflow-hidden text-[12px]">
-        {status.map(({ icon: Icon, label, value, isComment, isTrackCount }) => (
+        {status.map(({ label, value, isComment, icon: Icon, isTrackCount }) => (
           <div
             key={label}
-            title={label}
             className={cx(
               "min-w-0 flex items-center justify-start gap-1.5 rounded-sm transition-opacity duration-200 ease-in-out",
               (isComment || isTrackCount) && "hover:opacity-70 cursor-pointer"
             )}
+            title={label}
             onClick={async () => {
               if (isComment) {
                 if (!album) return;

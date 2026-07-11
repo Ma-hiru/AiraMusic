@@ -1,24 +1,24 @@
-import { type FC, memo, useCallback, useEffect, useMemo } from "react";
-import { CalendarDays, Clock3, type LucideIcon, LucideRefreshCw, Music2 } from "lucide-react";
+import { cx } from "@emotion/css";
+import { memo, type FC, useMemo, useEffect, useCallback } from "react";
+import { Clock3, Music2, CalendarDays, type LucideIcon, LucideRefreshCw } from "lucide-react";
 import { useUser } from "@/common/store/user";
-import { NeteaseAPIRecord } from "@/common/netease/api";
 import { RendererFormat } from "@/common/lib/format";
-import { NeteaseNetworkImage } from "@/common/netease/models";
 import { RendererWindow } from "@/common/lib/window";
+import { NeteaseAPIRecord } from "@/common/netease/api";
 import { RendererIPCMessageBus } from "@/common/lib/bus";
-import { useRequestAutoRun, useRequestStatusWrap } from "@/common/hooks/use-request-wrap";
 import { useListenable } from "@/common/hooks/use-listenable";
+import { NeteaseNetworkImage } from "@/common/netease/models";
+import { useRequestAutoRun, useRequestStatusWrap } from "@/common/hooks/use-request-wrap";
 import dayjs from "dayjs";
-import NeteaseImage from "@/common/components/display/image/netease-image";
+import RendererPlayerHandle from "@/wins/main/lib/handle";
 import AppError from "@/common/components/fallback/app-error";
 import AppLoading from "@/common/components/fallback/app-loading";
-import RendererPlayerHandle from "@/wins/main/lib/handle";
-import { cx } from "@emotion/css";
+import NeteaseImage from "@/common/components/display/image/netease-image";
 
 interface StatItem {
   label: string;
-  value: number | string;
   Icon: LucideIcon;
+  value: number | string;
 }
 
 const WEEKDAYS = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
@@ -92,8 +92,8 @@ const ForYouPanel: FC<{ className?: string }> = ({ className }) => {
         className
       )}>
       <div className="pointer-events-none absolute inset-0 bg-linear-to-t from-black/10 via-transparent to-white/30" />
-      <AppError when={status === "error"} message="听歌数据加载错误" reset={reload}>
-        <AppLoading loading={status === "loading"} tips="听歌数据加载中">
+      <AppError reset={reload} message="听歌数据加载错误" when={status === "error"}>
+        <AppLoading tips="听歌数据加载中" loading={status === "loading"}>
           <div className="relative z-10 flex h-full min-h-0 flex-col justify-between gap-4 sm:flex-row sm:gap-6 xl:gap-8 contain-strict">
             {/* title 和 日期 */}
             <section className="flex min-w-0 flex-col justify-between items-start">
@@ -105,8 +105,8 @@ const ForYouPanel: FC<{ className?: string }> = ({ className }) => {
                   <span>听歌足迹</span>
                   <span title="刷新">
                     <LucideRefreshCw
-                      onClick={reload}
                       className="size-4 hover:opacity-50 ease-in-out transition-opacity duration-500 cursor-pointer opacity-0 group-hover:opacity-100 active:scale-98"
+                      onClick={reload}
                     />
                   </span>
                 </p>
@@ -139,15 +139,15 @@ const ForYouPanel: FC<{ className?: string }> = ({ className }) => {
                 <div className="mt-0.5 flex max-w-full shrink-0 items-center gap-3">
                   {!!user && (
                     <NeteaseImage
-                      cache
                       className="size-10 rounded-full border cursor-pointer hover:scale-105 ease-in-out duration-300 transition-transform"
+                      shadow="base"
+                      cacheLazy={false}
+                      image={NeteaseNetworkImage.fromUserAvatar(user)}
                       onClick={async () => {
                         await RendererWindow.display.reactReadyAwait();
                         RendererIPCMessageBus.display.deliver({ type: "settings" });
                       }}
-                      cacheLazy={false}
-                      shadow="base"
-                      image={NeteaseNetworkImage.fromUserAvatar(user)}
+                      cache
                     />
                   )}
                   <span className="min-w-0 truncate text-xl font-bold sm:text-2xl">
@@ -169,7 +169,7 @@ const ForYouPanel: FC<{ className?: string }> = ({ className }) => {
                 </strong>
               </div>
               <div className="grid w-full shrink-0 grid-cols-3 gap-1.5 sm:w-auto">
-                {statItems.map(({ label, value, Icon }) => (
+                {statItems.map(({ Icon, label, value }) => (
                   <div key={label} className="min-w-0 rounded-md bg-white/10 px-2 py-1.5">
                     <div className="flex items-center gap-1 opacity-55">
                       <Icon className="size-3 shrink-0" />

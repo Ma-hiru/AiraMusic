@@ -1,19 +1,19 @@
-import { type FC, memo, useEffect, useRef, useState } from "react";
-import { useComments } from "@/common/hooks/use-comments";
-import { CommentSort, CommentType } from "@/common/enum";
+import { memo, useRef, type FC, useState, useEffect } from "react";
 import { RendererCache } from "@/common/lib/cache";
+import { CommentSort, CommentType } from "@/common/enum";
+import { RendererIPCMessageBus } from "@/common/lib/bus";
+import { useComments } from "@/common/hooks/use-comments";
 import { useListenable } from "@/common/hooks/use-listenable";
 import { useThemeInjectFromBus } from "@/common/hooks/use-theme-inject-from-bus";
-import { RendererIPCMessageBus } from "@/common/lib/bus";
 import AppToast from "@/common/components/display/toast";
-
-import Control from "./control";
-import Title from "./title";
-import Tabs from "./tabs";
-import Content from "./content";
+import AppError from "@/common/components/fallback/app-error";
 import AppLoading from "@/common/components/fallback/app-loading";
 import AcrylicBackground from "@/common/components/display/acrylic-background";
-import AppError from "@/common/components/fallback/app-error";
+
+import Tabs from "./tabs";
+import Title from "./title";
+import Content from "./content";
+import Control from "./control";
 
 const CommentsPage: FC<object> = () => {
   const commentBus = useListenable(RendererIPCMessageBus.comment);
@@ -25,7 +25,7 @@ const CommentsPage: FC<object> = () => {
   const [id, setId] = useState(0);
   const [type, setType] = useState(CommentType.Song);
   const [sortType, setSortType] = useState(CommentSort.Hot);
-  const { comments, status, loadMore } = useComments({ id, type, sortType });
+  const { status, comments, loadMore } = useComments({ id, type, sortType });
 
   useEffect(() => {
     if (!commentBus.data) return;
@@ -71,35 +71,35 @@ const CommentsPage: FC<object> = () => {
       <Control className="h-10 absolute top-0 left-0 right-0 z-10" />
       <div className="fixed inset-0 z-[-1]">
         <AcrylicBackground
-          fluid
-          fluidPaused
+          blur={60}
+          opacity={1}
+          saturate={2.5}
+          brightness={0.4}
           src={themeBus.data?.backgroundCover}
           themeColors={themeBus.data?.theme.themeColors}
-          opacity={1}
-          brightness={0.4}
-          saturate={2.5}
-          blur={60}
+          fluid
+          fluidPaused
         />
       </div>
-      <AppError reset={loadMore} when={status === "error"} message="加载评论失败">
+      <AppError message="加载评论失败" reset={loadMore} when={status === "error"}>
         <AppLoading loading={comments.data.length === 0 && status !== "success"}>
           <Title className="shrink-0" commentBus={commentBus} />
           <Tabs
             className="h-5"
             sortType={sortType}
             setSortType={setSortType}
-            totalComment={comments.totalComment}
             dynamicContent={dynamicContent}
+            totalComment={comments.totalComment}
             setDynamicContent={setDynamicContent}
           />
           <Content
             className="flex-1"
-            hasMore={comments.hasMore}
             comments={comments.data}
-            onEnded={loadMore}
-            loading={status === "loading"}
+            hasMore={comments.hasMore}
             type={commentBus.data?.type}
+            loading={status === "loading"}
             sourceID={commentBus.data?.id}
+            onEnded={loadMore}
           />
         </AppLoading>
       </AppError>

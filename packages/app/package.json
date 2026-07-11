@@ -24,6 +24,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@mahiru/ai": "workspace:*",
     "@mahiru/ipc": "workspace:*",
     "@mahiru/log": "workspace:*",
     "@mahiru/native": "workspace:*",

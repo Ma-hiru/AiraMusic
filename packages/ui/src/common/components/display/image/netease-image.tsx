@@ -1,74 +1,74 @@
+import { cx } from "@emotion/css";
 import {
-  type FC,
-  type ImgHTMLAttributes,
   memo,
-  type MouseEvent as ReactMouseEvent,
+  useRef,
+  type FC,
+  useState,
+  useEffect,
+  useCallback,
   type ReactNode,
   startTransition,
   type SyntheticEvent,
-  useCallback,
-  useEffect,
-  useRef,
-  useState
+  type ImgHTMLAttributes,
+  type MouseEvent as ReactMouseEvent
 } from "react";
-import { cx } from "@emotion/css";
-import { NeteaseLocalImage, NeteaseNetworkImage } from "@/common/netease/models";
 import { NeteaseImageSize } from "@/common/enum";
-import { NeteaseServicesImage } from "@/common/netease/services";
 import { RendererWindow } from "@/common/lib/window";
 import { RendererIPCMessageBus } from "@/common/lib/bus";
+import { NeteaseServicesImage } from "@/common/netease/services";
+import { NeteaseLocalImage, NeteaseNetworkImage } from "@/common/netease/models";
 
-type ShadowLevel = "none" | "base" | "float";
+type ShadowLevel = "base" | "none" | "float";
 
-type ShadowColor = "light" | "dark";
+type ShadowColor = "dark" | "light";
 
 type ImageProps = Omit<ImgHTMLAttributes<HTMLImageElement>, "src"> & {
-  imageClassName?: string;
-  retryOnError?: boolean;
-  retryDelay?: number;
-  retryCount?: number;
-  shadow?: ShadowLevel;
-  shadowColor?: ShadowColor;
+  cache: boolean;
   pause?: boolean;
   preview?: boolean;
-  image: Optional<NeteaseNetworkImage | NeteaseLocalImage>;
-  cache: boolean;
-  draggable?: boolean;
   cacheLazy?: boolean;
-  cacheLazyProps?: {
-    root?: Element | null;
-    rootMargin?: string;
-    threshold?: number;
-  };
+  draggable?: boolean;
+  retryCount?: number;
+  retryDelay?: number;
   fallback?: ReactNode;
+  shadow?: ShadowLevel;
+  retryOnError?: boolean;
+  imageClassName?: string;
+  shadowColor?: ShadowColor;
+  image: Optional<NeteaseLocalImage | NeteaseNetworkImage>;
+  cacheLazyProps?: {
+    threshold?: number;
+    rootMargin?: string;
+    root?: null | Element;
+  };
 };
 
 const NeteaseImage: FC<ImageProps> = ({
-  image,
-  cache,
-  alt,
-  onError,
   className,
-  loading = "lazy",
-  decoding = "async",
-  imageClassName,
-  retryCount = 2,
-  retryDelay = 500,
-  retryOnError = true,
-  shadow = "base",
-  shadowColor = "light",
   onClick,
+  onError,
+  alt,
+  cache,
+  image,
   pause,
   preview,
-  cacheLazy = true,
-  cacheLazyProps,
-  draggable = false,
   fallback,
+  cacheLazyProps,
+  imageClassName,
+  retryCount = 2,
+  shadow = "base",
+  cacheLazy = true,
+  loading = "lazy",
+  retryDelay = 500,
+  draggable = false,
+  decoding = "async",
+  retryOnError = true,
+  shadowColor = "light",
   ...rest
 }) => {
   const [visible, setVisible] = useState(false);
   const [error, setError] = useState(false);
-  const [source, setSource] = useState<Nullable<NeteaseNetworkImage | NeteaseLocalImage>>(null);
+  const [source, setSource] = useState<Nullable<NeteaseLocalImage | NeteaseNetworkImage>>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const retryStatus = useRef({
     token: 0,
@@ -82,7 +82,7 @@ const NeteaseImage: FC<ImageProps> = ({
   const retry = useCallback((imageElement: HTMLImageElement) => {
     if (!imageElement.isConnected) return; // 图片已不在文档中，停止重试
     if (imageElement.complete && imageElement.naturalWidth > 0) return; // 图片已加载成功，停止重试
-    const { retryCount, retryDelay, count } = retryStatus.current;
+    const { count, retryCount, retryDelay } = retryStatus.current;
     if (count >= retryCount) return; // 达到最大重试次数，停止重试
 
     const token = Date.now();
@@ -190,7 +190,6 @@ const NeteaseImage: FC<ImageProps> = ({
   return (
     <span
       ref={containerRef}
-      onClick={wrapClick}
       className={cx(
         "overflow-hidden block",
         error && !fallback && "bg-white/10 backdrop-blur-sm",
@@ -199,15 +198,16 @@ const NeteaseImage: FC<ImageProps> = ({
         shadowFloatDark && "shadow-[0_0_0_1px_rgba(255,255,255,0.06),0_8px_24px_rgba(0,0,0,0.4)]",
         shadowFloatLight && "shadow-[0_0_0_1px_rgba(0,0,0,0.04),0_4px_12px_rgba(0,0,0,0.18)]",
         className
-      )}>
+      )}
+      onClick={wrapClick}>
       <img
         {...rest}
-        draggable={draggable}
         className={cx("w-full h-full object-cover", error && "invisible w-0 h-0", imageClassName)}
-        src={source?.src}
-        alt={alt ?? source?.alt}
         loading={loading}
+        src={source?.src}
         decoding={decoding}
+        draggable={draggable}
+        alt={alt ?? source?.alt}
         onError={handleLoadError}
       />
       {error && fallback}

@@ -1,34 +1,34 @@
 export type ProxyParentMessage =
   | {
-      type: "start";
+      type: "stop";
+    }
+  | {
       port: number;
+      type: "start";
       ncmPort: number;
       storePort: number;
       staticUIDir: string;
-    }
-  | {
-      type: "stop";
     };
 
 export type ProxyChildMessage =
   | {
-      type: "ready";
-      port: number;
+      type: "stopped";
     }
   | {
-      type: "stopped";
+      port: number;
+      type: "ready";
     }
   | {
       type: "log";
       payload: {
-        type: string;
         text: string;
+        type: string;
       };
     }
   | {
       type: "error";
       error: {
-        message: string;
         stack?: string;
+        message: string;
       };
     };

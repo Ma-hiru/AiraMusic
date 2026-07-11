@@ -1,34 +1,35 @@
+import { cx } from "@emotion/css";
+import { motion, useAnimate } from "motion/react";
 import {
+  memo,
+  useRef,
   type FC,
   type Key,
-  memo,
-  type ReactNode,
+  useState,
   useCallback,
-  useLayoutEffect,
-  useRef,
-  useState
+  type ReactNode,
+  useLayoutEffect
 } from "react";
-import { motion, useAnimate } from "motion/react";
-import { cx } from "@emotion/css";
-import { ensureInjectObject, useInject } from "@/common/utils/inject";
 import { useLatestRef } from "@/common/hooks/use-latest-ref";
+import { useInject, ensureInjectObject } from "@/common/utils/inject";
+
 import AppContextMenu from "./use";
 
 const DURATION = 0.15;
 
 export type ContextMenuItem = {
   id?: Key;
-  prefix?: ReactNode;
   label: ReactNode;
+  prefix?: ReactNode;
   suffix?: ReactNode;
   onClick?: () => void;
 };
 
 export type ContextMenuRender = {
-  items: ContextMenuItem[];
-  header?: ReactNode;
   clientX: number;
   clientY: number;
+  header?: ReactNode;
+  items: ContextMenuItem[];
 };
 
 const MenuProvider: FC<{ className?: string }> = ({ className }) => {
@@ -119,7 +120,6 @@ const MenuProvider: FC<{ className?: string }> = ({ className }) => {
   return (
     <motion.div
       ref={scope}
-      aria-hidden={!visible}
       className={cx(
         `
           fixed z-15 w-40 overflow-hidden rounded-md
@@ -127,7 +127,8 @@ const MenuProvider: FC<{ className?: string }> = ({ className }) => {
           pointer-events-none opacity-0 shadow-none!
       `,
         className
-      )}>
+      )}
+      aria-hidden={!visible}>
       {!!render?.header && (
         <>
           <div className="px-1 h-10">{render.header}</div>
@@ -135,13 +136,10 @@ const MenuProvider: FC<{ className?: string }> = ({ className }) => {
         </>
       )}
       <div className="flex flex-col space-y-1" role="menu" aria-label="上下文菜单">
-        {render?.items.map(({ prefix, label, suffix, id, onClick }, index) => {
+        {render?.items.map(({ id, onClick, label, prefix, suffix }, index) => {
           return (
             <button
               key={id || index}
-              type="button"
-              role="menuitem"
-              tabIndex={visible ? 0 : -1}
               className={`
                   flex w-full items-center gap-1.5
                   rounded-md border-0 bg-transparent px-2 py-1 text-left
@@ -153,6 +151,9 @@ const MenuProvider: FC<{ className?: string }> = ({ className }) => {
                   focus-visible:ring-2 focus-visible:ring-primary/60
                   cursor-pointer
               `}
+              type="button"
+              role="menuitem"
+              tabIndex={visible ? 0 : -1}
               onClick={(e) => {
                 e.stopPropagation();
                 onClick?.();

@@ -9,14 +9,14 @@ export class PlaylistPathUtils {
     this.like = this.withQuery(null, "like");
   }
 
-  withQuery(id: Optional<number | string>, source: "normal" | "like") {
+  withQuery(id: Optional<number | string>, source: "like" | "normal") {
     const search = new URLSearchParams();
     id && search.set("id", String(id));
     source && search.set("source", String(source));
     return `${this.base}?${search.toString()}`;
   }
 
-  queryCache: { source: Nullable<"normal" | "like">; id: Nullable<string> } = {
+  queryCache: { id: Nullable<string>; source: Nullable<"like" | "normal"> } = {
     source: null,
     id: null
   };
@@ -31,7 +31,7 @@ export class PlaylistPathUtils {
 
     const search = new URLSearchParams(location.search);
     const result = {
-      source: search.get("source") as Nullable<"normal" | "like">,
+      source: search.get("source") as Nullable<"like" | "normal">,
       id: search.get("id")
     };
     cache && (this.queryCache = result);

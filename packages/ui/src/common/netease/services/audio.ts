@@ -1,14 +1,14 @@
 import { RendererCache } from "@/common/lib/cache";
-import { StoreCategory, TrackQuality } from "@/common/enum";
-import {
-  NeteaseLocalAudio,
-  NeteaseNetworkAudio,
-  NeteaseTrack,
-  NeteaseUser
-} from "@/common/netease/models";
+import { RendererFormat } from "@/common/lib/format";
 import { NeteaseAPITrack } from "@/common/netease/api";
 import { userStoreSnapshot } from "@/common/store/user";
-import { RendererFormat } from "@/common/lib/format";
+import { TrackQuality, StoreCategory } from "@/common/enum";
+import {
+  NeteaseUser,
+  NeteaseTrack,
+  NeteaseLocalAudio,
+  NeteaseNetworkAudio
+} from "@/common/netease/models";
 
 export default class _NeteaseAudioSource {
   //region cache
@@ -69,7 +69,7 @@ export default class _NeteaseAudioSource {
     track: NeteaseTrack,
     preference: TrackQuality,
     download: boolean
-  ): Promise<Nullable<NeteaseNetworkAudio | NeteaseLocalAudio>> {
+  ): Promise<Nullable<NeteaseLocalAudio | NeteaseNetworkAudio>> {
     const meta =
       this.getMetaCache(track, preference) ?? (await this.latestAudio(track, preference));
     if (!meta) return null;
