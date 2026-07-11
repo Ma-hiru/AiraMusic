@@ -5,7 +5,6 @@ import { MainTray } from "@/lib/tray";
 import { MainAgent } from "@/inner/agent";
 import { MainServices } from "@/services";
 import { MainIPC } from "@mahiru/ipc/main";
-import { MainProtocol } from "@/inner/protocol";
 import { MainWindowPreset } from "@/lib/window-preset";
 import { MainWindowCreator } from "@/lib/window-creator";
 import { MainWindowManager } from "@/lib/window-manager";

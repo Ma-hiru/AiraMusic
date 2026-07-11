@@ -448,20 +448,16 @@ export class RendererWindow extends Listenable<"react-ready" | RendererWindowEve
     return instance;
   }
 
-  static get process() {
-    return this.get("process");
-  }
-
-  static get agent() {
-    return this.get("agent");
-  }
-
   static get isMain() {
     return RendererRuntime.currentWindowType === "main";
   }
 
   static get process() {
     return this.get("process");
+  }
+
+  static get agent() {
+    return this.get("agent");
   }
 
   static get comment() {
