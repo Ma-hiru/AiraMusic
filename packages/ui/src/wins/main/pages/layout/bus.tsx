@@ -155,7 +155,7 @@ const Bus: FC<object> = () => {
           player.playlist.next(true);
           break;
         case "exit":
-          windowCurrent.close();
+          RendererWindow.process.send("message_dispatch_should_close", true);
           break;
         case "toggle-lyric-version-rm":
           RendererPlayerHandle.player.toggleLyric("rm");

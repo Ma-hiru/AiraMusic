@@ -91,7 +91,6 @@ export class MainApp {
       const mainWindow = MainWindowCreator.create(MainWindowPreset.main);
 
       let isQuitting = false;
-      let isClosing = false;
       if (process.platform === "darwin") {
         app.addListener("activate", () => MainWindowManager.checkAndShow("main"));
         mainWindow.addListener("close", (event) => {
@@ -111,16 +110,18 @@ export class MainApp {
       app.addListener("before-quit", (e) => {
         e.preventDefault();
         if (process.platform === "darwin") {
-          if (isClosing) return;
-          isClosing = true;
-
-          this.emitStopMessageToMainRenderer().then(() => {
-            isQuitting = true;
-          });
-          mainWindow.close();
-        } else {
-          this.exit(MainExitCodeConstants.NORMAL_EXIT, "");
+          mainWindow.hide();
+          isQuitting = true;
         }
+        this.exit(MainExitCodeConstants.NORMAL_EXIT, "");
+      });
+      MainIPC.MessageChannel.listen("message_dispatch_should_close", (close) => {
+        if (!close) return;
+        if (process.platform === "darwin") {
+          mainWindow.hide();
+          isQuitting = true;
+        }
+        void this.emitStopMessageToMainRenderer();
       });
 
       return mainWindow;
