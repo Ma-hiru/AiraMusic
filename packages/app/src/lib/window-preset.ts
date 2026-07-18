@@ -81,6 +81,7 @@ export class MainWindowPreset {
     const { max, min, base } = MainScreenResolver.primary.adaptiveWindowSizePreset(
       MainWindowConstants.WINDOW_BASE_SIZE.lyric
     );
+    const isDarwin = process.platform === "darwin";
 
     return {
       options: {
@@ -101,7 +102,8 @@ export class MainWindowPreset {
         minimizable: false,
         maximizable: false,
         fullscreen: false,
-        titleBarStyle: "hidden",
+        // mac 上 titleBarStyle:"hidden" 会强制画出红绿灯，与自带关闭按钮冲突
+        ...(isDarwin ? {} : { titleBarStyle: "hidden" as const }),
         frame: false,
         type: "toolbar",
         skipTaskbar: true,
@@ -114,6 +116,7 @@ export class MainWindowPreset {
       memoPos: true,
       loadURL: (port: number) => `http://localhost:${port}/lyric.html`,
       onCreate: (win: BrowserWindow) => {
+        if (isDarwin) win.setWindowButtonVisibility(false);
         if (process.platform === "linux") {
           win.setAlwaysOnTop(true);
         } else {
@@ -127,6 +130,8 @@ export class MainWindowPreset {
     const { max, min, base } = MainScreenResolver.primary.adaptiveWindowSizePreset(
       MainWindowConstants.WINDOW_BASE_SIZE.miniplayer
     );
+    const isDarwin = process.platform === "darwin";
+
     return {
       options: {
         width: base.width,
@@ -144,7 +149,8 @@ export class MainWindowPreset {
         minimizable: false,
         maximizable: false,
         fullscreen: false,
-        titleBarStyle: "hidden",
+        // mac 上 titleBarStyle:"hidden" 会强制画出红绿灯，与自带关闭按钮冲突
+        ...(isDarwin ? {} : { titleBarStyle: "hidden" as const }),
         frame: false,
         type: "toolbar",
         skipTaskbar: true,
@@ -156,6 +162,7 @@ export class MainWindowPreset {
       memoPos: true,
       loadURL: (port: number) => `http://localhost:${port}/mini.html`,
       onCreate: (win: BrowserWindow) => {
+        if (isDarwin) win.setWindowButtonVisibility(false);
         win.hide();
         if (process.platform === "linux") {
           win.setAlwaysOnTop(true);
