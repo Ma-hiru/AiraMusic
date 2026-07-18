@@ -21,7 +21,7 @@ interface TopControlProps {
   className?: string;
   itemClassName?: string;
   appends?: ControlButtonProps | ControlButtonProps[];
-  onClose?: NormalFunc;
+  onClose?: NormalFunc<[quiting: boolean]>;
 }
 
 const Control: FC<TopControlProps> = ({
@@ -64,12 +64,10 @@ const Control: FC<TopControlProps> = ({
   const apd = Array.isArray(appends) ? appends : [appends];
 
   useEffect(() => {
-    if (isDarwin && RendererWindow.isMain) {
-      return RendererWindow.process.listenMessage(
-        "message_dispatch_darwin_close",
-        (close) => close && onClose?.()
-      );
-    }
+    return RendererWindow.process.listenMessage(
+      "message_dispatch_should_close",
+      (close) => close && onClose?.(true)
+    );
   }, [onClose]);
 
   return (
@@ -119,7 +117,7 @@ const Control: FC<TopControlProps> = ({
         color={color}
         show={exit && !isDarwin}
         iconClassName="scale-105"
-        onClick={onClose ?? (() => currentWindow.close())}
+        onClick={onClose ? () => onClose(false) : () => currentWindow.close()}
       />
     </NoDrag>
   );

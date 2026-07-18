@@ -1,11 +1,4 @@
 export {
-  LLMProviderOpenAI,
-  type LLMProviderOpenAIConfig,
-  type LLMProviderOpenAIAPIMode,
-  type LLMProviderOpenAIStreamResponse,
-  type LLMProviderOpenAIGenerateResponse
-} from "./openai";
-export {
   LLMProvider,
   type LLMUsage,
   type LLMMessage,
@@ -14,7 +7,34 @@ export {
   type LLMCheckResponse,
   type LLMGenerateRequest,
   type LLMMessageToolCall,
+  LLMProviderConfigSchema,
+  type LLMProviderContext,
+  type LLMProviderOptions,
   type LLMGenerateResponse,
   type LLMMessageToolResult,
-  type LLMGenerateStreamResponse
+  type LLMProviderDescriptor,
+  type LLMProviderConfigInput,
+  type LLMProviderConfigValue,
+  type LLMProviderCapabilities,
+  type LLMGenerateStreamResponse,
+  type LLMProviderConfigJSONSchema
 } from "./interface";
+export {
+  LLMProviderOpenAI,
+  LLMProviderOpenAIAPIModes,
+  type LLMProviderOpenAIConfig,
+  type LLMProviderOpenAIAPIMode,
+  LLMProviderOpenAIConfigSchema,
+  LLMProviderOpenAIChatToolStrictModes,
+  type LLMProviderOpenAIStreamResponse,
+  LLMProviderOpenAIChatInstructionRoles,
+  LLMProviderOpenAIChatStreamUsageModes,
+  LLMProviderOpenAIChatTokenLimitFields,
+  type LLMProviderOpenAIGenerateResponse,
+  type LLMProviderOpenAIChatToolStrictMode,
+  LLMProviderOpenAIRequiredToolChoiceModes,
+  type LLMProviderOpenAIChatInstructionRole,
+  type LLMProviderOpenAIChatStreamUsageMode,
+  type LLMProviderOpenAIChatTokenLimitField,
+  type LLMProviderOpenAIRequiredToolChoiceMode
+} from "./openai";

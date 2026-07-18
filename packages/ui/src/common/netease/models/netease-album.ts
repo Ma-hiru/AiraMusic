@@ -12,6 +12,7 @@ export class NeteaseAlbum {
     this.tracks = props.tracks;
   }
 
+  /** @deprecated Agent 输出请统一使用 RendererTool.album。 */
   toToolJSONValue(): JsonValue {
     return {
       content: this.content,

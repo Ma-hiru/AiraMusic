@@ -1,5 +1,33 @@
 import type { LLMToolCall } from "@mahiru/ai";
 
+export type AgentTokenUsage = {
+  input?: number;
+  total?: number;
+  output?: number;
+  reasoning?: number;
+  cacheWrite?: number;
+  cachedInput?: number;
+};
+
+export type AgentAssistantTurnObservability = {
+  step: number;
+  runID?: string;
+  finishReason?: string;
+  usage?: AgentTokenUsage;
+  status: "complete" | "incomplete";
+};
+
+export type AgentRunTerminal = {
+  id: string;
+  error?: string;
+  runID?: string;
+  endedAt?: number;
+  type: "terminal";
+  startedAt?: number;
+  usage?: AgentTokenUsage;
+  status: "failed" | "aborted" | "max_steps";
+};
+
 export type AgentLiveToolResult = {
   name: string;
   callID: string;
@@ -7,25 +35,31 @@ export type AgentLiveToolResult = {
 };
 
 export type AgentLiveTimelineItem =
+  | AgentRunTerminal
   | {
       id: string;
       text: string;
+      runID?: string;
       type: "assistant";
     }
   | {
       id: string;
       step: number;
       type: "tool";
+      runID?: string;
       toolCalls: LLMToolCall[];
       toolResults?: AgentLiveToolResult[];
       status: "done" | "error" | "running";
+      assistantTurn?: AgentAssistantTurnObservability;
     };
 
 export type AgentToolTimelineItem = {
   id: string;
   type: "tool";
   step?: number;
+  runID?: string;
   toolCalls: LLMToolCall[];
   toolResults: AgentLiveToolResult[];
   status: "done" | "error" | "running";
+  assistantTurn?: AgentAssistantTurnObservability;
 };

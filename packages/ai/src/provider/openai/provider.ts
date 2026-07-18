@@ -19,16 +19,74 @@ import {
   normalizeChatFinishReason,
   normalizeCompletionsUsage,
   type StreamedChatToolCall,
+  toResponseProviderContext,
   normalizeResponseToolCalls,
   normalizeStreamedChatToolCalls
 } from "@/utils/openai";
 import OpenAI from "openai";
 
+import { LLMProviderOpenAIConfigSchema } from "./types";
 import type {
   LLMProviderOpenAIConfig,
   LLMProviderOpenAIStreamResponse,
-  LLMProviderOpenAIGenerateResponse
+  LLMProviderOpenAIGenerateResponse,
+  LLMProviderOpenAIChatInstructionRole,
+  LLMProviderOpenAIChatTokenLimitField
 } from "./types";
+
+type ResolvedChatInstructionRole = Exclude<LLMProviderOpenAIChatInstructionRole, "auto">;
+type ResolvedChatTokenLimitField = Exclude<LLMProviderOpenAIChatTokenLimitField, "auto">;
+
+function isModernOpenAIChatModel(model: string): boolean {
+  return /^(?:o\d|gpt-(?:4\.1|5))(?:[.-]|$)/i.test(model.trim());
+}
+
+function isOfficialOpenAIEndpoint(baseURL?: string): boolean {
+  if (!baseURL) return true;
+  try {
+    return new URL(baseURL).hostname.toLowerCase() === "api.openai.com";
+  } catch {
+    return false;
+  }
+}
+
+function resolveChatInstructionRole(config: LLMProviderOpenAIConfig): ResolvedChatInstructionRole {
+  if (config.chatInstructionRole !== "auto") return config.chatInstructionRole;
+  return isModernOpenAIChatModel(config.model) ? "developer" : "system";
+}
+
+function resolveChatTokenLimitField(config: LLMProviderOpenAIConfig): ResolvedChatTokenLimitField {
+  if (config.chatTokenLimitField !== "auto") return config.chatTokenLimitField;
+  return isOfficialOpenAIEndpoint(config.baseURL) || isModernOpenAIChatModel(config.model)
+    ? "max_completion_tokens"
+    : "max_tokens";
+}
+
+function shouldIncludeChatStreamUsage(config: LLMProviderOpenAIConfig): boolean {
+  if (config.chatStreamUsage !== "auto") return config.chatStreamUsage === "include";
+  return isOfficialOpenAIEndpoint(config.baseURL);
+}
+
+function shouldIncludeChatToolStrict(config: LLMProviderOpenAIConfig): boolean {
+  if (config.chatToolStrict !== "auto") return config.chatToolStrict === "include";
+  return isOfficialOpenAIEndpoint(config.baseURL);
+}
+
+function toChatStreamOptions(config: LLMProviderOpenAIConfig) {
+  return shouldIncludeChatStreamUsage(config)
+    ? { stream_options: { include_usage: true as const } }
+    : {};
+}
+
+function toChatTokenLimit(
+  config: LLMProviderOpenAIConfig,
+  value?: number
+): { max_tokens?: number; max_completion_tokens?: number } {
+  if (value === undefined) return {};
+  return resolveChatTokenLimitField(config) === "max_completion_tokens"
+    ? { max_completion_tokens: value }
+    : { max_tokens: value };
+}
 
 export class LLMProviderOpenAI extends LLMProvider<
   LLMProviderOpenAIConfig,
@@ -36,11 +94,25 @@ export class LLMProviderOpenAI extends LLMProvider<
   LLMProviderOpenAIStreamResponse<LLMProviderOpenAIConfig["apiMode"]>
 > {
   constructor() {
-    super("openai");
+    super("openai", {
+      label: "OpenAI",
+      configSchema: LLMProviderOpenAIConfigSchema,
+      description: "支持 Responses 与 Chat Completions 的 OpenAI API Provider"
+    });
+  }
+
+  override getCapabilities<T extends LLMProviderOpenAIConfig>(config: T) {
+    const requiredToolChoice = config.requiredToolChoice ?? "auto";
+    return {
+      // 自定义 Endpoint 的兼容程度不可预知，默认只使用所有旧接口都支持的 auto。
+      supportsRequiredToolChoice:
+        requiredToolChoice === "include" ||
+        (requiredToolChoice === "auto" && isOfficialOpenAIEndpoint(config.baseURL))
+    };
   }
 
   override async check(cfg: LLMProviderOpenAIConfig): Promise<AIResult<LLMCheckResponse>> {
-    const resolvedCfg = this.resolveConfig(cfg);
+    const resolvedCfg = this.parseConfig(cfg);
     if (resolvedCfg.isErr()) return resolvedCfg;
 
     const config = resolvedCfg.unwrap();
@@ -52,7 +124,7 @@ export class LLMProviderOpenAI extends LLMProvider<
         client.chat.completions.create(
           {
             model: config.model,
-            max_completion_tokens: 8,
+            ...toChatTokenLimit(config, 8),
             messages: [{ role: "user", content: "ping" }],
             stream: false
           },
@@ -72,7 +144,7 @@ export class LLMProviderOpenAI extends LLMProvider<
 
     const responseResult = await AIResult.from(
       client.responses.create(
-        { model: config.model, input: "ping", max_output_tokens: 8 },
+        { model: config.model, input: "ping", max_output_tokens: 8, store: false },
         { signal }
       )
     );
@@ -82,7 +154,14 @@ export class LLMProviderOpenAI extends LLMProvider<
     }
 
     const response = responseResult.unwrap();
-    if (response.error || response.status === "failed" || response.status === "incomplete") {
+    const checkHitOutputLimit =
+      response.status === "incomplete" &&
+      response.incomplete_details?.reason === "max_output_tokens";
+    if (
+      response.error ||
+      response.status === "failed" ||
+      (response.status === "incomplete" && !checkHitOutputLimit)
+    ) {
       return AIResult.err(normalizeError(response));
     }
 
@@ -96,7 +175,7 @@ export class LLMProviderOpenAI extends LLMProvider<
     cfg: T,
     request: LLMGenerateRequest
   ): Promise<AIResult<LLMGenerateResponse<LLMProviderOpenAIGenerateResponse<T["apiMode"]>>>> {
-    const resolvedCfg = this.resolveConfig(cfg);
+    const resolvedCfg = this.parseConfig(cfg);
     if (resolvedCfg.isErr()) return resolvedCfg;
 
     const config = resolvedCfg.unwrap();
@@ -107,11 +186,11 @@ export class LLMProviderOpenAI extends LLMProvider<
         client.chat.completions.create(
           {
             model: config.model,
-            messages: toChatMessages(request.messages),
-            max_completion_tokens: request.maxOutputTokens,
+            messages: toChatMessages(request.messages, resolveChatInstructionRole(config)),
+            ...toChatTokenLimit(config, request.maxOutputTokens),
             temperature: request.temperature,
-            tools: toChatTools(request.tools),
-            tool_choice: toChatToolChoice(request.toolChoice),
+            tools: toChatTools(request.tools, shouldIncludeChatToolStrict(config)),
+            tool_choice: toChatToolChoice(this.resolveToolChoice(config, request.toolChoice)),
             stream: false
           },
           { signal: request.signal }
@@ -160,7 +239,9 @@ export class LLMProviderOpenAI extends LLMProvider<
           max_output_tokens: request.maxOutputTokens,
           temperature: request.temperature,
           tools: toResponseTools(request.tools),
-          tool_choice: toResponseToolChoice(request.toolChoice),
+          tool_choice: toResponseToolChoice(this.resolveToolChoice(config, request.toolChoice)),
+          include: ["reasoning.encrypted_content"],
+          store: false,
           stream: false
         },
         { signal: request.signal }
@@ -176,11 +257,13 @@ export class LLMProviderOpenAI extends LLMProvider<
     }
 
     const toolCalls = normalizeResponseToolCalls(response);
+    const providerContext = toolCalls.length ? toResponseProviderContext(response) : undefined;
     return AIResult.ok<LLMGenerateResponse<LLMProviderOpenAIGenerateResponse<"responses">>>({
       usage: normalizeResponseUsage(response.usage).unwrapOr(undefined),
       text: response.output_text,
       toolCalls,
       finishReason: toolCalls.length ? "tool_calls" : "stop",
+      ...(providerContext ? { providerContext } : {}),
       raw: response
     }) as unknown as AIResult<LLMGenerateResponse<LLMProviderOpenAIGenerateResponse<T["apiMode"]>>>;
   }
@@ -191,7 +274,7 @@ export class LLMProviderOpenAI extends LLMProvider<
   ): AsyncGenerator<
     AIResult<LLMGenerateStreamResponse<LLMProviderOpenAIStreamResponse<T["apiMode"]>>>
   > {
-    const resolvedCfg = this.resolveConfig(cfg);
+    const resolvedCfg = this.parseConfig(cfg);
     if (resolvedCfg.isErr()) {
       yield resolvedCfg;
       return;
@@ -205,13 +288,13 @@ export class LLMProviderOpenAI extends LLMProvider<
         client.chat.completions.create(
           {
             model: config.model,
-            messages: toChatMessages(request.messages),
-            max_completion_tokens: request.maxOutputTokens,
+            messages: toChatMessages(request.messages, resolveChatInstructionRole(config)),
+            ...toChatTokenLimit(config, request.maxOutputTokens),
             temperature: request.temperature,
-            tools: toChatTools(request.tools),
-            tool_choice: toChatToolChoice(request.toolChoice),
+            tools: toChatTools(request.tools, shouldIncludeChatToolStrict(config)),
+            tool_choice: toChatToolChoice(this.resolveToolChoice(config, request.toolChoice)),
             stream: true,
-            stream_options: { include_usage: true }
+            ...toChatStreamOptions(config)
           },
           { signal: request.signal }
         )
@@ -300,7 +383,9 @@ export class LLMProviderOpenAI extends LLMProvider<
           max_output_tokens: request.maxOutputTokens,
           temperature: request.temperature,
           tools: toResponseTools(request.tools),
-          tool_choice: toResponseToolChoice(request.toolChoice),
+          tool_choice: toResponseToolChoice(this.resolveToolChoice(config, request.toolChoice)),
+          include: ["reasoning.encrypted_content"],
+          store: false,
           stream: true
         },
         { signal: request.signal }
@@ -325,6 +410,9 @@ export class LLMProviderOpenAI extends LLMProvider<
           }
           case "response.completed": {
             const toolCalls = normalizeResponseToolCalls(event.response);
+            const providerContext = toolCalls.length
+              ? toResponseProviderContext(event.response)
+              : undefined;
             yield AIResult.ok<
               LLMGenerateStreamResponse<LLMProviderOpenAIStreamResponse<"responses">>
             >({
@@ -332,6 +420,7 @@ export class LLMProviderOpenAI extends LLMProvider<
               text,
               toolCalls,
               finishReason: toolCalls.length ? "tool_calls" : "stop",
+              ...(providerContext ? { providerContext } : {}),
               usage: normalizeResponseUsage(event.response.usage).unwrapOr(undefined),
               raw: event.response
             }) as AIResult<
@@ -371,30 +460,5 @@ export class LLMProviderOpenAI extends LLMProvider<
       timeout: config.timeoutMs,
       maxRetries: 0
     });
-  }
-
-  private resolveConfig(
-    config: Optional<LLMProviderOpenAIConfig>
-  ): AIResult<LLMProviderOpenAIConfig> {
-    if (!config) {
-      return AIResult.err({
-        type: "no_config",
-        message: "缺少配置"
-      });
-    }
-    if (!config.apiKey) {
-      return AIResult.err({
-        type: "invalid_config",
-        message: "缺少apiKey"
-      });
-    }
-    if (!config.model) {
-      return AIResult.err({
-        type: "invalid_config",
-        message: "缺少配置模型"
-      });
-    }
-    config.apiMode ??= "responses";
-    return AIResult.ok(config);
   }
 }

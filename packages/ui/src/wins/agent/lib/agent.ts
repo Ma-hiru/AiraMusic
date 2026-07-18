@@ -6,12 +6,20 @@ export class RendererAgent {
     return RendererIPC.NormalChannel.send("invoke_agent_list_providers", undefined);
   }
 
+  static listProviderDescriptors() {
+    return RendererIPC.NormalChannel.send("invoke_agent_list_provider_descriptors", undefined);
+  }
+
   static listConfigs() {
     return RendererIPC.NormalChannel.send("invoke_agent_list_configs", undefined);
   }
 
   static createConfig(config: InvokeEventArgs<"invoke_agent_create_config">) {
     return RendererIPC.NormalChannel.send("invoke_agent_create_config", config);
+  }
+
+  static updateConfig(config: InvokeEventArgs<"invoke_agent_update_config">) {
+    return RendererIPC.NormalChannel.send("invoke_agent_update_config", config);
   }
 
   static createConversation(options: InvokeEventArgs<"invoke_agent_create_conversation">) {

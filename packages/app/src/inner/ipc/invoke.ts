@@ -1,4 +1,4 @@
-import { app, dialog, BrowserWindow } from "electron";
+import { app, dialog, BrowserWindow, type IpcMainInvokeEvent } from "electron";
 import { Log } from "@/lib/log";
 import { MainAgent } from "@/inner/agent";
 import { MainHandle } from "@/lib/handle";
@@ -7,7 +7,7 @@ import { mergeCacheStoreConfig } from "@/utils/merge";
 import { MainWindowManager } from "@/lib/window-manager";
 import { MainScreenResolver } from "@/lib/screen-resolver";
 import { MainCacheStoreConstants } from "@/constants/store";
-import { type AIResult, type AIErrorCode } from "@mahiru/ai";
+import { AIError, AIResult, type AIErrorCode } from "@mahiru/ai";
 import { MainStoreForConfig, MainStoreForRenderer } from "@/lib/key-value-store";
 import Net from "node:net";
 import Https from "node:https";
@@ -16,35 +16,72 @@ import Dns from "node:dns/promises";
 import type { InvokeHandlers } from "@mahiru/ipc/types";
 
 export const invokeHandlers: InvokeHandlers = {
-  invoke_agent_list_providers: () => {
-    return agentData(() => MainAgent.listProviders());
+  invoke_agent_list_providers: (event) => {
+    return authorizedAgentData(event, () => MainAgent.listProviders());
   },
-  invoke_agent_list_configs: () => {
-    return agentResult(() => MainAgent.listConfigs());
+  invoke_agent_list_provider_descriptors: (event) => {
+    return authorizedAgentData(event, () => MainAgent.listProviderDescriptors());
   },
-  invoke_agent_create_config: (_, options) => {
-    return agentResult(() => MainAgent.createConfig(options));
+  invoke_agent_list_configs: (event) => {
+    return authorizedAgentResult(event, () => MainAgent.listConfigs());
   },
-  invoke_agent_create_conversation: (_, options) => {
-    return agentResult(() => MainAgent.createConversation(options));
+  invoke_agent_create_config: (event, options) => {
+    return authorizedAgentResult(event, async () => {
+      if (
+        !isRecord(options) ||
+        !hasOnlyKeys(options, ["name", "provider", "config"]) ||
+        typeof options.name !== "string" ||
+        typeof options.provider !== "string" ||
+        !isRecord(options.config)
+      ) {
+        return AIResult.err({
+          type: "invalid_config",
+          message: "创建 Provider 配置的参数无效，且不允许指定 id"
+        });
+      }
+      return MainAgent.createConfig({
+        name: options.name,
+        provider: options.provider,
+        config: structuredClone(options.config)
+      });
+    });
   },
-  invoke_agent_list_conversations: () => {
-    return agentResult(() => MainAgent.listConversations());
+  invoke_agent_update_config: (event, options) => {
+    return authorizedAgentResult(event, () => MainAgent.updateConfig(options));
   },
-  invoke_agent_list_runs: () => {
-    return agentData(() => MainAgent.listRuns());
+  invoke_agent_create_conversation: (event, options) => {
+    return authorizedAgentResult(event, () => {
+      if (
+        options !== undefined &&
+        (!isRecord(options) ||
+          !hasOnlyKeys(options, ["name"]) ||
+          (options.name !== undefined && typeof options.name !== "string"))
+      ) {
+        return AIResult.err({
+          type: "invalid_conversation",
+          message: "创建会话只允许传入可选的 name，不能指定 id 或消息快照"
+        });
+      }
+      return MainAgent.createConversation(options ? { name: options.name } : {});
+    });
   },
-  invoke_agent_get_conversation: (_, id) => {
-    return agentResult(() => MainAgent.getConversationSnapshot(id));
+  invoke_agent_list_conversations: (event) => {
+    return authorizedAgentResult(event, () => MainAgent.listConversations());
   },
-  invoke_agent_remove_conversation: (_, id) => {
-    return agentResult(() => MainAgent.removeConversation(id));
+  invoke_agent_list_runs: (event) => {
+    return authorizedAgentData(event, () => MainAgent.listRuns());
   },
-  invoke_agent_chat: (_, options) => {
-    return agentResult(() => MainAgent.chat(options));
+  invoke_agent_get_conversation: (event, id) => {
+    return authorizedAgentResult(event, () => MainAgent.getConversationSnapshot(id));
   },
-  invoke_agent_abort: (_, runID) => {
-    return agentResult(() => MainAgent.abort(runID));
+  invoke_agent_remove_conversation: (event, id) => {
+    return authorizedAgentResult(event, () => MainAgent.removeConversation(id));
+  },
+  invoke_agent_chat: (event, options) => {
+    return authorizedAgentResult(event, () => MainAgent.chat(options));
+  },
+  invoke_agent_abort: (event, runID) => {
+    return authorizedAgentResult(event, () => MainAgent.abort(runID));
   },
   invoke_fs_select: async (_, type) => {
     const { canceled, filePaths } = await dialog.showOpenDialog({
@@ -235,6 +272,15 @@ export const invokeHandlers: InvokeHandlers = {
 };
 
 const toAgentInvokeError = (error: unknown) => {
+  if (error instanceof AIError) {
+    return {
+      ok: false,
+      reason: {
+        type: error.type,
+        message: error.message
+      }
+    } as const;
+  }
   return {
     ok: false,
     reason: {
@@ -243,6 +289,52 @@ const toAgentInvokeError = (error: unknown) => {
     }
   } as const;
 };
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  Boolean(value) && typeof value === "object" && !Array.isArray(value);
+
+const hasOnlyKeys = (value: Record<string, unknown>, allowedKeys: readonly string[]) => {
+  const allowed = new Set(allowedKeys);
+  return Object.keys(value).every((key) => allowed.has(key));
+};
+
+/**
+ * Agent IPC 只接收 Agent 窗口自身主框架发出的请求。
+ * 既校验窗口身份，也拒绝 iframe 和导航到外部页面后的调用。
+ */
+export const isAuthorizedAgentInvokeSender = (event: IpcMainInvokeEvent) => {
+  try {
+    const senderWindow = BrowserWindow.fromWebContents(event.sender);
+    if (!senderWindow || MainWindowManager.getId(senderWindow) !== "agent") return false;
+    if (!event.senderFrame || event.senderFrame !== event.sender.mainFrame) return false;
+
+    const url = new URL(event.senderFrame.url);
+    const expectedFrameURL = MainWindowManager.getAppFrameURL(senderWindow);
+    if (!expectedFrameURL) return false;
+    const expectedURL = new URL(expectedFrameURL);
+    return (
+      url.protocol === "http:" &&
+      url.hostname === "localhost" &&
+      Boolean(url.port) &&
+      url.pathname === "/agent.html" &&
+      url.origin === expectedURL.origin &&
+      url.pathname === expectedURL.pathname &&
+      !url.username &&
+      !url.password
+    );
+  } catch {
+    return false;
+  }
+};
+
+const unauthorizedAgentInvokeResult = () =>
+  ({
+    ok: false,
+    reason: {
+      type: "auth" as AIErrorCode,
+      message: "拒绝来自非 Agent 应用主框架的 IPC 请求"
+    }
+  }) as const;
 
 const agentResult = async <T>(action: () => AIResult<T> | Promise<AIResult<T>>) => {
   try {
@@ -277,4 +369,23 @@ const agentData = <T>(action: () => T) => {
     Log.error("invoke(agent)", error);
     return toAgentInvokeError(error);
   }
+};
+
+const authorizedAgentResult = <T>(
+  event: IpcMainInvokeEvent,
+  action: () => AIResult<T> | Promise<AIResult<T>>
+) => {
+  if (!isAuthorizedAgentInvokeSender(event)) {
+    Log.warn("invoke(agent)", "拒绝非 Agent 主框架请求");
+    return Promise.resolve(unauthorizedAgentInvokeResult());
+  }
+  return agentResult(action);
+};
+
+const authorizedAgentData = <T>(event: IpcMainInvokeEvent, action: () => T) => {
+  if (!isAuthorizedAgentInvokeSender(event)) {
+    Log.warn("invoke(agent)", "拒绝非 Agent 主框架请求");
+    return unauthorizedAgentInvokeResult();
+  }
+  return agentData(action);
 };

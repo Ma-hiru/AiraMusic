@@ -47,14 +47,17 @@ export default class _NeteasePlaylistSource {
   private static async requestFullTracks(
     response: NullablePrivilegesPlaylistDetailResponse,
     maxPerRequest: number = 100,
-    concurrency: number = 5
+    concurrency: number = 5,
+    signal?: AbortSignal
   ) {
+    signal?.throwIfAborted();
     const { playlist } = response;
     if (playlist.trackCount === playlist.tracks.length) {
       return response;
     }
 
     const cache = await _NeteasePlaylistSource.getCache(playlist.id);
+    signal?.throwIfAborted();
     if (
       cache?.playlist.updateTime === playlist.updateTime &&
       cache.playlist.trackNumberUpdateTime === playlist.trackNumberUpdateTime &&
@@ -70,11 +73,14 @@ export default class _NeteasePlaylistSource {
     const entries = await NeteaseTrackSource._raw(
       playlist.trackIds.slice(playlist.tracks.length, playlist.trackCount),
       maxPerRequest,
-      concurrency
+      concurrency,
+      signal
     );
+    signal?.throwIfAborted();
 
     let index = 0;
     for (const entry of entries) {
+      signal?.throwIfAborted();
       if (!entry) {
         // 找不到的歌曲（可能是网络错误、或云端不存在）会被过滤掉，所以需要更新trackCount
         response.playlist.trackIds.splice(index, 1);
@@ -87,15 +93,40 @@ export default class _NeteasePlaylistSource {
       index++;
     }
 
-    window.requestIdleCallback(() => _NeteasePlaylistSource.storeCache(response), {
-      timeout: 1000
-    });
+    window.requestIdleCallback(
+      () => {
+        if (!signal?.aborted) void _NeteasePlaylistSource.storeCache(response);
+      },
+      {
+        timeout: 1000
+      }
+    );
 
     return response;
   }
 
   static lastLikedCachedID = "";
+
+  /** 仅为摘要卡片读取元信息和少量预览曲目，不补齐整张歌单。 */
+  static preview(id: number, limit = 3, signal?: AbortSignal) {
+    signal?.throwIfAborted();
+    const trackLimit = Number.isFinite(limit) ? Math.min(10, Math.max(0, Math.floor(limit))) : 3;
+    return NeteaseAPIPlaylist.detail(id, signal).then((response) => {
+      signal?.throwIfAborted();
+      const tracks = response.playlist.tracks.slice(0, trackLimit);
+      return NeteasePlaylist.fromNeteaseAPIResponse({
+        ...response,
+        playlist: {
+          ...response.playlist,
+          tracks
+        },
+        privileges: response.privileges.slice(0, tracks.length)
+      });
+    });
+  }
+
   static id(id: number, signal?: AbortSignal, useMemoryCache = true) {
+    signal?.throwIfAborted();
     let cachedID: number | string = id;
     // 喜欢的歌曲歌单需要区分喜欢状态的变化，否则喜欢状态无法及时更新
     if (id === _NeteasePlaylistSource.likedPlaylistID) {
@@ -111,17 +142,24 @@ export default class _NeteasePlaylistSource {
     if (cache && useMemoryCache) return Promise.resolve(cache);
 
     return NeteaseAPIPlaylist.detail(id, signal)
-      .then((response) => _NeteasePlaylistSource.response(response))
       .then((response) => {
+        signal?.throwIfAborted();
+        return _NeteasePlaylistSource.response(response, signal);
+      })
+      .then((response) => {
+        signal?.throwIfAborted();
         this.memoryCache.set(cachedID, response);
         return response;
       });
   }
 
-  static response(response: NeteaseAPI.NeteasePlaylistDetailResponse) {
+  static response(response: NeteaseAPI.NeteasePlaylistDetailResponse, signal?: AbortSignal) {
     return _NeteasePlaylistSource
-      .requestFullTracks(response)
-      .then(NeteasePlaylist.fromNeteaseAPIResponse);
+      .requestFullTracks(response, 100, 5, signal)
+      .then((fullResponse) => {
+        signal?.throwIfAborted();
+        return NeteasePlaylist.fromNeteaseAPIResponse(fullResponse);
+      });
   }
 
   static summary(summary: NeteasePlaylistSummary | NeteaseAPI.NeteasePlaylistSummary) {

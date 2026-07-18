@@ -23,27 +23,31 @@ const ConversationItem: FC<ConversationItemProps> = ({
     <div
       className={cx(
         `
-          group flex items-center gap-1 rounded-xl border border-transparent
+          group relative flex items-center gap-0.5 rounded-lg border border-transparent
           transition-colors duration-200
         `,
         active
-          ? "border-primary/30 bg-primary/74 text-primary-text shadow-sm shadow-black/10"
-          : "text-white/72 hover:border-white/10 hover:bg-white/9"
+          ? "border-white/9 bg-white/9 text-white shadow-sm shadow-black/8"
+          : "text-white/58 hover:border-white/7 hover:bg-white/5 hover:text-white/78"
       )}>
+      {active && (
+        <span className="absolute top-2 bottom-2 left-0 w-0.5 rounded-full bg-primary/85" />
+      )}
       <button
-        className="min-w-0 flex-1 px-2.5 py-2 text-left"
+        className="min-w-0 flex-1 rounded-lg px-2.5 py-1.5 text-left outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white/40"
         type="button"
+        aria-current={active ? "page" : undefined}
         onClick={() => onOpen(conversation.id)}>
         <span className="flex min-w-0 items-center gap-1.5">
           {disabled && <Radio className="size-3 shrink-0 opacity-70" />}
-          <span className="block min-w-0 truncate text-[13px] font-semibold leading-5">
+          <span className="block min-w-0 truncate text-[12px] font-medium leading-5">
             {conversation.name || "未命名会话"}
           </span>
         </span>
       </button>
       <IconButton
         className={cx(
-          "mr-1 opacity-0 transition-opacity group-hover:opacity-100",
+          "mr-1 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100",
           active && "opacity-80"
         )}
         label="删除会话"

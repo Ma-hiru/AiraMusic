@@ -7,16 +7,25 @@ import {
 } from "@/utils/message";
 import type { LLMToolCall } from "@/tools";
 import type { LLMMessage } from "@/provider";
+import type { LLMConversationCompactionSnapshot } from "@/history";
 
-import type { LLMConversationSnapshot, LLMConversationCreateOptions } from "./interface";
+import type {
+  LLMConversationSnapshot,
+  LLMConversationCreateOptions,
+  LLMConversationRuntimeSnapshot,
+  LLMConversationAssistantTurnSnapshot
+} from "./interface";
 
 export class LLMConversation {
   readonly id: string;
   name: string;
   readonly createdAt: number;
-  readonly updatedAt: number;
+  updatedAt: number;
   private readonly metadata: Record<string, unknown>;
   private readonly messages: LLMMessage[];
+  private runtime?: LLMConversationRuntimeSnapshot;
+  private compaction?: LLMConversationCompactionSnapshot;
+  private readonly assistantTurns: LLMConversationAssistantTurnSnapshot[];
 
   private constructor(snapshot: LLMConversationSnapshot) {
     this.id = snapshot.id;
@@ -25,6 +34,13 @@ export class LLMConversation {
     this.updatedAt = snapshot.updatedAt;
     this.metadata = { ...snapshot.metadata };
     this.messages = structuredClone(snapshot.messages);
+    this.runtime = snapshot.runtime ? structuredClone(snapshot.runtime) : undefined;
+    this.compaction = snapshot.compaction ? structuredClone(snapshot.compaction) : undefined;
+    this.assistantTurns = structuredClone(snapshot.assistantTurns ?? []);
+  }
+
+  private touch() {
+    this.updatedAt = Math.max(Date.now(), this.updatedAt + 1);
   }
 
   private ensureNoPendingToolCalls(action: string): AIResult<void> {
@@ -62,6 +78,7 @@ export class LLMConversation {
     }
 
     this.messages.push(structuredClone(message));
+    this.touch();
     return AIResult.ok(undefined);
   }
 
@@ -75,6 +92,7 @@ export class LLMConversation {
     }
 
     this.name = normalized;
+    this.touch();
     return AIResult.ok(undefined);
   }
 
@@ -85,7 +103,12 @@ export class LLMConversation {
       createdAt: this.createdAt,
       updatedAt: this.updatedAt,
       metadata: { ...this.metadata },
-      messages: structuredClone(this.messages)
+      messages: structuredClone(this.messages),
+      ...(this.runtime ? { runtime: structuredClone(this.runtime) } : {}),
+      ...(this.assistantTurns.length
+        ? { assistantTurns: structuredClone(this.assistantTurns) }
+        : {}),
+      ...(this.compaction ? { compaction: structuredClone(this.compaction) } : {})
     };
   }
 
@@ -95,10 +118,73 @@ export class LLMConversation {
 
   setMetadata(key: string, value: unknown) {
     this.metadata[key] = value;
+    this.touch();
   }
 
   toMessages(): LLMMessage[] {
     return structuredClone(this.messages);
+  }
+
+  getCompaction(): Undefinable<LLMConversationCompactionSnapshot> {
+    return this.compaction ? structuredClone(this.compaction) : undefined;
+  }
+
+  setCompaction(state: Undefinable<LLMConversationCompactionSnapshot>) {
+    this.compaction = state ? structuredClone(state) : undefined;
+    this.touch();
+  }
+
+  getRuntime(): Undefinable<LLMConversationRuntimeSnapshot> {
+    return this.runtime ? structuredClone(this.runtime) : undefined;
+  }
+
+  setRuntime(runtime: LLMConversationRuntimeSnapshot): AIResult<void> {
+    const validation = LLMConversation.validateRuntime(runtime);
+    if (validation.isErr()) return validation;
+    this.runtime = structuredClone(runtime);
+    this.touch();
+    return AIResult.ok(undefined);
+  }
+
+  getAssistantTurns(): LLMConversationAssistantTurnSnapshot[] {
+    return structuredClone(this.assistantTurns);
+  }
+
+  recordAssistantTurn(turn: LLMConversationAssistantTurnSnapshot): AIResult<void> {
+    const validation = LLMConversation.validateAssistantTurns(this.messages, [
+      ...this.assistantTurns,
+      turn
+    ]);
+    if (validation.isErr()) return validation;
+    this.assistantTurns.push(structuredClone(turn));
+    this.touch();
+    return AIResult.ok(undefined);
+  }
+
+  updateAssistantTurn(
+    messageIndex: number,
+    update: Partial<Pick<LLMConversationAssistantTurnSnapshot, "usage" | "status" | "finishReason">>
+  ): AIResult<void> {
+    const index = this.assistantTurns.findIndex((turn) => turn.messageIndex === messageIndex);
+    if (index < 0) {
+      return AIResult.err({
+        type: "invalid_conversation",
+        message: `assistant turn 元数据不存在：${messageIndex}`
+      });
+    }
+
+    const next = this.assistantTurns.map((turn, turnIndex) =>
+      turnIndex === index ? { ...turn, ...structuredClone(update) } : turn
+    );
+    const validation = LLMConversation.validateAssistantTurns(this.messages, next);
+    if (validation.isErr()) return validation;
+    this.assistantTurns[index] = next[index]!;
+    this.touch();
+    return AIResult.ok(undefined);
+  }
+
+  messageCount() {
+    return this.messages.length;
   }
 
   pendingToolCalls(): LLMToolCall[] {
@@ -107,6 +193,10 @@ export class LLMConversation {
 
   clear() {
     this.messages.length = 0;
+    this.runtime = undefined;
+    this.compaction = undefined;
+    this.assistantTurns.length = 0;
+    this.touch();
   }
 
   static create(options: LLMConversationCreateOptions): AIResult<LLMConversation> {
@@ -124,10 +214,21 @@ export class LLMConversation {
       createdAt: now,
       updatedAt: now,
       metadata: { ...(options.metadata ?? {}) },
-      messages: options.messages ?? []
+      messages: options.messages ?? [],
+      ...(options.runtime ? { runtime: options.runtime } : {}),
+      ...(options.assistantTurns ? { assistantTurns: options.assistantTurns } : {})
     };
     const validation = validateMessages(snapshot.messages);
     if (validation.isErr()) return validation;
+    const runtimeValidation = snapshot.runtime
+      ? LLMConversation.validateRuntime(snapshot.runtime)
+      : AIResult.ok(undefined);
+    if (runtimeValidation.isErr()) return runtimeValidation;
+    const turnsValidation = LLMConversation.validateAssistantTurns(
+      snapshot.messages,
+      snapshot.assistantTurns ?? []
+    );
+    if (turnsValidation.isErr()) return turnsValidation;
 
     return AIResult.ok(new LLMConversation(snapshot));
   }
@@ -142,7 +243,83 @@ export class LLMConversation {
 
     const validation = validateMessages(snapshot.messages);
     if (validation.isErr()) return validation;
+    const runtimeValidation = snapshot.runtime
+      ? LLMConversation.validateRuntime(snapshot.runtime)
+      : AIResult.ok(undefined);
+    if (runtimeValidation.isErr()) return runtimeValidation;
+    const turnsValidation = LLMConversation.validateAssistantTurns(
+      snapshot.messages,
+      snapshot.assistantTurns ?? []
+    );
+    if (turnsValidation.isErr()) return turnsValidation;
 
     return AIResult.ok(new LLMConversation(snapshot));
+  }
+
+  private static validateRuntime(runtime: LLMConversationRuntimeSnapshot): AIResult<void> {
+    if (!runtime.runID.trim() || !Number.isFinite(runtime.startedAt)) {
+      return AIResult.err({
+        type: "invalid_conversation",
+        message: "conversation runtime 缺少 runID 或 startedAt"
+      });
+    }
+    const shouldBeTerminal = runtime.status !== "running" && runtime.status !== "idle";
+    if (runtime.terminal !== shouldBeTerminal) {
+      return AIResult.err({
+        type: "invalid_conversation",
+        message: `conversation runtime terminal 与状态不一致：${runtime.status}`
+      });
+    }
+    if (runtime.terminal && !Number.isFinite(runtime.endedAt)) {
+      return AIResult.err({
+        type: "invalid_conversation",
+        message: "terminal conversation runtime 缺少 endedAt"
+      });
+    }
+    if (!LLMConversation.isValidUsage(runtime.usage)) {
+      return AIResult.err({
+        type: "invalid_conversation",
+        message: "conversation runtime usage 无效"
+      });
+    }
+    return AIResult.ok(undefined);
+  }
+
+  private static validateAssistantTurns(
+    messages: readonly LLMMessage[],
+    turns: readonly LLMConversationAssistantTurnSnapshot[]
+  ): AIResult<void> {
+    const indexes = new Set<number>();
+    for (const turn of turns) {
+      const message = messages[turn.messageIndex];
+      if (
+        !turn.runID.trim() ||
+        !Number.isInteger(turn.step) ||
+        turn.step < 0 ||
+        !Number.isInteger(turn.messageIndex) ||
+        indexes.has(turn.messageIndex) ||
+        message?.role !== "assistant"
+      ) {
+        return AIResult.err({
+          type: "invalid_conversation",
+          message: `assistant turn 元数据无效：${turn.messageIndex}`
+        });
+      }
+      indexes.add(turn.messageIndex);
+
+      if (!LLMConversation.isValidUsage(turn.usage)) {
+        return AIResult.err({
+          type: "invalid_conversation",
+          message: `assistant turn usage 无效：${turn.messageIndex}`
+        });
+      }
+    }
+    return AIResult.ok(undefined);
+  }
+
+  private static isValidUsage(usage: LLMConversationRuntimeSnapshot["usage"]): boolean {
+    return Object.values(usage ?? {}).every(
+      (value) => typeof value === "number" && Number.isFinite(value) && value >= 0
+    );
   }
 }

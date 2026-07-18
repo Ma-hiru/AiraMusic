@@ -219,6 +219,7 @@ export class NeteaseTrack implements NeteaseTrackModel {
     };
   }
 
+  /** @deprecated Agent 输出请统一使用 RendererTool.track。 */
   toToolJSONValue(mode: "detail" | "simple" = "simple"): JsonValue {
     if (mode === "simple") {
       return {

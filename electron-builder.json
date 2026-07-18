@@ -57,6 +57,34 @@
       {
         "from": "packages/store/dist/aira-music-cache",
         "to": "bin/aira-music-cache"
+      },
+      {
+        "from": "packages/native/index.node",
+        "to": "native/index.node"
+      }
+    ]
+  },
+  "mac": {
+    "target": [
+      {
+        "target": "dmg",
+        "arch": ["arm64"]
+      }
+    ],
+    "icon": "packages/app/assets/logo.png",
+    "category": "public.app-category.music",
+    "artifactName": "${productName}_${version}_mac_${arch}.${ext}",
+    "identity": "-",
+    "hardenedRuntime": false,
+    "notarize": false,
+    "extraResources": [
+      {
+        "from": "packages/store/dist/aira-music-cache",
+        "to": "bin/aira-music-cache"
+      },
+      {
+        "from": "packages/native/index.node",
+        "to": "native/index.node"
       }
     ]
   },
@@ -107,5 +135,30 @@
   "rpm": {
     "packageCategory": "Applications/Multimedia",
     "compression": "xz"
+  },
+  "dmg": {
+    "title": "${productName} ${version}",
+    "backgroundColor": "#ffffff",
+    "window": {
+      "width": 540,
+      "height": 380
+    },
+    "contents": [
+      {
+        "x": 130,
+        "y": 220,
+        "type": "file"
+      },
+      {
+        "x": 410,
+        "y": 220,
+        "type": "link",
+        "path": "/Applications"
+      }
+    ],
+    "iconSize": 80,
+    "iconTextSize": 12,
+    "format": "UDZO",
+    "sign": false
   }
 }

@@ -23,10 +23,18 @@ export type StoreTypeForConfig = {
 
 export type StoreTypeForRenderer = Record<string, JsonValue>;
 
+export type AgentConversationIndexEntry = Pick<
+  LLMConversationSnapshot,
+  "id" | "name" | "updatedAt"
+>;
+
 export type StoreTypeForAgent = {
+  conversationStorageVersion?: number;
   providerAPIKeys: Record<string, string>;
-  conversations: Record<string, LLMConversationSnapshot>;
   providerConfigs: Record<string, AIProviderConfigSnapshot>;
+  conversationIndex?: Record<string, AgentConversationIndexEntry>;
+  // 仅用于从旧版单文件结构迁移，迁移完成后会删除。
+  conversations?: Record<string, LLMConversationSnapshot>;
 };
 
 export const MainStoreForWindow = new ElectronStore<StoreTypeForWindow>({

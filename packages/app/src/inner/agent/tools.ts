@@ -11,7 +11,59 @@ type AgentToolInput<TTool extends AgentToolName> = Extract<
   { tool: TTool }
 >["input"];
 
-const AgentToolRequestTimeoutMs = 15_000;
+const LocalAgentTools = new Set<AgentToolName>([
+  "agent-lyric-schema",
+  "agent-tool-change-settings",
+  "agent-tool-player-action",
+  "agent-tool-player-current",
+  "agent-tool-player-mode",
+  "agent-tool-player-queue",
+  "agent-tool-player-queue-remove",
+  "agent-tool-player-seek",
+  "agent-tool-player-volume",
+  "agent-tool-replace-lyrics",
+  "agent-tool-settings-get",
+  "agent-tool-user-info"
+]);
+
+const NavigationAgentTools = new Set<AgentToolName>([
+  "agent-tool-comment-open",
+  "agent-tool-search-open",
+  "agent-tool-source-open"
+]);
+
+const MutatingNetworkAgentTools = new Set<AgentToolName>([
+  "agent-tool-album-star",
+  "agent-tool-comment-like",
+  "agent-tool-comment-send",
+  "agent-tool-fm-trash",
+  "agent-tool-playlist-create",
+  "agent-tool-playlist-delete",
+  "agent-tool-playlist-modify",
+  "agent-tool-playlist-star",
+  "agent-tool-player-queue-add",
+  "agent-tool-track-like",
+  "agent-tool-track-play"
+]);
+
+const SideEffectAgentTools = new Set<AgentToolName>([
+  ...MutatingNetworkAgentTools,
+  "agent-tool-change-settings",
+  "agent-tool-player-action",
+  "agent-tool-player-mode",
+  "agent-tool-player-queue-remove",
+  "agent-tool-player-seek",
+  "agent-tool-player-volume",
+  "agent-tool-playlist-delete",
+  "agent-tool-replace-lyrics"
+]);
+
+export function getAgentToolTimeoutMs(tool: AgentToolName): number {
+  if (LocalAgentTools.has(tool)) return 5_000;
+  if (NavigationAgentTools.has(tool)) return 10_000;
+  if (MutatingNetworkAgentTools.has(tool)) return 30_000;
+  return 20_000;
+}
 
 const requestAgentTool = <TTool extends AgentToolName>(
   context: LLMToolContext,
@@ -31,6 +83,15 @@ const requestAgentTool = <TTool extends AgentToolName>(
     const id = crypto.randomUUID();
     let settled = false;
 
+    const cancelRenderer = (reason: "aborted" | "timeout") => {
+      MainIPC.MessageChannel.commit({
+        sender: "process",
+        receiver: "main",
+        type: "message_cancel_agent_tool_request",
+        data: { id, reason }
+      });
+    };
+
     const settle = (result: AIResult<JsonValue>) => {
       if (settled) return;
       settled = true;
@@ -40,6 +101,7 @@ const requestAgentTool = <TTool extends AgentToolName>(
       resolve(result);
     };
     const abort = () => {
+      cancelRenderer("aborted");
       settle(
         AIResult.err({
           type: "aborted",
@@ -48,13 +110,17 @@ const requestAgentTool = <TTool extends AgentToolName>(
       );
     };
     const timeout = setTimeout(() => {
+      cancelRenderer("timeout");
+      const commitUnknown = SideEffectAgentTools.has(tool);
       settle(
         AIResult.err({
-          type: "timeout",
-          message: `工具请求超时：${tool}`
+          type: commitUnknown ? "commit_unknown" : "timeout",
+          message: commitUnknown
+            ? `工具响应超时，无法确认操作是否已经提交；禁止自动重试：${tool}`
+            : `工具请求超时：${tool}`
         })
       );
-    }, AgentToolRequestTimeoutMs);
+    }, getAgentToolTimeoutMs(tool));
     const unsubscribeResponse = MainIPC.MessageChannel.listen(
       "message_deliver_agent_tool_response",
       (response: AgentToolResponseData) => {
@@ -93,7 +159,11 @@ export class AgentToolTrackDetail {
     "获取指定 ID 的歌曲详情，尽可能一次性放入所有id，单独请求效率比一次性请求低，频繁请求可能网络错误";
 
   inputSchema = z.object({
-    ids: z.array(z.number()).describe("歌曲 ID 列表"),
+    ids: z
+      .array(z.number().int().positive())
+      .min(1)
+      .max(100)
+      .describe("歌曲 ID 列表，单次最多查询 100 首"),
     mode: z
       .enum(["simple", "detail"])
       .default("simple")
@@ -126,10 +196,12 @@ export class AgentToolTrackPlayable {
 
 export class AgentToolTrackLyrics {
   readonly name = "agent-tool-track-lyrics";
-  readonly description = "获取指定 ID 的歌曲歌词";
+  readonly description =
+    "获取指定 ID 的歌曲歌词；semantic 用于阅读和分析，editable 仅在需要逐字时间轴或修改歌词时使用";
 
   inputSchema = z.object({
-    id: z.number().describe("歌曲 ID")
+    id: z.number().describe("歌曲 ID"),
+    mode: z.enum(["semantic", "editable"]).default("semantic").describe("歌词返回模式")
   });
 
   execute(
@@ -180,7 +252,7 @@ export class AgentToolComment {
     id: z.number().describe("资源 ID"),
     type: z.enum(["track", "playlist", "album"]).describe("资源类型"),
     page: z.number().min(1).max(100).default(1).describe("页码"),
-    pageSize: z.number().min(1).max(100).default(20).describe("每页数量"),
+    pageSize: z.number().min(1).max(20).default(10).describe("每页数量"),
     sort: z.enum(["new", "hot", "recommend"]).default("hot").describe("排序方式")
   });
 
@@ -243,14 +315,12 @@ export class AgentToolPlaylistDetail {
 export class AgentToolPlayerAction {
   readonly name = "agent-tool-player-action";
   readonly description =
-    "执行播放器操作，如播放、暂停、下一首、上一首、随机播放、重复播放、切换播放模式等";
+    "执行即时播放器操作，包括播放、暂停、上一首、下一首，以及切换歌词翻译或罗马音显示";
 
   private readonly actions = [
-    "exit",
     "next",
     "play",
     "pause",
-    "update",
     "previous",
     "toggle-lyric-version-rm",
     "toggle-lyric-version-tl"
@@ -296,7 +366,7 @@ export class AgentToolSearch {
     keyword: z.string(),
     type: z.enum(["track", "playlist", "album", "artist"]),
     page: z.number().min(1).max(100).default(1),
-    pageSize: z.number().min(1).max(100).default(20)
+    pageSize: z.number().min(1).max(20).default(10)
   });
 
   execute(
@@ -391,8 +461,6 @@ export class AgentToolSearchOpen {
   }
 }
 
-// todo: 以下tool还未逐一测试
-
 export class AgentToolPlayerCurrent {
   readonly name = "agent-tool-player-current";
   readonly description = "获取当前播放器状态，包括当前播放曲目、播放进度、音量、循环/随机模式等";
@@ -411,10 +479,14 @@ export class AgentToolPlayerVolume {
   readonly name = "agent-tool-player-volume";
   readonly description = "设置播放器音量（0-100）或切换静音状态";
 
-  inputSchema = z.object({
-    volume: z.number().min(0).max(100).optional().describe("音量百分比 0-100"),
-    mute: z.boolean().optional().describe("true 静音，false 取消静音")
-  });
+  inputSchema = z
+    .object({
+      volume: z.number().min(0).max(100).optional().describe("音量百分比 0-100"),
+      mute: z.boolean().optional().describe("true 静音，false 取消静音")
+    })
+    .refine((input) => input.volume !== undefined || input.mute !== undefined, {
+      message: "volume 和 mute 至少提供一个"
+    });
 
   execute(
     input: z.infer<typeof this.inputSchema>,
@@ -429,7 +501,9 @@ export class AgentToolPlayerSeek {
   readonly description = "跳转到当前歌曲的指定位置，支持秒数或百分比（如 '50%'）";
 
   inputSchema = z.object({
-    position: z.union([z.number(), z.string()]).describe("跳转位置，秒数或百分比字符串如 '50%'")
+    position: z
+      .union([z.number().nonnegative(), z.string().regex(/^(?:100(?:\.0+)?|\d{1,2}(?:\.\d+)?)%$/)])
+      .describe("跳转位置，非负秒数或 0%-100% 的百分比字符串，如 '50%'")
   });
 
   execute(
@@ -451,6 +525,83 @@ export class AgentToolPlayerQueue {
     context: LLMToolContext
   ): Promise<AIResult<JsonValue>> {
     return requestAgentTool(context, "agent-tool-player-queue", input);
+  }
+}
+
+export class AgentToolPlayerQueueAdd {
+  readonly name = "agent-tool-player-queue-add";
+  readonly description =
+    "把一首或多首歌曲加入当前播放队列，但不立即切换播放；position=next 表示依次插入当前歌曲之后，position=end 表示追加到队尾";
+
+  inputSchema = z.object({
+    ids: z
+      .array(z.number().int().positive())
+      .min(1)
+      .max(50)
+      .describe("按期望播放顺序排列的歌曲 ID，重复 ID 会自动去重"),
+    position: z
+      .enum(["next", "end"])
+      .default("next")
+      .describe("加入位置：next 下一首开始播放，end 队列末尾")
+  });
+
+  execute(
+    input: z.infer<typeof this.inputSchema>,
+    context: LLMToolContext
+  ): Promise<AIResult<JsonValue>> {
+    return requestAgentTool(context, "agent-tool-player-queue-add", input);
+  }
+}
+
+export class AgentToolPlayerQueueRemove {
+  readonly name = "agent-tool-player-queue-remove";
+  readonly description =
+    "从当前播放队列移除指定歌曲或清空队列。此操作会改变现有队列，仅在用户允许破坏性工具时可用";
+
+  inputSchema = z.discriminatedUnion("scope", [
+    z
+      .object({
+        scope: z.literal("tracks"),
+        ids: z.array(z.number().int().positive()).min(1).max(50).describe("要从队列移除的歌曲 ID")
+      })
+      .strict(),
+    z
+      .object({
+        scope: z.literal("all").describe("清空整个播放队列")
+      })
+      .strict()
+  ]);
+
+  execute(
+    input: z.infer<typeof this.inputSchema>,
+    context: LLMToolContext
+  ): Promise<AIResult<JsonValue>> {
+    return requestAgentTool(context, "agent-tool-player-queue-remove", input);
+  }
+}
+
+export class AgentToolPlayerMode {
+  readonly name = "agent-tool-player-mode";
+  readonly description =
+    "明确设置当前播放模式，可设置循环模式和随机播放；未提供的字段保持原值，至少要提供一个字段";
+
+  inputSchema = z
+    .object({
+      repeat: z
+        .enum(["off", "all", "one"])
+        .optional()
+        .describe("循环模式：off 不循环，all 列表循环，one 单曲循环"),
+      shuffle: z.boolean().optional().describe("是否随机播放")
+    })
+    .refine((input) => input.repeat !== undefined || input.shuffle !== undefined, {
+      message: "repeat 和 shuffle 至少提供一个"
+    });
+
+  execute(
+    input: z.infer<typeof this.inputSchema>,
+    context: LLMToolContext
+  ): Promise<AIResult<JsonValue>> {
+    return requestAgentTool(context, "agent-tool-player-mode", input);
   }
 }
 
@@ -729,7 +880,11 @@ export class AgentToolPlaylistModify {
   inputSchema = z.object({
     op: z.enum(["add", "del"]).describe("add 添加歌曲，del 删除歌曲"),
     pid: z.number().describe("歌单 ID"),
-    trackIds: z.array(z.number()).describe("歌曲 ID 列表")
+    trackIds: z
+      .array(z.number().int().positive())
+      .min(1)
+      .max(500)
+      .describe("歌曲 ID 列表，单次最多修改 500 首")
   });
 
   execute(

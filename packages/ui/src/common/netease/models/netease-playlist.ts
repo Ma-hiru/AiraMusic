@@ -34,6 +34,7 @@ export class NeteasePlaylist extends NeteasePlaylistSummary implements NeteasePl
     this.tracks = props.tracks;
   }
 
+  /** @deprecated Agent 输出请统一使用 RendererTool.playlist。 */
   override toToolJSONValue(): JsonValue {
     return {
       ...(super.toToolJSONValue() as object),

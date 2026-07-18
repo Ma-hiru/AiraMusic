@@ -45,12 +45,13 @@ export default class _NeteaseTrackAPI {
    * @param ids - 音乐 id, 例如 ids=405998841,33894312
    * @example /song/detail?ids=347230`,`/song/detail?ids=347230,347231
    */
-  static detail(ids: number | string | number[]) {
+  static detail(ids: number | string | number[], signal?: AbortSignal) {
     if (Array.isArray(ids)) ids = ids.join(",");
     return apiRequest<any, NeteaseAPI.NeteaseTrackDetailResponse>({
       method: "POST",
       url: "/song/detail",
-      data: { ids }
+      data: { ids },
+      signal
     });
   }
 
@@ -58,18 +59,22 @@ export default class _NeteaseTrackAPI {
    * 喜欢音乐
    * @desc 调用此接口 , 传入音乐 id, 可喜欢该音乐
    */
-  static star(params: {
-    /** 歌曲 id */
-    id: number;
-    /** 默认为 true 即喜欢 , 若传 false, 则取消喜欢 */
-    like?: boolean;
-  }) {
+  static star(
+    params: {
+      /** 歌曲 id */
+      id: number;
+      /** 默认为 true 即喜欢 , 若传 false, 则取消喜欢 */
+      like?: boolean;
+    },
+    signal?: AbortSignal
+  ) {
     return apiRequest<any, NeteaseAPI.NeteaseAPIResponse>({
       url: "/like",
       params: {
         ...params,
         timestamp: Date.now()
-      }
+      },
+      signal
     });
   }
 
@@ -146,10 +151,11 @@ export default class _NeteaseTrackAPI {
   }
 
   /** 获取相似音乐 */
-  static similar(id: number) {
+  static similar(id: number, signal?: AbortSignal) {
     return apiRequest<any, NeteaseAPI.NeteaseAPIResponse>({
       url: "/simi/song",
-      params: { id }
+      params: { id },
+      signal
     });
   }
 
@@ -157,10 +163,11 @@ export default class _NeteaseTrackAPI {
    * 每日推荐歌曲
    * @desc 调用此接口 , 可获得每日推荐歌曲 ( 需要登录 )
    */
-  static recommendDaily() {
+  static recommendDaily(signal?: AbortSignal) {
     return apiRequest<any, NeteaseAPI.NeteaseDailyRecommendTracksResponse>({
       url: "/recommend/songs",
-      params: { timestamp: Date.now() }
+      params: { timestamp: Date.now() },
+      signal
     });
   }
 
@@ -180,12 +187,13 @@ export default class _NeteaseTrackAPI {
    * @desc 调用此接口 , 可获取新歌速递
    * @param type - 地区类型 id, 对应以下: 全部:0 华语:7 欧美:96 日本:8 韩国:16
    */
-  static recommendNew(type: 0 | 7 | 8 | 16 | 96) {
+  static recommendNew(type: 0 | 7 | 8 | 16 | 96, signal?: AbortSignal) {
     return apiRequest<any, NeteaseAPI.NeteaseTopSongResponse>({
       url: "/top/song",
       params: {
         type
-      }
+      },
+      signal
     });
   }
 
@@ -193,12 +201,13 @@ export default class _NeteaseTrackAPI {
    * 私人 FM
    * @note 需要登录
    * */
-  static personalFM() {
+  static personalFM(signal?: AbortSignal) {
     return apiRequest<any, NeteaseAPI.NeteasePersonalFMResponse>({
       url: "/personal_fm",
       params: {
         timestamp: Date.now()
-      }
+      },
+      signal
     });
   }
 
@@ -206,13 +215,14 @@ export default class _NeteaseTrackAPI {
    * 私人FM垃圾桶
    * @desc 调用此接口 , 传入音乐 id, 可把该音乐从私人 FM 中移除至垃圾桶
    * */
-  static personalFMTrash(id: number) {
+  static personalFMTrash(id: number, signal?: AbortSignal) {
     return apiRequest<any, NeteaseAPI.NeteaseAPIResponse>({
       url: "/fm/trash",
       params: {
         id,
         timestamp: Date.now()
-      }
+      },
+      signal
     });
   }
 

@@ -7,24 +7,29 @@ export type AIErrorCode =
   | "service" // 服务端错误
   | "timeout" // 超时
   | "unknown"
+  | "max_steps" // tool loop 达到最大步数
   | "no_config" // 未配置或缺 key
   | "rate_limit" // 429
   | "bad_response" // SSE/JSON 形状异常
   | "context_load" // context source 加载失败
   | "unknown_tool" // 工具调用校验失败（一般不阻断消息）
   | "run_not_found" // agent run 不存在
+  | "commit_unknown" // 副作用请求超时，无法确认服务端是否已经提交
   | "config_storage" // provider config / apiKey 存储读写失败
   | "invalid_config" // 配置不完整/解密失败
   | "invalid_actions" // 动作块校验失败（一般不阻断消息）
   | "model_not_found" // 404
   | "conversation_busy" // 同会话已有活跃流
   | "invalid_tool_call" // 工具调用校验失败（一般不阻断消息）
+  | "history_compaction" // 历史摘要或压缩失败
   | "invalid_tool_config" // 工具配置校验失败（一般不阻断消息）
   | "conversation_storage" // conversation 存储读写失败
   | "invalid_conversation" // conversation 历史或顺序不合法
+  | "invalid_skill_config" // Agent Skill/Rule 定义或 matcher 不合法
   | "has_pending_tool_call" // 工具调用未完成
   | "invalid_prompt_config" // prompt 组装配置不合法
-  | "invalid_context_config"; // context source 或 block 配置不合法
+  | "invalid_context_config" // context source 或 block 配置不合法
+  | "prompt_budget_exceeded"; // 不可裁剪的 prompt 超出上下文预算
 
 export class AIError extends Error {
   readonly type: AIErrorCode;

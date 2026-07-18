@@ -1,9 +1,17 @@
 import type { AIResult } from "@/result";
 import type { LLMContextComposeResult } from "@/context";
 import type { LLMToolCall, LLMToolResult } from "@/tools";
+import type { AIAgentEvidenceRequirement } from "@/skills";
 import type { LLMProviderConfig } from "@/provider/interface";
 import type { LLMPromptBuilder, LLMPromptBuildOptions } from "@/prompt";
-import type { LLMMessage, LLMProvider, LLMMessageToolCall, LLMGenerateResponse } from "@/provider";
+import type {
+  LLMUsage,
+  LLMMessage,
+  LLMProvider,
+  LLMFinishReason,
+  LLMMessageToolCall,
+  LLMGenerateResponse
+} from "@/provider";
 
 export type LLMLoopRunOptions<TConfig extends LLMProviderConfig = LLMProviderConfig> =
   LLMPromptBuildOptions & {
@@ -11,6 +19,12 @@ export type LLMLoopRunOptions<TConfig extends LLMProviderConfig = LLMProviderCon
     maxSteps: number;
     provider: LLMProvider<TConfig>;
     promptBuilder: LLMPromptBuilder;
+    onUsage?: NormalFunc<[usage: Undefinable<LLMUsage>]>;
+    requiredEvidence?: readonly AIAgentEvidenceRequirement[];
+    transformFinalText?: NormalFunc<
+      [context: { text: string; messages: readonly LLMMessage[] }],
+      string
+    >;
   };
 
 export type LLMLoopRunStream = AsyncGenerator<AIResult<LLMLoopEvent>, AIResult<LLMLoopRunResult>>;
@@ -41,17 +55,19 @@ export type LLMLoopEvent =
     }
   | {
       step: number;
-      text?: string;
-      type: "tool_call";
-      toolCalls: LLMToolCall[];
-      message: LLMMessageToolCall;
-    }
-  | {
-      step: number;
       type: "done";
       messages: LLMMessage[];
       response: LLMLoopEventResponse;
       context?: LLMContextComposeResult;
+    }
+  | {
+      step: number;
+      text?: string;
+      usage?: LLMUsage;
+      type: "tool_call";
+      toolCalls: LLMToolCall[];
+      message: LLMMessageToolCall;
+      finishReason: LLMFinishReason;
     };
 
 export type LLMLoopEventResponse = Pick<

@@ -34,8 +34,9 @@ export default class _NeteaseAlbumSource {
 
   //endregion
 
-  private static requestFullTracks(ids: number[]) {
-    return _NeteaseTrackSource.ids(ids).then((tracks) => {
+  private static requestFullTracks(ids: number[], signal?: AbortSignal) {
+    return _NeteaseTrackSource.ids(ids, 100, 5, signal).then((tracks) => {
+      signal?.throwIfAborted();
       return tracks.map(
         (track) =>
           new NeteaseTrackRecord({
@@ -47,20 +48,27 @@ export default class _NeteaseAlbumSource {
     });
   }
 
-  static async id(id: number): Promise<NeteaseAlbum> {
+  static async id(id: number, signal?: AbortSignal): Promise<NeteaseAlbum> {
+    signal?.throwIfAborted();
     const cache = await _NeteaseAlbumSource.getCache(id);
+    signal?.throwIfAborted();
     if (cache && cache.tracks.length) return cache;
 
-    const content = await NeteaseAPIAlbum.content(id);
+    const content = await NeteaseAPIAlbum.content(id, signal);
+    signal?.throwIfAborted();
     const tracks = await _NeteaseAlbumSource.requestFullTracks(
-      content.songs.map((song) => song.id)
+      content.songs.map((song) => song.id),
+      signal
     );
+    signal?.throwIfAborted();
     const album = new NeteaseAlbum({
       content: content.album,
       tracks
     });
 
+    signal?.throwIfAborted();
     await _NeteaseAlbumSource.storeCache(album);
+    signal?.throwIfAborted();
 
     return album;
   }
