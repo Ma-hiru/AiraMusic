@@ -1,4 +1,4 @@
-import { dialog, BrowserWindow } from "electron";
+import { app, dialog, BrowserWindow } from "electron";
 import { Log } from "@/lib/log";
 import { getArgFlag } from "@/utils/args";
 import { MainRuntime } from "@/lib/runtime";
@@ -270,7 +270,13 @@ export class MainWindowPreset {
       onCreate: (win: BrowserWindow) => {
         // 菜单栏弹窗需要盖在全屏应用之上
         win.setAlwaysOnTop(true, "pop-up-menu");
-        win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+        // skipTransformProcessType：避免 macOS 把进程改成 accessory，导致 Dock 图标闪一下后消失
+        // 见 electron#26350
+        win.setVisibleOnAllWorkspaces(true, {
+          visibleOnFullScreen: true,
+          skipTransformProcessType: true
+        });
+        app.dock?.show();
       }
     };
   }

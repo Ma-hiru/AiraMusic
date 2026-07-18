@@ -124,14 +124,21 @@ export class MainTray {
     const toggleMenu = () => {
       this.customMenuVisible ? this.hideCustomMenu(trayWin) : this.showCustomMenu(tray, trayWin);
     };
-    tray.addListener("click", () => {
-      Log.debug("tray", "click");
-      toggleMenu();
-    });
-    tray.addListener("right-click", () => {
-      Log.debug("tray", "right-click");
-      toggleMenu();
-    });
+    const bindToggle = (target: Tray, label: string) => {
+      target.addListener("click", () => {
+        Log.debug("tray", label, "click");
+        toggleMenu();
+      });
+      target.addListener("right-click", () => {
+        Log.debug("tray", label, "right-click");
+        toggleMenu();
+      });
+    };
+    // 图标 Tray 先创建（靠时钟一侧）；歌词 Tray 后创建（在图标左侧）。
+    // 菜单栏 status item 后创建的会排在更靠左，因此布局为：[歌词][图标]…[时钟]
+    bindToggle(tray, "icon");
+    const lyricTray = this.ensureDarwinLyricTray();
+    bindToggle(lyricTray, "lyric");
     trayWin.addListener("blur", () => {
       if (!trayWin.webContents.isDevToolsOpened()) {
         this.hideCustomMenu(trayWin);
@@ -141,17 +148,36 @@ export class MainTray {
       if (input.key === "Escape") this.hideCustomMenu(trayWin);
     });
 
-    this.registerDarwinLyricTitle(tray);
+    this.registerDarwinLyricTitle(lyricTray);
+  }
+
+  /**
+   * 歌词单独占一个 status item：只显示文字、透明图标。
+   * 这样歌词变长只会向左伸展，右侧图标位置固定，不会跟着乱动。
+   */
+  private static darwinLyricTray: Nullable<Tray> = null;
+  private static ensureDarwinLyricTray() {
+    if (this.darwinLyricTray) return this.darwinLyricTray;
+    this.darwinLyricTray = new Tray(this.createTransparentDarwinIcon());
+    this.darwinLyricTray.setIgnoreDoubleClickEvents(true);
+    return this.darwinLyricTray;
+  }
+
+  /** 1×1 透明 PNG，避免歌词 Tray 再露出第二枚图标 */
+  private static createTransparentDarwinIcon() {
+    return nativeImage.createFromDataURL(
+      "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO5X1k0AAAAASUVORK5CYII="
+    );
   }
 
   /** 菜单栏歌词 */
   private static readonly DARWIN_TITLE_MAX_LENGTH = 25;
   private static darwinTrayTitle = "";
-  private static registerDarwinLyricTitle(tray: Tray) {
+  private static registerDarwinLyricTitle(lyricTray: Tray) {
     const applyTitle = (title: string) => {
       if (title === this.darwinTrayTitle) return;
       this.darwinTrayTitle = title;
-      tray.setTitle(title);
+      lyricTray.setTitle(title);
     };
 
     MainIPC.MessageChannel.listen("bus_deliver_track_meta", (data) => {
