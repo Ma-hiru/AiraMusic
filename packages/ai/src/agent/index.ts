@@ -7,7 +7,10 @@ export type {
   AIAgentResponse,
   AIAgentToolResult,
   AIAgentChatOptions,
+  AIAgentEventReplayItem,
   AIAgentRunningRunSnapshot,
   AIAgentCreateConfigOptions,
+  AIAgentEventReplaySnapshot,
+  AIAgentUpdateConfigOptions,
   AIAgentCreateConversationResult
 } from "./interface";

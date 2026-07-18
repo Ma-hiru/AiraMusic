@@ -155,7 +155,7 @@ const Bus: FC<object> = () => {
           player.playlist.next(true);
           break;
         case "exit":
-          windowCurrent.close();
+          RendererWindow.process.send("message_dispatch_should_close", true);
           break;
         case "toggle-lyric-version-rm":
           RendererPlayerHandle.player.toggleLyric("rm");
@@ -252,15 +252,37 @@ const Bus: FC<object> = () => {
 
     let change: Undefinable<MessageData<"bus_dispatch_playlist_action">>;
     while ((change = appliedChangesQueue.current.shift())) {
+      let actionError: unknown;
       try {
-        if (change.type === "replacePlaylistAndPlay") {
+        if (change.type === "playTrack") {
+          const { trackID } = change;
+          if (player.current.track?.id === trackID) {
+            player.audio.play();
+            continue;
+          }
+
+          const existingIndex = player.playlist.locate(trackID);
+          if (existingIndex !== -1) {
+            player.playlist.jump(existingIndex);
+            continue;
+          }
+
+          const detail = await NeteaseServicesTrack.idEnsure(trackID);
+          const track = new NeteaseTrackRecord({
+            detail,
+            sourceID: 0,
+            sourceName: "other"
+          });
+          player.playlist.add(track, "next");
+          player.playlist.jump(track);
+        } else if (change.type === "replacePlaylistAndPlay") {
           const { allIDs, trackID, sourceID, trackIdx, sourceType } = change;
-          if (player.current.track?.id === trackID) continue;
 
           const records = await fetchTrackList(sourceType, sourceID, allIDs);
-          const track = records[trackIdx] ?? records[0];
+          const track =
+            records.find((record) => record.id === trackID) ?? records[trackIdx] ?? records[0];
 
-          if (!track) continue;
+          if (!track) throw new Error("找不到可播放的歌曲");
           if (player.playlist.same(records)) {
             player.playlist.jump(track);
           } else {
@@ -284,7 +306,20 @@ const Bus: FC<object> = () => {
           player.playlist.add(track, type === "addToPlaylistNext" ? "next" : "end");
         }
       } catch (err) {
+        actionError = err;
         Log.error("Bus", "applyPlayerChangesError:", err);
+      } finally {
+        if (change.requestID) {
+          RendererIPCMessageBus.playlistActionResult.deliver({
+            requestID: change.requestID,
+            ok: !actionError,
+            ...(actionError
+              ? {
+                  error: actionError instanceof Error ? actionError.message : "播放操作失败"
+                }
+              : {})
+          });
+        }
       }
     }
 

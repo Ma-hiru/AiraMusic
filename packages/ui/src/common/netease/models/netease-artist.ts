@@ -34,6 +34,7 @@ export class NeteaseArtist {
     this.followInfos = props.followInfos;
   }
 
+  /** @deprecated Agent 输出请统一使用 RendererTool.artist。 */
   toToolJSONValue(): JsonValue {
     return {
       id: this.id,

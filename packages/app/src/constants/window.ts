@@ -41,6 +41,10 @@ export class MainWindowConstants {
     trayOnWindows: {
       base: { width: 180, height: 450 }
     },
+    // macOS 菜单栏托盘弹窗
+    trayOnDarwin: {
+      base: { width: 180, height: 450 }
+    },
     // 信息窗
     display: {
       base: { width: 1024, height: 600 },

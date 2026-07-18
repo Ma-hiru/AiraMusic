@@ -2,9 +2,10 @@ import { apiRequest } from "@/common/netease/api/request";
 
 export default class _NeteaseRecordAPI {
   /** @desc 听歌足迹 - 今日收听 */
-  static today() {
+  static today(signal?: AbortSignal) {
     return apiRequest<unknown, NeteaseAPI.NeteaseToplistResponse>(
-      `/listen/data/today/song?timestamp=${Date.now()}`
+      `/listen/data/today/song?timestamp=${Date.now()}`,
+      { signal }
     );
   }
 
@@ -12,7 +13,7 @@ export default class _NeteaseRecordAPI {
    * @desc 听歌足迹 - 总收听时长
    * 说明 : 登录后调用此接口, 获取总收听时长; 相关接口可能需要 vip 权限
    * */
-  static total() {
+  static total(signal?: AbortSignal) {
     return apiRequest<
       unknown,
       NeteaseAPI.NeteaseAPIResponse & {
@@ -21,20 +22,22 @@ export default class _NeteaseRecordAPI {
           totalDuration: number;
         };
       }
-    >(`/listen/data/total?timestamp=${Date.now()}`);
+    >(`/listen/data/total?timestamp=${Date.now()}`, { signal });
   }
 
   /** @desc 听歌足迹 - 本周收听时长 */
-  static week() {
+  static week(signal?: AbortSignal) {
     return apiRequest<unknown, NeteaseAPI.NeteaseWeekDurationResponse>(
-      `/listen/data/realtime/report?type=week&timestamp=${Date.now()}`
+      `/listen/data/realtime/report?type=week&timestamp=${Date.now()}`,
+      { signal }
     );
   }
 
   /** @desc 听歌足迹 - 本月收听时长 */
-  static month() {
+  static month(signal?: AbortSignal) {
     return apiRequest<unknown, NeteaseAPI.NeteaseMonthDurationResponse>(
-      `/listen/data/realtime/report?type=month&timestamp=${Date.now()}`
+      `/listen/data/realtime/report?type=month&timestamp=${Date.now()}`,
+      { signal }
     );
   }
 

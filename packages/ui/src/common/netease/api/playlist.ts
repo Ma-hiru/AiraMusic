@@ -102,18 +102,22 @@ export default class _NeteasePlaylistAPI {
    * 收藏/取消收藏歌单
    * @desc 调用此接口, 传入类型和歌单 id 可收藏歌单或者取消收藏歌单
    */
-  static star(params: {
-    /** 歌单 id */
-    id: number;
-    /** 类型,`1:收藏`,`2:取消收藏` */
-    t: 1 | 2;
-  }) {
+  static star(
+    params: {
+      /** 歌单 id */
+      id: number;
+      /** 类型,`1:收藏`,`2:取消收藏` */
+      t: 1 | 2;
+    },
+    signal?: AbortSignal
+  ) {
     return apiRequest<any, NeteaseAPI.NeteaseAPIResponse>({
       url: "/playlist/subscribe",
       params: {
         ...params,
         timestamp: Date.now()
-      }
+      },
+      signal
     });
   }
 
@@ -122,11 +126,12 @@ export default class _NeteasePlaylistAPI {
    * @desc 调用此接口 , 传入歌单id可删除歌单
    * @param id 歌单id,可多个,用逗号隔开
    */
-  static delete(id: number | string | number[]) {
+  static delete(id: number | string | number[], signal?: AbortSignal) {
     if (Array.isArray(id)) id = id.join(",");
     return apiRequest<any, NeteaseAPI.NeteaseAPIResponse>({
       url: "/playlist/delete",
-      params: { id, timestamp: Date.now() }
+      params: { id, timestamp: Date.now() },
+      signal
     });
   }
 
@@ -134,21 +139,25 @@ export default class _NeteasePlaylistAPI {
    * 新建歌单
    * @desc 调用此接口 , 传入歌单名字可新建歌单
    */
-  static create(params: {
-    /** 歌单名 */
-    name: string;
-    /** 是否设置为隐私歌单，默认否，传`10`则设置成隐私歌单 */
-    privacy?: 10;
-    /** 歌单类型,默认`NORMAL`,传 `VIDEO`则为视频歌单 */
-    type?: "VIDEO" | "NORMAL";
-  }) {
+  static create(
+    params: {
+      /** 歌单名 */
+      name: string;
+      /** 是否设置为隐私歌单，默认否，传`10`则设置成隐私歌单 */
+      privacy?: 10;
+      /** 歌单类型,默认`NORMAL`,传 `VIDEO`则为视频歌单 */
+      type?: "VIDEO" | "NORMAL";
+    },
+    signal?: AbortSignal
+  ) {
     params.type ||= "NORMAL";
     return apiRequest<
       any,
       NeteaseAPI.NeteaseAPIResponse & { playlist: NeteaseAPI.NeteasePlaylistSummary }
     >({
       url: "/playlist/create",
-      params: { ...params, timestamp: Date.now() }
+      params: { ...params, timestamp: Date.now() },
+      signal
     });
   }
 
@@ -168,14 +177,17 @@ export default class _NeteasePlaylistAPI {
    * 对歌单添加或删除歌曲
    * @desc 调用此接口 , 可以添加歌曲到歌单或者从歌单删除某首歌曲 ( 需要登录 )
    */
-  static modify(data: {
-    /** 从歌单增加单曲为 `add`, 删除为 `del` */
-    op: "add" | "del";
-    /** 歌单 id */
-    pid: number;
-    /** 歌曲 id,可多个,用逗号隔开 */
-    tracks: number | string | number[];
-  }) {
+  static modify(
+    data: {
+      /** 从歌单增加单曲为 `add`, 删除为 `del` */
+      op: "add" | "del";
+      /** 歌单 id */
+      pid: number;
+      /** 歌曲 id,可多个,用逗号隔开 */
+      tracks: number | string | number[];
+    },
+    signal?: AbortSignal
+  ) {
     if (Array.isArray(data.tracks)) data.tracks = data.tracks.join(",");
     return apiRequest<
       any,
@@ -188,7 +200,8 @@ export default class _NeteasePlaylistAPI {
       url: "/playlist/tracks",
       method: "POST",
       params: { timestamp: Date.now() },
-      data: data
+      data: data,
+      signal
     });
   }
 
@@ -240,10 +253,11 @@ export default class _NeteasePlaylistAPI {
   }
 
   /** 获取相似歌单 */
-  static similar(id: number) {
+  static similar(id: number, signal?: AbortSignal) {
     return apiRequest<any, NeteaseAPI.NeteaseAPIResponse>({
       url: "/simi/playlist",
-      params: { id }
+      params: { id },
+      signal
     });
   }
 
@@ -253,11 +267,13 @@ export default class _NeteasePlaylistAPI {
    */
   static recommend(
     /** 取出数量 , 默认为 30 (不支持 offset) */
-    limit?: number
+    limit?: number,
+    signal?: AbortSignal
   ) {
     return apiRequest<any, NeteaseAPI.NeteaseRecommendPlaylistResponse>({
       url: "/personalized",
-      params: { limit, timestamp: Date.now() }
+      params: { limit, timestamp: Date.now() },
+      signal
     });
   }
 
@@ -276,20 +292,24 @@ export default class _NeteasePlaylistAPI {
    * 歌单 (网友精选碟)
    * @desc 调用此接口 , 可获取网友精选碟歌单
    */
-  static recommendTop(params: {
-    /** 可选值为 'new' 和 'hot', 分别对应最新和最热 , 默认为 'hot' */
-    order: "hot" | "new";
-    /** tag, 比如 " 华语 "、" 古风 " 、" 欧美 "、" 流行 ", 默认为 "全部",可从歌单分类接口获取(/playlist/catlist) */
-    cat: string;
-    /** 取出歌单数量 , 默认为 50 */
-    limit?: number;
-    /** 偏移数量 , 用于分页 , 如 :( 页数 -1)*50, 其中 50 为 limit 的值 */
-    offset?: number;
-  }): Promise<NeteaseAPI.NeteaseTopPlaylistResponse> {
+  static recommendTop(
+    params: {
+      /** 可选值为 'new' 和 'hot', 分别对应最新和最热 , 默认为 'hot' */
+      order: "hot" | "new";
+      /** tag, 比如 " 华语 "、" 古风 " 、" 欧美 "、" 流行 ", 默认为 "全部",可从歌单分类接口获取(/playlist/catlist) */
+      cat: string;
+      /** 取出歌单数量 , 默认为 50 */
+      limit?: number;
+      /** 偏移数量 , 用于分页 , 如 :( 页数 -1)*50, 其中 50 为 limit 的值 */
+      offset?: number;
+    },
+    signal?: AbortSignal
+  ): Promise<NeteaseAPI.NeteaseTopPlaylistResponse> {
     return apiRequest({
       url: "/top/playlist",
       method: "get",
-      params
+      params,
+      signal
     });
   }
 

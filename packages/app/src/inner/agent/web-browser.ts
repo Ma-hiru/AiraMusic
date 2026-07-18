@@ -1,23 +1,34 @@
-import { isIP } from "node:net";
-import { lookup } from "node:dns/promises";
 import { app, session, type Session, BrowserWindow } from "electron";
-import { Log } from "@/lib/log";
+
+import { getAgentWebSafeProxyURL } from "./web-safe-proxy";
+import { createWebSearchURL, resolveAgentWebSearchScope } from "./web-search";
+import type { AgentWebSearchScope, AgentWebSearchEngine } from "./web-search";
+import { assertPublicWebURL, canRequestPublicWebURL } from "./web-url-safety";
+
+export type { AgentWebSearchScope, AgentWebSearchEngine } from "./web-search";
+export {
+  createWebSearchURL,
+  AgentWebSearchScopeValues,
+  resolveAgentWebSearchScope,
+  normalizeAgentWebSearchSite
+} from "./web-search";
 
 // ========== 类型 ==========
 
 export type AgentWebBrowserMode = "open" | "search";
-export type AgentWebSearchEngine = "bing" | "duckduckgo";
 
 export interface AgentWebBrowserSearchInput {
   query: string;
   site?: string;
   action: "search";
+  scope?: AgentWebSearchScope;
   engine?: AgentWebSearchEngine;
 }
 
 export interface AgentWebBrowserOpenInput {
   url: string;
   action: "open";
+  maxChars?: number;
 }
 
 export type AgentWebBrowserInput = AgentWebBrowserOpenInput | AgentWebBrowserSearchInput;
@@ -31,6 +42,41 @@ export interface AgentWebPage {
   truncated: boolean;
   contentChars: number;
   originalChars: number;
+  search?: AgentWebSearchContext;
+  results?: AgentWebSearchResult[];
+}
+
+export interface AgentWebSearchContext {
+  label: string;
+  query: string;
+  domains: string[];
+  customSite?: string;
+  scope: AgentWebSearchScope;
+}
+
+export interface AgentWebSearchResult {
+  url: string;
+  title: string;
+  domain: string;
+  snippet: string;
+}
+
+const WebSearchStructuredContent =
+  "搜索结果已整理到 results 字段；请从 results[].url 选择最相关的页面并使用 open 阅读正文。";
+
+/**
+ * 搜索页已经提取出标题、摘要和目标 URL 后，不再把同一批结果的 HTML 重复交给模型。
+ * 若提取器没有得到结构化结果，则保留原始裁剪 HTML 作为兼容性回退。
+ */
+export function projectAgentWebSearchPage(page: AgentWebPage): AgentWebPage {
+  if (!page.results?.length) return page;
+
+  return {
+    ...page,
+    content: WebSearchStructuredContent,
+    contentChars: WebSearchStructuredContent.length,
+    truncated: page.truncated || page.contentChars > WebSearchStructuredContent.length
+  };
 }
 
 // ========== 配置 ==========
@@ -39,10 +85,53 @@ const WebAgentPartition = "aira-web-agent";
 const WebAgentMaxConcurrentWindows = 2;
 const WebAgentLoadTimeoutMs = 20_000;
 const WebAgentExtractTimeoutMs = 10_000;
-const WebAgentDefaultMaxChars = 60_000;
+const WebAgentDefaultMaxChars = 12_000;
 const WebAgentIsolatedWorldID = 1001;
 
-const BlockedResourceTypes = new Set(["image", "media", "font", "object", "ping", "cspReport"]);
+const BlockedResourceTypes = new Set([
+  "image",
+  "media",
+  "font",
+  "object",
+  "ping",
+  "cspReport",
+  // 拦截外链脚本；页面内联脚本由响应头 CSP（script-src 'none'）一并封死
+  "script",
+  "websocket"
+]);
+
+/**
+ * javascript 必须为 true：Chromium 在 javascript=false 时会禁用整帧 JS 引擎，
+ * executeJavaScriptInIsolatedWorld 的 Promise 永远不结算，最终表现为「网页 DOM 提取超时」。
+ *
+ * 页面自身脚本仍不可执行——靠 CSP（script-src 'none'）+ 拦截 script/websocket 资源；
+ * 提取脚本跑在隔离世界，不受页面 CSP 约束，也不向页面开放 Node/Electron 能力。
+ */
+export const AgentWebBrowserSecurityPreferences = Object.freeze({
+  sandbox: true,
+  contextIsolation: true,
+  nodeIntegration: false,
+  webSecurity: true,
+  allowRunningInsecureContent: false,
+  javascript: true,
+  images: false,
+  backgroundThrottling: false
+});
+
+/** 禁止页面执行任何脚本，堵住 WebRTC 等绕过固定代理直连的路径 */
+const AgentWebAgentContentSecurityPolicy = [
+  "default-src 'none'",
+  "img-src 'none'",
+  "media-src 'none'",
+  "font-src 'none'",
+  "connect-src 'none'",
+  "script-src 'none'",
+  "object-src 'none'",
+  "base-uri 'none'",
+  "form-action 'none'",
+  "frame-src 'none'",
+  "worker-src 'none'"
+].join("; ");
 
 // ========== 错误类型 ==========
 
@@ -130,187 +219,9 @@ class AsyncSemaphore {
 
 const WebAgentSemaphore = new AsyncSemaphore(WebAgentMaxConcurrentWindows);
 
-// ========== 私网地址拦截（自实现 CIDR 匹配，弃用 Node.js BlockList） ==========
-
-const IPv4BlockedRanges: [number, number][] = (() => {
-  const subnets: [string, number][] = [
-    ["0.0.0.0", 8],
-    ["10.0.0.0", 8],
-    ["100.64.0.0", 10],
-    ["127.0.0.0", 8],
-    ["169.254.0.0", 16],
-    ["172.16.0.0", 12],
-    ["192.0.0.0", 24],
-    ["192.0.2.0", 24],
-    ["192.168.0.0", 16],
-    ["198.18.0.0", 15],
-    ["198.51.100.0", 24],
-    ["203.0.113.0", 24],
-    ["224.0.0.0", 4],
-    ["240.0.0.0", 4]
-  ];
-  return subnets.map(([net, prefix]) => ip4CidrToRange(net, prefix));
-})();
-
-function ip4ToNumber(ip: string): number {
-  const parts = ip.split(".");
-  return (
-    ((Number(parts[0]) << 24) >>> 0) +
-    (Number(parts[1]) << 16) +
-    (Number(parts[2]) << 8) +
-    Number(parts[3])
-  );
-}
-
-function ip4CidrToRange(net: string, prefix: number): [number, number] {
-  const netNum = ip4ToNumber(net);
-  const mask = ~((1 << (32 - prefix)) - 1);
-  const start = (netNum & mask) >>> 0;
-  const end = (start | ~mask) >>> 0;
-  return [start, end];
-}
-
-function isBlockedIPv4(address: string): boolean {
-  const num = ip4ToNumber(address);
-  for (const [start, end] of IPv4BlockedRanges) {
-    if (num >= start && num <= end) return true;
-  }
-  return false;
-}
-
-function isBlockedIPv6(_address: string): boolean {
-  void _address;
-  // IPv6 私网地址暂以 hostname 模式检查兜底，后续可按需补充 CIDR 匹配
-  return false;
-}
-
-interface HostSafetyCacheEntry {
-  expiresAt: number;
-  result: Promise<boolean>;
-}
-
-const HostSafetyCache = new Map<string, HostSafetyCacheEntry>();
-let SharedWebAgentSession: Session | undefined;
+let SharedWebAgentSessionPromise: undefined | Promise<Session>;
 
 // ========== URL 安全检查 ==========
-
-async function assertPublicWebURL(value: URL | string): Promise<URL> {
-  let url: URL;
-  try {
-    url = value instanceof URL ? new URL(value) : new URL(value);
-  } catch {
-    throw new Error("网页 URL 无效");
-  }
-  if (url.protocol !== "http:" && url.protocol !== "https:") {
-    throw new Error("只允许访问 HTTP 或 HTTPS 网页");
-  }
-  if (url.username || url.password) {
-    throw new Error("网页 URL 不允许包含认证信息");
-  }
-  const hostname = normalizeHostname(url.hostname);
-  const allowed = await isPublicHostname(hostname);
-  if (!allowed) {
-    Log.warn("WebBrowser", `URL 安全检查不通过: ${url.toString()}`);
-    throw new Error("不允许访问本地、私网或保留地址");
-  }
-  return url;
-}
-
-async function canRequestURL(value: string): Promise<boolean> {
-  let url: URL;
-  try {
-    url = new URL(value);
-  } catch {
-    return false;
-  }
-  if (url.protocol !== "http:" && url.protocol !== "https:") return false;
-  if (url.username || url.password) return false;
-  return isPublicHostname(normalizeHostname(url.hostname));
-}
-
-async function isPublicHostname(hostname: string): Promise<boolean> {
-  const normalized = hostname.toLowerCase();
-  if (
-    !normalized ||
-    normalized === "localhost" ||
-    normalized.endsWith(".localhost") ||
-    normalized.endsWith(".local")
-  ) {
-    return false;
-  }
-  const family = isIP(normalized);
-  if (family !== 0) return !isBlockedAddress(normalized, family);
-  const now = Date.now();
-  const cached = HostSafetyCache.get(normalized);
-  if (cached && cached.expiresAt > now) return cached.result;
-  // DNS 解析失败或返回空列表时放行，不因网络环境问题误拦公网域名。
-  // hostname 模式检查与 webRequest IP 层拦截已提供纵深防御。
-  const result = lookup(normalized, { all: true, verbatim: true })
-    .then((addresses) => {
-      if (!addresses.length) {
-        Log.info("WebBrowser", `DNS 空结果放行: ${normalized}`);
-        return true;
-      }
-      for (const { family, address } of addresses) {
-        if (isBlockedAddress(address, family)) {
-          Log.warn("WebBrowser", `DNS 解析到私网地址被拦截: ${normalized} → ${address}`);
-          return false;
-        }
-      }
-      return true;
-    })
-    .catch((err) => {
-      Log.warn("WebBrowser", `DNS 解析失败放行: ${normalized}`, (err as Error)?.message);
-      return true;
-    });
-  HostSafetyCache.set(normalized, { expiresAt: now + 30_000, result });
-  return result;
-}
-
-function isBlockedAddress(address: string, family: number): boolean {
-  if (family === 4) return isBlockedIPv4(address);
-  if (family === 6) return isBlockedIPv6(address);
-  return true;
-}
-
-function normalizeHostname(hostname: string): string {
-  return hostname.trim().replace(/^\[/, "").replace(/\]$/, "");
-}
-
-// ========== 搜索 URL 构建 ==========
-
-export function createWebSearchURL(
-  query: string,
-  site?: string,
-  engine: AgentWebSearchEngine = "bing"
-): URL {
-  const normalizedQuery = query.trim().replace(/\s+/g, " ");
-  if (!normalizedQuery) throw new Error("搜索关键字不能为空");
-  const normalizedSite = site ? normalizeSite(site) : undefined;
-  const fullQuery = normalizedSite ? `${normalizedQuery} site:${normalizedSite}` : normalizedQuery;
-  if (engine === "duckduckgo") {
-    const url = new URL("https://html.duckduckgo.com/html/");
-    url.searchParams.set("q", fullQuery);
-    return url;
-  }
-  const url = new URL("https://www.bing.com/search");
-  url.searchParams.set("q", fullQuery);
-  url.searchParams.set("count", "10");
-  return url;
-}
-
-function normalizeSite(site: string): string {
-  const value = site.trim();
-  if (!value) throw new Error("搜索站点不能为空");
-  try {
-    const url = new URL(/^https?:\/\//i.test(value) ? value : `https://${value}`);
-    return normalizeHostname(url.hostname)
-      .replace(/^www\./i, "")
-      .toLowerCase();
-  } catch {
-    throw new Error("搜索站点格式无效");
-  }
-}
 
 // ========== 公开入口 ==========
 
@@ -319,10 +230,26 @@ export async function executeWebBrowser(
   signal?: AbortSignal
 ): Promise<AgentWebPage> {
   if (input.action === "search") {
-    const url = createWebSearchURL(input.query, input.site, input.engine);
-    return openWebPage({ url, mode: "search", signal });
+    const resolvedScope = resolveAgentWebSearchScope(input.scope, input.site);
+    const url = createWebSearchURL(input.query, input.site, input.engine, input.scope);
+    const page = projectAgentWebSearchPage(await openWebPage({ url, mode: "search", signal }));
+    return {
+      ...page,
+      search: {
+        query: input.query,
+        scope: resolvedScope.scope,
+        label: resolvedScope.label,
+        domains: resolvedScope.domains,
+        ...(resolvedScope.customSite ? { customSite: resolvedScope.customSite } : {})
+      }
+    };
   }
-  return openWebPage({ url: input.url, mode: "open", signal });
+  return openWebPage({
+    url: input.url,
+    mode: "open",
+    signal,
+    maxChars: input.maxChars
+  });
 }
 
 interface OpenWebPageOptions {
@@ -335,7 +262,7 @@ interface OpenWebPageOptions {
 async function openWebPage(options: OpenWebPageOptions): Promise<AgentWebPage> {
   if (!app.isReady()) throw new Error("Electron app 尚未 ready");
   const url = await assertPublicWebURL(options.url);
-  const maxChars = clamp(options.maxChars ?? WebAgentDefaultMaxChars, 10_000, 100_000);
+  const maxChars = clamp(options.maxChars ?? WebAgentDefaultMaxChars, 6_000, 30_000);
   return WebAgentSemaphore.run(
     () => openWebPageInWindow({ url, mode: options.mode, maxChars, signal: options.signal }),
     options.signal
@@ -350,20 +277,14 @@ async function openWebPageInWindow(options: {
   signal?: AbortSignal;
   mode: AgentWebBrowserMode;
 }): Promise<AgentWebPage> {
+  const webSession = await getWebAgentSession();
   const win = new BrowserWindow({
     show: false,
     width: 1280,
     height: 900,
     webPreferences: {
-      session: getWebAgentSession(),
-      sandbox: true,
-      contextIsolation: true,
-      nodeIntegration: false,
-      webSecurity: true,
-      allowRunningInsecureContent: false,
-      javascript: true,
-      images: false,
-      backgroundThrottling: false
+      ...AgentWebBrowserSecurityPreferences,
+      session: webSession
     }
   });
 
@@ -372,13 +293,24 @@ async function openWebPageInWindow(options: {
   contents.setUserAgent(createBrowserUserAgent());
   contents.setWindowOpenHandler(() => ({ action: "deny" }));
   contents.on("will-prevent-unload", (event) => event.preventDefault());
+  const preventUnsafeNavigation = (event: Electron.Event, target: string) => {
+    try {
+      const protocol = new URL(target).protocol;
+      if (protocol !== "http:" && protocol !== "https:") event.preventDefault();
+    } catch {
+      event.preventDefault();
+    }
+  };
+  contents.on("will-navigate", preventUnsafeNavigation);
+  contents.on("will-redirect", preventUnsafeNavigation);
 
   try {
     await loadURLWithTimeout(win, options.url.toString(), options.signal);
     const finalURL = contents.getURL();
     await assertPublicWebURL(finalURL);
-    // 阻止后续导航（防止 JS 重定向）
+    // 页面载入完成后锁定导航，避免提取期间被脚本切换到另一个文档。
     contents.on("will-navigate", (event) => event.preventDefault());
+    contents.on("will-redirect", (event) => event.preventDefault());
     const result = await runWithTimeout(
       contents.executeJavaScriptInIsolatedWorld(WebAgentIsolatedWorldID, [
         { code: createExtractPageScript(options.mode, options.maxChars) }
@@ -395,7 +327,8 @@ async function openWebPageInWindow(options: {
       truncated: result.truncated,
       originalChars: result.originalChars,
       contentChars: result.contentChars,
-      linkCount: result.linkCount
+      linkCount: result.linkCount,
+      ...(result.results.length ? { results: result.results } : {})
     };
   } finally {
     if (!win.isDestroyed()) {
@@ -412,13 +345,28 @@ interface ExtractedPageResult {
   truncated: boolean;
   contentChars: number;
   originalChars: number;
+  results: AgentWebSearchResult[];
 }
 
 // ========== 独立 Session ==========
 
-function getWebAgentSession(): Session {
-  if (SharedWebAgentSession) return SharedWebAgentSession;
+function getWebAgentSession(): Promise<Session> {
+  if (SharedWebAgentSessionPromise) return SharedWebAgentSessionPromise;
+  SharedWebAgentSessionPromise = createWebAgentSession().catch((error) => {
+    SharedWebAgentSessionPromise = undefined;
+    throw error;
+  });
+  return SharedWebAgentSessionPromise;
+}
+
+async function createWebAgentSession(): Promise<Session> {
   const webSession = session.fromPartition(WebAgentPartition, { cache: false });
+  const safeProxyURL = await getAgentWebSafeProxyURL();
+  await webSession.setProxy({
+    mode: "fixed_servers",
+    proxyRules: safeProxyURL,
+    proxyBypassRules: "<-loopback>"
+  });
   webSession.setPermissionCheckHandler(() => false);
   webSession.setPermissionRequestHandler((_wc, _perm, cb) => cb(false));
   webSession.on("will-download", (event) => event.preventDefault());
@@ -429,13 +377,26 @@ function getWebAgentSession(): Session {
         callback({ cancel: true });
         return;
       }
-      void canRequestURL(details.url).then(
+      void canRequestPublicWebURL(details.url).then(
         (allowed) => callback({ cancel: !allowed }),
         () => callback({ cancel: true })
       );
     }
   );
-  SharedWebAgentSession = webSession;
+  // 覆盖站点原有 CSP：页面脚本（含内联）一律禁止；隔离世界提取不受此限制
+  webSession.webRequest.onHeadersReceived(
+    { urls: ["http://*/*", "https://*/*"] },
+    (details, callback) => {
+      const responseHeaders = { ...(details.responseHeaders ?? {}) };
+      for (const key of Object.keys(responseHeaders)) {
+        if (key.toLowerCase() === "content-security-policy") {
+          delete responseHeaders[key];
+        }
+      }
+      responseHeaders["Content-Security-Policy"] = [AgentWebAgentContentSecurityPolicy];
+      callback({ responseHeaders });
+    }
+  );
   return webSession;
 }
 
@@ -816,6 +777,47 @@ async function extractPageInRenderer(config: { maxChars: number; mode: "open" | 
   const doctype = "<!DOCTYPE html>\n";
   const fullContent = doctype + outputDoc.documentElement.outerHTML;
   const linkCount = outputDoc.querySelectorAll("a[href]").length;
+  const results = collectSearchResults(outputDoc, config.mode);
+
+  function collectSearchResults(doc: Document, mode: "open" | "search") {
+    if (mode !== "search") return [];
+
+    const seen = new Set<string>();
+    const items: Array<{ url: string; title: string; domain: string; snippet: string }> = [];
+    for (const anchor of Array.from(doc.querySelectorAll("a[href]"))) {
+      if (items.length >= 10) break;
+      const href = anchor.getAttribute("href")?.trim();
+      const title = String(anchor.textContent ?? "")
+        .replace(/\s+/g, " ")
+        .trim();
+      if (!href || title.length < 2 || seen.has(href)) continue;
+
+      try {
+        const target = new URL(href);
+        const domain = target.hostname.replace(/^www\./, "");
+        if (!domain || /^(bing|duckduckgo)\.com$/i.test(domain)) continue;
+
+        const container = anchor.closest("li, article, section, div");
+        const containerText = String(container?.textContent ?? "")
+          .replace(/\s+/g, " ")
+          .trim();
+        const snippet = containerText.startsWith(title)
+          ? containerText.slice(title.length).trim().slice(0, 240)
+          : containerText.slice(0, 240);
+
+        seen.add(href);
+        items.push({
+          url: href,
+          domain,
+          snippet,
+          title: title.slice(0, 240)
+        });
+      } catch {
+        continue;
+      }
+    }
+    return items;
+  }
 
   if (fullContent.length <= config.maxChars) {
     return {
@@ -824,7 +826,8 @@ async function extractPageInRenderer(config: { maxChars: number; mode: "open" | 
       truncated: false,
       originalChars: fullContent.length,
       contentChars: fullContent.length,
-      linkCount
+      linkCount,
+      results
     };
   }
 
@@ -910,6 +913,7 @@ async function extractPageInRenderer(config: { maxChars: number; mode: "open" | 
     truncated: true,
     originalChars: fullContent.length,
     contentChars: (doctype + serialized).length,
-    linkCount
+    linkCount,
+    results
   };
 }

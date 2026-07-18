@@ -6,8 +6,12 @@ type AgentToolIDInput = {
   id: number;
 };
 
+type AgentToolLyricsInput = AgentToolIDInput & {
+  mode: "editable" | "semantic";
+};
+
 type AgentToolPlayerActionInput = {
-  action: PlayerAction;
+  action: Exclude<PlayerAction, "exit" | "update">;
 };
 
 type AgentToolCommentInput = {
@@ -119,12 +123,6 @@ export type AgentToolRequest =
       id: string;
       conversationID: string;
       input: AgentToolIDInput;
-      tool: "agent-tool-track-lyrics";
-    }
-  | {
-      id: string;
-      conversationID: string;
-      input: AgentToolIDInput;
       tool: "agent-tool-artist-detail";
     }
   | {
@@ -133,7 +131,6 @@ export type AgentToolRequest =
       input: AgentToolIDInput;
       tool: "agent-tool-track-similar";
     }
-  // ---- 播放器信息与控制 ----
   | {
       id: string;
       conversationID: string;
@@ -158,7 +155,7 @@ export type AgentToolRequest =
       input: AgentToolIDInput;
       tool: "agent-tool-playlist-delete";
     }
-  // ---- 用户 ----
+  // ---- 播放器信息与控制 ----
   | {
       id: string;
       conversationID: string;
@@ -174,10 +171,16 @@ export type AgentToolRequest =
   | {
       id: string;
       conversationID: string;
+      input: AgentToolLyricsInput;
+      tool: "agent-tool-track-lyrics";
+    }
+  | {
+      id: string;
+      conversationID: string;
       input: AgentToolIDInput;
       tool: "agent-tool-artist-hot-tracks";
     }
-  // ---- 歌曲操作 ----
+  // ---- 用户 ----
   | {
       id: string;
       conversationID: string;
@@ -196,6 +199,7 @@ export type AgentToolRequest =
       input: AgentToolCommentInput;
       tool: "agent-tool-track-comment";
     }
+  // ---- 歌曲操作 ----
   | {
       id: string;
       conversationID: string;
@@ -208,7 +212,6 @@ export type AgentToolRequest =
       input: { type?: 1 | 2 | 3 | 4 };
       tool: "agent-tool-artist-toplist";
     }
-  // ---- 艺人 ----
   | {
       id: string;
       conversationID: string;
@@ -227,6 +230,7 @@ export type AgentToolRequest =
       tool: "agent-tool-player-seek";
       input: { position: number | string };
     }
+  // ---- 艺人 ----
   | {
       id: string;
       conversationID: string;
@@ -239,7 +243,6 @@ export type AgentToolRequest =
       tool: "agent-tool-album-star";
       input: { id: number; subscribe: boolean };
     }
-  // ---- 歌单管理 ----
   | {
       id: string;
       conversationID: string;
@@ -258,6 +261,7 @@ export type AgentToolRequest =
       tool: "agent-tool-playlist-star";
       input: { id: number; subscribe: boolean };
     }
+  // ---- 歌单管理 ----
   | {
       id: string;
       conversationID: string;
@@ -282,7 +286,6 @@ export type AgentToolRequest =
       tool: "agent-tool-track-detail";
       input: { ids: number[]; mode: "detail" | "simple" };
     }
-  // ---- 专辑 ----
   | {
       id: string;
       conversationID: string;
@@ -295,38 +298,63 @@ export type AgentToolRequest =
       tool: "agent-tool-user-playlists";
       input: { uid?: number; limit?: number; offset?: number };
     }
-  // ---- 评论互动 ----
   | {
       id: string;
       conversationID: string;
       tool: "agent-tool-comment-open";
       input: { id: number; type: "album" | "track" | "playlist" };
     }
+  // ---- 专辑 ----
   | {
       id: string;
       conversationID: string;
       tool: "agent-tool-source-open";
       input: { id: number; type: "album" | "artist" | "playlist" };
     }
-  // ---- 搜索增强 ----
   | {
       id: string;
       conversationID: string;
       tool: "agent-tool-playlist-modify";
       input: { pid: number; op: "add" | "del"; trackIds: number[] };
     }
+  // ---- 评论互动 ----
+  | {
+      id: string;
+      conversationID: string;
+      tool: "agent-tool-player-queue-remove";
+      input: { scope: "all" } | { ids: number[]; scope: "tracks" };
+    }
+  | {
+      id: string;
+      conversationID: string;
+      tool: "agent-tool-player-queue-add";
+      input: {
+        ids: number[];
+        position: "end" | "next";
+      };
+    }
+  // ---- 搜索增强 ----
   | {
       id: string;
       conversationID: string;
       tool: "agent-tool-playlist-top";
       input: { cat?: string; limit?: number; offset?: number; order?: "hot" | "new" };
     }
-  // ---- 首页与榜单 ----
   | {
       id: string;
       conversationID: string;
       tool: "agent-tool-album-new";
       input: { limit?: number; offset?: number; area?: "EA" | "JP" | "KR" | "ZH" | "ALL" };
+    }
+  // ---- 首页与榜单 ----
+  | {
+      id: string;
+      conversationID: string;
+      tool: "agent-tool-player-mode";
+      input: {
+        shuffle?: boolean;
+        repeat?: "all" | "off" | "one";
+      };
     }
   // ---- 设置 ----
   | {
@@ -360,6 +388,11 @@ export type AgentToolResponse =
       data: JsonValue;
     };
 
+export type AgentToolCancel = {
+  id: string;
+  reason: "aborted" | "timeout";
+};
+
 export type AgentFocusContext =
   | {
       page: "home" | "hidden" | "settings";
@@ -382,11 +415,6 @@ export type AgentFocusContext =
       page: "history";
       recent: { id: number; name: string; time: string; playDuration: string }[];
     };
-
-export type AgentSettingsContext = {
-  schema: string;
-  values: JsonValue;
-};
 
 export type AgentInvokeError = {
   message: string;

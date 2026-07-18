@@ -31,7 +31,7 @@ export interface AIConversationStore {
   remove(id: string): Promise<AIResult<void>>;
   write(snapshot: LLMConversationSnapshot): Promise<AIResult<void>>;
   read(id: string): Promise<AIResult<Optional<LLMConversationSnapshot>>>;
-  list(): Promise<AIResult<Pick<AIProviderConfigSnapshot, "id" | "name">[]>>;
+  list(): Promise<AIResult<Pick<LLMConversationSnapshot, "id" | "name">[]>>;
 }
 
 export interface AIInject {

@@ -9,7 +9,10 @@ export default defineConfig((options) => {
   const mode = options.watch ? "development" : "production";
   return [
     {
-      entry: ["src/index.ts"],
+      entry: {
+        index: "src/index.ts",
+        model: "src/model/index.ts"
+      },
       outDir: "dist",
       format: ["esm"],
       platform: "node",

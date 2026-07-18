@@ -6,6 +6,7 @@ import type { LLMConversationCreateOptions } from "./interface";
 
 export class LLMConversationRepository {
   private readonly inject: Pick<AIInject, "CreateID" | "ConversationStore">;
+  private readonly creatingIDs = new Set<string>();
 
   constructor(inject: Pick<AIInject, "CreateID" | "ConversationStore">) {
     this.inject = inject;
@@ -26,14 +27,41 @@ export class LLMConversationRepository {
   async create(
     options: Partial<LLMConversationCreateOptions> = {}
   ): Promise<AIResult<LLMConversation>> {
-    const id = options.id ?? this.inject.CreateID();
-    const conversation = LLMConversation.create({ id, ...options });
-    if (conversation.isErr()) return conversation;
+    const id = options.id === undefined ? this.inject.CreateID() : options.id.trim();
+    if (!id) {
+      return AIResult.err({
+        type: "invalid_conversation",
+        message: "conversation id 不能为空"
+      });
+    }
+    if (this.creatingIDs.has(id)) {
+      return AIResult.err({
+        type: "invalid_conversation",
+        message: `conversation id 已存在或正在创建：${id}`
+      });
+    }
 
-    const saved = await this.save(conversation.unwrap());
-    if (saved.isErr()) return saved;
+    this.creatingIDs.add(id);
+    try {
+      const existing = await this.load(id);
+      if (existing.isErr()) return existing;
+      if (existing.unwrap()) {
+        return AIResult.err({
+          type: "invalid_conversation",
+          message: `conversation id 已存在：${id}`
+        });
+      }
 
-    return conversation;
+      const conversation = LLMConversation.create({ ...options, id });
+      if (conversation.isErr()) return conversation;
+
+      const saved = await this.save(conversation.unwrap());
+      if (saved.isErr()) return saved;
+
+      return conversation;
+    } finally {
+      this.creatingIDs.delete(id);
+    }
   }
 
   async load(id: string): Promise<AIResult<Optional<LLMConversation>>> {

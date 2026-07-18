@@ -50,7 +50,8 @@ export class MainApp {
   }
 
   /**
-   * @desc 注册自定义协议 \
+   * @desc 注册自定义协议
+   * @deprecated
    * error exit \
    * code MainExitCodeConstants.REGISTER_PROTOCOL_FAILED
    * */
@@ -88,36 +89,41 @@ export class MainApp {
   private launchMainWindow() {
     try {
       const mainWindow = MainWindowCreator.create(MainWindowPreset.main);
+
+      let isQuitting = false;
       if (process.platform === "darwin") {
-        let isQuitting = false;
-        let isClosing = false;
-        app.on("before-quit", () => (isQuitting = true));
-        app.on("activate", () => MainWindowManager.checkAndShow("main"));
-        mainWindow.on("close", (event) => {
-          if (isQuitting) {
-            if (isClosing) return;
-            event.preventDefault();
-            isClosing = true;
-            MainIPC.MessageChannel.commit({
-              sender: "process",
-              receiver: "main",
-              type: "message_dispatch_darwin_close",
-              data: true
-            });
-            setTimeout(() => mainWindow.close(), 2000);
-          } else {
+        app.addListener("activate", () => MainWindowManager.checkAndShow("main"));
+        mainWindow.addListener("close", (event) => {
+          if (!isQuitting) {
             event.preventDefault();
             mainWindow.hide();
           }
         });
-      } else {
-        mainWindow.addListener("closed", () => {
-          this.exit(MainExitCodeConstants.NORMAL_EXIT, "");
-        });
-        app.addListener("window-all-closed", () => {
-          this.exit(MainExitCodeConstants.NORMAL_EXIT, "");
-        });
       }
+
+      mainWindow.addListener("closed", () => {
+        this.exit(MainExitCodeConstants.NORMAL_EXIT, "");
+      });
+      app.addListener("window-all-closed", () => {
+        this.exit(MainExitCodeConstants.NORMAL_EXIT, "");
+      });
+      app.addListener("before-quit", (e) => {
+        e.preventDefault();
+        if (process.platform === "darwin") {
+          mainWindow.hide();
+          isQuitting = true;
+        }
+        this.exit(MainExitCodeConstants.NORMAL_EXIT, "");
+      });
+      MainIPC.MessageChannel.listen("message_dispatch_should_close", (close) => {
+        if (!close) return;
+        if (process.platform === "darwin") {
+          mainWindow.hide();
+          isQuitting = true;
+        }
+        void this.emitStopMessageToMainRenderer();
+      });
+
       return mainWindow;
     } catch (err) {
       Log.error("window", "failed to launch main window", err);
@@ -166,6 +172,24 @@ export class MainApp {
     return Promise.allSettled(
       this._services?.services.map((s) => this._services?.stopService(s)) ?? []
     );
+  }
+
+  private emitStopMessageToMainRenderer() {
+    const { promise, resolve } = Promise.withResolvers<void>();
+
+    Log.info("quit", "emit 'message_dispatch_should_close' message");
+    MainIPC.MessageChannel.commit({
+      sender: "process",
+      receiver: "main",
+      type: "message_dispatch_should_close",
+      data: true
+    });
+    setTimeout(() => {
+      Log.info("quit", "exiting after commit 'message_dispatch_should_close' message");
+      resolve();
+    }, 2000);
+
+    return promise;
   }
 
   /** 输出信息 */
@@ -241,6 +265,18 @@ export class MainApp {
    * @desc 按照顺序执行各个步骤，步骤失败会记录日志，但不会阻止其他步骤的执行， \
    * 最终都会调用 app.exit(code) 退出应用 \
    * code为负数时是非正常退出，等于0为正常退出
+   *
+   * 退出流程：
+   * ```text
+   * 第一类（quit 流程）
+   * before-quit 拦截 → 转入 MainApp.exit()
+   * 第二类（app.exit）
+   * 只有 MainApp.exit() 使用，其他意外的 process.exit 由 process.on("exit") 补充信号
+   * 第三类（强杀/崩溃）
+   * 无解，靠子进程的 stdin 管道 EOF 自检来进行非JS部分的清理
+   * 第四类（主窗口关闭）
+   * window、linux上主窗口可以关闭，且直接调用 exit 退出，mac上不会关闭，靠第一类退出流程
+   * ```
    * */
   exit(code: number, reason: string) {
     if (this._status === "exiting") return;
@@ -251,8 +287,10 @@ export class MainApp {
       Log.error("app exit", reason);
     }
 
-    this.stopAllServers().finally(() => {
-      app.exit(code);
-    });
+    this.emitStopMessageToMainRenderer()
+      .then(() => this.stopAllServers())
+      .finally(() => {
+        app.exit(code);
+      });
   }
 }

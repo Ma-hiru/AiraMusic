@@ -2,25 +2,29 @@ import { CommentSort, CommentType } from "@/common/enum";
 import { apiRequest } from "@/common/netease/api/request";
 
 export default class _NeteaseCommentAPI {
-  static get(params: {
-    /** 资源 id, 如歌曲 id,mv id */
-    id: number;
-    /** 数字 , 资源类型 , 对应歌曲 , mv, 专辑 , 歌单 , 电台, 视频对应以下类型 */
-    type: CommentType;
-    /** 分页参数,第 N 页,默认为 1 */
-    pageNo: number;
-    /** 分页参数,每页多少条数据,默认 20 */
-    pageSize: number;
-    /** 排序方式, 1:按推荐排序, 2:按热度排序, 3:按时间排序 */
-    sortType: CommentSort;
-    /** 当sortType为 3 时且页数不是第一页时需传入,值为上一条数据的 time */
-    cursor?: number;
-  }) {
+  static get(
+    params: {
+      /** 资源 id, 如歌曲 id,mv id */
+      id: number;
+      /** 数字 , 资源类型 , 对应歌曲 , mv, 专辑 , 歌单 , 电台, 视频对应以下类型 */
+      type: CommentType;
+      /** 分页参数,第 N 页,默认为 1 */
+      pageNo: number;
+      /** 分页参数,每页多少条数据,默认 20 */
+      pageSize: number;
+      /** 排序方式, 1:按推荐排序, 2:按热度排序, 3:按时间排序 */
+      sortType: CommentSort;
+      /** 当sortType为 3 时且页数不是第一页时需传入,值为上一条数据的 time */
+      cursor?: number;
+    },
+    signal?: AbortSignal
+  ) {
     return apiRequest<any, NeteaseAPI.NeteaseCommentsNewResponse>("/comment/new", {
       params: {
         ...params,
         timestamp: Date.now()
-      }
+      },
+      signal
     });
   }
 
@@ -29,21 +33,25 @@ export default class _NeteaseCommentAPI {
    * @desc 调用此接口 , 传入 type, 资源 id, 和评论 id cid 和 是否点赞参数 t 即可给对 应评论点赞 ( 需要登录 )
    @note 动态点赞不需要传入 id 参数，需要传入动态的 threadId 参数
    * */
-  static like(params: {
-    /** 评论 id */
-    cid?: number;
-    /** 是否点赞 , 1 为点赞 ,0 为取消点赞 */
-    t: 0 | 1;
-    type: CommentType;
-    /** 资源 id, 如歌曲 id,mv id */
-    id: number;
-    threadId?: string;
-  }) {
+  static like(
+    params: {
+      /** 评论 id */
+      cid?: number;
+      /** 是否点赞 , 1 为点赞 ,0 为取消点赞 */
+      t: 0 | 1;
+      type: CommentType;
+      /** 资源 id, 如歌曲 id,mv id */
+      id: number;
+      threadId?: string;
+    },
+    signal?: AbortSignal
+  ) {
     return apiRequest<any, NeteaseAPI.NeteaseAPIResponse>("/comment/like", {
       params: {
         ...params,
         timestamp: Date.now()
-      }
+      },
+      signal
     });
   }
 
@@ -94,8 +102,9 @@ export default class _NeteaseCommentAPI {
           commentId?: number;
           /** 给动态发送评论，则不需要传 id，需要传动态的 threadId */
           threadId?: string;
-        }
+        },
+    signal?: AbortSignal
   ) {
-    return apiRequest("/comment", { params });
+    return apiRequest("/comment", { params, signal });
   }
 }

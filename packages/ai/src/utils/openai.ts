@@ -1,7 +1,14 @@
 import { AIError, AIResult } from "@/result";
 import OpenAI from "openai";
 import type { LLMToolCall, LLMToolChoice, LLMToolDefinition } from "@/tools";
-import type { LLMUsage, LLMMessage, LLMFinishReason } from "@/provider/interface";
+import type {
+  LLMUsage,
+  LLMMessage,
+  LLMFinishReason,
+  LLMProviderContext
+} from "@/provider/interface";
+
+const OpenAIResponsesProviderContext = "openai.responses";
 
 export type StreamedChatToolCall = {
   name?: string;
@@ -11,19 +18,40 @@ export type StreamedChatToolCall = {
 
 export function normalizeResponseUsage(usage?: OpenAI.Responses.ResponseUsage): AIResult<LLMUsage> {
   if (!usage || typeof usage !== "object") return AIResult.err(AIError.empty);
+  const inputDetails = usage.input_tokens_details as
+    | undefined
+    | ({ cache_write_tokens?: number } & NonNullable<typeof usage.input_tokens_details>);
+  const cachedInputTokens = inputDetails?.cached_tokens;
+  const cacheWriteTokens = inputDetails?.cache_write_tokens;
+  const reasoningTokens = usage.output_tokens_details?.reasoning_tokens;
   return AIResult.ok({
     inputTokens: usage.input_tokens,
     outputTokens: usage.output_tokens,
-    totalTokens: usage.total_tokens
+    totalTokens: usage.total_tokens,
+    ...(cachedInputTokens === undefined ? {} : { cachedInputTokens }),
+    ...(cacheWriteTokens === undefined ? {} : { cacheWriteTokens }),
+    ...(reasoningTokens === undefined ? {} : { reasoningTokens })
   });
 }
 
 export function normalizeCompletionsUsage(usage?: OpenAI.CompletionUsage): AIResult<LLMUsage> {
   if (!usage || typeof usage !== "object") return AIResult.err(AIError.empty);
+  const compatibleUsage = usage as OpenAI.CompletionUsage & {
+    prompt_cache_hit_tokens?: number;
+  };
+  const promptDetails = usage.prompt_tokens_details as
+    | undefined
+    | ({ cache_write_tokens?: number } & NonNullable<typeof usage.prompt_tokens_details>);
+  const cachedInputTokens = promptDetails?.cached_tokens ?? compatibleUsage.prompt_cache_hit_tokens;
+  const cacheWriteTokens = promptDetails?.cache_write_tokens;
+  const reasoningTokens = usage.completion_tokens_details?.reasoning_tokens;
   return AIResult.ok({
     inputTokens: usage.prompt_tokens,
     outputTokens: usage.completion_tokens,
-    totalTokens: usage.total_tokens
+    totalTokens: usage.total_tokens,
+    ...(cachedInputTokens === undefined ? {} : { cachedInputTokens }),
+    ...(cacheWriteTokens === undefined ? {} : { cacheWriteTokens }),
+    ...(reasoningTokens === undefined ? {} : { reasoningTokens })
   });
 }
 
@@ -116,6 +144,19 @@ export function normalizeResponseToolCalls(response: OpenAI.Responses.Response):
   });
 }
 
+export function toResponseProviderContext(
+  response: OpenAI.Responses.Response
+): Undefinable<LLMProviderContext> {
+  const reasoningItems = response.output.flatMap((item) =>
+    item.type === "reasoning" ? [structuredClone(item)] : []
+  );
+  if (!reasoningItems.length) return undefined;
+  return {
+    provider: OpenAIResponsesProviderContext,
+    data: { reasoningItems }
+  };
+}
+
 export function normalizeChatFinishReason(
   finishReason: OpenAI.ChatCompletionChunk.Choice["finish_reason"]
 ): LLMFinishReason {
@@ -135,7 +176,8 @@ export function normalizeChatFinishReason(
 }
 
 export function toChatMessages(
-  messages: LLMMessage[]
+  messages: LLMMessage[],
+  instructionRole: "system" | "developer" = "system"
 ): OpenAI.Chat.Completions.ChatCompletionMessageParam[] {
   return messages.map((message) => {
     if (message.role === "tool") {
@@ -159,10 +201,13 @@ export function toChatMessages(
         }))
       };
     }
-    return {
-      role: message.role,
-      content: message.content
-    };
+    if (message.role === "system") {
+      return {
+        role: instructionRole,
+        content: message.content
+      };
+    }
+    return { role: message.role, content: message.content };
   });
 }
 
@@ -179,6 +224,7 @@ export function toResponseInput(messages: LLMMessage[]): OpenAI.Responses.Respon
     }
     if (message.role === "assistant" && "toolCalls" in message) {
       const items: OpenAI.Responses.ResponseInputItem[] = [];
+      items.push(...readResponseReasoningItems(message.providerContext));
       if (message.content) {
         items.push({
           role: "assistant",
@@ -217,7 +263,8 @@ export function toResponseInput(messages: LLMMessage[]): OpenAI.Responses.Respon
 }
 
 export function toChatTools(
-  tools?: LLMToolDefinition[]
+  tools?: LLMToolDefinition[],
+  includeStrict = true
 ): Undefinable<OpenAI.Chat.Completions.ChatCompletionTool[]> {
   if (!tools?.length) return undefined;
   return tools.map((tool) => ({
@@ -226,7 +273,7 @@ export function toChatTools(
       name: tool.name,
       description: tool.description,
       parameters: tool.inputSchema,
-      strict: tool.strict ?? true
+      ...(includeStrict ? { strict: tool.strict ?? true } : {})
     }
   }));
 }
@@ -408,4 +455,76 @@ function isOpenAIResponseErrorEvent(error: unknown): error is OpenAI.Responses.R
   if (!error || typeof error !== "object") return false;
   const value = error as Partial<OpenAI.Responses.ResponseErrorEvent>;
   return value.type === "error" && typeof value.message === "string";
+}
+
+function readResponseReasoningItems(
+  context?: LLMProviderContext
+): OpenAI.Responses.ResponseReasoningItem[] {
+  if (context?.provider !== OpenAIResponsesProviderContext) return [];
+  if (!context.data || typeof context.data !== "object") return [];
+
+  const data = context.data as { reasoningItems?: unknown };
+  if (!Array.isArray(data.reasoningItems)) return [];
+  return data.reasoningItems.flatMap((item) => {
+    const normalized = normalizeResponseReasoningItem(item);
+    return normalized ? [normalized] : [];
+  });
+}
+
+function normalizeResponseReasoningItem(
+  value: unknown
+): Undefinable<OpenAI.Responses.ResponseReasoningItem> {
+  if (!value || typeof value !== "object") return undefined;
+  const item = value as Record<string, unknown>;
+  if (item["type"] !== "reasoning" || typeof item["id"] !== "string") return undefined;
+
+  const summary = normalizeReasoningTextParts(item["summary"], "summary_text");
+  if (!summary) return undefined;
+  const content =
+    item["content"] === undefined
+      ? undefined
+      : normalizeReasoningTextParts(item["content"], "reasoning_text");
+  if (item["content"] !== undefined && !content) return undefined;
+
+  const encryptedContent = item["encrypted_content"];
+  if (
+    encryptedContent !== undefined &&
+    encryptedContent !== null &&
+    typeof encryptedContent !== "string"
+  ) {
+    return undefined;
+  }
+  const status = item["status"];
+  if (
+    status !== undefined &&
+    status !== "in_progress" &&
+    status !== "completed" &&
+    status !== "incomplete"
+  ) {
+    return undefined;
+  }
+
+  return {
+    id: item["id"],
+    type: "reasoning",
+    summary,
+    ...(content ? { content } : {}),
+    ...(encryptedContent === undefined ? {} : { encrypted_content: encryptedContent }),
+    ...(status === undefined ? {} : { status })
+  } as OpenAI.Responses.ResponseReasoningItem;
+}
+
+function normalizeReasoningTextParts<TType extends "summary_text" | "reasoning_text">(
+  value: unknown,
+  type: TType
+): Undefinable<Array<{ type: TType; text: string }>> {
+  if (!Array.isArray(value)) return undefined;
+  const result: Array<{ type: TType; text: string }> = [];
+  for (const part of value) {
+    if (!part || typeof part !== "object") return undefined;
+    const candidate = part as Record<string, unknown>;
+    if (candidate["type"] !== type || typeof candidate["text"] !== "string") return undefined;
+    result.push({ type, text: candidate["text"] });
+  }
+  return result;
 }

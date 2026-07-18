@@ -38,8 +38,9 @@ export default class _NeteaseArtistSource {
 
   //endregion
 
-  private static requestFullTracks(artistID: number, ids: number[]) {
-    return _NeteaseTrackSource.ids(ids).then((tracks) => {
+  private static requestFullTracks(artistID: number, ids: number[], signal?: AbortSignal) {
+    return _NeteaseTrackSource.ids(ids, 100, 5, signal).then((tracks) => {
+      signal?.throwIfAborted();
       return tracks.map(
         (track) =>
           new NeteaseTrackRecord({
@@ -51,23 +52,31 @@ export default class _NeteaseArtistSource {
     });
   }
 
-  static async id(id: number): Promise<NeteaseArtist> {
-    const followInfos = await NeteaseAPIArtist.followCount(id);
+  static async id(id: number, signal?: AbortSignal): Promise<NeteaseArtist> {
+    signal?.throwIfAborted();
+    const followInfos = await NeteaseAPIArtist.followCount(id, signal);
+    signal?.throwIfAborted();
 
     const cache = await _NeteaseArtistSource.getCache(id);
+    signal?.throwIfAborted();
     if (cache) {
       cache.followInfos = followInfos.data;
       return cache;
     }
 
-    const detail = await NeteaseAPIArtist.detail(id);
-    const desc = await NeteaseAPIArtist.desc(id);
-    const hotTracks = await NeteaseAPIArtist.hotTracks(id).then(({ songs }) => {
+    const detail = await NeteaseAPIArtist.detail(id, signal);
+    signal?.throwIfAborted();
+    const desc = await NeteaseAPIArtist.desc(id, signal);
+    signal?.throwIfAborted();
+    const hotTracks = await NeteaseAPIArtist.hotTracks(id, signal).then(({ songs }) => {
+      signal?.throwIfAborted();
       return _NeteaseArtistSource.requestFullTracks(
         id,
-        songs.map((track) => track.id)
+        songs.map((track) => track.id),
+        signal
       );
     });
+    signal?.throwIfAborted();
 
     const artist = NeteaseArtist.fromNeteaseAPIs({
       detail,
@@ -76,7 +85,9 @@ export default class _NeteaseArtistSource {
       hotTracks
     });
 
+    signal?.throwIfAborted();
     await _NeteaseArtistSource.storeCache(artist);
+    signal?.throwIfAborted();
 
     return artist;
   }

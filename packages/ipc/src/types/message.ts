@@ -1,10 +1,10 @@
-import type { AIAgentEvent } from "@mahiru/ai";
+import type { AIAgentEvent, AIAgentEventReplayItem } from "@mahiru/ai";
 
 import type {
+  AgentToolCancel,
   AgentToolRequest,
   AgentFocusContext,
-  AgentToolResponse,
-  AgentSettingsContext
+  AgentToolResponse
 } from "./agent";
 
 export type PlayerAction =
@@ -24,7 +24,6 @@ export type PlayerAction =
 type MessageBus = {
   bus_dispatch_player_action: PlayerAction;
   bus_deliver_focus_context: AgentFocusContext;
-  bus_deliver_agent_settings_context: AgentSettingsContext;
   bus_deliver_preview: {
     url: string;
     alt?: string;
@@ -34,6 +33,11 @@ type MessageBus = {
     type: "album" | "track" | "playlist";
   };
   bus_dispatch_update: "theme" | "output" | "history" | "track-meta" | "track-progress";
+  bus_deliver_playlist_action_result: {
+    ok: boolean;
+    error?: string;
+    requestID: string;
+  };
   bus_deliver_react_ready:
     | { type: "ready"; sender: WindowType }
     | { type: "isReady"; target: WindowType };
@@ -137,7 +141,13 @@ type MessageBus = {
       sourceName: NeteaseTrackRecordSourceType;
     }>;
   };
-  bus_dispatch_playlist_action:
+  bus_dispatch_playlist_action: {
+    requestID?: string;
+  } & (
+    | {
+        trackID: number;
+        type: "playTrack";
+      }
     | {
         allIDs: number[];
         sourceID: number;
@@ -157,7 +167,8 @@ type MessageBus = {
         trackIdx: number;
         type: "replacePlaylistAndPlay";
         sourceType: NeteaseTrackRecordSourceType;
-      };
+      }
+  );
 };
 
 /**
@@ -167,12 +178,13 @@ type MessageBus = {
 type MessageSingle = {
   message_dispatch_login: string;
   message_dispatch_need_login: boolean;
-  message_dispatch_darwin_close: boolean;
+  message_dispatch_should_close: boolean;
   message_dispatch_cache_has_clear: boolean;
   message_dispatch_device_output_set: string;
-  message_deliver_agent_chat_event: AIAgentEvent;
+  message_cancel_agent_tool_request: AgentToolCancel;
   message_dispatch_agent_tool_request: AgentToolRequest;
   message_deliver_agent_tool_response: AgentToolResponse;
+  message_deliver_agent_chat_event: AIAgentEvent | AIAgentEventReplayItem;
 };
 
 type MessageEventValue = MessageBus & MessageSingle;

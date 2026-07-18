@@ -74,6 +74,57 @@ describe("LLMConversation", () => {
     const repeated = conversation.appendMessage({ role: "assistant", toolCalls: [toolCall] });
     expect(repeated.isErr()).toBe(true);
   });
+
+  it("advances updatedAt and round-trips runtime and assistant turn metadata", () => {
+    const conversation = LLMConversation.create({ id: "conversation-observability" }).unwrap();
+    const initialUpdatedAt = conversation.updatedAt;
+
+    expect(conversation.appendMessage({ role: "user", content: "hello" }).isOk()).toBe(true);
+    const afterUser = conversation.updatedAt;
+    expect(afterUser).toBeGreaterThan(initialUpdatedAt);
+
+    expect(conversation.appendMessage({ role: "assistant", content: "world" }).isOk()).toBe(true);
+    expect(
+      conversation
+        .recordAssistantTurn({
+          runID: "run-1",
+          step: 0,
+          status: "complete",
+          messageIndex: 1,
+          finishReason: "stop",
+          usage: {
+            input: 10,
+            output: 2,
+            total: 12,
+            cachedInput: 3,
+            cacheWrite: 4,
+            reasoning: 1
+          }
+        })
+        .isOk()
+    ).toBe(true);
+    const afterTurn = conversation.updatedAt;
+    expect(afterTurn).toBeGreaterThan(afterUser);
+
+    expect(
+      conversation
+        .setRuntime({
+          runID: "run-1",
+          status: "completed",
+          startedAt: 100,
+          endedAt: 200,
+          terminal: true,
+          incomplete: false
+        })
+        .isOk()
+    ).toBe(true);
+    expect(conversation.updatedAt).toBeGreaterThan(afterTurn);
+
+    const snapshot = conversation.snapshot();
+    const restored = LLMConversation.fromSnapshot(snapshot);
+    expect(restored.isOk()).toBe(true);
+    expect(restored.unwrap().snapshot()).toEqual(snapshot);
+  });
 });
 
 describe("LLMConversationRepository", () => {

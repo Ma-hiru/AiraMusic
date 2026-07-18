@@ -1,4 +1,4 @@
-import { dialog, BrowserWindow } from "electron";
+import { app, dialog, BrowserWindow } from "electron";
 import { Log } from "@/lib/log";
 import { getArgFlag } from "@/utils/args";
 import { MainRuntime } from "@/lib/runtime";
@@ -81,6 +81,7 @@ export class MainWindowPreset {
     const { max, min, base } = MainScreenResolver.primary.adaptiveWindowSizePreset(
       MainWindowConstants.WINDOW_BASE_SIZE.lyric
     );
+    const isDarwin = process.platform === "darwin";
 
     return {
       options: {
@@ -101,7 +102,8 @@ export class MainWindowPreset {
         minimizable: false,
         maximizable: false,
         fullscreen: false,
-        titleBarStyle: "hidden",
+        // mac 上 titleBarStyle:"hidden" 会强制画出红绿灯，与自带关闭按钮冲突
+        ...(isDarwin ? {} : { titleBarStyle: "hidden" as const }),
         frame: false,
         type: "toolbar",
         skipTaskbar: true,
@@ -114,6 +116,7 @@ export class MainWindowPreset {
       memoPos: true,
       loadURL: (port: number) => `http://localhost:${port}/lyric.html`,
       onCreate: (win: BrowserWindow) => {
+        if (isDarwin) win.setWindowButtonVisibility(false);
         if (process.platform === "linux") {
           win.setAlwaysOnTop(true);
         } else {
@@ -127,6 +130,8 @@ export class MainWindowPreset {
     const { max, min, base } = MainScreenResolver.primary.adaptiveWindowSizePreset(
       MainWindowConstants.WINDOW_BASE_SIZE.miniplayer
     );
+    const isDarwin = process.platform === "darwin";
+
     return {
       options: {
         width: base.width,
@@ -144,7 +149,8 @@ export class MainWindowPreset {
         minimizable: false,
         maximizable: false,
         fullscreen: false,
-        titleBarStyle: "hidden",
+        // mac 上 titleBarStyle:"hidden" 会强制画出红绿灯，与自带关闭按钮冲突
+        ...(isDarwin ? {} : { titleBarStyle: "hidden" as const }),
         frame: false,
         type: "toolbar",
         skipTaskbar: true,
@@ -156,6 +162,7 @@ export class MainWindowPreset {
       memoPos: true,
       loadURL: (port: number) => `http://localhost:${port}/mini.html`,
       onCreate: (win: BrowserWindow) => {
+        if (isDarwin) win.setWindowButtonVisibility(false);
         win.hide();
         if (process.platform === "linux") {
           win.setAlwaysOnTop(true);
@@ -232,6 +239,52 @@ export class MainWindowPreset {
       handleExits: "IGNORE",
       memoPos: true,
       loadURL: (port: number) => `http://localhost:${port}/tray.html`
+    };
+  }
+
+  static get trayOnDarwin(): AppWindowCreatorProps {
+    const {
+      base: { width, height }
+    } = MainScreenResolver.primary.adaptiveWindowSizePreset(
+      MainWindowConstants.WINDOW_BASE_SIZE.trayOnDarwin
+    );
+    return {
+      options: {
+        width,
+        height,
+        webPreferences: {
+          preload: MainPathResolver.preloadPath
+        },
+        alwaysOnTop: true,
+        title: process.env.APP_NAME,
+        resizable: false,
+        minimizable: false,
+        maximizable: false,
+        // 不设 titleBarStyle，避免 frameless 下仍显示红绿灯按钮
+        frame: false,
+        // NSPanel：非激活式面板，弹出时不会切走全屏 Space、不激活 Dock
+        type: "panel",
+        skipTaskbar: true,
+        show: false,
+        transparent: true,
+        backgroundColor: "#00000000",
+        hasShadow: false
+      },
+      id: "tray",
+      handleExits: "IGNORE",
+      memoPos: true,
+      loadURL: (port: number) => `http://localhost:${port}/tray.html`,
+      onCreate: (win: BrowserWindow) => {
+        // 菜单栏弹窗需要盖在全屏应用之上
+        win.setAlwaysOnTop(true, "pop-up-menu");
+        // skipTransformProcessType：避免 macOS 把进程改成 accessory，导致 Dock 图标闪一下后消失
+        // 见 electron#26350
+        win.setVisibleOnAllWorkspaces(true, {
+          visibleOnFullScreen: true,
+          skipTransformProcessType: true
+        });
+        app.dock?.show();
+      }
     };
   }
 

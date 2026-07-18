@@ -1,10 +1,18 @@
-import { AIError, type AIErrorCode } from "@/result";
 import { LLMConversation, type LLMConversationSnapshot } from "@/conversations";
-import { type LLMUsage, type LLMProvider, type LLMFinishReason } from "@/provider";
+import {
+  type LLMUsage,
+  type LLMMessage,
+  type LLMProvider,
+  type LLMFinishReason,
+  type LLMMessageToolCall
+} from "@/provider";
 import type { AIInject } from "@/inject";
-import type { LLMProviderConfig } from "@/provider/interface";
+import type { AIErrorCode } from "@/result";
+import type { LLMHistoryCompactionPolicy } from "@/history";
+import type { AIAgentInstructionDefinition } from "@/skills";
 import type { LLMTool, LLMToolCall, LLMToolChoice } from "@/tools";
 import type { LLMContextSource, LLMContextMessageRole } from "@/context";
+import type { LLMProviderConfig, LLMProviderConfigInput } from "@/provider/interface";
 
 export interface AIAgentOptions {
   inject: AIInject;
@@ -12,22 +20,44 @@ export interface AIAgentOptions {
   titlePrompt: string;
   systemPrompt: string;
   titleMaxOutputTokens: number;
+  history?: false | LLMHistoryCompactionPolicy;
   providers: Iterable<LLMProvider<any, any, any>>;
+  skills?: {
+    list: Iterable<AIAgentInstructionDefinition>;
+  };
+  transformFinalText?: NormalFunc<
+    [context: { text: string; messages: readonly LLMMessage[] }],
+    string
+  >;
   context?: {
     maxChars: number;
     sources: LLMContextSource[];
     defaultRole: LLMContextMessageRole;
+    placement?: "prefix" | "before_user";
   };
   tools?: {
     list: LLMTool[];
     strict: boolean;
     choice: LLMToolChoice;
+    maxOutputChars?: number;
+    parallelSafeNames?: Iterable<string>;
     serializeOutput?: NormalFunc<[output: unknown], string>;
+    select?: NormalFunc<
+      [context: { input: string; conversation: LLMConversation }],
+      Iterable<string>
+    >;
   };
 }
 
-export interface AIAgentCreateConfigOptions<TConfig extends LLMProviderConfig = LLMProviderConfig> {
+export interface AIAgentCreateConfigOptions<TConfig = LLMProviderConfig> {
   id?: string;
+  name: string;
+  config: TConfig;
+  provider: string;
+}
+
+export interface AIAgentUpdateConfigOptions<TConfig = LLMProviderConfigInput> {
+  id: string;
   name: string;
   config: TConfig;
   provider: string;
@@ -54,31 +84,36 @@ export interface AIAgentRunState {
 
 export interface AIAgentRunContext extends AIAgentRunState {
   input: string;
+  startedAt: number;
+  terminal: boolean;
   temperature?: number;
   provider: LLMProvider;
   maxOutputTokens?: number;
   config: LLMProviderConfig;
+  accumulatedUsage?: LLMUsage;
+  shouldGenerateTitle: boolean;
   conversation: LLMConversation;
+  partialText: Map<number, string>;
+  persistedTurnMessageCount: number;
+  persistedConversation: LLMConversation;
+  pendingToolCall?: {
+    step: number;
+    usage?: LLMUsage;
+    message: LLMMessageToolCall;
+    finishReason: LLMFinishReason;
+  };
 }
 
-export type AIAgentRunningRunSnapshot = Omit<AIAgentRunState, "controller">;
+export type AIAgentRunningRunSnapshot = Omit<AIAgentRunState, "controller"> & {
+  eventReplayTruncated?: boolean;
+  eventReplay?: AIAgentEventReplayItem[];
+};
 
 export type AIAgentEvent =
   | {
       runID: string;
-      type: "aborted";
-      conversationID: string;
-    }
-  | {
-      runID: string;
       title: string;
       type: "title";
-      conversationID: string;
-    }
-  | {
-      runID: string;
-      type: "error";
-      error: AIError;
       conversationID: string;
     }
   | {
@@ -87,6 +122,12 @@ export type AIAgentEvent =
       type: "started";
       configID: string;
       conversationID: string;
+    }
+  | {
+      runID: string;
+      type: "aborted";
+      conversationID: string;
+      snapshot?: LLMConversationSnapshot;
     }
   | {
       step: number;
@@ -103,6 +144,13 @@ export type AIAgentEvent =
       toolResults: AIAgentToolResult[];
     }
   | {
+      runID: string;
+      type: "error";
+      error: AIAgentError;
+      conversationID: string;
+      snapshot?: LLMConversationSnapshot;
+    }
+  | {
       type: "done";
       runID: string;
       conversationID: string;
@@ -113,9 +161,11 @@ export type AIAgentEvent =
       step: number;
       runID: string;
       text?: string;
+      usage?: LLMUsage;
       type: "tool_call";
       conversationID: string;
       toolCalls: LLMToolCall[];
+      finishReason?: LLMFinishReason;
     };
 
 export interface AIAgentToolResult {
@@ -136,6 +186,19 @@ export interface AIAgentError {
   type: AIErrorCode;
 }
 
+export interface AIAgentEventReplayItem {
+  sequence: number;
+  event: AIAgentEvent;
+}
+
+export interface AIAgentEventReplaySnapshot {
+  runID: string;
+  terminal: boolean;
+  truncated: boolean;
+  conversationID: string;
+  eventReplay: AIAgentEventReplayItem[];
+}
+
 export type AIAgentListener<TEvent extends AIAgentEvent = AIAgentEvent> = NormalFunc<
-  [event: TEvent]
+  [event: TEvent, sequence: number]
 >;

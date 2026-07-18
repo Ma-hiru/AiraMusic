@@ -216,7 +216,8 @@ mod windows_taskbar {
 
         unsafe {
             SetLastError(0);
-            let original_proc = SetWindowLongPtrW(hwnd, GWLP_WNDPROC, wnd_proc as usize as isize);
+            let original_proc =
+                SetWindowLongPtrW(hwnd, GWLP_WNDPROC, wnd_proc as *const () as usize as isize);
             if original_proc == 0 {
                 return Err(last_error("SetWindowLongPtrW"));
             }

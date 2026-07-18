@@ -5,13 +5,14 @@ export default class _NeteaseAlbumAPI {
    * 获取专辑内容
    * @param id 专辑 id
    */
-  static content(id: number) {
+  static content(id: number, signal?: AbortSignal) {
     return apiRequest<{ id: number }, NeteaseAPI.NeteaseAlbumContentResponse>({
       url: "/album",
       method: "get",
       params: {
         id
-      }
+      },
+      signal
     });
   }
 
@@ -19,18 +20,22 @@ export default class _NeteaseAlbumAPI {
    * 全部新碟
    * @desc 登录后调用此接口 ,可获取全部新碟
    */
-  static allNews(params: {
-    /** 返回数量 , 默认为 30 */
-    limit?: number;
-    /** 偏移数量，用于分页 , 如 :( 页数 -1)*30, 其中 30 为 limit 的值 , 默认为 0 */
-    offset?: number;
-    /** ALL:全部,ZH:华语,EA:欧美,KR:韩国,JP:日本 */
-    area?: "EA" | "JP" | "KR" | "ZH" | "ALL";
-  }) {
+  static allNews(
+    params: {
+      /** 返回数量 , 默认为 30 */
+      limit?: number;
+      /** 偏移数量，用于分页 , 如 :( 页数 -1)*30, 其中 30 为 limit 的值 , 默认为 0 */
+      offset?: number;
+      /** ALL:全部,ZH:华语,EA:欧美,KR:韩国,JP:日本 */
+      area?: "EA" | "JP" | "KR" | "ZH" | "ALL";
+    },
+    signal?: AbortSignal
+  ) {
     return apiRequest<typeof params, NeteaseAPI.NeteaseNewAlbumsResponse>({
       url: "/album/new",
       method: "get",
-      params
+      params,
+      signal
     });
   }
 
@@ -54,16 +59,20 @@ export default class _NeteaseAlbumAPI {
    * 收藏/取消收藏专辑
    * @desc 调用此接口,可 收藏/取消收藏 专辑
    */
-  static star(params: {
-    /** 返专辑 id */
-    id: number;
-    /** 1 为收藏,其他为取消收藏 */
-    t: 0 | 1;
-  }) {
+  static star(
+    params: {
+      /** 返专辑 id */
+      id: number;
+      /** 1 为收藏,其他为取消收藏 */
+      t: 0 | 1;
+    },
+    signal?: AbortSignal
+  ) {
     return apiRequest<typeof params, NeteaseAPI.NeteaseAPIResponse>({
       url: "/album/sub",
       method: "post",
-      params
+      params,
+      signal
     });
   }
 }
