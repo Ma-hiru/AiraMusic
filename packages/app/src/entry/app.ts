@@ -97,7 +97,6 @@ export class MainApp {
         mainWindow.addListener("close", (event) => {
           if (!isQuitting) {
             event.preventDefault();
-            mainWindow.hide();
           }
         });
       }
