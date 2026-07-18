@@ -4,6 +4,13 @@ import { Log } from "@/common/lib/log";
 import { RendererWindow } from "@/common/lib/window";
 import { RendererAgent } from "@/wins/agent/lib/agent";
 import { useLatestRef } from "@/common/hooks/use-latest-ref";
+import { reduceAgentConversationEvent } from "@/wins/agent/hooks/agent-event-state";
+import {
+  readAgentEventReplay,
+  readAgentEventEnvelope,
+  getAgentEventFingerprint,
+  readPersistedAssistantSteps
+} from "@/wins/agent/page/chat/observability";
 import {
   EMPTY_LIVE_TIMELINE,
   agentSelectedConfigIDAtom,
@@ -20,9 +27,14 @@ import {
   agentSelectedConversationRunningRunIDAtom
 } from "@/wins/agent/atoms/agent";
 import AppToast from "@/common/components/display/toast";
-import type { AgentInvokeError } from "@mahiru/ipc/src/types/agent";
-import type { AIAgentEvent, AIProviderConfigSnapshot } from "@mahiru/ai";
-import type { AgentConversationSummary } from "@mahiru/ipc/dist-types/src/types/agent";
+import type { AgentEventEnvelope } from "@/wins/agent/page/chat/observability";
+import type { AgentInvokeError, AgentConversationSummary } from "@mahiru/ipc/types";
+import type {
+  AIAgentEvent,
+  LLMProviderDescriptor,
+  AIAgentEventReplayItem,
+  AIProviderConfigSnapshot
+} from "@mahiru/ai";
 
 export function useAgent() {
   const [loading, setLoading] = useState(false);
@@ -44,11 +56,15 @@ export function useAgent() {
   const runningConversationIDsRef = useLatestRef(runningConversationIDs);
   const closeAfterRunningRef = useLatestRef(closeAfterRunning);
   const hydratedRef = useRef(false);
+  const agentEventsReadyRef = useRef(false);
+  const eventSequenceByRunRef = useRef(new Map<string, number>());
+  const bufferedAgentEventsRef = useRef<AgentEventEnvelope[]>([]);
+  const replayFingerprintCountsRef = useRef(new Map<string, Map<string, number>>());
 
-  // provider
-  const [providers, setProviders] = useState<string[]>([]);
+  // 模型服务提供方
+  const [providers, setProviders] = useState<LLMProviderDescriptor[]>([]);
   const loadProviders = useCallback(async () => {
-    const result = await RendererAgent.listProvider();
+    const result = await RendererAgent.listProviderDescriptors();
     if (!result.ok) {
       showAgentError(result.reason);
       return [];
@@ -57,7 +73,7 @@ export function useAgent() {
     return result.data;
   }, []);
 
-  // config
+  // 模型配置
   const [configs, setConfigs] = useState<AIProviderConfigSnapshot[]>([]);
   const activeConfig = useMemo(
     () => configs.find((config) => config.id === selectedConfigID),
@@ -90,16 +106,16 @@ export function useAgent() {
         setLoading(false);
       });
   }, [loadConfigs, loadingRef]);
-  const createConfig = useCallback(
-    (config: AIProviderConfigSnapshot) => {
-      setSelectedConfigID(config.id);
+  const saveConfig = useCallback(
+    (config: AIProviderConfigSnapshot, select = true) => {
+      if (select) setSelectedConfigID(config.id);
       setConfigs((items) => [config, ...items.filter((item) => item.id !== config.id)]);
       void loadConfigs();
     },
     [loadConfigs, setSelectedConfigID]
   );
 
-  // conversation-summary
+  // 会话摘要
   const [conversations, setConversations] = useState<AgentConversationSummary[]>([]);
   const loadConversations = useCallback(async () => {
     const result = await RendererAgent.listConversations();
@@ -249,6 +265,63 @@ export function useAgent() {
     ]
   );
 
+  const applyAgentChatEvent = useCallback(
+    (event: AIAgentEvent, sequence?: number, notify = true) => {
+      if (sequence !== undefined) {
+        const previousSequence = eventSequenceByRunRef.current.get(event.runID);
+        if (previousSequence !== undefined && sequence <= previousSequence) return false;
+        eventSequenceByRunRef.current.set(event.runID, sequence);
+        if (eventSequenceByRunRef.current.size > 64) {
+          const oldestRunID = eventSequenceByRunRef.current.keys().next().value;
+          if (oldestRunID && oldestRunID !== event.runID) {
+            eventSequenceByRunRef.current.delete(oldestRunID);
+          }
+        }
+      }
+
+      updateConversationState({
+        conversationID: event.conversationID,
+        update: (state) => reduceAgentConversationEvent(state, event)
+      });
+
+      if (event.type === "title") {
+        setConversations((items) =>
+          items.map((item) =>
+            item.id === event.conversationID ? { ...item, name: event.title } : item
+          )
+        );
+      } else if (event.type === "done") {
+        void loadConversations();
+      } else if (event.type === "error" && notify) {
+        showAgentError(event.error);
+      }
+
+      return true;
+    },
+    [loadConversations, updateConversationState]
+  );
+
+  const flushBufferedAgentEvents = useCallback(() => {
+    const buffered = bufferedAgentEventsRef.current.splice(0).sort((left, right) => {
+      if (left.sequence === undefined) return 1;
+      if (right.sequence === undefined) return -1;
+      return left.sequence - right.sequence;
+    });
+    for (const envelope of buffered) {
+      if (envelope.sequence === undefined) {
+        const fingerprint = getAgentEventFingerprint(envelope.event);
+        const counts = replayFingerprintCountsRef.current.get(envelope.event.runID);
+        const replayedCount = counts?.get(fingerprint) ?? 0;
+        if (replayedCount > 0) {
+          counts?.set(fingerprint, replayedCount - 1);
+          continue;
+        }
+      }
+      applyAgentChatEvent(envelope.event, envelope.sequence);
+    }
+    replayFingerprintCountsRef.current.clear();
+  }, [applyAgentChatEvent]);
+
   const restoreRunningConversations = useCallback(
     async (recoverableIDs = recoverableConversationIDs) => {
       const result = await RendererAgent.listRuns();
@@ -270,6 +343,9 @@ export function useAgent() {
         [...restoreConversationIDs].map(async (conversationID) => {
           const activeRun = activeRunByConversationID.get(conversationID);
           if (activeRun) {
+            const snapshot = await RendererAgent.getConversation(conversationID);
+            if (!snapshot.ok) showAgentError(snapshot.reason);
+            const conversationSnapshot = snapshot.ok ? (snapshot.data ?? null) : null;
             updateConversationState({
               conversationID,
               update: (state) => ({
@@ -278,9 +354,23 @@ export function useAgent() {
                 recovering: true,
                 streamText: "",
                 runningRunID: activeRun.runID,
-                liveTimeline: EMPTY_LIVE_TIMELINE
+                liveTimeline: EMPTY_LIVE_TIMELINE,
+                conversation: conversationSnapshot ?? state.conversation
               })
             });
+            const replay = readAgentEventReplay(conversationSnapshot, activeRun);
+            const persistedSteps = readPersistedAssistantSteps(
+              conversationSnapshot,
+              activeRun.runID
+            );
+            const replayFingerprints = new Map<string, number>();
+            for (const entry of replay) {
+              const fingerprint = getAgentEventFingerprint(entry.event);
+              replayFingerprints.set(fingerprint, (replayFingerprints.get(fingerprint) ?? 0) + 1);
+              if ("step" in entry.event && persistedSteps.has(entry.event.step)) continue;
+              applyAgentChatEvent(entry.event, entry.sequence, false);
+            }
+            replayFingerprintCountsRef.current.set(activeRun.runID, replayFingerprints);
             return;
           }
 
@@ -307,166 +397,23 @@ export function useAgent() {
 
       return activeRuns;
     },
-    [recoverableConversationIDs, updateConversationState]
+    [applyAgentChatEvent, recoverableConversationIDs, updateConversationState]
   );
 
   const handleAgentChatEvent = useCallback(
-    (event: AIAgentEvent) => {
-      switch (event.type) {
-        case "started":
-          updateConversationState({
-            conversationID: event.conversationID,
-            update: (state) => ({
-              ...state,
-              sending: false,
-              recovering: false,
-              runningRunID: event.runID
-            })
-          });
-          break;
-        case "title":
-          updateConversationState({
-            conversationID: event.conversationID,
-            update: (state) => ({
-              ...state,
-              conversation: state.conversation
-                ? {
-                    ...state.conversation,
-                    name: event.title
-                  }
-                : state.conversation
-            })
-          });
-          setConversations((items) =>
-            items.map((item) =>
-              item.id === event.conversationID ? { ...item, name: event.title } : item
-            )
-          );
-          break;
-        case "text_delta":
-          updateConversationState({
-            conversationID: event.conversationID,
-            update: (state) => ({
-              ...state,
-              recovering: false,
-              streamText: state.streamText + event.text
-            })
-          });
-          break;
-        case "tool_call":
-          updateConversationState({
-            conversationID: event.conversationID,
-            update: (state) => {
-              const eventText = event.text?.trim();
-              const currentText = state.streamText;
-              const assistantText =
-                eventText && (!currentText || eventText.startsWith(currentText))
-                  ? event.text!
-                  : currentText;
-              const nextItems = [...state.liveTimeline];
-              if (assistantText.trim()) {
-                nextItems.push({
-                  type: "assistant",
-                  text: assistantText,
-                  id: `${event.runID}-${event.step}-assistant`
-                });
-              }
-              nextItems.push({
-                type: "tool",
-                status: "running",
-                step: event.step,
-                toolCalls: event.toolCalls,
-                id: `${event.runID}-${event.step}-tool`
-              });
-              return {
-                ...state,
-                streamText: "",
-                recovering: false,
-                liveTimeline: nextItems
-              };
-            }
-          });
-          break;
-        case "tool_result":
-          updateConversationState({
-            conversationID: event.conversationID,
-            update: (state) => ({
-              ...state,
-              recovering: false,
-              liveTimeline: state.liveTimeline.map((item) =>
-                item.type === "tool" && item.id === `${event.runID}-${event.step}-tool`
-                  ? {
-                      ...item,
-                      status: "done",
-                      toolResults: event.toolResults
-                    }
-                  : item
-              )
-            })
-          });
-          break;
-        case "done":
-          updateConversationState({
-            conversationID: event.conversationID,
-            update: (state) => ({
-              ...state,
-              sending: false,
-              streamText: "",
-              recovering: false,
-              runningRunID: "",
-              liveTimeline: EMPTY_LIVE_TIMELINE,
-              conversation: event.snapshot,
-              pendingUserMessage: ""
-            })
-          });
-          void loadConversations();
-          break;
-        case "aborted":
-          updateConversationState({
-            conversationID: event.conversationID,
-            update: (state) => ({
-              ...state,
-              sending: false,
-              streamText: "",
-              recovering: false,
-              runningRunID: "",
-              pendingUserMessage: "",
-              liveTimeline: state.liveTimeline.map((item) =>
-                item.type === "tool" && item.status === "running"
-                  ? {
-                      ...item,
-                      status: "error"
-                    }
-                  : item
-              )
-            })
-          });
-          break;
-        case "error":
-          updateConversationState({
-            conversationID: event.conversationID,
-            update: (state) => ({
-              ...state,
-              sending: false,
-              streamText: "",
-              recovering: false,
-              runningRunID: "",
-              pendingUserMessage: "",
-              liveTimeline: state.liveTimeline.map((item) =>
-                item.type === "tool" && item.status === "running"
-                  ? {
-                      ...item,
-                      status: "error"
-                    }
-                  : item
-              )
-            })
-          });
-          showAgentError(event.error);
-          break;
+    (payload: AIAgentEvent | AIAgentEventReplayItem) => {
+      const envelope = readAgentEventEnvelope(payload);
+      if (!envelope) return;
+      if (!agentEventsReadyRef.current) {
+        bufferedAgentEventsRef.current.push(envelope);
+        if (bufferedAgentEventsRef.current.length > 256) {
+          bufferedAgentEventsRef.current.splice(0, bufferedAgentEventsRef.current.length - 256);
+        }
+        return;
       }
+      applyAgentChatEvent(envelope.event, envelope.sequence);
     },
-    [loadConversations, updateConversationState]
+    [applyAgentChatEvent]
   );
   useEffect(() => {
     return RendererWindow.process.listenMessage(
@@ -476,26 +423,26 @@ export function useAgent() {
   }, [handleAgentChatEvent]);
 
   const refresh = useCallback(
-    (recoverableIDs?: string[]) => {
+    async (recoverableIDs?: string[]) => {
       if (loadingRef.current) return;
       setLoading(true);
-      Promise.all([
-        loadProviders(),
-        loadConfigs(),
-        loadConversations(),
-        restoreRunningConversations(recoverableIDs)
-      ])
-        .catch((err) => {
-          Log.error(err);
-          AppToast.show({
-            type: "error",
-            text: "刷新失败"
-          });
-        })
-        .finally(() => {
-          setLoading(false);
-          setLoaded(true);
+      try {
+        await Promise.all([
+          loadProviders(),
+          loadConfigs(),
+          loadConversations(),
+          restoreRunningConversations(recoverableIDs)
+        ]);
+      } catch (err) {
+        Log.error(err);
+        AppToast.show({
+          type: "error",
+          text: "刷新失败"
         });
+      } finally {
+        setLoading(false);
+        setLoaded(true);
+      }
     },
     [loadConfigs, loadConversations, loadProviders, loadingRef, restoreRunningConversations]
   );
@@ -503,14 +450,24 @@ export function useAgent() {
     if (hydratedRef.current) return;
     hydratedRef.current = true;
     void (async () => {
-      const snapshot = await loadAgentAtomStorageSnapshot();
-      applyStorageSnapshot(snapshot);
-      refresh(getAgentRecoverableConversationIDs(snapshot.conversationResumeStates));
-    })().catch((err) => {
-      Log.error(err);
-      refresh();
-    });
-  }, [applyStorageSnapshot, refresh]);
+      try {
+        const snapshot = await loadAgentAtomStorageSnapshot();
+        applyStorageSnapshot(snapshot);
+        await Promise.all([
+          refresh(getAgentRecoverableConversationIDs(snapshot.conversationResumeStates)),
+          snapshot.selectedConversationID
+            ? openConversation(snapshot.selectedConversationID)
+            : Promise.resolve()
+        ]);
+      } catch (err) {
+        Log.error(err);
+        await refresh();
+      } finally {
+        agentEventsReadyRef.current = true;
+        flushBufferedAgentEvents();
+      }
+    })();
+  }, [applyStorageSnapshot, flushBufferedAgentEvents, openConversation, refresh]);
 
   const requestClose = useCallback(() => {
     if (runningConversationIDsRef.current.length) {
@@ -547,7 +504,7 @@ export function useAgent() {
     conversation,
     activeConfig,
     requestClose,
-    createConfig,
+    saveConfig,
     conversations,
     runningRunID,
     openConversation,

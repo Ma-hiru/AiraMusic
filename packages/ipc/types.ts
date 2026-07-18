@@ -23,11 +23,11 @@ export type {
 } from "./src/types/message";
 
 export type {
+  AgentToolCancel,
   AgentInvokeError,
   AgentToolRequest,
   AgentFocusContext,
   AgentInvokeResult,
   AgentToolResponse,
-  AgentSettingsContext,
   AgentConversationSummary
 } from "./src/types/agent";

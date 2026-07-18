@@ -11,6 +11,22 @@ import {
 import AppToast from "@/common/components/display/toast";
 import type { AgentInvokeError } from "@mahiru/ipc/src/types/agent";
 
+const submitTokens = new Map<string, symbol>();
+
+const acquireSubmitToken = (conversationID: string) => {
+  if (submitTokens.has(conversationID)) return null;
+  const token = Symbol(conversationID);
+  submitTokens.set(conversationID, token);
+  return token;
+};
+
+const ownsSubmitToken = (conversationID: string, token: symbol) =>
+  submitTokens.get(conversationID) === token;
+
+const releaseSubmitToken = (conversationID: string, token: symbol) => {
+  if (ownsSubmitToken(conversationID, token)) submitTokens.delete(conversationID);
+};
+
 export function useConversation(conversationID: string) {
   const conversationStateAtom = useMemo(
     () => createAgentConversationStateAtom(conversationID),
@@ -34,17 +50,30 @@ export function useConversation(conversationID: string) {
         return false;
       }
 
+      // React 状态提交到下一次渲染前仍是旧值，因此用同步锁挡住双击和快速双 Enter。
+      const submitToken = acquireSubmitToken(conversationID);
+      if (!submitToken) return false;
+
+      let submissionAccepted = false;
       updateConversationState({
         conversationID,
-        update: (state) => ({
-          ...state,
-          sending: true,
-          streamText: "",
-          recovering: false,
-          liveTimeline: EMPTY_LIVE_TIMELINE,
-          pendingUserMessage: input
-        })
+        update: (state) => {
+          if (state.sending || state.runningRunID || state.recovering) return state;
+          submissionAccepted = true;
+          return {
+            ...state,
+            sending: true,
+            streamText: "",
+            recovering: false,
+            liveTimeline: EMPTY_LIVE_TIMELINE,
+            pendingUserMessage: input
+          };
+        }
       });
+      if (!submissionAccepted) {
+        releaseSubmitToken(conversationID, submitToken);
+        return false;
+      }
 
       try {
         const result = await RendererAgent.chat({
@@ -53,50 +82,88 @@ export function useConversation(conversationID: string) {
           conversationID
         });
         if (!result.ok) {
+          let shouldNotify = false;
           updateConversationState({
             conversationID,
-            update: (state) => ({
-              ...state,
-              sending: false,
-              runningRunID: "",
-              pendingUserMessage: ""
-            })
+            update: (state) => {
+              if (
+                !ownsSubmitToken(conversationID, submitToken) ||
+                state.runningRunID ||
+                !state.sending ||
+                state.pendingUserMessage !== input
+              ) {
+                return state;
+              }
+              shouldNotify = true;
+              return {
+                ...state,
+                sending: false,
+                pendingUserMessage: ""
+              };
+            }
           });
-          showAgentError(result.reason);
+          if (shouldNotify) showAgentError(result.reason);
           return false;
         }
         updateConversationState({
           conversationID,
-          update: (state) => ({
-            ...state,
-            runningRunID: result.data.runID
-          })
+          update: (state) => {
+            if (
+              !ownsSubmitToken(conversationID, submitToken) ||
+              state.runningRunID ||
+              !state.sending ||
+              state.pendingUserMessage !== input
+            ) {
+              return state;
+            }
+            return {
+              ...state,
+              runningRunID: result.data.runID
+            };
+          }
         });
         return true;
       } catch (err) {
         Log.error(err);
+        let shouldNotify = false;
         updateConversationState({
           conversationID,
-          update: (state) => ({
-            ...state,
-            sending: false,
-            runningRunID: "",
-            pendingUserMessage: ""
-          })
+          update: (state) => {
+            if (
+              !ownsSubmitToken(conversationID, submitToken) ||
+              state.runningRunID ||
+              !state.sending ||
+              state.pendingUserMessage !== input
+            ) {
+              return state;
+            }
+            shouldNotify = true;
+            return {
+              ...state,
+              sending: false,
+              pendingUserMessage: ""
+            };
+          }
         });
-        AppToast.show({
-          type: "error",
-          text: "发送消息失败"
-        });
+        if (shouldNotify) {
+          AppToast.show({
+            type: "error",
+            text: "发送消息失败"
+          });
+        }
         return false;
       } finally {
         updateConversationState({
           conversationID,
-          update: (state) => ({
-            ...state,
-            sending: false
-          })
+          update: (state) => {
+            if (!ownsSubmitToken(conversationID, submitToken) || !state.sending) return state;
+            return {
+              ...state,
+              sending: false
+            };
+          }
         });
+        releaseSubmitToken(conversationID, submitToken);
       }
     },
     [

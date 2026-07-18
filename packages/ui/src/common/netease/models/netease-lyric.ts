@@ -80,6 +80,7 @@ export class NeteaseLyric implements NeteaseLyricModel {
     };
   }
 
+  /** @deprecated Agent 输出请统一使用 RendererTool.lyric。 */
   toToolJSONValue(): JsonValue {
     return {
       data: this.data as unknown as JsonValue[],

@@ -20,6 +20,7 @@ export class NeteaseTrackRecord {
     this.name = this.detail.name;
   }
 
+  /** @deprecated Agent 输出请统一使用 RendererTool.record。 */
   static toToolJSONValue(record: NeteaseTrackRecord): JsonValue {
     return {
       id: record.id,

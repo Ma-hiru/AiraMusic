@@ -12,6 +12,7 @@ import type { MessageData } from "@mahiru/ipc/types";
 
 export class MainWindowManager {
   private static readonly BrowserWindowList = new Map<WindowType, BrowserWindow>();
+  private static readonly AppFrameURLList = new WeakMap<BrowserWindow, string>();
   private static tray: Nullable<Tray> = null;
 
   /**
@@ -74,6 +75,14 @@ export class MainWindowManager {
       }
     }
     return null;
+  }
+
+  static setAppFrameURL(window: BrowserWindow, url: string) {
+    this.AppFrameURLList.set(window, url);
+  }
+
+  static getAppFrameURL(window: BrowserWindow) {
+    return this.AppFrameURLList.get(window);
   }
 
   static getAll() {

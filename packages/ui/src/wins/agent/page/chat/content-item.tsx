@@ -1,21 +1,68 @@
 import { cx } from "@emotion/css";
-import { Copy, Check, UserRound } from "lucide-react";
-import { memo, useRef, type FC, useState, useEffect, useCallback } from "react";
+import { Copy, Check, Sparkles } from "lucide-react";
+import { memo, useRef, type FC, useState, useEffect, useCallback, type ReactNode } from "react";
 import AppToast from "@/common/components/display/toast";
-import NeteaseImage from "@/common/components/display/image/netease-image";
 import type { LLMMessage } from "@mahiru/ai";
-import type { NeteaseNetworkImage } from "@/common/netease/models";
+import type { AgentAssistantTurnObservability } from "@/wins/agent/page/types";
 
 import MarkdownContent from "./markdown-content";
+import { AssistantTurnMeta } from "./turn-observability";
 
 interface ContentItemProps {
-  userName?: string;
+  grouped?: boolean;
+  showCopy?: boolean;
   message: LLMMessage;
   streaming?: boolean;
-  userAvatar?: Nullable<NeteaseNetworkImage>;
+  assistantTurn?: AgentAssistantTurnObservability;
 }
 
-const ContentItem: FC<ContentItemProps> = ({ message, userName, streaming, userAvatar }) => {
+interface AssistantTurnGroupProps {
+  runID?: string;
+  children: ReactNode;
+  streaming?: boolean;
+  assistantTurn?: AgentAssistantTurnObservability;
+}
+
+const AssistantTurnGroup: FC<AssistantTurnGroupProps> = ({
+  runID,
+  children,
+  streaming,
+  assistantTurn
+}) => (
+  <div className="flex min-w-0 justify-start">
+    <article
+      className={cx(
+        `
+          relative grid min-w-0 max-w-full grid-cols-[1.5rem_minmax(0,1fr)]
+          gap-2.5 px-0.5 py-1
+        `,
+        streaming && "opacity-95"
+      )}
+      role="group"
+      aria-label="Aira 的连续回复"
+      data-assistant-run-id={runID}>
+      <span className="mt-0.5 flex size-6 items-center justify-center rounded-lg border border-white/8 bg-white/5 text-primary">
+        <Sparkles className="size-3" />
+      </span>
+      <div className="min-w-0">
+        <div className="mb-1.5 flex items-center gap-1.5 text-[9px] font-medium tracking-[0.08em] text-white/28">
+          Aira
+          {streaming && <span className="animate-pulse text-white/20">正在回复</span>}
+        </div>
+        <div className="grid min-w-0 gap-2.5">{children}</div>
+        {assistantTurn && <AssistantTurnMeta turn={assistantTurn} />}
+      </div>
+    </article>
+  </div>
+);
+
+const ContentItem: FC<ContentItemProps> = ({
+  grouped,
+  message,
+  streaming,
+  assistantTurn,
+  showCopy = true
+}) => {
   const isUser = message.role === "user";
   const copiedTimerRef = useRef(0);
   const [copied, setCopied] = useState(false);
@@ -40,33 +87,14 @@ const ContentItem: FC<ContentItemProps> = ({ message, userName, streaming, userA
   if (message.role === "tool") return null;
 
   if (isUser) {
-    const displayName = userName || "你";
-
     return (
       <div className="flex min-w-0 justify-end">
-        <article className="grid min-w-0 max-w-[min(100%,48rem)] justify-items-end gap-1.5 px-1 py-1">
-          <div className="flex min-w-0 flex-row-reverse items-center gap-2 text-[11px] font-semibold text-white/48">
-            <span className="flex size-6 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-white/12 bg-white/10 text-white/64">
-              {userAvatar ? (
-                <NeteaseImage
-                  className="size-full rounded-lg"
-                  cache={true}
-                  shadow="none"
-                  preview={false}
-                  cacheLazy={false}
-                  image={userAvatar}
-                  title={displayName}
-                />
-              ) : (
-                <UserRound className="size-3.5" />
-              )}
-            </span>
-            <span className="min-w-0 truncate">{displayName}</span>
-          </div>
+        <article className="min-w-0 max-w-[min(88%,36rem)] px-0.5 py-0.5">
           <div
             className="
-              max-w-full whitespace-pre-wrap break-words rounded-2xl bg-white/10
-              px-3.5 py-2.5 text-left text-[14px] leading-6 text-white/88
+              max-w-full whitespace-pre-wrap break-words rounded-xl rounded-br-sm border
+              border-white/9 bg-white/8 px-3 py-2 text-left text-[13px]
+              leading-[1.65] text-white/86 shadow-sm shadow-black/6
             ">
             {message.content}
           </div>
@@ -75,24 +103,17 @@ const ContentItem: FC<ContentItemProps> = ({ message, userName, streaming, userA
     );
   }
 
-  return (
-    <div className="flex min-w-0 justify-start">
-      <article
-        className={cx(
-          `
-            group relative min-w-0 max-w-[min(100%,48rem)] rounded-2xl
-            px-2 py-1.5 pr-9 transition-colors duration-200 hover:bg-white/[0.035]
-          `,
-          streaming && "bg-white/4.5"
-        )}>
-        <MarkdownContent content={content} streaming={streaming} />
+  const assistantContent = (
+    <div className={cx("group/assistant-message relative min-w-0 pr-7", streaming && "opacity-95")}>
+      <MarkdownContent content={content} streaming={streaming} />
+      {showCopy && (
         <button
           className="
-            absolute top-1 right-1 inline-flex size-7 cursor-pointer items-center
-            justify-center rounded-lg border border-white/10 bg-black/18 text-white/50
+            absolute top-0 right-0 inline-flex size-7 cursor-pointer items-center
+            justify-center rounded-lg border border-white/8 bg-black/12 text-white/42
             opacity-0 outline-none transition-all duration-200 hover:bg-white/10
             hover:text-white focus-visible:opacity-100 focus-visible:ring-2
-            focus-visible:ring-white/45 group-hover:opacity-100
+            focus-visible:ring-white/45 group-hover/assistant-message:opacity-100
             disabled:pointer-events-none disabled:opacity-0
           "
           title="复制回复"
@@ -102,9 +123,21 @@ const ContentItem: FC<ContentItemProps> = ({ message, userName, streaming, userA
           onClick={copyContent}>
           {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
         </button>
-      </article>
+      )}
     </div>
   );
+
+  if (grouped) return assistantContent;
+  return (
+    <AssistantTurnGroup
+      streaming={streaming}
+      runID={assistantTurn?.runID}
+      assistantTurn={assistantTurn}>
+      {assistantContent}
+    </AssistantTurnGroup>
+  );
 };
+
+export { AssistantTurnGroup };
 
 export default memo(ContentItem);

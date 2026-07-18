@@ -74,6 +74,8 @@ export class MainWindowCreator {
       services.ports().then(({ proxy }) => {
         const port = MainRuntime.isDev ? process.env.VITE_SERVER_PORT! : proxy;
         const url = resolver(Number(port));
+        // 保存首次解析出的应用页面地址，供敏感 IPC 校验主框架来源。
+        MainWindowManager.setAppFrameURL(win, url);
         win
           .loadURL(url)
           .then(() => Log.info("AppWindowCreator", `Window loaded URL: ${url}`))

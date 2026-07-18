@@ -235,6 +235,46 @@ export class MainWindowPreset {
     };
   }
 
+  static get trayOnDarwin(): AppWindowCreatorProps {
+    const {
+      base: { width, height }
+    } = MainScreenResolver.primary.adaptiveWindowSizePreset(
+      MainWindowConstants.WINDOW_BASE_SIZE.trayOnDarwin
+    );
+    return {
+      options: {
+        width,
+        height,
+        webPreferences: {
+          preload: MainPathResolver.preloadPath
+        },
+        alwaysOnTop: true,
+        title: process.env.APP_NAME,
+        resizable: false,
+        minimizable: false,
+        maximizable: false,
+        // 不设 titleBarStyle，避免 frameless 下仍显示红绿灯按钮
+        frame: false,
+        // NSPanel：非激活式面板，弹出时不会切走全屏 Space、不激活 Dock
+        type: "panel",
+        skipTaskbar: true,
+        show: false,
+        transparent: true,
+        backgroundColor: "#00000000",
+        hasShadow: false
+      },
+      id: "tray",
+      handleExits: "IGNORE",
+      memoPos: true,
+      loadURL: (port: number) => `http://localhost:${port}/tray.html`,
+      onCreate: (win: BrowserWindow) => {
+        // 菜单栏弹窗需要盖在全屏应用之上
+        win.setAlwaysOnTop(true, "pop-up-menu");
+        win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+      }
+    };
+  }
+
   static get display(): AppWindowCreatorProps {
     const { min, base } = MainScreenResolver.primary.adaptiveWindowSizePreset(
       MainWindowConstants.WINDOW_BASE_SIZE.display

@@ -98,6 +98,67 @@ describe("LLMPromptBuilder", () => {
     expect(result.unwrap().request.signal).toBe(signal);
   });
 
+  it("places dynamic context after stable history without persisting it", async () => {
+    const conversation = LLMConversation.create({ id: "conversation-cache-prefix" }).unwrap();
+    conversation.appendMessage({ role: "user", content: "上一轮问题" });
+    conversation.appendMessage({ role: "assistant", content: "上一轮回答" });
+    const context = new LLMContextComposer({
+      inject: baseInject,
+      sources: [source("player", 10, [{ key: "track", content: "当前歌曲：动态 A" }])]
+    });
+
+    const result = await new LLMPromptBuilder("稳定系统提示").build({
+      conversation,
+      input: "这首歌是谁唱的",
+      signal: new AbortController().signal,
+      context: { composer: context, placement: "before_user", defaultRole: "user" }
+    });
+
+    expect(result.unwrap().request.messages).toEqual([
+      { role: "system", content: "稳定系统提示" },
+      { role: "user", content: "上一轮问题" },
+      { role: "assistant", content: "上一轮回答" },
+      { role: "user", content: "[track]\n当前歌曲：动态 A" },
+      { role: "user", content: "这首歌是谁唱的" }
+    ]);
+    expect(result.unwrap().transientMessages).toEqual([
+      { role: "user", content: "[track]\n当前歌曲：动态 A" }
+    ]);
+    expect(conversation.toMessages()).toHaveLength(2);
+  });
+
+  it("injects request-only skill instructions after stable history and preserves them in tool loops", async () => {
+    const conversation = LLMConversation.create({ id: "conversation-skill-prompt" }).unwrap();
+    conversation.appendMessage({ role: "user", content: "上一轮问题" });
+    conversation.appendMessage({ role: "assistant", content: "上一轮回答" });
+
+    const result = await new LLMPromptBuilder(["稳定系统提示", "稳定规则"]).build({
+      conversation,
+      input: "介绍当前歌曲",
+      signal: new AbortController().signal,
+      instructions: ['<active_skill id="track-overview">读取详情与评论</active_skill>']
+    });
+
+    expect(result.unwrap().request.messages).toEqual([
+      { role: "system", content: "稳定系统提示" },
+      { role: "system", content: "稳定规则" },
+      { role: "user", content: "上一轮问题" },
+      { role: "assistant", content: "上一轮回答" },
+      {
+        role: "system",
+        content: '<active_skill id="track-overview">读取详情与评论</active_skill>'
+      },
+      { role: "user", content: "介绍当前歌曲" }
+    ]);
+    expect(result.unwrap().transientMessages).toEqual([
+      {
+        role: "system",
+        content: '<active_skill id="track-overview">读取详情与评论</active_skill>'
+      }
+    ]);
+    expect(conversation.toMessages()).toHaveLength(2);
+  });
+
   it("uses explicit tool config", async () => {
     const signal = new AbortController().signal;
     const conversation = LLMConversation.create({ id: "conversation-tools" }).unwrap();

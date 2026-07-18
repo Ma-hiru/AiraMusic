@@ -15,50 +15,52 @@ const TopControl: FC = () => {
   const miniWindow = useListenable(RendererWindow.get("miniplayer"));
   const memoRef = useRef(false);
 
-  const close = useCallback(async () => {
-    type Behavior = "exit" | "tray";
-    const hidden = () => RendererWindow.current.hide();
-    const exit = () => {
-      RendererWindow.current.hide();
-      RendererWindow.all.hide();
-      RendererPlayerHandle[Symbol.dispose]();
-      RendererWindow.current.close();
-    };
+  const close = useCallback(
+    async (quiting: boolean) => {
+      const hidden = () => RendererWindow.current.hide();
+      const exit = () => {
+        RendererWindow.current.hide();
+        RendererWindow.all.hide();
+        RendererPlayerHandle[Symbol.dispose]();
+        RendererWindow.current.close();
+      };
 
-    if ((await RendererDevice.platform) === "darwin") exit();
+      if (quiting) return exit();
+      if ((await RendererDevice.platform) === "darwin") return hidden();
 
-    const behavior = RendererCache.browser.getOne<Behavior>("main-exit-behavior");
-
-    if (behavior === "exit") {
-      exit();
-    } else if (behavior === "tray") {
-      hidden();
-    } else if (behavior == null) {
-      create(createDialogModal, {
-        title: "退出",
-        body: "是否最小化至系统托盘？",
-        confirmText: "退出",
-        cancelText: "最小化",
-        important: true,
-        footerExtraElement: (
-          <AskMemo
-            memo={memoRef.current}
-            setMemo={(memo) => {
-              memoRef.current = memo;
-            }}
-          />
-        ),
-        onConfirm: () => {
-          memoRef.current && RendererCache.browser.setOne<Behavior>("main-exit-behavior", "exit");
-          exit();
-        },
-        onConfirmCancel: () => {
-          memoRef.current && RendererCache.browser.setOne<Behavior>("main-exit-behavior", "tray");
-          hidden();
-        }
-      });
-    }
-  }, [create]);
+      const behavior = RendererCache.browser.getOne<Behavior>("main-exit-behavior");
+      if (behavior === "exit") {
+        exit();
+      } else if (behavior === "tray") {
+        hidden();
+      } else if (behavior == null) {
+        create(createDialogModal, {
+          title: "退出",
+          body: "是否最小化至系统托盘？",
+          confirmText: "退出",
+          cancelText: "最小化",
+          important: true,
+          footerExtraElement: (
+            <AskMemo
+              memo={memoRef.current}
+              setMemo={(memo) => {
+                memoRef.current = memo;
+              }}
+            />
+          ),
+          onConfirm: () => {
+            memoRef.current && RendererCache.browser.setOne<Behavior>("main-exit-behavior", "exit");
+            exit();
+          },
+          onConfirmCancel: () => {
+            memoRef.current && RendererCache.browser.setOne<Behavior>("main-exit-behavior", "tray");
+            hidden();
+          }
+        });
+      }
+    },
+    [create]
+  );
 
   const mini = useCallback(() => {
     RendererWindow.mini.show();
@@ -119,3 +121,5 @@ const AskMemo = ({ setMemo, memo }: { memo: boolean; setMemo: NormalFunc<[memo: 
     />
   );
 };
+
+type Behavior = "exit" | "tray";

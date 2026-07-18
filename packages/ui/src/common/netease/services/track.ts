@@ -48,8 +48,10 @@ export default class _NeteaseTrackSource {
   static async _raw(
     ids: number[] | NeteaseAPI.TrackId[],
     maxPerRequest: number = 500,
-    concurrency: number = 3
+    concurrency: number = 3,
+    signal?: AbortSignal
   ) {
+    signal?.throwIfAborted();
     // 如果传入的是TrackId对象数组，先提取出id
     if (ids.length === 0) return [];
     const rawIDs =
@@ -59,6 +61,7 @@ export default class _NeteaseTrackSource {
 
     // 从缓存中获取数据，找出需要请求的id
     const cache = await _NeteaseTrackSource.getCache(rawIDs);
+    signal?.throwIfAborted();
     const requestIDs: number[] = [];
     const requestIdx: number[] = [];
     for (let i = 0; i < rawIDs.length; i++) {
@@ -77,9 +80,13 @@ export default class _NeteaseTrackSource {
     }
     const requestResults = await Promise.all(
       chunks.map((chunk) => {
-        return limit(() => NeteaseAPITrack.detail(chunk));
+        return limit(() => {
+          signal?.throwIfAborted();
+          return NeteaseAPITrack.detail(chunk, signal);
+        });
       })
     );
+    signal?.throwIfAborted();
     // 将请求结果扁平化
     const trackMap = new Map<number, NeteaseAPI.NeteaseTrack>();
     const privilegeMap = new Map<number, NeteaseAPI.NeteaseTrackPrivilege>();
@@ -99,7 +106,9 @@ export default class _NeteaseTrackSource {
       }
     }
     // 将请求结果存入缓存
+    signal?.throwIfAborted();
     await _NeteaseTrackSource.storeCache(requestTracks, requestPrivileges);
+    signal?.throwIfAborted();
     // 将请求结果合并到结果中
     for (const idx of requestIdx) {
       const id = rawIDs[idx]!;
@@ -127,9 +136,12 @@ export default class _NeteaseTrackSource {
   static async ids(
     ids: number[] | NeteaseAPI.TrackId[],
     maxPerRequest: number = 100,
-    concurrency: number = 5
+    concurrency: number = 5,
+    signal?: AbortSignal
   ) {
-    const entries = await _NeteaseTrackSource._raw(ids, maxPerRequest, concurrency);
+    signal?.throwIfAborted();
+    const entries = await _NeteaseTrackSource._raw(ids, maxPerRequest, concurrency, signal);
+    signal?.throwIfAborted();
 
     const results: NeteaseTrack[] = [];
     for (const entry of entries) {
@@ -141,23 +153,35 @@ export default class _NeteaseTrackSource {
     return results;
   }
 
-  static id(id: number) {
-    return _NeteaseTrackSource.ids([id]).then((response) => response[0]);
+  static id(id: number, signal?: AbortSignal) {
+    return _NeteaseTrackSource.ids([id], 100, 5, signal).then((response) => {
+      signal?.throwIfAborted();
+      return response[0];
+    });
   }
 
-  static idEnsure(id: number) {
-    return _NeteaseTrackSource.ids([id]).then((response) => response[0]!);
+  static idEnsure(id: number, signal?: AbortSignal) {
+    return _NeteaseTrackSource.ids([id], 100, 5, signal).then((response) => {
+      signal?.throwIfAborted();
+      return response[0]!;
+    });
   }
 
-  static playlist(playlist: NeteaseAPI.NeteasePlaylistDetail) {
-    return _NeteasePlaylistSource.id(playlist.id).then((p) => p.tracks);
+  static playlist(playlist: NeteaseAPI.NeteasePlaylistDetail, signal?: AbortSignal) {
+    return _NeteasePlaylistSource.id(playlist.id, signal).then((p) => {
+      signal?.throwIfAborted();
+      return p.tracks;
+    });
   }
 
-  static async personalFM(): Promise<NeteaseTrackRecord[]> {
-    const res = await NeteaseAPITrack.personalFM();
+  static async personalFM(signal?: AbortSignal): Promise<NeteaseTrackRecord[]> {
+    signal?.throwIfAborted();
+    const res = await NeteaseAPITrack.personalFM(signal);
+    signal?.throwIfAborted();
     const ids = (res.data ?? []).map((track) => track.id).filter(Boolean);
     if (ids.length === 0) return [];
-    const tracks = await _NeteaseTrackSource.ids(ids);
+    const tracks = await _NeteaseTrackSource.ids(ids, 100, 5, signal);
+    signal?.throwIfAborted();
     return tracks.map(
       (detail) => new NeteaseTrackRecord({ detail, sourceID: 0, sourceName: "fm" })
     );

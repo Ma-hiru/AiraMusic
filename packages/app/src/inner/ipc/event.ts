@@ -1,5 +1,6 @@
 import { shell, BrowserWindow } from "electron";
 import { Log } from "@/lib/log";
+import { MainAgent } from "@/inner/agent";
 import { MainHandle } from "@/lib/handle";
 import { MainWindowPreset } from "@/lib/window-preset";
 import { MainWindowConstants } from "@/constants/window";
@@ -22,6 +23,10 @@ export const eventHandlers: EventHandlers = {
   event_window_open: (e, type) => {
     const sender = BrowserWindow.fromWebContents(e.sender);
     if (!sender) return;
+    if (type === "agent" && !MainAgent.isEnabled()) {
+      Log.warn("event_window_open", "Agent 已关闭，拒绝创建 Agent 窗口");
+      return;
+    }
     return MainWindowCreator.create(MainWindowPreset.get(type));
   },
   event_window_title: (e, { type, title }) => {
@@ -30,6 +35,7 @@ export const eventHandlers: EventHandlers = {
     MainWindowManager.get(type)?.setTitle(title || process.env.APP_NAME);
   },
   event_window_focus: (e, type) => {
+    if (type === "agent" && !MainAgent.isEnabled()) return;
     const win = type ? MainWindowManager.get(type) : BrowserWindow.fromWebContents(e.sender);
     Log.debug("event_window_focus", type, "win found:", !!win);
     win?.focus();
@@ -66,6 +72,7 @@ export const eventHandlers: EventHandlers = {
     win?.webContents.openDevTools();
   },
   event_window_show: (e, type) => {
+    if (type === "agent" && !MainAgent.isEnabled()) return;
     const win = type ? MainWindowManager.get(type) : BrowserWindow.fromWebContents(e.sender);
     Log.debug("event_window_show", type, "win found:", !!win);
     win && !win.isVisible() && win.show();

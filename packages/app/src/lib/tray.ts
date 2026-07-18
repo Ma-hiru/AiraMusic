@@ -32,7 +32,27 @@ export class MainTray {
   private static customMenuVisible = false;
 
   private static createIcon() {
+    if (process.platform === "darwin") return this.createDarwinIcon();
     return nativeImage.createFromPath(MainPathResolver.appLogoPath);
+  }
+
+  /**
+   * macOS 菜单栏按图片的 point 尺寸渲染且不会自动缩放，
+   * 512px 原图会被当作 512pt 直接撑爆菜单栏，
+   * 需缩到 ~18pt 并附带 retina(@2x) 表示
+   */
+  private static createDarwinIcon() {
+    const base = nativeImage.createFromPath(MainPathResolver.appLogoPath);
+    const icon = nativeImage.createEmpty();
+    icon.addRepresentation({
+      scaleFactor: 1,
+      buffer: base.resize({ width: 18, height: 18 }).toPNG()
+    });
+    icon.addRepresentation({
+      scaleFactor: 2,
+      buffer: base.resize({ width: 36, height: 36 }).toPNG()
+    });
+    return icon;
   }
 
   private static hideCustomMenu(trayWin: BrowserWindow) {
@@ -56,6 +76,8 @@ export class MainTray {
         this.playerBus = data;
         this.showRawMenu(tray);
       });
+    } else if (process.platform === "darwin") {
+      this.createDarwinMenu(tray);
     } else {
       const trayWin =
         MainWindowManager.get("tray") || MainWindowCreator.create(MainWindowPreset.trayOnWindows)!;
@@ -93,6 +115,79 @@ export class MainTray {
         ? tray.setToolTip(`${process.env.APP_NAME} - ${track.name}`)
         : tray.setToolTip(process.env.APP_NAME);
     });
+  }
+
+  private static createDarwinMenu(tray: Tray) {
+    const trayWin =
+      MainWindowManager.get("tray") || MainWindowCreator.create(MainWindowPreset.trayOnDarwin)!;
+    // macOS 菜单栏习惯：单击即弹出，再次单击收起，无需双击/防抖
+    const toggleMenu = () => {
+      this.customMenuVisible ? this.hideCustomMenu(trayWin) : this.showCustomMenu(tray, trayWin);
+    };
+    tray.addListener("click", () => {
+      Log.debug("tray", "click");
+      toggleMenu();
+    });
+    tray.addListener("right-click", () => {
+      Log.debug("tray", "right-click");
+      toggleMenu();
+    });
+    trayWin.addListener("blur", () => {
+      if (!trayWin.webContents.isDevToolsOpened()) {
+        this.hideCustomMenu(trayWin);
+      }
+    });
+    trayWin.webContents.addListener("before-input-event", (_, input) => {
+      if (input.key === "Escape") this.hideCustomMenu(trayWin);
+    });
+
+    this.registerDarwinLyricTitle(tray);
+  }
+
+  /** 菜单栏歌词 */
+  private static readonly DARWIN_TITLE_MAX_LENGTH = 25;
+  private static darwinTrayTitle = "";
+  private static registerDarwinLyricTitle(tray: Tray) {
+    const applyTitle = (title: string) => {
+      if (title === this.darwinTrayTitle) return;
+      this.darwinTrayTitle = title;
+      tray.setTitle(title);
+    };
+
+    MainIPC.MessageChannel.listen("bus_deliver_track_meta", (data) => {
+      this.playerBus = data;
+      if (data.status !== "playing") applyTitle("");
+    });
+    MainIPC.MessageChannel.listen("bus_deliver_track_progress", (data) => {
+      if (this.playerBus?.status !== "playing") return applyTitle("");
+      // progress 单位为秒，歌词时间轴为毫秒
+      const line = this.findLyricLine(this.playerBus.lyric, data.currentTime * 1000);
+      applyTitle(line ? this.formatDarwinTitle(line) : "");
+    });
+  }
+
+  /** 取最后一条已开始的主歌词行 */
+  private static findLyricLine(lyric: Optional<NeteaseLyricModel>, timeMS: number) {
+    const lines = lyric?.data;
+    if (!lines?.length) return null;
+
+    let current: Nullable<LyricLine> = null;
+    for (const line of lines) {
+      if (line.startTime > timeMS) break;
+      if (line.isBlank || line.isBackChorus) continue;
+      current = line;
+    }
+    return current;
+  }
+
+  private static formatDarwinTitle(line: LyricLine) {
+    const text = line.words
+      .filter((word) => !word.inlineNote)
+      .map((word) => word.word)
+      .join("")
+      .trim();
+    if (text.length <= this.DARWIN_TITLE_MAX_LENGTH) return text;
+    return `${text.slice(0, this.DARWIN_TITLE_MAX_LENGTH - 1)}…`;
   }
 
   private static removeChecker: Nullable<NormalFunc> = null;

@@ -18,8 +18,8 @@ export interface AgentConversationState {
 export interface AgentConversationResumeState {
   recovering: boolean;
   runningRunID: string;
+  conversationID: string;
   pendingUserMessage: string;
-  conversation: Nullable<LLMConversationSnapshot>;
 }
 
 export type AgentConversationStates = Record<string, AgentConversationState>;
@@ -33,6 +33,7 @@ export interface AgentStorageSnapshot {
 }
 
 export const EMPTY_LIVE_TIMELINE: AgentLiveTimelineItem[] = [];
+export const AGENT_PENDING_MESSAGE_STORAGE_LIMIT = 2_000;
 
 export const createAgentConversationState = (): AgentConversationState => ({
   sending: false,
@@ -46,18 +47,20 @@ export const createAgentConversationState = (): AgentConversationState => ({
 
 export const EMPTY_AGENT_CONVERSATION_STATE = createAgentConversationState();
 
-const toResumeState = (state: AgentConversationState): AgentConversationResumeState => ({
+const toResumeState = (
+  conversationID: string,
+  state: AgentConversationState
+): AgentConversationResumeState => ({
+  conversationID,
   recovering: state.recovering,
   runningRunID: state.runningRunID,
-  conversation: state.conversation,
-  pendingUserMessage: state.pendingUserMessage
+  pendingUserMessage: state.pendingUserMessage.slice(0, AGENT_PENDING_MESSAGE_STORAGE_LIMIT)
 });
 
 const fromResumeState = (state: AgentConversationResumeState): AgentConversationState => ({
   ...createAgentConversationState(),
-  recovering: state.recovering || !!state.runningRunID,
+  recovering: state.recovering || !!state.runningRunID || !!state.pendingUserMessage,
   runningRunID: state.runningRunID,
-  conversation: state.conversation,
   pendingUserMessage: state.pendingUserMessage
 });
 
@@ -67,9 +70,9 @@ const resumeStateEqual = (
 ) => {
   return (
     !!a &&
+    a.conversationID === b.conversationID &&
     a.recovering === b.recovering &&
     a.runningRunID === b.runningRunID &&
-    a.conversation === b.conversation &&
     a.pendingUserMessage === b.pendingUserMessage
   );
 };
@@ -80,8 +83,50 @@ const stringArrayEqual = (a: string[], b: string[]) => {
 
 export const getAgentRecoverableConversationIDs = (states: AgentConversationResumeStates) =>
   Object.entries(states).flatMap(([conversationID, state]) =>
-    state.runningRunID || state.recovering ? [conversationID] : []
+    state.runningRunID || state.recovering || state.pendingUserMessage ? [conversationID] : []
   );
+
+const asStorageRecord = (value: unknown): null | Record<string, unknown> => {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  return value as Record<string, unknown>;
+};
+
+const readStorageString = (value: unknown) => (typeof value === "string" ? value : "");
+
+const normalizeResumeStates = (value: unknown): AgentConversationResumeStates => {
+  const record = asStorageRecord(value);
+  if (!record) return {};
+
+  const states: AgentConversationResumeStates = {};
+  for (const [conversationID, rawState] of Object.entries(record)) {
+    if (!conversationID) continue;
+    const state = asStorageRecord(rawState);
+    if (!state) continue;
+    const normalized: AgentConversationResumeState = {
+      conversationID,
+      recovering: state["recovering"] === true,
+      runningRunID: readStorageString(state["runningRunID"]),
+      pendingUserMessage: readStorageString(state["pendingUserMessage"]).slice(
+        0,
+        AGENT_PENDING_MESSAGE_STORAGE_LIMIT
+      )
+    };
+    if (!normalized.recovering && !normalized.runningRunID && !normalized.pendingUserMessage) {
+      continue;
+    }
+    states[conversationID] = normalized;
+  }
+  return states;
+};
+
+export const normalizeAgentStorageSnapshot = (value: unknown): AgentStorageSnapshot => {
+  const snapshot = asStorageRecord(value);
+  return {
+    selectedConfigID: readStorageString(snapshot?.["selectedConfigID"]),
+    selectedConversationID: readStorageString(snapshot?.["selectedConversationID"]),
+    conversationResumeStates: normalizeResumeStates(snapshot?.["conversationResumeStates"])
+  };
+};
 
 const agentKeyValue = new RendererKeyValue();
 
@@ -122,12 +167,12 @@ export const loadAgentAtomStorageSnapshot = async (): Promise<AgentStorageSnapsh
     agentKeyValue.getItem(AGENT_SELECTED_CONVERSATION_ID_KEY, ""),
     agentKeyValue.getItem<JsonValue>(AGENT_CONVERSATION_RESUME_STATES_KEY, {})
   ]);
-  const snapshot = {
-    selectedConfigID: selectedConfigID ?? "",
-    selectedConversationID: selectedConversationID ?? "",
-    conversationResumeStates: (conversationResumeStates ??
-      {}) as unknown as AgentConversationResumeStates
-  };
+  // 旧版本会把完整会话和工具历史放进 renderer 存储；加载时只迁移恢复所需字段。
+  const snapshot = normalizeAgentStorageSnapshot({
+    selectedConfigID,
+    selectedConversationID,
+    conversationResumeStates
+  });
   cacheAgentStorageSnapshot(snapshot);
   return snapshot;
 };
@@ -175,11 +220,12 @@ export const agentCloseAfterRunningAtom = atom(false);
 export const agentApplyStorageSnapshotAtom = atom(
   null,
   (_get, set, snapshot: AgentStorageSnapshot) => {
-    cacheAgentStorageSnapshot(snapshot);
-    set(agentSelectedConfigIDAtom, snapshot.selectedConfigID);
-    set(agentSelectedConversationIDAtom, snapshot.selectedConversationID);
-    set(agentConversationResumeStatesAtom, snapshot.conversationResumeStates);
-    set(agentConversationStatesAtom, fromResumeStates(snapshot.conversationResumeStates));
+    const normalized = normalizeAgentStorageSnapshot(snapshot);
+    cacheAgentStorageSnapshot(normalized);
+    set(agentSelectedConfigIDAtom, normalized.selectedConfigID);
+    set(agentSelectedConversationIDAtom, normalized.selectedConversationID);
+    set(agentConversationResumeStatesAtom, normalized.conversationResumeStates);
+    set(agentConversationStatesAtom, fromResumeStates(normalized.conversationResumeStates));
   }
 );
 
@@ -242,8 +288,15 @@ export const agentUpdateConversationStateAtom = atom(
       [conversationID]: next
     });
 
-    const resumeState = toResumeState(next);
+    const resumeState = toResumeState(conversationID, next);
     const resumeStates = get(agentConversationResumeStatesAtom);
+    if (!resumeState.recovering && !resumeState.runningRunID && !resumeState.pendingUserMessage) {
+      if (!(conversationID in resumeStates)) return;
+      const { [conversationID]: removedResumeState, ...nextResumeStates } = resumeStates;
+      void removedResumeState;
+      set(agentConversationResumeStatesAtom, nextResumeStates);
+      return;
+    }
     if (resumeStateEqual(resumeStates[conversationID], resumeState)) return;
 
     set(agentConversationResumeStatesAtom, {

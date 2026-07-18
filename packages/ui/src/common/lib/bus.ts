@@ -81,7 +81,10 @@ export class MessageBusArray<T extends MessageBusEvent> extends MessageBus<T, "a
   }
 
   protected override append(data: MessageData<T>) {
-    this.data = [...this.data.slice(0, this.maxLen - 1), data]; // 新引用
+    const previous = Number.isFinite(this.maxLen)
+      ? this.data.slice(-Math.max(0, this.maxLen - 1))
+      : this.data;
+    this.data = [...previous, data]; // 新引用
   }
 
   protected override clear() {
@@ -100,7 +103,16 @@ export class RendererIPCMessageBus {
   static readonly updater = new MessageBusArray("bus_dispatch_update", "main");
   static readonly display = new MessageBusArray("bus_display", "display");
   static readonly playerAction = new MessageBusArray("bus_dispatch_player_action", "main");
-  static readonly playlistAction = new MessageBusArray("bus_dispatch_playlist_action", "main");
+  static readonly playlistAction = new MessageBusArray(
+    "bus_dispatch_playlist_action",
+    "main",
+    Number.POSITIVE_INFINITY
+  );
+  static readonly playlistActionResult = new MessageBusArray(
+    "bus_deliver_playlist_action_result",
+    "agent",
+    50
+  );
   static readonly output = new MessageBusObj("bus_deliver_device_output_views", "display");
   static readonly history = new MessageBusObj("bus_deliver_history", "display");
   static readonly preview = new MessageBusArray("bus_deliver_preview", "image");

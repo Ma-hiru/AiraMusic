@@ -1,15 +1,29 @@
 import type {
   AIAgentChatOptions,
+  LLMProviderDescriptor,
+  LLMProviderConfigInput,
   LLMConversationSnapshot,
-  LLMProviderOpenAIConfig,
   AIProviderConfigSnapshot,
   AIAgentRunningRunSnapshot,
-  AIAgentCreateConfigOptions,
-  LLMConversationCreateOptions,
+  AIAgentUpdateConfigOptions,
   AIAgentCreateConversationResult
 } from "@mahiru/ai";
 
 import type { AgentInvokeResult, AgentConversationSummary } from "./agent";
+
+export type AgentProviderConfigCreateInput = {
+  name: string;
+  provider: string;
+  config: LLMProviderConfigInput;
+};
+
+export type AgentConversationCreateInput = {
+  name?: string;
+};
+
+export type AgentProviderConfigUpdateInput = {
+  config: LLMProviderConfigInput;
+} & Omit<AIAgentUpdateConfigOptions, "config">;
 
 /** Invoke 事件类型以及参数 */
 export type InvokeEventMaps = {
@@ -63,6 +77,7 @@ export type InvokeEventMaps = {
   invoke_agent_list_runs: [undefined, AgentInvokeResult<AIAgentRunningRunSnapshot[]>];
   invoke_agent_chat: [AIAgentChatOptions, Promise<AgentInvokeResult<AIAgentRunningRunSnapshot>>];
   invoke_agent_list_configs: [undefined, Promise<AgentInvokeResult<AIProviderConfigSnapshot[]>>];
+  invoke_agent_list_provider_descriptors: [undefined, AgentInvokeResult<LLMProviderDescriptor[]>];
   invoke_agent_list_conversations: [
     undefined,
     Promise<AgentInvokeResult<AgentConversationSummary[]>>
@@ -72,11 +87,15 @@ export type InvokeEventMaps = {
     Promise<AgentInvokeResult<Optional<LLMConversationSnapshot>>>
   ];
   invoke_agent_create_config: [
-    AIAgentCreateConfigOptions<LLMProviderOpenAIConfig>,
+    AgentProviderConfigCreateInput,
+    Promise<AgentInvokeResult<AIProviderConfigSnapshot>>
+  ];
+  invoke_agent_update_config: [
+    AgentProviderConfigUpdateInput,
     Promise<AgentInvokeResult<AIProviderConfigSnapshot>>
   ];
   invoke_agent_create_conversation: [
-    undefined | Partial<LLMConversationCreateOptions>,
+    undefined | AgentConversationCreateInput,
     Promise<AgentInvokeResult<AIAgentCreateConversationResult>>
   ];
 };

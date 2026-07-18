@@ -1,7 +1,7 @@
 import { join } from "node:path";
 import { existsSync } from "node:fs";
-import { Readable } from "node:stream";
 import { fileURLToPath } from "node:url";
+import { Readable, Writable } from "node:stream";
 import { spawn, type ChildProcessByStdio } from "node:child_process";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
@@ -110,14 +110,35 @@ export default class Store {
     return this._running;
   }
 
+  private static exitHookRegistered = false;
+
+  /**
+   * 兜底：宿主进程退出时（无论是否走过 stop()）同步给服务端发终止信号，
+   * 覆盖 app.exit / 未捕获异常等没有执行清理流程的退出路径。
+   * 'exit' 回调只允许同步操作，kill 发信号后立即返回
+   */
+  private static registerExitHook() {
+    if (this.exitHookRegistered) return;
+    this.exitHookRegistered = true;
+    process.on("exit", () => {
+      const instance = Store.instance;
+      if (!instance?._running) return;
+      try {
+        instance.serverProc.kill(process.platform === "win32" ? "SIGINT" : "SIGTERM");
+      } catch {
+        // 进程可能已自行退出，忽略
+      }
+    });
+  }
+
   get pid() {
     return this.serverProc.pid!;
   }
 
   private constructor(
     process:
-      | ChildProcessByStdio<null, null, null> // ["ignore","ignore","ignore"]
-      | ChildProcessByStdio<null, Readable, Readable>, // ["ignore","pipe","pipe"]
+      | ChildProcessByStdio<Writable, null, null> // ["pipe","ignore","ignore"]
+      | ChildProcessByStdio<Writable, Readable, Readable>, // ["pipe","pipe","pipe"]
     props: {
       port: number;
       token: string;
@@ -219,14 +240,17 @@ export default class Store {
       throw new Error(`executable file not found: ${props.path}`);
     }
 
+    // stdin 保持 pipe：配合 --watch-parent，父进程以任何方式退出（含被强杀）后
+    // 管道关闭，服务端读到 EOF 会自行优雅退出，避免残留孤儿进程
+    const spawnArgs = [...Store.handleArgs(props.args), "--watch-parent=true"];
     let serverProc;
     if (props.enableConsole) {
-      serverProc = spawn(props.path, Store.handleArgs(props.args), {
-        stdio: ["ignore", "pipe", "pipe"]
+      serverProc = spawn(props.path, spawnArgs, {
+        stdio: ["pipe", "pipe", "pipe"]
       });
     } else {
-      serverProc = spawn(props.path, Store.handleArgs(props.args), {
-        stdio: ["ignore", "ignore", "ignore"]
+      serverProc = spawn(props.path, spawnArgs, {
+        stdio: ["pipe", "ignore", "ignore"]
       });
     }
 
@@ -241,6 +265,7 @@ export default class Store {
       port: props.port,
       token: props.token
     });
+    this.registerExitHook();
 
     return this.instance;
   }
