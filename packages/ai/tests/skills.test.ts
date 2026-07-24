@@ -82,6 +82,11 @@ describe("AIAgentSkillRegistry", () => {
             description: "打开网页正文",
             toolNames: ["web-browser"],
             argumentEquals: { action: "open" },
+            argumentFromEvidence: {
+              argumentName: "url",
+              evidenceID: "web-search",
+              outputPath: ["results", "url"]
+            },
             satisfaction: "attempt",
             dependsOn: ["web-search"]
           },
@@ -110,6 +115,11 @@ describe("AIAgentSkillRegistry", () => {
         description: "打开网页正文",
         toolNames: ["web-browser"],
         argumentEquals: { action: "open" },
+        argumentFromEvidence: {
+          argumentName: "url",
+          evidenceID: "grounded-overview:web-search",
+          outputPath: ["results", "url"]
+        },
         satisfaction: "attempt",
         dependsOn: ["grounded-overview:web-search"]
       },

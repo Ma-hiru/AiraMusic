@@ -17,6 +17,9 @@ export type AgentProviderConfigCreateInput = {
   config: LLMProviderConfigInput;
 };
 
+/** Agent 对话请求；retryAbortedRunID 存在时只允许替换最近一次中止运行。 */
+export type AgentChatInput = AIAgentChatOptions;
+
 export type AgentConversationCreateInput = {
   name?: string;
 };
@@ -75,7 +78,7 @@ export type InvokeEventMaps = {
   invoke_agent_remove_conversation: [string, Promise<AgentInvokeResult<void>>];
   invoke_store_delete: [string, { ok: true } | { ok: false; reason?: string }];
   invoke_agent_list_runs: [undefined, AgentInvokeResult<AIAgentRunningRunSnapshot[]>];
-  invoke_agent_chat: [AIAgentChatOptions, Promise<AgentInvokeResult<AIAgentRunningRunSnapshot>>];
+  invoke_agent_chat: [AgentChatInput, Promise<AgentInvokeResult<AIAgentRunningRunSnapshot>>];
   invoke_agent_list_configs: [undefined, Promise<AgentInvokeResult<AIProviderConfigSnapshot[]>>];
   invoke_agent_list_provider_descriptors: [undefined, AgentInvokeResult<LLMProviderDescriptor[]>];
   invoke_agent_list_conversations: [

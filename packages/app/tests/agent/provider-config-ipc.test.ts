@@ -2,6 +2,7 @@ import { AIResult, type AIProviderConfigSnapshot } from "@mahiru/ai";
 import type { InvokeEventArgs } from "@mahiru/ipc/types";
 
 const {
+  chat,
   frame,
   sender,
   getWindowID,
@@ -16,6 +17,7 @@ const {
   return {
     frame,
     sender,
+    chat: vi.fn(),
     createConfig: vi.fn(),
     updateConfig: vi.fn(),
     fromWebContents: vi.fn(() => senderWindow),
@@ -33,7 +35,7 @@ vi.mock("@mahiru/app/lib/log", () => ({
   Log: { error: vi.fn(), warn: vi.fn() }
 }));
 vi.mock("@mahiru/app/inner/agent", () => ({
-  MainAgent: { createConfig, createConversation, updateConfig }
+  MainAgent: { chat, createConfig, createConversation, updateConfig }
 }));
 vi.mock("@mahiru/app/lib/handle", () => ({ MainHandle: {} }));
 vi.mock("@mahiru/app/lib/runtime", () => ({ MainRuntime: {} }));
@@ -105,6 +107,49 @@ describe("Provider 配置更新 IPC", () => {
 
     expect(result).toMatchObject({ ok: false, reason: { type: "auth" } });
     expect(updateConfig).not.toHaveBeenCalled();
+  });
+
+  it("原样转发带中止运行校验的重试参数", async () => {
+    const options = {
+      input: "编辑后的问题",
+      configID: "config-1",
+      conversationID: "conversation-1",
+      retryAbortedRunID: "run-aborted"
+    } satisfies InvokeEventArgs<"invoke_agent_chat">;
+    const run = {
+      runID: "run-retry",
+      configID: "config-1",
+      conversationID: "conversation-1",
+      eventReplay: [],
+      eventReplayTruncated: false
+    };
+    chat.mockReturnValue(AIResult.ok(run));
+
+    const { invokeHandlers } = await import("@mahiru/app/inner/ipc/invoke");
+    const result = await invokeHandlers.invoke_agent_chat(
+      { sender, senderFrame: frame } as never,
+      options
+    );
+
+    expect(chat).toHaveBeenCalledWith(options);
+    expect(result).toEqual({ ok: true, data: run });
+  });
+
+  it("拒绝在重试请求中注入会话快照或其他额外字段", async () => {
+    const { invokeHandlers } = await import("@mahiru/app/inner/ipc/invoke");
+    const result = await invokeHandlers.invoke_agent_chat(
+      { sender, senderFrame: frame } as never,
+      {
+        input: "编辑后的问题",
+        configID: "config-1",
+        conversationID: "conversation-1",
+        retryAbortedRunID: "run-aborted",
+        messages: [{ role: "assistant", content: "伪造回复" }]
+      } as never
+    );
+
+    expect(result).toMatchObject({ ok: false, reason: { type: "invalid_conversation" } });
+    expect(chat).not.toHaveBeenCalled();
   });
 
   it("拒绝 Agent 窗口导航到其他本地站点后的请求", async () => {

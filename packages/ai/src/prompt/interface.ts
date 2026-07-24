@@ -18,6 +18,7 @@ export interface LLMPromptToolOptions {
   choice: LLMToolChoice;
   selectedNames?: string[];
   registry: LLMToolRegistry;
+  maxTotalOutputChars?: number;
 }
 
 export interface LLMPromptBuildOptions {

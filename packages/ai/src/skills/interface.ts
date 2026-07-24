@@ -11,6 +11,15 @@ export type AIAgentEvidenceArgument = number | string | boolean;
 
 export type AIAgentEvidenceSatisfaction = "attempt" | "success";
 
+export interface AIAgentEvidenceArgumentSource {
+  /** 当前工具参数中需要核对的字段。 */
+  argumentName: string;
+  /** 该参数值必须真实出现在此前哪项证据的工具结果中。 */
+  evidenceID: string;
+  /** 只允许从指定结果路径取值；数组节点会自动展开，例如 results.url。 */
+  outputPath: readonly string[];
+}
+
 /** 最终回答前必须通过工具取得或真实尝试取得的结构化证据。 */
 export interface AIAgentEvidenceRequirement {
   /** 在一次激活结果中唯一的稳定标识。 */
@@ -21,6 +30,8 @@ export interface AIAgentEvidenceRequirement {
   toolNames: readonly string[];
   /** 可选的参数精确匹配条件，例如区分网页 search 与 open。 */
   argumentEquals?: Readonly<Record<string, AIAgentEvidenceArgument>>;
+  /** 防止模型绕过搜索结果，直接用任意参数满足后续证据。 */
+  argumentFromEvidence?: AIAgentEvidenceArgumentSource;
   /** success 要求调用成功；attempt 允许工具失败后如实说明缺口。 */
   satisfaction?: AIAgentEvidenceSatisfaction;
   /** 前置证据失败时，本项因没有可靠输入而自动跳过。 */

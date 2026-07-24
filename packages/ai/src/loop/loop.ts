@@ -49,8 +49,10 @@ export class LLMLoop {
     const commitUnknownTools = new Set<string>();
     const successfulEvidence = new Set<string>();
     const acceptedFailedEvidence = new Set<string>();
+    const evidenceOutputs = new Map<string, unknown[]>();
     const requiredEvidence = structuredClone(options.requiredEvidence ?? []);
     const evidenceToolChoice = options.provider.resolveToolChoice(options.config, "required");
+    let totalToolOutputChars = 0;
     let evidenceCorrectionSent = false;
     let request: LLMGenerateRequest = prompt.request;
     if (requiredEvidence.length > 0 && prompt.request.tools?.length) {
@@ -62,10 +64,12 @@ export class LLMLoop {
           content: this.buildEvidenceCorrection(requiredEvidence)
         };
         requestTurnMessages.push(proactiveEvidenceInstruction);
-        request = {
-          ...request,
-          messages: [...request.messages, proactiveEvidenceInstruction]
-        };
+        const rebuilt = await this.rebuildRequest(prompt, requestTurnMessages);
+        if (rebuilt.isErr()) {
+          yield rebuilt;
+          return rebuilt;
+        }
+        request = { ...rebuilt.unwrap(), toolChoice: evidenceToolChoice };
       }
     }
 
@@ -199,7 +203,7 @@ export class LLMLoop {
         ...(response.text ? { text: response.text } : {})
       });
 
-      const toolResults: LLMToolResult[] = [];
+      let toolResults: LLMToolResult[] = [];
       const toolMessages: LLMMessage[] = [];
       const attemptedCallIDs = new Set<string>();
       const successfulCallIDs = new Set<string>();
@@ -253,6 +257,23 @@ export class LLMLoop {
         toolResults.push(...(await Promise.all(batch.map(executeCall))));
       }
 
+      if (tools.maxTotalOutputChars !== undefined) {
+        const totalLimit = Math.max(256, Math.floor(tools.maxTotalOutputChars));
+        toolResults = toolResults.map((result) => {
+          const remaining = Math.max(0, totalLimit - totalToolOutputChars);
+          let output = result.output;
+          if (output.length > remaining) {
+            if (remaining >= 256) {
+              output = tools.registry.limitOutput(output, remaining);
+            } else {
+              output = "[本轮工具结果预算已用尽]".slice(0, remaining);
+            }
+          }
+          totalToolOutputChars += output.length;
+          return output === result.output ? result : { ...result, output };
+        });
+      }
+
       for (const result of toolResults) {
         toolMessages.push({
           role: "tool",
@@ -263,13 +284,16 @@ export class LLMLoop {
       }
 
       for (const call of response.toolCalls) {
+        const result = toolResults.find((candidate) => candidate.callID === call.callID);
         this.recordEvidenceOutcome(
           call,
+          result,
           attemptedCallIDs.has(call.callID),
           successfulCallIDs.has(call.callID),
           requiredEvidence,
           successfulEvidence,
-          acceptedFailedEvidence
+          acceptedFailedEvidence,
+          evidenceOutputs
         );
       }
 
@@ -310,13 +334,27 @@ export class LLMLoop {
   }
 
   private static buildToolError(call: LLMToolCall, error: AIError): LLMToolResult {
-    const raw = {
-      error: {
-        type: error.type,
-        message: error.message
-      },
-      call
-    };
+    const internal =
+      error.raw &&
+      typeof error.raw === "object" &&
+      "visibility" in error.raw &&
+      error.raw.visibility === "internal";
+    const raw = internal
+      ? {
+          _meta: { visibility: "internal" },
+          error: {
+            type: error.type,
+            code: "not_selected",
+            message: "该工具当前不可用，请改用已提供的工具。"
+          }
+        }
+      : {
+          error: {
+            type: error.type,
+            message: error.message
+          },
+          call
+        };
     return {
       raw,
       name: call.name,
@@ -341,11 +379,13 @@ export class LLMLoop {
 
   private static recordEvidenceOutcome(
     call: LLMToolCall,
+    result: Undefinable<LLMToolResult>,
     attempted: boolean,
     succeeded: boolean,
     requirements: readonly AIAgentEvidenceRequirement[],
     successful: Set<string>,
-    acceptedFailed: Set<string>
+    acceptedFailed: Set<string>,
+    evidenceOutputs: Map<string, unknown[]>
   ) {
     let args: unknown;
     try {
@@ -362,14 +402,97 @@ export class LLMLoop {
         const record = args as Record<string, unknown>;
         if (Object.entries(expected).some(([key, value]) => record[key] !== value)) continue;
       }
+      const argumentSource = requirement.argumentFromEvidence;
+      if (argumentSource) {
+        if (!args || typeof args !== "object" || Array.isArray(args)) continue;
+        const argument = (args as Record<string, unknown>)[argumentSource.argumentName];
+        const sourceOutputs = evidenceOutputs.get(argumentSource.evidenceID) ?? [];
+        const sourceValues = this.readEvidencePath(sourceOutputs, argumentSource.outputPath);
+        if (!sourceValues.some((value) => this.evidenceValueEquals(value, argument))) {
+          continue;
+        }
+      }
       if (succeeded) {
+        const parsedOutput = result ? this.parseEvidenceOutput(result.raw) : undefined;
+        const dependentSources = requirements.flatMap((candidate) =>
+          candidate.argumentFromEvidence?.evidenceID === requirement.id
+            ? [candidate.argumentFromEvidence]
+            : []
+        );
+        if (
+          dependentSources.length &&
+          (parsedOutput === undefined ||
+            dependentSources.some(
+              (source) => !this.readEvidencePath(parsedOutput, source.outputPath).length
+            ))
+        ) {
+          continue;
+        }
         successful.add(requirement.id);
         acceptedFailed.delete(requirement.id);
+        if (parsedOutput !== undefined) {
+          evidenceOutputs.set(requirement.id, [
+            ...(evidenceOutputs.get(requirement.id) ?? []),
+            parsedOutput
+          ]);
+        }
         continue;
       }
       if (attempted && requirement.satisfaction === "attempt" && !successful.has(requirement.id)) {
         acceptedFailed.add(requirement.id);
       }
+    }
+  }
+
+  private static parseEvidenceOutput(output: unknown): unknown {
+    if (typeof output !== "string") return output;
+    try {
+      return JSON.parse(output);
+    } catch {
+      return output;
+    }
+  }
+
+  private static readEvidencePath(
+    value: unknown,
+    path: readonly string[],
+    pathIndex = 0,
+    depth = 0
+  ): unknown[] {
+    if (depth > 16 || value === undefined || value === null) return [];
+    if (pathIndex >= path.length) return [value];
+    if (Array.isArray(value)) {
+      return value.flatMap((item) => this.readEvidencePath(item, path, pathIndex, depth + 1));
+    }
+    if (typeof value !== "object") return [];
+    const segment = path[pathIndex];
+    if (!segment) return [];
+    return this.readEvidencePath(
+      (value as Record<string, unknown>)[segment],
+      path,
+      pathIndex + 1,
+      depth + 1
+    );
+  }
+
+  private static evidenceValueEquals(candidate: unknown, expected: unknown): boolean {
+    if (candidate === expected) return true;
+    if (typeof candidate !== "string" || typeof expected !== "string") return false;
+    const candidateURL = this.normalizeEvidenceURL(candidate);
+    const expectedURL = this.normalizeEvidenceURL(expected);
+    return candidateURL !== undefined && candidateURL === expectedURL;
+  }
+
+  private static normalizeEvidenceURL(value: string): string | undefined {
+    try {
+      const url = new URL(value);
+      if (!["http:", "https:"].includes(url.protocol)) return undefined;
+      url.hash = "";
+      url.searchParams.sort();
+      if (url.pathname.length > 1) url.pathname = url.pathname.replace(/\/+$/, "");
+      return url.href;
+    } catch {
+      return undefined;
     }
   }
 

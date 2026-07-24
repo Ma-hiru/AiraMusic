@@ -167,7 +167,8 @@ const History: FC<HistoryProps> = ({
     useMemo(
       () => ({
         page: "history",
-        recent: tracks.slice(0, 100).map((t) => ({
+        // 焦点上下文只携带最近一屏；更早记录由专用历史工具按需读取。
+        recent: tracks.slice(0, 20).map((t) => ({
           name: t.name,
           id: t.id,
           playDuration: RendererFormat.duration(t.playDuration),

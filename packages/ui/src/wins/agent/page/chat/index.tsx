@@ -1,6 +1,6 @@
 import { cx } from "@emotion/css";
-import { memo, type FC } from "react";
 import { Cpu, Activity } from "lucide-react";
+import { memo, type FC, Fragment } from "react";
 import { useConversation } from "@/wins/agent/hooks/use-conversation";
 import Card from "@/common/components/layout/card";
 import type { AIProviderConfigSnapshot } from "@mahiru/ai";
@@ -39,6 +39,7 @@ const Chat: FC<ChatProps> = ({
 }) => {
   const {
     abort,
+    retry,
     submit,
     sending,
     recovering,
@@ -46,6 +47,7 @@ const Chat: FC<ChatProps> = ({
     conversation,
     liveTimeline,
     runningRunID,
+    retryCandidate,
     pendingUserMessage
   } = useConversation(conversationID);
   const runningTool = [...liveTimeline]
@@ -97,28 +99,32 @@ const Chat: FC<ChatProps> = ({
           </div>
         </div>
       )}
-      <ChatContent
-        recovering={recovering}
-        streamText={streamText}
-        running={!!runningRunID}
-        configured={!!activeConfig}
-        conversation={conversation}
-        liveTimeline={liveTimeline}
-        runningRunID={runningRunID}
-        hasConversation={!!conversationID}
-        pendingUserMessage={pendingUserMessage}
-        onSubmitPrompt={submit}
-        onCreateConfig={onCreateConfig}
-        onCreateConversation={onCreateConversation}
-      />
-      <ChatInput
-        sending={sending}
-        activeConfig={activeConfig}
-        runningRunID={runningRunID}
-        selectedConversationID={conversationID}
-        onAbort={abort}
-        onSubmit={submit}
-      />
+      <Fragment key={`conversation-${conversationID || "empty"}`}>
+        <ChatContent
+          recovering={recovering}
+          streamText={streamText}
+          running={!!runningRunID}
+          configured={!!activeConfig}
+          conversation={conversation}
+          liveTimeline={liveTimeline}
+          runningRunID={runningRunID}
+          hasConversation={!!conversationID}
+          pendingUserMessage={pendingUserMessage}
+          onSubmitPrompt={submit}
+          onCreateConfig={onCreateConfig}
+          onCreateConversation={onCreateConversation}
+        />
+        <ChatInput
+          sending={sending}
+          activeConfig={activeConfig}
+          runningRunID={runningRunID}
+          retryCandidate={retryCandidate}
+          selectedConversationID={conversationID}
+          onAbort={abort}
+          onRetry={retry}
+          onSubmit={submit}
+        />
+      </Fragment>
     </Card>
   );
 };

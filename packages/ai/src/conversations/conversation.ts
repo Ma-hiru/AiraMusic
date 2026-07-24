@@ -139,7 +139,7 @@ export class LLMConversation {
   }
 
   setRuntime(runtime: LLMConversationRuntimeSnapshot): AIResult<void> {
-    const validation = LLMConversation.validateRuntime(runtime);
+    const validation = LLMConversation.validateRuntime(runtime, this.messages);
     if (validation.isErr()) return validation;
     this.runtime = structuredClone(runtime);
     this.touch();
@@ -191,6 +191,109 @@ export class LLMConversation {
     return structuredClone(collectPendingToolCalls(this.messages));
   }
 
+  rewindAbortedRun(
+    expectedRunID: string,
+    isToolRetrySafe: (toolName: string) => boolean = () => false
+  ): AIResult<void> {
+    const runID = expectedRunID.trim();
+    const runtime = this.runtime;
+    if (
+      !runID ||
+      !runtime ||
+      runtime.runID !== runID ||
+      runtime.status !== "aborted" ||
+      !runtime.terminal ||
+      !runtime.incomplete
+    ) {
+      return AIResult.err({
+        type: "invalid_conversation",
+        message: "只能回退会话最近一次已中止的运行"
+      });
+    }
+
+    const inputMessageIndex = runtime.inputMessageIndex;
+    if (
+      inputMessageIndex === undefined ||
+      !Number.isInteger(inputMessageIndex) ||
+      inputMessageIndex < 0 ||
+      this.messages[inputMessageIndex]?.role !== "user"
+    ) {
+      return AIResult.err({
+        type: "invalid_conversation",
+        message: "最近一次中止运行缺少可回退的用户消息位置"
+      });
+    }
+
+    const turnByMessageIndex = new Map(
+      this.assistantTurns.map((turn) => [turn.messageIndex, turn] as const)
+    );
+    const unsafeToolNames = new Set<string>();
+    for (let index = inputMessageIndex + 1; index < this.messages.length; index++) {
+      const message = this.messages[index];
+      if (!message || (message.role !== "assistant" && message.role !== "tool")) {
+        return AIResult.err({
+          type: "invalid_conversation",
+          message: "最近一次中止运行之后存在不属于该轮的消息"
+        });
+      }
+      if (message.role === "assistant" && turnByMessageIndex.get(index)?.runID !== runID) {
+        return AIResult.err({
+          type: "invalid_conversation",
+          message: `中止运行的 assistant 元数据不一致：${index}`
+        });
+      }
+      if (message.role === "assistant" && "toolCalls" in message) {
+        for (const call of message.toolCalls) {
+          if (!isToolRetrySafe(call.name)) unsafeToolNames.add(call.name);
+        }
+      }
+    }
+
+    if (
+      this.assistantTurns.some(
+        (turn) =>
+          (turn.runID === runID && turn.messageIndex < inputMessageIndex) ||
+          (turn.messageIndex >= inputMessageIndex && turn.runID !== runID)
+      )
+    ) {
+      return AIResult.err({
+        type: "invalid_conversation",
+        message: "中止运行的 assistant turn 边界不一致"
+      });
+    }
+
+    if (unsafeToolNames.size) {
+      return AIResult.err({
+        type: "invalid_conversation",
+        message: `中止运行包含不可安全重试的工具调用：${[...unsafeToolNames].join(", ")}`
+      });
+    }
+
+    const retainedMessages = this.messages.slice(0, inputMessageIndex);
+    const retainedValidation = validateMessages(retainedMessages);
+    if (retainedValidation.isErr()) return retainedValidation;
+
+    this.messages.splice(inputMessageIndex);
+    for (let index = this.assistantTurns.length - 1; index >= 0; index--) {
+      if (this.assistantTurns[index]!.messageIndex >= inputMessageIndex) {
+        this.assistantTurns.splice(index, 1);
+      }
+    }
+    if (runtime.titleGenerated) this.name = "";
+    this.runtime = undefined;
+
+    const retryCoveredMessageCount = this.compaction?.fallback?.retryState?.coveredMessageCount;
+    if (
+      this.compaction &&
+      (this.compaction.coveredMessageCount > inputMessageIndex ||
+        (retryCoveredMessageCount !== undefined && retryCoveredMessageCount > inputMessageIndex))
+    ) {
+      this.compaction = undefined;
+    }
+    this.touch();
+    return AIResult.ok(undefined);
+  }
+
   clear() {
     this.messages.length = 0;
     this.runtime = undefined;
@@ -221,7 +324,7 @@ export class LLMConversation {
     const validation = validateMessages(snapshot.messages);
     if (validation.isErr()) return validation;
     const runtimeValidation = snapshot.runtime
-      ? LLMConversation.validateRuntime(snapshot.runtime)
+      ? LLMConversation.validateRuntime(snapshot.runtime, snapshot.messages)
       : AIResult.ok(undefined);
     if (runtimeValidation.isErr()) return runtimeValidation;
     const turnsValidation = LLMConversation.validateAssistantTurns(
@@ -244,7 +347,7 @@ export class LLMConversation {
     const validation = validateMessages(snapshot.messages);
     if (validation.isErr()) return validation;
     const runtimeValidation = snapshot.runtime
-      ? LLMConversation.validateRuntime(snapshot.runtime)
+      ? LLMConversation.validateRuntime(snapshot.runtime, snapshot.messages)
       : AIResult.ok(undefined);
     if (runtimeValidation.isErr()) return runtimeValidation;
     const turnsValidation = LLMConversation.validateAssistantTurns(
@@ -256,7 +359,10 @@ export class LLMConversation {
     return AIResult.ok(new LLMConversation(snapshot));
   }
 
-  private static validateRuntime(runtime: LLMConversationRuntimeSnapshot): AIResult<void> {
+  private static validateRuntime(
+    runtime: LLMConversationRuntimeSnapshot,
+    messages: readonly LLMMessage[]
+  ): AIResult<void> {
     if (!runtime.runID.trim() || !Number.isFinite(runtime.startedAt)) {
       return AIResult.err({
         type: "invalid_conversation",
@@ -280,6 +386,25 @@ export class LLMConversation {
       return AIResult.err({
         type: "invalid_conversation",
         message: "conversation runtime usage 无效"
+      });
+    }
+    if (runtime.titleGenerated !== undefined && typeof runtime.titleGenerated !== "boolean") {
+      return AIResult.err({
+        type: "invalid_conversation",
+        message: "conversation runtime titleGenerated 无效"
+      });
+    }
+    if (
+      runtime.inputMessageIndex !== undefined &&
+      (!Number.isInteger(runtime.inputMessageIndex) ||
+        runtime.inputMessageIndex < 0 ||
+        runtime.inputMessageIndex >= messages.length ||
+        messages[runtime.inputMessageIndex]?.role !== "user" ||
+        messages.slice(runtime.inputMessageIndex + 1).some((message) => message.role === "user"))
+    ) {
+      return AIResult.err({
+        type: "invalid_conversation",
+        message: "conversation runtime inputMessageIndex 无效"
       });
     }
     return AIResult.ok(undefined);

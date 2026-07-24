@@ -10,10 +10,14 @@ import {
 } from "@mahiru/ai";
 
 import { createAiraAgentSkills } from "./skills";
-import { createAgentToolCatalog } from "./tool-catalog";
 import { sanitizeAiraRichContent } from "./rich-content";
+import { createAgentToolCatalog, buildAgentToolRoutingText } from "./tool-catalog";
 import { ConversationStore, ProviderAPIKeyStore, ProviderConfigStore } from "./store";
-import { AgentContextCurrentTrackMeta, AgentContextCurrentFocusContext } from "./source";
+import {
+  AgentDynamicContextMaxChars,
+  AgentContextCurrentTrackMeta,
+  AgentContextCurrentFocusContext
+} from "./source";
 
 export class MainAgent {
   private static agent?: AIAgent;
@@ -75,9 +79,10 @@ ${AiraRichContentPrompt}
   用户：打开这个歌单的评论
   标题：查看歌单评论
       `,
-      titleMaxOutputTokens: 256,
+      titleMaxOutputTokens: 128,
       transformFinalText: ({ text, messages }) => sanitizeAiraRichContent(text, messages),
-      maxSteps: 30,
+      // 常规取证流程约需 3～6 步；限制异常循环，避免同一前缀和工具结果被反复计费。
+      maxSteps: 12,
       history: {
         defaultContextWindowTokens: LLMDefaultContextWindowTokens,
         defaultMaxOutputTokens: 4_096,
@@ -92,17 +97,22 @@ ${AiraRichContentPrompt}
       skills: {
         list: createAiraAgentSkills()
       },
+      resolveIntent: ({ input, conversation }) => buildAgentToolRoutingText(input, conversation),
       tools: {
         strict: true,
         choice: "auto",
         maxOutputChars: 32_000,
+        maxTotalOutputChars: 40_000,
         list: toolCatalog.list,
         parallelSafeNames: toolCatalog.parallelSafeNames,
-        select: ({ input }) => toolCatalog.select(input)
+        // 当前目录已把所有写操作排除在 parallelSafeNames 外，先保守复用为可重试集合。
+        retrySafeNames: toolCatalog.parallelSafeNames,
+        select: ({ input, rawInput }) => toolCatalog.select(input, rawInput)
       },
       providers: [new LLMProviderOpenAI()],
       context: {
-        maxChars: 10_000,
+        // 动态页面信息每个模型步骤都会重放；6K 足够容纳当前资源，又避免历史页拖高整轮输入。
+        maxChars: AgentDynamicContextMaxChars,
         defaultRole: "user",
         placement: "before_user",
         sources: [new AgentContextCurrentTrackMeta(), new AgentContextCurrentFocusContext()]

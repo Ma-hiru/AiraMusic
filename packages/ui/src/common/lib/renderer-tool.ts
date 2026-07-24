@@ -9,6 +9,11 @@ import type {
 
 type JsonObject = { [key: string]: JsonValue };
 
+type RendererToolSearchPage = {
+  page: number;
+  pageSize: number;
+};
+
 export type RendererToolTruncation = {
   path: string;
   originalChars?: number;
@@ -39,6 +44,14 @@ const DefaultProjectionLimits: ProjectionLimits = {
   maxItems: 20,
   maxKeys: 40,
   maxTextChars: 4_000,
+  totalChars: 12_000
+};
+
+const MaximumProjectionLimits: ProjectionLimits = {
+  maxDepth: 12,
+  maxItems: 500,
+  maxKeys: 200,
+  maxTextChars: 20_000,
   totalChars: 30_000
 };
 
@@ -90,7 +103,8 @@ class ProjectionState {
  * 脱敏和大小预算。所有公开结果都保持为可结构化克隆的有效 JsonValue。
  */
 export class RendererTool {
-  static readonly maxResultChars = DefaultProjectionLimits.totalChars;
+  static readonly maxResultChars = MaximumProjectionLimits.totalChars;
+  static readonly defaultResultChars = DefaultProjectionLimits.totalChars;
   private static readonly projectedValues = new WeakSet<object>();
 
   static output(value: unknown, options?: RendererToolProjectionOptions): JsonValue {
@@ -156,28 +170,32 @@ export class RendererTool {
         sortType: page["sortType"],
         totalCount: page["totalCount"],
         commentsTitle: page["commentsTitle"],
-        comments: comments.slice(0, 20).map(compactComment)
+        comments: comments.map(compactComment)
       }),
       {
         maxDepth: 6,
         maxItems: 20,
         maxKeys: 24,
         maxTextChars: 2_000,
-        totalChars: 12_000
+        totalChars: 8_000
       }
     );
   }
 
   /** 搜索只用于消歧和取得资源 ID，不向模型转发封面权限、版权对象等界面字段。 */
-  static search(value: unknown, type: "album" | "track" | "artist" | "playlist"): JsonValue {
+  static search(
+    value: unknown,
+    type: "album" | "track" | "artist" | "playlist",
+    pagination?: RendererToolSearchPage
+  ): JsonValue {
     const result = asRecord(value);
-    const projected = compactSearchResult(result, type);
+    const projected = compactSearchResult(result, type, pagination);
     return this.project(projected, {
       maxDepth: 5,
       maxItems: 20,
       maxKeys: 20,
       maxTextChars: 1_200,
-      totalChars: 12_000
+      totalChars: 8_000
     });
   }
 
@@ -209,7 +227,7 @@ export class RendererTool {
         coverUrl: content["picUrl"] ?? content["blurPicUrl"],
         publishedAt: content["publishTime"],
         trackCount: content["size"] ?? album.tracks.length,
-        tracks: album.tracks.slice(0, 30).map((record) => this.recordData(record))
+        tracks: album.tracks.map((record) => this.recordData(record))
       }),
       { maxItems: 30, maxTextChars: 4_000 }
     );
@@ -220,7 +238,7 @@ export class RendererTool {
     const detailArtist = asRecord(detail["artist"] ?? detail);
     const desc = asRecord(artist.desc);
     const introductions = Array.isArray(desc["introduction"])
-      ? desc["introduction"].slice(0, 20).map((item) => {
+      ? desc["introduction"].map((item) => {
           const introduction = asRecord(item);
           return compactObject({
             title: introduction["ti"] ?? introduction["title"],
@@ -248,7 +266,7 @@ export class RendererTool {
           "follows",
           "identifyTag"
         ]),
-        hotTracks: artist.hotTracks.slice(0, 20).map((record) => this.recordData(record))
+        hotTracks: artist.hotTracks.map((record) => this.recordData(record))
       }),
       { maxItems: 20, maxTextChars: 4_000 }
     );
@@ -279,7 +297,7 @@ export class RendererTool {
         playlistType: playlist.playlistType,
         createdAt: playlist.createTime,
         updatedAt: playlist.updateTime,
-        tracks: playlist.tracks.slice(0, 30).map((track) => this.trackData(track, "simple"))
+        tracks: playlist.tracks.map((track) => this.trackData(track, "simple"))
       }),
       { maxItems: 30, maxTextChars: 4_000 }
     );
@@ -289,7 +307,7 @@ export class RendererTool {
     if (mode === "semantic") {
       return this.project(
         {
-          data: lyric.data.slice(0, 160).map((line) => {
+          data: lyric.data.map((line) => {
             const inlineNote = line.words
               .filter((word) => word.inlineNote)
               .map((word) => word.word)
@@ -323,8 +341,8 @@ export class RendererTool {
 
     return this.project(
       {
-        data: lyric.data.slice(0, 160).map((line) => ({
-          words: line.words.slice(0, 160).map((word) => ({
+        data: lyric.data.map((line) => ({
+          words: line.words.map((word) => ({
             startTime: word.startTime,
             endTime: word.endTime,
             word: word.word,
@@ -347,7 +365,8 @@ export class RendererTool {
         maxDepth: 8,
         maxItems: 160,
         maxKeys: 40,
-        maxTextChars: 1_024
+        maxTextChars: 1_024,
+        totalChars: MaximumProjectionLimits.totalChars
       }
     );
   }
@@ -441,31 +460,31 @@ function normalizeLimits(options: RendererToolProjectionOptions): ProjectionLimi
     maxDepth: clampInteger(
       options.maxDepth,
       MinimumProjectionLimits.maxDepth,
-      DefaultProjectionLimits.maxDepth,
+      MaximumProjectionLimits.maxDepth,
       DefaultProjectionLimits.maxDepth
     ),
     maxItems: clampInteger(
       options.maxItems,
       MinimumProjectionLimits.maxItems,
-      500,
+      MaximumProjectionLimits.maxItems,
       DefaultProjectionLimits.maxItems
     ),
     maxKeys: clampInteger(
       options.maxKeys,
       MinimumProjectionLimits.maxKeys,
-      200,
+      MaximumProjectionLimits.maxKeys,
       DefaultProjectionLimits.maxKeys
     ),
     maxTextChars: clampInteger(
       options.maxTextChars,
       MinimumProjectionLimits.maxTextChars,
-      20_000,
+      MaximumProjectionLimits.maxTextChars,
       DefaultProjectionLimits.maxTextChars
     ),
     totalChars: clampInteger(
       options.totalChars,
       MinimumProjectionLimits.totalChars,
-      DefaultProjectionLimits.totalChars,
+      MaximumProjectionLimits.totalChars,
       DefaultProjectionLimits.totalChars
     )
   };
@@ -601,17 +620,12 @@ function wrapResult(
   void _ignored;
   if (!existingMeta) return { ...rest, _meta: meta };
 
-  const existingTruncations = Array.isArray(existingMeta["truncations"])
-    ? existingMeta["truncations"].slice(0, MaxTruncationDetails)
-    : [];
-  const currentTruncations = meta.truncations ?? [];
   return {
     ...rest,
     _meta: {
       ...existingMeta,
       ...meta,
-      truncated: existingMeta["truncated"] === true || meta.truncated,
-      truncations: [...existingTruncations, ...currentTruncations].slice(0, MaxTruncationDetails)
+      truncated: existingMeta["truncated"] === true || meta.truncated
     }
   };
 }
@@ -742,7 +756,8 @@ function compactComment(value: unknown): JsonObject {
 
 function compactSearchResult(
   result: Record<string, unknown>,
-  type: "album" | "track" | "artist" | "playlist"
+  type: "album" | "track" | "artist" | "playlist",
+  pagination?: RendererToolSearchPage
 ): JsonObject {
   const config = {
     track: { count: "songCount", list: "songs", map: compactSearchTrack },
@@ -753,12 +768,22 @@ function compactSearchResult(
   const candidateItems = result[config.list];
   const rawItems: unknown[] = Array.isArray(candidateItems) ? candidateItems : [];
   const items = rawItems.slice(0, 20).map(config.map);
+  const total = result[config.count];
+  const hasMore =
+    typeof result["hasMore"] === "boolean"
+      ? result["hasMore"]
+      : pagination && typeof total === "number"
+        ? pagination.page * pagination.pageSize < total
+        : pagination
+          ? rawItems.length >= pagination.pageSize
+          : rawItems.length > items.length;
   return compactObject({
     type,
     items,
-    total: result[config.count],
+    total,
+    ...(pagination ? pagination : {}),
     returnedCount: items.length,
-    hasMore: result["hasMore"] === true || rawItems.length > items.length
+    hasMore
   });
 }
 
