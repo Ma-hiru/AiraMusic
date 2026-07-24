@@ -62,6 +62,7 @@ export class AIAgent {
   private readonly inject: AIInject;
   private readonly maxSteps: number;
   private readonly transformFinalText?: AIAgentOptions["transformFinalText"];
+  private readonly resolveIntent?: AIAgentOptions["resolveIntent"];
   private readonly tools?: LLMPromptToolOptions;
   private readonly selectTools?: NonNullable<AIAgentOptions["tools"]>["select"];
   private readonly context?: LLMPromptContextOptions;
@@ -81,6 +82,7 @@ export class AIAgent {
     this.inject = options.inject;
     this.maxSteps = options.maxSteps;
     this.transformFinalText = options.transformFinalText;
+    this.resolveIntent = options.resolveIntent;
     this.titlePrompt = options.titlePrompt;
     this.titleMaxOutputTokens = options.titleMaxOutputTokens;
     this.skills = options.skills ? new AIAgentSkillRegistry(options.skills.list) : undefined;
@@ -101,7 +103,10 @@ export class AIAgent {
       this.tools = {
         registry: registry,
         strict: options.tools.strict,
-        choice: options.tools.choice
+        choice: options.tools.choice,
+        ...(options.tools.maxTotalOutputChars === undefined
+          ? {}
+          : { maxTotalOutputChars: Math.max(256, options.tools.maxTotalOutputChars) })
       };
       this.selectTools = options.tools.select;
     }
@@ -547,14 +552,7 @@ export class AIAgent {
         .find((message) => message.role === "user")?.content;
       const title = normalizeConversationTitle(firstUserMessage ?? "");
       if (!title) continue;
-
-      const renamed = conversation.rename(title);
-      if (renamed.isErr()) continue;
-      const saved = await this.conversationRepository.save(conversation);
-      if (saved.isErr()) {
-        this.inject.Log.warn("Agent", "保存修复后的会话标题失败:", saved.reason);
-        continue;
-      }
+      // 列表查询只修正展示值，不能用一次旧读取覆盖正在流式写入的完整会话快照。
       summary.name = title;
     }
 
@@ -628,6 +626,12 @@ export class AIAgent {
   }
 
   private async prepareRun(run: AIAgentRunContext): Promise<AIResult<void>> {
+    if (run.persistedConversation.messageCount() !== run.inputMessageIndex) {
+      return AIResult.err({
+        type: "invalid_conversation",
+        message: "运行开始前的用户消息位置发生变化"
+      });
+    }
     const appended = run.persistedConversation.appendMessage({
       role: "user",
       content: run.input
@@ -637,6 +641,8 @@ export class AIAgent {
 
     const runtime = run.persistedConversation.setRuntime({
       runID: run.runID,
+      inputMessageIndex: run.inputMessageIndex,
+      titleGenerated: run.titleGenerated,
       status: "running",
       startedAt: run.startedAt,
       terminal: false,
@@ -840,6 +846,8 @@ export class AIAgent {
     const usage = this.toConversationUsage(run.accumulatedUsage);
     const runtime = run.persistedConversation.setRuntime({
       runID: run.runID,
+      inputMessageIndex: run.inputMessageIndex,
+      titleGenerated: run.titleGenerated,
       status,
       startedAt: run.startedAt,
       endedAt: Date.now(),
@@ -856,6 +864,8 @@ export class AIAgent {
       error = saved.reason;
       run.persistedConversation.setRuntime({
         runID: run.runID,
+        inputMessageIndex: run.inputMessageIndex,
+        titleGenerated: run.titleGenerated,
         status: "failed",
         startedAt: run.startedAt,
         endedAt: Date.now(),
@@ -918,6 +928,19 @@ export class AIAgent {
     if (renamed.isErr()) return renamed;
     const persistedRenamed = run.persistedConversation.rename(title);
     if (persistedRenamed.isErr()) return persistedRenamed;
+    run.titleGenerated = true;
+    const currentRuntime = run.persistedConversation.getRuntime();
+    if (!currentRuntime) {
+      return AIResult.err({
+        type: "invalid_conversation",
+        message: "自动生成标题时缺少运行元数据"
+      });
+    }
+    const runtime = run.persistedConversation.setRuntime({
+      ...currentRuntime,
+      titleGenerated: true
+    });
+    if (runtime.isErr()) return runtime;
 
     const saved = await this.persistConversation(run);
     if (saved.isErr()) return saved;
@@ -1005,6 +1028,8 @@ export class AIAgent {
         const usage = this.toConversationUsage(run.accumulatedUsage);
         const runtime = run.persistedConversation.setRuntime({
           runID: run.runID,
+          inputMessageIndex: run.inputMessageIndex,
+          titleGenerated: run.titleGenerated,
           status: "completed",
           startedAt: run.startedAt,
           endedAt: Date.now(),
@@ -1070,8 +1095,11 @@ export class AIAgent {
         this.inject.Log.warn("Agent", "title generation skipped:", titleResult.reason);
       }
 
+      const effectiveIntent =
+        this.resolveIntent?.({ input: run.input, conversation: run.conversation }).trim() ||
+        run.input;
       const skillActivationResult = this.skills?.activate({
-        input: run.input,
+        input: effectiveIntent,
         conversation: run.conversation
       });
       if (skillActivationResult?.isErr()) {
@@ -1084,7 +1112,11 @@ export class AIAgent {
       if (this.tools && this.selectTools) {
         selectedToolNames = Array.from(
           new Set([
-            ...this.selectTools({ input: run.input, conversation: run.conversation }),
+            ...this.selectTools({
+              input: effectiveIntent,
+              rawInput: run.input,
+              conversation: run.conversation
+            }),
             ...(skillActivation?.toolNames ?? [])
           ])
         );
@@ -1181,9 +1213,17 @@ export class AIAgent {
           message: `conversation 不存在：${options.conversationID}`
         });
       }
+      if (options.retryAbortedRunID) {
+        const rewound = conversation.rewindAbortedRun(
+          options.retryAbortedRunID,
+          (toolName) => this.tools?.registry.isRetrySafe(toolName) ?? false
+        );
+        if (rewound.isErr()) return rewound;
+      }
 
       const persistedConversationResult = LLMConversation.fromSnapshot(conversation.snapshot());
       if (persistedConversationResult.isErr()) return persistedConversationResult;
+      const inputMessageIndex = conversation.messageCount();
 
       const run: AIAgentRunState = {
         runID,
@@ -1201,6 +1241,8 @@ export class AIAgent {
           conversation,
           terminal: false,
           input: options.input,
+          inputMessageIndex,
+          titleGenerated: false,
           partialText: new Map(),
           persistedTurnMessageCount: 0,
           startedAt: Date.now(),
@@ -1315,10 +1357,25 @@ export class AIAgent {
       });
     }
 
+    const retryAbortedRunID =
+      typeof value.retryAbortedRunID === "string" ? value.retryAbortedRunID.trim() : undefined;
+    if (
+      value.retryAbortedRunID !== undefined &&
+      (typeof value.retryAbortedRunID !== "string" ||
+        !retryAbortedRunID ||
+        retryAbortedRunID.length > MAX_CHAT_IDENTIFIER_CHARS)
+    ) {
+      return AIResult.err({
+        type: "invalid_conversation",
+        message: "retryAbortedRunID 无效"
+      });
+    }
+
     return AIResult.ok({
       input: value.input,
       configID,
       conversationID,
+      ...(retryAbortedRunID === undefined ? {} : { retryAbortedRunID }),
       ...(temperature === undefined ? {} : { temperature }),
       ...(maxOutputTokens === undefined ? {} : { maxOutputTokens })
     });

@@ -1,4 +1,8 @@
-import { createAgentToolCatalog } from "@mahiru/app/inner/agent/tool-catalog";
+import { LLMConversation } from "@mahiru/ai";
+import {
+  createAgentToolCatalog,
+  buildAgentToolRoutingText
+} from "@mahiru/app/inner/agent/tool-catalog";
 
 vi.mock("electron", () => ({
   app: { isReady: () => false },
@@ -33,6 +37,63 @@ describe("Agent 工具目录", () => {
     const selected = createAgentToolCatalog(false).select("你好，最近怎么样？");
 
     expect(selected).toEqual(["agent-search"]);
+  });
+
+  it("短跟进句继承上一条用户意图，普通新话题不继承", () => {
+    const conversation = LLMConversation.create({ id: "follow-up-routing" }).unwrap();
+    conversation.appendMessage({ role: "user", content: "介绍当前播放歌曲" }).unwrap();
+    conversation.appendMessage({ role: "assistant", content: "先介绍到这里。" }).unwrap();
+    conversation.appendMessage({ role: "user", content: "继续" }).unwrap();
+
+    const followUp = buildAgentToolRoutingText("继续", conversation);
+    const selected = createAgentToolCatalog(false).select(followUp);
+
+    expect(followUp).toBe("介绍当前播放歌曲\n继续");
+    expect(selected).toContain("agent-tool-track-detail");
+    expect(selected).toContain("agent-tool-track-comment");
+    expect(buildAgentToolRoutingText("你好", conversation)).toBe("你好");
+
+    conversation.appendMessage({ role: "assistant", content: "还可以继续。" }).unwrap();
+    conversation.appendMessage({ role: "user", content: "好的" }).unwrap();
+    expect(buildAgentToolRoutingText("好的", conversation)).toBe("介绍当前播放歌曲\n好的");
+  });
+
+  it("确认短句会纳入助手最近的明确提议，供 Skill 和只读工具理解", () => {
+    const conversation = LLMConversation.create({ id: "assistant-proposal-routing" }).unwrap();
+    conversation.appendMessage({ role: "user", content: "介绍当前播放歌曲" }).unwrap();
+    conversation
+      .appendMessage({
+        role: "assistant",
+        content: "歌曲的基础信息先介绍到这里。要不要结合动画剧情分析？"
+      })
+      .unwrap();
+    conversation.appendMessage({ role: "user", content: "好的" }).unwrap();
+
+    const routingText = buildAgentToolRoutingText("好的", conversation);
+    const selected = createAgentToolCatalog(false).select(routingText, "好的");
+
+    expect(routingText).toBe("介绍当前播放歌曲\n要不要结合动画剧情分析？\n好的");
+    expect(selected).toContain("agent-tool-track-detail");
+    expect(selected).toContain("agent-tool-web-browser");
+  });
+
+  it("短确认只继承只读能力，不会重新暴露上一轮动作工具", () => {
+    const conversation = LLMConversation.create({ id: "follow-up-action-safety" }).unwrap();
+    conversation.appendMessage({ role: "user", content: "删除这个歌单" }).unwrap();
+    conversation.appendMessage({ role: "assistant", content: "删除这个歌单，可以吗？" }).unwrap();
+    conversation.appendMessage({ role: "user", content: "好的" }).unwrap();
+
+    const routingText = buildAgentToolRoutingText("好的", conversation);
+    const selected = createAgentToolCatalog(true).select(routingText, "好的");
+
+    expect(routingText).toBe("删除这个歌单\n删除这个歌单，可以吗？\n好的");
+    expect(selected).not.toContain("agent-tool-playlist-delete");
+
+    const playerRouting = "播放这首歌\n继续";
+    const playerSelected = createAgentToolCatalog(false).select(playerRouting, "继续");
+    expect(playerSelected).not.toContain("agent-tool-track-play");
+    expect(playerSelected).not.toContain("agent-tool-player-action");
+    expect(createAgentToolCatalog(false).select("继续播放")).toContain("agent-tool-player-action");
   });
 
   it("泛化的音乐推荐不会顺带加载评论和歌词工具", () => {

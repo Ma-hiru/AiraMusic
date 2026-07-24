@@ -9,7 +9,13 @@ import {
   createAgentConversationStateAtom
 } from "@/wins/agent/atoms/agent";
 import AppToast from "@/common/components/display/toast";
+import type { LLMConversationSnapshot } from "@mahiru/ai";
 import type { AgentInvokeError } from "@mahiru/ipc/src/types/agent";
+
+export type AgentRetryCandidate = {
+  text: string;
+  runID: string;
+};
 
 const submitTokens = new Map<string, symbol>();
 
@@ -36,8 +42,8 @@ export function useConversation(conversationID: string) {
   const selectedConfigID = useAtomValue(agentSelectedConfigIDAtom);
   const updateConversationState = useSetAtom(agentUpdateConversationStateAtom);
 
-  const submit = useCallback(
-    async (text: string) => {
+  const send = useCallback(
+    async (text: string, retryAbortedRunID?: string) => {
       const input = text.trim();
       if (
         !input ||
@@ -79,7 +85,8 @@ export function useConversation(conversationID: string) {
         const result = await RendererAgent.chat({
           input,
           configID: selectedConfigID,
-          conversationID
+          conversationID,
+          ...(retryAbortedRunID ? { retryAbortedRunID } : {})
         });
         if (!result.ok) {
           let shouldNotify = false;
@@ -110,15 +117,22 @@ export function useConversation(conversationID: string) {
           update: (state) => {
             if (
               !ownsSubmitToken(conversationID, submitToken) ||
-              state.runningRunID ||
-              !state.sending ||
+              (state.runningRunID && state.runningRunID !== result.data.runID) ||
               state.pendingUserMessage !== input
             ) {
               return state;
             }
             return {
               ...state,
-              runningRunID: result.data.runID
+              runningRunID: result.data.runID,
+              ...(retryAbortedRunID
+                ? {
+                    conversation: rewindRetryConversationSnapshot(
+                      state.conversation,
+                      retryAbortedRunID
+                    )
+                  }
+                : {})
             };
           }
         });
@@ -175,6 +189,15 @@ export function useConversation(conversationID: string) {
       updateConversationState
     ]
   );
+  const submit = useCallback((text: string) => send(text), [send]);
+  const retry = useCallback(
+    (text: string, abortedRunID: string) => send(text, abortedRunID),
+    [send]
+  );
+  const retryCandidate = useMemo(
+    () => getAgentRetryCandidate(state.conversation),
+    [state.conversation]
+  );
 
   const abort = useCallback(() => {
     if (!state.runningRunID) return;
@@ -189,7 +212,9 @@ export function useConversation(conversationID: string) {
   return useMemo(
     () => ({
       abort,
+      retry,
       submit,
+      retryCandidate,
       sending: state.sending,
       streamText: state.streamText,
       recovering: state.recovering,
@@ -200,7 +225,9 @@ export function useConversation(conversationID: string) {
     }),
     [
       abort,
+      retry,
       submit,
+      retryCandidate,
       state.sending,
       state.streamText,
       state.recovering,
@@ -211,6 +238,64 @@ export function useConversation(conversationID: string) {
     ]
   );
 }
+
+export const getAgentRetryCandidate = (
+  conversation: Nullable<LLMConversationSnapshot>
+): null | AgentRetryCandidate => {
+  const runtime = conversation?.runtime;
+  const inputMessageIndex = runtime?.inputMessageIndex;
+  if (
+    !conversation ||
+    runtime?.status !== "aborted" ||
+    !runtime.terminal ||
+    !runtime.incomplete ||
+    typeof inputMessageIndex !== "number" ||
+    !Number.isInteger(inputMessageIndex)
+  ) {
+    return null;
+  }
+
+  const message = conversation.messages[inputMessageIndex];
+  if (message?.role !== "user" || !message.content.trim()) return null;
+  return { runID: runtime.runID, text: message.content };
+};
+
+const rewindRetryConversationSnapshot = (
+  conversation: Nullable<LLMConversationSnapshot>,
+  expectedRunID: string
+): Nullable<LLMConversationSnapshot> => {
+  const candidate = getAgentRetryCandidate(conversation);
+  const runtime = conversation?.runtime;
+  const inputMessageIndex = runtime?.inputMessageIndex;
+  if (
+    !conversation ||
+    !runtime ||
+    !candidate ||
+    candidate.runID !== expectedRunID ||
+    typeof inputMessageIndex !== "number"
+  ) {
+    return conversation;
+  }
+
+  const { compaction, assistantTurns, runtime: removedRuntime, ...snapshot } = conversation;
+  void removedRuntime;
+  const nextAssistantTurns = assistantTurns?.filter(
+    (turn) => turn.messageIndex < inputMessageIndex
+  );
+  const retryCoveredMessageCount = compaction?.fallback?.retryState?.coveredMessageCount;
+  const keepCompaction =
+    !!compaction &&
+    compaction.coveredMessageCount <= inputMessageIndex &&
+    (retryCoveredMessageCount === undefined || retryCoveredMessageCount <= inputMessageIndex);
+
+  return {
+    ...snapshot,
+    name: runtime.titleGenerated ? "" : snapshot.name,
+    messages: snapshot.messages.slice(0, inputMessageIndex),
+    ...(nextAssistantTurns?.length ? { assistantTurns: nextAssistantTurns } : {}),
+    ...(keepCompaction ? { compaction } : {})
+  };
+};
 
 const showAgentError = (error: AgentInvokeError) => {
   AppToast.show({ type: "error", text: `${error.type}: ${error.message}` });

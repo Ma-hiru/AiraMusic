@@ -474,8 +474,12 @@ export class LLMHistoryBudget {
     state: Undefinable<LLMConversationCompactionSnapshot>,
     fallback: Undefinable<NonNullable<LLMConversationCompactionSnapshot["fallback"]>>
   ): null | LLMConversationCompactionRetrySnapshot {
-    if (fallback && Object.prototype.hasOwnProperty.call(fallback, "retryState")) {
-      return fallback.retryState ? structuredClone(fallback.retryState) : null;
+    if (fallback) {
+      if (Object.prototype.hasOwnProperty.call(fallback, "retryState")) {
+        return fallback.retryState ? structuredClone(fallback.retryState) : null;
+      }
+      // 旧版回退没有保存摘要前状态；继续滑窗时也不能把“已省略”摘要误当成可重试基线。
+      return null;
     }
     if (!state) return null;
     return {

@@ -1,4 +1,5 @@
 import { AIResult } from "@/result";
+import { digestHistoryPrefix } from "@/history";
 import {
   LLMConversation,
   LLMConversationRepository,
@@ -124,6 +125,189 @@ describe("LLMConversation", () => {
     const restored = LLMConversation.fromSnapshot(snapshot);
     expect(restored.isOk()).toBe(true);
     expect(restored.unwrap().snapshot()).toEqual(snapshot);
+  });
+
+  it("只回退最近一次已中止运行，并同步清理该轮消息、元数据和失效摘要", () => {
+    const previousMessages = [
+      { role: "user" as const, content: "上一轮问题" },
+      { role: "assistant" as const, content: "上一轮回答" }
+    ];
+    const messages = [
+      ...previousMessages,
+      { role: "user" as const, content: "原始问题" },
+      {
+        role: "assistant" as const,
+        content: "先搜索资料",
+        toolCalls: [toolCall]
+      },
+      {
+        role: "tool" as const,
+        name: toolCall.name,
+        callID: toolCall.callID,
+        content: "搜索结果"
+      },
+      { role: "assistant" as const, content: "半截回复" }
+    ];
+    const conversation = LLMConversation.fromSnapshot({
+      id: "conversation-retry",
+      name: "重试对话",
+      createdAt: 1,
+      updatedAt: 2,
+      metadata: {},
+      messages,
+      runtime: {
+        runID: "run-aborted",
+        titleGenerated: true,
+        status: "aborted",
+        startedAt: 10,
+        endedAt: 20,
+        terminal: true,
+        incomplete: true,
+        inputMessageIndex: 2,
+        error: { type: "aborted", message: "用户停止生成" }
+      },
+      assistantTurns: [
+        {
+          runID: "run-previous",
+          step: 0,
+          status: "complete",
+          messageIndex: 1,
+          finishReason: "stop"
+        },
+        {
+          runID: "run-aborted",
+          step: 0,
+          status: "complete",
+          messageIndex: 3,
+          finishReason: "tool_calls"
+        },
+        {
+          runID: "run-aborted",
+          step: 1,
+          status: "incomplete",
+          messageIndex: 5
+        }
+      ],
+      compaction: {
+        version: 1,
+        summary: "错误地覆盖到了本轮消息",
+        updatedAt: 2,
+        coveredMessageCount: 5,
+        coveredDigest: digestHistoryPrefix(messages.slice(0, 5))
+      }
+    }).unwrap();
+    const before = conversation.snapshot();
+
+    const stale = conversation.rewindAbortedRun("run-other");
+    expect(stale.isErr()).toBe(true);
+    expect(conversation.snapshot()).toEqual(before);
+
+    const rewound = conversation.rewindAbortedRun(
+      "run-aborted",
+      (toolName) => toolName === "search_music"
+    );
+    expect(rewound.isOk()).toBe(true);
+    expect(conversation.snapshot()).toMatchObject({
+      messages: previousMessages,
+      assistantTurns: [
+        {
+          runID: "run-previous",
+          step: 0,
+          status: "complete",
+          messageIndex: 1,
+          finishReason: "stop"
+        }
+      ]
+    });
+    expect(conversation.getRuntime()).toBeUndefined();
+    expect(conversation.getCompaction()).toBeUndefined();
+    expect(conversation.name).toBe("");
+  });
+
+  it("发现不可安全重试的工具后拒绝回退，且不修改任何快照字段", () => {
+    const conversation = LLMConversation.fromSnapshot({
+      id: "conversation-unsafe-retry",
+      name: "保留标题",
+      createdAt: 1,
+      updatedAt: 2,
+      metadata: {},
+      messages: [
+        { role: "user", content: "发送评论" },
+        {
+          role: "assistant",
+          content: "正在发送",
+          toolCalls: [{ ...toolCall, name: "comment_send" }]
+        },
+        {
+          role: "tool",
+          name: "comment_send",
+          callID: toolCall.callID,
+          content: "发送成功"
+        }
+      ],
+      runtime: {
+        runID: "run-unsafe",
+        status: "aborted",
+        startedAt: 10,
+        endedAt: 20,
+        terminal: true,
+        incomplete: true,
+        inputMessageIndex: 0,
+        error: { type: "aborted", message: "用户停止生成" }
+      },
+      assistantTurns: [
+        {
+          runID: "run-unsafe",
+          step: 0,
+          status: "complete",
+          messageIndex: 1,
+          finishReason: "tool_calls"
+        }
+      ]
+    }).unwrap();
+    const before = conversation.snapshot();
+
+    const rewound = conversation.rewindAbortedRun("run-unsafe", () => false);
+
+    expect(rewound.isErr()).toBe(true);
+    if (rewound.isErr()) expect(rewound.reason.message).toContain("comment_send");
+    expect(conversation.snapshot()).toEqual(before);
+  });
+
+  it("拒绝回退未中止的运行", () => {
+    const conversation = LLMConversation.fromSnapshot({
+      id: "conversation-completed",
+      name: "已完成对话",
+      createdAt: 1,
+      updatedAt: 2,
+      metadata: {},
+      messages: [
+        { role: "user", content: "问题" },
+        { role: "assistant", content: "完整回答" }
+      ],
+      runtime: {
+        runID: "run-completed",
+        status: "completed",
+        startedAt: 10,
+        endedAt: 20,
+        terminal: true,
+        incomplete: false,
+        inputMessageIndex: 0
+      },
+      assistantTurns: [
+        {
+          runID: "run-completed",
+          step: 0,
+          status: "complete",
+          messageIndex: 1,
+          finishReason: "stop"
+        }
+      ]
+    }).unwrap();
+    const before = conversation.snapshot();
+
+    expect(conversation.rewindAbortedRun("run-completed").isErr()).toBe(true);
+    expect(conversation.snapshot()).toEqual(before);
   });
 });
 

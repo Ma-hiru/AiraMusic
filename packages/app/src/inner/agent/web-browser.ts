@@ -36,11 +36,13 @@ export type AgentWebBrowserInput = AgentWebBrowserOpenInput | AgentWebBrowserSea
 export interface AgentWebPage {
   url: string;
   title: string;
+  author?: string;
   content: string;
   fetchedAt: string;
   linkCount: number;
   truncated: boolean;
   contentChars: number;
+  publishedAt?: string;
   originalChars: number;
   search?: AgentWebSearchContext;
   results?: AgentWebSearchResult[];
@@ -61,8 +63,12 @@ export interface AgentWebSearchResult {
   snippet: string;
 }
 
+export const AgentWebPageMaxSerializedChars = 12_000;
+
 const WebSearchStructuredContent =
   "搜索结果已整理到 results 字段；请从 results[].url 选择最相关的页面并使用 open 阅读正文。";
+const WebPageBudgetTruncationMarker = "\n\n[内容已按 Agent 12K 输出预算截断]";
+const ExtractedContentTruncationMarker = "\n\n[正文已截断，可提高 maxChars 后重新 open]";
 
 /**
  * 搜索页已经提取出标题、摘要和目标 URL 后，不再把同一批结果的 HTML 重复交给模型。
@@ -79,13 +85,183 @@ export function projectAgentWebSearchPage(page: AgentWebPage): AgentWebPage {
   };
 }
 
+/**
+ * 模型最终收到的是完整 AgentWebPage JSON，因此正文预算之外还要计算 URL、元数据和搜索结果。
+ * 搜索结果优先保留完整 URL：先压缩摘要，再从尾部减少低优先级结果；URL 本身绝不截断。
+ */
+export function limitAgentWebPageToBudget(page: AgentWebPage): AgentWebPage {
+  let projected = cloneAgentWebPage(page);
+  if (serializedPageChars(projected) <= AgentWebPageMaxSerializedChars) return projected;
+
+  projected = { ...projected, truncated: true };
+  if (projected.results?.length) {
+    projected = fitSearchResultsToBudget(projected, AgentWebPageMaxSerializedChars);
+    if (serializedPageChars(projected) <= AgentWebPageMaxSerializedChars) return projected;
+  }
+
+  projected = fitPageContentToBudget(projected, AgentWebPageMaxSerializedChars);
+  if (serializedPageChars(projected) <= AgentWebPageMaxSerializedChars) return projected;
+
+  // 正常入口已限制 URL、标题和搜索参数；这里只为异常重定向等极端输入保留硬边界。
+  const fallbackContent = "[网页固定元数据超过 Agent 输出预算，正文与搜索结果已省略]";
+  return {
+    url: compactPageURL(projected.url),
+    title: projected.title.slice(0, 120),
+    content: fallbackContent,
+    fetchedAt: projected.fetchedAt.slice(0, 64),
+    linkCount: projected.linkCount,
+    truncated: true,
+    contentChars: fallbackContent.length,
+    originalChars: projected.originalChars
+  };
+}
+
+function fitSearchResultsToBudget(page: AgentWebPage, budgetChars: number): AgentWebPage {
+  const sourceResults = page.results?.map((result) => ({ ...result })) ?? [];
+  if (!sourceResults.length) return page;
+
+  const createCandidate = (results: AgentWebSearchResult[]): AgentWebPage => {
+    const { results: _ignored, ...rest } = page;
+    void _ignored;
+    return results.length ? { ...rest, results, truncated: true } : { ...rest, truncated: true };
+  };
+  const withSnippetLimit = (maxChars: number) =>
+    createCandidate(
+      sourceResults.map((result) => ({
+        ...result,
+        snippet: truncateSearchSnippet(result.snippet, maxChars)
+      }))
+    );
+
+  const maxSnippetChars = sourceResults.reduce(
+    (maximum, result) => Math.max(maximum, result.snippet.length),
+    0
+  );
+  let low = 0;
+  let high = maxSnippetChars;
+  let best = withSnippetLimit(0);
+  if (serializedPageChars(best) <= budgetChars) {
+    while (low <= high) {
+      const middle = Math.floor((low + high) / 2);
+      const candidate = withSnippetLimit(middle);
+      if (serializedPageChars(candidate) <= budgetChars) {
+        best = candidate;
+        low = middle + 1;
+      } else {
+        high = middle - 1;
+      }
+    }
+    return best;
+  }
+
+  const retained = sourceResults.map((result) => ({ ...result, snippet: "" }));
+  best = createCandidate(retained);
+  while (retained.length && serializedPageChars(best) > budgetChars) {
+    retained.pop();
+    best = createCandidate(retained);
+  }
+  return best;
+}
+
+function fitPageContentToBudget(page: AgentWebPage, budgetChars: number): AgentWebPage {
+  const sourceContent = stripTrailingTruncationMarker(page.content);
+  const createCandidate = (maxContentChars: number): AgentWebPage => {
+    const content = truncateContentAtSemanticBoundary(sourceContent, maxContentChars);
+    return {
+      ...page,
+      content,
+      truncated: true,
+      contentChars: content.length
+    };
+  };
+
+  let low = 0;
+  let high = sourceContent.length;
+  let best = createCandidate(0);
+  if (serializedPageChars(best) > budgetChars) return best;
+
+  while (low <= high) {
+    const middle = Math.floor((low + high) / 2);
+    const candidate = createCandidate(middle);
+    if (serializedPageChars(candidate) <= budgetChars) {
+      best = candidate;
+      low = middle + 1;
+    } else {
+      high = middle - 1;
+    }
+  }
+  return best;
+}
+
+function stripTrailingTruncationMarker(value: string): string {
+  let content = value.trimEnd();
+  for (const marker of [ExtractedContentTruncationMarker, WebPageBudgetTruncationMarker]) {
+    if (content.endsWith(marker)) content = content.slice(0, -marker.length).trimEnd();
+  }
+  return content;
+}
+
+function truncateContentAtSemanticBoundary(value: string, maxChars: number): string {
+  if (value.length <= maxChars) return value;
+  if (maxChars <= WebPageBudgetTruncationMarker.length) return "";
+
+  const available = maxChars - WebPageBudgetTruncationMarker.length;
+  const prefix = value.slice(0, available);
+  const paragraphBoundary = prefix.lastIndexOf("\n\n");
+  const lineBoundary = prefix.lastIndexOf("\n");
+  const sentenceBoundary = Math.max(
+    prefix.lastIndexOf("。"),
+    prefix.lastIndexOf("！"),
+    prefix.lastIndexOf("？"),
+    prefix.lastIndexOf(". ")
+  );
+  const preferredBoundary = Math.max(paragraphBoundary, lineBoundary, sentenceBoundary);
+  const cutAt = preferredBoundary >= available * 0.6 ? preferredBoundary + 1 : available;
+  const content = prefix.slice(0, cutAt).trimEnd();
+  return content ? `${content}${WebPageBudgetTruncationMarker}` : "";
+}
+
+function truncateSearchSnippet(value: string, maxChars: number): string {
+  if (value.length <= maxChars) return value;
+  if (maxChars <= 0) return "";
+  if (maxChars === 1) return "…";
+  return `${value.slice(0, maxChars - 1).trimEnd()}…`;
+}
+
+function cloneAgentWebPage(page: AgentWebPage): AgentWebPage {
+  return {
+    ...page,
+    ...(page.search
+      ? {
+          search: {
+            ...page.search,
+            domains: [...page.search.domains]
+          }
+        }
+      : {}),
+    ...(page.results ? { results: page.results.map((result) => ({ ...result })) } : {})
+  };
+}
+
+function serializedPageChars(page: AgentWebPage): number {
+  return JSON.stringify(page).length;
+}
+
+function compactPageURL(value: string): string {
+  try {
+    return new URL(value).origin;
+  } catch {
+    return "";
+  }
+}
+
 // ========== 配置 ==========
 
 const WebAgentPartition = "aira-web-agent";
 const WebAgentMaxConcurrentWindows = 2;
 const WebAgentLoadTimeoutMs = 20_000;
 const WebAgentExtractTimeoutMs = 10_000;
-const WebAgentDefaultMaxChars = 12_000;
+const WebAgentDefaultMaxChars = 8_000;
 const WebAgentIsolatedWorldID = 1001;
 
 const BlockedResourceTypes = new Set([
@@ -233,7 +409,7 @@ export async function executeWebBrowser(
     const resolvedScope = resolveAgentWebSearchScope(input.scope, input.site);
     const url = createWebSearchURL(input.query, input.site, input.engine, input.scope);
     const page = projectAgentWebSearchPage(await openWebPage({ url, mode: "search", signal }));
-    return {
+    return limitAgentWebPageToBudget({
       ...page,
       search: {
         query: input.query,
@@ -242,14 +418,16 @@ export async function executeWebBrowser(
         domains: resolvedScope.domains,
         ...(resolvedScope.customSite ? { customSite: resolvedScope.customSite } : {})
       }
-    };
+    });
   }
-  return openWebPage({
-    url: input.url,
-    mode: "open",
-    signal,
-    maxChars: input.maxChars
-  });
+  return limitAgentWebPageToBudget(
+    await openWebPage({
+      url: input.url,
+      mode: "open",
+      signal,
+      maxChars: input.maxChars
+    })
+  );
 }
 
 interface OpenWebPageOptions {
@@ -262,7 +440,7 @@ interface OpenWebPageOptions {
 async function openWebPage(options: OpenWebPageOptions): Promise<AgentWebPage> {
   if (!app.isReady()) throw new Error("Electron app 尚未 ready");
   const url = await assertPublicWebURL(options.url);
-  const maxChars = clamp(options.maxChars ?? WebAgentDefaultMaxChars, 6_000, 30_000);
+  const maxChars = clamp(options.maxChars ?? WebAgentDefaultMaxChars, 6_000, 12_000);
   return WebAgentSemaphore.run(
     () => openWebPageInWindow({ url, mode: options.mode, maxChars, signal: options.signal }),
     options.signal
@@ -322,6 +500,8 @@ async function openWebPageInWindow(options: {
     return {
       url: finalURL,
       title: result.title,
+      ...(result.author ? { author: result.author } : {}),
+      ...(result.publishedAt ? { publishedAt: result.publishedAt } : {}),
       content: result.content,
       fetchedAt: new Date().toISOString(),
       truncated: result.truncated,
@@ -340,10 +520,12 @@ async function openWebPageInWindow(options: {
 
 interface ExtractedPageResult {
   title: string;
+  author?: string;
   content: string;
   linkCount: number;
   truncated: boolean;
   contentChars: number;
+  publishedAt?: string;
   originalChars: number;
   results: AgentWebSearchResult[];
 }
@@ -472,8 +654,10 @@ async function runWithTimeout<T>(
 
 // ========== DOM 提取脚本（注入 Renderer，不能引用外部变量） ==========
 
-function createExtractPageScript(mode: AgentWebBrowserMode, maxChars: number): string {
-  return `(${extractPageInRenderer.toString()})(${JSON.stringify({ mode, maxChars })})`;
+export function createExtractPageScript(mode: AgentWebBrowserMode, maxChars: number): string {
+  // tsup 开启函数名保留时，toString() 结果可能引用构建期的 __name 辅助函数；
+  // 把最小兼容实现一并放进隔离世界，避免开发测试可用、打包后提取失败。
+  return `(() => { const __name = (value) => value; return (${extractPageInRenderer.toString()})(${JSON.stringify({ mode, maxChars })}); })()`;
 }
 
 function clamp(value: number, min: number, max: number): number {
@@ -517,7 +701,8 @@ async function extractPageInRenderer(config: { maxChars: number; mode: "open" | 
 
   const title = String(document.title ?? "")
     .replace(/\s+/g, " ")
-    .trim();
+    .trim()
+    .slice(0, 300);
 
   const description = String(
     document
@@ -525,7 +710,75 @@ async function extractPageInRenderer(config: { maxChars: number; mode: "open" | 
       ?.getAttribute("content") ?? ""
   )
     .replace(/\s+/g, " ")
-    .trim();
+    .trim()
+    .slice(0, 500);
+
+  // ------- 在清洗正文前保留署名与发布时间 -------
+  function normalizeMetadataText(value: null | string | undefined, maxChars: number): string {
+    return String(value ?? "")
+      .replace(/\s+/g, " ")
+      .trim()
+      .slice(0, maxChars);
+  }
+
+  function firstMetaContent(selectors: readonly string[], maxChars: number): string {
+    for (const selector of selectors) {
+      const content = normalizeMetadataText(
+        document.querySelector(selector)?.getAttribute("content"),
+        maxChars
+      );
+      if (content) return content;
+    }
+    return "";
+  }
+
+  function firstElementText(selectors: readonly string[], maxChars: number): string {
+    for (const selector of selectors) {
+      const element = document.querySelector(selector);
+      const content =
+        element?.getAttribute("content") ??
+        element?.getAttribute("datetime") ??
+        element?.textContent;
+      const normalized = normalizeMetadataText(content, maxChars);
+      if (normalized) return normalized;
+    }
+    return "";
+  }
+
+  const author =
+    firstMetaContent(
+      [
+        'meta[name="author"]',
+        'meta[property="article:author"]',
+        'meta[name="byline"]',
+        'meta[name="byl"]'
+      ],
+      200
+    ) ||
+    firstElementText(
+      [
+        '[itemprop~="author"] [itemprop~="name"]',
+        'a[rel~="author"]',
+        '[itemprop~="author"]',
+        '[itemprop~="creator"]',
+        ".byline",
+        '[class~="byline"]'
+      ],
+      200
+    );
+
+  const publishedAt =
+    firstMetaContent(
+      [
+        'meta[property="article:published_time"]',
+        'meta[name="article:published_time"]',
+        'meta[itemprop~="datePublished"]',
+        'meta[name="date"]',
+        'meta[name="publishdate"]',
+        'meta[name="pubdate"]'
+      ],
+      100
+    ) || firstElementText(['time[itemprop~="datePublished"]', '[itemprop~="datePublished"]'], 100);
 
   // ------- 选择内容根节点 -------
   function selectContentRoot(mode: "open" | "search"): HTMLElement {
@@ -555,7 +808,27 @@ async function extractPageInRenderer(config: { maxChars: number; mode: "open" | 
         .trim().length;
       const linkCount = el.querySelectorAll("a[href]").length;
       const headingCount = el.querySelectorAll("h1,h2,h3,h4,h5,h6").length;
-      const score = textLen + linkCount * 50 + headingCount * 100;
+      const linkTextLen = Array.from(el.querySelectorAll("a[href]")).reduce(
+        (total, anchor) =>
+          total +
+          String(anchor.textContent ?? "")
+            .replace(/\s+/g, " ")
+            .trim().length,
+        0
+      );
+      const paragraphTextLen = Array.from(el.querySelectorAll("p,pre,blockquote")).reduce(
+        (total, paragraph) => {
+          const length = String(paragraph.textContent ?? "")
+            .replace(/\s+/g, " ")
+            .trim().length;
+          return total + (length >= 25 ? length : 0);
+        },
+        0
+      );
+      const score =
+        mode === "search"
+          ? textLen + linkCount * 50 + headingCount * 100
+          : paragraphTextLen * 2 + textLen * 0.25 + headingCount * 40 - linkTextLen * 1.5;
       if (score > bestScore) {
         best = el;
         bestScore = score;
@@ -572,6 +845,7 @@ async function extractPageInRenderer(config: { maxChars: number; mode: "open" | 
   }
 
   const sourceRoot = selectContentRoot(config.mode);
+  const originalChars = sourceRoot.outerHTML.length;
   const root = sourceRoot.cloneNode(true) as Element;
 
   // ------- 删除无用元素 -------
@@ -632,9 +906,9 @@ async function extractPageInRenderer(config: { maxChars: number; mode: "open" | 
   // ------- 删除噪音元素 -------
   function removeNoiseElements(rootEl: Element, mode: "open" | "search") {
     const commonNoise =
-      /(?:^|[\s_-])(cookie|consent|advert|advertisement|ads?|sponsor|promotion|newsletter|modal|popup|toast)(?:$|[\s_-])/i;
+      /(?:^|[\s_-])(cookie|consent|advert(?:isement|ising)?|ads?|sponsor|promotion|newsletter|modal|popup|toast)(?:$|[\s_-])/i;
     const articleNoise =
-      /(?:^|[\s_-])(social|share|sidebar|related|recommended|login|sign-?up|subscription)(?:$|[\s_-])/i;
+      /(?:^|[\s_-])(social|share|sidebar|related|recommended|login|sign-?up|subscription|comments?|breadcrumb|pagination|author-?box|read-?more|download-?app|qr-?code)(?:$|[\s_-])/i;
     for (const el of Array.from(rootEl.querySelectorAll("*"))) {
       const sig = [el.getAttribute("id") ?? "", el.getAttribute("class") ?? ""].join(" ");
       if (commonNoise.test(sig) || (mode === "open" && articleNoise.test(sig))) el.remove();
@@ -661,7 +935,6 @@ async function extractPageInRenderer(config: { maxChars: number; mode: "open" | 
 
   // ------- 规范化链接 -------
   function normalizeLinks(rootEl: Element) {
-    let linkID = 0;
     for (const a of Array.from(rootEl.querySelectorAll("a[href]"))) {
       const rawHref = a.getAttribute("href")?.trim();
       if (!rawHref) {
@@ -678,9 +951,12 @@ async function extractPageInRenderer(config: { maxChars: number; mode: "open" | 
           a.removeAttribute("href");
           continue;
         }
-        linkID += 1;
+        for (const key of Array.from(target.searchParams.keys())) {
+          if (/^utm_/i.test(key) || /^(fbclid|gclid|mc_cid|mc_eid)$/i.test(key)) {
+            target.searchParams.delete(key);
+          }
+        }
         a.setAttribute("href", target.toString());
-        a.setAttribute("data-link-id", String(linkID));
       } catch {
         a.removeAttribute("href");
       }
@@ -692,7 +968,7 @@ async function extractPageInRenderer(config: { maxChars: number; mode: "open" | 
   function stripAttributes(rootEl: Element) {
     const globalAttrs = new Set(["title", "aria-label"]);
     const tagAttrs: Record<string, Set<string>> = {
-      a: new Set(["href", "data-link-id"]),
+      a: new Set(["href"]),
       time: new Set(["datetime"]),
       td: new Set(["colspan", "rowspan"]),
       th: new Set(["colspan", "rowspan"])
@@ -750,41 +1026,15 @@ async function extractPageInRenderer(config: { maxChars: number; mode: "open" | 
   }
   removeEmptyElements(root);
 
-  // ------- 构建输出文档 -------
-  const outputDoc = document.implementation.createHTMLDocument(title);
-  outputDoc.head.replaceChildren();
-  const metaCharset = outputDoc.createElement("meta");
-  metaCharset.setAttribute("charset", "utf-8");
-  outputDoc.head.append(metaCharset);
-  const titleEl = outputDoc.createElement("title");
-  titleEl.textContent = title;
-  outputDoc.head.append(titleEl);
-  if (description) {
-    const descEl = outputDoc.createElement("meta");
-    descEl.setAttribute("name", "description");
-    descEl.setAttribute("content", description);
-    outputDoc.head.append(descEl);
-  }
-  const lang = document.documentElement.getAttribute("lang")?.trim();
-  if (lang) outputDoc.documentElement.setAttribute("lang", lang);
-  outputDoc.body.replaceChildren();
-  if (sourceRoot.tagName.toLowerCase() === "body") {
-    while (root.firstChild) outputDoc.body.append(root.firstChild);
-  } else {
-    outputDoc.body.append(root);
-  }
+  const linkCount = root.querySelectorAll("a[href]").length;
+  const results = collectSearchResults(root, config.mode);
 
-  const doctype = "<!DOCTYPE html>\n";
-  const fullContent = doctype + outputDoc.documentElement.outerHTML;
-  const linkCount = outputDoc.querySelectorAll("a[href]").length;
-  const results = collectSearchResults(outputDoc, config.mode);
-
-  function collectSearchResults(doc: Document, mode: "open" | "search") {
+  function collectSearchResults(containerRoot: ParentNode, mode: "open" | "search") {
     if (mode !== "search") return [];
 
     const seen = new Set<string>();
     const items: Array<{ url: string; title: string; domain: string; snippet: string }> = [];
-    for (const anchor of Array.from(doc.querySelectorAll("a[href]"))) {
+    for (const anchor of Array.from(containerRoot.querySelectorAll("a[href]"))) {
       if (items.length >= 10) break;
       const href = anchor.getAttribute("href")?.trim();
       const title = String(anchor.textContent ?? "")
@@ -819,100 +1069,143 @@ async function extractPageInRenderer(config: { maxChars: number; mode: "open" | 
     return items;
   }
 
-  if (fullContent.length <= config.maxChars) {
-    return {
-      title,
-      content: fullContent,
-      truncated: false,
-      originalChars: fullContent.length,
-      contentChars: fullContent.length,
-      linkCount,
-      results
-    };
+  // ------- 把正文 DOM 投影为紧凑 Markdown -------
+  const markdownBlockTags = new Set([
+    "address",
+    "article",
+    "body",
+    "details",
+    "div",
+    "figcaption",
+    "figure",
+    "header",
+    "main",
+    "ol",
+    "section",
+    "summary",
+    "table",
+    "tbody",
+    "tfoot",
+    "thead",
+    "ul"
+  ]);
+
+  function renderChildren(node: Node): string {
+    return Array.from(node.childNodes)
+      .map((child) => renderNode(child))
+      .join("");
   }
 
-  // ------- 预算裁剪 -------
-  function escapeText(v: string): string {
-    return v.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-  }
-  function escapeAttribute(v: string): string {
-    return escapeText(v).replace(/"/g, "&quot;");
-  }
-  function fitEscapedText(value: string, maxLen: number): string {
-    let low = 0,
-      high = value.length,
-      result = "";
-    while (low <= high) {
-      const mid = Math.floor((low + high) / 2);
-      const cand = escapeText(value.slice(0, mid));
-      if (cand.length <= maxLen) {
-        result = cand;
-        low = mid + 1;
-      } else high = mid - 1;
-    }
-    return result;
-  }
-  function serializeNodeWithinBudget(
-    node: Node,
-    state: { remaining: number; truncated: boolean }
-  ): string {
-    if (node.nodeType === Node.TEXT_NODE) {
-      const v = node.textContent ?? "";
-      const escaped = escapeText(v);
-      if (escaped.length <= state.remaining) {
-        state.remaining -= escaped.length;
-        return escaped;
-      }
-      const fitted = fitEscapedText(v, state.remaining);
-      state.remaining -= fitted.length;
-      state.truncated = true;
-      return fitted;
-    }
+  function renderNode(node: Node): string {
+    if (node.nodeType === Node.TEXT_NODE) return node.textContent ?? "";
     if (node.nodeType !== Node.ELEMENT_NODE) return "";
+
     const el = node as Element;
     const tag = el.tagName.toLowerCase();
-    const voidTags = new Set([
-      "area",
-      "base",
-      "br",
-      "col",
-      "embed",
-      "hr",
-      "img",
-      "input",
-      "link",
-      "meta",
-      "param",
-      "source",
-      "track",
-      "wbr"
-    ]);
-    const attrs = Array.from(el.attributes)
-      .map((a) => ` ${a.name}="${escapeAttribute(a.value)}"`)
-      .join("");
-    const opening = `<${tag}${attrs}>`;
-    const closing = voidTags.has(tag) ? "" : `</${tag}>`;
-    if (opening.length + closing.length > state.remaining) {
-      state.truncated = true;
-      return "";
+    const children = renderChildren(el);
+    const inline = children.replace(/\s+/g, " ").trim();
+
+    if (/^h[1-6]$/.test(tag)) {
+      const level = Number(tag.slice(1));
+      return inline ? `\n\n${"#".repeat(level)} ${inline}\n\n` : "";
     }
-    state.remaining -= opening.length + closing.length;
-    let children = "";
-    for (const child of Array.from(el.childNodes)) {
-      children += serializeNodeWithinBudget(child, state);
-      if (state.truncated) break;
+    if (tag === "p") return inline ? `\n\n${inline}\n\n` : "";
+    if (tag === "br") return "\n";
+    if (tag === "hr") return "\n\n---\n\n";
+    if (tag === "a") {
+      const href = el.getAttribute("href")?.trim();
+      if (!href) return inline;
+      const label = inline || el.getAttribute("title")?.trim() || href;
+      return `[${label}](${href})`;
     }
-    return opening + children + closing;
+    if (tag === "strong" || tag === "b") return inline ? `**${inline}**` : "";
+    if (tag === "em" || tag === "i") return inline ? `*${inline}*` : "";
+    if (tag === "code" && el.parentElement?.tagName.toLowerCase() !== "pre") {
+      return inline ? `\`${inline.replace(/`/g, "\\`")}\`` : "";
+    }
+    if (tag === "pre") {
+      const code = String(el.textContent ?? "").trim();
+      return code ? `\n\n\`\`\`\n${code}\n\`\`\`\n\n` : "";
+    }
+    if (tag === "blockquote") {
+      const quoted = normalizeMarkdown(children)
+        .split("\n")
+        .map((line) => `> ${line}`)
+        .join("\n");
+      return quoted ? `\n\n${quoted}\n\n` : "";
+    }
+    if (tag === "li") {
+      const parent = el.parentElement;
+      const ordered = parent?.tagName.toLowerCase() === "ol";
+      const siblings = parent
+        ? Array.from(parent.children).filter((child) => child.tagName.toLowerCase() === "li")
+        : [];
+      const index = Math.max(0, siblings.indexOf(el));
+      return inline ? `\n${ordered ? `${index + 1}.` : "-"} ${inline}\n` : "";
+    }
+    if (tag === "tr") {
+      const cells = Array.from(el.children)
+        .filter((child) => /^(td|th)$/i.test(child.tagName))
+        .map((cell) => renderChildren(cell).replace(/\s+/g, " ").trim())
+        .filter(Boolean);
+      return cells.length ? `\n| ${cells.join(" | ")} |\n` : "";
+    }
+    if (tag === "dt") return inline ? `\n\n**${inline}**\n` : "";
+    if (tag === "dd") return inline ? `\n${inline}\n\n` : "";
+
+    return markdownBlockTags.has(tag) ? `\n${children}\n` : children;
   }
 
-  const state = { remaining: config.maxChars - doctype.length, truncated: false };
-  const serialized = serializeNodeWithinBudget(outputDoc.documentElement, state);
+  function normalizeMarkdown(value: string): string {
+    const lines: string[] = [];
+    let insideFence = false;
+    for (const rawLine of value.replace(/\r\n?/g, "\n").split("\n")) {
+      const trimmed = rawLine.trim();
+      if (trimmed.startsWith("```")) {
+        insideFence = !insideFence;
+        lines.push(trimmed);
+        continue;
+      }
+      lines.push(insideFence ? rawLine.trimEnd() : rawLine.replace(/[ \t]+/g, " ").trim());
+    }
+    return lines
+      .join("\n")
+      .replace(/\n{3,}/g, "\n\n")
+      .trim();
+  }
+
+  const bodyContent = normalizeMarkdown(renderNode(root));
+  const summary = description && !bodyContent.includes(description) ? `> 摘要：${description}` : "";
+  const fullContent = normalizeMarkdown([summary, bodyContent].filter(Boolean).join("\n\n"));
+
+  // ------- 在段落边界内完成预算裁剪 -------
+  const truncationMarker = "\n\n[正文已截断，可提高 maxChars 后重新 open]";
+  let content = fullContent;
+  const truncated = fullContent.length > config.maxChars;
+  if (truncated) {
+    const available = Math.max(0, config.maxChars - truncationMarker.length);
+    const prefix = fullContent.slice(0, available);
+    const paragraphBoundary = prefix.lastIndexOf("\n\n");
+    const lineBoundary = prefix.lastIndexOf("\n");
+    const sentenceBoundary = Math.max(
+      prefix.lastIndexOf("。"),
+      prefix.lastIndexOf("！"),
+      prefix.lastIndexOf("？"),
+      prefix.lastIndexOf(". ")
+    );
+    const preferredBoundary = Math.max(paragraphBoundary, lineBoundary, sentenceBoundary);
+    const cutAt = preferredBoundary >= available * 0.6 ? preferredBoundary + 1 : available;
+    content = prefix.slice(0, cutAt).trimEnd() + truncationMarker;
+  }
+
   return {
     title,
-    content: doctype + serialized,
-    truncated: true,
-    originalChars: fullContent.length,
-    contentChars: (doctype + serialized).length,
+    ...(author ? { author } : {}),
+    ...(publishedAt ? { publishedAt } : {}),
+    content,
+    truncated,
+    originalChars,
+    contentChars: content.length,
     linkCount,
     results
   };

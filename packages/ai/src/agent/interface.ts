@@ -25,6 +25,8 @@ export interface AIAgentOptions {
   skills?: {
     list: Iterable<AIAgentInstructionDefinition>;
   };
+  /** 为 Skill 和动态工具路由生成统一的有效意图；不会改写真实用户消息。 */
+  resolveIntent?: NormalFunc<[context: { input: string; conversation: LLMConversation }], string>;
   transformFinalText?: NormalFunc<
     [context: { text: string; messages: readonly LLMMessage[] }],
     string
@@ -40,10 +42,14 @@ export interface AIAgentOptions {
     strict: boolean;
     choice: LLMToolChoice;
     maxOutputChars?: number;
+    /** 单次 Agent 循环内所有工具结果首次进入上下文时的累计字符预算。 */
+    maxTotalOutputChars?: number;
     parallelSafeNames?: Iterable<string>;
+    /** 中止后可安全重新执行的工具；默认不信任任何工具。 */
+    retrySafeNames?: Iterable<string>;
     serializeOutput?: NormalFunc<[output: unknown], string>;
     select?: NormalFunc<
-      [context: { input: string; conversation: LLMConversation }],
+      [context: { input: string; rawInput: string; conversation: LLMConversation }],
       Iterable<string>
     >;
   };
@@ -73,6 +79,8 @@ export interface AIAgentChatOptions {
   temperature?: number;
   conversationID: string;
   maxOutputTokens?: number;
+  /** 仅当该 ID 仍是会话最近一次中止运行时，替换整轮后重新生成。 */
+  retryAbortedRunID?: string;
 }
 
 export interface AIAgentRunState {
@@ -88,8 +96,10 @@ export interface AIAgentRunContext extends AIAgentRunState {
   terminal: boolean;
   temperature?: number;
   provider: LLMProvider;
+  titleGenerated: boolean;
   maxOutputTokens?: number;
   config: LLMProviderConfig;
+  inputMessageIndex: number;
   accumulatedUsage?: LLMUsage;
   shouldGenerateTitle: boolean;
   conversation: LLMConversation;

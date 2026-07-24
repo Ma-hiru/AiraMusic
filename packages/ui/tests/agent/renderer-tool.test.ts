@@ -116,6 +116,14 @@ describe("RendererTool", () => {
     );
     expect(list["items"]).toEqual([1, 2]);
     expect(asObject(list["_meta"]!)["truncated"]).toBe(true);
+    expect(asObject(list["_meta"]!)["truncations"]).toEqual([
+      {
+        kind: "list",
+        path: "$.items",
+        originalCount: 4,
+        returnedCount: 2
+      }
+    ]);
 
     const text = asObject(RendererTool.text("x".repeat(100), { maxTextChars: 12 }));
     expect((text["text"] as string).length).toBe(12);
@@ -173,6 +181,19 @@ describe("RendererTool", () => {
     expect(asObject(asObject(result)["_meta"]!)["truncated"]).toBe(true);
   });
 
+  it("默认把通用工具结果限制在 12K，显式编辑场景仍可申请更高预算", () => {
+    const result = RendererTool.output({
+      rows: Array.from({ length: 200 }, (_, index) => ({
+        index,
+        text: "内容".repeat(1_000)
+      }))
+    });
+
+    expect(RendererTool.defaultResultChars).toBe(12_000);
+    expect(JSON.stringify(result).length).toBeLessThanOrEqual(RendererTool.defaultResultChars);
+    expect(asObject(asObject(result)["_meta"]!)["truncated"]).toBe(true);
+  });
+
   it("歌词分析默认移除逐字时间轴，并保留显式可编辑模式", () => {
     const lyric = {
       id: 101,
@@ -210,6 +231,11 @@ describe("RendererTool", () => {
     expect(firstLine["words"]).toBeUndefined();
     expect(editableText.length).toBeLessThanOrEqual(RendererTool.maxResultChars);
     expect(asObject(asObject(editable)["_meta"]!)["truncated"]).toBe(true);
+    expect(
+      (asObject(asObject(semantic)["_meta"]!)["truncations"] as JsonValue[]).some(
+        (item) => asObject(item)["path"] === "$.data"
+      )
+    ).toBe(true);
   });
 
   it("只把评论正文和分析所需字段交给 Agent", () => {
@@ -221,7 +247,7 @@ describe("RendererTool", () => {
         sortType: 2,
         totalCount: 8_888,
         commentsTitle: "热门评论",
-        comments: Array.from({ length: 20 }, (_, index) => ({
+        comments: Array.from({ length: 25 }, (_, index) => ({
           commentId: 10_000 + index,
           parentCommentId: 0,
           content: `第 ${index + 1} 条听众观点：${"情绪与剧情的联想。".repeat(12)}`,
@@ -257,6 +283,7 @@ describe("RendererTool", () => {
     expect(serialized.length).toBeLessThanOrEqual(12_000);
     expect(serialized.length).toBeLessThan(JSON.stringify(payload).length / 4);
     expect(projected["comments"]).toHaveLength(20);
+    expect(asObject(projected["_meta"]!)["truncated"]).toBe(true);
     expect(firstComment["content"]).toContain("听众观点");
     expect(asObject(firstComment["user"]!)).toEqual({ id: 20_000, nickname: "用户 1" });
     expect(serialized).not.toContain("avatarUrl");
@@ -310,5 +337,28 @@ describe("RendererTool", () => {
     expect(asObject(first["album"]!)).toEqual({ id: 3_000, name: "专辑 0" });
     expect(serialized).not.toContain("privilege");
     expect(serialized).not.toContain("img1v1Url");
+  });
+
+  it("搜索响应没有 hasMore 时根据总数和页码计算分页状态", () => {
+    const payload = {
+      albumCount: 25,
+      albums: Array.from({ length: 10 }, (_, index) => ({
+        id: index + 1,
+        name: `专辑 ${index + 1}`
+      }))
+    };
+
+    expect(RendererTool.search(payload, "album", { page: 2, pageSize: 10 })).toMatchObject({
+      page: 2,
+      pageSize: 10,
+      total: 25,
+      hasMore: true
+    });
+    expect(RendererTool.search(payload, "album", { page: 3, pageSize: 10 })).toMatchObject({
+      page: 3,
+      pageSize: 10,
+      total: 25,
+      hasMore: false
+    });
   });
 });

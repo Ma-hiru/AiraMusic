@@ -3,6 +3,7 @@ import {
   getAgentToolSummary,
   parseAgentToolValue,
   getAgentWebToolDetails,
+  isInternalAgentToolResult,
   getAgentToolSemanticResult
 } from "@mahiru/ui/wins/agent/page/chat/tool-presentation";
 
@@ -27,6 +28,8 @@ describe("Agent tool presentation", () => {
       contentChars: 18000,
       originalChars: 24000,
       truncated: true,
+      author: "Aira 编辑部",
+      publishedAt: "2026-07-24T08:30:00.000Z",
       results: [
         {
           title: "AiraMusic repository",
@@ -53,6 +56,8 @@ describe("Agent tool presentation", () => {
       scope: "moegirl",
       scopeLabel: "萌娘百科",
       scopeDomains: ["zh.moegirl.org.cn"],
+      author: "Aira 编辑部",
+      publishedAt: "2026-07-24T08:30:00.000Z",
       results: [{ title: "AiraMusic repository", domain: "github.com" }]
     });
   });
@@ -62,6 +67,18 @@ describe("Agent tool presentation", () => {
       true
     );
     expect(isAgentToolError(JSON.stringify({ ok: true }))).toBe(false);
+  });
+
+  it("识别仅供内部恢复的工具结果", () => {
+    expect(
+      isInternalAgentToolResult(
+        JSON.stringify({
+          error: { type: "tool_not_selected", message: "内部工具路由不匹配" },
+          _meta: { visibility: "internal" }
+        })
+      )
+    ).toBe(true);
+    expect(isInternalAgentToolResult(JSON.stringify({ ok: true }))).toBe(false);
   });
 
   it("projects music results into a short human summary before technical JSON", () => {

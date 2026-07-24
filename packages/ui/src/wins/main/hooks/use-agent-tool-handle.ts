@@ -208,7 +208,15 @@ export function useAgentToolHandle() {
               },
               controller.signal
             )
-              .then((res) => sendOK(id, RendererTool.search(res.result, request.input.type)))
+              .then((res) =>
+                sendOK(
+                  id,
+                  RendererTool.search(res.result, request.input.type, {
+                    page: request.input.page,
+                    pageSize: request.input.pageSize
+                  })
+                )
+              )
               .catch((err) => sendErr(id, String(err)));
             break;
           }

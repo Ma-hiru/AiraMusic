@@ -1,5 +1,13 @@
 import { LLMConversation, AIAgentSkillRegistry } from "@mahiru/ai";
 import { createAiraAgentSkills } from "@mahiru/app/inner/agent/skills";
+import { buildAgentToolRoutingText } from "@mahiru/app/inner/agent/tool-catalog";
+
+vi.mock("electron", () => ({
+  app: { isReady: () => false },
+  ipcMain: { on: vi.fn(), handle: vi.fn() },
+  session: { fromPartition: vi.fn() },
+  BrowserWindow: class {}
+}));
 
 describe("AiraMusic Agent skills", () => {
   const registry = new AIAgentSkillRegistry(createAiraAgentSkills());
@@ -39,6 +47,11 @@ describe("AiraMusic Agent skills", () => {
     ]);
     expect(activation.requiredEvidence.at(-2)?.argumentEquals).toEqual({ action: "search" });
     expect(activation.requiredEvidence.at(-1)?.argumentEquals).toEqual({ action: "open" });
+    expect(activation.requiredEvidence.at(-1)?.argumentFromEvidence).toEqual({
+      argumentName: "url",
+      evidenceID: "track-overview:web-search",
+      outputPath: ["results", "url"]
+    });
     expect(activation.requiredEvidence.every((item) => item.satisfaction === "attempt")).toBe(true);
     expect(activation.requiredEvidence.at(-1)?.dependsOn).toEqual(["track-overview:web-search"]);
     expect(
@@ -49,6 +62,14 @@ describe("AiraMusic Agent skills", () => {
     ).toEqual([]);
     expect(
       registry.activate({ input: "那它的创作背景呢？", conversation }).unwrap().activeSkillIDs
+    ).toEqual([]);
+    expect(
+      registry
+        .activate({
+          input: "介绍当前播放歌曲\n那它的创作背景呢？",
+          conversation
+        })
+        .unwrap().activeSkillIDs
     ).toEqual(["track-overview"]);
     expect(
       registry.activate({ input: "介绍一下你自己", conversation }).unwrap().activeSkillIDs
@@ -56,6 +77,30 @@ describe("AiraMusic Agent skills", () => {
     expect(
       registry.activate({ input: "介绍一下周杰伦", conversation }).unwrap().activeSkillIDs
     ).toEqual([]);
+    expect(
+      registry.activate({ input: "介绍《三体》", conversation }).unwrap().activeSkillIDs
+    ).toEqual([]);
+  });
+
+  it.each(["介绍《晴天》这首歌", "介绍周杰伦的歌曲晴天"])(
+    "能识别带有明确歌曲语义的中文作品介绍：%s",
+    (input) => {
+      expect(registry.activate({ input, conversation }).unwrap().activeSkillIDs).toEqual([
+        "track-overview"
+      ]);
+    }
+  );
+
+  it.each([
+    "介绍这个游戏的制作背景",
+    "介绍一下它的制作背景",
+    "为什么《三体》剧情好",
+    "推荐一个电影",
+    "发现一个 bug",
+    "我发现这首歌有个错误",
+    "我发现这个歌手的采访不错"
+  ])("不会为陈述或明确的非音乐请求启用昂贵 Skill：%s", (input) => {
+    expect(registry.activate({ input, conversation }).unwrap().activeSkillIDs).toEqual([]);
   });
 
   it("activates a web-grounded media-context workflow for plot and emotion explanations", () => {
@@ -114,6 +159,28 @@ describe("AiraMusic Agent skills", () => {
     expect(
       registry.activate({ input: "那结合剧情讲讲呢？", conversation }).unwrap().activeSkillIDs
     ).toEqual(["media-context-analysis"]);
+  });
+
+  it("助手提出剧情分析后，确认短句会激活对应 Skill", () => {
+    const followUpConversation = LLMConversation.create({
+      id: "assistant-proposal-skill"
+    }).unwrap();
+    followUpConversation.appendMessage({ role: "user", content: "介绍当前播放歌曲" }).unwrap();
+    followUpConversation
+      .appendMessage({
+        role: "assistant",
+        content: "基本信息已经介绍完了。要不要结合动画剧情分析？"
+      })
+      .unwrap();
+    followUpConversation.appendMessage({ role: "user", content: "可以" }).unwrap();
+
+    const routingText = buildAgentToolRoutingText("可以", followUpConversation);
+    const activation = registry.activate({
+      input: routingText,
+      conversation: followUpConversation
+    });
+
+    expect(activation.unwrap().activeSkillIDs).toEqual(["media-context-analysis"]);
   });
 
   it("requires real lyrics before interpretation without enabling web by default", () => {

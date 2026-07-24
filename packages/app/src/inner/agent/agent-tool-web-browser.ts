@@ -33,9 +33,9 @@ export const AgentWebBrowserInputSchema = z
       .number()
       .int()
       .min(6_000)
-      .max(30_000)
-      .default(12_000)
-      .describe("open 正文字符预算；默认 12000，正文截断且确有必要时可提高")
+      .max(12_000)
+      .default(8_000)
+      .describe("open 正文字符预算；默认 8000，正文截断时最多提高到 12000")
   })
   .superRefine((input, context) => {
     if (input.action === "search" && !input.query) {
@@ -58,7 +58,7 @@ export class AgentToolWebBrowser {
   readonly name = "agent-tool-web-browser";
 
   readonly description = `
-通过真实浏览器搜索或读取公开网页。search 返回结构化 results；从 results[].url 选择相关页面后，用 open 阅读正文。
+通过真实浏览器搜索或读取公开网页。search 返回结构化 results；open 返回去除页面样板和 DOM 标签的紧凑 Markdown 正文，默认 8000、最多 12000 字符。
 
 使用规则：
 1. search 填 query；open 填 url。关键词保留作品名、歌曲名、艺人等关键实体。

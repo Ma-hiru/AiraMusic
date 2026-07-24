@@ -343,7 +343,7 @@ describe("AIAgent", () => {
     ]);
   });
 
-  it("repairs a legacy untitled conversation from its first user message when listing", async () => {
+  it("列表展示旧无标题会话的首条消息，但不回写完整快照", async () => {
     const stores = createStores();
     const agent = createAgent(stores.inject, new FakeProvider());
     const now = Date.now();
@@ -361,9 +361,7 @@ describe("AIAgent", () => {
     expect(listed.unwrap()).toEqual([
       { id: "conversation-legacy-title", name: "介绍这首歌，并结合动画剧情" }
     ]);
-    expect(stores.conversations.values.get("conversation-legacy-title")?.name).toBe(
-      "介绍这首歌，并结合动画剧情"
-    );
+    expect(stores.conversations.values.get("conversation-legacy-title")?.name).toBe("");
   });
 
   it("runs chat in background, emits title and deltas, then stores the final conversation", async () => {
@@ -808,6 +806,67 @@ describe("AIAgent", () => {
     ]);
   });
 
+  it("让短跟进句的有效意图同时驱动 Skill 与工具路由，但保留原始用户消息", async () => {
+    const stores = createStores();
+    const provider = new FakeProvider({ responses: [response({ text: "继续介绍" })] });
+    const routedInputs: Array<{ input: string; rawInput: string }> = [];
+    const agent = createAgent(stores.inject, provider, {
+      resolveIntent: ({ input }) => `介绍当前歌曲\n${input}`,
+      tools: {
+        list: [new NamedTool("detail"), new NamedTool("base")],
+        strict: true,
+        choice: "auto",
+        select: ({ input, rawInput }) => {
+          routedInputs.push({ input, rawInput });
+          return input.includes("介绍") ? ["base"] : [];
+        }
+      },
+      skills: {
+        list: [
+          {
+            id: "overview",
+            kind: "skill",
+            instructions: "继续介绍歌曲",
+            toolNames: ["detail"],
+            match: ({ input }) => input.includes("介绍")
+          }
+        ]
+      }
+    });
+    await createReadyConfig(agent, "config-effective-intent");
+    expect(
+      (
+        await agent.createConversation({
+          id: "conversation-effective-intent",
+          name: "已有标题"
+        })
+      ).isOk()
+    ).toBe(true);
+
+    const terminal = waitForTerminal(agent);
+    expect(
+      (
+        await agent.chat({
+          configID: "config-effective-intent",
+          conversationID: "conversation-effective-intent",
+          input: "继续"
+        })
+      ).isOk()
+    ).toBe(true);
+    expect((await terminal).type).toBe("done");
+
+    expect(routedInputs).toEqual([{ input: "介绍当前歌曲\n继续", rawInput: "继续" }]);
+    expect(provider.streamRequests[0]?.tools?.map((tool) => tool.name)).toEqual(["detail", "base"]);
+    expect(provider.streamRequests[0]?.messages).toContainEqual({
+      role: "user",
+      content: "继续"
+    });
+    expect(provider.streamRequests[0]?.messages).toContainEqual({
+      role: "system",
+      content: '<active_skill id="overview">\n继续介绍歌曲\n</active_skill>'
+    });
+  });
+
   it("persists an aborted terminal state and releases the conversation", async () => {
     const stores = createStores();
     const agent = createAgent(stores.inject, new BlockingAbortProvider());
@@ -843,6 +902,174 @@ describe("AIAgent", () => {
     expect(next.isOk()).toBe(true);
     expect(agent.abort(next.unwrap().runID).isOk()).toBe(true);
     expect((await replay).type).toBe("aborted");
+  });
+
+  it("原子替换最近中止运行的用户消息，并移除该轮工具链和半截回复", async () => {
+    const stores = createStores();
+    const provider = new ToolThenAbortProvider();
+    const agent = createAgent(stores.inject, provider, {
+      maxSteps: 3,
+      tools: {
+        list: [new EchoTool()],
+        strict: true,
+        choice: "auto",
+        retrySafeNames: ["echo"]
+      }
+    });
+    await createReadyConfig(agent, "config-retry");
+    expect(
+      (await agent.createConversation({ id: "conversation-retry", name: "已有标题" })).isOk()
+    ).toBe(true);
+
+    const partial = waitForAgentEvent(agent, (event) => event.type === "text_delta");
+    const aborted = waitForTerminal(agent);
+    const first = await agent.chat({
+      configID: "config-retry",
+      conversationID: "conversation-retry",
+      input: "原始问题"
+    });
+    expect(first.isOk()).toBe(true);
+    await partial;
+    expect(agent.abort(first.unwrap().runID).isOk()).toBe(true);
+    expect((await aborted).type).toBe("aborted");
+
+    const abortedSnapshot = stores.conversations.values.get("conversation-retry");
+    expect(abortedSnapshot?.messages.map((message) => message.role)).toEqual([
+      "user",
+      "assistant",
+      "tool",
+      "assistant"
+    ]);
+    expect(abortedSnapshot?.runtime).toMatchObject({
+      runID: first.unwrap().runID,
+      status: "aborted",
+      inputMessageIndex: 0
+    });
+
+    const staleRetry = await agent.chat({
+      configID: "config-retry",
+      conversationID: "conversation-retry",
+      input: "不应运行",
+      retryAbortedRunID: "stale-run"
+    });
+    expect(staleRetry.isErr()).toBe(true);
+    if (staleRetry.isErr()) expect(staleRetry.reason.type).toBe("invalid_conversation");
+    expect(stores.conversations.values.get("conversation-retry")).toEqual(abortedSnapshot);
+
+    const completed = waitForTerminal(agent);
+    const retry = await agent.chat({
+      configID: "config-retry",
+      conversationID: "conversation-retry",
+      input: "编辑后的问题",
+      retryAbortedRunID: first.unwrap().runID
+    });
+    expect(retry.isOk()).toBe(true);
+    expect((await completed).type).toBe("done");
+
+    const saved = stores.conversations.values.get("conversation-retry");
+    expect(saved?.messages).toEqual([
+      { role: "user", content: "编辑后的问题" },
+      { role: "assistant", content: "重试后的完整回复" }
+    ]);
+    expect(saved?.assistantTurns).toEqual([
+      expect.objectContaining({
+        runID: retry.unwrap().runID,
+        step: 0,
+        status: "complete",
+        messageIndex: 1
+      })
+    ]);
+    expect(saved?.runtime).toMatchObject({
+      runID: retry.unwrap().runID,
+      status: "completed",
+      terminal: true,
+      incomplete: false,
+      inputMessageIndex: 0
+    });
+    expect(provider.streamRequests.at(-1)?.messages).not.toContainEqual({
+      role: "user",
+      content: "原始问题"
+    });
+  });
+
+  it("中止运行包含非安全工具时原子拒绝重试", async () => {
+    const stores = createStores();
+    const provider = new ToolThenAbortProvider();
+    const agent = createAgent(stores.inject, provider, {
+      maxSteps: 3,
+      tools: { list: [new EchoTool()], strict: true, choice: "auto" }
+    });
+    await createReadyConfig(agent, "config-unsafe-retry");
+    expect(
+      (
+        await agent.createConversation({
+          id: "conversation-unsafe-retry",
+          name: "已有标题"
+        })
+      ).isOk()
+    ).toBe(true);
+
+    const partial = waitForAgentEvent(agent, (event) => event.type === "text_delta");
+    const aborted = waitForTerminal(agent);
+    const first = await agent.chat({
+      configID: "config-unsafe-retry",
+      conversationID: "conversation-unsafe-retry",
+      input: "原始问题"
+    });
+    expect(first.isOk()).toBe(true);
+    await partial;
+    expect(agent.abort(first.unwrap().runID).isOk()).toBe(true);
+    expect((await aborted).type).toBe("aborted");
+
+    const before = structuredClone(stores.conversations.values.get("conversation-unsafe-retry"));
+    const retry = await agent.chat({
+      configID: "config-unsafe-retry",
+      conversationID: "conversation-unsafe-retry",
+      input: "编辑后的问题",
+      retryAbortedRunID: first.unwrap().runID
+    });
+
+    expect(retry.isErr()).toBe(true);
+    if (retry.isErr()) {
+      expect(retry.reason.type).toBe("invalid_conversation");
+      expect(retry.reason.message).toContain("echo");
+    }
+    expect(stores.conversations.values.get("conversation-unsafe-retry")).toEqual(before);
+    expect(provider.streamRequests).toHaveLength(2);
+  });
+
+  it("会话运行中拒绝中止重试请求", async () => {
+    const stores = createStores();
+    const agent = createAgent(stores.inject, new BlockingAbortProvider());
+    await createReadyConfig(agent, "config-busy-retry");
+    expect(
+      (
+        await agent.createConversation({
+          id: "conversation-busy-retry",
+          name: "已有标题"
+        })
+      ).isOk()
+    ).toBe(true);
+
+    const firstTerminal = waitForTerminal(agent);
+    const first = await agent.chat({
+      configID: "config-busy-retry",
+      conversationID: "conversation-busy-retry",
+      input: "运行中的问题"
+    });
+    expect(first.isOk()).toBe(true);
+
+    const retry = await agent.chat({
+      configID: "config-busy-retry",
+      conversationID: "conversation-busy-retry",
+      input: "不应替换",
+      retryAbortedRunID: first.unwrap().runID
+    });
+    expect(retry.isErr()).toBe(true);
+    if (retry.isErr()) expect(retry.reason.type).toBe("conversation_busy");
+
+    expect(agent.abort(first.unwrap().runID).isOk()).toBe(true);
+    await firstTerminal;
   });
 
   it("persists atomic tool messages and max_steps terminal state", async () => {
@@ -1031,6 +1258,16 @@ function waitForTerminal(agent: AIAgent) {
   return new Promise<TerminalAgentEvent>((resolve) => {
     const unlisten = agent.listen((event) => {
       if (event.type !== "done" && event.type !== "error" && event.type !== "aborted") return;
+      unlisten();
+      resolve(event);
+    });
+  });
+}
+
+function waitForAgentEvent(agent: AIAgent, predicate: NormalFunc<[event: AIAgentEvent], boolean>) {
+  return new Promise<AIAgentEvent>((resolve) => {
+    const unlisten = agent.listen((event) => {
+      if (!predicate(event)) return;
       unlisten();
       resolve(event);
     });
@@ -1252,6 +1489,48 @@ class BlockingAbortProvider extends FakeProvider {
       );
     }
     yield AIResult.err({ type: "aborted", message: "aborted by test" });
+  }
+}
+
+class ToolThenAbortProvider extends FakeProvider {
+  private streamCount = 0;
+
+  override async *stream<T extends TestConfig>(
+    _config: T,
+    request: LLMGenerateRequest
+  ): AsyncGenerator<AIResult<LLMGenerateStreamResponse>> {
+    this.streamRequests.push(structuredClone(request));
+    const streamIndex = this.streamCount++;
+    if (streamIndex === 0) {
+      const call = toolCall("call-retry");
+      yield AIResult.ok({
+        type: "done",
+        raw: {},
+        text: "先读取资料",
+        toolCalls: [call],
+        finishReason: "tool_calls"
+      });
+      return;
+    }
+    if (streamIndex === 1) {
+      yield AIResult.ok({ type: "text_delta", text: "半截回复" });
+      if (!request.signal?.aborted) {
+        await new Promise<void>((resolve) =>
+          request.signal?.addEventListener("abort", () => resolve(), { once: true })
+        );
+      }
+      yield AIResult.err({ type: "aborted", message: "aborted by test" });
+      return;
+    }
+
+    yield AIResult.ok({ type: "text_delta", text: "重试后的完整回复" });
+    yield AIResult.ok({
+      type: "done",
+      raw: {},
+      text: "重试后的完整回复",
+      toolCalls: [],
+      finishReason: "stop"
+    });
   }
 }
 

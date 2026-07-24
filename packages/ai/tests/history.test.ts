@@ -418,10 +418,16 @@ describe("LLMHistoryBudget", () => {
       if (legacyState.fallback) delete legacyState.fallback.retryState;
       conversation.setCompaction(legacyState);
 
-      vi.setSystemTime(legacyState.fallback!.retryAt);
+      appendTurns(conversation, 6, 4);
+      expect((await budget.fit([{ role: "user", content: "still-waiting" }])).isOk()).toBe(true);
+      const advancedLegacyState = structuredClone(conversation.getCompaction())!;
+      expect(summaryRequests).toHaveLength(1);
+      expect(advancedLegacyState.fallback?.retryState).toBeNull();
+
+      vi.setSystemTime(advancedLegacyState.fallback!.retryAt);
       expect((await budget.fit([{ role: "user", content: "retry" }])).isOk()).toBe(true);
 
-      expect(summaryRequests).toHaveLength(2);
+      expect(summaryRequests).toHaveLength(3);
       expect(summaryRequests[1]?.messages).toContainEqual({ role: "user", content: "user-0" });
       expect(conversation.getCompaction()?.summary).toBe("restored-summary");
       expect(conversation.getCompaction()?.fallback).toBeUndefined();
