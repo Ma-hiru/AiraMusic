@@ -12,8 +12,8 @@ export abstract class MainServicesBase {
   public readonly services: readonly MainServicesType[];
   public onError;
 
-  getInstance(service: MainServicesType) {
-    return this.instances.get(service);
+  getInstance(service: MainServicesType): Readonly<Nullable<MainServicesInstance>> {
+    return this.instances.get(service) ?? null;
   }
 
   ready() {
@@ -28,21 +28,33 @@ export abstract class MainServicesBase {
     this.services = [...new Set(props.services)];
     const { promise, resolve } = Promise.withResolvers<void>();
     this.readyPromise = promise;
-    this.resolvePort().then((ports) => {
-      for (const service of this.services) {
-        this.instances.set(
-          service,
-          this.wrapServiceCreator(service, this.creators[service])(ports)
+    this.resolvePort()
+      .catch((err) => {
+        for (const service of this.services) {
+          this.onError(service, "resolve port error", err);
+        }
+      })
+      .then((ports) => {
+        if (!ports) return false;
+        for (const service of this.services) {
+          this.instances.set(
+            service,
+            this.wrapServiceCreator(service, this.creators[service])(ports)
+          );
+        }
+        return true;
+      })
+      .then((ok) => {
+        if (!ok) return;
+        return Promise.all(
+          this.services.map((service) => {
+            const instance = this.instances.get(service);
+            if (!instance) return Promise.resolve();
+            return instance.ready();
+          })
         );
-      }
-      Promise.all(
-        this.services.map((service) => {
-          const instance = this.instances.get(service);
-          if (!instance) return Promise.resolve();
-          return instance.ready();
-        })
-      ).finally(resolve);
-    });
+      })
+      .finally(resolve);
   }
 
   protected printServiceLog(service: MainServicesType, msg: string) {

@@ -10,16 +10,6 @@ crate-type = ["cdylib"]
 napi = { version = "3", default-features = false, features = ["napi8"] }
 napi-derive = "3"
 
-[target.'cfg(windows)'.dependencies]
-image = { version = "0.25", default-features = false, features = ["jpeg", "png", "webp"] }
-once_cell = "1"
-windows-sys = { version = "0.61", features = [
-    "Win32_Foundation",
-    "Win32_Graphics_Dwm",
-    "Win32_Graphics_Gdi",
-    "Win32_UI_WindowsAndMessaging"
-] }
-
 [build-dependencies]
 napi-build = "2"
 
@@ -31,3 +21,50 @@ debug = false
 debug-assertions = false
 overflow-checks = false
 panic = "abort"
+
+[target.'cfg(windows)'.dependencies]
+image = { version = "0.25", default-features = false, features = ["jpeg", "png", "webp"] }
+once_cell = "1"
+windows-sys = { version = "0.61", features = [
+    "Win32_Foundation",
+    "Win32_Graphics_Dwm",
+    "Win32_Graphics_Gdi",
+    "Win32_UI_WindowsAndMessaging"
+] }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+dispatch = "0.2"
+objc2 = "0.6"
+objc2-foundation = { version = "0.3", features = [
+    "NSString",
+    "NSGeometry",
+    "NSValue",
+    "NSThread",
+    "NSObject",
+    "NSObjCRuntime",
+    "NSAttributedString",
+    "NSDictionary",
+    "NSEnumerator"
+] }
+objc2-app-kit = { version = "0.3", features = [
+    "NSApplication",
+    "NSStatusBar",
+    "NSStatusItem",
+    "NSStatusBarButton",
+    "NSButton",
+    "NSControl",
+    "NSCell",
+    "NSView",
+    "NSResponder",
+    "NSTextField",
+    "NSTextFieldCell",
+    "NSText",
+    "NSFont",
+    "NSColor",
+    "NSImage",
+    "NSGraphics",
+    "NSEvent",
+    "NSWindow",
+    "NSScreen"
+] }
+objc2-quartz-core = { version = "0.3", features = ["CALayer"] }

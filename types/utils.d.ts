@@ -15,7 +15,7 @@ type Undefinable<T> = T | undefined;
 
 type Optional<T> = T | null | undefined;
 
-type Falsy = 0 | "" | null | false | undefined;
+type Falsy<T = undefined> = 0 | T | "" | null | false | undefined;
 
 type NullishValue = null | undefined;
 

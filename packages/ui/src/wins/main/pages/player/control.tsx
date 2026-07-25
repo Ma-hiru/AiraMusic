@@ -22,8 +22,11 @@ import { usePageJump } from "@/wins/main/hooks/use-page-jump";
 import { usePlayerActionInList } from "@/wins/main/hooks/use-player-action-in-list";
 import AppToast from "@/common/components/display/toast";
 import RendererPlayerHandle from "@/wins/main/lib/handle";
-import AppModal, { createPlayerPlaylistModal } from "@/common/components/display/modal";
 import IconButton, { type IconButtonProps } from "@/common/components/data-input/icon-button";
+import AppModal, {
+  type PlaylistModalProps,
+  createPlayerPlaylistModal
+} from "@/common/components/display/modal";
 
 import Progress from "./progress";
 
@@ -39,9 +42,10 @@ const Control: FC<ControlProps> = ({ className, itemClassName, containerClassNam
   const setPlayModalAtom = useSetAtom(playModalAtom);
   const fmMode = useAtomValue(fmModeAtom);
 
-  const actionRef = useLatestRef({
+  const actionRef = useLatestRef<PlaylistModalProps>({
     ...usePageJump(),
-    ...usePlayerActionInList(() => player.playlist.list())
+    ...usePlayerActionInList(() => player.playlist.list()),
+    cacheKey: "player-playlist-player-control"
   });
   const openPlaylistModal = useCallback(() => {
     create(createPlayerPlaylistModal, {

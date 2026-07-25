@@ -14,7 +14,10 @@ import AppToast from "@/common/components/display/toast";
 import Tooltip from "@/common/components/display/tooltip";
 import RendererPlayerHandle from "@/wins/main/lib/handle";
 import RangeSlider from "@/common/components/data-input/range";
-import AppModal, { createPlayerPlaylistModal } from "@/common/components/display/modal";
+import AppModal, {
+  type PlaylistModalProps,
+  createPlayerPlaylistModal
+} from "@/common/components/display/modal";
 
 const WHEEL_VOLUME_STEP = 0.1;
 const RESTORE_VOLUME = 0.5;
@@ -61,9 +64,10 @@ const BarBtns: FC<object> = () => {
   const fmMode = useAtomValue(fmModeAtom);
 
   const update = useUpdate();
-  const actionRef = useLatestRef({
+  const actionRef = useLatestRef<PlaylistModalProps>({
     ...usePageJump(),
-    ...usePlayerActionInList(() => player.playlist.list())
+    ...usePlayerActionInList(() => player.playlist.list()),
+    cacheKey: "player-playlist-bar-btns"
   });
   const openPlaylistModal = useCallback(() => {
     create(createPlayerPlaylistModal, actionRef.current);

@@ -11,6 +11,7 @@ import {
   type ReactNode,
   type CSSProperties
 } from "react";
+import { Log } from "@/common/lib/log";
 import { useLatestRef } from "@/common/hooks/use-latest-ref";
 import { useInject, ensureInjectObject } from "@/common/utils/inject";
 
@@ -28,15 +29,31 @@ export type ModalRender = {
   width?: CSSProperties["width"];
   height?: CSSProperties["height"];
   onClose?: NormalFunc<[], void | boolean>;
+  cache?: {
+    key: string;
+    enable: boolean;
+  };
 };
 
 const ModalProvider: FC<{ className?: string }> = ({ className }) => {
   const [render, setRender] = useState<Nullable<ModalRender>>(null);
   const [visible, setVisible] = useState(false);
+  const cacheRef = useRef<Nullable<Map<string, Nullable<ModalRender>>>>(null);
   const renderRef = useLatestRef(render);
   const visibleRef = useLatestRef(visible);
 
-  const setModalRenderData = setRender;
+  if (cacheRef.current === null) cacheRef.current = new Map();
+
+  const setModalRenderData: NormalFunc<[data: Nullable<ModalRender>]> = useCallback((args) => {
+    if (args && args.cache?.enable && args.cache.key) {
+      Log.info("setModalRenderData use cache", args.cache.key);
+      const cache = cacheRef.current?.get(args.cache.key) ?? args;
+      cacheRef.current?.set(args.cache.key, args);
+      setRender(cache);
+      return;
+    }
+    setRender(args);
+  }, []);
 
   const setModalVisible = useCallback((show?: boolean) => {
     if (typeof show === "boolean") {
@@ -47,6 +64,7 @@ const ModalProvider: FC<{ className?: string }> = ({ className }) => {
   }, []);
 
   const getRender = useRef(() => renderRef.current).current;
+
   const getVisible = useRef(() => visibleRef.current).current;
 
   const close = useCallback(() => {

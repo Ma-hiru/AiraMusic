@@ -14,7 +14,7 @@ import TrackList, {
 import type RendererPlayer from "@/common/player/core";
 import type { ModalRender } from "@/common/components/display/modal/modal-provider";
 
-type PlaylistModalProps = {
+type PlaylistModalCallbackProps = {
   onJumpPage?: NormalFunc;
   jumpAlbumPage: NormalFunc<[id: number]>;
   jumpArtistPage: NormalFunc<[id: number]>;
@@ -23,16 +23,26 @@ type PlaylistModalProps = {
   addTrackToPlaylistNext: NormalFunc<[track: NeteaseTrackRecord]>;
 };
 
+export type PlaylistModalProps = PlaylistModalCallbackProps & {
+  cacheKey?: string;
+  player: RendererPlayer;
+};
+
 export function createPlayerPlaylistModal({
   player,
+  cacheKey,
   ...rest
-}: PlaylistModalProps & { player: RendererPlayer }): ModalRender {
+}: PlaylistModalProps): ModalRender {
   return {
     title: "播放列表",
     subTitle: "Queue",
     width: 900,
     height: 640,
     contentClassName: "overflow-hidden! px-4 pb-4",
+    cache: {
+      enable: !!cacheKey,
+      key: cacheKey ?? ""
+    },
     content: <PlayerPlaylistModalContent {...rest} rendererPlayer={player} />
   };
 }
@@ -46,7 +56,7 @@ const PlayerPlaylistModalContent = ({
   jumpAlbumPage,
   jumpArtistPage,
   rendererPlayer
-}: PlaylistModalProps & { rendererPlayer: RendererPlayer }) => {
+}: PlaylistModalCallbackProps & { rendererPlayer: RendererPlayer }) => {
   const { heartManager, playableManager } = useUserTrackManager();
   const player = useListenable(rendererPlayer);
   const trackListRef = useRef<Nullable<TrackListRef>>(null);
