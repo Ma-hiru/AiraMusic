@@ -9,6 +9,10 @@ import {
 } from "@/common/netease/models";
 import NeteaseTrackSource from "@/common/netease/services/track";
 
+/**
+ * - 歌单元数据使用内存缓存，内存失效时，一定会重新请求元信息，只有歌单中的歌曲信息才会使用本地缓存
+ * - 元信息一定是最新的，失效操作只需要清除内存缓存即可
+ * */
 export default class _NeteasePlaylistSource {
   //region cache
   private static readonly cacheKey = "netease_playlist_detail_v1";

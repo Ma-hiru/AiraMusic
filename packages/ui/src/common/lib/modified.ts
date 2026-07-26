@@ -1,3 +1,4 @@
+import { Log } from "@/common/lib/log";
 import { userStoreSnapshot } from "@/common/store/user";
 import { NeteaseServicesUser, NeteaseServicesPlaylist } from "@/common/netease/services";
 import type { NavigateFunction } from "react-router-dom";
@@ -15,6 +16,8 @@ export class RendererModified {
         return `user:${props.user.userId}`;
       case "removePlaylist":
         return `remove:${props.id}`;
+      case "album":
+        return `album:${props.id}`;
     }
   }
 
@@ -30,6 +33,7 @@ export class RendererModified {
     queueMicrotask(async () => {
       switch (props.type) {
         case "playlist":
+          Log.info("playlist modified", props.id);
           if (props.source === "normal") {
             NeteaseServicesPlaylist.invalidate(Number(props.id));
           } else if (props.source === "like") {
@@ -38,10 +42,16 @@ export class RendererModified {
           }
           break;
         case "userPlaylist":
+          Log.info("user playlist modified", props.user.userId);
           await NeteaseServicesUser.refreshUserPlaylist(props.user);
           break;
         case "removePlaylist":
+          Log.info("remove playlist modified", props.id);
           await props.navigate(props.homePath, { replace: true });
+          break;
+        case "album":
+          Log.info("album modified", props.id);
+        // dynamic数据 不缓存
       }
       RendererModified.updaters.get(this.buildKey(props))?.();
     });
@@ -49,6 +59,7 @@ export class RendererModified {
 }
 
 export type ModifiedType =
+  | { type: "album"; id: Nullable<number | string> }
   | {
       type: "userPlaylist";
       user: NeteaseUserModel;

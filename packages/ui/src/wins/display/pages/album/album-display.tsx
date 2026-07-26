@@ -1,8 +1,11 @@
-import { memo, useRef, type FC } from "react";
 import { useLocation } from "react-router-dom";
+import { memo, useRef, type FC, useEffect } from "react";
+import { useUser } from "@/common/store/user";
 import { RendererIPCMessageBus } from "@/common/lib/bus";
+import { RendererModified } from "@/common/lib/modified";
 import { useListenable } from "@/common/hooks/use-listenable";
 import { useRouterActive } from "@/common/hooks/use-router-active";
+import { useAlbumModifySync } from "@/common/hooks/use-album-modify-sync";
 import { useUserTrackManager } from "@/common/hooks/use-user-track-manager";
 import { RoutePath, RoutePathMain, RoutePathDisplay } from "@/common/routes";
 import { useTrackAddToPlaylist } from "@/common/hooks/use-track-add-to-playlist";
@@ -14,12 +17,14 @@ import RendererImageConstants from "@/common/constants/image";
 import Album, { type AlbumPageRef } from "@/common/components/page/album";
 
 const AlbumDisplay: FC<object> = () => {
+  const user = useUser();
   const location = useLocation();
   const albumRef = useRef<Nullable<AlbumPageRef>>(null);
   const trackMetaBus = useListenable(RendererIPCMessageBus.trackMeta);
   const routerActive = useRouterActive(RoutePathDisplay, "album");
   const { id } = RoutePath.parseQuery<{ id: number }>(location, RoutePathMain.album);
   const { heartManager, playableManager } = useUserTrackManager();
+  const { onEdited } = useAlbumModifySync(id ?? null);
 
   const {
     addTrackToPlaylistLast,
@@ -42,11 +47,23 @@ const AlbumDisplay: FC<object> = () => {
   const { setTitle } = useDisplayTitleRegister("album", "专辑");
   const { addTrackToPlaylist } = useTrackAddToPlaylist();
 
+  useEffect(() => {
+    if (!id) return;
+    return RendererModified.listen(
+      {
+        type: "album",
+        id
+      },
+      () => albumRef.current?.reload()
+    );
+  }, [id]);
+
   return (
     <Album
       ref={albumRef}
       id={id!}
       className="display-container pb-0!"
+      user={user}
       pageActionType="out"
       heartManager={heartManager}
       routerActive={routerActive}
@@ -57,6 +74,7 @@ const AlbumDisplay: FC<object> = () => {
       addToPlaylistNext={addTrackToPlaylistNext}
       activeTrackID={trackMetaBus.data?.track?.id}
       coverSize={RendererImageConstants.AlbumPageCoverSize}
+      onEdited={onEdited}
       onAddList={onAddList}
       onClick={onTrackPlay}
       onPageAction={onPageAction}

@@ -19,7 +19,7 @@ type Falsy<T = undefined> = 0 | T | "" | null | false | undefined;
 
 type NullishValue = null | undefined;
 
-type NormalFunc<P extends readonly any[] = never[], R = void> = (...args: P) => R;
+type NormalFunc<P extends readonly any[] = any[], R = void> = (...args: P) => R;
 
 type PromiseFunc<P extends readonly any[] = never[], R = void> = (...args: P) => Promise<R>;
 

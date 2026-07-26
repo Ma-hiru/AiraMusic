@@ -73,19 +73,6 @@ type MessageBus = {
       textColorOnSecondary: string;
     };
   };
-  bus_modify_source:
-    | {
-        type: "user-playlist";
-      }
-    | {
-        type: "remove-playlist";
-        id: Nullable<number | string>;
-      }
-    | {
-        type: "playlist-update";
-        id: Nullable<number | string>;
-        source: Nullable<"like" | "normal">;
-      };
   bus_display:
     | {
         type: "history";
@@ -125,6 +112,23 @@ type MessageBus = {
       | "leave-fullscreen"
       | "always-on-top-changed";
   };
+  bus_modify_source:
+    | {
+        type: "user-playlist";
+      }
+    | {
+        type: "album";
+        id: Nullable<number | string>;
+      }
+    | {
+        type: "remove-playlist";
+        id: Nullable<number | string>;
+      }
+    | {
+        type: "playlist-update";
+        id: Nullable<number | string>;
+        source: Nullable<"like" | "normal">;
+      };
   bus_deliver_track_meta: {
     shuffle: boolean;
     rmActive: boolean;

@@ -419,6 +419,11 @@ const Bus: FC<object> = () => {
           });
           break;
         }
+        case "album":
+          RendererModified.mark({
+            type: "album",
+            id: m.id
+          });
       }
     }
   }, [modifiedBus.data, modifiedBus.type, navigate, userRef, locationRef]);

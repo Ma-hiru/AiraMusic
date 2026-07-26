@@ -37,6 +37,7 @@ import AppError from "@/common/components/fallback/app-error";
 import RendererImageConstants from "@/common/constants/image";
 import TrackList from "@/common/components/display/track_list";
 import AppLoading from "@/common/components/fallback/app-loading";
+import type { PlaylistModifyType } from "@/common/hooks/use-playlist-modify-sync";
 import type {
   TrackListRef,
   TrackListClickFunc,
@@ -84,7 +85,7 @@ interface PlaylistProps {
   onClickArtist: NormalFunc<[id: number]>;
   onCoverLoaded?: NormalFunc<[src: string]>;
   onDataLoaded?: NormalFunc<[playlist: NeteasePlaylist]>;
-  onEdited: Optional<NormalFunc<[modifiedCover: boolean]>>;
+  onEdited: Optional<NormalFunc<[modifies: PlaylistModifyType[]]>>;
 }
 
 const Playlist: FC<PlaylistProps> = ({
@@ -380,6 +381,7 @@ const Playlist: FC<PlaylistProps> = ({
       <AppError reset={reload} message="歌曲加载失败" when={status === "error"}>
         <AppLoading className="h-full w-full" loading={status === "loading"}>
           <Top
+            user={user}
             loading={false}
             reload={reload}
             source={source}

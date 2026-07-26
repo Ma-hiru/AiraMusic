@@ -4,6 +4,7 @@ import { NeteaseAlbum, NeteaseTrackRecord } from "@/common/netease/models";
 
 import _NeteaseTrackSource from "./track";
 
+/** 专辑数据信息永不缓存 */
 export default class _NeteaseAlbumSource {
   //region cache
   private static readonly cacheKey = "netease_album_detail_v4";
@@ -30,6 +31,14 @@ export default class _NeteaseAlbumSource {
         if (res) return NeteaseAlbum.fromObject(res);
         return res;
       });
+  }
+
+  private static removeCache(id: number) {
+    RendererCache.memory.deleteOne(_NeteaseAlbumSource.cacheKey + "_" + id);
+    return RendererCache.service.object.setOne({
+      id: _NeteaseAlbumSource.cacheKey + "_" + id,
+      data: null
+    });
   }
 
   //endregion
@@ -78,5 +87,10 @@ export default class _NeteaseAlbumSource {
   ): T extends Falsy ? null : Promise<NeteaseAPI.NeteaseAlbumDynamicDetailResponse> {
     const res = !id ? null : NeteaseAPIAlbum.detail(typeof id === "number" ? id : id.content.id);
     return res as T extends Falsy ? null : Promise<NeteaseAPI.NeteaseAlbumDynamicDetailResponse>;
+  }
+
+  /** 失效专辑缓存（不含专辑数据，因为其永不缓存） */
+  static invalidate(id: number) {
+    return _NeteaseAlbumSource.removeCache(id);
   }
 }
