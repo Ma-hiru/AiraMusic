@@ -14,7 +14,12 @@ import { NeteaseServicesAlbum } from "@/common/netease/services";
 import { useAgentFocusCtx } from "@/common/hooks/use-agent-focus-ctx";
 import { useTrackContextMenu } from "@/common/hooks/use-track-context-menu";
 import { useRequestAutoRun, useRequestStatusWrap } from "@/common/hooks/use-request-wrap";
-import { NeteaseAlbum, NeteaseTrackRecord, NeteaseHistoryRecord } from "@/common/netease/models";
+import {
+  NeteaseUser,
+  NeteaseAlbum,
+  NeteaseTrackRecord,
+  NeteaseHistoryRecord
+} from "@/common/netease/models";
 import AppToast from "@/common/components/display/toast";
 import Divider from "@/common/components/layout/divider";
 import AppError from "@/common/components/fallback/app-error";
@@ -24,6 +29,7 @@ import TrackList, {
   type TrackListRef,
   type TrackListPlayableManager
 } from "@/common/components/display/track_list";
+import type { AlbumModifyType } from "@/common/hooks/use-album-modify-sync";
 
 import Top from "./top";
 
@@ -40,6 +46,7 @@ interface AlbumPageProps {
   className?: string;
   routerActive: boolean;
   coverSize: NeteaseImageSize;
+  user: Nullable<NeteaseUser>;
   activeTrackID: Undefinable<number>;
   pageActionType: "out" | "none" | "enter";
   heartManager: HeartManager;
@@ -55,12 +62,14 @@ interface AlbumPageProps {
   onCoverLoaded?: NormalFunc<[cover: string]>;
   onRangeUpdate?: NormalFunc<[range: IndexRange]>;
   onDataLoaded?: NormalFunc<[album: NeteaseAlbum]>;
+  onEdited?: NormalFunc<[modifies: AlbumModifyType[]]>;
   onClick: NormalFunc<[track: NeteaseTrackRecord | NeteaseHistoryRecord, index: number]>;
 }
 
 const Album: FC<AlbumPageProps> = ({
   ref,
   id,
+  user,
   className,
   activeTrackID,
   pageActionType,
@@ -71,6 +80,7 @@ const Album: FC<AlbumPageProps> = ({
   addTrackToPlaylist,
   openComment,
   onClick,
+  onEdited,
   onAddList,
   onClickAlbum,
   onDataLoaded,
@@ -140,13 +150,16 @@ const Album: FC<AlbumPageProps> = ({
       <AppError reset={reload} message="加载专辑失败" when={status === "error"}>
         <AppLoading loading={status === "loading"}>
           <Top
+            user={user}
             album={album}
+            reload={reload}
             dynamic={dynamic}
             coverSize={coverSize}
             pageActionType={pageActionType}
             onAddList={onAddList}
             onPageAction={onPageAction}
             onCoverLoaded={onCoverLoaded}
+            onEdited={() => onEdited?.(["star"])}
           />
           <Divider className="my-3" />
           {album && (

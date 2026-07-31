@@ -1,6 +1,7 @@
 import { Provider, createStore } from "jotai";
-import { act, renderHook } from "@testing-library/react";
+import { act, render, screen, waitFor, fireEvent, renderHook } from "@testing-library/react";
 import type { PropsWithChildren } from "react";
+import type { LLMConversationSnapshot, AIProviderConfigSnapshot } from "@mahiru/ai";
 
 const mocks = vi.hoisted(() => ({
   chat: vi.fn(),
@@ -39,8 +40,10 @@ import { useConversation } from "@mahiru/ui/wins/agent/hooks/use-conversation";
 import {
   agentSelectedConfigIDAtom,
   agentConversationStatesAtom,
+  createAgentConversationState,
   agentUpdateConversationStateAtom
 } from "@mahiru/ui/wins/agent/atoms/agent";
+import ChatInput from "@mahiru/ui/wins/agent/page/chat/input";
 
 describe("Agent 会话提交运行态", () => {
   beforeEach(() => {
@@ -151,4 +154,191 @@ describe("Agent 会话提交运行态", () => {
       "run-already-started"
     );
   });
+
+  it("编辑最近中止的消息时传递运行校验，并在本地移除未完成尾部", async () => {
+    mocks.chat.mockResolvedValue({ ok: true, data: { runID: "run-retry" } });
+    const store = createStore();
+    store.set(agentSelectedConfigIDAtom, "config-1");
+    store.set(agentConversationStatesAtom, {
+      "conversation-1": {
+        ...createAgentConversationState(),
+        conversation: createAbortedConversation()
+      }
+    });
+    const wrapper = ({ children }: PropsWithChildren) => (
+      <Provider store={store}>{children}</Provider>
+    );
+    const { result } = renderHook(() => useConversation("conversation-1"), { wrapper });
+
+    expect(result.current.retryCandidate).toEqual({
+      runID: "run-aborted",
+      text: "原始问题"
+    });
+
+    await act(async () => {
+      await expect(result.current.retry("编辑后的问题", "run-aborted")).resolves.toBe(true);
+    });
+
+    expect(mocks.chat).toHaveBeenCalledWith({
+      input: "编辑后的问题",
+      configID: "config-1",
+      conversationID: "conversation-1",
+      retryAbortedRunID: "run-aborted"
+    });
+    expect(store.get(agentConversationStatesAtom)["conversation-1"]).toMatchObject({
+      runningRunID: "run-retry",
+      pendingUserMessage: "编辑后的问题",
+      conversation: {
+        name: "",
+        messages: [
+          { role: "user", content: "上一轮问题" },
+          { role: "assistant", content: "上一轮回答" }
+        ],
+        assistantTurns: [{ runID: "run-previous", messageIndex: 1 }]
+      }
+    });
+    expect(
+      store.get(agentConversationStatesAtom)["conversation-1"]?.conversation?.runtime
+    ).toBeUndefined();
+  });
+
+  it("停止后自动进入编辑态，提交修改后的内容重新生成", async () => {
+    const onRetry = vi.fn().mockResolvedValue(true);
+    render(
+      <ChatInput
+        runningRunID=""
+        selectedConversationID="conversation-1"
+        retryCandidate={{ runID: "run-aborted", text: "原始问题" }}
+        activeConfig={{ id: "config-1" } as AIProviderConfigSnapshot}
+        onAbort={vi.fn()}
+        onRetry={onRetry}
+        onSubmit={vi.fn().mockResolvedValue(true)}
+      />
+    );
+
+    const input = screen.getByRole("textbox");
+    await waitFor(() => expect(input).toHaveValue("原始问题"));
+    expect(input).not.toHaveFocus();
+    expect(screen.getByText(/正在编辑已停止的消息/)).toBeInTheDocument();
+
+    fireEvent.change(input, { target: { value: "编辑后的问题" } });
+    fireEvent.keyDown(input, { key: "Enter", isComposing: true, keyCode: 229 });
+    expect(onRetry).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: "重新生成" }));
+
+    await waitFor(() => {
+      expect(onRetry).toHaveBeenCalledWith("编辑后的问题", "run-aborted");
+    });
+    expect(input).toHaveValue("");
+  });
+
+  it("手动编辑中止消息时，取消后恢复原有草稿", async () => {
+    const commonProps = {
+      activeConfig: { id: "config-1" } as AIProviderConfigSnapshot,
+      runningRunID: "",
+      selectedConversationID: "conversation-1",
+      onAbort: vi.fn(),
+      onRetry: vi.fn().mockResolvedValue(true),
+      onSubmit: vi.fn().mockResolvedValue(true)
+    };
+    const { rerender } = render(<ChatInput {...commonProps} retryCandidate={null} />);
+    const input = screen.getByRole("textbox");
+    fireEvent.change(input, { target: { value: "尚未发送的草稿" } });
+
+    rerender(
+      <ChatInput
+        {...commonProps}
+        retryCandidate={{ runID: "run-aborted", text: "已停止的原消息" }}
+      />
+    );
+    await waitFor(() => {
+      expect(screen.getByText("编辑已停止的消息并重新生成")).toBeInTheDocument();
+    });
+    expect(input).toHaveValue("尚未发送的草稿");
+
+    fireEvent.click(screen.getByText("编辑已停止的消息并重新生成"));
+    expect(input).toHaveValue("已停止的原消息");
+    fireEvent.click(screen.getByRole("button", { name: "取消编辑已停止的消息" }));
+    expect(input).toHaveValue("尚未发送的草稿");
+  });
+
+  it("请求等待期间输入的新草稿不会被旧请求完成事件清空", async () => {
+    let resolveSubmit!: (accepted: boolean) => void;
+    const onSubmit = vi.fn(
+      () =>
+        new Promise<boolean>((resolve) => {
+          resolveSubmit = resolve;
+        })
+    );
+    render(
+      <ChatInput
+        runningRunID=""
+        retryCandidate={null}
+        selectedConversationID="conversation-1"
+        activeConfig={{ id: "config-1" } as AIProviderConfigSnapshot}
+        onAbort={vi.fn()}
+        onSubmit={onSubmit}
+        onRetry={vi.fn().mockResolvedValue(true)}
+      />
+    );
+
+    const input = screen.getByRole("textbox");
+    fireEvent.change(input, { target: { value: "第一条消息" } });
+    fireEvent.click(screen.getByRole("button", { name: "发送消息" }));
+    expect(onSubmit).toHaveBeenCalledWith("第一条消息");
+
+    fireEvent.change(input, { target: { value: "等待期间的新草稿" } });
+    await act(async () => {
+      resolveSubmit(true);
+    });
+
+    expect(input).toHaveValue("等待期间的新草稿");
+  });
+});
+
+const createAbortedConversation = (): LLMConversationSnapshot => ({
+  id: "conversation-1",
+  name: "首轮自动标题",
+  createdAt: 1,
+  updatedAt: 2,
+  metadata: {},
+  messages: [
+    { role: "user", content: "上一轮问题" },
+    { role: "assistant", content: "上一轮回答" },
+    { role: "user", content: "原始问题" },
+    { role: "assistant", content: "先搜索资料" },
+    { role: "assistant", content: "半截回复" }
+  ],
+  runtime: {
+    runID: "run-aborted",
+    status: "aborted",
+    startedAt: 10,
+    endedAt: 20,
+    terminal: true,
+    incomplete: true,
+    titleGenerated: true,
+    inputMessageIndex: 2
+  },
+  assistantTurns: [
+    {
+      runID: "run-previous",
+      step: 0,
+      status: "complete",
+      messageIndex: 1,
+      finishReason: "stop"
+    },
+    {
+      runID: "run-aborted",
+      step: 0,
+      status: "complete",
+      messageIndex: 3,
+      finishReason: "tool_calls"
+    },
+    {
+      runID: "run-aborted",
+      step: 1,
+      status: "incomplete",
+      messageIndex: 4
+    }
+  ]
 });

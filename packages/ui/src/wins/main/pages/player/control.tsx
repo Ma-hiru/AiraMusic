@@ -1,6 +1,6 @@
 import { cx } from "@emotion/css";
-import { useSetAtom, useAtomValue } from "jotai";
-import { memo, type FC, useMemo, useCallback } from "react";
+import { useAtom, useSetAtom, useAtomValue } from "jotai";
+import { memo, type FC, useMemo, useCallback, startTransition } from "react";
 import {
   Play,
   Pause,
@@ -10,20 +10,24 @@ import {
   Shuffle,
   SkipBack,
   ListMusic,
+  HeartPulse,
   SkipForward,
   LoaderCircle,
   ArrowRightLeft
 } from "lucide-react";
-import { fmModeAtom } from "@/wins/main/atoms/track";
 import { NeteaseAPITrack } from "@/common/netease/api";
 import { playModalAtom } from "@/wins/main/atoms/layout";
 import { useLatestRef } from "@/common/hooks/use-latest-ref";
 import { usePageJump } from "@/wins/main/hooks/use-page-jump";
+import { fmModeAtom, intelligenceModeAtom } from "@/wins/main/atoms/track";
 import { usePlayerActionInList } from "@/wins/main/hooks/use-player-action-in-list";
 import AppToast from "@/common/components/display/toast";
 import RendererPlayerHandle from "@/wins/main/lib/handle";
-import AppModal, { createPlayerPlaylistModal } from "@/common/components/display/modal";
 import IconButton, { type IconButtonProps } from "@/common/components/data-input/icon-button";
+import AppModal, {
+  type PlaylistModalProps,
+  createPlayerPlaylistModal
+} from "@/common/components/display/modal";
 
 import Progress from "./progress";
 
@@ -38,10 +42,12 @@ const Control: FC<ControlProps> = ({ className, itemClassName, containerClassNam
   const player = RendererPlayerHandle.usePlayer();
   const setPlayModalAtom = useSetAtom(playModalAtom);
   const fmMode = useAtomValue(fmModeAtom);
+  const [intelligenceMode, setIntelligenceMode] = useAtom(intelligenceModeAtom);
 
-  const actionRef = useLatestRef({
+  const actionRef = useLatestRef<PlaylistModalProps>({
     ...usePageJump(),
-    ...usePlayerActionInList(() => player.playlist.list())
+    ...usePlayerActionInList(() => player.playlist.list()),
+    cacheKey: "player-playlist-player-control"
   });
   const openPlaylistModal = useCallback(() => {
     create(createPlayerPlaylistModal, {
@@ -60,6 +66,12 @@ const Control: FC<ControlProps> = ({ className, itemClassName, containerClassNam
       text: `已移除 ${current.name}`
     });
   }, [fmMode, player]);
+
+  const disableHeart = useCallback(() => {
+    startTransition(() => {
+      setIntelligenceMode(false);
+    });
+  }, [setIntelligenceMode]);
 
   const centerIcon = useMemo(() => {
     if (player.playing) {
@@ -130,6 +142,7 @@ const Control: FC<ControlProps> = ({ className, itemClassName, containerClassNam
           />
         )}
         {!fmMode &&
+          !intelligenceMode &&
           (player.playlist.shuffle ? (
             <ControlBtn
               icon={Shuffle}
@@ -150,6 +163,16 @@ const Control: FC<ControlProps> = ({ className, itemClassName, containerClassNam
               onClick={() => (player.playlist.shuffle = true)}
             />
           ))}
+        {intelligenceMode && (
+          <ControlBtn
+            label="关闭心动模式"
+            icon={HeartPulse}
+            iconClassName="scale-85"
+            itemClassName={itemClassName}
+            onClick={disableHeart}
+            aria-pressed
+          />
+        )}
         {player.playlist.repeat !== "off" ? (
           <ControlBtn
             icon={Repeat1}

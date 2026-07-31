@@ -110,7 +110,9 @@ export default class _NeteaseUserSource {
   }
 
   static async logout() {
-    await NeteaseAPIAuth.logout();
     NeteaseCookie.clearLoggedIn();
+    NeteaseAPIAuth.logout().catch((err) => {
+      Log.error("logout error", err);
+    });
   }
 }

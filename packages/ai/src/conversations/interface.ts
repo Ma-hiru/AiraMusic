@@ -27,6 +27,10 @@ export interface LLMConversationRuntimeSnapshot {
   startedAt: number;
   terminal: boolean;
   incomplete: boolean;
+  /** 回退该轮时一并撤销自动生成的标题。 */
+  titleGenerated?: boolean;
+  /** 用于安全回退最近一次中止运行。 */
+  inputMessageIndex?: number;
   usage?: LLMConversationUsage;
   status: LLMConversationRuntimeStatus;
   error?: {

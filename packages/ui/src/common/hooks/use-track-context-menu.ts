@@ -1,5 +1,6 @@
 import { useCallback } from "react";
 import { NeteaseTrackRecord } from "@/common/netease/models";
+import AppToast from "@/common/components/display/toast";
 import AppContextMenu from "@/common/components/display/menu";
 import type {
   TrackListClickFunc,
@@ -44,9 +45,17 @@ export function useTrackContextMenu(props: {
               break;
             case "nextPlay":
               addToPlaylistNext(track);
+              AppToast.show({
+                type: "info",
+                text: "已添加到下一首播放"
+              });
               break;
             case "addPlayList":
               addToPlaylistLast(track);
+              AppToast.show({
+                type: "info",
+                text: "已添加到播放列表"
+              });
               break;
             case "comment":
               void openComment(track);

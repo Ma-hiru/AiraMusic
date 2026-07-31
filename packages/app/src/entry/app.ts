@@ -156,6 +156,11 @@ export class MainApp {
     }
   }
 
+  /**
+   * @desc 是否启用Agent \
+   * error: log \
+   * return: 是否启用成功
+   * */
   private enableAgent() {
     try {
       return MainStoreForConfig.get("enableAgent", true) && !!MainAgent.init();

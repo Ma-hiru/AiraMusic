@@ -18,15 +18,37 @@ import {
   parseAgentToolValue,
   getAgentWebToolDetails,
   getAgentToolPresentation,
+  isInternalAgentToolResult,
   getAgentToolSemanticResult,
   type AgentToolSemanticResult
 } from "./tool-presentation";
 
 interface ToolStepProps {
+  collapseEnabled?: boolean;
   item: AgentToolTimelineItem;
 }
 
-const ToolStep: FC<ToolStepProps> = ({ item }) => {
+const ToolStep: FC<ToolStepProps> = ({ item, collapseEnabled }) => {
+  const internalCallIDs = new Set(
+    item.toolResults
+      .filter((result) => isInternalAgentToolResult(result.output))
+      .map((result) => result.callID)
+  );
+  if (!internalCallIDs.size) {
+    return <VisibleToolStep item={item} collapseEnabled={collapseEnabled} />;
+  }
+
+  const visibleItem: AgentToolTimelineItem = {
+    ...item,
+    toolCalls: item.toolCalls.filter((call) => !internalCallIDs.has(call.callID)),
+    toolResults: item.toolResults.filter((result) => !internalCallIDs.has(result.callID))
+  };
+  if (!visibleItem.toolCalls.length && !visibleItem.toolResults.length) return null;
+
+  return <VisibleToolStep item={visibleItem} collapseEnabled={collapseEnabled} />;
+};
+
+const VisibleToolStep: FC<ToolStepProps> = ({ item, collapseEnabled }) => {
   const contentID = useAccessibleID("agent-tool-step");
   const calls = useMemo(() => {
     if (item.toolCalls.length) return item.toolCalls;
@@ -38,6 +60,7 @@ const ToolStep: FC<ToolStepProps> = ({ item }) => {
   }, [item.toolCalls, item.toolResults]);
   const hasError = item.toolResults.some((result) => isAgentToolError(result.output));
   const status = hasError ? "error" : item.status;
+  const canCollapse = collapseEnabled ?? status !== "running";
   const [open, setOpen] = useState(shouldAutoOpen);
   const manuallyToggledRef = useRef(false);
   const itemIDRef = useRef(item.id);
@@ -65,6 +88,7 @@ const ToolStep: FC<ToolStepProps> = ({ item }) => {
   }, [item.id, status]);
 
   const toggleOpen = () => {
+    if (open && !canCollapse) return;
     manuallyToggledRef.current = true;
     setOpen((value) => !value);
   };
@@ -82,15 +106,22 @@ const ToolStep: FC<ToolStepProps> = ({ item }) => {
         aria-hidden="true"
       />
       <button
-        className="
-          group flex h-11 w-full cursor-pointer items-center gap-2.5 bg-transparent
-          px-3 text-left outline-none transition-colors duration-150 hover:bg-white/[0.05]
-          focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white/45
-        "
+        className={cx(
+          `
+            group flex h-11 w-full items-center gap-2.5 bg-transparent px-3 text-left
+            outline-none transition-colors duration-150 hover:bg-white/[0.05]
+            focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white/45
+          `,
+          open && !canCollapse ? "cursor-default" : "cursor-pointer"
+        )}
         type="button"
         aria-expanded={open}
         aria-controls={contentID}
-        onClick={toggleOpen}>
+        aria-disabled={open && !canCollapse}
+        onClick={toggleOpen}
+        title={
+          open && !canCollapse ? "回复完成后可收起工具结果" : open ? "收起工具结果" : "展开工具结果"
+        }>
         <span className="flex size-6 shrink-0 items-center justify-center rounded-md border border-white/7 bg-white/[0.045] text-white/56 shadow-inner shadow-white/[0.025]">
           <presentation.icon className="size-3.5" aria-hidden="true" />
         </span>
@@ -115,11 +146,11 @@ const ToolStep: FC<ToolStepProps> = ({ item }) => {
           <span className="sm:hidden" aria-label={getStatusLabel(status)}>
             <StatusIcon status={status} />
           </span>
-          {open ? (
+          {open && canCollapse ? (
             <ChevronDown className="size-3 text-white/30" aria-hidden="true" />
-          ) : (
+          ) : !open ? (
             <ChevronRight className="size-3 text-white/30" aria-hidden="true" />
-          )}
+          ) : null}
         </div>
       </button>
 
@@ -310,6 +341,10 @@ const WebToolSummary: FC<{
   const searchScope = details.query
     ? [details.scopeLabel, details.scopeDomains.join(" / ")].filter(Boolean).join(" · ")
     : "";
+  const provenance = [
+    details.author ? `作者 ${details.author}` : "",
+    details.publishedAt ? formatWebPublishedAt(details.publishedAt) : ""
+  ].filter(Boolean);
 
   return (
     <div className="min-w-0 rounded-r-lg border-l border-sky-200/22 bg-sky-100/[0.022] px-3 py-2.5">
@@ -330,6 +365,9 @@ const WebToolSummary: FC<{
         <div className="mt-0.5 truncate text-[10px] text-white/34">
           {searchScope || details.domain || details.site}
         </div>
+      )}
+      {provenance.length > 0 && (
+        <div className="mt-0.5 truncate text-[9px] text-white/28">{provenance.join(" · ")}</div>
       )}
       {metrics.length > 0 && (
         <div className="mt-1.5 flex flex-wrap items-center gap-x-2 text-[9px] text-white/30">
@@ -376,6 +414,12 @@ const WebToolSummary: FC<{
     </div>
   );
 };
+
+function formatWebPublishedAt(value: string) {
+  const calendarDate = value.match(/^(\d{4})-(\d{2})-(\d{2})(?:T|$)/);
+  if (!calendarDate) return value;
+  return `${calendarDate[1]}年${Number(calendarDate[2])}月${Number(calendarDate[3])}日`;
+}
 
 const CodeBlock: FC<{ label: string; value: string }> = memo(({ label, value }) => (
   <div className="min-w-0">

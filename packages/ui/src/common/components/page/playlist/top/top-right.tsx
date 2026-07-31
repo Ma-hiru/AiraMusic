@@ -22,7 +22,7 @@ interface TopRightProps {
   setTying: NormalFunc<[typing: boolean]>;
   onPageAction?: NormalFunc;
   /** 编辑保存成功后刷新歌单页 */
-  onEdited?: Optional<NormalFunc<[modifiedCover: boolean]>>;
+  onEdited?: Optional<NormalFunc>;
   /** 删除歌单成功后离开当前页 */
   reload?: NormalFunc;
   selectionMode?: boolean;

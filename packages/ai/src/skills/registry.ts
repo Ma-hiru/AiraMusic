@@ -85,6 +85,14 @@ export class AIAgentSkillRegistry {
         requiredEvidence.set(`${definition.id}:${requirement.id}`, {
           ...structuredClone(requirement),
           id: `${definition.id}:${requirement.id}`,
+          ...(requirement.argumentFromEvidence
+            ? {
+                argumentFromEvidence: {
+                  ...requirement.argumentFromEvidence,
+                  evidenceID: `${definition.id}:${requirement.argumentFromEvidence.evidenceID}`
+                }
+              }
+            : {}),
           ...(requirement.dependsOn
             ? {
                 dependsOn: requirement.dependsOn.map(
@@ -170,6 +178,22 @@ export class AIAgentSkillRegistry {
           return AIResult.err({
             type: "invalid_skill_config",
             message: `Skill 证据依赖不存在或指向自身：${definition.id}:${requirement.id}`
+          });
+        }
+        const argumentSource = requirement.argumentFromEvidence;
+        if (
+          argumentSource &&
+          (!argumentSource.argumentName.trim() ||
+            argumentSource.evidenceID === requirement.id ||
+            !configuredRequirementIDs.has(argumentSource.evidenceID) ||
+            !requirement.dependsOn?.includes(argumentSource.evidenceID) ||
+            !argumentSource.outputPath.length ||
+            argumentSource.outputPath.length > 16 ||
+            argumentSource.outputPath.some((segment) => !segment.trim()))
+        ) {
+          return AIResult.err({
+            type: "invalid_skill_config",
+            message: `Skill 证据参数来源无效：${definition.id}:${requirement.id}`
           });
         }
       }

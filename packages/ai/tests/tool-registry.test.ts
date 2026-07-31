@@ -41,14 +41,18 @@ describe("LLMToolRegistry output budget", () => {
 
     expect(result.isOk()).toBe(true);
     expect(result.unwrap().output.length).toBeLessThanOrEqual(320);
-    expect(result.unwrap().output).toContain("tool output truncated");
+    expect(result.unwrap().output).toContain("工具结果已裁剪");
   });
 
-  it("keeps definition selection stable and exposes explicit parallel safety", () => {
-    const registry = new LLMToolRegistry({ parallelSafeNames: ["read"] });
+  it("keeps definition selection stable and exposes independent parallel/retry safety", () => {
+    const registry = new LLMToolRegistry({
+      parallelSafeNames: ["read"],
+      retrySafeNames: ["read", "idempotent"]
+    });
     registry.register([
       new OutputTool("read", { ok: true }),
-      new OutputTool("write", { ok: true })
+      new OutputTool("write", { ok: true }),
+      new OutputTool("idempotent", { ok: true })
     ]);
 
     expect(registry.definitions(true, ["write"]).map((tool) => tool.name)).toEqual(["write"]);
@@ -58,6 +62,10 @@ describe("LLMToolRegistry output budget", () => {
     ]);
     expect(registry.isParallelSafe("read")).toBe(true);
     expect(registry.isParallelSafe("write")).toBe(false);
+    expect(registry.isRetrySafe("read")).toBe(true);
+    expect(registry.isRetrySafe("idempotent")).toBe(true);
+    expect(registry.isParallelSafe("idempotent")).toBe(false);
+    expect(registry.isRetrySafe("write")).toBe(false);
   });
 
   it("does not execute a registered tool outside the current routed allowlist", async () => {
@@ -71,7 +79,32 @@ describe("LLMToolRegistry output budget", () => {
     );
 
     expect(result.isErr()).toBe(true);
-    if (result.isErr()) expect(result.reason.type).toBe("unknown_tool");
+    if (result.isErr()) {
+      expect(result.reason.type).toBe("unknown_tool");
+      expect(result.reason.message).not.toContain("本轮未启用");
+      expect(result.reason.raw).toMatchObject({
+        reason: "not_selected",
+        visibility: "internal"
+      });
+    }
+  });
+
+  it("仍把完全未注册的名称报告为真实工具错误", async () => {
+    const registry = new LLMToolRegistry();
+    registry.register(new OutputTool("read", { ok: true }));
+
+    const result = await registry.execute(
+      { name: "missing", callID: "call-missing", arguments: "{}" },
+      context(),
+      ["read"]
+    );
+
+    expect(result.isErr()).toBe(true);
+    if (result.isErr()) {
+      expect(result.reason.type).toBe("unknown_tool");
+      expect(result.reason.message).toContain("未知工具");
+      expect(result.reason.raw).toBeUndefined();
+    }
   });
 
   it("normalizes a thrown tool exception into an AIResult error", async () => {

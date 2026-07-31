@@ -241,6 +241,7 @@ const Bus: FC<object> = () => {
           return album.tracks;
         }
         case "fm":
+        case "intelligence":
         case "other": {
           const tracks = await NeteaseServicesTrack.ids(allIDs);
           return tracks.map(
@@ -419,6 +420,11 @@ const Bus: FC<object> = () => {
           });
           break;
         }
+        case "album":
+          RendererModified.mark({
+            type: "album",
+            id: m.id
+          });
       }
     }
   }, [modifiedBus.data, modifiedBus.type, navigate, userRef, locationRef]);

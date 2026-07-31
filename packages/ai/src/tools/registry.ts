@@ -12,12 +12,15 @@ import type {
 export interface LLMToolRegistryOptions {
   maxOutputChars?: number;
   parallelSafeNames?: Iterable<string>;
+  /** 中止后允许整轮重新执行的工具；必须没有不可逆或重复副作用。 */
+  retrySafeNames?: Iterable<string>;
   serializeOutput?: NormalFunc<[output: unknown], string>;
 }
 
 export class LLMToolRegistry {
   private readonly tools = new Map<string, LLMTool>();
   private readonly parallelSafeNames: Set<string>;
+  private readonly retrySafeNames: Set<string>;
   private readonly maxOutputChars?: number;
   private readonly serializeOutput: NormalFunc<[output: unknown], string>;
 
@@ -26,6 +29,7 @@ export class LLMToolRegistry {
       options.maxOutputChars === undefined ? undefined : Math.max(256, options.maxOutputChars);
     this.serializeOutput = options.serializeOutput ?? this.defaultSerializeOutput.bind(this);
     this.parallelSafeNames = new Set(options.parallelSafeNames ?? []);
+    this.retrySafeNames = new Set(options.retrySafeNames ?? []);
   }
 
   register(tool: LLMTool | LLMTool[]): AIResult<void> {
@@ -65,6 +69,10 @@ export class LLMToolRegistry {
     return this.parallelSafeNames.has(name);
   }
 
+  isRetrySafe(name: string): boolean {
+    return this.retrySafeNames.has(name);
+  }
+
   get(name: string): AIResult<LLMTool> {
     const tool = this.tools.get(name);
 
@@ -83,14 +91,16 @@ export class LLMToolRegistry {
     context: LLMToolContext,
     selectedNames?: readonly string[]
   ): Promise<AIResult<LLMToolResult>> {
+    const toolResult = this.get(call.name);
+    if (toolResult.isErr()) return toolResult;
+
     if (selectedNames && !selectedNames.includes(call.name)) {
       return AIResult.err({
         type: "unknown_tool",
-        message: `工具未在本轮启用：${call.name}`
+        message: "内部工具路由不匹配，请改用本轮提供的工具。",
+        raw: { reason: "not_selected", visibility: "internal" }
       });
     }
-    const toolResult = this.get(call.name);
-    if (toolResult.isErr()) return toolResult;
 
     const argsResult = this.parseToolArguments(call);
     if (argsResult.isErr()) return argsResult;
@@ -154,8 +164,9 @@ export class LLMToolRegistry {
     }
   }
 
-  private limitOutput(output: string) {
-    const limit = this.maxOutputChars;
+  limitOutput(output: string, maxOutputChars = this.maxOutputChars) {
+    const limit =
+      maxOutputChars === undefined ? undefined : Math.max(256, Math.floor(maxOutputChars));
     if (!limit || output.length <= limit) return output;
 
     const originalChars = output.length;
@@ -163,7 +174,7 @@ export class LLMToolRegistry {
       JSON.parse(output);
       return this.buildJSONPreview(output, originalChars, limit);
     } catch {
-      const marker = `\n… [tool output truncated: ${originalChars - limit} chars omitted]`;
+      const marker = `\n… [工具结果已裁剪，原始共 ${originalChars} 个字符]`;
       const contentChars = Math.max(0, limit - marker.length);
       return `${output.slice(0, contentChars)}${marker}`.slice(0, limit);
     }

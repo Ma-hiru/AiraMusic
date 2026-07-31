@@ -8,6 +8,7 @@ export type { NormalEvent, NormalEventArgs, NormalEventMaps } from "./src/types/
 
 export type {
   InvokeEvent,
+  AgentChatInput,
   InvokeEventArgs,
   InvokeEventMaps,
   InvokeEventPayload

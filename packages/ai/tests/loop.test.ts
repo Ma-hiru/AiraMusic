@@ -258,6 +258,46 @@ describe("LLMLoop", () => {
     ]);
   });
 
+  it("在结果首次进入上下文时限制本轮工具输出总量", async () => {
+    const firstCall = { name: "large_output", callID: "large-1", arguments: "{}" };
+    const secondCall = { name: "large_output", callID: "large-2", arguments: "{}" };
+    const provider = new FakeProvider([
+      response({ toolCalls: [firstCall], finishReason: "tool_calls" }),
+      response({ toolCalls: [secondCall], finishReason: "tool_calls" }),
+      response({ text: "已根据有限结果完成。" })
+    ]);
+    const conversation = LLMConversation.create({ id: "tool-output-run-budget" }).unwrap();
+    const registry = new LLMToolRegistry();
+    registry.register(new LargeOutputTool());
+
+    const run = await collectRun(
+      LLMLoop.run({
+        signal,
+        conversation,
+        input: "连续读取大结果",
+        tools: {
+          registry,
+          strict: true,
+          choice: "auto",
+          maxTotalOutputChars: 600
+        },
+        provider,
+        config: { model: "test", apiKey: "test-key" },
+        promptBuilder: new LLMPromptBuilder(),
+        maxSteps: 3
+      })
+    );
+
+    expect(run.result.isOk()).toBe(true);
+    const toolMessages = run.result.unwrap().messages.filter((message) => message.role === "tool");
+    expect(toolMessages).toHaveLength(2);
+    expect(
+      toolMessages.reduce((total, message) => total + message.content.length, 0)
+    ).toBeLessThanOrEqual(600);
+    expect(toolMessages[0]?.content).toContain("工具结果已裁剪");
+    expect(toolMessages[1]?.content).toBe("");
+  });
+
   it("forwards provider context across a tool step without interpreting it", async () => {
     const providerContext = {
       provider: "test.provider",
@@ -333,6 +373,36 @@ describe("LLMLoop", () => {
     expect(conversation.toMessages()).toEqual([]);
     expect(provider.generateRequests).toHaveLength(0);
     expect(run.events.some((event) => event.type === "tool_result")).toBe(true);
+  });
+
+  it("把动态路由失配标记为仅内部可见的工具结果", async () => {
+    const provider = new FakeProvider([
+      response({ toolCalls: [searchCall], finishReason: "tool_calls" }),
+      response({ text: "改用本轮能力继续回答。" })
+    ]);
+    const conversation = LLMConversation.create({ id: "internal-tool-routing" }).unwrap();
+    const registry = new LLMToolRegistry();
+    registry.register(new SearchMusicTool());
+
+    const run = await collectRun(
+      LLMLoop.run({
+        signal,
+        conversation,
+        input: "继续",
+        tools: { registry, strict: true, choice: "auto", selectedNames: [] },
+        provider,
+        config: { model: "test", apiKey: "test-key" },
+        promptBuilder: new LLMPromptBuilder(),
+        maxSteps: 2
+      })
+    );
+
+    expect(run.result.isOk()).toBe(true);
+    const toolMessage = run.result.unwrap().messages.find((message) => message.role === "tool");
+    expect(toolMessage?.content).toContain('"visibility":"internal"');
+    expect(toolMessage?.content).not.toContain("本轮未启用");
+    expect(toolMessage?.content).not.toContain('"call"');
+    expect(toolMessage?.content.length).toBeLessThan(180);
   });
 
   it("keeps request-only dynamic context in later tool steps", async () => {
@@ -779,6 +849,164 @@ describe("LLMLoop", () => {
     ]);
   });
 
+  it("只接受真实出现在前置证据结果中的后续工具参数", async () => {
+    const trustedURL = "https://trusted.test/article?a=1&b=2";
+    const searchResultURL = "https://trusted.test/article/?b=2&a=1#source";
+    const secondSearchURL = "https://trusted.test/second";
+    const searchPageURL = "https://search.test/?q=Aira";
+    const provider = new FakeProvider([
+      response({
+        toolCalls: [
+          {
+            name: "evidence_browser",
+            callID: "call_source_search",
+            arguments: JSON.stringify({ action: "search", query: "Aira" })
+          }
+        ],
+        finishReason: "tool_calls"
+      }),
+      response({
+        toolCalls: [
+          {
+            name: "evidence_browser",
+            callID: "call_source_search_second",
+            arguments: JSON.stringify({ action: "search", query: "second" })
+          }
+        ],
+        finishReason: "tool_calls"
+      }),
+      response({
+        toolCalls: [
+          {
+            name: "evidence_browser",
+            callID: "call_arbitrary_open",
+            arguments: JSON.stringify({
+              action: "open",
+              url: searchPageURL
+            })
+          }
+        ],
+        finishReason: "tool_calls"
+      }),
+      response({
+        toolCalls: [
+          {
+            name: "evidence_browser",
+            callID: "call_grounded_open",
+            arguments: JSON.stringify({ action: "open", url: trustedURL })
+          }
+        ],
+        finishReason: "tool_calls"
+      }),
+      response({ text: "只使用搜索结果中的链接完成了取证。" })
+    ]);
+    const conversation = LLMConversation.create({ id: "evidence-result-reference" }).unwrap();
+    const registry = new LLMToolRegistry({ maxOutputChars: 512 });
+    registry.register(new EvidenceBrowserTool(searchResultURL, searchPageURL, secondSearchURL));
+
+    const run = await collectRun(
+      LLMLoop.run({
+        signal,
+        conversation,
+        input: "介绍 Aira",
+        tools: { registry, strict: true, choice: "auto" },
+        requiredEvidence: [
+          {
+            id: "overview:search",
+            description: "搜索可信网页",
+            toolNames: ["evidence_browser"],
+            argumentEquals: { action: "search" }
+          },
+          {
+            id: "overview:open",
+            description: "打开搜索结果",
+            toolNames: ["evidence_browser"],
+            argumentEquals: { action: "open" },
+            satisfaction: "attempt",
+            dependsOn: ["overview:search"],
+            argumentFromEvidence: {
+              argumentName: "url",
+              evidenceID: "overview:search",
+              outputPath: ["results", "url"]
+            }
+          }
+        ],
+        provider,
+        config: { model: "test", apiKey: "test-key" },
+        promptBuilder: new LLMPromptBuilder(),
+        maxSteps: 5
+      })
+    );
+
+    expect(run.result.isOk()).toBe(true);
+    expect(provider.requests.map((request) => request.toolChoice)).toEqual([
+      "required",
+      "required",
+      "required",
+      "required",
+      "auto"
+    ]);
+  });
+
+  it("搜索成功但没有候选链接时仍视为缺少可用证据", async () => {
+    const provider = new FakeProvider([
+      response({
+        toolCalls: [
+          {
+            name: "evidence_browser",
+            callID: "call_empty_search",
+            arguments: JSON.stringify({ action: "search", query: "empty" })
+          }
+        ],
+        finishReason: "tool_calls"
+      }),
+      response({ text: "没有候选也提前回答。" }),
+      response({ text: "仍然没有补充搜索结果。" })
+    ]);
+    const conversation = LLMConversation.create({ id: "empty-evidence-results" }).unwrap();
+    const registry = new LLMToolRegistry();
+    registry.register(new EvidenceBrowserTool("https://trusted.test/article"));
+
+    const run = await collectRun(
+      LLMLoop.run({
+        signal,
+        conversation,
+        input: "介绍 Aira",
+        tools: { registry, strict: true, choice: "auto" },
+        requiredEvidence: [
+          {
+            id: "overview:search",
+            description: "搜索可信网页",
+            toolNames: ["evidence_browser"],
+            argumentEquals: { action: "search" }
+          },
+          {
+            id: "overview:open",
+            description: "打开搜索结果",
+            toolNames: ["evidence_browser"],
+            argumentEquals: { action: "open" },
+            satisfaction: "attempt",
+            dependsOn: ["overview:search"],
+            argumentFromEvidence: {
+              argumentName: "url",
+              evidenceID: "overview:search",
+              outputPath: ["results", "url"]
+            }
+          }
+        ],
+        provider,
+        config: { model: "test", apiKey: "test-key" },
+        promptBuilder: new LLMPromptBuilder(),
+        maxSteps: 3
+      })
+    );
+
+    expect(run.result.isErr()).toBe(true);
+    if (run.result.isErr()) {
+      expect(run.result.reason.message).toContain("搜索可信网页");
+    }
+  });
+
   it("fails when the model ignores the evidence correction twice", async () => {
     const provider = new FakeProvider([
       response({ text: "第一次提前回答" }),
@@ -1052,7 +1280,59 @@ class FlakySearchMusicTool extends SearchMusicTool {
   }
 }
 
+const evidenceBrowserSchema = z.discriminatedUnion("action", [
+  z.object({ action: z.literal("search"), query: z.string() }),
+  z.object({ action: z.literal("open"), url: z.string() })
+]);
+
+class EvidenceBrowserTool extends LLMTool<typeof evidenceBrowserSchema, unknown> {
+  readonly inputSchema = evidenceBrowserSchema;
+
+  constructor(
+    private readonly trustedURL: string,
+    private readonly searchPageURL = "https://search.test/",
+    private readonly secondSearchURL?: string
+  ) {
+    super({ name: "evidence_browser", description: "搜索并打开网页" });
+  }
+
+  override async execute(input: z.infer<typeof evidenceBrowserSchema>) {
+    return AIResult.ok(
+      input.action === "search"
+        ? {
+            url: this.searchPageURL,
+            padding: "x".repeat(2_000),
+            results:
+              input.query === "empty"
+                ? []
+                : [
+                    {
+                      title: "可信文章",
+                      url:
+                        input.query === "second" && this.secondSearchURL
+                          ? this.secondSearchURL
+                          : this.trustedURL
+                    }
+                  ]
+          }
+        : { title: "网页正文", url: input.url }
+    );
+  }
+}
+
 const emptySchema = z.object({});
+
+class LargeOutputTool extends LLMTool<typeof emptySchema, string> {
+  readonly inputSchema = emptySchema;
+
+  constructor() {
+    super({ name: "large_output", description: "返回用于预算测试的大文本" });
+  }
+
+  override async execute() {
+    return AIResult.ok("x".repeat(2_000));
+  }
+}
 
 class TrackedTool extends LLMTool<typeof emptySchema, string> {
   readonly inputSchema = emptySchema;

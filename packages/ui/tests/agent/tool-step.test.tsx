@@ -77,6 +77,24 @@ describe("Agent tool step disclosure", () => {
     expect(screen.getByRole("alert")).toHaveTextContent("网页读取超时");
   });
 
+  it("不向用户展示内部工具路由恢复结果", () => {
+    render(
+      <ToolStep
+        item={createItem(
+          "error",
+          JSON.stringify({
+            error: { type: "tool_not_selected", message: "内部工具路由不匹配" },
+            _meta: { visibility: "internal" }
+          })
+        )}
+      />
+    );
+
+    expect(screen.queryByText(/内部工具路由不匹配/)).not.toBeInTheDocument();
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /读取歌曲详情/ })).not.toBeInTheDocument();
+  });
+
   it("does not override the user's disclosure choice when status changes", () => {
     const { rerender } = render(
       <ToolStep item={createItem("done", JSON.stringify({ name: "夜に駆ける" }))} />
@@ -227,5 +245,41 @@ describe("Agent tool step disclosure", () => {
     expect(screen.getByText("萌娘百科 · zh.moegirl.org.cn")).toBeInTheDocument();
     expect(screen.getByRole("list", { name: "网页来源" })).toHaveTextContent("STYX HELIX");
     expect(screen.getByRole("list", { name: "网页来源" })).toHaveTextContent("Stay Alive");
+  });
+
+  it("在网页正文卡片中显示作者和发布日期", () => {
+    const item: AgentToolTimelineItem = {
+      id: "web-open-1",
+      type: "tool",
+      status: "done",
+      toolCalls: [
+        {
+          name: "agent-tool-web-browser",
+          callID: "web-open-call-1",
+          arguments: JSON.stringify({
+            action: "open",
+            url: "https://music.example.com/interview"
+          })
+        }
+      ],
+      toolResults: [
+        {
+          name: "agent-tool-web-browser",
+          callID: "web-open-call-1",
+          output: JSON.stringify({
+            title: "制作人访谈",
+            url: "https://music.example.com/interview",
+            author: "音乐编辑部",
+            publishedAt: "2026-07-24T23:30:00-07:00",
+            contentChars: 3200
+          })
+        }
+      ]
+    };
+
+    render(<ToolStep item={item} />);
+
+    expect(screen.getByText(/作者 音乐编辑部/)).toBeInTheDocument();
+    expect(screen.getByText(/2026年7月24日/)).toBeInTheDocument();
   });
 });

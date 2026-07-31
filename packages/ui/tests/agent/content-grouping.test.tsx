@@ -1,5 +1,5 @@
 import { vi } from "vitest";
-import { render, screen, within } from "@testing-library/react";
+import { act, render, screen, within, fireEvent } from "@testing-library/react";
 import ChatContent from "@mahiru/ui/wins/agent/page/chat/content";
 import type { LLMConversationSnapshot } from "@mahiru/ai";
 
@@ -16,9 +16,132 @@ vi.mock("@/common/hooks/use-scroll-auto-hide", () => ({
   useScrollAutoHide: () => undefined
 }));
 
+const scrollIntoViewMock = vi.fn();
+
 Object.defineProperty(Element.prototype, "scrollIntoView", {
   configurable: true,
-  value: vi.fn()
+  value: scrollIntoViewMock
+});
+
+describe("对话自动滚动", () => {
+  const originalResizeObserver = globalThis.ResizeObserver;
+  const originalRequestAnimationFrame = globalThis.requestAnimationFrame;
+  const originalCancelAnimationFrame = globalThis.cancelAnimationFrame;
+  let resizeCallbacks: ResizeObserverCallback[] = [];
+
+  beforeEach(() => {
+    resizeCallbacks = [];
+    scrollIntoViewMock.mockClear();
+    globalThis.ResizeObserver = class {
+      constructor(callback: ResizeObserverCallback) {
+        resizeCallbacks.push(callback);
+      }
+
+      disconnect() {}
+      observe() {}
+      unobserve() {}
+    } as typeof ResizeObserver;
+    globalThis.requestAnimationFrame = ((callback: FrameRequestCallback) => {
+      callback(0);
+      return 1;
+    }) as typeof requestAnimationFrame;
+    globalThis.cancelAnimationFrame = vi.fn();
+  });
+
+  afterEach(() => {
+    globalThis.ResizeObserver = originalResizeObserver;
+    globalThis.requestAnimationFrame = originalRequestAnimationFrame;
+    globalThis.cancelAnimationFrame = originalCancelAnimationFrame;
+  });
+
+  it("内容增长不会被误判为用户离开底部，流式输出会继续贴底", () => {
+    const props = {
+      recovering: false,
+      conversation: null,
+      runningRunID: "run-scroll",
+      pendingUserMessage: "介绍当前歌曲",
+      onCreateConfig: () => undefined,
+      onSubmitPrompt: async () => true,
+      onCreateConversation: () => undefined,
+      liveTimeline: [],
+      running: true,
+      configured: true,
+      hasConversation: true
+    };
+    const { rerender, container } = render(<ChatContent {...props} streamText="第一段" />);
+    const scroller = container.querySelector<HTMLDivElement>(".agent-scroll");
+
+    expect(scroller).not.toBeNull();
+    expect(resizeCallbacks).toHaveLength(1);
+    setScrollMetrics(scroller!, { scrollHeight: 600, scrollTop: 300, clientHeight: 300 });
+    fireEvent.scroll(scroller!);
+    scrollIntoViewMock.mockClear();
+
+    setScrollMetrics(scroller!, { scrollHeight: 800, scrollTop: 300, clientHeight: 300 });
+    act(() => resizeCallbacks[0]!([], {} as ResizeObserver));
+    scrollIntoViewMock.mockClear();
+    rerender(<ChatContent {...props} streamText="第一段，第二段" />);
+
+    expect(scrollIntoViewMock).toHaveBeenCalled();
+  });
+
+  it("用户主动滚离后停止抢滚，回到底部后恢复跟随", () => {
+    const props = {
+      recovering: false,
+      conversation: null,
+      runningRunID: "run-scroll",
+      pendingUserMessage: "介绍当前歌曲",
+      onCreateConfig: () => undefined,
+      onSubmitPrompt: async () => true,
+      onCreateConversation: () => undefined,
+      liveTimeline: [],
+      running: true,
+      configured: true,
+      hasConversation: true
+    };
+    const { rerender, container } = render(<ChatContent {...props} streamText="第一段" />);
+    const scroller = container.querySelector<HTMLDivElement>(".agent-scroll")!;
+
+    setScrollMetrics(scroller, { scrollHeight: 900, scrollTop: 300, clientHeight: 300 });
+    fireEvent.scroll(scroller);
+    scrollIntoViewMock.mockClear();
+    rerender(<ChatContent {...props} streamText="第一段，第二段" />);
+    expect(scrollIntoViewMock).not.toHaveBeenCalled();
+
+    setScrollMetrics(scroller, { scrollHeight: 900, scrollTop: 600, clientHeight: 300 });
+    fireEvent.scroll(scroller);
+    rerender(<ChatContent {...props} streamText="第一段，第二段，第三段" />);
+    expect(scrollIntoViewMock).toHaveBeenCalled();
+  });
+
+  it("即使仍在贴底阈值内，用户向上滚动后也不会被流式输出拉回", () => {
+    const props = {
+      recovering: false,
+      conversation: null,
+      runningRunID: "run-shallow-scroll",
+      pendingUserMessage: "介绍当前歌曲",
+      onCreateConfig: () => undefined,
+      onSubmitPrompt: async () => true,
+      onCreateConversation: () => undefined,
+      liveTimeline: [],
+      running: true,
+      configured: true,
+      hasConversation: true
+    };
+    const { rerender, container } = render(<ChatContent {...props} streamText="第一段" />);
+    const scroller = container.querySelector<HTMLDivElement>(".agent-scroll")!;
+
+    setScrollMetrics(scroller, { scrollHeight: 900, scrollTop: 600, clientHeight: 300 });
+    fireEvent.scroll(scroller);
+    setScrollMetrics(scroller, { scrollHeight: 900, scrollTop: 560, clientHeight: 300 });
+    fireEvent.scroll(scroller);
+    scrollIntoViewMock.mockClear();
+
+    rerender(<ChatContent {...props} streamText="第一段，第二段" />);
+
+    expect(scrollIntoViewMock).not.toHaveBeenCalled();
+    expect(screen.getByRole("button", { name: "跳到最新" })).toBeInTheDocument();
+  });
 });
 
 describe("Assistant 连续回复分组", () => {
@@ -98,9 +221,12 @@ describe("Assistant 连续回复分组", () => {
     const assistantGroup = screen.getByRole("group", { name: "Aira 的连续回复" });
     expect(within(assistantGroup).getAllByText("Aira")).toHaveLength(1);
     expect(within(assistantGroup).getByText("我先读取歌曲详情。")).toBeInTheDocument();
-    expect(
-      within(assistantGroup).getByRole("button", { name: /^读取歌曲详情·/ })
-    ).toBeInTheDocument();
+    const completedToolDisclosure = within(assistantGroup).getByRole("button", {
+      name: /^读取歌曲详情·/
+    });
+    expect(completedToolDisclosure).toHaveAttribute("aria-expanded", "true");
+    fireEvent.click(completedToolDisclosure);
+    expect(completedToolDisclosure).toHaveAttribute("aria-expanded", "false");
     expect(within(assistantGroup).getByText("我再看看听众的评论。")).toBeInTheDocument();
     expect(within(assistantGroup).getByRole("button", { name: /^读取评论·/ })).toBeInTheDocument();
     expect(
@@ -170,15 +296,58 @@ describe("Assistant 连续回复分组", () => {
     const assistantGroup = assistantGroups[0]!;
     expect(within(assistantGroup).getAllByText("Aira")).toHaveLength(1);
     expect(within(assistantGroup).getByText("我先读取歌曲详情。")).toBeInTheDocument();
-    expect(
-      within(assistantGroup).getByRole("button", { name: /^读取歌曲详情·/ })
-    ).toBeInTheDocument();
+    const toolDisclosure = within(assistantGroup).getByRole("button", {
+      name: /^读取歌曲详情·/
+    });
+    expect(toolDisclosure).toBeInTheDocument();
+    fireEvent.click(toolDisclosure);
+    expect(toolDisclosure).toHaveAttribute("aria-expanded", "true");
     expect(
       within(assistantGroup).getByText("根据刚才的资料，这首歌表达了持续前行的力量。")
     ).toBeInTheDocument();
     expect(within(assistantGroup).getByText("正在回复")).toBeInTheDocument();
     expect(within(assistantGroup).getAllByRole("button", { name: "复制回复" })).toHaveLength(1);
     expect(within(assistantGroup).getAllByLabelText("本轮 Token 用量")).toHaveLength(1);
+  });
+
+  it("工具仍在执行时保持结果区域展开", () => {
+    render(
+      <ChatContent
+        streamText=""
+        recovering={false}
+        conversation={null}
+        runningRunID="run-tool"
+        pendingUserMessage="介绍当前歌曲"
+        onCreateConfig={() => undefined}
+        onSubmitPrompt={async () => true}
+        onCreateConversation={() => undefined}
+        liveTimeline={[
+          {
+            id: "run-tool-0-tool",
+            runID: "run-tool",
+            step: 0,
+            type: "tool",
+            status: "running",
+            toolCalls: [
+              {
+                name: "agent-tool-track-detail",
+                callID: "call-running",
+                arguments: "{}"
+              }
+            ],
+            toolResults: []
+          }
+        ]}
+        running
+        configured
+        hasConversation
+      />
+    );
+
+    const disclosure = screen.getByRole("button", { name: /^读取歌曲详情·/ });
+    expect(disclosure).toHaveAttribute("aria-expanded", "true");
+    fireEvent.click(disclosure);
+    expect(disclosure).toHaveAttribute("aria-expanded", "true");
   });
 
   it("把同一 run 的终止状态收进 Assistant 容器底部且不重复用量", () => {
@@ -419,3 +588,14 @@ const renderChatContent = (conversation: LLMConversationSnapshot) =>
       hasConversation
     />
   );
+
+const setScrollMetrics = (
+  element: HTMLElement,
+  metrics: { scrollTop: number; clientHeight: number; scrollHeight: number }
+) => {
+  Object.defineProperties(element, {
+    scrollHeight: { configurable: true, value: metrics.scrollHeight },
+    scrollTop: { configurable: true, writable: true, value: metrics.scrollTop },
+    clientHeight: { configurable: true, value: metrics.clientHeight }
+  });
+};

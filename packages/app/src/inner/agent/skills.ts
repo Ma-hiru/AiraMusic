@@ -86,6 +86,11 @@ const AiraAgentSkills = [
         description: "打开至少一个搜索结果并阅读正文",
         toolNames: ["agent-tool-web-browser"],
         argumentEquals: { action: "open" },
+        argumentFromEvidence: {
+          argumentName: "url",
+          evidenceID: "web-search",
+          outputPath: ["results", "url"]
+        },
         satisfaction: "attempt",
         dependsOn: ["web-search"]
       }
@@ -143,6 +148,11 @@ const AiraAgentSkills = [
         description: "打开至少一个可信结果并阅读正文",
         toolNames: ["agent-tool-web-browser"],
         argumentEquals: { action: "open" },
+        argumentFromEvidence: {
+          argumentName: "url",
+          evidenceID: "web-search",
+          outputPath: ["results", "url"]
+        },
         satisfaction: "attempt",
         dependsOn: ["web-search"]
       }
@@ -225,11 +235,13 @@ function matchesTrackOverview(context: AIAgentSkillMatchContext): boolean {
   // 剧情/情绪工作流已经包含歌曲介绍所需能力，避免同时注入两份近似指令。
   if (matchesMediaContextAnalysis(context)) return false;
   const text = normalize(context.input);
-  const hasTrackReference = /这首|当前播放|正在播放|歌曲|单曲|音乐|song|track/i.test(text);
-  const hasNamedTrackShape =
-    /《[^》]{1,80}》|“[^”]{1,80}”|"[^"]{1,80}"|[a-z0-9._-]{2,40}\s+的\s+[a-z0-9][a-z0-9 ._'-]{1,60}/iu.test(
+  const hasTrackReference =
+    /这首(?!诗|词)|当前播放|正在播放|歌曲|单曲|音乐|主题曲|片头曲|片尾曲|插曲|配乐|原声|song|track/i.test(
       text
     );
+  const hasNamedTrackShape = /[a-z0-9._-]{2,40}\s+的\s+[a-z0-9][a-z0-9 ._'-]{1,60}/iu.test(text);
+  // “制作背景”等短语本身不属于音乐意图；出现明确的非音乐对象时必须同时具备歌曲锚点。
+  if (hasExplicitNonMusicSubject(text) && !hasTrackReference) return false;
   if (!hasTrackReference && /歌手|艺人|艺术家|乐队|专辑|唱片|歌单|播放列表/i.test(text)) {
     return false;
   }
@@ -242,9 +254,10 @@ function matchesTrackOverview(context: AIAgentSkillMatchContext): boolean {
     /(?:这首|当前播放|正在播放).{0,8}(?:歌|歌曲|单曲)?.{0,16}(?:什么来头|怎么样|介绍|背景|故事|评价)/i.test(
       text
     ) ||
-    /(?:创作|发行|制作|写作).{0,8}(?:背景|故事|来源|过程|幕后)|(?:作者|歌手|制作人).{0,8}(?:访谈|采访|说法)|(?:这背后|它背后).{0,8}(?:故事|背景)/i.test(
-      text
-    ) ||
+    ((hasTrackReference || hasNamedTrackShape) &&
+      /(?:创作|发行|制作|写作).{0,8}(?:背景|故事|来源|过程|幕后)|(?:作者|歌手|制作人).{0,8}(?:访谈|采访|说法)|(?:这背后|它背后).{0,8}(?:故事|背景)/i.test(
+        text
+      )) ||
     ((hasTrackReference || hasNamedTrackShape) &&
       /^请?(?:介绍|讲讲|说说|聊聊|科普)(?:一下)?/i.test(text)) ||
     /(?:tell me about|introduce).{0,24}(?:song|track)/i.test(text)
@@ -263,18 +276,20 @@ function matchesLyricInterpretation({ input }: AIAgentSkillMatchContext): boolea
   );
 }
 
-function matchesMediaContextAnalysis({ input }: AIAgentSkillMatchContext): boolean {
-  const text = normalize(input);
+function matchesMediaContextAnalysis(context: AIAgentSkillMatchContext): boolean {
+  const text = normalize(context.input);
   const mentionsNarrativeMedia =
     /(?:动画|动漫|番剧|游戏|视觉小说|电影|影视|电视剧|剧集|剧情|角色|场景|世界观|主题曲|片头曲|片尾曲|插曲|原声|\bop\b|\bed\b|\bost\b|anime|game|visual novel|film|movie|drama|plot|story)/i.test(
       text
     );
-  const asksAboutMusicOrEmotion =
-    /(?:这首|当前播放|正在播放|歌曲|单曲|音乐|歌词|主题曲|片头曲|片尾曲|插曲|原声|情绪|感情|氛围|悲伤|绝望|压抑|治愈|热血|激昂|呼应|契合|表达|来源|为什么|song|track|music|lyric|emotion|mood)/i.test(
+  const mentionsMusic =
+    /(?:这首(?:歌|歌曲|单曲)|当前播放|正在播放|歌曲|单曲|音乐|歌词|主题曲|片头曲|片尾曲|插曲|配乐|原声|\bsong\b|\btrack\b|\bmusic\b|\blyric|\bop\b|\bed\b|\bost\b)/i.test(
       text
     );
+  const mentionsEmotion =
+    /(?:情绪|感情|氛围|感觉|悲伤|绝望|压抑|治愈|热血|激昂|\bemotion\b|\bmood\b)/i.test(text);
   const asksEmotionOrigin =
-    asksAboutMusicOrEmotion &&
+    mentionsEmotion &&
     (/(?:情绪|感情|氛围|悲伤|绝望|压抑|治愈|热血|激昂).{0,16}(?:来源|从哪里|为何|为什么|原因|怎么产生)/i.test(
       text
     ) ||
@@ -283,18 +298,29 @@ function matchesMediaContextAnalysis({ input }: AIAgentSkillMatchContext): boole
       ) ||
       /(?:emotion|mood).{0,16}(?:source|origin|why|reason)/i.test(text));
   const narrativeFollowUp =
-    /(?:结合|联系|对照|从).{0,8}(?:剧情|角色|场景|世界观).{0,12}(?:讲|分析|解释|说|看)|(?:剧情|角色|场景).{0,8}(?:里|中|上).{0,12}(?:怎么|为何|为什么|呼应|契合|表达)/i.test(
+    /(?:那|再|还|继续).{0,8}(?:结合|联系|对照|从).{0,8}(?:剧情|角色|场景|世界观).{0,12}(?:讲|分析|解释|说|看)/i.test(
       text
     );
   return (
-    (mentionsNarrativeMedia && asksAboutMusicOrEmotion) || asksEmotionOrigin || narrativeFollowUp
+    (mentionsNarrativeMedia && mentionsMusic) ||
+    (!mentionsNarrativeMedia && asksEmotionOrigin) ||
+    narrativeFollowUp
   );
 }
 
 function matchesRecommendation({ input }: AIAgentSkillMatchContext): boolean {
   const text = normalize(input);
+  const mentionsMusicTarget =
+    /(?:这首(?!诗|词)|当前播放|正在播放|歌曲|单曲|音乐|歌单|播放列表|新歌|歌手|艺人|乐队|专辑|唱片|歌荒|几首|想听|\bsongs?\b|\btracks?\b|\bmusic\b|\bplaylists?\b|\balbums?\b|\bartists?\b)/i.test(
+      text
+    );
+  if (!mentionsMusicTarget) return false;
+
   return (
-    /(?:推荐|安利|歌荒|发现).{0,20}(?:歌|歌曲|音乐|歌单|新歌)?/i.test(text) ||
+    /(?:推荐|安利|歌荒).{0,20}(?:歌|歌曲|音乐|歌单|新歌)?/i.test(text) ||
+    /(?:(?:帮我|请(?:你)?|我想(?:要)?|想要|希望).{0,3}(?:发现|发掘)|^(?:发现|发掘)).{0,8}(?:新歌|音乐|歌单|艺人)/i.test(
+      text
+    ) ||
     /(?:相似|类似|同风格|像这首|差不多).{0,16}(?:歌|歌曲|音乐|歌单)?/i.test(text) ||
     /(?:找|来|想听).{0,12}(?:几首|一些|点).{0,8}(?:歌|歌曲|音乐)/i.test(text) ||
     /recommend|similar to|songs? like|music discovery/i.test(text)
@@ -303,4 +329,10 @@ function matchesRecommendation({ input }: AIAgentSkillMatchContext): boolean {
 
 function normalize(input: string): string {
   return input.trim().replace(/\s+/g, " ");
+}
+
+function hasExplicitNonMusicSubject(text: string): boolean {
+  return /(?:游戏|视觉小说|动画|动漫|番剧|电影|影视|电视剧|剧集|小说|书籍|漫画|诗歌|诗词|剧情|角色|软件|程序|代码|\bbugs?\b)/i.test(
+    text
+  );
 }

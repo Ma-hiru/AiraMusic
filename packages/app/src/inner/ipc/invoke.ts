@@ -78,7 +78,42 @@ export const invokeHandlers: InvokeHandlers = {
     return authorizedAgentResult(event, () => MainAgent.removeConversation(id));
   },
   invoke_agent_chat: (event, options) => {
-    return authorizedAgentResult(event, () => MainAgent.chat(options));
+    return authorizedAgentResult(event, () => {
+      if (
+        !isRecord(options) ||
+        !hasOnlyKeys(options, [
+          "input",
+          "configID",
+          "temperature",
+          "conversationID",
+          "maxOutputTokens",
+          "retryAbortedRunID"
+        ]) ||
+        typeof options.input !== "string" ||
+        typeof options.configID !== "string" ||
+        typeof options.conversationID !== "string" ||
+        (options.temperature !== undefined && typeof options.temperature !== "number") ||
+        (options.maxOutputTokens !== undefined && typeof options.maxOutputTokens !== "number") ||
+        (options.retryAbortedRunID !== undefined && typeof options.retryAbortedRunID !== "string")
+      ) {
+        return AIResult.err({
+          type: "invalid_conversation",
+          message: "Agent 对话请求参数无效或包含不允许的字段"
+        });
+      }
+      return MainAgent.chat({
+        input: options.input,
+        configID: options.configID,
+        conversationID: options.conversationID,
+        ...(options.temperature === undefined ? {} : { temperature: options.temperature }),
+        ...(options.maxOutputTokens === undefined
+          ? {}
+          : { maxOutputTokens: options.maxOutputTokens }),
+        ...(options.retryAbortedRunID === undefined
+          ? {}
+          : { retryAbortedRunID: options.retryAbortedRunID })
+      });
+    });
   },
   invoke_agent_abort: (event, runID) => {
     return authorizedAgentResult(event, () => MainAgent.abort(runID));

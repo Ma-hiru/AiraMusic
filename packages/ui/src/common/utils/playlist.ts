@@ -7,7 +7,7 @@ import {
   MessageSquare
 } from "lucide-react";
 import { RendererFormat } from "@/common/lib/format";
-import { NeteaseAlbum, NeteasePlaylist } from "@/common/netease/models";
+import type { NeteaseUser, NeteaseAlbum, NeteasePlaylist } from "@/common/netease/models";
 
 export function createPlaylistStats(playlist: Optional<NeteasePlaylist>) {
   if (playlist == null) return [];
@@ -43,7 +43,8 @@ export function createPlaylistStats(playlist: Optional<NeteasePlaylist>) {
     {
       icon: UserRound,
       label: "收藏",
-      value: RendererFormat.count(playlist.subscribedCount) || "0"
+      value: RendererFormat.count(playlist.subscribedCount) || "0",
+      isStar: true
     }
   ];
 }
@@ -80,7 +81,20 @@ export function createAlbumStats(
     {
       icon: UserRound,
       label: "收藏",
-      value: RendererFormat.count(dynamic.subCount) || "0"
+      value: RendererFormat.count(dynamic.subCount) || "0",
+      isStar: true
     }
   ];
+}
+
+export function isUserPlaylist(user: Falsy<NeteaseUser>, id: Falsy<number | string>) {
+  if (!user || !id) return false;
+  id = Number(id);
+
+  if (id === user.likedPlaylist.id) return true;
+  for (const playlist of user.userPlaylists) {
+    if (playlist.id === id) return true;
+  }
+
+  return false;
 }

@@ -329,7 +329,7 @@ export class RendererWindow extends Listenable<"react-ready" | RendererWindowEve
     const listener = () => {
       if (!this.reactReady) return;
       removeListener?.();
-      resolve();
+      setTimeout(resolve, 100);
     };
     removeListener = this.addEventListener("react-ready", listener);
 

@@ -1,4 +1,4 @@
-import type { LLMTool } from "@mahiru/ai";
+import type { LLMTool, LLMConversation } from "@mahiru/ai";
 
 import { AgentToolWebBrowser } from "./agent-tool-web-browser";
 import {
@@ -116,9 +116,61 @@ const ToolGroups = {
 
 type AgentToolGroup = keyof typeof ToolGroups;
 
+const FollowUpIntentPattern =
+  /^(?:继续|接着|然后|更多|详细(?:一点|点)?|展开(?:说说)?|再(?:看看|试试|来|查|找|打开|播放|说|讲|详细)|这个|那个|它|这首|那首|好|好的|可以)(?:[吧呀啊呢嘛，。！？!?~\s]|$)/i;
+
+const ConfirmationIntentPattern =
+  /^(?:继续|接着|然后|好(?:的)?|可以(?:的)?|行|没问题|嗯+)(?:[吧呀啊呢嘛，。！？!?~\s]*)$/i;
+
+const AssistantProposalPattern =
+  /(?:要不要|是否(?:要|需要|继续)|需不需要|想不想|需要我|要我|建议(?:你)?|(?:我可以|接下来可以|还可以|也可以).{0,80}(?:结合|分析|解释|介绍|查看|搜索|查询|读取|打开|播放|创建|删除|修改|补充|展开)|(?:可以|好|行)吗[？?]?)/i;
+
+function extractAssistantProposal(content: string): string | undefined {
+  const clauses = content.match(/[^。！？!?\n]+[。！？!?]?/g) ?? [];
+  return clauses
+    .map((clause) => clause.trim())
+    .filter((clause) => clause.length > 0 && clause.length <= 240)
+    .findLast((clause) => AssistantProposalPattern.test(clause));
+}
+
+/**
+ * 短跟进句继承上一条用户意图，避免动态工具路由在“继续”等输入上突然退化。
+ * 确认短句还会带上助手最近明确提出的一条建议，供 Skill 和只读工具理解确认分支。
+ * 当前消息通常已写入会话，因此需要显式跳过末尾与 input 相同的用户消息；
+ * 副作用工具仍由当前原始输入单独筛选，这里只负责恢复路由语义。
+ */
+export function buildAgentToolRoutingText(input: string, conversation: LLMConversation): string {
+  const current = input.trim();
+  if (!FollowUpIntentPattern.test(current)) return current;
+
+  const messages = conversation.toMessages();
+  const latestMessage = messages.at(-1);
+  const historyMessages =
+    latestMessage?.role === "user" && latestMessage.content?.trim() === current
+      ? messages.slice(0, -1)
+      : messages;
+  const userMessages = historyMessages.flatMap((message) => {
+    const content = message.content?.trim();
+    if (message.role !== "user" || !content) return [];
+    return [content];
+  });
+  const previous =
+    userMessages.findLast((message) => !FollowUpIntentPattern.test(message)) ?? userMessages.at(-1);
+  const latestAssistantMessage = historyMessages.findLast(
+    (message) => message.role === "assistant" && message.content?.trim()
+  );
+  const latestAssistantContent = latestAssistantMessage?.content?.trim();
+  const proposal =
+    ConfirmationIntentPattern.test(current) && latestAssistantContent
+      ? extractAssistantProposal(latestAssistantContent)
+      : undefined;
+
+  return [previous, proposal, current].filter(Boolean).join("\n");
+}
+
 // “当前播放歌曲”通常只是指代当前曲目，只有明确的控制或状态意图才加载播放器工具。
 const PlayerIntentPattern =
-  /(?:^|[，。！？!?]\s*|请(?:你)?|麻烦(?:你)?|帮我|替我|给我|我要|我想(?:要)?|想要|需要|现在)(?:播放|放(?:一下|一?首)?|播(?:一下)?|来(?:一)?首|听(?:一下|一?首)?)|(?:把|将).{0,24}(?:播放|放一下|播一下)|暂停|继续(?:播放)?|上一首|下一首|音量|静音|进度|跳转|队列|(?:当前|现在|正在)(?:播放)?.{0,8}(?:状态|进度|到哪(?:里)?|什么|哪首)|player|queue/i;
+  /(?:^|[，。！？!?]\s*|请(?:你)?|麻烦(?:你)?|帮我|替我|给我|我要|我想(?:要)?|想要|需要|现在)(?:播放|放(?:一下|一?首)?|播(?:一下)?|来(?:一)?首|听(?:一下|一?首)?)|(?:把|将).{0,24}(?:播放|放一下|播一下)|暂停(?:播放)?|继续播放|上一首|下一首|音量|静音|进度|跳转|队列|(?:当前|现在|正在)(?:播放)?.{0,8}(?:状态|进度|到哪(?:里)?|什么|哪首)|player|queue/i;
 
 const GroupPatterns: ReadonlyArray<readonly [AgentToolGroup, RegExp]> = [
   ["track", /歌曲?|单曲|song|track/i],
@@ -139,7 +191,7 @@ const GroupPatterns: ReadonlyArray<readonly [AgentToolGroup, RegExp]> = [
   ["settings", /设置|配置|音质|性能|频谱|背景效果|setting/i],
   [
     "web",
-    /网页|网站|互联网|联网|最新资料|新闻|官网|创作背景|发行背景|创作故事|幕后|作者访谈|制作人访谈|结合剧情|剧情关联|角色关系|资料来源|web|internet|online|site:/i
+    /网页|网站|互联网|联网|最新资料|新闻|官网|创作背景|发行背景|创作故事|幕后|作者访谈|制作人访谈|结合.{0,8}(?:剧情|角色|场景|世界观)|剧情关联|角色关系|资料来源|web|internet|online|site:/i
   ]
 ];
 
@@ -221,7 +273,7 @@ const ActionToolNames = new Set([
 export interface AgentToolCatalog {
   list: LLMTool[];
   parallelSafeNames: string[];
-  select(routingText: string): string[];
+  select(routingText: string, actionText?: string): string[];
 }
 
 export function createAgentToolCatalog(enableDestructive: boolean): AgentToolCatalog {
@@ -289,7 +341,7 @@ export function createAgentToolCatalog(enableDestructive: boolean): AgentToolCat
   return {
     list,
     parallelSafeNames: list.map((tool) => tool.name).filter((name) => !ActionToolNames.has(name)),
-    select(routingText) {
+    select(routingText, actionText = routingText) {
       const selected = new Set<string>(CoreToolNames);
       for (const [group, pattern] of GroupPatterns) {
         if (!pattern.test(routingText)) continue;
@@ -297,6 +349,19 @@ export function createAgentToolCatalog(enableDestructive: boolean): AgentToolCat
       }
       for (const [name, pattern] of DestructiveToolPatterns) {
         if (pattern.test(routingText)) selected.add(name);
+      }
+      if (actionText !== routingText) {
+        const rawSelected = new Set<string>(CoreToolNames);
+        for (const [group, pattern] of GroupPatterns) {
+          if (!pattern.test(actionText)) continue;
+          for (const name of ToolGroups[group]) rawSelected.add(name);
+        }
+        for (const [name, pattern] of DestructiveToolPatterns) {
+          if (pattern.test(actionText)) rawSelected.add(name);
+        }
+        for (const name of selected) {
+          if (ActionToolNames.has(name) && !rawSelected.has(name)) selected.delete(name);
+        }
       }
       return list
         .map((tool) => tool.name)

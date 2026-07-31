@@ -94,6 +94,7 @@ const ChatContent: FC<ChatContentProps> = ({
   const scrollRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const stayAtBottomRef = useRef(true);
+  const lastScrollTopRef = useRef(0);
   useScrollAutoHide(scrollRef, 700);
   const [showJumpToLatest, setShowJumpToLatest] = useState(false);
   const trackMetaBus = useListenable(RendererIPCMessageBus.trackMeta);
@@ -126,21 +127,35 @@ const ChatContent: FC<ChatContentProps> = ({
   const updateScrollState = useCallback(() => {
     const container = scrollRef.current;
     if (!container) return;
-    const nearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 112;
+    const distanceToBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
+    const scrollingUp = container.scrollTop < lastScrollTopRef.current - 1;
+    const nearBottom = distanceToBottom <= 2 || (!scrollingUp && distanceToBottom < 112);
+    lastScrollTopRef.current = container.scrollTop;
     stayAtBottomRef.current = nearBottom;
     setShowJumpToLatest(!nearBottom);
+  }, []);
+
+  const scrollToLatest = useCallback((behavior?: ScrollBehavior) => {
+    bottomRef.current?.scrollIntoView({ block: "end", behavior });
   }, []);
 
   const jumpToLatest = useCallback(() => {
     stayAtBottomRef.current = true;
     setShowJumpToLatest(false);
-    bottomRef.current?.scrollIntoView({ block: "end", behavior: "smooth" });
-  }, []);
+    scrollToLatest("smooth");
+  }, [scrollToLatest]);
 
   useEffect(() => {
     if (!stayAtBottomRef.current) return;
-    bottomRef.current?.scrollIntoView({ block: "end" });
-  }, [timeline.length, pendingUserMessage, liveTimeline.length, streamText, running]);
+    scrollToLatest();
+  }, [
+    timeline.length,
+    pendingUserMessage,
+    liveTimeline.length,
+    streamText,
+    running,
+    scrollToLatest
+  ]);
 
   useEffect(() => {
     const container = scrollRef.current;
@@ -152,14 +167,16 @@ const ChatContent: FC<ChatContentProps> = ({
     let frame = 0;
     const observer = new ResizeObserver(() => {
       cancelAnimationFrame(frame);
-      frame = requestAnimationFrame(updateScrollState);
+      frame = requestAnimationFrame(() => {
+        if (stayAtBottomRef.current) scrollToLatest();
+      });
     });
     observer.observe(content);
     return () => {
       cancelAnimationFrame(frame);
       observer.disconnect();
     };
-  }, [empty, updateScrollState]);
+  }, [empty, scrollToLatest]);
 
   return (
     <div className="relative min-h-0 flex-1">
@@ -244,7 +261,13 @@ const renderTimelineItem = (item: ChatRenderableTimelineItem) => {
             );
           }
           if (child.type === "tool") {
-            return <ToolStep key={child.id} item={stripAssistantTurn(child)} />;
+            return (
+              <ToolStep
+                key={child.id}
+                item={stripAssistantTurn(child)}
+                collapseEnabled={!streaming && child.status !== "running"}
+              />
+            );
           }
           return <RunTerminalCard key={child.id} terminal={child} />;
         })}

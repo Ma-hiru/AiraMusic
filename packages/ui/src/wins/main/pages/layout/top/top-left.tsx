@@ -30,7 +30,7 @@ const TopLeft: FC<TopLeftProps> = ({ user, onClick, isDarwin, playModal }) => {
           <motion.div
             key="back"
             className={cx(
-              "w-20 h-full flex items-center justify-center  cursor-pointer",
+              "w-20 h-full flex items-center justify-center cursor-pointer",
               isDarwin && "relative justify-end left-4 items-start top-1.5"
             )}
             initial={{ opacity: 0 }}

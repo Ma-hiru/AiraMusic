@@ -140,6 +140,11 @@ export function isAgentToolError(output?: string) {
   return isRecord(value) && isRecord(value["error"]);
 }
 
+export function isInternalAgentToolResult(output?: string) {
+  const value = parseAgentToolValue(output);
+  return getNestedString(value, "_meta", "visibility") === "internal";
+}
+
 export function getAgentToolSummary(props: {
   name: string;
   input?: string;
@@ -273,11 +278,13 @@ export type AgentWebToolDetails = {
   query?: string;
   scope?: string;
   title?: string;
+  author?: string;
   domain?: string;
   engine?: string;
   linkCount?: number;
   scopeLabel?: string;
   truncated?: boolean;
+  publishedAt?: string;
   contentChars?: number;
   originalChars?: number;
   scopeDomains: string[];
@@ -311,6 +318,8 @@ export function getAgentWebToolDetails(input?: string, output?: string): AgentWe
       (site ? "指定站点" : scope ? WebSearchScopeLabels[scope] : "综合"),
     scopeDomains: scopeDomains.length ? scopeDomains : site ? [site] : [],
     title: getString(outputValue, "title") || undefined,
+    author: getString(outputValue, "author") || undefined,
+    publishedAt: getString(outputValue, "publishedAt") || undefined,
     linkCount: getNumber(outputValue, "linkCount"),
     truncated: getBoolean(outputValue, "truncated"),
     contentChars: getNumber(outputValue, "contentChars"),

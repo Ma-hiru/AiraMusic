@@ -19,9 +19,9 @@ const TopControl: FC = () => {
     async (quiting: boolean) => {
       const hidden = () => RendererWindow.current.hide();
       const exit = () => {
+        RendererPlayerHandle[Symbol.dispose]();
         RendererWindow.current.hide();
         RendererWindow.all.hide();
-        RendererPlayerHandle[Symbol.dispose]();
         RendererWindow.current.close();
       };
 
