@@ -448,4 +448,49 @@ namespace NeteaseAPI {
     createTime: number;
     trackCount: number;
   }
+
+  interface NeteasePlaylistIntelligenceResponse extends NeteaseAPIResponse {
+    data: {
+      id: number;
+      alg: string;
+      recommended: boolean;
+      songInfo: {
+        h: H;
+        l: L;
+        m: M;
+        al: Al;
+        a: null;
+        ar: Ar[];
+        t: number;
+        v: number;
+        cd: string;
+        cf: string;
+        cp: number;
+        crbt: null;
+        dt: number;
+        id: number;
+        mv: number;
+        no: number;
+        rurl: null;
+        st: number;
+        fee: number;
+        mst: number;
+        pop: number;
+        pst: number;
+        rtUrl: null;
+        djId: number;
+        name: string;
+        s_id: number;
+        ftype: number;
+        rtype: number;
+        alia: string[];
+        tns?: string[];
+        rtUrls: string[];
+        copyright: number;
+        rt: null | string;
+        publishTime: number;
+        privilege: Privilege;
+      };
+    }[];
+  }
 }

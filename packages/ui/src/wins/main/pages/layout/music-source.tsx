@@ -6,6 +6,7 @@ import { useRoamMode } from "@/wins/main/hooks/use-roam-mode";
 import { typingAtom, playModalAtom } from "@/wins/main/atoms/layout";
 import { useMediaSession } from "@/wins/main/hooks/use-media-session";
 import { useSpectrumWorker } from "@/wins/main/hooks/use-spectrum-worker";
+import { useIntelligenceMode } from "@/wins/main/hooks/use-intelligence-mode";
 import { type ShortcutAction, RendererShortcutConstants } from "@/common/constants/shortcut";
 import { type ShortcutConfig, useKeyboardShortcut } from "@/common/hooks/use-keyboard-shortcut";
 import {
@@ -22,6 +23,8 @@ const MusicSource: FC<object> = () => {
 
   // 处理漫游模式
   useRoamMode();
+  // 处理心动模式
+  useIntelligenceMode();
   // 注册窗口标题
   useEffect(() => {
     let title;

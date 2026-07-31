@@ -1,9 +1,12 @@
+import { Log } from "@/common/lib/log";
 import { RendererCache } from "@/common/lib/cache";
 import { LRUCacheWithTime } from "@/common/utils/lru";
 import { userStoreSnapshot } from "@/common/store/user";
 import { NeteaseAPIPlaylist } from "@/common/netease/api";
+import { NeteaseServicesTrack } from "@/common/netease/services/index";
 import {
   NeteasePlaylist,
+  NeteaseTrackRecord,
   NeteasePlaylistSummary,
   type NullablePrivilegesPlaylistDetailResponse
 } from "@/common/netease/models";
@@ -168,6 +171,41 @@ export default class _NeteasePlaylistSource {
 
   static summary(summary: NeteasePlaylistSummary | NeteaseAPI.NeteasePlaylistSummary) {
     return _NeteasePlaylistSource.id(summary.id);
+  }
+
+  /** 心动模式/智能播放 */
+  static intelligence(params: {
+    trackID: number;
+    playlistID: number;
+    /** 要开始播放的歌曲的 id (可选参数) */
+    sid?: number;
+    signal?: AbortSignal;
+  }) {
+    return NeteaseAPIPlaylist.intelligence(
+      {
+        id: params.trackID,
+        pid: params.playlistID,
+        sid: params.sid
+      },
+      params.signal
+    )
+      .then((response) => response.data)
+      .then((tracks) => tracks.map((track) => track.id))
+      .then((ids) => NeteaseServicesTrack.ids(ids, 100, 5, params.signal))
+      .then((details) =>
+        details.map(
+          (track) =>
+            new NeteaseTrackRecord({
+              detail: track,
+              sourceName: "intelligence",
+              sourceID: 0
+            })
+        )
+      )
+      .then((records) => {
+        Log.info("intelligence", "get records", records.length);
+        return records;
+      });
   }
 
   //region 编辑相关

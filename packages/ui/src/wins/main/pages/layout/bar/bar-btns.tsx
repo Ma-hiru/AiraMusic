@@ -1,15 +1,16 @@
 import { cx } from "@emotion/css";
-import { useAtomValue } from "jotai";
-import { memo, type FC, useEffect, useCallback, type WheelEvent } from "react";
-import { Trash2, Volume, Volume1, Volume2, VolumeX, ListMusic } from "lucide-react";
+import { useAtom, useSetAtom, useAtomValue } from "jotai";
+import { Trash2, Volume, Volume1, Volume2, VolumeX, ListMusic, HeartPulse } from "lucide-react";
+import { memo, type FC, useEffect, useCallback, startTransition, type WheelEvent } from "react";
 import { RendererWindow } from "@/common/lib/window";
-import { fmModeAtom } from "@/wins/main/atoms/track";
 import { useUpdate } from "@/common/hooks/use-update";
 import { NeteaseAPITrack } from "@/common/netease/api";
+import { playModalAtom } from "@/wins/main/atoms/layout";
 import { useLatestRef } from "@/common/hooks/use-latest-ref";
 import { useListenable } from "@/common/hooks/use-listenable";
 import { usePageJump } from "@/wins/main/hooks/use-page-jump";
 import { usePlayerActionInList } from "@/wins/main/hooks/use-player-action-in-list";
+import { fmModeAtom, intelligenceModeAtom, intelligenceSessionAtom } from "@/wins/main/atoms/track";
 import AppToast from "@/common/components/display/toast";
 import Tooltip from "@/common/components/display/tooltip";
 import RendererPlayerHandle from "@/wins/main/lib/handle";
@@ -62,6 +63,9 @@ const BarBtns: FC<object> = () => {
   const volumePercent = Math.round(volume * 100);
   const VolumeTag = getVolumeIcon(volume);
   const fmMode = useAtomValue(fmModeAtom);
+  const setPlayModal = useSetAtom(playModalAtom);
+  const setIntelligenceSession = useSetAtom(intelligenceSessionAtom);
+  const [intelligenceMode, setIntelligenceMode] = useAtom(intelligenceModeAtom);
 
   const update = useUpdate();
   const actionRef = useLatestRef<PlaylistModalProps>({
@@ -99,6 +103,20 @@ const BarBtns: FC<object> = () => {
     });
   }, [fmMode, player]);
 
+  const enableHeart = useCallback(() => {
+    startTransition(() => {
+      setIntelligenceMode(true);
+      setPlayModal(true);
+      setIntelligenceSession((s) => s + 1);
+    });
+  }, [setIntelligenceMode, setIntelligenceSession, setPlayModal]);
+
+  const disableHeart = useCallback(() => {
+    startTransition(() => {
+      setIntelligenceMode(false);
+    });
+  }, [setIntelligenceMode]);
+
   return (
     <div className="flex gap-4 justify-end items-center h-full ">
       {fmMode && (
@@ -113,7 +131,16 @@ const BarBtns: FC<object> = () => {
           <Trash2 className="size-5" />
         </button>
       )}
-
+      <button
+        className="
+            size-4.5 flex items-center justify-center select-none cursor-pointer
+            hover:opacity-50 ease-in-out duration-300 transition-all active:scale-90
+          "
+        type="button"
+        title={intelligenceMode ? "关闭心动模式" : "打开心动模式"}
+        onClick={intelligenceMode ? disableHeart : enableHeart}>
+        <HeartPulse className="size-5" fill={intelligenceMode ? "currentColor" : "none"} />
+      </button>
       <Tooltip
         className="size-5 items-center justify-center"
         placement="top"

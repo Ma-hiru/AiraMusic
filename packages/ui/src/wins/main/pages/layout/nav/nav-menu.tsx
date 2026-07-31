@@ -1,7 +1,7 @@
 import { cx } from "@emotion/css";
 import { useSetAtom } from "jotai";
-import { memo, type FC, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { memo, type FC, useCallback, startTransition } from "react";
 import { RoutePathMain } from "@/common/routes";
 import { NavConstants } from "@/wins/main/constants";
 import { NeteaseUser } from "@/common/netease/models";
@@ -24,12 +24,10 @@ const NavMenu: FC<NavMenuProps> = ({ className, barOpened }) => {
   const navigate = useNavigate();
 
   const enableFM = useCallback(() => {
-    setFMMode(true);
-    setPlayModal(true);
-    setFMSession((s) => s + 1);
-    AppToast.show({
-      type: "info",
-      text: "开启漫游中..."
+    startTransition(() => {
+      setFMMode(true);
+      setPlayModal(true);
+      setFMSession((s) => s + 1);
     });
   }, [setFMMode, setFMSession, setPlayModal]);
 

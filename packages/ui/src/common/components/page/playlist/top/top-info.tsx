@@ -115,7 +115,7 @@ const TopInfo: FC<TopInfoProps> = ({ user, onEdited, onAddList, onPlayAll, summa
               <Icon className="size-3.5 shrink-0 opacity-70" />
               <p className="truncate font-semibold tabular-nums opacity-80">
                 {value}
-                {isStar && !userPlaylist && (summary?.subscribed ? " (已收藏)" : " (收藏)")}
+                {isStar && !userPlaylist && (summary?.subscribed ? " (已收藏)" : " (未收藏)")}
               </p>
             </div>
           )

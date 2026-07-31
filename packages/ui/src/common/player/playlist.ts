@@ -163,8 +163,14 @@ export default class RendererPlayerPlaylist extends Listenable {
   }
   //#endregion
 
+  /** 返回当前显示序（播放序）列表 */
   public list() {
     return this.order.map((i) => this.tracks[i]!);
+  }
+
+  /** 返回当前原始序列表 */
+  public listRaw() {
+    return this.tracks;
   }
 
   public pos() {
