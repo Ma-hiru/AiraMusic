@@ -35,6 +35,8 @@ export interface AgentWebBrowserSearchInput {
   action: "search";
   scope?: AgentWebSearchScope;
   engine?: AgentWebSearchEngine;
+  /** 首屏加载超时（毫秒）；慢站可提高。 */
+  timeoutMs?: number;
 }
 
 export interface AgentWebBrowserOpenInput {
@@ -42,6 +44,8 @@ export interface AgentWebBrowserOpenInput {
   action: "open";
   cursor?: number;
   maxChars?: number;
+  /** 首屏加载超时（毫秒）；慢站可提高。 */
+  timeoutMs?: number;
 }
 
 export interface AgentWebBrowserFindInput {
@@ -50,6 +54,13 @@ export interface AgentWebBrowserFindInput {
   pattern: string;
   matchOffset?: number;
   contextChars?: number;
+  /** 首屏加载超时（毫秒）；慢站可提高。 */
+  timeoutMs?: number;
+}
+
+export interface AgentWebBrowserLoadTimeouts {
+  fullLoadTimeoutMs: number;
+  firstPaintTimeoutMs: number;
 }
 
 export type AgentWebBrowserInput =
@@ -522,9 +533,31 @@ function canonicalSearchResultURL(value: string): string | undefined {
 const WebAgentStaticPartition = "aira-web-agent-static";
 const WebAgentDynamicPartition = "aira-web-agent-dynamic";
 const WebAgentMaxConcurrentWindows = 2;
-const WebAgentLoadTimeoutMs = 20_000;
-const WebAgentExtractTimeoutMs = 10_000;
-const WebAgentSearchHydrateTimeoutMs = 1_500;
+/** 首屏（dom-ready / finish）默认超时；可通过 timeoutMs 覆盖。 */
+export const AgentWebBrowserFirstPaintTimeoutMs = 5_000;
+export const AgentWebBrowserFirstPaintTimeoutMinMs = 3_000;
+export const AgentWebBrowserFirstPaintTimeoutMaxMs = 30_000;
+/** 单次导航完整加载默认预算；会随 timeoutMs 同步拉长。 */
+export const AgentWebBrowserFullLoadTimeoutMs = 10_000;
+/** 整次 search（多引擎/回退）硬预算，防止级联拖到几十秒。 */
+export const AgentWebBrowserSearchBudgetMs = 16_000;
+/** Bing 首页表单提交后的导航等待；超时则改走直达 SERP。 */
+const BingHomepageSearchNavigateTimeoutMs = 4_500;
+
+/** 解析首屏/完整加载预算；timeoutMs 只抬高首屏，完整加载至少为首屏 +5s。 */
+export function resolveWebBrowserLoadTimeouts(timeoutMs?: number): AgentWebBrowserLoadTimeouts {
+  const firstPaintTimeoutMs = clamp(
+    Math.floor(timeoutMs ?? AgentWebBrowserFirstPaintTimeoutMs),
+    AgentWebBrowserFirstPaintTimeoutMinMs,
+    AgentWebBrowserFirstPaintTimeoutMaxMs
+  );
+  return {
+    firstPaintTimeoutMs,
+    fullLoadTimeoutMs: Math.max(AgentWebBrowserFullLoadTimeoutMs, firstPaintTimeoutMs + 5_000)
+  };
+}
+const WebAgentExtractTimeoutMs = 3_000;
+const WebAgentSearchHydrateTimeoutMs = 800;
 const WebAgentDefaultMaxChars = 8_000;
 const WebAgentIsolatedWorldID = 1001;
 
@@ -659,7 +692,6 @@ const WebAgentSemaphore = new AsyncSemaphore(WebAgentMaxConcurrentWindows);
 
 let SharedStaticWebAgentSessionPromise: undefined | Promise<Session>;
 let SharedDynamicWebAgentSessionPromise: undefined | Promise<Session>;
-
 // ========== URL 安全检查 ==========
 
 // ========== 公开入口 ==========
@@ -668,12 +700,20 @@ export async function executeWebBrowser(
   input: AgentWebBrowserInput,
   signal?: AbortSignal
 ): Promise<AgentWebPage> {
+  const loadTimeouts = resolveWebBrowserLoadTimeouts(input.timeoutMs);
   if (input.action === "search") {
     const resolvedScope = resolveAgentWebSearchScope(input.scope, input.site);
     // 国内网络：DDG 常超时；Bing 对部分日文查询反爬；百度噪声多。默认 Bing→百度→DDG。
     const engines = resolveSearchEngineOrder(input.engine ?? "bing");
     const preferAcgRecovery =
       !input.site && resolvedScope.scope === "general" && queryHasCjkScript(input.query);
+    const searchStarted = Date.now();
+    const searchBudgetMs = Math.max(
+      AgentWebBrowserSearchBudgetMs,
+      loadTimeouts.fullLoadTimeoutMs + 6_000
+    );
+    const searchDeadline = searchStarted + searchBudgetMs;
+    const canAttemptMore = () => Date.now() < searchDeadline - 1_500;
     let rawPage: undefined | AgentWebPage;
     let firstError: unknown;
     const absorbSearchPage = (page: AgentWebPage, domains: readonly string[]) => {
@@ -695,38 +735,42 @@ export async function executeWebBrowser(
         ? mergeAgentWebSearchPages(rawPage!, filtered)
         : filtered;
     };
+    /** 只打一个高质量站点回退，避免多站串联把 Agent 卡死。 */
     const runAcgRecovery = async () => {
-      for (const url of listAcgRecoverySearchURLs(input.query)) {
-        if (countUsableSearchResults(rawPage, input.query, []) >= 3) break;
-        try {
-          absorbSearchPage(await openWebPage({ url, mode: "search", signal }), []);
-        } catch (error) {
-          if (signal?.aborted) throw error;
-          firstError ??= error;
-        }
+      if (!canAttemptMore()) return;
+      const [url] = listAcgRecoverySearchURLs(input.query);
+      if (!url) return;
+      try {
+        absorbSearchPage(await openWebPage({ url, mode: "search", signal, loadTimeouts }), []);
+      } catch (error) {
+        if (signal?.aborted) throw error;
+        firstError ??= error;
       }
     };
     for (const engine of engines) {
       if (countUsableSearchResults(rawPage, input.query, resolvedScope.domains) >= 3) break;
-      // Bing 普通检索失败后，先单站 site: 回退再打百度，避免先被热门噪声填满。
+      if (!canAttemptMore()) break;
+      // DDG 国内常整页不可达，预算紧张时直接跳过。
+      if (engine === "duckduckgo" && Date.now() - searchStarted > 4_000) continue;
+      const url = createWebSearchURL(input.query, input.site, engine, input.scope);
+      try {
+        absorbSearchPage(
+          await openWebPage({ url, mode: "search", signal, loadTimeouts }),
+          resolvedScope.domains
+        );
+      } catch (error) {
+        if (signal?.aborted) throw error;
+        firstError ??= error;
+      }
+      // Bing 普通检索失败后立刻做单站回退，再考虑百度。
       if (
+        engine === "bing" &&
         preferAcgRecovery &&
-        engine !== "bing" &&
         countUsableSearchResults(rawPage, input.query, resolvedScope.domains) < 2
       ) {
         await runAcgRecovery();
         if (countUsableSearchResults(rawPage, input.query, []) >= 2) break;
       }
-      const url = createWebSearchURL(input.query, input.site, engine, input.scope);
-      try {
-        absorbSearchPage(await openWebPage({ url, mode: "search", signal }), resolvedScope.domains);
-      } catch (error) {
-        if (signal?.aborted) throw error;
-        firstError ??= error;
-      }
-    }
-    if (preferAcgRecovery && countUsableSearchResults(rawPage, input.query, []) < 2) {
-      await runAcgRecovery();
     }
     if (!rawPage) throw firstError ?? new Error("网页搜索没有返回可用页面");
     const scoped = filterAgentWebSearchPageByDomains(rawPage, resolvedScope.domains);
@@ -753,6 +797,7 @@ export async function executeWebBrowser(
       url: input.url,
       mode: "open",
       signal,
+      loadTimeouts,
       ...(input.action === "find"
         ? {
             findPattern: input.pattern,
@@ -776,6 +821,7 @@ interface OpenWebPageOptions {
   signal?: AbortSignal;
   findContextChars?: number;
   mode: AgentWebBrowserMode;
+  loadTimeouts?: AgentWebBrowserLoadTimeouts;
 }
 
 async function openWebPage(options: OpenWebPageOptions): Promise<AgentWebPage> {
@@ -783,7 +829,9 @@ async function openWebPage(options: OpenWebPageOptions): Promise<AgentWebPage> {
   const url = await assertPublicWebURL(options.url);
   const maxChars = clamp(options.maxChars ?? WebAgentDefaultMaxChars, 2_500, 12_000);
   const cursor = Math.max(0, Math.floor(options.cursor ?? 0));
+  const loadTimeouts = options.loadTimeouts ?? resolveWebBrowserLoadTimeouts();
   return WebAgentSemaphore.run(async () => {
+    const attemptStarted = Date.now();
     const staticPage = await openWebPageInWindow({
       url,
       mode: options.mode,
@@ -793,12 +841,17 @@ async function openWebPage(options: OpenWebPageOptions): Promise<AgentWebPage> {
       findOffset: options.findOffset,
       findContextChars: options.findContextChars,
       signal: options.signal,
-      allowPageScripts: false
+      allowPageScripts: false,
+      loadTimeouts
     });
     if (options.mode === "search") {
       if ((staticPage.results?.length ?? 0) > 0) return staticPage;
       // DDG 在国内常整页不可达；静态已空时再开动态只会叠加超时，直接换下一引擎。
       if (/(?:^|\.)duckduckgo\.com$/i.test(url.hostname)) return staticPage;
+      // 静态已耗掉大半预算则不再开动态会话。
+      if (Date.now() - attemptStarted > loadTimeouts.fullLoadTimeoutMs - 2_000) {
+        return staticPage;
+      }
       // Bing/百度 SERP 偶发依赖脚本；静态读不到时再开动态会话。
       try {
         const dynamicPage = await openWebPageInWindow({
@@ -807,15 +860,23 @@ async function openWebPage(options: OpenWebPageOptions): Promise<AgentWebPage> {
           maxChars,
           cursor,
           signal: options.signal,
-          allowPageScripts: true
+          allowPageScripts: true,
+          loadTimeouts
         });
         return (dynamicPage.results?.length ?? 0) > 0 ? dynamicPage : staticPage;
       } catch (error) {
         if (options.signal?.aborted) throw error;
+        if (isWebBrowserTimeoutError(error) && (staticPage.contentChars > 0 || staticPage.title)) {
+          return staticPage;
+        }
         return staticPage;
       }
     }
     if (!isLowQualityOpenPage(staticPage)) return staticPage;
+    if (Date.now() - attemptStarted > loadTimeouts.fullLoadTimeoutMs - 2_000) {
+      if (staticPage.contentChars > 0) return staticPage;
+      throw new Error("网页正文为空或过短，站点可能阻止自动读取");
+    }
 
     const dynamicPage = await openWebPageInWindow({
       url,
@@ -826,9 +887,11 @@ async function openWebPage(options: OpenWebPageOptions): Promise<AgentWebPage> {
       findOffset: options.findOffset,
       findContextChars: options.findContextChars,
       signal: options.signal,
-      allowPageScripts: true
+      allowPageScripts: true,
+      loadTimeouts
     });
     if (isLowQualityOpenPage(dynamicPage)) {
+      if (staticPage.contentChars > 0) return staticPage;
       throw new Error("网页正文为空或过短，站点可能阻止自动读取");
     }
     return dynamicPage;
@@ -852,6 +915,7 @@ async function openWebPageInWindow(options: {
   allowPageScripts: boolean;
   findContextChars?: number;
   mode: AgentWebBrowserMode;
+  loadTimeouts: AgentWebBrowserLoadTimeouts;
 }): Promise<AgentWebPage> {
   const webSession = await getWebAgentSession(options.allowPageScripts);
   const win = new BrowserWindow({
@@ -889,6 +953,7 @@ async function openWebPageInWindow(options: {
       options.url,
       options.mode,
       options.allowPageScripts,
+      options.loadTimeouts,
       options.signal
     );
     const finalURL = contents.getURL();
@@ -899,38 +964,44 @@ async function openWebPageInWindow(options: {
     if (options.mode === "search" && options.allowPageScripts) {
       await waitForSearchResultsHydration(contents, options.signal);
     }
-    const result = await runWithTimeout(
-      contents.executeJavaScriptInIsolatedWorld(WebAgentIsolatedWorldID, [
-        {
-          code: createExtractPageScript(
-            options.mode,
-            options.maxChars,
-            options.cursor,
-            options.findPattern,
-            options.findContextChars,
-            options.findOffset
-          )
-        }
-      ]) as Promise<ExtractedPageResult>,
-      WebAgentExtractTimeoutMs,
-      options.signal,
-      "网页 DOM 提取超时"
-    );
-    return {
-      url: finalURL,
-      title: result.title,
-      ...(result.author ? { author: result.author } : {}),
-      ...(result.publishedAt ? { publishedAt: result.publishedAt } : {}),
-      content: result.content,
-      fetchedAt: new Date().toISOString(),
-      truncated: result.truncated,
-      originalChars: result.originalChars,
-      contentChars: result.contentChars,
-      linkCount: result.linkCount,
-      ...(result.contentRange ? { contentRange: result.contentRange } : {}),
-      ...(result.find ? { find: result.find } : {}),
-      ...(result.results.length ? { results: result.results } : {})
-    };
+    try {
+      const result = await runWithTimeout(
+        contents.executeJavaScriptInIsolatedWorld(WebAgentIsolatedWorldID, [
+          {
+            code: createExtractPageScript(
+              options.mode,
+              options.maxChars,
+              options.cursor,
+              options.findPattern,
+              options.findContextChars,
+              options.findOffset
+            )
+          }
+        ]) as Promise<ExtractedPageResult>,
+        WebAgentExtractTimeoutMs,
+        options.signal,
+        "网页 DOM 提取超时"
+      );
+      return {
+        url: finalURL,
+        title: result.title,
+        ...(result.author ? { author: result.author } : {}),
+        ...(result.publishedAt ? { publishedAt: result.publishedAt } : {}),
+        content: result.content,
+        fetchedAt: new Date().toISOString(),
+        truncated: result.truncated,
+        originalChars: result.originalChars,
+        contentChars: result.contentChars,
+        linkCount: result.linkCount,
+        ...(result.contentRange ? { contentRange: result.contentRange } : {}),
+        ...(result.find ? { find: result.find } : {}),
+        ...(result.results.length ? { results: result.results } : {})
+      };
+    } catch (error) {
+      if (options.signal?.aborted) throw error;
+      // 完整提取失败时退回原始 DOM/正文，避免整次工具调用卡死无结果。
+      return extractRawPageFallback(contents, finalURL, options.maxChars);
+    }
   } finally {
     if (!win.isDestroyed()) {
       contents.stop();
@@ -1059,50 +1130,175 @@ function createBrowserUserAgent(): string {
 
 // ========== 超时 & 取消 ==========
 
-async function loadURLWithTimeout(
+/**
+ * 两阶段加载：
+ * - firstPaintTimeoutMs 内必须出现首屏，否则直接超时错误；
+ * - fullLoadTimeoutMs 内未完整加载则 stop 并继续用已有 DOM 提取。
+ */
+async function loadURLWithBudget(
   win: BrowserWindow,
   url: string,
+  loadTimeouts: AgentWebBrowserLoadTimeouts,
   signal?: AbortSignal
-): Promise<void> {
-  await runWithTimeout(win.loadURL(url), WebAgentLoadTimeoutMs, signal, "网页加载超时", () => {
-    if (!win.isDestroyed()) win.webContents.stop();
-  });
+): Promise<{ completed: boolean }> {
+  if (signal?.aborted) throw createAbortError();
+  const contents = win.webContents;
+  const started = Date.now();
+  const firstPaintTimeoutMs = loadTimeouts.firstPaintTimeoutMs;
+  const fullLoadTimeoutMs = loadTimeouts.fullLoadTimeoutMs;
+  const firstPaintTimeoutLabel = formatTimeoutSeconds(firstPaintTimeoutMs);
+  const fullLoadTimeoutLabel = formatTimeoutSeconds(fullLoadTimeoutMs);
+  let firstPaint = false;
+  let finished = false;
+  let loadError: Error | undefined;
+
+  const markFirstPaint = () => {
+    firstPaint = true;
+  };
+  const onFinish = () => {
+    finished = true;
+    firstPaint = true;
+  };
+  const onFail = (
+    _event: Electron.Event,
+    _errorCode: number,
+    errorDescription: string,
+    _validatedURL: string,
+    isMainFrame: boolean
+  ) => {
+    if (!isMainFrame || finished || firstPaint) return;
+    loadError = new Error(`网页加载失败：${errorDescription || "unknown"}`);
+  };
+
+  contents.on("dom-ready", markFirstPaint);
+  contents.on("did-finish-load", onFinish);
+  contents.on("did-fail-load", onFail);
+
+  const loadPromise = win.loadURL(url).then(
+    () => {
+      finished = true;
+      firstPaint = true;
+    },
+    (error: unknown) => {
+      loadError ??= error instanceof Error ? error : new Error(String(error));
+    }
+  );
+
+  try {
+    await runWithTimeout(
+      new Promise<void>((resolve, reject) => {
+        const tick = () => {
+          if (signal?.aborted) {
+            reject(createAbortError());
+            return;
+          }
+          if (loadError && !firstPaint) {
+            reject(loadError);
+            return;
+          }
+          if (firstPaint || finished) {
+            resolve();
+            return;
+          }
+          if (Date.now() - started >= firstPaintTimeoutMs) {
+            reject(new WebBrowserTimeoutError(`网页首屏加载超时（${firstPaintTimeoutLabel}）`));
+            return;
+          }
+          setTimeout(tick, 40);
+        };
+        tick();
+      }),
+      firstPaintTimeoutMs + 120,
+      signal,
+      `网页首屏加载超时（${firstPaintTimeoutLabel}）`,
+      () => {
+        if (!win.isDestroyed()) contents.stop();
+      }
+    );
+
+    if (finished) {
+      await loadPromise.catch(() => undefined);
+      return { completed: true };
+    }
+
+    const remaining = fullLoadTimeoutMs - (Date.now() - started);
+    if (remaining <= 0) {
+      if (!win.isDestroyed()) contents.stop();
+      return { completed: false };
+    }
+
+    try {
+      await runWithTimeout(
+        loadPromise,
+        remaining,
+        signal,
+        `网页完整加载超时（${fullLoadTimeoutLabel}）`,
+        () => {
+          if (!win.isDestroyed()) contents.stop();
+        }
+      );
+      return { completed: true };
+    } catch (error) {
+      if (signal?.aborted) throw error;
+      if (isWebBrowserTimeoutError(error)) {
+        if (!win.isDestroyed()) contents.stop();
+        return { completed: false };
+      }
+      throw error;
+    }
+  } finally {
+    contents.removeListener("dom-ready", markFirstPaint);
+    contents.removeListener("did-finish-load", onFinish);
+    contents.removeListener("did-fail-load", onFail);
+  }
+}
+
+function formatTimeoutSeconds(timeoutMs: number): string {
+  const seconds = timeoutMs / 1_000;
+  return Number.isInteger(seconds) ? `${seconds}s` : `${seconds.toFixed(1)}s`;
 }
 
 /**
- * Bing 加载策略参考 web-search-mcp：
- * 1) 先打开首页建立会话；2) 动态会话尝试首页表单提交；3) 失败再直达带 cvid 的 SERP URL。
+ * Bing 加载策略（预算内）：
+ * - 静态直达 SERP；空结果由上层再开动态会话。
+ * - 动态每次走首页表单（仅 cookie 直达 SERP 仍会被 cn.bing 反爬清空）。
+ * - 表单失败再直达带 cvid 的 SERP，避免卡死。
  */
 async function loadSearchOrPageURL(
   win: BrowserWindow,
   url: URL,
   mode: AgentWebBrowserMode,
   allowPageScripts: boolean,
+  loadTimeouts: AgentWebBrowserLoadTimeouts,
   signal?: AbortSignal
 ): Promise<void> {
   if (mode !== "search" || !isBingSearchURL(url)) {
-    await loadURLWithTimeout(win, url.toString(), signal);
+    await loadURLWithBudget(win, url.toString(), loadTimeouts, signal);
     return;
   }
 
   const query = url.searchParams.get("q")?.trim() ?? "";
+
+  // 静态无脚本，无法走首页表单；空结果交给动态会话。
+  if (!allowPageScripts || !query) {
+    await loadURLWithBudget(win, url.toString(), loadTimeouts, signal);
+    return;
+  }
+
   try {
-    await loadURLWithTimeout(win, "https://www.bing.com/", signal);
+    await loadURLWithBudget(win, "https://www.bing.com/", loadTimeouts, signal);
   } catch (error) {
     if (signal?.aborted) throw error;
   }
 
-  if (allowPageScripts && query) {
-    try {
-      await submitBingHomepageSearch(win, query, signal);
-      // 仅当已进入 SERP 才视为表单成功；停在首页则继续走直达 URL。
-      if (isBingSearchURL(new URL(win.webContents.getURL()))) return;
-    } catch (error) {
-      if (signal?.aborted) throw error;
-    }
+  try {
+    await submitBingHomepageSearch(win, query, signal);
+    if (isBingSearchURL(new URL(win.webContents.getURL()))) return;
+  } catch (error) {
+    if (signal?.aborted) throw error;
   }
 
-  await loadURLWithTimeout(win, url.toString(), signal);
+  await loadURLWithBudget(win, url.toString(), loadTimeouts, signal);
 }
 
 async function submitBingHomepageSearch(
@@ -1111,9 +1307,15 @@ async function submitBingHomepageSearch(
   signal?: AbortSignal
 ): Promise<void> {
   const code = `(() => {
-    const input = document.querySelector("#sb_form_q");
-    const form = document.querySelector("#sb_form");
-    if (!(input instanceof HTMLInputElement) || !(form instanceof HTMLFormElement)) {
+    const input =
+      document.querySelector("#sb_form_q") ||
+      document.querySelector("textarea[name='q']") ||
+      document.querySelector("input[name='q']");
+    const form = document.querySelector("#sb_form") || input?.closest?.("form");
+    if (!(input instanceof HTMLInputElement || input instanceof HTMLTextAreaElement)) {
+      throw new Error("bing_search_form_missing");
+    }
+    if (!(form instanceof HTMLFormElement)) {
       throw new Error("bing_search_form_missing");
     }
     input.focus();
@@ -1124,33 +1326,98 @@ async function submitBingHomepageSearch(
   })()`;
   await runWithTimeout(
     win.webContents.executeJavaScript(code) as Promise<unknown>,
-    2_000,
+    1_500,
     signal,
     "Bing 搜索框提交超时"
   );
   await runWithTimeout(
     new Promise<void>((resolve, reject) => {
       const contents = win.webContents;
+      const started = Date.now();
       const timer = setTimeout(() => {
         cleanup();
         reject(new WebBrowserTimeoutError("Bing 搜索导航超时"));
-      }, 8_000);
-      const onFinish = () => {
-        cleanup();
-        resolve();
+      }, BingHomepageSearchNavigateTimeoutMs);
+      const onReady = () => {
+        try {
+          if (isBingSearchURL(new URL(contents.getURL()))) {
+            cleanup();
+            resolve();
+          }
+        } catch {
+          /* ignore transient URL */
+        }
+        if (Date.now() - started >= BingHomepageSearchNavigateTimeoutMs) {
+          cleanup();
+          reject(new WebBrowserTimeoutError("Bing 搜索导航超时"));
+        }
       };
       const cleanup = () => {
         clearTimeout(timer);
-        contents.removeListener("did-finish-load", onFinish);
-        contents.removeListener("did-navigate", onFinish);
+        contents.removeListener("did-finish-load", onReady);
+        contents.removeListener("did-navigate", onReady);
+        contents.removeListener("dom-ready", onReady);
       };
-      contents.once("did-finish-load", onFinish);
-      contents.once("did-navigate", onFinish);
+      contents.on("did-finish-load", onReady);
+      contents.on("did-navigate", onReady);
+      contents.on("dom-ready", onReady);
+      onReady();
     }),
-    8_500,
+    BingHomepageSearchNavigateTimeoutMs + 200,
     signal,
     "Bing 搜索导航超时"
   );
+}
+
+async function extractRawPageFallback(
+  contents: Electron.WebContents,
+  finalURL: string,
+  maxChars: number
+): Promise<AgentWebPage> {
+  const limit = Math.max(500, Math.floor(maxChars));
+  const code = `(() => {
+    const title = String(document.title || "").replace(/\\s+/g, " ").trim().slice(0, 300);
+    const text = String(document.body?.innerText || document.documentElement?.outerHTML || "")
+      .replace(/\\s+/g, " ")
+      .trim();
+    const content = text.slice(0, ${limit});
+    return {
+      title,
+      content,
+      truncated: text.length > content.length,
+      originalChars: text.length,
+      contentChars: content.length,
+      linkCount: document.querySelectorAll("a[href]").length,
+      results: []
+    };
+  })()`;
+  try {
+    const result = (await contents.executeJavaScriptInIsolatedWorld(WebAgentIsolatedWorldID, [
+      { code }
+    ])) as ExtractedPageResult;
+    return {
+      url: finalURL,
+      title: result.title || "未命名页面",
+      content: result.content || "[未能提取页面内容]",
+      fetchedAt: new Date().toISOString(),
+      truncated: Boolean(result.truncated),
+      originalChars: result.originalChars ?? 0,
+      contentChars: result.contentChars ?? 0,
+      linkCount: result.linkCount ?? 0
+    };
+  } catch {
+    const fallback = "[页面加载未完成，原始 DOM 提取失败]";
+    return {
+      url: finalURL,
+      title: "加载未完成",
+      content: fallback,
+      fetchedAt: new Date().toISOString(),
+      truncated: true,
+      originalChars: 0,
+      contentChars: fallback.length,
+      linkCount: 0
+    };
+  }
 }
 
 /** 动态 SERP 在 did-finish-load 后仍可能晚一点才插入主结果节点。 */
@@ -1268,7 +1535,7 @@ async function extractPageInRenderer(config: {
       };
       const resetQuietTimer = () => {
         if (quietTimer) clearTimeout(quietTimer);
-        quietTimer = setTimeout(finish, 450);
+        quietTimer = setTimeout(finish, config.mode === "search" ? 180 : 450);
       };
       const observer = new MutationObserver(resetQuietTimer);
       observer.observe(document.documentElement, {
@@ -1276,8 +1543,8 @@ async function extractPageInRenderer(config: {
         subtree: true,
         characterData: true
       });
-      quietTimer = setTimeout(finish, 450);
-      const maxTimer = setTimeout(finish, 2500);
+      quietTimer = setTimeout(finish, config.mode === "search" ? 180 : 450);
+      const maxTimer = setTimeout(finish, config.mode === "search" ? 700 : 2500);
     });
   }
 

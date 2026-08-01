@@ -15,10 +15,16 @@ import {
   limitAgentWebPageToBudget,
   projectAgentWebSearchPage,
   isRelevantAgentWebSearchPage,
+  AgentWebBrowserSearchBudgetMs,
+  resolveWebBrowserLoadTimeouts,
   AgentWebPageMaxSerializedChars,
+  AgentWebBrowserFullLoadTimeoutMs,
   filterAgentWebSearchPageByDomains,
+  AgentWebBrowserFirstPaintTimeoutMs,
   AgentWebBrowserSecurityPreferences,
-  filterAgentWebSearchResultsByQuery
+  filterAgentWebSearchResultsByQuery,
+  AgentWebBrowserFirstPaintTimeoutMaxMs,
+  AgentWebBrowserFirstPaintTimeoutMinMs
 } from "@mahiru/app/inner/agent/web-browser";
 // @ts-expect-error 根目录测试依赖未附带 jsdom 的类型声明。
 import { JSDOM } from "jsdom";
@@ -40,6 +46,24 @@ describe("agent web search scopes", () => {
       sandbox: true,
       webSecurity: true
     });
+  });
+
+  it("网页加载预算：首屏 5s 失败、完整加载 10s 上限、search 级联 16s", () => {
+    expect(AgentWebBrowserFirstPaintTimeoutMs).toBe(5_000);
+    expect(AgentWebBrowserFirstPaintTimeoutMinMs).toBe(3_000);
+    expect(AgentWebBrowserFirstPaintTimeoutMaxMs).toBe(30_000);
+    expect(AgentWebBrowserFullLoadTimeoutMs).toBe(10_000);
+    expect(AgentWebBrowserSearchBudgetMs).toBe(16_000);
+    expect(resolveWebBrowserLoadTimeouts()).toEqual({
+      firstPaintTimeoutMs: 5_000,
+      fullLoadTimeoutMs: 10_000
+    });
+    expect(resolveWebBrowserLoadTimeouts(15_000)).toEqual({
+      firstPaintTimeoutMs: 15_000,
+      fullLoadTimeoutMs: 20_000
+    });
+    expect(resolveWebBrowserLoadTimeouts(1_000).firstPaintTimeoutMs).toBe(3_000);
+    expect(resolveWebBrowserLoadTimeouts(60_000).firstPaintTimeoutMs).toBe(30_000);
   });
 
   it("defaults general search to Bing（国内网络下 DDG 常不可达）", () => {
@@ -189,6 +213,27 @@ describe("agent web search scopes", () => {
         maxChars: 12_001
       }).success
     ).toBe(false);
+    expect(
+      schema.safeParse({
+        action: "open",
+        url: "https://example.com/article",
+        timeoutMs: 15_000
+      }).success
+    ).toBe(true);
+    expect(
+      schema.safeParse({
+        action: "open",
+        url: "https://example.com/article",
+        timeoutMs: 2_999
+      }).success
+    ).toBe(false);
+    expect(
+      schema.safeParse({
+        action: "open",
+        url: "https://example.com/article",
+        timeoutMs: 30_001
+      }).success
+    ).toBe(false);
 
     const modelSchema = JSON.stringify(z.toJSONSchema(schema));
     expect(z.toJSONSchema(schema)).toMatchObject({ type: "object" });
@@ -196,6 +241,7 @@ describe("agent web search scopes", () => {
     expect(modelSchema).toContain("acg_news");
     expect(modelSchema).toContain("encyclopedia");
     expect(modelSchema).toContain("site");
+    expect(modelSchema).toContain("timeoutMs");
   });
 
   it("让 detail 决定网页读取预算，同时保留绝对上限", () => {
@@ -217,6 +263,16 @@ describe("agent web search scopes", () => {
         "detailed"
       )
     ).toMatchObject({ contextChars: 600, matchOffset: 0 });
+    expect(
+      resolveAgentWebBrowserInput(
+        new AgentToolWebBrowser().inputSchema.parse({
+          action: "open",
+          url: "https://example.com/article",
+          timeoutMs: 15_000
+        }),
+        "standard"
+      )
+    ).toMatchObject({ timeoutMs: 15_000 });
   });
 
   it("固定站点范围会过滤搜索引擎混入的站外结果，并接受萌娘镜像子域", () => {
