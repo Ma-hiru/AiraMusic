@@ -205,6 +205,10 @@ export interface LLMUsage {
   reasoningTokens?: number;
   cacheWriteTokens?: number;
   cachedInputTokens?: number;
+  /** 聚合用量包含的模型请求数；单次 Provider 响应通常不填写。 */
+  requestCount?: number;
+  /** 聚合用量中最后一次真实请求的输入规模，用于区分当前上下文与累计计费量。 */
+  lastInputTokens?: number;
 }
 
 export type LLMFinishReason = "stop" | "length" | "unknown" | "tool_calls" | "content_filter";

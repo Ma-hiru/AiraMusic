@@ -30,6 +30,13 @@ describe("Agent tool presentation", () => {
       truncated: true,
       author: "Aira 编辑部",
       publishedAt: "2026-07-24T08:30:00.000Z",
+      contentRange: {
+        start: 0,
+        end: 8000,
+        total: 24000,
+        hasMore: true,
+        nextCursor: 8000
+      },
       results: [
         {
           title: "AiraMusic repository",
@@ -58,6 +65,13 @@ describe("Agent tool presentation", () => {
       scopeDomains: ["zh.moegirl.org.cn"],
       author: "Aira 编辑部",
       publishedAt: "2026-07-24T08:30:00.000Z",
+      contentRange: {
+        start: 0,
+        end: 8000,
+        total: 24000,
+        hasMore: true,
+        nextCursor: 8000
+      },
       results: [{ title: "AiraMusic repository", domain: "github.com" }]
     });
   });
@@ -131,5 +145,15 @@ describe("Agent tool presentation", () => {
 
     expect(details.scopeLabel).toBe("ACG 新闻");
     expect(details.scope).toBe("acg_news");
+  });
+
+  it("为聚合百科搜索显示中文范围标签", () => {
+    const details = getAgentWebToolDetails(
+      JSON.stringify({ action: "search", query: "歌曲设定", scope: "encyclopedia" }),
+      JSON.stringify({ results: [] })
+    );
+
+    expect(details.scopeLabel).toBe("百科资料");
+    expect(details.scope).toBe("encyclopedia");
   });
 });

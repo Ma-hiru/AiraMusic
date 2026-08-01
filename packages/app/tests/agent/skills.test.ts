@@ -126,13 +126,11 @@ describe("AiraMusic Agent skills", () => {
     expect(activation.instructions.join("\n")).toContain("剧情事实");
     expect(activation.instructions.join("\n")).toContain("评论不能作为剧情或创作事实依据");
     expect(activation.instructions.join("\n")).toContain(
-      "剧情、角色、歌曲使用场景等事实先用 scope=official"
+      "剧情、角色和稳定作品背景可用 scope=encyclopedia"
     );
     expect(activation.instructions.join("\n")).toContain("scope=acg_news");
     expect(activation.instructions.join("\n")).toContain("scope=music_news");
-    expect(activation.instructions.join("\n")).toContain(
-      "scope=baidu_baike、wikipedia、moegirl 只能作为寻找一手来源的线索"
-    );
+    expect(activation.instructions.join("\n")).toContain("scope=zhihu 只能作为署名观点");
     expect(activation.requiredEvidence.map((item) => item.id)).toEqual([
       "media-context-analysis:track-detail",
       "media-context-analysis:lyrics",

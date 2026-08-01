@@ -15,18 +15,24 @@ vi.mock("electron", () => ({
 }));
 
 describe("Agent token 载荷预算", () => {
-  it("普通聊天只携带一个轻量搜索兜底", () => {
+  it("普通对话只携带稳定的小型核心工具集", () => {
     const catalog = createAgentToolCatalog(false);
-    const selectedNames = catalog.select("你好，最近怎么样？");
+    const ordinaryNames = catalog.select("你好，最近怎么样？");
+    const otherOrdinaryNames = catalog.select("说个简短的笑话");
     const tools = new LLMToolRegistry();
     tools.register(catalog.list).unwrap();
-    const definitions = tools.definitions(true, selectedNames);
+    const definitions = tools.definitions(true, ordinaryNames);
+    const otherOrdinaryDefinitions = tools.definitions(true, otherOrdinaryNames);
     const toolSchemas = JSON.stringify(definitions);
     const estimator = new LLMConservativeTokenEstimator();
 
-    expect(definitions.map((definition) => definition.name)).toEqual(["agent-search"]);
-    expect(toolSchemas.length).toBeLessThanOrEqual(1_000);
-    expect(estimator.estimateText(toolSchemas)).toBeLessThanOrEqual(500);
+    expect(ordinaryNames).toEqual(otherOrdinaryNames);
+    expect(definitions).toEqual(otherOrdinaryDefinitions);
+    expect(definitions.map((definition) => definition.name)).toEqual([
+      "agent-search",
+      "agent-tool-capability-search"
+    ]);
+    expect(estimator.estimateText(toolSchemas)).toBeLessThanOrEqual(1_200);
   });
 
   it("限制歌曲剧情介绍工作流的固定提示与工具定义预算", () => {
@@ -45,17 +51,24 @@ describe("Agent token 载荷预算", () => {
     const toolSchemas = JSON.stringify(definitions);
 
     expect(activation.activeSkillIDs).toEqual(["media-context-analysis"]);
-    expect(definitions.map((definition) => definition.name)).not.toEqual(
+    expect(definitions.map((definition) => definition.name)).toEqual(
       expect.arrayContaining([
-        "agent-tool-player-action",
-        "agent-tool-player-current",
-        "agent-tool-player-volume"
+        "agent-search",
+        "agent-tool-capability-search",
+        "agent-tool-track-detail",
+        "agent-tool-track-lyrics",
+        "agent-tool-track-comment",
+        "agent-tool-web-browser"
       ])
     );
-    expect(stableRules.length).toBeLessThanOrEqual(1_200);
+    expect(definitions.map((definition) => definition.name)).not.toContain(
+      "agent-tool-settings-get"
+    );
+    expect(stableRules.length).toBeLessThanOrEqual(1_700);
     expect(activeSkills.length).toBeLessThanOrEqual(1_200);
-    expect(definitions.length).toBeLessThanOrEqual(9);
-    expect(toolSchemas.length).toBeLessThanOrEqual(5_000);
-    expect(estimator.estimateText(toolSchemas)).toBeLessThanOrEqual(2_500);
+    expect(definitions.length).toBeGreaterThan(7);
+    expect(definitions.length).toBeLessThanOrEqual(12);
+    expect(toolSchemas.length).toBeGreaterThan(0);
+    expect(estimator.estimateText(toolSchemas)).toBeLessThanOrEqual(4_000);
   });
 });

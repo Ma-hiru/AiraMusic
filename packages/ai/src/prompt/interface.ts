@@ -17,8 +17,11 @@ export interface LLMPromptToolOptions {
   strict: boolean;
   choice: LLMToolChoice;
   selectedNames?: string[];
+  /** 只有这些工具可由已选工具在当前循环中延迟激活。 */
   registry: LLMToolRegistry;
+  activatableNames?: string[];
   maxTotalOutputChars?: number;
+  maxRetainedToolOutputChars?: number;
 }
 
 export interface LLMPromptBuildOptions {

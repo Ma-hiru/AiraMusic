@@ -1,5 +1,5 @@
 import { cx } from "@emotion/css";
-import { Cpu, Activity } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import { memo, type FC, Fragment } from "react";
 import { useConversation } from "@/wins/agent/hooks/use-conversation";
 import Card from "@/common/components/layout/card";
@@ -64,14 +64,26 @@ const Chat: FC<ChatProps> = ({
         "agent-panel flex min-h-0 min-w-0 flex-col overflow-hidden rounded-xl! p-0!",
         className
       )}>
-      <header className="flex min-h-11 shrink-0 items-center justify-between gap-3 border-b border-white/7 px-3 sm:px-4">
-        <div className="flex min-w-0 items-center gap-2">
-          <span className="grid size-6 shrink-0 place-items-center rounded-lg border border-white/8 bg-white/5">
-            <Cpu className="size-3.5 text-white/48" />
+      <header className="flex min-h-11 shrink-0 items-center justify-between gap-3 border-b border-white/6 px-3 sm:px-4">
+        <div className="flex min-w-0 items-center gap-2.5">
+          <span className="grid size-6 shrink-0 place-items-center rounded-full bg-[color-mix(in_srgb,var(--theme-color-main)_14%,transparent)] text-[color-mix(in_srgb,var(--theme-color-main)_78%,white)] ring-1 ring-[color-mix(in_srgb,var(--theme-color-main)_22%,transparent)]">
+            <Sparkles className="size-3" />
           </span>
           <div className="min-w-0">
-            <div className="truncate text-[12px] font-medium text-white/76">音乐助手</div>
-            <div className="mt-px text-[9px] text-white/26">Aira Agent</div>
+            <div className="truncate text-[12px] font-semibold text-white/84">音乐助手</div>
+            <div className="mt-px flex items-center gap-1 text-[9px] text-white/30">
+              <span
+                className={cx(
+                  "size-1 rounded-full",
+                  runningRunID
+                    ? "animate-pulse bg-[color-mix(in_srgb,var(--theme-color-main)_80%,white)]"
+                    : activeConfig
+                      ? "bg-emerald-300/70"
+                      : "bg-amber-200/70"
+                )}
+              />
+              Aira Agent
+            </div>
           </div>
         </div>
         <div className="flex min-w-0 items-center gap-2">
@@ -88,17 +100,6 @@ const Chat: FC<ChatProps> = ({
           />
         </div>
       </header>
-      {runningRunID && (
-        <div className="flex min-h-10 shrink-0 items-center gap-2.5 border-b border-sky-200/10 bg-sky-200/[0.035] px-3.5 sm:px-5">
-          <span className="relative flex size-5 shrink-0 items-center justify-center">
-            <span className="absolute size-4 animate-ping rounded-full bg-sky-200/10" />
-            <Activity className="relative size-3.5 text-sky-100/72" />
-          </span>
-          <div className="min-w-0 flex-1 truncate text-[11px] font-semibold text-white/56">
-            {runningLabel}
-          </div>
-        </div>
-      )}
       <Fragment key={`conversation-${conversationID || "empty"}`}>
         <ChatContent
           recovering={recovering}
@@ -117,6 +118,7 @@ const Chat: FC<ChatProps> = ({
         <ChatInput
           sending={sending}
           activeConfig={activeConfig}
+          runningLabel={runningLabel}
           runningRunID={runningRunID}
           retryCandidate={retryCandidate}
           selectedConversationID={conversationID}

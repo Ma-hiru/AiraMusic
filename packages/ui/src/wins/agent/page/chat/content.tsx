@@ -198,9 +198,9 @@ const ChatContent: FC<ChatContentProps> = ({
             {timeline.map(renderTimelineItem)}
             {recovering && !streamText && (
               <div
-                className="flex items-center gap-2.5 rounded-xl border border-sky-100/10 bg-sky-100/5 px-3 py-2.5 text-[11px] text-white/48"
+                className="flex items-center gap-2.5 rounded-xl border border-[color-mix(in_srgb,var(--theme-color-main)_16%,transparent)] bg-[color-mix(in_srgb,var(--theme-color-main)_5%,transparent)] px-3 py-2.5 text-[11px] text-white/48"
                 role="status">
-                <LoaderCircle className="size-3.5 shrink-0 animate-spin text-sky-100/65" />
+                <LoaderCircle className="size-3.5 shrink-0 animate-spin text-[color-mix(in_srgb,var(--theme-color-main)_70%,white)]" />
                 <div className="min-w-0">
                   <div className="font-semibold text-white/62">正在重新连接运行中的对话</div>
                   <div className="mt-0.5 text-[10px] text-white/32">
@@ -265,6 +265,7 @@ const renderTimelineItem = (item: ChatRenderableTimelineItem) => {
               <ToolStep
                 key={child.id}
                 item={stripAssistantTurn(child)}
+                autoCollapse={!streaming && child.status !== "running"}
                 collapseEnabled={!streaming && child.status !== "running"}
               />
             );
@@ -376,19 +377,22 @@ const EmptyWorkspace: FC<{
 
   return (
     <div className="mx-auto flex min-h-full w-full max-w-[44rem] items-center py-4">
-      <div className="grid w-full gap-5 lg:grid-cols-[minmax(0,0.92fr)_minmax(17rem,1.08fr)] lg:items-end">
+      <div className="grid w-full gap-6 lg:grid-cols-[minmax(0,0.92fr)_minmax(17rem,1.08fr)] lg:items-end">
         <div className="min-w-0">
-          <div className="text-[9px] font-medium tracking-[0.12em] text-white/30">从此刻开始</div>
-          <h2 className="mt-2 max-w-md text-2xl leading-[1.12] font-semibold tracking-[-0.025em] text-white/88 sm:text-[1.7rem]">
+          <div className="flex items-center gap-1.5 text-[9px] font-semibold tracking-[0.16em] text-[color-mix(in_srgb,var(--theme-color-main)_62%,white)]">
+            <span className="size-1 rounded-full bg-[color-mix(in_srgb,var(--theme-color-main)_80%,white)]" />
+            从此刻开始
+          </div>
+          <h2 className="mt-2.5 max-w-md text-[1.75rem] leading-[1.08] font-semibold tracking-[-0.03em] text-white/92 sm:text-[1.9rem]">
             从正在听的音乐开始
           </h2>
-          <p className="mt-2.5 max-w-md text-[11px] leading-5 text-white/40">
+          <p className="mt-3 max-w-md text-[11.5px] leading-5.5 text-white/42">
             我可以读取 AiraMusic 当前状态、搜索站内音乐，也可以在需要时浏览公开网页。
           </p>
 
           {currentTrack && (
-            <div className="mt-4 flex min-w-0 items-center gap-2.5 rounded-xl border border-white/8 bg-white/[0.035] p-2 backdrop-blur-xl">
-              <div className="size-10 shrink-0 overflow-hidden rounded-lg bg-black/20">
+            <div className="mt-5 flex min-w-0 items-center gap-2.5 rounded-xl border border-white/8 bg-white/[0.035] p-2 backdrop-blur-xl transition-colors hover:border-[color-mix(in_srgb,var(--theme-color-main)_22%,transparent)]">
+              <div className="size-10 shrink-0 overflow-hidden rounded-lg bg-black/20 ring-1 ring-[color-mix(in_srgb,var(--theme-color-main)_18%,transparent)]">
                 {cover ? (
                   <NeteaseImage
                     className="size-full rounded-lg"
@@ -406,10 +410,10 @@ const EmptyWorkspace: FC<{
                 )}
               </div>
               <div className="min-w-0 flex-1">
-                <div className="text-[8px] font-medium tracking-[0.1em] text-white/26">
+                <div className="text-[8px] font-semibold tracking-[0.12em] text-[color-mix(in_srgb,var(--theme-color-main)_52%,white)]">
                   正在播放
                 </div>
-                <div className="mt-0.5 truncate text-[12px] font-medium text-white/80">
+                <div className="mt-0.5 truncate text-[12px] font-medium text-white/84">
                   {currentTrack.name}
                 </div>
                 <div className="mt-0.5 truncate text-[10px] text-white/38">
@@ -422,25 +426,27 @@ const EmptyWorkspace: FC<{
         </div>
 
         <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-1">
-          <div className="mb-0.5 text-[9px] font-medium tracking-[0.08em] text-white/28 sm:col-span-2 lg:col-span-1">
+          <div className="mb-0.5 text-[9px] font-semibold tracking-[0.1em] text-white/30 sm:col-span-2 lg:col-span-1">
             可以这样问
           </div>
           {prompts.map((prompt, index) => (
             <button
               key={prompt}
               className="
-                group flex min-h-10 cursor-pointer items-center gap-2.5 rounded-lg border
-                border-white/8 bg-black/8 px-2.5 py-1.5 text-left text-[11px] leading-4
-                text-white/58 outline-none transition-all duration-200 hover:border-white/16
-                hover:bg-white/8 hover:text-white/82 focus-visible:ring-2 focus-visible:ring-white/45
+                group flex min-h-10 cursor-pointer items-center gap-2.5 rounded-xl border
+                border-white/7 bg-black/10 px-3 py-2 text-left text-[11px] leading-4
+                text-white/58 outline-none transition-all duration-200
+                hover:border-[color-mix(in_srgb,var(--theme-color-main)_26%,transparent)]
+                hover:bg-[color-mix(in_srgb,var(--theme-color-main)_7%,transparent)]
+                hover:text-white/84 focus-visible:ring-2 focus-visible:ring-white/45
               "
               type="button"
               onClick={() => void onSubmitPrompt(prompt)}>
-              <span className="text-[9px] font-bold tabular-nums text-white/25">
+              <span className="text-[9px] font-bold tabular-nums text-[color-mix(in_srgb,var(--theme-color-main)_38%,white)]">
                 {String(index + 1).padStart(2, "0")}
               </span>
               <span className="min-w-0 flex-1">{prompt}</span>
-              <Sparkles className="size-3.5 shrink-0 text-primary opacity-60 transition-opacity group-hover:opacity-100" />
+              <ArrowDown className="size-3.5 shrink-0 -rotate-90 text-[color-mix(in_srgb,var(--theme-color-main)_62%,white)] opacity-0 transition-all duration-200 group-hover:translate-x-0.5 group-hover:opacity-100" />
             </button>
           ))}
         </div>
@@ -457,12 +463,14 @@ const EmptyStateFrame: FC<{
 }> = ({ title, eyebrow, children, icon: Icon }) => (
   <div className="grid h-full place-items-center py-6">
     <div className="grid max-w-md justify-items-center gap-4 text-center">
-      <div className="flex size-12 items-center justify-center rounded-2xl border border-white/11 bg-white/6">
-        <Icon className="size-5.5 text-white/58" />
+      <div className="flex size-12 items-center justify-center rounded-2xl bg-[color-mix(in_srgb,var(--theme-color-main)_12%,transparent)] text-[color-mix(in_srgb,var(--theme-color-main)_72%,white)] ring-1 ring-[color-mix(in_srgb,var(--theme-color-main)_20%,transparent)]">
+        <Icon className="size-5.5" />
       </div>
       <div>
-        <div className="text-[9px] font-bold tracking-[0.2em] text-white/30">{eyebrow}</div>
-        <h2 className="mt-1.5 text-xl font-bold tracking-[-0.025em] text-white/84">{title}</h2>
+        <div className="text-[9px] font-bold tracking-[0.2em] text-[color-mix(in_srgb,var(--theme-color-main)_48%,white)]">
+          {eyebrow}
+        </div>
+        <h2 className="mt-1.5 text-xl font-bold tracking-[-0.025em] text-white/88">{title}</h2>
       </div>
       {children}
     </div>
@@ -532,25 +540,35 @@ const buildTimeline = (conversation: Nullable<LLMConversationSnapshot>): ChatTim
       }
 
       const callIDs = new Set(message.toolCalls.map((call) => call.callID));
-      const toolResults = messages.slice(index + 1).flatMap((candidate, offset) => {
-        if (candidate.role !== "tool" || !callIDs.has(candidate.callID)) return [];
+      const toolResultsByCallID = new Map<
+        string,
+        { name: string; callID: string; output: string }
+      >();
+      messages.slice(index + 1).forEach((candidate, offset) => {
+        if (candidate.role !== "tool" || !callIDs.has(candidate.callID)) return;
         consumed.add(index + offset + 1);
-        return {
+        toolResultsByCallID.set(candidate.callID, {
           name: candidate.name,
           callID: candidate.callID,
           output: candidate.content
-        };
+        });
       });
+      const toolResults = message.toolCalls.flatMap((call) => {
+        const result = toolResultsByCallID.get(call.callID);
+        return result ? [result] : [];
+      });
+      const allToolCallsResolved = message.toolCalls.every((call) =>
+        toolResultsByCallID.has(call.callID)
+      );
 
       items.push({
         id: `${assistantItemPrefix}-tool`,
         type: "tool",
-        status:
-          toolResults.length >= message.toolCalls.length
-            ? "done"
-            : terminal || assistantTurn?.status === "incomplete"
-              ? "error"
-              : "running",
+        status: allToolCallsResolved
+          ? "done"
+          : terminal || assistantTurn?.status === "incomplete"
+            ? "error"
+            : "running",
         toolCalls: message.toolCalls,
         toolResults,
         ...(assistantTurn?.runID ? { runID: assistantTurn.runID } : {}),

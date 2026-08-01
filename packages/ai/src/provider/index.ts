@@ -1,3 +1,4 @@
+export { attachLLMUsageToError, readLLMUsageFromError } from "./usage";
 export {
   LLMProvider,
   type LLMUsage,

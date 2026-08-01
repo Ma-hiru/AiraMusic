@@ -5,5 +5,6 @@ export {
   type LLMToolChoice,
   type LLMToolResult,
   type LLMToolContext,
-  type LLMToolDefinition
+  type LLMToolDefinition,
+  type LLMToolOutputDetail
 } from "./interface";

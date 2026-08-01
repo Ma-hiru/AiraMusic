@@ -1,9 +1,11 @@
 import { Bot, PictureInPicture } from "lucide-react";
 import { memo, useRef, type FC, useState, useEffect, useCallback } from "react";
 import { RendererCache } from "@/common/lib/cache";
+import { RendererIPC } from "@mahiru/ipc/renderer";
 import { RendererDevice } from "@/common/lib/device";
 import { RendererWindow } from "@/common/lib/window";
 import { useListenable } from "@/common/hooks/use-listenable";
+import AppToast from "@/common/components/display/toast";
 import RendererPlayerHandle from "@/wins/main/lib/handle";
 import Switch from "@/common/components/data-input/switch";
 import Control from "@/common/components/layout/top/control";
@@ -14,6 +16,8 @@ const TopControl: FC = () => {
   const currentWindow = useListenable(RendererWindow.current);
   const miniWindow = useListenable(RendererWindow.get("miniplayer"));
   const memoRef = useRef(false);
+  const [agentEnabled, setAgentEnabled] = useState(false);
+  const [openingAgent, setOpeningAgent] = useState(false);
 
   const close = useCallback(
     async (quiting: boolean) => {
@@ -77,6 +81,35 @@ const TopControl: FC = () => {
     };
   }, [currentWindow, miniWindow]);
 
+  useEffect(() => {
+    void RendererIPC.NormalChannel.send("invoke_agent_feature_settings_get", undefined)
+      .then((result) => result.ok && setAgentEnabled(result.data.effective.agentEnabled))
+      .catch(() => setAgentEnabled(false));
+    return RendererIPC.MessageChannel.listen(
+      "message_deliver_agent_feature_settings",
+      "process",
+      (state) => setAgentEnabled(state.effective.agentEnabled)
+    );
+  }, []);
+
+  const openAgent = useCallback(async () => {
+    if (openingAgent) return;
+    if (RendererWindow.agent.opened) {
+      RendererWindow.agent.show();
+      RendererWindow.agent.focus();
+      return;
+    }
+
+    setOpeningAgent(true);
+    try {
+      await RendererWindow.agent.reactReadyAwait({ signal: AbortSignal.timeout(12_000) });
+    } catch {
+      AppToast.show({ type: "error", text: "Agent 窗口启动超时，请检查配置或重启应用" });
+    } finally {
+      setOpeningAgent(false);
+    }
+  }, [openingAgent]);
+
   return (
     <Control
       onClose={close}
@@ -86,18 +119,15 @@ const TopControl: FC = () => {
           label: "打开迷你播放器",
           onClick: mini
         },
-        {
-          icon: Bot,
-          label: "Agent",
-          onClick: () => {
-            if (RendererWindow.agent.opened) {
-              RendererWindow.agent.show();
-              RendererWindow.agent.focus();
-            } else {
-              void RendererWindow.agent.reactReadyAwait();
-            }
-          }
-        }
+        ...(agentEnabled
+          ? [
+              {
+                icon: Bot,
+                label: openingAgent ? "正在打开 Agent" : "Agent",
+                onClick: () => void openAgent()
+              }
+            ]
+          : [])
       ]}
       max
       pin

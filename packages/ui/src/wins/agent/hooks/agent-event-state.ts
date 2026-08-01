@@ -8,12 +8,15 @@ export const reduceAgentConversationEvent = (
   state: AgentConversationState,
   event: AIAgentEvent
 ): AgentConversationState => {
+  if (!shouldApplyAgentConversationEvent(state, event)) return state;
+
   switch (event.type) {
     case "started":
       return {
         ...state,
         sending: false,
         recovering: false,
+        latestRunID: event.runID,
         runningRunID: event.runID
       };
     case "title":
@@ -42,6 +45,7 @@ export const reduceAgentConversationEvent = (
         sending: false,
         streamText: "",
         recovering: false,
+        latestRunID: event.runID,
         runningRunID: "",
         liveTimeline: [],
         conversation: event.snapshot,
@@ -71,6 +75,21 @@ export const reduceAgentConversationEvent = (
         event.snapshot
       );
   }
+};
+
+const shouldApplyAgentConversationEvent = (state: AgentConversationState, event: AIAgentEvent) => {
+  const latestRunID =
+    state.runningRunID || state.latestRunID || state.conversation?.runtime?.runID || "";
+
+  if (event.type === "started") {
+    if (state.runningRunID && state.runningRunID !== event.runID) return false;
+    if (state.sending || state.recovering) return true;
+    return !latestRunID || latestRunID === event.runID;
+  }
+
+  // 新消息已经提交但尚未拿到 runID 时，只可能收到上一轮迟到事件。
+  if (state.sending && !state.runningRunID) return false;
+  return !latestRunID || latestRunID === event.runID;
 };
 
 const reduceToolCall = (
@@ -162,6 +181,7 @@ const reduceTerminal = (
       sending: false,
       streamText: "",
       recovering: false,
+      latestRunID: terminal.runID ?? state.latestRunID,
       runningRunID: "",
       liveTimeline: [],
       conversation: snapshot,
@@ -193,6 +213,7 @@ const reduceTerminal = (
     sending: false,
     streamText: "",
     recovering: false,
+    latestRunID: terminal.runID ?? state.latestRunID,
     runningRunID: "",
     pendingUserMessage: "",
     liveTimeline

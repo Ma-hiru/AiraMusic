@@ -14,6 +14,7 @@ vi.mock("electron", () => ({
 describe("Agent 工具目录", () => {
   const destructiveToolNames = [
     "agent-tool-change-settings",
+    "agent-tool-replace-lyrics",
     "agent-tool-track-like",
     "agent-tool-fm-trash",
     "agent-tool-playlist-create",
@@ -33,10 +34,16 @@ describe("Agent 工具目录", () => {
     expect(catalog.select("介绍当前歌曲")).not.toContain("agent-tool-playlist-delete");
   });
 
-  it("普通聊天只保留搜索兜底，不携带四类资源详情 schema", () => {
-    const selected = createAgentToolCatalog(false).select("你好，最近怎么样？");
+  it("核心工具保持稳定，其他能力按意图预加载", () => {
+    const catalog = createAgentToolCatalog(false);
+    const ordinary = catalog.select("你好，最近怎么样？");
+    const music = catalog.select("介绍当前播放歌曲");
 
-    expect(selected).toEqual(["agent-search"]);
+    expect(ordinary).toEqual(["agent-search", "agent-tool-capability-search"]);
+    expect(music).toEqual(expect.arrayContaining(ordinary));
+    expect(music).toContain("agent-tool-track-detail");
+    expect(music).not.toContain("agent-tool-settings-get");
+    expect(ordinary).not.toContain("agent-tool-playlist-delete");
   });
 
   it("短跟进句继承上一条用户意图，普通新话题不继承", () => {
@@ -72,12 +79,14 @@ describe("Agent 工具目录", () => {
     const routingText = buildAgentToolRoutingText("好的", conversation);
     const selected = createAgentToolCatalog(false).select(routingText, "好的");
 
-    expect(routingText).toBe("介绍当前播放歌曲\n要不要结合动画剧情分析？\n好的");
+    expect(routingText).toBe(
+      "介绍当前播放歌曲\n<assistant_proposal>要不要结合动画剧情分析？</assistant_proposal>\n好的"
+    );
     expect(selected).toContain("agent-tool-track-detail");
     expect(selected).toContain("agent-tool-web-browser");
   });
 
-  it("短确认只继承只读能力，不会重新暴露上一轮动作工具", () => {
+  it("短确认只授权助手最近明确提议的写操作", () => {
     const conversation = LLMConversation.create({ id: "follow-up-action-safety" }).unwrap();
     conversation.appendMessage({ role: "user", content: "删除这个歌单" }).unwrap();
     conversation.appendMessage({ role: "assistant", content: "删除这个歌单，可以吗？" }).unwrap();
@@ -86,21 +95,49 @@ describe("Agent 工具目录", () => {
     const routingText = buildAgentToolRoutingText("好的", conversation);
     const selected = createAgentToolCatalog(true).select(routingText, "好的");
 
-    expect(routingText).toBe("删除这个歌单\n删除这个歌单，可以吗？\n好的");
-    expect(selected).not.toContain("agent-tool-playlist-delete");
+    expect(routingText).toBe(
+      "删除这个歌单\n<assistant_proposal>删除这个歌单，可以吗？</assistant_proposal>\n好的"
+    );
+    expect(selected).toContain("agent-tool-playlist-delete");
 
     const playerRouting = "播放这首歌\n继续";
     const playerSelected = createAgentToolCatalog(false).select(playerRouting, "继续");
-    expect(playerSelected).not.toContain("agent-tool-track-play");
-    expect(playerSelected).not.toContain("agent-tool-player-action");
+    expect(playerSelected).toContain("agent-tool-track-play");
+    expect(playerSelected).toContain("agent-tool-player-action");
     expect(createAgentToolCatalog(false).select("继续播放")).toContain("agent-tool-player-action");
   });
 
-  it("泛化的音乐推荐不会顺带加载评论和歌词工具", () => {
-    const selected = createAgentToolCatalog(false).select("推荐一些适合工作的音乐");
+  it("确认无关建议时不会继承更早的写操作", () => {
+    const conversation = LLMConversation.create({ id: "unrelated-write-confirmation" }).unwrap();
+    conversation.appendMessage({ role: "user", content: "删除这个歌单" }).unwrap();
+    conversation.appendMessage({ role: "assistant", content: "要不要搜索相关资料？" }).unwrap();
+    conversation.appendMessage({ role: "user", content: "好的" }).unwrap();
 
-    expect(selected).not.toContain("agent-tool-track-comment");
-    expect(selected).not.toContain("agent-tool-track-lyrics");
+    const routingText = buildAgentToolRoutingText("好的", conversation);
+
+    expect(createAgentToolCatalog(true).select(routingText, "好的")).not.toContain(
+      "agent-tool-playlist-delete"
+    );
+  });
+
+  it("没有助手确认提议时，多行旧消息不会被误判成写操作授权", () => {
+    const conversation = LLMConversation.create({ id: "multiline-write-confirmation" }).unwrap();
+    conversation.appendMessage({ role: "user", content: "我还在考虑\n删除这个歌单" }).unwrap();
+    conversation.appendMessage({ role: "assistant", content: "明白了。" }).unwrap();
+    conversation.appendMessage({ role: "user", content: "好的" }).unwrap();
+
+    const routingText = buildAgentToolRoutingText("好的", conversation);
+
+    expect(routingText).not.toContain("<assistant_proposal>");
+    expect(createAgentToolCatalog(true).select(routingText, "好的")).not.toContain(
+      "agent-tool-playlist-delete"
+    );
+  });
+
+  it("无特定意图的普通对话保持相同工具定义顺序", () => {
+    const catalog = createAgentToolCatalog(false);
+
+    expect(catalog.select("你好")).toEqual(catalog.select("说个笑话"));
   });
 
   it.each(["介绍这个歌单", "这张专辑怎么样", "看看热门评论", "设置有哪些", "我喜欢这首歌"])(
@@ -114,6 +151,7 @@ describe("Agent 工具目录", () => {
 
   it.each([
     ["修改音质设置", "agent-tool-change-settings"],
+    ["把当前歌词替换为新的逐字歌词", "agent-tool-replace-lyrics"],
     ["把这首歌曲加入喜欢", "agent-tool-track-like"],
     ["屏蔽这首歌曲", "agent-tool-fm-trash"],
     ["新建一个通勤歌单", "agent-tool-playlist-create"],
@@ -135,6 +173,28 @@ describe("Agent 工具目录", () => {
     expect(catalog.select("结合剧情讲讲")).toContain("agent-tool-web-browser");
   });
 
+  it("能力搜索可以在下一步按需加载未预选的只读工具", async () => {
+    const catalog = createAgentToolCatalog(false);
+    const directory = catalog.list.find((tool) => tool.name === "agent-tool-capability-search");
+    const activateTools = vi.fn();
+
+    const result = await directory?.execute(
+      { query: "查看播放历史" },
+      {
+        conversationID: "capability-search",
+        outputDetail: "standard",
+        activateTools
+      }
+    );
+
+    expect(result?.isOk()).toBe(true);
+    expect(activateTools).toHaveBeenCalledWith(
+      expect.arrayContaining(["agent-tool-user-play-history"])
+    );
+    expect(catalog.deferredNames).toContain("agent-tool-user-play-history");
+    expect(catalog.deferredNames).not.toContain("agent-tool-capability-search");
+  });
+
   it("把“当前播放”作为歌曲指代时不会误暴露播放器控制组", () => {
     const catalog = createAgentToolCatalog(false);
     const selected = catalog.select("结合《86》的动画剧情，介绍当前播放歌曲并解释情绪来源");
@@ -144,8 +204,6 @@ describe("Agent 工具目录", () => {
     expect(selected).not.toContain("agent-tool-player-mode");
     expect(selected).not.toContain("agent-tool-player-queue-add");
     expect(selected).not.toContain("agent-tool-track-play");
-    expect(selected).not.toContain("agent-tool-track-playable");
-    expect(selected).not.toContain("agent-tool-track-similar");
     expect(catalog.select("请播放晴天")).toContain("agent-tool-player-action");
     expect(catalog.select("请播放晴天")).toContain("agent-tool-track-play");
     expect(catalog.select("当前播放状态是什么")).toContain("agent-tool-player-current");
@@ -210,6 +268,16 @@ describe("Agent 工具目录", () => {
     expect(
       tool?.inputSchema.safeParse({ keyword: "ANIMA", type: "track", pageSize: 21 }).success
     ).toBe(false);
+  });
+
+  it("只复用稳定资料查询，不缓存会随播放或设置变化的实时状态", () => {
+    const catalog = createAgentToolCatalog(false);
+
+    expect(catalog.reuseSafeNames).toContain("agent-tool-web-browser");
+    expect(catalog.reuseSafeNames).toContain("agent-tool-track-detail");
+    expect(catalog.reuseSafeNames).not.toContain("agent-tool-player-current");
+    expect(catalog.reuseSafeNames).not.toContain("agent-tool-player-queue");
+    expect(catalog.reuseSafeNames).not.toContain("agent-tool-settings-get");
   });
 
   it("歌词读取默认使用语义模式，按需保留可编辑逐字结构", () => {

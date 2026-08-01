@@ -21,6 +21,11 @@ export type LLMLoopRunOptions<TConfig extends LLMProviderConfig = LLMProviderCon
     promptBuilder: LLMPromptBuilder;
     onUsage?: NormalFunc<[usage: Undefinable<LLMUsage>]>;
     requiredEvidence?: readonly AIAgentEvidenceRequirement[];
+    /**
+     * 连续调用工具但未推进必要证据时，允许的停滞步数上限（默认 3，最大 12）。
+     * 联网取证类流程搜索质量波动大，可由 skill 经 core 传入更大的预算。
+     */
+    maxNoEvidenceProgressSteps?: number;
     transformFinalText?: NormalFunc<
       [context: { text: string; messages: readonly LLMMessage[] }],
       string

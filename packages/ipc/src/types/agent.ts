@@ -1,4 +1,4 @@
-import type { AIErrorCode } from "@mahiru/ai";
+import type { AIErrorCode, LLMToolOutputDetail } from "@mahiru/ai";
 
 import type { PlayerAction } from "./message";
 
@@ -34,7 +34,10 @@ type AgentToolChangeSettingsInput = {
   value: JsonValue;
 };
 
-export type AgentToolRequest =
+export type AgentToolRequest = {
+  /** 由模型选择，渲染进程仍会施加不可绕过的裁剪与脱敏上限。 */
+  detail?: LLMToolOutputDetail;
+} & (
   | {
       id: string;
       input: object;
@@ -374,7 +377,8 @@ export type AgentToolRequest =
         commentId?: number;
         type: "album" | "track" | "playlist";
       };
-    };
+    }
+);
 
 export type AgentToolResponse =
   | {

@@ -29,11 +29,11 @@ const AssistantTurnGroup: FC<AssistantTurnGroupProps> = ({
   streaming,
   assistantTurn
 }) => (
-  <div className="flex min-w-0 justify-start">
+  <div className="flex w-full min-w-0 justify-start">
     <article
       className={cx(
         `
-          relative grid min-w-0 max-w-full grid-cols-[1.5rem_minmax(0,1fr)]
+          relative grid w-full min-w-0 max-w-full grid-cols-[1.5rem_minmax(0,1fr)]
           gap-2.5 px-0.5 py-1
         `,
         streaming && "opacity-95"
@@ -41,13 +41,22 @@ const AssistantTurnGroup: FC<AssistantTurnGroupProps> = ({
       role="group"
       aria-label="Aira 的连续回复"
       data-assistant-run-id={runID}>
-      <span className="mt-0.5 flex size-6 items-center justify-center rounded-lg border border-white/8 bg-white/5 text-primary">
+      <span className="mt-0.5 flex size-6 items-center justify-center rounded-full bg-[color-mix(in_srgb,var(--theme-color-main)_14%,transparent)] text-[color-mix(in_srgb,var(--theme-color-main)_78%,white)] ring-1 ring-[color-mix(in_srgb,var(--theme-color-main)_22%,transparent)]">
         <Sparkles className="size-3" />
       </span>
-      <div className="min-w-0">
-        <div className="mb-1.5 flex items-center gap-1.5 text-[9px] font-medium tracking-[0.08em] text-white/28">
+      <div className="w-full min-w-0">
+        <div className="mb-1.5 flex items-center gap-1.5 text-[9.5px] font-semibold tracking-[0.06em] text-white/42">
           Aira
-          {streaming && <span className="animate-pulse text-white/20">正在回复</span>}
+          {streaming && (
+            <span className="flex items-center gap-1.5 font-normal text-white/26">
+              <span className="agent-typing-dots" aria-hidden="true">
+                <i />
+                <i />
+                <i />
+              </span>
+              正在回复
+            </span>
+          )}
         </div>
         <div className="grid min-w-0 gap-2.5">{children}</div>
         {assistantTurn && <AssistantTurnMeta turn={assistantTurn} />}
@@ -92,9 +101,10 @@ const ContentItem: FC<ContentItemProps> = ({
         <article className="min-w-0 max-w-[min(88%,36rem)] px-0.5 py-0.5">
           <div
             className="
-              max-w-full whitespace-pre-wrap break-words rounded-xl rounded-br-sm border
-              border-white/9 bg-white/8 px-3 py-2 text-left text-[13px]
-              leading-[1.65] text-white/86 shadow-sm shadow-black/6
+              max-w-full whitespace-pre-wrap break-words rounded-2xl rounded-br-md border
+              border-[color-mix(in_srgb,var(--theme-color-main)_14%,transparent)]
+              bg-[color-mix(in_srgb,var(--theme-color-main)_8%,transparent)] px-3 py-2
+              text-left text-[13px] leading-[1.65] text-white/88
             ">
             {message.content}
           </div>

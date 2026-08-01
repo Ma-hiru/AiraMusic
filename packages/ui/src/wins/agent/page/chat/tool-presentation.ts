@@ -278,6 +278,7 @@ export type AgentWebToolDetails = {
   query?: string;
   scope?: string;
   title?: string;
+  action?: string;
   author?: string;
   domain?: string;
   engine?: string;
@@ -294,6 +295,22 @@ export type AgentWebToolDetails = {
     domain: string;
     snippet: string;
   }>;
+  contentRange?: {
+    end: number;
+    start: number;
+    total: number;
+    hasMore: boolean;
+    nextCursor?: number;
+  };
+  find?: {
+    offset: number;
+    pattern: string;
+    hasMore: boolean;
+    nextOffset?: number;
+    sourceChars?: number;
+    totalMatches: number;
+    returnedMatches: number;
+  };
 };
 
 export function getAgentWebToolDetails(input?: string, output?: string): AgentWebToolDetails {
@@ -307,6 +324,7 @@ export function getAgentWebToolDetails(input?: string, output?: string): AgentWe
   const scopeDomains = getStringArray(search, "domains");
 
   return {
+    action: getString(inputValue, "action") || undefined,
     url,
     site,
     scope,
@@ -315,7 +333,7 @@ export function getAgentWebToolDetails(input?: string, output?: string): AgentWe
     engine: getString(inputValue, "engine") || undefined,
     scopeLabel:
       getString(search, "label") ||
-      (site ? "指定站点" : scope ? WebSearchScopeLabels[scope] : "综合"),
+      (site ? "指定站点" : scope ? WebSearchScopeLabels[scope] || scope : "综合"),
     scopeDomains: scopeDomains.length ? scopeDomains : site ? [site] : [],
     title: getString(outputValue, "title") || undefined,
     author: getString(outputValue, "author") || undefined,
@@ -324,12 +342,15 @@ export function getAgentWebToolDetails(input?: string, output?: string): AgentWe
     truncated: getBoolean(outputValue, "truncated"),
     contentChars: getNumber(outputValue, "contentChars"),
     originalChars: getNumber(outputValue, "originalChars"),
+    contentRange: readWebContentRange(outputValue),
+    find: readWebFind(outputValue),
     results: getSearchResults(outputValue)
   };
 }
 
 const WebSearchScopeLabels: Record<string, string> = {
   general: "综合",
+  encyclopedia: "百科资料",
   moegirl: "萌娘百科",
   baidu_baike: "百度百科",
   zhihu: "知乎",
@@ -339,6 +360,45 @@ const WebSearchScopeLabels: Record<string, string> = {
   official: "官方资料",
   wikipedia: "维基百科"
 };
+
+function readWebContentRange(value: unknown): AgentWebToolDetails["contentRange"] {
+  if (!isRecord(value) || !isRecord(value["contentRange"])) return undefined;
+  const range = value["contentRange"];
+  const start = getNumber(range, "start");
+  const end = getNumber(range, "end");
+  const total = getNumber(range, "total");
+  if (start === undefined || end === undefined || total === undefined) return undefined;
+
+  const nextCursor = getNumber(range, "nextCursor");
+  const hasMore = getBoolean(range, "hasMore") ?? nextCursor !== undefined;
+  return {
+    start,
+    end,
+    total,
+    hasMore,
+    ...(nextCursor === undefined ? {} : { nextCursor })
+  };
+}
+
+function readWebFind(value: unknown): AgentWebToolDetails["find"] {
+  if (!isRecord(value) || !isRecord(value["find"])) return undefined;
+  const find = value["find"];
+  const pattern = getString(find, "pattern");
+  const offset = getNumber(find, "offset");
+  const totalMatches = getNumber(find, "totalMatches");
+  if (!pattern || offset === undefined || totalMatches === undefined) return undefined;
+  const nextOffset = getNumber(find, "nextOffset");
+  const sourceChars = getNumber(find, "sourceChars");
+  return {
+    pattern,
+    offset,
+    totalMatches,
+    returnedMatches: Array.isArray(find["matches"]) ? find["matches"].length : 0,
+    hasMore: getBoolean(find, "hasMore") ?? nextOffset !== undefined,
+    ...(nextOffset === undefined ? {} : { nextOffset }),
+    ...(sourceChars === undefined ? {} : { sourceChars })
+  };
+}
 
 function readWebSearchScopeLabel(input: unknown, output: unknown) {
   const search = isRecord(output) && isRecord(output["search"]) ? output["search"] : undefined;

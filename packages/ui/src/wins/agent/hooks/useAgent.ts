@@ -162,6 +162,7 @@ export function useAgent() {
           return {
             ...state,
             conversation: result.data ?? null,
+            latestRunID: state.runningRunID || result.data?.runtime?.runID || state.latestRunID,
             ...(keepLiveState
               ? {}
               : {
@@ -211,6 +212,7 @@ export function useAgent() {
           sending: false,
           streamText: "",
           recovering: false,
+          latestRunID: snapshot.runtime?.runID ?? "",
           runningRunID: "",
           liveTimeline: EMPTY_LIVE_TIMELINE,
           pendingUserMessage: ""
@@ -279,10 +281,16 @@ export function useAgent() {
         }
       }
 
+      let applied = false;
       updateConversationState({
         conversationID: event.conversationID,
-        update: (state) => reduceAgentConversationEvent(state, event)
+        update: (state) => {
+          const next = reduceAgentConversationEvent(state, event);
+          applied = next !== state;
+          return next;
+        }
       });
+      if (!applied) return false;
 
       if (event.type === "title") {
         setConversations((items) =>
@@ -353,6 +361,7 @@ export function useAgent() {
                 sending: false,
                 recovering: true,
                 streamText: "",
+                latestRunID: activeRun.runID,
                 runningRunID: activeRun.runID,
                 liveTimeline: EMPTY_LIVE_TIMELINE,
                 conversation: conversationSnapshot ?? state.conversation
@@ -386,6 +395,7 @@ export function useAgent() {
               sending: false,
               recovering: false,
               streamText: "",
+              latestRunID: snapshot.data?.runtime?.runID ?? state.latestRunID,
               runningRunID: "",
               liveTimeline: EMPTY_LIVE_TIMELINE,
               conversation: snapshot.data ?? state.conversation,

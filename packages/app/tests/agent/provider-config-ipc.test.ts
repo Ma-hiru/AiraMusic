@@ -35,7 +35,16 @@ vi.mock("@mahiru/app/lib/log", () => ({
   Log: { error: vi.fn(), warn: vi.fn() }
 }));
 vi.mock("@mahiru/app/inner/agent", () => ({
-  MainAgent: { chat, createConfig, createConversation, updateConfig }
+  MainAgent: {
+    chat,
+    createConfig,
+    updateConfig,
+    createConversation,
+    broadcastFeatureSettings: vi.fn()
+  }
+}));
+vi.mock("@mahiru/app/inner/agent/feature-settings", () => ({
+  MainAgentFeatureSettings: { getState: vi.fn(), update: vi.fn() }
 }));
 vi.mock("@mahiru/app/lib/handle", () => ({ MainHandle: {} }));
 vi.mock("@mahiru/app/lib/runtime", () => ({ MainRuntime: {} }));

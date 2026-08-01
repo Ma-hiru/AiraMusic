@@ -53,7 +53,7 @@ pub fn set_live_preview(handle: Buffer, preview: Uint8Array) -> Result<()> {
         Ok(())
     };
     #[cfg(windows)]
-    return { win::windows_taskbar::set_live_preview(handle.as_ref(), preview.as_ref()) };
+    return win::windows_taskbar::set_live_preview(handle.as_ref(), preview.as_ref());
 }
 
 #[napi(js_name = "setMenuLyric")]

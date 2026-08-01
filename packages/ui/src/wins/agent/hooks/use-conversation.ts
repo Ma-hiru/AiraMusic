@@ -124,6 +124,7 @@ export function useConversation(conversationID: string) {
             }
             return {
               ...state,
+              latestRunID: result.data.runID,
               runningRunID: result.data.runID,
               ...(retryAbortedRunID
                 ? {

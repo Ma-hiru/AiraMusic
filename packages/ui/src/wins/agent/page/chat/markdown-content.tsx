@@ -1,11 +1,13 @@
 import "streamdown/styles.css";
 
 import { cx } from "@emotion/css";
-import { memo, type FC, useMemo, type ComponentProps } from "react";
+import { memo, type FC, useMemo, Fragment, type ComponentProps } from "react";
 import { Streamdown, type Components, defaultRemarkPlugins } from "streamdown";
 import { parseAiraResourceURI, parseAiraRichContent, resolveAiraResourceAction } from "@mahiru/ai";
 
+import ThinkBlock from "./think-content";
 import AgentResourceCard from "./resource-card";
+import { splitThinkSegments } from "./think-segments";
 import { remarkAiraResourceLinks } from "./rich-markdown";
 import { runAiraResourceAction } from "./resource-actions";
 
@@ -14,6 +16,14 @@ interface MarkdownContentProps {
   className?: string;
   streaming?: boolean;
 }
+
+type RichSegment =
+  | { type: "think"; closed: boolean; content: string }
+  | {
+      type: "text";
+      content: string;
+      document: ReturnType<typeof parseAiraRichContent>;
+    };
 
 const streamAnimation = {
   sep: "word",
@@ -63,8 +73,18 @@ const AiraResourceLink: FC<
 const markdownRemarkPlugins = [...Object.values(defaultRemarkPlugins), remarkAiraResourceLinks];
 
 const MarkdownContent: FC<MarkdownContentProps> = ({ className, content, streaming }) => {
-  const document = useMemo(
-    () => parseAiraRichContent(content, { streaming: !!streaming }),
+  // 先把内联 think 推理段剥离，再逐段走富内容卡片解析，避免思考内容混入正式回答
+  const segments = useMemo<RichSegment[]>(
+    () =>
+      splitThinkSegments(content).map((segment) =>
+        segment.type === "think"
+          ? segment
+          : {
+              type: "text",
+              content: segment.content,
+              document: parseAiraRichContent(segment.content, { streaming: !!streaming })
+            }
+      ),
     [content, streaming]
   );
   const markdownComponents = useMemo<Components>(
@@ -79,41 +99,62 @@ const MarkdownContent: FC<MarkdownContentProps> = ({ className, content, streami
     return (
       <span className={cx("agent-markdown inline-flex items-center", className)}>
         正在思考
-        <span className="ml-1 inline-block h-4 w-0.5 animate-pulse rounded-full bg-white/60" />
+        <span className="agent-typing-dots ml-1.5" aria-hidden="true">
+          <i />
+          <i />
+          <i />
+        </span>
       </span>
     );
   }
 
   return (
     <div className={cx("agent-rich-content", className)}>
-      {document.segments.map((segment, index) =>
-        segment.type === "card" ? (
-          streaming ? (
-            <ResourceCardSkeleton key={`card-pending-${index}`} />
-          ) : (
-            <AgentResourceCard
-              key={`card-${index}-${segment.card.kind}-${segment.card.id}`}
-              card={segment.card}
+      {segments.map((richSegment, richIndex) => {
+        if (richSegment.type === "think") {
+          return (
+            <ThinkBlock
+              key={`think-${richIndex}`}
+              streaming={!!streaming}
+              closed={richSegment.closed}
+              content={richSegment.content}
             />
-          )
-        ) : (
-          <Streamdown
-            key={`markdown-${index}`}
-            className="agent-markdown text-[13px] leading-[1.78] font-normal text-white/82"
-            controls={false}
-            lineNumbers={false}
-            isAnimating={!!streaming}
-            components={markdownComponents}
-            literalTagContent={["aira-resource"]}
-            remarkPlugins={markdownRemarkPlugins}
-            mode={streaming ? "streaming" : "static"}
-            animated={streaming ? streamAnimation : false}
-            allowedTags={{ "aira-resource": ["kind", "resourceid"] }}>
-            {segment.content}
-          </Streamdown>
-        )
-      )}
-      {document.pendingCard && <ResourceCardSkeleton />}
+          );
+        }
+        return (
+          <Fragment key={`text-${richIndex}`}>
+            {richSegment.document.segments.map((segment, index) =>
+              segment.type === "card" ? (
+                streaming ? (
+                  <ResourceCardSkeleton key={`card-pending-${index}`} />
+                ) : (
+                  <AgentResourceCard
+                    key={`card-${index}-${segment.card.kind}-${segment.card.id}`}
+                    card={segment.card}
+                  />
+                )
+              ) : (
+                <Streamdown
+                  key={`markdown-${index}`}
+                  className="agent-markdown text-[13px] leading-[1.78] font-normal text-white/82"
+                  controls={false}
+                  lineNumbers={false}
+                  isAnimating={!!streaming}
+                  components={markdownComponents}
+                  literalTagContent={["aira-resource"]}
+                  remarkPlugins={markdownRemarkPlugins}
+                  caret={streaming ? "block" : undefined}
+                  mode={streaming ? "streaming" : "static"}
+                  animated={streaming ? streamAnimation : false}
+                  allowedTags={{ "aira-resource": ["kind", "resourceid"] }}>
+                  {segment.content}
+                </Streamdown>
+              )
+            )}
+            {richSegment.document.pendingCard && <ResourceCardSkeleton />}
+          </Fragment>
+        );
+      })}
     </div>
   );
 };

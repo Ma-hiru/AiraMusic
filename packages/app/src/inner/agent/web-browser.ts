@@ -1,14 +1,26 @@
 import { app, session, type Session, BrowserWindow } from "electron";
 
 import { getAgentWebSafeProxyURL } from "./web-safe-proxy";
-import { createWebSearchURL, resolveAgentWebSearchScope } from "./web-search";
 import type { AgentWebSearchScope, AgentWebSearchEngine } from "./web-search";
 import { assertPublicWebURL, canRequestPublicWebURL } from "./web-url-safety";
+import {
+  isBingSearchURL,
+  queryHasCjkScript,
+  createWebSearchURL,
+  resolveSearchEngineOrder,
+  listAcgRecoverySearchURLs,
+  resolveAgentWebSearchScope
+} from "./web-search";
 
 export type { AgentWebSearchScope, AgentWebSearchEngine } from "./web-search";
 export {
+  isBingSearchURL,
+  queryHasCjkScript,
   createWebSearchURL,
+  resolveSearchEngineOrder,
   AgentWebSearchScopeValues,
+  listAcgRecoverySearchURLs,
+  createAcgRecoverySearchURL,
   resolveAgentWebSearchScope,
   normalizeAgentWebSearchSite
 } from "./web-search";
@@ -28,10 +40,22 @@ export interface AgentWebBrowserSearchInput {
 export interface AgentWebBrowserOpenInput {
   url: string;
   action: "open";
+  cursor?: number;
   maxChars?: number;
 }
 
-export type AgentWebBrowserInput = AgentWebBrowserOpenInput | AgentWebBrowserSearchInput;
+export interface AgentWebBrowserFindInput {
+  url: string;
+  action: "find";
+  pattern: string;
+  matchOffset?: number;
+  contextChars?: number;
+}
+
+export type AgentWebBrowserInput =
+  | AgentWebBrowserFindInput
+  | AgentWebBrowserOpenInput
+  | AgentWebBrowserSearchInput;
 
 export interface AgentWebPage {
   url: string;
@@ -44,8 +68,35 @@ export interface AgentWebPage {
   contentChars: number;
   publishedAt?: string;
   originalChars: number;
+  find?: AgentWebFindResult;
   search?: AgentWebSearchContext;
   results?: AgentWebSearchResult[];
+  contentRange?: AgentWebContentRange;
+}
+
+export interface AgentWebFindResult {
+  offset: number;
+  pattern: string;
+  hasMore: boolean;
+  nextOffset?: number;
+  sourceChars: number;
+  totalMatches: number;
+  matches: AgentWebFindMatch[];
+}
+
+export interface AgentWebFindMatch {
+  end: number;
+  start: number;
+  snippet: string;
+  openCursor: number;
+}
+
+export interface AgentWebContentRange {
+  end: number;
+  start: number;
+  total: number;
+  hasMore: boolean;
+  nextCursor?: number;
 }
 
 export interface AgentWebSearchContext {
@@ -67,22 +118,178 @@ export const AgentWebPageMaxSerializedChars = 12_000;
 
 const WebSearchStructuredContent =
   "搜索结果已整理到 results 字段；请从 results[].url 选择最相关的页面并使用 open 阅读正文。";
+const WebSearchEmptyContent =
+  "未能从搜索结果页提取到结构化条目（results 为空）。常见原因：搜索引擎反爬降级页、网络限制，或查询无命中。可改用 engine=baidu、缩小到 encyclopedia/moegirl，或直接 open 已知可信 URL；不要把本页导航/热门链接当作搜索命中。";
 const WebPageBudgetTruncationMarker = "\n\n[内容已按 Agent 12K 输出预算截断]";
 const ExtractedContentTruncationMarker = "\n\n[正文已截断，可提高 maxChars 后重新 open]";
 
 /**
  * 搜索页已经提取出标题、摘要和目标 URL 后，不再把同一批结果的 HTML 重复交给模型。
- * 若提取器没有得到结构化结果，则保留原始裁剪 HTML 作为兼容性回退。
+ * 若提取器没有得到结构化结果，也不回传反爬/导航页 HTML，避免模型误读为命中。
  */
 export function projectAgentWebSearchPage(page: AgentWebPage): AgentWebPage {
-  if (!page.results?.length) return page;
+  if (!page.results?.length) {
+    return {
+      ...page,
+      content: WebSearchEmptyContent,
+      contentChars: WebSearchEmptyContent.length,
+      truncated: false
+    };
+  }
 
   return {
     ...page,
     content: WebSearchStructuredContent,
     contentChars: WebSearchStructuredContent.length,
-    truncated: page.truncated || page.contentChars > WebSearchStructuredContent.length
+    // 搜索页样板被结构化投影主动省略，不代表 results 本身不完整。
+    truncated: false
   };
+}
+
+/** 合并两个搜索引擎的结构化结果，主引擎保持优先，并按规范化 URL 去重。 */
+export function mergeAgentWebSearchPages(
+  primary: AgentWebPage,
+  fallback: AgentWebPage
+): AgentWebPage {
+  const results: AgentWebSearchResult[] = [];
+  const seen = new Set<string>();
+  for (const result of [...(primary.results ?? []), ...(fallback.results ?? [])]) {
+    const key = canonicalSearchResultURL(result.url);
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    results.push(result);
+    if (results.length >= 10) break;
+  }
+  const primaryCount = primary.results?.length ?? 0;
+  const fallbackCount = fallback.results?.length ?? 0;
+  // 元数据（尤其最终 url）优先保留真正产出结果的引擎；主引擎有结果时不因备用更多而改挂 URL。
+  const base = primaryCount > 0 ? primary : fallbackCount > 0 ? fallback : primary;
+  return {
+    ...base,
+    linkCount: results.length || primary.linkCount + fallback.linkCount,
+    originalChars: primary.originalChars + fallback.originalChars,
+    ...(results.length ? { results } : {})
+  };
+}
+
+/** 固定站点搜索只保留目标域名，避免搜索引擎用站外结果凑满数量。 */
+export function filterAgentWebSearchPageByDomains(
+  page: AgentWebPage,
+  domains: readonly string[]
+): AgentWebPage {
+  if (!domains.length || !page.results?.length) return page;
+  const normalizedDomains = domains.map((domain) => domain.toLowerCase().replace(/^www\./, ""));
+  const results = page.results.filter((result) => {
+    const domain = result.domain.toLowerCase().replace(/^www\./, "");
+    return normalizedDomains.some(
+      (expected) => domain === expected || domain.endsWith(`.${expected}`)
+    );
+  });
+  return {
+    ...page,
+    results,
+    linkCount: results.length,
+    truncated: page.truncated || results.length < page.results.length
+  };
+}
+
+/** 从查询里抽出可用于相关性判断的 token（拉丁词 + 日/中文片段）。 */
+export function tokenizeSearchQuery(query: string): string[] {
+  const normalized = query.trim().toLowerCase().replace(/\s+/g, " ");
+  if (!normalized) return [];
+  const tokens = new Set<string>();
+  for (const match of normalized.match(/[a-z0-9]{3,}/g) ?? []) tokens.add(match);
+  for (const match of normalized.match(/[\u3040-\u30ff\u3400-\u9fff]{2,}/g) ?? []) {
+    tokens.add(match);
+    if (match.length > 3) {
+      for (let index = 0; index <= match.length - 2; index += 1) {
+        tokens.add(match.slice(index, index + 2));
+      }
+    }
+  }
+  return [...tokens];
+}
+
+/** 主实体词：不做中日文 bigram 展开，避免「初音」单独放宽整页相关性。 */
+export function tokenizePrimarySearchQuery(query: string): string[] {
+  const normalized = query.trim().toLowerCase().replace(/\s+/g, " ");
+  if (!normalized) return [];
+  const tokens = new Set<string>();
+  for (const match of normalized.match(/[a-z0-9]{3,}/g) ?? []) tokens.add(match);
+  for (const match of normalized.match(/[\u3040-\u30ff\u3400-\u9fff]{2,}/g) ?? []) {
+    tokens.add(match);
+  }
+  return [...tokens];
+}
+
+function resultMatchesSearchToken(result: AgentWebSearchResult, token: string): boolean {
+  const haystack =
+    `${result.title}\n${result.snippet}\n${result.url}\n${result.domain}`.toLowerCase();
+  return haystack.includes(token);
+}
+
+function longestToken(tokens: readonly string[]): string {
+  return tokens.reduce((longest, token) => (token.length > longest.length ? token : longest), "");
+}
+
+/**
+ * 判定搜索页是否与 query 相关。
+ * Bing 反爬降级页常带完整 b_algo 结构，但标题/摘要与关键词零重合——不能当可用结果。
+ * 必须先命中最长主实体词（如 ポリスピカデリー / Polyspicadelly），不能只靠「初音」「eleven」。
+ */
+export function isRelevantAgentWebSearchPage(
+  query: string,
+  page: Undefinable<AgentWebPage>
+): boolean {
+  const results = page?.results;
+  if (!results?.length) return false;
+  const primary = tokenizePrimarySearchQuery(query);
+  if (!primary.length) return true;
+  const cjkPrimary = primary.filter((token) => /[\u3040-\u30ff\u3400-\u9fff]/.test(token));
+  const latinPrimary = primary.filter((token) => /^[a-z0-9]+$/i.test(token) && token.length >= 5);
+  const longestCjk = longestToken(cjkPrimary);
+  const longestLatin = longestToken(latinPrimary);
+  if (longestCjk.length >= 3) {
+    if (!results.some((result) => resultMatchesSearchToken(result, longestCjk))) return false;
+  } else if (longestLatin) {
+    if (!results.some((result) => resultMatchesSearchToken(result, longestLatin))) return false;
+  }
+  const tokens = tokenizeSearchQuery(query);
+  const hits = results.filter((result) =>
+    tokens.some((token) => resultMatchesSearchToken(result, token))
+  );
+  if (hits.length >= Math.min(2, results.length)) return true;
+  return hits.length / results.length >= 0.34;
+}
+
+/** 去掉只命中弱词（如单独「初音」）的噪声结果，保留命中最长主词的条目。 */
+export function filterAgentWebSearchResultsByQuery(
+  query: string,
+  results: readonly AgentWebSearchResult[]
+): AgentWebSearchResult[] {
+  if (!results.length) return [];
+  const primary = tokenizePrimarySearchQuery(query);
+  if (!primary.length) return [...results];
+  const ranked = [...primary].sort((left, right) => right.length - left.length);
+  const keys = ranked.slice(0, Math.min(2, ranked.length)).filter((token) => token.length >= 3);
+  if (!keys.length) return [...results];
+  const filtered = results.filter((result) =>
+    keys.some((token) => resultMatchesSearchToken(result, token))
+  );
+  return filtered.length ? filtered : [...results];
+}
+
+function countUsableSearchResults(
+  page: Undefinable<AgentWebPage>,
+  query: string,
+  domains: readonly string[]
+): number {
+  if (!page?.results?.length) return 0;
+  const scoped = filterAgentWebSearchPageByDomains(page, domains);
+  const pruned = filterAgentWebSearchResultsByQuery(query, scoped.results ?? []);
+  const filtered = { ...scoped, results: pruned, linkCount: pruned.length };
+  if (!isRelevantAgentWebSearchPage(query, filtered)) return 0;
+  return filtered.results?.length ?? 0;
 }
 
 /**
@@ -112,7 +319,20 @@ export function limitAgentWebPageToBudget(page: AgentWebPage): AgentWebPage {
     linkCount: projected.linkCount,
     truncated: true,
     contentChars: fallbackContent.length,
-    originalChars: projected.originalChars
+    originalChars: projected.originalChars,
+    ...(projected.contentRange
+      ? {
+          contentRange: {
+            start: projected.contentRange.start,
+            end: projected.contentRange.start,
+            total: projected.contentRange.total,
+            hasMore: projected.contentRange.start < projected.contentRange.total,
+            ...(projected.contentRange.start < projected.contentRange.total
+              ? { nextCursor: projected.contentRange.start }
+              : {})
+          }
+        }
+      : {})
   };
 }
 
@@ -166,12 +386,20 @@ function fitSearchResultsToBudget(page: AgentWebPage, budgetChars: number): Agen
 function fitPageContentToBudget(page: AgentWebPage, budgetChars: number): AgentWebPage {
   const sourceContent = stripTrailingTruncationMarker(page.content);
   const createCandidate = (maxContentChars: number): AgentWebPage => {
-    const content = truncateContentAtSemanticBoundary(sourceContent, maxContentChars);
+    const content = truncateContentAtSemanticBoundary(
+      sourceContent,
+      maxContentChars,
+      page.contentRange ? "" : WebPageBudgetTruncationMarker
+    );
+    const contentRange = page.contentRange
+      ? createFittedContentRange(page.contentRange, content.length)
+      : undefined;
     return {
       ...page,
       content,
       truncated: true,
-      contentChars: content.length
+      contentChars: content.length,
+      ...(contentRange ? { contentRange } : {})
     };
   };
 
@@ -201,11 +429,15 @@ function stripTrailingTruncationMarker(value: string): string {
   return content;
 }
 
-function truncateContentAtSemanticBoundary(value: string, maxChars: number): string {
+function truncateContentAtSemanticBoundary(
+  value: string,
+  maxChars: number,
+  marker = WebPageBudgetTruncationMarker
+): string {
   if (value.length <= maxChars) return value;
-  if (maxChars <= WebPageBudgetTruncationMarker.length) return "";
+  if (maxChars <= marker.length) return "";
 
-  const available = maxChars - WebPageBudgetTruncationMarker.length;
+  const available = maxChars - marker.length;
   const prefix = value.slice(0, available);
   const paragraphBoundary = prefix.lastIndexOf("\n\n");
   const lineBoundary = prefix.lastIndexOf("\n");
@@ -218,7 +450,22 @@ function truncateContentAtSemanticBoundary(value: string, maxChars: number): str
   const preferredBoundary = Math.max(paragraphBoundary, lineBoundary, sentenceBoundary);
   const cutAt = preferredBoundary >= available * 0.6 ? preferredBoundary + 1 : available;
   const content = prefix.slice(0, cutAt).trimEnd();
-  return content ? `${content}${WebPageBudgetTruncationMarker}` : "";
+  return content ? `${content}${marker}` : "";
+}
+
+function createFittedContentRange(
+  source: AgentWebContentRange,
+  retainedChars: number
+): AgentWebContentRange {
+  const end = Math.min(source.end, source.start + retainedChars);
+  const hasMore = end < source.total;
+  return {
+    start: source.start,
+    end,
+    total: source.total,
+    hasMore,
+    ...(hasMore ? { nextCursor: end } : {})
+  };
 }
 
 function truncateSearchSnippet(value: string, maxChars: number): string {
@@ -239,7 +486,10 @@ function cloneAgentWebPage(page: AgentWebPage): AgentWebPage {
           }
         }
       : {}),
-    ...(page.results ? { results: page.results.map((result) => ({ ...result })) } : {})
+    ...(page.results ? { results: page.results.map((result) => ({ ...result })) } : {}),
+    ...(page.find
+      ? { find: { ...page.find, matches: page.find.matches.map((match) => ({ ...match })) } }
+      : {})
   };
 }
 
@@ -255,12 +505,26 @@ function compactPageURL(value: string): string {
   }
 }
 
+function canonicalSearchResultURL(value: string): string | undefined {
+  try {
+    const url = new URL(value);
+    url.hash = "";
+    if (url.pathname.length > 1) url.pathname = url.pathname.replace(/\/+$/, "");
+    url.searchParams.sort();
+    return url.toString();
+  } catch {
+    return undefined;
+  }
+}
+
 // ========== 配置 ==========
 
-const WebAgentPartition = "aira-web-agent";
+const WebAgentStaticPartition = "aira-web-agent-static";
+const WebAgentDynamicPartition = "aira-web-agent-dynamic";
 const WebAgentMaxConcurrentWindows = 2;
 const WebAgentLoadTimeoutMs = 20_000;
 const WebAgentExtractTimeoutMs = 10_000;
+const WebAgentSearchHydrateTimeoutMs = 1_500;
 const WebAgentDefaultMaxChars = 8_000;
 const WebAgentIsolatedWorldID = 1001;
 
@@ -271,8 +535,6 @@ const BlockedResourceTypes = new Set([
   "object",
   "ping",
   "cspReport",
-  // 拦截外链脚本；页面内联脚本由响应头 CSP（script-src 'none'）一并封死
-  "script",
   "websocket"
 ]);
 
@@ -280,8 +542,8 @@ const BlockedResourceTypes = new Set([
  * javascript 必须为 true：Chromium 在 javascript=false 时会禁用整帧 JS 引擎，
  * executeJavaScriptInIsolatedWorld 的 Promise 永远不结算，最终表现为「网页 DOM 提取超时」。
  *
- * 页面自身脚本仍不可执行——靠 CSP（script-src 'none'）+ 拦截 script/websocket 资源；
- * 提取脚本跑在隔离世界，不受页面 CSP 约束，也不向页面开放 Node/Electron 能力。
+ * 首次静态读取会禁用页面脚本；只有正文为空时才在同样的沙箱和公开网络代理下
+ * 启用页面脚本重试，以兼容依赖客户端渲染的百科与新闻页面。
  */
 export const AgentWebBrowserSecurityPreferences = Object.freeze({
   sandbox: true,
@@ -395,7 +657,8 @@ class AsyncSemaphore {
 
 const WebAgentSemaphore = new AsyncSemaphore(WebAgentMaxConcurrentWindows);
 
-let SharedWebAgentSessionPromise: undefined | Promise<Session>;
+let SharedStaticWebAgentSessionPromise: undefined | Promise<Session>;
+let SharedDynamicWebAgentSessionPromise: undefined | Promise<Session>;
 
 // ========== URL 安全检查 ==========
 
@@ -407,8 +670,73 @@ export async function executeWebBrowser(
 ): Promise<AgentWebPage> {
   if (input.action === "search") {
     const resolvedScope = resolveAgentWebSearchScope(input.scope, input.site);
-    const url = createWebSearchURL(input.query, input.site, input.engine, input.scope);
-    const page = projectAgentWebSearchPage(await openWebPage({ url, mode: "search", signal }));
+    // 国内网络：DDG 常超时；Bing 对部分日文查询反爬；百度噪声多。默认 Bing→百度→DDG。
+    const engines = resolveSearchEngineOrder(input.engine ?? "bing");
+    const preferAcgRecovery =
+      !input.site && resolvedScope.scope === "general" && queryHasCjkScript(input.query);
+    let rawPage: undefined | AgentWebPage;
+    let firstError: unknown;
+    const absorbSearchPage = (page: AgentWebPage, domains: readonly string[]) => {
+      const scoped = filterAgentWebSearchPageByDomains(page, domains);
+      const prunedResults = filterAgentWebSearchResultsByQuery(input.query, scoped.results ?? []);
+      const filtered = {
+        ...scoped,
+        results: prunedResults,
+        linkCount: prunedResults.length
+      };
+      if (
+        !(filtered.results?.length ?? 0) ||
+        !isRelevantAgentWebSearchPage(input.query, filtered)
+      ) {
+        rawPage ??= page;
+        return;
+      }
+      rawPage = countUsableSearchResults(rawPage, input.query, domains)
+        ? mergeAgentWebSearchPages(rawPage!, filtered)
+        : filtered;
+    };
+    const runAcgRecovery = async () => {
+      for (const url of listAcgRecoverySearchURLs(input.query)) {
+        if (countUsableSearchResults(rawPage, input.query, []) >= 3) break;
+        try {
+          absorbSearchPage(await openWebPage({ url, mode: "search", signal }), []);
+        } catch (error) {
+          if (signal?.aborted) throw error;
+          firstError ??= error;
+        }
+      }
+    };
+    for (const engine of engines) {
+      if (countUsableSearchResults(rawPage, input.query, resolvedScope.domains) >= 3) break;
+      // Bing 普通检索失败后，先单站 site: 回退再打百度，避免先被热门噪声填满。
+      if (
+        preferAcgRecovery &&
+        engine !== "bing" &&
+        countUsableSearchResults(rawPage, input.query, resolvedScope.domains) < 2
+      ) {
+        await runAcgRecovery();
+        if (countUsableSearchResults(rawPage, input.query, []) >= 2) break;
+      }
+      const url = createWebSearchURL(input.query, input.site, engine, input.scope);
+      try {
+        absorbSearchPage(await openWebPage({ url, mode: "search", signal }), resolvedScope.domains);
+      } catch (error) {
+        if (signal?.aborted) throw error;
+        firstError ??= error;
+      }
+    }
+    if (preferAcgRecovery && countUsableSearchResults(rawPage, input.query, []) < 2) {
+      await runAcgRecovery();
+    }
+    if (!rawPage) throw firstError ?? new Error("网页搜索没有返回可用页面");
+    const scoped = filterAgentWebSearchPageByDomains(rawPage, resolvedScope.domains);
+    const prunedResults = filterAgentWebSearchResultsByQuery(input.query, scoped.results ?? []);
+    const pruned = { ...scoped, results: prunedResults, linkCount: prunedResults.length };
+    const page = projectAgentWebSearchPage(
+      isRelevantAgentWebSearchPage(input.query, pruned)
+        ? pruned
+        : { ...pruned, results: [], linkCount: 0 }
+    );
     return limitAgentWebPageToBudget({
       ...page,
       search: {
@@ -425,37 +753,107 @@ export async function executeWebBrowser(
       url: input.url,
       mode: "open",
       signal,
-      maxChars: input.maxChars
+      ...(input.action === "find"
+        ? {
+            findPattern: input.pattern,
+            findContextChars: input.contextChars,
+            findOffset: input.matchOffset
+          }
+        : {
+            maxChars: input.maxChars,
+            cursor: input.cursor
+          })
     })
   );
 }
 
 interface OpenWebPageOptions {
+  cursor?: number;
   maxChars?: number;
   url: URL | string;
+  findOffset?: number;
+  findPattern?: string;
   signal?: AbortSignal;
+  findContextChars?: number;
   mode: AgentWebBrowserMode;
 }
 
 async function openWebPage(options: OpenWebPageOptions): Promise<AgentWebPage> {
   if (!app.isReady()) throw new Error("Electron app 尚未 ready");
   const url = await assertPublicWebURL(options.url);
-  const maxChars = clamp(options.maxChars ?? WebAgentDefaultMaxChars, 6_000, 12_000);
-  return WebAgentSemaphore.run(
-    () => openWebPageInWindow({ url, mode: options.mode, maxChars, signal: options.signal }),
-    options.signal
-  );
+  const maxChars = clamp(options.maxChars ?? WebAgentDefaultMaxChars, 2_500, 12_000);
+  const cursor = Math.max(0, Math.floor(options.cursor ?? 0));
+  return WebAgentSemaphore.run(async () => {
+    const staticPage = await openWebPageInWindow({
+      url,
+      mode: options.mode,
+      maxChars,
+      cursor,
+      findPattern: options.findPattern,
+      findOffset: options.findOffset,
+      findContextChars: options.findContextChars,
+      signal: options.signal,
+      allowPageScripts: false
+    });
+    if (options.mode === "search") {
+      if ((staticPage.results?.length ?? 0) > 0) return staticPage;
+      // DDG 在国内常整页不可达；静态已空时再开动态只会叠加超时，直接换下一引擎。
+      if (/(?:^|\.)duckduckgo\.com$/i.test(url.hostname)) return staticPage;
+      // Bing/百度 SERP 偶发依赖脚本；静态读不到时再开动态会话。
+      try {
+        const dynamicPage = await openWebPageInWindow({
+          url,
+          mode: "search",
+          maxChars,
+          cursor,
+          signal: options.signal,
+          allowPageScripts: true
+        });
+        return (dynamicPage.results?.length ?? 0) > 0 ? dynamicPage : staticPage;
+      } catch (error) {
+        if (options.signal?.aborted) throw error;
+        return staticPage;
+      }
+    }
+    if (!isLowQualityOpenPage(staticPage)) return staticPage;
+
+    const dynamicPage = await openWebPageInWindow({
+      url,
+      mode: options.mode,
+      maxChars,
+      cursor,
+      findPattern: options.findPattern,
+      findOffset: options.findOffset,
+      findContextChars: options.findContextChars,
+      signal: options.signal,
+      allowPageScripts: true
+    });
+    if (isLowQualityOpenPage(dynamicPage)) {
+      throw new Error("网页正文为空或过短，站点可能阻止自动读取");
+    }
+    return dynamicPage;
+  }, options.signal);
+}
+
+function isLowQualityOpenPage(page: AgentWebPage): boolean {
+  const sourceChars = page.find?.sourceChars ?? page.contentRange?.total ?? page.contentChars;
+  return sourceChars < 200 || (!page.find && page.content.trim().length < 120);
 }
 
 // ========== 隐藏 BrowserWindow ==========
 
 async function openWebPageInWindow(options: {
   url: URL;
+  cursor: number;
   maxChars: number;
+  findOffset?: number;
+  findPattern?: string;
   signal?: AbortSignal;
+  allowPageScripts: boolean;
+  findContextChars?: number;
   mode: AgentWebBrowserMode;
 }): Promise<AgentWebPage> {
-  const webSession = await getWebAgentSession();
+  const webSession = await getWebAgentSession(options.allowPageScripts);
   const win = new BrowserWindow({
     show: false,
     width: 1280,
@@ -468,6 +866,9 @@ async function openWebPageInWindow(options: {
 
   const contents = win.webContents;
   contents.setAudioMuted(true);
+  // Electron 29 起该 API 从 Session 移除，只能设在 WebContents 上；
+  // 阻止页面通过 WebRTC 绕过固定代理直连泄露真实地址
+  contents.setWebRTCIPHandlingPolicy("disable_non_proxied_udp");
   contents.setUserAgent(createBrowserUserAgent());
   contents.setWindowOpenHandler(() => ({ action: "deny" }));
   contents.on("will-prevent-unload", (event) => event.preventDefault());
@@ -483,15 +884,33 @@ async function openWebPageInWindow(options: {
   contents.on("will-redirect", preventUnsafeNavigation);
 
   try {
-    await loadURLWithTimeout(win, options.url.toString(), options.signal);
+    await loadSearchOrPageURL(
+      win,
+      options.url,
+      options.mode,
+      options.allowPageScripts,
+      options.signal
+    );
     const finalURL = contents.getURL();
     await assertPublicWebURL(finalURL);
     // 页面载入完成后锁定导航，避免提取期间被脚本切换到另一个文档。
     contents.on("will-navigate", (event) => event.preventDefault());
     contents.on("will-redirect", (event) => event.preventDefault());
+    if (options.mode === "search" && options.allowPageScripts) {
+      await waitForSearchResultsHydration(contents, options.signal);
+    }
     const result = await runWithTimeout(
       contents.executeJavaScriptInIsolatedWorld(WebAgentIsolatedWorldID, [
-        { code: createExtractPageScript(options.mode, options.maxChars) }
+        {
+          code: createExtractPageScript(
+            options.mode,
+            options.maxChars,
+            options.cursor,
+            options.findPattern,
+            options.findContextChars,
+            options.findOffset
+          )
+        }
       ]) as Promise<ExtractedPageResult>,
       WebAgentExtractTimeoutMs,
       options.signal,
@@ -508,6 +927,8 @@ async function openWebPageInWindow(options: {
       originalChars: result.originalChars,
       contentChars: result.contentChars,
       linkCount: result.linkCount,
+      ...(result.contentRange ? { contentRange: result.contentRange } : {}),
+      ...(result.find ? { find: result.find } : {}),
       ...(result.results.length ? { results: result.results } : {})
     };
   } finally {
@@ -527,22 +948,34 @@ interface ExtractedPageResult {
   contentChars: number;
   publishedAt?: string;
   originalChars: number;
+  find?: AgentWebFindResult;
   results: AgentWebSearchResult[];
+  contentRange?: AgentWebContentRange;
 }
 
 // ========== 独立 Session ==========
 
-function getWebAgentSession(): Promise<Session> {
-  if (SharedWebAgentSessionPromise) return SharedWebAgentSessionPromise;
-  SharedWebAgentSessionPromise = createWebAgentSession().catch((error) => {
-    SharedWebAgentSessionPromise = undefined;
+function getWebAgentSession(allowPageScripts: boolean): Promise<Session> {
+  const current = allowPageScripts
+    ? SharedDynamicWebAgentSessionPromise
+    : SharedStaticWebAgentSessionPromise;
+  if (current) return current;
+
+  const created = createWebAgentSession(allowPageScripts).catch((error) => {
+    if (allowPageScripts) SharedDynamicWebAgentSessionPromise = undefined;
+    else SharedStaticWebAgentSessionPromise = undefined;
     throw error;
   });
-  return SharedWebAgentSessionPromise;
+  if (allowPageScripts) SharedDynamicWebAgentSessionPromise = created;
+  else SharedStaticWebAgentSessionPromise = created;
+  return created;
 }
 
-async function createWebAgentSession(): Promise<Session> {
-  const webSession = session.fromPartition(WebAgentPartition, { cache: false });
+async function createWebAgentSession(allowPageScripts: boolean): Promise<Session> {
+  const webSession = session.fromPartition(
+    allowPageScripts ? WebAgentDynamicPartition : WebAgentStaticPartition,
+    { cache: false }
+  );
   const safeProxyURL = await getAgentWebSafeProxyURL();
   await webSession.setProxy({
     mode: "fixed_servers",
@@ -552,10 +985,25 @@ async function createWebAgentSession(): Promise<Session> {
   webSession.setPermissionCheckHandler(() => false);
   webSession.setPermissionRequestHandler((_wc, _perm, cb) => cb(false));
   webSession.on("will-download", (event) => event.preventDefault());
+  // 对齐 web-search-mcp：en-US Accept-Language，降低被打到 cn.bing 反爬降级页的概率。
+  webSession.webRequest.onBeforeSendHeaders(
+    { urls: ["http://*/*", "https://*/*"] },
+    (details, callback) => {
+      const requestHeaders = { ...details.requestHeaders };
+      requestHeaders["Accept-Language"] = "en-US,en;q=0.9";
+      requestHeaders["Accept"] =
+        requestHeaders["Accept"] ||
+        "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8";
+      callback({ requestHeaders });
+    }
+  );
   webSession.webRequest.onBeforeRequest(
     { urls: ["http://*/*", "https://*/*"] },
     (details, callback) => {
-      if (BlockedResourceTypes.has(details.resourceType)) {
+      if (
+        BlockedResourceTypes.has(details.resourceType) ||
+        (!allowPageScripts && details.resourceType === "script")
+      ) {
         callback({ cancel: true });
         return;
       }
@@ -565,20 +1013,22 @@ async function createWebAgentSession(): Promise<Session> {
       );
     }
   );
-  // 覆盖站点原有 CSP：页面脚本（含内联）一律禁止；隔离世界提取不受此限制
-  webSession.webRequest.onHeadersReceived(
-    { urls: ["http://*/*", "https://*/*"] },
-    (details, callback) => {
-      const responseHeaders = { ...(details.responseHeaders ?? {}) };
-      for (const key of Object.keys(responseHeaders)) {
-        if (key.toLowerCase() === "content-security-policy") {
-          delete responseHeaders[key];
+  if (!allowPageScripts) {
+    // 静态首读覆盖站点 CSP，页面脚本（含内联）一律禁止；隔离世界提取不受影响。
+    webSession.webRequest.onHeadersReceived(
+      { urls: ["http://*/*", "https://*/*"] },
+      (details, callback) => {
+        const responseHeaders = { ...(details.responseHeaders ?? {}) };
+        for (const key of Object.keys(responseHeaders)) {
+          if (key.toLowerCase() === "content-security-policy") {
+            delete responseHeaders[key];
+          }
         }
+        responseHeaders["Content-Security-Policy"] = [AgentWebAgentContentSecurityPolicy];
+        callback({ responseHeaders });
       }
-      responseHeaders["Content-Security-Policy"] = [AgentWebAgentContentSecurityPolicy];
-      callback({ responseHeaders });
-    }
-  );
+    );
+  }
   return webSession;
 }
 
@@ -619,6 +1069,126 @@ async function loadURLWithTimeout(
   });
 }
 
+/**
+ * Bing 加载策略参考 web-search-mcp：
+ * 1) 先打开首页建立会话；2) 动态会话尝试首页表单提交；3) 失败再直达带 cvid 的 SERP URL。
+ */
+async function loadSearchOrPageURL(
+  win: BrowserWindow,
+  url: URL,
+  mode: AgentWebBrowserMode,
+  allowPageScripts: boolean,
+  signal?: AbortSignal
+): Promise<void> {
+  if (mode !== "search" || !isBingSearchURL(url)) {
+    await loadURLWithTimeout(win, url.toString(), signal);
+    return;
+  }
+
+  const query = url.searchParams.get("q")?.trim() ?? "";
+  try {
+    await loadURLWithTimeout(win, "https://www.bing.com/", signal);
+  } catch (error) {
+    if (signal?.aborted) throw error;
+  }
+
+  if (allowPageScripts && query) {
+    try {
+      await submitBingHomepageSearch(win, query, signal);
+      // 仅当已进入 SERP 才视为表单成功；停在首页则继续走直达 URL。
+      if (isBingSearchURL(new URL(win.webContents.getURL()))) return;
+    } catch (error) {
+      if (signal?.aborted) throw error;
+    }
+  }
+
+  await loadURLWithTimeout(win, url.toString(), signal);
+}
+
+async function submitBingHomepageSearch(
+  win: BrowserWindow,
+  query: string,
+  signal?: AbortSignal
+): Promise<void> {
+  const code = `(() => {
+    const input = document.querySelector("#sb_form_q");
+    const form = document.querySelector("#sb_form");
+    if (!(input instanceof HTMLInputElement) || !(form instanceof HTMLFormElement)) {
+      throw new Error("bing_search_form_missing");
+    }
+    input.focus();
+    input.value = ${JSON.stringify(query)};
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    form.submit();
+    return true;
+  })()`;
+  await runWithTimeout(
+    win.webContents.executeJavaScript(code) as Promise<unknown>,
+    2_000,
+    signal,
+    "Bing 搜索框提交超时"
+  );
+  await runWithTimeout(
+    new Promise<void>((resolve, reject) => {
+      const contents = win.webContents;
+      const timer = setTimeout(() => {
+        cleanup();
+        reject(new WebBrowserTimeoutError("Bing 搜索导航超时"));
+      }, 8_000);
+      const onFinish = () => {
+        cleanup();
+        resolve();
+      };
+      const cleanup = () => {
+        clearTimeout(timer);
+        contents.removeListener("did-finish-load", onFinish);
+        contents.removeListener("did-navigate", onFinish);
+      };
+      contents.once("did-finish-load", onFinish);
+      contents.once("did-navigate", onFinish);
+    }),
+    8_500,
+    signal,
+    "Bing 搜索导航超时"
+  );
+}
+
+/** 动态 SERP 在 did-finish-load 后仍可能晚一点才插入主结果节点。 */
+async function waitForSearchResultsHydration(
+  contents: Electron.WebContents,
+  signal?: AbortSignal
+): Promise<void> {
+  const code = `new Promise((resolve) => {
+    const ready = () =>
+      !!document.querySelector(
+        "#b_results li.b_algo h2 a, .b_algo h2 a, .b_result h2 a, .results .result .result__a, a.result-link, article h2 > a[href], #content_left .result h3 a[href], #content_left .c-container h3 a[href]"
+      );
+    if (ready()) {
+      resolve(true);
+      return;
+    }
+    const started = Date.now();
+    const timer = setInterval(() => {
+      if (ready() || Date.now() - started >= ${WebAgentSearchHydrateTimeoutMs}) {
+        clearInterval(timer);
+        resolve(ready());
+      }
+    }, 120);
+  })`;
+  try {
+    await runWithTimeout(
+      contents.executeJavaScriptInIsolatedWorld(WebAgentIsolatedWorldID, [
+        { code }
+      ]) as Promise<unknown>,
+      WebAgentSearchHydrateTimeoutMs + 400,
+      signal,
+      "搜索结果等待超时"
+    );
+  } catch (error) {
+    if (signal?.aborted) throw error;
+  }
+}
+
 async function runWithTimeout<T>(
   promise: Promise<T>,
   timeoutMs: number,
@@ -654,10 +1224,17 @@ async function runWithTimeout<T>(
 
 // ========== DOM 提取脚本（注入 Renderer，不能引用外部变量） ==========
 
-export function createExtractPageScript(mode: AgentWebBrowserMode, maxChars: number): string {
+export function createExtractPageScript(
+  mode: AgentWebBrowserMode,
+  maxChars: number,
+  cursor = 0,
+  findPattern?: string,
+  findContextChars = 320,
+  findOffset = 0
+): string {
   // tsup 开启函数名保留时，toString() 结果可能引用构建期的 __name 辅助函数；
   // 把最小兼容实现一并放进隔离世界，避免开发测试可用、打包后提取失败。
-  return `(() => { const __name = (value) => value; return (${extractPageInRenderer.toString()})(${JSON.stringify({ mode, maxChars })}); })()`;
+  return `(() => { const __name = (value) => value; return (${extractPageInRenderer.toString()})(${JSON.stringify({ mode, maxChars, cursor, findPattern, findContextChars, findOffset })}); })()`;
 }
 
 function clamp(value: number, min: number, max: number): number {
@@ -666,7 +1243,14 @@ function clamp(value: number, min: number, max: number): number {
 
 // ========== 以下函数通过 toString() 注入 Renderer ==========
 
-async function extractPageInRenderer(config: { maxChars: number; mode: "open" | "search" }) {
+async function extractPageInRenderer(config: {
+  cursor: number;
+  maxChars: number;
+  findOffset?: number;
+  findPattern?: string;
+  mode: "open" | "search";
+  findContextChars?: number;
+}) {
   const document = globalThis.document;
 
   // ------- 等待 DOM 稳定 -------
@@ -784,7 +1368,16 @@ async function extractPageInRenderer(config: { maxChars: number; mode: "open" | 
   function selectContentRoot(mode: "open" | "search"): HTMLElement {
     const selectors =
       mode === "search"
-        ? ["#b_results", "#links", ".results", ".serp__results", "main", '[role="main"]']
+        ? [
+            "#b_results",
+            "#content_left",
+            "#links",
+            ".results",
+            ".serp__results",
+            "table",
+            "main",
+            '[role="main"]'
+          ]
         : [
             "article",
             "main",
@@ -881,12 +1474,16 @@ async function extractPageInRenderer(config: { maxChars: number; mode: "open" | 
     removeSelectors(root, [
       "nav",
       "footer",
-      "aside",
       '[role="navigation"]',
       '[role="banner"]',
-      '[role="complementary"]',
       '[role="dialog"]'
     ]);
+    // 百科信息框经常使用 aside；只删除正文外侧栏，保留文章内部的结构化资料。
+    for (const aside of Array.from(root.querySelectorAll('aside,[role="complementary"]'))) {
+      const insideArticle = Boolean(aside.closest("article"));
+      const hasStructuredFacts = Boolean(aside.querySelector("table,dl"));
+      if (!insideArticle && !hasStructuredFacts) aside.remove();
+    }
   } else {
     removeSelectors(root, ['[role="dialog"]', '[aria-modal="true"]']);
   }
@@ -911,7 +1508,16 @@ async function extractPageInRenderer(config: { maxChars: number; mode: "open" | 
       /(?:^|[\s_-])(social|share|sidebar|related|recommended|login|sign-?up|subscription|comments?|breadcrumb|pagination|author-?box|read-?more|download-?app|qr-?code)(?:$|[\s_-])/i;
     for (const el of Array.from(rootEl.querySelectorAll("*"))) {
       const sig = [el.getAttribute("id") ?? "", el.getAttribute("class") ?? ""].join(" ");
-      if (commonNoise.test(sig) || (mode === "open" && articleNoise.test(sig))) el.remove();
+      const substantialExpandableContent =
+        mode === "open" &&
+        /(?:^|[\s_-])read-?more(?:$|[\s_-])/i.test(sig) &&
+        String(el.textContent ?? "").trim().length >= 300;
+      if (
+        commonNoise.test(sig) ||
+        (mode === "open" && articleNoise.test(sig) && !substantialExpandableContent)
+      ) {
+        el.remove();
+      }
     }
   }
   removeNoiseElements(root, config.mode);
@@ -963,6 +1569,9 @@ async function extractPageInRenderer(config: { maxChars: number; mode: "open" | 
     }
   }
   normalizeLinks(root);
+
+  // 必须在剥离 class/id 前按搜索引擎的语义结构提取主结果。
+  const results = collectSearchResults(root, config.mode);
 
   // ------- 剥离属性 -------
   function stripAttributes(rootEl: Element) {
@@ -1027,37 +1636,129 @@ async function extractPageInRenderer(config: { maxChars: number; mode: "open" | 
   removeEmptyElements(root);
 
   const linkCount = root.querySelectorAll("a[href]").length;
-  const results = collectSearchResults(root, config.mode);
 
   function collectSearchResults(containerRoot: ParentNode, mode: "open" | "search") {
     if (mode !== "search") return [];
 
     const seen = new Set<string>();
     const items: Array<{ url: string; title: string; domain: string; snippet: string }> = [];
-    for (const anchor of Array.from(containerRoot.querySelectorAll("a[href]"))) {
+    // 只认搜索引擎主结果节点。反爬/降级页没有这些节点时返回空，
+    // 绝不能回退到全页 a[href]，否则会把热门推荐、页脚导航当成命中。
+    // Bing 选择器对齐 web-search-mcp：.b_algo / .b_result + h2 a。
+    const primarySelectors = [
+      "#b_results li.b_algo h2 a[href]",
+      ".b_algo h2 a[href]",
+      ".b_result h2 a[href]",
+      ".results .result .result__a[href]",
+      ".result__body .result__a[href]",
+      "a.result-link[href]",
+      "article[data-testid='result'] h2 a[href]",
+      "#content_left .result h3 a[href]",
+      "#content_left .c-container h3 a[href]",
+      "#content_left h3.t a[href]"
+    ];
+    const anchors = Array.from(
+      containerRoot.querySelectorAll<HTMLAnchorElement>(primarySelectors.join(","))
+    );
+    function resolveSearchResultURL(href: string): URL | undefined {
+      try {
+        const raw = new URL(href, String(document.baseURI || location.href));
+        // DuckDuckGo HTML 结果是 /l/?uddg=<目标> 跳转链；不解包会被当成引擎域名丢掉。
+        if (/(?:^|\.)duckduckgo\.com$/i.test(raw.hostname)) {
+          const uddg = raw.searchParams.get("uddg");
+          if (!uddg) return undefined;
+          return new URL(uddg);
+        }
+        if (/(?:^|\.)bing\.com$/i.test(raw.hostname)) return undefined;
+        // 百度结果常是 /link?url= 加密跳转；保留跳转链供后续 open 跟随，域名用展示 URL 补。
+        if (/(?:^|\.)baidu\.com$/i.test(raw.hostname) && !/\/link\b/i.test(raw.pathname)) {
+          return undefined;
+        }
+        return raw;
+      } catch {
+        return undefined;
+      }
+    }
+
+    for (const anchor of anchors) {
       if (items.length >= 10) break;
       const href = anchor.getAttribute("href")?.trim();
       const title = String(anchor.textContent ?? "")
         .replace(/\s+/g, " ")
         .trim();
-      if (!href || title.length < 2 || seen.has(href)) continue;
+      if (!href || title.length < 2) continue;
 
       try {
-        const target = new URL(href);
-        const domain = target.hostname.replace(/^www\./, "");
-        if (!domain || /^(bing|duckduckgo)\.com$/i.test(domain)) continue;
+        const target = resolveSearchResultURL(href);
+        if (!target) continue;
+        const canonicalTarget = new URL(target.toString());
+        canonicalTarget.hash = "";
+        if (canonicalTarget.pathname.length > 1) {
+          canonicalTarget.pathname = canonicalTarget.pathname.replace(/\/+$/, "");
+        }
+        canonicalTarget.searchParams.sort();
+        const canonicalURL = canonicalTarget.toString();
+        const row = anchor.closest("tr");
+        const container = anchor.closest(
+          "li.b_algo,.result,.c-container,.result-op,article,li,section,div,tr"
+        );
+        let domain = target.hostname.replace(/^www\./, "");
+        let openURL = target.toString();
+        if (/(?:^|\.)baidu\.com$/i.test(domain)) {
+          // 新版百度常把真实落地页放在容器 mu / data-url，展示域名在 c-showurl。
+          const landing =
+            container?.getAttribute("mu") ||
+            container?.getAttribute("data-url") ||
+            anchor.getAttribute("data-url") ||
+            "";
+          if (landing) {
+            try {
+              const landed = new URL(landing, String(document.baseURI || location.href));
+              if (landed.protocol === "http:" || landed.protocol === "https:") {
+                openURL = landed.toString();
+                domain = landed.hostname.replace(/^www\./, "");
+              }
+            } catch {
+              // 保留百度跳转链，open 时再跟随。
+            }
+          }
+          if (/(?:^|\.)baidu\.com$/i.test(domain)) {
+            const showUrl = String(
+              container?.querySelector(
+                ".c-showurl,.c-color-gray,.cite,.b_attribution,.result__url,[class*='showurl']"
+              )?.textContent ?? ""
+            )
+              .replace(/\s+/g, " ")
+              .trim();
+            const hostMatch = showUrl.match(/(?:https?:\/\/)?([a-z0-9.-]+\.[a-z]{2,})/i);
+            if (hostMatch?.[1]) domain = hostMatch[1].replace(/^www\./i, "").toLowerCase();
+          }
+        }
+        if (!domain || seen.has(canonicalURL)) continue;
 
-        const container = anchor.closest("li, article, section, div");
         const containerText = String(container?.textContent ?? "")
           .replace(/\s+/g, " ")
           .trim();
-        const snippet = containerText.startsWith(title)
-          ? containerText.slice(title.length).trim().slice(0, 240)
-          : containerText.slice(0, 240);
+        const semanticSnippet = String(
+          (
+            container?.querySelector(
+              ".b_caption p,.result__snippet,.result-snippet,td.result-snippet,.c-abstract,.content-right_8Zs90,p"
+            ) ?? row?.nextElementSibling?.querySelector(".result-snippet,td.result-snippet")
+          )?.textContent ?? ""
+        )
+          .replace(/\s+/g, " ")
+          .trim();
+        const snippet = (
+          semanticSnippet ||
+          (containerText.startsWith(title)
+            ? containerText.slice(title.length).trim()
+            : containerText)
+        ).slice(0, 240);
 
-        seen.add(href);
+        seen.add(canonicalURL);
         items.push({
-          url: href,
+          // 规范化 URL 只用于去重；百度结果优先落地页，否则保留跳转链供 open 跟随。
+          url: openURL,
           domain,
           snippet,
           title: title.slice(0, 240)
@@ -1178,13 +1879,74 @@ async function extractPageInRenderer(config: { maxChars: number; mode: "open" | 
   const summary = description && !bodyContent.includes(description) ? `> 摘要：${description}` : "";
   const fullContent = normalizeMarkdown([summary, bodyContent].filter(Boolean).join("\n\n"));
 
-  // ------- 在段落边界内完成预算裁剪 -------
-  const truncationMarker = "\n\n[正文已截断，可提高 maxChars 后重新 open]";
-  let content = fullContent;
-  const truncated = fullContent.length > config.maxChars;
-  if (truncated) {
-    const available = Math.max(0, config.maxChars - truncationMarker.length);
-    const prefix = fullContent.slice(0, available);
+  // find 只返回匹配片段和可继续 open 的游标，避免为定位一个词读取整篇网页。
+  const findPattern = String(config.findPattern ?? "").trim();
+  if (findPattern) {
+    const normalizedContent = fullContent.toLocaleLowerCase();
+    const normalizedPattern = findPattern.toLocaleLowerCase();
+    const contextChars = Math.min(800, Math.max(120, Math.floor(config.findContextChars ?? 320)));
+    const offset = Math.max(0, Math.floor(config.findOffset ?? 0));
+    const matches: Array<{
+      end: number;
+      start: number;
+      snippet: string;
+      openCursor: number;
+    }> = [];
+    let totalMatches = 0;
+    let searchFrom = 0;
+    while (searchFrom < normalizedContent.length) {
+      const start = normalizedContent.indexOf(normalizedPattern, searchFrom);
+      if (start < 0) break;
+      const end = start + normalizedPattern.length;
+      const matchIndex = totalMatches;
+      totalMatches += 1;
+      if (matchIndex >= offset && matches.length < 12) {
+        const snippetStart = Math.max(0, start - Math.floor(contextChars / 2));
+        const snippetEnd = Math.min(fullContent.length, end + Math.ceil(contextChars / 2));
+        matches.push({
+          start,
+          end,
+          openCursor: Math.max(0, start - Math.floor(config.maxChars * 0.25)),
+          snippet: fullContent.slice(snippetStart, snippetEnd).replace(/\s+/g, " ").trim()
+        });
+      }
+      searchFrom = Math.max(end, start + 1);
+    }
+    const nextOffset = offset + matches.length;
+    const hasMore = nextOffset < totalMatches;
+    const content = totalMatches
+      ? `已定位 ${totalMatches} 处匹配；本页从第 ${offset + 1} 处开始，可用 openCursor 读取上下文${hasMore ? "，或用 nextOffset 继续定位" : ""}。`
+      : "未在正文中找到匹配文本。";
+    return {
+      title,
+      ...(author ? { author } : {}),
+      ...(publishedAt ? { publishedAt } : {}),
+      content,
+      truncated: totalMatches > matches.length,
+      originalChars,
+      contentChars: content.length,
+      linkCount,
+      results,
+      find: {
+        pattern: findPattern,
+        offset,
+        hasMore,
+        sourceChars: fullContent.length,
+        totalMatches,
+        matches,
+        ...(hasMore ? { nextOffset } : {})
+      }
+    };
+  }
+
+  // ------- 在段落边界内完成按需分块 -------
+  const total = fullContent.length;
+  const start = Math.min(total, Math.max(0, Math.floor(config.cursor || 0)));
+  const remaining = fullContent.slice(start);
+  let content = remaining;
+  let end = total;
+  if (remaining.length > config.maxChars) {
+    const prefix = remaining.slice(0, config.maxChars);
     const paragraphBoundary = prefix.lastIndexOf("\n\n");
     const lineBoundary = prefix.lastIndexOf("\n");
     const sentenceBoundary = Math.max(
@@ -1194,19 +1956,31 @@ async function extractPageInRenderer(config: { maxChars: number; mode: "open" | 
       prefix.lastIndexOf(". ")
     );
     const preferredBoundary = Math.max(paragraphBoundary, lineBoundary, sentenceBoundary);
-    const cutAt = preferredBoundary >= available * 0.6 ? preferredBoundary + 1 : available;
-    content = prefix.slice(0, cutAt).trimEnd() + truncationMarker;
+    const cutAt =
+      preferredBoundary >= config.maxChars * 0.6 ? preferredBoundary + 1 : config.maxChars;
+    content = prefix.slice(0, cutAt).trimEnd();
+    end = start + cutAt;
+    while (end < total && /\s/.test(fullContent[end] ?? "")) end += 1;
   }
+  const hasMore = end < total;
+  const contentRange = {
+    start,
+    end,
+    total,
+    hasMore,
+    ...(hasMore ? { nextCursor: end } : {})
+  };
 
   return {
     title,
     ...(author ? { author } : {}),
     ...(publishedAt ? { publishedAt } : {}),
     content,
-    truncated,
+    truncated: hasMore,
     originalChars,
     contentChars: content.length,
     linkCount,
-    results
+    results,
+    ...(config.mode === "open" ? { contentRange } : {})
   };
 }

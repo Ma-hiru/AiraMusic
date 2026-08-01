@@ -3,12 +3,18 @@ import { AIError, AIResult } from "@/result";
 import { LLMContextComposer } from "@/context";
 import { AIAgentSkillRegistry } from "@/skills";
 import { LLMLoop, type LLMLoopEvent, type LLMLoopRunOptions } from "@/loop";
-import { LLMProvider, type LLMUsage, type LLMMessage, type LLMFinishReason } from "@/provider";
 import {
   LLMPromptBuilder,
   type LLMPromptToolOptions,
   type LLMPromptContextOptions
 } from "@/prompt";
+import {
+  LLMProvider,
+  type LLMUsage,
+  type LLMMessage,
+  type LLMFinishReason,
+  readLLMUsageFromError
+} from "@/provider";
 import {
   LLMConversation,
   LLMConversationRepository,
@@ -44,6 +50,9 @@ const MAX_CONVERSATION_TITLE_CHARS = 20;
 const MAX_CHAT_INPUT_CHARS = 64_000;
 const MAX_CHAT_OUTPUT_TOKENS = 131_072;
 const MAX_CHAT_IDENTIFIER_CHARS = 256;
+const CONVERSATION_TITLE_SOURCE_METADATA_KEY = "agent.titleSource";
+const CONVERSATION_TITLE_SOURCE_GENERATED = "generated";
+const CONVERSATION_TITLE_SOURCE_FALLBACK = "fallback";
 
 const normalizeConversationTitle = (value: string) => {
   const normalized = value
@@ -100,13 +109,25 @@ export class AIAgent {
       const result = registry.register(options.tools.list);
       if (result.isErr()) throw result.reason;
 
+      const activatableNames = Array.from(new Set(options.tools.activatableNames ?? []));
+      for (const name of activatableNames) {
+        const tool = registry.get(name);
+        if (tool.isErr()) throw tool.reason;
+      }
+
       this.tools = {
         registry: registry,
         strict: options.tools.strict,
         choice: options.tools.choice,
+        ...(activatableNames.length ? { activatableNames } : {}),
         ...(options.tools.maxTotalOutputChars === undefined
           ? {}
-          : { maxTotalOutputChars: Math.max(256, options.tools.maxTotalOutputChars) })
+          : { maxTotalOutputChars: Math.max(256, options.tools.maxTotalOutputChars) }),
+        ...(options.tools.maxRetainedToolOutputChars === undefined
+          ? {}
+          : {
+              maxRetainedToolOutputChars: Math.max(256, options.tools.maxRetainedToolOutputChars)
+            })
       };
       this.selectTools = options.tools.select;
     }
@@ -666,7 +687,9 @@ export class AIAgent {
           : undefined),
       cachedInput: usage.cachedInputTokens,
       cacheWrite: usage.cacheWriteTokens,
-      reasoning: usage.reasoningTokens
+      reasoning: usage.reasoningTokens,
+      requests: usage.requestCount ?? 1,
+      lastInput: usage.lastInputTokens ?? usage.inputTokens
     };
     const entries = Object.entries(normalized).filter(([, value]) => value !== undefined);
     return entries.length ? (Object.fromEntries(entries) as LLMConversationUsage) : undefined;
@@ -685,7 +708,9 @@ export class AIAgent {
       totalTokens: sum(current?.total, next.total),
       cachedInputTokens: sum(current?.cachedInput, next.cachedInput),
       cacheWriteTokens: sum(current?.cacheWrite, next.cacheWrite),
-      reasoningTokens: sum(current?.reasoning, next.reasoning)
+      reasoningTokens: sum(current?.reasoning, next.reasoning),
+      requestCount: (current?.requests ?? 0) + 1,
+      lastInputTokens: next.lastInput ?? next.input
     };
     run.accumulatedUsage = accumulated;
   }
@@ -907,13 +932,16 @@ export class AIAgent {
       ]
     });
     let title = "";
+    let generatedTitle = false;
     if (response.isErr()) {
+      this.accumulateUsage(run, readLLMUsageFromError(response.reason));
       if (response.reason.type === "aborted") return response;
       this.inject.Log.warn("Agent", "自动生成标题失败，改用首条消息:", response.reason);
     } else {
       const generated = response.unwrap();
       this.accumulateUsage(run, generated.usage);
       title = normalizeConversationTitle(generated.text);
+      generatedTitle = Boolean(title);
     }
 
     title ||= normalizeConversationTitle(titleInput);
@@ -928,7 +956,14 @@ export class AIAgent {
     if (renamed.isErr()) return renamed;
     const persistedRenamed = run.persistedConversation.rename(title);
     if (persistedRenamed.isErr()) return persistedRenamed;
-    run.titleGenerated = true;
+    const titleSource = generatedTitle
+      ? CONVERSATION_TITLE_SOURCE_GENERATED
+      : CONVERSATION_TITLE_SOURCE_FALLBACK;
+    run.conversation.setMetadata(CONVERSATION_TITLE_SOURCE_METADATA_KEY, titleSource);
+    run.persistedConversation.setMetadata(CONVERSATION_TITLE_SOURCE_METADATA_KEY, titleSource);
+    // 只有模型实际生成的标题才随本轮回退；首条消息回退标题要保留显示，
+    // 同时通过 metadata 允许后续轮次再次尝试生成。
+    run.titleGenerated = generatedTitle;
     const currentRuntime = run.persistedConversation.getRuntime();
     if (!currentRuntime) {
       return AIResult.err({
@@ -938,7 +973,7 @@ export class AIAgent {
     }
     const runtime = run.persistedConversation.setRuntime({
       ...currentRuntime,
-      titleGenerated: true
+      titleGenerated: generatedTitle
     });
     if (runtime.isErr()) return runtime;
 
@@ -1136,6 +1171,9 @@ export class AIAgent {
         ...(skillActivation?.requiredEvidence.length
           ? { requiredEvidence: skillActivation.requiredEvidence }
           : {}),
+        ...(skillActivation?.maxNoProgressSteps === undefined
+          ? {}
+          : { maxNoEvidenceProgressSteps: skillActivation.maxNoProgressSteps }),
         ...(skillActivation?.instructions.length
           ? { instructions: skillActivation.instructions }
           : {}),
@@ -1248,7 +1286,10 @@ export class AIAgent {
           startedAt: Date.now(),
           temperature: options.temperature,
           maxOutputTokens: options.maxOutputTokens,
-          shouldGenerateTitle: !conversation.name.trim(),
+          shouldGenerateTitle:
+            !conversation.name.trim() ||
+            conversation.getMetadata()[CONVERSATION_TITLE_SOURCE_METADATA_KEY] ===
+              CONVERSATION_TITLE_SOURCE_FALLBACK,
           persistedConversation: persistedConversationResult.unwrap()
         });
       });
