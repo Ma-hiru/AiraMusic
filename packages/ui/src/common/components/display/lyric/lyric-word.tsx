@@ -14,12 +14,13 @@ import type { TimeManager } from "./time-manager";
 interface LyricWordProps {
   word: LyricWord;
   wordIndex: number;
+  waitLine?: boolean;
   activeColor?: string;
   lineActive?: boolean;
   singleWord?: boolean;
   notesContent?: string;
   inactiveColor?: string;
-  currentWordIndex: number;
+  activeWordIndex: number;
   timeManager: TimeManager;
   onClick?: NormalFunc<[startTime: number]>;
 }
@@ -28,11 +29,12 @@ const LyricWord: FC<LyricWordProps> = ({
   timeManager,
   onClick,
   word,
+  waitLine,
   wordIndex,
   activeColor,
   notesContent,
   inactiveColor,
-  currentWordIndex,
+  activeWordIndex,
   lineActive = false,
   singleWord = false
 }) => {
@@ -51,8 +53,8 @@ const LyricWord: FC<LyricWordProps> = ({
     };
   }, [timeManager, word.endTime, word.startTime]);
 
-  const active = wordIndex <= currentWordIndex && lineActive;
-  const isCurrentWord = wordIndex === currentWordIndex && lineActive && !singleWord;
+  const active = wordIndex <= activeWordIndex && lineActive;
+  const isCurrentWord = wordIndex === activeWordIndex && lineActive && !singleWord;
 
   useLayoutEffect(() => {
     if (!isCurrentWord) return;
@@ -83,9 +85,9 @@ const LyricWord: FC<LyricWordProps> = ({
 
   const progress = useMemo(() => {
     if (singleWord) return "0%";
-    if (wordIndex < currentWordIndex && lineActive) return "100%";
+    if (wordIndex < activeWordIndex && lineActive) return "100%";
     return "0%";
-  }, [singleWord, wordIndex, currentWordIndex, lineActive]);
+  }, [singleWord, wordIndex, activeWordIndex, lineActive]);
 
   // 上浮时长跟随词时长：快词快起避免拖影，慢词从容，封顶防止拖沓。
   const wrapperStyle = useMemo(
@@ -123,22 +125,22 @@ const LyricWord: FC<LyricWordProps> = ({
           lyric-word font-semibold whitespace-pre-wrap
         `,
           // 非单行歌词且未高亮时模糊
-          !singleWord && wordIndex > currentWordIndex ? "blur-[1.5px]" : "blur-none",
-          !singleWord && wordIndex === currentWordIndex && active
+          !singleWord && wordIndex > activeWordIndex ? "blur-[1.5px]" : "blur-none",
+          !singleWord && wordIndex === activeWordIndex && active
             ? "lyric-word-active"
             : "lyric-word-inactive"
         )}
         style={style}
         onClick={handleClick}>
-        {word.word}
+        {waitLine && !lineActive ? "" : word.word}
       </span>
       {notesContent && (
         <span
           className={cx(
             `absolute left-1/2 -translate-x-1/2 -translate-y-full top-[45%] z-10 whitespace-nowrap scale-45`,
             // 非单行歌词且未高亮时模糊
-            !singleWord && wordIndex > currentWordIndex ? "blur-[1.5px]" : "blur-none",
-            !singleWord && wordIndex === currentWordIndex && active
+            !singleWord && wordIndex > activeWordIndex ? "blur-[1.5px]" : "blur-none",
+            !singleWord && wordIndex === activeWordIndex && active
               ? "lyric-word-active"
               : "lyric-word-inactive"
           )}>
