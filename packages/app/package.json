@@ -15,6 +15,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@modelcontextprotocol/sdk": "1.29.0",
     "@neteasecloudmusicapienhanced/api": "4.36.1",
     "electron-store": "^11.0.2",
     "express": "^5.1.0",

@@ -224,9 +224,9 @@ describe("Assistant 连续回复分组", () => {
     const completedToolDisclosure = within(assistantGroup).getByRole("button", {
       name: /^读取歌曲详情·/
     });
-    expect(completedToolDisclosure).toHaveAttribute("aria-expanded", "true");
-    fireEvent.click(completedToolDisclosure);
     expect(completedToolDisclosure).toHaveAttribute("aria-expanded", "false");
+    fireEvent.click(completedToolDisclosure);
+    expect(completedToolDisclosure).toHaveAttribute("aria-expanded", "true");
     expect(within(assistantGroup).getByText("我再看看听众的评论。")).toBeInTheDocument();
     expect(within(assistantGroup).getByRole("button", { name: /^读取评论·/ })).toBeInTheDocument();
     expect(
@@ -518,6 +518,96 @@ describe("Assistant 连续回复分组", () => {
     expect(within(assistantGroup).getAllByText("我先读取歌曲详情。")).toHaveLength(1);
     expect(assistantGroup.querySelectorAll("section[data-status] > button")).toHaveLength(1);
     expect(screen.getAllByText("介绍当前歌曲")).toHaveLength(1);
+  });
+
+  it("纯工具回复保持与普通助手回复相同的完整宽度", () => {
+    renderChatContent({
+      id: "conversation-tool-only",
+      name: "纯工具回复",
+      createdAt: 1,
+      updatedAt: 2,
+      metadata: {},
+      messages: [
+        { role: "user", content: "读取歌曲详情" },
+        {
+          role: "assistant",
+          content: "",
+          toolCalls: [
+            {
+              name: "agent-tool-track-detail",
+              callID: "tool-only-call",
+              arguments: JSON.stringify({ id: 42 })
+            }
+          ]
+        },
+        {
+          role: "tool",
+          name: "agent-tool-track-detail",
+          callID: "tool-only-call",
+          content: JSON.stringify({ name: "群青" })
+        }
+      ],
+      assistantTurns: [
+        {
+          runID: "run-tool-only",
+          step: 0,
+          messageIndex: 1,
+          status: "complete",
+          finishReason: "tool_calls"
+        }
+      ]
+    });
+
+    const assistantGroup = screen.getByRole("group", { name: "Aira 的连续回复" });
+    expect(assistantGroup).toHaveClass("w-full");
+    expect(assistantGroup.querySelector("section[data-status]")).toHaveClass("w-full");
+  });
+
+  it("重复的同一 callID 结果不能把缺失的并行调用误判为完成", () => {
+    renderChatContent({
+      id: "conversation-duplicate-tool-result",
+      name: "并行工具结果",
+      createdAt: 1,
+      updatedAt: 2,
+      metadata: {},
+      messages: [
+        { role: "user", content: "读取两首歌曲" },
+        {
+          role: "assistant",
+          content: "",
+          toolCalls: [
+            {
+              name: "agent-tool-track-detail",
+              callID: "call-a",
+              arguments: JSON.stringify({ id: 1 })
+            },
+            {
+              name: "agent-tool-track-detail",
+              callID: "call-b",
+              arguments: JSON.stringify({ id: 2 })
+            }
+          ]
+        },
+        {
+          role: "tool",
+          name: "agent-tool-track-detail",
+          callID: "call-a",
+          content: JSON.stringify({ name: "第一首歌" })
+        },
+        {
+          role: "tool",
+          name: "agent-tool-track-detail",
+          callID: "call-a",
+          content: JSON.stringify({ name: "第一首歌（重复）" })
+        }
+      ]
+    });
+
+    const toolStep = screen
+      .getByRole("group", { name: "Aira 的连续回复" })
+      .querySelector("section[data-status]");
+    expect(toolStep).toHaveAttribute("data-status", "running");
+    expect(screen.getByText("正在等待结果")).toBeInTheDocument();
   });
 
   it("历史 run 已终止且工具结果缺失时不再把工具显示为运行中", () => {

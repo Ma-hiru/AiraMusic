@@ -8,6 +8,7 @@ import type { AgentLiveTimelineItem } from "@/wins/agent/page/types";
 export interface AgentConversationState {
   sending: boolean;
   streamText: string;
+  latestRunID: string;
   recovering: boolean;
   runningRunID: string;
   pendingUserMessage: string;
@@ -39,6 +40,7 @@ export const createAgentConversationState = (): AgentConversationState => ({
   sending: false,
   recovering: false,
   streamText: "",
+  latestRunID: "",
   runningRunID: "",
   liveTimeline: EMPTY_LIVE_TIMELINE,
   conversation: null,
@@ -60,6 +62,7 @@ const toResumeState = (
 const fromResumeState = (state: AgentConversationResumeState): AgentConversationState => ({
   ...createAgentConversationState(),
   recovering: state.recovering || !!state.runningRunID || !!state.pendingUserMessage,
+  latestRunID: state.runningRunID,
   runningRunID: state.runningRunID,
   pendingUserMessage: state.pendingUserMessage
 });

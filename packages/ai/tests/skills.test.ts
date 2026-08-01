@@ -26,6 +26,43 @@ describe("AIAgentSkillRegistry", () => {
     expect(activated.toolNames).toEqual(["search", "detail", "comments"]);
   });
 
+  it("exposes the largest no-progress budget among activated skills and validates it", () => {
+    const conversation = LLMConversation.create({ id: "skill-budget" }).unwrap();
+    const registry = new AIAgentSkillRegistry([
+      {
+        id: "web-research",
+        kind: "skill",
+        instructions: "联网取证",
+        match: () => true,
+        toolNames: ["web-browser"],
+        maxNoProgressSteps: 6
+      },
+      {
+        id: "local-task",
+        kind: "skill",
+        instructions: "本地操作",
+        match: () => true,
+        toolNames: ["search"],
+        maxNoProgressSteps: 4
+      }
+    ]);
+
+    expect(registry.activate({ input: "hi", conversation }).unwrap().maxNoProgressSteps).toBe(6);
+
+    expect(
+      () =>
+        new AIAgentSkillRegistry([
+          {
+            id: "bad-budget",
+            kind: "skill",
+            instructions: "预算越界",
+            match: () => true,
+            maxNoProgressSteps: 20
+          }
+        ])
+    ).toThrowError(/停滞步数预算/);
+  });
+
   it("snapshots definitions so later host mutations cannot change the cache-stable prefix", () => {
     const instructions = ["稳定规则"];
     const toolNames = ["search", "search"];

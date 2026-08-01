@@ -1,11 +1,58 @@
 import { LLMProviderOpenAI } from "@/provider";
 import { LLMMinimumContextWindowTokens } from "@/model";
 import {
+  toChatTools,
   toResponseInput,
+  toResponseTools,
   normalizeResponseUsage,
   normalizeCompletionsUsage,
-  toResponseProviderContext
+  toResponseProviderContext,
+  isOpenAIToolSchemaStrictCompatible
 } from "@/utils/openai";
+
+describe("OpenAI 工具严格模式兼容", () => {
+  const compatible = {
+    type: "object",
+    properties: { keyword: { type: "string" } },
+    required: ["keyword"],
+    additionalProperties: false
+  };
+  const optional = {
+    type: "object",
+    properties: { keyword: { type: "string" }, site: { type: "string" } },
+    required: ["keyword"],
+    additionalProperties: false
+  };
+
+  it("只为完整 required 且禁止额外字段的 schema 开启 strict", () => {
+    expect(isOpenAIToolSchemaStrictCompatible(compatible)).toBe(true);
+    expect(isOpenAIToolSchemaStrictCompatible(optional)).toBe(false);
+
+    const tool = { name: "search", description: "搜索", strict: true, inputSchema: optional };
+    expect(toResponseTools([tool])?.[0]).toMatchObject({ strict: false });
+    expect(toChatTools([tool])?.[0]).toMatchObject({ function: { strict: false } });
+  });
+
+  it("拒绝根联合与 allOf，避免官方接口因伪 strict schema 返回 400", () => {
+    const rootUnion = {
+      oneOf: [compatible, compatible]
+    };
+    const withAllOf = {
+      ...compatible,
+      properties: {
+        keyword: { allOf: [{ type: "string" }] }
+      }
+    };
+
+    expect(isOpenAIToolSchemaStrictCompatible(rootUnion)).toBe(false);
+    expect(isOpenAIToolSchemaStrictCompatible(withAllOf)).toBe(false);
+    expect(
+      toResponseTools([
+        { name: "union", description: "联合", strict: true, inputSchema: rootUnion }
+      ])?.[0]
+    ).toMatchObject({ strict: false });
+  });
+});
 
 describe("LLMProviderOpenAI config", () => {
   it("defaults legacy configs to the Responses API mode", () => {
@@ -445,6 +492,211 @@ describe("LLMProviderOpenAI request shape", () => {
     });
   });
 
+  it("uses visible text from a Responses result truncated by the output limit", async () => {
+    const bodies: Record<string, unknown>[] = [];
+    vi.stubGlobal(
+      "fetch",
+      createJSONFetchMock(
+        bodies,
+        responsesResponse({
+          status: "incomplete",
+          output: [responseOutputMessage("可用的会话标题", "incomplete")],
+          incomplete_details: { reason: "max_output_tokens" },
+          usage: { input_tokens: 8, output_tokens: 16, total_tokens: 24 }
+        })
+      )
+    );
+    const provider = new LLMProviderOpenAI();
+    const config = provider
+      .parseConfig({ model: "gpt-5", apiKey: "sk-test", apiMode: "responses" })
+      .unwrap();
+
+    const result = await provider.generate(config, {
+      maxOutputTokens: 128,
+      messages: [{ role: "user", content: "生成标题" }]
+    });
+
+    expect(result.isOk()).toBe(true);
+    expect(result.unwrap()).toMatchObject({
+      text: "可用的会话标题",
+      finishReason: "length",
+      usage: { inputTokens: 8, outputTokens: 16, totalTokens: 24 }
+    });
+    expect(bodies[0]).not.toHaveProperty("include");
+  });
+
+  it("omits optional encrypted reasoning for compatible Responses endpoints", async () => {
+    const bodies: Record<string, unknown>[] = [];
+    vi.stubGlobal(
+      "fetch",
+      createJSONFetchMock(bodies, responsesResponse({ output: [responseFunctionCall()] }))
+    );
+    const provider = new LLMProviderOpenAI();
+    const config = provider
+      .parseConfig({
+        model: "compatible-model",
+        apiKey: "sk-test",
+        apiMode: "responses",
+        baseURL: "https://compatible.example/v1"
+      })
+      .unwrap();
+
+    const result = await provider.generate(config, {
+      messages: [{ role: "user", content: "搜索 Aira" }],
+      tools: [chatTestTool()]
+    });
+
+    expect(result.isOk()).toBe(true);
+    expect(bodies[0]).not.toHaveProperty("include");
+  });
+
+  it("recovers Responses stream text from output_text.done without deltas", async () => {
+    const bodies: Record<string, unknown>[] = [];
+    const completed = responsesResponse();
+    vi.stubGlobal(
+      "fetch",
+      createSSEFetchMock(bodies, [
+        responsesTextDoneEvent("完整流式回复"),
+        responsesCompletedEvent(completed)
+      ])
+    );
+    const provider = new LLMProviderOpenAI();
+    const config = provider
+      .parseConfig({ model: "gpt-5", apiKey: "sk-test", apiMode: "responses" })
+      .unwrap();
+
+    const events = [];
+    for await (const event of provider.stream(config, {
+      messages: [{ role: "user", content: "ping" }]
+    })) {
+      events.push(event);
+    }
+
+    expect(
+      events.find((event) => event.isOk() && event.unwrap().type === "text_delta")?.unwrap()
+    ).toMatchObject({ type: "text_delta", text: "完整流式回复" });
+    expect(
+      events.find((event) => event.isOk() && event.unwrap().type === "done")?.unwrap()
+    ).toMatchObject({ type: "done", text: "完整流式回复", finishReason: "stop" });
+    expect(bodies[0]).not.toHaveProperty("include");
+  });
+
+  it("recovers Responses stream text from response.completed without prior text events", async () => {
+    const bodies: Record<string, unknown>[] = [];
+    vi.stubGlobal(
+      "fetch",
+      createSSEFetchMock(bodies, [
+        responsesCompletedEvent(responsesResponse({ output_text: "completed 聚合回复" }))
+      ])
+    );
+    const provider = new LLMProviderOpenAI();
+    const config = provider
+      .parseConfig({ model: "gpt-5", apiKey: "sk-test", apiMode: "responses" })
+      .unwrap();
+
+    const events = [];
+    for await (const event of provider.stream(config, {
+      messages: [{ role: "user", content: "ping" }]
+    })) {
+      events.push(event);
+    }
+
+    expect(events.at(-1)?.unwrap()).toMatchObject({
+      type: "done",
+      text: "completed 聚合回复",
+      finishReason: "stop"
+    });
+  });
+
+  it("把 Responses 的合法拒答作为可见回复返回", async () => {
+    const bodies: Record<string, unknown>[] = [];
+    vi.stubGlobal(
+      "fetch",
+      createJSONFetchMock(
+        bodies,
+        responsesResponse({ output: [responseRefusalMessage("抱歉，我不能协助这个请求。")] })
+      )
+    );
+    const provider = new LLMProviderOpenAI();
+    const config = provider
+      .parseConfig({ model: "gpt-5", apiKey: "sk-test", apiMode: "responses" })
+      .unwrap();
+
+    const result = await provider.generate(config, {
+      messages: [{ role: "user", content: "不安全请求" }]
+    });
+
+    expect(result.unwrap()).toMatchObject({
+      text: "抱歉，我不能协助这个请求。",
+      finishReason: "stop"
+    });
+  });
+
+  it("流式转发 Responses refusal 事件而不是生成空回复", async () => {
+    const bodies: Record<string, unknown>[] = [];
+    const completed = responsesResponse({
+      output: [responseRefusalMessage("抱歉，我不能协助这个请求。")]
+    });
+    vi.stubGlobal(
+      "fetch",
+      createSSEFetchMock(bodies, [
+        responsesRefusalDeltaEvent("抱歉，"),
+        responsesRefusalDoneEvent("抱歉，我不能协助这个请求。"),
+        responsesCompletedEvent(completed)
+      ])
+    );
+    const provider = new LLMProviderOpenAI();
+    const config = provider
+      .parseConfig({ model: "gpt-5", apiKey: "sk-test", apiMode: "responses" })
+      .unwrap();
+
+    const events = [];
+    for await (const event of provider.stream(config, {
+      messages: [{ role: "user", content: "不安全请求" }]
+    })) {
+      events.push(event);
+    }
+
+    expect(events.at(-1)?.unwrap()).toMatchObject({
+      type: "done",
+      text: "抱歉，我不能协助这个请求。",
+      finishReason: "stop"
+    });
+  });
+
+  it("finishes a truncated Responses stream when it already contains visible text", async () => {
+    const bodies: Record<string, unknown>[] = [];
+    const incomplete = responsesResponse({
+      status: "incomplete",
+      incomplete_details: { reason: "max_output_tokens" }
+    });
+    vi.stubGlobal(
+      "fetch",
+      createSSEFetchMock(bodies, [
+        responsesTextDeltaEvent("达到上限前的完整可见内容"),
+        responsesIncompleteEvent(incomplete)
+      ])
+    );
+    const provider = new LLMProviderOpenAI();
+    const config = provider
+      .parseConfig({ model: "gpt-5", apiKey: "sk-test", apiMode: "responses" })
+      .unwrap();
+
+    const events = [];
+    for await (const event of provider.stream(config, {
+      messages: [{ role: "user", content: "ping" }]
+    })) {
+      events.push(event);
+    }
+
+    expect(events.every((event) => event.isOk())).toBe(true);
+    expect(events.at(-1)?.unwrap()).toMatchObject({
+      type: "done",
+      text: "达到上限前的完整可见内容",
+      finishReason: "length"
+    });
+  });
+
   it("uses stateless Responses requests and exposes reasoning continuation", async () => {
     const bodies: Record<string, unknown>[] = [];
     const reasoningItem = responseReasoningItem();
@@ -541,7 +793,6 @@ describe("LLMProviderOpenAI request shape", () => {
     expect(secondEvents.some((event) => event.isOk() && event.unwrap().type === "done")).toBe(true);
     expect(bodies[1]).toMatchObject({
       store: false,
-      include: ["reasoning.encrypted_content"],
       input: [
         reasoningItem,
         {
@@ -557,6 +808,7 @@ describe("LLMProviderOpenAI request shape", () => {
         }
       ]
     });
+    expect(bodies[1]).not.toHaveProperty("include");
   });
 });
 
@@ -822,10 +1074,91 @@ function responseFunctionCall() {
   };
 }
 
+function responseOutputMessage(text: string, status: "completed" | "incomplete" = "completed") {
+  return {
+    id: "msg_1",
+    type: "message",
+    role: "assistant",
+    status,
+    content: [
+      {
+        type: "output_text",
+        text,
+        annotations: [],
+        logprobs: []
+      }
+    ]
+  };
+}
+
+function responseRefusalMessage(refusal: string) {
+  return {
+    id: "msg_refusal",
+    type: "message",
+    role: "assistant",
+    status: "completed",
+    content: [{ type: "refusal", refusal }]
+  };
+}
+
 function responsesCompletedEvent(response: Record<string, unknown>) {
   return {
     type: "response.completed",
     sequence_number: 0,
     response
+  };
+}
+
+function responsesIncompleteEvent(response: Record<string, unknown>) {
+  return {
+    type: "response.incomplete",
+    sequence_number: 0,
+    response
+  };
+}
+
+function responsesTextDoneEvent(text: string) {
+  return {
+    type: "response.output_text.done",
+    content_index: 0,
+    item_id: "msg_1",
+    logprobs: [],
+    output_index: 0,
+    sequence_number: 0,
+    text
+  };
+}
+
+function responsesRefusalDeltaEvent(delta: string) {
+  return {
+    type: "response.refusal.delta",
+    content_index: 0,
+    delta,
+    item_id: "msg_refusal",
+    output_index: 0,
+    sequence_number: 0
+  };
+}
+
+function responsesRefusalDoneEvent(refusal: string) {
+  return {
+    type: "response.refusal.done",
+    content_index: 0,
+    item_id: "msg_refusal",
+    output_index: 0,
+    refusal,
+    sequence_number: 1
+  };
+}
+
+function responsesTextDeltaEvent(delta: string) {
+  return {
+    type: "response.output_text.delta",
+    content_index: 0,
+    delta,
+    item_id: "msg_1",
+    logprobs: [],
+    output_index: 0,
+    sequence_number: 0
   };
 }

@@ -273,7 +273,9 @@ export function toChatTools(
       name: tool.name,
       description: tool.description,
       parameters: tool.inputSchema,
-      ...(includeStrict ? { strict: tool.strict ?? true } : {})
+      ...(includeStrict
+        ? { strict: tool.strict && isOpenAIToolSchemaStrictCompatible(tool.inputSchema) }
+        : {})
     }
   }));
 }
@@ -283,10 +285,66 @@ export function toResponseTools(tools?: LLMToolDefinition[]): Undefinable<OpenAI
   return tools.map((tool) => ({
     type: "function",
     name: tool.name,
-    strict: tool.strict,
+    strict: tool.strict && isOpenAIToolSchemaStrictCompatible(tool.inputSchema),
     description: tool.description,
     parameters: tool.inputSchema
   }));
+}
+
+/**
+ * OpenAI 严格函数 schema 要求对象的每个属性都列入 required，且禁止额外属性。
+ * AiraMusic 仍会用 Zod 校验实际调用；不兼容时只关闭协议层 strict，避免 Responses 拒绝整次请求。
+ */
+export function isOpenAIToolSchemaStrictCompatible(schema: unknown): boolean {
+  return isOpenAIToolSchemaStrictCompatibleNode(schema, true);
+}
+
+function isOpenAIToolSchemaStrictCompatibleNode(schema: unknown, root: boolean): boolean {
+  if (!schema || typeof schema !== "object" || Array.isArray(schema)) return false;
+  const record = schema as Record<string, unknown>;
+
+  // Structured Outputs 的函数参数根必须是单个 object；allOf/not/条件分支不受支持。
+  if (root && record["type"] !== "object") return false;
+  if (
+    ["allOf", "not", "if", "then", "else", "dependentSchemas"].some(
+      (key) => record[key] !== undefined
+    )
+  ) {
+    return false;
+  }
+  if (record["oneOf"] !== undefined) return false;
+
+  for (const unionKey of ["anyOf"] as const) {
+    const branches = record[unionKey];
+    if (
+      Array.isArray(branches) &&
+      !branches.every((branch) => isOpenAIToolSchemaStrictCompatibleNode(branch, false))
+    ) {
+      return false;
+    }
+  }
+
+  if (record["type"] === "array") {
+    return isOpenAIToolSchemaStrictCompatibleNode(record["items"], false);
+  }
+  if (record["type"] !== "object") return true;
+
+  const properties =
+    record["properties"] &&
+    typeof record["properties"] === "object" &&
+    !Array.isArray(record["properties"])
+      ? (record["properties"] as Record<string, unknown>)
+      : {};
+  const required = new Set(
+    Array.isArray(record["required"])
+      ? record["required"].filter((item): item is string => typeof item === "string")
+      : []
+  );
+  if (record["additionalProperties"] !== false) return false;
+  if (Object.keys(properties).some((key) => !required.has(key))) return false;
+  return Object.values(properties).every((property) =>
+    isOpenAIToolSchemaStrictCompatibleNode(property, false)
+  );
 }
 
 export function toChatToolChoice(

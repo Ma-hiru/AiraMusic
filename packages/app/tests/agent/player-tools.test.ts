@@ -28,7 +28,7 @@ describe("Agent 播放器工具", () => {
     expect(addSchema.safeParse({ ids: [1], position: "middle" }).success).toBe(false);
     expect(removeSchema.safeParse({ scope: "tracks", ids: [1, 2] }).success).toBe(true);
     expect(removeSchema.safeParse({ scope: "tracks", ids: [] }).success).toBe(false);
-    expect(removeSchema.safeParse({ scope: "all" }).success).toBe(true);
+    expect(removeSchema.safeParse({ scope: "all", ids: null }).success).toBe(true);
     expect(removeSchema.safeParse({ scope: "all", ids: [1] }).success).toBe(false);
   });
 

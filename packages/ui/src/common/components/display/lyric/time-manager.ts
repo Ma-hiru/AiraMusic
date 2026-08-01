@@ -1,6 +1,8 @@
 import { Listenable } from "@/common/utils/listenable";
 import { BinarySearch } from "@/common/utils/binary-search";
 
+import type { LyricLineExtended } from "./utils";
+
 type TimeManagerEvent = "line-change" | "word-change";
 
 export class TimeManager extends Listenable<TimeManagerEvent> {
@@ -8,7 +10,7 @@ export class TimeManager extends Listenable<TimeManagerEvent> {
   private currentLineIndex = -1;
   private currentWordIndex = -1;
 
-  constructor(private lyric: LyricLine[]) {
+  constructor(private lyric: LyricLineExtended[]) {
     super();
     this.normalizeLyric();
   }
@@ -94,7 +96,7 @@ export class TimeManager extends Listenable<TimeManagerEvent> {
     return line.words[this.currentWordIndex];
   }
 
-  reset(lyric: LyricLine[]) {
+  reset(lyric: LyricLineExtended[]) {
     this.currentTime = 0;
     this.currentLineIndex = -1;
     this.currentWordIndex = -1;

@@ -15,8 +15,13 @@ export type StoreTypeForWindow = {
 };
 
 export type StoreTypeForConfig = {
-  enableAgent: boolean;
+  mcpPort: number;
+  mcpTools: string[];
+  mcpEnabled: boolean;
+  agentEnabled: boolean;
+  /** 旧版配置键，仅用于首次读取时迁移。 */
   cacheIndexKey: string;
+  enableAgent?: boolean;
   cache: CacheStoreConfig;
   enableDestructiveTools: boolean;
 };

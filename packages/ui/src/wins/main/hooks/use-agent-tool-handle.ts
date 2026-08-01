@@ -2,11 +2,11 @@ import { z } from "zod";
 import { useEffect, useCallback } from "react";
 import { RendererWindow } from "@/common/lib/window";
 import { RendererIPCMessageBus } from "@/common/lib/bus";
-import { RendererTool } from "@/common/lib/renderer-tool";
 import { useLatestRef } from "@/common/hooks/use-latest-ref";
 import { settingsStoreSnapshot } from "@/common/store/settings";
 import { useUser, userStoreSnapshot } from "@/common/store/user";
 import { SearchType, CommentSort, CommentType, TrackQuality } from "@/common/enum";
+import { RendererTool, type RendererToolDetail } from "@/common/lib/renderer-tool";
 import { NeteaseUser, NeteaseLyricSchema, NeteaseTrackRecord } from "@/common/netease/models";
 import {
   NeteaseServicesAlbum,
@@ -30,11 +30,13 @@ import RendererPlayerHandle from "@/wins/main/lib/handle";
 import type { AgentToolRequest } from "@mahiru/ipc/types";
 
 const AgentToolRequestControllers = new Map<string, AbortController>();
+const AgentToolRequestDetails = new Map<string, RendererToolDetail>();
 
-const beginAgentToolRequest = (id: string) => {
+const beginAgentToolRequest = (id: string, detail: RendererToolDetail) => {
   AgentToolRequestControllers.get(id)?.abort();
   const controller = new AbortController();
   AgentToolRequestControllers.set(id, controller);
+  AgentToolRequestDetails.set(id, detail);
   return controller;
 };
 
@@ -43,6 +45,7 @@ const cancelAgentToolRequest = (id: string) => {
   if (!controller) return;
   controller.abort();
   AgentToolRequestControllers.delete(id);
+  AgentToolRequestDetails.delete(id);
 };
 
 const finishAgentToolRequest = (id: string) => {
@@ -62,7 +65,8 @@ export function useAgentToolHandle() {
   const handleAgentToolRequest = useCallback(
     (request: AgentToolRequest) => {
       const id = request.id;
-      const controller = beginAgentToolRequest(id);
+      const detail = request.detail ?? "standard";
+      const controller = beginAgentToolRequest(id, detail);
       try {
         switch (request.tool) {
           case "agent-tool-player-action": {
@@ -96,12 +100,12 @@ export function useAgentToolHandle() {
           }
           case "agent-tool-track-lyrics":
             NeteaseServicesLyric.id(request.input.id, controller.signal)
-              .then((lyric) => sendOK(id, RendererTool.lyric(lyric, request.input.mode)))
+              .then((lyric) => sendOK(id, RendererTool.lyric(lyric, request.input.mode, detail)))
               .catch((err) => sendErr(id, String(err)));
             break;
           case "agent-tool-album-detail":
             NeteaseServicesAlbum.id(request.input.id, controller.signal)
-              .then((album) => sendOK(id, RendererTool.album(album)))
+              .then((album) => sendOK(id, RendererTool.album(album, detail)))
               .catch((err) => sendErr(id, String(err)));
             break;
           case "agent-tool-track-detail":
@@ -112,8 +116,10 @@ export function useAgentToolHandle() {
                     id,
                     RendererTool.list(
                       tracks,
-                      (track) => RendererTool.track(track, request.input.mode),
-                      { maxItems: request.input.ids.length }
+                      (track) => RendererTool.track(track, request.input.mode, detail),
+                      RendererTool.options(detail, {
+                        maxItems: request.input.ids.length
+                      })
                     )
                   );
                 else sendErr(id, "track not found or network error");
@@ -123,7 +129,7 @@ export function useAgentToolHandle() {
           case "agent-tool-artist-detail":
             NeteaseServicesArtist.id(request.input.id, controller.signal)
               .then((artist) => {
-                if (artist) sendOK(id, RendererTool.artist(artist));
+                if (artist) sendOK(id, RendererTool.artist(artist, detail));
                 else sendErr(id, "artist not found or network error");
               })
               .catch((err) => sendErr(id, String(err)));
@@ -131,7 +137,7 @@ export function useAgentToolHandle() {
           case "agent-tool-playlist-detail":
             NeteaseServicesPlaylist.id(request.input.id, controller.signal)
               .then((playlist) => {
-                if (playlist) sendOK(id, RendererTool.playlist(playlist));
+                if (playlist) sendOK(id, RendererTool.playlist(playlist, detail));
                 else sendErr(id, "playlist not found or network error");
               })
               .catch((err) => sendErr(id, String(err)));
@@ -179,7 +185,7 @@ export function useAgentToolHandle() {
               },
               controller.signal
             )
-              .then((comments) => sendOK(id, RendererTool.comments(comments)))
+              .then((comments) => sendOK(id, RendererTool.comments(comments, detail)))
               .catch((err) => sendErr(id, String(err)));
             break;
           }
@@ -211,10 +217,15 @@ export function useAgentToolHandle() {
               .then((res) =>
                 sendOK(
                   id,
-                  RendererTool.search(res.result, request.input.type, {
-                    page: request.input.page,
-                    pageSize: request.input.pageSize
-                  })
+                  RendererTool.search(
+                    res.result,
+                    request.input.type,
+                    {
+                      page: request.input.page,
+                      pageSize: request.input.pageSize
+                    },
+                    detail
+                  )
                 )
               )
               .catch((err) => sendErr(id, String(err)));
@@ -773,6 +784,7 @@ export function useAgentToolHandle() {
       removeCancelListener();
       for (const controller of AgentToolRequestControllers.values()) controller.abort();
       AgentToolRequestControllers.clear();
+      AgentToolRequestDetails.clear();
     };
   }, [handleAgentToolRequest]);
 }
@@ -915,16 +927,19 @@ const updateAgentSetting = (
 };
 
 const sendOK = (callID: string, data: JsonValue) => {
+  const detail = AgentToolRequestDetails.get(callID) ?? "standard";
   if (!finishAgentToolRequest(callID)) return;
+  AgentToolRequestDetails.delete(callID);
   RendererWindow.process.send("message_deliver_agent_tool_response", {
     id: callID,
     ok: true,
-    data: RendererTool.output(data)
+    data: RendererTool.output(data, detail)
   });
 };
 
 const sendErr = (callID: string, reason: string) => {
   if (!finishAgentToolRequest(callID)) return;
+  AgentToolRequestDetails.delete(callID);
   RendererWindow.process.send("message_deliver_agent_tool_response", {
     id: callID,
     ok: false,

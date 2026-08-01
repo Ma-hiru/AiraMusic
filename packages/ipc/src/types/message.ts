@@ -1,5 +1,6 @@
 import type { AIAgentEvent, AIAgentEventReplayItem } from "@mahiru/ai";
 
+import type { AgentFeatureSettingsState } from "./invoke";
 import type {
   AgentToolCancel,
   AgentToolRequest,
@@ -188,6 +189,7 @@ type MessageSingle = {
   message_cancel_agent_tool_request: AgentToolCancel;
   message_dispatch_agent_tool_request: AgentToolRequest;
   message_deliver_agent_tool_response: AgentToolResponse;
+  message_deliver_agent_feature_settings: AgentFeatureSettingsState;
   message_deliver_agent_chat_event: AIAgentEvent | AIAgentEventReplayItem;
 };
 

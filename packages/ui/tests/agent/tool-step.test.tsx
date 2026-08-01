@@ -29,7 +29,7 @@ const getStepDisclosure = (name: RegExp) => {
 };
 
 describe("Agent tool step disclosure", () => {
-  it("keeps running and completed results open by default", () => {
+  it("运行中与最终回答流式输出期间保持展开，回答完成后自动收起", () => {
     const { rerender } = render(<ToolStep item={createItem("running")} />);
     const disclosure = getStepDisclosure(/读取歌曲详情/);
 
@@ -37,6 +37,8 @@ describe("Agent tool step disclosure", () => {
 
     rerender(
       <ToolStep
+        autoCollapse={false}
+        collapseEnabled={false}
         item={createItem(
           "done",
           JSON.stringify({ name: "夜に駆ける", artists: [{ name: "YOASOBI" }] })
@@ -46,9 +48,21 @@ describe("Agent tool step disclosure", () => {
 
     expect(disclosure).toHaveAttribute("aria-expanded", "true");
     expect(screen.getByText("夜に駆ける")).toBeInTheDocument();
+
+    rerender(
+      <ToolStep
+        item={createItem(
+          "done",
+          JSON.stringify({ name: "夜に駆ける", artists: [{ name: "YOASOBI" }] })
+        )}
+        autoCollapse
+        collapseEnabled
+      />
+    );
+    expect(disclosure).toHaveAttribute("aria-expanded", "false");
   });
 
-  it("opens an already completed result by default", () => {
+  it("历史完成结果默认收起", () => {
     render(
       <ToolStep
         item={createItem("done", JSON.stringify({ name: "群青", artists: [{ name: "YOASOBI" }] }))}
@@ -56,11 +70,11 @@ describe("Agent tool step disclosure", () => {
     );
 
     const disclosure = getStepDisclosure(/读取歌曲详情/);
-    expect(disclosure).toHaveAttribute("aria-expanded", "true");
+    expect(disclosure).toHaveAttribute("aria-expanded", "false");
     const controlledRegion = document.getElementById(disclosure.getAttribute("aria-controls")!);
     expect(controlledRegion).toBeInTheDocument();
-    expect(controlledRegion).not.toHaveAttribute("hidden");
-    expect(screen.getByText("群青")).toBeInTheDocument();
+    expect(controlledRegion).toHaveAttribute("hidden");
+    expect(screen.queryByText("群青")).not.toBeInTheDocument();
   });
 
   it("keeps an error open by default", () => {
@@ -95,38 +109,71 @@ describe("Agent tool step disclosure", () => {
     expect(screen.queryByRole("button", { name: /读取歌曲详情/ })).not.toBeInTheDocument();
   });
 
-  it("does not override the user's disclosure choice when status changes", () => {
+  it("自动折叠策略不会覆盖用户的手动展开状态", () => {
     const { rerender } = render(
       <ToolStep item={createItem("done", JSON.stringify({ name: "夜に駆ける" }))} />
     );
     const disclosure = getStepDisclosure(/读取歌曲详情/);
 
-    fireEvent.click(disclosure);
     expect(disclosure).toHaveAttribute("aria-expanded", "false");
+    fireEvent.click(disclosure);
+    expect(disclosure).toHaveAttribute("aria-expanded", "true");
 
-    rerender(<ToolStep item={createItem("running", undefined)} />);
+    rerender(
+      <ToolStep
+        autoCollapse={false}
+        collapseEnabled={false}
+        item={createItem("done", JSON.stringify({ name: "夜に駆ける" }))}
+      />
+    );
+    expect(disclosure).toHaveAttribute("aria-expanded", "true");
+
+    rerender(
+      <ToolStep
+        item={createItem("done", JSON.stringify({ name: "夜に駆ける" }))}
+        autoCollapse
+        collapseEnabled
+      />
+    );
+    expect(disclosure).toHaveAttribute("aria-expanded", "true");
+
+    fireEvent.click(disclosure);
     expect(disclosure).toHaveAttribute("aria-expanded", "false");
 
     rerender(
       <ToolStep
-        item={createItem(
-          "error",
-          JSON.stringify({ error: { type: "timeout", message: "读取超时" } })
-        )}
+        autoCollapse={false}
+        item={createItem("done", JSON.stringify({ ok: true }))}
+        collapseEnabled
       />
     );
     expect(disclosure).toHaveAttribute("aria-expanded", "false");
+  });
 
-    fireEvent.click(disclosure);
-    expect(disclosure).toHaveAttribute("aria-expanded", "true");
+  it("完成但没有返回正文时仍显示通用结果预览", () => {
+    const item: AgentToolTimelineItem = {
+      id: "generic-tool-step",
+      type: "tool",
+      status: "done",
+      toolCalls: [
+        {
+          name: "agent-tool-custom-action",
+          callID: "generic-call",
+          arguments: "{}"
+        }
+      ],
+      toolResults: []
+    };
 
-    rerender(<ToolStep item={createItem("done", JSON.stringify({ ok: true }))} />);
-    expect(disclosure).toHaveAttribute("aria-expanded", "true");
+    render(<ToolStep item={item} autoCollapse={false} />);
+
+    expect(screen.getByText("工具已完成，但没有返回可展示的内容")).toBeInTheDocument();
   });
 
   it("keeps raw input and output behind a second disclosure", () => {
     render(
       <ToolStep
+        autoCollapse={false}
         item={createItem(
           "done",
           JSON.stringify({ name: "夜に駆ける", artists: [{ name: "YOASOBI" }] })
@@ -179,7 +226,7 @@ describe("Agent tool step disclosure", () => {
       ]
     };
 
-    render(<ToolStep item={item} />);
+    render(<ToolStep item={item} autoCollapse={false} />);
     const first = screen.getByRole("button", { name: "读取歌曲详情技术详情（第 1 项）" });
     const second = screen.getByRole("button", { name: "读取歌曲详情技术详情（第 2 项）" });
 
@@ -238,7 +285,7 @@ describe("Agent tool step disclosure", () => {
       ]
     };
 
-    render(<ToolStep item={item} />);
+    render(<ToolStep item={item} autoCollapse={false} />);
 
     expect(getStepDisclosure(/浏览网页/)).toHaveAttribute("aria-expanded", "true");
 
@@ -271,7 +318,14 @@ describe("Agent tool step disclosure", () => {
             url: "https://music.example.com/interview",
             author: "音乐编辑部",
             publishedAt: "2026-07-24T23:30:00-07:00",
-            contentChars: 3200
+            contentChars: 3200,
+            contentRange: {
+              start: 0,
+              end: 3200,
+              total: 9100,
+              hasMore: true,
+              nextCursor: 3200
+            }
           })
         }
       ]
@@ -279,7 +333,11 @@ describe("Agent tool step disclosure", () => {
 
     render(<ToolStep item={item} />);
 
+    fireEvent.click(getStepDisclosure(/浏览网页/));
+
     expect(screen.getByText(/作者 音乐编辑部/)).toBeInTheDocument();
     expect(screen.getByText(/2026年7月24日/)).toBeInTheDocument();
+    expect(screen.getByText("已读取 0–3,200 / 9,100 字符")).toBeInTheDocument();
+    expect(screen.getByText("可从 3,200 继续读取")).toBeInTheDocument();
   });
 });

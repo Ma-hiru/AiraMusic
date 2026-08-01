@@ -24,18 +24,21 @@ import {
 } from "./tool-presentation";
 
 interface ToolStepProps {
+  autoCollapse?: boolean;
   collapseEnabled?: boolean;
   item: AgentToolTimelineItem;
 }
 
-const ToolStep: FC<ToolStepProps> = ({ item, collapseEnabled }) => {
+const ToolStep: FC<ToolStepProps> = ({ item, autoCollapse, collapseEnabled }) => {
   const internalCallIDs = new Set(
     item.toolResults
       .filter((result) => isInternalAgentToolResult(result.output))
       .map((result) => result.callID)
   );
   if (!internalCallIDs.size) {
-    return <VisibleToolStep item={item} collapseEnabled={collapseEnabled} />;
+    return (
+      <VisibleToolStep item={item} autoCollapse={autoCollapse} collapseEnabled={collapseEnabled} />
+    );
   }
 
   const visibleItem: AgentToolTimelineItem = {
@@ -45,10 +48,16 @@ const ToolStep: FC<ToolStepProps> = ({ item, collapseEnabled }) => {
   };
   if (!visibleItem.toolCalls.length && !visibleItem.toolResults.length) return null;
 
-  return <VisibleToolStep item={visibleItem} collapseEnabled={collapseEnabled} />;
+  return (
+    <VisibleToolStep
+      item={visibleItem}
+      autoCollapse={autoCollapse}
+      collapseEnabled={collapseEnabled}
+    />
+  );
 };
 
-const VisibleToolStep: FC<ToolStepProps> = ({ item, collapseEnabled }) => {
+const VisibleToolStep: FC<ToolStepProps> = ({ item, autoCollapse, collapseEnabled }) => {
   const contentID = useAccessibleID("agent-tool-step");
   const calls = useMemo(() => {
     if (item.toolCalls.length) return item.toolCalls;
@@ -61,7 +70,8 @@ const VisibleToolStep: FC<ToolStepProps> = ({ item, collapseEnabled }) => {
   const hasError = item.toolResults.some((result) => isAgentToolError(result.output));
   const status = hasError ? "error" : item.status;
   const canCollapse = collapseEnabled ?? status !== "running";
-  const [open, setOpen] = useState(shouldAutoOpen);
+  const autoCollapseEnabled = autoCollapse ?? status === "done";
+  const [open, setOpen] = useState(() => getDefaultToolOpen(status, autoCollapseEnabled));
   const manuallyToggledRef = useRef(false);
   const itemIDRef = useRef(item.id);
   const primary = calls[0];
@@ -84,8 +94,14 @@ const VisibleToolStep: FC<ToolStepProps> = ({ item, collapseEnabled }) => {
       itemIDRef.current = item.id;
       manuallyToggledRef.current = false;
     }
-    if (!manuallyToggledRef.current) setOpen(shouldAutoOpen());
-  }, [item.id, status]);
+    if (status === "running") {
+      setOpen(true);
+      return;
+    }
+    if (!manuallyToggledRef.current) {
+      setOpen(getDefaultToolOpen(status, autoCollapseEnabled));
+    }
+  }, [autoCollapseEnabled, item.id, status]);
 
   const toggleOpen = () => {
     if (open && !canCollapse) return;
@@ -96,9 +112,9 @@ const VisibleToolStep: FC<ToolStepProps> = ({ item, collapseEnabled }) => {
   return (
     <section
       className={cx(
-        "relative min-w-0 max-w-[min(100%,48rem)] overflow-hidden rounded-lg border",
-        "border-white/[0.075] bg-white/[0.018] text-[12px] text-white/68",
-        "transition-colors duration-200 hover:border-white/10"
+        "relative w-full min-w-0 max-w-[min(100%,48rem)] overflow-hidden rounded-xl border",
+        "border-white/6 bg-white/[0.014] text-[12px] text-white/68",
+        "transition-colors duration-200 hover:border-white/9"
       )}
       data-status={status}>
       <span
@@ -108,8 +124,8 @@ const VisibleToolStep: FC<ToolStepProps> = ({ item, collapseEnabled }) => {
       <button
         className={cx(
           `
-            group flex h-11 w-full items-center gap-2.5 bg-transparent px-3 text-left
-            outline-none transition-colors duration-150 hover:bg-white/[0.05]
+            group flex h-10 w-full items-center gap-2 bg-transparent px-3 text-left
+            outline-none transition-colors duration-150 hover:bg-white/[0.035]
             focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white/45
           `,
           open && !canCollapse ? "cursor-default" : "cursor-pointer"
@@ -122,41 +138,35 @@ const VisibleToolStep: FC<ToolStepProps> = ({ item, collapseEnabled }) => {
         title={
           open && !canCollapse ? "回复完成后可收起工具结果" : open ? "收起工具结果" : "展开工具结果"
         }>
-        <span className="flex size-6 shrink-0 items-center justify-center rounded-md border border-white/7 bg-white/[0.045] text-white/56 shadow-inner shadow-white/[0.025]">
-          <presentation.icon className="size-3.5" aria-hidden="true" />
-        </span>
+        <presentation.icon
+          className={cx("size-3.5 shrink-0", statusVisual.icon)}
+          aria-hidden="true"
+        />
         <div className="flex min-w-0 flex-1 items-baseline gap-1.5">
-          <span className="shrink-0 text-[11px] font-semibold tracking-[-0.01em] text-white/80">
+          <span className="shrink-0 text-[11px] font-semibold tracking-[-0.01em] text-white/78">
             {presentation.label}
           </span>
-          <span className="truncate text-[10px] text-white/40">· {summary}</span>
+          <span className="truncate text-[10px] text-white/36">· {summary}</span>
         </div>
         <div className="flex shrink-0 items-center gap-1.5">
           {calls.length > 1 && (
-            <span className="text-[9px] tabular-nums text-white/30">{calls.length} 项</span>
+            <span className="text-[9px] tabular-nums text-white/28">{calls.length} 项</span>
           )}
-          <span
-            className={cx(
-              "hidden h-5 items-center gap-1 rounded-full border px-1.5 text-[9px] font-medium sm:flex",
-              statusVisual.badge
-            )}>
-            <StatusIcon status={status} />
-            {getStatusLabel(status)}
-          </span>
-          <span className="sm:hidden" aria-label={getStatusLabel(status)}>
-            <StatusIcon status={status} />
+          <span className="flex items-center gap-1 text-[9px] font-medium">
+            <span className={cx("size-1.5 rounded-full", statusVisual.dot)} aria-hidden="true" />
+            <span className={statusVisual.text}>{getStatusLabel(status)}</span>
           </span>
           {open && canCollapse ? (
-            <ChevronDown className="size-3 text-white/30" aria-hidden="true" />
+            <ChevronDown className="size-3 text-white/26" aria-hidden="true" />
           ) : !open ? (
-            <ChevronRight className="size-3 text-white/30" aria-hidden="true" />
+            <ChevronRight className="size-3 text-white/26" aria-hidden="true" />
           ) : null}
         </div>
       </button>
 
       <div
         id={contentID}
-        className="min-w-0 border-t border-white/7 bg-black/[0.035]"
+        className="min-w-0 border-t border-white/6 bg-black/[0.03]"
         hidden={!open}>
         {open && (
           <>
@@ -207,6 +217,15 @@ const ToolCallDetail: FC<{
   const semanticResult = getAgentToolSemanticResult(name, output);
   const failed = isAgentToolError(output) || (status === "error" && !output);
   const waiting = !output && status === "running";
+  const resultPreview =
+    semanticResult ??
+    (!web && !failed && !waiting
+      ? {
+          title: "工具已完成，但没有返回可展示的内容",
+          facts: [],
+          items: []
+        }
+      : null);
 
   return (
     <article className={cx("min-w-0 px-3 py-3", divided && "border-t border-white/7")}>
@@ -220,13 +239,16 @@ const ToolCallDetail: FC<{
       )}
 
       {web && <WebToolSummary details={web} running={waiting} />}
-      {!web && semanticResult && !failed && <SemanticToolSummary result={semanticResult} />}
+      {!web && resultPreview && !failed && <SemanticToolSummary result={resultPreview} />}
 
       {waiting && (
         <div
-          className="flex items-center gap-2 rounded-r-lg border-l border-sky-200/24 bg-sky-200/[0.025] px-3 py-2 text-[11px] text-white/45"
+          className="flex items-center gap-2 rounded-r-lg border-l border-[color-mix(in_srgb,var(--theme-color-main)_32%,transparent)] bg-[color-mix(in_srgb,var(--theme-color-main)_4%,transparent)] px-3 py-2 text-[11px] text-white/45"
           role="status">
-          <LoaderCircle className="size-3.5 animate-spin text-sky-100/68" aria-hidden="true" />
+          <LoaderCircle
+            className="size-3.5 animate-spin text-[color-mix(in_srgb,var(--theme-color-main)_68%,white)]"
+            aria-hidden="true"
+          />
           正在等待结果
         </div>
       )}
@@ -284,8 +306,8 @@ const ToolCallDetail: FC<{
 });
 
 const SemanticToolSummary: FC<{ result: AgentToolSemanticResult }> = ({ result }) => (
-  <div className="min-w-0 rounded-r-lg border-l border-emerald-200/20 bg-emerald-100/[0.022] px-3 py-2.5">
-    <div className="flex items-center gap-1.5 text-[9px] font-medium tracking-[0.1em] text-emerald-100/42">
+  <div className="min-w-0 rounded-r-lg border-l border-[color-mix(in_srgb,var(--theme-color-main)_30%,transparent)] bg-[color-mix(in_srgb,var(--theme-color-main)_4%,transparent)] px-3 py-2.5">
+    <div className="flex items-center gap-1.5 text-[9px] font-medium tracking-[0.1em] text-[color-mix(in_srgb,var(--theme-color-main)_55%,white)]">
       <CheckCircle2 className="size-3" aria-hidden="true" />
       工具结果
     </div>
@@ -311,7 +333,7 @@ const SemanticToolSummary: FC<{ result: AgentToolSemanticResult }> = ({ result }
           <li
             key={`${item.title}-${index}`}
             className="flex min-w-0 items-baseline gap-2 border-b border-white/[0.045] py-1.5 last:border-b-0">
-            <span className="w-3 shrink-0 text-[8px] font-medium tabular-nums text-emerald-100/28">
+            <span className="w-3 shrink-0 text-[8px] font-medium tabular-nums text-[color-mix(in_srgb,var(--theme-color-main)_42%,white)]">
               {String(index + 1).padStart(2, "0")}
             </span>
             <div className="min-w-0 flex-1">
@@ -335,9 +357,12 @@ const WebToolSummary: FC<{
     details.results.length ? `${details.results.length} 条结果` : "",
     details.linkCount === undefined ? "" : `${details.linkCount} 个链接`,
     details.contentChars === undefined ? "" : `${formatChars(details.contentChars)} 字符`,
+    details.find ? `${details.find.totalMatches} 处匹配` : "",
     details.truncated ? "内容已裁剪" : ""
   ].filter(Boolean);
-  const heading = details.query ? "网页搜索" : "网页来源";
+  const contentRange = details.contentRange;
+  const find = details.find;
+  const heading = details.query ? "网页搜索" : details.action === "find" ? "网页定位" : "网页来源";
   const searchScope = details.query
     ? [details.scopeLabel, details.scopeDomains.join(" / ")].filter(Boolean).join(" · ")
     : "";
@@ -347,10 +372,15 @@ const WebToolSummary: FC<{
   ].filter(Boolean);
 
   return (
-    <div className="min-w-0 rounded-r-lg border-l border-sky-200/22 bg-sky-100/[0.022] px-3 py-2.5">
+    <div className="min-w-0 rounded-r-lg border-l border-[color-mix(in_srgb,var(--theme-color-main)_30%,transparent)] bg-[color-mix(in_srgb,var(--theme-color-main)_4%,transparent)] px-3 py-2.5">
       <div className="flex min-w-0 items-center gap-2">
-        <Globe2 className="size-3 text-sky-100/42" aria-hidden="true" />
-        <span className="text-[9px] font-medium tracking-[0.1em] text-sky-100/42">{heading}</span>
+        <Globe2
+          className="size-3 text-[color-mix(in_srgb,var(--theme-color-main)_55%,white)]"
+          aria-hidden="true"
+        />
+        <span className="text-[9px] font-medium tracking-[0.1em] text-[color-mix(in_srgb,var(--theme-color-main)_55%,white)]">
+          {heading}
+        </span>
         {details.engine && (
           <span className="text-[9px] text-white/25">· {formatEngine(details.engine)}</span>
         )}
@@ -379,13 +409,42 @@ const WebToolSummary: FC<{
           ))}
         </div>
       )}
+      {contentRange && (
+        <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[9px] text-[color-mix(in_srgb,var(--theme-color-main)_50%,white)]">
+          <span>
+            已读取 {formatWebRangeNumber(contentRange.start)}–
+            {formatWebRangeNumber(contentRange.end)} / {formatWebRangeNumber(contentRange.total)}{" "}
+            字符
+          </span>
+          {contentRange.hasMore ? (
+            <span>
+              {contentRange.nextCursor === undefined
+                ? "仍有正文可继续读取"
+                : `可从 ${formatWebRangeNumber(contentRange.nextCursor)} 继续读取`}
+            </span>
+          ) : (
+            <span>正文已读完</span>
+          )}
+        </div>
+      )}
+      {find && (
+        <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[9px] text-[color-mix(in_srgb,var(--theme-color-main)_50%,white)]">
+          <span>
+            “{find.pattern}” · 已返回 {find.offset + 1}–{find.offset + find.returnedMatches} /{" "}
+            {find.totalMatches}
+          </span>
+          {find.hasMore && find.nextOffset !== undefined && (
+            <span>可从第 {find.nextOffset + 1} 处继续定位</span>
+          )}
+        </div>
+      )}
       {details.results.length > 0 && (
         <ol className="mt-2.5 border-t border-white/7 pt-1.5" aria-label="网页来源">
           {details.results.slice(0, 3).map((result, index) => (
             <li
               key={result.url}
               className="flex min-w-0 items-start gap-2 border-b border-white/[0.045] py-1.5 last:border-b-0">
-              <span className="mt-0.5 w-3 shrink-0 text-[8px] font-medium tabular-nums text-sky-100/30">
+              <span className="mt-0.5 w-3 shrink-0 text-[8px] font-medium tabular-nums text-[color-mix(in_srgb,var(--theme-color-main)_42%,white)]">
                 {String(index + 1).padStart(2, "0")}
               </span>
               <div className="min-w-0 flex-1">
@@ -395,7 +454,7 @@ const WebToolSummary: FC<{
                   {result.title}
                 </div>
                 <div className="mt-0.5 flex min-w-0 items-center gap-1.5 text-[9px] text-white/28">
-                  <span className="shrink-0 rounded bg-white/[0.035] px-1 py-px text-sky-100/34">
+                  <span className="shrink-0 rounded bg-[color-mix(in_srgb,var(--theme-color-main)_7%,transparent)] px-1 py-px text-[color-mix(in_srgb,var(--theme-color-main)_52%,white)]">
                     {result.domain}
                   </span>
                   {result.snippet && <span className="truncate">· {result.snippet}</span>}
@@ -435,34 +494,33 @@ const CodeBlock: FC<{ label: string; value: string }> = memo(({ label, value }) 
   </div>
 ));
 
-const StatusIcon: FC<{ status: AgentToolTimelineItem["status"] }> = ({ status }) => {
-  if (status === "running") {
-    return <LoaderCircle className="size-3.5 shrink-0 animate-spin text-sky-100/72" />;
-  }
-  if (status === "error") {
-    return <AlertCircle className="size-3.5 shrink-0 text-red-100/72" />;
-  }
-  return <CheckCircle2 className="size-3.5 shrink-0 text-emerald-100/68" />;
-};
+const getDefaultToolOpen = (status: AgentToolTimelineItem["status"], autoCollapse: boolean) =>
+  status === "running" || status === "error" || !autoCollapse;
 
-const shouldAutoOpen = () => true;
+const formatWebRangeNumber = (value: number) => value.toLocaleString("zh-CN");
 
 const getStatusVisual = (status: AgentToolTimelineItem["status"]) => {
   if (status === "running") {
     return {
-      rail: "animate-pulse bg-sky-200/65",
-      badge: "border-sky-200/12 bg-sky-200/[0.055] text-sky-100/62"
+      rail: "animate-pulse bg-[color-mix(in_srgb,var(--theme-color-main)_72%,transparent)]",
+      dot: "bg-[color-mix(in_srgb,var(--theme-color-main)_85%,white)] shadow-[0_0_6px_color-mix(in_srgb,var(--theme-color-main)_60%,transparent)]",
+      icon: "text-[color-mix(in_srgb,var(--theme-color-main)_72%,white)]",
+      text: "text-[color-mix(in_srgb,var(--theme-color-main)_64%,white)]"
     };
   }
   if (status === "error") {
     return {
       rail: "bg-red-200/70",
-      badge: "border-red-200/13 bg-red-200/[0.055] text-red-100/66"
+      dot: "bg-red-300/85",
+      icon: "text-red-100/72",
+      text: "text-red-100/62"
     };
   }
   return {
-    rail: "bg-emerald-200/45",
-    badge: "border-emerald-200/10 bg-emerald-200/[0.045] text-emerald-100/58"
+    rail: "bg-white/12",
+    dot: "bg-white/22",
+    icon: "text-white/40",
+    text: "text-white/30"
   };
 };
 

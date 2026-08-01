@@ -117,7 +117,7 @@ const AgentPage: FC<object> = () => {
       <main className="relative top-11 flex h-[calc(100%-44px)] min-h-0 w-screen flex-row px-2 pb-2.5 sm:px-2.5 sm:pb-2.5">
         {compactLayout && openList && (
           <button
-            className="absolute inset-0 z-20 cursor-default bg-black/38 backdrop-blur-[2px]"
+            className="absolute inset-0 z-20 cursor-default bg-black/16"
             type="button"
             aria-label="关闭对话列表"
             onClick={() => setOpenList(false)}

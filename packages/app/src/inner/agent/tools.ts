@@ -145,6 +145,7 @@ const requestAgentTool = <TTool extends AgentToolName>(
       type: "message_dispatch_agent_tool_request",
       data: {
         id,
+        detail: context.outputDetail,
         conversationID: context.conversationID,
         tool,
         input
@@ -558,25 +559,36 @@ export class AgentToolPlayerQueueRemove {
   readonly description =
     "从当前播放队列移除指定歌曲或清空队列。此操作会改变现有队列，仅在用户允许破坏性工具时可用";
 
-  inputSchema = z.discriminatedUnion("scope", [
-    z
-      .object({
-        scope: z.literal("tracks"),
-        ids: z.array(z.number().int().positive()).min(1).max(50).describe("要从队列移除的歌曲 ID")
-      })
-      .strict(),
-    z
-      .object({
-        scope: z.literal("all").describe("清空整个播放队列")
-      })
-      .strict()
-  ]);
+  inputSchema = z
+    .object({
+      scope: z.enum(["tracks", "all"]).describe("tracks 移除指定歌曲；all 清空整个队列"),
+      ids: z
+        .array(z.number().int().positive())
+        .min(1)
+        .max(50)
+        .nullable()
+        .describe("scope=tracks 时填写歌曲 ID；scope=all 时必须为 null")
+    })
+    .strict()
+    .superRefine((input, context) => {
+      if (input.scope === "tracks" && !input.ids) {
+        context.addIssue({ code: "custom", path: ["ids"], message: "移除歌曲时必须提供 ids" });
+      }
+      if (input.scope === "all" && input.ids !== null) {
+        context.addIssue({ code: "custom", path: ["ids"], message: "清空队列时 ids 必须为 null" });
+      }
+    });
 
   execute(
     input: z.infer<typeof this.inputSchema>,
     context: LLMToolContext
   ): Promise<AIResult<JsonValue>> {
-    return requestAgentTool(context, "agent-tool-player-queue-remove", input);
+    // schema 的 superRefine 已保证 tracks 时 ids 非空；收窄为 IPC 的可辨识联合
+    const payload =
+      input.scope === "all"
+        ? { scope: "all" as const }
+        : { scope: "tracks" as const, ids: input.ids ?? [] };
+    return requestAgentTool(context, "agent-tool-player-queue-remove", payload);
   }
 }
 

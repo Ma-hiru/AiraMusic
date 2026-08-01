@@ -310,28 +310,51 @@ export class RendererWindow extends Listenable<"react-ready" | RendererWindowEve
     RendererIPC.NormalChannel.send("event_window_open", this.type);
   }
 
-  reactReadyAwait() {
-    const { promise, resolve } = Promise.withResolvers<void>();
+  reactReadyAwait(options: { signal?: AbortSignal } = {}) {
+    const { reject, promise, resolve } = Promise.withResolvers<void>();
+    let settled = false;
+    let readyTimer: Undefinable<ReturnType<typeof setTimeout>>;
+    const listenerState: { remove?: NormalFunc } = {};
+    const cleanup = () => {
+      listenerState.remove?.();
+      options.signal?.removeEventListener("abort", abort);
+      if (readyTimer) clearTimeout(readyTimer);
+    };
+    const finish = (callback: NormalFunc) => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      callback();
+    };
+    const abort = () => {
+      const error = new Error("窗口就绪等待已取消");
+      error.name = "AbortError";
+      finish(() => reject(error));
+    };
 
-    promise.finally(() => {
+    void promise.then(() => {
       // 新建窗口自动分发一次基本的 bus
       // 额外的 bus 可以自行 dispatch
       RendererIPC.MessageChannel.commit("bus_dispatch_update", ["theme", "track-meta"]);
     });
 
+    if (options.signal?.aborted) {
+      abort();
+      return promise;
+    }
     if (this.reactReady) {
       this.focus();
-      resolve();
+      finish(resolve);
       return promise;
     }
 
-    let removeListener: Undefinable<NormalFunc> = undefined;
     const listener = () => {
       if (!this.reactReady) return;
-      removeListener?.();
-      setTimeout(resolve, 100);
+      listenerState.remove?.();
+      readyTimer = setTimeout(() => finish(resolve), 100);
     };
-    removeListener = this.addEventListener("react-ready", listener);
+    listenerState.remove = this.addEventListener("react-ready", listener);
+    options.signal?.addEventListener("abort", abort, { once: true });
 
     if (this.opened) {
       RendererIPC.MessageChannel.send("bus_deliver_react_ready", this.type, {

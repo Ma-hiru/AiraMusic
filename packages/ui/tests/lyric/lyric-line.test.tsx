@@ -112,13 +112,13 @@ describe("LyricLine", () => {
     return (
       <LyricLineComponent
         index={0}
-        line={line}
         hasRm={false}
         hasTl={false}
         rmActive={false}
         tlActive={false}
         noteActive={false}
-        timeManager={new TimeManager([line])}
+        line={{ ...line, wait: false }}
+        timeManager={new TimeManager([{ ...line, wait: false }])}
         active
         {...props}
       />

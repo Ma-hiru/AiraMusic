@@ -4,6 +4,8 @@ export type AgentTokenUsage = {
   input?: number;
   total?: number;
   output?: number;
+  requests?: number;
+  lastInput?: number;
   reasoning?: number;
   cacheWrite?: number;
   cachedInput?: number;

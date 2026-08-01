@@ -44,7 +44,13 @@ export interface AIAgentOptions {
     maxOutputChars?: number;
     /** 单次 Agent 循环内所有工具结果首次进入上下文时的累计字符预算。 */
     maxTotalOutputChars?: number;
+    /** 后续模型步骤中保留的工具结果滑动窗口；旧结果会替换为紧凑占位。 */
+    maxRetainedToolOutputChars?: number;
     parallelSafeNames?: Iterable<string>;
+    /** 单轮内相同参数可复用结果的稳定只读工具。 */
+    reuseSafeNames?: Iterable<string>;
+    /** 允许由工具目录在当前循环的后续步骤按需加载的工具。 */
+    activatableNames?: Iterable<string>;
     /** 中止后可安全重新执行的工具；默认不信任任何工具。 */
     retrySafeNames?: Iterable<string>;
     serializeOutput?: NormalFunc<[output: unknown], string>;

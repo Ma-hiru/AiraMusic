@@ -61,6 +61,7 @@ export default defineConfig(({ mode }) => {
     clearScreen: false,
     server: {
       port: Number(env.VITE_SERVER_PORT),
+      strictPort: true,
       proxy: {
         "/api": {
           target: `http://127.0.0.1:${env.NCM_SERVER_PORT}`,

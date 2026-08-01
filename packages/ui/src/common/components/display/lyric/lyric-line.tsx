@@ -2,16 +2,17 @@ import { cx } from "@emotion/css";
 import { memo, type FC, useMemo, useState, useCallback, useLayoutEffect } from "react";
 
 import LyricWord from "./lyric-word";
+import type { LyricLineExtended } from "./utils";
 import type { TimeManager } from "./time-manager";
 
 interface LyricLineProps {
   index: number;
   active: boolean;
-  line: LyricLine;
   spring?: boolean;
   fontSize?: number;
   activeColor?: string;
   inactiveColor?: string;
+  line: LyricLineExtended;
   hasRm: Optional<boolean>;
   hasTl: Optional<boolean>;
   rmActive: Optional<boolean>;
@@ -128,9 +129,10 @@ const LyricLine: FC<LyricLineProps> = ({
                   word={word}
                   wordIndex={index}
                   lineActive={active}
+                  waitLine={!!line.wait}
                   activeColor={activeColor}
                   timeManager={timeManager}
-                  currentWordIndex={wordIndex}
+                  activeWordIndex={wordIndex}
                   inactiveColor={inactiveColor}
                   singleWord={line.words.length === 1}
                   notesContent={inlineNoteContent || undefined}
@@ -143,7 +145,9 @@ const LyricLine: FC<LyricLineProps> = ({
           <LyricWord
             wordIndex={0}
             word={allWord}
-            currentWordIndex={0}
+            lineActive={false}
+            activeWordIndex={0}
+            waitLine={!!line.wait}
             activeColor={activeColor}
             timeManager={timeManager}
             inactiveColor={inactiveColor}
