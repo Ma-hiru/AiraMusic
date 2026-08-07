@@ -80,7 +80,7 @@ const ConfigPicker: FC<ConfigPickerProps> = ({
     <>
       <button
         ref={triggerRef}
-        className="flex h-8 max-w-64 cursor-pointer items-center gap-2 rounded-lg border border-white/8 bg-white/[0.035] px-2.5 text-left outline-none transition-colors hover:bg-white/7 focus-visible:ring-2 focus-visible:ring-white/40 disabled:pointer-events-none disabled:opacity-45"
+        className="flex h-8 max-w-64 cursor-pointer items-center gap-2 rounded-lg px-2 text-left outline-none transition-colors hover:bg-white/6 focus-visible:ring-2 focus-visible:ring-white/40 disabled:pointer-events-none disabled:opacity-45"
         type="button"
         aria-label="模型配置"
         disabled={disabled}
@@ -90,15 +90,17 @@ const ConfigPicker: FC<ConfigPickerProps> = ({
         <span
           className={cx(
             "size-1.5 shrink-0 rounded-full",
-            activeConfig ? "bg-emerald-300/72" : "bg-white/25"
+            activeConfig
+              ? "bg-[color-mix(in_srgb,var(--theme-color-main)_85%,white)] shadow-[0_0_5px_color-mix(in_srgb,var(--theme-color-main)_55%,transparent)]"
+              : "bg-amber-200/70"
           )}
         />
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-[10px] font-medium text-white/65">
+          <span className="block truncate text-[10.5px] font-medium text-white/68">
             {activeConfig?.name ?? "选择模型"}
           </span>
           {activeConfig && (
-            <span className="mt-px block truncate text-[8px] text-white/25">
+            <span className="mt-px block truncate font-mono text-[8px] text-white/26">
               {activeConfig.config.model}
             </span>
           )}

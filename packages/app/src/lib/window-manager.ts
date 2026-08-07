@@ -50,6 +50,14 @@ export class MainWindowManager {
     const window = new BrowserWindow(options || undefined);
     this.BrowserWindowList.set(id, window);
     this.bindWindowBus(window, id);
+
+    window.addListener("close", (e) => {
+      if (window.isDestroyed()) {
+        this.BrowserWindowList.delete(id);
+        e.preventDefault();
+      }
+    });
+
     return window;
   }
 

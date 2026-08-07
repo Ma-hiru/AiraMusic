@@ -1,4 +1,4 @@
-import { app, dialog, BrowserWindow } from "electron";
+import { app, dialog } from "electron";
 import { Log } from "@/lib/log";
 import { getArgFlag } from "@/utils/args";
 import { MainRuntime } from "@/lib/runtime";
@@ -43,7 +43,7 @@ export class MainWindowPreset {
       id: "login",
       handleExits: "DESTROY",
       memoPos: false,
-      loadURL: (port: number) => `http://localhost:${port}/login.html`
+      loadURL: (port) => `http://localhost:${port}/login.html`
     };
   }
 
@@ -73,7 +73,7 @@ export class MainWindowPreset {
       id: "image",
       handleExits: "IGNORE",
       memoPos: false,
-      loadURL: (port: number) => `http://localhost:${port}/image.html`
+      loadURL: (port) => `http://localhost:${port}/image.html`
     };
   }
 
@@ -114,14 +114,11 @@ export class MainWindowPreset {
       id: "lyric",
       handleExits: "DESTROY",
       memoPos: true,
-      loadURL: (port: number) => `http://localhost:${port}/lyric.html`,
-      onCreate: (win: BrowserWindow) => {
-        if (isDarwin) win.setWindowButtonVisibility(false);
-        if (process.platform === "linux") {
-          win.setAlwaysOnTop(true);
-        } else {
-          win.setAlwaysOnTop(true, "floating");
-        }
+      loadURL: (port) => `http://localhost:${port}/lyric.html`,
+      onCreate: (win) => {
+        if (process.platform === "darwin") win.setWindowButtonVisibility(false);
+        if (process.platform === "linux") win.setAlwaysOnTop(true);
+        else win.setAlwaysOnTop(true, "floating");
       }
     };
   }
@@ -160,15 +157,60 @@ export class MainWindowPreset {
       id: "miniplayer",
       handleExits: "IGNORE",
       memoPos: true,
-      loadURL: (port: number) => `http://localhost:${port}/mini.html`,
-      onCreate: (win: BrowserWindow) => {
-        if (isDarwin) win.setWindowButtonVisibility(false);
+      loadURL: (port) => `http://localhost:${port}/mini.html`,
+      onCreate: (win) => {
         win.hide();
-        if (process.platform === "linux") {
-          win.setAlwaysOnTop(true);
-        } else {
-          win.setAlwaysOnTop(true, "floating");
-        }
+
+        if (process.platform === "darwin") win.setWindowButtonVisibility(false);
+        if (process.platform === "linux") win.setAlwaysOnTop(true);
+        else win.setAlwaysOnTop(true, "floating");
+      }
+    };
+  }
+
+  static get radio(): AppWindowCreatorProps {
+    const { max, min, base } = MainScreenResolver.primary.adaptiveWindowSizePreset(
+      MainWindowConstants.WINDOW_BASE_SIZE.radio
+    );
+    const isDarwin = process.platform === "darwin";
+
+    return {
+      options: {
+        width: base.width,
+        height: base.height,
+        webPreferences: {
+          preload: MainPathResolver.preloadPath
+        },
+        alwaysOnTop: true,
+        title: process.env.APP_NAME,
+        resizable: true,
+        minHeight: min.height,
+        maxHeight: max.height,
+        minWidth: min.width,
+        maxWidth: max.width,
+        minimizable: false,
+        maximizable: false,
+        fullscreen: false,
+        // mac 上 titleBarStyle:"hidden" 会强制画出红绿灯，与自带关闭按钮冲突
+        ...(isDarwin ? {} : { titleBarStyle: "hidden" as const }),
+        frame: false,
+        type: "toolbar",
+        skipTaskbar: true,
+        show: false,
+        icon: MainPathResolver.appLogoPath
+      },
+      id: "radio",
+      handleExits: "IGNORE",
+      memoPos: true,
+      loadURL: (port) => `http://localhost:${port}/radio.html`,
+      onCreate: (win) => {
+        win.hide();
+
+        if (process.platform === "darwin") win.setWindowButtonVisibility(false);
+        else if (process.platform === "linux") win.setAlwaysOnTop(true);
+        else win.setAlwaysOnTop(true, "floating");
+
+        (MainRuntime.isDev || getArgFlag("devtools")) && win.webContents.openDevTools();
       }
     };
   }
@@ -199,8 +241,8 @@ export class MainWindowPreset {
       memoPos: true,
       id: "main",
       handleExits: "IGNORE",
-      loadURL: (port: number) => `http://localhost:${port}`,
-      onCreate: (win: BrowserWindow) => {
+      loadURL: (port) => `http://localhost:${port}`,
+      onCreate: (win) => {
         win.setMenuBarVisibility(false);
         (MainRuntime.isDev || getArgFlag("devtools")) && win.webContents.openDevTools();
       }
@@ -273,8 +315,8 @@ export class MainWindowPreset {
       id: "tray",
       handleExits: "IGNORE",
       memoPos: true,
-      loadURL: (port: number) => `http://localhost:${port}/tray.html`,
-      onCreate: (win: BrowserWindow) => {
+      loadURL: (port) => `http://localhost:${port}/tray.html`,
+      onCreate: (win) => {
         // 菜单栏弹窗需要盖在全屏应用之上
         win.setAlwaysOnTop(true, "pop-up-menu");
         // skipTransformProcessType：避免 macOS 把进程改成 accessory，导致 Dock 图标闪一下后消失
@@ -311,8 +353,8 @@ export class MainWindowPreset {
       memoPos: true,
       id: "display",
       handleExits: "IGNORE",
-      loadURL: (port: number) => `http://localhost:${port}/display.html`,
-      onCreate: (win: BrowserWindow) => {
+      loadURL: (port) => `http://localhost:${port}/display.html`,
+      onCreate: (win) => {
         (MainRuntime.isDev || getArgFlag("devtools")) && win.webContents.openDevTools();
       }
     };
@@ -345,8 +387,8 @@ export class MainWindowPreset {
       memoPos: true,
       id: "comments",
       handleExits: "IGNORE",
-      loadURL: (port: number) => `http://localhost:${port}/comments.html`,
-      onCreate: (win: BrowserWindow) => {
+      loadURL: (port) => `http://localhost:${port}/comments.html`,
+      onCreate: (win) => {
         (MainRuntime.isDev || getArgFlag("devtools")) && win.webContents.openDevTools();
       }
     };
@@ -375,8 +417,8 @@ export class MainWindowPreset {
       memoPos: true,
       id: "agent",
       handleExits: "IGNORE",
-      loadURL: (port: number) => `http://localhost:${port}/agent.html`,
-      onCreate: (win: BrowserWindow) => {
+      loadURL: (port) => `http://localhost:${port}/agent.html`,
+      onCreate: (win) => {
         (MainRuntime.isDev || getArgFlag("devtools")) && win.webContents.openDevTools();
       }
     };

@@ -4,7 +4,7 @@ import { createLog } from "@mahiru/log";
 import { LLMPromptBuilder } from "@/prompt";
 import { LLMContextComposer } from "@/context";
 import { LLMConversation } from "@/conversations";
-import { LLMTool, LLMToolRegistry } from "@/tools";
+import { LLMTool, LLMToolRegistry, type LLMToolContext } from "@/tools";
 import { LLMLoop, type LLMLoopEvent, type LLMLoopRunResult } from "@/loop";
 import {
   LLMProvider,
@@ -258,7 +258,50 @@ describe("LLMLoop", () => {
     ]);
   });
 
-  it("在结果首次进入上下文时限制本轮工具输出总量", async () => {
+  it("延迟工具只在目录工具授权后进入后续请求", async () => {
+    const directoryCall = {
+      name: "tool_directory",
+      callID: "directory_1",
+      arguments: "{}"
+    };
+    const provider = new FakeProvider([
+      response({ toolCalls: [directoryCall], finishReason: "tool_calls" }),
+      response({ text: "已加载所需能力" })
+    ]);
+    const conversation = LLMConversation.create({ id: "deferred-tools" }).unwrap();
+    const registry = new LLMToolRegistry();
+    registry
+      .register([new DeferredToolDirectory(), new DeferredReadTool(), new ForbiddenWriteTool()])
+      .unwrap();
+
+    const run = await collectRun(
+      LLMLoop.run({
+        signal,
+        conversation,
+        input: "查找能力",
+        tools: {
+          registry,
+          strict: true,
+          choice: "auto",
+          selectedNames: ["tool_directory"],
+          activatableNames: ["deferred_read"]
+        },
+        provider,
+        config: { model: "test", apiKey: "test-key" },
+        promptBuilder: new LLMPromptBuilder(),
+        maxSteps: 2
+      })
+    );
+
+    expect(run.result.isOk()).toBe(true);
+    expect(provider.requests[0]?.tools?.map((tool) => tool.name)).toEqual(["tool_directory"]);
+    expect(provider.requests[1]?.tools?.map((tool) => tool.name)).toEqual([
+      "tool_directory",
+      "deferred_read"
+    ]);
+  });
+
+  it("每个模型步骤独立限制工具输出，后续分页不会被前一步耗尽", async () => {
     const firstCall = { name: "large_output", callID: "large-1", arguments: "{}" };
     const secondCall = { name: "large_output", callID: "large-2", arguments: "{}" };
     const provider = new FakeProvider([
@@ -291,11 +334,61 @@ describe("LLMLoop", () => {
     expect(run.result.isOk()).toBe(true);
     const toolMessages = run.result.unwrap().messages.filter((message) => message.role === "tool");
     expect(toolMessages).toHaveLength(2);
+    expect(toolMessages.every((message) => message.content.length <= 600)).toBe(true);
     expect(
       toolMessages.reduce((total, message) => total + message.content.length, 0)
-    ).toBeLessThanOrEqual(600);
+    ).toBeLessThanOrEqual(1_200);
     expect(toolMessages[0]?.content).toContain("工具结果已裁剪");
-    expect(toolMessages[1]?.content).toBe("");
+    expect(toolMessages[1]?.content).toContain("工具结果已裁剪");
+  });
+
+  it("后续步骤按滑动预算重放工具结果，同时保留完整持久化消息", async () => {
+    const calls = [1, 2, 3].map((index) => ({
+      name: "large_output",
+      callID: `window-${index}`,
+      arguments: "{}"
+    }));
+    const provider = new FakeProvider([
+      ...calls.map((call) => response({ toolCalls: [call], finishReason: "tool_calls" })),
+      response({ text: "已综合最近结果完成。" })
+    ]);
+    const conversation = LLMConversation.create({ id: "tool-output-sliding-window" }).unwrap();
+    const registry = new LLMToolRegistry();
+    registry.register(new LargeOutputTool());
+
+    const run = await collectRun(
+      LLMLoop.run({
+        signal,
+        conversation,
+        input: "连续读取三次大结果",
+        tools: {
+          registry,
+          strict: true,
+          choice: "auto",
+          maxRetainedToolOutputChars: 2_700
+        },
+        provider,
+        config: { model: "test", apiKey: "test-key" },
+        promptBuilder: new LLMPromptBuilder(),
+        maxSteps: 4
+      })
+    );
+
+    expect(run.result.isOk()).toBe(true);
+    const finalRequestTools = provider.requests[3]!.messages.filter(
+      (message) => message.role === "tool"
+    );
+    expect(
+      finalRequestTools.reduce((total, message) => total + message.content.length, 0)
+    ).toBeLessThanOrEqual(2_700);
+    expect(finalRequestTools[0]?.content).toContain("pruned");
+    expect(finalRequestTools.at(-1)?.content.length).toBeGreaterThan(1_500);
+
+    const persistedTools = run.result
+      .unwrap()
+      .messages.filter((message) => message.role === "tool");
+    expect(persistedTools).toHaveLength(3);
+    expect(persistedTools.every((message) => message.content.length === 2_000)).toBe(true);
   });
 
   it("forwards provider context across a tool step without interpreting it", async () => {
@@ -505,7 +598,7 @@ describe("LLMLoop", () => {
       role: "system",
       content: expect.stringContaining("搜索真实歌曲资料")
     });
-    expect(provider.requests[2]?.toolChoice).toBe("auto");
+    expect(provider.requests[2]?.toolChoice).toBe("none");
     expect(observedUsage).toEqual([discardedUsage]);
     expect(run.result.unwrap().messages).toEqual([
       { role: "user", content: "介绍 Aira" },
@@ -545,7 +638,7 @@ describe("LLMLoop", () => {
     );
 
     expect(run.result.isOk()).toBe(true);
-    expect(provider.requests.map((request) => request.toolChoice)).toEqual(["auto", "auto"]);
+    expect(provider.requests.map((request) => request.toolChoice)).toEqual(["auto", "none"]);
     expect(provider.requests[0]?.messages.at(-1)).toMatchObject({
       role: "system",
       content: expect.stringContaining("搜索真实歌曲资料")
@@ -604,7 +697,7 @@ describe("LLMLoop", () => {
     expect(provider.requests.map((request) => request.toolChoice)).toEqual([
       "required",
       "required",
-      "auto"
+      "none"
     ]);
   });
 
@@ -639,7 +732,7 @@ describe("LLMLoop", () => {
     );
 
     expect(run.result.isOk()).toBe(true);
-    expect(provider.requests.map((request) => request.toolChoice)).toEqual(["required", "auto"]);
+    expect(provider.requests.map((request) => request.toolChoice)).toEqual(["required", "none"]);
     expect(provider.requests[1]?.messages.at(-1)).toMatchObject({
       role: "tool",
       content: expect.stringContaining("搜索服务不可用")
@@ -686,7 +779,7 @@ describe("LLMLoop", () => {
     );
 
     expect(run.result.isOk()).toBe(true);
-    expect(provider.requests.map((request) => request.toolChoice)).toEqual(["required", "auto"]);
+    expect(provider.requests.map((request) => request.toolChoice)).toEqual(["required", "none"]);
   });
 
   it("does not skip dependent evidence while a success requirement is retried", async () => {
@@ -742,7 +835,7 @@ describe("LLMLoop", () => {
       "required",
       "required",
       "required",
-      "auto"
+      "none"
     ]);
   });
 
@@ -786,7 +879,7 @@ describe("LLMLoop", () => {
     expect(provider.requests.map((request) => request.toolChoice)).toEqual([
       "required",
       "required",
-      "auto"
+      "none"
     ]);
   });
 
@@ -845,7 +938,7 @@ describe("LLMLoop", () => {
       "required",
       "auto",
       "required",
-      "auto"
+      "none"
     ]);
   });
 
@@ -944,11 +1037,11 @@ describe("LLMLoop", () => {
       "required",
       "required",
       "required",
-      "auto"
+      "none"
     ]);
   });
 
-  it("搜索成功但没有候选链接时仍视为缺少可用证据", async () => {
+  it("搜索成功但没有候选链接时把 attempt 证据降级为不可用并跳过依赖项", async () => {
     const provider = new FakeProvider([
       response({
         toolCalls: [
@@ -960,8 +1053,7 @@ describe("LLMLoop", () => {
         ],
         finishReason: "tool_calls"
       }),
-      response({ text: "没有候选也提前回答。" }),
-      response({ text: "仍然没有补充搜索结果。" })
+      response({ text: "没有找到可打开的候选页面，我会明确说明资料缺口。" })
     ]);
     const conversation = LLMConversation.create({ id: "empty-evidence-results" }).unwrap();
     const registry = new LLMToolRegistry();
@@ -978,7 +1070,8 @@ describe("LLMLoop", () => {
             id: "overview:search",
             description: "搜索可信网页",
             toolNames: ["evidence_browser"],
-            argumentEquals: { action: "search" }
+            argumentEquals: { action: "search" },
+            satisfaction: "attempt"
           },
           {
             id: "overview:open",
@@ -997,14 +1090,136 @@ describe("LLMLoop", () => {
         provider,
         config: { model: "test", apiKey: "test-key" },
         promptBuilder: new LLMPromptBuilder(),
-        maxSteps: 3
+        maxSteps: 2
+      })
+    );
+
+    expect(run.result.isOk()).toBe(true);
+    expect(provider.requests.map((request) => request.toolChoice)).toEqual(["required", "none"]);
+    expect(run.events.filter((event) => event.type === "tool_result")).toHaveLength(1);
+  });
+
+  it("连续工具调用没有推进必要证据时提前熔断，而不是耗尽最大步骤", async () => {
+    const searchCalls = ["first", "second", "third", "fourth"].map((query, index) => ({
+      name: "evidence_browser",
+      callID: `call_no_progress_${index + 1}`,
+      arguments: JSON.stringify({ action: "search", query })
+    }));
+    const provider = new FakeProvider([
+      ...searchCalls.map((call) => response({ toolCalls: [call], finishReason: "tool_calls" })),
+      response({ text: "根据已有搜索结果回答，并说明没有成功打开正文。" })
+    ]);
+    const conversation = LLMConversation.create({ id: "evidence-no-progress" }).unwrap();
+    const registry = new LLMToolRegistry();
+    registry.register(new EvidenceBrowserTool("https://trusted.test/article"));
+
+    const run = await collectRun(
+      LLMLoop.run({
+        signal,
+        conversation,
+        input: "介绍 Aira",
+        tools: { registry, strict: true, choice: "auto" },
+        requiredEvidence: [
+          {
+            id: "overview:search",
+            description: "搜索可信网页",
+            toolNames: ["evidence_browser"],
+            argumentEquals: { action: "search" },
+            satisfaction: "attempt"
+          },
+          {
+            id: "overview:open",
+            description: "打开搜索结果",
+            toolNames: ["evidence_browser"],
+            argumentEquals: { action: "open" },
+            satisfaction: "attempt",
+            dependsOn: ["overview:search"],
+            argumentFromEvidence: {
+              argumentName: "url",
+              evidenceID: "overview:search",
+              outputPath: ["results", "url"]
+            }
+          }
+        ],
+        provider,
+        config: { model: "test", apiKey: "test-key" },
+        promptBuilder: new LLMPromptBuilder(),
+        maxSteps: 8
       })
     );
 
     expect(run.result.isErr()).toBe(true);
     if (run.result.isErr()) {
-      expect(run.result.reason.message).toContain("搜索可信网页");
+      expect(run.result.reason.type).toBe("bad_response");
+      expect(run.result.reason.message).toContain("打开搜索结果");
     }
+    expect(provider.requests).toHaveLength(4);
+    expect(run.errors.at(-1)?.type).toBe("bad_response");
+  });
+
+  it("放宽停滞预算后允许更多换词尝试，打开正文后正常完成", async () => {
+    const searchCalls = ["first", "second", "third", "fourth", "fifth"].map((query, index) => ({
+      name: "evidence_browser",
+      callID: `call_retry_${index + 1}`,
+      arguments: JSON.stringify({ action: "search", query })
+    }));
+    const provider = new FakeProvider([
+      ...searchCalls.map((call) => response({ toolCalls: [call], finishReason: "tool_calls" })),
+      response({
+        toolCalls: [
+          {
+            name: "evidence_browser",
+            callID: "call_retry_open",
+            arguments: JSON.stringify({ action: "open", url: "https://trusted.test/article" })
+          }
+        ],
+        finishReason: "tool_calls"
+      }),
+      response({ text: "根据搜索与正文回答。" })
+    ]);
+    const conversation = LLMConversation.create({ id: "evidence-no-progress-budget" }).unwrap();
+    const registry = new LLMToolRegistry();
+    registry.register(new EvidenceBrowserTool("https://trusted.test/article"));
+
+    const run = await collectRun(
+      LLMLoop.run({
+        signal,
+        conversation,
+        input: "介绍 Aira",
+        tools: { registry, strict: true, choice: "auto" },
+        requiredEvidence: [
+          {
+            id: "overview:search",
+            description: "搜索可信网页",
+            toolNames: ["evidence_browser"],
+            argumentEquals: { action: "search" },
+            satisfaction: "attempt"
+          },
+          {
+            id: "overview:open",
+            description: "打开搜索结果",
+            toolNames: ["evidence_browser"],
+            argumentEquals: { action: "open" },
+            satisfaction: "attempt",
+            dependsOn: ["overview:search"],
+            argumentFromEvidence: {
+              argumentName: "url",
+              evidenceID: "overview:search",
+              outputPath: ["results", "url"]
+            }
+          }
+        ],
+        provider,
+        config: { model: "test", apiKey: "test-key" },
+        promptBuilder: new LLMPromptBuilder(),
+        maxSteps: 10,
+        // 默认 3 步预算会在第四次请求前熔断；放宽到 6 后 5 次换词重搜仍可用
+        maxNoEvidenceProgressSteps: 6
+      })
+    );
+
+    expect(run.result.isOk()).toBe(true);
+    expect(provider.requests).toHaveLength(7);
   });
 
   it("fails when the model ignores the evidence correction twice", async () => {
@@ -1123,6 +1338,106 @@ describe("LLMLoop", () => {
       .steps.flatMap((step) => step.toolResults.map((result) => result.output));
     expect(outputs).toHaveLength(2);
     expect(outputs.every((output) => output.includes("commit_unknown"))).toBe(true);
+  });
+
+  it("在最后一个模型步骤关闭工具调用，为已有证据保留最终回答机会", async () => {
+    const secondCall = { ...searchCall, callID: "call_last_step_second" };
+    const provider = new FakeProvider([
+      response({ toolCalls: [searchCall], finishReason: "tool_calls" }),
+      response({ toolCalls: [secondCall], finishReason: "tool_calls" }),
+      response({ text: "基于已经取得的结果回答。" })
+    ]);
+    const conversation = LLMConversation.create({ id: "reserve-final-step" }).unwrap();
+    const registry = new LLMToolRegistry();
+    registry.register(new SearchMusicTool());
+
+    const run = await collectRun(
+      LLMLoop.run({
+        signal,
+        conversation,
+        input: "找 Aira",
+        tools: { registry, strict: true, choice: "auto" },
+        provider,
+        config: { model: "test", apiKey: "test-key" },
+        promptBuilder: new LLMPromptBuilder(),
+        maxSteps: 3
+      })
+    );
+
+    expect(run.result.isOk()).toBe(true);
+    expect(provider.requests.map((request) => request.toolChoice)).toEqual([
+      "auto",
+      "auto",
+      "none"
+    ]);
+  });
+
+  it("相同只读调用在一轮内复用结果，并停止继续调用工具", async () => {
+    const duplicateCall = { ...searchCall, callID: "call_duplicate_read" };
+    const provider = new FakeProvider([
+      response({ toolCalls: [searchCall], finishReason: "tool_calls" }),
+      response({ toolCalls: [duplicateCall], finishReason: "tool_calls" }),
+      response({ text: "使用第一次搜索结果回答。" })
+    ]);
+    const conversation = LLMConversation.create({ id: "deduplicate-read-call" }).unwrap();
+    const registry = new LLMToolRegistry({ reuseSafeNames: ["search_music"] });
+    const tool = new CountingSearchMusicTool();
+    registry.register(tool);
+
+    const run = await collectRun(
+      LLMLoop.run({
+        signal,
+        conversation,
+        input: "找 Aira",
+        tools: { registry, strict: true, choice: "auto" },
+        provider,
+        config: { model: "test", apiKey: "test-key" },
+        promptBuilder: new LLMPromptBuilder(),
+        maxSteps: 4
+      })
+    );
+
+    expect(run.result.isOk()).toBe(true);
+    expect(tool.executeCount).toBe(1);
+    expect(provider.requests.map((request) => request.toolChoice)).toEqual([
+      "auto",
+      "auto",
+      "none"
+    ]);
+  });
+
+  it("动作工具执行后清空只读复用缓存，避免返回变更前状态", async () => {
+    const actionCall = { name: "action", callID: "call_cache_action", arguments: "{}" };
+    const repeatedRead = { ...searchCall, callID: "call_read_after_action" };
+    const provider = new FakeProvider([
+      response({ toolCalls: [searchCall], finishReason: "tool_calls" }),
+      response({ toolCalls: [actionCall], finishReason: "tool_calls" }),
+      response({ toolCalls: [repeatedRead], finishReason: "tool_calls" }),
+      response({ text: "使用动作后的新状态回答。" })
+    ]);
+    const conversation = LLMConversation.create({ id: "invalidate-read-cache" }).unwrap();
+    const registry = new LLMToolRegistry({
+      parallelSafeNames: ["search_music"],
+      reuseSafeNames: ["search_music"]
+    });
+    const tool = new CountingSearchMusicTool();
+    registry.register([tool, new TrackedTool("action", { active: 0, maxActive: 0 })]);
+
+    const run = await collectRun(
+      LLMLoop.run({
+        signal,
+        conversation,
+        input: "读取、修改后再次读取",
+        tools: { registry, strict: true, choice: "auto" },
+        provider,
+        config: { model: "test", apiKey: "test-key" },
+        promptBuilder: new LLMPromptBuilder(),
+        maxSteps: 4
+      })
+    );
+
+    expect(run.result.isOk()).toBe(true);
+    expect(tool.executeCount).toBe(2);
   });
 
   it("fails after maxSteps with yielded tool result messages", async () => {
@@ -1259,6 +1574,54 @@ class SearchMusicTool extends LLMTool<typeof searchSchema, string[]> {
 
   async execute(input: z.infer<typeof searchSchema>): Promise<AIResult<string[]>> {
     return AIResult.ok([input.keyword]);
+  }
+}
+
+const emptyToolSchema = z.object({});
+
+class DeferredToolDirectory extends LLMTool<typeof emptyToolSchema, { activated: string[] }> {
+  readonly inputSchema = emptyToolSchema;
+
+  constructor() {
+    super({ name: "tool_directory", description: "按需加载工具" });
+  }
+
+  override async execute(_input: object, context: LLMToolContext) {
+    context.activateTools?.(["deferred_read", "forbidden_write"]);
+    return AIResult.ok({ activated: ["deferred_read"] });
+  }
+}
+
+class DeferredReadTool extends LLMTool<typeof emptyToolSchema, string> {
+  readonly inputSchema = emptyToolSchema;
+
+  constructor() {
+    super({ name: "deferred_read", description: "延迟读取" });
+  }
+
+  override async execute() {
+    return AIResult.ok("ok");
+  }
+}
+
+class ForbiddenWriteTool extends LLMTool<typeof emptyToolSchema, string> {
+  readonly inputSchema = emptyToolSchema;
+
+  constructor() {
+    super({ name: "forbidden_write", description: "不得延迟激活的写工具" });
+  }
+
+  override async execute() {
+    return AIResult.ok("written");
+  }
+}
+
+class CountingSearchMusicTool extends SearchMusicTool {
+  executeCount = 0;
+
+  override async execute(input: z.infer<typeof searchSchema>) {
+    this.executeCount += 1;
+    return super.execute(input);
   }
 }
 

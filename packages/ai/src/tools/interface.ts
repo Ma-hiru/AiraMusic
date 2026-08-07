@@ -17,7 +17,13 @@ export abstract class LLMTool<TSchema extends z.ZodType = z.ZodType, TOutput = u
 export interface LLMToolContext {
   signal?: AbortSignal;
   conversationID: string;
+  /** 请求在后续模型步骤中按需加载已授权的延迟工具。 */
+  activateTools?: NormalFunc<[names: readonly string[]]>;
+  /** 模型为本次调用选择的输出信息密度；工具仍必须遵守应用侧硬上限。 */
+  outputDetail: LLMToolOutputDetail;
 }
+
+export type LLMToolOutputDetail = "compact" | "detailed" | "standard";
 
 export interface LLMToolDefinition {
   name: string;

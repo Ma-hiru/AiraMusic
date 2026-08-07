@@ -182,4 +182,4 @@ type NeteaseLyricModel = {
   noteExisted: boolean;
 };
 
-type NeteaseTrackRecordSourceType = "fm" | "album" | "other" | "playlist";
+type NeteaseTrackRecordSourceType = "fm" | "album" | "other" | "playlist" | "intelligence";

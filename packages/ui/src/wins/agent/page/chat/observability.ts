@@ -253,7 +253,9 @@ const mergeUsage = (fallback: unknown, preferred: unknown): undefined | AgentTok
     total: preferredUsage?.total ?? fallbackUsage?.total,
     reasoning: preferredUsage?.reasoning ?? fallbackUsage?.reasoning,
     cacheWrite: preferredUsage?.cacheWrite ?? fallbackUsage?.cacheWrite,
-    cachedInput: preferredUsage?.cachedInput ?? fallbackUsage?.cachedInput
+    cachedInput: preferredUsage?.cachedInput ?? fallbackUsage?.cachedInput,
+    requests: preferredUsage?.requests ?? fallbackUsage?.requests,
+    lastInput: preferredUsage?.lastInput ?? fallbackUsage?.lastInput
   };
   if (usage.total === undefined && (usage.input !== undefined || usage.output !== undefined)) {
     usage.total = (usage.input ?? 0) + (usage.output ?? 0);
@@ -282,6 +284,8 @@ const readUsage = (value: unknown): undefined | AgentTokenUsage => {
       readFirstNumber(record, ["reasoning", "reasoningTokens", "reasoning_tokens"]) ??
       readFirstNumber(outputDetails, ["reasoningTokens", "reasoning_tokens"]),
     cacheWrite: readFirstNumber(record, ["cacheWrite", "cacheWriteTokens", "cache_write_tokens"]),
+    requests: readFirstNumber(record, ["requests", "requestCount", "request_count"]),
+    lastInput: readFirstNumber(record, ["lastInput", "lastInputTokens", "last_input_tokens"]),
     cachedInput:
       readFirstNumber(record, ["cachedInput", "cachedInputTokens", "cached_input_tokens"]) ??
       readFirstNumber(inputDetails, ["cachedTokens", "cached_tokens"])

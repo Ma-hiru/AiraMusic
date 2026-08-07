@@ -8,12 +8,12 @@ import {
   type MouseEvent as ReactMouseEvent
 } from "react";
 import { RendererWindow } from "@/common/lib/window";
-import { NeteaseLyric } from "@/common/netease/models";
 import { RendererIPCMessageBus } from "@/common/lib/bus";
 import { useAppLoaded } from "@/common/hooks/use-app-loaded";
-import { useLatestRef } from "@/common/hooks/use-latest-ref";
 import { useListenable } from "@/common/hooks/use-listenable";
+import { useLyricSyncFromBus } from "@/common/hooks/use-lyric-sync-from-bus";
 import { useThemeInjectFromBus } from "@/common/hooks/use-theme-inject-from-bus";
+import { useStableLyricInstanceFromBus } from "@/common/hooks/use-stable-lyric-instance-from-bus";
 import WindowResizeArea from "@/common/components/layout/window-resize-area";
 import LyricComponent, { type LyricRef } from "@/common/components/display/lyric";
 
@@ -34,51 +34,10 @@ export default function LyricPage() {
   // 监听播放器相关事件
   const trackMetaBus = useListenable(RendererIPCMessageBus.trackMeta);
   const themeBus = useThemeInjectFromBus();
-  const progressBus = useListenable(RendererIPCMessageBus.progress);
-  const getInfo = useLatestRef({ trackMetaBus });
   // 歌词实例
-  const [lyric, setLyric] = useState<Nullable<NeteaseLyric>>(null);
-  const lyricKey = useRef("");
-  useEffect(() => {
-    if (!trackMetaBus.data?.lyric) return setLyric(null);
-    const newLyric = new NeteaseLyric(trackMetaBus.data.lyric);
-    if (newLyric.key === lyricKey.current) return;
-    lyricKey.current = newLyric.key;
-    setLyric(newLyric);
-  }, [trackMetaBus.data?.lyric]);
+  const lyric = useStableLyricInstanceFromBus(trackMetaBus.data?.lyric);
   // 歌词播放同步
-  useEffect(() => {
-    let lastTime = 0;
-    let isRunning = trackMetaBus.data?.status === "playing";
-
-    const onFrame = (time: number) => {
-      if (!isRunning) return;
-
-      const { trackMetaBus } = getInfo.current;
-      if (trackMetaBus.data?.status !== "playing") {
-        isRunning = false;
-        return;
-      }
-
-      if (!lastTime) lastTime = time;
-      const delta = time - lastTime;
-      lastTime = time;
-
-      // 自己更新时间
-      lyricRef.current?.update(delta);
-
-      requestAnimationFrame(onFrame);
-    };
-
-    requestAnimationFrame(onFrame);
-    return () => {
-      isRunning = false;
-    };
-  }, [getInfo, trackMetaBus.data?.status]);
-  useEffect(() => {
-    // 关键时间点同步
-    lyricRef.current?.setCurrentTime((progressBus.data?.currentTime || 0) * 1000);
-  }, [progressBus.data?.currentTime]);
+  useLyricSyncFromBus(lyricRef);
   // 颜色变化
   useEffect(() => {
     if (color !== undefined) window.localStorage.setItem("lyricWindowColor", color);
@@ -179,6 +138,7 @@ export default function LyricPage() {
             rmActive={trackMetaBus.data?.rmActive}
             tlActive={trackMetaBus.data?.tlActive}
             noteActive={trackMetaBus.data?.noteActive}
+            playing={trackMetaBus.data?.status === "playing"}
             activeColor={(color ?? themeBus.data?.theme.mainColor) || "#ffffff"}
           />
         </div>

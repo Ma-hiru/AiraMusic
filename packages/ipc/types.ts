@@ -7,14 +7,6 @@ export type { EventHandlers, InvokeHandlers } from "./src/main/normal";
 export type { NormalEvent, NormalEventArgs, NormalEventMaps } from "./src/types/event";
 
 export type {
-  InvokeEvent,
-  AgentChatInput,
-  InvokeEventArgs,
-  InvokeEventMaps,
-  InvokeEventPayload
-} from "./src/types/invoke";
-
-export type {
   Message,
   MessageData,
   MessageEvent,
@@ -32,3 +24,15 @@ export type {
   AgentToolResponse,
   AgentConversationSummary
 } from "./src/types/agent";
+
+export type {
+  InvokeEvent,
+  AgentChatInput,
+  InvokeEventArgs,
+  InvokeEventMaps,
+  InvokeEventPayload,
+  AgentFeatureSettingsState,
+  AgentFeatureSettingsConfig,
+  AgentFeatureSettingsMcpTool,
+  AgentFeatureSettingsUpdateInput
+} from "./src/types/invoke";

@@ -58,6 +58,7 @@ export class AIAgentSkillRegistry {
     const instructions: string[] = [];
     const toolNames = new Set<string>();
     const requiredEvidence = new Map<string, AIAgentEvidenceRequirement>();
+    let maxNoProgressSteps: number | undefined;
 
     for (const definition of this.definitions.values()) {
       if (definition.kind === "rule") {
@@ -80,6 +81,9 @@ export class AIAgentSkillRegistry {
       activeSkillIDs.push(definition.id);
       instructions.push(this.render(definition));
       for (const toolName of definition.toolNames ?? []) toolNames.add(toolName);
+      if (definition.maxNoProgressSteps !== undefined) {
+        maxNoProgressSteps = Math.max(maxNoProgressSteps ?? 0, definition.maxNoProgressSteps);
+      }
       for (const requirement of definition.requiredEvidence ?? []) {
         for (const toolName of requirement.toolNames) toolNames.add(toolName);
         requiredEvidence.set(`${definition.id}:${requirement.id}`, {
@@ -108,7 +112,8 @@ export class AIAgentSkillRegistry {
       activeSkillIDs,
       instructions,
       toolNames: Array.from(toolNames),
-      requiredEvidence: Array.from(requiredEvidence.values())
+      requiredEvidence: Array.from(requiredEvidence.values()),
+      ...(maxNoProgressSteps === undefined ? {} : { maxNoProgressSteps })
     });
   }
 
@@ -145,6 +150,17 @@ export class AIAgentSkillRegistry {
     }
 
     if (definition.kind === "skill") {
+      if (
+        definition.maxNoProgressSteps !== undefined &&
+        (!Number.isInteger(definition.maxNoProgressSteps) ||
+          definition.maxNoProgressSteps < 1 ||
+          definition.maxNoProgressSteps > 12)
+      ) {
+        return AIResult.err({
+          type: "invalid_skill_config",
+          message: `Skill 停滞步数预算必须是 1 到 12 的整数：${definition.id}`
+        });
+      }
       const configuredRequirementIDs = new Set(
         (definition.requiredEvidence ?? []).map((requirement) => requirement.id)
       );
@@ -196,6 +212,28 @@ export class AIAgentSkillRegistry {
             message: `Skill 证据参数来源无效：${definition.id}:${requirement.id}`
           });
         }
+        if (
+          requirement.outputPath &&
+          (!requirement.outputPath.length ||
+            requirement.outputPath.length > 16 ||
+            requirement.outputPath.some((segment) => !segment.trim()))
+        ) {
+          return AIResult.err({
+            type: "invalid_skill_config",
+            message: `Skill 证据结果路径无效：${definition.id}:${requirement.id}`
+          });
+        }
+        if (
+          requirement.minimumOutputChars !== undefined &&
+          (!Number.isInteger(requirement.minimumOutputChars) ||
+            requirement.minimumOutputChars < 1 ||
+            requirement.minimumOutputChars > 100_000)
+        ) {
+          return AIResult.err({
+            type: "invalid_skill_config",
+            message: `Skill 证据最小输出字符数无效：${definition.id}:${requirement.id}`
+          });
+        }
       }
     }
 
@@ -223,7 +261,10 @@ export class AIAgentSkillRegistry {
           match: definition.match,
           ...(definition.requiredEvidence
             ? { requiredEvidence: structuredClone(definition.requiredEvidence) }
-            : {})
+            : {}),
+          ...(definition.maxNoProgressSteps === undefined
+            ? {}
+            : { maxNoProgressSteps: definition.maxNoProgressSteps })
         };
   }
 

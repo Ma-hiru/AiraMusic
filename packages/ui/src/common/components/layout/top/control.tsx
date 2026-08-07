@@ -73,37 +73,40 @@ const Control: FC<TopControlProps> = ({
   return (
     <NoDrag className={cx(`flex flex-row items-center gap-4 select-none relative`, className)}>
       <ControlButton
-        className={itemClassName}
         show={dev}
         color={color}
         label="打开开发者工具"
         icon={AppWindow}
+        iconClassName={itemClassName}
         onClick={() => currentWindow.devTools()}
       />
       <ControlButton
-        className={itemClassName}
         icon={Minus}
         label="最小化窗口"
         show={mini && !isDarwin}
+        iconClassName={itemClassName}
         onClick={() => currentWindow.minimize()}
       />
-      {apd.map(({ className, ...props }, index) => (
-        <ControlButton key={index} {...props} className={cx(className, itemClassName)} />
+      {apd.map(({ className, iconClassName, ...props }, index) => (
+        <ControlButton
+          key={index}
+          {...props}
+          color={color}
+          iconClassName={cx(className, iconClassName, itemClassName)}
+        />
       ))}
       <ControlButton
-        className={itemClassName}
         show={pin}
         color={color}
-        iconClassName="scale-90"
         icon={currentWindow.isPin ? PinOff : Pin}
         label={currentWindow.isPin ? "取消窗口置顶" : "窗口置顶"}
+        iconClassName={cx(itemClassName, "scale-95 relative top-[1.5px]")}
         onClick={handlePin}
       />
       <ControlButton
-        className={itemClassName}
         color={color}
         show={max && !isDarwin}
-        iconClassName="scale-90"
+        iconClassName={cx(itemClassName, "scale-90")}
         label={currentWindow.isMax ? "还原窗口" : "最大化窗口"}
         icon={currentWindow.isMax ? SquareMinus : Square}
         onClick={() =>
@@ -111,12 +114,11 @@ const Control: FC<TopControlProps> = ({
         }
       />
       <ControlButton
-        className={itemClassName}
         icon={X}
         label="关闭窗口"
         color={color}
         show={exit && !isDarwin}
-        iconClassName="scale-105"
+        iconClassName={cx(itemClassName, "scale-105")}
         onClick={onClose ? () => onClose(false) : () => currentWindow.close()}
       />
     </NoDrag>

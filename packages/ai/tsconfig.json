@@ -14,5 +14,5 @@
     }
   },
   "references": [{ "path": "../log/tsconfig.json" }],
-  "include": ["../../types/**/*", "src/**/*", "tests/**/*"]
+  "include": ["../../types/**/*", "src/**/*", "tests/**/*", "tsup.config.ts"]
 }

@@ -1,6 +1,4 @@
-import { RendererOnce } from "@/common/lib/once";
 import { RendererCache } from "@/common/lib/cache";
-import { RendererWindow } from "@/common/lib/window";
 import { useListenable } from "@/common/hooks/use-listenable";
 import RendererPlayer from "@/common/player/core";
 
@@ -25,13 +23,6 @@ export default class RendererPlayerHandle {
     this._player = this.loadPlayer() ?? new RendererPlayer();
     return this;
   }
-
-  private static setupMini() {
-    RendererOnce.do("setupMini", async () => {
-      const miniWindow = RendererWindow.get("miniplayer");
-      await miniWindow.reactReadyAwait();
-    });
-  }
   //endregion
 
   static get player() {
@@ -49,7 +40,7 @@ export default class RendererPlayerHandle {
   }
 
   static {
-    this.setupPlayer().setupMini();
+    this.setupPlayer();
   }
 }
 

@@ -2,7 +2,7 @@
 
 一个基于 Electron、React 和 TypeScript 构建的第三方网易云音乐桌面客户端。AiraMusic 支持多窗口播放体验、动态视觉效果和可操作的音乐 Agent 。
 
-[下载预览版](https://github.com/Ma-hiru/AiraMusic/releases) · [功能概览](#功能概览) · [音乐 Agent](#音乐-agent) · [本地开发](#本地开发)
+[下载](https://github.com/Ma-hiru/AiraMusic/releases) · [功能概览](#功能概览) · [音乐 Agent](#音乐-agent) · [本地开发](#本地开发)
 
 > [!IMPORTANT]
 > AiraMusic 是非官方第三方客户端，不直接或间接提供任何音乐下载功能，推荐开通网易云黑胶会员使用。音乐 Agent 需要用户自行配置模型服务与 API Key，不附带模型额度。
@@ -17,15 +17,13 @@
 
 ## 下载与平台
 
-前往 [Releases](https://github.com/Ma-hiru/AiraMusic/releases) 获取当前预览版。安装包类型和可用平台以 Releases 页面实际提供的文件为准。
+前往 [Releases](https://github.com/Ma-hiru/AiraMusic/releases) 获取。安装包类型和可用平台以 Releases 页面实际提供的文件为准。
 
-| 平台          | 当前范围                | 打包目标                    |
-|-------------|---------------------|-------------------------|
-| Windows x64 | 主要开发与发布平台           | NSIS、MSI                |
-| Linux x64   | 已配置桌面打包             | AppImage、deb、rpm、tar.gz |
-| macOS arm64 | Apple Silicon 实验性支持 | DMG                     |
-
-macOS 已初步适配窗口控制、应用关闭与激活行为、菜单栏托盘、菜单栏歌词及交通灯布局。当前 macOS 构建尚未纳入 CI 和正式发布验证，也没有配置 Developer ID 签名与公证；是否提供 DMG 请以 Releases 为准，源码构建请在 Apple Silicon Mac 上进行。
+| 平台          | 当前范围             | 打包目标                    |
+|-------------|------------------|-------------------------|
+| Windows x64 | 主要开发与发布平台        | NSIS、MSI                |
+| Linux x64   | 已配置桌面打包          | AppImage、deb、rpm、tar.gz |
+| macOS arm64 | Apple Silicon 支持 | DMG                     |
 
 ## 音乐 Agent
 

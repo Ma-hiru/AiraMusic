@@ -43,7 +43,8 @@ export default defineConfig(({ mode }) => {
           image: join(__dirname, "image.html"),
           agent: join(__dirname, "agent.html"),
           comments: join(__dirname, "comments.html"),
-          display: join(__dirname, "display.html")
+          display: join(__dirname, "display.html"),
+          radio: join(__dirname, "radio.html")
         }
       }
     },
@@ -61,6 +62,7 @@ export default defineConfig(({ mode }) => {
     clearScreen: false,
     server: {
       port: Number(env.VITE_SERVER_PORT),
+      strictPort: true,
       proxy: {
         "/api": {
           target: `http://127.0.0.1:${env.NCM_SERVER_PORT}`,

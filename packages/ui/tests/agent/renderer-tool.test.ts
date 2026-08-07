@@ -181,7 +181,7 @@ describe("RendererTool", () => {
     expect(asObject(asObject(result)["_meta"]!)["truncated"]).toBe(true);
   });
 
-  it("默认把通用工具结果限制在 12K，显式编辑场景仍可申请更高预算", () => {
+  it("默认把通用工具结果限制在 8K，并为详细模式保留不可绕过的硬上限", () => {
     const result = RendererTool.output({
       rows: Array.from({ length: 200 }, (_, index) => ({
         index,
@@ -189,9 +189,28 @@ describe("RendererTool", () => {
       }))
     });
 
-    expect(RendererTool.defaultResultChars).toBe(12_000);
+    expect(RendererTool.defaultResultChars).toBe(8_000);
     expect(JSON.stringify(result).length).toBeLessThanOrEqual(RendererTool.defaultResultChars);
     expect(asObject(asObject(result)["_meta"]!)["truncated"]).toBe(true);
+
+    const detailed = RendererTool.output(
+      { rows: Array.from({ length: 500 }, () => ({ text: "详情".repeat(2_000) })) },
+      "detailed"
+    );
+    expect(JSON.stringify(detailed).length).toBeLessThanOrEqual(16_000);
+    expect(JSON.stringify(detailed).length).toBeLessThanOrEqual(RendererTool.maxResultChars);
+  });
+
+  it("信息密度档位会逐级放宽条目预算，但 detailed 仍不会返回全部原始数据", () => {
+    const rows = Array.from({ length: 200 }, (_, index) => ({ index, text: `row-${index}` }));
+    const compact = asObject(RendererTool.output({ rows }, "compact"));
+    const standard = asObject(RendererTool.output({ rows }, "standard"));
+    const detailed = asObject(RendererTool.output({ rows }, "detailed"));
+
+    expect((compact["rows"] as JsonValue[]).length).toBe(8);
+    expect((standard["rows"] as JsonValue[]).length).toBe(20);
+    expect((detailed["rows"] as JsonValue[]).length).toBe(60);
+    expect((detailed["rows"] as JsonValue[]).length).toBeLessThan(rows.length);
   });
 
   it("歌词分析默认移除逐字时间轴，并保留显式可编辑模式", () => {

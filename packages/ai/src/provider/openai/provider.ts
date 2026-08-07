@@ -1,4 +1,5 @@
-import { AIResult } from "@/result";
+import { AIError, AIResult } from "@/result";
+import { attachLLMUsageToError } from "@/provider/usage";
 import {
   LLMProvider,
   type LLMCheckResponse,
@@ -86,6 +87,56 @@ function toChatTokenLimit(
   return resolveChatTokenLimitField(config) === "max_completion_tokens"
     ? { max_completion_tokens: value }
     : { max_tokens: value };
+}
+
+function toResponseInclude(
+  config: LLMProviderOpenAIConfig,
+  request: LLMGenerateRequest
+): { include?: OpenAI.Responses.ResponseIncludable[] } {
+  // encrypted reasoning 只用于官方 Responses 的无状态工具续接。标题、摘要等
+  // 无工具请求不需要它；兼容端点也不应被迫实现这个可选字段。
+  return isOfficialOpenAIEndpoint(config.baseURL) && request.tools?.length
+    ? { include: ["reasoning.encrypted_content"] }
+    : {};
+}
+
+function readUsableIncompleteText(
+  response: OpenAI.Responses.Response,
+  fallbackText = ""
+): string | undefined {
+  if (
+    response.status !== "incomplete" ||
+    response.incomplete_details?.reason !== "max_output_tokens"
+  ) {
+    return undefined;
+  }
+  const text = response.output_text || readResponseRefusalText(response) || fallbackText;
+  return text.trim() ? text : undefined;
+}
+
+function readResponseRefusalText(response: OpenAI.Responses.Response): string {
+  return response.output
+    .flatMap((item) => (item.type === "message" ? item.content : []))
+    .flatMap((part) => (part.type === "refusal" ? [part.refusal] : []))
+    .join("");
+}
+
+function mergeResponseStreamText(
+  streamedText: string,
+  finalizedText: string
+): {
+  text: string;
+  missingDelta?: string;
+} {
+  if (!finalizedText) return { text: streamedText };
+  if (!streamedText) return { text: finalizedText, missingDelta: finalizedText };
+  if (finalizedText.startsWith(streamedText)) {
+    const missingDelta = finalizedText.slice(streamedText.length);
+    return missingDelta ? { text: finalizedText, missingDelta } : { text: finalizedText };
+  }
+  // 少数兼容端点的 delta 与最终聚合文本可能不完全一致。最终消息以服务端
+  // 的聚合文本为准，但不再补发不可靠的差量，避免界面出现重复内容。
+  return { text: finalizedText };
 }
 
 export class LLMProviderOpenAI extends LLMProvider<
@@ -209,10 +260,15 @@ export class LLMProviderOpenAI extends LLMProvider<
         });
       }
       if (choice.finish_reason === "content_filter") {
-        return AIResult.err({
-          type: "service",
-          message: "生成内容被服务提供方的内容过滤器拦截"
-        });
+        return AIResult.err(
+          attachLLMUsageToError(
+            new AIError({
+              type: "service",
+              message: "生成内容被服务提供方的内容过滤器拦截"
+            }),
+            normalizeCompletionsUsage(response.usage).unwrapOr(undefined)
+          )
+        );
       }
 
       const toolCalls = normalizeChatToolCalls(choice.message.tool_calls);
@@ -220,7 +276,7 @@ export class LLMProviderOpenAI extends LLMProvider<
         LLMGenerateResponse<LLMProviderOpenAIGenerateResponse<"chat_completions">>
       >({
         usage: normalizeCompletionsUsage(response.usage).unwrapOr(undefined),
-        text: choice.message.content ?? "",
+        text: choice.message.content ?? choice.message.refusal ?? "",
         toolCalls,
         finishReason: toolCalls.length
           ? "tool_calls"
@@ -240,7 +296,7 @@ export class LLMProviderOpenAI extends LLMProvider<
           temperature: request.temperature,
           tools: toResponseTools(request.tools),
           tool_choice: toResponseToolChoice(this.resolveToolChoice(config, request.toolChoice)),
-          include: ["reasoning.encrypted_content"],
+          ...toResponseInclude(config, request),
           store: false,
           stream: false
         },
@@ -252,17 +308,31 @@ export class LLMProviderOpenAI extends LLMProvider<
     }
 
     const response = responseResult.unwrap();
-    if (response.error || response.status === "failed" || response.status === "incomplete") {
-      return AIResult.err(normalizeError(response));
+    if (response.error || response.status === "failed") {
+      return AIResult.err(
+        attachLLMUsageToError(
+          normalizeError(response),
+          normalizeResponseUsage(response.usage).unwrapOr(undefined)
+        )
+      );
     }
 
     const toolCalls = normalizeResponseToolCalls(response);
+    const incompleteText = readUsableIncompleteText(response);
+    if (response.status === "incomplete" && (!incompleteText || toolCalls.length)) {
+      return AIResult.err(
+        attachLLMUsageToError(
+          normalizeError(response),
+          normalizeResponseUsage(response.usage).unwrapOr(undefined)
+        )
+      );
+    }
     const providerContext = toolCalls.length ? toResponseProviderContext(response) : undefined;
     return AIResult.ok<LLMGenerateResponse<LLMProviderOpenAIGenerateResponse<"responses">>>({
       usage: normalizeResponseUsage(response.usage).unwrapOr(undefined),
-      text: response.output_text,
+      text: incompleteText ?? (response.output_text || readResponseRefusalText(response)),
       toolCalls,
-      finishReason: toolCalls.length ? "tool_calls" : "stop",
+      finishReason: toolCalls.length ? "tool_calls" : incompleteText ? "length" : "stop",
       ...(providerContext ? { providerContext } : {}),
       raw: response
     }) as unknown as AIResult<LLMGenerateResponse<LLMProviderOpenAIGenerateResponse<T["apiMode"]>>>;
@@ -318,13 +388,14 @@ export class LLMProviderOpenAI extends LLMProvider<
           for (const choice of chunk.choices) {
             if (choice.finish_reason) finishReason = choice.finish_reason;
 
-            const delta = choice.delta.content;
-            if (delta) {
-              text += delta;
-              yield AIResult.ok({
-                type: "text_delta",
-                text: delta
-              });
+            for (const delta of [choice.delta.content, choice.delta.refusal]) {
+              if (delta) {
+                text += delta;
+                yield AIResult.ok({
+                  type: "text_delta",
+                  text: delta
+                });
+              }
             }
 
             for (const toolCall of choice.delta.tool_calls ?? []) {
@@ -337,17 +408,27 @@ export class LLMProviderOpenAI extends LLMProvider<
           }
         }
         if (finishReason === "content_filter") {
-          yield AIResult.err({
-            type: "service",
-            message: "生成内容被服务提供方的内容过滤器拦截"
-          });
+          yield AIResult.err(
+            attachLLMUsageToError(
+              new AIError({
+                type: "service",
+                message: "生成内容被服务提供方的内容过滤器拦截"
+              }),
+              normalizeCompletionsUsage(usage).unwrapOr(undefined)
+            )
+          );
           return;
         }
         if (finishReason === "length") {
-          yield AIResult.err({
-            type: "bad_response",
-            message: "生成内容达到最大 token 限制，响应未完整结束"
-          });
+          yield AIResult.err(
+            attachLLMUsageToError(
+              new AIError({
+                type: "bad_response",
+                message: "生成内容达到最大 token 限制，响应未完整结束"
+              }),
+              normalizeCompletionsUsage(usage).unwrapOr(undefined)
+            )
+          );
           return;
         }
 
@@ -384,7 +465,7 @@ export class LLMProviderOpenAI extends LLMProvider<
           temperature: request.temperature,
           tools: toResponseTools(request.tools),
           tool_choice: toResponseToolChoice(this.resolveToolChoice(config, request.toolChoice)),
-          include: ["reasoning.encrypted_content"],
+          ...toResponseInclude(config, request),
           store: false,
           stream: true
         },
@@ -398,6 +479,8 @@ export class LLMProviderOpenAI extends LLMProvider<
 
     try {
       let text = "";
+      let finalizedEventText = "";
+      let finalizedRefusalText = "";
       for await (const event of streamResult.unwrap()) {
         switch (event.type) {
           case "response.output_text.delta": {
@@ -408,7 +491,34 @@ export class LLMProviderOpenAI extends LLMProvider<
             });
             break;
           }
+          case "response.output_text.done": {
+            finalizedEventText += event.text;
+            break;
+          }
+          case "response.refusal.delta": {
+            text += event.delta;
+            yield AIResult.ok({
+              type: "text_delta",
+              text: event.delta
+            });
+            break;
+          }
+          case "response.refusal.done": {
+            finalizedRefusalText += event.refusal;
+            break;
+          }
           case "response.completed": {
+            const merged = mergeResponseStreamText(
+              text,
+              event.response.output_text ||
+                finalizedEventText ||
+                finalizedRefusalText ||
+                readResponseRefusalText(event.response)
+            );
+            text = merged.text;
+            if (merged.missingDelta) {
+              yield AIResult.ok({ type: "text_delta", text: merged.missingDelta });
+            }
             const toolCalls = normalizeResponseToolCalls(event.response);
             const providerContext = toolCalls.length
               ? toResponseProviderContext(event.response)
@@ -429,7 +539,12 @@ export class LLMProviderOpenAI extends LLMProvider<
             return;
           }
           case "response.failed": {
-            yield AIResult.err(normalizeError(event.response.error));
+            yield AIResult.err(
+              attachLLMUsageToError(
+                normalizeError(event.response.error),
+                normalizeResponseUsage(event.response.usage).unwrapOr(undefined)
+              )
+            );
             return;
           }
           case "error": {
@@ -437,7 +552,37 @@ export class LLMProviderOpenAI extends LLMProvider<
             return;
           }
           case "response.incomplete": {
-            yield AIResult.err(normalizeError(event.response));
+            const incompleteText = readUsableIncompleteText(
+              event.response,
+              finalizedEventText || text
+            );
+            const toolCalls = normalizeResponseToolCalls(event.response);
+            if (incompleteText && !toolCalls.length) {
+              const merged = mergeResponseStreamText(text, incompleteText);
+              text = merged.text;
+              if (merged.missingDelta) {
+                yield AIResult.ok({ type: "text_delta", text: merged.missingDelta });
+              }
+              yield AIResult.ok<
+                LLMGenerateStreamResponse<LLMProviderOpenAIStreamResponse<"responses">>
+              >({
+                type: "done",
+                text,
+                toolCalls: [],
+                finishReason: "length",
+                usage: normalizeResponseUsage(event.response.usage).unwrapOr(undefined),
+                raw: event.response
+              }) as AIResult<
+                LLMGenerateStreamResponse<LLMProviderOpenAIStreamResponse<T["apiMode"]>>
+              >;
+              return;
+            }
+            yield AIResult.err(
+              attachLLMUsageToError(
+                normalizeError(event.response),
+                normalizeResponseUsage(event.response.usage).unwrapOr(undefined)
+              )
+            );
             return;
           }
         }

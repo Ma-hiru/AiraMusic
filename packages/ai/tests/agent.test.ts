@@ -649,10 +649,63 @@ describe("AIAgent", () => {
     });
     expect(stores.conversations.values.get("conversation-title-fallback")).toMatchObject({
       name: "第一条消息",
+      metadata: { "agent.titleSource": "fallback" },
+      runtime: { titleGenerated: false },
       messages: [
         { role: "user", content: "第一条消息" },
         { role: "assistant", content: "主回复仍然完成" }
       ]
+    });
+  });
+
+  it("retries a fallback title on a later turn and replaces it after success", async () => {
+    const stores = createStores();
+    const provider = new RetryingTitleProvider({
+      responses: [response({ text: "第一轮主回复" }), response({ text: "第二轮主回复" })]
+    });
+    const agent = createAgent(stores.inject, provider);
+    await createReadyConfig(agent, "config-title-retry");
+    expect((await agent.createConversation({ id: "conversation-title-retry" })).isOk()).toBe(true);
+
+    const firstEvents: AIAgentEvent[] = [];
+    const firstTerminal = waitForTerminalEvent(agent, firstEvents);
+    expect(
+      (
+        await agent.chat({
+          configID: "config-title-retry",
+          conversationID: "conversation-title-retry",
+          input: "介绍这首歌和相关剧情"
+        })
+      ).isOk()
+    ).toBe(true);
+    await firstTerminal;
+    expect(stores.conversations.values.get("conversation-title-retry")).toMatchObject({
+      name: "介绍这首歌和相关剧情",
+      metadata: { "agent.titleSource": "fallback" }
+    });
+
+    const secondEvents: AIAgentEvent[] = [];
+    const secondTerminal = waitForTerminalEvent(agent, secondEvents);
+    expect(
+      (
+        await agent.chat({
+          configID: "config-title-retry",
+          conversationID: "conversation-title-retry",
+          input: "继续"
+        })
+      ).isOk()
+    ).toBe(true);
+    await secondTerminal;
+
+    expect(provider.titleAttempts).toBe(2);
+    expect(secondEvents.find((event) => event.type === "title")).toMatchObject({
+      type: "title",
+      title: "歌曲与剧情介绍"
+    });
+    expect(stores.conversations.values.get("conversation-title-retry")).toMatchObject({
+      name: "歌曲与剧情介绍",
+      metadata: { "agent.titleSource": "generated" },
+      runtime: { titleGenerated: true }
     });
   });
 
@@ -713,6 +766,8 @@ describe("AIAgent", () => {
       input: 10,
       output: 2,
       total: 12,
+      requests: 1,
+      lastInput: 10,
       cachedInput: 3,
       cacheWrite: 4,
       reasoning: 1
@@ -721,6 +776,8 @@ describe("AIAgent", () => {
       input: 30,
       output: 7,
       total: 37,
+      requests: 2,
+      lastInput: 20,
       cachedInput: 9,
       cacheWrite: 11,
       reasoning: 3
@@ -729,6 +786,8 @@ describe("AIAgent", () => {
       input: 30,
       output: 7,
       total: 37,
+      requests: 2,
+      lastInput: 20,
       cachedInput: 9,
       cacheWrite: 11,
       reasoning: 3
@@ -738,6 +797,8 @@ describe("AIAgent", () => {
         inputTokens: 30,
         outputTokens: 7,
         totalTokens: 37,
+        requestCount: 2,
+        lastInputTokens: 20,
         cachedInputTokens: 9,
         cacheWriteTokens: 11,
         reasoningTokens: 3
@@ -1123,7 +1184,9 @@ describe("AIAgent", () => {
     expect(saved?.assistantTurns?.at(-1)?.usage).toEqual({
       input: 30,
       output: 5,
-      total: 35
+      total: 35,
+      requests: 2,
+      lastInput: 20
     });
     expect(saved && LLMConversation.fromSnapshot(saved).isOk()).toBe(true);
   });
@@ -1471,6 +1534,23 @@ class TitleErrorProvider extends FakeProvider {
     _request: LLMGenerateRequest
   ): Promise<AIResult<LLMGenerateResponse>> {
     return AIResult.err({ type: "network", message: "title unavailable" });
+  }
+}
+
+class RetryingTitleProvider extends FakeProvider {
+  titleAttempts = 0;
+
+  override async generate<T extends TestConfig>(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _config: T,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _request: LLMGenerateRequest
+  ): Promise<AIResult<LLMGenerateResponse>> {
+    this.titleAttempts += 1;
+    if (this.titleAttempts === 1) {
+      return AIResult.err({ type: "network", message: "title temporarily unavailable" });
+    }
+    return AIResult.ok(response({ text: "歌曲与剧情介绍" }));
   }
 }
 

@@ -1,5 +1,6 @@
 import { memo, type FC } from "react";
-import { NeteasePlaylist } from "@/common/netease/models";
+import type { NeteaseUser, NeteasePlaylist } from "@/common/netease/models";
+import type { PlaylistModifyType } from "@/common/hooks/use-playlist-modify-sync";
 
 import TopInfo from "./top-info";
 import TopCover from "./top-cover";
@@ -11,6 +12,7 @@ interface TopProps {
   reload?: NormalFunc;
   coverCacheKey?: string;
   selectionMode?: boolean;
+  user: Nullable<NeteaseUser>;
   summary: Nullable<NeteasePlaylist>;
   source: Nullable<"like" | "normal">;
   searchTracks: NormalFunc<[k: string]>;
@@ -22,10 +24,11 @@ interface TopProps {
   onPageAction?: NormalFunc;
   onToggleSelectionMode?: NormalFunc;
   onCoverLoaded?: NormalFunc<[src: string]>;
-  onEdited?: Optional<NormalFunc<[modifiedCover: boolean]>>;
+  onEdited: Optional<NormalFunc<[modifies: PlaylistModifyType[]]>>;
 }
 
 const Top: FC<TopProps> = ({
+  user,
   source,
   pageActionType,
   setIsTyping = () => {},
@@ -49,7 +52,13 @@ const Top: FC<TopProps> = ({
     <div className="w-full h-45 grid grid-rows-1 grid-cols-[3fr_1fr] gap-3">
       <div className="min-w-0 grid grid-rows-1 grid-cols-[auto_1fr] gap-4 items-end">
         <TopCover summary={summary} coverCacheKey={coverCacheKey} onCoverLoaded={onCoverLoaded} />
-        <TopInfo summary={summary} onAddList={onAddList} onPlayAll={onPlayAll} />
+        <TopInfo
+          user={user}
+          summary={summary}
+          onAddList={onAddList}
+          onPlayAll={onPlayAll}
+          onEdited={() => onEdited?.(["star"])}
+        />
       </div>
       <TopRight
         reload={reload}
@@ -60,9 +69,9 @@ const Top: FC<TopProps> = ({
         searchTracks={searchTracks}
         selectionMode={selectionMode}
         pageActionType={pageActionType}
-        onEdited={onEdited}
         onDeleted={onDeleted}
         onPageAction={onPageAction}
+        onEdited={() => onEdited?.(["meta"])}
         onToggleSelectionMode={onToggleSelectionMode}
       />
     </div>

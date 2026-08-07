@@ -8,6 +8,7 @@ interface ToggleRowProps {
   title: string;
   checked: boolean;
   icon?: LucideIcon;
+  disabled?: boolean;
   description: string;
   emptyIcon?: boolean;
   onClick: NormalFunc;
@@ -19,6 +20,7 @@ const ToggleRow: FC<ToggleRowProps> = ({
   title,
   checked,
   description,
+  disabled = false,
   emptyIcon = false
 }) => {
   return (
@@ -37,11 +39,14 @@ const ToggleRow: FC<ToggleRowProps> = ({
               h-7 w-12 shrink-0 rounded-full border
               transition-all duration-300 ease-in-out
               cursor-pointer hover:opacity-50 active:scale-95
+              disabled:cursor-not-allowed disabled:opacity-35 disabled:active:scale-100
               flex justify-start items-center p-0
             `,
               checked ? "border-primary pl-6" : "border-white/50 pl-1"
             )}
             type="button"
+            disabled={disabled}
+            aria-pressed={checked}
             title={checked ? "关闭" : "开启"}
             onClick={onClick}>
             <span

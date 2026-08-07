@@ -100,6 +100,12 @@ const LayoutDisplay: FC<object> = () => {
           });
           break;
         }
+        case "album":
+          RendererModified.mark({
+            type: "album",
+            id: m.id
+          });
+          break;
       }
     }
   }, [modifiedBus.data, modifiedBus.type, navigate, locationRef]);

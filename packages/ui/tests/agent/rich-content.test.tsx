@@ -193,6 +193,58 @@ describe("Agent 富内容", () => {
     expect(screen.getAllByRole("button")).toHaveLength(1);
   });
 
+  it("闭合 think 内容默认收起且与正式回答分离", async () => {
+    render(
+      <MarkdownContent
+        content={[
+          "<think>",
+          "用户想听《群青》，先确认歌曲 ID 再读歌词。",
+          "</think>",
+          "",
+          "《群青》是 YOASOBI 的代表作。"
+        ].join("\n")}
+      />
+    );
+
+    const toggle = await screen.findByRole("button", { name: /思考过程/ });
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    expect(screen.getByText("《群青》是 YOASOBI 的代表作。")).toBeInTheDocument();
+    expect(screen.queryByText(/先确认歌曲 ID/)).not.toBeInTheDocument();
+
+    fireEvent.click(toggle);
+    expect(await screen.findByText(/先确认歌曲 ID/)).toBeInTheDocument();
+  });
+
+  it("流式未闭合 think 展示为正在思考并实时显示内容", () => {
+    render(<MarkdownContent content={"<think>\n正在分析当前播放的歌曲背景……"} streaming />);
+
+    const toggle = screen.getByRole("button", { name: /正在思考/ });
+    expect(toggle).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getByText("正在分析当前播放的歌曲背景……")).toBeInTheDocument();
+  });
+
+  it("围栏代码块里的 think 字样不会被误识别", async () => {
+    const source = ["```xml", "<think>这是代码示例</think>", "```"].join("\n");
+    render(<MarkdownContent content={source} />);
+
+    expect(screen.queryByRole("button", { name: /思考过程|正在思考/ })).not.toBeInTheDocument();
+    expect(await screen.findByText(/这是代码示例/)).toBeInTheDocument();
+  });
+
+  it("think 段之后仍能解析资源卡片", async () => {
+    const source = [
+      "<think>应该给用户一张歌曲卡片</think>",
+      "",
+      "```aira-card",
+      '{"kind":"track","id":123}',
+      "```"
+    ].join("\n");
+    render(<MarkdownContent content={source} />);
+
+    expect(await screen.findByRole("button", { name: /思考过程/ })).toBeInTheDocument();
+    expect(await screen.findByText("示例歌曲")).toBeInTheDocument();
+  });
+
   it("保留 Streamdown 默认 GFM，正确渲染 Markdown 表格", async () => {
     const source = [
       "对比如下：",

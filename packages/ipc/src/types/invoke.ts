@@ -28,6 +28,28 @@ export type AgentProviderConfigUpdateInput = {
   config: LLMProviderConfigInput;
 } & Omit<AIAgentUpdateConfigOptions, "config">;
 
+export type AgentFeatureSettingsConfig = {
+  mcpPort: number;
+  mcpTools: string[];
+  mcpEnabled: boolean;
+  agentEnabled: boolean;
+};
+
+export type AgentFeatureSettingsMcpTool = {
+  name: string;
+  label: string;
+  description: string;
+};
+
+export type AgentFeatureSettingsState = AgentFeatureSettingsConfig & {
+  /** 本次应用启动后实际采用的配置；它不会因仅持久化设置而偷偷热启服务。 */
+  restartRequired: boolean;
+  effective: AgentFeatureSettingsConfig;
+  availableMcpTools: AgentFeatureSettingsMcpTool[];
+};
+
+export type AgentFeatureSettingsUpdateInput = Partial<AgentFeatureSettingsConfig>;
+
 /** Invoke 事件类型以及参数 */
 export type InvokeEventMaps = {
   invoke_runtime_id: [undefined, string];
@@ -79,6 +101,7 @@ export type InvokeEventMaps = {
   invoke_store_delete: [string, { ok: true } | { ok: false; reason?: string }];
   invoke_agent_list_runs: [undefined, AgentInvokeResult<AIAgentRunningRunSnapshot[]>];
   invoke_agent_chat: [AgentChatInput, Promise<AgentInvokeResult<AIAgentRunningRunSnapshot>>];
+  invoke_agent_feature_settings_get: [undefined, AgentInvokeResult<AgentFeatureSettingsState>];
   invoke_agent_list_configs: [undefined, Promise<AgentInvokeResult<AIProviderConfigSnapshot[]>>];
   invoke_agent_list_provider_descriptors: [undefined, AgentInvokeResult<LLMProviderDescriptor[]>];
   invoke_agent_list_conversations: [
@@ -96,6 +119,10 @@ export type InvokeEventMaps = {
   invoke_agent_update_config: [
     AgentProviderConfigUpdateInput,
     Promise<AgentInvokeResult<AIProviderConfigSnapshot>>
+  ];
+  invoke_agent_feature_settings_update: [
+    AgentFeatureSettingsUpdateInput,
+    Promise<AgentInvokeResult<AgentFeatureSettingsState>>
   ];
   invoke_agent_create_conversation: [
     undefined | AgentConversationCreateInput,

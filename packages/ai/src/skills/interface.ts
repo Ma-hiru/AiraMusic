@@ -34,6 +34,10 @@ export interface AIAgentEvidenceRequirement {
   argumentFromEvidence?: AIAgentEvidenceArgumentSource;
   /** success 要求调用成功；attempt 允许工具失败后如实说明缺口。 */
   satisfaction?: AIAgentEvidenceSatisfaction;
+  /** 可选的结果字段路径；用于确认模型实际看见了有效内容。 */
+  outputPath?: readonly string[];
+  /** 指定结果字段至少需要保留多少可见字符；即使工具成功，空结果也不满足。 */
+  minimumOutputChars?: number;
   /** 前置证据失败时，本项因没有可靠输入而自动跳过。 */
   dependsOn?: readonly string[];
 }
@@ -57,6 +61,11 @@ export interface AIAgentSkillDefinition extends AIAgentInstructionDefinitionBase
   kind: "skill";
   match: AIAgentSkillMatcher;
   requiredEvidence?: readonly AIAgentEvidenceRequirement[];
+  /**
+   * 连续调用工具但未推进必要证据时，允许的停滞步数上限（默认 3，最大 12）。
+   * 搜索质量波动较大的联网取证流程可调大，给模型更多换词尝试机会。
+   */
+  maxNoProgressSteps?: number;
 }
 
 export type AIAgentInstructionDefinition = AIAgentRuleDefinition | AIAgentSkillDefinition;
@@ -69,4 +78,6 @@ export interface AIAgentSkillActivation {
   toolNames: string[];
   /** 接受最终回答前必须满足的工具证据。 */
   requiredEvidence: AIAgentEvidenceRequirement[];
+  /** 已激活技能中最大的停滞步数预算；未配置时由 loop 使用默认值。 */
+  maxNoProgressSteps?: number;
 }

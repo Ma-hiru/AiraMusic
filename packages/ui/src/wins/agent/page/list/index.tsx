@@ -67,7 +67,7 @@ const ConversationList: FC<ConversationListProps> = ({
         <aside
           className={cx(
             "agent-panel flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border",
-            overlay && "shadow-2xl shadow-black/35"
+            overlay && "shadow-md shadow-black/18"
           )}>
           <header className="flex h-12 shrink-0 items-center justify-between gap-2 border-b border-white/7 px-3">
             <div className="min-w-0">

@@ -21,11 +21,11 @@
 
 .agent-panel {
   border-color: rgba(255, 255, 255, 0.1) !important;
-  background: rgba(9, 10, 13, 0.3) !important;
+  background: rgba(12, 13, 16, 0.42) !important;
   box-shadow:
-    0 18px 52px rgba(0, 0, 0, 0.16),
-    inset 0 1px rgba(255, 255, 255, 0.035) !important;
-  backdrop-filter: blur(30px) saturate(1.18);
+    0 1px 0 rgba(255, 255, 255, 0.04) inset,
+    0 8px 28px rgba(0, 0, 0, 0.12) !important;
+  backdrop-filter: blur(28px) saturate(1.12);
 }
 
 .agent-scroll {
@@ -298,14 +298,14 @@
   }
 
   [data-streamdown="table"] {
-    width: max-content;
+    width: 100%;
     min-width: 100%;
     border-collapse: collapse;
     border-spacing: 0;
     border: 0;
     font-size: 0.82rem;
-    overflow-wrap: normal;
-    word-break: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
   }
 
   [data-streamdown="table-header"] {
@@ -317,10 +317,12 @@
   [data-streamdown="table-header-cell"],
   [data-streamdown="table-cell"] {
     border: 1px solid rgba(255, 255, 255, 0.1);
-    padding: 0.55rem 0.7rem;
+    padding: 0.45rem 0.6rem;
     text-align: left;
     vertical-align: top;
-    white-space: nowrap;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
   }
 
   [data-streamdown="table"] th,
@@ -825,6 +827,148 @@
 
   50% {
     opacity: 1;
+  }
+}
+
+/* ---------- 设计细节：流式指示 / 工作行 / 滚动渐变 ---------- */
+
+/* Aira 流式回复的三点跳动，颜色跟随动态主题 */
+.agent-typing-dots {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+
+  i {
+    width: 3px;
+    height: 3px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--theme-color-main) 72%, white);
+    animation: agent-typing-bounce 1.15s ease-in-out infinite;
+
+    &:nth-child(2) {
+      animation-delay: 140ms;
+    }
+
+    &:nth-child(3) {
+      animation-delay: 280ms;
+    }
+  }
+}
+
+@keyframes agent-typing-bounce {
+  0%,
+  64%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.42;
+  }
+
+  32% {
+    transform: translateY(-2.5px);
+    opacity: 1;
+  }
+}
+
+/* think 推理内容：默认收起、展开后整体淡化，与正式回答保持层级差 */
+.agent-think {
+  min-width: 0;
+  border-left: 1px solid rgba(255, 255, 255, 0.09);
+  padding-left: 0.65rem;
+}
+
+.agent-think-toggle {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  cursor: pointer;
+  align-items: center;
+  gap: 0.4rem;
+  border-radius: 0.4rem;
+  padding-block: 0.12rem;
+  color: rgba(255, 255, 255, 0.34);
+  font-size: 10.5px;
+  font-weight: 550;
+  letter-spacing: 0.02em;
+  outline: none;
+  text-align: left;
+  transition: color 160ms ease;
+
+  &:hover:not(:disabled),
+  &:focus-visible {
+    color: rgba(255, 255, 255, 0.58);
+  }
+
+  &:focus-visible {
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.28);
+  }
+
+  &:disabled {
+    cursor: default;
+    color: color-mix(in srgb, var(--theme-color-main) 52%, white);
+  }
+
+  svg {
+    opacity: 0.75;
+  }
+}
+
+.agent-think-body {
+  margin-top: 0.3rem;
+  padding-bottom: 0.15rem;
+  color: rgba(255, 255, 255, 0.34);
+  font-size: 11.5px;
+  font-weight: 400;
+  letter-spacing: 0.003em;
+  line-height: 1.72;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+  user-select: text;
+}
+
+.agent-think-body-live {
+  color: rgba(255, 255, 255, 0.44);
+}
+
+/* 输入区上方的工作状态行（取代旧的全宽横幅） */
+.agent-working {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 1.5rem;
+  padding-inline: 0.25rem;
+  color: color-mix(in srgb, var(--theme-color-main) 62%, white);
+  font-size: 10.5px;
+  font-weight: 550;
+}
+
+.agent-working-dot {
+  position: relative;
+  width: 5px;
+  height: 5px;
+  flex: none;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--theme-color-main) 85%, white);
+
+  &::after {
+    position: absolute;
+    inset: -3px;
+    border-radius: inherit;
+    background: color-mix(in srgb, var(--theme-color-main) 26%, transparent);
+    animation: agent-working-ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
+    content: "";
+  }
+}
+
+@keyframes agent-working-ping {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.9;
+  }
+
+  75%,
+  100% {
+    transform: scale(1.9);
+    opacity: 0;
   }
 }
 

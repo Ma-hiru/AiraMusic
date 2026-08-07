@@ -310,29 +310,67 @@ export class RendererWindow extends Listenable<"react-ready" | RendererWindowEve
     RendererIPC.NormalChannel.send("event_window_open", this.type);
   }
 
-  reactReadyAwait() {
-    const { promise, resolve } = Promise.withResolvers<void>();
+  reactReadyAwait(options: { signal?: AbortSignal } = {}) {
+    if (this.reactReady) return Promise.resolve();
 
-    promise.finally(() => {
+    const { reject, promise, resolve } = Promise.withResolvers<void>();
+    const listenerState: { timer?: number; settled?: boolean; remove?: NormalFunc } = {};
+
+    const finish = (callback = resolve) => {
+      if (listenerState.settled) return;
+      listenerState.settled = true;
+
+      listenerState.remove?.();
+      options.signal?.removeEventListener("abort", abort);
+      listenerState.timer && clearTimeout(listenerState.timer);
+
+      callback();
+    };
+    const ok = () => {
+      this.focus();
+      finish(resolve);
+    };
+    const abort = () => {
+      finish(() => {
+        const error = new Error("窗口就绪等待已取消");
+        error.name = "AbortError";
+        reject(error);
+      });
+    };
+    const timeout = () => {
+      finish(() => {
+        const error = new Error("窗口就绪等待超时");
+        error.name = "TimeoutError";
+        reject(error);
+      });
+    };
+    const listener = () => {
+      if (!this.reactReady) return;
+      listenerState.remove?.(); // 虽然finish（ok）会清理，但还是先清理一下，以免短时间重复触发来不及finish
+      listenerState.timer && clearTimeout(listenerState.timer); // 清理超时逻辑
+      listenerState.timer = window.setTimeout(ok, 100);
+    };
+
+    void promise.then(() => {
       // 新建窗口自动分发一次基本的 bus
       // 额外的 bus 可以自行 dispatch
       RendererIPC.MessageChannel.commit("bus_dispatch_update", ["theme", "track-meta"]);
     });
 
-    if (this.reactReady) {
-      this.focus();
-      resolve();
+    if (options.signal?.aborted) {
+      abort();
+      return promise;
+    } else if (this.reactReady) {
+      ok();
       return promise;
     }
 
-    let removeListener: Undefinable<NormalFunc> = undefined;
-    const listener = () => {
-      if (!this.reactReady) return;
-      removeListener?.();
-      resolve();
-    };
-    removeListener = this.addEventListener("react-ready", listener);
+    // 超时走 timeout，否则走 listener，取消走 abort
+    listenerState.remove = this.addEventListener("react-ready", listener);
+    listenerState.timer = window.setTimeout(timeout, 5_000);
+    options.signal?.addEventListener("abort", abort, { once: true });
 
+    // 最终都会触发 react-ready 事件
     if (this.opened) {
       RendererIPC.MessageChannel.send("bus_deliver_react_ready", this.type, {
         type: "isReady",
@@ -484,6 +522,14 @@ export class RendererWindow extends Listenable<"react-ready" | RendererWindowEve
     return this.get("miniplayer");
   }
 
+  static get radio() {
+    return this.get("radio");
+  }
+
+  static get lyric() {
+    return this.get("lyric");
+  }
+
   static get all() {
     return this.get("all");
   }
@@ -504,12 +550,14 @@ export class RendererWindow extends Listenable<"react-ready" | RendererWindowEve
           sender: RendererRuntime.currentWindowType
         });
       };
+
       RendererIPC.MessageChannel.listen("bus_deliver_react_ready", "all", ({ data }) => {
-        if (data.type === "isReady" && data.target === RendererRuntime.currentWindowType) {
-          sendStatus();
-        }
+        if (data.type !== "isReady") return;
+        if (data.target !== RendererRuntime.currentWindowType) return;
+        sendStatus();
       });
-      setTimeout(sendStatus, 500);
+
+      setTimeout(sendStatus, 300);
     });
   }
 }

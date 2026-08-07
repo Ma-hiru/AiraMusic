@@ -8,6 +8,7 @@ import { MainWindowManager } from "@/lib/window-manager";
 import { MainScreenResolver } from "@/lib/screen-resolver";
 import { MainCacheStoreConstants } from "@/constants/store";
 import { AIError, AIResult, type AIErrorCode } from "@mahiru/ai";
+import { MainAgentFeatureSettings } from "@/inner/agent/feature-settings";
 import { MainStoreForConfig, MainStoreForRenderer } from "@/lib/key-value-store";
 import Net from "node:net";
 import Https from "node:https";
@@ -16,6 +17,22 @@ import Dns from "node:dns/promises";
 import type { InvokeHandlers } from "@mahiru/ipc/types";
 
 export const invokeHandlers: InvokeHandlers = {
+  invoke_agent_feature_settings_get: (event) => {
+    return authorizedAgentFeatureSettingsData(event, () => MainAgentFeatureSettings.getState());
+  },
+  invoke_agent_feature_settings_update: (event, options) => {
+    return authorizedAgentFeatureSettingsResult(event, () => {
+      const previous = MainAgentFeatureSettings.getState();
+      const persisted = MainAgentFeatureSettings.update(options);
+      if (previous.agentEnabled && !persisted.agentEnabled) {
+        MainAgent.shutdown();
+        destroyAgentWindow();
+      }
+      const state = MainAgentFeatureSettings.getState();
+      MainAgent.broadcastFeatureSettings(state);
+      return AIResult.ok(state);
+    });
+  },
   invoke_agent_list_providers: (event) => {
     return authorizedAgentData(event, () => MainAgent.listProviders());
   },
@@ -338,9 +355,25 @@ const hasOnlyKeys = (value: Record<string, unknown>, allowedKeys: readonly strin
  * 既校验窗口身份，也拒绝 iframe 和导航到外部页面后的调用。
  */
 export const isAuthorizedAgentInvokeSender = (event: IpcMainInvokeEvent) => {
+  return isAuthorizedApplicationMainFrame(event, "agent", "/agent.html");
+};
+
+/** Agent 功能设置只能由主窗口或 display 设置窗口自身的应用主框架读取和修改。 */
+export const isAuthorizedAgentFeatureSettingsSender = (event: IpcMainInvokeEvent) => {
+  return (
+    isAuthorizedApplicationMainFrame(event, "main", "/") ||
+    isAuthorizedApplicationMainFrame(event, "display", "/display.html")
+  );
+};
+
+function isAuthorizedApplicationMainFrame(
+  event: IpcMainInvokeEvent,
+  windowType: "main" | "agent" | "display",
+  pathname: string
+) {
   try {
     const senderWindow = BrowserWindow.fromWebContents(event.sender);
-    if (!senderWindow || MainWindowManager.getId(senderWindow) !== "agent") return false;
+    if (!senderWindow || MainWindowManager.getId(senderWindow) !== windowType) return false;
     if (!event.senderFrame || event.senderFrame !== event.sender.mainFrame) return false;
 
     const url = new URL(event.senderFrame.url);
@@ -351,16 +384,33 @@ export const isAuthorizedAgentInvokeSender = (event: IpcMainInvokeEvent) => {
       url.protocol === "http:" &&
       url.hostname === "localhost" &&
       Boolean(url.port) &&
-      url.pathname === "/agent.html" &&
+      isWithinAppPath(url.pathname, pathname) &&
       url.origin === expectedURL.origin &&
-      url.pathname === expectedURL.pathname &&
       !url.username &&
       !url.password
     );
   } catch {
     return false;
   }
-};
+}
+
+/** SPA 会在初始页面地址下继续路由（如 /display.html/settings），允许其子路径。 */
+function isWithinAppPath(pathname: string, base: string) {
+  if (pathname === base) return true;
+  const prefix = base.endsWith("/") ? base : `${base}/`;
+  return pathname.startsWith(prefix);
+}
+
+function destroyAgentWindow() {
+  const agentWindow = MainWindowManager.get("agent");
+  try {
+    if (agentWindow && !agentWindow.isDestroyed()) agentWindow.destroy();
+  } catch (error) {
+    Log.error("invoke(agent settings)", "销毁 Agent 窗口失败", error);
+  } finally {
+    MainWindowManager.remove("agent");
+  }
+}
 
 const unauthorizedAgentInvokeResult = () =>
   ({
@@ -420,6 +470,25 @@ const authorizedAgentResult = <T>(
 const authorizedAgentData = <T>(event: IpcMainInvokeEvent, action: () => T) => {
   if (!isAuthorizedAgentInvokeSender(event)) {
     Log.warn("invoke(agent)", "拒绝非 Agent 主框架请求");
+    return unauthorizedAgentInvokeResult();
+  }
+  return agentData(action);
+};
+
+const authorizedAgentFeatureSettingsResult = <T>(
+  event: IpcMainInvokeEvent,
+  action: () => AIResult<T> | Promise<AIResult<T>>
+) => {
+  if (!isAuthorizedAgentFeatureSettingsSender(event)) {
+    Log.warn("invoke(agent settings)", "拒绝非主窗口应用主框架请求");
+    return Promise.resolve(unauthorizedAgentInvokeResult());
+  }
+  return agentResult(action);
+};
+
+const authorizedAgentFeatureSettingsData = <T>(event: IpcMainInvokeEvent, action: () => T) => {
+  if (!isAuthorizedAgentFeatureSettingsSender(event)) {
+    Log.warn("invoke(agent settings)", "拒绝非主窗口应用主框架请求");
     return unauthorizedAgentInvokeResult();
   }
   return agentData(action);

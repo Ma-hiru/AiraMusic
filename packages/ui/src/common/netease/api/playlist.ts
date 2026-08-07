@@ -209,17 +209,21 @@ export default class _NeteasePlaylistAPI {
    * 心动模式/智能播放
    * @desc 登录后调用此接口 , 可获取心动模式/智能播放列表 必选参数 : id :
    */
-  static intelligence(params: {
-    /** 歌曲 id */
-    id: number;
-    /** 歌单 id */
-    pid: number;
-    /** 要开始播放的歌曲的 id (可选参数) */
-    sid?: number;
-  }) {
-    return apiRequest({
+  static intelligence(
+    params: {
+      /** 歌曲 id */
+      id: number;
+      /** 歌单 id */
+      pid: number;
+      /** 要开始播放的歌曲的 id (可选参数) */
+      sid?: number;
+    },
+    signal?: AbortSignal
+  ) {
+    return apiRequest<any, NeteaseAPI.NeteasePlaylistIntelligenceResponse>({
       url: "/playmode/intelligence/list",
-      params
+      params,
+      signal
     });
   }
 

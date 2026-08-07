@@ -137,6 +137,14 @@ export class LLMHistoryBudget {
     };
   }
 
+  /** 延迟工具加载后同步基础请求，使新 schema 也进入上下文预算。 */
+  setToolConfiguration(configuration: Pick<LLMGenerateRequest, "tools" | "toolChoice">): void {
+    if (configuration.tools === undefined) delete this.baseRequest.tools;
+    else this.baseRequest.tools = structuredClone(configuration.tools);
+    if (configuration.toolChoice === undefined) delete this.baseRequest.toolChoice;
+    else this.baseRequest.toolChoice = structuredClone(configuration.toolChoice);
+  }
+
   async fit(currentTurn: readonly LLMMessage[]): Promise<AIResult<LLMHistoryCompactionResult>> {
     const history = this.conversation.toMessages();
     const turnsResult = partitionHistoryTurns(history);

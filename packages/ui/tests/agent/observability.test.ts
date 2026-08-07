@@ -74,7 +74,14 @@ describe("Agent observability", () => {
           runID: "run-1",
           startedAt: 100,
           endedAt: 1_100,
-          usage: { input: 12, output: 3, total: 15, cachedInput: 4 },
+          usage: {
+            input: 32,
+            output: 3,
+            total: 35,
+            cachedInput: 14,
+            requests: 2,
+            lastInput: 20
+          },
           error: { type: "provider_error", message: "upstream failed" }
         }
       })
@@ -85,7 +92,14 @@ describe("Agent observability", () => {
       status: "failed",
       startedAt: 100,
       endedAt: 1_100,
-      usage: { input: 12, output: 3, total: 15, cachedInput: 4 },
+      usage: {
+        input: 32,
+        output: 3,
+        total: 35,
+        cachedInput: 14,
+        requests: 2,
+        lastInput: 20
+      },
       error: "provider_error: upstream failed"
     });
     expect(
@@ -190,6 +204,72 @@ describe("Agent observability", () => {
       error: "service: request failed"
     });
   });
+
+  it("新 run 开始后拒绝旧 run 迟到的增量、完成和启动事件", () => {
+    const current = createState({
+      latestRunID: "run-new",
+      runningRunID: "run-new",
+      streamText: "新一轮回复"
+    });
+    const lateText = reduceAgentConversationEvent(current, {
+      step: 2,
+      type: "text_delta",
+      runID: "run-old",
+      conversationID: "conversation-1",
+      text: "旧回复不应出现"
+    } satisfies AIAgentEvent);
+    const lateDone = reduceAgentConversationEvent(current, {
+      type: "done",
+      runID: "run-old",
+      conversationID: "conversation-1",
+      response: {
+        text: "旧回复",
+        toolCalls: [],
+        finishReason: "stop"
+      },
+      snapshot: {
+        id: "conversation-1",
+        name: "旧快照",
+        createdAt: 1,
+        updatedAt: 2,
+        metadata: {},
+        messages: [{ role: "assistant", content: "旧回复" }]
+      }
+    } satisfies AIAgentEvent);
+    const lateStarted = reduceAgentConversationEvent(current, {
+      type: "started",
+      runID: "run-old",
+      at: 1,
+      configID: "config-1",
+      conversationID: "conversation-1"
+    } satisfies AIAgentEvent);
+
+    expect(lateText).toBe(current);
+    expect(lateDone).toBe(current);
+    expect(lateStarted).toBe(current);
+  });
+
+  it("提交新消息时允许新的 started 事件替换上一轮标识", () => {
+    const waiting = createState({
+      sending: true,
+      latestRunID: "run-old",
+      runningRunID: ""
+    });
+
+    expect(
+      reduceAgentConversationEvent(waiting, {
+        type: "started",
+        runID: "run-new",
+        at: 2,
+        configID: "config-1",
+        conversationID: "conversation-1"
+      } satisfies AIAgentEvent)
+    ).toMatchObject({
+      sending: false,
+      latestRunID: "run-new",
+      runningRunID: "run-new"
+    });
+  });
 });
 
 const createTextEvent = (step: number, text: string) =>
@@ -205,6 +285,7 @@ const createState = (override: Partial<AgentConversationState> = {}): AgentConve
   sending: false,
   streamText: "",
   recovering: false,
+  latestRunID: "run-1",
   runningRunID: "run-1",
   conversation: null,
   liveTimeline: [],

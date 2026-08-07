@@ -46,10 +46,6 @@ const MiniPlayerPage: FC = () => {
     RendererWindow.main.focus();
   }, []);
 
-  const togglePlay = useCallback(() => {
-    RendererIPCMessageBus.playerAction.deliver(isPlaying ? "pause" : "play");
-  }, [isPlaying]);
-
   useEffect(() => {
     RendererIPCMessageBus.updater.deliver("track-meta");
     RendererIPCMessageBus.updater.deliver("track-progress");
@@ -112,7 +108,7 @@ const MiniPlayerPage: FC = () => {
           <span className="absolute right-0.5 top-0.5 flex size-2.5 items-center justify-center rounded-full bg-primary">
             <Disc3
               className={cx(
-                "size-2 text-(--text-color-on-main)",
+                "size-2 text-primary-text",
                 trackMetaBus.data?.status === "playing" && "animate-spin"
               )}
             />
@@ -175,13 +171,14 @@ const MiniPlayerPage: FC = () => {
             <ControlButton
               label="上一首"
               icon={SkipBack}
+              disabled={trackMetaBus.data?.mode === "fm"}
               onClick={() => RendererIPCMessageBus.playerAction.deliver("previous")}
               filled
             />
             <ControlButton
               icon={isPlaying ? Pause : Play}
               label={isPlaying ? "暂停" : "播放"}
-              onClick={togglePlay}
+              onClick={() => RendererIPCMessageBus.playerAction.deliver("play-toggle")}
               filled
             />
             <ControlButton
@@ -198,7 +195,7 @@ const MiniPlayerPage: FC = () => {
               className="
                 flex size-5 items-center justify-center rounded-full outline-none
                 transition-all duration-200 ease-in-out
-                hover:bg-(--text-color-on-main)/50 hover:text-primary
+                hover:bg-primary-text/50 hover:text-primary
                 active:scale-90 focus-visible:ring-2 focus-visible:ring-primary/35
               "
               title="隐藏"
@@ -223,23 +220,26 @@ const ControlButton = ({
   onClick,
   label,
   filled,
+  disabled,
   icon: Icon
 }: {
   label: string;
   filled?: boolean;
   icon: LucideIcon;
+  disabled?: boolean;
   onClick: NormalFunc;
 }) => {
   return (
     <button
-      className="
-        flex size-5 items-center justify-center rounded-full outline-none
+      className={cx(
+        `flex size-5 items-center justify-center rounded-full outline-none
         transition-all duration-300 ease-in-out active:scale-90
         hover:bg-(--text-color-on-main)/50 hover:text-primary
-        focus-visible:ring-2 focus-visible:ring-primary/35
-      "
+        focus-visible:ring-2 focus-visible:ring-primary/35`,
+        disabled && "opacity-50"
+      )}
       title={label}
-      onClick={onClick}>
+      onClick={disabled ? undefined : onClick}>
       <Icon className="size-3.5" fill={filled ? "currentColor" : "none"} />
     </button>
   );

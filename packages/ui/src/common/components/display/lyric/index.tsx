@@ -4,6 +4,7 @@ import {
   memo,
   useRef,
   type FC,
+  useMemo,
   type Ref,
   useState,
   useEffect,
@@ -12,6 +13,7 @@ import {
   useImperativeHandle
 } from "react";
 import { useLatestRef } from "@/common/hooks/use-latest-ref";
+import { extendLyric } from "@/common/components/display/lyric/utils";
 import RendererTheme from "@/common/player/ui";
 
 import LyricLine from "./lyric-line";
@@ -48,8 +50,8 @@ const LyricContainer: FC<LyricContainerProps> = ({
   ref,
   className,
   onWordClick,
-  lyric,
   spring,
+  playing,
   fontSize,
   rmActive,
   tlActive,
@@ -57,10 +59,12 @@ const LyricContainer: FC<LyricContainerProps> = ({
   crossAlign,
   noteActive,
   activeColor,
-  inactiveColor
+  inactiveColor,
+  lyric: _lyric
 }) => {
   const [currentLine, setCurrentLine] = useState(-1);
   const [scrolling, setScrolling] = useState(false);
+  const lyricLines = useMemo(() => extendLyric(_lyric?.data ?? []), [_lyric?.data]);
   const containerRef = useRef<Nullable<HTMLDivElement>>(null);
   const currentLineRef = useRef(currentLine);
   const timeManagerRef = useRef<Nullable<TimeManager>>(null);
@@ -107,11 +111,11 @@ const LyricContainer: FC<LyricContainerProps> = ({
 
   // 歌词变化时，重置时间管理器和当前行
   useLayoutEffect(() => {
-    timeManagerRef.current?.reset(lyric?.data ?? []);
+    timeManagerRef.current?.reset(lyricLines);
     setCurrentLine(-1);
     currentLineRef.current = -1;
     calcLayout();
-  }, [calcLayout, lyric]);
+  }, [calcLayout, lyricLines]);
 
   // 歌词行变化时，滚动到对应位置
   const scrollingRef = useLatestRef(scrolling);
@@ -146,23 +150,22 @@ const LyricContainer: FC<LyricContainerProps> = ({
     };
   }, [calcLayout]);
 
-  // 布局参数变化时，计算布局
+  // 参数变化时，计算布局
   useEffect(() => {
     calcLayout();
-  }, [calcLayout, rmActive, tlActive, mainAlign, crossAlign, noteActive]);
-
-  const lyricLines = lyric?.data ?? [];
+  }, [calcLayout, rmActive, tlActive, mainAlign, crossAlign, noteActive, playing]);
 
   const scrollTimer = useRef(0);
+  const playingRef = useLatestRef(playing);
   const onScroll = useCallback(() => {
-    if (innerScrolling.current) return;
+    if (innerScrolling.current || playingRef.current === false) return;
     scrollTimer.current && clearTimeout(scrollTimer.current);
     scrollTimer.current = window.setTimeout(() => {
       setScrolling(false);
       calcLayout();
     }, 3000);
     setScrolling(true);
-  }, [calcLayout]);
+  }, [calcLayout, playingRef]);
 
   return (
     <div
@@ -193,9 +196,9 @@ const LyricContainer: FC<LyricContainerProps> = ({
           tlActive={tlActive}
           crossAlign={crossAlign}
           noteActive={noteActive}
-          hasRm={lyric?.rmExisted}
-          hasTl={lyric?.tlExisted}
           activeColor={activeColor}
+          hasRm={_lyric?.rmExisted}
+          hasTl={_lyric?.tlExisted}
           inactiveColor={inactiveColor}
           active={currentLine === index}
           timeManager={timeManagerRef.current!}
@@ -203,7 +206,7 @@ const LyricContainer: FC<LyricContainerProps> = ({
         />
       ))}
       <div className={cx("h-[55%]", lyricLines.length === 0 && "h-0 pt-0")}>
-        <LyricTips tips={lyric?.tips} crossAlign={crossAlign} />
+        <LyricTips fontSize={fontSize} tips={_lyric?.tips} crossAlign={crossAlign} />
       </div>
     </div>
   );

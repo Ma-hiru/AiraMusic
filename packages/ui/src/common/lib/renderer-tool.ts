@@ -1,3 +1,4 @@
+import type { LLMToolOutputDetail } from "@mahiru/ai";
 import type {
   NeteaseAlbum,
   NeteaseLyric,
@@ -37,22 +38,44 @@ export type RendererToolProjectionOptions = {
   maxTextChars?: number;
 };
 
+export type RendererToolDetail = LLMToolOutputDetail;
+
 type ProjectionLimits = Required<RendererToolProjectionOptions>;
+
+const CompactProjectionLimits: ProjectionLimits = {
+  maxDepth: 5,
+  maxItems: 8,
+  maxKeys: 24,
+  maxTextChars: 1_200,
+  totalChars: 4_000
+};
 
 const DefaultProjectionLimits: ProjectionLimits = {
   maxDepth: 6,
   maxItems: 20,
   maxKeys: 40,
-  maxTextChars: 4_000,
-  totalChars: 12_000
+  maxTextChars: 2_500,
+  totalChars: 8_000
 };
 
 const MaximumProjectionLimits: ProjectionLimits = {
-  maxDepth: 12,
-  maxItems: 500,
-  maxKeys: 200,
-  maxTextChars: 20_000,
-  totalChars: 30_000
+  maxDepth: 10,
+  maxItems: 120,
+  maxKeys: 120,
+  maxTextChars: 16_000,
+  totalChars: 24_000
+};
+
+const DetailProjectionLimits: Record<RendererToolDetail, ProjectionLimits> = {
+  compact: CompactProjectionLimits,
+  standard: DefaultProjectionLimits,
+  detailed: {
+    maxDepth: 8,
+    maxItems: 60,
+    maxKeys: 80,
+    maxTextChars: 8_000,
+    totalChars: 16_000
+  }
 };
 
 const MinimumProjectionLimits: ProjectionLimits = {
@@ -107,9 +130,23 @@ export class RendererTool {
   static readonly defaultResultChars = DefaultProjectionLimits.totalChars;
   private static readonly projectedValues = new WeakSet<object>();
 
-  static output(value: unknown, options?: RendererToolProjectionOptions): JsonValue {
-    if (isObjectLike(value) && this.projectedValues.has(value)) return value as JsonValue;
-    return this.project(value, options);
+  static options(
+    detail: RendererToolDetail = "standard",
+    overrides: RendererToolProjectionOptions = {}
+  ): RendererToolProjectionOptions {
+    const profile = DetailProjectionLimits[detail];
+    return { ...profile, ...overrides };
+  }
+
+  static output(
+    value: unknown,
+    options?: RendererToolDetail | RendererToolProjectionOptions
+  ): JsonValue {
+    const resolved = resolveProjectionOptions(options);
+    if (isObjectLike(value) && this.projectedValues.has(value)) {
+      return value as JsonValue;
+    }
+    return this.project(value, resolved);
   }
 
   static text(value: unknown, options?: RendererToolProjectionOptions): JsonValue {
@@ -157,7 +194,7 @@ export class RendererTool {
    * 评论接口包含头像、会员权益、装饰和动画等大量界面字段；Agent 只需要评论正文、
    * 作者、时间、热度及回复关系。这里保留完整一页的有效评论，同时限制极端长文本。
    */
-  static comments(value: unknown): JsonValue {
+  static comments(value: unknown, detail: RendererToolDetail = "standard"): JsonValue {
     const response = asRecord(value);
     const page = asRecord(response["data"] ?? response);
     const comments = Array.isArray(page["comments"]) ? page["comments"] : [];
@@ -172,13 +209,12 @@ export class RendererTool {
         commentsTitle: page["commentsTitle"],
         comments: comments.map(compactComment)
       }),
-      {
+      this.options(detail, {
         maxDepth: 6,
-        maxItems: 20,
+        maxItems: Math.min(40, DetailProjectionLimits[detail].maxItems),
         maxKeys: 24,
-        maxTextChars: 2_000,
-        totalChars: 8_000
-      }
+        maxTextChars: DetailProjectionLimits[detail].maxTextChars
+      })
     );
   }
 
@@ -186,28 +222,35 @@ export class RendererTool {
   static search(
     value: unknown,
     type: "album" | "track" | "artist" | "playlist",
-    pagination?: RendererToolSearchPage
+    pagination?: RendererToolSearchPage,
+    detail: RendererToolDetail = "standard"
   ): JsonValue {
     const result = asRecord(value);
     const projected = compactSearchResult(result, type, pagination);
-    return this.project(projected, {
-      maxDepth: 5,
-      maxItems: 20,
-      maxKeys: 20,
-      maxTextChars: 1_200,
-      totalChars: 8_000
-    });
+    return this.project(
+      projected,
+      this.options(detail, {
+        maxDepth: 5,
+        maxItems: Math.min(40, DetailProjectionLimits[detail].maxItems),
+        maxKeys: 20,
+        maxTextChars: Math.min(2_400, DetailProjectionLimits[detail].maxTextChars)
+      })
+    );
   }
 
-  static track(track: NeteaseTrack, mode: "detail" | "simple" = "simple"): JsonValue {
-    return this.project(this.trackData(track, mode));
+  static track(
+    track: NeteaseTrack,
+    mode: "detail" | "simple" = "simple",
+    detail: RendererToolDetail = "standard"
+  ): JsonValue {
+    return this.project(this.trackData(track, mode), this.options(detail));
   }
 
-  static record(record: NeteaseTrackRecord): JsonValue {
-    return this.project(this.recordData(record));
+  static record(record: NeteaseTrackRecord, detail: RendererToolDetail = "standard"): JsonValue {
+    return this.project(this.recordData(record), this.options(detail));
   }
 
-  static album(album: NeteaseAlbum): JsonValue {
+  static album(album: NeteaseAlbum, detail: RendererToolDetail = "standard"): JsonValue {
     const content = asRecord(album.content);
     const rawArtists = content["artists"] ?? content["artist"];
     const artists = Array.isArray(rawArtists)
@@ -229,13 +272,16 @@ export class RendererTool {
         trackCount: content["size"] ?? album.tracks.length,
         tracks: album.tracks.map((record) => this.recordData(record))
       }),
-      { maxItems: 30, maxTextChars: 4_000 }
+      this.options(detail, {
+        maxItems: Math.min(60, DetailProjectionLimits[detail].maxItems),
+        maxTextChars: DetailProjectionLimits[detail].maxTextChars
+      })
     );
   }
 
-  static artist(artist: NeteaseArtist): JsonValue {
-    const detail = asRecord(artist.detail);
-    const detailArtist = asRecord(detail["artist"] ?? detail);
+  static artist(artist: NeteaseArtist, detail: RendererToolDetail = "standard"): JsonValue {
+    const artistDetail = asRecord(artist.detail);
+    const detailArtist = asRecord(artistDetail["artist"] ?? artistDetail);
     const desc = asRecord(artist.desc);
     const introductions = Array.isArray(desc["introduction"])
       ? desc["introduction"].map((item) => {
@@ -252,7 +298,7 @@ export class RendererTool {
         id: artist.id,
         name: artist.name,
         aliases: detailArtist["alias"] ?? detailArtist["aliases"],
-        coverUrl: detailArtist["cover"] ?? detailArtist["picUrl"] ?? detail["cover"],
+        coverUrl: detailArtist["cover"] ?? detailArtist["picUrl"] ?? artistDetail["cover"],
         avatarUrl: detailArtist["avatar"] ?? detailArtist["img1v1Url"],
         briefDescription: desc["briefDesc"] ?? detailArtist["briefDesc"],
         albumCount: detailArtist["albumSize"],
@@ -268,11 +314,14 @@ export class RendererTool {
         ]),
         hotTracks: artist.hotTracks.map((record) => this.recordData(record))
       }),
-      { maxItems: 20, maxTextChars: 4_000 }
+      this.options(detail, {
+        maxItems: Math.min(40, DetailProjectionLimits[detail].maxItems),
+        maxTextChars: DetailProjectionLimits[detail].maxTextChars
+      })
     );
   }
 
-  static playlist(playlist: NeteasePlaylist): JsonValue {
+  static playlist(playlist: NeteasePlaylist, detail: RendererToolDetail = "standard"): JsonValue {
     return this.project(
       compactObject({
         id: playlist.id,
@@ -299,11 +348,18 @@ export class RendererTool {
         updatedAt: playlist.updateTime,
         tracks: playlist.tracks.map((track) => this.trackData(track, "simple"))
       }),
-      { maxItems: 30, maxTextChars: 4_000 }
+      this.options(detail, {
+        maxItems: Math.min(60, DetailProjectionLimits[detail].maxItems),
+        maxTextChars: DetailProjectionLimits[detail].maxTextChars
+      })
     );
   }
 
-  static lyric(lyric: NeteaseLyric, mode: "editable" | "semantic" = "semantic"): JsonValue {
+  static lyric(
+    lyric: NeteaseLyric,
+    mode: "editable" | "semantic" = "semantic",
+    detail: RendererToolDetail = "standard"
+  ): JsonValue {
     if (mode === "semantic") {
       return this.project(
         {
@@ -329,13 +385,13 @@ export class RendererTool {
           noteExisted: lyric.noteExisted,
           tips: lyric.tips
         },
-        {
+        this.options(detail, {
           maxDepth: 5,
-          maxItems: 160,
+          maxItems: Math.min(120, DetailProjectionLimits[detail].maxItems * 3),
           maxKeys: 20,
           maxTextChars: 1_024,
-          totalChars: 12_000
-        }
+          totalChars: detail === "compact" ? 4_000 : detail === "detailed" ? 16_000 : 5_500
+        })
       );
     }
 
@@ -361,13 +417,14 @@ export class RendererTool {
         noteExisted: lyric.noteExisted,
         tips: lyric.tips
       },
-      {
+      this.options(detail, {
         maxDepth: 8,
-        maxItems: 160,
+        maxItems: Math.min(120, DetailProjectionLimits[detail].maxItems * 6),
         maxKeys: 40,
         maxTextChars: 1_024,
-        totalChars: MaximumProjectionLimits.totalChars
-      }
+        // editable 已经是显式高信息场景；24K 上限与 AI 侧单结果、近期保留预算一致。
+        totalChars: detail === "compact" ? 10_000 : MaximumProjectionLimits.totalChars
+      })
     );
   }
 
@@ -453,6 +510,12 @@ export class RendererTool {
     if (isObjectLike(value)) this.projectedValues.add(value);
     return value;
   }
+}
+
+function resolveProjectionOptions(
+  options?: RendererToolDetail | RendererToolProjectionOptions
+): RendererToolProjectionOptions {
+  return typeof options === "string" ? RendererTool.options(options) : (options ?? {});
 }
 
 function normalizeLimits(options: RendererToolProjectionOptions): ProjectionLimits {

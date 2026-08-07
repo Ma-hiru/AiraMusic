@@ -17,5 +17,5 @@ const loadNativeAddon = (addonPath = defaultAddonPath): NativeAddon => {
   return require(addonPath) as NativeAddon;
 };
 
-export type { NativeAddon } from "./api";
+export type { NativeAddon, MenuLyricEvent, MenuLyricEventKind, MenuLyricEventHandler } from "./api";
 export { loadNativeAddon };
