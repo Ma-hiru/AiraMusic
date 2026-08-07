@@ -10,6 +10,9 @@ import { useRequestAutoRun, useRequestStatusWrap } from "@/common/hooks/use-requ
 import Item from "@/wins/comments/page/item";
 import NoDrag from "@/common/components/layout/drag/no-drag";
 
+const edgeFadeMask =
+  "linear-gradient(to bottom, transparent 0, #000 min(12%, 56px), #000 calc(100% - min(12%, 56px)), transparent 100%)";
+
 interface RadioCommentProps {
   className?: string;
 }
@@ -49,7 +52,11 @@ const RadioComment: FC<RadioCommentProps> = ({ className }) => {
       className={cx("flex flex-col justify-between items-center gap-2 cursor-pointer", className)}>
       <section
         ref={scrollRef}
-        className="flex-1 overflow-y-auto overflow-x-hidden scrollbar scrollbar-show">
+        className="flex-1 overflow-y-auto overflow-x-hidden scrollbar scrollbar-show px-1 py-3.5"
+        style={{
+          maskImage: edgeFadeMask,
+          WebkitMaskImage: edgeFadeMask
+        }}>
         {data?.map((i, idx) => (
           <Item key={i.commentId} data={i} avatar={false} border={idx > 0} small reverse />
         ))}

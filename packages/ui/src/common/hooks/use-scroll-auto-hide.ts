@@ -24,6 +24,9 @@ export function useScrollAutoHide(
       container.addEventListener("scroll", onScroll, { passive: true });
       container.addEventListener("scrollend", onScrollEnd, { passive: true });
 
+      onScroll();
+      onScrollEnd();
+
       return () => {
         timer && window.clearTimeout(timer);
         container.removeEventListener("scroll", onScroll);

@@ -144,9 +144,9 @@ const RadioMeta: FC<RadioMetaProps> = ({ className }) => {
   return (
     <section className={cx(className, "flex flex-col justify-center items-center gap-px")}>
       {/* Title */}
-      <section className="w-32 shrink-0 overflow-hidden">
+      <section className="w-35 shrink-0 overflow-hidden">
         <Marquee
-          className="opacity-50 text-[8px] text-center"
+          className="opacity-50 text-[9.5px] text-center"
           text={title?.translate ?? title?.alias ?? title?.sub}
           options={{
             speed: 15,
@@ -156,7 +156,7 @@ const RadioMeta: FC<RadioMetaProps> = ({ className }) => {
           }}
         />
         <Marquee
-          className="font-bold text-center text-[11px]"
+          className="font-bold text-center text-[11.5px]"
           text={title?.main}
           options={{
             speed: 10,
@@ -169,7 +169,7 @@ const RadioMeta: FC<RadioMetaProps> = ({ className }) => {
       {/* Cover */}
       <NoDrag
         className="
-          h-32 w-32 shrink-0 relative overflow-hidden rounded-md
+          h-35 w-35 shrink-0 relative overflow-hidden rounded-md
           hover:scale-102 cursor-pointer mt-0.5
           ease-in-out duration-300 transition-all
         ">
@@ -192,11 +192,11 @@ const RadioMeta: FC<RadioMetaProps> = ({ className }) => {
         </span>
       </NoDrag>
       {/* Info */}
-      <NoDrag className="flex mt-1 w-32 shrink-0 justify-center items-center gap-1 overflow-hidden">
+      <NoDrag className="flex mt-1 w-35 shrink-0 justify-center items-center gap-1 overflow-hidden">
         <div className="flex-1">
           {quality && (
             <Tag
-              className="w-fit! text-normal-text! bg-(--text-color)/30! text-[9px]"
+              className="w-fit! text-normal-text! bg-(--text-color)/30! text-[8px]"
               text={quality}
             />
           )}
@@ -222,9 +222,9 @@ const RadioMeta: FC<RadioMetaProps> = ({ className }) => {
         </div>
       </NoDrag>
       {/* Progress */}
-      <NoDrag className="flex mt-1 w-32 text-[11px] shrink-0 gap-2 justify-between items-center">
+      <NoDrag className="flex mt-1 w-35 text-[10px] shrink-0 gap-2 justify-between items-center">
         <Marquee
-          className="flex-1 flex gap-1 items-center text-[9px]"
+          className="flex-1 flex gap-1 items-center"
           options={{
             speed: 20,
             pingPong: true,
@@ -253,7 +253,7 @@ const RadioMeta: FC<RadioMetaProps> = ({ className }) => {
         </span>
       </NoDrag>
       {/* Control */}
-      <NoDrag className="flex w-32 justify-between items-center font-bold">
+      <NoDrag className="flex w-35 justify-between items-center font-bold">
         <ControlBtn
           icon={SkipBack}
           disabled={fmMode}
