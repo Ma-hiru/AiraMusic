@@ -116,6 +116,7 @@ function createOversizedTrackMeta(): MessageData<"bus_deliver_track_meta"> {
     rmActive: false,
     tlActive: true,
     noteActive: false,
+    mode: "normal",
     track: {
       id: 1,
       name: "超长歌曲名".repeat(100),

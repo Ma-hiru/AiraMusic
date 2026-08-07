@@ -1,11 +1,12 @@
-import { useAtomValue } from "jotai";
+import { useSetAtom, useAtomValue } from "jotai";
 import { useLocation, useNavigate } from "react-router-dom";
-import { memo, useRef, type FC, useEffect, useCallback } from "react";
+import { memo, useRef, type FC, useEffect, useCallback, startTransition } from "react";
 import { Log } from "@/common/lib/log";
 import { useUser } from "@/common/store/user";
 import { themeAtom } from "@/wins/main/atoms/theme";
 import { RendererDevice } from "@/common/lib/device";
 import { RendererWindow } from "@/common/lib/window";
+import { NeteaseAPITrack } from "@/common/netease/api";
 import { RendererIPCMessageBus } from "@/common/lib/bus";
 import { RendererModified } from "@/common/lib/modified";
 import { RoutePath, RoutePathMain } from "@/common/routes";
@@ -13,6 +14,7 @@ import { useLatestRef } from "@/common/hooks/use-latest-ref";
 import { NeteaseTrackRecord } from "@/common/netease/models";
 import { useListenable } from "@/common/hooks/use-listenable";
 import { useAudioOutput } from "@/common/hooks/use-audio-output";
+import { fmModeAtom, intelligenceModeAtom } from "@/wins/main/atoms/track";
 import { useAgentToolHandle } from "@/wins/main/hooks/use-agent-tool-handle";
 import {
   NeteaseServicesAlbum,
@@ -32,6 +34,8 @@ const Bus: FC<object> = () => {
   const updateProgressBus = useCallback(() => {
     RendererIPCMessageBus.progress.deliver(player.audio.progress);
   }, [player.audio.progress]);
+  const fmMode = useAtomValue(fmModeAtom);
+  const intelligenceMode = useAtomValue(intelligenceModeAtom);
   const updateMetaBus = useCallback(() => {
     RendererIPCMessageBus.trackMeta.deliver({
       track: player.current.track,
@@ -41,9 +45,11 @@ const Bus: FC<object> = () => {
       rmActive: player.current?.rmActive || false,
       tlActive: player.current?.tlActive || false,
       noteActive: player.current?.noteActive || false,
-      status: player.statusText
+      quality: player.current.audio?.quality,
+      status: player.statusText,
+      mode: fmMode ? "fm" : intelligenceMode ? "intelligence" : "normal"
     });
-  }, [player]);
+  }, [fmMode, intelligenceMode, player]);
   const updateThemeBus = useCallback(() => {
     RendererIPCMessageBus.theme.deliver({
       backgroundCover: theme.backgroundCover ?? undefined,
@@ -148,6 +154,13 @@ const Bus: FC<object> = () => {
         case "pause":
           player.audio.pause();
           break;
+        case "play-toggle":
+          if (player.audio.paused) {
+            player.audio.play();
+          } else {
+            player.audio.pause();
+          }
+          break;
         case "previous":
           player.playlist.last(true);
           break;
@@ -221,6 +234,8 @@ const Bus: FC<object> = () => {
   const applyingChanges = useRef(false);
   // 变更队列
   const appliedChangesQueue = useRef<MessageData<"bus_dispatch_playlist_action">[]>([]);
+  const fmModeRef = useLatestRef(fmMode);
+  const setIntelligenceMode = useSetAtom(intelligenceModeAtom);
 
   const applyPlayerChanges = useCallback(async () => {
     if (applyingChanges.current) return;
@@ -305,6 +320,24 @@ const Bus: FC<object> = () => {
             sourceID: sourceID
           });
           player.playlist.add(track, type === "addToPlaylistNext" ? "next" : "end");
+        } else if (change.type === "repeatMode") {
+          if (change.value) player.playlist.repeat = change.value;
+        } else if (change.type === "shuffleMode") {
+          if (typeof change.value === "boolean") player.playlist.shuffle = change.value;
+        } else if (change.type === "fmModeDislike") {
+          const current = player.current.track;
+          if (!current || !fmModeRef.current) return;
+          void NeteaseAPITrack.personalFMTrash(current.id);
+          player.playlist.remove(current);
+        } else if (change.type === "intelligenceMode") {
+          startTransition(() => {
+            change?.type === "intelligenceMode" && setIntelligenceMode(change?.value);
+          });
+        } else if (change.type === "lyricJump") {
+          if (Number.isFinite(change.timeMS) && change.timeMS >= 0) {
+            player.audio.currentTime = change.timeMS / 1000;
+            player.paused && player.audio.play();
+          }
         }
       } catch (err) {
         actionError = err;
@@ -325,7 +358,7 @@ const Bus: FC<object> = () => {
     }
 
     applyingChanges.current = false;
-  }, [player]);
+  }, [fmModeRef, player, setIntelligenceMode]);
   useEffect(() => {
     const changes = playlistActionBus.data;
     if (changes.length === 0) return;

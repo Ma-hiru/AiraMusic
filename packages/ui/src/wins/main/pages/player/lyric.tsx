@@ -75,6 +75,7 @@ const Lyric: FC<object> = () => {
         ref={lyricRef}
         className="contain-strict"
         fontSize={fontSize}
+        playing={player.playing}
         lyric={player.current.lyric}
         rmActive={player.current?.rmActive}
         tlActive={player.current?.tlActive}

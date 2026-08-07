@@ -38,7 +38,7 @@ export class RendererFormat {
   }
 
   static duration(time: Optional<number>, unit: "s" | "ms" = "ms", split?: string) {
-    if (!time) return "0:00";
+    if (!time || !Number.isFinite(time) || time <= 0) return "0:00";
     split ||= ":";
     let base;
     if (unit === "ms") {
@@ -114,6 +114,20 @@ export class RendererFormat {
         return NeteaseMusicLevel.lossless;
       case TrackQuality.hr:
         return NeteaseMusicLevel.hires;
+    }
+  }
+
+  static quality(text: Optional<string>) {
+    if (!text) return null;
+    switch (text) {
+      case TrackQuality.l:
+      case TrackQuality.m:
+      case TrackQuality.h:
+      case TrackQuality.sq:
+      case TrackQuality.hr:
+        return text as TrackQuality;
+      default:
+        return null;
     }
   }
 

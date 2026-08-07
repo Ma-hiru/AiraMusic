@@ -51,6 +51,7 @@ const LyricContainer: FC<LyricContainerProps> = ({
   className,
   onWordClick,
   spring,
+  playing,
   fontSize,
   rmActive,
   tlActive,
@@ -149,21 +150,22 @@ const LyricContainer: FC<LyricContainerProps> = ({
     };
   }, [calcLayout]);
 
-  // 布局参数变化时，计算布局
+  // 参数变化时，计算布局
   useEffect(() => {
     calcLayout();
-  }, [calcLayout, rmActive, tlActive, mainAlign, crossAlign, noteActive]);
+  }, [calcLayout, rmActive, tlActive, mainAlign, crossAlign, noteActive, playing]);
 
   const scrollTimer = useRef(0);
+  const playingRef = useLatestRef(playing);
   const onScroll = useCallback(() => {
-    if (innerScrolling.current) return;
+    if (innerScrolling.current || playingRef.current === false) return;
     scrollTimer.current && clearTimeout(scrollTimer.current);
     scrollTimer.current = window.setTimeout(() => {
       setScrolling(false);
       calcLayout();
     }, 3000);
     setScrolling(true);
-  }, [calcLayout]);
+  }, [calcLayout, playingRef]);
 
   return (
     <div
@@ -204,7 +206,7 @@ const LyricContainer: FC<LyricContainerProps> = ({
         />
       ))}
       <div className={cx("h-[55%]", lyricLines.length === 0 && "h-0 pt-0")}>
-        <LyricTips tips={_lyric?.tips} crossAlign={crossAlign} />
+        <LyricTips fontSize={fontSize} tips={_lyric?.tips} crossAlign={crossAlign} />
       </div>
     </div>
   );

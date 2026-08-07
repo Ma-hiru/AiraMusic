@@ -5,6 +5,7 @@ type WindowType =
   | "image"
   | "login"
   | "lyric"
+  | "radio"
   | "display"
   | "comments"
   | "external"

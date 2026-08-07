@@ -2,11 +2,12 @@ import { cx } from "@emotion/css";
 import { memo, type FC } from "react";
 
 type LyricTipsProps = {
+  fontSize?: number;
   tips: Optional<string>;
   crossAlign?: "left" | "right" | "center";
 };
 
-const LyricTips: FC<LyricTipsProps> = ({ tips, crossAlign }) => {
+const LyricTips: FC<LyricTipsProps> = ({ tips, fontSize, crossAlign }) => {
   if (!tips) return null;
   return (
     <div
@@ -18,7 +19,8 @@ const LyricTips: FC<LyricTipsProps> = ({ tips, crossAlign }) => {
         crossAlign === "left" && "text-left",
         crossAlign === "center" && "text-center",
         crossAlign === "right" && "text-right"
-      )}>
+      )}
+      style={{ fontSize }}>
       {tips}
     </div>
   );

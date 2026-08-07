@@ -15,6 +15,7 @@ export type PlayerAction =
   | "pause"
   | "update"
   | "previous"
+  | "play-toggle"
   | "toggle-lyric-version-rm"
   | "toggle-lyric-version-tl";
 
@@ -131,12 +132,14 @@ type MessageBus = {
         source: Nullable<"like" | "normal">;
       };
   bus_deliver_track_meta: {
+    quality?: string;
     shuffle: boolean;
     rmActive: boolean;
     tlActive: boolean;
     noteActive: boolean;
     repeat: "all" | "off" | "one";
     lyric: Optional<NeteaseLyricModel>;
+    mode: "fm" | "normal" | "intelligence";
     status: "idle" | "error" | "paused" | "loading" | "playing";
     track: Optional<{
       id: number;
@@ -150,8 +153,27 @@ type MessageBus = {
     requestID?: string;
   } & (
     | {
+        type: "fmModeDislike";
+      }
+    | {
+        timeMS: number;
+        type: "lyricJump";
+      }
+    | {
         trackID: number;
         type: "playTrack";
+      }
+    | {
+        value: boolean;
+        type: "shuffleMode";
+      }
+    | {
+        value: boolean;
+        type: "intelligenceMode";
+      }
+    | {
+        type: "repeatMode";
+        value: "all" | "off" | "one";
       }
     | {
         allIDs: number[];
