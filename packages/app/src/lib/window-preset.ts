@@ -169,7 +169,7 @@ export class MainWindowPreset {
   }
 
   static get radio(): AppWindowCreatorProps {
-    const { max, min, base } = MainScreenResolver.primary.adaptiveWindowSizePreset(
+    const { base } = MainScreenResolver.primary.adaptiveWindowSizePreset(
       MainWindowConstants.WINDOW_BASE_SIZE.radio
     );
     const isDarwin = process.platform === "darwin";
@@ -183,11 +183,7 @@ export class MainWindowPreset {
         },
         alwaysOnTop: true,
         title: process.env.APP_NAME,
-        resizable: true,
-        minHeight: min.height,
-        maxHeight: max.height,
-        minWidth: min.width,
-        maxWidth: max.width,
+        resizable: false,
         minimizable: false,
         maximizable: false,
         fullscreen: false,

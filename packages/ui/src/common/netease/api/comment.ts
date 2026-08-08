@@ -16,13 +16,15 @@ export default class _NeteaseCommentAPI {
       sortType: CommentSort;
       /** 当sortType为 3 时且页数不是第一页时需传入,值为上一条数据的 time */
       cursor?: number;
+      /** 是否使用缓存 */
+      cache?: boolean;
     },
     signal?: AbortSignal
   ) {
     return apiRequest<any, NeteaseAPI.NeteaseCommentsNewResponse>("/comment/new", {
       params: {
         ...params,
-        timestamp: Date.now()
+        timestamp: params.cache ? undefined : Date.now()
       },
       signal
     });

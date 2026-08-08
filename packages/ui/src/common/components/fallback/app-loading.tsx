@@ -9,6 +9,7 @@ interface ListLoadingProps {
   wrap?: boolean;
   loading: boolean;
   className?: string;
+  smallIcon?: boolean;
   children?: ReactNode;
 }
 
@@ -18,7 +19,8 @@ const AppLoading: FC<ListLoadingProps> = ({
   wrap,
   loading,
   children,
-  tips = "数据努力加载中"
+  tips = "数据努力加载中",
+  smallIcon = false
 }) => {
   if (!loading) {
     if (wrap) return <div ref={ref}>{children}</div>;
@@ -31,7 +33,7 @@ const AppLoading: FC<ListLoadingProps> = ({
         "px-2 py-1 w-full h-full flex flex-col gap-2 justify-center items-center text-center",
         className
       )}>
-      <Loading className="size-8" />
+      <Loading className={smallIcon ? "size-3" : "size-8"} />
       <span className="font-semibold">{tips}</span>
     </div>
   );

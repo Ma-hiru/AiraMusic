@@ -123,31 +123,21 @@ export const eventHandlers: EventHandlers = {
     Log.debug("event_window_unmaximize", type, "win found:", !!win);
     win?.isMaximized() && win.unmaximize();
   },
+  event_window_resize_delta: (e, props) => {
+    const { next, current } = resizeWindow(
+      props.type ? MainWindowManager.get(props.type) : BrowserWindow.fromWebContents(e.sender),
+      { x: props.deltaX, y: props.deltaY, width: props.deltaWidth, height: props.deltaHeight },
+      "delta"
+    );
+    next && Log.debug("event_window_resize_delta", "next:", next, "current:", current);
+  },
   event_window_resize: (e, props) => {
-    const win = props.type
-      ? MainWindowManager.get(props.type)
-      : BrowserWindow.fromWebContents(e.sender);
-    if (!win) return;
-    const current = win.getBounds();
-    const next = {
-      x: Math.floor(props.x ?? current.x),
-      y: Math.floor(props.y ?? current.y),
-      width: Math.floor(props.width ?? current.width),
-      height: Math.floor(props.height ?? current.height)
-    };
-    if (
-      next.x === current.x &&
-      next.y === current.y &&
-      next.width === current.width &&
-      next.height === current.height
-    ) {
-      return;
-    }
-    const resizable = win.resizable;
-    win.setResizable(true);
-    win.setBounds(next);
-    win.setResizable(resizable);
-    Log.debug("event_window_resize", "next:", next, "current:", current);
+    const { next, current } = resizeWindow(
+      props.type ? MainWindowManager.get(props.type) : BrowserWindow.fromWebContents(e.sender),
+      props,
+      "absolute"
+    );
+    next && Log.debug("event_window_resize", "next:", next, "current:", current);
   },
   event_window_pin: (e, { pin, type, level }) => {
     const win = type ? MainWindowManager.get(type) : BrowserWindow.fromWebContents(e.sender);
@@ -209,3 +199,46 @@ export const eventHandlers: EventHandlers = {
     Log[level](`Renderer(${name})`, message);
   }
 };
+
+function resizeWindow(
+  win: Optional<BrowserWindow>,
+  props: Partial<{ x: number; y: number; width: number; height: number }>,
+  mode: "delta" | "absolute"
+) {
+  if (!win) return {};
+
+  const current = win.getBounds();
+  const next =
+    mode === "absolute"
+      ? {
+          x: Math.floor(props.x ?? current.x),
+          y: Math.floor(props.y ?? current.y),
+          width: Math.floor(props.width ?? current.width),
+          height: Math.floor(props.height ?? current.height)
+        }
+      : {
+          x: Math.floor(current.x + (props.x ?? 0)),
+          y: Math.floor(current.y + (props.y ?? 0)),
+          width: Math.floor(current.width + (props.width ?? 0)),
+          height: Math.floor(current.height + (props.height ?? 0))
+        };
+
+  if (Object.values(next).some(isNaN) || Object.values(next).some((v) => v < 0)) {
+    return {};
+  }
+  if (
+    next.x === current.x &&
+    next.y === current.y &&
+    next.width === current.width &&
+    next.height === current.height
+  ) {
+    return { current, next };
+  }
+
+  const resizable = win.resizable;
+  win.setResizable(true);
+  win.setBounds(next, true);
+  win.setResizable(resizable);
+
+  return { current, next };
+}

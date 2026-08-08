@@ -38,9 +38,7 @@ export class MainWindowConstants {
       max: { width: 300, height: 68 }
     },
     radio: {
-      min: { width: 600, height: 280 },
-      base: { width: 620, height: 300 },
-      max: { width: 640, height: 320 }
+      base: { width: 640, height: 320 }
     },
     // Windows 托盘弹窗
     trayOnWindows: {

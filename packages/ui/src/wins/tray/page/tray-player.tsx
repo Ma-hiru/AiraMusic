@@ -60,7 +60,7 @@ const TrayPlayer: FC<TrayPlayerProps> = ({ track, status, duration, currentTime 
         )}
         {status === "playing" && (
           <span className="absolute right-1 top-1 flex size-3 items-center justify-center rounded-full bg-primary">
-            <Disc3 className="size-2 animate-spin text-(--text-color-on-main)" />
+            <Disc3 className="size-2 animate-spin text-primary-text" />
           </span>
         )}
       </div>

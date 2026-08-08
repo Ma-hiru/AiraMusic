@@ -427,8 +427,30 @@ export class RendererWindow extends Listenable<"react-ready" | RendererWindowEve
   }
 
   resize(
-    props: Partial<{ x: number; y: number; width: number; height: number; type: WindowType }>
+    props: Partial<{
+      x: number;
+      y: number;
+      width: number;
+      deltaX: number;
+      deltaY: number;
+      height: number;
+      type: WindowType;
+      deltaWidth: number;
+      deltaHeight: number;
+    }>
   ) {
+    if (
+      props.deltaX != null ||
+      props.deltaY != null ||
+      props.deltaWidth != null ||
+      props.deltaHeight != null
+    ) {
+      RendererIPC.NormalChannel.send("event_window_resize_delta", {
+        type: this.type,
+        ...props
+      });
+      return;
+    }
     RendererIPC.NormalChannel.send("event_window_resize", {
       ...props,
       type: this.type

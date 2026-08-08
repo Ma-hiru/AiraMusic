@@ -9,6 +9,7 @@ interface AppErrorProps {
   asChild?: boolean;
   className?: string;
   reset?: NormalFunc;
+  smallIcon?: boolean;
   children?: ReactNode;
 }
 
@@ -18,7 +19,8 @@ const AppError: FC<AppErrorProps> = ({
   reset,
   message,
   children,
-  asChild = true
+  asChild = true,
+  smallIcon = false
 }) => {
   useEffect(() => {
     if (when && message) {
@@ -53,12 +55,12 @@ const AppError: FC<AppErrorProps> = ({
             duration-200 ease-in-out transition-all text-center
           `}
           onClick={reset}>
-          <CircleX className="mr-2 inline" />
+          <CircleX className={cx("mr-2 inline", smallIcon && "size-4")} />
           <span>加载错误，点击重载</span>
         </button>
       ) : (
         <p className="whitespace-pre-wrap break-keep text-center">
-          <CircleX className="mr-2 inline" />
+          <CircleX className={cx("mr-2 inline", smallIcon && "size-4")} />
           <span>加载出错了</span>
         </p>
       )}

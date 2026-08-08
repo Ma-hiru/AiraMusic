@@ -30,6 +30,13 @@ export type NormalEventMaps = {
     height?: number;
     type: Optional<WindowType>;
   };
+  event_window_resize_delta: {
+    deltaX?: number;
+    deltaY?: number;
+    deltaWidth?: number;
+    deltaHeight?: number;
+    type: Optional<WindowType>;
+  };
   event_window_pin: {
     pin: boolean;
     type: Optional<WindowType>;

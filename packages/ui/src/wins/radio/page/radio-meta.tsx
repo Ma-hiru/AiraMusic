@@ -1,5 +1,15 @@
 import { cx } from "@emotion/css";
-import { memo, type FC, useMemo, Fragment, useState, useEffect, useCallback } from "react";
+import { clamp } from "lodash-es";
+import {
+  memo,
+  type FC,
+  useMemo,
+  Fragment,
+  useState,
+  useEffect,
+  useCallback,
+  type MouseEvent as ReactMouseEvent
+} from "react";
 import {
   Play,
   Disc3,
@@ -141,6 +151,23 @@ const RadioMeta: FC<RadioMetaProps> = ({ className }) => {
     );
   }, [status]);
 
+  const handleProgressJump = useCallback(
+    (e: ReactMouseEvent<HTMLDivElement>) => {
+      const duration = Number(progressBus.data?.duration);
+      if (!duration || !Number.isFinite(duration)) return;
+
+      const rect = e.currentTarget.getBoundingClientRect();
+      const percent = clamp((e.clientX - rect.left) / (rect.width || 1), 0, 1);
+      const timeMS = duration * 1000 * percent;
+
+      RendererIPCMessageBus.playlistAction.deliver({
+        type: "lyricJump",
+        timeMS
+      });
+    },
+    [progressBus.data?.duration]
+  );
+
   return (
     <section className={cx(className, "flex flex-col justify-center items-center gap-px")}>
       {/* Title */}
@@ -222,6 +249,16 @@ const RadioMeta: FC<RadioMetaProps> = ({ className }) => {
         </div>
       </NoDrag>
       {/* Progress */}
+      <NoDrag
+        className="h-1.25 w-35 mt-1.5 overflow-hidden rounded-full bg-white/50 cursor-pointer"
+        onMouseDown={handleProgressJump}>
+        <span
+          className="block h-full rounded-full bg-primary transition-[width] duration-300 ease-in-out"
+          style={{
+            width: `${((progressBus.data?.currentTime ?? 0) / (progressBus.data?.duration ?? 1)) * 100}%`
+          }}
+        />
+      </NoDrag>
       <NoDrag className="flex mt-1 w-35 text-[10px] shrink-0 gap-2 justify-between items-center">
         <Marquee
           className="flex-1 flex gap-1 items-center"
@@ -248,7 +285,8 @@ const RadioMeta: FC<RadioMetaProps> = ({ className }) => {
         </Marquee>
         <span>
           {RendererFormat.duration(
-            ((progressBus.data?.duration || 0) - (progressBus.data?.currentTime || 0)) * 1000
+            (progressBus.data?.duration || 0) - (progressBus.data?.currentTime || 0),
+            "s"
           )}
         </span>
       </NoDrag>

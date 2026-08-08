@@ -1,6 +1,6 @@
-import { X } from "lucide-react";
 import { cx } from "@emotion/css";
-import { type FC, useMemo, useEffect, useCallback } from "react";
+import { X, ChevronRight } from "lucide-react";
+import { type FC, useMemo, useState, useEffect, useCallback } from "react";
 import { NeteaseImageSize } from "@/common/enum";
 import { RendererWindow } from "@/common/lib/window";
 import { NeteaseURL } from "@/common/netease/models";
@@ -14,6 +14,7 @@ import NoDrag from "@/common/components/layout/drag/no-drag";
 import AcrylicBackground from "@/common/components/display/acrylic-background";
 
 const RadioPage: FC = () => {
+  const [openCommentPanel, setOpenCommentPanel] = useState(true);
   const themeBus = useThemeInjectFromBus();
   const trackMetaBus = useListenable(RendererIPCMessageBus.trackMeta);
 
@@ -48,7 +49,7 @@ const RadioPage: FC = () => {
         />
       </section>
       <section className="h-screen w-screen p-2 overflow-hidden contain-strict">
-        <RadioContent />
+        <RadioContent openComment={openCommentPanel} />
         <NoDrag className="absolute top-2 right-2">
           <button
             className="
@@ -60,6 +61,22 @@ const RadioPage: FC = () => {
             title="隐藏"
             onClick={close}>
             <X className="size-3.5" />
+          </button>
+        </NoDrag>
+        <NoDrag className="absolute top-1/2 -right-2 transform -translate-x-1/2 -translate-y-1/2">
+          <button
+            className={cx(
+              `
+              flex size-5 items-center justify-center rounded-full outline-none
+              transition-all duration-200 ease-in-out
+              hover:bg-primary-text/50 hover:text-primary
+              active:scale-90 focus-visible:ring-2 focus-visible:ring-primary/35
+            `,
+              !openCommentPanel ? "rotate-180" : ""
+            )}
+            title="隐藏"
+            onClick={() => setOpenCommentPanel(!openCommentPanel)}>
+            <ChevronRight className="size-4" />
           </button>
         </NoDrag>
       </section>
