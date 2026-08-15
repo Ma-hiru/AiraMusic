@@ -35,7 +35,9 @@ export default class ProxyService extends MainChildEntry<ProxyParentMessage, Pro
       port: this.port,
       ncmPort: this.ncmPort,
       storePort: this.storePort,
-      staticUIDir: this.staticUIDir
+      staticUIDir: this.staticUIDir,
+      cert: MainPathResolver.localhostCertPath,
+      key: MainPathResolver.localhostKeyPath
     };
   }
 

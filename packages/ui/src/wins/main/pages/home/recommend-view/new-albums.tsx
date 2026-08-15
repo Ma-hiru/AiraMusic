@@ -1,6 +1,7 @@
 import { DiscAlbum } from "lucide-react";
 import { memo, type FC, useMemo, useCallback } from "react";
 import { NeteaseAPIAlbum } from "@/common/netease/api";
+import { NeteaseServicesAlbum } from "@/common/netease/services";
 import { useRequestAutoRetry, useRequestStatusWrap } from "@/common/hooks/use-request-wrap";
 import Section from "@/common/components/layout/section";
 import AppError from "@/common/components/fallback/app-error";
@@ -48,6 +49,8 @@ const NewAlbums: FC<NewAlbumsProps> = ({ onClickItem }) => {
             items={items}
             coverSize={RendererImageConstants.AlbumListCoverSize}
             onClickItem={onClickItem}
+            onMouseEnter={(id) => NeteaseServicesAlbum.preload(id)}
+            onMouseLeave={(id) => NeteaseServicesAlbum.cancelPreload(id)}
           />
         </AppLoading>
       </AppError>

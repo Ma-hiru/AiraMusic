@@ -19,6 +19,10 @@
     {
       "from": "packages/app/assets",
       "to": "assets"
+    },
+    {
+      "from": "packages/app/cert",
+      "to": "cert"
     }
   ],
   "linux": {

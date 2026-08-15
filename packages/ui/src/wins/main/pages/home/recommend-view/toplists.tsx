@@ -2,6 +2,7 @@ import { Trophy } from "lucide-react";
 import { memo, type FC, useMemo, useCallback } from "react";
 import { NeteaseAPIHome } from "@/common/netease/api";
 import { RendererHomeConstants } from "@/wins/main/constants";
+import { NeteaseServicesPlaylist } from "@/common/netease/services";
 import { useRequestAutoRetry, useRequestStatusWrap } from "@/common/hooks/use-request-wrap";
 import Section from "@/common/components/layout/section";
 import AppError from "@/common/components/fallback/app-error";
@@ -42,7 +43,12 @@ const Toplists: FC<ToplistsProps> = ({ onClickItem }) => {
     <Section title="排行榜" Icon={Trophy} subTitle="Charts">
       <AppError reset={reload} message="加载排行榜失败" when={status === "error"}>
         <AppLoading className="h-40" loading={status === "loading"}>
-          <MediaGrid items={gridItems} onClickItem={onClickItem} />
+          <MediaGrid
+            items={gridItems}
+            onClickItem={onClickItem}
+            onMouseEnter={(id) => NeteaseServicesPlaylist.preload(id)}
+            onMouseLeave={(id) => NeteaseServicesPlaylist.cancelPreload(id)}
+          />
         </AppLoading>
       </AppError>
     </Section>

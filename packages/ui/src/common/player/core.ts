@@ -25,6 +25,7 @@ import {
   NeteaseHistoryRecord
 } from "@/common/netease/models";
 import AppToast from "@/common/components/display/toast";
+import RendererImageConstants from "@/common/constants/image";
 
 import RendererPlayerAudio from "./audio";
 import RendererPlayerHistory from "./history";
@@ -294,10 +295,14 @@ export default class RendererPlayer extends Listenable {
     track: NeteaseTrack,
     controller: AbortController
   ): Promise<NeteaseLocalImage | NeteaseNetworkImage> {
-    const local = await NeteaseServicesImage.local(track, false, NeteaseImageSize.lg);
+    const local = await NeteaseServicesImage.local(
+      track,
+      false,
+      RendererImageConstants.PlayerCoverSize
+    );
     if (local) return local;
 
-    const network = NeteaseServicesImage.notwork(track, NeteaseImageSize.lg);
+    const network = NeteaseServicesImage.notwork(track, RendererImageConstants.PlayerCoverSize);
     this.downloadCoverTimer && window.clearTimeout(this.downloadCoverTimer);
     this.downloadCoverTimer = window.setTimeout(() => {
       if (controller.signal.aborted) return null;

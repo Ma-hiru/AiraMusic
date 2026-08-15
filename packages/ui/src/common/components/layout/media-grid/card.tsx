@@ -21,9 +21,20 @@ interface MediaCardProps {
   coverSize: number;
   className?: string;
   onClick?: NormalFunc<[id: number]>;
+  onHover?: NormalFunc<[id: number]>;
+  onMouseEnter?: NormalFunc<[id: number]>;
+  onMouseLeave?: NormalFunc<[id: number]>;
 }
 
-const MediaCard: FC<MediaCardProps> = ({ className, onClick, item, coverSize }) => {
+const MediaCard: FC<MediaCardProps> = ({
+  className,
+  onClick,
+  onHover,
+  onMouseEnter,
+  onMouseLeave,
+  item,
+  coverSize
+}) => {
   const image = useMemo(
     () => NeteaseNetworkImage.fromURL(item.coverUrl)?.setSize(coverSize).setAlt(item.name),
     [coverSize, item.coverUrl, item.name]
@@ -39,7 +50,12 @@ const MediaCard: FC<MediaCardProps> = ({ className, onClick, item, coverSize }) 
         `,
         className
       )}
-      onClick={() => onClick?.(item.id)}>
+      onClick={() => onClick?.(item.id)}
+      onMouseLeave={() => onMouseLeave?.(item.id)}
+      onMouseEnter={() => {
+        onHover?.(item.id);
+        onMouseEnter?.(item.id);
+      }}>
       <div className={cx("relative aspect-square w-full bg-white/10 shadow-md", roundedClass)}>
         <NeteaseImage
           className={cx("size-full object-cover surface-border", roundedClass)}

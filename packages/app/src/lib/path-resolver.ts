@@ -29,6 +29,14 @@ export class MainPathResolver {
 
   static staticAssetsDir = isDev ? this.appPathJoin("assets") : this.appResourcePathJoin("assets");
 
+  static localhostCertPath = isDev
+    ? this.appPathJoin("cert", "localhost-cert.pem")
+    : this.appResourcePathJoin("cert", "localhost-cert.pem");
+
+  static localhostKeyPath = isDev
+    ? this.appPathJoin("cert", "localhost-key.pem")
+    : this.appResourcePathJoin("cert", "localhost-key.pem");
+
   static storeServerBinaryPath = isDev
     ? this.appPathJoin(
         "../store/dist",

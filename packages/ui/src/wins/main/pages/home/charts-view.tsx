@@ -4,6 +4,7 @@ import { memo, type FC, useMemo, useCallback } from "react";
 import { NeteaseAPIHome } from "@/common/netease/api";
 import { RendererHomeConstants } from "@/wins/main/constants";
 import { usePageJump } from "@/wins/main/hooks/use-page-jump";
+import { NeteaseServicesPlaylist } from "@/common/netease/services";
 import { useRequestAutoRetry, useRequestStatusWrap } from "@/common/hooks/use-request-wrap";
 import Section from "@/common/components/layout/section";
 import AppError from "@/common/components/fallback/app-error";
@@ -103,13 +104,20 @@ const HomeChartsView: FC<{ className?: string }> = ({ className }) => {
               <MediaGrid
                 items={gridFeatured}
                 onClickItem={(id) => jumpPlaylistPage(id, "normal")}
+                onMouseEnter={(id) => NeteaseServicesPlaylist.preload(id)}
+                onMouseLeave={(id) => NeteaseServicesPlaylist.cancelPreload(id)}
               />
             </div>
           </AppLoading>
         </AppError>
       </Section>
       <Section title="更多榜单" subTitle="All Charts">
-        <MediaGrid items={gridMore} onClickItem={(id) => jumpPlaylistPage(id, "normal")} />
+        <MediaGrid
+          items={gridMore}
+          onClickItem={(id) => jumpPlaylistPage(id, "normal")}
+          onMouseEnter={(id) => NeteaseServicesPlaylist.preload(id)}
+          onMouseLeave={(id) => NeteaseServicesPlaylist.cancelPreload(id)}
+        />
       </Section>
     </div>
   );

@@ -3,13 +3,16 @@ import { RendererCache } from "@/common/lib/cache";
 import { LRUCacheWithTime } from "@/common/utils/lru";
 import { userStoreSnapshot } from "@/common/store/user";
 import { NeteaseAPIPlaylist } from "@/common/netease/api";
-import { NeteaseServicesTrack } from "@/common/netease/services/index";
+import { PreloadManager } from "@/common/utils/preload-manager";
+import { NeteaseServicesImage, NeteaseServicesTrack } from "@/common/netease/services/index";
 import {
   NeteasePlaylist,
   NeteaseTrackRecord,
+  NeteaseNetworkImage,
   NeteasePlaylistSummary,
   type NullablePrivilegesPlaylistDetailResponse
 } from "@/common/netease/models";
+import RendererImageConstants from "@/common/constants/image";
 import NeteaseTrackSource from "@/common/netease/services/track";
 
 /**
@@ -171,6 +174,37 @@ export default class _NeteasePlaylistSource {
 
   static summary(summary: NeteasePlaylistSummary | NeteaseAPI.NeteasePlaylistSummary) {
     return _NeteasePlaylistSource.id(summary.id);
+  }
+
+  private static preloadManager = new PreloadManager<number>({
+    name: "playlist",
+    exec: (id, signal) => {
+      // 如果已经缓存了，就不需要预加载了(说明已经打开过页面)
+      if (this.memoryCache.get(id)) return Promise.resolve();
+      return NeteaseAPIPlaylist.detail(id, signal).then((response) => {
+        signal?.throwIfAborted();
+        NeteaseServicesImage.preload([
+          NeteaseNetworkImage.fromURL(response.playlist.coverImgUrl).setSize(
+            RendererImageConstants.PlaylistPageCoverSize
+          ),
+          ...response.playlist.tracks
+            .slice(0, 10)
+            .map((track) =>
+              NeteaseNetworkImage.fromURL(track.al.picUrl).setSize(
+                RendererImageConstants.PlaylistPageTrackCoverSize
+              )
+            )
+        ]);
+      });
+    }
+  });
+
+  static preload(id: number) {
+    return _NeteasePlaylistSource.preloadManager.preload(id);
+  }
+
+  static cancelPreload(id: number) {
+    return _NeteasePlaylistSource.preloadManager.cancelPreload(id);
   }
 
   /** 心动模式/智能播放 */

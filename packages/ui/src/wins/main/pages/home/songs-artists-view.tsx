@@ -1,10 +1,10 @@
 import { cx } from "@emotion/css";
 import { Music2, UserRound } from "lucide-react";
 import { memo, type FC, useMemo, useState, useCallback } from "react";
-import { NeteaseTrackRecord } from "@/common/netease/models";
 import { usePageJump } from "@/wins/main/hooks/use-page-jump";
-import { NeteaseServicesTrack } from "@/common/netease/services";
 import { NeteaseAPITrack, NeteaseAPIArtist } from "@/common/netease/api";
+import { NeteaseTrackRecord, NeteaseNetworkImage } from "@/common/netease/models";
+import { NeteaseServicesImage, NeteaseServicesTrack } from "@/common/netease/services";
 import { useRequestAutoRun, useRequestStatusWrap } from "@/common/hooks/use-request-wrap";
 import { type SongArea, type ArtistArea, RendererHomeConstants } from "@/wins/main/constants";
 import AppToast from "@/common/components/display/toast";
@@ -120,6 +120,13 @@ const HomeSongsArtistsView: FC<{ className?: string }> = ({ className }) => {
               items={songItems}
               coverSize={RendererImageConstants.AlbumListCoverSize}
               onClickItem={playSong}
+              onMouseEnter={(_, index) =>
+                NeteaseServicesImage.preload([
+                  NeteaseNetworkImage.fromURL(songItems[index]!.coverUrl).setSize(
+                    RendererImageConstants.PlayerCoverSize
+                  )
+                ])
+              }
             />
           </AppLoading>
         </AppError>

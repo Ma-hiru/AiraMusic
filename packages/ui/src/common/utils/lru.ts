@@ -74,8 +74,10 @@ export abstract class LRUCache<K, V> {
    * */
   protected _limitSize() {
     if (this._size > this.capacity) {
-      this.cache.delete(this.tail.prev!.take().key);
+      const node = this.tail.prev!.take();
+      this.cache.delete(node.key);
       this._size--;
+      return node;
     }
   }
 
@@ -93,48 +95,63 @@ export abstract class LRUCache<K, V> {
     }
   }
 
+  protected _delete(key: K) {
+    const node = this.cache.get(key)?.take();
+    if (node) {
+      this.cache.delete(key);
+      this._size--;
+    }
+    return node;
+  }
+
   protected abstract limit(): void;
 
   public abstract get(key: K): Undefinable<any>;
 
-  public abstract set(key: K, value: any): void;
+  public abstract set(key: K, value: any): this;
+
+  public abstract delete(key: K): any;
 
   public get size() {
     return this._size;
-  }
-
-  public delete(key: K) {
-    if (this.cache.get(key)?.take()) {
-      this.cache.delete(key);
-      this._size--;
-    }
   }
 }
 
 export class LRUCacheWithTime<K, V> extends LRUCache<K, { value: V; time: number }> {
   readonly timelimit;
-
-  constructor(capacity: number, timelimit: number) {
+  readonly onDrop?;
+  constructor(capacity: number, timelimit: number, onDrop?: NormalFunc<[key: K, value: V]>) {
     super(capacity);
     this.timelimit = timelimit;
+    this.onDrop = onDrop;
   }
 
-  protected limit() {
-    super._limitSize();
+  protected override limit() {
+    const node = super._limitSize();
+    node && this.onDrop?.(node.key, node.value.value);
 
     let current = this.tail.prev;
     while (current && current !== this.head && Date.now() - current.value.time > this.timelimit) {
       const delKey = current.key;
+      const delVal = current.value.value;
+
       current = current.prev;
+
       this.delete(delKey);
+      this.onDrop?.(delKey, delVal);
     }
   }
 
-  get(key: K): Undefinable<V> {
+  public override get(key: K): Undefinable<V> {
     return super._get(key)?.value;
   }
 
-  set(key: K, value: V) {
-    return super._set(key, { time: Date.now(), value });
+  public override set(key: K, value: V) {
+    super._set(key, { time: Date.now(), value });
+    return this;
+  }
+
+  public override delete(key: K): Undefinable<V> {
+    return super._delete(key)?.value.value;
   }
 }

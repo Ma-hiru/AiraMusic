@@ -1,8 +1,9 @@
 import { memo, type FC, type RefObject } from "react";
-import { NeteaseTrack, NeteaseTrackRecord } from "@/common/netease/models";
+import { NeteaseServicesImage } from "@/common/netease/services";
+import { NeteaseTrack, NeteaseTrackRecord, NeteaseNetworkImage } from "@/common/netease/models";
 import RendererPlayerHandle from "@/wins/main/lib/handle";
 import RendererImageConstants from "@/common/constants/image";
-import HomeMediaCard from "@/common/components/layout/media-grid/card";
+import MediaCard from "@/common/components/layout/media-grid/card";
 
 interface RecommendTrackListProps {
   containerRef: RefObject<Nullable<HTMLDivElement>>;
@@ -22,9 +23,17 @@ const RecommendTrackList: FC<RecommendTrackListProps> = ({ recommend, containerR
       ">
       {recommend.map((song) => (
         <div key={song.id} className="snap-start">
-          <HomeMediaCard
+          <MediaCard
             className="size-full object-center aspect-square"
             coverSize={RendererImageConstants.HomePageTrackCoverSize}
+            onHover={() => {
+              // hover 时预加载封面
+              NeteaseServicesImage.preload([
+                NeteaseNetworkImage.fromURL(song.al.picUrl).setSize(
+                  RendererImageConstants.PlayerCoverSize
+                )
+              ]);
+            }}
             onClick={() => {
               if (RendererPlayerHandle.player.current.track?.id === song.id) return;
               const track = new NeteaseTrackRecord({

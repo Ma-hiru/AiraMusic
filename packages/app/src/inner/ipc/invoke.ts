@@ -381,7 +381,7 @@ function isAuthorizedApplicationMainFrame(
     if (!expectedFrameURL) return false;
     const expectedURL = new URL(expectedFrameURL);
     return (
-      url.protocol === "http:" &&
+      (url.protocol === "http:" || url.protocol === "https:") &&
       url.hostname === "localhost" &&
       Boolean(url.port) &&
       isWithinAppPath(url.pathname, pathname) &&

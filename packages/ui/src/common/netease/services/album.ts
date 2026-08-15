@@ -1,6 +1,9 @@
 import { RendererCache } from "@/common/lib/cache";
 import { NeteaseAPIAlbum } from "@/common/netease/api";
-import { NeteaseAlbum, NeteaseTrackRecord } from "@/common/netease/models";
+import { PreloadManager } from "@/common/utils/preload-manager";
+import { NeteaseServicesImage } from "@/common/netease/services/index";
+import { NeteaseAlbum, NeteaseTrackRecord, NeteaseNetworkImage } from "@/common/netease/models";
+import RendererImageConstants from "@/common/constants/image";
 
 import _NeteaseTrackSource from "./track";
 
@@ -87,6 +90,35 @@ export default class _NeteaseAlbumSource {
   ): T extends Falsy ? null : Promise<NeteaseAPI.NeteaseAlbumDynamicDetailResponse> {
     const res = !id ? null : NeteaseAPIAlbum.detail(typeof id === "number" ? id : id.content.id);
     return res as T extends Falsy ? null : Promise<NeteaseAPI.NeteaseAlbumDynamicDetailResponse>;
+  }
+
+  private static preloadManager = new PreloadManager<number>({
+    name: "album",
+    exec: async (id, signal) => {
+      const cache = await _NeteaseAlbumSource.getCache(id);
+      signal?.throwIfAborted();
+      if (cache && cache.tracks.length) return;
+      const content = await NeteaseAPIAlbum.content(id, signal);
+      signal?.throwIfAborted();
+      NeteaseServicesImage.preload([
+        NeteaseNetworkImage.fromURL(content.album.picUrl).setSize(
+          RendererImageConstants.AlbumPageCoverSize
+        ),
+        ...content.songs.map((song) =>
+          NeteaseNetworkImage.fromURL(song.al.picUrl).setSize(
+            RendererImageConstants.PlaylistPageTrackCoverSize
+          )
+        )
+      ]);
+    }
+  });
+
+  static preload(id: number) {
+    return _NeteaseAlbumSource.preloadManager.preload(id);
+  }
+
+  static cancelPreload(id: number) {
+    return _NeteaseAlbumSource.preloadManager.cancelPreload(id);
   }
 
   /** 失效专辑缓存（不含专辑数据，因为其永不缓存） */

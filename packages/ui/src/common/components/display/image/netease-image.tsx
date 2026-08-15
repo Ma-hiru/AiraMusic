@@ -153,7 +153,7 @@ const NeteaseImage: FC<ImageProps> = ({
       },
       {
         root: null, // viewport
-        rootMargin: "300px", // 提前加载（关键）
+        rootMargin: "200px", // 提前加载（关键）
         threshold: 0,
         ...cacheLazyProps
       }

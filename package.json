@@ -46,6 +46,7 @@
     "clean:cargo": "yarn workspace @mahiru/wasm clean:cargo && yarn workspace @mahiru/native clean:cargo",
     "clean:go": "yarn workspace @mahiru/store clean:go",
     "preview:ui": "yarn workspace @mahiru/ui preview",
+    "generate:cert": "bash scripts/generate-localhost-cert.sh",
     "check": "yarn tsgo -b --force",
     "lint": "yarn npm-run-all --parallel lint:ts lint:wasm lint:native lint:store",
     "lint:ts": "yarn eslint . --fix && yarn prettier --write .",

@@ -3,6 +3,7 @@ import { ListMusic, LoaderCircle } from "lucide-react";
 import { memo, useRef, type FC, useMemo, useState, useEffect, useCallback } from "react";
 import { useUser } from "@/common/store/user";
 import { usePageJump } from "@/wins/main/hooks/use-page-jump";
+import { NeteaseServicesPlaylist } from "@/common/netease/services";
 import { type RequestStatus } from "@/common/hooks/use-request-wrap";
 import { uniqueItems, loadPlaylistCategory } from "@/wins/main/pages/home/playlists-view/load";
 import Section from "@/common/components/layout/section";
@@ -114,7 +115,12 @@ const HomePlaylistsView: FC<{ className?: string }> = ({ className }) => {
       <Section Icon={ListMusic} title={resolvedTitle} subTitle="Playlist Explore">
         <AppError reset={reload} message="加载歌单失败" when={status === "error"}>
           <AppLoading className="min-h-80" loading={status === "loading"}>
-            <MediaGrid items={items} onClickItem={(id) => jumpPlaylistPage(id, "normal")} />
+            <MediaGrid
+              items={items}
+              onClickItem={(id) => jumpPlaylistPage(id, "normal")}
+              onMouseEnter={(id) => NeteaseServicesPlaylist.preload(id)}
+              onMouseLeave={(id) => NeteaseServicesPlaylist.cancelPreload(id)}
+            />
             <div
               ref={loadMoreSentinelRef}
               className="mt-5 flex min-h-14 items-center justify-center pb-18"

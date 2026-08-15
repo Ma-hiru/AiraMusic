@@ -110,16 +110,21 @@ export default class _NeteaseImageSource {
     return this.removeCache(image);
   }
 
+  private static preloadedRecord = new Set<string>();
   static preload(images: NeteaseNetworkImage[]) {
-    void RendererCache.service.check.readOrStore(
-      images.map((image) => {
-        return {
+    const items = [];
+    for (const image of images) {
+      const id = _NeteaseImageSource.getCacheKey(image);
+      if (!_NeteaseImageSource.preloadedRecord.has(id)) {
+        _NeteaseImageSource.preloadedRecord.add(id);
+        items.push({
+          id,
           url: image.url,
-          id: _NeteaseImageSource.getCacheKey(image),
           category: StoreCategory.Image
-        };
-      })
-    );
+        });
+      }
+    }
+    void RendererCache.service.check.readOrStore(items);
   }
 
   static async download(image: NeteaseNetworkImage) {

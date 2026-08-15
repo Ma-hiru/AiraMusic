@@ -3,12 +3,13 @@ import { useRef, type FC, useEffect, useCallback } from "react";
 import { SearchType } from "@/common/enum";
 import { RendererFormat } from "@/common/lib/format";
 import { NeteaseAPISearch } from "@/common/netease/api";
+import { NeteaseServicesAlbum } from "@/common/netease/services";
 import { useScrollAutoHide } from "@/common/hooks/use-scroll-auto-hide";
 import { useRequestAutoRun, useRequestStatusWrap } from "@/common/hooks/use-request-wrap";
 import AppEmpty from "@/common/components/fallback/app-empty";
 import AppError from "@/common/components/fallback/app-error";
+import MediaGrid from "@/common/components/layout/media-grid";
 import AppLoading from "@/common/components/fallback/app-loading";
-import HomeMediaGrid from "@/common/components/layout/media-grid";
 
 interface AlbumResultProps {
   active: boolean;
@@ -63,8 +64,10 @@ const AlbumResult: FC<AlbumResultProps> = ({
               "w-full h-full contain-strict overflow-y-auto scrollbar scrollbar-show",
               className
             )}>
-            <HomeMediaGrid
+            <MediaGrid
               onClickItem={onJumpAlbum ?? undefined}
+              onMouseEnter={(id) => NeteaseServicesAlbum.preload(id)}
+              onMouseLeave={(id) => NeteaseServicesAlbum.cancelPreload(id)}
               items={list.map((a) => ({
                 id: a.id,
                 name: a.name,

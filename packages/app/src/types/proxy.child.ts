@@ -3,6 +3,8 @@ export type ProxyParentMessage =
       type: "stop";
     }
   | {
+      key: string;
+      cert: string;
       port: number;
       type: "start";
       ncmPort: number;

@@ -1,6 +1,7 @@
 import { Sparkles } from "lucide-react";
 import { memo, useEffect, useCallback } from "react";
 import { NeteaseAPIPlaylist } from "@/common/netease/api";
+import { NeteaseServicesPlaylist } from "@/common/netease/services";
 import { useRequestAutoRetry, useRequestStatusWrap } from "@/common/hooks/use-request-wrap";
 import Section from "@/common/components/layout/section";
 import AppError from "@/common/components/fallback/app-error";
@@ -33,6 +34,8 @@ const DailyRecommendPlaylist = ({
         <AppLoading className="h-fit w-full" loading={status === "loading"}>
           <MediaGrid
             onClickItem={onClickItem}
+            onMouseEnter={(id) => NeteaseServicesPlaylist.preload(id)}
+            onMouseLeave={(id) => NeteaseServicesPlaylist.cancelPreload(id)}
             items={recommend.map((r) => ({
               name: r.name,
               id: r.id,

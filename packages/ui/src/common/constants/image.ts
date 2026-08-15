@@ -10,4 +10,5 @@ export default class RendererImageConstants {
   static readonly PlaylistPageTrackCoverSize = NeteaseImageSize.xs;
   static readonly HomePagePlaylistCoverSize = 180;
   static readonly HomePageTrackCoverSize = 180;
+  static readonly PlayerCoverSize = NeteaseImageSize.lg;
 }

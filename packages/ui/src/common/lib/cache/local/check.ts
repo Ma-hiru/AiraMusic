@@ -11,6 +11,8 @@ import { cacheRequest } from "../request";
 
 export class CacheStoreForCheck {
   private static collections: Task[] = [];
+  private static maxSize = 15;
+  private static gap = 20;
 
   private static _read(
     items: CacheStoreCheckItem[]
@@ -32,23 +34,30 @@ export class CacheStoreForCheck {
   }
 
   private static timer: Nullable<number> = null;
-  private static add(task: Task) {
-    this.collections.push(task);
-    this.timer && window.clearTimeout(this.timer);
-    this.timer = window.setTimeout(() => {
-      let task;
-      const readTask: ReadTask[] = [];
-      const readOrStoreTask: ReadOrStoreTask[] = [];
-      while ((task = this.collections.shift())) {
-        if (task.type === "read") {
-          readTask.push(task);
-        } else {
-          readOrStoreTask.push(task);
-        }
+  private static exec() {
+    let task;
+    const readTask: ReadTask[] = [];
+    const readOrStoreTask: ReadOrStoreTask[] = [];
+    while ((task = this.collections.shift())) {
+      if (task.type === "read") {
+        readTask.push(task);
+      } else {
+        readOrStoreTask.push(task);
       }
-      this.handleReadTask("read", readTask);
-      this.handleReadTask("readOrStore", readOrStoreTask);
-    }, 100);
+    }
+    this.handleReadTask("read", readTask);
+    this.handleReadTask("readOrStore", readOrStoreTask);
+  }
+  private static add(task: Task) {
+    this.timer && window.clearTimeout(this.timer);
+    this.collections.push(task);
+
+    // 如果任务数量超过最大值，直接执行
+    if (this.collections.length >= this.maxSize) {
+      this.exec();
+    } else {
+      this.timer = window.setTimeout(this.exec.bind(this), this.gap);
+    }
   }
 
   private static handleReadTask(

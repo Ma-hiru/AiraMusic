@@ -9,6 +9,14 @@ import { MainScreenResolver } from "@/lib/screen-resolver";
 import type { AppWindowCreatorProps } from "@/types/window";
 
 export class MainWindowPreset {
+  /**
+   * 本地服务地址：开发走 Vite(http)，生产走 HTTPS 代理
+   * （HTTP/2 多路复用只在 TLS 下协商）
+   */
+  private static origin(port: number | string) {
+    return `${MainRuntime.isDev ? "http" : "https"}://localhost:${port}`;
+  }
+
   static fatalError(message: string, error?: string) {
     Log.error({ label: "App fatalError", message, raw: error });
     dialog.showErrorBox("应用发生致命错误", `${message}\n ${error || ""}`);
@@ -43,7 +51,7 @@ export class MainWindowPreset {
       id: "login",
       handleExits: "DESTROY",
       memoPos: false,
-      loadURL: (port) => `http://localhost:${port}/login.html`
+      loadURL: (port) => `${MainWindowPreset.origin(port)}/login.html`
     };
   }
 
@@ -73,7 +81,7 @@ export class MainWindowPreset {
       id: "image",
       handleExits: "IGNORE",
       memoPos: false,
-      loadURL: (port) => `http://localhost:${port}/image.html`
+      loadURL: (port) => `${MainWindowPreset.origin(port)}/image.html`
     };
   }
 
@@ -114,7 +122,7 @@ export class MainWindowPreset {
       id: "lyric",
       handleExits: "DESTROY",
       memoPos: true,
-      loadURL: (port) => `http://localhost:${port}/lyric.html`,
+      loadURL: (port) => `${MainWindowPreset.origin(port)}/lyric.html`,
       onCreate: (win) => {
         if (process.platform === "darwin") win.setWindowButtonVisibility(false);
         if (process.platform === "linux") win.setAlwaysOnTop(true);
@@ -157,7 +165,7 @@ export class MainWindowPreset {
       id: "miniplayer",
       handleExits: "IGNORE",
       memoPos: true,
-      loadURL: (port) => `http://localhost:${port}/mini.html`,
+      loadURL: (port) => `${MainWindowPreset.origin(port)}/mini.html`,
       onCreate: (win) => {
         win.hide();
 
@@ -198,7 +206,7 @@ export class MainWindowPreset {
       id: "radio",
       handleExits: "IGNORE",
       memoPos: true,
-      loadURL: (port) => `http://localhost:${port}/radio.html`,
+      loadURL: (port) => `${MainWindowPreset.origin(port)}/radio.html`,
       onCreate: (win) => {
         win.hide();
 
@@ -237,7 +245,7 @@ export class MainWindowPreset {
       memoPos: true,
       id: "main",
       handleExits: "IGNORE",
-      loadURL: (port) => `http://localhost:${port}`,
+      loadURL: (port) => `${MainWindowPreset.origin(port)}`,
       onCreate: (win) => {
         win.setMenuBarVisibility(false);
         (MainRuntime.isDev || getArgFlag("devtools")) && win.webContents.openDevTools();
@@ -276,7 +284,7 @@ export class MainWindowPreset {
       id: "tray",
       handleExits: "IGNORE",
       memoPos: true,
-      loadURL: (port: number) => `http://localhost:${port}/tray.html`
+      loadURL: (port: number) => `${MainWindowPreset.origin(port)}/tray.html`
     };
   }
 
@@ -311,7 +319,7 @@ export class MainWindowPreset {
       id: "tray",
       handleExits: "IGNORE",
       memoPos: true,
-      loadURL: (port) => `http://localhost:${port}/tray.html`,
+      loadURL: (port) => `${MainWindowPreset.origin(port)}/tray.html`,
       onCreate: (win) => {
         // 菜单栏弹窗需要盖在全屏应用之上
         win.setAlwaysOnTop(true, "pop-up-menu");
@@ -349,7 +357,7 @@ export class MainWindowPreset {
       memoPos: true,
       id: "display",
       handleExits: "IGNORE",
-      loadURL: (port) => `http://localhost:${port}/display.html`,
+      loadURL: (port) => `${MainWindowPreset.origin(port)}/display.html`,
       onCreate: (win) => {
         (MainRuntime.isDev || getArgFlag("devtools")) && win.webContents.openDevTools();
       }
@@ -383,7 +391,7 @@ export class MainWindowPreset {
       memoPos: true,
       id: "comments",
       handleExits: "IGNORE",
-      loadURL: (port) => `http://localhost:${port}/comments.html`,
+      loadURL: (port) => `${MainWindowPreset.origin(port)}/comments.html`,
       onCreate: (win) => {
         (MainRuntime.isDev || getArgFlag("devtools")) && win.webContents.openDevTools();
       }
@@ -413,7 +421,7 @@ export class MainWindowPreset {
       memoPos: true,
       id: "agent",
       handleExits: "IGNORE",
-      loadURL: (port) => `http://localhost:${port}/agent.html`,
+      loadURL: (port) => `${MainWindowPreset.origin(port)}/agent.html`,
       onCreate: (win) => {
         (MainRuntime.isDev || getArgFlag("devtools")) && win.webContents.openDevTools();
       }
