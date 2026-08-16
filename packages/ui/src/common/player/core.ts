@@ -1,6 +1,5 @@
 import { throttle } from "lodash-es";
 import { Log } from "@/common/lib/log";
-import { NeteaseImageSize } from "@/common/enum";
 import { RendererCache } from "@/common/lib/cache";
 import { Listenable } from "@/common/utils/listenable";
 import { Status } from "@/common/netease/services/auth";

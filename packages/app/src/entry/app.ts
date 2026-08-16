@@ -79,8 +79,7 @@ export class MainApp {
       const fingerprint = cert.fingerprint256;
 
       session.defaultSession.setCertificateVerifyProc((request, callback) => {
-        const isLoopback =
-          request.hostname === "localhost" || request.hostname === "127.0.0.1";
+        const isLoopback = request.hostname === "localhost" || request.hostname === "127.0.0.1";
         if (!isLoopback) return callback(-3);
         // Electron 的 certificate.fingerprint 是 "sha256/"+Base64 的 pin 格式，
         // 与 Node 的冒号分隔 hex 不可比，统一从 PEM 数据（certificate.data）重算。

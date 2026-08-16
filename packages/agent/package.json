@@ -1,0 +1,13 @@
+{
+  "name": "@mahiru/agent",
+  "type": "module",
+  "version": "1.0.0",
+  "files": [],
+  "scripts": {
+    "build": "cargo build --release",
+    "clean:cargo": "cargo clean",
+    "lint": "cargo fmt && cargo clippy --all-targets -- -D warnings",
+    "lint:check": "cargo fmt --check && cargo clippy --all-targets -- -D warnings",
+    "test": "cargo test"
+  }
+}
