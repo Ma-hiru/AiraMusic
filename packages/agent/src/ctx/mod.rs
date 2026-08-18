@@ -86,7 +86,8 @@ impl Ctx {
     // ───────────────────── 观察通道 ─────────────────────
 
     /// 订阅广播(观察者)
-    pub fn on<P: 'static>(&self, event: &str, observer: impl Observer<P> + 'static) -> Disposer {
+    pub fn on<P: 'static>(&self, event: impl Into<Event>, observer: impl Observer<P> + 'static) -> Disposer {
+        let event = event.into();
         let entry: Arc<dyn Observer<P>> = Arc::new(observer);
 
         {
@@ -119,10 +120,11 @@ impl Ctx {
     }
 
     /// 广播(依次喊醒所有观察者)
-    pub fn emit<P: 'static>(&self, event: &str, payload: &P) {
+    pub fn emit<P: 'static>(&self, event: impl Into<Event>, payload: &P) {
+        let event = event.into().to_string();
         let snapshot: ObserverList<P> = {
             let map = self.observers.lock().unwrap();
-            match map.get(event) {
+            match map.get(&event) {
                 Some(slot) => slot
                     .downcast_ref::<Observers<P>>()
                     .expect("事件名与载荷类型不匹配")
@@ -142,9 +144,10 @@ impl Ctx {
     /// 订阅广播(裁决者)
     pub fn on_veto<P: 'static, R: 'static>(
         &self,
-        event: &str,
+        event: impl Into<Event>,
         voter: impl Voter<P, R> + 'static,
     ) -> Disposer {
+        let event = event.into();
         let entry: Arc<dyn Voter<P, R>> = Arc::new(voter);
 
         {
@@ -175,13 +178,14 @@ impl Ctx {
     /// 表决(决裁者顺序表态)
     pub fn veto<P: 'static, R: 'static>(
         &self,
-        event: &str,
+        event: impl Into<Event>,
         payload: &mut P,
         fallback: impl FnOnce(&mut P) -> R,
     ) -> R {
+        let event = event.into().to_string();
         let snapshot: VoterList<P, R> = {
             let map = self.voters.lock().unwrap();
-            match map.get(event) {
+            match map.get(&event) {
                 Some(slot) => slot
                     .downcast_ref::<Voters<P, R>>()
                     .expect("事件名与载荷类型不匹配")

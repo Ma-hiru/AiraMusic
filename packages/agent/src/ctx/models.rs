@@ -36,3 +36,22 @@ pub struct Voters<P: 'static, R: 'static>(pub Mutex<VoterList<P, R>>);
 
 /// 收据(销毁器): 本质就是一个"可执行闭包" FnOnce()。
 pub type Disposer = Box<dyn FnOnce() + Send>;
+
+/// 事件名: 字符串
+pub struct Event {
+    pub name: String,
+    /// session id
+    pub session_id: Option<String>,
+}
+
+impl From<Event> for String {
+    fn from(event: Event) -> String {
+        event.name.clone()
+    }
+}
+
+impl Event {
+    pub fn to_string(&self) -> String {
+        self.name.clone()
+    }
+}

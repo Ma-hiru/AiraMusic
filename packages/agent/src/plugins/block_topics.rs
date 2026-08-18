@@ -5,14 +5,17 @@
 use std::sync::Arc;
 
 use anyhow::Result;
-use serde::Deserialize; // 解析 JSON 配置
+use serde::Deserialize;
+// 解析 JSON 配置
 use serde_json::Value;
 
-use crate::ctx::Ctx;
 use crate::ctx::models::Disposer;
-use crate::r#loop::models::{BeforeRequestPayload, PreRequestDecision}; // 载荷 + 裁决(循环的专属语言)
+use crate::ctx::Ctx;
+use crate::r#loop::models::{LoopEvent, LoopPayloadBeforeRequest, PreRequestDecision};
+// 载荷 + 裁决(循环的专属语言)
 use crate::plugins::models::Plugin;
-use crate::shared::message::Role; // 消息角色(共享词汇)
+use crate::shared::message::Role;
+// 消息角色(共享词汇)
 // 公告板(on_veto 在它上面) // 合同
 
 /// 本插件的配置。
@@ -39,10 +42,10 @@ impl Plugin for BlockTopicsPlugin {
         // 把敏感词拷进闭包(闭包要 'static)。
         let words = config.words;
         // 订阅否决链。泛型参数 = (载荷类型, 裁决类型)。
-        let receipt = ctx.on_veto::<BeforeRequestPayload, PreRequestDecision>(
-            "loop:before-request",
+        let receipt = ctx.on_veto::<LoopPayloadBeforeRequest, PreRequestDecision>(
+            LoopEvent::BeforeRequest,
             // 监听者闭包: 在即将发出的历史里找命中敏感词的用户消息。
-            move |payload: &mut BeforeRequestPayload| {
+            move |payload: &mut LoopPayloadBeforeRequest| {
                 let hit = payload.request.messages.iter().find(|m| {
                     // 只看用户说的话, 且包含任意一个敏感词。
                     m.role == Role::User && words.iter().any(|word| m.content.contains(word))

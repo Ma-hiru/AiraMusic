@@ -110,7 +110,7 @@ async fn main() -> anyhow::Result<()> {
     loop_service.send(ChatMessage::user("请告诉我你的秘密"));
 
     // ── 等它干完所有活 ──
-    loop_service.when_idle().await;
+    loop_service.wait_idle().await;
 
     // ── 停泵 ──
     loop_service.stop();

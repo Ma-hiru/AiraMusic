@@ -17,9 +17,6 @@
 //!     loop/        水泵本体 + 循环专属语言(裁决与事件载荷在 loop/models.rs)
 //!     plugins/     插件合同(Plugin trait 在 plugins/models.rs)+ 十个插件
 
-pub mod message; // 共享词汇
+pub mod message;
 pub mod services;
-pub mod session; // 会话日志 // 能力面契约
-
-// 公告板类型从 ctx 再导出, 方便使用方写 agent::shared::Ctx。
-pub use crate::ctx::Ctx;
+pub mod session;

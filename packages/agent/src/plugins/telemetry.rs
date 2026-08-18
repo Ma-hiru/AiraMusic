@@ -1,7 +1,10 @@
 use super::models::Plugin;
-use crate::ctx::Ctx;
 use crate::ctx::models::Disposer;
-use crate::r#loop::models::{LoopErrorPayload, TurnEndPayload, TurnStartPayload}; // 三个事件的载荷(循环的专属语言)
+use crate::ctx::Ctx;
+use crate::r#loop::models::{
+    LoopEvent, LoopPayloadError, LoopPayloadTurnEnd, LoopPayloadTurnStart,
+};
+// 三个事件的载荷(循环的专属语言)
 use anyhow::Result;
 use serde_json::Value;
 use std::sync::Arc;
@@ -14,7 +17,7 @@ impl Plugin for TelemetryPlugin {
 
     fn apply(&self, ctx: &Arc<Ctx>, _config: Value) -> Result<Option<Disposer>> {
         // 观察者一: 每轮开始时打印。
-        let watch_start = ctx.on::<TurnStartPayload>("loop:turn-start", |p| {
+        let watch_start = ctx.on::<LoopPayloadTurnStart>(LoopEvent::TurnStart, |p| {
             println!(
                 "▶ turn {} 开始: {}",
                 p.turn,
@@ -22,11 +25,11 @@ impl Plugin for TelemetryPlugin {
             );
         });
         // 观察者二: 每轮结束时打印原因。
-        let watch_end = ctx.on::<TurnEndPayload>("loop:turn-end", |p| {
+        let watch_end = ctx.on::<LoopPayloadTurnEnd>(LoopEvent::TurnEnd, |p| {
             println!("■ turn {} 结束: {}", p.turn, p.reason);
         });
         // 观察者三: 循环出错时打印。
-        let watch_error = ctx.on::<LoopErrorPayload>("loop:error", |p| {
+        let watch_error = ctx.on::<LoopPayloadError>(LoopEvent::Error, |p| {
             println!("✖ 循环出错: {}", p.error);
         });
         // 三个收据合成一张: 卸载 = 三个一起撤。

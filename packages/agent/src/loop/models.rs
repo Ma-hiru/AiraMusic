@@ -1,17 +1,5 @@
-//! loop 的"模型"部分 —— 循环自己的语言。
-//!
-//! 这里放"只有循环世界才用的类型":
-//!   裁决(否决链的两端): 循环发起表决, 监听者返回的答案
-//!   事件载荷: 循环广播时附带的"信封"
-//!
-//! 注意依赖方向: loop → shared(message)。
-//! 载荷里嵌套的 Request / AssistantReply / ToolCall / ChatMessage 是共享词汇,
-//! 留在 shared/message.rs —— 因为能力面(shared/services.rs)的接口也要用它们,
-//! 而插件同样 import 那些接口。循环专属的才放这里。
-
+use crate::ctx::models::Event;
 use crate::shared::message::{AssistantReply, ChatMessage, Request, ToolCall};
-
-// ═══════════════════ 一、裁决(否决链的两端) ═══════════════════
 
 /// 前阶段表决(before-request)的结果。
 pub enum PreRequestDecision {
@@ -37,16 +25,54 @@ pub struct LoopDecision {
     pub reason: String,
 }
 
-// ═══════════════════ 二、事件载荷(循环广播时附带的"信封") ═══════════════════
+/// 循环事件
+#[derive(Clone, Copy, Debug)]
+pub enum LoopEvent {
+    TurnStart,
+    TurnEnd,
+    BeforeRequest,
+    AfterReply,
+    ToolAfter,
+    Error,
+}
+
+impl LoopEvent {
+    fn name(&self) -> &'static str {
+        match self {
+            LoopEvent::TurnStart => "loop:turn-start",
+            LoopEvent::TurnEnd => "loop:turn-end",
+            LoopEvent::BeforeRequest => "loop:before-request",
+            LoopEvent::AfterReply => "loop:after-reply",
+            LoopEvent::ToolAfter => "loop:tool-after",
+            LoopEvent::Error => "loop:error",
+        }
+    }
+
+    fn with_id(self, id: impl Into<String>) -> Event {
+        Event {
+            name: self.name().into(),
+            session_id: Some(id.into()),
+        }
+    }
+}
+
+impl From<LoopEvent> for Event {
+    fn from(value: LoopEvent) -> Self {
+        Event {
+            name: value.name().into(),
+            session_id: None,
+        }
+    }
+}
 
 /// loop:before-request 的载荷。
-pub struct BeforeRequestPayload {
+pub struct LoopPayloadBeforeRequest {
     /// 即将发出的请求(监听者可改写)。
     pub request: Request,
 }
 
 /// loop:after-reply 的载荷。
-pub struct AfterReplyPayload {
+pub struct LoopPayloadAfterReply {
     /// 模型刚给的回复(只读参考)。
     pub reply: AssistantReply,
     /// 这是第几轮。
@@ -56,7 +82,7 @@ pub struct AfterReplyPayload {
 }
 
 /// tool:after 的载荷: 结果可被替换; inject 是"给下一轮注入上下文"的合法通道。
-pub struct ToolOutcome {
+pub struct LoopPayloadToolAfter {
     /// 刚执行完的那次调用(名字、参数)。
     pub call: ToolCall,
     /// 工具结果的文本(监听者可替换成自己的版本)。
@@ -68,7 +94,7 @@ pub struct ToolOutcome {
 
 /// loop:turn-start 的载荷(观察类事件)。
 #[derive(Clone)]
-pub struct TurnStartPayload {
+pub struct LoopPayloadTurnStart {
     /// 第几轮。
     pub turn: u32,
     /// 触发这一轮的用户消息。
@@ -77,7 +103,7 @@ pub struct TurnStartPayload {
 
 /// loop:turn-end 的载荷(观察类事件)。
 #[derive(Clone)]
-pub struct TurnEndPayload {
+pub struct LoopPayloadTurnEnd {
     /// 第几轮。
     pub turn: u32,
     /// 为什么结束(模型说完了 / 被谁否决 / 出错 / 超步数)。
@@ -86,7 +112,7 @@ pub struct TurnEndPayload {
 
 /// loop:error 的载荷(观察类事件)。
 #[derive(Clone)]
-pub struct LoopErrorPayload {
+pub struct LoopPayloadError {
     /// 错误内容(已转成字符串)。
     pub error: String,
     /// 出错时正在处理的那条用户消息。

@@ -8,12 +8,14 @@
 use std::sync::Arc;
 
 use anyhow::Result;
-use serde::Deserialize; // 解析 JSON 配置
+use serde::Deserialize;
+// 解析 JSON 配置
 use serde_json::Value;
 
-use crate::ctx::Ctx;
 use crate::ctx::models::Disposer;
-use crate::r#loop::models::{AfterReplyPayload, LoopDecision}; // 载荷 + 裁决类型(循环的专属语言)
+use crate::ctx::Ctx;
+use crate::r#loop::models::{LoopDecision, LoopEvent, LoopPayloadAfterReply};
+// 载荷 + 裁决类型(循环的专属语言)
 use crate::plugins::models::Plugin;
 // 公告板(on_veto 在它上面) // 合同
 
@@ -41,10 +43,10 @@ impl Plugin for MaxTurnsPlugin {
         // 把上限值拷进闭包(闭包要 'static, 只能带走自己的东西)。
         let max = config.max_turns;
         // 订阅否决链。泛型参数 = (载荷类型, 裁决类型)。
-        let receipt = ctx.on_veto::<AfterReplyPayload, LoopDecision>(
-            "loop:after-reply",
+        let receipt = ctx.on_veto::<LoopPayloadAfterReply, LoopDecision>(
+            LoopEvent::AfterReply,
             // 监听者就是一个闭包: 看载荷, 表态。
-            move |payload: &mut AfterReplyPayload| {
+            move |payload: &mut LoopPayloadAfterReply| {
                 if payload.turn >= max {
                     // 到上限: 否决 —— 链立刻停, 这个裁决就是最终答案。
                     Some(LoopDecision {
