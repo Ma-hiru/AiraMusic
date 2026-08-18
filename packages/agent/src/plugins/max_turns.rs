@@ -14,9 +14,9 @@ use serde_json::Value;
 
 use crate::ctx::models::Disposer;
 use crate::ctx::Ctx;
-use crate::r#loop::models::{LoopDecision, LoopEvent, LoopPayloadAfterReply};
-// 载荷 + 裁决类型(循环的专属语言)
 use crate::plugins::models::Plugin;
+// 载荷 + 裁决类型(循环的专属语言)
+use crate::r#loop::models::{LoopDecision, LoopEvent, LoopPayloadAfterReply};
 // 公告板(on_veto 在它上面) // 合同
 
 /// 本插件的配置。
@@ -49,7 +49,7 @@ impl Plugin for MaxTurnsPlugin {
             move |payload: &mut LoopPayloadAfterReply| {
                 if payload.turn >= max {
                     // 到上限: 否决 —— 链立刻停, 这个裁决就是最终答案。
-                    Some(LoopDecision {
+                    Some(LoopDecision::Deny {
                         should_continue: false,
                         reason: format!("达到轮数上限 {max}"),
                     })

@@ -13,13 +13,12 @@
 
 use std::sync::Arc;
 
-use anyhow::{Result, anyhow};
+use anyhow::Result;
 use serde_json::Value;
 
 use crate::ctx::Ctx;
 use crate::plugins::models::Plugin;
 use crate::plugins::session::SessionPlugin;
-use crate::shared::services::SessionSeed;
 
 /// 清单里的一行 = 一个插件的"报名信息"。
 /// 真实仓库里这是 cordis.yml 的一行(id + name + config), 这里把
@@ -101,17 +100,13 @@ pub fn boot(rows: Vec<ConfigRow>) -> Result<Arc<Ctx>> {
         }
     }
 
-    // ── 第三步: 会话加载 ──
-    // 如果清单里有 session-loader 插件, 它已经把初始历史挂成了 "session-seed" 服务;
-    // 这里取出种子数据, 种进会话日志(会话日志只许 seed 一次, 且只能在开始前)。
-    // 会话日志本体由 session 插件提供 —— 装了 session-loader 却不装 session 是配置错误,
-    // 在这里 fail loud(而不是等循环启动时才炸)。
-    if ctx.has("session-seed") {
-        let seed = ctx.get::<SessionSeed>("session-seed")?;
-        let session = SessionPlugin::get_service(&ctx).map_err(|_| {
-            anyhow!("装配失败: 清单里有 session-loader 却没有 session 插件(会话日志无处可写)")
-        })?;
-        session.seed(seed.initial_messages.clone())?;
+    // ── 第三步: 配置校验 ──
+    // session-loader 提供的是"每个会话开头的初始历史模板"(挂在 session-seed 服务下)。
+    // 真正的"创建会话 + 播种"由使用方(如 main)负责: 会话可以有多个, 每个都自己决定
+    // 何时创建、种什么。这里只做配置一致性校验 —— 装了 session-loader 却没装 session
+    // = 配置错误(种子无处可写), 在装配期就 fail loud(而不是等运行到一半才炸)。
+    if ctx.has("session-seed") && !ctx.has(SessionPlugin::service_name()) {
+        anyhow::bail!("装配失败: 清单里有 session-loader 却没有 session 插件(会话日志无处可写)");
     }
 
     // ── 装配完成 ──

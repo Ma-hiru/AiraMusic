@@ -13,7 +13,7 @@
 //!   plugins/models.rs  插件合同 —— name / inject / apply
 //!   boot/              装配 —— 把清单变成运行中的系统
 //!   shared/message.rs  共享词汇 —— 消息 + 模型请求/回复
-//!   shared/session.rs  会话日志 —— 唯一事实源(只追加)
+//!   shared/session.rs  会话身份 —— SessionId(多会话的钥匙)
 //!   shared/services.rs 能力面契约 —— 循环消费、插件提供的模型/工具/注册表接口
 //!   loop/              笨循环 —— 水泵本体; loop/models.rs 放循环专属的裁决与事件载荷
 //!   plugins/           十个插件 —— 三种角色(提供者/贡献者/监听者)

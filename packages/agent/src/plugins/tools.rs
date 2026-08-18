@@ -1,16 +1,17 @@
-use crate::ctx::Ctx;
 use crate::ctx::models::Disposer;
+use crate::ctx::Ctx;
 use crate::plugins::models::Plugin;
-use futures::future::BoxFuture;
+use async_trait::async_trait;
 use serde_json::Value;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
+#[async_trait]
 pub trait Tool: Send + Sync {
     fn name(&self) -> &str;
     fn description(&self) -> &str;
     fn parameters(&self) -> Value;
-    fn run(&self, args: Value) -> BoxFuture<anyhow::Result<Value>>;
+    async fn run(&self, args: Value) -> anyhow::Result<Value>;
 }
 
 #[derive(Clone)]
@@ -84,7 +85,7 @@ impl ToolsPlugin {
     }
 
     pub fn get_service(ctx: &Arc<Ctx>) -> anyhow::Result<Arc<ToolRegistry>> {
-        Ok(ctx.get::<ToolRegistry>(Self::service_name())?)
+        ctx.get::<ToolRegistry>(Self::service_name())
     }
 }
 impl Plugin for ToolsPlugin {

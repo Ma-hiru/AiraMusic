@@ -16,21 +16,22 @@ impl Plugin for TelemetryPlugin {
     }
 
     fn apply(&self, ctx: &Arc<Ctx>, _config: Value) -> Result<Option<Disposer>> {
-        // 观察者一: 每轮开始时打印。
+        // 观察者一: 每轮开始时打印(带上会话 id, 多会话时才能分清是谁的轮次)。
         let watch_start = ctx.on::<LoopPayloadTurnStart>(LoopEvent::TurnStart, |p| {
             println!(
-                "▶ turn {} 开始: {}",
+                "▶ [{}] turn {} 开始: {}",
+                p.session_id,
                 p.turn,
                 serde_json::to_string(&p.message.content).unwrap_or_default()
             );
         });
         // 观察者二: 每轮结束时打印原因。
         let watch_end = ctx.on::<LoopPayloadTurnEnd>(LoopEvent::TurnEnd, |p| {
-            println!("■ turn {} 结束: {}", p.turn, p.reason);
+            println!("■ [{}] turn {} 结束: {}", p.session_id, p.turn, p.reason);
         });
         // 观察者三: 循环出错时打印。
         let watch_error = ctx.on::<LoopPayloadError>(LoopEvent::Error, |p| {
-            println!("✖ 循环出错: {}", p.error);
+            println!("✖ [{}] 循环出错: {}", p.session_id, p.error);
         });
         // 三个收据合成一张: 卸载 = 三个一起撤。
         Ok(Some(Box::new(move || {

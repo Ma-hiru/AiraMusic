@@ -13,7 +13,7 @@
 | 3 | src/boot/ | 装配: 清单 → 系统 | 能解释"为什么反复扫描" |
 | 4 | src/ctx/ | 公告板: 服务表 + 两条广播通道 + 收据 | 能画出 veto 的表决流程 |
 | 5 | src/shared/message.rs | 共享词汇: 消息 + 模型请求/回复 | 读 loop 时回来查 |
-| 6 | src/shared/session.rs | 会话日志: 唯一事实源(session 插件提供) | 能背出"两个写点、只追加" |
+| 6 | src/shared/session.rs | 会话身份: SessionId(多会话的钥匙) | 能说出 id 为什么是 newtype 而不是裸 String |
 | 7 | src/shared/services.rs | 能力面契约: 模型/工具/注册表接口 | 能说出循环认识模型/工具的什么 |
 | 8 | src/loop/ | 笨循环: mod.rs 水泵 + models.rs 裁决/载荷 | 能默写 ①~⑨ 的骨架 |
 | 9 | src/plugins/ | 十个插件(挑三个看) | 三种角色各认一个代表 |
@@ -29,7 +29,8 @@
 | 观察通道 | 广播: 只能听, 不能拦 | telemetry 插件 |
 | 否决链 | 表决: 返回 None = 放行, Some(裁决) = 否决 | max-turns 插件 |
 | 兜底 | 没人否决时的默认行为, 由发起方(循环)提供 | "原样发出" |
-| 会话日志 | 唯一事实源, 只追加、不修改 | 所有对话消息 |
+| 会话 id | 一把钥匙, 定位某条会话日志; newtype 防与普通字符串搞混 | `SessionId("s-…-0")` |
+| 会话日志 | 每个会话一条, 唯一事实源, 只追加、不修改 | 所有对话消息 |
 | 投影 | 读会话日志的一种方式, 不改原日志 | compact 插件(压缩) |
 | 装配 boot | 把插件清单变成运行中的系统 | main.rs 的 rows |
 | driver | 唯一的水泵任务, loop 插件 spawn 的 | |
@@ -38,10 +39,10 @@
 
 | 插件 | 角色 | 干什么 |
 | --- | --- | --- |
-| session | 提供者 | 挂上会话日志(唯一事实源) —— 记录本身也是插件, 与真实仓库的 dsh-session 一致 |
+| session | 提供者 | 挂上会话管理器: 按 session id 存多份会话日志(唯一事实源), 与真实仓库的 dsh-session 一致 |
 | llm-fake | 提供者 | 把假模型挂上 `ctx.llm`(换真模型 = 重写这一个插件) |
 | registries | 提供者 | 挂上 `tools` 和 `prompt` 两个注册表 |
-| session-loader | 提供者 | 提供初始历史, boot 用它 seed 会话日志 |
+| session-loader | 提供者 | 提供初始历史模板, main 给每个新会话 seed 一次 |
 | compact | 提供者 | 压缩 = 对会话日志的纯投影 |
 | calculator | 贡献者 | 往注册表塞 add 工具 |
 | persona | 贡献者 | 往注册表塞一段提示词(order 0) |
@@ -57,8 +58,8 @@ boot(rows)
   ├─ new Ctx()                    公告板出生(服务表 / 观察通道 / 否决链 / 收据堆)
   │
   └─ 反复扫描 rows, 谁的依赖齐了就 apply(会话日志也是其中之一, 不是地板):
-        session         → 挂 "session" 会话日志服务
-        session-loader → 挂 "session" 服务(初始历史)
+        session         → 挂 "session_manager" 会话管理服务(按 id 存多份日志)
+        session-loader → 挂 "session-seed" 服务(初始历史模板)
         registries     → 挂 "tools" + "prompt" 注册表
         llm-fake       → 挂 "llm" 适配器
         compact        → 挂 "compactor" 投影函数
@@ -69,7 +70,7 @@ boot(rows)
         telemetry      → 挂观察监听("loop:turn-start/end")
         loop           → 挂 "loop" 服务 + spawn(driver)   ← 此刻 driver 在睡觉
   │
-  └─ seed: 会话加载的初始历史写进会话日志(唯一一次)
+  └─ 校验: 有 session-loader 就必须有 session(否则 fail loud); 创建会话 + 播种由 main 负责
 
 装配完成: 系统静止。没有任何业务代码在跑, 只有 driver 在等消息。
 ```
@@ -77,17 +78,17 @@ boot(rows)
 ## 一条消息的完整数据流(运行时)
 
 ```
-main: ctx.get("loop").send("1 + 2 = ?")
-        │ ① 塞进收件箱 + 踢门铃(wake.notify_one)
+main: create_session()×2 → seed×2 → loop.send(session_id, "1 + 2 = ?")
+        │ ① 塞进收件箱(带 session_id)+ 踢门铃(wake.notify_one)
         ▼
-driver 醒来 → run_turn_inner:                     (agent_loop.rs 里的编号)
-   ① 写日志: session.append(用户消息)                唯一写点
+driver 醒来 → run_turn_inner:                     (loop/mod.rs 里的编号)
+   ① 写日志: session.append(session_id, 用户消息)  唯一写点
    ② 广播: ctx.emit("loop:turn-start")           观察者 telemetry 打印
-   ③ 收租: prompt.sections + compact(会话日志) + tools.list  →  Request
+   ③ 收租: prompt.sections + compact(该会话日志) + tools.list  →  Request
    ④ 表决: ctx.veto("loop:before-request")        block-topics:
                                                      命中? Some(否决) : None(放行)
    ⑤ 模型: llm.complete(request)                  假模型(不认识任何插件)
-   ⑥ 写日志: session.append(模型回复)                唯一写点
+   ⑥ 写日志: session.append(session_id, 模型回复)  唯一写点
    ⑦ 工具: tools.get(name).run → veto("tool:after") → 写日志(工具结果)
    ⑧ 表决: ctx.veto("loop:after-reply")           max-turns:
                                                      到上限? Some(停) : None(放行)
@@ -115,8 +116,9 @@ stop()
 cd packages/agent && cargo run
 ```
 
-预期输出: ① 假模型调 add 工具、拿到结果后作答; ② 被 max-turns 在第 2 轮后否决;
-③ 被 block-topics 在发送前否决。最后打印会话日志 —— "模型看到的每一行都来自会话日志"。
+预期输出: 两个会话交错跑, telemetry 每行都带 `[会话 id]`; ① 假模型调 add 工具、拿到结果后作答;
+② 会话 A 的第 2 轮被 max-turns 否决(会话 B 只跑 1 轮, 不受影响)。最后分别打印两条会话日志 ——
+"模型看到的每一行都来自它自己那条会话日志"。
 
 ## 练习(都不动循环一行代码)
 
@@ -127,6 +129,6 @@ cd packages/agent && cargo run
 
 ## 与真实仓库的差距(有意裁剪)
 
-没有事件溯源日志(seq/校验)、没有作用域注册、没有 schema 校验、没有 HMR、没有 AbortSignal。
+没有事件溯源日志(seq/校验)、没有作用域注册(会话已按 id 存多份日志, 但事件还没按会话隔离路由)、没有 schema 校验、没有 HMR、没有 AbortSignal。
 否决链也简化成了同步表决(真实仓库的 waterfall 是异步中间件, 支持"包一层")。
 先把"交/听/拦 + 会话日志投影"这四件事学会, 其余都是量变。

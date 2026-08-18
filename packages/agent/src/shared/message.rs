@@ -1,15 +1,8 @@
-//! 词典 · 共享词汇 —— 循环、插件、会话日志三方共同的语言。
-//!
-//! 这里只留"大家都用"的类型, 分两组:
-//!   一、消息(会话日志里存的东西)
-//!   二、模型请求与回复(能力面契约 + 循环都用)
-//! 循环专属的"裁决"和"事件载荷"已搬到 loop/models.rs ——
-//! 判据: 只有循环世界用到的类型放 loop, 三方共享的留这里。
-
 use std::sync::Arc;
 
+// 序列化: 将来存盘/走网络要用
 use crate::plugins::tools::Tool;
-use serde::{Deserialize, Serialize}; // 序列化: 将来存盘/走网络要用
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 // JSON 值: 工具参数的通用表示
 
@@ -57,6 +50,22 @@ impl ChatMessage {
     pub fn user(content: impl Into<String>) -> Self {
         Self {
             role: Role::User,
+            content: content.into(),
+            tool_call_id: None,
+        }
+    }
+
+    pub fn tool(content: impl Into<String>, tool_call_id: impl Into<String>) -> Self {
+        Self {
+            role: Role::Tool,
+            content: content.into(),
+            tool_call_id: Some(tool_call_id.into()),
+        }
+    }
+
+    pub fn assistant(content: impl Into<String>) -> Self {
+        Self {
+            role: Role::Assistant,
             content: content.into(),
             tool_call_id: None,
         }

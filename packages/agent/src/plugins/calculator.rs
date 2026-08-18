@@ -5,14 +5,16 @@
 
 use std::sync::Arc;
 
-use anyhow::{Result, anyhow}; // anyhow!: 造带消息的错误
-use futures::future::BoxFuture; // 异步 trait 方法的返回类型
-use serde_json::Value; // 工具参数的 JSON 表示
+use anyhow::{anyhow, Result};
+use async_trait::async_trait;
+// 异步 trait 方法的返回类型
+use serde_json::Value;
+// 工具参数的 JSON 表示
 
-use crate::ctx::Ctx;
 use crate::ctx::models::Disposer;
+use crate::ctx::Ctx;
 use crate::plugins::models::Plugin;
-use crate::plugins::tools::{Tool, ToolRegistry, ToolsPlugin};
+use crate::plugins::tools::{Tool, ToolsPlugin};
 
 /// 插件本体。
 pub struct CalculatorPlugin;
@@ -39,6 +41,7 @@ impl Plugin for CalculatorPlugin {
 /// 工具本体: 元信息 + 真干活的部分。
 struct AddTool;
 
+#[async_trait]
 impl Tool for AddTool {
     /// 工具名(模型叫这个名字)。
     fn name(&self) -> &str {
@@ -56,20 +59,18 @@ impl Tool for AddTool {
     }
 
     /// 真干活: 吃 a、b, 吐 a+b。
-    fn run<'a>(&'a self, args: Value) -> BoxFuture<'a, Result<Value>> {
-        Box::pin(async move {
-            // 从 JSON 参数里取 a(取不到或不是整数 = 报错)。
-            let a = args
-                .get("a")
-                .and_then(Value::as_i64)
-                .ok_or_else(|| anyhow!("缺参数 a"))?;
-            // 同样取 b。
-            let b = args
-                .get("b")
-                .and_then(Value::as_i64)
-                .ok_or_else(|| anyhow!("缺参数 b"))?;
-            // 返回和(JSON 数字)。
-            Ok(Value::from(a + b))
-        })
+    async fn run(&self, args: Value) -> Result<Value> {
+        // 从 JSON 参数里取 a(取不到或不是整数 = 报错)。
+        let a = args
+            .get("a")
+            .and_then(Value::as_i64)
+            .ok_or_else(|| anyhow!("缺参数 a"))?;
+        // 同样取 b。
+        let b = args
+            .get("b")
+            .and_then(Value::as_i64)
+            .ok_or_else(|| anyhow!("缺参数 b"))?;
+        // 返回和(JSON 数字)。
+        Ok(Value::from(a + b))
     }
 }
