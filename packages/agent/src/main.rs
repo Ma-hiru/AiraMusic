@@ -16,18 +16,17 @@ use std::sync::Arc; // 插件对象要共享
 use agent::boot::{ConfigRow, boot};
 use agent::constants; // 模型名常量
 use agent::r#loop::{LoopPlugin, LoopService};
-use agent::plugins::block_topics::BlockTopicsPlugin; // 敏感词拦截
 use agent::plugins::calculator::CalculatorPlugin; // add 工具
 use agent::plugins::compact::CompactPlugin; // 上下文压缩
 use agent::plugins::llm_fake::LlmFakePlugin; // 假模型
 use agent::plugins::max_turns::MaxTurnsPlugin; // 轮数上限
 use agent::plugins::persona::PersonaPlugin; // 人设提示词
-use agent::plugins::registries::RegistriesPlugin; // 两个注册表
+use agent::plugins::prompt::PromptPlugin;
 use agent::plugins::session::SessionPlugin; // 会话日志(唯一事实源)
 use agent::plugins::session_loader::SessionLoaderPlugin; // 初始历史
 use agent::plugins::telemetry::TelemetryPlugin; // 打印日志
+use agent::plugins::tools::ToolsPlugin;
 use agent::shared::message::ChatMessage; // 消息类型(send 用)
-use agent::shared::session::Session; // 会话日志(最后打印用)
 use serde_json::json;
 // 快捷构造 JSON 配置
 
@@ -35,8 +34,6 @@ use serde_json::json;
 async fn main() -> anyhow::Result<()> {
     // ── 装配: 清单 → 公告板 ──
     let ctx = boot(vec![
-        // ═══ 提供者: 把能力挂上公告板 ═══
-        // 会话日志也是插件 —— 万物皆插件, 记录本身也不例外。
         ConfigRow {
             id: "session".to_string(),       // 行的唯一编号
             plugin: Arc::new(SessionPlugin), // 插件对象
@@ -48,9 +45,14 @@ async fn main() -> anyhow::Result<()> {
             config: json!({ "greeting": "历史已加载: 这是第 1 次会话。" }), // 它的配置
         },
         ConfigRow {
-            id: "registries".to_string(),
-            plugin: Arc::new(RegistriesPlugin),
-            config: json!({}), // 无配置
+            id: ToolsPlugin::name().into(),
+            plugin: Arc::new(ToolsPlugin),
+            config: json!({}),
+        },
+        ConfigRow {
+            id: PromptPlugin::name().into(),
+            plugin: Arc::new(PromptPlugin),
+            config: json!({}),
         },
         ConfigRow {
             id: "llm-fake".to_string(),
@@ -63,7 +65,6 @@ async fn main() -> anyhow::Result<()> {
             plugin: Arc::new(CompactPlugin),
             config: json!({ "maxMessages": 20 }), // 超过 20 条才压缩
         },
-        // ═══ 贡献者: 往注册表里塞东西 ═══
         ConfigRow {
             id: "persona".to_string(),
             plugin: Arc::new(PersonaPlugin),
@@ -74,23 +75,16 @@ async fn main() -> anyhow::Result<()> {
             plugin: Arc::new(CalculatorPlugin),
             config: json!({}),
         },
-        // ═══ 监听者: 挂广播(两个否决 + 一个观察) ═══
         ConfigRow {
             id: "max-turns".to_string(),
             plugin: Arc::new(MaxTurnsPlugin),
             config: json!({ "maxTurns": 2 }), // 第 2 轮结束时会被它否决
         },
         ConfigRow {
-            id: "block-topics".to_string(),
-            plugin: Arc::new(BlockTopicsPlugin),
-            config: json!({ "words": ["秘密"] }), // 命中就不发给模型
-        },
-        ConfigRow {
             id: "telemetry".to_string(),
             plugin: Arc::new(TelemetryPlugin),
             config: json!({}),
         },
-        // ═══ 水泵: 笨循环。依赖最多, 由装配器自动排到最后 ═══
         ConfigRow {
             id: "loop".to_string(),
             plugin: Arc::new(LoopPlugin),
@@ -117,7 +111,7 @@ async fn main() -> anyhow::Result<()> {
 
     // ── 打印会话日志: 验证"模型见过的每一行都来自会话日志" ──
     println!("\n=== 会话日志(唯一事实源) ===");
-    for message in ctx.get::<Session>("session")?.messages() {
+    for message in SessionPlugin::get_service(&ctx)?.messages() {
         // 工具消息额外打印调用编号, 方便和模型的调用对齐。
         let tag = message
             .tool_call_id

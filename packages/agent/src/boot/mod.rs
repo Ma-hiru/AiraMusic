@@ -18,8 +18,8 @@ use serde_json::Value;
 
 use crate::ctx::Ctx;
 use crate::plugins::models::Plugin;
+use crate::plugins::session::SessionPlugin;
 use crate::shared::services::SessionSeed;
-use crate::shared::session::Session;
 
 /// 清单里的一行 = 一个插件的"报名信息"。
 /// 真实仓库里这是 cordis.yml 的一行(id + name + config), 这里把
@@ -108,7 +108,7 @@ pub fn boot(rows: Vec<ConfigRow>) -> Result<Arc<Ctx>> {
     // 在这里 fail loud(而不是等循环启动时才炸)。
     if ctx.has("session-seed") {
         let seed = ctx.get::<SessionSeed>("session-seed")?;
-        let session = ctx.get::<Session>("session").map_err(|_| {
+        let session = SessionPlugin::get_service(&ctx).map_err(|_| {
             anyhow!("装配失败: 清单里有 session-loader 却没有 session 插件(会话日志无处可写)")
         })?;
         session.seed(seed.initial_messages.clone())?;

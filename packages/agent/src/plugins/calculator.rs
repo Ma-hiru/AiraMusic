@@ -12,8 +12,7 @@ use serde_json::Value; // 工具参数的 JSON 表示
 use crate::ctx::Ctx;
 use crate::ctx::models::Disposer;
 use crate::plugins::models::Plugin;
-use crate::shared::services::{Tool, ToolRegistry};
-// 公告板 // 工具接口 + 注册表
+use crate::plugins::tools::{Tool, ToolRegistry, ToolsPlugin};
 
 /// 插件本体。
 pub struct CalculatorPlugin;
@@ -25,16 +24,14 @@ impl Plugin for CalculatorPlugin {
     }
 
     /// 我要什么: 注册表先就绪, 我才能往里塞。
-    fn inject(&self) -> &'static [&'static str] {
-        &["tools"]
+    fn inject(&self) -> Vec<&'static str> {
+        vec![ToolsPlugin::service_name()]
     }
 
     /// 我要干什么: 往注册表里塞一个 add 工具。
     fn apply(&self, ctx: &Arc<Ctx>, _config: Value) -> Result<Option<Disposer>> {
         // 从公告板取注册表, 注册工具, 把"取出工具"的收据交给装配器。
-        let receipt = ctx
-            .get::<ToolRegistry>("tools")?
-            .register(Arc::new(AddTool))?;
+        let receipt = ToolsPlugin::get_service(ctx)?.register(Arc::new(AddTool))?;
         Ok(Some(receipt))
     }
 }

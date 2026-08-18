@@ -15,8 +15,8 @@ pub trait Plugin: Send + Sync {
     /// 永远等不到的插件会让装配直接报错(见 boot.rs)
     /// 装载顺序由此推导: 谁依赖谁, 谁就先启动, 不用手写顺序
     /// 默认返回空列表 = 无依赖
-    fn inject(&self) -> &'static [&'static str] {
-        &[]
+    fn inject(&self) -> Vec<&'static str> {
+        vec![]
     }
 
     /// @return:

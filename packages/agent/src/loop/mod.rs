@@ -1,11 +1,13 @@
 pub mod models;
-use crate::ctx::models::Disposer;
 use crate::ctx::Ctx;
-use crate::plugins::models::Plugin;
+use crate::ctx::models::Disposer;
 use crate::r#loop::models::LoopEvent;
+use crate::plugins::models::Plugin;
+use crate::plugins::prompt::PromptPlugin;
+use crate::plugins::session::SessionPlugin;
+use crate::plugins::tools::ToolsPlugin;
 use crate::shared::message::{ChatMessage, Request, Role};
-use crate::shared::services::{Compactor, LlmAdapter, PromptRegistry, ToolRegistry};
-use crate::shared::session::Session;
+use crate::shared::services::{Compactor, LlmAdapter};
 use anyhow::Result;
 use models::{
     LoopDecision, LoopPayloadAfterReply, LoopPayloadBeforeRequest, LoopPayloadError,
@@ -30,8 +32,14 @@ impl Plugin for LoopPlugin {
         "loop"
     }
 
-    fn inject(&self) -> &'static [&'static str] {
-        &["llm", "tools", "prompt", "compactor", "session"]
+    fn inject(&self) -> Vec<&'static str> {
+        vec![
+            "llm",
+            ToolsPlugin::service_name(),
+            PromptPlugin::service_name(),
+            "compactor",
+            SessionPlugin::service_name(),
+        ]
     }
 
     fn apply(&self, ctx: &Arc<Ctx>, config: Value) -> Result<Option<Disposer>> {
@@ -62,14 +70,14 @@ impl LoopService {
 
     pub fn new(ctx: &Arc<Ctx>, config: LoopConfig) -> Arc<Self> {
         let service = Arc::new(Self {
-            ctx: Arc::downgrade(ctx),                      // 弱引用公告板
-            queue: Mutex::new(VecDeque::new()),            // 收件箱: 空
-            wake: Arc::new(Notify::new()),                 // 门铃: 未响
-            idle: Arc::new(Notify::new()),                 // 下班铃: 未响
-            stop_flag: Arc::new(AtomicBool::new(false)),   // 停泵标志: 否
-            busy: Arc::new(AtomicUsize::new(0)),           // 干活中: 0
-            turn_counter: Arc::new(AtomicU32::new(0)),     // 轮次: 0
-            max_steps_per_turn: config.max_steps_per_turn, // 步数上限来自配置
+            ctx: Arc::downgrade(ctx),
+            queue: Mutex::new(VecDeque::new()),
+            wake: Arc::new(Notify::new()),
+            idle: Arc::new(Notify::new()),
+            stop_flag: Arc::new(AtomicBool::new(false)),
+            busy: Arc::new(AtomicUsize::new(0)),
+            turn_counter: Arc::new(AtomicU32::new(0)),
+            max_steps_per_turn: config.max_steps_per_turn,
         });
 
         tokio::spawn(Self::driver(Arc::clone(&service)));
@@ -133,9 +141,8 @@ impl LoopService {
 
         // 轮次编号 +1。
         let turn = self.turn_counter.fetch_add(1, Ordering::SeqCst) + 1;
-        let session = ctx
-            .get::<Session>("session")
-            .expect("装配保证: 循环启动时 session 一定在");
+        let session =
+            SessionPlugin::get_service(&ctx).expect("装配保证: 循环启动时 session 一定在");
 
         session.append(user_message.clone());
         ctx.emit(
@@ -153,17 +160,16 @@ impl LoopService {
             //    工具   = 各插件注册的工具清单
             let request = {
                 // 取提示词注册表(prompt 由 registries 插件提供)
-                let prompt = ctx
-                    .get::<PromptRegistry>("prompt")
-                    .expect("装配保证: 循环启动时 prompt 一定在");
+
+                let prompt =
+                    PromptPlugin::get_service(&ctx).expect("装配保证: 循环启动时 prompt 一定在");
                 // 取压缩器(compactor 由 compact 插件提供)
                 let compactor = ctx
                     .get::<Compactor>("compactor")
                     .expect("装配保证: 循环启动时 compactor 一定在");
                 // 取工具注册表(tools 由 registries 插件提供)
-                let tools = ctx
-                    .get::<ToolRegistry>("tools")
-                    .expect("装配保证: 循环启动时 tools 一定在");
+                let tools =
+                    ToolsPlugin::get_service(&ctx).expect("装配保证: 循环启动时 tools 一定在");
                 // 拼请求。
                 Request {
                     system: prompt.sections(),                // 全部段落的文本
@@ -238,9 +244,8 @@ impl LoopService {
                     // ── ⑦ 工具: 按名字取工具(不认识任何具体工具) ──
                     //    每个结果先过一次"tool:after"表决, 插件可替换结果或注入上下文;
                     //    注入的上下文也必须落日志(唯一写点纪律)。
-                    let tools = ctx
-                        .get::<ToolRegistry>("tools")
-                        .expect("装配保证: 循环启动时 tools 一定在");
+                    let tools =
+                        ToolsPlugin::get_service(&ctx).expect("装配保证: 循环启动时 tools 一定在");
                     // 先克隆调用列表, 因为 reply 后面还要用来算默认裁决。
                     let tool_calls = reply.tool_calls.clone();
                     for call in tool_calls {

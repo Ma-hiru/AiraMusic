@@ -8,10 +8,10 @@
 
 use std::sync::Arc;
 
+use crate::plugins::tools::Tool;
 use serde::{Deserialize, Serialize}; // 序列化: 将来存盘/走网络要用
-use serde_json::Value; // JSON 值: 工具参数的通用表示
-
-use crate::shared::services::Tool; // 工具接口(工具清单里存的是它)
+use serde_json::Value;
+// JSON 值: 工具参数的通用表示
 
 // ═══════════════════ 一、消息(会话日志里存的东西) ═══════════════════
 

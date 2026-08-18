@@ -8,15 +8,14 @@
 //! 加新能力 = 在本目录加一个新文件 + 在 main.rs 清单里加一行, 循环不用动。
 
 // 每个 pub mod 对应一个插件文件。
-pub mod block_topics; // 监听者(否决): 敏感词拦截
 pub mod calculator; // 贡献者: add 工具
 pub mod compact; // 提供者: 上下文压缩(会话日志投影)
 pub mod llm_fake; // 提供者: 假模型
 pub mod max_turns; // 监听者(否决): 轮数上限
 pub mod models;
 pub mod persona; // 贡献者: 人设提示词
-pub mod registries; // 提供者: tools / prompt 两个注册表
+pub mod prompt;
 pub mod session; // 提供者: 会话日志(唯一事实源)
 pub mod session_loader; // 提供者: 初始历史
 pub mod telemetry;
-// 监听者(观察): 打印每轮起止
+pub mod tools;
