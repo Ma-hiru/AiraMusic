@@ -1,10 +1,10 @@
 //! 十个插件, 三种角色(合同见 plugins/models.rs 的 Plugin trait):
 //!
-//!   提供者(把能力挂上公告板): session / llm_fake / registries / session_loader / compact
+//!   提供者(把能力挂上公告板): session / llm_fake / tools / prompt / session_loader / compact
 //!   贡献者(往注册表里塞东西): calculator / persona
-//!   监听者(挂广播):           max_turns / block_topics(否决链) + telemetry(观察)
+//!   监听者(挂广播):           max_turns(否决链) + telemetry(观察)
 //!
-//! 注意: 循环(agent_loop)一个都不认识 —— 它只认识公告板上的服务名和接口。
+//! 注意: 循环(loop)一个都不认识 —— 它只认识公告板上的服务名和接口。
 //! 加新能力 = 在本目录加一个新文件 + 在 main.rs 清单里加一行, 循环不用动。
 
 // 每个 pub mod 对应一个插件文件。

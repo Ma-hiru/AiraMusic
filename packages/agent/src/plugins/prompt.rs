@@ -75,11 +75,11 @@ impl PromptPlugin {
     }
 
     fn register_service(ctx: &Arc<Ctx>) -> anyhow::Result<Disposer> {
-        Ok(ctx.provide(Self::service_name(), PromptRegistry::new())?)
+        ctx.provide(Self::service_name(), PromptRegistry::new())
     }
 
     pub fn get_service(ctx: &Arc<Ctx>) -> anyhow::Result<Arc<PromptRegistry>> {
-        Ok(ctx.get::<PromptRegistry>(Self::service_name())?)
+        ctx.get::<PromptRegistry>(Self::service_name())
     }
 }
 impl Plugin for PromptPlugin {

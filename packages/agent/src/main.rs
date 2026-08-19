@@ -16,7 +16,7 @@
 use std::sync::Arc;
 // 插件对象要共享
 
-use agent::boot::{boot, ConfigRow};
+use agent::boot::{ConfigRow, boot};
 use agent::constants;
 use agent::plugins::calculator::CalculatorPlugin;
 // 模型名常量

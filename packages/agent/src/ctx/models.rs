@@ -50,8 +50,8 @@ impl From<Event> for String {
     }
 }
 
-impl Event {
-    pub fn to_string(&self) -> String {
-        self.name.clone()
+impl std::fmt::Display for Event {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(&self.name)
     }
 }

@@ -1,5 +1,5 @@
-use crate::ctx::models::Disposer;
 use crate::ctx::Ctx;
+use crate::ctx::models::Disposer;
 use crate::plugins::models::Plugin;
 use crate::shared::message::ChatMessage;
 use anyhow::Context;
@@ -113,13 +113,13 @@ impl SessionManager {
     }
 
     pub fn append(&self, id: &SessionId, message: ChatMessage) -> anyhow::Result<()> {
-        Ok(self
-            .sessions
+        self.sessions
             .lock()
             .map_err(|e| anyhow::anyhow!("[SessionManager.append] lock sessions 失败: {}", e))?
             .get_mut(id)
             .context("[SessionManager.append] 会话 {id} 不存在")?
-            .push(message))
+            .push(message);
+        Ok(())
     }
 
     pub fn messages(&self, id: &SessionId) -> Vec<ChatMessage> {

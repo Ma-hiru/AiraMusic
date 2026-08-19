@@ -1,16 +1,17 @@
 pub mod models;
-use crate::ctx::models::Disposer;
 use crate::ctx::Ctx;
+use crate::ctx::models::Disposer;
+use crate::r#loop::models::{LoopDecision, LoopEvent};
 use crate::plugins::models::Plugin;
 use crate::plugins::prompt::PromptPlugin;
 use crate::plugins::session::{SessionId, SessionPlugin};
 use crate::plugins::tools::ToolsPlugin;
-use crate::r#loop::models::{LoopDecision, LoopEvent};
 use crate::shared::message::{ChatMessage, Request};
 use crate::shared::services::{Compactor, LlmAdapter};
 use models::{
-    LoopPayloadAfterReply, LoopPayloadBeforeRequest, LoopPayloadError, LoopPayloadToolAfter,
-    LoopPayloadTurnEnd, LoopPayloadTurnStart,
+    LoopPayloadAfterReply, LoopPayloadBeforeRequest, LoopPayloadError, LoopPayloadReply,
+    LoopPayloadRequest, LoopPayloadRequestSent, LoopPayloadStepStart, LoopPayloadToolAfter,
+    LoopPayloadToolPreExecute, LoopPayloadToolResult, LoopPayloadTurnEnd, LoopPayloadTurnStart,
 };
 use serde::Deserialize;
 use serde_json::Value;
@@ -138,9 +139,6 @@ impl LoopService {
     }
 
     async fn run_turn(&self, session_id: SessionId, user_message: ChatMessage) {
-        //  Ordering::SeqCst
-        //- 阻止指令重排: 之前的所有内存操作，必须在它之前完成；之后的所有操作，必须在它之后开始
-        //- 控制多核缓存的“可见性”: 承诺提供全局唯一的总顺序。强制刷新当前核心的缓存，并让所有其他核心看到这个修改的顺序保持一致
         self.busy.fetch_add(1, Ordering::SeqCst);
         self.run_turn_inner(&session_id, user_message).await;
         self.busy.fetch_sub(1, Ordering::SeqCst);
@@ -168,6 +166,7 @@ impl LoopService {
             .append(session_id, user_message.clone())
             .expect("session 追加消息失败");
 
+        // emit: turn-start
         ctx.emit(
             LoopEvent::TurnStart.with_id(session_id.clone()),
             &LoopPayloadTurnStart {
@@ -178,8 +177,21 @@ impl LoopService {
         );
 
         let mut break_reason = String::new();
-        'steps: for _step in 0..self.max_steps_per_turn {
-            // 决裁 before_request
+        'steps: for step_index in 0..self.max_steps_per_turn {
+            let step = step_index as u32 + 1;
+
+            // emit: step-start
+            // 一轮可有多步: 工具往返
+            ctx.emit(
+                LoopEvent::StepStart.with_id(session_id.clone()),
+                &LoopPayloadStepStart {
+                    turn,
+                    step,
+                    session_id: session_id.clone(),
+                },
+            );
+
+            // vote: before-request
             let mut before_request_payload = LoopPayloadBeforeRequest {
                 request: {
                     // 取提示词注册表
@@ -190,7 +202,7 @@ impl LoopService {
                         .expect("compactor plugin 不存在");
                     // 取工具注册表
                     let tools = ToolsPlugin::get_service(&ctx).expect("tools plugin 不存在");
-                    // 拼请求。
+                    // 拼请求
                     Request {
                         system: prompt.sections(),                          // 全部段落的文本
                         messages: compactor(&session.messages(session_id)), // 该会话压缩后的历史投影
@@ -198,6 +210,7 @@ impl LoopService {
                     }
                 },
                 turn,
+                step,
                 session_id: session_id.clone(),
                 user_message_snapshot: user_message.clone(),
             };
@@ -206,20 +219,12 @@ impl LoopService {
                 &mut before_request_payload,
                 |_| LoopDecision::Allow,
             );
-            if let LoopDecision::Deny {
-                reason,
-                should_continue,
-            } = before_request_decision
-            {
+            if let LoopDecision::Deny { reason } = before_request_decision {
+                break_reason = reason.clone();
                 session
                     .append(session_id, ChatMessage::system(format!("[veto] {reason}")))
                     .expect("会话日志写入失败");
-
-                if should_continue {
-                    // 无法继续
-                }
-
-                break_reason = reason.clone();
+                // emit: turn-end
                 ctx.emit(
                     LoopEvent::TurnEnd.with_id(session_id.clone()),
                     &LoopPayloadTurnEnd {
@@ -232,19 +237,72 @@ impl LoopService {
                 break 'steps;
             }
 
+            // vote: request
+            // 准入之后、发送之前的最后一次改写机会。
+            let mut request_payload = LoopPayloadRequest {
+                turn,
+                step,
+                session_id: session_id.clone(),
+                request: before_request_payload.request,
+            };
+            let request_decision = ctx.veto(LoopEvent::Request, &mut request_payload, |_| {
+                LoopDecision::Allow
+            });
+            if let LoopDecision::Deny { reason } = request_decision {
+                break_reason = reason.clone();
+                session
+                    .append(session_id, ChatMessage::system(format!("[veto] {reason}")))
+                    .expect("会话日志写入失败");
+                // emit: turn-end
+                ctx.emit(
+                    LoopEvent::TurnEnd.with_id(session_id.clone()),
+                    &LoopPayloadTurnEnd {
+                        turn,
+                        user_message_snapshot: user_message.clone(),
+                        session_id: session_id.clone(),
+                        reason: reason.clone(),
+                    },
+                );
+                break 'steps;
+            }
+
+            // 请求已定稿
+            let request = request_payload.request;
+            // emit: request-sent
+            ctx.emit(
+                LoopEvent::RequestSent.with_id(session_id.clone()),
+                &LoopPayloadRequestSent {
+                    turn,
+                    step,
+                    session_id: session_id.clone(),
+                    request: request.clone(),
+                },
+            );
+
             // 调模型
             let llm = ctx
                 .get::<Arc<dyn LlmAdapter>>("llm")
                 .expect("llm plugin 不存在");
-            let reply = match llm.complete(&before_request_payload.request).await {
+            let reply = match llm.complete(&request).await {
                 Ok(reply) => {
                     session
                         .append(session_id, ChatMessage::assistant(reply.text.clone()))
                         .expect("会话日志写入失败");
+                    // emit: reply
+                    ctx.emit(
+                        LoopEvent::Reply.with_id(session_id.clone()),
+                        &LoopPayloadReply {
+                            turn,
+                            step,
+                            session_id: session_id.clone(),
+                            reply: reply.clone(),
+                        },
+                    );
                     reply
                 }
                 Err(error) => {
                     break_reason = format!("模型调用失败: {error}");
+                    // emit: error
                     ctx.emit(
                         LoopEvent::Error.with_id(session_id.clone()),
                         &LoopPayloadError {
@@ -257,6 +315,7 @@ impl LoopService {
                     session
                         .append(session_id, ChatMessage::system(format!("[error] {error}")))
                         .expect("会话日志写入失败");
+                    // emit: turn-end
                     ctx.emit(
                         LoopEvent::TurnEnd.with_id(session_id.clone()),
                         &LoopPayloadTurnEnd {
@@ -274,58 +333,61 @@ impl LoopService {
             // 调用工具
             let tool_calls = reply.tool_calls.clone();
             let mut tool_call_results = vec![];
-            for call in tool_calls {
-                // 执行 tool
+            'tool_calls: for call in tool_calls {
                 let call_id = call.id.clone();
-                let raw = match tools_service.get(&call.name) {
-                    Some(tool) => {
-                        // 找到了: 真正执行(异步)。结果转成文本。
-                        match tool.run(call.args.clone()).await {
-                            Ok(value) => Self::stringify(&value),
-                            Err(error) => format!("[error] {error}"),
+
+                // vote: tool:pre-execute 可以修改call数据
+                let mut gate_payload = LoopPayloadToolPreExecute {
+                    turn,
+                    step,
+                    session_id: session_id.clone(),
+                    call: call.clone(),
+                };
+                let gate_decision = ctx.veto(LoopEvent::ToolPreExecute, &mut gate_payload, |_| {
+                    LoopDecision::Allow
+                });
+                let raw = match gate_decision {
+                    LoopDecision::Deny { reason } => format!("[denied] {reason}"),
+                    LoopDecision::Allow => {
+                        let call = gate_payload.call;
+                        // 执行 tool
+                        match tools_service.get(&call.name) {
+                            Some(tool) => {
+                                // 找到了: 真正执行(异步)。结果转成文本。
+                                match tool.run(call.args.clone()).await {
+                                    Ok(value) => Self::stringify(&value),
+                                    Err(error) => format!("[error] {error}"),
+                                }
+                            }
+                            None => format!("[error] 未知工具 {}", call.name),
                         }
                     }
-                    None => format!("[error] 未知工具 {}", call.name),
                 };
 
-                // 裁决tool result
+                // vote: tool:after
+                //   - 改写: 原地改 result / 塞 inject, 返回 Allow
+                //   - 拦截: 返回 Deny = 工具结果不写入
                 let mut outcome = LoopPayloadToolAfter {
                     call,
                     call_id: call_id.clone(),
                     session_id: session_id.clone(),
+                    turn,
+                    step,
                     result: raw,
                     inject: Vec::new(),
                 };
                 let decision =
                     ctx.veto(LoopEvent::ToolAfter, &mut outcome, |_| LoopDecision::Allow);
-                if let LoopDecision::Deny {
-                    reason,
-                    should_continue,
-                } = decision
-                {
+                if let LoopDecision::Deny { reason } = decision {
                     let msg = ChatMessage::tool(format!("[veto] {reason}"), call_id);
                     tool_call_results.push(msg.clone());
                     session.append(session_id, msg).expect("会话日志写入失败");
-                    // 跳过这个tool
-                    if should_continue {
-                        continue;
-                    }
-
-                    break_reason = reason.clone();
-                    ctx.emit(
-                        LoopEvent::TurnEnd.with_id(session_id.clone()),
-                        &LoopPayloadTurnEnd {
-                            turn,
-                            user_message_snapshot: user_message.clone(),
-                            session_id: session_id.clone(),
-                            reason: reason.clone(),
-                        },
-                    );
-                    break 'steps;
+                    // 拦截后，不写入 inject和result（写reason），不emit
+                    continue 'tool_calls;
                 }
 
-                // 继续
-                let msg = ChatMessage::tool(outcome.result, call_id);
+                // 结果落会话日志
+                let msg = ChatMessage::tool(outcome.result.clone(), call_id);
                 tool_call_results.push(msg.clone());
                 session.append(session_id, msg).expect("会话日志写入失败");
                 // 插件注入的上下文也写日志
@@ -335,12 +397,23 @@ impl LoopService {
                         .append(session_id, injected)
                         .expect("会话日志写入失败");
                 }
+                // emit: tool-result
+                ctx.emit(
+                    LoopEvent::ToolResult.with_id(session_id.clone()),
+                    &LoopPayloadToolResult {
+                        turn,
+                        step,
+                        session_id: session_id.clone(),
+                        call: outcome.call,
+                        result: outcome.result,
+                    },
+                );
             }
 
             // 判断是否解决问题
             let is_resolved = reply.tool_calls.is_empty();
 
-            // 决裁 after_reply
+            // vote: after-reply
             let mut after_reply_payload = LoopPayloadAfterReply {
                 session_id: session_id.clone(),
                 tool_calls: tool_call_results,
@@ -352,18 +425,11 @@ impl LoopService {
                 ctx.veto(LoopEvent::AfterReply, &mut after_reply_payload, |_| {
                     LoopDecision::Allow
                 });
-            if let LoopDecision::Deny {
-                reason,
-                should_continue,
-            } = after_reply_decision
-            {
+            if let LoopDecision::Deny { reason } = after_reply_decision {
+                break_reason = reason.clone();
                 let msg = ChatMessage::system(format!("[veto] {reason}"));
                 session.append(session_id, msg).expect("会话日志写入失败");
-                if should_continue {
-                    // 无法继续
-                }
-
-                break_reason = reason.clone();
+                // emit: turn-end
                 ctx.emit(
                     LoopEvent::TurnEnd.with_id(session_id.clone()),
                     &LoopPayloadTurnEnd {
@@ -376,9 +442,9 @@ impl LoopService {
                 break 'steps;
             }
 
-            // 如果没有解决问题, 继续下一轮
+            // 插件没干预: 循环按数据决定
             if !is_resolved {
-                continue;
+                continue; // 还有工具结果要消化, 下一步
             }
 
             // 问题解决
@@ -387,12 +453,13 @@ impl LoopService {
             ctx.emit(
                 LoopEvent::TurnEnd.with_id(session_id.clone()),
                 &LoopPayloadTurnEnd {
+                    turn,
                     user_message_snapshot: user_message.clone(),
                     session_id: session_id.clone(),
-                    turn,
                     reason: reason.clone(),
                 },
             );
+            break 'steps;
         }
 
         // 没有中断理由 => 超限
@@ -404,8 +471,9 @@ impl LoopService {
                     ChatMessage::system("[error] 一轮内步数超过上限"),
                 )
                 .expect("会话日志写入失败");
+            // emit: turn-end
             ctx.emit(
-                LoopEvent::TurnEnd,
+                LoopEvent::TurnEnd.with_id(session_id.clone()),
                 &LoopPayloadTurnEnd {
                     turn,
                     user_message_snapshot: user_message.clone(),

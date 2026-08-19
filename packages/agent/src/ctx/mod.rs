@@ -86,7 +86,11 @@ impl Ctx {
     // ───────────────────── 观察通道 ─────────────────────
 
     /// 订阅广播(观察者)
-    pub fn on<P: 'static>(&self, event: impl Into<Event>, observer: impl Observer<P> + 'static) -> Disposer {
+    pub fn on<P: 'static>(
+        &self,
+        event: impl Into<Event>,
+        observer: impl Observer<P> + 'static,
+    ) -> Disposer {
         let event = event.into();
         let entry: Arc<dyn Observer<P>> = Arc::new(observer);
 
