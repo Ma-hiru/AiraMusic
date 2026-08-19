@@ -13,7 +13,7 @@ use crate::ctx::models::Event;
 use crate::plugins::session::SessionId;
 use crate::shared::message::{AssistantReply, ChatMessage, Request, ToolCall};
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum LoopEvent {
     // ── 决裁事件(veto): 插件可改写载荷、可拦截 ──
     /// 准入: 这一步能不能发(可改写请求)。
@@ -97,30 +97,24 @@ pub enum LoopDecision {
 
 // 决定 Request 是否可发
 pub struct LoopPayloadBeforeRequest {
-    /// 属于哪个会话
-    pub session_id: SessionId,
-    /// 第几轮 / 第几步
     pub turn: u32,
     pub step: u32,
-    /// 即将发出的请求(监听者可原地改写)
+    pub session_id: SessionId,
     pub request: Request,
-    /// 触发这一轮的用户消息(只读参考)
-    pub user_message_snapshot: ChatMessage,
 }
 
 pub struct LoopPayloadRequest {
-    pub session_id: SessionId,
     pub turn: u32,
     pub step: u32,
+    pub session_id: SessionId,
     pub request: Request,
 }
 
 /// 批不批这一次工具调用
 pub struct LoopPayloadToolPreExecute {
-    pub session_id: SessionId,
     pub turn: u32,
     pub step: u32,
-    /// 待审批的调用
+    pub session_id: SessionId,
     pub call: ToolCall,
 }
 
@@ -128,119 +122,131 @@ pub struct LoopPayloadToolPreExecute {
 ///   - 原地改 result / 往 inject 塞消息, 返回 Allow (循环用改后的值)
 ///   - 返回 Deny{reason} = 这一轮到此为止(否决这条结果)
 pub struct LoopPayloadToolAfter {
-    pub session_id: SessionId,
     pub turn: u32,
     pub step: u32,
-    /// 本次调用的编号(与会话日志里的 tool 消息对齐)。
-    pub call_id: String,
-    /// 刚执行完的那次调用(名字、参数)
+    pub session_id: SessionId,
     pub call: ToolCall,
-    /// 工具结果的文本(监听者可替换成自己的版本)。
     pub result: String,
-    /// 注入的上下文: 监听者往里塞消息, 循环会替它写会话日志。
-    /// 这样注入也走"唯一写点" —— 模型看到的每句话都有日志可查。
     pub inject: Vec<ChatMessage>,
 }
 
-/// loop:after-reply 的载荷(决裁)。
-/// is_resolved 由循环按数据算好(没有工具调用 = 这一轮解决);
-/// 拦截就 Deny; 想继续/结束按 is_resolved 走就返回 Allow。
 pub struct LoopPayloadAfterReply {
-    /// 属于哪个会话。
-    pub session_id: SessionId,
-    /// 第几轮。
     pub turn: u32,
-    /// 模型刚给的回复。
+    pub step: u32,
+    pub session_id: SessionId,
     pub reply: AssistantReply,
-    /// 这一轮是否已解决(循环按数据算出, 监听者只读)。
     pub is_resolved: bool,
-    /// 本步产生的工具结果(注入的消息也在里面)。
     pub tool_calls: Vec<ChatMessage>,
 }
 
 // ═══════════════ emit ═══════════════
 
-/// loop:turn-start 的载荷(观察类事件)。
 #[derive(Clone)]
 pub struct LoopPayloadTurnStart {
-    /// 属于哪个会话。
-    pub session_id: SessionId,
-    /// 第几轮(该会话自己的轮次计数)。
     pub turn: u32,
-    /// 触发这一轮的用户消息。
-    pub message: ChatMessage,
-}
-
-/// loop:step-start 的载荷(观察类事件)。一轮可有多步(工具往返)。
-#[derive(Clone)]
-pub struct LoopPayloadStepStart {
-    /// 属于哪个会话。
     pub session_id: SessionId,
-    /// 第几轮 / 第几步。
-    pub turn: u32,
-    pub step: u32,
-}
-
-/// loop:request-sent 的载荷(观察类事件)。决裁后的冻结请求。
-#[derive(Clone)]
-pub struct LoopPayloadRequestSent {
-    /// 属于哪个会话。
-    pub session_id: SessionId,
-    /// 第几轮 / 第几步。
-    pub turn: u32,
-    pub step: u32,
-    /// 真正发出去的请求(终值)。
-    pub request: Request,
-}
-
-/// loop:reply 的载荷(观察类事件)。模型回复的冻结快照。
-#[derive(Clone)]
-pub struct LoopPayloadReply {
-    /// 属于哪个会话。
-    pub session_id: SessionId,
-    /// 第几轮 / 第几步。
-    pub turn: u32,
-    pub step: u32,
-    /// 模型刚给的回复(终值)。
-    pub reply: AssistantReply,
-}
-
-/// tool:result 的载荷(观察类事件)。决裁后的冻结结果。
-#[derive(Clone)]
-pub struct LoopPayloadToolResult {
-    /// 属于哪个会话。
-    pub session_id: SessionId,
-    /// 第几轮 / 第几步。
-    pub turn: u32,
-    pub step: u32,
-    /// 刚执行完的那次调用。
-    pub call: ToolCall,
-    /// 最终写进会话日志的结果(终值)。
-    pub result: String,
-}
-
-/// loop:turn-end 的载荷(观察类事件)。决裁后的终局。
-#[derive(Clone)]
-pub struct LoopPayloadTurnEnd {
-    /// 属于哪个会话。
-    pub session_id: SessionId,
-    /// 第几轮(该会话自己的轮次计数)。
-    pub turn: u32,
-    /// 为什么结束(模型说完了 / 被谁拦截 / 出错 / 超步数)。
-    pub reason: String,
-    /// 触发这一轮的用户消息(只读参考)。
     pub user_message_snapshot: ChatMessage,
 }
 
-/// loop:error 的载荷(观察类事件)。
+#[derive(Clone)]
+pub struct LoopPayloadStepStart {
+    pub turn: u32,
+    pub step: u32,
+    pub session_id: SessionId,
+    pub user_message_snapshot: ChatMessage,
+}
+
+#[derive(Clone)]
+pub struct LoopPayloadRequestSent {
+    pub turn: u32,
+    pub step: u32,
+    pub session_id: SessionId,
+    pub user_message_snapshot: ChatMessage,
+    pub request: Request,
+}
+
+#[derive(Clone)]
+pub struct LoopPayloadReply {
+    pub turn: u32,
+    pub step: u32,
+    pub session_id: SessionId,
+    pub user_message_snapshot: ChatMessage,
+    pub reply: AssistantReply,
+}
+
+#[derive(Clone)]
+pub struct LoopPayloadToolResult {
+    pub turn: u32,
+    pub step: u32,
+    pub session_id: SessionId,
+    pub user_message_snapshot: ChatMessage,
+    pub call: ToolCall,
+    pub result: String,
+}
+
 #[derive(Clone)]
 pub struct LoopPayloadError {
-    /// 属于哪个会话。
-    pub session_id: SessionId,
-    /// 第几轮。
     pub turn: u32,
-    /// 错误内容(已转成字符串)。
+    pub step: u32,
+    pub session_id: SessionId,
+    pub user_message_snapshot: ChatMessage,
     pub error: String,
-    /// 出错时正在处理的那条用户消息。
-    pub message: ChatMessage,
+}
+
+#[derive(Clone)]
+pub struct LoopPayloadTurnEnd {
+    pub turn: u32,
+    pub step: u32,
+    pub session_id: SessionId,
+    pub user_message_snapshot: ChatMessage,
+    pub cause: LoopCause,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub enum LoopPhase {
+    Vote(LoopEvent),
+    MaxStep,
+    Error,
+    Success,
+}
+impl From<LoopPhase> for String {
+    fn from(value: LoopPhase) -> Self {
+        match value {
+            LoopPhase::Vote(event) => event.name().into(),
+            LoopPhase::MaxStep => "max-step".into(),
+            LoopPhase::Error => "error".into(),
+            LoopPhase::Success => "success".into(),
+        }
+    }
+}
+#[derive(Clone)]
+pub struct LoopCause {
+    pub reason: String,
+    pub phase: LoopPhase,
+}
+impl LoopCause {
+    pub fn new(reason: String, phase: LoopPhase) -> Self {
+        LoopCause { reason, phase }
+    }
+
+    pub fn success() -> Self {
+        LoopCause::new("success".into(), LoopPhase::Success)
+    }
+
+    pub fn error(reason: String) -> Self {
+        LoopCause::new(reason, LoopPhase::Error)
+    }
+
+    pub fn max_step() -> Self {
+        LoopCause::new("max-step".into(), LoopPhase::MaxStep)
+    }
+
+    pub fn vote(event: LoopEvent, reason: String) -> Self {
+        LoopCause::new(reason, LoopPhase::Vote(event))
+    }
+}
+impl From<LoopCause> for String {
+    fn from(value: LoopCause) -> Self {
+        format!("[{}]: {}", String::from(value.phase), value.reason)
+    }
 }

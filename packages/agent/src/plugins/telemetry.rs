@@ -1,6 +1,6 @@
 use super::models::Plugin;
-use crate::ctx::Ctx;
 use crate::ctx::models::Disposer;
+use crate::ctx::Ctx;
 use crate::r#loop::models::{
     LoopEvent, LoopPayloadError, LoopPayloadStepStart, LoopPayloadTurnEnd, LoopPayloadTurnStart,
 };
@@ -22,7 +22,7 @@ impl Plugin for TelemetryPlugin {
                 "▶ [{}] turn {} 开始: {}",
                 p.session_id,
                 p.turn,
-                serde_json::to_string(&p.message.content).unwrap_or_default()
+                serde_json::to_string(&p.user_message_snapshot.content).unwrap_or_default()
             );
         });
         // 观察者二: 每一步开始时打印(工具往返时一轮会有多步)。
@@ -34,7 +34,10 @@ impl Plugin for TelemetryPlugin {
         });
         // 观察者三: 每轮结束时打印原因。
         let watch_end = ctx.on::<LoopPayloadTurnEnd>(LoopEvent::TurnEnd, |p| {
-            println!("■ [{}] turn {} 结束: {}", p.session_id, p.turn, p.reason);
+            println!(
+                "■ [{}] turn {} 结束: {}",
+                p.session_id, p.turn, p.cause.reason
+            );
         });
         // 观察者四: 循环出错时打印。
         let watch_error = ctx.on::<LoopPayloadError>(LoopEvent::Error, |p| {
