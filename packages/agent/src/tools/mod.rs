@@ -1,31 +1,39 @@
-use crate::ctx::Ctx;
+pub mod models;
+
 use crate::ctx::models::Disposer;
+use crate::ctx::Ctx;
 use crate::plugins::models::Plugin;
-use crate::plugins::session::SessionId;
-use async_trait::async_trait;
+use models::*;
 use serde_json::Value;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
-/// 工具执行上下文: 工具需要"我在为哪个会话、哪一轮、哪一步干活"时用。
-/// (例如 history-search 要知道查哪个会话的日志)
-#[derive(Clone)]
-pub struct ToolRunContext {
-    /// 属于哪个会话。
-    pub session_id: SessionId,
-    /// 第几轮。
-    pub turn: u32,
-    /// 第几步。
-    pub step: u32,
-}
+pub struct ToolsPlugin;
+impl ToolsPlugin {
+    pub fn name() -> &'static str {
+        "tools"
+    }
 
-#[async_trait]
-pub trait Tool: Send + Sync {
-    fn name(&self) -> &str;
-    fn description(&self) -> &str;
-    fn parameters(&self) -> Value;
-    /// 真干活: 吃参数 + 执行上下文, 吐结果(JSON)。
-    async fn run(&self, args: Value, ctx: &ToolRunContext) -> anyhow::Result<Value>;
+    pub fn service_name() -> &'static str {
+        "tool_registry"
+    }
+
+    fn register_service(ctx: &Arc<Ctx>) -> anyhow::Result<Disposer> {
+        ctx.provide(Self::service_name(), ToolRegistry::new())
+    }
+
+    pub fn get_service(ctx: &Arc<Ctx>) -> anyhow::Result<Arc<ToolRegistry>> {
+        ctx.get::<ToolRegistry>(Self::service_name())
+    }
+}
+impl Plugin for ToolsPlugin {
+    fn name(&self) -> &'static str {
+        Self::name()
+    }
+
+    fn apply(&self, ctx: &Arc<Ctx>, _config: Value) -> anyhow::Result<Option<Disposer>> {
+        Ok(Some(Self::register_service(ctx)?))
+    }
 }
 
 #[derive(Clone)]
@@ -81,33 +89,5 @@ impl Default for ToolRegistry {
         Self {
             tools: Arc::new(Mutex::new(HashMap::new())),
         }
-    }
-}
-
-pub struct ToolsPlugin;
-impl ToolsPlugin {
-    pub fn name() -> &'static str {
-        "tools"
-    }
-
-    pub fn service_name() -> &'static str {
-        "tool_registry"
-    }
-
-    fn register_service(ctx: &Arc<Ctx>) -> anyhow::Result<Disposer> {
-        ctx.provide(Self::service_name(), ToolRegistry::new())
-    }
-
-    pub fn get_service(ctx: &Arc<Ctx>) -> anyhow::Result<Arc<ToolRegistry>> {
-        ctx.get::<ToolRegistry>(Self::service_name())
-    }
-}
-impl Plugin for ToolsPlugin {
-    fn name(&self) -> &'static str {
-        Self::name()
-    }
-
-    fn apply(&self, ctx: &Arc<Ctx>, _config: Value) -> anyhow::Result<Option<Disposer>> {
-        Ok(Some(Self::register_service(ctx)?))
     }
 }

@@ -1,12 +1,10 @@
-use agent::boot::{ConfigRow, boot};
+use agent::boot::{boot, ConfigRow};
 use agent::constants;
-use agent::r#loop::{LoopPlugin, LoopService};
 use agent::plugins::agui::AguiPlugin;
 use agent::plugins::agui_stdout::AguiStdoutPlugin;
 use agent::plugins::calculator::CalculatorPlugin;
 use agent::plugins::context_compactor::ContextCompactorPlugin;
 use agent::plugins::history_search::HistorySearchPlugin;
-use agent::plugins::llm_fake::LlmFakePlugin;
 use agent::plugins::llm_openai::LlmOpenAiPlugin;
 use agent::plugins::max_turns::MaxTurnsPlugin;
 use agent::plugins::model_router::ModelRouterPlugin;
@@ -17,6 +15,7 @@ use agent::plugins::session_loader::SessionLoaderPlugin;
 use agent::plugins::session_persistence::SessionPersistencePlugin;
 use agent::plugins::telemetry::TelemetryPlugin;
 use agent::plugins::tools::ToolsPlugin;
+use agent::r#loop::{LoopPlugin, LoopService};
 use agent::shared::message::ChatMessage;
 use agent::shared::services::SessionSeed;
 use serde_json::json;
@@ -24,33 +23,17 @@ use std::sync::Arc;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    // ── 环境变量(.env)+ 日志(与 rust-agent demo 同款) ──
     dotenvy::dotenv().ok();
+
     tracing_subscriber::fmt()
         .with_max_level(tracing::Level::INFO)
         .init();
 
-    // ── 选模型适配器: AGENT_LLM=openai 用真模型(需要 DEEPSEEK_API_KEY),
-    //    默认 fake(离线可用)。其余清单完全一样 —— 换模型 = 换这一行。 ──
-    let llm_row: ConfigRow = match std::env::var("AGENT_LLM").as_deref() {
-        Ok("openai") => ConfigRow {
-            id: "llm-openai".to_string(),
-            plugin: Arc::new(LlmOpenAiPlugin),
-            config: json!({}),
-        },
-        _ => ConfigRow {
-            id: "llm-fake".to_string(),
-            plugin: Arc::new(LlmFakePlugin),
-            config: json!({ "modelName": constants::DEEPSEEK_V4_FLASH }),
-        },
-    };
-
-    // ── 装配: 清单 → 公告板 ──
     let ctx = boot(vec![
         ConfigRow {
-            id: "session".to_string(),       // 行的唯一编号
-            plugin: Arc::new(SessionPlugin), // 插件对象
-            config: json!({}),               // 无配置
+            id: "session".to_string(),
+            plugin: Arc::new(SessionPlugin),
+            config: json!({}),
         },
         ConfigRow {
             id: "session-loader".to_string(),      // 行的唯一编号
@@ -67,7 +50,11 @@ async fn main() -> anyhow::Result<()> {
             plugin: Arc::new(PromptPlugin),
             config: json!({}),
         },
-        llm_row,
+        ConfigRow {
+            id: "llm-openai".to_string(),
+            plugin: Arc::new(LlmOpenAiPlugin),
+            config: json!({}),
+        },
         ConfigRow {
             id: "persona".to_string(),
             plugin: Arc::new(PersonaPlugin),

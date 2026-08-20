@@ -1,80 +1,42 @@
-use crate::ctx::Ctx;
+pub mod models;
+
 use crate::ctx::models::Disposer;
+use crate::ctx::Ctx;
 use crate::plugins::models::Plugin;
 use crate::shared::message::ChatMessage;
 use anyhow::Context;
-use serde::{Deserialize, Serialize};
+use models::*;
 use serde_json::Value;
 use std::collections::HashMap;
-use std::fmt;
-use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[serde(transparent)]
-pub struct SessionId(String);
+pub struct SessionPlugin;
+impl SessionPlugin {
+    pub fn name() -> &'static str {
+        "session"
+    }
 
-impl SessionId {
-    pub fn new() -> Self {
-        static COUNTER: AtomicU64 = AtomicU64::new(0);
-        let count = COUNTER.fetch_add(1, Ordering::Relaxed);
+    pub fn service_name() -> &'static str {
+        "session_manager"
+    }
 
-        let millis = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .map(|d| d.as_millis())
-            .unwrap_or(0);
+    fn register_service(ctx: &Arc<Ctx>) -> anyhow::Result<Disposer> {
+        ctx.provide(Self::service_name(), SessionManager::new())
+    }
 
-        Self(format!("s-{millis:x}-{count}"))
+    pub fn get_service(ctx: &Arc<Ctx>) -> anyhow::Result<Arc<SessionManager>> {
+        ctx.get::<SessionManager>(Self::service_name())
     }
 }
+impl Plugin for SessionPlugin {
+    fn name(&self) -> &'static str {
+        Self::name()
+    }
 
-impl fmt::Display for SessionId {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str(&self.0)
+    fn apply(&self, ctx: &Arc<Ctx>, _config: Value) -> anyhow::Result<Option<Disposer>> {
+        Ok(Some(Self::register_service(ctx)?))
     }
 }
-
-impl AsRef<str> for SessionId {
-    fn as_ref(&self) -> &str {
-        &self.0
-    }
-}
-
-impl From<&str> for SessionId {
-    fn from(value: &str) -> Self {
-        Self(value.to_string())
-    }
-}
-
-impl From<String> for SessionId {
-    fn from(value: String) -> Self {
-        Self(value)
-    }
-}
-
-impl From<SessionId> for String {
-    fn from(value: SessionId) -> Self {
-        value.0
-    }
-}
-
-impl Default for SessionId {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-/// 会话日志的一次变更(持久化等插件订阅这个通知)。
-#[derive(Clone)]
-pub enum SessionChange {
-    /// 播种: 会话被 seed(初始历史落定)。
-    Seeded { messages: Vec<ChatMessage> },
-    /// 追加: 一条消息落日志。
-    Appended { message: ChatMessage },
-}
-
-/// 变更监听者(订阅方, 如持久化插件)。
-pub type SessionListener = Arc<dyn Fn(&SessionId, &SessionChange) + Send + Sync>;
 
 #[derive(Clone)]
 pub struct SessionManager {
@@ -211,33 +173,5 @@ impl Default for SessionManager {
             sessions: Arc::new(Mutex::new(HashMap::new())),
             listeners: Arc::new(Mutex::new(Vec::new())),
         }
-    }
-}
-
-pub struct SessionPlugin;
-impl SessionPlugin {
-    pub fn name() -> &'static str {
-        "session"
-    }
-
-    pub fn service_name() -> &'static str {
-        "session_manager"
-    }
-
-    fn register_service(ctx: &Arc<Ctx>) -> anyhow::Result<Disposer> {
-        ctx.provide(Self::service_name(), SessionManager::new())
-    }
-
-    pub fn get_service(ctx: &Arc<Ctx>) -> anyhow::Result<Arc<SessionManager>> {
-        ctx.get::<SessionManager>(Self::service_name())
-    }
-}
-impl Plugin for SessionPlugin {
-    fn name(&self) -> &'static str {
-        Self::name()
-    }
-
-    fn apply(&self, ctx: &Arc<Ctx>, _config: Value) -> anyhow::Result<Option<Disposer>> {
-        Ok(Some(Self::register_service(ctx)?))
     }
 }

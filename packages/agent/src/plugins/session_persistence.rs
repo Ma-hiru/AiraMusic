@@ -1,27 +1,16 @@
-//! 角色: 提供者(带副作用) —— 会话落库 + 启动恢复。
-//!
-//! 拆法对齐 deepseek-harness: SessionManager 只存内存(会话日志本体),
-//! 落库是独立插件 —— 订阅 SessionManager 的变更通知(seed/append),
-//! 把消息写进 <dir>/<session_id>.jsonl; 启动时扫描目录恢复历史会话。
-//!
-//! 落盘是异步队列: 变更回调只把命令塞进无界通道(不阻塞 driver),
-//! 一个后台任务串行写盘(写盘顺序 = 变更顺序, 天然保序)。
-//! 换存储(比如 SQLite)= 重写这一个插件, 其他一切不动。
-
-use std::path::PathBuf;
-use std::sync::Arc;
-
+use crate::ctx::models::Disposer;
+use crate::ctx::Ctx;
+use crate::llm::models::ChatMessage;
+use crate::plugins::models::Plugin;
+use crate::session::models::{SessionChange, SessionId};
+use crate::session::SessionPlugin;
 use anyhow::Result;
 use serde::Deserialize;
 use serde_json::Value;
+use std::path::PathBuf;
+use std::sync::Arc;
 use tokio::io::AsyncWriteExt;
 use tokio::sync::mpsc;
-
-use crate::ctx::Ctx;
-use crate::ctx::models::Disposer;
-use crate::plugins::models::Plugin;
-use crate::plugins::session::{SessionChange, SessionId, SessionPlugin};
-use crate::shared::message::ChatMessage;
 
 /// 本插件的配置。
 #[derive(Deserialize)]

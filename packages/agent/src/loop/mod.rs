@@ -1,22 +1,21 @@
 pub mod models;
-use crate::ctx::Ctx;
 use crate::ctx::models::Disposer;
-use crate::r#loop::models::{LoopCause, LoopDecision, LoopEvent, LoopPayloadError, LoopPhase};
+use crate::ctx::Ctx;
+use crate::llm::models::{
+    AssistantReply, ChatMessage, LLMConfig, LLMProvider, LLMAdapter, Request, Role, StreamEvent,
+    ToolCall, Usage,
+};
+use crate::llm::LLMPlugin;
 use crate::plugins::models::Plugin;
 use crate::plugins::prompt::PromptPlugin;
-use crate::plugins::session::{SessionId, SessionPlugin};
-use crate::plugins::tools::{ToolRunContext, ToolsPlugin};
-use crate::shared::llm::{LlmAdapter, StreamEvent, Usage};
-use crate::shared::message::{AssistantReply, ChatMessage, Request, Role, ToolCall};
+use crate::r#loop::models::{LoopCause, LoopDecision, LoopEvent, LoopPayloadError, LoopPhase};
+use crate::session::models::SessionId;
+use crate::session::SessionPlugin;
 use crate::shared::services::ContextCompactor;
+use crate::tools::models::ToolRunContext;
+use crate::tools::ToolsPlugin;
 use futures::StreamExt;
-use models::{
-    LoopPayloadAfterReply, LoopPayloadBeforeRequest, LoopPayloadReply, LoopPayloadRequest,
-    LoopPayloadRequestSent, LoopPayloadStepStart, LoopPayloadTextDelta, LoopPayloadTextEnd,
-    LoopPayloadTextStart, LoopPayloadToolAfter, LoopPayloadToolCallArgs, LoopPayloadToolCallEnd,
-    LoopPayloadToolCallStart, LoopPayloadToolExecStart, LoopPayloadToolPreExecute,
-    LoopPayloadToolResult, LoopPayloadTurnEnd, LoopPayloadTurnStart,
-};
+use models::*;
 use serde::Deserialize;
 use serde_json::Value;
 use std::collections::{HashMap, VecDeque};
@@ -28,7 +27,7 @@ use tokio::sync::Notify;
 #[serde(rename_all = "camelCase")]
 pub struct LoopConfig {
     pub max_steps_per_turn: usize,
-    /// 默认模型名(每次拼 Request 的初值; 路由插件可在 loop:request 决裁点改写)。
+    /// 默认模型名(每次拼 Request 的初值; 路由插件可在 loop:request 决裁点改写)
     pub model: String,
 }
 
@@ -61,13 +60,20 @@ impl Plugin for LoopPlugin {
     }
 
     fn inject(&self) -> Vec<&'static str> {
-        vec![
-            "llm",
+        let mut llm_services = Vec::new();
+        for provider in LLMProvider::iter() {
+            llm_services.push(LLMPlugin::service_name(provider));
+        }
+
+        let mut services = vec![
             ToolsPlugin::service_name(),
             PromptPlugin::service_name(),
             SessionPlugin::service_name(),
             "compactor",
-        ]
+        ];
+        services.extend(llm_services);
+
+        services
     }
 
     fn apply(&self, ctx: &Arc<Ctx>, config: Value) -> anyhow::Result<Option<Disposer>> {
@@ -166,9 +172,9 @@ impl LoopService {
         let session = SessionPlugin::get_service(&ctx)
             .expect("[LoopService.run_turn_inner] SessionManager 获取失败");
 
-        // 该会话的轮次编号 +1(每个会话各自计数)。
-        // 恢复的会话: 计数器没有记录时, 从会话日志里的用户消息数推导 ——
-        // 落库再恢复的会话能接着原来的轮次续号(恢复后继续对话)。
+        // 该会话的轮次编号 +1(每个会话各自计数)
+        // 计数器没有记录时, 从会话日志里的用户消息数推导
+        // 落库再恢复的会话能接着原来的轮次续号(恢复后继续对话)
         let turn = {
             let mut counters = self.turn_counters.lock().unwrap();
             let n = counters.entry(session_id.clone()).or_insert_with(|| {
@@ -218,19 +224,19 @@ impl LoopService {
             let mut before_request_payload = LoopPayloadBeforeRequest {
                 request: {
                     // 取提示词注册表
-                    let prompt = PromptPlugin::get_service(&ctx).expect("prompt plugin 不存在");
+                    let prompt = PromptPlugin::get_service(&ctx)
+                        .expect("[LoopService.run_turn_inner] prompt plugin 不存在");
                     // 取工具注册表
-                    let tools = ToolsPlugin::get_service(&ctx).expect("tools plugin 不存在");
-                    // 上下文压缩: 异步服务调用(压缩可能调 LLM, 必须 await)。
+                    let tools = ToolsPlugin::get_service(&ctx)
+                        .expect("[LoopService.run_turn_inner] tools plugin 不存在");
+                    // 上下文压缩: 异步服务调用(压缩可能调 LLM, 必须 await)
                     let compactor = ctx
                         .get::<Arc<dyn ContextCompactor>>("compactor")
-                        .expect("compactor 不存在(清单里没有压缩插件)");
+                        .expect("[LoopService.run_turn_inner] compactor plugin 不存在");
                     let compaction = compactor
                         .compact(&session.messages(session_id))
                         .await
                         .expect("[LoopService.run_turn_inner] 上下文压缩失败");
-                    // 压缩结果留痕: summary 落会话日志(压缩后的结果存起来,
-                    // 下一步的 request.messages 会通过会话日志投影看到它)。
                     if let Some(summary) = compaction.summary {
                         session
                             .append(
@@ -239,9 +245,16 @@ impl LoopService {
                             )
                             .expect("[LoopService.run_turn_inner] 会话日志写入失败");
                     }
-                    // 拼请求(模型名取循环默认值, 路由插件可在 request 决裁点改写)
                     Request {
-                        model: self.default_model.clone(),
+                        config: LLMConfig {
+                            provider: Default::default(),
+                            model: self.default_model.clone(),
+                            api_key: "".to_string(),
+                            base_url: None,
+                            context_size: None,
+                            headers: None,
+                            other: None,
+                        },
                         system: prompt.sections(),
                         messages: compaction.messages,
                         tools: tools.list(),
@@ -293,7 +306,7 @@ impl LoopService {
 
             // 调模型: 流式消费, 边收边广播(AGUI 形态), 边拼装最终回复。
             let llm = ctx
-                .get::<Arc<dyn LlmAdapter>>("llm")
+                .get::<Arc<dyn LLMAdapter>>("llm")
                 .expect("[LoopService.run_turn_inner] llm adapter 获取失败");
 
             // 拼装状态: 文本 / 工具调用 / 用量
@@ -411,7 +424,6 @@ impl LoopService {
                 }
             }
 
-            // 拼装最终回复 + 落会话日志(assistant 消息携带工具调用, 回放要带上)
             let reply = AssistantReply {
                 text: reply_text.clone(),
                 tool_calls: reply_tool_calls.clone(),
@@ -460,7 +472,6 @@ impl LoopService {
                         String::from(LoopCause::vote(LoopEvent::ToolPreExecute, reason))
                     }
                     LoopDecision::Allow => {
-                        // emit: tool-exec-start(执行侧, 与模型侧的 call-start 对应)
                         ctx.emit(
                             LoopEvent::ToolExecStart.with_id(session_id.clone()),
                             &LoopPayloadToolExecStart {
@@ -471,7 +482,8 @@ impl LoopService {
                                 name: pre_execute_payload.call.name.clone(),
                             },
                         );
-                        // 执行 tool(带上执行上下文: 工具可以知道自己在为哪个会话干活)
+
+                        // 执行 tool(带上执行上下文: 工具可以知道自己在哪个会话)
                         match tools_service.get(&pre_execute_payload.call.name) {
                             Some(tool) => {
                                 let run_ctx = ToolRunContext {

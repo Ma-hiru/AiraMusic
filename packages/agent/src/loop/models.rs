@@ -1,5 +1,3 @@
-//! loop 的"模型"部分 —— 循环自己的语言: 事件名 + 事件载荷 + 决裁结果。
-//!
 //! 1. LoopEvent:
 //!     - event集中在一个enum里, 由 name() 派发
 //!     - 一个event只有一种模式 —— 观察(emit)或决裁(veto)
@@ -20,51 +18,51 @@
 //!         ToolExecStart → ToolResult(执行侧, 来自循环)
 
 use crate::ctx::models::Event;
-use crate::plugins::session::SessionId;
-use crate::shared::llm::Usage;
-use crate::shared::message::{AssistantReply, ChatMessage, Request, ToolCall};
+use crate::llm::models::{AssistantReply, ChatMessage, Request, ToolCall, Usage};
+use crate::session::models::SessionId;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum LoopEvent {
     // ── 决裁事件(veto): 插件可改写载荷、可拦截 ──
-    /// 准入: 这一步能不能发(可改写请求)。
+    /// 准入: 能不能发
     BeforeRequest,
-    /// 定稿: 请求最终改写(将来放路由/模型选择)。
+    /// 定稿: 请求最终改写
     Request,
-    /// 审批: 这个工具调用批不批。
+    /// 审批: 工具调用批不批
     ToolPreExecute,
-    /// 改写: 工具结果改写 + 注入上下文。
+    /// 改写: 工具结果改写 + 注入上下文
     ToolAfter,
-    /// 判读: 这一轮继不继续。
+    /// 判读: 这一轮继不继续
     AfterReply,
+
     // ── 观察事件(emit): 只读的"阶段事实", 载荷是冻结终值 ──
-    /// 一轮开始。
+    /// 一轮开始
     TurnStart,
-    /// 一步开始(一轮可有多步: 工具往返)。
+    /// 一步开始(一轮可有多步,比如工具往返)
     StepStart,
-    /// 请求已定稿发出(决裁之后的终值)。
+    /// 请求已定稿发出(决裁之后的终值)
     RequestSent,
-    /// 文本开始(AGUI: TEXT_MESSAGE_START)。
+    /// 文本开始(AGUI: TEXT_MESSAGE_START)
     TextStart,
-    /// 文本增量(AGUI: TEXT_MESSAGE_CONTENT)。
+    /// 文本增量(AGUI: TEXT_MESSAGE_CONTENT)
     TextDelta,
-    /// 文本结束(AGUI: TEXT_MESSAGE_END)。
+    /// 文本结束(AGUI: TEXT_MESSAGE_END)
     TextEnd,
-    /// 工具调用开始(AGUI: TOOL_CALL_START, 模型侧)。
+    /// 工具调用开始(AGUI: TOOL_CALL_START)
     ToolCallStart,
-    /// 工具参数增量(AGUI: TOOL_CALL_ARGS, 模型侧)。
+    /// 工具参数增量(AGUI: TOOL_CALL_ARGS)
     ToolCallArgs,
-    /// 工具调用结束(AGUI: TOOL_CALL_END, 模型侧)。
+    /// 工具调用结束(AGUI: TOOL_CALL_END)
     ToolCallEnd,
     /// 工具开始执行(AGUI: RUN_STARTED 的对应物, 执行侧)。
     ToolExecStart,
-    /// 模型回复到达(整条消息的冻结快照, 含工具调用与用量)。
+    /// 模型回复到达(整条消息的冻结快照, 含工具调用与用量)
     Reply,
-    /// 工具结果落定(决裁之后的终值)。
+    /// 工具结果落定(决裁之后的终值)
     ToolResult,
-    /// 一轮结束(决裁之后的终局)。
+    /// 一轮结束(决裁之后的终局)
     TurnEnd,
-    /// 循环出错。
+    /// 循环出错
     Error,
 }
 
@@ -78,20 +76,20 @@ impl LoopEvent {
             LoopEvent::ToolPreExecute => "tool:pre-execute",
             LoopEvent::ToolAfter => "tool:after",
             LoopEvent::AfterReply => "loop:after-reply",
-            // 观察 · 轮/步级
+            // 观察 - 轮/步级
             LoopEvent::TurnStart => "loop:turn-start",
             LoopEvent::StepStart => "loop:step-start",
             LoopEvent::RequestSent => "loop:request-sent",
-            // 观察 · 流式文本
+            // 观察 - 流式文本
             LoopEvent::TextStart => "loop:text-start",
             LoopEvent::TextDelta => "loop:text-delta",
             LoopEvent::TextEnd => "loop:text-end",
-            // 观察 · 工具调用(模型侧)与执行(执行侧)
+            // 观察 - 工具调用(模型侧)与执行(执行侧)
             LoopEvent::ToolCallStart => "tool:call-start",
             LoopEvent::ToolCallArgs => "tool:call-args",
             LoopEvent::ToolCallEnd => "tool:call-end",
             LoopEvent::ToolExecStart => "tool:exec-start",
-            // 观察 · 收尾
+            // 观察 - 收尾
             LoopEvent::Reply => "loop:reply",
             LoopEvent::ToolResult => "tool:result",
             LoopEvent::TurnEnd => "loop:turn-end",
@@ -200,7 +198,6 @@ pub struct LoopPayloadRequestSent {
     pub request: Request,
 }
 
-/// loop:text-start(文本流开始)。
 #[derive(Clone)]
 pub struct LoopPayloadTextStart {
     pub turn: u32,
@@ -208,7 +205,6 @@ pub struct LoopPayloadTextStart {
     pub session_id: SessionId,
 }
 
-/// loop:text-delta(文本增量, 流式逐片)。
 #[derive(Clone)]
 pub struct LoopPayloadTextDelta {
     pub turn: u32,
@@ -218,7 +214,6 @@ pub struct LoopPayloadTextDelta {
     pub delta: String,
 }
 
-/// loop:text-end(文本流结束)。
 #[derive(Clone)]
 pub struct LoopPayloadTextEnd {
     pub turn: u32,
@@ -226,49 +221,39 @@ pub struct LoopPayloadTextEnd {
     pub session_id: SessionId,
 }
 
-/// tool:call-start(模型点名调用工具)。
 #[derive(Clone)]
 pub struct LoopPayloadToolCallStart {
     pub turn: u32,
     pub step: u32,
     pub session_id: SessionId,
-    /// 本次调用的编号。
     pub call_id: String,
-    /// 工具名。
     pub name: String,
 }
 
-/// tool:call-args(工具参数增量, JSON 片段)。
 #[derive(Clone)]
 pub struct LoopPayloadToolCallArgs {
     pub turn: u32,
     pub step: u32,
     pub session_id: SessionId,
-    /// 对应哪次调用。
     pub call_id: String,
-    /// JSON 片段。
+    /// JSON 片段
     pub delta: String,
 }
 
-/// tool:call-end(工具参数给全)。
 #[derive(Clone)]
 pub struct LoopPayloadToolCallEnd {
     pub turn: u32,
     pub step: u32,
     pub session_id: SessionId,
-    /// 对应哪次调用。
     pub call_id: String,
 }
 
-/// tool:exec-start(循环开始真正执行工具)。
 #[derive(Clone)]
 pub struct LoopPayloadToolExecStart {
     pub turn: u32,
     pub step: u32,
     pub session_id: SessionId,
-    /// 本次调用的编号。
     pub call_id: String,
-    /// 工具名。
     pub name: String,
 }
 
@@ -279,7 +264,7 @@ pub struct LoopPayloadReply {
     pub session_id: SessionId,
     pub user_message_snapshot: ChatMessage,
     pub reply: AssistantReply,
-    /// 本次请求的用量(适配器上报; 没有则为 None)。
+    /// 本次请求的用量(适配器上报; 没有则为 None)
     pub usage: Option<Usage>,
 }
 

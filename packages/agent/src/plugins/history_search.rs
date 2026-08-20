@@ -9,15 +9,16 @@
 
 use std::sync::Arc;
 
-use anyhow::{Result, anyhow};
+use anyhow::{anyhow, Result};
 use async_trait::async_trait;
 use serde_json::Value;
 
-use crate::ctx::Ctx;
 use crate::ctx::models::Disposer;
+use crate::ctx::Ctx;
 use crate::plugins::models::Plugin;
-use crate::plugins::session::SessionPlugin;
-use crate::plugins::tools::{Tool, ToolRunContext, ToolsPlugin};
+use crate::session::{SessionManager, SessionPlugin};
+use crate::tools::models::{Tool, ToolRunContext};
+use crate::tools::ToolsPlugin;
 
 /// 插件本体。
 pub struct HistorySearchPlugin;
@@ -42,7 +43,7 @@ impl Plugin for HistorySearchPlugin {
 
 /// 搜索工具本体: 持有会话管理器, 执行时用 ToolRunContext 定位会话。
 struct SearchTool {
-    sessions: Arc<crate::plugins::session::SessionManager>,
+    sessions: Arc<SessionManager>,
 }
 
 #[async_trait]

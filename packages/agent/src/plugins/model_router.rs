@@ -10,10 +10,10 @@ use anyhow::Result;
 use serde::Deserialize;
 use serde_json::Value;
 
-use crate::ctx::Ctx;
 use crate::ctx::models::Disposer;
-use crate::r#loop::models::{LoopDecision, LoopEvent, LoopPayloadRequest};
+use crate::ctx::Ctx;
 use crate::plugins::models::Plugin;
+use crate::r#loop::models::{LoopDecision, LoopEvent, LoopPayloadRequest};
 
 /// 本插件的配置。
 #[derive(Deserialize)]
@@ -48,7 +48,7 @@ impl Plugin for ModelRouterPlugin {
                     .any(|m| m.content.contains(&keyword));
                 if hit {
                     tracing::info!(model = %model, keyword = %keyword, "路由切换模型");
-                    payload.request.model = model.clone();
+                    payload.request.config.model = model.clone();
                 }
                 None
             },
