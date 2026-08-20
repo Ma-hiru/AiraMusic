@@ -1,17 +1,31 @@
 use crate::ctx::Ctx;
 use crate::ctx::models::Disposer;
 use crate::plugins::models::Plugin;
+use crate::plugins::session::SessionId;
 use async_trait::async_trait;
 use serde_json::Value;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
+
+/// 工具执行上下文: 工具需要"我在为哪个会话、哪一轮、哪一步干活"时用。
+/// (例如 history-search 要知道查哪个会话的日志)
+#[derive(Clone)]
+pub struct ToolRunContext {
+    /// 属于哪个会话。
+    pub session_id: SessionId,
+    /// 第几轮。
+    pub turn: u32,
+    /// 第几步。
+    pub step: u32,
+}
 
 #[async_trait]
 pub trait Tool: Send + Sync {
     fn name(&self) -> &str;
     fn description(&self) -> &str;
     fn parameters(&self) -> Value;
-    async fn run(&self, args: Value) -> anyhow::Result<Value>;
+    /// 真干活: 吃参数 + 执行上下文, 吐结果(JSON)。
+    async fn run(&self, args: Value, ctx: &ToolRunContext) -> anyhow::Result<Value>;
 }
 
 #[derive(Clone)]

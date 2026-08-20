@@ -14,7 +14,7 @@ use serde_json::Value;
 use crate::ctx::Ctx;
 use crate::ctx::models::Disposer;
 use crate::plugins::models::Plugin;
-use crate::plugins::tools::{Tool, ToolsPlugin};
+use crate::plugins::tools::{Tool, ToolRunContext, ToolsPlugin};
 
 /// 插件本体。
 pub struct CalculatorPlugin;
@@ -58,8 +58,8 @@ impl Tool for AddTool {
         serde_json::json!({ "a": "number", "b": "number" })
     }
 
-    /// 真干活: 吃 a、b, 吐 a+b。
-    async fn run(&self, args: Value) -> Result<Value> {
+    /// 真干活: 吃 a、b, 吐 a+b(执行上下文用不上, 忽略)。
+    async fn run(&self, args: Value, _ctx: &ToolRunContext) -> Result<Value> {
         // 从 JSON 参数里取 a(取不到或不是整数 = 报错)。
         let a = args
             .get("a")

@@ -1,52 +1,50 @@
-//! 演示入口 —— 看代码从这里开始。
-//!
-//! 这一份 rows 清单 = 一棵插件树(真实仓库 cordis.yml 的降级版)。
-//! 想换模型 / 加工具 / 改策略, 都只动这张清单, 循环代码一行不用改。
-//!
-//! 运行后发生了什么(对照 README 的流程图):
-//!   boot(rows)      装配: 插件按依赖顺序启动, 把服务/监听挂上公告板;
-//!                   结束后系统静止, 只有 loop 的 driver 任务在睡觉。
-//!   创建两个会话     每个会话一把 id, 各自有一条会话日志(多会话演示)。
-//!   seed × 2        给两个会话分别播种初始历史(每个会话只能 seed 一次)。
-//!   send × 3        用户输入: 塞进收件箱(带会话 id)+ 踢醒 driver。
-//!   when_idle       等 driver 把手头的活干完。
-//!   stop            停泵。
-//!   打印两条会话日志  验证"模型见过的每一行都来自它自己那条会话日志"。
-
-use std::sync::Arc;
-// 插件对象要共享
-
 use agent::boot::{ConfigRow, boot};
 use agent::constants;
-use agent::plugins::calculator::CalculatorPlugin;
-// 模型名常量
 use agent::r#loop::{LoopPlugin, LoopService};
-// add 工具
-use agent::plugins::compact::CompactPlugin;
-// 上下文压缩
+use agent::plugins::agui::AguiPlugin;
+use agent::plugins::agui_stdout::AguiStdoutPlugin;
+use agent::plugins::calculator::CalculatorPlugin;
+use agent::plugins::context_compactor::ContextCompactorPlugin;
+use agent::plugins::history_search::HistorySearchPlugin;
 use agent::plugins::llm_fake::LlmFakePlugin;
-// 假模型
+use agent::plugins::llm_openai::LlmOpenAiPlugin;
 use agent::plugins::max_turns::MaxTurnsPlugin;
-// 轮数上限
+use agent::plugins::model_router::ModelRouterPlugin;
 use agent::plugins::persona::PersonaPlugin;
-// 人设提示词
 use agent::plugins::prompt::PromptPlugin;
 use agent::plugins::session::SessionPlugin;
-// 会话日志(唯一事实源)
 use agent::plugins::session_loader::SessionLoaderPlugin;
-// 初始历史模板
+use agent::plugins::session_persistence::SessionPersistencePlugin;
 use agent::plugins::telemetry::TelemetryPlugin;
-// 打印日志
 use agent::plugins::tools::ToolsPlugin;
 use agent::shared::message::ChatMessage;
-// 消息类型(send 用)
 use agent::shared::services::SessionSeed;
-// 初始历史模板(session-loader 提供)
 use serde_json::json;
-// 快捷构造 JSON 配置
+use std::sync::Arc;
 
-#[tokio::main] // tokio 运行时入口(loop 的 driver 任务跑在上面)
+#[tokio::main]
 async fn main() -> anyhow::Result<()> {
+    // ── 环境变量(.env)+ 日志(与 rust-agent demo 同款) ──
+    dotenvy::dotenv().ok();
+    tracing_subscriber::fmt()
+        .with_max_level(tracing::Level::INFO)
+        .init();
+
+    // ── 选模型适配器: AGENT_LLM=openai 用真模型(需要 DEEPSEEK_API_KEY),
+    //    默认 fake(离线可用)。其余清单完全一样 —— 换模型 = 换这一行。 ──
+    let llm_row: ConfigRow = match std::env::var("AGENT_LLM").as_deref() {
+        Ok("openai") => ConfigRow {
+            id: "llm-openai".to_string(),
+            plugin: Arc::new(LlmOpenAiPlugin),
+            config: json!({}),
+        },
+        _ => ConfigRow {
+            id: "llm-fake".to_string(),
+            plugin: Arc::new(LlmFakePlugin),
+            config: json!({ "modelName": constants::DEEPSEEK_V4_FLASH }),
+        },
+    };
+
     // ── 装配: 清单 → 公告板 ──
     let ctx = boot(vec![
         ConfigRow {
@@ -69,25 +67,27 @@ async fn main() -> anyhow::Result<()> {
             plugin: Arc::new(PromptPlugin),
             config: json!({}),
         },
-        ConfigRow {
-            id: "llm-fake".to_string(),
-            plugin: Arc::new(LlmFakePlugin),
-            // 模型名来自 constants —— 换真模型时, 这里换成真适配器的配置。
-            config: json!({ "modelName": constants::DEEPSEEK_V4_FLASH }),
-        },
-        ConfigRow {
-            id: "compact".to_string(),
-            plugin: Arc::new(CompactPlugin),
-            config: json!({ "maxMessages": 20 }), // 超过 20 条才压缩
-        },
+        llm_row,
         ConfigRow {
             id: "persona".to_string(),
             plugin: Arc::new(PersonaPlugin),
             config: json!({}),
         },
+        // 上下文压缩(截断策略)。想换成 LLM 压缩: 把这一行换成 LlmCompactorPlugin。
+        ConfigRow {
+            id: "context-compactor".to_string(),
+            plugin: Arc::new(ContextCompactorPlugin),
+            config: json!({ "maxMessages": 100 }),
+        },
         ConfigRow {
             id: "calculator".to_string(),
             plugin: Arc::new(CalculatorPlugin),
+            config: json!({}),
+        },
+        // 历史搜索工具: 演示"工具与会话绑定"(用 ToolRunContext 定位会话)。
+        ConfigRow {
+            id: "history-search".to_string(),
+            plugin: Arc::new(HistorySearchPlugin),
             config: json!({}),
         },
         ConfigRow {
@@ -100,10 +100,37 @@ async fn main() -> anyhow::Result<()> {
             plugin: Arc::new(TelemetryPlugin),
             config: json!({}),
         },
+        // AGUI 翻译器: 循环事件 → AGUI 协议事件(广播给传输层)。
+        ConfigRow {
+            id: "agui".to_string(),
+            plugin: Arc::new(AguiPlugin),
+            config: json!({}),
+        },
+        // AGUI 传输示例: 把事件以 SSE 线格式打到 stdout。
+        ConfigRow {
+            id: "agui-stdout".to_string(),
+            plugin: Arc::new(AguiStdoutPlugin),
+            config: json!({}),
+        },
+        // 路由演示: 消息里出现关键词就换模型(改写 loop:request 里的 Request.model)。
+        ConfigRow {
+            id: "model-router".to_string(),
+            plugin: Arc::new(ModelRouterPlugin),
+            config: json!({ "keyword": "简单", "model": constants::MIMO_V2_5_PRO }),
+        },
+        // 会话落库 + 启动恢复(每个会话一个 <dir>/<session_id>.jsonl)。
+        ConfigRow {
+            id: "session-persistence".to_string(),
+            plugin: Arc::new(SessionPersistencePlugin),
+            config: json!({ "dir": "./sessions" }),
+        },
         ConfigRow {
             id: "loop".to_string(),
             plugin: Arc::new(LoopPlugin),
-            config: json!({ "maxStepsPerTurn": 8 }), // 一轮最多 8 步(防死循环)
+            config: json!({
+                "maxStepsPerTurn": 8, // 一轮最多 8 步(防死循环)
+                "model": constants::DEEPSEEK_V4_FLASH // 默认模型(路由插件可改写)
+            }),
         },
     ])?; // 装配失败会在这里直接返回错误
 
@@ -130,6 +157,22 @@ async fn main() -> anyhow::Result<()> {
     // 会话 A 第 2 轮: 这是 A 自己的第 2 轮, 结束时被 max-turns 否决;
     // B 只跑了 1 轮, 不受影响(轮次是"会话内"的概念)。
     loop_service.send(session_a.clone(), ChatMessage::user("再算一次"));
+    // 会话 A 第 3 轮: 含关键词"简单" → model-router 在 loop:request 决裁点
+    // 把模型换成 MIMO_V2_5_PRO, 假模型的回复里会回显新模型名。
+    loop_service.send(session_a.clone(), ChatMessage::user("简单算一下 5 + 6"));
+
+    // ── 恢复演示: 上次运行留下的历史会话(若有), 挑最新一个接着聊 ──
+    // 轮次会从它日志里的用户消息数推导续号(见 loop 的轮次推导),
+    // 而不是重新从 1 开始 —— 这就是"落库再恢复, 接着上次继续"。
+    let resumed: Option<agent::plugins::session::SessionId> = sessions
+        .session_ids()
+        .into_iter()
+        .filter(|id| *id != session_a && *id != session_b)
+        .max_by_key(|id| id.to_string());
+    if let Some(resumed) = &resumed {
+        tracing::info!(session = %resumed, "恢复会话, 接着上次继续");
+        loop_service.send(resumed.clone(), ChatMessage::user("接着上次继续算: 9 + 1"));
+    }
 
     // ── 等它干完所有活 ──
     loop_service.wait_idle().await;
@@ -137,8 +180,15 @@ async fn main() -> anyhow::Result<()> {
     // ── 停泵 ──
     loop_service.stop();
 
-    // ── 分别打印两条会话日志: 验证"模型见过的每一行都来自它自己那条日志" ──
-    for (label, id) in [("A", &session_a), ("B", &session_b)] {
+    // ── 分别打印会话日志: 验证"模型见过的每一行都来自它自己那条日志" ──
+    let mut logs: Vec<(String, agent::plugins::session::SessionId)> = vec![
+        ("A".into(), session_a.clone()),
+        ("B".into(), session_b.clone()),
+    ];
+    if let Some(resumed) = &resumed {
+        logs.push(("恢复".into(), resumed.clone()));
+    }
+    for (label, id) in &logs {
         println!("\n=== 会话 {label}({id}) ===");
         for message in sessions.messages(id) {
             // 工具消息额外打印调用编号, 方便和模型的调用对齐。

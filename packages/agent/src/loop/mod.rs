@@ -1,16 +1,20 @@
 pub mod models;
-use crate::ctx::models::Disposer;
 use crate::ctx::Ctx;
+use crate::ctx::models::Disposer;
+use crate::r#loop::models::{LoopCause, LoopDecision, LoopEvent, LoopPayloadError, LoopPhase};
 use crate::plugins::models::Plugin;
 use crate::plugins::prompt::PromptPlugin;
 use crate::plugins::session::{SessionId, SessionPlugin};
-use crate::plugins::tools::ToolsPlugin;
-use crate::r#loop::models::{LoopCause, LoopDecision, LoopEvent, LoopPayloadError, LoopPhase};
-use crate::shared::message::{ChatMessage, Request};
-use crate::shared::services::{Compactor, LlmAdapter};
+use crate::plugins::tools::{ToolRunContext, ToolsPlugin};
+use crate::shared::llm::{LlmAdapter, StreamEvent, Usage};
+use crate::shared::message::{AssistantReply, ChatMessage, Request, Role, ToolCall};
+use crate::shared::services::ContextCompactor;
+use futures::StreamExt;
 use models::{
     LoopPayloadAfterReply, LoopPayloadBeforeRequest, LoopPayloadReply, LoopPayloadRequest,
-    LoopPayloadRequestSent, LoopPayloadStepStart, LoopPayloadToolAfter, LoopPayloadToolPreExecute,
+    LoopPayloadRequestSent, LoopPayloadStepStart, LoopPayloadTextDelta, LoopPayloadTextEnd,
+    LoopPayloadTextStart, LoopPayloadToolAfter, LoopPayloadToolCallArgs, LoopPayloadToolCallEnd,
+    LoopPayloadToolCallStart, LoopPayloadToolExecStart, LoopPayloadToolPreExecute,
     LoopPayloadToolResult, LoopPayloadTurnEnd, LoopPayloadTurnStart,
 };
 use serde::Deserialize;
@@ -24,6 +28,8 @@ use tokio::sync::Notify;
 #[serde(rename_all = "camelCase")]
 pub struct LoopConfig {
     pub max_steps_per_turn: usize,
+    /// 默认模型名(每次拼 Request 的初值; 路由插件可在 loop:request 决裁点改写)。
+    pub model: String,
 }
 
 pub struct LoopPlugin;
@@ -59,8 +65,8 @@ impl Plugin for LoopPlugin {
             "llm",
             ToolsPlugin::service_name(),
             PromptPlugin::service_name(),
-            "compactor",
             SessionPlugin::service_name(),
+            "compactor",
         ]
     }
 
@@ -82,6 +88,7 @@ pub struct LoopService {
     busy: Arc<AtomicUsize>,
     turn_counters: Mutex<HashMap<SessionId, u32>>,
     max_steps_per_turn: usize,
+    default_model: String,
 }
 impl LoopService {
     // ----- outer -----
@@ -96,6 +103,7 @@ impl LoopService {
             busy: Arc::new(AtomicUsize::new(0)),
             turn_counters: Mutex::new(HashMap::new()),
             max_steps_per_turn: config.max_steps_per_turn,
+            default_model: config.model,
         });
 
         tokio::spawn(Self::driver(Arc::clone(&service)));
@@ -155,16 +163,24 @@ impl LoopService {
             .upgrade()
             .expect("[LoopService.run_turn_inner] ctx 已被销毁");
 
+        let session = SessionPlugin::get_service(&ctx)
+            .expect("[LoopService.run_turn_inner] SessionManager 获取失败");
+
         // 该会话的轮次编号 +1(每个会话各自计数)。
+        // 恢复的会话: 计数器没有记录时, 从会话日志里的用户消息数推导 ——
+        // 落库再恢复的会话能接着原来的轮次续号(恢复后继续对话)。
         let turn = {
             let mut counters = self.turn_counters.lock().unwrap();
-            let n = counters.entry(session_id.clone()).or_insert(0);
+            let n = counters.entry(session_id.clone()).or_insert_with(|| {
+                session
+                    .messages(session_id)
+                    .iter()
+                    .filter(|m| m.role == Role::User)
+                    .count() as u32
+            });
             *n += 1;
             *n
         };
-
-        let session = SessionPlugin::get_service(&ctx)
-            .expect("[LoopService.run_turn_inner] SessionManager 获取失败");
         session
             .append(session_id, user_message.clone())
             .unwrap_or_else(|_| {
@@ -203,17 +219,32 @@ impl LoopService {
                 request: {
                     // 取提示词注册表
                     let prompt = PromptPlugin::get_service(&ctx).expect("prompt plugin 不存在");
-                    // 取压缩器
-                    let compactor = ctx
-                        .get::<Compactor>("compactor")
-                        .expect("compactor plugin 不存在");
                     // 取工具注册表
                     let tools = ToolsPlugin::get_service(&ctx).expect("tools plugin 不存在");
-                    // 拼请求
+                    // 上下文压缩: 异步服务调用(压缩可能调 LLM, 必须 await)。
+                    let compactor = ctx
+                        .get::<Arc<dyn ContextCompactor>>("compactor")
+                        .expect("compactor 不存在(清单里没有压缩插件)");
+                    let compaction = compactor
+                        .compact(&session.messages(session_id))
+                        .await
+                        .expect("[LoopService.run_turn_inner] 上下文压缩失败");
+                    // 压缩结果留痕: summary 落会话日志(压缩后的结果存起来,
+                    // 下一步的 request.messages 会通过会话日志投影看到它)。
+                    if let Some(summary) = compaction.summary {
+                        session
+                            .append(
+                                session_id,
+                                ChatMessage::system(format!("[compacted] {summary}")),
+                            )
+                            .expect("[LoopService.run_turn_inner] 会话日志写入失败");
+                    }
+                    // 拼请求(模型名取循环默认值, 路由插件可在 request 决裁点改写)
                     Request {
-                        system: prompt.sections(),                          // 全部段落的文本
-                        messages: compactor(&session.messages(session_id)), // 该会话压缩后的历史投影
-                        tools: tools.list(),                                // 全部工具
+                        model: self.default_model.clone(),
+                        system: prompt.sections(),
+                        messages: compaction.messages,
+                        tools: tools.list(),
                     }
                 },
                 session_id: session_id.clone(),
@@ -260,23 +291,139 @@ impl LoopService {
                 },
             );
 
-            // 调模型
+            // 调模型: 流式消费, 边收边广播(AGUI 形态), 边拼装最终回复。
             let llm = ctx
                 .get::<Arc<dyn LlmAdapter>>("llm")
                 .expect("[LoopService.run_turn_inner] llm adapter 获取失败");
-            let reply = match llm.complete(&request).await {
-                Ok(reply) => {
-                    session
-                        .append(session_id, ChatMessage::assistant(reply.text.clone()))
-                        .expect("[LoopService.run_turn_inner] 会话日志写入失败");
-                    reply
+
+            // 拼装状态: 文本 / 工具调用 / 用量
+            let mut reply_text = String::new();
+            let mut reply_tool_calls: Vec<ToolCall> = Vec::new();
+            // call_id -> (name, args_json 片段)
+            let mut pending_calls: HashMap<String, (String, String)> = HashMap::new();
+            let mut usage: Option<Usage> = None;
+
+            let mut stream = llm.stream(&request);
+            while let Some(event) = stream.next().await {
+                match event {
+                    Ok(event) => match event {
+                        StreamEvent::TextStart => {
+                            ctx.emit(
+                                LoopEvent::TextStart.with_id(session_id.clone()),
+                                &LoopPayloadTextStart {
+                                    turn,
+                                    step,
+                                    session_id: session_id.clone(),
+                                },
+                            );
+                        }
+                        StreamEvent::TextDelta { text: delta } => {
+                            reply_text.push_str(&delta);
+                            ctx.emit(
+                                LoopEvent::TextDelta.with_id(session_id.clone()),
+                                &LoopPayloadTextDelta {
+                                    turn,
+                                    step,
+                                    session_id: session_id.clone(),
+                                    delta,
+                                },
+                            );
+                        }
+                        StreamEvent::TextEnd => {
+                            ctx.emit(
+                                LoopEvent::TextEnd.with_id(session_id.clone()),
+                                &LoopPayloadTextEnd {
+                                    turn,
+                                    step,
+                                    session_id: session_id.clone(),
+                                },
+                            );
+                        }
+                        StreamEvent::ToolCallStart { id, name } => {
+                            // 记录, 等参数增量
+                            pending_calls.insert(id.clone(), (name.clone(), String::new()));
+                            ctx.emit(
+                                LoopEvent::ToolCallStart.with_id(session_id.clone()),
+                                &LoopPayloadToolCallStart {
+                                    turn,
+                                    step,
+                                    session_id: session_id.clone(),
+                                    call_id: id,
+                                    name,
+                                },
+                            );
+                        }
+                        StreamEvent::ToolCallArgs { id, delta } => {
+                            // 累积 JSON 片段
+                            if let Some((_, args)) = pending_calls.get_mut(&id) {
+                                args.push_str(&delta);
+                            }
+                            ctx.emit(
+                                LoopEvent::ToolCallArgs.with_id(session_id.clone()),
+                                &LoopPayloadToolCallArgs {
+                                    turn,
+                                    step,
+                                    session_id: session_id.clone(),
+                                    call_id: id,
+                                    delta,
+                                },
+                            );
+                        }
+                        StreamEvent::ToolCallEnd { id } => {
+                            // 参数给全: 解析 JSON, 生成最终 ToolCall
+                            if let Some((name, args)) = pending_calls.remove(&id) {
+                                let args_value: Value =
+                                    serde_json::from_str(&args).unwrap_or(Value::Null);
+                                reply_tool_calls.push(ToolCall {
+                                    id: id.clone(),
+                                    name,
+                                    args: args_value,
+                                });
+                            }
+                            ctx.emit(
+                                LoopEvent::ToolCallEnd.with_id(session_id.clone()),
+                                &LoopPayloadToolCallEnd {
+                                    turn,
+                                    step,
+                                    session_id: session_id.clone(),
+                                    call_id: id,
+                                },
+                            );
+                        }
+                        StreamEvent::Usage(u) => {
+                            usage = Some(u);
+                        }
+                        StreamEvent::Done { finish_reason } => {
+                            tracing::info!(
+                                session = %session_id,
+                                turn,
+                                step,
+                                finish = ?finish_reason,
+                                "模型流结束"
+                            );
+                            break;
+                        }
+                    },
+                    Err(error) => {
+                        cause = LoopCause::error(format!("模型调用失败: {error}"));
+                        break 'steps;
+                    }
                 }
-                Err(error) => {
-                    cause = LoopCause::error(error.to_string());
-                    break 'steps;
-                }
+            }
+
+            // 拼装最终回复 + 落会话日志(assistant 消息携带工具调用, 回放要带上)
+            let reply = AssistantReply {
+                text: reply_text.clone(),
+                tool_calls: reply_tool_calls.clone(),
             };
-            // emit: reply
+            session
+                .append(
+                    session_id,
+                    ChatMessage::assistant_with_tool_calls(reply_text, reply_tool_calls),
+                )
+                .expect("[LoopService.run_turn_inner] 会话日志写入失败");
+
+            // emit: reply(整条消息的冻结快照, 含用量)
             ctx.emit(
                 LoopEvent::Reply.with_id(session_id.clone()),
                 &LoopPayloadReply {
@@ -285,6 +432,7 @@ impl LoopService {
                     session_id: session_id.clone(),
                     reply: reply.clone(),
                     user_message_snapshot: user_message.clone(),
+                    usage: usage.clone(),
                 },
             );
 
@@ -312,18 +460,37 @@ impl LoopService {
                         String::from(LoopCause::vote(LoopEvent::ToolPreExecute, reason))
                     }
                     LoopDecision::Allow => {
-                        // 执行 tool
+                        // emit: tool-exec-start(执行侧, 与模型侧的 call-start 对应)
+                        ctx.emit(
+                            LoopEvent::ToolExecStart.with_id(session_id.clone()),
+                            &LoopPayloadToolExecStart {
+                                turn,
+                                step,
+                                session_id: session_id.clone(),
+                                call_id: pre_execute_payload.call.id.clone(),
+                                name: pre_execute_payload.call.name.clone(),
+                            },
+                        );
+                        // 执行 tool(带上执行上下文: 工具可以知道自己在为哪个会话干活)
                         match tools_service.get(&pre_execute_payload.call.name) {
                             Some(tool) => {
+                                let run_ctx = ToolRunContext {
+                                    session_id: session_id.clone(),
+                                    turn,
+                                    step,
+                                };
                                 // 找到了: 真正执行(异步)。结果转成文本。
-                                match tool.run(pre_execute_payload.call.args.clone()).await {
+                                match tool
+                                    .run(pre_execute_payload.call.args.clone(), &run_ctx)
+                                    .await
+                                {
                                     Ok(value) => Self::stringify(&value),
                                     Err(error) => String::from(LoopCause::error(error.to_string())),
                                 }
                             }
                             None => String::from(LoopCause::error(format!(
                                 "工具 {} 不存在",
-                                &pre_execute_payload.call.name
+                                pre_execute_payload.call.name
                             ))),
                         }
                     }

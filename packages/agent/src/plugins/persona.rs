@@ -1,18 +1,10 @@
-//! 角色: 贡献者 —— 提示词注入 = 注册一个有序段落(order 0)。
-//!
-//! 不是每轮改写请求 —— 注册一次, 循环每轮"收租"时自动带上。
-//! 想加更多提示词(比如"工具使用指南")= 再注册一个 order 更大的段落。
-
-use std::sync::Arc;
-
-use anyhow::Result;
-use serde_json::Value;
-
 use crate::ctx::Ctx;
 use crate::ctx::models::Disposer;
 use crate::plugins::models::Plugin;
 use crate::plugins::prompt::{PromptPlugin, PromptSection};
-// 公告板 // 注册表 + 段落类型
+use anyhow::Result;
+use serde_json::Value;
+use std::sync::Arc;
 
 /// 插件本体。
 pub struct PersonaPlugin;

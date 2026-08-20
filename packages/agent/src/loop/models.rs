@@ -1,3 +1,5 @@
+//! loop 的"模型"部分 —— 循环自己的语言: 事件名 + 事件载荷 + 决裁结果。
+//!
 //! 1. LoopEvent:
 //!     - event集中在一个enum里, 由 name() 派发
 //!     - 一个event只有一种模式 —— 观察(emit)或决裁(veto)
@@ -5,12 +7,21 @@
 //!     - 每个事件一个专属struct
 //!     - veto载荷可被原地改写(&mut p)
 //!     - emit载荷是冻结终值(&p)
+//!     - 惯例: 载荷都带 session_id / turn / (步级事件带) step;
+//!       微事件(流式文本、工具调用)不带 user_message_snapshot ——
+//!       它们靠 session_id+turn+step 关联, 快照只在轮级事件上。
 //! 3. LoopDecision:
 //!     - Allow           放行 载荷里被改写的部分生效
 //!     - Deny { reason } 拦截 循环立刻停在该点, reason写进会话日志
+//!
+//! 流式微事件(对齐 AGUI):
+//!   文本: TextStart → TextDelta* → TextEnd
+//!   工具: ToolCallStart → ToolCallArgs* → ToolCallEnd(模型侧, 来自 llm 流)
+//!         ToolExecStart → ToolResult(执行侧, 来自循环)
 
 use crate::ctx::models::Event;
 use crate::plugins::session::SessionId;
+use crate::shared::llm::Usage;
 use crate::shared::message::{AssistantReply, ChatMessage, Request, ToolCall};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
@@ -33,7 +44,21 @@ pub enum LoopEvent {
     StepStart,
     /// 请求已定稿发出(决裁之后的终值)。
     RequestSent,
-    /// 模型回复到达。
+    /// 文本开始(AGUI: TEXT_MESSAGE_START)。
+    TextStart,
+    /// 文本增量(AGUI: TEXT_MESSAGE_CONTENT)。
+    TextDelta,
+    /// 文本结束(AGUI: TEXT_MESSAGE_END)。
+    TextEnd,
+    /// 工具调用开始(AGUI: TOOL_CALL_START, 模型侧)。
+    ToolCallStart,
+    /// 工具参数增量(AGUI: TOOL_CALL_ARGS, 模型侧)。
+    ToolCallArgs,
+    /// 工具调用结束(AGUI: TOOL_CALL_END, 模型侧)。
+    ToolCallEnd,
+    /// 工具开始执行(AGUI: RUN_STARTED 的对应物, 执行侧)。
+    ToolExecStart,
+    /// 模型回复到达(整条消息的冻结快照, 含工具调用与用量)。
     Reply,
     /// 工具结果落定(决裁之后的终值)。
     ToolResult,
@@ -53,10 +78,20 @@ impl LoopEvent {
             LoopEvent::ToolPreExecute => "tool:pre-execute",
             LoopEvent::ToolAfter => "tool:after",
             LoopEvent::AfterReply => "loop:after-reply",
-            // 观察
+            // 观察 · 轮/步级
             LoopEvent::TurnStart => "loop:turn-start",
             LoopEvent::StepStart => "loop:step-start",
             LoopEvent::RequestSent => "loop:request-sent",
+            // 观察 · 流式文本
+            LoopEvent::TextStart => "loop:text-start",
+            LoopEvent::TextDelta => "loop:text-delta",
+            LoopEvent::TextEnd => "loop:text-end",
+            // 观察 · 工具调用(模型侧)与执行(执行侧)
+            LoopEvent::ToolCallStart => "tool:call-start",
+            LoopEvent::ToolCallArgs => "tool:call-args",
+            LoopEvent::ToolCallEnd => "tool:call-end",
+            LoopEvent::ToolExecStart => "tool:exec-start",
+            // 观察 · 收尾
             LoopEvent::Reply => "loop:reply",
             LoopEvent::ToolResult => "tool:result",
             LoopEvent::TurnEnd => "loop:turn-end",
@@ -165,6 +200,78 @@ pub struct LoopPayloadRequestSent {
     pub request: Request,
 }
 
+/// loop:text-start(文本流开始)。
+#[derive(Clone)]
+pub struct LoopPayloadTextStart {
+    pub turn: u32,
+    pub step: u32,
+    pub session_id: SessionId,
+}
+
+/// loop:text-delta(文本增量, 流式逐片)。
+#[derive(Clone)]
+pub struct LoopPayloadTextDelta {
+    pub turn: u32,
+    pub step: u32,
+    pub session_id: SessionId,
+    /// 本次增量文本。
+    pub delta: String,
+}
+
+/// loop:text-end(文本流结束)。
+#[derive(Clone)]
+pub struct LoopPayloadTextEnd {
+    pub turn: u32,
+    pub step: u32,
+    pub session_id: SessionId,
+}
+
+/// tool:call-start(模型点名调用工具)。
+#[derive(Clone)]
+pub struct LoopPayloadToolCallStart {
+    pub turn: u32,
+    pub step: u32,
+    pub session_id: SessionId,
+    /// 本次调用的编号。
+    pub call_id: String,
+    /// 工具名。
+    pub name: String,
+}
+
+/// tool:call-args(工具参数增量, JSON 片段)。
+#[derive(Clone)]
+pub struct LoopPayloadToolCallArgs {
+    pub turn: u32,
+    pub step: u32,
+    pub session_id: SessionId,
+    /// 对应哪次调用。
+    pub call_id: String,
+    /// JSON 片段。
+    pub delta: String,
+}
+
+/// tool:call-end(工具参数给全)。
+#[derive(Clone)]
+pub struct LoopPayloadToolCallEnd {
+    pub turn: u32,
+    pub step: u32,
+    pub session_id: SessionId,
+    /// 对应哪次调用。
+    pub call_id: String,
+}
+
+/// tool:exec-start(循环开始真正执行工具)。
+#[derive(Clone)]
+pub struct LoopPayloadToolExecStart {
+    pub turn: u32,
+    pub step: u32,
+    pub session_id: SessionId,
+    /// 本次调用的编号。
+    pub call_id: String,
+    /// 工具名。
+    pub name: String,
+}
+
 #[derive(Clone)]
 pub struct LoopPayloadReply {
     pub turn: u32,
@@ -172,6 +279,8 @@ pub struct LoopPayloadReply {
     pub session_id: SessionId,
     pub user_message_snapshot: ChatMessage,
     pub reply: AssistantReply,
+    /// 本次请求的用量(适配器上报; 没有则为 None)。
+    pub usage: Option<Usage>,
 }
 
 #[derive(Clone)]

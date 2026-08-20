@@ -1,0 +1,3 @@
+{"role":"system","content":"历史已加载: 这是第 1 次会话。"}
+{"role":"user","content":"3 + 4 等于几?"}
+{"role":"assistant","content":"我来算一下。(模型 deepseek-v4-flash)","tool_calls":[{"id":"call-2","name":"add","args":{"a":1,"b":2}}]}
