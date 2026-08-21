@@ -1,38 +1,33 @@
+pub mod inner;
 pub mod models;
 
-use crate::ctx::models::Disposer;
 use crate::ctx::Ctx;
-use crate::plugins::models::Plugin;
+use crate::ctx::models::Disposer;
+use crate::plugins::models::{Plugin, PluginApplyResult, PluginMeta};
 use models::*;
-use serde_json::Value;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
 pub struct ToolsPlugin;
-impl ToolsPlugin {
-    pub fn name() -> &'static str {
+impl PluginMeta<ToolRegistry> for ToolsPlugin {
+    fn name() -> &'static str {
         "tools"
     }
 
-    pub fn service_name() -> &'static str {
+    fn service_name() -> &'static str {
         "tool_registry"
     }
-
-    fn register_service(ctx: &Arc<Ctx>) -> anyhow::Result<Disposer> {
-        ctx.provide(Self::service_name(), ToolRegistry::new())
-    }
-
-    pub fn get_service(ctx: &Arc<Ctx>) -> anyhow::Result<Arc<ToolRegistry>> {
-        ctx.get::<ToolRegistry>(Self::service_name())
-    }
 }
-impl Plugin for ToolsPlugin {
-    fn name(&self) -> &'static str {
-        Self::name()
-    }
-
-    fn apply(&self, ctx: &Arc<Ctx>, _config: Value) -> anyhow::Result<Option<Disposer>> {
-        Ok(Some(Self::register_service(ctx)?))
+impl Plugin<(), ToolRegistry> for ToolsPlugin {
+    fn apply(
+        &self,
+        _ctx: &Arc<Ctx>,
+        _config: (),
+    ) -> anyhow::Result<PluginApplyResult<ToolRegistry>> {
+        Ok(PluginApplyResult {
+            service: Some(ToolRegistry::new()),
+            emit_disposers: None,
+        })
     }
 }
 

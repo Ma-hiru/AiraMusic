@@ -1,8 +1,30 @@
 use crate::ctx::Ctx;
 use crate::ctx::models::Disposer;
-use crate::plugins::models::Plugin;
-use serde_json::Value;
+use crate::plugins::models::{Plugin, PluginApplyResult, PluginMeta};
 use std::sync::{Arc, Mutex};
+
+pub struct PromptPlugin;
+impl PluginMeta<PromptRegistry> for PromptPlugin {
+    fn name() -> &'static str {
+        "prompt"
+    }
+
+    fn service_name() -> &'static str {
+        "prompt-registry"
+    }
+}
+impl Plugin<(), PromptRegistry> for PromptPlugin {
+    fn apply(
+        &self,
+        _ctx: &Arc<Ctx>,
+        _config: (),
+    ) -> anyhow::Result<PluginApplyResult<PromptRegistry>> {
+        Ok(PluginApplyResult {
+            service: Some(PromptRegistry::new()),
+            emit_disposers: None,
+        })
+    }
+}
 
 #[derive(Clone, Default, Debug)]
 pub struct PromptSection {
@@ -61,33 +83,5 @@ impl Default for PromptRegistry {
         Self {
             sections: Arc::new(Mutex::new(Vec::new())),
         }
-    }
-}
-
-pub struct PromptPlugin;
-impl PromptPlugin {
-    pub fn name() -> &'static str {
-        "prompt"
-    }
-
-    pub fn service_name() -> &'static str {
-        "prompt_registry"
-    }
-
-    fn register_service(ctx: &Arc<Ctx>) -> anyhow::Result<Disposer> {
-        ctx.provide(Self::service_name(), PromptRegistry::new())
-    }
-
-    pub fn get_service(ctx: &Arc<Ctx>) -> anyhow::Result<Arc<PromptRegistry>> {
-        ctx.get::<PromptRegistry>(Self::service_name())
-    }
-}
-impl Plugin for PromptPlugin {
-    fn name(&self) -> &'static str {
-        Self::name()
-    }
-
-    fn apply(&self, ctx: &Arc<Ctx>, _config: Value) -> anyhow::Result<Option<Disposer>> {
-        Ok(Some(Self::register_service(ctx)?))
     }
 }

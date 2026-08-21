@@ -60,10 +60,12 @@ pub enum LoopEvent {
     Reply,
     /// 工具结果落定(决裁之后的终值)
     ToolResult,
-    /// 一轮结束(决裁之后的终局)
+    /// 一轮结束(决裁之后的终局)，除非发生 InnerError，否则结束后一定会触发 TurnEnd
     TurnEnd,
     /// 循环出错
     Error,
+    /// 程序错误
+    InnerError,
 }
 
 impl LoopEvent {
@@ -94,6 +96,7 @@ impl LoopEvent {
             LoopEvent::ToolResult => "tool:result",
             LoopEvent::TurnEnd => "loop:turn-end",
             LoopEvent::Error => "loop:error",
+            LoopEvent::InnerError => "loop:inner-error",
         }
     }
 
@@ -285,6 +288,13 @@ pub struct LoopPayloadError {
     pub session_id: SessionId,
     pub user_message_snapshot: ChatMessage,
     pub error: String,
+}
+
+#[derive(Clone)]
+pub struct LoopPayloadInnerError {
+    pub session_id: SessionId,
+    pub error: String,
+    pub turn: Option<u32>,
 }
 
 #[derive(Clone)]

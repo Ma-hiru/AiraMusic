@@ -1,17 +1,18 @@
 use crate::llm::models::{
-    ChatMessage, LLMProvider, LLMAdapter, LlmStream, Request, Role, StreamEvent, Usage,
+    ChatMessage, LLMAdapter, LLMConfig, LLMProvider, LlmStream, Request, Role, StreamEvent, Usage,
 };
-use crate::plugins::models::Plugin;
 use crate::tools::models::Tool;
 use async_openai::{
+    Client,
     config::OpenAIConfig,
     types::chat::*,
     types::chat::{FinishReason, FunctionCall},
-    Client,
 };
 use async_stream::stream;
 use backon::Retryable;
 use futures::StreamExt;
+use reqwest::header::{HeaderName, HeaderValue};
+use std::str::FromStr;
 use std::{collections::HashMap, sync::Arc};
 
 pub struct OpenAiAdapter;
@@ -51,7 +52,7 @@ impl OpenAiAdapter {
                                             },
                                         )
                                     })
-                                    .collect(),
+                                    .collect::<Vec<_>>(),
                             );
                         }
 
@@ -94,6 +95,25 @@ impl OpenAiAdapter {
             })
             .collect()
     }
+
+    fn build_openai_config(config: &LLMConfig) -> anyhow::Result<OpenAIConfig> {
+        let mut cfg = OpenAIConfig::default().with_api_key(config.api_key.as_str());
+        if let Some(url) = &config.base_url {
+            cfg = cfg.with_api_base(url.as_str());
+        }
+        if let Some(headers) = &config.headers {
+            for (key, value) in headers {
+                let name = HeaderName::from_str(key.as_str())
+                    .map_err(|e| anyhow::anyhow!("llm-openai: 非法请求头名 {key}: {e}"))?;
+                let value = HeaderValue::from_str(value.as_str())
+                    .map_err(|e| anyhow::anyhow!("llm-openai: 非法请求头值 {key}: {e}"))?;
+                cfg = cfg
+                    .with_header(name, value.as_ref())
+                    .map_err(|err| anyhow::anyhow!("llm-openai: 设置请求头 {key} 失败: {err}"))?;
+            }
+        }
+        Ok(cfg)
+    }
 }
 impl LLMAdapter for OpenAiAdapter {
     fn stream<'a>(&'a self, request: &'a Request) -> LlmStream<'a> {
@@ -133,26 +153,9 @@ impl LLMAdapter for OpenAiAdapter {
                 .tools(tool_defs)
                 .stream(true)
                 .build()?;
-
-            let mut client_config = OpenAIConfig::default().with_api_key(request.config.api_key);
-            if let Some(url) = request.config.base_url {
-                client_config = client_config.with_api_base(url);
-            }
-            if let Some(headers) = request.config.headers {
-                for (key, value) in headers {
-                    match client_config.with_header(&key, &value) {
-                        Ok(c) => {
-                            client_config = c;
-                        }
-                        Err(err) => {
-                            yield Err(anyhow::anyhow!("llm-openai: 设置请求头失败({})", err));
-                            return;
-                        }
-                    }
-                }
-            }
-            let client = Client::with_config(client_config);
-
+            // 创建 client
+            let client = Client::with_config(Self::build_openai_config(&request.config)?);
+            // 创建流
             let mut stream = match (|| async {
                 client.chat().create_stream(openai_request.clone()).await
             })
@@ -203,7 +206,7 @@ impl LLMAdapter for OpenAiAdapter {
                             let index = tc.index;
                             let state = tool_states.entry(index).or_insert_with(|| {
                                 // (id, name, args, started, finished)
-                                (tc.id.clone().unwrap_or_default(), tc.function.and_then(|f| f.name.clone()).unwrap_or_default(), String::new(), false, false)
+                                (tc.id.clone().unwrap_or_default(), tc.function.clone().and_then(|f| f.name.clone()).unwrap_or_default(), String::new(), false, false)
                             });
                             // 3 → 是否已发 start
                             if !state.3 {

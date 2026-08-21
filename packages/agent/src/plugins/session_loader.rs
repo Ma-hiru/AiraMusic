@@ -1,20 +1,17 @@
-//! 角色: 提供者 —— 会话加载 = 提供初始历史。
-//!
-//! 它不直接写会话日志 —— 遵守"唯一写点"纪律:
-//!   会话日志只有两个写入口: boot 的 seed(本插件提供的数据)和循环的 append。
-//! 将来做"从磁盘恢复会话", 就是把这个插件的 initial_messages 换成读文件的结果。
-
+use crate::ctx::Ctx;
+use crate::llm::models::ChatMessage;
+use crate::plugins::models::{Plugin, PluginApplyResult, PluginMeta};
+use anyhow::Result;
+use serde::Deserialize;
 use std::sync::Arc;
 
-use anyhow::Result;
-use serde::Deserialize; // 解析 JSON 配置
-use serde_json::Value;
-
-use crate::ctx::Ctx; // 公告板
-use crate::ctx::models::Disposer; // 收据
-use crate::plugins::models::Plugin;
-use crate::shared::message::ChatMessage; // 消息类型
-use crate::shared::services::SessionSeed; // 会话种子类型(初始历史) // 合同
+/// 会话加载插件提供的初始历史(种子)。boot 用它 seed 会话日志。
+/// 服务名 "session-seed" —— 和会话日志本体的 "session_manager" 区分开。
+#[derive(Clone)]
+pub struct SessionSeed {
+    /// 会话开始前就该在会话日志里的消息(例如"历史已加载"的系统消息)。
+    pub initial_messages: Vec<ChatMessage>,
+}
 
 /// 本插件的配置。
 #[derive(Deserialize)]
@@ -26,25 +23,26 @@ pub struct SessionLoaderConfig {
 
 /// 插件本体。
 pub struct SessionLoaderPlugin;
-
-impl Plugin for SessionLoaderPlugin {
-    /// 我是谁。
-    fn name(&self) -> &'static str {
+impl PluginMeta<SessionSeed> for SessionLoaderPlugin {
+    fn name() -> &'static str {
         "session-loader"
     }
 
-    /// 我要干什么: 提供初始历史。
-    /// 服务名是 "session-seed" —— 避免和会话日志本体的 "session" 服务重名:
-    /// 本插件提供的是"种子数据", 会话日志本体由 session 插件提供。
-    fn apply(&self, ctx: &Arc<Ctx>, config: Value) -> Result<Option<Disposer>> {
-        // 解析配置。
-        let config: SessionLoaderConfig = serde_json::from_value(config)?;
-        // 初始历史 = 一条系统消息。
-        let seed = SessionSeed {
-            initial_messages: vec![ChatMessage::system(config.greeting)],
-        };
-        // 挂上公告板。真正的"写日志"发生在 boot 的 seed 阶段(见 boot)。
-        let receipt = ctx.provide("session-seed", seed)?;
-        Ok(Some(receipt))
+    fn service_name() -> &'static str {
+        "session-seed"
+    }
+}
+impl Plugin<SessionLoaderConfig, SessionSeed> for SessionLoaderPlugin {
+    fn apply(
+        &self,
+        _ctx: &Arc<Ctx>,
+        config: SessionLoaderConfig,
+    ) -> Result<PluginApplyResult<SessionSeed>> {
+        Ok(PluginApplyResult {
+            service: Some(SessionSeed {
+                initial_messages: vec![ChatMessage::system(config.greeting)],
+            }),
+            emit_disposers: None,
+        })
     }
 }

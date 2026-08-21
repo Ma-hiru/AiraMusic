@@ -1,45 +1,16 @@
-//! 第 3 章 · 装配 —— 把插件清单变成运行中的系统。
-//!
-//! 对应真实仓库的 cordis.yml + Loader(那里配置写在 YAML 文件里,
-//! 这里直接写在 main.rs 的 rows 列表里, 思想相同)。
-//!
-//! 装配算法(整个文件的核心, 只有一个循环):
-//!   反复扫描清单 → 谁的 inject 依赖都齐了, 就调它的 apply → 直到全部启动。
-//!   扫完一轮一个都没能启动 = 有人永远等不到依赖 → 报错, 绝不静默跳过。
-//!
-//! 关键事实: 装配完成后系统是"静止"的 ——
-//!   插件只是把服务/监听挂好了, 没有任何业务代码在跑。
-//!   直到 loop 插件 spawn 的 driver 任务被第一条消息踢醒(见 loop 模块)。
-
+use crate::ctx::Ctx;
+use crate::ctx::models::Disposer;
+use crate::plugins::models::PluginMeta;
+use crate::session::SessionPlugin;
 use std::sync::Arc;
 
-use anyhow::Result;
-use serde_json::Value;
-
-use crate::ctx::Ctx;
-use crate::plugins::models::Plugin;
-use crate::plugins::session::SessionPlugin;
-
-/// 清单里的一行 = 一个插件的"报名信息"。
-/// 真实仓库里这是 cordis.yml 的一行(id + name + config), 这里把
-/// "name"(模块路径)直接换成了已经实例化的插件对象。
-pub struct ConfigRow {
-    /// 本行的唯一编号, 报错信息里用它定位"是哪一行出问题"。
-    pub id: String,
-    /// 插件对象(实现了 Plugin 合同)。Arc = 多线程共享的智能指针。
-    pub plugin: Arc<dyn Plugin>,
-    /// 传给插件的配置(JSON)。每个插件自己解析成强类型。
-    pub config: Value,
+pub struct BootRow {
+    pub id: &'static str,
+    pub depends: Vec<&'static str>,
+    pub disposer: Option<Disposer>,
 }
 
-/// 装配入口: 清单 → 运行中的公告板。
-///
-/// 返回 Arc<Ctx> —— 拿到公告板后, 就能 get("loop") 拿到循环服务开始用了。
-pub fn boot(rows: Vec<ConfigRow>) -> Result<Arc<Ctx>> {
-    // ── 第一步: 公告板出生 ──
-    // 此刻板上什么都没有, 只有四张空表(服务表/观察者表/裁决者表/收据堆)。
-    let ctx = Arc::new(Ctx::new());
-
+pub fn boot(ctx: &Arc<Ctx>, rows: Vec<BootRow>) -> anyhow::Result<()> {
     // ── 第二步: 依赖驱动的激活循环 ──
     // (会话日志也是插件了 —— 由清单里的 session 行提供, 和别的服务一视同仁)
     // pending = "还没启动的插件"。下面的循环反复扫描, 直到它清空。
@@ -53,8 +24,7 @@ pub fn boot(rows: Vec<ConfigRow>) -> Result<Arc<Ctx>> {
         for row in round {
             // 找出它依赖里"还没就绪"的服务名。
             let missing: Vec<&str> = row
-                .plugin
-                .inject() // 它声明要什么
+                .depends
                 .iter()
                 .copied()
                 .filter(|name| !ctx.has(name)) // 板上还没有 = 没就绪
@@ -66,7 +36,7 @@ pub fn boot(rows: Vec<ConfigRow>) -> Result<Arc<Ctx>> {
             }
             // 依赖齐了 → 调 apply, 让插件把东西挂上公告板。
             // apply 返回的收据(如果有)交给 ctx.effect 登记。
-            if let Some(receipt) = row.plugin.apply(&ctx, row.config)? {
+            if let Some(receipt) = row.disposer {
                 ctx.effect(receipt);
             }
             activated += 1;
@@ -79,8 +49,7 @@ pub fn boot(rows: Vec<ConfigRow>) -> Result<Arc<Ctx>> {
                 .map(|row| {
                     // 重新计算缺失项, 方便报错时说明"缺的是什么"。
                     let missing: Vec<&str> = row
-                        .plugin
-                        .inject()
+                        .depends
                         .iter()
                         .copied()
                         .filter(|name| !ctx.has(name))
@@ -111,5 +80,5 @@ pub fn boot(rows: Vec<ConfigRow>) -> Result<Arc<Ctx>> {
 
     // ── 装配完成 ──
     // 系统静止, 只有 loop 的 driver 在睡觉(如果清单里装了 loop)。
-    Ok(ctx)
+    Ok(())
 }

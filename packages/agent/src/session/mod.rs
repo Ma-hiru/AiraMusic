@@ -1,40 +1,34 @@
 pub mod models;
 
-use crate::ctx::models::Disposer;
 use crate::ctx::Ctx;
-use crate::plugins::models::Plugin;
-use crate::shared::message::ChatMessage;
+use crate::ctx::models::Disposer;
+use crate::llm::models::ChatMessage;
+use crate::plugins::models::{Plugin, PluginApplyResult, PluginMeta};
 use anyhow::Context;
 use models::*;
-use serde_json::Value;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
 pub struct SessionPlugin;
-impl SessionPlugin {
-    pub fn name() -> &'static str {
+impl PluginMeta<SessionManager> for SessionPlugin {
+    fn name() -> &'static str {
         "session"
     }
 
-    pub fn service_name() -> &'static str {
-        "session_manager"
-    }
-
-    fn register_service(ctx: &Arc<Ctx>) -> anyhow::Result<Disposer> {
-        ctx.provide(Self::service_name(), SessionManager::new())
-    }
-
-    pub fn get_service(ctx: &Arc<Ctx>) -> anyhow::Result<Arc<SessionManager>> {
-        ctx.get::<SessionManager>(Self::service_name())
+    fn service_name() -> &'static str {
+        "session-manager"
     }
 }
-impl Plugin for SessionPlugin {
-    fn name(&self) -> &'static str {
-        Self::name()
-    }
-
-    fn apply(&self, ctx: &Arc<Ctx>, _config: Value) -> anyhow::Result<Option<Disposer>> {
-        Ok(Some(Self::register_service(ctx)?))
+impl Plugin<(), SessionManager> for SessionPlugin {
+    fn apply(
+        &self,
+        _ctx: &Arc<Ctx>,
+        _config: (),
+    ) -> anyhow::Result<PluginApplyResult<SessionManager>> {
+        Ok(PluginApplyResult {
+            service: Some(SessionManager::new()),
+            emit_disposers: None,
+        })
     }
 }
 

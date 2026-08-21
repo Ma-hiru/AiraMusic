@@ -1,19 +1,17 @@
 pub mod models;
-use crate::ctx::models::Disposer;
 use crate::ctx::Ctx;
 use crate::llm::models::{
-    AssistantReply, ChatMessage, LLMConfig, LLMProvider, LLMAdapter, Request, Role, StreamEvent,
-    ToolCall, Usage,
+    AssistantReply, ChatMessage, Request, Role, StreamEvent, ToolCall, Usage,
 };
-use crate::llm::LLMPlugin;
-use crate::plugins::models::Plugin;
-use crate::plugins::prompt::PromptPlugin;
+use crate::llm::plugins::{LLMCompactorPlugin, LLMConfigPlugin, LLMPlugin};
 use crate::r#loop::models::{LoopCause, LoopDecision, LoopEvent, LoopPayloadError, LoopPhase};
-use crate::session::models::SessionId;
+use crate::plugins::models::{Plugin, PluginApplyResult, PluginMeta};
+use crate::prompt::PromptPlugin;
 use crate::session::SessionPlugin;
-use crate::shared::services::ContextCompactor;
-use crate::tools::models::ToolRunContext;
+use crate::session::models::SessionId;
 use crate::tools::ToolsPlugin;
+use crate::tools::models::ToolRunContext;
+use anyhow::Context;
 use futures::StreamExt;
 use models::*;
 use serde::Deserialize;
@@ -23,67 +21,45 @@ use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex, Weak};
 use tokio::sync::Notify;
 
+pub struct LoopPlugin;
+impl PluginMeta<Arc<LoopService>> for LoopPlugin {
+    fn name() -> &'static str {
+        "loop"
+    }
+
+    fn service_name() -> &'static str {
+        "loop-service"
+    }
+}
+impl Plugin<LoopConfig, Arc<LoopService>> for LoopPlugin {
+    fn inject(&self) -> Vec<&'static str> {
+        vec![
+            ToolsPlugin::service_name(),
+            PromptPlugin::service_name(),
+            SessionPlugin::service_name(),
+            LLMPlugin::service_name(),
+            LLMCompactorPlugin::service_name(),
+            LLMConfigPlugin::service_name(),
+        ]
+    }
+
+    fn apply(
+        &self,
+        ctx: &Arc<Ctx>,
+        config: LoopConfig,
+    ) -> anyhow::Result<PluginApplyResult<Arc<LoopService>>> {
+        Ok(PluginApplyResult {
+            service: Some(LoopService::new(ctx, config)),
+            emit_disposers: None,
+        })
+    }
+}
+
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct LoopConfig {
     pub max_steps_per_turn: usize,
-    /// 默认模型名(每次拼 Request 的初值; 路由插件可在 loop:request 决裁点改写)
-    pub model: String,
 }
-
-pub struct LoopPlugin;
-impl LoopPlugin {
-    pub fn name() -> &'static str {
-        "loop"
-    }
-
-    pub fn service_name() -> &'static str {
-        "loop_driver"
-    }
-
-    fn register_service(ctx: &Arc<Ctx>, config: LoopConfig) -> anyhow::Result<Disposer> {
-        let service = LoopService::new(ctx, config);
-        let provide_disposer = ctx.provide(Self::service_name(), Arc::clone(&service))?;
-        Ok(Box::new(move || {
-            service.stop();
-            provide_disposer();
-        }))
-    }
-
-    pub fn get_service(ctx: &Arc<Ctx>) -> anyhow::Result<Arc<LoopService>> {
-        ctx.get::<LoopService>(Self::service_name())
-    }
-}
-impl Plugin for LoopPlugin {
-    fn name(&self) -> &'static str {
-        Self::name()
-    }
-
-    fn inject(&self) -> Vec<&'static str> {
-        let mut llm_services = Vec::new();
-        for provider in LLMProvider::iter() {
-            llm_services.push(LLMPlugin::service_name(provider));
-        }
-
-        let mut services = vec![
-            ToolsPlugin::service_name(),
-            PromptPlugin::service_name(),
-            SessionPlugin::service_name(),
-            "compactor",
-        ];
-        services.extend(llm_services);
-
-        services
-    }
-
-    fn apply(&self, ctx: &Arc<Ctx>, config: Value) -> anyhow::Result<Option<Disposer>> {
-        Ok(Some(Self::register_service(
-            ctx,
-            serde_json::from_value(config)?,
-        )?))
-    }
-}
-
 pub struct LoopService {
     /// 用弱引用: 避免"ctx → service → ctx"互相套圈导致内存泄漏
     ctx: Weak<Ctx>,
@@ -94,7 +70,6 @@ pub struct LoopService {
     busy: Arc<AtomicUsize>,
     turn_counters: Mutex<HashMap<SessionId, u32>>,
     max_steps_per_turn: usize,
-    default_model: String,
 }
 impl LoopService {
     // ----- outer -----
@@ -109,7 +84,6 @@ impl LoopService {
             busy: Arc::new(AtomicUsize::new(0)),
             turn_counters: Mutex::new(HashMap::new()),
             max_steps_per_turn: config.max_steps_per_turn,
-            default_model: config.model,
         });
 
         tokio::spawn(Self::driver(Arc::clone(&service)));
@@ -154,7 +128,23 @@ impl LoopService {
 
     async fn run_turn(&self, session_id: SessionId, user_message: ChatMessage) {
         self.busy.fetch_add(1, Ordering::SeqCst);
-        self.run_turn_inner(&session_id, user_message).await;
+        let mut process_turn = None;
+        if let Err(err) = self
+            .run_turn_inner(&session_id, user_message, &mut process_turn)
+            .await
+        {
+            tracing::error!(session_id = %session_id, err = ?err, turn = ?process_turn);
+            if let Some(ctx) = self.ctx.upgrade() {
+                ctx.emit(
+                    LoopEvent::InnerError.with_id(session_id.clone()),
+                    &LoopPayloadInnerError {
+                        turn: process_turn,
+                        error: err.to_string(),
+                        session_id: session_id.clone(),
+                    },
+                );
+            }
+        }
         self.busy.fetch_sub(1, Ordering::SeqCst);
         // 每轮都检查是否是最后处理完毕的轮次，如果是，则通知等待者
         if self.is_idle() {
@@ -162,23 +152,37 @@ impl LoopService {
         }
     }
 
-    async fn run_turn_inner(&self, session_id: &SessionId, user_message: ChatMessage) {
+    async fn run_turn_inner(
+        &self,
+        session_id: &SessionId,
+        user_message: ChatMessage,
+        process_turn: &mut Option<u32>,
+    ) -> anyhow::Result<()> {
         // 升级弱引用为强引用, ctx 已被销毁则直接返回(理论走不到)
-        let ctx = self
-            .ctx
-            .upgrade()
-            .expect("[LoopService.run_turn_inner] ctx 已被销毁");
+        let ctx = self.ctx.upgrade().context("ctx 已被销毁")?;
 
-        let session = SessionPlugin::get_service(&ctx)
-            .expect("[LoopService.run_turn_inner] SessionManager 获取失败");
+        // 获取依赖的注册服务
+        let session_manager = SessionPlugin::get_service(&ctx).context("SessionManager 不存在")?;
+        let prompt_registry = PromptPlugin::get_service(&ctx).context("PromptRegistry 不存在")?;
+        let tool_registry = ToolsPlugin::get_service(&ctx).context("ToolRegistry 不存在")?;
+        let config_manager = LLMConfigPlugin::get_service(&ctx).context("ConfigPlugin 不存在")?;
+        let llm_compactor = LLMCompactorPlugin::get_service(&ctx).context("LLMCompactor 不存在")?;
+        let llm_manager = LLMPlugin::get_service(&ctx).context("LLMManager 不存在")?;
+        let llm_config = config_manager.current_config(session_id);
+        let llm_provider = llm_manager
+            .get_provider(&llm_config.provider)
+            .context("LLMProvider 不存在")?;
 
         // 该会话的轮次编号 +1(每个会话各自计数)
         // 计数器没有记录时, 从会话日志里的用户消息数推导
         // 落库再恢复的会话能接着原来的轮次续号(恢复后继续对话)
         let turn = {
-            let mut counters = self.turn_counters.lock().unwrap();
+            let mut counters = self
+                .turn_counters
+                .lock()
+                .map_err(|e| anyhow::anyhow!("lock counters 失败: {}", e))?;
             let n = counters.entry(session_id.clone()).or_insert_with(|| {
-                session
+                session_manager
                     .messages(session_id)
                     .iter()
                     .filter(|m| m.role == Role::User)
@@ -187,11 +191,12 @@ impl LoopService {
             *n += 1;
             *n
         };
-        session
+        process_turn.replace(turn);
+
+        // 会话追加 user 消息
+        session_manager
             .append(session_id, user_message.clone())
-            .unwrap_or_else(|_| {
-                panic!("[LoopService.run_turn_inner] 会话 {session_id} 追加 user 消息失败")
-            });
+            .context("会话 {session_id} 追加 user 消息失败")?;
 
         // emit: turn-start
         ctx.emit(
@@ -223,41 +228,29 @@ impl LoopService {
             // vote: before-request
             let mut before_request_payload = LoopPayloadBeforeRequest {
                 request: {
-                    // 取提示词注册表
-                    let prompt = PromptPlugin::get_service(&ctx)
-                        .expect("[LoopService.run_turn_inner] prompt plugin 不存在");
-                    // 取工具注册表
-                    let tools = ToolsPlugin::get_service(&ctx)
-                        .expect("[LoopService.run_turn_inner] tools plugin 不存在");
-                    // 上下文压缩: 异步服务调用(压缩可能调 LLM, 必须 await)
-                    let compactor = ctx
-                        .get::<Arc<dyn ContextCompactor>>("compactor")
-                        .expect("[LoopService.run_turn_inner] compactor plugin 不存在");
-                    let compaction = compactor
-                        .compact(&session.messages(session_id))
+                    let compaction = llm_compactor
+                        .compact(
+                            Arc::clone(&llm_provider),
+                            session_manager.messages(session_id),
+                            llm_config.clone(),
+                        )
                         .await
-                        .expect("[LoopService.run_turn_inner] 上下文压缩失败");
+                        .context("上下文压缩失败")?;
+
                     if let Some(summary) = compaction.summary {
-                        session
+                        session_manager
                             .append(
                                 session_id,
                                 ChatMessage::system(format!("[compacted] {summary}")),
                             )
-                            .expect("[LoopService.run_turn_inner] 会话日志写入失败");
+                            .context("会话日志写入失败")?;
                     }
+
                     Request {
-                        config: LLMConfig {
-                            provider: Default::default(),
-                            model: self.default_model.clone(),
-                            api_key: "".to_string(),
-                            base_url: None,
-                            context_size: None,
-                            headers: None,
-                            other: None,
-                        },
-                        system: prompt.sections(),
+                        config: llm_config.clone(),
+                        system: prompt_registry.sections(),
                         messages: compaction.messages,
-                        tools: tools.list(),
+                        tools: tool_registry.list(),
                     }
                 },
                 session_id: session_id.clone(),
@@ -304,19 +297,15 @@ impl LoopService {
                 },
             );
 
-            // 调模型: 流式消费, 边收边广播(AGUI 形态), 边拼装最终回复。
-            let llm = ctx
-                .get::<Arc<dyn LLMAdapter>>("llm")
-                .expect("[LoopService.run_turn_inner] llm adapter 获取失败");
-
             // 拼装状态: 文本 / 工具调用 / 用量
             let mut reply_text = String::new();
             let mut reply_tool_calls: Vec<ToolCall> = Vec::new();
+            let mut usage: Option<Usage> = None;
             // call_id -> (name, args_json 片段)
             let mut pending_calls: HashMap<String, (String, String)> = HashMap::new();
-            let mut usage: Option<Usage> = None;
 
-            let mut stream = llm.stream(&request);
+            // stream 请求
+            let mut stream = llm_provider.stream(&request);
             while let Some(event) = stream.next().await {
                 match event {
                     Ok(event) => match event {
@@ -423,18 +412,17 @@ impl LoopService {
                     }
                 }
             }
-
             let reply = AssistantReply {
                 text: reply_text.clone(),
                 tool_calls: reply_tool_calls.clone(),
             };
-            session
+
+            session_manager
                 .append(
                     session_id,
                     ChatMessage::assistant_with_tool_calls(reply_text, reply_tool_calls),
                 )
-                .expect("[LoopService.run_turn_inner] 会话日志写入失败");
-
+                .context("会话日志写入失败")?;
             // emit: reply(整条消息的冻结快照, 含用量)
             ctx.emit(
                 LoopEvent::Reply.with_id(session_id.clone()),
@@ -449,8 +437,7 @@ impl LoopService {
             );
 
             // 调用工具
-            let tools_service = ToolsPlugin::get_service(&ctx)
-                .expect("[LoopService.run_turn_inner] tools service 获取失败");
+            let tools_service = ToolsPlugin::get_service(&ctx).context("tools service 获取失败")?;
             let tool_calls = reply.tool_calls.clone();
             let mut tool_call_results = vec![];
             'tool_calls: for call in tool_calls {
@@ -528,9 +515,9 @@ impl LoopService {
                     let tool_cause = LoopCause::vote(LoopEvent::ToolAfter, reason);
                     let msg = ChatMessage::tool(tool_cause.clone(), call_id);
                     tool_call_results.push(msg.clone());
-                    session
+                    session_manager
                         .append(session_id, msg)
-                        .expect("[LoopService.run_turn_inner] 会话日志写入失败");
+                        .context("会话日志写入失败")?;
                     // 拦截后，不写入 inject和result（写reason），不emit
                     continue 'tool_calls;
                 }
@@ -541,15 +528,15 @@ impl LoopService {
                     tool_after_payload.call.id.clone(),
                 );
                 tool_call_results.push(msg.clone());
-                session
+                session_manager
                     .append(session_id, msg)
-                    .expect("[LoopService.run_turn_inner] 会话日志写入失败");
+                    .context("会话日志写入失败")?;
                 // 注入的上下文
                 for injected in tool_after_payload.inject {
                     tool_call_results.push(injected.clone());
-                    session
+                    session_manager
                         .append(session_id, injected)
-                        .expect("[LoopService.run_turn_inner] 会话日志写入失败");
+                        .context("会话日志写入失败")?;
                 }
                 // emit: tool-result
                 ctx.emit(
@@ -614,9 +601,9 @@ impl LoopService {
                 );
             }
 
-            session
+            session_manager
                 .append(session_id, ChatMessage::system(cause.clone()))
-                .expect("[LoopService.run_turn_inner] 会话日志写入失败");
+                .context("会话日志写入失败")?;
         }
 
         // emit: turn-end
@@ -630,6 +617,8 @@ impl LoopService {
                 user_message_snapshot: user_message,
             },
         );
+
+        Ok(())
     }
 
     async fn driver(service: Arc<LoopService>) {

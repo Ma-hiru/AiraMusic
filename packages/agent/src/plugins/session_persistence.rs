@@ -1,12 +1,11 @@
-use crate::ctx::models::Disposer;
 use crate::ctx::Ctx;
+use crate::ctx::models::DisposerLike;
 use crate::llm::models::ChatMessage;
-use crate::plugins::models::Plugin;
-use crate::session::models::{SessionChange, SessionId};
+use crate::plugins::models::{Plugin, PluginApplyResult, PluginMeta};
 use crate::session::SessionPlugin;
+use crate::session::models::{SessionChange, SessionId};
 use anyhow::Result;
 use serde::Deserialize;
-use serde_json::Value;
 use std::path::PathBuf;
 use std::sync::Arc;
 use tokio::io::AsyncWriteExt;
@@ -33,19 +32,21 @@ enum PersistCommand {
 
 /// 插件本体。
 pub struct SessionPersistencePlugin;
-
-impl Plugin for SessionPersistencePlugin {
-    fn name(&self) -> &'static str {
+impl PluginMeta<()> for SessionPersistencePlugin {
+    fn name() -> &'static str {
         "session-persistence"
     }
-
-    /// 我要什么: 会话管理器(订阅它 + 恢复它)。
+}
+impl Plugin<SessionPersistenceConfig, ()> for SessionPersistencePlugin {
     fn inject(&self) -> Vec<&'static str> {
         vec![SessionPlugin::service_name()]
     }
 
-    fn apply(&self, ctx: &Arc<Ctx>, config: Value) -> Result<Option<Disposer>> {
-        let config: SessionPersistenceConfig = serde_json::from_value(config)?;
+    fn apply(
+        &self,
+        ctx: &Arc<Ctx>,
+        config: SessionPersistenceConfig,
+    ) -> Result<PluginApplyResult<()>> {
         let dir = PathBuf::from(&config.dir);
         // 目录不存在就建
         std::fs::create_dir_all(&dir)?;
@@ -123,6 +124,9 @@ impl Plugin for SessionPersistencePlugin {
             };
             let _ = tx.send(command);
         });
-        Ok(Some(receipt))
+        Ok(PluginApplyResult {
+            service: None,
+            emit_disposers: receipt.to_option_disposers(),
+        })
     }
 }

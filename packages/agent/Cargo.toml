@@ -20,6 +20,10 @@ reqwest = { version = "0.13.4", features = ["json"] }
 chrono = "0.4.45"
 async-trait = "0.1.92"
 
+[profile.dev]
+debug = false
+panic = "abort"
+
 [profile.release]
 opt-level = 3
 lto = "fat"

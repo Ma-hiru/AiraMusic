@@ -1,9 +1,9 @@
+pub mod agui;
 pub mod boot;
-pub mod constants;
 pub mod ctx;
 pub mod llm;
 pub mod r#loop;
 pub mod plugins;
+pub mod prompt;
 pub mod session;
-pub mod shared;
 pub mod tools;

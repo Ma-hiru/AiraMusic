@@ -135,7 +135,7 @@ pub enum StreamEvent {
 /// 装箱的流(异步 trait 方法的标准返回类型)
 pub type LlmStream<'a> = Pin<Box<dyn Stream<Item = Result<StreamEvent>> + Send + 'a>>;
 
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, Default)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, Default, Eq, Hash)]
 #[serde(rename_all = "lowercase")]
 pub enum LLMProvider {
     #[default]

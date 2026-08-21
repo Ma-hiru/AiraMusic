@@ -2,7 +2,6 @@
 //! 抽成两个 trait 是因为角色不同:
 //!   Observer = 观察者: 只能看(&P), 不能拦 —— 用在 emit 广播上
 //!   Voter    = 裁决者: 可改写(&mut P)并表态 —— 用在 veto 表决上
-
 use std::sync::{Arc, Mutex};
 
 /// 观察者: 本质就是一个"只读闭包" Fn(&P)
@@ -35,7 +34,59 @@ pub type VoterList<P, R> = Vec<Arc<dyn Voter<P, R>>>;
 pub struct Voters<P: 'static, R: 'static>(pub Mutex<VoterList<P, R>>);
 
 /// 收据(销毁器): 本质就是一个"可执行闭包" FnOnce()。
-pub type Disposer = Box<dyn FnOnce() + Send>;
+pub type Disposer = Box<dyn FnOnce() + Send + 'static>;
+pub trait DisposerLike {
+    fn to_disposer(self) -> Disposer;
+    fn to_disposers(self) -> Vec<Disposer>;
+    fn to_option_disposer(self) -> Option<Disposer>;
+    fn to_option_disposers(self) -> Option<Vec<Disposer>>;
+}
+impl DisposerLike for Disposer {
+    fn to_disposer(self) -> Disposer {
+        self
+    }
+
+    fn to_disposers(self) -> Vec<Disposer> {
+        vec![self]
+    }
+
+    fn to_option_disposer(self) -> Option<Disposer> {
+        Some(self.to_disposer())
+    }
+
+    fn to_option_disposers(self) -> Option<Vec<Disposer>> {
+        Some(self.to_disposers())
+    }
+}
+impl DisposerLike for Vec<Disposer> {
+    fn to_disposer(self) -> Disposer {
+        Box::new(move || {
+            for disposer in self {
+                disposer();
+            }
+        })
+    }
+
+    fn to_disposers(self) -> Vec<Disposer> {
+        self
+    }
+
+    fn to_option_disposer(self) -> Option<Disposer> {
+        if self.is_empty() {
+            None
+        } else {
+            Some(self.to_disposer())
+        }
+    }
+
+    fn to_option_disposers(self) -> Option<Vec<Disposer>> {
+        if self.is_empty() {
+            None
+        } else {
+            Some(self.to_disposers())
+        }
+    }
+}
 
 /// 事件名: 字符串
 pub struct Event {
@@ -43,7 +94,6 @@ pub struct Event {
     /// session id
     pub session_id: Option<String>,
 }
-
 impl From<Event> for String {
     fn from(event: Event) -> String {
         event.name.clone()

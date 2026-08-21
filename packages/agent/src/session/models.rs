@@ -1,8 +1,8 @@
-use crate::shared::message::ChatMessage;
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
+use crate::llm::models::ChatMessage;
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(transparent)]
