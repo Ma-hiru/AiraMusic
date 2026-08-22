@@ -1,23 +1,26 @@
 pub mod models;
+use crate::cancel::Signal;
 use crate::ctx::Ctx;
 use crate::llm::models::{
     AssistantReply, ChatMessage, Request, Role, StreamEvent, ToolCall, Usage,
 };
 use crate::llm::plugins::{LLMCompactorPlugin, LLMConfigPlugin, LLMPlugin};
 use crate::r#loop::models::{LoopCause, LoopDecision, LoopEvent, LoopPayloadError, LoopPhase};
+use crate::mcp::MCPPlugin;
 use crate::plugins::models::{Plugin, PluginApplyResult, PluginMeta};
 use crate::prompt::PromptPlugin;
 use crate::session::SessionPlugin;
 use crate::session::models::SessionId;
 use crate::tools::ToolsPlugin;
 use crate::tools::models::ToolRunContext;
+use crate::utils::stringify;
 use anyhow::Context;
 use futures::StreamExt;
 use models::*;
 use serde::Deserialize;
 use serde_json::Value;
 use std::collections::{HashMap, VecDeque};
-use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex, Weak};
 use tokio::sync::Notify;
 
@@ -60,77 +63,132 @@ impl Plugin<LoopConfig, Arc<LoopService>> for LoopPlugin {
 pub struct LoopConfig {
     pub max_steps_per_turn: usize,
 }
+/// 单个会话的私有队列与唤醒器
+struct SessionWorker {
+    queue: Mutex<VecDeque<(ChatMessage, Signal, Arc<Notify>)>>,
+    wake: Notify,
+}
+
+/// 一次 send 的完成句柄
+/// 无论这次 run 怎么结束(正常完成 / 出错 / 取消 / 排队中被丢弃), completed() 都会返回
+pub struct SendHandle {
+    done: Arc<Notify>,
+}
+impl SendHandle {
+    /// 等这一次 run 结束(单次使用: 内部信号只通知一次)
+    pub async fn completed(self) {
+        self.done.notified().await;
+    }
+}
+
 pub struct LoopService {
     /// 用弱引用: 避免"ctx → service → ctx"互相套圈导致内存泄漏
     ctx: Weak<Ctx>,
-    queue: Mutex<VecDeque<(SessionId, ChatMessage)>>,
-    wake: Arc<Notify>,
-    idle: Arc<Notify>,
+    /// 每会话一个 worker(首次 send 懒创建): 同会话串行, 跨会话并行
+    workers: Mutex<HashMap<SessionId, Arc<SessionWorker>>>,
     stop_flag: Arc<AtomicBool>,
-    busy: Arc<AtomicUsize>,
     turn_counters: Mutex<HashMap<SessionId, u32>>,
     max_steps_per_turn: usize,
+    current_cancel: Mutex<HashMap<SessionId, Signal>>,
 }
 impl LoopService {
     // ----- outer -----
 
     pub fn new(ctx: &Arc<Ctx>, config: LoopConfig) -> Arc<Self> {
-        let service = Arc::new(Self {
+        Arc::new(Self {
             ctx: Arc::downgrade(ctx),
-            queue: Mutex::new(VecDeque::new()),
-            wake: Arc::new(Notify::new()),
-            idle: Arc::new(Notify::new()),
+            workers: Mutex::new(HashMap::new()),
             stop_flag: Arc::new(AtomicBool::new(false)),
-            busy: Arc::new(AtomicUsize::new(0)),
             turn_counters: Mutex::new(HashMap::new()),
             max_steps_per_turn: config.max_steps_per_turn,
-        });
-
-        tokio::spawn(Self::driver(Arc::clone(&service)));
-
-        service
+            current_cancel: Mutex::new(HashMap::new()),
+        })
     }
 
-    pub fn send(&self, session_id: SessionId, message: ChatMessage) {
-        self.queue.lock().unwrap().push_back((session_id, message));
-        self.wake.notify_one();
+    /// 同会话 FIFO 串行, 跨会话并行; token 只对齐这一次 run
+    /// 返回完成句柄: await completed() 等这一次 run 结束
+    pub fn send(
+        self: &Arc<Self>,
+        session_id: SessionId,
+        message: ChatMessage,
+        cancel_signal: Signal,
+    ) -> SendHandle {
+        let done = Arc::new(Notify::new());
+        if self.stop_flag.load(Ordering::SeqCst) {
+            tracing::warn!(session_id = %session_id, "服务已停止, 拒绝新消息");
+            done.notify_waiters();
+            return SendHandle { done };
+        }
+        let worker = {
+            let mut workers = self.workers.lock().unwrap();
+            workers
+                .entry(session_id.clone())
+                .or_insert_with(|| {
+                    // 该会话第一次 send: 建私有队列 + 常驻 worker
+                    let worker = Arc::new(SessionWorker {
+                        queue: Mutex::new(VecDeque::new()),
+                        wake: Notify::new(),
+                    });
+                    tokio::spawn(Self::session_worker(
+                        Arc::clone(self),
+                        session_id.clone(),
+                        Arc::clone(&worker),
+                    ));
+                    worker
+                })
+                .clone()
+        };
+        worker
+            .queue
+            .lock()
+            .unwrap()
+            .push_back((message, cancel_signal, done.clone()));
+        worker.wake.notify_one();
+        SendHandle { done }
     }
 
+    /// 全量取消
+    /// 只取消某一次 run 用 send 时绑定的 token.cancel()
     pub fn stop(&self) {
         self.stop_flag.store(true, Ordering::SeqCst);
-        self.wake.notify_one();
-        self.idle.notify_waiters();
-    }
-
-    pub async fn wait_idle(&self) {
-        loop {
-            if self.is_idle() {
-                return;
-            } else {
-                self.idle.notified().await;
+        for cancel_signal in self.current_cancel.lock().unwrap().values() {
+            cancel_signal.cancel();
+        }
+        for worker in self.workers.lock().unwrap().values() {
+            let mut queue = worker.queue.lock().unwrap();
+            for (_, cancel_signal, done) in queue.iter() {
+                cancel_signal.cancel();
+                done.notify_waiters(); // 这些 run 不会再执行, 完成句柄立即返回
             }
+            queue.clear();
+            worker.wake.notify_one();
         }
     }
 
     // ----- inner -----
 
-    fn messages_pop_front(&self) -> Option<(SessionId, ChatMessage)> {
-        self.queue.lock().unwrap().pop_front()
-    }
+    async fn run_turn(
+        &self,
+        session_id: &SessionId,
+        user_message: ChatMessage,
+        cancel_signal: Signal,
+        done: Arc<Notify>,
+    ) {
+        // 排队期间被取消 / 服务已停止: 不启动这一轮, 直接丢弃
+        if cancel_signal.is_cancelled() || self.stop_flag.load(Ordering::SeqCst) {
+            tracing::debug!(session_id = %session_id, "回合开始前已被取消或服务已停止, 丢弃");
+            done.notify_waiters();
+            return;
+        }
 
-    fn messages_is_empty(&self) -> bool {
-        self.queue.lock().unwrap().is_empty()
-    }
-
-    fn is_idle(&self) -> bool {
-        self.busy.load(Ordering::SeqCst) == 0 && self.messages_is_empty()
-    }
-
-    async fn run_turn(&self, session_id: SessionId, user_message: ChatMessage) {
-        self.busy.fetch_add(1, Ordering::SeqCst);
+        // 登记该会话当前回合的信号, 供 stop() 全量取消
+        self.current_cancel
+            .lock()
+            .unwrap()
+            .insert(session_id.clone(), cancel_signal.clone());
         let mut process_turn = None;
         if let Err(err) = self
-            .run_turn_inner(&session_id, user_message, &mut process_turn)
+            .run_turn_inner(session_id, user_message, &mut process_turn, cancel_signal)
             .await
         {
             tracing::error!(session_id = %session_id, err = ?err, turn = ?process_turn);
@@ -145,11 +203,9 @@ impl LoopService {
                 );
             }
         }
-        self.busy.fetch_sub(1, Ordering::SeqCst);
-        // 每轮都检查是否是最后处理完毕的轮次，如果是，则通知等待者
-        if self.is_idle() {
-            self.idle.notify_waiters();
-        }
+        self.current_cancel.lock().unwrap().remove(session_id);
+        // 这一轮到此结束(成功/失败/取消), 唤醒等完成句柄的一方
+        done.notify_waiters();
     }
 
     async fn run_turn_inner(
@@ -157,18 +213,23 @@ impl LoopService {
         session_id: &SessionId,
         user_message: ChatMessage,
         process_turn: &mut Option<u32>,
+        cancel_signal: Signal,
     ) -> anyhow::Result<()> {
         // 升级弱引用为强引用, ctx 已被销毁则直接返回(理论走不到)
         let ctx = self.ctx.upgrade().context("ctx 已被销毁")?;
 
         // 获取依赖的注册服务
+        let mcp_service = MCPPlugin::get_service(&ctx).context("MCPPlugin 不存在")?;
         let session_manager = SessionPlugin::get_service(&ctx).context("SessionManager 不存在")?;
         let prompt_registry = PromptPlugin::get_service(&ctx).context("PromptRegistry 不存在")?;
         let tool_registry = ToolsPlugin::get_service(&ctx).context("ToolRegistry 不存在")?;
         let config_manager = LLMConfigPlugin::get_service(&ctx).context("ConfigPlugin 不存在")?;
         let llm_compactor = LLMCompactorPlugin::get_service(&ctx).context("LLMCompactor 不存在")?;
         let llm_manager = LLMPlugin::get_service(&ctx).context("LLMManager 不存在")?;
-        let llm_config = config_manager.current_config(session_id);
+        let llm_config = config_manager
+            .get_session_config(session_id)
+            .context("LLMConfig 获取配置失败")?
+            .ok_or_else(|| anyhow::anyhow!("LLMConfig 中没有配置"))?;
         let llm_provider = llm_manager
             .get_provider(&llm_config.provider)
             .context("LLMProvider 不存在")?;
@@ -183,7 +244,7 @@ impl LoopService {
                 .map_err(|e| anyhow::anyhow!("lock counters 失败: {}", e))?;
             let n = counters.entry(session_id.clone()).or_insert_with(|| {
                 session_manager
-                    .messages(session_id)
+                    .real_messages(session_id)
                     .iter()
                     .filter(|m| m.role == Role::User)
                     .count() as u32
@@ -228,11 +289,14 @@ impl LoopService {
             // vote: before-request
             let mut before_request_payload = LoopPayloadBeforeRequest {
                 request: {
+                    mcp_service.refresh_all().await;
+
                     let compaction = llm_compactor
                         .compact(
                             Arc::clone(&llm_provider),
-                            session_manager.messages(session_id),
+                            session_manager.compaction_messages(session_id),
                             llm_config.clone(),
+                            cancel_signal.clone(),
                         )
                         .await
                         .context("上下文压缩失败")?;
@@ -246,11 +310,16 @@ impl LoopService {
                             .context("会话日志写入失败")?;
                     }
 
+                    // 放在 append 之后，覆盖 compacted 消息
+                    session_manager
+                        .update_compaction_session(session_id, compaction.messages.clone());
+
                     Request {
                         config: llm_config.clone(),
                         system: prompt_registry.sections(),
                         messages: compaction.messages,
                         tools: tool_registry.list(),
+                        cancel: cancel_signal.clone(),
                     }
                 },
                 session_id: session_id.clone(),
@@ -304,9 +373,18 @@ impl LoopService {
             // call_id -> (name, args_json 片段)
             let mut pending_calls: HashMap<String, (String, String)> = HashMap::new();
 
-            // stream 请求
+            // stream 请求(可被本次 run 绑定的取消信号打断)
             let mut stream = llm_provider.stream(&request);
-            while let Some(event) = stream.next().await {
+            loop {
+                let event = tokio::select! {
+                    biased;
+                    _ = cancel_signal.cancelled() => {
+                        cause = LoopCause::cancel();
+                        break 'steps;
+                    }
+                    event = stream.next() => event,
+                };
+                let Some(event) = event else { break };
                 match event {
                     Ok(event) => match event {
                         StreamEvent::TextStart => {
@@ -475,15 +553,17 @@ impl LoopService {
                             Some(tool) => {
                                 let run_ctx = ToolRunContext {
                                     session_id: session_id.clone(),
+                                    ctx: Arc::clone(&ctx),
                                     turn,
                                     step,
+                                    cancel: cancel_signal.clone(),
                                 };
                                 // 找到了: 真正执行(异步)。结果转成文本。
                                 match tool
                                     .run(pre_execute_payload.call.args.clone(), &run_ctx)
                                     .await
                                 {
-                                    Ok(value) => Self::stringify(&value),
+                                    Ok(value) => stringify(&value),
                                     Err(error) => String::from(LoopCause::error(error.to_string())),
                                 }
                             }
@@ -621,27 +701,31 @@ impl LoopService {
         Ok(())
     }
 
-    async fn driver(service: Arc<LoopService>) {
+    /// 单个会话的常驻 worker: 私有队列 FIFO 串行执行, 队列空则休眠等通知。
+    /// stop() 会取消队列/在飞回合并 notify, 让休眠中的 worker 醒来退出。
+    async fn session_worker(
+        service: Arc<LoopService>,
+        session_id: SessionId,
+        worker: Arc<SessionWorker>,
+    ) {
         loop {
-            if let Some((session_id, message)) = service.messages_pop_front() {
-                service.run_turn(session_id, message).await;
-                continue; // 继续检查是否有新消息
-            }
-
-            // 叫醒了但是队列空了，查看是否有停止信号
-            if service.stop_flag.load(Ordering::SeqCst) {
-                break;
-            }
-
-            // 没消息也没停止信号，继续等待
-            service.wake.notified().await;
+            // 同会话串行，上一条消息的整个回合(LLM 流 + 工具多步)跑完, 才取下一条
+            let item = {
+                let mut queue = worker.queue.lock().unwrap();
+                queue.pop_front()
+            };
+            let Some((message, cancel_signal, done)) = item else {
+                // 队列空，服务停止则退出
+                if service.stop_flag.load(Ordering::SeqCst) {
+                    break;
+                }
+                // 否则休眠, 等该会话下一条消息(或 stop 唤醒)
+                worker.wake.notified().await;
+                continue;
+            };
+            service
+                .run_turn(&session_id, message, cancel_signal, done)
+                .await;
         }
-    }
-
-    fn stringify(value: &Value) -> String {
-        if value.is_string() {
-            return value.as_str().unwrap_or_default().to_string();
-        }
-        serde_json::to_string(value).unwrap_or_else(|_| String::from("<unprintable>"))
     }
 }

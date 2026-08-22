@@ -1,4 +1,5 @@
 pub mod models;
+pub mod stdout;
 
 use crate::agui::models::{AguiEmitter, AguiEvent, AguiState};
 use crate::ctx::Ctx;

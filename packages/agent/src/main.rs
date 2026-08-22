@@ -1,84 +1,72 @@
-use agent::agui::AguiPlugin;
-use agent::boot::boot;
-use agent::ctx::Ctx;
-use agent::llm::models::ChatMessage;
-use agent::llm::plugins::{LLMCompactorPlugin, LLMConfigPlugin, LLMPlugin, LlmCompactorConfig};
+use agent::agent::{AgentConfig, build_agent};
+use agent::cancel::Signal;
+use agent::llm::models::{ChatMessage, LLMConfig, LLMContextSize, LLMProvider};
+use agent::llm::plugins::{LLMCompactorConfig, LLMConfigPlugin};
 use agent::r#loop::{LoopConfig, LoopPlugin};
-use agent::plugins::agui_stdout::AguiStdoutPlugin;
-use agent::plugins::history_search::HistorySearchPlugin;
-use agent::plugins::max_turns::{MaxTurnsConfig, MaxTurnsPlugin};
-use agent::plugins::models::{Plugin, PluginMeta};
-use agent::plugins::persona::PersonaPlugin;
-use agent::plugins::session_loader::{SessionLoaderConfig, SessionLoaderPlugin};
-use agent::plugins::session_persistence::{SessionPersistenceConfig, SessionPersistencePlugin};
-use agent::prompt::PromptPlugin;
+use agent::plugins::max_turns::MaxTurnsConfig;
+use agent::plugins::models::PluginMeta;
 use agent::session::SessionPlugin;
-use agent::tools::ToolsPlugin;
-use agent::tools::inner::InnerToolsPlugin;
-use std::sync::Arc;
+use agent::store::StoreConfig;
+use agent::utils::generate_id;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     dotenvy::dotenv()?;
     dotenvy::from_filename(".env.local")?;
-
-    tracing_subscriber::fmt()
-        .with_max_level(tracing::Level::INFO)
-        .init();
-
-    let ctx = Arc::new(Ctx::new());
-
-    boot(
-        &ctx,
-        vec![
-            SessionPlugin.boot(&ctx, ())?,
-            SessionLoaderPlugin.boot(
-                &ctx,
-                SessionLoaderConfig {
-                    greeting: "历史已加载: 这是第 1 次会话。".to_string(),
-                },
-            )?,
-            ToolsPlugin.boot(&ctx, ())?,
-            PromptPlugin.boot(&ctx, ())?,
-            PersonaPlugin.boot(&ctx, ())?,
-            LLMPlugin.boot(&ctx, ())?,
-            LLMConfigPlugin.boot(&ctx, ())?,
-            LLMCompactorPlugin.boot(&ctx, LlmCompactorConfig { keep: 20 })?,
-            InnerToolsPlugin.boot(&ctx, ())?,
-            HistorySearchPlugin.boot(&ctx, ())?,
-            MaxTurnsPlugin.boot(&ctx, MaxTurnsConfig { max_turns: 1000 })?,
-            AguiPlugin.boot(&ctx, ())?,
-            AguiStdoutPlugin.boot(&ctx, ())?,
-            SessionPersistencePlugin.boot(
-                &ctx,
-                SessionPersistenceConfig {
-                    dir: "./sessions".to_string(),
-                },
-            )?,
-            LoopPlugin.boot(
-                &ctx,
-                LoopConfig {
-                    max_steps_per_turn: 100,
-                },
-            )?,
-        ],
+    tracing::subscriber::set_global_default(
+        tracing_subscriber::FmtSubscriber::builder()
+            .with_max_level(tracing::Level::INFO)
+            .finish(),
     )?;
 
-    let session_manager = SessionPlugin::get_service(&ctx)?;
-    let session = session_manager.create_session();
-    session_manager.seed(
-        &session,
-        SessionLoaderPlugin::get_service(&ctx)?
-            .initial_messages
-            .clone(),
-    )?;
+    let ctx = build_agent(AgentConfig {
+        store_config: StoreConfig {
+            path: "./data".into(),
+            secret: "aaa".to_string(),
+        },
+        llm_compactor_config: LLMCompactorConfig {
+            keep: 10,
+            threshold: 0.75,
+        },
+        max_turns_config: MaxTurnsConfig { max_turns: 100000 },
+        loop_config: LoopConfig {
+            max_steps_per_turn: 100,
+        },
+    })
+    .await?;
+
     let loop_service = LoopPlugin::get_service(&ctx)?;
-    loop_service.send(
-        session.clone(),
-        ChatMessage::user("调用工具计算12345+6789+今天的年份，并返回结果，然后在bing上搜索，查询参数为前面的结果，返回html文本"),
-    );
-    loop_service.wait_idle().await;
-    loop_service.stop();
+    let session_manager = SessionPlugin::get_service(&ctx)?;
+    let config_manager = LLMConfigPlugin::get_service(&ctx)?;
 
+    config_manager.add_global_config(LLMConfig {
+        default: true,
+        id: generate_id("llm-config"),
+        name: "default".to_string(),
+        provider: LLMProvider::OpenAI,
+        base_url: std::env::var("OPENAI_BASE_URL").ok(),
+        api_key: std::env::var("OPENAI_API_KEY").expect("OPENAI_API_KEY not found"),
+        model: std::env::var("OPENAI_MODEL").expect("OPENAI_MODEL not found"),
+        context_size: LLMContextSize::_1M,
+        other: None,
+        headers: None,
+    })?;
+    // 两个会话并行: A 跑工具链路, B 只做一次简单计算, 互不阻塞
+    let session_a = session_manager.create_session();
+    let session_b = session_manager.create_session();
+    let handle_a = loop_service.send(
+        session_a.clone(),
+        ChatMessage::user("调用工具计算12345+6789+今天的年份"),
+        Signal::new(),
+    );
+    let handle_b = loop_service.send(
+        session_b.clone(),
+        ChatMessage::user("用计算器工具计算 3*4+5 并返回结果"),
+        Signal::new(),
+    );
+    futures::join!(handle_a.completed(), handle_b.completed());
+
+    loop_service.stop();
+    ctx.dispose();
     Ok(())
 }

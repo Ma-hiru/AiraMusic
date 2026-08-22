@@ -1,9 +1,13 @@
+pub mod agent;
 pub mod agui;
-pub mod boot;
+pub mod cancel;
 pub mod ctx;
 pub mod llm;
 pub mod r#loop;
+pub mod mcp;
 pub mod plugins;
 pub mod prompt;
 pub mod session;
+pub mod store;
 pub mod tools;
+pub mod utils;

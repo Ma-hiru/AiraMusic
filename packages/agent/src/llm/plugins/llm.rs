@@ -56,6 +56,6 @@ impl LLMAdapterManager {
     }
 
     pub fn get_provider(&self, provider: &LLMProvider) -> Option<Arc<dyn LLMAdapter>> {
-        self.providers.lock().unwrap().get(&provider).cloned()
+        self.providers.lock().unwrap().get(provider).cloned()
     }
 }

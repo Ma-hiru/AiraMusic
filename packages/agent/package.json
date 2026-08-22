@@ -4,10 +4,13 @@
   "version": "1.0.0",
   "files": [],
   "scripts": {
-    "build": "cargo build --release",
+    "build": "cargo build --release && tsx scripts/copy.ts",
     "clean:cargo": "cargo clean",
     "lint": "cargo fmt && cargo clippy --all-targets -- -D warnings",
     "lint:check": "cargo fmt --check && cargo clippy --all-targets -- -D warnings",
     "test": "cargo test"
+  },
+  "devDependencies": {
+    "tsx": "^4.23.12"
   }
 }

@@ -24,7 +24,8 @@ impl Tool for TimeTool {
         schemars::schema_for!(TimeToolParameters).into()
     }
 
-    async fn run(&self, args: Value, _ctx: &ToolRunContext) -> anyhow::Result<Value> {
+    async fn run(&self, args: Value, ctx: &ToolRunContext) -> anyhow::Result<Value> {
+        ctx.cancel.check()?;
         let TimeToolParameters { format } = serde_json::from_value(args)?;
         let time = chrono::Local::now().format(&format).to_string();
         Ok(serde_json::to_value(time)?)

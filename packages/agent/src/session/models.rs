@@ -1,8 +1,7 @@
+use crate::llm::models::ChatMessage;
+use crate::utils::generate_id;
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
-use std::sync::atomic::{AtomicU64, Ordering};
-use std::sync::Arc;
-use crate::llm::models::ChatMessage;
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(transparent)]
@@ -10,15 +9,7 @@ pub struct SessionId(String);
 
 impl SessionId {
     pub fn new() -> Self {
-        static COUNTER: AtomicU64 = AtomicU64::new(0);
-        let count = COUNTER.fetch_add(1, Ordering::Relaxed);
-
-        let millis = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .map(|d| d.as_millis())
-            .unwrap_or(0);
-
-        Self(format!("s-{millis:x}-{count}"))
+        generate_id("s").into()
     }
 }
 
@@ -58,11 +49,24 @@ impl Default for SessionId {
     }
 }
 
-/// 会话日志的一次变更
 #[derive(Clone)]
-pub enum SessionChange {
-    Seeded { messages: Vec<ChatMessage> },
-    Appended { message: ChatMessage },
+pub enum SessionEvent {
+    Create {
+        session_id: SessionId,
+    },
+    Append {
+        session_id: SessionId,
+        message: ChatMessage,
+    },
+    AppendMemory {
+        id: String,
+        content: String,
+    },
+    DeleteMemory {
+        id: String,
+    },
+    Compaction {
+        session_id: SessionId,
+        messages: Vec<ChatMessage>,
+    },
 }
-
-pub type SessionListener = Arc<dyn Fn(&SessionId, &SessionChange) + Send + Sync>;

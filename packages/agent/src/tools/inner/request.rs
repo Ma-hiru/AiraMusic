@@ -40,7 +40,8 @@ impl Tool for RequestTool {
         schemars::schema_for!(RequestToolParameters).into()
     }
 
-    async fn run(&self, args: Value, _ctx: &ToolRunContext) -> anyhow::Result<Value> {
+    async fn run(&self, args: Value, ctx: &ToolRunContext) -> anyhow::Result<Value> {
+        ctx.cancel.check()?;
         let RequestToolParameters {
             url,
             method,

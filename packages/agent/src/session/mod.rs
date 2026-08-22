@@ -1,13 +1,13 @@
 pub mod models;
+pub mod persistence;
 
 use crate::ctx::Ctx;
-use crate::ctx::models::Disposer;
-use crate::llm::models::ChatMessage;
+use crate::llm::models::{ChatMemory, ChatMessage};
 use crate::plugins::models::{Plugin, PluginApplyResult, PluginMeta};
-use anyhow::Context;
 use models::*;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
+use tokio::sync::broadcast;
 
 pub struct SessionPlugin;
 impl PluginMeta<SessionManager> for SessionPlugin {
@@ -34,19 +34,40 @@ impl Plugin<(), SessionManager> for SessionPlugin {
 
 #[derive(Clone)]
 pub struct SessionManager {
-    // 可以克隆共享句柄; 每个会话一条日志, 互不干扰
+    // 真实历史(存储真相，搜索依据)
     sessions: Arc<Mutex<HashMap<SessionId, Vec<ChatMessage>>>>,
-    // 变更监听者列表(订阅即收据可撤)
-    listeners: Arc<Mutex<Vec<SessionListener>>>,
+    // 压缩历史(对话真相，请求依据)
+    compaction: Arc<Mutex<HashMap<SessionId, Vec<ChatMessage>>>>,
+    // 全局记忆
+    memories: Arc<Mutex<Vec<ChatMemory>>>,
+    channel_sender: broadcast::Sender<SessionEvent>,
 }
 impl SessionManager {
     pub fn new() -> Self {
         Self::default()
     }
 
+    fn send_event(&self, event: SessionEvent) {
+        let _ = self.channel_sender.send(event);
+    }
+
+    pub fn subscribe(&self) -> broadcast::Receiver<SessionEvent> {
+        self.channel_sender.subscribe()
+    }
+
     pub fn create_session(&self) -> SessionId {
         let id = SessionId::new();
+
         self.sessions.lock().unwrap().insert(id.clone(), Vec::new());
+        self.compaction
+            .lock()
+            .unwrap()
+            .insert(id.clone(), Vec::new());
+
+        self.send_event(SessionEvent::Create {
+            session_id: id.clone(),
+        });
+
         id
     }
 
@@ -54,85 +75,33 @@ impl SessionManager {
         self.sessions.lock().unwrap().contains_key(id)
     }
 
-    /// 恢复一个历史会话(持久化插件启动时用)。
-    pub fn restore_session(&self, id: SessionId, messages: Vec<ChatMessage>) -> anyhow::Result<()> {
-        let mut sessions = self
-            .sessions
-            .lock()
-            .map_err(|e| anyhow::anyhow!("[SessionManager.restore] lock sessions 失败: {}", e))?;
-        if sessions.contains_key(&id) {
-            anyhow::bail!("[SessionManager.restore] 会话 {id} 已存在, 无法恢复");
-        }
-        sessions.insert(id, messages);
-        Ok(())
-    }
-
-    /// 订阅会话变更(返回收据)。
-    pub fn subscribe(
-        &self,
-        listener: impl Fn(&SessionId, &SessionChange) + Send + Sync + 'static,
-    ) -> Disposer {
-        let entry: SessionListener = Arc::new(listener);
-        self.listeners.lock().unwrap().push(Arc::clone(&entry));
-        let listeners = Arc::clone(&self.listeners);
-        Box::new(move || {
-            listeners
-                .lock()
-                .unwrap()
-                .retain(|e| !Arc::ptr_eq(e, &entry));
-        })
-    }
-
-    /// 通知所有订阅者(先复制列表再喊, 避免回调里再碰锁死锁)。
-    fn notify(&self, id: &SessionId, change: &SessionChange) {
-        let snapshot: Vec<SessionListener> = self.listeners.lock().unwrap().clone();
-        for listener in &snapshot {
-            listener(id, change);
-        }
-    }
-
-    pub fn seed(&self, id: &SessionId, messages: Vec<ChatMessage>) -> anyhow::Result<()> {
-        // 写日志(锁作用域 = 这个花括号, 出块即放锁)
-        {
-            let mut sessions = self
-                .sessions
-                .lock()
-                .map_err(|e| anyhow::anyhow!("[SessionManager.seed] lock sessions 失败: {}", e))?;
-
-            match sessions.get_mut(id) {
-                None => {
-                    sessions.insert(id.clone(), messages);
-                }
-                Some(session) => {
-                    if !session.is_empty() {
-                        anyhow::bail!(
-                            "[SessionManager.seed] 会话 {id} 已有内容: seed 只允许在会话开始时调用一次"
-                        );
-                    }
-                    session.extend(messages);
-                }
-            }
-        }
-        // 通知订阅者(锁已放, 回调里随便干什么)
-        let messages = self.messages(id);
-        self.notify(id, &SessionChange::Seeded { messages });
-        Ok(())
-    }
-
     pub fn append(&self, id: &SessionId, message: ChatMessage) -> anyhow::Result<()> {
         {
             self.sessions
                 .lock()
-                .map_err(|e| anyhow::anyhow!("[SessionManager.append] lock sessions 失败: {}", e))?
+                .map_err(|e| anyhow::anyhow!("lock sessions 失败: {}", e))?
                 .get_mut(id)
-                .context("[SessionManager.append] 会话 {id} 不存在")?
+                .ok_or_else(|| anyhow::anyhow!("会话 {id} 不存在"))?
                 .push(message.clone());
         }
-        self.notify(id, &SessionChange::Appended { message });
+        {
+            self.compaction
+                .lock()
+                .map_err(|e| anyhow::anyhow!("lock compaction 失败: {}", e))?
+                .get_mut(id)
+                .ok_or_else(|| anyhow::anyhow!("会话 {id} 不存在"))?
+                .push(message.clone());
+        }
+
+        self.send_event(SessionEvent::Append {
+            session_id: id.clone(),
+            message,
+        });
+
         Ok(())
     }
 
-    pub fn messages(&self, id: &SessionId) -> Vec<ChatMessage> {
+    pub fn real_messages(&self, id: &SessionId) -> Vec<ChatMessage> {
         self.sessions
             .lock()
             .unwrap()
@@ -141,8 +110,51 @@ impl SessionManager {
             .unwrap_or_default()
     }
 
-    /// 按关键词搜索会话历史(history_search 工具用)。
-    /// 只读: 不写会话日志, 不触碰"唯一写点"纪律。
+    pub fn compaction_messages(&self, id: &SessionId) -> Vec<ChatMessage> {
+        self.compaction
+            .lock()
+            .unwrap()
+            .get(id)
+            .cloned()
+            .unwrap_or_default()
+    }
+
+    pub fn update_compaction_session(&self, id: &SessionId, messages: Vec<ChatMessage>) {
+        self.compaction
+            .lock()
+            .unwrap()
+            .insert(id.clone(), messages.clone());
+        self.send_event(SessionEvent::Compaction {
+            session_id: id.clone(),
+            messages,
+        });
+    }
+
+    pub fn append_memory(&self, memory: ChatMemory) -> anyhow::Result<()> {
+        self.memories
+            .lock()
+            .map_err(|e| anyhow::anyhow!("lock memories 失败: {}", e))?
+            .push(memory.clone());
+
+        self.send_event(SessionEvent::AppendMemory {
+            content: memory.content,
+            id: memory.id,
+        });
+
+        Ok(())
+    }
+
+    pub fn delete_memory(&self, id: &str) -> anyhow::Result<()> {
+        self.memories
+            .lock()
+            .map_err(|e| anyhow::anyhow!("lock memories 失败: {}", e))?
+            .retain(|m| m.id != id);
+
+        self.send_event(SessionEvent::DeleteMemory { id: id.to_string() });
+
+        Ok(())
+    }
+
     pub fn search(&self, id: &SessionId, keyword: &str) -> Vec<ChatMessage> {
         self.sessions
             .lock()
@@ -157,6 +169,55 @@ impl SessionManager {
             .unwrap_or_default()
     }
 
+    pub fn search_memory(&self, keyword: &str) -> Vec<ChatMemory> {
+        self.memories
+            .lock()
+            .unwrap()
+            .iter()
+            .filter(|m| m.content.contains(keyword))
+            .cloned()
+            .collect()
+    }
+
+    /// 静默插入
+    pub fn restore_session(
+        &self,
+        id: SessionId,
+        real: Vec<ChatMessage>,
+        compaction: Vec<ChatMessage>,
+    ) -> anyhow::Result<()> {
+        {
+            let mut sessions = self
+                .sessions
+                .lock()
+                .map_err(|e| anyhow::anyhow!("lock sessions 失败: {}", e))?;
+            if sessions.contains_key(&id) {
+                anyhow::bail!("会话 {id} 已存在, 无法恢复");
+            }
+            sessions.insert(id.clone(), real);
+        }
+        {
+            let mut compaction_map = self
+                .compaction
+                .lock()
+                .map_err(|e| anyhow::anyhow!("lock compaction 失败: {}", e))?;
+            if compaction_map.contains_key(&id) {
+                anyhow::bail!("会话 {id} 已存在, 无法恢复");
+            }
+            compaction_map.insert(id.clone(), compaction);
+        }
+        Ok(())
+    }
+
+    // 静默插入
+    pub fn restore_memories(&self, memories: Vec<ChatMemory>) -> anyhow::Result<()> {
+        self.memories
+            .lock()
+            .map_err(|e| anyhow::anyhow!("lock memories 失败: {}", e))?
+            .extend(memories);
+        Ok(())
+    }
+
     pub fn session_ids(&self) -> Vec<SessionId> {
         self.sessions.lock().unwrap().keys().cloned().collect()
     }
@@ -164,8 +225,10 @@ impl SessionManager {
 impl Default for SessionManager {
     fn default() -> Self {
         Self {
+            compaction: Arc::new(Mutex::new(HashMap::new())),
             sessions: Arc::new(Mutex::new(HashMap::new())),
-            listeners: Arc::new(Mutex::new(Vec::new())),
+            memories: Arc::new(Mutex::new(Vec::new())),
+            channel_sender: broadcast::channel::<SessionEvent>(256).0,
         }
     }
 }

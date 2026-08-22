@@ -118,7 +118,11 @@ impl OpenAiAdapter {
 impl LLMAdapter for OpenAiAdapter {
     fn stream<'a>(&'a self, request: &'a Request) -> LlmStream<'a> {
         Box::pin(stream! {
-            // 检查
+            // 检查: 取消 + 配置
+            if request.cancel.is_cancelled() {
+                yield Err(anyhow::anyhow!("llm-openai: 请求已被取消"));
+                return;
+            }
             if request.config.provider != LLMProvider::OpenAI  {
                 yield Err(anyhow::anyhow!("llm-openai: 请求配置不匹配(Request.config.provider != LLMProvider::OpenAI)"));
                 return;
@@ -155,16 +159,17 @@ impl LLMAdapter for OpenAiAdapter {
                 .build()?;
             // 创建 client
             let client = Client::with_config(Self::build_openai_config(&request.config)?);
-            // 创建流
+            // 创建流(每次重试前检查取消)
             let mut stream = match (|| async {
-                client.chat().create_stream(openai_request.clone()).await
+                request.cancel.check()?;
+                Ok::<_, anyhow::Error>(client.chat().create_stream(openai_request.clone()).await?)
             })
             .retry(backon::ExponentialBuilder::default().with_jitter().with_max_times(3))
             .await
             {
                 Ok(stream) => stream,
                 Err(error) => {
-                    yield Err(error.into());
+                    yield Err(error);
                     return;
                 }
             };
@@ -174,7 +179,16 @@ impl LLMAdapter for OpenAiAdapter {
             let mut text_started = false;
             let mut finish_reason: Option<String> = None;
 
-            while let Some(result) = stream.next().await {
+            loop {
+                let result = tokio::select! {
+                    biased;
+                    _ = request.cancel.cancelled() => {
+                        yield Err(anyhow::anyhow!("llm-openai: 请求已被取消"));
+                        return;
+                    }
+                    result = stream.next() => result,
+                };
+                let Some(result) = result else { break };
                 let chunk = match result {
                     Ok(chunk) => chunk,
                     Err(error) => {

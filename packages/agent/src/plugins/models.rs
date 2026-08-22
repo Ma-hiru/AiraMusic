@@ -1,5 +1,5 @@
-use crate::boot::BootRow;
 use crate::ctx::Ctx;
+use crate::ctx::boot::BootRow;
 use crate::ctx::models::{Disposer, DisposerLike};
 use std::any::Any;
 use std::sync::Arc;
@@ -12,12 +12,7 @@ pub trait Plugin<Config: Any + Send + 'static, Service: Any + Send + Sync>:
         <Self as PluginMeta<Service>>::name()
     }
 
-    /// 依赖的服务名列表。
-    ///
-    /// 装配器会等这些服务全部就绪才调用 apply
-    /// 永远等不到的插件会让装配直接报错(见 boot.rs)
-    /// 装载顺序由此推导: 谁依赖谁, 谁就先启动, 不用手写顺序
-    /// 默认返回空列表 = 无依赖
+    /// 依赖的服务名列表
     fn inject(&self) -> Vec<&'static str> {
         vec![]
     }
@@ -27,6 +22,7 @@ pub trait Plugin<Config: Any + Send + 'static, Service: Any + Send + Sync>:
     /// 返回 Some(Service, Vec<Disposer>) 表示插件需要注册服务/处理监听器Disposer
     fn apply(&self, ctx: &Arc<Ctx>, config: Config) -> anyhow::Result<PluginApplyResult<Service>>;
 
+    /// 生成 boot 配置
     fn boot(&self, ctx: &Arc<Ctx>, config: Config) -> anyhow::Result<BootRow> {
         let PluginApplyResult {
             service,

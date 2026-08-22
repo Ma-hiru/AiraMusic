@@ -1,3 +1,4 @@
+pub mod boot;
 pub mod models;
 
 use models::*;
@@ -216,5 +217,13 @@ impl Ctx {
     /// 把disposer交给系统(退出/卸载时倒序销毁)
     pub fn effect(&self, receipt: Disposer) {
         self.receipts.lock().unwrap().push(receipt);
+    }
+
+    /// 倒序执行(后挂先收), 幂等
+    pub fn dispose(&self) {
+        let receipts = std::mem::take(&mut *self.receipts.lock().unwrap());
+        for receipt in receipts.into_iter().rev() {
+            receipt();
+        }
     }
 }

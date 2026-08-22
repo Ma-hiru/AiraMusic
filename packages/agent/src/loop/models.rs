@@ -311,6 +311,7 @@ pub enum LoopPhase {
     Vote(LoopEvent),
     MaxStep,
     Error,
+    Cancel,
     Success,
 }
 impl From<LoopPhase> for String {
@@ -319,6 +320,7 @@ impl From<LoopPhase> for String {
             LoopPhase::Vote(event) => event.name().into(),
             LoopPhase::MaxStep => "max-step".into(),
             LoopPhase::Error => "error".into(),
+            LoopPhase::Cancel => "cancel".into(),
             LoopPhase::Success => "success".into(),
         }
     }
@@ -347,6 +349,10 @@ impl LoopCause {
 
     pub fn vote(event: LoopEvent, reason: String) -> Self {
         LoopCause::new(reason, LoopPhase::Vote(event))
+    }
+
+    pub fn cancel() -> Self {
+        LoopCause::new("已取消".into(), LoopPhase::Cancel)
     }
 }
 impl From<LoopCause> for String {

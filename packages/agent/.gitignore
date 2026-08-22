@@ -1,2 +1,6 @@
 /target
 .idea
+agent
+agent.exe
+*.exe
+data

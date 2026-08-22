@@ -31,7 +31,8 @@ impl Tool for CalculatorTool {
         schemars::schema_for!(CalculatorArgs).into()
     }
 
-    async fn run(&self, args: Value, _ctx: &ToolRunContext) -> anyhow::Result<Value> {
+    async fn run(&self, args: Value, ctx: &ToolRunContext) -> anyhow::Result<Value> {
+        ctx.cancel.check()?;
         let CalculatorArgs {
             first_number,
             second_number,
