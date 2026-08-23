@@ -1,4 +1,4 @@
-import type { LLMToolOutputDetail } from "@mahiru/ai";
+import type { LLMToolOutputDetail } from "@mahiru/agent/browser";
 import type {
   NeteaseAlbum,
   NeteaseLyric,

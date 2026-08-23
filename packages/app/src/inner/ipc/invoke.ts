@@ -1,14 +1,15 @@
 import { app, dialog, BrowserWindow, type IpcMainInvokeEvent } from "electron";
 import { Log } from "@/lib/log";
-import { MainAgent } from "@/inner/agent";
 import { MainHandle } from "@/lib/handle";
 import { MainRuntime } from "@/lib/runtime";
+import { MainAgent } from "@/services/agent";
+import { MainMcp } from "@/inner/mcp/runtime";
+import { AgentRequestError } from "@mahiru/agent";
 import { mergeCacheStoreConfig } from "@/utils/merge";
 import { MainWindowManager } from "@/lib/window-manager";
 import { MainScreenResolver } from "@/lib/screen-resolver";
 import { MainCacheStoreConstants } from "@/constants/store";
-import { AIError, AIResult, type AIErrorCode } from "@mahiru/ai";
-import { MainAgentFeatureSettings } from "@/inner/agent/feature-settings";
+import { MainAgentFeatureSettings } from "@/services/agent/settings";
 import { MainStoreForConfig, MainStoreForRenderer } from "@/lib/key-value-store";
 import Net from "node:net";
 import Https from "node:https";
@@ -21,119 +22,57 @@ export const invokeHandlers: InvokeHandlers = {
     return authorizedAgentFeatureSettingsData(event, () => MainAgentFeatureSettings.getState());
   },
   invoke_agent_feature_settings_update: (event, options) => {
-    return authorizedAgentFeatureSettingsResult(event, () => {
+    return authorizedAgentFeatureSettingsRequest(event, async () => {
       const previous = MainAgentFeatureSettings.getState();
       const persisted = MainAgentFeatureSettings.update(options);
       if (previous.agentEnabled && !persisted.agentEnabled) {
-        MainAgent.shutdown();
+        await MainAgent.shutdown();
         destroyAgentWindow();
+      }
+      if (
+        !persisted.agentEnabled &&
+        !persisted.mcpEnabled &&
+        (previous.agentEnabled || previous.mcpEnabled)
+      ) {
+        await MainMcp.shutdown();
       }
       const state = MainAgentFeatureSettings.getState();
       MainAgent.broadcastFeatureSettings(state);
-      return AIResult.ok(state);
+      return state;
     });
   },
   invoke_agent_list_providers: (event) => {
-    return authorizedAgentData(event, () => MainAgent.listProviders());
-  },
-  invoke_agent_list_provider_descriptors: (event) => {
-    return authorizedAgentData(event, () => MainAgent.listProviderDescriptors());
+    return authorizedAgentRequest(event, () => MainAgent.listProviders());
   },
   invoke_agent_list_configs: (event) => {
-    return authorizedAgentResult(event, () => MainAgent.listConfigs());
+    return authorizedAgentRequest(event, () => MainAgent.listConfigs());
   },
-  invoke_agent_create_config: (event, options) => {
-    return authorizedAgentResult(event, async () => {
-      if (
-        !isRecord(options) ||
-        !hasOnlyKeys(options, ["name", "provider", "config"]) ||
-        typeof options.name !== "string" ||
-        typeof options.provider !== "string" ||
-        !isRecord(options.config)
-      ) {
-        return AIResult.err({
-          type: "invalid_config",
-          message: "创建 Provider 配置的参数无效，且不允许指定 id"
-        });
-      }
-      return MainAgent.createConfig({
-        name: options.name,
-        provider: options.provider,
-        config: structuredClone(options.config)
-      });
-    });
+  invoke_agent_create_config: (event, input) => {
+    return authorizedAgentRequest(event, () => MainAgent.createConfig(input));
   },
-  invoke_agent_update_config: (event, options) => {
-    return authorizedAgentResult(event, () => MainAgent.updateConfig(options));
+  invoke_agent_update_config: (event, { id, config }) => {
+    return authorizedAgentRequest(event, () => MainAgent.updateConfig(id, config));
   },
-  invoke_agent_create_conversation: (event, options) => {
-    return authorizedAgentResult(event, () => {
-      if (
-        options !== undefined &&
-        (!isRecord(options) ||
-          !hasOnlyKeys(options, ["name"]) ||
-          (options.name !== undefined && typeof options.name !== "string"))
-      ) {
-        return AIResult.err({
-          type: "invalid_conversation",
-          message: "创建会话只允许传入可选的 name，不能指定 id 或消息快照"
-        });
-      }
-      return MainAgent.createConversation(options ? { name: options.name } : {});
-    });
+  invoke_agent_create_thread: (event, input) => {
+    return authorizedAgentRequest(event, () => MainAgent.createThread(input));
   },
-  invoke_agent_list_conversations: (event) => {
-    return authorizedAgentResult(event, () => MainAgent.listConversations());
+  invoke_agent_list_threads: (event) => {
+    return authorizedAgentRequest(event, () => MainAgent.listThreads());
   },
   invoke_agent_list_runs: (event) => {
-    return authorizedAgentData(event, () => MainAgent.listRuns());
+    return authorizedAgentRequest(event, () => MainAgent.listRuns());
   },
-  invoke_agent_get_conversation: (event, id) => {
-    return authorizedAgentResult(event, () => MainAgent.getConversationSnapshot(id));
+  invoke_agent_get_thread: (event, id) => {
+    return authorizedAgentRequest(event, () => MainAgent.getThread(id));
   },
-  invoke_agent_remove_conversation: (event, id) => {
-    return authorizedAgentResult(event, () => MainAgent.removeConversation(id));
+  invoke_agent_delete_thread: (event, id) => {
+    return authorizedAgentRequest(event, () => MainAgent.deleteThread(id));
   },
-  invoke_agent_chat: (event, options) => {
-    return authorizedAgentResult(event, () => {
-      if (
-        !isRecord(options) ||
-        !hasOnlyKeys(options, [
-          "input",
-          "configID",
-          "temperature",
-          "conversationID",
-          "maxOutputTokens",
-          "retryAbortedRunID"
-        ]) ||
-        typeof options.input !== "string" ||
-        typeof options.configID !== "string" ||
-        typeof options.conversationID !== "string" ||
-        (options.temperature !== undefined && typeof options.temperature !== "number") ||
-        (options.maxOutputTokens !== undefined && typeof options.maxOutputTokens !== "number") ||
-        (options.retryAbortedRunID !== undefined && typeof options.retryAbortedRunID !== "string")
-      ) {
-        return AIResult.err({
-          type: "invalid_conversation",
-          message: "Agent 对话请求参数无效或包含不允许的字段"
-        });
-      }
-      return MainAgent.chat({
-        input: options.input,
-        configID: options.configID,
-        conversationID: options.conversationID,
-        ...(options.temperature === undefined ? {} : { temperature: options.temperature }),
-        ...(options.maxOutputTokens === undefined
-          ? {}
-          : { maxOutputTokens: options.maxOutputTokens }),
-        ...(options.retryAbortedRunID === undefined
-          ? {}
-          : { retryAbortedRunID: options.retryAbortedRunID })
-      });
-    });
+  invoke_agent_create_run: (event, { content, configId, threadId }) => {
+    return authorizedAgentRequest(event, () => MainAgent.createRun(threadId, configId, content));
   },
-  invoke_agent_abort: (event, runID) => {
-    return authorizedAgentResult(event, () => MainAgent.abort(runID));
+  invoke_agent_cancel_run: (event, runId) => {
+    return authorizedAgentRequest(event, () => MainAgent.cancelRun(runId));
   },
   invoke_fs_select: async (_, type) => {
     const { canceled, filePaths } = await dialog.showOpenDialog({
@@ -324,30 +263,13 @@ export const invokeHandlers: InvokeHandlers = {
 };
 
 const toAgentInvokeError = (error: unknown) => {
-  if (error instanceof AIError) {
-    return {
-      ok: false,
-      reason: {
-        type: error.type,
-        message: error.message
-      }
-    } as const;
-  }
   return {
     ok: false,
     reason: {
-      type: "unknown" as AIErrorCode,
+      code: error instanceof AgentRequestError ? error.code : "unknown",
       message: error instanceof Error ? error.message : String(error)
     }
   } as const;
-};
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  Boolean(value) && typeof value === "object" && !Array.isArray(value);
-
-const hasOnlyKeys = (value: Record<string, unknown>, allowedKeys: readonly string[]) => {
-  const allowed = new Set(allowedKeys);
-  return Object.keys(value).every((key) => allowed.has(key));
 };
 
 /**
@@ -416,27 +338,16 @@ const unauthorizedAgentInvokeResult = () =>
   ({
     ok: false,
     reason: {
-      type: "auth" as AIErrorCode,
+      code: "auth",
       message: "拒绝来自非 Agent 应用主框架的 IPC 请求"
     }
   }) as const;
 
-const agentResult = async <T>(action: () => AIResult<T> | Promise<AIResult<T>>) => {
+const agentRequest = async <T>(action: () => T | Promise<T>) => {
   try {
-    const result = await action();
-    if (result.isErr()) {
-      return {
-        ok: false,
-        reason: {
-          type: result.reason.type,
-          message: result.reason.message
-        }
-      } as const;
-    }
-
     return {
       ok: true,
-      data: structuredClone(result.unwrap())
+      data: structuredClone(await action())
     } as const;
   } catch (error) {
     Log.error("invoke(agent)", error);
@@ -456,34 +367,23 @@ const agentData = <T>(action: () => T) => {
   }
 };
 
-const authorizedAgentResult = <T>(
-  event: IpcMainInvokeEvent,
-  action: () => AIResult<T> | Promise<AIResult<T>>
-) => {
+const authorizedAgentRequest = <T>(event: IpcMainInvokeEvent, action: () => T | Promise<T>) => {
   if (!isAuthorizedAgentInvokeSender(event)) {
     Log.warn("invoke(agent)", "拒绝非 Agent 主框架请求");
     return Promise.resolve(unauthorizedAgentInvokeResult());
   }
-  return agentResult(action);
+  return agentRequest(action);
 };
 
-const authorizedAgentData = <T>(event: IpcMainInvokeEvent, action: () => T) => {
-  if (!isAuthorizedAgentInvokeSender(event)) {
-    Log.warn("invoke(agent)", "拒绝非 Agent 主框架请求");
-    return unauthorizedAgentInvokeResult();
-  }
-  return agentData(action);
-};
-
-const authorizedAgentFeatureSettingsResult = <T>(
+const authorizedAgentFeatureSettingsRequest = <T>(
   event: IpcMainInvokeEvent,
-  action: () => AIResult<T> | Promise<AIResult<T>>
+  action: () => T | Promise<T>
 ) => {
   if (!isAuthorizedAgentFeatureSettingsSender(event)) {
     Log.warn("invoke(agent settings)", "拒绝非主窗口应用主框架请求");
     return Promise.resolve(unauthorizedAgentInvokeResult());
   }
-  return agentResult(action);
+  return agentRequest(action);
 };
 
 const authorizedAgentFeatureSettingsData = <T>(event: IpcMainInvokeEvent, action: () => T) => {

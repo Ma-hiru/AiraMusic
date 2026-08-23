@@ -10,7 +10,15 @@ const mocks = vi.hoisted(() => ({
   stop: vi.fn()
 }));
 
-vi.mock("../../src/inner/agent/feature-settings", () => ({
+vi.mock("../../src/lib/runtime", () => ({
+  MainRuntime: { agentMcpToken: "internal-mcp-token" }
+}));
+
+vi.mock("../../src/inner/mcp/public-tools", () => ({
+  AiraPublicMcpToolNames: ["agent-search", "agent-tool-player-action"]
+}));
+
+vi.mock("../../src/services/agent/settings", () => ({
   MainAgentFeatureSettings: {
     beginMcpInitialization: mocks.begin,
     markMcpInitialized: mocks.markInitialized,
@@ -65,7 +73,14 @@ describe("MainMcp", () => {
     const { MainMcp } = await import("../../src/inner/mcp/runtime");
     await expect(MainMcp.init()).resolves.toMatchObject({ port: 32_123 });
 
-    expect(mocks.serverConfigs).toEqual([{ port: 32_123, toolNames: ["agent-search"] }]);
+    expect(mocks.serverConfigs).toEqual([
+      {
+        port: 32_123,
+        toolNames: ["agent-search"],
+        internalToken: "internal-mcp-token",
+        internalToolNames: ["agent-search", "agent-tool-player-action"]
+      }
+    ]);
     expect(mocks.markInitialized).toHaveBeenCalledWith(32_123, ["agent-search"]);
 
     await MainMcp.shutdown();
@@ -79,6 +94,33 @@ describe("MainMcp", () => {
 
     await expect(MainMcp.init()).resolves.toBeUndefined();
     expect(mocks.serverConfigs).toHaveLength(0);
+  });
+
+  it("仅启用 Agent 时创建内部端点且不公开任何工具", async () => {
+    mocks.begin.mockReturnValue({
+      agentEnabled: true,
+      mcpEnabled: false,
+      mcpPort: 32_123,
+      mcpTools: ["agent-search"]
+    });
+    mocks.start.mockResolvedValue({
+      host: "127.0.0.1",
+      port: 32_123,
+      url: "http://127.0.0.1:32123/mcp"
+    });
+    const { MainMcp } = await import("../../src/inner/mcp/runtime");
+
+    await expect(MainMcp.init()).resolves.toMatchObject({ port: 32_123 });
+    expect(mocks.serverConfigs).toEqual([
+      {
+        port: 32_123,
+        toolNames: [],
+        internalToken: "internal-mcp-token",
+        internalToolNames: ["agent-search", "agent-tool-player-action"]
+      }
+    ]);
+    expect(mocks.markInitialized).not.toHaveBeenCalled();
+    await MainMcp.shutdown();
   });
 
   it("启动失败时回收实例并回滚 effective", async () => {

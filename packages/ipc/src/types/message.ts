@@ -1,4 +1,4 @@
-import type { AIAgentEvent, AIAgentEventReplayItem } from "@mahiru/ai";
+import type { AGUIEvent } from "@mahiru/agent";
 
 import type { AgentFeatureSettingsState } from "./invoke";
 import type {
@@ -208,11 +208,11 @@ type MessageSingle = {
   message_dispatch_should_close: boolean;
   message_dispatch_cache_has_clear: boolean;
   message_dispatch_device_output_set: string;
+  message_deliver_agent_chat_event: AGUIEvent;
   message_cancel_agent_tool_request: AgentToolCancel;
   message_dispatch_agent_tool_request: AgentToolRequest;
   message_deliver_agent_tool_response: AgentToolResponse;
   message_deliver_agent_feature_settings: AgentFeatureSettingsState;
-  message_deliver_agent_chat_event: AIAgentEvent | AIAgentEventReplayItem;
 };
 
 type MessageEventValue = MessageBus & MessageSingle;

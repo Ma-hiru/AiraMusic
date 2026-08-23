@@ -65,6 +65,10 @@
       {
         "from": "packages/native/index.node",
         "to": "native/index.node"
+      },
+      {
+        "from": "packages/agent/agent",
+        "to": "bin/agent"
       }
     ]
   },
@@ -89,6 +93,10 @@
       {
         "from": "packages/native/index.node",
         "to": "native/index.node"
+      },
+      {
+        "from": "packages/agent/agent",
+        "to": "bin/agent"
       }
     ]
   },
@@ -113,6 +121,10 @@
       {
         "from": "packages/native/index.node",
         "to": "native/index.node"
+      },
+      {
+        "from": "packages/agent/agent.exe",
+        "to": "bin/agent.exe"
       }
     ]
   },

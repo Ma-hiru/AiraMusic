@@ -4,13 +4,8 @@ import { Log } from "@/common/lib/log";
 import { RendererWindow } from "@/common/lib/window";
 import { RendererAgent } from "@/wins/agent/lib/agent";
 import { useLatestRef } from "@/common/hooks/use-latest-ref";
+import { parseAgentTurnUsage } from "@/wins/agent/page/chat/observability";
 import { reduceAgentConversationEvent } from "@/wins/agent/hooks/agent-event-state";
-import {
-  readAgentEventReplay,
-  readAgentEventEnvelope,
-  getAgentEventFingerprint,
-  readPersistedAssistantSteps
-} from "@/wins/agent/page/chat/observability";
 import {
   EMPTY_LIVE_TIMELINE,
   agentSelectedConfigIDAtom,
@@ -27,14 +22,25 @@ import {
   agentSelectedConversationRunningRunIDAtom
 } from "@/wins/agent/atoms/agent";
 import AppToast from "@/common/components/display/toast";
-import type { AgentEventEnvelope } from "@/wins/agent/page/chat/observability";
-import type { AgentInvokeError, AgentConversationSummary } from "@mahiru/ipc/types";
+import type { AgentInvokeError } from "@mahiru/ipc/types";
+import type { AgentTokenUsage } from "@/wins/agent/page/types";
 import type {
-  AIAgentEvent,
-  LLMProviderDescriptor,
-  AIAgentEventReplayItem,
-  AIProviderConfigSnapshot
-} from "@mahiru/ai";
+  AGUIEvent,
+  ThreadSummary,
+  ProviderConfigView,
+  ProviderDescriptor
+} from "@mahiru/agent/browser";
+
+import {
+  AgentAguiAdapter,
+  readAgentAguiIdentity,
+  type AgentConversationEvent
+} from "./agui-adapter";
+
+interface PendingRunError {
+  message: string;
+  usage?: AgentTokenUsage;
+}
 
 export function useAgent() {
   const [loading, setLoading] = useState(false);
@@ -57,14 +63,14 @@ export function useAgent() {
   const closeAfterRunningRef = useLatestRef(closeAfterRunning);
   const hydratedRef = useRef(false);
   const agentEventsReadyRef = useRef(false);
-  const eventSequenceByRunRef = useRef(new Map<string, number>());
-  const bufferedAgentEventsRef = useRef<AgentEventEnvelope[]>([]);
-  const replayFingerprintCountsRef = useRef(new Map<string, Map<string, number>>());
+  const aguiAdapterRef = useRef(new AgentAguiAdapter());
+  const bufferedAgentEventsRef = useRef<AGUIEvent[]>([]);
+  const pendingRunErrorsRef = useRef(new Map<string, PendingRunError>());
 
   // 模型服务提供方
-  const [providers, setProviders] = useState<LLMProviderDescriptor[]>([]);
+  const [providers, setProviders] = useState<ProviderDescriptor[]>([]);
   const loadProviders = useCallback(async () => {
-    const result = await RendererAgent.listProviderDescriptors();
+    const result = await RendererAgent.listProviders();
     if (!result.ok) {
       showAgentError(result.reason);
       return [];
@@ -74,7 +80,7 @@ export function useAgent() {
   }, []);
 
   // 模型配置
-  const [configs, setConfigs] = useState<AIProviderConfigSnapshot[]>([]);
+  const [configs, setConfigs] = useState<ProviderConfigView[]>([]);
   const activeConfig = useMemo(
     () => configs.find((config) => config.id === selectedConfigID),
     [configs, selectedConfigID]
@@ -107,7 +113,7 @@ export function useAgent() {
       });
   }, [loadConfigs, loadingRef]);
   const saveConfig = useCallback(
-    (config: AIProviderConfigSnapshot, select = true) => {
+    (config: ProviderConfigView, select = true) => {
       if (select) setSelectedConfigID(config.id);
       setConfigs((items) => [config, ...items.filter((item) => item.id !== config.id)]);
       void loadConfigs();
@@ -116,9 +122,9 @@ export function useAgent() {
   );
 
   // 会话摘要
-  const [conversations, setConversations] = useState<AgentConversationSummary[]>([]);
+  const [conversations, setConversations] = useState<ThreadSummary[]>([]);
   const loadConversations = useCallback(async () => {
-    const result = await RendererAgent.listConversations();
+    const result = await RendererAgent.listThreads();
     if (!result.ok) {
       showAgentError(result.reason);
       return [];
@@ -147,7 +153,7 @@ export function useAgent() {
     async (id: string) => {
       if (!id) return;
 
-      const result = await RendererAgent.getConversation(id);
+      const result = await RendererAgent.getThread(id);
       if (!result.ok) {
         showAgentError(result.reason);
         return;
@@ -161,8 +167,8 @@ export function useAgent() {
 
           return {
             ...state,
-            conversation: result.data ?? null,
-            latestRunID: state.runningRunID || result.data?.runtime?.runID || state.latestRunID,
+            conversation: result.data,
+            latestRunID: state.runningRunID || result.data.runtime.runId || state.latestRunID,
             ...(keepLiveState
               ? {}
               : {
@@ -194,14 +200,14 @@ export function useAgent() {
     });
 
     for (const item of blankConversations) {
-      const result = await RendererAgent.getConversation(item.id);
+      const result = await RendererAgent.getThread(item.id);
       if (!result.ok) {
         showAgentError(result.reason);
         return false;
       }
 
       const snapshot = result.data;
-      if (!snapshot || snapshot.messages.length) continue;
+      if (snapshot.messages.length) continue;
 
       setSelectedConversationID(item.id);
       updateConversationState({
@@ -212,7 +218,7 @@ export function useAgent() {
           sending: false,
           streamText: "",
           recovering: false,
-          latestRunID: snapshot.runtime?.runID ?? "",
+          latestRunID: snapshot.runtime.runId ?? "",
           runningRunID: "",
           liveTimeline: EMPTY_LIVE_TIMELINE,
           pendingUserMessage: ""
@@ -234,7 +240,7 @@ export function useAgent() {
   const createConversation = useCallback(async () => {
     if (await openReusableBlankConversation()) return;
 
-    const result = await RendererAgent.createConversation(undefined);
+    const result = await RendererAgent.createThread(undefined);
     if (!result.ok) {
       showAgentError(result.reason);
       return;
@@ -246,7 +252,7 @@ export function useAgent() {
     async (id: string) => {
       if (!id || runningConversationIDsRef.current.includes(id)) return;
 
-      const result = await RendererAgent.removeConversation(id);
+      const result = await RendererAgent.deleteThread(id);
       if (!result.ok) {
         showAgentError(result.reason);
         return;
@@ -268,19 +274,7 @@ export function useAgent() {
   );
 
   const applyAgentChatEvent = useCallback(
-    (event: AIAgentEvent, sequence?: number, notify = true) => {
-      if (sequence !== undefined) {
-        const previousSequence = eventSequenceByRunRef.current.get(event.runID);
-        if (previousSequence !== undefined && sequence <= previousSequence) return false;
-        eventSequenceByRunRef.current.set(event.runID, sequence);
-        if (eventSequenceByRunRef.current.size > 64) {
-          const oldestRunID = eventSequenceByRunRef.current.keys().next().value;
-          if (oldestRunID && oldestRunID !== event.runID) {
-            eventSequenceByRunRef.current.delete(oldestRunID);
-          }
-        }
-      }
-
+    (event: AgentConversationEvent, notify = true) => {
       let applied = false;
       updateConversationState({
         conversationID: event.conversationID,
@@ -292,16 +286,10 @@ export function useAgent() {
       });
       if (!applied) return false;
 
-      if (event.type === "title") {
-        setConversations((items) =>
-          items.map((item) =>
-            item.id === event.conversationID ? { ...item, name: event.title } : item
-          )
-        );
-      } else if (event.type === "done") {
+      if (event.type === "finished") {
         void loadConversations();
-      } else if (event.type === "error" && notify) {
-        showAgentError(event.error);
+      } else if (event.type === "failed" && notify) {
+        showAgentError({ code: "run_failed", message: event.message ?? "Agent 运行失败" });
       }
 
       return true;
@@ -309,26 +297,112 @@ export function useAgent() {
     [loadConversations, updateConversationState]
   );
 
-  const flushBufferedAgentEvents = useCallback(() => {
-    const buffered = bufferedAgentEventsRef.current.splice(0).sort((left, right) => {
-      if (left.sequence === undefined) return 1;
-      if (right.sequence === undefined) return -1;
-      return left.sequence - right.sequence;
-    });
-    for (const envelope of buffered) {
-      if (envelope.sequence === undefined) {
-        const fingerprint = getAgentEventFingerprint(envelope.event);
-        const counts = replayFingerprintCountsRef.current.get(envelope.event.runID);
-        const replayedCount = counts?.get(fingerprint) ?? 0;
-        if (replayedCount > 0) {
-          counts?.set(fingerprint, replayedCount - 1);
-          continue;
+  const applyAgentAguiEvent = useCallback(
+    async (event: AGUIEvent) => {
+      const identity = readAgentAguiIdentity(event);
+      if (!identity) return;
+      const { runID, conversationID } = identity;
+      const record = event as unknown as Record<string, unknown>;
+
+      if (event.type === "RUN_ERROR") {
+        const turnUsage = parseAgentTurnUsage(record["usages"]);
+        const message =
+          typeof record["message"] === "string" ? record["message"] : "Agent 运行失败";
+
+        // Loop 的预期错误会在持久化完成后继续发送 RUN_FINISHED；先展示错误，
+        // 再由 RUN_FINISHED 用权威快照收口。InnerError 自带 usages，且不会再发结束事件。
+        if (record["usages"] === null || record["usages"] === undefined) {
+          pendingRunErrorsRef.current.set(runID, {
+            message,
+            ...(turnUsage?.usage ? { usage: turnUsage.usage } : {})
+          });
+          applyAgentChatEvent({
+            type: "failed",
+            runID,
+            conversationID,
+            message,
+            ...(turnUsage?.usage ? { usage: turnUsage.usage } : {})
+          });
+          aguiAdapterRef.current.clear(runID);
+          return;
         }
+
+        const snapshot = await RendererAgent.getThread(conversationID);
+        applyAgentChatEvent({
+          type: "failed",
+          runID,
+          conversationID,
+          message,
+          ...(turnUsage?.usage ? { usage: turnUsage.usage } : {}),
+          ...(snapshot.ok ? { snapshot: snapshot.data } : {})
+        });
+        aguiAdapterRef.current.clear(runID);
+        return;
       }
-      applyAgentChatEvent(envelope.event, envelope.sequence);
+
+      if (event.type === "RUN_FINISHED") {
+        const pendingError = pendingRunErrorsRef.current.get(runID);
+        pendingRunErrorsRef.current.delete(runID);
+        const snapshot = await RendererAgent.getThread(conversationID);
+        if (!snapshot.ok) {
+          showAgentError(snapshot.reason);
+          return;
+        }
+        const result = typeof record["result"] === "string" ? record["result"] : "success";
+        if (pendingError) {
+          const turnUsage = parseAgentTurnUsage(record["usages"]);
+          applyAgentChatEvent(
+            {
+              type: "failed",
+              runID,
+              conversationID,
+              snapshot: snapshot.data,
+              message: pendingError.message,
+              ...(turnUsage?.usage || pendingError.usage
+                ? { usage: turnUsage?.usage ?? pendingError.usage }
+                : {})
+            },
+            false
+          );
+        } else if (result === "cancel") {
+          applyAgentChatEvent({
+            type: "cancelled",
+            runID,
+            conversationID,
+            snapshot: snapshot.data
+          });
+        } else if (result !== "success") {
+          applyAgentChatEvent({
+            type: "failed",
+            runID,
+            conversationID,
+            snapshot: snapshot.data,
+            message: result === "max-step" ? "Agent 已达到最大执行步数" : result
+          });
+        } else {
+          applyAgentChatEvent({
+            type: "finished",
+            runID,
+            conversationID,
+            snapshot: snapshot.data
+          });
+        }
+        aguiAdapterRef.current.clear(runID);
+        return;
+      }
+
+      for (const translated of aguiAdapterRef.current.push(event)) {
+        applyAgentChatEvent(translated);
+      }
+    },
+    [applyAgentChatEvent]
+  );
+
+  const flushBufferedAgentEvents = useCallback(() => {
+    for (const event of bufferedAgentEventsRef.current.splice(0)) {
+      void applyAgentAguiEvent(event);
     }
-    replayFingerprintCountsRef.current.clear();
-  }, [applyAgentChatEvent]);
+  }, [applyAgentAguiEvent]);
 
   const restoreRunningConversations = useCallback(
     async (recoverableIDs = recoverableConversationIDs) => {
@@ -340,18 +414,18 @@ export function useAgent() {
 
       const activeRuns = result.data;
       const activeRunByConversationID = new Map(
-        activeRuns.map((run) => [run.conversationID, run] as const)
+        activeRuns.map((run) => [run.threadId, run] as const)
       );
       const restoreConversationIDs = new Set([
         ...recoverableIDs,
-        ...activeRuns.map((run) => run.conversationID)
+        ...activeRuns.map((run) => run.threadId)
       ]);
 
       await Promise.all(
         [...restoreConversationIDs].map(async (conversationID) => {
           const activeRun = activeRunByConversationID.get(conversationID);
           if (activeRun) {
-            const snapshot = await RendererAgent.getConversation(conversationID);
+            const snapshot = await RendererAgent.getThread(conversationID);
             if (!snapshot.ok) showAgentError(snapshot.reason);
             const conversationSnapshot = snapshot.ok ? (snapshot.data ?? null) : null;
             updateConversationState({
@@ -361,29 +435,16 @@ export function useAgent() {
                 sending: false,
                 recovering: true,
                 streamText: "",
-                latestRunID: activeRun.runID,
-                runningRunID: activeRun.runID,
+                latestRunID: activeRun.runId,
+                runningRunID: activeRun.runId,
                 liveTimeline: EMPTY_LIVE_TIMELINE,
                 conversation: conversationSnapshot ?? state.conversation
               })
             });
-            const replay = readAgentEventReplay(conversationSnapshot, activeRun);
-            const persistedSteps = readPersistedAssistantSteps(
-              conversationSnapshot,
-              activeRun.runID
-            );
-            const replayFingerprints = new Map<string, number>();
-            for (const entry of replay) {
-              const fingerprint = getAgentEventFingerprint(entry.event);
-              replayFingerprints.set(fingerprint, (replayFingerprints.get(fingerprint) ?? 0) + 1);
-              if ("step" in entry.event && persistedSteps.has(entry.event.step)) continue;
-              applyAgentChatEvent(entry.event, entry.sequence, false);
-            }
-            replayFingerprintCountsRef.current.set(activeRun.runID, replayFingerprints);
             return;
           }
 
-          const snapshot = await RendererAgent.getConversation(conversationID);
+          const snapshot = await RendererAgent.getThread(conversationID);
           if (!snapshot.ok) {
             showAgentError(snapshot.reason);
             return;
@@ -395,7 +456,7 @@ export function useAgent() {
               sending: false,
               recovering: false,
               streamText: "",
-              latestRunID: snapshot.data?.runtime?.runID ?? state.latestRunID,
+              latestRunID: snapshot.data.runtime.runId ?? state.latestRunID,
               runningRunID: "",
               liveTimeline: EMPTY_LIVE_TIMELINE,
               conversation: snapshot.data ?? state.conversation,
@@ -407,23 +468,21 @@ export function useAgent() {
 
       return activeRuns;
     },
-    [applyAgentChatEvent, recoverableConversationIDs, updateConversationState]
+    [recoverableConversationIDs, updateConversationState]
   );
 
   const handleAgentChatEvent = useCallback(
-    (payload: AIAgentEvent | AIAgentEventReplayItem) => {
-      const envelope = readAgentEventEnvelope(payload);
-      if (!envelope) return;
+    (event: AGUIEvent) => {
       if (!agentEventsReadyRef.current) {
-        bufferedAgentEventsRef.current.push(envelope);
+        bufferedAgentEventsRef.current.push(event);
         if (bufferedAgentEventsRef.current.length > 256) {
           bufferedAgentEventsRef.current.splice(0, bufferedAgentEventsRef.current.length - 256);
         }
         return;
       }
-      applyAgentChatEvent(envelope.event, envelope.sequence);
+      void applyAgentAguiEvent(event);
     },
-    [applyAgentChatEvent]
+    [applyAgentAguiEvent]
   );
   useEffect(() => {
     return RendererWindow.process.listenMessage(
@@ -431,6 +490,58 @@ export function useAgent() {
       handleAgentChatEvent
     );
   }, [handleAgentChatEvent]);
+
+  useEffect(() => {
+    if (!agentEventsReadyRef.current || !runningConversationIDs.length) return;
+    let disposed = false;
+    let checking = false;
+
+    const reconcile = async () => {
+      if (checking || disposed) return;
+      checking = true;
+      try {
+        const runs = await RendererAgent.listRuns();
+        if (!runs.ok || disposed) return;
+        const activeConversationIDs = new Set(runs.data.map((run) => run.threadId));
+        const completedConversationIDs = runningConversationIDs.filter(
+          (conversationID) => !activeConversationIDs.has(conversationID)
+        );
+        if (!completedConversationIDs.length) return;
+
+        await Promise.all(
+          completedConversationIDs.map(async (conversationID) => {
+            const snapshot = await RendererAgent.getThread(conversationID);
+            if (!snapshot.ok || disposed) return;
+            updateConversationState({
+              conversationID,
+              update: (state) => {
+                if (!state.runningRunID && !state.recovering) return state;
+                return {
+                  ...state,
+                  sending: false,
+                  recovering: false,
+                  streamText: "",
+                  runningRunID: "",
+                  liveTimeline: EMPTY_LIVE_TIMELINE,
+                  conversation: snapshot.data,
+                  pendingUserMessage: ""
+                };
+              }
+            });
+          })
+        );
+        void loadConversations();
+      } finally {
+        checking = false;
+      }
+    };
+
+    const timer = window.setInterval(() => void reconcile(), 2_000);
+    return () => {
+      disposed = true;
+      window.clearInterval(timer);
+    };
+  }, [loadConversations, runningConversationIDs, updateConversationState]);
 
   const refresh = useCallback(
     async (recoverableIDs?: string[]) => {
@@ -530,5 +641,5 @@ export function useAgent() {
 }
 
 const showAgentError = (error: AgentInvokeError) => {
-  AppToast.show({ type: "error", text: `${error.type}: ${error.message}` });
+  AppToast.show({ type: "error", text: `${error.code}: ${error.message}` });
 };

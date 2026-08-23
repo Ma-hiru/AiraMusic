@@ -1,294 +1,51 @@
-import { it, expect, describe } from "vitest";
-import { reduceAgentConversationEvent } from "@mahiru/ui/wins/agent/hooks/agent-event-state";
 import {
-  readRunTerminal,
+  toTerminalError,
   formatTokenCount,
-  readAssistantTurn,
-  readAgentEventReplay,
-  getUncachedInputTokens,
-  readAgentEventEnvelope,
-  readPersistedAssistantSteps
+  parseAgentTurnUsage,
+  getUncachedInputTokens
 } from "@mahiru/ui/wins/agent/page/chat/observability";
-import type { LLMMessage, AIAgentEvent } from "@mahiru/ai";
-import type { AgentConversationState } from "@mahiru/ui/wins/agent/atoms/agent";
 
-describe("Agent observability", () => {
-  it("associates assistant usage by message index and only uses message usage as fallback", () => {
-    const message = {
-      role: "assistant",
-      content: "done",
-      usage: {
-        inputTokens: 99,
-        outputTokens: 8,
-        cacheWrite: 3
-      }
-    } as unknown as LLMMessage;
-    const snapshot = {
-      assistantTurns: [
-        {
-          runID: "run-observed",
-          step: 4,
-          messageIndex: 2,
-          status: "complete",
-          finishReason: "stop",
-          usage: {
-            input: 12,
-            total: 20,
-            cachedInput: 5,
-            reasoning: 2
-          }
-        }
-      ]
-    };
-
-    expect(readAssistantTurn(snapshot, 1, message)).toMatchObject({
-      status: "complete",
-      usage: { input: 99, output: 8, total: 107, cacheWrite: 3 }
-    });
-    expect(readAssistantTurn(snapshot, 2, message)).toEqual({
-      step: 4,
-      runID: "run-observed",
-      status: "complete",
-      finishReason: "stop",
-      usage: {
-        input: 12,
-        output: 8,
-        total: 20,
-        cachedInput: 5,
-        cacheWrite: 3,
-        reasoning: 2
-      }
-    });
+describe("Agent 可观测信息格式化", () => {
+  it("格式化 token 数量并计算未缓存输入", () => {
     expect(formatTokenCount(999)).toBe("999");
-    expect(formatTokenCount(1_250)).toBe("1.3K");
-    expect(getUncachedInputTokens({ input: 12, cachedInput: 5 })).toBe(7);
-    expect(getUncachedInputTokens({ input: 12 })).toBeUndefined();
-    expect(getUncachedInputTokens({ input: 4, cachedInput: 8 })).toBe(0);
+    expect(formatTokenCount(1_500)).toBe("1.5K");
+    expect(formatTokenCount(2_000_000)).toBe("2M");
+    expect(getUncachedInputTokens({ input: 120, cachedInput: 80 })).toBe(40);
   });
 
-  it("normalizes persisted terminal states and incomplete legacy finish reasons", () => {
+  it("读取 Rust 服务错误", () => {
+    expect(toTerminalError({ code: "run_failed", message: "模型请求失败" })).toBe(
+      "run_failed: 模型请求失败"
+    );
+    expect(toTerminalError("已取消")).toBe("已取消");
+  });
+
+  it("汇总 Rust TurnUsage 的多个 step", () => {
     expect(
-      readRunTerminal({
-        runtime: {
-          status: "failed",
-          runID: "run-1",
-          startedAt: 100,
-          endedAt: 1_100,
-          usage: {
-            input: 32,
-            output: 3,
-            total: 35,
-            cachedInput: 14,
-            requests: 2,
-            lastInput: 20
-          },
-          error: { type: "provider_error", message: "upstream failed" }
-        }
-      })
-    ).toEqual({
-      id: "run-1-terminal",
-      type: "terminal",
-      runID: "run-1",
-      status: "failed",
-      startedAt: 100,
-      endedAt: 1_100,
-      usage: {
-        input: 32,
-        output: 3,
-        total: 35,
-        cachedInput: 14,
-        requests: 2,
-        lastInput: 20
-      },
-      error: "provider_error: upstream failed"
-    });
-    expect(
-      readRunTerminal({
-        assistantTurns: [
-          {
-            runID: "run-legacy",
-            messageIndex: 4,
-            status: "incomplete",
-            finishReason: "max-steps"
-          }
+      parseAgentTurnUsage({
+        records: [
+          { step: 1, usage: { prompt_tokens: 100, completion_tokens: 20 } },
+          { step: 2, usage: { prompt_tokens: 120, completion_tokens: 10 } }
         ]
       })
-    ).toMatchObject({ id: "run-legacy-terminal", runID: "run-legacy", status: "max_steps" });
-  });
-
-  it("sorts, bounds and deduplicates replay events by sequence", () => {
-    const eventReplay = Array.from({ length: 140 }, (_, sequence) => ({
-      sequence,
-      event: createTextEvent(sequence, String(sequence))
-    })).reverse();
-    eventReplay.push({ sequence: 139, event: createTextEvent(139, "replacement") });
-
-    const replay = readAgentEventReplay({ eventReplay });
-    expect(replay).toHaveLength(128);
-    expect(replay[0]?.sequence).toBe(12);
-    expect(replay.at(-1)).toMatchObject({
-      sequence: 139,
-      event: { text: "replacement" }
-    });
-
-    expect(readAgentEventEnvelope(createTextEvent(1, "live"))?.sequence).toBeUndefined();
-    expect(
-      readAgentEventEnvelope({ sequence: 7, event: createTextEvent(1, "replayed") })
-    ).toMatchObject({ sequence: 7, event: { text: "replayed" } });
-    expect([
-      ...readPersistedAssistantSteps(
-        {
-          assistantTurns: [
-            { runID: "run-1", step: 1, status: "complete" },
-            { runID: "run-1", step: 2, status: "incomplete" },
-            { runID: "run-2", step: 3, status: "complete" }
-          ]
-        },
-        "run-1"
-      )
-    ]).toEqual([1]);
-  });
-
-  it("keeps replayed tool steps idempotent and turns errors into timeline cards", () => {
-    const state = createState({ streamText: "先搜索" });
-    const toolCall = {
-      step: 1,
-      runID: "run-1",
-      type: "tool_call",
-      text: "先搜索",
-      usage: { inputTokens: 10, outputTokens: 2, totalTokens: 12 },
-      finishReason: "tool_calls",
-      conversationID: "conversation-1",
-      toolCalls: [
-        {
-          name: "search",
-          callID: "call-1",
-          arguments: '{"query":"AiraMusic"}'
-        }
-      ]
-    } satisfies AIAgentEvent;
-
-    const called = reduceAgentConversationEvent(state, toolCall);
-    const replayed = reduceAgentConversationEvent(called, toolCall);
-    expect(replayed.liveTimeline).toHaveLength(2);
-    expect(replayed.liveTimeline[0]).toMatchObject({
-      type: "assistant",
-      runID: "run-1"
-    });
-    expect(replayed.liveTimeline[1]).toMatchObject({
-      type: "tool",
-      runID: "run-1",
-      status: "running",
-      assistantTurn: {
-        step: 1,
-        runID: "run-1",
-        status: "complete",
-        finishReason: "tool_calls",
-        usage: { input: 10, output: 2, total: 12 }
-      },
-      toolCalls: [{ callID: "call-1" }]
-    });
-
-    const failed = reduceAgentConversationEvent(replayed, {
-      type: "error",
-      runID: "run-1",
-      conversationID: "conversation-1",
-      error: { type: "service", message: "request failed" }
-    } as AIAgentEvent);
-    expect(failed.runningRunID).toBe("");
-    expect(failed.liveTimeline).toHaveLength(3);
-    expect(failed.liveTimeline[1]).toMatchObject({ type: "tool", status: "error" });
-    expect(failed.liveTimeline[2]).toMatchObject({
-      type: "terminal",
-      status: "failed",
-      error: "service: request failed"
-    });
-  });
-
-  it("新 run 开始后拒绝旧 run 迟到的增量、完成和启动事件", () => {
-    const current = createState({
-      latestRunID: "run-new",
-      runningRunID: "run-new",
-      streamText: "新一轮回复"
-    });
-    const lateText = reduceAgentConversationEvent(current, {
+    ).toEqual({
       step: 2,
-      type: "text_delta",
-      runID: "run-old",
-      conversationID: "conversation-1",
-      text: "旧回复不应出现"
-    } satisfies AIAgentEvent);
-    const lateDone = reduceAgentConversationEvent(current, {
-      type: "done",
-      runID: "run-old",
-      conversationID: "conversation-1",
-      response: {
-        text: "旧回复",
-        toolCalls: [],
-        finishReason: "stop"
-      },
-      snapshot: {
-        id: "conversation-1",
-        name: "旧快照",
-        createdAt: 1,
-        updatedAt: 2,
-        metadata: {},
-        messages: [{ role: "assistant", content: "旧回复" }]
+      usage: {
+        input: 220,
+        output: 30,
+        total: 250,
+        requests: 2,
+        lastInput: 120
       }
-    } satisfies AIAgentEvent);
-    const lateStarted = reduceAgentConversationEvent(current, {
-      type: "started",
-      runID: "run-old",
-      at: 1,
-      configID: "config-1",
-      conversationID: "conversation-1"
-    } satisfies AIAgentEvent);
-
-    expect(lateText).toBe(current);
-    expect(lateDone).toBe(current);
-    expect(lateStarted).toBe(current);
+    });
   });
 
-  it("提交新消息时允许新的 started 事件替换上一轮标识", () => {
-    const waiting = createState({
-      sending: true,
-      latestRunID: "run-old",
-      runningRunID: ""
-    });
-
+  it("忽略空或损坏的 Rust TurnUsage", () => {
+    expect(parseAgentTurnUsage({ records: [] })).toBeUndefined();
     expect(
-      reduceAgentConversationEvent(waiting, {
-        type: "started",
-        runID: "run-new",
-        at: 2,
-        configID: "config-1",
-        conversationID: "conversation-1"
-      } satisfies AIAgentEvent)
-    ).toMatchObject({
-      sending: false,
-      latestRunID: "run-new",
-      runningRunID: "run-new"
-    });
+      parseAgentTurnUsage({
+        records: [{ step: 1, usage: { prompt_tokens: "100", completion_tokens: 20 } }]
+      })
+    ).toBeUndefined();
   });
-});
-
-const createTextEvent = (step: number, text: string) =>
-  ({
-    step,
-    text,
-    runID: "run-1",
-    type: "text_delta",
-    conversationID: "conversation-1"
-  }) satisfies AIAgentEvent;
-
-const createState = (override: Partial<AgentConversationState> = {}): AgentConversationState => ({
-  sending: false,
-  streamText: "",
-  recovering: false,
-  latestRunID: "run-1",
-  runningRunID: "run-1",
-  conversation: null,
-  liveTimeline: [],
-  pendingUserMessage: "",
-  ...override
 });

@@ -1,4 +1,8 @@
-import type { LLMToolCall } from "@mahiru/ai";
+export type AgentToolCall = {
+  name: string;
+  callID: string;
+  arguments: string;
+};
 
 export type AgentTokenUsage = {
   input?: number;
@@ -36,8 +40,19 @@ export type AgentLiveToolResult = {
   output: string;
 };
 
+export type AgentLiveReasoning = {
+  id: string;
+  step: number;
+  text: string;
+  runID?: string;
+  messageID: string;
+  type: "reasoning";
+  status: "done" | "streaming";
+};
+
 export type AgentLiveTimelineItem =
   | AgentRunTerminal
+  | AgentLiveReasoning
   | {
       id: string;
       text: string;
@@ -49,7 +64,7 @@ export type AgentLiveTimelineItem =
       step: number;
       type: "tool";
       runID?: string;
-      toolCalls: LLMToolCall[];
+      toolCalls: AgentToolCall[];
       toolResults?: AgentLiveToolResult[];
       status: "done" | "error" | "running";
       assistantTurn?: AgentAssistantTurnObservability;
@@ -60,7 +75,7 @@ export type AgentToolTimelineItem = {
   type: "tool";
   step?: number;
   runID?: string;
-  toolCalls: LLMToolCall[];
+  toolCalls: AgentToolCall[];
   toolResults: AgentLiveToolResult[];
   status: "done" | "error" | "running";
   assistantTurn?: AgentAssistantTurnObservability;

@@ -2,17 +2,18 @@ import { cx } from "@emotion/css";
 import { type FC, useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { Check, KeyRound, ShieldCheck, type LucideIcon, SlidersHorizontal } from "lucide-react";
 import { RendererAgent } from "@/wins/agent/lib/agent";
-import { resolveLLMContextWindowTokens } from "@mahiru/ai/model";
 import AppModal from "@/common/components/display/modal";
 import AppToast from "@/common/components/display/toast";
 import FormSelect, { type FormSelectOption } from "@/common/components/data-input/form-select";
 import type { ModalRender } from "@/common/components/display/modal/modal-provider";
 import type {
-  LLMProviderDescriptor,
-  LLMProviderConfigInput,
-  LLMProviderConfigValue,
-  AIProviderConfigSnapshot
-} from "@mahiru/ai";
+  ProviderConfigView,
+  ProviderDescriptor,
+  ProviderConfigInput
+} from "@mahiru/agent/browser";
+
+type ProviderConfigValue = number | string | boolean;
+type ProviderFormValues = Record<string, ProviderConfigValue>;
 
 type ProviderFieldType = "number" | "string" | "boolean" | "integer";
 
@@ -26,30 +27,29 @@ type ProviderConfigField = {
   writeOnly?: boolean;
   description?: string;
   type: ProviderFieldType;
-  examples: LLMProviderConfigValue[];
-  defaultValue?: LLMProviderConfigValue;
-  enumValues?: LLMProviderConfigValue[];
+  examples: ProviderConfigValue[];
+  defaultValue?: ProviderConfigValue;
+  enumValues?: ProviderConfigValue[];
 };
 
 type AgentConfigForm = {
   name: string;
   provider: string;
-  config: LLMProviderConfigInput;
+  config: ProviderFormValues;
 };
 
 type AgentConfigModalProps = {
   defaultProvider?: string;
-  providers: LLMProviderDescriptor[];
-  initialConfig?: AIProviderConfigSnapshot;
-  onSaved: NormalFunc<[config: AIProviderConfigSnapshot]>;
+  providers: ProviderDescriptor[];
+  initialConfig?: ProviderConfigView;
+  onSaved: NormalFunc<[config: ProviderConfigView]>;
 };
 
 type ProviderFieldControlProps = {
-  model?: string;
   editing?: boolean;
   field: ProviderConfigField;
-  value: undefined | LLMProviderConfigValue;
-  onChange: NormalFunc<[value: LLMProviderConfigValue]>;
+  value: undefined | ProviderConfigValue;
+  onChange: NormalFunc<[value: ProviderConfigValue]>;
 };
 
 const SupportedFieldTypes = new Set<ProviderFieldType>(["string", "number", "integer", "boolean"]);
@@ -61,17 +61,22 @@ const inputClassName = `
   focus:ring-2 focus:ring-primary/12 disabled:cursor-not-allowed disabled:opacity-40
 `;
 
-const isConfigValue = (value: unknown): value is LLMProviderConfigValue =>
+const isConfigValue = (value: unknown): value is ProviderConfigValue =>
   typeof value === "string" || typeof value === "number" || typeof value === "boolean";
 
 const isSchemaObject = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
 
-const readProviderFields = (provider?: LLMProviderDescriptor): ProviderConfigField[] => {
-  const properties = provider?.configSchema.properties;
+const readProviderFields = (provider?: ProviderDescriptor): ProviderConfigField[] => {
+  const schema = isSchemaObject(provider?.configSchema) ? provider.configSchema : undefined;
+  const properties = isSchemaObject(schema?.["properties"]) ? schema["properties"] : undefined;
   if (!properties) return [];
 
-  const required = new Set(provider.configSchema.required ?? []);
+  const required = new Set(
+    Array.isArray(schema?.["required"])
+      ? schema["required"].filter((key): key is string => typeof key === "string")
+      : []
+  );
   return Object.entries(properties).flatMap(([key, rawSchema]) => {
     if (!isSchemaObject(rawSchema)) return [];
 
@@ -111,14 +116,18 @@ const readProviderFields = (provider?: LLMProviderDescriptor): ProviderConfigFie
 };
 
 const readUnsupportedRequiredFields = (
-  provider: undefined | LLMProviderDescriptor,
+  provider: undefined | ProviderDescriptor,
   fields: ProviderConfigField[]
 ) => {
   const supported = new Set(fields.map((field) => field.key));
-  return (provider?.configSchema.required ?? []).filter((key) => !supported.has(key));
+  const schema = isSchemaObject(provider?.configSchema) ? provider.configSchema : undefined;
+  const required = Array.isArray(schema?.["required"])
+    ? schema["required"].filter((key): key is string => typeof key === "string")
+    : [];
+  return required.filter((key) => !supported.has(key));
 };
 
-const createDefaultConfig = (provider?: LLMProviderDescriptor): LLMProviderConfigInput => {
+const createDefaultConfig = (provider?: ProviderDescriptor): ProviderFormValues => {
   return Object.fromEntries(
     readProviderFields(provider).map((field) => {
       const value =
@@ -128,19 +137,25 @@ const createDefaultConfig = (provider?: LLMProviderDescriptor): LLMProviderConfi
   );
 };
 
-const createDefaultForm = (provider?: LLMProviderDescriptor): AgentConfigForm => ({
+const createDefaultForm = (provider?: ProviderDescriptor): AgentConfigForm => ({
   name: provider?.label ?? "",
   provider: provider?.id ?? "",
   config: createDefaultConfig(provider)
 });
 
 const createEditForm = (
-  provider: Undefinable<LLMProviderDescriptor>,
-  snapshot: AIProviderConfigSnapshot
+  provider: Undefinable<ProviderDescriptor>,
+  snapshot: ProviderConfigView
 ): AgentConfigForm => {
   const defaults = createDefaultConfig(provider);
   const fields = readProviderFields(provider);
-  const snapshotConfig = snapshot.config as unknown as LLMProviderConfigInput;
+  const snapshotConfig: ProviderFormValues = {
+    model: snapshot.model,
+    apiKey: "",
+    contextSize: snapshot.contextSize,
+    thinking: snapshot.thinking,
+    ...(snapshot.baseUrl ? { baseUrl: snapshot.baseUrl } : {})
+  };
   return {
     name: snapshot.name,
     provider: snapshot.provider,
@@ -153,13 +168,13 @@ const createEditForm = (
   };
 };
 
-const isEmptyFieldValue = (value: undefined | LLMProviderConfigValue) =>
+const isEmptyFieldValue = (value: undefined | ProviderConfigValue) =>
   value === undefined || (typeof value === "string" && !value.trim());
 
 const normalizeProviderConfig = (
   fields: ProviderConfigField[],
-  values: LLMProviderConfigInput
-): LLMProviderConfigInput => {
+  values: ProviderFormValues
+): ProviderFormValues => {
   return Object.fromEntries(
     fields.flatMap((field) => {
       const value = values[field.key];
@@ -173,9 +188,9 @@ const normalizeProviderConfig = (
   );
 };
 
-const enumValueKey = (value: LLMProviderConfigValue) => `${typeof value}:${String(value)}`;
+const enumValueKey = (value: ProviderConfigValue) => `${typeof value}:${String(value)}`;
 
-const enumValueLabel = (value: LLMProviderConfigValue) => {
+const enumValueLabel = (value: ProviderConfigValue) => {
   if (typeof value === "boolean") return value ? "启用" : "关闭";
   if (typeof value === "number") return String(value);
   return value
@@ -186,7 +201,7 @@ const enumValueLabel = (value: LLMProviderConfigValue) => {
 };
 
 const isWideProviderField = (field: ProviderConfigField) =>
-  field.key === "baseURL" ||
+  field.key === "baseUrl" ||
   (field.type === "string" && field.key !== "model" && !field.enumValues?.length);
 
 export function createAgentConfigModal(props: AgentConfigModalProps): ModalRender {
@@ -255,7 +270,7 @@ const AgentConfigFormContent: FC<AgentConfigModalProps> = ({
     setForm(createDefaultForm(provider));
   };
 
-  const updateConfigValue = (key: string, value: LLMProviderConfigValue) => {
+  const updateConfigValue = (key: string, value: ProviderConfigValue) => {
     setForm((current) => ({
       ...current,
       config: { ...current.config, [key]: value }
@@ -263,9 +278,7 @@ const AgentConfigFormContent: FC<AgentConfigModalProps> = ({
   };
 
   const credentialFields = fields.filter((field) => field.writeOnly);
-  const advancedFields = fields.filter((field) =>
-    ["contextWindowTokens", "timeoutMs"].includes(field.key)
-  );
+  const advancedFields = fields.filter((field) => ["contextSize", "thinking"].includes(field.key));
   const primaryFields = fields.filter(
     (field) => !field.writeOnly && !advancedFields.includes(field)
   );
@@ -276,13 +289,23 @@ const AgentConfigFormContent: FC<AgentConfigModalProps> = ({
 
     setSaving(true);
     try {
-      const payload = {
+      const values = normalizeProviderConfig(fields, form.config);
+      const payload: ProviderConfigInput = {
         name: form.name.trim(),
         provider: selectedProvider.id,
-        config: normalizeProviderConfig(fields, form.config)
+        model: String(values["model"] ?? "").trim(),
+        apiKey: String(values["apiKey"] ?? ""),
+        contextSize: String(values["contextSize"] ?? "128K").trim(),
+        default: initialConfig?.default ?? false,
+        thinking: values["thinking"] === true,
+        ...(typeof values["baseUrl"] === "string" && values["baseUrl"].trim()
+          ? { baseUrl: values["baseUrl"].trim() }
+          : {}),
+        ...(initialConfig?.headers ? { headers: initialConfig.headers } : {}),
+        ...(initialConfig?.other !== undefined ? { other: initialConfig.other } : {})
       };
       const result = initialConfig
-        ? await RendererAgent.updateConfig({ id: initialConfig.id, ...payload })
+        ? await RendererAgent.updateConfig({ id: initialConfig.id, config: payload })
         : await RendererAgent.createConfig(payload);
       if (!result.ok) {
         AppToast.show({ type: "error", text: result.reason.message });
@@ -350,9 +373,6 @@ const AgentConfigFormContent: FC<AgentConfigModalProps> = ({
                   field={field}
                   value={form.config[field.key]}
                   onChange={(value) => updateConfigValue(field.key, value)}
-                  model={
-                    typeof form.config["model"] === "string" ? form.config["model"] : undefined
-                  }
                 />
               </div>
             ))}
@@ -373,7 +393,6 @@ const AgentConfigFormContent: FC<AgentConfigModalProps> = ({
               field={field}
               editing={editing}
               value={form.config[field.key]}
-              model={typeof form.config["model"] === "string" ? form.config["model"] : undefined}
               onChange={(value) => updateConfigValue(field.key, value)}
             />
           ))}
@@ -393,7 +412,6 @@ const AgentConfigFormContent: FC<AgentConfigModalProps> = ({
                 key={field.key}
                 field={field}
                 value={form.config[field.key]}
-                model={typeof form.config["model"] === "string" ? form.config["model"] : undefined}
                 onChange={(value) => updateConfigValue(field.key, value)}
               />
             ))}
@@ -410,7 +428,7 @@ const AgentConfigFormContent: FC<AgentConfigModalProps> = ({
       <div className="sticky -bottom-4 z-10 -mx-1 flex items-center justify-between gap-3 border-t border-white/8 bg-black/35 px-1 pt-3 pb-0.5 backdrop-blur-xl">
         <div className="flex min-w-0 items-center gap-1.5 text-[9px] text-white/30">
           <KeyRound className="size-3.5 shrink-0" />
-          <span className="truncate">保存前会先验证连接</span>
+          <span className="truncate">凭据由 Rust Agent 加密保存</span>
         </div>
         <div className="flex shrink-0 items-center gap-1.5">
           <button
@@ -429,7 +447,7 @@ const AgentConfigFormContent: FC<AgentConfigModalProps> = ({
             type="submit"
             disabled={disabled}>
             <Check className="size-3.5" />
-            {saving ? "验证中…" : editing ? "验证并保存" : "验证并添加"}
+            {saving ? "保存中…" : editing ? "保存更改" : "添加配置"}
           </button>
         </div>
       </div>
@@ -441,7 +459,6 @@ const AgentConfigFormContent: FC<AgentConfigModalProps> = ({
 const ProviderFieldControl: FC<ProviderFieldControlProps> = ({
   onChange,
   field,
-  model,
   value,
   editing
 }) => {
@@ -498,16 +515,9 @@ const ProviderFieldControl: FC<ProviderFieldControlProps> = ({
 
   const numeric = field.type === "number" || field.type === "integer";
   const example = field.examples[0];
-  const automaticContextTokens =
-    field.key === "contextWindowTokens" && model?.trim()
-      ? resolveLLMContextWindowTokens(model)
-      : undefined;
-  const description = automaticContextTokens
-    ? `${field.description ? `${field.description} ` : ""}留空时根据当前模型自动使用 ${automaticContextTokens.toLocaleString("zh-CN")} tokens。`
-    : field.description;
   const inputType = field.writeOnly || field.format === "password" ? "password" : "text";
   return (
-    <FieldLabel title={field.title} description={description} required={field.required}>
+    <FieldLabel title={field.title} required={field.required} description={field.description}>
       <input
         className={inputClassName}
         type={inputType}
@@ -522,11 +532,9 @@ const ProviderFieldControl: FC<ProviderFieldControlProps> = ({
         placeholder={
           editing && field.writeOnly
             ? "留空保留当前密钥"
-            : automaticContextTokens
-              ? `自动：${automaticContextTokens.toLocaleString("zh-CN")} tokens`
-              : example === undefined
-                ? `输入${field.title}`
-                : String(example)
+            : example === undefined
+              ? `输入${field.title}`
+              : String(example)
         }
       />
     </FieldLabel>

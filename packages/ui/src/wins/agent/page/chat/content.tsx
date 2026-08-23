@@ -25,14 +25,16 @@ import RendererImageConstants from "@/common/constants/image";
 import NeteaseImage from "@/common/components/display/image/netease-image";
 import type { LucideIcon } from "lucide-react";
 import type { MessageData } from "@mahiru/ipc/types";
-import type { LLMMessageText, LLMConversationSnapshot } from "@mahiru/ai";
+import type { ThreadSnapshot, MessageSnapshot } from "@mahiru/agent/browser";
 
 import ToolStep from "./tool-step";
+import ThinkContent from "./think-content";
+import { parseAgentTurnUsage } from "./observability";
 import { RunTerminalCard } from "./turn-observability";
 import ContentItem, { AssistantTurnGroup } from "./content-item";
-import { readRunTerminal, readAssistantTurn } from "./observability";
 import type {
   AgentRunTerminal,
+  AgentLiveReasoning,
   AgentLiveTimelineItem,
   AgentToolTimelineItem,
   AgentAssistantTurnObservability
@@ -43,13 +45,20 @@ type ChatMessageTimelineItem = {
   runID?: string;
   type: "message";
   streaming?: boolean;
-  message: LLMMessageText;
   assistantTurn?: AgentAssistantTurnObservability;
+  message: Pick<MessageSnapshot, "role" | "content">;
 };
 
-type ChatTimelineItem = AgentRunTerminal | AgentToolTimelineItem | ChatMessageTimelineItem;
+type ChatTimelineItem =
+  | AgentRunTerminal
+  | AgentLiveReasoning
+  | AgentToolTimelineItem
+  | ChatMessageTimelineItem;
 
-type AssistantContentTimelineItem = AgentToolTimelineItem | ChatMessageTimelineItem;
+type AssistantContentTimelineItem =
+  | AgentLiveReasoning
+  | AgentToolTimelineItem
+  | ChatMessageTimelineItem;
 
 type AssistantTimelineItem = AgentRunTerminal | AssistantContentTimelineItem;
 
@@ -71,7 +80,7 @@ interface ChatContentProps {
   hasConversation: boolean;
   pendingUserMessage: string;
   liveTimeline: AgentLiveTimelineItem[];
-  conversation: Nullable<LLMConversationSnapshot>;
+  conversation: Nullable<ThreadSnapshot>;
   onCreateConfig: NormalFunc;
   onCreateConversation: NormalFunc;
   onSubmitPrompt: NormalFunc<[text: string], Promise<boolean>>;
@@ -101,13 +110,16 @@ const ChatContent: FC<ChatContentProps> = ({
   const currentTrack = trackMetaBus.data?.track;
   const lastLiveItem = liveTimeline.at(-1);
   const waitingForModel =
-    running && !recovering && !(lastLiveItem?.type === "tool" && lastLiveItem.status === "running");
+    running &&
+    !recovering &&
+    !(lastLiveItem?.type === "tool" && lastLiveItem.status === "running") &&
+    !(lastLiveItem?.type === "reasoning" && lastLiveItem.status === "streaming");
   const timeline = useMemo(() => {
     const liveItems = buildLiveTimeline(liveTimeline, streamText, waitingForModel, runningRunID);
     const liveItemIDs = new Set(liveItems.map((item) => item.id));
     const items = buildTimeline(conversation).filter((item) => !liveItemIDs.has(item.id));
     const pendingMessageAlreadyPersisted =
-      !!runningRunID && conversation?.runtime?.runID === runningRunID;
+      !!runningRunID && conversation?.runtime.runId === runningRunID;
     if (pendingUserMessage && !pendingMessageAlreadyPersisted) {
       items.push({
         id: `pending-user-${runningRunID || "message"}`,
@@ -240,7 +252,9 @@ const renderTimelineItem = (item: ChatRenderableTimelineItem) => {
     const assistantTurn = terminalHasUsage ? undefined : findLastAssistantTurn(item.items);
     const copyItemIndex = findLastCopyableMessageIndex(item.items);
     const streaming = item.items.some(
-      (candidate) => candidate.type === "message" && candidate.streaming
+      (candidate) =>
+        (candidate.type === "message" && candidate.streaming) ||
+        (candidate.type === "reasoning" && candidate.status === "streaming")
     );
     return (
       <AssistantTurnGroup
@@ -270,9 +284,29 @@ const renderTimelineItem = (item: ChatRenderableTimelineItem) => {
               />
             );
           }
+          if (child.type === "reasoning") {
+            return (
+              <ThinkContent
+                key={child.id}
+                content={child.text}
+                closed={child.status === "done"}
+                streaming={child.status === "streaming"}
+              />
+            );
+          }
           return <RunTerminalCard key={child.id} terminal={child} />;
         })}
       </AssistantTurnGroup>
+    );
+  }
+  if (item.type === "reasoning") {
+    return (
+      <ThinkContent
+        key={item.id}
+        content={item.text}
+        closed={item.status === "done"}
+        streaming={item.status === "streaming"}
+      />
     );
   }
   if (item.type === "message") {
@@ -292,7 +326,8 @@ const renderTimelineItem = (item: ChatRenderableTimelineItem) => {
 const findLastAssistantTurn = (items: AssistantTimelineItem[]) => {
   for (let index = items.length - 1; index >= 0; index--) {
     const item = items[index];
-    if (item && item.type !== "terminal" && item.assistantTurn) return item.assistantTurn;
+    if (item?.type === "message" && item.assistantTurn) return item.assistantTurn;
+    if (item?.type === "tool" && item.assistantTurn) return item.assistantTurn;
   }
   return undefined;
 };
@@ -495,32 +530,48 @@ const PrimaryAction: FC<{
   </button>
 );
 
-const buildTimeline = (conversation: Nullable<LLMConversationSnapshot>): ChatTimelineItem[] => {
+const buildTimeline = (conversation: Nullable<ThreadSnapshot>): ChatTimelineItem[] => {
   const items: ChatTimelineItem[] = [];
   const consumed = new Set<number>();
   const messages = conversation?.messages ?? [];
-  const terminal = readRunTerminal(conversation);
 
   for (let index = 0; index < messages.length; index++) {
     if (consumed.has(index)) continue;
 
     const message = messages[index];
     if (!message) continue;
-    const assistantTurn =
-      message.role === "assistant" ? readAssistantTurn(conversation, index, message) : undefined;
-    const assistantItemPrefix = assistantTurn?.runID
-      ? `${assistantTurn.runID}-${assistantTurn.step}`
-      : `assistant-${index}`;
-    if (message.role === "tool") {
+    if (message.role === "inner") {
+      if (message.innerType === "usage") {
+        const parsed = parseStoredTurnUsage(message.content);
+        if (parsed) attachTurnUsage(items, parsed);
+      }
+      continue;
+    }
+    if (message.role === "system") continue;
+    const assistantItemPrefix = `assistant-${index}`;
+
+    if (message.role === "assistant" && message.reasoningContent?.trim()) {
       items.push({
-        id: `tool-result-${index}-${message.callID}`,
+        id: `${assistantItemPrefix}-reasoning`,
+        type: "reasoning",
+        status: "done",
+        step: index + 1,
+        messageID: `${assistantItemPrefix}-reasoning`,
+        text: message.reasoningContent
+      });
+    }
+
+    if (message.role === "tool") {
+      const callID = message.toolCallId ?? `unknown-${index}`;
+      items.push({
+        id: `tool-result-${index}-${callID}`,
         type: "tool",
         status: "done",
         toolCalls: [],
         toolResults: [
           {
-            name: message.name,
-            callID: message.callID,
+            name: "tool",
+            callID,
             output: message.content
           }
         ]
@@ -528,51 +579,52 @@ const buildTimeline = (conversation: Nullable<LLMConversationSnapshot>): ChatTim
       continue;
     }
 
-    if (message.role === "assistant" && "toolCalls" in message) {
+    if (message.role === "assistant" && message.toolCalls?.length) {
       if (message.content) {
         items.push({
           id: `${assistantItemPrefix}-assistant`,
           type: "message",
-          message: { role: "assistant", content: message.content ?? "" },
-          ...(assistantTurn?.runID ? { runID: assistantTurn.runID } : {}),
-          ...(assistantTurn ? { assistantTurn } : {})
+          message: { role: "assistant", content: message.content ?? "" }
         });
       }
 
-      const callIDs = new Set(message.toolCalls.map((call) => call.callID));
+      const calls = message.toolCalls.map((call) => ({
+        name: call.name,
+        callID: call.id,
+        arguments: JSON.stringify(call.args)
+      }));
+      const callIDs = new Set(calls.map((call) => call.callID));
       const toolResultsByCallID = new Map<
         string,
         { name: string; callID: string; output: string }
       >();
       messages.slice(index + 1).forEach((candidate, offset) => {
-        if (candidate.role !== "tool" || !callIDs.has(candidate.callID)) return;
+        const callID = candidate.toolCallId;
+        if (candidate.role !== "tool" || !callID || !callIDs.has(callID)) return;
         consumed.add(index + offset + 1);
-        toolResultsByCallID.set(candidate.callID, {
-          name: candidate.name,
-          callID: candidate.callID,
+        const call = calls.find((item) => item.callID === callID);
+        toolResultsByCallID.set(callID, {
+          name: call?.name ?? "tool",
+          callID,
           output: candidate.content
         });
       });
-      const toolResults = message.toolCalls.flatMap((call) => {
+      const toolResults = calls.flatMap((call) => {
         const result = toolResultsByCallID.get(call.callID);
         return result ? [result] : [];
       });
-      const allToolCallsResolved = message.toolCalls.every((call) =>
-        toolResultsByCallID.has(call.callID)
-      );
+      const allToolCallsResolved = calls.every((call) => toolResultsByCallID.has(call.callID));
 
       items.push({
         id: `${assistantItemPrefix}-tool`,
         type: "tool",
         status: allToolCallsResolved
           ? "done"
-          : terminal || assistantTurn?.status === "incomplete"
+          : conversation?.runtime.status === "failed"
             ? "error"
             : "running",
-        toolCalls: message.toolCalls,
-        toolResults,
-        ...(assistantTurn?.runID ? { runID: assistantTurn.runID } : {}),
-        ...(!message.content && assistantTurn ? { assistantTurn } : {})
+        toolCalls: calls,
+        toolResults
       });
       continue;
     }
@@ -583,15 +635,43 @@ const buildTimeline = (conversation: Nullable<LLMConversationSnapshot>): ChatTim
           ? `${assistantItemPrefix}-assistant`
           : `${message.role}-${index}`,
       type: "message",
-      message: message as LLMMessageText,
-      ...(assistantTurn?.runID ? { runID: assistantTurn.runID } : {}),
-      ...(assistantTurn ? { assistantTurn } : {})
+      message: { role: message.role, content: message.content }
     });
   }
 
-  if (terminal) items.push(terminal);
-
   return items;
+};
+
+const parseStoredTurnUsage = (content: string) => {
+  try {
+    return parseAgentTurnUsage(JSON.parse(content) as unknown);
+  } catch {
+    return undefined;
+  }
+};
+
+const attachTurnUsage = (
+  items: ChatTimelineItem[],
+  turn: Pick<AgentAssistantTurnObservability, "step" | "usage">
+) => {
+  for (let index = items.length - 1; index >= 0; index--) {
+    const item = items[index];
+    if (!item || (item.type === "message" && item.message.role === "user")) return;
+    if (item.type === "terminal") {
+      items[index] = { ...item, usage: turn.usage };
+      return;
+    }
+    if (item.type === "message" || item.type === "tool") {
+      items[index] = {
+        ...item,
+        assistantTurn: {
+          ...turn,
+          status: "complete"
+        }
+      };
+      return;
+    }
+  }
 };
 
 const buildLiveTimeline = (
@@ -652,7 +732,7 @@ const groupAssistantTimeline = (items: ChatTimelineItem[]): ChatRenderableTimeli
       continue;
     }
 
-    const runID = item.runID ?? item.assistantTurn?.runID;
+    const runID = item.runID ?? (item.type === "reasoning" ? undefined : item.assistantTurn?.runID);
     const belongsToActiveGroup =
       !!activeGroup && (runID ? activeGroup.runID === runID : activeGroup.runID === undefined);
     if (belongsToActiveGroup && activeGroup) {
@@ -675,6 +755,8 @@ const groupAssistantTimeline = (items: ChatTimelineItem[]): ChatRenderableTimeli
 const isAssistantContentTimelineItem = (
   item: ChatTimelineItem
 ): item is AssistantContentTimelineItem =>
-  item.type === "tool" || (item.type === "message" && item.message.role === "assistant");
+  item.type === "reasoning" ||
+  item.type === "tool" ||
+  (item.type === "message" && item.message.role === "assistant");
 
 export default memo(ChatContent);

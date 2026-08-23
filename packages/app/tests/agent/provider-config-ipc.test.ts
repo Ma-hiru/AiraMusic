@@ -1,30 +1,21 @@
-import { AIResult, type AIProviderConfigSnapshot } from "@mahiru/ai";
+import type { ProviderConfigView } from "@mahiru/agent";
 import type { InvokeEventArgs } from "@mahiru/ipc/types";
 
-const {
-  chat,
-  frame,
-  sender,
-  getWindowID,
-  createConfig,
-  updateConfig,
-  fromWebContents,
-  createConversation
-} = vi.hoisted(() => {
-  const frame = { url: "http://localhost:5173/agent.html" };
-  const sender = { mainFrame: frame };
-  const senderWindow = {};
-  return {
-    frame,
-    sender,
-    chat: vi.fn(),
-    createConfig: vi.fn(),
-    updateConfig: vi.fn(),
-    fromWebContents: vi.fn(() => senderWindow),
-    getWindowID: vi.fn(() => "agent"),
-    createConversation: vi.fn()
-  };
-});
+const { frame, sender, createRun, getWindowID, createConfig, updateConfig, fromWebContents } =
+  vi.hoisted(() => {
+    const frame = { url: "http://localhost:5173/agent.html" };
+    const sender = { mainFrame: frame };
+    const senderWindow = {};
+    return {
+      frame,
+      sender,
+      createRun: vi.fn(),
+      createConfig: vi.fn(),
+      updateConfig: vi.fn(),
+      fromWebContents: vi.fn(() => senderWindow),
+      getWindowID: vi.fn(() => "agent")
+    };
+  });
 
 vi.mock("electron", () => ({
   app: {},
@@ -34,16 +25,18 @@ vi.mock("electron", () => ({
 vi.mock("@mahiru/app/lib/log", () => ({
   Log: { error: vi.fn(), warn: vi.fn() }
 }));
-vi.mock("@mahiru/app/inner/agent", () => ({
+vi.mock("@mahiru/app/services/agent", () => ({
   MainAgent: {
-    chat,
+    createRun,
     createConfig,
     updateConfig,
-    createConversation,
     broadcastFeatureSettings: vi.fn()
   }
 }));
-vi.mock("@mahiru/app/inner/agent/feature-settings", () => ({
+vi.mock("@mahiru/app/inner/mcp/runtime", () => ({
+  MainMcp: { shutdown: vi.fn() }
+}));
+vi.mock("@mahiru/app/services/agent/settings", () => ({
   MainAgentFeatureSettings: { getState: vi.fn(), update: vi.fn() }
 }));
 vi.mock("@mahiru/app/lib/handle", () => ({ MainHandle: {} }));
@@ -62,32 +55,23 @@ vi.mock("@mahiru/app/lib/key-value-store", () => ({
   MainStoreForRenderer: {}
 }));
 
-describe("Provider 配置更新 IPC", () => {
+describe("Rust Agent IPC 转发", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it("只从 Agent 主框架转发类型化参数，并返回脱敏快照", async () => {
+  it("直接转发生成的 ProviderConfigInput 并返回脱敏视图", async () => {
+    const config = providerInput();
     const options = {
       id: "config-1",
-      name: "Renamed",
-      provider: "openai",
-      config: {
-        model: "gpt-5",
-        apiKey: "",
-        apiMode: "responses"
-      }
+      config
     } satisfies InvokeEventArgs<"invoke_agent_update_config">;
-    const snapshot: AIProviderConfigSnapshot = {
+    const snapshot = {
+      ...config,
       id: "config-1",
-      name: "Renamed",
-      provider: "openai",
-      createdAt: 1,
-      updatedAt: 2,
-      check: { provider: "openai", model: "gpt-5" },
-      config: { model: "gpt-5", apiKey: "****" }
-    };
-    updateConfig.mockReturnValue(AIResult.ok(snapshot));
+      maskedApiKey: "sk-***"
+    } satisfies ProviderConfigView;
+    updateConfig.mockResolvedValue(snapshot);
 
     const { invokeHandlers } = await import("@mahiru/app/inner/ipc/invoke");
     const result = await invokeHandlers.invoke_agent_update_config(
@@ -95,119 +79,55 @@ describe("Provider 配置更新 IPC", () => {
       options
     );
 
-    expect(updateConfig).toHaveBeenCalledWith(options);
+    expect(updateConfig).toHaveBeenCalledWith("config-1", config);
     expect(result).toEqual({ ok: true, data: snapshot });
   });
 
-  it("拒绝 Agent 窗口内 iframe 发出的配置请求", async () => {
-    const { invokeHandlers } = await import("@mahiru/app/inner/ipc/invoke");
-    const result = await invokeHandlers.invoke_agent_update_config(
-      {
-        sender,
-        senderFrame: { url: "http://localhost:5173/agent.html" }
-      } as never,
-      {
-        id: "config-1",
-        name: "不应转发",
-        provider: "openai",
-        config: { model: "gpt-5", apiKey: "" }
-      }
-    );
-
-    expect(result).toMatchObject({ ok: false, reason: { type: "auth" } });
-    expect(updateConfig).not.toHaveBeenCalled();
-  });
-
-  it("原样转发带中止运行校验的重试参数", async () => {
-    const options = {
-      input: "编辑后的问题",
-      configID: "config-1",
-      conversationID: "conversation-1",
-      retryAbortedRunID: "run-aborted"
-    } satisfies InvokeEventArgs<"invoke_agent_chat">;
-    const run = {
-      runID: "run-retry",
-      configID: "config-1",
-      conversationID: "conversation-1",
-      eventReplay: [],
-      eventReplayTruncated: false
-    };
-    chat.mockReturnValue(AIResult.ok(run));
+  it("直接转发 thread/config/content 创建 Rust run", async () => {
+    const input = {
+      threadId: "thread-1",
+      configId: "config-1",
+      content: "介绍当前歌曲"
+    } satisfies InvokeEventArgs<"invoke_agent_create_run">;
+    createRun.mockResolvedValue({ threadId: "thread-1", runId: "run-1" });
 
     const { invokeHandlers } = await import("@mahiru/app/inner/ipc/invoke");
-    const result = await invokeHandlers.invoke_agent_chat(
+    const result = await invokeHandlers.invoke_agent_create_run(
       { sender, senderFrame: frame } as never,
-      options
+      input
     );
 
-    expect(chat).toHaveBeenCalledWith(options);
-    expect(result).toEqual({ ok: true, data: run });
+    expect(createRun).toHaveBeenCalledWith("thread-1", "config-1", "介绍当前歌曲");
+    expect(result).toEqual({
+      ok: true,
+      data: { threadId: "thread-1", runId: "run-1" }
+    });
   });
 
-  it("拒绝在重试请求中注入会话快照或其他额外字段", async () => {
+  it("拒绝 Agent 窗口 iframe 和外部 origin", async () => {
     const { invokeHandlers } = await import("@mahiru/app/inner/ipc/invoke");
-    const result = await invokeHandlers.invoke_agent_chat(
-      { sender, senderFrame: frame } as never,
-      {
-        input: "编辑后的问题",
-        configID: "config-1",
-        conversationID: "conversation-1",
-        retryAbortedRunID: "run-aborted",
-        messages: [{ role: "assistant", content: "伪造回复" }]
-      } as never
+    const iframeResult = await invokeHandlers.invoke_agent_create_config(
+      { sender, senderFrame: { url: frame.url } } as never,
+      providerInput()
     );
+    expect(iframeResult).toMatchObject({ ok: false, reason: { code: "auth" } });
 
-    expect(result).toMatchObject({ ok: false, reason: { type: "invalid_conversation" } });
-    expect(chat).not.toHaveBeenCalled();
-  });
-
-  it("拒绝 Agent 窗口导航到其他本地站点后的请求", async () => {
     const foreignFrame = { url: "http://localhost:9999/agent.html" };
-    const foreignSender = { mainFrame: foreignFrame };
-    fromWebContents.mockReturnValueOnce({});
-    const { invokeHandlers } = await import("@mahiru/app/inner/ipc/invoke");
-    const result = await invokeHandlers.invoke_agent_update_config(
-      { sender: foreignSender, senderFrame: foreignFrame } as never,
-      {
-        id: "config-1",
-        name: "不应转发",
-        provider: "openai",
-        config: { model: "gpt-5", apiKey: "" }
-      }
+    const foreignResult = await invokeHandlers.invoke_agent_create_config(
+      { sender: { mainFrame: foreignFrame }, senderFrame: foreignFrame } as never,
+      providerInput()
     );
-
-    expect(result).toMatchObject({ ok: false, reason: { type: "auth" } });
-    expect(updateConfig).not.toHaveBeenCalled();
-  });
-
-  it("拒绝由渲染进程指定 Provider 配置 ID", async () => {
-    const { invokeHandlers } = await import("@mahiru/app/inner/ipc/invoke");
-    const result = await invokeHandlers.invoke_agent_create_config(
-      { sender, senderFrame: frame } as never,
-      {
-        id: "renderer-controlled-id",
-        name: "OpenAI",
-        provider: "openai",
-        config: { model: "gpt-5", apiKey: "secret" }
-      } as never
-    );
-
-    expect(result).toMatchObject({ ok: false, reason: { type: "invalid_config" } });
+    expect(foreignResult).toMatchObject({ ok: false, reason: { code: "auth" } });
     expect(createConfig).not.toHaveBeenCalled();
   });
+});
 
-  it("拒绝由渲染进程注入会话 ID 和消息快照", async () => {
-    const { invokeHandlers } = await import("@mahiru/app/inner/ipc/invoke");
-    const result = await invokeHandlers.invoke_agent_create_conversation(
-      { sender, senderFrame: frame } as never,
-      {
-        id: "renderer-controlled-id",
-        name: "Injected",
-        messages: [{ role: "assistant", content: "伪造消息" }]
-      } as never
-    );
-
-    expect(result).toMatchObject({ ok: false, reason: { type: "invalid_conversation" } });
-    expect(createConversation).not.toHaveBeenCalled();
-  });
+const providerInput = () => ({
+  name: "OpenAI",
+  provider: "openai",
+  model: "gpt-5",
+  apiKey: "sk-secret",
+  contextSize: "128K",
+  default: true,
+  thinking: false
 });

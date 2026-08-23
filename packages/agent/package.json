@@ -1,0 +1,45 @@
+{
+  "name": "@mahiru/agent",
+  "type": "module",
+  "version": "1.0.0",
+  "types": "dist/index.d.ts",
+  "main": "index.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./index.ts",
+      "default": "./index.ts"
+    },
+    "./browser": {
+      "types": "./dist/browser.d.ts",
+      "import": "./browser.ts",
+      "default": "./browser.ts"
+    }
+  },
+  "files": [
+    "agent",
+    "agent.exe",
+    "dist",
+    "generated",
+    "browser.ts",
+    "index.ts"
+  ],
+  "scripts": {
+    "build": "cargo build --release && cargo test --lib && tsc -b && tsx scripts/copy.ts",
+    "clean:dist": "rimraf dist agent agent.exe",
+    "clean:cargo": "cargo clean",
+    "lint": "cargo fmt && cargo clippy --all-targets -- -D warnings",
+    "lint:check": "cargo fmt --check && cargo clippy --all-targets -- -D warnings",
+    "test": "cargo test && vitest run --config vitest.config.ts"
+  },
+  "dependencies": {
+    "@ag-ui/core": "0.0.58",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "rimraf": "^6.1.0",
+    "tsx": "^4.23.12",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.5"
+  }
+}

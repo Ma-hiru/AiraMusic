@@ -10,6 +10,6 @@
     "types": ["node"],
     "outDir": "dist-types"
   },
-  "references": [{ "path": "../log/tsconfig.json" }, { "path": "../ai/tsconfig.json" }],
+  "references": [{ "path": "../log/tsconfig.json" }, { "path": "../agent/tsconfig.json" }],
   "include": ["../../types/**/*", "."]
 }

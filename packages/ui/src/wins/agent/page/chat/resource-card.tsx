@@ -23,8 +23,8 @@ import {
 } from "lucide-react";
 import { NeteaseImageSize } from "@/common/enum";
 import { RendererFormat } from "@/common/lib/format";
-import { resolveAiraResourceAction } from "@mahiru/ai";
 import { NeteaseNetworkImage } from "@/common/netease/models";
+import { resolveAiraResourceAction } from "@mahiru/agent/browser";
 import {
   NeteaseServicesAlbum,
   NeteaseServicesTrack,
@@ -32,7 +32,7 @@ import {
   NeteaseServicesPlaylist
 } from "@/common/netease/services";
 import NeteaseImage from "@/common/components/display/image/netease-image";
-import type { AiraResourceCard, AiraResourceAction } from "@mahiru/ai";
+import type { AiraResourceCard, AiraResourceAction } from "@mahiru/agent/browser";
 
 import { getAiraResourceLabel, runAiraResourceAction } from "./resource-actions";
 

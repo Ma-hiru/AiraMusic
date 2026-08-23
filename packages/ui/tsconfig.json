@@ -16,6 +16,7 @@
   },
   "references": [
     { "path": "../log/tsconfig.json" },
+    { "path": "../agent/tsconfig.json" },
     { "path": "../ipc/tsconfig.json" },
     { "path": "../wasm/tsconfig.json" }
   ],

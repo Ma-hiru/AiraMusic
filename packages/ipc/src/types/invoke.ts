@@ -1,32 +1,24 @@
 import type {
-  AIAgentChatOptions,
-  LLMProviderDescriptor,
-  LLMProviderConfigInput,
-  LLMConversationSnapshot,
-  AIProviderConfigSnapshot,
-  AIAgentRunningRunSnapshot,
-  AIAgentUpdateConfigOptions,
-  AIAgentCreateConversationResult
-} from "@mahiru/ai";
+  RunAccepted,
+  ThreadSummary,
+  ThreadSnapshot,
+  ProviderConfigView,
+  ProviderDescriptor,
+  ProviderConfigInput
+} from "@mahiru/agent";
 
-import type { AgentInvokeResult, AgentConversationSummary } from "./agent";
+import type { AgentInvokeResult } from "./agent";
 
-export type AgentProviderConfigCreateInput = {
-  name: string;
-  provider: string;
-  config: LLMProviderConfigInput;
-};
-
-/** Agent 对话请求；retryAbortedRunID 存在时只允许替换最近一次中止运行。 */
-export type AgentChatInput = AIAgentChatOptions;
-
-export type AgentConversationCreateInput = {
-  name?: string;
+export type AgentCreateRunInput = {
+  content: string;
+  configId: string;
+  threadId: string;
 };
 
 export type AgentProviderConfigUpdateInput = {
-  config: LLMProviderConfigInput;
-} & Omit<AIAgentUpdateConfigOptions, "config">;
+  id: string;
+  config: ProviderConfigInput;
+};
 
 export type AgentFeatureSettingsConfig = {
   mcpPort: number;
@@ -39,6 +31,7 @@ export type AgentFeatureSettingsMcpTool = {
   name: string;
   label: string;
   description: string;
+  risk: "read" | "write" | "destructive";
 };
 
 export type AgentFeatureSettingsState = AgentFeatureSettingsConfig & {
@@ -95,38 +88,28 @@ export type InvokeEventMaps = {
     )
   ];
   // agent
-  invoke_agent_abort: [string, Promise<AgentInvokeResult<void>>];
-  invoke_agent_list_providers: [undefined, AgentInvokeResult<string[]>];
-  invoke_agent_remove_conversation: [string, Promise<AgentInvokeResult<void>>];
+  invoke_agent_cancel_run: [string, Promise<AgentInvokeResult<void>>];
+  invoke_agent_delete_thread: [string, Promise<AgentInvokeResult<void>>];
   invoke_store_delete: [string, { ok: true } | { ok: false; reason?: string }];
-  invoke_agent_list_runs: [undefined, AgentInvokeResult<AIAgentRunningRunSnapshot[]>];
-  invoke_agent_chat: [AgentChatInput, Promise<AgentInvokeResult<AIAgentRunningRunSnapshot>>];
+  invoke_agent_get_thread: [string, Promise<AgentInvokeResult<ThreadSnapshot>>];
+  invoke_agent_list_runs: [undefined, Promise<AgentInvokeResult<RunAccepted[]>>];
+  invoke_agent_list_threads: [undefined, Promise<AgentInvokeResult<ThreadSummary[]>>];
+  invoke_agent_create_run: [AgentCreateRunInput, Promise<AgentInvokeResult<RunAccepted>>];
+  invoke_agent_list_configs: [undefined, Promise<AgentInvokeResult<ProviderConfigView[]>>];
+  invoke_agent_list_providers: [undefined, Promise<AgentInvokeResult<ProviderDescriptor[]>>];
   invoke_agent_feature_settings_get: [undefined, AgentInvokeResult<AgentFeatureSettingsState>];
-  invoke_agent_list_configs: [undefined, Promise<AgentInvokeResult<AIProviderConfigSnapshot[]>>];
-  invoke_agent_list_provider_descriptors: [undefined, AgentInvokeResult<LLMProviderDescriptor[]>];
-  invoke_agent_list_conversations: [
-    undefined,
-    Promise<AgentInvokeResult<AgentConversationSummary[]>>
-  ];
-  invoke_agent_get_conversation: [
-    string,
-    Promise<AgentInvokeResult<Optional<LLMConversationSnapshot>>>
-  ];
-  invoke_agent_create_config: [
-    AgentProviderConfigCreateInput,
-    Promise<AgentInvokeResult<AIProviderConfigSnapshot>>
+  invoke_agent_create_config: [ProviderConfigInput, Promise<AgentInvokeResult<ProviderConfigView>>];
+  invoke_agent_create_thread: [
+    undefined | { name?: string },
+    Promise<AgentInvokeResult<ThreadSummary>>
   ];
   invoke_agent_update_config: [
     AgentProviderConfigUpdateInput,
-    Promise<AgentInvokeResult<AIProviderConfigSnapshot>>
+    Promise<AgentInvokeResult<ProviderConfigView>>
   ];
   invoke_agent_feature_settings_update: [
     AgentFeatureSettingsUpdateInput,
     Promise<AgentInvokeResult<AgentFeatureSettingsState>>
-  ];
-  invoke_agent_create_conversation: [
-    undefined | AgentConversationCreateInput,
-    Promise<AgentInvokeResult<AIAgentCreateConversationResult>>
   ];
 };
 

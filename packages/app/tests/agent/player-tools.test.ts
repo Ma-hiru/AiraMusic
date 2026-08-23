@@ -1,4 +1,4 @@
-import { createAgentToolCatalog } from "@mahiru/app/inner/agent/tool-catalog";
+import { createAgentToolCatalog } from "@mahiru/app/inner/mcp/tools/catalog";
 import {
   AgentToolPlayerMode,
   AgentToolPlayerSeek,
@@ -9,7 +9,7 @@ import {
   AgentToolPlayerQueueAdd,
   AgentToolPlaylistModify,
   AgentToolPlayerQueueRemove
-} from "@mahiru/app/inner/agent/tools";
+} from "@mahiru/app/inner/mcp/tools";
 
 vi.mock("electron", () => ({
   app: { isReady: () => false },
@@ -82,14 +82,7 @@ describe("Agent 播放器工具", () => {
     expect(fullCatalog.parallelSafeNames).not.toContain("agent-tool-player-queue-remove");
   });
 
-  it("按播放器意图路由新增工具，并区分本地与联网超时", () => {
-    const selected = createAgentToolCatalog(true).select("把这几首歌加入播放队列并开启随机播放");
-    const removeSelected = createAgentToolCatalog(true).select("从播放队列移除这几首歌");
-
-    expect(selected).toContain("agent-tool-player-queue-add");
-    expect(selected).not.toContain("agent-tool-player-queue-remove");
-    expect(selected).toContain("agent-tool-player-mode");
-    expect(removeSelected).toContain("agent-tool-player-queue-remove");
+  it("为 MCP 工具保留有界调用超时", () => {
     expect(getAgentToolTimeoutMs("agent-tool-player-queue-add")).toBe(30_000);
     expect(getAgentToolTimeoutMs("agent-tool-player-queue-remove")).toBe(5_000);
     expect(getAgentToolTimeoutMs("agent-tool-player-mode")).toBe(5_000);

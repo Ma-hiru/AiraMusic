@@ -9,3 +9,4 @@
 **/*.md
 **/*.schema.json
 yarn.lock
+packages/agent/generated/**/*.ts

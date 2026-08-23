@@ -3,7 +3,7 @@ import { Sparkles } from "lucide-react";
 import { memo, type FC, Fragment } from "react";
 import { useConversation } from "@/wins/agent/hooks/use-conversation";
 import Card from "@/common/components/layout/card";
-import type { AIProviderConfigSnapshot } from "@mahiru/ai";
+import type { ProviderConfigView } from "@mahiru/agent/browser";
 
 import ChatInput from "./input";
 import ChatContent from "./content";
@@ -15,13 +15,13 @@ interface ChatProps {
   conversationID: string;
   loadingConfigs?: boolean;
   selectedConfigID: string;
-  configs: AIProviderConfigSnapshot[];
-  activeConfig: Undefinable<AIProviderConfigSnapshot>;
+  configs: ProviderConfigView[];
+  activeConfig: Undefinable<ProviderConfigView>;
   onCreateConfig: NormalFunc;
   onRefreshConfigs: NormalFunc;
   onCreateConversation: NormalFunc;
   onSelectConfig: NormalFunc<[id: string]>;
-  onEditConfig: NormalFunc<[config: AIProviderConfigSnapshot]>;
+  onEditConfig: NormalFunc<[config: ProviderConfigView]>;
 }
 
 const Chat: FC<ChatProps> = ({
@@ -39,7 +39,6 @@ const Chat: FC<ChatProps> = ({
 }) => {
   const {
     abort,
-    retry,
     submit,
     sending,
     recovering,
@@ -47,7 +46,6 @@ const Chat: FC<ChatProps> = ({
     conversation,
     liveTimeline,
     runningRunID,
-    retryCandidate,
     pendingUserMessage
   } = useConversation(conversationID);
   const runningTool = [...liveTimeline]
@@ -120,10 +118,8 @@ const Chat: FC<ChatProps> = ({
           activeConfig={activeConfig}
           runningLabel={runningLabel}
           runningRunID={runningRunID}
-          retryCandidate={retryCandidate}
           selectedConversationID={conversationID}
           onAbort={abort}
-          onRetry={retry}
           onSubmit={submit}
         />
       </Fragment>
