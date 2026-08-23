@@ -1,4 +1,4 @@
-import type { AgentAssistantTurnObservability, AgentTokenUsage } from "../types";
+import type { AgentTokenUsage, AgentAssistantTurnObservability } from "../types";
 
 export const formatTokenCount = (value: number) => {
   if (value < 1_000) return String(value);

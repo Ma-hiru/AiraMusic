@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { it, vi, expect, describe, beforeEach } from "vitest";
 
 const mocks = vi.hoisted(() => {
   const values = new Map<string, unknown>();

@@ -7,9 +7,9 @@ import AppToast from "@/common/components/display/toast";
 import FormSelect, { type FormSelectOption } from "@/common/components/data-input/form-select";
 import type { ModalRender } from "@/common/components/display/modal/modal-provider";
 import type {
+  ProviderConfigView,
   ProviderDescriptor,
-  ProviderConfigInput,
-  ProviderConfigView
+  ProviderConfigInput
 } from "@mahiru/agent/browser";
 
 type ProviderConfigValue = number | string | boolean;
@@ -517,7 +517,7 @@ const ProviderFieldControl: FC<ProviderFieldControlProps> = ({
   const example = field.examples[0];
   const inputType = field.writeOnly || field.format === "password" ? "password" : "text";
   return (
-    <FieldLabel title={field.title} description={field.description} required={field.required}>
+    <FieldLabel title={field.title} required={field.required} description={field.description}>
       <input
         className={inputClassName}
         type={inputType}

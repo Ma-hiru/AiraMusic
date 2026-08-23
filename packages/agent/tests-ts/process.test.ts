@@ -1,5 +1,6 @@
 import { fileURLToPath } from "node:url";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { it, vi, expect, describe, afterEach } from "vitest";
+
 import { Agent } from "../index";
 
 const fixture = fileURLToPath(new URL("./fixtures/fake-agent.mjs", import.meta.url));

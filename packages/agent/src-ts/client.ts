@@ -1,16 +1,17 @@
 import type { AGUIEvent } from "@ag-ui/core";
+
+import { decodeAgentEvents } from "./sse";
 import type {
   ApiError,
-  CreateThreadRequest,
+  RunAccepted,
+  ThreadSummary,
   HealthResponse,
-  ProviderConfigInput,
+  ThreadSnapshot,
   ProviderConfigView,
   ProviderDescriptor,
-  RunAccepted,
-  ThreadSnapshot,
-  ThreadSummary
+  CreateThreadRequest,
+  ProviderConfigInput
 } from "./types";
-import { decodeAgentEvents } from "./sse";
 
 export class AgentRequestError extends Error {
   constructor(
@@ -132,9 +133,7 @@ async function readError(response: Response): Promise<ApiError> {
     return {
       code: typeof value.code === "string" ? value.code : "request_failed",
       message:
-        typeof value.message === "string"
-          ? value.message
-          : `Agent 请求失败 (${response.status})`
+        typeof value.message === "string" ? value.message : `Agent 请求失败 (${response.status})`
     };
   } catch {
     return { code: "request_failed", message: `Agent 请求失败 (${response.status})` };

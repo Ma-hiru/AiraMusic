@@ -4,9 +4,9 @@ import { X509Certificate } from "node:crypto";
 import { Log } from "@/lib/log";
 import { ipcInit } from "@/inner/ipc";
 import { MainTray } from "@/lib/tray";
-import { MainAgent } from "@/services/agent";
 import { MainServices } from "@/services";
 import { MainIPC } from "@mahiru/ipc/main";
+import { MainAgent } from "@/services/agent";
 import { MainMcp } from "@/inner/mcp/runtime";
 import { MainPathResolver } from "@/lib/path-resolver";
 import { MainWindowPreset } from "@/lib/window-preset";
@@ -197,9 +197,7 @@ export class MainApp {
    * */
   private async enableAgent(mcpUrl: string) {
     try {
-      return (
-        MainAgentFeatureSettings.isAgentRequestedAtStartup() && (await MainAgent.init(mcpUrl))
-      );
+      return MainAgentFeatureSettings.isAgentRequestedAtStartup() && (await MainAgent.init(mcpUrl));
     } catch (err) {
       Log.warn("agent", "failed to enable agent", err);
       return false;

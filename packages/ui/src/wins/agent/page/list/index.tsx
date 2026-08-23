@@ -13,9 +13,9 @@ interface ConversationListProps {
   loading?: boolean;
   overlay?: boolean;
   className?: string;
+  conversations: ThreadSummary[];
   selectedConversationID: string;
   runningConversationIDs: string[];
-  conversations: ThreadSummary[];
   onRefresh: NormalFunc;
   onCreateConversation: NormalFunc;
   onOpenConversation: NormalFunc<[id: string]>;

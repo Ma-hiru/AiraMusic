@@ -2,9 +2,9 @@ import type {
   RunAccepted,
   ThreadSummary,
   ThreadSnapshot,
+  ProviderConfigView,
   ProviderDescriptor,
-  ProviderConfigInput,
-  ProviderConfigView
+  ProviderConfigInput
 } from "@mahiru/agent";
 
 import type { AgentInvokeResult } from "./agent";
@@ -91,14 +91,18 @@ export type InvokeEventMaps = {
   invoke_agent_cancel_run: [string, Promise<AgentInvokeResult<void>>];
   invoke_agent_delete_thread: [string, Promise<AgentInvokeResult<void>>];
   invoke_store_delete: [string, { ok: true } | { ok: false; reason?: string }];
+  invoke_agent_get_thread: [string, Promise<AgentInvokeResult<ThreadSnapshot>>];
   invoke_agent_list_runs: [undefined, Promise<AgentInvokeResult<RunAccepted[]>>];
+  invoke_agent_list_threads: [undefined, Promise<AgentInvokeResult<ThreadSummary[]>>];
   invoke_agent_create_run: [AgentCreateRunInput, Promise<AgentInvokeResult<RunAccepted>>];
-  invoke_agent_feature_settings_get: [undefined, AgentInvokeResult<AgentFeatureSettingsState>];
   invoke_agent_list_configs: [undefined, Promise<AgentInvokeResult<ProviderConfigView[]>>];
   invoke_agent_list_providers: [undefined, Promise<AgentInvokeResult<ProviderDescriptor[]>>];
-  invoke_agent_list_threads: [undefined, Promise<AgentInvokeResult<ThreadSummary[]>>];
-  invoke_agent_get_thread: [string, Promise<AgentInvokeResult<ThreadSnapshot>>];
+  invoke_agent_feature_settings_get: [undefined, AgentInvokeResult<AgentFeatureSettingsState>];
   invoke_agent_create_config: [ProviderConfigInput, Promise<AgentInvokeResult<ProviderConfigView>>];
+  invoke_agent_create_thread: [
+    undefined | { name?: string },
+    Promise<AgentInvokeResult<ThreadSummary>>
+  ];
   invoke_agent_update_config: [
     AgentProviderConfigUpdateInput,
     Promise<AgentInvokeResult<ProviderConfigView>>
@@ -106,10 +110,6 @@ export type InvokeEventMaps = {
   invoke_agent_feature_settings_update: [
     AgentFeatureSettingsUpdateInput,
     Promise<AgentInvokeResult<AgentFeatureSettingsState>>
-  ];
-  invoke_agent_create_thread: [
-    undefined | { name?: string },
-    Promise<AgentInvokeResult<ThreadSummary>>
   ];
 };
 

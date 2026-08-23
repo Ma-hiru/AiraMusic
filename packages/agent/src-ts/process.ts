@@ -1,18 +1,19 @@
-import { spawn, type ChildProcessWithoutNullStreams } from "node:child_process";
-import { existsSync } from "node:fs";
 import { join } from "node:path";
+import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+import { spawn, type ChildProcessWithoutNullStreams } from "node:child_process";
 import type { AGUIEvent } from "@ag-ui/core";
+
 import { AgentClient } from "./client";
 import type { AgentReady } from "./types";
 
-export type AgentLogLevel = "TRACE" | "DEBUG" | "INFO" | "WARN" | "ERROR" | "NONE";
+export type AgentLogLevel = "INFO" | "NONE" | "WARN" | "DEBUG" | "ERROR" | "TRACE";
 
 export interface AgentLogRecord {
-  level: Exclude<AgentLogLevel, "NONE">;
   message: string;
   target?: string;
   fields: Record<string, unknown>;
+  level: Exclude<AgentLogLevel, "NONE">;
 }
 
 const packageDirectory = fileURLToPath(new URL("..", import.meta.url));
@@ -23,15 +24,15 @@ const defaultExecutable = join(
 
 export interface AgentRunOptions {
   port: number;
-  dataDir: string;
   mcpUrl: string;
-  controlToken: string;
-  storeSecret: string;
+  dataDir: string;
   mcpToken: string;
   execPath?: string;
-  execArgs?: readonly string[];
+  storeSecret: string;
+  controlToken: string;
   logLevel?: AgentLogLevel;
   startupTimeoutMs?: number;
+  execArgs?: readonly string[];
   logger?: (record: AgentLogRecord) => void;
 }
 
@@ -325,7 +326,7 @@ function waitUntilReady(
 }
 
 async function waitForExit(exited: Promise<void>, timeoutMs: number): Promise<boolean> {
-  let timer: NodeJS.Timeout | undefined;
+  let timer: undefined | NodeJS.Timeout;
   try {
     return await Promise.race([
       exited.then(() => true),

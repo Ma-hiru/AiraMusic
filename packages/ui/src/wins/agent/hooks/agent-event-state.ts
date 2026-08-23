@@ -5,9 +5,9 @@ import type {
   AgentLiveToolResult,
   AgentLiveTimelineItem
 } from "@/wins/agent/page/types";
-import type { AgentConversationEvent } from "./agui-adapter";
 
 import { toTerminalError } from "../page/chat/observability";
+import type { AgentConversationEvent } from "./agui-adapter";
 
 export const reduceAgentConversationEvent = (
   state: AgentConversationState,
@@ -283,7 +283,7 @@ const mergeToolCalls = (current: AgentToolCall[], incoming: AgentToolCall[]) => 
 };
 
 const mergeToolResults = (
-  current: AgentLiveToolResult[] | undefined,
+  current: undefined | AgentLiveToolResult[],
   incoming: AgentLiveToolResult[]
 ) => {
   const merged = new Map(current?.map((result) => [result.callID, result]) ?? []);

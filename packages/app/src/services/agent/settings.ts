@@ -1,11 +1,4 @@
 import { MainStoreForConfig } from "@/lib/key-value-store";
-import type {
-  AgentFeatureSettingsState,
-  AgentFeatureSettingsConfig,
-  AgentFeatureSettingsMcpTool,
-  AgentFeatureSettingsUpdateInput
-} from "@mahiru/ipc/types";
-
 import { createAgentToolCatalog } from "@/inner/mcp/tools/catalog";
 import {
   AiraPublicMcpToolNames,
@@ -13,6 +6,12 @@ import {
   isAiraMcpMutatingToolName,
   isAiraMcpDestructiveToolName
 } from "@/inner/mcp/public-tools";
+import type {
+  AgentFeatureSettingsState,
+  AgentFeatureSettingsConfig,
+  AgentFeatureSettingsMcpTool,
+  AgentFeatureSettingsUpdateInput
+} from "@mahiru/ipc/types";
 
 export const AgentFeatureDefaultMcpPort = 32_123;
 

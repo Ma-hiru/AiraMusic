@@ -1,5 +1,5 @@
-import type { ProviderConfigInput } from "@mahiru/agent";
 import { MainIPC } from "@mahiru/ipc/main";
+import type { ProviderConfigInput } from "@mahiru/agent";
 import type { AgentFeatureSettingsState } from "@mahiru/ipc/types";
 
 import { RustAgentService } from "./child";

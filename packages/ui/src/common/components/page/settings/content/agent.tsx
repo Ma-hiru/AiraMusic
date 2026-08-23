@@ -166,14 +166,14 @@ const AgentSettings: FC = () => {
       </Card>
 
       <Card
-        title="外部 MCP 接入"
         Icon={ServerCog}
+        title="外部 MCP 接入"
         subTitle="Public loopback endpoint"
         action={<RuntimeBadge label="公开访问" active={effectiveMcp} />}>
         <ToggleRow
           icon={Network}
-          title="允许外部 MCP 客户端"
           disabled={saving}
+          title="允许外部 MCP 客户端"
           checked={state.mcpEnabled}
           description="通过 127.0.0.1 向本机客户端公开所选工具；Rust Agent 不依赖此开关。"
           onClick={() => void update({ mcpEnabled: !state.mcpEnabled })}

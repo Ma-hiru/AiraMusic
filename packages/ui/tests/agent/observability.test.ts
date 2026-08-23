@@ -1,8 +1,8 @@
 import {
+  toTerminalError,
   formatTokenCount,
-  getUncachedInputTokens,
   parseAgentTurnUsage,
-  toTerminalError
+  getUncachedInputTokens
 } from "@mahiru/ui/wins/agent/page/chat/observability";
 
 describe("Agent 可观测信息格式化", () => {

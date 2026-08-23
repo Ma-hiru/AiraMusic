@@ -1,28 +1,21 @@
-import type { InvokeEventArgs } from "@mahiru/ipc/types";
 import type { ProviderConfigView } from "@mahiru/agent";
+import type { InvokeEventArgs } from "@mahiru/ipc/types";
 
-const {
-  frame,
-  sender,
-  createRun,
-  getWindowID,
-  createConfig,
-  updateConfig,
-  fromWebContents
-} = vi.hoisted(() => {
-  const frame = { url: "http://localhost:5173/agent.html" };
-  const sender = { mainFrame: frame };
-  const senderWindow = {};
-  return {
-    frame,
-    sender,
-    createRun: vi.fn(),
-    createConfig: vi.fn(),
-    updateConfig: vi.fn(),
-    fromWebContents: vi.fn(() => senderWindow),
-    getWindowID: vi.fn(() => "agent")
-  };
-});
+const { frame, sender, createRun, getWindowID, createConfig, updateConfig, fromWebContents } =
+  vi.hoisted(() => {
+    const frame = { url: "http://localhost:5173/agent.html" };
+    const sender = { mainFrame: frame };
+    const senderWindow = {};
+    return {
+      frame,
+      sender,
+      createRun: vi.fn(),
+      createConfig: vi.fn(),
+      updateConfig: vi.fn(),
+      fromWebContents: vi.fn(() => senderWindow),
+      getWindowID: vi.fn(() => "agent")
+    };
+  });
 
 vi.mock("electron", () => ({
   app: {},
@@ -69,7 +62,10 @@ describe("Rust Agent IPC 转发", () => {
 
   it("直接转发生成的 ProviderConfigInput 并返回脱敏视图", async () => {
     const config = providerInput();
-    const options = { id: "config-1", config } satisfies InvokeEventArgs<"invoke_agent_update_config">;
+    const options = {
+      id: "config-1",
+      config
+    } satisfies InvokeEventArgs<"invoke_agent_update_config">;
     const snapshot = {
       ...config,
       id: "config-1",

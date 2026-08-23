@@ -1,5 +1,5 @@
-import { randomBytes } from "node:crypto";
 import { safeStorage } from "electron";
+import { randomBytes } from "node:crypto";
 import { MainStoreForAgent } from "@/lib/key-value-store";
 
 const AgentStoreSecretKey = "agentStoreSecret";

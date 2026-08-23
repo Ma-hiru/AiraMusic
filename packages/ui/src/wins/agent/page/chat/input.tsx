@@ -130,8 +130,8 @@ const ChatInput: FC<ChatInputProps> = ({
                   disabled:opacity-35
                 "
                 type="submit"
-                disabled={disabled}
                 aria-label="发送消息"
+                disabled={disabled}
                 title="发送消息 · Shift + Enter 换行">
                 <SendHorizontal className="size-3.5" />
               </button>

@@ -1,7 +1,6 @@
-import { describe, expect, it } from "vitest";
-import type { AGUIEvent } from "@mahiru/agent/browser";
-
+import { it, expect, describe } from "vitest";
 import { AgentAguiAdapter } from "@mahiru/ui/wins/agent/hooks/agui-adapter";
+import type { AGUIEvent } from "@mahiru/agent/browser";
 
 const agui = (value: Record<string, unknown>) => value as AGUIEvent;
 

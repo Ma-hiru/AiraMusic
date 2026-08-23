@@ -4,13 +4,8 @@ import { Log } from "@/common/lib/log";
 import { RendererWindow } from "@/common/lib/window";
 import { RendererAgent } from "@/wins/agent/lib/agent";
 import { useLatestRef } from "@/common/hooks/use-latest-ref";
-import { reduceAgentConversationEvent } from "@/wins/agent/hooks/agent-event-state";
 import { parseAgentTurnUsage } from "@/wins/agent/page/chat/observability";
-import {
-  AgentAguiAdapter,
-  readAgentAguiIdentity,
-  type AgentConversationEvent
-} from "./agui-adapter";
+import { reduceAgentConversationEvent } from "@/wins/agent/hooks/agent-event-state";
 import {
   EMPTY_LIVE_TIMELINE,
   agentSelectedConfigIDAtom,
@@ -27,14 +22,20 @@ import {
   agentSelectedConversationRunningRunIDAtom
 } from "@/wins/agent/atoms/agent";
 import AppToast from "@/common/components/display/toast";
+import type { AgentInvokeError } from "@mahiru/ipc/types";
+import type { AgentTokenUsage } from "@/wins/agent/page/types";
 import type {
   AGUIEvent,
   ThreadSummary,
-  ProviderDescriptor,
-  ProviderConfigView
+  ProviderConfigView,
+  ProviderDescriptor
 } from "@mahiru/agent/browser";
-import type { AgentInvokeError } from "@mahiru/ipc/types";
-import type { AgentTokenUsage } from "@/wins/agent/page/types";
+
+import {
+  AgentAguiAdapter,
+  readAgentAguiIdentity,
+  type AgentConversationEvent
+} from "./agui-adapter";
 
 interface PendingRunError {
   message: string;

@@ -1,7 +1,7 @@
 import { RendererIPC } from "@mahiru/ipc/renderer";
 import { RendererWindow } from "@/common/lib/window";
-import { resolveAiraResourceAction } from "@mahiru/agent/browser";
 import { RendererIPCMessageBus } from "@/common/lib/bus";
+import { resolveAiraResourceAction } from "@mahiru/agent/browser";
 import {
   NeteaseServicesAlbum,
   NeteaseServicesArtist,

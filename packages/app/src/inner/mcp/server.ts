@@ -1,9 +1,9 @@
-import { createHash, randomUUID, timingSafeEqual } from "node:crypto";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { createServer, type Server as HTTPServer } from "node:http";
+import { createHash, randomUUID, timingSafeEqual } from "node:crypto";
+import { ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
 import { createMcpExpressApp } from "@modelcontextprotocol/sdk/server/express.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
-import { ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
 import { MainWindowManager } from "@/lib/window-manager";
 import type { AddressInfo } from "node:net";
 import type { Request, Response } from "express";
@@ -236,7 +236,7 @@ function validatePort(port: number): number {
   return port;
 }
 
-function validateInternalToken(token: undefined | string): undefined | string {
+function validateInternalToken(token: string | undefined): string | undefined {
   if (token === undefined) return undefined;
   if (!token) throw new Error("MCP 内部 token 不能为空");
   return token;

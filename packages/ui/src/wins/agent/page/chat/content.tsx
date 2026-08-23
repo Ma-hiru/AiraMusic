@@ -25,12 +25,12 @@ import RendererImageConstants from "@/common/constants/image";
 import NeteaseImage from "@/common/components/display/image/netease-image";
 import type { LucideIcon } from "lucide-react";
 import type { MessageData } from "@mahiru/ipc/types";
-import type { MessageSnapshot, ThreadSnapshot } from "@mahiru/agent/browser";
+import type { ThreadSnapshot, MessageSnapshot } from "@mahiru/agent/browser";
 
 import ToolStep from "./tool-step";
 import ThinkContent from "./think-content";
-import { RunTerminalCard } from "./turn-observability";
 import { parseAgentTurnUsage } from "./observability";
+import { RunTerminalCard } from "./turn-observability";
 import ContentItem, { AssistantTurnGroup } from "./content-item";
 import type {
   AgentRunTerminal,
@@ -45,8 +45,8 @@ type ChatMessageTimelineItem = {
   runID?: string;
   type: "message";
   streaming?: boolean;
-  message: Pick<MessageSnapshot, "role" | "content">;
   assistantTurn?: AgentAssistantTurnObservability;
+  message: Pick<MessageSnapshot, "role" | "content">;
 };
 
 type ChatTimelineItem =

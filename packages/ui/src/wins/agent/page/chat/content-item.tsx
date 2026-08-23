@@ -11,9 +11,9 @@ import { AssistantTurnMeta } from "./turn-observability";
 interface ContentItemProps {
   grouped?: boolean;
   showCopy?: boolean;
-  message: Pick<MessageSnapshot, "role" | "content">;
   streaming?: boolean;
   assistantTurn?: AgentAssistantTurnObservability;
+  message: Pick<MessageSnapshot, "role" | "content">;
 }
 
 interface AssistantTurnGroupProps {

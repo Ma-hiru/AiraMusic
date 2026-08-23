@@ -1,4 +1,5 @@
 import { z } from "zod";
+
 import type { AIResult } from "./result";
 
 export abstract class LLMTool<TSchema extends z.ZodType = z.ZodType, TOutput = unknown> {

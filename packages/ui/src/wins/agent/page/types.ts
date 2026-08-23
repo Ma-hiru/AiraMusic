@@ -45,8 +45,8 @@ export type AgentLiveReasoning = {
   step: number;
   text: string;
   runID?: string;
-  type: "reasoning";
   messageID: string;
+  type: "reasoning";
   status: "done" | "streaming";
 };
 

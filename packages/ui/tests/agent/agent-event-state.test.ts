@@ -1,5 +1,4 @@
-import { describe, expect, it } from "vitest";
-
+import { it, expect, describe } from "vitest";
 import { createAgentConversationState } from "@mahiru/ui/wins/agent/atoms/agent";
 import { reduceAgentConversationEvent } from "@mahiru/ui/wins/agent/hooks/agent-event-state";
 import type { AgentConversationEvent } from "@mahiru/ui/wins/agent/hooks/agui-adapter";

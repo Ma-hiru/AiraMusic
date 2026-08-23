@@ -23,8 +23,8 @@ import {
 } from "lucide-react";
 import { NeteaseImageSize } from "@/common/enum";
 import { RendererFormat } from "@/common/lib/format";
-import { resolveAiraResourceAction } from "@mahiru/agent/browser";
 import { NeteaseNetworkImage } from "@/common/netease/models";
+import { resolveAiraResourceAction } from "@mahiru/agent/browser";
 import {
   NeteaseServicesAlbum,
   NeteaseServicesTrack,

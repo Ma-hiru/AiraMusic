@@ -2,57 +2,57 @@ import type { AGUIEvent, ThreadSnapshot } from "@mahiru/agent/browser";
 import type { AgentToolCall, AgentTokenUsage, AgentLiveToolResult } from "@/wins/agent/page/types";
 
 export type AgentConversationEvent =
-  | { type: "started"; runID: string; conversationID: string }
-  | { type: "text_delta"; runID: string; conversationID: string; step: number; text: string }
+  | { runID: string; type: "started"; conversationID: string }
+  | { step: number; text: string; runID: string; type: "text_delta"; conversationID: string }
   | {
-      type: "reasoning_started";
       runID: string;
-      messageID: string;
-      conversationID: string;
-      step: number;
-    }
-  | {
-      type: "reasoning_finished";
-      runID: string;
-      messageID: string;
-      conversationID: string;
-      step: number;
-    }
-  | {
-      type: "reasoning_delta";
-      runID: string;
-      messageID: string;
-      conversationID: string;
-      step: number;
-      text: string;
-    }
-  | {
-      type: "tool_call";
-      runID: string;
-      conversationID: string;
-      step: number;
-      toolCalls: AgentToolCall[];
-    }
-  | {
-      type: "tool_result";
-      runID: string;
-      conversationID: string;
-      step: number;
-      toolResults: AgentLiveToolResult[];
-    }
-  | {
       type: "finished";
-      runID: string;
       conversationID: string;
       snapshot: ThreadSnapshot;
     }
   | {
-      type: "cancelled" | "failed";
+      step: number;
       runID: string;
+      messageID: string;
       conversationID: string;
+      type: "reasoning_started";
+    }
+  | {
+      step: number;
+      runID: string;
+      messageID: string;
+      conversationID: string;
+      type: "reasoning_finished";
+    }
+  | {
+      step: number;
+      runID: string;
+      type: "tool_call";
+      conversationID: string;
+      toolCalls: AgentToolCall[];
+    }
+  | {
+      step: number;
+      runID: string;
+      type: "tool_result";
+      conversationID: string;
+      toolResults: AgentLiveToolResult[];
+    }
+  | {
+      step: number;
+      text: string;
+      runID: string;
+      messageID: string;
+      conversationID: string;
+      type: "reasoning_delta";
+    }
+  | {
+      runID: string;
       message?: string;
+      conversationID: string;
       usage?: AgentTokenUsage;
       snapshot?: ThreadSnapshot;
+      type: "failed" | "cancelled";
     };
 
 type ToolCallState = {

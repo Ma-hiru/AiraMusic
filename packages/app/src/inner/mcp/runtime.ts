@@ -1,7 +1,8 @@
-import { AiraMcpServer, type AiraMcpEndpoint } from "./server";
 import { MainRuntime } from "@/lib/runtime";
 import { MainAgentFeatureSettings } from "@/services/agent/settings";
+
 import { AiraPublicMcpToolNames } from "./public-tools";
+import { AiraMcpServer, type AiraMcpEndpoint } from "./server";
 
 /** 管理应用进程中唯一的本地 MCP 实例。 */
 export class MainMcp {

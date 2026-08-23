@@ -148,8 +148,6 @@ export function createAgentToolCatalog(enableDestructive: boolean): AgentToolCat
   const list = enableDestructive ? [...safe, ...destructive] : safe;
   return {
     list,
-    parallelSafeNames: list
-      .map((tool) => tool.name)
-      .filter((name) => !MutatingToolNames.has(name))
+    parallelSafeNames: list.map((tool) => tool.name).filter((name) => !MutatingToolNames.has(name))
   };
 }

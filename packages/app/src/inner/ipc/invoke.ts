@@ -1,14 +1,14 @@
 import { app, dialog, BrowserWindow, type IpcMainInvokeEvent } from "electron";
 import { Log } from "@/lib/log";
-import { MainAgent } from "@/services/agent";
-import { MainMcp } from "@/inner/mcp/runtime";
 import { MainHandle } from "@/lib/handle";
 import { MainRuntime } from "@/lib/runtime";
+import { MainAgent } from "@/services/agent";
+import { MainMcp } from "@/inner/mcp/runtime";
+import { AgentRequestError } from "@mahiru/agent";
 import { mergeCacheStoreConfig } from "@/utils/merge";
 import { MainWindowManager } from "@/lib/window-manager";
 import { MainScreenResolver } from "@/lib/screen-resolver";
 import { MainCacheStoreConstants } from "@/constants/store";
-import { AgentRequestError } from "@mahiru/agent";
 import { MainAgentFeatureSettings } from "@/services/agent/settings";
 import { MainStoreForConfig, MainStoreForRenderer } from "@/lib/key-value-store";
 import Net from "node:net";
@@ -68,7 +68,7 @@ export const invokeHandlers: InvokeHandlers = {
   invoke_agent_delete_thread: (event, id) => {
     return authorizedAgentRequest(event, () => MainAgent.deleteThread(id));
   },
-  invoke_agent_create_run: (event, { threadId, configId, content }) => {
+  invoke_agent_create_run: (event, { content, configId, threadId }) => {
     return authorizedAgentRequest(event, () => MainAgent.createRun(threadId, configId, content));
   },
   invoke_agent_cancel_run: (event, runId) => {
@@ -373,14 +373,6 @@ const authorizedAgentRequest = <T>(event: IpcMainInvokeEvent, action: () => T | 
     return Promise.resolve(unauthorizedAgentInvokeResult());
   }
   return agentRequest(action);
-};
-
-const authorizedAgentData = <T>(event: IpcMainInvokeEvent, action: () => T) => {
-  if (!isAuthorizedAgentInvokeSender(event)) {
-    Log.warn("invoke(agent)", "拒绝非 Agent 主框架请求");
-    return unauthorizedAgentInvokeResult();
-  }
-  return agentData(action);
 };
 
 const authorizedAgentFeatureSettingsRequest = <T>(
