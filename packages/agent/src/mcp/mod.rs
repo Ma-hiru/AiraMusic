@@ -7,6 +7,7 @@ use crate::ctx::models::Disposer;
 use crate::mcp::models::{MCPCServerConfigJSON, MCPServer, MCPServerConfig, MCPTool};
 use crate::plugins::models::{Plugin, PluginApplyResult, PluginMeta};
 use crate::tools::{ToolRegistry, ToolsPlugin};
+use anyhow::Context;
 pub use client::MCPClient;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
@@ -106,7 +107,8 @@ impl MCPService {
     /// ```
     ///
     pub fn register_json(self: &Arc<Self>, json: &str) -> anyhow::Result<Vec<Disposer>> {
-        let config: MCPCServerConfigJSON = serde_json::from_str(json)?;
+        let config: MCPCServerConfigJSON =
+            serde_json::from_str(json).context("解析 MCP server config JSON 失败")?;
         config
             .mcp_servers
             .into_iter()

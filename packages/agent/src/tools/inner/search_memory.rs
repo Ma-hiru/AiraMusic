@@ -49,6 +49,7 @@ impl Tool for SearchMemoryTool {
             }
         }
 
-        Ok(serde_json::to_value(result.truncate(max_results as usize))?)
+        result.truncate(max_results as usize);
+        Ok(serde_json::to_value(result)?)
     }
 }

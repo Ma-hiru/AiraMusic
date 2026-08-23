@@ -22,26 +22,46 @@ pub enum Role {
     User,
     Assistant,
     Tool,
+    // 内部使用
+    Inner,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub enum RoleInnerType {
+    Think,
+    Error,
+    Compressed,
+    Usage,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct ChatMessage {
     pub role: Role,
     pub content: String,
+    /// 思考内容 (思考模型且返回思考内容才有)
+    /// 仅 assistant 角色有意义
+    /// 多轮对话时（有tool call+reasoning）需随消息回传给 API （交错式思考）
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub reasoning_content: Option<String>,
     /// 仅 assistant 角色
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub tool_calls: Vec<ToolCall>,
     /// 仅 tool 角色
     #[serde(skip_serializing_if = "Option::is_none")]
     pub tool_call_id: Option<String>,
+    /// 仅 inner 角色
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub inner_type: Option<RoleInnerType>,
 }
 impl ChatMessage {
     pub fn system(content: impl Into<String>) -> Self {
         Self {
             role: Role::System,
             content: content.into(),
+            reasoning_content: None,
             tool_calls: Vec::new(),
             tool_call_id: None,
+            inner_type: None,
         }
     }
 
@@ -49,8 +69,10 @@ impl ChatMessage {
         Self {
             role: Role::User,
             content: content.into(),
+            reasoning_content: None,
             tool_calls: Vec::new(),
             tool_call_id: None,
+            inner_type: None,
         }
     }
 
@@ -58,8 +80,10 @@ impl ChatMessage {
         Self {
             role: Role::Assistant,
             content: content.into(),
+            reasoning_content: None,
             tool_calls: Vec::new(),
             tool_call_id: None,
+            inner_type: None,
         }
     }
 
@@ -67,11 +91,21 @@ impl ChatMessage {
         content: impl Into<String>,
         tool_calls: Vec<ToolCall>,
     ) -> Self {
+        Self::assistant_with_tool_calls_and_reasoning(content, tool_calls, None)
+    }
+
+    pub fn assistant_with_tool_calls_and_reasoning(
+        content: impl Into<String>,
+        tool_calls: Vec<ToolCall>,
+        reasoning_content: Option<String>,
+    ) -> Self {
         Self {
             role: Role::Assistant,
             content: content.into(),
+            reasoning_content,
             tool_calls,
             tool_call_id: None,
+            inner_type: None,
         }
     }
 
@@ -79,9 +113,41 @@ impl ChatMessage {
         Self {
             role: Role::Tool,
             content: content.into(),
+            reasoning_content: None,
             tool_calls: Vec::new(),
             tool_call_id: Some(tool_call_id.into()),
+            inner_type: None,
         }
+    }
+
+    pub fn inner(content: impl Into<String>, inner_type: RoleInnerType) -> Self {
+        Self {
+            role: Role::Inner,
+            content: content.into(),
+            reasoning_content: None,
+            tool_calls: Vec::new(),
+            tool_call_id: None,
+            inner_type: Some(inner_type),
+        }
+    }
+
+    pub fn usage(content: &TurnUsage) -> Self {
+        Self::inner(
+            serde_json::to_string(content).unwrap(),
+            RoleInnerType::Usage,
+        )
+    }
+
+    pub fn think(content: impl Into<String>) -> Self {
+        Self::inner(content, RoleInnerType::Think)
+    }
+
+    pub fn error(content: impl Into<String>) -> Self {
+        Self::inner(content, RoleInnerType::Error)
+    }
+
+    pub fn compressed(content: impl Into<String>) -> Self {
+        Self::inner(content, RoleInnerType::Compressed)
     }
 
     pub fn token_count(&self) -> usize {
@@ -112,15 +178,17 @@ pub struct ToolCall {
     pub args: Value,
 }
 
-/// 模型的一轮回复: 文本 + 要执行的工具调用
+/// 模型的一轮回复: 文本 + 思考 + 要执行的工具调用
 #[derive(Clone, Debug)]
 pub struct AssistantReply {
     pub text: String,
+    /// 思考内容(思考模式模型才有, 空串 = 无思考)
+    pub reasoning: String,
     pub tool_calls: Vec<ToolCall>,
 }
 
 /// 一次请求的 token 用量
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct Usage {
     /// 输入 token 数
     pub prompt_tokens: u32,
@@ -128,19 +196,60 @@ pub struct Usage {
     pub completion_tokens: u32,
 }
 
+/// 一次请求的 token 用量
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+pub struct TurnUsage {
+    records: Vec<StepUsage>,
+}
+impl TurnUsage {
+    pub fn new() -> Self {
+        Self {
+            records: Vec::new(),
+        }
+    }
+
+    pub fn add(&mut self, record: (u32, Usage)) {
+        self.records.push(record.into());
+    }
+}
+
+/// 请求中某个轮回的 token 用量
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+pub struct StepUsage {
+    step: u32,
+    usage: Usage,
+}
+impl From<(u32, Usage)> for StepUsage {
+    fn from(value: (u32, Usage)) -> Self {
+        Self {
+            step: value.0,
+            usage: value.1,
+        }
+    }
+}
+
 /// 模型流式输出的统一事件(厂商无关)
 #[derive(Clone, Debug)]
 pub enum StreamEvent {
-    /// 文本开始(AGUI: TEXT_MESSAGE_START)。
+    /// 文本开始(AGUI: TEXT_MESSAGE_START)
     TextStart,
-    /// 文本增量(AGUI: TEXT_MESSAGE_CONTENT)。
+    /// 文本增量(AGUI: TEXT_MESSAGE_CONTENT)
     TextDelta {
         /// 本次增量
         text: String,
     },
-    /// 文本结束(AGUI: TEXT_MESSAGE_END)。
+    /// 文本结束(AGUI: TEXT_MESSAGE_END)
     TextEnd,
-    /// 工具调用开始(AGUI: TOOL_CALL_START)。
+    /// 思考开始(AGUI: REASONING_MESSAGE_START, 思考模式模型才有)
+    ReasoningStart,
+    /// 思考增量(AGUI: REASONING_MESSAGE_CONTENT)
+    ReasoningDelta {
+        /// 本次增量
+        delta: String,
+    },
+    /// 思考结束(AGUI: REASONING_MESSAGE_END)
+    ReasoningEnd,
+    /// 工具调用开始(AGUI: TOOL_CALL_START)
     ToolCallStart { id: String, name: String },
     /// 工具参数增量(AGUI: TOOL_CALL_ARGS, JSON 片段, 可能分多次到达)
     ToolCallArgs {
@@ -267,6 +376,9 @@ pub struct LLMConfig {
     pub headers: Option<HashMap<String, String>>,
     pub other: Option<Value>,
     pub default: bool,
+    /// 思考模式开关(请求带 thinking: {type: enabled})
+    #[serde(default)]
+    pub thinking: bool,
 }
 
 pub type LLMConfigSecret = LLMConfig;

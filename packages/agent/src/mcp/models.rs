@@ -1,6 +1,7 @@
 use crate::ctx::models::{Disposer, DisposerLike};
 use crate::mcp::client::MCPClient;
 use crate::tools::models::{Tool, ToolRunContext};
+use crate::utils::sanitize_tool_name;
 use async_trait::async_trait;
 use serde::Deserialize;
 use serde_json::Value;
@@ -74,9 +75,9 @@ impl MCPServer {
 
 pub struct MCPTool {
     client: Arc<MCPClient>,
-    /// 注册到 tool-registry 的名字(server/工具名), 避免跨 server 撞名
+    /// 注册到 tool-registry 的名字(server__工具名), 避免跨 server 撞名
     registry_name: String,
-    /// MCP 协议里的真实工具名(请求时用)
+    /// MCP 协议里的真实工具名(请求时用, 保持原样)
     remote_name: String,
     description: String,
     parameters: Value,
@@ -84,7 +85,14 @@ pub struct MCPTool {
 impl MCPTool {
     pub fn new(client: Arc<MCPClient>, server_name: String, tool: rmcp::model::Tool) -> Self {
         let remote_name = tool.name.to_string();
-        let registry_name = format!("{server_name}/{remote_name}");
+        // OpenAI 工具名只允许 ^[a-zA-Z0-9_-]+$(不允许 /)
+        // 注册名用 __ 连接 server 与工具名, 两边都清洗到白名单字符
+        // remote_name 保持原样, 真正调 MCP 时用它
+        let registry_name = format!(
+            "{}__{}",
+            sanitize_tool_name(&server_name),
+            sanitize_tool_name(&remote_name)
+        );
         let parameters = Value::Object((*tool.input_schema).clone());
         Self {
             client,
@@ -95,6 +103,7 @@ impl MCPTool {
         }
     }
 }
+
 #[async_trait]
 impl Tool for MCPTool {
     fn name(&self) -> &str {

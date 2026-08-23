@@ -2,7 +2,7 @@ pub mod models;
 use crate::cancel::Signal;
 use crate::ctx::Ctx;
 use crate::llm::models::{
-    AssistantReply, ChatMessage, Request, Role, StreamEvent, ToolCall, Usage,
+    AssistantReply, ChatMessage, Request, Role, StreamEvent, ToolCall, TurnUsage, Usage,
 };
 use crate::llm::plugins::{LLMCompactorPlugin, LLMConfigPlugin, LLMPlugin};
 use crate::r#loop::models::{LoopCause, LoopDecision, LoopEvent, LoopPayloadError, LoopPhase};
@@ -187,8 +187,15 @@ impl LoopService {
             .unwrap()
             .insert(session_id.clone(), cancel_signal.clone());
         let mut process_turn = None;
+        let mut process_usages = TurnUsage::new();
         if let Err(err) = self
-            .run_turn_inner(session_id, user_message, &mut process_turn, cancel_signal)
+            .run_turn_inner(
+                session_id,
+                user_message,
+                &mut process_turn,
+                &mut process_usages,
+                cancel_signal,
+            )
             .await
         {
             tracing::error!(session_id = %session_id, err = ?err, turn = ?process_turn);
@@ -198,6 +205,7 @@ impl LoopService {
                     &LoopPayloadInnerError {
                         turn: process_turn,
                         error: err.to_string(),
+                        usages: process_usages,
                         session_id: session_id.clone(),
                     },
                 );
@@ -213,6 +221,7 @@ impl LoopService {
         session_id: &SessionId,
         user_message: ChatMessage,
         process_turn: &mut Option<u32>,
+        process_usages: &mut TurnUsage,
         cancel_signal: Signal,
     ) -> anyhow::Result<()> {
         // 升级弱引用为强引用, ctx 已被销毁则直接返回(理论走不到)
@@ -303,14 +312,10 @@ impl LoopService {
 
                     if let Some(summary) = compaction.summary {
                         session_manager
-                            .append(
-                                session_id,
-                                ChatMessage::system(format!("[compacted] {summary}")),
-                            )
+                            .append(session_id, ChatMessage::compressed(summary))
                             .context("会话日志写入失败")?;
                     }
 
-                    // 放在 append 之后，覆盖 compacted 消息
                     session_manager
                         .update_compaction_session(session_id, compaction.messages.clone());
 
@@ -366,8 +371,9 @@ impl LoopService {
                 },
             );
 
-            // 拼装状态: 文本 / 工具调用 / 用量
+            // 拼装状态: 文本 / 思考 / 工具调用 / 用量
             let mut reply_text = String::new();
+            let mut reasoning_text = String::new();
             let mut reply_tool_calls: Vec<ToolCall> = Vec::new();
             let mut usage: Option<Usage> = None;
             // call_id -> (name, args_json 片段)
@@ -413,6 +419,38 @@ impl LoopService {
                             ctx.emit(
                                 LoopEvent::TextEnd.with_id(session_id.clone()),
                                 &LoopPayloadTextEnd {
+                                    turn,
+                                    step,
+                                    session_id: session_id.clone(),
+                                },
+                            );
+                        }
+                        StreamEvent::ReasoningStart => {
+                            ctx.emit(
+                                LoopEvent::ReasoningStart.with_id(session_id.clone()),
+                                &LoopPayloadReasoningStart {
+                                    turn,
+                                    step,
+                                    session_id: session_id.clone(),
+                                },
+                            );
+                        }
+                        StreamEvent::ReasoningDelta { delta } => {
+                            reasoning_text.push_str(&delta);
+                            ctx.emit(
+                                LoopEvent::ReasoningDelta.with_id(session_id.clone()),
+                                &LoopPayloadReasoningDelta {
+                                    turn,
+                                    step,
+                                    session_id: session_id.clone(),
+                                    delta,
+                                },
+                            );
+                        }
+                        StreamEvent::ReasoningEnd => {
+                            ctx.emit(
+                                LoopEvent::ReasoningEnd.with_id(session_id.clone()),
+                                &LoopPayloadReasoningEnd {
                                     turn,
                                     step,
                                     session_id: session_id.clone(),
@@ -490,15 +528,32 @@ impl LoopService {
                     }
                 }
             }
+            if let Some(usage) = usage.clone() {
+                process_usages.add((step, usage))
+            }
+
             let reply = AssistantReply {
                 text: reply_text.clone(),
+                reasoning: reasoning_text.clone(),
                 tool_calls: reply_tool_calls.clone(),
             };
 
+            // 交错式思考
+            // 思考落会话日志(assistant 消息的 reasoning_content 字段)
+            // 多轮对话时随历史回传, 否则 DeepSeek 思考模式会 400
+            let reasoning_content = if reasoning_text.is_empty() {
+                None
+            } else {
+                Some(reasoning_text.clone())
+            };
             session_manager
                 .append(
                     session_id,
-                    ChatMessage::assistant_with_tool_calls(reply_text, reply_tool_calls),
+                    ChatMessage::assistant_with_tool_calls_and_reasoning(
+                        reply_text,
+                        reply_tool_calls,
+                        reasoning_content,
+                    ),
                 )
                 .context("会话日志写入失败")?;
             // emit: reply(整条消息的冻结快照, 含用量)
@@ -679,12 +734,19 @@ impl LoopService {
                         error: cause.reason.clone(),
                     },
                 );
+                session_manager
+                    .append(session_id, ChatMessage::error(cause.clone()))
+                    .context("会话日志写入失败")?;
+            } else {
+                session_manager
+                    .append(session_id, ChatMessage::system(cause.clone()))
+                    .context("会话日志写入失败")?;
             }
-
-            session_manager
-                .append(session_id, ChatMessage::system(cause.clone()))
-                .context("会话日志写入失败")?;
         }
+
+        session_manager
+            .append(session_id, ChatMessage::usage(process_usages))
+            .context("会话日志写入失败")?;
 
         // emit: turn-end
         ctx.emit(
@@ -693,6 +755,7 @@ impl LoopService {
                 turn,
                 step,
                 cause,
+                usages: process_usages.clone(),
                 session_id: session_id.clone(),
                 user_message_snapshot: user_message,
             },

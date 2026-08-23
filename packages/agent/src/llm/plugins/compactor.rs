@@ -69,7 +69,7 @@ impl LLMCompactor {
         &self,
         llm: Arc<dyn LLMAdapter>,
         messages: Vec<ChatMessage>,
-        config: LLMConfig,
+        mut config: LLMConfig,
         cancel: Signal,
     ) -> anyhow::Result<Compaction> {
         // 太少就不压缩
@@ -83,9 +83,11 @@ impl LLMCompactor {
             });
         }
 
-        // 旧历史拿去总结, 最近 keep 条保留
+        // 旧历史拿去总结 最近 keep 条保留
         let old = messages[..messages.len() - self.keep].to_vec();
         let keep = messages[messages.len() - self.keep..].to_vec();
+        // 压缩请求不开启思考
+        config.thinking = false;
         let request = Request {
             config,
             system: vec!["你是会话压缩器: 把以下对话历史压缩成要点摘要, 只输出摘要本身。".into()],

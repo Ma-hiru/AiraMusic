@@ -14,11 +14,12 @@
 //!
 //! 流式微事件(对齐 AGUI):
 //!   文本: TextStart → TextDelta* → TextEnd
+//!   思考: ReasoningStart → ReasoningDelta* → ReasoningEnd(思考模式模型才有)
 //!   工具: ToolCallStart → ToolCallArgs* → ToolCallEnd(模型侧, 来自 llm 流)
 //!         ToolExecStart → ToolResult(执行侧, 来自循环)
 
 use crate::ctx::models::Event;
-use crate::llm::models::{AssistantReply, ChatMessage, Request, ToolCall, Usage};
+use crate::llm::models::{AssistantReply, ChatMessage, Request, ToolCall, TurnUsage, Usage};
 use crate::session::models::SessionId;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
@@ -48,6 +49,12 @@ pub enum LoopEvent {
     TextDelta,
     /// 文本结束(AGUI: TEXT_MESSAGE_END)
     TextEnd,
+    /// 思考开始(AGUI: REASONING_MESSAGE_START)
+    ReasoningStart,
+    /// 思考增量(AGUI: REASONING_MESSAGE_CONTENT)
+    ReasoningDelta,
+    /// 思考结束(AGUI: REASONING_MESSAGE_END)
+    ReasoningEnd,
     /// 工具调用开始(AGUI: TOOL_CALL_START)
     ToolCallStart,
     /// 工具参数增量(AGUI: TOOL_CALL_ARGS)
@@ -86,6 +93,10 @@ impl LoopEvent {
             LoopEvent::TextStart => "loop:text-start",
             LoopEvent::TextDelta => "loop:text-delta",
             LoopEvent::TextEnd => "loop:text-end",
+            // 观察 - 流式思考
+            LoopEvent::ReasoningStart => "loop:reasoning-start",
+            LoopEvent::ReasoningDelta => "loop:reasoning-delta",
+            LoopEvent::ReasoningEnd => "loop:reasoning-end",
             // 观察 - 工具调用(模型侧)与执行(执行侧)
             LoopEvent::ToolCallStart => "tool:call-start",
             LoopEvent::ToolCallArgs => "tool:call-args",
@@ -225,6 +236,29 @@ pub struct LoopPayloadTextEnd {
 }
 
 #[derive(Clone)]
+pub struct LoopPayloadReasoningStart {
+    pub turn: u32,
+    pub step: u32,
+    pub session_id: SessionId,
+}
+
+#[derive(Clone)]
+pub struct LoopPayloadReasoningDelta {
+    pub turn: u32,
+    pub step: u32,
+    pub session_id: SessionId,
+    /// 本次思考增量
+    pub delta: String,
+}
+
+#[derive(Clone)]
+pub struct LoopPayloadReasoningEnd {
+    pub turn: u32,
+    pub step: u32,
+    pub session_id: SessionId,
+}
+
+#[derive(Clone)]
 pub struct LoopPayloadToolCallStart {
     pub turn: u32,
     pub step: u32,
@@ -294,6 +328,10 @@ pub struct LoopPayloadError {
 pub struct LoopPayloadInnerError {
     pub session_id: SessionId,
     pub error: String,
+    /// inner error 是内部非预期错误，不会触发 TurnEnd 和 Error 事件
+    /// Error 是预期错误，会触发 TurnEnd 和 Error 事件
+    /// 因此inner error 需要单独带上 usages
+    pub usages: TurnUsage,
     pub turn: Option<u32>,
 }
 
@@ -302,6 +340,7 @@ pub struct LoopPayloadTurnEnd {
     pub turn: u32,
     pub step: u32,
     pub session_id: SessionId,
+    pub usages: TurnUsage,
     pub user_message_snapshot: ChatMessage,
     pub cause: LoopCause,
 }

@@ -2,7 +2,7 @@ pub mod models;
 pub mod persistence;
 
 use crate::ctx::Ctx;
-use crate::llm::models::{ChatMemory, ChatMessage};
+use crate::llm::models::{ChatMemory, ChatMessage, Role};
 use crate::plugins::models::{Plugin, PluginApplyResult, PluginMeta};
 use models::*;
 use std::collections::HashMap;
@@ -84,7 +84,9 @@ impl SessionManager {
                 .ok_or_else(|| anyhow::anyhow!("会话 {id} 不存在"))?
                 .push(message.clone());
         }
-        {
+
+        let inner = message.role == Role::Inner;
+        if !inner {
             self.compaction
                 .lock()
                 .map_err(|e| anyhow::anyhow!("lock compaction 失败: {}", e))?
@@ -95,6 +97,7 @@ impl SessionManager {
 
         self.send_event(SessionEvent::Append {
             session_id: id.clone(),
+            inner,
             message,
         });
 
@@ -116,6 +119,7 @@ impl SessionManager {
             .unwrap()
             .get(id)
             .cloned()
+            .map(|c| c.into_iter().filter(|m| m.role != Role::Inner).collect())
             .unwrap_or_default()
     }
 

@@ -6,7 +6,8 @@ use crate::ctx::Ctx;
 use crate::ctx::models::Disposer;
 use crate::llm::models::Role;
 use crate::r#loop::models::{
-    LoopEvent, LoopPayloadError, LoopPayloadInnerError, LoopPayloadStepStart, LoopPayloadTextDelta,
+    LoopEvent, LoopPayloadError, LoopPayloadInnerError, LoopPayloadReasoningDelta,
+    LoopPayloadReasoningEnd, LoopPayloadReasoningStart, LoopPayloadStepStart, LoopPayloadTextDelta,
     LoopPayloadTextEnd, LoopPayloadTextStart, LoopPayloadToolCallArgs, LoopPayloadToolCallEnd,
     LoopPayloadToolCallStart, LoopPayloadToolResult, LoopPayloadTurnEnd, LoopPayloadTurnStart,
 };
@@ -36,6 +37,9 @@ impl Plugin<(), AguiEmitter> for AguiPlugin {
         let message_id = |session_id: &SessionId, turn: u32, step: u32| -> String {
             format!("{session_id}-t{turn}-s{step}")
         };
+        let reasoning_message_id = |session_id: &SessionId, turn: u32, step: u32| -> String {
+            format!("{session_id}-t{turn}-s{step}-r")
+        };
 
         let mut receipts: Vec<Disposer> = Vec::new();
         let emit = {
@@ -55,7 +59,7 @@ impl Plugin<(), AguiEmitter> for AguiPlugin {
                     state.lock().unwrap().current_step.remove(session_id)
                 {
                     emit(AguiEvent::StepFinished {
-                        thread_id: session_id.into(),
+                        session_id: session_id.into(),
                         run_id,
                         step_name,
                     });
@@ -68,7 +72,7 @@ impl Plugin<(), AguiEmitter> for AguiPlugin {
             receipts.push(
                 ctx.on::<LoopPayloadTurnStart>(LoopEvent::TurnStart, move |p| {
                     emit(AguiEvent::RunStarted {
-                        thread_id: p.session_id.to_string(),
+                        session_id: p.session_id.to_string(),
                         run_id: run_id(&p.session_id, p.turn),
                     });
                 }),
@@ -82,9 +86,10 @@ impl Plugin<(), AguiEmitter> for AguiPlugin {
                 // 先结束最后一步, 再结束整个 run
                 finish_step(p.session_id.as_ref());
                 emit(AguiEvent::RunFinished {
-                    thread_id: p.session_id.to_string(),
+                    session_id: p.session_id.to_string(),
                     run_id: run_id(&p.session_id, p.turn),
                     result: Some(p.cause.reason.clone()),
+                    usages: p.usages.clone(),
                 });
             }));
         }
@@ -93,9 +98,10 @@ impl Plugin<(), AguiEmitter> for AguiPlugin {
             let emit = emit.clone();
             receipts.push(ctx.on::<LoopPayloadError>(LoopEvent::Error, move |p| {
                 emit(AguiEvent::RunError {
-                    thread_id: p.session_id.to_string(),
+                    session_id: p.session_id.to_string(),
                     run_id: run_id(&p.session_id, p.turn),
                     message: p.error.clone(),
+                    usages: None,
                 });
             }));
         }
@@ -104,9 +110,10 @@ impl Plugin<(), AguiEmitter> for AguiPlugin {
             receipts.push(
                 ctx.on::<LoopPayloadInnerError>(LoopEvent::InnerError, move |p| {
                     emit(AguiEvent::RunError {
-                        thread_id: p.session_id.to_string(),
+                        session_id: p.session_id.to_string(),
                         run_id: run_id(&p.session_id, p.turn.unwrap_or(0)),
                         message: p.error.clone(),
+                        usages: Some(p.usages.clone()),
                     });
                 }),
             );
@@ -127,7 +134,7 @@ impl Plugin<(), AguiEmitter> for AguiPlugin {
                         (run_id.clone(), step_name.clone()),
                     );
                     emit(AguiEvent::StepStarted {
-                        thread_id: p.session_id.to_string(),
+                        session_id: p.session_id.to_string(),
                         run_id,
                         step_name,
                     });
@@ -140,6 +147,8 @@ impl Plugin<(), AguiEmitter> for AguiPlugin {
             receipts.push(
                 ctx.on::<LoopPayloadTextStart>(LoopEvent::TextStart, move |p| {
                     emit(AguiEvent::TextMessageStart {
+                        session_id: p.session_id.to_string(),
+                        run_id: run_id(&p.session_id, p.turn),
                         message_id: message_id(&p.session_id, p.turn, p.step),
                         role: Role::Assistant,
                     });
@@ -152,6 +161,8 @@ impl Plugin<(), AguiEmitter> for AguiPlugin {
             receipts.push(
                 ctx.on::<LoopPayloadTextDelta>(LoopEvent::TextDelta, move |p| {
                     emit(AguiEvent::TextMessageContent {
+                        session_id: p.session_id.to_string(),
+                        run_id: run_id(&p.session_id, p.turn),
                         message_id: message_id(&p.session_id, p.turn, p.step),
                         delta: p.delta.clone(),
                     });
@@ -163,9 +174,51 @@ impl Plugin<(), AguiEmitter> for AguiPlugin {
             let emit = emit.clone();
             receipts.push(ctx.on::<LoopPayloadTextEnd>(LoopEvent::TextEnd, move |p| {
                 emit(AguiEvent::TextMessageEnd {
+                    session_id: p.session_id.to_string(),
+                    run_id: run_id(&p.session_id, p.turn),
                     message_id: message_id(&p.session_id, p.turn, p.step),
                 });
             }));
+        }
+        // 7.5 Reasoning* (思考模式模型才有, 事件不发则 UI 侧无思考)
+        {
+            let emit = emit.clone();
+            receipts.push(ctx.on::<LoopPayloadReasoningStart>(
+                LoopEvent::ReasoningStart,
+                move |p| {
+                    emit(AguiEvent::ReasoningMessageStart {
+                        session_id: p.session_id.to_string(),
+                        run_id: run_id(&p.session_id, p.turn),
+                        message_id: reasoning_message_id(&p.session_id, p.turn, p.step),
+                    });
+                },
+            ));
+        }
+        {
+            let emit = emit.clone();
+            receipts.push(ctx.on::<LoopPayloadReasoningDelta>(
+                LoopEvent::ReasoningDelta,
+                move |p| {
+                    emit(AguiEvent::ReasoningMessageContent {
+                        session_id: p.session_id.to_string(),
+                        run_id: run_id(&p.session_id, p.turn),
+                        message_id: reasoning_message_id(&p.session_id, p.turn, p.step),
+                        delta: p.delta.clone(),
+                    });
+                },
+            ));
+        }
+        {
+            let emit = emit.clone();
+            receipts.push(
+                ctx.on::<LoopPayloadReasoningEnd>(LoopEvent::ReasoningEnd, move |p| {
+                    emit(AguiEvent::ReasoningMessageEnd {
+                        session_id: p.session_id.to_string(),
+                        run_id: run_id(&p.session_id, p.turn),
+                        message_id: reasoning_message_id(&p.session_id, p.turn, p.step),
+                    });
+                }),
+            );
         }
         //  8. ToolCallStart
         {
@@ -173,6 +226,8 @@ impl Plugin<(), AguiEmitter> for AguiPlugin {
             receipts.push(
                 ctx.on::<LoopPayloadToolCallStart>(LoopEvent::ToolCallStart, move |p| {
                     emit(AguiEvent::ToolCallStart {
+                        session_id: p.session_id.to_string(),
+                        run_id: run_id(&p.session_id, p.turn),
                         tool_call_id: p.call_id.clone(),
                         tool_call_name: p.name.clone(),
                     });
@@ -185,6 +240,8 @@ impl Plugin<(), AguiEmitter> for AguiPlugin {
             receipts.push(
                 ctx.on::<LoopPayloadToolCallArgs>(LoopEvent::ToolCallArgs, move |p| {
                     emit(AguiEvent::ToolCallArgs {
+                        session_id: p.session_id.to_string(),
+                        run_id: run_id(&p.session_id, p.turn),
                         tool_call_id: p.call_id.clone(),
                         delta: p.delta.clone(),
                     });
@@ -197,6 +254,8 @@ impl Plugin<(), AguiEmitter> for AguiPlugin {
             receipts.push(
                 ctx.on::<LoopPayloadToolCallEnd>(LoopEvent::ToolCallEnd, move |p| {
                     emit(AguiEvent::ToolCallEnd {
+                        session_id: p.session_id.to_string(),
+                        run_id: run_id(&p.session_id, p.turn),
                         tool_call_id: p.call_id.clone(),
                     });
                 }),
@@ -208,6 +267,8 @@ impl Plugin<(), AguiEmitter> for AguiPlugin {
             receipts.push(
                 ctx.on::<LoopPayloadToolResult>(LoopEvent::ToolResult, move |p| {
                     emit(AguiEvent::ToolCallResult {
+                        session_id: p.session_id.to_string(),
+                        run_id: run_id(&p.session_id, p.turn),
                         tool_call_id: p.call.id.clone(),
                         content: p.result.clone(),
                     });

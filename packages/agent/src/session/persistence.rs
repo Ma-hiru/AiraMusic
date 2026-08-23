@@ -113,10 +113,14 @@ impl SessionPersistencePlugin {
             SessionEvent::Append {
                 session_id,
                 message,
+                inner,
             } => {
                 let store = Self::session_store(store_manager, session_id).await?;
                 Self::append_to::<ChatMessage>(&store, KEY_REAL, message).await?;
-                Self::append_to::<ChatMessage>(&store, KEY_COMPACTION, message).await?;
+                // 非内部消息才写入压缩历史
+                if !(*inner) {
+                    Self::append_to::<ChatMessage>(&store, KEY_COMPACTION, message).await?;
+                }
                 Ok(())
             }
             SessionEvent::AppendMemory { id, content } => {

@@ -57,6 +57,7 @@ pub enum SessionEvent {
     Append {
         session_id: SessionId,
         message: ChatMessage,
+        inner: bool,
     },
     AppendMemory {
         id: String,

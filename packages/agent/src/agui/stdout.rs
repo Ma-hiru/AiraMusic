@@ -1,4 +1,5 @@
 use crate::agui::AguiPlugin;
+use crate::agui::models::AguiEvent;
 use crate::cancel::Signal;
 use crate::ctx::Ctx;
 use crate::ctx::models::{Disposer, DisposerLike};
@@ -31,9 +32,18 @@ impl Plugin<(), ()> for AguiStdoutPlugin {
                     _ = task_signal.cancelled() => break,
                     event = rx.recv() => match event {
                         Ok(event) => {
-                            // AGUI over SSE: 每条事件一行 data + 空行分隔
-                            let json = serde_json::to_string(&event).unwrap_or_default();
-                            tracing::info!("AGUI: {json}\n");
+                            match &event {
+                                AguiEvent::TextMessageStart {..} => print!("\nreply: \n"),
+                                AguiEvent::TextMessageContent { delta, .. } => print!("{delta}"),
+                                AguiEvent::TextMessageEnd {..} => println!(),
+                                AguiEvent::ReasoningMessageStart {..} => print!("\nreasoning: \n"),
+                                AguiEvent::ReasoningMessageContent { delta, .. } => print!("{delta}"),
+                                AguiEvent::ReasoningMessageEnd {..} => println!(),
+                                AguiEvent::ToolCallStart {tool_call_name, ..} => print!("\ntool_call({tool_call_name}): \n"),
+                                AguiEvent::ToolCallArgs { delta, .. } => print!("{delta}"),
+                                AguiEvent::ToolCallEnd {..} => println!(),
+                                _ => tracing::info!("\n{event}"),
+                            }
                         }
                         Err(RecvError::Lagged(skipped)) => {
                             tracing::warn!(skipped, "agui 事件积压, 丢弃 {skipped} 条");
@@ -42,10 +52,19 @@ impl Plugin<(), ()> for AguiStdoutPlugin {
                     },
                 }
             }
-            // 收摊: 把积压的事件打印完再退
+            // 收摊: 把积压的事件打印完再退(与主循环同款分发)
             while let Ok(event) = rx.try_recv() {
-                let json = serde_json::to_string(&event).unwrap_or_default();
-                tracing::info!("AGUI: {json}\n");
+                match &event {
+                    AguiEvent::TextMessageStart { .. } => print!("\nreply: \n"),
+                    AguiEvent::TextMessageContent { delta, .. } => print!("{delta}"),
+                    AguiEvent::TextMessageEnd { .. } => println!(),
+                    AguiEvent::ToolCallStart { tool_call_name, .. } => {
+                        print!("\ntool_call({tool_call_name}): \n")
+                    }
+                    AguiEvent::ToolCallArgs { delta, .. } => print!("{delta}"),
+                    AguiEvent::ToolCallEnd { .. } => println!(),
+                    _ => tracing::info!("{event}"),
+                }
             }
         });
 
