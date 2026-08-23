@@ -1,7 +1,7 @@
 pub mod models;
 pub mod stdout;
 
-use crate::agui::models::{AguiEmitter, AguiEvent, AguiState};
+use crate::agui::models::{AguiEmitter, AguiEvent, AguiReasoningRole, AguiState};
 use crate::ctx::Ctx;
 use crate::ctx::models::Disposer;
 use crate::llm::models::Role;
@@ -31,9 +31,6 @@ impl Plugin<(), AguiEmitter> for AguiPlugin {
         let (tx, _) = broadcast::channel::<AguiEvent>(256);
         let state: Arc<Mutex<AguiState>> = Arc::new(Mutex::new(AguiState::default()));
         let step_name = |turn: u32, step: u32| -> String { format!("turn{turn}-step{step}") };
-        let run_id = |session_id: &SessionId, turn: u32| -> String {
-            format!("{}-turn{}", session_id, turn)
-        };
         let message_id = |session_id: &SessionId, turn: u32, step: u32| -> String {
             format!("{session_id}-t{turn}-s{step}")
         };
@@ -73,7 +70,7 @@ impl Plugin<(), AguiEmitter> for AguiPlugin {
                 ctx.on::<LoopPayloadTurnStart>(LoopEvent::TurnStart, move |p| {
                     emit(AguiEvent::RunStarted {
                         session_id: p.session_id.to_string(),
-                        run_id: run_id(&p.session_id, p.turn),
+                        run_id: p.run_id.clone(),
                     });
                 }),
             );
@@ -87,7 +84,7 @@ impl Plugin<(), AguiEmitter> for AguiPlugin {
                 finish_step(p.session_id.as_ref());
                 emit(AguiEvent::RunFinished {
                     session_id: p.session_id.to_string(),
-                    run_id: run_id(&p.session_id, p.turn),
+                    run_id: p.run_id.clone(),
                     result: Some(p.cause.reason.clone()),
                     usages: p.usages.clone(),
                 });
@@ -99,7 +96,7 @@ impl Plugin<(), AguiEmitter> for AguiPlugin {
             receipts.push(ctx.on::<LoopPayloadError>(LoopEvent::Error, move |p| {
                 emit(AguiEvent::RunError {
                     session_id: p.session_id.to_string(),
-                    run_id: run_id(&p.session_id, p.turn),
+                    run_id: p.run_id.clone(),
                     message: p.error.clone(),
                     usages: None,
                 });
@@ -111,7 +108,7 @@ impl Plugin<(), AguiEmitter> for AguiPlugin {
                 ctx.on::<LoopPayloadInnerError>(LoopEvent::InnerError, move |p| {
                     emit(AguiEvent::RunError {
                         session_id: p.session_id.to_string(),
-                        run_id: run_id(&p.session_id, p.turn.unwrap_or(0)),
+                        run_id: p.run_id.clone(),
                         message: p.error.clone(),
                         usages: Some(p.usages.clone()),
                     });
@@ -127,7 +124,7 @@ impl Plugin<(), AguiEmitter> for AguiPlugin {
                 ctx.on::<LoopPayloadStepStart>(LoopEvent::StepStart, move |p| {
                     // 上一步结束, 这一步开始
                     finish_step(p.session_id.as_ref());
-                    let run_id = run_id(&p.session_id, p.turn);
+                    let run_id = p.run_id.clone();
                     let step_name = step_name(p.turn, p.step);
                     state.lock().unwrap().current_step.insert(
                         p.session_id.to_string(),
@@ -148,7 +145,7 @@ impl Plugin<(), AguiEmitter> for AguiPlugin {
                 ctx.on::<LoopPayloadTextStart>(LoopEvent::TextStart, move |p| {
                     emit(AguiEvent::TextMessageStart {
                         session_id: p.session_id.to_string(),
-                        run_id: run_id(&p.session_id, p.turn),
+                        run_id: p.run_id.clone(),
                         message_id: message_id(&p.session_id, p.turn, p.step),
                         role: Role::Assistant,
                     });
@@ -162,7 +159,7 @@ impl Plugin<(), AguiEmitter> for AguiPlugin {
                 ctx.on::<LoopPayloadTextDelta>(LoopEvent::TextDelta, move |p| {
                     emit(AguiEvent::TextMessageContent {
                         session_id: p.session_id.to_string(),
-                        run_id: run_id(&p.session_id, p.turn),
+                        run_id: p.run_id.clone(),
                         message_id: message_id(&p.session_id, p.turn, p.step),
                         delta: p.delta.clone(),
                     });
@@ -175,7 +172,7 @@ impl Plugin<(), AguiEmitter> for AguiPlugin {
             receipts.push(ctx.on::<LoopPayloadTextEnd>(LoopEvent::TextEnd, move |p| {
                 emit(AguiEvent::TextMessageEnd {
                     session_id: p.session_id.to_string(),
-                    run_id: run_id(&p.session_id, p.turn),
+                    run_id: p.run_id.clone(),
                     message_id: message_id(&p.session_id, p.turn, p.step),
                 });
             }));
@@ -188,8 +185,9 @@ impl Plugin<(), AguiEmitter> for AguiPlugin {
                 move |p| {
                     emit(AguiEvent::ReasoningMessageStart {
                         session_id: p.session_id.to_string(),
-                        run_id: run_id(&p.session_id, p.turn),
+                        run_id: p.run_id.clone(),
                         message_id: reasoning_message_id(&p.session_id, p.turn, p.step),
+                        role: AguiReasoningRole::Reasoning,
                     });
                 },
             ));
@@ -201,7 +199,7 @@ impl Plugin<(), AguiEmitter> for AguiPlugin {
                 move |p| {
                     emit(AguiEvent::ReasoningMessageContent {
                         session_id: p.session_id.to_string(),
-                        run_id: run_id(&p.session_id, p.turn),
+                        run_id: p.run_id.clone(),
                         message_id: reasoning_message_id(&p.session_id, p.turn, p.step),
                         delta: p.delta.clone(),
                     });
@@ -214,7 +212,7 @@ impl Plugin<(), AguiEmitter> for AguiPlugin {
                 ctx.on::<LoopPayloadReasoningEnd>(LoopEvent::ReasoningEnd, move |p| {
                     emit(AguiEvent::ReasoningMessageEnd {
                         session_id: p.session_id.to_string(),
-                        run_id: run_id(&p.session_id, p.turn),
+                        run_id: p.run_id.clone(),
                         message_id: reasoning_message_id(&p.session_id, p.turn, p.step),
                     });
                 }),
@@ -227,7 +225,7 @@ impl Plugin<(), AguiEmitter> for AguiPlugin {
                 ctx.on::<LoopPayloadToolCallStart>(LoopEvent::ToolCallStart, move |p| {
                     emit(AguiEvent::ToolCallStart {
                         session_id: p.session_id.to_string(),
-                        run_id: run_id(&p.session_id, p.turn),
+                        run_id: p.run_id.clone(),
                         tool_call_id: p.call_id.clone(),
                         tool_call_name: p.name.clone(),
                     });
@@ -241,7 +239,7 @@ impl Plugin<(), AguiEmitter> for AguiPlugin {
                 ctx.on::<LoopPayloadToolCallArgs>(LoopEvent::ToolCallArgs, move |p| {
                     emit(AguiEvent::ToolCallArgs {
                         session_id: p.session_id.to_string(),
-                        run_id: run_id(&p.session_id, p.turn),
+                        run_id: p.run_id.clone(),
                         tool_call_id: p.call_id.clone(),
                         delta: p.delta.clone(),
                     });
@@ -255,7 +253,7 @@ impl Plugin<(), AguiEmitter> for AguiPlugin {
                 ctx.on::<LoopPayloadToolCallEnd>(LoopEvent::ToolCallEnd, move |p| {
                     emit(AguiEvent::ToolCallEnd {
                         session_id: p.session_id.to_string(),
-                        run_id: run_id(&p.session_id, p.turn),
+                        run_id: p.run_id.clone(),
                         tool_call_id: p.call_id.clone(),
                     });
                 }),
@@ -268,7 +266,8 @@ impl Plugin<(), AguiEmitter> for AguiPlugin {
                 ctx.on::<LoopPayloadToolResult>(LoopEvent::ToolResult, move |p| {
                     emit(AguiEvent::ToolCallResult {
                         session_id: p.session_id.to_string(),
-                        run_id: run_id(&p.session_id, p.turn),
+                        run_id: p.run_id.clone(),
+                        message_id: format!("tool-result-{}", p.call.id),
                         tool_call_id: p.call.id.clone(),
                         content: p.result.clone(),
                     });
@@ -280,5 +279,35 @@ impl Plugin<(), AguiEmitter> for AguiPlugin {
             service: Some(AguiEmitter { tx }),
             emit_disposers: Some(receipts),
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::llm::models::TurnUsage;
+
+    #[test]
+    fn inner_error_preserves_the_runtime_run_id_without_a_turn() {
+        let ctx = Arc::new(Ctx::new());
+        let applied = AguiPlugin.apply(&ctx, ()).unwrap();
+        let emitter = applied.service.unwrap();
+        let mut events = emitter.subscribe();
+
+        ctx.emit(
+            LoopEvent::InnerError,
+            &LoopPayloadInnerError {
+                run_id: "accepted-run-id".to_string(),
+                session_id: SessionId::from("thread-1"),
+                error: "provider config missing".to_string(),
+                usages: TurnUsage::new(),
+                turn: None,
+            },
+        );
+
+        assert!(matches!(
+            events.try_recv().unwrap(),
+            AguiEvent::RunError { run_id, .. } if run_id == "accepted-run-id"
+        ));
     }
 }

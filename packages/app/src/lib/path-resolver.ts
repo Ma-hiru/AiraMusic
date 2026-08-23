@@ -47,6 +47,12 @@ export class MainPathResolver {
         process.platform === "win32" ? "aira-music-cache.exe" : "aira-music-cache"
       );
 
+  static agentBinaryPath = isDev
+    ? this.appPathJoin("../agent", process.platform === "win32" ? "agent.exe" : "agent")
+    : this.appResourcePathJoin("bin", process.platform === "win32" ? "agent.exe" : "agent");
+
+  static agentDataDir = this.appUserDataJoin("agent-service");
+
   static nativeTaskbarAddonPath = isDev
     ? this.appPathJoin("../native/index.node")
     : this.appResourcePathJoin("native", "index.node");

@@ -1,12 +1,13 @@
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID, timingSafeEqual } from "node:crypto";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { createServer, type Server as HTTPServer } from "node:http";
 import { createMcpExpressApp } from "@modelcontextprotocol/sdk/server/express.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
+import { ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
 import { MainWindowManager } from "@/lib/window-manager";
 import type { AddressInfo } from "node:net";
 import type { Request, Response } from "express";
-import type { LLMTool } from "@mahiru/ai";
+import type { LLMTool } from "@mahiru/agent";
 
 import {
   registerLLMToolsAsMcp,
@@ -27,6 +28,10 @@ export interface AiraMcpServerConfig {
   port: number;
   /** 仅接受 AiraPublicMcpToolNames 中明确审核过的工具。 */
   toolNames: readonly string[];
+  /** Electron 主进程与 Rust Agent 之间的进程级凭证，不对 renderer 暴露。 */
+  internalToken?: string;
+  /** 内部凭证可见的完整目录；未配置凭证时忽略。 */
+  internalToolNames?: readonly string[];
 }
 
 export interface AiraMcpEndpoint {
@@ -58,7 +63,8 @@ const DefaultDependencies: AiraMcpServerDependencies = {
 export class AiraMcpServer {
   private readonly config: Readonly<AiraMcpServerConfig>;
   private readonly dependencies: AiraMcpServerDependencies;
-  private readonly tools: readonly LLMTool[];
+  private readonly publicTools: readonly LLMTool[];
+  private readonly internalTools: readonly LLMTool[];
   private readonly activeRequests = new Set<ActiveMcpRequest>();
   private httpServer?: HTTPServer;
   private endpointValue?: AiraMcpEndpoint;
@@ -69,10 +75,27 @@ export class AiraMcpServer {
     config: AiraMcpServerConfig,
     dependencies: AiraMcpServerDependencies = DefaultDependencies
   ) {
-    const toolNames = validateAiraPublicMcpToolNames(config.toolNames);
-    this.config = Object.freeze({ port: validatePort(config.port), toolNames });
+    const internalToken = validateInternalToken(config.internalToken);
+    const toolNames =
+      config.toolNames.length === 0 && internalToken
+        ? []
+        : validateAiraPublicMcpToolNames(config.toolNames);
+    const internalToolNames = internalToken
+      ? validateAiraPublicMcpToolNames(config.internalToolNames ?? toolNames)
+      : toolNames;
+    this.config = Object.freeze({
+      port: validatePort(config.port),
+      toolNames,
+      ...(internalToken ? { internalToken, internalToolNames } : {})
+    });
     this.dependencies = dependencies;
-    this.tools = validateResolvedTools(toolNames, dependencies.resolveTools(toolNames));
+    this.publicTools =
+      toolNames.length === 0
+        ? []
+        : validateResolvedTools(toolNames, dependencies.resolveTools(toolNames));
+    this.internalTools = internalToken
+      ? validateResolvedTools(internalToolNames, dependencies.resolveTools(internalToolNames))
+      : this.publicTools;
   }
 
   get endpoint(): undefined | AiraMcpEndpoint {
@@ -103,7 +126,6 @@ export class AiraMcpServer {
   private async startInternal(): Promise<AiraMcpEndpoint> {
     if (this.endpointValue) return this.endpointValue;
 
-    const registry = createAiraMcpToolRegistry(this.tools);
     const adapterOptions: AiraMcpToolAdapterOptions = {
       createCallID: this.dependencies.createCallID,
       isRendererAvailable: this.dependencies.isRendererAvailable,
@@ -116,8 +138,15 @@ export class AiraMcpServer {
     });
 
     expressApp.post(AiraMcpProtocolPath, async (request: Request, response: Response) => {
+      const tools = this.resolveRequestTools(request);
+      const registry = createAiraMcpToolRegistry(tools);
       const mcpServer = new McpServer({ name: "airamusic-mcp-server", version: "1.0.0" });
-      registerLLMToolsAsMcp(mcpServer, registry, this.tools, adapterOptions);
+      if (tools.length === 0) {
+        mcpServer.server.registerCapabilities({ tools: { listChanged: false } });
+        mcpServer.server.setRequestHandler(ListToolsRequestSchema, async () => ({ tools: [] }));
+      } else {
+        registerLLMToolsAsMcp(mcpServer, registry, tools, adapterOptions);
+      }
       const transport = new StreamableHTTPServerTransport({
         sessionIdGenerator: undefined,
         enableJsonResponse: true
@@ -188,6 +217,16 @@ export class AiraMcpServer {
     if (!httpServer?.listening) return;
     await close(httpServer);
   }
+
+  private resolveRequestTools(request: Request): readonly LLMTool[] {
+    const token = this.config.internalToken;
+    if (!token) return this.publicTools;
+    const authorization = request.get("authorization");
+    const supplied = authorization?.startsWith("Bearer ")
+      ? authorization.slice("Bearer ".length)
+      : undefined;
+    return supplied && secureTokenEqual(supplied, token) ? this.internalTools : this.publicTools;
+  }
 }
 
 function validatePort(port: number): number {
@@ -195,6 +234,18 @@ function validatePort(port: number): number {
     throw new Error(`MCP 端口必须是 0 到 65535 的整数：${port}`);
   }
   return port;
+}
+
+function validateInternalToken(token: undefined | string): undefined | string {
+  if (token === undefined) return undefined;
+  if (!token) throw new Error("MCP 内部 token 不能为空");
+  return token;
+}
+
+function secureTokenEqual(left: string, right: string): boolean {
+  const leftDigest = createHash("sha256").update(left).digest();
+  const rightDigest = createHash("sha256").update(right).digest();
+  return timingSafeEqual(leftDigest, rightDigest);
 }
 
 function validateResolvedTools(names: readonly string[], tools: readonly LLMTool[]): LLMTool[] {

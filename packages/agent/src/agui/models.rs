@@ -5,15 +5,27 @@ use std::fmt::{Display, Formatter};
 use tokio::sync::broadcast;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[serde(rename_all = "lowercase")]
+pub enum AguiReasoningRole {
+    Reasoning,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(
+    tag = "type",
+    rename_all = "SCREAMING_SNAKE_CASE",
+    rename_all_fields = "camelCase"
+)]
 pub enum AguiEvent {
     RunStarted {
         /// 会话 id(AGUI 的 threadId)
+        #[serde(rename = "threadId")]
         session_id: String,
         /// 运行 id(会话内唯一, turn相关)
         run_id: String,
     },
     RunFinished {
+        #[serde(rename = "threadId")]
         session_id: String,
         run_id: String,
         /// 结束原因(成功 / 被拦 / 出错 / 超步数)
@@ -22,6 +34,7 @@ pub enum AguiEvent {
         usages: TurnUsage,
     },
     RunError {
+        #[serde(rename = "threadId")]
         session_id: String,
         run_id: String,
         message: String,
@@ -31,17 +44,20 @@ pub enum AguiEvent {
     },
     /// 一步开始(工具往返的一小步)
     StepStarted {
+        #[serde(rename = "threadId")]
         session_id: String,
         run_id: String,
         /// 步骤名(如 "turn1-step2")
         step_name: String,
     },
     StepFinished {
+        #[serde(rename = "threadId")]
         session_id: String,
         run_id: String,
         step_name: String,
     },
     TextMessageStart {
+        #[serde(rename = "threadId")]
         session_id: String,
         run_id: String,
         /// 消息 id(一个 step 一段文本)
@@ -50,33 +66,40 @@ pub enum AguiEvent {
         role: Role,
     },
     TextMessageContent {
+        #[serde(rename = "threadId")]
         session_id: String,
         run_id: String,
         message_id: String,
         delta: String,
     },
     TextMessageEnd {
+        #[serde(rename = "threadId")]
         session_id: String,
         run_id: String,
         message_id: String,
     },
     ReasoningMessageStart {
+        #[serde(rename = "threadId")]
         session_id: String,
         run_id: String,
         message_id: String,
+        role: AguiReasoningRole,
     },
     ReasoningMessageContent {
+        #[serde(rename = "threadId")]
         session_id: String,
         run_id: String,
         message_id: String,
         delta: String,
     },
     ReasoningMessageEnd {
+        #[serde(rename = "threadId")]
         session_id: String,
         run_id: String,
         message_id: String,
     },
     ToolCallStart {
+        #[serde(rename = "threadId")]
         session_id: String,
         run_id: String,
         tool_call_id: String,
@@ -84,19 +107,23 @@ pub enum AguiEvent {
     },
     /// 工具参数增量(JSON 片段)
     ToolCallArgs {
+        #[serde(rename = "threadId")]
         session_id: String,
         run_id: String,
         tool_call_id: String,
         delta: String,
     },
     ToolCallEnd {
+        #[serde(rename = "threadId")]
         session_id: String,
         run_id: String,
         tool_call_id: String,
     },
     ToolCallResult {
+        #[serde(rename = "threadId")]
         session_id: String,
         run_id: String,
+        message_id: String,
         tool_call_id: String,
         content: String,
     },
@@ -180,6 +207,7 @@ impl Display for AguiEvent {
                 message_id,
                 run_id,
                 session_id,
+                ..
             } => {
                 write!(
                     f,
@@ -228,6 +256,7 @@ impl Display for AguiEvent {
                 session_id,
                 run_id,
                 content,
+                ..
             } => {
                 write!(
                     f,

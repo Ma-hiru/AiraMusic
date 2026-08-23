@@ -2,6 +2,7 @@ use crate::llm::models::ChatMessage;
 use crate::utils::generate_id;
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(transparent)]
@@ -49,15 +50,54 @@ impl Default for SessionId {
     }
 }
 
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ThreadMetadata {
+    pub name: String,
+    pub created_at: i64,
+    pub updated_at: i64,
+}
+
+impl ThreadMetadata {
+    pub fn new(name: impl Into<String>) -> Self {
+        let now = current_timestamp_millis();
+        Self {
+            name: name.into(),
+            created_at: now,
+            updated_at: now,
+        }
+    }
+
+    pub fn touch(&mut self) {
+        self.updated_at = current_timestamp_millis().max(self.updated_at);
+    }
+}
+
+fn current_timestamp_millis() -> i64 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|duration| duration.as_millis().min(i64::MAX as u128) as i64)
+        .unwrap_or_default()
+}
+
 #[derive(Clone)]
 pub enum SessionEvent {
     Create {
+        session_id: SessionId,
+        metadata: ThreadMetadata,
+    },
+    Delete {
         session_id: SessionId,
     },
     Append {
         session_id: SessionId,
         message: ChatMessage,
         inner: bool,
+        metadata: ThreadMetadata,
+    },
+    Metadata {
+        session_id: SessionId,
+        metadata: ThreadMetadata,
     },
     AppendMemory {
         id: String,

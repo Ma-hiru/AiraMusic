@@ -1,5 +1,4 @@
 use crate::agui::AguiPlugin;
-use crate::agui::stdout::AguiStdoutPlugin;
 use crate::ctx::Ctx;
 use crate::ctx::boot::boot;
 use crate::llm::persistence::LLMConfigPersistencePlugin;
@@ -7,7 +6,7 @@ use crate::llm::plugins::{LLMCompactorConfig, LLMCompactorPlugin, LLMConfigPlugi
 use crate::r#loop::{LoopConfig, LoopPlugin};
 use crate::mcp::MCPPlugin;
 use crate::plugins::max_turns::{MaxTurnsConfig, MaxTurnsPlugin};
-use crate::plugins::models::Plugin;
+use crate::plugins::models::{Plugin, PluginMeta};
 use crate::plugins::persona::PersonaPlugin;
 use crate::prompt::PromptPlugin;
 use crate::session::SessionPlugin;
@@ -44,10 +43,14 @@ pub async fn build_agent(config: AgentConfig) -> anyhow::Result<Arc<Ctx>> {
             InnerToolsPlugin.boot(&ctx, ())?,
             MaxTurnsPlugin.boot(&ctx, config.max_turns_config)?,
             AguiPlugin.boot(&ctx, ())?,
-            AguiStdoutPlugin.boot(&ctx, ())?,
             LoopPlugin.boot(&ctx, config.loop_config)?,
         ],
     )?;
+    let store_manager = StorePlugin::get_service(&ctx)?;
+    let session_manager = SessionPlugin::get_service(&ctx)?;
+    let config_manager = LLMConfigPlugin::get_service(&ctx)?;
+    SessionPersistencePlugin::restore(&session_manager, &store_manager).await?;
+    LLMConfigPersistencePlugin::restore(&config_manager, &store_manager).await?;
     tracing::info!("agent booted");
     Ok(ctx)
 }

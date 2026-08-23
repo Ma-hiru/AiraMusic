@@ -8,7 +8,7 @@ import Marquee from "@/common/components/display/marquee";
 import AppMask from "@/common/components/fallback/app-mask";
 import Control from "@/common/components/layout/top/control";
 import AppModal, { createDialogModal } from "@/common/components/display/modal";
-import type { AIProviderConfigSnapshot } from "@mahiru/ai";
+import type { ProviderConfigView } from "@mahiru/agent/browser";
 
 import Chat from "./chat";
 import SideBtn from "./side-btn";
@@ -57,7 +57,7 @@ const AgentPage: FC<object> = () => {
   }, [activeConfig, loading, runningRunID]);
 
   const openConfigModal = useCallback(
-    (initialConfig?: AIProviderConfigSnapshot) => {
+    (initialConfig?: ProviderConfigView) => {
       create(createAgentConfigModal, {
         providers,
         defaultProvider: initialConfig?.provider ?? providers[0]?.id,

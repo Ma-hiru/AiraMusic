@@ -2,12 +2,12 @@ import { cx } from "@emotion/css";
 import { memo, type FC } from "react";
 import { Radio, Trash2 } from "lucide-react";
 import IconButton from "@/common/components/data-input/icon-button";
-import type { AgentConversationSummary } from "@mahiru/ipc/types";
+import type { ThreadSummary } from "@mahiru/agent/browser";
 
 interface ConversationItemProps {
   active: boolean;
   disabled?: boolean;
-  conversation: AgentConversationSummary;
+  conversation: ThreadSummary;
   onOpen: NormalFunc<[id: string]>;
   onRemove: NormalFunc<[id: string]>;
 }

@@ -1,6 +1,6 @@
 import { shell, BrowserWindow } from "electron";
 import { Log } from "@/lib/log";
-import { MainAgent } from "@/inner/agent";
+import { MainAgent } from "@/services/agent";
 import { MainHandle } from "@/lib/handle";
 import { MainWindowPreset } from "@/lib/window-preset";
 import { MainWindowConstants } from "@/constants/window";

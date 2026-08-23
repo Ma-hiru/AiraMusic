@@ -3,7 +3,7 @@ import { request as httpRequest } from "node:http";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { CallToolResultSchema } from "@modelcontextprotocol/sdk/types.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
-import { LLMTool, AIResult } from "@mahiru/ai";
+import { LLMTool, AIResult } from "@mahiru/agent";
 import {
   AiraMcpServer,
   AiraMcpToolOutputMaxChars,
@@ -29,8 +29,11 @@ class FakeSearchTool extends LLMTool<typeof SearchInputSchema, JsonValue> {
   readonly inputSchema = SearchInputSchema;
   calls = 0;
 
-  constructor(private readonly output: JsonValue) {
-    super({ name: "agent-search", description: "查询公开音乐资料" });
+  constructor(
+    private readonly output: JsonValue,
+    name = "agent-search"
+  ) {
+    super({ name, description: "查询公开音乐资料" });
   }
 
   async execute(): Promise<AIResult<JsonValue>> {
@@ -215,6 +218,83 @@ describe("Aira MCP Streamable HTTP 服务", () => {
     expect(response.body).toContain("Invalid Host");
     expect(tool.calls).toBe(0);
   });
+
+  it("同一端点仅向内部 bearer token 开放完整工具目录", async () => {
+    const publicTool = new FakeSearchTool({ answer: "public" });
+    const dangerousTool = new FakeSearchTool({ answer: "internal" }, "agent-tool-player-action");
+    const tools = new Map([publicTool, dangerousTool].map((tool) => [tool.name, tool]));
+    const dependencies: AiraMcpServerDependencies = {
+      resolveTools: (names) => names.map((name) => tools.get(name)!),
+      isRendererAvailable: () => true,
+      createCallID: () => crypto.randomUUID()
+    };
+    const server = new AiraMcpServer(
+      {
+        port: 0,
+        toolNames: ["agent-search"],
+        internalToken: "internal-secret",
+        internalToolNames: ["agent-search", "agent-tool-player-action"]
+      },
+      dependencies
+    );
+    running.push(server);
+    const endpoint = await server.start();
+    const publicClient = await connectClient(endpoint.url);
+    const invalidClient = await connectClient(endpoint.url, "wrong-secret");
+    const internalClient = await connectClient(endpoint.url, "internal-secret");
+
+    try {
+      await expect(publicClient.listTools()).resolves.toMatchObject({
+        tools: [{ name: "agent-search" }]
+      });
+      await expect(invalidClient.listTools()).resolves.toMatchObject({
+        tools: [{ name: "agent-search" }]
+      });
+      expect((await internalClient.listTools()).tools.map((tool) => tool.name)).toEqual([
+        "agent-search",
+        "agent-tool-player-action"
+      ]);
+    } finally {
+      await Promise.allSettled([
+        publicClient.close(),
+        invalidClient.close(),
+        internalClient.close()
+      ]);
+    }
+  });
+
+  it("公开 MCP 关闭时匿名目录为空但内部 Agent 仍可使用工具", async () => {
+    const internalTool = new FakeSearchTool({ answer: "internal" });
+    const server = new AiraMcpServer(
+      {
+        port: 0,
+        toolNames: [],
+        internalToken: "internal-secret",
+        internalToolNames: ["agent-search"]
+      },
+      {
+        resolveTools: (names) => {
+          if (names.length === 0) throw new Error("不应解析空的公共工具目录");
+          return names.map(() => internalTool);
+        },
+        isRendererAvailable: () => true,
+        createCallID: () => crypto.randomUUID()
+      }
+    );
+    running.push(server);
+    const endpoint = await server.start();
+    const publicClient = await connectClient(endpoint.url);
+    const internalClient = await connectClient(endpoint.url, "internal-secret");
+
+    try {
+      await expect(publicClient.listTools()).resolves.toMatchObject({ tools: [] });
+      await expect(internalClient.listTools()).resolves.toMatchObject({
+        tools: [{ name: "agent-search" }]
+      });
+    } finally {
+      await Promise.allSettled([publicClient.close(), internalClient.close()]);
+    }
+  });
 });
 
 function createServer(tool: FakeSearchTool, rendererAvailable: boolean): AiraMcpServer {
@@ -226,9 +306,13 @@ function createServer(tool: FakeSearchTool, rendererAvailable: boolean): AiraMcp
   return new AiraMcpServer({ port: 0, toolNames: ["agent-search"] }, dependencies);
 }
 
-async function connectClient(url: string): Promise<Client> {
+async function connectClient(url: string, token?: string): Promise<Client> {
   const client = new Client({ name: "airamusic-mcp-test", version: "1.0.0" });
-  await client.connect(new StreamableHTTPClientTransport(new URL(url)));
+  await client.connect(
+    new StreamableHTTPClientTransport(new URL(url), {
+      ...(token ? { requestInit: { headers: { Authorization: `Bearer ${token}` } } } : {})
+    })
+  );
   return client;
 }
 

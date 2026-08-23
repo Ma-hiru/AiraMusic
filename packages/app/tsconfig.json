@@ -18,7 +18,7 @@
     { "path": "../store/tsconfig.json" },
     { "path": "../ipc/tsconfig.json" },
     { "path": "../native/tsconfig.json" },
-    { "path": "../ai/tsconfig.json" }
+    { "path": "../agent/tsconfig.json" }
   ],
   "include": ["src/**/*", "../../types/**/*"]
 }

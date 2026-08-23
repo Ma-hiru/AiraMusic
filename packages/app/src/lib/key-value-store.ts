@@ -3,7 +3,6 @@ import { MainRuntime } from "@/lib/runtime";
 import { MainPathResolver } from "@/lib/path-resolver";
 import ElectronStore from "electron-store";
 import type { CacheStoreConfig } from "@/types/store";
-import type { LLMConversationSnapshot, AIProviderConfigSnapshot } from "@mahiru/ai";
 
 export type StoreTypeForWindow = {
   [k in WindowType]: {
@@ -21,25 +20,15 @@ export type StoreTypeForConfig = {
   agentEnabled: boolean;
   /** 旧版配置键，仅用于首次读取时迁移。 */
   cacheIndexKey: string;
-  enableAgent?: boolean;
   cache: CacheStoreConfig;
   enableDestructiveTools: boolean;
 };
 
 export type StoreTypeForRenderer = Record<string, JsonValue>;
 
-export type AgentConversationIndexEntry = Pick<
-  LLMConversationSnapshot,
-  "id" | "name" | "updatedAt"
->;
-
 export type StoreTypeForAgent = {
-  conversationStorageVersion?: number;
-  providerAPIKeys: Record<string, string>;
-  providerConfigs: Record<string, AIProviderConfigSnapshot>;
-  conversationIndex?: Record<string, AgentConversationIndexEntry>;
-  // 仅用于从旧版单文件结构迁移，迁移完成后会删除。
-  conversations?: Record<string, LLMConversationSnapshot>;
+  /** Rust Agent store secret 经 Electron safeStorage 加密后的 base64 密文。 */
+  agentStoreSecret?: string;
 };
 
 export const MainStoreForWindow = new ElectronStore<StoreTypeForWindow>({

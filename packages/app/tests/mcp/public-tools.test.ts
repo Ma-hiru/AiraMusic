@@ -1,4 +1,4 @@
-import { createAgentToolCatalog } from "@mahiru/app/inner/agent/tool-catalog";
+import { createAgentToolCatalog } from "@mahiru/app/inner/mcp/tools/catalog";
 import {
   AiraPublicMcpToolNames,
   AiraDefaultMcpToolNames,
@@ -18,17 +18,15 @@ vi.mock("electron", () => ({
 }));
 
 describe("Aira MCP 工具可选列表", () => {
-  it("可选列表覆盖完整 Agent 工具目录（排除内部路由工具）", () => {
+  it("可选列表覆盖完整应用工具目录", () => {
     const catalogNames = createAgentToolCatalog(true)
       .list.map((tool) => tool.name)
-      .filter((name) => name !== "agent-tool-capability-search")
       .sort((left, right) => left.localeCompare(right));
 
     expect([...AiraPublicMcpToolNames]).toEqual(catalogNames);
     expect(AiraPublicMcpToolNames).toContain("agent-tool-player-queue-remove");
     expect(AiraPublicMcpToolNames).toContain("agent-tool-track-play");
     expect(AiraPublicMcpToolNames).toContain("agent-tool-playlist-delete");
-    expect(AiraPublicMcpToolNames).not.toContain("agent-tool-capability-search");
   });
 
   it("可选列表每一项都能解析", () => {
@@ -69,8 +67,8 @@ describe("Aira MCP 工具可选列表", () => {
     });
   });
 
-  it.each(["agent-tool-capability-search", "not-a-real-tool"])("拒绝内部或未知工具 %s", (name) => {
-    expect(() => validateAiraPublicMcpToolNames([name])).toThrow("公开可选列表");
+  it("拒绝未知工具", () => {
+    expect(() => validateAiraPublicMcpToolNames(["not-a-real-tool"])).toThrow("公开可选列表");
   });
 
   it("拒绝空配置和重复工具", () => {

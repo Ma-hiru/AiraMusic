@@ -1,116 +1,121 @@
 use agent::agent::{AgentConfig, build_agent};
-use agent::cancel::Signal;
-use agent::llm::models::{ChatMessage, LLMConfig, LLMContextSize, LLMProvider};
-use agent::llm::plugins::{LLMCompactorConfig, LLMConfigPlugin};
+use agent::agui::AguiPlugin;
+use agent::api::models::AgentReady;
+use agent::llm::plugins::LLMCompactorConfig;
 use agent::r#loop::{LoopConfig, LoopPlugin};
 use agent::mcp::MCPPlugin;
 use agent::plugins::max_turns::MaxTurnsConfig;
 use agent::plugins::models::PluginMeta;
-use agent::session::SessionPlugin;
+use agent::runtime::AgentRuntimeService;
+use agent::server::bootstrap::AgentBootstrap;
+use agent::server::{AGENT_PROTOCOL_VERSION, AgentServerState, build_router};
 use agent::store::StoreConfig;
-use agent::utils::generate_id;
-use std::io::BufRead;
+use serde_json::json;
+use std::io::Write;
+use std::net::{Ipv4Addr, SocketAddr};
+use std::time::Duration;
+use tokio::io::AsyncReadExt;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    dotenvy::dotenv()?;
-    dotenvy::from_filename(".env.local")?;
+    let bootstrap = AgentBootstrap::from_process()?;
     tracing::subscriber::set_global_default(
         tracing_subscriber::FmtSubscriber::builder()
-            .with_max_level(tracing::Level::INFO)
+            .json()
+            .with_max_level(bootstrap.log_level.as_level_filter())
+            .with_ansi(false)
+            .with_writer(std::io::stderr)
             .finish(),
     )?;
 
     let ctx = build_agent(AgentConfig {
         store_config: StoreConfig {
-            path: "./data".into(),
-            secret: "aaa".to_string(),
+            path: bootstrap.data_dir,
+            secret: bootstrap.secrets.store_secret().to_string(),
         },
         llm_compactor_config: LLMCompactorConfig {
             keep: 10,
             threshold: 0.75,
         },
-        max_turns_config: MaxTurnsConfig { max_turns: 100000 },
+        max_turns_config: MaxTurnsConfig { max_turns: 100_000 },
         loop_config: LoopConfig {
             max_steps_per_turn: 100,
         },
     })
     .await?;
 
-    let loop_service = LoopPlugin::get_service(&ctx)?;
-    let session_manager = SessionPlugin::get_service(&ctx)?;
-    let config_manager = LLMConfigPlugin::get_service(&ctx)?;
     let mcp_service = MCPPlugin::get_service(&ctx)?;
-
-    mcp_service.register_json(
-        r#"{
-          "mcpServers": {
+    let mcp_config = json!({
+        "mcpServers": {
             "aira-music": {
-              "url": "http://127.0.0.1:32123/mcp"
+                "url": bootstrap.mcp_url,
+                "headers": {
+                    "Authorization": format!("Bearer {}", bootstrap.secrets.mcp_token())
+                }
             }
-          }
-        }"#,
-    )?;
-
-    if config_manager.get_default_config()?.is_none() {
-        config_manager.add_global_config(LLMConfig {
-            default: true,
-            id: generate_id("llm-config"),
-            name: "default".to_string(),
-            provider: LLMProvider::OpenAI,
-            base_url: std::env::var("OPENAI_BASE_URL").ok(),
-            api_key: std::env::var("OPENAI_API_KEY").expect("OPENAI_API_KEY not found"),
-            model: std::env::var("OPENAI_MODEL").expect("OPENAI_MODEL not found"),
-            context_size: LLMContextSize::_1M,
-            other: None,
-            headers: None,
-            thinking: true,
-        })?;
-    }
-
-    let cancel_signal = Signal::new();
-    let mut session = session_manager.create_session();
-
-    let args = std::env::args();
-    let mut last_arg = String::new();
-    for arg in args.into_iter().skip(1) {
-        if last_arg == "--session" {
-            tracing::info!("resume session: {}", arg);
-            session = arg.into();
-        } else {
-            last_arg = arg;
         }
+    });
+    for disposer in mcp_service.register_json(&serde_json::to_string(&mcp_config)?)? {
+        ctx.effect(disposer);
     }
+    mcp_service
+        .wait_until_ready(Duration::from_secs(10))
+        .await?;
 
-    tracing::info!("current session: {}", session);
-    let mut buffer: Vec<u8> = Vec::new();
-    loop {
-        print!("input >> ");
-        std::io::Write::flush(&mut std::io::stdout())?;
+    let runtime = AgentRuntimeService::from_ctx(&ctx)?;
+    let emitter = AguiPlugin::get_service(&ctx)?;
+    let state = AgentServerState::new(
+        runtime,
+        bootstrap.secrets.control_token(),
+        emitter.tx.clone(),
+    );
+    let shutdown = state.shutdown_signal();
+    monitor_parent(shutdown.clone());
+    monitor_interrupt(shutdown.clone());
 
-        buffer.clear();
-        let stdin = std::io::stdin();
-        let mut handle = stdin.lock();
-        if handle.read_until(b'\n', &mut buffer)? == 0 {
-            break; // stdin EOF
-        }
+    let listener =
+        tokio::net::TcpListener::bind(SocketAddr::from((Ipv4Addr::LOCALHOST, bootstrap.port)))
+            .await?;
+    let port = listener.local_addr()?.port();
+    let ready = AgentReady {
+        event_type: "ready".to_string(),
+        port,
+        protocol_version: AGENT_PROTOCOL_VERSION,
+    };
+    println!("{}", serde_json::to_string(&ready)?);
+    std::io::stdout().flush()?;
 
-        // 交互输入不做严格 utf-8 校验: 非法字节替换成 �,
-        // 不因一次坏输入(输入法/粘贴的脏字节)把整个进程带崩
-        let content = String::from_utf8_lossy(&buffer).trim().to_string();
-        if content == "quit" {
-            break;
-        }
-        let handle = loop_service.send(
-            session.clone(),
-            ChatMessage::user(content),
-            cancel_signal.clone(),
-        );
+    let server_shutdown = shutdown.clone();
+    let serve_result = axum::serve(listener, build_router(state))
+        .with_graceful_shutdown(async move { server_shutdown.cancelled().await })
+        .await;
 
-        tokio::join!(handle.completed());
-    }
-
-    loop_service.stop();
+    LoopPlugin::get_service(&ctx)?.stop();
     ctx.dispose();
+    serve_result?;
     Ok(())
+}
+
+fn monitor_parent(shutdown: agent::cancel::Signal) {
+    tokio::spawn(async move {
+        let mut stdin = tokio::io::stdin();
+        let mut buffer = [0u8; 1];
+        loop {
+            match stdin.read(&mut buffer).await {
+                Ok(0) | Err(_) => {
+                    shutdown.cancel();
+                    return;
+                }
+                Ok(_) => {}
+            }
+        }
+    });
+}
+
+fn monitor_interrupt(shutdown: agent::cancel::Signal) {
+    tokio::spawn(async move {
+        if tokio::signal::ctrl_c().await.is_ok() {
+            shutdown.cancel();
+        }
+    });
 }

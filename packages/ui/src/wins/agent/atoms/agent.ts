@@ -2,7 +2,7 @@ import { atom } from "jotai";
 import { selectAtom, atomWithStorage } from "jotai/utils";
 import { RendererKeyValue } from "@/common/lib/key-value";
 import type { SyncStorage } from "jotai/vanilla/utils/atomWithStorage";
-import type { LLMConversationSnapshot } from "@mahiru/ai";
+import type { ThreadSnapshot } from "@mahiru/agent/browser";
 import type { AgentLiveTimelineItem } from "@/wins/agent/page/types";
 
 export interface AgentConversationState {
@@ -13,7 +13,7 @@ export interface AgentConversationState {
   runningRunID: string;
   pendingUserMessage: string;
   liveTimeline: AgentLiveTimelineItem[];
-  conversation: Nullable<LLMConversationSnapshot>;
+  conversation: Nullable<ThreadSnapshot>;
 }
 
 export interface AgentConversationResumeState {
@@ -170,7 +170,6 @@ export const loadAgentAtomStorageSnapshot = async (): Promise<AgentStorageSnapsh
     agentKeyValue.getItem(AGENT_SELECTED_CONVERSATION_ID_KEY, ""),
     agentKeyValue.getItem<JsonValue>(AGENT_CONVERSATION_RESUME_STATES_KEY, {})
   ]);
-  // 旧版本会把完整会话和工具历史放进 renderer 存储；加载时只迁移恢复所需字段。
   const snapshot = normalizeAgentStorageSnapshot({
     selectedConfigID,
     selectedConversationID,

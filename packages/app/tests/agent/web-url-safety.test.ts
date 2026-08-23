@@ -5,7 +5,7 @@ import {
   isPublicWebHostname,
   canRequestPublicWebURL,
   resolvePublicWebHostname
-} from "@mahiru/app/inner/agent/web-url-safety";
+} from "@mahiru/app/inner/mcp/tools/web-url-safety";
 
 describe("agent web URL safety", () => {
   it.each([

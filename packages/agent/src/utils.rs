@@ -26,11 +26,8 @@ pub fn secret_key(key: String) -> String {
     if key.is_empty() {
         return key;
     }
-    if key.len() > 10 {
-        format!("{}***", &key[..4])
-    } else {
-        format!("{}***", &key[..2])
-    }
+    let visible = if key.chars().count() > 10 { 4 } else { 2 };
+    format!("{}***", key.chars().take(visible).collect::<String>())
 }
 
 /// 工具名白名单清洗: 只保留 [a-zA-Z0-9_-], 其余替换成 _
@@ -113,5 +110,16 @@ impl LLMSSEDecoder {
             }
         }
         events
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::secret_key;
+
+    #[test]
+    fn secret_masking_handles_non_ascii_input_without_panicking() {
+        assert_eq!(secret_key("密钥测试值".to_string()), "密钥***");
+        assert_eq!(secret_key("sk-long-secret-value".to_string()), "sk-l***");
     }
 }

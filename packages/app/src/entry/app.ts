@@ -4,7 +4,7 @@ import { X509Certificate } from "node:crypto";
 import { Log } from "@/lib/log";
 import { ipcInit } from "@/inner/ipc";
 import { MainTray } from "@/lib/tray";
-import { MainAgent } from "@/inner/agent";
+import { MainAgent } from "@/services/agent";
 import { MainServices } from "@/services";
 import { MainIPC } from "@mahiru/ipc/main";
 import { MainMcp } from "@/inner/mcp/runtime";
@@ -15,7 +15,7 @@ import { MainWindowManager } from "@/lib/window-manager";
 import { MainScreenResolver } from "@/lib/screen-resolver";
 import { MainExitCodeConstants } from "@/constants/exit-code";
 import { MainTaskBarCoverPreview } from "@/lib/taskbar-cover";
-import { MainAgentFeatureSettings } from "@/inner/agent/feature-settings";
+import { MainAgentFeatureSettings } from "@/services/agent/settings";
 
 /**
  * @desc 应用实例 \
@@ -195,9 +195,11 @@ export class MainApp {
    * error: log \
    * return: 是否启用成功
    * */
-  private enableAgent() {
+  private async enableAgent(mcpUrl: string) {
     try {
-      return MainAgentFeatureSettings.isAgentRequestedAtStartup() && !!MainAgent.init();
+      return (
+        MainAgentFeatureSettings.isAgentRequestedAtStartup() && (await MainAgent.init(mcpUrl))
+      );
     } catch (err) {
       Log.warn("agent", "failed to enable agent", err);
       return false;
@@ -213,11 +215,11 @@ export class MainApp {
         const toolCount = MainAgentFeatureSettings.getState().effective.mcpTools.length;
         Log.info("mcp", `MCP listening at ${endpoint.url} with ${toolCount} tools`);
       }
-      return Boolean(endpoint);
+      return endpoint;
     } catch (err) {
       MainAgent.broadcastFeatureSettings();
       Log.warn("mcp", "failed to enable MCP", err);
-      return false;
+      return undefined;
     }
   }
 
@@ -309,13 +311,13 @@ export class MainApp {
         if (this.isExiting) return;
         Log.info("App taskbar registered");
 
-        const enable = this.enableAgent(); // 启用 Agent
+        const mcpEndpoint = await this.enableMcp(); // Agent 依赖 MCP，必须先监听
+        if (this.isExiting) return;
+        mcpEndpoint && Log.info("App MCP initialized");
+
+        const enable = mcpEndpoint ? await this.enableAgent(mcpEndpoint.url) : false;
         if (this.isExiting) return;
         enable && Log.info("App agent initialized");
-
-        const mcpEnabled = await this.enableMcp(); // 启用本地 MCP
-        if (this.isExiting) return;
-        mcpEnabled && Log.info("App MCP initialized");
 
         this._status = "running"; // 修改状态，完成初始化
         Log.info("App running");
@@ -346,8 +348,7 @@ export class MainApp {
   exit(code: number, reason: string) {
     if (this._status === "exiting") return;
     this._status = "exiting";
-    MainAgent.shutdown();
-    const stopMcp = MainMcp.shutdown();
+    const stopAgentAndMcp = MainAgent.shutdown().then(() => MainMcp.shutdown());
 
     // 异常退出输出错误日志
     if (code !== MainExitCodeConstants.NORMAL_EXIT) {
@@ -356,7 +357,7 @@ export class MainApp {
 
     this.emitStopMessageToMainRenderer()
       .catch((error) => Log.warn("app exit", "failed to notify renderer", error))
-      .then(() => Promise.allSettled([this.stopAllServers(), stopMcp]))
+      .then(() => Promise.allSettled([this.stopAllServers(), stopAgentAndMcp]))
       .finally(() => {
         app.exit(code);
       });

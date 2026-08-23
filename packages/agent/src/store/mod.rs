@@ -138,4 +138,22 @@ impl StoreManager {
             .insert(key.clone(), store.clone());
         Ok(store)
     }
+
+    pub async fn remove(&self, key: &OsString) -> anyhow::Result<bool> {
+        self.load().await?;
+        let removed = self
+            .stores
+            .lock()
+            .map_err(|e| anyhow::anyhow!("删除存储失败: {}", e))?
+            .remove(key);
+        let path = removed
+            .as_ref()
+            .map(|store| store.dir.clone())
+            .unwrap_or_else(|| self.path.join(key));
+        match tokio::fs::remove_dir_all(path).await {
+            Ok(()) => Ok(true),
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(removed.is_some()),
+            Err(error) => Err(error.into()),
+        }
+    }
 }

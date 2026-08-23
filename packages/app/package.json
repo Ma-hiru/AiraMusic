@@ -25,7 +25,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@mahiru/ai": "workspace:*",
+    "@mahiru/agent": "workspace:*",
     "@mahiru/ipc": "workspace:*",
     "@mahiru/log": "workspace:*",
     "@mahiru/native": "workspace:*",
@@ -33,6 +33,9 @@
     "@types/express": "^5.0.0",
     "@types/express-http-proxy": "^1.6.7",
     "electron": "42.3.3",
-    "tsx": "^4.22.3"
+    "rimraf": "^6.1.0",
+    "tsup": "^8.5.0",
+    "tsx": "^4.22.3",
+    "vitest": "^4.1.5"
   }
 }

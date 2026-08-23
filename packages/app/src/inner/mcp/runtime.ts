@@ -1,5 +1,7 @@
 import { AiraMcpServer, type AiraMcpEndpoint } from "./server";
-import { MainAgentFeatureSettings } from "../agent/feature-settings";
+import { MainRuntime } from "@/lib/runtime";
+import { MainAgentFeatureSettings } from "@/services/agent/settings";
+import { AiraPublicMcpToolNames } from "./public-tools";
 
 /** 管理应用进程中唯一的本地 MCP 实例。 */
 export class MainMcp {
@@ -15,13 +17,17 @@ export class MainMcp {
 
     const server = new AiraMcpServer({
       port: config.mcpPort,
-      toolNames: config.mcpTools
+      toolNames: config.mcpEnabled ? config.mcpTools : [],
+      internalToken: MainRuntime.agentMcpToken,
+      internalToolNames: AiraPublicMcpToolNames
     });
     this.server = server;
     this.starting = server
       .start()
       .then((endpoint) => {
-        MainAgentFeatureSettings.markMcpInitialized(endpoint.port, config.mcpTools);
+        if (config.mcpEnabled) {
+          MainAgentFeatureSettings.markMcpInitialized(endpoint.port, config.mcpTools);
+        }
         return endpoint;
       })
       .catch(async (error: unknown) => {

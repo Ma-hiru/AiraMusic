@@ -21,13 +21,12 @@ export type {
   AgentToolRequest,
   AgentFocusContext,
   AgentInvokeResult,
-  AgentToolResponse,
-  AgentConversationSummary
+  AgentToolResponse
 } from "./src/types/agent";
 
 export type {
   InvokeEvent,
-  AgentChatInput,
+  AgentCreateRunInput,
   InvokeEventArgs,
   InvokeEventMaps,
   InvokeEventPayload,

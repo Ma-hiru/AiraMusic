@@ -3,18 +3,18 @@ import { createPortal } from "react-dom";
 import { Plus, Check, Pencil, RefreshCw, ChevronDown, type LucideIcon } from "lucide-react";
 import { memo, useRef, type FC, useState, useEffect, useCallback, type CSSProperties } from "react";
 import { useScrollAutoHide } from "@/common/hooks/use-scroll-auto-hide";
-import type { AIProviderConfigSnapshot } from "@mahiru/ai";
+import type { ProviderConfigView } from "@mahiru/agent/browser";
 
 interface ConfigPickerProps {
   loading?: boolean;
   disabled?: boolean;
   selectedConfigID: string;
-  configs: AIProviderConfigSnapshot[];
-  activeConfig: Undefinable<AIProviderConfigSnapshot>;
+  configs: ProviderConfigView[];
+  activeConfig: Undefinable<ProviderConfigView>;
   onCreate: NormalFunc;
   onRefresh: NormalFunc;
   onSelect: NormalFunc<[id: string]>;
-  onEdit: NormalFunc<[config: AIProviderConfigSnapshot]>;
+  onEdit: NormalFunc<[config: ProviderConfigView]>;
 }
 
 const PopoverWidth = 304;
@@ -101,7 +101,7 @@ const ConfigPicker: FC<ConfigPickerProps> = ({
           </span>
           {activeConfig && (
             <span className="mt-px block truncate font-mono text-[8px] text-white/26">
-              {activeConfig.config.model}
+              {activeConfig.model}
             </span>
           )}
         </span>
@@ -160,7 +160,7 @@ const ConfigPicker: FC<ConfigPickerProps> = ({
                         {config.name}
                       </span>
                       <span className="mt-0.5 block truncate text-[9px] text-white/32">
-                        {config.config.model} · {config.provider}
+                        {config.model} · {config.provider}
                       </span>
                     </button>
                     {active && <Check className="mr-1 size-3.5 shrink-0 text-primary" />}

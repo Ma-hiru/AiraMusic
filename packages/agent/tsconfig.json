@@ -10,6 +10,6 @@
     "types": ["node"],
     "outDir": "dist"
   },
-  "files": ["index.ts"],
-  "include": ["../../types/**/*"]
+  "files": ["index.ts", "browser.ts"],
+  "include": ["../../types/**/*", "./scripts/**/*", "./src-ts/**/*", "./generated/**/*"]
 }

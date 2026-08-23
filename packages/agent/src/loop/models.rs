@@ -190,6 +190,7 @@ pub struct LoopPayloadAfterReply {
 
 #[derive(Clone)]
 pub struct LoopPayloadTurnStart {
+    pub run_id: String,
     pub turn: u32,
     pub session_id: SessionId,
     pub user_message_snapshot: ChatMessage,
@@ -197,6 +198,7 @@ pub struct LoopPayloadTurnStart {
 
 #[derive(Clone)]
 pub struct LoopPayloadStepStart {
+    pub run_id: String,
     pub turn: u32,
     pub step: u32,
     pub session_id: SessionId,
@@ -214,6 +216,7 @@ pub struct LoopPayloadRequestSent {
 
 #[derive(Clone)]
 pub struct LoopPayloadTextStart {
+    pub run_id: String,
     pub turn: u32,
     pub step: u32,
     pub session_id: SessionId,
@@ -221,6 +224,7 @@ pub struct LoopPayloadTextStart {
 
 #[derive(Clone)]
 pub struct LoopPayloadTextDelta {
+    pub run_id: String,
     pub turn: u32,
     pub step: u32,
     pub session_id: SessionId,
@@ -230,6 +234,7 @@ pub struct LoopPayloadTextDelta {
 
 #[derive(Clone)]
 pub struct LoopPayloadTextEnd {
+    pub run_id: String,
     pub turn: u32,
     pub step: u32,
     pub session_id: SessionId,
@@ -237,6 +242,7 @@ pub struct LoopPayloadTextEnd {
 
 #[derive(Clone)]
 pub struct LoopPayloadReasoningStart {
+    pub run_id: String,
     pub turn: u32,
     pub step: u32,
     pub session_id: SessionId,
@@ -244,6 +250,7 @@ pub struct LoopPayloadReasoningStart {
 
 #[derive(Clone)]
 pub struct LoopPayloadReasoningDelta {
+    pub run_id: String,
     pub turn: u32,
     pub step: u32,
     pub session_id: SessionId,
@@ -253,6 +260,7 @@ pub struct LoopPayloadReasoningDelta {
 
 #[derive(Clone)]
 pub struct LoopPayloadReasoningEnd {
+    pub run_id: String,
     pub turn: u32,
     pub step: u32,
     pub session_id: SessionId,
@@ -260,6 +268,7 @@ pub struct LoopPayloadReasoningEnd {
 
 #[derive(Clone)]
 pub struct LoopPayloadToolCallStart {
+    pub run_id: String,
     pub turn: u32,
     pub step: u32,
     pub session_id: SessionId,
@@ -269,6 +278,7 @@ pub struct LoopPayloadToolCallStart {
 
 #[derive(Clone)]
 pub struct LoopPayloadToolCallArgs {
+    pub run_id: String,
     pub turn: u32,
     pub step: u32,
     pub session_id: SessionId,
@@ -279,6 +289,7 @@ pub struct LoopPayloadToolCallArgs {
 
 #[derive(Clone)]
 pub struct LoopPayloadToolCallEnd {
+    pub run_id: String,
     pub turn: u32,
     pub step: u32,
     pub session_id: SessionId,
@@ -307,6 +318,7 @@ pub struct LoopPayloadReply {
 
 #[derive(Clone)]
 pub struct LoopPayloadToolResult {
+    pub run_id: String,
     pub turn: u32,
     pub step: u32,
     pub session_id: SessionId,
@@ -317,6 +329,7 @@ pub struct LoopPayloadToolResult {
 
 #[derive(Clone)]
 pub struct LoopPayloadError {
+    pub run_id: String,
     pub turn: u32,
     pub step: u32,
     pub session_id: SessionId,
@@ -326,6 +339,7 @@ pub struct LoopPayloadError {
 
 #[derive(Clone)]
 pub struct LoopPayloadInnerError {
+    pub run_id: String,
     pub session_id: SessionId,
     pub error: String,
     /// inner error 是内部非预期错误，不会触发 TurnEnd 和 Error 事件
@@ -337,6 +351,7 @@ pub struct LoopPayloadInnerError {
 
 #[derive(Clone)]
 pub struct LoopPayloadTurnEnd {
+    pub run_id: String,
     pub turn: u32,
     pub step: u32,
     pub session_id: SessionId,

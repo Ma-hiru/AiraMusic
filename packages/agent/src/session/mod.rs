@@ -38,6 +38,7 @@ pub struct SessionManager {
     sessions: Arc<Mutex<HashMap<SessionId, Vec<ChatMessage>>>>,
     // 压缩历史(对话真相，请求依据)
     compaction: Arc<Mutex<HashMap<SessionId, Vec<ChatMessage>>>>,
+    metadata: Arc<Mutex<HashMap<SessionId, ThreadMetadata>>>,
     // 全局记忆
     memories: Arc<Mutex<Vec<ChatMemory>>>,
     channel_sender: broadcast::Sender<SessionEvent>,
@@ -56,19 +57,77 @@ impl SessionManager {
     }
 
     pub fn create_session(&self) -> SessionId {
+        self.create_session_named("")
+    }
+
+    pub fn create_session_named(&self, name: impl Into<String>) -> SessionId {
         let id = SessionId::new();
+        let metadata = ThreadMetadata::new(name);
 
         self.sessions.lock().unwrap().insert(id.clone(), Vec::new());
         self.compaction
             .lock()
             .unwrap()
             .insert(id.clone(), Vec::new());
+        self.metadata
+            .lock()
+            .unwrap()
+            .insert(id.clone(), metadata.clone());
 
         self.send_event(SessionEvent::Create {
             session_id: id.clone(),
+            metadata,
         });
 
         id
+    }
+
+    pub fn delete_session(&self, id: &SessionId) -> anyhow::Result<bool> {
+        let removed = self
+            .sessions
+            .lock()
+            .map_err(|e| anyhow::anyhow!("lock sessions 失败: {}", e))?
+            .remove(id)
+            .is_some();
+        if !removed {
+            return Ok(false);
+        }
+        self.compaction
+            .lock()
+            .map_err(|e| anyhow::anyhow!("lock compaction 失败: {}", e))?
+            .remove(id);
+        self.metadata
+            .lock()
+            .map_err(|e| anyhow::anyhow!("lock metadata 失败: {}", e))?
+            .remove(id);
+        self.send_event(SessionEvent::Delete {
+            session_id: id.clone(),
+        });
+        Ok(true)
+    }
+
+    pub fn metadata(&self, id: &SessionId) -> Option<ThreadMetadata> {
+        self.metadata.lock().unwrap().get(id).cloned()
+    }
+
+    pub fn rename(&self, id: &SessionId, name: impl Into<String>) -> anyhow::Result<()> {
+        let metadata = {
+            let mut all = self
+                .metadata
+                .lock()
+                .map_err(|e| anyhow::anyhow!("lock metadata 失败: {}", e))?;
+            let metadata = all
+                .get_mut(id)
+                .ok_or_else(|| anyhow::anyhow!("会话 {id} 不存在"))?;
+            metadata.name = name.into();
+            metadata.touch();
+            metadata.clone()
+        };
+        self.send_event(SessionEvent::Metadata {
+            session_id: id.clone(),
+            metadata,
+        });
+        Ok(())
     }
 
     pub fn has(&self, id: &SessionId) -> bool {
@@ -95,10 +154,23 @@ impl SessionManager {
                 .push(message.clone());
         }
 
+        let metadata = {
+            let mut all = self
+                .metadata
+                .lock()
+                .map_err(|e| anyhow::anyhow!("lock metadata 失败: {}", e))?;
+            let metadata = all
+                .get_mut(id)
+                .ok_or_else(|| anyhow::anyhow!("会话 {id} 不存在"))?;
+            metadata.touch();
+            metadata.clone()
+        };
+
         self.send_event(SessionEvent::Append {
             session_id: id.clone(),
             inner,
             message,
+            metadata,
         });
 
         Ok(())
@@ -190,6 +262,16 @@ impl SessionManager {
         real: Vec<ChatMessage>,
         compaction: Vec<ChatMessage>,
     ) -> anyhow::Result<()> {
+        self.restore_session_with_metadata(id, real, compaction, ThreadMetadata::new(""))
+    }
+
+    pub fn restore_session_with_metadata(
+        &self,
+        id: SessionId,
+        real: Vec<ChatMessage>,
+        compaction: Vec<ChatMessage>,
+        metadata: ThreadMetadata,
+    ) -> anyhow::Result<()> {
         {
             let mut sessions = self
                 .sessions
@@ -210,6 +292,10 @@ impl SessionManager {
             }
             compaction_map.insert(id.clone(), compaction);
         }
+        self.metadata
+            .lock()
+            .map_err(|e| anyhow::anyhow!("lock metadata 失败: {}", e))?
+            .insert(id, metadata);
         Ok(())
     }
 
@@ -230,6 +316,7 @@ impl Default for SessionManager {
     fn default() -> Self {
         Self {
             compaction: Arc::new(Mutex::new(HashMap::new())),
+            metadata: Arc::new(Mutex::new(HashMap::new())),
             sessions: Arc::new(Mutex::new(HashMap::new())),
             memories: Arc::new(Mutex::new(Vec::new())),
             channel_sender: broadcast::channel::<SessionEvent>(256).0,

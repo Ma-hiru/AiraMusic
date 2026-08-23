@@ -10,4 +10,4 @@ const exec_path = join(
   process.platform === "win32" ? "agent.exe" : "agent"
 );
 
-await copyFile(exec_path, join(root, "agent"));
+await copyFile(exec_path, join(root, process.platform === "win32" ? "agent.exe" : "agent"));

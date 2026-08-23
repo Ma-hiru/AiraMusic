@@ -2,13 +2,13 @@ import { z } from "zod";
 import {
   AgentToolWebBrowser,
   resolveAgentWebBrowserInput
-} from "@mahiru/app/inner/agent/agent-tool-web-browser";
+} from "@mahiru/app/inner/mcp/tools/web-browser-tool";
 import {
   createWebSearchURL,
   resolveSearchEngineOrder,
   createAcgRecoverySearchURL,
   resolveAgentWebSearchScope
-} from "@mahiru/app/inner/agent/web-search";
+} from "@mahiru/app/inner/mcp/tools/web-search";
 import {
   createExtractPageScript,
   mergeAgentWebSearchPages,
@@ -25,7 +25,7 @@ import {
   filterAgentWebSearchResultsByQuery,
   AgentWebBrowserFirstPaintTimeoutMaxMs,
   AgentWebBrowserFirstPaintTimeoutMinMs
-} from "@mahiru/app/inner/agent/web-browser";
+} from "@mahiru/app/inner/mcp/tools/web-browser";
 // @ts-expect-error 根目录测试依赖未附带 jsdom 的类型声明。
 import { JSDOM } from "jsdom";
 

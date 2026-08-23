@@ -4,7 +4,7 @@ import { RefreshCw, MessageSquarePlus } from "lucide-react";
 import { useScrollAutoHide } from "@/common/hooks/use-scroll-auto-hide";
 import AppEmpty from "@/common/components/fallback/app-empty";
 import IconButton from "@/common/components/data-input/icon-button";
-import type { AgentConversationSummary } from "@mahiru/ipc/types";
+import type { ThreadSummary } from "@mahiru/agent/browser";
 
 import ConversationItem from "./item";
 
@@ -15,7 +15,7 @@ interface ConversationListProps {
   className?: string;
   selectedConversationID: string;
   runningConversationIDs: string[];
-  conversations: AgentConversationSummary[];
+  conversations: ThreadSummary[];
   onRefresh: NormalFunc;
   onCreateConversation: NormalFunc;
   onOpenConversation: NormalFunc<[id: string]>;

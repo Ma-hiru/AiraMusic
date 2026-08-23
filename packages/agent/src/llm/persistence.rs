@@ -38,14 +38,9 @@ impl Plugin<(), ()> for LLMConfigPersistencePlugin {
 
         let cancel_signal = Signal::new();
         let task_signal = cancel_signal.clone();
+        drop(config_manager);
 
         tokio::spawn(async move {
-            if let Err(error) = Self::restore(&config_manager, &store_manager).await {
-                tracing::error!(error = %error, "llm 配置恢复失败");
-            }
-            // 恢复完立刻放掉 ConfigManager(broadcast Sender)
-            // 不然recv() 永远不会 Closed(自己永远持有一个 Sender)
-            drop(config_manager);
             loop {
                 tokio::select! {
                     biased;
@@ -80,7 +75,7 @@ impl Plugin<(), ()> for LLMConfigPersistencePlugin {
 }
 
 impl LLMConfigPersistencePlugin {
-    async fn restore(
+    pub(crate) async fn restore(
         config_manager: &LLMConfigManager,
         store_manager: &StoreManager,
     ) -> Result<()> {
@@ -110,12 +105,15 @@ impl LLMConfigPersistencePlugin {
     async fn persist(store_manager: &StoreManager, event: &LLMConfigEvent) -> Result<()> {
         match event {
             LLMConfigEvent::AddGlobal { config } => {
-                // 追加 = 读-改-写(单任务串行, 无并发竞争)
                 let store = store_manager
                     .get_or_create(&OsString::from(GLOBAL_STORE))
                     .await?;
                 let mut configs = Self::read_vec::<LLMConfig>(&store, KEY_ITEMS).await?;
-                configs.push(config.clone());
+                if let Some(current) = configs.iter_mut().find(|item| item.id == config.id) {
+                    *current = config.clone();
+                } else {
+                    configs.push(config.clone());
+                }
                 Self::write_vec(&store, KEY_ITEMS, &configs).await
             }
             LLMConfigEvent::RemoveGlobal { id } => {

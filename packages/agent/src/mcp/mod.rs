@@ -10,7 +10,9 @@ use crate::tools::{ToolRegistry, ToolsPlugin};
 use anyhow::Context;
 pub use client::MCPClient;
 use std::collections::HashMap;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
+use std::time::Duration;
 
 pub struct MCPPlugin;
 impl PluginMeta<Arc<MCPService>> for MCPPlugin {
@@ -69,6 +71,7 @@ impl MCPService {
                 name: config.name.clone(),
                 client: MCPClient::new(config),
                 tool_disposers: Mutex::new(vec![]),
+                tools_refreshed: AtomicBool::new(false),
             });
             servers.insert(server.name.clone(), Arc::clone(&server));
         }
@@ -116,7 +119,7 @@ impl MCPService {
                 self.register(MCPServerConfig {
                     name,
                     transport,
-                    auto_reconnect: true,
+                    auto_reconnect: false,
                     reconnect_interval_secs: 1,
                 })
             })
@@ -126,6 +129,31 @@ impl MCPService {
     /// 已注册的 server 名
     pub fn list(&self) -> Vec<String> {
         self.servers.lock().unwrap().keys().cloned().collect()
+    }
+
+    pub async fn wait_until_ready(&self, timeout: Duration) -> anyhow::Result<()> {
+        if self.servers.lock().unwrap().is_empty() {
+            anyhow::bail!("MCP 未注册任何 server");
+        }
+
+        tokio::time::timeout(timeout, async {
+            loop {
+                let servers = self
+                    .servers
+                    .lock()
+                    .unwrap()
+                    .values()
+                    .cloned()
+                    .collect::<Vec<_>>();
+                if !servers.is_empty() && servers.iter().all(|server| server.is_ready()) {
+                    return;
+                }
+                tokio::time::sleep(Duration::from_millis(10)).await;
+            }
+        })
+        .await
+        .map_err(|_| anyhow::anyhow!("等待 MCP server 就绪超时"))?;
+        Ok(())
     }
 
     /// 刷新所有"已连接" server 的工具列表
@@ -212,10 +240,29 @@ impl MCPService {
                     }
                 }
                 *server.tool_disposers.lock().unwrap() = disposers;
+                server.tools_refreshed.store(true, Ordering::Release);
             }
             Err(error) => {
                 tracing::error!(server = %server.name, error = %error, "mcp 工具列表获取失败");
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::MCPService;
+    use crate::tools::ToolRegistry;
+    use std::sync::Arc;
+    use std::time::Duration;
+
+    #[tokio::test]
+    async fn readiness_requires_a_registered_server() {
+        let service = MCPService::new(Arc::new(ToolRegistry::new()));
+        let error = service
+            .wait_until_ready(Duration::from_millis(20))
+            .await
+            .unwrap_err();
+        assert!(error.to_string().contains("未注册"));
     }
 }

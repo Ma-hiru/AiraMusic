@@ -1,6 +1,6 @@
 import { RendererIPC } from "@mahiru/ipc/renderer";
 import { RendererWindow } from "@/common/lib/window";
-import { resolveAiraResourceAction } from "@mahiru/ai";
+import { resolveAiraResourceAction } from "@mahiru/agent/browser";
 import { RendererIPCMessageBus } from "@/common/lib/bus";
 import {
   NeteaseServicesAlbum,
@@ -9,7 +9,7 @@ import {
 } from "@/common/netease/services";
 import AppToast from "@/common/components/display/toast";
 import type { MessageData } from "@mahiru/ipc/types";
-import type { AiraResourceAction, AiraResourceReference } from "@mahiru/ai";
+import type { AiraResourceAction, AiraResourceReference } from "@mahiru/agent/browser";
 
 const PlaylistActionTimeoutMs = 15_000;
 

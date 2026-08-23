@@ -3,7 +3,7 @@ import "streamdown/styles.css";
 import { cx } from "@emotion/css";
 import { memo, type FC, useMemo, Fragment, type ComponentProps } from "react";
 import { Streamdown, type Components, defaultRemarkPlugins } from "streamdown";
-import { parseAiraResourceURI, parseAiraRichContent, resolveAiraResourceAction } from "@mahiru/ai";
+import { parseAiraResourceURI, parseAiraRichContent, resolveAiraResourceAction } from "@mahiru/agent/browser";
 
 import ThinkBlock from "./think-content";
 import AgentResourceCard from "./resource-card";

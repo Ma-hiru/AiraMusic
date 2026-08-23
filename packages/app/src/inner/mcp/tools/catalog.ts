@@ -1,0 +1,155 @@
+import type { LLMTool } from "@mahiru/agent";
+
+import { AgentToolWebBrowser } from "./web-browser-tool";
+import {
+  AgentToolRecord,
+  AgentToolSearch,
+  AgentToolComment,
+  AgentToolFMTrash,
+  AgentToolTrackFM,
+  AgentToolAlbumNew,
+  AgentToolUserInfo,
+  AgentToolAlbumStar,
+  AgentToolSearchHot,
+  AgentToolTrackLike,
+  AgentToolTrackPlay,
+  AgentToolArtistDesc,
+  AgentToolPlayerMode,
+  AgentToolPlayerSeek,
+  AgentToolSearchOpen,
+  AgentToolSourceOpen,
+  AgentToolAlbumDetail,
+  AgentToolCommentLike,
+  AgentToolCommentOpen,
+  AgentToolCommentSend,
+  AgentToolLyricSchema,
+  AgentToolPlayerQueue,
+  AgentToolPlaylistTop,
+  AgentToolSettingsGet,
+  AgentToolTrackDetail,
+  AgentToolTrackLyrics,
+  AgentToolArtistAlbums,
+  AgentToolArtistDetail,
+  AgentToolHomeToplists,
+  AgentToolPlayerAction,
+  AgentToolPlayerVolume,
+  AgentToolPlaylistStar,
+  AgentToolTrackSimilar,
+  AgentToolArtistSimilar,
+  AgentToolArtistToplist,
+  AgentToolPlayerCurrent,
+  AgentToolReplaceLyrics,
+  AgentToolSearchSuggest,
+  AgentToolTrackPlayable,
+  AgentToolUserPlaylists,
+  AgentToolChangeSettings,
+  AgentToolPlayerQueueAdd,
+  AgentToolPlaylistCreate,
+  AgentToolPlaylistDelete,
+  AgentToolPlaylistDetail,
+  AgentToolPlaylistModify,
+  AgentToolArtistHotTracks,
+  AgentToolPlaylistSimilar,
+  AgentToolUserPlayHistory,
+  AgentToolPlayerQueueRemove,
+  AgentToolPlaylistRecommend,
+  AgentToolTrackRecommendNew,
+  AgentToolTrackRecommendDaily
+} from "./index";
+
+const MutatingToolNames = new Set([
+  "agent-tool-album-star",
+  "agent-tool-change-settings",
+  "agent-tool-comment-like",
+  "agent-tool-comment-open",
+  "agent-tool-comment-send",
+  "agent-tool-fm-trash",
+  "agent-tool-player-action",
+  "agent-tool-player-mode",
+  "agent-tool-player-queue-add",
+  "agent-tool-player-queue-remove",
+  "agent-tool-player-seek",
+  "agent-tool-player-volume",
+  "agent-tool-playlist-create",
+  "agent-tool-playlist-delete",
+  "agent-tool-playlist-modify",
+  "agent-tool-playlist-star",
+  "agent-tool-replace-lyrics",
+  "agent-tool-search-open",
+  "agent-tool-source-open",
+  "agent-tool-track-like",
+  "agent-tool-track-play"
+]);
+
+export interface AgentToolCatalog {
+  list: LLMTool[];
+  parallelSafeNames: string[];
+}
+
+export function createAgentToolCatalog(enableDestructive: boolean): AgentToolCatalog {
+  const safe: LLMTool[] = [
+    new AgentToolSearch(),
+    new AgentToolComment(),
+    new AgentToolTrackDetail(),
+    new AgentToolAlbumDetail(),
+    new AgentToolArtistDetail(),
+    new AgentToolPlayerAction(),
+    new AgentToolTrackLyrics(),
+    new AgentToolTrackSimilar(),
+    new AgentToolTrackPlayable(),
+    new AgentToolPlaylistDetail(),
+    new AgentToolTrackPlay(),
+    new AgentToolLyricSchema(),
+    new AgentToolSourceOpen(),
+    new AgentToolSearchOpen(),
+    new AgentToolCommentOpen(),
+    new AgentToolPlayerCurrent(),
+    new AgentToolPlayerVolume(),
+    new AgentToolPlayerSeek(),
+    new AgentToolPlayerQueue(),
+    new AgentToolPlayerQueueAdd(),
+    new AgentToolPlayerMode(),
+    new AgentToolUserInfo(),
+    new AgentToolUserPlaylists(),
+    new AgentToolUserPlayHistory(),
+    new AgentToolTrackRecommendDaily(),
+    new AgentToolTrackRecommendNew(),
+    new AgentToolTrackFM(),
+    new AgentToolArtistHotTracks(),
+    new AgentToolArtistAlbums(),
+    new AgentToolArtistSimilar(),
+    new AgentToolArtistToplist(),
+    new AgentToolArtistDesc(),
+    new AgentToolPlaylistRecommend(),
+    new AgentToolPlaylistSimilar(),
+    new AgentToolPlaylistTop(),
+    new AgentToolAlbumNew(),
+    new AgentToolSearchHot(),
+    new AgentToolSearchSuggest(),
+    new AgentToolHomeToplists(),
+    new AgentToolSettingsGet(),
+    new AgentToolRecord(),
+    new AgentToolWebBrowser()
+  ];
+  const destructive: LLMTool[] = [
+    new AgentToolReplaceLyrics(),
+    new AgentToolChangeSettings(),
+    new AgentToolTrackLike(),
+    new AgentToolFMTrash(),
+    new AgentToolPlaylistCreate(),
+    new AgentToolPlaylistDelete(),
+    new AgentToolPlaylistModify(),
+    new AgentToolPlaylistStar(),
+    new AgentToolAlbumStar(),
+    new AgentToolCommentSend(),
+    new AgentToolCommentLike(),
+    new AgentToolPlayerQueueRemove()
+  ];
+  const list = enableDestructive ? [...safe, ...destructive] : safe;
+  return {
+    list,
+    parallelSafeNames: list
+      .map((tool) => tool.name)
+      .filter((name) => !MutatingToolNames.has(name))
+  };
+}

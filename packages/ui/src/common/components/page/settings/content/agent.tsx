@@ -4,27 +4,21 @@ import { Bot, Copy, Network, RotateCcw, ServerCog, ShieldCheck, LoaderCircle } f
 import { RendererIPC } from "@mahiru/ipc/renderer";
 import Card from "@/common/components/layout/card";
 import AppToast from "@/common/components/display/toast";
-import type { AgentFeatureSettingsState, AgentFeatureSettingsUpdateInput } from "@mahiru/ipc/types";
+import type {
+  AgentFeatureSettingsState,
+  AgentFeatureSettingsMcpTool,
+  AgentFeatureSettingsUpdateInput
+} from "@mahiru/ipc/types";
 
 import ToggleRow from "./toggle-row";
 
-type McpToolDescriptor = {
-  name: string;
-  label: string;
-  description: string;
-};
-
-type AgentFeatureSettingsViewState = AgentFeatureSettingsState & {
-  availableMcpTools?: McpToolDescriptor[];
-};
-
 const AgentSettings: FC = () => {
-  const [state, setState] = useState<AgentFeatureSettingsViewState>();
+  const [state, setState] = useState<AgentFeatureSettingsState>();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [portDraft, setPortDraft] = useState("");
 
-  const applyState = useCallback((next: AgentFeatureSettingsViewState) => {
+  const applyState = useCallback((next: AgentFeatureSettingsState) => {
     setState(next);
     setPortDraft(String(next.mcpPort));
   }, []);
@@ -75,10 +69,13 @@ const AgentSettings: FC = () => {
     [applyState, saving]
   );
 
-  const availableTools = useMemo<McpToolDescriptor[]>(() => {
+  const availableTools = useMemo<AgentFeatureSettingsMcpTool[]>(() => {
     if (!state) return [];
-    if (state.availableMcpTools?.length) return state.availableMcpTools;
-    return state.mcpTools.map((name) => ({ name, label: name, description: "公共只读工具" }));
+    return [...state.availableMcpTools].sort(
+      (left, right) =>
+        ToolRiskOrder[left.risk] - ToolRiskOrder[right.risk] ||
+        left.label.localeCompare(right.label)
+    );
   }, [state]);
 
   const commitPort = useCallback(() => {
@@ -147,32 +144,38 @@ const AgentSettings: FC = () => {
       <Card
         Icon={Bot}
         title="Agent"
-        subTitle="Assistant"
+        subTitle="Rust runtime"
         action={<RuntimeBadge label="本次启动" active={effectiveAgent} />}>
         <ToggleRow
           icon={Bot}
           title="启用 Agent"
           disabled={saving}
           checked={state.agentEnabled}
-          description="显示主界面 Agent 入口，并启用独立的音乐助手窗口。"
+          description="启动独立 Rust Agent 服务，并显示主界面的音乐助手入口。"
           onClick={() => void update({ agentEnabled: !state.agentEnabled })}
         />
         <div className="mx-12 border-t border-white/[0.055] pt-3 text-[11px] leading-5 text-white/38">
-          关闭时会立即终止仍在运行的 Agent 请求并关闭窗口，不会删除对话、Provider 或 API Key。
+          <p>
+            Rust Agent 始终通过内部凭证使用完整工具目录。下方公开 MCP
+            开关和工具选择只影响外部客户端。
+          </p>
+          <p className="mt-1">
+            关闭时会立即终止仍在运行的请求并关闭窗口，不会删除对话、Provider 或 API Key。
+          </p>
         </div>
       </Card>
 
       <Card
-        title="MCP 服务"
+        title="外部 MCP 接入"
         Icon={ServerCog}
-        subTitle="Local loopback bridge"
-        action={<RuntimeBadge label="本次启动" active={effectiveMcp} />}>
+        subTitle="Public loopback endpoint"
+        action={<RuntimeBadge label="公开访问" active={effectiveMcp} />}>
         <ToggleRow
           icon={Network}
-          title="启用本地 MCP"
+          title="允许外部 MCP 客户端"
           disabled={saving}
           checked={state.mcpEnabled}
-          description="在 127.0.0.1 启动 Streamable HTTP MCP，供本机 Agent 客户端连接。"
+          description="通过 127.0.0.1 向本机客户端公开所选工具；Rust Agent 不依赖此开关。"
           onClick={() => void update({ mcpEnabled: !state.mcpEnabled })}
         />
 
@@ -180,10 +183,10 @@ const AgentSettings: FC = () => {
           <div className="flex min-w-0 items-start gap-3 px-3 sm:px-12">
             <ShieldCheck className="mt-1 size-4 shrink-0 text-emerald-200/60" aria-hidden="true" />
             <div className="min-w-0">
-              <p className="text-xs font-semibold text-white/72">仅回环地址；工具按勾选暴露</p>
+              <p className="text-xs font-semibold text-white/72">仅限回环地址；工具按勾选公开</p>
               <p className="mt-1 text-[11px] leading-5 text-white/38">
-                设置里可选全部 Agent
-                工具。默认只勾选无副作用的查询类；播放控制、写操作与破坏性工具需自行打开。结果会脱敏并受硬预算限制。
+                默认只选择无副作用的查询工具。播放控制、写操作和高风险工具必须手动开启；这些选择不会限制内部
+                Rust Agent。
               </p>
             </div>
           </div>
@@ -228,7 +231,7 @@ const AgentSettings: FC = () => {
             <div>
               <p className="text-xs font-semibold text-white/72">公开工具</p>
               <p className="mt-0.5 text-[10px] text-white/35">
-                已选择 {state.mcpTools.length} / {availableTools.length}
+                仅影响外部客户端 · 已选择 {state.mcpTools.length} / {availableTools.length}
               </p>
             </div>
             {effectiveMcp && (
@@ -269,7 +272,12 @@ const AgentSettings: FC = () => {
                     {checked ? "✓" : ""}
                   </span>
                   <span className="min-w-0">
-                    <span className="block truncate text-[11px] font-semibold">{tool.label}</span>
+                    <span className="flex min-w-0 items-center gap-1.5">
+                      <span className="min-w-0 flex-1 truncate text-[11px] font-semibold">
+                        {tool.label}
+                      </span>
+                      <ToolRiskBadge risk={tool.risk} />
+                    </span>
                     <span className="mt-0.5 line-clamp-2 block text-[9px] leading-4 opacity-50">
                       {tool.description}
                     </span>
@@ -281,6 +289,30 @@ const AgentSettings: FC = () => {
         </div>
       </Card>
     </section>
+  );
+};
+
+const ToolRiskOrder: Record<AgentFeatureSettingsMcpTool["risk"], number> = {
+  read: 0,
+  write: 1,
+  destructive: 2
+};
+
+const ToolRiskBadge: FC<{ risk: AgentFeatureSettingsMcpTool["risk"] }> = ({ risk }) => {
+  const presentation = {
+    read: { label: "只读", className: "border-emerald-200/15 text-emerald-100/55" },
+    write: { label: "写操作", className: "border-amber-200/15 text-amber-100/60" },
+    destructive: { label: "高风险", className: "border-red-200/20 text-red-100/65" }
+  }[risk];
+
+  return (
+    <span
+      className={cx(
+        "shrink-0 rounded border bg-black/10 px-1.5 py-0.5 text-[8px] font-semibold",
+        presentation.className
+      )}>
+      {presentation.label}
+    </span>
   );
 };
 

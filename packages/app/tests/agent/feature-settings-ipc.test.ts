@@ -4,6 +4,7 @@ const {
   frame,
   sender,
   shutdown,
+  shutdownMcp,
   commitAll,
   initialize,
   agentWindow,
@@ -21,6 +22,7 @@ const {
     frame,
     sender,
     shutdown: vi.fn(),
+    shutdownMcp: vi.fn(),
     initialize: vi.fn(),
     getSettings: vi.fn(),
     updateSettings: vi.fn(),
@@ -44,14 +46,17 @@ vi.mock("@mahiru/ipc/main", () => ({
 vi.mock("@mahiru/app/lib/log", () => ({
   Log: { error: vi.fn(), warn: vi.fn() }
 }));
-vi.mock("@mahiru/app/inner/agent", () => ({
+vi.mock("@mahiru/app/services/agent", () => ({
   MainAgent: {
     init: initialize,
     shutdown,
     broadcastFeatureSettings
   }
 }));
-vi.mock("@mahiru/app/inner/agent/feature-settings", () => ({
+vi.mock("@mahiru/app/inner/mcp/runtime", () => ({
+  MainMcp: { shutdown: shutdownMcp }
+}));
+vi.mock("@mahiru/app/services/agent/settings", () => ({
   MainAgentFeatureSettings: { getState: getSettings, update: updateSettings }
 }));
 vi.mock("@mahiru/app/lib/handle", () => ({ MainHandle: {} }));
@@ -73,7 +78,7 @@ vi.mock("@mahiru/app/lib/key-value-store", () => ({
 }));
 
 const availableMcpTools = [
-  { name: "agent-search", label: "搜索音乐", description: "搜索音乐资源" }
+  { name: "agent-search", label: "搜索音乐", description: "搜索音乐资源", risk: "read" as const }
 ];
 
 function createState(
@@ -115,10 +120,49 @@ describe("Agent 功能设置 IPC 生命周期", () => {
     );
 
     expect(shutdown).toHaveBeenCalledOnce();
+    expect(shutdownMcp).toHaveBeenCalledOnce();
     expect(agentWindow.destroy).toHaveBeenCalledOnce();
     expect(removeWindow).toHaveBeenCalledWith("agent");
     expect(broadcastFeatureSettings).toHaveBeenCalledWith(disabled);
     expect(result).toEqual({ ok: true, data: disabled });
+  });
+
+  it("关闭 Agent 但保留公共 MCP 时不停止共享 MCP", async () => {
+    const enabled = createState(true, true, false);
+    enabled.mcpEnabled = true;
+    enabled.effective.mcpEnabled = true;
+    const disabled = createState(false, false, false);
+    disabled.mcpEnabled = true;
+    disabled.effective.mcpEnabled = true;
+    getSettings.mockReturnValueOnce(enabled).mockReturnValue(disabled);
+    updateSettings.mockReturnValue(disabled);
+
+    const { invokeHandlers } = await import("@mahiru/app/inner/ipc/invoke");
+    await invokeHandlers.invoke_agent_feature_settings_update(
+      { sender, senderFrame: frame } as never,
+      { agentEnabled: false }
+    );
+
+    expect(shutdown).toHaveBeenCalledOnce();
+    expect(shutdownMcp).not.toHaveBeenCalled();
+  });
+
+  it("公共 MCP 是唯一消费者时关闭设置会立即停止共享 MCP", async () => {
+    const enabled = createState(false, false, false);
+    enabled.mcpEnabled = true;
+    enabled.effective.mcpEnabled = true;
+    const disabled = createState(false, false, false);
+    getSettings.mockReturnValueOnce(enabled).mockReturnValue(disabled);
+    updateSettings.mockReturnValue(disabled);
+
+    const { invokeHandlers } = await import("@mahiru/app/inner/ipc/invoke");
+    await invokeHandlers.invoke_agent_feature_settings_update(
+      { sender, senderFrame: frame } as never,
+      { mcpEnabled: false }
+    );
+
+    expect(shutdown).not.toHaveBeenCalled();
+    expect(shutdownMcp).toHaveBeenCalledOnce();
   });
 
   it("本轮重新开启只持久化并提示重启，不会懒初始化", async () => {
@@ -146,7 +190,7 @@ describe("Agent 功能设置 IPC 生命周期", () => {
       { agentEnabled: false }
     );
 
-    expect(result).toMatchObject({ ok: false, reason: { type: "auth" } });
+    expect(result).toMatchObject({ ok: false, reason: { code: "auth" } });
     expect(updateSettings).not.toHaveBeenCalled();
     expect(shutdown).not.toHaveBeenCalled();
   });
@@ -201,7 +245,7 @@ describe("Agent 功能设置 IPC 生命周期", () => {
       } as never,
       undefined
     );
-    expect(iframe).toMatchObject({ ok: false, reason: { type: "auth" } });
+    expect(iframe).toMatchObject({ ok: false, reason: { code: "auth" } });
 
     const foreignSender = {
       mainFrame: { url: "http://localhost:9999/display.html/settings" }
@@ -210,7 +254,7 @@ describe("Agent 功能设置 IPC 生命周期", () => {
       { sender: foreignSender, senderFrame: foreignSender.mainFrame } as never,
       undefined
     );
-    expect(foreign).toMatchObject({ ok: false, reason: { type: "auth" } });
+    expect(foreign).toMatchObject({ ok: false, reason: { code: "auth" } });
     expect(getSettings).not.toHaveBeenCalled();
   });
 });

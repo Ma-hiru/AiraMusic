@@ -71,7 +71,20 @@ impl LLMConfigManager {
             .cloned())
     }
 
+    pub fn get_global_config(&self, id: &str) -> anyhow::Result<Option<LLMConfig>> {
+        Ok(self
+            .configs
+            .lock()
+            .map_err(|e| anyhow::anyhow!("lock configs 失败: {}", e))?
+            .get(id)
+            .cloned())
+    }
+
     pub fn add_global_config(&self, config: LLMConfig) -> anyhow::Result<()> {
+        self.upsert_global_config(config)
+    }
+
+    pub fn upsert_global_config(&self, config: LLMConfig) -> anyhow::Result<()> {
         self.configs
             .lock()
             .map_err(|e| anyhow::anyhow!("lock configs 失败: {}", e))?
@@ -80,13 +93,17 @@ impl LLMConfigManager {
         Ok(())
     }
 
-    pub fn remove_global_config(&self, id: &str) -> anyhow::Result<()> {
-        self.configs
+    pub fn remove_global_config(&self, id: &str) -> anyhow::Result<bool> {
+        let removed = self
+            .configs
             .lock()
             .map_err(|e| anyhow::anyhow!("lock configs 失败: {}", e))?
-            .remove(id);
-        self.send_event(LLMConfigEvent::RemoveGlobal { id: id.to_string() });
-        Ok(())
+            .remove(id)
+            .is_some();
+        if removed {
+            self.send_event(LLMConfigEvent::RemoveGlobal { id: id.to_string() });
+        }
+        Ok(removed)
     }
 
     pub fn set_session_config(
@@ -137,7 +154,8 @@ impl LLMConfigManager {
     }
 
     pub fn list(&self) -> Vec<LLMConfigSecret> {
-        self.configs
+        let mut configs = self
+            .configs
             .lock()
             .unwrap()
             .values()
@@ -146,6 +164,8 @@ impl LLMConfigManager {
                 config.api_key = secret_key(config.api_key);
                 config
             })
-            .collect()
+            .collect::<Vec<_>>();
+        configs.sort_by(|left, right| left.id.cmp(&right.id));
+        configs
     }
 }

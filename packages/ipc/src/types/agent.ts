@@ -1,4 +1,4 @@
-import type { AIErrorCode, LLMToolOutputDetail } from "@mahiru/ai";
+import type { LLMToolOutputDetail } from "@mahiru/agent";
 
 import type { PlayerAction } from "./message";
 
@@ -421,8 +421,8 @@ export type AgentFocusContext =
     };
 
 export type AgentInvokeError = {
+  code: string;
   message: string;
-  type: AIErrorCode;
 };
 
 export type AgentInvokeResult<T> =
@@ -434,8 +434,3 @@ export type AgentInvokeResult<T> =
       ok: false;
       reason: AgentInvokeError;
     };
-
-export type AgentConversationSummary = {
-  id: string;
-  name: string;
-};

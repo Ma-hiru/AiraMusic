@@ -1,5 +1,6 @@
 pub mod agent;
 pub mod agui;
+pub mod api;
 pub mod cancel;
 pub mod ctx;
 pub mod llm;
@@ -7,6 +8,8 @@ pub mod r#loop;
 pub mod mcp;
 pub mod plugins;
 pub mod prompt;
+pub mod runtime;
+pub mod server;
 pub mod session;
 pub mod store;
 pub mod tools;

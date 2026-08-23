@@ -6,6 +6,7 @@ use async_trait::async_trait;
 use serde::Deserialize;
 use serde_json::Value;
 use std::collections::HashMap;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
@@ -66,10 +67,16 @@ pub struct MCPServer {
     pub client: Arc<MCPClient>,
     /// 该 server 已注册到 tool-registry 的disposers
     pub tool_disposers: Mutex<Vec<Disposer>>,
+    pub tools_refreshed: AtomicBool,
 }
 impl MCPServer {
     pub fn clear_tools(&self) {
+        self.tools_refreshed.store(false, Ordering::Release);
         std::mem::take(&mut *self.tool_disposers.lock().unwrap()).to_disposer()();
+    }
+
+    pub fn is_ready(&self) -> bool {
+        self.client.is_connected() && self.tools_refreshed.load(Ordering::Acquire)
     }
 }
 

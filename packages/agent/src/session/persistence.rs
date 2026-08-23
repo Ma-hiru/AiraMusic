@@ -3,7 +3,7 @@ use crate::ctx::Ctx;
 use crate::ctx::models::{Disposer, DisposerLike};
 use crate::llm::models::{ChatMemory, ChatMessage};
 use crate::plugins::models::{Plugin, PluginApplyResult, PluginMeta};
-use crate::session::models::SessionEvent;
+use crate::session::models::{SessionEvent, ThreadMetadata};
 use crate::session::{SessionId, SessionManager, SessionPlugin};
 use crate::store::local::LocalStore;
 use crate::store::models::Store;
@@ -18,6 +18,7 @@ use tokio::sync::broadcast::error::RecvError;
 const MEMORY_STORE: &str = "memories";
 const KEY_REAL: &str = "real";
 const KEY_COMPACTION: &str = "compaction";
+const KEY_METADATA: &str = "metadata";
 const KEY_MEMORY: &str = "items";
 
 pub struct SessionPersistencePlugin;
@@ -39,13 +40,8 @@ impl Plugin<(), ()> for SessionPersistencePlugin {
         // 退出由取消信号驱动: disposer 挂到 ctx, ctx.dispose() 时触发
         let cancel_signal = Signal::new();
         let task_signal = cancel_signal.clone();
+        drop(session_manager);
         tokio::spawn(async move {
-            if let Err(error) = Self::restore(&session_manager, &store_manager).await {
-                tracing::error!(error = %error, "会话恢复失败");
-            }
-            // 恢复完立刻放掉 SessionManager(broadcast Sender)
-            // recv() 永远不会 Closed(自己永远持有一个 Sender), Closed 分支成死代码
-            drop(session_manager);
             loop {
                 tokio::select! {
                     biased;
@@ -80,7 +76,10 @@ impl Plugin<(), ()> for SessionPersistencePlugin {
     }
 }
 impl SessionPersistencePlugin {
-    async fn restore(session_manager: &SessionManager, store_manager: &StoreManager) -> Result<()> {
+    pub(crate) async fn restore(
+        session_manager: &SessionManager,
+        store_manager: &StoreManager,
+    ) -> Result<()> {
         let mut restored = 0usize;
         for store in store_manager.stores().await? {
             let name = store.name();
@@ -96,7 +95,11 @@ impl SessionPersistencePlugin {
             }
             let real = Self::read_vec::<ChatMessage>(&store, KEY_REAL).await?;
             let compaction = Self::read_vec::<ChatMessage>(&store, KEY_COMPACTION).await?;
-            session_manager.restore_session(session_id, real, compaction)?;
+            let metadata = Self::read::<ThreadMetadata>(&store, KEY_METADATA)
+                .await?
+                .unwrap_or_else(|| ThreadMetadata::new(""));
+            session_manager
+                .restore_session_with_metadata(session_id, real, compaction, metadata)?;
             restored += 1;
         }
 
@@ -106,14 +109,24 @@ impl SessionPersistencePlugin {
 
     async fn persist(store_manager: &StoreManager, event: &SessionEvent) -> Result<()> {
         match event {
-            SessionEvent::Create { session_id } => {
-                Self::session_store(store_manager, session_id).await?;
+            SessionEvent::Create {
+                session_id,
+                metadata,
+            } => {
+                let store = Self::session_store(store_manager, session_id).await?;
+                Self::write(&store, KEY_METADATA, metadata).await
+            }
+            SessionEvent::Delete { session_id } => {
+                store_manager
+                    .remove(&Self::session_store_key(session_id))
+                    .await?;
                 Ok(())
             }
             SessionEvent::Append {
                 session_id,
                 message,
                 inner,
+                metadata,
             } => {
                 let store = Self::session_store(store_manager, session_id).await?;
                 Self::append_to::<ChatMessage>(&store, KEY_REAL, message).await?;
@@ -121,7 +134,14 @@ impl SessionPersistencePlugin {
                 if !(*inner) {
                     Self::append_to::<ChatMessage>(&store, KEY_COMPACTION, message).await?;
                 }
-                Ok(())
+                Self::write(&store, KEY_METADATA, metadata).await
+            }
+            SessionEvent::Metadata {
+                session_id,
+                metadata,
+            } => {
+                let store = Self::session_store(store_manager, session_id).await?;
+                Self::write(&store, KEY_METADATA, metadata).await
             }
             SessionEvent::AppendMemory { id, content } => {
                 let store = store_manager
@@ -183,6 +203,22 @@ impl SessionPersistencePlugin {
         items: &[T],
     ) -> Result<()> {
         let raw = serde_json::to_string(items)?;
+        if !store.set(key, raw).await? {
+            anyhow::bail!("写入 store 键 {key} 失败");
+        }
+        Ok(())
+    }
+
+    async fn read<T: DeserializeOwned>(store: &Arc<LocalStore>, key: &str) -> Result<Option<T>> {
+        store
+            .get(key)
+            .await?
+            .map(|raw| serde_json::from_str(&raw).map_err(Into::into))
+            .transpose()
+    }
+
+    async fn write<T: Serialize>(store: &Arc<LocalStore>, key: &str, item: &T) -> Result<()> {
+        let raw = serde_json::to_string(item)?;
         if !store.set(key, raw).await? {
             anyhow::bail!("写入 store 键 {key} 失败");
         }

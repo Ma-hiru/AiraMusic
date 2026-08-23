@@ -63,9 +63,23 @@ impl Plugin<LoopConfig, Arc<LoopService>> for LoopPlugin {
 pub struct LoopConfig {
     pub max_steps_per_turn: usize,
 }
+
+struct QueuedRun {
+    run_id: String,
+    message: ChatMessage,
+    cancel_signal: Signal,
+    done: Arc<Notify>,
+}
+
+struct TurnProgress {
+    turn: Option<u32>,
+    usages: TurnUsage,
+    user_persisted: bool,
+}
+
 /// 单个会话的私有队列与唤醒器
 struct SessionWorker {
-    queue: Mutex<VecDeque<(ChatMessage, Signal, Arc<Notify>)>>,
+    queue: Mutex<VecDeque<QueuedRun>>,
     wake: Notify,
 }
 
@@ -110,13 +124,14 @@ impl LoopService {
     pub fn send(
         self: &Arc<Self>,
         session_id: SessionId,
+        run_id: String,
         message: ChatMessage,
         cancel_signal: Signal,
     ) -> SendHandle {
         let done = Arc::new(Notify::new());
         if self.stop_flag.load(Ordering::SeqCst) {
             tracing::warn!(session_id = %session_id, "服务已停止, 拒绝新消息");
-            done.notify_waiters();
+            done.notify_one();
             return SendHandle { done };
         }
         let worker = {
@@ -138,11 +153,12 @@ impl LoopService {
                 })
                 .clone()
         };
-        worker
-            .queue
-            .lock()
-            .unwrap()
-            .push_back((message, cancel_signal, done.clone()));
+        worker.queue.lock().unwrap().push_back(QueuedRun {
+            run_id,
+            message,
+            cancel_signal,
+            done: done.clone(),
+        });
         worker.wake.notify_one();
         SendHandle { done }
     }
@@ -156,9 +172,9 @@ impl LoopService {
         }
         for worker in self.workers.lock().unwrap().values() {
             let mut queue = worker.queue.lock().unwrap();
-            for (_, cancel_signal, done) in queue.iter() {
-                cancel_signal.cancel();
-                done.notify_waiters(); // 这些 run 不会再执行, 完成句柄立即返回
+            for run in queue.iter() {
+                run.cancel_signal.cancel();
+                run.done.notify_one(); // 这些 run 不会再执行, 完成句柄立即返回
             }
             queue.clear();
             worker.wake.notify_one();
@@ -170,6 +186,7 @@ impl LoopService {
     async fn run_turn(
         &self,
         session_id: &SessionId,
+        run_id: String,
         user_message: ChatMessage,
         cancel_signal: Signal,
         done: Arc<Notify>,
@@ -177,7 +194,21 @@ impl LoopService {
         // 排队期间被取消 / 服务已停止: 不启动这一轮, 直接丢弃
         if cancel_signal.is_cancelled() || self.stop_flag.load(Ordering::SeqCst) {
             tracing::debug!(session_id = %session_id, "回合开始前已被取消或服务已停止, 丢弃");
-            done.notify_waiters();
+            if let Some(ctx) = self.ctx.upgrade() {
+                ctx.emit(
+                    LoopEvent::TurnEnd.with_id(session_id.clone()),
+                    &LoopPayloadTurnEnd {
+                        run_id,
+                        turn: 0,
+                        step: 0,
+                        session_id: session_id.clone(),
+                        usages: TurnUsage::new(),
+                        user_message_snapshot: user_message,
+                        cause: LoopCause::cancel(),
+                    },
+                );
+            }
+            done.notify_one();
             return;
         }
 
@@ -186,26 +217,47 @@ impl LoopService {
             .lock()
             .unwrap()
             .insert(session_id.clone(), cancel_signal.clone());
-        let mut process_turn = None;
-        let mut process_usages = TurnUsage::new();
+        let mut progress = TurnProgress {
+            turn: None,
+            usages: TurnUsage::new(),
+            user_persisted: false,
+        };
         if let Err(err) = self
             .run_turn_inner(
                 session_id,
-                user_message,
-                &mut process_turn,
-                &mut process_usages,
+                &run_id,
+                user_message.clone(),
+                &mut progress,
                 cancel_signal,
             )
             .await
         {
-            tracing::error!(session_id = %session_id, err = ?err, turn = ?process_turn);
+            tracing::error!(session_id = %session_id, err = ?err, turn = ?progress.turn);
             if let Some(ctx) = self.ctx.upgrade() {
+                if let Ok(session_manager) = SessionPlugin::get_service(&ctx) {
+                    if !progress.user_persisted
+                        && let Err(persist_error) = session_manager.append(session_id, user_message)
+                    {
+                        tracing::error!(error = %persist_error, "InnerError user 消息补写失败");
+                    }
+                    if let Err(persist_error) =
+                        session_manager.append(session_id, ChatMessage::error(err.to_string()))
+                    {
+                        tracing::error!(error = %persist_error, "InnerError 错误消息写入失败");
+                    }
+                    if let Err(persist_error) =
+                        session_manager.append(session_id, ChatMessage::usage(&progress.usages))
+                    {
+                        tracing::error!(error = %persist_error, "InnerError usage 写入失败");
+                    }
+                }
                 ctx.emit(
                     LoopEvent::InnerError.with_id(session_id.clone()),
                     &LoopPayloadInnerError {
-                        turn: process_turn,
+                        run_id,
+                        turn: progress.turn,
                         error: err.to_string(),
-                        usages: process_usages,
+                        usages: progress.usages,
                         session_id: session_id.clone(),
                     },
                 );
@@ -213,15 +265,15 @@ impl LoopService {
         }
         self.current_cancel.lock().unwrap().remove(session_id);
         // 这一轮到此结束(成功/失败/取消), 唤醒等完成句柄的一方
-        done.notify_waiters();
+        done.notify_one();
     }
 
     async fn run_turn_inner(
         &self,
         session_id: &SessionId,
+        run_id: &str,
         user_message: ChatMessage,
-        process_turn: &mut Option<u32>,
-        process_usages: &mut TurnUsage,
+        progress: &mut TurnProgress,
         cancel_signal: Signal,
     ) -> anyhow::Result<()> {
         // 升级弱引用为强引用, ctx 已被销毁则直接返回(理论走不到)
@@ -261,17 +313,19 @@ impl LoopService {
             *n += 1;
             *n
         };
-        process_turn.replace(turn);
+        progress.turn.replace(turn);
 
         // 会话追加 user 消息
         session_manager
             .append(session_id, user_message.clone())
             .context("会话 {session_id} 追加 user 消息失败")?;
+        progress.user_persisted = true;
 
         // emit: turn-start
         ctx.emit(
             LoopEvent::TurnStart.with_id(session_id.clone()),
             &LoopPayloadTurnStart {
+                run_id: run_id.to_string(),
                 turn,
                 session_id: session_id.clone(),
                 user_message_snapshot: user_message.clone(),
@@ -288,6 +342,7 @@ impl LoopService {
             ctx.emit(
                 LoopEvent::StepStart.with_id(session_id.clone()),
                 &LoopPayloadStepStart {
+                    run_id: run_id.to_string(),
                     turn,
                     step,
                     session_id: session_id.clone(),
@@ -397,6 +452,7 @@ impl LoopService {
                             ctx.emit(
                                 LoopEvent::TextStart.with_id(session_id.clone()),
                                 &LoopPayloadTextStart {
+                                    run_id: run_id.to_string(),
                                     turn,
                                     step,
                                     session_id: session_id.clone(),
@@ -408,6 +464,7 @@ impl LoopService {
                             ctx.emit(
                                 LoopEvent::TextDelta.with_id(session_id.clone()),
                                 &LoopPayloadTextDelta {
+                                    run_id: run_id.to_string(),
                                     turn,
                                     step,
                                     session_id: session_id.clone(),
@@ -419,6 +476,7 @@ impl LoopService {
                             ctx.emit(
                                 LoopEvent::TextEnd.with_id(session_id.clone()),
                                 &LoopPayloadTextEnd {
+                                    run_id: run_id.to_string(),
                                     turn,
                                     step,
                                     session_id: session_id.clone(),
@@ -429,6 +487,7 @@ impl LoopService {
                             ctx.emit(
                                 LoopEvent::ReasoningStart.with_id(session_id.clone()),
                                 &LoopPayloadReasoningStart {
+                                    run_id: run_id.to_string(),
                                     turn,
                                     step,
                                     session_id: session_id.clone(),
@@ -440,6 +499,7 @@ impl LoopService {
                             ctx.emit(
                                 LoopEvent::ReasoningDelta.with_id(session_id.clone()),
                                 &LoopPayloadReasoningDelta {
+                                    run_id: run_id.to_string(),
                                     turn,
                                     step,
                                     session_id: session_id.clone(),
@@ -451,6 +511,7 @@ impl LoopService {
                             ctx.emit(
                                 LoopEvent::ReasoningEnd.with_id(session_id.clone()),
                                 &LoopPayloadReasoningEnd {
+                                    run_id: run_id.to_string(),
                                     turn,
                                     step,
                                     session_id: session_id.clone(),
@@ -463,6 +524,7 @@ impl LoopService {
                             ctx.emit(
                                 LoopEvent::ToolCallStart.with_id(session_id.clone()),
                                 &LoopPayloadToolCallStart {
+                                    run_id: run_id.to_string(),
                                     turn,
                                     step,
                                     session_id: session_id.clone(),
@@ -479,6 +541,7 @@ impl LoopService {
                             ctx.emit(
                                 LoopEvent::ToolCallArgs.with_id(session_id.clone()),
                                 &LoopPayloadToolCallArgs {
+                                    run_id: run_id.to_string(),
                                     turn,
                                     step,
                                     session_id: session_id.clone(),
@@ -501,6 +564,7 @@ impl LoopService {
                             ctx.emit(
                                 LoopEvent::ToolCallEnd.with_id(session_id.clone()),
                                 &LoopPayloadToolCallEnd {
+                                    run_id: run_id.to_string(),
                                     turn,
                                     step,
                                     session_id: session_id.clone(),
@@ -529,7 +593,7 @@ impl LoopService {
                 }
             }
             if let Some(usage) = usage.clone() {
-                process_usages.add((step, usage))
+                progress.usages.add((step, usage))
             }
 
             let reply = AssistantReply {
@@ -677,6 +741,7 @@ impl LoopService {
                 ctx.emit(
                     LoopEvent::ToolResult.with_id(session_id.clone()),
                     &LoopPayloadToolResult {
+                        run_id: run_id.to_string(),
                         turn,
                         step,
                         session_id: session_id.clone(),
@@ -727,6 +792,7 @@ impl LoopService {
                 ctx.emit(
                     LoopEvent::Error.with_id(session_id.clone()),
                     &LoopPayloadError {
+                        run_id: run_id.to_string(),
                         turn,
                         step,
                         session_id: session_id.clone(),
@@ -745,17 +811,18 @@ impl LoopService {
         }
 
         session_manager
-            .append(session_id, ChatMessage::usage(process_usages))
+            .append(session_id, ChatMessage::usage(&progress.usages))
             .context("会话日志写入失败")?;
 
         // emit: turn-end
         ctx.emit(
             LoopEvent::TurnEnd.with_id(session_id.clone()),
             &LoopPayloadTurnEnd {
+                run_id: run_id.to_string(),
                 turn,
                 step,
                 cause,
-                usages: process_usages.clone(),
+                usages: progress.usages.clone(),
                 session_id: session_id.clone(),
                 user_message_snapshot: user_message,
             },
@@ -777,7 +844,7 @@ impl LoopService {
                 let mut queue = worker.queue.lock().unwrap();
                 queue.pop_front()
             };
-            let Some((message, cancel_signal, done)) = item else {
+            let Some(run) = item else {
                 // 队列空，服务停止则退出
                 if service.stop_flag.load(Ordering::SeqCst) {
                     break;
@@ -787,8 +854,43 @@ impl LoopService {
                 continue;
             };
             service
-                .run_turn(&session_id, message, cancel_signal, done)
+                .run_turn(
+                    &session_id,
+                    run.run_id,
+                    run.message,
+                    run.cancel_signal,
+                    run.done,
+                )
                 .await;
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::time::Duration;
+
+    #[tokio::test]
+    async fn a_run_rejected_after_stop_still_completes_its_handle() {
+        let ctx = Arc::new(Ctx::new());
+        let service = LoopService::new(
+            &ctx,
+            LoopConfig {
+                max_steps_per_turn: 10,
+            },
+        );
+        service.stop();
+
+        let handle = service.send(
+            SessionId::from("thread-1"),
+            "run-1".to_string(),
+            ChatMessage::user("hello"),
+            Signal::new(),
+        );
+
+        tokio::time::timeout(Duration::from_millis(100), handle.completed())
+            .await
+            .expect("completion notification must retain a permit");
     }
 }

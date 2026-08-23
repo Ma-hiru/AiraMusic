@@ -2,7 +2,7 @@ use crate::mcp::models::{MCPServerConfig, MCPTransport};
 use anyhow::Context;
 use http::{HeaderName, HeaderValue};
 use rmcp::ServiceExt;
-use rmcp::model::{CallToolRequestParams, CallToolResponse, Tool};
+use rmcp::model::{CallToolRequestParams, CallToolResponse, CallToolResult, Tool};
 use rmcp::service::{Peer, RoleClient, RunningService};
 use rmcp::transport::streamable_http_client::StreamableHttpClientTransportConfig;
 use rmcp::transport::{StreamableHttpClientTransport, TokioChildProcess};
@@ -19,6 +19,7 @@ pub struct MCPClient {
     /// 守护任务发布/摘除, 请求方只读 clone, 无锁
     peer: watch::Sender<Option<Peer<RoleClient>>>,
 }
+
 impl MCPClient {
     pub fn new(config: MCPServerConfig) -> Arc<Self> {
         let (peer, _) = watch::channel(None);
@@ -90,13 +91,68 @@ impl MCPClient {
             _ => anyhow::bail!("MCP 工具返回了不支持的多轮交互响应"),
         };
 
-        let text = result
-            .content
-            .iter()
-            .filter_map(|block| block.as_text().map(|t| t.text.clone()))
-            .collect::<Vec<String>>()
-            .join("\n");
+        parse_tool_result(result)
+    }
+}
 
-        Ok(serde_json::from_str(&text)?)
+fn parse_tool_result(mut result: CallToolResult) -> anyhow::Result<Value> {
+    let text = result
+        .content
+        .iter()
+        .filter_map(|block| block.as_text().map(|text| text.text.clone()))
+        .collect::<Vec<_>>()
+        .join("\n");
+    let structured = result.structured_content.take();
+
+    if result.is_error == Some(true) {
+        let message = structured
+            .as_ref()
+            .and_then(|value| value.get("error"))
+            .and_then(|value| value.get("message"))
+            .and_then(Value::as_str)
+            .filter(|message| !message.is_empty())
+            .unwrap_or_else(|| {
+                if text.is_empty() {
+                    "MCP 工具执行失败"
+                } else {
+                    &text
+                }
+            });
+        anyhow::bail!(message.to_string());
+    }
+
+    if let Some(value) = structured {
+        if value.get("ok").and_then(Value::as_bool) == Some(true) {
+            return Ok(value.get("result").cloned().unwrap_or(Value::Null));
+        }
+        return Ok(value);
+    }
+
+    if text.is_empty() {
+        return Ok(Value::Null);
+    }
+    Ok(serde_json::from_str(&text).unwrap_or(Value::String(text)))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::parse_tool_result;
+    use rmcp::model::{CallToolResult, ContentBlock};
+    use serde_json::json;
+
+    #[test]
+    fn structured_app_result_preserves_plain_string_values() {
+        let result = CallToolResult::structured(json!({
+            "ok": true,
+            "tool": "plain-tool",
+            "result": "plain text"
+        }));
+        assert_eq!(parse_tool_result(result).unwrap(), json!("plain text"));
+    }
+
+    #[test]
+    fn text_only_result_falls_back_to_a_json_string() {
+        let result = CallToolResult::success(vec![ContentBlock::text("plain text")]);
+        assert_eq!(parse_tool_result(result).unwrap(), json!("plain text"));
     }
 }

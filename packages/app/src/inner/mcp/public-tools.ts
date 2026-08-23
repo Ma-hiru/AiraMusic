@@ -1,9 +1,6 @@
-import type { LLMTool } from "@mahiru/ai";
+import type { LLMTool } from "@mahiru/agent";
 
-import { createAgentToolCatalog } from "../agent/tool-catalog";
-
-/** Agent 内部路由工具，不对 MCP 客户端暴露。 */
-const McpExcludedToolNames = new Set(["agent-tool-capability-search"]);
+import { createAgentToolCatalog } from "./tools/catalog";
 
 const FullMcpCatalog = createAgentToolCatalog(true);
 const SafeMcpCatalog = createAgentToolCatalog(false);
@@ -14,12 +11,11 @@ const SafeMcpToolNameSet: ReadonlySet<string> = new Set(
 const ParallelSafeMcpToolNameSet: ReadonlySet<string> = new Set(SafeMcpCatalog.parallelSafeNames);
 
 /**
- * MCP 可选工具 = 完整 Agent 工具目录（含破坏性），排除仅供内部路由的项。
+ * MCP 可选工具 = 完整应用工具目录（含破坏性）。
  * 真正挂到端口上的仍由用户在设置里勾选决定。
  */
 export const AiraPublicMcpToolNames: readonly string[] = FullMcpCatalog.list
   .map((tool) => tool.name)
-  .filter((name) => !McpExcludedToolNames.has(name))
   .sort((left, right) => left.localeCompare(right));
 
 /**
