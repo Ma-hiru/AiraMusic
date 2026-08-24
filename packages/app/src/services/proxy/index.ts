@@ -7,12 +7,15 @@ export default class ProxyService extends MainChildEntry<ProxyParentMessage, Pro
   readonly ncmPort: number;
   readonly storePort: number;
   readonly staticUIDir: string;
+  /** 运行期错误回调：服务就绪后的瞬时错误（如上游断连），不触发应用退出 */
+  private readonly onRuntimeError?: NormalFunc<[err: Error]>;
 
   constructor(props: {
     port: number;
     ncmPort: number;
     storePort: number;
     onError?: NormalFunc<[err: Error]>;
+    onRuntimeError?: NormalFunc<[err: Error]>;
   }) {
     super({
       serviceName: "proxy",
@@ -27,6 +30,7 @@ export default class ProxyService extends MainChildEntry<ProxyParentMessage, Pro
     this.ncmPort = props.ncmPort;
     this.storePort = props.storePort;
     this.staticUIDir = MainPathResolver.staticUIDir;
+    this.onRuntimeError = props.onRuntimeError;
   }
 
   protected override createStartMessage(): ProxyParentMessage {
@@ -77,7 +81,9 @@ export default class ProxyService extends MainChildEntry<ProxyParentMessage, Pro
         this.printInfo(`[${message.payload.type}] ${message.payload.text}`);
         break;
       case "error":
-        this.onError(this.getErrorFromMessage(message));
+        // 运行期瞬时错误（如上游断连的 socket hang up）：该请求已回 502，
+        // 仅记录日志，不升级为应用退出；启动期错误仍由 onError 处理（致命）
+        this.onRuntimeError?.(this.getErrorFromMessage(message));
         break;
     }
   }

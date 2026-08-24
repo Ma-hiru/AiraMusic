@@ -56,6 +56,9 @@ export class MainServices extends MainServicesBase {
     proxy: ({ ncm, proxy, store }) => {
       return new ProxyService({
         onError: (err: Error) => this.onError("proxy", "internal error", err),
+        // 运行期瞬时错误（上游断连等）仅记录日志：对应请求已回 502，不退出应用
+        onRuntimeError: (err: Error) =>
+          Log.warn("service(proxy)", "runtime error, request failed with 502", err),
         port: proxy,
         ncmPort: ncm,
         storePort: store
