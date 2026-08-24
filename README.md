@@ -41,17 +41,25 @@ React 构建多窗口播放体验，并使用 Rust Agent、Rust WASM 和 Go 本�
 |---------------------------------------|-------------------------------------------|
 | ![AiraMusic 首页](docs/images/home.png) | ![AiraMusic 歌单](docs/images/playlist.png) |
 
+| Agent                           |
+|---------------------------------|
+| ![Agent](docs/images/agent.png) |
+
+
 <details>
 <summary>查看更多界面截图</summary>
+
+### 播放页
+
+![播放页 3](docs/images/player3.png)
 
 ### 托盘与迷你播放器
 
 ![托盘](docs/images/tray.png)
 ![迷你播放器](docs/images/mini.png)
 
-### 播放页
-
-![播放页 3](docs/images/player3.png)
+### Agent
+![Agent](docs/images/agent2.png)
 
 ### 歌单与播放队列
 
