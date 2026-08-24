@@ -24,6 +24,7 @@ jobs:
         run: |
           ARGS=(
             release create "$GITHUB_REF_NAME"
+            --repo "$GITHUB_REPOSITORY"
             --verify-tag
             --draft
             --generate-notes
@@ -99,6 +100,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release upload "$GITHUB_REF_NAME" \
+            --repo "$GITHUB_REPOSITORY" \
             dist/*.exe \
             dist/*.msi \
             --clobber
@@ -110,6 +112,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release upload "$GITHUB_REF_NAME" \
+            --repo "$GITHUB_REPOSITORY" \
             dist/*.AppImage \
             dist/*.deb \
             dist/*.rpm \
@@ -123,6 +126,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release upload "$GITHUB_REF_NAME" \
+            --repo "$GITHUB_REPOSITORY" \
             dist/*.dmg \
             --clobber
 
@@ -135,4 +139,7 @@ jobs:
       - name: Publish draft release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release edit "$GITHUB_REF_NAME" --draft=false
+        run: |
+          gh release edit "$GITHUB_REF_NAME" \
+            --repo "$GITHUB_REPOSITORY" \
+            --draft=false
