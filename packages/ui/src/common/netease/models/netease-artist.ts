@@ -34,18 +34,6 @@ export class NeteaseArtist {
     this.followInfos = props.followInfos;
   }
 
-  /** @deprecated Agent 输出请统一使用 RendererTool.artist。 */
-  toToolJSONValue(): JsonValue {
-    return {
-      id: this.id,
-      name: this.name,
-      detail: this.detail,
-      desc: this.desc,
-      hotTracks: this.hotTracks.map(NeteaseTrackRecord.toToolJSONValue),
-      followInfos: this.followInfos
-    } as unknown as JsonValue;
-  }
-
   static fromNeteaseAPIs(props: {
     hotTracks: NeteaseTrackRecord[];
     desc: NeteaseAPI.NeteaseArtistDescResponse;

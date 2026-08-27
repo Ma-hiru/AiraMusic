@@ -12,14 +12,6 @@ export class NeteaseAlbum {
     this.tracks = props.tracks;
   }
 
-  /** @deprecated Agent 输出请统一使用 RendererTool.album。 */
-  toToolJSONValue(): JsonValue {
-    return {
-      content: this.content,
-      tracks: this.tracks.map(NeteaseTrackRecord.toToolJSONValue)
-    } as unknown as JsonValue;
-  }
-
   static fromObject<T extends Optional<Jsonify<NeteaseAlbum>>>(
     obj: T
   ): T extends Falsy ? null : NeteaseAlbum {

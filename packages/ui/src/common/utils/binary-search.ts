@@ -21,6 +21,7 @@ export class BinarySearch {
     }
   }
 
+  /** TTTTFFFF */
   static findLastByMonotonicPredicate<T>(arr: T[], predicate: NormalFunc<[e: T], boolean>) {
     let left = 0;
     let right = arr.length - 1;
@@ -40,19 +41,20 @@ export class BinarySearch {
     return result;
   }
 
+  /** FFFFTTTT */
   static findFirstByMonotonicPredicate<T>(arr: T[], predicate: NormalFunc<[e: T], boolean>) {
     let left = 0;
     let right = arr.length - 1;
     let result = -1;
-    let mid;
 
     while (left <= right) {
-      mid = (left + right) >>> 1;
+      const mid = (left + right) >>> 1;
+
       if (predicate(arr[mid]!)) {
         result = mid;
-        left = mid - 1;
+        right = mid - 1;
       } else {
-        right = mid + 1;
+        left = mid + 1;
       }
     }
 

@@ -44,13 +44,6 @@ export class NeteasePlaylistSummary implements NeteasePlaylistSummaryModel {
   }
   //endregion
 
-  /** @deprecated Agent 输出请统一使用 RendererTool.object 或 RendererTool.playlist。 */
-  toToolJSONValue(): JsonValue {
-    return {
-      ...this
-    } as unknown as JsonValue;
-  }
-
   playCountFormat() {
     if (!this.playCount) return "0";
     if (this.playCount >= 100000000) {

@@ -4,6 +4,7 @@ import {
   parseQrc,
   parseYrc,
   parseTTML,
+  type TTMLLyric,
   type LyricLine as AMLyricLine
 } from "@applemusic-like-lyrics/lyric";
 import { Log } from "@/common/lib/log";
@@ -80,18 +81,6 @@ export class NeteaseLyric implements NeteaseLyricModel {
     };
   }
 
-  /** @deprecated Agent 输出请统一使用 RendererTool.lyric。 */
-  toToolJSONValue(): JsonValue {
-    return {
-      data: this.data as unknown as JsonValue[],
-      tips: this.tips,
-      rmExisted: this.rmExisted,
-      tlExisted: this.tlExisted,
-      noteExisted: this.noteExisted,
-      id: this.id ?? null
-    };
-  }
-
   static fromNeteaseAPIResponse(response: NeteaseAPI.NeteaseLyricResponse) {
     return new NeteaseLyric(Parser.parseNeteaseLyricResponse(response));
   }
@@ -131,8 +120,8 @@ class Parser {
   }
 
   static parseTTMLyric(context: string) {
-    const ttml = parseTTML(context);
     // TTML 文件先修复
+    const ttml = Parser.handleTTMLSpaceWord(parseTTML(context));
     const lines = normalizeLyricLines(ttml.lines) as AMLyricLine[];
     const data = Parser.handleAMLyricLine(lines);
     const { rmCount, tlCount, noteCount } = data.reduce(
@@ -155,6 +144,24 @@ class Parser {
       },
       metadata: ttml.metadata
     };
+  }
+
+  static handleTTMLSpaceWord(ttml: TTMLLyric): TTMLLyric {
+    const lines = ttml.lines;
+
+    for (const line of lines) {
+      line.words = line.words.map((w, i) => {
+        const last = line.words[i - 1];
+        const next = line.words[i + 1];
+        if (w.word.trim() === "" && (w.startTime === 0 || w.endTime === 0)) {
+          w.startTime = last ? last.endTime : line.startTime;
+          w.endTime = next ? next.startTime : line.endTime;
+        }
+        return w;
+      });
+    }
+
+    return ttml;
   }
 
   static handleAMLyricLine(lines: AMLyricLine[]): LyricLine[] {
