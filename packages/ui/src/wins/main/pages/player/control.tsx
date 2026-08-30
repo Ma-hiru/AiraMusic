@@ -15,6 +15,7 @@ import {
   LoaderCircle,
   ArrowRightLeft
 } from "lucide-react";
+import { useSettings } from "@/common/store/settings";
 import { NeteaseAPITrack } from "@/common/netease/api";
 import { playModalAtom } from "@/wins/main/atoms/layout";
 import { useLatestRef } from "@/common/hooks/use-latest-ref";
@@ -49,12 +50,13 @@ const Control: FC<ControlProps> = ({ className, itemClassName, containerClassNam
     ...usePlayerActionInList(() => player.playlist.list()),
     cacheKey: "player-playlist-player-control"
   });
+  const settings = useSettings();
   const openPlaylistModal = useCallback(() => {
     create(createPlayerPlaylistModal, {
       ...actionRef.current,
-      onJumpPage: () => setPlayModalAtom(false)
+      onJumpPage: () => !settings.preference.defaultUseDisplayWindow && setPlayModalAtom(false)
     });
-  }, [actionRef, create, setPlayModalAtom]);
+  }, [actionRef, create, setPlayModalAtom, settings.preference.defaultUseDisplayWindow]);
 
   const dislike = useCallback(() => {
     const current = player.current.track;

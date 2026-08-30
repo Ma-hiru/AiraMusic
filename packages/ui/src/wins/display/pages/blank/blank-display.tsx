@@ -8,7 +8,7 @@ import AppMask from "@/common/components/fallback/app-mask";
 
 const BlankDisplay: FC<object> = () => {
   const { back } = useBack();
-  const active = useRouterActive(RoutePathDisplay, "base");
+  const active = useRouterActive(RoutePathDisplay, "blank");
   useDisplayTitleRegister("blank", import.meta.env.APP_NAME);
 
   // 退回到最初的路由时，关闭窗口

@@ -45,8 +45,7 @@ const Top: FC<{ className?: string }> = ({ className }) => {
       <div
         className={cx(
           `
-            h-full overflow-hidden
-            duration-300 ease-in-out transition-all
+            h-full duration-300 ease-in-out transition-all
           `,
           sidebar ? "w-(--side-bar-expand-width)" : "w-(--side-bar-collapse-width)"
         )}>

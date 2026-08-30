@@ -3,6 +3,7 @@ import { useSetAtom } from "jotai";
 import { motion } from "motion/react";
 import { memo, type FC, Fragment, useCallback } from "react";
 import { RendererFormat } from "@/common/lib/format";
+import { useSettings } from "@/common/store/settings";
 import { playModalAtom } from "@/wins/main/atoms/layout";
 import { useProgress } from "@/wins/main/hooks/use-progress";
 import { usePageJump } from "@/wins/main/hooks/use-page-jump";
@@ -14,6 +15,7 @@ const Progress: FC<object> = () => {
   const { barRef, bufferScope, percentScope, chorusPercent, handleBarClick, handleBarMouseDown } =
     usePlayProgress();
   const { progress } = useProgress();
+  const settings = useSettings();
   const player = RendererPlayerHandle.usePlayer();
   const track = player.current.track?.detail;
 
@@ -23,9 +25,9 @@ const Progress: FC<object> = () => {
   const jump = useCallback(
     (id: number) => {
       void jumpArtistPage(id);
-      setPlayModal(false);
+      !settings.preference.defaultUseDisplayWindow && setPlayModal(false);
     },
-    [jumpArtistPage, setPlayModal]
+    [jumpArtistPage, setPlayModal, settings.preference.defaultUseDisplayWindow]
   );
 
   return (
