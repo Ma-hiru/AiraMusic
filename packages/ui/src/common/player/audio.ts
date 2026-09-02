@@ -1,13 +1,14 @@
 import { clamp } from "lodash-es";
 import { Log } from "@/common/lib/log";
-import { NeteaseLocalAudio, NeteaseNetworkAudio } from "@/common/netease/models";
+import { NeteaseServicesAudio } from "@/common/netease/services";
+import { NeteaseTrack, NeteaseLocalAudio, NeteaseNetworkAudio } from "@/common/netease/models";
 
 export default class RendererPlayerAudio {
   readonly audio = new Audio();
   readonly outputTarget: RendererAudioOutputTarget = { audio: this.audio, context: null };
   readonly addEventListener = this.audio.addEventListener.bind(this.audio);
   readonly removeEventListener = this.audio.removeEventListener.bind(this.audio);
-  private readonly removeEvents: NormalFunc;
+  private readonly removeEvents: NormalFunc[] = [];
   private sourceRef: Nullable<MediaElementAudioSourceNode> = null;
   private analyserRef: Nullable<AnalyserNode> = null;
   private audioCtxRef: Nullable<AudioContext> = null;
@@ -25,7 +26,7 @@ export default class RendererPlayerAudio {
   }
 
   constructor() {
-    this.removeEvents = this.bindProgressEvents();
+    this.removeEvents.push(this.bindProgressEvents(), this.bindErrorHandler());
     this.audio.crossOrigin = "anonymous";
   }
 
@@ -112,8 +113,47 @@ export default class RendererPlayerAudio {
     };
   }
 
-  async load(source: NeteaseLocalAudio | NeteaseNetworkAudio, play: boolean, jump = 0) {
+  private errorID: Optional<number>;
+  private errorCount = 0;
+  private bindErrorHandler() {
+    const errorHandler = async () => {
+      const track = this.loadedTrack;
+      const source = this.loadedSource;
+      // 非 local 才尝试是否已经缓存（比如长时间暂停，播放链接已经失效，但是后台已经缓存）
+      if (!track || !source || source.isLocal()) return;
+      // 同一个 track 已经报错过，不再尝试
+      if (this.errorID === track.id && this.errorCount > 0) return;
+      this.errorID = track.id;
+      this.errorCount += 1;
+
+      const audio = await NeteaseServicesAudio.track(track, source.quality, false);
+      if (!audio || !audio.isLocal()) return;
+
+      queueMicrotask(() => {
+        if (this.errorID !== this.loadedTrack?.id || this.errorCount > 1) return;
+        this.errorCount += 1;
+        this.load(track, audio, true, this.audio.currentTime || 0);
+        Log.warn(`Retry load track ${track.id} from local cache`);
+      });
+    };
+    this.audio.addEventListener("error", errorHandler, { passive: true });
+    return () => {
+      this.audio.removeEventListener("error", errorHandler);
+    };
+  }
+
+  private loadedTrack: Optional<NeteaseTrack> = null;
+  private loadedSource: Optional<NeteaseLocalAudio | NeteaseNetworkAudio> = null;
+  async load(
+    track: Optional<NeteaseTrack>,
+    source: NeteaseLocalAudio | NeteaseNetworkAudio,
+    play: boolean,
+    jump = 0
+  ) {
     this.pause();
+    this.loadedTrack = track;
+    this.loadedSource = source;
+
     let src = source.url;
     if (source.isLocal() && source.localURL) {
       const blob = await fetch(source.localURL)
@@ -162,18 +202,19 @@ export default class RendererPlayerAudio {
   }
 
   static fromSave(
+    track: Optional<NeteaseTrack>,
     save: ReturnType<typeof this.save>,
     audio: Optional<NeteaseLocalAudio | NeteaseNetworkAudio>
   ) {
     const instance = new RendererPlayerAudio();
     instance.pause();
     instance.volume = save.volume;
-    audio && instance.load(audio, false, save.currentTime);
+    audio && instance.load(track, audio, false, save.currentTime);
     return instance;
   }
 
   [Symbol.dispose]() {
-    this.removeEvents();
+    this.removeEvents.forEach((fn) => fn());
     this.audio.pause();
     this.audio.removeAttribute("src");
     this.audio.load();
@@ -185,6 +226,7 @@ export default class RendererPlayerAudio {
     this.analyserRef = null;
     this.audioCtxRef = null;
     this.outputTarget.context = null;
+    this.removeEvents.length = 0;
   }
 
   /** 创建ctx时，同步 sinkId（如果有），空或默认时设置为 this.audio.sinkId */

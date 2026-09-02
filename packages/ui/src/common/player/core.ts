@@ -230,7 +230,7 @@ export default class RendererPlayer extends Listenable {
       .then((audio) => {
         if (controller.signal.aborted) return;
         if (audio) {
-          this.audio.load(audio, play);
+          this.audio.load(current.detail, audio, play);
           this.current.audio = audio;
           this.executeListeners();
         } else {
@@ -344,18 +344,19 @@ export default class RendererPlayer extends Listenable {
       );
     }
 
-    const playerAudio = RendererPlayerAudio.fromSave(save.audio, audio);
+    const current = {
+      ...save.current,
+      audio,
+      cover,
+      track: NeteaseTrackRecord.fromRecordObject(save.current.track),
+      lyric: NeteaseLyric.fromObject(save.current.lyric)
+    };
+    const playerAudio = RendererPlayerAudio.fromSave(current.track?.detail, save.audio, audio);
     const instance = new RendererPlayer({
       audio: playerAudio,
       playlist: RendererPlayerPlaylist.fromSave(save.playlist),
       history: RendererPlayerHistory.fromSave(save.history),
-      current: {
-        ...save.current,
-        track: NeteaseTrackRecord.fromRecordObject(save.current.track),
-        lyric: NeteaseLyric.fromObject(save.current.lyric),
-        audio,
-        cover
-      }
+      current
     });
     queueMicrotask(async () => {
       const audio = instance.current.audio;
@@ -376,7 +377,7 @@ export default class RendererPlayer extends Listenable {
         const audio = await instance.loadAudio(track.detail, new AbortController());
         if (!audio) return;
 
-        instance.audio.load(audio, false);
+        instance.audio.load(track.detail, audio, false);
         instance.audio.currentTime = playerAudio.currentTime;
       }
     });
