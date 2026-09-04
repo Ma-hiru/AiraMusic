@@ -126,11 +126,11 @@ impl Tool for MCPTool {
     }
 
     async fn run(&self, args: Value, ctx: &ToolRunContext) -> anyhow::Result<Value> {
-        ctx.cancel.check()?;
+        ctx.signal.throw_if_aborted()?;
         // 请求挂在取消信号上: stop 时不再干等远端
         tokio::select! {
             biased;
-            _ = ctx.cancel.cancelled() => anyhow::bail!("已取消"),
+            _ = ctx.signal.wait_aborted() => anyhow::bail!("已取消"),
             result = self.client.call_tool(&self.remote_name, args) => result,
         }
     }

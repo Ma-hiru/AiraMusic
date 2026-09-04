@@ -1,6 +1,6 @@
 import { join } from "node:path";
 
-import AppEnv from "../../../../scripts/env";
+import { AppEnv } from "../../../../scripts/env";
 
 AppEnv.setEnvPath(join(process.cwd(), "../../"), join(process.cwd(), "../../"));
 const env = AppEnv.load("test");

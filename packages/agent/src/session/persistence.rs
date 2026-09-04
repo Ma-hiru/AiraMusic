@@ -1,4 +1,3 @@
-use crate::cancel::Signal;
 use crate::ctx::Ctx;
 use crate::ctx::models::{Disposer, DisposerLike};
 use crate::llm::models::{ChatMemory, ChatMessage};
@@ -8,6 +7,7 @@ use crate::session::{SessionId, SessionManager, SessionPlugin};
 use crate::store::local::LocalStore;
 use crate::store::models::Store;
 use crate::store::{StoreManager, StorePlugin};
+use crate::utils::Signal;
 use anyhow::Result;
 use serde::Serialize;
 use serde::de::DeserializeOwned;
@@ -38,14 +38,14 @@ impl Plugin<(), ()> for SessionPersistencePlugin {
         let mut rx = session_manager.subscribe();
 
         // 退出由取消信号驱动: disposer 挂到 ctx, ctx.dispose() 时触发
-        let cancel_signal = Signal::new();
+        let cancel_signal = Signal::new(Some("session-persistence-apply"));
         let task_signal = cancel_signal.clone();
         drop(session_manager);
         tokio::spawn(async move {
             loop {
                 tokio::select! {
                     biased;
-                    _ = task_signal.cancelled() => break,
+                    _ = task_signal.wait_aborted() => break,
                     event = rx.recv() => match event {
                         Ok(event) => {
                             if let Err(error) = Self::persist(&store_manager, &event).await {
@@ -68,7 +68,7 @@ impl Plugin<(), ()> for SessionPersistencePlugin {
             }
         });
 
-        let disposer: Disposer = Box::new(move || cancel_signal.cancel());
+        let disposer: Disposer = Box::new(move || cancel_signal.abort());
         Ok(PluginApplyResult {
             service: None,
             emit_disposers: disposer.to_option_disposers(),

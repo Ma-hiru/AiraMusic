@@ -24,7 +24,7 @@ impl Tool for CalculatorTool {
     }
 
     fn description(&self) -> &str {
-        "Perform basic arithmetic operations."
+        "执行基本的算数操作"
     }
 
     fn parameters(&self) -> Value {
@@ -32,7 +32,7 @@ impl Tool for CalculatorTool {
     }
 
     async fn run(&self, args: Value, ctx: &ToolRunContext) -> anyhow::Result<Value> {
-        ctx.cancel.check()?;
+        ctx.signal.throw_if_aborted()?;
         let CalculatorArgs {
             first_number,
             second_number,

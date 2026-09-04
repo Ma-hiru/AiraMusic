@@ -1,6 +1,4 @@
-import { readFileSync } from "node:fs";
-import { app, session } from "electron";
-import { X509Certificate } from "node:crypto";
+import { app } from "electron";
 import { Log } from "@/lib/log";
 import { ipcInit } from "@/inner/ipc";
 import { MainTray } from "@/lib/tray";
@@ -8,7 +6,6 @@ import { MainServices } from "@/services";
 import { MainIPC } from "@mahiru/ipc/main";
 import { MainAgent } from "@/services/agent";
 import { MainMcp } from "@/inner/mcp/runtime";
-import { MainPathResolver } from "@/lib/path-resolver";
 import { MainWindowPreset } from "@/lib/window-preset";
 import { MainWindowCreator } from "@/lib/window-creator";
 import { MainWindowManager } from "@/lib/window-manager";
@@ -65,36 +62,6 @@ export class MainApp {
     } catch (err) {
       Log.error("protocol", "failed to register app protocol", err);
       this.exit(MainExitCodeConstants.REGISTER_PROTOCOL_FAILED, "failed to register app protocol");
-    }
-  }
-
-  /**
-   * @desc 信任本地 HTTPS 代理的自签证书 \
-   * 仅对 localhost / 127.0.0.1 生效，其余主机回退 Chromium 默认校验（callback(-3)）。 \
-   * 回环地址无法被网络侧中间人劫持，指纹不匹配时拒绝，避免信任错误的证书
-   * */
-  private trustLocalProxyCertificate() {
-    try {
-      const cert = new X509Certificate(readFileSync(MainPathResolver.localhostCertPath));
-      const fingerprint = cert.fingerprint256;
-
-      session.defaultSession.setCertificateVerifyProc((request, callback) => {
-        const isLoopback = request.hostname === "localhost" || request.hostname === "127.0.0.1";
-        if (!isLoopback) return callback(-3);
-        // Electron 的 certificate.fingerprint 是 "sha256/"+Base64 的 pin 格式，
-        // 与 Node 的冒号分隔 hex 不可比，统一从 PEM 数据（certificate.data）重算。
-        const peerData = request.certificate?.data;
-        if (!peerData) return callback(0); // 数据缺失时不拒绝，回环上风险可忽略
-        try {
-          const peer = new X509Certificate(peerData);
-          return callback(peer.fingerprint256 === fingerprint ? 0 : -3);
-        } catch {
-          return callback(-3);
-        }
-      });
-      Log.info("cert", "trusted local proxy certificate for localhost/127.0.0.1");
-    } catch (err) {
-      Log.warn("cert", "failed to trust local proxy certificate", err);
     }
   }
 
@@ -204,7 +171,7 @@ export class MainApp {
     }
   }
 
-  /** 按应用启动时的快照启动本地只读 MCP。 */
+  /** 按应用启动时的快照启动本地只读 MCP */
   private async enableMcp() {
     try {
       const endpoint = await MainMcp.init();
@@ -279,7 +246,7 @@ export class MainApp {
         Log.info("App ready");
         MainAgentFeatureSettings.captureStartup();
 
-        // 绑定 AppUserModelID
+        // 绑定 AppUserModelID, 多个窗口使用同一个 AppUserModelID 时，Windows 可以把它们归到同一个任务栏应用下面
         if (process.platform === "win32") {
           app.setAppUserModelId(process.env.APP_USER_MODEL_ID);
           Log.info(`App user model id is ${process.env.APP_USER_MODEL_ID}`);
@@ -288,10 +255,6 @@ export class MainApp {
         this.registerIPCHandlers(); // 注册IPC
         if (this.isExiting) return;
         Log.info("App ipc handlers registered");
-
-        this.trustLocalProxyCertificate(); // 信任本地代理证书
-        if (this.isExiting) return;
-        Log.info("App local proxy certificate trusted");
 
         await this.createServices(); // 创建服务
         if (this.isExiting) return;

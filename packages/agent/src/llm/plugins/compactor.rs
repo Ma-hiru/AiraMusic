@@ -1,8 +1,8 @@
-use crate::cancel::Signal;
 use crate::ctx::Ctx;
-use crate::llm::models::{ChatMessage, LLMAdapter, LLMConfig, Request, StreamEvent};
+use crate::llm::models::{ChatMessage, ChatRequest, LLMAdapter, LLMConfig, LLMStreamEvent};
 use crate::llm::plugins::LLMPlugin;
 use crate::plugins::models::{Plugin, PluginApplyResult, PluginMeta};
+use crate::utils::Signal;
 use futures::StreamExt;
 use serde::Deserialize;
 use std::sync::Arc;
@@ -88,7 +88,7 @@ impl LLMCompactor {
         let keep = messages[messages.len() - self.keep..].to_vec();
         // 压缩请求不开启思考
         config.thinking = false;
-        let request = Request {
+        let request = ChatRequest {
             config,
             system: vec!["你是会话压缩器: 把以下对话历史压缩成要点摘要, 只输出摘要本身。".into()],
             messages: old,
@@ -102,13 +102,13 @@ impl LLMCompactor {
         loop {
             let event = tokio::select! {
                 biased;
-                _ = cancel.cancelled() => {
+                _ = cancel.wait_aborted() => {
                     anyhow::bail!("压缩被取消");
                 }
                 event = stream.next() => event,
             };
             let Some(event) = event else { break };
-            if let Ok(StreamEvent::TextDelta { text }) = event {
+            if let Ok(LLMStreamEvent::TextDelta { text }) = event {
                 summary.push_str(&text);
             }
         }

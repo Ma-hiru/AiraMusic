@@ -8,17 +8,6 @@ import { MainWindowCreator } from "@/lib/window-creator";
 import { MainWindowManager } from "@/lib/window-manager";
 import type { EventHandlers } from "@mahiru/ipc/types";
 
-function concealTrayWindow(win: BrowserWindow) {
-  win.setIgnoreMouseEvents(true);
-  win.setOpacity(0);
-  win.setPosition(
-    MainWindowConstants.TRAY_HIDDEN_POINT.x,
-    MainWindowConstants.TRAY_HIDDEN_POINT.y,
-    false
-  );
-  win.isFocused() && win.blur();
-}
-
 export const eventHandlers: EventHandlers = {
   event_window_open: (e, type) => {
     const sender = BrowserWindow.fromWebContents(e.sender);
@@ -241,4 +230,15 @@ function resizeWindow(
   win.setResizable(resizable);
 
   return { current, next };
+}
+
+function concealTrayWindow(win: BrowserWindow) {
+  win.setIgnoreMouseEvents(true);
+  win.setOpacity(0);
+  win.setPosition(
+    MainWindowConstants.TRAY_HIDDEN_POINT.x,
+    MainWindowConstants.TRAY_HIDDEN_POINT.y,
+    false
+  );
+  win.isFocused() && win.blur();
 }

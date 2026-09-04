@@ -29,7 +29,7 @@ impl Tool for SearchHistoryTool {
     }
 
     async fn run(&self, args: Value, ctx: &ToolRunContext) -> anyhow::Result<Value> {
-        ctx.cancel.check()?;
+        ctx.signal.throw_if_aborted()?;
         let SearchHistoryToolParameters {
             keywords,
             max_results,

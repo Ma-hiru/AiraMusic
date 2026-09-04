@@ -1,4 +1,4 @@
-use crate::llm::models::{Role, TurnUsage};
+use crate::llm::models::{ChatRole, ChatTurnUsage};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fmt::{Display, Formatter};
@@ -31,7 +31,7 @@ pub enum AguiEvent {
         /// 结束原因(成功 / 被拦 / 出错 / 超步数)
         result: Option<String>,
         /// (step, usage)
-        usages: TurnUsage,
+        usages: ChatTurnUsage,
     },
     RunError {
         #[serde(rename = "threadId")]
@@ -40,7 +40,7 @@ pub enum AguiEvent {
         message: String,
         // 如果是 inner error 不会出现 turn end事件
         // 也不会间接触发 RunFinished 事件，此时 usages 在这里出现
-        usages: Option<TurnUsage>,
+        usages: Option<ChatTurnUsage>,
     },
     /// 一步开始(工具往返的一小步)
     StepStarted {
@@ -63,7 +63,7 @@ pub enum AguiEvent {
         /// 消息 id(一个 step 一段文本)
         message_id: String,
         /// 角色(恒为 assistant, 循环只流模型输出)
-        role: Role,
+        role: ChatRole,
     },
     TextMessageContent {
         #[serde(rename = "threadId")]
@@ -269,13 +269,22 @@ impl Display for AguiEvent {
 
 /// AGUI 事件广播服务(传输层订阅它)。
 #[derive(Clone)]
-pub struct AguiEmitter {
-    pub tx: broadcast::Sender<AguiEvent>,
+pub struct AguiEventChannel {
+    sender: broadcast::Sender<AguiEvent>,
 }
-impl AguiEmitter {
+impl AguiEventChannel {
     /// 订阅事件流。
     pub fn subscribe(&self) -> broadcast::Receiver<AguiEvent> {
-        self.tx.subscribe()
+        self.sender.subscribe()
+    }
+
+    pub fn sender(&self) -> broadcast::Sender<AguiEvent> {
+        self.sender.clone()
+    }
+}
+impl From<broadcast::Sender<AguiEvent>> for AguiEventChannel {
+    fn from(sender: broadcast::Sender<AguiEvent>) -> Self {
+        Self { sender }
     }
 }
 

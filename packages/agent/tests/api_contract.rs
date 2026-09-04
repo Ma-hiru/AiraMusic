@@ -1,5 +1,5 @@
 use agent::agui::models::{AguiEvent, AguiReasoningRole};
-use agent::api::models::{AgentReady, AgentServiceStatus, HealthResponse, ThreadSummary};
+use agent::server::models::{AgentReady, AgentServiceStatus, HealthResponse, ThreadSummary};
 use serde_json::json;
 use ts_rs::TS;
 

@@ -1,14 +1,15 @@
-use crate::cancel::Signal;
 use crate::session::models::SessionId;
 use crate::tools::models::Tool;
+use crate::utils::Signal;
 use crate::utils::generate_id;
 use anyhow::Result;
 use futures::Stream;
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use std::borrow::Cow;
+use std::cmp::Ordering;
 use std::collections::HashMap;
+use std::fmt;
 use std::pin::Pin;
 use std::sync::Arc;
 use tiktoken_rs::{CoreBPE, o200k_base};
@@ -17,7 +18,7 @@ static TOKENIZER: Lazy<CoreBPE> = Lazy::new(|| o200k_base().expect("Failed to lo
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
-pub enum Role {
+pub enum ChatRole {
     System,
     User,
     Assistant,
@@ -27,7 +28,7 @@ pub enum Role {
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-pub enum RoleInnerType {
+pub enum ChatRoleInnerType {
     Think,
     Error,
     Compressed,
@@ -36,7 +37,7 @@ pub enum RoleInnerType {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct ChatMessage {
-    pub role: Role,
+    pub role: ChatRole,
     pub content: String,
     /// 思考内容 (思考模型且返回思考内容才有)
     /// 仅 assistant 角色有意义
@@ -45,18 +46,18 @@ pub struct ChatMessage {
     pub reasoning_content: Option<String>,
     /// 仅 assistant 角色
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub tool_calls: Vec<ToolCall>,
+    pub tool_calls: Vec<ChatToolCall>,
     /// 仅 tool 角色
     #[serde(skip_serializing_if = "Option::is_none")]
     pub tool_call_id: Option<String>,
     /// 仅 inner 角色
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub inner_type: Option<RoleInnerType>,
+    pub inner_type: Option<ChatRoleInnerType>,
 }
 impl ChatMessage {
     pub fn system(content: impl Into<String>) -> Self {
         Self {
-            role: Role::System,
+            role: ChatRole::System,
             content: content.into(),
             reasoning_content: None,
             tool_calls: Vec::new(),
@@ -67,7 +68,7 @@ impl ChatMessage {
 
     pub fn user(content: impl Into<String>) -> Self {
         Self {
-            role: Role::User,
+            role: ChatRole::User,
             content: content.into(),
             reasoning_content: None,
             tool_calls: Vec::new(),
@@ -78,7 +79,7 @@ impl ChatMessage {
 
     pub fn assistant(content: impl Into<String>) -> Self {
         Self {
-            role: Role::Assistant,
+            role: ChatRole::Assistant,
             content: content.into(),
             reasoning_content: None,
             tool_calls: Vec::new(),
@@ -89,18 +90,18 @@ impl ChatMessage {
 
     pub fn assistant_with_tool_calls(
         content: impl Into<String>,
-        tool_calls: Vec<ToolCall>,
+        tool_calls: Vec<ChatToolCall>,
     ) -> Self {
         Self::assistant_with_tool_calls_and_reasoning(content, tool_calls, None)
     }
 
     pub fn assistant_with_tool_calls_and_reasoning(
         content: impl Into<String>,
-        tool_calls: Vec<ToolCall>,
+        tool_calls: Vec<ChatToolCall>,
         reasoning_content: Option<String>,
     ) -> Self {
         Self {
-            role: Role::Assistant,
+            role: ChatRole::Assistant,
             content: content.into(),
             reasoning_content,
             tool_calls,
@@ -111,7 +112,7 @@ impl ChatMessage {
 
     pub fn tool(content: impl Into<String>, tool_call_id: impl Into<String>) -> Self {
         Self {
-            role: Role::Tool,
+            role: ChatRole::Tool,
             content: content.into(),
             reasoning_content: None,
             tool_calls: Vec::new(),
@@ -120,9 +121,9 @@ impl ChatMessage {
         }
     }
 
-    pub fn inner(content: impl Into<String>, inner_type: RoleInnerType) -> Self {
+    pub fn inner(content: impl Into<String>, inner_type: ChatRoleInnerType) -> Self {
         Self {
-            role: Role::Inner,
+            role: ChatRole::Inner,
             content: content.into(),
             reasoning_content: None,
             tool_calls: Vec::new(),
@@ -131,23 +132,23 @@ impl ChatMessage {
         }
     }
 
-    pub fn usage(content: &TurnUsage) -> Self {
+    pub fn usage(content: &ChatTurnUsage) -> Self {
         Self::inner(
             serde_json::to_string(content).unwrap(),
-            RoleInnerType::Usage,
+            ChatRoleInnerType::Usage,
         )
     }
 
     pub fn think(content: impl Into<String>) -> Self {
-        Self::inner(content, RoleInnerType::Think)
+        Self::inner(content, ChatRoleInnerType::Think)
     }
 
     pub fn error(content: impl Into<String>) -> Self {
-        Self::inner(content, RoleInnerType::Error)
+        Self::inner(content, ChatRoleInnerType::Error)
     }
 
     pub fn compressed(content: impl Into<String>) -> Self {
-        Self::inner(content, RoleInnerType::Compressed)
+        Self::inner(content, ChatRoleInnerType::Compressed)
     }
 
     pub fn token_count(&self) -> usize {
@@ -171,7 +172,7 @@ impl ChatMemory {
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-pub struct ToolCall {
+pub struct ChatToolCall {
     pub id: String,
     pub name: String,
     /// 工具参数(JSON)
@@ -180,16 +181,16 @@ pub struct ToolCall {
 
 /// 模型的一轮回复: 文本 + 思考 + 要执行的工具调用
 #[derive(Clone, Debug)]
-pub struct AssistantReply {
+pub struct ChatAssistantReply {
     pub text: String,
     /// 思考内容(思考模式模型才有, 空串 = 无思考)
     pub reasoning: String,
-    pub tool_calls: Vec<ToolCall>,
+    pub tool_calls: Vec<ChatToolCall>,
 }
 
 /// 一次请求的 token 用量
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-pub struct Usage {
+pub struct ChatUsage {
     /// 输入 token 数
     pub prompt_tokens: u32,
     /// 输出 token 数
@@ -198,29 +199,29 @@ pub struct Usage {
 
 /// 一次请求的 token 用量
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-pub struct TurnUsage {
-    records: Vec<StepUsage>,
+pub struct ChatTurnUsage {
+    records: Vec<ChatStepUsage>,
 }
-impl TurnUsage {
+impl ChatTurnUsage {
     pub fn new() -> Self {
         Self {
             records: Vec::new(),
         }
     }
 
-    pub fn add(&mut self, record: (u32, Usage)) {
+    pub fn add(&mut self, record: (u32, ChatUsage)) {
         self.records.push(record.into());
     }
 }
 
 /// 请求中某个轮回的 token 用量
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-pub struct StepUsage {
+pub struct ChatStepUsage {
     step: u32,
-    usage: Usage,
+    usage: ChatUsage,
 }
-impl From<(u32, Usage)> for StepUsage {
-    fn from(value: (u32, Usage)) -> Self {
+impl From<(u32, ChatUsage)> for ChatStepUsage {
+    fn from(value: (u32, ChatUsage)) -> Self {
         Self {
             step: value.0,
             usage: value.1,
@@ -228,9 +229,18 @@ impl From<(u32, Usage)> for StepUsage {
     }
 }
 
+#[derive(Clone)]
+pub struct ChatRequest {
+    pub system: Vec<String>,
+    pub messages: Vec<ChatMessage>,
+    pub tools: Vec<Arc<dyn Tool>>,
+    pub config: LLMConfig,
+    pub cancel: Signal,
+}
+
 /// 模型流式输出的统一事件(厂商无关)
 #[derive(Clone, Debug)]
-pub enum StreamEvent {
+pub enum LLMStreamEvent {
     /// 文本开始(AGUI: TEXT_MESSAGE_START)
     TextStart,
     /// 文本增量(AGUI: TEXT_MESSAGE_CONTENT)
@@ -260,7 +270,7 @@ pub enum StreamEvent {
     /// 工具调用结束(AGUI: TOOL_CALL_END, 参数已给全)
     ToolCallEnd { id: String },
     /// 用量统计(可能出现在流尾)
-    Usage(Usage),
+    Usage(ChatUsage),
     /// 流结束(携带厂商给的结束原因, 如 "stop" / "length" / "tool_calls")
     Done {
         /// 厂商结束原因(没有就不带)
@@ -269,7 +279,7 @@ pub enum StreamEvent {
 }
 
 /// 装箱的流(异步 trait 方法的标准返回类型)
-pub type LlmStream<'a> = Pin<Box<dyn Stream<Item = Result<StreamEvent>> + Send + 'a>>;
+pub type LLMStream<'a> = Pin<Box<dyn Stream<Item = Result<LLMStreamEvent>> + Send + 'a>>;
 
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, Default, Eq, Hash)]
 #[serde(rename_all = "lowercase")]
@@ -283,26 +293,17 @@ impl LLMProvider {
     }
 }
 
-// 10M	10,000,000	Llama 4 Scout
-// 2M	2,000,000	Gemini 3.1 Pro
-// 1M	1,000,000	GPT-5.5, Claude Opus 4.8, DeepSeek V4, Qwen3.7 Max
-// 512K	524,288	Kimi K2.5
-// 400K	409,600	GPT-5.4-mini
-// 256K	262,144	Kimi K2, 混元 Hy3
-// 200K	204,800	Claude 3.5 Sonnet, Kimi K2
-// 128K	131,072	Llama 3.1, DeepSeek-V3, Qwen2.5
-// 8K	8,192	Llama 2, 早期GPT模型
-#[derive(Copy, Clone, PartialEq, PartialOrd, Ord, Eq, Default, Serialize, Deserialize)]
+#[derive(Copy, Clone, Default, Eq, Serialize, Deserialize)]
 pub enum LLMContextSize {
     #[serde(rename = "8K")]
     _8K,
     #[default]
     #[serde(rename = "128K")]
     _128K,
-    #[serde(rename = "256K")]
-    _256K,
     #[serde(rename = "200K")]
     _200K,
+    #[serde(rename = "256K")]
+    _256K,
     #[serde(rename = "400K")]
     _400K,
     #[serde(rename = "512K")]
@@ -316,13 +317,34 @@ pub enum LLMContextSize {
     #[serde(untagged)]
     Custom(usize),
 }
-impl LLMContextSize {
-    pub fn from_model(model: Cow<str>) -> Self {
-        match model.as_ref() {
-            "deepseek-v4-flash" => Self::from("1M"),
-            "deepseek-v4-flash-vision-exp" => Self::from("1M"),
-            "deepseek-v4-pro" => Self::from("1M"),
-            _ => Self::default(),
+impl PartialEq for LLMContextSize {
+    fn eq(&self, other: &Self) -> bool {
+        usize::from(*self) == usize::from(*other)
+    }
+}
+impl PartialOrd for LLMContextSize {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+impl Ord for LLMContextSize {
+    fn cmp(&self, other: &Self) -> Ordering {
+        usize::from(*self).cmp(&usize::from(*other))
+    }
+}
+impl fmt::Display for LLMContextSize {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::_8K => formatter.write_str("8K"),
+            Self::_128K => formatter.write_str("128K"),
+            Self::_200K => formatter.write_str("200K"),
+            Self::_256K => formatter.write_str("256K"),
+            Self::_400K => formatter.write_str("400K"),
+            Self::_512K => formatter.write_str("512K"),
+            Self::_1M => formatter.write_str("1M"),
+            Self::_2M => formatter.write_str("2M"),
+            Self::_10M => formatter.write_str("10M"),
+            Self::Custom(value) => value.fmt(formatter),
         }
     }
 }
@@ -380,7 +402,6 @@ pub struct LLMConfig {
     #[serde(default)]
     pub thinking: bool,
 }
-
 pub type LLMConfigSecret = LLMConfig;
 
 /// LLM 配置变更事件
@@ -398,16 +419,7 @@ pub enum LLMConfigEvent {
     },
 }
 
-#[derive(Clone)]
-pub struct Request {
-    pub system: Vec<String>,
-    pub messages: Vec<ChatMessage>,
-    pub tools: Vec<Arc<dyn Tool>>,
-    pub config: LLMConfig,
-    pub cancel: Signal,
-}
-
 /// LLM 适配器(异步接口)
 pub trait LLMAdapter: Send + Sync {
-    fn stream<'a>(&'a self, request: &'a Request) -> LlmStream<'a>;
+    fn stream<'a>(&'a self, request: &'a ChatRequest) -> LLMStream<'a>;
 }

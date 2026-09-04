@@ -29,7 +29,7 @@ impl Tool for SearchMemoryTool {
     }
 
     async fn run(&self, args: Value, ctx: &ToolRunContext) -> anyhow::Result<Value> {
-        ctx.cancel.check()?;
+        ctx.signal.throw_if_aborted()?;
         let SearchMemoryToolParameters {
             keywords,
             max_results,

@@ -8,7 +8,29 @@ type EnvValue = number | string | boolean;
 
 export type Env = Record<EnvName, EnvValue>;
 
-export default class AppEnv {
+export class TypedEnv {
+  private readonly e: Env;
+
+  private constructor(e: Env) {
+    this.e = e;
+  }
+
+  static fromEnv(e: Env) {
+    return new TypedEnv(e);
+  }
+
+  var<T extends keyof ENV>(key: T): ENV[T] {
+    return this.e[key] as ENV[T];
+  }
+
+  var_with_process<T extends string | keyof ENV>(key: T): T extends keyof ENV ? ENV[T] : string {
+    return (this.var(key as keyof ENV) ?? process.env[key]) as T extends keyof ENV
+      ? ENV[T]
+      : string;
+  }
+}
+
+export class AppEnv {
   static envDir: string;
   static defaultTypeFilePath: string;
 
@@ -24,13 +46,13 @@ export default class AppEnv {
     }
   }
 
-  static load(mode?: string, log: boolean = true) {
+  static load(mode?: string, print_log: boolean = true) {
     if (!AppEnv.envDir) AppEnv.setEnvPath();
-    log && console.log(`Loading env for mode: ${mode || "default"}`);
-    return AppEnv.getEnvNames(mode).reduce(
+    print_log && console.log(`[env] mode: ${mode || "default"}`);
+    return AppEnv.getEnvNames(mode, print_log).reduce(
       (env, name) => {
         const parsedEnv = AppEnv.parseEnv(join(AppEnv.envDir, name));
-        console.log(`  Loaded ${name}:`, JSON.stringify(parsedEnv, null, 2));
+        print_log && console.log(`[env] loaded '${name}'\n`, JSON.stringify(parsedEnv, null, 2));
         return { ...env, ...parsedEnv };
       },
       <Env>{}
@@ -58,9 +80,11 @@ declare namespace NodeJS {
     writeFileSync(AppEnv.defaultTypeFilePath, content, "utf-8");
   }
 
-  private static getEnvNames(mode?: string) {
-    const names = [".env"];
-    mode && names.unshift(`.env.${mode}`);
+  private static getEnvNames(mode?: string, print_log = true) {
+    const names = [".env", ".env.local"];
+    mode && names.push(`.env.${mode}`); // 可以覆盖 .env
+
+    print_log && console.log(`[env] should load env from: [${names.join(", ")}]`);
 
     const args = process.argv;
     const modeIndex = args.findIndex((arg) => arg === "--env" || arg === "-e");
@@ -73,8 +97,16 @@ declare namespace NodeJS {
   }
 
   private static parseEnv(filePath: string) {
+    let file;
     try {
-      return readFileSync(filePath, "utf-8")
+      file = readFileSync(filePath, "utf-8");
+    } catch {
+      // env 不存在静默忽略
+      return <Env>{};
+    }
+
+    try {
+      return file
         .split("\n") // 按行分割
         .filter(Boolean) // 过滤掉空行
         .map(AppEnv.handleLine) // 处理每一行，返回 { name, value } 或 null
@@ -94,10 +126,11 @@ declare namespace NodeJS {
   }
 
   private static handleLine(line: string) {
+    line = line.trim();
     if (line === "" || line.startsWith("#")) return null;
 
     const [name, ...rest] = line.split("=");
-    const value = rest.join("=").trim();
+    const value = rest.join("=");
     if (name && rest.length > 0) {
       return {
         name: AppEnv.handleName(name),

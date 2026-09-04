@@ -7,7 +7,7 @@ export abstract class LLMTool<TSchema extends z.ZodType = z.ZodType, TOutput = u
   readonly description: string;
   abstract readonly inputSchema: TSchema;
 
-  constructor(props: { name: string; description: string }) {
+  protected constructor(props: { name: string; description: string }) {
     this.name = props.name;
     this.description = props.description;
   }

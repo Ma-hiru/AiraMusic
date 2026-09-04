@@ -19,7 +19,9 @@
 //!         ToolExecStart → ToolResult(执行侧, 来自循环)
 
 use crate::ctx::models::Event;
-use crate::llm::models::{AssistantReply, ChatMessage, Request, ToolCall, TurnUsage, Usage};
+use crate::llm::models::{
+    ChatAssistantReply, ChatMessage, ChatRequest, ChatToolCall, ChatTurnUsage, ChatUsage,
+};
 use crate::session::models::SessionId;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
@@ -71,7 +73,7 @@ pub enum LoopEvent {
     TurnEnd,
     /// 循环出错
     Error,
-    /// 程序错误
+    /// 程序错误，如果出现InnerError，不会触发 TurnEnd!
     InnerError,
 }
 
@@ -142,19 +144,19 @@ pub enum LoopDecision {
 
 // ═══════════════ veto ═══════════════
 
-// 决定 Request 是否可发
+/// 决定 Request 是否可发
 pub struct LoopPayloadBeforeRequest {
     pub turn: u32,
     pub step: u32,
     pub session_id: SessionId,
-    pub request: Request,
+    pub request: ChatRequest,
 }
 
 pub struct LoopPayloadRequest {
     pub turn: u32,
     pub step: u32,
     pub session_id: SessionId,
-    pub request: Request,
+    pub request: ChatRequest,
 }
 
 /// 批不批这一次工具调用
@@ -162,7 +164,7 @@ pub struct LoopPayloadToolPreExecute {
     pub turn: u32,
     pub step: u32,
     pub session_id: SessionId,
-    pub call: ToolCall,
+    pub call: ChatToolCall,
 }
 
 /// 两种用法:
@@ -172,7 +174,7 @@ pub struct LoopPayloadToolAfter {
     pub turn: u32,
     pub step: u32,
     pub session_id: SessionId,
-    pub call: ToolCall,
+    pub call: ChatToolCall,
     pub result: String,
     pub inject: Vec<ChatMessage>,
 }
@@ -181,7 +183,7 @@ pub struct LoopPayloadAfterReply {
     pub turn: u32,
     pub step: u32,
     pub session_id: SessionId,
-    pub reply: AssistantReply,
+    pub reply: ChatAssistantReply,
     pub is_resolved: bool,
     pub tool_calls: Vec<ChatMessage>,
 }
@@ -211,7 +213,7 @@ pub struct LoopPayloadRequestSent {
     pub step: u32,
     pub session_id: SessionId,
     pub user_message_snapshot: ChatMessage,
-    pub request: Request,
+    pub request: ChatRequest,
 }
 
 #[derive(Clone)]
@@ -311,9 +313,9 @@ pub struct LoopPayloadReply {
     pub step: u32,
     pub session_id: SessionId,
     pub user_message_snapshot: ChatMessage,
-    pub reply: AssistantReply,
+    pub reply: ChatAssistantReply,
     /// 本次请求的用量(适配器上报; 没有则为 None)
-    pub usage: Option<Usage>,
+    pub usage: Option<ChatUsage>,
 }
 
 #[derive(Clone)]
@@ -323,7 +325,7 @@ pub struct LoopPayloadToolResult {
     pub step: u32,
     pub session_id: SessionId,
     pub user_message_snapshot: ChatMessage,
-    pub call: ToolCall,
+    pub call: ChatToolCall,
     pub result: String,
 }
 
@@ -345,7 +347,7 @@ pub struct LoopPayloadInnerError {
     /// inner error 是内部非预期错误，不会触发 TurnEnd 和 Error 事件
     /// Error 是预期错误，会触发 TurnEnd 和 Error 事件
     /// 因此inner error 需要单独带上 usages
-    pub usages: TurnUsage,
+    pub usages: ChatTurnUsage,
     pub turn: Option<u32>,
 }
 
@@ -355,7 +357,7 @@ pub struct LoopPayloadTurnEnd {
     pub turn: u32,
     pub step: u32,
     pub session_id: SessionId,
-    pub usages: TurnUsage,
+    pub usages: ChatTurnUsage,
     pub user_message_snapshot: ChatMessage,
     pub cause: LoopCause,
 }

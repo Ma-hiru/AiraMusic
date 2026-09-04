@@ -1,10 +1,10 @@
 pub mod models;
 pub mod stdout;
 
-use crate::agui::models::{AguiEmitter, AguiEvent, AguiReasoningRole, AguiState};
+use crate::agui::models::{AguiEvent, AguiEventChannel, AguiReasoningRole, AguiState};
 use crate::ctx::Ctx;
 use crate::ctx::models::Disposer;
-use crate::llm::models::Role;
+use crate::llm::models::ChatRole;
 use crate::r#loop::models::{
     LoopEvent, LoopPayloadError, LoopPayloadInnerError, LoopPayloadReasoningDelta,
     LoopPayloadReasoningEnd, LoopPayloadReasoningStart, LoopPayloadStepStart, LoopPayloadTextDelta,
@@ -17,7 +17,7 @@ use std::sync::{Arc, Mutex};
 use tokio::sync::broadcast;
 
 pub struct AguiPlugin;
-impl PluginMeta<AguiEmitter> for AguiPlugin {
+impl PluginMeta<AguiEventChannel> for AguiPlugin {
     fn name() -> &'static str {
         "agui"
     }
@@ -26,9 +26,13 @@ impl PluginMeta<AguiEmitter> for AguiPlugin {
         "agui-emitter"
     }
 }
-impl Plugin<(), AguiEmitter> for AguiPlugin {
-    fn apply(&self, ctx: &Arc<Ctx>, _config: ()) -> anyhow::Result<PluginApplyResult<AguiEmitter>> {
-        let (tx, _) = broadcast::channel::<AguiEvent>(256);
+impl Plugin<(), AguiEventChannel> for AguiPlugin {
+    fn apply(
+        &self,
+        ctx: &Arc<Ctx>,
+        _config: (),
+    ) -> anyhow::Result<PluginApplyResult<AguiEventChannel>> {
+        let (sender, _) = broadcast::channel::<AguiEvent>(256);
         let state: Arc<Mutex<AguiState>> = Arc::new(Mutex::new(AguiState::default()));
         let step_name = |turn: u32, step: u32| -> String { format!("turn{turn}-step{step}") };
         let message_id = |session_id: &SessionId, turn: u32, step: u32| -> String {
@@ -40,7 +44,7 @@ impl Plugin<(), AguiEmitter> for AguiPlugin {
 
         let mut receipts: Vec<Disposer> = Vec::new();
         let emit = {
-            let tx = tx.clone();
+            let tx = sender.clone();
             move |event: AguiEvent| {
                 let _ = tx.send(event);
             }
@@ -147,7 +151,7 @@ impl Plugin<(), AguiEmitter> for AguiPlugin {
                         session_id: p.session_id.to_string(),
                         run_id: p.run_id.clone(),
                         message_id: message_id(&p.session_id, p.turn, p.step),
-                        role: Role::Assistant,
+                        role: ChatRole::Assistant,
                     });
                 }),
             );
@@ -276,7 +280,7 @@ impl Plugin<(), AguiEmitter> for AguiPlugin {
         }
 
         Ok(PluginApplyResult {
-            service: Some(AguiEmitter { tx }),
+            service: Some(sender.into()),
             emit_disposers: Some(receipts),
         })
     }
@@ -285,7 +289,7 @@ impl Plugin<(), AguiEmitter> for AguiPlugin {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::llm::models::TurnUsage;
+    use crate::llm::models::ChatTurnUsage;
 
     #[test]
     fn inner_error_preserves_the_runtime_run_id_without_a_turn() {
@@ -300,7 +304,7 @@ mod tests {
                 run_id: "accepted-run-id".to_string(),
                 session_id: SessionId::from("thread-1"),
                 error: "provider config missing".to_string(),
-                usages: TurnUsage::new(),
+                usages: ChatTurnUsage::new(),
                 turn: None,
             },
         );

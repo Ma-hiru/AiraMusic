@@ -1,12 +1,12 @@
 pub mod client;
 pub mod models;
 
-use crate::cancel::Signal;
 use crate::ctx::Ctx;
 use crate::ctx::models::Disposer;
 use crate::mcp::models::{MCPCServerConfigJSON, MCPServer, MCPServerConfig, MCPTool};
 use crate::plugins::models::{Plugin, PluginApplyResult, PluginMeta};
 use crate::tools::{ToolRegistry, ToolsPlugin};
+use crate::utils::Signal;
 use anyhow::Context;
 pub use client::MCPClient;
 use std::collections::HashMap;
@@ -77,7 +77,7 @@ impl MCPService {
         }
 
         // 守护任务: 建连 → 注册工具 → 等断线 → 摘工具 → 退避重连
-        let cancel_signal = Signal::new();
+        let cancel_signal = Signal::new(Some("mcp-server.register"));
         let task_signal = cancel_signal.clone();
         let task_service = Arc::clone(self);
         let task_server = Arc::clone(&server);
@@ -86,7 +86,7 @@ impl MCPService {
         let service = Arc::clone(self);
         let name = server.name.clone();
         Ok(Box::new(move || {
-            cancel_signal.cancel();
+            cancel_signal.abort();
             server.clear_tools();
             service.servers.lock().unwrap().remove(&name);
         }))
@@ -161,7 +161,8 @@ impl MCPService {
         let servers: Vec<Arc<MCPServer>> = self.servers.lock().unwrap().values().cloned().collect();
         for server in servers {
             if server.client.is_connected() {
-                self.refresh_tools(&server, &Signal::new()).await;
+                self.refresh_tools(&server, &Signal::new(Some("mcp-server.refresh_all")))
+                    .await;
             }
         }
     }
@@ -172,7 +173,7 @@ impl MCPService {
     async fn run_server(self: Arc<Self>, server: Arc<MCPServer>, signal: Signal) {
         let mut attempt = 0u32;
         loop {
-            if signal.is_cancelled() {
+            if signal.is_aborted() {
                 return;
             }
             match server.client.connect().await {
@@ -182,7 +183,7 @@ impl MCPService {
                     self.refresh_tools(&server, &signal).await;
                     tokio::select! {
                         biased;
-                        _ = signal.cancelled() => return, // drop running = 拆除连接/杀子进程
+                        _ = signal.wait_aborted() => return, // drop running = 拆除连接/杀子进程
                         quit = running.waiting() => {
                             tracing::warn!(server = %server.name, reason = ?quit, "mcp 断线");
                             server.client.mark_disconnected();
@@ -210,7 +211,7 @@ impl MCPService {
             attempt += 1;
             tokio::select! {
                 biased;
-                _ = signal.cancelled() => return,
+                _ = signal.wait_aborted() => return,
                 _ = tokio::time::sleep(delay) => {}
             }
         }
@@ -221,7 +222,7 @@ impl MCPService {
         server.clear_tools();
         match server.client.list_tools().await {
             Ok(tools) => {
-                if signal.is_cancelled() {
+                if signal.is_aborted() {
                     return; // 拉列表期间被注销: 不再注册
                 }
                 let mut disposers = vec![];

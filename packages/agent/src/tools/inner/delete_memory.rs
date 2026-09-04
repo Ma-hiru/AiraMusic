@@ -27,7 +27,7 @@ impl Tool for DeleteMemoryTool {
     }
 
     async fn run(&self, args: Value, ctx: &ToolRunContext) -> anyhow::Result<Value> {
-        ctx.cancel.check()?;
+        ctx.signal.throw_if_aborted()?;
         let DeleteMemoryToolParameters { id } =
             serde_json::from_value::<DeleteMemoryToolParameters>(args)?;
 

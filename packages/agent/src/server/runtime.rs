@@ -1,0 +1,445 @@
+use crate::agui::AguiPlugin;
+use crate::constants::support_providers;
+use crate::ctx::Ctx;
+use crate::llm::models::{
+    ChatMessage, ChatRole, ChatRoleInnerType, LLMConfig, LLMContextSize, LLMProvider,
+};
+use crate::llm::plugins::{LLMConfigPlugin, config::LLMConfigManager};
+use crate::r#loop::models::{LoopEvent, LoopPayloadInnerError, LoopPayloadTurnEnd};
+use crate::r#loop::{LoopPlugin, LoopService};
+use crate::plugins::models::PluginMeta;
+use crate::server::models::{
+    MessageSnapshot, ProviderConfigInput, ProviderConfigView, ProviderDescriptor, RunAccepted,
+    ThreadRunStatus, ThreadRuntimeSnapshot, ThreadSnapshot, ThreadSummary,
+};
+use crate::session::models::SessionId;
+use crate::session::{SessionManager, SessionPlugin};
+use crate::utils::Signal;
+use crate::utils::generate_id;
+use std::collections::HashMap;
+use std::sync::{Arc, Mutex};
+
+#[derive(Clone)]
+pub struct AgentLoopRuntimeThreadRegisteredRun {
+    pub thread_id: String,
+    pub run_id: String,
+    pub signal: Signal, // 随意复制
+}
+#[derive(Default)]
+pub struct AgentLoopRuntimeThreadRegistryState {
+    /// run_id -> run
+    run_id_2_run_state: HashMap<String, AgentLoopRuntimeThreadRegisteredRun>,
+    /// thread_id -> run_id
+    thread_id_2_run_id: HashMap<String, String>,
+}
+#[derive(Clone, Default)]
+pub struct AgentLoopRuntimeThreadRegistry {
+    state: Arc<Mutex<AgentLoopRuntimeThreadRegistryState>>,
+}
+impl AgentLoopRuntimeThreadRegistry {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn create_run(
+        &self,
+        thread_id: impl Into<String>,
+    ) -> anyhow::Result<AgentLoopRuntimeThreadRegisteredRun> {
+        self.create_with_id(thread_id, generate_id("run"))
+    }
+
+    pub fn create_with_id(
+        &self,
+        thread_id: impl Into<String>,
+        run_id: impl Into<String>,
+    ) -> anyhow::Result<AgentLoopRuntimeThreadRegisteredRun> {
+        let thread_id = thread_id.into();
+        let run_id = run_id.into();
+        let mut state = self
+            .state
+            .lock()
+            .map_err(|error| anyhow::anyhow!("lock run registry 失败: {error}"))?;
+
+        if state.thread_id_2_run_id.contains_key(&thread_id) {
+            anyhow::bail!("会话 {thread_id} 已有运行中的请求");
+        }
+        if state.run_id_2_run_state.contains_key(&run_id) {
+            anyhow::bail!("运行 {run_id} 已存在");
+        }
+
+        let run = AgentLoopRuntimeThreadRegisteredRun {
+            thread_id: thread_id.clone(),
+            run_id,
+            signal: Signal::new(Some(thread_id.clone())),
+        };
+        state
+            .thread_id_2_run_id
+            .insert(thread_id, run.run_id.clone());
+        state
+            .run_id_2_run_state
+            .insert(run.run_id.clone(), run.clone());
+
+        Ok(run)
+    }
+
+    /// 仅调用signal.abort()
+    pub fn cancel(&self, run_id: &str) -> bool {
+        let run = self
+            .state
+            .lock()
+            .ok()
+            .and_then(|state| state.run_id_2_run_state.get(run_id).cloned());
+        if let Some(run) = run {
+            run.signal.abort();
+            true
+        } else {
+            false
+        }
+    }
+
+    /// 仅移除记录
+    pub fn finish(&self, run_id: &str) -> bool {
+        let Ok(mut state) = self.state.lock() else {
+            return false;
+        };
+        let Some(run) = state.run_id_2_run_state.remove(run_id) else {
+            return false;
+        };
+        state.thread_id_2_run_id.remove(&run.thread_id);
+        true
+    }
+
+    /// 返回当前正在运行的run
+    pub fn active_for_thread(
+        &self,
+        thread_id: &str,
+    ) -> Option<AgentLoopRuntimeThreadRegisteredRun> {
+        let state = self.state.lock().ok()?;
+        let run_id = state.thread_id_2_run_id.get(thread_id)?;
+        state.run_id_2_run_state.get(run_id).cloned()
+    }
+
+    pub fn list(&self) -> Vec<RunAccepted> {
+        let Ok(state) = self.state.lock() else {
+            return Vec::new();
+        };
+
+        let mut runs = state
+            .run_id_2_run_state
+            .values()
+            .map(|run| RunAccepted {
+                thread_id: run.thread_id.clone(),
+                run_id: run.run_id.clone(),
+            })
+            .collect::<Vec<_>>();
+        runs.sort_by(|left, right| left.run_id.cmp(&right.run_id));
+
+        runs
+    }
+}
+
+#[derive(Clone)]
+pub struct AgentLoopRuntimeService {
+    sessions: Arc<SessionManager>,
+    configs: Arc<LLMConfigManager>,
+    loop_service: Option<Arc<LoopService>>,
+    runs: AgentLoopRuntimeThreadRegistry,
+}
+impl AgentLoopRuntimeService {
+    pub fn from_ctx(ctx: &Arc<Ctx>) -> anyhow::Result<Self> {
+        let _ = AguiPlugin::get_service(ctx)?; // 检查是否注册
+        let service = Self::from_services(
+            SessionPlugin::get_service(ctx)?,
+            LLMConfigPlugin::get_service(ctx)?,
+            Some(LoopPlugin::get_service(ctx)?),
+        );
+        service.bind_run_lifecycle(ctx);
+        Ok(service)
+    }
+
+    // 纯粹为了 codex 写测试时方便，其实不应该这么写
+    pub fn from_services<S, C>(
+        sessions: S,
+        configs: C,
+        loop_service: Option<Arc<LoopService>>,
+    ) -> Self
+    where
+        S: Into<Arc<SessionManager>>,
+        C: Into<Arc<LLMConfigManager>>,
+    {
+        Self {
+            sessions: sessions.into(),
+            configs: configs.into(),
+            loop_service,
+            runs: AgentLoopRuntimeThreadRegistry::new(),
+        }
+    }
+
+    /// 监听 ctx 自动 finish，单纯移除记录
+    fn bind_run_lifecycle(&self, ctx: &Arc<Ctx>) {
+        let runs = self.runs.clone();
+        ctx.effect(
+            ctx.on::<LoopPayloadTurnEnd>(LoopEvent::TurnEnd, move |payload| {
+                runs.finish(&payload.run_id);
+            }),
+        );
+
+        // 关键在于，出现InnerError不会触发TurnEnd，这是重要的约定
+        let runs = self.runs.clone();
+        ctx.effect(
+            ctx.on::<LoopPayloadInnerError>(LoopEvent::InnerError, move |payload| {
+                runs.finish(&payload.run_id);
+            }),
+        );
+    }
+
+    pub fn create_thread(&self, name: Option<String>) -> anyhow::Result<ThreadSummary> {
+        let id = self.sessions.create_session_named(name.unwrap_or_default());
+        self.thread_summary(&id)
+            .ok_or_else(|| anyhow::anyhow!("创建会话后元数据缺失"))
+    }
+
+    pub fn list_threads(&self) -> anyhow::Result<Vec<ThreadSummary>> {
+        let mut threads = self
+            .sessions
+            .session_ids()
+            .iter()
+            .filter_map(|id| self.thread_summary(id))
+            .collect::<Vec<_>>();
+        threads.sort_by(|left, right| {
+            right
+                .updated_at
+                .cmp(&left.updated_at)
+                .then_with(|| left.id.cmp(&right.id))
+        });
+        Ok(threads)
+    }
+
+    pub fn get_thread(&self, id: &str) -> anyhow::Result<Option<ThreadSnapshot>> {
+        let session_id = SessionId::from(id);
+        let Some(metadata) = self.sessions.metadata(&session_id) else {
+            return Ok(None);
+        };
+        let active = self.runs.active_for_thread(id);
+        let messages = self.sessions.real_messages(&session_id);
+        Ok(Some(ThreadSnapshot {
+            id: id.to_string(),
+            name: metadata.name,
+            created_at: metadata.created_at,
+            updated_at: metadata.updated_at,
+            messages: messages.iter().map(MessageSnapshot::from).collect(),
+            runtime: ThreadRuntimeSnapshot {
+                status: if active.is_some() {
+                    ThreadRunStatus::Running
+                } else if Self::latest_turn_failed(&messages) {
+                    ThreadRunStatus::Failed
+                } else {
+                    ThreadRunStatus::Idle
+                },
+                run_id: active.map(|run| run.run_id),
+            },
+        }))
+    }
+
+    pub fn delete_thread(&self, id: &str) -> anyhow::Result<bool> {
+        if self.runs.active_for_thread(id).is_some() {
+            anyhow::bail!("会话 {id} 正在运行，不能删除");
+        }
+        self.sessions.delete_session(&SessionId::from(id))
+    }
+
+    pub fn create_run(&self, thread_id: &str, content: String) -> anyhow::Result<RunAccepted> {
+        let session_id = SessionId::from(thread_id);
+
+        if !self.sessions.has(&session_id) {
+            anyhow::bail!("会话 {thread_id} 不存在");
+        }
+        let loop_service = self
+            .loop_service
+            .as_ref()
+            .ok_or_else(|| anyhow::anyhow!("Agent loop service 未配置"))?;
+
+        // 如果会话没有名称，那么从输入中提取标题
+        if self
+            .sessions
+            .metadata(&session_id)
+            .is_some_and(|metadata| metadata.name.trim().is_empty())
+        {
+            let title = Self::thread_title_from_input(&content);
+            if !title.is_empty() {
+                self.sessions.rename(&session_id, title)?;
+            }
+        }
+
+        let run = self.runs.create_run(thread_id)?;
+        let accepted = RunAccepted {
+            thread_id: run.thread_id.clone(),
+            run_id: run.run_id.clone(),
+        };
+        let handle = loop_service.send(
+            SessionId::from(thread_id),
+            run.run_id.clone(),
+            ChatMessage::user(content),
+            run.signal,
+        );
+
+        let registry = self.runs.clone();
+        let run_id = run.run_id;
+        tokio::spawn(async move {
+            // 等待 handle 完成，完成后删除 run
+            // 这里是防止出现没有跑到 run loop 的情况
+            // 则没有LoopEvent，bind_run_lifecycle失效
+            handle.completed().await;
+            registry.finish(&run_id);
+        });
+
+        Ok(accepted)
+    }
+
+    pub fn cancel_run(&self, run_id: &str) -> bool {
+        self.runs.cancel(run_id)
+    }
+
+    pub fn list_runs(&self) -> Vec<RunAccepted> {
+        self.runs.list()
+    }
+
+    pub fn list_providers(&self) -> Vec<ProviderDescriptor> {
+        support_providers()
+    }
+
+    pub fn create_config(&self, input: ProviderConfigInput) -> anyhow::Result<ProviderConfigView> {
+        let config = Self::config_from_input(input, None, None)?;
+        self.configs.add_global_config(config.clone())?;
+        Ok(Self::config_to_view(config, true))
+    }
+
+    pub fn update_config(
+        &self,
+        id: &str,
+        input: ProviderConfigInput,
+    ) -> anyhow::Result<ProviderConfigView> {
+        let existing_api_key = self
+            .configs
+            .get_global_config(id)?
+            .map(|config| config.api_key);
+        let config = Self::config_from_input(input, Some(id), existing_api_key)?;
+        self.configs.upsert_global_config(config.clone())?;
+        Ok(Self::config_to_view(config, true))
+    }
+
+    pub fn list_configs(&self) -> anyhow::Result<Vec<ProviderConfigView>> {
+        Ok(self
+            .configs
+            .list()
+            .into_iter()
+            .map(|config| Self::config_to_view(config, false))
+            .collect())
+    }
+
+    pub fn delete_config(&self, id: &str) -> anyhow::Result<bool> {
+        self.configs.remove_global_config(id)
+    }
+
+    pub fn set_thread_config(&self, thread_id: &str, config_id: &str) -> anyhow::Result<()> {
+        let session_id = SessionId::from(thread_id);
+        if !self.sessions.has(&session_id) {
+            anyhow::bail!("会话 {thread_id} 不存在");
+        }
+        let config = self
+            .configs
+            .get_global_config(config_id)?
+            .ok_or_else(|| anyhow::anyhow!("配置 {config_id} 不存在"))?;
+        self.configs.set_session_config(&session_id, config)
+    }
+
+    fn thread_summary(&self, id: &SessionId) -> Option<ThreadSummary> {
+        let metadata = self.sessions.metadata(id)?;
+        Some(ThreadSummary {
+            id: id.to_string(),
+            name: metadata.name,
+            created_at: metadata.created_at,
+            updated_at: metadata.updated_at,
+        })
+    }
+
+    fn config_from_input(
+        input: ProviderConfigInput,
+        forced_id: Option<&str>,
+        existing_api_key: Option<String>,
+    ) -> anyhow::Result<LLMConfig> {
+        let provider = match input.provider.to_ascii_lowercase().as_str() {
+            "openai" => LLMProvider::OpenAI,
+            provider => anyhow::bail!("不支持的 LLM provider: {provider}"),
+        };
+        let id = forced_id
+            .map(str::to_string)
+            .or(input.id)
+            .filter(|id| !id.trim().is_empty())
+            .unwrap_or_else(|| generate_id("llm-config"));
+        let api_key = if input.api_key.trim().is_empty() {
+            existing_api_key.ok_or_else(|| anyhow::anyhow!("API Key 不能为空"))?
+        } else {
+            input.api_key
+        };
+        Ok(LLMConfig {
+            id,
+            name: input.name,
+            provider,
+            model: input.model,
+            api_key,
+            context_size: LLMContextSize::from(input.context_size),
+            base_url: input.base_url,
+            headers: input.headers,
+            other: input.other,
+            default: input.default,
+            thinking: input.thinking,
+        })
+    }
+
+    fn config_to_view(config: LLMConfig, mask_api_key: bool) -> ProviderConfigView {
+        ProviderConfigView {
+            id: config.id,
+            name: config.name,
+            provider: match config.provider {
+                LLMProvider::OpenAI => "openai".to_string(),
+            },
+            model: config.model,
+            masked_api_key: if mask_api_key {
+                crate::utils::secret_key(config.api_key)
+            } else {
+                config.api_key
+            },
+            context_size: config.context_size.to_string(),
+            base_url: config.base_url,
+            headers: config.headers,
+            other: config.other,
+            default: config.default,
+            thinking: config.thinking,
+        }
+    }
+
+    fn thread_title_from_input(input: &str) -> String {
+        input
+            .split_whitespace()
+            .collect::<Vec<_>>()
+            .join(" ")
+            .chars()
+            .take(32)
+            .collect()
+    }
+
+    fn latest_turn_failed(messages: &[ChatMessage]) -> bool {
+        for message in messages.iter().rev() {
+            if message.role == ChatRole::User {
+                return false;
+            }
+            if message.role == ChatRole::Inner
+                && message.inner_type == Some(ChatRoleInnerType::Error)
+            {
+                return true;
+            }
+        }
+        false
+    }
+}

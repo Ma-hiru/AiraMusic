@@ -1,13 +1,16 @@
-use agent::api::models::ProviderConfigInput;
 use agent::llm::plugins::config::LLMConfigManager;
-use agent::runtime::AgentRuntimeService;
-use agent::runtime::run_registry::RunRegistry;
+use agent::server::models::ProviderConfigInput;
+use agent::server::runtime::{AgentLoopRuntimeService, AgentLoopRuntimeThreadRegistry};
+
 use agent::session::SessionManager;
 
 #[test]
 fn runtime_service_owns_thread_metadata_and_deletion() {
-    let service =
-        AgentRuntimeService::from_services(SessionManager::new(), LLMConfigManager::new(), None);
+    let service = AgentLoopRuntimeService::from_services(
+        SessionManager::new(),
+        LLMConfigManager::new(),
+        None,
+    );
 
     let created = service
         .create_thread(Some("First thread".to_string()))
@@ -27,27 +30,30 @@ fn runtime_service_owns_thread_metadata_and_deletion() {
 
 #[test]
 fn run_registry_allows_parallel_threads_but_only_one_run_per_thread() {
-    let registry = RunRegistry::new();
+    let registry = AgentLoopRuntimeThreadRegistry::new();
     let first = registry
-        .start_with_id("thread-1", "thread-1-turn1")
+        .create_with_id("thread-1", "thread-1-turn1")
         .unwrap();
     assert_eq!(first.run_id, "thread-1-turn1");
 
-    assert!(registry.start("thread-1").is_err());
-    let second = registry.start("thread-2").unwrap();
+    assert!(registry.create_run("thread-1").is_err());
+    let second = registry.create_run("thread-2").unwrap();
     assert_ne!(first.run_id, second.run_id);
     assert_eq!(registry.list().len(), 2);
 
     assert!(registry.cancel(&first.run_id));
-    assert!(first.signal.is_cancelled());
+    assert!(first.signal.is_aborted());
     assert!(registry.finish(&first.run_id));
-    assert!(registry.start("thread-1").is_ok());
+    assert!(registry.create_run("thread-1").is_ok());
 }
 
 #[test]
 fn config_crud_returns_only_masked_api_keys() {
-    let service =
-        AgentRuntimeService::from_services(SessionManager::new(), LLMConfigManager::new(), None);
+    let service = AgentLoopRuntimeService::from_services(
+        SessionManager::new(),
+        LLMConfigManager::new(),
+        None,
+    );
     let created = service
         .create_config(provider_input(None, "First", "sk-secret-value"))
         .unwrap();
@@ -79,8 +85,11 @@ fn config_crud_returns_only_masked_api_keys() {
 
 #[test]
 fn config_binding_rejects_a_missing_thread() {
-    let service =
-        AgentRuntimeService::from_services(SessionManager::new(), LLMConfigManager::new(), None);
+    let service = AgentLoopRuntimeService::from_services(
+        SessionManager::new(),
+        LLMConfigManager::new(),
+        None,
+    );
     let config = service
         .create_config(provider_input(None, "First", "sk-secret-value"))
         .unwrap();

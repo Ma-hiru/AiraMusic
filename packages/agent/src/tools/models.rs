@@ -1,6 +1,6 @@
-use crate::cancel::Signal;
 use crate::ctx::Ctx;
 use crate::session::models::SessionId;
+use crate::utils::Signal;
 use async_trait::async_trait;
 use serde_json::Value;
 use std::sync::Arc;
@@ -11,7 +11,7 @@ pub struct ToolRunContext {
     pub turn: u32,
     pub step: u32,
     pub ctx: Arc<Ctx>,
-    pub cancel: Signal,
+    pub signal: Signal,
 }
 
 #[async_trait]

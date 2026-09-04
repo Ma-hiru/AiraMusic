@@ -1,3 +1,4 @@
+use crate::llm::models::{ChatMessage, ChatRole, ChatRoleInnerType};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
@@ -92,6 +93,37 @@ pub struct MessageSnapshot {
     pub tool_call_id: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub inner_type: Option<InnerMessageType>,
+}
+impl From<&ChatMessage> for MessageSnapshot {
+    fn from(message: &ChatMessage) -> Self {
+        Self {
+            role: match message.role {
+                ChatRole::System => MessageRole::System,
+                ChatRole::User => MessageRole::User,
+                ChatRole::Assistant => MessageRole::Assistant,
+                ChatRole::Tool => MessageRole::Tool,
+                ChatRole::Inner => MessageRole::Inner,
+            },
+            content: message.content.clone(),
+            reasoning_content: message.reasoning_content.clone(),
+            tool_calls: message
+                .tool_calls
+                .iter()
+                .map(|call| ToolCallSnapshot {
+                    id: call.id.clone(),
+                    name: call.name.clone(),
+                    args: call.args.clone(),
+                })
+                .collect(),
+            tool_call_id: message.tool_call_id.clone(),
+            inner_type: message.inner_type.as_ref().map(|kind| match kind {
+                ChatRoleInnerType::Think => InnerMessageType::Think,
+                ChatRoleInnerType::Error => InnerMessageType::Error,
+                ChatRoleInnerType::Compressed => InnerMessageType::Compressed,
+                ChatRoleInnerType::Usage => InnerMessageType::Usage,
+            }),
+        }
+    }
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize, TS)]

@@ -33,7 +33,7 @@ impl Tool for RequestTool {
     }
 
     fn description(&self) -> &str {
-        "Perform a request."
+        "简单的http请求工具"
     }
 
     fn parameters(&self) -> Value {
@@ -41,7 +41,7 @@ impl Tool for RequestTool {
     }
 
     async fn run(&self, args: Value, ctx: &ToolRunContext) -> anyhow::Result<Value> {
-        ctx.cancel.check()?;
+        ctx.signal.throw_if_aborted()?;
         let RequestToolParameters {
             url,
             method,

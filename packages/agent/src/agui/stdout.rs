@@ -1,9 +1,9 @@
 use crate::agui::AguiPlugin;
 use crate::agui::models::AguiEvent;
-use crate::cancel::Signal;
 use crate::ctx::Ctx;
 use crate::ctx::models::{Disposer, DisposerLike};
 use crate::plugins::models::{Plugin, PluginApplyResult, PluginMeta};
+use crate::utils::Signal;
 use anyhow::Result;
 use std::sync::Arc;
 use tokio::sync::broadcast::error::RecvError;
@@ -23,13 +23,13 @@ impl Plugin<(), ()> for AguiStdoutPlugin {
         let emitter = AguiPlugin::get_service(ctx)?;
         let mut rx = emitter.subscribe();
 
-        let cancel_signal = Signal::new();
+        let cancel_signal = Signal::new(Some("agui-stdout-apply"));
         let task_signal = cancel_signal.clone();
         tokio::spawn(async move {
             loop {
                 tokio::select! {
                     biased;
-                    _ = task_signal.cancelled() => break,
+                    _ = task_signal.wait_aborted() => break,
                     event = rx.recv() => match event {
                         Ok(event) => {
                             match &event {
@@ -68,7 +68,7 @@ impl Plugin<(), ()> for AguiStdoutPlugin {
             }
         });
 
-        let disposer: Disposer = Box::new(move || cancel_signal.cancel());
+        let disposer: Disposer = Box::new(move || cancel_signal.abort());
         Ok(PluginApplyResult {
             service: None,
             emit_disposers: disposer.to_option_disposers(),

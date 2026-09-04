@@ -2,7 +2,7 @@ pub mod models;
 pub mod persistence;
 
 use crate::ctx::Ctx;
-use crate::llm::models::{ChatMemory, ChatMessage, Role};
+use crate::llm::models::{ChatMemory, ChatMessage, ChatRole};
 use crate::plugins::models::{Plugin, PluginApplyResult, PluginMeta};
 use models::*;
 use std::collections::HashMap;
@@ -50,6 +50,10 @@ impl SessionManager {
 
     fn send_event(&self, event: SessionEvent) {
         let _ = self.channel_sender.send(event);
+    }
+
+    pub fn session_ids(&self) -> Vec<SessionId> {
+        self.sessions.lock().unwrap().keys().cloned().collect()
     }
 
     pub fn subscribe(&self) -> broadcast::Receiver<SessionEvent> {
@@ -144,7 +148,7 @@ impl SessionManager {
                 .push(message.clone());
         }
 
-        let inner = message.role == Role::Inner;
+        let inner = message.role == ChatRole::Inner;
         if !inner {
             self.compaction
                 .lock()
@@ -191,7 +195,11 @@ impl SessionManager {
             .unwrap()
             .get(id)
             .cloned()
-            .map(|c| c.into_iter().filter(|m| m.role != Role::Inner).collect())
+            .map(|c| {
+                c.into_iter()
+                    .filter(|m| m.role != ChatRole::Inner)
+                    .collect()
+            })
             .unwrap_or_default()
     }
 
@@ -292,10 +300,12 @@ impl SessionManager {
             }
             compaction_map.insert(id.clone(), compaction);
         }
-        self.metadata
-            .lock()
-            .map_err(|e| anyhow::anyhow!("lock metadata 失败: {}", e))?
-            .insert(id, metadata);
+        {
+            self.metadata
+                .lock()
+                .map_err(|e| anyhow::anyhow!("lock metadata 失败: {}", e))?
+                .insert(id, metadata);
+        }
         Ok(())
     }
 
@@ -306,10 +316,6 @@ impl SessionManager {
             .map_err(|e| anyhow::anyhow!("lock memories 失败: {}", e))?
             .extend(memories);
         Ok(())
-    }
-
-    pub fn session_ids(&self) -> Vec<SessionId> {
-        self.sessions.lock().unwrap().keys().cloned().collect()
     }
 }
 impl Default for SessionManager {

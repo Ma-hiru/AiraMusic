@@ -1,5 +1,6 @@
 use crate::llm::models::{
-    ChatMessage, LLMAdapter, LLMProvider, LlmStream, Request, Role, StreamEvent, Usage,
+    ChatMessage, ChatRequest, ChatRole, ChatUsage, LLMAdapter, LLMProvider, LLMStream,
+    LLMStreamEvent,
 };
 use crate::tools::models::Tool;
 use crate::utils::LLMSSEDecoder;
@@ -14,8 +15,15 @@ use std::str::FromStr;
 use std::{collections::HashMap, sync::Arc};
 
 pub struct OpenAiAdapter;
+/// 一个 SSE 事件的类型化结果 (openai 流式下，为了支持交错式思考)
+struct ExtendedStreamChunk {
+    /// async-openai 类型化(choices / delta / tool_calls / usage / finish_reason)
+    inner: CreateChatCompletionStreamResponse,
+    /// 拓展字段,思考增量(思考模式才有)
+    reasoning_delta: Option<String>,
+}
 impl OpenAiAdapter {
-    /// ChatMessage → openai 消息 + 该消息要回传的思考内容(仅 assistant 会有)
+    /// ChatMessage → openai 消息 + 要回传的思考内容(仅 assistant 时，其他类型为None)
     fn inner_msg_2_openai_msg(
         messages: &[ChatMessage],
     ) -> Vec<(ChatCompletionRequestMessage, Option<String>)> {
@@ -24,21 +32,20 @@ impl OpenAiAdapter {
             .filter_map(|m| {
                 let reasoning = m.reasoning_content.clone();
                 let message: ChatCompletionRequestMessage = match m.role {
-                    Role::System => ChatCompletionRequestSystemMessageArgs::default()
+                    ChatRole::System => ChatCompletionRequestSystemMessageArgs::default()
                         .content(m.content.as_str())
                         .build()
                         .ok()?
                         .into(),
-                    Role::User => ChatCompletionRequestUserMessageArgs::default()
+                    ChatRole::User => ChatCompletionRequestUserMessageArgs::default()
                         .content(m.content.as_str())
                         .build()
                         .ok()?
                         .into(),
-                    Role::Assistant => {
+                    ChatRole::Assistant => {
                         let mut args = ChatCompletionRequestAssistantMessageArgs::default();
 
                         args.content(m.content.as_str());
-
                         if !m.tool_calls.is_empty() {
                             args.tool_calls(
                                 m.tool_calls
@@ -57,22 +64,23 @@ impl OpenAiAdapter {
                                     .collect::<Vec<_>>(),
                             );
                         }
+
                         args.build().ok()?.into()
                     }
-                    Role::Tool => ChatCompletionRequestToolMessageArgs::default()
+                    ChatRole::Tool => ChatCompletionRequestToolMessageArgs::default()
                         .content(m.content.as_str())
                         .tool_call_id(m.tool_call_id.clone()?)
                         .build()
                         .ok()?
                         .into(),
                     // 理论上不会把内部消息转换为 system 消息，这里保留为以后策略扩展
-                    Role::Inner => ChatCompletionRequestSystemMessageArgs::default()
+                    ChatRole::Inner => ChatCompletionRequestSystemMessageArgs::default()
                         .content(m.content.as_str())
                         .build()
                         .ok()?
                         .into(),
                 };
-                Some((message, reasoning))
+                Some((message, reasoning)) // 一般都是助手的思考内容，所以，reasoning_content 不为None时，都是助手消息
             })
             .collect()
     }
@@ -105,7 +113,7 @@ impl OpenAiAdapter {
 
     /// 原有字段用 serde 直接反序列化成 async-openai 的类型(未知字段被忽略)
     /// 拓展字段(reasoning_content)手工补齐
-    fn parse_stream_chunk(value: Value) -> Option<StreamChunk> {
+    fn parse_stream_chunk(value: Value) -> Option<ExtendedStreamChunk> {
         let inner: CreateChatCompletionStreamResponse =
             serde_json::from_value(value.clone()).ok()?;
         // 拓展字段: choices[*].delta.reasoning_content(取第一个非空的)
@@ -122,25 +130,18 @@ impl OpenAiAdapter {
                         .map(|s| s.to_string())
                 })
             });
-        Some(StreamChunk {
+        Some(ExtendedStreamChunk {
             inner,
             reasoning_delta,
         })
     }
 }
 
-/// 一个 SSE 事件的类型化结果
-struct StreamChunk {
-    /// async-openai 类型化(choices / delta / tool_calls / usage / finish_reason)
-    inner: CreateChatCompletionStreamResponse,
-    /// 拓展字段,思考增量(思考模式才有)
-    reasoning_delta: Option<String>,
-}
 impl LLMAdapter for OpenAiAdapter {
-    fn stream<'a>(&'a self, request: &'a Request) -> LlmStream<'a> {
+    fn stream<'a>(&'a self, request: &'a ChatRequest) -> LLMStream<'a> {
         Box::pin(stream! {
             // 检查: 取消 + 配置
-            if request.cancel.is_cancelled() {
+            if request.cancel.is_aborted() {
                 yield Err(anyhow::anyhow!("llm-openai: 请求已被取消"));
                 return;
             }
@@ -159,7 +160,7 @@ impl LLMAdapter for OpenAiAdapter {
 
             // 用 async-openai 构造请求结构(tools/messages 序列化照旧),
             // 再序列化成 JSON, 手工注入它不建模的思考扩展字段
-            tracing::info!(model = %request.config.model, "创建 openai 流");
+            tracing::info!(model = % request.config.model, "创建 openai 流");
             let openai_request = CreateChatCompletionRequestArgs::default()
                 .model(&request.config.model)
                 .messages(vec![]) // 占位: 下面用带 reasoning_content 的消息数组覆盖
@@ -167,9 +168,8 @@ impl LLMAdapter for OpenAiAdapter {
                 .stream(true)
                 .build()?;
             let mut body = serde_json::to_value(&openai_request)?;
-
             // 重建 messages: 系统 + 会话消息; assistant 消息补 reasoning_content
-            // (思考模式多轮对话必须随历史回传, 否则 deepseek 返回 400)
+            // (思考模式多轮对话必须随历史回传, 否则 deepseek 返回 400!!! 交错式思考)
             let converted = Self::inner_msg_2_openai_msg(&request.messages);
             let mut body_messages: Vec<Value> = Vec::new();
             if !request.system.is_empty() {
@@ -180,7 +180,7 @@ impl LLMAdapter for OpenAiAdapter {
                         .into();
                 body_messages.push(serde_json::to_value(&system_msg)?);
             } else {
-                tracing::warn!(model = %request.config.model, "请求缺少系统消息(Request.system 为空)");
+                tracing::warn ! (model = % request.config.model, "请求缺少系统消息(Request.system 为空)");
             }
             for (message, reasoning) in converted {
                 let mut value = serde_json::to_value(&message)?;
@@ -204,8 +204,8 @@ impl LLMAdapter for OpenAiAdapter {
                 .unwrap_or_else(|| "https://api.openai.com/v1".to_string());
             let url = format!("{}/chat/completions", base_url.trim_end_matches('/'));
             let client = reqwest::Client::new();
-            let response = match (|| async {
-                request.cancel.check()?;
+            let send = || async {
+                request.cancel.throw_if_aborted()?;
                 let mut builder = client
                     .post(&url)
                     .bearer_auth(&request.config.api_key)
@@ -223,14 +223,15 @@ impl LLMAdapter for OpenAiAdapter {
                     }
                 }
                 Ok::<_, anyhow::Error>(builder.send().await?)
-            })
+            };
+            let response = send
             .retry(
                 backon::ExponentialBuilder::default()
                     .with_jitter()
                     .with_max_times(3),
             )
-            .await
-            {
+            .await;
+            let response = match response {
                 Ok(response) => response,
                 Err(error) => {
                     yield Err(error);
@@ -249,12 +250,12 @@ impl LLMAdapter for OpenAiAdapter {
             let mut text_started = false;
             let mut reasoning_started = false;
             let mut finish_reason: Option<String> = None;
-            let mut decoder = LLMSSEDecoder::new();
+            let mut decoder = LLMSSEDecoder::open_ai();
             let mut byte_stream = response.bytes_stream();
             loop {
                 let chunk = tokio::select! {
                     biased;
-                    _ = request.cancel.cancelled() => {
+                    _ = request.cancel.wait_aborted() => {
                         yield Err(anyhow::anyhow!("llm-openai: 请求已被取消"));
                         return;
                     }
@@ -268,8 +269,10 @@ impl LLMAdapter for OpenAiAdapter {
                         continue;
                     }
                 };
-                // 半截事件留在解码器内部, 这里只拿完整 JSON 事件
-                for value in decoder.feed(&chunk) {
+                // 半截事件在解码器内部
+                // 这里是解析完成的 JSON 事件
+                // openai 协议每个事件都是 JSON
+                for value in decoder.feed(&chunk).into_iter().flatten() {
                     let Some(stream_chunk) = Self::parse_stream_chunk(value) else {
                         continue; // 反序列化失败的事件(防御)直接跳过
                     };
@@ -277,7 +280,7 @@ impl LLMAdapter for OpenAiAdapter {
 
                     // 用量(流尾 chunk)
                     if let Some(usage) = chunk.usage {
-                        yield Ok(StreamEvent::Usage(Usage {
+                        yield Ok(LLMStreamEvent::Usage(ChatUsage {
                             prompt_tokens: usage.prompt_tokens,
                             completion_tokens: usage.completion_tokens,
                         }));
@@ -287,9 +290,9 @@ impl LLMAdapter for OpenAiAdapter {
                     if let Some(reasoning) = stream_chunk.reasoning_delta {
                         if !reasoning_started {
                             reasoning_started = true;
-                            yield Ok(StreamEvent::ReasoningStart);
+                            yield Ok(LLMStreamEvent::ReasoningStart);
                         }
-                        yield Ok(StreamEvent::ReasoningDelta { delta: reasoning });
+                        yield Ok(LLMStreamEvent::ReasoningDelta { delta: reasoning });
                     }
 
                     for choice in &chunk.choices {
@@ -299,9 +302,9 @@ impl LLMAdapter for OpenAiAdapter {
                         {
                             if !text_started {
                                 text_started = true;
-                                yield Ok(StreamEvent::TextStart);
+                                yield Ok(LLMStreamEvent::TextStart);
                             }
-                            yield Ok(StreamEvent::TextDelta {
+                            yield Ok(LLMStreamEvent::TextDelta {
                                 text: content.clone(),
                             });
                         }
@@ -324,7 +327,7 @@ impl LLMAdapter for OpenAiAdapter {
                                 });
                                 if !state.3 {
                                     state.3 = true;
-                                    yield Ok(StreamEvent::ToolCallStart {
+                                    yield Ok(LLMStreamEvent::ToolCallStart {
                                         id: state.0.clone(),
                                         name: state.1.clone(),
                                     });
@@ -335,7 +338,7 @@ impl LLMAdapter for OpenAiAdapter {
                                     }
                                     if let Some(args) = &function.arguments {
                                         state.2.push_str(args);
-                                        yield Ok(StreamEvent::ToolCallArgs {
+                                        yield Ok(LLMStreamEvent::ToolCallArgs {
                                             id: state.0.clone(),
                                             delta: args.clone(),
                                         });
@@ -353,15 +356,15 @@ impl LLMAdapter for OpenAiAdapter {
             }
 
             if text_started {
-                yield Ok(StreamEvent::TextEnd);
+                yield Ok(LLMStreamEvent::TextEnd);
             }
             if reasoning_started {
-                yield Ok(StreamEvent::ReasoningEnd);
+                yield Ok(LLMStreamEvent::ReasoningEnd);
             }
             for (_index, state) in tool_states {
-                yield Ok(StreamEvent::ToolCallEnd { id: state.0 });
+                yield Ok(LLMStreamEvent::ToolCallEnd { id: state.0 });
             }
-            yield Ok(StreamEvent::Done { finish_reason });
+            yield Ok(LLMStreamEvent::Done { finish_reason });
         })
     }
 }

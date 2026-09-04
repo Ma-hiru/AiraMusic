@@ -1,7 +1,6 @@
 use agent::agui::models::AguiEvent;
 use agent::llm::plugins::config::LLMConfigManager;
-use agent::runtime::AgentRuntimeService;
-use agent::server::{AgentServerState, build_router};
+use agent::server::runtime::AgentLoopRuntimeService;
 use agent::session::SessionManager;
 use axum::body::Body;
 use http::{Request, StatusCode};
@@ -57,7 +56,7 @@ async fn shutdown_route_is_authenticated_and_signals_graceful_shutdown() {
         .await
         .unwrap();
     assert_eq!(response.status(), StatusCode::NO_CONTENT);
-    assert!(shutdown.is_cancelled());
+    assert!(shutdown.is_aborted());
 }
 
 #[tokio::test]
@@ -236,7 +235,11 @@ async fn event_stream_serializes_canonical_agui_events() {
 
 fn test_state(token: &str, events: broadcast::Sender<AguiEvent>) -> AgentServerState {
     AgentServerState::new(
-        AgentRuntimeService::from_services(SessionManager::new(), LLMConfigManager::new(), None),
+        AgentLoopRuntimeService::from_services(
+            SessionManager::new(),
+            LLMConfigManager::new(),
+            None,
+        ),
         token,
         events,
     )
@@ -268,4 +271,6 @@ fn provider_json(name: &str, api_key: &str) -> String {
     .to_string()
 }
 
+use agent::server::router::build_router;
+use agent::server::service::AgentServerState;
 use futures::StreamExt;

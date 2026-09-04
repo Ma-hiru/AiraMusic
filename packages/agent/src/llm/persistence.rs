@@ -1,4 +1,3 @@
-use crate::cancel::Signal;
 use crate::ctx::Ctx;
 use crate::ctx::models::{Disposer, DisposerLike};
 use crate::llm::models::{LLMConfig, LLMConfigEvent};
@@ -9,6 +8,7 @@ use crate::session::models::SessionId;
 use crate::store::local::LocalStore;
 use crate::store::models::Store;
 use crate::store::{StoreManager, StorePlugin};
+use crate::utils::Signal;
 use anyhow::Result;
 use serde::Serialize;
 use serde::de::DeserializeOwned;
@@ -36,7 +36,7 @@ impl Plugin<(), ()> for LLMConfigPersistencePlugin {
         let store_manager = StorePlugin::get_service(ctx)?;
         let mut rx = config_manager.subscribe();
 
-        let cancel_signal = Signal::new();
+        let cancel_signal = Signal::new(Some("llm-config-persistence-apply"));
         let task_signal = cancel_signal.clone();
         drop(config_manager);
 
@@ -44,7 +44,7 @@ impl Plugin<(), ()> for LLMConfigPersistencePlugin {
             loop {
                 tokio::select! {
                     biased;
-                    _ = task_signal.cancelled() => break,
+                    _ = task_signal.wait_aborted() => break,
                     event = rx.recv() => match event {
                         Ok(event) => {
                             if let Err(error) = Self::persist(&store_manager, &event).await {
@@ -66,7 +66,7 @@ impl Plugin<(), ()> for LLMConfigPersistencePlugin {
             }
         });
 
-        let disposer: Disposer = Box::new(move || cancel_signal.cancel());
+        let disposer: Disposer = Box::new(move || cancel_signal.abort());
         Ok(PluginApplyResult {
             service: None,
             emit_disposers: disposer.to_option_disposers(),

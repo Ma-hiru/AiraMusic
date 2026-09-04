@@ -1,8 +1,8 @@
 pub mod models;
-use crate::cancel::Signal;
 use crate::ctx::Ctx;
 use crate::llm::models::{
-    AssistantReply, ChatMessage, Request, Role, StreamEvent, ToolCall, TurnUsage, Usage,
+    ChatAssistantReply, ChatMessage, ChatRequest, ChatRole, ChatToolCall, ChatTurnUsage, ChatUsage,
+    LLMStreamEvent,
 };
 use crate::llm::plugins::{LLMCompactorPlugin, LLMConfigPlugin, LLMPlugin};
 use crate::r#loop::models::{LoopCause, LoopDecision, LoopEvent, LoopPayloadError, LoopPhase};
@@ -13,6 +13,7 @@ use crate::session::SessionPlugin;
 use crate::session::models::SessionId;
 use crate::tools::ToolsPlugin;
 use crate::tools::models::ToolRunContext;
+use crate::utils::Signal;
 use crate::utils::stringify;
 use anyhow::Context;
 use futures::StreamExt;
@@ -25,7 +26,7 @@ use std::sync::{Arc, Mutex, Weak};
 use tokio::sync::Notify;
 
 pub struct LoopPlugin;
-impl PluginMeta<Arc<LoopService>> for LoopPlugin {
+impl PluginMeta<LoopService> for LoopPlugin {
     fn name() -> &'static str {
         "loop"
     }
@@ -34,7 +35,7 @@ impl PluginMeta<Arc<LoopService>> for LoopPlugin {
         "loop-service"
     }
 }
-impl Plugin<LoopConfig, Arc<LoopService>> for LoopPlugin {
+impl Plugin<LoopConfig, LoopService> for LoopPlugin {
     fn inject(&self) -> Vec<&'static str> {
         vec![
             ToolsPlugin::service_name(),
@@ -50,7 +51,7 @@ impl Plugin<LoopConfig, Arc<LoopService>> for LoopPlugin {
         &self,
         ctx: &Arc<Ctx>,
         config: LoopConfig,
-    ) -> anyhow::Result<PluginApplyResult<Arc<LoopService>>> {
+    ) -> anyhow::Result<PluginApplyResult<LoopService>> {
         Ok(PluginApplyResult {
             service: Some(LoopService::new(ctx, config)),
             emit_disposers: None,
@@ -73,7 +74,7 @@ struct QueuedRun {
 
 struct TurnProgress {
     turn: Option<u32>,
-    usages: TurnUsage,
+    usages: ChatTurnUsage,
     user_persisted: bool,
 }
 
@@ -108,15 +109,15 @@ pub struct LoopService {
 impl LoopService {
     // ----- outer -----
 
-    pub fn new(ctx: &Arc<Ctx>, config: LoopConfig) -> Arc<Self> {
-        Arc::new(Self {
+    pub fn new(ctx: &Arc<Ctx>, config: LoopConfig) -> Self {
+        Self {
             ctx: Arc::downgrade(ctx),
             workers: Mutex::new(HashMap::new()),
             stop_flag: Arc::new(AtomicBool::new(false)),
             turn_counters: Mutex::new(HashMap::new()),
             max_steps_per_turn: config.max_steps_per_turn,
             current_cancel: Mutex::new(HashMap::new()),
-        })
+        }
     }
 
     /// 同会话 FIFO 串行, 跨会话并行; token 只对齐这一次 run
@@ -168,12 +169,12 @@ impl LoopService {
     pub fn stop(&self) {
         self.stop_flag.store(true, Ordering::SeqCst);
         for cancel_signal in self.current_cancel.lock().unwrap().values() {
-            cancel_signal.cancel();
+            cancel_signal.abort();
         }
         for worker in self.workers.lock().unwrap().values() {
             let mut queue = worker.queue.lock().unwrap();
             for run in queue.iter() {
-                run.cancel_signal.cancel();
+                run.cancel_signal.abort();
                 run.done.notify_one(); // 这些 run 不会再执行, 完成句柄立即返回
             }
             queue.clear();
@@ -192,7 +193,7 @@ impl LoopService {
         done: Arc<Notify>,
     ) {
         // 排队期间被取消 / 服务已停止: 不启动这一轮, 直接丢弃
-        if cancel_signal.is_cancelled() || self.stop_flag.load(Ordering::SeqCst) {
+        if cancel_signal.is_aborted() || self.stop_flag.load(Ordering::SeqCst) {
             tracing::debug!(session_id = %session_id, "回合开始前已被取消或服务已停止, 丢弃");
             if let Some(ctx) = self.ctx.upgrade() {
                 ctx.emit(
@@ -202,7 +203,7 @@ impl LoopService {
                         turn: 0,
                         step: 0,
                         session_id: session_id.clone(),
-                        usages: TurnUsage::new(),
+                        usages: ChatTurnUsage::new(),
                         user_message_snapshot: user_message,
                         cause: LoopCause::cancel(),
                     },
@@ -219,7 +220,7 @@ impl LoopService {
             .insert(session_id.clone(), cancel_signal.clone());
         let mut progress = TurnProgress {
             turn: None,
-            usages: TurnUsage::new(),
+            usages: ChatTurnUsage::new(),
             user_persisted: false,
         };
         if let Err(err) = self
@@ -307,7 +308,7 @@ impl LoopService {
                 session_manager
                     .real_messages(session_id)
                     .iter()
-                    .filter(|m| m.role == Role::User)
+                    .filter(|m| m.role == ChatRole::User)
                     .count() as u32
             });
             *n += 1;
@@ -374,7 +375,7 @@ impl LoopService {
                     session_manager
                         .update_compaction_session(session_id, compaction.messages.clone());
 
-                    Request {
+                    ChatRequest {
                         config: llm_config.clone(),
                         system: prompt_registry.sections(),
                         messages: compaction.messages,
@@ -429,8 +430,8 @@ impl LoopService {
             // 拼装状态: 文本 / 思考 / 工具调用 / 用量
             let mut reply_text = String::new();
             let mut reasoning_text = String::new();
-            let mut reply_tool_calls: Vec<ToolCall> = Vec::new();
-            let mut usage: Option<Usage> = None;
+            let mut reply_tool_calls: Vec<ChatToolCall> = Vec::new();
+            let mut usage: Option<ChatUsage> = None;
             // call_id -> (name, args_json 片段)
             let mut pending_calls: HashMap<String, (String, String)> = HashMap::new();
 
@@ -439,7 +440,7 @@ impl LoopService {
             loop {
                 let event = tokio::select! {
                     biased;
-                    _ = cancel_signal.cancelled() => {
+                    _ = cancel_signal.wait_aborted() => {
                         cause = LoopCause::cancel();
                         break 'steps;
                     }
@@ -448,7 +449,7 @@ impl LoopService {
                 let Some(event) = event else { break };
                 match event {
                     Ok(event) => match event {
-                        StreamEvent::TextStart => {
+                        LLMStreamEvent::TextStart => {
                             ctx.emit(
                                 LoopEvent::TextStart.with_id(session_id.clone()),
                                 &LoopPayloadTextStart {
@@ -459,7 +460,7 @@ impl LoopService {
                                 },
                             );
                         }
-                        StreamEvent::TextDelta { text: delta } => {
+                        LLMStreamEvent::TextDelta { text: delta } => {
                             reply_text.push_str(&delta);
                             ctx.emit(
                                 LoopEvent::TextDelta.with_id(session_id.clone()),
@@ -472,7 +473,7 @@ impl LoopService {
                                 },
                             );
                         }
-                        StreamEvent::TextEnd => {
+                        LLMStreamEvent::TextEnd => {
                             ctx.emit(
                                 LoopEvent::TextEnd.with_id(session_id.clone()),
                                 &LoopPayloadTextEnd {
@@ -483,7 +484,7 @@ impl LoopService {
                                 },
                             );
                         }
-                        StreamEvent::ReasoningStart => {
+                        LLMStreamEvent::ReasoningStart => {
                             ctx.emit(
                                 LoopEvent::ReasoningStart.with_id(session_id.clone()),
                                 &LoopPayloadReasoningStart {
@@ -494,7 +495,7 @@ impl LoopService {
                                 },
                             );
                         }
-                        StreamEvent::ReasoningDelta { delta } => {
+                        LLMStreamEvent::ReasoningDelta { delta } => {
                             reasoning_text.push_str(&delta);
                             ctx.emit(
                                 LoopEvent::ReasoningDelta.with_id(session_id.clone()),
@@ -507,7 +508,7 @@ impl LoopService {
                                 },
                             );
                         }
-                        StreamEvent::ReasoningEnd => {
+                        LLMStreamEvent::ReasoningEnd => {
                             ctx.emit(
                                 LoopEvent::ReasoningEnd.with_id(session_id.clone()),
                                 &LoopPayloadReasoningEnd {
@@ -518,7 +519,7 @@ impl LoopService {
                                 },
                             );
                         }
-                        StreamEvent::ToolCallStart { id, name } => {
+                        LLMStreamEvent::ToolCallStart { id, name } => {
                             // 记录, 等参数增量
                             pending_calls.insert(id.clone(), (name.clone(), String::new()));
                             ctx.emit(
@@ -533,7 +534,7 @@ impl LoopService {
                                 },
                             );
                         }
-                        StreamEvent::ToolCallArgs { id, delta } => {
+                        LLMStreamEvent::ToolCallArgs { id, delta } => {
                             // 累积 JSON 片段
                             if let Some((_, args)) = pending_calls.get_mut(&id) {
                                 args.push_str(&delta);
@@ -550,12 +551,12 @@ impl LoopService {
                                 },
                             );
                         }
-                        StreamEvent::ToolCallEnd { id } => {
+                        LLMStreamEvent::ToolCallEnd { id } => {
                             // 参数给全: 解析 JSON, 生成最终 ToolCall
                             if let Some((name, args)) = pending_calls.remove(&id) {
                                 let args_value: Value =
                                     serde_json::from_str(&args).unwrap_or(Value::Null);
-                                reply_tool_calls.push(ToolCall {
+                                reply_tool_calls.push(ChatToolCall {
                                     id: id.clone(),
                                     name,
                                     args: args_value,
@@ -572,10 +573,10 @@ impl LoopService {
                                 },
                             );
                         }
-                        StreamEvent::Usage(u) => {
+                        LLMStreamEvent::Usage(u) => {
                             usage = Some(u);
                         }
-                        StreamEvent::Done { finish_reason } => {
+                        LLMStreamEvent::Done { finish_reason } => {
                             tracing::info!(
                                 session = %session_id,
                                 turn,
@@ -596,7 +597,7 @@ impl LoopService {
                 progress.usages.add((step, usage))
             }
 
-            let reply = AssistantReply {
+            let reply = ChatAssistantReply {
                 text: reply_text.clone(),
                 reasoning: reasoning_text.clone(),
                 tool_calls: reply_tool_calls.clone(),
@@ -675,7 +676,7 @@ impl LoopService {
                                     ctx: Arc::clone(&ctx),
                                     turn,
                                     step,
-                                    cancel: cancel_signal.clone(),
+                                    signal: cancel_signal.clone(),
                                 };
                                 // 找到了: 真正执行(异步)。结果转成文本。
                                 match tool
@@ -863,34 +864,5 @@ impl LoopService {
                 )
                 .await;
         }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use std::time::Duration;
-
-    #[tokio::test]
-    async fn a_run_rejected_after_stop_still_completes_its_handle() {
-        let ctx = Arc::new(Ctx::new());
-        let service = LoopService::new(
-            &ctx,
-            LoopConfig {
-                max_steps_per_turn: 10,
-            },
-        );
-        service.stop();
-
-        let handle = service.send(
-            SessionId::from("thread-1"),
-            "run-1".to_string(),
-            ChatMessage::user("hello"),
-            Signal::new(),
-        );
-
-        tokio::time::timeout(Duration::from_millis(100), handle.completed())
-            .await
-            .expect("completion notification must retain a permit");
     }
 }

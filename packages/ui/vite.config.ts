@@ -6,12 +6,13 @@ import react from "@vitejs/plugin-react";
 import babel from "@rolldown/plugin-babel";
 import tailwindcss from "@tailwindcss/vite";
 
-import AppEnv from "../../scripts/env";
+import { AppEnv, TypedEnv } from "../../scripts/env";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 
 export default defineConfig(({ mode }) => {
   const env = AppEnv.load(mode);
+  const typed_env = TypedEnv.fromEnv(env);
   mode === "development" && AppEnv.type(env);
 
   const defineEnv: Record<string, string> = {};
@@ -61,22 +62,22 @@ export default defineConfig(({ mode }) => {
     },
     clearScreen: false,
     server: {
-      port: Number(env.VITE_SERVER_PORT),
+      port: typed_env.var("VITE_SERVER_PORT"),
       strictPort: true,
       proxy: {
         "/api": {
-          target: `http://127.0.0.1:${env.NCM_SERVER_PORT}`,
+          target: `http://127.0.0.1:${typed_env.var("NCM_SERVER_PORT")}`,
           changeOrigin: true,
           rewrite: (path) => path.replace(/^\/api/, "")
         },
         "/cache": {
-          target: `http://127.0.0.1:${env.GO_SERVER_PORT}`,
+          target: `http://127.0.0.1:${typed_env.var("GO_SERVER_PORT")}`,
           changeOrigin: true,
           rewrite: (path) => path.replace(/^\/cache/, "")
         }
       },
       watch: {
-        ignored: ["**/node_modules/**", "**/dist", "**/tests/**"]
+        ignored: ["**/node_modules/**", "**/dist", "**/dist-types", "**/tests/**"]
       }
     },
     test: {

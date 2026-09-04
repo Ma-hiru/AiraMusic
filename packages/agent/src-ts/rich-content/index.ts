@@ -1,4 +1,3 @@
-export { AiraRichContentPrompt } from "./prompt";
 export {
   parseAiraResourceURI,
   parseAiraRichContent,

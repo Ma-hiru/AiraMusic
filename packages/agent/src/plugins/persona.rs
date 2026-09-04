@@ -1,3 +1,4 @@
+use crate::constants::PERSONA;
 use crate::ctx::Ctx;
 use crate::ctx::models::DisposerLike;
 use crate::plugins::models::{Plugin, PluginApplyResult, PluginMeta};
@@ -20,7 +21,7 @@ impl Plugin<(), ()> for PersonaPlugin {
         let disposer = PromptPlugin::get_service(ctx)?.register(PromptSection {
             order: 0,
             name: "persona".to_string(),
-            text: "你是 AiraMusic 的音乐助手, 回答要简短。".to_string(),
+            text: PERSONA.to_string(),
         })?;
         Ok(PluginApplyResult {
             service: None,
