@@ -43,7 +43,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v6
         with:
-          go-version-file: packages/store/go.mod
+          go-version-file: go.work
           cache-dependency-path: packages/store/go.sum
 
       - name: Setup Rust
