@@ -1,0 +1,7 @@
+{
+  "rust-analyzer.linkedProjects": [
+    "packages/agent/Cargo.toml",
+    "packages/native/Cargo.toml",
+    "packages/wasm/Cargo.toml"
+  ]
+}
