@@ -1,5 +1,7 @@
 use crate::ctx::Ctx;
-use crate::llm::models::{ChatMessage, ChatRequest, LLMAdapter, LLMConfig, LLMStreamEvent};
+use crate::llm::models::{
+    ChatMessage, ChatRequest, ChatRole, LLMAdapter, LLMConfig, LLMStreamEvent,
+};
 use crate::llm::plugins::LLMPlugin;
 use crate::plugins::models::{Plugin, PluginApplyResult, PluginMeta};
 use crate::utils::Signal;
@@ -84,8 +86,18 @@ impl LLMCompactor {
         }
 
         // 旧历史拿去总结 最近 keep 条保留
-        let old = messages[..messages.len() - self.keep].to_vec();
-        let keep = messages[messages.len() - self.keep..].to_vec();
+        // 避免截断 tool 消息
+        let mut keep_start_idx = messages.len() - self.keep;
+        for msg in messages[keep_start_idx..].iter() {
+            match msg.role {
+                ChatRole::Tool => {
+                    keep_start_idx += 1
+                }
+                _ => break,
+            }
+        }
+        let old = messages[..keep_start_idx].to_vec();
+        let keep = messages[keep_start_idx..].to_vec();
         // 压缩请求不开启思考
         config.thinking = false;
         let request = ChatRequest {
