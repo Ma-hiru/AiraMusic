@@ -1,7 +1,7 @@
 use agent::agui::AguiPlugin;
 use agent::constants::AGENT_PROTOCOL_VERSION;
+use agent::context::models::ContextPolicy;
 use agent::ctx::Ctx;
-use agent::llm::plugins::LLMCompactorConfig;
 use agent::r#loop::{LoopConfig, LoopPlugin};
 use agent::mcp::MCPPlugin;
 use agent::plugins::max_turns::MaxTurnsConfig;
@@ -53,10 +53,7 @@ async fn boot_agent(bootstrap: &AgentBootstrap) -> anyhow::Result<Arc<Ctx>> {
             path: bootstrap.data_dir.clone(),
             secret: bootstrap.secrets.store_secret.clone(),
         },
-        llm_compactor_config: LLMCompactorConfig {
-            keep: 10,
-            threshold: 0.75,
-        },
+        context_policy: ContextPolicy::default(),
         max_turns_config: MaxTurnsConfig { max_turns: 100_000 },
         loop_config: LoopConfig {
             max_steps_per_turn: 100,

@@ -41,6 +41,18 @@ pub fn support_providers() -> Vec<ProviderDescriptor> {
                     "title": "思考模式",
                     "default": false
                 },
+                "maxOutputTokens": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "title": "最大输出 Token",
+                    "description": "用于限制回复长度并预留上下文空间；默认最多 8192"
+                },
+                "inputLimit": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "title": "模型输入上限",
+                    "description": "模型有独立输入限制时填写；默认使用上下文窗口"
+                },
                 "apiKey": {
                     "type": "string",
                     "title": "API Key",

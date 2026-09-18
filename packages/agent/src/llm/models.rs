@@ -16,6 +16,10 @@ use tiktoken_rs::{CoreBPE, o200k_base};
 
 static TOKENIZER: Lazy<CoreBPE> = Lazy::new(|| o200k_base().expect("Failed to load tokenizer"));
 
+pub fn token_count(text: &str) -> usize {
+    TOKENIZER.encode_ordinary(text).len()
+}
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum ChatRole {
@@ -152,8 +156,8 @@ impl ChatMessage {
     }
 
     pub fn token_count(&self) -> usize {
-        let tokens = TOKENIZER.encode_with_special_tokens(&self.content);
-        tokens.len()
+        // Includes tool arguments, IDs, reasoning and message framing, not just visible text.
+        token_count(&serde_json::to_string(self).expect("ChatMessage is serializable")) + 8
     }
 }
 
@@ -278,9 +282,6 @@ pub enum LLMStreamEvent {
     },
 }
 
-/// 装箱的流(异步 trait 方法的标准返回类型)
-pub type LLMStream<'a> = Pin<Box<dyn Stream<Item = Result<LLMStreamEvent>> + Send + 'a>>;
-
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, Default, Eq, Hash)]
 #[serde(rename_all = "lowercase")]
 pub enum LLMProvider {
@@ -394,6 +395,10 @@ pub struct LLMConfig {
     pub model: String,
     pub api_key: String,
     pub context_size: LLMContextSize,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub max_output_tokens: Option<u32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub input_limit: Option<usize>,
     pub base_url: Option<String>,
     pub headers: Option<HashMap<String, String>>,
     pub other: Option<Value>,
@@ -403,6 +408,24 @@ pub struct LLMConfig {
     pub thinking: bool,
 }
 pub type LLMConfigSecret = LLMConfig;
+
+impl LLMConfig {
+    pub fn output_limit(&self) -> u32 {
+        self.max_output_tokens.unwrap_or_else(|| {
+            let context: usize = self.context_size.into();
+            (context / 4).clamp(1, 8_192) as u32
+        })
+    }
+}
+
+#[derive(Debug)]
+pub struct ContextOverflow(pub String);
+impl fmt::Display for ContextOverflow {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter.write_str(&self.0)
+    }
+}
+impl std::error::Error for ContextOverflow {}
 
 /// LLM 配置变更事件
 #[derive(Clone)]
@@ -418,6 +441,9 @@ pub enum LLMConfigEvent {
         config: LLMConfig,
     },
 }
+
+/// 装箱的流(异步 trait 方法的标准返回类型)
+pub type LLMStream<'a> = Pin<Box<dyn Stream<Item = Result<LLMStreamEvent>> + Send + 'a>>;
 
 /// LLM 适配器(异步接口)
 pub trait LLMAdapter: Send + Sync {

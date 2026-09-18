@@ -1,8 +1,9 @@
+use crate::context::models::SessionContext;
 use crate::ctx::Ctx;
 use crate::ctx::models::{Disposer, DisposerLike};
 use crate::llm::models::{ChatMemory, ChatMessage};
 use crate::plugins::models::{Plugin, PluginApplyResult, PluginMeta};
-use crate::session::models::{SessionEvent, ThreadMetadata};
+use crate::session::models::{PersistenceCommand, SessionEvent, ThreadMetadata};
 use crate::session::{SessionId, SessionManager, SessionPlugin};
 use crate::store::local::LocalStore;
 use crate::store::models::Store;
@@ -11,13 +12,13 @@ use crate::utils::Signal;
 use anyhow::Result;
 use serde::Serialize;
 use serde::de::DeserializeOwned;
+use std::collections::HashMap;
 use std::ffi::OsString;
 use std::sync::Arc;
-use tokio::sync::broadcast::error::RecvError;
 
 const MEMORY_STORE: &str = "memories";
 const KEY_REAL: &str = "real";
-const KEY_COMPACTION: &str = "compaction";
+const KEY_CONTEXT: &str = "context-v1";
 const KEY_METADATA: &str = "metadata";
 const KEY_MEMORY: &str = "items";
 
@@ -35,36 +36,35 @@ impl Plugin<(), ()> for SessionPersistencePlugin {
     fn apply(&self, ctx: &Arc<Ctx>, _config: ()) -> Result<PluginApplyResult<()>> {
         let session_manager = SessionPlugin::get_service(ctx)?;
         let store_manager = StorePlugin::get_service(ctx)?;
-        let mut rx = session_manager.subscribe();
+        let mut rx = session_manager.subscribe_persistence()?;
 
         // 退出由取消信号驱动: disposer 挂到 ctx, ctx.dispose() 时触发
         let cancel_signal = Signal::new(Some("session-persistence-apply"));
         let task_signal = cancel_signal.clone();
-        drop(session_manager);
         tokio::spawn(async move {
+            let mut failure = None;
+            let mut saved = HashMap::new();
             loop {
                 tokio::select! {
                     biased;
                     _ = task_signal.wait_aborted() => break,
                     event = rx.recv() => match event {
-                        Ok(event) => {
-                            if let Err(error) = Self::persist(&store_manager, &event).await {
-                                tracing::error!(error = %error, "会话落盘失败");
-                            }
-                        }
-                        Err(RecvError::Lagged(skipped)) => {
-                            // 丢事件: 磁盘将缺中间片段, 后续 Append 仍正常追加(目前无整写兜底)
-                            tracing::warn!(skipped, "会话事件积压, 丢弃 {skipped} 条");
-                        }
-                        Err(RecvError::Closed) => break,
+                        Some(command) => Self::process(&store_manager, &session_manager, command, &mut failure, &mut saved).await,
+                        None => break,
                     },
                 }
             }
-            // 处理广播里已积压的事件
-            while let Ok(event) = rx.try_recv() {
-                if let Err(error) = Self::persist(&store_manager, &event).await {
-                    tracing::error!(error = %error, "会话落盘失败");
-                }
+            // Reliable queue: close admission and flush all accepted records and receipts.
+            rx.close();
+            while let Some(command) = rx.recv().await {
+                Self::process(
+                    &store_manager,
+                    &session_manager,
+                    command,
+                    &mut failure,
+                    &mut saved,
+                )
+                .await;
             }
         });
 
@@ -93,13 +93,27 @@ impl SessionPersistencePlugin {
                 tracing::warn!(session = %session_id, "恢复会话已存在于内存, 跳过");
                 continue;
             }
-            let real = Self::read_vec::<ChatMessage>(&store, KEY_REAL).await?;
-            let compaction = Self::read_vec::<ChatMessage>(&store, KEY_COMPACTION).await?;
+            // Legacy compaction arrays have no coverage watermark. Rebuild from raw history.
+            let snapshot = match Self::read::<SessionContext>(&store, KEY_CONTEXT).await? {
+                Some(snapshot) => snapshot,
+                None => SessionContext::new(
+                    Self::read_vec::<ChatMessage>(&store, KEY_REAL).await?,
+                    None,
+                ),
+            };
+            snapshot.validate()?;
             let metadata = Self::read::<ThreadMetadata>(&store, KEY_METADATA)
                 .await?
                 .unwrap_or_else(|| ThreadMetadata::new(""));
-            session_manager
-                .restore_session_with_metadata(session_id, real, compaction, metadata)?;
+            session_manager.restore_session_with_metadata(
+                session_id.clone(),
+                snapshot.messages,
+                Vec::new(),
+                metadata,
+            )?;
+            if let Some(checkpoint) = snapshot.checkpoint {
+                session_manager.restore_checkpoint(&session_id, checkpoint);
+            }
             restored += 1;
         }
 
@@ -107,8 +121,65 @@ impl SessionPersistencePlugin {
         Ok(())
     }
 
+    async fn process(
+        store_manager: &StoreManager,
+        sessions: &SessionManager,
+        command: PersistenceCommand,
+        failure: &mut Option<String>,
+        saved: &mut HashMap<SessionId, (usize, u64)>,
+    ) {
+        if matches!(&command.event, SessionEvent::Flush) {
+            if let Some(receipt) = command.receipt {
+                let _ = receipt.send(failure.take().map_or(Ok(()), Err));
+            }
+            return;
+        }
+        if let SessionEvent::Delete { session_id } = &command.event {
+            saved.remove(session_id);
+        }
+        let result = async {
+            let session_id = match &command.event {
+                SessionEvent::Create { session_id, .. }
+                | SessionEvent::Append { session_id, .. }
+                | SessionEvent::Compaction { session_id, .. }
+                | SessionEvent::Checkpoint { session_id, .. } => Some(session_id),
+                _ => None,
+            };
+            if let Some(session_id) = session_id {
+                // Capture once when writing, not once per queued Append (which would be quadratic memory).
+                let snapshot = match command.snapshot {
+                    Some(snapshot) => snapshot,
+                    None if sessions.has(session_id) => sessions.context_snapshot(session_id)?,
+                    None => return Ok(()), // A queued Delete supersedes this write.
+                };
+                let revision = (
+                    snapshot.messages.len(),
+                    snapshot
+                        .checkpoint
+                        .as_ref()
+                        .map_or(0, |checkpoint| checkpoint.through_seq),
+                );
+                if command.receipt.is_some() || saved.get(session_id) != Some(&revision) {
+                    let store = Self::session_store(store_manager, session_id).await?;
+                    Self::write(&store, KEY_CONTEXT, &snapshot).await?;
+                    saved.insert(session_id.clone(), revision);
+                }
+            }
+            Self::persist(store_manager, &command.event).await
+        }
+        .await;
+        if let Err(error) = &result {
+            *failure = Some(error.to_string());
+            tracing::error!(error = %error, "会话落盘失败");
+        }
+        if let Some(receipt) = command.receipt {
+            let _ = receipt.send(result.map_err(|error| error.to_string()));
+        }
+    }
+
     async fn persist(store_manager: &StoreManager, event: &SessionEvent) -> Result<()> {
         match event {
+            SessionEvent::Flush => Ok(()),
             SessionEvent::Create {
                 session_id,
                 metadata,
@@ -124,18 +195,13 @@ impl SessionPersistencePlugin {
             }
             SessionEvent::Append {
                 session_id,
-                message,
-                inner,
                 metadata,
+                ..
             } => {
                 let store = Self::session_store(store_manager, session_id).await?;
-                Self::append_to::<ChatMessage>(&store, KEY_REAL, message).await?;
-                // 非内部消息才写入压缩历史
-                if !(*inner) {
-                    Self::append_to::<ChatMessage>(&store, KEY_COMPACTION, message).await?;
-                }
                 Self::write(&store, KEY_METADATA, metadata).await
             }
+            SessionEvent::Checkpoint { .. } => Ok(()),
             SessionEvent::Metadata {
                 session_id,
                 metadata,
@@ -162,14 +228,7 @@ impl SessionPersistencePlugin {
                 memories.retain(|m| m.id != *id);
                 Self::write_vec(&store, KEY_MEMORY, &memories).await
             }
-            SessionEvent::Compaction {
-                session_id,
-                messages,
-            } => {
-                // 压缩更新 = 整文件重写压缩历史
-                let store = Self::session_store(store_manager, session_id).await?;
-                Self::write_vec(&store, KEY_COMPACTION, messages).await
-            }
+            SessionEvent::Compaction { .. } => Ok(()),
         }
     }
 
@@ -188,10 +247,10 @@ impl SessionPersistencePlugin {
             .await
     }
 
-    /// 读一个 JSON 数组文件(缺失/损坏按空处理)
+    /// 缺失按空处理；损坏必须报告，避免随后覆盖原始历史。
     async fn read_vec<T: DeserializeOwned>(store: &Arc<LocalStore>, key: &str) -> Result<Vec<T>> {
         match store.get(key).await? {
-            Some(raw) => Ok(serde_json::from_str(&raw).unwrap_or_default()),
+            Some(raw) => Ok(serde_json::from_str(&raw)?),
             None => Ok(Vec::new()),
         }
     }
@@ -223,15 +282,5 @@ impl SessionPersistencePlugin {
             anyhow::bail!("写入 store 键 {key} 失败");
         }
         Ok(())
-    }
-
-    /// 往 JSON 数组末尾追加一条
-    async fn append_to<T>(store: &Arc<LocalStore>, key: &str, item: &T) -> Result<()>
-    where
-        T: DeserializeOwned + Serialize + Clone,
-    {
-        let mut items = Self::read_vec::<T>(store, key).await?;
-        items.push(item.clone());
-        Self::write_vec(store, key, &items).await
     }
 }

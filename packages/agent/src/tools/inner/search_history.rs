@@ -13,6 +13,12 @@ pub struct SearchHistoryToolParameters {
     pub keywords: Vec<String>,
     #[schemars(description = "最大结果数")]
     pub max_results: u32,
+    #[serde(default)]
+    #[schemars(description = "从此原始消息序号之后继续搜索；初次为 0")]
+    pub after_seq: u64,
+    #[serde(default)]
+    #[schemars(description = "是否搜索工具输出；默认只搜索用户和助手正文")]
+    pub include_tools: bool,
 }
 #[async_trait]
 impl Tool for SearchHistoryTool {
@@ -21,7 +27,7 @@ impl Tool for SearchHistoryTool {
     }
 
     fn description(&self) -> &str {
-        "在当前对话中，按关键词搜索过去的历史对话"
+        "按关键词搜索当前会话，返回去重的短片段和原始消息序号。使用 read-history 分页读取原文。"
     }
 
     fn parameters(&self) -> Value {
@@ -33,23 +39,18 @@ impl Tool for SearchHistoryTool {
         let SearchHistoryToolParameters {
             keywords,
             max_results,
+            after_seq,
+            include_tools,
         } = serde_json::from_value::<SearchHistoryToolParameters>(args)?;
 
         let session_manager = SessionPlugin::get_service(&ctx.ctx)?;
 
-        let mut result = vec![];
-        let mut count = 0u32;
-        for query in keywords {
-            let res = session_manager.search(&ctx.session_id, &query);
-            count += res.len() as u32;
-            result.extend(res);
-
-            if count >= max_results {
-                break;
-            }
-        }
-
-        result.truncate(max_results as usize);
-        Ok(serde_json::to_value(result)?)
+        Ok(crate::context::history::search_history(
+            &session_manager.real_messages(&ctx.session_id),
+            &keywords,
+            max_results,
+            after_seq,
+            include_tools,
+        ))
     }
 }

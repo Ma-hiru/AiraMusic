@@ -1,6 +1,7 @@
 pub mod add_memory;
 pub mod calculator;
 pub mod delete_memory;
+pub mod read_history;
 pub mod request;
 pub mod search_history;
 mod search_memory;
@@ -40,6 +41,7 @@ impl Plugin<(), ()> for InnerToolsPlugin {
             Arc::new(RequestTool),
             Arc::new(TimeTool),
             Arc::new(SearchHistoryTool),
+            Arc::new(read_history::ReadHistoryTool),
             Arc::new(SearchMemoryTool),
             Arc::new(AddMemoryTool),
             Arc::new(DeleteMemoryTool),

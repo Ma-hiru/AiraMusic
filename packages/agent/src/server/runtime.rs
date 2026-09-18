@@ -389,6 +389,8 @@ impl AgentLoopRuntimeService {
             model: input.model,
             api_key,
             context_size: LLMContextSize::from(input.context_size),
+            max_output_tokens: input.max_output_tokens,
+            input_limit: input.input_limit,
             base_url: input.base_url,
             headers: input.headers,
             other: input.other,
@@ -411,6 +413,8 @@ impl AgentLoopRuntimeService {
                 config.api_key
             },
             context_size: config.context_size.to_string(),
+            max_output_tokens: config.max_output_tokens,
+            input_limit: config.input_limit,
             base_url: config.base_url,
             headers: config.headers,
             other: config.other,

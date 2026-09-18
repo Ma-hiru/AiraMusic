@@ -1,10 +1,11 @@
 pub mod models;
+use crate::context::manager::LLMContextPlugin;
 use crate::ctx::Ctx;
 use crate::llm::models::{
     ChatAssistantReply, ChatMessage, ChatRequest, ChatRole, ChatToolCall, ChatTurnUsage, ChatUsage,
     LLMStreamEvent,
 };
-use crate::llm::plugins::{LLMCompactorPlugin, LLMConfigPlugin, LLMPlugin};
+use crate::llm::plugins::{LLMConfigPlugin, LLMPlugin};
 use crate::r#loop::models::{LoopCause, LoopDecision, LoopEvent, LoopPayloadError, LoopPhase};
 use crate::mcp::MCPPlugin;
 use crate::plugins::models::{Plugin, PluginApplyResult, PluginMeta};
@@ -42,7 +43,7 @@ impl Plugin<LoopConfig, LoopService> for LoopPlugin {
             PromptPlugin::service_name(),
             SessionPlugin::service_name(),
             LLMPlugin::service_name(),
-            LLMCompactorPlugin::service_name(),
+            LLMContextPlugin::service_name(),
             LLMConfigPlugin::service_name(),
         ]
     }
@@ -286,7 +287,8 @@ impl LoopService {
         let prompt_registry = PromptPlugin::get_service(&ctx).context("PromptRegistry 不存在")?;
         let tool_registry = ToolsPlugin::get_service(&ctx).context("ToolRegistry 不存在")?;
         let config_manager = LLMConfigPlugin::get_service(&ctx).context("ConfigPlugin 不存在")?;
-        let llm_compactor = LLMCompactorPlugin::get_service(&ctx).context("LLMCompactor 不存在")?;
+        let context_manager =
+            LLMContextPlugin::get_service(&ctx).context("LLMContextManager 不存在")?;
         let llm_manager = LLMPlugin::get_service(&ctx).context("LLMManager 不存在")?;
         let llm_config = config_manager
             .get_session_config(session_id)
@@ -351,248 +353,258 @@ impl LoopService {
                 },
             );
 
-            // vote: before-request
-            let mut before_request_payload = LoopPayloadBeforeRequest {
-                request: {
-                    mcp_service.refresh_all().await;
-
-                    let compaction = llm_compactor
-                        .compact(
-                            Arc::clone(&llm_provider),
-                            session_manager.compaction_messages(session_id),
-                            llm_config.clone(),
-                            cancel_signal.clone(),
-                        )
-                        .await
-                        .context("上下文压缩失败")?;
-
-                    if let Some(summary) = compaction.summary {
-                        session_manager
-                            .append(session_id, ChatMessage::compressed(summary))
-                            .context("会话日志写入失败")?;
-                    }
-
-                    session_manager
-                        .update_compaction_session(session_id, compaction.messages.clone());
-
-                    ChatRequest {
-                        config: llm_config.clone(),
-                        system: prompt_registry.sections(),
-                        messages: compaction.messages,
-                        tools: tool_registry.list(),
-                        cancel: cancel_signal.clone(),
-                    }
-                },
-                session_id: session_id.clone(),
-                turn,
-                step,
-            };
-            let before_request_decision = ctx.veto(
-                LoopEvent::BeforeRequest,
-                &mut before_request_payload,
-                |_| LoopDecision::Allow,
-            );
-            if let LoopDecision::Deny { reason } = before_request_decision {
-                cause = LoopCause::vote(LoopEvent::BeforeRequest, reason);
-                break 'steps;
-            }
-
-            // vote: request
-            // 准入之后、发送之前的最后一次改写机会。
-            let mut request_payload = LoopPayloadRequest {
-                turn,
-                step,
-                session_id: session_id.clone(),
-                request: before_request_payload.request,
-            };
-            let request_decision = ctx.veto(LoopEvent::Request, &mut request_payload, |_| {
-                LoopDecision::Allow
-            });
-            if let LoopDecision::Deny { reason } = request_decision {
-                cause = LoopCause::vote(LoopEvent::Request, reason);
-                break 'steps;
-            }
-
-            // 请求已定稿
-            let request = request_payload.request;
-            // emit: request-sent
-            ctx.emit(
-                LoopEvent::RequestSent.with_id(session_id.clone()),
-                &LoopPayloadRequestSent {
+            let mut retried_overflow = false;
+            let (reply_text, reasoning_text, reply_tool_calls, usage) = 'attempts: loop {
+                mcp_service.refresh_all().await;
+                let prepared = context_manager
+                    .prepare(
+                        session_id,
+                        ChatRequest {
+                            config: llm_config.clone(),
+                            system: prompt_registry.sections(),
+                            messages: Vec::new(),
+                            tools: tool_registry.list(),
+                            cancel: cancel_signal.clone(),
+                        },
+                        llm_provider.as_ref(),
+                        retried_overflow,
+                    )
+                    .await
+                    .context("上下文准备失败")?;
+                let mut before_request_payload = LoopPayloadBeforeRequest {
+                    request: prepared.request.clone(),
+                    session_id: session_id.clone(),
                     turn,
                     step,
-                    request: request.clone(),
-                    session_id: session_id.clone(),
-                    user_message_snapshot: user_message.clone(),
-                },
-            );
-
-            // 拼装状态: 文本 / 思考 / 工具调用 / 用量
-            let mut reply_text = String::new();
-            let mut reasoning_text = String::new();
-            let mut reply_tool_calls: Vec<ChatToolCall> = Vec::new();
-            let mut usage: Option<ChatUsage> = None;
-            // call_id -> (name, args_json 片段)
-            let mut pending_calls: HashMap<String, (String, String)> = HashMap::new();
-
-            // stream 请求(可被本次 run 绑定的取消信号打断)
-            let mut stream = llm_provider.stream(&request);
-            loop {
-                let event = tokio::select! {
-                    biased;
-                    _ = cancel_signal.wait_aborted() => {
-                        cause = LoopCause::cancel();
-                        break 'steps;
-                    }
-                    event = stream.next() => event,
                 };
-                let Some(event) = event else { break };
-                match event {
-                    Ok(event) => match event {
-                        LLMStreamEvent::TextStart => {
-                            ctx.emit(
-                                LoopEvent::TextStart.with_id(session_id.clone()),
-                                &LoopPayloadTextStart {
-                                    run_id: run_id.to_string(),
-                                    turn,
-                                    step,
-                                    session_id: session_id.clone(),
-                                },
-                            );
-                        }
-                        LLMStreamEvent::TextDelta { text: delta } => {
-                            reply_text.push_str(&delta);
-                            ctx.emit(
-                                LoopEvent::TextDelta.with_id(session_id.clone()),
-                                &LoopPayloadTextDelta {
-                                    run_id: run_id.to_string(),
-                                    turn,
-                                    step,
-                                    session_id: session_id.clone(),
-                                    delta,
-                                },
-                            );
-                        }
-                        LLMStreamEvent::TextEnd => {
-                            ctx.emit(
-                                LoopEvent::TextEnd.with_id(session_id.clone()),
-                                &LoopPayloadTextEnd {
-                                    run_id: run_id.to_string(),
-                                    turn,
-                                    step,
-                                    session_id: session_id.clone(),
-                                },
-                            );
-                        }
-                        LLMStreamEvent::ReasoningStart => {
-                            ctx.emit(
-                                LoopEvent::ReasoningStart.with_id(session_id.clone()),
-                                &LoopPayloadReasoningStart {
-                                    run_id: run_id.to_string(),
-                                    turn,
-                                    step,
-                                    session_id: session_id.clone(),
-                                },
-                            );
-                        }
-                        LLMStreamEvent::ReasoningDelta { delta } => {
-                            reasoning_text.push_str(&delta);
-                            ctx.emit(
-                                LoopEvent::ReasoningDelta.with_id(session_id.clone()),
-                                &LoopPayloadReasoningDelta {
-                                    run_id: run_id.to_string(),
-                                    turn,
-                                    step,
-                                    session_id: session_id.clone(),
-                                    delta,
-                                },
-                            );
-                        }
-                        LLMStreamEvent::ReasoningEnd => {
-                            ctx.emit(
-                                LoopEvent::ReasoningEnd.with_id(session_id.clone()),
-                                &LoopPayloadReasoningEnd {
-                                    run_id: run_id.to_string(),
-                                    turn,
-                                    step,
-                                    session_id: session_id.clone(),
-                                },
-                            );
-                        }
-                        LLMStreamEvent::ToolCallStart { id, name } => {
-                            // 记录, 等参数增量
-                            pending_calls.insert(id.clone(), (name.clone(), String::new()));
-                            ctx.emit(
-                                LoopEvent::ToolCallStart.with_id(session_id.clone()),
-                                &LoopPayloadToolCallStart {
-                                    run_id: run_id.to_string(),
-                                    turn,
-                                    step,
-                                    session_id: session_id.clone(),
-                                    call_id: id,
-                                    name,
-                                },
-                            );
-                        }
-                        LLMStreamEvent::ToolCallArgs { id, delta } => {
-                            // 累积 JSON 片段
-                            if let Some((_, args)) = pending_calls.get_mut(&id) {
-                                args.push_str(&delta);
-                            }
-                            ctx.emit(
-                                LoopEvent::ToolCallArgs.with_id(session_id.clone()),
-                                &LoopPayloadToolCallArgs {
-                                    run_id: run_id.to_string(),
-                                    turn,
-                                    step,
-                                    session_id: session_id.clone(),
-                                    call_id: id,
-                                    delta,
-                                },
-                            );
-                        }
-                        LLMStreamEvent::ToolCallEnd { id } => {
-                            // 参数给全: 解析 JSON, 生成最终 ToolCall
-                            if let Some((name, args)) = pending_calls.remove(&id) {
-                                let args_value: Value =
-                                    serde_json::from_str(&args).unwrap_or(Value::Null);
-                                reply_tool_calls.push(ChatToolCall {
-                                    id: id.clone(),
-                                    name,
-                                    args: args_value,
-                                });
-                            }
-                            ctx.emit(
-                                LoopEvent::ToolCallEnd.with_id(session_id.clone()),
-                                &LoopPayloadToolCallEnd {
-                                    run_id: run_id.to_string(),
-                                    turn,
-                                    step,
-                                    session_id: session_id.clone(),
-                                    call_id: id,
-                                },
-                            );
-                        }
-                        LLMStreamEvent::Usage(u) => {
-                            usage = Some(u);
-                        }
-                        LLMStreamEvent::Done { finish_reason } => {
-                            tracing::info!(
-                                session = %session_id,
-                                turn,
-                                step,
-                                finish = ?finish_reason,
-                                "模型流结束"
-                            );
-                            break;
-                        }
+                let before_request_decision = ctx.veto(
+                    LoopEvent::BeforeRequest,
+                    &mut before_request_payload,
+                    |_| LoopDecision::Allow,
+                );
+                if let LoopDecision::Deny { reason } = before_request_decision {
+                    cause = LoopCause::vote(LoopEvent::BeforeRequest, reason);
+                    break 'steps;
+                }
+
+                // vote: request
+                // 准入之后、发送之前的最后一次改写机会。
+                let mut request_payload = LoopPayloadRequest {
+                    turn,
+                    step,
+                    session_id: session_id.clone(),
+                    request: before_request_payload.request,
+                };
+                let request_decision = ctx.veto(LoopEvent::Request, &mut request_payload, |_| {
+                    LoopDecision::Allow
+                });
+                if let LoopDecision::Deny { reason } = request_decision {
+                    cause = LoopCause::vote(LoopEvent::Request, reason);
+                    break 'steps;
+                }
+
+                // 请求已定稿
+                let request = request_payload.request;
+                context_manager
+                    .commit(session_id, &prepared, &request)
+                    .await
+                    .context("最终上下文校验或提交失败")?;
+                // emit: request-sent
+                ctx.emit(
+                    LoopEvent::RequestSent.with_id(session_id.clone()),
+                    &LoopPayloadRequestSent {
+                        turn,
+                        step,
+                        request: request.clone(),
+                        session_id: session_id.clone(),
+                        user_message_snapshot: user_message.clone(),
                     },
-                    Err(error) => {
-                        cause = LoopCause::error(format!("模型调用失败: {error}"));
-                        break 'steps;
+                );
+
+                // 拼装状态: 文本 / 思考 / 工具调用 / 用量
+                let mut reply_text = String::new();
+                let mut reasoning_text = String::new();
+                let mut reply_tool_calls: Vec<ChatToolCall> = Vec::new();
+                let mut usage: Option<ChatUsage> = None;
+                let mut has_stream_output = false;
+                // call_id -> (name, args_json 片段)
+                let mut pending_calls: HashMap<String, (String, String)> = HashMap::new();
+
+                // stream 请求(可被本次 run 绑定的取消信号打断)
+                let mut stream = llm_provider.stream(&request);
+                loop {
+                    let event = tokio::select! {
+                        biased;
+                        _ = cancel_signal.wait_aborted() => {
+                            cause = LoopCause::cancel();
+                            break 'steps;
+                        }
+                        event = stream.next() => event,
+                    };
+                    let Some(event) = event else { break };
+                    match event {
+                        Ok(event) => match event {
+                            LLMStreamEvent::TextStart => {
+                                has_stream_output = true;
+                                ctx.emit(
+                                    LoopEvent::TextStart.with_id(session_id.clone()),
+                                    &LoopPayloadTextStart {
+                                        run_id: run_id.to_string(),
+                                        turn,
+                                        step,
+                                        session_id: session_id.clone(),
+                                    },
+                                );
+                            }
+                            LLMStreamEvent::TextDelta { text: delta } => {
+                                has_stream_output = true;
+                                reply_text.push_str(&delta);
+                                ctx.emit(
+                                    LoopEvent::TextDelta.with_id(session_id.clone()),
+                                    &LoopPayloadTextDelta {
+                                        run_id: run_id.to_string(),
+                                        turn,
+                                        step,
+                                        session_id: session_id.clone(),
+                                        delta,
+                                    },
+                                );
+                            }
+                            LLMStreamEvent::TextEnd => {
+                                ctx.emit(
+                                    LoopEvent::TextEnd.with_id(session_id.clone()),
+                                    &LoopPayloadTextEnd {
+                                        run_id: run_id.to_string(),
+                                        turn,
+                                        step,
+                                        session_id: session_id.clone(),
+                                    },
+                                );
+                            }
+                            LLMStreamEvent::ReasoningStart => {
+                                has_stream_output = true;
+                                ctx.emit(
+                                    LoopEvent::ReasoningStart.with_id(session_id.clone()),
+                                    &LoopPayloadReasoningStart {
+                                        run_id: run_id.to_string(),
+                                        turn,
+                                        step,
+                                        session_id: session_id.clone(),
+                                    },
+                                );
+                            }
+                            LLMStreamEvent::ReasoningDelta { delta } => {
+                                has_stream_output = true;
+                                reasoning_text.push_str(&delta);
+                                ctx.emit(
+                                    LoopEvent::ReasoningDelta.with_id(session_id.clone()),
+                                    &LoopPayloadReasoningDelta {
+                                        run_id: run_id.to_string(),
+                                        turn,
+                                        step,
+                                        session_id: session_id.clone(),
+                                        delta,
+                                    },
+                                );
+                            }
+                            LLMStreamEvent::ReasoningEnd => {
+                                ctx.emit(
+                                    LoopEvent::ReasoningEnd.with_id(session_id.clone()),
+                                    &LoopPayloadReasoningEnd {
+                                        run_id: run_id.to_string(),
+                                        turn,
+                                        step,
+                                        session_id: session_id.clone(),
+                                    },
+                                );
+                            }
+                            LLMStreamEvent::ToolCallStart { id, name } => {
+                                has_stream_output = true;
+                                // 记录, 等参数增量
+                                pending_calls.insert(id.clone(), (name.clone(), String::new()));
+                                ctx.emit(
+                                    LoopEvent::ToolCallStart.with_id(session_id.clone()),
+                                    &LoopPayloadToolCallStart {
+                                        run_id: run_id.to_string(),
+                                        turn,
+                                        step,
+                                        session_id: session_id.clone(),
+                                        call_id: id,
+                                        name,
+                                    },
+                                );
+                            }
+                            LLMStreamEvent::ToolCallArgs { id, delta } => {
+                                // 累积 JSON 片段
+                                if let Some((_, args)) = pending_calls.get_mut(&id) {
+                                    args.push_str(&delta);
+                                }
+                                ctx.emit(
+                                    LoopEvent::ToolCallArgs.with_id(session_id.clone()),
+                                    &LoopPayloadToolCallArgs {
+                                        run_id: run_id.to_string(),
+                                        turn,
+                                        step,
+                                        session_id: session_id.clone(),
+                                        call_id: id,
+                                        delta,
+                                    },
+                                );
+                            }
+                            LLMStreamEvent::ToolCallEnd { id } => {
+                                // 参数给全: 解析 JSON, 生成最终 ToolCall
+                                if let Some((name, args)) = pending_calls.remove(&id) {
+                                    let args_value: Value =
+                                        serde_json::from_str(&args).unwrap_or(Value::Null);
+                                    reply_tool_calls.push(ChatToolCall {
+                                        id: id.clone(),
+                                        name,
+                                        args: args_value,
+                                    });
+                                }
+                                ctx.emit(
+                                    LoopEvent::ToolCallEnd.with_id(session_id.clone()),
+                                    &LoopPayloadToolCallEnd {
+                                        run_id: run_id.to_string(),
+                                        turn,
+                                        step,
+                                        session_id: session_id.clone(),
+                                        call_id: id,
+                                    },
+                                );
+                            }
+                            LLMStreamEvent::Usage(u) => {
+                                usage = Some(u);
+                            }
+                            LLMStreamEvent::Done { finish_reason } => {
+                                tracing::info!(
+                                    session = %session_id,
+                                    turn,
+                                    step,
+                                    finish = ?finish_reason,
+                                    "模型流结束"
+                                );
+                                break;
+                            }
+                        },
+                        Err(error) => {
+                            if !retried_overflow
+                                && !has_stream_output
+                                && error
+                                    .downcast_ref::<crate::llm::models::ContextOverflow>()
+                                    .is_some()
+                            {
+                                retried_overflow = true;
+                                tracing::info!(session = %session_id, step, "模型报告上下文超限，压缩后重试当前步骤一次");
+                                continue 'attempts;
+                            }
+                            cause = LoopCause::error(format!("模型调用失败: {error}"));
+                            break 'steps;
+                        }
                     }
                 }
-            }
+                break 'attempts (reply_text, reasoning_text, reply_tool_calls, usage);
+            };
             if let Some(usage) = usage.clone() {
                 progress.usages.add((step, usage))
             }

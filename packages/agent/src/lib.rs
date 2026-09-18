@@ -1,5 +1,6 @@
 pub mod agui;
 pub mod constants;
+pub mod context;
 pub mod ctx;
 pub mod llm;
 pub mod r#loop;
@@ -12,11 +13,14 @@ pub mod store;
 pub mod tools;
 pub mod utils;
 
+use crate::context::compactor::LLMCompactorPlugin;
+use crate::context::manager::LLMContextPlugin;
+use crate::context::models::ContextPolicy;
 use agui::AguiPlugin;
 use ctx::Ctx;
 use ctx::boot::boot;
 use llm::persistence::LLMConfigPersistencePlugin;
-use llm::plugins::{LLMCompactorConfig, LLMCompactorPlugin, LLMConfigPlugin, LLMPlugin};
+use llm::plugins::{LLMConfigPlugin, LLMPlugin};
 use r#loop::{LoopConfig, LoopPlugin};
 use mcp::MCPPlugin;
 use plugins::max_turns::{MaxTurnsConfig, MaxTurnsPlugin};
@@ -32,7 +36,7 @@ use tools::inner::InnerToolsPlugin;
 
 pub struct AgentConfig {
     pub store_config: StoreConfig,
-    pub llm_compactor_config: LLMCompactorConfig,
+    pub context_policy: ContextPolicy,
     pub max_turns_config: MaxTurnsConfig,
     pub loop_config: LoopConfig,
 }
@@ -51,7 +55,8 @@ pub async fn build_agent(config: AgentConfig) -> anyhow::Result<Arc<Ctx>> {
             LLMPlugin.boot(&ctx, ())?,
             LLMConfigPlugin.boot(&ctx, ())?,
             LLMConfigPersistencePlugin.boot(&ctx, ())?,
-            LLMCompactorPlugin.boot(&ctx, config.llm_compactor_config)?,
+            LLMCompactorPlugin.boot(&ctx, ())?,
+            LLMContextPlugin.boot(&ctx, config.context_policy)?,
             MCPPlugin.boot(&ctx, ())?,
             InnerToolsPlugin.boot(&ctx, ())?,
             MaxTurnsPlugin.boot(&ctx, config.max_turns_config)?,

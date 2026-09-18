@@ -80,7 +80,28 @@ impl Store for LocalStore {
     async fn set(&self, key: &str, value: String) -> anyhow::Result<bool> {
         let full_path = self.dir.join(key);
         let encoded = self.encode(&value)?;
-        Ok(tokio::fs::write(&full_path, encoded).await.is_ok())
+        let temporary = self.dir.join(crate::utils::generate_id(".write"));
+        let result = async {
+            use tokio::io::AsyncWriteExt;
+            let mut file = tokio::fs::OpenOptions::new()
+                .write(true)
+                .create_new(true)
+                .open(&temporary)
+                .await?;
+            file.write_all(encoded.as_bytes()).await?;
+            file.sync_all().await?;
+            drop(file);
+            tokio::fs::rename(&temporary, &full_path).await?;
+            #[cfg(unix)]
+            tokio::fs::File::open(&self.dir).await?.sync_all().await?;
+            Ok::<_, std::io::Error>(())
+        }
+        .await;
+        if result.is_err() {
+            let _ = tokio::fs::remove_file(&temporary).await;
+        }
+        result?;
+        Ok(true)
     }
 
     async fn delete(&self, key: &str) -> anyhow::Result<bool> {

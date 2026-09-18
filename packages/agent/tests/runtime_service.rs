@@ -111,6 +111,8 @@ fn provider_input(id: Option<String>, name: &str, api_key: &str) -> ProviderConf
         model: "model-1".to_string(),
         api_key: api_key.to_string(),
         context_size: "128K".to_string(),
+        max_output_tokens: None,
+        input_limit: None,
         base_url: Some("https://example.com/v1".to_string()),
         headers: None,
         other: None,

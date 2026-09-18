@@ -1,3 +1,4 @@
+use crate::context::models::{Checkpoint, SessionContext};
 use crate::llm::models::ChatMessage;
 use crate::utils::generate_id;
 use serde::{Deserialize, Serialize};
@@ -82,6 +83,11 @@ fn current_timestamp_millis() -> i64 {
 
 #[derive(Clone)]
 pub enum SessionEvent {
+    Flush,
+    Checkpoint {
+        session_id: SessionId,
+        checkpoint: Checkpoint,
+    },
     Create {
         session_id: SessionId,
         metadata: ThreadMetadata,
@@ -110,4 +116,10 @@ pub enum SessionEvent {
         session_id: SessionId,
         messages: Vec<ChatMessage>,
     },
+}
+
+pub(crate) struct PersistenceCommand {
+    pub event: SessionEvent,
+    pub snapshot: Option<SessionContext>,
+    pub receipt: Option<tokio::sync::oneshot::Sender<Result<(), String>>>,
 }

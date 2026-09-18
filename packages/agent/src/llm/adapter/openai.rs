@@ -23,24 +23,89 @@ struct ExtendedStreamChunk {
     reasoning_delta: Option<String>,
 }
 impl OpenAiAdapter {
+    fn request_body(request: &ChatRequest) -> anyhow::Result<Value> {
+        let openai_request = CreateChatCompletionRequestArgs::default()
+            .model(&request.config.model)
+            .messages(vec![]) // 占位: 下面用带 reasoning_content 的消息数组覆盖
+            .tools(Self::inner_tool_2_openai_tools(&request.tools))
+            .stream(true)
+            .build()?;
+        let mut body = serde_json::to_value(&openai_request)?;
+        // 重建 messages: 系统 + 会话消息; assistant 消息补 reasoning_content
+        // (思考模式多轮对话必须随历史回传, 否则 deepseek 返回 400!!! 交错式思考)
+        crate::context::messages::validate_messages(&request.messages)?;
+        let converted = Self::inner_msg_2_openai_msg(&request.messages)?;
+        let mut body_messages: Vec<Value> = Vec::new();
+        if !request.system.is_empty() {
+            let system_msg: ChatCompletionRequestMessage =
+                ChatCompletionRequestSystemMessageArgs::default()
+                    .content(request.system.join("\n\n"))
+                    .build()?
+                    .into();
+            body_messages.push(serde_json::to_value(&system_msg)?);
+        } else {
+            tracing::warn ! (model = % request.config.model, "请求缺少系统消息(Request.system 为空)");
+        }
+        for (message, reasoning) in converted {
+            let mut value = serde_json::to_value(&message)?;
+            if let Some(reasoning) = reasoning {
+                value["reasoning_content"] = Value::String(reasoning);
+            }
+            body_messages.push(value);
+        }
+        body["messages"] = Value::Array(body_messages);
+        // Use the same limit that the context manager reserved in its input budget.
+        body["max_tokens"] = serde_json::json!(request.config.output_limit());
+
+        // 思考模式开关(async-openai 无 thinking 参数)
+        if request.config.thinking {
+            body["thinking"] = serde_json::json!({ "type": "enabled" });
+        }
+
+        Ok(body)
+    }
+
+    pub(crate) fn response_error(status: u16, text: &str) -> anyhow::Error {
+        let message = format!("llm-openai: {status}: {text}");
+        let body = serde_json::from_str::<Value>(text).unwrap_or(Value::Null);
+        let code = body
+            .pointer("/error/code")
+            .and_then(Value::as_str)
+            .unwrap_or_default();
+        let detail = body
+            .pointer("/error/message")
+            .and_then(Value::as_str)
+            .unwrap_or_default()
+            .to_lowercase();
+        if matches!(status, 400 | 413)
+            && (matches!(
+                code,
+                "context_length_exceeded" | "context_window_exceeded" | "input_tokens_exceeded"
+            ) || detail.contains("maximum context length")
+                || detail.contains("context length exceeded"))
+        {
+            crate::llm::models::ContextOverflow(message).into()
+        } else {
+            anyhow::anyhow!(message)
+        }
+    }
+
     /// ChatMessage → openai 消息 + 要回传的思考内容(仅 assistant 时，其他类型为None)
     fn inner_msg_2_openai_msg(
         messages: &[ChatMessage],
-    ) -> Vec<(ChatCompletionRequestMessage, Option<String>)> {
+    ) -> anyhow::Result<Vec<(ChatCompletionRequestMessage, Option<String>)>> {
         messages
             .iter()
-            .filter_map(|m| {
+            .map(|m| {
                 let reasoning = m.reasoning_content.clone();
                 let message: ChatCompletionRequestMessage = match m.role {
                     ChatRole::System => ChatCompletionRequestSystemMessageArgs::default()
                         .content(m.content.as_str())
-                        .build()
-                        .ok()?
+                        .build()?
                         .into(),
                     ChatRole::User => ChatCompletionRequestUserMessageArgs::default()
                         .content(m.content.as_str())
-                        .build()
-                        .ok()?
+                        .build()?
                         .into(),
                     ChatRole::Assistant => {
                         let mut args = ChatCompletionRequestAssistantMessageArgs::default();
@@ -65,22 +130,24 @@ impl OpenAiAdapter {
                             );
                         }
 
-                        args.build().ok()?.into()
+                        args.build()?.into()
                     }
                     ChatRole::Tool => ChatCompletionRequestToolMessageArgs::default()
                         .content(m.content.as_str())
-                        .tool_call_id(m.tool_call_id.clone()?)
-                        .build()
-                        .ok()?
+                        .tool_call_id(
+                            m.tool_call_id
+                                .clone()
+                                .ok_or_else(|| anyhow::anyhow!("tool 缺少 tool_call_id"))?,
+                        )
+                        .build()?
                         .into(),
                     // 理论上不会把内部消息转换为 system 消息，这里保留为以后策略扩展
                     ChatRole::Inner => ChatCompletionRequestSystemMessageArgs::default()
                         .content(m.content.as_str())
-                        .build()
-                        .ok()?
+                        .build()?
                         .into(),
                 };
-                Some((message, reasoning)) // 一般都是助手的思考内容，所以，reasoning_content 不为None时，都是助手消息
+                Ok((message, reasoning)) // 一般都是助手的思考内容，所以，reasoning_content 不为None时，都是助手消息
             })
             .collect()
     }
@@ -161,40 +228,7 @@ impl LLMAdapter for OpenAiAdapter {
             // 用 async-openai 构造请求结构(tools/messages 序列化照旧),
             // 再序列化成 JSON, 手工注入它不建模的思考扩展字段
             tracing::info!(model = % request.config.model, "创建 openai 流");
-            let openai_request = CreateChatCompletionRequestArgs::default()
-                .model(&request.config.model)
-                .messages(vec![]) // 占位: 下面用带 reasoning_content 的消息数组覆盖
-                .tools(Self::inner_tool_2_openai_tools(&request.tools))
-                .stream(true)
-                .build()?;
-            let mut body = serde_json::to_value(&openai_request)?;
-            // 重建 messages: 系统 + 会话消息; assistant 消息补 reasoning_content
-            // (思考模式多轮对话必须随历史回传, 否则 deepseek 返回 400!!! 交错式思考)
-            let converted = Self::inner_msg_2_openai_msg(&request.messages);
-            let mut body_messages: Vec<Value> = Vec::new();
-            if !request.system.is_empty() {
-                let system_msg: ChatCompletionRequestMessage =
-                    ChatCompletionRequestSystemMessageArgs::default()
-                        .content(request.system.join("\n\n"))
-                        .build()?
-                        .into();
-                body_messages.push(serde_json::to_value(&system_msg)?);
-            } else {
-                tracing::warn ! (model = % request.config.model, "请求缺少系统消息(Request.system 为空)");
-            }
-            for (message, reasoning) in converted {
-                let mut value = serde_json::to_value(&message)?;
-                if let Some(reasoning) = reasoning {
-                    value["reasoning_content"] = Value::String(reasoning);
-                }
-                body_messages.push(value);
-            }
-            body["messages"] = Value::Array(body_messages);
-
-            // 思考模式开关(async-openai 无 thinking 参数)
-            if request.config.thinking {
-                body["thinking"] = serde_json::json!({ "type": "enabled" });
-            }
+            let body = Self::request_body(request)?;
 
             // 发送(每次重试前检查取消; 连接级错误才重试)
             let base_url = request
@@ -241,7 +275,7 @@ impl LLMAdapter for OpenAiAdapter {
             if !response.status().is_success() {
                 let status = response.status();
                 let text = response.text().await.unwrap_or_default();
-                yield Err(anyhow::anyhow!("llm-openai: {status}: {text}"));
+                yield Err(Self::response_error(status.as_u16(), &text));
                 return;
             }
 
@@ -366,5 +400,74 @@ impl LLMAdapter for OpenAiAdapter {
             }
             yield Ok(LLMStreamEvent::Done { finish_reason });
         })
+    }
+}
+
+#[cfg(test)]
+mod context_tests {
+    use super::*;
+    use crate::llm::models::{ChatToolCall, ContextOverflow, LLMConfig};
+    use crate::utils::Signal;
+    use serde_json::json;
+
+    #[test]
+    fn outgoing_body_preserves_pairs_reasoning_and_the_reserved_output_limit() {
+        let request = ChatRequest {
+            config: LLMConfig {
+                model: "test".into(),
+                max_output_tokens: Some(1234),
+                ..LLMConfig::default()
+            },
+            system: vec!["fixed rules".into()],
+            messages: vec![
+                ChatMessage::user("lookup"),
+                ChatMessage::assistant_with_tool_calls_and_reasoning(
+                    "",
+                    vec![ChatToolCall {
+                        id: "call-1".into(),
+                        name: "lookup".into(),
+                        args: json!({"track_id": "123"}),
+                    }],
+                    Some("original reasoning".into()),
+                ),
+                ChatMessage::tool("result", "call-1"),
+            ],
+            tools: Vec::new(),
+            cancel: Signal::default(),
+        };
+        let body = OpenAiAdapter::request_body(&request).unwrap();
+        assert_eq!(body["max_tokens"], 1234);
+        assert_eq!(body["messages"][0]["content"], "fixed rules");
+        assert_eq!(body["messages"][2]["tool_calls"][0]["id"], "call-1");
+        assert_eq!(
+            body["messages"][2]["reasoning_content"],
+            "original reasoning"
+        );
+        assert_eq!(body["messages"][3]["tool_call_id"], "call-1");
+        let mut invalid = request;
+        invalid.messages.remove(1);
+        assert!(OpenAiAdapter::request_body(&invalid).is_err());
+    }
+
+    #[test]
+    fn only_known_context_errors_are_classified_for_compaction_retry() {
+        for body in [
+            json!({"error":{"code":"context_length_exceeded","message":"too long"}}),
+            json!({"error":{"message":"This model's maximum context length is 128000 tokens"}}),
+        ] {
+            assert!(OpenAiAdapter::response_error(400, &body.to_string()).is::<ContextOverflow>());
+        }
+        for (status, body) in [
+            (
+                400,
+                json!({"error":{"message":"Messages with role 'tool' must be a response to a pending message with 'tool_calls'"}}),
+            ),
+            (401, json!({"error":{"code":"context_length_exceeded"}})),
+            (413, json!({"error":{"message":"request too large"}})),
+        ] {
+            assert!(
+                !OpenAiAdapter::response_error(status, &body.to_string()).is::<ContextOverflow>()
+            );
+        }
     }
 }
