@@ -29,13 +29,14 @@ export class MainAgent {
     try {
       await service.start(mcpUrl);
       this.service = service;
-      MainAgentFeatureSettings.markAgentInitialized();
+      // 主窗口可能已读取启动前的状态，就绪后需要通知它重新显示入口
+      this.broadcastFeatureSettings(MainAgentFeatureSettings.markAgentInitialized());
       return true;
     } catch (error) {
       this.stopListening?.();
       this.stopListening = undefined;
       await service.stop();
-      MainAgentFeatureSettings.markAgentInitializationFailed();
+      this.broadcastFeatureSettings(MainAgentFeatureSettings.markAgentInitializationFailed());
       throw error;
     }
   }

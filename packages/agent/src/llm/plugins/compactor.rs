@@ -90,9 +90,7 @@ impl LLMCompactor {
         let mut keep_start_idx = messages.len() - self.keep;
         for msg in messages[keep_start_idx..].iter() {
             match msg.role {
-                ChatRole::Tool => {
-                    keep_start_idx += 1
-                }
+                ChatRole::Tool => keep_start_idx += 1,
                 _ => break,
             }
         }
