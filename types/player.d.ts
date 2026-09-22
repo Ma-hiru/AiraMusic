@@ -169,8 +169,10 @@ interface LyricLine {
   endTime: number;
   /** 是否为空白行 */
   isBlank?: boolean;
-  /** 是否为和声行 */
+  /** 是否为 和声/对唱 行 */
   isBackChorus?: boolean;
+  /** 背景歌词行(TTML) */
+  isBG?: boolean;
 }
 
 type NeteaseLyricModel = {

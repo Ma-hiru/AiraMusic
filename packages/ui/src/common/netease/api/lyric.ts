@@ -46,7 +46,7 @@ export default class _NeteaseLyricAPI {
         signal?.throwIfAborted();
         if (!this.loadedMeta || !this.ttmLyricMeta.has(String(id))) return null;
         return fetch(
-          `https://raw.githubusercontent.com/Steve-xmh/amll-ttml-db/refs/heads/main/ncm-lyrics/${id}.ttml`,
+          `https://raw.githubusercontent.com/amll-dev/amll-ttml-db/refs/heads/main/ncm-lyrics/${id}.ttml`,
           {
             method: "GET",
             credentials: "same-origin",
@@ -90,7 +90,7 @@ export default class _NeteaseLyricAPI {
     signal?.throwIfAborted();
     if (this.loadedMeta) return Promise.resolve();
     return fetch(
-      "https://raw.githubusercontent.com/Steve-xmh/amll-ttml-db/refs/heads/main/metadata/raw-lyrics-index.jsonl",
+      "https://raw.githubusercontent.com/amll-dev/amll-ttml-db/refs/heads/main/metadata/raw-lyrics-index.jsonl",
       { signal }
     )
       .then((response) => {

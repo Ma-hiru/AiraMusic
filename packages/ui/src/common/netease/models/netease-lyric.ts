@@ -171,6 +171,7 @@ class Parser {
       rawLyrics.push(rawLyric);
       return {
         ...line,
+        isBG: line.isBG ?? false,
         isBlank: LyricLineInfo.isBlank(rawLyric),
         isBackChorus: line.isBG || line.isDuet || LyricLineInfo.isBackChorus(rawLyric)
       };

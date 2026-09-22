@@ -40,7 +40,11 @@ const LyricLine: FC<LyricLineProps> = ({
   spring = true,
   crossAlign = "left"
 }) => {
-  if (line.isBlank || line.isBackChorus) {
+  const isBG = line.isBG ?? false;
+  if (isBG) {
+    if (crossAlign === "left" || crossAlign === "right") crossAlign = "center";
+    else crossAlign = "left";
+  } else if (line.isBlank || line.isBackChorus) {
     if (crossAlign === "left" || crossAlign === "center") crossAlign = "right";
     else if (crossAlign === "right") crossAlign = "left";
   }

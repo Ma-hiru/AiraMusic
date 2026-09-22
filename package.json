@@ -38,7 +38,7 @@
     "dev": "yarn npm-run-all --parallel --race dev:ui dev:app dev:electron",
     "dev:ui": "yarn workspace @mahiru/ui dev",
     "dev:app": "yarn workspace aira-music dev",
-    "dev:electron": "yarn wait-on http://localhost:8827 && yarn wait-on packages/app/dist/app/main.mjs && yarn electronmon ./packages/app --inspect=9229",
+    "dev:electron": "yarn wait-on tcp:8827 && yarn wait-on packages/app/dist/app/main.mjs && yarn electronmon ./packages/app --inspect=9229",
     "devtools": "yarn react-devtools",
     "clean": "yarn npm-run-all --parallel clean:vite clean:cargo clean:go clean:dist",
     "clean:dist": "yarn rimraf dist && yarn workspace @mahiru/wasm clean:dist && yarn workspace @mahiru/native clean:dist && yarn workspace @mahiru/store clean:dist && yarn workspace @mahiru/agent clean:dist && yarn workspace @mahiru/ui clean:dist && yarn workspace aira-music clean:dist",
