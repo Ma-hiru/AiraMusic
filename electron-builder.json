@@ -28,20 +28,16 @@
   "linux": {
     "target": [
       {
-        "target": "AppImage",
-        "arch": ["x64"]
+        "target": "AppImage"
       },
       {
-        "target": "deb",
-        "arch": ["x64"]
+        "target": "deb"
       },
       {
-        "target": "rpm",
-        "arch": ["x64"]
+        "target": "rpm"
       },
       {
-        "target": "tar.gz",
-        "arch": ["x64"]
+        "target": "tar.gz"
       }
     ],
     "icon": "packages/app/assets/logo.png",
@@ -75,8 +71,7 @@
   "mac": {
     "target": [
       {
-        "target": "dmg",
-        "arch": ["arm64"]
+        "target": "dmg"
       }
     ],
     "icon": "packages/app/assets/logo.png",
@@ -103,12 +98,10 @@
   "win": {
     "target": [
       {
-        "target": "nsis",
-        "arch": ["x64"]
+        "target": "nsis"
       },
       {
-        "target": "msi",
-        "arch": ["x64"]
+        "target": "msi"
       }
     ],
     "icon": "packages/app/assets/logo.png",

@@ -48,11 +48,20 @@ jobs:
           - name: Windows x64
             os: windows-latest
 
+          - name: Windows ARM64
+            os: windows-11-arm
+
           - name: Linux x64
             os: ubuntu-latest
 
+          - name: Linux ARM64
+            os: ubuntu-24.04-arm
+
           - name: macOS ARM64
             os: macos-latest
+
+          - name: macOS x64
+            os: macos-15-intel
 
     runs-on: ${{ matrix.os }}
 
