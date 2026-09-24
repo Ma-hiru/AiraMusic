@@ -1,5 +1,5 @@
 import { Log } from "@/common/lib/log";
-import { LRUCacheWithTime } from "@/common/utils/lru";
+import { LRUCache } from "@/common/utils/lru";
 
 export class PreloadManager<K> {
   private readonly name;
@@ -19,11 +19,11 @@ export class PreloadManager<K> {
     this.name = name;
     this.delay = delay;
     this.exec = exec;
-    this.preloadList = new LRUCacheWithTime<K, AbortController>(
+    this.preloadList = new LRUCache<K, AbortController>({
       capacity,
-      timeout,
-      (_, controller) => controller.abort()
-    );
+      time_limit: timeout,
+      on_drop: (_, controller) => controller.abort()
+    });
   }
 
   private logger(...args: any[]) {

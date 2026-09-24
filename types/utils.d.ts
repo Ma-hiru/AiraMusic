@@ -23,6 +23,8 @@ type NormalFunc<P extends readonly any[] = any[], R = void> = (...args: P) => R;
 
 type PromiseFunc<P extends readonly any[] = never[], R = void> = (...args: P) => Promise<R>;
 
+type AnyFunc<P extends readonly any[] = never[], R = void> = NormalFunc<P, R> | PromiseFunc<P, R>;
+
 type IndexRange = [start: number, end: number];
 
 interface HasID {

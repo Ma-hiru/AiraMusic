@@ -1,6 +1,6 @@
 import { Log } from "@/common/lib/log";
+import { LRUCache } from "@/common/utils/lru";
 import { RendererCache } from "@/common/lib/cache";
-import { LRUCacheWithTime } from "@/common/utils/lru";
 import { userStoreSnapshot } from "@/common/store/user";
 import { NeteaseAPIPlaylist } from "@/common/netease/api";
 import { PreloadManager } from "@/common/utils/preload-manager";
@@ -36,10 +36,10 @@ export default class _NeteasePlaylistSource {
     );
   }
 
-  private static memoryCache = new LRUCacheWithTime<number | string, NeteasePlaylist>(
-    10,
-    1000 * 60 * 60
-  );
+  private static memoryCache = new LRUCache<number | string, NeteasePlaylist>({
+    capacity: 10,
+    time_limit: 1000 * 60 * 60
+  });
 
   private static get userStore() {
     return userStoreSnapshot();

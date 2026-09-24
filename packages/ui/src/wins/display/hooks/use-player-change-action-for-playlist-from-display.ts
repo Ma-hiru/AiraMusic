@@ -3,9 +3,10 @@ import { RendererWindow } from "@/common/lib/window";
 import { RendererIPCMessageBus } from "@/common/lib/bus";
 import { useLatestRef } from "@/common/hooks/use-latest-ref";
 import { NeteaseTrackRecord } from "@/common/netease/models";
+import AppToast from "@/common/components/display/toast";
 
 /** 从多窗口页面触发播放器变更 */
-export function usePlayerChangeActionFromDisplay(props: {
+export function usePlayerChangeActionForPlaylistFromDisplay(props: {
   sourceID: number;
   sourceType: NeteaseTrackRecordSourceType;
   getTracks: NormalFunc<[], NeteaseTrackRecord[]>;
@@ -16,6 +17,7 @@ export function usePlayerChangeActionFromDisplay(props: {
     (track: NeteaseTrackRecord) => {
       const tracks = propsRef.current.getTracks();
       if (!tracks || !tracks[0]) return;
+      loadingTips();
       RendererIPCMessageBus.playlistAction.deliver({
         type: "replacePlaylistAndPlay",
         sourceType: track.sourceName,
@@ -61,6 +63,7 @@ export function usePlayerChangeActionFromDisplay(props: {
     const tracks = propsRef.current.getTracks();
     const { sourceID, sourceType } = propsRef.current;
     if (!tracks || !tracks[0]) return;
+    loadingTips();
     RendererIPCMessageBus.playlistAction.deliver({
       sourceID,
       sourceType,
@@ -75,6 +78,7 @@ export function usePlayerChangeActionFromDisplay(props: {
     const tracks = propsRef.current.getTracks();
     const { sourceID, sourceType } = propsRef.current;
     if (!tracks || !tracks[0]) return;
+    loadingTips();
     RendererIPCMessageBus.playlistAction.deliver({
       sourceID,
       sourceType,
@@ -92,3 +96,5 @@ export function usePlayerChangeActionFromDisplay(props: {
     onAddList
   };
 }
+
+const loadingTips = () => AppToast.show({ type: "info", text: "加载播放列表中..." });

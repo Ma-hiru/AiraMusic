@@ -7,7 +7,7 @@ import { useRouterActive } from "@/common/hooks/use-router-active";
 import { useUserTrackManager } from "@/common/hooks/use-user-track-manager";
 import { useTrackAddToPlaylist } from "@/common/hooks/use-track-add-to-playlist";
 import { useArtistOrAlbumDisplayJump } from "@/wins/display/hooks/use-artist-or-album-display-jump";
-import { usePlayerChangeActionFromDisplay } from "@/wins/display/hooks/use-player-change-action-from-display";
+import { usePlayerChangeActionForPlaylistFromDisplay } from "@/wins/display/hooks/use-player-change-action-for-playlist-from-display";
 import RendererImageConstants from "@/common/constants/image";
 import Search, { type SearchRef } from "@/common/components/page/search";
 
@@ -21,7 +21,7 @@ const SearchDisplay: FC<object> = () => {
   const { jumpAlbumDisplay, jumpArtistDisplay, jumpPlaylistDisplay } =
     useArtistOrAlbumDisplayJump();
   const { addTrackToPlaylistLast, addTrackToPlaylistNext, openTrackComment, onTrackPlay } =
-    usePlayerChangeActionFromDisplay({
+    usePlayerChangeActionForPlaylistFromDisplay({
       getTracks: () => searchRef.current?.tracks ?? [],
       sourceID: 0,
       sourceType: "other"

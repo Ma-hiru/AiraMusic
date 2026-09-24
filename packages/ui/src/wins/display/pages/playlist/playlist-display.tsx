@@ -14,7 +14,7 @@ import { useDisplayTitleRegister } from "@/wins/display/hooks/use-display-title"
 import { useDisplayPageAction } from "@/wins/display/hooks/use-display-page-action";
 import { useScrollActionsRegister } from "@/common/hooks/use-scroll-actions-register";
 import { useArtistOrAlbumDisplayJump } from "@/wins/display/hooks/use-artist-or-album-display-jump";
-import { usePlayerChangeActionFromDisplay } from "@/wins/display/hooks/use-player-change-action-from-display";
+import { usePlayerChangeActionForPlaylistFromDisplay } from "@/wins/display/hooks/use-player-change-action-for-playlist-from-display";
 import Playlist, { type PlaylistRef } from "@/common/components/page/playlist";
 
 const PlaylistDisplay: FC<object> = () => {
@@ -31,7 +31,7 @@ const PlaylistDisplay: FC<object> = () => {
     onAddList,
     onReplace,
     onTrackPlay
-  } = usePlayerChangeActionFromDisplay({
+  } = usePlayerChangeActionForPlaylistFromDisplay({
     getTracks: () => playlistRef.current?.totalTracks.current ?? [],
     sourceID: Number(id),
     sourceType: "playlist"

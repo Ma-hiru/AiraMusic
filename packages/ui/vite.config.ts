@@ -45,7 +45,8 @@ export default defineConfig(({ mode }) => {
           agent: join(__dirname, "agent.html"),
           comments: join(__dirname, "comments.html"),
           display: join(__dirname, "display.html"),
-          radio: join(__dirname, "radio.html")
+          radio: join(__dirname, "radio.html"),
+          about: join(__dirname, "about.html")
         }
       }
     },

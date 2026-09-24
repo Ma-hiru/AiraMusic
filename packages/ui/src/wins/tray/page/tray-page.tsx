@@ -1,4 +1,4 @@
-import { memo, useRef, type FC, useMemo, useEffect, useCallback, useLayoutEffect } from "react";
+import { memo, type FC, useMemo, useEffect, useCallback } from "react";
 import {
   Copy,
   Play,
@@ -33,11 +33,8 @@ type TrayAction = {
 };
 
 const TrayPage: FC = () => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const contentSizeRef = useRef<Nullable<{ width: number; height: number }>>(null);
   const trackMetaBus = useListenable(RendererIPCMessageBus.trackMeta);
   const progressBus = useListenable(RendererIPCMessageBus.progress);
-  const currentWindow = useListenable(RendererWindow.current);
   const themeBus = useThemeInjectFromBus();
   const trackRecord = trackMetaBus.data?.track;
   const track = trackRecord?.detail;
@@ -45,41 +42,6 @@ const TrayPage: FC = () => {
   const artistName = track?.ar.map((item) => item.name).join(" / ");
   const firstArtistID = track?.ar.find((item) => item.id > 0)?.id;
   const albumID = track?.al.id && track.al.id > 0 ? track.al.id : undefined;
-
-  useLayoutEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    let frame = 0;
-    const updateWindowBounds = () => {
-      window.cancelAnimationFrame(frame);
-      frame = window.requestAnimationFrame(() => {
-        const width = Math.ceil(container.offsetWidth || window.innerWidth);
-        const height = Math.ceil(container.offsetHeight || window.innerHeight);
-        const currentSize = contentSizeRef.current;
-        if (currentSize?.width === width && currentSize.height === height) return;
-
-        contentSizeRef.current = { height, width };
-        const deltaX = window.innerWidth - width;
-        const deltaY = window.innerHeight - height;
-
-        currentWindow.resize({ width, height });
-        currentWindow.move({
-          x: window.screenX + deltaX,
-          y: window.screenY + deltaY
-        });
-      });
-    };
-
-    const observer = new ResizeObserver(updateWindowBounds);
-    observer.observe(container);
-    updateWindowBounds();
-
-    return () => {
-      window.cancelAnimationFrame(frame);
-      observer.disconnect();
-    };
-  }, [currentWindow]);
 
   useEffect(() => {
     document.title = track?.name && artistName ? `${track.name} - ${artistName}` : "AiraMusic";
@@ -206,11 +168,10 @@ const TrayPage: FC = () => {
   );
 
   return (
-    <div className="h-screen w-screen overflow-hidden">
-      <div
-        ref={containerRef}
+    <div className="w-screen overflow-hidden p-0.5 overflow-y-auto scrollbar">
+      <main
         className="
-          max-w-50 w-max rounded-xl border border-black/8
+          w-full rounded-xl border border-black/8
           backdrop-saturate-150 backdrop-blur-xl p-2 relative bg-white/80
         ">
         <div className="fixed inset-0 z-[-1]">
@@ -238,7 +199,7 @@ const TrayPage: FC = () => {
         <TrayGroup actions={copyActions} />
         <TrayDivider />
         <TrayGroup actions={systemActions} />
-      </div>
+      </main>
       <AppToast.Provider className="top-2 z-50" />
     </div>
   );

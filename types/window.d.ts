@@ -1,6 +1,7 @@
 type WindowType =
   | "main"
   | "tray"
+  | "about"
   | "agent"
   | "image"
   | "login"

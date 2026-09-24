@@ -273,7 +273,10 @@ export class TrayUtils {
             {
               label: process.env.APP_NAME,
               submenu: [
-                { role: "about", label: "关于 " + process.env.APP_NAME },
+                {
+                  label: "关于 " + process.env.APP_NAME,
+                  click: () => MainWindowCreator.create(MainWindowPreset.about)
+                },
                 { type: "separator" },
                 { role: "services", label: "服务" },
                 { type: "separator" },

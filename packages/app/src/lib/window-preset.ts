@@ -334,6 +334,39 @@ export class MainWindowPreset {
     };
   }
 
+  static get about(): AppWindowCreatorProps {
+    const {
+      base: { width, height }
+    } = MainScreenResolver.primary.adaptiveWindowSizePreset(
+      MainWindowConstants.WINDOW_BASE_SIZE.about
+    );
+    return {
+      options: {
+        width,
+        height,
+        webPreferences: {
+          preload: MainPathResolver.preloadPath
+        },
+        alwaysOnTop: true,
+        title: process.env.APP_NAME,
+        resizable: false,
+        minimizable: false,
+        maximizable: false,
+        frame: false,
+        titleBarStyle: "hidden",
+        type: "toolbar",
+        skipTaskbar: true,
+        show: false,
+        transparent: false,
+        hasShadow: false
+      },
+      id: "about",
+      handleExits: "IGNORE",
+      memoPos: true,
+      loadURL: (port) => `${MainWindowPreset.origin(port)}/about.html`
+    };
+  }
+
   static get display(): AppWindowCreatorProps {
     const { min, base } = MainScreenResolver.primary.adaptiveWindowSizePreset(
       MainWindowConstants.WINDOW_BASE_SIZE.display

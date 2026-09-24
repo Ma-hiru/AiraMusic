@@ -12,7 +12,7 @@ import { useTrackAddToPlaylist } from "@/common/hooks/use-track-add-to-playlist"
 import { useDisplayTitleRegister } from "@/wins/display/hooks/use-display-title";
 import { useDisplayPageAction } from "@/wins/display/hooks/use-display-page-action";
 import { useArtistOrAlbumDisplayJump } from "@/wins/display/hooks/use-artist-or-album-display-jump";
-import { usePlayerChangeActionFromDisplay } from "@/wins/display/hooks/use-player-change-action-from-display";
+import { usePlayerChangeActionForPlaylistFromDisplay } from "@/wins/display/hooks/use-player-change-action-for-playlist-from-display";
 import RendererImageConstants from "@/common/constants/image";
 import Album, { type AlbumPageRef } from "@/common/components/page/album";
 
@@ -32,7 +32,7 @@ const AlbumDisplay: FC<object> = () => {
     openTrackComment,
     onAddList,
     onTrackPlay
-  } = usePlayerChangeActionFromDisplay({
+  } = usePlayerChangeActionForPlaylistFromDisplay({
     getTracks: () => albumRef.current?.album?.tracks ?? [],
     sourceID: id!,
     sourceType: "album"

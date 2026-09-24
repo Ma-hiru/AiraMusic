@@ -5,6 +5,7 @@ import { useSettings } from "@/common/store/settings";
 import { RendererIPCMessageBus } from "@/common/lib/bus";
 import { RoutePath, RoutePathMain } from "@/common/routes";
 import { useLatestRef } from "@/common/hooks/use-latest-ref";
+import { NeteaseServicesAlbum, NeteaseServicesPlaylist } from "@/common/netease/services";
 
 /** 跳转歌手和专辑页 */
 export function usePageJump(
@@ -24,6 +25,7 @@ export function usePageJump(
       if (id === propsRef.current.currentAlbumID) return;
 
       if (settingsRef.current.preference.defaultUseDisplayWindow) {
+        NeteaseServicesAlbum.preload(id);
         await RendererWindow.display.reactReadyAwait();
         return RendererIPCMessageBus.display.deliver({
           type: "album",
@@ -60,6 +62,7 @@ export function usePageJump(
       if (playlistRef.current.source === "like" && !id && isPlaylistPage) return;
 
       if (settingsRef.current.preference.defaultUseDisplayWindow) {
+        NeteaseServicesPlaylist.preload(id);
         await RendererWindow.display.reactReadyAwait();
         return RendererIPCMessageBus.display.deliver({
           type: "playlist",

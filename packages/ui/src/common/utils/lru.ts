@@ -26,23 +26,40 @@ export class DLinkedNode<K, V> {
     this.next = null;
     return this;
   }
+
+  public take_front() {
+    return this.prev?.take();
+  }
+
+  public insert(other: Optional<DLinkedNode<K, V>>) {
+    if (other) {
+      other.append(this.next);
+      this.append(other);
+    }
+    return this;
+  }
 }
 
-export abstract class LRUCache<K, V> {
+export abstract class LRUCacheBase<K, V> {
   readonly capacity;
-  protected _size;
   protected readonly cache;
   protected readonly head;
   protected readonly tail;
+  private on_drop_callback: Optional<AnyFunc<[K, V]>>;
 
-  protected constructor(capacity: number) {
+  protected constructor(capacity?: number, on_drop?: AnyFunc<[K, V]>) {
+    if (typeof capacity !== "number" || !Number.isSafeInteger(capacity) || capacity < 0)
+      capacity = -1;
     this.capacity = capacity;
     this.cache = new Map<K, DLinkedNode<K, V>>();
     this.head = new DLinkedNode<K, V>(null as K, null as V);
     this.tail = new DLinkedNode<K, V>(null as K, null as V);
-    this.head.next = this.tail;
-    this.tail.prev = this.head;
-    this._size = 0;
+    this.head.append(this.tail);
+    this._on_drop(on_drop);
+  }
+
+  public get size() {
+    return this.cache.size;
   }
 
   /**
@@ -57,28 +74,15 @@ export abstract class LRUCache<K, V> {
     // 如果节点不存在，则返回undefined
     if (!node) return undefined as T extends Falsy ? undefined : V;
     // 将节点插入链表头部
-    node.take();
-    node.append(this.head.next);
-    this.head.append(node);
-    // 如果节点不存在于cache中，则size++，并检查是否需要限制size
-    if (!this.cache.has(node.key)) {
-      this._size++;
-      this.limit();
-    }
+    this.head.insert(node.take());
     this.cache.set(node.key, node);
-    return node.value as T extends Falsy ? undefined : V;
-  }
 
-  /**
-   * @desc 检查是否超过限制，如果超过限制，则删除链表尾部节点，size--。
-   * */
-  protected _limitSize() {
-    if (this._size > this.capacity) {
-      const node = this.tail.prev!.take();
-      this.cache.delete(node.key);
-      this._size--;
-      return node;
+    if (this.capacity !== -1 && this.size > this.capacity) {
+      const node = this.tail.take_front();
+      node && this._delete(node.key);
     }
+
+    return node.value as T extends Falsy ? undefined : V;
   }
 
   protected _get(key: K): Undefinable<V> {
@@ -86,25 +90,27 @@ export abstract class LRUCache<K, V> {
   }
 
   protected _set(key: K, value: V) {
-    const node = this.cache.get(key);
-    if (node) {
-      node.value = value;
-      return this.visit(node);
-    } else {
-      return this.visit(new DLinkedNode(key, value));
-    }
+    const node = this.cache.get(key) ?? new DLinkedNode(key, value);
+    node.value = value;
+    return this.visit(node);
   }
 
   protected _delete(key: K) {
     const node = this.cache.get(key)?.take();
-    if (node) {
-      this.cache.delete(key);
-      this._size--;
-    }
+    node && this.cache.delete(key);
+    node && this.on_drop_callback?.(node.key, node.value);
     return node;
   }
 
-  protected abstract limit(): void;
+  protected _on_drop(callback: Optional<AnyFunc<[K, V]>>) {
+    this.on_drop_callback = async (k, v) => {
+      try {
+        await callback?.(k, v);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+  }
 
   public abstract get(key: K): Undefinable<any>;
 
@@ -112,42 +118,40 @@ export abstract class LRUCache<K, V> {
 
   public abstract delete(key: K): any;
 
-  public get size() {
-    return this._size;
-  }
+  public abstract on_drop(callback: Optional<AnyFunc<[K, any]>>): any;
 }
 
-export class LRUCacheWithTime<K, V> extends LRUCache<K, { value: V; time: number }> {
-  readonly timelimit;
-  readonly onDrop?;
-  constructor(capacity: number, timelimit: number, onDrop?: NormalFunc<[key: K, value: V]>) {
-    super(capacity);
-    this.timelimit = timelimit;
-    this.onDrop = onDrop;
-  }
+export class LRUCache<K, V> extends LRUCacheBase<K, { value: V; expired: number }> {
+  readonly time_limit;
 
-  protected override limit() {
-    const node = super._limitSize();
-    node && this.onDrop?.(node.key, node.value.value);
+  constructor(props: {
+    capacity?: number;
+    time_limit?: number;
+    on_drop?: AnyFunc<[key: K, value: V]>;
+  }) {
+    const { on_drop, capacity, time_limit } = props;
+    super(capacity, (k, v) => on_drop?.(k, v.value));
 
-    let current = this.tail.prev;
-    while (current && current !== this.head && Date.now() - current.value.time > this.timelimit) {
-      const delKey = current.key;
-      const delVal = current.value.value;
-
-      current = current.prev;
-
-      this.delete(delKey);
-      this.onDrop?.(delKey, delVal);
+    if (typeof time_limit !== "number" || !Number.isSafeInteger(time_limit) || time_limit <= 0) {
+      this.time_limit = -1;
+    } else {
+      this.time_limit = time_limit;
     }
   }
 
+  public override on_drop(callback: Optional<AnyFunc<[key: K, value: V]>>) {
+    super._on_drop((key, value) => callback?.(key, value.value));
+  }
+
   public override get(key: K): Undefinable<V> {
-    return super._get(key)?.value;
+    const node = super._get(key);
+    const now = Date.now();
+    if (!node || this.time_limit === -1 || node.expired > now) return node?.value;
+    this.delete(key);
   }
 
   public override set(key: K, value: V) {
-    super._set(key, { time: Date.now(), value });
+    super._set(key, { expired: Date.now() + this.time_limit, value });
     return this;
   }
 

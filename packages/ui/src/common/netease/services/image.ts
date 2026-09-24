@@ -1,6 +1,6 @@
 import { Log } from "@/common/lib/log";
+import { LRUCache } from "@/common/utils/lru";
 import { RendererCache } from "@/common/lib/cache";
-import { LRUCacheWithTime } from "@/common/utils/lru";
 import { StoreCategory, NeteaseImageSize } from "@/common/enum";
 import { NeteaseTrack, NeteaseLocalImage, NeteaseNetworkImage } from "@/common/netease/models";
 
@@ -19,10 +19,10 @@ interface LocalFn {
 export default class _NeteaseImageSource {
   //region cache
   private static readonly cacheKey = "netease_image";
-  private static readonly memoryCache = new LRUCacheWithTime<string, NeteaseLocalImage>(
-    1500,
-    1000 * 60 * 60 * 24
-  );
+  private static readonly memoryCache = new LRUCache<string, NeteaseLocalImage>({
+    capacity: 1500,
+    time_limit: 1000 * 60 * 60 * 24
+  });
 
   private static getCacheKey(image: NeteaseNetworkImage) {
     const suffix = image.sourceName === "other" ? image.url : "";

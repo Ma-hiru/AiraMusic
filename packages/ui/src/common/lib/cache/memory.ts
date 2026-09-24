@@ -1,8 +1,8 @@
-import { LRUCacheWithTime } from "@/common/utils/lru";
+import { LRUCache } from "@/common/utils/lru";
 import { type CacheObjectInterface } from "@/common/lib/cache/utils";
 
 export class MemoryCache implements CacheObjectInterface {
-  private cache = new LRUCacheWithTime<string, any>(5000, 1000 * 60 * 60);
+  private cache = new LRUCache<string, any>({ capacity: 5000, time_limit: 1000 * 60 * 60 });
 
   getOne<T>(id: string): Undefinable<T> {
     return this.cache.get(id);

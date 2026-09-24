@@ -1,21 +1,12 @@
 import { siGithub } from "simple-icons";
 import { memo, type FC, useState } from "react";
 import { UserRound, ExternalLink } from "lucide-react";
-import { RendererIPC } from "@mahiru/ipc/renderer";
+import { RendererVersion } from "@/common/lib/version";
 import Card from "@/common/components/layout/card";
 import SimpleIcon from "@/common/components/display/simple-icon";
 
-const author = "Ma-hiru";
-const authorPage = `https://github.com/${author}`;
-const authorAvatar = `https://github.com/${author}.png?size=80`;
-
 const Github: FC<object> = () => {
   const [avatarOk, setAvatarOk] = useState(true);
-  const openAuthor = () => {
-    RendererIPC.NormalChannel.send("event_window_browser", {
-      url: authorPage
-    });
-  };
 
   return (
     <Card title="作者" Icon={UserRound} subTitle="author">
@@ -23,8 +14,8 @@ const Github: FC<object> = () => {
         {avatarOk ? (
           <img
             className="size-12 shrink-0 rounded-full border border-white/30 object-cover"
-            alt={author}
-            src={authorAvatar}
+            alt={RendererVersion.author}
+            src={RendererVersion.authorAvatar}
             onError={() => setAvatarOk(false)}
           />
         ) : (
@@ -36,7 +27,7 @@ const Github: FC<object> = () => {
           </span>
         )}
         <div className="min-w-0">
-          <h1 className="truncate text-lg font-bold">{author}</h1>
+          <h1 className="truncate text-lg font-bold">{RendererVersion.author}</h1>
           <p className="mt-0.5 truncate text-[12px] opacity-50">项目作者 · Developer</p>
         </div>
       </section>
@@ -50,7 +41,7 @@ const Github: FC<object> = () => {
         `}
         type="button"
         title="访问作者 GitHub 主页"
-        onClick={openAuthor}>
+        onClick={RendererVersion.openAuthor}>
         <SimpleIcon className="size-3.5" icon={siGithub} />
         <span>个人主页</span>
         <ExternalLink className="size-3.5 opacity-60" />

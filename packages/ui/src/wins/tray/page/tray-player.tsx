@@ -32,7 +32,7 @@ const TrayPlayer: FC<TrayPlayerProps> = ({ track, status, duration, currentTime 
   return (
     <section
       className="
-        w-fit min-h-16 bg-white/10 backdrop-blur-2xl px-2.5 py-2
+        w-full min-h-16 bg-white/10 backdrop-blur-2xl px-2.5 py-2
         grid grid-cols-[auto_minmax(0,1fr)] items-center gap-3 rounded-lg
         border border-black/6 shadow-[0_8px_24px_rgba(0,0,0,0.08)]
       ">

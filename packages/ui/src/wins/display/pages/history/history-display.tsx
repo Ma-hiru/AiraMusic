@@ -13,7 +13,7 @@ import { useDisplayTitleRegister } from "@/wins/display/hooks/use-display-title"
 import { useDisplayPageAction } from "@/wins/display/hooks/use-display-page-action";
 import { useScrollActionsRegister } from "@/common/hooks/use-scroll-actions-register";
 import { useArtistOrAlbumDisplayJump } from "@/wins/display/hooks/use-artist-or-album-display-jump";
-import { usePlayerChangeActionFromDisplay } from "@/wins/display/hooks/use-player-change-action-from-display";
+import { usePlayerChangeActionForPlaylistFromDisplay } from "@/wins/display/hooks/use-player-change-action-for-playlist-from-display";
 import History, { type HistoryRef } from "@/common/components/page/history";
 import type { TrackListClickFunc } from "@/common/components/display/track_list";
 
@@ -36,7 +36,7 @@ const HistoryDisplay: FC<object> = () => {
   );
 
   const { addTrackToPlaylistLast, addTrackToPlaylistNext, openTrackComment } =
-    usePlayerChangeActionFromDisplay({
+    usePlayerChangeActionForPlaylistFromDisplay({
       getTracks: () => historyRef.current?.totalTracks.current ?? [],
       sourceID: 0,
       sourceType: "other"
