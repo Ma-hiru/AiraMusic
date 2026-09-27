@@ -1,11 +1,11 @@
 import { app } from "electron";
-import { Log } from "@/lib/log";
 import { ipcInit } from "@/inner/ipc";
 import { MainTray } from "@/lib/tray";
 import { MainServices } from "@/services";
 import { MainIPC } from "@mahiru/ipc/main";
 import { MainAgent } from "@/services/agent";
 import { MainMcp } from "@/inner/mcp/runtime";
+import { Log, runWithLogContext } from "@/lib/log";
 import { MainWindowPreset } from "@/lib/window-preset";
 import { MainWindowCreator } from "@/lib/window-creator";
 import { MainWindowManager } from "@/lib/window-manager";
@@ -231,62 +231,67 @@ export class MainApp {
    * 出现内部未被捕获的错误时，退出 code 为 MainExitCodeConstants.UNCAUGHT_ERROR
    * */
   init() {
-    this.printInfo(); // 打印信息
+    runWithLogContext({ traceId: "entry" }, () => {
+      this.printInfo(); // 打印信息
 
-    this._status = "initializing"; // 初始化状态
-    Log.info("App initializing...");
+      this._status = "initializing"; // 初始化状态
+      Log.info("App initializing...");
 
-    // this.registerAppProtocol(); // 注册自定义应用协议
-    // if (this.isExiting) return;
-    // Log.info("App protocol registered");
+      // this.registerAppProtocol(); // 注册自定义应用协议
+      // if (this.isExiting) return;
+      // Log.info("App protocol registered");
 
-    app
-      .whenReady()
-      .then(async () => {
-        Log.info("App ready");
-        MainAgentFeatureSettings.captureStartup();
+      app
+        .whenReady()
+        .then(async () => {
+          Log.info("App ready");
+          MainAgentFeatureSettings.captureStartup();
 
-        // 绑定 AppUserModelID, 多个窗口使用同一个 AppUserModelID 时，Windows 可以把它们归到同一个任务栏应用下面
-        if (process.platform === "win32") {
-          app.setAppUserModelId(process.env.APP_USER_MODEL_ID);
-          Log.info(`App user model id is ${process.env.APP_USER_MODEL_ID}`);
-        }
+          // 绑定 AppUserModelID, 多个窗口使用同一个 AppUserModelID 时，Windows 可以把它们归到同一个任务栏应用下面
+          if (process.platform === "win32") {
+            app.setAppUserModelId(process.env.APP_USER_MODEL_ID);
+            Log.info(`App user model id is ${process.env.APP_USER_MODEL_ID}`);
+          }
 
-        this.registerIPCHandlers(); // 注册IPC
-        if (this.isExiting) return;
-        Log.info("App ipc handlers registered");
+          this.registerIPCHandlers(); // 注册IPC
+          if (this.isExiting) return;
+          Log.info("App ipc handlers registered");
 
-        await this.createServices(); // 创建服务
-        if (this.isExiting) return;
-        Log.info("App services created");
+          await this.createServices(); // 创建服务
+          if (this.isExiting) return;
+          Log.info("App services created");
 
-        this.launchMainWindow(); // 启动窗口
-        if (this.isExiting) return;
-        Log.info("App main window launched");
+          this.launchMainWindow(); // 启动窗口
+          if (this.isExiting) return;
+          Log.info("App main window launched");
 
-        this.registerAppTray(); // 注册托盘
-        if (this.isExiting) return;
-        Log.info("App tray registered");
+          this.registerAppTray(); // 注册托盘
+          if (this.isExiting) return;
+          Log.info("App tray registered");
 
-        this.registerTaskBar(); // 注册任务栏
-        if (this.isExiting) return;
-        Log.info("App taskbar registered");
+          this.registerTaskBar(); // 注册任务栏
+          if (this.isExiting) return;
+          Log.info("App taskbar registered");
 
-        const mcpEndpoint = await this.enableMcp(); // Agent 依赖 MCP，必须先监听
-        if (this.isExiting) return;
-        mcpEndpoint && Log.info("App MCP initialized");
+          const mcpEndpoint = await this.enableMcp(); // Agent 依赖 MCP，必须先监听
+          if (this.isExiting) return;
+          mcpEndpoint && Log.info("App MCP initialized");
 
-        const enable = mcpEndpoint ? await this.enableAgent(mcpEndpoint.url) : false;
-        if (this.isExiting) return;
-        enable && Log.info("App agent initialized");
+          const enable = mcpEndpoint ? await this.enableAgent(mcpEndpoint.url) : false;
+          if (this.isExiting) return;
+          enable && Log.info("App agent initialized");
 
-        this._status = "running"; // 修改状态，完成初始化
-        Log.info("App running");
-      })
-      .catch((err) => {
-        Log.error("app init", "failed to initialize app, uncaught error", err);
-        this.exit(MainExitCodeConstants.UNCAUGHT_ERROR, "failed to initialize app, uncaught error");
-      });
+          this._status = "running"; // 修改状态，完成初始化
+          Log.info("App running");
+        })
+        .catch((err) => {
+          Log.error("app init", "failed to initialize app, uncaught error", err);
+          this.exit(
+            MainExitCodeConstants.UNCAUGHT_ERROR,
+            "failed to initialize app, uncaught error"
+          );
+        });
+    });
   }
 
   /** 应用退出
@@ -307,20 +312,22 @@ export class MainApp {
    * ```
    * */
   exit(code: number, reason: string) {
-    if (this._status === "exiting") return;
-    this._status = "exiting";
-    const stopAgentAndMcp = MainAgent.shutdown().then(() => MainMcp.shutdown());
+    runWithLogContext({ traceId: "exiting" }, () => {
+      if (this._status === "exiting") return;
+      this._status = "exiting";
+      const stopAgentAndMcp = MainAgent.shutdown().then(() => MainMcp.shutdown());
 
-    // 异常退出输出错误日志
-    if (code !== MainExitCodeConstants.NORMAL_EXIT) {
-      Log.error("app exit", reason);
-    }
+      // 异常退出输出错误日志
+      if (code !== MainExitCodeConstants.NORMAL_EXIT) {
+        Log.error("app exit", reason);
+      }
 
-    this.emitStopMessageToMainRenderer()
-      .catch((error) => Log.warn("app exit", "failed to notify renderer", error))
-      .then(() => Promise.allSettled([this.stopAllServers(), stopAgentAndMcp]))
-      .finally(() => {
-        app.exit(code);
-      });
+      this.emitStopMessageToMainRenderer()
+        .catch((error) => Log.warn("app exit", "failed to notify renderer", error))
+        .then(() => Promise.allSettled([this.stopAllServers(), stopAgentAndMcp]))
+        .finally(() => {
+          app.exit(code);
+        });
+    });
   }
 }

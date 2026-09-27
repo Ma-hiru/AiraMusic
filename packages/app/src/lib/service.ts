@@ -1,4 +1,4 @@
-import { Log } from "@/lib/log";
+import { Log, runWithLogContext } from "@/lib/log";
 import type { MainServicesType, MainServicesInstance } from "@/types/service";
 
 export type MainServicesCreator = NormalFunc<
@@ -24,7 +24,11 @@ export abstract class MainServicesBase {
     services: readonly MainServicesType[];
     onError: NormalFunc<[service: MainServicesType, msg: string, err?: unknown]>;
   }) {
-    this.onError = props.onError;
+    this.onError = (service: MainServicesType, msg: string, err?: unknown) => {
+      return runWithLogContext({ traceId: ["service", service] }, () =>
+        props.onError(service, msg, err)
+      );
+    };
     this.services = [...new Set(props.services)];
     const { promise, resolve } = Promise.withResolvers<void>();
     this.readyPromise = promise;
@@ -58,7 +62,7 @@ export abstract class MainServicesBase {
   }
 
   protected printServiceLog(service: MainServicesType, msg: string) {
-    Log.debug(`MainService(${service})`, msg);
+    runWithLogContext({ traceId: ["service", service] }, () => Log.debug(msg));
   }
 
   private wrapServiceCreator(

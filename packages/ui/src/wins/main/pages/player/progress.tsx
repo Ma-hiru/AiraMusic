@@ -4,6 +4,7 @@ import { motion } from "motion/react";
 import { memo, type FC, Fragment, useCallback } from "react";
 import { RendererFormat } from "@/common/lib/format";
 import { useSettings } from "@/common/store/settings";
+import { NeteaseArtist } from "@/common/netease/models";
 import { playModalAtom } from "@/wins/main/atoms/layout";
 import { useProgress } from "@/wins/main/hooks/use-progress";
 import { usePageJump } from "@/wins/main/hooks/use-page-jump";
@@ -77,7 +78,7 @@ const Progress: FC<object> = () => {
           }}>
           {track?.ar?.map((a, index) => {
             return (
-              <Fragment key={a.id}>
+              <Fragment key={NeteaseArtist.computedKey(a, index)}>
                 <a
                   className="hover:opacity-50 cursor-pointer active:scale-98 ease-in-out duration-300 transition-all truncate"
                   onClick={() => jump(a.id)}>

@@ -2,8 +2,8 @@ import { useSetAtom } from "jotai";
 import { memo, type FC, useMemo, Fragment } from "react";
 import { NeteaseImageSize } from "@/common/enum";
 import { playModalAtom } from "@/wins/main/atoms/layout";
-import { NeteaseNetworkImage } from "@/common/netease/models";
 import { usePageJump } from "@/wins/main/hooks/use-page-jump";
+import { NeteaseArtist, NeteaseNetworkImage } from "@/common/netease/models";
 import Marquee from "@/common/components/display/marquee";
 import RendererPlayerHandle from "@/wins/main/lib/handle";
 import NeteaseImage from "@/common/components/display/image/netease-image";
@@ -42,7 +42,7 @@ const BarCover: FC<object> = () => {
         <Marquee className="text-xs font-medium opacity-70" options={marqueeOpts}>
           {track?.ar?.map((a, index) => {
             return (
-              <Fragment key={a.id}>
+              <Fragment key={NeteaseArtist.computedKey(a, index)}>
                 <span
                   className="hover:opacity-50 ease-in-out duration-300 transition-all cursor-pointer"
                   onClick={() => jumpArtistPage(a.id)}>

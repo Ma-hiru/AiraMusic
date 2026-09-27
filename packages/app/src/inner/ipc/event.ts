@@ -1,7 +1,7 @@
 import { shell, BrowserWindow } from "electron";
-import { Log } from "@/lib/log";
 import { MainHandle } from "@/lib/handle";
 import { MainAgent } from "@/services/agent";
+import { Log, runWithLogContext } from "@/lib/log";
 import { MainWindowPreset } from "@/lib/window-preset";
 import { MainWindowConstants } from "@/constants/window";
 import { MainWindowCreator } from "@/lib/window-creator";
@@ -188,6 +188,12 @@ export const eventHandlers: EventHandlers = {
     Log[level](`Renderer(${name})`, message);
   }
 };
+
+for (const [key, handler] of Object.entries(eventHandlers)) {
+  eventHandlers[key as keyof typeof eventHandlers] = ((...args: any[]) => {
+    return runWithLogContext({ traceId: `${key}:${crypto.randomUUID()}` }, () => handler(...args));
+  }) as never;
+}
 
 function resizeWindow(
   win: Optional<BrowserWindow>,

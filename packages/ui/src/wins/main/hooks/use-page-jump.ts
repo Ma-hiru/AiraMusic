@@ -6,6 +6,7 @@ import { RendererIPCMessageBus } from "@/common/lib/bus";
 import { RoutePath, RoutePathMain } from "@/common/routes";
 import { useLatestRef } from "@/common/hooks/use-latest-ref";
 import { NeteaseServicesAlbum, NeteaseServicesPlaylist } from "@/common/netease/services";
+import AppToast from "@/common/components/display/toast";
 
 /** 跳转歌手和专辑页 */
 export function usePageJump(
@@ -22,6 +23,7 @@ export function usePageJump(
 
   const jumpAlbumPage = useCallback(
     async (id: number) => {
+      if (id === 0) return AppToast.show({ type: "warn", text: "专辑不存在" });
       if (id === propsRef.current.currentAlbumID) return;
 
       if (settingsRef.current.preference.defaultUseDisplayWindow) {
@@ -40,6 +42,7 @@ export function usePageJump(
 
   const jumpArtistPage = useCallback(
     async (id: number) => {
+      if (id === 0) return AppToast.show({ type: "warn", text: "艺术家不存在" });
       if (id === propsRef.current.currentArtistID) return;
 
       if (settingsRef.current.preference.defaultUseDisplayWindow) {
@@ -58,6 +61,8 @@ export function usePageJump(
   const isPlaylistPage = location.pathname.includes(RoutePathMain.playlist.base);
   const jumpPlaylistPage = useCallback(
     async (id: number, source: "like" | "normal") => {
+      if ((id === 0 && source !== "like") || id === null)
+        return AppToast.show({ type: "warn", text: "歌单不存在" });
       if (source !== "like" && id === Number(playlistRef.current.id) && isPlaylistPage) return;
       if (playlistRef.current.source === "like" && !id && isPlaylistPage) return;
 

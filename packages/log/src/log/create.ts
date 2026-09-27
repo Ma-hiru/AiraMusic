@@ -1,17 +1,20 @@
+import { Colors, colorText } from "./color";
 import type { LoggerWriter } from "./writer";
 import { EqError, type EqErrorProps } from "../err";
 import { AnyToString, type CanString } from "../string";
 import { LogLevel, ParseLogLevel, LogLevelToString } from "./logLevel";
 
 export interface Log {
-  info: LogHandler;
-  warn: LogHandler;
-  debug: LogHandler;
-  trace: LogHandler;
-  format: LogHandler;
   currentLevel: LogLevel;
-  error: ErrorLogHandler;
-  throw: ErrorLogHandler;
+  readonly info: LogHandler;
+  readonly warn: LogHandler;
+  readonly debug: LogHandler;
+  readonly trace: LogHandler;
+  readonly format: LogHandler;
+  readonly Colors: typeof Colors;
+  readonly error: ErrorLogHandler;
+  readonly throw: ErrorLogHandler;
+  readonly colorText: typeof colorText;
 }
 
 export interface LogHandler {
@@ -32,7 +35,9 @@ export function createLog(
 ): Log {
   const currentLevel = ParseLogLevel(level);
   return class {
-    static readonly currentLevel = currentLevel;
+    static currentLevel = currentLevel;
+    static readonly Colors = Colors;
+    static readonly colorText = colorText;
 
     private static handleInput(level: LogLevel, ...args: CanString[] | [EqErrorProps]): string {
       let output: string;
@@ -111,8 +116,8 @@ function handleLogText(
   showTimestamp?: boolean
 ) {
   let text = `${messages.map(AnyToString).join(" ")}`;
-  if (label !== undefined) text = `[${label}] ${text}`;
-  if (level !== undefined) text = `(${LogLevelToString(level)}) ${text}`;
-  if (showTimestamp) text = `${new Date().toLocaleString()} ${text}`;
+  if (label !== undefined) text = `[${colorText(Colors.green, label)}] ${text}`;
+  if (level !== undefined) text = `(${colorText(Colors.blue, LogLevelToString(level))}) ${text}`;
+  if (showTimestamp) text = `${colorText(Colors.yellow, new Date().toLocaleString())} ${text}`;
   return text;
 }

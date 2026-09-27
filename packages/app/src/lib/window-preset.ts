@@ -358,11 +358,12 @@ export class MainWindowPreset {
         skipTaskbar: true,
         show: false,
         transparent: false,
-        hasShadow: false
+        hasShadow: false,
+        center: true
       },
       id: "about",
       handleExits: "IGNORE",
-      memoPos: true,
+      memoPos: false,
       loadURL: (port) => `${MainWindowPreset.origin(port)}/about.html`
     };
   }

@@ -1,10 +1,10 @@
 import { app, dialog, BrowserWindow, type IpcMainInvokeEvent } from "electron";
-import { Log } from "@/lib/log";
 import { MainHandle } from "@/lib/handle";
 import { MainRuntime } from "@/lib/runtime";
 import { MainAgent } from "@/services/agent";
 import { MainMcp } from "@/inner/mcp/runtime";
 import { AgentRequestError } from "@mahiru/agent";
+import { Log, runWithLogContext } from "@/lib/log";
 import { mergeCacheStoreConfig } from "@/utils/merge";
 import { MainWindowManager } from "@/lib/window-manager";
 import { MainScreenResolver } from "@/lib/screen-resolver";
@@ -261,6 +261,12 @@ export const invokeHandlers: InvokeHandlers = {
     }
   }
 };
+
+for (const [key, handler] of Object.entries(invokeHandlers)) {
+  invokeHandlers[key as keyof typeof invokeHandlers] = ((...args: any[]) => {
+    return runWithLogContext({ traceId: `${key}:${crypto.randomUUID()}` }, () => handler(...args));
+  }) as never;
+}
 
 const toAgentInvokeError = (error: unknown) => {
   return {

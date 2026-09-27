@@ -23,7 +23,8 @@ vi.mock("electron", () => ({
   BrowserWindow: { fromWebContents }
 }));
 vi.mock("@mahiru/app/lib/log", () => ({
-  Log: { error: vi.fn(), warn: vi.fn() }
+  Log: { error: vi.fn(), warn: vi.fn() },
+  runWithLogContext: <T>(_context: unknown, callback: () => T): T => callback()
 }));
 vi.mock("@mahiru/app/services/agent", () => ({
   MainAgent: {

@@ -15,8 +15,8 @@ import { RendererFormat } from "@/common/lib/format";
 import { RendererWindow } from "@/common/lib/window";
 import { RendererIPCMessageBus } from "@/common/lib/bus";
 import { useListenable } from "@/common/hooks/use-listenable";
-import { NeteaseURL, NeteaseNetworkImage } from "@/common/netease/models";
 import { useThemeInjectFromBus } from "@/common/hooks/use-theme-inject-from-bus";
+import { NeteaseURL, NeteaseArtist, NeteaseNetworkImage } from "@/common/netease/models";
 import Drag from "@/common/components/layout/drag/drag";
 import Marquee from "@/common/components/display/marquee";
 import NoDrag from "@/common/components/layout/drag/no-drag";
@@ -127,7 +127,7 @@ const MiniPlayerPage: FC = () => {
               <span>
                 {trackMetaBus.data?.track?.detail.ar.map((a, index) => {
                   return (
-                    <Fragment key={a.id}>
+                    <Fragment key={NeteaseArtist.computedKey(a, index)}>
                       <NoDrag
                         className="
                             inline cursor-pointer hover:opacity-50

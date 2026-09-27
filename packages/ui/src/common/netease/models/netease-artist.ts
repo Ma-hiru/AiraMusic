@@ -60,4 +60,8 @@ export class NeteaseArtist {
       followInfos: obj.followInfos
     });
   }
+
+  static computedKey(ar: { id: number; name: string }, index = 0) {
+    return Number.isSafeInteger(ar.id) && ar.id > 0 ? `id:${ar.id}` : `name:${ar.name}:${index}`;
+  }
 }

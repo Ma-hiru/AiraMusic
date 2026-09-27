@@ -1,6 +1,6 @@
 import { cx } from "@emotion/css";
 import { memo, type FC, Fragment } from "react";
-import { NeteaseTrackRecord } from "@/common/netease/models";
+import { NeteaseArtist, NeteaseTrackRecord } from "@/common/netease/models";
 
 interface ListItemNameProps {
   disabled: boolean;
@@ -48,7 +48,7 @@ const TrackItemName: FC<ListItemNameProps> = ({
         <span className="min-w-0 truncate space-x-0.5">
           {track.detail.ar.map((ar, index) => {
             return (
-              <Fragment key={ar.name + ar.id}>
+              <Fragment key={NeteaseArtist.computedKey(ar, index)}>
                 <span
                   className="inline-block cursor-pointer transition-all duration-200 ease-in-out hover:opacity-60 active:scale-98"
                   onClick={() => onClickArtist?.(ar.id)}>

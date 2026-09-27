@@ -51,7 +51,6 @@ export class NeteaseTrack implements NeteaseTrackModel {
     this.id = props.id;
     this.al = props.al;
     this.alia = props.alia || [];
-    this.ar = props.ar;
     this.dt = props.dt;
     this.fee = props.fee;
     this.mark = props.mark;
@@ -68,6 +67,23 @@ export class NeteaseTrack implements NeteaseTrackModel {
     this.sq = props.sq;
     this.tns = props.tns || [];
     this.privilege = props.privilege;
+
+    // 检查是否有相同的ar(比如，一堆id为0的艺术家！)
+    const artists = new Set<string>();
+    this.ar = props.ar.filter((ar) => {
+      if (!Number.isSafeInteger(ar.id)) return false;
+      const key = ar.id > 0 ? `id:${ar.id}` : `name:${ar.name}`;
+      if (artists.has(key)) {
+        console.error(
+          "NeteaseTrack",
+          `${this.name}(${this.id}) has duplicate artist "${ar.name}"(${ar.id})`
+        );
+        return false;
+      }
+      artists.add(key);
+      return true;
+    });
+
     // 移除重复的翻译和别名
     const coverage = new Set();
     for (const ts of this.tns) {

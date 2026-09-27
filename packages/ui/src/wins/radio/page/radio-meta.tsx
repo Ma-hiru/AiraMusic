@@ -34,7 +34,7 @@ import { NeteaseAPITrack } from "@/common/netease/api";
 import { RendererIPCMessageBus } from "@/common/lib/bus";
 import { useListenable } from "@/common/hooks/use-listenable";
 import { useUserTrackManager } from "@/common/hooks/use-user-track-manager";
-import { NeteaseTrack, NeteaseNetworkImage } from "@/common/netease/models";
+import { NeteaseTrack, NeteaseArtist, NeteaseNetworkImage } from "@/common/netease/models";
 import Tag from "@/common/components/display/tag";
 import Marquee from "@/common/components/display/marquee";
 import NoDrag from "@/common/components/layout/drag/no-drag";
@@ -270,7 +270,7 @@ const RadioMeta: FC<RadioMetaProps> = ({ className }) => {
           }}>
           {track?.ar?.map((a, index) => {
             return (
-              <Fragment key={a.id}>
+              <Fragment key={NeteaseArtist.computedKey(a, index)}>
                 <a
                   className="hover:opacity-50 cursor-pointer active:scale-98 ease-in-out duration-300 transition-all truncate"
                   onClick={() => openArtist(a.id)}>
