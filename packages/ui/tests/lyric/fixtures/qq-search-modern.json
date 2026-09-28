@@ -1,0 +1,72 @@
+{
+  "code": 0,
+  "ts": 1790606217846,
+  "start_ts": 1790606217834,
+  "traceid": "5c619ae97ae85341",
+  "music.search.SearchCgiService": {
+    "code": 2001,
+    "data": {
+      "body": {
+        "album": {
+          "list": []
+        },
+        "gedantip": {
+          "tab": 0,
+          "tip": ""
+        },
+        "mv": {
+          "list": []
+        },
+        "qc": [],
+        "singer": {
+          "list": []
+        },
+        "song": {
+          "list": []
+        },
+        "songlist": {
+          "list": []
+        },
+        "user": {
+          "list": []
+        },
+        "zhida": {
+          "list": []
+        }
+      },
+      "code": 0,
+      "feedbackURL": "",
+      "meta": {
+        "cid": "",
+        "curpage": 1,
+        "dir": "L",
+        "display_order": [],
+        "ein": 1,
+        "estimate_sum": 20402,
+        "expid": "",
+        "feedbackPlaceId": "",
+        "is_filter": -12,
+        "next_page_start": {},
+        "nextpage": -1,
+        "perpage": 1,
+        "query": "晴天 周杰伦",
+        "report_info": {
+          "items": {}
+        },
+        "result_trustworthy": 1,
+        "ret": 0,
+        "safetyType": 0,
+        "safetyUrl": "",
+        "searchid": "",
+        "sid": "",
+        "sin": 0,
+        "step_rela_syntax_tree": {},
+        "sum": 0,
+        "tab_list": [100, 0, 3, 15, 2, 1, 4, 10, 101, 7, 8],
+        "uid": "",
+        "v": 0
+      },
+      "ver": 0
+    }
+  }
+}

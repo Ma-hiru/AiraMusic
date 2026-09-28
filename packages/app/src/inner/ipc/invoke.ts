@@ -3,6 +3,7 @@ import { MainHandle } from "@/lib/handle";
 import { MainRuntime } from "@/lib/runtime";
 import { MainAgent } from "@/services/agent";
 import { MainMcp } from "@/inner/mcp/runtime";
+import { fetchFromNode } from "@/lib/net-fetch";
 import { AgentRequestError } from "@mahiru/agent";
 import { Log, runWithLogContext } from "@/lib/log";
 import { mergeCacheStoreConfig } from "@/utils/merge";
@@ -18,6 +19,7 @@ import Dns from "node:dns/promises";
 import type { InvokeHandlers } from "@mahiru/ipc/types";
 
 export const invokeHandlers: InvokeHandlers = {
+  invoke_net_fetch: (_event, request) => fetchFromNode(request),
   invoke_agent_feature_settings_get: (event) => {
     return authorizedAgentFeatureSettingsData(event, () => MainAgentFeatureSettings.getState());
   },

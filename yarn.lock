@@ -1765,6 +1765,7 @@ __metadata:
     lucide-react: "npm:^0.575.0"
     motion: "npm:^12.23.24"
     p-limit: "npm:^7.2.0"
+    qrc-decoder: "npm:^1.0.2"
     qrcode: "npm:^1.5.4"
     react: "npm:^19.2.0"
     react-dom: "npm:^19.2.0"
@@ -10911,6 +10912,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"pako@npm:^2":
+  version: 2.2.0
+  resolution: "pako@npm:2.2.0"
+  checksum: 10c0/e5d31de1940fdd13cc4014296b0026112483d0834bce4856ca29c8af8438d030c6416986a0f6df7d5372cae18d6dd6c57f48b24a49d6c207c0a4cc66af15c07d
+  languageName: node
+  linkType: hard
+
 "parent-module@npm:^1.0.0":
   version: 1.0.1
   resolution: "parent-module@npm:1.0.1"
@@ -11463,6 +11471,15 @@ __metadata:
   version: 1.2.0
   resolution: "pvutils@npm:1.2.0"
   checksum: 10c0/1206766f0b9947fd44a629e2ed7945fb5d1d8ee0f31f032ec58d60cec2165b0b3afb11bf3727215348bf19132ca34986302680b5930d45b0a0d23745fd54224b
+  languageName: node
+  linkType: hard
+
+"qrc-decoder@npm:^1.0.2":
+  version: 1.0.2
+  resolution: "qrc-decoder@npm:1.0.2"
+  dependencies:
+    pako: "npm:^2"
+  checksum: 10c0/539c6138f270b7f791a787b77f64ce883c6e15f7ccac3d38395ab5748b994facbb9bf1cc1e63087167b456cf661db98d7a7bd4b35da46c5f8ef2dfab254bce05
   languageName: node
   linkType: hard
 

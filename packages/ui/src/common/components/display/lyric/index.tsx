@@ -63,7 +63,6 @@ const LyricContainer: FC<LyricContainerProps> = ({
   lyric: _lyric
 }) => {
   const [currentLine, setCurrentLine] = useState(-1);
-  const [scrolling, setScrolling] = useState(false);
   const lyricLines = useMemo(() => extendLyric(_lyric?.data ?? []), [_lyric?.data]);
   const containerRef = useRef<Nullable<HTMLDivElement>>(null);
   const currentLineRef = useRef(currentLine);
@@ -76,16 +75,18 @@ const LyricContainer: FC<LyricContainerProps> = ({
   mainAlignRef.current = mainAlign;
 
   // 计算布局的函数
-  const innerScrolling = useRef(false);
+  const innerScrolling = useRef(false); // 是否是由于calcLayout引起的的滚动
   const calcLayout = useCallback(() => {
-    innerScrolling.current = true;
     const container = containerRef.current;
     const lineIndex = currentLineRef.current;
     const mainAlign = mainAlignRef.current;
 
     if (!container) return;
     if (lineIndex === -1) {
-      return RendererTheme.smoothScrollTo(container, 0);
+      innerScrolling.current = true;
+      return RendererTheme.smoothScrollTo(container, 0).then(
+        ({ status }) => status === "finished" && (innerScrolling.current = false)
+      );
     }
 
     const activeLine = container.children[lineIndex + 1] as Nullable<HTMLElement>;
@@ -104,20 +105,14 @@ const LyricContainer: FC<LyricContainerProps> = ({
       scrollTop = lineOffsetTop - containerHeight / 2 + lineHeight / 2;
     }
 
-    return RendererTheme.smoothScrollTo(container, scrollTop).finally(
-      () => (innerScrolling.current = false)
+    innerScrolling.current = true;
+    return RendererTheme.smoothScrollTo(container, scrollTop).then(
+      ({ status }) => status === "finished" && (innerScrolling.current = false)
     );
   }, []);
 
-  // 歌词变化时，重置时间管理器和当前行
-  useLayoutEffect(() => {
-    timeManagerRef.current?.reset(lyricLines);
-    setCurrentLine(-1);
-    currentLineRef.current = -1;
-    calcLayout();
-  }, [calcLayout, lyricLines]);
-
   // 歌词行变化时，滚动到对应位置
+  const [scrolling, setScrolling] = useState(false);
   const scrollingRef = useLatestRef(scrolling);
   useLayoutEffect(() => {
     const timeManager = timeManagerRef.current;
@@ -130,6 +125,19 @@ const LyricContainer: FC<LyricContainerProps> = ({
     });
   }, [calcLayout, scrollingRef]);
 
+  // 手动滚动且播放时，标记 scrolling 为 true
+  const scrollTimer = useRef(0);
+  const playingRef = useLatestRef(playing);
+  const onScroll = useCallback(() => {
+    if (innerScrolling.current || playingRef.current === false) return;
+    scrollTimer.current && clearTimeout(scrollTimer.current);
+    scrollTimer.current = window.setTimeout(() => {
+      setScrolling(false);
+      calcLayout();
+    }, 3000);
+    setScrolling(true);
+  }, [calcLayout, playingRef]);
+
   // 暴露接口
   useImperativeHandle(
     ref,
@@ -140,6 +148,14 @@ const LyricContainer: FC<LyricContainerProps> = ({
     }),
     [calcLayout]
   );
+
+  // 歌词变化时，重置时间管理器和当前行
+  useLayoutEffect(() => {
+    timeManagerRef.current?.reset(lyricLines);
+    setCurrentLine(-1);
+    currentLineRef.current = -1;
+    calcLayout();
+  }, [calcLayout, lyricLines]);
 
   // 窗口大小变化时，计算布局
   useEffect(() => {
@@ -154,18 +170,6 @@ const LyricContainer: FC<LyricContainerProps> = ({
   useEffect(() => {
     calcLayout();
   }, [calcLayout, rmActive, tlActive, mainAlign, crossAlign, noteActive, playing]);
-
-  const scrollTimer = useRef(0);
-  const playingRef = useLatestRef(playing);
-  const onScroll = useCallback(() => {
-    if (innerScrolling.current || playingRef.current === false) return;
-    scrollTimer.current && clearTimeout(scrollTimer.current);
-    scrollTimer.current = window.setTimeout(() => {
-      setScrolling(false);
-      calcLayout();
-    }, 3000);
-    setScrolling(true);
-  }, [calcLayout, playingRef]);
 
   return (
     <div

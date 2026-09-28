@@ -2,6 +2,7 @@ import { EqError } from "@mahiru/log";
 import { Log } from "@/common/lib/log";
 import { RendererIPC } from "@mahiru/ipc/renderer";
 import { Listener } from "@/common/utils/listenable";
+import type { NetFetchRequest } from "@mahiru/ipc/types";
 
 export class RendererNet {
   static completed: number[] = [];
@@ -67,6 +68,49 @@ export class RendererNet {
   static onOnlineChange = this.listener.add.bind(this.listener);
 
   static offOnlineChange = this.listener.remove.bind(this.listener);
+
+  static async requestFromNode(
+    input: URL | string | Request,
+    init?: RequestInit
+  ): Promise<Response> {
+    const request = new Request(input instanceof URL ? input.href : input, init);
+    request.signal.throwIfAborted();
+    const headers = new Headers(request.headers);
+    // 浏览器的 Request 会过滤 Referer 等受限请求头；Node 请求需要保留显式传入的值。
+    new Headers(init?.headers ?? (input instanceof Request ? input.headers : undefined)).forEach(
+      (value, key) => headers.set(key, value)
+    );
+    const payload: NetFetchRequest = {
+      input: request.url,
+      init: {
+        method: request.method,
+        headers: Object.fromEntries(headers),
+        cache: request.cache,
+        credentials: request.credentials,
+        integrity: request.integrity,
+        keepalive: request.keepalive,
+        mode: request.mode,
+        redirect: request.redirect,
+        referrer: request.referrer,
+        referrerPolicy: request.referrerPolicy,
+        ...(request.body === null ? {} : { body: await request.arrayBuffer() })
+      }
+    };
+    request.signal.throwIfAborted();
+    const result = await RendererIPC.NormalChannel.send("invoke_net_fetch", payload);
+    request.signal.throwIfAborted();
+    const response = new Response(result.body, {
+      status: result.status,
+      statusText: result.statusText,
+      headers: result.headers
+    });
+    Object.defineProperties(response, {
+      url: { value: result.url },
+      redirected: { value: result.redirected },
+      type: { value: result.type }
+    });
+    return response;
+  }
 
   static {
     queueMicrotask(() => {

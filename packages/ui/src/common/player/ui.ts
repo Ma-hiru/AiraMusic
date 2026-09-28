@@ -185,53 +185,85 @@ export default class RendererTheme {
     return [aHex, manufactured];
   }
 
+  /**
+   * 每个 HTMLElement 当前正在执行的滚动任务
+   *
+   * WeakMap 不会阻止 HTMLElement 被 GC
+   */
+  private static readonly smoothScrollTasks = new WeakMap<HTMLElement, SmoothScrollTask>();
+
+  /**
+   * 平滑滚动到指定位置
+   *
+   * 语义：
+   *
+   * 1. 同一个 element 同时只能存在一个滚动任务
+   * 2. 新任务会取消旧任务（latest-wins）
+   * 3. 被新任务替代时，旧任务返回：
+   *    { status: "cancelled", reason: "superseded" }
+   * 4. 正常完成时，会在设置最终 scrollTop 后，
+   *    再等待一次 requestAnimationFrame，
+   *    给浏览器一次实际渲染最终状态的机会
+   */
   static smoothScrollTo(
     element: Optional<HTMLElement>,
     scrollTop: number,
     duration?: number
-  ): Promise<void> {
-    if (!element || !Number.isFinite(scrollTop)) return Promise.resolve();
-
-    const elementExtended = element as HTMLElement & {
-      raf?: number;
-      resolve?: NormalFunc;
-    };
-    if (elementExtended.raf) cancelAnimationFrame(elementExtended.raf);
-    if (elementExtended.resolve) elementExtended.resolve();
-
-    if (scrollTop < 0) scrollTop = 0;
+  ): Promise<SmoothScrollResult> {
+    if (!element || !Number.isFinite(scrollTop)) {
+      return Promise.resolve({ status: "cancelled", reason: "superseded" });
+    }
+    // 取消该 element 上一个滚动任务
+    const previous = this.smoothScrollTasks.get(element);
+    if (previous) {
+      cancelAnimationFrame(previous.raf);
+      previous.resolve({
+        status: "cancelled",
+        reason: "superseded"
+      });
+      this.smoothScrollTasks.delete(element);
+    }
+    // 浏览器真正允许的 scrollTop 范围
+    const maxScrollTop = Math.max(0, element.scrollHeight - element.clientHeight);
+    const target = clamp(scrollTop, 0, maxScrollTop);
     const start = element.scrollTop;
-    const distance = scrollTop - start;
-    if (Math.abs(distance) < 1) {
-      element.scrollTop = scrollTop;
-      return Promise.resolve();
-    }
-    if (!duration) {
-      duration = clamp(Math.abs(distance) * 8, 200, 800);
+    const distance = target - start;
+    const actualDuration = duration ?? clamp(Math.abs(distance) * 8, 200, 800);
+
+    const { promise, resolve } = Promise.withResolvers<SmoothScrollResult>();
+    const task: SmoothScrollTask = { raf: 0, resolve };
+    this.smoothScrollTasks.set(element, task);
+
+    const finish = () => {
+      element.scrollTop = target;
+      task.raf = requestAnimationFrame(() => {
+        // 等待最终 frame 的过程中，可能又有一个新的滚动任务进来了, resolve 被新任务处理
+        if (this.smoothScrollTasks.get(element) !== task) return;
+        this.smoothScrollTasks.delete(element);
+        resolve({ status: "finished" });
+      });
+    };
+
+    // 已经基本处于目标位置，或调用者明确要求 duration = 0
+    if (Math.abs(distance) < 1 || actualDuration <= 0) {
+      finish();
+      return promise;
     }
 
-    let startTime = -1;
-    const { promise, resolve } = Promise.withResolvers<void>();
-    const easeOutCubic = (t: number) => {
-      return 1 - Math.pow(1 - t, 3);
-    };
+    let startTime: number;
+    const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
     const animate = (now: number) => {
-      if (startTime < 0) startTime = now;
+      if (this.smoothScrollTasks.get(element) !== task) return;
+      startTime ??= now;
       const elapsed = now - startTime;
-      const progress = clamp(elapsed / duration, 0, 1);
-      const ease = easeOutCubic(progress);
-      element.scrollTop = start + distance * ease;
-
-      if (progress < 1) {
-        elementExtended.raf = requestAnimationFrame(animate);
-      } else {
-        elementExtended.raf = 0;
-        resolve();
-      }
+      const progress = clamp(elapsed / actualDuration, 0, 1);
+      const eased = easeOutCubic(progress);
+      element.scrollTop = start + distance * eased;
+      if (progress >= 1) return finish();
+      task.raf = requestAnimationFrame(animate);
     };
+    task.raf = requestAnimationFrame(animate);
 
-    elementExtended.resolve = resolve;
-    elementExtended.raf = requestAnimationFrame(animate);
     return promise;
   }
 
@@ -277,3 +309,17 @@ const Palette_SCALE: Record<LIGHTNESS_SCALE, number> = {
   800: 0.32,
   900: 0.22
 };
+
+export type SmoothScrollResult =
+  | {
+      status: "finished";
+    }
+  | {
+      status: "cancelled";
+      reason: "superseded";
+    };
+
+interface SmoothScrollTask {
+  raf: number;
+  resolve: (result: SmoothScrollResult) => void;
+}

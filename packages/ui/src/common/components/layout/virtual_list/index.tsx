@@ -154,7 +154,7 @@ function useVirtualList(props: {
       if (!container) return Promise.resolve();
       if (index < 0 || index >= total) return Promise.resolve();
       Log.debug(`Scrolling to item ${index}, position ${index * itemHeight}px`);
-      return RendererTheme.smoothScrollTo(container, index * itemHeight);
+      return RendererTheme.smoothScrollTo(container, index * itemHeight).then(() => void 0);
     },
     [containerRef, itemHeight, total]
   );

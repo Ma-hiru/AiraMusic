@@ -1,0 +1,87 @@
+{
+  "code": 0,
+  "data": {
+    "keyword": "晴天 周杰伦",
+    "priority": 0,
+    "qc": [],
+    "semantic": {
+      "curnum": 0,
+      "curpage": 1,
+      "list": [],
+      "totalnum": 0
+    },
+    "song": {
+      "curnum": 1,
+      "curpage": 1,
+      "list": [
+        {
+          "albumid": 8220,
+          "albummid": "000MkMni19ClKG",
+          "albumname": "叶惠美",
+          "albumname_hilight": "叶惠美",
+          "alertid": 41,
+          "chinesesinger": 0,
+          "docid": "4660176279196411288",
+          "grp": [],
+          "interval": 269,
+          "isonly": 1,
+          "lyric": "",
+          "lyric_hilight": "",
+          "msgid": 13,
+          "nt": 4230540145,
+          "pay": {
+            "payalbum": 0,
+            "payalbumprice": 0,
+            "paydownload": 1,
+            "payinfo": 1,
+            "payplay": 1,
+            "paytrackmouth": 1,
+            "paytrackprice": 200
+          },
+          "preview": {
+            "trybegin": 84346,
+            "tryend": 142843,
+            "trysize": 960887
+          },
+          "pubtime": 1059580800,
+          "pure": 0,
+          "singer": [
+            {
+              "id": 4558,
+              "mid": "0025NhlN2yWrP4",
+              "name": "周杰伦",
+              "name_hilight": "<span class=\"c_tx_highlight\">周杰伦</span>"
+            }
+          ],
+          "size128": 4317292,
+          "size320": 10792943,
+          "sizeape": 0,
+          "sizeflac": 55397039,
+          "sizeogg": 5860576,
+          "songid": 97773,
+          "songmid": "0039MnYb0qxYhV",
+          "songname": "晴天",
+          "songname_hilight": "<span class=\"c_tx_highlight\">晴天</span>",
+          "stream": 1,
+          "switch": 104193,
+          "t": 1,
+          "tag": 0,
+          "type": 0,
+          "ver": 0,
+          "vid": ""
+        }
+      ],
+      "totalnum": 600
+    },
+    "totaltime": 0,
+    "zhida": {
+      "chinesesinger": 0,
+      "type": 0
+    }
+  },
+  "message": "",
+  "notice": "",
+  "subcode": 0,
+  "time": 1790606217,
+  "tips": ""
+}

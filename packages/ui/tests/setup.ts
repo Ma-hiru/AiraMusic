@@ -10,6 +10,7 @@ import { resetLogMock } from "./mock/log";
 vi.mock("@/common/lib/log", async () => await import("./mock/log"));
 vi.mock("@mahiru/ui/common/lib/log", async () => await import("./mock/log"));
 vi.mock("@mahiru/ipc/renderer", async () => await import("./mock/ipc"));
+vi.mock("@applemusic-like-lyrics/lyric", async () => await import("./mock/amll-lyric"));
 
 afterEach(() => {
   resetLogMock();

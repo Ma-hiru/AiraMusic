@@ -20,7 +20,7 @@ const LyricTips: FC<LyricTipsProps> = ({ tips, fontSize, crossAlign }) => {
         crossAlign === "center" && "text-center",
         crossAlign === "right" && "text-right"
       )}
-      style={{ fontSize }}>
+      style={{ fontSize: typeof fontSize === "number" ? `${fontSize * 0.8}px` : fontSize }}>
       {tips}
     </div>
   );

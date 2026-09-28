@@ -8,6 +8,7 @@ import type {
 } from "@mahiru/agent";
 
 import type { AgentInvokeResult } from "./agent";
+import type { NetFetchRequest, NetFetchResponse } from "./net";
 
 export type AgentCreateRunInput = {
   content: string;
@@ -55,6 +56,7 @@ export type InvokeEventMaps = {
   invoke_device_gpu: [undefined, Promise<unknown>];
   invoke_device_platform: [undefined, NodeJS.Platform];
   invoke_device_net: [undefined, Promise<NetworkStatus>];
+  invoke_net_fetch: [NetFetchRequest, Promise<NetFetchResponse>];
   invoke_cache_config_get: [undefined, { ttl: string; path: string; capacity: number }];
   invoke_store_get: [string, { ok: false; reason?: string } | { ok: true; value: JsonValue }];
   invoke_store_set: [

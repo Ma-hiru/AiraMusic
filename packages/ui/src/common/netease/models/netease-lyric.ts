@@ -20,37 +20,39 @@ import {
 export const NeteaseLyricSchema = z.object({
   id: z.number().optional(),
   tips: z.string().optional(),
-  data: z.array(
-    z.object({
-      words: z
-        .array(
-          z.object({
-            startTime: z.number().describe("单词的起始时间，单位为毫秒"),
-            endTime: z.number().describe("单词的结束时间，单位为毫秒"),
-            word: z.string().describe("单词内容"),
-            inlineNote: z
-              .boolean()
-              .optional()
-              .describe("是否为内嵌注释，比如日文汉字的平假名和片假名")
-          })
-        )
-        .describe("该行的所有单词"),
-      translatedLyric: z.string().describe("该行的翻译歌词，将会显示在主歌词行的下方"),
-      romanLyric: z.string().describe("该行的音译歌词，将会显示在翻译歌词行的下方"),
-      startTime: z.number().describe("该行的起始时间，单位为毫秒"),
-      endTime: z.number().describe("该行的结束时间，单位为毫秒"),
-      isBlank: z.boolean().optional().describe("是否为空白行"),
-      isBackChorus: z.boolean().optional().describe("是否为和声行")
-    })
-  ),
-  rmExisted: z.boolean(),
-  tlExisted: z.boolean(),
-  noteExisted: z.boolean()
+  data: z
+    .array(
+      z.object({
+        words: z
+          .array(
+            z.object({
+              startTime: z.number().describe("单词的起始时间，单位为毫秒"),
+              endTime: z.number().describe("单词的结束时间，单位为毫秒"),
+              word: z.string().describe("单词内容"),
+              inlineNote: z
+                .boolean()
+                .optional()
+                .describe("是否为内嵌注释，比如日文汉字的平假名和片假名")
+            })
+          )
+          .describe("该行的所有单词"),
+        translatedLyric: z.string().describe("该行的翻译歌词，将会显示在主歌词行的下方"),
+        romanLyric: z.string().describe("该行的音译歌词，将会显示在翻译歌词行的下方"),
+        startTime: z.number().describe("该行的起始时间，单位为毫秒"),
+        endTime: z.number().describe("该行的结束时间，单位为毫秒"),
+        isBlank: z.boolean().optional().describe("是否为空白行"),
+        isBackChorus: z.boolean().optional().describe("是否为和声行")
+      })
+    )
+    .default([]),
+  rmExisted: z.boolean().optional().default(false),
+  tlExisted: z.boolean().optional().default(false),
+  noteExisted: z.boolean().optional().default(false)
 });
 
 export class NeteaseLyric implements NeteaseLyricModel {
   //region fields
-  readonly data;
+  readonly data: LyricLine[];
   readonly tips;
   readonly rmExisted;
   readonly tlExisted;
@@ -79,6 +81,18 @@ export class NeteaseLyric implements NeteaseLyricModel {
       lineCount: this.data.length,
       tips: this.tips
     };
+  }
+
+  get priority() {
+    if (this.data.length <= 0) return 0;
+
+    let priority = 0;
+    (this.data[Math.floor(this.data.length / 2)]?.words.length ?? 0) > 1 && priority++;
+    this.rmExisted && (priority += 2);
+    this.tlExisted && (priority += 2);
+    this.noteExisted && (priority += 1);
+
+    return priority;
   }
 
   static fromNeteaseAPIResponse(response: NeteaseAPI.NeteaseLyricResponse) {

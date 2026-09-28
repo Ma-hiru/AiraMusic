@@ -56,7 +56,10 @@ export default defineConfig(({ mode }) => {
         "@mahiru/ui": join(__dirname, "./src"), // vitest
         ...(mode === "test"
           ? {
-              "@applemusic-like-lyrics/lyric": join(__dirname, "./tests/mock/amll-lyric.ts")
+              // 包只有 module 入口；显式解析，让测试可通过 vi.unmock 使用真实 WASM
+              "@applemusic-like-lyrics/lyric": fileURLToPath(
+                import.meta.resolve("@applemusic-like-lyrics/lyric/pkg/amll_lyric.js")
+              )
             }
           : {})
       }
@@ -82,6 +85,9 @@ export default defineConfig(({ mode }) => {
       }
     },
     test: {
+      server: {
+        deps: { inline: ["@applemusic-like-lyrics/lyric"] }
+      },
       include: ["tests/**/*.test.{ts,tsx,cts,mts,js,cjs,mjs}"],
       globals: true,
       environment: "jsdom",

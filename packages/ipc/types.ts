@@ -1,8 +1,9 @@
 export type { ForwardChecker } from "./src/main/message";
-
 export type { WindowManagerInstance } from "./src/inject/window";
 
 export type { EventHandlers, InvokeHandlers } from "./src/main/normal";
+
+export type { NetFetchRequest, NetFetchResponse } from "./src/types/net";
 
 export type { NormalEvent, NormalEventArgs, NormalEventMaps } from "./src/types/event";
 
