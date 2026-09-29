@@ -6,7 +6,9 @@ import type { LyricLineExtended } from "./utils";
 import type { TimeManager } from "./time-manager";
 
 interface LyricLineProps {
+  /** 歌词行序号 */
   index: number;
+  /** 歌词行是否激活 */
   active: boolean;
   spring?: boolean;
   fontSize?: number;
@@ -40,11 +42,7 @@ const LyricLine: FC<LyricLineProps> = ({
   spring = true,
   crossAlign = "left"
 }) => {
-  const isBG = line.isBG ?? false;
-  if (isBG) {
-    if (crossAlign === "left" || crossAlign === "right") crossAlign = "center";
-    else crossAlign = "left";
-  } else if (line.isBlank || line.isBackChorus) {
+  if (line.isBlank || line.isBackChorus || line.isBG) {
     if (crossAlign === "left" || crossAlign === "center") crossAlign = "right";
     else if (crossAlign === "right") crossAlign = "left";
   }
@@ -55,10 +53,21 @@ const LyricLine: FC<LyricLineProps> = ({
   }, [line.startTime, line.words, onClick]);
 
   useLayoutEffect(() => {
-    return timeManager.addEventListener("word-change", () => {
-      setWordIndex(timeManager.getCurrentWordIndex());
-    });
-  }, [timeManager, index]);
+    if (!active) return;
+    const syncWordIndex = () => {
+      // 同时演唱的行会增减；按固定行号查找，不能捕获激活数组中的旧位置
+      const activeIndex = timeManager.getCurrentLineIndex().indexOf(index);
+      const idx = timeManager.getCurrentWordIndex()[activeIndex];
+      setWordIndex(idx ?? -1);
+    };
+    syncWordIndex();
+    const removeLineListener = timeManager.addEventListener("line-change", syncWordIndex);
+    const removeWordListener = timeManager.addEventListener("word-change", syncWordIndex);
+    return () => {
+      removeLineListener();
+      removeWordListener();
+    };
+  }, [timeManager, index, active]);
 
   const allWord = useMemo(() => {
     let result = { ...line.words[0]! };
@@ -126,6 +135,9 @@ const LyricLine: FC<LyricLineProps> = ({
               }
             }
             inlineNoteContent = trimInlineNoteContent(inlineNoteContent);
+            const notesContent = noteActive
+              ? inlineNoteContent || word.romanWord?.trim()
+              : undefined;
             return (
               !word.inlineNote && (
                 <LyricWord
@@ -139,7 +151,7 @@ const LyricLine: FC<LyricLineProps> = ({
                   activeWordIndex={wordIndex}
                   inactiveColor={inactiveColor}
                   singleWord={line.words.length === 1}
-                  notesContent={inlineNoteContent || undefined}
+                  notesContent={notesContent || undefined}
                   onClick={onClick}
                 />
               )

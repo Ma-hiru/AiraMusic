@@ -13,6 +13,7 @@ import {
   useImperativeHandle
 } from "react";
 import { useLatestRef } from "@/common/hooks/use-latest-ref";
+import { useStableArray } from "@/common/hooks/use-stable-array";
 import { extendLyric } from "@/common/components/display/lyric/utils";
 import RendererTheme from "@/common/player/ui";
 
@@ -62,10 +63,13 @@ const LyricContainer: FC<LyricContainerProps> = ({
   inactiveColor,
   lyric: _lyric
 }) => {
-  const [currentLine, setCurrentLine] = useState(-1);
   const lyricLines = useMemo(() => extendLyric(_lyric?.data ?? []), [_lyric?.data]);
-  const containerRef = useRef<Nullable<HTMLDivElement>>(null);
+
+  const [_currentLine, setCurrentLine] = useState([-1]);
+  const currentLine = useStableArray(_currentLine);
   const currentLineRef = useRef(currentLine);
+
+  const containerRef = useRef<Nullable<HTMLDivElement>>(null);
   const timeManagerRef = useRef<Nullable<TimeManager>>(null);
   const mainAlignRef = useRef(mainAlign);
 
@@ -82,19 +86,25 @@ const LyricContainer: FC<LyricContainerProps> = ({
     const mainAlign = mainAlignRef.current;
 
     if (!container) return;
-    if (lineIndex === -1) {
+    if (lineIndex.length === 0 || (lineIndex.length === 1 && lineIndex[0] === -1)) {
       innerScrolling.current = true;
       return RendererTheme.smoothScrollTo(container, 0).then(
         ({ status }) => status === "finished" && (innerScrolling.current = false)
       );
     }
 
-    const activeLine = container.children[lineIndex + 1] as Nullable<HTMLElement>;
-    if (!activeLine) return;
+    const activeLine = lineIndex
+      .filter((l) => l >= 0)
+      .flatMap((l) => {
+        const e = container.children[l + 1];
+        if (!e) return [];
+        return [e as HTMLElement];
+      });
+    if (!activeLine.length) return;
 
     const containerHeight = container.clientHeight;
-    const lineOffsetTop = activeLine.offsetTop;
-    const lineHeight = activeLine.clientHeight;
+    const lineOffsetTop = activeLine.at(0)!.offsetTop;
+    const lineHeight = activeLine.reduce((acc, cur) => acc + cur.clientHeight, 0);
 
     let scrollTop;
     if (mainAlign === "top") {
@@ -120,7 +130,7 @@ const LyricContainer: FC<LyricContainerProps> = ({
     return timeManager.addEventListener("line-change", () => {
       const lineIndex = timeManager.getCurrentLineIndex();
       setCurrentLine(lineIndex);
-      currentLineRef.current = lineIndex;
+      currentLineRef.current = lineIndex; // 这里立即赋值是为了calcLayout使用
       !scrollingRef.current && calcLayout();
     });
   }, [calcLayout, scrollingRef]);
@@ -152,8 +162,9 @@ const LyricContainer: FC<LyricContainerProps> = ({
   // 歌词变化时，重置时间管理器和当前行
   useLayoutEffect(() => {
     timeManagerRef.current?.reset(lyricLines);
-    setCurrentLine(-1);
-    currentLineRef.current = -1;
+    const reset = [-1];
+    setCurrentLine(reset);
+    currentLineRef.current = reset;
     calcLayout();
   }, [calcLayout, lyricLines]);
 
@@ -189,26 +200,29 @@ const LyricContainer: FC<LyricContainerProps> = ({
       }}
       onScroll={onScroll}>
       <div className={cx("h-[55%]", lyricLines.length === 0 && "h-0")} />
-      {lyricLines.map((line, index) => (
-        <LyricLine
-          key={index}
-          line={line}
-          index={index}
-          spring={spring}
-          fontSize={fontSize}
-          rmActive={rmActive}
-          tlActive={tlActive}
-          crossAlign={crossAlign}
-          noteActive={noteActive}
-          activeColor={activeColor}
-          hasRm={_lyric?.rmExisted}
-          hasTl={_lyric?.tlExisted}
-          inactiveColor={inactiveColor}
-          active={currentLine === index}
-          timeManager={timeManagerRef.current!}
-          onClick={onWordClick}
-        />
-      ))}
+      {lyricLines.map((line, index) => {
+        const active_index = currentLine.indexOf(index);
+        return (
+          <LyricLine
+            key={index}
+            line={line}
+            index={index}
+            spring={spring}
+            fontSize={fontSize}
+            rmActive={rmActive}
+            tlActive={tlActive}
+            crossAlign={crossAlign}
+            noteActive={noteActive}
+            activeColor={activeColor}
+            hasRm={_lyric?.rmExisted}
+            hasTl={_lyric?.tlExisted}
+            active={active_index !== -1}
+            inactiveColor={inactiveColor}
+            timeManager={timeManagerRef.current!}
+            onClick={onWordClick}
+          />
+        );
+      })}
       <div className={cx("h-[55%]", lyricLines.length === 0 && "h-0 pt-0")}>
         <LyricTips fontSize={fontSize} tips={_lyric?.tips} crossAlign={crossAlign} />
       </div>

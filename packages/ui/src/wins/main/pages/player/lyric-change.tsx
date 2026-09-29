@@ -4,7 +4,7 @@ import RendererPlayerHandle from "@/wins/main/lib/handle";
 
 const LyricChange: FC<object> = () => {
   const player = RendererPlayerHandle.usePlayer();
-  const { rmExisted, tlExisted, noteExisted } = player.current.lyric?.info || {};
+  const { canShowNotes, rmExisted, tlExisted } = player.current.lyric?.info || {};
   const { rmActive, tlActive, noteActive } = player.current;
 
   const items = [
@@ -20,7 +20,7 @@ const LyricChange: FC<object> = () => {
       label: "注",
       title: "切换注音",
       active: noteActive,
-      existed: noteExisted
+      existed: canShowNotes
     },
     {
       key: "tl",

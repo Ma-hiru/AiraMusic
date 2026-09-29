@@ -14,7 +14,7 @@ const resolveAbortSignal = (input?: AbortInput) =>
 
 export default class _NeteaseLyricSource {
   //region cache
-  private static readonly cacheKey = "netease_lyric_v20";
+  private static readonly cacheKey = "netease_lyric_v21";
 
   private static storeCache(id: number, lyric: NeteaseLyricModel) {
     return RendererCache.service.object.setOne<NeteaseLyricModel>({

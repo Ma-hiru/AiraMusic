@@ -390,7 +390,7 @@ export default class RendererPlayer extends Listenable {
       this.current.rmActive = !this.current.rmActive;
     } else if (next === "tl" && this.current.lyric?.tlExisted) {
       this.current.tlActive = !this.current.tlActive;
-    } else if (next === "note" && this.current.lyric?.noteExisted) {
+    } else if (next === "note" && this.current.lyric?.canShowNotes) {
       this.current.noteActive = !this.current.noteActive;
     }
     this.executeListeners();

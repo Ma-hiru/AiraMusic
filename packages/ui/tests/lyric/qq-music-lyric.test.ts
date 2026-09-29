@@ -1,7 +1,9 @@
 import { vi } from "vitest";
 import { parseLrc, parseQrc } from "@applemusic-like-lyrics/lyric";
+import { parseNeteaseLyric } from "@mahiru/wasm";
 import { RendererNet } from "@mahiru/ui/common/lib/net";
 import { QQMusicLyric } from "@mahiru/ui/common/lib/qq-music-lyric";
+import { NeteaseLyric, NeteaseLyricSchema } from "@mahiru/ui/common/netease/models/netease-lyric";
 import type {
   QQSong,
   QQLyricContent,
@@ -113,6 +115,50 @@ describe("QQMusicLyric recorded API responses", () => {
       console.info(`[QQMusicLyric Japanese ${key}]`, content?.type, JSON.stringify(lines, null, 2));
       expect(lines).toHaveLength(57);
     }
+  });
+
+  it("keeps the existing lyric output while adding timed roman words through WASM and schema", async () => {
+    vi.mocked(RendererNet.requestFromNode).mockResolvedValue(Response.json(japaneseLyricResponse));
+    const result = await QQMusicLyric.get({
+      id: japaneseLyricResponse.lyric.data.songID,
+      mid: "",
+      title: "打上花火",
+      singer: []
+    });
+    const raw = parseContent(result.lyric);
+    const trans = parseContent(result.translation);
+    const roman = parseContent(result.roma);
+    const model = NeteaseLyricSchema.parse(parseNeteaseLyric(raw, trans, roman));
+    // 同一份音译退化为逐行数据，作为原有输出的对照。
+    const lineOnly = roman.map((line) => ({
+      ...line,
+      words: [
+        {
+          startTime: line.startTime,
+          endTime: line.endTime,
+          word: line.words.map((word) => word.word).join(""),
+          romanWord: ""
+        }
+      ]
+    }));
+    const baseline = NeteaseLyricSchema.parse(parseNeteaseLyric(raw, trans, lineOnly));
+    const withoutWordRoman = (lyric: NeteaseLyricModel) => ({
+      ...lyric,
+      data: lyric.data.map((line) => ({
+        ...line,
+        words: line.words.map((word) => ({ ...word, romanWord: undefined }))
+      }))
+    });
+    expect(withoutWordRoman(model)).toEqual(withoutWordRoman(baseline));
+    expect(
+      model.data.flatMap((line) => line.words).filter((word) => word.romanWord?.trim())
+    ).toHaveLength(405);
+    const first = model.data.find((line) => line.startTime === 19953)!;
+    expect(first.words.find((word) => word.word === "渚")?.romanWord).toBe("na gi sa");
+    expect(first.words.find((word) => word.word === "渡")?.romanWord).toBe("wa ta");
+    const lyric = new NeteaseLyric(model);
+    expect(lyric.canShowNotes).toBe(true);
+    expect(lyric.priority).toBe(new NeteaseLyric(baseline).priority);
   });
 
   it.each([

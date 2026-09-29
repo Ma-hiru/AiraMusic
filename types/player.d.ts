@@ -148,6 +148,8 @@ interface LyricWord {
   endTime: number;
   /** 单词内容 */
   word: string;
+  /** 按词时间匹配的音译，可用于上方注音 */
+  romanWord?: string;
   /** 是否为内嵌注释，比如日文汉字的平假名和片假名 */
   inlineNote?: boolean;
 }

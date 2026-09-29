@@ -29,6 +29,7 @@ export const NeteaseLyricSchema = z.object({
               startTime: z.number().describe("单词的起始时间，单位为毫秒"),
               endTime: z.number().describe("单词的结束时间，单位为毫秒"),
               word: z.string().describe("单词内容"),
+              romanWord: z.string().optional().describe("单词的音译，可用于上方注音"),
               inlineNote: z
                 .boolean()
                 .optional()
@@ -78,9 +79,18 @@ export class NeteaseLyric implements NeteaseLyricModel {
       rmExisted: this.rmExisted,
       tlExisted: this.tlExisted,
       noteExisted: this.noteExisted,
+      canShowNotes: this.canShowNotes,
       lineCount: this.data.length,
       tips: this.tips
     };
+  }
+
+  /** 注音可来自原文中的假名，也可来自独立时间轴匹配出的逐词音译。 */
+  get canShowNotes() {
+    return (
+      this.noteExisted ||
+      this.data.some((line) => line.words.some((word) => word.romanWord?.trim()))
+    );
   }
 
   get priority() {

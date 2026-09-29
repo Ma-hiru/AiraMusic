@@ -1,4 +1,4 @@
-use super::model::{Lyric, LyricLine};
+use super::model::{Lyric, LyricLine, LyricWord};
 use regex::Regex;
 use std::collections::HashMap;
 use wasm_bindgen::prelude::wasm_bindgen;
@@ -10,6 +10,7 @@ use wasm_bindgen::prelude::wasm_bindgen;
 pub struct LyricTextLine {
     pub start_time: i32,
     pub text: String,
+    pub words: Vec<LyricWord>,
 }
 
 /// 将 RawLyricLine 列表转换为 HashMap，键为 startTime，值为拼接后的歌词字符串
@@ -44,13 +45,14 @@ pub fn split_lyric_as_lines(lines: Vec<LyricLine>) -> Vec<LyricTextLine> {
             |LyricLine {
                  startTime, words, ..
              }| {
-                let text = words.into_iter().map(|w| w.word).collect::<String>();
+                let text = words.iter().map(|w| w.word.as_str()).collect::<String>();
                 if text.trim().is_empty() {
                     None
                 } else {
                     Some(LyricTextLine {
                         start_time: startTime,
                         text,
+                        words,
                     })
                 }
             },
@@ -70,6 +72,16 @@ pub fn take_nearest_lyric_line(
     next_start_time: Option<i32>,
     tolerance: i32,
 ) -> Option<String> {
+    take_nearest_lyric_entry(lines, start_time, next_start_time, tolerance).map(|line| line.text)
+}
+
+/// 与文本匹配使用同一个候选，保留逐字时间，避免二次匹配串行。
+pub fn take_nearest_lyric_entry(
+    lines: &mut Vec<LyricTextLine>,
+    start_time: i32,
+    next_start_time: Option<i32>,
+    tolerance: i32,
+) -> Option<LyricTextLine> {
     let matched = lines
         .iter()
         .enumerate()
@@ -85,7 +97,7 @@ pub fn take_nearest_lyric_line(
         .min_by_key(|(_, diff)| *diff)
         .map(|(index, _)| index);
 
-    matched.map(|index| lines.remove(index).text)
+    matched.map(|index| lines.remove(index))
 }
 
 #[wasm_bindgen]

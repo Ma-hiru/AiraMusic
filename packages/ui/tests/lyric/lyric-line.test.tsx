@@ -1,8 +1,35 @@
-import { render, screen, fireEvent } from "@testing-library/react";
+import { act, render, screen, fireEvent } from "@testing-library/react";
 import { TimeManager } from "@mahiru/ui/common/components/display/lyric/time-manager";
 import LyricLineComponent from "@mahiru/ui/common/components/display/lyric/lyric-line";
 
 describe("LyricLine", () => {
+  it("shows timed word roman as notes only when enabled, preserving the roman lyric below", () => {
+    const line = createLyricLine({
+      words: [{ word: "渚", startTime: 0, endTime: 1000, romanWord: "na gi sa" }],
+      romanLyric: "na gi sa wo"
+    });
+    const { rerender } = renderLine(line, { noteActive: true, hasRm: true, rmActive: true });
+    expect(screen.getByText("na gi sa")).toBeInTheDocument();
+    expect(screen.getByText("na gi sa wo")).toBeInTheDocument();
+    rerender(createElement(line, { noteActive: false, hasRm: true, rmActive: true }));
+    expect(screen.queryByText("na gi sa")).not.toBeInTheDocument();
+    expect(screen.getByText("na gi sa wo")).toBeInTheDocument();
+  });
+
+  it("prefers existing kana notes over word roman", () => {
+    renderLine(
+      createLyricLine({
+        words: [
+          { word: "声", startTime: 0, endTime: 500, romanWord: "ko e" },
+          { word: "（こえ）", startTime: 0, endTime: 500, inlineNote: true }
+        ]
+      }),
+      { noteActive: true }
+    );
+    expect(screen.getByText("こえ")).toBeInTheDocument();
+    expect(screen.queryByText("ko e")).not.toBeInTheDocument();
+  });
+
   it("renders inline notes without predicate brackets", () => {
     const line = createLyricLine({
       words: [
@@ -102,6 +129,56 @@ describe("LyricLine", () => {
 
     expect(container).toHaveTextContent("声が");
     expect(container).not.toHaveTextContent("こえ");
+  });
+
+  it("synchronizes word progress when mounting an already active line", () => {
+    const line = createLyricLine({
+      words: [
+        { word: "first", startTime: 0, endTime: 500 },
+        { word: "last", startTime: 500, endTime: 1000 }
+      ]
+    });
+    const manager = new TimeManager([{ ...line, wait: false }]);
+    manager.update(750);
+
+    renderLine(line, { timeManager: manager });
+
+    expect(screen.getByText("first")).toHaveClass("blur-none");
+    expect(screen.getByText("last")).toHaveClass("lyric-word-active");
+  });
+
+  it("keeps completed words clear when two singing lines become one focused line", () => {
+    const line = createLyricLine({
+      startTime: 1000,
+      endTime: 2000,
+      words: [
+        { word: "first", startTime: 1000, endTime: 1200 },
+        { word: "middle", startTime: 1200, endTime: 1400 },
+        { word: "last", startTime: 1400, endTime: 2000 }
+      ],
+      translatedLyric: "translation"
+    });
+    const manager = new TimeManager([
+      { ...line, wait: false },
+      { ...line, isBG: true, wait: false }
+    ]);
+    renderLine(line, { index: 1, timeManager: manager, hasTl: true, tlActive: true });
+
+    act(() => {
+      manager.update(1450);
+    });
+    expect(manager.getCurrentLineIndex()).toEqual([0, 1]);
+    expect(screen.getByText("last")).toHaveClass("lyric-word-active");
+
+    act(() => {
+      manager.update(600);
+    });
+    expect(manager.getCurrentLineIndex()).toEqual([1]);
+    for (const word of ["first", "middle", "last"]) {
+      expect(screen.getByText(word)).toHaveClass("blur-none");
+    }
+    expect(screen.getByText("last")).toHaveClass("lyric-word-active");
+    expect(screen.getByText("translation").closest("section")).not.toHaveClass("blur-[2px]");
   });
 
   function renderLine(line: LyricLine, props: Partial<LyricLineComponentProps> = {}) {

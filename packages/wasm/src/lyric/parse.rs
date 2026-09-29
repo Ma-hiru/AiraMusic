@@ -1,7 +1,10 @@
 #![allow(non_snake_case)]
 use super::model::{Lyric, LyricLine};
 use crate::lyric::normalize::repair_lyric_lines;
-use crate::lyric::utils::{split_lyric_as_lines, take_nearest_lyric_line};
+use crate::lyric::roman::{fill_roman_words, has_word_timing};
+use crate::lyric::utils::{
+    split_lyric_as_lines, take_nearest_lyric_entry, take_nearest_lyric_line,
+};
 use regex::Regex;
 use serde_wasm_bindgen::{from_value, to_value};
 use wasm_bindgen::{JsValue, prelude::wasm_bindgen};
@@ -41,6 +44,8 @@ fn parse_netease_lyric_lines(
 
     // 源数据（yrc/TTML）偶见异常时间轴，先修复再做翻译/音译的时间匹配。
     repair_lyric_lines(&mut raw_lyric);
+    let match_roman_words = has_word_timing(&raw_lyric) && has_word_timing(&rm_lyric);
+    let mut matched_roman_lines = vec![None; raw_lyric.len()];
 
     let raw_lyric_count = raw_lyric
         .iter()
@@ -77,13 +82,17 @@ fn parse_netease_lyric_lines(
             LYRIC_MATCH_TOLERANCE_MS,
         )
         .unwrap_or_default();
-        line.romanLyric = take_nearest_lyric_line(
+        let roman = take_nearest_lyric_entry(
             &mut rm_lyric_lines,
             line.startTime,
             next_raw_start_times[index],
             LYRIC_MATCH_TOLERANCE_MS,
-        )
-        .unwrap_or_default();
+        );
+        line.romanLyric = roman
+            .as_ref()
+            .map(|line| line.text.clone())
+            .unwrap_or_default();
+        matched_roman_lines[index] = roman;
         // 解析行内歌词，例如 `Hello (你好)` 或 `原文〖翻译〗`。
         // 这类翻译可能只出现在少数行，所以不能用全曲覆盖率阈值来决定是否存在翻译。
         //
@@ -102,15 +111,17 @@ fn parse_netease_lyric_lines(
         }
     }
 
+    let (data, matched_roman_lines): (Vec<_>, Vec<_>) = raw_lyric
+        .into_iter()
+        .zip(matched_roman_lines)
+        .filter(|(line, _)| {
+            !(line.words.is_empty()
+                && line.translatedLyric.is_empty()
+                && line.romanLyric.is_empty())
+        })
+        .unzip();
     let mut lyric = Lyric {
-        data: raw_lyric
-            .into_iter()
-            .filter(|line| {
-                !(line.words.is_empty()
-                    && line.translatedLyric.is_empty()
-                    && line.romanLyric.is_empty())
-            })
-            .collect(),
+        data,
         noteExisted: false,
         rmExisted: is_extra_lyric_existed(rm_matched_count, raw_lyric_count),
         // 外部翻译用覆盖率判断；行内翻译只要解析出任意一行，就应该允许 UI 打开翻译展示。
@@ -119,6 +130,14 @@ fn parse_netease_lyric_lines(
     };
     // 更新额外信息
     lyric.update_extra_info();
+    // 注音拆词完成后再对最终 words 匹配，避免把 romanWord 复制到括号注音词上。
+    if match_roman_words {
+        for (line, roman) in lyric.data.iter_mut().zip(matched_roman_lines) {
+            if let Some(roman) = roman {
+                fill_roman_words(&mut line.words, &roman.words);
+            }
+        }
+    }
 
     lyric
 }
@@ -292,6 +311,29 @@ mod tests {
         assert_eq!(lyric.data[0].translatedLyric, "你好");
         assert_eq!(lyric.data[0].words[0].word, "Hello");
         assert!(lyric.tlExisted);
+    }
+
+    #[test]
+    fn line_level_roman_keeps_text_without_inventing_word_annotations() {
+        let mut raw = test_line(1000, "声");
+        raw.words[0].endTime = 1500;
+        let mut second = raw.words[0].clone();
+        second.word = "が".into();
+        second.startTime = 1500;
+        second.endTime = 2000;
+        raw.words.push(second);
+        let mut roman = test_line(1000, "ko e ga");
+        roman.words[0].endTime = 2000;
+        let lyric = parse_netease_lyric_lines(vec![raw], vec![], vec![roman]);
+        assert_eq!(lyric.data[0].romanLyric, "ko e ga");
+        assert!(lyric.rmExisted);
+        assert!(!lyric.noteExisted);
+        assert!(
+            lyric.data[0]
+                .words
+                .iter()
+                .all(|word| word.romanWord.is_none())
+        );
     }
 
     fn test_line(start_time: i32, text: &str) -> LyricLine {

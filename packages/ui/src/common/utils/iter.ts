@@ -54,3 +54,33 @@ export const iter: IterFunc = (...args: number[]) => {
   }
   return createIter(min, max);
 };
+
+export function zip<A, B>(a: Iterable<A>, b: Iterable<B>): Generator<[A, B]>;
+
+export function zip<A, B>(
+  a: Iterable<A>,
+  b: Iterable<B>,
+  mode: "longest"
+): Generator<[A | undefined, B | undefined]>;
+
+export function* zip<A, B>(
+  a: Iterable<A>,
+  b: Iterable<B>,
+  mode?: "longest"
+): Generator<[A | undefined, B | undefined]> {
+  const a_iter = a[Symbol.iterator]();
+  const b_iter = b[Symbol.iterator]();
+
+  while (true) {
+    const a_next = a_iter.next();
+    const b_next = b_iter.next();
+
+    if (mode === "longest") {
+      if (a_next.done && b_next.done) return;
+    } else {
+      if (a_next.done || b_next.done) return;
+    }
+
+    yield [a_next.value, b_next.value];
+  }
+}
