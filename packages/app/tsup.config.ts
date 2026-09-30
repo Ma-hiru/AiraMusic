@@ -1,3 +1,8 @@
+/**
+ * @file tsup.config.ts
+ * @deprecated 迁移到 tsdown
+ * */
+
 import { fileURLToPath } from "node:url";
 import { defineConfig, type Options } from "tsup";
 import path from "node:path";
@@ -7,9 +12,7 @@ import { generateLogo } from "../../scripts/logo";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 
-void generateLogo();
-
-function genDefine(mode: string) {
+const genEnvDefine = (mode: string) => {
   return Object.entries(AppEnv.load(mode)).reduce(
     (result, [key, value]) => {
       result[`process.env.${key}`] = JSON.stringify(value);
@@ -17,7 +20,9 @@ function genDefine(mode: string) {
     },
     {} as Record<string, string>
   );
-}
+};
+
+void generateLogo();
 
 // noinspection JSUnusedGlobalSymbols
 export default defineConfig((options) => {
@@ -40,7 +45,7 @@ export default defineConfig((options) => {
       };
       esbuildOptions.define = {
         ...(esbuildOptions.define || {}),
-        ...genDefine(mode)
+        ...genEnvDefine(mode)
       };
       esbuildOptions.banner = {
         ...(esbuildOptions.banner || {}),

@@ -78,6 +78,8 @@ export class TrayUtils {
     trayWin.focus();
     trayWin.setOpacity(1);
     this.customMenuVisible = true;
+
+    MainWindowManager.deliverIPCEvent(trayWin, "show");
   }
   protected hideCustomMenu(trayWin: BrowserWindow) {
     if (!this.customMenuVisible) return;
@@ -91,6 +93,7 @@ export class TrayUtils {
       false
     );
     trayWin.isFocused() && trayWin.blur();
+    MainWindowManager.deliverIPCEvent(trayWin, "hide");
   }
 
   protected removeChecker: Nullable<NormalFunc> = null;

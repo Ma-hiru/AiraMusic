@@ -31,6 +31,9 @@ export default defineConfig(({ mode }) => {
         plugins: [["@babel/plugin-proposal-decorators", { version: "2023-11" }]]
       })
     ],
+    css: {
+      transformer: "lightningcss"
+    },
     build: {
       outDir: join(__dirname, "dist"),
       sourcemap: false,

@@ -26,6 +26,7 @@ export function useSpectrumWorker(
   const workerRef = useRef<Nullable<Worker>>(null);
   const animationFrameRef = useRef<number>(0);
   const lastPostAtRef = useRef(Number.NEGATIVE_INFINITY);
+  const nextPostAtRef = useRef(Number.NEGATIVE_INFINITY);
   const pendingRef = useRef(false);
   const samplesRef = useRef<Nullable<Float32Array<ArrayBuffer>>>(null);
   const [isReady, setIsReady] = useState(false);
@@ -69,8 +70,7 @@ export function useSpectrumWorker(
     }
     const now = performance.now();
     if (fpsLimit && fpsLimit > 0) {
-      const minInterval = 1000 / fpsLimit;
-      if (now - lastPostAtRef.current < minInterval) {
+      if (now + 0.5 < nextPostAtRef.current) {
         animationFrameRef.current = requestAnimationFrame(updateSpectrum);
         return;
       }
@@ -82,11 +82,20 @@ export function useSpectrumWorker(
     analyser.getFloatTimeDomainData(samples);
     const payload = samples.slice();
     pendingRef.current = true;
+    const elapsedMs = Number.isFinite(lastPostAtRef.current)
+      ? now - lastPostAtRef.current
+      : 1000 / (fpsLimit && fpsLimit > 0 ? fpsLimit : 60);
     lastPostAtRef.current = now;
+    if (fpsLimit && fpsLimit > 0) {
+      const interval = 1000 / fpsLimit;
+      const next = nextPostAtRef.current + interval;
+      nextPostAtRef.current = next > now ? next : now + interval;
+    }
     worker.postMessage(
       {
         type: withPeaks ? "analyzeWithPeaks" : "analyze",
-        data: payload
+        data: payload,
+        elapsedMs
       } satisfies SpectrumWorkerArgs,
       [payload.buffer]
     );
@@ -165,6 +174,7 @@ export function useSpectrumWorker(
       workerRef.current = null;
       pendingRef.current = false;
       lastPostAtRef.current = Number.NEGATIVE_INFINITY;
+      nextPostAtRef.current = Number.NEGATIVE_INFINITY;
       samplesRef.current = null;
     };
   }, [fftSize, numBands, withPeaks, audio]);

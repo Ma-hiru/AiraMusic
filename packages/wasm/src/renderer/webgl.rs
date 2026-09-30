@@ -53,19 +53,21 @@ void main() {
     bool inTopBand = p.y <= (y + r);
     bool inBottomBand = p.y >= (y + h - r);
 
+    float coverage = 1.0;
+    float aa = 0.75 / max(u_pixelRatio, 1.0);
     if (r > 0.0) {
         if ((u_roundedCorners == 1 || u_roundedCorners == 3) && inTopBand) {
             if (p.x < (x + r)) {
-                if (distance(p, cLT) > r) discard;
+                coverage = 1.0 - smoothstep(r - aa, r, distance(p, cLT));
             } else if (p.x > (x + w - r)) {
-                if (distance(p, cRT) > r) discard;
+                coverage = 1.0 - smoothstep(r - aa, r, distance(p, cRT));
             }
         }
         if ((u_roundedCorners == 2 || u_roundedCorners == 3) && inBottomBand) {
             if (p.x < (x + r)) {
-                if (distance(p, cLB) > r) discard;
+                coverage = 1.0 - smoothstep(r - aa, r, distance(p, cLB));
             } else if (p.x > (x + w - r)) {
-                if (distance(p, cRB) > r) discard;
+                coverage = 1.0 - smoothstep(r - aa, r, distance(p, cRB));
             }
         }
     }
@@ -79,7 +81,7 @@ void main() {
         float mixFactor = (t - 0.6) / 0.4;
         color = mix(u_colorBottom, u_colorTop, clamp(mixFactor, 0.0, 1.0));
     }
-    gl_FragColor = color;
+    gl_FragColor = vec4(color.rgb, color.a * coverage);
 }
 "#;
 
@@ -285,7 +287,7 @@ impl WebGLRenderer {
 
         for (i, &band) in bands.iter().enumerate() {
             let v = band.clamp(0.0, 1.0);
-            let h = (v * self.height * self.height_scale).max(2.0);
+            let h = (v * self.height * self.height_scale).max(1.0);
             let x = i as f32 * (computed_bar_width + computed_gap);
             let draw_bar_width = if i + 1 == count {
                 (self.width - x).max(0.5)
@@ -317,7 +319,7 @@ impl WebGLRenderer {
             }
 
             // radius
-            let radius = 3.0_f32.min(draw_bar_width / 2.0).min(h / 2.0).floor();
+            let radius = 3.0_f32.min(draw_bar_width / 2.0).min(h / 2.0);
             self.radii.extend_from_slice(&[radius; 6]);
         }
 

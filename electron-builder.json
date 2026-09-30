@@ -13,8 +13,8 @@
       "to": "ui"
     },
     {
-      "from": "packages/app/dist/preload/index.js",
-      "to": "preload.js"
+      "from": "packages/app/dist/preload/index.cjs",
+      "to": "preload.cjs"
     },
     {
       "from": "packages/app/assets",

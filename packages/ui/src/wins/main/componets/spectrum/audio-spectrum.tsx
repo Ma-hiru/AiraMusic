@@ -15,6 +15,8 @@ import {
 } from "@/wins/main/componets/spectrum/renderers/i-renderer";
 import type { SpectrumOptions } from "@/wins/main/hooks/use-spectrum-worker";
 
+import { SpectrumEnvelope } from "./envelope";
+
 type AudioSpectrumProps = HTMLAttributes<HTMLCanvasElement> & {
   gap?: number;
   color?: string;
@@ -101,13 +103,17 @@ const AudioSpectrum: FC<AudioSpectrumProps> = ({
   // 渲染循环
   useEffect(() => {
     let animationFrameId: number;
-    const draw = () => {
+    const envelope = new SpectrumEnvelope();
+    let previousTime: number | undefined;
+    const draw = (now: number) => {
+      const elapsedMs = previousTime === undefined ? 1000 / 60 : now - previousTime;
+      previousTime = now;
       const spectrumData = spectrumDataRef.current;
-      if (!spectrumReadyRef.current || !playingRef.current || !spectrumData) {
+      if (!spectrumReadyRef.current || !spectrumData) {
         animationFrameId = requestAnimationFrame(draw);
         return;
       }
-      const { bands } = spectrumData;
+      const bands = envelope.advance(spectrumData.bands, elapsedMs, playingRef.current);
       if (bands.length) {
         const hideCount = Math.max(0, Math.floor(hideRightBandsRef.current));
         const visibleCount = Math.max(0, bands.length - hideCount);

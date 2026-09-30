@@ -22,8 +22,8 @@ export class MainPathResolver {
     : this.appResourcePathJoin("assets", "logo.png");
 
   static preloadPath = isDev
-    ? this.appPathJoin("dist", "preload", "index.js")
-    : this.appResourcePathJoin("preload.js");
+    ? this.appPathJoin("dist", "preload", "index.cjs")
+    : this.appResourcePathJoin("preload.cjs");
 
   static staticUIDir = isDev ? this.appPathJoin("../ui", "dist") : this.appResourcePathJoin("ui");
 

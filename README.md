@@ -7,6 +7,7 @@ React 构建多窗口播放体验，并使用 Rust Agent、Rust WASM 和 Go 本�
 
 ![AiraMusic 多窗口1](docs/images/all_windows.png)
 ![AiraMusic 播放页2](docs/images/player2.png)
+![AiraMusic 播放页](docs/images/player.png)
 
 > [!IMPORTANT]
 > AiraMusic 是非官方第三方客户端，不直接或间接提供任何音乐下载功能，推荐开通网易云黑胶会员使用。音乐

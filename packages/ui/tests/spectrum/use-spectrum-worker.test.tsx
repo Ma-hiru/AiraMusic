@@ -103,9 +103,25 @@ describe("useSpectrumWorker", () => {
 
     await runNextFrame(40);
     expect(analyzeMessages(worker)).toHaveLength(2);
+    expect(analyzeMessages(worker)[1]?.message.elapsedMs).toBe(40);
 
     await runNextFrame(80);
     expect(analyzeMessages(worker)).toHaveLength(2);
+  });
+
+  it("keeps 30 FPS cadence on a 60 Hz display without rounding away every other update", async () => {
+    const audio = createAudioMock();
+    renderSpectrumHook(audio, {
+      isPlaying: true,
+      options: { fftSize: 16, fpsLimit: 30, numBands: 8 }
+    });
+    const worker = latestWorker();
+    act(() => worker.emit({ type: "ready" }));
+    for (let i = 0; i < 60; i++) {
+      await runNextFrame((i * 1000) / 60);
+      act(() => worker.emit({ type: "spectrum", bands: new Float32Array(8) }));
+    }
+    expect(analyzeMessages(worker)).toHaveLength(30);
   });
 
   it("writes spectrum and peak responses into the stable result object", () => {

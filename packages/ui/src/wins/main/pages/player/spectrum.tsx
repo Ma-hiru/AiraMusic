@@ -21,7 +21,7 @@ const Spectrum: FC<SpectrumProps> = ({ className }) => {
   if (!settings.performance.playerSpectrum) return null;
   return (
     <AudioSpectrum
-      className={cx("h-5 mt-2", className)}
+      className={cx("h-7 mt-2", className)}
       gap={2}
       color="#ffffff"
       renderer="webgl-rust"
@@ -29,7 +29,7 @@ const Spectrum: FC<SpectrumProps> = ({ className }) => {
       secondaryColor="#ffffff"
       isPlaying={playModal && player.playing && currentWindow.isShow && !currentWindow.isMin}
       spectrumOptions={{
-        numBands: 88,
+        numBands: 60,
         withPeaks: false,
         fpsLimit: settings.performance.spectrumFps
       }}

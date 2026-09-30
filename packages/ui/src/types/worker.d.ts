@@ -1,8 +1,8 @@
 type SpectrumWorkerArgs =
   | { type: "reset" }
-  | { type: "analyze"; data: Float32Array }
   | { factor: number; type: "setSmoothing" }
-  | { data: Float32Array; type: "analyzeWithPeaks" }
+  | { type: "analyze"; elapsedMs: number; data: Float32Array }
+  | { elapsedMs: number; data: Float32Array; type: "analyzeWithPeaks" }
   | {
       type: "init";
       fftSize: number;

@@ -11,5 +11,5 @@ export async function generateLogo() {
     .resize(512, 512)
     .png()
     .toFile(join(__dirname, "../packages/app/assets/logo.png"));
-  console.log("done");
+  console.log("[generate logo]", "done");
 }

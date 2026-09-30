@@ -7,6 +7,8 @@ use rustfft::num_complex::Complex;
 use std::sync::Arc;
 use wasm_bindgen::prelude::wasm_bindgen;
 
+const ANALYSIS_BANDS: usize = 64;
+
 const MIN_VISUAL_HZ: f32 = 45.0;
 const MAX_VISUAL_HZ: f32 = 16_000.0;
 
@@ -18,6 +20,7 @@ pub struct SpectrumAnalyzer {
     window_function: WindowFunction,
     /// 频带数量
     num_bands: usize,
+    frame_interval_ms: f32,
     /// 平滑器
     smoother: Smoother,
     /// 采样率
@@ -35,7 +38,7 @@ pub struct SpectrumAnalyzer {
     /// 带峰值时的交错缓冲区（避免每帧新建 Vec）
     combined_buf: Vec<f32>,
 
-    /// 推荐的美化处理：跨帧 EMA 动态归一化
+    /// 有增益上限的 dB 高度映射
     auto_processor: SpectrumAutoProcessor,
 }
 
@@ -50,14 +53,15 @@ impl SpectrumAnalyzer {
             fft_size,
             window_function,
             num_bands,
-            smoother: Smoother::new(num_bands, 0.82, 0.965),
+            frame_interval_ms: 1000.0 / 30.0,
+            smoother: Smoother::new(ANALYSIS_BANDS, 0.82, 0.965),
             sample_rate,
             fft,
             fft_buffer: vec![Complex::new(0.0, 0.0); fft_size],
             window_coeffs: build_window_coeffs(fft_size, window_function),
             spectrum_half: vec![0.0; fft_size / 2],
-            band_ranges: build_band_ranges(fft_size, num_bands, sample_rate),
-            bands_buf: vec![0.0; num_bands],
+            band_ranges: build_band_ranges(fft_size, ANALYSIS_BANDS, sample_rate),
+            bands_buf: vec![0.0; ANALYSIS_BANDS],
             combined_buf: Vec::with_capacity(num_bands.saturating_mul(2)),
             auto_processor: SpectrumAutoProcessor::new(),
         }
@@ -77,6 +81,16 @@ impl SpectrumAnalyzer {
     #[wasm_bindgen]
     pub fn set_peak_decay(&mut self, decay: f32) {
         self.smoother.set_peak_decay(decay);
+    }
+
+    /// 使用采样之间的实际间隔，兼容未设置时的 30 FPS 调用。
+    #[wasm_bindgen]
+    pub fn set_frame_interval(&mut self, elapsed_ms: f32) {
+        self.frame_interval_ms = if elapsed_ms.is_finite() {
+            elapsed_ms.clamp(1.0, 1000.0)
+        } else {
+            1000.0 / 30.0
+        };
     }
 
     #[wasm_bindgen]
@@ -108,40 +122,38 @@ impl SpectrumAnalyzer {
 
     #[wasm_bindgen]
     pub fn analyze_frame(&mut self, samples: &[f32]) -> Vec<f32> {
-        self.compute_bands(samples);
-        let smoothed = self.smoother.smooth(&self.bands_buf);
-        let mut processed = self.auto_processor.process_auto_ema(&smoothed);
-        smooth_frequency_inplace(&mut processed);
-        processed
+        let targets = self.compute_heights(samples);
+        let smoothed = self.smoother.smooth(&targets, self.frame_interval_ms);
+        resample_bands(&smoothed, self.num_bands)
     }
 
     /// 数据排列为 [band, peak, band, peak, ...]
     #[wasm_bindgen]
     pub fn analyze_frame_with_peaks(&mut self, samples: &[f32]) -> Vec<f32> {
-        self.compute_bands(samples);
-        let (smoothed, peaks) = self.smoother.smooth_with_peaks(&self.bands_buf);
-
-        let norm_base = self.auto_processor.update_norm_base(&smoothed);
-        let mut processed_bands = self
-            .auto_processor
-            .apply_with_norm_base(&smoothed, norm_base);
-        smooth_frequency_inplace(&mut processed_bands);
-        let processed_peaks = self.auto_processor.apply_with_norm_base(&peaks, norm_base);
-
+        let targets = self.compute_heights(samples);
+        let (bands, peaks) = self
+            .smoother
+            .smooth_with_peaks(&targets, self.frame_interval_ms);
+        let bands = resample_bands(&bands, self.num_bands);
+        let peaks = resample_bands(&peaks, self.num_bands);
         self.combined_buf.clear();
-        self.combined_buf.reserve(self.num_bands.saturating_mul(2));
-        for i in 0..self.num_bands {
-            self.combined_buf
-                .push(*processed_bands.get(i).unwrap_or(&0.0));
-            self.combined_buf
-                .push(*processed_peaks.get(i).unwrap_or(&0.0));
+        for (band, peak) in bands.into_iter().zip(peaks) {
+            self.combined_buf.extend_from_slice(&[band, peak]);
         }
-
         self.combined_buf.clone()
     }
 }
 
 impl SpectrumAnalyzer {
+    fn compute_heights(&mut self, samples: &[f32]) -> Vec<f32> {
+        self.compute_bands(samples);
+        let mut heights = self
+            .auto_processor
+            .process(&self.bands_buf, self.frame_interval_ms);
+        smooth_frequency_inplace(&mut heights);
+        heights
+    }
+
     fn compute_bands(&mut self, samples: &[f32]) {
         self.compute_fft_half(samples);
         group_perceptual_into(&self.band_ranges, &self.spectrum_half, &mut self.bands_buf);
@@ -161,7 +173,11 @@ impl SpectrumAnalyzer {
         }
 
         for i in 0..n {
-            let sample = samples.get(i).copied().unwrap_or(0.0);
+            let sample = samples
+                .get(i)
+                .copied()
+                .filter(|v| v.is_finite())
+                .unwrap_or(0.0);
             self.fft_buffer[i] = Complex::new(sample * self.window_coeffs[i], 0.0);
         }
 
@@ -171,7 +187,8 @@ impl SpectrumAnalyzer {
         if self.spectrum_half.len() != half {
             self.spectrum_half.resize(half, 0.0);
         }
-        let norm = (n as f32).sqrt().max(1.0);
+        // 补偿窗函数的 coherent gain，让绝对幅度门槛不随 FFT 大小变化。
+        let norm = (self.window_coeffs.iter().sum::<f32>() / 2.0).max(1.0);
         for i in 0..half {
             let c = self.fft_buffer[i];
             self.spectrum_half[i] = (c.re * c.re + c.im * c.im).sqrt() / norm;
@@ -221,7 +238,6 @@ fn build_band_ranges(fft_size: usize, num_bands: usize, sample_rate: f32) -> Vec
     let max_hz = MAX_VISUAL_HZ.min(nyquist * 0.96).max(min_hz + bin_hz);
     let min_mel = hz_to_mel(min_hz);
     let max_mel = hz_to_mel(max_hz);
-    let mut prev_end = hz_to_bin_floor(min_hz, sample_rate, fft_size).min(half.saturating_sub(1));
 
     for band in 0..num_bands {
         let start_t = band as f32 / num_bands as f32;
@@ -229,27 +245,34 @@ fn build_band_ranges(fft_size: usize, num_bands: usize, sample_rate: f32) -> Vec
         let start_hz = mel_to_hz(min_mel + (max_mel - min_mel) * start_t);
         let end_hz = mel_to_hz(min_mel + (max_mel - min_mel) * end_t);
 
-        let mut start = hz_to_bin_floor(start_hz, sample_rate, fft_size)
-            .max(prev_end)
-            .min(half.saturating_sub(1));
-        let mut end = hz_to_bin_ceil(end_hz, sample_rate, fft_size)
+        let start = hz_to_bin_floor(start_hz, sample_rate, fft_size).min(half.saturating_sub(1));
+        let end = hz_to_bin_ceil(end_hz, sample_rate, fft_size)
             .max(start + 1)
             .min(half);
 
-        if end <= start {
-            start = half.saturating_sub(1);
-            end = half;
-        }
-
+        // 低频允许共享 FFT bin；不能为了凑柱数把频段不断推向高频。
         ranges.push((start, end));
-        prev_end = if end >= half {
-            half.saturating_sub(1)
-        } else {
-            end
-        };
     }
 
     ranges
+}
+
+/// 固定分析频段，显示柱数只改变密度，不改变音频分析与增益。
+fn resample_bands(data: &[f32], count: usize) -> Vec<f32> {
+    if data.is_empty() {
+        return vec![0.0; count];
+    }
+    (0..count)
+        .map(|i| {
+            let position = ((i as f32 + 0.5) * data.len() as f32 / count as f32 - 0.5)
+                .clamp(0.0, (data.len() - 1) as f32);
+            let left = position.floor() as usize;
+            let right = (left + 1).min(data.len() - 1);
+            let t = position - left as f32;
+            let t = t * t * (3.0 - 2.0 * t);
+            data[left] + (data[right] - data[left]) * t
+        })
+        .collect()
 }
 
 fn smooth_frequency_inplace(data: &mut [f32]) {
@@ -335,5 +358,90 @@ mod tests {
 
         assert_eq!(frame.len(), 12);
         assert!(frame.iter().all(|value| value.is_finite()));
+    }
+    fn tone(size: usize, hz: f32, amplitude: f32) -> Vec<f32> {
+        (0..size)
+            .map(|i| amplitude * (std::f32::consts::TAU * hz * i as f32 / 48_000.0).sin())
+            .collect()
+    }
+
+    #[test]
+    fn display_density_does_not_move_tones_to_other_frequencies() {
+        for hz in [110.0, 1000.0, 8000.0] {
+            let expected = (hz_to_mel(hz) - hz_to_mel(MIN_VISUAL_HZ))
+                / (hz_to_mel(MAX_VISUAL_HZ) - hz_to_mel(MIN_VISUAL_HZ));
+            for count in [48, 88, 300] {
+                let mut analyzer = SpectrumAnalyzer::new(2048, count, 48_000.0);
+                analyzer.set_smoothing(0.0);
+                let bands = analyzer.analyze_frame(&tone(2048, hz, 0.5));
+                let peak = bands
+                    .iter()
+                    .enumerate()
+                    .max_by(|a, b| a.1.total_cmp(b.1))
+                    .unwrap()
+                    .0;
+                let position = (peak as f32 + 0.5) / count as f32;
+                assert!(
+                    (position - expected).abs() < 0.035,
+                    "{hz}Hz / {count} bars: {position}, expected {expected}"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn fft_amplitude_is_independent_of_window_size() {
+        for size in [1024, 2048, 4096] {
+            let mut analyzer = SpectrumAnalyzer::new(size, 64, 48_000.0);
+            analyzer.compute_fft_half(&tone(size, 1500.0, 0.5));
+            let peak = analyzer
+                .spectrum_half
+                .iter()
+                .copied()
+                .fold(0.0_f32, f32::max);
+            assert!((peak - 0.5).abs() < 0.001, "size={size}, peak={peak}");
+        }
+    }
+
+    #[test]
+    fn silence_release_is_consistent_at_different_analysis_rates() {
+        let mut tails = Vec::new();
+        for fps in [15, 30, 60] {
+            let mut analyzer = SpectrumAnalyzer::new(2048, 48, 48_000.0);
+            analyzer.set_frame_interval(1000.0 / fps as f32);
+            let samples = tone(2048, 110.0, 0.5);
+            for _ in 0..fps * 2 {
+                analyzer.analyze_frame(&samples);
+            }
+            let mut frame = Vec::new();
+            for _ in 0..fps {
+                frame = analyzer.analyze_frame(&[0.0; 2048]);
+            }
+            let tail = frame.iter().copied().fold(0.0_f32, f32::max);
+            assert!(tail < 0.005, "fps={fps}, tail={tail}");
+            tails.push(tail);
+        }
+        assert!((tails[0] - tails[2]).abs() < 0.0001);
+    }
+
+    #[test]
+    fn tiny_signal_stays_dark_after_gain_settles() {
+        let mut analyzer = SpectrumAnalyzer::new(2048, 300, 48_000.0);
+        let samples = tone(2048, 110.0, 1e-6);
+        for _ in 0..600 {
+            assert!(analyzer.analyze_frame(&samples).iter().all(|&v| v == 0.0));
+        }
+    }
+
+    #[test]
+    fn peak_output_preserves_pairs_and_bounds_after_resampling() {
+        let mut analyzer = SpectrumAnalyzer::new(2048, 300, 48_000.0);
+        analyzer.analyze_frame_with_peaks(&tone(2048, 1000.0, 0.5));
+        let frame = analyzer.analyze_frame_with_peaks(&[0.0; 2048]);
+        assert_eq!(frame.len(), 600);
+        for pair in frame.as_chunks::<2>().0 {
+            assert!((0.0..=1.0).contains(&pair[0]));
+            assert!(pair[1] >= pair[0] && pair[1] <= 1.0);
+        }
     }
 }

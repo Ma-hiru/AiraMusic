@@ -121,20 +121,31 @@ export class MainWindowManager {
     return this.tray;
   }
 
+  static deliverIPCEvent(
+    win: Optional<WindowType | BrowserWindow>,
+    action: MessageData<"bus_deliver_window_event">["action"]
+  ) {
+    if (typeof win === "object") win = this.getId(win);
+    if (!win) return;
+
+    Log.debug("windowBus", `${win} - ${action}`);
+    try {
+      MainIPC.MessageChannel.commitAll({
+        type: "bus_deliver_window_event",
+        sender: "process",
+        data: { type: win, action }
+      });
+    } catch (err) {
+      Log.error("windowBus", "deliver error", `${win} - ${action}`, err);
+    }
+  }
+
   private static bindWindowBus(window: BrowserWindow, type?: WindowType) {
     if (!type) return;
-    const sendBusMessage = (action: MessageData<"bus_deliver_window_event">["action"]) => {
-      Log.debug("windowBus", `${type} - ${action}`);
-      try {
-        MainIPC.MessageChannel.commitAll({
-          type: "bus_deliver_window_event",
-          sender: "process",
-          data: { type, action }
-        });
-      } catch (err) {
-        Log.error("windowBus", "dispatch error", `${type} - ${action}`, err);
-      }
-    };
+
+    const sendBusMessage = (action: MessageData<"bus_deliver_window_event">["action"]) =>
+      this.deliverIPCEvent(type, action);
+
     window.addListener("closed", () => {
       this.BrowserWindowList.delete(type);
       window.removeAllListeners();

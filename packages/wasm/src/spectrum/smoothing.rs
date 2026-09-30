@@ -45,7 +45,7 @@ impl Smoother {
         self.peak_decay = decay.clamp(0.0, 1.0);
     }
 
-    pub fn smooth(&mut self, current: &[f32]) -> Vec<f32> {
+    pub fn smooth(&mut self, current: &[f32], elapsed_ms: f32) -> Vec<f32> {
         if self.previous.len() != current.len() {
             self.previous.resize(current.len(), 0.0);
         }
@@ -57,7 +57,8 @@ impl Smoother {
                 self.attack_factor
             } else {
                 self.release_factor
-            };
+            }
+            .powf(elapsed_ms / (1000.0 / 30.0));
             result[i] = previous * factor + current[i] * (1.0 - factor);
             self.previous[i] = result[i];
         }
@@ -65,23 +66,20 @@ impl Smoother {
         result
     }
 
-    pub fn smooth_with_peaks(&mut self, current: &[f32]) -> (Vec<f32>, Vec<f32>) {
-        let smoothed = self.smooth(current);
-        let peaks = self.update_peaks(&smoothed);
+    pub fn smooth_with_peaks(&mut self, current: &[f32], elapsed_ms: f32) -> (Vec<f32>, Vec<f32>) {
+        let smoothed = self.smooth(current, elapsed_ms);
+        let peaks = self.update_peaks(&smoothed, elapsed_ms);
         (smoothed, peaks)
     }
 
-    pub fn update_peaks(&mut self, current: &[f32]) -> Vec<f32> {
+    pub fn update_peaks(&mut self, current: &[f32], elapsed_ms: f32) -> Vec<f32> {
         if self.peaks.len() != current.len() {
             self.peaks.resize(current.len(), 0.0);
         }
         for (i, &current_val) in current.iter().enumerate() {
-            if current_val > self.peaks[i] {
-                self.peaks[i] = current_val;
-            } else {
-                self.peaks[i] *= self.peak_decay;
-            }
-            if self.peaks[i] < self.peak_threshold {
+            self.peaks[i] =
+                current_val.max(self.peaks[i] * self.peak_decay.powf(elapsed_ms / (1000.0 / 30.0)));
+            if self.peaks[i] < self.peak_threshold && current_val == 0.0 {
                 self.peaks[i] = 0.0;
             }
         }
@@ -103,8 +101,8 @@ mod tests {
     fn smooth_uses_fast_attack_and_slow_release() {
         let mut smoother = Smoother::new(1, 0.8, 0.95);
 
-        let attacked = smoother.smooth(&[1.0])[0];
-        let released = smoother.smooth(&[0.0])[0];
+        let attacked = smoother.smooth(&[1.0], 1000.0 / 30.0)[0];
+        let released = smoother.smooth(&[0.0], 1000.0 / 30.0)[0];
 
         assert!((attacked - 0.72).abs() < 0.0001);
         assert!((released - 0.576).abs() < 0.0001);
@@ -113,9 +111,9 @@ mod tests {
     #[test]
     fn peak_decay_is_clamped_to_a_valid_multiplier() {
         let mut smoother = Smoother::new(1, 0.8, 2.0);
-        smoother.update_peaks(&[1.0]);
+        smoother.update_peaks(&[1.0], 1000.0 / 30.0);
 
-        let peaks = smoother.update_peaks(&[0.0]);
+        let peaks = smoother.update_peaks(&[0.0], 1000.0 / 30.0);
 
         assert_eq!(peaks[0], 1.0);
     }

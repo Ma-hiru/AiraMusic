@@ -1,12 +1,13 @@
-/// 有状态的频谱处理器：用于跨帧复用动态归一化基准（EMA），视觉更稳定。
+/// 在幅度归一化后的 FFT 上映射 dB 高度。自动增益有上限，静音不会被放大。
 pub struct SpectrumAutoProcessor {
-    norm_base_ema: f32,
-    attack_alpha: f32,
-    release_alpha: f32,
-    log_multiplier: f32,
-    min_val: f32,
-    noise_floor: f32,
+    reference_db: f32,
 }
+
+const INITIAL_REFERENCE_DB: f32 = -18.0;
+const MIN_REFERENCE_DB: f32 = -30.0;
+const MAX_REFERENCE_DB: f32 = -6.0;
+const DISPLAY_RANGE_DB: f32 = 48.0;
+const NOISE_FLOOR_DB: f32 = -78.0;
 
 impl Default for SpectrumAutoProcessor {
     fn default() -> Self {
@@ -15,65 +16,53 @@ impl Default for SpectrumAutoProcessor {
 }
 
 impl SpectrumAutoProcessor {
-    pub fn new() -> SpectrumAutoProcessor {
-        SpectrumAutoProcessor {
-            norm_base_ema: 1.0,
-            attack_alpha: 0.28,
-            release_alpha: 0.035,
-            log_multiplier: 260.0,
-            min_val: 0.0,
-            noise_floor: 0.012,
+    pub fn new() -> Self {
+        Self {
+            reference_db: INITIAL_REFERENCE_DB,
         }
     }
 
     pub fn reset(&mut self) {
-        self.norm_base_ema = 1.0;
+        self.reference_db = INITIAL_REFERENCE_DB;
     }
 
-    /// 更新内部 EMA 归一化基准，并返回当前 norm_base。
-    pub fn update_norm_base(&mut self, data: &[f32]) -> f32 {
-        let mut max_est = 1e-6_f32;
-        for &v in data {
-            if v.is_finite() {
-                max_est = max_est.max(v.max(0.0));
-            }
+    pub fn process(&mut self, data: &[f32], elapsed_ms: f32) -> Vec<f32> {
+        let peak = data
+            .iter()
+            .copied()
+            .filter(|v| v.is_finite())
+            .fold(0.0_f32, f32::max);
+        let peak_db = amplitude_db(peak);
+        // 静音时保持增益，避免停顿后弱小的尾音被抬高。
+        if peak_db > NOISE_FLOOR_DB {
+            let target = peak_db.clamp(MIN_REFERENCE_DB, MAX_REFERENCE_DB);
+            let tau_ms = if target > self.reference_db {
+                180.0
+            } else {
+                2500.0
+            };
+            let factor = (-elapsed_ms / tau_ms).exp();
+            self.reference_db = target + (self.reference_db - target) * factor;
         }
-        let norm_base_new = (1.0 + max_est * self.log_multiplier).log10().max(1e-6);
-        let alpha = if norm_base_new > self.norm_base_ema {
-            self.attack_alpha
-        } else {
-            self.release_alpha
-        };
-        self.norm_base_ema = ((1.0 - alpha) * self.norm_base_ema + alpha * norm_base_new).max(1e-6);
-        self.norm_base_ema
-    }
-
-    /// 在不更新 EMA 的情况下，用指定 norm_base 对数据做同一套压缩/归一化。
-    pub fn apply_with_norm_base(&self, data: &[f32], norm_base: f32) -> Vec<f32> {
-        let norm_base = norm_base.max(1e-6);
-        let log_multiplier = self.log_multiplier;
-        let min_val = self.min_val;
-        let noise_floor = self.noise_floor;
-
         data.iter()
             .map(|&value| {
-                let v = value.max(0.0);
-                let log_val = (1.0 + v * log_multiplier).log10();
-                let mut norm = log_val / norm_base;
-                norm = norm.powf(0.85);
-                if norm < noise_floor {
+                let db = amplitude_db(value);
+                if db <= NOISE_FLOOR_DB {
                     return 0.0;
                 }
-                norm.clamp(min_val, 1.0)
+                ((db - self.reference_db + DISPLAY_RANGE_DB) / DISPLAY_RANGE_DB)
+                    .clamp(0.0, 1.0)
+                    .powf(1.3)
             })
             .collect()
     }
+}
 
-    /// 跨帧稳定的 auto 处理：max + EMA 动态归一化
-    pub fn process_auto_ema(&mut self, data: &[f32]) -> Vec<f32> {
-        let norm_base = self.update_norm_base(data);
-        self.apply_with_norm_base(data, norm_base)
+fn amplitude_db(value: f32) -> f32 {
+    if !value.is_finite() || value <= 0.0 {
+        return -120.0;
     }
+    20.0 * value.max(1e-6).log10()
 }
 
 #[cfg(test)]
@@ -81,25 +70,38 @@ mod tests {
     use super::*;
 
     #[test]
-    fn norm_base_attacks_faster_than_it_releases() {
+    fn automatic_gain_does_not_amplify_silence_or_noise() {
         let mut processor = SpectrumAutoProcessor::new();
-
-        let attacked = processor.update_norm_base(&[1.0]);
-        let released = processor.update_norm_base(&[0.001]);
-
-        assert!(attacked > 1.0);
-        assert!(released < attacked);
-        assert!(released > 1.2);
+        for _ in 0..600 {
+            assert_eq!(
+                processor.process(&[0.0, 1e-6], 1000.0 / 30.0),
+                vec![0.0, 0.0]
+            );
+        }
     }
 
     #[test]
-    fn apply_with_norm_base_clamps_values_under_noise_floor() {
-        let processor = SpectrumAutoProcessor::new();
+    fn quiet_signal_keeps_headroom_after_gain_settles() {
+        let mut processor = SpectrumAutoProcessor::new();
+        let mut height = 0.0;
+        for _ in 0..600 {
+            height = processor.process(&[0.005], 1000.0 / 30.0)[0];
+        }
+        assert!(height > 0.2 && height < 0.65, "height={height}");
+    }
 
-        let result = processor.apply_with_norm_base(&[0.000001, 1.0], 2.0);
-
-        assert_eq!(result[0], 0.0);
-        assert!(result[1] > 0.0);
-        assert!(result[1] <= 1.0);
+    #[test]
+    fn gain_depends_on_time_not_frame_count() {
+        let references: Vec<_> = [15, 30, 60]
+            .iter()
+            .map(|&fps| {
+                let mut processor = SpectrumAutoProcessor::new();
+                for _ in 0..fps {
+                    processor.process(&[0.01], 1000.0 / fps as f32);
+                }
+                processor.reference_db
+            })
+            .collect();
+        assert!((references[0] - references[2]).abs() < 0.0001);
     }
 }

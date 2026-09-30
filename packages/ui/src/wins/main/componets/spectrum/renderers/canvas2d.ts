@@ -57,7 +57,7 @@ export class Canvas2DRenderer implements IRenderer {
     for (let i = 0; i < count; i++) {
       const value = bands[i] ?? 0;
       const enhanced = Math.min(1, Math.max(0, value));
-      const barHeight = Math.max(2, enhanced * height * heightScale);
+      const barHeight = Math.max(1, enhanced * height * heightScale);
       const x = i * (computedBarWidth + computedGap);
       const drawBarWidth = i === count - 1 ? Math.max(0.5, width - x) : computedBarWidth;
       const y = height - barHeight;
@@ -66,7 +66,7 @@ export class Canvas2DRenderer implements IRenderer {
       gradient.addColorStop(0.6, color);
       gradient.addColorStop(1, secondaryColor || color);
       ctx.fillStyle = gradient;
-      const radius = Math.min(3, Math.floor(drawBarWidth / 2), Math.floor(barHeight / 2));
+      const radius = Math.min(3, drawBarWidth / 2, barHeight / 2);
 
       let radii: number[];
       if (roundedCorners === "both") {

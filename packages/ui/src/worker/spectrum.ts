@@ -11,7 +11,7 @@ function postErr(msg: string) {
   self.postMessage({ type: "error", error: msg } satisfies SpectrumWorkerResult);
 }
 
-function ensureInput(payload: any): Float32Array {
+function ensureInput(payload: Float32Array): Float32Array {
   if (payload instanceof Float32Array) {
     return payload;
   }
@@ -39,7 +39,8 @@ self.addEventListener("message", (ev: MessageEvent<SpectrumWorkerArgs>) => {
             /** empty */
           }
           analyser = new SpectrumAnalyzer(fftSize, numBands, sampleRate);
-          analyser.set_smoothing(0.82);
+          // 柱高包络由渲染端按屏幕帧率处理，避免与分析端重复平滑。
+          analyser.set_smoothing(0);
           analyser.set_window_function(WindowFunction.Hanning);
           ready = true;
           self.postMessage({ type: "ready" } satisfies SpectrumWorkerResult);
@@ -52,6 +53,8 @@ self.addEventListener("message", (ev: MessageEvent<SpectrumWorkerArgs>) => {
     case "analyze": {
       if (!ready || !analyser) break;
       try {
+        if (data.elapsedMs > 250) analyser.reset();
+        analyser.set_frame_interval(data.elapsedMs > 250 ? 1000 / 30 : data.elapsedMs);
         const input = ensureInput(data.data);
         const bands = analyser.analyze_frame(input);
         // 直接传递 Float32Array，避免 Array.from 的大额分配
@@ -70,6 +73,8 @@ self.addEventListener("message", (ev: MessageEvent<SpectrumWorkerArgs>) => {
     case "analyzeWithPeaks": {
       if (!ready || !analyser) break;
       try {
+        if (data.elapsedMs > 250) analyser.reset();
+        analyser.set_frame_interval(data.elapsedMs > 250 ? 1000 / 30 : data.elapsedMs);
         const input = ensureInput(data.data);
         const result = analyser.analyze_frame_with_peaks(input);
         self.postMessage(
