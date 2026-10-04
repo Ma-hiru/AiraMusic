@@ -45,6 +45,11 @@ export default class RendererPlayerHistory extends Listenable {
       .finally(() => this.executeListeners());
   }
 
+  clear() {
+    this.list.length = 0;
+    this.executeListeners();
+  }
+
   remove(record: number | NeteaseHistoryRecord) {
     const exitsPos = this.locate(record);
     if (exitsPos !== -1) this.list.splice(exitsPos, 1);
@@ -54,6 +59,7 @@ export default class RendererPlayerHistory extends Listenable {
   toSearchStruct() {
     return RendererPlayerHistory.toSearchStruct(this.list);
   }
+
   static toSearchStruct(list: NeteaseHistoryRecord[]) {
     return NeteaseTrack.toSearchStructString(list.map((h) => new NeteaseTrack(h.detail)));
   }

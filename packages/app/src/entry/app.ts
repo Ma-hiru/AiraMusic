@@ -324,6 +324,10 @@ export class MainApp {
         Log.error("app exit", reason);
       }
 
+      for (const [id, win] of MainWindowManager.getAll()) {
+        if (id !== "main" && !win.isDestroyed()) win.close();
+      }
+
       this.emitStopMessageToMainRenderer()
         .catch((error) => Log.warn("app exit", "failed to notify renderer", error))
         .then(() =>

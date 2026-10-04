@@ -40,11 +40,11 @@ export const enum RendererPlayerStatus {
 
 export default class RendererPlayer extends Listenable {
   readonly current;
-  readonly audio;
-  readonly playlist;
-  readonly history;
-  private _status;
-  private readonly disconnect;
+  readonly audio: RendererPlayerAudio;
+  readonly playlist: RendererPlayerPlaylist;
+  readonly history: RendererPlayerHistory;
+  private _status: RendererPlayerStatus;
+  private readonly disconnect: NormalFunc;
 
   get status() {
     return this._status;
@@ -142,7 +142,6 @@ export default class RendererPlayer extends Listenable {
       NeteaseServicesAuth.checkLoggedIn().then((check) => {
         if (check === Status.Expired) {
           AppToast.show({ type: "info", text: "登录过期" });
-          void NeteaseServicesAuth.logout();
         }
       });
     }
@@ -377,7 +376,7 @@ export default class RendererPlayer extends Listenable {
         const audio = await instance.loadAudio(track.detail, new AbortController());
         if (!audio) return;
 
-        instance.audio.load(track.detail, audio, false);
+        void instance.audio.load(track.detail, audio, false);
         instance.audio.currentTime = playerAudio.currentTime;
       }
     });

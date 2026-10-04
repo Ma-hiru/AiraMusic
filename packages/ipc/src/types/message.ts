@@ -204,6 +204,7 @@ type MessageBus = {
  * */
 type MessageSingle = {
   message_dispatch_login: string;
+  message_deliver_logout: boolean;
   message_dispatch_need_login: boolean;
   message_dispatch_should_close: boolean;
   message_dispatch_cache_has_clear: boolean;

@@ -8,6 +8,7 @@ export default class RendererPlayerAudio {
   readonly outputTarget: RendererAudioOutputTarget = { audio: this.audio, context: null };
   readonly addEventListener = this.audio.addEventListener.bind(this.audio);
   readonly removeEventListener = this.audio.removeEventListener.bind(this.audio);
+  private shouldPlay = false;
   private readonly removeEvents: NormalFunc[] = [];
   private sourceRef: Nullable<MediaElementAudioSourceNode> = null;
   private analyserRef: Nullable<AnalyserNode> = null;
@@ -20,6 +21,10 @@ export default class RendererPlayerAudio {
     buffered: 0,
     volume: 0
   };
+
+  get muted() {
+    return this.audio.muted;
+  }
 
   get instance() {
     return this.audio;
@@ -81,6 +86,7 @@ export default class RendererPlayerAudio {
   }
 
   play() {
+    this.shouldPlay = true;
     if (this.audio.paused && this.audio.src) {
       this.audio.play().catch((err) => {
         Log.error(err);
@@ -89,6 +95,7 @@ export default class RendererPlayerAudio {
   }
 
   pause() {
+    this.shouldPlay = false;
     !this.audio.paused && this.audio.pause();
   }
 
@@ -132,7 +139,7 @@ export default class RendererPlayerAudio {
       queueMicrotask(() => {
         if (this.errorID !== this.loadedTrack?.id || this.errorCount > 1) return;
         this.errorCount += 1;
-        this.load(track, audio, true, this.audio.currentTime || 0);
+        this.load(track, audio, this.shouldPlay, this.audio.currentTime || 0);
         Log.warn(`Retry load track ${track.id} from local cache`);
       });
     };
@@ -147,7 +154,7 @@ export default class RendererPlayerAudio {
   async load(
     track: Optional<NeteaseTrack>,
     source: NeteaseLocalAudio | NeteaseNetworkAudio,
-    play: boolean,
+    play = this.shouldPlay,
     jump = 0
   ) {
     this.pause();
@@ -164,6 +171,7 @@ export default class RendererPlayerAudio {
     this.audio.src = src;
     this.audio.currentTime = jump;
     this.audio.load();
+    this.shouldPlay = play;
     play && this.play();
   }
 

@@ -1,10 +1,11 @@
-import { Bot, BoomBox, PictureInPicture } from "lucide-react";
+import { Bot, BoomBox, Settings, PictureInPicture } from "lucide-react";
 import { memo, useRef, type FC, useState, useEffect, useCallback } from "react";
 import { Log } from "@/common/lib/log";
 import { RendererCache } from "@/common/lib/cache";
 import { RendererIPC } from "@mahiru/ipc/renderer";
 import { RendererDevice } from "@/common/lib/device";
 import { RendererWindow } from "@/common/lib/window";
+import { RendererIPCMessageBus } from "@/common/lib/bus";
 import AppToast from "@/common/components/display/toast";
 import RendererPlayerHandle from "@/wins/main/lib/handle";
 import Switch from "@/common/components/data-input/switch";
@@ -115,6 +116,11 @@ const TopControl: FC = () => {
     }
   }, [openingAgent]);
 
+  const openSettings = useCallback(async () => {
+    await RendererWindow.display.reactReadyAwait();
+    RendererIPCMessageBus.display.deliver({ type: "settings" });
+  }, []);
+
   useEffect(() => {
     const sub1 = RendererWindow.mini.addEventListener("show", () => RendererWindow.current.hide());
     const sub2 = RendererWindow.radio.addEventListener("show", () => RendererWindow.current.hide());
@@ -161,6 +167,12 @@ const TopControl: FC = () => {
           className: "scale-110",
           label: openingAgent ? "正在打开 Agent" : "Agent",
           onClick: openAgent
+        },
+        {
+          icon: Settings,
+          label: "设置",
+          className: "scale-95",
+          onClick: openSettings
         }
       ]}
       max

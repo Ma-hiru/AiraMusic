@@ -1,12 +1,16 @@
 import { useEffect } from "react";
 import { Log } from "@/common/lib/log";
+import { RendererIPC } from "@mahiru/ipc/renderer";
 import { RendererWindow } from "@/common/lib/window";
 import { SetupStatus } from "@/common/netease/services/auth";
 import { NeteaseServicesAuth } from "@/common/netease/services";
+import { useUser, userStoreSnapshot } from "@/common/store/user";
 import { useRequestAutoRetry, useRequestStatusWrap } from "@/common/hooks/use-request-wrap";
 import AppToast from "@/common/components/display/toast";
+import RendererPlayerHandle from "@/wins/main/lib/handle";
 
 export const User = () => {
+  const user = useUser();
   const { data, fetchData } = useRequestStatusWrap(
     NeteaseServicesAuth.setup.bind(NeteaseServicesAuth)
   );
@@ -22,7 +26,7 @@ export const User = () => {
         type: "error",
         text: "登录过期"
       });
-      void NeteaseServicesAuth.createLoginWindow();
+      void NeteaseServicesAuth.logout();
     } else if (data === SetupStatus.Unknown) {
       AppToast.show({
         type: "error",
@@ -48,6 +52,29 @@ export const User = () => {
       return NeteaseServicesAuth.createLoginWindow();
     });
   }, [reload]);
+
+  useEffect(() => {
+    user && !user.isLoggedIn && userStoreSnapshot().updateUser(null);
+  }, [user]);
+
+  useEffect(() => {
+    const logout = () => {
+      RendererPlayerHandle.player.history.clear();
+      return NeteaseServicesAuth.createLoginWindow();
+    };
+
+    NeteaseServicesAuth.on_logout = logout;
+    const unlisten = RendererIPC.MessageChannel.listen(
+      "message_deliver_logout",
+      "all",
+      (ok) => ok && logout()
+    );
+
+    return () => {
+      unlisten();
+      NeteaseServicesAuth.on_logout = null;
+    };
+  }, []);
 
   return null;
 };

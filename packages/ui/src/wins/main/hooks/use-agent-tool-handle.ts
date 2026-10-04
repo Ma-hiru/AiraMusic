@@ -94,7 +94,7 @@ export function useAgentToolHandle() {
               ok: true,
               action: request.input.action,
               currentTrackID: player.current.track?.id ?? null,
-              status: player.audio.audio.paused ? "paused" : "playing"
+              status: player.audio.paused ? "paused" : "playing"
             });
             break;
           }
@@ -331,7 +331,7 @@ export function useAgentToolHandle() {
                 buffered: player.audio.progress.buffered
               },
               volume: Math.round(player.audio.volume * 100),
-              muted: player.audio.audio.muted,
+              muted: player.audio.muted,
               repeat: player.playlist.repeat,
               shuffle: player.playlist.shuffle
             });
@@ -346,7 +346,7 @@ export function useAgentToolHandle() {
             }
             sendOK(id, {
               volume: Math.round(player.audio.volume * 100),
-              muted: player.audio.audio.muted
+              muted: player.audio.muted
             });
             break;
           }

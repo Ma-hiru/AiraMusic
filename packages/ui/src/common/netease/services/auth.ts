@@ -1,4 +1,5 @@
 import { Log } from "@/common/lib/log";
+import { RendererIPC } from "@mahiru/ipc/renderer";
 import { RendererWindow } from "@/common/lib/window";
 import { NeteaseAPIAuth } from "@/common/netease/api";
 import { userStoreSnapshot } from "@/common/store/user";
@@ -43,7 +44,7 @@ export default class _NeteaseAuth {
   static async createLoginWindow() {
     RendererWindow.current.focus();
     const loginWindow = RendererWindow.get("login");
-    if (!NeteaseUser.isLoggedIn) {
+    if (!NeteaseUser.isLoggedIn && !loginWindow.reactReady) {
       loginWindow.removeMessageHandler("login");
       await loginWindow.reactReadyAwait();
       loginWindow.focus();
@@ -108,9 +109,12 @@ export default class _NeteaseAuth {
       });
   }
 
+  static on_logout: Nullable<NormalFunc> = null;
   static logout() {
     return NeteaseServicesUser.logout().finally(() => {
       _NeteaseAuth.userStore.updateUser(null);
+      this.on_logout?.();
+      RendererIPC.MessageChannel.send("message_deliver_logout", "all", true);
     });
   }
 
