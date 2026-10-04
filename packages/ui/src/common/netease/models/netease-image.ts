@@ -178,7 +178,7 @@ export class NeteaseLocalImage extends NeteaseNetworkImage {
   }) {
     super(props);
     this.localURL = props.localURL;
-    this.localSize = props.localSize ?? props.size ?? NeteaseImageSize.raw;
+    this.localSize = props.localSize ?? NeteaseURL.parseImageSize(props.localURL)?.[0];
   }
 
   override get src() {
@@ -190,7 +190,7 @@ export class NeteaseLocalImage extends NeteaseNetworkImage {
       url: image.url,
       sourceID: image.sourceID,
       sourceName: image.sourceName,
-      localSize: image.size,
+      size: image.size,
       localURL
     });
   }

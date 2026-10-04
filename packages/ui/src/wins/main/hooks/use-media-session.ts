@@ -1,5 +1,6 @@
 import { useRef, useEffect, useLayoutEffect } from "react";
 import { NeteaseImageSize } from "@/common/enum";
+import { RendererCache } from "@/common/lib/cache";
 import { NeteaseURL } from "@/common/netease/models";
 import RendererPlayerHandle from "@/wins/main/lib/handle";
 
@@ -67,19 +68,24 @@ export function useMediaSession(props: {
     const { mediaSession } = navigator;
     const artist = track.detail.ar.map((artist) => artist.name).join("&");
     const artworkSrc = NeteaseURL.setImageSize(track?.detail.al.picUrl, NeteaseImageSize.lg) || "";
+    const coverNotFound = RendererCache.memory
+      .getOne<Set<string>>("cover-not-found")
+      ?.has(NeteaseURL.setImageSize(artworkSrc, NeteaseImageSize.raw));
     const signature = `${track?.detail.id}|${artist}|${artworkSrc}`;
     if (mediaMetadataSignatureRef.current !== signature) {
       mediaSession.metadata = new MediaMetadata({
         title: track.detail.name,
         artist,
         album: track.detail.al.name,
-        artwork: [
-          {
-            src: artworkSrc,
-            sizes: "500x500",
-            type: "image/jpeg"
-          }
-        ]
+        artwork: coverNotFound
+          ? []
+          : [
+              {
+                src: artworkSrc,
+                sizes: "500x500",
+                type: "image/jpeg"
+              }
+            ]
       });
       mediaSession.setPositionState(undefined);
       mediaMetadataSignatureRef.current = signature;

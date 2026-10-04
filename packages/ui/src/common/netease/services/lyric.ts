@@ -14,7 +14,7 @@ const resolveAbortSignal = (input?: AbortInput) =>
 
 export default class _NeteaseLyricSource {
   //region cache
-  private static readonly cacheKey = "netease_lyric_v21";
+  private static readonly cacheKey = "netease_lyric_v22";
 
   private static storeCache(id: number, lyric: NeteaseLyricModel) {
     return RendererCache.service.object.setOne<NeteaseLyricModel>({
@@ -94,7 +94,7 @@ export default class _NeteaseLyricSource {
     let lyric = NeteaseLyric.loadErrorLyric;
     // 优先TTML，其次QRC
     if (ttml.status === "fulfilled" && ttml.value) {
-      Log.debug("use ttml lyric id:" + id);
+      Log.debug("LyricService", "use ttml lyric id:" + id);
       lyric = NeteaseLyric.fromTTMLyric(ttml.value);
       signal?.throwIfAborted();
       lyric.data.length && void _NeteaseLyricSource.storeCache(id, lyric);
@@ -103,11 +103,12 @@ export default class _NeteaseLyricSource {
       const YRC =
         response.status === "fulfilled" && NeteaseLyric.fromNeteaseAPIResponse(response.value);
       if (QRC && (!YRC || QRC.priority >= YRC.priority)) {
-        Log.debug("use qrc lyric id:" + id);
+        Log.debug("LyricService", "use qrc lyric id:" + id);
         lyric = QRC;
         signal?.throwIfAborted();
         lyric.data.length && void _NeteaseLyricSource.storeCache(id, lyric);
       } else if (YRC) {
+        Log.debug("LyricService", "use yrc lyric id:" + id);
         lyric = YRC;
         signal?.throwIfAborted();
         lyric.data.length && void _NeteaseLyricSource.storeCache(id, lyric);

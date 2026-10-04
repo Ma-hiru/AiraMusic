@@ -26,7 +26,7 @@
   ],
   "scripts": {
     "build": "cargo build --release && cargo test --lib && tsgo -b && tsx scripts/copy.ts",
-    "clean:dist": "rimraf dist agent agent.exe",
+    "clean:dist": "rimraf dist agent agent.exe generated",
     "clean:cargo": "cargo clean",
     "lint": "cargo fmt && cargo clippy --all-targets -- -D warnings",
     "lint:check": "cargo fmt --check && cargo clippy --all-targets -- -D warnings",

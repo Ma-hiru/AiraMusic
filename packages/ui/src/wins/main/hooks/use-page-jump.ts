@@ -2,6 +2,7 @@ import { useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { RendererWindow } from "@/common/lib/window";
 import { useSettings } from "@/common/store/settings";
+import { userStoreSnapshot } from "@/common/store/user";
 import { RendererIPCMessageBus } from "@/common/lib/bus";
 import { RoutePath, RoutePathMain } from "@/common/routes";
 import { useLatestRef } from "@/common/hooks/use-latest-ref";
@@ -61,13 +62,24 @@ export function usePageJump(
   const isPlaylistPage = location.pathname.includes(RoutePathMain.playlist.base);
   const jumpPlaylistPage = useCallback(
     async (id: number, source: "like" | "normal") => {
-      if ((id === 0 && source !== "like") || id === null)
-        return AppToast.show({ type: "warn", text: "歌单不存在" });
-      if (source !== "like" && id === Number(playlistRef.current.id) && isPlaylistPage) return;
-      if (playlistRef.current.source === "like" && !id && isPlaylistPage) return;
+      if (id == null) return AppToast.show({ type: "error", text: "歌单参数错误" });
+      if (id === 0 && source !== "like") return AppToast.show({ type: "info", text: "歌单不存在" });
 
+      // 已在目标界面
+      if (isPlaylistPage) {
+        // normal
+        if (source !== "like" && id === Number(playlistRef.current.id)) return;
+        // like
+        if (playlistRef.current.source === "like" && id === 0) return;
+      }
+
+      // 默认多窗口打开
       if (settingsRef.current.preference.defaultUseDisplayWindow) {
-        NeteaseServicesPlaylist.preload(id);
+        // “我喜欢” 歌单这里，id为0，不合法，内部要重新获取id！
+        const real_id = id || userStoreSnapshot()._user?.likedPlaylist.id;
+        // 为可能的多窗口合并到主窗口的操作，预加载数据
+        real_id && NeteaseServicesPlaylist.preload(id);
+
         await RendererWindow.display.reactReadyAwait();
         return RendererIPCMessageBus.display.deliver({
           type: "playlist",

@@ -21,6 +21,7 @@ import { MainAgentFeatureSettings } from "@/services/agent/settings";
 export class MainApp {
   private _services?: MainServices;
   private _status: "exiting" | "running" | "initializing" = "initializing";
+  private _quitting = false;
 
   /** @desc 是否进入退出流程 */
   private get isExiting() {
@@ -89,40 +90,41 @@ export class MainApp {
    * */
   private launchMainWindow() {
     try {
+      let isQuitting = process.platform !== "darwin";
       const mainWindow = MainWindowCreator.create(MainWindowPreset.main);
 
-      let isQuitting = false;
       if (process.platform === "darwin") {
         app.addListener("activate", () => MainWindowManager.checkAndShow("main"));
-        mainWindow.addListener("close", (event) => {
-          if (!isQuitting) {
-            event.preventDefault();
-            mainWindow.hide();
-          }
-        });
       }
-
-      mainWindow.addListener("closed", () => {
-        this.exit(MainExitCodeConstants.NORMAL_EXIT, "");
-      });
-      app.addListener("window-all-closed", () => {
-        this.exit(MainExitCodeConstants.NORMAL_EXIT, "");
-      });
-      app.addListener("before-quit", (e) => {
-        e.preventDefault();
-        if (process.platform === "darwin") {
+      mainWindow.addListener("close", (event) => {
+        if (!isQuitting) {
+          event.preventDefault();
           mainWindow.hide();
-          isQuitting = true;
         }
+      });
+      // window/linux 触发
+      mainWindow.addListener("closed", () => {
+        isQuitting = true;
         this.exit(MainExitCodeConstants.NORMAL_EXIT, "");
       });
+      // 已经关闭直接退出
+      app.addListener("window-all-closed", () => {
+        isQuitting = true;
+        this.exit(MainExitCodeConstants.NORMAL_EXIT, "");
+      });
+      // mac 上触发 app.quit
+      app.addListener("before-quit", (e) => {
+        isQuitting = true;
+        // 正常退出使用quit，避免再次触发，不使用isExiting是因为防止退出时外部二次触发，导致这里直接关闭
+        if (this._quitting) return Log.info("app quit due to exiting");
+        e.preventDefault();
+        this.exit(MainExitCodeConstants.NORMAL_EXIT, "");
+      });
+      // ipc 触发
       MainIPC.MessageChannel.listen("message_dispatch_should_close", (close) => {
         if (!close) return;
-        if (process.platform === "darwin") {
-          mainWindow.hide();
-          isQuitting = true;
-        }
-        void this.emitStopMessageToMainRenderer();
+        isQuitting = true;
+        this.exit(MainExitCodeConstants.NORMAL_EXIT, "");
       });
 
       return mainWindow;
@@ -201,6 +203,7 @@ export class MainApp {
     const { promise, resolve } = Promise.withResolvers<void>();
 
     Log.info("quit", "emit 'message_dispatch_should_close' message");
+    // 发送给renderer，监听后，main renderer会自己close自己的窗口示例（触发 window close）
     MainIPC.MessageChannel.commit({
       sender: "process",
       receiver: "main",
@@ -315,7 +318,6 @@ export class MainApp {
     runWithLogContext({ traceId: "exiting" }, () => {
       if (this._status === "exiting") return;
       this._status = "exiting";
-      const stopAgentAndMcp = MainAgent.shutdown().then(() => MainMcp.shutdown());
 
       // 异常退出输出错误日志
       if (code !== MainExitCodeConstants.NORMAL_EXIT) {
@@ -324,10 +326,27 @@ export class MainApp {
 
       this.emitStopMessageToMainRenderer()
         .catch((error) => Log.warn("app exit", "failed to notify renderer", error))
-        .then(() => Promise.allSettled([this.stopAllServers(), stopAgentAndMcp]))
+        .then(() =>
+          Promise.allSettled([
+            this.stopAllServers(),
+            MainAgent.shutdown().then(() => MainMcp.shutdown())
+          ])
+        )
         .finally(() => {
-          app.exit(code);
+          if (code === MainExitCodeConstants.NORMAL_EXIT) {
+            this._quitting = true;
+            // 使用 app.quit 退出才可以触发 electronmon hook,使用 code 37然后重启
+            app.quit();
+          } else {
+            app.exit(code);
+          }
         });
     });
+  }
+
+  /** 重启应用 */
+  restart(code: number, reason: string) {
+    app.relaunch();
+    this.exit(code, reason);
   }
 }

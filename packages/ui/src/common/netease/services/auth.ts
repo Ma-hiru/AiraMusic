@@ -109,7 +109,7 @@ export default class _NeteaseAuth {
   }
 
   static logout() {
-    return NeteaseServicesUser.logout().then(() => {
+    return NeteaseServicesUser.logout().finally(() => {
       _NeteaseAuth.userStore.updateUser(null);
     });
   }

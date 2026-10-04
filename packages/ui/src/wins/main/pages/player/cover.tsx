@@ -36,6 +36,7 @@ const Cover: FC<CoverProps> = ({ className }) => {
         onLoad={onLoad}
         cache
         preview
+        showNotFoundTips
       />
     </section>
   );

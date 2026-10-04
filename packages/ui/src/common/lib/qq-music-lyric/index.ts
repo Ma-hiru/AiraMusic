@@ -1,4 +1,5 @@
 import { decryptQrc } from "qrc-decoder";
+import { EqError } from "@mahiru/log";
 import { Log } from "@/common/lib/log";
 import { RendererNet } from "@/common/lib/net";
 import { NeteaseTrack } from "@/common/netease/models";
@@ -38,8 +39,9 @@ export class QQMusicLyric {
     });
 
     const block = json[module];
-    if (json.code !== 0 || !block || block.code !== 0)
-      throw new Error(`QQ search failed: ${JSON.stringify(block ?? json)}`);
+    if (json.code !== 0 || !block || block.code !== 0) {
+      throw new EqError(`QQ search failed, code ${block?.code ?? null}`);
+    }
 
     return block.data?.body?.song?.list ?? [];
   }

@@ -37,6 +37,11 @@ apiRequest.interceptors.response.use(
     const message = String(data?.message || data?.msg || "");
     const method = config?.method?.toLowerCase() ?? "get";
 
+    if (axiosResponse?.status === 404) {
+      AppToast.show({ type: "error", text: "资源不存在" });
+    } else if (axiosResponse?.status === 502) {
+      AppToast.show({ type: "error", text: "请求频繁" });
+    }
     if (!config || !data) {
       !config && Log.warn("apiRequest.ts", "no config in error");
       !data && Log.warn("apiRequest.ts", "no response data in error");

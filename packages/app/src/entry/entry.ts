@@ -99,6 +99,13 @@ export class MainEntry {
     // 单实例锁，避免多开
     if (app.requestSingleInstanceLock()) {
       this.instance.init();
+      // 监听退出信号
+      process.on("SIGTERM", () =>
+        this.instance.exit(MainExitCodeConstants.SIGTERM_TRIGGERED, "SIGTERM")
+      );
+      process.on("SIGINT", () =>
+        this.instance.exit(MainExitCodeConstants.SIGINT_TRIGGERED, "SIGINT")
+      );
     } else {
       // 多实例，正常退出
       app.exit(MainExitCodeConstants.MULTI_INSTANCE);

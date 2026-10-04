@@ -6,4 +6,6 @@ export class MainExitCodeConstants {
   static readonly REGISTER_IPC_HANDLERS_FAILED = 3;
   static readonly LAUNCH_MAIN_RENDERER_FAILED = 4;
   static readonly UNCAUGHT_ERROR = 5;
+  static readonly SIGTERM_TRIGGERED = 6;
+  static readonly SIGINT_TRIGGERED = 7;
 }

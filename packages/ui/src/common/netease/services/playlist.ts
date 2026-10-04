@@ -200,6 +200,7 @@ export default class _NeteasePlaylistSource {
   });
 
   static preload(id: number) {
+    if (!id) return; // 排除falsy和0
     return _NeteasePlaylistSource.preloadManager.preload(id);
   }
 

@@ -1,4 +1,3 @@
-import { Log } from "@/common/lib/log";
 import { LRUCache } from "@/common/utils/lru";
 import { RendererCache } from "@/common/lib/cache";
 import { StoreCategory, NeteaseImageSize } from "@/common/enum";
@@ -46,10 +45,7 @@ export default class _NeteaseImageSource {
 
   private static getCache(image: NeteaseNetworkImage, download?: boolean) {
     const cache = _NeteaseImageSource.memoryCache.get(_NeteaseImageSource.getCacheKey(image));
-    if (cache) {
-      Log.debug("image cache hit");
-      return Promise.resolve({ code: 201, data: cache } as const);
-    }
+    if (cache) return Promise.resolve({ code: 201, data: cache } as const);
     if (download) {
       return RendererCache.service.check.readOrStoreOne({
         url: image.url,

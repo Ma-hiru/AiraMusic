@@ -164,7 +164,8 @@ class Parser {
         data,
         rmExisted: Parser.hasExtraLyric(rmCount, lyricLineCount),
         tlExisted: Parser.hasExtraLyric(tlCount, lyricLineCount),
-        noteExisted: noteCount > 0
+        noteExisted: noteCount > 0,
+        tips: "歌词来源：AppleMusic"
       },
       metadata: ttml.metadata
     };
@@ -280,7 +281,10 @@ class Parser {
     } else if (parsedLyric.data.length === 0) {
       return RendererLyricConstants.pureMusicLyricPreset;
     } else {
-      return parsedLyric;
+      return {
+        ...parsedLyric,
+        tips: parsedLyric.tips || "歌词来源：网易云音乐"
+      };
     }
   }
 

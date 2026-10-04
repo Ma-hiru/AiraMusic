@@ -78,4 +78,17 @@ export class NeteaseURL {
 
     return <T extends Falsy ? undefined : string>u.toString();
   }
+
+  static parseImageSize(url: string) {
+    if (!url || !url.startsWith("http")) return;
+    try {
+      const res = new URL(url).searchParams.get("param")?.match(/^([0-9]+)y([0-9]+)$/);
+      const x = Number(res?.[1]);
+      const y = Number(res?.[2]);
+      if (res == null || !Number.isFinite(x) || !Number.isFinite(y)) return;
+      return [x, y] as const;
+    } catch (err) {
+      Log.error(err);
+    }
+  }
 }

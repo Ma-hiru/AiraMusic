@@ -226,6 +226,16 @@ export default class RendererPlayer extends Listenable {
     this.current.track = current;
     this.status = RendererPlayerStatus.loading;
 
+    this.loadLyric(current.detail, controller)
+      .then((lyric) => {
+        if (controller.signal.aborted) return;
+        this.current.lyric = lyric;
+        this.executeListeners();
+      })
+      .catch((err) => {
+        Log.error(err);
+      });
+
     this.loadAudio(current.detail, controller)
       .then((audio) => {
         if (controller.signal.aborted) return;
@@ -244,16 +254,6 @@ export default class RendererPlayer extends Listenable {
             if (controller.signal.aborted) return;
             this.current.cover = cover;
             this.current.cover.setAlt(current.detail.al.name || current.detail.name);
-            this.executeListeners();
-          })
-          .catch((err) => {
-            Log.error(err);
-          });
-
-        this.loadLyric(current.detail, controller)
-          .then((lyric) => {
-            if (controller.signal.aborted) return;
-            this.current.lyric = lyric;
             this.executeListeners();
           })
           .catch((err) => {

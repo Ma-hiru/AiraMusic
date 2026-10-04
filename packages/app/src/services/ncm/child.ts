@@ -1,4 +1,5 @@
 import { join, dirname } from "node:path";
+import { createRequire } from "node:module";
 import { mkdir, access, readFile, writeFile } from "node:fs/promises";
 import { MainChild } from "@/lib/child";
 import os from "node:os";
@@ -18,6 +19,15 @@ class NeteaseMusicApiChildService extends MainChild<NCMParentMessage, NCMChildMe
 
   constructor() {
     super("ncm");
+  }
+
+  static {
+    const localRequire = createRequire(import.meta.url);
+    const ncmRequire = createRequire(
+      localRequire.resolve("@neteasecloudmusicapienhanced/api/server.js")
+    );
+    const ncmAxios = ncmRequire("axios").default;
+    ncmAxios.defaults.timeout = 15_000;
   }
 
   private async ensureAnonToken(tokenPath: string) {
@@ -86,14 +96,19 @@ class NeteaseMusicApiChildService extends MainChild<NCMParentMessage, NCMChildMe
     const savedDeviceId = await this.readDeviceId(deviceIdPath);
     if (savedDeviceId) g.deviceId = savedDeviceId;
 
-    await this.ensureXeapiKey();
-
+    let timer: Undefinable<NodeJS.Timeout> = undefined;
     try {
       const { default: generateConfig } =
         await import("@neteasecloudmusicapienhanced/api/generateConfig.js");
-      await generateConfig();
+      const init = this.ensureXeapiKey().then(() => generateConfig());
+      const timeout = new Promise<void>((_, reject) => {
+        timer = setTimeout(() => reject(new Error("ncm bootstrapDeviceIdentity timeout")), 8_000);
+      });
+      await Promise.race([init, timeout]);
     } catch (err) {
-      console.error(err);
+      console.warn(err);
+    } finally {
+      clearTimeout(timer);
     }
 
     if (savedDeviceId) {
