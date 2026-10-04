@@ -207,6 +207,7 @@ type MessageSingle = {
   message_deliver_logout: boolean;
   message_dispatch_need_login: boolean;
   message_dispatch_should_close: boolean;
+  message_deliver_renderer_exited: boolean;
   message_dispatch_cache_has_clear: boolean;
   message_dispatch_device_output_set: string;
   message_deliver_agent_chat_event: AGUIEvent;

@@ -97,6 +97,12 @@ export class MainWindowManager {
     return Array.from(this.BrowserWindowList);
   }
 
+  static *[Symbol.iterator](): Generator<[WindowType, BrowserWindow]> {
+    for (const w of this.getAll()) {
+      yield w;
+    }
+  }
+
   static checkAndShow<T extends WindowType | BrowserWindow>(
     id: T
   ): T extends WindowType ? Nullable<BrowserWindow> : BrowserWindow {

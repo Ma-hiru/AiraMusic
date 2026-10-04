@@ -22,6 +22,7 @@ export class MainApp {
   private _services?: MainServices;
   private _status: "exiting" | "running" | "initializing" = "initializing";
   private _quitting = false;
+  private _renderer_exited = false;
 
   /** @desc 是否进入退出流程 */
   private get isExiting() {
@@ -101,6 +102,14 @@ export class MainApp {
           event.preventDefault();
           mainWindow.hide();
         }
+        if (process.platform !== "darwin" && !this._renderer_exited) {
+          Log.info(
+            "main window close but renderer not exited, so prevent close and emit stop message to main renderer"
+          );
+          event.preventDefault();
+          mainWindow.hide();
+          void this.emitStopMessageToMainRenderer();
+        }
       });
       // window/linux 触发
       mainWindow.addListener("closed", () => {
@@ -114,6 +123,18 @@ export class MainApp {
       });
       // mac 上触发 app.quit
       app.addListener("before-quit", (e) => {
+        const focus_window = MainWindowManager.getAll().find(([, win]) => win.isFocused());
+        if (focus_window && focus_window[0] !== "main") {
+          e.preventDefault();
+
+          const [id, win] = focus_window;
+          if (id === "tray") return win.blur();
+          if (id === "miniplayer") return win.hide();
+          focus_window[1]?.close();
+
+          return;
+        }
+
         isQuitting = true;
         // 正常退出使用quit，避免再次触发，不使用isExiting是因为防止退出时外部二次触发，导致这里直接关闭
         if (this._quitting) return Log.info("app quit due to exiting");
@@ -126,6 +147,10 @@ export class MainApp {
         isQuitting = true;
         this.exit(MainExitCodeConstants.NORMAL_EXIT, "");
       });
+      MainIPC.MessageChannel.listen(
+        "message_deliver_renderer_exited",
+        (exit) => (this._renderer_exited = exit)
+      );
 
       return mainWindow;
     } catch (err) {
@@ -142,7 +167,7 @@ export class MainApp {
     try {
       MainTray.register();
     } catch (err) {
-      Log.warn("tary", "failed to register app tray", err);
+      Log.warn("tray", "failed to register app tray", err);
     }
   }
 

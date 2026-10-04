@@ -26,6 +26,7 @@ const TopControl: FC = () => {
         RendererWindow.current.hide();
         RendererWindow.all.hide();
         RendererWindow.current.close();
+        RendererIPC.MessageChannel.send("message_deliver_renderer_exited", "process", true);
       };
 
       if (quiting) return exit();
