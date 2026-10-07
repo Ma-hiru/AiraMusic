@@ -9,7 +9,6 @@ import type {
 } from "./agent";
 
 export type PlayerAction =
-  | "exit"
   | "next"
   | "play"
   | "pause"
@@ -137,6 +136,7 @@ type MessageBus = {
     rmActive: boolean;
     tlActive: boolean;
     noteActive: boolean;
+    playlistMarkId: string;
     repeat: "all" | "off" | "one";
     lyric: Optional<NeteaseLyricModel>;
     mode: "fm" | "normal" | "intelligence";
@@ -188,12 +188,14 @@ type MessageBus = {
         type: "addToPlaylistLast" | "addToPlaylistNext";
       }
     | {
+        markId?: string;
         trackID: number;
         allIDs: number[];
         sourceID: number;
         trackIdx: number;
         type: "replacePlaylistAndPlay";
         sourceType: NeteaseTrackRecordSourceType;
+        detailType?: NeteaseTrackRecordSourceTypeDetail;
       }
   );
 };

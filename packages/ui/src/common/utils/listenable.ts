@@ -1,11 +1,13 @@
 import { Log } from "@/common/lib/log";
 
+type ListenerFunction<E> = NormalFunc<[e: E]>;
+
 export abstract class Listenable<const EventName = string> {
   private readonly listenableName;
-  private readonly listeners = new Map<NormalFunc, { id: string; once: boolean }>();
+  private readonly listeners = new Map<ListenerFunction<this>, { id: string; once: boolean }>();
   private readonly eventListeners = new Map<
     EventName,
-    Map<NormalFunc, { id: string; once: boolean }>
+    Map<ListenerFunction<this>, { id: string; once: boolean }>
   >();
   private listenerTimer: Nullable<number> = null;
   private listenerMicrotaskPending = false;
@@ -18,14 +20,14 @@ export abstract class Listenable<const EventName = string> {
     this.listenableName = name;
   }
 
-  protected wrapListener(
-    listener: NormalFunc,
+  protected wrapListener<T>(
+    listener: ListenerFunction<T>,
     label = this.listenableName || "Listenable",
     message = `Executing ${label} listener error`
   ) {
-    return () => {
+    return (e: T) => {
       try {
-        return listener();
+        return listener(e);
       } catch (raw) {
         Log.error({ message, label, raw });
       }
@@ -37,7 +39,7 @@ export abstract class Listenable<const EventName = string> {
     const execute = (listeners: typeof this.listeners) => {
       for (const [listener, options] of [...listeners.entries()]) {
         options.once && listeners.delete(listener);
-        this.wrapListener(listener)();
+        this.wrapListener(listener)(this);
       }
     };
     if (event) {
@@ -101,7 +103,10 @@ export abstract class Listenable<const EventName = string> {
     this.updateMode = mode;
   }
 
-  public addListener(callback: NormalFunc, props: { id?: string; once?: boolean } = {}) {
+  public addListener(
+    callback: ListenerFunction<this>,
+    props: { id?: string; once?: boolean } = {}
+  ) {
     props.once ??= false;
     props.id ??= window.crypto.randomUUID();
     this.listeners.set(callback, { id: props.id, once: props.once });
@@ -116,7 +121,7 @@ export abstract class Listenable<const EventName = string> {
 
   public addEventListener(
     event: EventName,
-    callback: NormalFunc,
+    callback: ListenerFunction<this>,
     props: { id?: string; once?: boolean } = {}
   ) {
     props.once ??= false;
@@ -133,7 +138,7 @@ export abstract class Listenable<const EventName = string> {
     return unsubscriber;
   }
 
-  public removeListener(callback: string | NormalFunc) {
+  public removeListener(callback: string | ListenerFunction<this>) {
     if (typeof callback === "string") {
       for (const [listener, { id }] of this.listeners) {
         if (id === callback) {
@@ -146,7 +151,7 @@ export abstract class Listenable<const EventName = string> {
     this.listeners.delete(callback);
   }
 
-  public removeEventListener(event: EventName, callback: string | NormalFunc) {
+  public removeEventListener(event: EventName, callback: string | ListenerFunction<this>) {
     if (typeof callback === "string") {
       for (const [listener, { id }] of this.eventListeners.get(event) ?? []) {
         if (id === callback) {

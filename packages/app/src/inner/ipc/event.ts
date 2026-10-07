@@ -6,9 +6,15 @@ import { MainWindowPreset } from "@/lib/window-preset";
 import { MainWindowConstants } from "@/constants/window";
 import { MainWindowCreator } from "@/lib/window-creator";
 import { MainWindowManager } from "@/lib/window-manager";
+import { MainExitCodeConstants } from "@/constants/exit-code";
 import type { EventHandlers } from "@mahiru/ipc/types";
 
 export const eventHandlers: EventHandlers = {
+  event_app_restart: (e, ok) => {
+    const sender = BrowserWindow.fromWebContents(e.sender);
+    if (!sender) return;
+    ok && MainHandle.get()?.restart(MainExitCodeConstants.NORMAL_EXIT, "manually restart");
+  },
   event_window_open: (e, type) => {
     const sender = BrowserWindow.fromWebContents(e.sender);
     if (!sender) return;

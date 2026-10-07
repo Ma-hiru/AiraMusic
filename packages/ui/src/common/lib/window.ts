@@ -114,7 +114,7 @@ export class RendererWindow extends Listenable<"react-ready" | RendererWindowEve
   private constructor(type: WindowType) {
     super(`AppWindow(${type})`);
     this.type = type;
-    this._opened = false;
+    this._opened = this.type === RendererRuntime.currentWindowType;
     this._max = false;
     this._min = false;
     this._show = false;
@@ -137,6 +137,9 @@ export class RendererWindow extends Listenable<"react-ready" | RendererWindowEve
     );
     RendererIPC.NormalChannel.send("invoke_window_opened", this.type).then(
       (opened) => (this.opened = opened)
+    );
+    RendererIPC.NormalChannel.send("invoke_window_shown", this.type).then(
+      (opened) => (this.isShow = opened)
     );
     RendererIPC.NormalChannel.send("invoke_window_maximized", this.type).then(
       (isMax) => (this.isMax = isMax)
@@ -245,10 +248,10 @@ export class RendererWindow extends Listenable<"react-ready" | RendererWindowEve
     this.executeListeners(action);
   }
 
-  closeThen(cb: NormalFunc) {
-    if (!this.opened) return this.wrapListener(cb)();
+  closeThen(cb: NormalFunc<[e: this]>) {
+    if (!this.opened) return this.wrapListener(cb)(this);
     const listener = () => {
-      !this.opened && this.wrapListener(cb)();
+      !this.opened && this.wrapListener(cb)(this);
       !this.opened && this.removeListener(listener);
     };
     this.addListener(listener);
@@ -257,14 +260,14 @@ export class RendererWindow extends Listenable<"react-ready" | RendererWindowEve
 
   closeAwait() {
     return new Promise<void>((resolve) => {
-      this.closeThen(resolve);
+      this.closeThen(() => resolve());
     });
   }
 
-  onCloseThen(cb: NormalFunc) {
-    if (!this.opened) return this.wrapListener(cb)();
+  onCloseThen(cb: NormalFunc<[e: this]>) {
+    if (!this.opened) return this.wrapListener(cb)(this);
     const listener = () => {
-      !this.opened && this.wrapListener(cb)();
+      !this.opened && this.wrapListener(cb)(this);
       !this.opened && this.removeListener(listener);
     };
     this.addListener(listener);
@@ -581,5 +584,50 @@ export class RendererWindow extends Listenable<"react-ready" | RendererWindowEve
 
       setTimeout(sendStatus, 300);
     });
+  }
+}
+
+export class RendererWindowVisible extends Listenable<"visible-change"> {
+  private readonly unlisten: NormalFunc;
+  readonly win: RendererWindow;
+  visible: boolean;
+
+  constructor(win: RendererWindow) {
+    super(`${win.type} visible`);
+    this.win = win;
+    this.visible = this.snapshot();
+    this.unlisten = this.listen();
+  }
+
+  private listen() {
+    const on_change = () => {
+      const _old = this.visible;
+      const _new = this.snapshot();
+      if (_old === _new) return;
+      this.visible = _new;
+      this.executeListeners("visible-change");
+    };
+
+    this.win.addListener(on_change);
+    document.addEventListener("visibilitychange", on_change);
+    return () => {
+      this.win.removeListener(on_change);
+      document.removeEventListener("visibilitychange", on_change);
+    };
+  }
+
+  private snapshot() {
+    return this.win.isShow && !this.win.isMin && document.visibilityState === "visible";
+  }
+
+  [Symbol.toPrimitive](type: string) {
+    if (type === "string")
+      return `${this.win.type} visibility: ${this.visible ? "visible" : "hidden"}`;
+    return this.visible;
+  }
+
+  override [Symbol.dispose]() {
+    this.unlisten();
+    super[Symbol.dispose]();
   }
 }

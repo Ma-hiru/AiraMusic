@@ -64,7 +64,7 @@ export default class _NeteaseUserSource {
       let refreshCookiesDate = user.refreshCookiesDate ?? new Date().getDate();
       if (refreshCookiesDate !== new Date().getDate()) {
         await NeteaseCookie.refresh();
-        Log.debug("refresh cookies");
+        Log.info("refresh cookies");
         refreshCookiesDate = new Date().getDate();
       }
 
@@ -73,7 +73,7 @@ export default class _NeteaseUserSource {
       const userPlaylist = await _NeteaseUserSource.getUserPlaylist(uid);
       if (!userPlaylist) return null;
 
-      Log.debug("refresh user info");
+      Log.info("refresh user info");
       return NeteaseUser.fromNeteaseAPI({
         ...userProfile,
         ...userPlaylist,

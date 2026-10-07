@@ -5,6 +5,7 @@ import { useSettings } from "@/common/store/settings";
 import { useRoamMode } from "@/wins/main/hooks/use-roam-mode";
 import { typingAtom, playModalAtom } from "@/wins/main/atoms/layout";
 import { useMediaSession } from "@/wins/main/hooks/use-media-session";
+import { useSpectrumActive } from "@/wins/main/hooks/use-spectrum-active";
 import { useSpectrumWorker } from "@/wins/main/hooks/use-spectrum-worker";
 import { useIntelligenceMode } from "@/wins/main/hooks/use-intelligence-mode";
 import { type ShortcutAction, RendererShortcutConstants } from "@/common/constants/shortcut";
@@ -83,7 +84,8 @@ const MusicSource: FC<object> = () => {
   const setSpectrumData = useSetAtom(spectrumDataAtom);
   const setSpectrumReady = useSetAtom(spectrumReadyAtom);
   const spectrumOptions = useAtomValue(spectrumOptionsAtom);
-  const { isReady, spectrumData } = useSpectrumWorker(player.audio, player.playing, {
+  const enable = useSpectrumActive(player.playing);
+  const { isReady, spectrumData } = useSpectrumWorker(player.audio, enable, {
     fftSize: 2048,
     numBands: 32,
     withPeaks: false,

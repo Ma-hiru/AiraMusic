@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useRef, useCallback } from "react";
 import { RendererWindow } from "@/common/lib/window";
 import { RendererIPCMessageBus } from "@/common/lib/bus";
 import { useLatestRef } from "@/common/hooks/use-latest-ref";
@@ -9,23 +9,44 @@ import AppToast from "@/common/components/display/toast";
 export function usePlayerChangeActionForPlaylistFromDisplay(props: {
   sourceID: number;
   sourceType: NeteaseTrackRecordSourceType;
+  detailType: NeteaseTrackRecordSourceTypeDetail;
   getTracks: NormalFunc<[], NeteaseTrackRecord[]>;
+  /** history 不使用标记，因为这些可能是动态的内容, playlist虽然使用了标记，但是main会根据content对比而不完全是markId */
+  markId?: string | NormalFunc<[], Undefinable<string>>;
 }) {
   const propsRef = useLatestRef(props);
+  const lastCurrentMarkId = useRef<Undefinable<string>>(undefined);
 
   const onTrackPlay = useCallback(
     (track: NeteaseTrackRecord) => {
       const tracks = propsRef.current.getTracks();
       if (!tracks || !tracks[0]) return;
-      loadingTips();
+      const markId =
+        typeof propsRef.current.markId === "function"
+          ? propsRef.current.markId()
+          : propsRef.current.markId;
+
       RendererIPCMessageBus.playlistAction.deliver({
+        markId,
         type: "replacePlaylistAndPlay",
         sourceType: track.sourceName,
         trackIdx: tracks.findIndex((t) => t.id === track.id),
         sourceID: track.sourceID,
         trackID: track.id,
-        allIDs: tracks.map((t) => t.id)
+        allIDs: tracks.map((t) => t.id),
+        detailType: propsRef.current.detailType
       });
+
+      const current_id = RendererIPCMessageBus.trackMeta.data?.playlistMarkId;
+      if (!current_id) loadingTips();
+      else if (current_id !== markId && lastCurrentMarkId.current !== current_id) {
+        window.setTimeout(() => {
+          lastCurrentMarkId.current !== current_id && loadingTips();
+          lastCurrentMarkId.current = current_id;
+        }, 500);
+        return;
+      }
+      lastCurrentMarkId.current = current_id;
     },
     [propsRef]
   );
@@ -61,12 +82,13 @@ export function usePlayerChangeActionForPlaylistFromDisplay(props: {
 
   const onReplace = useCallback(() => {
     const tracks = propsRef.current.getTracks();
-    const { sourceID, sourceType } = propsRef.current;
+    const { sourceID, detailType, sourceType } = propsRef.current;
     if (!tracks || !tracks[0]) return;
     loadingTips();
     RendererIPCMessageBus.playlistAction.deliver({
       sourceID,
       sourceType,
+      detailType,
       type: "replacePlaylistAndPlay",
       trackIdx: 0,
       trackID: tracks[0].id,

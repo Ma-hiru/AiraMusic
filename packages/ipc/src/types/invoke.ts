@@ -49,6 +49,7 @@ export type InvokeEventMaps = {
   invoke_runtime_id: [undefined, string];
   invoke_runtime_token: [undefined, string];
   invoke_window_id: [undefined, WindowType];
+  invoke_window_shown: [WindowType, boolean];
   invoke_window_opened: [WindowType, boolean];
   invoke_window_pinned: [WindowType, boolean];
   invoke_window_maximized: [WindowType, boolean];

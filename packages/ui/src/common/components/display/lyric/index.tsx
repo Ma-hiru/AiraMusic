@@ -14,6 +14,7 @@ import {
 } from "react";
 import { useLatestRef } from "@/common/hooks/use-latest-ref";
 import { useStableArray } from "@/common/hooks/use-stable-array";
+import { useWindowVisible } from "@/common/hooks/use-window-visible";
 import { extendLyric } from "@/common/components/display/lyric/utils";
 import RendererTheme from "@/common/player/ui";
 
@@ -52,7 +53,6 @@ const LyricContainer: FC<LyricContainerProps> = ({
   className,
   onWordClick,
   spring,
-  playing,
   fontSize,
   rmActive,
   tlActive,
@@ -61,8 +61,11 @@ const LyricContainer: FC<LyricContainerProps> = ({
   noteActive,
   activeColor,
   inactiveColor,
-  lyric: _lyric
+  lyric: _lyric,
+  playing: _playing
 }) => {
+  const visible = useWindowVisible();
+  const playing = visible ? _playing : false;
   const lyricLines = useMemo(() => extendLyric(_lyric?.data ?? []), [_lyric?.data]);
 
   const [_currentLine, setCurrentLine] = useState([-1]);
@@ -208,6 +211,7 @@ const LyricContainer: FC<LyricContainerProps> = ({
             line={line}
             index={index}
             spring={spring}
+            playing={playing}
             fontSize={fontSize}
             rmActive={rmActive}
             tlActive={tlActive}

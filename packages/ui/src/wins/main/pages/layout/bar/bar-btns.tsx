@@ -70,7 +70,7 @@ const BarBtns: FC<object> = () => {
   const update = useUpdate();
   const actionRef = useLatestRef<PlaylistModalProps>({
     ...usePageJump(),
-    ...usePlayerActionInList(() => player.playlist.list()),
+    ...usePlayerActionInList(() => player.playlist.list(), player.playlist.mark_id),
     cacheKey: "player-playlist-bar-btns"
   });
   const openPlaylistModal = useCallback(() => {

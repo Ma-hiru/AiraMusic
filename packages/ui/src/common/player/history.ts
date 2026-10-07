@@ -4,8 +4,8 @@ import { Listenable } from "@/common/utils/listenable";
 import { NeteaseTrack, NeteaseHistoryRecord } from "@/common/netease/models";
 
 export default class RendererPlayerHistory extends Listenable {
-  readonly list;
-  readonly maxLength;
+  readonly list: NeteaseHistoryRecord[];
+  readonly maxLength: number;
 
   get count() {
     return this.list.length;

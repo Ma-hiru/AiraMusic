@@ -7,11 +7,13 @@ import {
   MicVocal,
   SkipBack,
   DiscAlbum,
+  RotateCcw,
   SkipForward,
   ExternalLink,
   MessageSquare,
   type LucideIcon
 } from "lucide-react";
+import { RendererIPC } from "@mahiru/ipc/renderer";
 import { RendererWindow } from "@/common/lib/window";
 import { RendererIPCMessageBus } from "@/common/lib/bus";
 import { useListenable } from "@/common/hooks/use-listenable";
@@ -158,10 +160,16 @@ const TrayPage: FC = () => {
         onClick: showMainWindow
       },
       {
+        icon: RotateCcw,
+        text: "重启",
+        danger: true,
+        onClick: () => RendererIPC.NormalChannel.send("event_app_restart", true)
+      },
+      {
         icon: LogOut,
         text: "退出",
         danger: true,
-        onClick: () => RendererIPCMessageBus.playerAction.deliver("exit")
+        onClick: () => RendererWindow.process.send("message_dispatch_should_close", true)
       }
     ],
     [showMainWindow]

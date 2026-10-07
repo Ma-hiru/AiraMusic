@@ -20,8 +20,8 @@ import { SpectrumEnvelope } from "./envelope";
 type AudioSpectrumProps = HTMLAttributes<HTMLCanvasElement> & {
   gap?: number;
   color?: string;
+  enable: boolean;
   barWidth?: number;
-  isPlaying: boolean;
   heightScale?: number;
   hideRightBands?: number;
   secondaryColor?: string;
@@ -31,9 +31,9 @@ type AudioSpectrumProps = HTMLAttributes<HTMLCanvasElement> & {
 };
 
 const AudioSpectrum: FC<AudioSpectrumProps> = ({
+  enable,
   gap = 2,
   barWidth,
-  isPlaying,
   heightScale = 1,
   color = "#ffffff",
   hideRightBands = 0,
@@ -48,7 +48,6 @@ const AudioSpectrum: FC<AudioSpectrumProps> = ({
   const spectrumData = useAtomValue(spectrumDataAtom);
   const canvasRef = useRef<Nullable<HTMLCanvasElement>>(null);
   const rendererRef = useRef<Nullable<IRenderer>>(null);
-  const playingRef = useLatestRef(isPlaying);
   const hideRightBandsRef = useLatestRef(hideRightBands);
   const spectrumDataRef = useLatestRef(spectrumData);
   const spectrumReadyRef = useLatestRef(spectrumReady);
@@ -102,6 +101,10 @@ const AudioSpectrum: FC<AudioSpectrumProps> = ({
   }, [rendererFactory, rendererOptions]);
   // 渲染循环
   useEffect(() => {
+    if (!enable) {
+      rendererRef.current?.draw(new Float32Array(0));
+      return;
+    }
     let animationFrameId: number;
     const envelope = new SpectrumEnvelope();
     let previousTime: number | undefined;
@@ -113,7 +116,7 @@ const AudioSpectrum: FC<AudioSpectrumProps> = ({
         animationFrameId = requestAnimationFrame(draw);
         return;
       }
-      const bands = envelope.advance(spectrumData.bands, elapsedMs, playingRef.current);
+      const bands = envelope.advance(spectrumData.bands, elapsedMs);
       if (bands.length) {
         const hideCount = Math.max(0, Math.floor(hideRightBandsRef.current));
         const visibleCount = Math.max(0, bands.length - hideCount);
@@ -129,15 +132,15 @@ const AudioSpectrum: FC<AudioSpectrumProps> = ({
     return () => {
       cancelAnimationFrame(animationFrameId);
     };
-  }, [hideRightBandsRef, playingRef, spectrumDataRef, spectrumReadyRef]);
+  }, [enable, hideRightBandsRef, spectrumDataRef, spectrumReadyRef]);
 
   // 更新频谱选项(在激活时)
   const spectrumOptionsKey = useMemo(() => JSON.stringify(options), [options]);
   useEffect(() => {
-    if (!isPlaying) return;
+    if (!enable) return;
     if (JSON.stringify(spectrumOptions) === spectrumOptionsKey) return;
     setSpectrumOptions(options);
-  }, [isPlaying, options, setSpectrumOptions, spectrumOptions, spectrumOptionsKey]);
+  }, [enable, options, setSpectrumOptions, spectrumOptions, spectrumOptionsKey]);
 
   return <canvas ref={canvasRef} {...rest} />;
 };

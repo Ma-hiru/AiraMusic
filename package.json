@@ -47,7 +47,7 @@
     "clean:go": "yarn workspace @mahiru/store clean:go",
     "preview:ui": "yarn workspace @mahiru/ui preview",
     "generate:cert": "bash scripts/generate-localhost-cert.sh",
-    "check": "yarn tsgo -b --force",
+    "check": "yarn tsgo -b --force --verbose --extendedDiagnostics",
     "lint": "yarn npm-run-all --parallel lint:ts lint:wasm lint:native lint:store lint:agent",
     "lint:ts": "yarn eslint . --fix && yarn prettier --write .",
     "lint:wasm": "yarn workspace @mahiru/wasm lint",

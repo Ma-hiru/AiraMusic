@@ -17,6 +17,7 @@ interface LyricLineProps {
   line: LyricLineExtended;
   hasRm: Optional<boolean>;
   hasTl: Optional<boolean>;
+  playing?: Optional<boolean>;
   rmActive: Optional<boolean>;
   tlActive: Optional<boolean>;
   noteActive: Optional<boolean>;
@@ -33,6 +34,7 @@ const LyricLine: FC<LyricLineProps> = ({
   hasTl,
   index,
   active,
+  playing,
   fontSize,
   rmActive,
   tlActive,
@@ -143,6 +145,7 @@ const LyricLine: FC<LyricLineProps> = ({
                 <LyricWord
                   key={index}
                   word={word}
+                  playing={playing}
                   wordIndex={index}
                   lineActive={active}
                   waitLine={!!line.wait}
@@ -161,6 +164,7 @@ const LyricLine: FC<LyricLineProps> = ({
           <LyricWord
             wordIndex={0}
             word={allWord}
+            playing={playing}
             lineActive={false}
             activeWordIndex={0}
             waitLine={!!line.wait}

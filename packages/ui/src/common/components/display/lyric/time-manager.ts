@@ -47,8 +47,12 @@ export class TimeManager extends Listenable<TimeManagerEvent> {
       lines,
       (l) => l.startTime <= time
     );
+
+    let miss = 0;
     for (let i = last_active; i >= 0; i--) {
-      time <= lines[i]!.endTime && ans.push(i);
+      if (miss >= 5) break; // 最多再检查五行
+      if (time <= lines[i]!.endTime) ans.push(i);
+      else miss++;
     }
 
     // 两行之间的空档仍聚焦上一行

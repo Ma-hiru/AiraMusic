@@ -47,7 +47,7 @@ const Control: FC<ControlProps> = ({ className, itemClassName, containerClassNam
 
   const actionRef = useLatestRef<PlaylistModalProps>({
     ...usePageJump(),
-    ...usePlayerActionInList(() => player.playlist.list()),
+    ...usePlayerActionInList(() => player.playlist.list(), player.playlist.mark_id),
     cacheKey: "player-playlist-player-control"
   });
   const settings = useSettings();

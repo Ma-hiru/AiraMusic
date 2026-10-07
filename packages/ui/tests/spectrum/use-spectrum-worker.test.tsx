@@ -17,22 +17,27 @@ vi.mock("@mahiru/ui/worker/spectrum.ts?worker", async () => {
 });
 
 describe("useSpectrumWorker", () => {
-  let rafCallbacks: FrameRequestCallback[];
+  let rafCallbacks: Map<number, FrameRequestCallback>;
+  let nextRafId = 0;
   let now = 0;
   let originalRaf: typeof requestAnimationFrame;
   let originalCancelRaf: typeof cancelAnimationFrame;
 
   beforeEach(() => {
     spectrumWorkerMock.instances.length = 0;
-    rafCallbacks = [];
+    rafCallbacks = new Map();
+    nextRafId = 0;
     now = 0;
     originalRaf = globalThis.requestAnimationFrame;
     originalCancelRaf = globalThis.cancelAnimationFrame;
     globalThis.requestAnimationFrame = ((callback: FrameRequestCallback) => {
-      rafCallbacks.push(callback);
-      return rafCallbacks.length;
+      const id = ++nextRafId;
+      rafCallbacks.set(id, callback);
+      return id;
     }) as typeof requestAnimationFrame;
-    globalThis.cancelAnimationFrame = vi.fn() as typeof cancelAnimationFrame;
+    globalThis.cancelAnimationFrame = vi.fn((id: number) => {
+      rafCallbacks.delete(id);
+    }) as typeof cancelAnimationFrame;
     vi.spyOn(performance, "now").mockImplementation(() => now);
   });
 
@@ -83,7 +88,7 @@ describe("useSpectrumWorker", () => {
 
     const worker = latestWorker();
 
-    expect(rafCallbacks).toHaveLength(0);
+    expect(rafCallbacks.size).toBe(0);
     expect(analyzeMessages(worker)).toHaveLength(0);
 
     act(() => {
@@ -174,7 +179,7 @@ describe("useSpectrumWorker", () => {
     const audio = createAudioMock();
 
     const { result, unmount } = renderSpectrumHook(audio, {
-      isPlaying: false,
+      isPlaying: true,
       options: { fftSize: 16, numBands: 8, withPeaks: false }
     });
     const worker = latestWorker();
@@ -195,6 +200,59 @@ describe("useSpectrumWorker", () => {
     expect(worker.terminated).toBe(true);
   });
 
+  it("does not access the audio context or create a worker while disabled", () => {
+    const audio = createAudioMock();
+    const context = audio.context;
+    const getContext = vi.fn(() => context);
+    Object.defineProperty(audio, "context", { get: getContext });
+
+    const { result, rerender } = renderSpectrumHook(audio, {
+      isPlaying: false,
+      options: { fftSize: 16, numBands: 8 }
+    });
+
+    expect(getContext).not.toHaveBeenCalled();
+    expect(spectrumWorkerMock.instances).toHaveLength(0);
+    expect(rafCallbacks.size).toBe(0);
+    expect(result.current.isReady).toBe(false);
+
+    rerender({ isPlaying: true, options: { fftSize: 16, numBands: 8 } });
+
+    expect(getContext).toHaveBeenCalled();
+    expect(spectrumWorkerMock.instances).toHaveLength(1);
+    expect(rafCallbacks.size).toBe(0);
+  });
+
+  it("stops pending analysis when disabled and resumes with a fresh worker", async () => {
+    const audio = createAudioMock();
+    const options = { fftSize: 16, fpsLimit: 30, numBands: 8 };
+    const { result, rerender } = renderSpectrumHook(audio, { isPlaying: true, options });
+    const worker = latestWorker();
+    act(() => worker.emit({ type: "ready" }));
+    await runNextFrame(0);
+    expect(analyzeMessages(worker)).toHaveLength(1);
+    expect(rafCallbacks.size).toBe(1);
+
+    rerender({ isPlaying: false, options });
+
+    expect(worker.terminated).toBe(true);
+    expect(result.current.isReady).toBe(false);
+    expect(rafCallbacks.size).toBe(0);
+    expect(audio.context.analyser.getFloatTimeDomainData).toHaveBeenCalledTimes(1);
+
+    rerender({ isPlaying: true, options });
+    const nextWorker = latestWorker();
+    expect(nextWorker).not.toBe(worker);
+    expect(nextWorker.terminated).toBe(false);
+    expect(rafCallbacks.size).toBe(0);
+    act(() => nextWorker.emit({ type: "ready" }));
+    await runNextFrame(10);
+
+    expect(analyzeMessages(nextWorker)).toHaveLength(1);
+    expect(analyzeMessages(nextWorker)[0]?.message.elapsedMs).toBeCloseTo(1000 / 30);
+    expect(audio.context.analyser.getFloatTimeDomainData).toHaveBeenCalledTimes(2);
+  });
+
   function renderSpectrumHook(audio: ReturnType<typeof createAudioMock>, props: RenderHookProps) {
     return renderHook(
       ({ options, isPlaying }: RenderHookProps) => {
@@ -206,8 +264,10 @@ describe("useSpectrumWorker", () => {
 
   async function runNextFrame(timestamp: number) {
     now = timestamp;
-    const callback = rafCallbacks.shift();
-    expect(callback).toBeDefined();
+    const next = rafCallbacks.entries().next().value;
+    expect(next).toBeDefined();
+    const [id, callback] = next!;
+    rafCallbacks.delete(id);
     await act(async () => {
       callback?.(timestamp);
     });

@@ -4,6 +4,7 @@ import { useUser } from "@/common/store/user";
 import { RendererModified } from "@/common/lib/modified";
 import { RoutePath, RoutePathMain } from "@/common/routes";
 import { usePageJump } from "@/wins/main/hooks/use-page-jump";
+import { playlistMarkId } from "@/common/utils/playlist-mark-id";
 import { useRouterActive } from "@/common/hooks/use-router-active";
 import { useDisplayAction } from "@/wins/main/hooks/use-display-action";
 import { useSetBackground } from "@/wins/main/hooks/use-set-background";
@@ -30,7 +31,10 @@ const AlbumPage: FC<object> = () => {
     onAddList,
     onTrackPlay,
     player
-  } = usePlayerActionInList(() => albumRef.current?.album?.tracks ?? []);
+  } = usePlayerActionInList(
+    () => albumRef.current?.album?.tracks ?? [],
+    playlistMarkId({ type: "album", id })
+  );
   const { jumpAlbumPage, jumpArtistPage } = usePageJump({
     currentAlbumID: albumRef.current?.album?.content.id
   });

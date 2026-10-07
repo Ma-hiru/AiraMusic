@@ -21,6 +21,7 @@ interface LyricWordProps {
   notesContent?: string;
   inactiveColor?: string;
   activeWordIndex: number;
+  playing?: Optional<boolean>;
   timeManager: TimeManager;
   onClick?: NormalFunc<[startTime: number]>;
 }
@@ -29,6 +30,7 @@ const LyricWord: FC<LyricWordProps> = ({
   timeManager,
   onClick,
   word,
+  playing,
   waitLine,
   wordIndex,
   activeColor,
@@ -58,7 +60,7 @@ const LyricWord: FC<LyricWordProps> = ({
 
   useLayoutEffect(() => {
     if (!isCurrentWord) return;
-    let rafId: number;
+    let rafId = 0;
 
     const updateProgress = () => {
       const { end, start, current } = getTime();
@@ -74,14 +76,14 @@ const LyricWord: FC<LyricWordProps> = ({
         spanRef.current.style.setProperty("--progress", `${p}%`);
       }
 
-      if (p < 100) {
+      if (p < 100 && playing !== false) {
         rafId = requestAnimationFrame(updateProgress);
       }
     };
 
-    rafId = requestAnimationFrame(updateProgress);
+    updateProgress();
     return () => cancelAnimationFrame(rafId);
-  }, [isCurrentWord, getTime]);
+  }, [isCurrentWord, getTime, playing]);
 
   const progress = useMemo(() => {
     if (singleWord) return "0%";

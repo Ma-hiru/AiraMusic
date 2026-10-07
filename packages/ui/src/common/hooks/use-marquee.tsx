@@ -1,5 +1,7 @@
-import { useEffect, type RefObject } from "react";
+import { useRef, useEffect, type RefObject } from "react";
 import { useUpdate } from "@/common/hooks/use-update";
+import { useLatestRef } from "@/common/hooks/use-latest-ref";
+import { useWindowVisible } from "@/common/hooks/use-window-visible";
 
 export type MarqueeOpts = {
   /** 像素/秒 单位，默认 30 */
@@ -10,6 +12,10 @@ export type MarqueeOpts = {
   pauseOnHover?: boolean;
   /** 到达端点后的停留时长（ms） */
   gapDuration?: number;
+  /** 是否暂停 */
+  pause?: boolean;
+  /** 是否禁用 */
+  disable?: boolean;
 };
 
 /**
@@ -20,20 +26,30 @@ export type MarqueeOpts = {
  * 尺寸或内容变化由 ResizeObserver 触发重建（observe 时会立即回调一次，无需手动初始化）。
  */
 export function useMarquee(containerRef: RefObject<Nullable<HTMLElement>>, opts: MarqueeOpts = {}) {
-  const { speed = 30, pingPong = true, gapDuration = 1000, pauseOnHover = true } = opts;
+  const {
+    pause,
+    disable,
+    speed = 30,
+    pingPong = true,
+    gapDuration = 1000,
+    pauseOnHover = true
+  } = opts;
+  const animationRef = useRef<Nullable<Animation>>(null);
+  const hoveringRef = useRef(false);
+  const visible = useWindowVisible();
+  const pauseRef = useLatestRef(pause || !visible);
   const update = useUpdate();
 
   useEffect(() => {
+    if (disable) return; // 禁用时停止动画
+
     const container = containerRef.current;
     const inner = container?.firstElementChild;
     if (!container || !(inner instanceof HTMLElement)) return;
 
-    let animation: Nullable<Animation> = null;
-    let hovering = false;
-
-    const rebuild = () => {
-      animation?.cancel();
-      animation = null;
+    const observer = new ResizeObserver(() => {
+      animationRef.current?.cancel();
+      animationRef.current = null;
       const distance = inner.scrollWidth - container.clientWidth;
       if (distance <= 0) return;
 
@@ -58,36 +74,49 @@ export function useMarquee(containerRef: RefObject<Nullable<HTMLElement>>, opts:
             { transform: `translateX(${-distance}px)`, offset: 1 }
           ];
 
-      animation = inner.animate(keyframes, { duration: total, iterations: Infinity });
-      if (hovering) animation.pause();
-    };
-
-    const onMouseEnter = () => {
-      hovering = true;
-      animation?.pause();
-    };
-    const onMouseLeave = () => {
-      hovering = false;
-      animation?.play();
-    };
-    if (pauseOnHover) {
-      container.addEventListener("mouseenter", onMouseEnter);
-      container.addEventListener("mouseleave", onMouseLeave);
-    }
-
-    const observer = new ResizeObserver(rebuild);
+      animationRef.current = inner.animate(keyframes, { duration: total, iterations: Infinity });
+      if (hoveringRef.current || pauseRef.current) animationRef.current.pause();
+    });
     observer.observe(container);
     observer.observe(inner);
 
     return () => {
       observer.disconnect();
-      if (pauseOnHover) {
-        container.removeEventListener("mouseenter", onMouseEnter);
-        container.removeEventListener("mouseleave", onMouseLeave);
-      }
-      animation?.cancel();
+      animationRef.current?.cancel();
+      animationRef.current = null;
     };
-  }, [containerRef, speed, pingPong, pauseOnHover, gapDuration, update.count]);
+  }, [containerRef, speed, pingPong, pauseOnHover, gapDuration, update.count, disable, pauseRef]);
+
+  useEffect(() => {
+    if (disable || !pauseOnHover) return;
+    const container = containerRef.current;
+    if (!container) return;
+
+    const onMouseEnter = () => {
+      hoveringRef.current = true;
+      animationRef.current?.pause();
+    };
+    const onMouseLeave = () => {
+      hoveringRef.current = false;
+      !pauseRef.current && animationRef.current?.play();
+    };
+    container.addEventListener("mouseenter", onMouseEnter);
+    container.addEventListener("mouseleave", onMouseLeave);
+    return () => {
+      container.removeEventListener("mouseenter", onMouseEnter);
+      container.removeEventListener("mouseleave", onMouseLeave);
+      hoveringRef.current = false;
+    };
+  }, [containerRef, disable, pauseOnHover, pauseRef]);
+
+  useEffect(() => {
+    if (disable) return; // 禁用时停止动画
+    if (visible && !pause && !hoveringRef.current) {
+      animationRef.current?.play();
+    } else {
+      animationRef.current?.pause();
+    }
+  }, [disable, pause, visible]);
 
   return {
     update

@@ -1,5 +1,6 @@
 import { cx, css, keyframes } from "@emotion/css";
 import { memo, useRef, type FC, useMemo, useState, useEffect, useCallback } from "react";
+import { useWindowVisible } from "@/common/hooks/use-window-visible";
 import Color from "color";
 import RendererTheme from "@/common/player/ui";
 
@@ -129,9 +130,12 @@ const AcrylicBackground: FC<AcrylicBackgroundProps> = ({
   brightness = 0.5,
   scrim_max = 0.28,
   scrim_factor = 0.3,
-  fluidPaused = false,
-  gradient_alpha = 0.5
+  gradient_alpha = 0.5,
+  fluidPaused: _fluidPaused = false
 }) => {
+  const visible = useWindowVisible();
+  const fluidPaused = !visible || _fluidPaused;
+
   const [current, setCurrent] = useState(src);
   const [next, setNext] = useState<string>();
   const [stage, setStage] = useState<"fade" | "idle">("idle");

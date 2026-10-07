@@ -3,6 +3,7 @@ import { useLocation } from "react-router-dom";
 import { RendererIPCMessageBus } from "@/common/lib/bus";
 import { useListenable } from "@/common/hooks/use-listenable";
 import { RoutePath, RoutePathDisplay } from "@/common/routes";
+import { playlistMarkId } from "@/common/utils/playlist-mark-id";
 import { useRouterActive } from "@/common/hooks/use-router-active";
 import { useUserTrackManager } from "@/common/hooks/use-user-track-manager";
 import { useTrackAddToPlaylist } from "@/common/hooks/use-track-add-to-playlist";
@@ -23,7 +24,9 @@ const ArtistDisplay: FC<object> = () => {
     usePlayerChangeActionForPlaylistFromDisplay({
       getTracks: () => artistRef.current?.artist?.hotTracks ?? [],
       sourceID: id!,
-      sourceType: "other"
+      sourceType: "other",
+      detailType: "artist",
+      markId: playlistMarkId({ type: "artist", id })
     });
   const { jumpAlbumDisplay, jumpArtistDisplay } = useArtistOrAlbumDisplayJump({
     currentArtistID: artistRef.current?.artist?.id

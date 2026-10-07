@@ -255,16 +255,8 @@ export class TrayUtils {
         {
           label: "退出",
           click: () => {
-            MainIPC.MessageChannel.commit({
-              sender: "process",
-              receiver: "main",
-              type: "bus_dispatch_player_action",
-              data: "exit"
-            });
-            setTimeout(() => {
-              const app = MainHandle.get();
-              app?.exit(MainExitCodeConstants.NORMAL_EXIT, "user exit");
-            });
+            const app = MainHandle.get();
+            app?.exit(MainExitCodeConstants.NORMAL_EXIT, "");
           }
         }
       ]

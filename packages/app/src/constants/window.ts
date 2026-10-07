@@ -42,11 +42,11 @@ export class MainWindowConstants {
     },
     // Windows 托盘弹窗
     trayOnWindows: {
-      base: { width: 180, height: 510 }
+      base: { width: 180, height: 540 }
     },
     // macOS 菜单栏托盘弹窗
     trayOnDarwin: {
-      base: { width: 180, height: 510 }
+      base: { width: 180, height: 540 }
     },
     about: {
       base: { width: 300, height: 270 }

@@ -25,6 +25,7 @@ import type { TrackResultRef } from "./content/track-result";
 import { AlbumResult, TrackResult, ArtistResult, PlaylistResult } from "./content";
 
 export type SearchRef = {
+  currentKeyword: string;
   tracks: NeteaseTrackRecord[];
 };
 
@@ -105,11 +106,12 @@ const Search: FC<SearchProps> = ({
   useImperativeHandle(
     ref,
     () => ({
+      currentKeyword: keyword,
       get tracks() {
         return trackResultRef.current?.tracks ?? [];
       }
     }),
-    []
+    [keyword]
   );
 
   useAgentFocusCtx({ page: "search", keyword }, routerActive);

@@ -22,11 +22,11 @@ export default class RendererPlayerAudio {
     volume: 0
   };
 
-  get muted() {
+  get muted(): boolean {
     return this.audio.muted;
   }
 
-  get instance() {
+  get instance(): HTMLAudioElement {
     return this.audio;
   }
 
@@ -35,15 +35,15 @@ export default class RendererPlayerAudio {
     this.audio.crossOrigin = "anonymous";
   }
 
-  mute() {
+  mute(): void {
     this.audio.muted = true;
   }
 
-  unmute() {
+  unmute(): void {
     this.audio.muted = false;
   }
 
-  get volume() {
+  get volume(): number {
     return this.audio.volume;
   }
 
@@ -81,11 +81,11 @@ export default class RendererPlayerAudio {
     }
   }
 
-  get paused() {
+  get paused(): boolean {
     return this.audio.paused;
   }
 
-  play() {
+  play(): void {
     this.shouldPlay = true;
     if (this.audio.paused && this.audio.src) {
       this.audio.play().catch((err) => {
@@ -94,7 +94,7 @@ export default class RendererPlayerAudio {
     }
   }
 
-  pause() {
+  pause(): void {
     this.shouldPlay = false;
     !this.audio.paused && this.audio.pause();
   }

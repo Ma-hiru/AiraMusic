@@ -25,8 +25,8 @@ const TopControl: FC = () => {
         RendererPlayerHandle[Symbol.dispose]();
         RendererWindow.current.hide();
         RendererWindow.all.hide();
-        RendererWindow.current.close();
         RendererIPC.MessageChannel.send("message_deliver_renderer_exited", "process", true);
+        setTimeout(() => RendererWindow.current.close(), 100);
       };
 
       if (quiting) return exit();

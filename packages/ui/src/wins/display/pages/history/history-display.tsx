@@ -39,6 +39,7 @@ const HistoryDisplay: FC<object> = () => {
     usePlayerChangeActionForPlaylistFromDisplay({
       getTracks: () => historyRef.current?.totalTracks.current ?? [],
       sourceID: 0,
+      detailType: "history",
       sourceType: "other"
     });
 
@@ -51,6 +52,7 @@ const HistoryDisplay: FC<object> = () => {
       RendererIPCMessageBus.playlistAction.deliver({
         type: "replacePlaylistAndPlay",
         sourceType: "other",
+        detailType: "history",
         sourceID: 0,
         trackID: track.id,
         trackIdx: tracks.findIndex((t) => t.id === track.id),

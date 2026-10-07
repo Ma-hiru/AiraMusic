@@ -38,6 +38,7 @@ const Bus: FC<object> = () => {
   const intelligenceMode = useAtomValue(intelligenceModeAtom);
   const updateMetaBus = useCallback(() => {
     RendererIPCMessageBus.trackMeta.deliver({
+      playlistMarkId: player.playlist.mark_id,
       track: player.current.track,
       lyric: player.current.lyric,
       repeat: player.playlist.repeat,
@@ -167,9 +168,6 @@ const Bus: FC<object> = () => {
         case "next":
           player.playlist.next(true);
           break;
-        case "exit":
-          RendererWindow.process.send("message_dispatch_should_close", true);
-          break;
         case "toggle-lyric-version-rm":
           RendererPlayerHandle.player.toggleLyric("rm");
           RendererPlayerHandle.player.afterUpdate(updateBus.current);
@@ -292,17 +290,32 @@ const Bus: FC<object> = () => {
           player.playlist.add(track, "next");
           player.playlist.jump(track);
         } else if (change.type === "replacePlaylistAndPlay") {
-          const { allIDs, trackID, sourceID, trackIdx, sourceType } = change;
+          const { allIDs, markId, trackID, sourceID, trackIdx, detailType, sourceType } = change;
 
-          const records = await fetchTrackList(sourceType, sourceID, allIDs);
-          const track =
-            records.find((record) => record.id === trackID) ?? records[trackIdx] ?? records[0];
+          const hasChange = (() => {
+            const id_matched = player.playlist.mark_id === markId;
+            if (!id_matched) return true;
+            if (detailType === "album" || detailType === "artist" || detailType === "search")
+              return false;
+            const current = player.playlist.listRaw();
+            if (current.length !== allIDs.length) return true;
+            return !current.every(
+              (t, i) => t.id === allIDs[i] && t.sourceID === sourceID && t.sourceName === sourceType
+            );
+          })();
+          if (hasChange) {
+            const records = await fetchTrackList(sourceType, sourceID, allIDs);
+            const track =
+              records.find((record) => record.id === trackID) ?? records[trackIdx] ?? records[0];
 
-          if (!track) throw new Error("找不到可播放的歌曲");
-          if (player.playlist.same(records)) {
-            player.playlist.jump(track);
+            if (!track) throw new Error("找不到可播放的歌曲");
+            if (player.playlist.same(records)) {
+              player.playlist.jump(track);
+            } else {
+              player.playlist.replace(records, track, markId);
+            }
           } else {
-            player.playlist.replace(records, track);
+            player.playlist.jump(player.playlist.locate(trackID));
           }
         } else if (change.type === "addListToPlaylistEnd") {
           const { allIDs, sourceID, sourceType } = change;

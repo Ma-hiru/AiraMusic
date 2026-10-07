@@ -136,9 +136,9 @@ export class QQMusicLyric {
     try {
       const songs = await this.search_modern(keyword, limit);
       if (songs.length > 0) return songs;
-      Log.warn("qq-music-search", "modern API returned empty, fallback...");
+      Log.info("qq-music-search", "modern API returned empty, fallback...");
     } catch (err) {
-      Log.warn("qq-music-search", "modern API failed:", err);
+      Log.info("qq-music-search", "modern API failed:", err);
     }
     return this.search_fallback(keyword, limit).catch((err) => {
       Log.warn("qq-music-search", "fallback API failed:", err);

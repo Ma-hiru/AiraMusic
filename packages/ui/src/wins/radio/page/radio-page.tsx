@@ -1,11 +1,13 @@
 import { cx } from "@emotion/css";
 import { X, ChevronRight } from "lucide-react";
 import { type FC, useMemo, useState, useEffect, useCallback } from "react";
+import { Log } from "@/common/lib/log";
 import { NeteaseImageSize } from "@/common/enum";
 import { RendererWindow } from "@/common/lib/window";
 import { NeteaseURL } from "@/common/netease/models";
 import { RendererIPCMessageBus } from "@/common/lib/bus";
 import { useListenable } from "@/common/hooks/use-listenable";
+import { useWindowVisible } from "@/common/hooks/use-window-visible";
 import { useThemeInjectFromBus } from "@/common/hooks/use-theme-inject-from-bus";
 import Drag from "@/common/components/layout/drag/drag";
 import AppToast from "@/common/components/display/toast";
@@ -34,6 +36,18 @@ const RadioPage: FC = () => {
     RendererIPCMessageBus.updater.deliver("track-meta");
     RendererIPCMessageBus.updater.deliver("track-progress");
   }, []);
+
+  const visible = useWindowVisible();
+  useEffect(() => {
+    if (visible) return;
+    Log.info("radio-page", "page will close after 100s");
+    const timer = window.setTimeout(() => {
+      RendererWindow.current.close();
+    }, 100_000);
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [visible]);
 
   return (
     <Drag className={cx("relative overflow-hidden", !coverURL && "text-black")}>

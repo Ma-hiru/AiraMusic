@@ -300,7 +300,7 @@ export default memo(NeteaseImage);
 const is_not_found_cover = (url?: string) => {
   if (!url) return true;
   url = NeteaseURL.setImageSize(url, NeteaseImageSize.raw);
-  const ans = !!RendererCache.memory.getOne<Set<string>>("cover-not-found")?.has(url);
+  const ans = !!RendererCache.browser.getOne<Record<string, boolean>>("cover-not-found")?.[url];
   ans && Log.info("NeteaseImage", "not found cover", url);
   return ans;
 };
@@ -309,8 +309,8 @@ const set_not_found_cover = (url?: string) => {
   if (!url) return;
   url = NeteaseURL.setImageSize(url, NeteaseImageSize.raw);
   Log.info("NeteaseImage", "set not found cover", url);
-  RendererCache.memory.setOne<Set<string>>(
-    "cover-not-found",
-    (RendererCache.memory.getOne<Set<string>>("cover-not-found") ?? new Set<string>()).add(url)
-  );
+  RendererCache.browser.setOne<Record<string, boolean>>("cover-not-found", {
+    ...RendererCache.browser.getOne<Record<string, boolean>>("cover-not-found"),
+    [url]: true
+  });
 };

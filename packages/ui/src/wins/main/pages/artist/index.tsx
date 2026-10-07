@@ -2,6 +2,7 @@ import { memo, useRef, type FC } from "react";
 import { useLocation } from "react-router-dom";
 import { RoutePath, RoutePathMain } from "@/common/routes";
 import { usePageJump } from "@/wins/main/hooks/use-page-jump";
+import { playlistMarkId } from "@/common/utils/playlist-mark-id";
 import { useRouterActive } from "@/common/hooks/use-router-active";
 import { useDisplayAction } from "@/wins/main/hooks/use-display-action";
 import { useSetBackground } from "@/wins/main/hooks/use-set-background";
@@ -17,7 +18,10 @@ const ArtistPage: FC<object> = () => {
   const { id } = RoutePath.parseQuery<{ id: number }>(location, RoutePathMain.artist);
   const { setBackground } = useSetBackground("artist");
   const { addTrackToPlaylistLast, addTrackToPlaylistNext, openTrackComment, onTrackPlay, player } =
-    usePlayerActionInList(() => artistRef.current?.artist?.hotTracks ?? []);
+    usePlayerActionInList(
+      () => artistRef.current?.artist?.hotTracks ?? [],
+      playlistMarkId({ type: "artist", id })
+    );
   const { jumpAlbumPage, jumpArtistPage } = usePageJump({
     currentArtistID: artistRef.current?.artist?.id
   });

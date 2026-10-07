@@ -8,7 +8,10 @@ const state = vi.hoisted(() => ({
   window: { isShow: true, isMin: false, addListener: () => () => {} },
   performance: { playerSpectrum: true, barSpectrum: true }
 }));
-vi.mock("@/common/lib/window", () => ({ RendererWindow: { current: state.window } }));
+vi.mock("@/common/hooks/use-window-visible", () => ({
+  useWindowVisible: () =>
+    state.window.isShow && !state.window.isMin && document.visibilityState === "visible"
+}));
 vi.mock("@/common/store/settings", () => ({ useSettings: () => state }));
 
 afterEach(() => {
@@ -55,15 +58,11 @@ it("shares visibility, playback, page and setting gates between analysis and bot
   rerender({ playing: true });
   expect(result.current.bar).toBe(true);
 
-  act(() => {
-    visible = false;
-    document.dispatchEvent(new Event("visibilitychange"));
-  });
+  visible = false;
+  rerender({ playing: true });
   expect(result.current).toEqual(stopped);
-  act(() => {
-    visible = true;
-    document.dispatchEvent(new Event("visibilitychange"));
-  });
+  visible = true;
+  rerender({ playing: true });
   expect(result.current.bar).toBe(true);
 
   // 当前页面的频谱关闭时，即使另一页面的开关打开，也不分析。

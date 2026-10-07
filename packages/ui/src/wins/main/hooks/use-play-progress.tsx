@@ -9,13 +9,15 @@ import {
 } from "react";
 import { NeteaseAPITrack } from "@/common/netease/api";
 import { useCacheRequest } from "@/common/utils/cache";
+import { usePlayerViewVisible } from "@/wins/main/hooks/use-player-view-visible";
 import RendererPlayerHandle from "@/wins/main/lib/handle";
 
-export function usePlayProgress() {
+export function usePlayProgress(view: "bar" | "player") {
   const [percentScope, percentAnimate] = useAnimate();
   const [bufferScope, bufferAnimate] = useAnimate();
   const [chorus, setChorus] = useState<NeteaseAPI.NeteaseChorusData[]>([]);
   const [chorusPercent, setChorusPercent] = useState<number[]>([]);
+  const visible = usePlayerViewVisible(view);
   const player = RendererPlayerHandle.usePlayer();
   const barRef = useRef<HTMLDivElement>(null);
   const dragPercentRef = useRef(0);
@@ -61,17 +63,20 @@ export function usePlayProgress() {
 
   // 监听事件，自然更新
   useEffect(() => {
+    if (!visible) return;
     const handleTimeUpdate = () => throttleTick();
     const handleLoad = () => throttleTick(true);
+    handleTimeUpdate();
     player.audio.addEventListener("timeupdate", handleTimeUpdate, { passive: true });
     player.audio.addEventListener("loadstart", handleLoad, { passive: true });
     document.addEventListener("visibilitychange", handleLoad, { passive: true });
     return () => {
+      throttleTick.cancel();
       player.audio.removeEventListener("timeupdate", handleTimeUpdate);
       player.audio.removeEventListener("loadstart", handleLoad);
       document.removeEventListener("visibilitychange", handleLoad);
     };
-  }, [player, throttleTick]);
+  }, [player, throttleTick, visible]);
 
   // 点击和拖拽
   const calcPercent = useCallback((clientX: number) => {

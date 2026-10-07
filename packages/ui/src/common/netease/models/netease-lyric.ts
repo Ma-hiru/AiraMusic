@@ -70,7 +70,7 @@ export class NeteaseLyric implements NeteaseLyricModel {
   }
   //endregion
 
-  get key() {
+  get key(): string {
     return `${this.id || 0}_${this.tips}_${this.data?.length || 0}_${this.rmExisted}_${this.tlExisted}`;
   }
 
@@ -86,47 +86,51 @@ export class NeteaseLyric implements NeteaseLyricModel {
   }
 
   /** 注音可来自原文中的假名，也可来自独立时间轴匹配出的逐词音译。 */
-  get canShowNotes() {
+  get canShowNotes(): boolean {
     return (
       this.noteExisted ||
       this.data.some((line) => line.words.some((word) => word.romanWord?.trim()))
     );
   }
 
-  get priority() {
+  get priority(): number {
     if (this.data.length <= 0) return 0;
 
     let priority = 0;
     (this.data[Math.floor(this.data.length / 2)]?.words.length ?? 0) > 1 && priority++;
-    this.rmExisted && (priority += 2);
-    this.tlExisted && (priority += 2);
+    this.rmExisted &&
+      this.data[Math.floor(this.data.length / 2)]?.romanLyric?.length &&
+      (priority += 2);
+    this.tlExisted &&
+      this.data[Math.floor(this.data.length / 2)]?.translatedLyric?.length &&
+      (priority += 2);
     this.noteExisted && (priority += 1);
 
     return priority;
   }
 
-  static fromNeteaseAPIResponse(response: NeteaseAPI.NeteaseLyricResponse) {
+  static fromNeteaseAPIResponse(response: NeteaseAPI.NeteaseLyricResponse): NeteaseLyric {
     return new NeteaseLyric(Parser.parseNeteaseLyricResponse(response));
   }
 
-  static fromTTMLyric(lyric: string) {
+  static fromTTMLyric(lyric: string): NeteaseLyric {
     return new NeteaseLyric(Parser.parseTTMLyric(lyric).lyric);
   }
 
-  static fromObject(lyric: Optional<NeteaseLyricModel>) {
+  static fromObject(lyric: Optional<NeteaseLyricModel>): Nullable<NeteaseLyric> {
     if (!lyric) return null;
     return new NeteaseLyric(lyric);
   }
 
-  static get blankLyric() {
+  static get blankLyric(): NeteaseLyric {
     return new NeteaseLyric(RendererLyricConstants.noLyricPreset);
   }
 
-  static get pureMusicLyric() {
+  static get pureMusicLyric(): NeteaseLyric {
     return new NeteaseLyric(RendererLyricConstants.pureMusicLyricPreset);
   }
 
-  static get loadErrorLyric() {
+  static get loadErrorLyric(): NeteaseLyric {
     return new NeteaseLyric(RendererLyricConstants.loadErrorLyricPreset);
   }
 }
@@ -137,7 +141,7 @@ class Parser {
     return parseTranslatedLRC(raw, false) as LyricLine[];
   }
 
-  static parseExternalLrc(lyric: string) {
+  static parseExternalLrc(lyric: string): LyricLine[] {
     // eg: [00:00.00-1] 作曲 : solfa \n
     lyric = parseExternalLrc(lyric);
     return parseLrc(lyric);
@@ -229,7 +233,7 @@ class Parser {
   static shouldUseInlineNotes(
     rawLyrics: string[],
     inlineNotes: { end: number; start: number }[][]
-  ) {
+  ): boolean {
     const lineCount = rawLyrics.filter((line) => !LyricLineInfo.isBlank(line)).length;
     const candidateLineCount = inlineNotes.filter((notes) => notes.length > 0).length;
     const candidateCount = inlineNotes.reduce((count, notes) => count + notes.length, 0);
@@ -294,7 +298,7 @@ class Parser {
     rm: Undefinable<NeteaseAPI.NeteaseLyric>,
     type: "LRC" | "QRC" | "YRC",
     mt?: NeteaseAPI.NeteaseTransUser
-  ) {
+  ): NeteaseLyricModel {
     try {
       let mainLyric;
       switch (type) {

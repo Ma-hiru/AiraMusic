@@ -61,10 +61,11 @@ export function useSpectrumWorker(
 
   const updateSpectrum = useCallback(() => {
     const { audio, isReady, fpsLimit, isPlaying, withPeaks } = propsRef.current;
+    if (!isReady || !isPlaying) return;
     const analyser = audio.context.analyser;
     const worker = workerRef.current;
     const samples = samplesRef.current;
-    if (!analyser || !worker || !samples || !isReady || !isPlaying) {
+    if (!analyser || !worker || !samples) {
       animationFrameRef.current = requestAnimationFrame(updateSpectrum);
       return;
     }
@@ -104,6 +105,7 @@ export function useSpectrumWorker(
 
   // 初始化 SpectrumWorker，随着 fftSize、numBands、withPeaks 变化而重新初始化
   useEffect(() => {
+    if (!isPlaying) return;
     const analyser = audio.context.analyser;
     const audioCtx = audio.context.ctx;
     if (!analyser || !audioCtx) return;
@@ -177,7 +179,7 @@ export function useSpectrumWorker(
       nextPostAtRef.current = Number.NEGATIVE_INFINITY;
       samplesRef.current = null;
     };
-  }, [fftSize, numBands, withPeaks, audio]);
+  }, [fftSize, numBands, withPeaks, audio, isPlaying]);
   // 当 numBands 或 withPeaks 变化时，更新 spectrumData 的结构
   useEffect(() => {
     if (!spectrumData.current) return;

@@ -3,6 +3,7 @@ import { useLocation } from "react-router-dom";
 import { RendererIPCMessageBus } from "@/common/lib/bus";
 import { useListenable } from "@/common/hooks/use-listenable";
 import { RoutePath, RoutePathDisplay } from "@/common/routes";
+import { playlistMarkId } from "@/common/utils/playlist-mark-id";
 import { useRouterActive } from "@/common/hooks/use-router-active";
 import { useUserTrackManager } from "@/common/hooks/use-user-track-manager";
 import { useTrackAddToPlaylist } from "@/common/hooks/use-track-add-to-playlist";
@@ -24,7 +25,9 @@ const SearchDisplay: FC<object> = () => {
     usePlayerChangeActionForPlaylistFromDisplay({
       getTracks: () => searchRef.current?.tracks ?? [],
       sourceID: 0,
-      sourceType: "other"
+      sourceType: "other",
+      detailType: "search",
+      markId: () => playlistMarkId({ type: "search", keyword: searchRef.current?.currentKeyword })
     });
   const { addTrackToPlaylist } = useTrackAddToPlaylist();
 

@@ -26,17 +26,29 @@ vi.mock("@mahiru/ipc/renderer", () => ({
 
 it("reacts to real RendererWindow IPC notifications without a manual component rerender", async () => {
   vi.useFakeTimers();
-  vi.spyOn(document, "visibilityState", "get").mockReturnValue("visible");
+  const visibility = vi.spyOn(document, "visibilityState", "get").mockReturnValue("visible");
   try {
     const { result } = renderHook(useWindowVisible);
     const send = async (...actions: string[]) => {
       await act(async () => {
         for (const action of actions)
           ipc.listeners.get("bus_deliver_window_event")!({ type: "main", action });
-        await vi.advanceTimersByTimeAsync(150);
+        await vi.runAllTimersAsync();
       });
     };
     await send("show");
+    expect(result.current).toBe(true);
+    await act(async () => {
+      visibility.mockReturnValue("hidden");
+      document.dispatchEvent(new Event("visibilitychange"));
+      await vi.runAllTimersAsync();
+    });
+    expect(result.current).toBe(false);
+    await act(async () => {
+      visibility.mockReturnValue("visible");
+      document.dispatchEvent(new Event("visibilitychange"));
+      await vi.runAllTimersAsync();
+    });
     expect(result.current).toBe(true);
     await send("minimize", "hide", "blur");
     expect(RendererWindow.current.isMin).toBe(true);

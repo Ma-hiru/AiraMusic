@@ -4,6 +4,7 @@ import { useUser } from "@/common/store/user";
 import { RendererIPCMessageBus } from "@/common/lib/bus";
 import { RendererModified } from "@/common/lib/modified";
 import { useListenable } from "@/common/hooks/use-listenable";
+import { playlistMarkId } from "@/common/utils/playlist-mark-id";
 import { useRouterActive } from "@/common/hooks/use-router-active";
 import { useAlbumModifySync } from "@/common/hooks/use-album-modify-sync";
 import { useUserTrackManager } from "@/common/hooks/use-user-track-manager";
@@ -35,7 +36,9 @@ const AlbumDisplay: FC<object> = () => {
   } = usePlayerChangeActionForPlaylistFromDisplay({
     getTracks: () => albumRef.current?.album?.tracks ?? [],
     sourceID: id!,
-    sourceType: "album"
+    sourceType: "album",
+    detailType: "album",
+    markId: playlistMarkId({ type: "album", id })
   });
   const { jumpAlbumDisplay, jumpArtistDisplay } = useArtistOrAlbumDisplayJump({
     currentAlbumID: albumRef.current?.album?.content.id

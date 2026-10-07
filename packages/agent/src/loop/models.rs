@@ -144,6 +144,49 @@ pub enum LoopDecision {
 
 // ═══════════════ veto ═══════════════
 
+#[allow(unused)]
+pub enum LoopPayload {
+    /// 决定 Request 是否可发
+    BeforeRequest {
+        turn: u32,
+        step: u32,
+        session_id: SessionId,
+        request: ChatRequest,
+    },
+    Request {
+        turn: u32,
+        step: u32,
+        session_id: SessionId,
+        request: ChatRequest,
+    },
+    /// 批不批这一次工具调用
+    ToolPreExecute {
+        turn: u32,
+        step: u32,
+        session_id: SessionId,
+        call: ChatToolCall,
+    },
+    /// 两种用法:
+    ///   - 原地改 result / 往 inject 塞消息, 返回 Allow (循环用改后的值)
+    ///   - 返回 Deny{reason} = 这一轮到此为止(否决这条结果)
+    ToolAfter {
+        turn: u32,
+        step: u32,
+        session_id: SessionId,
+        call: ChatToolCall,
+        result: String,
+        inject: Vec<ChatMessage>,
+    },
+    AfterReply {
+        turn: u32,
+        step: u32,
+        session_id: SessionId,
+        reply: ChatAssistantReply,
+        is_resolved: bool,
+        tool_calls: Vec<ChatMessage>,
+    },
+}
+
 /// 决定 Request 是否可发
 pub struct LoopPayloadBeforeRequest {
     pub turn: u32,

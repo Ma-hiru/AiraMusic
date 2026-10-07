@@ -25,7 +25,7 @@ async function sync_version() {
       console.log(`[sync_version] version not match: ${old_version} !== ${current_version}`);
       console.log(`[sync_version] update version: ${old_version} -> ${current_version}`);
       package_json["version"] = current_version;
-      await writeFile(app_package, JSON.stringify(package_json, null, 2));
+      await writeFile(app_package, JSON.stringify(package_json, null, 2) + "\n");
     } else {
       console.log(`[sync_version] version match: ${old_version} === ${current_version}`);
     }
@@ -34,7 +34,7 @@ async function sync_version() {
       console.log(`[sync_version] description not match: ${old_desc} !== ${current_desc}`);
       console.log(`[sync_version] update description: ${old_desc} -> ${current_desc}`);
       package_json["description"] = current_desc;
-      await writeFile(app_package, JSON.stringify(package_json, null, 2));
+      await writeFile(app_package, JSON.stringify(package_json, null, 2) + "\n");
     } else {
       console.log(`[sync_version] description match: ${old_desc} === ${current_desc}`);
     }

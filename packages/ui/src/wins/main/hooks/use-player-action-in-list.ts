@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useMemo, useCallback } from "react";
 import { RendererWindow } from "@/common/lib/window";
 import { RendererIPCMessageBus } from "@/common/lib/bus";
 import { useLatestRef } from "@/common/hooks/use-latest-ref";
@@ -6,22 +6,27 @@ import { NeteaseTrackRecord } from "@/common/netease/models";
 import { type TrackListClickFunc } from "@/common/components/display/track_list";
 import RendererPlayerHandle from "@/wins/main/lib/handle";
 
-export function usePlayerActionInList(getTracks: NormalFunc<[], NeteaseTrackRecord[]>) {
+export function usePlayerActionInList(
+  getTracks: NormalFunc<[], NeteaseTrackRecord[]>,
+  /** history/playlist 不使用标记，因为这些可能是动态的内容 */
+  markId?: string | NormalFunc<[], Undefinable<string>>
+) {
   const player = RendererPlayerHandle.usePlayer();
   const getTracksRef = useLatestRef(getTracks);
+  const markIdMemo = useMemo(() => (typeof markId === "function" ? markId() : markId), [markId]);
 
   const onTrackPlay = useCallback<TrackListClickFunc>(
     (track) => {
       const totalTracks = getTracksRef.current();
       if (!totalTracks || !totalTracks[0]) return;
       if (player.current.track?.id === track.id) return;
-      if (player.playlist.same(totalTracks)) {
+      if (player.playlist.same(totalTracks, markIdMemo)) {
         player.playlist.jump(track);
       } else {
-        player.playlist.replace(totalTracks, track);
+        player.playlist.replace(totalTracks, track, markIdMemo);
       }
     },
-    [player, getTracksRef]
+    [player, getTracksRef, markIdMemo]
   );
   const addTrackToPlaylistNext = useCallback(
     (track: NeteaseTrackRecord) => {
@@ -49,8 +54,8 @@ export function usePlayerActionInList(getTracks: NormalFunc<[], NeteaseTrackReco
 
   const onReplace = useCallback(() => {
     const tracks = getTracksRef.current();
-    player.playlist.replace(tracks, 0);
-  }, [player.playlist, getTracksRef]);
+    player.playlist.replace(tracks, 0, markIdMemo);
+  }, [player.playlist, getTracksRef, markIdMemo]);
 
   const onAddList = useCallback(() => {
     const tracks = getTracksRef.current();

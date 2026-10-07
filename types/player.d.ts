@@ -187,3 +187,5 @@ type NeteaseLyricModel = {
 };
 
 type NeteaseTrackRecordSourceType = "fm" | "album" | "other" | "playlist" | "intelligence";
+
+type NeteaseTrackRecordSourceTypeDetail = "album" | "artist" | "search" | "history" | "playlist";

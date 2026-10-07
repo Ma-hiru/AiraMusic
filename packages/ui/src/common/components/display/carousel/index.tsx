@@ -1,6 +1,7 @@
 import { cx } from "@emotion/css";
 import { clamp } from "lodash-es";
 import { memo, useRef, type FC, useState, useEffect, useCallback } from "react";
+import { useWindowVisible } from "@/common/hooks/use-window-visible";
 import AppEmpty from "@/common/components/fallback/app-empty";
 import AppLoading from "@/common/components/fallback/app-loading";
 
@@ -59,11 +60,12 @@ const Carousel: FC<CarouselProps> = ({
     [items.length]
   );
 
+  const visible = useWindowVisible();
   useEffect(() => {
-    if (!hasMultipleItems) return stopAutoPlay;
+    if (!visible || !hasMultipleItems) return stopAutoPlay;
     startAutoPlay();
     return stopAutoPlay;
-  }, [hasMultipleItems, startAutoPlay, stopAutoPlay]);
+  }, [hasMultipleItems, startAutoPlay, stopAutoPlay, visible]);
 
   useEffect(() => {
     if (index >= items.length) setIndex(0);

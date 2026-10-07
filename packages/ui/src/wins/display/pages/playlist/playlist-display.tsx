@@ -6,6 +6,7 @@ import { RendererIPCMessageBus } from "@/common/lib/bus";
 import { RendererModified } from "@/common/lib/modified";
 import { useListenable } from "@/common/hooks/use-listenable";
 import { scrollActionsAtom } from "@/wins/display/atoms/layout";
+import { playlistMarkId } from "@/common/utils/playlist-mark-id";
 import { useRouterActive } from "@/common/hooks/use-router-active";
 import { useUserTrackManager } from "@/common/hooks/use-user-track-manager";
 import { usePlaylistModifySync } from "@/common/hooks/use-playlist-modify-sync";
@@ -34,7 +35,9 @@ const PlaylistDisplay: FC<object> = () => {
   } = usePlayerChangeActionForPlaylistFromDisplay({
     getTracks: () => playlistRef.current?.totalTracks.current ?? [],
     sourceID: Number(id),
-    sourceType: "playlist"
+    sourceType: "playlist",
+    detailType: "playlist",
+    markId: playlistMarkId({ type: "playlist", id })
   });
   const { jumpAlbumDisplay, jumpArtistDisplay } = useArtistOrAlbumDisplayJump();
   const { onPageAction } = useDisplayPageAction(() => {

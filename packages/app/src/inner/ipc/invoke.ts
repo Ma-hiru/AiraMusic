@@ -184,6 +184,11 @@ export const invokeHandlers: InvokeHandlers = {
     const sender = BrowserWindow.fromWebContents(e.sender);
     return MainWindowManager.getId(sender)!;
   },
+  invoke_window_shown: (e, type) => {
+    const sender = BrowserWindow.fromWebContents(e.sender);
+    if (!sender) return false;
+    return MainWindowManager.get(type)?.isVisible() ?? false;
+  },
   invoke_window_pinned: (e, type) => {
     const sender = BrowserWindow.fromWebContents(e.sender);
     if (!sender) return false;

@@ -14,8 +14,8 @@ import RendererPlayerHandle from "@/wins/main/lib/handle";
 
 const Progress: FC<object> = () => {
   const { barRef, bufferScope, percentScope, chorusPercent, handleBarClick, handleBarMouseDown } =
-    usePlayProgress();
-  const { progress } = useProgress();
+    usePlayProgress("player");
+  const { progress } = useProgress("player");
   const settings = useSettings();
   const player = RendererPlayerHandle.usePlayer();
   const track = player.current.track?.detail;

@@ -14,7 +14,7 @@ const resolveAbortSignal = (input?: AbortInput) =>
 
 export default class _NeteaseLyricSource {
   //region cache
-  private static readonly cacheKey = "netease_lyric_v22";
+  private static readonly cacheKey = "netease_lyric_v23";
 
   private static storeCache(id: number, lyric: NeteaseLyricModel) {
     return RendererCache.service.object.setOne<NeteaseLyricModel>({
@@ -30,7 +30,10 @@ export default class _NeteaseLyricSource {
   }
   //endregion
 
-  private static async fromQQMusic(track: Optional<NeteaseTrack>, signal?: AbortSignal) {
+  private static async fromQQMusic(
+    track: Optional<NeteaseTrack>,
+    signal?: AbortSignal
+  ): Promise<Nullable<NeteaseLyric>> {
     signal?.throwIfAborted();
     if (!track) return null;
     try {
@@ -70,7 +73,11 @@ export default class _NeteaseLyricSource {
     return null;
   }
 
-  static async id(id: number, abortInput?: AbortInput, track?: NeteaseTrack) {
+  static async id(
+    id: number,
+    abortInput?: AbortInput,
+    track?: NeteaseTrack
+  ): Promise<NeteaseLyric> {
     const signal = resolveAbortSignal(abortInput);
     signal?.throwIfAborted();
     const cache = await _NeteaseLyricSource.getCache(id);
@@ -118,7 +125,7 @@ export default class _NeteaseLyricSource {
     return lyric;
   }
 
-  static track(track: NeteaseTrack, abortInput?: AbortInput) {
+  static track(track: NeteaseTrack, abortInput?: AbortInput): Promise<NeteaseLyric> {
     return _NeteaseLyricSource.id(track.id, abortInput, track);
   }
 }

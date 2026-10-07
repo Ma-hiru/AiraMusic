@@ -5,7 +5,7 @@ import { usePlayProgress } from "@/wins/main/hooks/use-play-progress";
 
 const BarProgress: FC<object> = () => {
   const { barRef, bufferScope, percentScope, chorusPercent, handleBarClick, handleBarMouseDown } =
-    usePlayProgress();
+    usePlayProgress("bar");
 
   return (
     <div
@@ -37,7 +37,7 @@ const BarProgress: FC<object> = () => {
           <span
             key={index}
             className={cx(
-              "bg-(--text-color-on-main)",
+              "bg-primary-text",
               css`
                 position: absolute;
                 top: 0;

@@ -1,11 +1,13 @@
 import { memo, useRef, type FC, useMemo, useEffect, useCallback } from "react";
 import { useTailwindMediaQuery } from "@/common/hooks/use-tailwind-media-query";
+import { usePlayerViewVisible } from "@/wins/main/hooks/use-player-view-visible";
 import RendererPlayerHandle from "@/wins/main/lib/handle";
 import LyricComponent, { type LyricRef } from "@/common/components/display/lyric";
 
 const Lyric: FC<object> = () => {
   const player = RendererPlayerHandle.usePlayer();
   const lyricRef = useRef<Nullable<LyricRef>>(null);
+  const visible = usePlayerViewVisible("player");
 
   const handleWordClick = useCallback(
     (timeMS: number) => {
@@ -16,6 +18,7 @@ const Lyric: FC<object> = () => {
   );
 
   useEffect(() => {
+    if (!visible) return;
     let lastTime = -1;
     let rafId: Nullable<number> = null;
     let isRunning = false;
@@ -49,6 +52,10 @@ const Lyric: FC<object> = () => {
       lyricRef.current?.calcLayout();
     };
 
+    // 确保visible恢复时，时间同步，且loop开启
+    lyricRef.current?.setCurrentTime(player.audio.instance.currentTime * 1000);
+    lyricRef.current?.update(0);
+    !player.audio.paused && startLoop();
     player.audio.addEventListener("play", startLoop, { passive: true });
     player.audio.addEventListener("pause", stopLoop, { passive: true });
     player.audio.addEventListener("loadstart", loadstart, { passive: true });
@@ -58,7 +65,7 @@ const Lyric: FC<object> = () => {
       player.audio.removeEventListener("pause", stopLoop);
       player.audio.removeEventListener("loadstart", loadstart);
     };
-  }, [player]);
+  }, [player, visible]);
 
   const { lg, md, sm, xl, "2xl": xxl } = useTailwindMediaQuery();
   const fontSize = useMemo(() => {
@@ -75,8 +82,8 @@ const Lyric: FC<object> = () => {
         ref={lyricRef}
         className="contain-strict"
         fontSize={fontSize}
-        playing={player.playing}
         lyric={player.current.lyric}
+        playing={visible && player.playing}
         rmActive={player.current?.rmActive}
         tlActive={player.current?.tlActive}
         noteActive={player.current?.noteActive}

@@ -1,4 +1,5 @@
 import { shuffle } from "lodash-es";
+import { Log } from "@/common/lib/log";
 import { Listenable } from "@/common/utils/listenable";
 import { NeteaseTrackRecord } from "@/common/netease/models";
 
@@ -6,6 +7,8 @@ type PlayableResult = { reason: string; playable: boolean };
 
 export default class RendererPlayerPlaylist extends Listenable {
   //#region fields
+  /** 标记, 用于区分不同播放列表 */
+  public mark_id: string;
   /** 规范序 */
   private tracks: NeteaseTrackRecord[];
   /** 播放/显示序：tracks 下标的一个排列，shuffle 关时为 0..n-1，开时为打乱排列 */
@@ -91,6 +94,7 @@ export default class RendererPlayerPlaylist extends Listenable {
     this._loop = props?.loop ?? false;
     this.order = [];
     this.cursor = -1;
+    this.mark_id = crypto.randomUUID();
     // position 是规范序下标，与 save 持久化的口径一致
     this.rebuildOrder(this._shuffle, props?.position ?? -1);
   }
@@ -184,7 +188,12 @@ export default class RendererPlayerPlaylist extends Listenable {
     return this.order.findIndex((i) => this.tracks[i]!.id === id);
   }
 
-  public replace(list: NeteaseTrackRecord[], initPosition: number | NeteaseTrackRecord = -1) {
+  public replace(
+    list: NeteaseTrackRecord[],
+    initPosition: number | NeteaseTrackRecord = -1,
+    id: string = crypto.randomUUID()
+  ) {
+    this.mark_id = id;
     this.tracks = [...list];
     const headTrackIdx =
       typeof initPosition === "number"
@@ -196,6 +205,7 @@ export default class RendererPlayerPlaylist extends Listenable {
   }
 
   public clear() {
+    this.mark_id = crypto.randomUUID();
     this.tracks = [];
     this.order = [];
     this.cursor = -1;
@@ -221,6 +231,8 @@ export default class RendererPlayerPlaylist extends Listenable {
     if (d < this.cursor) this.cursor--;
     if (this.cursor >= this.order.length) this.cursor = this.order.length - 1;
 
+    // 标记变化
+    this.mark_id = crypto.randomUUID();
     this.executeListeners();
     return this;
   }
@@ -249,6 +261,8 @@ export default class RendererPlayerPlaylist extends Listenable {
       this.order.splice(this.cursor + 1, 0, trackIdx);
     }
 
+    // 标记变化
+    this.mark_id = crypto.randomUUID();
     this.executeListeners();
     return this;
   }
@@ -284,6 +298,8 @@ export default class RendererPlayerPlaylist extends Listenable {
     this.order = newDisplay.map((t) => trackIndexById.get(t.id)!);
     this.cursor = currentRecord ? newDisplay.findIndex((t) => t.id === currentRecord.id) : -1;
 
+    // 标记变化
+    this.mark_id = crypto.randomUUID();
     this.executeListeners();
     return this;
   }
@@ -297,12 +313,18 @@ export default class RendererPlayerPlaylist extends Listenable {
     return this;
   }
 
-  public same(list: NeteaseTrackRecord[]) {
+  /** 判断两个列表是否完全相同, 优先传入 id 判断是否为同一个列表 */
+  public same(list: NeteaseTrackRecord[], id?: string) {
+    if (id && this.mark_id === id && this.tracks.length === list.length) {
+      Log.info(`same playlist, id(${id}) match`);
+      return true;
+    }
     if (this.tracks.length !== list.length) return false;
     for (let i = 0; i < this.tracks.length; i++) {
       if (this.tracks[i]!.detail.id !== list[i]!.detail.id) return false;
       if (this.tracks[i]!.sourceID !== list[i]!.sourceID) return false;
     }
+    Log.info(`same playlist, content match`);
     return true;
   }
 
