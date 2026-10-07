@@ -5,13 +5,13 @@ import { MainAgent } from "@/services/agent";
 import { MainMcp } from "@/inner/mcp/runtime";
 import { fetchFromNode } from "@/lib/net-fetch";
 import { AgentRequestError } from "@mahiru/agent";
-import { Log, runWithLogContext } from "@/lib/log";
 import { mergeCacheStoreConfig } from "@/utils/merge";
 import { MainWindowManager } from "@/lib/window-manager";
 import { MainScreenResolver } from "@/lib/screen-resolver";
 import { MainCacheStoreConstants } from "@/constants/store";
 import { MainAgentFeatureSettings } from "@/services/agent/settings";
 import { MainStoreForConfig, MainStoreForRenderer } from "@/lib/key-value-store";
+import { Log, exportLogFiles, getLogFileNames, runWithLogContext } from "@/lib/log";
 import Net from "node:net";
 import Https from "node:https";
 import Fs from "node:fs/promises";
@@ -124,6 +124,29 @@ export const invokeHandlers: InvokeHandlers = {
       return { ok: true };
     } catch (e) {
       return { ok: false, error: String(e) };
+    }
+  },
+  invoke_log_export: async (event, scope) => {
+    try {
+      if (scope !== "recent" && scope !== "all") return { ok: false, error: "无效日志范围" };
+      const files = await getLogFileNames(scope);
+      if (!files.length) return { ok: false, error: "暂无日志可导出" };
+      const options = {
+        title: "导出日志",
+        defaultPath: `AiraMusic-logs-${new Date().toISOString().replace(/[:.]/g, "-")}.tar.gz`,
+        filters: [{ name: "日志归档", extensions: ["gz"] }]
+      };
+      const sender = BrowserWindow.fromWebContents(event.sender);
+      const { canceled, filePath } = sender
+        ? await dialog.showSaveDialog(sender, options)
+        : await dialog.showSaveDialog(options);
+      if (canceled) return { ok: false, canceled: true };
+      if (!filePath) return { ok: false, error: "无效路径" };
+      await exportLogFiles(files, filePath);
+      return { ok: true };
+    } catch (error) {
+      Log.error("invoke(log export)", error);
+      return { ok: false, error: String(error) };
     }
   },
   invoke_device_gpu: async () => app.whenReady().then(() => app.getGPUInfo("complete")),

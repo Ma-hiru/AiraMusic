@@ -12,15 +12,15 @@ interface MarqueeProps {
 
 const Marquee: FC<MarqueeProps> = ({ className, text, options, children, itemClassName }) => {
   const titleRef = useRef(null);
-  useMarquee(
-    titleRef,
-    options ?? {
+  useMarquee(titleRef, {
+    ...(options ?? {
       pingPong: true,
       pauseOnHover: true,
       gapDuration: 3000,
       speed: 10
-    }
-  );
+    }),
+    disable: options?.disable || (!text && !children)
+  });
   if (!text && !children) return;
   return (
     <h1

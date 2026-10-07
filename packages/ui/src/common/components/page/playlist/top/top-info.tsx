@@ -1,5 +1,5 @@
 import { cx } from "@emotion/css";
-import { memo, type FC, useMemo, useState } from "react";
+import { memo, type FC, useMemo, useState, useEffect } from "react";
 import { RendererWindow } from "@/common/lib/window";
 import { RendererIPCMessageBus } from "@/common/lib/bus";
 import { NeteaseAPIPlaylist } from "@/common/netease/api";
@@ -27,6 +27,7 @@ const TopInfo: FC<TopInfoProps> = ({ user, onEdited, onAddList, onPlayAll, summa
       RendererImageConstants.PlaylistPageCreatorAvatarSize
     );
   }, [summary]);
+  useEffect(() => setSummary(_summary), [_summary]);
   return (
     <div className="grid h-full w-full min-h-0 min-w-0 grid-cols-1 grid-rows-[auto_minmax(0,1fr)_auto] gap-1 overflow-hidden">
       {/* title */}
@@ -95,6 +96,7 @@ const TopInfo: FC<TopInfoProps> = ({ user, onEdited, onAddList, onPlayAll, summa
                   if (userPlaylist) return; // 用户歌单不支持收藏
                   await NeteaseAPIPlaylist.star({ id: summary.id, t: summary.subscribed ? 2 : 1 });
                   setSummary((prev) => {
+                    if (prev?.id !== summary.id) return prev;
                     return (
                       prev &&
                       new NeteasePlaylist({

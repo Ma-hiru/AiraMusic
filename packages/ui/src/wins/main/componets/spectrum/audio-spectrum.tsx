@@ -48,6 +48,7 @@ const AudioSpectrum: FC<AudioSpectrumProps> = ({
   const spectrumData = useAtomValue(spectrumDataAtom);
   const canvasRef = useRef<Nullable<HTMLCanvasElement>>(null);
   const rendererRef = useRef<Nullable<IRenderer>>(null);
+  const lastBandsRef = useRef<Nullable<Float32Array>>(null);
   const hideRightBandsRef = useLatestRef(hideRightBands);
   const spectrumDataRef = useLatestRef(spectrumData);
   const spectrumReadyRef = useLatestRef(spectrumReady);
@@ -94,6 +95,7 @@ const AudioSpectrum: FC<AudioSpectrumProps> = ({
     const { canvas, options } = rendererOptions;
     render.init(canvas, options);
     rendererRef.current = render;
+    if (lastBandsRef.current) render.draw(lastBandsRef.current);
     return () => {
       rendererRef.current?.destroy();
       rendererRef.current = null;
@@ -101,10 +103,7 @@ const AudioSpectrum: FC<AudioSpectrumProps> = ({
   }, [rendererFactory, rendererOptions]);
   // 渲染循环
   useEffect(() => {
-    if (!enable) {
-      rendererRef.current?.draw(new Float32Array(0));
-      return;
-    }
+    if (!enable) return;
     let animationFrameId: number;
     const envelope = new SpectrumEnvelope();
     let previousTime: number | undefined;
@@ -120,10 +119,11 @@ const AudioSpectrum: FC<AudioSpectrumProps> = ({
       if (bands.length) {
         const hideCount = Math.max(0, Math.floor(hideRightBandsRef.current));
         const visibleCount = Math.max(0, bands.length - hideCount);
-        if (visibleCount > 0) {
-          rendererRef.current?.draw(
-            visibleCount === bands.length ? bands : bands.subarray(0, visibleCount)
-          );
+        if (visibleCount > 0 && rendererRef.current) {
+          const visibleBands =
+            visibleCount === bands.length ? bands : bands.subarray(0, visibleCount);
+          rendererRef.current.draw(visibleBands);
+          lastBandsRef.current = visibleBands;
         }
       }
       animationFrameId = requestAnimationFrame(draw);

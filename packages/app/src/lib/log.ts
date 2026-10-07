@@ -3,6 +3,7 @@ import { mkdirSync, createWriteStream } from "node:fs";
 import { getArgValue } from "@/utils/args";
 import { MainRuntime } from "@/lib/runtime";
 import { MainPathResolver } from "@/lib/path-resolver";
+import { listLogFiles, createLogArchive } from "@/lib/log-export";
 import {
   Colors,
   LogLevel,
@@ -134,13 +135,24 @@ export type ExtendLog = LogInstance & {
   EnvLevel: LogLevel;
 };
 
+const fileWriter = MainRuntime.isDev ? null : new LoggerFileWriter();
+
 export const Log = <ExtendLog>(
-  createLog(
-    level,
-    new ContextLoggerWriter(MainRuntime.isDev ? raw_console : new LoggerFileWriter()),
-    true
-  )
+  createLog(level, new ContextLoggerWriter(fileWriter ?? raw_console), true)
 );
+
+export function getLogFileNames(scope: "all" | "recent") {
+  return listLogFiles(MainPathResolver.logDir, scope === "recent" ? 10 : undefined);
+}
+
+export async function exportLogFiles(files: string[], filePath: string) {
+  if (fileWriter) {
+    await new Promise<void>((resolve, reject) => {
+      fileWriter.stream.write("", (error) => (error ? reject(error) : resolve()));
+    });
+  }
+  await createLogArchive(MainPathResolver.logDir, files, filePath);
+}
 
 export function replaceGlobalConsole() {
   const consoleLogger = {

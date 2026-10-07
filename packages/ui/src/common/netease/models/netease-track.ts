@@ -1,3 +1,4 @@
+import { Log } from "@/common/lib/log";
 import { RendererFormat } from "@/common/lib/format";
 import { TrackBitmark, TrackQuality } from "@/common/enum";
 
@@ -139,7 +140,8 @@ export class NeteaseTrack implements NeteaseTrackModel {
       result.playable = false;
       result.reason = "无版权";
     } else if (this.privilege.st && this.privilege.st < 0) {
-      // st小于0时为灰色歌曲, 使用上传云盘的方法解灰后 st == 0。
+      // st小于0时为灰色歌曲, 使用上传云盘的方法解灰后 st == 0
+      Log.error("NeteaseTrack", "歌曲下架", this.id, this.name, this.privilege);
       result.playable = false;
       result.reason = "已下架";
     }

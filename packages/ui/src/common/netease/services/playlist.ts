@@ -21,7 +21,7 @@ import NeteaseTrackSource from "@/common/netease/services/track";
  * */
 export default class _NeteasePlaylistSource {
   //region cache
-  private static readonly cacheKey = "netease_playlist_detail_v1";
+  private static readonly cacheKey = "netease_playlist_detail_v2";
 
   private static storeCache(response: NullablePrivilegesPlaylistDetailResponse) {
     return RendererCache.service.object.setOne({
@@ -73,7 +73,14 @@ export default class _NeteasePlaylistSource {
       cache.playlist.trackNumberUpdateTime === playlist.trackNumberUpdateTime &&
       cache.playlist.trackUpdateTime === playlist.trackUpdateTime
     ) {
-      response.privileges = cache.privileges;
+      const latestPrivileges = new Map(
+        response.privileges
+          .filter((privilege) => privilege !== null)
+          .map((privilege) => [privilege.id, privilege])
+      );
+      response.privileges = cache.playlist.tracks.map(
+        (track, index) => latestPrivileges.get(track.id) ?? cache.privileges[index] ?? null
+      );
       response.playlist.tracks = cache.playlist.tracks;
       response.playlist.trackCount = cache.playlist.trackCount;
       response.playlist.trackIds = cache.playlist.trackIds;

@@ -64,6 +64,10 @@ export type InvokeEventMaps = {
     { key: string; value: JsonValue },
     { ok: true } | { ok: false; reason?: string }
   ];
+  invoke_log_export: [
+    scope: "all" | "recent",
+    Promise<{ ok: boolean; error?: string; canceled?: boolean }>
+  ];
   invoke_fs_select: [
     type: "dir" | "file",
     Promise<{ ok: boolean; path: string; error?: string; canceled?: boolean }>
