@@ -260,4 +260,6 @@ CI 会检查 TypeScript、Go、Rust/WASM 和各工作区测试，并构建 UI �
 
 ## License
 
-AiraMusic 基于 [MIT License](LICENSE) 开源。使用第三方音乐服务时，请同时遵守相应服务条款与所在地法律法规。
+Copyright (C) 2025-2026 Ma-hiru
+
+AiraMusic 基于 [AGPL-3.0](LICENSE) 开源。分发衍生作品时须以相同协议开源并提供完整源码；若通过网络向用户提供服务，还须向这些用户提供对应源码。使用第三方音乐服务时，请同时遵守相应服务条款与所在地法律法规。
