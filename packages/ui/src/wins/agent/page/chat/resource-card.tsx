@@ -24,7 +24,7 @@ import {
 import { NeteaseImageSize } from "@/common/enum";
 import { RendererFormat } from "@/common/lib/format";
 import { NeteaseNetworkImage } from "@/common/netease/models";
-import { resolveAiraResourceAction } from "@mahiru/agent/browser";
+import { resolveAiraResourceAction } from "@/wins/agent/lib/rich-content";
 import {
   NeteaseServicesAlbum,
   NeteaseServicesTrack,
@@ -32,7 +32,7 @@ import {
   NeteaseServicesPlaylist
 } from "@/common/netease/services";
 import NeteaseImage from "@/common/components/display/image/netease-image";
-import type { AiraResourceCard, AiraResourceAction } from "@mahiru/agent/browser";
+import type { AiraResourceCard, AiraResourceAction } from "@/wins/agent/lib/rich-content";
 
 import { getAiraResourceLabel, runAiraResourceAction } from "./resource-actions";
 

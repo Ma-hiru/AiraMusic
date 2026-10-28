@@ -1,0 +1,11 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ESNext"],
+    "types": ["vitest/globals", "node"],
+    "noEmit": true,
+    "tsBuildInfoFile": "../node_modules/.buildinfo-tests"
+  },
+  "references": [{ "path": "../tsconfig.json" }],
+  "include": [".", "../../../types/**/*"]
+}

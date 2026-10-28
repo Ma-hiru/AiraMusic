@@ -24,6 +24,7 @@ const exactLabels: Record<string, string> = {
   "agent-search": "搜索音乐资源",
   "agent-lyric-schema": "读取歌词结构",
   "agent-tool-web-browser": "浏览网页",
+  "agent-tool-web-snapshot": "浏览网页",
   "agent-tool-track-detail": "读取歌曲详情",
   "agent-tool-track-playable": "检查播放权限",
   "agent-tool-track-lyrics": "读取歌曲歌词",
@@ -80,7 +81,7 @@ const exactLabels: Record<string, string> = {
 export function getAgentToolPresentation(name: string): AgentToolPresentation {
   const label = exactLabels[name] ?? humanizeToolName(name);
 
-  if (name === "agent-tool-web-browser") {
+  if (name === "agent-tool-web-browser" || name === "agent-tool-web-snapshot") {
     return { label, icon: Globe2, category: "WEB" };
   }
   if (name.includes("search")) {
@@ -157,7 +158,7 @@ export function getAgentToolSummary(props: {
   const errorMessage = getNestedString(output, "error", "message");
   if (errorMessage) return errorMessage;
 
-  if (props.name === "agent-tool-web-browser") {
+  if (props.name === "agent-tool-web-browser" || props.name === "agent-tool-web-snapshot") {
     const action = getString(input, "action");
     const query = getString(input, "query");
     const url = getString(input, "url");
@@ -366,7 +367,7 @@ function readWebContentRange(value: unknown): AgentWebToolDetails["contentRange"
   const range = value["contentRange"];
   const start = getNumber(range, "start");
   const end = getNumber(range, "end");
-  const total = getNumber(range, "total");
+  const total = getNumber(range, "totalChars") ?? getNumber(range, "total");
   if (start === undefined || end === undefined || total === undefined) return undefined;
 
   const nextCursor = getNumber(range, "nextCursor");

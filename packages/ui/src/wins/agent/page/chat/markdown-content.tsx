@@ -7,9 +7,10 @@ import {
   parseAiraResourceURI,
   parseAiraRichContent,
   resolveAiraResourceAction
-} from "@mahiru/agent/browser";
+} from "@/wins/agent/lib/rich-content";
 
 import ThinkBlock from "./think-content";
+import MarkdownImage from "./markdown-image";
 import AgentResourceCard from "./resource-card";
 import { splitThinkSegments } from "./think-segments";
 import { remarkAiraResourceLinks } from "./rich-markdown";
@@ -94,6 +95,7 @@ const MarkdownContent: FC<MarkdownContentProps> = ({ className, content, streami
   const markdownComponents = useMemo<Components>(
     () => ({
       a: AiraMarkdownLink,
+      img: MarkdownImage,
       "aira-resource": (props) => <AiraResourceLink {...props} disabled={!!streaming} />
     }),
     [streaming]

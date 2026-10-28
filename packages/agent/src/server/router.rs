@@ -17,6 +17,7 @@ use http::{HeaderMap, Request, StatusCode};
 use std::convert::Infallible;
 use subtle::ConstantTimeEq;
 use tokio_stream::wrappers::BroadcastStream;
+use tower_http::cors::{AllowOrigin, CorsLayer};
 
 pub fn build_router(state: AgentServerState) -> Router {
     Router::new()
@@ -39,6 +40,29 @@ pub fn build_router(state: AgentServerState) -> Router {
             axum::routing::put(set_thread_config),
         )
         .layer(middleware::from_fn_with_state(state.clone(), authorize))
+        .layer(
+            CorsLayer::new()
+                .allow_origin(AllowOrigin::predicate(|origin, _| {
+                    origin
+                        .to_str()
+                        .ok()
+                        .and_then(|value| reqwest::Url::parse(value).ok())
+                        .is_some_and(|url| {
+                            matches!(url.scheme(), "http" | "https")
+                                && matches!(url.host_str(), Some("localhost" | "127.0.0.1"))
+                                && url.port().is_some()
+                                && url.username().is_empty()
+                                && url.password().is_none()
+                        })
+                }))
+                .allow_methods([
+                    http::Method::GET,
+                    http::Method::POST,
+                    http::Method::PUT,
+                    http::Method::DELETE,
+                ])
+                .allow_headers([http::header::AUTHORIZATION, http::header::CONTENT_TYPE]),
+        )
         .with_state(state)
 }
 

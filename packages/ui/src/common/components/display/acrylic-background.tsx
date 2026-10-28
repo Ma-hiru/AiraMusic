@@ -1,8 +1,12 @@
 import { cx, css, keyframes } from "@emotion/css";
-import { memo, useRef, type FC, useMemo, useState, useEffect, useCallback } from "react";
+import { memo, useRef, type FC, useMemo, useState, useEffect } from "react";
+import { useLatestRef } from "@/common/hooks/use-latest-ref";
+import { useListenResize } from "@/common/hooks/use-listen-resize";
 import { useWindowVisible } from "@/common/hooks/use-window-visible";
 import Color from "color";
 import RendererTheme from "@/common/player/ui";
+
+import AcrylicTexture from "./acrylic-texture";
 
 interface AcrylicBackgroundProps {
   alt?: string;
@@ -13,11 +17,11 @@ interface AcrylicBackgroundProps {
   saturate?: number;
   className?: string;
   brightness?: number;
-  /** 流体背景：封面色彩缓慢旋转漂移。仅 transform/opacity 合成动画，模糊只栅格化一次。默认关闭 */
+  /** 流体背景：预处理封面纹理后，仅通过 transform/opacity 漂移和换图。默认关闭 */
   fluid?: boolean;
   /** 流体速度倍率，1 为默认，越大越快。运行时修改会导致相位跳变 */
   fluidSpeed?: number;
-  /** 暂停流体动画。冻结当前相位，恢复时从原位继续（无闪烁），暂停期间合成器不重绘，可与播放状态联动省电 */
+  /** 暂停漂移动画，保留当前相位；换图淡入不受暂停影响 */
   fluidPaused?: boolean;
   /** 自适应蒙版所需要的颜色集合：封面越亮，蒙版越浓，保证白字在亮封面下的可读性*/
   themeColors?: readonly string[];
@@ -54,24 +58,21 @@ const driftSlow = keyframes`
   100% { transform: rotate(1turn) translate(0, 6%) scale(1.1); }
 `;
 
-const fadeIn = keyframes`
-  from { opacity: 0; }
-`;
-
-// 圆形色斑：旋转时不会露出矩形边角，重模糊把圆形边缘融进底图；screen 混合让色彩发光而非平铺
+// 圆形与模糊已写入纹理，动画层只负责漂移和颜色叠加。
 const fluidLayerCls = css`
   position: absolute;
   aspect-ratio: 1 / 1;
-  border-radius: 50%;
-  object-fit: cover;
   pointer-events: none;
   mix-blend-mode: screen;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
   @media (prefers-reduced-motion: reduce) {
     animation: none !important;
   }
 `;
 
 interface FluidBlob {
+  width: number;
   animation: string;
   /** 周期（秒），fluidSpeed = 1 时的值 */
   cycle: number;
@@ -80,40 +81,46 @@ interface FluidBlob {
   blurScale: number;
   opacityScale: number;
   brightnessScale: number;
-  pos: { width: string } & Partial<Record<"top" | "left" | "right" | "bottom", string>>;
+  pos: Partial<Record<"top" | "left" | "right" | "bottom", string>>;
 }
 
 const FLUID_BLOBS: FluidBlob[] = [
   {
+    width: 72,
     animation: drift,
     cycle: 42,
     delay: -7,
     blurScale: 1.4,
     brightnessScale: 1.5,
     opacityScale: 1,
-    pos: { width: "72%", left: "-16%", top: "-24%" }
+    pos: { left: "-16%", top: "-24%" }
   },
   {
+    width: 85,
     animation: driftReverse,
     cycle: 58,
     delay: -23,
     blurScale: 1.6,
     brightnessScale: 1.3,
     opacityScale: 1,
-    pos: { width: "85%", right: "-22%", bottom: "-32%" }
+    pos: { right: "-22%", bottom: "-32%" }
   },
   {
+    width: 55,
     animation: driftSlow,
     cycle: 73,
     delay: -41,
     blurScale: 1.2,
     brightnessScale: 1.6,
     opacityScale: 0.75,
-    pos: { width: "55%", left: "28%", top: "30%" }
+    pos: { left: "28%", top: "30%" }
   }
 ];
 
-const imgClasses = "absolute inset-0 w-full h-full object-cover scale-110";
+interface BackgroundCover {
+  src: string;
+  image: HTMLImageElement;
+}
 
 const AcrylicBackground: FC<AcrylicBackgroundProps> = ({
   className,
@@ -136,53 +143,72 @@ const AcrylicBackground: FC<AcrylicBackgroundProps> = ({
   const visible = useWindowVisible();
   const fluidPaused = !visible || _fluidPaused;
 
-  const [current, setCurrent] = useState(src);
-  const [next, setNext] = useState<string>();
+  const containerRef = useRef<HTMLDivElement>(null);
+  const sizeListener = useListenResize(containerRef);
+  const size = useMemo(() => {
+    void sizeListener;
+    return {
+      width: containerRef.current?.clientWidth || window.innerWidth,
+      height: containerRef.current?.clientHeight || window.innerHeight
+    };
+  }, [sizeListener]);
+  const [current, setCurrent] = useState<BackgroundCover>();
+  const [next, setNext] = useState<BackgroundCover>();
   const [stage, setStage] = useState<"fade" | "idle">("idle");
-  const timerRef = useRef<ReturnType<typeof setTimeout>>(null);
+  const currentRef = useLatestRef(current);
+  const onLoadedRef = useLatestRef(onLoaded);
 
   useEffect(() => {
-    if (src === current) return;
-    if (timerRef.current) clearTimeout(timerRef.current);
+    setNext(undefined);
+    setStage("idle");
     if (!src) {
       setCurrent(undefined);
-      setNext(undefined);
-    } else {
-      setNext(src);
+      return;
     }
-    setStage("idle");
-  }, [current, src]);
+    if (src === currentRef.current?.src) return;
 
-  // 组件卸载时清理定时器，避免内存泄漏
-  useEffect(() => {
+    let cancelled = false;
+    const image = new Image();
+    image.decoding = "async";
+    image.src = src;
+    image
+      .decode()
+      .then(() => {
+        if (cancelled) return;
+        const cover = { src, image };
+        if (currentRef.current) setNext(cover);
+        else setCurrent(cover);
+        onLoadedRef.current?.();
+      })
+      .catch(() => {
+        // 加载失败保留旧图。
+      });
     return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
+      cancelled = true;
     };
-  }, []);
+  }, [currentRef, onLoadedRef, src]);
 
-  const handleLoad = useCallback(() => {
-    // 双重 rAF 确保 opacity: 0 已提交，transition 才能生效
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
+  useEffect(() => {
+    if (!next) return;
+    let frame = 0;
+    let timer: ReturnType<typeof setTimeout>;
+    // 等待透明的新纹理提交后，再一起淡入底图与色斑。
+    frame = requestAnimationFrame(() => {
+      frame = requestAnimationFrame(() => {
         setStage("fade");
-        if (timerRef.current) clearTimeout(timerRef.current);
-        timerRef.current = setTimeout(() => {
+        timer = setTimeout(() => {
           setCurrent(next);
           setNext(undefined);
           setStage("idle");
         }, duration);
       });
     });
+    return () => {
+      cancelAnimationFrame(frame);
+      clearTimeout(timer);
+    };
   }, [duration, next]);
 
-  // 加载失败保留旧图
-  const handleError = useCallback(() => {
-    setNext(undefined);
-    setStage("idle");
-  }, []);
-
-  // saturate 原由毛玻璃层的 backdrop-filter 提供，并入图片 filter 后效果一致且免去每帧重采样
-  const imgFilter = `blur(${blur}px) brightness(${brightness}) saturate(${saturate})`;
   const fluidOpacity = Math.min(1, opacity * 1.4);
   const speed = Math.max(0.1, fluidSpeed);
 
@@ -205,62 +231,59 @@ const AcrylicBackground: FC<AcrylicBackgroundProps> = ({
   }, [gradient_alpha, themeColors]);
 
   return (
-    <div className={cx("relative w-full h-full overflow-hidden", fluid && "isolate", className)}>
-      {/* 当前背景：仅在交叉淡化阶段开启 transition，提交新图时直接跳变（与淡入层像素一致，无闪烁） */}
-      {current && (
-        <img
-          className={imgClasses}
-          style={{
-            transition: stage === "fade" ? `opacity ${duration}ms ease` : "none",
-            opacity: stage === "fade" ? 0 : opacity,
-            filter: imgFilter
-          }}
-          src={current}
-          alt={alt ?? ""}
-          decoding="async"
-          draggable={false}
-          onLoad={onLoaded}
-        />
+    <div ref={containerRef} className={cx("relative w-full h-full overflow-hidden", className)}>
+      {[current, next].map(
+        (cover) =>
+          cover && (
+            <div
+              key={cover.src}
+              className={cx("absolute inset-0", fluid && "isolate")}
+              style={{
+                transition: stage === "fade" ? `opacity ${duration}ms ease` : "none",
+                opacity: cover === current ? (stage === "fade" ? 0 : 1) : stage === "fade" ? 1 : 0
+              }}>
+              <div
+                className="absolute inset-0 scale-110"
+                style={{ opacity }}
+                aria-label={alt}
+                role={alt ? "img" : undefined}>
+                <AcrylicTexture
+                  blur={blur}
+                  width={size.width}
+                  image={cover.image}
+                  saturate={saturate}
+                  height={size.height}
+                  brightness={brightness}
+                />
+              </div>
+              {fluid &&
+                FLUID_BLOBS.map((blob, i) => (
+                  <div
+                    key={i}
+                    className={fluidLayerCls}
+                    style={{
+                      ...blob.pos,
+                      width: `${blob.width}%`,
+                      opacity: fluidOpacity * blob.opacityScale,
+                      animationName: blob.animation,
+                      animationDuration: `${blob.cycle / speed}s`,
+                      animationDelay: `${blob.delay / speed}s`,
+                      animationPlayState: fluidPaused ? "paused" : "running"
+                    }}>
+                    <AcrylicTexture
+                      saturate={2}
+                      image={cover.image}
+                      blur={blur * blob.blurScale}
+                      width={(size.width * blob.width) / 100}
+                      height={(size.width * blob.width) / 100}
+                      brightness={brightness * blob.brightnessScale}
+                      round
+                    />
+                  </div>
+                ))}
+            </div>
+          )
       )}
-      {/* 下一张：加载完成后才开始交叉淡化，加载期间旧图保持可见 */}
-      {next && (
-        <img
-          key={next}
-          className={imgClasses}
-          style={{
-            transition: `opacity ${duration}ms ease`,
-            opacity: stage === "fade" ? opacity : 0,
-            filter: imgFilter
-          }}
-          alt=""
-          src={next}
-          decoding="async"
-          draggable={false}
-          onLoad={handleLoad}
-          onError={handleError}
-        />
-      )}
-      {/* 流体层：三个轨道运动的封面色斑。play-state 只作用于漂移动画，换图淡入不受暂停影响 */}
-      {fluid &&
-        current &&
-        FLUID_BLOBS.map((blob, i) => (
-          <img
-            key={`fluid-${i}-${current}`}
-            className={fluidLayerCls}
-            style={{
-              ...blob.pos,
-              opacity: fluidOpacity * blob.opacityScale,
-              filter: `blur(${blur * blob.blurScale}px) brightness(${brightness * blob.brightnessScale}) saturate(2)`,
-              animation: `${fadeIn} ${duration}ms ease both, ${blob.animation} ${blob.cycle / speed}s linear ${blob.delay / speed}s infinite`,
-              animationPlayState: `running, ${fluidPaused ? "paused" : "running"}`
-            }}
-            alt=""
-            src={current}
-            decoding="async"
-            draggable={false}
-            aria-hidden
-          />
-        ))}
       {/* 轻微提亮，替代原 backdrop-filter 毛玻璃层 */}
       <div
         className="absolute inset-0 pointer-events-none"

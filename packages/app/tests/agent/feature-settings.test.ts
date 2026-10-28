@@ -1,3 +1,5 @@
+import { MainAgentSettings } from "@mahiru/app/inner/agent/settings";
+
 const { configGet, configSet, configValues } = vi.hoisted(() => {
   const configValues = new Map<string, unknown>();
   return {
@@ -16,185 +18,155 @@ const { configGet, configSet, configValues } = vi.hoisted(() => {
 vi.mock("@mahiru/app/lib/key-value-store", () => ({
   MainStoreForConfig: { get: configGet, set: configSet }
 }));
-vi.mock("@mahiru/app/inner/mcp/public-tools", () => ({
-  AiraPublicMcpToolNames: [
-    "agent-search",
-    "agent-tool-track-detail",
-    "agent-tool-player-action",
-    "agent-tool-comment-send"
-  ],
-  AiraDefaultMcpToolNames: ["agent-search", "agent-tool-track-detail"],
-  isAiraMcpMutatingToolName: (name: string) =>
-    name === "agent-tool-player-action" || name === "agent-tool-comment-send",
-  isAiraMcpDestructiveToolName: (name: string) => name === "agent-tool-comment-send"
-}));
-vi.mock("@mahiru/app/inner/mcp/tools/catalog", () => ({
-  createAgentToolCatalog: vi.fn(() => ({
-    list: [
-      { name: "agent-search", description: "搜索歌曲、专辑和艺人。" },
-      { name: "agent-tool-track-detail", description: "获取指定歌曲的详细信息，支持批量查询。" },
-      { name: "agent-tool-player-action", description: "控制播放器播放状态。" },
-      { name: "agent-tool-comment-send", description: "发送或回复评论。" },
-      { name: "agent-tool-private", description: "不应公开。" }
+vi.mock("@mahiru/app/inner/agent/tools", () => ({
+  agentToolCatalog: {
+    names: [
+      "agent-search",
+      "agent-tool-track-detail",
+      "agent-tool-web-snapshot",
+      "agent-tool-player-action",
+      "agent-tool-comment-send"
     ],
-    parallelSafeNames: ["agent-search", "agent-tool-track-detail"]
-  }))
+    defaultNames: ["agent-search", "agent-tool-track-detail", "agent-tool-web-snapshot"]
+  }
 }));
 
-describe("Agent 功能设置启动快照", () => {
+const defaultSettings = {
+  agentEnabled: true,
+  mcpEnabled: false,
+  mcpPort: MainAgentSettings.AgentFeatureDefaultMcpPort,
+  mcpTools: ["agent-search", "agent-tool-track-detail", "agent-tool-web-snapshot"]
+};
+
+describe("Agent 持久配置", () => {
   beforeEach(() => {
-    vi.resetModules();
     vi.clearAllMocks();
     configValues.clear();
   });
 
-  it("迁移旧开关，并在 Agent 真正初始化后更新 effective", async () => {
-    configValues.set("enableAgent", true);
-    const { MainAgentFeatureSettings } = await import("@mahiru/app/services/agent/settings");
-
-    const captured = MainAgentFeatureSettings.captureStartup();
-    expect(captured).toMatchObject({
-      agentEnabled: true,
-      effective: { agentEnabled: false, mcpEnabled: false },
-      restartRequired: true
-    });
-    expect(configSet).toHaveBeenCalledWith("agentEnabled", true);
-    expect(MainAgentFeatureSettings.beginAgentInitialization()).toBe(true);
-
-    const initialized = MainAgentFeatureSettings.markAgentInitialized();
-    expect(initialized.effective.agentEnabled).toBe(true);
-    expect(initialized.restartRequired).toBe(false);
+  it("纯读取返回默认配置，不隐式初始化或写入存储", () => {
+    expect(MainAgentSettings.read()).toEqual(defaultSettings);
+    expect(configSet).not.toHaveBeenCalled();
+    expect(configValues.size).toBe(0);
   });
 
-  it("设置更新只改期望值，不覆盖本次启动的 MCP 快照", async () => {
-    configValues.set("agentEnabled", false);
-    configValues.set("mcpEnabled", false);
-    const { MainAgentFeatureSettings } = await import("@mahiru/app/services/agent/settings");
-    MainAgentFeatureSettings.captureStartup();
+  it("显式初始化持久化缺失的默认值", () => {
+    expect(MainAgentSettings.initialize()).toEqual(defaultSettings);
+    expect(configSet).toHaveBeenCalledExactlyOnceWith(defaultSettings);
+    expect(Object.fromEntries(configValues)).toEqual(defaultSettings);
+  });
 
-    const updated = MainAgentFeatureSettings.update({
+  it("初始化修复无效配置、迁移旧工具名并保留无关设置", () => {
+    const storedTools = [" agent-tool-web-browser ", "agent-tool-web-snapshot", "unknown", 17];
+    configValues.set("agentEnabled", "invalid");
+    configValues.set("mcpEnabled", true);
+    configValues.set("mcpPort", 1_023);
+    configValues.set("mcpTools", storedTools);
+    configValues.set("otherSetting", "keep");
+
+    const initialized = MainAgentSettings.initialize();
+
+    expect(initialized).toEqual({
+      ...defaultSettings,
+      mcpEnabled: true,
+      mcpTools: ["agent-tool-web-snapshot"]
+    });
+    expect(configSet).toHaveBeenCalledExactlyOnceWith(initialized);
+    expect(configValues.get("otherSetting")).toBe("keep");
+    expect(storedTools).toEqual([
+      " agent-tool-web-browser ",
+      "agent-tool-web-snapshot",
+      "unknown",
+      17
+    ]);
+  });
+
+  it("读取旧配置仅返回归一结果，迁移写入留给 initialize", () => {
+    const storedTools = ["agent-tool-web-browser", " agent-search ", "agent-search", "unknown"];
+    configValues.set("mcpTools", storedTools);
+
+    expect(MainAgentSettings.read().mcpTools).toEqual(["agent-search", "agent-tool-web-snapshot"]);
+    expect(configSet).not.toHaveBeenCalled();
+    expect(configValues.get("mcpTools")).toEqual([
+      "agent-tool-web-browser",
+      " agent-search ",
+      "agent-search",
+      "unknown"
+    ]);
+  });
+
+  it("返回的数组与存储及其他读取结果相互独立", () => {
+    configValues.set("mcpTools", ["agent-search"]);
+    const first = MainAgentSettings.read();
+    const second = MainAgentSettings.read();
+    first.mcpTools.push("agent-tool-track-detail");
+
+    expect(second.mcpTools).toEqual(["agent-search"]);
+    expect(configValues.get("mcpTools")).toEqual(["agent-search"]);
+    expect(configSet).not.toHaveBeenCalled();
+  });
+
+  it("部分更新仅保存配置，不返回运行状态", () => {
+    configValues.set("agentEnabled", false);
+    const updated = MainAgentSettings.update({
       mcpEnabled: true,
       mcpPort: 45_678,
       mcpTools: ["agent-tool-track-detail"]
     });
 
-    expect(updated).toMatchObject({
-      mcpEnabled: true,
-      mcpPort: 45_678,
-      effective: { mcpEnabled: false, mcpPort: 32_123 },
-      restartRequired: true
-    });
-    expect(updated.effective.mcpTools).toEqual(["agent-search", "agent-tool-track-detail"]);
-  });
-
-  it("MCP 只在真正监听后才标记为本次启动已启用", async () => {
-    configValues.set("agentEnabled", false);
-    configValues.set("mcpEnabled", true);
-    configValues.set("mcpPort", 45_678);
-    configValues.set("mcpTools", ["agent-search"]);
-    const { MainAgentFeatureSettings } = await import("@mahiru/app/services/agent/settings");
-
-    const captured = MainAgentFeatureSettings.captureStartup();
-    expect(captured.effective.mcpEnabled).toBe(false);
-    expect(captured.restartRequired).toBe(true);
-    expect(MainAgentFeatureSettings.beginMcpInitialization()).toMatchObject({
-      mcpEnabled: true,
-      mcpPort: 45_678,
-      mcpTools: ["agent-search"]
-    });
-
-    const initialized = MainAgentFeatureSettings.markMcpInitialized(45_678);
-    expect(initialized.effective.mcpEnabled).toBe(true);
-    expect(initialized.restartRequired).toBe(false);
-    expect(MainAgentFeatureSettings.beginMcpInitialization()).toBeUndefined();
-  });
-
-  it("公开 MCP 关闭但 Agent 启用时仍允许启动内部端点", async () => {
-    configValues.set("agentEnabled", true);
-    configValues.set("mcpEnabled", false);
-    const { MainAgentFeatureSettings } = await import("@mahiru/app/services/agent/settings");
-
-    MainAgentFeatureSettings.captureStartup();
-    expect(MainAgentFeatureSettings.beginMcpInitialization()).toMatchObject({
-      agentEnabled: true,
-      mcpEnabled: false
-    });
-  });
-
-  it("关闭后即使本轮重新开启，也不会再次开放初始化", async () => {
-    configValues.set("agentEnabled", true);
-    const { MainAgentFeatureSettings } = await import("@mahiru/app/services/agent/settings");
-    MainAgentFeatureSettings.captureStartup();
-    expect(MainAgentFeatureSettings.beginAgentInitialization()).toBe(true);
-    MainAgentFeatureSettings.markAgentInitialized();
-
-    MainAgentFeatureSettings.update({ agentEnabled: false });
-    const stopped = MainAgentFeatureSettings.markAgentStopped();
-    expect(stopped).toMatchObject({
+    expect(updated).toEqual({
       agentEnabled: false,
-      effective: { agentEnabled: false },
-      restartRequired: false
+      mcpEnabled: true,
+      mcpPort: 45_678,
+      mcpTools: ["agent-tool-track-detail"]
     });
-
-    const reenabled = MainAgentFeatureSettings.update({ agentEnabled: true });
-    expect(reenabled).toMatchObject({
-      agentEnabled: true,
-      effective: { agentEnabled: false },
-      restartRequired: true
-    });
-    expect(MainAgentFeatureSettings.beginAgentInitialization()).toBe(false);
+    expect(configSet).toHaveBeenCalledExactlyOnceWith(updated);
+    updated.mcpTools.push("agent-search");
+    expect(configValues.get("mcpTools")).toEqual(["agent-tool-track-detail"]);
   });
 
-  it("拒绝非法端口、重复工具和额外字段", async () => {
+  it("归一化工具名，忽略显式 undefined，并保持输入不变", () => {
     configValues.set("agentEnabled", false);
-    const { MainAgentFeatureSettings } = await import("@mahiru/app/services/agent/settings");
-    MainAgentFeatureSettings.captureStartup();
-    configSet.mockClear();
+    const mcpTools = [" agent-tool-track-detail ", "agent-search"];
 
-    expect(() => MainAgentFeatureSettings.update({ mcpPort: 0 })).toThrow(
-      "mcpPort 必须是 1024 到 65535 之间的整数"
-    );
-    expect(() =>
-      MainAgentFeatureSettings.update({ mcpTools: ["agent-search", "agent-search"] })
-    ).toThrow("mcpTools 不能包含重复工具");
-    expect(() => MainAgentFeatureSettings.update({ mcpTools: ["agent-tool-private"] })).toThrow(
-      "不在公开可选列表中"
-    );
-    expect(() => MainAgentFeatureSettings.update({ unexpected: true } as never)).toThrow(
-      "包含不允许的字段"
+    const settings = MainAgentSettings.update({ agentEnabled: undefined, mcpTools });
+
+    expect(settings.agentEnabled).toBe(false);
+    expect(settings.mcpTools).toEqual(["agent-search", "agent-tool-track-detail"]);
+    expect(mcpTools).toEqual([" agent-tool-track-detail ", "agent-search"]);
+  });
+
+  it.each([
+    [{ mcpPort: 0 }, "mcpPort 必须是 1024 到 65535 之间的整数"],
+    [{ mcpPort: 65_536 }, "mcpPort 必须是 1024 到 65535 之间的整数"],
+    [{ mcpPort: 10_000.5 }, "mcpPort 必须是 1024 到 65535 之间的整数"],
+    [{ agentEnabled: 1 }, "agentEnabled 必须是布尔值"],
+    [{ mcpEnabled: "true" }, "mcpEnabled 必须是布尔值"],
+    [{ mcpTools: ["agent-search", " agent-search "] }, "mcpTools 不能包含重复工具"],
+    [{ mcpTools: ["unknown"] }, "不在公开可选列表中"],
+    [{ mcpTools: [123] }, "mcpTools 只能包含字符串"],
+    [{ unexpected: true }, "包含不允许的字段"],
+    [null, "Agent 功能设置必须是对象"]
+  ])("拒绝非法更新 %j 且不写入存储", (input, message) => {
+    expect(() => MainAgentSettings.update(input as never)).toThrow(message as string);
+    expect(configSet).not.toHaveBeenCalled();
+    expect(configValues.size).toBe(0);
+  });
+
+  it("开启公开 MCP 时拒绝清空工具目录", () => {
+    expect(() => MainAgentSettings.update({ mcpEnabled: true, mcpTools: [] })).toThrow(
+      "至少需要选择一个公开工具"
     );
     expect(configSet).not.toHaveBeenCalled();
   });
 
-  it("从公共白名单和真实工具定义生成可选择清单", async () => {
-    configValues.set("agentEnabled", false);
-    const { MainAgentFeatureSettings } = await import("@mahiru/app/services/agent/settings");
-
-    expect(MainAgentFeatureSettings.getState().availableMcpTools).toEqual([
-      {
-        name: "agent-search",
-        label: "搜索歌曲、专辑和艺人",
-        description: "搜索歌曲、专辑和艺人。",
-        risk: "read"
-      },
-      {
-        name: "agent-tool-track-detail",
-        label: "获取指定歌曲的详细信息",
-        description: "获取指定歌曲的详细信息，支持批量查询。",
-        risk: "read"
-      },
-      {
-        name: "agent-tool-player-action",
-        label: "控制播放器播放状态",
-        description: "控制播放器播放状态。",
-        risk: "write"
-      },
-      {
-        name: "agent-tool-comment-send",
-        label: "发送或回复评论",
-        description: "发送或回复评论。",
-        risk: "destructive"
-      }
-    ]);
+  it("保留空或无效存储列表回退默认工具的行为", () => {
+    for (const mcpTools of [[], ["unknown"], "invalid"]) {
+      configValues.set("mcpTools", mcpTools);
+      expect(MainAgentSettings.read().mcpTools).toEqual(defaultSettings.mcpTools);
+    }
+    const updated = MainAgentSettings.update({ mcpEnabled: false, mcpTools: [] });
+    expect(updated.mcpTools).toEqual(defaultSettings.mcpTools);
+    expect(configValues.get("mcpTools")).toEqual(defaultSettings.mcpTools);
   });
 });

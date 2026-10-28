@@ -18,6 +18,12 @@ fn run_started_uses_the_canonical_agui_wire_shape() {
             "runId": "run-1"
         })
     );
+    let declaration = AguiEvent::decl(&ts_rs::Config::default());
+    assert!(declaration.contains("threadId: string"));
+    assert!(declaration.contains("runId: string"));
+    assert!(declaration.contains("toolCallId: string"));
+    assert!(!declaration.contains("session_id"));
+    assert!(!declaration.contains("run_id"));
 }
 
 #[test]

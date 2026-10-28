@@ -1,81 +1,25 @@
 import { app, dialog, BrowserWindow, type IpcMainInvokeEvent } from "electron";
 import { MainHandle } from "@/lib/handle";
 import { MainRuntime } from "@/lib/runtime";
-import { MainAgent } from "@/services/agent";
-import { MainMcp } from "@/inner/mcp/runtime";
 import { fetchFromNode } from "@/lib/net-fetch";
-import { AgentRequestError } from "@mahiru/agent";
 import { mergeCacheStoreConfig } from "@/utils/merge";
+import { getNetworkStatus } from "@/lib/network-status";
 import { MainWindowManager } from "@/lib/window-manager";
 import { MainScreenResolver } from "@/lib/screen-resolver";
 import { MainCacheStoreConstants } from "@/constants/store";
-import { MainAgentFeatureSettings } from "@/services/agent/settings";
 import { MainStoreForConfig, MainStoreForRenderer } from "@/lib/key-value-store";
 import { Log, exportLogFiles, getLogFileNames, runWithLogContext } from "@/lib/log";
-import Net from "node:net";
-import Https from "node:https";
 import Fs from "node:fs/promises";
-import Dns from "node:dns/promises";
 import type { InvokeHandlers } from "@mahiru/ipc/types";
 
 export const invokeHandlers: InvokeHandlers = {
   invoke_net_fetch: (_event, request) => fetchFromNode(request),
-  invoke_agent_feature_settings_get: (event) => {
-    return authorizedAgentFeatureSettingsData(event, () => MainAgentFeatureSettings.getState());
-  },
-  invoke_agent_feature_settings_update: (event, options) => {
-    return authorizedAgentFeatureSettingsRequest(event, async () => {
-      const previous = MainAgentFeatureSettings.getState();
-      const persisted = MainAgentFeatureSettings.update(options);
-      if (previous.agentEnabled && !persisted.agentEnabled) {
-        await MainAgent.shutdown();
-        destroyAgentWindow();
-      }
-      if (
-        !persisted.agentEnabled &&
-        !persisted.mcpEnabled &&
-        (previous.agentEnabled || previous.mcpEnabled)
-      ) {
-        await MainMcp.shutdown();
-      }
-      const state = MainAgentFeatureSettings.getState();
-      MainAgent.broadcastFeatureSettings(state);
-      return state;
-    });
-  },
-  invoke_agent_list_providers: (event) => {
-    return authorizedAgentRequest(event, () => MainAgent.listProviders());
-  },
-  invoke_agent_list_configs: (event) => {
-    return authorizedAgentRequest(event, () => MainAgent.listConfigs());
-  },
-  invoke_agent_create_config: (event, input) => {
-    return authorizedAgentRequest(event, () => MainAgent.createConfig(input));
-  },
-  invoke_agent_update_config: (event, { id, config }) => {
-    return authorizedAgentRequest(event, () => MainAgent.updateConfig(id, config));
-  },
-  invoke_agent_create_thread: (event, input) => {
-    return authorizedAgentRequest(event, () => MainAgent.createThread(input));
-  },
-  invoke_agent_list_threads: (event) => {
-    return authorizedAgentRequest(event, () => MainAgent.listThreads());
-  },
-  invoke_agent_list_runs: (event) => {
-    return authorizedAgentRequest(event, () => MainAgent.listRuns());
-  },
-  invoke_agent_get_thread: (event, id) => {
-    return authorizedAgentRequest(event, () => MainAgent.getThread(id));
-  },
-  invoke_agent_delete_thread: (event, id) => {
-    return authorizedAgentRequest(event, () => MainAgent.deleteThread(id));
-  },
-  invoke_agent_create_run: (event, { content, configId, threadId }) => {
-    return authorizedAgentRequest(event, () => MainAgent.createRun(threadId, configId, content));
-  },
-  invoke_agent_cancel_run: (event, runId) => {
-    return authorizedAgentRequest(event, () => MainAgent.cancelRun(runId));
-  },
+  invoke_agent_feature_settings_get: (event) =>
+    authorizedAgentFeatureSettingsData(event, () => getAgent().getState()),
+  invoke_agent_feature_settings_update: (event, options) =>
+    authorizedAgentFeatureSettingsRequest(event, () => getAgent().updateSettings(options)),
+  invoke_agent_connection: (event) =>
+    authorizedAgentRequest(event, () => getAgent().getConnection()),
   invoke_fs_select: async (_, type) => {
     const { canceled, filePaths } = await dialog.showOpenDialog({
       title: type === "dir" ? "选择目录" : "选择文件",
@@ -133,7 +77,7 @@ export const invokeHandlers: InvokeHandlers = {
       if (!files.length) return { ok: false, error: "暂无日志可导出" };
       const options = {
         title: "导出日志",
-        defaultPath: `AiraMusic-logs-${new Date().toISOString().replace(/[:.]/g, "-")}.tar.gz`,
+        defaultPath: `${process.env.APP_NAME}-logs-${new Date().toISOString().replace(/[:.]/g, "-")}.tar.gz`,
         filters: [{ name: "日志归档", extensions: ["gz"] }]
       };
       const sender = BrowserWindow.fromWebContents(event.sender);
@@ -151,58 +95,7 @@ export const invokeHandlers: InvokeHandlers = {
   },
   invoke_device_gpu: async () => app.whenReady().then(() => app.getGPUInfo("complete")),
   invoke_device_platform: () => process.platform,
-  invoke_device_net: async (): Promise<NetworkStatus> => {
-    // Dns.resolve 可能因为各种原因失败，比如本地网络配置问题，但不代表当前网络不可用
-    try {
-      await Dns.resolve("www.baidu.com");
-    } catch {
-      return "dns_error";
-    }
-    // TCP 连接失败则认为当前网络不可用
-    const tcp = await new Promise<boolean>((resolve) => {
-      const socket = Net.createConnection(
-        {
-          host: "www.baidu.com",
-          port: 443,
-          timeout: 3000
-        },
-        () => {
-          socket.end();
-          resolve(true);
-        }
-      );
-      socket.on("error", () => resolve(false));
-      socket.on("timeout", () => {
-        socket.destroy();
-        resolve(false);
-      });
-    });
-    if (!tcp) {
-      return "tcp_error";
-    }
-    // HTTPS 请求失败则认为 TLS 有问题
-    const https = await new Promise<boolean>((resolve) => {
-      const req = Https.request(
-        {
-          hostname: "www.baidu.com",
-          method: "GET",
-          timeout: 3000
-        },
-        (res) => {
-          resolve(res.statusCode === 200);
-        }
-      );
-      req.on("error", () => {
-        resolve(false);
-      });
-      req.end();
-    });
-    if (!https) {
-      return "tls_error";
-    }
-
-    return "ok";
-  },
+  invoke_device_net: () => getNetworkStatus(),
   invoke_window_id: (e) => {
     const sender = BrowserWindow.fromWebContents(e.sender);
     return MainWindowManager.getId(sender)!;
@@ -302,7 +195,7 @@ const toAgentInvokeError = (error: unknown) => {
   return {
     ok: false,
     reason: {
-      code: error instanceof AgentRequestError ? error.code : "unknown",
+      code: "unknown",
       message: error instanceof Error ? error.message : String(error)
     }
   } as const;
@@ -359,15 +252,10 @@ function isWithinAppPath(pathname: string, base: string) {
   return pathname.startsWith(prefix);
 }
 
-function destroyAgentWindow() {
-  const agentWindow = MainWindowManager.get("agent");
-  try {
-    if (agentWindow && !agentWindow.isDestroyed()) agentWindow.destroy();
-  } catch (error) {
-    Log.error("invoke(agent settings)", "销毁 Agent 窗口失败", error);
-  } finally {
-    MainWindowManager.remove("agent");
-  }
+function getAgent() {
+  const agent = MainHandle.get()?.agent;
+  if (!agent) throw new Error("Agent 功能尚未初始化");
+  return agent;
 }
 
 const unauthorizedAgentInvokeResult = () =>

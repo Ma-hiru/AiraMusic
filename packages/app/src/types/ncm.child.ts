@@ -1,3 +1,5 @@
+import type { SerializedError } from "@/types/child";
+
 export type NCMServerModule = typeof import("@neteasecloudmusicapienhanced/api/server.js");
 
 export type NcmApiServer = NCMServerModule["default"];
@@ -25,8 +27,5 @@ export type NCMChildMessage =
     }
   | {
       type: "error";
-      error: {
-        stack?: string;
-        message: string;
-      };
+      error: SerializedError;
     };

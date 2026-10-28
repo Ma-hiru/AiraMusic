@@ -49,6 +49,13 @@ export class RendererShortcutConstants {
     meta: "Win"
   };
 
+  static readonly macModifierLabels: Record<ShortcutModifier, string> = {
+    ctrl: "Control",
+    shift: "Shift",
+    alt: "Option",
+    meta: "Command"
+  };
+
   static readonly keyLabels: Record<string, string> = {
     " ": "Space",
     ArrowUp: "↑",
@@ -57,6 +64,40 @@ export class RendererShortcutConstants {
     ArrowRight: "→",
     Escape: "Esc"
   };
+
+  /** Option 会改变输入字符，字母和数字组合键用 code 还原主键。 */
+  static fromEvent(event: KeyboardEvent): Nullable<ShortcutBinding> {
+    if (event.isComposing || ["Control", "Shift", "Alt", "Meta", "Process"].includes(event.key)) {
+      return null;
+    }
+
+    let key = event.key;
+    if (event.altKey) {
+      const codeKey = /^(?:Key([A-Z])|Digit([0-9]))$/.exec(event.code);
+      key = codeKey?.[1] ?? codeKey?.[2] ?? key;
+    }
+    if (!key || ["Dead", "Unidentified"].includes(key)) return null;
+
+    return {
+      key,
+      modifiers: [
+        event.ctrlKey && "ctrl",
+        event.shiftKey && "shift",
+        event.altKey && "alt",
+        event.metaKey && "meta"
+      ].filter(Boolean) as ShortcutModifier[]
+    };
+  }
+
+  static matchesEvent(event: KeyboardEvent, binding: ShortcutBinding): boolean {
+    const pressed = this.fromEvent(event);
+    if (!pressed) return false;
+    return (
+      this.isSameBinding(pressed, binding) ||
+      // 兼容之前按输入字符保存的自定义绑定。
+      this.isSameBinding({ ...pressed, key: event.key }, binding)
+    );
+  }
 
   /** 判断两个绑定是否等价（按键忽略大小写，修饰键忽略顺序） */
   static isSameBinding(a: ShortcutBinding, b: ShortcutBinding): boolean {

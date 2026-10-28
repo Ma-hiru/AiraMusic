@@ -9,7 +9,7 @@ import {
   createAgentConversationStateAtom
 } from "@/wins/agent/atoms/agent";
 import AppToast from "@/common/components/display/toast";
-import type { AgentInvokeError } from "@mahiru/ipc/src/types/agent";
+import type { ApiError } from "@mahiru/agent/browser";
 
 const submitTokens = new Map<string, symbol>();
 
@@ -213,6 +213,6 @@ export function useConversation(conversationID: string) {
   );
 }
 
-const showAgentError = (error: AgentInvokeError) => {
+const showAgentError = (error: ApiError) => {
   AppToast.show({ type: "error", text: `${error.code}: ${error.message}` });
 };

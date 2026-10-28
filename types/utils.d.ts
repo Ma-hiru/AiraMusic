@@ -43,7 +43,7 @@ interface CanInit {
   _init: NormalFunc;
 }
 
-type JsonValue = null | number | string | boolean | JsonValue[] | { [key: string]: JsonValue };
+type JsonValue = null | number | string | boolean | JsonValue[] | { [key in string]: JsonValue };
 
 type JsonPrimitive = null | number | string | boolean;
 

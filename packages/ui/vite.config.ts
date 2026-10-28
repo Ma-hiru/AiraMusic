@@ -1,12 +1,13 @@
+/// <reference types="vitest/config" />
 import { join } from "node:path";
-import { defineConfig } from "vite";
 import { fileURLToPath } from "node:url";
+import { UserConfig, defineConfig } from "vite";
 import wasm from "vite-plugin-wasm";
 import react from "@vitejs/plugin-react";
 import babel from "@rolldown/plugin-babel";
 import tailwindcss from "@tailwindcss/vite";
 
-import { AppEnv, TypedEnv } from "../../scripts/env";
+import { AppEnv, TypedEnv } from "../../scripts/env.ts";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 
@@ -37,7 +38,7 @@ export default defineConfig(({ mode }) => {
     build: {
       outDir: join(__dirname, "dist"),
       sourcemap: false,
-      rollupOptions: {
+      rolldownOptions: {
         input: {
           index: join(__dirname, "index.html"),
           login: join(__dirname, "login.html"),
@@ -96,5 +97,5 @@ export default defineConfig(({ mode }) => {
       environment: "jsdom",
       setupFiles: ["./tests/setup.ts"]
     }
-  };
+  } satisfies UserConfig;
 });

@@ -13,8 +13,7 @@ export function clearAllCache() {
         "indexdb",
         "localstorage",
         "serviceworkers",
-        "shadercache",
-        "websql"
+        "shadercache"
       ]
     });
     // 2. 清除 HTTP/HTTPS 缓存

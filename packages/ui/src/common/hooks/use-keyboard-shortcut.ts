@@ -1,19 +1,18 @@
 import { useRef, useEffect } from "react";
+import { type ShortcutBinding, RendererShortcutConstants } from "@/common/constants/shortcut";
 
-type ModifierKey = "alt" | "ctrl" | "meta" | "shift";
 type Key = string;
 
-export interface ShortcutConfig {
-  key: Key;
+export interface ShortcutConfig extends ShortcutBinding {
   description?: string;
   preventDefault?: boolean;
-  modifiers?: ModifierKey[];
   stopPropagation?: boolean;
   callback: (event: KeyboardEvent) => void;
 }
 
 export interface UseKeyboardShortcutOptions {
   enabled?: boolean;
+  ignoreEditable?: boolean;
   target?: null | Window | HTMLElement;
 }
 
@@ -31,15 +30,30 @@ export function useKeyboardShortcut(
   shortcuts: ShortcutConfig[],
   options: UseKeyboardShortcutOptions = {}
 ) {
-  const { enabled = true, target = window } = options;
+  const { enabled = true, target = window, ignoreEditable = false } = options;
   const shortcutsRef = useRef<ShortcutConfig[]>(shortcuts);
   shortcutsRef.current = shortcuts;
 
   useEffect(() => {
     if (!enabled || !target) return;
     const handleKeyDown = (event: KeyboardEvent) => {
+      if (
+        ignoreEditable &&
+        event
+          .composedPath()
+          .some(
+            (node) =>
+              node instanceof HTMLElement &&
+              (node.isContentEditable ||
+                node.matches(
+                  'input, textarea, select, [role="textbox"], [contenteditable=""], [contenteditable="true"], [contenteditable="plaintext-only"]'
+                ))
+          )
+      ) {
+        return;
+      }
       for (const shortcut of shortcutsRef.current) {
-        if (matchShortcut(event, shortcut)) {
+        if (RendererShortcutConstants.matchesEvent(event, shortcut)) {
           if (shortcut.preventDefault !== false) {
             event.preventDefault();
           }
@@ -55,25 +69,7 @@ export function useKeyboardShortcut(
     return () => {
       target.removeEventListener("keydown", handleKeyDown as EventListener);
     };
-  }, [enabled, target]);
-}
-
-/**
- * 检查键盘事件是否匹配快捷键配置
- */
-function matchShortcut(event: KeyboardEvent, shortcut: ShortcutConfig): boolean {
-  // 检查主键
-  const keyMatch = event.key.toLowerCase() === shortcut.key.toLowerCase();
-  if (!keyMatch) return false;
-
-  // 检查修饰键
-  const modifiers = shortcut.modifiers || [];
-  const ctrlMatch = modifiers.includes("ctrl") ? event.ctrlKey : !event.ctrlKey;
-  const shiftMatch = modifiers.includes("shift") ? event.shiftKey : !event.shiftKey;
-  const altMatch = modifiers.includes("alt") ? event.altKey : !event.altKey;
-  const metaMatch = modifiers.includes("meta") ? event.metaKey : !event.metaKey;
-
-  return ctrlMatch && shiftMatch && altMatch && metaMatch;
+  }, [enabled, target, ignoreEditable]);
 }
 
 /**
@@ -87,7 +83,15 @@ export function useSingleShortcut(
   callback: (event: KeyboardEvent) => void,
   config: UseKeyboardShortcutOptions & Omit<ShortcutConfig, "key" | "callback"> = {}
 ) {
-  const { target, enabled, modifiers, description, preventDefault, stopPropagation } = config;
+  const {
+    target,
+    enabled,
+    modifiers,
+    description,
+    ignoreEditable,
+    preventDefault,
+    stopPropagation
+  } = config;
 
   const shortcuts: ShortcutConfig[] = [
     {
@@ -100,5 +104,5 @@ export function useSingleShortcut(
     }
   ];
 
-  useKeyboardShortcut(shortcuts, { enabled, target });
+  useKeyboardShortcut(shortcuts, { enabled, target, ignoreEditable });
 }

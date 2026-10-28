@@ -21,7 +21,7 @@ export default class Store {
 
   // 仅在类 Unix-like 系统上有效，Windows 几乎和强制杀死进程没有区别
   // 通过 http 让服务端自己优雅退出，才能保证数据完整性
-  async stop(timeoutMs = 5000): Promise<boolean> {
+  async stop(timeoutMs = 2_000): Promise<boolean> {
     if (!this._running) return true;
     return new Promise<boolean>((resolve) => {
       let timer: null | NodeJS.Timeout = null;

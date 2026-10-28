@@ -30,7 +30,7 @@ const SettingsAside: FC<SettingsAsideProps> = ({
       <UserDetail user={user} login={login} logout={logout} />
       <SettingsSummary settings={settings} cacheStoreConfig={cacheStoreConfig} />
       <Github />
-      <Version />
+      <Version showExportLogs />
     </aside>
   );
 };

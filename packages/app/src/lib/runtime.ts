@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto";
 export class MainRuntime {
   static readonly id = `${process.env.APP_NAME}-runtime-${randomUUID()}`;
   static readonly storeAccessToken = `${process.env.APP_NAME}-access-token-${randomUUID()}`;
-  /** 仅用于 Electron 主进程调用 Rust Agent HTTP API。 */
+  /** Rust Agent 控制面凭证；仅向本应用 Agent 窗口的主框架提供。 */
   static readonly agentControlToken = `${process.env.APP_NAME}-agent-control-${randomUUID()}`;
   /** 仅用于 Rust Agent 调用应用内 MCP 的完整工具目录。 */
   static readonly agentMcpToken = `${process.env.APP_NAME}-agent-mcp-${randomUUID()}`;

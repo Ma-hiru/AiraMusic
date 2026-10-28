@@ -1,5 +1,5 @@
+export { AnyToString } from "./string";
 export { EqError, type EqErrorProps } from "./err";
-export { AnyToString, type CanString } from "./string";
 export {
   Colors,
   type Log,

@@ -12,11 +12,10 @@ import {
   SkipForward,
   type LucideIcon
 } from "lucide-react";
+import { RendererDevice } from "@/common/lib/device";
 import { RendererFormat } from "@/common/lib/format";
 import {
   type ShortcutAction,
-  type ShortcutBinding,
-  type ShortcutModifier,
   type ShortcutBindingMap,
   RendererShortcutConstants
 } from "@/common/constants/shortcut";
@@ -43,7 +42,7 @@ const actionIcons: Record<ShortcutAction, LucideIcon> = {
 
 const actions = Object.keys(actionIcons) as ShortcutAction[];
 
-const modifierKeys = ["Control", "Shift", "Alt", "Meta"];
+const platform = await RendererDevice.platform;
 
 const Shortcut: FC<ShortcutSettings> = ({ data, patchSettings }) => {
   const [recording, setRecording] = useState<Nullable<ShortcutAction>>(null);
@@ -51,27 +50,19 @@ const Shortcut: FC<ShortcutSettings> = ({ data, patchSettings }) => {
   useEffect(() => {
     if (!recording) return;
     const handler = (event: KeyboardEvent) => {
+      if (event.isComposing) return;
       event.preventDefault();
       event.stopPropagation();
-      // 单独按下修饰键时继续等待主键
-      if (modifierKeys.includes(event.key)) return;
       if (event.key === "Escape") {
         setRecording(null);
         return;
       }
 
-      const binding: ShortcutBinding = {
-        key: event.key,
-        modifiers: [
-          event.ctrlKey && "ctrl",
-          event.shiftKey && "shift",
-          event.altKey && "alt",
-          event.metaKey && "meta"
-        ].filter(Boolean) as ShortcutModifier[]
-      };
+      const binding = RendererShortcutConstants.fromEvent(event);
+      if (!binding) return;
       const conflict = actions.find(
         (action) =>
-          action !== recording && RendererShortcutConstants.isSameBinding(data[action], binding)
+          action !== recording && RendererShortcutConstants.matchesEvent(event, data[action])
       );
       if (conflict) {
         AppToast.show({
@@ -112,8 +103,9 @@ const Shortcut: FC<ShortcutSettings> = ({ data, patchSettings }) => {
                 )}
                 type="button"
                 title={isRecording ? "按 Esc 取消" : "点击修改快捷键"}
+                aria-label={`修改${RendererShortcutConstants.actionLabels[action]}快捷键`}
                 onClick={() => setRecording(isRecording ? null : action)}>
-                {isRecording ? "按下新的快捷键…" : RendererFormat.shortcut(data[action])}
+                {isRecording ? "按下新的快捷键…" : RendererFormat.shortcut(data[action], platform)}
               </button>
             </section>
           </BaseItem>

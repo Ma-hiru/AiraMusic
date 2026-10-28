@@ -79,9 +79,11 @@ export default defineConfig([
   globalIgnores([
     "**/dist/**",
     "**/dist-types/**",
+    "**/coverage/**",
     "**/node_modules/**",
     "**/pkg/**",
     "**/target/**",
+    "packages/agent/generated/**",
     "./types/env.d.ts"
   ]),
   {

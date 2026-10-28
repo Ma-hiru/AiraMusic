@@ -1,20 +1,44 @@
-export type MainChildParentPort<
-  ParentMessage extends { type: string },
-  ChildMessage extends { type: string }
-> = {
+export interface Message {
+  type: string;
+}
+
+export interface StartMessage extends Message {
+  type: "start";
+}
+
+export interface StopMessage extends Message {
+  type: "stop";
+}
+export interface StoppedMessage extends Message {
+  type: "stopped";
+}
+
+export interface ReadyMessage extends Message {
+  type: "ready";
+}
+
+export interface ErrorMessage extends Message {
+  type: "error";
+  error: SerializedError;
+}
+
+export type ControlMessage = StopMessage | StartMessage;
+
+export type ResultMessage = ErrorMessage | ReadyMessage | StoppedMessage;
+
+export interface ParentPort<
+  ParentMessage extends Message = Message,
+  ChildMessage extends Message = Message
+>
+  extends Electron.ParentPort {
+  postMessage(message: ChildMessage): void;
   on(
     event: "message",
-    listener: (event: { data: ParentMessage }) => void
-  ): MainChildParentPort<ParentMessage, ChildMessage>;
+    listener: (event: { data: ParentMessage; ports: Electron.MessagePortMain[] }) => void
+  ): this;
+}
 
-  postMessage(message: ChildMessage): void;
-};
-
-export type MainChildStartMessage = { type: "start" };
-
-export type MainChildControlMessage = { type: "stop" } | MainChildStartMessage;
-
-export type MainChildSerializedError = {
-  stack?: string;
+export interface SerializedError extends Partial<Error> {
   message: string;
-};
+  name?: string | "panic";
+}

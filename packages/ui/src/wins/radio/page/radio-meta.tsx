@@ -17,8 +17,6 @@ import {
   Pause,
   Music2,
   Trash2,
-  Repeat1,
-  Repeat2,
   Shuffle,
   SkipBack,
   HeartPulse,
@@ -33,6 +31,7 @@ import { RendererWindow } from "@/common/lib/window";
 import { NeteaseAPITrack } from "@/common/netease/api";
 import { RendererIPCMessageBus } from "@/common/lib/bus";
 import { useListenable } from "@/common/hooks/use-listenable";
+import { repeatModeControls } from "@/common/constants/repeat";
 import { useUserTrackManager } from "@/common/hooks/use-user-track-manager";
 import { NeteaseTrack, NeteaseArtist, NeteaseNetworkImage } from "@/common/netease/models";
 import Tag from "@/common/components/display/tag";
@@ -114,7 +113,8 @@ const RadioMeta: FC<RadioMetaProps> = ({ className }) => {
 
   const fmMode = trackMetaBus.data?.mode === "fm";
   const intelligenceMode = trackMetaBus.data?.mode === "intelligence";
-  const repeat = trackMetaBus.data?.repeat;
+  const repeat = trackMetaBus.data?.repeat ?? "off";
+  const repeatControl = repeatModeControls[repeat];
   const shuffle = trackMetaBus.data?.shuffle;
   const status = trackMetaBus.data?.status;
   const centerIcon = useMemo(() => {
@@ -342,12 +342,14 @@ const RadioMeta: FC<RadioMetaProps> = ({ className }) => {
           />
         )}
         <ControlBtn
-          icon={repeat !== "off" ? Repeat1 : Repeat2}
-          label={repeat !== "off" ? "关闭单曲循环" : "开启单曲循环"}
+          className={repeat === "off" ? "scale-85" : undefined}
+          icon={repeatControl.icon}
+          label={repeatControl.label}
+          aria-pressed={repeat !== "off"}
           onClick={() =>
             RendererIPCMessageBus.playlistAction.deliver({
               type: "repeatMode",
-              value: repeat !== "off" ? "off" : "one"
+              value: repeatControl.next
             })
           }
         />

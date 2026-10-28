@@ -1,4 +1,4 @@
-import type { LLMToolOutputDetail } from "@mahiru/agent/browser";
+import type { AgentToolRequest } from "@mahiru/ipc/types";
 import type {
   NeteaseAlbum,
   NeteaseLyric,
@@ -38,7 +38,7 @@ export type RendererToolProjectionOptions = {
   maxTextChars?: number;
 };
 
-export type RendererToolDetail = LLMToolOutputDetail;
+export type RendererToolDetail = NonNullable<AgentToolRequest["detail"]>;
 
 type ProjectionLimits = Required<RendererToolProjectionOptions>;
 

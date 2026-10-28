@@ -67,6 +67,53 @@ describe("Rust Agent 消息分组", () => {
     expect(screen.getByText("对用户可见")).toBeInTheDocument();
   });
 
+  it("丢失 RUN_ERROR 后仍从持久化错误恢复失败卡片和 usage", () => {
+    renderChatContent({
+      ...thread(),
+      runtime: { status: "failed", runId: "run-1" },
+      messages: [
+        { role: "user", content: "分析歌曲" },
+        { role: "inner", innerType: "error", content: "provider disconnected" },
+        {
+          role: "inner",
+          innerType: "usage",
+          content: JSON.stringify({
+            records: [{ step: 1, usage: { prompt_tokens: 100, completion_tokens: 20 } }]
+          })
+        }
+      ]
+    });
+
+    expect(screen.getByRole("alert")).toHaveTextContent("provider disconnected");
+    expect(screen.getByRole("alert")).toHaveTextContent("总计120");
+    expect(screen.getAllByRole("alert")).toHaveLength(1);
+  });
+
+  it("持久化错误与已收到的实时错误只展示一张失败卡片", () => {
+    renderChatContent(
+      {
+        ...thread(),
+        runtime: { status: "failed", runId: "run-1" },
+        messages: [
+          { role: "user", content: "分析歌曲" },
+          { role: "inner", innerType: "error", content: "provider disconnected" }
+        ]
+      },
+      {
+        liveTimeline: [
+          {
+            type: "terminal",
+            status: "failed",
+            runID: "run-1",
+            id: "run-1-terminal",
+            error: "provider disconnected"
+          }
+        ]
+      }
+    );
+    expect(screen.getAllByRole("alert")).toHaveLength(1);
+  });
+
   it("运行中的用户消息已进入 Rust 快照时不重复渲染 pending message", () => {
     renderChatContent(
       {

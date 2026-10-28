@@ -141,7 +141,14 @@ export class NeteaseTrack implements NeteaseTrackModel {
       result.reason = "无版权";
     } else if (this.privilege.st && this.privilege.st < 0) {
       // st小于0时为灰色歌曲, 使用上传云盘的方法解灰后 st == 0
-      Log.error("NeteaseTrack", "歌曲下架", this.id, this.name, this.privilege);
+      Log.once(
+        this.id,
+        "NeteaseTrack",
+        "歌曲下架",
+        this.id,
+        this.name,
+        Log.JsonFlat(Log.JsonCompact(Log.Pick(this.privilege, ["st", "fee", "toast", "message"])))
+      );
       result.playable = false;
       result.reason = "已下架";
     }

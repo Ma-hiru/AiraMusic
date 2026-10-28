@@ -27,10 +27,10 @@ export type {
 
 export type {
   InvokeEvent,
+  AgentConnection,
   InvokeEventArgs,
   InvokeEventMaps,
   InvokeEventPayload,
-  AgentCreateRunInput,
   AgentFeatureSettingsState,
   AgentFeatureSettingsConfig,
   AgentFeatureSettingsMcpTool,

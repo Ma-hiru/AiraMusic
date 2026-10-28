@@ -45,6 +45,71 @@ async fn control_routes_require_the_exact_bearer_token() {
 }
 
 #[tokio::test]
+async fn browser_preflight_allows_local_origins_but_control_requests_still_require_auth() {
+    let (events, _) = broadcast::channel(8);
+    let app = build_router(test_state("control-secret", events));
+    for origin in ["http://localhost:8827", "http://127.0.0.1:8827"] {
+        let preflight = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .method("OPTIONS")
+                    .uri("/v1/threads")
+                    .header("origin", origin)
+                    .header("access-control-request-method", "POST")
+                    .header(
+                        "access-control-request-headers",
+                        "authorization,content-type",
+                    )
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert!(preflight.status().is_success());
+        assert_eq!(preflight.headers()["access-control-allow-origin"], origin);
+        assert!(
+            preflight.headers()["access-control-allow-headers"]
+                .to_str()
+                .unwrap()
+                .contains("authorization")
+        );
+        let missing = app
+            .clone()
+            .oneshot(
+                Request::get("/health")
+                    .header("origin", origin)
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(missing.status(), StatusCode::UNAUTHORIZED);
+        assert_eq!(missing.headers()["access-control-allow-origin"], origin);
+    }
+    for origin in [
+        "https://example.com",
+        "null",
+        "http://localhost.evil:8827",
+        "http://localhost",
+    ] {
+        let response = app
+            .clone()
+            .oneshot(authorized(
+                Request::get("/health").header("origin", origin),
+                Body::empty(),
+            ))
+            .await
+            .unwrap();
+        assert!(
+            !response
+                .headers()
+                .contains_key("access-control-allow-origin")
+        );
+    }
+}
+
+#[tokio::test]
 async fn shutdown_route_is_authenticated_and_signals_graceful_shutdown() {
     let (events, _) = broadcast::channel(8);
     let state = test_state("control-secret", events);

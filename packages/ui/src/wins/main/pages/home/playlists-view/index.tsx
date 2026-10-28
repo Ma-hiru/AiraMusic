@@ -113,7 +113,7 @@ const HomePlaylistsView: FC<{ className?: string }> = ({ className }) => {
         setShowCategoryPanel={setShowCategoryPanel}
       />
       <Section Icon={ListMusic} title={resolvedTitle} subTitle="Playlist Explore">
-        <AppError reset={reload} message="加载歌单失败" when={status === "error"}>
+        <AppError className="h-60!" reset={reload} when={status === "error"}>
           <AppLoading className="min-h-80" loading={status === "loading"}>
             <MediaGrid
               items={items}

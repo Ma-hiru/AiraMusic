@@ -3,6 +3,7 @@ import { MainChildEntry } from "@/lib/child-entry";
 import { MainPathResolver } from "@/lib/path-resolver";
 import os from "node:os";
 import type { NCMChildMessage, NCMParentMessage } from "@/types/ncm.child";
+import type { StopMessage, StartMessage, ResultMessage } from "@/types/child";
 
 export default class NeteaseMusicApiService extends MainChildEntry<
   NCMParentMessage,
@@ -10,32 +11,23 @@ export default class NeteaseMusicApiService extends MainChildEntry<
 > {
   port;
 
-  constructor(props: { port: number; onError: NormalFunc<[err: Error]> }) {
+  constructor(props: {
+    port: number;
+    onPanicError: NormalFunc<[err: Error]>;
+    logger: NormalFunc<[level: "debug" | "error", ...message: any[]]>;
+  }) {
     super({
       serviceName: "ncm",
       childPath: "./ncm/child.mjs",
       metaUrl: import.meta.url,
       autoStart: true,
-      onError: props.onError
+      onPanicError: props.onPanicError,
+      logger: props.logger
     });
     this.port = props.port;
   }
 
-  protected handleChildMessage(message: NCMChildMessage) {
-    switch (message.type) {
-      case "ready":
-        this.printInfo(`ready on port ${message.port}`);
-        break;
-      case "stopped":
-        this.printInfo("stopped");
-        break;
-      case "error":
-        this.printError(this.getErrorFromMessage(message));
-        break;
-    }
-  }
-
-  protected createStartMessage(): NCMParentMessage {
+  protected buildStartMessage(): Extract<NCMParentMessage, StartMessage> {
     return {
       type: "start",
       port: this.port,
@@ -44,25 +36,11 @@ export default class NeteaseMusicApiService extends MainChildEntry<
     };
   }
 
-  protected createStopMessage(): NCMParentMessage {
+  protected buildStopMessage(): Extract<NCMParentMessage, StopMessage> {
     return { type: "stop" };
   }
 
-  protected getErrorFromMessage(message: NCMChildMessage): Error {
-    if (message.type !== "error") {
-      return new Error("Unknown child error");
-    }
-
-    const err = new Error(message.error.message);
-    err.stack = message.error.stack;
-    return err;
-  }
-
-  protected isErrorMessage(message: NCMChildMessage): boolean {
-    return message.type === "error";
-  }
-
-  protected isReadyMessage(message: NCMChildMessage): boolean {
-    return message.type === "ready";
+  protected handleChildMessage(_message: Exclude<NCMChildMessage, ResultMessage>) {
+    void _message;
   }
 }

@@ -1,4 +1,5 @@
 import { cx } from "@emotion/css";
+import { GlobeOff } from "lucide-react";
 import {
   memo,
   useRef,
@@ -9,6 +10,7 @@ import {
   useImperativeHandle
 } from "react";
 import { NeteaseImageSize } from "@/common/enum";
+import { useOnline } from "@/common/hooks/use-online";
 import { type HeartManager } from "@/common/hooks/use-heart";
 import { NeteaseServicesAlbum } from "@/common/netease/services";
 import { useAgentFocusCtx } from "@/common/hooks/use-agent-focus-ctx";
@@ -145,9 +147,14 @@ const Album: FC<AlbumPageProps> = ({
 
   useAgentFocusCtx({ page: "album", name: album?.content.name ?? "", id }, routerActive);
 
+  const { online } = useOnline();
   return (
     <div className={cx("w-full h-full flex flex-col", className)}>
-      <AppError reset={reload} message="加载专辑失败" when={status === "error"}>
+      <AppError
+        reset={reload}
+        when={status === "error"}
+        tipsIcon={!online ? GlobeOff : undefined}
+        tips={!online ? "网络连接中断，请检查网络后重试" : undefined}>
         <AppLoading loading={status === "loading"}>
           <Top
             user={user}

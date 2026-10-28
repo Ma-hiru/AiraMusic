@@ -158,6 +158,11 @@ export class TrayUtils {
     getData: NormalFunc<[], Nullable<MessageData<"bus_deliver_track_meta">>>;
   }) {
     Log.debug("tray", "create raw menu");
+    const copy = (text: string) => {
+      clipboard.writeText(text).catch((err) => {
+        Log.error("tray", "copy", err);
+      });
+    };
     const playerBus = register.getData();
     const items: (MenuItem | MenuItemConstructorOptions)[] = [
       {
@@ -222,20 +227,20 @@ export class TrayUtils {
               {
                 label: "复制歌名",
                 click: () => {
-                  playerBus?.track && clipboard.writeText(playerBus.track.name);
+                  playerBus?.track && copy(playerBus.track.name);
                 }
               },
               {
                 label: "复制歌手名",
                 click: () => {
                   playerBus?.track?.detail &&
-                    clipboard.writeText(playerBus.track.detail.ar.map((a) => a.name).join("&"));
+                    copy(playerBus.track.detail.ar.map((a) => a.name).join("&"));
                 }
               },
               {
                 label: "复制专辑名",
                 click: () => {
-                  playerBus?.track?.detail && clipboard.writeText(playerBus.track?.detail.al.name);
+                  playerBus?.track?.detail && copy(playerBus.track?.detail.al.name);
                 }
               }
             ]

@@ -39,7 +39,7 @@ const DailyRecommendTracks: FC<object> = () => {
   return (
     <div className="w-full overflow-hidden contain-layout min-h-40">
       <RecommendTrackTitle lastPage={lastPage} nextPage={nextPage} />
-      <AppError reset={reload} when={status === "error"}>
+      <AppError className="h-40!" reset={reload} when={status === "error"}>
         <AppLoading className="w-full h-auto" loading={status === "loading"}>
           <RecommendTrackList recommend={recommend} containerRef={containerRef} />
         </AppLoading>

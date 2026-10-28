@@ -5,6 +5,7 @@
 **/.idea
 **/dist
 **/dist-types
+**/coverage
 **/pkg
 **/*.md
 **/*.schema.json

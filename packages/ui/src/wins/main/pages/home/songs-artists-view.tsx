@@ -114,7 +114,7 @@ const HomeSongsArtistsView: FC<{ className?: string }> = ({ className }) => {
             </button>
           ))}
         </div>
-        <AppError message="加载新歌失败" reset={reloadSongs} when={songStatus === "error"}>
+        <AppError className="h-40!" reset={reloadSongs} when={songStatus === "error"}>
           <AppLoading className="min-h-60" loading={songStatus === "loading"}>
             <MediaGrid
               items={songItems}
@@ -153,7 +153,7 @@ const HomeSongsArtistsView: FC<{ className?: string }> = ({ className }) => {
             </button>
           ))}
         </div>
-        <AppError message="加载歌手榜失败" reset={reloadArtists} when={artistStatus === "error"}>
+        <AppError className="h-40!" reset={reloadArtists} when={artistStatus === "error"}>
           <AppLoading className="min-h-60" loading={artistStatus === "loading"}>
             <MediaGrid
               items={artistItems}

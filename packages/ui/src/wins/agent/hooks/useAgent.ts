@@ -1,15 +1,17 @@
-import { useAtom, useSetAtom, useAtomValue } from "jotai";
+import { useAtom, useStore, useSetAtom, useAtomValue } from "jotai";
 import { useRef, useMemo, useState, useEffect, useCallback } from "react";
 import { Log } from "@/common/lib/log";
 import { RendererWindow } from "@/common/lib/window";
 import { RendererAgent } from "@/wins/agent/lib/agent";
 import { useLatestRef } from "@/common/hooks/use-latest-ref";
 import { parseAgentTurnUsage } from "@/wins/agent/page/chat/observability";
+import { recoverAgentConversationState } from "@/wins/agent/hooks/agent-recovery";
 import { reduceAgentConversationEvent } from "@/wins/agent/hooks/agent-event-state";
 import {
   EMPTY_LIVE_TIMELINE,
   agentSelectedConfigIDAtom,
   agentCloseAfterRunningAtom,
+  agentConversationStatesAtom,
   agentBusyConversationIDsAtom,
   loadAgentAtomStorageSnapshot,
   agentApplyStorageSnapshotAtom,
@@ -22,9 +24,9 @@ import {
   agentSelectedConversationRunningRunIDAtom
 } from "@/wins/agent/atoms/agent";
 import AppToast from "@/common/components/display/toast";
-import type { AgentInvokeError } from "@mahiru/ipc/types";
 import type { AgentTokenUsage } from "@/wins/agent/page/types";
 import type {
+  ApiError,
   AGUIEvent,
   ThreadSummary,
   ProviderConfigView,
@@ -43,8 +45,10 @@ interface PendingRunError {
 }
 
 export function useAgent() {
+  const agentStore = useStore();
   const [loading, setLoading] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  const [eventsAvailable, setEventsAvailable] = useState(true);
   const loadingRef = useLatestRef(loading);
 
   const [selectedConfigID, setSelectedConfigID] = useAtom(agentSelectedConfigIDAtom);
@@ -55,6 +59,8 @@ export function useAgent() {
   const runningRunID = useAtomValue(agentSelectedConversationRunningRunIDAtom);
   const runningConversationIDs = useAtomValue(agentBusyConversationIDsAtom);
   const recoverableConversationIDs = useAtomValue(agentRecoverableConversationIDsAtom);
+  const recoverableConversationIDsRef = useLatestRef(recoverableConversationIDs);
+  const selectedConversationIDRef = useLatestRef(selectedConversationID);
   const [closeAfterRunning, setCloseAfterRunning] = useAtom(agentCloseAfterRunningAtom);
   const applyStorageSnapshot = useSetAtom(agentApplyStorageSnapshotAtom);
   const updateConversationState = useSetAtom(agentUpdateConversationStateAtom);
@@ -66,6 +72,8 @@ export function useAgent() {
   const aguiAdapterRef = useRef(new AgentAguiAdapter());
   const bufferedAgentEventsRef = useRef<AGUIEvent[]>([]);
   const pendingRunErrorsRef = useRef(new Map<string, PendingRunError>());
+  const conversationEventVersionsRef = useRef(new Map<string, number>());
+  const reconnectPendingRef = useRef(false);
 
   // 模型服务提供方
   const [providers, setProviders] = useState<ProviderDescriptor[]>([]);
@@ -405,11 +413,18 @@ export function useAgent() {
   }, [applyAgentAguiEvent]);
 
   const restoreRunningConversations = useCallback(
-    async (recoverableIDs = recoverableConversationIDs) => {
+    async (
+      recoverableIDs = recoverableConversationIDsRef.current,
+      includeActive = true,
+      disposed: () => boolean = () => false
+    ) => {
+      const statesAtStart = agentStore.get(agentConversationStatesAtom);
+      const versionsAtStart = new Map(conversationEventVersionsRef.current);
       const result = await RendererAgent.listRuns();
+      if (disposed()) return 0;
       if (!result.ok) {
-        showAgentError(result.reason);
-        return [];
+        if (includeActive) showAgentError(result.reason);
+        return 0;
       }
 
       const activeRuns = result.data;
@@ -417,62 +432,53 @@ export function useAgent() {
         activeRuns.map((run) => [run.threadId, run] as const)
       );
       const restoreConversationIDs = new Set([
-        ...recoverableIDs,
-        ...activeRuns.map((run) => run.threadId)
+        ...recoverableIDs.filter(
+          (conversationID) =>
+            !!conversationID && (includeActive || !activeRunByConversationID.has(conversationID))
+        ),
+        ...(includeActive ? activeRuns.map((run) => run.threadId) : [])
       ]);
+      let restored = 0;
 
       await Promise.all(
         [...restoreConversationIDs].map(async (conversationID) => {
-          const activeRun = activeRunByConversationID.get(conversationID);
-          if (activeRun) {
-            const snapshot = await RendererAgent.getThread(conversationID);
-            if (!snapshot.ok) showAgentError(snapshot.reason);
-            const conversationSnapshot = snapshot.ok ? (snapshot.data ?? null) : null;
-            updateConversationState({
-              conversationID,
-              update: (state) => ({
-                ...state,
-                sending: false,
-                recovering: true,
-                streamText: "",
-                latestRunID: activeRun.runId,
-                runningRunID: activeRun.runId,
-                liveTimeline: EMPTY_LIVE_TIMELINE,
-                conversation: conversationSnapshot ?? state.conversation
-              })
-            });
-            return;
-          }
-
           const snapshot = await RendererAgent.getThread(conversationID);
+          if (disposed()) return;
           if (!snapshot.ok) {
-            showAgentError(snapshot.reason);
+            if (includeActive) showAgentError(snapshot.reason);
             return;
           }
           updateConversationState({
             conversationID,
-            update: (state) => ({
-              ...state,
-              sending: false,
-              recovering: false,
-              streamText: "",
-              latestRunID: snapshot.data.runtime.runId ?? state.latestRunID,
-              runningRunID: "",
-              liveTimeline: EMPTY_LIVE_TIMELINE,
-              conversation: snapshot.data ?? state.conversation,
-              pendingUserMessage: ""
-            })
+            update: (state) => {
+              // listRuns / getThread 期间收到的新事件或用户提交优先，旧快照留待下次同步。
+              if (
+                agentStore.get(agentConversationStatesAtom)[conversationID] !==
+                  statesAtStart[conversationID] ||
+                conversationEventVersionsRef.current.get(conversationID) !==
+                  versionsAtStart.get(conversationID)
+              )
+                return state;
+              const next = recoverAgentConversationState(state, snapshot.data);
+              if (next !== state) restored++;
+              return next;
+            }
           });
         })
       );
 
-      return activeRuns;
+      return restored;
     },
-    [recoverableConversationIDs, updateConversationState]
+    [agentStore, recoverableConversationIDsRef, updateConversationState]
   );
 
   const handleAgentChatEvent = useCallback(
     (event: AGUIEvent) => {
+      const identity = readAgentAguiIdentity(event);
+      if (identity) {
+        const versions = conversationEventVersionsRef.current;
+        versions.set(identity.conversationID, (versions.get(identity.conversationID) ?? 0) + 1);
+      }
       if (!agentEventsReadyRef.current) {
         bufferedAgentEventsRef.current.push(event);
         if (bufferedAgentEventsRef.current.length > 256) {
@@ -484,15 +490,40 @@ export function useAgent() {
     },
     [applyAgentAguiEvent]
   );
+  const reconcileAfterReconnect = useCallback(
+    async (signal?: AbortSignal) => {
+      if (!agentEventsReadyRef.current) {
+        reconnectPendingRef.current = true;
+        return;
+      }
+      await restoreRunningConversations(
+        [
+          ...runningConversationIDsRef.current,
+          ...recoverableConversationIDsRef.current,
+          selectedConversationIDRef.current
+        ],
+        true,
+        () => !!signal?.aborted
+      );
+      if (!signal?.aborted) void loadConversations();
+    },
+    [
+      loadConversations,
+      recoverableConversationIDsRef,
+      restoreRunningConversations,
+      runningConversationIDsRef,
+      selectedConversationIDRef
+    ]
+  );
   useEffect(() => {
-    return RendererWindow.process.listenMessage(
-      "message_deliver_agent_chat_event",
-      handleAgentChatEvent
-    );
-  }, [handleAgentChatEvent]);
+    return RendererAgent.listenEvents(handleAgentChatEvent, {
+      onReconnect: reconcileAfterReconnect,
+      onUnavailable: () => setEventsAvailable(false)
+    });
+  }, [handleAgentChatEvent, reconcileAfterReconnect]);
 
   useEffect(() => {
-    if (!agentEventsReadyRef.current || !runningConversationIDs.length) return;
+    if (!eventsAvailable || !agentEventsReadyRef.current || !runningConversationIDs.length) return;
     let disposed = false;
     let checking = false;
 
@@ -500,37 +531,12 @@ export function useAgent() {
       if (checking || disposed) return;
       checking = true;
       try {
-        const runs = await RendererAgent.listRuns();
-        if (!runs.ok || disposed) return;
-        const activeConversationIDs = new Set(runs.data.map((run) => run.threadId));
-        const completedConversationIDs = runningConversationIDs.filter(
-          (conversationID) => !activeConversationIDs.has(conversationID)
+        const restored = await restoreRunningConversations(
+          runningConversationIDsRef.current,
+          false,
+          () => disposed
         );
-        if (!completedConversationIDs.length) return;
-
-        await Promise.all(
-          completedConversationIDs.map(async (conversationID) => {
-            const snapshot = await RendererAgent.getThread(conversationID);
-            if (!snapshot.ok || disposed) return;
-            updateConversationState({
-              conversationID,
-              update: (state) => {
-                if (!state.runningRunID && !state.recovering) return state;
-                return {
-                  ...state,
-                  sending: false,
-                  recovering: false,
-                  streamText: "",
-                  runningRunID: "",
-                  liveTimeline: EMPTY_LIVE_TIMELINE,
-                  conversation: snapshot.data,
-                  pendingUserMessage: ""
-                };
-              }
-            });
-          })
-        );
-        void loadConversations();
+        if (restored && !disposed) void loadConversations();
       } finally {
         checking = false;
       }
@@ -541,7 +547,13 @@ export function useAgent() {
       disposed = true;
       window.clearInterval(timer);
     };
-  }, [loadConversations, runningConversationIDs, updateConversationState]);
+  }, [
+    loadConversations,
+    eventsAvailable,
+    restoreRunningConversations,
+    runningConversationIDs,
+    runningConversationIDsRef
+  ]);
 
   const refresh = useCallback(
     async (recoverableIDs?: string[]) => {
@@ -586,9 +598,19 @@ export function useAgent() {
       } finally {
         agentEventsReadyRef.current = true;
         flushBufferedAgentEvents();
+        if (reconnectPendingRef.current) {
+          reconnectPendingRef.current = false;
+          void reconcileAfterReconnect();
+        }
       }
     })();
-  }, [applyStorageSnapshot, flushBufferedAgentEvents, openConversation, refresh]);
+  }, [
+    applyStorageSnapshot,
+    flushBufferedAgentEvents,
+    openConversation,
+    reconcileAfterReconnect,
+    refresh
+  ]);
 
   const requestClose = useCallback(() => {
     if (runningConversationIDsRef.current.length) {
@@ -640,6 +662,6 @@ export function useAgent() {
   };
 }
 
-const showAgentError = (error: AgentInvokeError) => {
+const showAgentError = (error: ApiError) => {
   AppToast.show({ type: "error", text: `${error.code}: ${error.message}` });
 };

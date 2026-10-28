@@ -213,7 +213,10 @@ const ToolCallDetail: FC<{
   const technicalContentID = useAccessibleID("agent-tool-technical");
   const presentation = getAgentToolPresentation(name);
   const technicalLabel = `${presentation.label}技术详情${total > 1 ? `（第 ${ordinal} 项）` : ""}`;
-  const web = name === "agent-tool-web-browser" ? getAgentWebToolDetails(input, output) : null;
+  const web =
+    name === "agent-tool-web-browser" || name === "agent-tool-web-snapshot"
+      ? getAgentWebToolDetails(input, output)
+      : null;
   const semanticResult = getAgentToolSemanticResult(name, output);
   const failed = isAgentToolError(output) || (status === "error" && !output);
   const waiting = !output && status === "running";

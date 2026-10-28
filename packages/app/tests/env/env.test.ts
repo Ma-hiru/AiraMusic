@@ -1,8 +1,12 @@
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 
 import { AppEnv } from "../../../../scripts/env";
 
-AppEnv.setEnvPath(join(process.cwd(), "../../"), join(process.cwd(), "../../"));
+const __dirname = fileURLToPath(new URL(".", import.meta.url));
+const _root = join(__dirname, "../../");
+
+AppEnv.setEnvPath(join(_root, "../../"), join(_root, "../../"));
 const env = AppEnv.load("test");
 
 describe("test vitest env loaded successfully", () => {

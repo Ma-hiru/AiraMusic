@@ -308,7 +308,13 @@ impl AgentLoopRuntimeService {
         support_providers()
     }
 
-    pub fn create_config(&self, input: ProviderConfigInput) -> anyhow::Result<ProviderConfigView> {
+    pub fn create_config(
+        &self,
+        mut input: ProviderConfigInput,
+    ) -> anyhow::Result<ProviderConfigView> {
+        if self.configs.list().is_empty() {
+            input.default = true;
+        }
         let config = Self::config_from_input(input, None, None)?;
         self.configs.add_global_config(config.clone())?;
         Ok(Self::config_to_view(config, true))

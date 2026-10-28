@@ -2,6 +2,7 @@ import { app, dialog } from "electron";
 import { Log } from "@/lib/log";
 import { getArgFlag } from "@/utils/args";
 import { MainRuntime } from "@/lib/runtime";
+import { WebBrowser } from "@/lib/web-search";
 import { MainPathResolver } from "@/lib/path-resolver";
 import { MainWindowConstants } from "@/constants/window";
 import { MainWindowManager } from "@/lib/window-manager";
@@ -458,6 +459,7 @@ export class MainWindowPreset {
       loadURL: (port) => `${MainWindowPreset.origin(port)}/agent.html`,
       onCreate: (win) => {
         (MainRuntime.isDev || getArgFlag("devtools")) && win.webContents.openDevTools();
+        win.once("closed", () => WebBrowser.close());
       }
     };
   }

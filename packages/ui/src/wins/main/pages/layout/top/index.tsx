@@ -1,5 +1,5 @@
 import { cx } from "@emotion/css";
-import { useAtom, useAtomValue } from "jotai";
+import { useAtomValue } from "jotai";
 import { memo, type FC, useCallback } from "react";
 import { useUser } from "@/common/store/user";
 import { RendererDevice } from "@/common/lib/device";
@@ -19,7 +19,7 @@ import TopControl from "./top-control";
 const isDarwin = (await RendererDevice.platform) === "darwin";
 
 const Top: FC<{ className?: string }> = ({ className }) => {
-  const [playModal, setPlayModal] = useAtom(playModalAtom);
+  const playModal = useAtomValue(playModalAtom);
   const sidebar = useAtomValue(sidebarAtom);
   const user = useUser();
   const isFullscreen = useListenable(RendererWindow.current).isFullscreen;
@@ -49,12 +49,7 @@ const Top: FC<{ className?: string }> = ({ className }) => {
           `,
           sidebar ? "w-(--side-bar-expand-width)" : "w-(--side-bar-collapse-width)"
         )}>
-        <TopLeft
-          user={user}
-          isDarwin={isDarwin}
-          playModal={playModal}
-          onClick={() => (playModal ? setPlayModal(false) : onClick())}
-        />
+        <TopLeft user={user} isDarwin={isDarwin} playModal={playModal} onClick={onClick} />
       </div>
       <div
         className={cx(

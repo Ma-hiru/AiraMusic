@@ -158,6 +158,94 @@ it.each([
   }
 );
 
+it.each(["canvas", "webgl-rust"] as const)(
+  "limits actual %s draws to the configured FPS across display refresh rates",
+  (type) => {
+    for (const refreshRate of [60, 90, 120, 144]) {
+      for (const fpsLimit of [15, 30, 60]) {
+        const store = createStore();
+        store.set(spectrumReadyAtom, true);
+        store.set(spectrumDataAtom, { bands: new Float32Array([0.5, 0.8]) });
+        const { unmount } = render(
+          <Provider store={store}>
+            <AudioSpectrum renderer={type} spectrumOptions={{ fpsLimit }} enable />
+          </Provider>
+        );
+        act(() => {
+          renderer.size++;
+          renderer.onResize?.();
+        });
+        const initialDraws = renderer.draw.mock.calls.length;
+        for (let frame = 0; frame < refreshRate; frame++) runFrame((frame * 1000) / refreshRate);
+
+        expect(renderer.draw.mock.calls.length - initialDraws).toBe(fpsLimit);
+        unmount();
+        expect(frames.size).toBe(0);
+      }
+    }
+  }
+);
+
+it("changes FPS immediately without resetting the displayed envelope or renderer", () => {
+  const store = createStore();
+  store.set(spectrumReadyAtom, true);
+  store.set(spectrumDataAtom, { bands: new Float32Array([1]) });
+  const view = (fpsLimit: number) => (
+    <Provider store={store}>
+      <AudioSpectrum renderer="webgl-rust" spectrumOptions={{ fpsLimit }} enable />
+    </Provider>
+  );
+  const { rerender } = render(view(30));
+  act(() => {
+    renderer.size++;
+    renderer.onResize?.();
+  });
+  runFrame(0);
+  runFrame(1000 / 30);
+  const lastValue = renderer.frame[0]!;
+  const initialDraws = renderer.draw.mock.calls.length;
+
+  rerender(view(15));
+  runFrame(50);
+  expect(renderer.frame[0]).toBeGreaterThan(lastValue);
+  expect(renderer.init).toHaveBeenCalledTimes(1);
+  expect(renderer.draw).toHaveBeenCalledTimes(initialDraws + 1);
+  runFrame(100);
+  expect(renderer.draw).toHaveBeenCalledTimes(initialDraws + 1);
+  runFrame(50 + 1000 / 15);
+  expect(renderer.draw).toHaveBeenCalledTimes(initialDraws + 2);
+
+  rerender(view(60));
+  runFrame(125);
+  runFrame(125 + 1000 / 60);
+  expect(renderer.draw).toHaveBeenCalledTimes(initialDraws + 4);
+  expect(renderer.init).toHaveBeenCalledTimes(1);
+});
+
+it("uses elapsed draw time for smoothing and does not catch up with a burst after a stalled frame", () => {
+  const store = createStore();
+  store.set(spectrumReadyAtom, true);
+  store.set(spectrumDataAtom, { bands: new Float32Array([1]) });
+  render(
+    <Provider store={store}>
+      <AudioSpectrum spectrumOptions={{ fpsLimit: 15 }} enable />
+    </Provider>
+  );
+  act(() => {
+    renderer.size++;
+    renderer.onResize?.();
+  });
+  runFrame(0);
+  expect(renderer.frame[0]).toBeCloseTo(1 - Math.exp(-(1000 / 15) / 32));
+  runFrame(1000 / 60);
+  expect(renderer.draw).toHaveBeenCalledTimes(1);
+  runFrame(1000 / 15);
+  expect(renderer.frame[0]).toBeCloseTo(1 - Math.exp(-(2000 / 15) / 32));
+  runFrame(2000);
+  runFrame(2000 + 1000 / 60);
+  expect(renderer.draw).toHaveBeenCalledTimes(3);
+});
+
 function runFrame(timestamp: number) {
   const next = frames.entries().next().value;
   expect(next).toBeDefined();

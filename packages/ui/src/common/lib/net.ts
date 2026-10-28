@@ -8,6 +8,9 @@ export class RendererNet {
   static completed: number[] = [];
   static cursor = 0;
   static listener = new Listener();
+  private static statusGeneration = 0;
+  private static statusCache?: { expiresAt: number; value: NetworkStatus };
+  private static statusPending?: { generation: number; promise: Promise<NetworkStatus> };
 
   static get quality() {
     const now = performance.now();
@@ -23,8 +26,29 @@ export class RendererNet {
   }
 
   static get status(): Promise<NetworkStatus> {
+    return this.checkStatus();
+  }
+
+  static checkStatus(refresh = false): Promise<NetworkStatus> {
     if (!window.navigator.onLine) return Promise.resolve("offline");
-    return Promise.resolve(RendererIPC.NormalChannel.send("invoke_device_net", undefined));
+    if (this.statusPending?.generation === this.statusGeneration) {
+      return this.statusPending.promise;
+    }
+    if (!refresh && this.statusCache && this.statusCache.expiresAt > Date.now()) {
+      return Promise.resolve(this.statusCache.value);
+    }
+    const generation = this.statusGeneration;
+    const promise = (async () => {
+      const value = await RendererIPC.NormalChannel.send("invoke_device_net", undefined);
+      if (generation === this.statusGeneration) {
+        this.statusCache = { value, expiresAt: Date.now() + 2_500 };
+      }
+      return value;
+    })().finally(() => {
+      if (this.statusPending?.promise === promise) this.statusPending = undefined;
+    });
+    this.statusPending = { generation, promise };
+    return promise;
   }
 
   static get isOnline() {
@@ -129,17 +153,19 @@ export class RendererNet {
         buffered: false
       });
       const status = () => {
+        this.statusGeneration++;
+        this.statusCache = undefined;
         if (!this.isOnline) this.listener.execute();
         else {
-          // 有时候网络状态会在短时间内频繁变化，等 5 秒再通知，避免重复请求
+          // 有时候网络状态会在短时间内频繁变化，等 2.5 秒再通知，避免重复请求
           window.setTimeout(() => {
             this.listener.execute();
-          }, 5000);
+          }, 2_500);
         }
 
-        Log.info("AppNet", "network status changed", this.isOnline ? "online" : "offline");
+        Log.info("AppNet", "network status changed:", this.isOnline ? "online" : "offline");
       };
-      Log.info("AppNet", "network status changed", window.navigator.onLine ? "online" : "offline");
+      Log.info("AppNet", "network status changed:", window.navigator.onLine ? "online" : "offline");
       window.addEventListener("online", status, { passive: true });
       window.addEventListener("offline", status, { passive: true });
     });

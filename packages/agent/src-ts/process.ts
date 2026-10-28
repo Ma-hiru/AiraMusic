@@ -2,19 +2,8 @@ import { join } from "node:path";
 import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { spawn, type ChildProcessWithoutNullStreams } from "node:child_process";
-import type { AGUIEvent } from "@ag-ui/core";
 
-import { AgentClient } from "./client";
-import type { AgentReady } from "./types";
-
-export type AgentLogLevel = "INFO" | "NONE" | "WARN" | "DEBUG" | "ERROR" | "TRACE";
-
-export interface AgentLogRecord {
-  message: string;
-  target?: string;
-  fields: Record<string, unknown>;
-  level: Exclude<AgentLogLevel, "NONE">;
-}
+import type { AgentReady, AgentLogLevel, AgentLogRecord, HealthResponse } from "./types";
 
 const packageDirectory = fileURLToPath(new URL("..", import.meta.url));
 const defaultExecutable = join(
@@ -37,28 +26,115 @@ export interface AgentRunOptions {
 }
 
 export class Agent {
-  private runningValue = true;
-  private readonly client: AgentClient;
+  private isRunning = true;
   private readonly exited: Promise<void>;
+  private readonly child: ChildProcessWithoutNullStreams;
+  private readonly controlToken: string;
+  readonly endpoint: string;
+
+  get running(): boolean {
+    return this.isRunning;
+  }
+
+  get closed(): Promise<void> {
+    return this.exited;
+  }
+
+  get pid(): number | undefined {
+    return this.child.pid;
+  }
 
   private constructor(
-    private readonly child: ChildProcessWithoutNullStreams,
-    readonly endpoint: string,
+    child: ChildProcessWithoutNullStreams,
+    endpoint: string,
     controlToken: string
   ) {
-    this.client = new AgentClient(endpoint, controlToken);
-    this.exited = new Promise((resolve) => {
-      child.once("exit", () => {
-        this.runningValue = false;
-        resolve();
-      });
+    const { promise, resolve } = Promise.withResolvers<void>();
+    this.endpoint = endpoint;
+    this.controlToken = controlToken;
+    this.exited = promise;
+    this.child = child.once("exit", () => {
+      this.isRunning = false;
+      resolve();
     });
   }
 
-  static async run(options: AgentRunOptions): Promise<Agent> {
-    validateOptions(options);
+  private request<T>(path: string, options?: RequestInit): Promise<T> {
+    const url = this.endpoint + path;
+    const init = {
+      ...options,
+      headers: { ...options?.headers, Authorization: `Bearer ${this.controlToken}` }
+    };
+    return fetch(url, init)
+      .then((response) => {
+        if (!response.ok) {
+          console.error(`Agent 连接失败 (${response.status})`);
+          throw new Error(`Agent 连接失败 (${response.status})`);
+        }
+        return response.status === 204 ? (undefined as T) : (response.json() as Promise<T>);
+      })
+      .catch((err) => {
+        console.error(`Agent 连接失败`, err);
+        throw new Error(`Agent 连接失败 (${err})`);
+      });
+  }
+
+  private waitForExit(timeoutMs: number): Promise<boolean> {
+    const { resolve, promise: timeout } = Promise.withResolvers<false>();
+    const timer = setTimeout(() => resolve(false), timeoutMs);
+    return Promise.race([this.exited.then(() => true), timeout]).finally(() => {
+      clearTimeout(timer);
+      resolve(false);
+    });
+  }
+
+  health(): Promise<HealthResponse> {
+    return this.request<HealthResponse>("/health");
+  }
+
+  async stop(timeoutMs = 2_000): Promise<boolean> {
+    if (!this.isRunning) return true;
+    const controller = new AbortController();
+    const requestTimer = setTimeout(() => controller.abort(), Math.max(1, timeoutMs / 2));
+
+    try {
+      await this.request<void>("/shutdown", { method: "POST", signal: controller.signal });
+    } catch {
+      this.child.stdin.end();
+    } finally {
+      clearTimeout(requestTimer);
+    }
+
+    if (await this.waitForExit(timeoutMs)) return true;
+    this.child.stdin.end();
+    this.child.kill();
+    return await this.waitForExit(Math.min(timeoutMs, 1_000));
+  }
+
+  private static validateOptions(options: AgentRunOptions) {
+    if (!Number.isInteger(options.port) || options.port < 0 || options.port > 65_535) {
+      throw new Error("Agent port must be an integer between 0 and 65535");
+    }
+
+    const require = {
+      dataDir: options.dataDir,
+      mcpUrl: options.mcpUrl,
+      controlToken: options.controlToken,
+      storeSecret: options.storeSecret,
+      mcpToken: options.mcpToken
+    };
+    for (const [name, value] of Object.entries(require)) {
+      if (!value) throw new Error(`Agent option ${name} cannot be empty`);
+    }
+
+    const AGENT_LOG_LEVELS: AgentLogLevel[] = ["TRACE", "DEBUG", "INFO", "WARN", "ERROR", "NONE"];
+    if (options.logLevel && !AGENT_LOG_LEVELS.includes(options.logLevel)) {
+      throw new Error(`Agent log level is invalid: ${options.logLevel}`);
+    }
+
     const executable = options.execPath ?? defaultExecutable;
     if (!existsSync(executable)) throw new Error(`Agent executable not found: ${executable}`);
+
     const args = [
       ...(options.execArgs ?? []),
       "--port",
@@ -70,6 +146,7 @@ export class Agent {
       "--log-level",
       options.logLevel ?? "INFO"
     ];
+
     const env = Object.fromEntries(
       Object.entries(process.env).map(([name, value]) => [name, String(value)])
     ) as NodeJS.ProcessEnv;
@@ -78,212 +155,77 @@ export class Agent {
       AIRA_AGENT_STORE_SECRET: options.storeSecret,
       AIRA_AGENT_MCP_TOKEN: options.mcpToken
     });
-    const child: ChildProcessWithoutNullStreams = spawn(executable, args, {
-      windowsHide: true,
-      stdio: ["pipe", "pipe", "pipe"],
-      env
-    });
+
+    return { executable, args, env };
+  }
+  private static listenAgentLogs(
+    child: ChildProcessWithoutNullStreams,
+    loglevel?: AgentLogLevel,
+    logger?: NormalFunc<[record: AgentLogRecord]>
+  ) {
     child.stderr.setEncoding("utf8");
-    listenAgentLogs(child, options.logger);
 
-    try {
-      const ready = await waitUntilReady(child, options.startupTimeoutMs ?? 10_000);
-      return new Agent(child, `http://127.0.0.1:${ready.port}`, options.controlToken);
-    } catch (error) {
-      child.stdin.end();
-      child.kill();
-      throw error;
-    }
-  }
-
-  get running(): boolean {
-    return this.runningValue;
-  }
-
-  get pid(): number | undefined {
-    return this.child.pid;
-  }
-
-  health() {
-    return this.client.health();
-  }
-
-  listThreads() {
-    return this.client.listThreads();
-  }
-
-  createThread(...args: Parameters<AgentClient["createThread"]>) {
-    return this.client.createThread(...args);
-  }
-
-  getThread(...args: Parameters<AgentClient["getThread"]>) {
-    return this.client.getThread(...args);
-  }
-
-  deleteThread(...args: Parameters<AgentClient["deleteThread"]>) {
-    return this.client.deleteThread(...args);
-  }
-
-  listRuns() {
-    return this.client.listRuns();
-  }
-
-  listProviders() {
-    return this.client.listProviders();
-  }
-
-  createRun(...args: Parameters<AgentClient["createRun"]>) {
-    return this.client.createRun(...args);
-  }
-
-  cancelRun(...args: Parameters<AgentClient["cancelRun"]>) {
-    return this.client.cancelRun(...args);
-  }
-
-  listConfigs() {
-    return this.client.listConfigs();
-  }
-
-  createConfig(...args: Parameters<AgentClient["createConfig"]>) {
-    return this.client.createConfig(...args);
-  }
-
-  updateConfig(...args: Parameters<AgentClient["updateConfig"]>) {
-    return this.client.updateConfig(...args);
-  }
-
-  deleteConfig(...args: Parameters<AgentClient["deleteConfig"]>) {
-    return this.client.deleteConfig(...args);
-  }
-
-  setThreadConfig(...args: Parameters<AgentClient["setThreadConfig"]>) {
-    return this.client.setThreadConfig(...args);
-  }
-
-  events(signal?: AbortSignal): AsyncGenerator<AGUIEvent> {
-    return this.client.events(signal);
-  }
-
-  async stop(timeoutMs = 5_000): Promise<boolean> {
-    if (!this.runningValue) return true;
-    const controller = new AbortController();
-    const requestTimer = setTimeout(() => controller.abort(), Math.max(1, timeoutMs / 2));
-    try {
-      await this.client.shutdown(controller.signal);
-    } catch {
-      this.child.stdin.end();
-    } finally {
-      clearTimeout(requestTimer);
+    if (!logger) {
+      child.stderr.resume();
+      return;
     }
 
-    if (await waitForExit(this.exited, timeoutMs)) return true;
-    this.child.stdin.end();
-    this.child.kill();
-    await waitForExit(this.exited, Math.min(timeoutMs, 1_000));
-    return false;
-  }
-}
+    let buffer = "";
+    const currentLevelNumber = loglevel && loglevelToNumber(loglevel);
+    const parseAgentLogRecord = (line: string): null | AgentLogRecord => {
+      try {
+        const parsed = JSON.parse(line) as Record<string, unknown>;
+        const level = readAgentLogLevel(parsed["level"]);
+        if (currentLevelNumber && loglevelToNumber(level) < currentLevelNumber) return null;
+        const sourceFields = isRecord(parsed["fields"]) ? parsed["fields"] : {};
+        const fields = { ...sourceFields };
+        const fieldMessage = fields["message"];
+        delete fields["message"];
 
-function validateOptions(options: AgentRunOptions) {
-  if (!Number.isInteger(options.port) || options.port < 0 || options.port > 65_535) {
-    throw new Error("Agent port must be an integer between 0 and 65535");
-  }
-  for (const [name, value] of Object.entries({
-    dataDir: options.dataDir,
-    mcpUrl: options.mcpUrl,
-    controlToken: options.controlToken,
-    storeSecret: options.storeSecret,
-    mcpToken: options.mcpToken
-  })) {
-    if (!value) throw new Error(`Agent option ${name} cannot be empty`);
-  }
-  if (options.logLevel && !AGENT_LOG_LEVELS.includes(options.logLevel)) {
-    throw new Error(`Agent log level is invalid: ${options.logLevel}`);
-  }
-}
+        const message =
+          typeof fieldMessage === "string"
+            ? fieldMessage
+            : typeof parsed["message"] === "string"
+              ? parsed["message"]
+              : line;
 
-const AGENT_LOG_LEVELS: readonly AgentLogLevel[] = [
-  "TRACE",
-  "DEBUG",
-  "INFO",
-  "WARN",
-  "ERROR",
-  "NONE"
-];
-
-function listenAgentLogs(
-  child: ChildProcessWithoutNullStreams,
-  logger?: (record: AgentLogRecord) => void
-) {
-  if (!logger) {
-    child.stderr.resume();
-    return;
-  }
-
-  let buffer = "";
-  const flushLine = (line: string) => {
-    const content = line.trim();
-    if (content) logger(parseAgentLogRecord(content));
-  };
-  child.stderr.on("data", (chunk: string) => {
-    buffer += chunk;
-    let newline = buffer.indexOf("\n");
-    while (newline >= 0) {
-      flushLine(buffer.slice(0, newline));
-      buffer = buffer.slice(newline + 1);
-      newline = buffer.indexOf("\n");
-    }
-  });
-  child.stderr.once("end", () => {
-    flushLine(buffer);
-    buffer = "";
-  });
-}
-
-function parseAgentLogRecord(line: string): AgentLogRecord {
-  try {
-    const parsed = JSON.parse(line) as Record<string, unknown>;
-    const level = readAgentLogLevel(parsed["level"]);
-    const sourceFields = isRecord(parsed["fields"]) ? parsed["fields"] : {};
-    const fields = { ...sourceFields };
-    const fieldMessage = fields["message"];
-    delete fields["message"];
-    const message =
-      typeof fieldMessage === "string"
-        ? fieldMessage
-        : typeof parsed["message"] === "string"
-          ? parsed["message"]
-          : line;
-    return {
-      level,
-      message,
-      fields,
-      ...(typeof parsed["target"] === "string" ? { target: parsed["target"] } : {})
+        return {
+          level,
+          message,
+          fields,
+          ...(typeof parsed["target"] === "string" ? { target: parsed["target"] } : {})
+        };
+      } catch {
+        return { level: "ERROR", message: line, fields: {} };
+      }
     };
-  } catch {
-    return { level: "ERROR", message: line, fields: {} };
+    const flushLine = (line: string) => {
+      const content = line.trim();
+      if (content) {
+        const record = parseAgentLogRecord(content);
+        record && logger(record);
+      }
+    };
+    child.stderr.on("data", (chunk: string) => {
+      buffer += chunk;
+      let newline = buffer.indexOf("\n");
+      while (newline >= 0) {
+        flushLine(buffer.slice(0, newline));
+        buffer = buffer.slice(newline + 1);
+        newline = buffer.indexOf("\n");
+      }
+    });
+    child.stderr.once("end", () => {
+      flushLine(buffer);
+      buffer = "";
+    });
   }
-}
+  private static waitUntilReady(
+    child: ChildProcessWithoutNullStreams,
+    timeoutMs: number
+  ): Promise<AgentReady> {
+    const { reject, promise, resolve } = Promise.withResolvers<AgentReady>();
 
-function readAgentLogLevel(value: unknown): AgentLogRecord["level"] {
-  return value === "TRACE" ||
-    value === "DEBUG" ||
-    value === "INFO" ||
-    value === "WARN" ||
-    value === "ERROR"
-    ? value
-    : "ERROR";
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
-function waitUntilReady(
-  child: ChildProcessWithoutNullStreams,
-  timeoutMs: number
-): Promise<AgentReady> {
-  return new Promise((resolve, reject) => {
     let buffer = "";
     let settled = false;
     const finish = (error?: Error, ready?: AgentReady) => {
@@ -316,25 +258,67 @@ function waitUntilReady(
         finish(new Error("Agent readiness record 无效"));
       }
     };
+
     const onError = () => finish(new Error("Agent 子进程启动失败"));
     const onExit = () => finish(new Error("Agent 在就绪前退出"));
     const timer = setTimeout(() => finish(new Error("Agent 启动超时")), timeoutMs);
+
     child.stdout.on("data", onData);
     child.once("error", onError);
     child.once("exit", onExit);
-  });
-}
 
-async function waitForExit(exited: Promise<void>, timeoutMs: number): Promise<boolean> {
-  let timer: undefined | NodeJS.Timeout;
-  try {
-    return await Promise.race([
-      exited.then(() => true),
-      new Promise<false>((resolve) => {
-        timer = setTimeout(() => resolve(false), timeoutMs);
-      })
-    ]);
-  } finally {
-    if (timer) clearTimeout(timer);
+    return promise;
+  }
+  static async run(options: AgentRunOptions): Promise<Agent> {
+    const { env, args, executable } = this.validateOptions(options);
+    const child: ChildProcessWithoutNullStreams = spawn(executable, args, {
+      windowsHide: true,
+      stdio: ["pipe", "pipe", "pipe"],
+      env
+    });
+    this.listenAgentLogs(child, options.logLevel, options.logger);
+
+    try {
+      const ready = await this.waitUntilReady(child, options.startupTimeoutMs ?? 15_000);
+      return new Agent(child, `http://127.0.0.1:${ready.port}`, options.controlToken);
+    } catch (error) {
+      child.stdin.end();
+      child.kill();
+      throw error;
+    }
   }
 }
+
+const isRecord = (value: unknown): value is Record<string, unknown> => {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+};
+
+const readAgentLogLevel = (
+  value: unknown,
+  dft: AgentLogRecord["level"] = "ERROR"
+): AgentLogRecord["level"] => {
+  return value === "TRACE" ||
+    value === "DEBUG" ||
+    value === "INFO" ||
+    value === "WARN" ||
+    value === "ERROR"
+    ? value
+    : dft;
+};
+
+const loglevelToNumber = (level: AgentLogLevel) => {
+  switch (level) {
+    case "TRACE":
+      return 0;
+    case "DEBUG":
+      return 1;
+    case "INFO":
+      return 2;
+    case "WARN":
+      return 3;
+    case "ERROR":
+      return 4;
+    case "NONE":
+      return 5;
+  }
+};

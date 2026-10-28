@@ -1,119 +1,87 @@
-import { MainIPC } from "@mahiru/ipc/main";
-import type { ProviderConfigInput } from "@mahiru/agent";
-import type { AgentFeatureSettingsState } from "@mahiru/ipc/types";
+import { Log } from "@/lib/log";
+import { LogLevel } from "@mahiru/log";
+import { MainServicesInstance } from "@/types/service";
+import { Agent, type AgentLogLevel, type AgentRunOptions } from "@mahiru/agent";
 
-import { RustAgentService } from "./child";
-import { MainAgentFeatureSettings } from "./settings";
+type AgentServiceOptions = Omit<AgentRunOptions, "logger" | "logLevel"> & {
+  logLevel: LogLevel;
+  onPanicError: NormalFunc<[err: Error]>;
+  logger: NormalFunc<[level: "debug" | "error", ...message: any[]]>;
+};
 
-export class MainAgent {
-  private static service?: RustAgentService;
-  private static stopListening?: () => boolean;
+export default class AgentService extends MainServicesInstance {
+  private instance?: Agent;
+  private readonly starting: Promise<Agent>;
+  private stopping?: Promise<void>;
+  private readonly options: AgentServiceOptions;
 
-  static isEnabled() {
-    return MainAgentFeatureSettings.isAgentEffective();
-  }
-
-  static async init(mcpUrl: string): Promise<boolean> {
-    if (this.service?.running) return true;
-    if (!MainAgentFeatureSettings.beginAgentInitialization()) return false;
-
-    const service = new RustAgentService();
-    this.stopListening = service.listen((event) => {
-      MainIPC.MessageChannel.commit({
-        sender: "process",
-        receiver: "agent",
-        type: "message_deliver_agent_chat_event",
-        data: event
+  constructor(options: AgentServiceOptions) {
+    super({ name: "agent", onPanic: options.onPanicError, logger: options.logger });
+    this.options = options;
+    this.starting = Agent.run({
+      ...options,
+      logLevel: this.toAgentLogLevel(options.logLevel),
+      logger: (record) => {
+        this.logger(
+          record.level === "ERROR" ? "error" : "debug",
+          record.target,
+          record.message,
+          Log.JsonFlat(Log.JsonCompact(record.fields))
+        );
+      }
+    }).then((instance) => {
+      this.instance = instance;
+      void instance.closed.then(() => {
+        if (!this.stopping) this.panic(new Error("Agent 服务已退出"));
       });
+      return instance;
     });
-    try {
-      await service.start(mcpUrl);
-      this.service = service;
-      // 主窗口可能已读取启动前的状态，就绪后需要通知它重新显示入口
-      this.broadcastFeatureSettings(MainAgentFeatureSettings.markAgentInitialized());
-      return true;
-    } catch (error) {
-      this.stopListening?.();
-      this.stopListening = undefined;
-      await service.stop();
-      this.broadcastFeatureSettings(MainAgentFeatureSettings.markAgentInitializationFailed());
-      throw error;
+  }
+
+  private toAgentLogLevel(level: LogLevel): AgentLogLevel {
+    switch (level) {
+      case LogLevel.TRACE:
+        return "TRACE";
+      case LogLevel.DEBUG:
+        return "DEBUG";
+      case LogLevel.INFO:
+        return "INFO";
+      case LogLevel.WARN:
+        return "WARN";
+      case LogLevel.ERROR:
+        return "ERROR";
+      default:
+        return "NONE";
     }
   }
 
-  private static current() {
-    if (!MainAgentFeatureSettings.isAgentEffective() || !this.service) {
-      throw new Error("Agent 本次启动未运行；如已重新开启，请重启应用");
-    }
-    return this.service.current();
+  get running(): boolean {
+    return !this.stopping && Boolean(this.instance?.running);
   }
 
-  static async shutdown(): Promise<AgentFeatureSettingsState> {
-    const service = this.service;
-    this.service = undefined;
-    this.stopListening?.();
-    this.stopListening = undefined;
-    if (service) await service.stop();
-    return MainAgentFeatureSettings.markAgentStopped();
+  getConnection() {
+    const instance = this.running ? this.instance : undefined;
+    if (!instance) throw new Error("Agent 本次启动未运行；如已重新开启，请重启应用");
+    return { endpoint: instance.endpoint, token: this.options.controlToken };
   }
 
-  static broadcastFeatureSettings(
-    state: AgentFeatureSettingsState = MainAgentFeatureSettings.getState()
-  ) {
-    MainIPC.MessageChannel.commitAll({
-      sender: "process",
-      type: "message_deliver_agent_feature_settings",
-      data: state
-    });
+  override async ready() {
+    await this.starting;
   }
 
-  static listProviders() {
-    return this.current().listProviders();
-  }
-
-  static listConfigs() {
-    return this.current().listConfigs();
-  }
-
-  static async createConfig(input: ProviderConfigInput) {
-    const configs = await this.current().listConfigs();
-    return this.current().createConfig({
-      ...input,
-      id: undefined,
-      default: configs.length === 0 ? true : input.default
-    });
-  }
-
-  static updateConfig(id: string, input: ProviderConfigInput) {
-    return this.current().updateConfig(id, { ...input, id });
-  }
-
-  static createThread(input: { name?: string } = {}) {
-    return this.current().createThread(input);
-  }
-
-  static listThreads() {
-    return this.current().listThreads();
-  }
-
-  static listRuns() {
-    return this.current().listRuns();
-  }
-
-  static getThread(id: string) {
-    return this.current().getThread(id);
-  }
-
-  static deleteThread(id: string) {
-    return this.current().deleteThread(id);
-  }
-
-  static async createRun(threadId: string, configId: string, content: string) {
-    await this.current().setThreadConfig(threadId, configId);
-    return this.current().createRun(threadId, content);
-  }
-
-  static cancelRun(runId: string) {
-    return this.current().cancelRun(runId);
+  override stop(): Promise<void> {
+    if (this.stopping) return this.stopping;
+    this.stopping = this.starting
+      .then(
+        async (instance) => {
+          if (!(await instance.stop())) throw new Error("Agent 服务尚未退出，请重试停止操作");
+        },
+        () => void 0
+      )
+      .catch((error: unknown) => {
+        this.stopping = undefined;
+        throw error;
+      });
+    return this.stopping;
   }
 }

@@ -1,4 +1,5 @@
 import { cx } from "@emotion/css";
+import { GlobeOff } from "lucide-react";
 import {
   memo,
   useRef,
@@ -10,6 +11,7 @@ import {
   useCallback,
   useImperativeHandle
 } from "react";
+import { useOnline } from "@/common/hooks/use-online";
 import { type HeartManager } from "@/common/hooks/use-heart";
 import { NeteaseServicesArtist } from "@/common/netease/services";
 import { useAgentFocusCtx } from "@/common/hooks/use-agent-focus-ctx";
@@ -130,9 +132,14 @@ const Artist: FC<ArtistProps> = ({
 
   useAgentFocusCtx({ page: "artist", id, name: artist?.detail.artist.name ?? "" }, routerActive);
 
+  const { online } = useOnline();
   return (
     <div className={cx("flex flex-col", className)}>
-      <AppError reset={reload} message="歌手加载失败" when={status === "error"}>
+      <AppError
+        reset={reload}
+        when={status === "error"}
+        tipsIcon={!online ? GlobeOff : undefined}
+        tips={!online ? "网络连接中断，请检查网络后重试" : undefined}>
         <AppLoading loading={status === "loading"}>
           <Header
             className="shrink-0"

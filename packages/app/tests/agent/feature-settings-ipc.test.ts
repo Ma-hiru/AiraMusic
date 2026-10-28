@@ -3,17 +3,12 @@ import type { AgentFeatureSettingsState } from "@mahiru/ipc/types";
 const {
   frame,
   sender,
-  shutdown,
-  commitAll,
   initialize,
-  agentWindow,
   getSettings,
   getWindowID,
-  shutdownMcp,
-  removeWindow,
+  getAppFrameURL,
   updateSettings,
-  fromWebContents,
-  broadcastFeatureSettings
+  fromWebContents
 } = vi.hoisted(() => {
   const frame = { url: "http://localhost:5173/" };
   const sender = { mainFrame: frame };
@@ -21,17 +16,12 @@ const {
   return {
     frame,
     sender,
-    shutdown: vi.fn(),
-    shutdownMcp: vi.fn(),
     initialize: vi.fn(),
     getSettings: vi.fn(),
     updateSettings: vi.fn(),
-    removeWindow: vi.fn(),
-    commitAll: vi.fn(),
-    broadcastFeatureSettings: vi.fn(),
     fromWebContents: vi.fn(() => mainWindow),
     getWindowID: vi.fn(() => "main"),
-    agentWindow: { destroy: vi.fn(), isDestroyed: vi.fn(() => false) }
+    getAppFrameURL: vi.fn(() => "http://localhost:5173/")
   };
 });
 
@@ -40,35 +30,21 @@ vi.mock("electron", () => ({
   dialog: {},
   BrowserWindow: { fromWebContents }
 }));
-vi.mock("@mahiru/ipc/main", () => ({
-  MainIPC: { MessageChannel: { commitAll } }
-}));
 vi.mock("@mahiru/app/lib/log", () => ({
   Log: { error: vi.fn(), warn: vi.fn() },
   runWithLogContext: <T>(_context: unknown, callback: () => T): T => callback()
 }));
-vi.mock("@mahiru/app/services/agent", () => ({
-  MainAgent: {
-    init: initialize,
-    shutdown,
-    broadcastFeatureSettings
+vi.mock("@mahiru/app/lib/handle", () => ({
+  MainHandle: {
+    get: () => ({ agent: { getState: getSettings, updateSettings, init: initialize } })
   }
 }));
-vi.mock("@mahiru/app/inner/mcp/runtime", () => ({
-  MainMcp: { shutdown: shutdownMcp }
-}));
-vi.mock("@mahiru/app/services/agent/settings", () => ({
-  MainAgentFeatureSettings: { getState: getSettings, update: updateSettings }
-}));
-vi.mock("@mahiru/app/lib/handle", () => ({ MainHandle: {} }));
 vi.mock("@mahiru/app/lib/runtime", () => ({ MainRuntime: {} }));
 vi.mock("@mahiru/app/utils/merge", () => ({ mergeCacheStoreConfig: vi.fn() }));
 vi.mock("@mahiru/app/lib/window-manager", () => ({
   MainWindowManager: {
     getId: getWindowID,
-    remove: removeWindow,
-    get: vi.fn((type: string) => (type === "agent" ? agentWindow : null)),
-    getAppFrameURL: vi.fn(() => "http://localhost:5173/")
+    getAppFrameURL
   }
 }));
 vi.mock("@mahiru/app/lib/screen-resolver", () => ({ MainScreenResolver: {} }));
@@ -103,74 +79,48 @@ function createState(
   };
 }
 
-describe("Agent 功能设置 IPC 生命周期", () => {
+describe("Agent 功能设置 IPC 门面", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    getWindowID.mockReturnValue("main");
+    getAppFrameURL.mockReturnValue("http://localhost:5173/");
   });
 
-  it("关闭 Agent 时立即停止运行、销毁窗口并广播最终状态", async () => {
-    const enabled = createState(true, true, false);
+  it("把设置更新交给应用 Agent，并返回其完成后的最终状态", async () => {
     const disabled = createState(false, false, false);
-    getSettings.mockReturnValueOnce(enabled).mockReturnValue(disabled);
-    updateSettings.mockReturnValue(disabled);
+    const input = { agentEnabled: false };
+    updateSettings.mockResolvedValue(disabled);
 
     const { invokeHandlers } = await import("@mahiru/app/inner/ipc/invoke");
     const result = await invokeHandlers.invoke_agent_feature_settings_update(
       { sender, senderFrame: frame } as never,
-      { agentEnabled: false }
+      input
     );
 
-    expect(shutdown).toHaveBeenCalledOnce();
-    expect(shutdownMcp).toHaveBeenCalledOnce();
-    expect(agentWindow.destroy).toHaveBeenCalledOnce();
-    expect(removeWindow).toHaveBeenCalledWith("agent");
-    expect(broadcastFeatureSettings).toHaveBeenCalledWith(disabled);
+    expect(updateSettings).toHaveBeenCalledExactlyOnceWith(input);
+    expect(getSettings).not.toHaveBeenCalled();
     expect(result).toEqual({ ok: true, data: disabled });
   });
 
-  it("关闭 Agent 但保留公共 MCP 时不停止共享 MCP", async () => {
-    const enabled = createState(true, true, false);
-    enabled.mcpEnabled = true;
-    enabled.effective.mcpEnabled = true;
-    const disabled = createState(false, false, false);
-    disabled.mcpEnabled = true;
-    disabled.effective.mcpEnabled = true;
-    getSettings.mockReturnValueOnce(enabled).mockReturnValue(disabled);
-    updateSettings.mockReturnValue(disabled);
+  it("等待应用 Agent 完成异步更新再返回状态", async () => {
+    const pending = Promise.withResolvers<AgentFeatureSettingsState>();
+    updateSettings.mockReturnValue(pending.promise);
 
     const { invokeHandlers } = await import("@mahiru/app/inner/ipc/invoke");
-    await invokeHandlers.invoke_agent_feature_settings_update(
+    const result = invokeHandlers.invoke_agent_feature_settings_update(
       { sender, senderFrame: frame } as never,
       { agentEnabled: false }
     );
 
-    expect(shutdown).toHaveBeenCalledOnce();
-    expect(shutdownMcp).not.toHaveBeenCalled();
+    const disabled = createState(false, false, false);
+    expect(updateSettings).toHaveBeenCalledOnce();
+    pending.resolve(disabled);
+    await expect(result).resolves.toEqual({ ok: true, data: disabled });
   });
 
-  it("公共 MCP 是唯一消费者时关闭设置会立即停止共享 MCP", async () => {
-    const enabled = createState(false, false, false);
-    enabled.mcpEnabled = true;
-    enabled.effective.mcpEnabled = true;
-    const disabled = createState(false, false, false);
-    getSettings.mockReturnValueOnce(enabled).mockReturnValue(disabled);
-    updateSettings.mockReturnValue(disabled);
-
-    const { invokeHandlers } = await import("@mahiru/app/inner/ipc/invoke");
-    await invokeHandlers.invoke_agent_feature_settings_update(
-      { sender, senderFrame: frame } as never,
-      { mcpEnabled: false }
-    );
-
-    expect(shutdown).not.toHaveBeenCalled();
-    expect(shutdownMcp).toHaveBeenCalledOnce();
-  });
-
-  it("本轮重新开启只持久化并提示重启，不会懒初始化", async () => {
-    const disabled = createState(false, false, false);
+  it("转发本轮重新开启请求，不会在 IPC 中懒初始化", async () => {
     const reenabled = createState(true, false, true);
-    getSettings.mockReturnValueOnce(disabled).mockReturnValue(reenabled);
-    updateSettings.mockReturnValue(reenabled);
+    updateSettings.mockResolvedValue(reenabled);
 
     const { invokeHandlers } = await import("@mahiru/app/inner/ipc/invoke");
     const result = await invokeHandlers.invoke_agent_feature_settings_update(
@@ -179,21 +129,33 @@ describe("Agent 功能设置 IPC 生命周期", () => {
     );
 
     expect(initialize).not.toHaveBeenCalled();
-    expect(shutdown).not.toHaveBeenCalled();
-    expect(agentWindow.destroy).not.toHaveBeenCalled();
+    expect(updateSettings).toHaveBeenCalledExactlyOnceWith({ agentEnabled: true });
     expect(result).toEqual({ ok: true, data: reenabled });
   });
 
-  it("拒绝主窗口 iframe 和其他窗口修改功能设置", async () => {
+  it("拒绝 iframe、其他窗口和其他 origin 修改功能设置", async () => {
     const { invokeHandlers } = await import("@mahiru/app/inner/ipc/invoke");
-    const result = await invokeHandlers.invoke_agent_feature_settings_update(
+    const iframe = await invokeHandlers.invoke_agent_feature_settings_update(
       { sender, senderFrame: { url: frame.url } } as never,
       { agentEnabled: false }
     );
 
-    expect(result).toMatchObject({ ok: false, reason: { code: "auth" } });
+    expect(iframe).toMatchObject({ ok: false, reason: { code: "auth" } });
+    getWindowID.mockReturnValue("agent");
+    const otherWindow = await invokeHandlers.invoke_agent_feature_settings_update(
+      { sender, senderFrame: frame } as never,
+      { agentEnabled: false }
+    );
+    expect(otherWindow).toMatchObject({ ok: false, reason: { code: "auth" } });
+    getWindowID.mockReturnValue("main");
+    const foreignFrame = { url: "http://localhost:9999/" };
+    const foreign = await invokeHandlers.invoke_agent_feature_settings_update(
+      { sender: { mainFrame: foreignFrame }, senderFrame: foreignFrame } as never,
+      { agentEnabled: false }
+    );
+    expect(foreign).toMatchObject({ ok: false, reason: { code: "auth" } });
     expect(updateSettings).not.toHaveBeenCalled();
-    expect(shutdown).not.toHaveBeenCalled();
+    expect(initialize).not.toHaveBeenCalled();
   });
 
   it("由主窗口主框架返回带 effective 和工具清单的完整状态", async () => {

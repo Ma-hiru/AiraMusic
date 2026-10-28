@@ -5,7 +5,7 @@ import { NeteaseTrackRecord } from "@/common/netease/models";
 
 type PlayableResult = { reason: string; playable: boolean };
 
-export default class RendererPlayerPlaylist extends Listenable {
+export default class RendererPlayerPlaylist extends Listenable<"currentChange"> {
   //#region fields
   /** 标记, 用于区分不同播放列表 */
   public mark_id: string;
@@ -165,6 +165,20 @@ export default class RendererPlayerPlaylist extends Listenable {
     const record = this.tracks[trackIdx];
     return record && record.detail ? record : null;
   }
+
+  private triggerPoint() {
+    const old_current = this.current();
+    return {
+      triggerCurrentChange: () => {
+        const change = this.current() !== old_current;
+        change && this.executeListeners("currentChange");
+        return change;
+      },
+      triggerNormal: () => {
+        this.executeListeners();
+      }
+    };
+  }
   //#endregion
 
   /** 返回当前显示序（播放序）列表 */
@@ -193,6 +207,7 @@ export default class RendererPlayerPlaylist extends Listenable {
     initPosition: number | NeteaseTrackRecord = -1,
     id: string = crypto.randomUUID()
   ) {
+    const { triggerNormal, triggerCurrentChange } = this.triggerPoint();
     this.mark_id = id;
     this.tracks = [...list];
     const headTrackIdx =
@@ -200,22 +215,25 @@ export default class RendererPlayerPlaylist extends Listenable {
         ? initPosition
         : this.tracks.findIndex((t) => t.id === initPosition.id);
     this.rebuildOrder(this._shuffle, headTrackIdx);
-    this.executeListeners();
+    !triggerCurrentChange() && triggerNormal();
     return this;
   }
 
   public clear() {
+    const { triggerNormal, triggerCurrentChange } = this.triggerPoint();
     this.mark_id = crypto.randomUUID();
     this.tracks = [];
     this.order = [];
     this.cursor = -1;
-    this.executeListeners();
+    !triggerCurrentChange() && triggerNormal();
     return this;
   }
 
   public remove(pos: number | NeteaseTrackRecord) {
     const d = typeof pos === "number" ? pos : this.locate(pos);
     if (d < 0 || d >= this.order.length) return this;
+
+    const { triggerNormal, triggerCurrentChange } = this.triggerPoint();
 
     const trackIdx = this.order[d]!;
     this.tracks.splice(trackIdx, 1);
@@ -233,7 +251,7 @@ export default class RendererPlayerPlaylist extends Listenable {
 
     // 标记变化
     this.mark_id = crypto.randomUUID();
-    this.executeListeners();
+    !triggerCurrentChange() && triggerNormal();
     return this;
   }
 
@@ -242,10 +260,9 @@ export default class RendererPlayerPlaylist extends Listenable {
     const isCurrent = existD !== -1 && existD === this.cursor;
 
     // 当前曲目自己“下一首播放”无意义
-    if (isCurrent && position === "next") {
-      this.executeListeners();
-      return this;
-    }
+    if (isCurrent && position === "next") return this;
+
+    const { triggerNormal, triggerCurrentChange } = this.triggerPoint();
 
     // 去重：已存在则先移除（remove 会维护 tracks/order/cursor）
     if (existD !== -1) this.remove(existD);
@@ -263,7 +280,7 @@ export default class RendererPlayerPlaylist extends Listenable {
 
     // 标记变化
     this.mark_id = crypto.randomUUID();
-    this.executeListeners();
+    !triggerCurrentChange() && triggerNormal();
     return this;
   }
 
@@ -305,11 +322,12 @@ export default class RendererPlayerPlaylist extends Listenable {
   }
 
   public jump(pos: number | NeteaseTrackRecord) {
+    const { triggerCurrentChange } = this.triggerPoint();
     const target = typeof pos === "number" ? pos : this.locate(pos);
     if (this.check(target) && this.cursor !== target) {
       this.cursor = target;
+      triggerCurrentChange();
     }
-    this.executeListeners();
     return this;
   }
 
@@ -330,7 +348,7 @@ export default class RendererPlayerPlaylist extends Listenable {
 
   public check(pos: number | NeteaseTrackRecord = this.cursor) {
     if (typeof pos !== "number") return this.locate(pos) !== -1;
-    return (pos >= 0 && pos < this.order.length) || (pos == -1 && this.order.length > 0);
+    return (pos >= 0 && pos < this.order.length) || (pos === -1 && this.order.length > 0);
   }
 
   public current() {
@@ -365,6 +383,8 @@ export default class RendererPlayerPlaylist extends Listenable {
    * 全不可播则置 -1
    */
   private moveToPlayable(direction: 1 | -1) {
+    const { triggerCurrentChange } = this.triggerPoint();
+
     const len = this.order.length;
     let pos = this.advance(direction);
     let skippedReason = "";
@@ -377,6 +397,7 @@ export default class RendererPlayerPlaylist extends Listenable {
         if (playable) {
           this.cursor = pos;
           skippedReason && this.onUnplayable?.(skippedReason);
+          triggerCurrentChange();
           return;
         }
         skippedReason ||= reason;
@@ -386,6 +407,7 @@ export default class RendererPlayerPlaylist extends Listenable {
 
     this.cursor = -1;
     skippedReason && this.onUnplayable?.(skippedReason);
+    triggerCurrentChange();
   }
 
   public peek(force = true): Nullable<NeteaseTrackRecord> {

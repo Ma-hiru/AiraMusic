@@ -38,7 +38,7 @@ export const enum RendererPlayerStatus {
   error
 }
 
-export default class RendererPlayer extends Listenable {
+export default class RendererPlayer extends Listenable<"onCurrentTrackChange"> {
   readonly current;
   readonly audio: RendererPlayerAudio;
   readonly playlist: RendererPlayerPlaylist;
@@ -152,6 +152,20 @@ export default class RendererPlayer extends Listenable {
   /** 监听事件，绑定状态机 */
   private connect() {
     let last = 0;
+
+    const refreshHistory = <R = unknown>(task: NormalFunc<[], R>): Promise<Awaited<R>> => {
+      const track = this.current.track;
+      const duration = Math.floor(this.playDurationMS / 1_000);
+      this.playDurationMS = 0;
+
+      const promise = Promise.resolve(task?.());
+      if (track && duration > 5) {
+        promise.finally(() => {
+          this.history.add(NeteaseHistoryRecord.fromTrack(track, duration));
+        });
+      }
+      return promise;
+    };
     const onPlaying = () => {
       last = performance.now();
       this.checkStatus();
@@ -162,7 +176,23 @@ export default class RendererPlayer extends Listenable {
     const onLoadedData = () => (this.status = RendererPlayerStatus.paused);
     const onPause = () => (this.status = RendererPlayerStatus.paused);
     const onError = () => (this.status = RendererPlayerStatus.error);
-    const onEnded = () => this.playlist.next(false);
+    const replay = () =>
+      refreshHistory(() => {
+        this.audio.currentTime = 0;
+        this.audio.play();
+      });
+    const onEnded = () => {
+      if (this.playlist.repeat === "one") return replay();
+      const endedTrack = this.current.track;
+      this.playlist.next(false);
+      // 环绕后仍是当前可播曲目时不会触发切歌，需要直接重播已有音频
+      if (
+        this.playlist.repeat === "all" &&
+        endedTrack &&
+        this.playlist.current()?.detail.id === endedTrack.detail.id
+      )
+        return replay();
+    };
     const onTimeupdate = () => {
       const now = performance.now();
       if (now > last && last !== 0) {
@@ -183,26 +213,26 @@ export default class RendererPlayer extends Listenable {
     this.audio.addEventListener("ended", onEnded, { passive: true });
     this.audio.addEventListener("timeupdate", onTimeupdate, { passive: true });
 
-    const unsubscribe = this.playlist.addListener(() => {
+    const unsubscribe1 = this.playlist.addListener(() => this.executeListeners());
+    const unsubscribe2 = this.playlist.addEventListener("currentChange", () => {
       const current = this.playlist.current();
       if (!current) {
-        this.status = RendererPlayerStatus.idle;
-        this.audio.currentTime = 0;
+        void refreshHistory(() => {
+          this.status = RendererPlayerStatus.idle;
+          this.audio.currentTime = 0;
+        });
       } else if (this.current.track?.detail.id !== current.detail.id) {
-        const track = this.current.track;
-        const duration = Math.floor(this.playDurationMS / 1_000);
-        this.playDurationMS = 0;
-        this.load(current, true).finally(() => {
-          if (track && duration > 5) {
-            this.history.add(NeteaseHistoryRecord.fromTrack(track, duration));
-          }
+        this.audio.pause();
+        refreshHistory(async () => this.load(current, true)).then((status) => {
+          status === "ok" && this.audio.play();
         });
       }
-      this.executeListeners();
+      this.executeListeners("onCurrentTrackChange");
     });
 
     return () => {
-      unsubscribe();
+      unsubscribe1();
+      unsubscribe2();
       this.audio.removeEventListener("playing", onPlaying);
       this.audio.removeEventListener("loadstart", onLoadStart);
       this.audio.removeEventListener("waiting", onWaiting);
@@ -217,8 +247,11 @@ export default class RendererPlayer extends Listenable {
 
   /** 加载资源（音频、封面、歌词） */
   private controller = new AbortController();
-  private async load(current: Optional<NeteaseTrackRecord>, play = false) {
-    if (!current) return;
+  private async load(
+    current: Optional<NeteaseTrackRecord>,
+    play = false
+  ): Promise<"ok" | "error" | "cancel"> {
+    if (!current) return "error";
     this.controller.abort();
     const controller = new AbortController();
     this.controller = controller;
@@ -235,19 +268,21 @@ export default class RendererPlayer extends Listenable {
         Log.error(err);
       });
 
-    this.loadAudio(current.detail, controller)
-      .then((audio) => {
-        if (controller.signal.aborted) return;
+    return this.loadAudio(current.detail, controller)
+      .then(async (audio): Promise<"ok" | "error" | "cancel"> => {
+        if (controller.signal.aborted) return "cancel";
         if (audio) {
-          this.audio.load(current.detail, audio, play);
+          await this.audio.load(current.detail, audio, play);
           this.current.audio = audio;
           this.executeListeners();
+          return "ok";
         } else {
           this.status = RendererPlayerStatus.error;
+          return "error";
         }
       })
-      .then(() => {
-        if (controller.signal.aborted) return;
+      .then((status): "ok" | "error" | "cancel" => {
+        if (controller.signal.aborted) return "cancel";
         this.loadCover(current.detail, controller)
           .then((cover) => {
             if (controller.signal.aborted) return;
@@ -258,10 +293,12 @@ export default class RendererPlayer extends Listenable {
           .catch((err) => {
             Log.error(err);
           });
+        return status;
       })
       .catch((err) => {
         Log.error(err);
         this.status = RendererPlayerStatus.error;
+        return "error";
       });
   }
 

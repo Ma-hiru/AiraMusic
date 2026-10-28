@@ -3,7 +3,7 @@
 一个面向桌面端的第三方网易云音乐播放器，也是一个探索音乐 Agent 的工程化项目。AiraMusic 以 Electron 与
 React 构建多窗口播放体验，并使用 Rust Agent、Rust WASM 和 Go 本地服务承载模型循环、计算密集任务与缓存能力。
 
-[下载](https://github.com/Ma-hiru/AiraMusic/releases) · [功能概览](#功能概览) · [界面截图](#界面预览) · [音乐Agent](#音乐Agent) · [架构设计](#架构设计) · [本地开发](#本地开发)
+[下载](https://github.com/Ma-hiru/AiraMusic/releases) · [功能概览](#功能概览) · [界面截图](#界面预览) · [音乐 Agent](#音乐-agent) · [架构设计](#架构设计) · [本地开发](#本地开发)
 
 ![AiraMusic 多窗口1](docs/images/all_windows.png)
 ![AiraMusic 播放页2](docs/images/player2.png)
@@ -19,7 +19,7 @@ React 构建多窗口播放体验，并使用 Rust Agent、Rust WASM 和 Go 本�
 
 - **音乐浏览与播放**：覆盖首页推荐、搜索、歌单、专辑、艺人、评论、播放历史、队列管理和多种播放模式。
 - **多种播放模式**：支持网易云私人 FM（漫游）、心动模式。
-- **多窗口桌面体验**：使用十个 Vite 入口承载主界面、登录、迷你播放器、歌词、托盘、图片、评论、设置、Radio 和
+- **多窗口桌面体验**：使用多个 Vite 入口承载主界面、登录、迷你播放器、歌词、托盘、图片、评论、设置、Radio 和
   Agent；多窗口之间随意拉起、关闭和同步。支持托盘控制与 Windows 任务栏封面缩略图，适配 mac 的顶栏歌词和红绿灯。
 - **沉浸式视觉**：提供播放页、桌面歌词、实时音乐频谱、简单流体背景，以及基于封面 MMCQ 取色生成的动态主题。
 - **计算任务异步化**：Rust/WASM 负责歌词解析与修复、FFT 频谱、主题色提取、搜索辅助和 WebGL
@@ -34,18 +34,17 @@ React 构建多窗口播放体验，并使用 Rust Agent、Rust WASM 和 Go 本�
 
 ## 界面预览
 
-| 多窗口                                                                                            | 播放页                                                                                   |
-|------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------|
-| ![AiraMusic 多窗口1](docs/images/all_windows.png) ![AiraMusic 多窗口2](docs/images/all_windows2.png) | ![AiraMusic 播放页1](docs/images/player.png)  ![AiraMusic 播放页2](docs/images/player2.png) |
+| 多窗口                                                                                               | 播放页                                                                                     |
+| ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| ![AiraMusic 多窗口1](docs/images/all_windows.png) ![AiraMusic 多窗口2](docs/images/all_windows2.png) | ![AiraMusic 播放页1](docs/images/player.png) ![AiraMusic 播放页2](docs/images/player2.png) |
 
 | 首页                                    | 歌单                                        |
-|---------------------------------------|-------------------------------------------|
+| --------------------------------------- | ------------------------------------------- |
 | ![AiraMusic 首页](docs/images/home.png) | ![AiraMusic 歌单](docs/images/playlist.png) |
 
 | Agent                           |
-|---------------------------------|
+| ------------------------------- |
 | ![Agent](docs/images/agent.png) |
-
 
 <details>
 <summary>查看更多界面截图</summary>
@@ -60,6 +59,7 @@ React 构建多窗口播放体验，并使用 Rust Agent、Rust WASM 和 Go 本�
 ![迷你播放器](docs/images/mini.png)
 
 ### Agent
+
 ![Agent](docs/images/agent2.png)
 
 ### 歌单与播放队列
@@ -104,11 +104,11 @@ React 构建多窗口播放体验，并使用 Rust Agent、Rust WASM 和 Go 本�
 
 </details>
 
-## 音乐Agent
+## 音乐 Agent
 
-AiraMusic 内置了独立的 Agent
-工作区。它不是在播放器旁边附加一个聊天框，而是把模型循环、应用上下文、音乐工具和可恢复会话组合成一个本地服务：模型能够读取当前播放状态，围绕用户目标连续检索、判断和调用工具，最终把结果以
-Markdown、应用内链接和资源卡片交还给界面。目前前端界面还在优化中。
+AiraMusic 的 Agent 工作区把模型循环、应用上下文、音乐工具和可恢复会话组合成一个本地服务。
+模型读取当前播放状态，围绕用户目标连续检索和调用工具，最终以 Markdown、应用内链接和资源卡片返回结果。
+目前前端界面还在优化中。
 
 - **理解应用上下文**：感知当前播放歌曲及搜索、专辑、艺人、歌单、播放历史等页面，理解“这首歌”“这个专辑”等指代。
 - **调用音乐能力**：支持资源检索、详情查询、歌词与评论读取、相似音乐与个性化推荐、播放控制、进度、音量、播放模式、队列管理和页面跳转。
@@ -123,37 +123,21 @@ Markdown、应用内链接和资源卡片交还给界面。目前前端界面还
 Endpoint。API Key 由 Rust Agent 加密持久化，所需主密钥由 Electron `safeStorage`
 保护，配置接口只返回掩码。兼容服务对流式输出、思考内容、工具调用和用量统计的支持程度取决于服务自身。
 
-### 插件优先的 Rust Agent
-
-`packages/agent` 的设计受到 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) 与
-Cordis “一切皆插件”思想启发：模型、会话、工具、提示词、持久化、上下文压缩、MCP、AG-UI 和 Agent Loop
-都不应固化在一个不可替换的核心中，而应作为可组合服务挂载到共享上下文。
-
-AiraMusic 没有移植 Cordis，也不是 DeepSeek Harness 的兼容实现，而是针对 Rust
-与本地桌面应用的需求现实，重新实现了一套更紧凑的符合本项目的简单插件内核：
-
-- **共享 `Ctx`**：以线程安全服务表连接插件，通过类型化观察事件和 veto 事件扩展运行过程，而不是让模块直接互相持有具体实现。
-- **`Plugin<Config, Service>`**：插件显式声明配置、提供的服务和依赖项；启动器按依赖关系完成装配，检测无法满足的依赖或循环。
-- **可逆副作用**：服务注册和事件订阅都会返回 disposer，由 `Ctx` 统一记录并在退出时逆序释放。
-
-在这一插件内核之上，项目完成了面向 Electron 的本地化适配：Rust Agent 作为受主进程监督的独立进程运行；Axum
-提供带进程级鉴权的回环 HTTP/SSE；MCP 将播放器和应用能力与模型运行时解耦；`ts-rs` 生成跨语言
-DTO；会话、Provider 和 API Key 使用 XChaCha20-Poly1305 加密落盘，主密钥再由操作系统 `safeStorage` 保护。
-
 > [!NOTE]
 > 收藏、评论、歌单修改和设置变更等写操作受登录状态与权限开关约束，高风险工具默认关闭。网页检索只访问公开
-> HTTP(S) 地址，遇到登录墙、反爬或纯脚本渲染页面时可能无法取得正文。
+> HTTP(S) 地址，使用独立的临时浏览器会话，并限制提取和输出大小。遇到登录墙或反爬时可能无法取得正文。
+> 自定义 JavaScript 属于独立写工具，默认不对外部 MCP 客户端开放。
 
 ## 下载与平台
 
 前往 [Releases](https://github.com/Ma-hiru/AiraMusic/releases) 获取。安装包类型和可用平台以 Releases
 页面实际提供的文件为准。
 
-| 平台          | 当前范围             | 打包目标                    |
-|-------------|------------------|-------------------------|
-| Windows x64 | 主要开发与发布平台        | NSIS、MSI                |
-| Linux x64   | 已配置桌面打包          | AppImage、deb、rpm、tar.gz |
-| macOS arm64 | Apple Silicon 支持 | DMG                     |
+| 平台                | 当前范围       | 打包目标                   |
+| ------------------- | -------------- | -------------------------- |
+| Windows x64 / arm64 | 已配置发布构建 | NSIS、MSI                  |
+| Linux x64 / arm64   | 已配置发布构建 | AppImage、deb、rpm、tar.gz |
+| macOS x64 / arm64   | 已配置发布构建 | DMG                        |
 
 ## 架构设计
 
@@ -185,38 +169,43 @@ flowchart LR
     McpClient["MCP client"]
   end
 
-  UI -->|invoke| IPC --> Supervisor -->|Bearer HTTP| HTTP
-  HTTP --> Runtime --> Ctx --> Loop
-  Loop --> Events -->|SSE| Supervisor -->|message IPC| UI
+  UI -->|Connection / settings IPC| IPC --> Supervisor
+  Supervisor -.->|Process lifecycle| Runtime
+  UI -->|Bearer HTTP| HTTP --> Runtime --> Ctx --> Loop
+  Loop --> Events -->|SSE| UI
   Loop --> McpClient -->|Bearer MCP| MCP --> Tools
 ```
 
 ### 工作区概览
 
-| Package           | 职责                                                                                 | 核心技术                                         |
-|-------------------|------------------------------------------------------------------------------------|----------------------------------------------|
+| Package           | 职责                                                                                                  | 核心技术                                         |
+| ----------------- | ----------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
 | `packages/ui`     | 多窗口渲染层，包括 `index`、`login`、`mini`、`lyric`、`tray`、`comments`、`display` 和 `agent` 等入口 | React 19、Vite 8、Tailwind CSS 4、Zustand、Jotai |
-| `packages/app`    | Electron 主进程、窗口与托盘、IPC、自定义协议、子服务生命周期及打包入口                                          | Electron 42、tsup、Express、`http-proxy-3`      |
-| `packages/agent`  | Agent HTTP 服务、模型与工具循环、MCP 客户端、会话持久化、AG-UI 事件和 TypeScript 客户端                       | Rust、Axum、Tokio、rmcp、AG-UI                   |
-| `packages/ipc`    | Electron 主进程与各渲染窗口之间的类型化 invoke/message 契约                                         | TypeScript                                   |
-| `packages/store`  | 供渲染层通过 `/cache` 使用的本地缓存服务，以及 Electron 侧进程启动器                                       | Go、Gin                                       |
-| `packages/wasm`   | 歌词解析、主题与图片颜色、频谱、搜索辅助和 WebGL renderer                                               | Rust、wasm-bindgen、wasm-pack                  |
-| `packages/native` | Windows 任务栏自定义封面缩略图；非 Windows 平台为空实现；mac下处理顶栏歌词                                    | Rust、napi-rs、windows-sys                     |
-| `packages/log`    | 主进程和渲染层共用的日志基础能力                                                                   | TypeScript                                   |
+| `packages/app`    | Electron 主进程、窗口与托盘、IPC、自定义协议、子服务生命周期及打包入口                                | Electron 45、tsdown、Express、`http-proxy-3`     |
+| `packages/agent`  | Agent HTTP/SSE 服务、模型与工具循环、MCP 客户端、会话持久化、进程封装和生成的 DTO                     | Rust、Axum、Tokio、rmcp、AG-UI                   |
+| `packages/ipc`    | Electron 主进程与各渲染窗口之间的类型化 invoke/message 契约                                           | TypeScript                                       |
+| `packages/store`  | 供渲染层通过 `/cache` 使用的本地缓存服务，以及 Electron 侧进程启动器                                  | Go、Gin                                          |
+| `packages/wasm`   | 歌词解析、主题与图片颜色、频谱、搜索辅助和 WebGL renderer                                             | Rust、wasm-bindgen、wasm-pack                    |
+| `packages/native` | Windows 任务栏自定义封面缩略图；macOS 顶栏歌词；其他平台保留对应接口                                  | Rust、napi-rs、windows-sys                       |
+| `packages/log`    | 主进程和渲染层共用的日志基础能力                                                                      | TypeScript                                       |
 
 ## 本地开发
 
 ### 环境要求
 
-- Node.js `>= 20`
-- Corepack 与 Yarn `4.17.1`
-- Rust stable，包含 `wasm32-unknown-unknown` target
-- `wasm-pack`（CI 使用 `0.15.0`）
-- Go `1.26.4`
+- Node.js `^22.18.0 || ^24.11.0 || >=26.0.0`；CI 使用 Node.js 24
+- Corepack 与 Yarn `4.18.1`，版本由根目录 `packageManager` 固定
+- Rust stable，包含 `wasm32-unknown-unknown` target、`rustfmt` 和 `clippy`
+- `wasm-pack` `0.15.0`
+- Go `1.27.3`，版本以 `packages/store/go.mod` 为准
 
-安装 `wasm-pack`：
+Rust 编译还需要当前平台的链接工具链，例如 macOS Command Line Tools 或 Windows MSVC。
+
+安装 Rust 目标、检查工具和 `wasm-pack`：
 
 ```bash
+rustup target add wasm32-unknown-unknown
+rustup component add rustfmt clippy
 cargo install wasm-pack --version 0.15.0 --locked
 ```
 
@@ -226,13 +215,17 @@ cargo install wasm-pack --version 0.15.0 --locked
 corepack enable
 yarn install --immutable
 
-# 首次运行，或修改 packages/agent、wasm、native、store 后执行原生产物构建
+# 首次运行，或修改 Agent、WASM、native、store 工作区后构建原生产物
 yarn build:bin
 yarn dev
 ```
 
 `yarn dev` 监听 UI 和 Electron 主进程代码，但不会热编译 Rust、Go、WASM 或 native 模块；修改这些工作区后需要重新执行对应的
 `build:*` 脚本。
+
+开发模式读取 `.env`、`.env.local` 和 `.env.development`。默认 Vite 端口为 `8827`；
+生产模式由 Electron 加载本地 HTTPS 代理提供的页面。Agent 控制服务使用运行时分配的回环地址，
+前端通过受校验的 IPC 获取地址和凭证，再直接订阅 HTTP/SSE。
 
 ### 构建与打包
 
@@ -246,17 +239,32 @@ yarn build:electron:linux
 yarn build:electron:darwin
 ```
 
-Go、Rust 原生产物和 Electron 安装包应在对应目标系统上构建。macOS 当前仅配置 arm64 DMG。
+Go、Rust 原生产物和 Electron 安装包应在对应目标系统和架构上构建。
+Release 工作流配置了 Windows、Linux 和 macOS 的 x64/arm64 构建；安装包是否可用以对应 Release 的资产为准。
 
 ### 质量检查
 
+日常修改可先运行轻量检查。首次检出需要先完成 `yarn build:bin`，生成 WASM、原生模块和跨语言类型。
+
 ```bash
-yarn check
-yarn lint:check
-yarn test
+yarn check:fast       # TypeScript 增量检查
+yarn test:ts          # 根 Vitest projects 聚合 app、ui 和 agent 的 TypeScript 测试
+yarn lint:check:ts    # Prettier 与 ESLint，只检查不写入文件
 ```
 
-CI 会检查 TypeScript、Go、Rust/WASM 和各工作区测试，并构建 UI 与 Electron 主进程 bundle。
+提交前可运行完整检查：
+
+```bash
+yarn check           # 强制重建 TypeScript 检查项目，并输出诊断统计
+yarn lint:check      # TypeScript、Go 和 Rust/WASM 格式及静态检查
+yarn test            # TypeScript、Go、Rust/WASM 和原生模块测试
+```
+
+测试配置集中在根目录 `vitest.config.ts` 与各工作区配置中。项目保留 `vite-plugin-wasm` 的 Yarn 补丁，
+用于识别 Vitest 5 的插件名称；更新相关依赖时需要同时验证补丁和真实 WASM 测试。
+
+常规 CI 安装锁定依赖，检查格式与静态分析，构建原生产物，再执行类型检查、测试及 UI/Electron bundle 构建。
+`v*` 标签触发独立 Release 工作流；它在各目标平台构建安装包，上传资产后发布 Release。
 
 ## License
 

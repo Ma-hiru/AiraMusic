@@ -106,6 +106,9 @@ export class MainEntry {
       process.on("SIGINT", () =>
         this.instance.exit(MainExitCodeConstants.SIGINT_TRIGGERED, "SIGINT")
       );
+      process.on("unhandledRejection", (error) => {
+        Log.error("unhandledRejection", error);
+      });
     } else {
       // 多实例，正常退出
       app.exit(MainExitCodeConstants.MULTI_INSTANCE);

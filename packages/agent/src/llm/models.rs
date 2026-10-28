@@ -13,11 +13,13 @@ use std::fmt;
 use std::pin::Pin;
 use std::sync::Arc;
 use tiktoken_rs::{CoreBPE, o200k_base};
+use ts_rs::TS;
 
 static TOKENIZER: Lazy<CoreBPE> = Lazy::new(|| o200k_base().expect("Failed to load tokenizer"));
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, TS)]
 #[serde(rename_all = "lowercase")]
+#[ts(export)]
 pub enum ChatRole {
     System,
     User,
@@ -189,7 +191,8 @@ pub struct ChatAssistantReply {
 }
 
 /// 一次请求的 token 用量
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, TS)]
+#[ts(export)]
 pub struct ChatUsage {
     /// 输入 token 数
     pub prompt_tokens: u32,
@@ -198,7 +201,8 @@ pub struct ChatUsage {
 }
 
 /// 一次请求的 token 用量
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, TS)]
+#[ts(export)]
 pub struct ChatTurnUsage {
     records: Vec<ChatStepUsage>,
 }
@@ -215,7 +219,8 @@ impl ChatTurnUsage {
 }
 
 /// 请求中某个轮回的 token 用量
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, TS)]
+#[ts(export)]
 pub struct ChatStepUsage {
     step: u32,
     usage: ChatUsage,

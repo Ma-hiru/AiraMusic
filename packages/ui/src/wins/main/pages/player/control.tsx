@@ -5,8 +5,6 @@ import {
   Play,
   Pause,
   Trash2,
-  Repeat1,
-  Repeat2,
   Shuffle,
   SkipBack,
   ListMusic,
@@ -20,6 +18,7 @@ import { NeteaseAPITrack } from "@/common/netease/api";
 import { playModalAtom } from "@/wins/main/atoms/layout";
 import { useLatestRef } from "@/common/hooks/use-latest-ref";
 import { usePageJump } from "@/wins/main/hooks/use-page-jump";
+import { repeatModeControls } from "@/common/constants/repeat";
 import { fmModeAtom, intelligenceModeAtom } from "@/wins/main/atoms/track";
 import { usePlayerActionInList } from "@/wins/main/hooks/use-player-action-in-list";
 import AppToast from "@/common/components/display/toast";
@@ -41,6 +40,7 @@ interface ControlProps {
 const Control: FC<ControlProps> = ({ className, itemClassName, containerClassName }) => {
   const { create } = AppModal.useModal();
   const player = RendererPlayerHandle.usePlayer();
+  const repeatControl = repeatModeControls[player.playlist.repeat];
   const setPlayModalAtom = useSetAtom(playModalAtom);
   const fmMode = useAtomValue(fmModeAtom);
   const [intelligenceMode, setIntelligenceMode] = useAtom(intelligenceModeAtom);
@@ -175,23 +175,14 @@ const Control: FC<ControlProps> = ({ className, itemClassName, containerClassNam
             aria-pressed
           />
         )}
-        {player.playlist.repeat !== "off" ? (
-          <ControlBtn
-            icon={Repeat1}
-            label="关闭单曲循环"
-            itemClassName={itemClassName}
-            onClick={() => (player.playlist.repeat = "off")}
-            aria-pressed
-          />
-        ) : (
-          <ControlBtn
-            icon={Repeat2}
-            label="开启单曲循环"
-            aria-pressed={false}
-            itemClassName={itemClassName}
-            onClick={() => (player.playlist.repeat = "one")}
-          />
-        )}
+        <ControlBtn
+          className={player.playlist.repeat === "off" ? "scale-85" : undefined}
+          icon={repeatControl.icon}
+          label={repeatControl.label}
+          itemClassName={itemClassName}
+          aria-pressed={player.playlist.repeat !== "off"}
+          onClick={() => (player.playlist.repeat = repeatControl.next)}
+        />
         <ControlBtn
           label="打开播放队列"
           icon={ListMusic}

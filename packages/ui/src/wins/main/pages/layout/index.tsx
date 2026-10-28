@@ -16,6 +16,7 @@ import NavSide from "./nav";
 import PlayerBar from "./bar";
 import Content from "./content";
 import PlayerModal from "./modal";
+import TopBack from "./top/top-back";
 import Background from "./background";
 import MusicSource from "./music-source";
 
@@ -28,7 +29,7 @@ const Layout: FC<object> = () => {
 
   useEffect(() => {
     if (stage >= Stage.Finally) {
-      const timer = setTimeout(() => setWait(false), 3000);
+      const timer = setTimeout(() => setWait(false), 1_500);
       return () => {
         clearTimeout(timer);
       };
@@ -43,6 +44,7 @@ const Layout: FC<object> = () => {
     `}>
       <AppMask className="z-40 bg-white text-black" show={!loaded || wait} />
       <TopBar className="h-(--top-control-height) z-30 contain-strict" />
+      <TopBack />
       <NavSide />
       <Content />
       {stage >= Stage.Finally && <PlayerBar className="h-(--playbar-height) z-10 contain-layout" />}

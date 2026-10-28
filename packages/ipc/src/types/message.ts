@@ -1,5 +1,3 @@
-import type { AGUIEvent } from "@mahiru/agent";
-
 import type { AgentFeatureSettingsState } from "./invoke";
 import type {
   AgentToolCancel,
@@ -212,7 +210,6 @@ type MessageSingle = {
   message_deliver_renderer_exited: boolean;
   message_dispatch_cache_has_clear: boolean;
   message_dispatch_device_output_set: string;
-  message_deliver_agent_chat_event: AGUIEvent;
   message_cancel_agent_tool_request: AgentToolCancel;
   message_dispatch_agent_tool_request: AgentToolRequest;
   message_deliver_agent_tool_response: AgentToolResponse;

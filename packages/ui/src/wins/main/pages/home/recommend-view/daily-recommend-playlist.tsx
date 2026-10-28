@@ -30,7 +30,11 @@ const DailyRecommendPlaylist = ({
 
   return (
     <Section title="每日推荐歌单" Icon={Sparkles} subTitle="Daily Mix">
-      <AppError reset={reload} message="加载每日推荐歌单失败" when={status === "error"}>
+      <AppError
+        className="h-40!"
+        reset={reload}
+        message="加载每日推荐歌单失败"
+        when={status === "error"}>
         <AppLoading className="h-fit w-full" loading={status === "loading"}>
           <MediaGrid
             onClickItem={onClickItem}

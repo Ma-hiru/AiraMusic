@@ -19,7 +19,7 @@ beforeEach(() => {
 afterEach(cleanup);
 
 function openMenu() {
-  const view = render(<Version />);
+  const view = render(<Version showExportLogs />);
   const button = view.getByRole("button", { name: "导出日志" });
   fireEvent.click(button);
   const menu = createMenu.mock.calls[0]![0]();

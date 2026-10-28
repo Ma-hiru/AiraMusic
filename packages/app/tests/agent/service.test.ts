@@ -1,138 +1,187 @@
 import { it, vi, expect, describe, beforeEach } from "vitest";
+import { LogLevel } from "@mahiru/log";
 
-const mocks = vi.hoisted(() => ({
-  run: vi.fn(),
-  stop: vi.fn(),
-  getSecret: vi.fn(() => "persisted-store-secret")
-}));
-
-vi.mock("@mahiru/agent", () => ({
-  Agent: { run: mocks.run }
-}));
-
-vi.mock("../../src/lib/runtime", () => ({
-  MainRuntime: {
-    agentControlToken: "control-token",
-    agentMcpToken: "mcp-token"
-  }
-}));
-
-vi.mock("../../src/lib/path-resolver", () => ({
-  MainPathResolver: {
-    agentBinaryPath: "C:/app/bin/agent.exe",
-    agentDataDir: "C:/data/agent"
-  }
-}));
-
-vi.mock("../../src/services/agent/secret", () => ({
-  getAgentStoreSecret: mocks.getSecret
-}));
-
+const mocks = vi.hoisted(() => ({ run: vi.fn(), stop: vi.fn() }));
+vi.mock("@mahiru/agent", () => ({ Agent: { run: mocks.run } }));
 vi.mock("../../src/lib/log", () => ({
   Log: {
-    EnvLevel: 1,
     trace: vi.fn(),
     debug: vi.fn(),
     info: vi.fn(),
     warn: vi.fn(),
-    error: vi.fn()
+    error: vi.fn(),
+    JsonCompact: (record: object) => record,
+    JsonFlat: (record: object) => record
   }
 }));
 
-import { RustAgentService } from "../../src/services/agent/child";
+import AgentService from "../../src/services/agent";
 
-describe("Rust Agent 主进程服务", () => {
+const options = {
+  port: 0,
+  execPath: "/app/agent",
+  dataDir: "/data/agent",
+  mcpUrl: "http://127.0.0.1:32123/mcp",
+  controlToken: "control-token",
+  mcpToken: "mcp-token",
+  storeSecret: "store-secret",
+  logLevel: LogLevel.INFO,
+  onPanicError: vi.fn(),
+  logger: vi.fn()
+};
+const instance = () => {
+  const exited = Promise.withResolvers<void>();
+  return {
+    running: true,
+    endpoint: "http://127.0.0.1:34567",
+    stop: mocks.stop,
+    closed: exited.promise,
+    exit() {
+      this.running = false;
+      exited.resolve();
+    }
+  };
+};
+
+describe("MainServices Agent 服务", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.stop.mockResolvedValue(true);
+    mocks.run.mockResolvedValue(instance());
   });
 
-  it("只通过环境选项传递凭证并原样转发 AG-UI 事件", async () => {
-    const event = { type: "RUN_STARTED", threadId: "thread-1", runId: "run-1" } as const;
-    mocks.run.mockResolvedValue({
-      running: true,
-      events: async function* () {
-        yield event;
-      },
-      stop: mocks.stop
-    });
-    const service = new RustAgentService();
-    const received: unknown[] = [];
-    service.listen((value) => received.push(value));
-
-    await service.start("http://127.0.0.1:32123/mcp");
-    await vi.waitFor(() => expect(received).toEqual([event]));
-
-    expect(mocks.run).toHaveBeenCalledWith(
+  it("ready 后提供连接配置，并共用一次停止操作", async () => {
+    const service = new AgentService(options);
+    expect(service.name).toBe("agent");
+    expect(service.running).toBe(false);
+    expect(() => service.getConnection()).toThrow("未运行");
+    await service.ready();
+    expect(service.running).toBe(true);
+    expect(mocks.run).toHaveBeenCalledExactlyOnceWith(
       expect.objectContaining({
-        port: 0,
-        mcpUrl: "http://127.0.0.1:32123/mcp",
-        execPath: "C:/app/bin/agent.exe",
-        dataDir: "C:/data/agent",
-        controlToken: "control-token",
-        mcpToken: "mcp-token",
-        storeSecret: "persisted-store-secret",
-        logLevel: "DEBUG"
+        ...options,
+        logLevel: "INFO",
+        logger: expect.any(Function)
       })
     );
-    await expect(service.stop()).resolves.toBe(true);
+    expect(service.getConnection()).toEqual({
+      endpoint: "http://127.0.0.1:34567",
+      token: "control-token"
+    });
+    const stop = service.stop();
+    expect(service.stop()).toBe(stop);
+    expect(service.running).toBe(false);
+    expect(() => service.getConnection()).toThrow("未运行");
+    await stop;
+    expect(service.running).toBe(false);
     expect(mocks.stop).toHaveBeenCalledOnce();
   });
 
-  it("拒绝重复启动同一服务实例", async () => {
-    mocks.run.mockResolvedValue({
-      running: true,
-      events: async function* () {},
-      stop: mocks.stop
-    });
-    const service = new RustAgentService();
-    await service.start("http://127.0.0.1:32123/mcp");
-    await expect(service.start("http://127.0.0.1:32123/mcp")).rejects.toThrow("已经启动");
-    await service.stop();
+  it("启动中关闭仍等待子进程就绪后释放它", async () => {
+    const deferred = Promise.withResolvers<ReturnType<typeof instance>>();
+    mocks.run.mockReturnValue(deferred.promise);
+    const service = new AgentService(options);
+    const stopping = service.stop();
+    expect(service.running).toBe(false);
+    expect(mocks.stop).not.toHaveBeenCalled();
+    deferred.resolve(instance());
+    await stopping;
+    expect(service.running).toBe(false);
+    expect(mocks.stop).toHaveBeenCalledOnce();
   });
 
-  it("AG-UI 事件流意外断开后自动重连", async () => {
-    const event = { type: "RUN_STARTED", threadId: "thread-1", runId: "run-1" } as const;
-    let attempts = 0;
-    mocks.run.mockResolvedValue({
-      running: true,
-      events: async function* () {
-        attempts += 1;
-        if (attempts === 1) throw new Error("connection reset");
-        yield event;
-      },
-      stop: mocks.stop
-    });
-    const service = new RustAgentService();
-    const received: unknown[] = [];
-    service.listen((value) => received.push(value));
-
-    await service.start("http://127.0.0.1:32123/mcp");
-    await vi.waitFor(() => expect(received).toEqual([event]), { timeout: 2_000 });
-    expect(attempts).toBeGreaterThanOrEqual(2);
-
-    await service.stop();
+  it("启动失败传递给 ready，清理不再次报错", async () => {
+    mocks.run.mockRejectedValue(new Error("spawn failed"));
+    const service = new AgentService(options);
+    await expect(service.ready()).rejects.toThrow("spawn failed");
+    expect(service.running).toBe(false);
+    await expect(service.stop()).resolves.toBeUndefined();
+    expect(mocks.stop).not.toHaveBeenCalled();
   });
 
-  it("按 Rust 日志等级写入 Electron Log", async () => {
-    mocks.run.mockResolvedValue({
-      running: true,
-      events: async function* () {},
-      stop: mocks.stop
-    });
-    const service = new RustAgentService();
-    await service.start("http://127.0.0.1:32123/mcp");
+  it("底层进程意外退出后即时反映运行状态并通过 panic 通知应用", async () => {
+    const process = instance();
+    mocks.run.mockResolvedValue(process);
+    const service = new AgentService(options);
+    await service.ready();
 
-    const options = mocks.run.mock.calls[0]?.[0];
-    options.logger({
+    process.exit();
+    expect(service.running).toBe(false);
+    expect(() => service.getConnection()).toThrow("未运行");
+    await process.closed;
+    expect(options.onPanicError).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({ message: "Agent 服务已退出" })
+    );
+  });
+
+  it("主动停止导致的进程退出不会报告 panic", async () => {
+    const process = instance();
+    mocks.run.mockResolvedValue(process);
+    mocks.stop.mockImplementationOnce(async () => {
+      process.exit();
+      return true;
+    });
+    const service = new AgentService(options);
+    await service.ready();
+
+    await service.stop();
+    expect(service.running).toBe(false);
+    expect(options.onPanicError).not.toHaveBeenCalled();
+  });
+
+  it("停止失败会恢复真实运行状态并允许后续重试", async () => {
+    const process = instance();
+    mocks.run.mockResolvedValue(process);
+    mocks.stop.mockRejectedValueOnce(new Error("stop failed"));
+    const service = new AgentService(options);
+    await service.ready();
+
+    const stopping = service.stop();
+    expect(service.stop()).toBe(stopping);
+    expect(service.running).toBe(false);
+    await expect(stopping).rejects.toThrow("stop failed");
+    expect(service.running).toBe(true);
+    expect(service.getConnection()).toMatchObject({ endpoint: process.endpoint });
+
+    mocks.stop.mockImplementationOnce(async () => {
+      process.exit();
+      return true;
+    });
+    await expect(service.stop()).resolves.toBeUndefined();
+    expect(mocks.stop).toHaveBeenCalledTimes(2);
+    expect(service.running).toBe(false);
+    expect(options.onPanicError).not.toHaveBeenCalled();
+  });
+
+  it("底层停止未确认退出时允许重试", async () => {
+    const process = instance();
+    mocks.run.mockResolvedValue(process);
+    mocks.stop.mockResolvedValueOnce(false);
+    const service = new AgentService(options);
+    await service.ready();
+
+    await expect(service.stop()).rejects.toThrow("尚未退出");
+    expect(service.running).toBe(true);
+    mocks.stop.mockImplementationOnce(async () => {
+      process.exit();
+      return true;
+    });
+    await service.stop();
+    expect(service.running).toBe(false);
+    expect(mocks.stop).toHaveBeenCalledTimes(2);
+  });
+
+  it("按 Rust 日志记录转发到服务 logger", async () => {
+    new AgentService(options);
+    const logger = mocks.run.mock.calls[0]![0].logger;
+    logger({
       level: "INFO",
       message: "mcp connected",
       target: "agent::mcp",
       fields: { server: "aira-music" }
     });
-
-    const { Log } = await import("../../src/lib/log");
-    expect(Log.info).toHaveBeenCalledWith("agent:agent::mcp", "mcp connected server=aira-music");
-    await service.stop();
+    expect(options.logger).toHaveBeenCalledWith("debug", "agent::mcp", "mcp connected", {
+      server: "aira-music"
+    });
   });
 });

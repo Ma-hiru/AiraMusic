@@ -11,82 +11,16 @@ import {
 import { MainChild } from "@/lib/child";
 import express from "express";
 import type { ProxyChildMessage, ProxyParentMessage } from "@/types/proxy.child";
-import type { MainChildControlMessage, MainChildSerializedError } from "@/types/child";
+import type {
+  ErrorMessage,
+  ReadyMessage,
+  StartMessage,
+  ControlMessage,
+  StoppedMessage,
+  SerializedError
+} from "@/types/child";
 
-function createApiAgent() {
-  return new Agent({
-    keepAlive: true,
-    maxSockets: 64
-  });
-}
-
-function createCacheAgent() {
-  return new Agent({
-    keepAlive: true,
-    maxSockets: 256
-  });
-}
-
-/**
- * express 的 app.handle 会用 Object.setPrototypeOf 把 req/res 的原型替换成 express
- * 自己的 request/response，导致 node:http2 compat 定义在 Http2ServerRequest /
- * Http2ServerResponse 原型上的 getter（socket/connection/method 等）与 _read/_write
- * 全部失效：请求流关闭时 compat 调用 req.resume()，回退到 IncomingMessage._read 后
- * 因 this.socket 为 undefined 而崩溃。此处把 compat 原型的成员复制为自身属性
- * （自身属性不受 setPrototypeOf 影响）再交给 express。
- */
-function attachCompatShim(req: Http2ServerRequest, res: Http2ServerResponse) {
-  for (const target of [req, res] as const) {
-    const proto = Object.getPrototypeOf(target) as object;
-    for (const key of Reflect.ownKeys(proto)) {
-      if (key === "constructor" || Object.hasOwn(target, key)) continue;
-      const desc = Object.getOwnPropertyDescriptor(proto, key);
-      if (!desc) continue;
-      Object.defineProperty(target, key, { ...desc, configurable: true });
-    }
-  }
-}
-
-function createProxyMiddleware(options: {
-  agent: Agent;
-  target: string;
-  timeout: number;
-  proxyTimeout: number;
-  onError: (error: Error) => void;
-}) {
-  const proxy = createProxyServer({
-    target: options.target,
-    agent: options.agent,
-    proxyTimeout: options.proxyTimeout,
-    timeout: options.timeout,
-    changeOrigin: false,
-    selfHandleResponse: false
-  });
-
-  proxy.on("error", (error) => {
-    options.onError(error);
-  });
-
-  const middleware: express.RequestHandler = (req, res) => {
-    proxy.web(req, res, (error) => {
-      options.onError(error);
-      if (res.writableEnded) return;
-      if (res.headersSent) {
-        res.destroy(error);
-        return;
-      }
-      res.status(502).type("text/plain").send("Proxy error");
-    });
-  };
-
-  return {
-    middleware,
-    close() {
-      proxy.close();
-    }
-  };
-}
-
+/** @deprecated express兼容代码太过于复杂，考虑替换express，比如koa */
 class ProxyChildService extends MainChild<ProxyParentMessage, ProxyChildMessage> {
   private instance?: Http2SecureServer;
   private sessions = new Set<ServerHttp2Session>();
@@ -99,42 +33,93 @@ class ProxyChildService extends MainChild<ProxyParentMessage, ProxyChildMessage>
     super("proxy");
   }
 
-  protected override async start(message: Extract<ProxyParentMessage, { type: "start" }>) {
-    if (this.instance) return;
+  /**
+   * express 的 app.handle 会用 Object.setPrototypeOf 把 req/res 的原型替换成 express
+   * 自己的 request/response，导致 node:http2 compat 定义在 Http2ServerRequest /
+   * Http2ServerResponse 原型上的 getter（socket/connection/method 等）与 _read/_write
+   * 全部失效：请求流关闭时 compat 调用 req.resume()，回退到 IncomingMessage._read 后
+   * 因 this.socket 为 undefined 而崩溃。此处把 compat 原型的成员复制为自身属性
+   * （自身属性不受 setPrototypeOf 影响）再交给 express。
+   */
+  private attachCompatShim(req: Http2ServerRequest, res: Http2ServerResponse) {
+    for (const target of [req, res] as const) {
+      const proto = Object.getPrototypeOf(target) as object;
+      for (const key of Reflect.ownKeys(proto)) {
+        if (key === "constructor" || Object.hasOwn(target, key)) continue;
+        const desc = Object.getOwnPropertyDescriptor(proto, key);
+        if (!desc) continue;
+        Object.defineProperty(target, key, { ...desc, configurable: true });
+      }
+    }
+  }
+
+  private createProxyMiddleware(options: {
+    agent: Agent;
+    target: string;
+    timeout: number;
+    proxyTimeout: number;
+    onError: (error: Error) => void;
+  }) {
+    const proxy = createProxyServer({
+      target: options.target,
+      agent: options.agent,
+      proxyTimeout: options.proxyTimeout,
+      timeout: options.timeout,
+      changeOrigin: false,
+      selfHandleResponse: false
+    });
+    proxy.on("error", (error) => options.onError(error));
+
+    const middleware: express.RequestHandler = (req, res) => {
+      proxy.web(req, res, (error) => {
+        options.onError(error);
+        if (res.writableEnded) return;
+        if (res.headersSent) {
+          res.destroy(error);
+          return;
+        }
+        res.status(502).type("text/plain").send("Proxy error");
+      });
+    };
+
+    return {
+      middleware,
+      close() {
+        proxy.close();
+      }
+    };
+  }
+
+  protected override async start(
+    message: Extract<ProxyParentMessage, StartMessage>
+  ): Promise<{ port: number }> {
+    if (this.instance) return { port: message.port };
+
     const app = express();
     app.disable("x-powered-by");
-    const apiAgent = createApiAgent();
-    const cacheAgent = createCacheAgent();
+    app.use("/", express.static(message.staticUIDir));
 
-    this.apiAgent = apiAgent;
-    this.cacheAgent = cacheAgent;
-
-    const apiProxy = createProxyMiddleware({
+    this.apiAgent = new Agent({ keepAlive: true, maxSockets: 64 });
+    const apiProxy = this.createProxyMiddleware({
       target: `http://127.0.0.1:${message.ncmPort}`,
-      agent: apiAgent,
+      agent: this.apiAgent,
       proxyTimeout: 15_000,
       timeout: 15_000,
-      onError: (error) => {
-        this.sendError(error);
-      }
+      onError: (error) => this.sendError(error)
     });
+    this.closeApiProxy = apiProxy.close;
+    app.use("/api", apiProxy.middleware);
 
-    const cacheProxy = createProxyMiddleware({
+    this.cacheAgent = new Agent({ keepAlive: true, maxSockets: 256 });
+    const cacheProxy = this.createProxyMiddleware({
       target: `http://127.0.0.1:${message.storePort}`,
-      agent: cacheAgent,
+      agent: this.cacheAgent,
       proxyTimeout: 60_000,
       timeout: 60_000,
-      onError: (error) => {
-        this.sendError(error);
-      }
+      onError: (error) => this.sendError(error)
     });
-
-    this.closeApiProxy = apiProxy.close;
     this.closeCacheProxy = cacheProxy.close;
-
-    app.use("/api", apiProxy.middleware);
     app.use("/cache", cacheProxy.middleware);
-    app.use("/", express.static(message.staticUIDir));
 
     let key: Buffer;
     let cert: Buffer;
@@ -142,22 +127,17 @@ class ProxyChildService extends MainChild<ProxyParentMessage, ProxyChildMessage>
       key = readFileSync(message.key);
       cert = readFileSync(message.cert);
     } catch (err) {
-      this.sendError(err instanceof Error ? err : new Error(String(err)));
-      return;
+      this.sendPanicError(err);
+      throw err;
     }
 
     const onRequest = (req: Http2ServerRequest, res: Http2ServerResponse) => {
-      attachCompatShim(req, res);
-      (app as unknown as (req: IncomingMessage, res: ServerResponse) => void)(
-        req as unknown as IncomingMessage,
-        res as unknown as ServerResponse
-      );
+      this.attachCompatShim(req, res);
+      app(req as unknown as IncomingMessage, res as unknown as ServerResponse);
     };
-
     // allowHTTP1 兼容旧客户端；Chromium 通过 ALPN 自动协商 HTTP/2，
     // 多路复用解除浏览器对每 host 6 条 HTTP/1.1 连接的限制
     const server = createSecureServer({ key, cert, allowHTTP1: true }, onRequest);
-
     // 跟踪会话：部分 Node 版本的 http2 close() 不会销毁存活会话，
     // 关闭时显式销毁，避免 close 回调被 h2 长连接挂住
     server.on("session", (session) => {
@@ -169,6 +149,7 @@ class ProxyChildService extends MainChild<ProxyParentMessage, ProxyChildMessage>
       server.listen(message.port, "127.0.0.1");
       const onError = (err: Error) => {
         server.off("listening", onListening);
+        this.sendPanicError(err);
         reject(err);
       };
       const onListening = () => {
@@ -179,17 +160,12 @@ class ProxyChildService extends MainChild<ProxyParentMessage, ProxyChildMessage>
       server.once("error", onError);
       server.once("listening", onListening);
     });
-    this.instance.on("error", (err) => {
-      this.sendError(err);
-    });
+    this.instance.on("error", (err) => this.sendError(err));
 
-    this.send({
-      type: "ready",
-      port: message.port
-    });
+    return { port: message.port };
   }
 
-  protected override async close() {
+  protected override async stop() {
     const server = this.instance;
     this.instance = undefined;
 
@@ -222,23 +198,26 @@ class ProxyChildService extends MainChild<ProxyParentMessage, ProxyChildMessage>
     this.cacheAgent = undefined;
   }
 
-  protected override createStoppedMessage(): ProxyChildMessage {
-    return {
-      type: "stopped"
-    };
+  protected override buildReadyMessage(info: {
+    port: number;
+  }): Extract<ProxyChildMessage, ReadyMessage> {
+    return { type: "ready", port: info.port };
   }
 
-  protected override createErrorMessage(error: MainChildSerializedError): ProxyChildMessage {
-    return {
-      type: "error",
-      error
-    };
+  protected override buildStoppedMessage(): Extract<ProxyChildMessage, StoppedMessage> {
+    return { type: "stopped" };
   }
 
-  protected override handleCustomMessage(
-    message: Exclude<ProxyParentMessage, MainChildControlMessage>
+  protected override buildErrorMessage(
+    error: SerializedError
+  ): Extract<ProxyChildMessage, ErrorMessage> {
+    return { type: "error", error };
+  }
+
+  protected override handleParentMessage(
+    _message: Exclude<ProxyParentMessage, ControlMessage>
   ): void | Promise<void> {
-    void message;
+    void _message;
   }
 }
 

@@ -3,7 +3,7 @@ import { type LucideIcon } from "lucide-react";
 import { memo, type FC, useMemo, type ReactNode } from "react";
 import { getTextClassName } from "@/common/components/display/text";
 
-interface HomeSectionProps {
+interface SectionProps {
   title?: string;
   Icon?: LucideIcon;
   subTitle?: string;
@@ -13,7 +13,7 @@ interface HomeSectionProps {
   onClick?: NormalFunc;
 }
 
-const Section: FC<HomeSectionProps> = ({
+const Section: FC<SectionProps> = ({
   className,
   onClick,
   Icon,

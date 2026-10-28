@@ -1,10 +1,8 @@
 import { app } from "electron";
-import { ipcInit } from "@/inner/ipc";
 import { MainTray } from "@/lib/tray";
+import { MainAgent } from "@/inner/agent";
 import { MainServices } from "@/services";
 import { MainIPC } from "@mahiru/ipc/main";
-import { MainAgent } from "@/services/agent";
-import { MainMcp } from "@/inner/mcp/runtime";
 import { Log, runWithLogContext } from "@/lib/log";
 import { MainWindowPreset } from "@/lib/window-preset";
 import { MainWindowCreator } from "@/lib/window-creator";
@@ -12,7 +10,7 @@ import { MainWindowManager } from "@/lib/window-manager";
 import { MainScreenResolver } from "@/lib/screen-resolver";
 import { MainExitCodeConstants } from "@/constants/exit-code";
 import { MainTaskBarCoverPreview } from "@/lib/taskbar-cover";
-import { MainAgentFeatureSettings } from "@/services/agent/settings";
+import { ipcInit, broadcastAgentFeatureSettings } from "@/inner/ipc";
 
 /**
  * @desc 应用实例 \
@@ -20,6 +18,7 @@ import { MainAgentFeatureSettings } from "@/services/agent/settings";
  * */
 export class MainApp {
   private _services?: MainServices;
+  private _agent?: MainAgent;
   private _status: "exiting" | "running" | "initializing" = "initializing";
   private _quitting = false;
   private _renderer_exited = false;
@@ -27,6 +26,10 @@ export class MainApp {
   /** @desc 是否进入退出流程 */
   private get isExiting() {
     return this._status === "exiting";
+  }
+
+  get agent() {
+    return this._agent;
   }
 
   get services() {
@@ -41,8 +44,14 @@ export class MainApp {
   private createServices() {
     this._services = new MainServices({
       services: ["ncm", "proxy", "store"],
-      onError: (service, msg, err) => {
-        Log.error(`service(${service})`, msg, err);
+      onPanic: (service, err) => {
+        // agent 服务不算致命服务
+        if (service === "agent") {
+          Log.warn("service(agent)", err);
+          if (this._agent) broadcastAgentFeatureSettings(this._agent.getState());
+          return;
+        }
+        Log.error(`service(${service})`, err);
         this.exit(
           MainExitCodeConstants.SERVICES_START_ERROR,
           `failed to initialize ${service} service`
@@ -185,43 +194,10 @@ export class MainApp {
   }
 
   /**
-   * @desc 是否启用Agent \
-   * error: log \
-   * return: 是否启用成功
-   * */
-  private async enableAgent(mcpUrl: string) {
-    try {
-      return MainAgentFeatureSettings.isAgentRequestedAtStartup() && (await MainAgent.init(mcpUrl));
-    } catch (err) {
-      Log.warn("agent", "failed to enable agent", err);
-      return false;
-    }
-  }
-
-  /** 按应用启动时的快照启动本地只读 MCP */
-  private async enableMcp() {
-    try {
-      const endpoint = await MainMcp.init();
-      MainAgent.broadcastFeatureSettings();
-      if (endpoint) {
-        const toolCount = MainAgentFeatureSettings.getState().effective.mcpTools.length;
-        Log.info("mcp", `MCP listening at ${endpoint.url} with ${toolCount} tools`);
-      }
-      return endpoint;
-    } catch (err) {
-      MainAgent.broadcastFeatureSettings();
-      Log.warn("mcp", "failed to enable MCP", err);
-      return undefined;
-    }
-  }
-
-  /**
    * @desc 停止所有服务
    * */
   private stopAllServers() {
-    return Promise.allSettled(
-      this._services?.services.map((s) => this._services?.stopService(s)) ?? []
-    );
+    return this._services?.stopAll() ?? Promise.resolve();
   }
 
   private emitStopMessageToMainRenderer() {
@@ -273,7 +249,7 @@ export class MainApp {
         .whenReady()
         .then(async () => {
           Log.info("App ready");
-          MainAgentFeatureSettings.captureStartup();
+          this._agent = new MainAgent({ onStateChange: broadcastAgentFeatureSettings });
 
           // 绑定 AppUserModelID, 多个窗口使用同一个 AppUserModelID 时，Windows 可以把它们归到同一个任务栏应用下面
           if (process.platform === "win32") {
@@ -301,18 +277,15 @@ export class MainApp {
           if (this.isExiting) return;
           Log.info("App taskbar registered");
 
-          const mcpEndpoint = await this.enableMcp(); // Agent 依赖 MCP，必须先监听
+          await this._agent.init(this._services!);
           if (this.isExiting) return;
-          mcpEndpoint && Log.info("App MCP initialized");
-
-          const enable = mcpEndpoint ? await this.enableAgent(mcpEndpoint.url) : false;
-          if (this.isExiting) return;
-          enable && Log.info("App agent initialized");
+          Log.info("App agent initialized");
 
           this._status = "running"; // 修改状态，完成初始化
           Log.info("App running");
         })
         .catch((err) => {
+          if (this.isExiting) return;
           Log.error("app init", "failed to initialize app, uncaught error", err);
           this.exit(
             MainExitCodeConstants.UNCAUGHT_ERROR,
@@ -353,15 +326,28 @@ export class MainApp {
         if (id !== "main" && !win.isDestroyed()) win.close();
       }
 
+      let finished = false;
+      const deadline = setTimeout(() => {
+        if (finished) return;
+        finished = true;
+        Log.warn("app exit", "shutdown timed out, exiting app");
+        app.exit(code);
+      }, 10_000);
+
       this.emitStopMessageToMainRenderer()
         .catch((error) => Log.warn("app exit", "failed to notify renderer", error))
-        .then(() =>
-          Promise.allSettled([
-            this.stopAllServers(),
-            MainAgent.shutdown().then(() => MainMcp.shutdown())
-          ])
-        )
+        .then(async () => {
+          try {
+            await this._agent?.shutdown();
+          } finally {
+            await this.stopAllServers();
+          }
+        })
+        .catch((error) => Log.warn("app exit", "failed to stop services", error))
         .finally(() => {
+          if (finished) return;
+          finished = true;
+          clearTimeout(deadline);
           if (code === MainExitCodeConstants.NORMAL_EXIT) {
             this._quitting = true;
             // 使用 app.quit 退出才可以触发 electronmon hook,使用 code 37然后重启

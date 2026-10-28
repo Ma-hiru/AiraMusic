@@ -1,4 +1,6 @@
-import { createAgentToolCatalog } from "@mahiru/app/inner/mcp/tools/catalog";
+import { createAgentToolCatalog } from "@mahiru/app/inner/agent/tools";
+
+vi.mock("@mahiru/app/lib/web-search", () => ({ WebBrowser: {} }));
 
 vi.mock("electron", () => ({
   app: { isReady: () => false },

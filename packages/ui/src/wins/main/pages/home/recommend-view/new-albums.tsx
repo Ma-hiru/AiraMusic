@@ -43,7 +43,7 @@ const NewAlbums: FC<NewAlbumsProps> = ({ onClickItem }) => {
 
   return (
     <Section title="新碟上架" Icon={DiscAlbum} subTitle="New Albums">
-      <AppError reset={reload} message="加载新碟失败" when={status === "error"}>
+      <AppError className="h-40!" reset={reload} message="加载新碟失败" when={status === "error"}>
         <AppLoading className="h-40" loading={status === "loading"}>
           <MediaGrid
             items={items}

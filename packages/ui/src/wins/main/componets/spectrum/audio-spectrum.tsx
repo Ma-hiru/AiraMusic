@@ -52,6 +52,7 @@ const AudioSpectrum: FC<AudioSpectrumProps> = ({
   const hideRightBandsRef = useLatestRef(hideRightBands);
   const spectrumDataRef = useLatestRef(spectrumData);
   const spectrumReadyRef = useLatestRef(spectrumReady);
+  const fpsLimitRef = useLatestRef(options?.fpsLimit);
 
   const rendererFactory = useMemo(() => {
     return () => (renderer === "webgl-rust" ? new WebGLRendererRust() : new Canvas2DRenderer());
@@ -107,14 +108,23 @@ const AudioSpectrum: FC<AudioSpectrumProps> = ({
     let animationFrameId: number;
     const envelope = new SpectrumEnvelope();
     let previousTime: number | undefined;
+    let nextDrawAt = Number.NEGATIVE_INFINITY;
+    let previousInterval = 0;
     const draw = (now: number) => {
-      const elapsedMs = previousTime === undefined ? 1000 / 60 : now - previousTime;
-      previousTime = now;
-      const spectrumData = spectrumDataRef.current;
-      if (!spectrumReadyRef.current || !spectrumData) {
-        animationFrameId = requestAnimationFrame(draw);
-        return;
+      animationFrameId = requestAnimationFrame(draw);
+      const fpsLimit = fpsLimitRef.current;
+      const interval = fpsLimit && fpsLimit > 0 ? 1000 / fpsLimit : 0;
+      if (interval !== previousInterval) {
+        nextDrawAt = now;
+        previousInterval = interval;
       }
+      if (interval && now + 0.5 < nextDrawAt) return;
+      const spectrumData = spectrumDataRef.current;
+      if (!spectrumReadyRef.current || !spectrumData || !rendererRef.current) return;
+      const elapsedMs = previousTime === undefined ? interval || 1000 / 60 : now - previousTime;
+      previousTime = now;
+      const next = nextDrawAt + interval;
+      nextDrawAt = next > now ? next : now + interval;
       const bands = envelope.advance(spectrumData.bands, elapsedMs);
       if (bands.length) {
         const hideCount = Math.max(0, Math.floor(hideRightBandsRef.current));
@@ -126,13 +136,12 @@ const AudioSpectrum: FC<AudioSpectrumProps> = ({
           lastBandsRef.current = visibleBands;
         }
       }
-      animationFrameId = requestAnimationFrame(draw);
     };
     animationFrameId = requestAnimationFrame(draw);
     return () => {
       cancelAnimationFrame(animationFrameId);
     };
-  }, [enable, hideRightBandsRef, spectrumDataRef, spectrumReadyRef]);
+  }, [enable, fpsLimitRef, hideRightBandsRef, spectrumDataRef, spectrumReadyRef]);
 
   // 更新频谱选项(在激活时)
   const spectrumOptionsKey = useMemo(() => JSON.stringify(options), [options]);

@@ -2,6 +2,9 @@
   "$schema": "docs/schema/electron-builder.schema.json",
   "appId": "com.mahiru.airamusic",
   "productName": "AiraMusic",
+  "toolsets": {
+    "appimage": "1.0.3"
+  },
   "directories": {
     "app": "packages/app",
     "output": "dist"

@@ -1,12 +1,15 @@
 import { cx } from "@emotion/css";
+import { GlobeOff } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { memo, useRef, type FC, useState, useEffect, useCallback } from "react";
+import { useOnline } from "@/common/hooks/use-online";
 import { RoutePath, RoutePathMain } from "@/common/routes";
 import { scrollActionsAtom } from "@/wins/main/atoms/layout";
 import { useRouterActive } from "@/common/hooks/use-router-active";
 import { useAgentFocusCtx } from "@/common/hooks/use-agent-focus-ctx";
 import { useScrollAutoHide } from "@/common/hooks/use-scroll-auto-hide";
 import { useScrollActionsRegister } from "@/common/hooks/use-scroll-actions-register";
+import AppError from "@/common/components/fallback/app-error";
 import type { HomeChannelKey } from "@/wins/main/constants";
 
 import Banner from "./banner";
@@ -21,6 +24,7 @@ const HomePage: FC<object> = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const location = useLocation();
+  const { online, pending, refresh } = useOnline(true);
   const [mounted, setMounted] = useState(0);
   const { activeChannel = "recommend" } = RoutePath.parseQuery<{ activeChannel: HomeChannelKey }>(
     location,
@@ -64,7 +68,14 @@ const HomePage: FC<object> = () => {
   useAgentFocusCtx({ page: "home" }, useRouterActive(RoutePathMain, "home"));
 
   return (
-    <div className="router-container pt-0! px-2!">
+    <AppError
+      className="router-container pt-0! px-2!"
+      when={!online}
+      asChild={false}
+      reset={refresh}
+      pending={pending}
+      tipsIcon={GlobeOff}
+      tips="网络连接中断，请检查网络后重试">
       <div
         ref={containerRef}
         className={`
@@ -104,7 +115,7 @@ const HomePage: FC<object> = () => {
           <HomeSongsArtistsView className={cx(activeChannel !== "songs-artists" && "hidden")} />
         )}
       </div>
-    </div>
+    </AppError>
   );
 };
 

@@ -21,26 +21,9 @@ describe("Agent process wrapper", () => {
     expect(agent.pid).toBeTypeOf("number");
     expect(agent.endpoint).toMatch(/^http:\/\/127\.0\.0\.1:\d+$/);
     await expect(agent.health()).resolves.toEqual({ status: "ready", protocolVersion: 1 });
-    await expect(agent.listThreads()).resolves.toEqual([]);
 
     const unauthenticated = await fetch(`${agent.endpoint}/health`);
     expect(unauthenticated.status).toBe(401);
-  });
-
-  it("decodes canonical AG-UI events from SSE", async () => {
-    const agent = await startFixture();
-    running.add(agent);
-    const events = agent.events()[Symbol.asyncIterator]();
-
-    await expect(events.next()).resolves.toEqual({
-      done: false,
-      value: {
-        type: "RUN_STARTED",
-        threadId: "thread-1",
-        runId: "run-1"
-      }
-    });
-    await events.return?.();
   });
 
   it("rejects a child that does not become ready and terminates it", async () => {
@@ -54,6 +37,17 @@ describe("Agent process wrapper", () => {
     running.add(agent);
 
     await expect(agent.stop(1_000)).resolves.toBe(true);
+    await expect(agent.closed).resolves.toBeUndefined();
+    expect(agent.running).toBe(false);
+    running.delete(agent);
+  });
+
+  it("publishes unexpected process exit through the closed signal", async () => {
+    const agent = await startFixture();
+    running.add(agent);
+
+    process.kill(agent.pid!, "SIGTERM");
+    await agent.closed;
     expect(agent.running).toBe(false);
     running.delete(agent);
   });
@@ -61,7 +55,7 @@ describe("Agent process wrapper", () => {
   it("passes the log level and decodes structured stderr records", async () => {
     const records: unknown[] = [];
     const agent = await startFixture({
-      logLevel: "WARN",
+      logLevel: "INFO",
       logger: (record) => records.push(record)
     });
     running.add(agent);
@@ -72,7 +66,7 @@ describe("Agent process wrapper", () => {
           level: "INFO",
           message: "fixture ready",
           target: "fake_agent",
-          fields: { configured_level: "WARN" }
+          fields: { configured_level: "INFO" }
         }
       ])
     );

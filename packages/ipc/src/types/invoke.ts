@@ -1,25 +1,7 @@
-import type {
-  RunAccepted,
-  ThreadSummary,
-  ThreadSnapshot,
-  ProviderConfigView,
-  ProviderDescriptor,
-  ProviderConfigInput
-} from "@mahiru/agent";
-
 import type { AgentInvokeResult } from "./agent";
 import type { NetFetchRequest, NetFetchResponse } from "./net";
 
-export type AgentCreateRunInput = {
-  content: string;
-  configId: string;
-  threadId: string;
-};
-
-export type AgentProviderConfigUpdateInput = {
-  id: string;
-  config: ProviderConfigInput;
-};
+export type AgentConnection = { token: string; endpoint: string };
 
 export type AgentFeatureSettingsConfig = {
   mcpPort: number;
@@ -46,36 +28,16 @@ export type AgentFeatureSettingsUpdateInput = Partial<AgentFeatureSettingsConfig
 
 /** Invoke 事件类型以及参数 */
 export type InvokeEventMaps = {
+  // runtime
   invoke_runtime_id: [undefined, string];
   invoke_runtime_token: [undefined, string];
+  // window
   invoke_window_id: [undefined, WindowType];
   invoke_window_shown: [WindowType, boolean];
   invoke_window_opened: [WindowType, boolean];
   invoke_window_pinned: [WindowType, boolean];
   invoke_window_maximized: [WindowType, boolean];
   invoke_window_fullscreen: [WindowType, boolean];
-  invoke_device_gpu: [undefined, Promise<unknown>];
-  invoke_device_platform: [undefined, NodeJS.Platform];
-  invoke_device_net: [undefined, Promise<NetworkStatus>];
-  invoke_net_fetch: [NetFetchRequest, Promise<NetFetchResponse>];
-  invoke_cache_config_get: [undefined, { ttl: string; path: string; capacity: number }];
-  invoke_store_get: [string, { ok: false; reason?: string } | { ok: true; value: JsonValue }];
-  invoke_store_set: [
-    { key: string; value: JsonValue },
-    { ok: true } | { ok: false; reason?: string }
-  ];
-  invoke_log_export: [
-    scope: "all" | "recent",
-    Promise<{ ok: boolean; error?: string; canceled?: boolean }>
-  ];
-  invoke_fs_select: [
-    type: "dir" | "file",
-    Promise<{ ok: boolean; path: string; error?: string; canceled?: boolean }>
-  ];
-  invoke_fs_save: [
-    { name: string; buffer: ArrayBuffer },
-    Promise<{ ok: boolean; error?: string; canceled?: boolean }>
-  ];
   invoke_window_bounds: [
     undefined,
     {
@@ -87,6 +49,34 @@ export type InvokeEventMaps = {
       workAreaHeight: number;
     }
   ];
+  // device
+  invoke_device_gpu: [undefined, Promise<unknown>];
+  invoke_device_platform: [undefined, NodeJS.Platform];
+  invoke_device_net: [undefined, Promise<NetworkStatus>];
+  invoke_net_fetch: [NetFetchRequest, Promise<NetFetchResponse>];
+  // store
+  invoke_store_delete: [string, { ok: true } | { ok: false; reason?: string }];
+  invoke_store_get: [string, { ok: false; reason?: string } | { ok: true; value: JsonValue }];
+  invoke_store_set: [
+    { key: string; value: JsonValue },
+    { ok: true } | { ok: false; reason?: string }
+  ];
+  // log
+  invoke_log_export: [
+    scope: "all" | "recent",
+    Promise<{ ok: boolean; error?: string; canceled?: boolean }>
+  ];
+  // fs
+  invoke_fs_select: [
+    type: "dir" | "file",
+    Promise<{ ok: boolean; path: string; error?: string; canceled?: boolean }>
+  ];
+  invoke_fs_save: [
+    { name: string; buffer: ArrayBuffer },
+    Promise<{ ok: boolean; error?: string; canceled?: boolean }>
+  ];
+  // go cache
+  invoke_cache_config_get: [undefined, { ttl: string; path: string; capacity: number }];
   invoke_cache_config_update: [
     { ttl?: string; path?: string; capacity?: number },
     (
@@ -95,25 +85,8 @@ export type InvokeEventMaps = {
     )
   ];
   // agent
-  invoke_agent_cancel_run: [string, Promise<AgentInvokeResult<void>>];
-  invoke_agent_delete_thread: [string, Promise<AgentInvokeResult<void>>];
-  invoke_store_delete: [string, { ok: true } | { ok: false; reason?: string }];
-  invoke_agent_get_thread: [string, Promise<AgentInvokeResult<ThreadSnapshot>>];
-  invoke_agent_list_runs: [undefined, Promise<AgentInvokeResult<RunAccepted[]>>];
-  invoke_agent_list_threads: [undefined, Promise<AgentInvokeResult<ThreadSummary[]>>];
-  invoke_agent_create_run: [AgentCreateRunInput, Promise<AgentInvokeResult<RunAccepted>>];
-  invoke_agent_list_configs: [undefined, Promise<AgentInvokeResult<ProviderConfigView[]>>];
-  invoke_agent_list_providers: [undefined, Promise<AgentInvokeResult<ProviderDescriptor[]>>];
+  invoke_agent_connection: [undefined, Promise<AgentInvokeResult<AgentConnection>>];
   invoke_agent_feature_settings_get: [undefined, AgentInvokeResult<AgentFeatureSettingsState>];
-  invoke_agent_create_config: [ProviderConfigInput, Promise<AgentInvokeResult<ProviderConfigView>>];
-  invoke_agent_create_thread: [
-    undefined | { name?: string },
-    Promise<AgentInvokeResult<ThreadSummary>>
-  ];
-  invoke_agent_update_config: [
-    AgentProviderConfigUpdateInput,
-    Promise<AgentInvokeResult<ProviderConfigView>>
-  ];
   invoke_agent_feature_settings_update: [
     AgentFeatureSettingsUpdateInput,
     Promise<AgentInvokeResult<AgentFeatureSettingsState>>

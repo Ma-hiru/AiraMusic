@@ -51,18 +51,13 @@ const MusicSource: FC<object> = () => {
       muteToggle: () => (player.audio.instance.muted ? player.audio.unmute() : player.audio.mute()),
       playModalToggle: () => setPlayModal((playModal) => !playModal)
     };
-    return (
-      (Object.keys(actions) as ShortcutAction[])
-        // 输入框聚焦时只保留带修饰键的组合，避免吞掉正常输入
-        .filter((action) => !typing || (shortcuts[action].modifiers?.length ?? 0) > 0)
-        .map((action) => ({
-          ...shortcuts[action],
-          description: RendererShortcutConstants.actionLabels[action],
-          callback: actions[action]
-        }))
-    );
-  }, [player.audio, player.playlist, setPlayModal, shortcuts, typing]);
-  useKeyboardShortcut(shortcutConfigs);
+    return (Object.keys(actions) as ShortcutAction[]).map((action) => ({
+      ...shortcuts[action],
+      description: RendererShortcutConstants.actionLabels[action],
+      callback: actions[action]
+    }));
+  }, [player.audio, player.playlist, setPlayModal, shortcuts]);
+  useKeyboardShortcut(shortcutConfigs, { enabled: !typing, ignoreEditable: true });
   // 禁 Tab 键
   useEffect(() => {
     const handler = (e: KeyboardEvent) => e.key === "Tab" && e.preventDefault();

@@ -1,5 +1,3 @@
-import type { LLMToolOutputDetail } from "@mahiru/agent";
-
 import type { PlayerAction } from "./message";
 
 type AgentToolIDInput = {
@@ -34,351 +32,95 @@ type AgentToolChangeSettingsInput = {
   value: JsonValue;
 };
 
+type AgentToolInputs = {
+  "agent-lyric-schema": object;
+  "agent-tool-track-fm": object;
+  "agent-tool-user-info": object;
+  "agent-tool-search-hot": object;
+  "agent-tool-player-queue": object;
+  "agent-tool-settings-get": object;
+  "agent-tool-home-toplists": object;
+  "agent-tool-player-current": object;
+  "agent-search": AgentToolSearchInput;
+  "agent-tool-fm-trash": AgentToolIDInput;
+  "agent-tool-track-play": AgentToolIDInput;
+  "agent-tool-artist-desc": AgentToolIDInput;
+  "agent-tool-track-recommend-daily": object;
+  "agent-tool-album-detail": AgentToolIDInput;
+  "agent-tool-artist-detail": AgentToolIDInput;
+  "agent-tool-track-similar": AgentToolIDInput;
+  "agent-tool-artist-similar": AgentToolIDInput;
+  "agent-tool-search-open": { keyword: string };
+  "agent-tool-track-playable": AgentToolIDInput;
+  "agent-tool-playlist-delete": AgentToolIDInput;
+  "agent-tool-playlist-detail": AgentToolIDInput;
+  "agent-tool-playlist-similar": AgentToolIDInput;
+  "agent-tool-track-lyrics": AgentToolLyricsInput;
+  "agent-tool-artist-hot-tracks": AgentToolIDInput;
+  "agent-tool-replace-lyrics": { content: string };
+  "agent-tool-search-suggest": { keyword: string };
+  "agent-tool-track-comment": AgentToolCommentInput;
+  "agent-tool-playlist-recommend": { limit?: number };
+  "agent-tool-artist-toplist": { type?: 1 | 2 | 3 | 4 };
+  "agent-tool-player-action": AgentToolPlayerActionInput;
+  "agent-tool-track-like": { id: number; like: boolean };
+  "agent-tool-player-seek": { position: number | string };
+  "agent-tool-change-settings": AgentToolChangeSettingsInput;
+  "agent-tool-album-star": { id: number; subscribe: boolean };
+  "agent-tool-playlist-create": { name: string; privacy?: 10 };
+  "agent-tool-user-play-history": { type: 0 | 1; uid: number };
+  "agent-tool-playlist-star": { id: number; subscribe: boolean };
+  "agent-tool-player-volume": { mute?: boolean; volume?: number };
+  "agent-tool-track-recommend-new": { type?: 0 | 7 | 8 | 16 | 96 };
+  "agent-tool-record": { type: "week" | "month" | "today" | "total" };
+  "agent-tool-track-detail": { ids: number[]; mode: "detail" | "simple" };
+  "agent-tool-artist-albums": { id: number; page?: number; pageSize?: number };
+  "agent-tool-user-playlists": { uid?: number; limit?: number; offset?: number };
+  "agent-tool-comment-open": { id: number; type: "album" | "track" | "playlist" };
+  "agent-tool-source-open": { id: number; type: "album" | "artist" | "playlist" };
+  "agent-tool-playlist-modify": { pid: number; op: "add" | "del"; trackIds: number[] };
+  "agent-tool-player-queue-add": {
+    ids: number[];
+    position: "end" | "next";
+  };
+  "agent-tool-player-queue-remove": { scope: "all" } | { ids: number[]; scope: "tracks" };
+  "agent-tool-player-mode": {
+    shuffle?: boolean;
+    repeat?: "all" | "off" | "one";
+  };
+  "agent-tool-album-new": {
+    limit?: number;
+    offset?: number;
+    area?: "EA" | "JP" | "KR" | "ZH" | "ALL";
+  };
+  "agent-tool-playlist-top": {
+    cat?: string;
+    limit?: number;
+    offset?: number;
+    order?: "hot" | "new";
+  };
+  "agent-tool-comment-like": {
+    id: number;
+    cid: number;
+    like: boolean;
+    type: "album" | "track" | "playlist";
+  };
+  "agent-tool-comment-send": {
+    id: number;
+    content: string;
+    commentId?: number;
+    type: "album" | "track" | "playlist";
+  };
+};
+
 export type AgentToolRequest = {
-  /** 由模型选择，渲染进程仍会施加不可绕过的裁剪与脱敏上限。 */
-  detail?: LLMToolOutputDetail;
-} & (
-  | {
-      id: string;
-      input: object;
-      conversationID: string;
-      tool: "agent-lyric-schema";
-    }
-  | {
-      id: string;
-      input: object;
-      conversationID: string;
-      tool: "agent-tool-track-fm";
-    }
-  | {
-      id: string;
-      input: object;
-      conversationID: string;
-      tool: "agent-tool-user-info";
-    }
-  | {
-      id: string;
-      input: object;
-      conversationID: string;
-      tool: "agent-tool-search-hot";
-    }
-  | {
-      id: string;
-      input: object;
-      conversationID: string;
-      tool: "agent-tool-player-queue";
-    }
-  | {
-      id: string;
-      input: object;
-      conversationID: string;
-      tool: "agent-tool-settings-get";
-    }
-  | {
-      id: string;
-      input: object;
-      conversationID: string;
-      tool: "agent-tool-home-toplists";
-    }
-  | {
-      id: string;
-      input: object;
-      conversationID: string;
-      tool: "agent-tool-player-current";
-    }
-  | {
-      id: string;
-      tool: "agent-search";
-      conversationID: string;
-      input: AgentToolSearchInput;
-    }
-  | {
-      id: string;
-      conversationID: string;
-      input: AgentToolIDInput;
-      tool: "agent-tool-fm-trash";
-    }
-  | {
-      id: string;
-      conversationID: string;
-      input: AgentToolIDInput;
-      tool: "agent-tool-track-play";
-    }
-  | {
-      id: string;
-      conversationID: string;
-      input: AgentToolIDInput;
-      tool: "agent-tool-artist-desc";
-    }
-  | {
-      id: string;
-      input: object;
-      conversationID: string;
-      tool: "agent-tool-track-recommend-daily";
-    }
-  | {
-      id: string;
-      conversationID: string;
-      input: AgentToolIDInput;
-      tool: "agent-tool-album-detail";
-    }
-  | {
-      id: string;
-      conversationID: string;
-      input: AgentToolIDInput;
-      tool: "agent-tool-artist-detail";
-    }
-  | {
-      id: string;
-      conversationID: string;
-      input: AgentToolIDInput;
-      tool: "agent-tool-track-similar";
-    }
-  | {
-      id: string;
-      conversationID: string;
-      input: AgentToolIDInput;
-      tool: "agent-tool-artist-similar";
-    }
-  | {
-      id: string;
-      conversationID: string;
-      input: AgentToolIDInput;
-      tool: "agent-tool-track-playable";
-    }
-  | {
-      id: string;
-      conversationID: string;
-      input: { keyword: string };
-      tool: "agent-tool-search-open";
-    }
-  | {
-      id: string;
-      conversationID: string;
-      input: AgentToolIDInput;
-      tool: "agent-tool-playlist-delete";
-    }
-  // ---- 播放器信息与控制 ----
-  | {
-      id: string;
-      conversationID: string;
-      input: AgentToolIDInput;
-      tool: "agent-tool-playlist-detail";
-    }
-  | {
-      id: string;
-      conversationID: string;
-      input: AgentToolIDInput;
-      tool: "agent-tool-playlist-similar";
-    }
-  | {
-      id: string;
-      conversationID: string;
-      input: AgentToolLyricsInput;
-      tool: "agent-tool-track-lyrics";
-    }
-  | {
-      id: string;
-      conversationID: string;
-      input: AgentToolIDInput;
-      tool: "agent-tool-artist-hot-tracks";
-    }
-  // ---- 用户 ----
-  | {
-      id: string;
-      conversationID: string;
-      input: { content: string };
-      tool: "agent-tool-replace-lyrics";
-    }
-  | {
-      id: string;
-      conversationID: string;
-      input: { keyword: string };
-      tool: "agent-tool-search-suggest";
-    }
-  | {
-      id: string;
-      conversationID: string;
-      input: AgentToolCommentInput;
-      tool: "agent-tool-track-comment";
-    }
-  // ---- 歌曲操作 ----
-  | {
-      id: string;
-      conversationID: string;
-      input: { limit?: number };
-      tool: "agent-tool-playlist-recommend";
-    }
-  | {
-      id: string;
-      conversationID: string;
-      input: { type?: 1 | 2 | 3 | 4 };
-      tool: "agent-tool-artist-toplist";
-    }
-  | {
-      id: string;
-      conversationID: string;
-      tool: "agent-tool-player-action";
-      input: AgentToolPlayerActionInput;
-    }
-  | {
-      id: string;
-      conversationID: string;
-      tool: "agent-tool-track-like";
-      input: { id: number; like: boolean };
-    }
-  | {
-      id: string;
-      conversationID: string;
-      tool: "agent-tool-player-seek";
-      input: { position: number | string };
-    }
-  // ---- 艺人 ----
-  | {
-      id: string;
-      conversationID: string;
-      tool: "agent-tool-change-settings";
-      input: AgentToolChangeSettingsInput;
-    }
-  | {
-      id: string;
-      conversationID: string;
-      tool: "agent-tool-album-star";
-      input: { id: number; subscribe: boolean };
-    }
-  | {
-      id: string;
-      conversationID: string;
-      input: { type: 0 | 1; uid: number };
-      tool: "agent-tool-user-play-history";
-    }
-  | {
-      id: string;
-      conversationID: string;
-      tool: "agent-tool-playlist-create";
-      input: { name: string; privacy?: 10 };
-    }
-  | {
-      id: string;
-      conversationID: string;
-      tool: "agent-tool-playlist-star";
-      input: { id: number; subscribe: boolean };
-    }
-  // ---- 歌单管理 ----
-  | {
-      id: string;
-      conversationID: string;
-      tool: "agent-tool-player-volume";
-      input: { mute?: boolean; volume?: number };
-    }
-  | {
-      id: string;
-      conversationID: string;
-      input: { type?: 0 | 7 | 8 | 16 | 96 };
-      tool: "agent-tool-track-recommend-new";
-    }
-  | {
-      id: string;
-      conversationID: string;
-      tool: "agent-tool-record";
-      input: { type: "week" | "month" | "today" | "total" };
-    }
-  | {
-      id: string;
-      conversationID: string;
-      tool: "agent-tool-track-detail";
-      input: { ids: number[]; mode: "detail" | "simple" };
-    }
-  | {
-      id: string;
-      conversationID: string;
-      tool: "agent-tool-artist-albums";
-      input: { id: number; page?: number; pageSize?: number };
-    }
-  | {
-      id: string;
-      conversationID: string;
-      tool: "agent-tool-user-playlists";
-      input: { uid?: number; limit?: number; offset?: number };
-    }
-  | {
-      id: string;
-      conversationID: string;
-      tool: "agent-tool-comment-open";
-      input: { id: number; type: "album" | "track" | "playlist" };
-    }
-  // ---- 专辑 ----
-  | {
-      id: string;
-      conversationID: string;
-      tool: "agent-tool-source-open";
-      input: { id: number; type: "album" | "artist" | "playlist" };
-    }
-  | {
-      id: string;
-      conversationID: string;
-      tool: "agent-tool-playlist-modify";
-      input: { pid: number; op: "add" | "del"; trackIds: number[] };
-    }
-  // ---- 评论互动 ----
-  | {
-      id: string;
-      conversationID: string;
-      tool: "agent-tool-player-queue-remove";
-      input: { scope: "all" } | { ids: number[]; scope: "tracks" };
-    }
-  | {
-      id: string;
-      conversationID: string;
-      tool: "agent-tool-player-queue-add";
-      input: {
-        ids: number[];
-        position: "end" | "next";
-      };
-    }
-  // ---- 搜索增强 ----
-  | {
-      id: string;
-      conversationID: string;
-      tool: "agent-tool-playlist-top";
-      input: { cat?: string; limit?: number; offset?: number; order?: "hot" | "new" };
-    }
-  | {
-      id: string;
-      conversationID: string;
-      tool: "agent-tool-album-new";
-      input: { limit?: number; offset?: number; area?: "EA" | "JP" | "KR" | "ZH" | "ALL" };
-    }
-  // ---- 首页与榜单 ----
-  | {
-      id: string;
-      conversationID: string;
-      tool: "agent-tool-player-mode";
-      input: {
-        shuffle?: boolean;
-        repeat?: "all" | "off" | "one";
-      };
-    }
-  // ---- 设置 ----
-  | {
-      id: string;
-      conversationID: string;
-      tool: "agent-tool-comment-like";
-      input: { id: number; cid: number; like: boolean; type: "album" | "track" | "playlist" };
-    }
-  // ---- 听歌统计 ----
-  | {
-      id: string;
-      conversationID: string;
-      tool: "agent-tool-comment-send";
-      input: {
-        id: number;
-        content: string;
-        commentId?: number;
-        type: "album" | "track" | "playlist";
-      };
-    }
-);
+  [Tool in keyof AgentToolInputs]: { tool: Tool; input: AgentToolInputs[Tool] };
+}[keyof AgentToolInputs] & {
+  id: string;
+  conversationID: string;
+  /** 由模型选择，渲染进程仍施加裁剪与脱敏上限。 */
+  detail?: "compact" | "detailed" | "standard";
+};
 
 export type AgentToolResponse =
   | {

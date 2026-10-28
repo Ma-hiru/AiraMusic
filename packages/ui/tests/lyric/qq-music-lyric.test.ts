@@ -78,7 +78,6 @@ describe("QQMusicLyric recorded API responses", () => {
     const result = await QQMusicLyric.get(expectedSong);
     expect(result.lyric?.type).toBe("qrc");
     const lines = parseContent(result.lyric);
-    console.info("[QQMusicLyric parseQrc]", JSON.stringify(lines, null, 2));
     expect(lines).toHaveLength(63);
     const words = lines.flatMap((line) => line.words);
     expect(words).toHaveLength(602);
@@ -112,7 +111,6 @@ describe("QQMusicLyric recorded API responses", () => {
     for (const key of ["lyric", "roma", "translation"] as const) {
       const content = result[key];
       const lines = parseContent(content);
-      console.info(`[QQMusicLyric Japanese ${key}]`, content?.type, JSON.stringify(lines, null, 2));
       expect(lines).toHaveLength(57);
     }
   });
@@ -200,30 +198,24 @@ describe("QQMusicLyric recorded API responses", () => {
   });
 });
 
-// QQ_MUSIC_LIVE=1 yarn workspace @mahiru/ui test tests/lyric/qq-music-lyric.test.ts --disableConsoleIntercept
+// QQ_MUSIC_LIVE=1 yarn workspace @mahiru/ui test tests/lyric/qq-music-lyric.test.ts
 describe.runIf(process.env["QQ_MUSIC_LIVE"] === "1")("QQMusicLyric live API", () => {
-  it("prints actual search/lyric JSON and decoded lyrics", async () => {
-    vi.mocked(RendererNet.requestFromNode).mockImplementation(async (input, init) => {
-      const response = await fetch(input, { ...init, signal: AbortSignal.timeout(20_000) });
-      console.info("[QQMusicLyric HTTP]", String(input), response.status);
-      console.info("[QQMusicLyric JSON]", await response.clone().text());
-      return response;
-    });
+  it("searches songs and parses decoded lyrics from the live API", async () => {
+    vi.mocked(RendererNet.requestFromNode).mockImplementation((input, init) =>
+      fetch(input, { ...init, signal: AbortSignal.timeout(20_000) })
+    );
 
     const songs = await QQMusicLyric["search"]("晴天 周杰伦", 1);
-    console.info("[QQMusicLyric songs]", JSON.stringify(songs, null, 2));
     expect(songs.length).toBeGreaterThan(0);
     const song = songs[0]!;
     expect(song.id).toEqual(expect.any(Number));
     expect(song.mid).toEqual(expect.any(String));
     const result = await QQMusicLyric.get(song);
-    console.info("[QQMusicLyric result]", JSON.stringify(result, null, 2));
     expect(result.lyric?.text).toContain("<QrcInfos>");
     expect(result.translation).toBeNull();
     expect(result.roma).toBeNull();
     expect(result.lyric?.type).toBe("qrc");
     const lines = parseContent(result.lyric);
-    console.info("[QQMusicLyric live parseQrc]", JSON.stringify(lines, null, 2));
     expect(lines.length).toBeGreaterThan(0);
   }, 65_000);
 });

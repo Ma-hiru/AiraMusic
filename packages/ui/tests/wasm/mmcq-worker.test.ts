@@ -1,4 +1,4 @@
-import { join } from "node:path";
+import { resolve } from "node:path";
 import { readFile } from "node:fs/promises";
 import init, { extractPalette } from "@mahiru/wasm";
 
@@ -9,8 +9,10 @@ vi.mock("@mahiru/wasm", async (importOriginal) => {
 
 let onMessage: (event: MessageEvent<any>) => Promise<void>;
 
-beforeAll(async () => {
-  vi.mocked(init).mockClear();
+beforeEach(async () => {
+  vi.resetModules();
+  vi.mocked(init).mockReset();
+  vi.mocked(extractPalette).mockReset();
   const listener = vi.spyOn(self, "addEventListener").mockImplementation((type, callback) => {
     if (type === "message") onMessage = callback as typeof onMessage;
   });
@@ -24,7 +26,7 @@ beforeAll(async () => {
 afterEach(() => vi.restoreAllMocks());
 
 it("returns the same palette as direct WASM extraction with the request id", async () => {
-  const image = await readFile(join(process.cwd(), "../app/assets/logo.png"));
+  const image = await readFile(resolve(import.meta.dirname, "../../../app/assets/logo.png"));
   const data = Uint8Array.from(image).buffer;
   const expected = extractPalette(new Uint8Array(data), 64, 64, 5);
   const post = vi.spyOn(self, "postMessage").mockImplementation(() => {});
@@ -39,20 +41,37 @@ it("returns the same palette as direct WASM extraction with the request id", asy
 
 it("reuses WASM initialization across concurrent requests", async () => {
   const post = vi.spyOn(self, "postMessage").mockImplementation(() => {});
-  await Promise.all(
-    [2, 3].map((id) =>
-      onMessage({
-        data: {
-          id,
-          type: "extract",
-          data: new ArrayBuffer(0),
-          dst_width: 64,
-          dst_height: 64,
-          count: 5
-        }
-      } as MessageEvent)
-    )
+  const initializeWasm = vi.mocked(init).getMockImplementation()!;
+  let finishInitialization!: () => void;
+  const initialization = new Promise<void>((resolve) => {
+    finishInitialization = resolve;
+  });
+  vi.mocked(init).mockImplementationOnce(async () => {
+    await initialization;
+    return initializeWasm();
+  });
+  const requests = [2, 3].map((id) =>
+    onMessage({
+      data: {
+        id,
+        type: "extract",
+        data: new ArrayBuffer(0),
+        dst_width: 64,
+        dst_height: 64,
+        count: 5
+      }
+    } as MessageEvent)
   );
+  try {
+    expect(init).toHaveBeenCalledTimes(1);
+    expect(extractPalette).not.toHaveBeenCalled();
+    expect(post).not.toHaveBeenCalled();
+  } finally {
+    finishInitialization();
+    await Promise.all(requests);
+  }
+  expect(extractPalette).toHaveBeenCalledTimes(2);
+  expect(post).toHaveBeenCalledTimes(2);
   expect(post).toHaveBeenCalledWith({ id: 2, type: "palette", colors: [] });
   expect(post).toHaveBeenCalledWith({ id: 3, type: "palette", colors: [] });
   expect(init).toHaveBeenCalledTimes(1);

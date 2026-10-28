@@ -36,7 +36,7 @@ const RecommendArtists: FC<RecommendArtistsProps> = ({ onClickItem }) => {
 
   return (
     <Section title="推荐歌手" Icon={UserRound} subTitle="Artist Chart">
-      <AppError reset={reload} message="加载歌手榜失败" when={status === "error"}>
+      <AppError className="h-40!" reset={reload} message="加载歌手榜失败" when={status === "error"}>
         <AppLoading className="h-40" loading={status === "loading"}>
           <MediaGrid
             items={items}

@@ -1,5 +1,6 @@
 import { EqError } from "@mahiru/log";
 import { Log } from "@/common/lib/log";
+import { RendererNet } from "@/common/lib/net";
 import { RendererIPC } from "@mahiru/ipc/renderer";
 import { RendererRuntime } from "@/common/lib/runtime";
 import { NeteaseCookie } from "@/common/netease/models";
@@ -39,8 +40,14 @@ apiRequest.interceptors.response.use(
 
     if (axiosResponse?.status === 404) {
       AppToast.show({ type: "error", text: "资源不存在" });
-    } else if (axiosResponse?.status === 502) {
-      AppToast.show({ type: "error", text: "请求频繁" });
+    } else if (axiosResponse?.status === 502 && window.navigator.onLine) {
+      RendererNet.checkStatus().then((s) => {
+        if (s === "ok") {
+          AppToast.show({ type: "error", text: "请求频繁" });
+        } else {
+          AppToast.show({ type: "error", text: "网络错误" });
+        }
+      });
     }
     if (!config || !data) {
       !config && Log.warn("apiRequest.ts", "no config in error");

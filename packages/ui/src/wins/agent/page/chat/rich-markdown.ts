@@ -1,4 +1,4 @@
-import { parseAiraResourceURI } from "@mahiru/agent/browser";
+import { parseAiraResourceURI } from "@/wins/agent/lib/rich-content";
 
 type MarkdownNode = {
   url?: string;

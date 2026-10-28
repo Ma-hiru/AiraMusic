@@ -41,7 +41,7 @@ const Toplists: FC<ToplistsProps> = ({ onClickItem }) => {
   }, [toplists]);
   return (
     <Section title="排行榜" Icon={Trophy} subTitle="Charts">
-      <AppError reset={reload} message="加载排行榜失败" when={status === "error"}>
+      <AppError className="h-40!" reset={reload} message="加载排行榜失败" when={status === "error"}>
         <AppLoading className="h-40" loading={status === "loading"}>
           <MediaGrid
             items={gridItems}

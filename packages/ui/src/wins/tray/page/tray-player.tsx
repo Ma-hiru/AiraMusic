@@ -70,7 +70,7 @@ const TrayPlayer: FC<TrayPlayerProps> = ({ track, status, duration, currentTime 
             {track?.name || "暂无播放"}
           </p>
           <p className="truncate text-[10px] font-semibold leading-3 opacity-45">
-            {artist || track?.al.name || "AiraMusic"}
+            {artist || track?.al.name || import.meta.env.APP_NAME}
           </p>
         </div>
         <div className="grid grid-cols-[1fr_auto] items-center gap-2">

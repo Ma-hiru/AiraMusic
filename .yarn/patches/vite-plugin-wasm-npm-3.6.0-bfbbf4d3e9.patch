@@ -1,0 +1,22 @@
+diff --git a/dist/index.js b/dist/index.js
+index a02b5d28aaa8cf70bfaebac44d30d4bd2d80ba69..4a0f1b1525d399ced88e0448bee084af2e1be328 100644
+--- a/dist/index.js
++++ b/dist/index.js
+@@ -40,13 +40,15 @@ const wasmHelper = __importStar(require("./wasm-helper"));
+ const util_1 = require("./util");
+ function wasm() {
+     // Vitest reports { ssr: false } to plugins but execute the code in SSR
+-    // Detect Vitest with the existance of plugin with the name "vitest"
++    // Vitest 5 uses plugin names prefixed with "vitest:".
+     let runningInVitest = false;
+     return {
+         name: "vite-plugin-wasm",
+         enforce: "pre",
+         configResolved(config) {
+-            runningInVitest = config.plugins.some(plugin => plugin.name === "vitest");
++            runningInVitest = config.plugins.some(plugin =>
++                plugin.name === "vitest" || plugin.name.startsWith("vitest:")
++            );
+             if (config.optimizeDeps?.esbuildOptions) {
+                 // https://github.com/Menci/vite-plugin-wasm/pull/11
+                 if (!config.optimizeDeps.esbuildOptions.plugins) {

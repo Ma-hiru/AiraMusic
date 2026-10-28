@@ -1,17 +1,7 @@
-export type CanString =
-  | bigint
-  | number
-  | object
-  | string
-  | symbol
-  | boolean
-  | unknown
-  | Function
-  | undefined
-  | { toString: () => any }
-  | { [Symbol.toPrimitive]: (hint: string) => any };
+export const JSONCompact = Symbol("json_compact");
+export const JSONFlat = Symbol("json_flat");
 
-export function AnyToString(input: CanString): string {
+export function AnyToString(input: unknown): string {
   if (typeof input === "function") return `[Function: ${input.name}]`;
   if (typeof input === "object" && input !== null) {
     if (input instanceof Error && input.message) return input.message + "\n" + input.stack;
@@ -31,7 +21,15 @@ export function AnyToString(input: CanString): string {
       }
     }
     try {
-      return JSON.stringify(input, null, 2);
+      const is_compact: unknown = JSONCompact in input && input[JSONCompact];
+      const is_flat: unknown = JSONFlat in input && input[JSONFlat];
+      if (is_flat) {
+        const text = Object.entries(input)
+          .map(([key, value]) => `${is_compact ? "" : "\n"}${key}=${AnyToString(value)}`)
+          .join(is_compact ? "," : "");
+        return is_compact ? text : text + "\n";
+      }
+      return JSON.stringify(input, null, is_compact ? undefined : 2);
     } catch (err) {
       console.error(err);
     }

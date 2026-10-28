@@ -1,9 +1,9 @@
 import { Log } from "@/lib/log";
 import net from "node:net";
-import type { MainServicesType } from "@/types/service";
+import type { MainServicesName } from "@/types/service";
 
 export class MainPortResolver {
-  private static readonly stored = new Map<MainServicesType, number>();
+  private static readonly stored = new Map<MainServicesName, number>();
 
   static valid(port: number) {
     return Number.isInteger(port) && port > 0 && port <= 65535;
@@ -41,7 +41,7 @@ export class MainPortResolver {
     });
   }
 
-  static async resolve(name: MainServicesType, candidates: Iterable<number> & { host?: string }) {
+  static async resolve(name: MainServicesName, candidates: Iterable<number> & { host?: string }) {
     if (this.stored.get(name)) return this.stored.get(name)!;
     Log.debug("port", name, "no stored port, then use candidates");
     for (const port of candidates) {

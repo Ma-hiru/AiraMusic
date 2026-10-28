@@ -1,15 +1,16 @@
-import { createAgentToolCatalog } from "@mahiru/app/inner/mcp/tools/catalog";
+import { createAgentToolCatalog } from "@mahiru/app/inner/agent/tools";
 import {
   AgentToolPlayerMode,
   AgentToolPlayerSeek,
   AgentToolTrackDetail,
   AgentToolPlayerAction,
   AgentToolPlayerVolume,
-  getAgentToolTimeoutMs,
   AgentToolPlayerQueueAdd,
   AgentToolPlaylistModify,
   AgentToolPlayerQueueRemove
-} from "@mahiru/app/inner/mcp/tools";
+} from "@mahiru/app/inner/agent/tools/renderer";
+
+vi.mock("@mahiru/app/lib/web-search", () => ({ WebBrowser: {} }));
 
 vi.mock("electron", () => ({
   app: { isReady: () => false },
@@ -20,8 +21,8 @@ vi.mock("electron", () => ({
 
 describe("Agent 播放器工具", () => {
   it("使用明确且有界的队列参数", () => {
-    const addSchema = new AgentToolPlayerQueueAdd().inputSchema;
-    const removeSchema = new AgentToolPlayerQueueRemove().inputSchema;
+    const addSchema = AgentToolPlayerQueueAdd.inputSchema;
+    const removeSchema = AgentToolPlayerQueueRemove.inputSchema;
 
     expect(addSchema.safeParse({ ids: [1, 2], position: "next" }).success).toBe(true);
     expect(addSchema.safeParse({ ids: [], position: "next" }).success).toBe(false);
@@ -33,7 +34,7 @@ describe("Agent 播放器工具", () => {
   });
 
   it("设置播放模式时至少要求一个字段", () => {
-    const schema = new AgentToolPlayerMode().inputSchema;
+    const schema = AgentToolPlayerMode.inputSchema;
 
     expect(schema.safeParse({ repeat: "one" }).success).toBe(true);
     expect(schema.safeParse({ shuffle: true }).success).toBe(true);
@@ -42,7 +43,7 @@ describe("Agent 播放器工具", () => {
   });
 
   it("不再向 Agent 暴露关闭窗口和内部刷新动作", () => {
-    const schema = new AgentToolPlayerAction().inputSchema;
+    const schema = AgentToolPlayerAction.inputSchema;
 
     expect(schema.safeParse({ action: "play" }).success).toBe(true);
     expect(schema.safeParse({ action: "exit" }).success).toBe(false);
@@ -50,10 +51,10 @@ describe("Agent 播放器工具", () => {
   });
 
   it("拒绝空控制、非法进度和无界批量请求", () => {
-    const volumeSchema = new AgentToolPlayerVolume().inputSchema;
-    const seekSchema = new AgentToolPlayerSeek().inputSchema;
-    const detailSchema = new AgentToolTrackDetail().inputSchema;
-    const playlistModifySchema = new AgentToolPlaylistModify().inputSchema;
+    const volumeSchema = AgentToolPlayerVolume.inputSchema;
+    const seekSchema = AgentToolPlayerSeek.inputSchema;
+    const detailSchema = AgentToolTrackDetail.inputSchema;
+    const playlistModifySchema = AgentToolPlaylistModify.inputSchema;
 
     expect(volumeSchema.safeParse({}).success).toBe(false);
     expect(volumeSchema.safeParse({ volume: 75 }).success).toBe(true);
@@ -83,8 +84,8 @@ describe("Agent 播放器工具", () => {
   });
 
   it("为 MCP 工具保留有界调用超时", () => {
-    expect(getAgentToolTimeoutMs("agent-tool-player-queue-add")).toBe(30_000);
-    expect(getAgentToolTimeoutMs("agent-tool-player-queue-remove")).toBe(5_000);
-    expect(getAgentToolTimeoutMs("agent-tool-player-mode")).toBe(5_000);
+    expect(AgentToolPlayerQueueAdd.timeoutMs).toBe(30_000);
+    expect(AgentToolPlayerQueueRemove.timeoutMs).toBe(5_000);
+    expect(AgentToolPlayerMode.timeoutMs).toBe(5_000);
   });
 });

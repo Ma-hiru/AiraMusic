@@ -84,6 +84,21 @@ fn config_crud_returns_only_masked_api_keys() {
 }
 
 #[test]
+fn the_first_config_becomes_default_without_the_electron_facade() {
+    let service = AgentLoopRuntimeService::from_services(
+        SessionManager::new(),
+        LLMConfigManager::new(),
+        None,
+    );
+    let mut first_input = provider_input(None, "First", "sk-first");
+    first_input.default = false;
+    assert!(service.create_config(first_input).unwrap().default);
+    let mut second_input = provider_input(None, "Second", "sk-second");
+    second_input.default = false;
+    assert!(!service.create_config(second_input).unwrap().default);
+}
+
+#[test]
 fn config_binding_rejects_a_missing_thread() {
     let service = AgentLoopRuntimeService::from_services(
         SessionManager::new(),

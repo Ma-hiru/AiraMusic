@@ -29,9 +29,9 @@ import type { ThreadSnapshot, MessageSnapshot } from "@mahiru/agent/browser";
 
 import ToolStep from "./tool-step";
 import ThinkContent from "./think-content";
-import { parseAgentTurnUsage } from "./observability";
 import { RunTerminalCard } from "./turn-observability";
 import ContentItem, { AssistantTurnGroup } from "./content-item";
+import { parseStoredTurnUsage, storedRunErrorTerminal } from "./observability";
 import type {
   AgentRunTerminal,
   AgentLiveReasoning,
@@ -544,6 +544,8 @@ const buildTimeline = (conversation: Nullable<ThreadSnapshot>): ChatTimelineItem
       if (message.innerType === "usage") {
         const parsed = parseStoredTurnUsage(message.content);
         if (parsed) attachTurnUsage(items, parsed);
+      } else if (message.innerType === "error" && conversation) {
+        items.push(storedRunErrorTerminal(conversation, index));
       }
       continue;
     }
@@ -640,14 +642,6 @@ const buildTimeline = (conversation: Nullable<ThreadSnapshot>): ChatTimelineItem
   }
 
   return items;
-};
-
-const parseStoredTurnUsage = (content: string) => {
-  try {
-    return parseAgentTurnUsage(JSON.parse(content) as unknown);
-  } catch {
-    return undefined;
-  }
 };
 
 const attachTurnUsage = (

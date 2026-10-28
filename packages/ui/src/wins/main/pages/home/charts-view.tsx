@@ -60,7 +60,7 @@ const HomeChartsView: FC<{ className?: string }> = ({ className }) => {
   return (
     <div className={cx("flex flex-col gap-8", className)}>
       <Section title="排行榜" Icon={Trophy} subTitle="Charts">
-        <AppError reset={reload} message="加载排行榜失败" when={status === "error"}>
+        <AppError className="h-60!" reset={reload} when={status === "error"}>
           <AppLoading className="min-h-60" loading={status === "loading"}>
             <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
               <Section className="rounded-lg surface-1 p-3" title="官方主榜" subTitle="Featured">

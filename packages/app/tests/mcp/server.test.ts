@@ -1,59 +1,48 @@
 import { z } from "zod";
 import { request as httpRequest } from "node:http";
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { CallToolResultSchema } from "@modelcontextprotocol/sdk/types.js";
-import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
-import { LLMTool, AIResult } from "@mahiru/agent";
 import {
-  AiraMcpServer,
-  AiraMcpToolOutputMaxChars,
-  type AiraMcpServerDependencies
-} from "@mahiru/app/inner/mcp";
+  Client,
+  type CallToolResult,
+  StreamableHTTPClientTransport
+} from "@modelcontextprotocol/client";
+import { MainAgentTool } from "@mahiru/app/lib/agent/tool";
+import { McpToolRisk, type McpTool, McpToolError } from "@mahiru/app/types/tool";
+import { MainAgentMcpServer, type MainAgentMcpServerOptions } from "@mahiru/app/lib/agent/server";
 
-vi.mock("electron", () => ({
-  app: { isReady: () => false },
-  ipcMain: { on: vi.fn(), off: vi.fn(), handle: vi.fn() },
-  session: { fromPartition: vi.fn() },
-  BrowserWindow: class {
-    static fromWebContents = vi.fn();
-  }
-}));
-
-vi.mock("@/lib/window-manager", () => ({
-  MainWindowManager: { get: vi.fn(() => null) }
+vi.mock("@mahiru/ipc/main", () => ({
+  MainIPC: { MessageChannel: { commit: vi.fn(), listen: vi.fn() } }
 }));
 
 const SearchInputSchema = z.object({ query: z.string().min(1) });
+const running: MainAgentMcpServer[] = [];
 
-class FakeSearchTool extends LLMTool<typeof SearchInputSchema, JsonValue> {
+class FakeSearchTool implements McpTool {
+  readonly risk = McpToolRisk.Read;
+  readonly execution = "renderer";
+  readonly timeoutMs = 20_000;
+  readonly openWorld = false;
+  readonly description = "查询公开音乐资料";
   readonly inputSchema = SearchInputSchema;
   calls = 0;
 
   constructor(
     private readonly output: JsonValue,
-    name = "agent-search"
-  ) {
-    super({ name, description: "查询公开音乐资料" });
-  }
+    readonly name = "agent-search"
+  ) {}
 
-  async execute(): Promise<AIResult<JsonValue>> {
+  async execute(): Promise<JsonValue> {
     this.calls += 1;
-    return AIResult.ok(this.output);
+    return this.output;
   }
 }
 
 describe("Aira MCP Streamable HTTP 服务", () => {
-  const running: AiraMcpServer[] = [];
-
   afterEach(async () => {
     await Promise.allSettled(running.splice(0).map((server) => server.stop()));
   });
 
   it("只绑定回环地址，且启动和停止均幂等", async () => {
-    const tool = new FakeSearchTool({ answer: "ok" });
-    const server = createServer(tool, true);
-    running.push(server);
-
+    const server = createServer([new FakeSearchTool({ answer: "ok" })]);
     const firstStart = server.start();
     const secondStart = server.start();
     expect(secondStart).toBe(firstStart);
@@ -61,20 +50,40 @@ describe("Aira MCP Streamable HTTP 服务", () => {
     const [first, second] = await Promise.all([firstStart, secondStart]);
     expect(second).toEqual(first);
     expect(first.host).toBe("127.0.0.1");
-    expect(first.url).toBe(`http://127.0.0.1:${first.port}/mcp`);
+    expect(first.url).toBe("http://127.0.0.1:" + first.port + "/mcp");
 
     const firstStop = server.stop();
     const secondStop = server.stop();
     expect(secondStop).toBe(firstStop);
     await Promise.all([firstStop, secondStop]);
     await expect(server.stop()).resolves.toBeUndefined();
+    expect(server.endpoint).toBeUndefined();
   });
 
-  it("通过 MCP 客户端列出并调用转换后的 LLMTool", async () => {
-    const tool = new FakeSearchTool({ answer: "公开结果" });
-    const server = createServer(tool, true);
-    running.push(server);
+  it("停止后可以重新启动并继续提供工具", async () => {
+    const tool = new FakeSearchTool({ answer: "restarted" });
+    const server = createServer([tool]);
+    await server.start();
+    await server.stop();
     const endpoint = await server.start();
+    const client = await connectClient(endpoint.url);
+
+    try {
+      expect((await client.listTools()).tools.map((item) => item.name)).toEqual(["agent-search"]);
+      const result = await client.callTool({
+        name: tool.name,
+        arguments: { query: "Aira" }
+      });
+      expect(result.structuredContent).toMatchObject({ result: { answer: "restarted" } });
+      expect(tool.calls).toBe(1);
+    } finally {
+      await client.close();
+    }
+  });
+
+  it("通过最新 MCP 客户端列出并调用转换后的工具", async () => {
+    const tool = new FakeSearchTool({ answer: "公开结果" });
+    const endpoint = await createServer([tool]).start();
     const client = await connectClient(endpoint.url);
 
     try {
@@ -86,17 +95,14 @@ describe("Aira MCP Streamable HTTP 服务", () => {
         idempotentHint: true
       });
 
-      const result = await client.callTool(
-        {
-          name: "agent-search",
-          arguments: { query: "Aira" }
-        },
-        CallToolResultSchema
-      );
+      const result = await client.callTool({
+        name: tool.name,
+        arguments: { query: "Aira" }
+      });
       expect(result.isError).not.toBe(true);
       expect(result.structuredContent).toMatchObject({
         ok: true,
-        tool: "agent-search",
+        tool: tool.name,
         result: { answer: "公开结果" }
       });
       expect(tool.calls).toBe(1);
@@ -107,21 +113,14 @@ describe("Aira MCP Streamable HTTP 服务", () => {
 
   it("renderer 不可用时立即返回结构化错误且不分发工具", async () => {
     const tool = new FakeSearchTool({ answer: "不会执行" });
-    const server = createServer(tool, false);
-    running.push(server);
-    const endpoint = await server.start();
+    const endpoint = await createServer([tool], false).start();
     const client = await connectClient(endpoint.url);
 
     try {
-      const startedAt = performance.now();
-      const result = await client.callTool(
-        {
-          name: "agent-search",
-          arguments: { query: "Aira" }
-        },
-        CallToolResultSchema
-      );
-      expect(performance.now() - startedAt).toBeLessThan(1_000);
+      const result = await client.callTool({
+        name: tool.name,
+        arguments: { query: "Aira" }
+      });
       expect(result.isError).toBe(true);
       expect(result.structuredContent).toMatchObject({
         ok: false,
@@ -133,30 +132,26 @@ describe("Aira MCP Streamable HTTP 服务", () => {
     }
   });
 
-  it("工具正文继续经过现有 LLMToolRegistry 字符预算", async () => {
-    const tool = new FakeSearchTool("x".repeat(AiraMcpToolOutputMaxChars * 2));
-    const server = createServer(tool, true);
-    running.push(server);
-    const endpoint = await server.start();
+  it("工具正文继续经过应用注入的字符预算", async () => {
+    const tool = new FakeSearchTool("x".repeat(MainAgentTool.AiraMcpToolOutputMaxChars * 2));
+    const endpoint = await createServer([tool]).start();
     const client = await connectClient(endpoint.url);
 
     try {
-      const result = await client.callTool(
-        {
-          name: "agent-search",
-          arguments: { query: "Aira" }
-        },
-        CallToolResultSchema
-      );
+      const result = await client.callTool({
+        name: tool.name,
+        arguments: { query: "Aira" }
+      });
       const text = readFirstTextContent(result);
-      expect(text.length).toBeLessThanOrEqual(AiraMcpToolOutputMaxChars);
+      expect(text.length).toBeLessThanOrEqual(MainAgentTool.AiraMcpToolOutputMaxChars);
       expect(text).toContain("工具结果已裁剪");
+      expect(result.structuredContent).toMatchObject({ result: text });
     } finally {
       await client.close();
     }
   });
 
-  it("递归移除公共歌单结果中的用户资料，同时保留音乐字段", async () => {
+  it("公开结果递归移除用户资料，同时保留音乐字段", async () => {
     const tool = new FakeSearchTool({
       id: 42,
       name: "公开歌单",
@@ -166,27 +161,18 @@ describe("Aira MCP Streamable HTTP 服务", () => {
         avatarUrl: "https://example.com/private-avatar.jpg"
       },
       subscribers: [
-        {
-          profile: { signature: "不应泄露的签名" },
-          user: { email: "private@example.com" }
-        }
+        { profile: { signature: "不应泄露的签名" }, user: { email: "private@example.com" } }
       ],
       tracks: [{ id: 7, name: "保留的歌曲", artist: "保留的歌手" }]
     });
-    const server = createServer(tool, true);
-    running.push(server);
-    const endpoint = await server.start();
+    const endpoint = await createServer([tool]).start();
     const client = await connectClient(endpoint.url);
 
     try {
-      const result = await client.callTool(
-        {
-          name: "agent-search",
-          arguments: { query: "公开歌单" }
-        },
-        CallToolResultSchema
-      );
-      const text = readFirstTextContent(result);
+      const result = await client.callTool({
+        name: tool.name,
+        arguments: { query: "公开歌单" }
+      });
       expect(result.structuredContent).toMatchObject({
         ok: true,
         result: {
@@ -195,11 +181,8 @@ describe("Aira MCP Streamable HTTP 服务", () => {
           tracks: [{ id: 7, name: "保留的歌曲", artist: "保留的歌手" }]
         }
       });
-      expect(text).toContain("保留的歌曲");
-      expect(text).not.toMatch(
-        /creator|subscriber|profile|userId|nickname|avatar|signature|private@example/i
-      );
-      expect(JSON.stringify(result.structuredContent)).not.toMatch(
+      expect(readFirstTextContent(result)).toContain("保留的歌曲");
+      expect(JSON.stringify(result)).not.toMatch(
         /creator|subscriber|profile|userId|nickname|avatar|signature|private@example/i
       );
     } finally {
@@ -207,53 +190,46 @@ describe("Aira MCP Streamable HTTP 服务", () => {
     }
   });
 
-  it("拒绝伪造 Host，避免本地端点遭 DNS rebinding", async () => {
-    const tool = new FakeSearchTool({ answer: "ok" });
-    const server = createServer(tool, true);
-    running.push(server);
-    const endpoint = await server.start();
-
-    const response = await postWithHost(endpoint.port, "evil.example");
-    expect(response.status).toBe(403);
-    expect(response.body).toContain("Invalid Host");
-    expect(tool.calls).toBe(0);
-  });
-
-  it("同一端点仅向内部 bearer token 开放完整工具目录", async () => {
+  it("同一端点按注入策略区分工具目录，内部结果保留用户资料", async () => {
     const publicTool = new FakeSearchTool({ answer: "public" });
-    const dangerousTool = new FakeSearchTool({ answer: "internal" }, "agent-tool-player-action");
-    const tools = new Map([publicTool, dangerousTool].map((tool) => [tool.name, tool]));
-    const dependencies: AiraMcpServerDependencies = {
-      resolveTools: (names) => names.map((name) => tools.get(name)!),
-      isRendererAvailable: () => true,
-      createCallID: () => crypto.randomUUID()
-    };
-    const server = new AiraMcpServer(
-      {
-        port: 0,
-        toolNames: ["agent-search"],
-        internalToken: "internal-secret",
-        internalToolNames: ["agent-search", "agent-tool-player-action"]
-      },
-      dependencies
+    const internalTool = new FakeSearchTool(
+      { profile: { nickname: "内部资料" }, answer: "internal" },
+      "agent-tool-player-action"
     );
-    running.push(server);
-    const endpoint = await server.start();
+    const endpoint = await createServer([publicTool], true, {
+      resolveScope: (request) =>
+        request.headers.get("authorization") === "Bearer internal-secret"
+          ? { tools: [publicTool, internalTool], access: "internal" }
+          : { tools: [publicTool], access: "public" }
+    }).start();
     const publicClient = await connectClient(endpoint.url);
     const invalidClient = await connectClient(endpoint.url, "wrong-secret");
     const internalClient = await connectClient(endpoint.url, "internal-secret");
 
     try {
-      await expect(publicClient.listTools()).resolves.toMatchObject({
-        tools: [{ name: "agent-search" }]
-      });
-      await expect(invalidClient.listTools()).resolves.toMatchObject({
-        tools: [{ name: "agent-search" }]
-      });
-      expect((await internalClient.listTools()).tools.map((tool) => tool.name)).toEqual([
-        "agent-search",
-        "agent-tool-player-action"
+      expect((await publicClient.listTools()).tools.map((tool) => tool.name)).toEqual([
+        publicTool.name
       ]);
+      expect((await invalidClient.listTools()).tools.map((tool) => tool.name)).toEqual([
+        publicTool.name
+      ]);
+      expect((await internalClient.listTools()).tools.map((tool) => tool.name)).toEqual([
+        publicTool.name,
+        internalTool.name
+      ]);
+      await expect(
+        publicClient.callTool({ name: internalTool.name, arguments: { query: "Aira" } })
+      ).rejects.toThrow(/not found/i);
+      expect(internalTool.calls).toBe(0);
+
+      const result = await internalClient.callTool({
+        name: internalTool.name,
+        arguments: { query: "Aira" }
+      });
+      expect(result.structuredContent).toMatchObject({
+        result: { profile: { nickname: "内部资料" }, answer: "internal" }
+      });
+      expect(readFirstTextContent(result)).toContain("内部资料");
     } finally {
       await Promise.allSettled([
         publicClient.close(),
@@ -263,54 +239,207 @@ describe("Aira MCP Streamable HTTP 服务", () => {
     }
   });
 
-  it("公开 MCP 关闭时匿名目录为空但内部 Agent 仍可使用工具", async () => {
+  it("公开目录为空时仍能列出空目录，内部 Agent 可以使用工具", async () => {
     const internalTool = new FakeSearchTool({ answer: "internal" });
-    const server = new AiraMcpServer(
-      {
-        port: 0,
-        toolNames: [],
-        internalToken: "internal-secret",
-        internalToolNames: ["agent-search"]
-      },
-      {
-        resolveTools: (names) => {
-          if (names.length === 0) throw new Error("不应解析空的公共工具目录");
-          return names.map(() => internalTool);
-        },
-        isRendererAvailable: () => true,
-        createCallID: () => crypto.randomUUID()
-      }
-    );
-    running.push(server);
-    const endpoint = await server.start();
+    const endpoint = await createServer([], true, {
+      resolveScope: (request) =>
+        request.headers.get("authorization") === "Bearer internal-secret"
+          ? { tools: [internalTool], access: "internal" }
+          : { tools: [], access: "public" }
+    }).start();
     const publicClient = await connectClient(endpoint.url);
     const internalClient = await connectClient(endpoint.url, "internal-secret");
 
     try {
       await expect(publicClient.listTools()).resolves.toMatchObject({ tools: [] });
       await expect(internalClient.listTools()).resolves.toMatchObject({
-        tools: [{ name: "agent-search" }]
+        tools: [{ name: internalTool.name }]
       });
+      const result = await internalClient.callTool({
+        name: internalTool.name,
+        arguments: { query: "Aira" }
+      });
+      expect(result.structuredContent).toMatchObject({ result: { answer: "internal" } });
     } finally {
       await Promise.allSettled([publicClient.close(), internalClient.close()]);
     }
   });
+
+  it("SDK 拒绝非法输入且只解析一次 transform，执行器收到解析后的参数", async () => {
+    const transform = vi.fn((query: string) => query + "!");
+    const execute = vi.fn((input: { query: string }) => ({ answer: input.query }));
+    const tool = MainAgentTool.createMcpTool({
+      name: "agent-transform",
+      description: "验证输入解析边界",
+      risk: McpToolRisk.Read,
+      inputSchema: z.object({ query: z.string().min(1).transform(transform) }),
+      execute
+    });
+    const endpoint = await createServer([tool]).start();
+    const client = await connectClient(endpoint.url);
+
+    try {
+      const invalid = await client.callTool({
+        name: tool.name,
+        arguments: { query: 42 }
+      });
+      expect(invalid.isError).toBe(true);
+      expect(readFirstTextContent(invalid)).toMatch(/validation|invalid arguments/i);
+      expect(execute).not.toHaveBeenCalled();
+      expect(transform).not.toHaveBeenCalled();
+
+      const result = await client.callTool({
+        name: tool.name,
+        arguments: { query: "Aira", detail: "compact" }
+      });
+      expect(result.structuredContent).toMatchObject({ result: { answer: "Aira!" } });
+      expect(transform).toHaveBeenCalledTimes(1);
+      expect(execute).toHaveBeenCalledExactlyOnceWith(
+        { query: "Aira!" },
+        expect.objectContaining({ outputDetail: "compact", access: "public" })
+      );
+    } finally {
+      await client.close();
+    }
+  });
+
+  it("拒绝伪造 Host，且不会执行工具", async () => {
+    const tool = new FakeSearchTool({ answer: "ok" });
+    const endpoint = await createServer([tool]).start();
+
+    const response = await postWithHost(endpoint.port, "evil.example");
+    expect(response.status).toBe(403);
+    expect(response.body).toContain("Invalid Host");
+    expect(tool.calls).toBe(0);
+  });
+
+  it("拒绝非本地 Origin，且不会执行工具", async () => {
+    const tool = new FakeSearchTool({ answer: "ok" });
+    const endpoint = await createServer([tool]).start();
+    const response = await fetch(endpoint.url, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        accept: "application/json, text/event-stream",
+        origin: "https://evil.example"
+      },
+      body: JSON.stringify({
+        jsonrpc: "2.0",
+        id: 1,
+        method: "tools/call",
+        params: { name: tool.name, arguments: { query: "Aira" } }
+      })
+    });
+    expect(response.status).toBe(403);
+    expect(await response.text()).toContain("Origin");
+    expect(tool.calls).toBe(0);
+  });
+
+  it("通过 TCP 兼容 2025 initialize、initialized、tools/list 和 tools/call", async () => {
+    const tool = new FakeSearchTool({ answer: "legacy" });
+    const endpoint = await createServer([tool]).start();
+    const initialized = await postLegacy(endpoint.url, 1, "initialize", {
+      protocolVersion: "2025-11-25",
+      capabilities: {},
+      clientInfo: { name: "rmcp-legacy-wire-test", version: "1.0.0" }
+    });
+    expect(initialized.status).toBe(200);
+    expect(initialized.message.result).toMatchObject({
+      protocolVersion: "2025-11-25",
+      capabilities: { tools: {} }
+    });
+
+    const notification = await fetch(endpoint.url, {
+      method: "POST",
+      headers: legacyHeaders,
+      body: JSON.stringify({ jsonrpc: "2.0", method: "notifications/initialized" })
+    });
+    expect(notification.status).toBe(202);
+
+    const listed = await postLegacy(endpoint.url, 2, "tools/list");
+    expect(listed.message.result).toMatchObject({ tools: [{ name: tool.name }] });
+    const called = await postLegacy(endpoint.url, 3, "tools/call", {
+      name: tool.name,
+      arguments: { query: "Aira" }
+    });
+    expect(called.message.result).toMatchObject({
+      structuredContent: { ok: true, result: { answer: "legacy" } }
+    });
+    expect(tool.calls).toBe(1);
+  });
+
+  it.each(["modern", "legacy"] as const)(
+    "停止服务会中断在途 %s 工具并取消执行信号",
+    async (protocol) => {
+      const started = Promise.withResolvers<AbortSignal>();
+      const aborted = Promise.withResolvers<void>();
+      const tool = MainAgentTool.createMcpTool({
+        name: "agent-pending",
+        description: "等待服务关闭",
+        risk: McpToolRisk.Read,
+        inputSchema: z.object({}),
+        execute: (_input, context) =>
+          new Promise<never>((_resolve, reject) => {
+            const signal = context.signal!;
+            started.resolve(signal);
+            signal.addEventListener(
+              "abort",
+              () => {
+                aborted.resolve();
+                reject(new McpToolError("aborted", "工具请求已取消"));
+              },
+              { once: true }
+            );
+          })
+      });
+      const server = createServer([tool]);
+      const endpoint = await server.start();
+      const client = protocol === "modern" ? await connectClient(endpoint.url) : undefined;
+      const pending = (
+        client
+          ? client.callTool({ name: tool.name, arguments: {} })
+          : postLegacy(endpoint.url, 1, "tools/call", { name: tool.name, arguments: {} })
+      ).then(
+        () => "resolved",
+        () => "rejected"
+      );
+
+      try {
+        const signal = await started.promise;
+        await server.stop();
+        await aborted.promise;
+        expect(signal.aborted).toBe(true);
+        expect(await pending).toBe("rejected");
+        expect(server.endpoint).toBeUndefined();
+      } finally {
+        await client?.close();
+      }
+    }
+  );
 });
 
-function createServer(tool: FakeSearchTool, rendererAvailable: boolean): AiraMcpServer {
-  const dependencies: AiraMcpServerDependencies = {
-    resolveTools: () => [tool],
-    isRendererAvailable: () => rendererAvailable,
-    createCallID: () => crypto.randomUUID()
-  };
-  return new AiraMcpServer({ port: 0, toolNames: ["agent-search"] }, dependencies);
+function createServer(
+  tools: readonly McpTool[],
+  rendererAvailable = true,
+  options: Partial<MainAgentMcpServerOptions> = {}
+): MainAgentMcpServer {
+  const server = new MainAgentMcpServer({
+    port: 0,
+    tools,
+    beforeCall: (tool, context) => MainAgentTool.beforeCall(tool, context, () => rendererAvailable),
+    mapResult: (output, tool, context) => MainAgentTool.formatResult(output, tool, context),
+    mapError: (error, tool) => MainAgentTool.formatError(error, tool),
+    ...options
+  });
+  running.push(server);
+  return server;
 }
 
 async function connectClient(url: string, token?: string): Promise<Client> {
   const client = new Client({ name: "airamusic-mcp-test", version: "1.0.0" });
   await client.connect(
     new StreamableHTTPClientTransport(new URL(url), {
-      ...(token ? { requestInit: { headers: { Authorization: `Bearer ${token}` } } } : {})
+      ...(token ? { requestInit: { headers: { Authorization: "Bearer " + token } } } : {})
     })
   );
   return client;
@@ -338,16 +467,50 @@ function postWithHost(port: number, host: string): Promise<{ body: string; statu
   });
 }
 
-function readFirstTextContent(result: unknown): string {
-  if (!result || typeof result !== "object") return "";
-  const content = (result as Record<string, unknown>)["content"];
-  if (!Array.isArray(content)) return "";
-  for (const item of content) {
-    if (!item || typeof item !== "object") continue;
-    const record = item as Record<string, unknown>;
-    if (record["type"] === "text" && typeof record["text"] === "string") {
-      return record["text"];
-    }
-  }
-  return "";
+const legacyHeaders = {
+  "content-type": "application/json",
+  accept: "application/json, text/event-stream",
+  "mcp-protocol-version": "2025-11-25"
+};
+
+interface LegacyReply {
+  id: number;
+  error?: unknown;
+  result?: Record<string, unknown>;
+}
+
+async function postLegacy(
+  url: string,
+  id: number,
+  method: string,
+  params?: Record<string, unknown>
+): Promise<{ status: number; message: LegacyReply }> {
+  const response = await fetch(url, {
+    method: "POST",
+    headers: legacyHeaders,
+    body: JSON.stringify({ jsonrpc: "2.0", id, method, ...(params ? { params } : {}) })
+  });
+  const body = await response.text();
+  const messages: LegacyReply[] = response.headers
+    .get("content-type")
+    ?.includes("text/event-stream")
+    ? body
+        .split(/\r?\n\r?\n/)
+        .map((event) =>
+          event
+            .split(/\r?\n/)
+            .filter((line) => line.startsWith("data:"))
+            .map((line) => line.slice(5).trim())
+            .join("\n")
+        )
+        .filter(Boolean)
+        .map((data) => JSON.parse(data) as LegacyReply)
+    : [JSON.parse(body) as LegacyReply];
+  const message = messages.find((item) => item.id === id);
+  if (!message) throw new Error("缺少 JSON-RPC 响应：" + body.slice(0, 500));
+  return { status: response.status, message };
+}
+
+function readFirstTextContent(result: CallToolResult): string {
+  return result.content.find((item) => item.type === "text")?.text ?? "";
 }

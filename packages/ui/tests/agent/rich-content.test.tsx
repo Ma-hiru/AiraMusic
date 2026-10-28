@@ -1,5 +1,5 @@
 import { it, vi, expect, describe, beforeEach } from "vitest";
-import { render, screen, waitFor, fireEvent } from "@testing-library/react";
+import { act, render, screen, waitFor, fireEvent } from "@testing-library/react";
 import type { ReactNode } from "react";
 
 const mocks = vi.hoisted(() => ({
@@ -167,10 +167,14 @@ describe("Agent 富内容", () => {
     expect(mocks.loadTrack).not.toHaveBeenCalled();
   });
 
-  it("非法卡片按普通 Markdown 降级，不触发资源请求", () => {
-    render(
-      <MarkdownContent content={'```aira-card\n{"kind":"track","id":123,"dangerous":true}\n```'} />
-    );
+  it("非法卡片按普通 Markdown 降级，不触发资源请求", async () => {
+    await act(async () => {
+      render(
+        <MarkdownContent
+          content={'```aira-card\n{"kind":"track","id":123,"dangerous":true}\n```'}
+        />
+      );
+    });
 
     expect(mocks.loadTrack).not.toHaveBeenCalled();
     expect(screen.queryByLabelText("歌曲：示例歌曲")).not.toBeInTheDocument();
@@ -243,6 +247,61 @@ describe("Agent 富内容", () => {
 
     expect(await screen.findByRole("button", { name: /思考过程/ })).toBeInTheDocument();
     expect(await screen.findByText("示例歌曲")).toBeInTheDocument();
+  });
+
+  describe.each([false, true])("Markdown 图片（streaming=%s）", (streaming) => {
+    it.each([
+      "**主视觉（key visual）**\n![主视觉海报](https://example.com/poster.jpg)",
+      "![主视觉海报](https://example.com/poster.jpg)",
+      "正文 [![主视觉海报](https://example.com/poster.jpg)](https://example.com/source) 后文。",
+      "**加粗 ![主视觉海报](https://example.com/poster.jpg)**",
+      "> 引用 ![主视觉海报](https://example.com/poster.jpg)",
+      "- 列表 ![主视觉海报](https://example.com/poster.jpg)"
+    ])("图片在段落、链接或强调中保持合法嵌套：%s", async (content) => {
+      const { container } = render(<MarkdownContent content={content} streaming={streaming} />);
+
+      expect(await screen.findByAltText("主视觉海报")).toHaveAttribute(
+        "src",
+        "https://example.com/poster.jpg"
+      );
+      expect(container.querySelector("p div, strong div, em div")).toBeNull();
+      const link = screen.queryByRole("link");
+      if (link) {
+        expect(link).toHaveAttribute("href", "https://example.com/source");
+        expect(link).toHaveAttribute("target", "_blank");
+      }
+    });
+  });
+
+  it("流式图片从不完整 Markdown 到完成回答都保持合法结构", async () => {
+    const { rerender, container } = render(
+      <MarkdownContent content="**主视觉**\n![主视觉海报](" streaming />
+    );
+
+    const completed = '**主视觉**\n![主视觉海报](https://example.com/poster.jpg "官方海报")';
+    rerender(<MarkdownContent content={completed} streaming />);
+    expect(await screen.findByAltText("主视觉海报")).toHaveAttribute("title", "官方海报");
+    expect(container.querySelector("p div, strong div, em div")).toBeNull();
+
+    rerender(<MarkdownContent content={completed} />);
+    expect(await screen.findByAltText("主视觉海报")).toHaveAttribute("title", "官方海报");
+    expect(container.querySelector("p div, strong div, em div")).toBeNull();
+  });
+
+  it("图片失败时显示说明，更换图片地址后恢复显示", async () => {
+    const { rerender, container } = render(
+      <MarkdownContent content="说明 ![主视觉海报](https://example.com/missing.jpg)" />
+    );
+    const image = await screen.findByAltText("主视觉海报");
+    fireEvent.error(image);
+
+    expect(image).toHaveClass("hidden");
+    expect(screen.getByText("图片加载失败：主视觉海报")).toBeInTheDocument();
+    expect(container.querySelector("p div")).toBeNull();
+
+    rerender(<MarkdownContent content="说明 ![主视觉海报](https://example.com/poster.jpg)" />);
+    expect(await screen.findByAltText("主视觉海报")).not.toHaveClass("hidden");
+    expect(screen.queryByText("图片加载失败：主视觉海报")).not.toBeInTheDocument();
   });
 
   it("保留 Streamdown 默认 GFM，正确渲染 Markdown 表格", async () => {

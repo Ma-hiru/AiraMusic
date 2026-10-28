@@ -13,3 +13,5 @@ export function ipcInit() {
   MainIPC.NormalChannel.registerEventHandlers(eventHandlers);
   MainIPC.NormalChannel.registerInvokeHandlers(invokeHandlers);
 }
+
+export { broadcastAgentFeatureSettings } from "./agent-settings";

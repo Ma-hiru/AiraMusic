@@ -52,10 +52,11 @@ jobs:
             os: windows-11-arm
 
           - name: Linux x64
-            os: ubuntu-latest
+            os: ubuntu-22.04
 
           - name: Linux ARM64
             os: ubuntu-24.04-arm
+            container: ubuntu:22.04
 
           - name: macOS ARM64
             os: macos-latest
@@ -64,8 +65,21 @@ jobs:
             os: macos-15-intel
 
     runs-on: ${{ matrix.os }}
+    # ARM64 宿主是 24.04，使用 22.04 用户空间保持相同的 glibc 构建基线。
+    container: ${{ matrix.container }}
 
     steps:
+      - name: Install container prerequisites
+        if: matrix.container
+        shell: bash
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          apt-get update
+          apt-get install --no-install-recommends -y \
+            ca-certificates curl git sudo gh build-essential cmake \
+            pkg-config libssl-dev libglib2.0-0 xz-utils unzip
+
       - name: Checkout
         uses: actions/checkout@v7
 
@@ -84,6 +98,22 @@ jobs:
         uses: actions/setup-go@v6
         with:
           go-version-file: packages/store/go.mod
+          cache-dependency-path: packages/store/go.sum
+
+      - name: Download Go dependencies
+        working-directory: packages/store
+        shell: bash
+        run: |
+          for attempt in 1 2 3; do
+            if go mod download; then
+              exit 0
+            fi
+            echo "Go dependency download failed (attempt $attempt/3)."
+            if [ "$attempt" -eq 3 ]; then
+              exit 1
+            fi
+            sleep 5
+          done
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable

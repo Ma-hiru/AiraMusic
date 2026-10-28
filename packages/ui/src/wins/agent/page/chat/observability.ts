@@ -1,4 +1,6 @@
-import type { AgentTokenUsage, AgentAssistantTurnObservability } from "../types";
+import type { ThreadSnapshot } from "@mahiru/agent/browser";
+
+import type { AgentTokenUsage, AgentRunTerminal, AgentAssistantTurnObservability } from "../types";
 
 export const formatTokenCount = (value: number) => {
   if (value < 1_000) return String(value);
@@ -57,6 +59,48 @@ export const parseAgentTurnUsage = (
       total: input + output
     }
   };
+};
+
+export const parseStoredTurnUsage = (content: string) => {
+  try {
+    return parseAgentTurnUsage(JSON.parse(content) as unknown);
+  } catch {
+    return undefined;
+  }
+};
+
+/** 只有最新一轮的错误能使用 runtime.runId，历史消息没有持久化 runId。 */
+export const storedRunErrorTerminal = (
+  conversation: ThreadSnapshot,
+  index: number
+): AgentRunTerminal => {
+  const latestUserIndex = conversation.messages.findLastIndex((message) => message.role === "user");
+  const runID =
+    conversation.runtime.status === "failed" && index > latestUserIndex
+      ? conversation.runtime.runId
+      : undefined;
+  return {
+    type: "terminal",
+    status: "failed",
+    id: runID ? `${runID}-terminal` : `stored-error-${index}`,
+    ...(runID ? { runID } : {}),
+    error: toTerminalError(conversation.messages[index]?.content)
+  };
+};
+
+export const readStoredRunFailure = (conversation: ThreadSnapshot) => {
+  if (conversation.runtime.status !== "failed") return undefined;
+  let usage: undefined | AgentTokenUsage;
+  for (let index = conversation.messages.length - 1; index >= 0; index--) {
+    const message = conversation.messages[index];
+    if (!message || message.role === "user") break;
+    if (message.role !== "inner") continue;
+    if (message.innerType === "usage") usage = parseStoredTurnUsage(message.content)?.usage;
+    if (message.innerType === "error") {
+      return { ...storedRunErrorTerminal(conversation, index), ...(usage ? { usage } : {}) };
+    }
+  }
+  return undefined;
 };
 
 const asRecord = (value: unknown): undefined | Record<string, unknown> =>

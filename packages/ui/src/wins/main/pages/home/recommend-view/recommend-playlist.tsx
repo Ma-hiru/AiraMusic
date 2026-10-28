@@ -35,7 +35,11 @@ const RecommendPlaylist = ({
 
   return (
     <Section title="推荐歌单" Icon={ListMusic} subTitle="Playlist Picks">
-      <AppError reset={reload} message="加载推荐歌单失败" when={status === "error"}>
+      <AppError
+        className="h-40!"
+        reset={reload}
+        message="加载推荐歌单失败"
+        when={status === "error"}>
         <AppLoading className="h-auto w-full" loading={status === "loading"}>
           <MediaGrid
             onClickItem={onClickItem}

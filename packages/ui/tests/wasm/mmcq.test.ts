@@ -1,8 +1,8 @@
-import { join } from "node:path";
+import { resolve } from "node:path";
 import { readFile } from "node:fs/promises";
 import { extractPalette } from "@mahiru/wasm";
 
-const imagePath = join(process.cwd(), "../app/assets/logo.png");
+const imagePath = resolve(import.meta.dirname, "../../../app/assets/logo.png");
 
 describe("test mmcq", () => {
   it("should not be empty, and length should be 5", async () => {

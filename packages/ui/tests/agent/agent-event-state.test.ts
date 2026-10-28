@@ -1,5 +1,6 @@
 import { it, expect, describe } from "vitest";
 import { createAgentConversationState } from "@mahiru/ui/wins/agent/atoms/agent";
+import { recoverAgentConversationState } from "@mahiru/ui/wins/agent/hooks/agent-recovery";
 import { reduceAgentConversationEvent } from "@mahiru/ui/wins/agent/hooks/agent-event-state";
 import type { AgentConversationEvent } from "@mahiru/ui/wins/agent/hooks/agui-adapter";
 
@@ -111,6 +112,65 @@ describe("Agent 对话事件状态", () => {
         usage: { input: 100, output: 20, total: 120, requests: 1, lastInput: 100 }
       })
     ]);
+  });
+
+  it("轮询恢复 InnerError 失败快照时保留错误和持久化 usage", () => {
+    const state = recoverAgentConversationState(
+      {
+        ...createAgentConversationState(),
+        latestRunID: "run-1",
+        runningRunID: "run-1",
+        recovering: true
+      },
+      {
+        id: "thread-1",
+        name: "测试会话",
+        createdAt: 1,
+        updatedAt: 2,
+        runtime: { status: "failed", runId: "run-1" },
+        messages: [
+          { role: "user", content: "分析歌曲" },
+          { role: "inner", innerType: "error", content: "provider disconnected" },
+          {
+            role: "inner",
+            innerType: "usage",
+            content: JSON.stringify({
+              records: [{ step: 1, usage: { prompt_tokens: 100, completion_tokens: 20 } }]
+            })
+          }
+        ]
+      }
+    );
+
+    expect(state.runningRunID).toBe("");
+    expect(state.recovering).toBe(false);
+    expect(state.liveTimeline).toEqual([
+      expect.objectContaining({
+        type: "terminal",
+        status: "failed",
+        runID: "run-1",
+        error: "provider disconnected",
+        usage: { input: 100, output: 20, total: 120, requests: 1, lastInput: 100 }
+      })
+    ]);
+  });
+
+  it("服务端还未创建 run 的发送态不被恢复快照清除", () => {
+    const state = {
+      ...createAgentConversationState(),
+      sending: true,
+      pendingUserMessage: "新请求"
+    };
+    expect(
+      recoverAgentConversationState(state, {
+        id: "thread-1",
+        name: "测试会话",
+        createdAt: 1,
+        updatedAt: 2,
+        messages: [],
+        runtime: { status: "idle" }
+      })
+    ).toBe(state);
   });
 
   it("保留同一步中已经返回的多个工具结果", () => {

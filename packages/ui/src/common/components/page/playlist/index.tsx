@@ -1,4 +1,5 @@
 import { cx } from "@emotion/css";
+import { GlobeOff } from "lucide-react";
 import {
   memo,
   useRef,
@@ -15,6 +16,7 @@ import {
 import { Log } from "@/common/lib/log";
 import { SearchTrack } from "@mahiru/wasm";
 import { RendererNet } from "@/common/lib/net";
+import { useOnline } from "@/common/hooks/use-online";
 import { useUpdate } from "@/common/hooks/use-update";
 import { RendererIPCMessageBus } from "@/common/lib/bus";
 import { NeteaseAPIPlaylist } from "@/common/netease/api";
@@ -376,9 +378,15 @@ const Playlist: FC<PlaylistProps> = ({
     routerActive
   );
 
+  const { online } = useOnline();
+
   return (
     <div className={cx("flex h-full min-h-0 flex-col overflow-hidden", className)}>
-      <AppError reset={reload} message="歌曲加载失败" when={status === "error"}>
+      <AppError
+        reset={reload}
+        when={status === "error"}
+        tipsIcon={!online ? GlobeOff : undefined}
+        tips={!online ? "网络连接中断，请检查网络后重试" : undefined}>
         <AppLoading className="h-full w-full" loading={status === "loading"}>
           <Top
             user={user}

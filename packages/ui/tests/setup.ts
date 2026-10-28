@@ -1,6 +1,6 @@
 import "@testing-library/jest-dom/vitest";
 
-import { join } from "node:path";
+import { resolve } from "node:path";
 import { vi, afterEach } from "vitest";
 import { readFile } from "node:fs/promises";
 import init from "@mahiru/wasm";
@@ -16,7 +16,7 @@ afterEach(() => {
   resetLogMock();
 });
 
-const wasmPath = join(process.cwd(), "../wasm/pkg/wasm_bg.wasm");
+const wasmPath = resolve(import.meta.dirname, "../../wasm/pkg/wasm_bg.wasm");
 
 beforeAll(async () => {
   const wasmBytes = await readFile(wasmPath);

@@ -154,27 +154,5 @@ export async function exportLogFiles(files: string[], filePath: string) {
   await createLogArchive(MainPathResolver.logDir, files, filePath);
 }
 
-export function replaceGlobalConsole() {
-  const consoleLogger = {
-    trace: Log.trace.bind(Log),
-    debug: Log.debug.bind(Log),
-    info: Log.info.bind(Log),
-    warn: Log.warn.bind(Log),
-    error: Log.error.bind(Log)
-  };
-  globalThis.console = new Proxy(raw_console, {
-    get(target, prop, receiver) {
-      if (typeof prop === "string" && Object.hasOwn(consoleLogger, prop)) {
-        return consoleLogger[prop as keyof typeof consoleLogger];
-      }
-      return Reflect.get(target, prop, receiver);
-    }
-  });
-}
-
-export function restoreGlobalConsole() {
-  globalThis.console = raw_console;
-}
-
-replaceGlobalConsole();
+Log.ReplaceGlobalConsole();
 Log.EnvLevel = level;

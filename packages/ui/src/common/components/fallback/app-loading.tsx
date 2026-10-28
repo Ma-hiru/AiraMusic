@@ -3,7 +3,7 @@ import { memo, type FC, type ReactNode, type RefObject } from "react";
 
 import Loading from "./loading";
 
-interface ListLoadingProps {
+interface AppLoadingProps {
   ref?: RefObject<Nullable<HTMLDivElement>>;
   tips?: string;
   wrap?: boolean;
@@ -13,7 +13,7 @@ interface ListLoadingProps {
   children?: ReactNode;
 }
 
-const AppLoading: FC<ListLoadingProps> = ({
+const AppLoading: FC<AppLoadingProps> = ({
   ref,
   className,
   wrap,

@@ -3,13 +3,19 @@ import { createRequire } from "node:module";
 import { mkdir, access, readFile, writeFile } from "node:fs/promises";
 import { MainChild } from "@/lib/child";
 import os from "node:os";
-import type { MainChildControlMessage, MainChildSerializedError } from "@/types/child";
 import type {
   NcmApiServer,
   NcmApiInstance,
   NCMChildMessage,
   NCMParentMessage
 } from "@/types/ncm.child";
+import type {
+  ErrorMessage,
+  ReadyMessage,
+  ControlMessage,
+  StoppedMessage,
+  SerializedError
+} from "@/types/child";
 
 import moduleDefs from "./ncmModDef";
 
@@ -130,7 +136,7 @@ class NeteaseMusicApiChildService extends MainChild<NCMParentMessage, NCMChildMe
   }
 
   protected override async start(message: Extract<NCMParentMessage, { type: "start" }>) {
-    if (this.instance) return;
+    if (this.instance) return { port: message.port };
     const actualTokenPath = message.tokenPath ?? join(os.tmpdir(), "anonymous_token");
     await this.ensureAnonToken(actualTokenPath);
     await this.bootstrapDeviceIdentity(message.deviceIdPath);
@@ -139,13 +145,10 @@ class NeteaseMusicApiChildService extends MainChild<NCMParentMessage, NCMChildMe
       port: message.port,
       moduleDefs
     });
-    this.send({
-      type: "ready",
-      port: message.port
-    });
+    return { port: message.port };
   }
 
-  protected override async close() {
+  protected override async stop() {
     const server = this.instance?.server;
     this.instance = undefined;
     if (!server) return;
@@ -157,22 +160,25 @@ class NeteaseMusicApiChildService extends MainChild<NCMParentMessage, NCMChildMe
     });
   }
 
-  protected override createStoppedMessage(): NCMChildMessage {
-    return {
-      type: "stopped"
-    };
+  protected override buildReadyMessage(info: {
+    port: number;
+  }): Extract<NCMChildMessage, ReadyMessage> {
+    return { type: "ready", port: info.port };
   }
 
-  protected override createErrorMessage(error: MainChildSerializedError): NCMChildMessage {
-    return {
-      type: "error",
-      error
-    };
+  protected override buildStoppedMessage(): Extract<NCMChildMessage, StoppedMessage> {
+    return { type: "stopped" };
   }
 
-  protected override handleCustomMessage(
-    _message: Exclude<NCMParentMessage, MainChildControlMessage>
-  ): void | Promise<void> {
+  protected override buildErrorMessage(
+    error: SerializedError
+  ): Extract<NCMChildMessage, ErrorMessage> {
+    return { type: "error", error };
+  }
+
+  protected override handleParentMessage(
+    _message: Exclude<NCMParentMessage, ControlMessage>
+  ): void {
     void _message;
   }
 }

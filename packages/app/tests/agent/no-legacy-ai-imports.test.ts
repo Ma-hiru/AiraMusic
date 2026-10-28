@@ -6,7 +6,9 @@ const ProductionRoots = ["packages/app/src", "packages/ipc/src", "packages/ui/sr
 const DeprecatedAgentPatterns = [
   /@mahiru\/ai(?:\/|["'])/,
   /@mahiru\/app\/inner\/agent(?:\/|["'])/,
-  /invoke_agent_(?:chat|abort|create_conversation|list_conversations|get_conversation|delete_conversation)/
+  /invoke_agent_(?:chat|abort|create_conversation|list_conversations|get_conversation|delete_conversation|list_threads|create_thread|get_thread|delete_thread|create_run|cancel_run|list_configs|create_config|update_config|list_providers|list_runs)/,
+  /message_deliver_agent_chat_event/,
+  /\b(?:LLMTool|LLMToolRegistry|LLMToolResult|AgentRequestError)\b/
 ];
 
 it("does not reference deprecated TypeScript Agent contracts from production code", async () => {
@@ -16,7 +18,12 @@ it("does not reference deprecated TypeScript Agent contracts from production cod
   for (const root of ProductionRoots) {
     for (const file of await sourceFiles(resolve(repository, root))) {
       const source = await readFile(file, "utf8");
-      if (DeprecatedAgentPatterns.some((pattern) => pattern.test(source))) {
+      const appTool = file.includes("/app/src/inner/agent/tools/");
+      const ipc = file.includes("/ipc/src/");
+      if (
+        DeprecatedAgentPatterns.some((pattern) => pattern.test(source)) ||
+        ((appTool || ipc) && source.includes("@mahiru/agent"))
+      ) {
         offenders.push(file.slice(repository.length + 1).replaceAll("\\", "/"));
       }
     }

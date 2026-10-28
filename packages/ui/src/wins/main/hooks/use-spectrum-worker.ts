@@ -13,7 +13,7 @@ export type SpectrumOptions = {
   fftSize?: number;
   numBands?: number;
   withPeaks?: boolean;
-  /** 频谱分析计算限帧（在 UI 端减少 worker 投递），0/undefined 表示不限制 */
+  /** 频谱分析与绘制的帧率上限，0/undefined 表示不限制 */
   fpsLimit?: number;
 };
 

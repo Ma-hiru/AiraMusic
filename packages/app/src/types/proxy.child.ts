@@ -1,3 +1,5 @@
+import type { SerializedError } from "@/types/child";
+
 export type ProxyParentMessage =
   | {
       type: "stop";
@@ -21,16 +23,13 @@ export type ProxyChildMessage =
       type: "ready";
     }
   | {
+      type: "error";
+      error: SerializedError;
+    }
+  | {
       type: "log";
       payload: {
         text: string;
         type: string;
-      };
-    }
-  | {
-      type: "error";
-      error: {
-        stack?: string;
-        message: string;
       };
     };

@@ -1,4 +1,14 @@
+export type AgentLogLevel = "INFO" | "NONE" | "WARN" | "DEBUG" | "ERROR" | "TRACE";
+
+export interface AgentLogRecord {
+  message: string;
+  target?: string;
+  fields: Record<string, unknown>;
+  level: Exclude<AgentLogLevel, "NONE">;
+}
+
 export type { ApiError } from "../generated/ApiError";
+export type { AGUIEvent } from "../generated/AGUIEvent";
 export type { AgentReady } from "../generated/AgentReady";
 export type { MessageRole } from "../generated/MessageRole";
 export type { RunAccepted } from "../generated/RunAccepted";

@@ -70,7 +70,7 @@ const AgentPage: FC<object> = () => {
   const openCreateConfigModal = useCallback(() => openConfigModal(), [openConfigModal]);
 
   useEffect(() => {
-    RendererWindow.current.title(`${currentTitle} - AiraMusic Agent`);
+    RendererWindow.current.title(`${currentTitle} - ${import.meta.env.APP_NAME} Agent`);
   }, [currentTitle]);
 
   useEffect(() => {

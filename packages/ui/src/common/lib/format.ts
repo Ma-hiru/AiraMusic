@@ -159,11 +159,13 @@ export class RendererFormat {
     };
   }
 
-  /** 把绑定格式化为 `Alt + →` 形式的展示文本 */
-  static shortcut(binding: ShortcutBinding): string {
-    const parts = (binding.modifiers ?? []).map(
-      (modifier) => RendererShortcutConstants.modifierLabels[modifier]
-    );
+  /** 按平台展示快捷键的修饰键名称 */
+  static shortcut(binding: ShortcutBinding, platform?: "unknown" | NodeJS.Platform): string {
+    const labels =
+      platform === "darwin"
+        ? RendererShortcutConstants.macModifierLabels
+        : RendererShortcutConstants.modifierLabels;
+    const parts = (binding.modifiers ?? []).map((modifier) => labels[modifier]);
     const key = RendererShortcutConstants.keyLabels[binding.key] ?? binding.key.toUpperCase();
     return [...parts, key].join(" + ");
   }
