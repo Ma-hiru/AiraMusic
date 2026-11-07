@@ -264,7 +264,7 @@ const NeteaseImage: FC<ImageProps> = ({
       ref={containerRef}
       className={cx(
         "overflow-hidden block",
-        error && "flex justify-center items-center",
+        (error || !image) && "flex justify-center items-center",
         !ok && "bg-white/10 backdrop-blur-sm",
         shadowBaseDark && "shadow-sm",
         shadowBaseLight && "shadow-[0_1px_2px_rgba(0,0,0,0.12)]",
@@ -290,6 +290,7 @@ const NeteaseImage: FC<ImageProps> = ({
           onError={handleLoadError}
         />
       )}
+      {!image && fallback}
       {error && stopRetry && fallback}
     </span>
   );

@@ -11,7 +11,7 @@ React 构建多窗口播放体验，并使用 Rust Agent、Rust WASM 和 Go 本�
 
 > [!IMPORTANT]
 > AiraMusic 是非官方第三方客户端，不直接或间接提供任何音乐下载功能，推荐开通网易云黑胶会员使用。
-> 音乐 Agent 需要用户自行配置模型服务与 API Key，不附带模型额度。
+> 音乐 Agent 需要用户自行配置模型服务；本地 Ollama 的 API Key 可留空。AiraMusic 不附带模型额度。
 
 ## 功能概览
 
@@ -20,7 +20,7 @@ React 构建多窗口播放体验，并使用 Rust Agent、Rust WASM 和 Go 本�
 - **音乐浏览与播放**：覆盖首页推荐、搜索、歌单、专辑、艺人、评论、播放历史、队列管理和多种播放模式。
 - **多种播放模式**：支持网易云私人 FM（漫游）、心动模式。
 - **多窗口桌面体验**：使用多个 Vite 入口承载主界面、登录、迷你播放器、歌词、托盘、图片、评论、设置、Radio 和
-  Agent；多窗口之间随意拉起、关闭和同步。支持托盘控制与 Windows 任务栏封面缩略图，适配 mac 的顶栏歌词和红绿灯。
+  Agent；多窗口之间随意拉起、关闭和同步。支持托盘控制与 Windows 任务栏封面缩略图，适配 mac 的顶栏胶囊（托盘图标与逐字歌词合一）和红绿灯。
 - **沉浸式视觉**：提供播放页、桌面歌词、实时音乐频谱、简单流体背景，以及基于封面 MMCQ 取色生成的动态主题。
 - **计算任务异步化**：Rust/WASM 负责歌词解析与修复、FFT 频谱、主题色提取、搜索辅助和 WebGL
   renderer，频谱链路结合 Web Worker 避免阻塞 React 渲染。
@@ -119,9 +119,12 @@ AiraMusic 的 Agent 工作区把模型循环、应用上下文、音乐工具和
 - **多会话与恢复**：Rust 维护 thread/run 状态，renderer 持久化选择与恢复标记；窗口重开或事件流重连后，通过活跃
   run 和 thread snapshot 恢复最终状态。
 
-当前内置的是 **OpenAI Chat Completions 兼容 Provider**，可配置模型、上下文窗口、思考模式和自定义兼容
-Endpoint。API Key 由 Rust Agent 加密持久化，所需主密钥由 Electron `safeStorage`
-保护，配置接口只返回掩码。兼容服务对流式输出、思考内容、工具调用和用量统计的支持程度取决于服务自身。
+当前内置 **OpenAI Chat Completions 兼容 Provider** 和 **Ollama Provider**，可配置模型、上下文窗口、
+思考模式和自定义兼容 Endpoint。OpenAI 兼容 Provider 需要 API Key；Ollama 默认连接
+`http://localhost:11434/v1`，API Key 可留空，连接需要认证的服务时再填写。
+
+填写的 API Key 由 Rust Agent 加密持久化，所需主密钥由 Electron `safeStorage` 保护，配置接口只返回掩码。
+流式输出、思考内容、工具调用和用量统计的支持程度取决于模型服务。
 
 > [!NOTE]
 > 收藏、评论、歌单修改和设置变更等写操作受登录状态与权限开关约束，高风险工具默认关闭。网页检索只访问公开
@@ -186,7 +189,7 @@ flowchart LR
 | `packages/ipc`    | Electron 主进程与各渲染窗口之间的类型化 invoke/message 契约                                           | TypeScript                                       |
 | `packages/store`  | 供渲染层通过 `/cache` 使用的本地缓存服务，以及 Electron 侧进程启动器                                  | Go、Gin                                          |
 | `packages/wasm`   | 歌词解析、主题与图片颜色、频谱、搜索辅助和 WebGL renderer                                             | Rust、wasm-bindgen、wasm-pack                    |
-| `packages/native` | Windows 任务栏自定义封面缩略图；macOS 顶栏歌词；其他平台保留对应接口                                  | Rust、napi-rs、windows-sys                       |
+| `packages/native` | Windows 任务栏自定义封面缩略图；macOS 顶栏胶囊（托盘图标 + 逐字歌词）；其他平台保留对应接口               | Rust、napi-rs、windows-sys                       |
 | `packages/log`    | 主进程和渲染层共用的日志基础能力                                                                      | TypeScript                                       |
 
 ## 本地开发
@@ -248,7 +251,7 @@ Release 工作流配置了 Windows、Linux 和 macOS 的 x64/arm64 构建；安�
 
 ```bash
 yarn check:fast       # TypeScript 增量检查
-yarn test:ts          # 根 Vitest projects 聚合 app、ui 和 agent 的 TypeScript 测试
+yarn test:ts          # 根 Vitest projects 聚合 scripts、app、ui 和 agent 的 TypeScript 测试
 yarn lint:check:ts    # Prettier 与 ESLint，只检查不写入文件
 ```
 
@@ -260,8 +263,8 @@ yarn lint:check      # TypeScript、Go 和 Rust/WASM 格式及静态检查
 yarn test            # TypeScript、Go、Rust/WASM 和原生模块测试
 ```
 
-测试配置集中在根目录 `vitest.config.ts` 与各工作区配置中。项目保留 `vite-plugin-wasm` 的 Yarn 补丁，
-用于识别 Vitest 5 的插件名称；更新相关依赖时需要同时验证补丁和真实 WASM 测试。
+TypeScript 测试由根目录 `vitest.config.ts` 聚合，包含各工作区测试。
+项目保留 `vite-plugin-wasm` 的 Yarn 补丁， 用于识别 Vitest 5 的插件名称。
 
 常规 CI 安装锁定依赖，检查格式与静态分析，构建原生产物，再执行类型检查、测试及 UI/Electron bundle 构建。
 `v*` 标签触发独立 Release 工作流；它在各目标平台构建安装包，上传资产后发布 Release。

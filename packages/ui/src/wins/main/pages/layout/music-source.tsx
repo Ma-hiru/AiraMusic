@@ -2,13 +2,15 @@ import { useSetAtom, useAtomValue } from "jotai";
 import { memo, type FC, useMemo, useEffect } from "react";
 import { RendererWindow } from "@/common/lib/window";
 import { useSettings } from "@/common/store/settings";
+import { typingAtom } from "@/wins/main/atoms/layout";
+import { RendererIPCMessageBus } from "@/common/lib/bus";
 import { useRoamMode } from "@/wins/main/hooks/use-roam-mode";
-import { typingAtom, playModalAtom } from "@/wins/main/atoms/layout";
 import { useMediaSession } from "@/wins/main/hooks/use-media-session";
+import { RendererShortcutConstants } from "@/common/constants/shortcut";
 import { useSpectrumActive } from "@/wins/main/hooks/use-spectrum-active";
 import { useSpectrumWorker } from "@/wins/main/hooks/use-spectrum-worker";
+import { useShortcutActions } from "@/wins/main/hooks/use-shortcut-actions";
 import { useIntelligenceMode } from "@/wins/main/hooks/use-intelligence-mode";
-import { type ShortcutAction, RendererShortcutConstants } from "@/common/constants/shortcut";
 import { type ShortcutConfig, useKeyboardShortcut } from "@/common/hooks/use-keyboard-shortcut";
 import {
   spectrumDataAtom,
@@ -38,26 +40,24 @@ const MusicSource: FC<object> = () => {
     RendererWindow.current.title(title);
   }, [artist, title]);
   // 注册局部键盘快捷键（绑定可在设置中自定义）
-  const setPlayModal = useSetAtom(playModalAtom);
   const typing = useAtomValue(typingAtom);
   const shortcuts = useSettings().shortcuts;
-  const shortcutConfigs = useMemo<ShortcutConfig[]>(() => {
-    const actions: Record<ShortcutAction, () => void> = {
-      playToggle: () => (player.audio.paused ? player.audio.play() : player.audio.pause()),
-      prevTrack: () => player.playlist.last(),
-      nextTrack: () => player.playlist.next(true),
-      volumeUp: () => (player.audio.volume += 0.1),
-      volumeDown: () => (player.audio.volume -= 0.1),
-      muteToggle: () => (player.audio.instance.muted ? player.audio.unmute() : player.audio.mute()),
-      playModalToggle: () => setPlayModal((playModal) => !playModal)
-    };
-    return (Object.keys(actions) as ShortcutAction[]).map((action) => ({
-      ...shortcuts[action],
-      description: RendererShortcutConstants.actionLabels[action],
-      callback: actions[action]
-    }));
-  }, [player.audio, player.playlist, setPlayModal, shortcuts]);
+  const shortcutActions = useShortcutActions();
+  const shortcutConfigs = useMemo<ShortcutConfig[]>(
+    () =>
+      RendererShortcutConstants.actions.map((action) => ({
+        ...shortcuts[action],
+        description: RendererShortcutConstants.actionLabels[action],
+        callback: shortcutActions[action]
+      })),
+    [shortcutActions, shortcuts]
+  );
   useKeyboardShortcut(shortcutConfigs, { enabled: !typing, ignoreEditable: true });
+  // 执行其他窗口（歌词、迷你播放器、托盘等）转发过来的快捷键
+  useEffect(
+    () => RendererIPCMessageBus.listenShortcut((action) => shortcutActions[action]?.()),
+    [shortcutActions]
+  );
   // 禁 Tab 键
   useEffect(() => {
     const handler = (e: KeyboardEvent) => e.key === "Tab" && e.preventDefault();

@@ -44,7 +44,7 @@ impl LLMAdapterManager {
 
         for provider in LLMProvider::iter() {
             match provider {
-                LLMProvider::OpenAI => {
+                LLMProvider::OpenAI | LLMProvider::Ollama => {
                     providers.insert(provider, Arc::new(OpenAiAdapter));
                 }
             }

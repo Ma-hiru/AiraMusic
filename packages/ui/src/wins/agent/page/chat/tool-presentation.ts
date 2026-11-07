@@ -21,6 +21,7 @@ export type AgentToolPresentation = {
 };
 
 const exactLabels: Record<string, string> = {
+  "agent-tool-app-context": "读取当前页面",
   "agent-search": "搜索音乐资源",
   "agent-lyric-schema": "读取歌词结构",
   "agent-tool-web-browser": "浏览网页",
@@ -102,7 +103,7 @@ export function getAgentToolPresentation(name: string): AgentToolPresentation {
   if (name.includes("player") || name.includes("track-play")) {
     return { label, icon: SlidersHorizontal, category: "PLAYER" };
   }
-  if (name.includes("settings")) {
+  if (name.includes("settings") || name === "agent-tool-app-context") {
     return { label, icon: Settings2, category: "SYSTEM" };
   }
   if (name.includes("user")) {

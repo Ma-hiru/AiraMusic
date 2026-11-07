@@ -1,8 +1,9 @@
-import { BrowserWindow } from "electron";
 import { clamp, debounce } from "lodash-es";
+import { screen, BrowserWindow } from "electron";
 import { Log } from "@/lib/log";
 import { MainHandle } from "@/lib/handle";
 import { MainRuntime } from "@/lib/runtime";
+import { MainWindowConstants } from "@/constants/window";
 import { MainWindowManager } from "@/lib/window-manager";
 import { MainStoreForWindow } from "@/lib/key-value-store";
 import { MainScreenResolver } from "@/lib/screen-resolver";
@@ -24,13 +25,49 @@ export class MainWindowCreator {
     if (memoPos) {
       const { x, y, width, height } = this.getMemoPos(id);
       if (!MainScreenResolver.isOutScreenDIPBounds(x, y)) {
-        const { width: workAreaWidth, height: workAreaHeight } =
-          MainScreenResolver.primary.effectiveWorkAreaSize;
-        const nextWidth = clamp(Math.floor(width), 1, workAreaWidth);
-        const nextHeight = clamp(Math.floor(height), 1, workAreaHeight);
+        const { width: workAreaWidth, height: workAreaHeight } = screen.getDisplayNearestPoint({
+          x,
+          y
+        }).workAreaSize;
+        const { width: minWidth, height: minHeight } =
+          MainWindowConstants.getWindowBaseSize(id)?.min ?? {};
+        const { width: maxWidth, height: maxHeight } =
+          MainWindowConstants.getWindowBaseSize(id)?.max ?? {};
+
+        const next = (area: number, c: number, min?: number, max?: number) => {
+          const upper = Math.min(max ?? area, area);
+          const lower = Math.min(min ?? 1, upper);
+          return Math.floor(clamp(c, lower, upper));
+        };
+
+        // Electron 会再次应用最小尺寸，恢复值与创建约束必须一起适配目标屏幕。
+        options.minWidth = Math.min(
+          options.minWidth ?? minWidth ?? 1,
+          options.maxWidth ?? maxWidth ?? workAreaWidth,
+          workAreaWidth
+        );
+        options.minHeight = Math.min(
+          options.minHeight ?? minHeight ?? 1,
+          options.maxHeight ?? maxHeight ?? workAreaHeight,
+          workAreaHeight
+        );
+        const nextWidth = next(
+          workAreaWidth,
+          width,
+          options.minWidth,
+          options.maxWidth ?? maxWidth
+        );
+        const nextHeight = next(
+          workAreaHeight,
+          height,
+          options.minHeight,
+          options.maxHeight ?? maxHeight
+        );
+
         Log.info(
           `Restoring window(${id}) position from store: x=${x}, y=${y}, width=${nextWidth}, height=${nextHeight}`
         );
+
         options.x = x;
         options.y = y;
         options.width = nextWidth;

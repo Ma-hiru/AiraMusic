@@ -3,7 +3,7 @@ import { memo, type FC } from "react";
 import { NeteaseUser, NeteaseSettings } from "@/common/netease/models";
 import type { InvokeEventPayload } from "@mahiru/ipc/dist-types/src/types/invoke";
 
-import Github from "./github";
+// import Github from "./github";
 import Version from "./version";
 import UserDetail from "./user-detail";
 import SettingsSummary from "./settings-summary";
@@ -29,7 +29,7 @@ const SettingsAside: FC<SettingsAsideProps> = ({
     <aside className={cx("w-full flex scrollbar flex-col gap-4", className)}>
       <UserDetail user={user} login={login} logout={logout} />
       <SettingsSummary settings={settings} cacheStoreConfig={cacheStoreConfig} />
-      <Github />
+      {/*<Github />*/}
       <Version showExportLogs />
     </aside>
   );

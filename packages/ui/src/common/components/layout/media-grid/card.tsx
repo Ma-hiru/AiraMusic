@@ -1,6 +1,6 @@
 import { cx } from "@emotion/css";
-import { Headphones } from "lucide-react";
-import { memo, type FC, useMemo } from "react";
+import { UserRound, Headphones } from "lucide-react";
+import { memo, type FC, useMemo, type MouseEvent as ReactMouseEvent } from "react";
 import { RendererFormat } from "@/common/lib/format";
 import { NeteaseNetworkImage } from "@/common/netease/models";
 import NeteaseImage from "@/common/components/display/image/netease-image";
@@ -24,12 +24,14 @@ interface MediaCardProps {
   onHover?: NormalFunc<[id: number]>;
   onMouseEnter?: NormalFunc<[id: number]>;
   onMouseLeave?: NormalFunc<[id: number]>;
+  onContext?: NormalFunc<[e: ReactMouseEvent<HTMLButtonElement>, id: number]>;
 }
 
 const MediaCard: FC<MediaCardProps> = ({
   className,
   onClick,
   onHover,
+  onContext,
   onMouseEnter,
   onMouseLeave,
   item,
@@ -52,6 +54,7 @@ const MediaCard: FC<MediaCardProps> = ({
       )}
       onClick={() => onClick?.(item.id)}
       onMouseLeave={() => onMouseLeave?.(item.id)}
+      onContextMenu={(e) => onContext?.(e, item.id)}
       onMouseEnter={() => {
         onHover?.(item.id);
         onMouseEnter?.(item.id);
@@ -60,6 +63,11 @@ const MediaCard: FC<MediaCardProps> = ({
         <NeteaseImage
           className={cx("size-full object-cover surface-border", roundedClass)}
           image={image}
+          fallback={
+            item.shape === "circle" ? (
+              <UserRound className="size-1/3 max-w-10 opacity-35" aria-hidden="true" />
+            ) : undefined
+          }
           cache
         />
         <div

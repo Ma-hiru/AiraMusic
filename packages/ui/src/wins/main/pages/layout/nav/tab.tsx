@@ -2,7 +2,7 @@ import { cx } from "@emotion/css";
 import { memo, type FC, useState, useEffect } from "react";
 import SectionTab from "@/common/components/data-input/tab";
 
-const tab = ["创建", "搜藏"];
+const tab = ["创建", "收藏"];
 
 interface NavTabProps {
   category: number;

@@ -1,5 +1,5 @@
-import type { AgentInvokeResult } from "./agent";
 import type { NetFetchRequest, NetFetchResponse } from "./net";
+import type { AgentAppContext, AgentInvokeResult } from "./agent";
 
 export type AgentConnection = { token: string; endpoint: string };
 
@@ -51,6 +51,7 @@ export type InvokeEventMaps = {
   ];
   // device
   invoke_device_gpu: [undefined, Promise<unknown>];
+  invoke_device_name: [undefined, Promise<string>];
   invoke_device_platform: [undefined, NodeJS.Platform];
   invoke_device_net: [undefined, Promise<NetworkStatus>];
   invoke_net_fetch: [NetFetchRequest, Promise<NetFetchResponse>];
@@ -85,6 +86,7 @@ export type InvokeEventMaps = {
     )
   ];
   // agent
+  invoke_agent_context: [undefined, AgentInvokeResult<AgentAppContext>];
   invoke_agent_connection: [undefined, Promise<AgentInvokeResult<AgentConnection>>];
   invoke_agent_feature_settings_get: [undefined, AgentInvokeResult<AgentFeatureSettingsState>];
   invoke_agent_feature_settings_update: [

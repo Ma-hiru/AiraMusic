@@ -8,7 +8,8 @@ const RoutePathMain = RoutePath.create({
     { name: "artist", path: "/artist" },
     { name: "album", path: "/album" },
     { name: "history", path: "/history" },
-    { name: "fm", path: "/fm" }
+    { name: "fm", path: "/fm" },
+    { name: "star", path: "/star" }
   ]
 });
 
@@ -21,7 +22,10 @@ const RoutePathDisplay = RoutePath.create({
     { name: "search", path: "/search" },
     { name: "blank", path: "/blank" },
     { name: "settings", path: "/settings" },
-    { name: "history", path: "/history" }
+    { name: "playList", path: "/play-list" },
+    { name: "listeningFootprint", path: "/listening-footprint" },
+    { name: "history", path: "/history" },
+    { name: "star", path: "/star" }
   ]
 });
 

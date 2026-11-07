@@ -1,16 +1,18 @@
 pub mod models;
+mod progress;
 use crate::ctx::Ctx;
 use crate::llm::models::{
     ChatAssistantReply, ChatMessage, ChatRequest, ChatRole, ChatToolCall, ChatTurnUsage, ChatUsage,
-    LLMStreamEvent,
+    LLMStreamEvent, ThreadContextUsage,
 };
 use crate::llm::plugins::{LLMCompactorPlugin, LLMConfigPlugin, LLMPlugin};
 use crate::r#loop::models::{LoopCause, LoopDecision, LoopEvent, LoopPayloadError, LoopPhase};
 use crate::mcp::MCPPlugin;
 use crate::plugins::models::{Plugin, PluginApplyResult, PluginMeta};
 use crate::prompt::PromptPlugin;
-use crate::session::SessionPlugin;
-use crate::session::models::SessionId;
+use crate::session::models::{AuxiliaryUsagePurpose, SessionId};
+use crate::session::usage::track_auxiliary_usage;
+use crate::session::{SessionManager, SessionPlugin};
 use crate::tools::ToolsPlugin;
 use crate::tools::models::ToolRunContext;
 use crate::utils::Signal;
@@ -18,6 +20,7 @@ use crate::utils::stringify;
 use anyhow::Context;
 use futures::StreamExt;
 use models::*;
+use progress::{ToolOutcome, ToolProgress};
 use serde::Deserialize;
 use serde_json::Value;
 use std::collections::{HashMap, VecDeque};
@@ -70,12 +73,14 @@ struct QueuedRun {
     message: ChatMessage,
     cancel_signal: Signal,
     done: Arc<Notify>,
+    context: Option<String>,
 }
 
 struct TurnProgress {
     turn: Option<u32>,
     usages: ChatTurnUsage,
     user_persisted: bool,
+    context_persisted: bool,
 }
 
 /// 单个会话的私有队列与唤醒器
@@ -129,6 +134,17 @@ impl LoopService {
         message: ChatMessage,
         cancel_signal: Signal,
     ) -> SendHandle {
+        self.send_with_context(session_id, run_id, message, cancel_signal, None)
+    }
+
+    pub fn send_with_context(
+        self: &Arc<Self>,
+        session_id: SessionId,
+        run_id: String,
+        message: ChatMessage,
+        cancel_signal: Signal,
+        context: Option<String>,
+    ) -> SendHandle {
         let done = Arc::new(Notify::new());
         if self.stop_flag.load(Ordering::SeqCst) {
             tracing::warn!(session_id = %session_id, "服务已停止, 拒绝新消息");
@@ -159,9 +175,29 @@ impl LoopService {
             message,
             cancel_signal,
             done: done.clone(),
+            context,
         });
         worker.wake.notify_one();
         SendHandle { done }
+    }
+
+    pub fn context_usage(&self, session_id: &SessionId) -> Option<ThreadContextUsage> {
+        let ctx = self.ctx.upgrade()?;
+        let config = LLMConfigPlugin::get_service(&ctx)
+            .ok()?
+            .get_session_config(session_id)
+            .ok()??;
+        let messages = SessionPlugin::get_service(&ctx)
+            .ok()?
+            .compaction_messages(session_id);
+        let system = PromptPlugin::get_service(&ctx).ok()?.sections();
+        let tools = ToolsPlugin::get_service(&ctx).ok()?.list();
+        Some(ThreadContextUsage {
+            config_id: config.id,
+            estimated_tokens: messages.iter().map(ChatMessage::token_count).sum::<usize>()
+                + ChatRequest::instruction_tokens(&system, &tools),
+            capacity_tokens: config.context_size.into(),
+        })
     }
 
     /// 全量取消
@@ -184,6 +220,30 @@ impl LoopService {
 
     // ----- inner -----
 
+    fn append_input(
+        sessions: &SessionManager,
+        session_id: &SessionId,
+        user_message: &ChatMessage,
+        context: Option<&ChatMessage>,
+        progress: &mut TurnProgress,
+    ) -> anyhow::Result<()> {
+        if !progress.context_persisted {
+            if let Some(context) = context {
+                sessions
+                    .append(session_id, context.clone())
+                    .context("会话追加页面 context 失败")?;
+            }
+            progress.context_persisted = true;
+        }
+        if !progress.user_persisted {
+            sessions
+                .append(session_id, user_message.clone())
+                .context("会话追加 user 消息失败")?;
+            progress.user_persisted = true;
+        }
+        Ok(())
+    }
+
     async fn run_turn(
         &self,
         session_id: &SessionId,
@@ -191,6 +251,7 @@ impl LoopService {
         user_message: ChatMessage,
         cancel_signal: Signal,
         done: Arc<Notify>,
+        context: Option<String>,
     ) {
         // 排队期间被取消 / 服务已停止: 不启动这一轮, 直接丢弃
         if cancel_signal.is_aborted() || self.stop_flag.load(Ordering::SeqCst) {
@@ -203,7 +264,7 @@ impl LoopService {
                         turn: 0,
                         step: 0,
                         session_id: session_id.clone(),
-                        usages: ChatTurnUsage::new(),
+                        usages: ChatTurnUsage::tracked(),
                         user_message_snapshot: user_message,
                         cause: LoopCause::cancel(),
                     },
@@ -218,16 +279,21 @@ impl LoopService {
             .lock()
             .unwrap()
             .insert(session_id.clone(), cancel_signal.clone());
+        let context = context
+            .filter(|value| !value.trim().is_empty())
+            .map(ChatMessage::context_snapshot);
         let mut progress = TurnProgress {
             turn: None,
-            usages: ChatTurnUsage::new(),
+            usages: ChatTurnUsage::tracked(),
             user_persisted: false,
+            context_persisted: false,
         };
         if let Err(err) = self
             .run_turn_inner(
                 session_id,
                 &run_id,
                 user_message.clone(),
+                context.as_ref(),
                 &mut progress,
                 cancel_signal,
             )
@@ -236,9 +302,13 @@ impl LoopService {
             tracing::error!(session_id = %session_id, err = ?err, turn = ?progress.turn);
             if let Some(ctx) = self.ctx.upgrade() {
                 if let Ok(session_manager) = SessionPlugin::get_service(&ctx) {
-                    if !progress.user_persisted
-                        && let Err(persist_error) = session_manager.append(session_id, user_message)
-                    {
+                    if let Err(persist_error) = Self::append_input(
+                        &session_manager,
+                        session_id,
+                        &user_message,
+                        context.as_ref(),
+                        &mut progress,
+                    ) {
                         tracing::error!(error = %persist_error, "InnerError user 消息补写失败");
                     }
                     if let Err(persist_error) =
@@ -274,6 +344,7 @@ impl LoopService {
         session_id: &SessionId,
         run_id: &str,
         user_message: ChatMessage,
+        context: Option<&ChatMessage>,
         progress: &mut TurnProgress,
         cancel_signal: Signal,
     ) -> anyhow::Result<()> {
@@ -316,11 +387,13 @@ impl LoopService {
         };
         progress.turn.replace(turn);
 
-        // 会话追加 user 消息
-        session_manager
-            .append(session_id, user_message.clone())
-            .context("会话 {session_id} 追加 user 消息失败")?;
-        progress.user_persisted = true;
+        Self::append_input(
+            &session_manager,
+            session_id,
+            &user_message,
+            context,
+            progress,
+        )?;
 
         // emit: turn-start
         ctx.emit(
@@ -335,6 +408,7 @@ impl LoopService {
 
         let mut cause = LoopCause::max_step();
         let mut step = 0;
+        let mut tool_progress = ToolProgress::default();
         'steps: for step_index in 0..self.max_steps_per_turn {
             step = step_index as u32 + 1;
 
@@ -356,12 +430,24 @@ impl LoopService {
                 request: {
                     mcp_service.refresh_all().await;
 
+                    let system = prompt_registry.sections();
+                    let tools = tool_registry.list();
+                    let reserved_tokens = ChatRequest::instruction_tokens(&system, &tools);
+
                     let compaction = llm_compactor
-                        .compact(
-                            Arc::clone(&llm_provider),
+                        .compact_with_budget(
+                            track_auxiliary_usage(
+                                Arc::clone(&llm_provider),
+                                Arc::clone(&session_manager),
+                                Arc::downgrade(&ctx),
+                                session_id.clone(),
+                                run_id.to_string(),
+                                AuxiliaryUsagePurpose::Compaction,
+                            ),
                             session_manager.compaction_messages(session_id),
                             llm_config.clone(),
                             cancel_signal.clone(),
+                            reserved_tokens,
                         )
                         .await
                         .context("上下文压缩失败")?;
@@ -377,9 +463,9 @@ impl LoopService {
 
                     ChatRequest {
                         config: llm_config.clone(),
-                        system: prompt_registry.sections(),
+                        system,
                         messages: compaction.messages,
-                        tools: tool_registry.list(),
+                        tools,
                         cancel: cancel_signal.clone(),
                     }
                 },
@@ -415,6 +501,11 @@ impl LoopService {
 
             // 请求已定稿
             let request = request_payload.request;
+            if cancel_signal.is_aborted() {
+                cause = LoopCause::cancel();
+                break 'steps;
+            }
+            progress.usages.request_started(step);
             // emit: request-sent
             ctx.emit(
                 LoopEvent::RequestSent.with_id(session_id.clone()),
@@ -432,6 +523,9 @@ impl LoopService {
             let mut reasoning_text = String::new();
             let mut reply_tool_calls: Vec<ChatToolCall> = Vec::new();
             let mut usage: Option<ChatUsage> = None;
+            let mut finished = false;
+            let mut finish_reason = None;
+            let mut response_error = None;
             // call_id -> (name, args_json 片段)
             let mut pending_calls: HashMap<String, (String, String)> = HashMap::new();
 
@@ -441,8 +535,7 @@ impl LoopService {
                 let event = tokio::select! {
                     biased;
                     _ = cancel_signal.wait_aborted() => {
-                        cause = LoopCause::cancel();
-                        break 'steps;
+                        break;
                     }
                     event = stream.next() => event,
                 };
@@ -576,25 +669,69 @@ impl LoopService {
                         LLMStreamEvent::Usage(u) => {
                             usage = Some(u);
                         }
-                        LLMStreamEvent::Done { finish_reason } => {
+                        LLMStreamEvent::Done {
+                            finish_reason: reason,
+                        } => {
                             tracing::info!(
                                 session = %session_id,
                                 turn,
                                 step,
-                                finish = ?finish_reason,
+                                finish = ?reason,
                                 "模型流结束"
                             );
+                            finished = true;
+                            finish_reason = reason;
                             break;
                         }
                     },
                     Err(error) => {
-                        cause = LoopCause::error(format!("模型调用失败: {error}"));
-                        break 'steps;
+                        response_error = Some(format!("模型调用失败: {error}"));
+                        break;
                     }
                 }
             }
             if let Some(usage) = usage.clone() {
                 progress.usages.add((step, usage))
+            }
+
+            // 先保存已收到的正文、思考和用量，再结束失败的回合。
+            // 没有工具调用不等于生成了最终答案，不能把仅思考或截断流判为成功。
+            if !cancel_signal.is_aborted() && response_error.is_none() {
+                response_error = match finish_reason.as_deref() {
+                    Some("stop" | "tool_calls" | "function_call") => None,
+                    Some("length") => Some("模型达到输出长度上限，回复未完整生成".to_string()),
+                    Some("content_filter") => Some("模型服务的内容过滤中断了本次回复".to_string()),
+                    Some(reason) => Some(format!("模型以未预期的原因结束：{reason}")),
+                    None if finished => Some("模型未提供结束原因，回复可能未完整生成".to_string()),
+                    None => Some("模型响应流提前结束，未收到完成信号".to_string()),
+                };
+                if response_error.is_none() {
+                    response_error = if !pending_calls.is_empty() {
+                        Some("模型的工具调用输出不完整，工具未执行".to_string())
+                    } else if matches!(
+                        finish_reason.as_deref(),
+                        Some("tool_calls" | "function_call")
+                    ) && reply_tool_calls.is_empty()
+                    {
+                        Some("模型声明了工具调用，但未返回有效工具调用".to_string())
+                    } else if reply_tool_calls.is_empty() && reply_text.trim().is_empty() {
+                        Some(if reasoning_text.trim().is_empty() {
+                            "模型未返回正文或有效工具调用".to_string()
+                        } else {
+                            "模型仅返回思考内容，未返回最终回复或有效工具调用".to_string()
+                        })
+                    } else {
+                        None
+                    };
+                }
+            }
+            if reply_tool_calls
+                .iter()
+                .any(|call| call.id.is_empty() || call.name.is_empty())
+            {
+                response_error
+                    .get_or_insert_with(|| "模型的工具调用缺少标识或名称，工具未执行".to_string());
+                reply_tool_calls.retain(|call| !call.id.is_empty() && !call.name.is_empty());
             }
 
             let reply = ChatAssistantReply {
@@ -611,16 +748,19 @@ impl LoopService {
             } else {
                 Some(reasoning_text.clone())
             };
-            session_manager
-                .append(
-                    session_id,
-                    ChatMessage::assistant_with_tool_calls_and_reasoning(
-                        reply_text,
-                        reply_tool_calls,
-                        reasoning_content,
-                    ),
-                )
-                .context("会话日志写入失败")?;
+            if !reply.text.is_empty() || !reply.reasoning.is_empty() || !reply.tool_calls.is_empty()
+            {
+                session_manager
+                    .append(
+                        session_id,
+                        ChatMessage::assistant_with_tool_calls_and_reasoning(
+                            reply_text,
+                            reply_tool_calls,
+                            reasoning_content,
+                        ),
+                    )
+                    .context("会话日志写入失败")?;
+            }
             // emit: reply(整条消息的冻结快照, 含用量)
             ctx.emit(
                 LoopEvent::Reply.with_id(session_id.clone()),
@@ -634,12 +774,43 @@ impl LoopService {
                 },
             );
 
+            if cancel_signal.is_aborted() || response_error.is_some() {
+                let result = if cancel_signal.is_aborted() {
+                    cause = LoopCause::cancel();
+                    "[cancel]: 工具未执行，请求已取消"
+                } else {
+                    cause = LoopCause::error(response_error.unwrap());
+                    "[error]: 工具未执行，模型回复未完整结束"
+                };
+                // 已保存的 assistant 工具调用需要配对结果，后续请求才能安全重放历史。
+                for call in &reply.tool_calls {
+                    session_manager
+                        .append(session_id, ChatMessage::tool(result, &call.id))
+                        .context("会话日志写入失败")?;
+                    ctx.emit(
+                        LoopEvent::ToolResult.with_id(session_id.clone()),
+                        &LoopPayloadToolResult {
+                            run_id: run_id.to_string(),
+                            turn,
+                            step,
+                            session_id: session_id.clone(),
+                            user_message_snapshot: user_message.clone(),
+                            call: call.clone(),
+                            result: result.to_string(),
+                        },
+                    );
+                }
+                break 'steps;
+            }
+
             // 调用工具
             let tools_service = ToolsPlugin::get_service(&ctx).context("tools service 获取失败")?;
             let tool_calls = reply.tool_calls.clone();
             let mut tool_call_results = vec![];
+            let mut tool_outcomes = vec![];
             'tool_calls: for call in tool_calls {
                 let call_id = call.id.clone();
+                let mut tool_succeeded = false;
 
                 // vote: tool:pre-execute 可以修改call数据
                 let mut pre_execute_payload = LoopPayloadToolPreExecute {
@@ -648,10 +819,15 @@ impl LoopService {
                     call,
                     session_id: session_id.clone(),
                 };
-                let pre_execute_decision =
+                let pre_execute_decision = if cancel_signal.is_aborted() {
+                    LoopDecision::Deny {
+                        reason: "工具执行已取消".to_string(),
+                    }
+                } else {
                     ctx.veto(LoopEvent::ToolPreExecute, &mut pre_execute_payload, |_| {
                         LoopDecision::Allow
-                    });
+                    })
+                };
                 let raw = match pre_execute_decision {
                     LoopDecision::Deny { reason } => {
                         String::from(LoopCause::vote(LoopEvent::ToolPreExecute, reason))
@@ -679,16 +855,23 @@ impl LoopService {
                                     signal: cancel_signal.clone(),
                                 };
                                 // 找到了: 真正执行(异步)。结果转成文本。
-                                match tool
-                                    .run(pre_execute_payload.call.args.clone(), &run_ctx)
-                                    .await
-                                {
-                                    Ok(value) => stringify(&value),
+                                let result = tokio::select! {
+                                    biased;
+                                    _ = cancel_signal.wait_aborted() => {
+                                        Err(anyhow::anyhow!("工具执行已取消"))
+                                    }
+                                    result = tool.run(pre_execute_payload.call.args.clone(), &run_ctx) => result,
+                                };
+                                match result {
+                                    Ok(value) => {
+                                        tool_succeeded = true;
+                                        stringify(&value)
+                                    }
                                     Err(error) => String::from(LoopCause::error(error.to_string())),
                                 }
                             }
                             None => String::from(LoopCause::error(format!(
-                                "工具 {} 不存在",
+                                "工具 {} 不存在；请使用本轮 tools 列表中声明的完整工具名，不要省略或改写名称",
                                 pre_execute_payload.call.name
                             ))),
                         }
@@ -714,6 +897,11 @@ impl LoopService {
                     // 这里不是结束，而是继续下一个工具，不需要赋值上一级的cause
                     let tool_cause = LoopCause::vote(LoopEvent::ToolAfter, reason);
                     let msg = ChatMessage::tool(tool_cause.clone(), call_id);
+                    tool_outcomes.push(ToolOutcome::new(
+                        &tool_after_payload.call,
+                        &msg.content,
+                        false,
+                    ));
                     tool_call_results.push(msg.clone());
                     session_manager
                         .append(session_id, msg)
@@ -723,6 +911,11 @@ impl LoopService {
                 }
 
                 // 结果写入会话
+                tool_outcomes.push(ToolOutcome::new(
+                    &tool_after_payload.call,
+                    &tool_after_payload.result,
+                    tool_succeeded,
+                ));
                 let msg = ChatMessage::tool(
                     tool_after_payload.result.clone(),
                     tool_after_payload.call.id.clone(),
@@ -753,6 +946,10 @@ impl LoopService {
                 );
             }
 
+            if cancel_signal.is_aborted() {
+                cause = LoopCause::cancel();
+                break 'steps;
+            }
             // 判断是否解决问题
             let is_resolved = reply.tool_calls.is_empty();
 
@@ -776,6 +973,10 @@ impl LoopService {
 
             // 如果没有解决问题，则继续下一步
             if !after_reply_payload.is_resolved {
+                if let Some(reason) = tool_progress.observe(tool_outcomes) {
+                    cause = LoopCause::error(reason.to_string());
+                    break 'steps;
+                }
                 continue;
             }
 
@@ -861,6 +1062,7 @@ impl LoopService {
                     run.message,
                     run.cancel_signal,
                     run.done,
+                    run.context,
                 )
                 .await;
         }

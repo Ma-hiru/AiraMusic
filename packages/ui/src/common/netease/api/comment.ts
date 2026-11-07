@@ -30,6 +30,73 @@ export default class _NeteaseCommentAPI {
     });
   }
 
+  static floor(
+    params: {
+      /** 资源 id, 如歌曲 id,mv id */
+      id: number;
+      /** 楼层评论 id */
+      parentCommentId: number;
+      /** 数字 , 资源类型 , 对应歌曲 , mv, 专辑 , 歌单 , 电台, 视频对应以下类型 */
+      type: CommentType;
+      /** 取出评论数量, 默认为 20 */
+      limit?: number;
+      /** 分页参数,取上一页最后一项的 time 获取下一页数据 */
+      time?: number;
+    },
+    signal?: AbortSignal
+  ) {
+    return apiRequest<any, NeteaseAPI.NeteaseCommentFloorResponse>({
+      url: "/comment/floor",
+      params,
+      signal
+    });
+  }
+
+  /**
+   * @desc 调用此接口, 传入资源类型和资源 id 列表, 可批量获取对应资源的评论统计数据 (不需要登录)
+   * @return
+   * ```json
+   * {
+   *   "data": [
+   *     {
+   *       "latestLikedUsers": null,
+   *       "liked": false,
+   *       "comments": null,
+   *       "resourceType": 4,
+   *       "resourceId": 186016,
+   *       "commentUpgraded": false,
+   *       "musicianSaidCount": 0,
+   *       "commentCountDesc": "100w+",
+   *       "likedCount": 347,
+   *       "commentCount": 1970844,
+   *       "shareCount": 109721,
+   *       "threadId": "R_SO_4_186016"
+   *     }
+   *   ],
+   *   "code": 200
+   * }
+   * ```
+   * */
+  static info(
+    params: {
+      /** 资源 id 列表 */
+      ids: number[];
+      /** 数字 , 资源类型 , 对应歌曲 , mv, 专辑 , 歌单 , 电台, 视频对应以下类型 */
+      type: CommentType;
+    },
+    signal?: AbortSignal
+  ) {
+    return apiRequest<unknown, NeteaseAPI.NeteaseCommentInfoResponse>({
+      url: "/comment/info/list",
+      params: {
+        ids: params.ids.join(","),
+        type: params.type,
+        timestamp: Date.now()
+      },
+      signal
+    });
+  }
+
   /**
    * 给评论点赞
    * @desc 调用此接口 , 传入 type, 资源 id, 和评论 id cid 和 是否点赞参数 t 即可给对 应评论点赞 ( 需要登录 )

@@ -118,7 +118,10 @@ describe("自然结束时的列表循环", () => {
     const { audio, player, playlist } = createPlayer(tracks);
     const load = vi
       .spyOn(player as unknown as { load: (...args: unknown[]) => Promise<string> }, "load")
-      .mockResolvedValue("ok");
+      .mockImplementation(async (_track, play) => {
+        if (play) audio.play();
+        return "ok";
+      });
     audio.emit("ended");
     expect(audio.currentTime).toBe(180);
     expect(audio.play).not.toHaveBeenCalled();

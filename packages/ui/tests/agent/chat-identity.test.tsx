@@ -6,16 +6,12 @@ import type { ReactNode } from "react";
 vi.mock("@/wins/agent/hooks/use-conversation", () => ({
   useConversation: () => ({
     abort: vi.fn(),
-    retry: vi.fn(),
     submit: vi.fn(),
+    status: "ready",
     sending: false,
+    messages: [],
     recovering: false,
-    streamText: "",
-    conversation: null,
-    liveTimeline: [],
-    runningRunID: "",
-    retryCandidate: null,
-    pendingUserMessage: ""
+    runningRunID: ""
   })
 }));
 
@@ -51,6 +47,7 @@ const renderChat = (conversationID: string) => (
     conversationID={conversationID}
     onEditConfig={vi.fn()}
     onCreateConfig={vi.fn()}
+    onRemoveConfig={vi.fn()}
     onSelectConfig={vi.fn()}
     onRefreshConfigs={vi.fn()}
     onCreateConversation={vi.fn()}

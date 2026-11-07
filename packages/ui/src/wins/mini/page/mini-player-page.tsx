@@ -15,6 +15,7 @@ import { RendererFormat } from "@/common/lib/format";
 import { RendererWindow } from "@/common/lib/window";
 import { RendererIPCMessageBus } from "@/common/lib/bus";
 import { useListenable } from "@/common/hooks/use-listenable";
+import { useShortcutForwarder } from "@/common/hooks/use-shortcut-forwarder";
 import { useThemeInjectFromBus } from "@/common/hooks/use-theme-inject-from-bus";
 import { NeteaseURL, NeteaseArtist, NeteaseNetworkImage } from "@/common/netease/models";
 import Drag from "@/common/components/layout/drag/drag";
@@ -24,6 +25,8 @@ import NeteaseImage from "@/common/components/display/image/netease-image";
 import AcrylicBackground from "@/common/components/display/acrylic-background";
 
 const MiniPlayerPage: FC = () => {
+  // 迷你播放器聚焦时，命中的快捷键转发给主窗口执行
+  useShortcutForwarder();
   const themeBus = useThemeInjectFromBus();
   const mainWindow = useListenable(RendererWindow.main);
   const trackMetaBus = useListenable(RendererIPCMessageBus.trackMeta);

@@ -18,12 +18,18 @@ export default class RendererPlayerPlaylist extends Listenable<"currentChange"> 
   private _repeat: "all" | "off" | "one";
   private _shuffle: boolean;
   private _loop: boolean;
+  private _listVersion = 0;
   // 可播判定与不可播提示由外部（播放器）注入，使本类不依赖 UI/用户态、可独立测试
   private playableOf: NormalFunc<[record: NeteaseTrackRecord], PlayableResult> = () => ({
     playable: true,
     reason: ""
   });
   private onUnplayable?: (reason: string) => void;
+
+  /** 仅成员或显示顺序变化时推进，供窗口同步队列快照。 */
+  get listVersion() {
+    return this._listVersion;
+  }
 
   get loop() {
     return this._loop;
@@ -64,6 +70,7 @@ export default class RendererPlayerPlaylist extends Listenable<"currentChange"> 
    * on 把 headTrackIdx 放在最前、其余打乱，cursor=0，当前曲目继续播，后续是新随机
    */
   private rebuildOrder(shuffleOn: boolean, headTrackIdx: number) {
+    this._listVersion++;
     const n = this.tracks.length;
     const identity = Array.from({ length: n }, (_, i) => i);
     if (!shuffleOn) {
@@ -112,7 +119,7 @@ export default class RendererPlayerPlaylist extends Listenable<"currentChange"> 
     };
   }
 
-  static fromSave(props: ReturnType<typeof this.save>) {
+  static fromSave(props: ReturnType<typeof this.save>): RendererPlayerPlaylist {
     const playlist = props.playlist.map(
       NeteaseTrackRecord.fromRecordObject
     ) as NeteaseTrackRecord[];
@@ -225,6 +232,7 @@ export default class RendererPlayerPlaylist extends Listenable<"currentChange"> 
     this.tracks = [];
     this.order = [];
     this.cursor = -1;
+    this._listVersion++;
     !triggerCurrentChange() && triggerNormal();
     return this;
   }
@@ -251,6 +259,7 @@ export default class RendererPlayerPlaylist extends Listenable<"currentChange"> 
 
     // 标记变化
     this.mark_id = crypto.randomUUID();
+    this._listVersion++;
     !triggerCurrentChange() && triggerNormal();
     return this;
   }
@@ -280,6 +289,7 @@ export default class RendererPlayerPlaylist extends Listenable<"currentChange"> 
 
     // 标记变化
     this.mark_id = crypto.randomUUID();
+    this._listVersion++;
     !triggerCurrentChange() && triggerNormal();
     return this;
   }
@@ -317,6 +327,7 @@ export default class RendererPlayerPlaylist extends Listenable<"currentChange"> 
 
     // 标记变化
     this.mark_id = crypto.randomUUID();
+    this._listVersion++;
     this.executeListeners();
     return this;
   }

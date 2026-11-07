@@ -1,4 +1,5 @@
 import { cx } from "@emotion/css";
+import { Info } from "lucide-react";
 import { memo, type FC, useMemo, useState, useEffect } from "react";
 import { RendererWindow } from "@/common/lib/window";
 import { RendererIPCMessageBus } from "@/common/lib/bus";
@@ -9,8 +10,10 @@ import { NeteaseUser, NeteasePlaylist, NeteaseNetworkImage } from "@/common/nete
 import AppToast from "@/common/components/display/toast";
 import RendererImageConstants from "@/common/constants/image";
 import NeteaseImage from "@/common/components/display/image/netease-image";
+import AppModal, { createPlaylistCoverModal } from "@/common/components/display/modal";
 
 interface TopInfoProps {
+  coverCacheKey?: string;
   user: Nullable<NeteaseUser>;
   summary: Nullable<NeteasePlaylist>;
   onAddList: NormalFunc;
@@ -18,7 +21,15 @@ interface TopInfoProps {
   onEdited: Optional<NormalFunc>;
 }
 
-const TopInfo: FC<TopInfoProps> = ({ user, onEdited, onAddList, onPlayAll, summary: _summary }) => {
+const TopInfo: FC<TopInfoProps> = ({
+  user,
+  onEdited,
+  onAddList,
+  onPlayAll,
+  coverCacheKey,
+  summary: _summary
+}) => {
+  const { create } = AppModal.useModal();
   const [summary, setSummary] = useState(_summary);
   const userPlaylist = isUserPlaylist(user, summary?.id);
   const status = createPlaylistStats(summary);
@@ -122,6 +133,17 @@ const TopInfo: FC<TopInfoProps> = ({ user, onEdited, onAddList, onPlayAll, summa
             </div>
           )
         )}
+        <button
+          className="inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-sm font-semibold opacity-80 transition-opacity duration-200 hover:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 disabled:pointer-events-none disabled:opacity-35"
+          title="查看详情"
+          type="button"
+          disabled={!summary}
+          onClick={() =>
+            summary && create(createPlaylistCoverModal, { playlist: summary, coverCacheKey })
+          }>
+          <Info className="size-3.5 shrink-0" />
+          详情
+        </button>
       </div>
     </div>
   );

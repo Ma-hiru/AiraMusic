@@ -40,7 +40,9 @@ export class RendererDevice {
     return promise;
   }
 
+  private static platformCache: Undefinable<NodeJS.Platform>;
   static get platform(): Promise<"unknown" | NodeJS.Platform> {
+    if (this.platformCache) return Promise.resolve(this.platformCache);
     return RendererIPC.NormalChannel.send("invoke_device_platform", undefined).catch((err) => {
       Log.error(err);
       return "unknown";
@@ -70,6 +72,17 @@ export class RendererDevice {
     } catch (err) {
       Log.error(err);
     }
+  }
+
+  private static deviceNameCache: Optional<string>;
+  static get deviceName(): Promise<Nullable<string>> {
+    if (this.deviceNameCache !== undefined) return Promise.resolve(this.deviceNameCache);
+    return RendererIPC.NormalChannel.send("invoke_device_name", undefined)
+      .then(async (name) => (this.deviceNameCache = (await name) || null))
+      .catch((err) => {
+        Log.error(err);
+        return null;
+      });
   }
 }
 

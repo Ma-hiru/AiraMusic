@@ -8,6 +8,7 @@ import { NeteaseURL } from "@/common/netease/models";
 import { RendererIPCMessageBus } from "@/common/lib/bus";
 import { useListenable } from "@/common/hooks/use-listenable";
 import { useWindowVisible } from "@/common/hooks/use-window-visible";
+import { useShortcutForwarder } from "@/common/hooks/use-shortcut-forwarder";
 import { useThemeInjectFromBus } from "@/common/hooks/use-theme-inject-from-bus";
 import Drag from "@/common/components/layout/drag/drag";
 import AppToast from "@/common/components/display/toast";
@@ -16,6 +17,8 @@ import NoDrag from "@/common/components/layout/drag/no-drag";
 import AcrylicBackground from "@/common/components/display/acrylic-background";
 
 const RadioPage: FC = () => {
+  // 电台窗聚焦时，命中的快捷键转发给主窗口执行
+  useShortcutForwarder();
   const [openCommentPanel, setOpenCommentPanel] = useState(true);
   const themeBus = useThemeInjectFromBus();
   const trackMetaBus = useListenable(RendererIPCMessageBus.trackMeta);

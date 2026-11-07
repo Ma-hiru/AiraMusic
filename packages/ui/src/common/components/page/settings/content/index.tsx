@@ -7,6 +7,7 @@ import type { InvokeEventPayload } from "@mahiru/ipc/types";
 
 import Cache from "./cache";
 import Device from "./device";
+import Capsule from "./capsule";
 import Quality from "./quality";
 import Shortcut from "./shortcut";
 import AgentSettings from "./agent";
@@ -106,6 +107,7 @@ const SettingsContent: FC<SettingsContentProps> = ({
             updateQuality={updateQuality}
           />
           <Device output={output} updateOutput={updateOutput} />
+          <Capsule data={settings.preference} patchSettings={patchSettings} />
           <Performance data={settings.performance} patchSettings={patchSettings} />
           <Preference data={settings.preference} patchSettings={patchSettings} />
           <Shortcut data={settings.shortcuts} patchSettings={patchSettings} />

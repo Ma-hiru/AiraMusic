@@ -1,4 +1,5 @@
-use crate::llm::models::{ChatMessage, ChatRole, ChatRoleInnerType};
+use crate::llm::models::{ChatMessage, ChatRole, ChatRoleInnerType, ThreadContextUsage};
+use crate::session::models::ThreadAuxiliaryUsage;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
@@ -155,6 +156,10 @@ pub struct ThreadSnapshot {
     pub updated_at: i64,
     pub messages: Vec<MessageSnapshot>,
     pub runtime: ThreadRuntimeSnapshot,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub context: Option<ThreadContextUsage>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub auxiliary_usage: Option<ThreadAuxiliaryUsage>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]
@@ -162,6 +167,8 @@ pub struct ThreadSnapshot {
 #[ts(export)]
 pub struct CreateRunRequest {
     pub content: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub context: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, TS)]

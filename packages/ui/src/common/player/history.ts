@@ -71,7 +71,7 @@ export default class RendererPlayerHistory extends Listenable {
     };
   }
 
-  static fromSave(save: ReturnType<typeof this.save>) {
+  static fromSave(save: ReturnType<typeof this.save>): RendererPlayerHistory {
     save.list = save.list.map(NeteaseHistoryRecord.fromHistoryObject);
     return new RendererPlayerHistory(save);
   }

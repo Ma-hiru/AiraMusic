@@ -70,7 +70,7 @@ export interface ParseAiraRichContentOptions {
   maxCards?: number;
   /** 单个卡片围栏正文的最大字符数，只能收紧内置上限。 */
   maxCardChars?: number;
-  /** 允许进入富内容解析器的全文最大字符数，只能收紧内置上限。 */
+  /** 允许解析卡片 JSON 的全文最大字符数；超限仍隐藏显式卡片协议，只能收紧内置上限。 */
   maxContentChars?: number;
   /** 流式渲染时隐藏末尾尚未闭合的卡片协议，避免暴露内部 JSON。 */
   streaming?: boolean;

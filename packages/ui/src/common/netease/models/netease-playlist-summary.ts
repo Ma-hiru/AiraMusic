@@ -60,6 +60,10 @@ export class NeteasePlaylistSummary implements NeteasePlaylistSummaryModel {
     return new NeteasePlaylistSummary(playlist);
   }
 
+  static fromObject(playlist: NeteasePlaylistSummaryModel) {
+    return new NeteasePlaylistSummary(playlist);
+  }
+
   static isPrivacy(playlist: NeteasePlaylistSummaryModel | NeteaseAPI.NeteasePlaylistSummary) {
     return playlist?.privacy === 10;
   }

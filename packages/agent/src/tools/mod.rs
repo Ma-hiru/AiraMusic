@@ -72,7 +72,10 @@ impl ToolRegistry {
     }
 
     pub fn list(&self) -> Vec<Arc<dyn Tool>> {
-        self.tools.lock().unwrap().values().cloned().collect()
+        let mut tools: Vec<_> = self.tools.lock().unwrap().values().cloned().collect();
+        // MCP 刷新会重新注册工具，顺序不能随 HashMap 变化而改写请求前缀。
+        tools.sort_by(|left, right| left.name().cmp(right.name()));
+        tools
     }
 
     pub fn get(&self, name: &str) -> Option<Arc<dyn Tool>> {
@@ -84,5 +87,55 @@ impl Default for ToolRegistry {
         Self {
             tools: Arc::new(Mutex::new(HashMap::new())),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::tools::inner::{calculator::CalculatorTool, request::RequestTool, time::TimeTool};
+
+    #[test]
+    fn refreshing_tools_in_reverse_order_keeps_the_same_definitions() {
+        let registry = ToolRegistry::new();
+        let tools: Vec<Arc<dyn Tool>> = vec![
+            Arc::new(TimeTool),
+            Arc::new(CalculatorTool),
+            Arc::new(RequestTool),
+        ];
+        let snapshot = || {
+            registry
+                .list()
+                .into_iter()
+                .map(|tool| {
+                    (
+                        tool.name().to_string(),
+                        tool.description().to_string(),
+                        tool.parameters(),
+                    )
+                })
+                .collect::<Vec<_>>()
+        };
+        let disposers = tools
+            .iter()
+            .map(|tool| registry.register(Arc::clone(tool)).unwrap())
+            .collect::<Vec<_>>();
+        let original = snapshot();
+        assert_eq!(
+            original
+                .iter()
+                .map(|tool| tool.0.as_str())
+                .collect::<Vec<_>>(),
+            vec!["calculator", "request", "time"]
+        );
+        for dispose in disposers {
+            dispose();
+        }
+        let _disposers = tools
+            .iter()
+            .rev()
+            .map(|tool| registry.register(Arc::clone(tool)).unwrap())
+            .collect::<Vec<_>>();
+        assert_eq!(snapshot(), original);
     }
 }

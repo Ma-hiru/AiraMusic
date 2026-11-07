@@ -1,4 +1,5 @@
 import { cx } from "@emotion/css";
+import { Info } from "lucide-react";
 import { memo, type FC, useState } from "react";
 import { RendererWindow } from "@/common/lib/window";
 import { NeteaseAPIAlbum } from "@/common/netease/api";
@@ -6,8 +7,10 @@ import { RendererIPCMessageBus } from "@/common/lib/bus";
 import { createAlbumStats } from "@/common/utils/playlist";
 import { NeteaseUser, NeteaseAlbum } from "@/common/netease/models";
 import AppToast from "@/common/components/display/toast";
+import AppModal, { createAlbumCoverModal } from "@/common/components/display/modal";
 
 interface TopInfoProps {
+  coverCacheKey?: string;
   user: Nullable<NeteaseUser>;
   album: Nullable<NeteaseAlbum>;
   dynamic: Nullable<NeteaseAPI.NeteaseAlbumDynamicDetailResponse>;
@@ -15,7 +18,14 @@ interface TopInfoProps {
   onEdited?: NormalFunc;
 }
 
-const TopInfo: FC<TopInfoProps> = ({ onEdited, onAddList, album, dynamic: _dynamic }) => {
+const TopInfo: FC<TopInfoProps> = ({
+  onEdited,
+  onAddList,
+  album,
+  coverCacheKey,
+  dynamic: _dynamic
+}) => {
+  const { create } = AppModal.useModal();
   const [dynamic, setDynamic] = useState(_dynamic);
   const status = createAlbumStats(album, dynamic);
   return (
@@ -88,6 +98,20 @@ const TopInfo: FC<TopInfoProps> = ({ onEdited, onAddList, album, dynamic: _dynam
             </p>
           </div>
         ))}
+        <button
+          className="inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-sm font-semibold opacity-80 transition-opacity duration-200 hover:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 disabled:pointer-events-none disabled:opacity-35"
+          title="查看详情"
+          type="button"
+          disabled={!album || !dynamic}
+          onClick={() => {
+            if (!album || !dynamic) return;
+            const cacheKey =
+              (coverCacheKey ?? "") + album.content.publishTime + (album.tracks[0]?.id ?? "");
+            create(createAlbumCoverModal, { album, dynamic, coverCacheKey: cacheKey });
+          }}>
+          <Info className="size-3.5 shrink-0" />
+          详情
+        </button>
       </div>
     </div>
   );

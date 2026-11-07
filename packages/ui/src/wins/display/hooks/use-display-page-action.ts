@@ -9,14 +9,14 @@ import type { MessageData } from "@mahiru/ipc/types";
 export function useDisplayPageAction(
   data: Nullable<MessageData<"bus_display">> | NormalFunc<[], Nullable<MessageData<"bus_display">>>
 ) {
-  if (typeof data === "function") data = data();
   const { markBack } = useBack();
   const navigate = useNavigate();
   const dataRef = useLatestRef(data);
 
   const onPageAction = useCallback(async () => {
-    if (!dataRef.current) return;
-    RendererIPCMessageBus.display.deliver(dataRef.current, "main");
+    const data = typeof dataRef.current === "function" ? dataRef.current() : dataRef.current;
+    if (!data) return;
+    RendererIPCMessageBus.display.deliver(data, "main");
     markBack();
     navigate(-1);
   }, [dataRef, markBack, navigate]);

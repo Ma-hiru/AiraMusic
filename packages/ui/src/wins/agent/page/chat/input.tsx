@@ -11,13 +11,21 @@ import {
   type KeyboardEvent
 } from "react";
 import { useScrollAutoHide } from "@/common/hooks/use-scroll-auto-hide";
-import type { ProviderConfigView } from "@mahiru/agent/browser";
+import type {
+  ProviderConfigView,
+  ThreadContextUsage,
+  ThreadAuxiliaryUsage
+} from "@mahiru/agent/browser";
+
+import ContextUsage from "./context-usage";
 
 interface ChatInputProps {
   sending?: boolean;
   runningRunID: string;
   runningLabel?: string;
+  context?: ThreadContextUsage;
   selectedConversationID: string;
+  auxiliaryUsage?: ThreadAuxiliaryUsage;
   activeConfig: Undefinable<ProviderConfigView>;
   onAbort: NormalFunc;
   onSubmit: NormalFunc<[text: string], Promise<boolean>>;
@@ -26,10 +34,12 @@ interface ChatInputProps {
 const ChatInput: FC<ChatInputProps> = ({
   onAbort,
   onSubmit,
+  context,
   sending,
   activeConfig,
   runningLabel,
   runningRunID,
+  auxiliaryUsage,
   selectedConversationID
 }) => {
   const formRef = useRef<HTMLFormElement>(null);
@@ -112,6 +122,14 @@ const ChatInput: FC<ChatInputProps> = ({
             <span id={keyboardHintID} className="sr-only">
               Enter 发送，Shift + Enter 换行
             </span>
+            {selectedConversationID && (
+              <ContextUsage
+                context={context}
+                config={activeConfig}
+                running={!!runningRunID}
+                auxiliaryUsage={auxiliaryUsage}
+              />
+            )}
             {runningRunID ? (
               <button
                 className="inline-flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-full border border-red-200/18 bg-red-200/10 text-red-100/78 outline-none transition-colors hover:bg-red-200/16 focus-visible:ring-2 focus-visible:ring-red-100/40"

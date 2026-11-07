@@ -17,6 +17,7 @@ import { RendererIPC } from "@mahiru/ipc/renderer";
 import { RendererWindow } from "@/common/lib/window";
 import { RendererIPCMessageBus } from "@/common/lib/bus";
 import { useListenable } from "@/common/hooks/use-listenable";
+import { useShortcutForwarder } from "@/common/hooks/use-shortcut-forwarder";
 import { useThemeInjectFromBus } from "@/common/hooks/use-theme-inject-from-bus";
 import AppToast from "@/common/components/display/toast";
 import AcrylicBackground from "@/common/components/display/acrylic-background";
@@ -35,6 +36,8 @@ type TrayAction = {
 };
 
 const TrayPage: FC = () => {
+  // 托盘窗聚焦时，命中的快捷键转发给主窗口执行
+  useShortcutForwarder();
   const trackMetaBus = useListenable(RendererIPCMessageBus.trackMeta);
   const progressBus = useListenable(RendererIPCMessageBus.progress);
   const themeBus = useThemeInjectFromBus();

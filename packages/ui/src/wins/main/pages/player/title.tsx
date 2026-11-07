@@ -19,6 +19,7 @@ const Title: FC<TitleProps> = ({ className }) => {
     return (
       <Marquee
         className="opacity-50 text-[65%] leading-normal"
+        as="h3"
         text={title.sub}
         options={{
           speed: 15,
@@ -35,6 +36,7 @@ const Title: FC<TitleProps> = ({ className }) => {
     return (
       <Marquee
         className="opacity-50 text-[65%] leading-normal"
+        as="h3"
         text={alias}
         options={{
           speed: 15,
@@ -54,6 +56,7 @@ const Title: FC<TitleProps> = ({ className }) => {
     <section className={cx("flex flex-col justify-end text-center contain-layout", className)}>
       <Marquee
         className="opacity-50 text-[70%] leading-normal"
+        as="h2"
         text={ts}
         options={{
           speed: 15,
@@ -64,6 +67,7 @@ const Title: FC<TitleProps> = ({ className }) => {
       />
       <Marquee
         className="font-bold leading-normal"
+        as="h1"
         text={title?.main}
         options={{
           speed: 10,

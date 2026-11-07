@@ -3,6 +3,7 @@ import { memo, type FC, useState, useEffect, useCallback } from "react";
 import { RendererIPCMessageBus } from "@/common/lib/bus";
 import { useAppLoaded } from "@/common/hooks/use-app-loaded";
 import { useListenable } from "@/common/hooks/use-listenable";
+import { useShortcutForwarder } from "@/common/hooks/use-shortcut-forwarder";
 import { useThemeInjectFromBus } from "@/common/hooks/use-theme-inject-from-bus";
 import Drag from "@/common/components/layout/drag/drag";
 import AppToast from "@/common/components/display/toast";
@@ -15,6 +16,8 @@ type ImageGalleryState = {
 };
 
 const ImagePage: FC = () => {
+  // 图片窗聚焦时，命中的快捷键转发给主窗口执行
+  useShortcutForwarder();
   const [{ index, images }, setGallery] = useState<ImageGalleryState>({
     images: [],
     index: 0

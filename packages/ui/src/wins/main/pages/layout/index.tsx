@@ -1,9 +1,13 @@
+import { cx } from "@emotion/css";
+import { useAtomValue } from "jotai";
 import { memo, type FC, useState, useEffect } from "react";
 import { Stage } from "@/common/enum";
 import { useStage } from "@/common/hooks/use-stage";
+import { playModalAtom } from "@/wins/main/atoms/layout";
 import { useAppLoaded } from "@/common/hooks/use-app-loaded";
 import AppModal from "@/common/components/display/modal";
 import AppToast from "@/common/components/display/toast";
+import AppDrawer from "@/common/components/display/drawer";
 import AppMask from "@/common/components/fallback/app-mask";
 import AppContextMenu from "@/common/components/display/menu";
 import AppErrorBoundary from "@/common/components/fallback/app-error-boundary";
@@ -22,6 +26,7 @@ import MusicSource from "./music-source";
 
 const Layout: FC<object> = () => {
   const { stage } = useStage();
+  const playerOpened = useAtomValue(playModalAtom);
   const [loaded, setLoaded] = useState(false);
   const [wait, setWait] = useState(true);
 
@@ -56,6 +61,15 @@ const Layout: FC<object> = () => {
         {stage >= Stage.Second && <AppToast.Provider className="z-40" />}
         {stage >= Stage.Finally && <AppContextMenu.Provider className="z-40" />}
         {stage >= Stage.Finally && <AppModal.Provider className="z-35" />}
+        {stage >= Stage.Finally && (
+          <AppDrawer.Provider
+            className={cx(
+              // 播放层开合会改变抽屉可用的底边界，过渡时长与播放层位移保持一致
+              "z-32 top-(--top-control-height)! transition-[bottom] duration-400 ease-in-out",
+              !playerOpened && "bottom-(--playbar-height)!"
+            )}
+          />
+        )}
         {stage >= Stage.Second && <Float className="z-10" />}
       </AppErrorBoundary>
       <AppErrorBoundary name="PlayerSource" panic>

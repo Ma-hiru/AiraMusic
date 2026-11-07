@@ -59,7 +59,7 @@ async fn boot_agent(bootstrap: &AgentBootstrap) -> anyhow::Result<Arc<Ctx>> {
         },
         max_turns_config: MaxTurnsConfig { max_turns: 100_000 },
         loop_config: LoopConfig {
-            max_steps_per_turn: 100,
+            max_steps_per_turn: 25,
         },
     })
     .await?;

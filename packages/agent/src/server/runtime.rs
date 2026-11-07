@@ -12,6 +12,7 @@ use crate::server::models::{
     MessageSnapshot, ProviderConfigInput, ProviderConfigView, ProviderDescriptor, RunAccepted,
     ThreadRunStatus, ThreadRuntimeSnapshot, ThreadSnapshot, ThreadSummary,
 };
+use crate::server::title::ThreadTitleService;
 use crate::session::models::SessionId;
 use crate::session::{SessionManager, SessionPlugin};
 use crate::utils::Signal;
@@ -143,16 +144,18 @@ pub struct AgentLoopRuntimeService {
     sessions: Arc<SessionManager>,
     configs: Arc<LLMConfigManager>,
     loop_service: Option<Arc<LoopService>>,
+    titles: Option<Arc<ThreadTitleService>>,
     runs: AgentLoopRuntimeThreadRegistry,
 }
 impl AgentLoopRuntimeService {
     pub fn from_ctx(ctx: &Arc<Ctx>) -> anyhow::Result<Self> {
         let _ = AguiPlugin::get_service(ctx)?; // 检查是否注册
-        let service = Self::from_services(
+        let mut service = Self::from_services(
             SessionPlugin::get_service(ctx)?,
             LLMConfigPlugin::get_service(ctx)?,
             Some(LoopPlugin::get_service(ctx)?),
         );
+        service.titles = Some(ThreadTitleService::bind(ctx)?);
         service.bind_run_lifecycle(ctx);
         Ok(service)
     }
@@ -171,6 +174,7 @@ impl AgentLoopRuntimeService {
             sessions: sessions.into(),
             configs: configs.into(),
             loop_service,
+            titles: None,
             runs: AgentLoopRuntimeThreadRegistry::new(),
         }
     }
@@ -238,6 +242,11 @@ impl AgentLoopRuntimeService {
                 },
                 run_id: active.map(|run| run.run_id),
             },
+            context: self
+                .loop_service
+                .as_ref()
+                .and_then(|service| service.context_usage(&session_id)),
+            auxiliary_usage: metadata.auxiliary_usage,
         }))
     }
 
@@ -245,10 +254,27 @@ impl AgentLoopRuntimeService {
         if self.runs.active_for_thread(id).is_some() {
             anyhow::bail!("会话 {id} 正在运行，不能删除");
         }
-        self.sessions.delete_session(&SessionId::from(id))
+        let session_id = SessionId::from(id);
+        let removed = self.sessions.delete_session(&session_id)?;
+        Ok(removed)
     }
 
     pub fn create_run(&self, thread_id: &str, content: String) -> anyhow::Result<RunAccepted> {
+        self.create_run_with_context(thread_id, content, None)
+    }
+
+    pub fn create_run_with_context(
+        &self,
+        thread_id: &str,
+        content: String,
+        context: Option<String>,
+    ) -> anyhow::Result<RunAccepted> {
+        if context
+            .as_ref()
+            .is_some_and(|value| value.chars().count() > 8_192)
+        {
+            anyhow::bail!("应用页面上下文超过长度限制");
+        }
         let session_id = SessionId::from(thread_id);
 
         if !self.sessions.has(&session_id) {
@@ -259,28 +285,43 @@ impl AgentLoopRuntimeService {
             .as_ref()
             .ok_or_else(|| anyhow::anyhow!("Agent loop service 未配置"))?;
 
-        // 如果会话没有名称，那么从输入中提取标题
-        if self
-            .sessions
-            .metadata(&session_id)
-            .is_some_and(|metadata| metadata.name.trim().is_empty())
+        let run = self.runs.create_run(thread_id)?;
+        if let Some(titles) = &self.titles {
+            if let Err(error) = titles.prepare(&session_id, &run.run_id, &content) {
+                self.runs.finish(&run.run_id);
+                return Err(error);
+            }
+        } else if let Some(metadata) = self.sessions.metadata(&session_id)
+            && metadata.name.trim().is_empty()
         {
-            let title = Self::thread_title_from_input(&content);
-            if !title.is_empty() {
-                self.sessions.rename(&session_id, title)?;
+            let first_user = self
+                .sessions
+                .real_messages(&session_id)
+                .into_iter()
+                .find(|message| message.role == ChatRole::User);
+            let title = crate::session::models::ThreadMetadata::title_from_input(
+                first_user
+                    .as_ref()
+                    .map_or(&content, |message| &message.content),
+            );
+            if let Err(error) = self
+                .sessions
+                .rename_if_name(&session_id, &metadata.name, title)
+            {
+                self.runs.finish(&run.run_id);
+                return Err(error);
             }
         }
-
-        let run = self.runs.create_run(thread_id)?;
         let accepted = RunAccepted {
             thread_id: run.thread_id.clone(),
             run_id: run.run_id.clone(),
         };
-        let handle = loop_service.send(
+        let handle = loop_service.send_with_context(
             SessionId::from(thread_id),
             run.run_id.clone(),
             ChatMessage::user(content),
             run.signal,
+            context,
         );
 
         let registry = self.runs.clone();
@@ -376,6 +417,7 @@ impl AgentLoopRuntimeService {
     ) -> anyhow::Result<LLMConfig> {
         let provider = match input.provider.to_ascii_lowercase().as_str() {
             "openai" => LLMProvider::OpenAI,
+            "ollama" => LLMProvider::Ollama,
             provider => anyhow::bail!("不支持的 LLM provider: {provider}"),
         };
         let id = forced_id
@@ -384,7 +426,10 @@ impl AgentLoopRuntimeService {
             .filter(|id| !id.trim().is_empty())
             .unwrap_or_else(|| generate_id("llm-config"));
         let api_key = if input.api_key.trim().is_empty() {
-            existing_api_key.ok_or_else(|| anyhow::anyhow!("API Key 不能为空"))?
+            existing_api_key
+                .filter(|key| !key.trim().is_empty())
+                .or_else(|| (provider == LLMProvider::Ollama).then(String::new))
+                .ok_or_else(|| anyhow::anyhow!("API Key 不能为空"))?
         } else {
             input.api_key
         };
@@ -409,6 +454,7 @@ impl AgentLoopRuntimeService {
             name: config.name,
             provider: match config.provider {
                 LLMProvider::OpenAI => "openai".to_string(),
+                LLMProvider::Ollama => "ollama".to_string(),
             },
             model: config.model,
             masked_api_key: if mask_api_key {
@@ -423,16 +469,6 @@ impl AgentLoopRuntimeService {
             default: config.default,
             thinking: config.thinking,
         }
-    }
-
-    fn thread_title_from_input(input: &str) -> String {
-        input
-            .split_whitespace()
-            .collect::<Vec<_>>()
-            .join(" ")
-            .chars()
-            .take(32)
-            .collect()
     }
 
     fn latest_turn_failed(messages: &[ChatMessage]) -> bool {

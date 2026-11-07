@@ -235,11 +235,24 @@
   [data-streamdown="ordered-list"] {
     margin-block: 0.3rem 0.8rem;
     padding-left: 1.35rem;
+    list-style-position: outside;
+  }
+
+  [data-streamdown="unordered-list"] {
+    list-style-type: disc;
+  }
+
+  [data-streamdown="ordered-list"] {
+    list-style-type: decimal;
   }
 
   [data-streamdown="list-item"] {
     margin-block: 0.22rem;
     padding-left: 0.1rem;
+
+    &.task-list-item {
+      list-style-type: none;
+    }
   }
 
   [data-streamdown="blockquote"] {

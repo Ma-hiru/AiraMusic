@@ -1,6 +1,6 @@
 import { RendererIPC } from "@mahiru/ipc/renderer";
 import { Listenable } from "@/common/utils/listenable";
-import type { MessageData, MessageBusEvent } from "@mahiru/ipc/types";
+import type { MessageData, ShortcutAction, MessageBusEvent } from "@mahiru/ipc/types";
 
 export abstract class MessageBus<
   T extends MessageBusEvent,
@@ -115,6 +115,8 @@ export class RendererIPCMessageBus {
   );
   static readonly output = new MessageBusObj("bus_deliver_device_output_views", "display");
   static readonly history = new MessageBusObj("bus_deliver_history", "display");
+  static readonly playList = new MessageBusObj("bus_deliver_play_list", "display");
+  static readonly playListPosition = new MessageBusObj("bus_deliver_play_list_position", "display");
   static readonly preview = new MessageBusArray("bus_deliver_preview", "image");
   static readonly modified = new MessageBusArray("bus_modify_source", ["main", "display"]);
 
@@ -124,5 +126,22 @@ export class RendererIPCMessageBus {
         MessageBus._consume(ins);
       }
     }
+  }
+
+  /**
+   * 转发命中的快捷键给主窗口执行。
+   * 该事件频次低但要求即时（音量键会连发），因此直接走 channel，不进 Listenable 的防抖队列。
+   */
+  static forwardShortcut(action: ShortcutAction) {
+    RendererIPC.MessageChannel.send("bus_dispatch_shortcut", "main", action);
+  }
+
+  /** 主窗口侧监听其他窗口转发来的快捷键，返回取消订阅函数 */
+  static listenShortcut(callback: NormalFunc<[action: ShortcutAction]>) {
+    return RendererIPC.MessageChannel.listen("bus_dispatch_shortcut", "all", ({ data, from }) => {
+      // 只接受其他渲染窗口的转发，进程广播与主窗口自身回环一律忽略
+      if (from === "process" || from === "main") return;
+      callback(data);
+    });
   }
 }

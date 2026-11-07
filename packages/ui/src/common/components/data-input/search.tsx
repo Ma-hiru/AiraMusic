@@ -4,36 +4,46 @@ import { Search as SearchIcon } from "lucide-react";
 import { memo, type FC, useMemo, useState, useEffect, useDeferredValue } from "react";
 
 interface SearchProps {
+  value?: string;
   iconClass?: string;
   inputClass?: string;
   placeholder?: string;
   containerClass?: string;
   setIsTyping: NormalFunc<[isTyping: boolean]>;
   onSearch: NormalFunc<[k: string]>;
+  onValueChange?: NormalFunc<[value: string]>;
 }
 
 const Search: FC<SearchProps> = ({
   setIsTyping,
   onSearch,
+  onValueChange,
   iconClass,
   inputClass,
   placeholder,
-  containerClass
+  containerClass,
+  value: controlledValue
 }) => {
-  const [value, setValue] = useState("");
+  const [localValue, setValue] = useState("");
+  const value = controlledValue ?? localValue;
   const debouncedSearch = useMemo(() => debounce(onSearch, 300), [onSearch]);
   const deferredValue = useDeferredValue(value);
 
   useEffect(() => {
+    if (value !== deferredValue) {
+      debouncedSearch.cancel();
+      return;
+    }
     debouncedSearch(deferredValue);
-  }, [deferredValue, debouncedSearch]);
+    return () => debouncedSearch.cancel();
+  }, [value, deferredValue, debouncedSearch]);
 
   return (
-    <div className={cx("font-semibold relative inline-block text-(--text-color)", containerClass)}>
+    <div className={cx("font-semibold relative inline-block text-normal-text", containerClass)}>
       <input
         className={cx(
           `
-          outline-(--text-color)
+          outline-normal-text
           block h-6 px-3 pr-8 w-18 focus:w-48 rounded-full
           border border-(--text-color)/30
           placeholder:text-(--text-color)/50
@@ -47,7 +57,11 @@ const Search: FC<SearchProps> = ({
         placeholder={placeholder ?? "搜索"}
         onBlur={() => setIsTyping(false)}
         onFocus={() => setIsTyping(true)}
-        onChange={(e) => setValue(e.target.value)}
+        onChange={(e) => {
+          const value = e.target.value;
+          if (controlledValue === undefined) setValue(value);
+          onValueChange?.(value);
+        }}
       />
       <SearchIcon
         className={cx(

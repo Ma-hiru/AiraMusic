@@ -94,7 +94,7 @@ const NavPlaylist: FC<NavPlaylistProps> = ({
       {playlistItems.length === 0 && <AppEmpty tips="无搜索结果" />}
       <VirtualList
         overscan={10}
-        itemHeight={57}
+        itemHeight={55}
         items={playlistItems}
         containerRef={containerRef}
         RowComponent={RowComponent}

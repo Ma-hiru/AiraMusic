@@ -18,7 +18,9 @@ import { MainExitCodeConstants } from "@/constants/exit-code";
 import type { MessageData } from "@mahiru/ipc/types";
 
 export class TrayUtils {
-  constructor(tray: Tray) {
+  /** darwin 的胶囊由原生承载，没有 Electron Tray 实例 */
+  constructor(tray: Nullable<Tray>) {
+    if (!tray) return;
     tray.setToolTip(process.env.APP_NAME);
     MainIPC.MessageChannel.listen("bus_deliver_track_meta", (data) => {
       const track = data.track?.detail;
@@ -30,10 +32,10 @@ export class TrayUtils {
 
   protected customMenuVisible = false;
   protected showCustomMenu(
-    tray: Tray,
+    tray: Nullable<Tray>,
     trayWin: BrowserWindow,
-    /** native 歌词条传来的是 AppKit 屏幕坐标（左下原点） */
-    anchor?: { x: number; y: number; width: number; height: number }
+    /** native 歌词条传来的是 AppKit 屏幕坐标（左下原点）+ 该屏的 CGDirectDisplayID */
+    anchor?: MenuBarAnchor
   ) {
     const winBounds = trayWin.getBounds();
     let x: number;
@@ -41,9 +43,7 @@ export class TrayUtils {
 
     if (anchor) {
       // 菜单栏歌词：水平对齐歌词条；垂直贴在该屏 workArea 顶边（菜单栏正下方）
-      // 避免 AppKit ↔ Electron Y 轴混用导致飞位
-      const display = screen.getDisplayNearestPoint({ x: Math.round(anchor.x), y: 0 });
-      const { workArea } = display;
+      const { workArea } = resolveDisplay(anchor);
       const trayCenterX = anchor.x + anchor.width / 2;
       x = Math.round(trayCenterX - winBounds.width / 2);
       if (x + winBounds.width > workArea.x + workArea.width) {
@@ -52,7 +52,11 @@ export class TrayUtils {
       if (x < workArea.x) x = workArea.x + 8;
       y = Math.round(workArea.y);
     } else {
-      const trayBounds = tray.getBounds();
+      const trayBounds = tray?.getBounds();
+      if (!trayBounds) {
+        Log.warn("tray", "custom menu requires either anchor or tray bounds");
+        return;
+      }
       const workArea = screen.getDisplayNearestPoint({
         x: trayBounds.x,
         y: trayBounds.y
@@ -314,4 +318,35 @@ export class TrayUtils {
 
     register.setMenu(Menu.buildFromTemplate(template));
   }
+}
+
+/** native 菜单栏事件带来的 AppKit 矩形（左下原点） */
+type MenuBarAnchor = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  /** CGDirectDisplayID，与 Electron `display.id` 同源；0 表示没取到 */
+  displayId?: number;
+};
+
+/**
+ * @desc 定位胶囊所在的那块屏 \
+ * 优先按 native 给的 displayId 精确匹配；缺失时把 AppKit 的左下原点坐标
+ * 翻成 Electron 的左上原点矩形再匹配 \
+ * 不能再用固定的 `y: 0`：上下叠屏时那条线正好是两屏交界，距离同为 0 会被判给主屏
+ */
+function resolveDisplay(anchor: MenuBarAnchor) {
+  if (anchor.displayId) {
+    const matched = screen.getAllDisplays().find((display) => display.id === anchor.displayId);
+    if (matched) return matched;
+  }
+
+  const primaryHeight = screen.getPrimaryDisplay().bounds.height;
+  return screen.getDisplayMatching({
+    x: Math.round(anchor.x),
+    y: Math.round(primaryHeight - anchor.y - anchor.height),
+    width: Math.round(anchor.width),
+    height: Math.round(anchor.height)
+  });
 }

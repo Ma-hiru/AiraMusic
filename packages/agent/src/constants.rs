@@ -12,7 +12,7 @@ pub const STORE_SECRET_ENV: &str = "AIRA_AGENT_STORE_SECRET";
 pub const MCP_TOKEN_ENV: &str = "AIRA_AGENT_MCP_TOKEN";
 
 pub fn support_providers() -> Vec<ProviderDescriptor> {
-    vec![ProviderDescriptor {
+    let openai = ProviderDescriptor {
         id: "openai".to_string(),
         label: "OpenAI Compatible".to_string(),
         description: "OpenAI Chat Completions 兼容接口".to_string(),
@@ -50,7 +50,25 @@ pub fn support_providers() -> Vec<ProviderDescriptor> {
                 }
             }
         }),
-    }]
+    };
+    let mut ollama_schema = openai.config_schema.clone();
+    ollama_schema["required"] = json!(["model"]);
+    ollama_schema["properties"]["baseUrl"]["default"] = json!("http://localhost:11434/v1");
+    ollama_schema["properties"]["baseUrl"]["description"] =
+        json!("Ollama 的 OpenAI 兼容接口地址，默认连接本机服务");
+    ollama_schema["properties"]["apiKey"]["description"] =
+        json!("本地服务可留空；远程服务需要鉴权时填写，凭据加密保存");
+    ollama_schema["properties"]["thinking"]["description"] =
+        json!("需要模型支持；部分模型只支持调整思考强度，关闭时请求不输出思考内容");
+    vec![
+        openai,
+        ProviderDescriptor {
+            id: "ollama".to_string(),
+            label: "Ollama".to_string(),
+            description: "Ollama 的 OpenAI 兼容接口".to_string(),
+            config_schema: ollama_schema,
+        },
+    ]
 }
 
 /// @prompt by ChatGPT
@@ -90,6 +108,13 @@ pub const PERSONA: &str = r#"你是 Aira，AiraMusic 内置的智能音乐助手
 - 获取评论内容与打开评论页面是不同操作；读取资源详情与打开资源页面也是不同操作，应按用户真实意图选择。
 - 修改歌词翻译或罗马音前，先取得当前歌词及其要求的数据结构；只修改用户要求的部分，保留时间轴、原文、顺序和其他已有数据。
 - 涉及近期发行、新闻、官方声明、创作背景或跨媒体关系时，如果有网页工具，应查阅可靠来源正文。回答中清楚标明来源，并把事实与解释分开。
+
+## ACGN 资料
+
+- 用户问动画、漫画、游戏、轻小说、角色、声优或制作人员，且需要准确资料（作品名与别名、播出或发售时间、评分排名、制作名单、关联角色）时，优先用 Bangumi 工具检索；它返回结构化条目和 wiki 字段，比网页搜索更可靠。
+- 只是闲聊、讨论你已确定知道的常识，或用户要的是观点和推荐理由时，不必为了凑资料强行查询。
+- Bangumi 明显连不通（DNS 被拦截、代理不可用、超时）时，不要反复重试同一个工具：改用网页搜索查同一内容，并在回答里说明来源是网页而不是 Bangumi。
+- 引用 Bangumi 资料时给出条目链接；内容由用户编辑，可能有误或过时，不确定的部分要说明。
 
 ## 历史与长期记忆
 

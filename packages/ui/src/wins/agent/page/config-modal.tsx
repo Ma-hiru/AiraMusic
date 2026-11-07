@@ -1,6 +1,14 @@
 import { cx } from "@emotion/css";
 import { type FC, useMemo, useState, type FormEvent, type ReactNode } from "react";
-import { Check, KeyRound, ShieldCheck, type LucideIcon, SlidersHorizontal } from "lucide-react";
+import {
+  Check,
+  Network,
+  KeyRound,
+  Settings2,
+  ShieldCheck,
+  type LucideIcon,
+  SlidersHorizontal
+} from "lucide-react";
 import { RendererAgent } from "@/wins/agent/lib/agent";
 import AppModal from "@/common/components/display/modal";
 import AppToast from "@/common/components/display/toast";
@@ -60,6 +68,8 @@ const inputClassName = `
   placeholder:text-white/24 hover:bg-white/7 focus:border-primary/60 focus:bg-white/8
   focus:ring-2 focus:ring-primary/12 disabled:cursor-not-allowed disabled:opacity-40
 `;
+
+const cardClassName = "rounded-xl border border-white/8 bg-white/[0.025]";
 
 const isConfigValue = (value: unknown): value is ProviderConfigValue =>
   typeof value === "string" || typeof value === "number" || typeof value === "boolean";
@@ -327,9 +337,13 @@ const AgentConfigFormContent: FC<AgentConfigModalProps> = ({
 
   return (
     <form className="agent-config-form grid gap-3 text-[12px]" onSubmit={saveConfig}>
-      <section className="grid gap-2.5 rounded-xl border border-white/8 bg-white/[0.025] p-3">
-        <SectionHeading title="基础信息" description="为这组连接设置一个容易识别的名称" />
-        <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+      <section className={cx("grid gap-2.5 p-3", cardClassName)} aria-label="基础信息">
+        <SectionHeading
+          title="基础信息"
+          icon={Settings2}
+          description="为这组连接设置一个容易识别的名称"
+        />
+        <div className="grid grid-cols-1 items-start gap-2.5 sm:grid-cols-2">
           <FieldLabel title="Provider" required>
             <FormSelect
               label="Provider"
@@ -362,9 +376,13 @@ const AgentConfigFormContent: FC<AgentConfigModalProps> = ({
       )}
 
       {primaryFields.length > 0 && (
-        <section className="grid gap-2.5">
-          <SectionHeading title="模型与接口" description="选择调用方式和兼容服务地址" />
-          <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+        <section className={cx("grid gap-2.5 p-3", cardClassName)} aria-label="模型与接口">
+          <SectionHeading
+            title="模型与接口"
+            icon={Network}
+            description="选择调用方式和兼容服务地址"
+          />
+          <div className="grid grid-cols-1 items-start gap-2.5 sm:grid-cols-2">
             {primaryFields.map((field) => (
               <div
                 key={field.key}
@@ -381,11 +399,17 @@ const AgentConfigFormContent: FC<AgentConfigModalProps> = ({
       )}
 
       {credentialFields.length > 0 && (
-        <section className="grid gap-2.5 rounded-xl border border-white/8 bg-black/8 p-3">
+        <section className={cx("grid gap-2.5 p-3", cardClassName)} aria-label="访问凭据">
           <SectionHeading
             title="访问凭据"
             icon={ShieldCheck}
-            description={editing ? "密钥已经安全保存；留空不会修改" : "密钥只会交给主进程保存"}
+            description={
+              initialConfig?.maskedApiKey
+                ? "密钥已经安全保存；留空不会修改"
+                : credentialFields.some((field) => field.required)
+                  ? "填写服务要求的访问密钥"
+                  : "本地服务可留空；远程服务需要鉴权时填写"
+            }
           />
           {credentialFields.map((field) => (
             <ProviderFieldControl
@@ -400,13 +424,13 @@ const AgentConfigFormContent: FC<AgentConfigModalProps> = ({
       )}
 
       {advancedFields.length > 0 && (
-        <details className="group rounded-xl border border-white/8 bg-white/[0.02]">
-          <summary className="flex h-10 cursor-pointer list-none items-center gap-2 px-3 text-[11px] font-medium text-white/55 outline-none hover:text-white/76 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white/35">
-            <SlidersHorizontal className="size-3.5 text-white/34" />
-            高级设置
-            <span className="ml-auto text-[9px] font-normal text-white/24">上下文窗口与超时</span>
-          </summary>
-          <div className="grid grid-cols-1 gap-2.5 border-t border-white/7 p-3 sm:grid-cols-2">
+        <section className={cx("grid gap-2.5 p-3", cardClassName)} aria-label="高级设置">
+          <SectionHeading
+            title="高级设置"
+            description="上下文窗口与思考模式"
+            icon={SlidersHorizontal}
+          />
+          <div className="grid grid-cols-1 items-start gap-2.5 sm:grid-cols-2">
             {advancedFields.map((field) => (
               <ProviderFieldControl
                 key={field.key}
@@ -416,7 +440,7 @@ const AgentConfigFormContent: FC<AgentConfigModalProps> = ({
               />
             ))}
           </div>
-        </details>
+        </section>
       )}
 
       {!fields.length && selectedProvider && (
@@ -492,6 +516,7 @@ const ProviderFieldControl: FC<ProviderFieldControlProps> = ({
           role="switch"
           type="button"
           aria-checked={checked}
+          aria-label={field.title}
           onClick={() => onChange(!checked)}>
           <span className="text-[11px] font-medium text-white/60">
             {checked ? "已启用" : "已关闭"}
@@ -548,7 +573,7 @@ const FieldLabel: FC<{
   children: ReactNode;
   description?: string;
 }> = ({ title, children, required, description }) => (
-  <label className="grid min-w-0 gap-1">
+  <label className="grid min-w-0 content-start gap-1">
     <span className="flex items-center gap-1 text-[10px] font-medium text-white/52">
       {title}
       {required && <span className="text-primary/80">*</span>}
@@ -561,18 +586,16 @@ const FieldLabel: FC<{
 // eslint-disable-next-line react-refresh/only-export-components
 const SectionHeading: FC<{
   title: string;
-  icon?: LucideIcon;
+  icon: LucideIcon;
   description: string;
 }> = ({ title, icon: Icon, description }) => (
-  <div className="flex min-w-0 items-start gap-2">
-    {Icon && (
-      <span className="mt-0.5 grid size-6 shrink-0 place-items-center rounded-lg border border-white/8 bg-white/4">
-        <Icon className="size-3.5 text-white/40" />
-      </span>
-    )}
-    <div className="min-w-0">
-      <div className="text-[11px] font-medium text-white/67">{title}</div>
-      <div className="mt-px text-[9px] leading-4 text-white/27">{description}</div>
-    </div>
-  </div>
+  <span className="flex min-w-0 items-center gap-2">
+    <span className="grid size-6 shrink-0 place-items-center rounded-lg border border-white/8 bg-white/4">
+      <Icon className="size-3.5 text-white/40" aria-hidden="true" />
+    </span>
+    <span className="min-w-0">
+      <span className="block text-[11px] font-medium text-white/67">{title}</span>
+      <span className="mt-px block text-[9px] leading-4 text-white/27">{description}</span>
+    </span>
+  </span>
 );

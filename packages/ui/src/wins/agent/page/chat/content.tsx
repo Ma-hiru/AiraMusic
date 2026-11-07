@@ -25,62 +25,57 @@ import RendererImageConstants from "@/common/constants/image";
 import NeteaseImage from "@/common/components/display/image/netease-image";
 import type { LucideIcon } from "lucide-react";
 import type { MessageData } from "@mahiru/ipc/types";
-import type { ThreadSnapshot, MessageSnapshot } from "@mahiru/agent/browser";
+import type {
+  AgentUIMessage,
+  AgentRunTerminal,
+  AgentAssistantTurnObservability
+} from "@/wins/agent/lib/chat/interface";
 
 import ToolStep from "./tool-step";
 import ThinkContent from "./think-content";
+import type { AgentToolTimelineItem } from "../types";
 import { RunTerminalCard } from "./turn-observability";
 import ContentItem, { AssistantTurnGroup } from "./content-item";
-import { parseStoredTurnUsage, storedRunErrorTerminal } from "./observability";
-import type {
-  AgentRunTerminal,
-  AgentLiveReasoning,
-  AgentLiveTimelineItem,
-  AgentToolTimelineItem,
-  AgentAssistantTurnObservability
-} from "../types";
 
 type ChatMessageTimelineItem = {
   id: string;
   runID?: string;
   type: "message";
   streaming?: boolean;
-  assistantTurn?: AgentAssistantTurnObservability;
-  message: Pick<MessageSnapshot, "role" | "content">;
+  message: { content: string; role: "user" | "assistant" };
 };
 
-type ChatTimelineItem =
+type ChatReasoningTimelineItem = {
+  id: string;
+  text: string;
+  type: "reasoning";
+  status: "done" | "streaming";
+};
+
+type AssistantTimelineItem =
   | AgentRunTerminal
-  | AgentLiveReasoning
   | AgentToolTimelineItem
-  | ChatMessageTimelineItem;
-
-type AssistantContentTimelineItem =
-  | AgentLiveReasoning
-  | AgentToolTimelineItem
-  | ChatMessageTimelineItem;
-
-type AssistantTimelineItem = AgentRunTerminal | AssistantContentTimelineItem;
+  | ChatMessageTimelineItem
+  | ChatReasoningTimelineItem;
 
 type AssistantTimelineGroup = {
   id: string;
   runID?: string;
+  streaming: boolean;
   type: "assistant-group";
   items: AssistantTimelineItem[];
+  assistantTurn?: AgentAssistantTurnObservability;
 };
 
-type ChatRenderableTimelineItem = ChatTimelineItem | AssistantTimelineGroup;
+type ChatRenderableTimelineItem = AssistantTimelineGroup | ChatMessageTimelineItem;
 
 interface ChatContentProps {
   running: boolean;
-  streamText: string;
   configured: boolean;
   recovering: boolean;
   runningRunID: string;
   hasConversation: boolean;
-  pendingUserMessage: string;
-  liveTimeline: AgentLiveTimelineItem[];
-  conversation: Nullable<ThreadSnapshot>;
+  messages: AgentUIMessage[];
   onCreateConfig: NormalFunc;
   onCreateConversation: NormalFunc;
   onSubmitPrompt: NormalFunc<[text: string], Promise<boolean>>;
@@ -91,14 +86,11 @@ const ChatContent: FC<ChatContentProps> = ({
   onSubmitPrompt,
   onCreateConversation,
   running,
+  messages,
   configured,
   recovering,
-  streamText,
-  conversation,
-  liveTimeline,
   runningRunID,
-  hasConversation,
-  pendingUserMessage
+  hasConversation
 }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -108,28 +100,10 @@ const ChatContent: FC<ChatContentProps> = ({
   const [showJumpToLatest, setShowJumpToLatest] = useState(false);
   const trackMetaBus = useListenable(RendererIPCMessageBus.trackMeta);
   const currentTrack = trackMetaBus.data?.track;
-  const lastLiveItem = liveTimeline.at(-1);
-  const waitingForModel =
-    running &&
-    !recovering &&
-    !(lastLiveItem?.type === "tool" && lastLiveItem.status === "running") &&
-    !(lastLiveItem?.type === "reasoning" && lastLiveItem.status === "streaming");
-  const timeline = useMemo(() => {
-    const liveItems = buildLiveTimeline(liveTimeline, streamText, waitingForModel, runningRunID);
-    const liveItemIDs = new Set(liveItems.map((item) => item.id));
-    const items = buildTimeline(conversation).filter((item) => !liveItemIDs.has(item.id));
-    const pendingMessageAlreadyPersisted =
-      !!runningRunID && conversation?.runtime.runId === runningRunID;
-    if (pendingUserMessage && !pendingMessageAlreadyPersisted) {
-      items.push({
-        id: `pending-user-${runningRunID || "message"}`,
-        type: "message",
-        message: { role: "user", content: pendingUserMessage }
-      });
-    }
-    items.push(...liveItems);
-    return groupAssistantTimeline(items);
-  }, [conversation, liveTimeline, pendingUserMessage, runningRunID, streamText, waitingForModel]);
+  const timeline = useMemo(
+    () => buildTimeline(messages, running, recovering, runningRunID),
+    [messages, running, recovering, runningRunID]
+  );
   const empty = !timeline.length && !recovering && !running;
 
   useEffect(() => {
@@ -160,14 +134,7 @@ const ChatContent: FC<ChatContentProps> = ({
   useEffect(() => {
     if (!stayAtBottomRef.current) return;
     scrollToLatest();
-  }, [
-    timeline.length,
-    pendingUserMessage,
-    liveTimeline.length,
-    streamText,
-    running,
-    scrollToLatest
-  ]);
+  }, [timeline, running, scrollToLatest]);
 
   useEffect(() => {
     const container = scrollRef.current;
@@ -208,7 +175,7 @@ const ChatContent: FC<ChatContentProps> = ({
         ) : (
           <div className="mx-auto flex w-full max-w-[min(100%,44rem)] flex-col gap-3.5">
             {timeline.map(renderTimelineItem)}
-            {recovering && !streamText && (
+            {recovering && (
               <div
                 className="flex items-center gap-2.5 rounded-xl border border-[color-mix(in_srgb,var(--theme-color-main)_16%,transparent)] bg-[color-mix(in_srgb,var(--theme-color-main)_5%,transparent)] px-3 py-2.5 text-[11px] text-white/48"
                 role="status">
@@ -249,13 +216,9 @@ const renderTimelineItem = (item: ChatRenderableTimelineItem) => {
     const terminalHasUsage = item.items.some(
       (candidate) => candidate.type === "terminal" && !!candidate.usage
     );
-    const assistantTurn = terminalHasUsage ? undefined : findLastAssistantTurn(item.items);
+    const assistantTurn = terminalHasUsage ? undefined : item.assistantTurn;
     const copyItemIndex = findLastCopyableMessageIndex(item.items);
-    const streaming = item.items.some(
-      (candidate) =>
-        (candidate.type === "message" && candidate.streaming) ||
-        (candidate.type === "reasoning" && candidate.status === "streaming")
-    );
+    const streaming = item.streaming;
     return (
       <AssistantTurnGroup
         key={item.id}
@@ -278,7 +241,7 @@ const renderTimelineItem = (item: ChatRenderableTimelineItem) => {
             return (
               <ToolStep
                 key={child.id}
-                item={stripAssistantTurn(child)}
+                item={child}
                 autoCollapse={!streaming && child.status !== "running"}
                 collapseEnabled={!streaming && child.status !== "running"}
               />
@@ -299,37 +262,7 @@ const renderTimelineItem = (item: ChatRenderableTimelineItem) => {
       </AssistantTurnGroup>
     );
   }
-  if (item.type === "reasoning") {
-    return (
-      <ThinkContent
-        key={item.id}
-        content={item.text}
-        closed={item.status === "done"}
-        streaming={item.status === "streaming"}
-      />
-    );
-  }
-  if (item.type === "message") {
-    return (
-      <ContentItem
-        key={item.id}
-        message={item.message}
-        streaming={item.streaming}
-        assistantTurn={item.assistantTurn}
-      />
-    );
-  }
-  if (item.type === "tool") return <ToolStep key={item.id} item={item} />;
-  return <RunTerminalCard key={item.id} terminal={item} />;
-};
-
-const findLastAssistantTurn = (items: AssistantTimelineItem[]) => {
-  for (let index = items.length - 1; index >= 0; index--) {
-    const item = items[index];
-    if (item?.type === "message" && item.assistantTurn) return item.assistantTurn;
-    if (item?.type === "tool" && item.assistantTurn) return item.assistantTurn;
-  }
-  return undefined;
+  return <ContentItem key={item.id} message={item.message} streaming={item.streaming} />;
 };
 
 const findLastCopyableMessageIndex = (items: AssistantTimelineItem[]) => {
@@ -339,16 +272,6 @@ const findLastCopyableMessageIndex = (items: AssistantTimelineItem[]) => {
   }
   return -1;
 };
-
-const stripAssistantTurn = (item: AgentToolTimelineItem): AgentToolTimelineItem => ({
-  id: item.id,
-  type: item.type,
-  status: item.status,
-  toolCalls: item.toolCalls,
-  toolResults: item.toolResults,
-  ...(item.runID ? { runID: item.runID } : {}),
-  ...(item.step !== undefined ? { step: item.step } : {})
-});
 
 const EmptyWorkspace: FC<{
   configured: boolean;
@@ -530,227 +453,146 @@ const PrimaryAction: FC<{
   </button>
 );
 
-const buildTimeline = (conversation: Nullable<ThreadSnapshot>): ChatTimelineItem[] => {
-  const items: ChatTimelineItem[] = [];
-  const consumed = new Set<number>();
-  const messages = conversation?.messages ?? [];
+const buildTimeline = (
+  messages: AgentUIMessage[],
+  running: boolean,
+  recovering: boolean,
+  runningRunID: string
+): ChatRenderableTimelineItem[] => {
+  const timeline: ChatRenderableTimelineItem[] = [];
 
-  for (let index = 0; index < messages.length; index++) {
-    if (consumed.has(index)) continue;
-
-    const message = messages[index];
-    if (!message) continue;
-    if (message.role === "inner") {
-      if (message.innerType === "usage") {
-        const parsed = parseStoredTurnUsage(message.content);
-        if (parsed) attachTurnUsage(items, parsed);
-      } else if (message.innerType === "error" && conversation) {
-        items.push(storedRunErrorTerminal(conversation, index));
-      }
-      continue;
-    }
-    if (message.role === "system") continue;
-    const assistantItemPrefix = `assistant-${index}`;
-
-    if (message.role === "assistant" && message.reasoningContent?.trim()) {
-      items.push({
-        id: `${assistantItemPrefix}-reasoning`,
-        type: "reasoning",
-        status: "done",
-        step: index + 1,
-        messageID: `${assistantItemPrefix}-reasoning`,
-        text: message.reasoningContent
-      });
-    }
-
-    if (message.role === "tool") {
-      const callID = message.toolCallId ?? `unknown-${index}`;
-      items.push({
-        id: `tool-result-${index}-${callID}`,
-        type: "tool",
-        status: "done",
-        toolCalls: [],
-        toolResults: [
-          {
-            name: "tool",
-            callID,
-            output: message.content
-          }
-        ]
+  for (const [messageIndex, message] of messages.entries()) {
+    if (message.role === "user") {
+      timeline.push({
+        id: message.id,
+        type: "message",
+        message: {
+          role: "user",
+          content: message.parts
+            .flatMap((part) => (part.type === "text" ? [part.text] : []))
+            .join("")
+        }
       });
       continue;
     }
+    if (message.role !== "assistant") continue;
 
-    if (message.role === "assistant" && message.toolCalls?.length) {
-      if (message.content) {
-        items.push({
-          id: `${assistantItemPrefix}-assistant`,
-          type: "message",
-          message: { role: "assistant", content: message.content ?? "" }
+    const items: AssistantTimelineItem[] = [];
+    const tools = new Map<number, AgentToolTimelineItem>();
+    const terminal = message.metadata?.terminal;
+    const runID = message.metadata?.runID;
+    const active = running && messageIndex === messages.length - 1 && !terminal;
+    let step = 0;
+
+    for (const [partIndex, part] of message.parts.entries()) {
+      const id = `${message.id}-part-${partIndex}`;
+      if (part.type === "step-start") {
+        step++;
+      } else if (part.type === "text") {
+        if (part.text || part.state === "streaming") {
+          items.push({
+            id,
+            type: "message",
+            runID,
+            streaming: part.state === "streaming",
+            message: { role: "assistant", content: part.text }
+          });
+        }
+      } else if (part.type === "reasoning") {
+        if (part.text || part.state === "streaming") {
+          items.push({
+            id,
+            type: "reasoning",
+            text: part.text,
+            status: part.state === "streaming" ? "streaming" : "done"
+          });
+        }
+      } else if (part.type === "dynamic-tool") {
+        let tool = tools.get(step);
+        if (!tool) {
+          tool = {
+            id: `${message.id}-step-${step}-tool`,
+            type: "tool",
+            step,
+            runID,
+            status: "done",
+            toolCalls: [],
+            toolResults: []
+          };
+          tools.set(step, tool);
+          items.push(tool);
+        }
+        tool.toolCalls.push({
+          callID: part.toolCallId,
+          name: part.toolName,
+          arguments: part.input === undefined ? "" : (JSON.stringify(part.input) ?? "")
         });
+        if (part.state === "output-available") {
+          tool.toolResults.push({
+            callID: part.toolCallId,
+            name: part.toolName,
+            output:
+              typeof part.output === "string" ? part.output : (JSON.stringify(part.output) ?? "")
+          });
+        } else if (part.state === "output-error" || part.state === "output-denied") {
+          if (tool.status !== "running") tool.status = "error";
+          tool.toolResults.push({
+            callID: part.toolCallId,
+            name: part.toolName,
+            output: part.state === "output-error" ? part.errorText : "工具调用已被拒绝"
+          });
+        } else {
+          tool.status = terminal ? "error" : "running";
+        }
       }
-
-      const calls = message.toolCalls.map((call) => ({
-        name: call.name,
-        callID: call.id,
-        arguments: JSON.stringify(call.args)
-      }));
-      const callIDs = new Set(calls.map((call) => call.callID));
-      const toolResultsByCallID = new Map<
-        string,
-        { name: string; callID: string; output: string }
-      >();
-      messages.slice(index + 1).forEach((candidate, offset) => {
-        const callID = candidate.toolCallId;
-        if (candidate.role !== "tool" || !callID || !callIDs.has(callID)) return;
-        consumed.add(index + offset + 1);
-        const call = calls.find((item) => item.callID === callID);
-        toolResultsByCallID.set(callID, {
-          name: call?.name ?? "tool",
-          callID,
-          output: candidate.content
-        });
-      });
-      const toolResults = calls.flatMap((call) => {
-        const result = toolResultsByCallID.get(call.callID);
-        return result ? [result] : [];
-      });
-      const allToolCallsResolved = calls.every((call) => toolResultsByCallID.has(call.callID));
-
-      items.push({
-        id: `${assistantItemPrefix}-tool`,
-        type: "tool",
-        status: allToolCallsResolved
-          ? "done"
-          : conversation?.runtime.status === "failed"
-            ? "error"
-            : "running",
-        toolCalls: calls,
-        toolResults
-      });
-      continue;
     }
 
-    items.push({
-      id:
-        message.role === "assistant"
-          ? `${assistantItemPrefix}-assistant`
-          : `${message.role}-${index}`,
-      type: "message",
-      message: { role: message.role, content: message.content }
+    if (
+      active &&
+      !recovering &&
+      !items.some(
+        (item) =>
+          (item.type === "tool" && item.status === "running") ||
+          (item.type === "reasoning" && item.status === "streaming") ||
+          (item.type === "message" && item.streaming)
+      )
+    ) {
+      items.push({
+        id: `${message.id}-waiting`,
+        type: "message",
+        runID,
+        streaming: true,
+        message: { role: "assistant", content: "" }
+      });
+    }
+    if (terminal) items.push(terminal);
+    timeline.push({
+      id: message.id,
+      runID,
+      type: "assistant-group",
+      items,
+      streaming: active && !recovering,
+      assistantTurn: message.metadata?.turns?.at(-1)
     });
   }
 
-  return items;
-};
-
-const attachTurnUsage = (
-  items: ChatTimelineItem[],
-  turn: Pick<AgentAssistantTurnObservability, "step" | "usage">
-) => {
-  for (let index = items.length - 1; index >= 0; index--) {
-    const item = items[index];
-    if (!item || (item.type === "message" && item.message.role === "user")) return;
-    if (item.type === "terminal") {
-      items[index] = { ...item, usage: turn.usage };
-      return;
-    }
-    if (item.type === "message" || item.type === "tool") {
-      items[index] = {
-        ...item,
-        assistantTurn: {
-          ...turn,
-          status: "complete"
+  if (running && !recovering && messages.at(-1)?.role !== "assistant") {
+    timeline.push({
+      id: `${runningRunID || "pending"}-assistant`,
+      runID: runningRunID || undefined,
+      type: "assistant-group",
+      streaming: true,
+      items: [
+        {
+          id: `${runningRunID || "pending"}-waiting`,
+          type: "message",
+          streaming: true,
+          message: { role: "assistant", content: "" }
         }
-      };
-      return;
-    }
+      ]
+    });
   }
-};
-
-const buildLiveTimeline = (
-  items: AgentLiveTimelineItem[],
-  streamText: string,
-  waitingForModel: boolean,
-  runningRunID: string
-): ChatTimelineItem[] => {
-  const timeline = items.map<ChatTimelineItem>((item) => {
-    if (item.type === "assistant") {
-      return {
-        id: item.id,
-        type: "message",
-        message: { role: "assistant", content: item.text },
-        ...(item.runID ? { runID: item.runID } : {})
-      };
-    }
-    if (item.type === "tool") {
-      return {
-        ...item,
-        toolResults: item.toolResults ?? []
-      };
-    }
-    return item;
-  });
-  if (!streamText && !waitingForModel) return timeline;
-
-  const inferredRunID = [...items].reverse().find((item) => item.runID)?.runID;
-  const streamRunID = runningRunID || inferredRunID;
-  timeline.push({
-    id: `${streamRunID || "active"}-stream-assistant`,
-    type: "message",
-    streaming: true,
-    message: { role: "assistant", content: streamText },
-    ...(streamRunID ? { runID: streamRunID } : {})
-  });
   return timeline;
 };
-
-const groupAssistantTimeline = (items: ChatTimelineItem[]): ChatRenderableTimelineItem[] => {
-  const grouped: ChatRenderableTimelineItem[] = [];
-  let activeGroup: undefined | AssistantTimelineGroup;
-
-  for (const item of items) {
-    if (item.type === "terminal") {
-      if (activeGroup && item.runID && activeGroup.runID === item.runID) {
-        activeGroup.items.push(item);
-      } else {
-        grouped.push(item);
-      }
-      activeGroup = undefined;
-      continue;
-    }
-
-    if (!isAssistantContentTimelineItem(item)) {
-      grouped.push(item);
-      activeGroup = undefined;
-      continue;
-    }
-
-    const runID = item.runID ?? (item.type === "reasoning" ? undefined : item.assistantTurn?.runID);
-    const belongsToActiveGroup =
-      !!activeGroup && (runID ? activeGroup.runID === runID : activeGroup.runID === undefined);
-    if (belongsToActiveGroup && activeGroup) {
-      activeGroup.items.push(item);
-      continue;
-    }
-
-    activeGroup = {
-      items: [item],
-      type: "assistant-group",
-      id: runID ? `${runID}-assistant-group` : `assistant-group-${item.id}`,
-      ...(runID ? { runID } : {})
-    };
-    grouped.push(activeGroup);
-  }
-
-  return grouped;
-};
-
-const isAssistantContentTimelineItem = (
-  item: ChatTimelineItem
-): item is AssistantContentTimelineItem =>
-  item.type === "reasoning" ||
-  item.type === "tool" ||
-  (item.type === "message" && item.message.role === "assistant");
 
 export default memo(ChatContent);

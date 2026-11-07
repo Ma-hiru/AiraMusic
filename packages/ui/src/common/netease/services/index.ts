@@ -1,4 +1,5 @@
 export { default as NeteaseServicesAuth } from "./auth";
+export { default as NeteaseServicesStar } from "./star";
 export { default as NeteaseServicesUser } from "./user";
 export { default as NeteaseServicesAlbum } from "./album";
 export { default as NeteaseServicesAudio } from "./audio";

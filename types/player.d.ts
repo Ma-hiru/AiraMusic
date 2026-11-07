@@ -7,6 +7,7 @@ interface Quality {
 }
 
 interface NeteaseTrackModel {
+  /** 歌曲时长，单位为毫秒 */
   dt: number;
   id: number;
   /** 歌曲标题 */

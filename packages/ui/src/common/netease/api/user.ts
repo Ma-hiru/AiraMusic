@@ -64,7 +64,7 @@ export default class _NeteaseUserAPI {
     },
     signal?: AbortSignal
   ) {
-    return apiRequest<any, NeteaseAPI.NeteaseAPIResponse>({
+    return apiRequest<any, NeteaseAPI.NeteasePlayRecordResponse>({
       url: "/user/record",
       params,
       signal
@@ -106,18 +106,22 @@ export default class _NeteaseUserAPI {
    * 获取收藏的专辑（需要登录）
    * @desc 调用此接口可获取到用户收藏的专辑
    */
-  static likedAlbums(params: {
-    /** 返回数量 , 默认为 25 */
-    limit: number;
-    /** 偏移数量，用于分页 , 如 :( 页数 -1)*25, 其中 25 为 limit 的值 , 默认为 0 */
-    offset?: number;
-  }) {
-    return apiRequest<any, NeteaseAPI.NeteaseAPIResponse>({
+  static likedAlbums(
+    params: {
+      /** 返回数量 , 默认为 25 */
+      limit: number;
+      /** 偏移数量，用于分页 , 如 :( 页数 -1)*25, 其中 25 为 limit 的值 , 默认为 0 */
+      offset?: number;
+    },
+    signal?: AbortSignal
+  ) {
+    return apiRequest<any, NeteaseAPI.NeteaseLikedAlbumsResponse>({
       url: "/album/sublist",
       params: {
         ...params,
         timestamp: new Date().getTime()
-      }
+      },
+      signal
     });
   }
 
@@ -125,13 +129,14 @@ export default class _NeteaseUserAPI {
    * 获取收藏的歌手（需要登录）
    * @desc 调用此接口可获取到用户收藏的歌手
    */
-  static likedArtists(params: { limit: number; offset?: number }) {
-    return apiRequest<any, NeteaseAPI.NeteaseAPIResponse>({
+  static likedArtists(params: { limit: number; offset?: number }, signal?: AbortSignal) {
+    return apiRequest<any, NeteaseAPI.NeteaseLikedArtistsResponse>({
       url: "/artist/sublist",
       params: {
         ...params,
         timestamp: Date.now()
-      }
+      },
+      signal
     });
   }
 
@@ -146,6 +151,29 @@ export default class _NeteaseUserAPI {
         ...params,
         timestamp: Date.now()
       }
+    });
+  }
+
+  /** @desc 获取当前 VIP 信息。 (需要登录) */
+  static vipInfo(params: { uid: number }) {
+    return apiRequest({
+      url: "/vip/info",
+      params: {
+        ...params,
+        timestamp: Date.now()
+      }
+    });
+  }
+
+  static reportDeviceName(params: {
+    /** 期望展示的设备名称 */
+    deviceName: string;
+    /** deviceName 的兼容别名, 二选一即可 */
+    name?: string;
+  }) {
+    return apiRequest<unknown, NeteaseAPI.NeteaseAPIResponse>({
+      url: "/deviceinfo/center/upload",
+      params
     });
   }
 }

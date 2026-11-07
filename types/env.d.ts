@@ -9,6 +9,7 @@ interface ENV {
   readonly APP_MODE: string;
   readonly APP_TEST: boolean;
   readonly APP_DEBUG_PORT: number;
+  readonly APP_DEVTOOLS_REMOTE_PORT: number;
   readonly NCM_SERVER_PORT: number;
   readonly GO_SERVER_PORT: number;
   readonly EXPRESS_SERVER_PORT: number;

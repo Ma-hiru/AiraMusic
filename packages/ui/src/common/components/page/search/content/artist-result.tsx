@@ -68,7 +68,7 @@ const ArtistResult: FC<ArtistResultProps> = ({
                 return {
                   id: a.id,
                   name: a.name,
-                  coverUrl: a.picUrl ?? "",
+                  coverUrl: a.picUrl || a.img1v1Url || "",
                   shape: "circle",
                   badge: a.followed ? "已关注" : "未关注",
                   meta: a.alias.join(" / ")

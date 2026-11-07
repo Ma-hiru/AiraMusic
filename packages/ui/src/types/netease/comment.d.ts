@@ -1,4 +1,19 @@
 namespace NeteaseAPI {
+  /** 批量查询评论统计（/comment/info/list） */
+  interface NeteaseCommentInfoResponse extends NeteaseAPIResponse {
+    data: NeteaseCommentInfo[];
+  }
+
+  interface NeteaseCommentInfo {
+    resourceId: number;
+    commentCount: number;
+    resourceType: number;
+    /** 形如 10w+ 的展示文案 */
+    likedCount: number;
+    shareCount: number;
+    commentCountDesc: string;
+  }
+
   interface NeteaseCommentsNewResponse extends NeteaseAPIResponse {
     message: string;
     data: NeteaseCommentsPage;
@@ -212,5 +227,56 @@ namespace NeteaseAPI {
     target: string;
     sortType: number;
     sortTypeName: string;
+  }
+
+  /**
+   * 楼层评论（/comment/floor）
+   * @desc 字段比顶层评论精简，不能直接复用 NeteaseComment
+   * */
+  interface NeteaseCommentFloorResponse extends NeteaseAPIResponse {
+    message: string;
+    data: NeteaseCommentFloorPage;
+  }
+
+  interface NeteaseCommentFloorPage {
+    /** 楼主评论（父评论） */
+    ownerComment: null | NeteaseComment;
+    /** 被定位的评论，常规请求为 null */
+    currentComment: null | NeteaseComment;
+    /** 楼内回复，按时间正序 */
+    hasMore: boolean;
+    comments: NeteaseFloorComment[];
+    /** 楼内回复总数，翻页请求可能返回 0 */
+    totalCount: number;
+    /** 下一页游标，取本次返回值即可 */
+    time: number;
+    bestComments?: NeteaseFloorComment[];
+  }
+
+  interface NeteaseFloorComment {
+    user: User;
+    time: number;
+    liked: boolean;
+    owner: boolean;
+    status: number;
+    content: string;
+    timeStr?: string;
+    commentId: number;
+    threadId?: string;
+    likedCount: number;
+    parentCommentId: number;
+    needDisplayTime?: boolean;
+    richContent?: null | string;
+    repliedMark?: null | boolean;
+    ipLocation?: null | IpLocation;
+    /** 被回复的评论，最后一项即当前评论直接回复的对象 */
+    beReplied: null | NeteaseCommentBeReplied[];
+  }
+
+  interface NeteaseCommentBeReplied {
+    user: User;
+    content: string;
+    status?: number;
+    beRepliedCommentId: number;
   }
 }

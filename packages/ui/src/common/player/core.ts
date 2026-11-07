@@ -1,6 +1,8 @@
 import { throttle } from "lodash-es";
 import { Log } from "@/common/lib/log";
+import { RendererIdle } from "@/common/lib/idle";
 import { RendererCache } from "@/common/lib/cache";
+import { NeteaseAPITrack } from "@/common/netease/api";
 import { Listenable } from "@/common/utils/listenable";
 import { Status } from "@/common/netease/services/auth";
 import { userStoreSnapshot } from "@/common/store/user";
@@ -28,6 +30,7 @@ import RendererImageConstants from "@/common/constants/image";
 
 import RendererPlayerAudio from "./audio";
 import RendererPlayerHistory from "./history";
+import RendererPlayerSession from "./session";
 import RendererPlayerPlaylist from "./playlist";
 
 export const enum RendererPlayerStatus {
@@ -38,11 +41,14 @@ export const enum RendererPlayerStatus {
   error
 }
 
-export default class RendererPlayer extends Listenable<"onCurrentTrackChange"> {
+export default class RendererPlayer extends Listenable<
+  "sessionChange" | "playlistChange" | "onCurrentTrackChange"
+> {
   readonly current;
   readonly audio: RendererPlayerAudio;
   readonly playlist: RendererPlayerPlaylist;
   readonly history: RendererPlayerHistory;
+  readonly session: RendererPlayerSession;
   private _status: RendererPlayerStatus;
   private readonly disconnect: NormalFunc;
 
@@ -100,6 +106,7 @@ export default class RendererPlayer extends Listenable<"onCurrentTrackChange"> {
     audio?: RendererPlayerAudio;
     status?: RendererPlayerStatus;
     history?: RendererPlayerHistory;
+    session?: RendererPlayerSession;
     playlist?: RendererPlayerPlaylist;
     current?: {
       rmActive?: boolean;
@@ -114,6 +121,7 @@ export default class RendererPlayer extends Listenable<"onCurrentTrackChange"> {
     super();
     this.audio = props?.audio || new RendererPlayerAudio();
     this.playlist = props?.playlist || new RendererPlayerPlaylist();
+    this.session = props?.session || new RendererPlayerSession();
     this.playlist.bindPlayability(
       (record) => record.detail.playable(userStoreSnapshot()._user),
       throttle((reason: string) => AppToast.show({ type: "error", text: reason }), 1000)
@@ -178,8 +186,11 @@ export default class RendererPlayer extends Listenable<"onCurrentTrackChange"> {
     const onError = () => (this.status = RendererPlayerStatus.error);
     const replay = () =>
       refreshHistory(() => {
+        this.controller.abort();
+        this.controller = new AbortController();
         this.audio.currentTime = 0;
         this.audio.play();
+        this.session.updateSession();
       });
     const onEnded = () => {
       if (this.playlist.repeat === "one") return replay();
@@ -193,6 +204,19 @@ export default class RendererPlayer extends Listenable<"onCurrentTrackChange"> {
       )
         return replay();
     };
+    const submit = throttle((id?: number) => {
+      if (!id) return;
+      RendererIdle.normal(() => {
+        if (id !== this.session.trackId) return;
+        NeteaseAPITrack.stateSubmit({
+          id,
+          progress: Math.floor(this.audio.currentTime),
+          sessionId: this.session.sessionId
+        })
+          .then(() => Log.debug("submit", id, this.audio.currentTime))
+          .catch((err) => Log.error("submit", err));
+      });
+    }, 5_000);
     const onTimeupdate = () => {
       const now = performance.now();
       if (now > last && last !== 0) {
@@ -200,6 +224,7 @@ export default class RendererPlayer extends Listenable<"onCurrentTrackChange"> {
         this.playDurationMS += delta;
       }
       last = now;
+      submit(this.session.trackId);
     };
 
     this.audio.addEventListener("playing", onPlaying, { passive: true });
@@ -213,19 +238,20 @@ export default class RendererPlayer extends Listenable<"onCurrentTrackChange"> {
     this.audio.addEventListener("ended", onEnded, { passive: true });
     this.audio.addEventListener("timeupdate", onTimeupdate, { passive: true });
 
-    const unsubscribe1 = this.playlist.addListener(() => this.executeListeners());
-    const unsubscribe2 = this.playlist.addEventListener("currentChange", () => {
+    const unsubscribe1 = this.session.addListener(() => this.executeListeners("sessionChange"));
+    const unsubscribe2 = this.playlist.addListener(() => this.executeListeners("playlistChange"));
+    const unsubscribe3 = this.playlist.addEventListener("currentChange", () => {
       const current = this.playlist.current();
       if (!current) {
         void refreshHistory(() => {
+          this.controller.abort();
+          this.audio.pause();
           this.status = RendererPlayerStatus.idle;
           this.audio.currentTime = 0;
         });
       } else if (this.current.track?.detail.id !== current.detail.id) {
         this.audio.pause();
-        refreshHistory(async () => this.load(current, true)).then((status) => {
-          status === "ok" && this.audio.play();
-        });
+        void refreshHistory(async () => this.load(current, true));
       }
       this.executeListeners("onCurrentTrackChange");
     });
@@ -233,6 +259,7 @@ export default class RendererPlayer extends Listenable<"onCurrentTrackChange"> {
     return () => {
       unsubscribe1();
       unsubscribe2();
+      unsubscribe3();
       this.audio.removeEventListener("playing", onPlaying);
       this.audio.removeEventListener("loadstart", onLoadStart);
       this.audio.removeEventListener("waiting", onWaiting);
@@ -255,51 +282,62 @@ export default class RendererPlayer extends Listenable<"onCurrentTrackChange"> {
     this.controller.abort();
     const controller = new AbortController();
     this.controller = controller;
-    this.current.track = current;
     this.status = RendererPlayerStatus.loading;
 
-    this.loadLyric(current.detail, controller)
-      .then((lyric) => {
-        if (controller.signal.aborted) return;
-        this.current.lyric = lyric;
-        this.executeListeners();
-      })
-      .catch((err) => {
-        Log.error(err);
-      });
+    this.current.track = current;
+    this.session.next(current.id);
 
-    return this.loadAudio(current.detail, controller)
-      .then(async (audio): Promise<"ok" | "error" | "cancel"> => {
+    const res: Promise<"ok" | "error" | "cancel"> = this.loadAudio(current.detail, controller)
+      .then(async (audio) => {
         if (controller.signal.aborted) return "cancel";
         if (audio) {
-          await this.audio.load(current.detail, audio, play);
+          const loaded = await this.audio.load(current.detail, audio, play, 0, controller.signal);
+          if (!loaded || controller.signal.aborted) return "cancel";
           this.current.audio = audio;
           this.executeListeners();
+          // 此时还是loading，但是不赋值，因为 connect 内部已经处理，ok下，默认play，自动变化状态机
           return "ok";
         } else {
           this.status = RendererPlayerStatus.error;
           return "error";
         }
       })
-      .then((status): "ok" | "error" | "cancel" => {
-        if (controller.signal.aborted) return "cancel";
-        this.loadCover(current.detail, controller)
-          .then((cover) => {
-            if (controller.signal.aborted) return;
-            this.current.cover = cover;
-            this.current.cover.setAlt(current.detail.al.name || current.detail.name);
-            this.executeListeners();
-          })
-          .catch((err) => {
-            Log.error(err);
-          });
-        return status;
-      })
       .catch((err) => {
+        if (controller.signal.aborted) return "cancel";
+        AppToast.show({ text: "加载音频失败", type: "error" });
         Log.error(err);
         this.status = RendererPlayerStatus.error;
         return "error";
       });
+
+    RendererIdle.normal(() => {
+      this.loadLyric(current.detail, controller)
+        .then((lyric) => {
+          if (controller.signal.aborted) return;
+          this.current.lyric = lyric;
+          this.executeListeners();
+        })
+        .catch((err) => {
+          AppToast.show({ text: "加载歌词失败", type: "error" });
+          Log.error(err);
+        });
+    });
+    RendererIdle.normal(() => {
+      this.loadCover(current.detail, controller)
+        .then((cover) => {
+          if (controller.signal.aborted) return;
+          this.current.cover = cover;
+          this.current.cover.setAlt(current.detail.al.name || current.detail.name);
+          this.executeListeners();
+        })
+        .catch((err) => {
+          AppToast.show({ text: "加载封面失败", type: "error" });
+          Log.error(err);
+        });
+    });
+
+    this.executeListeners();
+    return res;
   }
 
   /** 加载音频地址 */
@@ -311,14 +349,62 @@ export default class RendererPlayer extends Listenable<"onCurrentTrackChange"> {
     const preference = this.settingsStore._settings.trackQuality.quality;
     if (controller.signal.aborted) return null;
     const audio = await NeteaseServicesAudio.track(track, preference, false);
+    if (controller.signal.aborted) return null;
+    const sessionID = this.session.sessionId;
 
     // 如果10s后没有切换歌曲，那么可以缓存非本地资源
     if (audio && !audio.isLocal()) {
-      this.downloadAudioTimer && window.clearTimeout(this.downloadAudioTimer);
-      this.downloadAudioTimer = window.setTimeout(() => {
+      const download = () => {
         if (controller.signal.aborted) return;
+        Log.info("load audio", "downloading audio after 10s", track.id);
         NeteaseServicesAudio.download(audio);
-      }, 10000);
+
+        const check = () => {
+          if (controller.signal.aborted) return false;
+          return track.id === this.session.trackId && sessionID === this.session.sessionId;
+        };
+        const exec = (audio: NeteaseLocalAudio) => {
+          if (!check()) return;
+          const handler = async () => {
+            if (!check()) return;
+            const loaded = await this.audio.load(
+              track,
+              audio,
+              undefined,
+              this.audio.currentTime,
+              controller.signal
+            );
+            if (!loaded || !check()) return;
+            this.current.audio = audio;
+            this.executeListeners();
+            Log.info("load audio", "replace url with local url");
+          };
+
+          Log.info("load audio", "downloaded success, will replace url with local url when paused");
+          this.audio.addEventListener("pause", handler, { once: true, passive: true });
+          controller.signal.addEventListener("abort", () => {
+            this.audio.removeEventListener("pause", handler);
+          });
+        };
+
+        const timer = window.setTimeout(() => {
+          if (!check()) return;
+          RendererIdle.runAsync(async function* () {
+            if (!check()) return;
+            const audio = await NeteaseServicesAudio.track(track, preference, false);
+            if (!audio || !audio.isLocal()) return Log.info("load audio", "downloaded not success");
+            yield;
+            exec(audio);
+          });
+        }, 30_000);
+        controller.signal.addEventListener("abort", () => window.clearTimeout(timer));
+      };
+
+      this.downloadAudioTimer && window.clearTimeout(this.downloadAudioTimer);
+      this.downloadAudioTimer = window.setTimeout(download, 10_000);
+      controller.signal.addEventListener("abort", () => {
+        this.downloadAudioTimer && window.clearTimeout(this.downloadAudioTimer);
+      });
     }
 
     return audio;
@@ -358,13 +444,15 @@ export default class RendererPlayer extends Listenable<"onCurrentTrackChange"> {
       audio: RendererPlayerAudio.save(instance.audio),
       playlist: RendererPlayerPlaylist.save(instance.playlist),
       history: RendererPlayerHistory.save(instance.history),
+      session: RendererPlayerSession.save(instance.session),
       current: instance.current
     };
   }
 
   /** 恢复持久化 */
-  static fromSave(save: ReturnType<typeof this.save>) {
+  static fromSave(save: ReturnType<typeof this.save>): RendererPlayer {
     let audio = NeteaseLocalAudio.fromObject(save.current.audio);
+    // 本地cache更新访问key
     if (audio?.isLocal() && audio.localURL) {
       audio = NeteaseLocalAudio.fromNetwork(
         audio,
@@ -373,6 +461,7 @@ export default class RendererPlayer extends Listenable<"onCurrentTrackChange"> {
     }
 
     let cover = NeteaseLocalImage.fromObject(save.current.cover);
+    // 本地cache更新访问key
     if (cover?.isLocal() && cover.localURL) {
       cover = NeteaseLocalImage.fromNetworkImage(
         cover,
@@ -387,16 +476,40 @@ export default class RendererPlayer extends Listenable<"onCurrentTrackChange"> {
       track: NeteaseTrackRecord.fromRecordObject(save.current.track),
       lyric: NeteaseLyric.fromObject(save.current.lyric)
     };
-    const playerAudio = RendererPlayerAudio.fromSave(current.track?.detail, save.audio, audio);
     const instance = new RendererPlayer({
-      audio: playerAudio,
       playlist: RendererPlayerPlaylist.fromSave(save.playlist),
       history: RendererPlayerHistory.fromSave(save.history),
+      session: RendererPlayerSession.fromSave(save.session),
       current
     });
-    queueMicrotask(async () => {
+    instance.audio.volume = save.audio.volume;
+    if (audio)
+      void instance.audio.load(
+        current.track?.detail,
+        audio,
+        false,
+        save.audio.currentTime,
+        instance.controller.signal
+      );
+
+    // 兼容性代码 （fromSave得到undefined时返回trackId=0的session）
+    const currentId = instance.current.track?.id;
+    if (currentId && instance.session.trackId !== currentId) {
+      instance.session.next(currentId);
+    }
+    save.session ??= {
+      session: { ...instance.session.netease_session },
+      trackId: instance.session.trackId
+    };
+    const controller = instance.controller;
+    const session = RendererPlayerSession.save(instance.session);
+    const track = instance.current.track;
+
+    // 重新加载音频（防止在线或本地缓存音频过期）
+    void RendererIdle.runAsync(async function* () {
       const audio = instance.current.audio;
-      if (!audio) return;
+      if (!audio || !track || controller.signal.aborted || !instance.session.equals(session))
+        return;
 
       // 仅探测文件是否仍存在：只请求 1 字节并立即取消响应体，避免拉取整文件造成的句柄泄漏
       const ok = await fetch(audio.src, { headers: { range: "bytes=0-0" } })
@@ -405,18 +518,40 @@ export default class RendererPlayer extends Listenable<"onCurrentTrackChange"> {
           return res.ok;
         })
         .catch(() => false);
+      yield;
+      if (controller.signal.aborted || !instance.session.equals(session)) return;
 
+      ok && Log.info("ReloadAudioURL", "音频地址有效");
       if (!ok) {
-        const track = instance.current.track;
-        if (!track) return;
+        Log.info("ReloadAudioURL", "音频地址已过期，重新加载...");
 
-        const audio = await instance.loadAudio(track.detail, new AbortController());
-        if (!audio) return;
+        const audio = await instance.loadAudio(track.detail, controller);
+        if (!audio) return Log.info("ReloadAudioURL", "加载音频失败");
+        yield;
 
-        void instance.audio.load(track.detail, audio, false);
-        instance.audio.currentTime = playerAudio.currentTime;
+        // 如果歌曲切换，则不重新加载
+        if (controller.signal.aborted || !instance.session.equals(session)) {
+          Log.info("ReloadAudioURL", "Session已切换");
+          return;
+        }
+        const loaded = await instance.audio.load(
+          track.detail,
+          audio,
+          undefined,
+          instance.audio.instance.src ? instance.audio.currentTime : save.audio.currentTime,
+          controller.signal
+        );
+        if (!loaded || controller.signal.aborted || !instance.session.equals(session)) return;
+        instance.current.audio = audio;
+        instance.executeListeners();
+        Log.info(
+          "ReloadAudioURL",
+          "音频地址已重新加载",
+          Log.JsonCompact(Log.JsonFlat(save.session))
+        );
       }
     });
+
     return instance;
   }
 
@@ -451,6 +586,7 @@ export default class RendererPlayer extends Listenable<"onCurrentTrackChange"> {
   }
 
   override [Symbol.dispose]() {
+    this.controller.abort();
     this.disconnect();
     this.current.track = null;
     this.current.lyric = null;

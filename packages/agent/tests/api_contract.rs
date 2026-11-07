@@ -4,6 +4,31 @@ use serde_json::json;
 use ts_rs::TS;
 
 #[test]
+fn thread_metadata_updates_use_a_custom_agui_event() {
+    let event = AguiEvent::Custom {
+        session_id: "thread-1".into(),
+        run_id: "run-1".into(),
+        name: "thread-metadata".into(),
+        value: agent::session::models::ThreadMetadata {
+            name: "播放器架构".into(),
+            created_at: 10,
+            updated_at: 20,
+            auxiliary_usage: None,
+        },
+    };
+    assert_eq!(
+        serde_json::to_value(event).unwrap(),
+        json!({
+            "type": "CUSTOM",
+            "threadId": "thread-1",
+            "runId": "run-1",
+            "name": "thread-metadata",
+            "value": { "name": "播放器架构", "createdAt": 10, "updatedAt": 20 }
+        })
+    );
+}
+
+#[test]
 fn run_started_uses_the_canonical_agui_wire_shape() {
     let event = AguiEvent::RunStarted {
         session_id: "thread-1".to_string(),

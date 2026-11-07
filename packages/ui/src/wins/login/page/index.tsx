@@ -67,7 +67,7 @@ export default function LoginPage() {
         </NoDrag>
         <div className="flex-1 flex items-center justify-center gap-8">
           <Tips result={result} status={status} loginType={tab === 0 ? "qr" : "captcha"} />
-          <div className="w-px shrink-0 bg-(--text-color)/15" />
+          <div className="w-px shrink-0 self-stretch bg-(--text-color)/15" />
           <div className="w-52 shrink-0 flex flex-col justify-center">
             {tab === 0 ? (
               <QRCode url={dataURL} status={status} update={update} />

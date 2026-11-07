@@ -30,15 +30,15 @@ type MarkdownFence = {
   marker: "`" | "~";
 };
 
-type ValidCardRange = {
+type CardRange = {
   end: number;
   start: number;
-  card: AiraResourceCard;
+  card?: AiraResourceCard;
 };
 
 type CardScanResult = {
-  ranges: ValidCardRange[];
-  pendingCardStart?: number;
+  pendingCard?: true;
+  ranges: CardRange[];
 };
 
 export function parseAiraResourceURI(uri: string): null | AiraResourceReference {
@@ -74,15 +74,14 @@ export function parseAiraRichContent(
     options.maxContentChars,
     AiraRichContentLimits.maxContentChars
   );
-  if (source.length > maxContentChars) return markdownOnly(source);
-
-  const maxCards = resolveLimit(options.maxCards, AiraRichContentLimits.maxCards);
+  const maxCards =
+    source.length > maxContentChars
+      ? 0
+      : resolveLimit(options.maxCards, AiraRichContentLimits.maxCards);
   const maxCardChars = resolveLimit(options.maxCardChars, AiraRichContentLimits.maxCardChars);
-  if (!maxCards || !maxCardChars) return markdownOnly(source);
 
-  const scan = findValidCards(source, maxCards, maxCardChars, options.streaming === true);
-  const visibleEnd = scan.pendingCardStart ?? source.length;
-  if (!scan.ranges.length && scan.pendingCardStart === undefined) return markdownOnly(source);
+  const scan = findCards(source, maxCards, maxCardChars, options.streaming === true);
+  if (!scan.ranges.length) return markdownOnly(source);
 
   const segments: AiraRichContentSegment[] = [];
   const cards: AiraResourceCard[] = [];
@@ -90,30 +89,33 @@ export function parseAiraRichContent(
 
   for (const range of scan.ranges) {
     pushMarkdown(segments, source.slice(cursor, range.start));
-    segments.push({ type: "card", card: range.card });
-    cards.push(range.card);
+    if (range.card) {
+      segments.push({ type: "card", card: range.card });
+      cards.push(range.card);
+    }
     cursor = range.end;
   }
-  pushMarkdown(segments, source.slice(cursor, visibleEnd));
+  pushMarkdown(segments, source.slice(cursor));
 
   return {
     source,
     segments,
     cards,
-    ...(scan.pendingCardStart === undefined ? {} : { pendingCard: true as const })
+    ...(scan.pendingCard ? { pendingCard: true as const } : {})
   };
 }
 
-function findValidCards(
+function findCards(
   source: string,
   maxCards: number,
   maxCardChars: number,
   streaming: boolean
 ): CardScanResult {
-  const ranges: ValidCardRange[] = [];
+  const ranges: CardRange[] = [];
+  let cardCount = 0;
   let cursor = 0;
 
-  while (cursor < source.length && ranges.length < maxCards) {
+  while (cursor < source.length) {
     const openingLine = readLine(source, cursor);
     const openingFence = parseFence(openingLine.text);
     if (!openingFence) {
@@ -121,27 +123,35 @@ function findValidCards(
       continue;
     }
 
-    const isCardFence =
-      openingFence.marker === "`" && openingFence.length === 3 && openingFence.info === "aira-card";
+    const isCardFence = openingFence.info === "aira-card";
     const closingLine = findClosingFence(source, openingLine.end, openingFence);
+    const bodyEnd = closingLine?.start ?? source.length;
     if (!closingLine) {
-      const pendingChars = source.length - openingLine.end;
+      if (!isCardFence) return { ranges };
+      ranges.push({ start: openingLine.start, end: source.length });
       return {
         ranges,
-        ...(streaming && isCardFence && pendingChars <= maxCardChars
-          ? { pendingCardStart: openingLine.start }
+        ...(streaming &&
+        maxCardChars > 0 &&
+        cardCount < maxCards &&
+        bodyEnd - openingLine.end <= maxCardChars
+          ? { pendingCard: true as const }
           : {})
       };
     }
 
     if (isCardFence) {
-      const body = source.slice(openingLine.end, closingLine.start);
-      if (body.length <= maxCardChars) {
-        const card = parseCardJSON(body);
-        if (card) {
-          ranges.push({ start: openingLine.start, end: closingLine.rawEnd, card });
-        }
-      }
+      const card =
+        cardCount < maxCards && bodyEnd - openingLine.end <= maxCardChars
+          ? parseCardJSON(source.slice(openingLine.end, bodyEnd))
+          : null;
+      // 已明确标记的卡片即使校验失败或超出限制，也不把内部协议暴露为代码块。
+      ranges.push({
+        start: openingLine.start,
+        end: closingLine.rawEnd,
+        ...(card ? { card } : {})
+      });
+      if (card) cardCount++;
     }
 
     // 无论卡片是否合法，都跳过当前围栏，避免把其中的文本误判成嵌套卡片。
@@ -153,7 +163,11 @@ function findValidCards(
 
 function parseCardJSON(body: string): null | AiraResourceCard {
   try {
-    const raw: unknown = JSON.parse(body.trim());
+    let raw: unknown = JSON.parse(body.trim());
+    // 歌曲卡片的查看入口原本就对应播放；仅恢复这个已知动作，不放宽严格协议。
+    if (raw && typeof raw === "object" && "kind" in raw && "action" in raw) {
+      if (raw.kind === "track" && raw.action === "open") raw = { ...raw, action: "play" };
+    }
     const parsed = AiraResourceCardSchema.safeParse(raw);
     return parsed.success ? parsed.data : null;
   } catch {

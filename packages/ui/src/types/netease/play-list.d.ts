@@ -36,6 +36,24 @@ namespace NeteaseAPI {
     result: RecommendPlaylistResult[];
   }
 
+  interface NeteaseRelatedPlaylistResponse extends NeteaseAPIResponse {
+    data: null | {
+      jumpUrl: string;
+      rcmdTitle: string;
+      recPlaylist: {
+        alg: string;
+        playlist: {
+          id: number;
+          name: string;
+          action: string;
+          playCount: number;
+          coverImgUrl: string;
+          specialType: number;
+        };
+      }[];
+    };
+  }
+
   interface NeteaseDailyRecommendPlaylistResponse extends NeteaseAPIResponse {
     featureFirst: boolean;
     haveRcmdSongs: boolean;

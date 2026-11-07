@@ -38,8 +38,7 @@ const TrackItemInfo: FC<ListItemAlbumProps> = ({ onLikeChange, type, liked, trac
             {RendererFormat.time((track as NeteaseHistoryRecord).time)}
           </div>
           <div className="w-24 text-right font-semibold tabular-nums opacity-75">
-            {RendererFormat.duration((track as NeteaseHistoryRecord).playDuration, "s")} /{" "}
-            {track.detail.formatDuration()}
+            {`${RendererFormat.duration(Math.min((track as NeteaseHistoryRecord).playDuration * 1_000, track.detail.dt), "ms")} / ${track.detail.formatDuration()}`}
           </div>
         </>
       ) : (

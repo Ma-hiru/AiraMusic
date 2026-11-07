@@ -1,4 +1,5 @@
 import { shell, BrowserWindow } from "electron";
+import { MainTray } from "@/lib/tray";
 import { MainHandle } from "@/lib/handle";
 import { Log, runWithLogContext } from "@/lib/log";
 import { MainWindowPreset } from "@/lib/window-preset";
@@ -13,6 +14,11 @@ export const eventHandlers: EventHandlers = {
     const sender = BrowserWindow.fromWebContents(e.sender);
     if (!sender) return;
     ok && MainHandle.get()?.restart(MainExitCodeConstants.NORMAL_EXIT, "manually restart");
+  },
+  event_tray_capsule: (e, config) => {
+    const sender = BrowserWindow.fromWebContents(e.sender);
+    if (!sender) return;
+    MainTray.applyCapsuleConfig(config);
   },
   event_window_open: (e, type) => {
     const sender = BrowserWindow.fromWebContents(e.sender);

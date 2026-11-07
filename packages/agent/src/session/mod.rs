@@ -1,8 +1,10 @@
 pub mod models;
 pub mod persistence;
+pub mod usage;
 
 use crate::ctx::Ctx;
 use crate::llm::models::{ChatMemory, ChatMessage, ChatRole};
+use crate::llm::usage::UsageTrackingEvent;
 use crate::plugins::models::{Plugin, PluginApplyResult, PluginMeta};
 use models::*;
 use std::collections::HashMap;
@@ -114,8 +116,44 @@ impl SessionManager {
         self.metadata.lock().unwrap().get(id).cloned()
     }
 
+    pub fn record_auxiliary_usage(
+        &self,
+        id: &SessionId,
+        purpose: AuxiliaryUsagePurpose,
+        event: &UsageTrackingEvent,
+    ) -> anyhow::Result<Option<ThreadMetadata>> {
+        let mut all = self
+            .metadata
+            .lock()
+            .map_err(|e| anyhow::anyhow!("lock metadata 失败: {}", e))?;
+        let Some(metadata) = all.get_mut(id) else {
+            return Ok(None);
+        };
+        let auxiliary = metadata
+            .auxiliary_usage
+            .get_or_insert_with(Default::default);
+        let totals = match purpose {
+            AuxiliaryUsagePurpose::Title => &mut auxiliary.title,
+            AuxiliaryUsagePurpose::Compaction => &mut auxiliary.compaction,
+        };
+        match event {
+            UsageTrackingEvent::Started => totals.requests = totals.requests.saturating_add(1),
+            UsageTrackingEvent::Reported { previous, usage } => {
+                totals.report(previous.as_ref(), usage)
+            }
+        }
+        metadata.touch();
+        let metadata = metadata.clone();
+        // 与其他元数据变更、删除保持事件顺序，迟到请求不能重建会话。
+        self.send_event(SessionEvent::Metadata {
+            session_id: id.clone(),
+            metadata: metadata.clone(),
+        });
+        Ok(Some(metadata))
+    }
+
     pub fn rename(&self, id: &SessionId, name: impl Into<String>) -> anyhow::Result<()> {
-        let metadata = {
+        {
             let mut all = self
                 .metadata
                 .lock()
@@ -125,17 +163,47 @@ impl SessionManager {
                 .ok_or_else(|| anyhow::anyhow!("会话 {id} 不存在"))?;
             metadata.name = name.into();
             metadata.touch();
-            metadata.clone()
-        };
-        self.send_event(SessionEvent::Metadata {
-            session_id: id.clone(),
-            metadata,
-        });
+            self.send_event(SessionEvent::Metadata {
+                session_id: id.clone(),
+                metadata: metadata.clone(),
+            });
+        }
         Ok(())
     }
 
     pub fn has(&self, id: &SessionId) -> bool {
         self.sessions.lock().unwrap().contains_key(id)
+    }
+
+    pub fn rename_if_name(
+        &self,
+        id: &SessionId,
+        expected: &str,
+        name: String,
+    ) -> anyhow::Result<Option<ThreadMetadata>> {
+        let metadata = {
+            let mut all = self
+                .metadata
+                .lock()
+                .map_err(|e| anyhow::anyhow!("lock metadata 失败: {}", e))?;
+            let Some(metadata) = all.get_mut(id) else {
+                return Ok(None);
+            };
+            // 后台标题不能覆盖用户改名。
+            if metadata.name != expected {
+                return Ok(None);
+            }
+            metadata.name = name;
+            metadata.touch();
+            let metadata = metadata.clone();
+            // 与删除保持事件顺序，避免迟到的标题事件重建磁盘会话。
+            self.send_event(SessionEvent::Metadata {
+                session_id: id.clone(),
+                metadata: metadata.clone(),
+            });
+            metadata
+        };
+        Ok(Some(metadata))
     }
 
     pub fn append(&self, id: &SessionId, message: ChatMessage) -> anyhow::Result<()> {
@@ -158,7 +226,7 @@ impl SessionManager {
                 .push(message.clone());
         }
 
-        let metadata = {
+        {
             let mut all = self
                 .metadata
                 .lock()
@@ -167,15 +235,13 @@ impl SessionManager {
                 .get_mut(id)
                 .ok_or_else(|| anyhow::anyhow!("会话 {id} 不存在"))?;
             metadata.touch();
-            metadata.clone()
-        };
-
-        self.send_event(SessionEvent::Append {
-            session_id: id.clone(),
-            inner,
-            message,
-            metadata,
-        });
+            self.send_event(SessionEvent::Append {
+                session_id: id.clone(),
+                inner,
+                message,
+                metadata: metadata.clone(),
+            });
+        }
 
         Ok(())
     }

@@ -37,19 +37,7 @@ export function useKeyboardShortcut(
   useEffect(() => {
     if (!enabled || !target) return;
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (
-        ignoreEditable &&
-        event
-          .composedPath()
-          .some(
-            (node) =>
-              node instanceof HTMLElement &&
-              (node.isContentEditable ||
-                node.matches(
-                  'input, textarea, select, [role="textbox"], [contenteditable=""], [contenteditable="true"], [contenteditable="plaintext-only"]'
-                ))
-          )
-      ) {
+      if (ignoreEditable && RendererShortcutConstants.isEditableEvent(event)) {
         return;
       }
       for (const shortcut of shortcutsRef.current) {

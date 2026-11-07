@@ -69,7 +69,7 @@ export abstract class Listenable<const EventName = string> {
             this.flushListeners(event);
             refresh = false;
           }
-          refresh && this.flushListeners();
+          refresh && this.flushListeners(); // 没有事件，说明触发的是通用事件
           this.listenerMicrotaskPending = false;
         });
       }

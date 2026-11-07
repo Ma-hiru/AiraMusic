@@ -11,6 +11,7 @@
     "test:ui": "yarn run -T vitest --ui"
   },
   "dependencies": {
+    "@ai-sdk/react": "4.0.160",
     "@applemusic-like-lyrics/lyric": "0.3.0",
     "@emotion/css": "^11.13.5",
     "@heroicons/react": "^2.2.0",
@@ -22,6 +23,7 @@
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
+    "ai": "7.0.156",
     "axios": "^1.20.0",
     "color": "^5.0.3",
     "culori": "^4.0.2",

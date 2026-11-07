@@ -1,8 +1,10 @@
+import { useSetAtom } from "jotai";
 import { useNavigate } from "react-router-dom";
 import { memo, type FC, useMemo, useCallback } from "react";
 import { BannerType } from "@/common/enum";
 import { RendererIPC } from "@mahiru/ipc/renderer";
 import { NeteaseAPIHome } from "@/common/netease/api";
+import { playModalAtom } from "@/wins/main/atoms/layout";
 import { RoutePath, RoutePathMain } from "@/common/routes";
 import { NeteaseServicesTrack } from "@/common/netease/services";
 import { NeteaseURL, NeteaseTrackRecord } from "@/common/netease/models";
@@ -29,6 +31,7 @@ const Banner: FC<BannerProps> = ({ className }) => {
     }));
   }, [banners]);
 
+  const setPlayModal = useSetAtom(playModalAtom);
   const resolveBanner = useCallback(
     async (i: number) => {
       const item = banners[i];
@@ -37,8 +40,9 @@ const Banner: FC<BannerProps> = ({ className }) => {
 
       switch (type) {
         case BannerType.song: {
-          if (player.current.track?.id === id) return;
+          if (player.current.track?.id === id) return setPlayModal(true);
           const track = await NeteaseServicesTrack.idEnsure(id);
+          navigate(RoutePath.withQuery(RoutePathMain.album, { id: track.al.id }));
           const record = new NeteaseTrackRecord({
             detail: track,
             sourceID: -1,
@@ -63,7 +67,7 @@ const Banner: FC<BannerProps> = ({ className }) => {
           return navigate(RoutePath.withQuery(RoutePathMain.album, { id }));
       }
     },
-    [banners, navigate, player]
+    [banners, navigate, player, setPlayModal]
   );
 
   return (

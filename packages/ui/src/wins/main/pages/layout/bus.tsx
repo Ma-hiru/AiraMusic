@@ -9,13 +9,16 @@ import { RendererWindow } from "@/common/lib/window";
 import { NeteaseAPITrack } from "@/common/netease/api";
 import { RendererIPCMessageBus } from "@/common/lib/bus";
 import { RendererModified } from "@/common/lib/modified";
+import { playModalAtom } from "@/wins/main/atoms/layout";
 import { RoutePath, RoutePathMain } from "@/common/routes";
 import { useLatestRef } from "@/common/hooks/use-latest-ref";
 import { NeteaseTrackRecord } from "@/common/netease/models";
 import { useListenable } from "@/common/hooks/use-listenable";
 import { useAudioOutput } from "@/common/hooks/use-audio-output";
+import { isDisplayResource } from "@/wins/main/hooks/use-display-action";
 import { fmModeAtom, intelligenceModeAtom } from "@/wins/main/atoms/track";
 import { useAgentToolHandle } from "@/wins/main/hooks/use-agent-tool-handle";
+import { useTrayCapsuleBridge } from "@/wins/main/hooks/use-tray-capsule-bridge";
 import {
   NeteaseServicesAlbum,
   NeteaseServicesTrack,
@@ -24,7 +27,13 @@ import {
 import RendererPlayerHandle from "@/wins/main/lib/handle";
 import type { MessageData } from "@mahiru/ipc/types";
 
+// 组件重建保留消息顺序；渲染进程重载后用新身份隔离展示窗缓存的位置。
+const playListSenderId = crypto.randomUUID();
+let playListSequence = 0;
+
 const Bus: FC<object> = () => {
+  const userRef = useLatestRef(useUser());
+  const locationRef = useLatestRef(useLocation());
   const theme = useAtomValue(themeAtom);
   const player = RendererPlayerHandle.usePlayer();
   const { setDevice, views, selected } = useAudioOutput(player.audio.outputTarget);
@@ -95,6 +104,46 @@ const Bus: FC<object> = () => {
   }, [player.history]);
   useEffect(() => player.history.addListener(updateHistoryBus), [player.history, updateHistoryBus]);
 
+  // 成员和显示顺序变化时推送快照，切歌只同步位置。
+  const playListSnapshotRef = useRef<Nullable<MessageData<"bus_deliver_play_list_position">>>(null);
+  const updatePlayListBus = useCallback(() => {
+    const snapshot = {
+      senderId: playListSenderId,
+      sequence: ++playListSequence,
+      version: player.playlist.listVersion,
+      position: player.playlist.pos(),
+      markId: player.playlist.mark_id
+    };
+    playListSnapshotRef.current = snapshot;
+    RendererIPCMessageBus.playList.deliver({
+      list: player.playlist.list(),
+      ...snapshot
+    });
+  }, [player.playlist]);
+  const syncPlayListBus = useCallback(() => {
+    const previous = playListSnapshotRef.current;
+    const version = player.playlist.listVersion;
+    const markId = player.playlist.mark_id;
+    const position = player.playlist.pos();
+    if (!previous || previous.version !== version || previous.markId !== markId) {
+      updatePlayListBus();
+    } else if (previous.position !== position) {
+      const snapshot = {
+        version,
+        markId,
+        position,
+        senderId: playListSenderId,
+        sequence: ++playListSequence
+      };
+      playListSnapshotRef.current = snapshot;
+      RendererIPCMessageBus.playListPosition.deliver(snapshot);
+    }
+  }, [player.playlist, updatePlayListBus]);
+  useEffect(() => {
+    updatePlayListBus();
+    return player.playlist.addListener(syncPlayListBus);
+  }, [player.playlist, syncPlayListBus, updatePlayListBus]);
+
   // 3. outputBus 播放设备推送（仅display）
   const updateOutputs = useCallback(() => {
     RendererDevice.platform.then((platform) => {
@@ -129,12 +178,14 @@ const Bus: FC<object> = () => {
   }, [selected, views]);
   useEffect(updateOutputs, [updateOutputs]);
 
-  const updateBus = useLatestRef(() => {
+  const updateBus = useLatestRef((forcePlayList = false) => {
     updateMetaBus();
     updateProgressBus();
     updateThemeBus();
     updateOutputs();
     updateHistoryBus();
+    if (forcePlayList) updatePlayListBus();
+    else syncPlayListBus();
   });
   //#endregion
 
@@ -177,7 +228,7 @@ const Bus: FC<object> = () => {
           RendererPlayerHandle.player.afterUpdate(updateBus.current);
           break;
         case "update":
-          updateBus.current();
+          updateBus.current(true);
           break;
       }
     }
@@ -214,6 +265,9 @@ const Bus: FC<object> = () => {
         case "history":
           updateHistoryBus();
           break;
+        case "play-list":
+          updatePlayListBus();
+          break;
       }
     }
   }, [
@@ -222,6 +276,7 @@ const Bus: FC<object> = () => {
     updateProgressBus,
     updateOutputs,
     updateHistoryBus,
+    updatePlayListBus,
     mainBusUpdater.data,
     mainBusUpdater.type
   ]);
@@ -247,7 +302,13 @@ const Bus: FC<object> = () => {
       switch (sourceType) {
         case "playlist": {
           const playlist = await NeteaseServicesPlaylist.id(sourceID);
-          return NeteaseTrackRecord.fromPlaylist(playlist);
+          const records = new Map(
+            NeteaseTrackRecord.fromPlaylist(playlist).map((track) => [track.id, track])
+          );
+          return allIDs.flatMap((id) => {
+            const track = records.get(id);
+            return track ? [track] : [];
+          });
         }
         case "album": {
           const album = await NeteaseServicesAlbum.id(sourceID);
@@ -385,34 +446,46 @@ const Bus: FC<object> = () => {
 
   // 4. 处理 display 合并消息
   const navigate = useNavigate();
+  const setPlayModal = useSetAtom(playModalAtom);
   const displayBus = useListenable(RendererIPCMessageBus.display);
   useEffect(() => {
     const data = displayBus.data;
-    if (!data) return;
-    for (const action of data) {
-      switch (action.type) {
-        case "album":
-          navigate(RoutePath.withQuery(RoutePathMain.album, { id: action.id }));
-          break;
-        case "artist":
-          navigate(RoutePath.withQuery(RoutePathMain.artist, { id: action.id }));
-          break;
-        case "playlist":
-          navigate(
-            RoutePathMain.playlist.withQuery(
-              action.id,
-              action.source === "like" ? "like" : "normal"
-            )
-          );
-          break;
-        case "history":
-          navigate(RoutePathMain.history);
-          break;
+    if (!data.length) return;
+    RendererIPCMessageBus.consume(displayBus.type);
+    const action = data.findLast((item) => item.type !== "search" && item.type !== "settings");
+    if (!action) return;
+    let target: string;
+    switch (action.type) {
+      case "album":
+        target = RoutePath.withQuery(RoutePathMain.album, { id: action.id });
+        break;
+      case "artist":
+        target = RoutePath.withQuery(RoutePathMain.artist, { id: action.id });
+        break;
+      case "playlist":
+        target = RoutePathMain.playlist.withQuery(action.id, action.source, action.scope);
+        break;
+      case "history":
+        target = RoutePathMain.history;
+        break;
+      case "star":
+        target = RoutePathMain.star;
+        break;
+      default:
+        return;
+    }
+    const current = locationRef.current;
+    if (current.pathname + current.search !== target) {
+      if (isDisplayResource(current, action, userRef.current?.likedPlaylist.id)) {
+        navigate(target, { replace: true });
+      } else {
+        navigate(target);
       }
     }
+    setPlayModal(false); // 关闭播放页面
 
     RendererWindow.current.focus();
-  }, [displayBus.data, navigate]);
+  }, [displayBus.data, displayBus.type, locationRef, navigate, setPlayModal, userRef]);
 
   // 5. 处理设备切换
   const viewsRef = useLatestRef(views);
@@ -430,8 +503,6 @@ const Bus: FC<object> = () => {
   // 6. 处理资源修改重载请求
   const modifiedBus = useListenable(RendererIPCMessageBus.modified);
   // 用 ref 读取最新 user/location 不然容易依赖循环
-  const userRef = useLatestRef(useUser());
-  const locationRef = useLatestRef(useLocation());
   useEffect(() => {
     const modifies = modifiedBus.data;
     if (modifies.length === 0) return;
@@ -476,6 +547,8 @@ const Bus: FC<object> = () => {
   }, [modifiedBus.data, modifiedBus.type, navigate, userRef, locationRef]);
   // 7. 处理Agent工具请求
   useAgentToolHandle();
+  // 8. 顶栏胶囊设置同步给主进程
+  useTrayCapsuleBridge();
   //#endregion
 
   return null;

@@ -16,7 +16,7 @@ interface NavMenuProps {
 }
 
 const NavMenu: FC<NavMenuProps> = ({ className, barOpened }) => {
-  const { jumpHistoryPage, jumpPlaylistPage } = usePageJump();
+  const { jumpStarPage, jumpHistoryPage, jumpPlaylistPage } = usePageJump();
   const setPlayModal = useSetAtom(playModalAtom);
   const setFMMode = useSetAtom(fmModeAtom);
   const setFMSession = useSetAtom(fmSessionAtom);
@@ -35,6 +35,15 @@ const NavMenu: FC<NavMenuProps> = ({ className, barOpened }) => {
     (path: string, active: boolean) => {
       if (active) return;
       if (path === RoutePathMain.history) return jumpHistoryPage();
+      if (path === RoutePathMain.star) {
+        if (!NeteaseUser.isLoggedIn) {
+          return AppToast.show({
+            type: "info",
+            text: "请先登录账号"
+          });
+        }
+        return jumpStarPage();
+      }
       if (path === RoutePathMain.fm) {
         if (!NeteaseUser.isLoggedIn) {
           return AppToast.show({
@@ -55,13 +64,13 @@ const NavMenu: FC<NavMenuProps> = ({ className, barOpened }) => {
       }
       return navigate(path);
     },
-    [enableFM, jumpHistoryPage, jumpPlaylistPage, navigate]
+    [enableFM, jumpHistoryPage, jumpPlaylistPage, jumpStarPage, navigate]
   );
 
   return (
     <div
       className={cx(
-        "flex flex-col gap-2 w-(--side-bar-expand-width) overflow-hidden contain-layout",
+        "flex flex-col gap-1.25 w-(--side-bar-expand-width) overflow-hidden contain-layout",
         className
       )}>
       {NavConstants.LAYOUT_NAV.map(({ icon, path, label }) => {

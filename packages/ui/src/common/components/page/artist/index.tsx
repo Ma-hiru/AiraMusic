@@ -130,7 +130,10 @@ const Artist: FC<ArtistProps> = ({
     artist && onDataLoaded?.(artist);
   }, [artist, onDataLoaded]);
 
-  useAgentFocusCtx({ page: "artist", id, name: artist?.detail.artist.name ?? "" }, routerActive);
+  useAgentFocusCtx(
+    { page: "artist", id, name: artist?.id === id ? artist.name : "" },
+    routerActive
+  );
 
   const { online } = useOnline();
   return (
@@ -144,6 +147,7 @@ const Artist: FC<ArtistProps> = ({
           <Header
             className="shrink-0"
             artist={artist}
+            reload={reload}
             tabsItem={tabsItems}
             activeIndex={activeTab}
             pageActionType={pageActionType}

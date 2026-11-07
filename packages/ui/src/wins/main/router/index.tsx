@@ -3,6 +3,7 @@ import { RoutePathMain } from "@/common/routes";
 
 import HomePage from "../pages/home";
 import Layout from "../pages/layout";
+import StarPage from "../pages/star";
 import AlbumPage from "../pages/album";
 import ArtistPage from "../pages/artist";
 import HistoryPage from "../pages/history";
@@ -36,6 +37,10 @@ export const MainRouter = createBrowserRouter([
       {
         path: RoutePathMain.history,
         element: <HistoryPage />
+      },
+      {
+        path: RoutePathMain.star,
+        element: <StarPage />
       }
     ]
   }

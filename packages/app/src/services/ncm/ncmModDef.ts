@@ -76,6 +76,11 @@ const moduleDefs: ModuleDefinition[] = [
     module: require("@neteasecloudmusicapienhanced/api/module/captcha_sent")
   },
   {
+    identifier: "check_music",
+    route: "/check/music",
+    module: require("@neteasecloudmusicapienhanced/api/module/check_music")
+  },
+  {
     identifier: "cloudsearch",
     route: "/cloudsearch",
     module: require("@neteasecloudmusicapienhanced/api/module/cloudsearch")
@@ -84,6 +89,16 @@ const moduleDefs: ModuleDefinition[] = [
     identifier: "comment",
     route: "/comment",
     module: require("@neteasecloudmusicapienhanced/api/module/comment")
+  },
+  {
+    identifier: "comment_floor",
+    route: "/comment/floor",
+    module: require("@neteasecloudmusicapienhanced/api/module/comment_floor")
+  },
+  {
+    identifier: "comment_info_list",
+    route: "/comment/info/list",
+    module: require("@neteasecloudmusicapienhanced/api/module/comment_info_list")
   },
   {
     identifier: "comment_like",
@@ -99,6 +114,11 @@ const moduleDefs: ModuleDefinition[] = [
     identifier: "daily_signin",
     route: "/daily_signin",
     module: require("@neteasecloudmusicapienhanced/api/module/daily_signin")
+  },
+  {
+    identifier: "deviceinfo_center_upload",
+    route: "/deviceinfo/center/upload",
+    module: require("@neteasecloudmusicapienhanced/api/module/deviceinfo_center_upload")
   },
   {
     identifier: "fm_trash",
@@ -129,6 +149,11 @@ const moduleDefs: ModuleDefinition[] = [
     identifier: "listen_data_report",
     route: "/listen/data/report",
     module: require("@neteasecloudmusicapienhanced/api/module/listen_data_report")
+  },
+  {
+    identifier: "listen_data_song_play_rank",
+    route: "/listen/data/song/play/rank",
+    module: require("@neteasecloudmusicapienhanced/api/module/listen_data_song_play_rank")
   },
   {
     identifier: "listen_data_today_song",
@@ -306,6 +331,11 @@ const moduleDefs: ModuleDefinition[] = [
     module: require("@neteasecloudmusicapienhanced/api/module/recommend_songs_dislike")
   },
   {
+    identifier: "record_recent_song",
+    route: "/record/recent/song",
+    module: require("@neteasecloudmusicapienhanced/api/module/record_recent_song")
+  },
+  {
     identifier: "relay_play_state_submit",
     route: "/relay/play/state/submit",
     module: require("@neteasecloudmusicapienhanced/api/module/relay_play_state_submit")
@@ -464,6 +494,11 @@ const moduleDefs: ModuleDefinition[] = [
     identifier: "user_record",
     route: "/user/record",
     module: require("@neteasecloudmusicapienhanced/api/module/user_record")
+  },
+  {
+    identifier: "vip_info",
+    route: "/vip/info",
+    module: require("@neteasecloudmusicapienhanced/api/module/vip_info")
   }
 ];
 

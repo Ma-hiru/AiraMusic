@@ -1,7 +1,16 @@
+/** macOS 菜单栏胶囊配置 */
+export interface TrayCapsuleConfig {
+  /** 是否显示胶囊 */
+  enabled: boolean;
+  /** 歌词视口宽度（pt） */
+  width: number;
+}
+
 /** Normal 事件类型以及参数 */
 export type NormalEventMaps = {
   event_app_restart: boolean;
   event_window_open: WindowType;
+  event_tray_capsule: TrayCapsuleConfig;
   event_window_browser: { url: string };
   event_window_show: Optional<WindowType>;
   event_window_close: Optional<WindowType>;

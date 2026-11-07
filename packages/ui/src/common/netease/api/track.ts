@@ -1,5 +1,6 @@
 import { NeteaseMusicLevel } from "@/common/enum";
 import { apiRequest } from "@/common/netease/api/request";
+import type { NeteaseSession } from "@/common/netease/models";
 
 export default class _NeteaseTrackAPI {
   /**
@@ -40,16 +41,32 @@ export default class _NeteaseTrackAPI {
   }
 
   /**
+   * @desc 调用此接口,传入歌曲 id, 可获取音乐是否可用,
+   * @return 返回 { success: true, message: 'ok' } 或者 { success: false, message: '亲爱的,暂无版权' }
+   * */
+  static check(id: number | string) {
+    return apiRequest({
+      url: "/check/music",
+      params: { id }
+    });
+  }
+
+  /**
    * 获取歌曲详情
    * @desc 调用此接口 , 传入音乐 id(支持多个 id, 用 , 隔开), 可获得歌曲详情(注意:歌曲封面现在需要通过专辑内容接口获取)
    * @param ids - 音乐 id, 例如 ids=405998841,33894312
    * @example /song/detail?ids=347230`,`/song/detail?ids=347230,347231
+   * @note ids 不能放进 query：单批最多 500 个 id，拼进 URL 会超长，因此用 POST body 传输 \
+   * 但 ncm 的 apicache 以 hostname + originalUrl + cookie 作为缓存键、缓存 2 分钟，\
+   * POST 的 URL 不含 ids，若不附加一次性标记，所有详情请求会命中同一条缓存，\
+   * 导致不同专辑/搜索结果互相串数据（表现为 get track xxx empty）。
    */
   static detail(ids: number | string | number[], signal?: AbortSignal) {
     if (Array.isArray(ids)) ids = ids.join(",");
     return apiRequest<any, NeteaseAPI.NeteaseTrackDetailResponse>({
       method: "POST",
       url: "/song/detail",
+      params: { timestamp: Date.now() },
       data: { ids },
       signal
     });
@@ -111,20 +128,27 @@ export default class _NeteaseTrackAPI {
     });
   }
 
+  /**
+   * @desc 调用此接口可提交歌曲播放状态，支持会话追踪和播放模式记录，未传入 sessionId 时后端会自动生成
+   * */
   static stateSubmit(params: {
     /** 歌曲 id */
     id: number;
     /** 播放进度（秒），默认 0 */
     progress: number;
     /** 播放会话 ID（12 位大写字母和数字），不传则自动生成 */
-    sessionId?: string;
     playMode?: "list_loop";
+    sessionId: string | undefined | NeteaseSession;
     /** 资源类型，默认 song */
     type?: "song";
   }) {
     return apiRequest<any, NeteaseAPI.NeteaseAPIResponse>({
       url: "/relay/play/state/submit",
-      params: { ...params, timestamp: Date.now() }
+      params: {
+        ...params,
+        sessionId: typeof params.sessionId === "string" ? params.sessionId : params.sessionId?.id,
+        timestamp: Date.now()
+      }
     });
   }
 

@@ -1,4 +1,6 @@
 .display-container {
+  $edge-fade: linear-gradient(to bottom, #000 calc(100% - (var(--spacing) * 6)), transparent);
+
   padding-top: calc(var(--spacing) * 10); /* 2.5rem = 40px */
   padding-inline: calc(var(--spacing) * 6); /* 1.5rem = 24px */
   padding-bottom: calc(var(--spacing) * 6); /* 1.5rem = 24px */
@@ -6,4 +8,7 @@
   height: 100vh;
   position: relative;
   contain: strict;
+  /* 底部渐隐：内容滚动到容器底边时柔和收尾 */
+  -webkit-mask-image: $edge-fade;
+  mask-image: $edge-fade;
 }

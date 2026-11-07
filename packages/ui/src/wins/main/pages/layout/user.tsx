@@ -59,7 +59,9 @@ export const User = () => {
 
   useEffect(() => {
     const logout = () => {
+      RendererPlayerHandle.player.audio.pause();
       RendererPlayerHandle.player.history.clear();
+      RendererPlayerHandle.player.playlist.clear();
       return NeteaseServicesAuth.createLoginWindow();
     };
 

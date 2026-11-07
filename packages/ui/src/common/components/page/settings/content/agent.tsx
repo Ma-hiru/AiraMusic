@@ -256,6 +256,7 @@ const AgentSettings: FC = () => {
                   type="button"
                   role="checkbox"
                   aria-checked={checked}
+                  title={tool.description}
                   disabled={saving || !state.mcpEnabled || onlySelected}
                   onClick={() =>
                     void update({
@@ -278,7 +279,7 @@ const AgentSettings: FC = () => {
                       </span>
                       <ToolRiskBadge risk={tool.risk} />
                     </span>
-                    <span className="mt-0.5 line-clamp-2 block text-[9px] leading-4 opacity-50">
+                    <span className="mt-0.5 line-clamp-2 min-h-8 text-[9px] leading-4 break-words opacity-50">
                       {tool.description}
                     </span>
                   </span>

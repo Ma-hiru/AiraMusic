@@ -1,190 +1,336 @@
 import { cx } from "@emotion/css";
-import { memo, type FC, useMemo, useEffect, useCallback } from "react";
-import { Clock3, Music2, CalendarDays, type LucideIcon, LucideRefreshCw } from "lucide-react";
+import { UserRound, ChevronRight, RotateCwSquare } from "lucide-react";
+import { memo, useRef, type FC, useState, useEffect, useCallback } from "react";
 import { useUser } from "@/common/store/user";
 import { RendererFormat } from "@/common/lib/format";
 import { RendererWindow } from "@/common/lib/window";
-import { NeteaseAPIRecord } from "@/common/netease/api";
 import { RendererIPCMessageBus } from "@/common/lib/bus";
-import { useListenable } from "@/common/hooks/use-listenable";
-import { NeteaseNetworkImage } from "@/common/netease/models";
-import { useRequestAutoRun, useRequestStatusWrap } from "@/common/hooks/use-request-wrap";
+import { usePageJump } from "@/wins/main/hooks/use-page-jump";
+import { usePlayerActionInList } from "@/wins/main/hooks/use-player-action-in-list";
+import { NeteaseNetworkImage, type NeteaseTrackRecord } from "@/common/netease/models";
+import { openListeningFootprintDisplay } from "@/wins/main/lib/open-listening-footprint-display";
+import {
+  type ListeningPeriod,
+  useListeningFootprint,
+  formatListeningDuration
+} from "@/common/hooks/use-listening-footprint";
 import dayjs from "dayjs";
+import Tooltip from "@/common/components/display/tooltip";
 import RendererPlayerHandle from "@/wins/main/lib/handle";
-import AppError from "@/common/components/fallback/app-error";
-import AppLoading from "@/common/components/fallback/app-loading";
+import IconButton from "@/common/components/data-input/icon-button";
 import NeteaseImage from "@/common/components/display/image/netease-image";
-
-interface StatItem {
-  label: string;
-  Icon: LucideIcon;
-  value: number | string;
-}
+import AppDrawer, {
+  createPlayerListeningFootprintDrawer
+} from "@/common/components/display/drawer";
 
 const WEEKDAYS = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
 
+const openAccount = async () => {
+  await RendererWindow.display.reactReadyAwait();
+  RendererIPCMessageBus.display.deliver({ type: "settings" });
+};
+
 const ForYouPanel: FC<{ className?: string }> = ({ className }) => {
   const user = useUser();
-  const isLoggedIn = user?.isLoggedIn;
+  const [date, setDate] = useState(() => dayjs());
+  const [revision, setRevision] = useState(0);
+  const report = useListeningFootprint(revision);
+  const modalTracksRef = useRef<NeteaseTrackRecord[]>([]);
+  const { addTrackToPlaylistLast, addTrackToPlaylistNext, openTrackComment, onTrackPlay, player } =
+    usePlayerActionInList(() => modalTracksRef.current);
+  const { jumpAlbumPage, jumpArtistPage } = usePageJump();
 
-  const {
-    status,
-    fetchData,
-    data: { weekRecords, monthRecords } = {}
-  } = useRequestStatusWrap(
-    useCallback(async () => {
-      if (!isLoggedIn)
-        return {
-          weekRecords: null,
-          monthRecords: null
-        };
-      const weekRecords = await NeteaseAPIRecord.week()
-        .then(RendererFormat.weekRecord)
-        .catch(() => undefined);
-      const monthRecords = await NeteaseAPIRecord.month()
-        .then(RendererFormat.monthRecord)
-        .catch(() => undefined);
-      return {
-        weekRecords,
-        monthRecords
-      };
-    }, [isLoggedIn])
+  useEffect(
+    () => RendererPlayerHandle.player.history.addListener(() => setRevision((value) => value + 1)),
+    []
   );
-  const { reload } = useRequestAutoRun(fetchData, []);
-
-  const dateDisplay = dayjs();
-  const statItems: StatItem[] = useMemo(
-    () => [
-      {
-        label: "本周",
-        value: (weekRecords?.total ?? "-") + " m",
-        Icon: CalendarDays
-      },
-      {
-        label: "今日",
-        value: (weekRecords?.today?.duration ?? "-") + " m",
-        Icon: Clock3
-      },
-      {
-        label: "歌曲",
-        value: (weekRecords?.todayTrackCount ?? "-") + " 首",
-        Icon: Music2
-      }
-    ],
-    [weekRecords?.today?.duration, weekRecords?.todayTrackCount, weekRecords?.total]
-  );
-
-  // 监听历史变化，实时刷新听歌数据
-  const history = useListenable(RendererPlayerHandle.player.history);
   useEffect(() => {
-    reload();
-  }, [history.count, isLoggedIn, reload]);
+    const timer = window.setTimeout(
+      () => {
+        setDate(dayjs());
+        setRevision((value) => value + 1);
+      },
+      date.endOf("day").valueOf() - Date.now() + 1
+    );
+    return () => window.clearTimeout(timer);
+  }, [date]);
+
+  const onTracksLoaded = useCallback((tracks: NeteaseTrackRecord[]) => {
+    modalTracksRef.current = tracks;
+  }, []);
+  const openReport = useCallback(
+    (initialPeriod: ListeningPeriod, initialDay?: string) => {
+      if (!report.loggedIn) {
+        void openAccount();
+        return;
+      }
+      modalTracksRef.current = [];
+      AppDrawer._create(createPlayerListeningFootprintDrawer, {
+        player,
+        initialPeriod,
+        initialDay,
+        onPageAction: openListeningFootprintDisplay,
+        onTracksLoaded,
+        onPlay: onTrackPlay,
+        onClickAlbum: jumpAlbumPage,
+        onClickArtist: jumpArtistPage,
+        openComment: openTrackComment,
+        addToPlaylistLast: addTrackToPlaylistLast,
+        addToPlaylistNext: addTrackToPlaylistNext
+      });
+    },
+    [
+      player,
+      report.loggedIn,
+      onTracksLoaded,
+      onTrackPlay,
+      jumpAlbumPage,
+      jumpArtistPage,
+      openTrackComment,
+      addTrackToPlaylistLast,
+      addTrackToPlaylistNext
+    ]
+  );
+  const registration = user?.profile.createTime;
+  const week = report.loggedIn ? report.week : null;
+  const month = report.loggedIn ? report.month : null;
+  const songCount = week?.todayTrackCount;
+  const todayDuration = formatListeningDuration(week?.today?.duration);
+  const todayDurationParts = todayDuration.match(/\d+|\D+/g) ?? [todayDuration];
+  const weekDetails = week?.details ?? [];
+  const hasWeekRecords = weekDetails.some((item) => (item.duration ?? 0) > 0);
+  const maxWeekDuration = Math.max(1, ...weekDetails.map((item) => item.duration ?? 0));
+  const trendTips = !report.loggedIn
+    ? "登录后查看趋势"
+    : report.loading && !week
+      ? "正在同步趋势"
+      : report.failed && !week
+        ? "本周统计暂不可用"
+        : weekDetails.length > 0
+          ? "本周还没有收听记录"
+          : "本周暂无趋势";
 
   return (
     <aside
       className={cx(
-        `
-        relative min-h-52 w-full min-w-0 overflow-hidden rounded-xl border border-white/15
-        bg-linear-to-br from-white/12 via-white/5 to-primary/50 p-3
-        shadow-md backdrop-saturate-150 backdrop-blur-lg
-        group lg:h-full
-        `,
+        "relative min-h-57 w-full min-w-0 overflow-hidden rounded-xl border border-white/15 bg-linear-to-br from-white/12 via-white/5 to-primary/50 p-3 shadow-md backdrop-saturate-150 backdrop-blur-lg lg:h-full",
         className
-      )}>
-      <div className="pointer-events-none absolute inset-0 bg-linear-to-t from-black/10 via-transparent to-white/30" />
-      <AppError reset={reload} message="听歌数据加载错误" when={status === "error"}>
-        <AppLoading tips="听歌数据加载中" loading={status === "loading"}>
-          <div className="relative z-10 flex h-full min-h-0 flex-col justify-between gap-4 sm:flex-row sm:gap-6 xl:gap-8 contain-strict">
-            {/* title 和 日期 */}
-            <section className="flex min-w-0 flex-col justify-between items-start">
-              <div className="min-w-0">
-                <p className="text-[10px] font-bold uppercase tracking-widest opacity-50">
-                  Listening Footprint
-                </p>
-                <p className="truncate text-xl font-bold flex items-center gap-2">
-                  <span>听歌足迹</span>
-                  <span title="刷新">
-                    <LucideRefreshCw
-                      className="size-4 hover:opacity-50 ease-in-out transition-opacity duration-500 cursor-pointer opacity-0 group-hover:opacity-100 active:scale-98"
-                      onClick={reload}
-                    />
-                  </span>
-                </p>
-              </div>
-              <div className="min-w-0 border-l-2 border-primary/55 pl-3">
-                <div className="flex items-end gap-2">
-                  <span className="text-5xl font-bold leading-none tabular-nums sm:text-6xl">
-                    {dateDisplay.date().toString().padStart(2, "0")}
-                  </span>
-                  <span className="mb-1 flex min-w-0 flex-col gap-0.5">
-                    <span className="truncate text-[11px] font-semibold uppercase tracking-widest opacity-55">
-                      {dateDisplay.month() + 1}月
-                    </span>
-                    <span className="truncate text-sm font-semibold">
-                      {WEEKDAYS[dateDisplay.day()]}
-                    </span>
-                  </span>
-                </div>
-                <div className="mt-2 flex max-w-40 items-center gap-2 rounded-full bg-white/10 px-2 py-1 text-[10px] font-semibold">
-                  <span className="shrink-0 tabular-nums opacity-55">{dateDisplay.year()}</span>
-                  <span className="min-w-0 truncate">
-                    {isLoggedIn ? "听歌报告更新中" : "登录后同步报告"}
-                  </span>
-                </div>
-              </div>
-            </section>
-            {/* 头像和信息 */}
-            <section className="flex min-w-0 flex-col items-start justify-between sm:items-end">
-              <div className="flex min-w-0 shrink-0 flex-col items-start sm:items-end">
-                <div className="mt-0.5 flex max-w-full shrink-0 items-center gap-3">
-                  {!!user && (
-                    <NeteaseImage
-                      className="size-10 rounded-full border cursor-pointer hover:scale-105 ease-in-out duration-300 transition-transform"
-                      shadow="base"
-                      cacheLazy={false}
-                      image={NeteaseNetworkImage.fromUserAvatar(user)}
-                      onClick={async () => {
-                        await RendererWindow.display.reactReadyAwait();
-                        RendererIPCMessageBus.display.deliver({ type: "settings" });
-                      }}
-                      cache
-                    />
-                  )}
-                  <span className="min-w-0 truncate text-xl font-bold sm:text-2xl">
-                    {user ? user.profile.nickname : "发现音乐"}
-                  </span>
-                </div>
-                {!!user && (
-                  <span className="font-semibold tracking-wide">
-                    {RendererFormat.yearsAndDays(user?.profile.createTime)}
-                  </span>
-                )}
-              </div>
-              <div className="min-w-0 flex flex-col flex-1 justify-end py-2">
-                <p className="text-[10px] font-semibold uppercase tracking-widest opacity-45">
-                  Month Total
-                </p>
-                <strong className="mt-1 block truncate text-2xl font-bold leading-none tabular-nums sm:text-right">
-                  {monthRecords?.total ?? "-"} m
-                </strong>
-              </div>
-              <div className="grid w-full shrink-0 grid-cols-3 gap-1.5 sm:w-auto">
-                {statItems.map(({ Icon, label, value }) => (
-                  <div key={label} className="min-w-0 rounded-md bg-white/10 px-2 py-1.5">
-                    <div className="flex items-center gap-1 opacity-55">
-                      <Icon className="size-3 shrink-0" />
-                      <span className="truncate text-[9px] font-semibold">{label}</span>
-                    </div>
-                    <span className="mt-0.5 block truncate text-[11px] font-semibold tabular-nums">
-                      {value}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </section>
+      )}
+      aria-label="听歌足迹"
+      aria-busy={report.loading}>
+      <div className="pointer-events-none absolute inset-0 bg-linear-to-t from-black/10 via-transparent to-white/20" />
+      <div className="relative flex h-full min-h-0 flex-col gap-1.5">
+        <header className="flex shrink-0 items-center justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-2.5">
+            <button
+              className="size-9 shrink-0 cursor-pointer rounded-full outline-none transition-transform hover:scale-105 focus-visible:ring-2 focus-visible:ring-white/60 active:scale-95"
+              title="账号设置"
+              type="button"
+              aria-label="账号设置"
+              onClick={openAccount}>
+              {user ? (
+                <NeteaseImage
+                  className="size-9 rounded-full border border-white/20"
+                  shadow="base"
+                  cacheLazy={false}
+                  image={NeteaseNetworkImage.fromUserAvatar(user)}
+                  cache
+                />
+              ) : (
+                <span className="flex size-9 items-center justify-center rounded-full bg-white/10">
+                  <UserRound className="size-5 opacity-70" />
+                </span>
+              )}
+            </button>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold">
+                {user?.profile.nickname ?? "发现音乐"}
+              </p>
+              <p
+                className="mt-0.5 truncate text-[10px] opacity-60"
+                title={
+                  registration ? dayjs(registration).format("YYYY年MM月DD日") + "注册" : undefined
+                }>
+                {user ? "注册" + RendererFormat.yearsAndDays(registration) : "登录后记录听歌足迹"}
+              </p>
+            </div>
           </div>
-        </AppLoading>
-      </AppError>
+          <time
+            className="ml-auto flex shrink-0 items-center gap-2 text-right"
+            title={date.format("YYYY年MM月DD日")}
+            dateTime={date.format("YYYY-MM-DD")}
+            aria-label={date.format("YYYY年MM月DD日")}>
+            <span className="text-[36px] font-semibold leading-none tracking-tight tabular-nums">
+              {date.format("DD")}
+            </span>
+            <span className="flex flex-col items-end gap-0.5 text-[11px] leading-tight opacity-60">
+              <span>{date.format("MM月")}</span>
+              <span>{WEEKDAYS[date.day()]}</span>
+            </span>
+          </time>
+        </header>
+        <div className="shrink-0 border-t border-white/10 pt-1.5">
+          <button
+            className="group flex w-full min-w-0 cursor-pointer items-end justify-between gap-3 rounded-md px-1 text-left outline-none transition-colors hover:bg-white/5 focus-visible:ring-2 focus-visible:ring-white/60"
+            type="button"
+            aria-label={report.loggedIn ? "查看今日听歌足迹" : "登录查看听歌足迹"}
+            onClick={() => openReport("today")}>
+            <div className="min-w-0">
+              <span className="block text-[10px] opacity-60">今日收听</span>
+              <div className="mt-1 flex min-w-0 flex-wrap items-baseline gap-x-4 gap-y-2">
+                <strong
+                  className="flex items-baseline whitespace-nowrap font-semibold leading-none tabular-nums"
+                  aria-label="今日收听时长">
+                  {todayDurationParts.map((part, index) => (
+                    <span
+                      key={`${part}-${index}`}
+                      className={
+                        /\d+/.test(part) || part === "—"
+                          ? "text-[32px] tracking-tight"
+                          : "mx-0.5 text-[11px] font-normal opacity-60"
+                      }>
+                      {part}
+                    </span>
+                  ))}
+                </strong>
+                <span
+                  className="flex shrink-0 items-baseline gap-1 border-l border-white/10 pl-4 leading-none tabular-nums"
+                  aria-label="今日歌曲数量">
+                  <span className="text-2xl font-medium leading-none">{songCount ?? "—"}</span>
+                  <span className="text-[10px] opacity-60">首歌曲</span>
+                </span>
+              </div>
+            </div>
+            <ChevronRight className="mb-0.5 size-4 shrink-0 opacity-45" />
+          </button>
+        </div>
+        <section
+          className="flex min-h-16 min-w-0 flex-1 flex-col border-t border-white/10 pt-1.5"
+          aria-label="本周收听趋势">
+          <div className="mb-1 flex min-w-0 shrink-0 items-baseline justify-between gap-2">
+            <button
+              className="min-w-max cursor-pointer rounded-sm text-[10px] opacity-55 outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-white/60"
+              type="button"
+              aria-label="查看本周听歌足迹"
+              onClick={() => openReport("week")}>
+              本周收听
+            </button>
+            <span className="min-w-0 flex-1 truncate text-[9px] opacity-45" role="status">
+              {report.loading && week
+                ? "更新中"
+                : report.failed && week
+                  ? "部分统计暂未更新"
+                  : null}
+            </span>
+            <span
+              className="shrink-0 text-[11px] font-medium tabular-nums"
+              aria-label="本周收听时长">
+              {formatListeningDuration(week?.total)}
+            </span>
+          </div>
+          {hasWeekRecords ? (
+            <ol
+              className="grid min-h-10 flex-1 auto-cols-fr grid-flow-col gap-2"
+              aria-label="本周每日收听时长">
+              {weekDetails.map((item, index) => {
+                const day = item.period ? dayjs(item.period) : null;
+                const validDay = day?.isValid() ? day : null;
+                const label = validDay ? validDay.format("M月D日") : `第${index + 1}天`;
+                const duration = formatListeningDuration(item.duration);
+                const isToday = validDay?.isSame(date, "day") ?? false;
+                return (
+                  <li key={`${item.period}-${index}`} className="min-h-0 min-w-0">
+                    <Tooltip
+                      className="h-full w-full min-w-0"
+                      tooltipLabel={`${label}收听时长`}
+                      content={
+                        <div className="whitespace-nowrap rounded-md border border-white/15 bg-black/85 px-3 py-2 text-white shadow-lg backdrop-blur-lg">
+                          <p className="text-[10px] opacity-65">{label}</p>
+                          <p className="mt-0.5 text-xs font-semibold tabular-nums">{duration}</p>
+                        </div>
+                      }
+                      portal>
+                      <button
+                        className="group flex h-full w-full min-w-0 cursor-pointer flex-col justify-end gap-1 rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-white/60"
+                        type="button"
+                        aria-label={`${label}，${duration}`}
+                        onClick={() => openReport("week", validDay?.format("YYYY-MM-DD"))}>
+                        <span
+                          className="flex min-h-0 w-full flex-1 items-end justify-center"
+                          aria-hidden="true">
+                          <span
+                            className={cx(
+                              "w-2.5 max-w-[60%] rounded-t-sm transition-colors",
+                              isToday
+                                ? "bg-white/90"
+                                : "bg-white/35 group-hover:bg-white/70 group-focus-visible:bg-white/70"
+                            )}
+                            style={{
+                              height: `${Math.max(0, ((item.duration ?? 0) / maxWeekDuration) * 100)}%`
+                            }}
+                          />
+                        </span>
+                        <span
+                          className={cx(
+                            "h-3 w-full truncate text-center text-[9px] tabular-nums",
+                            isToday ? "opacity-80" : "opacity-40"
+                          )}
+                          aria-hidden="true">
+                          {isToday
+                            ? "今"
+                            : validDay
+                              ? WEEKDAYS[validDay.day()]!.slice(-1)
+                              : index + 1}
+                        </span>
+                      </button>
+                    </Tooltip>
+                  </li>
+                );
+              })}
+            </ol>
+          ) : (
+            <div
+              className="flex min-h-10 flex-1 items-center justify-center text-[10px] opacity-45"
+              role="status">
+              {trendTips}
+            </div>
+          )}
+        </section>
+        <footer className="flex min-w-0 shrink-0 items-center justify-between gap-3 border-t border-white/10 pt-1.5 text-[10px]">
+          <button
+            className="flex min-w-0 cursor-pointer items-baseline gap-2 rounded-sm text-left opacity-65 outline-none transition-opacity hover:opacity-100 focus-visible:ring-2 focus-visible:ring-white/60"
+            type="button"
+            aria-label="查看本月听歌足迹"
+            onClick={() => openReport("month")}>
+            <span className="shrink-0">本月累计</span>
+            <span className="truncate font-medium tabular-nums" aria-label="本月收听时长">
+              {formatListeningDuration(month?.total)}
+            </span>
+          </button>
+          <div className="flex shrink-0 items-center gap-2">
+            <IconButton
+              label="刷新听歌足迹"
+              size="compact"
+              variant="plain"
+              icon={RotateCwSquare}
+              disabled={!report.loggedIn || report.loading}
+              onClick={report.reload}
+              iconClassName={cx(
+                "size-4.5!",
+                report.loading && "animate-spin motion-reduce:animate-none"
+              )}
+            />
+            <button
+              className="flex shrink-0 cursor-pointer items-center gap-0.5 rounded-sm opacity-65 outline-none transition-opacity hover:opacity-100 focus-visible:ring-2 focus-visible:ring-white/60"
+              type="button"
+              aria-label="查看听歌足迹"
+              onClick={() => openReport("week")}>
+              查看足迹
+              <ChevronRight className="size-3" />
+            </button>
+          </div>
+        </footer>
+      </div>
     </aside>
   );
 };

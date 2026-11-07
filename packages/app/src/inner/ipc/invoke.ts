@@ -1,8 +1,11 @@
-import { app, dialog, BrowserWindow, type IpcMainInvokeEvent } from "electron";
+import { app, dialog, BrowserWindow } from "electron";
 import { MainHandle } from "@/lib/handle";
 import { MainRuntime } from "@/lib/runtime";
+import { getDeviceName } from "@/utils/device";
 import { fetchFromNode } from "@/lib/net-fetch";
+import { MainAgentGuard } from "@/lib/agent/guard";
 import { mergeCacheStoreConfig } from "@/utils/merge";
+import { MainAgentContext } from "@/lib/agent/context";
 import { getNetworkStatus } from "@/lib/network-status";
 import { MainWindowManager } from "@/lib/window-manager";
 import { MainScreenResolver } from "@/lib/screen-resolver";
@@ -15,11 +18,13 @@ import type { InvokeHandlers } from "@mahiru/ipc/types";
 export const invokeHandlers: InvokeHandlers = {
   invoke_net_fetch: (_event, request) => fetchFromNode(request),
   invoke_agent_feature_settings_get: (event) =>
-    authorizedAgentFeatureSettingsData(event, () => getAgent().getState()),
+    MainAgentGuard.callSync(event, "settings", () => getAgent().getState()),
   invoke_agent_feature_settings_update: (event, options) =>
-    authorizedAgentFeatureSettingsRequest(event, () => getAgent().updateSettings(options)),
+    MainAgentGuard.call(event, "settings", () => getAgent().updateSettings(options)),
   invoke_agent_connection: (event) =>
-    authorizedAgentRequest(event, () => getAgent().getConnection()),
+    MainAgentGuard.call(event, "agent", () => getAgent().getConnection()),
+  invoke_agent_context: (event) =>
+    MainAgentGuard.callSync(event, "agent", () => MainAgentContext.snapshot()),
   invoke_fs_select: async (_, type) => {
     const { canceled, filePaths } = await dialog.showOpenDialog({
       title: type === "dir" ? "选择目录" : "选择文件",
@@ -96,6 +101,7 @@ export const invokeHandlers: InvokeHandlers = {
   invoke_device_gpu: async () => app.whenReady().then(() => app.getGPUInfo("complete")),
   invoke_device_platform: () => process.platform,
   invoke_device_net: () => getNetworkStatus(),
+  invoke_device_name: () => getDeviceName(),
   invoke_window_id: (e) => {
     const sender = BrowserWindow.fromWebContents(e.sender);
     return MainWindowManager.getId(sender)!;
@@ -191,129 +197,8 @@ for (const [key, handler] of Object.entries(invokeHandlers)) {
   }) as never;
 }
 
-const toAgentInvokeError = (error: unknown) => {
-  return {
-    ok: false,
-    reason: {
-      code: "unknown",
-      message: error instanceof Error ? error.message : String(error)
-    }
-  } as const;
-};
-
-/**
- * Agent IPC 只接收 Agent 窗口自身主框架发出的请求。
- * 既校验窗口身份，也拒绝 iframe 和导航到外部页面后的调用。
- */
-export const isAuthorizedAgentInvokeSender = (event: IpcMainInvokeEvent) => {
-  return isAuthorizedApplicationMainFrame(event, "agent", "/agent.html");
-};
-
-/** Agent 功能设置只能由主窗口或 display 设置窗口自身的应用主框架读取和修改。 */
-export const isAuthorizedAgentFeatureSettingsSender = (event: IpcMainInvokeEvent) => {
-  return (
-    isAuthorizedApplicationMainFrame(event, "main", "/") ||
-    isAuthorizedApplicationMainFrame(event, "display", "/display.html")
-  );
-};
-
-function isAuthorizedApplicationMainFrame(
-  event: IpcMainInvokeEvent,
-  windowType: "main" | "agent" | "display",
-  pathname: string
-) {
-  try {
-    const senderWindow = BrowserWindow.fromWebContents(event.sender);
-    if (!senderWindow || MainWindowManager.getId(senderWindow) !== windowType) return false;
-    if (!event.senderFrame || event.senderFrame !== event.sender.mainFrame) return false;
-
-    const url = new URL(event.senderFrame.url);
-    const expectedFrameURL = MainWindowManager.getAppFrameURL(senderWindow);
-    if (!expectedFrameURL) return false;
-    const expectedURL = new URL(expectedFrameURL);
-    return (
-      (url.protocol === "http:" || url.protocol === "https:") &&
-      url.hostname === "localhost" &&
-      Boolean(url.port) &&
-      isWithinAppPath(url.pathname, pathname) &&
-      url.origin === expectedURL.origin &&
-      !url.username &&
-      !url.password
-    );
-  } catch {
-    return false;
-  }
-}
-
-/** SPA 会在初始页面地址下继续路由（如 /display.html/settings），允许其子路径。 */
-function isWithinAppPath(pathname: string, base: string) {
-  if (pathname === base) return true;
-  const prefix = base.endsWith("/") ? base : `${base}/`;
-  return pathname.startsWith(prefix);
-}
-
 function getAgent() {
   const agent = MainHandle.get()?.agent;
   if (!agent) throw new Error("Agent 功能尚未初始化");
   return agent;
 }
-
-const unauthorizedAgentInvokeResult = () =>
-  ({
-    ok: false,
-    reason: {
-      code: "auth",
-      message: "拒绝来自非 Agent 应用主框架的 IPC 请求"
-    }
-  }) as const;
-
-const agentRequest = async <T>(action: () => T | Promise<T>) => {
-  try {
-    return {
-      ok: true,
-      data: structuredClone(await action())
-    } as const;
-  } catch (error) {
-    Log.error("invoke(agent)", error);
-    return toAgentInvokeError(error);
-  }
-};
-
-const agentData = <T>(action: () => T) => {
-  try {
-    return {
-      ok: true,
-      data: structuredClone(action())
-    } as const;
-  } catch (error) {
-    Log.error("invoke(agent)", error);
-    return toAgentInvokeError(error);
-  }
-};
-
-const authorizedAgentRequest = <T>(event: IpcMainInvokeEvent, action: () => T | Promise<T>) => {
-  if (!isAuthorizedAgentInvokeSender(event)) {
-    Log.warn("invoke(agent)", "拒绝非 Agent 主框架请求");
-    return Promise.resolve(unauthorizedAgentInvokeResult());
-  }
-  return agentRequest(action);
-};
-
-const authorizedAgentFeatureSettingsRequest = <T>(
-  event: IpcMainInvokeEvent,
-  action: () => T | Promise<T>
-) => {
-  if (!isAuthorizedAgentFeatureSettingsSender(event)) {
-    Log.warn("invoke(agent settings)", "拒绝非主窗口应用主框架请求");
-    return Promise.resolve(unauthorizedAgentInvokeResult());
-  }
-  return agentRequest(action);
-};
-
-const authorizedAgentFeatureSettingsData = <T>(event: IpcMainInvokeEvent, action: () => T) => {
-  if (!isAuthorizedAgentFeatureSettingsSender(event)) {
-    Log.warn("invoke(agent settings)", "拒绝非主窗口应用主框架请求");
-    return unauthorizedAgentInvokeResult();
-  }
-  return agentData(action);
-};

@@ -4,6 +4,8 @@ import { CommentSort, CommentType } from "@/common/enum";
 import { RendererIPCMessageBus } from "@/common/lib/bus";
 import { useComments } from "@/common/hooks/use-comments";
 import { useListenable } from "@/common/hooks/use-listenable";
+import { useAgentFocusCtx } from "@/common/hooks/use-agent-focus-ctx";
+import { useShortcutForwarder } from "@/common/hooks/use-shortcut-forwarder";
 import { useThemeInjectFromBus } from "@/common/hooks/use-theme-inject-from-bus";
 import AppToast from "@/common/components/display/toast";
 import AppError from "@/common/components/fallback/app-error";
@@ -16,6 +18,8 @@ import Content from "./content";
 import Control from "./control";
 
 const CommentsPage: FC<object> = () => {
+  // 评论窗聚焦时，命中的快捷键转发给主窗口执行
+  useShortcutForwarder();
   const commentBus = useListenable(RendererIPCMessageBus.comment);
   const trackMetaBus = useListenable(RendererIPCMessageBus.trackMeta);
   const themeBus = useThemeInjectFromBus();
@@ -26,6 +30,15 @@ const CommentsPage: FC<object> = () => {
   const [type, setType] = useState(CommentType.Song);
   const [sortType, setSortType] = useState(CommentSort.Hot);
   const { status, comments, loadMore } = useComments({ id, type, sortType });
+  useAgentFocusCtx(
+    {
+      page: "comments",
+      id,
+      type:
+        type === CommentType.Album ? "album" : type === CommentType.Playlist ? "playlist" : "track"
+    },
+    id > 0
+  );
 
   useEffect(() => {
     if (!commentBus.data) return;

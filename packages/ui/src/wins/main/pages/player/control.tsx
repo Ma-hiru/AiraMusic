@@ -20,14 +20,15 @@ import { useLatestRef } from "@/common/hooks/use-latest-ref";
 import { usePageJump } from "@/wins/main/hooks/use-page-jump";
 import { repeatModeControls } from "@/common/constants/repeat";
 import { fmModeAtom, intelligenceModeAtom } from "@/wins/main/atoms/track";
+import { openPlayListDisplay } from "@/wins/main/lib/open-play-list-display";
 import { usePlayerActionInList } from "@/wins/main/hooks/use-player-action-in-list";
 import AppToast from "@/common/components/display/toast";
 import RendererPlayerHandle from "@/wins/main/lib/handle";
 import IconButton, { type IconButtonProps } from "@/common/components/data-input/icon-button";
-import AppModal, {
-  type PlaylistModalProps,
-  createPlayerPlaylistModal
-} from "@/common/components/display/modal";
+import AppDrawer, {
+  type PlaylistDrawerProps,
+  createPlayerPlaylistDrawer
+} from "@/common/components/display/drawer";
 
 import Progress from "./progress";
 
@@ -38,21 +39,21 @@ interface ControlProps {
 }
 
 const Control: FC<ControlProps> = ({ className, itemClassName, containerClassName }) => {
-  const { create } = AppModal.useModal();
+  const { create } = AppDrawer.useDrawer();
   const player = RendererPlayerHandle.usePlayer();
   const repeatControl = repeatModeControls[player.playlist.repeat];
   const setPlayModalAtom = useSetAtom(playModalAtom);
   const fmMode = useAtomValue(fmModeAtom);
   const [intelligenceMode, setIntelligenceMode] = useAtom(intelligenceModeAtom);
 
-  const actionRef = useLatestRef<PlaylistModalProps>({
+  const actionRef = useLatestRef<PlaylistDrawerProps>({
     ...usePageJump(),
     ...usePlayerActionInList(() => player.playlist.list(), player.playlist.mark_id),
-    cacheKey: "player-playlist-player-control"
+    onPageAction: openPlayListDisplay
   });
   const settings = useSettings();
-  const openPlaylistModal = useCallback(() => {
-    create(createPlayerPlaylistModal, {
+  const openPlaylistDrawer = useCallback(() => {
+    create(createPlayerPlaylistDrawer, {
       ...actionRef.current,
       onJumpPage: () => !settings.preference.defaultUseDisplayWindow && setPlayModalAtom(false)
     });
@@ -188,7 +189,7 @@ const Control: FC<ControlProps> = ({ className, itemClassName, containerClassNam
           icon={ListMusic}
           iconClassName="scale-85"
           itemClassName={itemClassName}
-          onClick={openPlaylistModal}
+          onClick={openPlaylistDrawer}
         />
       </div>
     </section>

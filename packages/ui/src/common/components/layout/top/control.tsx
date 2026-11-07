@@ -1,6 +1,14 @@
 import { cx } from "@emotion/css";
-import { memo, type FC, useEffect, useCallback } from "react";
 import { X, Pin, Minus, PinOff, Square, AppWindow, SquareMinus } from "lucide-react";
+import {
+  memo,
+  type FC,
+  Fragment,
+  useEffect,
+  useCallback,
+  isValidElement,
+  type ReactElement
+} from "react";
 import { RendererDevice } from "@/common/lib/device";
 import { RendererWindow } from "@/common/lib/window";
 import { useListenable } from "@/common/hooks/use-listenable";
@@ -20,7 +28,7 @@ interface TopControlProps {
   mini?: boolean;
   className?: string;
   itemClassName?: string;
-  appends?: ControlButtonProps | ControlButtonProps[];
+  appends?: ControlAppend | ControlAppend[];
   onClose?: NormalFunc<[quiting: boolean]>;
 }
 
@@ -71,7 +79,7 @@ const Control: FC<TopControlProps> = ({
   }, [onClose]);
 
   return (
-    <NoDrag className={cx(`flex flex-row items-center gap-4 select-none relative`, className)}>
+    <NoDrag className={cx(`flex flex-row items-center gap-3.5 select-none relative`, className)}>
       <ControlButton
         show={dev}
         color={color}
@@ -87,20 +95,24 @@ const Control: FC<TopControlProps> = ({
         iconClassName={itemClassName}
         onClick={() => currentWindow.minimize()}
       />
-      {apd.map(({ className, iconClassName, ...props }, index) => (
-        <ControlButton
-          key={index}
-          {...props}
-          color={color}
-          iconClassName={cx(className, iconClassName, itemClassName)}
-        />
-      ))}
+      {apd.map((append, index) => {
+        if (isValidElement(append)) return <Fragment key={index}>{append}</Fragment>;
+        const { className, iconClassName, ...props } = append;
+        return (
+          <ControlButton
+            key={index}
+            {...props}
+            color={color}
+            iconClassName={cx(className, iconClassName, itemClassName)}
+          />
+        );
+      })}
       <ControlButton
         show={pin}
         color={color}
         icon={currentWindow.isPin ? PinOff : Pin}
         label={currentWindow.isPin ? "取消窗口置顶" : "窗口置顶"}
-        iconClassName={cx(itemClassName, "scale-95 relative top-[1.5px]")}
+        iconClassName={cx(itemClassName, "scale-95 relative top-[1.25px]")}
         onClick={handlePin}
       />
       <ControlButton
@@ -130,6 +142,8 @@ export default memo(Control);
 export type ControlButtonProps = {
   show?: boolean;
 } & Omit<IconButtonProps, "size" | "variant">;
+
+type ControlAppend = ReactElement | ControlButtonProps;
 
 const ControlButton = ({ show = true, ...props }: ControlButtonProps) => {
   if (!show) return null;

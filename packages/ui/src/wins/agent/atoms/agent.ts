@@ -3,16 +3,14 @@ import { selectAtom, atomWithStorage } from "jotai/utils";
 import { RendererKeyValue } from "@/common/lib/key-value";
 import type { SyncStorage } from "jotai/vanilla/utils/atomWithStorage";
 import type { ThreadSnapshot } from "@mahiru/agent/browser";
-import type { AgentLiveTimelineItem } from "@/wins/agent/page/types";
 
 export interface AgentConversationState {
   sending: boolean;
-  streamText: string;
   latestRunID: string;
   recovering: boolean;
   runningRunID: string;
+  metadataUpdatedAt?: number;
   pendingUserMessage: string;
-  liveTimeline: AgentLiveTimelineItem[];
   conversation: Nullable<ThreadSnapshot>;
 }
 
@@ -33,16 +31,13 @@ export interface AgentStorageSnapshot {
   conversationResumeStates: AgentConversationResumeStates;
 }
 
-export const EMPTY_LIVE_TIMELINE: AgentLiveTimelineItem[] = [];
 export const AGENT_PENDING_MESSAGE_STORAGE_LIMIT = 2_000;
 
 export const createAgentConversationState = (): AgentConversationState => ({
   sending: false,
   recovering: false,
-  streamText: "",
   latestRunID: "",
   runningRunID: "",
-  liveTimeline: EMPTY_LIVE_TIMELINE,
   conversation: null,
   pendingUserMessage: ""
 });

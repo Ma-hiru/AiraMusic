@@ -20,4 +20,6 @@ Rust Agent 和外部客户端通过 MCP 调用工具。播放器状态和操作�
 
 在仓库根目录运行 `yarn check` 检查 TypeScript。运行 `yarn workspace aira-music test` 和 `yarn workspace @mahiru/ui test` 检查工具、生命周期、连接配置和前端请求。运行 `yarn workspace @mahiru/agent test` 检查 Rust 服务及进程封装。
 
-Rust DTO 修改后运行 `cargo test --lib` 更新生成类型。运行 `yarn workspace @mahiru/agent build` 构建二进制、生成类型并复制可执行文件。
+Rust DTO 修改后，先切换到 `packages/agent` 目录，再运行 `cargo test --lib` 更新生成类型。
+Cargo 会加载该工作区的 `.cargo/config.toml`，将类型输出到 `packages/agent/generated`。
+在仓库根目录运行 `yarn workspace @mahiru/agent build`，可构建二进制、生成类型并复制可执行文件。

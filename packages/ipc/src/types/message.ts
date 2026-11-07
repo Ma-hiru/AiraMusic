@@ -16,11 +16,23 @@ export type PlayerAction =
   | "toggle-lyric-version-rm"
   | "toggle-lyric-version-tl";
 
+/** 可跨窗口转发的全局快捷键动作，取值与渲染进程的快捷键设置一一对应 */
+export type ShortcutAction =
+  | "volumeUp"
+  | "nextTrack"
+  | "prevTrack"
+  | "muteToggle"
+  | "playToggle"
+  | "volumeDown"
+  | "playModalToggle";
+
 /**
  * - deliver 表示主要是 main to other
  * - dispatch 表示主要是 other to main
  * */
 type MessageBus = {
+  /** 其他窗口聚焦时命中的全局快捷键，转发给 main 统一执行 */
+  bus_dispatch_shortcut: ShortcutAction;
   bus_dispatch_player_action: PlayerAction;
   bus_deliver_focus_context: AgentFocusContext;
   bus_deliver_preview: {
@@ -31,7 +43,6 @@ type MessageBus = {
     id: number;
     type: "album" | "track" | "playlist";
   };
-  bus_dispatch_update: "theme" | "output" | "history" | "track-meta" | "track-progress";
   bus_deliver_playlist_action_result: {
     ok: boolean;
     error?: string;
@@ -44,10 +55,26 @@ type MessageBus = {
     selected: string;
     views: { deviceId: string; displayName: string }[];
   };
+  bus_dispatch_update:
+    | "theme"
+    | "output"
+    | "history"
+    | "play-list"
+    | "track-meta"
+    | "track-progress";
+  bus_deliver_play_list_position: {
+    markId: string;
+    version: number;
+    position: number;
+    senderId: string;
+    sequence: number;
+  };
   bus_deliver_track_progress: {
+    /** 实际已加载音频的歌曲，避免切歌时与先后到达的 meta 串用。 */
     volume: number;
     buffered: number;
     duration: number;
+    trackID?: number;
     currentTime: number;
   };
   bus_deliver_history: {
@@ -72,26 +99,20 @@ type MessageBus = {
       textColorOnSecondary: string;
     };
   };
-  bus_display:
-    | {
-        type: "history";
-      }
-    | {
-        type: "settings";
-      }
-    | {
-        type: "search";
-        keyword?: string;
-      }
-    | {
-        id: number;
-        type: "album" | "artist";
-      }
-    | {
-        id: number;
-        type: "playlist";
-        source: "like" | "normal";
-      };
+  bus_deliver_play_list: {
+    markId: string;
+    version: number;
+    position: number;
+    senderId: string;
+    sequence: number;
+    list: {
+      id: number;
+      name: string;
+      sourceID: number;
+      detail: NeteaseTrackModel;
+      sourceName: NeteaseTrackRecordSourceType;
+    }[];
+  };
   bus_deliver_window_event: {
     type: WindowType;
     action:
@@ -147,6 +168,41 @@ type MessageBus = {
       sourceName: NeteaseTrackRecordSourceType;
     }>;
   };
+  bus_display:
+    | {
+        type: "star";
+      }
+    | {
+        type: "history";
+      }
+    | {
+        type: "settings";
+      }
+    | {
+        type: "play-list";
+      }
+    | {
+        type: "search";
+        keyword?: string;
+      }
+    | {
+        id: number;
+        type: "album" | "artist";
+      }
+    | {
+        day?: string;
+        type: "listening-footprint";
+        period?: "week" | "month" | "today";
+      }
+    | {
+        id: number;
+        type: "playlist";
+        source: "like" | "normal";
+        scope?: {
+          key: string;
+          kind: "album" | "artist";
+        };
+      };
   bus_dispatch_playlist_action: {
     requestID?: string;
   } & (

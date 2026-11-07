@@ -167,17 +167,68 @@ describe("Agent 富内容", () => {
     expect(mocks.loadTrack).not.toHaveBeenCalled();
   });
 
-  it("非法卡片按普通 Markdown 降级，不触发资源请求", async () => {
+  it("恢复歌曲 open 动作的卡片并加载数据，不自动执行播放", async () => {
+    render(
+      <MarkdownContent
+        content={
+          '前文。\n\n```aira-card\n{"kind":"track","id":1965919483,"action":"open","variant":"compact"}\n```\n\n后文。'
+        }
+      />
+    );
+
+    expect(await screen.findByLabelText("歌曲：示例歌曲")).toBeInTheDocument();
+    expect(mocks.loadTrack).toHaveBeenCalledWith(1965919483, expect.any(AbortSignal));
+    expect(screen.getByText("前文。")).toBeInTheDocument();
+    expect(screen.getByText("后文。")).toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: "播放示例歌曲" })).toHaveLength(2);
+    expect(screen.queryByText(/aira-card|kind.*track/)).not.toBeInTheDocument();
+    expect(mocks.deliverPlaylist).not.toHaveBeenCalled();
+    expect(mocks.deliverDisplay).not.toHaveBeenCalled();
+  });
+
+  it("兜底卡片流式阶段不请求数据，完成后才渲染正式卡片", async () => {
+    const source = '```aira-card\n{"kind":"track","id":123,"action":"open"}\n```';
+    const view = render(<MarkdownContent content={source} streaming />);
+
+    expect(screen.getByLabelText("正在生成音乐资源卡片")).toBeInTheDocument();
+    expect(screen.queryByText(/aira-card|kind.*track/)).not.toBeInTheDocument();
+    expect(mocks.loadTrack).not.toHaveBeenCalled();
+
+    view.rerender(<MarkdownContent content={source} />);
+
+    expect(await screen.findByLabelText("歌曲：示例歌曲")).toBeInTheDocument();
+    expect(mocks.loadTrack).toHaveBeenCalledTimes(1);
+    expect(mocks.deliverPlaylist).not.toHaveBeenCalled();
+  });
+
+  it("兜底卡片加载失败时显示资源错误并隐藏协议源码", async () => {
+    mocks.loadTrack.mockRejectedValueOnce(new Error("找不到这首歌曲"));
+    render(
+      <MarkdownContent content={'```aira-card\n{"kind":"track","id":123,"action":"open"}\n```'} />
+    );
+
+    expect(await screen.findByLabelText("歌曲载入失败")).toBeInTheDocument();
+    expect(screen.getByText("找不到这首歌曲")).toBeInTheDocument();
+    expect(screen.queryByText(/aira-card|kind.*track/)).not.toBeInTheDocument();
+    expect(mocks.deliverPlaylist).not.toHaveBeenCalled();
+  });
+
+  it("非法卡片隐藏协议源码，不触发资源请求且保留正文", async () => {
     await act(async () => {
       render(
         <MarkdownContent
-          content={'```aira-card\n{"kind":"track","id":123,"dangerous":true}\n```'}
+          content={
+            '前文。\n\n```aira-card\n{"kind":"track","id":123,"dangerous":true}\n```\n\n后文。'
+          }
         />
       );
     });
 
     expect(mocks.loadTrack).not.toHaveBeenCalled();
     expect(screen.queryByLabelText("歌曲：示例歌曲")).not.toBeInTheDocument();
+    expect(screen.queryByText(/aira-card|dangerous|kind.*track/)).not.toBeInTheDocument();
+    expect(screen.getByText("前文。")).toBeInTheDocument();
+    expect(screen.getByText("后文。")).toBeInTheDocument();
   });
 
   it("只转换 Markdown 正文链接，不改写代码和转义示例", async () => {

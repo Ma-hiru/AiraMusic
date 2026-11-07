@@ -1,11 +1,37 @@
 import { apiRequest } from "@/common/netease/api/request";
 
 export default class _NeteaseRecordAPI {
+  /**
+   * @desc 最近播放 - 歌曲
+   * 说明 : 登录后调用此接口, 获取最近播放的歌曲列表, 含最近播放时间与次数
+   * @param limit 返回数量, 默认 100
+   * */
+  static recentSongs(limit = 100, signal?: AbortSignal) {
+    return apiRequest<unknown, NeteaseAPI.NeteaseRecentSongsResponse>("/record/recent/song", {
+      params: { limit },
+      signal
+    });
+  }
+
   /** @desc 听歌足迹 - 今日收听 */
   static today(signal?: AbortSignal) {
-    return apiRequest<unknown, NeteaseAPI.NeteaseToplistResponse>(
+    return apiRequest<unknown, NeteaseAPI.NeteaseTodaySongsResponse>(
       `/listen/data/today/song?timestamp=${Date.now()}`,
       { signal }
+    );
+  }
+
+  /**
+   * 听歌足迹 - 周/月歌曲播放排行（Top20，不足则返回全部）
+   * endTime 不填为本周/月；历史周为周六 0 点、历史月为月末当天 0 点的时间戳
+   */
+  static songRank(type: "week" | "month", endTime?: number, signal?: AbortSignal) {
+    return apiRequest<unknown, NeteaseAPI.NeteaseSongPlayRankResponse>(
+      `/listen/data/song/play/rank?timestamp=${Date.now()}`,
+      {
+        params: { type, endTime },
+        signal
+      }
     );
   }
 

@@ -33,6 +33,8 @@ export function createPlaylistCoverModal({
     title: "歌单详情",
     subTitle: "Playlist",
     width: 900,
+    height: 560,
+    contentClassName: "overflow-hidden!",
     content: (
       <CoverModal
         cover={cover}
@@ -85,6 +87,8 @@ export function createAlbumCoverModal({
     title: "专辑详情",
     subTitle: "Album",
     width: 900,
+    height: 560,
+    contentClassName: "overflow-hidden!",
     content: (
       <CoverModal
         cover={cover}
@@ -120,35 +124,37 @@ const CoverModal: FC<CoverModalProps> = ({
   persons
 }) => {
   return (
-    <div className="w-full h-full contain-layout overflow-y-auto scrollbar scrollbar-show grid gap-7 grid-cols-[18rem_minmax(0,1fr)] grid-rows-1">
+    <div className="w-full h-full min-h-0 contain-layout overflow-hidden grid gap-7 grid-cols-[18rem_minmax(0,1fr)] grid-rows-[minmax(0,1fr)]">
       {/** 封面 */}
-      <section className="space-y-4">
-        <button
-          className="
-            group relative aspect-square w-full overflow-hidden rounded-lg
-            bg-white/10  outline-none mx-auto
+      <section className="grid min-h-0 content-start gap-4 grid-rows-[minmax(0,18rem)_auto]">
+        <div className="min-h-0 [container-type:size]">
+          <button
+            className="
+            group relative aspect-square size-[min(100cqw,100cqh)] overflow-hidden rounded-lg
+            bg-white/10 outline-none
             transition-all duration-300 ease-in-out
           "
-          title="查看封面"
-          type="button"
-          onClick={onCoverOpen}>
-          <NeteaseImage
-            className="size-full"
-            image={cover}
-            shadow="none"
-            cacheLazy={false}
-            imageClassName="transition-transform duration-300 ease-in-out group-hover:scale-105 cursor-pointer"
-            cache
-          />
-          <span
-            className="
+            title="查看封面"
+            type="button"
+            onClick={onCoverOpen}>
+            <NeteaseImage
+              className="size-full"
+              image={cover}
+              shadow="none"
+              cacheLazy={false}
+              imageClassName="transition-transform duration-300 ease-in-out group-hover:scale-105 cursor-pointer"
+              cache
+            />
+            <span
+              className="
               absolute right-2 top-2 flex size-8 items-center justify-center rounded-md
               border border-white/20 bg-black/30 text-white opacity-0 backdrop-blur-md
               transition-all duration-300 ease-in-out group-hover:opacity-100 cursor-pointer
             ">
-            <Maximize2 className="size-4" />
-          </span>
-        </button>
+              <Maximize2 className="size-4" />
+            </span>
+          </button>
+        </div>
         <div
           className="
             rounded-lg border border-white/10 bg-white/10 px-3 py-3
@@ -168,14 +174,14 @@ const CoverModal: FC<CoverModalProps> = ({
         </div>
       </section>
       {/** 简介*/}
-      <section className="h-full w-full overflow-hidden flex flex-col justify-between gap-3 contain-layout">
-        <section className="flex flex-1 flex-col overflow-hidden gap-6">
-          <h3 className="line-clamp-2 text-[32px] font-bold leading-tight tracking-normal">
+      <section className="h-full w-full min-h-0 min-w-0 overflow-hidden flex flex-col gap-3 contain-layout">
+        <section className="flex min-h-0 flex-1 flex-col overflow-hidden gap-6">
+          <h3 className="shrink-0 line-clamp-2 text-[32px] font-bold leading-tight tracking-normal">
             {name}
           </h3>
           <p
             className={`
-            flex-1 overflow-y-auto whitespace-pre-wrap text-[13px] px-1
+            min-h-0 flex-1 overflow-y-auto whitespace-pre-wrap text-[13px] px-1
             font-semibold leading-6 opacity-80 scrollbar scrollbar-show
           `}>
             {desc || "暂无简介"}

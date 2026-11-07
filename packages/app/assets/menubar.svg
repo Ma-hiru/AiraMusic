@@ -1,0 +1,19 @@
+<!-- macOS 菜单栏模板图标：实心圆 + 音符镂空，渲染时只取 alpha、由系统按亮暗上色 -->
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <mask id="note-hole" maskUnits="userSpaceOnUse" x="0" y="0" width="512" height="512">
+      <circle cx="256" cy="256" r="248" fill="#ffffff"/>
+      <!-- 音符包围盒中心已对齐画布中心（原 logo 里偏左下，镂空时必须居中） -->
+      <g transform="translate(276.73 269.83) scale(1.68) translate(-75,-95)" fill="#000000">
+        <path d="M56 0 v170
+                 a34 34 0 1 1 -18 -30
+                 v-95
+                 l100 -25
+                 v130
+                 a34 34 0 1 1 -18 -30
+                 v-150 z"/>
+      </g>
+    </mask>
+  </defs>
+  <circle cx="256" cy="256" r="248" fill="#000000" mask="url(#note-hole)"/>
+</svg>

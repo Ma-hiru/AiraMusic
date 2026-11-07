@@ -249,10 +249,11 @@ export default class _NeteasePlaylistAPI {
    * 相关歌单
    * @desc 调用此接口, 传入歌单 id, 获取相关歌单推荐
    * */
-  static relative(id: number) {
-    return apiRequest<any, NeteaseAPI.NeteaseAPIResponse>({
+  static relative(id: number, signal?: AbortSignal) {
+    return apiRequest<never, NeteaseAPI.NeteaseRelatedPlaylistResponse>({
       url: "/playlist/detail/rcmd/get",
-      params: { id }
+      params: { id },
+      signal
     });
   }
 

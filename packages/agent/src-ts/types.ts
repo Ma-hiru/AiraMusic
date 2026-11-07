@@ -9,9 +9,11 @@ export interface AgentLogRecord {
 
 export type { ApiError } from "../generated/ApiError";
 export type { AGUIEvent } from "../generated/AGUIEvent";
+export type { ChatUsage } from "../generated/ChatUsage";
 export type { AgentReady } from "../generated/AgentReady";
 export type { MessageRole } from "../generated/MessageRole";
 export type { RunAccepted } from "../generated/RunAccepted";
+export type { ChatTurnUsage } from "../generated/ChatTurnUsage";
 export type { ThreadSummary } from "../generated/ThreadSummary";
 export type { HealthResponse } from "../generated/HealthResponse";
 export type { ThreadSnapshot } from "../generated/ThreadSnapshot";
@@ -23,7 +25,10 @@ export type { ToolCallSnapshot } from "../generated/ToolCallSnapshot";
 export type { AgentServiceStatus } from "../generated/AgentServiceStatus";
 export type { ProviderConfigView } from "../generated/ProviderConfigView";
 export type { ProviderDescriptor } from "../generated/ProviderDescriptor";
+export type { RequestUsageTotals } from "../generated/RequestUsageTotals";
+export type { ThreadContextUsage } from "../generated/ThreadContextUsage";
 export type { CreateThreadRequest } from "../generated/CreateThreadRequest";
 export type { ProviderConfigInput } from "../generated/ProviderConfigInput";
+export type { ThreadAuxiliaryUsage } from "../generated/ThreadAuxiliaryUsage";
 export type { ThreadRuntimeSnapshot } from "../generated/ThreadRuntimeSnapshot";
 export type { SetThreadConfigRequest } from "../generated/SetThreadConfigRequest";

@@ -144,6 +144,7 @@ const History: FC<HistoryProps> = ({
   const { onContextMenu } = useTrackContextMenu({
     onPlay,
     onClickAlbum,
+    onClickArtist,
     addToPlaylistNext,
     addToPlaylistLast,
     openComment,

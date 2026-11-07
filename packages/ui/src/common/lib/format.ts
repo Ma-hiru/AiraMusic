@@ -24,7 +24,7 @@ export class RendererFormat {
     return `${Number.isInteger(res) ? res : res.toFixed(1)}${unit}`;
   }
 
-  static time(millTimestamp: Optional<number>, split?: string) {
+  static time(millTimestamp: Optional<number>, split?: string, short = false) {
     if ((!millTimestamp && millTimestamp !== 0) || !Number.isFinite(millTimestamp)) return "";
 
     const before = dayjs(millTimestamp);
@@ -34,7 +34,9 @@ export class RendererFormat {
     } else if (now.diff(before, "day") <= 0) {
       return before.format("HH:mm");
     }
-    return dayjs(millTimestamp).format(`YYYY${split ?? "-"}MM${split ?? "-"}DD`);
+    return dayjs(millTimestamp).format(
+      short ? `YYYY${split ?? "-"}MM` : `YYYY${split ?? "-"}MM${split ?? "-"}DD`
+    );
   }
 
   static duration(time: Optional<number>, unit: "s" | "ms" = "ms", split?: string) {

@@ -8,6 +8,7 @@ import {
   Trophy,
   Sparkles,
   ListMusic,
+  LucideStar,
   type LucideIcon
 } from "lucide-react";
 import { RoutePathMain } from "@/common/routes";
@@ -43,6 +44,11 @@ export class NavConstants {
       icon: <Radio className="w-full aspect-square" />,
       label: "漫游",
       path: RoutePathMain.fm
+    },
+    {
+      icon: <LucideStar className="w-full aspect-square" />,
+      label: "收藏",
+      path: RoutePathMain.star
     },
     {
       icon: <Clock className="w-full aspect-square" />,

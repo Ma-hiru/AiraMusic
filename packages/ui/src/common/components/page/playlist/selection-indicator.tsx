@@ -4,8 +4,9 @@ import { memo, type FC, useCallback, type ReactNode } from "react";
 import { NeteaseTrackRecord } from "@/common/netease/models";
 import AppModal, { createDialogModal } from "@/common/components/display/modal";
 
-interface SelectionIndicatorProps {
+export interface SelectionIndicatorProps {
   editable: boolean;
+  className?: string;
   selectAll: NormalFunc;
   selectedIds: Set<number>;
   exitSelection: NormalFunc;
@@ -15,6 +16,7 @@ interface SelectionIndicatorProps {
 }
 
 const SelectionIndicator: FC<SelectionIndicatorProps> = ({
+  className,
   onBatchAdd,
   onBatchDelete,
   tracks,
@@ -38,11 +40,14 @@ const SelectionIndicator: FC<SelectionIndicatorProps> = ({
 
   return (
     <div
-      className="
+      className={cx(
+        `
         absolute bottom-3 left-1/2 z-20 flex -translate-x-1/2 items-center gap-3
         rounded-full border border-white/15 bg-black/15 px-4 py-2 text-[12px] font-bold
         shadow-lg backdrop-blur-lg backdrop-saturate-150
-      ">
+      `,
+        className
+      )}>
       <TextButton
         text={tracks.length > 0 && selectedIds.size === tracks.length ? "取消全选" : "全选"}
         onClick={selectAll}

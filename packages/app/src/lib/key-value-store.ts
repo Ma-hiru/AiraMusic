@@ -1,5 +1,3 @@
-import { Log } from "@/lib/log";
-import { MainRuntime } from "@/lib/runtime";
 import { MainPathResolver } from "@/lib/path-resolver";
 import ElectronStore from "electron-store";
 import type { CacheStoreConfig } from "@/types/store";
@@ -58,8 +56,3 @@ export const MainStoreForAgent = new ElectronStore<StoreTypeForAgent>({
   encryptionAlgorithm: "aes-256-cbc",
   cwd: MainPathResolver.appUserDataJoin("key-value")
 });
-
-if (MainRuntime.isDev) {
-  Log.info("Clearing window store in development mode");
-  MainStoreForWindow.clear();
-}

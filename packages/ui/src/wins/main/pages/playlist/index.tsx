@@ -14,7 +14,7 @@ import { usePlaylistModifySync } from "@/common/hooks/use-playlist-modify-sync";
 import { useTrackAddToPlaylist } from "@/common/hooks/use-track-add-to-playlist";
 import { usePlayerActionInList } from "@/wins/main/hooks/use-player-action-in-list";
 import { useScrollActionsRegister } from "@/common/hooks/use-scroll-actions-register";
-import Playlist, { type PlaylistRef } from "@/common/components/page/playlist";
+import Playlist, { type PlaylistRef } from "@/common/components/page/playlist-switch";
 
 const PlaylistPage: FC<object> = () => {
   const user = useUser();
@@ -22,7 +22,8 @@ const PlaylistPage: FC<object> = () => {
   const playlistRef = useRef<Nullable<PlaylistRef>>(null);
   const routerActive = useRouterActive(RoutePathMain, "playlist");
   const { heartManager, playableManager } = useUserTrackManager();
-  const { id, source } = RoutePathMain.playlist.parseQuery(location);
+  const { id, source, scope } = RoutePathMain.playlist.parseQuery(location);
+  const playlistID = source === "like" ? (user?.likedPlaylist.id ?? 0) : Number(id);
 
   // 播放曲目
   const {
@@ -33,7 +34,10 @@ const PlaylistPage: FC<object> = () => {
     onReplace,
     onTrackPlay,
     player
-  } = usePlayerActionInList(() => playlistRef.current?.totalTracks.current ?? []);
+  } = usePlayerActionInList(
+    () =>
+      playlistRef.current?.playbackTracks?.current ?? playlistRef.current?.totalTracks.current ?? []
+  );
   // 注册滚动和定位回调
   const { canScrollTop, canFastLocate } = useScrollActionsRegister({
     atom: scrollActionsAtom,
@@ -46,9 +50,10 @@ const PlaylistPage: FC<object> = () => {
   const { onPageAction } = useDisplayAction(() => {
     if (source !== "normal" && source !== "like") return null;
     return {
-      id: Number(id),
+      id: playlistID,
       type: "playlist",
-      source
+      source,
+      scope: playlistRef.current?.scope ?? undefined
     };
   });
   const { setBackground } = useSetBackground("playlist");
@@ -80,6 +85,7 @@ const PlaylistPage: FC<object> = () => {
       className="router-container"
       user={user}
       source={source}
+      initialScope={scope}
       pageActionType="out"
       setIsTyping={setIsTyping}
       canScrollTop={canScrollTop}

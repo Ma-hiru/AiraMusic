@@ -1,6 +1,6 @@
 use crate::ctx::Ctx;
 use crate::ctx::models::{Disposer, DisposerLike};
-use crate::llm::models::{ChatMemory, ChatMessage};
+use crate::llm::models::{ChatMemory, ChatMessage, ChatRole};
 use crate::plugins::models::{Plugin, PluginApplyResult, PluginMeta};
 use crate::session::models::{SessionEvent, ThreadMetadata};
 use crate::session::{SessionId, SessionManager, SessionPlugin};
@@ -95,9 +95,15 @@ impl SessionPersistencePlugin {
             }
             let real = Self::read_vec::<ChatMessage>(&store, KEY_REAL).await?;
             let compaction = Self::read_vec::<ChatMessage>(&store, KEY_COMPACTION).await?;
-            let metadata = Self::read::<ThreadMetadata>(&store, KEY_METADATA)
+            let mut metadata = Self::read::<ThreadMetadata>(&store, KEY_METADATA)
                 .await?
                 .unwrap_or_else(|| ThreadMetadata::new(""));
+            if metadata.name.trim().is_empty()
+                && let Some(first_user) = real.iter().find(|message| message.role == ChatRole::User)
+            {
+                metadata.name = ThreadMetadata::title_from_input(&first_user.content);
+                Self::write(&store, KEY_METADATA, &metadata).await?;
+            }
             session_manager
                 .restore_session_with_metadata(session_id, real, compaction, metadata)?;
             restored += 1;

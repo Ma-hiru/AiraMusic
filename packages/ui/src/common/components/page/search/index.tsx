@@ -117,120 +117,123 @@ const Search: FC<SearchProps> = ({
   useAgentFocusCtx({ page: "search", keyword }, routerActive);
 
   return (
-    <div className={cx("flex flex-col gap-3 w-full h-full overflow-hidden", className)}>
-      {/*搜索框*/}
-      <Card
-        className="flex flex-row items-center justify-between relative z-50"
-        title="搜索"
-        subTitle="Search">
+    <div className={cx("flex h-full w-full flex-col gap-3 overflow-hidden", className)}>
+      <div className="relative z-50 flex shrink-0 flex-wrap items-center gap-3">
+        <div className="min-w-0 shrink-0">
+          <h1 className="text-[28px] font-bold leading-tight">搜索</h1>
+        </div>
         <SearchInput
           ref={inputRef}
-          className="w-full flex flex-row justify-end"
+          className="min-w-0 flex-1"
           onSearch={applySearch}
           setTabs={(tab) => {
             setCurrentTab(tabOptions.find((option) => option.key === tab) ?? tabOptions[0]!);
           }}
         />
-      </Card>
-      {/*热搜列表*/}
-      <HotRecommend
-        className={cx("flex-1", keyword && "hidden")}
-        onSearch={(nextKeyword) => {
-          applySearch(nextKeyword);
-          inputRef.current?.setKeyword(nextKeyword);
-        }}
-      />
-      {/*搜索结果*/}
-      <section
-        className={cx(
-          "grid flex-1 grid-cols-1 gap-3 md:grid-cols-[220px_minmax(0,1fr)] grid-rows-[auto_1fr] md:grid-rows-1",
-          !keyword && "hidden"
-        )}>
-        <Card subTitle="Matches" title={count + "条"} Icon={currentTab.icon}>
-          <div className="grid grid-cols-2 gap-2 md:grid-cols-1">
-            {tabOptions.map((option) => {
-              const Icon = option.icon;
-              const active = option.key === currentTab.key;
-              return (
-                <Card
-                  key={option.key}
-                  className="p-0! rounded-md overflow-hidden"
-                  onClick={() => setCurrentTab(option)}
-                  children={
-                    <div
-                      className={cx(
-                        `
-                        flex h-12 items-center gap-2  px-3 text-left
-                        transition-all duration-300 active:scale-[0.98] cursor-pointer
+      </div>
+
+      <Card className="flex min-h-0 flex-1 flex-col overflow-hidden p-0!">
+        <HotRecommend
+          className={cx("min-h-0 flex-1", keyword && "hidden")}
+          onSearch={(nextKeyword) => {
+            applySearch(nextKeyword);
+            inputRef.current?.setKeyword(nextKeyword);
+          }}
+        />
+
+        <section className={cx("flex min-h-0 flex-1", !keyword && "hidden")}>
+          <aside className="flex w-48 shrink-0 flex-col border-r border-white/[0.06] px-4 py-4">
+            <div className="min-w-0">
+              <p className="text-[10px] font-bold uppercase tracking-widest opacity-40">Matches</p>
+              <p className="mt-1 flex items-baseline gap-1 leading-none">
+                <span className="text-[22px] font-bold tabular-nums">{count}</span>
+                <span className="text-[11px] font-semibold opacity-40">条</span>
+              </p>
+            </div>
+            <nav className="mt-4 flex flex-col gap-1" aria-label="搜索结果类型">
+              {tabOptions.map((option) => {
+                const Icon = option.icon;
+                const active = option.key === currentTab.key;
+
+                return (
+                  <button
+                    key={option.key}
+                    className={cx(
+                      `
+                        flex w-full items-center gap-2 rounded-md px-3 py-2 text-left
+                        transition-colors duration-200 ease-in-out
                       `,
-                        active
-                          ? "bg-primary text-primary-text hover:bg-primary-active"
-                          : "hover:bg-white/20"
-                      )}>
-                      <Icon className="size-4 shrink-0" />
-                      <span className="min-w-0">
-                        <span className="block truncate text-sm font-semibold">{option.label}</span>
-                        <span className="block truncate text-[10px] font-bold">
-                          {option.caption}
-                        </span>
+                      active
+                        ? "bg-primary text-primary-text"
+                        : "text-(--text-color)/55 hover:bg-white/[0.06] hover:text-(--text-color)"
+                    )}
+                    type="button"
+                    aria-pressed={active}
+                    onClick={() => setCurrentTab(option)}>
+                    <Icon className="size-4 shrink-0" />
+                    <span className="min-w-0">
+                      <span className="block truncate text-sm font-semibold">{option.label}</span>
+                      <span className="block truncate text-[10px] font-bold opacity-50">
+                        {option.caption}
                       </span>
-                    </div>
-                  }
-                />
-              );
-            })}
+                    </span>
+                  </button>
+                );
+              })}
+            </nav>
+          </aside>
+
+          <div className="relative min-h-0 flex-1">
+            {!!(mounted & 0b1) && (
+              <TrackResult
+                ref={trackResultRef}
+                className={cx("h-full", (currentTab.key !== "tracks" || !keyword) && "hidden")}
+                keywords={keyword}
+                setCount={setCount}
+                coverSize={coverSize}
+                openComment={openComment}
+                heartManager={heartManager}
+                activeTrackID={activeTrackID}
+                playableManager={playableManager}
+                active={currentTab.key === "tracks"}
+                addToPlaylistLast={addToPlaylistLast}
+                addToPlaylistNext={addToPlaylistNext}
+                addTrackToPlaylist={addTrackToPlaylist}
+                onClick={onClickTrack}
+                onClickAlbum={onClickAlbum}
+                onClickArtist={onClickArtist}
+              />
+            )}
+            {!!(mounted & 0b10) && (
+              <AlbumResult
+                className={cx("h-full", (currentTab.key !== "albums" || !keyword) && "hidden")}
+                keywords={keyword}
+                setCount={setCount}
+                active={currentTab.key === "albums"}
+                onJumpAlbum={onClickAlbum}
+              />
+            )}
+            {!!(mounted & 0b100) && (
+              <PlaylistResult
+                className={cx("h-full", (currentTab.key !== "playlists" || !keyword) && "hidden")}
+                keywords={keyword}
+                setCount={setCount}
+                active={currentTab.key === "playlists"}
+                onJumpPlaylist={onClickPlaylist}
+              />
+            )}
+            {!!(mounted & 0b1000) && (
+              <ArtistResult
+                className={cx("h-full", (currentTab.key !== "artists" || !keyword) && "hidden")}
+                keywords={keyword}
+                setCount={setCount}
+                active={currentTab.key === "artists"}
+                onJumpArtist={onClickArtist}
+              />
+            )}
           </div>
-        </Card>
-        <Card className="flex flex-col p-0!">
-          {!!(mounted & 0b1) && (
-            <TrackResult
-              ref={trackResultRef}
-              className={cx((currentTab.key !== "tracks" || !keyword) && "hidden")}
-              keywords={keyword}
-              setCount={setCount}
-              coverSize={coverSize}
-              openComment={openComment}
-              heartManager={heartManager}
-              activeTrackID={activeTrackID}
-              playableManager={playableManager}
-              active={currentTab.key === "tracks"}
-              addToPlaylistLast={addToPlaylistLast}
-              addToPlaylistNext={addToPlaylistNext}
-              addTrackToPlaylist={addTrackToPlaylist}
-              onClick={onClickTrack}
-              onClickAlbum={onClickAlbum}
-              onClickArtist={onClickArtist}
-            />
-          )}
-          {!!(mounted & 0b10) && (
-            <AlbumResult
-              className={cx((currentTab.key !== "albums" || !keyword) && "hidden")}
-              keywords={keyword}
-              setCount={setCount}
-              active={currentTab.key === "albums"}
-              onJumpAlbum={onClickAlbum}
-            />
-          )}
-          {!!(mounted & 0b100) && (
-            <PlaylistResult
-              className={cx((currentTab.key !== "playlists" || !keyword) && "hidden")}
-              keywords={keyword}
-              setCount={setCount}
-              active={currentTab.key === "playlists"}
-              onJumpPlaylist={onClickPlaylist}
-            />
-          )}
-          {!!(mounted & 0b1000) && (
-            <ArtistResult
-              className={cx((currentTab.key !== "artists" || !keyword) && "hidden")}
-              keywords={keyword}
-              setCount={setCount}
-              active={currentTab.key === "artists"}
-              onJumpArtist={onClickArtist}
-            />
-          )}
-        </Card>
-      </section>
+        </section>
+      </Card>
     </div>
   );
 };

@@ -1,4 +1,6 @@
 import { Log } from "@/common/lib/log";
+import { RendererIdle } from "@/common/lib/idle";
+import { RendererDevice } from "@/common/lib/device";
 import { userStoreSnapshot } from "@/common/store/user";
 import { NeteaseAPIAuth, NeteaseAPIUser } from "@/common/netease/api";
 import {
@@ -39,7 +41,6 @@ export default class _NeteaseUserSource {
       NeteaseAPIUser.detail(uid),
       NeteaseAPIUser.likedTracks(uid)
     ]);
-
     if (detailResponse.status === "fulfilled" && likedResponse.status === "fulfilled") {
       const profile = detailResponse.value.profile;
       const { ids, checkPoint } = likedResponse.value;
@@ -57,7 +58,16 @@ export default class _NeteaseUserSource {
     return null;
   }
 
-  static async refresh(user: { userId: number; refreshCookiesDate?: number }) {
+  private static reportDeviceName(name: string) {
+    return NeteaseAPIUser.reportDeviceName({ deviceName: name })
+      .then((res) => res.code === 200)
+      .catch(() => false);
+  }
+
+  static async refresh(user: {
+    userId: number;
+    refreshCookiesDate?: number;
+  }): Promise<Nullable<NeteaseUser>> {
     try {
       if (!NeteaseCookie.isLoggedIn()) return null;
       const uid = user.userId;
@@ -66,6 +76,18 @@ export default class _NeteaseUserSource {
         await NeteaseCookie.refresh();
         Log.info("refresh cookies");
         refreshCookiesDate = new Date().getDate();
+        void RendererIdle.runAsync(async function* () {
+          const deviceName = await RendererDevice.deviceName;
+          yield;
+          if (deviceName) {
+            const ok = await _NeteaseUserSource.reportDeviceName(deviceName);
+            yield;
+            ok && Log.info(`report device name(${deviceName}) success`);
+            !ok && Log.error("report device name error");
+          } else {
+            Log.error("get device name null");
+          }
+        });
       }
 
       const userProfile = await _NeteaseUserSource.getUserProfile(uid);
@@ -73,7 +95,7 @@ export default class _NeteaseUserSource {
       const userPlaylist = await _NeteaseUserSource.getUserPlaylist(uid);
       if (!userPlaylist) return null;
 
-      Log.info("refresh user info");
+      Log.info("refresh user info success");
       return NeteaseUser.fromNeteaseAPI({
         ...userProfile,
         ...userPlaylist,
@@ -114,5 +136,9 @@ export default class _NeteaseUserSource {
     NeteaseAPIAuth.logout().catch((err) => {
       Log.error("logout error", err);
     });
+  }
+
+  static vipInfo(uid: number) {
+    return NeteaseAPIUser.vipInfo({ uid });
   }
 }

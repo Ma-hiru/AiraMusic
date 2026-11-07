@@ -1,6 +1,6 @@
 import { cx } from "@emotion/css";
 import { createPortal } from "react-dom";
-import { Plus, Check, Pencil, RefreshCw, ChevronDown, type LucideIcon } from "lucide-react";
+import { Plus, Check, Pencil, Trash2, RefreshCw, ChevronDown, type LucideIcon } from "lucide-react";
 import { memo, useRef, type FC, useState, useEffect, useCallback, type CSSProperties } from "react";
 import { useScrollAutoHide } from "@/common/hooks/use-scroll-auto-hide";
 import type { ProviderConfigView } from "@mahiru/agent/browser";
@@ -15,6 +15,7 @@ interface ConfigPickerProps {
   onRefresh: NormalFunc;
   onSelect: NormalFunc<[id: string]>;
   onEdit: NormalFunc<[config: ProviderConfigView]>;
+  onRemove: NormalFunc<[config: ProviderConfigView]>;
 }
 
 const PopoverWidth = 304;
@@ -22,6 +23,7 @@ const PopoverWidth = 304;
 const ConfigPicker: FC<ConfigPickerProps> = ({
   onEdit,
   onCreate,
+  onRemove,
   onSelect,
   onRefresh,
   configs,
@@ -174,6 +176,17 @@ const ConfigPicker: FC<ConfigPickerProps> = ({
                         onEdit(config);
                       }}>
                       <Pencil className="size-3.5" />
+                    </button>
+                    <button
+                      className="mr-1 grid size-7 shrink-0 cursor-pointer place-items-center rounded-lg text-white/30 outline-none transition-colors hover:bg-red-300/10 hover:text-red-200/80 focus-visible:ring-2 focus-visible:ring-white/35"
+                      type="button"
+                      title={`删除 ${config.name}`}
+                      aria-label={`删除 ${config.name}`}
+                      onClick={() => {
+                        setOpen(false);
+                        onRemove(config);
+                      }}>
+                      <Trash2 className="size-3.5" />
                     </button>
                   </div>
                 );

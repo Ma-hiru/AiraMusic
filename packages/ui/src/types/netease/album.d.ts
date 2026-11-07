@@ -200,4 +200,25 @@ namespace NeteaseAPI {
       freeTrialPrivilege: FreeTrialPrivilege;
     };
   }
+
+  interface NeteaseLikedAlbum {
+    id: number;
+    name: string;
+    picUrl: string;
+    /** 专辑曲目数 */
+    size: number;
+    /** 收藏时间 */
+    subTime: number;
+    artists: {
+      id: number;
+      name: string;
+      alias: string[];
+    }[];
+  }
+
+  interface NeteaseLikedAlbumsResponse extends NeteaseAPIResponse {
+    count: number;
+    hasMore: boolean;
+    data: NeteaseLikedAlbum[];
+  }
 }

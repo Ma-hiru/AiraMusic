@@ -22,12 +22,14 @@ interface ChatProps {
   onCreateConversation: NormalFunc;
   onSelectConfig: NormalFunc<[id: string]>;
   onEditConfig: NormalFunc<[config: ProviderConfigView]>;
+  onRemoveConfig: NormalFunc<[config: ProviderConfigView]>;
 }
 
 const Chat: FC<ChatProps> = ({
   className,
   onEditConfig,
   onCreateConfig,
+  onRemoveConfig,
   onSelectConfig,
   onRefreshConfigs,
   onCreateConversation,
@@ -39,19 +41,26 @@ const Chat: FC<ChatProps> = ({
 }) => {
   const {
     abort,
+    status,
     submit,
+    context,
     sending,
+    messages,
     recovering,
-    streamText,
-    conversation,
-    liveTimeline,
     runningRunID,
-    pendingUserMessage
+    auxiliaryUsage
   } = useConversation(conversationID);
-  const runningTool = [...liveTimeline]
-    .reverse()
-    .find((item) => item.type === "tool" && item.status === "running");
-  const runningToolName = runningTool?.type === "tool" ? runningTool.toolCalls[0]?.name : undefined;
+  const running = !!runningRunID || status === "submitted" || status === "streaming";
+  const runningTool = running
+    ? messages
+        .at(-1)
+        ?.parts.findLast(
+          (part) =>
+            part.type === "dynamic-tool" &&
+            (part.state === "input-streaming" || part.state === "input-available")
+        )
+    : undefined;
+  const runningToolName = runningTool?.type === "dynamic-tool" ? runningTool.toolName : undefined;
   const runningLabel = runningToolName
     ? getAgentToolPresentation(runningToolName).label
     : "正在生成回复";
@@ -73,7 +82,7 @@ const Chat: FC<ChatProps> = ({
               <span
                 className={cx(
                   "size-1 rounded-full",
-                  runningRunID
+                  running
                     ? "animate-pulse bg-[color-mix(in_srgb,var(--theme-color-main)_80%,white)]"
                     : activeConfig
                       ? "bg-emerald-300/70"
@@ -87,12 +96,13 @@ const Chat: FC<ChatProps> = ({
         <div className="flex min-w-0 items-center gap-2">
           <ConfigPicker
             configs={configs}
+            disabled={running}
             loading={loadingConfigs}
-            disabled={!!runningRunID}
             activeConfig={activeConfig}
             selectedConfigID={selectedConfigID}
             onEdit={onEditConfig}
             onCreate={onCreateConfig}
+            onRemove={onRemoveConfig}
             onSelect={onSelectConfig}
             onRefresh={onRefreshConfigs}
           />
@@ -100,15 +110,12 @@ const Chat: FC<ChatProps> = ({
       </header>
       <Fragment key={`conversation-${conversationID || "empty"}`}>
         <ChatContent
+          running={running}
+          messages={messages}
           recovering={recovering}
-          streamText={streamText}
-          running={!!runningRunID}
           configured={!!activeConfig}
-          conversation={conversation}
-          liveTimeline={liveTimeline}
           runningRunID={runningRunID}
           hasConversation={!!conversationID}
-          pendingUserMessage={pendingUserMessage}
           onSubmitPrompt={submit}
           onCreateConfig={onCreateConfig}
           onCreateConversation={onCreateConversation}
@@ -118,7 +125,9 @@ const Chat: FC<ChatProps> = ({
           activeConfig={activeConfig}
           runningLabel={runningLabel}
           runningRunID={runningRunID}
+          context={context ?? undefined}
           selectedConversationID={conversationID}
+          auxiliaryUsage={auxiliaryUsage ?? undefined}
           onAbort={abort}
           onSubmit={submit}
         />

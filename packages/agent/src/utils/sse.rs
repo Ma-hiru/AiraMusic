@@ -45,6 +45,23 @@ impl LLMSSEDecoder {
         }
     }
 
+    pub fn finish(&self) -> anyhow::Result<()> {
+        match self {
+            Self::OpenAI { buffer, .. } => {
+                let tail = std::str::from_utf8(buffer).map_err(|error| {
+                    anyhow::anyhow!("llm-openai: SSE 尾部不是有效 UTF-8: {error}")
+                })?;
+                if tail
+                    .lines()
+                    .any(|line| line == "data" || line.starts_with("data:"))
+                {
+                    anyhow::bail!("llm-openai: SSE 事件未完整结束");
+                }
+                Ok(())
+            }
+        }
+    }
+
     fn open_ai_feed(
         buffer: &mut Vec<u8>,
         done: &mut bool,

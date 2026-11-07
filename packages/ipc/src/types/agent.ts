@@ -153,14 +153,26 @@ export type AgentFocusContext =
       page: "album" | "artist";
     }
   | {
-      page: "playlist";
-      id: Nullable<number>;
-      source: "normal" | "user-liked-track";
+      id: number;
+      page: "comments";
+      type: "album" | "track" | "playlist";
     }
   | {
       page: "history";
       recent: { id: number; name: string; time: string; playDuration: string }[];
+    }
+  | {
+      name?: string;
+      page: "playlist";
+      id: Nullable<number>;
+      source: "normal" | "user-liked-track";
     };
+
+export type AgentAppContext = {
+  page: null | AgentFocusContext;
+  window: null | "main" | "display" | "comments";
+  currentTrack: null | { id: number; name: string; artists: string[] };
+};
 
 export type AgentInvokeError = {
   code: string;

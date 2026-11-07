@@ -1,3 +1,4 @@
+import { parseJsonEventStream } from "ai";
 import { Log } from "@/common/lib/log";
 import { RendererIPC } from "@mahiru/ipc/renderer";
 import axios, { type AxiosInstance, type AxiosRequestConfig } from "axios";
@@ -13,6 +14,8 @@ import type {
   CreateThreadRequest,
   ProviderConfigInput
 } from "@mahiru/agent/browser";
+
+import { agentEventSchema } from "./chat/schema";
 
 type AgentResponse<T> = { data: T; ok: true } | { ok: false; reason: ApiError };
 type AgentCreateRunInput = { content: string; configId: string; threadId: string };
@@ -96,6 +99,9 @@ export class RendererAgent {
       data: config
     });
   }
+  static deleteConfig(id: string) {
+    return this.request<void>(`/v1/configs/${encodeURIComponent(id)}`, { method: "DELETE" });
+  }
   static createThread(input: CreateThreadRequest = {}) {
     return this.request<ThreadSummary>("/v1/threads", { method: "POST", data: input });
   }
@@ -122,7 +128,19 @@ export class RendererAgent {
       data: { configId }
     });
     if (!configured.ok) return configured;
-    return this.request<RunAccepted>(path + "/runs", { method: "POST", data: { content } });
+    const context = await RendererIPC.NormalChannel.send("invoke_agent_context", undefined).catch(
+      () => undefined
+    );
+    const serializedContext = context?.ok ? JSON.stringify(context.data) : undefined;
+    return this.request<RunAccepted>(path + "/runs", {
+      method: "POST",
+      data: {
+        content,
+        ...(serializedContext && serializedContext.length <= 8192
+          ? { context: serializedContext }
+          : {})
+      }
+    });
   }
   static cancelRun(id: string) {
     return this.request<void>(`/v1/runs/${encodeURIComponent(id)}/cancel`, { method: "POST" });
@@ -201,45 +219,22 @@ export async function* decodeAgentEvents(
   stream: ReadableStream<Uint8Array>,
   signal?: AbortSignal
 ): AsyncGenerator<AGUIEvent> {
-  const reader = stream.getReader();
+  if (signal?.aborted) {
+    await stream.cancel().catch(() => undefined);
+    return;
+  }
+  const reader = parseJsonEventStream({ stream, schema: agentEventSchema }).getReader();
   const abort = () => {
     void reader.cancel().catch(() => undefined);
   };
   signal?.addEventListener("abort", abort, { once: true });
-  const decoder = new TextDecoder();
-  let buffer = "";
   try {
     if (signal?.aborted) return;
     while (true) {
       const chunk = await reader.read();
       if (chunk.done) break;
-      buffer = (buffer + decoder.decode(chunk.value, { stream: true })).replaceAll("\r\n", "\n");
-      let boundary = buffer.indexOf("\n\n");
-      while (boundary >= 0) {
-        const block = buffer.slice(0, boundary);
-        buffer = buffer.slice(boundary + 2);
-        const data = block
-          .split("\n")
-          .filter((line) => line.startsWith("data:"))
-          .map((line) => line.slice(5).replace(/^ /, ""))
-          .join("\n");
-        if (data) {
-          const value: unknown = JSON.parse(data);
-          if (
-            value &&
-            typeof value === "object" &&
-            "type" in value &&
-            typeof value.type === "string" &&
-            "threadId" in value &&
-            typeof value.threadId === "string" &&
-            "runId" in value &&
-            typeof value.runId === "string"
-          )
-            yield value as AGUIEvent;
-          else throw new Error("Agent 事件格式无效");
-        }
-        boundary = buffer.indexOf("\n\n");
-      }
+      if (!chunk.value.success) throw chunk.value.error;
+      yield chunk.value.value;
     }
   } finally {
     signal?.removeEventListener("abort", abort);

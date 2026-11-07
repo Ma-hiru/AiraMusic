@@ -2,6 +2,7 @@ import { memo, type FC, useMemo, useState, useEffect, useCallback } from "react"
 import { RendererWindow } from "@/common/lib/window";
 import { useAgent } from "@/wins/agent/hooks/useAgent";
 import { useMediaQuery } from "@/common/hooks/use-media-query";
+import { useShortcutForwarder } from "@/common/hooks/use-shortcut-forwarder";
 import Drag from "@/common/components/layout/drag/drag";
 import AppToast from "@/common/components/display/toast";
 import Marquee from "@/common/components/display/marquee";
@@ -17,6 +18,8 @@ import ConversationList from "./list";
 import { createAgentConfigModal } from "./config-modal";
 
 const AgentPage: FC<object> = () => {
+  // Agent 窗聚焦时，命中的快捷键转发给主窗口执行（输入框内会由过滤器挡掉）
+  useShortcutForwarder();
   const {
     openConversation,
     setSelectedConfigID,
@@ -27,6 +30,7 @@ const AgentPage: FC<object> = () => {
     saveConfig,
     activeConfig,
     conversation,
+    removeConfig,
     requestClose,
     runningRunID,
     conversations,
@@ -99,6 +103,19 @@ const AgentPage: FC<object> = () => {
     },
     [conversations, create, removeConversation]
   );
+  const confirmRemoveConfig = useCallback(
+    (config: ProviderConfigView) => {
+      create(createDialogModal, {
+        title: "删除模型配置",
+        body: `确定删除「${config.name}」吗？已保存的对话记录会保留。`,
+        footer: null,
+        important: true,
+        confirmText: "删除",
+        onConfirm: () => void removeConfig(config.id)
+      });
+    },
+    [create, removeConfig]
+  );
 
   return (
     <div className="agent-shell relative h-screen w-screen overflow-hidden text-white">
@@ -144,6 +161,7 @@ const AgentPage: FC<object> = () => {
           conversationID={selectedConversationID}
           onEditConfig={openConfigModal}
           onRefreshConfigs={refreshConfigs}
+          onRemoveConfig={confirmRemoveConfig}
           onSelectConfig={setSelectedConfigID}
           onCreateConfig={openCreateConfigModal}
           onCreateConversation={createConversation}

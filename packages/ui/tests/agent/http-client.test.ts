@@ -30,10 +30,11 @@ beforeEach(async () => {
   vi.resetModules();
   vi.clearAllMocks();
   mocks.get.mockReset();
-  mocks.send.mockResolvedValue({
-    ok: true,
-    data: { endpoint: "http://127.0.0.1:34567", token: "test-token" }
-  });
+  mocks.send.mockImplementation(async (type) =>
+    type === "invoke_agent_context"
+      ? { ok: false, reason: { code: "unavailable", message: "No context" } }
+      : { ok: true, data: { endpoint: "http://127.0.0.1:34567", token: "test-token" } }
+  );
   mocks.create.mockReturnValue({ request: mocks.request, get: mocks.get });
   mocks.listen.mockReturnValue(mocks.unsubscribe);
   mocks.request.mockResolvedValue({ status: 200, data: [] });
@@ -78,6 +79,59 @@ it("创建 run 先绑定配置，绑定失败时不提交 run", async () => {
   expect(mocks.request).toHaveBeenCalledOnce();
 });
 
+it("每轮发送前读取最新页面上下文，保留用户原文并独立附带短 JSON", async () => {
+  const pages = [
+    { window: "display", page: { page: "album", id: 123, name: "当前专辑" }, currentTrack: null },
+    { window: "main", page: { page: "search", keyword: "新的查询" }, currentTrack: null }
+  ];
+  let contextIndex = 0;
+  mocks.send.mockImplementation(async (type) =>
+    type === "invoke_agent_context"
+      ? { ok: true, data: pages[contextIndex++] }
+      : { ok: true, data: { endpoint: "http://127.0.0.1:34567", token: "test-token" } }
+  );
+  await RendererAgent.createRun({ threadId: "a", configId: "c", content: "介绍这个" });
+  await RendererAgent.createRun({ threadId: "a", configId: "c", content: "继续" });
+  expect(
+    mocks.request.mock.calls
+      .map(([request]) => request)
+      .filter(({ method }) => method === "POST")
+      .map(({ data }) => data)
+  ).toEqual([
+    { content: "介绍这个", context: JSON.stringify(pages[0]) },
+    { content: "继续", context: JSON.stringify(pages[1]) }
+  ]);
+});
+
+it("上下文读取失败或超出限制不阻止提交，也不裁断 JSON", async () => {
+  mocks.send.mockImplementation(async (type) => {
+    if (type === "invoke_agent_context") throw new Error("IPC disconnected");
+    return { ok: true, data: { endpoint: "http://127.0.0.1:34567", token: "test-token" } };
+  });
+  await RendererAgent.createRun({ threadId: "a", configId: "c", content: "hello" });
+  expect(mocks.request).toHaveBeenLastCalledWith({
+    url: "/v1/threads/a/runs",
+    method: "POST",
+    data: { content: "hello" }
+  });
+  mocks.send.mockResolvedValueOnce({ ok: true, data: { keyword: "x".repeat(8192) } });
+  await RendererAgent.createRun({ threadId: "a", configId: "c", content: "next" });
+  expect(mocks.request).toHaveBeenLastCalledWith({
+    url: "/v1/threads/a/runs",
+    method: "POST",
+    data: { content: "next" }
+  });
+});
+
+it("删除模型配置调用 Rust 控制路由并编码配置 ID", async () => {
+  mocks.request.mockResolvedValueOnce({ status: 204 });
+  expect(await RendererAgent.deleteConfig("config/a")).toEqual({ ok: true, data: undefined });
+  expect(mocks.request).toHaveBeenCalledExactlyOnceWith({
+    url: "/v1/configs/config%2Fa",
+    method: "DELETE"
+  });
+});
+
 it("连接未就绪后可重试，并正确处理 204", async () => {
   mocks.send.mockResolvedValueOnce({
     ok: false,
@@ -119,6 +173,118 @@ it("SSE 解码支持跨字节 UTF-8、CRLF、多行 data 和 keepalive", async (
     received.push(value);
   expect(received).toEqual([event]);
   expect(stream.locked).toBe(false);
+});
+
+it("SDK 事件校验保留聊天用量细分、覆盖信息和辅助请求元数据", async () => {
+  const events = [
+    {
+      type: "RUN_FINISHED",
+      threadId: "t",
+      runId: "r",
+      result: "success",
+      usages: {
+        requests: 2,
+        last_step: 2,
+        records: [
+          {
+            step: 2,
+            usage: {
+              prompt_tokens: 100,
+              completion_tokens: 20,
+              total_tokens: 120,
+              cached_tokens: 50,
+              cache_write_tokens: 10,
+              reasoning_tokens: 5
+            }
+          }
+        ]
+      }
+    },
+    {
+      type: "CUSTOM",
+      threadId: "t",
+      runId: "r",
+      name: "thread-metadata",
+      value: {
+        name: "对话标题",
+        createdAt: 1,
+        updatedAt: 2,
+        auxiliaryUsage: {
+          title: { requests: 1, reportedRequests: 1, promptTokens: 100, completionTokens: 10 },
+          compaction: { requests: 1, reportedRequests: 0, promptTokens: 0, completionTokens: 0 }
+        }
+      }
+    }
+  ];
+  const stream = new ReadableStream<Uint8Array>({
+    start(controller) {
+      controller.enqueue(
+        new TextEncoder().encode(
+          events.map((event) => `data: ${JSON.stringify(event)}\n\n`).join("")
+        )
+      );
+      controller.close();
+    }
+  });
+  const received = [];
+  for await (const value of decodeAgentEvents(stream as globalThis.ReadableStream<Uint8Array>))
+    received.push(value);
+  expect(received).toEqual(events);
+});
+
+it.each([
+  "{invalid json}",
+  JSON.stringify({ type: "UNKNOWN_EVENT", threadId: "t", runId: "r" }),
+  JSON.stringify({
+    type: "TEXT_MESSAGE_CONTENT",
+    threadId: "t",
+    runId: "r",
+    messageId: "m",
+    delta: 42
+  })
+])("拒绝损坏的事件并释放源流：%s", async (data) => {
+  const cancel = vi.fn();
+  const stream = new ReadableStream<Uint8Array>({
+    start(controller) {
+      controller.enqueue(new TextEncoder().encode(`data: ${data}\n\n`));
+    },
+    cancel
+  });
+  const events = decodeAgentEvents(stream as globalThis.ReadableStream<Uint8Array>);
+
+  await expect(events.next()).rejects.toBeInstanceOf(Error);
+  expect(cancel).toHaveBeenCalledOnce();
+  expect(stream.locked).toBe(false);
+});
+
+it("消费提前退出或预先取消时会释放 SDK 解码管道", async () => {
+  for (const aborted of [false, true]) {
+    const cancel = vi.fn();
+    const controller = new AbortController();
+    const stream = new ReadableStream<Uint8Array>({
+      start(source) {
+        source.enqueue(
+          new TextEncoder().encode('data: {"type":"RUN_STARTED","threadId":"t","runId":"r"}\n\n')
+        );
+      },
+      cancel
+    });
+    if (aborted) controller.abort();
+    const received = [];
+    for await (const event of decodeAgentEvents(
+      stream as globalThis.ReadableStream<Uint8Array>,
+      controller.signal
+    )) {
+      received.push(event);
+      break;
+    }
+
+    expect(received).toHaveLength(aborted ? 0 : 1);
+    await vi.waitFor(() => {
+      expect(cancel).toHaveBeenCalledOnce();
+      expect(stream.locked).toBe(false);
+    });
+  }
 });
 
 it("事件连接失败后同步会话，取消会终止阻塞的 reader", async () => {

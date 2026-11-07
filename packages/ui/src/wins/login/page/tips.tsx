@@ -21,7 +21,7 @@ const Tips: FC<TipsProps> = ({ result, status, loginType }) => {
   // 仅扫码登录在待确认时展示用户头像
   const waitingConfirm = loginType === "qr" && status === QRCodeStatus.WAITING_CONFIRM;
   return (
-    <div className="flex justify-center items-center flex-col">
+    <div className="flex justify-center items-center flex-col w-36">
       {!waitingConfirm && (
         <div className="flex justify-center items-center flex-col">
           <img className="size-10" alt="netease-music" src="/images/netease-music.png" />
@@ -39,7 +39,8 @@ const Tips: FC<TipsProps> = ({ result, status, loginType }) => {
             image={image}
             shadowColor={"light"}
           />
-          <span className="font-bold mt-4">{result?.nickname}</span>
+          <span className="font-bold mt-4 truncate max-w-full">{result?.nickname}</span>
+          <span className="text-xs mt-1 opacity-80">{mapQRCodeStatusToText(status)}</span>
         </div>
       )}
     </div>

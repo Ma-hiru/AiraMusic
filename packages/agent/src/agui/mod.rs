@@ -3,7 +3,7 @@ pub mod stdout;
 
 use crate::agui::models::{AguiEvent, AguiEventChannel, AguiReasoningRole, AguiState};
 use crate::ctx::Ctx;
-use crate::ctx::models::Disposer;
+use crate::ctx::models::{Disposer, Event};
 use crate::llm::models::ChatRole;
 use crate::r#loop::models::{
     LoopEvent, LoopPayloadError, LoopPayloadInnerError, LoopPayloadReasoningDelta,
@@ -12,7 +12,7 @@ use crate::r#loop::models::{
     LoopPayloadToolCallStart, LoopPayloadToolResult, LoopPayloadTurnEnd, LoopPayloadTurnStart,
 };
 use crate::plugins::models::{Plugin, PluginApplyResult, PluginMeta};
-use crate::session::models::SessionId;
+use crate::session::models::{SESSION_USAGE_UPDATED, SessionId, SessionUsageUpdated};
 use std::sync::{Arc, Mutex};
 use tokio::sync::broadcast;
 
@@ -49,6 +49,24 @@ impl Plugin<(), AguiEventChannel> for AguiPlugin {
                 let _ = tx.send(event);
             }
         };
+
+        {
+            let emit = emit.clone();
+            receipts.push(ctx.on::<SessionUsageUpdated>(
+                Event {
+                    name: SESSION_USAGE_UPDATED.into(),
+                    session_id: None,
+                },
+                move |payload| {
+                    emit(AguiEvent::Custom {
+                        session_id: payload.session_id.to_string(),
+                        run_id: payload.run_id.clone(),
+                        name: "thread-metadata".to_string(),
+                        value: payload.metadata.clone(),
+                    });
+                },
+            ));
+        }
 
         // AGUI 事件
         // 12. StepFinished

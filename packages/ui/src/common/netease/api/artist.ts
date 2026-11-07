@@ -74,7 +74,7 @@ export default class _NeteaseArtistAPI {
    * @param id 歌手 id
    * */
   static similar(id: number, signal?: AbortSignal) {
-    return apiRequest<unknown, NeteaseAPI.NeteaseAPIResponse>({
+    return apiRequest<unknown, NeteaseAPI.NeteaseArtistSimilarResponse>({
       url: "/simi/artist",
       method: "GET",
       params: { id },

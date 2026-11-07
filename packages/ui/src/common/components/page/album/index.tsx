@@ -145,7 +145,10 @@ const Album: FC<AlbumPageProps> = ({
     album && onDataLoaded?.(album);
   }, [album, onDataLoaded]);
 
-  useAgentFocusCtx({ page: "album", name: album?.content.name ?? "", id }, routerActive);
+  useAgentFocusCtx(
+    { page: "album", name: album?.content.id === id ? album.content.name : "", id },
+    routerActive
+  );
 
   const { online } = useOnline();
   return (

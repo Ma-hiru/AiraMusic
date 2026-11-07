@@ -2,6 +2,7 @@ import { useCallback } from "react";
 import { NeteaseTrackRecord } from "@/common/netease/models";
 import AppToast from "@/common/components/display/toast";
 import AppContextMenu from "@/common/components/display/menu";
+import AppModal, { createTrackInfoModal } from "@/common/components/display/modal";
 import type {
   TrackListClickFunc,
   TrackListContextMenuFunc
@@ -11,6 +12,8 @@ import type {
 export function useTrackContextMenu(props: {
   onPlay: TrackListClickFunc;
   onClickAlbum: NormalFunc<[id: number]>;
+  /** 提供后菜单才显示「查看歌手」 */
+  onClickArtist?: NormalFunc<[id: number]>;
   openComment: NormalFunc<[track: NeteaseTrackRecord]>;
   addToPlaylistLast: NormalFunc<[track: NeteaseTrackRecord]>;
   addToPlaylistNext: NormalFunc<[track: NeteaseTrackRecord]>;
@@ -24,6 +27,7 @@ export function useTrackContextMenu(props: {
     openComment,
     onPlay,
     onClickAlbum,
+    onClickArtist,
     removeFromPlaylist
   } = props;
   const { create, createTrackContextMenu } = AppContextMenu.useMenu();
@@ -35,36 +39,41 @@ export function useTrackContextMenu(props: {
         clientX: e.clientX,
         clientY: e.clientY,
         canRemove: !!removeFromPlaylist,
-        onClick: (type, track) => {
+        onClickArtist,
+        onClick: (type, target) => {
           switch (type) {
             case "play":
-              onPlay(track, /** unused */ 0);
+              onPlay(target, /** unused */ 0);
               break;
             case "album":
-              onClickAlbum(track.detail.al.id);
+              onClickAlbum(target.detail.al.id);
+              break;
+            case "info":
+              // 菜单也用于弹窗内部，替换内容时不接管宿主弹窗的生命周期。
+              AppModal._create(createTrackInfoModal, { track: target });
               break;
             case "nextPlay":
-              addToPlaylistNext(track);
+              addToPlaylistNext(target);
               AppToast.show({
                 type: "info",
                 text: "已添加到下一首播放"
               });
               break;
             case "addPlayList":
-              addToPlaylistLast(track);
+              addToPlaylistLast(target);
               AppToast.show({
                 type: "info",
                 text: "已添加到播放列表"
               });
               break;
             case "comment":
-              void openComment(track);
+              void openComment(target);
               break;
             case "favPlaylist":
-              addTrackToPlaylist?.(track);
+              addTrackToPlaylist?.(target);
               break;
             case "removeFromPlaylist":
-              removeFromPlaylist?.(track);
+              removeFromPlaylist?.(target);
               break;
           }
         }
@@ -77,6 +86,7 @@ export function useTrackContextMenu(props: {
       create,
       createTrackContextMenu,
       onClickAlbum,
+      onClickArtist,
       onPlay,
       openComment,
       removeFromPlaylist

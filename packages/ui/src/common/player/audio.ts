@@ -9,11 +9,14 @@ export default class RendererPlayerAudio {
   readonly addEventListener = this.audio.addEventListener.bind(this.audio);
   readonly removeEventListener = this.audio.removeEventListener.bind(this.audio);
   private shouldPlay = false;
+  private loadGeneration = 0;
+  private pendingLoad?: { generation: number; signal?: AbortSignal };
   private readonly removeEvents: NormalFunc[] = [];
   private sourceRef: Nullable<MediaElementAudioSourceNode> = null;
   private analyserRef: Nullable<AnalyserNode> = null;
   private audioCtxRef: Nullable<AudioContext> = null;
   readonly progress = {
+    trackID: undefined as Undefinable<number>,
     /** 单位: s */
     duration: 0,
     /** 单位: s */
@@ -87,6 +90,7 @@ export default class RendererPlayerAudio {
 
   play(): void {
     this.shouldPlay = true;
+    if (this.pendingLoad && !this.pendingLoad.signal?.aborted) return;
     if (this.audio.paused && this.audio.src) {
       this.audio.play().catch((err) => {
         Log.error(err);
@@ -124,8 +128,10 @@ export default class RendererPlayerAudio {
   private errorCount = 0;
   private bindErrorHandler() {
     const errorHandler = async () => {
+      const generation = this.loadGeneration;
       const track = this.loadedTrack;
       const source = this.loadedSource;
+      if (this.pendingLoad) return;
       // 非 local 才尝试是否已经缓存（比如长时间暂停，播放链接已经失效，但是后台已经缓存）
       if (!track || !source || source.isLocal()) return;
       // 同一个 track 已经报错过，不再尝试
@@ -134,10 +140,15 @@ export default class RendererPlayerAudio {
       this.errorCount += 1;
 
       const audio = await NeteaseServicesAudio.track(track, source.quality, false);
-      if (!audio || !audio.isLocal()) return;
+      if (!audio || !audio.isLocal() || generation !== this.loadGeneration) return;
 
       queueMicrotask(() => {
-        if (this.errorID !== this.loadedTrack?.id || this.errorCount > 1) return;
+        if (
+          generation !== this.loadGeneration ||
+          this.errorID !== this.loadedTrack?.id ||
+          this.errorCount > 1
+        )
+          return;
         this.errorCount += 1;
         this.load(track, audio, this.shouldPlay, this.audio.currentTime || 0);
         Log.warn(`Retry load track ${track.id} from local cache`);
@@ -155,24 +166,37 @@ export default class RendererPlayerAudio {
     track: Optional<NeteaseTrack>,
     source: NeteaseLocalAudio | NeteaseNetworkAudio,
     play = this.shouldPlay,
-    jump = 0
-  ) {
+    jump = 0,
+    signal?: AbortSignal
+  ): Promise<boolean> {
+    if (signal?.aborted) return false;
+    const generation = ++this.loadGeneration;
+    this.pendingLoad = { generation, signal };
     this.pause();
-    this.loadedTrack = track;
-    this.loadedSource = source;
+    this.shouldPlay = play;
 
     let src = source.url;
+    let blob: Nullable<Blob> = null;
     if (source.isLocal() && source.localURL) {
-      const blob = await fetch(source.localURL)
+      blob = await fetch(source.localURL, { signal })
         .then((res) => (res.ok ? res.blob() : null))
         .catch(() => null);
-      if (blob) src = URL.createObjectURL(blob);
     }
+    if (generation !== this.loadGeneration || signal?.aborted) {
+      if (this.pendingLoad?.generation === generation) this.pendingLoad = undefined;
+      return false;
+    }
+    this.pendingLoad = undefined;
+    if (blob) src = URL.createObjectURL(blob);
+    this.loadedTrack = track;
+    this.loadedSource = source;
     this.audio.src = src;
     this.audio.currentTime = jump;
+    this.progress.trackID = track?.id;
+    this.progress.currentTime = jump;
     this.audio.load();
-    this.shouldPlay = play;
-    play && this.play();
+    this.shouldPlay && this.play();
+    return true;
   }
 
   get context() {
@@ -209,19 +233,9 @@ export default class RendererPlayerAudio {
     };
   }
 
-  static fromSave(
-    track: Optional<NeteaseTrack>,
-    save: ReturnType<typeof this.save>,
-    audio: Optional<NeteaseLocalAudio | NeteaseNetworkAudio>
-  ) {
-    const instance = new RendererPlayerAudio();
-    instance.pause();
-    instance.volume = save.volume;
-    audio && instance.load(track, audio, false, save.currentTime);
-    return instance;
-  }
-
   [Symbol.dispose]() {
+    this.loadGeneration++;
+    this.pendingLoad = undefined;
     this.removeEvents.forEach((fn) => fn());
     this.audio.pause();
     this.audio.removeAttribute("src");

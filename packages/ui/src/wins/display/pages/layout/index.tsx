@@ -1,0 +1,169 @@
+import { cx } from "@emotion/css";
+import { useLocation, useNavigate } from "react-router-dom";
+import { memo, type FC, useMemo, useState, useEffect } from "react";
+import { BackCtx } from "@/wins/display/ctx/back";
+import { RendererDevice } from "@/common/lib/device";
+import { RendererWindow } from "@/common/lib/window";
+import { RendererIPCMessageBus } from "@/common/lib/bus";
+import { RendererModified } from "@/common/lib/modified";
+import { useLatestRef } from "@/common/hooks/use-latest-ref";
+import { useListenable } from "@/common/hooks/use-listenable";
+import { RoutePath, RoutePathDisplay } from "@/common/routes";
+import Drag from "@/common/components/layout/drag/drag";
+import AppModal from "@/common/components/display/modal";
+import AppToast from "@/common/components/display/toast";
+import TopBack from "@/common/components/layout/top/back";
+import AppDrawer from "@/common/components/display/drawer";
+import Control from "@/common/components/layout/top/control";
+import AppContextMenu from "@/common/components/display/menu";
+import KeepAliveOutlet from "@/common/components/other/keep-alive-outlet";
+import AppErrorBoundary from "@/common/components/fallback/app-error-boundary";
+
+import Title from "./title";
+import DisplayFloat from "./float";
+import Background from "./background";
+import PlayListControl from "./play-list-control";
+import ListeningFootprintControl from "./listening-footprint-control";
+
+const isDarwin = (await RendererDevice.platform) === "darwin";
+
+const LayoutDisplay: FC<object> = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const pathRef = useLatestRef(location.pathname + location.search);
+  const locationRef = useLatestRef(location);
+  const displayBus = useListenable(RendererIPCMessageBus.display);
+  const modifiedBus = useListenable(RendererIPCMessageBus.modified);
+
+  useEffect(() => {
+    const data = displayBus.data;
+    if (!data.length) return;
+    RendererIPCMessageBus.consume(displayBus.type);
+
+    const path = pathRef.current;
+    let target = path;
+
+    for (const action of data) {
+      switch (action.type) {
+        case "play-list":
+          target = RoutePathDisplay.playList;
+          AppDrawer.close();
+          break;
+        case "listening-footprint":
+          target = RoutePath.withQuery(RoutePathDisplay.listeningFootprint, {
+            period: action.period ?? "today",
+            ...(action.day ? { day: action.day } : {})
+          });
+          AppDrawer.close();
+          break;
+        case "playlist":
+          target = RoutePathDisplay.playlist.withQuery(
+            action.id,
+            action.source === "like" ? "like" : "normal",
+            action.scope
+          );
+          break;
+        case "album":
+          target = RoutePath.withQuery(RoutePathDisplay.album, { id: action.id });
+          break;
+        case "artist":
+          target = RoutePath.withQuery(RoutePathDisplay.artist, { id: action.id });
+          break;
+        case "search":
+          target = RoutePath.withQuery(RoutePathDisplay.search, {
+            keyword: action.keyword
+          });
+          break;
+        case "settings":
+          target = RoutePath.withQuery(RoutePathDisplay.settings, {});
+          break;
+        case "history":
+          target = RoutePathDisplay.history;
+          break;
+        case "star":
+          target = RoutePathDisplay.star;
+          break;
+      }
+    }
+
+    path !== target && navigate(target);
+    RendererWindow.current.focus();
+  }, [navigate, pathRef, displayBus.data, displayBus.type]);
+
+  useEffect(() => {
+    RendererIPCMessageBus.updater.deliver("track-meta");
+  }, []);
+
+  useEffect(() => {
+    const modifies = modifiedBus.data;
+    RendererIPCMessageBus.consume(modifiedBus.type);
+
+    for (const m of modifies) {
+      switch (m.type) {
+        case "playlist-update":
+          RendererModified.mark({
+            type: "playlist",
+            source: m.source,
+            id: m.id
+          });
+          break;
+        case "remove-playlist": {
+          const { id } = RoutePathDisplay.playlist.parseQuery(locationRef.current, false);
+          if (id !== m.id) break;
+          RendererModified.mark({
+            navigate,
+            type: "removePlaylist",
+            id: m.id,
+            homePath: RoutePathDisplay.blank
+          });
+          break;
+        }
+        case "album":
+          RendererModified.mark({
+            type: "album",
+            id: m.id
+          });
+          break;
+      }
+    }
+  }, [modifiedBus.data, modifiedBus.type, navigate, locationRef]);
+
+  const [back, setBack] = useState(false);
+  const backCtxValue = useMemo(
+    () => ({
+      back,
+      markBack: () => {
+        setBack(true);
+      }
+    }),
+    [back]
+  );
+
+  return (
+    <div className="w-screen h-screen relative overflow-hidden">
+      <Title />
+      <Drag className="absolute w-screen top-0 right-0 h-10  flex flex-row justify-between items-center px-4 z-50">
+        <TopBack
+          className={cx(isDarwin && "relative left-15 -top-1")}
+          exclude={["blank"]}
+          routePath={RoutePathDisplay}
+          onClick={() => setBack(true)}
+        />
+        <Control appends={[<PlayListControl />, <ListeningFootprintControl />]} max pin mini />
+      </Drag>
+      <AppErrorBoundary name="LayoutDisplayContent" canReset showError>
+        <Background />
+        <BackCtx value={backCtxValue}>
+          <KeepAliveOutlet maxCache={3} />
+        </BackCtx>
+        <DisplayFloat />
+        <AppToast.Provider className="z-50!" />
+        <AppContextMenu.Provider className="z-50!" />
+        <AppModal.Provider className="z-40!" />
+        <AppDrawer.Provider className="z-32 top-10!" />
+      </AppErrorBoundary>
+    </div>
+  );
+};
+
+export default memo(LayoutDisplay);

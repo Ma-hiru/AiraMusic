@@ -73,4 +73,25 @@ export class MainWindowConstants {
       min: { width: 800, height: 469 }
     }
   } satisfies Record<string, WindowSizePreset>;
+  static getWindowBaseSize(id: WindowType): Nullable<WindowSizePreset> {
+    switch (id) {
+      case "main":
+      case "login":
+      case "image":
+      case "lyric":
+      case "miniplayer":
+      case "radio":
+      case "about":
+      case "display":
+      case "agent":
+      case "comments":
+      case "external":
+        return this.WINDOW_BASE_SIZE[id];
+      case "tray":
+        return process.platform === "win32"
+          ? this.WINDOW_BASE_SIZE.trayOnWindows
+          : this.WINDOW_BASE_SIZE.trayOnDarwin;
+    }
+    return null;
+  }
 }

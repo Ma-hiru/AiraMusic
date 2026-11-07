@@ -1,4 +1,5 @@
 use crate::llm::models::{ChatRole, ChatTurnUsage};
+use crate::session::models::ThreadMetadata;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fmt::{Display, Formatter};
@@ -20,6 +21,13 @@ pub enum AguiReasoningRole {
 )]
 #[ts(export, rename = "AGUIEvent")]
 pub enum AguiEvent {
+    Custom {
+        #[serde(rename = "threadId")]
+        session_id: String,
+        run_id: String,
+        name: String,
+        value: ThreadMetadata,
+    },
     RunStarted {
         /// 会话 id(AGUI 的 threadId)
         #[serde(rename = "threadId")]
@@ -134,6 +142,14 @@ pub enum AguiEvent {
 impl Display for AguiEvent {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
+            AguiEvent::Custom {
+                session_id,
+                run_id,
+                name,
+                ..
+            } => {
+                write!(f, "Custom({session_id}) {run_id} name: {name}")
+            }
             AguiEvent::RunStarted { run_id, session_id } => {
                 write!(f, "RunStarted({session_id}) {run_id}")
             }

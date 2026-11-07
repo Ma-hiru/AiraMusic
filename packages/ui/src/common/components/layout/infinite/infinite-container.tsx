@@ -1,6 +1,6 @@
 import { cx } from "@emotion/css";
 import { LoaderCircle } from "lucide-react";
-import { memo, useRef, type FC, useEffect, useCallback, type ReactNode } from "react";
+import { memo, useRef, type FC, useState, useEffect, useCallback, type ReactNode } from "react";
 import { Log } from "@/common/lib/log";
 import { useLatestRef } from "@/common/hooks/use-latest-ref";
 import { useScrollAutoHide } from "@/common/hooks/use-scroll-auto-hide";
@@ -97,6 +97,12 @@ const InfiniteContainer: FC<InfiniteContainerProps> = ({
 
   useScrollAutoHide(containerRef);
 
+  // 是否加载过一次
+  const [haveALoading, setHaveALoading] = useState(false);
+  useEffect(() => {
+    isLoading && setHaveALoading(true);
+  }, [isLoading]);
+
   return (
     <div
       ref={containerRef}
@@ -110,7 +116,11 @@ const InfiniteContainer: FC<InfiniteContainerProps> = ({
           {isLoading ? "正在加载更多" : "继续下滑加载更多"}
         </div>
       ) : (
-        <div className="text-xs font-semibold opacity-40 text-center block mt-3">已经到底了</div>
+        haveALoading && (
+          <div className="text-xs font-semibold opacity-40 text-center block my-1.5">
+            已经到底了
+          </div>
+        )
       )}
       <span ref={sentinelRef} className="h-px" aria-hidden />
     </div>

@@ -13,9 +13,11 @@ const Content: FC<object> = () => {
             contain-strict
           `
       )}>
-      <AppErrorBoundary className="h-full w-full" name="Content" showError={false} canReset>
-        <KeepAliveOutlet maxCache={5} />
-      </AppErrorBoundary>
+      <div className="mx-auto h-full w-full max-w-(--content-max-width)">
+        <AppErrorBoundary className="h-full w-full" name="Content" showError={false} canReset>
+          <KeepAliveOutlet maxCache={5} />
+        </AppErrorBoundary>
+      </div>
     </div>
   );
 };

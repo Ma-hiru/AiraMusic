@@ -1,5 +1,7 @@
+import { useSetAtom } from "jotai";
 import { memo, useRef, type FC } from "react";
 import { useLocation } from "react-router-dom";
+import { typingAtom } from "@/wins/main/atoms/layout";
 import { RoutePath, RoutePathMain } from "@/common/routes";
 import { usePageJump } from "@/wins/main/hooks/use-page-jump";
 import { playlistMarkId } from "@/common/utils/playlist-mark-id";
@@ -9,7 +11,7 @@ import { useSetBackground } from "@/wins/main/hooks/use-set-background";
 import { useUserTrackManager } from "@/common/hooks/use-user-track-manager";
 import { useTrackAddToPlaylist } from "@/common/hooks/use-track-add-to-playlist";
 import { usePlayerActionInList } from "@/wins/main/hooks/use-player-action-in-list";
-import Artist, { type ArtistRef } from "@/common/components/page/artist";
+import Artist, { type ArtistRef } from "@/common/components/page/artist-switch";
 
 const ArtistPage: FC<object> = () => {
   const location = useLocation();
@@ -17,11 +19,19 @@ const ArtistPage: FC<object> = () => {
   const routerActive = useRouterActive(RoutePathMain, "artist");
   const { id } = RoutePath.parseQuery<{ id: number }>(location, RoutePathMain.artist);
   const { setBackground } = useSetBackground("artist");
-  const { addTrackToPlaylistLast, addTrackToPlaylistNext, openTrackComment, onTrackPlay, player } =
-    usePlayerActionInList(
-      () => artistRef.current?.artist?.hotTracks ?? [],
-      playlistMarkId({ type: "artist", id })
-    );
+  const setIsTyping = useSetAtom(typingAtom);
+  const {
+    addTrackToPlaylistLast,
+    addTrackToPlaylistNext,
+    openTrackComment,
+    onAddList,
+    onReplace,
+    onTrackPlay,
+    player
+  } = usePlayerActionInList(
+    () => artistRef.current?.artist?.hotTracks ?? [],
+    playlistMarkId({ type: "artist", id })
+  );
   const { jumpAlbumPage, jumpArtistPage } = usePageJump({
     currentArtistID: artistRef.current?.artist?.id
   });
@@ -38,6 +48,7 @@ const ArtistPage: FC<object> = () => {
       id={id!}
       className="router-container"
       pageActionType="out"
+      setIsTyping={setIsTyping}
       heartManager={heartManager}
       routerActive={routerActive}
       openComment={openTrackComment}
@@ -46,7 +57,9 @@ const ArtistPage: FC<object> = () => {
       activeTrackID={player.current.track?.id}
       addToPlaylistLast={addTrackToPlaylistLast}
       addToPlaylistNext={addTrackToPlaylistNext}
+      onAddList={onAddList}
       onClick={onTrackPlay}
+      onReplace={onReplace}
       onPageAction={onPageAction}
       onClickAlbum={jumpAlbumPage}
       onAvatarLoaded={setBackground}

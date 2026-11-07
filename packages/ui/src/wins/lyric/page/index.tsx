@@ -12,6 +12,7 @@ import { RendererIPCMessageBus } from "@/common/lib/bus";
 import { useAppLoaded } from "@/common/hooks/use-app-loaded";
 import { useListenable } from "@/common/hooks/use-listenable";
 import { useLyricSyncFromBus } from "@/common/hooks/use-lyric-sync-from-bus";
+import { useShortcutForwarder } from "@/common/hooks/use-shortcut-forwarder";
 import { useThemeInjectFromBus } from "@/common/hooks/use-theme-inject-from-bus";
 import { useStableLyricInstanceFromBus } from "@/common/hooks/use-stable-lyric-instance-from-bus";
 import WindowResizeArea from "@/common/components/layout/window-resize-area";
@@ -21,6 +22,8 @@ import Control from "./control";
 
 export default function LyricPage() {
   useAppLoaded();
+  // 歌词窗聚焦时，命中的快捷键转发给主窗口执行
+  useShortcutForwarder();
   const lyricRef = useRef<LyricRef>(null);
   const [showBg, setShowBg] = useState(false);
   const [lock, setLock] = useState(false);

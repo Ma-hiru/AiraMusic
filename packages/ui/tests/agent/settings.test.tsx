@@ -63,5 +63,9 @@ describe("Agent 功能设置", () => {
     expect(screen.getByText("只读")).toBeInTheDocument();
     expect(screen.getByText("写操作")).toBeInTheDocument();
     expect(screen.getByText("高风险")).toBeInTheDocument();
+
+    const searchTool = screen.getByRole("checkbox", { name: /搜索音乐/ });
+    expect(searchTool).toHaveAttribute("title", "搜索歌曲、专辑和艺人。");
+    expect(searchTool.querySelector(".line-clamp-2")).not.toBeNull();
   });
 });

@@ -156,7 +156,10 @@ async fn create_run(
     Path(thread_id): Path<String>,
     Json(request): Json<CreateRunRequest>,
 ) -> Response {
-    match state.runtime.create_run(&thread_id, request.content) {
+    match state
+        .runtime
+        .create_run_with_context(&thread_id, request.content, request.context)
+    {
         Ok(run) => (StatusCode::ACCEPTED, Json(run)).into_response(),
         Err(error) => api_error(StatusCode::CONFLICT, "run_rejected", &error.to_string()),
     }

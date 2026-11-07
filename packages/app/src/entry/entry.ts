@@ -3,6 +3,7 @@ import { app, session } from "electron";
 import { X509Certificate } from "node:crypto";
 import { Log } from "@/lib/log";
 import { MainHandle } from "@/lib/handle";
+import { MainRuntime } from "@/lib/runtime";
 import { MainPathResolver } from "@/lib/path-resolver";
 import { MainExitCodeConstants } from "@/constants/exit-code";
 
@@ -45,10 +46,10 @@ export class MainEntry {
     });
   }
 
-  private commands(commands: [the_switch: string, value?: string][]) {
+  private commands(commands: (false | [the_switch: string, value?: string])[]) {
     app.enableSandbox();
     process.env["ELECTRON_DISABLE_SECURITY_WARNINGS"] = "true";
-    for (const [the_switch, value] of commands) {
+    for (const [the_switch, value] of commands.filter((c) => !!c)) {
       app.commandLine.appendSwitch(the_switch, value);
     }
   }
@@ -93,7 +94,11 @@ export class MainEntry {
   }
 
   tryRun() {
-    this.commands([]);
+    /** 通过 http://127.0.0.1:{@link process.env.APP_DEVTOOLS_REMOTE_PORT} 调试和预览所有 renderer/worker*/
+    this.commands([
+      !app.isPackaged &&
+        MainRuntime.isDev && ["remote-debugging-port", String(process.env.APP_DEVTOOLS_REMOTE_PORT)]
+    ]);
     this.certificate();
     this.permissions(["speaker-selection", "clipboard-sanitized-write"]);
     // 单实例锁，避免多开

@@ -21,6 +21,11 @@ export class MainPathResolver {
     ? this.appPathJoin("assets", "logo.png")
     : this.appResourcePathJoin("assets", "logo.png");
 
+  /** macOS 菜单栏模板图标（36×36，2x；只取 alpha，系统按亮暗上色） */
+  static menuBarIconPath = isDev
+    ? this.appPathJoin("assets", "menubar.png")
+    : this.appResourcePathJoin("assets", "menubar.png");
+
   static preloadPath = isDev
     ? this.appPathJoin("dist", "preload", "index.cjs")
     : this.appResourcePathJoin("preload.cjs");

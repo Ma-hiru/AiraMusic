@@ -18,7 +18,10 @@ const MainFloat: FC<{ className?: string }> = ({ className }) => {
 
   return (
     <Float
-      className={cx("right-6 bottom-24", className)}
+      className={cx(
+        "right-(--float-button-right-margin) bottom-[calc(var(--playbar-height)+12px)]",
+        className
+      )}
       hidden={playModal}
       scrollTop={scrollActions.scrollTop}
       fastLocate={scrollActions.fastLocate}

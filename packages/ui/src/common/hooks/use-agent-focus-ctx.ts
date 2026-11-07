@@ -15,6 +15,10 @@ export function useAgentFocusCtx(ctx: AgentFocusContext, active: boolean) {
     };
 
     send();
-    return RendererWindow.current.addEventListener("focus", send);
+    const unsubscribe = RendererWindow.current.addEventListener("focus", send);
+    return () => {
+      unsubscribe();
+      RendererIPC.MessageChannel.send("bus_deliver_focus_context", "process", { page: "hidden" });
+    };
   }, [active, stableCtx]);
 }

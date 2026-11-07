@@ -59,10 +59,11 @@ export default class _NeteaseLyricSource {
         const roman = parse(lyric.roma);
         const trans = parse(lyric.translation);
         if (row.length) {
+          const parsedLyric = NeteaseLyricSchema.parse(parseNeteaseLyric(row, trans, roman));
           return new NeteaseLyric({
-            ...NeteaseLyricSchema.parse(parseNeteaseLyric(row, trans, roman)),
+            ...parsedLyric,
             id: track.id,
-            tips: "歌词来源：QQ音乐"
+            tips: parsedLyric.data.length >= 5 ? "歌词来源：QQ音乐" : undefined
           });
         }
       }
@@ -82,7 +83,7 @@ export default class _NeteaseLyricSource {
     signal?.throwIfAborted();
     const cache = await _NeteaseLyricSource.getCache(id);
     signal?.throwIfAborted();
-    if (cache && cache.data.length >= 2) return new NeteaseLyric(cache);
+    if (cache && cache.data.length >= 1) return new NeteaseLyric(cache);
 
     const ttmlController = new AbortController();
     const relayAbort = () => ttmlController.abort(signal?.reason);
@@ -109,7 +110,7 @@ export default class _NeteaseLyricSource {
       const QRC = qrc.status === "fulfilled" && qrc.value;
       const YRC =
         response.status === "fulfilled" && NeteaseLyric.fromNeteaseAPIResponse(response.value);
-      if (QRC && (!YRC || QRC.priority >= YRC.priority)) {
+      if (QRC && (!YRC || QRC.priority > YRC.priority)) {
         Log.debug("LyricService", "use qrc lyric id:" + id);
         lyric = QRC;
         signal?.throwIfAborted();

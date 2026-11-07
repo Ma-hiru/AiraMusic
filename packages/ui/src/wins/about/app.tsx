@@ -1,4 +1,5 @@
 import { useAppLoaded } from "@/common/hooks/use-app-loaded";
+import { useShortcutForwarder } from "@/common/hooks/use-shortcut-forwarder";
 import Drag from "@/common/components/layout/drag/drag";
 import NoDrag from "@/common/components/layout/drag/no-drag";
 import Background from "@/wins/display/pages/layout/background";
@@ -7,6 +8,8 @@ import type { FC } from "react";
 
 export const About: FC = () => {
   useAppLoaded();
+  // 关于窗聚焦时，命中的快捷键转发给主窗口执行
+  useShortcutForwarder();
   return (
     <div className="w-screen h-screen overflow-hidden px-2 overflow-y-auto p-8 flex justify-center items-center">
       <Drag className="w-screen h-8 fixed left-0 top-0 z-10" />

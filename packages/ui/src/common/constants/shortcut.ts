@@ -1,3 +1,5 @@
+import type { ShortcutAction } from "@mahiru/ipc/types";
+
 export type ShortcutModifier = "alt" | "ctrl" | "meta" | "shift";
 
 export interface ShortcutBinding {
@@ -5,15 +7,8 @@ export interface ShortcutBinding {
   modifiers?: ShortcutModifier[];
 }
 
-/** 可配置快捷键的动作 */
-export type ShortcutAction =
-  | "volumeUp"
-  | "nextTrack"
-  | "prevTrack"
-  | "muteToggle"
-  | "playToggle"
-  | "volumeDown"
-  | "playModalToggle";
+/** 可配置快捷键的动作；跨窗口转发时使用同一套取值 */
+export type { ShortcutAction };
 
 export type ShortcutBindingMap = Record<ShortcutAction, ShortcutBinding>;
 
@@ -28,6 +23,12 @@ export class RendererShortcutConstants {
     muteToggle: "静音/取消静音",
     playModalToggle: "切换播放页"
   };
+
+  /** 全部可配置动作；顺序同时决定按键解析时的优先级 */
+  static readonly actions = Object.keys(this.actionLabels) as ShortcutAction[];
+
+  /** 不参与快捷键转发的窗口：主窗口自己执行，登录页与外部网页窗没有播放上下文 */
+  static readonly shortcutForwardExcluded: WindowType[] = ["main", "login", "external"];
 
   /** 默认快捷键（每次返回新对象，避免默认值被外部修改） */
   static get defaultBindings(): ShortcutBindingMap {
@@ -97,6 +98,37 @@ export class RendererShortcutConstants {
       // 兼容之前按输入字符保存的自定义绑定。
       this.isSameBinding({ ...pressed, key: event.key }, binding)
     );
+  }
+
+  /** 按绑定表把事件解析成动作；只有命中已配置绑定才返回，未绑定的按键一律返回 null */
+  static resolveAction(
+    event: KeyboardEvent,
+    bindings: ShortcutBindingMap
+  ): Nullable<ShortcutAction> {
+    for (const action of this.actions) {
+      const binding = bindings[action];
+      if (binding && this.matchesEvent(event, binding)) return action;
+    }
+    return null;
+  }
+
+  /** 事件是否发生在可编辑元素上，全局快捷键与跨窗口转发都要据此避让输入 */
+  static isEditableEvent(event: KeyboardEvent): boolean {
+    return event
+      .composedPath()
+      .some(
+        (node) =>
+          node instanceof HTMLElement &&
+          (node.isContentEditable ||
+            node.matches(
+              'input, textarea, select, [role="textbox"], [contenteditable=""], [contenteditable="true"], [contenteditable="plaintext-only"]'
+            ))
+      );
+  }
+
+  /** 该窗口是否需要把命中的快捷键转发给主窗口执行 */
+  static canForwardShortcut(windowType: WindowType): boolean {
+    return !this.shortcutForwardExcluded.includes(windowType);
   }
 
   /** 判断两个绑定是否等价（按键忽略大小写，修饰键忽略顺序） */

@@ -5,3 +5,4 @@ agent.exe
 *.exe
 data
 generated
+bindings

@@ -11,7 +11,7 @@ export class NeteaseTrack implements NeteaseTrackModel {
   readonly al: NeteaseAPI.Al;
   readonly alia: string[];
   readonly ar: NeteaseAPI.Ar[];
-  /**  */
+  /** ms */
   readonly dt: number;
   /**
    * @enum

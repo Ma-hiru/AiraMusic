@@ -291,6 +291,23 @@ namespace NeteaseAPI {
     };
   }
 
+  interface NeteaseSimilarArtist {
+    id: number;
+    name: string;
+    trans?: string;
+    picUrl?: string;
+    alias?: string[];
+    albumSize?: number;
+    fansCount?: number;
+    img1v1Url?: string;
+    musicSize?: number;
+    transNames?: null | string[];
+  }
+
+  interface NeteaseArtistSimilarResponse extends NeteaseAPIResponse {
+    artists?: NeteaseSimilarArtist[];
+  }
+
   interface NeteaseArtistToplistResponse extends NeteaseAPIResponse {
     list: {
       type: number;
@@ -402,5 +419,24 @@ namespace NeteaseAPI {
       img1v1Id_str: string;
     };
     onSale: boolean;
+  }
+
+  interface NeteaseLikedArtist {
+    id: number;
+    name: string;
+    mvSize: number;
+    picUrl: string;
+    alias: string[];
+    albumSize: number;
+    fansCount: number;
+    followed: boolean;
+    /** 收藏时间 */
+    subTime?: number;
+  }
+
+  interface NeteaseLikedArtistsResponse extends NeteaseAPIResponse {
+    count: number;
+    hasMore: boolean;
+    data: NeteaseLikedArtist[];
   }
 }

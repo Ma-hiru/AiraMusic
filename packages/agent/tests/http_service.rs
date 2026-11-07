@@ -268,6 +268,121 @@ async fn provider_route_is_owned_by_the_agent_service() {
         providers[0]["configSchema"]["required"],
         json!(["model", "apiKey"])
     );
+    let ollama = providers
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|provider| provider["id"] == "ollama")
+        .unwrap();
+    assert_eq!(ollama["configSchema"]["required"], json!(["model"]));
+    assert_eq!(
+        ollama["configSchema"]["properties"]["baseUrl"]["default"],
+        "http://localhost:11434/v1"
+    );
+    assert_eq!(
+        ollama["configSchema"]["properties"]["apiKey"]["writeOnly"],
+        true
+    );
+}
+
+#[tokio::test]
+async fn ollama_config_routes_accept_an_empty_key_and_preserve_keys_on_edit() {
+    let (events, _) = broadcast::channel(8);
+    let app = build_router(test_state("control-secret", events));
+    let mut input = json!({
+        "name": "Local Ollama",
+        "provider": "ollama",
+        "model": "qwen3:8b",
+        "apiKey": "",
+        "contextSize": "128K"
+    });
+    let created = app
+        .clone()
+        .oneshot(authorized(
+            Request::post("/v1/configs").header("content-type", "application/json"),
+            Body::from(input.to_string()),
+        ))
+        .await
+        .unwrap();
+    assert_eq!(created.status(), StatusCode::CREATED);
+    let created = json_body(created).await;
+    assert_eq!(created["provider"], "ollama");
+    assert_eq!(created["maskedApiKey"], "");
+    assert!(created.get("apiKey").is_none());
+    let config_id = created["id"].as_str().unwrap();
+
+    input["name"] = json!("Private Ollama");
+    input["apiKey"] = json!("ollama-private-key");
+    let updated = app
+        .clone()
+        .oneshot(authorized(
+            Request::put(format!("/v1/configs/{config_id}"))
+                .header("content-type", "application/json"),
+            Body::from(input.to_string()),
+        ))
+        .await
+        .unwrap();
+    assert_eq!(updated.status(), StatusCode::OK);
+    let updated = json_body(updated).await;
+    assert_ne!(updated["maskedApiKey"], "ollama-private-key");
+    assert!(!updated.to_string().contains("ollama-private-key"));
+
+    input["apiKey"] = json!("");
+    let preserved = app
+        .clone()
+        .oneshot(authorized(
+            Request::put(format!("/v1/configs/{config_id}"))
+                .header("content-type", "application/json"),
+            Body::from(input.to_string()),
+        ))
+        .await
+        .unwrap();
+    assert_eq!(preserved.status(), StatusCode::OK);
+    assert_eq!(json_body(preserved).await, updated);
+
+    let list = app
+        .clone()
+        .oneshot(authorized(Request::get("/v1/configs"), Body::empty()))
+        .await
+        .unwrap();
+    assert_eq!(json_body(list).await, json!([updated]));
+
+    let deleted = app
+        .clone()
+        .oneshot(authorized(
+            Request::delete(format!("/v1/configs/{config_id}")),
+            Body::empty(),
+        ))
+        .await
+        .unwrap();
+    assert_eq!(deleted.status(), StatusCode::NO_CONTENT);
+    let list = app
+        .oneshot(authorized(Request::get("/v1/configs"), Body::empty()))
+        .await
+        .unwrap();
+    assert_eq!(json_body(list).await, json!([]));
+}
+
+#[tokio::test]
+async fn openai_config_route_still_rejects_an_empty_key() {
+    let (events, _) = broadcast::channel(8);
+    let app = build_router(test_state("control-secret", events));
+    let response = app
+        .oneshot(authorized(
+            Request::post("/v1/configs").header("content-type", "application/json"),
+            Body::from(provider_json("OpenAI", "")),
+        ))
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    let error = json_body(response).await;
+    assert_eq!(error["code"], "invalid_config");
+    assert!(
+        error["message"]
+            .as_str()
+            .unwrap()
+            .contains("API Key 不能为空")
+    );
 }
 
 #[tokio::test]

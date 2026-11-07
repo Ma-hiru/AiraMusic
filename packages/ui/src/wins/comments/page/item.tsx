@@ -1,14 +1,15 @@
 import { cx } from "@emotion/css";
-import { ThumbsUp } from "lucide-react";
-import { memo, type FC, useState, useCallback } from "react";
-import { Log } from "@/common/lib/log";
+import { memo, type FC, useMemo } from "react";
+import { ThumbsUp, ChevronUp, ChevronDown } from "lucide-react";
 import { RendererFormat } from "@/common/lib/format";
-import { NeteaseAPIComment } from "@/common/netease/api";
 import { CommentType, NeteaseImageSize } from "@/common/enum";
 import { NeteaseNetworkImage } from "@/common/netease/models";
 import { useThemeColor } from "@/common/hooks/use-theme-color";
-import AppToast from "@/common/components/display/toast";
+import { useCommentFloor } from "@/common/hooks/use-comment-floor";
+import { useCommentLike } from "@/wins/comments/hooks/use-comment-like";
 import NeteaseImage from "@/common/components/display/image/netease-image";
+
+import FloorList from "./floor/list";
 
 interface ItemProps {
   small?: boolean;
@@ -29,41 +30,36 @@ const Item: FC<ItemProps> = ({
   small = false,
   reverse = false
 }) => {
+  const commentType = useMemo(() => {
+    switch (type) {
+      case "track":
+        return CommentType.Song;
+      case "album":
+        return CommentType.Album;
+      case "playlist":
+        return CommentType.Playlist;
+      default:
+        return undefined;
+    }
+  }, [type]);
+  const floor = useCommentFloor({
+    id: sourceID,
+    type: commentType,
+    parentCommentId: data.commentId
+  });
   const { mainColor } = useThemeColor();
-  const [liked, setLiked] = useState(data.liked);
-  const like = useCallback(
-    async (props: { like: boolean; commentID: number }) => {
-      if (!sourceID || !type) return;
-      let commentType;
-      switch (type) {
-        case "track":
-          commentType = CommentType.Song;
-          break;
-        case "album":
-          commentType = CommentType.Album;
-          break;
-        case "playlist":
-          commentType = CommentType.Playlist;
-          break;
-      }
-      if (commentType == null) return;
-      setLiked(props.like);
-      NeteaseAPIComment.like({
-        cid: props.commentID,
-        id: sourceID,
-        t: props.like ? 1 : 0,
-        type: commentType
-      }).catch((err) => {
-        Log.error(err);
-        AppToast.show({
-          type: "error",
-          text: "操作失败"
-        });
-        setLiked(!props.like);
-      });
-    },
-    [sourceID, type]
-  );
+  const { liked, toggle: toggleLike } = useCommentLike({
+    commentId: data.commentId,
+    initialLiked: data.liked,
+    sourceID,
+    type: commentType
+  });
+
+  // 列表只返回 replyCount，楼层接口返回的 totalCount 更准，取较大值兜底
+  const replyCount = Math.max(data.replyCount || 0, floor.total);
+  // 只有完整版使用floor（比如radio评论显示时不使用）
+  const showFloor = Boolean(avatar && !reverse && sourceID && commentType != null && replyCount);
+
   return (
     <>
       {border && <div className="border-b border-white/30 m-2" />}
@@ -92,7 +88,8 @@ const Item: FC<ItemProps> = ({
             cacheLazy
           />
         )}
-        <div className={cx("space-y-1 w-full flex flex-col", reverse && "flex-col-reverse")}>
+        <div
+          className={cx("space-y-1 w-full min-w-0 flex flex-col", reverse && "flex-col-reverse")}>
           <h1
             className={cx(
               "font-semibold text-xs flex flex-col items-start justify-start",
@@ -106,39 +103,65 @@ const Item: FC<ItemProps> = ({
           </h1>
           <p
             className={cx(
-              "text-xs select-text p-1 rounded-lg rounded-tl-none",
-              small && "text-[10.5px]!"
+              "text-xs select-text rounded-lg rounded-tl-none wrap-break-word whitespace-pre-wrap",
+              small && "text-[10.5px]!",
+              !avatar && "p-1"
             )}>
-            {!avatar && <span>『</span>} {data.content} {!avatar && <span>』</span>}
+            {!avatar && <span>『 </span>}
+            {data.content}
+            {!avatar && <span> 』</span>}
           </p>
           <div
-            className={cx(
-              "text-xs opacity-80 font-medium flex flex-row items-center justify-end gap-1 px-1 py-0.5 rounded-md cursor-pointer",
-              small && "text-[10.5px]!",
-              !avatar && "hidden"
+            className={cx("flex flex-row items-center justify-between gap-2", !avatar && "hidden")}>
+            {showFloor && (
+              <button
+                className={cx(
+                  "flex flex-row items-center justify-start gap-x-1 min-w-0",
+                  "text-[10.5px] font-medium cursor-pointer opacity-80",
+                  "hover:opacity-100 ease-in-out duration-300 transition-opacity"
+                )}
+                type="button"
+                onClick={floor.toggle}>
+                <span>共</span>
+                <span className="font-semibold">{RendererFormat.count(replyCount)}</span>
+                <span>条回复</span>
+                {floor.expanded ? (
+                  <ChevronUp className="size-3 opacity-60" />
+                ) : (
+                  <ChevronDown className="size-3 opacity-60" />
+                )}
+              </button>
             )}
-            style={{ color: data.liked ? mainColor.string() : undefined }}>
-            <ThumbsUp
-              className={cx("size-3 inline-block", liked && "text-primary")}
-              fill={liked ? "currentColor" : "transparent"}
-              onClick={() =>
-                like({
-                  commentID: data.commentId,
-                  like: !liked
-                })
-              }
-            />
-            <span
-              className={cx("leading-3", liked && "text-primary")}
-              onClick={() =>
-                like({
-                  commentID: data.commentId,
-                  like: !liked
-                })
-              }>
-              {RendererFormat.count(data.likedCount)}
-            </span>
+            <div
+              className={cx(
+                "text-xs opacity-80 font-medium flex flex-row items-center justify-end gap-1 px-1 py-0.5 rounded-md cursor-pointer ml-auto shrink-0",
+                small && "text-[10.5px]!"
+              )}
+              style={{ color: liked ? mainColor.string() : undefined }}
+              onClick={toggleLike}>
+              <ThumbsUp
+                className={cx("size-3 inline-block", liked && "text-primary")}
+                fill={liked ? "currentColor" : "transparent"}
+              />
+              <span className={cx("leading-3", liked && "text-primary")}>
+                {RendererFormat.count(data.likedCount)}
+              </span>
+            </div>
           </div>
+          {showFloor && floor.expanded && (
+            <FloorList
+              total={replyCount}
+              type={commentType}
+              sourceID={sourceID}
+              floors={floor.floors}
+              status={floor.status}
+              hasMore={floor.hasMore}
+              onRetry={floor.retry}
+              onCollapse={floor.collapse}
+              onLoadMore={floor.loadMore}
+              onLikedChange={floor.updateLiked}
+            />
+          )}
         </div>
       </div>
     </>

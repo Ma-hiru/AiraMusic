@@ -1,14 +1,17 @@
 import { Navigate, createBrowserRouter } from "react-router-dom";
 import { RoutePathDisplay } from "@/common/routes";
 
-import AlbumDisplay from "../pages/album/album-display";
-import BlankDisplay from "../pages/blank/blank-display";
-import ArtistDisplay from "../pages/artist/artist-display";
-import LayoutDisplay from "../pages/layout/layout-display";
-import SearchDisplay from "../pages/search/search-display";
-import HistoryDisplay from "../pages/history/history-display";
-import PlaylistDisplay from "../pages/playlist/playlist-display";
-import SettingsDisplay from "../pages/settings/settings-display";
+import StarDisplay from "../pages/star";
+import AlbumDisplay from "../pages/album";
+import BlankDisplay from "../pages/blank";
+import ArtistDisplay from "../pages/artist";
+import LayoutDisplay from "../pages/layout";
+import SearchDisplay from "../pages/search";
+import HistoryDisplay from "../pages/history";
+import PlaylistDisplay from "../pages/playlist";
+import SettingsDisplay from "../pages/settings";
+import PlayListDisplay from "../pages/play-list";
+import ListeningFootprintDisplay from "../pages/listening-footprint";
 
 export const DisplayRouter = createBrowserRouter(
   [
@@ -16,6 +19,14 @@ export const DisplayRouter = createBrowserRouter(
       path: RoutePathDisplay.base,
       element: <LayoutDisplay />,
       children: [
+        {
+          path: RoutePathDisplay.playList,
+          element: <PlayListDisplay />
+        },
+        {
+          path: RoutePathDisplay.listeningFootprint,
+          element: <ListeningFootprintDisplay />
+        },
         {
           index: true,
           element: <Navigate to={RoutePathDisplay.blank} replace />
@@ -47,6 +58,10 @@ export const DisplayRouter = createBrowserRouter(
         {
           path: RoutePathDisplay.history,
           element: <HistoryDisplay />
+        },
+        {
+          path: RoutePathDisplay.star,
+          element: <StarDisplay />
         }
       ]
     }

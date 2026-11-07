@@ -1,6 +1,8 @@
+import { useSetAtom } from "jotai";
 import { useLocation } from "react-router-dom";
 import { memo, useRef, type FC, useEffect } from "react";
 import { useUser } from "@/common/store/user";
+import { typingAtom } from "@/wins/main/atoms/layout";
 import { RendererModified } from "@/common/lib/modified";
 import { RoutePath, RoutePathMain } from "@/common/routes";
 import { usePageJump } from "@/wins/main/hooks/use-page-jump";
@@ -13,7 +15,7 @@ import { useUserTrackManager } from "@/common/hooks/use-user-track-manager";
 import { useTrackAddToPlaylist } from "@/common/hooks/use-track-add-to-playlist";
 import { usePlayerActionInList } from "@/wins/main/hooks/use-player-action-in-list";
 import RendererImageConstants from "@/common/constants/image";
-import Album, { type AlbumPageRef } from "@/common/components/page/album";
+import Album, { type AlbumPageRef } from "@/common/components/page/album-switch";
 
 const AlbumPage: FC<object> = () => {
   const user = useUser();
@@ -23,12 +25,14 @@ const AlbumPage: FC<object> = () => {
   const { id } = RoutePath.parseQuery<{ id: number }>(location, RoutePathMain.album);
   const { heartManager, playableManager } = useUserTrackManager();
   const { onEdited } = useAlbumModifySync(id ?? null);
+  const setIsTyping = useSetAtom(typingAtom);
 
   const {
     addTrackToPlaylistLast,
     addTrackToPlaylistNext,
     openTrackComment,
     onAddList,
+    onReplace,
     onTrackPlay,
     player
   } = usePlayerActionInList(
@@ -63,6 +67,7 @@ const AlbumPage: FC<object> = () => {
       className="router-container"
       user={user}
       pageActionType="out"
+      setIsTyping={setIsTyping}
       heartManager={heartManager}
       routerActive={routerActive}
       openComment={openTrackComment}
@@ -75,6 +80,7 @@ const AlbumPage: FC<object> = () => {
       onEdited={onEdited}
       onAddList={onAddList}
       onClick={onTrackPlay}
+      onReplace={onReplace}
       onPageAction={onPageAction}
       onClickAlbum={jumpAlbumPage}
       onCoverLoaded={setBackground}

@@ -39,6 +39,7 @@ vi.mock("@mahiru/app/lib/key-value-store", () => ({
 }));
 
 import { invokeHandlers } from "@mahiru/app/inner/ipc/invoke";
+import { MainAgentContext } from "@mahiru/app/lib/agent/context";
 const authorized = () => ({ sender: mocks.sender, senderFrame: mocks.frame }) as never;
 
 describe("Agent 连接配置 IPC", () => {
@@ -72,6 +73,19 @@ describe("Agent 连接配置 IPC", () => {
       undefined
     );
     expect(result).toMatchObject({ ok: false, reason: { code: "auth" } });
+    for (const url of [
+      "https://localhost:5173/agent.html",
+      "http://user@localhost:5173/agent.html",
+      "http://localhost:5173/other.html"
+    ]) {
+      const variant = { url };
+      expect(
+        await invokeHandlers.invoke_agent_connection(
+          { sender: { mainFrame: variant }, senderFrame: variant } as never,
+          undefined
+        )
+      ).toMatchObject({ ok: false, reason: { code: "auth" } });
+    }
     mocks.getWindowID.mockReturnValue("main");
     expect(await invokeHandlers.invoke_agent_connection(authorized(), undefined)).toMatchObject({
       ok: false,
@@ -102,6 +116,38 @@ describe("Agent 连接配置 IPC", () => {
       "invoke_agent_update_config"
     ]) {
       expect(invokeHandlers).not.toHaveProperty(name);
+    }
+  });
+
+  it("页面上下文只向合法 Agent 主框架提供，不向 iframe 和其他窗口泄露", () => {
+    const snapshot = vi.spyOn(MainAgentContext, "snapshot").mockReturnValue({
+      window: "display",
+      page: { page: "album", id: 1, name: "当前专辑" },
+      currentTrack: null
+    });
+    try {
+      expect(invokeHandlers.invoke_agent_context(authorized(), undefined)).toEqual({
+        ok: true,
+        data: {
+          window: "display",
+          page: { page: "album", id: 1, name: "当前专辑" },
+          currentTrack: null
+        }
+      });
+      expect(
+        invokeHandlers.invoke_agent_context(
+          { sender: mocks.sender, senderFrame: { ...mocks.frame } } as never,
+          undefined
+        )
+      ).toMatchObject({ ok: false, reason: { code: "auth" } });
+      mocks.getWindowID.mockReturnValue("main");
+      expect(invokeHandlers.invoke_agent_context(authorized(), undefined)).toMatchObject({
+        ok: false,
+        reason: { code: "auth" }
+      });
+      expect(snapshot).toHaveBeenCalledOnce();
+    } finally {
+      snapshot.mockRestore();
     }
   });
 });

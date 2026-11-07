@@ -86,6 +86,7 @@ const TrackResult: FC<TrackResultProps> = ({
     addToPlaylistLast,
     addToPlaylistNext,
     onClickAlbum,
+    onClickArtist,
     onPlay: onClick,
     openComment,
     addTrackToPlaylist

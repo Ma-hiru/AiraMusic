@@ -1,5 +1,5 @@
 import { cx } from "@emotion/css";
-import { memo, type FC } from "react";
+import { memo, type FC, type MouseEvent as ReactMouseEvent } from "react";
 import RendererImageConstants from "@/common/constants/image";
 import MediaCard, { type MediaItem } from "@/common/components/layout/media-grid/card";
 
@@ -11,6 +11,7 @@ interface MediaGridProps {
   onHoverItem?: NormalFunc<[id: number, index: number]>;
   onMouseEnter?: NormalFunc<[id: number, index: number]>;
   onMouseLeave?: NormalFunc<[id: number, index: number]>;
+  onContextItem?: NormalFunc<[e: ReactMouseEvent<HTMLButtonElement>, id: number, index: number]>;
 }
 
 const MediaGrid: FC<MediaGridProps> = ({
@@ -19,6 +20,7 @@ const MediaGrid: FC<MediaGridProps> = ({
   onHoverItem,
   onMouseEnter,
   onMouseLeave,
+  onContextItem,
   items,
   coverSize = RendererImageConstants.HomePagePlaylistCoverSize
 }) => {
@@ -37,6 +39,7 @@ const MediaGrid: FC<MediaGridProps> = ({
           onHover={(id) => onHoverItem?.(id, index)}
           onMouseEnter={(id) => onMouseEnter?.(id, index)}
           onMouseLeave={(id) => onMouseLeave?.(id, index)}
+          onContext={(e, id) => onContextItem?.(e, id, index)}
         />
       ))}
     </div>

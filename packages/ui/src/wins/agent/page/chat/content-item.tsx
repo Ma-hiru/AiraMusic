@@ -3,7 +3,7 @@ import { Copy, Check, Sparkles } from "lucide-react";
 import { memo, useRef, type FC, useState, useEffect, useCallback, type ReactNode } from "react";
 import AppToast from "@/common/components/display/toast";
 import type { MessageSnapshot } from "@mahiru/agent/browser";
-import type { AgentAssistantTurnObservability } from "@/wins/agent/page/types";
+import type { AgentAssistantTurnObservability } from "@/wins/agent/lib/chat/interface";
 
 import MarkdownContent from "./markdown-content";
 import { AssistantTurnMeta } from "./turn-observability";

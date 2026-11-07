@@ -5,20 +5,18 @@ import { MainWindowManager } from "@/lib/window-manager";
 import { getThumbarIcons, type TaskbarButtonIcon } from "@/utils/thumbar-button";
 import type { NativeImage, BrowserWindow, ThumbarButton } from "electron";
 
-const WM_DWMSENDICONICLIVEPREVIEWBITMAP = 0x0326;
+/** 封面取图尺寸：DWM 在高 DPI 下请求约 300px，取 400 保证是缩小而不是放大 */
+const COVER_SIZE = 400;
 
 export class MainTaskBarCoverPreview {
   private static ready = false;
   private static enable = process.platform === "win32";
   private static playing = false;
-  private static hasTrack = false;
+  private static syncedPlaying?: boolean;
   private static cover?: string;
-  private static syncedCover?: string;
-  private static syncedCoverBytes?: Uint8Array;
-  private static coverBuildID = 0;
+  private static image?: Uint8Array;
+  private static pushed?: string;
   private static icons: Nullable<Record<TaskbarButtonIcon, NativeImage>> = null;
-  private static livePreviewHooked = false;
-  private static previewCapture: Nullable<Promise<void>> = null;
 
   private static sendAction(action: "next" | "play" | "pause" | "previous") {
     MainIPC.MessageChannel.commit({
@@ -51,122 +49,80 @@ export class MainTaskBarCoverPreview {
     ];
   }
 
-  private static updateButtons(win: Optional<BrowserWindow>) {
+  private static updateButtons(win: BrowserWindow) {
+    if (this.syncedPlaying === this.playing) return;
+
     const buttons = this.createButtons();
-    const ok = win?.setThumbarButtons(buttons);
-    !ok &&
-      Log.error(
-        "taskbar",
-        `thumbar set err: win=${!!win} hasTrack=${this.hasTrack} count=${buttons.length}`
-      );
+    if (!win.setThumbarButtons(buttons)) {
+      // 窗口尚未显示时会失败（electron#9049），留给下次 sync 重试
+      Log.error("taskbar", `thumbar set err: hasCover=${!!this.cover} count=${buttons.length}`);
+      return;
+    }
+
+    this.syncedPlaying = this.playing;
   }
 
   private static async fetchCover(cover: string): Promise<Nullable<Uint8Array>> {
     try {
-      const u = new URL(cover);
-      u.searchParams.delete("param");
-      u.searchParams.delete("type");
-      u.searchParams.set("param", "150y150");
-      return await fetch(u)
-        .then((res) => res.bytes())
-        .catch(() => null);
+      const url = new URL(cover);
+      url.searchParams.delete("type");
+      url.searchParams.set("param", `${COVER_SIZE}y${COVER_SIZE}`);
+
+      const response = await fetch(url);
+      return response.ok ? response.bytes() : null;
     } catch {
       return null;
     }
   }
 
-  private static coverHandle(): Nullable<Buffer> {
-    if (!MainNativeAddon.isSupported) return null;
-    return MainWindowManager.get("main")?.getNativeWindowHandle() ?? null;
-  }
+  /**
+   * 把当前曲目的封面同步给原生。
+   * DWM 在窗口过程里同步索要位图，所以这里只传图片字节，渲染留在原生侧。
+   *
+   * @param force 窗口重新显示后 DWM 会丢弃图标化位图，需要无条件重推一次
+   */
+  private static async sync(force = false) {
+    if (!this.ready) return;
 
-  private static async capturePreview(): Promise<Nullable<Uint8Array>> {
-    const mainWin = MainWindowManager.get("main");
-    if (!mainWin || mainWin.isDestroyed()) return null;
-
-    return mainWin
-      .capturePage()
-      .then((image) => (image.isEmpty() ? null : image.toPNG()))
-      .catch((err) => {
-        Log.warn("taskbar", "failed to capture taskbar live preview", err);
-        return null;
-      });
-  }
-
-  private static async updatePreview() {
-    const handle = this.coverHandle();
-    if (!handle) return;
-
-    const preview = await this.capturePreview();
-    if (!preview) return;
+    const win = MainWindowManager.get("main");
+    if (!win || !MainNativeAddon.isSupported) return;
 
     try {
-      MainNativeAddon.native.setLivePreview(handle, preview);
+      this.updateButtons(win);
+
+      const cover = this.cover;
+      if (cover === this.pushed && !force) return;
+
+      if (cover && cover !== this.pushed) {
+        const image = await this.fetchCover(cover);
+        // 期间切歌了就丢弃这次结果，以最新一次为准
+        if (cover !== this.cover) return;
+        this.image = image ?? undefined;
+      }
+
+      const handle = win.getNativeWindowHandle();
+      if (!cover || !this.image) {
+        // 没有封面或拉取失败：关掉图标化属性，实时预览交还给 DWM
+        MainNativeAddon.native.setCover(handle, null);
+        this.image = undefined;
+        this.pushed = undefined;
+        return;
+      }
+
+      MainNativeAddon.native.setCover(handle, this.image);
+      this.pushed = cover;
     } catch (err) {
-      Log.warn("taskbar", "failed to update taskbar live preview", err);
+      Log.warn("taskbar", "failed to sync taskbar cover", err);
     }
-  }
-
-  private static requestLivePreview() {
-    if (this.previewCapture) return;
-    this.previewCapture = this.updatePreview().finally(() => {
-      this.previewCapture = null;
-    });
-  }
-
-  private static attachLivePreviewHook(win: BrowserWindow) {
-    if (this.livePreviewHooked || !MainNativeAddon.isSupported) return;
-
-    win.hookWindowMessage(WM_DWMSENDICONICLIVEPREVIEWBITMAP, () => {
-      this.requestLivePreview();
-    });
-    win.once("closed", () => {
-      this.livePreviewHooked = false;
-      this.previewCapture = null;
-    });
-    this.livePreviewHooked = true;
-  }
-
-  private static async updateCover(handle: Buffer<ArrayBufferLike>) {
-    if (this.cover === this.syncedCover && this.syncedCoverBytes) return;
-
-    const currentCover = this.cover;
-    const buildID = ++this.coverBuildID;
-    const check = () => buildID === this.coverBuildID && currentCover === this.cover;
-
-    if (!currentCover) {
-      this.syncedCover = undefined;
-      this.syncedCoverBytes = undefined;
-      MainNativeAddon.native.setCover(handle, null);
-      return;
-    }
-
-    const cover = await this.fetchCover(currentCover);
-    if (!check()) return;
-
-    this.syncedCover = currentCover;
-    this.syncedCoverBytes = cover ?? undefined;
-    MainNativeAddon.native.setCover(handle, cover);
-  }
-
-  private static async build() {
-    const win = MainWindowManager.get("main");
-    this.updateButtons(win);
-
-    const handle = this.coverHandle();
-    if (!handle) return;
-
-    await this.updateCover(handle);
   }
 
   static {
     if (this.enable) {
+      // 窗口显示前到达的曲目信息也要记下来，否则启动时那一首永远没有封面
       MainIPC.MessageChannel.listen("bus_deliver_track_meta", ({ track, status }) => {
-        if (!this.ready) return;
-        this.hasTrack = !!track;
-        this.cover = track?.detail?.al?.picUrl;
+        this.cover = track?.detail?.al?.picUrl || undefined;
         this.playing = status === "playing";
-        void this.build();
+        void this.sync();
       });
     }
   }
@@ -184,16 +140,14 @@ export class MainTaskBarCoverPreview {
       return;
     }
 
-    if (win.isVisible()) {
+    const activate = () => {
       this.ready = true;
-      this.attachLivePreviewHook(win);
-      void this.build();
-    } else {
-      win.once("show", () => {
-        this.ready = true;
-        this.attachLivePreviewHook(win);
-        void this.build();
-      });
-    }
+      void this.sync(true);
+    };
+
+    win.on("show", activate);
+    win.on("restore", () => void this.sync(true));
+
+    if (win.isVisible()) activate();
   }
 }

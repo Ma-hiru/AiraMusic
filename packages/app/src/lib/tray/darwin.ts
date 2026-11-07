@@ -1,62 +1,42 @@
-import { Menu, Tray, BrowserWindow } from "electron";
+import { Menu, BrowserWindow } from "electron";
 import { Log } from "@/lib/log";
 import { MainIPC } from "@mahiru/ipc/main";
 import { MainNativeAddon } from "@/lib/native-addon";
+import { MainPathResolver } from "@/lib/path-resolver";
 import { MainWindowPreset } from "@/lib/window-preset";
 import { MainWindowCreator } from "@/lib/window-creator";
 import { MainWindowManager } from "@/lib/window-manager";
-import type { MessageData } from "@mahiru/ipc/types";
-import type { MenuLyricEvent } from "@mahiru/native";
+import type { MessageData, TrayCapsuleConfig } from "@mahiru/ipc/types";
+import type { NativeAddon, MenuLyricEvent, MenuBarLyricWord } from "@mahiru/native";
 
 import { TrayUtils } from "./utils";
+import { type MenuLyricLine, resolveMenuLyricLine } from "./menu-lyric";
 
-type MenuLyricLine = {
-  text: string;
-  /** 行起始时间，用作切行去重 key */
-  startTime: number;
-  /** 本行总时长 ms（end - start） */
-  lineMs: number;
-};
-
+/**
+ * macOS 菜单栏胶囊：托盘图标与歌词合并为同一个原生状态栏项，
+ * 图标、胶囊底、逐字高亮全部由 `@mahiru/native` 绘制，这里只负责喂数据与响应点击。
+ */
 export class DarwinTray extends TrayUtils {
   private playerBus: Nullable<MessageData<"bus_deliver_track_meta">> = null;
-  private readonly tray: Tray;
   private readonly trayWin: BrowserWindow;
-  private readonly MENU_LYRIC_WIDTH = 100;
-  /** 无时间轴时的回退 */
-  private readonly FALLBACK_LINE_MS = 4000;
-  private readonly GAP_MS = 400;
-  private lyricClickTimer: Nullable<NodeJS.Timeout> = null;
-  /** 当前已应用的行；-1 = 空闲标题 */
-  private appliedStartTime = Number.NaN;
+  private readonly native: Nullable<NativeAddon>;
+  /** 当前已应用的行；null = 尚未应用或已回到空闲标题 */
+  private appliedLine: Nullable<MenuLyricLine> = null;
+  private idleApplied = false;
   private lyricHandlerRegistered = false;
+  /** 最近一次播放进度（秒），切歌/暂停时用它重算行 */
+  private currentTime = 0;
+  private progress: Nullable<MessageData<"bus_deliver_track_progress">> = null;
 
-  constructor(tray: Tray) {
-    super(tray);
-    this.tray = tray;
+  constructor() {
+    super(null);
+    this.native = MainNativeAddon.isSupported ? MainNativeAddon.native : null;
     this.trayWin =
       MainWindowManager.get("tray") || MainWindowCreator.create(MainWindowPreset.trayOnDarwin)!;
 
-    const toggleMenu = (anchor?: MenuLyricEvent) => {
-      this.customMenuVisible
-        ? this.hideCustomMenu(this.trayWin)
-        : this.showCustomMenu(this.tray, this.trayWin, anchor);
-    };
-    let timer: Nullable<NodeJS.Timeout> = null;
-    tray.addListener("click", () => {
-      Log.debug("tray", "icon", "click");
-      timer && clearTimeout(timer);
-      timer = setTimeout(() => toggleMenu(), 150);
-    });
-    tray.addListener("right-click", () => {
-      Log.debug("tray", "icon", "right-click");
-      toggleMenu();
-    });
-    tray.addListener("double-click", () => {
-      Log.debug("tray", "icon", "double-click");
-      timer && clearTimeout(timer);
-      MainWindowManager.checkAndShow("main");
-    });
+    // 菜单栏用模板图标：透明镂空 + 系统着色
+    this.native?.initMenuBar(MainPathResolver.menuBarIconPath, process.env.APP_NAME);
+
     this.trayWin.addListener("blur", () => {
       if (!this.trayWin.webContents.isDevToolsOpened()) {
         this.hideCustomMenu(this.trayWin);
@@ -67,29 +47,51 @@ export class DarwinTray extends TrayUtils {
     });
 
     const showAppMenu = (playerBus: Nullable<MessageData<"bus_deliver_track_meta">>) => {
-      this.playerBus = playerBus;
       this.showRawMenu({
         setMenu: (menu) => Menu.setApplicationMenu(menu),
-        getData: () => this.playerBus
+        getData: () => playerBus
       });
     };
 
     MainIPC.MessageChannel.listen("bus_deliver_track_meta", (data) => {
+      const lyricChanged = data.lyric !== this.playerBus?.lyric;
+      const trackChanged = data.track?.id !== this.playerBus?.track?.id;
+      this.playerBus = data;
+      if (trackChanged) {
+        this.currentTime =
+          this.progress?.trackID === data.track?.id ? (this.progress?.currentTime ?? 0) : 0;
+      }
       showAppMenu(data);
-      if (data.status !== "playing") this.applyIdleTitle();
+      this.native?.setMenuBarToolTip(
+        data.track?.name ? `${process.env.APP_NAME} - ${data.track.name}` : process.env.APP_NAME
+      );
+      // 换歌/歌词重新解析后强制重算当前行
+      if (lyricChanged || trackChanged) this.appliedLine = null;
+      this.syncLine();
+      this.syncProgress();
     });
     MainIPC.MessageChannel.listen("bus_deliver_track_progress", (data) => {
-      if (this.playerBus?.status !== "playing") {
-        this.applyIdleTitle();
-        return;
-      }
-      this.applyLyricLine(this.findLyricLine(this.playerBus.lyric, data.currentTime * 1000));
+      this.progress = data;
+      if (data.trackID !== this.playerBus?.track?.id) return;
+      this.currentTime = data.currentTime;
+      this.syncLine();
+      this.syncProgress();
     });
 
     this.applyIdleTitle();
     showAppMenu(null);
   }
 
+  /** 应用设置里的胶囊开关与宽度（宽度是歌词视口宽度，胶囊总宽随之变化） */
+  applyCapsuleConfig({ width, enabled }: TrayCapsuleConfig) {
+    const native = this.native;
+    if (!native) return;
+    Log.debug("tray", "capsule config", enabled, width);
+    native.setMenuBarWidth(width);
+    native.setMenuBarVisible(enabled);
+  }
+
+  /** 原生点击事件回调；由 setMenuLyric 注册一次 */
   private readonly onMenuLyricEvent = (error: Nullable<Error>, event: MenuLyricEvent) => {
     try {
       if (error) {
@@ -101,117 +103,77 @@ export class DarwinTray extends TrayUtils {
         return;
       }
       Log.debug("tray", "lyric", event.kind);
-      if (event.kind === "right-click") {
-        this.lyricClickTimer && clearTimeout(this.lyricClickTimer);
-        this.lyricClickTimer = null;
+      if (event.kind === "click" || event.kind === "right-click") {
         this.customMenuVisible
           ? this.hideCustomMenu(this.trayWin)
-          : this.showCustomMenu(this.tray, this.trayWin, event);
+          : this.showCustomMenu(null, this.trayWin, event);
         return;
       }
       if (event.kind === "double-click") {
-        this.lyricClickTimer && clearTimeout(this.lyricClickTimer);
-        this.lyricClickTimer = null;
+        this.hideCustomMenu(this.trayWin);
         MainWindowManager.checkAndShow("main");
-        return;
-      }
-      if (event.kind === "click") {
-        this.lyricClickTimer && clearTimeout(this.lyricClickTimer);
-        this.lyricClickTimer = setTimeout(() => {
-          this.lyricClickTimer = null;
-          this.customMenuVisible
-            ? this.hideCustomMenu(this.trayWin)
-            : this.showCustomMenu(this.tray, this.trayWin, event);
-        }, 150);
       }
     } catch (handlerError) {
       Log.warn("tray", "menu lyric event handler failed", handlerError);
     }
   };
 
-  private applyIdleTitle() {
-    if (this.appliedStartTime === -1) return;
-    this.appliedStartTime = -1;
-    this.setMenuLyric(process.env.APP_NAME, this.FALLBACK_LINE_MS);
-  }
+  /** 按当前进度重算应显示的行 */
+  private syncLine() {
+    const meta = this.playerBus;
+    const status = meta?.status;
+    if (!meta?.lyric?.data.length || status === "idle" || status === "error") {
+      this.applyIdleTitle();
+      return;
+    }
 
-  private applyLyricLine(line: Nullable<MenuLyricLine>) {
+    const line = resolveMenuLyricLine(meta.lyric, this.currentTime * 1000);
     if (!line) {
       this.applyIdleTitle();
       return;
     }
-    // 只在换行时更新；progress 高频回调绝不能重开动画
-    if (line.startTime === this.appliedStartTime) return;
-    this.appliedStartTime = line.startTime;
-    const text = line.text.length === 0 ? "（音乐）" : line.text;
-    this.setMenuLyric(text, line.lineMs);
-  }
-
-  private setMenuLyric(text: string, lineMs: number) {
-    if (!MainNativeAddon.isSupported) {
-      Log.warn("tray", "native menu lyric unavailable, skip");
+    // progress 高频回调绝不能重开高亮
+    if (line.startTime === this.appliedLine?.startTime && line.text === this.appliedLine.text) {
       return;
     }
-    const gapMs = this.GAP_MS;
-    // Pause + Scroll + Pause ≈ 行时长；滚动至少 400ms
-    const durationMs = Math.max(400, lineMs - 2 * gapMs);
-    MainNativeAddon.native.setMenuLyric(
-      Buffer.alloc(0),
+    this.applyLine(line);
+  }
+
+  private applyIdleTitle() {
+    if (this.idleApplied) return;
+    this.idleApplied = true;
+    this.appliedLine = null;
+    this.pushLine(process.env.APP_NAME, []);
+  }
+
+  private applyLine(line: MenuLyricLine) {
+    this.idleApplied = false;
+    this.appliedLine = line;
+    this.pushLine(line.text, line.words);
+    // 切行瞬间就对齐进度：暂停状态下也能停在正确位置
+    this.syncProgress();
+  }
+
+  private pushLine(text: string, words: MenuBarLyricWord[]) {
+    const native = this.native;
+    if (!native) {
+      Log.warn("tray", "native menu bar unavailable, skip");
+      return;
+    }
+    native.setMenuLyric(
       text,
-      false,
-      durationMs,
-      gapMs,
-      this.MENU_LYRIC_WIDTH,
+      words,
       this.lyricHandlerRegistered ? undefined : this.onMenuLyricEvent
     );
     this.lyricHandlerRegistered = true;
   }
 
-  private findLyricLine(
-    lyric: Optional<NeteaseLyricModel>,
-    timeMS: number
-  ): Nullable<MenuLyricLine> {
-    const lines = lyric?.data;
-    if (!lines?.length) return null;
-
-    const index = this.findLastByMonotonicPredicate(lines, (l) => l.startTime <= timeMS);
-    if (index < 0) return null;
-
-    const current = lines[index]!;
-    const text = current.words
-      .filter((word) => !word.inlineNote)
-      .map((word) => word.word)
-      .join("")
-      .trim();
-
-    const nextStart = lines[index + 1]?.startTime;
-    const end =
-      current.endTime > current.startTime
-        ? current.endTime
-        : typeof nextStart === "number" && nextStart > current.startTime
-          ? nextStart
-          : current.startTime + this.FALLBACK_LINE_MS;
-
-    return {
-      startTime: current.startTime,
-      text,
-      lineMs: Math.max(400, end - current.startTime)
-    };
-  }
-
-  private findLastByMonotonicPredicate<T>(arr: T[], predicate: NormalFunc<[e: T], boolean>) {
-    let left = 0;
-    let right = arr.length - 1;
-    let result = -1;
-    while (left <= right) {
-      const mid = (left + right) >>> 1;
-      if (predicate(arr[mid]!)) {
-        result = mid;
-        left = mid + 1;
-      } else {
-        right = mid - 1;
-      }
-    }
-    return result;
+  /** 把播放进度折算到行内，原生据此推进逐字高亮 */
+  private syncProgress() {
+    const native = this.native;
+    const line = this.appliedLine;
+    if (!native || !line) return;
+    const elapsed = Math.max(0, this.currentTime * 1000 - line.startTime);
+    native.setMenuLyricProgress(elapsed, this.playerBus?.status === "playing");
   }
 }

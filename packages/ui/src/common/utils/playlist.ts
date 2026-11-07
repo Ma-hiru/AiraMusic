@@ -27,7 +27,7 @@ export function createPlaylistStats(playlist: Optional<NeteasePlaylist>) {
     {
       icon: CalendarDays,
       label: "创建",
-      value: RendererFormat.time(playlist.createTime) || "-"
+      value: RendererFormat.time(playlist.createTime, undefined, true) || "-"
     },
     {
       icon: MessageSquare,
@@ -65,7 +65,7 @@ export function createAlbumStats(
     {
       icon: CalendarDays,
       label: "发行",
-      value: RendererFormat.time(album.content.publishTime) || "-"
+      value: RendererFormat.time(album.content.publishTime, undefined, false) || "-"
     },
     {
       icon: MessageSquare,

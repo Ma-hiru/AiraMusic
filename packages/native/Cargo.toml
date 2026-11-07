@@ -44,7 +44,8 @@ objc2-foundation = { version = "0.3", features = [
     "NSObjCRuntime",
     "NSAttributedString",
     "NSDictionary",
-    "NSEnumerator"
+    "NSEnumerator",
+    "NSRange"
 ] }
 objc2-app-kit = { version = "0.3", features = [
     "NSApplication",
@@ -63,8 +64,13 @@ objc2-app-kit = { version = "0.3", features = [
     "NSColor",
     "NSImage",
     "NSGraphics",
+    "NSBezierPath",
+    "NSGraphicsContext",
+    "NSAttributedString",
+    "NSStringDrawing",
     "NSEvent",
     "NSWindow",
-    "NSScreen"
+    "NSScreen",
+    "objc2-core-foundation"
 ] }
 objc2-quartz-core = { version = "0.3", features = ["CALayer"] }

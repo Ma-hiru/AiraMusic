@@ -284,6 +284,7 @@ const Playlist: FC<PlaylistProps> = ({
   const { onContextMenu } = useTrackContextMenu({
     onPlay,
     onClickAlbum,
+    onClickArtist,
     addToPlaylistNext,
     addToPlaylistLast,
     openComment,
@@ -369,10 +370,18 @@ const Playlist: FC<PlaylistProps> = ({
     playlist && onDataLoaded?.(playlist);
   }, [onDataLoaded, playlist]);
 
+  const contextPlaylistID =
+    source === "like" ? (user?.likedPlaylist.id ?? null) : id ? Number(id) : null;
   useAgentFocusCtx(
     {
       page: "playlist",
-      id: typeof id === "string" ? Number(id) : id,
+      id: contextPlaylistID,
+      name:
+        playlist?.id === contextPlaylistID
+          ? playlist.name
+          : source === "like"
+            ? "我喜欢的音乐"
+            : "",
       source: source === "normal" ? "normal" : "user-liked-track"
     },
     routerActive

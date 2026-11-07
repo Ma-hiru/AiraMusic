@@ -103,10 +103,21 @@ export function usePageJump(
     await navigate(RoutePathMain.history);
   }, [navigate, settingsRef]);
 
+  const jumpStarPage = useCallback(async () => {
+    if (settingsRef.current.preference.defaultUseDisplayWindow) {
+      await RendererWindow.display.reactReadyAwait();
+      return RendererIPCMessageBus.display.deliver({
+        type: "star"
+      });
+    }
+    await navigate(RoutePathMain.star);
+  }, [navigate, settingsRef]);
+
   return {
     jumpArtistPage,
     jumpAlbumPage,
     jumpPlaylistPage,
-    jumpHistoryPage
+    jumpHistoryPage,
+    jumpStarPage
   };
 }

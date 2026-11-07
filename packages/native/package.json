@@ -7,11 +7,11 @@
   "files": [
     "dist-types/*",
     "index.ts",
-    "api.d.ts",
+    "api.ts",
     "index.node"
   ],
   "scripts": {
-    "build": "cargo build --release && tsx scripts/copy-artifact.ts",
+    "build": "cargo build --release && yarn run -T tsgo -b && tsx scripts/copy-artifact.ts",
     "clean:cargo": "cargo clean",
     "clean:dist": "tsx scripts/clean-dist.ts",
     "lint": "cargo fmt && cargo clippy --all-targets -- -D warnings",

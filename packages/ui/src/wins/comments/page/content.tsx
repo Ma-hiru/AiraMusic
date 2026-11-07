@@ -31,7 +31,7 @@ const Content: FC<ContentProps> = ({
 
   return (
     <InfiniteList
-      className={cx("px-3 py-2", className)}
+      className={cx("px-3 py-2 pt-0", className)}
       render={render}
       items={comments}
       hasMore={hasMore}

@@ -55,6 +55,7 @@ const Top: FC<TopProps> = ({
         <TopInfo
           user={user}
           summary={summary}
+          coverCacheKey={coverCacheKey}
           onAddList={onAddList}
           onPlayAll={onPlayAll}
           onEdited={() => onEdited?.(["star"])}

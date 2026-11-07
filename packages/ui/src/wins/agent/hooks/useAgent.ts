@@ -3,12 +3,9 @@ import { useRef, useMemo, useState, useEffect, useCallback } from "react";
 import { Log } from "@/common/lib/log";
 import { RendererWindow } from "@/common/lib/window";
 import { RendererAgent } from "@/wins/agent/lib/agent";
+import { RendererAgentChat } from "@/wins/agent/lib/chat";
 import { useLatestRef } from "@/common/hooks/use-latest-ref";
-import { parseAgentTurnUsage } from "@/wins/agent/page/chat/observability";
-import { recoverAgentConversationState } from "@/wins/agent/hooks/agent-recovery";
-import { reduceAgentConversationEvent } from "@/wins/agent/hooks/agent-event-state";
 import {
-  EMPTY_LIVE_TIMELINE,
   agentSelectedConfigIDAtom,
   agentCloseAfterRunningAtom,
   agentConversationStatesAtom,
@@ -24,25 +21,14 @@ import {
   agentSelectedConversationRunningRunIDAtom
 } from "@/wins/agent/atoms/agent";
 import AppToast from "@/common/components/display/toast";
-import type { AgentTokenUsage } from "@/wins/agent/page/types";
 import type {
   ApiError,
   AGUIEvent,
   ThreadSummary,
+  ThreadSnapshot,
   ProviderConfigView,
   ProviderDescriptor
 } from "@mahiru/agent/browser";
-
-import {
-  AgentAguiAdapter,
-  readAgentAguiIdentity,
-  type AgentConversationEvent
-} from "./agui-adapter";
-
-interface PendingRunError {
-  message: string;
-  usage?: AgentTokenUsage;
-}
 
 export function useAgent() {
   const agentStore = useStore();
@@ -61,17 +47,15 @@ export function useAgent() {
   const recoverableConversationIDs = useAtomValue(agentRecoverableConversationIDsAtom);
   const recoverableConversationIDsRef = useLatestRef(recoverableConversationIDs);
   const selectedConversationIDRef = useLatestRef(selectedConversationID);
+  const openConversationVersionRef = useRef(0);
   const [closeAfterRunning, setCloseAfterRunning] = useAtom(agentCloseAfterRunningAtom);
   const applyStorageSnapshot = useSetAtom(agentApplyStorageSnapshotAtom);
-  const updateConversationState = useSetAtom(agentUpdateConversationStateAtom);
   const removeConversationState = useSetAtom(agentRemoveConversationStateAtom);
   const runningConversationIDsRef = useLatestRef(runningConversationIDs);
   const closeAfterRunningRef = useLatestRef(closeAfterRunning);
   const hydratedRef = useRef(false);
   const agentEventsReadyRef = useRef(false);
-  const aguiAdapterRef = useRef(new AgentAguiAdapter());
   const bufferedAgentEventsRef = useRef<AGUIEvent[]>([]);
-  const pendingRunErrorsRef = useRef(new Map<string, PendingRunError>());
   const conversationEventVersionsRef = useRef(new Map<string, number>());
   const reconnectPendingRef = useRef(false);
 
@@ -128,6 +112,21 @@ export function useAgent() {
     },
     [loadConfigs, setSelectedConfigID]
   );
+  const removeConfig = useCallback(
+    async (id: string) => {
+      const result = await RendererAgent.deleteConfig(id);
+      if (!result.ok) {
+        showAgentError(result.reason);
+        return;
+      }
+      setConfigs((items) => items.filter((config) => config.id !== id));
+      setSelectedConfigID((current) =>
+        current === id ? configs.find((config) => config.id !== id)?.id || "" : current
+      );
+      await loadConfigs();
+    },
+    [configs, loadConfigs, setSelectedConfigID]
+  );
 
   // 会话摘要
   const [conversations, setConversations] = useState<ThreadSummary[]>([]);
@@ -138,7 +137,12 @@ export function useAgent() {
       return [];
     }
 
-    setConversations(result.data);
+    setConversations((items) =>
+      result.data.map((item) => {
+        const current = items.find((existing) => existing.id === item.id);
+        return current && current.updatedAt > item.updatedAt ? current : item;
+      })
+    );
     return result.data;
   }, []);
   const refreshConversations = useCallback(() => {
@@ -161,92 +165,72 @@ export function useAgent() {
     async (id: string) => {
       if (!id) return;
 
+      const requestVersion = ++openConversationVersionRef.current;
+      const chat = RendererAgentChat.get(agentStore, id);
+      const version = chat.version;
       const result = await RendererAgent.getThread(id);
+      if (requestVersion !== openConversationVersionRef.current) return;
       if (!result.ok) {
         showAgentError(result.reason);
         return;
       }
-
       setSelectedConversationID(id);
-      updateConversationState({
-        conversationID: id,
-        update: (state) => {
-          const keepLiveState = !!state.runningRunID || state.sending || state.recovering;
-
-          return {
-            ...state,
-            conversation: result.data,
-            latestRunID: state.runningRunID || result.data.runtime.runId || state.latestRunID,
-            ...(keepLiveState
-              ? {}
-              : {
-                  streamText: "",
-                  recovering: false,
-                  liveTimeline: EMPTY_LIVE_TIMELINE,
-                  pendingUserMessage: ""
-                })
-          };
-        }
-      });
+      if (chat.version === version) await chat.restore(result.data);
     },
-    [setSelectedConversationID, updateConversationState]
+    [agentStore, setSelectedConversationID]
   );
 
-  const openReusableBlankConversation = useCallback(async () => {
-    if (
-      conversation &&
-      !conversation.name.trim() &&
-      !conversation.messages.length &&
-      !runningRunID
-    ) {
-      return true;
-    }
-
-    const blankConversations = conversations.filter((item) => {
-      if (item.name.trim()) return false;
-      return !runningConversationIDsRef.current.includes(item.id);
-    });
-
-    for (const item of blankConversations) {
-      const result = await RendererAgent.getThread(item.id);
-      if (!result.ok) {
-        showAgentError(result.reason);
-        return false;
+  const openReusableBlankConversation = useCallback(
+    async (requestVersion: number) => {
+      if (
+        conversation &&
+        !conversation.name.trim() &&
+        !conversation.messages.length &&
+        !runningRunID
+      ) {
+        return true;
       }
 
-      const snapshot = result.data;
-      if (snapshot.messages.length) continue;
-
-      setSelectedConversationID(item.id);
-      updateConversationState({
-        conversationID: item.id,
-        update: (state) => ({
-          ...state,
-          conversation: snapshot,
-          sending: false,
-          streamText: "",
-          recovering: false,
-          latestRunID: snapshot.runtime.runId ?? "",
-          runningRunID: "",
-          liveTimeline: EMPTY_LIVE_TIMELINE,
-          pendingUserMessage: ""
-        })
+      const blankConversations = conversations.filter((item) => {
+        if (item.name.trim()) return false;
+        return !runningConversationIDsRef.current.includes(item.id);
       });
-      return true;
-    }
 
-    return false;
-  }, [
-    conversation,
-    conversations,
-    runningRunID,
-    runningConversationIDsRef,
-    setSelectedConversationID,
-    updateConversationState
-  ]);
+      for (const item of blankConversations) {
+        const result = await RendererAgent.getThread(item.id);
+        if (requestVersion !== openConversationVersionRef.current) return false;
+        if (!result.ok) {
+          showAgentError(result.reason);
+          return false;
+        }
+
+        const snapshot = result.data;
+        if (snapshot.messages.length) continue;
+
+        setSelectedConversationID(item.id);
+        await RendererAgentChat.get(agentStore, item.id).restore(snapshot);
+        return true;
+      }
+
+      return false;
+    },
+    [
+      agentStore,
+      conversation,
+      conversations,
+      runningRunID,
+      runningConversationIDsRef,
+      setSelectedConversationID
+    ]
+  );
 
   const createConversation = useCallback(async () => {
-    if (await openReusableBlankConversation()) return;
+    const requestVersion = ++openConversationVersionRef.current;
+    if (
+      (await openReusableBlankConversation(requestVersion)) ||
+      requestVersion !== openConversationVersionRef.current
+    )
+      return;
 
     const result = await RendererAgent.createThread(undefined);
     if (!result.ok) {
@@ -254,11 +238,13 @@ export function useAgent() {
       return;
     }
     await loadConversations();
+    if (requestVersion !== openConversationVersionRef.current) return;
     await openConversation(result.data.id);
   }, [loadConversations, openConversation, openReusableBlankConversation]);
   const removeConversation = useCallback(
     async (id: string) => {
       if (!id || runningConversationIDsRef.current.includes(id)) return;
+      if (id === selectedConversationIDRef.current) openConversationVersionRef.current++;
 
       const result = await RendererAgent.deleteThread(id);
       if (!result.ok) {
@@ -266,144 +252,85 @@ export function useAgent() {
         return;
       }
 
-      if (id === selectedConversationID) {
-        setSelectedConversationID("");
-      }
+      setSelectedConversationID((current) => (current === id ? "" : current));
+      RendererAgentChat.remove(agentStore, id);
       removeConversationState(id);
       await loadConversations();
     },
     [
+      agentStore,
       loadConversations,
-      selectedConversationID,
+      selectedConversationIDRef,
       removeConversationState,
       setSelectedConversationID,
       runningConversationIDsRef
     ]
   );
 
-  const applyAgentChatEvent = useCallback(
-    (event: AgentConversationEvent, notify = true) => {
-      let applied = false;
-      updateConversationState({
-        conversationID: event.conversationID,
-        update: (state) => {
-          const next = reduceAgentConversationEvent(state, event);
-          applied = next !== state;
-          return next;
-        }
-      });
-      if (!applied) return false;
-
-      if (event.type === "finished") {
-        void loadConversations();
-      } else if (event.type === "failed" && notify) {
-        showAgentError({ code: "run_failed", message: event.message ?? "Agent 运行失败" });
-      }
-
-      return true;
-    },
-    [loadConversations, updateConversationState]
-  );
-
   const applyAgentAguiEvent = useCallback(
     async (event: AGUIEvent) => {
-      const identity = readAgentAguiIdentity(event);
-      if (!identity) return;
-      const { runID, conversationID } = identity;
-      const record = event as unknown as Record<string, unknown>;
-
-      if (event.type === "RUN_ERROR") {
-        const turnUsage = parseAgentTurnUsage(record["usages"]);
-        const message =
-          typeof record["message"] === "string" ? record["message"] : "Agent 运行失败";
-
-        // Loop 的预期错误会在持久化完成后继续发送 RUN_FINISHED；先展示错误，
-        // 再由 RUN_FINISHED 用权威快照收口。InnerError 自带 usages，且不会再发结束事件。
-        if (record["usages"] === null || record["usages"] === undefined) {
-          pendingRunErrorsRef.current.set(runID, {
-            message,
-            ...(turnUsage?.usage ? { usage: turnUsage.usage } : {})
+      try {
+        const updateMetadata = (
+          metadata: Omit<ThreadSummary, "id"> & Pick<ThreadSnapshot, "auxiliaryUsage">
+        ) => {
+          agentStore.set(agentUpdateConversationStateAtom, {
+            conversationID: event.threadId,
+            update: (state) => {
+              const updatedAt = Math.max(
+                state.conversation?.updatedAt ?? 0,
+                state.metadataUpdatedAt ?? 0
+              );
+              if (!state.conversation || updatedAt > metadata.updatedAt) {
+                return state;
+              }
+              return {
+                ...state,
+                metadataUpdatedAt: metadata.updatedAt,
+                conversation: { ...state.conversation, ...metadata }
+              };
+            }
           });
-          applyAgentChatEvent({
-            type: "failed",
-            runID,
-            conversationID,
-            message,
-            ...(turnUsage?.usage ? { usage: turnUsage.usage } : {})
-          });
-          aguiAdapterRef.current.clear(runID);
+        };
+        if (event.type === "CUSTOM") {
+          if (event.name === "thread-metadata") {
+            updateMetadata(event.value);
+            setConversations((items) =>
+              items.map((item) =>
+                item.id === event.threadId && item.updatedAt <= event.value.updatedAt
+                  ? { ...item, ...event.value }
+                  : item
+              )
+            );
+          }
           return;
         }
-
-        const snapshot = await RendererAgent.getThread(conversationID);
-        applyAgentChatEvent({
-          type: "failed",
-          runID,
-          conversationID,
-          message,
-          ...(turnUsage?.usage ? { usage: turnUsage.usage } : {}),
-          ...(snapshot.ok ? { snapshot: snapshot.data } : {})
-        });
-        aguiAdapterRef.current.clear(runID);
-        return;
-      }
-
-      if (event.type === "RUN_FINISHED") {
-        const pendingError = pendingRunErrorsRef.current.get(runID);
-        pendingRunErrorsRef.current.delete(runID);
-        const snapshot = await RendererAgent.getThread(conversationID);
-        if (!snapshot.ok) {
-          showAgentError(snapshot.reason);
-          return;
-        }
-        const result = typeof record["result"] === "string" ? record["result"] : "success";
-        if (pendingError) {
-          const turnUsage = parseAgentTurnUsage(record["usages"]);
-          applyAgentChatEvent(
-            {
-              type: "failed",
-              runID,
-              conversationID,
-              snapshot: snapshot.data,
-              message: pendingError.message,
-              ...(turnUsage?.usage || pendingError.usage
-                ? { usage: turnUsage?.usage ?? pendingError.usage }
-                : {})
-            },
-            false
-          );
-        } else if (result === "cancel") {
-          applyAgentChatEvent({
-            type: "cancelled",
-            runID,
-            conversationID,
-            snapshot: snapshot.data
-          });
-        } else if (result !== "success") {
-          applyAgentChatEvent({
-            type: "failed",
-            runID,
-            conversationID,
-            snapshot: snapshot.data,
-            message: result === "max-step" ? "Agent 已达到最大执行步数" : result
-          });
-        } else {
-          applyAgentChatEvent({
-            type: "finished",
-            runID,
-            conversationID,
-            snapshot: snapshot.data
+        const chat = RendererAgentChat.get(agentStore, event.threadId);
+        const version = chat.version;
+        const pending = chat.push(event);
+        const state = agentStore.get(agentConversationStatesAtom)[event.threadId];
+        const accepted = chat.version !== version && state?.runningRunID === event.runId;
+        if (accepted && event.type === "RUN_STARTED") {
+          void loadConversations().then((items) => {
+            const summary = items.find((item) => item.id === event.threadId);
+            if (summary) {
+              updateMetadata({
+                name: summary.name,
+                createdAt: summary.createdAt,
+                updatedAt: summary.updatedAt
+              });
+            }
           });
         }
-        aguiAdapterRef.current.clear(runID);
-        return;
-      }
-
-      for (const translated of aguiAdapterRef.current.push(event)) {
-        applyAgentChatEvent(translated);
+        const settled = await pending;
+        if (accepted && event.type === "RUN_ERROR") {
+          showAgentError({ code: "run_failed", message: event.message });
+        }
+        if (settled) void loadConversations();
+      } catch (error) {
+        Log.warn("agent chat", "同步运行状态失败", error);
       }
     },
-    [applyAgentChatEvent]
+    [agentStore, loadConversations]
   );
 
   const flushBufferedAgentEvents = useCallback(() => {
@@ -416,7 +343,8 @@ export function useAgent() {
     async (
       recoverableIDs = recoverableConversationIDsRef.current,
       includeActive = true,
-      disposed: () => boolean = () => false
+      disposed: () => boolean = () => false,
+      reconnect = false
     ) => {
       const statesAtStart = agentStore.get(agentConversationStatesAtom);
       const versionsAtStart = new Map(conversationEventVersionsRef.current);
@@ -448,37 +376,32 @@ export function useAgent() {
             if (includeActive) showAgentError(snapshot.reason);
             return;
           }
-          updateConversationState({
-            conversationID,
-            update: (state) => {
-              // listRuns / getThread 期间收到的新事件或用户提交优先，旧快照留待下次同步。
-              if (
-                agentStore.get(agentConversationStatesAtom)[conversationID] !==
-                  statesAtStart[conversationID] ||
-                conversationEventVersionsRef.current.get(conversationID) !==
-                  versionsAtStart.get(conversationID)
-              )
-                return state;
-              const next = recoverAgentConversationState(state, snapshot.data);
-              if (next !== state) restored++;
-              return next;
-            }
-          });
+          const isCurrent = () =>
+            !disposed() &&
+            agentStore.get(agentConversationStatesAtom)[conversationID] ===
+              statesAtStart[conversationID] &&
+            conversationEventVersionsRef.current.get(conversationID) ===
+              versionsAtStart.get(conversationID);
+          // 恢复期间的新提交和流事件优先，迟到快照留待下次同步。
+          if (!isCurrent()) return;
+          await RendererAgentChat.get(agentStore, conversationID).restore(
+            snapshot.data,
+            isCurrent,
+            reconnect
+          );
+          if (!disposed()) restored++;
         })
       );
 
       return restored;
     },
-    [agentStore, recoverableConversationIDsRef, updateConversationState]
+    [agentStore, recoverableConversationIDsRef]
   );
 
   const handleAgentChatEvent = useCallback(
     (event: AGUIEvent) => {
-      const identity = readAgentAguiIdentity(event);
-      if (identity) {
-        const versions = conversationEventVersionsRef.current;
-        versions.set(identity.conversationID, (versions.get(identity.conversationID) ?? 0) + 1);
-      }
+      const versions = conversationEventVersionsRef.current;
+      versions.set(event.threadId, (versions.get(event.threadId) ?? 0) + 1);
       if (!agentEventsReadyRef.current) {
         bufferedAgentEventsRef.current.push(event);
         if (bufferedAgentEventsRef.current.length > 256) {
@@ -503,7 +426,8 @@ export function useAgent() {
           selectedConversationIDRef.current
         ],
         true,
-        () => !!signal?.aborted
+        () => !!signal?.aborted,
+        true
       );
       if (!signal?.aborted) void loadConversations();
     },
@@ -516,11 +440,26 @@ export function useAgent() {
     ]
   );
   useEffect(() => {
-    return RendererAgent.listenEvents(handleAgentChatEvent, {
-      onReconnect: reconcileAfterReconnect,
-      onUnavailable: () => setEventsAvailable(false)
-    });
-  }, [handleAgentChatEvent, reconcileAfterReconnect]);
+    let disposed = false;
+    const stop = RendererAgent.listenEvents(
+      (event) => {
+        if (!disposed) handleAgentChatEvent(event);
+      },
+      {
+        onReconnect: (signal) => (disposed ? Promise.resolve() : reconcileAfterReconnect(signal)),
+        onUnavailable: () => {
+          if (disposed) return;
+          setEventsAvailable(false);
+          RendererAgentChat.disconnect(agentStore);
+        }
+      }
+    );
+    return () => {
+      disposed = true;
+      stop();
+      RendererAgentChat.disconnect(agentStore);
+    };
+  }, [agentStore, handleAgentChatEvent, reconcileAfterReconnect]);
 
   useEffect(() => {
     if (!eventsAvailable || !agentEventsReadyRef.current || !runningConversationIDs.length) return;
@@ -574,7 +513,6 @@ export function useAgent() {
         });
       } finally {
         setLoading(false);
-        setLoaded(true);
       }
     },
     [loadConfigs, loadConversations, loadProviders, loadingRef, restoreRunningConversations]
@@ -602,6 +540,7 @@ export function useAgent() {
           reconnectPendingRef.current = false;
           void reconcileAfterReconnect();
         }
+        setLoaded(true);
       }
     })();
   }, [
@@ -648,6 +587,7 @@ export function useAgent() {
     activeConfig,
     requestClose,
     saveConfig,
+    removeConfig,
     conversations,
     runningRunID,
     openConversation,

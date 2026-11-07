@@ -95,10 +95,10 @@ const HomePage: FC<object> = () => {
         {!!(mounted & 0b1) && (
           <section
             className={cx(
-              "grid grid-cols-1 items-center gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(320px,24rem)]",
+              "grid shrink-0 grid-cols-1 items-stretch gap-3 lg:h-60 lg:grid-cols-[minmax(0,1fr)_20rem] lg:grid-rows-[minmax(0,1fr)] xl:h-64",
               activeChannel !== "recommend" && "hidden"
             )}>
-            <Banner className="min-w-0 contain-layout" />
+            <Banner className="min-h-0 min-w-0 contain-layout lg:aspect-auto lg:h-full" />
             <ForYouPanel className="min-w-0 hidden lg:block contain-layout" />
           </section>
         )}

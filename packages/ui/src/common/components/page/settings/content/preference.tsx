@@ -1,5 +1,5 @@
 import { memo, type FC } from "react";
-import { Monitor, Palette } from "lucide-react";
+import { Monitor, Palette, PanelLeft } from "lucide-react";
 import { NeteaseSettings, type NeteaseSettingsModel } from "@/common/netease/models";
 import Card from "@/common/components/layout/card";
 
@@ -23,6 +23,20 @@ const Preference: FC<PreferenceSettings> = ({ data, patchSettings }) => {
             preference: {
               ...data,
               defaultUseDisplayWindow: !data.defaultUseDisplayWindow
+            }
+          })
+        }
+      />
+      <ToggleRow
+        icon={PanelLeft}
+        title="使用简约版歌单、专辑和歌手页面"
+        checked={!!data.useLegacyPlaylistLayout}
+        description="以横向头部展示歌单、专辑和歌手，主窗口和展示窗同步生效。"
+        onClick={() =>
+          patchSettings({
+            preference: {
+              ...data,
+              useLegacyPlaylistLayout: !data.useLegacyPlaylistLayout
             }
           })
         }
