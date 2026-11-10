@@ -1,6 +1,13 @@
 @use "./font";
 @use "./animate";
 
+$z-index-toast: auto;
+$z-index-context-menu: 15;
+$z-index-modal: auto;
+$z-index-modal-content: 10;
+$z-index-drawer: auto;
+$z-index-drawer-resize-handle: 10;
+
 :root {
   --theme-color-main: #fc3d49;
   --theme-color-secondary: #ffffff;
@@ -11,6 +18,12 @@
   --primary-active: #d12a3a;
   --primary-soft: rgba(252, 61, 73, 0.18);
   --default-bg-color: #000000;
+  --z-index-toast: #{$z-index-toast};
+  --z-index-context-menu: #{$z-index-context-menu};
+  --z-index-modal: #{$z-index-modal};
+  --z-index-modal-content: #{$z-index-modal-content};
+  --z-index-drawer: #{$z-index-drawer};
+  --z-index-drawer-resize-handle: #{$z-index-drawer-resize-handle};
 }
 
 html,

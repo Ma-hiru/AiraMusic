@@ -1,7 +1,5 @@
-import { join } from "node:path";
 import { MainChildEntry } from "@/lib/child-entry";
 import { MainPathResolver } from "@/lib/path-resolver";
-import os from "node:os";
 import type { NCMChildMessage, NCMParentMessage } from "@/types/ncm.child";
 import type { StopMessage, StartMessage, ResultMessage } from "@/types/child";
 
@@ -21,6 +19,8 @@ export default class NeteaseMusicApiService extends MainChildEntry<
       childPath: "./ncm/child.mjs",
       metaUrl: import.meta.url,
       autoStart: true,
+      // Windows 冷启动还包含依赖的首次模块加载；网络引导在子进程中单独限时。
+      readyTimeout: 60_000,
       onPanicError: props.onPanicError,
       logger: props.logger
     });
@@ -31,7 +31,6 @@ export default class NeteaseMusicApiService extends MainChildEntry<
     return {
       type: "start",
       port: this.port,
-      tokenPath: join(os.tmpdir(), "anonymous_token"),
       deviceIdPath: MainPathResolver.appUserDataJoin("ncm", "deviceId")
     };
   }

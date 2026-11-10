@@ -1,4 +1,13 @@
 namespace NeteaseAPI {
+  interface NeteaseWeekReportResponse extends NeteaseAPIResponse {
+    data: {
+      type: string;
+      endTime: number;
+      startTime: number;
+      listenTimeDistributionBlock: ListenTimeDistributionBlock;
+    };
+  }
+
   interface NeteaseSongPlayRankResponse extends NeteaseAPIResponse {
     data: {
       songItems: NeteaseSongPlayRankItem[];

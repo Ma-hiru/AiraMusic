@@ -24,25 +24,61 @@ export interface MenuBarLyricWord {
 /** napi ThreadsafeFunction 默认 err-first */
 export type MenuLyricEventHandler = (error: null | Error, event: MenuLyricEvent) => void;
 
-export interface NativeAddon {
-  /** win32 独占：设置任务栏封面，null 表示交还给 DWM 的实时预览 */
+export type TaskbarAction = "next" | "play" | "pause" | "previous";
+
+export type TaskbarActionHandler = (error: null | Error, action: TaskbarAction) => void;
+
+export interface TaskbarButtonIcons {
+  next: Uint8Array;
+  play: Uint8Array;
+  pause: Uint8Array;
+  previous: Uint8Array;
+}
+
+/**
+ * Windows 产物导出的全部能力。
+ * `win.rs` 只在 Windows 目标编译，因此 macOS 产物里根本不存在这些函数。
+ */
+export interface WindowsNativeAddon {
+  /** 在主窗口的任务栏预览工具栏上挂三个播放按钮 */
+  setTaskbarButtons(
+    handle: Buffer,
+    playing: boolean,
+    icons: TaskbarButtonIcons,
+    onAction: TaskbarActionHandler
+  ): void;
+  /** 设置主窗口的任务栏缩略图封面，null 表示撤销 iconic 表示、恢复系统实时预览 */
   setCover(handle: Buffer, image: null | Uint8Array): void;
+}
+
+/**
+ * macOS 产物导出的全部能力。
+ * `darwin.rs` 只在 macOS 目标编译，因此 Windows 产物里根本不存在这些函数。
+ */
+export interface DarwinNativeAddon {
   /**
-   * macOS 独占：初始化菜单栏胶囊（托盘图标 + 歌词合并项），重复调用只更新图标与提示
+   * 初始化菜单栏胶囊（托盘图标 + 歌词合并项），重复调用只更新图标与提示。
    * 图标按模板图渲染：只取 alpha，用系统文字色随亮暗上色
    */
   initMenuBar(iconPath: string, tooltip: string): void;
-  /** macOS 独占：更新菜单栏胶囊的悬浮提示 */
+  /** 更新菜单栏胶囊的悬浮提示 */
   setMenuBarToolTip(tooltip: string): void;
-  /** macOS 独占：设置固定歌词视口宽度（pt），胶囊总宽随之变化 */
+  /** 设置固定歌词视口宽度（pt），胶囊总宽随之变化 */
   setMenuBarWidth(width: number): void;
-  /** macOS 独占：显示/隐藏整个菜单栏胶囊 */
+  /** 显示/隐藏整个菜单栏胶囊 */
   setMenuBarVisible(visible: boolean): void;
   /**
-   * macOS 独占：更新歌词行
+   * 更新歌词行
    * @param words 逐字时间轴（相对行首），空数组表示静态文本
    */
   setMenuLyric(text: string, words: MenuBarLyricWord[], onEvent?: MenuLyricEventHandler): void;
-  /** macOS 独占：同步播放进度（相对行首，ms），原生以该基准推进逐字动画 */
+  /** 同步播放进度（相对行首，ms），原生以该基准推进逐字动画 */
   setMenuLyricProgress(elapsed: number, playing: boolean): void;
 }
+
+/**
+ * 原生模块的载入类型。运行时只实现当前平台的那一半，
+ * 业务侧请通过 `MainNativeAddon.windows` / `MainNativeAddon.darwin` 取用，
+ * 不要直接把返回值当成全量接口。
+ */
+export type NativeAddon = DarwinNativeAddon | WindowsNativeAddon;

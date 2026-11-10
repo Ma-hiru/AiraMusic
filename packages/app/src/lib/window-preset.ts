@@ -238,6 +238,7 @@ export class MainWindowPreset {
           preload: MainPathResolver.preloadPath,
           backgroundThrottling: false,
           webSecurity: false
+          // allowRunningInsecureContent: false
         },
         frame: false,
         show: false,

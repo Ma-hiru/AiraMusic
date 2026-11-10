@@ -1,0 +1,40 @@
+diff --git a/util/zstd.js b/util/zstd.js
+index f5ba3f6b36a2350375eae75785f12a3cd76c8de3..705ac51710d8f50640890066f8520593fe2925e3 100644
+--- a/util/zstd.js
++++ b/util/zstd.js
+@@ -8,6 +8,9 @@ const hasNative = typeof zlib.zstdCompressSync === 'function'
+ const MAGIC = Buffer.from([0x28, 0xb5, 0x2f, 0xfd])
+ const WINDOW_DESCRIPTOR = 0x50 // windowLog 20
+ const BLOCK_MAX = 0x20000 // zstd 单块上限 128 KiB
++// 空块 + Last_Block 标记：上游 /api/gorilla/algorithm/record 的配置偶尔缺少
++// 帧结尾的空块，严格解码器会报 Z_BUF_ERROR(unexpected EOF)，补上即可解出
++const EMPTY_LAST_BLOCK = Buffer.from([0x01, 0x00, 0x00])
+ 
+ const compressRawFrame = (input) => {
+   const parts = [MAGIC, Buffer.from([0x00, WINDOW_DESCRIPTOR])]
+@@ -30,9 +33,23 @@ const compress = (input) => {
+ 
+ const decompress = (input) => {
+   const buf = Buffer.isBuffer(input) ? input : Buffer.from(input)
++  const withTail = (fn) => {
++    try {
++      return fn(buf)
++    } catch (error) {
++      // 只有「帧不完整」才值得重试；fzstd 的 unexpected EOF 错误码为 5
++      const incomplete = !error.code || error.code === 'Z_BUF_ERROR' || error.code === 5
++      if (!incomplete) throw error
++      try {
++        return fn(Buffer.concat([buf, EMPTY_LAST_BLOCK]))
++      } catch {
++        throw error
++      }
++    }
++  }
+   return hasNative
+-    ? zlib.zstdDecompressSync(buf)
+-    : Buffer.from(fzstdDecompress(buf))
++    ? withTail((data) => zlib.zstdDecompressSync(data))
++    : Buffer.from(withTail((data) => fzstdDecompress(data)))
+ }
+ 
+ module.exports = {

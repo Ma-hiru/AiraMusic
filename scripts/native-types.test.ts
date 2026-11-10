@@ -57,17 +57,26 @@ test("Native 公开声明从全新编译产物导入时保留完整类型契约"
       import { loadNativeAddon } from "@mahiru/native";
       import type {
         NativeAddon,
+        TaskbarAction,
         MenuLyricEvent,
         MenuBarLyricWord,
+        DarwinNativeAddon,
         MenuLyricEventKind,
+        WindowsNativeAddon,
+        TaskbarButtonIcons,
+        TaskbarActionHandler,
         MenuLyricEventHandler
       } from "@mahiru/native";
 
       type IsAny<T> = 0 extends (1 & T) ? true : false;
       declare const addonTypeIsAny: IsAny<NativeAddon>;
       declare const returnedTypeIsAny: IsAny<ReturnType<typeof loadNativeAddon>>;
+      declare const windowsTypeIsAny: IsAny<WindowsNativeAddon>;
+      declare const darwinTypeIsAny: IsAny<DarwinNativeAddon>;
       const addonTypeIsConcrete: false = addonTypeIsAny;
       const returnedTypeIsConcrete: false = returnedTypeIsAny;
+      const windowsTypeIsConcrete: false = windowsTypeIsAny;
+      const darwinTypeIsConcrete: false = darwinTypeIsAny;
 
       const addon: NativeAddon = loadNativeAddon("native.node");
       const word: MenuBarLyricWord = { startMs: 0, endMs: 500, text: "歌词" };
@@ -78,20 +87,58 @@ test("Native 公开声明从全新编译产物导入时保留完整类型契约"
       const onEvent: MenuLyricEventHandler = (error, received) => {
         const displayId: number = received.displayId;
         const message: string | undefined = error?.message;
+        // @ts-expect-error 回调事件的 displayId 不能退化为 any。
+        const invalidDisplay: string = received.displayId;
       };
-      addon.setCover(Buffer.alloc(0), null);
-      addon.setCover(Buffer.alloc(0), new Uint8Array());
-      addon.initMenuBar("icon.png", "AiraMusic");
-      addon.setMenuBarWidth(240);
-      addon.setMenuLyric("歌词", [word], onEvent);
-      addon.setMenuLyricProgress(200, true);
+      const icons: TaskbarButtonIcons = {
+        next: new Uint8Array(), play: new Uint8Array(),
+        pause: new Uint8Array(), previous: new Uint8Array()
+      };
+      const onAction: TaskbarActionHandler = (error, action) => {
+        const received: TaskbarAction = action;
+        const message: string | undefined = error?.message;
+        // @ts-expect-error 回调动作不能退化为 any。
+        const invalidAction: "stop" = action;
+      };
 
-      // @ts-expect-error NativeAddon 必须拒绝错误的宽度类型。
-      addon.setMenuBarWidth("240");
-      // @ts-expect-error 图片参数必须是字节或 null。
-      addon.setCover(Buffer.alloc(0), "cover.png");
-      // @ts-expect-error 逐字时间必须是数值。
-      addon.setMenuLyric("歌词", [{ startMs: "0", endMs: 500, text: "歌词" }]);
+      // 载入结果是平台联合类型，收窄前不能使用平台专属方法。
+      // @ts-expect-error 尚未确认是 Windows 产物。
+      addon.setCover(Buffer.alloc(0), null);
+      // @ts-expect-error 尚未确认是 macOS 产物。
+      addon.initMenuBar("icon.png", "AiraMusic");
+
+      if ("setCover" in addon) {
+        const windows: WindowsNativeAddon = addon;
+        addon.setCover(Buffer.alloc(0), null);
+        addon.setCover(Buffer.alloc(0), new Uint8Array());
+        addon.setTaskbarButtons(Buffer.alloc(0), true, icons, onAction);
+        // @ts-expect-error 图片参数必须是字节或 null。
+        addon.setCover(Buffer.alloc(0), "cover.png");
+        // @ts-expect-error 播放状态必须是 boolean。
+        addon.setTaskbarButtons(Buffer.alloc(0), "true", icons, onAction);
+        // @ts-expect-error 按钮图标必须是字节。
+        addon.setTaskbarButtons(Buffer.alloc(0), true, { ...icons, play: "play.png" }, onAction);
+        // @ts-expect-error Windows 产物没有菜单栏歌词接口。
+        addon.initMenuBar("icon.png", "AiraMusic");
+      } else {
+        const darwin: DarwinNativeAddon = addon;
+        addon.initMenuBar("icon.png", "AiraMusic");
+        addon.setMenuBarToolTip("AiraMusic");
+        addon.setMenuBarWidth(240);
+        addon.setMenuBarVisible(true);
+        addon.setMenuLyric("歌词", [word], onEvent);
+        addon.setMenuLyric("歌词", []);
+        addon.setMenuLyricProgress(200, true);
+        // @ts-expect-error 宽度必须是数值。
+        addon.setMenuBarWidth("240");
+        // @ts-expect-error 逐字时间必须是数值。
+        addon.setMenuLyric("歌词", [{ startMs: "0", endMs: 500, text: "歌词" }]);
+        // @ts-expect-error macOS 产物没有任务栏封面接口。
+        addon.setCover(Buffer.alloc(0), null);
+      }
+
+      // @ts-expect-error 任务栏动作不能接受任意字符串。
+      const invalidAction: TaskbarAction = "stop";
       // @ts-expect-error 事件类型不能接受任意字符串。
       const invalidKind: MenuLyricEventKind = "middle-click";
       // @ts-expect-error 回调公开的是 MenuLyricEvent，不能退化为 any。

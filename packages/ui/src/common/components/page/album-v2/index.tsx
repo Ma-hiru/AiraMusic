@@ -103,7 +103,15 @@ const Album: FC<AlbumPageProps> = ({
 }) => {
   const tabsID = useId();
   const [activeTab, setActiveTab] = useState<AlbumTab>("tracks");
+  const [albumsMountedID, setAlbumsMountedID] = useState<Nullable<number>>(null);
   const [keyword, setKeyword] = useState("");
+  const changeTab = useCallback(
+    (tab: AlbumTab) => {
+      setActiveTab(tab);
+      if (tab === "albums") setAlbumsMountedID(id);
+    },
+    [id]
+  );
   const requestData = useCallback(async (id: number) => {
     if (!id) return Promise.resolve([null, null]);
 
@@ -150,6 +158,7 @@ const Album: FC<AlbumPageProps> = ({
 
   useEffect(() => {
     setActiveTab("tracks");
+    setAlbumsMountedID(null);
     setKeyword("");
   }, [id]);
 
@@ -218,14 +227,14 @@ const Album: FC<AlbumPageProps> = ({
               searchTracks={setKeyword}
               setIsTyping={setIsTyping}
               trackCount={album?.tracks.length ?? 0}
-              onChange={setActiveTab}
+              onChange={changeTab}
             />
             <div className="relative min-h-0 w-full flex-1">
               <div
                 id={`${tabsID}-tracks-panel`}
                 className={cx(
                   "absolute inset-0 pt-1",
-                  activeTab !== "tracks" && "invisible pointer-events-none"
+                  activeTab !== "tracks" && "hidden pointer-events-none"
                 )}
                 role="tabpanel"
                 inert={activeTab !== "tracks"}
@@ -249,11 +258,13 @@ const Album: FC<AlbumPageProps> = ({
                   />
                 )}
               </div>
-              {activeTab === "albums" && album && (
+              {albumsMountedID === id && album?.content.id === id && (
                 <div
                   id={`${tabsID}-albums-panel`}
-                  className="absolute inset-0 pt-2"
+                  className={cx("absolute inset-0 pt-2", activeTab !== "albums" && "hidden")}
                   role="tabpanel"
+                  inert={activeTab !== "albums"}
+                  aria-hidden={activeTab !== "albums"}
                   aria-labelledby={`${tabsID}-albums-tab`}>
                   <ArtistAlbums
                     currentAlbumID={album.content.id}

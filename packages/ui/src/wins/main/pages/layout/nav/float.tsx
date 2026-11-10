@@ -2,7 +2,7 @@ import { cx } from "@emotion/css";
 import { useSetAtom } from "jotai";
 import { debounce } from "lodash-es";
 import { motion, AnimatePresence } from "motion/react";
-import { Plus, ArrowUp, SearchIcon } from "lucide-react";
+import { Plus, ArrowUp, RotateCw, SearchIcon } from "lucide-react";
 import { memo, useRef, type FC, useMemo, useState, useEffect } from "react";
 import { useUser } from "@/common/store/user";
 import { typingAtom } from "@/wins/main/atoms/layout";
@@ -13,6 +13,7 @@ interface NavFloatProps {
   sideBar: boolean;
   canScroll: boolean;
   setKeyword: NormalFunc<[keyword: string]>;
+  onRefresh?: NormalFunc;
   onScrollTop?: NormalFunc;
   onCreated?: NormalFunc<[playlist: NeteaseAPI.NeteasePlaylistSummary]>;
 }
@@ -21,6 +22,7 @@ const NavFloat: FC<NavFloatProps> = ({
   canScroll,
   setKeyword,
   onCreated,
+  onRefresh,
   onScrollTop,
   sideBar
 }) => {
@@ -71,6 +73,13 @@ const NavFloat: FC<NavFloatProps> = ({
             motionKey="create-playlist"
             onClick={() => create(createPlaylistCreateModal, { onTyping: setTyping, onCreated })}>
             <Plus className="size-5" />
+          </FloatItem>
+        )}
+        {showFloat && sideBar && user?.isLoggedIn && (
+          <FloatItem key="refresh-playlists" motionKey="refresh-playlists" onClick={onRefresh}>
+            <RotateCw className="size-5" aria-label="刷新歌单">
+              <title>刷新歌单</title>
+            </RotateCw>
           </FloatItem>
         )}
         {showFloat && sideBar && (

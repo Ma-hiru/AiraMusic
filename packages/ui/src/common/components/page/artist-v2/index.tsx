@@ -232,7 +232,7 @@ const Artist: FC<ArtistProps> = ({
                   className={cx(
                     "absolute inset-0 pt-1",
                     activeTab !== tab &&
-                      (tab === "tracks" ? "invisible pointer-events-none" : "hidden")
+                      (tab === "tracks" ? "hidden pointer-events-none" : "hidden")
                   )}
                   role="tabpanel"
                   inert={activeTab !== tab}

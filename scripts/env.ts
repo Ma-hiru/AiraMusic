@@ -152,6 +152,10 @@ declare namespace NodeJS {
     if (value === "") return "";
     const num = Number(value);
     if (!isNaN(num)) return num;
-    return String(value);
+    const str = String(value);
+    if (str.match(/^'.*'$/) || str.match(/^".*"$/)) {
+      return str.substring(1, str.length - 1);
+    }
+    return str;
   }
 }

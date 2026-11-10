@@ -29,7 +29,10 @@ const mocks = vi.hoisted(() => {
     theme: {},
     output: { views: [], selected: "default", setDevice: vi.fn() },
     setAtom: vi.fn(),
-    loadTrack: vi.fn()
+    loadTrack: vi.fn(),
+    markModified: vi.fn(),
+    user: null as null | { userId: number; isLoggedIn: boolean; likedPlaylist: { id: number } },
+    userListeners: new Set<() => void>()
   };
 });
 
@@ -57,8 +60,20 @@ vi.mock("@/common/lib/window", () => ({
   }
 }));
 vi.mock("@/common/lib/bus", () => ({ RendererIPCMessageBus: mocks.bus }));
-vi.mock("@/common/lib/modified", () => ({ RendererModified: { mark: vi.fn() } }));
-vi.mock("@/common/store/user", () => ({ useUser: () => null }));
+vi.mock("@/common/lib/modified", () => ({ RendererModified: { mark: mocks.markModified } }));
+vi.mock("@/common/store/user", async () => {
+  const { useSyncExternalStore } = await import("react");
+  return {
+    useUser: () =>
+      useSyncExternalStore(
+        (listener) => {
+          mocks.userListeners.add(listener);
+          return () => mocks.userListeners.delete(listener);
+        },
+        () => mocks.user
+      )
+  };
+});
 vi.mock("@/common/netease/api", () => ({ NeteaseAPITrack: {} }));
 vi.mock("@/common/netease/services", () => ({
   NeteaseServicesPlaylist: {},
@@ -86,6 +101,8 @@ let tracks: NeteaseTrackRecord[];
 beforeEach(() => {
   vi.useFakeTimers();
   vi.clearAllMocks();
+  mocks.user = null;
+  mocks.userListeners.clear();
   tracks = [makeTrack(1), makeTrack(2), makeTrack(3)];
   playlist = new RendererPlayerPlaylist({ playlist: tracks, position: 0 });
   playlist.mark_id = "original-scope";
@@ -123,6 +140,46 @@ afterEach(() => {
 
 const latestSnapshot = () =>
   mocks.bus.playList.deliver.mock.lastCall?.[0] as MessageData<"bus_deliver_play_list">;
+
+it("consumes user-playlist changes and refreshes the signed-in user's playlists", () => {
+  const user = { userId: 42, isLoggedIn: true, likedPlaylist: { id: 420 } };
+  mocks.user = user;
+  mocks.bus.modified.data = [{ type: "user-playlist" }];
+  render(<Bus />);
+
+  expect(mocks.markModified).toHaveBeenCalledExactlyOnceWith({ type: "userPlaylist", user });
+  expect(mocks.bus.consume).toHaveBeenCalledWith("modified");
+  expect(mocks.bus.modified.data).toEqual([]);
+});
+
+it("consumes user-playlist changes without refreshing when no user is signed in", () => {
+  mocks.bus.modified.data = [{ type: "user-playlist" }];
+  render(<Bus />);
+
+  expect(mocks.markModified).not.toHaveBeenCalled();
+  expect(mocks.bus.consume).toHaveBeenCalledWith("modified");
+  expect(mocks.bus.modified.data).toEqual([]);
+});
+
+it("uses the latest account when a user-playlist message is consumed after an account switch", () => {
+  const previousUser = { userId: 1, isLoggedIn: true, likedPlaylist: { id: 10 } };
+  const currentUser = { userId: 2, isLoggedIn: true, likedPlaylist: { id: 20 } };
+  mocks.user = previousUser;
+  render(<Bus />);
+
+  act(() => {
+    mocks.user = currentUser;
+    mocks.bus.modified.data = [{ type: "user-playlist" }];
+    for (const listener of mocks.userListeners) listener();
+  });
+
+  expect(mocks.markModified).toHaveBeenCalledExactlyOnceWith({
+    type: "userPlaylist",
+    user: currentUser
+  });
+  expect(mocks.bus.consume).toHaveBeenCalledWith("modified");
+  expect(mocks.bus.modified.data).toEqual([]);
+});
 
 it("pushes one initial snapshot and sends only positions for in-place cursor changes", () => {
   const subscribe = vi.spyOn(playlist, "addListener");

@@ -59,6 +59,8 @@ declare module "@neteasecloudmusicapienhanced/api/util/xeapiKey.js" {
   export interface XeapiPublicKey {
     sk?: string;
     version?: string;
+    deviceId?: string;
+    publicKey?: string;
     [key: string]: unknown;
   }
   export function getXeapiPublicKey(
@@ -66,5 +68,21 @@ declare module "@neteasecloudmusicapienhanced/api/util/xeapiKey.js" {
     deviceId?: string
   ): Promise<XeapiPublicKey>;
   const _default: { getXeapiPublicKey: typeof getXeapiPublicKey };
+  export default _default;
+}
+
+declare module "@neteasecloudmusicapienhanced/api/util/index.js" {
+  export function generateRandomChineseIP(): string;
+  export function generateDeviceId(): string;
+  export function cookieToJson(cookie?: string): Record<string, string>;
+  export function cookieObjToString(cookie: Record<string, number | string>): string;
+  export function toBoolean(val: unknown): boolean;
+  const _default: {
+    toBoolean: typeof toBoolean;
+    cookieToJson: typeof cookieToJson;
+    generateDeviceId: typeof generateDeviceId;
+    cookieObjToString: typeof cookieObjToString;
+    generateRandomChineseIP: typeof generateRandomChineseIP;
+  };
   export default _default;
 }

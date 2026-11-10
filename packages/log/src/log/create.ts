@@ -5,6 +5,8 @@ import { EqError, type EqErrorProps } from "../err";
 import { JSONFlat, JSONCompact } from "../string/stringify";
 import { LogLevel, ParseLogLevel, LogLevelToString } from "./logLevel";
 
+const globalConsole = globalThis as typeof globalThis & { raw_console?: Console };
+
 export interface Log {
   currentLevel: LogLevel;
   readonly info: LogHandler;
@@ -43,10 +45,18 @@ export interface ErrorLogHandler {
 
 export function createLog(
   level: string | LogLevel,
-  witter: LoggerWriter = console,
+  _writer: LoggerWriter = globalConsole.raw_console ?? console,
   showTimestamp = false
 ): Log {
   const currentLevel = ParseLogLevel(level);
+  // 保留输出方法与接收者，console 被临时替换时也不回到日志自身。
+  const writer: LoggerWriter = {
+    log: _writer.log.bind(_writer),
+    warn: _writer.warn.bind(_writer),
+    debug: _writer.debug.bind(_writer),
+    error: _writer.error.bind(_writer),
+    trace: _writer.trace.bind(_writer)
+  };
   return class {
     static currentLevel = currentLevel;
     static readonly Colors = Colors;
@@ -62,19 +72,19 @@ export function createLog(
       if (this.currentLevel <= level) {
         switch (level) {
           case LogLevel.TRACE:
-            witter.trace(output);
+            writer.trace(output);
             break;
           case LogLevel.DEBUG:
-            witter.debug(output);
+            writer.debug(output);
             break;
           case LogLevel.INFO:
-            witter.log(output);
+            writer.log(output);
             break;
           case LogLevel.WARN:
-            witter.warn(output);
+            writer.warn(output);
             break;
           case LogLevel.ERROR:
-            witter.error(output);
+            writer.error(output);
             break;
         }
       }
@@ -134,36 +144,29 @@ export function createLog(
     }
 
     static ReplaceGlobalConsole(): Console {
-      // @ts-expect-error
-      if (globalThis.raw_console) return globalThis.raw_console;
-      // @ts-expect-error
-      globalThis.raw_console = globalThis.console;
-      const consoleLogger = {
+      if (globalConsole.raw_console) return globalConsole.raw_console;
+      const rawConsole = globalConsole.console;
+      globalConsole.raw_console = rawConsole;
+      // React 会通过 defineProperties 静音/恢复 console；独立对象避免写穿原始输出端。
+      const consoleLogger: Console = Object.create(
+        Object.getPrototypeOf(rawConsole),
+        Object.getOwnPropertyDescriptors(rawConsole)
+      );
+      Object.assign(consoleLogger, {
         trace: this.trace.bind(this),
         debug: this.debug.bind(this),
         info: this.info.bind(this),
         warn: this.warn.bind(this),
         error: this.error.bind(this)
-      };
-      // @ts-expect-error
-      globalThis.console = new Proxy(globalThis.raw_console, {
-        get(target, prop, receiver) {
-          if (typeof prop === "string" && Object.hasOwn(consoleLogger, prop))
-            return consoleLogger[prop as keyof typeof consoleLogger];
-          return Reflect.get(target, prop, receiver);
-        }
       });
-      // @ts-expect-error
-      return globalThis.raw_console;
+      globalConsole.console = consoleLogger;
+      return rawConsole;
     }
 
     static RestoreGlobalConsole() {
-      // @ts-expect-error
-      if (!globalThis.raw_console) return;
-      // @ts-expect-error
-      globalThis.console = globalThis.raw_console;
-      // @ts-expect-error
-      globalThis.raw_console = undefined;
+      if (!globalConsole.raw_console) return;
+      globalConsole.console = globalConsole.raw_console;
+      globalConsole.raw_console = undefined;
     }
   };
 }

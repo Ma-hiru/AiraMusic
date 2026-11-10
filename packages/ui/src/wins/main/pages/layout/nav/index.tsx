@@ -28,7 +28,7 @@ const Nav: FC<object> = () => {
 
   const onScrollTop = useCallback(() => playlistRef.current?.scrollTop(), []);
 
-  const onCreated = useCallback(() => {
+  const refreshPlaylists = useCallback(() => {
     RendererIPCMessageBus.modified.twoWay({
       type: "user-playlist"
     });
@@ -67,8 +67,9 @@ const Nav: FC<object> = () => {
         sideBar={sidebar}
         setKeyword={setKeyword}
         canScroll={canScrollTop}
-        onCreated={onCreated}
         onScrollTop={onScrollTop}
+        onCreated={refreshPlaylists}
+        onRefresh={refreshPlaylists}
       />
     </section>
   );

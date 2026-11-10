@@ -157,10 +157,10 @@ const LayoutDisplay: FC<object> = () => {
           <KeepAliveOutlet maxCache={3} />
         </BackCtx>
         <DisplayFloat />
-        <AppToast.Provider className="z-50!" />
-        <AppContextMenu.Provider className="z-50!" />
-        <AppModal.Provider className="z-40!" />
-        <AppDrawer.Provider className="z-32 top-10!" />
+        <AppToast.Provider className="z-(--z-index-display-toast)!" />
+        <AppContextMenu.Provider className="z-(--z-index-display-context-menu)!" />
+        <AppModal.Provider className="z-(--z-index-display-modal)!" />
+        <AppDrawer.Provider className="z-(--z-index-display-drawer)! top-10!" />
       </AppErrorBoundary>
     </div>
   );

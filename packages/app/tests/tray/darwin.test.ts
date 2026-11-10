@@ -31,7 +31,7 @@ vi.mock("@mahiru/ipc/main", () => ({
   }
 }));
 vi.mock("@mahiru/app/lib/native-addon", () => ({
-  MainNativeAddon: { isSupported: true, native: mocks.native }
+  MainNativeAddon: { isSupported: true, native: mocks.native, darwin: mocks.native }
 }));
 vi.mock("@mahiru/app/lib/path-resolver", () => ({
   MainPathResolver: { menuBarIconPath: "/menu-bar.png" }

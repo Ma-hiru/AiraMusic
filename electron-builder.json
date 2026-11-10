@@ -46,12 +46,12 @@
     "icon": "packages/app/assets/logo.png",
     "category": "AudioVideo",
     "vendor": "Ma-hiru",
-    "description": "A third party music player for Netease Music",
+    "description": "Third-party Netease Music desktop client with immersive visuals",
     "artifactName": "${productName}_${version}_linux_${arch}.${ext}",
     "desktop": {
       "entry": {
         "Name": "AiraMusic",
-        "Comment": "A third-party music player for Netease Music",
+        "Comment": "Third-party Netease Music desktop client with immersive visuals",
         "Categories": "AudioVideo;Audio;",
         "Keywords": "music;audio;player;netease;"
       }

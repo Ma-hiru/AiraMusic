@@ -1,9 +1,31 @@
 import { Log } from "@/common/lib/log";
+import { isLoopbackHostname } from "@/common/utils/url";
 import { BannerType, NeteaseImageSize } from "@/common/enum";
 
 export class NeteaseURL {
   private static isNeteaseImageURL(url: URL) {
     return url.hostname === "music.126.net" || url.hostname.endsWith(".music.126.net");
+  }
+
+  /**
+   * @desc 将非回环的 http 地址升级为 https \
+   * 生产环境页面是 https://localhost，音频/封面若按接口返回的 http 地址请求，会被
+   * 当作混合内容拦截（媒体不会像图片那样自动升级）\
+   * 主机名交给 URL 解析器判定（能识别 `127.1`、十进制 IPv4、IPv6 等写法）；
+   * 协议替换仍按原始字符串裁剪——`URL#toString` 会做默认端口省略、点段折叠、
+   * 百分号编码规整，可能改写 CDN 的签名查询串 \
+   * 回环地址保持原样：本地服务没有 TLS
+   * */
+  static toSecure(url: string): string {
+    if (!url || !url.startsWith("http://")) return url;
+    let hostname: string;
+    try {
+      hostname = new URL(url).hostname;
+    } catch {
+      return url;
+    }
+    if (isLoopbackHostname(hostname)) return url;
+    return `https://${url.slice(7)}`;
   }
 
   static parseBannerURL(url: string): { id: number; type: BannerType } {
@@ -56,14 +78,17 @@ export class NeteaseURL {
     url: T,
     size: number | NeteaseImageSize
   ): T extends Falsy ? undefined : string {
-    if (!url || !url.startsWith("http")) {
-      return <T extends Falsy ? undefined : string>(url || undefined);
+    // 绕过 NeteaseNetworkImage 直接用裸 url 的调用点（radio/mini/mediaSession 等）
+    // 也走同一套协议升级
+    const source = NeteaseURL.toSecure(url ?? "");
+    if (!source || !source.startsWith("http")) {
+      return <T extends Falsy ? undefined : string>(source || undefined);
     }
     if (!Number.isFinite(size) || (size < 0 && size !== NeteaseImageSize.raw)) {
-      return <T extends Falsy ? undefined : string>(url || undefined);
+      return <T extends Falsy ? undefined : string>(source || undefined);
     }
 
-    const u = new URL(url);
+    const u = new URL(source);
     if (NeteaseURL.isNeteaseImageURL(u)) {
       u.search = "";
     }

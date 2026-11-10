@@ -1,5 +1,6 @@
 import { useAtom, useAtomValue } from "jotai";
 import { memo, useRef, type FC, useMemo, useEffect, type HTMLAttributes } from "react";
+import { Log } from "@/common/lib/log";
 import { useLatestRef } from "@/common/hooks/use-latest-ref";
 import { useListenResize } from "@/common/hooks/use-listen-resize";
 import { Canvas2DRenderer } from "@/wins/main/componets/spectrum/renderers/canvas2d";
@@ -92,16 +93,33 @@ const AudioSpectrum: FC<AudioSpectrumProps> = ({
   // 初始化和销毁渲染器
   useEffect(() => {
     if (!rendererOptions) return;
-    const render = rendererFactory();
     const { canvas, options } = rendererOptions;
-    render.init(canvas, options);
+    let render: IRenderer = rendererFactory();
+    try {
+      render.init(canvas, options);
+    } catch (err) {
+      // 无可用 GPU（无显卡的虚拟机、驱动异常）时 WebGL 上下文创建会失败，降级到 Canvas2D
+      Log.warn(
+        "AudioSpectrum",
+        `"${renderer}" renderer init failed, falling back to canvas2d`,
+        err
+      );
+      render.destroy();
+      render = new Canvas2DRenderer();
+      try {
+        render.init(canvas, options);
+      } catch (fallbackErr) {
+        Log.error("AudioSpectrum", "canvas2d fallback init failed", fallbackErr);
+        return;
+      }
+    }
     rendererRef.current = render;
     if (lastBandsRef.current) render.draw(lastBandsRef.current);
     return () => {
       rendererRef.current?.destroy();
       rendererRef.current = null;
     };
-  }, [rendererFactory, rendererOptions]);
+  }, [renderer, rendererFactory, rendererOptions]);
   // 渲染循环
   useEffect(() => {
     if (!enable) return;

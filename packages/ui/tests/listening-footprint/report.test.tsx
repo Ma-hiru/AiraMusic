@@ -1,4 +1,4 @@
-import { act, render, cleanup, waitFor, fireEvent } from "@testing-library/react";
+import { act, render, within, cleanup, waitFor, fireEvent } from "@testing-library/react";
 import {
   createListeningFootprintDrawer,
   createPlayerListeningFootprintDrawer,
@@ -10,6 +10,7 @@ import ListeningFootprint, {
 } from "@mahiru/ui/common/components/page/listening-footprint";
 import type RendererPlayer from "@mahiru/ui/common/player/core";
 import type { useListeningFootprint } from "@mahiru/ui/common/hooks/use-listening-footprint";
+import type { useListeningWeekTrend } from "@mahiru/ui/common/hooks/use-listening-week-trend";
 import type { NeteaseTrackRecord, NeteaseHistoryRecord } from "@mahiru/ui/common/netease/models";
 
 const mocks = vi.hoisted(() => ({
@@ -21,7 +22,12 @@ const mocks = vi.hoisted(() => ({
   todayReload: vi.fn(),
   summaryReload: vi.fn(),
   contextProps: vi.fn(),
-  contextMenu: vi.fn()
+  contextMenu: vi.fn(),
+  weekTrend: vi.fn(),
+  trendReload: vi.fn()
+}));
+vi.mock("@/common/hooks/use-listening-week-trend", () => ({
+  useListeningWeekTrend: mocks.weekTrend
 }));
 
 vi.mock("@/common/hooks/use-listening-footprint", async (importOriginal) => ({
@@ -101,6 +107,30 @@ const detail = (period: string, duration: number) => ({
   podcastDuration: 0,
   audiobookDuration: 0
 });
+const rollingWeekDetails = [
+  { period: "2026-11-03", duration: 276, previousWeek: true },
+  { period: "2026-11-04", duration: 503, previousWeek: true },
+  { period: "2026-11-05", duration: 389, previousWeek: true },
+  { period: "2026-11-06", duration: 419, previousWeek: true },
+  { period: "2026-11-07", duration: 1283, previousWeek: true },
+  { period: "2026-11-08", duration: 232, previousWeek: false },
+  { period: "2026-11-09", duration: 198, previousWeek: false }
+];
+
+function rollingAcrossMidnight() {
+  mocks.weekTrend.mockImplementation(({ date }: Parameters<typeof useListeningWeekTrend>[0]) => ({
+    details:
+      date === "2026-11-10"
+        ? [
+            ...rollingWeekDetails.slice(1),
+            { period: "2026-11-10", duration: 210, previousWeek: false }
+          ]
+        : rollingWeekDetails,
+    loading: false,
+    failed: false,
+    reload: mocks.trendReload
+  }));
+}
 
 function summary(overrides: Partial<ReturnType<typeof useListeningFootprint>> = {}) {
   const weekDetails = [detail("2026-11-05", 160), detail("2026-11-06", 123)];
@@ -189,6 +219,12 @@ beforeEach(() => {
   vi.useFakeTimers({ toFake: ["Date"] });
   vi.setSystemTime(new Date(2026, 10, 6, 12));
   mocks.summary.mockReturnValue(summary());
+  mocks.weekTrend.mockImplementation(({ week }: Parameters<typeof useListeningWeekTrend>[0]) => ({
+    details: week?.details.map((item) => ({ ...item, previousWeek: false })) ?? [],
+    loading: false,
+    failed: false,
+    reload: mocks.trendReload
+  }));
   mocks.today.mockReturnValue({ tracks, loading: false, failed: false, reload: mocks.todayReload });
   mocks.ranked.mockReturnValue({
     tracks: rankTracks,
@@ -365,17 +401,278 @@ it("initializes and publishes the current scope for page handoff", () => {
   expect(view.props.onScopeChange).toHaveBeenLastCalledWith({ period: "month" });
 });
 
+it("renders a rolling week and selects previous-week songs while keeping natural-week statistics", () => {
+  vi.setSystemTime(new Date(2026, 10, 9, 12));
+  const currentWeek = [detail("2026-11-08", 232), detail("2026-11-09", 198)];
+  const currentSummary = summary({
+    week: {
+      total: 430,
+      today: currentWeek[1],
+      details: currentWeek,
+      weekDays: 2,
+      todayTrackCount: 50
+    }
+  });
+  mocks.summary.mockReturnValue(currentSummary);
+  mocks.weekTrend.mockReturnValue({
+    details: rollingWeekDetails,
+    loading: false,
+    failed: false,
+    reload: mocks.trendReload
+  });
+  const previousTrack = {
+    ...localTrack,
+    time: new Date(2026, 10, 3, 14).getTime()
+  } as NeteaseHistoryRecord;
+  const view = openReport({
+    initialPeriod: "week",
+    historyRecords: [previousTrack],
+    variant: "page"
+  });
+
+  expect(mocks.weekTrend.mock.calls.at(-1)![0]).toMatchObject({
+    date: "2026-11-09",
+    week: currentSummary.week,
+    active: true
+  });
+  const chart = within(view.getByRole("figure", { name: "每日收听时长" }));
+  expect(chart.getAllByRole("button")).toHaveLength(7);
+  expect(chart.getAllByRole("button", { name: /（上周）/ })).toHaveLength(5);
+  expect(chart.getByText("近7天收听")).toBeInTheDocument();
+  expect(chart.getByText("浅色为上周")).toBeInTheDocument();
+  expect(view.getByLabelText("日均收听时长")).toHaveTextContent("本周日均 3小时35分");
+  expect(view.props.onTracksLoaded).toHaveBeenLastCalledWith(rankTracks);
+  const previousBar = chart.getByRole("button", { name: "11月3日（上周），4小时36分" });
+  fireEvent.mouseEnter(previousBar);
+  expect(view.getByRole("tooltip", { name: "11月3日收听时长" })).toHaveTextContent(
+    "11月3日上周4小时36分"
+  );
+  fireEvent.click(previousBar);
+  expect(view.getByLabelText("选中日期数据")).toHaveTextContent("11月3日 · 4小时36分");
+  expect(view.getByLabelText("累计收听时长")).toHaveTextContent("7小时10分");
+  expect(view.getByText("11月3日的本机记录")).toBeInTheDocument();
+  expect(view.props.onTracksLoaded).toHaveBeenLastCalledWith([previousTrack]);
+  expect(view.getByRole("button", { name: "11月8日，3小时52分" })).toBeInTheDocument();
+
+  fireEvent.click(view.getByRole("button", { name: "刷新听歌足迹" }));
+  expect(mocks.trendReload).toHaveBeenCalledOnce();
+  expect(mocks.summaryReload).toHaveBeenCalledOnce();
+  expect(view.getByLabelText("选中日期数据")).toHaveTextContent("11月3日 · 4小时36分");
+  fireEvent.click(view.getByRole("button", { name: "查看整周" }));
+  expect(mocks.weekTrend.mock.calls.at(-1)![0]).toMatchObject({ active: true });
+  expect(view.getByLabelText("日均收听时长")).toHaveTextContent("3小时35分");
+  expect(view.props.onTracksLoaded).toHaveBeenLastCalledWith(rankTracks);
+  expect(mocks.ranked.mock.calls.at(-1)![0]).toMatchObject({ active: true, period: "week" });
+  fireEvent.click(view.getByRole("button", { name: "刷新听歌足迹" }));
+  expect(mocks.trendReload).toHaveBeenCalledTimes(2);
+  fireEvent.click(view.getByRole("tab", { name: "本月" }));
+  expect(mocks.weekTrend.mock.calls.at(-1)![0]).toMatchObject({ active: false });
+});
+
+it("reports selected historical duration loading and failure without changing the local song list", () => {
+  vi.setSystemTime(new Date(2026, 10, 9, 12));
+  mocks.weekTrend.mockReturnValue({
+    details: rollingWeekDetails.map((item) => ({
+      ...item,
+      duration: item.previousWeek ? undefined : item.duration
+    })),
+    loading: true,
+    failed: false,
+    reload: mocks.trendReload
+  });
+  const previousTrack = {
+    ...localTrack,
+    time: new Date(2026, 10, 3, 14).getTime()
+  } as NeteaseHistoryRecord;
+  const view = openReport({
+    initialPeriod: "week",
+    initialDay: "2026-11-03",
+    historyRecords: [previousTrack],
+    variant: "page"
+  });
+  expect(view.getByLabelText("选中日期数据")).toHaveTextContent("11月3日 · —补充上周数据中");
+  const chart = within(view.getByRole("figure", { name: "每日收听时长" }));
+  expect(chart.getAllByRole("button")).toHaveLength(7);
+  expect(chart.getByRole("button", { name: "11月3日（上周），暂未获取" })).toBeInTheDocument();
+  expect(chart.queryByRole("button", { name: "11月3日（上周），0分钟" })).not.toBeInTheDocument();
+  expect(view.getByRole("button", { name: "刷新听歌足迹" })).toBeDisabled();
+  expect(view.props.onTracksLoaded).toHaveBeenLastCalledWith([previousTrack]);
+  mocks.weekTrend.mockReturnValue({
+    details: rollingWeekDetails.map((item) => ({
+      ...item,
+      duration: item.previousWeek ? undefined : item.duration
+    })),
+    loading: false,
+    failed: true,
+    reload: mocks.trendReload
+  });
+  view.rerender(<ListeningFootprint {...view.props} />);
+  expect(view.getByText("上周统计暂未更新")).toBeInTheDocument();
+  expect(view.getByRole("button", { name: "刷新听歌足迹" })).toBeEnabled();
+  expect(view.props.onTracksLoaded).toHaveBeenLastCalledWith([previousTrack]);
+});
+
+it("keeps a one-day natural week in the rolling chart instead of auto-selecting the day", () => {
+  vi.setSystemTime(new Date(2026, 10, 8, 12));
+  const currentDay = detail("2026-11-08", 232);
+  mocks.summary.mockReturnValue(
+    summary({
+      week: {
+        total: 232,
+        today: currentDay,
+        details: [currentDay],
+        weekDays: 1,
+        todayTrackCount: 50
+      }
+    })
+  );
+  mocks.weekTrend.mockReturnValue({
+    details: [
+      { period: "2026-11-02", duration: 247, previousWeek: true },
+      ...rollingWeekDetails.slice(0, 6)
+    ],
+    loading: false,
+    failed: false,
+    reload: mocks.trendReload
+  });
+  const view = openReport({ initialPeriod: "week" });
+  expect(
+    within(view.getByRole("figure", { name: "每日收听时长" })).getAllByRole("button")
+  ).toHaveLength(7);
+  expect(view.getByLabelText("日均收听时长")).toHaveTextContent("本周日均 3小时52分");
+  expect(view.queryByLabelText("选中日期数据")).not.toBeInTheDocument();
+  expect(view.getByText("本周播放排行")).toBeInTheDocument();
+  expect(view.props.onTracksLoaded).toHaveBeenLastCalledWith(rankTracks);
+  expect(mocks.ranked.mock.calls.at(-1)![0]).toMatchObject({ active: true });
+});
+
+it.each([
+  { initialPeriod: "today", active: true },
+  { initialPeriod: "month", active: true },
+  { initialPeriod: "week", active: false }
+] as const)(
+  "does not enable historical week requests for $initialPeriod when active=$active",
+  (scope) => {
+    vi.setSystemTime(new Date(2026, 10, 9, 12));
+    openReport({ ...scope, initialDay: "2026-11-03" });
+    expect(mocks.weekTrend.mock.calls.at(-1)![0]).toMatchObject({ active: false });
+  }
+);
+
 it("renders a page heading and keeps inactive pages from starting cloud work", () => {
   const view = openReport({ variant: "page", initialPeriod: "week", active: false });
   expect(view.getByRole("heading", { name: "听歌足迹", level: 1 })).toBeInTheDocument();
   expect(view.getByRole("figure", { name: "每日收听时长" })).toHaveClass("h-[150px]");
-  expect(view.getByText("本周收听分布与前20首歌曲排行")).toBeInTheDocument();
+  expect(view.getByText("近7天收听分布与本周前20首歌曲排行")).toBeInTheDocument();
   expect(mocks.summary.mock.calls.at(-1)![1]).toBe(false);
   expect(mocks.today.mock.calls.at(-1)![0]).toMatchObject({ active: false });
   expect(mocks.ranked.mock.calls.at(-1)![0]).toMatchObject({ active: false });
   view.rerender(<ListeningFootprint {...view.props} variant="page" active />);
   expect(mocks.summary.mock.calls.at(-1)![1]).toBe(true);
   expect(mocks.ranked.mock.calls.at(-1)![0]).toMatchObject({ active: true });
+});
+
+it("rolls the active report across midnight and catches up after being inactive", () => {
+  vi.useFakeTimers();
+  vi.setSystemTime(new Date(2026, 10, 7, 23, 59, 59));
+  const view = openReport({ initialPeriod: "week" });
+  expect(mocks.weekTrend.mock.calls.at(-1)![0]).toMatchObject({ date: "2026-11-07", active: true });
+  expect(mocks.summary.mock.calls.at(-1)![0]).toBe(0);
+  expect(vi.getTimerCount()).toBe(1);
+
+  act(() => vi.advanceTimersByTime(1_000));
+  expect(mocks.weekTrend.mock.calls.at(-1)![0]).toMatchObject({ date: "2026-11-08", active: true });
+  expect(mocks.summary.mock.calls.at(-1)![0]).toBe(1);
+  expect(vi.getTimerCount()).toBe(1);
+  view.rerender(<ListeningFootprint {...view.props} active={false} />);
+  expect(vi.getTimerCount()).toBe(0);
+
+  act(() => vi.advanceTimersByTime(86_400_000));
+  expect(mocks.summary.mock.calls.at(-1)![0]).toBe(1);
+  view.rerender(<ListeningFootprint {...view.props} active />);
+  expect(mocks.weekTrend.mock.calls.at(-1)![0]).toMatchObject({ date: "2026-11-09", active: true });
+  expect(mocks.summary.mock.calls.at(-1)![0]).toBe(2);
+  expect(vi.getTimerCount()).toBe(1);
+  view.unmount();
+  expect(vi.getTimerCount()).toBe(0);
+});
+
+it.each([true, false])(
+  "returns to the weekly rank when the selected oldest day expires, active across midnight=%s",
+  (staysActive) => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 10, 9, 23, 59, 59));
+    rollingAcrossMidnight();
+    const previousTrack = {
+      ...localTrack,
+      time: new Date(2026, 10, 3, 14).getTime()
+    } as NeteaseHistoryRecord;
+    const view = openReport({
+      initialPeriod: "week",
+      historyRecords: [previousTrack]
+    });
+    fireEvent.click(view.getByRole("button", { name: "11月3日（上周），4小时36分" }));
+    expect(view.getByLabelText("选中日期数据")).toHaveTextContent("11月3日 · 4小时36分");
+    expect(view.props.onTracksLoaded).toHaveBeenLastCalledWith([previousTrack]);
+    if (!staysActive) view.rerender(<ListeningFootprint {...view.props} active={false} />);
+
+    act(() => vi.advanceTimersByTime(1_000));
+    if (!staysActive) view.rerender(<ListeningFootprint {...view.props} active />);
+
+    expect(mocks.weekTrend.mock.calls.at(-1)![0]).toMatchObject({ date: "2026-11-10" });
+    expect(view.queryByLabelText("选中日期数据")).not.toBeInTheDocument();
+    expect(view.queryByText("11月3日的本机记录")).not.toBeInTheDocument();
+    expect(view.getByText("本周播放排行")).toBeInTheDocument();
+    expect(view.props.onTracksLoaded).toHaveBeenLastCalledWith(rankTracks);
+    expect(view.props.onScopeChange).toHaveBeenLastCalledWith({ period: "week" });
+    expect(mocks.ranked.mock.calls.at(-1)![0]).toMatchObject({ active: true, period: "week" });
+  }
+);
+
+it.each([
+  { period: "week", selected: "2026-11-04", expected: "11月4日 · 8小时23分" },
+  { period: "month", selected: "2026-11-01", expected: "11月1日 · 2小时40分" }
+] as const)(
+  "retains the valid $period selection across midnight",
+  ({ period, expected, selected }) => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 10, 9, 23, 59, 59));
+    rollingAcrossMidnight();
+    const view = openReport({ initialPeriod: period, initialDay: selected });
+    expect(view.getByLabelText("选中日期数据")).toHaveTextContent(expected);
+    act(() => vi.advanceTimersByTime(1_000));
+    expect(view.getByLabelText("选中日期数据")).toHaveTextContent(expected);
+    expect(view.props.onScopeChange).toHaveBeenLastCalledWith({ period, day: selected });
+  }
+);
+
+it("keeps a handed-off historical date while the rolling chart is loading", () => {
+  vi.setSystemTime(new Date(2026, 10, 9, 12));
+  mocks.weekTrend.mockReturnValue({
+    details: [],
+    loading: true,
+    failed: false,
+    reload: mocks.trendReload
+  });
+  const view = openReport({ initialPeriod: "week", initialDay: "2026-11-03" });
+  expect(view.getByLabelText("选中日期数据")).toHaveTextContent("11月3日 · —");
+  expect(view.props.onScopeChange).toHaveBeenLastCalledWith({ period: "week", day: "2026-11-03" });
+
+  rollingAcrossMidnight();
+  view.rerender(<ListeningFootprint {...view.props} />);
+  expect(view.getByLabelText("选中日期数据")).toHaveTextContent("11月3日 · 4小时36分");
+  expect(view.props.onScopeChange).toHaveBeenLastCalledWith({ period: "week", day: "2026-11-03" });
+});
+
+it("does not discard an external historical date that was already outside the rolling window", () => {
+  vi.useFakeTimers();
+  vi.setSystemTime(new Date(2026, 10, 9, 23, 59, 59));
+  rollingAcrossMidnight();
+  const view = openReport({ initialPeriod: "week", initialDay: "2026-11-01" });
+  expect(view.getByLabelText("选中日期数据")).toHaveTextContent("11月1日 · —");
+  act(() => vi.advanceTimersByTime(1_000));
+  expect(view.getByLabelText("选中日期数据")).toHaveTextContent("11月1日 · —");
+  expect(view.props.onScopeChange).toHaveBeenLastCalledWith({ period: "week", day: "2026-11-01" });
 });
 
 it("keeps the generic drawer shell independent of players", () => {

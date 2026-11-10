@@ -6,6 +6,7 @@ import { RendererFormat } from "@/common/lib/format";
 import { RendererWindow } from "@/common/lib/window";
 import { RendererIPCMessageBus } from "@/common/lib/bus";
 import { usePageJump } from "@/wins/main/hooks/use-page-jump";
+import { useListeningWeekTrend } from "@/common/hooks/use-listening-week-trend";
 import { usePlayerActionInList } from "@/wins/main/hooks/use-player-action-in-list";
 import { NeteaseNetworkImage, type NeteaseTrackRecord } from "@/common/netease/models";
 import { openListeningFootprintDisplay } from "@/wins/main/lib/open-listening-footprint-display";
@@ -94,21 +95,36 @@ const ForYouPanel: FC<{ className?: string }> = ({ className }) => {
   const registration = user?.profile.createTime;
   const week = report.loggedIn ? report.week : null;
   const month = report.loggedIn ? report.month : null;
+  const trend = useListeningWeekTrend({
+    week,
+    date: date.format("YYYY-MM-DD"),
+    active: report.loggedIn
+  });
   const songCount = week?.todayTrackCount;
   const todayDuration = formatListeningDuration(week?.today?.duration);
   const todayDurationParts = todayDuration.match(/\d+|\D+/g) ?? [todayDuration];
-  const weekDetails = week?.details ?? [];
-  const hasWeekRecords = weekDetails.some((item) => (item.duration ?? 0) > 0);
-  const maxWeekDuration = Math.max(1, ...weekDetails.map((item) => item.duration ?? 0));
+  const trendDetails = trend.details;
+  const hasTrendRecords = trendDetails.some((item) => (item.duration ?? 0) > 0);
+  const maxDuration = Math.max(1, ...trendDetails.map((item) => item.duration ?? 0));
+  const hasPreviousWeek = trendDetails.some((item) => item.previousWeek);
+  const loading = report.loading || trend.loading;
+  const refresh = () => {
+    report.reload();
+    trend.reload();
+  };
   const trendTips = !report.loggedIn
     ? "登录后查看趋势"
     : report.loading && !week
       ? "正在同步趋势"
       : report.failed && !week
         ? "本周统计暂不可用"
-        : weekDetails.length > 0
-          ? "本周还没有收听记录"
-          : "本周暂无趋势";
+        : trend.loading
+          ? "正在补齐近7天"
+          : trend.failed
+            ? "上周数据暂不可用"
+            : trendDetails.length > 0 && trendDetails.every((item) => item.duration != null)
+              ? "近7天还没有收听记录"
+              : "近7天暂无趋势";
 
   return (
     <aside
@@ -117,7 +133,7 @@ const ForYouPanel: FC<{ className?: string }> = ({ className }) => {
         className
       )}
       aria-label="听歌足迹"
-      aria-busy={report.loading}>
+      aria-busy={loading}>
       <div className="pointer-events-none absolute inset-0 bg-linear-to-t from-black/10 via-transparent to-white/20" />
       <div className="relative flex h-full min-h-0 flex-col gap-1.5">
         <header className="flex shrink-0 items-center justify-between gap-3">
@@ -206,46 +222,63 @@ const ForYouPanel: FC<{ className?: string }> = ({ className }) => {
         </div>
         <section
           className="flex min-h-16 min-w-0 flex-1 flex-col border-t border-white/10 pt-1.5"
-          aria-label="本周收听趋势">
+          aria-label="近7天收听趋势">
           <div className="mb-1 flex min-w-0 shrink-0 items-baseline justify-between gap-2">
             <button
               className="min-w-max cursor-pointer rounded-sm text-[10px] opacity-55 outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-white/60"
               type="button"
               aria-label="查看本周听歌足迹"
               onClick={() => openReport("week")}>
-              本周收听
+              近7天
             </button>
             <span className="min-w-0 flex-1 truncate text-[9px] opacity-45" role="status">
               {report.loading && week
                 ? "更新中"
                 : report.failed && week
                   ? "部分统计暂未更新"
-                  : null}
+                  : trend.loading
+                    ? "补齐中"
+                    : trend.failed
+                      ? "上周暂不可用"
+                      : hasPreviousWeek && (
+                          <span className="inline-flex items-center gap-1">
+                            <span className="size-1.5 rounded-sm bg-white/25" />
+                            上周
+                          </span>
+                        )}
             </span>
             <span
               className="shrink-0 text-[11px] font-medium tabular-nums"
               aria-label="本周收听时长">
+              <span className="mr-1 text-[9px] font-normal opacity-55">本周</span>
               {formatListeningDuration(week?.total)}
             </span>
           </div>
-          {hasWeekRecords ? (
+          {hasTrendRecords ? (
             <ol
               className="grid min-h-10 flex-1 auto-cols-fr grid-flow-col gap-2"
-              aria-label="本周每日收听时长">
-              {weekDetails.map((item, index) => {
+              aria-label="近7天每日收听时长">
+              {trendDetails.map((item, index) => {
                 const day = item.period ? dayjs(item.period) : null;
                 const validDay = day?.isValid() ? day : null;
                 const label = validDay ? validDay.format("M月D日") : `第${index + 1}天`;
-                const duration = formatListeningDuration(item.duration);
+                const duration =
+                  item.duration == null ? "暂未获取" : formatListeningDuration(item.duration);
                 const isToday = validDay?.isSame(date, "day") ?? false;
                 return (
-                  <li key={`${item.period}-${index}`} className="min-h-0 min-w-0">
+                  <li
+                    key={item.period}
+                    className="min-h-0 min-w-0"
+                    data-previous-week={item.previousWeek}>
                     <Tooltip
                       className="h-full w-full min-w-0"
                       tooltipLabel={`${label}收听时长`}
                       content={
                         <div className="whitespace-nowrap rounded-md border border-white/15 bg-black/85 px-3 py-2 text-white shadow-lg backdrop-blur-lg">
-                          <p className="text-[10px] opacity-65">{label}</p>
+                          <p className="text-[10px] opacity-65">
+                            {label}
+                            {item.previousWeek && <span className="ml-2">上周</span>}
+                          </p>
                           <p className="mt-0.5 text-xs font-semibold tabular-nums">{duration}</p>
                         </div>
                       }
@@ -253,7 +286,7 @@ const ForYouPanel: FC<{ className?: string }> = ({ className }) => {
                       <button
                         className="group flex h-full w-full min-w-0 cursor-pointer flex-col justify-end gap-1 rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-white/60"
                         type="button"
-                        aria-label={`${label}，${duration}`}
+                        aria-label={`${label}，${duration}${item.previousWeek ? "（上周）" : ""}`}
                         onClick={() => openReport("week", validDay?.format("YYYY-MM-DD"))}>
                         <span
                           className="flex min-h-0 w-full flex-1 items-end justify-center"
@@ -261,19 +294,29 @@ const ForYouPanel: FC<{ className?: string }> = ({ className }) => {
                           <span
                             className={cx(
                               "w-2.5 max-w-[60%] rounded-t-sm transition-colors",
-                              isToday
-                                ? "bg-white/90"
-                                : "bg-white/35 group-hover:bg-white/70 group-focus-visible:bg-white/70"
+                              item.duration == null
+                                ? "h-0 border-t border-dashed border-white/30"
+                                : "min-h-px",
+                              item.duration == null
+                                ? null
+                                : isToday
+                                  ? "bg-white/90"
+                                  : item.previousWeek
+                                    ? "bg-white/25 group-hover:bg-white/50 group-focus-visible:bg-white/50"
+                                    : "bg-white/55 group-hover:bg-white/75 group-focus-visible:bg-white/75"
                             )}
                             style={{
-                              height: `${Math.max(0, ((item.duration ?? 0) / maxWeekDuration) * 100)}%`
+                              height:
+                                item.duration == null
+                                  ? undefined
+                                  : `${Math.max(0, (item.duration / maxDuration) * 100)}%`
                             }}
                           />
                         </span>
                         <span
                           className={cx(
                             "h-3 w-full truncate text-center text-[9px] tabular-nums",
-                            isToday ? "opacity-80" : "opacity-40"
+                            isToday ? "opacity-80" : item.previousWeek ? "opacity-35" : "opacity-55"
                           )}
                           aria-hidden="true">
                           {isToday
@@ -313,12 +356,9 @@ const ForYouPanel: FC<{ className?: string }> = ({ className }) => {
               size="compact"
               variant="plain"
               icon={RotateCwSquare}
-              disabled={!report.loggedIn || report.loading}
-              onClick={report.reload}
-              iconClassName={cx(
-                "size-4.5!",
-                report.loading && "animate-spin motion-reduce:animate-none"
-              )}
+              disabled={!report.loggedIn || loading}
+              iconClassName={cx("size-4.5!", loading && "animate-spin motion-reduce:animate-none")}
+              onClick={refresh}
             />
             <button
               className="flex shrink-0 cursor-pointer items-center gap-0.5 rounded-sm opacity-65 outline-none transition-opacity hover:opacity-100 focus-visible:ring-2 focus-visible:ring-white/60"

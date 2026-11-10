@@ -1,3 +1,15 @@
+$z-index-toast: 50;
+$z-index-context-menu: 50;
+$z-index-modal: 40;
+$z-index-drawer: 32;
+
+:root {
+  --z-index-display-toast: #{$z-index-toast};
+  --z-index-display-context-menu: #{$z-index-context-menu};
+  --z-index-display-modal: #{$z-index-modal};
+  --z-index-display-drawer: #{$z-index-drawer};
+}
+
 .display-container {
   $edge-fade: linear-gradient(to bottom, #000 calc(100% - (var(--spacing) * 6)), transparent);
 

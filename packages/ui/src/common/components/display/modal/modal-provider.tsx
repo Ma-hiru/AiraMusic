@@ -94,7 +94,7 @@ const ModalProvider: FC<{ className?: string }> = ({ className }) => {
     <div>
       <button
         className={cx(
-          "fixed inset-0 cursor-default bg-black/30",
+          "fixed z-(--z-index-modal) inset-0 cursor-default bg-black/30",
           render?.hiddenMaskBlur ? "backdrop-blur-none" : "backdrop-saturate-150 backdrop-blur-lg",
           !(visible && render) && "hidden",
           className
@@ -107,7 +107,7 @@ const ModalProvider: FC<{ className?: string }> = ({ className }) => {
             key="modal"
             className={cx(
               `
-              fixed inset-0 flex items-center justify-center
+              fixed z-(--z-index-modal) inset-0 flex items-center justify-center
               px-5 py-7 pointer-events-none
             `,
               className
@@ -118,7 +118,7 @@ const ModalProvider: FC<{ className?: string }> = ({ className }) => {
             <motion.section
               className={cx(
                 `
-                relative z-10 grid max-h-[min(86vh,720px)] w-full max-w-[calc(100vw-2rem)]
+                relative z-(--z-index-modal-content) grid max-h-[min(86vh,720px)] w-full max-w-[calc(100vw-2rem)]
                 grid-rows-[auto_1fr_auto] overflow-hidden rounded-lg pointer-events-auto
                 surface-popover
               `,

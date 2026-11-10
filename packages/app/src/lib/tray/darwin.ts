@@ -7,7 +7,7 @@ import { MainWindowPreset } from "@/lib/window-preset";
 import { MainWindowCreator } from "@/lib/window-creator";
 import { MainWindowManager } from "@/lib/window-manager";
 import type { MessageData, TrayCapsuleConfig } from "@mahiru/ipc/types";
-import type { NativeAddon, MenuLyricEvent, MenuBarLyricWord } from "@mahiru/native";
+import type { MenuLyricEvent, MenuBarLyricWord, DarwinNativeAddon } from "@mahiru/native";
 
 import { TrayUtils } from "./utils";
 import { type MenuLyricLine, resolveMenuLyricLine } from "./menu-lyric";
@@ -19,7 +19,7 @@ import { type MenuLyricLine, resolveMenuLyricLine } from "./menu-lyric";
 export class DarwinTray extends TrayUtils {
   private playerBus: Nullable<MessageData<"bus_deliver_track_meta">> = null;
   private readonly trayWin: BrowserWindow;
-  private readonly native: Nullable<NativeAddon>;
+  private readonly native: Nullable<DarwinNativeAddon>;
   /** 当前已应用的行；null = 尚未应用或已回到空闲标题 */
   private appliedLine: Nullable<MenuLyricLine> = null;
   private idleApplied = false;
@@ -30,7 +30,7 @@ export class DarwinTray extends TrayUtils {
 
   constructor() {
     super(null);
-    this.native = MainNativeAddon.isSupported ? MainNativeAddon.native : null;
+    this.native = MainNativeAddon.darwin;
     this.trayWin =
       MainWindowManager.get("tray") || MainWindowCreator.create(MainWindowPreset.trayOnDarwin)!;
 

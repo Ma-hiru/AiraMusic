@@ -137,6 +137,7 @@ const Playlist: FC<PlaylistProps> = ({
   const location = useLocation();
   const tabsID = useId();
   const [activeTab, setActiveTab] = useState<PlaylistTab>("tracks");
+  const [mountedTabs, setMountedTabs] = useState<PlaylistTab[]>(["tracks"]);
   const [status, setStatus] = useState<RequestStatus>("loading");
   const [playlist, setPlaylist] = useState<Nullable<NeteasePlaylist>>(null);
   const [records, setRecords] = useState<NeteaseTrackRecord[]>([]);
@@ -155,6 +156,8 @@ const Playlist: FC<PlaylistProps> = ({
   const collectionIndex = useRef<Nullable<PlaylistCollectionIndex>>(null);
   const totalTracks = useRef<NeteaseTrackRecord[]>([]);
   const trackListRef = useRef<Nullable<TrackListRef>>(null);
+  const [locateTarget, setLocateTarget] =
+    useState<Nullable<{ kind: "top" } | { id: number; kind: "track" }>>(null);
   const isLikedList = source === "like" || (!!playlist && playlist.id === user?.likedPlaylist.id);
   const selectedGroup =
     isLikedList && scope
@@ -216,7 +219,7 @@ const Playlist: FC<PlaylistProps> = ({
   const scrollTop = useRef(() => {
     resetSearchForTracks();
     setActiveTab("tracks");
-    trackListRef.current?.scrollToItem(0);
+    setLocateTarget({ kind: "top" });
   }).current;
   // 封面预缓存
   const coverSize = RendererImageConstants.PlaylistPageTrackCoverSize;
@@ -232,11 +235,10 @@ const Playlist: FC<PlaylistProps> = ({
   const fastLocator = useRef(() => {
     const id = activeTrackIDRef.current;
     if (!id) return;
-    const idx = tracksRef.current.findIndex((t) => t.id === id);
-    if (idx === -1) return;
+    if (!tracksRef.current.some((track) => track.id === id)) return;
     resetSearchForTracks();
     setActiveTab("tracks");
-    trackListRef.current?.scrollToItem(idx);
+    setLocateTarget({ kind: "track", id });
   }).current;
 
   useEffect(() => {
@@ -366,6 +368,8 @@ const Playlist: FC<PlaylistProps> = ({
     addTrackToPlaylist
   });
   useEffect(() => {
+    setMountedTabs(["tracks"]);
+    setLocateTarget(null);
     startTransition(() => {
       totalTracks.current = [];
       setPlaylist(null);
@@ -540,6 +544,7 @@ const Playlist: FC<PlaylistProps> = ({
       exitSelection();
       updateScope(null);
       setActiveTab(tab);
+      setMountedTabs((tabs) => (tabs.includes(tab) ? tabs : [...tabs, tab]));
       setKeyword("");
       setSearch({ tab, query: "" });
     },
@@ -547,7 +552,6 @@ const Playlist: FC<PlaylistProps> = ({
   );
 
   // 从收听卡片定位歌曲：先清掉歌手/专辑筛选，否则目标可能不在当前列表里
-  const [locateTarget, setLocateTarget] = useState<Nullable<number>>(null);
   const locateSong = useCallback(
     (songID: number) => {
       if (!totalTracks.current.some((track) => track.id === songID)) {
@@ -559,18 +563,19 @@ const Playlist: FC<PlaylistProps> = ({
       setKeyword("");
       setSearch({ tab: "tracks", query: "" });
       setActiveTab("tracks");
-      setLocateTarget(songID);
+      setLocateTarget({ kind: "track", id: songID });
     },
     [exitSelection, updateScope]
   );
-  // 等筛选清空、列表恢复完整数据后再滚动，避免定位到错误的行号
+  // 等页签可见、筛选清空后的列表提交，再计算行号并滚动。
   useEffect(() => {
-    if (locateTarget == null || activeTab !== "tracks") return;
-    const index = tracks.findIndex((track) => track.id === locateTarget);
+    if (locateTarget == null || activeTab !== "tracks" || status !== "success") return;
+    const index =
+      locateTarget.kind === "top" ? 0 : tracks.findIndex((track) => track.id === locateTarget.id);
     if (index === -1) return;
     trackListRef.current?.scrollToItem(index);
     setLocateTarget(null);
-  }, [activeTab, locateTarget, tracks]);
+  }, [activeTab, locateTarget, status, tracks]);
 
   const openSimilarPlaylist = useCallback(
     async (playlistID: number) => {
@@ -642,7 +647,7 @@ const Playlist: FC<PlaylistProps> = ({
                 id={`${tabsID}-tracks-panel`}
                 className={cx(
                   "absolute inset-0 flex min-h-0 flex-col pt-1",
-                  activeTab !== "tracks" && "invisible pointer-events-none"
+                  activeTab !== "tracks" && "hidden pointer-events-none"
                 )}
                 role="tabpanel"
                 inert={activeTab !== "tracks"}
@@ -708,11 +713,13 @@ const Playlist: FC<PlaylistProps> = ({
                   />
                 )}
               </div>
-              {activeTab === "similar" && !isLikedList && playlist && (
+              {mountedTabs.includes("similar") && !isLikedList && playlist && (
                 <div
                   id={`${tabsID}-similar-panel`}
-                  className="absolute inset-0 pt-2"
+                  className={cx("absolute inset-0 pt-2", activeTab !== "similar" && "hidden")}
                   role="tabpanel"
+                  inert={activeTab !== "similar"}
+                  aria-hidden={activeTab !== "similar"}
                   aria-labelledby={`${tabsID}-similar-tab`}>
                   <SimilarPlaylists
                     id={playlist.id}
@@ -722,32 +729,36 @@ const Playlist: FC<PlaylistProps> = ({
                   />
                 </div>
               )}
-              {activeTab === "artists" && isLikedList && (
+              {mountedTabs.includes("artists") && isLikedList && (
                 <div
                   id={`${tabsID}-artists-panel`}
-                  className="absolute inset-0 pt-2"
+                  className={cx("absolute inset-0 pt-2", activeTab !== "artists" && "hidden")}
                   role="tabpanel"
+                  inert={activeTab !== "artists"}
+                  aria-hidden={activeTab !== "artists"}
                   aria-labelledby={`${tabsID}-artists-tab`}>
                   <LikedArtists
                     className="pr-2 [scrollbar-gutter:stable]"
-                    query={query}
                     artists={artists}
                     totalCount={collection.artists.length}
+                    query={activeTab === "artists" ? query : ""}
                     onSelect={(artist) => selectScope({ kind: "artist", key: artist.key })}
                   />
                 </div>
               )}
-              {activeTab === "albums" && isLikedList && (
+              {mountedTabs.includes("albums") && isLikedList && (
                 <div
                   id={`${tabsID}-albums-panel`}
-                  className="absolute inset-0 pt-2"
+                  className={cx("absolute inset-0 pt-2", activeTab !== "albums" && "hidden")}
                   role="tabpanel"
+                  inert={activeTab !== "albums"}
+                  aria-hidden={activeTab !== "albums"}
                   aria-labelledby={`${tabsID}-albums-tab`}>
                   <LikedAlbums
                     className="pr-2 [scrollbar-gutter:stable]"
-                    query={query}
                     albums={albums}
                     totalCount={collection.albums.length}
+                    query={activeTab === "albums" ? query : ""}
                     onSelect={(album) => selectScope({ kind: "album", key: album.key })}
                   />
                 </div>

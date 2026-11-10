@@ -13,6 +13,7 @@ export function usePlaylistModifySync(id: Nullable<string>, source: Nullable<"li
             RendererIPCMessageBus.modified.twoWay({ type: "playlist-update", id, source });
             break;
           case "star":
+            RendererIPCMessageBus.modified.twoWay({ type: "user-playlist" });
             RendererIPCMessageBus.modified.deliver({ type: "playlist-update", id, source });
             break;
         }

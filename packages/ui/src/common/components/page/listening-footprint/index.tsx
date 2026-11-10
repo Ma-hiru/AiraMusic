@@ -12,6 +12,7 @@ import {
 import { useLatestRef } from "@/common/hooks/use-latest-ref";
 import { useTrackContextMenu } from "@/common/hooks/use-track-context-menu";
 import { useUserTrackManager } from "@/common/hooks/use-user-track-manager";
+import { useListeningWeekTrend } from "@/common/hooks/use-listening-week-trend";
 import { openTrackAddToPlaylist } from "@/common/hooks/use-track-add-to-playlist";
 import {
   type ListeningPeriod,
@@ -82,16 +83,60 @@ const ListeningFootprint = ({
     initialDay && dayjs(initialDay).isValid() ? dayjs(initialDay).format("YYYY-MM-DD") : null
   );
   const [refreshRevision, setRefreshRevision] = useState(0);
+  const [date, setDate] = useState(() => dayjs().format("YYYY-MM-DD"));
   const revision = historyRevision + refreshRevision;
   const bumpRevision = useCallback(() => setRefreshRevision((value) => value + 1), []);
+  useEffect(() => {
+    if (!active) return;
+    const updateDate = (nextDate: string) => {
+      if (period === "week") {
+        const previousEnd = dayjs(date);
+        const previousStart = previousEnd.subtract(6, "day");
+        const nextStart = dayjs(nextDate).subtract(6, "day");
+        setSelectedDay((selected) => {
+          if (!selected) return selected;
+          const day = dayjs(selected);
+          // 只重置从当前滚动窗口滑出的选择，保留外部传入的其他历史日期。
+          return !day.isBefore(previousStart) &&
+            !day.isAfter(previousEnd) &&
+            day.isBefore(nextStart)
+            ? null
+            : selected;
+        });
+      }
+      setDate(nextDate);
+      bumpRevision();
+    };
+    const currentDate = dayjs();
+    const currentDay = currentDate.format("YYYY-MM-DD");
+    if (date !== currentDay) {
+      updateDate(currentDay);
+      return;
+    }
+    const timer = window.setTimeout(
+      () => updateDate(dayjs().format("YYYY-MM-DD")),
+      currentDate.endOf("day").valueOf() - Date.now() + 1
+    );
+    return () => window.clearTimeout(timer);
+  }, [active, bumpRevision, date, period]);
   const report = useListeningFootprint(revision, active);
   const records = period === "month" ? report.month : report.week;
   const details = records?.details ?? [];
-  const singlePeriod = period !== "today" && details.length === 1 ? details[0]?.period : null;
+  const weekActive = active && report.loggedIn && period === "week";
+  const weekTrend = useListeningWeekTrend({
+    date,
+    week: report.week,
+    active: weekActive
+  });
+  const chartDetails = period === "week" ? weekTrend.details : details;
+  const trendLoading = period === "week" && weekTrend.loading;
+  const trendFailed = period === "week" && weekTrend.failed;
+  const singlePeriod =
+    period !== "today" && chartDetails.length === 1 ? chartDetails[0]?.period : null;
   const singleDate = singlePeriod ? dayjs(singlePeriod) : null;
   const effectiveDay =
     selectedDay ?? (singleDate?.isValid() ? singleDate.format("YYYY-MM-DD") : null);
-  const selectedIsToday = effectiveDay === dayjs().format("YYYY-MM-DD");
+  const selectedIsToday = effectiveDay === date;
   const today = useTodayTracks({
     active: active && report.loggedIn && (period === "today" || selectedIsToday),
     revision
@@ -137,9 +182,10 @@ const ListeningFootprint = ({
     addTrackToPlaylist: openTrackAddToPlaylist
   });
   const refresh = () => {
-    if (!report.loggedIn || report.loading || list.loading) return;
+    if (!report.loggedIn || report.loading || list.loading || trendLoading) return;
     report.reload();
     list.reload();
+    if (weekActive) weekTrend.reload();
   };
   useImperativeHandle(actionsRef, () => ({ refresh }));
   const values = {
@@ -150,7 +196,7 @@ const ListeningFootprint = ({
   const average = records && details.length ? records.total / details.length : null;
   const currentPeriod = periods.find((item) => item.value === period)!;
   const selectedDetail = effectiveDay
-    ? details.find(
+    ? chartDetails.find(
         (item) => item.period && dayjs(item.period).format("YYYY-MM-DD") === effectiveDay
       )
     : null;
@@ -182,7 +228,9 @@ const ListeningFootprint = ({
                 ? "该日展示本机保留记录"
                 : period === "today" || selectedIsToday
                   ? "今日收听时长与听过的歌曲"
-                  : `${currentPeriod.label}收听分布与前20首歌曲排行`}
+                  : period === "week"
+                    ? "近7天收听分布与本周前20首歌曲排行"
+                    : `${currentPeriod.label}收听分布与前20首歌曲排行`}
             </p>
           </section>
           <IconButton
@@ -190,11 +238,11 @@ const ListeningFootprint = ({
             label="刷新听歌足迹"
             variant="plain"
             icon={RotateCwSquare}
-            disabled={!report.loggedIn || report.loading || list.loading}
+            disabled={!report.loggedIn || report.loading || list.loading || trendLoading}
             onClick={refresh}
             iconClassName={cx(
               "size-5!",
-              report.loading && "animate-spin motion-reduce:animate-none"
+              (report.loading || trendLoading) && "animate-spin motion-reduce:animate-none"
             )}
           />
         </header>
@@ -239,13 +287,20 @@ const ListeningFootprint = ({
           <span aria-label="选中日期数据">
             {dayjs(effectiveDay).format("M月D日")} ·{" "}
             {formatListeningDuration(selectedDetail?.duration)}
+            {(trendLoading || trendFailed) && (
+              <span className="ml-2 opacity-70" role="status">
+                {trendLoading ? "补充上周数据中" : "上周统计暂未更新"}
+              </span>
+            )}
           </span>
         ) : period === "today" ? (
           <span aria-label="今日歌曲数量">
             今日 {report.week?.todayTrackCount != null ? `${report.week.todayTrackCount} 首` : "—"}
           </span>
         ) : (
-          <span aria-label="日均收听时长">日均 {formatListeningDuration(average)}</span>
+          <span aria-label="日均收听时长">
+            {period === "week" ? "本周日均" : "日均"} {formatListeningDuration(average)}
+          </span>
         )}
         {selectedDay ? (
           <button
@@ -255,8 +310,16 @@ const ListeningFootprint = ({
             查看整{period === "month" ? "月" : "周"}
           </button>
         ) : (
-          (report.loading || report.failed) && (
-            <span role="status">{report.loading ? "更新统计中" : "统计暂未完整更新"}</span>
+          (report.loading || report.failed || trendLoading || trendFailed) && (
+            <span role="status">
+              {report.loading
+                ? "更新统计中"
+                : trendLoading
+                  ? "补充上周数据中"
+                  : trendFailed
+                    ? "上周统计暂未更新"
+                    : "统计暂未完整更新"}
+            </span>
           )
         )}
       </div>
@@ -265,12 +328,13 @@ const ListeningFootprint = ({
         className="flex min-h-0 flex-1 flex-col gap-3"
         role="tabpanel"
         aria-labelledby={`${tabsId}-${period}`}>
-        {period !== "today" && details.length > 1 && report.loggedIn && (
+        {period !== "today" && chartDetails.length > 1 && report.loggedIn && (
           <DailyChart
             key={period}
-            details={details}
             variant={variant}
+            details={chartDetails}
             selectedDay={effectiveDay}
+            label={period === "week" ? "近7天收听" : undefined}
             onSelectDay={setSelectedDay}
           />
         )}

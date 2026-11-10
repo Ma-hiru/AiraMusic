@@ -1,8 +1,10 @@
-import { act, render, cleanup, fireEvent } from "@testing-library/react";
+import { act, render, cleanup, waitFor, fireEvent } from "@testing-library/react";
 import Playlist from "@mahiru/ui/common/components/page/playlist-v2";
 import type { Ref, ComponentProps } from "react";
 import type { PlaylistScope } from "@mahiru/ui/common/types/playlist-scope";
 import type { PlaylistRef } from "@mahiru/ui/common/components/page/playlist-v2";
+
+type CollectionItem = { key: string; name: string };
 
 const mocks = vi.hoisted(() => ({
   load: vi.fn(),
@@ -14,6 +16,13 @@ const mocks = vi.hoisted(() => ({
   mounts: vi.fn(),
   unmounts: vi.fn(),
   similar: vi.fn(),
+  similarUnmounts: vi.fn(),
+  artistMounts: vi.fn(),
+  artistUnmounts: vi.fn(),
+  albumMounts: vi.fn(),
+  albumUnmounts: vi.fn(),
+  artistProps: vi.fn<(props: { query: string; artists: CollectionItem[] }) => void>(),
+  albumProps: vi.fn<(props: { query: string; albums: CollectionItem[] }) => void>(),
   isMain: true,
   defaultUseDisplayWindow: false
 }));
@@ -104,46 +113,88 @@ vi.mock("@/common/components/page/playlist-v2/top", () => ({
     </div>
   )
 }));
-vi.mock("@/common/components/page/playlist-v2/similar-playlists", () => ({
-  default: ({ onClick }: { onClick: (id: number) => void }) => {
-    mocks.similar();
-    return <button onClick={() => onClick(9)}>打开相似歌单</button>;
-  }
-}));
-vi.mock("@/common/components/page/playlist-v2/liked-artists", () => ({
-  default: ({
-    onSelect,
-    artists
-  }: {
-    onSelect: (artist: unknown) => void;
-    artists: { key: string; name: string }[];
-  }) => (
-    <div>
-      {artists.map((artist) => (
-        <button key={artist.key} onClick={() => onSelect(artist)}>
-          查看 {artist.name}
-        </button>
-      ))}
-    </div>
-  )
-}));
-vi.mock("@/common/components/page/playlist-v2/liked-albums", () => ({
-  default: ({
-    onSelect,
-    albums
-  }: {
-    onSelect: (album: unknown) => void;
-    albums: { key: string; name: string }[];
-  }) => (
-    <div>
-      {albums.map((album) => (
-        <button key={album.key} onClick={() => onSelect(album)}>
-          查看专辑 {album.name}
-        </button>
-      ))}
-    </div>
-  )
-}));
+vi.mock("@/common/components/page/playlist-v2/similar-playlists", async () => {
+  const { useState, useEffect } = await import("react");
+  return {
+    default: function SimilarPlaylistsMock({ onClick }: { onClick: (id: number) => void }) {
+      const [page, setPage] = useState(1);
+      useEffect(() => {
+        mocks.similar();
+        return mocks.similarUnmounts;
+      }, []);
+      return (
+        <div data-page={page} data-testid="similar-playlists">
+          <button onClick={() => onClick(9)}>打开相似歌单</button>
+          <button onClick={() => setPage((value) => value + 1)}>更多相似歌单</button>
+        </div>
+      );
+    }
+  };
+});
+vi.mock("@/common/components/page/playlist-v2/liked-artists", async () => {
+  const { useState, useEffect } = await import("react");
+  return {
+    default: function LikedArtistsMock({
+      onSelect,
+      query,
+      artists
+    }: {
+      query: string;
+      artists: CollectionItem[];
+      onSelect: (artist: CollectionItem) => void;
+    }) {
+      const [page, setPage] = useState(1);
+      mocks.artistProps({ artists, query });
+      useEffect(() => {
+        mocks.artistMounts();
+        return mocks.artistUnmounts;
+      }, []);
+      useEffect(() => setPage(1), [artists, query]);
+      return (
+        <div data-page={page} data-query={query} data-testid="liked-artists">
+          {artists.map((artist) => (
+            <button key={artist.key} onClick={() => onSelect(artist)}>
+              查看 {artist.name}
+            </button>
+          ))}
+          <button onClick={() => setPage((value) => value + 1)}>更多歌手</button>
+        </div>
+      );
+    }
+  };
+});
+vi.mock("@/common/components/page/playlist-v2/liked-albums", async () => {
+  const { useState, useEffect } = await import("react");
+  return {
+    default: function LikedAlbumsMock({
+      onSelect,
+      query,
+      albums
+    }: {
+      query: string;
+      albums: CollectionItem[];
+      onSelect: (album: CollectionItem) => void;
+    }) {
+      const [page, setPage] = useState(1);
+      mocks.albumProps({ albums, query });
+      useEffect(() => {
+        mocks.albumMounts();
+        return mocks.albumUnmounts;
+      }, []);
+      useEffect(() => setPage(1), [albums, query]);
+      return (
+        <div data-page={page} data-query={query} data-testid="liked-albums">
+          {albums.map((album) => (
+            <button key={album.key} onClick={() => onSelect(album)}>
+              查看专辑 {album.name}
+            </button>
+          ))}
+          <button onClick={() => setPage((value) => value + 1)}>更多专辑</button>
+        </div>
+      );
+    }
+  };
+});
 vi.mock("@/common/components/display/track_list", async () => {
   const { useEffect, useImperativeHandle } = await import("react");
   return {
@@ -224,6 +275,7 @@ function props(): Props {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  mocks.scrollToItem.mockReset();
   mocks.isMain = true;
   mocks.defaultUseDisplayWindow = false;
   mocks.load.mockResolvedValue({ id: 1, name: "歌单", trackCount: 2, tracks });
@@ -274,6 +326,68 @@ it("returns to the song tab before selection or locating the playing track", asy
   fireEvent.click(view.getByRole("button", { name: "选择" }));
   expect(view.getByRole("tab", { name: /歌曲/ })).toHaveAttribute("aria-selected", "true");
   expect(view.getByTestId("virtual-track-list")).toHaveAttribute("data-selection", "true");
+});
+
+it("waits for the restored song panel and cleared search before locating or returning to the top", async () => {
+  loadLikedFixture();
+  const ref = { current: null as null | PlaylistRef };
+  const view = render(<Playlist {...likedInput()} ref={ref} />);
+  const list = await view.findByTestId("virtual-track-list");
+  const snapshots: { index: number; hidden: boolean; tracks: string[] }[] = [];
+  mocks.scrollToItem.mockImplementation((index: number) => {
+    snapshots.push({
+      index,
+      hidden: list.closest('[role="tabpanel"]')!.classList.contains("hidden"),
+      tracks: [...list.querySelectorAll("button")].map((button) => button.textContent ?? "")
+    });
+  });
+
+  fireEvent.click(view.getByRole("tab", { name: /^按歌手/ }));
+  fireEvent.change(view.getByRole("textbox"), { target: { value: "artist a" } });
+  mocks.scrollToItem.mockClear();
+  act(() => {
+    ref.current?.fastLocator();
+    expect(mocks.scrollToItem).not.toHaveBeenCalled();
+  });
+  expect(snapshots).toEqual([
+    { index: 1, hidden: false, tracks: ["First song", "Second song", "Collaboration"] }
+  ]);
+  expect(view.getByRole("textbox")).toHaveValue("");
+
+  fireEvent.click(view.getByRole("tab", { name: /^按专辑/ }));
+  fireEvent.change(view.getByRole("textbox"), { target: { value: "beta" } });
+  mocks.scrollToItem.mockClear();
+  snapshots.length = 0;
+  act(() => {
+    ref.current?.scrollTop();
+    expect(mocks.scrollToItem).not.toHaveBeenCalled();
+  });
+  expect(snapshots).toEqual([
+    { index: 0, hidden: false, tracks: ["First song", "Second song", "Collaboration"] }
+  ]);
+  expect(view.getByRole("textbox")).toHaveValue("");
+});
+
+it("keeps the fast locator stable and recomputes its target from the latest track order", async () => {
+  const ref = { current: null as null | PlaylistRef };
+  const input = props();
+  const view = render(<Playlist {...input} ref={ref} />);
+  await view.findByTestId("virtual-track-list");
+  const locate = ref.current!.fastLocator;
+  const scrollTop = ref.current!.scrollTop;
+  mocks.load.mockResolvedValue({
+    id: 2,
+    name: "新歌单",
+    trackCount: 2,
+    tracks: [...tracks].reverse()
+  });
+  view.rerender(<Playlist {...input} ref={ref} id="2" />);
+  await waitFor(() => expect(ref.current?.tracks[0]?.id).toBe(12));
+  expect(ref.current!.fastLocator).toBe(locate);
+  expect(ref.current!.scrollTop).toBe(scrollTop);
+  mocks.scrollToItem.mockClear();
+  act(() => locate());
+  expect(mocks.scrollToItem).toHaveBeenLastCalledWith(0);
 });
 
 it.each([true, false])(
@@ -379,14 +493,14 @@ it("filters liked songs by artist while preserving the full collection and using
   expect(mocks.unmounts).not.toHaveBeenCalled();
 });
 
-function likedInput(): Props {
+function likedInput(playlistID = 1): Props {
   return {
     ...props(),
     source: "like",
     user: {
       userId: 2,
       profile: { userId: 2 },
-      likedPlaylist: { id: 1 },
+      likedPlaylist: { id: playlistID },
       likedTrackIDs: { checkPoint: 1 },
       userPlaylists: []
     } as unknown as NonNullable<Props["user"]>
@@ -520,4 +634,206 @@ it("clears group search when locating, scrolling or selecting returns to songs",
   expect(input).toHaveValue("");
   expect(view.getByTestId("virtual-track-list")).toHaveAttribute("data-selection", "true");
   expect(ref.current?.tracks).toHaveLength(3);
+});
+
+function expectPanelVisibility(content: HTMLElement, hidden: boolean) {
+  const panel = content.closest<HTMLElement>('[role="tabpanel"]')!;
+  expect(panel).toHaveAttribute("aria-hidden", String(hidden));
+  if (hidden) {
+    expect(panel).toHaveClass("hidden");
+    expect(panel).toHaveAttribute("inert");
+  } else {
+    expect(panel).not.toHaveClass("hidden");
+    expect(panel).not.toHaveAttribute("inert");
+  }
+}
+
+it("mounts similar playlists on first visit and retains their DOM, state and scroll across tabs", async () => {
+  const view = render(<Playlist {...props()} />);
+  await view.findByTestId("virtual-track-list");
+  expect(view.queryByTestId("similar-playlists")).not.toBeInTheDocument();
+  expect(mocks.similar).not.toHaveBeenCalled();
+
+  fireEvent.click(view.getByRole("tab", { name: "相似歌单" }));
+  const similar = view.getByTestId("similar-playlists");
+  expectPanelVisibility(similar, false);
+  fireEvent.click(view.getByRole("button", { name: "更多相似歌单" }));
+  similar.scrollTop = 240;
+  expect(similar).toHaveAttribute("data-page", "2");
+
+  fireEvent.click(view.getByRole("tab", { name: /歌曲/ }));
+  expect(view.getByTestId("similar-playlists")).toBe(similar);
+  expectPanelVisibility(similar, true);
+  expect(similar.scrollTop).toBe(240);
+  expect(mocks.similarUnmounts).not.toHaveBeenCalled();
+
+  fireEvent.click(view.getByRole("tab", { name: "相似歌单" }));
+  expect(view.getByTestId("similar-playlists")).toBe(similar);
+  expectPanelVisibility(similar, false);
+  expect(similar).toHaveAttribute("data-page", "2");
+  expect(similar.scrollTop).toBe(240);
+  expect(mocks.similar).toHaveBeenCalledOnce();
+  expect(mocks.similarUnmounts).not.toHaveBeenCalled();
+  expect(mocks.load).toHaveBeenCalledOnce();
+});
+
+it("lazily mounts liked categories and preserves their local pages and scroll after hiding them", async () => {
+  loadLikedFixture();
+  const view = render(<Playlist {...likedInput()} />);
+  await view.findByTestId("virtual-track-list");
+  expect(view.queryByTestId("liked-artists")).not.toBeInTheDocument();
+  expect(view.queryByTestId("liked-albums")).not.toBeInTheDocument();
+
+  fireEvent.click(view.getByRole("tab", { name: /^按歌手/ }));
+  const artists = view.getByTestId("liked-artists");
+  expectPanelVisibility(artists, false);
+  expect(view.queryByTestId("liked-albums")).not.toBeInTheDocument();
+  fireEvent.click(view.getByRole("button", { name: "更多歌手" }));
+  artists.scrollTop = 180;
+
+  fireEvent.click(view.getByRole("tab", { name: /^按专辑/ }));
+  const albums = view.getByTestId("liked-albums");
+  expectPanelVisibility(artists, true);
+  expectPanelVisibility(albums, false);
+  fireEvent.click(view.getByRole("button", { name: "更多专辑" }));
+  albums.scrollTop = 320;
+
+  fireEvent.click(view.getByRole("tab", { name: /^歌曲/ }));
+  expect(view.getByTestId("liked-artists")).toBe(artists);
+  expect(view.getByTestId("liked-albums")).toBe(albums);
+  expectPanelVisibility(artists, true);
+  expectPanelVisibility(albums, true);
+  fireEvent.click(view.getByRole("tab", { name: /^按歌手/ }));
+  expectPanelVisibility(artists, false);
+  expect(artists).toHaveAttribute("data-page", "2");
+  expect(artists.scrollTop).toBe(180);
+  fireEvent.click(view.getByRole("tab", { name: /^按专辑/ }));
+  expectPanelVisibility(albums, false);
+  expect(albums).toHaveAttribute("data-page", "2");
+  expect(albums.scrollTop).toBe(320);
+  expect(mocks.artistMounts).toHaveBeenCalledOnce();
+  expect(mocks.albumMounts).toHaveBeenCalledOnce();
+  expect(mocks.artistUnmounts).not.toHaveBeenCalled();
+  expect(mocks.albumUnmounts).not.toHaveBeenCalled();
+});
+
+it("keeps hidden category queries empty and their collections stable while searching another tab", async () => {
+  loadLikedFixture();
+  const view = render(<Playlist {...likedInput()} />);
+  await view.findByTestId("virtual-track-list");
+  fireEvent.click(view.getByRole("tab", { name: /^按歌手/ }));
+  const artists = view.getByTestId("liked-artists");
+  const allArtists = mocks.artistProps.mock.lastCall![0].artists;
+  fireEvent.click(view.getByRole("button", { name: "更多歌手" }));
+  fireEvent.click(view.getByRole("tab", { name: /^按专辑/ }));
+  const albums = view.getByTestId("liked-albums");
+  const allAlbums = mocks.albumProps.mock.lastCall![0].albums;
+  fireEvent.click(view.getByRole("button", { name: "更多专辑" }));
+  fireEvent.click(view.getByRole("tab", { name: /^歌曲/ }));
+
+  fireEvent.change(view.getByRole("textbox"), { target: { value: "First" } });
+  expect(mocks.artistProps.mock.lastCall![0].query).toBe("");
+  expect(mocks.albumProps.mock.lastCall![0].query).toBe("");
+  expect(mocks.artistProps.mock.lastCall![0].artists).toBe(allArtists);
+  expect(mocks.albumProps.mock.lastCall![0].albums).toBe(allAlbums);
+  expect(artists).toHaveAttribute("data-page", "2");
+  expect(albums).toHaveAttribute("data-page", "2");
+
+  fireEvent.click(view.getByRole("tab", { name: /^按专辑/ }));
+  expect(view.getByRole("textbox")).toHaveValue("");
+  fireEvent.change(view.getByRole("textbox"), { target: { value: "beta" } });
+  expect(mocks.albumProps.mock.lastCall![0].query).toBe("beta");
+  expect(mocks.artistProps.mock.lastCall![0].query).toBe("");
+  expect(mocks.artistProps.mock.lastCall![0].artists).toBe(allArtists);
+  expect(artists).toHaveAttribute("data-page", "2");
+
+  fireEvent.click(view.getByRole("tab", { name: /^按歌手/ }));
+  expect(view.getByRole("textbox")).toHaveValue("");
+  expect(view.getByTestId("liked-artists")).toBe(artists);
+  expect(artists).toHaveAttribute("data-page", "2");
+  fireEvent.change(view.getByRole("textbox"), { target: { value: "artist a" } });
+  expect(mocks.artistProps.mock.lastCall![0].query).toBe("artist a");
+  expect(mocks.albumProps.mock.lastCall![0].query).toBe("");
+  expect(mocks.albumProps.mock.lastCall![0].albums).toBe(allAlbums);
+  expect(view.getByTestId("liked-albums")).toBe(albums);
+  expect(mocks.artistMounts).toHaveBeenCalledOnce();
+  expect(mocks.albumMounts).toHaveBeenCalledOnce();
+  expect(mocks.artistUnmounts).not.toHaveBeenCalled();
+  expect(mocks.albumUnmounts).not.toHaveBeenCalled();
+});
+
+function resourceFixture(id: number, songName: string) {
+  return {
+    id,
+    name: `歌单 ${id}`,
+    trackCount: tracks.length,
+    tracks: tracks.map((track, index) => ({
+      ...track,
+      name: index === 0 ? songName : track.name
+    }))
+  };
+}
+
+it("clears visited panels when the playlist id changes", async () => {
+  const input = props();
+  const view = render(<Playlist {...input} />);
+  await view.findByTestId("virtual-track-list");
+  fireEvent.click(view.getByRole("tab", { name: "相似歌单" }));
+  const previous = view.getByTestId("similar-playlists");
+  fireEvent.click(view.getByRole("button", { name: "更多相似歌单" }));
+  fireEvent.click(view.getByRole("tab", { name: /^歌曲/ }));
+
+  mocks.load.mockResolvedValue(resourceFixture(2, "New playlist song"));
+  view.rerender(<Playlist {...input} id="2" />);
+  await view.findByRole("button", { name: "New playlist song" });
+  expect(view.queryByTestId("similar-playlists")).not.toBeInTheDocument();
+  expect(mocks.similar).toHaveBeenCalledOnce();
+  expect(mocks.similarUnmounts).toHaveBeenCalledOnce();
+
+  fireEvent.click(view.getByRole("tab", { name: "相似歌单" }));
+  expect(view.getByTestId("similar-playlists")).not.toBe(previous);
+  expect(view.getByTestId("similar-playlists")).toHaveAttribute("data-page", "1");
+  expect(mocks.similar).toHaveBeenCalledTimes(2);
+});
+
+it("clears visited panels across source changes even when returning to the same normal playlist", async () => {
+  const input = { ...props(), user: likedInput(100).user };
+  const view = render(<Playlist {...input} />);
+  await view.findByTestId("virtual-track-list");
+  fireEvent.click(view.getByRole("tab", { name: "相似歌单" }));
+  fireEvent.click(view.getByRole("tab", { name: /^歌曲/ }));
+
+  mocks.load.mockResolvedValue(resourceFixture(100, "Liked source song"));
+  view.rerender(<Playlist {...input} source="like" />);
+  await view.findByRole("button", { name: "Liked source song" });
+  expect(view.queryByTestId("similar-playlists")).not.toBeInTheDocument();
+  mocks.load.mockResolvedValue(resourceFixture(1, "Normal source song"));
+  view.rerender(<Playlist {...input} source="normal" />);
+  await view.findByRole("button", { name: "Normal source song" });
+  expect(view.queryByTestId("similar-playlists")).not.toBeInTheDocument();
+  expect(mocks.similar).toHaveBeenCalledOnce();
+  expect(mocks.similarUnmounts).toHaveBeenCalledOnce();
+  expect(view.getByRole("tab", { name: /^歌曲/ })).toHaveAttribute("aria-selected", "true");
+});
+
+it("clears visited liked categories when the user's liked playlist changes", async () => {
+  loadLikedFixture();
+  const view = render(<Playlist {...likedInput()} />);
+  await view.findByTestId("virtual-track-list");
+  fireEvent.click(view.getByRole("tab", { name: /^按歌手/ }));
+  fireEvent.click(view.getByRole("tab", { name: /^按专辑/ }));
+  fireEvent.click(view.getByRole("tab", { name: /^歌曲/ }));
+
+  mocks.load.mockResolvedValue(resourceFixture(2, "Another liked playlist song"));
+  view.rerender(<Playlist {...likedInput(2)} />);
+  await view.findByRole("button", { name: "Another liked playlist song" });
+  await waitFor(() =>
+    expect(mocks.load).toHaveBeenLastCalledWith(2, expect.any(AbortSignal), true)
+  );
+  expect(view.queryByTestId("liked-artists")).not.toBeInTheDocument();
+  expect(view.queryByTestId("liked-albums")).not.toBeInTheDocument();
+  expect(mocks.artistMounts).toHaveBeenCalledOnce();
+  expect(mocks.albumMounts).toHaveBeenCalledOnce();
+  expect(mocks.artistUnmounts).toHaveBeenCalledOnce();
+  expect(mocks.albumUnmounts).toHaveBeenCalledOnce();
 });

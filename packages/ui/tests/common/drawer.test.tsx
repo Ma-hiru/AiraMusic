@@ -142,6 +142,31 @@ it("keeps the drawer open while Escape closes a song modal or context menu", asy
   expect(AppDrawer.__visibleGetter()).toBe(false);
 });
 
+it("shares the same z-index classes between the context menu and its body portal submenu", () => {
+  const view = render(<AppContextMenu.Provider className="z-(--z-index-main-context-menu)!" />);
+  act(() =>
+    AppContextMenu._create(() => ({
+      clientX: 10,
+      clientY: 10,
+      items: [{ label: "更多", children: [{ label: "复制歌曲名" }] }]
+    }))
+  );
+
+  const menuRoot = view.getByRole("menu", { name: "上下文菜单" }).parentElement!;
+  fireEvent.mouseEnter(view.getByRole("menuitem", { name: "更多" }));
+  const submenu = view.getByRole("menu", { name: "子菜单" });
+  const submenuRoot = submenu.parentElement!.parentElement!;
+  const zIndexClasses = (element: HTMLElement) =>
+    Array.from(element.classList).filter((className) => className.startsWith("z-"));
+
+  expect(submenuRoot.parentElement).toBe(document.body);
+  expect(zIndexClasses(menuRoot)).toEqual([
+    "z-(--z-index-context-menu)",
+    "z-(--z-index-main-context-menu)!"
+  ]);
+  expect(zIndexClasses(submenuRoot)).toEqual(zIndexClasses(menuRoot));
+});
+
 it("retains newly opened content when a previous exit animation finishes", async () => {
   const view = render(<Providers />);
   act(() => AppDrawer._create(createDrawer, "旧队列"));

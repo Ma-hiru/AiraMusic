@@ -13,7 +13,6 @@ export type NCMParentMessage =
   | {
       port: number;
       type: "start";
-      tokenPath?: string;
       deviceIdPath?: string;
     };
 

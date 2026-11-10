@@ -58,14 +58,16 @@ const Layout: FC<object> = () => {
         {stage >= Stage.Immediately && (
           <Background className="-z-10" onLoaded={() => setLoaded(true)} />
         )}
-        {stage >= Stage.Second && <AppToast.Provider className="z-40" />}
-        {stage >= Stage.Finally && <AppContextMenu.Provider className="z-40" />}
-        {stage >= Stage.Finally && <AppModal.Provider className="z-35" />}
+        {stage >= Stage.Second && <AppToast.Provider className="z-(--z-index-main-toast)!" />}
+        {stage >= Stage.Finally && (
+          <AppContextMenu.Provider className="z-(--z-index-main-context-menu)!" />
+        )}
+        {stage >= Stage.Finally && <AppModal.Provider className="z-(--z-index-main-modal)!" />}
         {stage >= Stage.Finally && (
           <AppDrawer.Provider
             className={cx(
               // 播放层开合会改变抽屉可用的底边界，过渡时长与播放层位移保持一致
-              "z-32 top-(--top-control-height)! transition-[bottom] duration-400 ease-in-out",
+              "z-(--z-index-main-drawer)! top-(--top-control-height)! transition-[bottom] duration-400 ease-in-out",
               !playerOpened && "bottom-(--playbar-height)!"
             )}
           />

@@ -19,9 +19,14 @@ const loadNativeAddon = (addonPath = defaultAddonPath): NativeAddon => {
 
 export type {
   NativeAddon,
+  TaskbarAction,
   MenuLyricEvent,
   MenuBarLyricWord,
+  DarwinNativeAddon,
   MenuLyricEventKind,
+  TaskbarButtonIcons,
+  WindowsNativeAddon,
+  TaskbarActionHandler,
   MenuLyricEventHandler
 } from "./api";
 export { loadNativeAddon };

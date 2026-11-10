@@ -9,6 +9,8 @@ const mocks = vi.hoisted(() => ({
   dynamic: vi.fn(),
   mounts: vi.fn(),
   unmounts: vi.fn(),
+  otherMounts: vi.fn(),
+  otherUnmounts: vi.fn(),
   menu: vi.fn()
 }));
 vi.mock("@/common/netease/services", () => ({
@@ -58,13 +60,37 @@ vi.mock("@/common/components/page/album-v2/top", () => ({
     </div>
   )
 }));
-vi.mock("@/common/components/page/album-v2/artist-albums", () => ({
-  default: ({ onClick, artistID }: { artistID: number; onClick: (id: number) => void }) => (
-    <button data-artist={artistID} data-testid="other-albums" onClick={() => onClick(9)}>
-      打开歌手专辑
-    </button>
-  )
-}));
+vi.mock("@/common/components/page/album-v2/artist-albums", async () => {
+  const { useState, useEffect } = await import("react");
+  return {
+    default: function ArtistAlbumsMock({
+      onClick,
+      artistID,
+      currentAlbumID
+    }: {
+      artistID: number;
+      currentAlbumID: number;
+      onClick: (id: number) => void;
+    }) {
+      const [pages, setPages] = useState(1);
+      useEffect(() => {
+        mocks.otherMounts();
+        return mocks.otherUnmounts;
+      }, []);
+      return (
+        <div
+          className="h-full overflow-y-auto"
+          data-artist={artistID}
+          data-testid="other-albums"
+          data-album={currentAlbumID}>
+          <output aria-label="已加载专辑页">{pages}</output>
+          <button onClick={() => setPages((value) => value + 1)}>加载下一页</button>
+          <button onClick={() => onClick(9)}>打开歌手专辑</button>
+        </div>
+      );
+    }
+  };
+});
 vi.mock("@/common/components/display/track_list", async () => {
   const { useEffect, useImperativeHandle } = await import("react");
   return {
@@ -210,6 +236,67 @@ it("supports existing callers without the optional replace callback by playing t
   fireEvent.change(view.getByRole("textbox"), { target: { value: "Second" } });
   fireEvent.click(view.getByRole("button", { name: "播放全部" }));
   expect(input.onClick).toHaveBeenCalledExactlyOnceWith(fixture().tracks[0], 0);
+});
+it("mounts other albums lazily and retains their DOM, paging state and scroll position across tabs", async () => {
+  const view = render(<Album {...props()} />);
+  await view.findByTestId("virtual-album-tracks");
+  expect(view.queryByTestId("other-albums")).not.toBeInTheDocument();
+  expect(mocks.otherMounts).not.toHaveBeenCalled();
+
+  fireEvent.click(view.getByRole("tab", { name: "其他专辑" }));
+  const albums = view.getByTestId("other-albums");
+  const panel = albums.closest('[role="tabpanel"]')!;
+  expect(panel).toHaveAttribute("aria-hidden", "false");
+  expect(panel).not.toHaveAttribute("inert");
+  fireEvent.click(view.getByRole("button", { name: "加载下一页" }));
+  albums.scrollTop = 475;
+  fireEvent.scroll(albums);
+
+  fireEvent.click(view.getByRole("tab", { name: /歌曲/ }));
+  expect(view.getByTestId("other-albums")).toBe(albums);
+  expect(panel).toHaveClass("hidden");
+  expect(panel).toHaveAttribute("inert");
+  expect(panel).toHaveAttribute("aria-hidden", "true");
+  expect(view.queryByRole("button", { name: "加载下一页" })).not.toBeInTheDocument();
+  expect(mocks.otherUnmounts).not.toHaveBeenCalled();
+
+  fireEvent.click(view.getByRole("tab", { name: "其他专辑" }));
+  expect(view.getByTestId("other-albums")).toBe(albums);
+  expect(view.getByLabelText("已加载专辑页")).toHaveTextContent("2");
+  expect(albums.scrollTop).toBe(475);
+  expect(panel).not.toHaveClass("hidden");
+  expect(panel).not.toHaveAttribute("inert");
+  expect(panel).toHaveAttribute("aria-hidden", "false");
+  expect(mocks.otherMounts).toHaveBeenCalledOnce();
+  expect(mocks.otherUnmounts).not.toHaveBeenCalled();
+});
+it("clears visited-tab state on an album change and mounts the new resource only when requested", async () => {
+  const input = props();
+  const ref = { current: null as null | AlbumPageRef };
+  const view = render(<Album {...input} ref={ref} />);
+  await view.findByTestId("virtual-album-tracks");
+  fireEvent.click(view.getByRole("tab", { name: "其他专辑" }));
+  const previous = view.getByTestId("other-albums");
+  fireEvent.click(view.getByRole("button", { name: "加载下一页" }));
+  previous.scrollTop = 240;
+
+  mocks.load.mockResolvedValueOnce(fixture(2));
+  view.rerender(<Album {...input} ref={ref} id={2} />);
+  await view.findByTestId("virtual-album-tracks");
+  expect(ref.current?.album?.content.id).toBe(2);
+  expect(view.getByRole("tab", { name: /歌曲/ })).toHaveAttribute("aria-selected", "true");
+  expect(previous).not.toBeInTheDocument();
+  expect(view.queryByTestId("other-albums")).not.toBeInTheDocument();
+  expect(mocks.otherMounts).toHaveBeenCalledOnce();
+  expect(mocks.otherUnmounts).toHaveBeenCalledOnce();
+
+  fireEvent.click(view.getByRole("tab", { name: "其他专辑" }));
+  const next = view.getByTestId("other-albums");
+  expect(next).not.toBe(previous);
+  expect(next).toHaveAttribute("data-album", "2");
+  expect(view.getByLabelText("已加载专辑页")).toHaveTextContent("1");
+  expect(next.scrollTop).toBe(0);
+  expect(mocks.otherMounts).toHaveBeenCalledTimes(2);
 });
 it("ignores a late result for a replaced album and resets album-specific tab/search state", async () => {
   let resolve!: (value: ReturnType<typeof fixture>) => void;

@@ -69,7 +69,7 @@ const ToastProvider = ({
     <div
       className={cx(
         `
-        fixed top-4 left-1/2 -translate-x-1/2
+        fixed z-(--z-index-toast) top-4 left-1/2 -translate-x-1/2
         flex flex-col gap-2
       `,
         className

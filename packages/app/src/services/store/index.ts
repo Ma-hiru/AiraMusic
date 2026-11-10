@@ -43,10 +43,10 @@ export default class StoreService extends MainServicesInstance {
   }
 
   override async ready() {
-    return new Promise<void>((resolve) => {
+    return new Promise<void>((resolve, reject) => {
       let retryCount = 0;
-      const maxRetries = 5;
-      const retryDelay = 500; // ms
+      const maxRetries = 4;
+      const retryDelay = 2_500; // ms
       const checkServer = () => {
         this.instance.ping().then((ok) => {
           if (ok) {
@@ -55,8 +55,9 @@ export default class StoreService extends MainServicesInstance {
             retryCount++;
             setTimeout(checkServer, retryDelay);
           } else {
-            console.warn("StoreService: Server did not respond to ping after multiple attempts.");
-            resolve();
+            reject(
+              new Error("StoreService: Server did not respond to ping after multiple attempts.")
+            );
           }
         });
       };

@@ -88,13 +88,6 @@ const Control: FC<TopControlProps> = ({
         iconClassName={itemClassName}
         onClick={() => currentWindow.devTools()}
       />
-      <ControlButton
-        icon={Minus}
-        label="最小化窗口"
-        show={mini && !isDarwin}
-        iconClassName={itemClassName}
-        onClick={() => currentWindow.minimize()}
-      />
       {apd.map((append, index) => {
         if (isValidElement(append)) return <Fragment key={index}>{append}</Fragment>;
         const { className, iconClassName, ...props } = append;
@@ -114,6 +107,13 @@ const Control: FC<TopControlProps> = ({
         label={currentWindow.isPin ? "取消窗口置顶" : "窗口置顶"}
         iconClassName={cx(itemClassName, "scale-95 relative top-[1.25px]")}
         onClick={handlePin}
+      />
+      <ControlButton
+        icon={Minus}
+        label="最小化窗口"
+        show={mini && !isDarwin}
+        iconClassName={itemClassName}
+        onClick={() => currentWindow.minimize()}
       />
       <ControlButton
         color={color}

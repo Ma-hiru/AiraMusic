@@ -11,7 +11,7 @@ describe("NeteaseURL image sizing", () => {
     const url = new URL(sized);
 
     expect(url.origin + url.pathname).toBe(
-      "http://p1.music.126.net/HnYEb2ilgQarW4b31YY5SQ==/109951171991108161.jpg"
+      "https://p1.music.126.net/HnYEb2ilgQarW4b31YY5SQ==/109951171991108161.jpg"
     );
     expect(url.searchParams.get("param")).toBe("180y180");
     expect(url.searchParams.get("type")).toBe("webp");
@@ -24,7 +24,7 @@ describe("NeteaseURL image sizing", () => {
       "http://p4.music.126.net/JzNK4a5PjjPIXAgVlqEc5Q==/109951164154280311.jpg?param=200y200&type=webp";
 
     expect(NeteaseURL.setImageSize(source, NeteaseImageSize.raw)).toBe(
-      "http://p4.music.126.net/JzNK4a5PjjPIXAgVlqEc5Q==/109951164154280311.jpg"
+      "https://p4.music.126.net/JzNK4a5PjjPIXAgVlqEc5Q==/109951164154280311.jpg"
     );
   });
 

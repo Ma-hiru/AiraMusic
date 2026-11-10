@@ -1,5 +1,7 @@
 import { TrackQuality } from "@/common/enum";
 
+import { NeteaseURL } from "./netease-url";
+
 export class NeteaseNetworkAudio {
   readonly url;
   readonly quality;
@@ -13,7 +15,7 @@ export class NeteaseNetworkAudio {
     meta: NeteaseAPI.NeteaseSongUrlNewItem;
   }) {
     this.quality = props.quality;
-    this.url = props.url;
+    this.url = NeteaseURL.toSecure(props.url);
     this.id = props.id;
     this.meta = props.meta;
   }

@@ -338,7 +338,7 @@ const MenuProvider: FC<{ className?: string }> = ({ className }) => {
       ref={scope}
       className={cx(
         `
-          fixed z-15 w-46 rounded-md
+          fixed z-(--z-index-context-menu) w-46 rounded-md
           surface-popover p-1 contain-layout
           pointer-events-none opacity-0 shadow-none!
       `,
@@ -363,7 +363,7 @@ const MenuProvider: FC<{ className?: string }> = ({ className }) => {
       {submenu &&
         createPortal(
           <div
-            className="fixed z-[16] w-44"
+            className={cx("fixed z-(--z-index-context-menu) w-44", className)}
             style={{ left: submenu.left, top: submenu.top }}
             onMouseEnter={cancelSubmenuClose}
             onMouseLeave={scheduleSubmenuClose}>

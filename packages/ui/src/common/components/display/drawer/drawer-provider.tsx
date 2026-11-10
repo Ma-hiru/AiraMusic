@@ -280,7 +280,9 @@ const DrawerProvider: FC<{ className?: string }> = ({ className }) => {
   });
 
   return (
-    <div ref={frameRef} className={cx("fixed inset-0 pointer-events-none", className)}>
+    <div
+      ref={frameRef}
+      className={cx("fixed z-(--z-index-drawer) inset-0 pointer-events-none", className)}>
       <button
         className={cx(
           "absolute inset-0 cursor-default bg-transparent pointer-events-auto",
@@ -322,7 +324,7 @@ const DrawerProvider: FC<{ className?: string }> = ({ className }) => {
             animate={{ x: 0, transition: { duration: 0.28, ease: [0.16, 1, 0.3, 1] } }}>
             {render.resizable && (
               <div
-                className="group absolute inset-y-3 left-0 z-10 w-2 cursor-col-resize touch-none outline-none"
+                className="group absolute inset-y-3 left-0 z-(--z-index-drawer-resize-handle) w-2 cursor-col-resize touch-none outline-none"
                 tabIndex={0}
                 role="separator"
                 aria-label="调整抽屉宽度"

@@ -1,3 +1,8 @@
+$z-index-toast: 40;
+$z-index-context-menu: 40;
+$z-index-modal: 35;
+$z-index-drawer: 32;
+
 :root {
   --playbar-height: calc(var(--spacing) * 16); /* 4rem = 64px */
   --top-control-height: calc(var(--spacing) * 10); /* 2.5rem = 40px */
@@ -5,6 +10,10 @@
   --side-bar-collapse-width: calc(var(--spacing) * 20); /* 5rem = 80px */
   --content-max-width: 1440px;
   --float-button-right-margin: calc(var(--spacing) * 2); /* 0.5rem = 8px */
+  --z-index-main-toast: #{$z-index-toast};
+  --z-index-main-context-menu: #{$z-index-context-menu};
+  --z-index-main-modal: #{$z-index-modal};
+  --z-index-main-drawer: #{$z-index-drawer};
 }
 
 .router-container {

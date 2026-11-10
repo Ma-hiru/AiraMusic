@@ -39,11 +39,11 @@ export class MainApp {
   /**
    * @desc 创建并启动服务 \
    * error: exit \
-   * code: MainExitCodeConstants.SERVICES_START_ERROR
+   * code: MainExitCodeConstants.SERVICES_RUN_ERROR
    * */
   private createServices() {
     this._services = new MainServices({
-      services: ["ncm", "proxy", "store"],
+      services: ["store", "ncm", "proxy"],
       onPanic: (service, err) => {
         // agent 服务不算致命服务
         if (service === "agent") {
@@ -52,10 +52,7 @@ export class MainApp {
           return;
         }
         Log.error(`service(${service})`, err);
-        this.exit(
-          MainExitCodeConstants.SERVICES_START_ERROR,
-          `failed to initialize ${service} service`
-        );
+        this.exit(MainExitCodeConstants.SERVICES_RUN_ERROR, `${service} service run error`);
       }
     });
     return this._services.ready();

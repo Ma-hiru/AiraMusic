@@ -4,6 +4,7 @@ import MainPlaylist from "@mahiru/ui/wins/main/pages/playlist";
 import DisplayPlaylist from "@mahiru/ui/wins/display/pages/playlist";
 import type { PlaylistScope } from "@mahiru/ui/common/types/playlist-scope";
 import type { PlaylistRef } from "@mahiru/ui/common/components/page/playlist-switch";
+import type { PlaylistModifyType } from "@mahiru/ui/common/hooks/use-playlist-modify-sync";
 
 const mocks = vi.hoisted(() => {
   const noop = () => {};
@@ -13,14 +14,18 @@ const mocks = vi.hoisted(() => {
     navigate: vi.fn(),
     displayReady: vi.fn(),
     deliver: vi.fn(),
+    modifiedTwoWay: vi.fn(),
+    modifiedDeliver: vi.fn(),
     markBack: vi.fn(),
     setTyping: vi.fn(),
     mainPlayer: vi.fn(),
     displayPlayer: vi.fn(),
     setTitle: vi.fn(),
     playlistProps: null as unknown as {
+      onDeleted: () => void;
       onPageAction: () => void;
       initialScope?: PlaylistScope;
+      onEdited: (modifies: PlaylistModifyType[]) => void;
     },
     playlistRef: null as unknown as PlaylistRef,
     player: { current: { track: null } },
@@ -35,7 +40,6 @@ const mocks = vi.hoisted(() => {
     managers: { heartManager: noop, playableManager: noop },
     collectionActions: { addTrackToPlaylist: noop, addTracksToPlaylist: noop },
     scrollActions: { canScrollTop: noop, canFastLocate: noop },
-    modifications: { onEdited: noop, onDeleted: noop },
     background: { setBackground: noop },
     listen: vi.fn(() => noop)
   };
@@ -53,16 +57,17 @@ vi.mock("@/common/lib/window", () => ({
   RendererWindow: { display: { reactReadyAwait: mocks.displayReady } }
 }));
 vi.mock("@/common/lib/bus", () => ({
-  RendererIPCMessageBus: { trackMeta: { data: null }, display: { deliver: mocks.deliver } }
+  RendererIPCMessageBus: {
+    trackMeta: { data: null },
+    display: { deliver: mocks.deliver },
+    modified: { twoWay: mocks.modifiedTwoWay, deliver: mocks.modifiedDeliver }
+  }
 }));
 vi.mock("@/common/lib/modified", () => ({ RendererModified: { listen: mocks.listen } }));
 vi.mock("@/common/hooks/use-router-active", () => ({ useRouterActive: () => true }));
 vi.mock("@/common/hooks/use-listenable", () => ({ useListenable: (value: unknown) => value }));
 vi.mock("@/common/hooks/use-user-track-manager", () => ({
   useUserTrackManager: () => mocks.managers
-}));
-vi.mock("@/common/hooks/use-playlist-modify-sync", () => ({
-  usePlaylistModifySync: () => mocks.modifications
 }));
 vi.mock("@/common/hooks/use-track-add-to-playlist", () => ({
   useTrackAddToPlaylist: () => mocks.collectionActions
@@ -104,9 +109,11 @@ vi.mock("@/common/components/page/playlist-switch", async () => {
       ref,
       ...props
     }: {
+      onDeleted: () => void;
       onPageAction: () => void;
       ref: React.Ref<PlaylistRef>;
       initialScope?: PlaylistScope;
+      onEdited: (modifies: PlaylistModifyType[]) => void;
     }) {
       mocks.playlistProps = props;
       useImperativeHandle(ref, () => mocks.playlistRef);
@@ -199,4 +206,51 @@ it("uses the real liked playlist ID and selected playback range for display play
   expect(options.markId).toBe("playlist-100");
   expect(options.getTracks()).toBe(playbackTracks);
   expect(mocks.playlistRef.totalTracks.current).toBe(totalTracks);
+});
+
+it.each([
+  { name: "main", Component: MainPlaylist },
+  { name: "display", Component: DisplayPlaylist }
+])(
+  "refreshes user playlists and syncs playlist details after starring in $name",
+  ({ Component }) => {
+    mocks.location.search = "?id=200&source=normal";
+    render(<Component />);
+
+    act(() => mocks.playlistProps.onEdited(["star"]));
+
+    expect(mocks.modifiedTwoWay).toHaveBeenCalledExactlyOnceWith({ type: "user-playlist" });
+    expect(mocks.modifiedDeliver).toHaveBeenCalledExactlyOnceWith({
+      type: "playlist-update",
+      id: "200",
+      source: "normal"
+    });
+  }
+);
+
+it.each([
+  { name: "main", Component: MainPlaylist },
+  { name: "display", Component: DisplayPlaylist }
+])("keeps metadata and deletion notifications synchronized in $name", ({ Component }) => {
+  mocks.location.search = "?id=200&source=normal";
+  render(<Component />);
+
+  act(() => mocks.playlistProps.onEdited(["meta"]));
+
+  expect(mocks.modifiedTwoWay).toHaveBeenCalledTimes(2);
+  expect(mocks.modifiedTwoWay).toHaveBeenNthCalledWith(1, { type: "user-playlist" });
+  expect(mocks.modifiedTwoWay).toHaveBeenNthCalledWith(2, {
+    type: "playlist-update",
+    id: "200",
+    source: "normal"
+  });
+  expect(mocks.modifiedDeliver).not.toHaveBeenCalled();
+
+  mocks.modifiedTwoWay.mockClear();
+  act(() => mocks.playlistProps.onDeleted());
+
+  expect(mocks.modifiedTwoWay).toHaveBeenCalledTimes(2);
+  expect(mocks.modifiedTwoWay).toHaveBeenNthCalledWith(1, { type: "user-playlist" });
+  expect(mocks.modifiedTwoWay).toHaveBeenNthCalledWith(2, { type: "remove-playlist", id: "200" });
+  expect(mocks.modifiedDeliver).not.toHaveBeenCalled();
 });

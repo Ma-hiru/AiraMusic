@@ -28,7 +28,7 @@ export class NeteaseNetworkImage {
     size?: number | NeteaseImageSize;
     sourceName: "album" | "other" | "track" | "avatar" | "playlist";
   }) {
-    this.url = props.url;
+    this.url = NeteaseURL.toSecure(props.url);
     this.sourceID = props.sourceID;
     this.sourceName = props.sourceName;
     this.size = props.size ?? NeteaseImageSize.raw;
