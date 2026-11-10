@@ -6,8 +6,11 @@ React 构建多窗口播放体验，并使用 Rust Agent、Rust WASM 和 Go 本�
 [下载](https://github.com/Ma-hiru/AiraMusic/releases) · [功能概览](#功能概览) · [界面截图](#界面预览) · [音乐 Agent](#音乐-agent) · [架构设计](#架构设计) · [本地开发](#本地开发)
 
 ![AiraMusic 多窗口1](docs/images/all_windows.png)
+![AiraMusic 喜欢列表](docs/images/liked.png)
 ![AiraMusic 播放页2](docs/images/player2.png)
-![AiraMusic 播放页](docs/images/player.png)
+![AiraMusic 播放页](docs/images/player3.png)
+![AiraMusic 播放列表](docs/images/list.png)
+![AiraMusic 歌手](docs/images/artist.png)
 
 > [!IMPORTANT]
 > AiraMusic 是非官方第三方客户端，不直接或间接提供任何音乐下载功能，推荐开通网易云黑胶会员使用。
@@ -19,8 +22,10 @@ React 构建多窗口播放体验，并使用 Rust Agent、Rust WASM 和 Go 本�
 
 - **音乐浏览与播放**：覆盖首页推荐、搜索、歌单、专辑、艺人、评论、播放历史、队列管理和多种播放模式。
 - **多种播放模式**：支持网易云私人 FM（漫游）、心动模式。
-- **多窗口桌面体验**：使用多个 Vite 入口承载主界面、登录、迷你播放器、歌词、托盘、图片、评论、设置、Radio 和
-  Agent；多窗口之间随意拉起、关闭和同步。支持托盘控制与 Windows 任务栏封面缩略图，适配 mac 的顶栏胶囊（托盘图标与逐字歌词合一）和红绿灯。
+- **多窗口桌面体验**：使用多个 Vite 入口承载主界面、登录、迷你播放器、歌词、托盘、图片、评论、展示窗、Radio、
+  Agent 和关于；设置、播放列表与听歌足迹在展示窗中打开，开启“默认使用展示窗”后歌单、歌手、专辑等页面也会分离到
+  独立窗口。多窗口之间随意拉起、关闭和同步。支持托盘控制与 Windows 任务栏封面缩略图，适配 mac
+  的顶栏胶囊（托盘图标与逐字歌词合一）和红绿灯。
 - **沉浸式视觉**：提供播放页、桌面歌词、实时音乐频谱、简单流体背景，以及基于封面 MMCQ 取色生成的动态主题。
 - **计算任务异步化**：Rust/WASM 负责歌词解析与修复、FFT 频谱、主题色提取、搜索辅助和 WebGL
   renderer，频谱链路结合 Web Worker 避免阻塞 React 渲染。
@@ -34,75 +39,84 @@ React 构建多窗口播放体验，并使用 Rust Agent、Rust WASM 和 Go 本�
 
 ## 界面预览
 
-| 多窗口                                                                                               | 播放页                                                                                     |
-| ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
-| ![AiraMusic 多窗口1](docs/images/all_windows.png) ![AiraMusic 多窗口2](docs/images/all_windows2.png) | ![AiraMusic 播放页1](docs/images/player.png) ![AiraMusic 播放页2](docs/images/player2.png) |
+![AiraMusic 多窗口](docs/images/all_windows.png)
 
-| 首页                                    | 歌单                                        |
-| --------------------------------------- | ------------------------------------------- |
-| ![AiraMusic 首页](docs/images/home.png) | ![AiraMusic 歌单](docs/images/playlist.png) |
+### 主界面
 
-| Agent                           |
-| ------------------------------- |
-| ![Agent](docs/images/agent.png) |
+| 推荐首页                                    | 播放列表                                     |
+|---------------------------------------------|----------------------------------------------|
+| ![AiraMusic 推荐首页](docs/images/home.png) | ![AiraMusic 播放列表](docs/images/list2.png) |
 
-<details>
-<summary>查看更多界面截图</summary>
+| 我喜欢的音乐                                     | 历史记录                                       |
+|--------------------------------------------------|------------------------------------------------|
+| ![AiraMusic 我喜欢的音乐](docs/images/liked.png) | ![AiraMusic 历史记录](docs/images/history.png) |
 
 ### 播放页
 
-![播放页 3](docs/images/player3.png)
+| 播放页 · 逐字歌词                             | 播放页 · 多行&对唱                             |
+|-----------------------------------------------|------------------------------------------------|
+| ![AiraMusic 播放页 1](docs/images/player.png) | ![AiraMusic 播放页 2](docs/images/player2.png) |
 
-### 托盘与迷你播放器
+| 播放页 · 注音                              | 播放列表抽屉                                |
+|------------------------------------------------|---------------------------------------------|
+| ![AiraMusic 播放页 3](docs/images/player3.png) | ![AiraMusic 播放列表](docs/images/list.png) |
 
-![托盘](docs/images/tray.png)
-![迷你播放器](docs/images/mini.png)
+### 歌单
 
-### Agent
+| 歌单详情 · 歌曲                             | 歌单详情 · 相似歌单                              |
+|---------------------------------------------|--------------------------------------------------|
+| ![AiraMusic 歌单](docs/images/playlist.png) | ![AiraMusic 相似歌单](docs/images/playlist2.png) |
 
-![Agent](docs/images/agent2.png)
+| 歌单简介弹层                                     | 多窗口：歌单 / 播放列表 / 评论                     |
+|--------------------------------------------------|----------------------------------------------------|
+| ![AiraMusic 歌单简介](docs/images/playlist3.png) | ![AiraMusic 歌单多窗口](docs/images/playlist4.png) |
 
-### 歌单与播放队列
+### 专辑
 
-![歌单 2](docs/images/playlist2.png)
-![歌单 3](docs/images/playlist3.png)
-![歌单 4](docs/images/playlist4.png)
-![播放队列](docs/images/list.png)
+| 专辑详情 · 歌曲                          | 专辑详情 · 其他专辑                           |
+|------------------------------------------|-----------------------------------------------|
+| ![AiraMusic 专辑](docs/images/album.png) | ![AiraMusic 其他专辑](docs/images/album2.png) |
 
-### 播放历史
+### 歌手
 
-![播放历史](docs/images/history.png)
+| 歌手 · 热门歌曲                           | 歌手 · 专辑                                    |
+|-------------------------------------------|------------------------------------------------|
+| ![AiraMusic 歌手](docs/images/artist.png) | ![AiraMusic 歌手专辑](docs/images/artist2.png) |
 
-### 首页
+| 歌手 · 介绍                                    | 歌手 · 相似歌手                                |
+|------------------------------------------------|------------------------------------------------|
+| ![AiraMusic 歌手介绍](docs/images/artist3.png) | ![AiraMusic 相似歌手](docs/images/artist4.png) |
 
-![首页 2](docs/images/home2.png)
-![首页 3](docs/images/home3.png)
-![首页 4](docs/images/home4.png)
-![首页 5](docs/images/home5.png)
-![首页 6](docs/images/home6.png)
-![首页 7](docs/images/home7.png)
+### 收藏
 
-### 歌手与专辑
-
-![歌手](docs/images/artist.png)
-![歌手专辑](docs/images/artist_album.png)
-![专辑](docs/images/album.png)
-![专辑 2](docs/images/album2.png)
+| 喜欢的音乐 · 按歌手筛选                         | 收藏 · 歌单                                 | 收藏 · 专辑                                  |
+|-------------------------------------------------|---------------------------------------------|----------------------------------------------|
+| ![AiraMusic 按歌手筛选](docs/images/liked1.png) | ![AiraMusic 收藏歌单](docs/images/star.png) | ![AiraMusic 收藏专辑](docs/images/star2.png) |
 
 ### 搜索
 
-![搜索](docs/images/search.png)
-![搜索 2](docs/images/search2.png)
-![搜索 3](docs/images/search3.png)
+| 实时热搜                                      | 搜索结果 · 单曲                                | 搜索结果 · 专辑                                |
+|-----------------------------------------------|------------------------------------------------|------------------------------------------------|
+| ![AiraMusic 实时热搜](docs/images/search.png) | ![AiraMusic 搜索单曲](docs/images/search2.png) | ![AiraMusic 搜索专辑](docs/images/search3.png) |
 
 ### 设置
 
-![设置](docs/images/settings.png)
-![设置 2](docs/images/settings2.png)
-![设置 3](docs/images/settings3.png)
-![设置 4](docs/images/settings4.png)
+| 设置 · 音质与输出设备                       | 设置 · 缓存                                      |
+|---------------------------------------------|--------------------------------------------------|
+| ![AiraMusic 设置](docs/images/settings.png) | ![AiraMusic 缓存设置](docs/images/settings2.png) |
 
-</details>
+### Agent
+
+| Agent 工作区                              | 设置 · 外部 MCP 接入                             |
+|-------------------------------------------|--------------------------------------------------|
+| ![AiraMusic Agent](docs/images/agent.png) | ![AiraMusic MCP 设置](docs/images/settings3.png) |
+
+### 其他
+
+| 迷你播放器                                                                | 托盘菜单&胶囊歌词(mac)                                                                |
+|---------------------------------------------------------------------------|-------------------------------------------------------------------------|
+| <img src="docs/images/mini.png" width="372" alt="AiraMusic 迷你播放器" /> | <img src="docs/images/tray.png" width="188" alt="AiraMusic 托盘菜单" /> |
+
 
 ## 音乐 Agent
 
@@ -181,16 +195,16 @@ flowchart LR
 
 ### 工作区概览
 
-| Package           | 职责                                                                                                  | 核心技术                                         |
-| ----------------- | ----------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
-| `packages/ui`     | 多窗口渲染层，包括 `index`、`login`、`mini`、`lyric`、`tray`、`comments`、`display` 和 `agent` 等入口 | React 19、Vite 8、Tailwind CSS 4、Zustand、Jotai |
-| `packages/app`    | Electron 主进程、窗口与托盘、IPC、自定义协议、子服务生命周期及打包入口                                | Electron 45、tsdown、Express、`http-proxy-3`     |
-| `packages/agent`  | Agent HTTP/SSE 服务、模型与工具循环、MCP 客户端、会话持久化、进程封装和生成的 DTO                     | Rust、Axum、Tokio、rmcp、AG-UI                   |
-| `packages/ipc`    | Electron 主进程与各渲染窗口之间的类型化 invoke/message 契约                                           | TypeScript                                       |
-| `packages/store`  | 供渲染层通过 `/cache` 使用的本地缓存服务，以及 Electron 侧进程启动器                                  | Go、Gin                                          |
-| `packages/wasm`   | 歌词解析、主题与图片颜色、频谱、搜索辅助和 WebGL renderer                                             | Rust、wasm-bindgen、wasm-pack                    |
-| `packages/native` | Windows 任务栏自定义封面缩略图；macOS 顶栏胶囊（托盘图标 + 逐字歌词）；其他平台保留对应接口               | Rust、napi-rs、windows-sys                       |
-| `packages/log`    | 主进程和渲染层共用的日志基础能力                                                                      | TypeScript                                       |
+| Package           | 职责                                                                                                                                | 核心技术                                         |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| `packages/ui`     | 多窗口渲染层，11 个 Vite 入口：`index`、`login`、`mini`、`lyric`、`tray`、`image`、`comments`、`display`、`radio`、`agent`、`about` | React 19、Vite 8、Tailwind CSS 4、Zustand、Jotai |
+| `packages/app`    | Electron 主进程、窗口与托盘、IPC、自定义协议、子服务生命周期及打包入口                                                              | Electron 45、tsdown、Express、`http-proxy-3`     |
+| `packages/agent`  | Agent HTTP/SSE 服务、模型与工具循环、MCP 客户端、会话持久化、进程封装和生成的 DTO                                                   | Rust、Axum、Tokio、rmcp、AG-UI                   |
+| `packages/ipc`    | Electron 主进程与各渲染窗口之间的类型化 invoke/message 契约                                                                         | TypeScript                                       |
+| `packages/store`  | 供渲染层通过 `/cache` 使用的本地缓存服务，以及 Electron 侧进程启动器                                                                | Go、Gin                                          |
+| `packages/wasm`   | 歌词解析、主题与图片颜色、频谱、搜索辅助和 WebGL renderer                                                                           | Rust、wasm-bindgen、wasm-pack                    |
+| `packages/native` | Windows 任务栏自定义封面缩略图；macOS 顶栏胶囊（托盘图标 + 逐字歌词）；其他平台保留对应接口                                         | Rust、napi-rs、windows-sys                       |
+| `packages/log`    | 主进程和渲染层共用的日志基础能力                                                                                                    | TypeScript                                       |
 
 ## 本地开发
 
@@ -264,7 +278,7 @@ yarn test            # TypeScript、Go、Rust/WASM 和原生模块测试
 ```
 
 TypeScript 测试由根目录 `vitest.config.ts` 聚合，包含各工作区测试。
-项目保留 `vite-plugin-wasm` 的 Yarn 补丁， 用于识别 Vitest 5 的插件名称。
+项目保留 `vite-plugin-wasm` 的 Yarn 补丁，用于识别 Vitest 5 的插件名称。
 
 常规 CI 安装锁定依赖，检查格式与静态分析，构建原生产物，再执行类型检查、测试及 UI/Electron bundle 构建。
 `v*` 标签触发独立 Release 工作流；它在各目标平台构建安装包，上传资产后发布 Release。
@@ -273,4 +287,5 @@ TypeScript 测试由根目录 `vitest.config.ts` 聚合，包含各工作区测�
 
 Copyright (C) 2025-2026 Ma-hiru
 
-AiraMusic 基于 [AGPL-3.0](LICENSE) 开源。分发衍生作品时须以相同协议开源并提供完整源码；若通过网络向用户提供服务，还须向这些用户提供对应源码。使用第三方音乐服务时，请同时遵守相应服务条款与所在地法律法规。
+AiraMusic 基于 [AGPL-3.0](LICENSE)
+开源。分发衍生作品时须以相同协议开源并提供完整源码；若通过网络向用户提供服务，还须向这些用户提供对应源码。使用第三方音乐服务时，请同时遵守相应服务条款与所在地法律法规。
