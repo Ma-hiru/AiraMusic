@@ -28,6 +28,16 @@ export type TaskbarAction = "next" | "play" | "pause" | "previous";
 
 export type TaskbarActionHandler = (error: null | Error, action: TaskbarAction) => void;
 
+export type TaskbarLogLevel = "info" | "warn" | "debug" | "error";
+
+/** 原生侧回传的一条日志 */
+export interface TaskbarLogRecord {
+  message: string;
+  level: TaskbarLogLevel;
+}
+
+export type TaskbarLogHandler = (error: null | Error, record: TaskbarLogRecord) => void;
+
 export interface TaskbarButtonIcons {
   next: Uint8Array;
   play: Uint8Array;
@@ -40,6 +50,11 @@ export interface TaskbarButtonIcons {
  * `win.rs` 只在 Windows 目标编译，因此 macOS 产物里根本不存在这些函数。
  */
 export interface WindowsNativeAddon {
+  /**
+   * 注册原生日志回调，把 `[taskbar]` 的输出接进主进程 logger。
+   * 不注册时原生侧退回 stderr。重复调用会替换旧回调。
+   */
+  setTaskbarLogger(onLog: TaskbarLogHandler): void;
   /** 在主窗口的任务栏预览工具栏上挂三个播放按钮 */
   setTaskbarButtons(
     handle: Buffer,

@@ -2,17 +2,24 @@ import { EventEmitter } from "node:events";
 
 type Action = "next" | "play" | "pause" | "previous";
 type ActionHandler = (error: null | Error, action: Action) => void;
+type NativeLogHandler = (
+  error: null | Error,
+  record: { message: string; level: "info" | "warn" | "debug" | "error" }
+) => void;
 type ImageResponse = { ok: boolean; bytes: () => Promise<Uint8Array> };
 
 const mocks = vi.hoisted(() => ({
   listeners: new Map<string, (data: unknown) => void>(),
   getWindow: vi.fn(),
   commit: vi.fn(),
+  debug: vi.fn(),
+  info: vi.fn(),
   warn: vi.fn(),
   error: vi.fn(),
   getIcons: vi.fn(),
   native: {
     setCover: vi.fn<(handle: Buffer, image: null | Uint8Array) => void>(),
+    setTaskbarLogger: vi.fn<(onLog: NativeLogHandler) => void>(),
     setTaskbarButtons:
       vi.fn<
         (
@@ -25,7 +32,9 @@ const mocks = vi.hoisted(() => ({
   }
 }));
 
-vi.mock("@mahiru/app/lib/log", () => ({ Log: { warn: mocks.warn, error: mocks.error } }));
+vi.mock("@mahiru/app/lib/log", () => ({
+  Log: { debug: mocks.debug, info: mocks.info, warn: mocks.warn, error: mocks.error }
+}));
 vi.mock("@mahiru/ipc/main", () => ({
   MainIPC: {
     MessageChannel: {
@@ -110,6 +119,37 @@ beforeEach(async () => {
 afterEach(() => {
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
+});
+
+it("binds the native logger to the main process logger once", () => {
+  taskbar.attach();
+  expect(mocks.native.setTaskbarLogger).toHaveBeenCalledOnce();
+  const [onLog] = mocks.native.setTaskbarLogger.mock.calls[0]!;
+
+  onLog(null, { level: "warn", message: "boom" });
+  expect(mocks.warn).toHaveBeenCalledWith("taskbar", "boom");
+  onLog(null, { level: "debug", message: "detail" });
+  expect(mocks.debug).toHaveBeenCalledWith("taskbar", "detail");
+  onLog(null, { level: "info", message: "state" });
+  expect(mocks.info).toHaveBeenCalledWith("taskbar", "state");
+  onLog(null, { level: "error", message: "failed" });
+  expect(mocks.error).toHaveBeenCalledWith("taskbar", "failed");
+  // 回调带错误时丢弃，避免把原生侧的内部错误当成日志
+  onLog(new Error("napi"), { level: "error", message: "ignored" });
+  expect(mocks.error).toHaveBeenCalledOnce();
+
+  taskbar.attach();
+  expect(mocks.native.setTaskbarLogger).toHaveBeenCalledOnce();
+});
+
+it("still works when the native addon has no logger export", () => {
+  // 老产物没有这个导出：只告警，不影响封面与按钮
+  // @ts-expect-error 故意删掉导出模拟旧产物
+  delete mocks.native.setTaskbarLogger;
+  taskbar.attach();
+  expect(mocks.warn).toHaveBeenCalledWith("taskbar", expect.stringContaining("setTaskbarLogger"));
+  deliver(coverA);
+  expect(mocks.native.setTaskbarButtons).toHaveBeenCalled();
 });
 
 it("registers native buttons and the track received before the first show", async () => {

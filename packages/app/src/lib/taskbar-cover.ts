@@ -1,3 +1,4 @@
+import { release } from "node:os";
 import { Log } from "@/lib/log";
 import { MainIPC } from "@mahiru/ipc/main";
 import { MainNativeAddon } from "@/lib/native-addon";
@@ -6,6 +7,7 @@ import { getThumbarIcons } from "@/utils/thumbar-button";
 import type { BrowserWindow } from "electron";
 import type {
   TaskbarAction,
+  TaskbarLogRecord,
   TaskbarButtonIcons,
   WindowsNativeAddon,
   TaskbarActionHandler
@@ -14,9 +16,18 @@ import type {
 /** 封面取图尺寸：DWM 在高 DPI 下请求约 300px，取 400 保证是缩小而不是放大 */
 const COVER_SIZE = 400;
 
+const logLevelHandlers: Record<TaskbarLogRecord["level"], (message: string) => void> = {
+  debug: (message) => Log.debug("taskbar", message),
+  info: (message) => Log.info("taskbar", message),
+  warn: (message) => Log.warn("taskbar", message),
+  error: (message) => Log.error("taskbar", message)
+};
+
 export class MainTaskBarCoverPreview {
   private static ready = false;
   private static attached = false;
+  /** 原生 logger 只绑定一次，重复绑定会丢掉旧回调 */
+  private static loggerBound = false;
   /** 窗口重新显示/恢复后需要无条件重设一次任务栏按钮 */
   private static needsButtons = false;
   private static playing = false;
@@ -98,6 +109,7 @@ export class MainTaskBarCoverPreview {
   private static loadCover(cover: string) {
     if (this.pending?.cover === cover) return this.pending.promise;
 
+    Log.debug("taskbar", "fetching cover", cover);
     const pending = { cover, promise: this.fetchCover(cover) };
     this.pending = pending;
     void pending.promise.finally(() => {
@@ -140,6 +152,7 @@ export class MainTaskBarCoverPreview {
       const handle = win.getNativeWindowHandle();
       if (!cover || !image) {
         // 没有封面或拉取失败：撤销 iconic 表示，恢复系统实时预览。
+        Log.debug("taskbar", "no cover available, restoring the live thumbnail");
         native.setCover(handle, null);
         this.image = undefined;
         this.pushed = undefined;
@@ -147,6 +160,7 @@ export class MainTaskBarCoverPreview {
       }
 
       // 主窗口自己声明 DWM iconic 表示，缩略图由原生按封面渲染。
+      Log.debug("taskbar", "pushing cover to native", image.byteLength, "bytes");
       native.setCover(handle, image);
       this.image = image;
       this.pushed = cover;
@@ -184,6 +198,28 @@ export class MainTaskBarCoverPreview {
   }
 
   /**
+   * 把原生侧的 `[taskbar]` 日志接进主进程 logger：统一级别过滤。
+   * 原生模块版本较旧、没有这个导出时跳过，退回它的 stderr 输出。
+   */
+  private static bindLogger(native: WindowsNativeAddon) {
+    if (this.loggerBound) return;
+    if (typeof native.setTaskbarLogger !== "function") {
+      Log.warn("taskbar", "native addon has no setTaskbarLogger, logs stay on stderr");
+      return;
+    }
+    this.loggerBound = true;
+    try {
+      native.setTaskbarLogger((err, record) => {
+        if (err) return;
+        logLevelHandlers[record.level]?.(record.message);
+      });
+    } catch (err) {
+      this.loggerBound = false;
+      Log.warn("taskbar", "failed to bind the native logger", err);
+    }
+  }
+
+  /**
    * 绑定主窗口：等窗口首次显示后再做首次注册。
    * 等窗口首次显示后再挂任务栏按钮，避免错过 TaskbarButtonCreated。
    */
@@ -197,6 +233,10 @@ export class MainTaskBarCoverPreview {
     }
 
     this.attached = true;
+    this.bindLogger(this.native);
+    // 原生侧的诊断日志里会带上窗口样式与位图信息，这里补上系统维度，
+    // 两台机器行为不一致时先看这几项。
+    Log.info("taskbar", `os=${release()} electron=${process.versions.electron}`);
 
     const activate = () => {
       this.ready = true;

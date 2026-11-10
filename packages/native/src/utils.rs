@@ -41,13 +41,45 @@ pub fn packed_size(packed: usize) -> Option<(u32, u32)> {
 
 /// 缩略图边长：取请求宽高里较小的那个。
 ///
-/// 交一张 `边长 x 边长` 的正方形位图，DWM 会**等比**把它放进任务栏卡片，
-/// 卡片的画面区域于是就是正方形（官方同样是交 `min(w,h)` 的正方形画布）。
-///
-/// 反过来，如果把封面裁成请求尺寸（约 16:9）的宽幅位图，画面就是被拉伸裁切过的，
-/// 专辑封面上下会被切掉——这正是第一版看起来"封面是 16:9"的原因。
+/// 交一张 `边长 x 边长` 的正方形位图，是把卡片交给 DWM 自己处理的老做法：
+/// 在有重定向表面的窗口上 DWM 会**等比放置**它，卡片里就是一块正方形画面。
+/// 无重定向表面的窗口不适用（会拉伸），那条路径见 `win.rs` 的 `thumb_divisor`。
 pub fn square_side(width: u32, height: u32) -> u32 {
     width.min(height).max(1)
+}
+
+/// 在 `width x height` 的画布里居中放一个最大正方形，返回 `(边长, 左偏移, 上偏移)`。
+pub fn square_inset(width: u32, height: u32) -> (u32, u32, u32) {
+    let width = width.max(1);
+    let height = height.max(1);
+    let side = width.min(height);
+    (side, (width - side) / 2, (height - side) / 2)
+}
+
+/// 计算"铺满"一块 `width x height` 所需要的缩放尺寸与居中裁剪偏移。
+///
+/// 返回 `(缩放后宽, 缩放后高, 裁剪左偏移, 裁剪上偏移)`：先把源图等比放大到
+/// 两个方向都**不小于**目标尺寸，再从 `(偏移)` 处裁出 `width x height`。
+pub fn fill_geometry(
+    src_width: u32,
+    src_height: u32,
+    width: u32,
+    height: u32,
+) -> (u32, u32, u32, u32) {
+    let src_width = src_width.max(1);
+    let src_height = src_height.max(1);
+    let width = width.max(1);
+    let height = height.max(1);
+    let scale =
+        (f64::from(width) / f64::from(src_width)).max(f64::from(height) / f64::from(src_height));
+    let scaled_width = ((f64::from(src_width) * scale).round() as u32).max(width);
+    let scaled_height = ((f64::from(src_height) * scale).round() as u32).max(height);
+    (
+        scaled_width,
+        scaled_height,
+        (scaled_width - width) / 2,
+        (scaled_height - height) / 2,
+    )
 }
 
 /// 把 `(宽, 高)` 等比缩到 `max_edge` 以内，只缩不放；任一维至少为 1。
@@ -65,7 +97,9 @@ pub fn bounded(width: u32, height: u32, max_edge: u32) -> (u32, u32) {
 
 #[cfg(test)]
 mod tests {
-    use super::{MAX_THUMBNAIL_EDGE, bounded, packed_size, square_side};
+    use super::{
+        MAX_THUMBNAIL_EDGE, bounded, fill_geometry, packed_size, square_inset, square_side,
+    };
 
     #[test]
     fn packed_size_reads_width_from_high_word() {
@@ -87,14 +121,29 @@ mod tests {
 
     #[test]
     fn square_side_takes_the_shorter_edge() {
-        // 宽幅卡片取高；竖长请求取宽。
-        assert_eq!(square_side(384, 216), 216);
-        assert_eq!(square_side(200, 106), 106);
-        assert_eq!(square_side(106, 200), 106);
-        assert_eq!(square_side(256, 256), 256);
-        // 任一维为 0 时不能返回 0，否则建不出位图。
+        assert_eq!(square_side(400, 214), 214);
+        assert_eq!(square_side(600, 315), 315);
         assert_eq!(square_side(0, 0), 1);
-        assert_eq!(square_side(0, 216), 1);
+    }
+
+    #[test]
+    fn square_inset_centers_the_largest_square() {
+        assert_eq!(square_inset(400, 214), (214, 93, 0));
+        assert_eq!(square_inset(200, 107), (107, 46, 0));
+        assert_eq!(square_inset(5, 5), (5, 0, 0));
+    }
+
+    #[test]
+    fn fill_geometry_never_crops_outside_the_scaled_image() {
+        for (src_width, src_height) in [(400, 400), (1000, 300), (1, 1)] {
+            for (width, height) in [(400, 214), (200, 107), (16, 9)] {
+                let (scaled_width, scaled_height, offset_x, offset_y) =
+                    fill_geometry(src_width, src_height, width, height);
+                assert!(scaled_width >= width && scaled_height >= height);
+                assert!(offset_x + width <= scaled_width);
+                assert!(offset_y + height <= scaled_height);
+            }
+        }
     }
 
     #[test]
